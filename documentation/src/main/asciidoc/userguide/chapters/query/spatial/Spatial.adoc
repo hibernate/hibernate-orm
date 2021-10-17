@@ -12,10 +12,10 @@ and it allows you to deal with geographic data in a standardized way.
 
 Hibernate Spatial provides a standardized, cross-database interface to geographic data storage and query functions.
 It supports most of the functions described by the OGC Simple Feature Specification. Supported databases are Oracle 10g/11g,
-PostgreSQL/PostGIS, MySQL, Microsoft SQL Server and H2/GeoDB.
+PostgreSQL/PostGIS, MySQL, Microsoft SQL Server, DB2, CockroachDB and H2/GeoDB.
 
 Spatial data types are not part of the Java standard library, and they are absent from the JDBC specification.
-Over the years https://tsusiatsoftware.net/jts/main.html[JTS] has emerged the _de facto_ standard to fill this gap. JTS is
+Over the years https://tsusiatsoftware.net/jts/main.html[JTS] has emerged as the _de facto_ standard to fill this gap. JTS is
 an implementation of the https://portal.opengeospatial.org/files/?artifact_id=829[Simple Feature Specification (SFS)]. Many databases
 on the other hand implement the SQL/MM - Part 3: Spatial Data specification - a related, but broader specification. The biggest difference is that
 SFS is limited to 2D geometries in the projected plane (although JTS supports 3D coordinates), whereas
@@ -26,7 +26,7 @@ https://github.com/GeoLatte/geolatte-geom[geolatte-geom]. As already mentioned, 
 standard. Geolatte-geom (also written by the lead developer of Hibernate Spatial) is a more recent library that
 supports many features specified in SQL/MM but not available in JTS (such as support for 4D geometries, and support for extended WKT/WKB formats).
 Geolatte-geom also implements encoders/decoders for the database native types. Geolatte-geom has good interoperability with
-JTS. Converting a Geolatte `geometry` to a JTS `geometry, for instance, doesn't require copying of the coordinates.
+JTS. Converting a Geolatte `geometry` to a JTS `geometry`, for instance, doesn't require copying of the coordinates.
 It also delegates spatial processing to JTS.
 
 Whether you use JTS or Geolatte-geom, Hibernate spatial maps the database spatial types to your geometry model of choice. It will, however,
@@ -260,7 +260,7 @@ create transform for db2gse.st_geometry db2_program (
 Hibernate Spatial comes with the following types:
 
 jts_geometry::
-	Handled by `org.hibernate.spatial.JTSGeometryType` it maps a database geometry column type to a `org.locationtech.jts.geom.Geometry` entity property type.
+	Handled by `org.hibernate.spatial.JTSGeometryType`, it maps a database geometry column type to a `org.locationtech.jts.geom.Geometry` entity property type.
 geolatte_geometry::
 	Handled by `org.hibernate.spatial.GeolatteGeometryType`, it maps a database geometry column type to an `org.geolatte.geom.Geometry` entity property type.
 

@@ -18,15 +18,16 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
 import org.hibernate.Session;
+import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.query.procedure.ProcedureParameter;
 import org.hibernate.result.Output;
 import org.hibernate.result.ResultSetOutput;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.type.StandardBasicTypes;
 
-import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -50,8 +51,8 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialect(value = MySQLDialect.class, version = 500)
-@SkipForDialect(value = TiDBDialect.class, comment = "TiDB does not support stored procedure")
+@RequiresDialect(value = MySQLDialect.class, matchSubTypes = false, version = 500)
+@RequiresDialect(value = MariaDBDialect.class, version = 500)
 @Jpa(
 		annotatedClasses = {
 				Person.class,

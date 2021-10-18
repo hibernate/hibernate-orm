@@ -8,11 +8,15 @@ package org.hibernate.sql.results.graph.entity.internal;
 
 import java.util.function.Consumer;
 
+import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.log.LoggingHelper;
+import org.hibernate.loader.entity.CacheEntityLoaderHelper;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
@@ -21,8 +25,10 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.AbstractFetchParentAccess;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
+import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
+import org.hibernate.stat.spi.StatisticsImplementor;
 
 /**
  * @author Andrea Boriero
@@ -31,7 +37,7 @@ import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 public class EntityDelayedFetchInitializer extends AbstractFetchParentAccess implements EntityInitializer {
 
 	private final NavigablePath navigablePath;
-	private final ToOneAttributeMapping referencedModelPart;
+	private final EntityValuedFetchable referencedModelPart;
 	private final DomainResultAssembler identifierAssembler;
 
 	private Object entityInstance;
@@ -39,7 +45,7 @@ public class EntityDelayedFetchInitializer extends AbstractFetchParentAccess imp
 
 	public EntityDelayedFetchInitializer(
 			NavigablePath fetchedNavigable,
-			ToOneAttributeMapping referencedModelPart,
+			EntityValuedFetchable referencedModelPart,
 			DomainResultAssembler identifierAssembler) {
 		this.navigablePath = fetchedNavigable;
 		this.referencedModelPart = referencedModelPart;

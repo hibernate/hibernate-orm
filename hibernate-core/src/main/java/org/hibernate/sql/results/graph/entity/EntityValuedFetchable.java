@@ -25,4 +25,8 @@ public interface EntityValuedFetchable extends Fetchable, EntityValuedModelPart 
 			boolean selected,
 			String resultVariable,
 			DomainResultCreationState creationState);
+
+	boolean isOptional();
+
+	boolean isUnwrapProxy();
 }

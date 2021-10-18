@@ -1050,6 +1050,7 @@ public class ToOneAttributeMapping
 		return isNullable;
 	}
 
+	@Override
 	public boolean isOptional(){
 		return isOptional;
 	}
@@ -1062,6 +1063,7 @@ public class ToOneAttributeMapping
 		return isIgnoreNotFound;
 	}
 
+	@Override
 	public boolean isUnwrapProxy() {
 		return unwrapProxy;
 	}

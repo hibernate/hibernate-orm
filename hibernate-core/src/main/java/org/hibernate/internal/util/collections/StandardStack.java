@@ -10,25 +10,31 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 
 /**
- * A general-purpose stack impl.
+ * A general-purpose stack impl supporting null values.
  *
  * @param <T> The type of things stored in the stack
  *
  * @author Steve Ebersole
+ * @author Sanne Grinovero
  */
 public final class StandardStack<T> implements Stack<T> {
 
-	private ArrayDeque<T> internalStack;
+	private ArrayDeque internalStack;
+	private static final Object NULL_TOKEN = new Object();
 
 	public StandardStack() {
 	}
 
 	@Override
 	public void push(T newCurrent) {
-		stackInstanceExpected().addFirst( newCurrent );
+		Object toStore = newCurrent;
+		if ( newCurrent == null ) {
+			toStore = NULL_TOKEN;
+		}
+		stackInstanceExpected().addFirst( toStore );
 	}
 
-	private Deque<T> stackInstanceExpected() {
+	private Deque stackInstanceExpected() {
 		if ( internalStack == null ) {
 			//"7" picked to use 8, but skipping the odd initialCapacity method
 			internalStack = new ArrayDeque<>(7);
@@ -38,7 +44,14 @@ public final class StandardStack<T> implements Stack<T> {
 
 	@Override
 	public T pop() {
-		return stackInstanceExpected().removeFirst();
+		return convert( stackInstanceExpected().removeFirst() );
+	}
+
+	private T convert(final Object internalStoredObject) {
+		if ( internalStoredObject == NULL_TOKEN ) {
+			return null;
+		}
+		return (T) internalStoredObject;
 	}
 
 	@Override
@@ -46,7 +59,7 @@ public final class StandardStack<T> implements Stack<T> {
 		if ( internalStack == null ) {
 			return null;
 		}
-		return internalStack.peek();
+		return convert( internalStack.peek() );
 	}
 
 	@Override

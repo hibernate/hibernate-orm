@@ -24,7 +24,7 @@ public class TiDBSequenceSupport implements SequenceSupport {
 
 	@Override
 	public String getSelectSequencePreviousValString(String sequenceName) throws MappingException {
-		return "currval('" + sequenceName + "')";
+		return "lastval(" + sequenceName + ")";
 	}
 
 	@Override

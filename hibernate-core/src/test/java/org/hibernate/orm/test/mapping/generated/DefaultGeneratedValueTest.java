@@ -34,6 +34,7 @@ import org.hibernate.annotations.GeneratorType;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.tuple.ValueGenerator;
 
 
@@ -60,6 +61,7 @@ import static org.junit.Assert.assertTrue;
  */
 @SkipForDialect( dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "CURRENT_TIMESTAMP not supported as default value in Sybase" )
 @SkipForDialect( dialectClass = MySQLDialect.class, reason = "See HHH-10196" )
+@SkipForDialect( dialectClass = TiDBDialect.class, reason = "See HHH-10196" )
 @DomainModel( annotatedClasses = DefaultGeneratedValueTest.TheEntity.class )
 @SessionFactory
 public class DefaultGeneratedValueTest {

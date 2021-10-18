@@ -12,6 +12,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.dialect.sequence.NoSequenceSupport;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
+import org.hibernate.internal.util.MathHelper;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.FetchClauseType;
 import org.hibernate.query.IntervalType;
@@ -3068,7 +3069,18 @@ public abstract class Dialect implements ConversionContext {
 	protected final BatchLoadSizingStrategy STANDARD_DEFAULT_BATCH_LOAD_SIZING_STRATEGY = new BatchLoadSizingStrategy() {
 		@Override
 		public int determineOptimalBatchLoadSize(int numberOfKeyColumns, int numberOfKeys) {
-			return 50;
+			int paddedSize = MathHelper.ceilingPowerOfTwo( numberOfKeys );
+			// For tuples, there is no limit, so we can just use the power of two padding approach
+			if ( numberOfKeyColumns > 1 ) {
+				return paddedSize;
+			}
+			if ( paddedSize < getInExpressionCountLimit() ) {
+				return paddedSize;
+			}
+			else if ( numberOfKeys < getInExpressionCountLimit() ) {
+				return numberOfKeys;
+			}
+			return getInExpressionCountLimit();
 		}
 	};
 

@@ -63,7 +63,6 @@ public class EntityCollectionPart
 			MappingModelCreationProcess creationProcess) {
 		this.navigableRole = collectionDescriptor.getNavigableRole().appendContainer( nature.getName() );
 		this.collectionDescriptor = collectionDescriptor;
-
 		this.nature = nature;
 		this.entityMappingType = entityMappingType;
 	}
@@ -161,6 +160,16 @@ public class EntityCollectionPart
 		);
 
 		return new EntityFetchJoinedImpl( fetchParent, this, tableGroup, selected, fetchablePath, creationState );
+	}
+
+	@Override
+	public boolean isOptional() {
+		return false;
+	}
+
+	@Override
+	public boolean isUnwrapProxy() {
+		return false;
 	}
 
 	@Override

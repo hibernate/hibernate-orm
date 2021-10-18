@@ -13,6 +13,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -4866,17 +4867,17 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	@Override
-	public InListPredicate visitInListPredicate(SqmInListPredicate<?> predicate) {
+	public Predicate visitInListPredicate(SqmInListPredicate<?> predicate) {
 		// special case: if there is just a single "value" element and it is a parameter
 		//		and the binding for that parameter is multi-valued we need special
 		//		handling for "expansion"
 		if ( predicate.getListExpressions().size() == 1 ) {
-			final SqmExpression sqmExpression = predicate.getListExpressions().get( 0 );
+			final SqmExpression<?> sqmExpression = predicate.getListExpressions().get( 0 );
 			if ( sqmExpression instanceof SqmParameter ) {
-				final SqmParameter sqmParameter = (SqmParameter) sqmExpression;
+				final SqmParameter<?> sqmParameter = (SqmParameter<?>) sqmExpression;
 
 				if ( sqmParameter.allowMultiValuedBinding() ) {
-					final InListPredicate specialCase = processInListWithSingleParameter( predicate, sqmParameter );
+					final Predicate specialCase = processInListWithSingleParameter( predicate, sqmParameter );
 					if ( specialCase != null ) {
 						return specialCase;
 					}
@@ -4895,7 +4896,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		inferrableTypeAccessStack.push( () -> determineValueMapping( predicate.getTestExpression() ) );
 
 		try {
-			for ( SqmExpression expression : predicate.getListExpressions() ) {
+			for ( SqmExpression<?> expression : predicate.getListExpressions() ) {
 				inPredicate.addExpression( (Expression) expression.accept( this ) );
 			}
 		}
@@ -4906,70 +4907,49 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return inPredicate;
 	}
 
-	private InListPredicate processInListWithSingleParameter(
+	private Predicate processInListWithSingleParameter(
 			SqmInListPredicate<?> sqmPredicate,
-			SqmParameter sqmParameter) {
+			SqmParameter<?> sqmParameter) {
 		assert sqmParameter.allowMultiValuedBinding();
 
 		if ( sqmParameter instanceof JpaCriteriaParameter ) {
-			return processInSingleCriteriaParameter( sqmPredicate, (JpaCriteriaParameter) sqmParameter );
+			return processInSingleCriteriaParameter( sqmPredicate, (JpaCriteriaParameter<?>) sqmParameter );
 		}
 
 		return processInSingleHqlParameter( sqmPredicate, sqmParameter );
 	}
 
-	private InListPredicate processInSingleHqlParameter(SqmInListPredicate<?> sqmPredicate, SqmParameter sqmParameter) {
+	private Predicate processInSingleHqlParameter(SqmInListPredicate<?> sqmPredicate, SqmParameter<?> sqmParameter) {
 		final QueryParameterImplementor<?> domainParam = domainParameterXref.getQueryParameter( sqmParameter );
-		final QueryParameterBinding domainParamBinding = domainParameterBindings.getBinding( domainParam );
-
+		final QueryParameterBinding<?> domainParamBinding = domainParameterBindings.getBinding( domainParam );
 		if ( !domainParamBinding.isMultiValued() ) {
 			// triggers normal processing
 			return null;
 		}
 
-		final InListPredicate inListPredicate = new InListPredicate(
-				(Expression) sqmPredicate.getTestExpression().accept( this ),
-				sqmPredicate.isNegated(),
-				getBooleanType()
-		);
-
-		inferrableTypeAccessStack.push(
-				() -> determineValueMapping( sqmPredicate.getTestExpression() )
-		);
-
-		try {
-			boolean first = true;
-			for ( Object bindValue : domainParamBinding.getBindValues() ) {
-				final SqmParameter sqmParamToConsume;
-				// for each bind value create an "expansion"
-				if ( first ) {
-					sqmParamToConsume = sqmParameter;
-					first = false;
-				}
-				else {
-					sqmParamToConsume = sqmParameter.copy();
-					domainParameterXref.addExpansion( domainParam, sqmParameter, sqmParamToConsume );
-				}
-
-				inListPredicate.addExpression( consumeSingleSqmParameter( sqmParamToConsume ) );
-			}
-		}
-		finally {
-			inferrableTypeAccessStack.pop();
-		}
-
-		return inListPredicate;
+		return processInSingleParameter( sqmPredicate, sqmParameter, domainParam, domainParamBinding );
 	}
 
-	private InListPredicate processInSingleCriteriaParameter(
+	private Predicate processInSingleCriteriaParameter(
 			SqmInListPredicate<?> sqmPredicate,
-			JpaCriteriaParameter jpaCriteriaParameter) {
+			JpaCriteriaParameter<?> jpaCriteriaParameter) {
 		assert jpaCriteriaParameter.allowsMultiValuedBinding();
 
-		final QueryParameterBinding domainParamBinding = domainParameterBindings.getBinding( jpaCriteriaParameter );
+		final QueryParameterBinding<?> domainParamBinding = domainParameterBindings.getBinding( jpaCriteriaParameter );
 		if ( !domainParamBinding.isMultiValued() ) {
 			return null;
 		}
+		final SqmJpaCriteriaParameterWrapper<?> sqmWrapper = jpaCriteriaParamResolutions.get( jpaCriteriaParameter )
+				.get();
+
+		return processInSingleParameter( sqmPredicate, sqmWrapper, jpaCriteriaParameter, domainParamBinding );
+	}
+
+	private Predicate processInSingleParameter(
+			SqmInListPredicate<?> sqmPredicate,
+			SqmParameter<?> sqmParameter,
+			QueryParameterImplementor<?> domainParam,
+			QueryParameterBinding<?> domainParamBinding) {
 
 		final InListPredicate inListPredicate = new InListPredicate(
 				(Expression) sqmPredicate.getTestExpression().accept( this ),
@@ -4981,31 +4961,22 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				() -> determineValueMapping( sqmPredicate.getTestExpression() )
 		);
 
-		final SqmJpaCriteriaParameterWrapper<?> sqmWrapper = jpaCriteriaParamResolutions.get( jpaCriteriaParameter )
-				.get();
-
 		try {
-			boolean first = true;
-			for ( Object bindValue : domainParamBinding.getBindValues() ) {
-				final SqmParameter sqmParamToConsume;
+			final Iterator<?> iterator = domainParamBinding.getBindValues().iterator();
+			inListPredicate.addExpression( consumeSingleSqmParameter( sqmParameter ) );
+			iterator.next();
+			while ( iterator.hasNext() ) {
+				iterator.next();
 				// for each bind value create an "expansion"
-				if ( first ) {
-					sqmParamToConsume = sqmWrapper;
-					first = false;
-				}
-				else {
-					sqmParamToConsume = sqmWrapper.copy();
-					domainParameterXref.addExpansion( jpaCriteriaParameter, sqmWrapper, sqmParamToConsume );
-				}
-
+				final SqmParameter<?> sqmParamToConsume = sqmParameter.copy();
+				domainParameterXref.addExpansion( domainParam, sqmParameter, sqmParamToConsume );
 				inListPredicate.addExpression( consumeSingleSqmParameter( sqmParamToConsume ) );
 			}
+			return inListPredicate;
 		}
 		finally {
 			inferrableTypeAccessStack.pop();
 		}
-
-		return inListPredicate;
 	}
 
 	@Override

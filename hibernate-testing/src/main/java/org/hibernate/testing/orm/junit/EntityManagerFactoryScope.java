@@ -28,4 +28,6 @@ public interface EntityManagerFactoryScope {
 	<T> T fromEntityManager(Function<EntityManager, T> action);
 	<T> T fromTransaction(Function<EntityManager, T> action);
 	<T> T fromTransaction(EntityManager entityManager, Function<EntityManager, T> action);
+
+
 }

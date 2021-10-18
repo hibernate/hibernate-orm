@@ -17,6 +17,7 @@ import jakarta.persistence.ValidationMode;
 import jakarta.persistence.spi.PersistenceUnitTransactionType;
 
 import org.hibernate.jpa.spi.JpaCompliance;
+import org.hibernate.resource.jdbc.spi.StatementInspector;
 
 import org.hibernate.testing.orm.domain.DomainModelDescriptor;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
@@ -107,6 +108,8 @@ public @interface Jpa {
 	 * @see JpaCompliance#isLoadByIdComplianceEnabled()
 	 */
 	boolean loadByIdComplianceEnabled() default false;
+
+	Class<? extends StatementInspector> statementInspectorClass() default StatementInspector.class;
 
 	boolean excludeUnlistedClasses() default false;
 

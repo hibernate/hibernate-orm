@@ -15,6 +15,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -26,12 +27,14 @@ import org.hibernate.LockMode;
 import org.hibernate.QueryException;
 import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.SelectItemReferenceStrategy;
+import org.hibernate.internal.util.MathHelper;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.sqm.sql.internal.SqmPathInterpretation;
+import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.sql.ast.tree.cte.CteMaterialization;
 import org.hibernate.sql.ast.tree.cte.CteSearchClauseKind;
 import org.hibernate.query.FetchClauseType;
@@ -4081,22 +4084,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			appendSql( "1=0" );
 			return;
 		}
+		Function<Expression, Expression> itemAccessor = Function.identity();
 		final SqlTuple lhsTuple;
 		if ( ( lhsTuple = SqlTupleContainer.getSqlTuple( inListPredicate.getTestExpression() ) ) != null ) {
 			if ( lhsTuple.getExpressions().size() == 1 ) {
 				// Special case for tuples with arity 1 as any DBMS supports scalar IN predicates
-				lhsTuple.getExpressions().get( 0 ).accept( this );
-				if ( inListPredicate.isNegated() ) {
-					appendSql( " not" );
-				}
-				appendSql( " in(" );
-				String separator = NO_SEPARATOR;
-				for ( Expression expression : listExpressions ) {
-					appendSql( separator );
-					SqlTupleContainer.getSqlTuple( expression ).getExpressions().get( 0 ).accept( this );
-					separator = COMA_SEPARATOR;
-				}
-				appendSql( CLOSE_PARENTHESIS );
+				itemAccessor = listExpression -> SqlTupleContainer.getSqlTuple( listExpression ).getExpressions().get( 0 );
 			}
 			else if ( !supportsRowValueConstructorSyntaxInInList() ) {
 				final ComparisonOperator comparisonOperator = inListPredicate.isNegated() ?
@@ -4132,26 +4125,108 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						separator = " or ";
 					}
 				}
+				return;
 			}
-			else {
+		}
+
+		inListPredicate.getTestExpression().accept( this );
+		if ( inListPredicate.isNegated() ) {
+			appendSql( " not" );
+		}
+		appendSql( " in(" );
+		String separator = NO_SEPARATOR;
+
+		int bindValueCount = listExpressions.size();
+		int bindValueMaxCount = bindValueCount;
+
+		final Dialect dialect = getSessionFactory().getJdbcServices().getDialect();
+		int inExprLimit = dialect.getInExpressionCountLimit();
+
+		final boolean inClauseParameterPaddingEnabled = getSessionFactory().
+				getSessionFactoryOptions().inClauseParameterPaddingEnabled()
+				&& bindValueCount > 2;
+
+		if ( inClauseParameterPaddingEnabled ) {
+			// bindValueCount: 1005
+			// bindValuePaddingCount: 1024
+			int bindValuePaddingCount = MathHelper.ceilingPowerOfTwo( bindValueCount );
+
+			// inExprLimit: 1000
+			if ( inExprLimit > 0 ) {
+				if ( bindValuePaddingCount > inExprLimit ) {
+					// bindValueCount % inExprLimit: 5
+					// bindValuePaddingCount: 8
+					if ( bindValueCount < inExprLimit ) {
+						bindValueMaxCount = inExprLimit;
+					}
+					else {
+						bindValueMaxCount = MathHelper.ceilingPowerOfTwo( bindValueCount % inExprLimit );
+					}
+				}
+				else if ( bindValueCount < bindValuePaddingCount ) {
+					bindValueMaxCount = bindValuePaddingCount;
+				}
+			}
+			else if ( bindValueCount < bindValuePaddingCount ) {
+				bindValueMaxCount = bindValuePaddingCount;
+			}
+		}
+
+		final Iterator<Expression> iterator = listExpressions.iterator();
+		int itemNumber = 0;
+		while ( iterator.hasNext() && ( inExprLimit == 0 || itemNumber < inExprLimit ) ) {
+			final Expression listExpression = itemAccessor.apply( iterator.next() );
+			appendSql( separator );
+			listExpression.accept( this );
+			separator = COMA_SEPARATOR;
+			itemNumber++;
+			// If we encounter an expression that is not a parameter, we reset the inExprLimit and bindValueMaxCount
+			// and just render through the in list expressions as they are without padding/splitting
+			if ( !( listExpression instanceof JdbcParameter || listExpression instanceof SqmParameterInterpretation ) ) {
+				inExprLimit = 0;
+				bindValueMaxCount = bindValueCount;
+			}
+		}
+
+		if ( itemNumber != inExprLimit && bindValueCount == bindValueMaxCount ) {
+			appendSql( CLOSE_PARENTHESIS );
+			return;
+		}
+
+		if ( inExprLimit > 0 && bindValueCount > inExprLimit ) {
+			do {
+				append( ") and " );
 				inListPredicate.getTestExpression().accept( this );
 				if ( inListPredicate.isNegated() ) {
 					appendSql( " not" );
 				}
 				appendSql( " in(" );
-				renderCommaSeparated( listExpressions );
-				appendSql( CLOSE_PARENTHESIS );
-			}
+				separator = NO_SEPARATOR;
+				itemNumber = 0;
+				while ( iterator.hasNext() && itemNumber < inExprLimit ) {
+					final Expression listExpression = iterator.next();
+					appendSql( separator );
+					itemAccessor.apply( listExpression ).accept( this );
+					separator = COMA_SEPARATOR;
+					itemNumber++;
+				}
+			} while ( iterator.hasNext() );
+		}
+
+		int i;
+		if ( inExprLimit > 0 && bindValueCount > inExprLimit ) {
+			i = bindValueCount % inExprLimit;
 		}
 		else {
-			inListPredicate.getTestExpression().accept( this );
-			if ( inListPredicate.isNegated() ) {
-				appendSql( " not" );
-			}
-			appendSql( " in(" );
-			renderCommaSeparated( listExpressions );
-			appendSql( CLOSE_PARENTHESIS );
+			i = bindValueCount;
 		}
+		final Expression lastExpression = itemAccessor.apply( listExpressions.get( listExpressions.size() - 1 ) );
+		for ( ; i < bindValueMaxCount; i++ ) {
+			appendSql( separator );
+			lastExpression.accept( this );
+			separator = COMA_SEPARATOR;
+		}
+		appendSql( CLOSE_PARENTHESIS );
 	}
 
 	@Override

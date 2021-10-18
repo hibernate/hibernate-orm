@@ -18,6 +18,8 @@ import org.hibernate.Session;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.NoopLimitHandler;
+import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
+import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -42,6 +44,7 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 	private final JdbcParameterBindings jdbcParameterBindings;
 	private final ExecutionContext executionContext;
 	private final Function<String, PreparedStatement> statementCreator;
+	private final SqlStatementLogger sqlStatementLogger;
 	private final String finalSql;
 	private final Limit limit;
 	private final LimitHandler limitHandler;
@@ -60,6 +63,8 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 		this.executionContext = executionContext;
 		this.jdbcSelect = jdbcSelect;
 		this.statementCreator = statementCreator;
+		this.sqlStatementLogger = executionContext.getSession().getJdbcServices().getSqlStatementLogger();
+
 		final QueryOptions queryOptions = executionContext.getQueryOptions();
 		if ( queryOptions == null ) {
 			finalSql = jdbcSelect.getSql();
@@ -200,12 +205,20 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 				}
 			}
 
-			executionContext.getSession().getEventListenerManager().jdbcExecuteStatementStart();
+			final SessionEventListenerManager eventListenerManager = executionContext.getSession()
+					.getEventListenerManager();
+
+			long executeStartNanos = 0;
+			if ( this.sqlStatementLogger.getLogSlowQuery() > 0 ) {
+				executeStartNanos = System.nanoTime();
+			}
 			try {
+				eventListenerManager.jdbcExecuteStatementStart();
 				resultSet = preparedStatement.executeQuery();
 			}
 			finally {
-				executionContext.getSession().getEventListenerManager().jdbcExecuteStatementEnd();
+				eventListenerManager.jdbcExecuteStatementEnd();
+				sqlStatementLogger.logSlowQuery( preparedStatement, executeStartNanos );
 			}
 
 			// For dialects that don't support an offset clause

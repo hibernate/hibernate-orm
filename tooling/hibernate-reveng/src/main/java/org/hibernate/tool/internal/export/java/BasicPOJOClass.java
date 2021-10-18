@@ -330,14 +330,14 @@ abstract public class BasicPOJOClass implements POJOClass, MetaAttributeConstant
 	}
 
 	private StringBuffer buildTemporalAnnotation(StringBuffer annotations, String temporalTypeValue) {
-		String temporal = importType("javax.persistence.Temporal");
-		String temporalType = importType("javax.persistence.TemporalType");
+		String temporal = importType("jakarta.persistence.Temporal");
+		String temporalType = importType("jakarta.persistence.TemporalType");
 		
 		return annotations.append( "@" + temporal +"(" + temporalType + "." + temporalTypeValue + ")");
 	}
 	
 	private StringBuffer buildVersionAnnotation(StringBuffer annotations) {
-		String version = importType("javax.persistence.Version");
+		String version = importType("jakarta.persistence.Version");
 		
 		return annotations.append( "@" + version );
 	}
@@ -347,7 +347,7 @@ abstract public class BasicPOJOClass implements POJOClass, MetaAttributeConstant
 		boolean insertable = property.isInsertable();
 		boolean updatable = property.isUpdateable();
 		if ( property.isComposite() ) {
-			annotations.append( "@" + importType("javax.persistence.AttributeOverrides") +"( {" );
+			annotations.append( "@" + importType("jakarta.persistence.AttributeOverrides") +"( {" );
 			Component component = (Component) property.getValue();
 			Iterator<?> subElements = component.getPropertyIterator();
 			buildRecursiveAttributeOverride( subElements, null, property, annotations );
@@ -404,7 +404,7 @@ abstract public class BasicPOJOClass implements POJOClass, MetaAttributeConstant
 				}
 				else {
 					annotations.append( "\n        " ).append("@")
-							.append( importType("javax.persistence.AttributeOverride") ).append("(name=\"" );
+							.append( importType("jakarta.persistence.AttributeOverride") ).append("(name=\"" );
 					if ( path != null ) {
 						annotations.append( path ).append( "." );
 					}
@@ -426,7 +426,7 @@ abstract public class BasicPOJOClass implements POJOClass, MetaAttributeConstant
 		}
 		else {
 			Column column = (Column) selectable;
-			annotations.append( "@" + importType("javax.persistence.Column") + "(name=\"" ).append( column.getName() ).append( "\"" );
+			annotations.append( "@" + importType("jakarta.persistence.Column") + "(name=\"" ).append( column.getName() ).append( "\"" );
 			
 			appendCommonColumnInfo( annotations, column, insertable, updatable );
 			

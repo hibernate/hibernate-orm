@@ -2,7 +2,7 @@ package org.hibernate.tool.internal.metadata;
 
 import java.util.Properties;
 
-import javax.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityManagerFactory;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.Metadata;

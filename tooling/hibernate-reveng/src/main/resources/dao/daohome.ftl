@@ -15,7 +15,7 @@ public class ${declarationName}Home {
     private static final ${pojo.importType("java.util.logging.Logger")} logger = ${pojo.importType("Logger")}.getLogger(${pojo.getDeclarationName()}Home.class.getName());
 
 <#if ejb3>
-    @${pojo.importType("javax.persistence.PersistenceContext")} private ${pojo.importType("javax.persistence.EntityManager")} entityManager;
+    @${pojo.importType("jakarta.persistence.PersistenceContext")} private ${pojo.importType("jakarta.persistence.EntityManager")} entityManager;
     
     public void persist(${declarationName} transientInstance) {
         logger.log(${pojo.importType("java.util.logging.Level")}.INFO, "persisting ${declarationName} instance");
@@ -168,9 +168,9 @@ public class ${declarationName}Home {
     public ${declarationName} findByNaturalId(${c2j.asNaturalIdParameterList(clazz)}) {
         logger.log(${pojo.importType("java.util.logging.Level")}.INFO, "getting ${declarationName} instance by natural id");
         try {
-            ${pojo.importType("javax.persistence.criteria.CriteriaBuilder")} criteriaBuilder = sessionFactory.getCriteriaBuilder();
-            ${pojo.importType("javax.persistence.criteria.CriteriaQuery")}<${declarationName}> criteriaQuery = criteriaBuilder.createQuery(${declarationName}.class);
-            ${pojo.importType("javax.persistence.criteria.Root")}<${declarationName}> root = criteriaQuery.from(${declarationName}.class);
+            ${pojo.importType("jakarta.persistence.criteria.CriteriaBuilder")} criteriaBuilder = sessionFactory.getCriteriaBuilder();
+            ${pojo.importType("jakarta.persistence.criteria.CriteriaQuery")}<${declarationName}> criteriaQuery = criteriaBuilder.createQuery(${declarationName}.class);
+            ${pojo.importType("jakarta.persistence.criteria.Root")}<${declarationName}> root = criteriaQuery.from(${declarationName}.class);
             criteriaQuery.where(
 <#assign notFirst = false/>
 <#foreach property in pojo.getAllPropertiesIterator()>

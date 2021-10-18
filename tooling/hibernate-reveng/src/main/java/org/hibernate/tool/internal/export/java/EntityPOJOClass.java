@@ -201,7 +201,7 @@ public class EntityPOJOClass extends BasicPOJOClass {
 			if (table.hasPrimaryKey() && table.getPrimaryKey().getColumns().equals(key.getColumns())) {
 				continue;
 			}
-			AnnotationBuilder constraint = AnnotationBuilder.createAnnotation( importType("javax.persistence.UniqueConstraint") );
+			AnnotationBuilder constraint = AnnotationBuilder.createAnnotation( importType("jakarta.persistence.UniqueConstraint") );
 			constraint.addQuotedAttributes( "columnNames", new IteratorTransformer<Column>(key.getColumnIterator()) {
 				public String transform(Column column) {
 					return column.getName();
@@ -224,14 +224,14 @@ public class EntityPOJOClass extends BasicPOJOClass {
 		StringBuffer wholeString = new StringBuffer( "    " );
 		if ( identifier instanceof Component ) {
 
-			wholeString.append( AnnotationBuilder.createAnnotation( importType("javax.persistence.EmbeddedId") ).getResult());
+			wholeString.append( AnnotationBuilder.createAnnotation( importType("jakarta.persistence.EmbeddedId") ).getResult());
 		}
 		else if ( identifier instanceof SimpleValue ) {
 			SimpleValue simpleValue = (SimpleValue) identifier;
 			strategy = simpleValue.getIdentifierGeneratorStrategy();
 			properties = c2j.getFilteredIdentifierGeneratorProperties(simpleValue);
 			StringBuffer idResult = new StringBuffer();
-			AnnotationBuilder builder = AnnotationBuilder.createAnnotation( importType("javax.persistence.Id") );
+			AnnotationBuilder builder = AnnotationBuilder.createAnnotation( importType("jakarta.persistence.Id") );
 			idResult.append(builder.getResult());
 			idResult.append(" ");
 
@@ -240,37 +240,37 @@ public class EntityPOJOClass extends BasicPOJOClass {
 
 				if ( !"native".equals( strategy ) ) {
 					if ( "identity".equals( strategy ) ) {
-						builder.resetAnnotation( importType("javax.persistence.GeneratedValue") );
-						builder.addAttribute( "strategy", staticImport("javax.persistence.GenerationType", "IDENTITY" ) );
+						builder.resetAnnotation( importType("jakarta.persistence.GeneratedValue") );
+						builder.addAttribute( "strategy", staticImport("jakarta.persistence.GenerationType", "IDENTITY" ) );
 						idResult.append(builder.getResult());
 					}
 					else if ( "sequence".equals( strategy ) ) {
-						builder.resetAnnotation( importType("javax.persistence.GeneratedValue") )
-							.addAttribute( "strategy", staticImport("javax.persistence.GenerationType", "SEQUENCE" ) )
+						builder.resetAnnotation( importType("jakarta.persistence.GeneratedValue") )
+							.addAttribute( "strategy", staticImport("jakarta.persistence.GenerationType", "SEQUENCE" ) )
 						    .addQuotedAttribute( "generator", clazz.getClassName()+"IdGenerator" );
 						idResult.append(builder.getResult());
 
-						builder.resetAnnotation( importType("javax.persistence.SequenceGenerator") )
+						builder.resetAnnotation( importType("jakarta.persistence.SequenceGenerator") )
 							.addQuotedAttribute( "name", clazz.getClassName()+"IdGenerator" ) 
 							.addQuotedAttribute( "sequenceName", properties.getProperty(  org.hibernate.id.enhanced.SequenceStyleGenerator.SEQUENCE_PARAM, null ) );
 							//	TODO HA does not support initialValue and allocationSize
 						wholeString.append( builder.getResult() );
 					}
 					else if ( TableGenerator.class.getName().equals( strategy ) ) {
-						builder.resetAnnotation( importType("javax.persistence.GeneratedValue") )
-						.addAttribute( "strategy", staticImport("javax.persistence.GenerationType", "TABLE" ) )
+						builder.resetAnnotation( importType("jakarta.persistence.GeneratedValue") )
+						.addAttribute( "strategy", staticImport("jakarta.persistence.GenerationType", "TABLE" ) )
 					    .addQuotedAttribute( "generator", clazz.getClassName()+"IdGenerator" );
 						idResult.append(builder.getResult());
 						buildAnnTableGenerator( wholeString, properties );
 					}
 					else {
 						isGenericGenerator = true;
-						builder.resetAnnotation( importType("javax.persistence.GeneratedValue") );
+						builder.resetAnnotation( importType("jakarta.persistence.GeneratedValue") );
 						builder.addQuotedAttribute( "generator", clazz.getClassName()+"IdGenerator" );
 						idResult.append(builder.getResult());
 					}
 				} else {
-					builder.resetAnnotation( importType("javax.persistence.GeneratedValue") );
+					builder.resetAnnotation( importType("jakarta.persistence.GeneratedValue") );
 					idResult.append(builder.getResult());
 				}
 			}
@@ -302,7 +302,7 @@ public class EntityPOJOClass extends BasicPOJOClass {
 
 	private void buildAnnTableGenerator(StringBuffer wholeString, Properties properties) {
 
-		AnnotationBuilder builder = AnnotationBuilder.createAnnotation( importType("javax.persistence.TableGenerator") );
+		AnnotationBuilder builder = AnnotationBuilder.createAnnotation( importType("jakarta.persistence.TableGenerator") );
 		builder.addQuotedAttribute( "name", clazz.getClassName()+"IdGenerator" );
 		builder.addQuotedAttribute( "table", properties.getProperty( "generatorTableName", "hibernate_sequences" ) );
 		if ( ! isPropertyDefault( PersistentIdentifierGenerator.CATALOG, properties ) ) {
@@ -367,7 +367,7 @@ public class EntityPOJOClass extends BasicPOJOClass {
 		}
 		else {
 			Iterator<Selectable> columns = columnIterator;
-			annotations.append("@").append( importType("javax.persistence.JoinColumns") ).append("( { " );
+			annotations.append("@").append( importType("jakarta.persistence.JoinColumns") ).append("( { " );
 			buildArrayOfJoinColumnAnnotation( columns, referencedColumnsIterator, annotations, insertable, updatable );
 			annotations.append( " } )" );
 		}
@@ -406,7 +406,7 @@ public class EntityPOJOClass extends BasicPOJOClass {
 		}
 		else {
 			Column column = (Column) selectable;
-			annotations.append("@").append( importType("javax.persistence.JoinColumn") )
+			annotations.append("@").append( importType("jakarta.persistence.JoinColumn") )
 					.append("(name=\"" ).append( column.getName() ).append( "\"" );
 					//TODO handle referenced column name, this is a hard one
 			        if(referencedColumn!=null) {
@@ -425,26 +425,26 @@ public class EntityPOJOClass extends BasicPOJOClass {
 		while ( st.hasMoreElements() ) {
 			String element = ( (String) st.nextElement() ).toLowerCase();
 			if ( "persist".equals( element ) ) {
-				types.add(importType( "javax.persistence.CascadeType" ) + ".PERSIST");
+				types.add(importType( "jakarta.persistence.CascadeType" ) + ".PERSIST");
 			}
 			else if ( "merge".equals( element ) ) {
-				types.add(importType( "javax.persistence.CascadeType") + ".MERGE");
+				types.add(importType( "jakarta.persistence.CascadeType") + ".MERGE");
 			}
 			else if ( "delete".equals( element ) ) {
-				types.add(importType( "javax.persistence.CascadeType") + ".REMOVE");
+				types.add(importType( "jakarta.persistence.CascadeType") + ".REMOVE");
 			}
 			else if ( "refresh".equals( element ) ) {
-				types.add(importType( "javax.persistence.CascadeType") + ".REFRESH");
+				types.add(importType( "jakarta.persistence.CascadeType") + ".REFRESH");
 			}
 			else if ( "all".equals( element ) ) {
-				types.add(importType( "javax.persistence.CascadeType") + ".ALL");
+				types.add(importType( "jakarta.persistence.CascadeType") + ".ALL");
 			}
 		}
 		return (String[]) types.toArray( new String[types.size()] );
 	}
 
 	public String generateManyToOneAnnotation(Property property) {
-		StringBuffer buffer = new StringBuffer(AnnotationBuilder.createAnnotation( importType("javax.persistence.ManyToOne") )
+		StringBuffer buffer = new StringBuffer(AnnotationBuilder.createAnnotation( importType("jakarta.persistence.ManyToOne") )
 				.addAttribute( "cascade", getCascadeTypes(property))
 				.addAttribute( "fetch", getFetchType(property))
 				.getResult());
@@ -476,7 +476,7 @@ public class EntityPOJOClass extends BasicPOJOClass {
 
 		boolean pkIsAlsoFk = isSharedPkBasedOneToOne(oneToOne);
 
-		AnnotationBuilder ab = AnnotationBuilder.createAnnotation( importType("javax.persistence.OneToOne") )
+		AnnotationBuilder ab = AnnotationBuilder.createAnnotation( importType("jakarta.persistence.OneToOne") )
 			.addAttribute( "cascade", getCascadeTypes(property))
 			.addAttribute( "fetch", getFetchType(property));
 
@@ -488,7 +488,7 @@ public class EntityPOJOClass extends BasicPOJOClass {
 		buffer.append(getHibernateCascadeTypeAnnotation(property));
 
 		if ( pkIsAlsoFk && oneToOne.getForeignKeyType().equals(ForeignKeyDirection.FROM_PARENT) ){
-			AnnotationBuilder ab1 = AnnotationBuilder.createAnnotation( importType("javax.persistence.PrimaryKeyJoinColumn") );
+			AnnotationBuilder ab1 = AnnotationBuilder.createAnnotation( importType("jakarta.persistence.PrimaryKeyJoinColumn") );
 			buffer.append(ab1.getResult());
 		}
 
@@ -538,7 +538,7 @@ public class EntityPOJOClass extends BasicPOJOClass {
 
 	public String getFetchType(Property property) {
 		Value value = property.getValue();
-		String fetchType = importType( "javax.persistence.FetchType");
+		String fetchType = importType( "jakarta.persistence.FetchType");
 		boolean lazy = false;
 		if ( value instanceof ToOne ) {
 			lazy = ( (ToOne) value ).isLazy();
@@ -569,7 +569,7 @@ public class EntityPOJOClass extends BasicPOJOClass {
 			Collection collection = (Collection) value;
 			if ( collection.isOneToMany() ) {
 				String mappedBy = null;
-				AnnotationBuilder ab = AnnotationBuilder.createAnnotation( importType( "javax.persistence.OneToMany") );
+				AnnotationBuilder ab = AnnotationBuilder.createAnnotation( importType( "jakarta.persistence.OneToMany") );
 				ab.addAttribute( "cascade", getCascadeTypes( property ) );
 				ab.addAttribute( "fetch", getFetchType (property) );
 				if ( collection.isInverse() ) {
@@ -584,7 +584,7 @@ public class EntityPOJOClass extends BasicPOJOClass {
 				//TODO do the @OneToMany @JoinTable
 				//TODO composite element
 				String mappedBy = null;
-				AnnotationBuilder ab = AnnotationBuilder.createAnnotation( importType( "javax.persistence.ManyToMany") );
+				AnnotationBuilder ab = AnnotationBuilder.createAnnotation( importType( "jakarta.persistence.ManyToMany") );
 				ab.addAttribute( "cascade", getCascadeTypes( property ) );
 				ab.addAttribute( "fetch", getFetchType (property) );
 
@@ -595,7 +595,7 @@ public class EntityPOJOClass extends BasicPOJOClass {
 				annotation.append(ab.getResult());
 				if (mappedBy == null) {
 					annotation.append("\n    @");
-					annotation.append( importType( "javax.persistence.JoinTable") ).append( "(name=\"" );
+					annotation.append( importType( "jakarta.persistence.JoinTable") ).append( "(name=\"" );
 					Table table = collection.getCollectionTable();
 
 					annotation.append( table.getName() );

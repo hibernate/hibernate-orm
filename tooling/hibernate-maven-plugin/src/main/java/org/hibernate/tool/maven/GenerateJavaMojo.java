@@ -43,7 +43,7 @@ public class GenerateJavaMojo extends AbstractGenerationMojo {
     @Parameter(defaultValue = "${project.build.directory}/generated-sources/")
     private File outputDirectory;
 
-    /** Code will contain EJB 3 features, e.g. using annotations from javax.persistence
+    /** Code will contain JPA features, e.g. using annotations from jakarta.persistence
      * and org.hibernate.annotations. */
     @Parameter(defaultValue = "false")
     private boolean ejb3;

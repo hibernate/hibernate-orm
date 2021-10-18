@@ -288,6 +288,17 @@ public class DefaultLoadEventListener implements LoadEventListener {
 
 				// specialized handling for entities with subclasses with a HibernateProxy factory
 				if ( entityMetamodel.hasSubclasses() ) {
+					final Object cachedEntity = CacheEntityLoaderHelper.INSTANCE.loadFromSecondLevelCache(
+							session,
+							null,
+							LockMode.NONE,
+							persister,
+							keyToLoad
+					);
+
+					if ( cachedEntity != null ) {
+						return cachedEntity;
+					}
 					// entities with subclasses that define a ProxyFactory can create a HibernateProxy
 					return createProxy( event, persister, keyToLoad, persistenceContext );
 				}
@@ -314,6 +325,19 @@ public class DefaultLoadEventListener implements LoadEventListener {
 				}
 
 				if ( options.isAllowProxyCreation() ) {
+					if ( entityMetamodel.hasSubclasses() ) {
+						final Object cachedEntity = CacheEntityLoaderHelper.INSTANCE.loadFromSecondLevelCache(
+								session,
+								null,
+								LockMode.NONE,
+								persister,
+								keyToLoad
+						);
+
+						if ( cachedEntity != null ) {
+							return cachedEntity;
+						}
+					}
 					return createProxyIfNecessary( event, persister, keyToLoad, options, persistenceContext );
 				}
 			}

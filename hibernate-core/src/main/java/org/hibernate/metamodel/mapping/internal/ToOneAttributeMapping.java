@@ -98,6 +98,7 @@ public class ToOneAttributeMapping
 	private final boolean isConstrained;
 	private final boolean isIgnoreNotFound;
 	private final boolean unwrapProxy;
+	private final boolean isOptional;
 	private final EntityMappingType entityMappingType;
 
 	private final String referencedPropertyName;
@@ -113,11 +114,6 @@ public class ToOneAttributeMapping
 	private String identifyingColumnsTableExpression;
 	private boolean canUseParentTableGroup;
 
-	private boolean isInternalLoadNullable;
-
-	public boolean isInternalLoadNullable(){
-		return isInternalLoadNullable;
-	}
 
 	public ToOneAttributeMapping(
 			String name,
@@ -199,7 +195,7 @@ public class ToOneAttributeMapping
 			else {
 				this.bidirectionalAttributeName = referencedPropertyName;
 			}
-			isInternalLoadNullable = ( (ManyToOne) bootValue ).isIgnoreNotFound();
+			isOptional = ( (ManyToOne) bootValue ).isIgnoreNotFound();
 		}
 		else {
 			assert bootValue instanceof OneToOne;
@@ -265,7 +261,7 @@ public class ToOneAttributeMapping
 				this.bidirectionalAttributeName = bidirectionalAttributeName;
 			}
 			isIgnoreNotFound = isNullable();
-			isInternalLoadNullable = ! bootValue.isConstrained();
+			isOptional = ! bootValue.isConstrained();
 		}
 		isConstrained = bootValue.isConstrained();
 
@@ -344,6 +340,7 @@ public class ToOneAttributeMapping
 		this.navigableRole = original.navigableRole;
 		this.sqlAliasStem = original.sqlAliasStem;
 		this.isNullable = original.isNullable;
+		this.isOptional = original.isOptional;
 		this.isIgnoreNotFound = original.isIgnoreNotFound;
 		this.unwrapProxy = original.unwrapProxy;
 		this.entityMappingType = original.entityMappingType;
@@ -1051,6 +1048,10 @@ public class ToOneAttributeMapping
 
 	public boolean isNullable() {
 		return isNullable;
+	}
+
+	public boolean isOptional(){
+		return isOptional;
 	}
 
 	public boolean isConstrained(){

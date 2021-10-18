@@ -83,7 +83,7 @@ public class EntityDelayedFetchInitializer extends AbstractFetchParentAccess imp
 				entityInstance = loadingEntityLocally.getEntityInstance();
 			}
 			else {
-				if ( referencedModelPart.isInternalLoadNullable() ) {
+				if ( referencedModelPart.isOptional() ) {
 					entityInstance = LazyPropertyInitializer.UNFETCHED_PROPERTY;
 				}
 				else {

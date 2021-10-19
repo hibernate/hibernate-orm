@@ -26,6 +26,7 @@ import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -41,8 +42,8 @@ public class FinalFieldEnhancementTest extends BaseCoreFunctionalTestCase {
 		};
 	}
 
-	@Before
-	public void checkBytebuddy() {
+	@BeforeClass
+	public static void checkBytebuddy() {
 		String byteCodeProvider = Environment.getProperties().getProperty( AvailableSettings.BYTECODE_PROVIDER );
 		// skip the test if the bytecode provider is Javassist
 		Assume.assumeTrue( "This test will only pass with Bytebuddy bytecode enhancement (currently using '"

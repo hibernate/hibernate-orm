@@ -49,6 +49,7 @@ import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.AbstractSharedSessionContract;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.jpa.spi.NativeQueryTupleTransformer;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
@@ -1064,6 +1065,9 @@ public class NativeQueryImpl<R>
 		}
 		else if ( value instanceof LockModeType ) {
 			applyLockModeTypeHint( (LockModeType) value );
+		}
+		else if ( String.class.isInstance( value ) ) {
+			applyHibernateLockModeHint( LockModeTypeHelper.interpretLockMode( value ) );
 		}
 		else {
 			throw new IllegalArgumentException(

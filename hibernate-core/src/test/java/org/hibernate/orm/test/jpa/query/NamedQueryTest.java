@@ -16,8 +16,10 @@ import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.Query;
 
+import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.jpa.QueryHints;
 import org.hibernate.query.NativeQuery;
 
 import org.hibernate.testing.TestForIssue;
@@ -190,6 +192,18 @@ public class NamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 					() -> entityManager.createNamedQuery( "NamedNativeQuery", Game.class )
 			);
 		} );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-14816")
+	public void testQueryHintLockMode() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+					 Query query = entityManager.createNamedQuery( "NamedNativeQuery" );
+					 query.setHint( QueryHints.HINT_NATIVE_LOCKMODE, "none" );
+					 query.setParameter( 1, GAME_TITLES[0] );
+					 assertEquals( LockMode.NONE, query.getHints().get( QueryHints.HINT_NATIVE_LOCKMODE ) );
+				 }
+		);
 	}
 
 	@Entity(name = "Game")

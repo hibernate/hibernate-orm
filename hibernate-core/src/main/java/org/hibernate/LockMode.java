@@ -148,6 +148,12 @@ public enum LockMode {
 		}
 
 		for ( LockMode lockMode : LockMode.values() ) {
+			if ( lockMode.externalForm.equals( externalForm ) ) {
+				return lockMode;
+			}
+		}
+
+		for ( LockMode lockMode : LockMode.values() ) {
 			if ( lockMode.externalForm.equalsIgnoreCase( externalForm ) ) {
 				return lockMode;
 			}

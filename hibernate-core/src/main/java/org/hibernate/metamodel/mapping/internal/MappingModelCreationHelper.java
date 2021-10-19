@@ -956,7 +956,7 @@ public class MappingModelCreationHelper {
 		}
 	}
 
-	public static void interpretToOneKeyDescriptor(
+	public static boolean interpretToOneKeyDescriptor(
 			ToOneAttributeMapping attributeMapping,
 			Property bootProperty,
 			ToOne bootValueMapping,
@@ -965,7 +965,7 @@ public class MappingModelCreationHelper {
 			MappingModelCreationProcess creationProcess) {
 		if ( attributeMapping.getForeignKeyDescriptor() != null ) {
 			// already built/known
-			return;
+			return true;
 		}
 
 		final String tableName = getTableIdentifierExpression( bootValueMapping.getTable(), creationProcess );
@@ -990,6 +990,14 @@ public class MappingModelCreationHelper {
 		}
 
 		if ( referencedPropertyName != null  ) {
+			if ( referencedPropertyName.indexOf( "." ) > 0 ) {
+				return interpretNestedToOneKeyDescriptor(
+						referencedEntityDescriptor,
+						referencedPropertyName,
+						attributeMapping
+				);
+			}
+
 			final ModelPart modelPart = referencedEntityDescriptor.findSubPart( referencedPropertyName );
 			if ( modelPart instanceof ToOneAttributeMapping ) {
 				setReferencedAttributeForeignKeyDescriptor(
@@ -1017,7 +1025,7 @@ public class MappingModelCreationHelper {
 								bootProperty.getPersistentClass().getEntityName() + " -> " + bootProperty.getName()
 				);
 			}
-			return;
+			return true;
 		}
 
 		final ModelPart fkTarget;
@@ -1100,6 +1108,50 @@ public class MappingModelCreationHelper {
 							bootProperty.getPersistentClass().getEntityName() + " -> " + bootProperty.getName()
 			);
 		}
+
+		return true;
+	}
+
+	private static boolean interpretNestedToOneKeyDescriptor(
+			EntityPersister referencedEntityDescriptor,
+			String referencedPropertyName,
+			ToOneAttributeMapping attributeMapping) {
+		String[] propertyPath = StringHelper.split( ".", referencedPropertyName );
+		EmbeddableValuedModelPart lastEmbeddableModelPart = null;
+
+		for ( int i = 0; i < propertyPath.length; i++ ) {
+			String path = propertyPath[i];
+			ModelPart modelPart;
+
+			if ( i == 0 ) {
+				modelPart = referencedEntityDescriptor.findSubPart( path );
+			}
+			else {
+				modelPart = lastEmbeddableModelPart.findSubPart( path, null );
+			}
+
+			if ( modelPart == null ) {
+				return false;
+			}
+			if ( modelPart instanceof ToOneAttributeMapping ) {
+				ToOneAttributeMapping referencedAttributeMapping = (ToOneAttributeMapping) modelPart;
+				ForeignKeyDescriptor foreignKeyDescriptor = referencedAttributeMapping.getForeignKeyDescriptor();
+				if ( foreignKeyDescriptor == null ) {
+					return false;
+				}
+
+				attributeMapping.setForeignKeyDescriptor( foreignKeyDescriptor );
+				return true;
+			}
+			if ( modelPart instanceof EmbeddableValuedModelPart ) {
+				lastEmbeddableModelPart = (EmbeddableValuedModelPart) modelPart;
+			}
+			else {
+				return false;
+			}
+		}
+
+		return false;
 	}
 
 	public static EmbeddedForeignKeyDescriptor buildEmbeddableForeignKeyDescriptor(
@@ -1571,7 +1623,7 @@ public class MappingModelCreationHelper {
 								.getJdbcServices()
 								.getDialect();
 
-						MappingModelCreationHelper.interpretToOneKeyDescriptor(
+						return MappingModelCreationHelper.interpretToOneKeyDescriptor(
 								attributeMapping,
 								bootProperty,
 								(ToOne) bootProperty.getValue(),
@@ -1579,7 +1631,6 @@ public class MappingModelCreationHelper {
 								dialect,
 								creationProcess
 						);
-						return true;
 					}
 			);
 			return attributeMapping;

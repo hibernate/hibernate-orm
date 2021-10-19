@@ -158,7 +158,7 @@ public class SubselectFetchCollectionFromBatchTest {
 
 		scope.inTransaction( (s) -> {
 			List<EmployeeGroup> results = s
-					.createQuery( "from SubselectFetchCollectionFromBatchTest$EmployeeGroup where id in :groups" )
+					.createQuery( "from EmployeeGroup where id in :groups" )
 					.setParameterList( "groups", createdIds )
 					.list();
 
@@ -320,7 +320,7 @@ public class SubselectFetchCollectionFromBatchTest {
 		} );
 	}
 
-	@Entity
+	@Entity(name = "EmployeeGroup")
 	@Table(name = "EmployeeGroup")
 	@BatchSize(size = 1000)
 	public static class EmployeeGroup {
@@ -337,7 +337,7 @@ public class SubselectFetchCollectionFromBatchTest {
 		@OneToMany(cascade = CascadeType.ALL)
 		@Fetch(FetchMode.SUBSELECT)
 		@JoinTable(name="EmployeeGroup_employees")
-		private List<Employee> employees = new ArrayList<Employee>();
+		private List<Employee> employees = new ArrayList<>();
 
 		public EmployeeGroup(long id) {
 			this.id = id;
@@ -382,7 +382,7 @@ public class SubselectFetchCollectionFromBatchTest {
 	}
 
 
-	@Entity
+	@Entity(name="Employee")
 	@Table(name = "Employee")
 	public static class Employee {
 		@Id
@@ -392,7 +392,7 @@ public class SubselectFetchCollectionFromBatchTest {
 
 		@OneToMany(cascade = CascadeType.ALL)
 		@Fetch(FetchMode.SUBSELECT)
-		private List<Employee> collaborators = new ArrayList<Employee>();
+		private List<Employee> collaborators = new ArrayList<>();
 
 		public String getName() {
 			return name;

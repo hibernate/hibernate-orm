@@ -16,6 +16,7 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
+import org.hibernate.sql.ast.tree.predicate.LikePredicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -143,6 +144,34 @@ public class PostgreSQLSqlAstTranslator<T extends JdbcOperation> extends Abstrac
 		}
 		else {
 			expression.accept( this );
+		}
+	}
+
+	@Override
+	public void visitLikePredicate(LikePredicate likePredicate) {
+		// We need a custom implementation here because PostgreSQL
+		// uses the backslash character as default escape character
+		// According to the documentation, we can overcome this by specifying an empty escape character
+		// See https://www.postgresql.org/docs/current/functions-matching.html#FUNCTIONS-LIKE
+		likePredicate.getMatchExpression().accept( this );
+		if ( likePredicate.isNegated() ) {
+			appendSql( " not" );
+		}
+		if ( likePredicate.isCaseSensitive() ) {
+			appendSql( " like " );
+		}
+		else {
+			appendSql( WHITESPACE );
+			appendSql( getDialect().getCaseInsensitiveLike() );
+			appendSql( WHITESPACE );
+		}
+		likePredicate.getPattern().accept( this );
+		if ( likePredicate.getEscapeCharacter() != null ) {
+			appendSql( " escape " );
+			likePredicate.getEscapeCharacter().accept( this );
+		}
+		else {
+			appendSql( " escape ''" );
 		}
 	}
 

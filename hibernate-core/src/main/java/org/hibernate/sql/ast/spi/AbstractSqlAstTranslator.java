@@ -4385,12 +4385,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					appendSql( " escape " );
 					likePredicate.getEscapeCharacter().accept( this );
 				}
-
 			}
 			else {
 				renderCaseInsensitiveLikeEmulation(likePredicate.getMatchExpression(), likePredicate.getPattern(), likePredicate.getEscapeCharacter(), likePredicate.isNegated());
 			}
-
 		}
 	}
 

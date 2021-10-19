@@ -43,21 +43,5 @@ public interface EntityInitializer extends FetchParentAccess {
 		return getEntityInstance();
 	}
 
-	/**
-	 * For an EntityInitializer, the FetchParent reference would be
-	 * the loading entity instance.
-	 *
-	 * @apiNote This default simply delegates to {@link #getEntityInstance}
-	 * and therefore has the same timing limitations discussed there
-	 */
-	@Override
-	default Object getFetchParentInstance() {
-		final Object entityInstance = getEntityInstance();
-		if ( entityInstance == null ) {
-			throw new IllegalStateException( "Unexpected state condition - entity instance not yet resolved" );
-		}
-		return entityInstance;
-	}
-
 	EntityKey getEntityKey();
 }

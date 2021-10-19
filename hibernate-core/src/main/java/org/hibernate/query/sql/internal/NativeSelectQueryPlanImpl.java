@@ -192,7 +192,7 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 				jdbcSelect,
 				scrollMode,
 				jdbcParameterBindings,
-				new SqmJdbcExecutionContextAdapter( executionContext, jdbcSelect ),
+				new SqmJdbcExecutionContextAdapter( executionContext, executionContext.getQueryOptions() ),
 				null
 		);
 	}

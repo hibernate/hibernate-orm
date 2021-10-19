@@ -283,27 +283,18 @@ public class MultiIdLoaderStandard<T> implements MultiIdEntityLoader<T> {
 		final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory, sqlAst )
 				.translate( jdbcParameterBindings, QueryOptions.NONE );
 
-		final LoadingEntityCollector loadingEntityCollector;
-
+		final SubselectFetch.RegistrationHandler subSelectFetchableKeysHandler;
 		if ( entityDescriptor.hasSubselectLoadableCollections() ) {
-			loadingEntityCollector = new LoadingEntityCollector(
-					entityDescriptor,
-					sqlAst.getQuerySpec(),
+			subSelectFetchableKeysHandler = SubselectFetch.createRegistrationHandler(
+					session.getPersistenceContext().getBatchFetchQueue(),
+					sqlAst,
 					jdbcParameters,
-					jdbcParameterBindings,
-					session.getPersistenceContext().getBatchFetchQueue()
+					jdbcParameterBindings
 			);
 		}
 		else {
-			loadingEntityCollector = null;
+			subSelectFetchableKeysHandler = null;
 		}
-
-		final SubselectFetch.RegistrationHandler subSelectFetchableKeysHandler = SubselectFetch.createRegistrationHandler(
-				session.getPersistenceContext().getBatchFetchQueue(),
-				sqlAst,
-				jdbcParameters,
-				jdbcParameterBindings
-		);
 
 		List<T> list = JdbcSelectExecutorStandardImpl.INSTANCE.list(
 				jdbcSelect,
@@ -336,7 +327,9 @@ public class MultiIdLoaderStandard<T> implements MultiIdEntityLoader<T> {
 
 					@Override
 					public void registerLoadingEntityEntry(EntityKey entityKey, LoadingEntityEntry entry) {
-						subSelectFetchableKeysHandler.addKey( entityKey );
+						if ( subSelectFetchableKeysHandler != null ) {
+							subSelectFetchableKeysHandler.addKey( entityKey );
+						}
 					}
 				},
 				RowTransformerPassThruImpl.instance(),

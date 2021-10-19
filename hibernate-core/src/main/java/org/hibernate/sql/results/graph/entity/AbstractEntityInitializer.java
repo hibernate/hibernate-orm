@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.hibernate.HibernateException;
@@ -88,6 +89,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	private EntityPersister concreteDescriptor;
 	private EntityKey entityKey;
 	private Object entityInstance;
+	private Object entityInstanceForNotify;
 	private boolean missing;
 	private Object[] resolvedEntityState;
 
@@ -269,12 +271,12 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	}
 
 	@Override
-	public Object getFetchParentInstance() {
-		if ( entityInstance == null ) {
-			throw new IllegalStateException( "Unexpected state condition - entity instance not yet resolved" );
+	public void registerResolutionListener(Consumer<Object> listener) {
+		if ( entityInstanceForNotify != null ) {
+			listener.accept( entityInstanceForNotify );
+			return;
 		}
-
-		return getEntityInstance();
+		super.registerResolutionListener( listener );
 	}
 
 	// todo (6.0) : how to best handle possibility of null association?
@@ -637,7 +639,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		if ( missing ) {
 			return;
 		}
-		notifyParentResolutionListeners( entityInstance );
+
 		preLoad( rowProcessingState );
 
 		final SharedSessionContractImplementor session = rowProcessingState.getJdbcValuesSourceProcessingState().getSession();
@@ -648,6 +650,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			if ( !hibernateLazyInitializer.isUninitialized() ) {
 				return;
 			}
+
 			Object instance = persistenceContext.getEntity( entityKey );
 			if ( instance == null ) {
 				instance = resolveInstance(
@@ -658,11 +661,16 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				);
 				initializeEntity( instance, rowProcessingState, session, persistenceContext );
 			}
+
 			hibernateLazyInitializer.setImplementation( instance );
+			entityInstanceForNotify = instance;
 		}
 		else {
 			initializeEntity( entityInstance, rowProcessingState, session, persistenceContext );
+			entityInstanceForNotify = entityInstance;
 		}
+
+		notifyParentResolutionListeners( entityInstanceForNotify );
 	}
 
 	private void initializeEntity(
@@ -926,6 +934,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		concreteDescriptor = null;
 		entityKey = null;
 		entityInstance = null;
+		entityInstanceForNotify = null;
 		missing = false;
 		resolvedEntityState = null;
 		identifierInitializers.forEach( initializer -> initializer.finishUpRow( rowProcessingState ) );

@@ -92,7 +92,6 @@ public class CollectionLoaderSubSelectFetch implements CollectionLoader {
 		final SubselectFetch registeredFetch = batchFetchQueue.getSubselect( triggerKeyOwnerKey );
 		List<PersistentCollection<?>> subSelectFetchedCollections = null;
 		if ( registeredFetch != null ) {
-			batchFetchQueue.removeSubselect( triggerKeyOwnerKey );
 			subSelectFetchedCollections = CollectionHelper.arrayList( registeredFetch.getResultingEntityKeys().size() );
 
 			// there was one, so we want to make sure to prepare the corresponding collection
@@ -100,8 +99,6 @@ public class CollectionLoaderSubSelectFetch implements CollectionLoader {
 			final Iterator<EntityKey> itr = registeredFetch.getResultingEntityKeys().iterator();
 			while ( itr.hasNext() ) {
 				final EntityKey key = itr.next();
-				batchFetchQueue.removeSubselect( key );
-				itr.remove();
 
 				final PersistentCollection<?> containedCollection = persistenceContext.getCollection(
 						new CollectionKey( attributeMapping.getCollectionDescriptor(), key.getIdentifier() )

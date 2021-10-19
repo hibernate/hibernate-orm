@@ -15,6 +15,7 @@ import java.lang.annotation.Target;
 import org.hibernate.Interceptor;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 
+import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -48,4 +49,11 @@ public @interface SessionFactory {
 	Class<? extends Interceptor> interceptorClass() default Interceptor.class;
 
 	Class<? extends StatementInspector> statementInspectorClass() default StatementInspector.class;
+
+	/**
+	 * Short hand for {@code statementInspectorClass = org.hibernate.testing.jdbc.SQLStatementInspector.class}
+	 *
+	 * @see SQLStatementInspector
+	 */
+	boolean useCollectingStatementInspector() default false;
 }

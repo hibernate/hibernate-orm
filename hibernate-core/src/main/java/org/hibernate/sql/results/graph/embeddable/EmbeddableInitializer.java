@@ -24,9 +24,4 @@ public interface EmbeddableInitializer extends FetchParentAccess {
 	default Object getInitializedInstance() {
 		return getCompositeInstance();
 	}
-
-	@Override
-	default Object getFetchParentInstance() {
-		return getCompositeInstance();
-	}
 }

@@ -600,11 +600,6 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		}
 
 		@Override
-		public Object getFetchParentInstance() {
-			return null;
-		}
-
-		@Override
 		public NavigablePath getNavigablePath() {
 			return navigablePath;
 		}

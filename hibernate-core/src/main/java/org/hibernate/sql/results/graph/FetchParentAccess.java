@@ -11,22 +11,25 @@ import java.util.function.Consumer;
 import org.hibernate.query.NavigablePath;
 
 /**
- * Serves as a link to a fetch's parent providing access to the parent
- * instance in relation to the current "row" being processed.
+ * Provides access to information about the owner/parent of a fetch
+ * in relation to the current "row" being processed.
  *
  * @author Steve Ebersole
  */
 public interface FetchParentAccess extends Initializer {
+	/**
+	 * Find the first entity access up the fetch parent graph
+	 */
 	FetchParentAccess findFirstEntityDescriptorAccess();
 
 	Object getParentKey();
 
-	/**
-	 * Access to the fetch's parent instance.
-	 */
-	Object getFetchParentInstance();
-
 	NavigablePath getNavigablePath();
 
+	/**
+	 * Register a listener to be notified when the parent is "resolved"
+	 *
+	 * @apiNote If already resolved, the callback is triggered immediately
+	 */
 	void registerResolutionListener(Consumer<Object> resolvedParentConsumer);
 }

@@ -145,18 +145,9 @@ public class MultiNaturalIdLoadingBatcher {
 	}
 
 	private <E> List<E> performLoad(JdbcParameterBindings jdbcParamBindings, SharedSessionContractImplementor session) {
-		final LoadingEntityCollector loadingEntityCollector;
 		final SubselectFetch.RegistrationHandler subSelectFetchableKeysHandler;
 
 		if ( entityDescriptor.getEntityPersister().hasSubselectLoadableCollections() ) {
-			loadingEntityCollector = new LoadingEntityCollector(
-					entityDescriptor,
-					sqlSelect.getQuerySpec(),
-					jdbcParameters,
-					jdbcParamBindings,
-					session.getPersistenceContext().getBatchFetchQueue()
-			);
-
 			subSelectFetchableKeysHandler = SubselectFetch.createRegistrationHandler(
 					session.getPersistenceContext().getBatchFetchQueue(),
 					sqlSelect,
@@ -167,7 +158,6 @@ public class MultiNaturalIdLoadingBatcher {
 
 		}
 		else {
-			loadingEntityCollector = null;
 			subSelectFetchableKeysHandler = null;
 		}
 

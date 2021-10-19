@@ -1,6 +1,13 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ */
+
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
  * Copyright (c) 2006-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
@@ -21,7 +28,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.orm.test.mapping.collections.subselectfetch;
+package org.hibernate.orm.test.mapping.fetch.subselect;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,13 +41,13 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
-
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.CascadeType;
@@ -53,6 +60,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -63,12 +71,11 @@ import static org.junit.Assert.assertTrue;
  */
 @ServiceRegistry( settings = @Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ) )
 @DomainModel( annotatedClasses = { SubselectFetchCollectionFromBatchTest.EmployeeGroup.class, SubselectFetchCollectionFromBatchTest.Employee.class } )
-@SessionFactory
+@SessionFactory( useCollectingStatementInspector = true )
 public class SubselectFetchCollectionFromBatchTest {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-10679")
-	@NotImplementedYet( strict = false, reason = "Need to check why these fail" )
 	public void testSubselectFetchFromEntityBatch(SessionFactoryScope scope) {
 		final EmployeeGroup[] createdGroups = scope.fromTransaction( (s) -> {
 			EmployeeGroup group1 = new EmployeeGroup();
@@ -88,7 +95,8 @@ public class SubselectFetchCollectionFromBatchTest {
 			return new EmployeeGroup[] { group1, group2 };
 		});
 
-		scope.getSessionFactory().getStatistics().clear();
+		final SQLStatementInspector statementInspector = scope.getStatementInspector( SQLStatementInspector.class );
+		statementInspector.clear();
 
 		scope.inTransaction( (s) -> {
 			EmployeeGroup[] loadedGroups = new EmployeeGroup[] {
@@ -96,50 +104,33 @@ public class SubselectFetchCollectionFromBatchTest {
 					s.load(EmployeeGroup.class, createdGroups[1].getId())
 			};
 
-			// loadedGroups should only contain proxies
-			assertEquals( 0, scope.getSessionFactory().getStatistics().getPrepareStatementCount() );
-
+			// there should have been no SQL queries performed and loadedGroups should only contain proxies
+			assertThat( statementInspector.getSqlQueries() ).hasSize( 0 );
 			for (EmployeeGroup group : loadedGroups) {
 				assertFalse( Hibernate.isInitialized( group ) );
 			}
 
-			assertEquals( 0, scope.getSessionFactory().getStatistics().getPrepareStatementCount() );
+			// because EmployeeGroup defines batch fetching, both of the EmployeeGroup references
+			// should get initialized when we initialize one of them
+			Hibernate.initialize( loadedGroups[0] );
+			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
+			assertThat( Hibernate.isInitialized( loadedGroups[0] ) ).isTrue();
+			assertThat( Hibernate.isInitialized( loadedGroups[1] ) ).isTrue();
 
-			for ( EmployeeGroup group : loadedGroups ) {
-				// Both loadedGroups get initialized  and are added to the PersistenceContext when i == 0;
-				// Still need to call Hibernate.initialize( loadedGroups[i] ) for i > 0 so that the entity
-				// in the PersistenceContext gets assigned to its respective proxy target (is this a
-				// bug???)
-				Hibernate.initialize( group );
-				assertTrue( Hibernate.isInitialized( group ) );
-				// the collections should be uninitialized
-				assertFalse( Hibernate.isInitialized( group.getEmployees() ) );
-			}
+			// their collections however should still be unintialized
+			assertThat( Hibernate.isInitialized( loadedGroups[0].getEmployees() ) ).isFalse();
+			assertThat( Hibernate.isInitialized( loadedGroups[1].getEmployees() ) ).isFalse();
 
-			// both Group proxies should have been loaded in the same batch;
-			assertEquals( 1, scope.getSessionFactory().getStatistics().getPrepareStatementCount() );
-			scope.getSessionFactory().getStatistics().clear();
-
-			for ( EmployeeGroup group : loadedGroups ) {
-				assertTrue( Hibernate.isInitialized( group ) );
-				assertFalse( Hibernate.isInitialized( group.getEmployees() ) );
-			}
-
-			assertEquals( 0, scope.getSessionFactory().getStatistics().getPrepareStatementCount() );
+			statementInspector.clear();
 
 			// now initialize the collection in the first; collections in both loadedGroups
 			// should get initialized
 			Hibernate.initialize( loadedGroups[0].getEmployees() );
+			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
 
-			assertEquals( 1, scope.getSessionFactory().getStatistics().getPrepareStatementCount() );
-			scope.getSessionFactory().getStatistics().clear();
-
-			// all collections should be initialized now
-			for (EmployeeGroup group : loadedGroups) {
-				assertTrue( Hibernate.isInitialized( group.getEmployees() ) );
-			}
-
-			assertEquals( 0, scope.getSessionFactory().getStatistics().getPrepareStatementCount() );
+			// both collections should be initialized
+			assertThat( Hibernate.isInitialized( loadedGroups[0].getEmployees() ) ).isTrue();
+			assertThat( Hibernate.isInitialized( loadedGroups[1].getEmployees() ) ).isTrue();
 		} );
 	}
 
@@ -200,7 +191,7 @@ public class SubselectFetchCollectionFromBatchTest {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-10679")
-	@NotImplementedYet( strict = false, reason = "Need to check why these fail" )
+	@NotImplementedYet( strict = false, reason = "Need to check why this fails" )
 	public void testMultiSubselectFetchSamePersisterQueryList(SessionFactoryScope scope) {
 		final Long[] createdIds = scope.fromTransaction( (s) -> {
 			EmployeeGroup group1 = new EmployeeGroup();

@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.orm.test.mapping.collections.subselectfetch;
+package org.hibernate.orm.test.mapping.fetch.subselect;
 
 import java.util.HashSet;
 import java.util.List;
@@ -32,65 +32,45 @@ import jakarta.persistence.Table;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * @author Steve Ebersole
+ * Continuation of {@link SimpleEagerSubSelectFetchTests} testing
+ * sub-select fetching of multiple collections for the same owner.
+ *
+ * Tests that the {@link org.hibernate.engine.spi.SubselectFetch} entries
+ * and its matching keys are not prematurely purged from the
+ * {@link org.hibernate.engine.spi.BatchFetchQueue} after loading the first
  */
 @DomainModel(annotatedClasses = {
-		SimpleEagerSubSelectFetchTests.Owner.class,
-		SimpleEagerSubSelectFetchTests.Thing.class
+		SimpleMultipleEagerSubSelectFetchTests.Owner.class,
+		SimpleMultipleEagerSubSelectFetchTests.Thing.class,
+		SimpleMultipleEagerSubSelectFetchTests.Trinket.class,
 })
 @SessionFactory( statementInspectorClass = SQLStatementInspector.class )
-public class SimpleEagerSubSelectFetchTests {
+public class SimpleMultipleEagerSubSelectFetchTests {
 
 	@Test
 	public void smokeTest(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
 
 		scope.inTransaction( (session) -> {
-			final List<Owner> misspelled = session.createQuery( "from Owner o where o.name like 'Onwer%'", Owner.class ).list();
+			final List<Owner> misspelled = session.createQuery( "from Owner o where o.name like 'Onwer%' order by o.id", Owner.class ).list();
 			assertThat( misspelled ).hasSize( 2 );
 
 			final Owner firstResult = misspelled.get( 0 );
 			final Owner secondResult = misspelled.get( 1 );
 
 			// make sure we got the right owners
-			assertThat( firstResult.getId() ).isLessThanOrEqualTo( 2 );
-			assertThat( secondResult.getId() ).isLessThanOrEqualTo( 2 );
+			assertThat( firstResult.getId() ).isEqualTo( 1 );
+			assertThat( secondResult.getId() ).isEqualTo( 2 );
 
-			// check that the one-to-many was loaded
+			// check that the one-to-manys were loaded
 			assertThat( Hibernate.isInitialized( firstResult.getThings() ) ).isTrue();
 			assertThat( Hibernate.isInitialized( secondResult.getThings() ) ).isTrue();
+			assertThat( Hibernate.isInitialized( firstResult.getTrinkets() ) ).isTrue();
+			assertThat( Hibernate.isInitialized( secondResult.getTrinkets() ) ).isTrue();
 
-			// the initial query + the "subselect" select
-			assertThat( statementInspector.getSqlQueries() ).hasSize( 2 );
-		} );
-	}
-
-	@Test
-	public void baselineJoinFetchTest(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
-		statementInspector.clear();
-
-		scope.inTransaction( (session) -> {
-			final List<Owner> misspelled = session.createQuery( "from Owner o left join fetch o.things where o.name like 'Onwer%'", Owner.class ).list();
-			assertThat( misspelled ).hasSize( 2 );
-
-			final Owner firstResult = misspelled.get( 0 );
-			final Owner secondResult = misspelled.get( 1 );
-
-			// make sure we got the right owners
-			assertThat( firstResult.getId() ).isLessThanOrEqualTo( 2 );
-			assertThat( secondResult.getId() ).isLessThanOrEqualTo( 2 );
-
-			// both one-to-many should be initialized
-			assertThat( Hibernate.isInitialized( firstResult.getThings() ) ).isTrue();
-			assertThat( Hibernate.isInitialized( secondResult.getThings() ) ).isTrue();
-
-			assertThat( firstResult.getThings().size() + secondResult.getThings().size() ).isEqualTo( 3 );
-
-			// the initial query with join
-			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
-			assertThat( statementInspector.getNumberOfJoins( 0 ) ).isEqualTo( 1 );
+			// the initial query + the 2 "subselect" selects
+			assertThat( statementInspector.getSqlQueries() ).hasSize( 3 );
 		} );
 	}
 
@@ -138,6 +118,10 @@ public class SimpleEagerSubSelectFetchTests {
 		@Fetch(FetchMode.SUBSELECT)
 		private Set<Thing> things = new HashSet<>();
 
+		@OneToMany(mappedBy = "owner", fetch = FetchType.EAGER)
+		@Fetch(FetchMode.SUBSELECT)
+		private Set<Trinket> trinkets = new HashSet<>();
+
 		private Owner() {
 		}
 
@@ -165,6 +149,14 @@ public class SimpleEagerSubSelectFetchTests {
 		public void setThings(Set<Thing> things) {
 			this.things = things;
 		}
+
+		public Set<Trinket> getTrinkets() {
+			return trinkets;
+		}
+
+		public void setTrinkets(Set<Trinket> trinkets) {
+			this.trinkets = trinkets;
+		}
 	}
 
 	@Entity(name = "Thing")
@@ -185,6 +177,47 @@ public class SimpleEagerSubSelectFetchTests {
 			this.name = name;
 			this.owner = owner;
 			owner.getThings().add( this );
+		}
+
+		public Integer getId() {
+			return id;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		public Owner getOwner() {
+			return owner;
+		}
+
+		public void setOwner(Owner owner) {
+			this.owner = owner;
+		}
+	}
+
+	@Entity(name = "Trinket")
+	@Table(name = "t_sub_fetch_thing")
+	public static class Trinket {
+		@Id
+		private Integer id;
+		private String name;
+
+		@ManyToOne
+		private Owner owner;
+
+		private Trinket() {
+		}
+
+		public Trinket(Integer id, String name, Owner owner) {
+			this.id = id;
+			this.name = name;
+			this.owner = owner;
+			owner.getTrinkets().add( this );
 		}
 
 		public Integer getId() {

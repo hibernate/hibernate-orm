@@ -28,6 +28,7 @@ import org.hibernate.tool.schema.Action;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator.ActionGrouping;
 
+import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.transaction.TransactionUtil;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -99,10 +100,12 @@ public class SessionFactoryExtension
 							sessionFactoryBuilder.applyInterceptor( sessionFactoryConfig.interceptorClass().newInstance() );
 						}
 
-						if ( ! sessionFactoryConfig.statementInspectorClass().equals( StatementInspector.class ) ) {
-							sessionFactoryBuilder.applyStatementInspector(
-									sessionFactoryConfig.statementInspectorClass().newInstance()
-							);
+						final Class<? extends StatementInspector> explicitInspectorClass = sessionFactoryConfig.statementInspectorClass();
+						if ( sessionFactoryConfig.useCollectingStatementInspector() ) {
+							sessionFactoryBuilder.applyStatementInspector( new SQLStatementInspector() );
+						}
+						else if ( ! explicitInspectorClass.equals( StatementInspector.class ) ) {
+							sessionFactoryBuilder.applyStatementInspector( explicitInspectorClass.getConstructor().newInstance() );
 						}
 
 						final SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) sessionFactoryBuilder.build();
@@ -253,6 +256,17 @@ public class SessionFactoryExtension
 		@Override
 		public StatementInspector getStatementInspector() {
 			return getSessionFactory().getSessionFactoryOptions().getStatementInspector();
+		}
+
+		@Override
+		public <T extends StatementInspector> T getStatementInspector(Class<T> type) {
+			//noinspection unchecked
+			return (T) getStatementInspector();
+		}
+
+		@Override
+		public SQLStatementInspector getCollectingStatementInspector() {
+			return getStatementInspector( SQLStatementInspector.class );
 		}
 
 		@Override

@@ -16,8 +16,6 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
-import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.query.spi.SqlOmittingQueryOptions;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
 import org.hibernate.query.sqm.mutation.internal.DeleteHandler;
@@ -150,14 +148,7 @@ public class InlineDeleteHandler implements DeleteHandler {
 				sessionFactory
 		);
 
-		final QueryOptions queryOptions = SqlOmittingQueryOptions.omitSqlQueryOptions( executionContext.getQueryOptions() );
-
-		final SqmJdbcExecutionContextAdapter executionContextAdapter = new SqmJdbcExecutionContextAdapter( executionContext ) {
-			@Override
-			public QueryOptions getQueryOptions() {
-				return queryOptions;
-			}
-		};
+		final SqmJdbcExecutionContextAdapter executionContextAdapter = new SqmJdbcExecutionContextAdapter( executionContext );
 
 		final Predicate matchingIdsPredicate = matchingIdsPredicateProducer.produceRestriction(
 				ids,

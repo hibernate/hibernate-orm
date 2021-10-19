@@ -15,6 +15,8 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 
+import org.hibernate.testing.jdbc.SQLStatementInspector;
+
 /**
  * @author Steve Ebersole
  */
@@ -22,6 +24,8 @@ public interface SessionFactoryScope {
 	SessionFactoryImplementor getSessionFactory();
 	MetadataImplementor getMetadataImplementor();
 	StatementInspector getStatementInspector();
+	<T extends StatementInspector> T getStatementInspector(Class<T> type);
+	SQLStatementInspector getCollectingStatementInspector();
 
 	void inSession(Consumer<SessionImplementor> action);
 	void inTransaction(Consumer<SessionImplementor> action);

@@ -8,39 +8,35 @@ package org.hibernate.orm.test.loading.multiLoad;
 
 import java.util.List;
 import java.util.Objects;
-import jakarta.persistence.Cacheable;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.SharedCacheMode;
-import jakarta.persistence.Table;
 
 import org.hibernate.CacheMode;
 import org.hibernate.annotations.BatchSize;
-import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.stat.Statistics;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.jdbc.SQLStatementInterceptor;
+import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryProducer;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
-
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.Cacheable;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.SharedCacheMode;
+import jakarta.persistence.Table;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
@@ -67,17 +63,8 @@ import static org.junit.Assert.assertTrue;
 		sharedCacheMode = SharedCacheMode.ENABLE_SELECTIVE,
 		accessType = AccessType.READ_WRITE
 )
-@SessionFactory
-public class MultiLoadTest implements SessionFactoryProducer {
-	private SQLStatementInterceptor sqlStatementInterceptor;
-
-	@Override
-	public SessionFactoryImplementor produceSessionFactory(MetadataImplementor model) {
-		final SessionFactoryBuilder sessionFactoryBuilder = model.getSessionFactoryBuilder();
-		sqlStatementInterceptor = new SQLStatementInterceptor( sessionFactoryBuilder );
-		return (SessionFactoryImplementor) sessionFactoryBuilder.build();
-	}
-
+@SessionFactory( useCollectingStatementInspector = true )
+public class MultiLoadTest {
 
 	@BeforeEach
 	public void before(SessionFactoryScope scope) {
@@ -102,15 +89,16 @@ public class MultiLoadTest implements SessionFactoryProducer {
 
 	@Test
 	public void testBasicMultiLoad(SessionFactoryScope scope) {
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		scope.inTransaction(
 				session -> {
-					sqlStatementInterceptor.getSqlQueries().clear();
+					statementInspector.getSqlQueries().clear();
 
 					List<SimpleEntity> list = session.byMultipleIds( SimpleEntity.class ).multiLoad( ids( 5 ) );
 					assertEquals( 5, list.size() );
 
 					final int paramCount = StringHelper.countUnquoted(
-							sqlStatementInterceptor.getSqlQueries().getFirst(),
+							statementInspector.getSqlQueries().get( 0 ),
 							'?'
 					);
 					assertThat( paramCount, is( 5 ) );
@@ -220,6 +208,9 @@ public class MultiLoadTest implements SessionFactoryProducer {
 	@TestForIssue(jiraKey = "HHH-12944")
 	@FailureExpected( reason = "Caching/CacheMode supported not yet implemented" )
 	public void testMultiLoadFrom2ndLevelCache(SessionFactoryScope scope) {
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		statementInspector.clear();
+
 		scope.getSessionFactory().getCache().evictAll();
 
 		final Statistics statistics = scope.getSessionFactory().getStatistics();
@@ -245,7 +236,7 @@ public class MultiLoadTest implements SessionFactoryProducer {
 					// Validate that the entity is still in the Level 2 cache
 					assertTrue( session.getSessionFactory().getCache().containsEntity( SimpleEntity.class, 2 ) );
 
-					sqlStatementInterceptor.getSqlQueries().clear();
+					statementInspector.getSqlQueries().clear();
 
 					// Multiload 3 items and ensure that multiload pulls 2 from the database & 1 from the cache.
 					List<SimpleEntity> entities = session.byMultipleIds( SimpleEntity.class )
@@ -260,7 +251,7 @@ public class MultiLoadTest implements SessionFactoryProducer {
 					}
 
 					final int paramCount = StringHelper.countUnquoted(
-							sqlStatementInterceptor.getSqlQueries().getFirst(),
+							statementInspector.getSqlQueries().get( 0 ),
 							'?'
 					);
 					assertThat( paramCount, is( 2 ) );
@@ -272,6 +263,9 @@ public class MultiLoadTest implements SessionFactoryProducer {
 	@TestForIssue(jiraKey = "HHH-12944")
 	@FailureExpected( reason = "Caching/CacheMode supported not yet implemented" )
 	public void testUnorderedMultiLoadFrom2ndLevelCache(SessionFactoryScope scope) {
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		statementInspector.clear();
+
 		scope.getSessionFactory().getCache().evictAll();
 
 		final Statistics statistics = scope.getSessionFactory().getStatistics();
@@ -298,7 +292,7 @@ public class MultiLoadTest implements SessionFactoryProducer {
 					// Validate that the entity is still in the Level 2 cache
 					assertTrue( session.getSessionFactory().getCache().containsEntity( SimpleEntity.class, 2 ) );
 
-					sqlStatementInterceptor.getSqlQueries().clear();
+					statementInspector.getSqlQueries().clear();
 
 					// Multiload 3 items and ensure that multiload pulls 2 from the database & 1 from the cache.
 					List<SimpleEntity> entities = session.byMultipleIds( SimpleEntity.class )
@@ -313,7 +307,7 @@ public class MultiLoadTest implements SessionFactoryProducer {
 						assertTrue( session.contains( entity ) );
 					}
 					final int paramCount = StringHelper.countUnquoted(
-							sqlStatementInterceptor.getSqlQueries().getFirst(),
+							statementInspector.getSqlQueries().get( 0 ),
 							'?'
 					);
 					assertThat( paramCount, is( 2 ) );
@@ -324,11 +318,14 @@ public class MultiLoadTest implements SessionFactoryProducer {
 	@Test
 	@TestForIssue(jiraKey = "HHH-12944")
 	public void testOrderedMultiLoadFrom2ndLevelCachePendingDelete(SessionFactoryScope scope) {
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		statementInspector.clear();
+
 		scope.inTransaction(
 				session -> {
 					session.remove( session.find( SimpleEntity.class, 2 ) );
 
-					sqlStatementInterceptor.getSqlQueries().clear();
+					statementInspector.clear();
 
 					// Multi-load 3 items and ensure that it pulls 2 from the database & 1 from the cache.
 					List<SimpleEntity> entities = session.byMultipleIds( SimpleEntity.class )
@@ -341,7 +338,7 @@ public class MultiLoadTest implements SessionFactoryProducer {
 					assertNull( entities.get( 1 ) );
 
 					final int paramCount = StringHelper.countUnquoted(
-							sqlStatementInterceptor.getSqlQueries().getFirst(),
+							statementInspector.getSqlQueries().get( 0 ),
 							'?'
 					);
 					assertThat( paramCount, is( 2 ) );
@@ -352,11 +349,14 @@ public class MultiLoadTest implements SessionFactoryProducer {
 	@Test
 	@TestForIssue(jiraKey = "HHH-12944")
 	public void testOrderedMultiLoadFrom2ndLevelCachePendingDeleteReturnRemoved(SessionFactoryScope scope) {
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		statementInspector.clear();
+
 		scope.inTransaction(
 				session -> {
 					session.remove( session.find( SimpleEntity.class, 2 ) );
 
-					sqlStatementInterceptor.getSqlQueries().clear();
+					statementInspector.clear();
 
 					// Multiload 3 items and ensure that multiload pulls 2 from the database & 1 from the cache.
 					List<SimpleEntity> entities = session.byMultipleIds( SimpleEntity.class )
@@ -375,7 +375,7 @@ public class MultiLoadTest implements SessionFactoryProducer {
 					assertTrue( entry.getStatus() == Status.DELETED || entry.getStatus() == Status.GONE );
 
 					final int paramCount = StringHelper.countUnquoted(
-							sqlStatementInterceptor.getSqlQueries().getFirst(),
+							statementInspector.getSqlQueries().get( 0 ),
 							'?'
 					);
 					assertThat( paramCount, is( 2 ) );
@@ -385,12 +385,14 @@ public class MultiLoadTest implements SessionFactoryProducer {
 	@Test
 	@TestForIssue(jiraKey = "HHH-12944")
 	public void testUnorderedMultiLoadFrom2ndLevelCachePendingDelete(SessionFactoryScope scope) {
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		statementInspector.clear();
+
 		scope.inTransaction(
 				session -> {
-
 					session.remove( session.find( SimpleEntity.class, 2 ) );
 
-					sqlStatementInterceptor.getSqlQueries().clear();
+					statementInspector.clear();
 
 					// Multiload 3 items and ensure that multiload pulls 2 from the database & 1 from the cache.
 					List<SimpleEntity> entities = session.byMultipleIds( SimpleEntity.class )
@@ -403,7 +405,7 @@ public class MultiLoadTest implements SessionFactoryProducer {
 					assertTrue( entities.stream().anyMatch( Objects::isNull ) );
 
 					final int paramCount = StringHelper.countUnquoted(
-							sqlStatementInterceptor.getSqlQueries().getFirst(),
+							statementInspector.getSqlQueries().get( 0 ),
 							'?'
 					);
 					assertThat( paramCount, is( 2 ) );
@@ -413,12 +415,14 @@ public class MultiLoadTest implements SessionFactoryProducer {
 	@Test
 	@TestForIssue(jiraKey = "HHH-12944")
 	public void testUnorderedMultiLoadFrom2ndLevelCachePendingDeleteReturnRemoved(SessionFactoryScope scope) {
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		statementInspector.clear();
+
 		scope.inTransaction(
 				session -> {
-
 					session.remove( session.find( SimpleEntity.class, 2 ) );
 
-					sqlStatementInterceptor.getSqlQueries().clear();
+					statementInspector.clear();
 
 					// Multiload 3 items and ensure that multiload pulls 2 from the database & 1 from the cache.
 					List<SimpleEntity> entities = session.byMultipleIds( SimpleEntity.class )
@@ -438,7 +442,7 @@ public class MultiLoadTest implements SessionFactoryProducer {
 					assertTrue( entry.getStatus() == Status.DELETED || entry.getStatus() == Status.GONE );
 
 					final int paramCount = StringHelper.countUnquoted(
-							sqlStatementInterceptor.getSqlQueries().getFirst(),
+							statementInspector.getSqlQueries().get( 0 ),
 							'?'
 					);
 					assertThat( paramCount, is( 2 ) );

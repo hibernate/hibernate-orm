@@ -30,7 +30,6 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
-import org.hibernate.query.spi.SqlOmittingQueryOptions;
 import org.hibernate.query.sqm.sql.SqmTranslation;
 import org.hibernate.query.sqm.sql.SqmTranslator;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
@@ -151,19 +150,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 						sqmInterpretation.getJdbcSelect(),
 						scrollMode,
 						jdbcParameterBindings,
-						new SqmJdbcExecutionContextAdapter( executionContext ) {
-							final QueryOptions options = SqlOmittingQueryOptions.omitSqlQueryOptions( queryOptions, sqmInterpretation.jdbcSelect );
-
-							@Override
-							public void registerLoadingEntityEntry(EntityKey entityKey, LoadingEntityEntry entry) {
-								subSelectFetchKeyHandler.addKey( entityKey );
-							}
-
-							@Override
-							public QueryOptions getQueryOptions() {
-								return options;
-							}
-						},
+						new SqmJdbcExecutionContextAdapter( executionContext, sqmInterpretation.jdbcSelect ),
 						rowTransformer
 				);
 

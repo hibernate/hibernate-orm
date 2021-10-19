@@ -1,22 +1,26 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.orm.test.mapping.collections.subselectfetch;
+package org.hibernate.orm.test.mapping.fetch.subselect;
 
 import java.util.List;
 
 import org.hibernate.Hibernate;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.collection.spi.PersistentCollection;
 
+import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -24,6 +28,8 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Root;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.setAllowComparingPrivateFields;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -40,85 +46,113 @@ import static org.junit.Assert.assertTrue;
 @DomainModel(
 		xmlMappings = "/mappings/subselectfetch/ParentChild.hbm.xml"
 )
-@SessionFactory
-@NotImplementedYet( strict = false, reason = "Need to check why these fail" )
+@SessionFactory( useCollectingStatementInspector = true )
+//@NotImplementedYet( strict = false, reason = "Need to check why these fail" )
 public class SubselectFetchTest {
+	@BeforeEach
+	public void prepareTestData(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			Parent foo = new Parent("foo");
+			foo.getChildren().add( new Child("foo1") );
+			foo.getChildren().add( new Child("foo2") );
+
+			Parent bar = new Parent("bar");
+			bar.getChildren().add( new Child("bar1") );
+			bar.getChildren().add( new Child("bar2") );
+			bar.getMoreChildren().addAll( foo.getChildren() );
+
+			session.persist(foo);
+			session.persist(bar);
+		} );
+	}
+
+	@AfterEach
+	public void dropTestData(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			session.delete( session.load( Parent.class, "foo" ) );
+			session.delete( session.load( Parent.class, "bar" ) );
+		} );
+	}
+
+	@Test
+	public void simplifiedTestSubSelectFetchHql(SessionFactoryScope scope) {
+		scope.inTransaction( (s) -> {
+			scope.getSessionFactory().getStatistics().clear();
+
+			final List<Parent> parents = s
+					.createQuery("from Parent where name between 'bar' and 'foo' order by name desc", Parent.class )
+					.list();
+			final Parent foo = parents.get( 0 );
+			final Parent bar = parents.get( 1 );
+
+			assertThat( scope.getSessionFactory().getStatistics().getPrepareStatementCount() ).isEqualTo( 1 );
+			assertThat( Hibernate.isInitialized( foo.getChildren() ) ).isFalse();
+			assertThat( Hibernate.isInitialized( bar.getChildren() ) ).isFalse();
+
+			Hibernate.initialize( foo.getChildren() );
+
+			assertThat( scope.getSessionFactory().getStatistics().getPrepareStatementCount() ).isEqualTo( 2 );
+			assertThat( Hibernate.isInitialized( foo.getChildren() ) ).isTrue();
+			assertThat( Hibernate.isInitialized( bar.getChildren() ) ).isTrue();
+
+			assertThat( ( (PersistentCollection) foo.getChildren() ).getOwner() ).isEqualTo( foo );
+		} );
+	}
+
 	@Test
 	public void testSubselectFetchHql(SessionFactoryScope scope) {
-		scope.inTransaction(
-				s -> {
-					Parent p = new Parent( "foo" );
-					p.getChildren().add( new Child( "foo1" ) );
-					p.getChildren().add( new Child( "foo2" ) );
-					Parent q = new Parent( "bar" );
-					q.getChildren().add( new Child( "bar1" ) );
-					q.getChildren().add( new Child( "bar2" ) );
-					q.getMoreChildren().addAll( p.getChildren() );
-					s.persist( p );
-					s.persist( q );
-				}
-		);
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		statementInspector.clear();
 
 		scope.inTransaction(
 				s -> {
 					scope.getSessionFactory().getStatistics().clear();
 
-					List parents = s.createQuery( "from Parent where name between 'bar' and 'foo' order by name desc" )
+					final List<Parent> parents = s
+							.createQuery( "from Parent where name between 'bar' and 'foo' order by name desc", Parent.class )
 							.list();
-					Parent p = (Parent) parents.get( 0 );
-					Parent q = (Parent) parents.get( 1 );
+					final Parent foo = parents.get( 0 );
+					final Parent bar = parents.get( 1 );
 
-					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-					assertFalse( Hibernate.isInitialized( q.getChildren() ) );
+					assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
+					statementInspector.clear();
 
-					assertEquals( p.getChildren().size(), 2 );
+					assertThat( Hibernate.isInitialized( foo.getChildren() ) ).isFalse();
+					assertThat( Hibernate.isInitialized( bar.getChildren() ) ).isFalse();
 
-					assertTrue( Hibernate.isInitialized( p.getChildren().iterator().next() ) );
+					// triggers initialization as side effect
+					assertThat( foo.getChildren() ).hasSize( 2 );
 
-					assertTrue( Hibernate.isInitialized( q.getChildren() ) );
+					assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
+					statementInspector.clear();
 
-					assertEquals( q.getChildren().size(), 2 );
+					assertThat( Hibernate.isInitialized( foo.getChildren() ) ).isTrue();
+					assertThat( Hibernate.isInitialized( bar.getChildren() ) ).isTrue();
 
-					assertTrue( Hibernate.isInitialized( q.getChildren().iterator().next() ) );
+					// access bar's children and make sure it triggers no SQL
+					assertThat( bar.getChildren() ).hasSize( 2 );
 
-					assertFalse( Hibernate.isInitialized( p.getMoreChildren() ) );
-					assertFalse( Hibernate.isInitialized( q.getMoreChildren() ) );
+					assertThat( statementInspector.getSqlQueries() ).hasSize( 0 );
+					statementInspector.clear();
 
-					assertEquals( p.getMoreChildren().size(), 0 );
+					assertThat( Hibernate.isInitialized( foo.getChildren().iterator().next() ) ).isTrue();
+					assertThat( Hibernate.isInitialized( bar.getChildren().iterator().next() ) ).isTrue();
 
-					assertTrue( Hibernate.isInitialized( q.getMoreChildren() ) );
+					assertThat( Hibernate.isInitialized( foo.getMoreChildren() ) ).isFalse();
+					assertThat( Hibernate.isInitialized( bar.getMoreChildren() ) ).isFalse();
 
-					assertEquals( q.getMoreChildren().size(), 2 );
+					assertThat( foo.getMoreChildren() ).hasSize( 0 );
 
-					assertTrue( Hibernate.isInitialized( q.getMoreChildren().iterator().next() ) );
+					assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
 
-					assertEquals( 3, scope.getSessionFactory().getStatistics().getPrepareStatementCount() );
-
-					Child c = (Child) p.getChildren().get( 0 );
-					c.getFriends().size();
-
-					s.delete( p );
-					s.delete( q );
+					assertThat( Hibernate.isInitialized( foo.getMoreChildren() ) ).isTrue();
+					assertThat( Hibernate.isInitialized( bar.getMoreChildren() ) ).isTrue();
 				}
 		);
 	}
 
 	@Test
 	public void testSubselectFetchNamedParam(SessionFactoryScope scope) {
-		scope.inTransaction(
-				s -> {
-					Parent p = new Parent( "foo" );
-					p.getChildren().add( new Child( "foo1" ) );
-					p.getChildren().add( new Child( "foo2" ) );
-					Parent q = new Parent( "bar" );
-					q.getChildren().add( new Child( "bar1" ) );
-					q.getChildren().add( new Child( "bar2" ) );
-					q.getMoreChildren().addAll( p.getChildren() );
-					s.persist( p );
-					s.persist( q );
-				}
-		);
-
 		scope.inTransaction(
 				s -> {
 					scope.getSessionFactory().getStatistics().clear();
@@ -158,29 +192,12 @@ public class SubselectFetchTest {
 
 					Child c = (Child) p.getChildren().get( 0 );
 					c.getFriends().size();
-
-					s.delete( p );
-					s.delete( q );
 				}
 		);
 	}
 
 	@Test
 	public void testSubselectFetchPosParam(SessionFactoryScope scope) {
-		scope.inTransaction(
-				s -> {
-					Parent p = new Parent( "foo" );
-					p.getChildren().add( new Child( "foo1" ) );
-					p.getChildren().add( new Child( "foo2" ) );
-					Parent q = new Parent( "bar" );
-					q.getChildren().add( new Child( "bar1" ) );
-					q.getChildren().add( new Child( "bar2" ) );
-					q.getMoreChildren().addAll( p.getChildren() );
-					s.persist( p );
-					s.persist( q );
-				}
-		);
-
 		scope.inTransaction(
 				s -> {
 					scope.getSessionFactory().getStatistics().clear();
@@ -217,85 +234,59 @@ public class SubselectFetchTest {
 					assertTrue( Hibernate.isInitialized( q.getMoreChildren().iterator().next() ) );
 
 					assertEquals( 3, scope.getSessionFactory().getStatistics().getPrepareStatementCount() );
-
-					Child c = (Child) p.getChildren().get( 0 );
-					c.getFriends().size();
-
-					s.delete( p );
-					s.delete( q );
 				}
 		);
 	}
 
 	@Test
 	public void testSubselectFetchWithLimit(SessionFactoryScope scope) {
-
-		Parent parent = new Parent( "foo" );
-		Parent secondParent = new Parent( "bar" );
 		Parent thirdParent = new Parent( "aaa" );
+		thirdParent.getChildren().add( new Child( "aaa1" ) );
 
 		scope.inTransaction(
 				s -> {
-					parent.getChildren().add( new Child( "foo1" ) );
-					parent.getChildren().add( new Child( "foo2" ) );
-					secondParent.getChildren().add( new Child( "bar1" ) );
-					secondParent.getChildren().add( new Child( "bar2" ) );
-					thirdParent.getChildren().add( new Child( "aaa1" ) );
-					s.persist( parent );
-					s.persist( secondParent );
 					s.persist( thirdParent );
 				}
 		);
 
-		scope.inTransaction(
-				s -> {
-					scope.getSessionFactory().getStatistics().clear();
+		try {
+			scope.inTransaction(
+					s -> {
+						scope.getSessionFactory().getStatistics().clear();
 
-					List parents = s.createQuery( "from Parent order by name desc" )
-							.setMaxResults( 2 )
-							.list();
-					Parent p = (Parent) parents.get( 0 );
-					Parent q = (Parent) parents.get( 1 );
-					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-					assertFalse( Hibernate.isInitialized( p.getMoreChildren() ) );
-					assertFalse( Hibernate.isInitialized( q.getChildren() ) );
-					assertFalse( Hibernate.isInitialized( q.getMoreChildren() ) );
-					assertEquals( p.getMoreChildren().size(), 0 );
-					assertEquals( p.getChildren().size(), 2 );
-					assertTrue( Hibernate.isInitialized( q.getChildren() ) );
-					assertTrue( Hibernate.isInitialized( q.getMoreChildren() ) );
+						List parents = s.createQuery( "from Parent order by name desc" )
+								.setMaxResults( 2 )
+								.list();
+						Parent p = (Parent) parents.get( 0 );
+						Parent q = (Parent) parents.get( 1 );
+						assertFalse( Hibernate.isInitialized( p.getChildren() ) );
+						assertFalse( Hibernate.isInitialized( p.getMoreChildren() ) );
+						assertFalse( Hibernate.isInitialized( q.getChildren() ) );
+						assertFalse( Hibernate.isInitialized( q.getMoreChildren() ) );
+						assertEquals( p.getMoreChildren().size(), 0 );
+						assertEquals( p.getChildren().size(), 2 );
+						assertTrue( Hibernate.isInitialized( q.getChildren() ) );
+						assertTrue( Hibernate.isInitialized( q.getMoreChildren() ) );
 
-					assertEquals( 3, scope.getSessionFactory().getStatistics().getPrepareStatementCount() );
+						assertEquals( 3, scope.getSessionFactory().getStatistics().getPrepareStatementCount() );
 
-					Parent r = s.get( Parent.class, thirdParent.getName() );
-					assertTrue( Hibernate.isInitialized( r.getChildren() ) );
-					assertFalse( Hibernate.isInitialized( r.getMoreChildren() ) );
-					assertEquals( r.getChildren().size(), 1 );
-					assertEquals( r.getMoreChildren().size(), 0 );
-
-					s.delete( p );
-					s.delete( q );
-					s.delete( r );
-				}
-		);
+						Parent r = s.get( Parent.class, thirdParent.getName() );
+						assertTrue( Hibernate.isInitialized( r.getChildren() ) );
+						assertFalse( Hibernate.isInitialized( r.getMoreChildren() ) );
+						assertEquals( r.getChildren().size(), 1 );
+						assertEquals( r.getMoreChildren().size(), 0 );
+					}
+			);
+		}
+		finally {
+			scope.inTransaction( (session) -> {
+				session.remove( session.load( Parent.class, "aaa" ) );
+			} );
+		}
 	}
 
 	@Test
 	public void testManyToManyCriteriaJoin(SessionFactoryScope scope) {
-		scope.inTransaction(
-				s -> {
-					Parent p = new Parent( "foo" );
-					p.getChildren().add( new Child( "foo1" ) );
-					p.getChildren().add( new Child( "foo2" ) );
-					Parent q = new Parent( "bar" );
-					q.getChildren().add( new Child( "bar1" ) );
-					q.getChildren().add( new Child( "bar2" ) );
-					q.getMoreChildren().addAll( p.getChildren() );
-					s.persist( p );
-					s.persist( q );
-				}
-		);
-
 		scope.inTransaction(
 				s -> {
 					CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
@@ -306,49 +297,19 @@ public class SubselectFetchTest {
 					criteria.orderBy( criteriaBuilder.desc( root.get( "name" ) ) );
 
 					s.createQuery( criteria ).list();
-//					List parents = s.createCriteria( Parent.class )
-//							.createCriteria( "moreChildren" )
-//							.createCriteria( "friends" )
-//							.addOrder( Order.desc( "name" ) )
-//							.list();
-
 
 					criteria = criteriaBuilder.createQuery( Parent.class );
 					root = criteria.from( Parent.class );
 					root.fetch( "moreChildren", JoinType.LEFT ).fetch( "friends", JoinType.LEFT );
 					criteria.orderBy( criteriaBuilder.desc( root.get( "name" ) ) );
-
-					List parents = s.createQuery( criteria ).list();
-
-//					parents = s.createCriteria( Parent.class )
-//							.setFetchMode( "moreChildren", FetchMode.JOIN )
-//							.setFetchMode( "moreChildren.friends", FetchMode.JOIN )
-//							.addOrder( Order.desc( "name" ) )
-//							.list();
-
-					s.delete( parents.get( 0 ) );
-					s.delete( parents.get( 1 ) );
-
 				}
 		);
 	}
 
 	@Test
 	public void testSubselectFetchCriteria(SessionFactoryScope scope) {
-		scope.inTransaction(
-				s -> {
-					Parent p = new Parent( "foo" );
-					p.getChildren().add( new Child( "foo1" ) );
-					p.getChildren().add( new Child( "foo2" ) );
-					Parent q = new Parent( "bar" );
-					q.getChildren().add( new Child( "bar1" ) );
-					q.getChildren().add( new Child( "bar2" ) );
-					q.getMoreChildren().addAll( p.getChildren() );
-					s.persist( p );
-					s.persist( q );
-				}
-		);
-
+		final SQLStatementInspector statementInspector = scope.getStatementInspector( SQLStatementInspector.class );
+		statementInspector.clear();
 
 		scope.inTransaction(
 				s -> {
@@ -361,15 +322,19 @@ public class SubselectFetchTest {
 					criteria.orderBy( criteriaBuilder.desc( root.get( "name" ) ) );
 
 					List parents = s.createQuery( criteria ).list();
-//					List parents = s.createCriteria( Parent.class )
-//							.add( Property.forName( "name" ).between( "bar", "foo" ) )
-//							.addOrder( Order.desc( "name" ) )
-//							.list();
 					Parent p = (Parent) parents.get( 0 );
 					Parent q = (Parent) parents.get( 1 );
 
-					assertFalse( Hibernate.isInitialized( p.getChildren() ) );
-					assertFalse( Hibernate.isInitialized( q.getChildren() ) );
+					assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
+					assertThat( Hibernate.isInitialized( p.getChildren() ) ).isFalse();
+					assertThat( Hibernate.isInitialized( q.getChildren() ) ).isFalse();
+
+					statementInspector.clear();
+					Hibernate.initialize( p.getChildren() );
+
+					assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
+					assertThat( Hibernate.isInitialized( p.getChildren() ) ).isTrue();
+					assertThat( Hibernate.isInitialized( q.getChildren() ) ).isTrue();
 
 					assertEquals( p.getChildren().size(), 2 );
 
@@ -393,12 +358,6 @@ public class SubselectFetchTest {
 					assertTrue( Hibernate.isInitialized( q.getMoreChildren().iterator().next() ) );
 
 					assertEquals( 3, scope.getSessionFactory().getStatistics().getPrepareStatementCount() );
-
-					Child c = (Child) p.getChildren().get( 0 );
-					c.getFriends().size();
-
-					s.delete( p );
-					s.delete( q );
 				}
 		);
 

@@ -6,117 +6,117 @@
  */
 package org.hibernate.internal.util.collections;
 
-import java.util.LinkedList;
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.Iterator;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
- * A general-purpose stack impl.
+ * A general-purpose stack impl supporting null values.
  *
  * @param <T> The type of things stored in the stack
  *
  * @author Steve Ebersole
+ * @author Sanne Grinovero
  */
 public final class StandardStack<T> implements Stack<T> {
-	@SuppressWarnings("unchecked")
-	private final T nullMarker = (T) new Object();
 
-	private T current;
-
-	private final LinkedList<T> internalStack = new LinkedList<>();
+	private ArrayDeque<T> internalStack;
+	private static final Object NULL_TOKEN = new Object();
 
 	public StandardStack() {
 	}
 
 	public StandardStack(T initial) {
-		current = initial;
+		stackInstanceExpected().addFirst( initial );
 	}
 
 	@Override
 	public void push(T newCurrent) {
+		Object toStore = newCurrent;
 		if ( newCurrent == null ) {
-			newCurrent = nullMarker;
+			toStore = NULL_TOKEN;
 		}
+		stackInstanceExpected().addFirst( toStore );
+	}
 
-		if ( current != null ) {
-			internalStack.addFirst( current );
+	private Deque stackInstanceExpected() {
+		if ( internalStack == null ) {
+			//"7" picked to use 8, but skipping the odd initialCapacity method
+			internalStack = new ArrayDeque<>( 7 );
 		}
-
-		current = newCurrent;
+		return internalStack;
 	}
 
 	@Override
 	public T pop() {
-		final T popped = this.current;
-		if ( internalStack.isEmpty() ) {
-			this.current = null;
-		}
-		else {
-			this.current = internalStack.removeFirst();
-		}
+		return convert( stackInstanceExpected().removeFirst() );
+	}
 
-		return popped == nullMarker ? null : popped;
+	private T convert(final Object internalStoredObject) {
+		if ( internalStoredObject == NULL_TOKEN ) {
+			return null;
+		}
+		return (T) internalStoredObject;
 	}
 
 	@Override
 	public T getCurrent() {
-		return current == nullMarker ? null : current;
+		if ( internalStack == null ) {
+			return null;
+		}
+		return convert( internalStack.peek() );
 	}
 
 	@Override
 	public int depth() {
-		if ( current == null ) {
+		if ( internalStack == null ) {
 			return 0;
 		}
-		else if ( internalStack.isEmpty() ) {
-			return 1;
-		}
-		else {
-			return internalStack.size() + 1;
-		}
+		return internalStack.size();
 	}
 
 	@Override
 	public boolean isEmpty() {
-		return current == null;
+		if ( internalStack == null ) {
+			return true;
+		}
+		return internalStack.isEmpty();
 	}
 
 	@Override
 	public void clear() {
-		current = null;
-		internalStack.clear();
+		if ( internalStack != null ) {
+			internalStack.clear();
+		}
 	}
 
 	@Override
 	public void visitRootFirst(Consumer<T> action) {
-		final int stackSize = internalStack.size();
-		for ( int i = stackSize - 1; i >= 0; i-- ) {
-			action.accept( internalStack.get( i ) );
+		if ( internalStack == null ) {
+			return;
 		}
-		if ( current != null ) {
-			action.accept( current );
+		final Iterator<T> iterator = internalStack.descendingIterator();
+		while ( iterator.hasNext() ) {
+			action.accept( iterator.next() );
 		}
 	}
 
 	@Override
 	public <X> X findCurrentFirst(Function<T, X> function) {
-		if ( current != null ) {
-			{
-				final X result = function.apply( current );
-
-				if ( result != null ) {
-					return result;
-				}
-			}
-
-			for ( T t : internalStack ) {
-				final X result = function.apply( t );
-				if ( result != null ) {
-					return result;
-				}
+		if ( internalStack == null ) {
+			return null;
+		}
+		final Iterator<T> iterator = internalStack.iterator();
+		while ( iterator.hasNext() ) {
+			final X result = function.apply( iterator.next() );
+			if ( result != null ) {
+				return result;
 			}
 		}
 
 		return null;
 	}
+
 }

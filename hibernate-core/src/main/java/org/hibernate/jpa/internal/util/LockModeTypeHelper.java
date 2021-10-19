@@ -39,21 +39,10 @@ public final class LockModeTypeHelper {
 			return getLockMode( (LockModeType) value );
 		}
 		else if ( String.class.isInstance( value ) ) {
-			// first try LockMode name
-			LockMode lockMode = LockMode.valueOf( (String) value );
-			if ( lockMode == null ) {
-				try {
-					lockMode = getLockMode( LockModeType.valueOf( (String) value ) );
-				}
-				catch ( Exception ignore ) {
-				}
-			}
-			if ( lockMode != null ) {
-				return lockMode;
-			}
+			return LockMode.fromExternalForm( (String) value );
 		}
 
-		throw new IllegalArgumentException( "Unknown lock mode source : " + value );
+		throw new IllegalArgumentException( "Unknown lock mode source: '" + value + "'; can't convert from value of type " + value.getClass() );
 	}
 
 }

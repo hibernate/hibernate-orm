@@ -61,6 +61,10 @@ nexusPublishing {
 }
 
 allprojects {
+	tasks.withType(Test).configureEach {
+        	forkEvery = 100
+        }
+
 	repositories {
 		mavenCentral()
 		//Allow loading additional dependencies from a local path;

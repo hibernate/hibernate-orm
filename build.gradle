@@ -61,6 +61,9 @@ nexusPublishing {
 }
 
 allprojects {
+	tasks.withType(Test).configureEach {
+	    maxParallelForks = 4
+ 	}
 	repositories {
 		mavenCentral()
 		//Allow loading additional dependencies from a local path;

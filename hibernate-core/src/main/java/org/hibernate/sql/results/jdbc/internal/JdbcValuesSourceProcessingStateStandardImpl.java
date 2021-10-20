@@ -21,6 +21,7 @@ import org.hibernate.event.spi.PostLoadEvent;
 import org.hibernate.event.spi.PostLoadEventListener;
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.persister.entity.Loadable;
+import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.collection.internal.ArrayInitializer;
 import org.hibernate.query.spi.QueryOptions;
@@ -190,16 +191,17 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 						postLoadEvent.setEntity( loadingEntityEntry.getEntityInstance() )
 								.setId( entityKey.getIdentifier() )
 								.setPersister( loadingEntityEntry.getDescriptor() );
-						for ( PostLoadEventListener listener : listenerGroup.listeners() ) {
-							listener.onPostLoad( postLoadEvent );
-						}
+						listenerGroup.fireEventOnEachListener( postLoadEvent, PostLoadEventListener::onPostLoad );
 					}
 
-					executionContext.invokeAfterLoadActions(
-							getSession(),
-							loadingEntityEntry.getEntityInstance(),
-							(Loadable) loadingEntityEntry.getDescriptor()
-					);
+					final Callback callback = executionContext.getCallback();
+					if ( callback != null ) {
+						callback.invokeAfterLoadActions(
+								getSession(),
+								loadingEntityEntry.getEntityInstance(),
+								(Loadable) loadingEntityEntry.getDescriptor()
+						);
+					}
 				}
 		);
 		loadingEntityMap = null;

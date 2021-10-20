@@ -93,6 +93,7 @@ public class MySQLDialect extends Dialect {
 				info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10,
 				getCharacterSetBytesPerCharacter( info.unwrap( DatabaseMetaData.class ) )
 		);
+		registerKeywords( info );
 	}
 
 	public MySQLDialect() {

@@ -1195,23 +1195,12 @@ public abstract class AbstractHANADialect extends Dialect {
 	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)
 			throws SQLException {
 		/*
-		 * Copied from Dialect
-		 */
-		builder.applyIdentifierCasing( dbMetaData );
-
-		builder.applyReservedWords( dbMetaData );
-		builder.applyReservedWords( AnsiSqlKeywords.INSTANCE.sql2003() );
-		builder.applyReservedWords( getKeywords() );
-
-		builder.setNameQualifierSupport( getNameQualifierSupport() );
-
-		/*
 		 * HANA-specific extensions
 		 */
 		builder.setQuotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 		builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.UPPER );
 
-		final IdentifierHelper identifierHelper = builder.build();
+		final IdentifierHelper identifierHelper = super.buildIdentifierHelper( builder, dbMetaData );
 
 		return new IdentifierHelper() {
 

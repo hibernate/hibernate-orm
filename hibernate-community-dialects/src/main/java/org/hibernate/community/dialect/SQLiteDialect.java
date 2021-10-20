@@ -83,6 +83,7 @@ public class SQLiteDialect extends Dialect {
 
 	public SQLiteDialect(DialectResolutionInfo info) {
 		this( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() );
+		registerKeywords( info );
 	}
 
 	public SQLiteDialect() {

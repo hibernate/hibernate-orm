@@ -319,6 +319,11 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 						public int getDriverMinorVersion() {
 							return NO_VERSION;
 						}
+
+						@Override
+						public String getSQLKeywords() {
+							return "";
+						}
 					}
 			);
 

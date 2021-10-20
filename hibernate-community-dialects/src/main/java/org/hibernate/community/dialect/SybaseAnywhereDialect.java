@@ -42,6 +42,7 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 				info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10,
 				info.getDriverName() != null && info.getDriverName().contains( "jTDS" )
 		);
+		registerKeywords( info );
 	}
 
 	public SybaseAnywhereDialect(int version, boolean jtdsDriver) {

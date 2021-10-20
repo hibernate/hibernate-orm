@@ -18,6 +18,7 @@ import org.hibernate.dialect.lock.LockingStrategyException;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
 import org.hibernate.dialect.unique.UniqueDelegate;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.SchemaNameResolver;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -102,6 +103,11 @@ public class SpannerDialect extends Dialect {
 		registerColumnType( Types.CLOB, "string(max)" );
 		registerColumnType( Types.NCLOB, "string(max)" );
 		registerColumnType( Types.BLOB, "bytes(max)" );
+	}
+
+	public SpannerDialect(DialectResolutionInfo info) {
+		this();
+		registerKeywords( info );
 	}
 
 	@Override

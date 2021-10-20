@@ -46,6 +46,7 @@ public class MariaDBDialect extends MySQLDialect {
 				info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10,
 				getCharacterSetBytesPerCharacter( info.unwrap( DatabaseMetaData.class ) )
 		);
+		registerKeywords( info );
 	}
 
 	public MariaDBDialect(int version) {

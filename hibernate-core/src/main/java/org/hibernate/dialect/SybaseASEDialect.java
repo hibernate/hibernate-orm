@@ -63,6 +63,7 @@ public class SybaseASEDialect extends SybaseDialect {
 				info.getDriverName() != null && info.getDriverName().contains( "jTDS" ),
 				isAnsiNull( info.unwrap( DatabaseMetaData.class ) )
 		);
+		registerKeywords( info );
 	}
 
 	public SybaseASEDialect(int version, boolean jtdsDriver, boolean ansiNull) {

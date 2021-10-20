@@ -17,6 +17,7 @@ import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.community.dialect.pagination.TimesTenLimitHandler;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.community.dialect.sequence.TimesTenSequenceSupport;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -58,7 +59,6 @@ import jakarta.persistence.TemporalType;
  *
  * @author Sherry Listgarten, Max Andersen, Chris Jenkins
  */
-@SuppressWarnings("deprecation")
 public class TimesTenDialect extends Dialect {
 
 	public TimesTenDialect() {
@@ -94,6 +94,11 @@ public class TimesTenDialect extends Dialect {
 
 		getDefaultProperties().setProperty( Environment.USE_STREAMS_FOR_BINARY, "true" );
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
+	}
+
+	public TimesTenDialect(DialectResolutionInfo info) {
+		this();
+		registerKeywords( info );
 	}
 
 	@Override

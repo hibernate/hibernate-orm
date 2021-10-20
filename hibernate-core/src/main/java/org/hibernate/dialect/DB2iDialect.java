@@ -37,6 +37,7 @@ public class DB2iDialect extends DB2Dialect {
 
 	public DB2iDialect(DialectResolutionInfo info) {
 		this( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
+		registerKeywords( info );
 	}
 
 	public DB2iDialect() {

@@ -89,7 +89,7 @@ public enum CommunityDatabase {
 	CACHE {
 		@Override
 		public Dialect createDialect(DialectResolutionInfo info) {
-			return new CacheDialect();
+			return new CacheDialect( info );
 		}
 		@Override
 		public boolean productNameMatches(String databaseName) {
@@ -100,7 +100,7 @@ public enum CommunityDatabase {
 	CUBRID {
 		@Override
 		public Dialect createDialect(DialectResolutionInfo info) {
-			return new CUBRIDDialect();
+			return new CUBRIDDialect( info );
 		}
 		@Override
 		public boolean productNameMatches(String databaseName) {
@@ -115,7 +115,7 @@ public enum CommunityDatabase {
 	MIMER {
 		@Override
 		public Dialect createDialect(DialectResolutionInfo info) {
-			return new MimerSQLDialect();
+			return new MimerSQLDialect( info );
 		}
 		@Override
 		public boolean productNameMatches(String databaseName) {
@@ -130,7 +130,7 @@ public enum CommunityDatabase {
 	MAXDB {
 		@Override
 		public Dialect createDialect(DialectResolutionInfo info) {
-			return new MaxDBDialect();
+			return new MaxDBDialect( info );
 		}
 		@Override
 		public boolean productNameMatches(String databaseName) {
@@ -189,7 +189,7 @@ public enum CommunityDatabase {
 	TIMESTEN {
 		@Override
 		public Dialect createDialect(DialectResolutionInfo info) {
-			return new TimesTenDialect();
+			return new TimesTenDialect( info );
 		}
 		@Override
 		public boolean productNameMatches(String databaseName) {

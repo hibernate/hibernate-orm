@@ -85,6 +85,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	public SQLServerDialect(DialectResolutionInfo info) {
 		this( info.getDatabaseMajorVersion() );
+		registerKeywords( info );
 	}
 
 	public SQLServerDialect() {

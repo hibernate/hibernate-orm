@@ -85,6 +85,15 @@ public class H2Dialect extends Dialect {
 	private final SequenceInformationExtractor sequenceInformationExtractor;
 	private final String querySequenceString;
 
+	public H2Dialect(DialectResolutionInfo info) {
+		this(
+				info.getDatabaseMajorVersion() * 100000
+						+ info.getDatabaseMinorVersion() * 1000,
+				parseBuildId( info )
+		);
+		registerKeywords( info );
+	}
+
 	public H2Dialect() {
 		this(0, 0);
 	}
@@ -158,14 +167,6 @@ public class H2Dialect extends Dialect {
 
 		final String[] bits = databaseVersion.split("[. ]");
 		return bits.length > 2 ? Integer.parseInt( bits[2] ) : 0;
-	}
-
-	public H2Dialect(DialectResolutionInfo info) {
-		this(
-				info.getDatabaseMajorVersion() * 100000
-						+ info.getDatabaseMinorVersion() * 1000,
-				parseBuildId( info )
-		);
 	}
 
 	public boolean hasDstBug() {

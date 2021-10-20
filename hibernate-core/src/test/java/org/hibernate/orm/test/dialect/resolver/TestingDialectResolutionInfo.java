@@ -96,4 +96,9 @@ public class TestingDialectResolutionInfo implements DialectResolutionInfo {
 	public int getDriverMinorVersion() {
 		return driverMinorVersion == NO_VERSION ? 0 : driverMinorVersion;
 	}
+
+	@Override
+	public String getSQLKeywords() {
+		return "";
+	}
 }

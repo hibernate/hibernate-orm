@@ -89,27 +89,22 @@ import static org.hibernate.query.TemporalUnit.*;
  */
 public class OracleDialect extends Dialect {
 
-	private final int version;
-
-	public OracleDialect(DialectResolutionInfo info) {
-		this( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() );
-	}
-
 	private static final Pattern DISTINCT_KEYWORD_PATTERN = Pattern.compile( "\\bdistinct\\b" );
-
 	private static final Pattern GROUP_BY_KEYWORD_PATTERN = Pattern.compile( "\\bgroup\\sby\\b" );
-
 	private static final Pattern ORDER_BY_KEYWORD_PATTERN = Pattern.compile( "\\border\\sby\\b" );
-
 	private static final Pattern UNION_KEYWORD_PATTERN = Pattern.compile( "\\bunion\\b" );
-
 	private static final Pattern SQL_STATEMENT_TYPE_PATTERN = Pattern.compile("^(?:/\\*.*?\\*/)?\\s*(select|insert|update|delete)\\s+.*?");
-
 	private static final int PARAM_LIST_SIZE_LIMIT = 1000;
 
 	public static final String PREFER_LONG_RAW = "hibernate.dialect.oracle.prefer_long_raw";
 
 	private final LimitHandler limitHandler;
+	private final int version;
+
+	public OracleDialect(DialectResolutionInfo info) {
+		this( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() );
+		registerKeywords( info );
+	}
 
 	public OracleDialect() {
 		this( 800 );

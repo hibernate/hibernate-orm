@@ -444,7 +444,7 @@ public interface AvailableSettings {
 	 * @see #DIALECT_DB_MAJOR_VERSION
 	 * @see #DIALECT_DB_MINOR_VERSION
 	 *
-	 * @deprecated Use {@link #JAKARTA_HBM2DDL_DB_VERSION} instead
+	 * @deprecated Use {@link #JAKARTA_HBM2DDL_DB_NAME} instead
 	 */
 	@Deprecated
 	String DIALECT_DB_NAME = "javax.persistence.database-product-name";
@@ -459,7 +459,10 @@ public interface AvailableSettings {
 	 * {@link java.sql.DatabaseMetaData#getDatabaseProductVersion()} for the target database.
 	 *
 	 * @see #DIALECT_DB_NAME
+	 *
+	 * @deprecated Use {@link #JAKARTA_HBM2DDL_DB_VERSION} instead
 	 */
+	@Deprecated
 	String DIALECT_DB_VERSION = "javax.persistence.database-product-version";
 
 	/**
@@ -470,7 +473,10 @@ public interface AvailableSettings {
 
 	 * @see #DIALECT_DB_NAME
 	 * @see #DIALECT_DB_MINOR_VERSION
+	 *
+	 * @deprecated Use {@link #JAKARTA_HBM2DDL_DB_MAJOR_VERSION} instead
 	 */
+	@Deprecated
 	String DIALECT_DB_MAJOR_VERSION = "javax.persistence.database-major-version";
 
 	/**
@@ -482,7 +488,10 @@ public interface AvailableSettings {
 	 * @see #DIALECT_DB_NAME
 	 * @see #DIALECT_DB_MAJOR_VERSION
 	 * @see DialectResolver
+	 *
+	 * @deprecated Use {@link #JAKARTA_HBM2DDL_DB_MINOR_VERSION} instead
 	 */
+	@Deprecated
 	String DIALECT_DB_MINOR_VERSION = "javax.persistence.database-minor-version";
 
 	/**

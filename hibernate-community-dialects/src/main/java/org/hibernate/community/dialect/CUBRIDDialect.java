@@ -19,6 +19,7 @@ import org.hibernate.dialect.pagination.LimitLimitHandler;
 import org.hibernate.community.dialect.sequence.CUBRIDSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.Size;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.IntervalType;
 import org.hibernate.query.SemanticException;
@@ -101,6 +102,11 @@ public class CUBRIDDialect extends Dialect {
 		registerKeyword( "ATTRIBUTE" );
 		registerKeyword( "STRING" );
 		registerKeyword( "SEARCH" );
+	}
+
+	public CUBRIDDialect(DialectResolutionInfo info) {
+		this();
+		registerKeywords( info );
 	}
 
 	@Override

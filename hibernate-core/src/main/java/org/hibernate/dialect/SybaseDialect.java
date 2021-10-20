@@ -75,6 +75,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 				info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10,
 				info.getDriverName() != null && info.getDriverName().contains( "jTDS" )
 		);
+		registerKeywords( info );
 	}
 
 	public SybaseDialect(int version, boolean jtdsDriver) {

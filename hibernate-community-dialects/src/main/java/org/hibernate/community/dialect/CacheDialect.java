@@ -18,6 +18,7 @@ import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
 import org.hibernate.community.dialect.sequence.CacheSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.DataException;
@@ -73,6 +74,11 @@ public class CacheDialect extends Dialect {
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 
 		getDefaultProperties().setProperty( Environment.USE_SQL_COMMENTS, "false" );
+	}
+
+	public CacheDialect(DialectResolutionInfo info) {
+		this();
+		registerKeywords( info );
 	}
 
 	private static void useJdbcEscape(QueryEngine queryEngine, String name) {

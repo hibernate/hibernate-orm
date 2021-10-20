@@ -100,6 +100,7 @@ public class PostgreSQLDialect extends Dialect {
 				info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10,
 				PostgreSQLDriverKind.determineKind( info )
 		);
+		registerKeywords( info );
 	}
 
 	public PostgreSQLDialect() {

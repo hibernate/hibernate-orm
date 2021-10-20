@@ -89,6 +89,16 @@ public class DatabaseMetaDataDialectResolutionInfoAdapter implements DialectReso
 	}
 
 	@Override
+	public String getSQLKeywords() {
+		try {
+			return databaseMetaData.getSQLKeywords();
+		}
+		catch (SQLException e) {
+			throw BasicSQLExceptionConverter.INSTANCE.convert( e );
+		}
+	}
+
+	@Override
 	public <T> T unwrap(Class<T> clazz) {
 		if ( clazz.isInstance( databaseMetaData ) ) {
 			return clazz.cast( databaseMetaData );

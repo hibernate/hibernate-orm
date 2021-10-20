@@ -19,6 +19,7 @@ import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.community.dialect.sequence.MimerSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.Size;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.IntervalType;
 import org.hibernate.query.SemanticException;
@@ -77,6 +78,11 @@ public class MimerSQLDialect extends Dialect {
 
 		getDefaultProperties().setProperty( Environment.USE_STREAMS_FOR_BINARY, "true" );
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, "50" );
+	}
+
+	public MimerSQLDialect(DialectResolutionInfo info) {
+		this();
+		registerKeywords( info );
 	}
 
 	@Override

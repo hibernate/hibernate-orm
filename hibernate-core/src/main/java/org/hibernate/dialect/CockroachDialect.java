@@ -82,6 +82,7 @@ public class CockroachDialect extends Dialect {
 				info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10,
 				PostgreSQLDriverKind.determineKind( info )
 		);
+		registerKeywords( info );
 	}
 
 	public CockroachDialect(int version) {

@@ -6,6 +6,7 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.sqm.mutation.internal.idtable.AfterUseAction;
@@ -32,6 +33,11 @@ public class HANARowStoreDialect extends AbstractHANADialect {
 
 	public HANARowStoreDialect() {
 		super();
+	}
+
+	public HANARowStoreDialect(DialectResolutionInfo info) {
+		super();
+		registerKeywords( info );
 	}
 
 	@Override

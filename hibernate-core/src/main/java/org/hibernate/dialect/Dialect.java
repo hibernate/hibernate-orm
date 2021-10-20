@@ -11,6 +11,7 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.dialect.sequence.NoSequenceSupport;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.FetchClauseType;
 import org.hibernate.query.IntervalType;
@@ -237,12 +238,22 @@ public abstract class Dialect implements ConversionContext {
 		registerHibernateType( Types.TIME, StandardBasicTypes.TIME.getName() );
 		registerHibernateType( Types.TIMESTAMP, StandardBasicTypes.TIMESTAMP.getName() );
 
-		if(supportsPartitionBy()) {
-			registerKeyword( "PARTITION" );
-		}
+		registerDefaultKeywords();
 
 		uniqueDelegate = new DefaultUniqueDelegate( this );
 		sizeStrategy = new SizeStrategyImpl();
+	}
+
+	protected void registerDefaultKeywords() {
+		for ( String keyword : AnsiSqlKeywords.INSTANCE.sql2003() ) {
+			registerKeyword( keyword );
+		}
+	}
+
+	protected void registerKeywords(DialectResolutionInfo info) {
+		for ( String keyword : StringHelper.parseCommaSeparatedString( info.getSQLKeywords() ) ) {
+			registerKeyword( keyword );
+		}
 	}
 
 	public JdbcType resolveSqlTypeDescriptor(
@@ -2136,10 +2147,8 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * @deprecated These are only ever used (if at all) from the code that handles identifier quoting.
-	 * So see {@link #buildIdentifierHelper} instead
+	 * The keywords of the SQL dialect
 	 */
-	@Deprecated
 	public Set<String> getKeywords() {
 		return sqlKeywords;
 	}
@@ -2178,8 +2187,6 @@ public abstract class Dialect implements ConversionContext {
 			DatabaseMetaData dbMetaData) throws SQLException {
 		builder.applyIdentifierCasing( dbMetaData );
 
-		builder.applyReservedWords( dbMetaData );
-		builder.applyReservedWords( AnsiSqlKeywords.INSTANCE.sql2003() );
 		builder.applyReservedWords( sqlKeywords );
 
 		builder.setNameQualifierSupport( getNameQualifierSupport() );

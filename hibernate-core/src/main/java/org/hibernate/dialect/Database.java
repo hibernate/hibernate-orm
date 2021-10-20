@@ -241,7 +241,7 @@ public enum Database {
 	SPANNER {
 		@Override
 		public Dialect createDialect(DialectResolutionInfo info) {
-			return new SpannerDialect();
+			return new SpannerDialect( info );
 		}
 		@Override
 		public boolean productNameMatches(String databaseName) {

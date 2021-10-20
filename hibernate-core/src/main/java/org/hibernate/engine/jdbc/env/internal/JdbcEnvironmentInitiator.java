@@ -58,7 +58,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		// it is used to control whether we should consult the JDBC metadata to determine
 		// certain Settings default values; it is useful to *not* do this when the database
 		// may not be available (mainly in tools usage).
-		boolean useJdbcMetadata = ConfigurationHelper.getBoolean(
+		final boolean useJdbcMetadata = ConfigurationHelper.getBoolean(
 				"hibernate.temp.use_jdbc_metadata_defaults",
 				configurationValues,
 				true
@@ -78,12 +78,55 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 				}
 		);
 
-		NullnessHelper.coalesceSuppliedValues(
-				() -> AvailableSettings.JAKARTA_HBM2DDL_DB_VERSION,
-				() -> AvailableSettings.DIALECT_DB_VERSION
-		);
-
 		if ( dbName != null ) {
+			final String dbVersion = NullnessHelper.coalesceSuppliedValues(
+					() -> (String) configurationValues.get( AvailableSettings.JAKARTA_HBM2DDL_DB_VERSION ),
+					() -> {
+						final Object value = configurationValues.get( AvailableSettings.DIALECT_DB_VERSION );
+						if ( value != null ) {
+							DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
+									AvailableSettings.DIALECT_DB_VERSION,
+									AvailableSettings.JAKARTA_HBM2DDL_DB_VERSION
+							);
+						}
+						return (String) value;
+					},
+					() -> "0"
+			);
+			final int dbMajorVersion = NullnessHelper.coalesceSuppliedValues(
+					() -> ConfigurationHelper.getInteger( AvailableSettings.JAKARTA_HBM2DDL_DB_MAJOR_VERSION, configurationValues ),
+					() -> {
+						final Integer value = ConfigurationHelper.getInteger(
+								AvailableSettings.DIALECT_DB_MAJOR_VERSION,
+								configurationValues
+						);
+						if ( value != null ) {
+							DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
+									AvailableSettings.DIALECT_DB_MAJOR_VERSION,
+									AvailableSettings.JAKARTA_HBM2DDL_DB_MAJOR_VERSION
+							);
+						}
+						return value;
+					},
+					() -> 0
+			);
+			final int dbMinorVersion = NullnessHelper.coalesceSuppliedValues(
+					() -> ConfigurationHelper.getInteger( AvailableSettings.JAKARTA_HBM2DDL_DB_MINOR_VERSION, configurationValues ),
+					() -> {
+						final Integer value = ConfigurationHelper.getInteger(
+								AvailableSettings.DIALECT_DB_MINOR_VERSION,
+								configurationValues
+						);
+						if ( value != null ) {
+							DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
+									AvailableSettings.DIALECT_DB_MINOR_VERSION,
+									AvailableSettings.JAKARTA_HBM2DDL_DB_MINOR_VERSION
+							);
+						}
+						return value;
+					},
+					() -> 0
+			);
 			return new JdbcEnvironmentImpl( registry, dialectFactory.buildDialect(
 					configurationValues,
 					() -> new DialectResolutionInfo() {
@@ -94,32 +137,37 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 
 						@Override
 						public String getDatabaseVersion() {
-							return (String) configurationValues.getOrDefault( AvailableSettings.DIALECT_DB_VERSION, "0" );
+							return dbVersion;
 						}
 
 						@Override
 						public int getDatabaseMajorVersion() {
-							return (Integer) configurationValues.getOrDefault( AvailableSettings.DIALECT_DB_MAJOR_VERSION, 0 );
+							return dbMajorVersion;
 						}
 
 						@Override
 						public int getDatabaseMinorVersion() {
-							return (Integer) configurationValues.getOrDefault( AvailableSettings.DIALECT_DB_MINOR_VERSION, 0 );
+							return dbMinorVersion;
 						}
 
 						@Override
 						public String getDriverName() {
-							throw new UnsupportedOperationException();
+							return "";
 						}
 
 						@Override
 						public int getDriverMajorVersion() {
-							throw new UnsupportedOperationException();
+							return 0;
 						}
 
 						@Override
 						public int getDriverMinorVersion() {
-							throw new UnsupportedOperationException();
+							return 0;
+						}
+
+						@Override
+						public String getSQLKeywords() {
+							return "";
 						}
 					}
 			) );
@@ -156,7 +204,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 						log.debugf( "JDBC version : %s.%s", dbmd.getJDBCMajorVersion(), dbmd.getJDBCMinorVersion() );
 					}
 
-					Dialect dialect = dialectFactory.buildDialect(
+					final Dialect dialect = dialectFactory.buildDialect(
 							configurationValues,
 							() -> {
 								try {

@@ -75,6 +75,7 @@ public class TeradataDialect extends Dialect {
 
 	public TeradataDialect(DialectResolutionInfo info) {
 		this( info.getDatabaseMajorVersion() );
+		registerKeywords( info );
 	}
 
 	public TeradataDialect() {

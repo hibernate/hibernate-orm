@@ -67,13 +67,13 @@ import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtract
 public class InformixDialect extends Dialect {
 
 	private final int version;
+	private final UniqueDelegate uniqueDelegate;
+	private final LimitHandler limitHandler;
 
 	public InformixDialect(DialectResolutionInfo info) {
 		this( info.getDatabaseMajorVersion() );
+		registerKeywords( info );
 	}
-
-	private final UniqueDelegate uniqueDelegate;
-	private final LimitHandler limitHandler;
 
 	public InformixDialect() {
 		this( 7 );

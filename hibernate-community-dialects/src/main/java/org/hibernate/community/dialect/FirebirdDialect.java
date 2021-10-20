@@ -98,6 +98,7 @@ public class FirebirdDialect extends Dialect {
 
 	public FirebirdDialect(DialectResolutionInfo info) {
 		this( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
+		registerKeywords( info );
 	}
 
 	// KNOWN LIMITATIONS:

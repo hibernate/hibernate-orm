@@ -15,6 +15,7 @@ import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
 import org.hibernate.community.dialect.sequence.MaxDBSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -85,6 +86,11 @@ public class MaxDBDialect extends Dialect {
 				scale,
 				jdbcTypeDescriptorRegistry
 		);
+	}
+
+	public MaxDBDialect(DialectResolutionInfo info) {
+		this();
+		registerKeywords( info );
 	}
 
 	@Override

@@ -38,6 +38,7 @@ public class HANAColumnStoreDialect extends AbstractHANADialect {
 
 	public HANAColumnStoreDialect(DialectResolutionInfo info) {
 		this( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
+		registerKeywords( info );
 	}
 	
 	public HANAColumnStoreDialect() {

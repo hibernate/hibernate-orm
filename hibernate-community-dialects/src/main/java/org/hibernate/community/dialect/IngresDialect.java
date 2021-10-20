@@ -93,6 +93,7 @@ public class IngresDialect extends Dialect {
 
 	public IngresDialect(DialectResolutionInfo info) {
 		this( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
+		registerKeywords( info );
 	}
 
 	public IngresDialect() {

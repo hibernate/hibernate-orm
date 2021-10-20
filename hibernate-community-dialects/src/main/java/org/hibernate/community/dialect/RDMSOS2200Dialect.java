@@ -16,6 +16,7 @@ import org.hibernate.dialect.pagination.FetchLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.community.dialect.sequence.RDMSSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.Lockable;
@@ -105,6 +106,11 @@ public class RDMSOS2200Dialect extends Dialect {
 		registerColumnType( Types.VARCHAR, "unicode($l)");
 
 		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp($p)");
+	}
+
+	public RDMSOS2200Dialect(DialectResolutionInfo info) {
+		this();
+		registerKeywords( info );
 	}
 
 	@Override

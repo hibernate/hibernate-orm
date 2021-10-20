@@ -90,6 +90,16 @@ public interface DialectResolutionInfo {
 	int getDriverMinorVersion();
 
 	/**
+	 * Obtain access to the SQL keywords of the JDBC driver, as returned from
+	 * {@link java.sql.DatabaseMetaData#getSQLKeywords()} for the target database.
+	 *
+	 * @return The JDBC driver keywords
+	 *
+	 * @see java.sql.DatabaseMetaData#getSQLKeywords()
+	 */
+	String getSQLKeywords();
+
+	/**
 	 * Obtain access to the underlying object of the given type.
 	 *
 	 * Return <code>null</code> if the underlying object is not of the given type.

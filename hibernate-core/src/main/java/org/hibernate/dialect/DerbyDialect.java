@@ -26,8 +26,6 @@ import org.hibernate.dialect.sequence.DerbySequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
-import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
-import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
@@ -64,8 +62,6 @@ import org.hibernate.type.descriptor.jdbc.SmallIntJdbcType;
 import org.hibernate.type.descriptor.jdbc.TimestampJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
-import java.sql.DatabaseMetaData;
-import java.sql.SQLException;
 import java.sql.Types;
 
 import jakarta.persistence.TemporalType;
@@ -98,6 +94,7 @@ public class DerbyDialect extends Dialect {
 
 	public DerbyDialect(DialectResolutionInfo info) {
 		this( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
+		registerKeywords( info );
 	}
 
 	public DerbyDialect() {
@@ -533,20 +530,6 @@ public class DerbyDialect extends Dialect {
 	@Override
 	public boolean supportsUnboundedLobLocatorMaterialization() {
 		return false;
-	}
-
-	@Override
-	public IdentifierHelper buildIdentifierHelper(
-			IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData) throws SQLException {
-		builder.applyIdentifierCasing( dbMetaData );
-
-		builder.applyReservedWords( dbMetaData );
-
-		builder.applyReservedWords( getKeywords() );
-
-		builder.setNameQualifierSupport( getNameQualifierSupport() );
-
-		return builder.build();
 	}
 
 	@Override

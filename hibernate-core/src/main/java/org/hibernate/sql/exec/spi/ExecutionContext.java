@@ -34,10 +34,6 @@ public interface ExecutionContext {
 
 	Callback getCallback();
 
-	default void invokeAfterLoadActions(SharedSessionContractImplementor session, Object entity, Loadable persister) {
-		// No-op because by default there is no callback
-	}
-
 	default String getQueryIdentifier(String sql) {
 		return null;
 	}

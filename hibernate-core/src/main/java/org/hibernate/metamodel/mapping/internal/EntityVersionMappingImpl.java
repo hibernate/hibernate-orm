@@ -7,10 +7,15 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import java.util.function.BiConsumer;
+import java.util.function.Supplier;
 
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.internal.UnsavedValueFactory;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.engine.spi.VersionValue;
+import org.hibernate.mapping.KeyValue;
+import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -32,6 +37,7 @@ import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.VersionJavaType;
 
 /**
  * @author Steve Ebersole
@@ -45,12 +51,19 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 
 	private final BasicType versionBasicType;
 
+	private final VersionValue unsavedValueStrategy;
+
+	private BasicAttributeMapping attributeMapping;
+
 	public EntityVersionMappingImpl(
+			RootClass bootEntityDescriptor,
+			Supplier<?> templateInstanceAccess,
 			String attributeName,
 			String columnTableExpression,
 			String columnExpression,
 			BasicType versionBasicType,
-			EntityMappingType declaringType) {
+			EntityMappingType declaringType,
+			MappingModelCreationProcess creationProcess) {
 		this.attributeName = attributeName;
 		this.declaringType = declaringType;
 
@@ -58,11 +71,27 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 		this.columnExpression = columnExpression;
 
 		this.versionBasicType = versionBasicType;
+
+		unsavedValueStrategy = UnsavedValueFactory.getUnsavedVersionValue(
+				(KeyValue) bootEntityDescriptor.getVersion().getValue(),
+				(VersionJavaType) versionBasicType.getJavaTypeDescriptor(),
+				declaringType
+						.getRepresentationStrategy()
+						.resolvePropertyAccess( bootEntityDescriptor.getVersion() )
+						.getGetter(),
+				templateInstanceAccess,
+				creationProcess.getCreationContext().getSessionFactory()
+		);
 	}
 
 	@Override
 	public BasicAttributeMapping getVersionAttribute() {
 		return (BasicAttributeMapping) declaringType.findAttributeMapping( attributeName );
+	}
+
+	@Override
+	public VersionValue getUnsavedStrategy() {
+		return unsavedValueStrategy;
 	}
 
 	@Override

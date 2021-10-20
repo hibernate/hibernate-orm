@@ -9,6 +9,7 @@ package org.hibernate.metamodel.mapping;
 
 import java.util.List;
 
+import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.mapping.IndexedConsumer;
 
 /**
@@ -32,5 +33,10 @@ public interface CompositeIdentifierMapping extends EntityIdentifierMapping {
 		for ( int i = 0; i < attributes.size(); i++ ) {
 			consumer.accept( i, attributes.get( i ) );
 		}
+	}
+
+	@Override
+	default IdentifierValue getUnsavedStrategy() {
+		return IdentifierValue.UNDEFINED;
 	}
 }

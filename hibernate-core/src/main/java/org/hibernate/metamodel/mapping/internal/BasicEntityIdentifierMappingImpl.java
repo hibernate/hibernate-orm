@@ -7,20 +7,23 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import java.util.Locale;
+import java.util.function.Supplier;
 
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.internal.UnsavedValueFactory;
+import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
-import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
+import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.spi.PropertyAccess;
@@ -51,6 +54,8 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 	private final NavigableRole idRole;
 	private final String attributeName;
 
+	private final IdentifierValue unsavedStrategy;
+
 	private final PropertyAccess propertyAccess;
 	private final EntityPersister entityPersister;
 
@@ -63,6 +68,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 
 	public BasicEntityIdentifierMappingImpl(
 			EntityPersister entityPersister,
+			Supplier<?> instanceCreator,
 			String attributeName,
 			String rootTable,
 			String pkColumnName,
@@ -84,6 +90,14 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 
 		idRole = entityPersister.getNavigableRole().append( EntityIdentifierMapping.ROLE_LOCAL_NAME );
 		sessionFactory = creationProcess.getCreationContext().getSessionFactory();
+
+		unsavedStrategy = UnsavedValueFactory.getUnsavedIdentifierValue(
+				bootEntityDescriptor.getIdentifier(),
+				getJavaTypeDescriptor(),
+				propertyAccess.getGetter(),
+				instanceCreator,
+				sessionFactory
+		);
 	}
 
 	@Override
@@ -94,6 +108,11 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 	@Override
 	public String getAttributeName() {
 		return attributeName;
+	}
+
+	@Override
+	public IdentifierValue getUnsavedStrategy() {
+		return unsavedStrategy;
 	}
 
 	@Override

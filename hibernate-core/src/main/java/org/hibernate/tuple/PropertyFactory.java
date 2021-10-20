@@ -63,20 +63,12 @@ public final class PropertyFactory {
 		Type type = mappedEntity.getIdentifier().getType();
 		Property property = mappedEntity.getIdentifierProperty();
 
-		IdentifierValue unsavedValue = UnsavedValueFactory.getUnsavedIdentifierValue(
-				mappedUnsavedValue,
-				getGetter( property ),
-				type,
-				getConstructor( mappedEntity )
-		);
-
 		if ( property == null ) {
 			// this is a virtual id property...
 			return new IdentifierProperty(
 					type,
 					mappedEntity.hasEmbeddedIdentifier(),
 					mappedEntity.hasIdentifierMapper(),
-					unsavedValue,
 					generator
 			);
 		}
@@ -85,7 +77,6 @@ public final class PropertyFactory {
 					property.getName(),
 					type,
 					mappedEntity.hasEmbeddedIdentifier(),
-					unsavedValue,
 					generator
 			);
 		}
@@ -108,14 +99,6 @@ public final class PropertyFactory {
 			boolean lazyAvailable) {
 		String mappedUnsavedValue = ( (KeyValue) property.getValue() ).getNullValue();
 
-		//noinspection unchecked
-		VersionValue unsavedValue = UnsavedValueFactory.getUnsavedVersionValue(
-				mappedUnsavedValue,
-				getGetter( property ),
-				(VersionJavaType<Object>) ((BasicType<?>) property.getType()).getJavaTypeDescriptor(),
-				getConstructor( property.getPersistentClass() )
-		);
-
 		boolean lazy = lazyAvailable && property.isLazy();
 
 		return new VersionProperty(
@@ -133,8 +116,7 @@ public final class PropertyFactory {
 						.setDirtyCheckable( property.isUpdateable() && !lazy )
 						.setVersionable( property.isOptimisticLocked() )
 						.setCascadeStyle( property.getCascadeStyle() )
-						.createInformation(),
-				unsavedValue
+						.createInformation()
 		);
 	}
 

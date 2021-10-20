@@ -39,30 +39,7 @@ public interface EntityTuplizer extends Tuplizer {
 	 */
 	EntityMode getEntityMode();
 
-    /**
-     * Create an entity instance initialized with the given identifier.
-     *
-     * @param id The identifier value for the entity to be instantiated.
-     * @return The instantiated entity.
-     * @throws HibernateException
-	 *
-	 * @deprecated Use {@link #instantiate(Object, SharedSessionContractImplementor)} instead.
-     */
-	@Deprecated
-	@SuppressWarnings( {"JavaDoc"})
-	Object instantiate(Object id) throws HibernateException;
-
-    /**
-     * Create an entity instance initialized with the given identifier.
-     *
-     * @param id The identifier value for the entity to be instantiated.
-	 * @param session The session from which is requests originates
-	 *
-     * @return The instantiated entity.
-     */
-	Object instantiate(Object id, SharedSessionContractImplementor session);
-
-    /**
+	/**
      * Extract the identifier value from the given entity.
      *
      * @param entity The entity from which to extract the identifier value.
@@ -87,21 +64,7 @@ public interface EntityTuplizer extends Tuplizer {
      */
 	Object getIdentifier(Object entity, SharedSessionContractImplementor session);
 
-    /**
-     * Inject the identifier value into the given entity.
-     * </p>
-     * Has no effect if the entity does not define an identifier property
-     *
-     * @param entity The entity to inject with the identifier value.
-     * @param id The value to be injected as the identifier.
-	 *
-	 * @deprecated Use {@link #setIdentifier(Object, Object, SharedSessionContractImplementor)} instead.
-     */
-	@Deprecated
-	@SuppressWarnings( {"JavaDoc"})
-	void setIdentifier(Object entity, Object id) throws HibernateException;
-
-    /**
+	/**
      * Inject the identifier value into the given entity.
      * </p>
      * Has no effect if the entity does not define an identifier property
@@ -113,30 +76,6 @@ public interface EntityTuplizer extends Tuplizer {
 	void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session);
 
 	/**
-	 * Inject the given identifier and version into the entity, in order to
-	 * "roll back" to their original values.
-	 *
-	 * @param entity The entity for which to reset the id/version values
-	 * @param currentId The identifier value to inject into the entity.
-	 * @param currentVersion The version value to inject into the entity.
-	 *
-	 * @deprecated Use {@link #resetIdentifier(Object, Object, Object, SharedSessionContractImplementor)} instead
-	 */
-	@Deprecated
-	@SuppressWarnings( {"UnusedDeclaration"})
-	void resetIdentifier(Object entity, Object currentId, Object currentVersion);
-
-	/**
-	 * Inject the given identifier and version into the entity, in order to
-	 * "roll back" to their original values.
-	 *  @param entity The entity for which to reset the id/version values
-	 * @param currentId The identifier value to inject into the entity.
-	 * @param currentVersion The version value to inject into the entity.
-	 * @param session The session from which the request originated
-	 */
-	void resetIdentifier(Object entity, Object currentId, Object currentVersion, SharedSessionContractImplementor session);
-
-    /**
      * Extract the value of the version property from the given entity.
      *
      * @param entity The entity from which to extract the version value.
@@ -268,13 +207,6 @@ public interface EntityTuplizer extends Tuplizer {
 	 * @return The getter for the identifier property.
 	 */
 	Getter getIdentifierGetter();
-
-	/**
-	 * Retrieve the getter for the version property.  May return null.
-	 *
-	 * @return The getter for the version property.
-	 */
-	Getter getVersionGetter();
 
 	default ProxyFactory getProxyFactory() {
 		return null;

@@ -10,12 +10,17 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**
  * Contract for instantiating entity values
- *
- * @author Steve Ebersole
  */
 public interface EntityInstantiator extends Instantiator {
 	/**
 	 * Create an instance of managed entity
 	 */
 	Object instantiate(SessionFactoryImplementor sessionFactory);
+
+	/**
+	 * Can this entity be instantiated?
+	 */
+	default boolean canBeInstantiated() {
+		return true;
+	}
 }

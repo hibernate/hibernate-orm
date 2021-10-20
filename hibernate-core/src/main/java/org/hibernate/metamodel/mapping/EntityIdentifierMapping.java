@@ -6,20 +6,30 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
- * @author Steve Ebersole
+ * Describes the mapping of an entity's identifier.
+ *
+ * @see jakarta.persistence.Id
+ * @see jakarta.persistence.EmbeddedId
  */
 public interface EntityIdentifierMapping extends ValueMapping, ModelPart {
 	String ROLE_LOCAL_NAME = "{id}";
-
-	Object getIdentifier(Object entity, SharedSessionContractImplementor session);
-	void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session);
-	Object instantiate();
 
 	@Override
 	default String getPartName() {
 		return ROLE_LOCAL_NAME;
 	}
+
+	/**
+	 * The strategy for distinguishing between detached and transient
+	 * state based on the identifier mapping
+	 */
+	IdentifierValue getUnsavedStrategy();
+
+	Object getIdentifier(Object entity, SharedSessionContractImplementor session);
+	void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session);
+	Object instantiate();
 }

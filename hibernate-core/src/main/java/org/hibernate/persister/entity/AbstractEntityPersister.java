@@ -108,6 +108,7 @@ import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.FilterHelper;
+import org.hibernate.internal.util.LazyValue;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -183,6 +184,7 @@ import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.mapping.internal.NonAggregatedIdentifierMappingImpl;
 import org.hibernate.metamodel.mapping.internal.SimpleNaturalIdMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.metamodel.spi.EntityInstantiator;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -240,7 +242,6 @@ import org.hibernate.sql.results.graph.entity.internal.EntityResultImpl;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.tuple.GenerationTiming;
-import org.hibernate.tuple.IdentifierProperty;
 import org.hibernate.tuple.InDatabaseValueGenerationStrategy;
 import org.hibernate.tuple.InMemoryValueGenerationStrategy;
 import org.hibernate.tuple.NonIdentifierAttribute;
@@ -248,7 +249,6 @@ import org.hibernate.tuple.ValueGeneration;
 import org.hibernate.tuple.entity.EntityBasedAssociationAttribute;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
-import org.hibernate.tuple.entity.VersionProperty;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.BasicType;
@@ -4627,16 +4627,14 @@ public abstract class AbstractEntityPersister
 		if ( isVersioned() ) {
 			// let this take precedence if defined, since it works for
 			// assigned identifiers
-			Boolean result = entityMetamodel.getVersionProperty()
-					.getUnsavedValue().isUnsaved( version );
+			Boolean result = versionMapping.getUnsavedStrategy().isUnsaved( version );
 			if ( result != null ) {
 				return result;
 			}
 		}
 
 		// check the id unsaved-value
-		Boolean result = entityMetamodel.getIdentifierProperty()
-				.getUnsavedValue().isUnsaved( id );
+		Boolean result = identifierMapping.getUnsavedStrategy().isUnsaved( id );
 		if ( result != null ) {
 			return result;
 		}
@@ -5088,22 +5086,24 @@ public abstract class AbstractEntityPersister
 			Object currentId,
 			Object currentVersion,
 			SharedSessionContractImplementor session) {
-		final IdentifierProperty identifierProperty = entityMetamodel.getIdentifierProperty();
-		if ( !(identifierProperty.getIdentifierGenerator() instanceof Assigned) ) {
-			//reset the id
-			Object result = identifierProperty
-					.getUnsavedValue()
-					.getDefaultValue( currentId );
-			setIdentifier( entity, result, session );
-			//reset the version
-			VersionProperty versionProperty = entityMetamodel.getVersionProperty();
-			if ( entityMetamodel.isVersioned() ) {
-				setPropertyValue(
-						entity,
-						entityMetamodel.getVersionPropertyIndex(),
-						versionProperty.getUnsavedValue().getDefaultValue( currentVersion )
-				);
-			}
+		if ( entityMetamodel.getIdentifierProperty().getIdentifierGenerator() instanceof Assigned ) {
+			return;
+		}
+
+		// reset the identifier
+		setIdentifier(
+				entity,
+				identifierMapping.getUnsavedStrategy().getDefaultValue( currentId ),
+				session
+		);
+
+		// reset the version
+		if ( versionMapping != null ) {
+			versionMapping.getVersionAttribute().getPropertyAccess().getSetter().set(
+					entity,
+					versionMapping.getUnsavedStrategy().getDefaultValue( currentVersion ),
+					getFactory()
+			);
 		}
 	}
 
@@ -5579,14 +5579,25 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	private void prepareMappingModel(MappingModelCreationProcess creationProcess, PersistentClass bootEntityDescriptor) {
+	private void prepareMappingModel(MappingModelCreationProcess creationProcess, PersistentClass bootEntityDescriptor) {		final EntityInstantiator instantiator = getRepresentationStrategy().getInstantiator();
+		final Supplier<?> templateInstanceCreator;
+		if ( ! instantiator.canBeInstantiated() ) {
+			templateInstanceCreator = null;
+		}
+		else {
+			final LazyValue<?> templateCreator = new LazyValue<>(
+					() -> instantiator.instantiate( creationProcess.getCreationContext().getSessionFactory() )
+			);
+			templateInstanceCreator = templateCreator::getValue;
+		}
+
 		identifierMapping = creationProcess.processSubPart(
 				EntityIdentifierMapping.ROLE_LOCAL_NAME,
 				(role, process) ->
-						generateIdentifierMapping( process, bootEntityDescriptor )
+						generateIdentifierMapping( templateInstanceCreator, bootEntityDescriptor, process )
 		);
 
-		versionMapping = generateVersionMapping( creationProcess, bootEntityDescriptor );
+		versionMapping = generateVersionMapping( templateInstanceCreator, bootEntityDescriptor, creationProcess );
 
 		if ( rowIdName == null ) {
 			rowIdMapping = null;
@@ -5735,8 +5746,9 @@ public abstract class AbstractEntityPersister
 	}
 
 	protected EntityVersionMapping generateVersionMapping(
-			MappingModelCreationProcess creationProcess,
-			PersistentClass bootEntityDescriptor) {
+			Supplier<?> templateInstanceCreator,
+			PersistentClass bootEntityDescriptor,
+			MappingModelCreationProcess creationProcess) {
 		if ( getVersionType() == null ) {
 			return null;
 		}
@@ -5748,6 +5760,7 @@ public abstract class AbstractEntityPersister
 					versionPropertyName,
 					(role, creationProcess1) -> generateVersionMapping(
 							this,
+							templateInstanceCreator,
 							bootEntityDescriptor,
 							creationProcess
 					)
@@ -5836,7 +5849,10 @@ public abstract class AbstractEntityPersister
 	}
 
 
-	protected EntityIdentifierMapping generateIdentifierMapping(MappingModelCreationProcess creationProcess, PersistentClass bootEntityDescriptor) {
+	protected EntityIdentifierMapping generateIdentifierMapping(
+			Supplier<?> templateInstanceCreator,
+			PersistentClass bootEntityDescriptor,
+			MappingModelCreationProcess creationProcess) {
 		final Type idType = getIdentifierType();
 
 		if ( idType instanceof CompositeType ) {
@@ -5866,6 +5882,7 @@ public abstract class AbstractEntityPersister
 
 		return new BasicEntityIdentifierMappingImpl(
 				this,
+				templateInstanceCreator,
 				bootEntityDescriptor.getIdentifierProperty().getName(),
 				getTableName(),
 				rootTableKeyColumnNames[0],
@@ -5898,25 +5915,25 @@ public abstract class AbstractEntityPersister
 	 */
 	protected static EntityVersionMapping generateVersionMapping(
 			AbstractEntityPersister entityPersister,
+			Supplier<?> templateInstanceCreator,
 			PersistentClass bootModelRootEntityDescriptor,
 			MappingModelCreationProcess creationProcess) {
-		final BasicValue bootModelVersionValue = (BasicValue) bootModelRootEntityDescriptor.getVersion().getValue();
+		final Property versionProperty = bootModelRootEntityDescriptor.getVersion();
+		final BasicValue bootModelVersionValue = (BasicValue) versionProperty.getValue();
 		final BasicValue.Resolution<?> basicTypeResolution = bootModelVersionValue.resolve();
 
-		final Iterator<Selectable> versionColumnIterator = bootModelRootEntityDescriptor.getVersion().getColumnIterator();
-		assert versionColumnIterator.hasNext();
-
+		final Selectable column = bootModelVersionValue.getColumn();
 		final Dialect dialect = creationProcess.getCreationContext().getSessionFactory().getJdbcServices().getDialect();
-		final Selectable column = versionColumnIterator.next();
-		assert !versionColumnIterator.hasNext();
-		assert !column.isFormula();
 
 		return new EntityVersionMappingImpl(
+				bootModelRootEntityDescriptor.getRootClass(),
+				templateInstanceCreator,
 				bootModelRootEntityDescriptor.getVersion().getName(),
 				entityPersister.getTableName(),
 				column.getText( dialect ),
 				basicTypeResolution.getLegacyResolvedBasicType(),
-				entityPersister
+				entityPersister,
+				creationProcess
 		);
 	}
 

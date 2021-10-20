@@ -37,21 +37,6 @@ import org.hibernate.property.access.spi.Getter;
  */
 @Deprecated
 public interface Tuplizer {
-	/**
-	 * Extract the current values contained on the given entity.
-	 *
-	 * @param entity The entity from which to extract values.
-	 * @return The current property values.
-	 */
-	public Object[] getPropertyValues(Object entity);
-
-	/**
-	 * Inject the given values into the given entity.
-	 *
-	 * @param entity The entity.
-	 * @param values The values to be injected.
-	 */
-	public void setPropertyValues(Object entity, Object[] values);
 
 	/**
 	 * Extract the value of a particular property from the given entity.
@@ -61,23 +46,6 @@ public interface Tuplizer {
 	 * @return The current value of the given property on the given entity.
 	 */
 	public Object getPropertyValue(Object entity, int i);
-
-	/**
-	 * Generate a new, empty entity.
-	 *
-	 * @return The new, empty entity instance.
-	 */
-	public Object instantiate();
-
-	/**
-	 * Is the given object considered an instance of the the entity (accounting
-	 * for entity-mode) managed by this tuplizer.
-	 *
-	 * @param object The object to be checked.
-	 * @return True if the object is considered as an instance of this entity
-	 *      within the given mode.
-	 */
-	public boolean isInstance(Object object);
 
 	/**
 	 * Return the pojo class managed by this tuplizer.

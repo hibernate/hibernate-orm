@@ -956,6 +956,18 @@ public class MappingModelCreationHelper {
 		}
 	}
 
+	/**
+	 * Tries to {@link ToOneAttributeMapping#setForeignKeyDescriptor}
+	 * to the given attribute {@code attributeMapping}.
+	 *
+	 * @param attributeMapping The attribute for which we try to set the foreign key
+	 * @param bootProperty The property
+	 * @param bootValueMapping The value mapping
+	 * @param inversePropertyAccess Access to the inverse property
+	 * @param dialect Current dialect
+	 * @param creationProcess Current creation process
+	 * @return true if the foreign key is actually set
+	 */
 	public static boolean interpretToOneKeyDescriptor(
 			ToOneAttributeMapping attributeMapping,
 			Property bootProperty,
@@ -1112,6 +1124,16 @@ public class MappingModelCreationHelper {
 		return true;
 	}
 
+	/**
+	 * Tries to {@link ToOneAttributeMapping#setForeignKeyDescriptor}
+	 * to the given attribute {@code attributeMapping},
+	 * using the same value from the inverse property defined by the {@code mapped-by}.
+	 *
+	 * @param referencedEntityDescriptor The entity which contains the inverse property
+	 * @param referencedPropertyName The inverse property name path
+	 * @param attributeMapping The attribute for which we try to set the foreign key
+	 * @return true if the foreign key is actually set
+	 */
 	private static boolean interpretNestedToOneKeyDescriptor(
 			EntityPersister referencedEntityDescriptor,
 			String referencedPropertyName,

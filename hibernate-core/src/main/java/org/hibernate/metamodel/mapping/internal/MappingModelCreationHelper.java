@@ -1608,10 +1608,16 @@ public class MappingModelCreationHelper {
 			final FetchTiming fetchTiming;
 
 			final boolean lazy = value.isLazy();
-			if ( lazy
-					&& value.isUnwrapProxy()
-					&& entityPersister.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() ) {
-				fetchTiming = FetchTiming.DELAYED;
+			if ( lazy && entityPersister.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() ) {
+				if ( value.isUnwrapProxy() ) {
+					fetchTiming = FetchOptionsHelper.determineFetchTiming( fetchStyle, type, sessionFactory );
+				}
+				else if ( value instanceof ManyToOne && value.isNullable() && ( (ManyToOne) value ).isIgnoreNotFound() ) {
+					fetchTiming = FetchTiming.IMMEDIATE;
+				}
+				else {
+					fetchTiming = FetchOptionsHelper.determineFetchTiming( fetchStyle, type, sessionFactory );
+				}
 			}
 			else if ( fetchStyle == FetchStyle.JOIN
 					|| !lazy

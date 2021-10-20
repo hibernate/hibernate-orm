@@ -83,6 +83,7 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 					assert !Hibernate.isPropertyInitialized( entityD, "e" );
 
 					entityD.getE();
+
 					assertThat( stats.getPrepareStatementCount(), is( 2L ) );
 					assert Hibernate.isPropertyInitialized( entityD, "a" );
 					assert !Hibernate.isInitialized( entityD.getA() );

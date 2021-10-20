@@ -13,7 +13,6 @@ import java.util.Map;
 
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
-import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -44,16 +43,9 @@ public class ComponentMetamodel implements Serializable {
 	private final Map propertyIndexes = new HashMap();
 	private final boolean createEmptyCompositesEnabled;
 
-	/**
-	 * @deprecated Use {@link ComponentMetamodel#ComponentMetamodel(Component, BootstrapContext)} instead.
-	 */
 	@Deprecated
 	public ComponentMetamodel(Component component, MetadataBuildingOptions metadataBuildingOptions) {
 		this( component, new ComponentTuplizerFactory( metadataBuildingOptions ) );
-	}
-
-	public ComponentMetamodel(Component component, BootstrapContext bootstrapContext) {
-		this( component, new ComponentTuplizerFactory( bootstrapContext ) );
 	}
 
 	private ComponentMetamodel(Component component, ComponentTuplizerFactory componentTuplizerFactory){

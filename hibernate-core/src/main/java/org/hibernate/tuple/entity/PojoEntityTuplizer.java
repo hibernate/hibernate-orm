@@ -136,26 +136,6 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 	}
 
 	@Override
-	public void setPropertyValues(Object entity, Object[] values) throws HibernateException {
-		if ( !getEntityMetamodel().hasLazyProperties() && optimizer != null && optimizer.getAccessOptimizer() != null ) {
-			setPropertyValuesWithOptimizer( entity, values );
-		}
-		else {
-			super.setPropertyValues( entity, values );
-		}
-	}
-
-	@Override
-	public Object[] getPropertyValues(Object entity) throws HibernateException {
-		if ( shouldGetAllProperties( entity ) && optimizer != null && optimizer.getAccessOptimizer() != null ) {
-			return getPropertyValuesWithOptimizer( entity );
-		}
-		else {
-			return super.getPropertyValues( entity );
-		}
-	}
-
-	@Override
 	public Object[] getPropertyValuesToInsert(Object entity, Map mergeMap, SharedSessionContractImplementor session) {
 		if ( shouldGetAllProperties( entity ) && optimizer != null && optimizer.getAccessOptimizer() != null ) {
 			return getPropertyValuesWithOptimizer( entity );
@@ -163,10 +143,6 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 		else {
 			return super.getPropertyValuesToInsert( entity, mergeMap, session );
 		}
-	}
-
-	protected void setPropertyValuesWithOptimizer(Object object, Object[] values) {
-		optimizer.getAccessOptimizer().setPropertyValues( object, values );
 	}
 
 	protected Object[] getPropertyValuesWithOptimizer(Object object) {

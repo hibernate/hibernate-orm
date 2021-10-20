@@ -21,7 +21,6 @@ public class IdentifierProperty extends AbstractAttribute implements IdentifierA
 
 	private final boolean virtual;
 	private final boolean embedded;
-	private final IdentifierValue unsavedValue;
 	private final IdentifierGenerator identifierGenerator;
 	private final boolean identifierAssignedByInsert;
 	private final boolean hasIdentifierMapper;
@@ -33,7 +32,6 @@ public class IdentifierProperty extends AbstractAttribute implements IdentifierA
 	 * its owning entity.
 	 * @param type The Hibernate Type for the identifier property.
 	 * @param embedded Is this an embedded identifier.
-	 * @param unsavedValue The value which, if found as the value on the identifier
 	 * property, represents new (i.e., un-saved) instances of the owning entity.
 	 * @param identifierGenerator The generator to use for id value generation.
 	 */
@@ -41,13 +39,11 @@ public class IdentifierProperty extends AbstractAttribute implements IdentifierA
 			String name,
 			Type type,
 			boolean embedded,
-			IdentifierValue unsavedValue,
 			IdentifierGenerator identifierGenerator) {
 		super( name, type );
 		this.virtual = false;
 		this.embedded = embedded;
 		this.hasIdentifierMapper = false;
-		this.unsavedValue = unsavedValue;
 		this.identifierGenerator = identifierGenerator;
 		this.identifierAssignedByInsert = identifierGenerator instanceof PostInsertIdentifierGenerator;
 	}
@@ -57,7 +53,6 @@ public class IdentifierProperty extends AbstractAttribute implements IdentifierA
 	 *
 	 * @param type The Hibernate Type for the identifier property.
 	 * @param embedded Is this an embedded identifier.
-	 * @param unsavedValue The value which, if found as the value on the identifier
 	 * property, represents new (i.e., un-saved) instances of the owning entity.
 	 * @param identifierGenerator The generator to use for id value generation.
 	 */
@@ -65,13 +60,11 @@ public class IdentifierProperty extends AbstractAttribute implements IdentifierA
 			Type type,
 			boolean embedded,
 			boolean hasIdentifierMapper,
-			IdentifierValue unsavedValue,
 			IdentifierGenerator identifierGenerator) {
 		super( null, type );
 		this.virtual = true;
 		this.embedded = embedded;
 		this.hasIdentifierMapper = hasIdentifierMapper;
-		this.unsavedValue = unsavedValue;
 		this.identifierGenerator = identifierGenerator;
 		this.identifierAssignedByInsert = identifierGenerator instanceof PostInsertIdentifierGenerator;
 	}
@@ -84,11 +77,6 @@ public class IdentifierProperty extends AbstractAttribute implements IdentifierA
 	@Override
 	public boolean isEmbedded() {
 		return embedded;
-	}
-
-	@Override
-	public IdentifierValue getUnsavedValue() {
-		return unsavedValue;
 	}
 
 	@Override

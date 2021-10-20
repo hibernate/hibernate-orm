@@ -14,6 +14,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
@@ -1154,7 +1155,9 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 	@Override
 	protected EntityVersionMapping generateVersionMapping(
-			MappingModelCreationProcess creationProcess, PersistentClass bootEntityDescriptor) {
+			Supplier<?> templateInstanceCreator,
+			PersistentClass bootEntityDescriptor,
+			MappingModelCreationProcess creationProcess) {
 		if ( getVersionType() == null ) {
 			return null;
 		}
@@ -1166,6 +1169,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 						versionPropertyName,
 						(role, process) -> generateVersionMapping(
 								this,
+								templateInstanceCreator,
 								bootEntityDescriptor,
 								process
 						)
@@ -1179,7 +1183,10 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	protected EntityIdentifierMapping generateIdentifierMapping(MappingModelCreationProcess creationProcess, PersistentClass bootEntityDescriptor) {
+	protected EntityIdentifierMapping generateIdentifierMapping(
+			Supplier<?> templateInstanceCreator,
+			PersistentClass bootEntityDescriptor,
+			MappingModelCreationProcess creationProcess) {
 		final Type idType = getIdentifierType();
 
 		if ( idType instanceof CompositeType ) {
@@ -1209,6 +1216,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 		return new BasicEntityIdentifierMappingImpl(
 				this,
+				templateInstanceCreator,
 				bootEntityDescriptor.getIdentifierProperty().getName(),
 				getTableName(),
 				tableKeyColumns[0][0],

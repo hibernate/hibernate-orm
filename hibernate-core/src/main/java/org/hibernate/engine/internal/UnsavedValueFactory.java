@@ -7,11 +7,14 @@
 package org.hibernate.engine.internal;
 
 import java.lang.reflect.Constructor;
+import java.util.function.Supplier;
 
 import org.hibernate.InstantiationException;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.IdentifierValue;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.VersionValue;
+import org.hibernate.mapping.KeyValue;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
@@ -27,51 +30,28 @@ import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
 public class UnsavedValueFactory {
 
 	/**
-	 * Instantiate a class using the provided Constructor
-	 *
-	 * @param constructor The constructor
-	 *
-	 * @return The instantiated object
-	 *
-	 * @throws InstantiationException if something went wrong
-	 */
-	private static Object instantiate(Constructor constructor) {
-		try {
-			return constructor.newInstance();
-		}
-		catch (Exception e) {
-			throw new InstantiationException( "could not instantiate test object", constructor.getDeclaringClass(), e );
-		}
-	}
-	
-	/**
-	 * Return an IdentifierValue for the specified unsaved-value. If none is specified, 
-	 * guess the unsaved value by instantiating a test instance of the class and
-	 * reading it's id property, or if that is not possible, using the java default
-	 * value for the type
-	 *
-	 * @param unsavedValue The mapping defined unsaved value
-	 * @param identifierGetter The getter for the entity identifier attribute
-	 * @param identifierType The mapping type for the identifier
-	 * @param constructor The constructor for the entity
-	 *
-	 * @return The appropriate IdentifierValue
+	 * Return the UnsavedValueStrategy for determining whether an entity instance is
+	 * unsaved based on the identifier.  If an explicit strategy is not specified, determine
+	 * the unsaved value by instantiating an instance of the entity and reading the value of
+	 * its id property, or if that is not possible, using the java default value for the type
 	 */
 	public static IdentifierValue getUnsavedIdentifierValue(
-			String unsavedValue,
-			Getter identifierGetter,
-			Type identifierType,
-			Constructor constructor) {
+			KeyValue bootIdMapping,
+			JavaType<?> idJtd,
+			Getter getter,
+			Supplier<?> templateInstanceAccess,
+			SessionFactoryImplementor sessionFactory) {
+		final String unsavedValue = bootIdMapping.getNullValue();
+
 		if ( unsavedValue == null ) {
-			if ( identifierGetter != null && constructor != null ) {
+			if ( getter != null && templateInstanceAccess != null ) {
 				// use the id value of a newly instantiated instance as the unsaved-value
-				final Object defaultValue = identifierGetter.get( instantiate( constructor ) );
+				final Object templateInstance = templateInstanceAccess.get();
+				final Object defaultValue = getter.get( templateInstance );
 				return new IdentifierValue( defaultValue );
 			}
-			final JavaType<?> jtd;
-			if ( identifierGetter != null && ( identifierType instanceof BasicType<?> ) && ( jtd = ( (BasicType<?>) identifierType ).getJavaTypeDescriptor() ) instanceof PrimitiveJavaType ) {
-				final Object defaultValue = ( (PrimitiveJavaType<?>) jtd ).getDefaultValue();
-				return new IdentifierValue( defaultValue );
+			else if ( idJtd instanceof PrimitiveJavaType ) {
+				return new IdentifierValue( ( (PrimitiveJavaType<?>) idJtd ).getDefaultValue() );
 			}
 			else {
 				return IdentifierValue.NULL;
@@ -90,15 +70,70 @@ public class UnsavedValueFactory {
 			return IdentifierValue.ANY;
 		}
 		else {
-			try {
-				return new IdentifierValue( ( (BasicType<?>) identifierType ).getJavaTypeDescriptor().fromString( unsavedValue ) );
+			return new IdentifierValue( idJtd.fromString( unsavedValue ) );
+		}
+	}
+
+	/**
+	 * Return the UnsavedValueStrategy for determining whether an entity instance is
+	 * unsaved based on the version.  If an explicit strategy is not specified, determine the
+	 * unsaved value by instantiating an instance of the entity and reading the value of its
+	 * version property, or if that is not possible, using the java default value for the type
+	 */
+	public static VersionValue getUnsavedVersionValue(
+			KeyValue bootVersionMapping,
+			VersionJavaType jtd,
+			Getter getter,
+			Supplier<?> templateInstanceAccess,
+			SessionFactoryImplementor sessionFactory) {
+		final String unsavedValue = bootVersionMapping.getNullValue();
+		if ( unsavedValue == null ) {
+			if ( getter != null && templateInstanceAccess != null ) {
+				final Object templateInstance = templateInstanceAccess.get();
+				final Object defaultValue = getter.get( templateInstance );
+
+				// if the version of a newly instantiated object is not the same
+				// as the version seed value, use that as the unsaved-value
+				final Object seedValue = jtd.seed( null );
+				return jtd.areEqual( seedValue, defaultValue )
+						? VersionValue.UNDEFINED
+						: new VersionValue( defaultValue );
 			}
-			catch ( ClassCastException cce ) {
-				throw new MappingException( "Bad identifier type: " + identifierType.getName() );
+			else {
+				return VersionValue.UNDEFINED;
 			}
-			catch ( Exception e ) {
-				throw new MappingException( "Could not parse identifier unsaved-value: " + unsavedValue );
-			}
+		}
+		else if ( "undefined".equals( unsavedValue ) ) {
+			return VersionValue.UNDEFINED;
+		}
+		else if ( "null".equals( unsavedValue ) ) {
+			return VersionValue.NULL;
+		}
+		else if ( "negative".equals( unsavedValue ) ) {
+			return VersionValue.NEGATIVE;
+		}
+		else {
+			// this should not happen since the DTD prevents it
+			throw new MappingException( "Could not parse version unsaved-value: " + unsavedValue );
+		}
+
+	}
+
+	/**
+	 * Instantiate a class using the provided Constructor
+	 *
+	 * @param constructor The constructor
+	 *
+	 * @return The instantiated object
+	 *
+	 * @throws InstantiationException if something went wrong
+	 */
+	private static Object instantiate(Constructor constructor) {
+		try {
+			return constructor.newInstance();
+		}
+		catch (Exception e) {
+			throw new InstantiationException( "could not instantiate test object", constructor.getDeclaringClass(), e );
 		}
 	}
 

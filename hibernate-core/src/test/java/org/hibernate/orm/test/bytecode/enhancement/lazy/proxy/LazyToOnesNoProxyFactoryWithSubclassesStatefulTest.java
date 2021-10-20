@@ -6,31 +6,11 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy.proxy;
 
-import java.util.Map;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Inheritance;
-import jakarta.persistence.InheritanceType;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-
-import org.hibernate.EntityMode;
-import org.hibernate.EntityNameResolver;
 import org.hibernate.Hibernate;
-import org.hibernate.HibernateException;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.property.access.spi.Getter;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.stat.Statistics;
-import org.hibernate.tuple.entity.EntityMetamodel;
-import org.hibernate.tuple.entity.EntityTuplizer;
-import org.hibernate.tuple.entity.PojoEntityTuplizer;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
@@ -38,6 +18,14 @@ import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -305,177 +293,4 @@ public class LazyToOnesNoProxyFactoryWithSubclassesStatefulTest extends BaseNonC
 		}
 	}
 
-	public static class NoProxyFactoryPojoEntityTuplizer implements EntityTuplizer {
-
-		private final PojoEntityTuplizer pojoEntityTuplizer;
-
-		public NoProxyFactoryPojoEntityTuplizer(EntityMetamodel entityMetamodel, PersistentClass mappedEntity) {
-			pojoEntityTuplizer = new PojoEntityTuplizer( entityMetamodel, mappedEntity );
-		}
-
-		@Override
-		public EntityMode getEntityMode() {
-			return pojoEntityTuplizer.getEntityMode();
-		}
-
-		@Override
-		public Object instantiate(Object id) throws HibernateException {
-			return pojoEntityTuplizer.instantiate( id );
-		}
-
-		@Override
-		public Object instantiate(Object id, SharedSessionContractImplementor session) {
-			return pojoEntityTuplizer.instantiate( id, session );
-
-		}
-
-		@Override
-		public Object getIdentifier(Object entity) throws HibernateException {
-			return pojoEntityTuplizer.getIdentifier( entity );
-		}
-
-		@Override
-		public Object getIdentifier(Object entity, SharedSessionContractImplementor session) {
-			return pojoEntityTuplizer.getIdentifier( entity, session );
-		}
-
-		@Override
-		public void setIdentifier(Object entity, Object id) throws HibernateException {
-			pojoEntityTuplizer.setIdentifier( entity, id );
-		}
-
-		@Override
-		public void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session) {
-			pojoEntityTuplizer.setIdentifier( entity, id, session );
-		}
-
-		@Override
-		public void resetIdentifier(Object entity, Object currentId, Object currentVersion) {
-			pojoEntityTuplizer.resetIdentifier( entity, currentId, currentVersion );
-		}
-
-		@Override
-		public void resetIdentifier(
-				Object entity,
-				Object currentId,
-				Object currentVersion,
-				SharedSessionContractImplementor session) {
-			pojoEntityTuplizer.resetIdentifier( entity, currentId, currentVersion, session );
-		}
-
-		@Override
-		public Object getVersion(Object entity) throws HibernateException {
-			return pojoEntityTuplizer.getVersion( entity );
-		}
-
-		@Override
-		public void setPropertyValue(Object entity, int i, Object value) throws HibernateException {
-			pojoEntityTuplizer. setPropertyValue( entity, i, value );
-		}
-
-		@Override
-		public void setPropertyValue(Object entity, String propertyName, Object value) throws HibernateException {
-			pojoEntityTuplizer.setPropertyValue( entity, propertyName, value );
-		}
-
-		@Override
-		public Object[] getPropertyValuesToInsert(
-				Object entity,
-				Map mergeMap,
-				SharedSessionContractImplementor session) throws HibernateException {
-			return pojoEntityTuplizer.getPropertyValuesToInsert( entity, mergeMap, session );
-		}
-
-		@Override
-		public Object getPropertyValue(Object entity, String propertyName) throws HibernateException {
-			return pojoEntityTuplizer.getPropertyValue( entity, propertyName );
-		}
-
-		@Override
-		public void afterInitialize(Object entity, SharedSessionContractImplementor session) {
-			pojoEntityTuplizer.afterInitialize( entity, session );
-
-		}
-
-		@Override
-		public boolean hasProxy() {
-			return pojoEntityTuplizer.hasProxy();
-		}
-
-		@Override
-		public Object createProxy(Object id, SharedSessionContractImplementor session) throws HibernateException {
-			return pojoEntityTuplizer.createProxy( id, session );
-		}
-
-		@Override
-		public boolean isLifecycleImplementor() {
-			return pojoEntityTuplizer.isLifecycleImplementor();
-		}
-
-		@Override
-		public Class getConcreteProxyClass() {
-			return pojoEntityTuplizer.getConcreteProxyClass();
-		}
-
-		@Override
-		public EntityNameResolver[] getEntityNameResolvers() {
-			return pojoEntityTuplizer.getEntityNameResolvers();
-		}
-
-		@Override
-		public String determineConcreteSubclassEntityName(
-				Object entityInstance, SessionFactoryImplementor factory) {
-			return pojoEntityTuplizer.determineConcreteSubclassEntityName( entityInstance, factory );
-		}
-
-		@Override
-		public Getter getIdentifierGetter() {
-			return pojoEntityTuplizer.getIdentifierGetter();
-		}
-
-		@Override
-		public Getter getVersionGetter() {
-			return pojoEntityTuplizer.getVersionGetter();
-		}
-
-		@Override
-		public ProxyFactory getProxyFactory() {
-			return null;
-		}
-
-		@Override
-		public Object[] getPropertyValues(Object entity) {
-			return pojoEntityTuplizer.getPropertyValues( entity );
-		}
-
-		@Override
-		public void setPropertyValues(Object entity, Object[] values) {
-			pojoEntityTuplizer.setPropertyValues( entity, values );
-		}
-
-		@Override
-		public Object getPropertyValue(Object entity, int i) {
-			return pojoEntityTuplizer.getPropertyValue( entity, i );
-		}
-
-		@Override
-		public Object instantiate() {
-			return pojoEntityTuplizer.instantiate();
-		}
-
-		@Override
-		public boolean isInstance(Object object) {
-			return pojoEntityTuplizer.isInstance( object );
-		}
-
-		@Override
-		public Class getMappedClass() {
-			return pojoEntityTuplizer.getMappedClass();
-		}
-
-		@Override
-		public Getter getGetter(int i) {
-			return pojoEntityTuplizer.getGetter( i );
-		}
-	}
 }

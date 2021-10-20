@@ -62,6 +62,11 @@ public class EntityInstantiatorPojoStandard extends AbstractEntityInstantiatorPo
 	}
 
 	@Override
+	public boolean canBeInstantiated() {
+		return constructor != null;
+	}
+
+	@Override
 	protected Object applyInterception(Object entity) {
 		if ( !applyBytecodeInterception ) {
 			return entity;

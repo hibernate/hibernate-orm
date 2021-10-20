@@ -6,11 +6,23 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import org.hibernate.engine.spi.VersionValue;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 
 /**
- * @author Steve Ebersole
+ * Describes the mapping of an entity's version
+ *
+ * @see jakarta.persistence.Version
  */
 public interface EntityVersionMapping extends BasicValuedModelPart {
+	/**
+	 * The attribute marked as the version
+	 */
 	BasicAttributeMapping getVersionAttribute();
+
+	/**
+	 * The strategy for distinguishing between detached and transient
+	 * state based on the version mapping
+	 */
+	VersionValue getUnsavedStrategy();
 }

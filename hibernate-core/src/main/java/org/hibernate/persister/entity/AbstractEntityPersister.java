@@ -5579,7 +5579,8 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	private void prepareMappingModel(MappingModelCreationProcess creationProcess, PersistentClass bootEntityDescriptor) {		final EntityInstantiator instantiator = getRepresentationStrategy().getInstantiator();
+	private void prepareMappingModel(MappingModelCreationProcess creationProcess, PersistentClass bootEntityDescriptor) {
+		final EntityInstantiator instantiator = getRepresentationStrategy().getInstantiator();
 		final Supplier<?> templateInstanceCreator;
 		if ( ! instantiator.canBeInstantiated() ) {
 			templateInstanceCreator = null;

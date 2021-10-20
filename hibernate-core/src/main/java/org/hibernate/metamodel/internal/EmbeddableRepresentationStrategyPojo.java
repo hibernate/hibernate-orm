@@ -64,19 +64,22 @@ public class EmbeddableRepresentationStrategyPojo extends AbstractEmbeddableRepr
 				false
 		);
 
+		this.instantiator = determineInstantiator( bootDescriptor );
+	}
+
+	private EmbeddableInstantiator determineInstantiator(Component bootDescriptor) {
 		if ( reflectionOptimizer != null && reflectionOptimizer.getInstantiationOptimizer() != null ) {
 			final ReflectionOptimizer.InstantiationOptimizer instantiationOptimizer = reflectionOptimizer.getInstantiationOptimizer();
-			this.instantiator = new EmbeddableInstantiatorPojoOptimized(
+			return new EmbeddableInstantiatorPojoOptimized(
 					getEmbeddableJavaTypeDescriptor(),
 					instantiationOptimizer
 			);
 		}
-		else {
-			this.instantiator = new EmbeddableInstantiatorPojoStandard(
-					bootDescriptor,
-					getEmbeddableJavaTypeDescriptor()
-			);
-		}
+
+		return new EmbeddableInstantiatorPojoStandard(
+				bootDescriptor,
+				getEmbeddableJavaTypeDescriptor()
+		);
 	}
 
 	@Override

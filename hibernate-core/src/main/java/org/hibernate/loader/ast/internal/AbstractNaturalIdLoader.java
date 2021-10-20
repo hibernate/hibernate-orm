@@ -16,7 +16,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.hibernate.HibernateException;
-import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -46,6 +45,7 @@ import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.exec.internal.CallbackImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.ExecutionContext;
@@ -219,6 +219,8 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 				jdbcSelect,
 				jdbcParamBindings,
 				new ExecutionContext() {
+					private final Callback callback = new CallbackImpl();
+
 					@Override
 					public SharedSessionContractImplementor getSession() {
 						return session;
@@ -241,7 +243,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 
 					@Override
 					public Callback getCallback() {
-						throw new UnsupportedOperationException( "Follow-on locking not supported yet" );
+						return callback;
 					}
 
 				},

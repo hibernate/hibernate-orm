@@ -33,6 +33,7 @@ import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.result.Output;
 import org.hibernate.result.Outputs;
 import org.hibernate.result.spi.ResultContext;
+import org.hibernate.sql.exec.internal.CallbackImpl;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.NoMoreOutputsException;
@@ -179,6 +180,8 @@ public class OutputsImpl implements Outputs {
 		);
 
 		final ExecutionContext executionContext = new ExecutionContext() {
+			private final Callback callback = new CallbackImpl();
+
 			@Override
 			public SharedSessionContractImplementor getSession() {
 				return OutputsImpl.this.context.getSession();
@@ -206,7 +209,7 @@ public class OutputsImpl implements Outputs {
 
 			@Override
 			public Callback getCallback() {
-				throw new UnsupportedOperationException( "Follow-on locking not supported yet" );
+				return callback;
 			}
 
 		};

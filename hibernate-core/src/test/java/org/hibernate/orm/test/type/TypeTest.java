@@ -96,12 +96,17 @@ public class TypeTest extends BaseUnitTestCase {
 
 	@Test
 	public void testCalendarDateType() {
+		final long now = System.currentTimeMillis();
 		final Calendar original = new GregorianCalendar();
+		original.clear();
+		original.setTimeInMillis( now );
 		final Calendar copy = new GregorianCalendar();
+		copy.clear();
+		copy.setTimeInMillis( now );
 		final Calendar different = new GregorianCalendar();
-		different.set( Calendar.MONTH, 9 );
-		different.set( Calendar.DAY_OF_MONTH, 9 );
-		different.set( Calendar.YEAR, 2999 );
+		different.clear();
+		different.setTimeInMillis( now );
+		different.add( Calendar.MONTH, 1 );
 
 		runBasicTests( StandardBasicTypes.CALENDAR_DATE, original, copy, different );
 	}

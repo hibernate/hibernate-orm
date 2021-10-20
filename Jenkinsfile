@@ -44,7 +44,7 @@ stage('Configure') {
 // 		buildEnv('8', 'sybase'),
 		buildEnv('8', 'hana', 'HANA'),
 		buildEnv('8', 's390x', 's390x'),
-		buildEnv('8', 'tidb', 'tidb'),
+		buildEnv('8', 'tidb', 'tidb', 'tidb_hibernate@pingcap.com'),
 		// Disable EDB for now as the image is not available anymore
 // 		buildEnv('8', 'edb')
 	];
@@ -72,124 +72,132 @@ stage('Build') {
 	environments.each { BuildEnvironment buildEnv ->
 		executions.put(buildEnv.tag, {
 			runBuildOnNode(buildEnv.node) {
-				def containerName = null
-				env.JAVA_HOME="${tool buildEnv.buildJdkTool}"
-				env.PATH="${env.JAVA_HOME}/bin:${env.PATH}"
-				stage('Checkout') {
-					checkout scm
-				}
-				try {
-					stage('Start database') {
-						switch (buildEnv.dbName) {
-							case "mysql8":
-								docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-									docker.image('mysql:8.0.21').pull()
-								}
-								sh "./docker_db.sh mysql_8_0"
-								containerName = "mysql"
-								break;
-							case "mariadb":
-								docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-									docker.image('mariadb:10.5.8').pull()
-								}
-								sh "./docker_db.sh mariadb"
-								containerName = "mariadb"
-								break;
-							case "postgresql_9_5":
-							    // use the postgis image to enable the PGSQL GIS (spatial) extension
-								docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-									docker.image('postgis/postgis:9.5-2.5').pull()
-								}
-								sh "./docker_db.sh postgresql_9_5"
-								containerName = "postgres"
-								break;
-							case "postgresql_13":
-							    // use the postgis image to enable the PGSQL GIS (spatial) extension
-								docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-									docker.image('postgis/postgis:13-3.1').pull()
-								}
-								sh "./docker_db.sh postgresql_13"
-								containerName = "postgres"
-								break;
-							case "oracle":
-								docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-									docker.image('quillbuilduser/oracle-18-xe').pull()
-								}
-								sh "./docker_db.sh oracle"
-								containerName = "oracle"
-								break;
-							case "db2":
-								docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-									docker.image('ibmcom/db2:11.5.5.0').pull()
-								}
-								sh "./docker_db.sh db2"
-								containerName = "db2"
-								break;
-							case "mssql":
-								docker.image('mcr.microsoft.com/mssql/server:2017-CU13').pull()
-								sh "./docker_db.sh mssql"
-								containerName = "mssql"
-								break;
-							case "sybase":
-								docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-									docker.image('nguoianphu/docker-sybase').pull()
-								}
-								sh "./docker_db.sh sybase"
-								containerName = "sybase"
-								break;
-							case "edb":
-								docker.withRegistry('https://containers.enterprisedb.com', 'hibernateci.containers.enterprisedb.com') {
-	// 							withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'hibernateci.containers.enterprisedb.com',
-	// 								usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
-	// 							  	sh 'docker login -u "$USERNAME" -p "$PASSWORD" https://containers.enterprisedb.com'
-									docker.image('containers.enterprisedb.com/edb/edb-as-lite:v11').pull()
-								}
-								sh "./docker_db.sh edb"
-								containerName = "edb"
-								break;
+				// Use withEnv instead of setting env directly, as that is global!
+				// See https://github.com/jenkinsci/pipeline-plugin/blob/master/TUTORIAL.md
+				withEnv(["JAVA_HOME=${tool buildEnv.buildJdkTool}", "PATH+JAVA=${tool buildEnv.buildJdkTool}/bin"]) {
+					def containerName = null
+					stage('Checkout') {
+						checkout scm
+					}
+					try {
+						stage('Start database') {
+							switch (buildEnv.dbName) {
+								case "mysql8":
+									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
+										docker.image('mysql:8.0.21').pull()
+									}
+									sh "./docker_db.sh mysql_8_0"
+									containerName = "mysql"
+									break;
+								case "mariadb":
+									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
+										docker.image('mariadb:10.5.8').pull()
+									}
+									sh "./docker_db.sh mariadb"
+									containerName = "mariadb"
+									break;
+								case "postgresql_9_5":
+									// use the postgis image to enable the PGSQL GIS (spatial) extension
+									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
+										docker.image('postgis/postgis:9.5-2.5').pull()
+									}
+									sh "./docker_db.sh postgresql_9_5"
+									containerName = "postgres"
+									break;
+								case "postgresql_13":
+									// use the postgis image to enable the PGSQL GIS (spatial) extension
+									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
+										docker.image('postgis/postgis:13-3.1').pull()
+									}
+									sh "./docker_db.sh postgresql_13"
+									containerName = "postgres"
+									break;
+								case "oracle":
+									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
+										docker.image('quillbuilduser/oracle-18-xe').pull()
+									}
+									sh "./docker_db.sh oracle"
+									containerName = "oracle"
+									break;
+								case "db2":
+									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
+										docker.image('ibmcom/db2:11.5.5.0').pull()
+									}
+									sh "./docker_db.sh db2"
+									containerName = "db2"
+									break;
+								case "mssql":
+									docker.image('mcr.microsoft.com/mssql/server:2017-CU13').pull()
+									sh "./docker_db.sh mssql"
+									containerName = "mssql"
+									break;
+								case "sybase":
+									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
+										docker.image('nguoianphu/docker-sybase').pull()
+									}
+									sh "./docker_db.sh sybase"
+									containerName = "sybase"
+									break;
+								case "edb":
+									docker.withRegistry('https://containers.enterprisedb.com', 'hibernateci.containers.enterprisedb.com') {
+		// 							withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'hibernateci.containers.enterprisedb.com',
+		// 								usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
+		// 							  	sh 'docker login -u "$USERNAME" -p "$PASSWORD" https://containers.enterprisedb.com'
+										docker.image('containers.enterprisedb.com/edb/edb-as-lite:v11').pull()
+									}
+									sh "./docker_db.sh edb"
+									containerName = "edb"
+									break;
+							}
+						}
+						stage('Test') {
+							switch (buildEnv.dbName) {
+								case "h2":
+								case "derby":
+								case "hsqldb":
+									runTest("-Pdb=${buildEnv.dbName}")
+									break;
+								case "mysql8":
+									runTest("-Pdb=mysql_ci")
+									break;
+								case "tidb":
+									runTest("-Pdb=tidb -DdbHost=localhost:4000", 'TIDB')
+									break;
+								case "postgresql_9_5":
+								case "postgresql_13":
+									runTest("-Pdb=pgsql_ci")
+									break;
+								case "oracle":
+									runTest("-Pdb=oracle_ci -PexcludeTests=**.LockTest.testQueryTimeout*")
+									break;
+								case "oracle_ee":
+									runTest("-Pdb=oracle_jenkins", 'ORACLE_RDS')
+									break;
+								case "hana":
+									runTest("-Pdb=hana_jenkins", 'HANA')
+									break;
+								case "edb":
+									runTest("-Pdb=edb_ci -DdbHost=localhost:5433")
+									break;
+								case "s390x":
+									runTest("-Pdb=h2")
+									break;
+								default:
+									runTest("-Pdb=${buildEnv.dbName}_ci")
+									break;
+							}
 						}
 					}
-					stage('Test') {
-						switch (buildEnv.dbName) {
-							case "h2":
-							case "derby":
-							case "hsqldb":
-								runTest("-Pdb=${buildEnv.dbName}")
-								break;
-							case "mysql8":
-								runTest("-Pdb=mysql_ci")
-								break;
-							case "tidb":
-								runTest("-Pdb=tidb -DdbHost=localhost:4000", 'TIDB')
-								break;
-							case "postgresql_9_5":
-							case "postgresql_13":
-								runTest("-Pdb=pgsql_ci")
-								break;
-							case "oracle":
-								runTest("-Pdb=oracle_ci -PexcludeTests=**.LockTest.testQueryTimeout*")
-								break;
-							case "oracle_ee":
-								runTest("-Pdb=oracle_jenkins", 'ORACLE_RDS')
-								break;
-							case "hana":
-								runTest("-Pdb=hana_jenkins", 'HANA')
-								break;
-							case "edb":
-								runTest("-Pdb=edb_ci -DdbHost=localhost:5433")
-								break;
-							case "s390x":
-								runTest("-Pdb=h2")
-								break;
-							default:
-								runTest("-Pdb=${buildEnv.dbName}_ci")
-								break;
+					finally {
+						if ( containerName != null ) {
+							sh "docker rm -f ${containerName}"
 						}
-					}
-				}
-				finally {
-					if ( containerName != null ) {
-						sh "docker rm -f ${containerName}"
+						if ( buildEnv.notificationRecipients != null ) {
+							notifyBuildResult(
+								maintainers: buildEnv.notificationRecipients,
+								notifySuccessAfterSuccess: false
+							)
+						}
 					}
 				}
 			}
@@ -203,11 +211,15 @@ stage('Build') {
 // Job-specific helpers
 
 BuildEnvironment buildEnv(String version, String dbName) {
-	return new BuildEnvironment( version, dbName, NODE_PATTERN_BASE );
+	return new BuildEnvironment( version, dbName, NODE_PATTERN_BASE, null );
 }
 
 BuildEnvironment buildEnv(String version, String dbName, String node) {
-	return new BuildEnvironment( version, dbName, node );
+	return new BuildEnvironment( version, dbName, node, null );
+}
+
+BuildEnvironment buildEnv(String version, String dbName, String node, String notificationRecipients) {
+	return new BuildEnvironment( version, dbName, node, notificationRecipients );
 }
 
 public class BuildEnvironment {
@@ -216,11 +228,13 @@ public class BuildEnvironment {
 	private String testJdkTool;
 	private String dbName;
 	private String node;
+	private String notificationRecipients;
 
-	public BuildEnvironment(String version, String dbName, String node) {
+	public BuildEnvironment(String version, String dbName, String node, String notificationRecipients) {
 		this.version = version;
 		this.dbName = dbName;
 		this.node = node;
+		this.notificationRecipients = notificationRecipients;
 		String buildJdkTool;
 		String testJdkTool;
 		switch ( version ) {
@@ -239,13 +253,14 @@ public class BuildEnvironment {
 	String toString() { getTag() }
 	String getTag() { "jdk-$version-$dbName" }
 	String getNode() { node }
+	String getNotificationRecipients() { notificationRecipients }
 }
 
 void runBuildOnNode(String label, Closure body) {
 	node( label ) {
 		pruneDockerContainers()
         try {
-        	timeout( [time: 120, unit: 'MINUTES'], body )
+			timeout( [time: 120, unit: 'MINUTES'], body )
         }
         finally {
         	// If this is a PR, we clean the workspace at the end

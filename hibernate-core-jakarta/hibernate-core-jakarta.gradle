@@ -118,7 +118,7 @@ task transformJar {
 	mustRunAfter project(':hibernate-core').tasks.jar
 
 	inputs.file project(':hibernate-core').tasks.jar.archiveFile
-	outputs.file "${buildDir}/libs/${transformedJarName}"
+	outputs.file tasks.jar.archiveFile.get().asFile
 
 	doLast {
 		def transformerArgs = [
@@ -138,6 +138,15 @@ task transformJar {
 			main = 'org.eclipse.transformer.jakarta.JakartaTransformer'
 			args = transformerArgs
 		}
+	}
+}
+
+configurations {
+	[apiElements, runtimeElements].each {
+		it.outgoing.artifacts.removeIf {
+			it.buildDependencies.getDependencies(null).contains(jar)
+		}
+		it.outgoing.artifact(tasks.jar.archiveFile.get().asFile)
 	}
 }
 

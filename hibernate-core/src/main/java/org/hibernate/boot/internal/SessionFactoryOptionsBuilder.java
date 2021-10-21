@@ -130,6 +130,7 @@ import static org.hibernate.cfg.AvailableSettings.WRAP_RESULT_SETS;
 import static org.hibernate.cfg.AvailableSettings.DISCARD_PC_ON_CLOSE;
 import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
 import static org.hibernate.internal.CoreLogging.messageLogger;
+import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 
 /**
  * In-flight state of {@link org.hibernate.boot.spi.SessionFactoryOptions}
@@ -330,9 +331,10 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 		this.entityNotFoundDelegate = StandardEntityNotFoundDelegate.INSTANCE;
 		this.identifierRollbackEnabled = cfgService.getSetting( USE_IDENTIFIER_ROLLBACK, BOOLEAN, false );
-		this.defaultEntityMode = EntityMode.parse( (String) configurationSettings.get( DEFAULT_ENTITY_MODE ) );
 		this.checkNullability = cfgService.getSetting( CHECK_NULLABILITY, BOOLEAN, true );
 		this.initializeLazyStateOutsideTransactions = cfgService.getSetting( ENABLE_LAZY_LOAD_NO_TRANS, BOOLEAN, false );
+
+		this.defaultEntityMode = EntityMode.fromSetting( configurationSettings.get( DEFAULT_ENTITY_MODE ) );
 
 		this.multiTenancyStrategy = MultiTenancyStrategy.determineMultiTenancyStrategy( configurationSettings );
 		this.currentTenantIdentifierResolver = strategySelector.resolveStrategy(
@@ -475,7 +477,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 							null
 					);
 					if ( oldSetting != null ) {
-						DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
+						DEPRECATION_LOGGER.deprecatedSetting(
 								org.hibernate.jpa.AvailableSettings.DISCARD_PC_ON_CLOSE,
 								DISCARD_PC_ON_CLOSE
 						);
@@ -562,7 +564,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				() -> {
 					final Object oldSetting = configurationSettings.get( org.hibernate.jpa.AvailableSettings.INTERCEPTOR );
 					if ( oldSetting != null ) {
-						DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
+						DEPRECATION_LOGGER.deprecatedSetting(
 								org.hibernate.jpa.AvailableSettings.INTERCEPTOR,
 								INTERCEPTOR
 						);
@@ -583,7 +585,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				() -> {
 					final Object oldSetting = configurationSettings.get( org.hibernate.jpa.AvailableSettings.SESSION_INTERCEPTOR );
 					if ( oldSetting != null ) {
-						DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
+						DEPRECATION_LOGGER.deprecatedSetting(
 								org.hibernate.jpa.AvailableSettings.SESSION_INTERCEPTOR,
 								SESSION_SCOPED_INTERCEPTOR
 						);
@@ -659,7 +661,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 			ConnectionReleaseMode specifiedReleaseMode,
 			Map configurationSettings,
 			TransactionCoordinatorBuilder transactionCoordinatorBuilder) {
-		DeprecationLogger.DEPRECATION_LOGGER.logUseOfDeprecatedConnectionHandlingSettings();
+		DEPRECATION_LOGGER.logUseOfDeprecatedConnectionHandlingSettings();
 
 		final ConnectionAcquisitionMode effectiveAcquisitionMode = specifiedAcquisitionMode == null
 				? ConnectionAcquisitionMode.AS_NEEDED

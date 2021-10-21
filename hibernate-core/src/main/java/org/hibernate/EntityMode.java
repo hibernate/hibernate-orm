@@ -8,11 +8,16 @@ package org.hibernate;
 
 import java.util.Locale;
 
+import static org.hibernate.cfg.AvailableSettings.DEFAULT_ENTITY_MODE;
+import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
+
 /**
  * Defines the representation modes available for entities.
  *
- * @author Steve Ebersole
+ * @deprecated To be removed in 6.0 in favor of `ManagedTypeRepresentationStrategy`
+ * and `RepresentationMode`
  */
+@Deprecated
 public enum EntityMode {
 	/**
 	 * The {@code pojo} entity mode describes an entity model made up of entity classes (loosely) following
@@ -58,4 +63,23 @@ public enum EntityMode {
 		return valueOf( entityMode.toUpperCase( Locale.ENGLISH ) );
 	}
 
+	public static EntityMode fromSetting(Object setting) {
+		if ( setting != null ) {
+			DEPRECATION_LOGGER.deprecatedSetting( DEFAULT_ENTITY_MODE );
+		}
+
+		if ( setting == null || setting == POJO ) {
+			return POJO;
+		}
+
+		if ( setting instanceof EntityMode ) {
+			return ( (EntityMode) setting );
+		}
+
+		if ( setting instanceof String ) {
+			return parse( (String) setting );
+		}
+
+		return POJO;
+	}
 }

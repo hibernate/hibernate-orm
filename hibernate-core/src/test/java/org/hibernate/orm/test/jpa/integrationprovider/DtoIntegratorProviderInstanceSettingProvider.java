@@ -6,21 +6,14 @@
  */
 package org.hibernate.orm.test.jpa.integrationprovider;
 
-import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
-
-import org.hibernate.testing.orm.jpa.NonStringValueSettingProvider;
+import org.hibernate.testing.orm.junit.SettingProvider;
 
 /**
  * @author Jan Schatteman
  */
-public class DtoIntegratorProviderInstanceSettingProvider extends NonStringValueSettingProvider {
+public class DtoIntegratorProviderInstanceSettingProvider implements SettingProvider.Provider<DtoIntegratorProvider>  {
 	@Override
-	public String getKey() {
-		return EntityManagerFactoryBuilderImpl.INTEGRATOR_PROVIDER;
-	}
-
-	@Override
-	public Object getValue() {
+	public DtoIntegratorProvider getSetting() {
 		return new DtoIntegratorProvider();
 	}
 }

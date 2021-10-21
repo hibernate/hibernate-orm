@@ -7,6 +7,8 @@
 package org.hibernate.orm.test.jpa.mapping;
 
 import java.util.Arrays;
+import java.util.List;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
@@ -15,9 +17,9 @@ import jakarta.persistence.Table;
 
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.orm.jpa.NonStringValueSettingProvider;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.SettingProvider;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -31,7 +33,11 @@ import org.junit.jupiter.api.Test;
 				DefaultCascadeTest.Child.class
 		},
 		//	using 'xmlMappings = { "org/hibernate/orm/test/jpa/mapping/orm.xml" }' also works
-		nonStringValueSettingProviders = { DefaultCascadeTest.EJB3DDMappingProvider.class }
+		settingProviders = {
+				@SettingProvider(
+						settingName = AvailableSettings.ORM_XML_FILES,
+						provider = DefaultCascadeTest.EJB3DDMappingProvider.class )
+		}
 )
 public class DefaultCascadeTest {
 
@@ -79,14 +85,9 @@ public class DefaultCascadeTest {
 		private Parent parent;
 	}
 
-	public static class EJB3DDMappingProvider extends NonStringValueSettingProvider {
+	public static class EJB3DDMappingProvider implements SettingProvider.Provider<List<String>> {
 		@Override
-		public String getKey() {
-			return AvailableSettings.ORM_XML_FILES;
-		}
-
-		@Override
-		public Object getValue() {
+		public List<String> getSetting() {
 			return Arrays.asList( "org/hibernate/orm/test/jpa/mapping/orm.xml" );
 		}
 	}

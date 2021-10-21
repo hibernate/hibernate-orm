@@ -12,7 +12,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.util.Date;
-import jakarta.persistence.EntityManager;
 
 import org.hibernate.Session;
 import org.hibernate.orm.test.jpa.Cat;
@@ -23,8 +22,10 @@ import org.hibernate.orm.test.jpa.Wallet;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
-
+import org.hibernate.testing.orm.junit.SettingProvider;
 import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.EntityManager;
 
 /**
  * @author Emmanuel Bernard
@@ -38,7 +39,11 @@ import org.junit.jupiter.api.Test;
 				Cat.class,
 				Kitten.class
 		},
-		nonStringValueSettingProviders = { NotSerializableClassSettingValueProvider.class }
+		settingProviders = {
+				@SettingProvider(
+						settingName = "BaseEntityManagerFunctionalTestCase.getConfig_addedNotSerializableObject",
+						provider = NotSerializableClassSettingProvider.class)
+		}
 )
 public class EntityManagerSerializationTest {
 	@Test

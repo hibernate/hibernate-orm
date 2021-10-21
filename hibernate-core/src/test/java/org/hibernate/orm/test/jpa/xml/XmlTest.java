@@ -13,9 +13,9 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
-import org.hibernate.testing.orm.jpa.NonStringValueSettingProvider;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.SettingProvider;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Assertions;
@@ -25,7 +25,12 @@ import org.junit.jupiter.api.Assertions;
  */
 @Jpa(
 		xmlMappings = {"org/hibernate/orm/test/jpa/xml/orm.xml", "org/hibernate/orm/test/jpa/xml/orm2.xml"},
-		nonStringValueSettingProviders = { XmlTest.SharedCacheModeProvider.class }
+		settingProviders = {
+				@SettingProvider(
+						settingName = AvailableSettings.JAKARTA_SHARED_CACHE_MODE,
+						provider = XmlTest.SharedCacheModeProvider.class
+				)
+		}
 )
 public class XmlTest {
 	@Test
@@ -43,14 +48,9 @@ public class XmlTest {
 		Assertions.assertTrue(entityPersister.canWriteToCache());
 	}
 
-	public static class SharedCacheModeProvider extends NonStringValueSettingProvider {
+	public static class SharedCacheModeProvider implements SettingProvider.Provider<SharedCacheMode> {
 		@Override
-		public String getKey() {
-			return AvailableSettings.JPA_SHARED_CACHE_MODE;
-		}
-
-		@Override
-		public Object getValue() {
+		public SharedCacheMode getSetting() {
 			return SharedCacheMode.ENABLE_SELECTIVE;
 		}
 	}

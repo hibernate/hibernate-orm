@@ -7,6 +7,9 @@
 package org.hibernate.orm.test.jpa.transaction;
 
 import java.util.List;
+
+import org.hibernate.cfg.AvailableSettings;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityTransaction;
 import jakarta.persistence.GeneratedValue;
@@ -15,6 +18,7 @@ import jakarta.persistence.Id;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SettingProvider;
 
 import org.junit.jupiter.api.Test;
 
@@ -30,7 +34,12 @@ import static org.hamcrest.MatcherAssert.assertThat;
 				@Setting(name = org.hibernate.cfg.AvailableSettings.CONNECTION_PROVIDER, value = "org.hibernate.testing.jta.JtaAwareConnectionProviderImpl"),
 				@Setting(name = org.hibernate.cfg.AvailableSettings.JPA_TRANSACTION_TYPE, value = "JTA")
 		},
-		nonStringValueSettingProviders = { JtaPlatformNonStringValueSettingProvider.class }
+		settingProviders = {
+				@SettingProvider(
+						settingName = AvailableSettings.JTA_PLATFORM,
+						provider = JtaPlatformSettingProvider.class
+				)
+		}
 )
 public class JtaReusingEntityTransactionTest {
 

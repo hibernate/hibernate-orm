@@ -21,16 +21,16 @@ import org.hibernate.engine.jdbc.batch.internal.BatchingBatch;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
-import org.hibernate.orm.test.jpa.transaction.JtaPlatformNonStringValueSettingProvider;
+import org.hibernate.orm.test.jpa.transaction.JtaPlatformSettingProvider;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
-import org.hibernate.testing.orm.jpa.NonStringValueSettingProvider;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SettingProvider;
 
 import org.junit.jupiter.api.Test;
 
@@ -56,10 +56,19 @@ import static org.junit.jupiter.api.Assertions.fail;
 				@Setting(name = AvailableSettings.JPA_TRANSACTION_COMPLIANCE, value = "true"),
 				@Setting(name = AvailableSettings.STATEMENT_BATCH_SIZE, value = "50")
 		},
-		nonStringValueSettingProviders = {
-				JtaPlatformNonStringValueSettingProvider.class,
-				AbstractJtaBatchTest.ConnectionNonStringValueSettingProvider.class,
-				JtaWithFailingBatchTest.BatchBuilderNonStringValueSettingProvider.class
+		settingProviders = {
+				@SettingProvider(
+						settingName = AvailableSettings.CONNECTION_PROVIDER,
+						provider = AbstractJtaBatchTest.ConnectionSettingProvider.class
+				),
+				@SettingProvider(
+						settingName = AvailableSettings.JTA_PLATFORM,
+						provider = JtaPlatformSettingProvider.class
+				),
+				@SettingProvider(
+						settingName = BatchBuilderInitiator.BUILDER,
+						provider = JtaWithFailingBatchTest.BatchBuilderSettingProvider.class
+				)
 		}
 )
 public class JtaWithFailingBatchTest extends AbstractJtaBatchTest {
@@ -133,14 +142,9 @@ public class JtaWithFailingBatchTest extends AbstractJtaBatchTest {
 		);
 	}
 
-	public static class BatchBuilderNonStringValueSettingProvider extends NonStringValueSettingProvider {
+	public static class BatchBuilderSettingProvider implements SettingProvider.Provider<String> {
 		@Override
-		public String getKey() {
-			return BatchBuilderInitiator.BUILDER;
-		}
-
-		@Override
-		public Object getValue() {
+		public String getSetting() {
 			return TestBatchBuilder.class.getName();
 		}
 	}

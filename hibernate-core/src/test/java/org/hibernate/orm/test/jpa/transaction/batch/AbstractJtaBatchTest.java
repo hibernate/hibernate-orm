@@ -17,13 +17,12 @@ import jakarta.persistence.Table;
 
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.HEMLogging;
 import org.hibernate.jpa.boot.spi.ProviderChecker;
 
 import org.hibernate.testing.jta.JtaAwareConnectionProviderImpl;
 import org.hibernate.testing.logger.Triggerable;
-import org.hibernate.testing.orm.jpa.NonStringValueSettingProvider;
+import org.hibernate.testing.orm.junit.SettingProvider;
 import org.hibernate.testing.orm.logger.LoggerInspectionExtension;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -63,14 +62,9 @@ public abstract class AbstractJtaBatchTest {
 		} );
 	}
 
-	public static class ConnectionNonStringValueSettingProvider extends NonStringValueSettingProvider {
+	public static class ConnectionSettingProvider implements SettingProvider.Provider<String> {
 		@Override
-		public String getKey() {
-			return AvailableSettings.CONNECTION_PROVIDER;
-		}
-
-		@Override
-		public Object getValue() {
+		public String getSetting() {
 			return JtaAwareConnectionProviderImpl.class.getName();
 		}
 	}

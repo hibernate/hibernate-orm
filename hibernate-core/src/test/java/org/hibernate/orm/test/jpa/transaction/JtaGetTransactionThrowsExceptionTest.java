@@ -14,6 +14,7 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SettingProvider;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -27,7 +28,12 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 				@Setting(name = AvailableSettings.CONNECTION_PROVIDER, value = "org.hibernate.testing.jta.JtaAwareConnectionProviderImpl"),
 				@Setting( name = AvailableSettings.JPA_TRANSACTION_COMPLIANCE, value = "true")
 		},
-		nonStringValueSettingProviders = { JtaPlatformNonStringValueSettingProvider.class }
+		settingProviders = {
+				@SettingProvider(
+						settingName = AvailableSettings.JTA_PLATFORM,
+						provider = JtaPlatformSettingProvider.class
+				)
+		}
 )
 public class JtaGetTransactionThrowsExceptionTest {
 

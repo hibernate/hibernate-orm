@@ -12,12 +12,14 @@ import java.util.Map;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.orm.test.jpa.Wallet;
 
+import org.hibernate.testing.orm.jdbc.PreparedStatementSpyConnectionProviderSettingProvider;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.jdbc.PreparedStatementSpyConnectionProvider;
+import org.hibernate.testing.orm.junit.SettingProvider;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -33,7 +35,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @Jpa(
 		annotatedClasses = { Wallet.class },
 		integrationSettings = { @Setting( name = AvailableSettings.DISCARD_PC_ON_CLOSE, value = "false") },
-		nonStringValueSettingProviders = { PreparedStatementSpyConnectionProviderSettingValueProvider.class }
+		settingProviders = {
+				@SettingProvider(
+						settingName = AvailableSettings.CONNECTION_PROVIDER,
+						provider = PreparedStatementSpyConnectionProviderSettingProvider.class)
+		}
 )
 public class DisableDiscardPersistenceContextOnCloseTest {
 

@@ -33,6 +33,7 @@ import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SettingProvider;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -56,7 +57,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 				@Setting(name = AvailableSettings.JPA_TRANSACTION_TYPE, value = "JTA"),
 				@Setting(name = AvailableSettings.JPA_TRANSACTION_COMPLIANCE, value = "true")
 		},
-		nonStringValueSettingProviders = { JtaPlatformNonStringValueSettingProvider.class }
+		settingProviders = {
+				@SettingProvider(
+						settingName = AvailableSettings.JTA_PLATFORM,
+						provider = JtaPlatformSettingProvider.class
+				)
+		}
 )
 public class CloseEntityManagerWithActiveTransactionTest {
 

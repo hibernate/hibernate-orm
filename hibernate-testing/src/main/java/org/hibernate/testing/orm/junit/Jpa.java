@@ -21,7 +21,6 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
 
 import org.hibernate.testing.orm.domain.DomainModelDescriptor;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
-import org.hibernate.testing.orm.jpa.NonStringValueSettingProvider;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -48,14 +47,14 @@ public @interface Jpa {
 	 */
 	Setting[] integrationSettings() default {};
 
-	Class<? extends NonStringValueSettingProvider>[] nonStringValueSettingProviders() default {};
-
 	// todo : multiple persistence units?
 
 	/**
 	 * Persistence unit properties
 	 */
 	Setting[] properties() default {};
+
+	SettingProvider[] settingProviders() default {};
 
 	boolean generateStatistics() default false;
 	boolean exportSchema() default true;

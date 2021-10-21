@@ -34,7 +34,6 @@ import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator.ActionGroup
 import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 import org.hibernate.testing.orm.domain.DomainModelDescriptor;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
-import org.hibernate.testing.orm.jpa.NonStringValueSettingProvider;
 import org.hibernate.testing.orm.jpa.PersistenceUnitInfoImpl;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -176,16 +175,14 @@ public class EntityManagerFactoryExtension
 			integrationSettings.put( setting.name(), setting.value() );
 		}
 
-		if ( emfAnn.nonStringValueSettingProviders().length > 0 ) {
-			for ( int i = 0; i < emfAnn.nonStringValueSettingProviders().length; i++ ) {
-				final Class<? extends NonStringValueSettingProvider> _class = emfAnn.nonStringValueSettingProviders()[i];
-				try {
-					NonStringValueSettingProvider valueProvider = _class.newInstance();
-					integrationSettings.put( valueProvider.getKey(), valueProvider.getValue() );
-				}
-				catch (Exception e) {
-					log.error( "Error obtaining special value for " + _class.getName(), e );
-				}
+		for ( SettingProvider providerAnn : emfAnn.settingProviders() ) {
+			final Class<? extends SettingProvider.Provider<?>> providerImpl = providerAnn.provider();
+			try {
+				final SettingProvider.Provider<?> provider = providerImpl.getConstructor().newInstance();
+				integrationSettings.put( providerAnn.settingName(), provider.getSetting() );
+			}
+			catch (Exception e) {
+				log.error( "Error obtaining setting provider for " + providerImpl.getName(), e );
 			}
 		}
 

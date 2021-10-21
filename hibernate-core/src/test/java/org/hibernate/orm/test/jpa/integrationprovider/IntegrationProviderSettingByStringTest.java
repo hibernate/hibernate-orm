@@ -8,9 +8,12 @@ package org.hibernate.orm.test.jpa.integrationprovider;
 
 import java.util.List;
 
+import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.SettingProvider;
 
 import org.junit.jupiter.api.Test;
 
@@ -22,7 +25,11 @@ import org.junit.jupiter.api.Test;
 		annotatedClasses = {
 				Person.class
 		},
-		nonStringValueSettingProviders = { DtoIntegratorProviderClassNameSettingProvider.class }
+		settingProviders = {
+				@SettingProvider(
+						settingName = EntityManagerFactoryBuilderImpl.INTEGRATOR_PROVIDER,
+						provider = DtoIntegratorProviderClassNameSettingProvider.class )
+		}
 )
 public class IntegrationProviderSettingByStringTest {
 

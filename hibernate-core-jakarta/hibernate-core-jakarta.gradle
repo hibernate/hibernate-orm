@@ -5,8 +5,6 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
-import org.apache.tools.ant.filters.ReplaceTokens
-
 description = 'Hibernate O/RM implementation of the Jakarta Persistence specification'
 
 apply from: rootProject.file( 'gradle/published-java-module.gradle' )
@@ -88,86 +86,195 @@ dependencies {
 	testCompile libraries.jboss_annotation_spec_jar
 }
 
-jar {
-	mustRunAfter project(':hibernate-core').tasks.jar
-	mustRunAfter project(':hibernate-core').tasks.testJar
+// we do not want the much of the normal java plugin's behavior
+compileJava.enabled false
+processResources.enabled false
+compileTestJava.enabled false
+processTestResources.enabled false
+jar.enabled false
+
+ext {
+	transformedJarName = project(':hibernate-core').tasks.jar.archiveFileName.get().replaceAll( 'hibernate-core', 'hibernate-core-jakarta' )
+
+	unpackedTestDirRelative = 'tmp/unpack/test'
+	transformedTestDirRelative = 'classes/java/test'
+
+	unpackedTestDir = "${buildDir}/${unpackedTestDirRelative}"
+	transformedTestDir = "${buildDir}/${transformedTestDirRelative}"
+
+	baseTransformerArgs = [
+			// "quiet" output
+			'-q',
+			'-tr', new File(getProjectDir().getParentFile(), 'rules/jakarta-renames.properties').path,
+			'-tv', new File(getProjectDir().getParentFile(), 'rules/jakarta-versions.properties').path,
+			'-td', new File(getProjectDir().getParentFile(), 'rules/jakarta-direct.properties').path,
+	]
+}
+
+task transformJar {
+	description 'Transforms the hibernate-core jar using the JakartaTransformer tool'
+
 	dependsOn project(':hibernate-core').tasks.jar
-	dependsOn project(':hibernate-core').tasks.testJar
-	def baseDir = project(':hibernate-core').buildDir
-	def baseJars = fileTree(baseDir).matching {include 'libs/*.jar' }
-	inputs.files(baseJars).skipWhenEmpty()
-	outputs.dir project.buildDir
+	mustRunAfter project(':hibernate-core').tasks.jar
+
+	inputs.file project(':hibernate-core').tasks.jar.archiveFile
+	outputs.file "${buildDir}/libs/${transformedJarName}"
+
 	doLast {
-		new File(project.buildDir, "libs").mkdirs()
-		fileTree(project.buildDir).matching { include 'libs/*.jar' }.each { delete it }
+		def transformerArgs = [
+				// source jar
+				project(':hibernate-core').tasks.jar.archiveFile.get(),
+				// target jar
+				file( "${buildDir}/libs/${transformedJarName}" )
+		] + ( project.baseTransformerArgs as ArrayList )
 
-		baseJars.each { bundleJar ->
-			def sourceJarPath = baseDir.path + '/libs/' + bundleJar.name
-			println 'Initial bundle jar name [ ' + sourceJarPath + ' ]'
+		println 'Transformer options (main) :'
+		transformerArgs.each {
+			println '  [ ' + it + ' ]'
+		}
 
-			def finalBundleJarName = project.buildDir.path + '/libs/' + bundleJar.name.replaceAll( 'hibernate-core', 'hibernate-core-jakarta' )
-			println 'Default jakarta final bundle jar name [ ' + finalBundleJarName + ' ]'
-
-			def transformerArgs = [
-					sourceJarPath, finalBundleJarName,
-					'-q', // quiet output
-					'-tr', new File(getProjectDir().getParentFile(), 'rules/jakarta-renames.properties').path,
-					'-tv', new File(getProjectDir().getParentFile(), 'rules/jakarta-versions.properties').path,
-					'-td', new File(getProjectDir().getParentFile(), 'rules/jakarta-direct.properties').path,
-			]
-
-			println 'Transformer options:'
-			transformerArgs.each {
-				println '  [ ' + it + ' ]'
-			}
-
-			javaexec {
-				classpath configurations.jakartaeeTransformJars
-				main = 'org.eclipse.transformer.jakarta.JakartaTransformer'
-				args = transformerArgs
-			}
+		javaexec {
+			classpath configurations.jakartaeeTransformJars
+			main = 'org.eclipse.transformer.jakarta.JakartaTransformer'
+			args = transformerArgs
 		}
 	}
 }
 
 task unpackTestJar(type: Copy) {
-	dependsOn jar
-	fileTree(project.buildDir).matching { include 'libs/*-test.jar' }.each {
-		def outputDir = file("${buildDir}/unpacked/" + it.name)
-		from zipTree(it)
-		into outputDir
+	description 'Unpacks the hibernate-core test jar into a directory so we can transform it and replace token(s) in the test resources'
+
+	dependsOn project(':hibernate-core').tasks.testJar
+	mustRunAfter project(':hibernate-core').tasks.testJar
+
+	inputs.file project(':hibernate-core').tasks.testJar.archiveFile
+	outputs.dir project.unpackedTestDir
+
+	from zipTree( project( ":hibernate-core" ).tasks.testJar.archiveFile )
+	into project.unpackedTestDir
+
+	// There are persistence.xml files referencing jar files through their absolute path so we
+	// have to replace 'hibernate-core' references in the path with 'hibernate-core-jakarta'
+
+	filesMatching('**/*.xml') {
+		filter { line ->
+			line.replaceAll( 'hibernate-core/target', 'hibernate-core-jakarta/target' )
+		}
 	}
+
+// - commented out atm because this causes problems for the JakartaTransformer (doesn't everything?)
+//	filter { line ->
+//		line.replaceAll( 'hibernate-core/target', 'hibernate-core-jakarta/target' )
+//	}
+
+//	doLast {
+//		// replacing this text in the unpack dir causes problems for the JakartaTransformer (doesn't everything?)
+//		//		- so we only do it in the transformed dir after the transformation happens.
+//		ant.replaceregexp(match:'hibernate-core', replace:'hibernate-core-jakarta', flags:'g', byline:true) {
+//			fileset(dir: "${project.unpackedTestDir}/bundles", includes: '**/*.xml')
+//		}
+//	}
+
 }
 
-task copyBundleResources (type: Copy) {
+task transformTests {
+	description 'Transforms the hibernate-core tests using the JakartaTransformer tool'
+
 	dependsOn unpackTestJar
-	File unpackedDir = new File(project.buildDir, "libs/hibernate-core-jakarta-${project.version}-test.jar")
-	ext {
-		bundlesTargetDir = file( "${buildDir}/bundles" )
-		bundleTokens = dbBundle[db]
-		ext.bundleTokens['buildDirName'] = buildDir.absolutePath
+	mustRunAfter unpackTestJar
+
+	inputs.dir project.unpackedTestDir
+	outputs.dir project.transformedTestDir
+
+	def transformedTestDirFile = file(project.transformedTestDir)
+
+	doFirst {
+		println ":transformTests#doFirst : ${project.transformedTestDir} (exists? : ${transformedTestDirFile.exists()})"
+
+		// JakartaTransformer expects that the output directory does not exist and
+		//		also expects that the parent of the output directory does
+		if ( transformedTestDirFile.exists() ) {
+			def wasDeleteSuccessful = transformedTestDirFile.delete()
+			println ":unpackTestJar#doLast : deleting ${project.transformedTestDir} (successful? : ${wasDeleteSuccessful})"
+
+			def wasMakeDirsSuccessful = transformedTestDirFile.parentFile.mkdirs()
+			println ":unpackTestJar#doLast : created ${transformedTestDirFile.parentFile.absolutePath} (successful? : ${wasMakeDirsSuccessful})"
+		}
 	}
 
-	from file("${buildDir}/unpacked/${unpackedDir.name}/templates")
-	into ext.bundlesTargetDir
-	filter( ReplaceTokens, tokens: ext.bundleTokens)
-	doFirst {
-		ext.bundlesTargetDir.mkdirs()
+//	doLast {
+//		// replacing this text in the unpack dir causes problems for the JakartaTransformer (doesn't everything?)
+//		//		- so we only do it in the transformed dir after the transformation happens.
+//		ant.replaceregexp(match:'hibernate-core', replace:'hibernate-core-jakarta', flags:'g', byline:true) {
+//			fileset(dir: "${project.transformedTestDir}/bundles", includes: '**/*.xml')
+//		}
+//	}
+
+	doLast {
+		def transformerArgs = [
+				// source dir
+				project.unpackedTestDir,
+				// target dir
+				project.transformedTestDir
+		] + ( project.baseTransformerArgs as ArrayList )
+
+		println 'Transformer options (tests) :'
+		transformerArgs.each {
+			println '  [ ' + it + ' ]'
+		}
+
+		javaexec {
+			classpath configurations.jakartaeeTransformJars
+			main = 'org.eclipse.transformer.jakarta.JakartaTransformer'
+			args = transformerArgs
+		}
 	}
 }
 
-processTestResources.dependsOn copyBundleResources
+/**
+ * Allow the transformation task to process these bundles and then move them
+ */
+task stagePackagingTestBundles(type:Copy) {
+	dependsOn tasks.transformTests
+	mustRunAfter tasks.transformTests
+
+	from project.file( project.transformedTestDir )
+	into project.file( "${buildDir}" )
+}
+
+task testJar(type: Jar) {
+	description 'Jars the transformed tests'
+
+	dependsOn tasks.transformTests
+	dependsOn tasks.stagePackagingTestBundles
+	mustRunAfter tasks.transformTests
+	mustRunAfter tasks.stagePackagingTestBundles
+
+	from project.transformedTestDir
+
+	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+	archiveClassifier.set( 'test' )
+}
 
 artifacts {
-	tests new File(project.buildDir, "libs/hibernate-core-jakarta-${project.version}-test.jar")
+	tests tasks.testJar
 }
 
 test {
-	fileTree(project.buildDir).matching { include 'libs/*-test.jar' }.each {
-		def outputDir = file("${buildDir}/unpacked/" + it.name)
-		testClassesDirs += files(outputDir)
-		classpath += files(outputDir)
-	}
+	dependsOn tasks.transformJar
+	dependsOn tasks.transformTests
+	dependsOn tasks.stagePackagingTestBundles
+
+	mustRunAfter tasks.transformJar
+	mustRunAfter tasks.transformTests
+	mustRunAfter tasks.stagePackagingTestBundles
+
+	classpath += files(
+			"${buildDir}/libs/${project.transformedJarName}",
+			"${buildDir}/${project.transformedTestDirRelative}"
+	)
+	testClassesDirs += files( project.layout.buildDirectory.dir( project.transformedTestDirRelative ) )
+
 	systemProperty 'file.encoding', 'utf-8'
 
 	if ( gradle.ext.javaVersions.test.launcher.asInt() >= 9 ) {
@@ -177,4 +284,6 @@ test {
 		jvmArgs( ['--add-opens', 'java.base/java.security=ALL-UNNAMED'] )
 		jvmArgs( ['--add-opens', 'java.base/java.lang=ALL-UNNAMED'] )
 	}
+
+	maxHeapSize = '3G'
 }

@@ -25,7 +25,7 @@ sourceSets {
     // resources inherently exclude sources
     test {
         resources {
-            setSrcDirs( ['src/test/java','src/test/resources','src/test/bundles'] )
+            srcDir 'src/test/java'
         }
     }
 }
@@ -196,18 +196,13 @@ tasks.compile.dependsOn generateGrammarSource
 
 task copyBundleResources (type: Copy) {
     ext {
-        bundlesTargetDir = file( "${buildDir}/bundles" )
         bundleTokens = dbBundle[db]
         ext.bundleTokens['buildDirName'] = buildDir.absolutePath
     }
 
-    from file('src/test/bundles/templates')
-    into ext.bundlesTargetDir
+    from 'src/test/bundles/templates'
+    into "${buildDir}/bundles"
     filter( ReplaceTokens, tokens: ext.bundleTokens)
-
-    doFirst {
-        ext.bundlesTargetDir.mkdirs()
-    }
 }
 processTestResources.dependsOn copyBundleResources
 
@@ -219,6 +214,9 @@ task testJar(type: Jar, dependsOn: testClasses) {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     archiveClassifier.set( 'test' )
     from sourceSets.test.output
+    from( "${buildDir}/bundles" ) {
+        into 'bundles'
+    }
 }
 
 artifacts {
@@ -239,6 +237,7 @@ test {
     beforeTest { descriptor ->
         //println "Starting test: " + descriptor
     }
+
     // Allow to exclude specific tests
     if (project.hasProperty('excludeTests')) {
         filter {

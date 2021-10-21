@@ -44,6 +44,7 @@ import org.hibernate.sql.ast.tree.from.CompositeTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
@@ -286,21 +287,45 @@ public class EmbeddedAttributeMapping
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
-		final CompositeTableGroup compositeTableGroup = new CompositeTableGroup(
+		final TableGroup tableGroup = createRootTableGroupJoin(
+				navigablePath,
+				lhs,
+				explicitSourceAlias,
+				sqlAstJoinType,
+				fetched,
+				null,
+				aliasBaseGenerator,
+				sqlExpressionResolver,
+				creationContext
+		);
+
+		final TableGroupJoin tableGroupJoin = new TableGroupJoin(
+				navigablePath,
+				sqlAstJoinType,
+				tableGroup
+		);
+		lhs.addTableGroupJoin( tableGroupJoin );
+
+		return tableGroupJoin;
+	}
+
+	@Override
+	public TableGroup createRootTableGroupJoin(
+			NavigablePath navigablePath,
+			TableGroup lhs,
+			String explicitSourceAlias,
+			SqlAstJoinType sqlAstJoinType,
+			boolean fetched,
+			Consumer<Predicate> predicateConsumer,
+			SqlAliasBaseGenerator aliasBaseGenerator,
+			SqlExpressionResolver sqlExpressionResolver,
+			SqlAstCreationContext creationContext) {
+		return new CompositeTableGroup(
 				navigablePath,
 				this,
 				lhs,
 				fetched
 		);
-
-		TableGroupJoin tableGroupJoin = new TableGroupJoin(
-				navigablePath,
-				sqlAstJoinType,
-				compositeTableGroup
-		);
-		lhs.addTableGroupJoin( tableGroupJoin );
-
-		return tableGroupJoin;
 	}
 
 	@Override

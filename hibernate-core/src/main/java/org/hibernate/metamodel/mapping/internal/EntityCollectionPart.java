@@ -7,6 +7,7 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
@@ -32,6 +33,7 @@ import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchOptions;
@@ -280,6 +282,30 @@ public class EntityCollectionPart
 				explicitSourceAlias,
 				sqlAstJoinType,
 				fetched,
+				aliasBaseGenerator,
+				sqlExpressionResolver,
+				creationContext
+		);
+	}
+
+	@Override
+	public TableGroup createRootTableGroupJoin(
+			NavigablePath navigablePath,
+			TableGroup lhs,
+			String explicitSourceAlias,
+			SqlAstJoinType sqlAstJoinType,
+			boolean fetched,
+			Consumer<Predicate> predicateConsumer,
+			SqlAliasBaseGenerator aliasBaseGenerator,
+			SqlExpressionResolver sqlExpressionResolver,
+			SqlAstCreationContext creationContext) {
+		return collectionDescriptor.getAttributeMapping().createRootTableGroupJoin(
+				navigablePath,
+				lhs,
+				explicitSourceAlias,
+				sqlAstJoinType,
+				fetched,
+				predicateConsumer,
 				aliasBaseGenerator,
 				sqlExpressionResolver,
 				creationContext

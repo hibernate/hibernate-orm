@@ -10,7 +10,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import org.hibernate.HibernateException;
+import org.hibernate.QueryException;
 import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.query.Query;
 
 import org.hibernate.testing.TestForIssue;
@@ -25,9 +28,11 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static org.hibernate.testing.orm.junit.ExtraAssertions.assertTyping;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Implementation of WithClauseTest.
@@ -52,6 +57,26 @@ public class WithClauseTest {
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
 		data.cleanup( scope );
+	}
+
+	@Test
+	public void testWithClauseFailsWithFetch(SessionFactoryScope scope) {
+		scope.inTransaction(
+				(session) -> {
+					try {
+						session.createQuery( "from Animal a inner join fetch a.offspring as o with o.bodyWeight = :someLimit" )
+								.setParameter( "someLimit", 1 )
+								.list();
+						fail( "ad-hoc on clause allowed with fetched association" );
+					}
+					catch (IllegalArgumentException e) {
+						assertTyping( QueryException.class, e.getCause() );
+					}
+					catch ( HibernateException e ) {
+						// the expected response...
+					}
+				}
+		);
 	}
 
 	@Test
@@ -85,7 +110,16 @@ public class WithClauseTest {
 							.list();
 					assertTrue( list.isEmpty(), "ad-hoc on did not take effect" );
 
-					list = session.createQuery( "from Human h inner join h.offspring o with o.mother.father = :cousin" )
+				}
+		);
+	}
+
+	@Test
+	@SkipForDialect(dialectClass = TiDBDialect.class, reason = "TiDB db does not support subqueries for ON condition")
+	public void testWithClauseWithImplicitJoin(SessionFactoryScope scope) {
+		scope.inTransaction(
+				(session) -> {
+					List list = session.createQuery( "from Human h inner join h.offspring o with o.mother.father = :cousin" )
 							.setParameter( "cousin", session.load( Human.class, Long.valueOf( "123" ) ) )
 							.list();
 					assertTrue( list.isEmpty(), "ad-hoc did take effect" );

@@ -59,6 +59,10 @@ public class LazyTableGroup extends AbstractColumnReferenceQualifier implements 
 
 	}
 
+	public boolean isInitialized() {
+		return tableGroup != null;
+	}
+
 	public TableGroup getUnderlyingTableGroup() {
 		return tableGroup;
 	}

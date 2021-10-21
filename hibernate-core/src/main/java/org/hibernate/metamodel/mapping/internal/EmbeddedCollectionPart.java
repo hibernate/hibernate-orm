@@ -40,6 +40,7 @@ import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.from.CompositeTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
@@ -204,9 +205,17 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
-		assert lhs.getModelPart() instanceof PluralAttributeMapping;
-
-		final TableGroup tableGroup = new CompositeTableGroup( navigablePath, this, lhs, fetched );
+		final TableGroup tableGroup = createRootTableGroupJoin(
+				navigablePath,
+				lhs,
+				explicitSourceAlias,
+				sqlAstJoinType,
+				fetched,
+				null,
+				aliasBaseGenerator,
+				sqlExpressionResolver,
+				creationContext
+		);
 
 		final TableGroupJoin tableGroupJoin = new TableGroupJoin(
 				navigablePath,
@@ -216,6 +225,22 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 		);
 		lhs.addTableGroupJoin( tableGroupJoin );
 		return tableGroupJoin;
+	}
+
+	@Override
+	public TableGroup createRootTableGroupJoin(
+			NavigablePath navigablePath,
+			TableGroup lhs,
+			String explicitSourceAlias,
+			SqlAstJoinType sqlAstJoinType,
+			boolean fetched,
+			Consumer<Predicate> predicateConsumer,
+			SqlAliasBaseGenerator aliasBaseGenerator,
+			SqlExpressionResolver sqlExpressionResolver,
+			SqlAstCreationContext creationContext) {
+		assert lhs.getModelPart() instanceof PluralAttributeMapping;
+
+		return new CompositeTableGroup( navigablePath, this, lhs, fetched );
 	}
 
 	@Override

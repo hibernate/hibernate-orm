@@ -42,6 +42,7 @@ import org.hibernate.sql.ast.tree.from.CompositeTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
@@ -173,17 +174,36 @@ public abstract class AbstractCompositeIdentifierMapping
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
-		final CompositeTableGroup compositeTableGroup = new CompositeTableGroup(
+		final TableGroup tableGroup = createRootTableGroupJoin(
 				navigablePath,
-				this,
 				lhs,
-				fetched
+				explicitSourceAlias,
+				sqlAstJoinType,
+				fetched,
+				null,
+				aliasBaseGenerator,
+				sqlExpressionResolver,
+				creationContext
 		);
 
-		final TableGroupJoin join = new TableGroupJoin( navigablePath, SqlAstJoinType.LEFT, compositeTableGroup, null );
+		final TableGroupJoin join = new TableGroupJoin( navigablePath, SqlAstJoinType.LEFT, tableGroup, null );
 		lhs.addTableGroupJoin( join );
 
 		return join;
+	}
+
+	@Override
+	public TableGroup createRootTableGroupJoin(
+			NavigablePath navigablePath,
+			TableGroup lhs,
+			String explicitSourceAlias,
+			SqlAstJoinType sqlAstJoinType,
+			boolean fetched,
+			Consumer<Predicate> predicateConsumer,
+			SqlAliasBaseGenerator aliasBaseGenerator,
+			SqlExpressionResolver sqlExpressionResolver,
+			SqlAstCreationContext creationContext) {
+		return new CompositeTableGroup( navigablePath, this, lhs, fetched );
 	}
 
 	@Override

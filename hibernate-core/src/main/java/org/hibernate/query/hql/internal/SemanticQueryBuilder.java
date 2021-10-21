@@ -1683,6 +1683,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			// not consumed by the identifierConsumer
 			join.setExplicitAlias( alias );
 
+			final HqlParser.QualifiedJoinPredicateContext qualifiedJoinPredicateContext = parserJoin.qualifiedJoinPredicate();
 			if ( join instanceof SqmEntityJoin ) {
 				//noinspection unchecked
 				sqmRoot.addSqmJoin( join );
@@ -1690,8 +1691,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			else {
 				if ( getCreationOptions().useStrictJpaCompliance() ) {
 					if ( join.getExplicitAlias() != null ) {
-						//noinspection rawtypes
-						if ( ( (SqmAttributeJoin) join ).isFetched() ) {
+						if ( ( (SqmAttributeJoin<?, ?>) join ).isFetched() ) {
 							throw new StrictJpaComplianceViolation(
 									"Encountered aliased fetch join, but strict JPQL compliance was requested",
 									StrictJpaComplianceViolation.Type.ALIASED_FETCH_JOIN
@@ -1699,9 +1699,11 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 						}
 					}
 				}
+				if ( qualifiedJoinPredicateContext != null && ( (SqmAttributeJoin<?, ?>) join ).isFetched() ) {
+					throw new SemanticException( "with-clause not allowed on fetched associations; use filters" );
+				}
 			}
 
-			final HqlParser.QualifiedJoinPredicateContext qualifiedJoinPredicateContext = parserJoin.qualifiedJoinPredicate();
 			if ( qualifiedJoinPredicateContext != null ) {
 				dotIdentifierConsumerStack.push( new QualifiedJoinPredicatePathConsumer( join, this ) );
 				try {

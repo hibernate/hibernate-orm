@@ -627,57 +627,17 @@ public class PluralAttributeMappingImpl
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
-		final CollectionPersister collectionDescriptor = getCollectionDescriptor();
-		if ( collectionDescriptor.isOneToMany() ) {
-			return createOneToManyTableGroupJoin(
-					navigablePath,
-					lhs,
-					explicitSourceAlias,
-					sqlAstJoinType,
-					fetched,
-					aliasBaseGenerator,
-					sqlExpressionResolver,
-					creationContext
-			);
-		}
-		else {
-			return createCollectionTableGroupJoin(
-					navigablePath,
-					lhs,
-					explicitSourceAlias,
-					sqlAstJoinType,
-					fetched,
-					aliasBaseGenerator,
-					sqlExpressionResolver,
-					creationContext
-			);
-		}
-	}
-
-	public void setForeignKeyDescriptor(ForeignKeyDescriptor fkDescriptor) {
-		this.fkDescriptor = fkDescriptor;
-	}
-
-	@SuppressWarnings("unused")
-	private TableGroupJoin createOneToManyTableGroupJoin(
-			NavigablePath navigablePath,
-			TableGroup lhs,
-			String explicitSourceAlias,
-			SqlAstJoinType sqlAstJoinType,
-			boolean fetched,
-			SqlAliasBaseGenerator aliasBaseGenerator,
-			SqlExpressionResolver sqlExpressionResolver,
-			SqlAstCreationContext creationContext) {
-		final TableGroup tableGroup = createOneToManyTableGroup(
-				lhs.canUseInnerJoins() && sqlAstJoinType == SqlAstJoinType.INNER,
+		final TableGroup tableGroup = createRootTableGroupJoin(
 				navigablePath,
-				fetched,
+				lhs,
 				explicitSourceAlias,
-				aliasBaseGenerator.createSqlAliasBase( getSqlAliasStem() ),
+				sqlAstJoinType,
+				fetched,
+				null,
+				aliasBaseGenerator,
 				sqlExpressionResolver,
 				creationContext
 		);
-
 		final TableGroupJoin tableGroupJoin = new TableGroupJoin(
 				navigablePath,
 				sqlAstJoinType,
@@ -694,6 +654,60 @@ public class PluralAttributeMappingImpl
 		lhs.addTableGroupJoin( tableGroupJoin );
 
 		return tableGroupJoin;
+	}
+
+	@Override
+	public TableGroup createRootTableGroupJoin(
+			NavigablePath navigablePath,
+			TableGroup lhs,
+			String explicitSourceAlias,
+			SqlAstJoinType sqlAstJoinType,
+			boolean fetched,
+			Consumer<Predicate> predicateConsumer,
+			SqlAliasBaseGenerator aliasBaseGenerator,
+			SqlExpressionResolver sqlExpressionResolver,
+			SqlAstCreationContext creationContext) {
+		final CollectionPersister collectionDescriptor = getCollectionDescriptor();
+		final TableGroup tableGroup;
+		if ( collectionDescriptor.isOneToMany() ) {
+			tableGroup = createOneToManyTableGroup(
+					lhs.canUseInnerJoins() && sqlAstJoinType == SqlAstJoinType.INNER,
+					navigablePath,
+					fetched,
+					explicitSourceAlias,
+					aliasBaseGenerator.createSqlAliasBase( getSqlAliasStem() ),
+					sqlExpressionResolver,
+					creationContext
+			);
+		}
+		else {
+			tableGroup = createCollectionTableGroup(
+					lhs.canUseInnerJoins() && sqlAstJoinType == SqlAstJoinType.INNER,
+					navigablePath,
+					fetched,
+					explicitSourceAlias,
+					aliasBaseGenerator.createSqlAliasBase( getSqlAliasStem() ),
+					sqlExpressionResolver,
+					creationContext
+			);
+		}
+
+		if ( predicateConsumer != null ) {
+			predicateConsumer.accept(
+					getKeyDescriptor().generateJoinPredicate(
+							lhs,
+							tableGroup,
+							sqlAstJoinType,
+							sqlExpressionResolver,
+							creationContext
+					)
+			);
+		}
+		return tableGroup;
+	}
+
+	public void setForeignKeyDescriptor(ForeignKeyDescriptor fkDescriptor) {
+		this.fkDescriptor = fkDescriptor;
 	}
 
 	private TableGroup createOneToManyTableGroup(
@@ -823,44 +837,6 @@ public class PluralAttributeMappingImpl
 				tableReferenceJoinCreator,
 				creationContext.getSessionFactory()
 		);
-	}
-
-	@SuppressWarnings("unused")
-	private TableGroupJoin createCollectionTableGroupJoin(
-			NavigablePath navigablePath,
-			TableGroup lhs,
-			String explicitSourceAlias,
-			SqlAstJoinType sqlAstJoinType,
-			boolean fetched,
-			SqlAliasBaseGenerator aliasBaseGenerator,
-			SqlExpressionResolver sqlExpressionResolver,
-			SqlAstCreationContext creationContext) {
-		final TableGroup tableGroup = createCollectionTableGroup(
-				lhs.canUseInnerJoins() && sqlAstJoinType == SqlAstJoinType.INNER,
-				navigablePath,
-				fetched,
-				explicitSourceAlias,
-				aliasBaseGenerator.createSqlAliasBase( getSqlAliasStem() ),
-				sqlExpressionResolver,
-				creationContext
-		);
-
-		final TableGroupJoin tableGroupJoin = new TableGroupJoin(
-				navigablePath,
-				sqlAstJoinType,
-				tableGroup,
-				getKeyDescriptor().generateJoinPredicate(
-						lhs,
-						tableGroup,
-						sqlAstJoinType,
-						sqlExpressionResolver,
-						creationContext
-				)
-		);
-
-		lhs.addTableGroupJoin( tableGroupJoin );
-
-		return tableGroupJoin;
 	}
 
 	private TableGroup createCollectionTableGroup(
@@ -1054,8 +1030,8 @@ public class PluralAttributeMappingImpl
 					joinType,
 					elementAssociatedPrimaryTable,
 					elementFkDescriptor.generateJoinPredicate(
-							collectionTableReference,
 							elementAssociatedPrimaryTable,
+							collectionTableReference,
 							joinType,
 							sqlExpressionResolver,
 							creationContext

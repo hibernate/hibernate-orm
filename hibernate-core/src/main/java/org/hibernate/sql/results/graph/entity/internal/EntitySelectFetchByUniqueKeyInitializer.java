@@ -53,7 +53,6 @@ public class EntitySelectFetchByUniqueKeyInitializer extends EntitySelectFetchIn
 				uniqueKeyPropertyName,
 				entityIdentifier,
 				concreteDescriptor.getIdentifierType(),
-				concreteDescriptor.getEntityMode(),
 				session.getFactory()
 		);
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();

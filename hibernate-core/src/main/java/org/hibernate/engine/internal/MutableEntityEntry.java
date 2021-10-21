@@ -9,7 +9,6 @@ package org.hibernate.engine.internal;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 
-import org.hibernate.EntityMode;
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -40,7 +39,6 @@ public final class MutableEntityEntry extends AbstractEntityEntry {
 			final LockMode lockMode,
 			final boolean existsInDatabase,
 			final EntityPersister persister,
-			final EntityMode entityMode,
 			final String tenantId,
 			final boolean disableVersionIncrement,
 			final PersistenceContext persistenceContext) {

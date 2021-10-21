@@ -33,7 +33,6 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.EntityMode;
 import org.hibernate.FetchMode;
 import org.hibernate.Filter;
 import org.hibernate.HibernateException;
@@ -5297,11 +5296,6 @@ public abstract class AbstractEntityPersister
 	@Override
 	public EntityRepresentationStrategy getRepresentationStrategy() {
 		return representationStrategy;
-	}
-
-	@Override
-	public EntityMode getEntityMode() {
-		return getRepresentationStrategy().getMode().getLegacyEntityMode();
 	}
 
 	@Override

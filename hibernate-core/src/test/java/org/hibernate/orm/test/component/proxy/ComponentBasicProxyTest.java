@@ -6,23 +6,21 @@
  */
 package org.hibernate.orm.test.component.proxy;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
-
 import java.util.List;
 
-import org.hibernate.EntityMode;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.testing.TestForIssue;
-
-import org.hibernate.orm.test.annotations.basic.CollectionAsBasicTest;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.type.ComponentType;
+
+import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
+
+import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Guillaume Smet
@@ -67,10 +65,10 @@ public class ComponentBasicProxyTest extends BaseEntityManagerFunctionalTestCase
 			PersistentClass persistentClass = metadata.getEntityBinding( Person.class.getName() );
 
 			ComponentType componentType1 = (ComponentType) persistentClass.getIdentifierMapper().getType();
-			Object instance1 = componentType1.instantiate( EntityMode.POJO );
+			Object instance1 = componentType1.instantiate();
 
 			ComponentType componentType2 = (ComponentType) persistentClass.getIdentifierMapper().getType();
-			Object instance2 = componentType2.instantiate( EntityMode.POJO );
+			Object instance2 = componentType2.instantiate();
 
 			assertEquals( instance1.getClass(), instance2.getClass() );
 		}

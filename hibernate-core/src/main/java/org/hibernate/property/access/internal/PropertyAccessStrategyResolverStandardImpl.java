@@ -6,11 +6,11 @@
  */
 package org.hibernate.property.access.internal;
 
-import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.engine.spi.Managed;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.property.access.spi.PropertyAccessStrategyResolver;
@@ -32,7 +32,7 @@ public class PropertyAccessStrategyResolverStandardImpl implements PropertyAcces
 	public PropertyAccessStrategy resolvePropertyAccessStrategy(
 			Class containerClass,
 			String explicitAccessStrategyName,
-			EntityMode entityMode) {
+			RepresentationMode representationMode) {
 
 		if ( BuiltInPropertyAccessStrategies.BASIC.getExternalName().equals( explicitAccessStrategyName )
 				|| BuiltInPropertyAccessStrategies.FIELD.getExternalName().equals( explicitAccessStrategyName )
@@ -47,7 +47,7 @@ public class PropertyAccessStrategyResolverStandardImpl implements PropertyAcces
 			return resolveExplicitlyNamedPropertyAccessStrategy( explicitAccessStrategyName );
 		}
 
-		if ( entityMode == EntityMode.MAP ) {
+		if ( representationMode == RepresentationMode.MAP ) {
 			return BuiltInPropertyAccessStrategies.MAP.getStrategy();
 		}
 		else {

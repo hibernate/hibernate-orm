@@ -9,6 +9,7 @@ package org.hibernate;
 import java.io.Serializable;
 import java.util.Iterator;
 
+import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.type.Type;
 
@@ -413,26 +414,6 @@ public interface Interceptor {
 	}
 
 	/**
-	 * Instantiate the entity class. Return <tt>null</tt> to indicate that Hibernate should use
-	 * the default constructor of the class. The identifier property of the returned instance
-	 * should be initialized with the given identifier.
-	 *
-	 * @param entityName the name of the entity
-	 * @param entityMode The type of entity instance to be returned.
-	 * @param id the identifier of the new instance
-	 *
-	 * @return an instance of the class, or <tt>null</tt> to choose default behaviour
-	 *
-	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
-	 *
-	 * @deprecated Use {@link #instantiate(String, EntityRepresentationStrategy, Object)} instead
-	 */
-	@Deprecated
-	default Object instantiate(String entityName, EntityMode entityMode, Serializable id) throws CallbackException {
-		return null;
-	}
-
-	/**
 	 * Instantiate the entity. Return <tt>null</tt> to indicate that Hibernate should use
 	 * the default constructor of the class. The identifier property of the returned instance
 	 * should be initialized with the given identifier.
@@ -441,11 +422,13 @@ public interface Interceptor {
 			String entityName,
 			EntityRepresentationStrategy representationStrategy,
 			Object id) throws CallbackException {
-		if (id instanceof Serializable) {
-			return instantiate( entityName, representationStrategy.getMode().getLegacyEntityMode(), (Serializable) id );
-		}
-		return null;
+		return instantiate( entityName, representationStrategy.getMode(), id );
 	}
+
+	Object instantiate(
+			String entityName,
+			RepresentationMode representationMode,
+			Object id) throws CallbackException;
 
 	/**
 	 * Get the entity name for a persistent or transient instance.

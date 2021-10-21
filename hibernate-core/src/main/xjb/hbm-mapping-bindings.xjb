@@ -42,9 +42,9 @@
 		</jaxb:bindings>
 
 		<jaxb:bindings node="//xsd:simpleType[@name='EntityModeEnum']">
-			<jaxb:javaType name="org.hibernate.EntityMode"
-					parseMethod="org.hibernate.boot.jaxb.hbm.internal.EntityModeConverter.fromXml"
-					printMethod="org.hibernate.boot.jaxb.hbm.internal.EntityModeConverter.toXml" />
+			<jaxb:javaType name="org.hibernate.metamodel.RepresentationMode"
+					parseMethod="org.hibernate.boot.jaxb.hbm.internal.RepresentationModeConverter.fromXml"
+					printMethod="org.hibernate.boot.jaxb.hbm.internal.RepresentationModeConverter.toXml" />
 		</jaxb:bindings>
 
 		<jaxb:bindings node="//xsd:simpleType[@name='FlushModeEnum']">

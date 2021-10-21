@@ -13,7 +13,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.EntityMode;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.hbm.spi.EntityInfo;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmEntityBaseDefinition;
@@ -23,7 +22,6 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedNativeQueryType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedQueryType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmRootEntityType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSecondaryTableType;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmTuplizerType;
 import org.hibernate.boot.jaxb.hbm.spi.SecondaryTableContainer;
 import org.hibernate.boot.model.CustomSql;
 import org.hibernate.boot.model.TruthValue;
@@ -71,8 +69,6 @@ public abstract class AbstractEntitySourceImpl
 	private Map<String,SecondaryTableSource> secondaryTableMap;
 	private final FilterSource[] filterSources;
 
-	private final Map<EntityMode, String> tuplizerClassMap;
-
 	private final ToolingHintContext toolingHintContext;
 
 	protected AbstractEntitySourceImpl(MappingDocument sourceMappingDocument, JaxbHbmEntityBaseDefinition jaxbEntityMapping) {
@@ -83,8 +79,6 @@ public abstract class AbstractEntitySourceImpl
 
 		this.attributePathBase = new AttributePath();
 		this.attributeRoleBase = new AttributeRole( entityNamingSource.getEntityName() );
-
-		this.tuplizerClassMap = extractTuplizers( jaxbEntityMapping );
 
 		this.filterSources = buildFilterSources();
 
@@ -119,21 +113,6 @@ public abstract class AbstractEntitySourceImpl
 			jpaEntityName = StringHelper.unqualify( className );
 		}
 		return new EntityNamingSourceImpl( entityName, className, jpaEntityName );
-	}
-
-	private static Map<EntityMode, String> extractTuplizers(JaxbHbmEntityBaseDefinition entityElement) {
-		if ( entityElement.getTuplizer() == null ) {
-			return Collections.emptyMap();
-		}
-
-		final Map<EntityMode, String> tuplizers = new HashMap<>();
-		for ( JaxbHbmTuplizerType tuplizerElement : entityElement.getTuplizer() ) {
-			tuplizers.put(
-					tuplizerElement.getEntityMode(),
-					tuplizerElement.getClazz()
-			);
-		}
-		return tuplizers;
 	}
 
 	private FilterSource[] buildFilterSources() {
@@ -321,15 +300,6 @@ public abstract class AbstractEntitySourceImpl
 	@Override
 	public boolean isSelectBeforeUpdate() {
 		return jaxbEntityMapping.isSelectBeforeUpdate();
-	}
-
-	protected EntityMode determineEntityMode() {
-		return StringHelper.isNotEmpty( entityNamingSource.getClassName() ) ? EntityMode.POJO : EntityMode.MAP;
-	}
-
-	@Override
-	public Map<EntityMode, String> getTuplizerClassMap() {
-		return tuplizerClassMap;
 	}
 
 	@Override

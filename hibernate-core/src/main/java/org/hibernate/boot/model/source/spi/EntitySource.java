@@ -9,7 +9,6 @@ package org.hibernate.boot.model.source.spi;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.EntityMode;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedNativeQueryType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedQueryType;
 import org.hibernate.boot.model.CustomSql;
@@ -36,13 +35,6 @@ public interface EntitySource extends IdentifiableTypeSource, ToolingHintContext
 	Map<String,SecondaryTableSource> getSecondaryTableMap();
 
 	String getXmlNodeName();
-
-	/**
-	 * Obtain the named custom tuplizer classes to be used.
-	 *
-	 * @return The custom tuplizer class names
-	 */
-	Map<EntityMode,String> getTuplizerClassMap();
 
 	/**
 	 * Obtain the name of a custom persister class to be used.

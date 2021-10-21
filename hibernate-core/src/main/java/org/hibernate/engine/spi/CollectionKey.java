@@ -11,7 +11,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
-import org.hibernate.EntityMode;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
@@ -35,15 +34,6 @@ public final class CollectionKey implements Serializable {
 				persister.getKeyType(),
 				persister.getFactory()
 		);
-	}
-
-	/**
-	 * The EntityMode parameter is now ignored. Use the other constructor.
-	 * @deprecated Use {@link #CollectionKey(CollectionPersister, Object)}
-	 */
-	@Deprecated
-	public CollectionKey(CollectionPersister persister, Object key, EntityMode em) {
-		this( persister.getRole(), key, persister.getKeyType(), persister.getFactory() );
 	}
 
 	private CollectionKey(

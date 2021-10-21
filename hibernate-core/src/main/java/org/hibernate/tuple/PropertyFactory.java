@@ -8,20 +8,17 @@ package org.hibernate.tuple;
 
 import java.lang.reflect.Constructor;
 
-import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementHelper;
-import org.hibernate.engine.internal.UnsavedValueFactory;
-import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.VersionValue;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.property.access.spi.Getter;
@@ -33,10 +30,8 @@ import org.hibernate.tuple.entity.EntityBasedBasicAttribute;
 import org.hibernate.tuple.entity.EntityBasedCompositionAttribute;
 import org.hibernate.tuple.entity.VersionProperty;
 import org.hibernate.type.AssociationType;
-import org.hibernate.type.BasicType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
-import org.hibernate.type.descriptor.java.VersionJavaType;
 
 /**
  * Responsible for generation of runtime metamodel {@link Property} representations.
@@ -319,7 +314,7 @@ public final class PropertyFactory {
 		final PropertyAccessStrategy propertyAccessStrategy = propertyAccessStrategyResolver.resolvePropertyAccessStrategy(
 				mappingProperty.getClass(),
 				mappingProperty.getPropertyAccessorName(),
-				EntityMode.POJO
+				RepresentationMode.POJO
 		);
 
 		final PropertyAccess propertyAccess = propertyAccessStrategy.buildPropertyAccess(

@@ -8,11 +8,11 @@ package org.hibernate.tuple.entity;
 
 import java.util.Map;
 
-import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.tuple.Tuplizer;
@@ -37,7 +37,7 @@ public interface EntityTuplizer extends Tuplizer {
 	 *
 	 * @return The entity-mode
 	 */
-	EntityMode getEntityMode();
+	RepresentationMode getEntityMode();
 
 	/**
      * Extract the identifier value from the given entity.

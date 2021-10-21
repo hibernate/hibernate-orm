@@ -17,7 +17,6 @@ import java.util.Objects;
 import java.util.Properties;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.EntityMode;
 import org.hibernate.FetchMode;
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.Origin;
@@ -435,22 +434,6 @@ public class ModelBinder {
 					StringHelper.unqualify( entitySource.getEntityNamingSource().getEntityName() ),
 					entitySource.getEntityNamingSource().getEntityName()
 			);
-		}
-
-		if ( entitySource.getTuplizerClassMap() != null ) {
-			if ( entitySource.getTuplizerClassMap().size() > 1 ) {
-				DeprecationLogger.DEPRECATION_LOGGER.logDeprecationOfMultipleEntityModeSupport();
-			}
-			for ( Map.Entry<EntityMode,String> tuplizerEntry : entitySource.getTuplizerClassMap().entrySet() ) {
-				entityDescriptor.addTuplizer(
-						tuplizerEntry.getKey(),
-						tuplizerEntry.getValue()
-				);
-			}
-		}
-
-		if ( StringHelper.isNotEmpty( entitySource.getXmlNodeName() ) ) {
-			DeprecationLogger.DEPRECATION_LOGGER.logDeprecationOfDomEntityModeSupport();
 		}
 
 		entityDescriptor.setDynamicInsert( entitySource.isDynamicInsert() );
@@ -1909,10 +1892,6 @@ public class ModelBinder {
 				attribute
 		);
 
-		if ( StringHelper.isNotEmpty( embeddedSource.getXmlNodeName() ) ) {
-			DeprecationLogger.DEPRECATION_LOGGER.logDeprecationOfDomEntityModeSupport();
-		}
-
 		return attribute;
 	}
 
@@ -2585,10 +2564,6 @@ public class ModelBinder {
 			Property property) {
 		property.setName( propertySource.getName() );
 
-		if ( StringHelper.isNotEmpty( propertySource.getXmlNodeName() ) ) {
-			DeprecationLogger.DEPRECATION_LOGGER.logDeprecationOfDomEntityModeSupport();
-		}
-
 		property.setPropertyAccessorName(
 				StringHelper.isNotEmpty( propertySource.getPropertyAccessorName() )
 						? propertySource.getPropertyAccessorName()
@@ -2769,11 +2744,6 @@ public class ModelBinder {
 			}
 		}
 
-		String nodeName = xmlNodeName;
-		if ( StringHelper.isNotEmpty( nodeName ) ) {
-			DeprecationLogger.DEPRECATION_LOGGER.logDeprecationOfDomEntityModeSupport();
-		}
-
 		// todo : anything else to pass along?
 		bindAllCompositeAttributes(
 				sourceDocument,
@@ -2798,18 +2768,6 @@ public class ModelBinder {
 			}
 			// todo : we may need to delay this
 			componentBinding.getOwner().getTable().createUniqueKey( cols );
-		}
-
-		if ( embeddableSource.getTuplizerClassMap() != null ) {
-			if ( embeddableSource.getTuplizerClassMap().size() > 1 ) {
-				DeprecationLogger.DEPRECATION_LOGGER.logDeprecationOfMultipleEntityModeSupport();
-			}
-			for ( Map.Entry<EntityMode,String> tuplizerEntry : embeddableSource.getTuplizerClassMap().entrySet() ) {
-				componentBinding.addTuplizer(
-						tuplizerEntry.getKey(),
-						tuplizerEntry.getValue()
-				);
-			}
 		}
 	}
 

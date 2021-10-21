@@ -6,7 +6,6 @@
  */
 package org.hibernate.boot.model.source.spi;
 
-import org.hibernate.EntityMode;
 import org.hibernate.boot.model.Caching;
 import org.hibernate.engine.OptimisticLockStyle;
 
@@ -59,13 +58,6 @@ public interface EntityHierarchySource {
 	 * @return the source information about the multi-tenancy discriminator for this entity
 	 */
 	public MultiTenancySource getMultiTenancySource();
-
-	/**
-	 * Obtain the entity mode for this entity.
-	 *
-	 * @return The entity mode.
-	 */
-	public EntityMode getEntityMode();
 
 	/**
 	 * Is this root entity mutable?

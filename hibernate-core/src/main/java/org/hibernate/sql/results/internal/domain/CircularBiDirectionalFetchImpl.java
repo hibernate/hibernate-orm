@@ -247,7 +247,6 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch, Assoc
 					uniqueKeyPropertyName,
 					key,
 					entityPersister.getIdentifierType(),
-					entityPersister.getEntityMode(),
 					session.getFactory()
 			);
 			Object entityInstance = persistenceContext.getEntity( euk );

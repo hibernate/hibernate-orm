@@ -11,7 +11,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.cfg.Environment;
@@ -19,6 +18,7 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
+import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.tuple.PropertyFactory;
 import org.hibernate.tuple.StandardProperty;
 
@@ -35,7 +35,7 @@ public class ComponentMetamodel implements Serializable {
 	private final boolean isKey;
 	private final StandardProperty[] properties;
 
-	private final EntityMode entityMode;
+	private final RepresentationMode representationMode;
 	private final ComponentTuplizer componentTuplizer;
 
 	// cached for efficiency...
@@ -62,12 +62,12 @@ public class ComponentMetamodel implements Serializable {
 			i++;
 		}
 
-		entityMode = component.hasPojoRepresentation() ? EntityMode.POJO : EntityMode.MAP;
+		representationMode = component.hasPojoRepresentation() ? RepresentationMode.POJO : RepresentationMode.MAP;
 
 		// todo : move this to SF per HHH-3517; also see HHH-1907 and ComponentMetamodel
-		final String tuplizerClassName = component.getTuplizerImplClassName( entityMode );
+		final String tuplizerClassName = component.getTuplizerImplClassName( representationMode );
 		this.componentTuplizer = tuplizerClassName == null ? componentTuplizerFactory.constructDefaultTuplizer(
-				entityMode,
+				representationMode,
 				component
 		) : componentTuplizerFactory.constructTuplizer( tuplizerClassName, component );
 
@@ -112,8 +112,8 @@ public class ComponentMetamodel implements Serializable {
 		return getProperty( getPropertyIndex( propertyName ) );
 	}
 
-	public EntityMode getEntityMode() {
-		return entityMode;
+	public RepresentationMode getRepresentationMode() {
+		return representationMode;
 	}
 
 	public ComponentTuplizer getComponentTuplizer() {

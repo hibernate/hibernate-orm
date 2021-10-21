@@ -1323,11 +1323,6 @@ public interface AvailableSettings {
 	// Still to categorize
 
 	/**
-	 * The EntityMode in which set the Session opened from the SessionFactory.
-	 */
-	String DEFAULT_ENTITY_MODE = "hibernate.default_entity_mode";
-
-	/**
 	 * Should all database identifiers be quoted.  A {@code true}/{@code false} option.
 	 */
 	String GLOBALLY_QUOTED_IDENTIFIERS = "hibernate.globally_quoted_identifiers";

@@ -9,10 +9,8 @@ package org.hibernate.test.tm;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import jakarta.transaction.Transaction;
 
 import org.hibernate.ConnectionReleaseMode;
-import org.hibernate.EntityMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
@@ -26,6 +24,8 @@ import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
+
+import jakarta.transaction.Transaction;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -53,7 +53,6 @@ public class CMTTest extends BaseNonConfigCoreFunctionalTestCase {
 		settings.put( AvailableSettings.GENERATE_STATISTICS, "true" );
 		settings.put( AvailableSettings.USE_QUERY_CACHE, "true" );
 		settings.put( AvailableSettings.CACHE_REGION_PREFIX, "" );
-		settings.put( AvailableSettings.DEFAULT_ENTITY_MODE, EntityMode.MAP.toString() );
 	}
 
 	@Override

@@ -12,7 +12,6 @@ import java.util.function.Supplier;
 
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
-import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.Interceptor;
 import org.hibernate.MultiTenancyStrategy;
@@ -148,11 +147,6 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	@Override
 	public boolean isIdentifierRollbackEnabled() {
 		return delegate.isIdentifierRollbackEnabled();
-	}
-
-	@Override
-	public EntityMode getDefaultEntityMode() {
-		return delegate.getDefaultEntityMode();
 	}
 
 	@Override

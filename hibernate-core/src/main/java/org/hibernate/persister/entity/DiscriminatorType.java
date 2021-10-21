@@ -13,7 +13,6 @@ import java.sql.SQLException;
 import java.util.Map;
 import java.util.Objects;
 
-import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.engine.jdbc.Size;
@@ -21,6 +20,7 @@ import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.type.AbstractType;
 import org.hibernate.type.BasicType;
@@ -113,7 +113,9 @@ public class DiscriminatorType<T> extends AbstractType implements BasicType<T>, 
 			throw new HibernateException( "Unable to resolve discriminator value [" + discriminatorValue + "] to entity name" );
 		}
 		final EntityPersister entityPersister = session.getEntityPersister( entityName, null );
-		return ( EntityMode.POJO == entityPersister.getEntityMode() ) ? entityPersister.getMappedClass() : entityName;
+		return entityPersister.getRepresentationStrategy().getMode() == RepresentationMode.POJO
+				? entityPersister.getJavaTypeDescriptor().getJavaTypeClass()
+				: entityName;
 	}
 
 	@Override
@@ -211,11 +213,12 @@ public class DiscriminatorType<T> extends AbstractType implements BasicType<T>, 
 		return underlyingType.canDoExtraction();
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public JavaType<T> getExpressableJavaTypeDescriptor() {
-		return (JavaType<T>) ( EntityMode.POJO == persister.getEntityMode() ?
-				ClassJavaTypeDescriptor.INSTANCE :
-				StringJavaTypeDescriptor.INSTANCE );
+		return (JavaType<T>) (persister.getRepresentationStrategy().getMode() == RepresentationMode.POJO
+				? ClassJavaTypeDescriptor.INSTANCE
+				: StringJavaTypeDescriptor.INSTANCE);
 	}
 
 	@Override

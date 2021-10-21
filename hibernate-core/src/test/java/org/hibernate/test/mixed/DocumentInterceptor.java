@@ -13,9 +13,9 @@ import java.util.Calendar;
 import java.util.Iterator;
 
 import org.hibernate.CallbackException;
-import org.hibernate.EntityMode;
 import org.hibernate.Interceptor;
 import org.hibernate.Transaction;
+import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.type.Type;
 
 /**
@@ -85,7 +85,7 @@ public class DocumentInterceptor implements Interceptor {
 		return null;
 	}
 
-	public Object instantiate(String entityName, EntityMode entityMode, Serializable id) throws CallbackException {
+	public Object instantiate(String entityName, RepresentationMode entityMode, Object id) throws CallbackException {
 		return null;
 	}
 

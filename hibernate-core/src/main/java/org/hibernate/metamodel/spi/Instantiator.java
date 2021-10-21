@@ -10,19 +10,20 @@ import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**
- * Strategy for instantiating representation structure instances.
+ * Strategy for instantiating a managed type
  *
  * @author Steve Ebersole
  */
 @Incubating
 public interface Instantiator {
-
 	/**
 	 * Performs and "instance of" check to see if the given object is an
 	 * instance of managed structure
+	 * @see Class#isInstance
 	 */
 	boolean isInstance(Object object, SessionFactoryImplementor sessionFactory);
 
-	boolean isSameClass(Object object, SessionFactoryImplementor sessionFactory);
-
-}
+	/**
+	 * @see Class#equals
+	 */
+	boolean isSameClass(Object object, SessionFactoryImplementor sessionFactory);}

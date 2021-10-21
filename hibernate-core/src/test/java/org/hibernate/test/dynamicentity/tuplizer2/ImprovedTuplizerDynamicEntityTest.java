@@ -8,18 +8,18 @@ package org.hibernate.test.dynamicentity.tuplizer2;
 
 import java.util.HashSet;
 
-import org.junit.Test;
-
-import org.hibernate.EntityMode;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.metamodel.RepresentationMode;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.dynamicentity.Address;
 import org.hibernate.test.dynamicentity.Company;
 import org.hibernate.test.dynamicentity.Customer;
 import org.hibernate.test.dynamicentity.Person;
 import org.hibernate.test.dynamicentity.ProxyHelper;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -43,7 +43,7 @@ public class ImprovedTuplizerDynamicEntityTest extends BaseCoreFunctionalTestCas
 
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
-		cfg.getEntityTuplizerFactory().registerDefaultTuplizerClass( EntityMode.POJO, MyEntityTuplizer.class );
+		cfg.getEntityTuplizerFactory().registerDefaultTuplizerClass( RepresentationMode.POJO, MyEntityTuplizer.class );
 	}
 
 	@Test

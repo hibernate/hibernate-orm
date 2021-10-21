@@ -11,7 +11,6 @@ import java.util.Comparator;
 import java.util.SortedSet;
 import java.util.TreeMap;
 
-import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -80,7 +79,7 @@ public class PersistentSortedSet<E> extends PersistentSet<E> implements SortedSe
 	}
 
 	@SuppressWarnings("UnusedParameters")
-	protected Serializable snapshot(BasicCollectionPersister persister, EntityMode entityMode)
+	protected Serializable snapshot(BasicCollectionPersister persister)
 			throws HibernateException {
 		final TreeMap<E,E> clonedSet = new TreeMap<>( comparator );
 		for ( E setElement : set ) {

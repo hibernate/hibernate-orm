@@ -21,7 +21,6 @@ import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EmptyInterceptor;
-import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
@@ -58,6 +57,7 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
 import org.hibernate.loader.BatchFetchStyle;
+import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.NullPrecedence;
@@ -95,7 +95,6 @@ import static org.hibernate.cfg.AvailableSettings.CONVENTIONAL_JAVA_CONSTANTS;
 import static org.hibernate.cfg.AvailableSettings.CRITERIA_VALUE_HANDLING_MODE;
 import static org.hibernate.cfg.AvailableSettings.CUSTOM_ENTITY_DIRTINESS_STRATEGY;
 import static org.hibernate.cfg.AvailableSettings.DEFAULT_BATCH_FETCH_SIZE;
-import static org.hibernate.cfg.AvailableSettings.DEFAULT_ENTITY_MODE;
 import static org.hibernate.cfg.AvailableSettings.DELAY_ENTITY_LOADER_CREATIONS;
 import static org.hibernate.cfg.AvailableSettings.DISCARD_PC_ON_CLOSE;
 import static org.hibernate.cfg.AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS;
@@ -194,7 +193,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private List<EntityNameResolver> entityNameResolvers = new ArrayList<>();
 	private EntityNotFoundDelegate entityNotFoundDelegate;
 	private boolean identifierRollbackEnabled;
-	private EntityMode defaultEntityMode;
 	private EntityTuplizerFactory entityTuplizerFactory = new EntityTuplizerFactory();
 	private boolean checkNullability;
 	private boolean initializeLazyStateOutsideTransactions;
@@ -358,7 +356,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 		this.entityNotFoundDelegate = StandardEntityNotFoundDelegate.INSTANCE;
 		this.identifierRollbackEnabled = cfgService.getSetting( USE_IDENTIFIER_ROLLBACK, BOOLEAN, false );
-		this.defaultEntityMode = EntityMode.parse( (String) configurationSettings.get( DEFAULT_ENTITY_MODE ) );
 		this.checkNullability = cfgService.getSetting( CHECK_NULLABILITY, BOOLEAN, true );
 		this.initializeLazyStateOutsideTransactions = cfgService.getSetting( ENABLE_LAZY_LOAD_NO_TRANS, BOOLEAN, false );
 
@@ -969,11 +966,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
-	public EntityMode getDefaultEntityMode() {
-		return defaultEntityMode;
-	}
-
-	@Override
 	public EntityTuplizerFactory getEntityTuplizerFactory() {
 		return entityTuplizerFactory;
 	}
@@ -1336,10 +1328,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.identifierRollbackEnabled = enabled;
 	}
 
-	public void applyDefaultEntityMode(EntityMode entityMode) {
-		this.defaultEntityMode = entityMode;
-	}
-
 	public void enableNullabilityChecking(boolean enabled) {
 		this.checkNullability = enabled;
 	}
@@ -1352,7 +1340,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.entityTuplizerFactory = entityTuplizerFactory;
 	}
 
-	public void applyEntityTuplizer(EntityMode entityMode, Class<? extends EntityTuplizer> tuplizerClass) {
+	public void applyEntityTuplizer(RepresentationMode entityMode, Class<? extends EntityTuplizer> tuplizerClass) {
 		this.entityTuplizerFactory.registerDefaultTuplizerClass( entityMode, tuplizerClass );
 	}
 

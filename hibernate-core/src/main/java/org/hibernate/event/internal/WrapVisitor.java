@@ -6,7 +6,6 @@
  */
 package org.hibernate.event.internal;
 
-import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
@@ -147,7 +146,7 @@ public class WrapVisitor extends ProxyVisitor {
 				}
 			}
 			if ( substituteComponent ) {
-				componentType.setPropertyValues( component, values, EntityMode.POJO );
+				componentType.setPropertyValues( component, values );
 			}
 		}
 

@@ -6,12 +6,13 @@
  */
 package org.hibernate.tuple;
 
+import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.property.access.spi.Getter;
 
 /**
  * A tuplizer defines the contract for things which know how to manage
  * a particular representation of a piece of data, given that
- * representation's {@link org.hibernate.EntityMode} (the entity-mode
+ * representation's {@link RepresentationMode} (the entity-mode
  * essentially defining which representation).
  * </p>
  * If that given piece of data is thought of as a data structure, then a tuplizer

@@ -14,7 +14,6 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hibernate.EntityMode;
 import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -28,12 +27,15 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
+import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.tuple.StandardProperty;
 import org.hibernate.tuple.ValueGeneration;
 import org.hibernate.tuple.component.ComponentMetamodel;
 import org.hibernate.tuple.component.ComponentTuplizer;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.spi.CompositeTypeImplementor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -41,7 +43,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @author Gavin King
  */
-public class ComponentType extends AbstractType implements CompositeType, ProcedureParameterExtractionAware {
+public class ComponentType extends AbstractType implements CompositeTypeImplementor, ProcedureParameterExtractionAware {
 
 	private final TypeConfiguration typeConfiguration;
 	private final String[] propertyNames;
@@ -56,8 +58,8 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	private boolean hasNotNullProperty;
 	private final boolean createEmptyCompositesEnabled;
 
-	protected final EntityMode entityMode;
 	protected final ComponentTuplizer componentTuplizer;
+	private EmbeddableValuedModelPart mappingModelPart;
 
 	public ComponentType(TypeConfiguration typeConfiguration, ComponentMetamodel metamodel, int[] originalPropertyOrder) {
 		this.typeConfiguration = typeConfiguration;
@@ -85,17 +87,12 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 			this.propertyValueGenerationStrategies[i] = prop.getValueGenerationStrategy();
 		}
 
-		this.entityMode = metamodel.getEntityMode();
 		this.componentTuplizer = metamodel.getComponentTuplizer();
 		this.createEmptyCompositesEnabled = metamodel.isCreateEmptyCompositesEnabled();
 	}
 
 	public boolean isKey() {
 		return isKey;
-	}
-
-	public EntityMode getEntityMode() {
-		return entityMode;
 	}
 
 	public ComponentTuplizer getComponentTuplizer() {
@@ -167,8 +164,8 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 			return true;
 		}
 		// null value and empty component are considered equivalent
-		Object[] xvalues = getPropertyValues( x, entityMode );
-		Object[] yvalues = getPropertyValues( y, entityMode );
+		Object[] xvalues = getPropertyValues( x );
+		Object[] yvalues = getPropertyValues( y );
 		for ( int i = 0; i < propertySpan; i++ ) {
 			if ( !propertyTypes[i].isSame( xvalues[i], yvalues[i] ) ) {
 				return false;
@@ -326,7 +323,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	public void nullSafeSet(PreparedStatement st, Object value, int begin, SharedSessionContractImplementor session)
 			throws HibernateException, SQLException {
 
-		Object[] subvalues = nullSafeGetValues( value, entityMode );
+		Object[] subvalues = nullSafeGetValues( value );
 
 		for ( int i = 0; i < propertySpan; i++ ) {
 			propertyTypes[i].nullSafeSet( st, subvalues[i], begin, session );
@@ -343,7 +340,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 			SharedSessionContractImplementor session)
 			throws HibernateException, SQLException {
 
-		Object[] subvalues = nullSafeGetValues( value, entityMode );
+		Object[] subvalues = nullSafeGetValues( value );
 
 		int loc = 0;
 		for ( int i = 0; i < propertySpan; i++ ) {
@@ -368,22 +365,17 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 		}
 	}
 
-	private Object[] nullSafeGetValues(Object value, EntityMode entityMode) throws HibernateException {
+	private Object[] nullSafeGetValues(Object value) {
 		if ( value == null ) {
 			return new Object[propertySpan];
 		}
 		else {
-			return getPropertyValues( value, entityMode );
+			return getPropertyValues( value );
 		}
 	}
 
 	@Override
 	public Object getPropertyValue(Object component, int i, SharedSessionContractImplementor session)
-			throws HibernateException {
-		return getPropertyValue( component, i );
-	}
-
-	public Object getPropertyValue(Object component, int i, EntityMode entityMode)
 			throws HibernateException {
 		return getPropertyValue( component, i );
 	}
@@ -406,14 +398,12 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	}
 
 	@Override
-	public Object[] getPropertyValues(Object component, SharedSessionContractImplementor session)
-			throws HibernateException {
-		return getPropertyValues( component, entityMode );
+	public Object[] getPropertyValues(Object component, SharedSessionContractImplementor session) {
+		return getPropertyValues( component );
 	}
 
 	@Override
-	public Object[] getPropertyValues(Object component, EntityMode entityMode)
-			throws HibernateException {
+	public Object[] getPropertyValues(Object component) {
 		if (component == null) {
 			component = new Object[propertySpan];
 		}
@@ -430,7 +420,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	}
 
 	@Override
-	public void setPropertyValues(Object component, Object[] values, EntityMode entityMode)
+	public void setPropertyValues(Object component, Object[] values)
 			throws HibernateException {
 		componentTuplizer.setPropertyValues( component, values );
 	}
@@ -456,11 +446,8 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 			return "null";
 		}
 
-		if ( entityMode == null ) {
-			throw new ClassCastException( value.getClass().getName() );
-		}
 		Map<String, String> result = new HashMap<>();
-		Object[] values = getPropertyValues( value, entityMode );
+		Object[] values = getPropertyValues( value );
 		for ( int i = 0; i < propertyTypes.length; i++ ) {
 			if ( values[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
 				result.put( propertyNames[i], "<uninitialized>" );
@@ -484,13 +471,13 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 			return null;
 		}
 
-		Object[] values = getPropertyValues( component, entityMode );
+		Object[] values = getPropertyValues( component );
 		for ( int i = 0; i < propertySpan; i++ ) {
 			values[i] = propertyTypes[i].deepCopy( values[i], factory );
 		}
 
-		Object result = instantiate( entityMode );
-		setPropertyValues( result, values, entityMode );
+		Object result = instantiate();
+		setPropertyValues( result, values );
 
 		//not absolutely necessary, but helps for some
 		//equals()/hashCode() implementations
@@ -520,15 +507,15 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 				: target;
 
 		Object[] values = TypeHelper.replace(
-				getPropertyValues( original, entityMode ),
-				getPropertyValues( result, entityMode ),
+				getPropertyValues( original ),
+				getPropertyValues( result ),
 				propertyTypes,
 				session,
 				owner,
 				copyCache
 		);
 
-		setPropertyValues( result, values, entityMode );
+		setPropertyValues( result, values );
 		return result;
 	}
 
@@ -552,8 +539,8 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 				target;
 
 		Object[] values = TypeHelper.replace(
-				getPropertyValues( original, entityMode ),
-				getPropertyValues( result, entityMode ),
+				getPropertyValues( original ),
+				getPropertyValues( result ),
 				propertyTypes,
 				session,
 				owner,
@@ -561,21 +548,21 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 				foreignKeyDirection
 		);
 
-		setPropertyValues( result, values, entityMode );
+		setPropertyValues( result, values );
 		return result;
 	}
 
 	/**
 	 * This method does not populate the component parent
 	 */
-	public Object instantiate(EntityMode entityMode) throws HibernateException {
+	public Object instantiate() {
 		return componentTuplizer.instantiate();
 	}
 
 	public Object instantiate(Object parent, SharedSessionContractImplementor session)
 			throws HibernateException {
 
-		Object result = instantiate( entityMode );
+		Object result = instantiate();
 
 		if ( componentTuplizer.hasParentProperty() && parent != null ) {
 			componentTuplizer.setParent(
@@ -606,7 +593,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 			return null;
 		}
 		else {
-			Object[] values = getPropertyValues( value, entityMode );
+			Object[] values = getPropertyValues( value );
 			for ( int i = 0; i < propertyTypes.length; i++ ) {
 				values[i] = propertyTypes[i].disassemble( values[i], session, owner );
 			}
@@ -628,7 +615,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 				assembled[i] = propertyTypes[i].assemble( (Serializable) values[i], session, owner );
 			}
 			Object result = instantiate( owner, session );
-			setPropertyValues( result, assembled, entityMode );
+			setPropertyValues( result, assembled );
 			return result;
 		}
 	}
@@ -672,7 +659,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 		if ( value == null ) {
 			return result;
 		}
-		Object[] values = getPropertyValues( value, EntityMode.POJO ); //TODO!!!!!!!
+		Object[] values = getPropertyValues( value ); //TODO!!!!!!!
 		int loc = 0;
 		for ( int i = 0; i < propertyTypes.length; i++ ) {
 			boolean[] propertyNullness = propertyTypes[i].toColumnNullness( values[i], mapping );
@@ -819,5 +806,15 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	@Override
 	public Class getJavaType() {
 		return getReturnedClass();
+	}
+
+	@Override
+	public void injectMappingModelPart(EmbeddableValuedModelPart part, MappingModelCreationProcess process) {
+		this.mappingModelPart = part;
+	}
+
+	@Override
+	public EmbeddableValuedModelPart getMappingModelPart() {
+		return mappingModelPart;
 	}
 }

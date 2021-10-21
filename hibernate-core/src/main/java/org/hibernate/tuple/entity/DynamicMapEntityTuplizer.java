@@ -8,7 +8,6 @@ package org.hibernate.tuple.entity;
 
 import java.util.Map;
 
-import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -16,6 +15,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.property.access.internal.PropertyAccessStrategyMapImpl;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
@@ -39,8 +39,8 @@ public class DynamicMapEntityTuplizer extends AbstractEntityTuplizer {
 	}
 
 	@Override
-	public EntityMode getEntityMode() {
-		return EntityMode.MAP;
+	public RepresentationMode getEntityMode() {
+		return RepresentationMode.MAP;
 	}
 
 	private PropertyAccess buildPropertyAccess(Property mappedProperty) {

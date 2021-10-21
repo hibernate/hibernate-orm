@@ -92,7 +92,7 @@ public class SimpleUpdateQueryPlan implements NonSelectQueryPlan {
 						.getStatementPreparer()
 						.prepareStatement( sql ),
 				(integer, preparedStatement) -> {},
-				new SqmJdbcExecutionContextAdapter( executionContext )
+				SqmJdbcExecutionContextAdapter.omittingLockingAndPaging( executionContext )
 		);
 	}
 

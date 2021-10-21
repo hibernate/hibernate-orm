@@ -126,7 +126,7 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 			assert jdbcParamsXref.isEmpty();
 		}
 
-		final SqmJdbcExecutionContextAdapter executionContextAdapter = new SqmJdbcExecutionContextAdapter( executionContext );
+		final SqmJdbcExecutionContextAdapter executionContextAdapter = SqmJdbcExecutionContextAdapter.usingLockingAndPaging( executionContext );
 
 		SqmMutationStrategyHelper.cleanUpCollectionTables(
 				entityDescriptor,

@@ -109,7 +109,7 @@ public class NativeNonSelectQueryPlanImpl implements NonSelectQueryPlan {
 						.getStatementPreparer()
 						.prepareStatement( sql ),
 				(integer, preparedStatement) -> {},
-				new SqmJdbcExecutionContextAdapter( executionContext )
+				SqmJdbcExecutionContextAdapter.usingLockingAndPaging( executionContext )
 		);
 	}
 }

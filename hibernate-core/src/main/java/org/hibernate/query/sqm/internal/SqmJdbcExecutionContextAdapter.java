@@ -17,25 +17,38 @@ import org.hibernate.sql.exec.spi.JdbcSelect;
 import static org.hibernate.query.spi.SqlOmittingQueryOptions.omitSqlQueryOptions;
 
 /**
- * @author Steve Ebersole
+ * ExecutionContext adapter delegating to a DomainQueryExecutionContext
  */
 public class SqmJdbcExecutionContextAdapter implements ExecutionContext {
+	/**
+	 * Creates an adapter which drops any locking or paging details from the query options
+	 */
+	public static SqmJdbcExecutionContextAdapter omittingLockingAndPaging(DomainQueryExecutionContext sqmExecutionContext) {
+		return new SqmJdbcExecutionContextAdapter( sqmExecutionContext );
+	}
+
+	/**
+	 * Creates an adapter which honors any locking or paging details specified in the query options
+	 */
+	public static SqmJdbcExecutionContextAdapter usingLockingAndPaging(DomainQueryExecutionContext sqmExecutionContext) {
+		return new SqmJdbcExecutionContextAdapter( sqmExecutionContext, sqmExecutionContext.getQueryOptions() );
+	}
+
 	private final DomainQueryExecutionContext sqmExecutionContext;
 	private final QueryOptions queryOptions;
 
-	public SqmJdbcExecutionContextAdapter(DomainQueryExecutionContext sqmExecutionContext) {
+	private SqmJdbcExecutionContextAdapter(DomainQueryExecutionContext sqmExecutionContext) {
 		this( sqmExecutionContext, omitSqlQueryOptions( sqmExecutionContext.getQueryOptions() ) );
+	}
+
+	private SqmJdbcExecutionContextAdapter(DomainQueryExecutionContext sqmExecutionContext, QueryOptions queryOptions) {
+		this.sqmExecutionContext = sqmExecutionContext;
+		this.queryOptions = queryOptions;
 	}
 
 	public SqmJdbcExecutionContextAdapter(DomainQueryExecutionContext sqmExecutionContext, JdbcSelect jdbcSelect) {
 		this( sqmExecutionContext, omitSqlQueryOptions( sqmExecutionContext.getQueryOptions(), jdbcSelect ) );
 	}
-
-	public SqmJdbcExecutionContextAdapter(DomainQueryExecutionContext sqmExecutionContext, QueryOptions queryOptions) {
-		this.sqmExecutionContext = sqmExecutionContext;
-		this.queryOptions = queryOptions;
-	}
-
 	@Override
 	public SharedSessionContractImplementor getSession() {
 		return sqmExecutionContext.getSession();

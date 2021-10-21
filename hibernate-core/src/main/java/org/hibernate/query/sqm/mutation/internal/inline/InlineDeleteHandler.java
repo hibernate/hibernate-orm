@@ -148,7 +148,7 @@ public class InlineDeleteHandler implements DeleteHandler {
 				sessionFactory
 		);
 
-		final SqmJdbcExecutionContextAdapter executionContextAdapter = new SqmJdbcExecutionContextAdapter( executionContext );
+		final SqmJdbcExecutionContextAdapter executionContextAdapter = SqmJdbcExecutionContextAdapter.omittingLockingAndPaging( executionContext );
 
 		final Predicate matchingIdsPredicate = matchingIdsPredicateProducer.produceRestriction(
 				ids,

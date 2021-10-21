@@ -206,7 +206,7 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 		List<Object> list = jdbcServices.getJdbcSelectExecutor().list(
 				select,
 				jdbcParameterBindings,
-				new SqmJdbcExecutionContextAdapter( executionContext ),
+				SqmJdbcExecutionContextAdapter.omittingLockingAndPaging( executionContext ),
 				row -> row[0],
 				ListResultsConsumer.UniqueSemantic.NONE
 		);

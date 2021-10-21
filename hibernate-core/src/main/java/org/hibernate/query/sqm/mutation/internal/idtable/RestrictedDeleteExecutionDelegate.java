@@ -34,7 +34,6 @@ import org.hibernate.persister.entity.Joinable;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
-import org.hibernate.query.spi.SqlOmittingQueryOptions;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
 import org.hibernate.query.sqm.internal.SqmUtil;
@@ -178,7 +177,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 
 		boolean needsIdTable = needsIdTableWrapper.get();
 
-		final SqmJdbcExecutionContextAdapter executionContextAdapter = new SqmJdbcExecutionContextAdapter( executionContext );
+		final SqmJdbcExecutionContextAdapter executionContextAdapter = SqmJdbcExecutionContextAdapter.omittingLockingAndPaging( executionContext );
 
 		if ( needsIdTable ) {
 			return executeWithIdTable(

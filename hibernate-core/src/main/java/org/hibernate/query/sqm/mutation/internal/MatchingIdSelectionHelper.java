@@ -275,7 +275,7 @@ public class MatchingIdSelectionHelper {
 		return jdbcServices.getJdbcSelectExecutor().list(
 				idSelectJdbcOperation,
 				jdbcParameterBindings,
-				new SqmJdbcExecutionContextAdapter( executionContext ),
+				SqmJdbcExecutionContextAdapter.omittingLockingAndPaging( executionContext ),
 				row -> row,
 				ListResultsConsumer.UniqueSemantic.FILTER
 		);

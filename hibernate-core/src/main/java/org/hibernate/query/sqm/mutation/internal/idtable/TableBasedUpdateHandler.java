@@ -110,7 +110,7 @@ public class TableBasedUpdateHandler
 			);
 		}
 
-		final SqmJdbcExecutionContextAdapter executionContextAdapter = new SqmJdbcExecutionContextAdapter( executionContext );
+		final SqmJdbcExecutionContextAdapter executionContextAdapter = SqmJdbcExecutionContextAdapter.omittingLockingAndPaging( executionContext );
 		return resolveDelegate( executionContext ).execute( executionContextAdapter );
 	}
 

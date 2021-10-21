@@ -6,22 +6,15 @@
  */
 package org.hibernate.orm.test.jpa.transaction;
 
-import org.hibernate.cfg.AvailableSettings;
-
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
-import org.hibernate.testing.orm.jpa.NonStringValueSettingProvider;
+import org.hibernate.testing.orm.junit.SettingProvider;
 
 /**
  * @author Jan Schatteman
  */
-public class JtaPlatformNonStringValueSettingProvider extends NonStringValueSettingProvider {
+public class JtaPlatformSettingProvider implements SettingProvider.Provider<TestingJtaPlatformImpl> {
 	@Override
-	public String getKey() {
-		return AvailableSettings.JTA_PLATFORM;
-	}
-
-	@Override
-	public Object getValue() {
+	public TestingJtaPlatformImpl getSetting() {
 		return TestingJtaPlatformImpl.INSTANCE;
 	}
 }

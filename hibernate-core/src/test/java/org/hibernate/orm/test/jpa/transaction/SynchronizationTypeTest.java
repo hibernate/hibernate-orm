@@ -26,6 +26,7 @@ import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.ExtraAssertions;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SettingProvider;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -48,7 +49,12 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 
 		},
-		nonStringValueSettingProviders = { JtaPlatformNonStringValueSettingProvider.class }
+		settingProviders = {
+				@SettingProvider(
+						settingName = AvailableSettings.JTA_PLATFORM,
+						provider = JtaPlatformSettingProvider.class
+				)
+		}
 )
 public class SynchronizationTypeTest {
 

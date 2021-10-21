@@ -4,33 +4,23 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.test.bytecode.enhancement.lazy.proxy;
+package org.hibernate.orm.test.bytecode.enhancement.lazy.proxy;
 
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Inheritance;
-import jakarta.persistence.InheritanceType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
 
 import org.hibernate.Hibernate;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.StatelessSession;
-import org.hibernate.annotations.LazyToOne;
-import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.query.Query;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
@@ -41,6 +31,16 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -48,7 +48,12 @@ import static org.hamcrest.MatcherAssert.assertThat;
  * @author Andrea Boriero
  */
 @RunWith(BytecodeEnhancerRunner.class)
-public class QueryScrollingWithInheritanceProxyEagerManyToOneTest extends BaseNonConfigCoreFunctionalTestCase {
+public class QueryScrollingWithInheritanceProxyTest extends BaseNonConfigCoreFunctionalTestCase {
+	@Override
+	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
+		super.configureStandardServiceRegistryBuilder( ssrb );
+		ssrb.applySetting( AvailableSettings.ALLOW_ENHANCEMENT_AS_PROXY, "true" );
+	}
 
 	@Override
 	protected void configureSessionFactoryBuilder(SessionFactoryBuilder sfb) {
@@ -79,12 +84,12 @@ public class QueryScrollingWithInheritanceProxyEagerManyToOneTest extends BaseNo
 					"select distinct e from Employee e left join fetch e.otherEntities order by e.dept",
 					Employee.class
 			);
-			if ( getDialect() instanceof DB2Dialect ) {
+			if ( getDialect() instanceof DB2Dialect || getDialect() instanceof DerbyDialect ) {
 				/*
 					FetchingScrollableResultsImp#next() in order to check if the ResultSet is empty calls ResultSet#isBeforeFirst()
 					but the support for ResultSet#isBeforeFirst() is optional for ResultSets with a result
 					set type of TYPE_FORWARD_ONLY and db2 does not support it.
-				*/
+			 	*/
 				scrollableResults = query.scroll( ScrollMode.SCROLL_INSENSITIVE );
 			}
 			else {
@@ -108,7 +113,7 @@ public class QueryScrollingWithInheritanceProxyEagerManyToOneTest extends BaseNo
 							assertThat( Hibernate.isPropertyInitialized( otherEntity, "employee" ), is( true ) );
 							assertThat( otherEntity.employee, is( employee ) );
 							assertThat( Hibernate.isPropertyInitialized( otherEntity, "employeeParent" ), is( true ) );
-							assertThat( Hibernate.isInitialized( otherEntity.employeeParent ), is( true ) );
+							assertThat( Hibernate.isInitialized( otherEntity.employeeParent ), is( false ) );
 						}
 					}
 				}
@@ -117,7 +122,7 @@ public class QueryScrollingWithInheritanceProxyEagerManyToOneTest extends BaseNo
 				}
 			}
 			statelessSession.getTransaction().commit();
-			assertThat( stats.getPrepareStatementCount(), is( 2L ) );
+			assertThat( stats.getPrepareStatementCount(), is( 1L ) );
 		}
 		finally {
 			if ( scrollableResults != null ) {
@@ -143,12 +148,12 @@ public class QueryScrollingWithInheritanceProxyEagerManyToOneTest extends BaseNo
 					"select distinct e from Employee e left join fetch e.otherEntities order by e.dept",
 					Employee.class
 			);
-			if ( getDialect() instanceof DB2Dialect ) {
+			if ( getDialect() instanceof DB2Dialect || getDialect() instanceof DerbyDialect ) {
 				/*
 					FetchingScrollableResultsImp#next() in order to check if the ResultSet is empty calls ResultSet#isBeforeFirst()
 					but the support for ResultSet#isBeforeFirst() is optional for ResultSets with a result
 					set type of TYPE_FORWARD_ONLY and db2 does not support it.
-				*/
+			 	*/
 				scrollableResults = query.scroll( ScrollMode.SCROLL_INSENSITIVE );
 			}
 			else {
@@ -172,7 +177,7 @@ public class QueryScrollingWithInheritanceProxyEagerManyToOneTest extends BaseNo
 							assertThat( Hibernate.isPropertyInitialized( otherEntity, "employee" ), is( true ) );
 							assertThat( otherEntity.employee, is( employee ) );
 							assertThat( Hibernate.isPropertyInitialized( otherEntity, "employeeParent" ), is( true ) );
-							assertThat( Hibernate.isInitialized( otherEntity.employeeParent ), is( true ) );
+							assertThat( Hibernate.isInitialized( otherEntity.employeeParent ), is( false ) );
 						}
 					}
 				}
@@ -181,7 +186,7 @@ public class QueryScrollingWithInheritanceProxyEagerManyToOneTest extends BaseNo
 				}
 			}
 			session.getTransaction().commit();
-			assertThat( stats.getPrepareStatementCount(), is( 2L ) );
+			assertThat( stats.getPrepareStatementCount(), is( 1L ) );
 		}
 		finally {
 			if ( scrollableResults != null ) {
@@ -300,7 +305,7 @@ public class QueryScrollingWithInheritanceProxyEagerManyToOneTest extends BaseNo
 		@JoinColumn(name = "Employee_Id")
 		protected Employee employee = null;
 
-		@ManyToOne(fetch = FetchType.EAGER)
+		@ManyToOne(fetch = FetchType.LAZY)
 		@JoinColumn(name = "EmployeeParent_Id")
 		protected EmployeeParent employeeParent = null;
 

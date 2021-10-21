@@ -9,7 +9,7 @@
 	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
 	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 
-<hibernate-mapping package="org.hibernate.test.hqlfetchscroll">
+<hibernate-mapping package="org.hibernate.orm.test.hqlfetchscroll">
 	
 	<class name="Parent" table="Parents">
 		<!-- A numeric id must be the <id> field.  Some databases (Sybase, etc.)

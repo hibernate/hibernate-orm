@@ -13,6 +13,7 @@ import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.query.Query;
 
@@ -188,10 +189,11 @@ public class StatelessSessionFetchingTest {
 		scope.inStatelessTransaction(
 				session -> {
 					final Query query = session.createQuery( "select p from Producer p join fetch p.products" );
-					final ScrollableResults scrollableResults = getScrollableResults( query,
-																					  scope.getSessionFactory()
-																							  .getJdbcServices()
-																							  .getDialect()
+					final ScrollableResults scrollableResults = getScrollableResults(
+							query,
+							scope.getSessionFactory()
+									.getJdbcServices()
+									.getDialect()
 					);
 
 					while ( scrollableResults.next() ) {
@@ -209,7 +211,7 @@ public class StatelessSessionFetchingTest {
 	}
 
 	private ScrollableResults getScrollableResults(Query query, Dialect dialect) {
-		if ( dialect instanceof DB2Dialect ) {
+		if ( dialect instanceof DB2Dialect || dialect instanceof DerbyDialect ) {
 			/*
 				FetchingScrollableResultsImp#next() in order to check if the ResultSet is empty calls ResultSet#isBeforeFirst()
 				but the support for ResultSet#isBeforeFirst() is optional for ResultSets with a result

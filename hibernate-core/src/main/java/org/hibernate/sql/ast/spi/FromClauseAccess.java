@@ -19,6 +19,9 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
  * @author Steve Ebersole
  */
 public interface FromClauseAccess {
+
+	TableGroup findTableGroupOnLeaf(NavigablePath navigablePath);
+
 	/**
 	 * Find a TableGroup by the NavigablePath it is registered under.  Returns
 	 * {@code null} if no TableGroup is registered under that NavigablePath

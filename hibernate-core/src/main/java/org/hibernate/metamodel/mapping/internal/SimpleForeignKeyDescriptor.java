@@ -242,70 +242,40 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 
 	@Override
 	public Predicate generateJoinPredicate(
-			TableReference lhs,
-			TableReference rhs,
+			TableReference targetSideReference,
+			TableReference keySideReference,
 			SqlAstJoinType sqlAstJoinType,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
-		if ( lhs.getTableReference( keySide.getModelPart().getContainingTableExpression() ) != null ) {
-			return new ComparisonPredicate(
-					new ColumnReference(
-							lhs,
-							keySide.getModelPart(),
-							creationContext.getSessionFactory()
-					),
-					ComparisonOperator.EQUAL,
-					new ColumnReference(
-							rhs,
-							targetSide.getModelPart(),
-							creationContext.getSessionFactory()
-					)
-			);
-		}
-		else {
-			return new ComparisonPredicate(
-					new ColumnReference(
-							lhs,
-							targetSide.getModelPart(),
-							creationContext.getSessionFactory()
-					),
-					ComparisonOperator.EQUAL,
-					new ColumnReference(
-							rhs,
-							keySide.getModelPart(),
-							creationContext.getSessionFactory()
-					)
-			);
-		}
+		return new ComparisonPredicate(
+				new ColumnReference(
+						targetSideReference,
+						targetSide.getModelPart(),
+						creationContext.getSessionFactory()
+				),
+				ComparisonOperator.EQUAL,
+				new ColumnReference(
+						keySideReference,
+						keySide.getModelPart(),
+						creationContext.getSessionFactory()
+				)
+		);
 	}
 
 	@Override
 	public Predicate generateJoinPredicate(
-			TableGroup lhs,
-			TableGroup tableGroup,
+			TableGroup targetSideTableGroup,
+			TableGroup keySideTableGroup,
 			SqlAstJoinType sqlAstJoinType,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
-		TableReference lhsTableReference;
-		TableReference rhsTableKeyReference;
-		if ( targetSide.getModelPart().getContainingTableExpression().equals( keySide.getModelPart().getContainingTableExpression() )  ) {
-			lhsTableReference = getTableReferenceWhenTargetEqualsKey( lhs, tableGroup, keySide.getModelPart().getContainingTableExpression() );
-
-			rhsTableKeyReference = getTableReference(
-					lhs,
-					tableGroup,
-					targetSide.getModelPart().getContainingTableExpression()
-			);
-		}
-		else {
-			lhsTableReference = getTableReference( lhs, tableGroup, keySide.getModelPart().getContainingTableExpression() );
-
-			rhsTableKeyReference = getTableReference(
-					lhs,
-					tableGroup,
-					targetSide.getModelPart().getContainingTableExpression()
-			);
-		}
+		final TableReference lhsTableReference = targetSideTableGroup.getTableReference(
+				targetSideTableGroup.getNavigablePath(),
+				targetSide.getModelPart().getContainingTableExpression()
+		);
+		final TableReference rhsTableKeyReference = keySideTableGroup.getTableReference(
+				keySide.getModelPart().getContainingTableExpression()
+		);
 
 		return generateJoinPredicate(
 				lhsTableReference,
@@ -314,23 +284,6 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 				sqlExpressionResolver,
 				creationContext
 		);
-	}
-
-	protected TableReference getTableReferenceWhenTargetEqualsKey(TableGroup lhs, TableGroup tableGroup, String table) {
-		if ( tableGroup.getPrimaryTableReference().getTableExpression().equals( table ) ) {
-			return tableGroup.getPrimaryTableReference();
-		}
-		if ( lhs.getPrimaryTableReference().getTableExpression().equals( table ) ) {
-			return lhs.getPrimaryTableReference();
-		}
-
-		for ( TableReferenceJoin tableJoin : lhs.getTableReferenceJoins() ) {
-			if ( tableJoin.getJoinedTableReference().getTableExpression().equals( table ) ) {
-				return tableJoin.getJoinedTableReference();
-			}
-		}
-
-		throw new IllegalStateException( "Could not resolve binding for table `" + table + "`" );
 	}
 
 	protected TableReference getTableReference(TableGroup lhs, TableGroup tableGroup, String table) {

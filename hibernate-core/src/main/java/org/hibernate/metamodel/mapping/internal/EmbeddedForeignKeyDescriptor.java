@@ -335,31 +335,16 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 
 	@Override
 	public Predicate generateJoinPredicate(
-			TableGroup lhs,
-			TableGroup tableGroup,
+			TableGroup targetSideTableGroup,
+			TableGroup keySideTableGroup,
 			SqlAstJoinType sqlAstJoinType,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
-		TableReference lhsTableReference;
-		TableReference rhsTableKeyReference;
-		if ( targetTable.equals( keyTable ) ) {
-			lhsTableReference = getTableReferenceWhenTargetEqualsKey( lhs, tableGroup, keyTable );
-
-			rhsTableKeyReference = getTableReference(
-					lhs,
-					tableGroup,
-					targetTable
-			);
-		}
-		else {
-			lhsTableReference = getTableReference( lhs, tableGroup, keyTable );
-
-			rhsTableKeyReference = getTableReference(
-					lhs,
-					tableGroup,
-					targetTable
-			);
-		}
+		final TableReference lhsTableReference = targetSideTableGroup.getTableReference(
+				targetSideTableGroup.getNavigablePath(),
+				targetTable
+		);
+		final TableReference rhsTableKeyReference = keySideTableGroup.getTableReference( keyTable );
 
 		return generateJoinPredicate(
 				lhsTableReference,
@@ -372,21 +357,12 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 
 	@Override
 	public Predicate generateJoinPredicate(
-			TableReference lhs,
-			TableReference rhs,
+			TableReference targetSideReference,
+			TableReference keySideReference,
 			SqlAstJoinType sqlAstJoinType,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
-		final String rhsTableExpression = rhs.getTableExpression();
-		final String lhsTableExpression = lhs.getTableExpression();
-		if ( lhsTableExpression.equals( keyTable ) ) {
-			assert rhsTableExpression.equals( targetTable );
-			return getPredicate( lhs, rhs, creationContext, keySelectableMappings, targetSelectableMappings );
-		}
-		else {
-			assert rhsTableExpression.equals( keyTable );
-			return getPredicate( lhs, rhs, creationContext, targetSelectableMappings, keySelectableMappings );
-		}
+		return getPredicate( targetSideReference, keySideReference, creationContext, targetSelectableMappings, keySelectableMappings );
 	}
 
 	private Predicate getPredicate(
@@ -415,23 +391,6 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 				}
 		);
 		return predicate;
-	}
-
-	protected TableReference getTableReferenceWhenTargetEqualsKey(TableGroup lhs, TableGroup tableGroup, String table) {
-		if ( tableGroup.getPrimaryTableReference().getTableExpression().equals( table ) ) {
-			return tableGroup.getPrimaryTableReference();
-		}
-		if ( lhs.getPrimaryTableReference().getTableExpression().equals( table ) ) {
-			return lhs.getPrimaryTableReference();
-		}
-
-		for ( TableReferenceJoin tableJoin : lhs.getTableReferenceJoins() ) {
-			if ( tableJoin.getJoinedTableReference().getTableExpression().equals( table ) ) {
-				return tableJoin.getJoinedTableReference();
-			}
-		}
-
-		throw new IllegalStateException( "Could not resolve binding for table `" + table + "`" );
 	}
 
 	protected TableReference getTableReference(TableGroup lhs, TableGroup tableGroup, String table) {

@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStyle;
@@ -56,6 +57,7 @@ import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
 import org.hibernate.sql.ast.tree.from.TableGroupProducer;
 import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
@@ -419,6 +421,10 @@ public class ToOneAttributeMapping
 
 	public String getTargetKeyPropertyName() {
 		return targetKeyPropertyName;
+	}
+
+	public boolean isTargetKeyPropertyPath(String path) {
+		return targetKeyPropertyNames.contains( path );
 	}
 
 	public Cardinality getCardinality() {
@@ -924,6 +930,59 @@ public class ToOneAttributeMapping
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
+
+		final LazyTableGroup lazyTableGroup = createRootTableGroupJoin(
+				navigablePath,
+				lhs,
+				explicitSourceAlias,
+				sqlAstJoinType,
+				fetched,
+				null,
+				aliasBaseGenerator,
+				sqlExpressionResolver,
+				creationContext
+		);
+		final TableGroupJoin tableGroupJoin = new TableGroupJoin(
+				navigablePath,
+				sqlAstJoinType,
+				lazyTableGroup,
+				null
+		);
+
+		final TableReference lhsTableReference = lhs.resolveTableReference( navigablePath, identifyingColumnsTableExpression );
+
+		lazyTableGroup.setTableGroupInitializerCallback(
+				tableGroup -> tableGroupJoin.applyPredicate(
+						foreignKeyDescriptor.generateJoinPredicate(
+								sideNature == ForeignKeyDescriptor.Nature.TARGET ? lhsTableReference : tableGroup.getPrimaryTableReference(),
+								sideNature == ForeignKeyDescriptor.Nature.TARGET ? tableGroup.getPrimaryTableReference() : lhsTableReference,
+								sqlAstJoinType,
+								sqlExpressionResolver,
+								creationContext
+						)
+				)
+		);
+		lhs.addTableGroupJoin( tableGroupJoin );
+
+		if ( sqlAstJoinType == SqlAstJoinType.INNER && isNullable ) {
+			// Force initialization of the underlying table group join to retain cardinality
+			lazyTableGroup.getPrimaryTableReference();
+		}
+
+		return tableGroupJoin;
+	}
+
+	@Override
+	public LazyTableGroup createRootTableGroupJoin(
+			NavigablePath navigablePath,
+			TableGroup lhs,
+			String explicitSourceAlias,
+			SqlAstJoinType sqlAstJoinType,
+			boolean fetched,
+			Consumer<Predicate> predicateConsumer,
+			SqlAliasBaseGenerator aliasBaseGenerator,
+			SqlExpressionResolver sqlExpressionResolver,
+			SqlAstCreationContext creationContext) {
 		final SqlAliasBase sqlAliasBase = aliasBaseGenerator.createSqlAliasBase( sqlAliasStem );
 		final boolean canUseInnerJoin = sqlAstJoinType == SqlAstJoinType.INNER || lhs.canUseInnerJoins() && !isNullable;
 		final LazyTableGroup lazyTableGroup = new LazyTableGroup(
@@ -967,34 +1026,31 @@ public class ToOneAttributeMapping
 				lhs
 		);
 
-		final TableGroupJoin tableGroupJoin = new TableGroupJoin(
-				navigablePath,
-				sqlAstJoinType,
-				lazyTableGroup,
-				null
-		);
+		if ( predicateConsumer != null ) {
+			final TableReference lhsTableReference = lhs.resolveTableReference(
+					navigablePath,
+					identifyingColumnsTableExpression
+			);
 
-		final TableReference lhsTableReference = lhs.resolveTableReference( navigablePath, identifyingColumnsTableExpression );
+			lazyTableGroup.setTableGroupInitializerCallback(
+					tableGroup -> predicateConsumer.accept(
+							foreignKeyDescriptor.generateJoinPredicate(
+									sideNature == ForeignKeyDescriptor.Nature.TARGET ? lhsTableReference : tableGroup.getPrimaryTableReference(),
+									sideNature == ForeignKeyDescriptor.Nature.TARGET ? tableGroup.getPrimaryTableReference() : lhsTableReference,
+									sqlAstJoinType,
+									sqlExpressionResolver,
+									creationContext
+							)
+					)
+			);
 
-		lazyTableGroup.setTableGroupInitializerCallback(
-				tableGroup -> tableGroupJoin.applyPredicate(
-						foreignKeyDescriptor.generateJoinPredicate(
-								lhsTableReference,
-								tableGroup.getPrimaryTableReference(),
-								sqlAstJoinType,
-								sqlExpressionResolver,
-								creationContext
-						)
-				)
-		);
-		lhs.addTableGroupJoin( tableGroupJoin );
-
-		if ( sqlAstJoinType == SqlAstJoinType.INNER && isNullable ) {
-			// Force initialization of the underlying table group join to retain cardinality
-			lazyTableGroup.getPrimaryTableReference();
+			if ( sqlAstJoinType == SqlAstJoinType.INNER && isNullable ) {
+				// Force initialization of the underlying table group join to retain cardinality
+				lazyTableGroup.getPrimaryTableReference();
+			}
 		}
 
-		return tableGroupJoin;
+		return lazyTableGroup;
 	}
 
 	private SqlAstJoinType getJoinType(NavigablePath navigablePath, TableGroup tableGroup) {

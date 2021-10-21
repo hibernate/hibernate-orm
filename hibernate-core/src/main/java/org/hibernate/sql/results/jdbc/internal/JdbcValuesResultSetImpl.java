@@ -24,7 +24,6 @@ import org.hibernate.sql.results.caching.internal.QueryCachePutManagerDisabledIm
 import org.hibernate.sql.results.caching.internal.QueryCachePutManagerEnabledImpl;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMapping;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
-import org.hibernate.stat.spi.StatisticsImplementor;
 
 /**
  * JdbcValuesSource implementation for a JDBC ResultSet as the source

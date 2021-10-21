@@ -119,7 +119,7 @@ public class HHH3949Test extends BaseCoreFunctionalTestCase {
         try ( Session s = openSession() ) {
             CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
             CriteriaQuery<Vehicle> criteria = criteriaBuilder.createQuery( Vehicle.class );
-            criteria.from( Person.class ).fetch( "driver", JoinType.LEFT );
+            criteria.from( Vehicle.class ).fetch( "driver", JoinType.LEFT );
             vehicles = s.createQuery( criteria ).list();
 //            vehicles = (List<Vehicle>) s.createCriteria( Vehicle.class ).setFetchMode( "driver", FetchMode.JOIN ).list();
         }

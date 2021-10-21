@@ -4,13 +4,40 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.test.bytecode.enhancement.lazy.proxy;
+package org.hibernate.orm.test.bytecode.enhancement.lazy.proxy;
 
 import java.sql.Blob;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+
+import org.hibernate.Hibernate;
+import org.hibernate.ScrollMode;
+import org.hibernate.ScrollableResults;
+import org.hibernate.annotations.LazyGroup;
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.SessionFactoryBuilder;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.PersistentAttributeInterceptable;
+import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.query.Query;
+import org.hibernate.stat.spi.StatisticsImplementor;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
+import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
 import jakarta.persistence.Basic;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -24,40 +51,20 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
-import org.hibernate.Hibernate;
-import org.hibernate.ScrollableResults;
-import org.hibernate.annotations.LazyGroup;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.engine.spi.PersistentAttributeInterceptable;
-import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.stat.spi.StatisticsImplementor;
-
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Steve Ebersole
  */
-@SuppressWarnings({"unused", "WeakerAccess","ResultOfMethodCallIgnored"})
-@TestForIssue( jiraKey = "HHH-11147" )
-@RunWith( BytecodeEnhancerRunner.class )
-@EnhancementOptions( lazyLoading = true )
+@SuppressWarnings({ "unused", "WeakerAccess", "ResultOfMethodCallIgnored" })
+@TestForIssue(jiraKey = "HHH-11147")
+@RunWith(BytecodeEnhancerRunner.class)
+@EnhancementOptions(lazyLoading = true)
 public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
-
 
 	@Test
 	public void testLoadNonOwningOneToOne() {
@@ -123,6 +130,23 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
+	public void basicTypeLazyGroup() {
+		inSession(
+				session -> {
+					final DEntity dEntity = session.get( DEntity.class, 1L );
+					assertFalse( Hibernate.isPropertyInitialized( dEntity, "blob" ) );
+					assertFalse( Hibernate.isPropertyInitialized( dEntity, "lazyString" ) );
+					assertFalse( Hibernate.isPropertyInitialized( dEntity, "lazyStringBlobGroup" ) );
+					assertTrue( Hibernate.isPropertyInitialized( dEntity, "nonLazyString" ) );
+					dEntity.getBlob();
+					assertTrue( Hibernate.isPropertyInitialized( dEntity, "blob" ) );
+					assertTrue( Hibernate.isPropertyInitialized( dEntity, "lazyStringBlobGroup" ) );
+					assertFalse( Hibernate.isPropertyInitialized( dEntity, "lazyString" ) );
+				}
+		);
+	}
+
+	@Test
 	public void testFetchingScroll() {
 		final StatisticsImplementor stats = sessionFactory().getStatistics();
 		stats.clear();
@@ -132,14 +156,17 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 				.getBytecodeEnhancementMetadata()
 				.isEnhancedForLazyLoading();
 
-
 		inStatelessSession(
 				session -> {
 					final String qry = "select e from E e join fetch e.d";
 
-					final ScrollableResults scrollableResults = session.createQuery( qry ).scroll();
+					final Query query = session.createQuery( qry );
+					final ScrollableResults scrollableResults = getScrollableResults( query );
 					while ( scrollableResults.next() ) {
-						System.out.println( "Got entity : " + scrollableResults.get() );
+						final EEntity eEntity = (EEntity) scrollableResults.get();
+						final DEntity dEntity = eEntity.getD();
+						assertFalse(Hibernate.isPropertyInitialized( dEntity, "blob" ));
+						assertTrue(Hibernate.isPropertyInitialized( dEntity, "nonLazyString" ));
 					}
 				}
 		);
@@ -153,10 +180,15 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 							"join fetch d.e " +
 							"join fetch d.g";
 
-					final ScrollableResults scrollableResults = session.createQuery( qry ).scroll();
+					final Query query = session.createQuery( qry );
+					final ScrollableResults scrollableResults = getScrollableResults( query );
+					int i = 0;
 					while ( scrollableResults.next() ) {
-						System.out.println( "Got entity : " + scrollableResults.get() );
+						i++;
+						final DEntity dEntity = (DEntity) scrollableResults.get();
+						assertThat( dEntity.getBs().size(), is( 2 ) );
 					}
+					assertThat( i, is( 1 ) );
 				}
 		);
 
@@ -164,14 +196,65 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 				session -> {
 					final String qry = "select g from G g join fetch g.dEntities";
 
-					final ScrollableResults scrollableResults = session.createQuery( qry ).scroll();
+					final Query query = session.createQuery( qry );
+					final ScrollableResults scrollableResults = getScrollableResults( query );
 					while ( scrollableResults.next() ) {
-						System.out.println( "Got entity : " + scrollableResults.get() );
+						final Object o = scrollableResults.get();
 					}
 				}
 		);
 	}
 
+	@Test
+	public void testFetchingScroll2() {
+		final StatisticsImplementor stats = sessionFactory().getStatistics();
+		stats.clear();
+
+		assert sessionFactory().getMetamodel()
+				.entityPersister( DEntity.class )
+				.getBytecodeEnhancementMetadata()
+				.isEnhancedForLazyLoading();
+
+		inStatelessSession(
+				session -> {
+					final String qry = "select d, d.d from D d " +
+							"join fetch d.a " +
+							"join fetch d.bs " +
+							"join fetch d.c " +
+							"join fetch d.e " +
+							"join fetch d.g";
+
+					final Query query = session.createQuery( qry );
+					final ScrollableResults scrollableResults = getScrollableResults( query );
+					int i = 0;
+					while ( scrollableResults.next() ) {
+						i++;
+						final Object[] result = (Object[]) scrollableResults.get();
+						final DEntity dEntity = (DEntity) result[0];
+						assertThat( dEntity.getBs().size(), is( 2 ) );
+						assertThat( result[1], is( "bla" ) );
+					}
+					assertThat( i, is( 1 ) );
+				}
+		);
+	}
+
+	private ScrollableResults getScrollableResults(Query query) {
+		ScrollableResults scrollableResults;
+		final Dialect dialect = sessionFactory().getJdbcServices().getDialect();
+		if ( dialect instanceof DB2Dialect || dialect instanceof DerbyDialect ) {
+					/*
+						FetchingScrollableResultsImp#next() in order to check if the ResultSet is empty calls ResultSet#isBeforeFirst()
+						but the support for ResultSet#isBeforeFirst() is optional for ResultSets with a result
+						set type of TYPE_FORWARD_ONLY and db2 does not support it.
+					*/
+			scrollableResults = query.scroll( ScrollMode.SCROLL_INSENSITIVE );
+		}
+		else {
+			scrollableResults = query.scroll();
+		}
+		return scrollableResults;
+	}
 
 	@Test
 	public void testLazyAssociationSameAsNonLazyInPC() {
@@ -212,16 +295,16 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 
 					final DEntity entityD = session.load( DEntity.class, 1L );
 
-					assertThat( entityD instanceof HibernateProxy, is(false) );
-					assertThat( entityD instanceof PersistentAttributeInterceptable, is(true) );
-					assertThat( Hibernate.isInitialized( entityD ), is(false) );
+					assertThat( entityD instanceof HibernateProxy, is( false ) );
+					assertThat( entityD instanceof PersistentAttributeInterceptable, is( true ) );
+					assertThat( Hibernate.isInitialized( entityD ), is( false ) );
 					// Because D is enhanced we should not have executed any SQL
 					assertThat( stats.getPrepareStatementCount(), is( 0L ) );
 
 					// access the id.
 					// 		-since entityD is a "enhanced proxy", this should not trigger loading
-					assertThat( entityD.getOid(), is(1L) );
-					assertThat( Hibernate.isInitialized( entityD ), is(false) );
+					assertThat( entityD.getOid(), is( 1L ) );
+					assertThat( Hibernate.isInitialized( entityD ), is( false ) );
 					assertThat( stats.getPrepareStatementCount(), is( 0L ) );
 
 
@@ -280,7 +363,7 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 					entityD.getE();
 					assertThat( stats.getPrepareStatementCount(), is( 2L ) );
 
-					assertThat( entityD.getE().getOid(), is(17L) );
+					assertThat( entityD.getE().getOid(), is( 17L ) );
 
 
 					// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -327,16 +410,16 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 							//		the initialization of the association
 
 							activity.getInstruction().getSummary();
-							assertThat( stats.getPrepareStatementCount(), is( ++expectedCount  ) );
+							assertThat( stats.getPrepareStatementCount(), is( ++expectedCount ) );
 						}
 
 						if ( activity.getWebApplication() != null ) {
 							// trigger base group initialization
 							activity.getWebApplication().getName();
-							assertThat( stats.getPrepareStatementCount(), is( ++expectedCount  ) );
+							assertThat( stats.getPrepareStatementCount(), is( ++expectedCount ) );
 							// trigger  initialization
 							activity.getWebApplication().getSiteUrl();
-							assertThat( stats.getPrepareStatementCount(), is( ++expectedCount  ) );
+							assertThat( stats.getPrepareStatementCount(), is( ++expectedCount ) );
 						}
 					}
 				}
@@ -626,7 +709,7 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 					roleEntity.setOid( 1L );
 
 					SpecializedKey specializedKey = new SpecializedKey();
-					specializedKey.setOid(1L);
+					specializedKey.setOid( 1L );
 
 					MoreSpecializedKey moreSpecializedKey = new MoreSpecializedKey();
 					moreSpecializedKey.setOid( 3L );
@@ -634,7 +717,7 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 					SpecializedEntity specializedEntity = new SpecializedEntity();
 					specializedEntity.setId( 2L );
 					specializedKey.addSpecializedEntity( specializedEntity );
-					specializedEntity.setSpecializedKey( specializedKey);
+					specializedEntity.setSpecializedKey( specializedKey );
 
 					specializedKey.addRole( roleEntity );
 					roleEntity.setKey( specializedKey );
@@ -803,6 +886,16 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 		@JoinColumn()
 		@LazyGroup("g")
 		public GEntity g;
+
+		private String nonLazyString;
+
+		@Basic(fetch = FetchType.LAZY)
+		@LazyGroup("lazyString")
+		private String lazyString;
+
+		@Basic(fetch = FetchType.LAZY)
+		@LazyGroup("blob")
+		private String lazyStringBlobGroup;
 
 		@Lob
 		@Basic(fetch = FetchType.LAZY)

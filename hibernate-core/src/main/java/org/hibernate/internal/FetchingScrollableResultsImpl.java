@@ -7,10 +7,13 @@
 package org.hibernate.internal;
 
 import org.hibernate.HibernateException;
-import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.sql.results.jdbc.internal.JdbcValuesSourceProcessingStateStandardImpl;
+import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.entity.EntityInitializer;
+import org.hibernate.sql.results.graph.entity.internal.EntityResultInitializer;
 import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
+import org.hibernate.sql.results.jdbc.internal.JdbcValuesSourceProcessingStateStandardImpl;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.spi.RowReader;
@@ -21,6 +24,8 @@ import org.hibernate.sql.results.spi.RowReader;
  * @author Steve Ebersole
  */
 public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<R> {
+	private final EntityInitializer resultInitializer;
+
 	private R currentRow;
 
 	private int currentPosition;
@@ -41,7 +46,22 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 				rowReader,
 				persistenceContext
 		);
+
+		resultInitializer = extractResultInitializer( rowReader );
+
 		this.maxPosition = jdbcValuesSourceProcessingState.getQueryOptions().getEffectiveLimit().getMaxRows();
+	}
+
+	private static <R> EntityInitializer extractResultInitializer(RowReader<R> rowReader) {
+		for ( Initializer initializer : rowReader.getInitializers() ) {
+			if ( initializer instanceof EntityInitializer ) {
+				EntityInitializer entityInitializer = (EntityInitializer) initializer;
+				if ( entityInitializer instanceof EntityResultInitializer ) {
+					return entityInitializer;
+				}
+			}
+		}
+		return null;
 	}
 
 	@Override
@@ -51,78 +71,115 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 
 	@Override
 	public boolean next() {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		if ( maxPosition != null && maxPosition <= currentPosition ) {
+			currentRow = null;
+			currentPosition = maxPosition + 1;
+			return false;
+		}
 
-//		if ( maxPosition != null && maxPosition <= currentPosition ) {
-//			currentRow = null;
-//			currentPosition = maxPosition + 1;
-//			return false;
-//		}
-//
-//		if ( isResultSetEmpty() ) {
-//			currentRow = null;
-//			currentPosition = 0;
-//			return false;
-//		}
-//
-//		final Object row = getLoader().loadSequentialRowsForward(
-//				getResultSet(),
-//				getSession(),
-//				getQueryParameters(),
-//				true
-//		);
-//
-//
-//		final boolean afterLast;
-//		try {
-//			afterLast = getResultSet().isAfterLast();
-//		}
-//		catch (SQLException e) {
-//			throw getSession().getFactory().getSQLExceptionHelper().convert(
-//					e,
-//					"exception calling isAfterLast()"
-//			);
-//		}
-//
-//		currentPosition++;
-//		currentRow = new Object[] {row};
-//
-//		if ( afterLast ) {
-//			if ( maxPosition == null ) {
-//				// we just hit the last position
-//				maxPosition = currentPosition;
-//			}
-//		}
-//
-//		afterScrollOperation();
-//
-//		return true;
+		if ( isResultSetEmpty() ) {
+			currentRow = null;
+			currentPosition = 0;
+			return false;
+		}
+
+		boolean afterLast = prepareCurrentRow();
+
+		currentPosition++;
+
+		if ( afterLast ) {
+			if ( maxPosition == null ) {
+				// we just hit the last position
+				maxPosition = currentPosition;
+			}
+		}
+
+		afterScrollOperation();
+
+		return true;
 	}
+
 
 	@Override
 	public boolean previous() {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		if ( currentPosition <= 1 ) {
+			currentPosition = 0;
+			currentRow = null;
+			return false;
+		}
 
-//		if ( currentPosition <= 1 ) {
-//			currentPosition = 0;
-//			currentRow = null;
-//			return false;
-//		}
-//
-//		final Object loadResult = getLoader().loadSequentialRowsReverse(
-//				getResultSet(),
-//				getSession(),
-//				getQueryParameters(),
-//				false,
-//				( maxPosition != null && currentPosition > maxPosition )
-//		);
-//
-//		currentRow = new Object[] {loadResult};
-//		currentPosition--;
-//
-//		afterScrollOperation();
-//
-//		return true;
+		if ( getRowProcessingState().isFirst() ) {
+			// don't even bother trying to read any further
+			currentRow = null;
+		}
+		else {
+			EntityKey keyToRead = null;
+			// This check is needed since processing leaves the cursor
+			// after the last physical row for the current logical row;
+			// thus if we are after the last physical row, this might be
+			// caused by either:
+			//      1) scrolling to the last logical row
+			//      2) scrolling past the last logical row
+			// In the latter scenario, the previous logical row
+			// really is the last logical row.
+			//
+			// In all other cases, we should process back two
+			// logical records (the current logic row, plus the
+			// previous logical row).
+			if ( getRowProcessingState().isAfterLast() && maxPosition != null && currentPosition > maxPosition ) {
+				// position cursor to the last row
+				getRowProcessingState().last();
+				keyToRead = getEntityKey();
+			}
+			else {
+				// Since the result set cursor is always left at the first
+				// physical row after the "last processed", we need to jump
+				// back one position to get the key value we are interested
+				// in skipping
+				getRowProcessingState().previous();
+
+				// sequentially read the result set in reverse until we recognize
+				// a change in the key value.  At that point, we are pointed at
+				// the last physical sequential row for the logical row in which
+				// we are interested in processing
+				boolean firstPass = true;
+				final EntityKey lastKey = getEntityKey();
+
+				while ( getRowProcessingState().previous() ) {
+					EntityKey checkKey = getEntityKey();
+
+					if ( firstPass ) {
+						firstPass = false;
+						keyToRead = checkKey;
+					}
+
+					if ( !lastKey.equals( checkKey ) ) {
+						break;
+					}
+				}
+			}
+
+			// Read backwards until we read past the first physical sequential
+			// row with the key we are interested in loading
+			while ( getRowProcessingState().previous() ) {
+				EntityKey checkKey = getEntityKey();
+
+				if ( !keyToRead.equals( checkKey ) ) {
+					break;
+				}
+			}
+
+			// Finally, read ahead one row to position result set cursor
+			// at the first physical row we are interested in loading
+			getRowProcessingState().next();
+			prepareCurrentRow();
+		}
+
+		currentPosition--;
+
+		afterScrollOperation();
+
+		return true;
 	}
 
 	@Override
@@ -157,45 +214,43 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 
 	@Override
 	public boolean position(int position) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		final boolean underlyingScrollSuccessful = getRowProcessingState().position( position );
+		if ( !underlyingScrollSuccessful ) {
+			currentRow = null;
+			return false;
+
+		}
+		currentPosition = position - 1;
+		return next();
 	}
 
 	@Override
 	public boolean last() {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		boolean more = false;
+		if ( maxPosition != null ) {
+			if ( currentPosition > maxPosition ) {
+				more = previous();
+			}
+			for ( int i = currentPosition; i < maxPosition; i++ ) {
+				more = next();
+			}
+		}
+		else {
+			final RowProcessingStateStandardImpl rowProcessingState = getRowProcessingState();
+			if ( isResultSetEmpty() || rowProcessingState.isAfterLast() ) {
+				// should not be able to reach last without maxPosition being set
+				// unless there are no results
+				return false;
+			}
 
-//		boolean more = false;
-//		if ( maxPosition != null ) {
-//			if ( currentPosition > maxPosition ) {
-//				more = previous();
-//			}
-//			for ( int i = currentPosition; i < maxPosition; i++ ) {
-//				more = next();
-//			}
-//		}
-//		else {
-//			try {
-//				if ( isResultSetEmpty() || getResultSet().isAfterLast() ) {
-//					// should not be able to reach last without maxPosition being set
-//					// unless there are no results
-//					return false;
-//				}
-//
-//				while ( !getResultSet().isAfterLast() ) {
-//					more = next();
-//				}
-//			}
-//			catch (SQLException e) {
-//				throw getSession().getFactory().getSQLExceptionHelper().convert(
-//						e,
-//						"exception calling isAfterLast()"
-//				);
-//			}
-//		}
-//
-//		afterScrollOperation();
-//
-//		return more;
+			while ( !rowProcessingState.isAfterLast() ) {
+				more = next();
+			}
+		}
+
+		afterScrollOperation();
+
+		return more;
 	}
 
 	@Override
@@ -210,19 +265,9 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 
 	@Override
 	public void beforeFirst() {
-		throw new NotYetImplementedFor6Exception( getClass() );
-
-//		try {
-//			getResultSet().beforeFirst();
-//		}
-//		catch (SQLException e) {
-//			throw getSession().getFactory().getSQLExceptionHelper().convert(
-//					e,
-//					"exception calling beforeFirst()"
-//			);
-//		}
-//		currentRow = null;
-//		currentPosition = 0;
+		getRowProcessingState().beforeFirst();
+		currentRow = null;
+		currentPosition = 0;
 	}
 
 	@Override
@@ -263,16 +308,58 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 		return scroll( rowNumber - currentPosition );
 	}
 
-//	private boolean isResultSetEmpty() {
-//		try {
-//			return currentPosition == 0 && !getResultSet().isBeforeFirst() && !getResultSet().isAfterLast();
-//		}
-//		catch (SQLException e) {
-//			throw getSession().getFactory().getSQLExceptionHelper().convert(
-//					e,
-//					"Could not determine if resultset is empty due to exception calling isBeforeFirst or isAfterLast()"
-//			);
-//		}
-//	}
+	private boolean prepareCurrentRow() {
+		if ( currentRow == null ) {
+			getRowProcessingState().next();
+		}
+
+		final RowReader<R> rowReader = getRowReader();
+
+		boolean afterLast = false;
+		boolean resultProcessed = false;
+
+		final EntityKey entityKey = getEntityKey();
+
+		currentRow = rowReader.readRow( getRowProcessingState(), getProcessingOptions() );
+
+//		currentRow = new Object[] {row};
+
+		getRowProcessingState().finishRowProcessing();
+
+		while ( !resultProcessed ) {
+			boolean result = getRowProcessingState().next();
+			if ( result ) {
+				final EntityKey entityKey2 = getEntityKey();
+				if ( !entityKey.equals( entityKey2 ) ) {
+					resultInitializer.finishUpRow( getRowProcessingState() );
+					resultProcessed = true;
+					afterLast = false;
+				}
+				else {
+					rowReader.readRow( getRowProcessingState(), getProcessingOptions() );
+
+					getRowProcessingState().finishRowProcessing();
+				}
+			}
+			else if ( !result ) {
+				afterLast = true;
+				resultProcessed = true;
+			}
+
+		}
+		getJdbcValuesSourceProcessingState().finishUp();
+		getRowProcessingState().getSession().getPersistenceContext().initializeNonLazyCollections();
+		return afterLast;
+	}
+
+
+	private boolean isResultSetEmpty() {
+		return currentPosition == 0 && !getRowProcessingState().isBeforeFirst() && !getRowProcessingState().isAfterLast();
+	}
+
+	private EntityKey getEntityKey() {
+		resultInitializer.resolveKey( getRowProcessingState() );
+		return resultInitializer.getEntityKey();
+	}
 
 }

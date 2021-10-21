@@ -688,10 +688,6 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		final Object entity = persistenceContext.getEntity( entityKey );
 		assert entity == null || entity == toInitialize;
 
-//		if ( entity != null ) {
-//			return;
-//		}
-
 		final Object entityIdentifier = entityKey.getIdentifier();
 
 		if ( EntityLoadingLogger.TRACE_ENABLED ) {

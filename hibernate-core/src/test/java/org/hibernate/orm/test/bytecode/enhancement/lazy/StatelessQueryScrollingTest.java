@@ -22,9 +22,8 @@ import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.StatelessSession;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.query.Query;
 
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
@@ -74,7 +73,7 @@ public class StatelessQueryScrollingTest extends BaseNonConfigCoreFunctionalTest
 
 		try {
 			final Query query = statelessSession.createQuery( "select p from Producer p join fetch p.products" );
-			if ( getDialect() instanceof DB2Dialect ) {
+			if ( getDialect() instanceof DB2Dialect || getDialect() instanceof DerbyDialect ) {
 				/*
 					FetchingScrollableResultsImp#next() in order to check if the ResultSet is empty calls ResultSet#isBeforeFirst()
 					but the support for ResultSet#isBeforeFirst() is optional for ResultSets with a result

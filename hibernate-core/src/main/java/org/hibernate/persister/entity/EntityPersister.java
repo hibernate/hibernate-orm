@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -885,12 +884,6 @@ public interface EntityPersister
 	default EntityMappingType getEntityMappingType() {
 		return this;
 	}
-
-	/**
-	 * @deprecated Use {@link #getRepresentationStrategy()}
-	 */
-	@Deprecated
-	EntityMode getEntityMode();
 
 	/**
 	 * @deprecated Use {@link #getRepresentationStrategy()}

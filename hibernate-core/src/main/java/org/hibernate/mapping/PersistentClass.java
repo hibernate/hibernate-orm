@@ -10,13 +10,11 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.StringTokenizer;
 
-import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.CustomSql;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
@@ -28,6 +26,7 @@ import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.internal.util.collections.SingletonIterator;
+import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.jpa.event.spi.CallbackDefinition;
 import org.hibernate.service.ServiceRegistry;
@@ -1015,14 +1014,7 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		this.identifierMapper = handle;
 	}
 
-	public void addTuplizer(EntityMode entityMode, String implClassName) {
-		if ( tuplizerImpls == null ) {
-			tuplizerImpls = new HashMap();
-		}
-		tuplizerImpls.put( entityMode, implClassName );
-	}
-
-	public String getTuplizerImplClassName(EntityMode mode) {
+	public String getTuplizerImplClassName(RepresentationMode mode) {
 		if ( tuplizerImpls == null ) {
 			return null;
 		}

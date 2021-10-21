@@ -36,7 +36,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @ServiceRegistry(
 		settings = {
 				@Setting(name = Environment.USE_SECOND_LEVEL_CACHE, value = "false"),
-				@Setting(name = Environment.DEFAULT_ENTITY_MODE, value = "dynamic-map"),
 		}
 )
 public class DynamicMapOneToOneTest {

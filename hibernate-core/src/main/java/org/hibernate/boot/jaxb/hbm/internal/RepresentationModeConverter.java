@@ -6,17 +6,17 @@
  */
 package org.hibernate.boot.jaxb.hbm.internal;
 
-import org.hibernate.EntityMode;
+import org.hibernate.metamodel.RepresentationMode;
 
 /**
  * @author Steve Ebersole
  */
-public class EntityModeConverter {
-	public static EntityMode fromXml(String name) {
-		return EntityMode.parse( name );
+public class RepresentationModeConverter {
+	public static RepresentationMode fromXml(String name) {
+		return RepresentationMode.fromExternalName( name );
 	}
 
-	public static String toXml(EntityMode entityMode) {
+	public static String toXml(RepresentationMode entityMode) {
 		return ( null == entityMode ) ? null : entityMode.getExternalName();
 	}
 }

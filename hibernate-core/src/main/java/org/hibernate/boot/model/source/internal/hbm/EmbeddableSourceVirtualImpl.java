@@ -7,11 +7,8 @@
 package org.hibernate.boot.model.source.internal.hbm;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
-import org.hibernate.EntityMode;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmPropertiesType;
 import org.hibernate.boot.model.JavaTypeDescriptor;
 import org.hibernate.boot.model.source.spi.AttributePath;
@@ -89,11 +86,6 @@ public class EmbeddableSourceVirtualImpl extends AbstractHbmSourceNode implement
 	@Override
 	public String getParentReferenceAttributeName() {
 		return null;
-	}
-
-	@Override
-	public Map<EntityMode,String> getTuplizerClassMap() {
-		return Collections.emptyMap();
 	}
 
 	@Override

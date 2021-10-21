@@ -15,7 +15,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -29,16 +28,12 @@ import org.hibernate.cache.spi.entry.StandardCacheEntryImpl;
 import org.hibernate.cache.spi.entry.UnstructuredCacheEntry;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.internal.MutableEntityEntryFactory;
-import org.hibernate.engine.internal.TwoPhaseLoad;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.EntityEntryFactory;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.ValueInclusion;
-import org.hibernate.event.spi.EventSource;
-import org.hibernate.event.spi.PostLoadEvent;
-import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.UUIDHexGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
@@ -712,11 +707,6 @@ public class CustomPersister implements EntityPersister {
 	@Override
 	public EntityMetamodel getEntityMetamodel() {
 		return entityMetamodel;
-	}
-
-	@Override
-	public EntityMode getEntityMode() {
-		return EntityMode.POJO;
 	}
 
 	@Override

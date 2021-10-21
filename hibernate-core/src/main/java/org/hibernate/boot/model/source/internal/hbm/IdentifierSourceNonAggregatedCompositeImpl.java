@@ -8,9 +8,7 @@ package org.hibernate.boot.model.source.internal.hbm;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
-import org.hibernate.EntityMode;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmCompositeIdType;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.JavaTypeDescriptor;
@@ -149,11 +147,6 @@ class IdentifierSourceNonAggregatedCompositeImpl implements IdentifierSourceNonA
 
 	@Override
 	public String getParentReferenceAttributeName() {
-		return null;
-	}
-
-	@Override
-	public Map<EntityMode, String> getTuplizerClassMap() {
 		return null;
 	}
 

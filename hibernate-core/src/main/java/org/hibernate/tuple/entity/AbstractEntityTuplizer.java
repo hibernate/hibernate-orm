@@ -10,7 +10,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -217,7 +216,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 					throw new HibernateException( "The class has no identifier property: " + getEntityName() );
 				}
 				else {
-					id = mappedIdentifierValueMarshaller.getIdentifier( entity, getEntityMode(), session );
+					id = mappedIdentifierValueMarshaller.getIdentifier( entity, session );
 				}
 			}
 			else {
@@ -245,21 +244,21 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		if ( entityMetamodel.getIdentifierProperty().isEmbedded() ) {
 			if ( entity != id ) {
 				CompositeType copier = (CompositeType) entityMetamodel.getIdentifierProperty().getType();
-				copier.setPropertyValues( entity, copier.getPropertyValues( id, getEntityMode() ), getEntityMode() );
+				copier.setPropertyValues( entity, copier.getPropertyValues( id ) );
 			}
 		}
 		else if ( idSetter != null ) {
 			idSetter.set( entity, id, getFactory() );
 		}
 		else if ( identifierMapperType != null ) {
-			mappedIdentifierValueMarshaller.setIdentifier( entity, id, getEntityMode(), session );
+			mappedIdentifierValueMarshaller.setIdentifier( entity, id, session );
 		}
 	}
 
-	private static interface MappedIdentifierValueMarshaller {
-		public Object getIdentifier(Object entity, EntityMode entityMode, SharedSessionContractImplementor session);
+	private interface MappedIdentifierValueMarshaller {
+		Object getIdentifier(Object entity, SharedSessionContractImplementor session);
 
-		public void setIdentifier(Object entity, Object id, EntityMode entityMode, SharedSessionContractImplementor session);
+		void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session);
 	}
 
 	private final MappedIdentifierValueMarshaller mappedIdentifierValueMarshaller;
@@ -314,19 +313,18 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		}
 
 		@Override
-		public Object getIdentifier(Object entity, EntityMode entityMode, SharedSessionContractImplementor session) {
-			Object id = mappedIdentifierType.instantiate( entityMode );
-			final Object[] propertyValues = virtualIdComponent.getPropertyValues( entity, entityMode );
-			mappedIdentifierType.setPropertyValues( id, propertyValues, entityMode );
+		public Object getIdentifier(Object entity, SharedSessionContractImplementor session) {
+			Object id = mappedIdentifierType.instantiate();
+			final Object[] propertyValues = virtualIdComponent.getPropertyValues( entity );
+			mappedIdentifierType.setPropertyValues( id, propertyValues );
 			return id;
 		}
 
 		@Override
-		public void setIdentifier(Object entity, Object id, EntityMode entityMode, SharedSessionContractImplementor session) {
+		public void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session) {
 			virtualIdComponent.setPropertyValues(
 					entity,
-					mappedIdentifierType.getPropertyValues( id, session ),
-					entityMode
+					mappedIdentifierType.getPropertyValues( id, session )
 			);
 		}
 	}
@@ -353,9 +351,9 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		}
 
 		@Override
-		public Object getIdentifier(Object entity, EntityMode entityMode, SharedSessionContractImplementor session) {
-			final Object id = mappedIdentifierType.instantiate( entityMode );
-			final Object[] propertyValues = virtualIdComponent.getPropertyValues( entity, entityMode );
+		public Object getIdentifier(Object entity, SharedSessionContractImplementor session) {
+			final Object id = mappedIdentifierType.instantiate();
+			final Object[] propertyValues = virtualIdComponent.getPropertyValues( entity );
 			final Type[] subTypes = virtualIdComponent.getSubtypes();
 			final Type[] copierSubTypes = mappedIdentifierType.getSubtypes();
 			final int length = subTypes.length;
@@ -381,13 +379,13 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 					);
 				}
 			}
-			mappedIdentifierType.setPropertyValues( id, propertyValues, entityMode );
+			mappedIdentifierType.setPropertyValues( id, propertyValues );
 			return id;
 		}
 
 		@Override
-		public void setIdentifier(Object entity, Object id, EntityMode entityMode, SharedSessionContractImplementor session) {
-			final Object[] extractedValues = mappedIdentifierType.getPropertyValues( id, entityMode );
+		public void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session) {
+			final Object[] extractedValues = mappedIdentifierType.getPropertyValues( id );
 			final Object[] injectionValues = new Object[extractedValues.length];
 			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 			final MetamodelImplementor metamodel = sessionFactory.getMetamodel();
@@ -424,7 +422,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 					injectionValues[i] = extractedValues[i];
 				}
 			}
-			virtualIdComponent.setPropertyValues( entity, injectionValues, entityMode );
+			virtualIdComponent.setPropertyValues( entity, injectionValues );
 		}
 	}
 

@@ -11,7 +11,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
-import org.hibernate.EntityMode;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
 
@@ -30,7 +29,6 @@ public class EntityUniqueKey implements Serializable {
 	private final String entityName;
 	private final Object key;
 	private final Type keyType;
-	private final EntityMode entityMode;
 	private final int hashCode;
 
 	public EntityUniqueKey(
@@ -38,13 +36,11 @@ public class EntityUniqueKey implements Serializable {
 			final String uniqueKeyName,
 			final Object key,
 			final Type keyType,
-			final EntityMode entityMode,
 			final SessionFactoryImplementor factory) {
 		this.uniqueKeyName = uniqueKeyName;
 		this.entityName = entityName;
 		this.key = key;
 		this.keyType = keyType;
-		this.entityMode = entityMode;
 		this.hashCode = generateHashCode( factory );
 	}
 
@@ -117,7 +113,6 @@ public class EntityUniqueKey implements Serializable {
 		oos.writeObject( entityName );
 		oos.writeObject( key );
 		oos.writeObject( keyType );
-		oos.writeObject( entityMode );
 	}
 
 	/**
@@ -140,7 +135,6 @@ public class EntityUniqueKey implements Serializable {
 				(String) ois.readObject(),
 				ois.readObject(),
 				(Type) ois.readObject(),
-				(EntityMode) ois.readObject(),
 				session.getFactory()
 		);
 	}

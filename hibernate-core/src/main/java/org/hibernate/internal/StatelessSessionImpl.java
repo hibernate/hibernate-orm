@@ -6,13 +6,10 @@
  */
 package org.hibernate.internal;
 
-import java.io.Serializable;
 import java.sql.Connection;
 import java.util.Set;
-import jakarta.transaction.SystemException;
 
 import org.hibernate.CacheMode;
-import org.hibernate.EntityMode;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -34,6 +31,8 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.tuple.entity.EntityMetamodel;
+
+import jakarta.transaction.SystemException;
 
 /**
  * @author Gavin King
@@ -448,10 +447,6 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	public Object getContextEntityIdentifier(Object object) {
 		checkOpen();
 		return null;
-	}
-
-	public EntityMode getEntityMode() {
-		return EntityMode.POJO;
 	}
 
 	@Override

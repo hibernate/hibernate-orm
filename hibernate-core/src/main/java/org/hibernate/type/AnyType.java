@@ -16,7 +16,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
@@ -96,7 +95,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 	}
 
 	@Override
-	public Object[] getPropertyValues(Object component, EntityMode entityMode) {
+	public Object[] getPropertyValues(Object component) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -381,7 +380,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 	}
 
 	@Override
-	public void setPropertyValues(Object component, Object[] values, EntityMode entityMode) {
+	public void setPropertyValues(Object component, Object[] values) {
 		throw new UnsupportedOperationException();
 	}
 

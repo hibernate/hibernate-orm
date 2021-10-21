@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
-import org.hibernate.EntityMode;
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmCompositeIdType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmEntityDiscriminatorType;
@@ -385,11 +384,6 @@ public class EntityHierarchySourceImpl implements EntityHierarchySource {
 	@Override
 	public VersionAttributeSource getVersionAttributeSource() {
 		return versionAttributeSource;
-	}
-
-	@Override
-	public EntityMode getEntityMode() {
-		return rootEntitySource.determineEntityMode();
 	}
 
 	@Override

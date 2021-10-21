@@ -5,11 +5,13 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.test.dynamicentity.interceptor;
+
 import java.io.Serializable;
 import java.lang.reflect.Proxy;
 
 import org.hibernate.EmptyInterceptor;
-import org.hibernate.EntityMode;
+import org.hibernate.metamodel.RepresentationMode;
+
 import org.hibernate.test.dynamicentity.Company;
 import org.hibernate.test.dynamicentity.Customer;
 import org.hibernate.test.dynamicentity.ProxyHelper;
@@ -49,8 +51,8 @@ public class ProxyInterceptor extends EmptyInterceptor {
 	 * @param id The identifier value for the given entity.
 	 * @return The instantiated instance.
 	 */
-	public Object instantiate(String entityName, EntityMode entityMode, Serializable id) {
-		if ( entityMode == EntityMode.POJO ) {
+	public Object instantiate(String entityName, RepresentationMode entityMode, Serializable id) {
+		if ( entityMode == RepresentationMode.POJO ) {
 			if ( Customer.class.getName().equals( entityName ) ) {
 				return ProxyHelper.newCustomerProxy( id );
 			}

@@ -9,11 +9,10 @@
  * @author Gail Badner
  */
 package org.hibernate.test.interceptor;
-import java.io.Serializable;
 
 import org.hibernate.CallbackException;
 import org.hibernate.EmptyInterceptor;
-import org.hibernate.EntityMode;
+import org.hibernate.metamodel.RepresentationMode;
 
 public class InstantiateInterceptor extends EmptyInterceptor {
 	private String injectedString;
@@ -22,7 +21,8 @@ public class InstantiateInterceptor extends EmptyInterceptor {
 		this.injectedString = injectedString;		
 	}
 
-	public Object instantiate(String entityName, EntityMode entityMode, Serializable id) throws CallbackException {
+	@Override
+	public Object instantiate(String entityName, RepresentationMode entityMode, Object id) throws CallbackException {
 		if ( ! "org.hibernate.test.interceptor.User".equals( entityName ) ) {
 			return null;
 		}

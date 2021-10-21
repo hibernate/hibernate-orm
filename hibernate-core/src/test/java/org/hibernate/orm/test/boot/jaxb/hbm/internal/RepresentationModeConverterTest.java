@@ -6,11 +6,11 @@
  */
 package org.hibernate.orm.test.boot.jaxb.hbm.internal;
 
-import org.hibernate.EntityMode;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmRootEntityType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSimpleIdType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmTuplizerType;
+import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.tuple.entity.DynamicMapEntityTuplizer;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -19,7 +19,7 @@ import org.junit.Test;
 /**
  * @author Jean-François Boeuf
  */
-public class EntityModeConverterTest extends BaseUnitTestCase {
+public class RepresentationModeConverterTest extends BaseUnitTestCase {
 
 	@Test
 	public void testMashallNullEntityMode() throws Exception {
@@ -38,7 +38,7 @@ public class EntityModeConverterTest extends BaseUnitTestCase {
 		JaxbHbmTuplizerType tuplizer = new JaxbHbmTuplizerType();
 		tuplizer.setClazz( DynamicMapEntityTuplizer.class.getCanonicalName() );
 		if ( includeEntityMode ) {
-			tuplizer.setEntityMode( EntityMode.MAP );
+			tuplizer.setEntityMode( RepresentationMode.MAP );
 		}
 		clazz.getTuplizer().add( tuplizer );
 		JaxbHbmSimpleIdType id = new JaxbHbmSimpleIdType();

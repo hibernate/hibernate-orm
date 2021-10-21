@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
@@ -29,6 +28,7 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.JoinedIterator;
+import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.tuple.component.ComponentMetamodel;
 import org.hibernate.type.ComponentType;
@@ -54,7 +54,7 @@ public class Component extends SimpleValue implements MetaAttributable {
 	private boolean isKey;
 	private String roleName;
 
-	private Map<EntityMode,String> tuplizerImpls;
+	private Map<RepresentationMode,String> tuplizerImpls;
 
 	// cache the status of the type
 	private volatile Type type;
@@ -327,14 +327,14 @@ public class Component extends SimpleValue implements MetaAttributable {
 		return componentClassName!=null;
 	}
 
-	public void addTuplizer(EntityMode entityMode, String implClassName) {
+	public void addTuplizer(RepresentationMode representationMode, String implClassName) {
 		if ( tuplizerImpls == null ) {
 			tuplizerImpls = new HashMap<>();
 		}
-		tuplizerImpls.put( entityMode, implClassName );
+		tuplizerImpls.put( representationMode, implClassName );
 	}
 
-	public String getTuplizerImplClassName(EntityMode mode) {
+	public String getTuplizerImplClassName(RepresentationMode mode) {
 		// todo : remove this once ComponentMetamodel is complete and merged
 		if ( tuplizerImpls == null ) {
 			return null;

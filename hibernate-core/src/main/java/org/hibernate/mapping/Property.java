@@ -12,7 +12,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.StringTokenizer;
 
-import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.PropertyNotFoundException;
@@ -21,6 +20,7 @@ import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.jpa.event.spi.CallbackDefinition;
+import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.property.access.spi.PropertyAccessStrategyResolver;
@@ -301,7 +301,7 @@ public class Property implements Serializable, MetaAttributable {
 		this.selectable = selectable;
 	}
 
-	public String getAccessorPropertyName( EntityMode mode ) {
+	public String getAccessorPropertyName(RepresentationMode mode) {
 		return getName();
 	}
 
@@ -327,14 +327,14 @@ public class Property implements Serializable, MetaAttributable {
 			}
 		}
 
-		final EntityMode entityMode = clazz == null || java.util.Map.class.equals( clazz )
-				? EntityMode.MAP
-				: EntityMode.POJO;
+		final RepresentationMode representationMode = clazz == null || java.util.Map.class.equals( clazz )
+				? RepresentationMode.MAP
+				: RepresentationMode.POJO;
 
 		return resolveServiceRegistry().getService( PropertyAccessStrategyResolver.class ).resolvePropertyAccessStrategy(
 				clazz,
 				accessName,
-				entityMode
+				representationMode
 		);
 	}
 

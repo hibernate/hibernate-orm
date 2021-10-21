@@ -435,9 +435,6 @@ This is an experimental feature that has known issues. It should not be used in 
 `*hibernate.entity_dirtiness_strategy*` (e.g. fully-qualified class name or an actual `CustomEntityDirtinessStrategy` instance)::
 Setting to identify an `org.hibernate.CustomEntityDirtinessStrategy` to use.
 
-`*hibernate.default_entity_mode*` (e.g. `pojo` (default value) or `dynamic-map`)::
-Default `EntityMode` for entity representation for all sessions opened from this `SessionFactory`, defaults to `pojo`.
-
 `*hibernate.type.json_format_mapper*` (e.g. A fully-qualified class name, an instance, or a `Class` object reference)::
 Names a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/type/FormatMapper.html[`FormatMapper`] implementation to be applied to the `SessionFactory` for JSON serialization and deserialization.
 +

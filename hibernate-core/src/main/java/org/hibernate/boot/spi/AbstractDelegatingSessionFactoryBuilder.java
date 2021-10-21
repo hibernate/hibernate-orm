@@ -11,11 +11,9 @@ import java.util.function.Supplier;
 
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
-import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.Interceptor;
 import org.hibernate.MultiTenancyStrategy;
-import org.hibernate.query.NullPrecedence;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.SessionFactoryBuilder;
@@ -23,7 +21,9 @@ import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.loader.BatchFetchStyle;
+import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
@@ -142,13 +142,6 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	}
 
 	@Override
-	@SuppressWarnings("deprecation")
-	public T applyDefaultEntityMode(EntityMode entityMode) {
-		delegate.applyDefaultEntityMode( entityMode );
-		return getThis();
-	}
-
-	@Override
 	public T applyNullabilityChecking(boolean enabled) {
 		delegate.applyNullabilityChecking( enabled );
 		return getThis();
@@ -168,7 +161,7 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 
 	@Override
 	public T applyEntityTuplizer(
-			EntityMode entityMode,
+			RepresentationMode entityMode,
 			Class<? extends EntityTuplizer> tuplizerClass) {
 		delegate.applyEntityTuplizer( entityMode, tuplizerClass );
 		return getThis();

@@ -9,9 +9,7 @@ package org.hibernate.cfg;
 import java.util.Map;
 
 import org.hibernate.ConnectionReleaseMode;
-import org.hibernate.EntityMode;
 import org.hibernate.MultiTenancyStrategy;
-import org.hibernate.query.NullPrecedence;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.SchemaAutoTooling;
 import org.hibernate.boot.model.naming.Identifier;
@@ -20,6 +18,7 @@ import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.loader.BatchFetchStyle;
+import org.hibernate.query.NullPrecedence;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
 
 import org.jboss.logging.Logger;
@@ -70,7 +69,6 @@ public final class Settings {
 			LOG.debugf( "Statistics: %s", enabledDisabled( sessionFactoryOptions.isStatisticsEnabled() ) );
 
 			LOG.debugf( "Deleted entity synthetic identifier rollback: %s", enabledDisabled( sessionFactoryOptions.isIdentifierRollbackEnabled() ) );
-			LOG.debugf( "Default entity-mode: %s", sessionFactoryOptions.getDefaultEntityMode() );
 			LOG.debugf( "Check Nullability in Core (should be disabled when Bean Validation is on): %s", enabledDisabled( sessionFactoryOptions.isCheckNullability() ) );
 			LOG.debugf( "Allow initialization of lazy state outside session : %s", enabledDisabled( sessionFactoryOptions.isInitializeLazyStateOutsideTransactionsEnabled() ) );
 
@@ -151,10 +149,6 @@ public final class Settings {
 
 	public boolean isIdentifierRollbackEnabled() {
 		return sessionFactoryOptions.isIdentifierRollbackEnabled();
-	}
-
-	public EntityMode getDefaultEntityMode() {
-		return sessionFactoryOptions.getDefaultEntityMode();
 	}
 
 	public EntityTuplizerFactory getEntityTuplizerFactory() {

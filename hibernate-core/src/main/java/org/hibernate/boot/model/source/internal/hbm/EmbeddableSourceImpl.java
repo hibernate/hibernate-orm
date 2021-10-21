@@ -7,13 +7,8 @@
 package org.hibernate.boot.model.source.internal.hbm;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import org.hibernate.EntityMode;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmTuplizerType;
 import org.hibernate.boot.jaxb.hbm.spi.ToolingHintContainer;
 import org.hibernate.boot.model.JavaTypeDescriptor;
 import org.hibernate.boot.model.source.spi.AttributePath;
@@ -25,7 +20,6 @@ import org.hibernate.boot.model.source.spi.EmbeddableSource;
 import org.hibernate.boot.model.source.spi.LocalMetadataBuildingContext;
 import org.hibernate.boot.model.source.spi.NaturalIdMutability;
 import org.hibernate.boot.model.source.spi.ToolingHintContext;
-import org.hibernate.internal.log.DeprecationLogger;
 
 /**
  * @author Steve Ebersole
@@ -40,8 +34,6 @@ public class EmbeddableSourceImpl extends AbstractHbmSourceNode implements Embed
 
 	private final boolean isDynamic;
 	private final boolean isUnique;
-
-	private final Map<EntityMode,String> tuplizerClassMap;
 
 	private final List<AttributeSource> attributeSources;
 
@@ -81,23 +73,6 @@ public class EmbeddableSourceImpl extends AbstractHbmSourceNode implements Embed
 			}
 		};
 
-		if ( jaxbEmbeddableMapping.getTuplizer().isEmpty() ) {
-			tuplizerClassMap = Collections.emptyMap();
-		}
-		else {
-			if ( jaxbEmbeddableMapping.getTuplizer().size() > 1 ) {
-				DeprecationLogger.DEPRECATION_LOGGER.logDeprecationOfMultipleEntityModeSupport();
-			}
-
-			tuplizerClassMap = new HashMap<>();
-			for ( JaxbHbmTuplizerType tuplizerBinding : jaxbEmbeddableMapping.getTuplizer() ) {
-				tuplizerClassMap.put(
-						tuplizerBinding.getEntityMode(),
-						tuplizerBinding.getClazz()
-				);
-			}
-		}
-
 		this.attributeSources = new ArrayList<>();
 		AttributesHelper.processAttributes(
 				mappingDocument,
@@ -126,11 +101,6 @@ public class EmbeddableSourceImpl extends AbstractHbmSourceNode implements Embed
 	@Override
 	public String getParentReferenceAttributeName() {
 		return jaxbEmbeddableMapping.getParent();
-	}
-
-	@Override
-	public Map<EntityMode,String> getTuplizerClassMap() {
-		return tuplizerClassMap;
 	}
 
 	@Override

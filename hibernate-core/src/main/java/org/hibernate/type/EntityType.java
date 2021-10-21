@@ -689,7 +689,6 @@ public abstract class EntityType extends AbstractType implements AssociationType
 				uniqueKeyPropertyName,
 				key,
 				getIdentifierOrUniqueKeyType( factory ),
-				persister.getEntityMode(),
 				session.getFactory()
 		);
 

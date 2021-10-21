@@ -8,7 +8,6 @@ package org.hibernate.type;
 
 import java.lang.reflect.Method;
 
-import org.hibernate.EntityMode;
 import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.CascadeStyle;
@@ -63,13 +62,11 @@ public interface CompositeType extends Type {
 	 * An optional operation
 	 *
 	 * @param component The component instance
-	 * @param entityMode The entity mode
-	 *
 	 * @return The property values
 	 *
 	 * @throws HibernateException Indicates a problem access the property values.
 	 */
-	Object[] getPropertyValues(Object component, EntityMode entityMode) throws HibernateException;
+	Object[] getPropertyValues(Object component) throws HibernateException;
 
 	/**
 	 * Extract a particular component property value indicated by index.
@@ -91,11 +88,10 @@ public interface CompositeType extends Type {
 	 *
 	 * @param component The component instance
 	 * @param values The values to inject
-	 * @param entityMode The entity mode
 	 *
 	 * @throws HibernateException Indicates an issue performing the injection
 	 */
-	void setPropertyValues(Object component, Object[] values, EntityMode entityMode) throws HibernateException;
+	void setPropertyValues(Object component, Object[] values) throws HibernateException;
 
 	/**
 	 * Retrieve the cascade style of the indicated component property.

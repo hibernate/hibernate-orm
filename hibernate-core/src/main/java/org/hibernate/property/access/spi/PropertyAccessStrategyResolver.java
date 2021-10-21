@@ -6,7 +6,7 @@
  */
 package org.hibernate.property.access.spi;
 
-import org.hibernate.EntityMode;
+import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.service.Service;
 
 /**
@@ -22,12 +22,12 @@ public interface PropertyAccessStrategyResolver extends Service {
 	 *
 	 * @param containerClass The java class of the entity
 	 * @param explicitAccessStrategyName The access strategy name explicitly specified, if any.
-	 * @param entityMode The entity mode in effect for the property, used to interpret different default strategies.
+	 * @param representationMode The entity mode in effect for the property, used to interpret different default strategies.
 	 *
 	 * @return The resolved PropertyAccessStrategy
 	 */
 	PropertyAccessStrategy resolvePropertyAccessStrategy(
 			Class containerClass,
 			String explicitAccessStrategyName,
-			EntityMode entityMode);
+			RepresentationMode representationMode);
 }

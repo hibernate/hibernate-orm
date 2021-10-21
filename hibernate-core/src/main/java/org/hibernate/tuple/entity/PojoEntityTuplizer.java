@@ -10,7 +10,6 @@ import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
@@ -28,6 +27,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.proxy.ProxyFactory;
@@ -150,8 +150,8 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 	}
 
 	@Override
-	public EntityMode getEntityMode() {
-		return EntityMode.POJO;
+	public RepresentationMode getEntityMode() {
+		return RepresentationMode.POJO;
 	}
 
 	@Override

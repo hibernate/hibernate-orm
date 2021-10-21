@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import org.hibernate.EntityMode;
 import org.hibernate.Filter;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -93,11 +92,6 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 
 		@Override
 		public NavigableRole getNavigableRole() {
-			return null;
-		}
-
-		@Override
-		public EntityMode getEntityMode() {
 			return null;
 		}
 

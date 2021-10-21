@@ -11,20 +11,20 @@ import java.lang.reflect.Constructor;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.metamodel.RepresentationMode;
 
 /**
- * A registry allowing users to define the default {@link EntityTuplizer} class to use per {@link EntityMode}.
+ * A registry allowing users to define the default {@link EntityTuplizer} class to use per {@link RepresentationMode}.
  *
  * @author Steve Ebersole
  */
 public class EntityTuplizerFactory implements Serializable {
 	public static final Class[] ENTITY_TUP_CTOR_SIG = new Class[] { EntityMetamodel.class, PersistentClass.class };
 
-	private Map<EntityMode,Class<? extends EntityTuplizer>> defaultImplClassByMode = buildBaseMapping();
+	private Map<RepresentationMode,Class<? extends EntityTuplizer>> defaultImplClassByMode = buildBaseMapping();
 
 	/**
 	 * Method allowing registration of the tuplizer class to use as default for a particular entity-mode.
@@ -32,7 +32,7 @@ public class EntityTuplizerFactory implements Serializable {
 	 * @param entityMode The entity-mode for which to register the tuplizer class
 	 * @param tuplizerClass The class to use as the default tuplizer for the given entity-mode.
 	 */
-	public void registerDefaultTuplizerClass(EntityMode entityMode, Class<? extends EntityTuplizer> tuplizerClass) {
+	public void registerDefaultTuplizerClass(RepresentationMode entityMode, Class<? extends EntityTuplizer> tuplizerClass) {
 		assert isEntityTuplizerImplementor( tuplizerClass )
 				: "Specified tuplizer class [" + tuplizerClass.getName() + "] does not implement " + EntityTuplizer.class.getName();
 		// TODO: for now we need constructors for both PersistentClass and EntityBinding
@@ -92,30 +92,6 @@ public class EntityTuplizerFactory implements Serializable {
 		}
 	}
 
-	/**
-	 * Construct an instance of the default tuplizer for the given entity-mode.
-	 *
-	 * @param entityMode The entity mode for which to build a default tuplizer.
-	 * @param metamodel The entity metadata.
-	 * @param persistentClass The entity mapping info.
-	 *
-	 * @return The instantiated tuplizer
-	 *
-	 * @throws HibernateException If no default tuplizer found for that entity-mode; may be re-thrown from
-	 * {@link #constructTuplizer} too.
-	 */
-	public EntityTuplizer constructDefaultTuplizer(
-			EntityMode entityMode,
-			EntityMetamodel metamodel,
-			PersistentClass persistentClass) {
-		Class<? extends EntityTuplizer> tuplizerClass = defaultImplClassByMode.get( entityMode );
-		if ( tuplizerClass == null ) {
-			throw new HibernateException( "could not determine default tuplizer class to use [" + entityMode + "]" );
-		}
-
-		return constructTuplizer( tuplizerClass, metamodel, persistentClass );
-	}
-
 	private boolean isEntityTuplizerImplementor(Class tuplizerClass) {
 		return ReflectHelper.implementsInterface( tuplizerClass, EntityTuplizer.class );
 	}
@@ -144,10 +120,10 @@ public class EntityTuplizerFactory implements Serializable {
 		return constructor;
 	}
 
-	private static Map<EntityMode,Class<? extends EntityTuplizer>> buildBaseMapping() {
-		Map<EntityMode,Class<? extends EntityTuplizer>> map = new ConcurrentHashMap<>();
-		map.put( EntityMode.POJO, PojoEntityTuplizer.class );
-		map.put( EntityMode.MAP, DynamicMapEntityTuplizer.class );
+	private static Map<RepresentationMode,Class<? extends EntityTuplizer>> buildBaseMapping() {
+		Map<RepresentationMode,Class<? extends EntityTuplizer>> map = new ConcurrentHashMap<>();
+		map.put( RepresentationMode.POJO, PojoEntityTuplizer.class );
+		map.put( RepresentationMode.MAP, DynamicMapEntityTuplizer.class );
 		return map;
 	}
 }

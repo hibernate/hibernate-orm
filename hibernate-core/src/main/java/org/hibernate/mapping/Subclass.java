@@ -12,12 +12,12 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.EntityMode;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.internal.util.collections.SingletonIterator;
+import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -249,7 +249,7 @@ public class Subclass extends PersistentClass {
 			getSuperclass().hasSubselectLoadableCollections();
 	}
 
-	public String getTuplizerImplClassName(EntityMode mode) {
+	public String getTuplizerImplClassName(RepresentationMode mode) {
 		String impl = super.getTuplizerImplClassName( mode );
 		if ( impl == null ) {
 			impl = getSuperclass().getTuplizerImplClassName( mode );

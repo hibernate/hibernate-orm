@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
 
-import org.hibernate.EntityMode;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.type.Type;
 
@@ -30,14 +29,6 @@ public final class TypedValue implements Serializable {
 		this.type = type;
 		this.value = value;
 		initTransients();
-	}
-
-	/**
-	 * @deprecated explicit entity mode support is deprecated
-	 */
-	@Deprecated
-	public TypedValue(Type type, Object value, EntityMode entityMode) {
-		this(type, value);
 	}
 
 	public Object getValue() {

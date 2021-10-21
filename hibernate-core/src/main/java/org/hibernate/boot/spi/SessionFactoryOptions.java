@@ -12,14 +12,12 @@ import java.util.function.Supplier;
 
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
-import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.MultiTenancyStrategy;
-import org.hibernate.TimeZoneStorageStrategy;
-import org.hibernate.query.NullPrecedence;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.boot.SchemaAutoTooling;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -31,6 +29,7 @@ import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
+import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.spi.QueryEngineOptions;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
@@ -148,8 +147,6 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	BaselineSessionEventsListenerBuilder getBaselineSessionEventsListenerBuilder();
 
 	boolean isIdentifierRollbackEnabled();
-
-	EntityMode getDefaultEntityMode();
 
 	EntityTuplizerFactory getEntityTuplizerFactory();
 

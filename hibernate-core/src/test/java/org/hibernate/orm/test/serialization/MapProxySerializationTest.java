@@ -39,7 +39,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SessionFactory
 @ServiceRegistry(settings = {
 		@Setting( name = AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, value = "true" ),
-		@Setting( name = AvailableSettings.DEFAULT_ENTITY_MODE, value = "dynamic-map" )
 })
 public class MapProxySerializationTest {
 

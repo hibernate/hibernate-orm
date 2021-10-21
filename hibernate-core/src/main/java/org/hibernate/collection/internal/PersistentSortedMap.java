@@ -14,7 +14,6 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -83,7 +82,7 @@ public class PersistentSortedMap<K,E> extends PersistentMap<K,E> implements Sort
 	}
 
 	@SuppressWarnings("UnusedParameters")
-	protected Serializable snapshot(BasicCollectionPersister persister, EntityMode entityMode) throws HibernateException {
+	protected Serializable snapshot(BasicCollectionPersister persister) throws HibernateException {
 		final TreeMap<K,E> clonedMap = new TreeMap<>( comparator );
 		for ( Entry<K,E> e : map.entrySet() ) {
 			clonedMap.put( e.getKey(), (E) persister.getElementType().deepCopy( e.getValue(), persister.getFactory() ) );

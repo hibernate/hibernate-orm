@@ -43,16 +43,6 @@ public interface DeprecationLogger extends BasicLogger {
 	public void logDeprecatedScannerSetting();
 
 	/**
-	 * Log message indicating the use of multiple EntityModes for a single entity.
-	 */
-	@LogMessage( level = WARN )
-	@Message(
-			value = "Support for an entity defining multiple entity-modes is deprecated",
-			id = 90000002
-	)
-	public void logDeprecationOfMultipleEntityModeSupport();
-
-	/**
 	 * Log message indicating the use of features that were only useful for DOM4J EntityMode,
 	 * which was removed a long time ago.
 	 */

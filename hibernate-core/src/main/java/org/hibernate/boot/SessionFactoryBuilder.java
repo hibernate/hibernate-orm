@@ -11,18 +11,18 @@ import java.util.function.Supplier;
 
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
-import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.Interceptor;
 import org.hibernate.MultiTenancyStrategy;
-import org.hibernate.query.NullPrecedence;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.loader.BatchFetchStyle;
+import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
@@ -220,20 +220,6 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyIdentifierRollbackSupport(boolean enabled);
 
 	/**
-	 * Applies the given entity mode as the default for the SessionFactory.
-	 *
-	 * @param entityMode The default entity mode to use.
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @see org.hibernate.cfg.AvailableSettings#DEFAULT_ENTITY_MODE
-	 *
-	 * @deprecated Different entity modes per entity is soon to be removed as a feature.
-	 */
-	@Deprecated
-	SessionFactoryBuilder applyDefaultEntityMode(EntityMode entityMode);
-
-	/**
 	 * Should attributes using columns marked as not-null be checked (by Hibernate) for nullness?
 	 *
 	 * @param enabled {@code true} indicates that Hibernate should perform nullness checking; {@code false} indicates
@@ -275,7 +261,7 @@ public interface SessionFactoryBuilder {
 	 * @return {@code this}, for method chaining
 	 */
 	SessionFactoryBuilder applyEntityTuplizer(
-			EntityMode entityMode,
+			RepresentationMode entityMode,
 			Class<? extends EntityTuplizer> tuplizerClass);
 
 	SessionFactoryBuilder applyTempTableDdlTransactionHandling(TempTableDdlTransactionHandling handling);

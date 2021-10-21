@@ -16,7 +16,6 @@ import java.util.function.Consumer;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.PersistenceException;
 
-import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -116,11 +115,6 @@ public class PersisterClassProviderTest {
 				NaturalIdDataAccess naturalIdRegionAccessStrategy,
 				PersisterCreationContext creationContext) {
 			throw new GoofyException();
-		}
-
-		@Override
-		public EntityMode getEntityMode() {
-			return null;
 		}
 
 		@Override

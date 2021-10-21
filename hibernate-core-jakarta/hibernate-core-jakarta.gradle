@@ -1,3 +1,5 @@
+import javax.inject.Inject
+
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -13,7 +15,7 @@ configurations {
 	tests {
 		description = 'Configuration for the produced test jar'
 	}
-	jakartaeeTransformJars
+	jakartaeeTransformTool
 }
 
 dependencies {
@@ -37,7 +39,7 @@ dependencies {
 	compile( libraries.jakarta_jaxb_api )
 	compile( libraries.jakarta_jaxb_runtime )
 
-	jakartaeeTransformJars 'biz.aQute.bnd:biz.aQute.bnd.transform:5.1.1',
+	jakartaeeTransformTool 'biz.aQute.bnd:biz.aQute.bnd.transform:5.1.1',
 			'commons-cli:commons-cli:1.4',
 			'org.slf4j:slf4j-simple:1.7.30',
 			'org.slf4j:slf4j-api:1.7.26',
@@ -111,34 +113,14 @@ ext {
 	]
 }
 
-task transformJar {
+task transformJar(type: JakartaJarTransformation) {
 	description 'Transforms the hibernate-core jar using the JakartaTransformer tool'
 
 	dependsOn project(':hibernate-core').tasks.jar
 	mustRunAfter project(':hibernate-core').tasks.jar
 
-	inputs.file project(':hibernate-core').tasks.jar.archiveFile
-	outputs.file tasks.jar.archiveFile.get().asFile
-
-	doLast {
-		def transformerArgs = [
-				// source jar
-				project(':hibernate-core').tasks.jar.archiveFile.get(),
-				// target jar
-				file( "${buildDir}/libs/${transformedJarName}" )
-		] + ( project.baseTransformerArgs as ArrayList )
-
-		println 'Transformer options (main) :'
-		transformerArgs.each {
-			println '  [ ' + it + ' ]'
-		}
-
-		javaexec {
-			classpath configurations.jakartaeeTransformJars
-			main = 'org.eclipse.transformer.jakarta.JakartaTransformer'
-			args = transformerArgs
-		}
-	}
+	sourceJar project(':hibernate-core').tasks.jar.archiveFile
+	targetJar tasks.jar.archiveFile.get().asFile
 }
 
 configurations {
@@ -146,7 +128,9 @@ configurations {
 		it.outgoing.artifacts.removeIf {
 			it.buildDependencies.getDependencies(null).contains(jar)
 		}
-		it.outgoing.artifact(tasks.jar.archiveFile.get().asFile)
+		it.outgoing.artifact(tasks.transformJar.targetJar) {
+			builtBy tasks.transformJar
+		}
 	}
 }
 
@@ -233,7 +217,7 @@ task transformTests {
 		}
 
 		javaexec {
-			classpath configurations.jakartaeeTransformJars
+			classpath configurations.jakartaeeTransformTool
 			main = 'org.eclipse.transformer.jakarta.JakartaTransformer'
 			args = transformerArgs
 		}
@@ -295,4 +279,55 @@ test {
 	}
 
 	maxHeapSize = '3G'
+}
+
+
+@CacheableTask
+abstract class JakartaJarTransformation extends DefaultTask {
+	private final RegularFileProperty sourceJar;
+	private final RegularFileProperty targetJar;
+
+	@Inject
+	JakartaJarTransformation(ObjectFactory objectFactory) {
+		sourceJar = objectFactory.fileProperty();
+		targetJar = objectFactory.fileProperty();
+	}
+
+	@InputFile
+	@PathSensitive( PathSensitivity.RELATIVE )
+	RegularFileProperty getSourceJar() {
+		return sourceJar;
+	}
+
+	void sourceJar(Object fileReference) {
+		sourceJar.set( project.file( fileReference ) )
+	}
+
+	@OutputFile
+	RegularFileProperty getTargetJar() {
+		return targetJar;
+	}
+
+	void targetJar(Object fileReference) {
+		targetJar.set( project.file( fileReference ) )
+	}
+
+	@TaskAction
+	void transform() {
+		project.javaexec( new Action<JavaExecSpec>() {
+			@Override
+			void execute(JavaExecSpec javaExecSpec) {
+				javaExecSpec.classpath( getProject().getConfigurations().getByName( "jakartaeeTransformTool" ) );
+				javaExecSpec.setMain( "org.eclipse.transformer.jakarta.JakartaTransformer" );
+				javaExecSpec.args(
+						sourceJar.get().getAsFile().getAbsolutePath(),
+						targetJar.get().getAsFile().getAbsolutePath(),
+						"-q",
+						"-tr", getProject().getRootProject().file( "rules/jakarta-renames.properties" ).getAbsolutePath(),
+						"-tv", getProject().getRootProject().file( "rules/jakarta-versions.properties" ).getAbsolutePath(),
+						"-td", getProject().getRootProject().file( "rules/jakarta-direct.properties" ).getAbsolutePath()
+				);
+			}
+		});
+	}
 }

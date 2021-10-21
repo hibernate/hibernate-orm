@@ -29,6 +29,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
+import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.tuple.StandardProperty;
 import org.hibernate.tuple.ValueGeneration;
 import org.hibernate.tuple.component.ComponentMetamodel;
@@ -481,8 +482,9 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 
 		//not absolutely necessary, but helps for some
 		//equals()/hashCode() implementations
-		if ( componentTuplizer.hasParentProperty() ) {
-			componentTuplizer.setParent( result, componentTuplizer.getParent( component ), factory );
+		final PropertyAccess parentAccess = mappingModelPart().getParentInjectionAttributePropertyAccess();
+		if ( parentAccess != null ) {
+			parentAccess.getSetter().set( result, parentAccess.getGetter().get( component ), factory );
 		}
 
 		return result;
@@ -559,13 +561,12 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 		return componentTuplizer.instantiate();
 	}
 
-	public Object instantiate(Object parent, SharedSessionContractImplementor session)
-			throws HibernateException {
-
+	public Object instantiate(Object parent, SharedSessionContractImplementor session) {
 		Object result = instantiate();
 
-		if ( componentTuplizer.hasParentProperty() && parent != null ) {
-			componentTuplizer.setParent(
+		final PropertyAccess parentAccess = mappingModelPart().getParentInjectionAttributePropertyAccess();
+		if ( parentAccess != null && parent != null ) {
+			parentAccess.getSetter().set(
 					result,
 					session.getPersistenceContextInternal().proxyFor( parent ),
 					session.getFactory()
@@ -815,6 +816,13 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 
 	@Override
 	public EmbeddableValuedModelPart getMappingModelPart() {
+		return mappingModelPart;
+	}
+
+	public EmbeddableValuedModelPart mappingModelPart() {
+		if ( mappingModelPart == null ) {
+			throw new IllegalStateException( "Attempt to access EmbeddableValuedModelPart prior to its injection" );
+		}
 		return mappingModelPart;
 	}
 }

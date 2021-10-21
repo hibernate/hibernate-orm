@@ -15,7 +15,6 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.property.access.internal.PropertyAccessStrategyMapImpl;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
@@ -36,11 +35,6 @@ public class DynamicMapEntityTuplizer extends AbstractEntityTuplizer {
 
 	DynamicMapEntityTuplizer(EntityMetamodel entityMetamodel, PersistentClass mappedEntity) {
 		super( entityMetamodel, mappedEntity );
-	}
-
-	@Override
-	public RepresentationMode getEntityMode() {
-		return RepresentationMode.MAP;
 	}
 
 	private PropertyAccess buildPropertyAccess(Property mappedProperty) {
@@ -91,11 +85,6 @@ public class DynamicMapEntityTuplizer extends AbstractEntityTuplizer {
 
 	@Override
 	public Class getMappedClass() {
-		return Map.class;
-	}
-
-	@Override
-	public Class getConcreteProxyClass() {
 		return Map.class;
 	}
 

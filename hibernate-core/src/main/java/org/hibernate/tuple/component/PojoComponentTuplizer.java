@@ -6,7 +6,6 @@
  */
 package org.hibernate.tuple.component;
 
-import java.io.Serializable;
 import java.lang.reflect.Method;
 
 import org.hibernate.AssertionFailure;
@@ -16,7 +15,6 @@ import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ProxyFactoryFactory;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.cfg.Environment;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
@@ -102,14 +100,6 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 		}
 	}
 
-	public Object getParent(Object component) {
-		return parentGetter.get( component );
-	}
-
-	public boolean hasParentProperty() {
-		return parentGetter != null;
-	}
-
 	public boolean isMethodOf(Method method) {
 		for ( int i = 0; i < propertySpan; i++ ) {
 			final Method getterMethod = getters[i].getMethod();
@@ -118,10 +108,6 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 			}
 		}
 		return false;
-	}
-
-	public void setParent(Object component, Object parent, SessionFactoryImplementor factory) {
-		parentSetter.set( component, parent, factory );
 	}
 
 	protected Instantiator buildInstantiator(Component component) {

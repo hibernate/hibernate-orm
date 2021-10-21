@@ -46,6 +46,7 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.Clause;
@@ -64,6 +65,7 @@ import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
+import org.hibernate.type.spi.CompositeTypeImplementor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -98,6 +100,10 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectableMapp
 				embeddedPartBuilder,
 				creationContext.getSessionFactory()
 		);
+
+		if ( compositeType instanceof CompositeTypeImplementor ) {
+			( (CompositeTypeImplementor) compositeType ).injectMappingModelPart( mappingType.getEmbeddedValueMapping(), creationProcess );
+		}
 
 		creationProcess.registerInitializationCallback(
 				"EmbeddableMappingType(" + mappingType.getNavigableRole().getFullPath() + ")#finishInitialization",
@@ -750,6 +756,19 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectableMapp
 			Consumer<ModelPart> consumer,
 			EntityMappingType treatTargetType) {
 		visitAttributeMappings( consumer::accept );
+	}
+
+	public Object[] getPropertyValues(Object compositeInstance) {
+		final Object[] results = new Object[attributeMappings.size()];
+		for ( int i = 0; i < attributeMappings.size(); i++ ) {
+			final StateArrayContributorMapping attr = (StateArrayContributorMapping) attributeMappings.get( i );
+			final Getter getter = attr.getAttributeMetadataAccess()
+					.resolveAttributeMetadata( null )
+					.getPropertyAccess()
+					.getGetter();
+			results[ attr.getStateArrayPosition() ] = getter.get( compositeInstance );
+		}
+		return results;
 	}
 
 	public void setPropertyValues(Object compositeInstance, Object[] resolvedValues) {

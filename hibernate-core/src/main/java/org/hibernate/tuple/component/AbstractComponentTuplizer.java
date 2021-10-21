@@ -9,7 +9,6 @@ import java.lang.reflect.Method;
 import java.util.Iterator;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.property.access.spi.Getter;
@@ -80,20 +79,8 @@ public abstract class AbstractComponentTuplizer implements ComponentTuplizer {
 		return instantiator.instantiate();
 	}
 
-	public Object getParent(Object component) {
-		return null;
-	}
-
-	public boolean hasParentProperty() {
-		return false;
-	}
-
 	public boolean isMethodOf(Method method) {
 		return false;
-	}
-
-	public void setParent(Object component, Object parent, SessionFactoryImplementor factory) {
-		throw new UnsupportedOperationException();
 	}
 
 	public Getter getGetter(int i) {

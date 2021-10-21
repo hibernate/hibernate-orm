@@ -12,9 +12,6 @@ import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.RepresentationMode;
-import org.hibernate.property.access.spi.Getter;
-import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.tuple.Tuplizer;
 
 /**
@@ -32,29 +29,8 @@ import org.hibernate.tuple.Tuplizer;
  */
 @Deprecated
 public interface EntityTuplizer extends Tuplizer {
-	/**
-	 * Return the entity-mode handled by this tuplizer instance.
-	 *
-	 * @return The entity-mode
-	 */
-	RepresentationMode getEntityMode();
 
 	/**
-     * Extract the identifier value from the given entity.
-     *
-     * @param entity The entity from which to extract the identifier value.
-	 *
-     * @return The identifier value.
-	 *
-     * @throws HibernateException If the entity does not define an identifier property, or an
-     * error occurs accessing its value.
-	 *
-	 * @deprecated Use {@link #getIdentifier(Object,SharedSessionContractImplementor)} instead.
-     */
-	@Deprecated
-	Object getIdentifier(Object entity) throws HibernateException;
-
-    /**
      * Extract the identifier value from the given entity.
      *
      * @param entity The entity from which to extract the identifier value.
@@ -65,46 +41,6 @@ public interface EntityTuplizer extends Tuplizer {
 	Object getIdentifier(Object entity, SharedSessionContractImplementor session);
 
 	/**
-     * Inject the identifier value into the given entity.
-     * </p>
-     * Has no effect if the entity does not define an identifier property
-     *
-     * @param entity The entity to inject with the identifier value.
-     * @param id The value to be injected as the identifier.
-	 * @param session The session from which is requests originates
-     */
-	void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session);
-
-	/**
-     * Extract the value of the version property from the given entity.
-     *
-     * @param entity The entity from which to extract the version value.
-     * @return The value of the version property, or null if not versioned.
-	 * @throws HibernateException Indicates a problem accessing the version property
-     */
-	Object getVersion(Object entity) throws HibernateException;
-
-	/**
-	 * Inject the value of a particular property.
-	 *
-	 * @param entity The entity into which to inject the value.
-	 * @param i The property's index.
-	 * @param value The property value to inject.
-	 * @throws HibernateException Indicates a problem access the property
-	 */
-	void setPropertyValue(Object entity, int i, Object value) throws HibernateException;
-
-	/**
-	 * Inject the value of a particular property.
-	 *
-	 * @param entity The entity into which to inject the value.
-	 * @param propertyName The name of the property.
-	 * @param value The property value to inject.
-	 * @throws HibernateException Indicates a problem access the property
-	 */
-	void setPropertyValue(Object entity, String propertyName, Object value) throws HibernateException;
-
-	/**
 	 * Extract the values of the insertable properties of the entity (including backrefs)
 	 *
 	 * @param entity The entity from which to extract.
@@ -113,62 +49,7 @@ public interface EntityTuplizer extends Tuplizer {
 	 * @return The insertable property values.
 	 * @throws HibernateException Indicates a problem access the properties
 	 */
-	Object[] getPropertyValuesToInsert(Object entity, Map mergeMap, SharedSessionContractImplementor session)
-	throws HibernateException;
-
-	/**
-	 * Extract the value of a particular property from the given entity.
-	 *
-	 * @param entity The entity from which to extract the property value.
-	 * @param propertyName The name of the property for which to extract the value.
-	 * @return The current value of the given property on the given entity.
-	 * @throws HibernateException Indicates a problem access the property
-	 */
-	Object getPropertyValue(Object entity, String propertyName) throws HibernateException;
-
-    /**
-     * Called just after the entities properties have been initialized.
-     *
-     * @param entity The entity being initialized.
-     * @param session The session initializing this entity.
-     */
-	void afterInitialize(Object entity, SharedSessionContractImplementor session);
-
-	/**
-	 * Does this entity, for this mode, present a possibility for proxying?
-	 *
-	 * @return True if this tuplizer can generate proxies for this entity.
-	 */
-	boolean hasProxy();
-
-	/**
-	 * Generates an appropriate proxy representation of this entity for this
-	 * entity-mode.
-	 *
-	 * @param id The id of the instance for which to generate a proxy.
-	 * @param session The session to which the proxy should be bound.
-	 * @return The generate proxies.
-	 * @throws HibernateException Indicates an error generating the proxy.
-	 */
-	Object createProxy(Object id, SharedSessionContractImplementor session) throws HibernateException;
-
-	/**
-	 * Does the {@link #getMappedClass() class} managed by this tuplizer implement
-	 * the {@link org.hibernate.classic.Lifecycle} interface.
-	 *
-	 * @return True if the Lifecycle interface is implemented; false otherwise.
-	 */
-	boolean isLifecycleImplementor();
-
-	/**
-	 * Returns the java class to which generated proxies will be typed.
-	 * <p/>
-	 * todo : look at fully encapsulating {@link org.hibernate.engine.spi.PersistenceContext#narrowProxy} here,
-	 * since that is the only external use of this method
-	 *
-	 * @return The java class to which generated proxies will be typed
-	 */
-	Class getConcreteProxyClass();
+	Object[] getPropertyValuesToInsert(Object entity, Map mergeMap, SharedSessionContractImplementor session);
 
 	/**
 	 * Get any {@link EntityNameResolver EntityNameResolvers} associated with this {@link Tuplizer}.
@@ -201,14 +82,4 @@ public interface EntityTuplizer extends Tuplizer {
 	 */
 	String determineConcreteSubclassEntityName(Object entityInstance, SessionFactoryImplementor factory);
 
-	/**
-	 * Retrieve the getter for the identifier property.  May return null.
-	 *
-	 * @return The getter for the identifier property.
-	 */
-	Getter getIdentifierGetter();
-
-	default ProxyFactory getProxyFactory() {
-		return null;
-	}
 }

@@ -5,10 +5,10 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.tuple.component;
+
 import java.io.Serializable;
 import java.lang.reflect.Method;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.tuple.Tuplizer;
 
 /**
@@ -22,30 +22,6 @@ import org.hibernate.tuple.Tuplizer;
  * @author Steve Ebersole
  */
 public interface ComponentTuplizer extends Tuplizer, Serializable {
-	/**
-	 * Retrieve the current value of the parent property.
-	 *
-	 * @param component The component instance from which to extract the parent
-	 * property value.
-	 * @return The current value of the parent property.
-	 */
-	public Object getParent(Object component);
-
-    /**
-     * Set the value of the parent property.
-     *
-     * @param component The component instance on which to set the parent.
-     * @param parent The parent to be set on the component.
-     * @param factory The current session factory.
-     */
-	public void setParent(Object component, Object parent, SessionFactoryImplementor factory);
-
-	/**
-	 * Does the component managed by this tuplizer contain a parent property?
-	 *
-	 * @return True if the component does contain a parent property; false otherwise.
-	 */
-	public boolean hasParentProperty();
 
 	/**
 	 * Is the given method available via the managed component as a property getter?

@@ -12,22 +12,17 @@ import java.util.Set;
 
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
-import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
-import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ProxyFactoryFactory;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.cfg.Environment;
 import org.hibernate.classic.Lifecycle;
-import org.hibernate.engine.spi.PersistentAttributeInterceptable;
-import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.proxy.ProxyFactory;
@@ -150,18 +145,8 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 	}
 
 	@Override
-	public RepresentationMode getEntityMode() {
-		return RepresentationMode.POJO;
-	}
-
-	@Override
 	public Class getMappedClass() {
 		return mappedClass;
-	}
-
-	@Override
-	public boolean isLifecycleImplementor() {
-		return lifecycleImplementor;
 	}
 
 	@Override
@@ -174,36 +159,7 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 		return mappedProperty.getSetter( mappedEntity.getMappedClass() );
 	}
 
-	@Override
-	public Class getConcreteProxyClass() {
-		return proxyInterface;
-	}
-
 	//TODO: need to make the majority of this functionality into a top-level support class for custom impl support
-
-	@Override
-	public void afterInitialize(Object entity, SharedSessionContractImplementor session) {
-		if ( entity instanceof PersistentAttributeInterceptable ) {
-			final BytecodeLazyAttributeInterceptor interceptor = getEntityMetamodel().getBytecodeEnhancementMetadata().extractLazyInterceptor( entity );
-			if ( interceptor == null || interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
-				getEntityMetamodel().getBytecodeEnhancementMetadata().injectInterceptor(
-						entity,
-						getIdentifier( entity, session ),
-						session
-				);
-			}
-			else {
-				if ( interceptor.getLinkedSession() == null ) {
-					interceptor.setSession( session );
-				}
-			}
-		}
-
-		// clear the fields that are marked as dirty in the dirtiness tracker
-		if ( entity instanceof SelfDirtinessTracker ) {
-			( (SelfDirtinessTracker) entity ).$$_hibernate_clearDirtyAttributes();
-		}
-	}
 
 	@Override
 	public String determineConcreteSubclassEntityName(Object entityInstance, SessionFactoryImplementor factory) {

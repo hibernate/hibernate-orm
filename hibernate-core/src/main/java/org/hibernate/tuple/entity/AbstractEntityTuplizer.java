@@ -21,7 +21,6 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.loader.PropertyPath;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
@@ -197,11 +196,6 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 	}
 
 	@Override
-	public Object getIdentifier(Object entity) throws HibernateException {
-		return getIdentifier( entity, null );
-	}
-
-	@Override
 	public Object getIdentifier(Object entity, SharedSessionContractImplementor session) {
 		final Object id;
 		if ( entityMetamodel.getIdentifierProperty().isEmbedded() ) {
@@ -236,22 +230,6 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 				msg.append( cce.getMessage() );
 			}
 			throw new ClassCastException( msg.toString() );
-		}
-	}
-
-	@Override
-	public void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session) {
-		if ( entityMetamodel.getIdentifierProperty().isEmbedded() ) {
-			if ( entity != id ) {
-				CompositeType copier = (CompositeType) entityMetamodel.getIdentifierProperty().getType();
-				copier.setPropertyValues( entity, copier.getPropertyValues( id ) );
-			}
-		}
-		else if ( idSetter != null ) {
-			idSetter.set( entity, id, getFactory() );
-		}
-		else if ( identifierMapperType != null ) {
-			mappedIdentifierValueMarshaller.setIdentifier( entity, id, session );
 		}
 	}
 
@@ -488,14 +466,6 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		return metamodel.entityPersister( entityName );
 	}
 
-	@Override
-	public Object getVersion(Object entity) throws HibernateException {
-		if ( !entityMetamodel.isVersioned() ) {
-			return null;
-		}
-		return getters[entityMetamodel.getVersionPropertyIndex()].get( entity );
-	}
-
 	protected boolean shouldGetAllProperties(Object entity) {
 		final BytecodeEnhancementMetadata bytecodeEnhancementMetadata = getEntityMetamodel().getBytecodeEnhancementMetadata();
 		if ( !bytecodeEnhancementMetadata.isEnhancedForLazyLoading() ) {
@@ -519,38 +489,6 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 	@Override
 	public Object getPropertyValue(Object entity, int i) throws HibernateException {
 		return getters[i].get( entity );
-	}
-
-	@Override
-	public Object getPropertyValue(Object entity, String propertyPath) throws HibernateException {
-		int loc = propertyPath.indexOf( '.' );
-		String basePropertyName = loc > 0
-				? propertyPath.substring( 0, loc )
-				: propertyPath;
-		//final int index = entityMetamodel.getPropertyIndexOrNull( basePropertyName );
-		Integer index = entityMetamodel.getPropertyIndexOrNull( basePropertyName );
-		if ( index == null ) {
-			propertyPath = PropertyPath.IDENTIFIER_MAPPER_PROPERTY + "." + propertyPath;
-			loc = propertyPath.indexOf( '.' );
-			basePropertyName = loc > 0
-					? propertyPath.substring( 0, loc )
-					: propertyPath;
-		}
-		index = entityMetamodel.getPropertyIndexOrNull( basePropertyName );
-		final Object baseValue = getPropertyValue( entity, index );
-		if ( loc > 0 ) {
-			if ( baseValue == null ) {
-				return null;
-			}
-			return getComponentValue(
-					(ComponentType) entityMetamodel.getPropertyTypes()[index],
-					baseValue,
-					propertyPath.substring( loc + 1 )
-			);
-		}
-		else {
-			return baseValue;
-		}
 	}
 
 	/**
@@ -595,16 +533,6 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		throw new MappingException( "component property not found: " + subPropertyName );
 	}
 
-	@Override
-	public void setPropertyValue(Object entity, int i, Object value) throws HibernateException {
-		setters[i].set( entity, value, getFactory() );
-	}
-
-	@Override
-	public void setPropertyValue(Object entity, String propertyName, Object value) throws HibernateException {
-		setters[entityMetamodel.getPropertyIndex( propertyName )].set( entity, value, getFactory() );
-	}
-
 	protected void linkToSession(Object entity, SharedSessionContractImplementor session) {
 		if ( session == null ) {
 			return;
@@ -615,25 +543,6 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 				interceptor.setSession( session );
 			}
 		}
-	}
-
-	@Override
-	public void afterInitialize(Object entity, SharedSessionContractImplementor session) {
-	}
-
-	@Override
-	public boolean hasProxy() {
-		return entityMetamodel.isLazy() && !entityMetamodel.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading();
-	}
-
-	@Override
-	public final Object createProxy(Object id, SharedSessionContractImplementor session) {
-		return getProxyFactory().getProxy( id, session );
-	}
-
-	@Override
-	public boolean isLifecycleImplementor() {
-		return false;
 	}
 
 	protected final EntityMetamodel getEntityMetamodel() {
@@ -649,18 +558,8 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 	}
 
 	@Override
-	public final ProxyFactory getProxyFactory() {
-		return proxyFactory;
-	}
-
-	@Override
 	public String toString() {
 		return getClass().getName() + '(' + getEntityMetamodel().getName() + ')';
-	}
-
-	@Override
-	public Getter getIdentifierGetter() {
-		return idGetter;
 	}
 
 	@Override

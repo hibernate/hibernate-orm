@@ -5452,7 +5452,7 @@ public abstract class AbstractEntityPersister
 	protected ReflectionOptimizer.AccessOptimizer accessOptimizer;
 
 	@Override
-	public void visitAttributeMappings(Consumer<AttributeMapping> action) {
+	public void visitAttributeMappings(Consumer<? super AttributeMapping> action) {
 		attributeMappings.forEach( action );
 	}
 
@@ -5540,7 +5540,6 @@ public abstract class AbstractEntityPersister
 				"Entity(" + getEntityName() + ") `staticFetchableList` generator",
 				() -> {
 					staticFetchableList = new ArrayList<>( attributeMappings.size() );
-					visitAttributeMappings( attributeMapping -> staticFetchableList.add( attributeMapping ) );
 					visitSubTypeAttributeMappings( attributeMapping -> staticFetchableList.add( attributeMapping ) );
 					return true;
 				}
@@ -6352,10 +6351,11 @@ public abstract class AbstractEntityPersister
 			return;
 		}
 
-		attributeMappings.forEach( fetchableConsumer );
-
 		if ( treatTargetType.isTypeOrSuperType( this ) ) {
 			visitSubTypeAttributeMappings( fetchableConsumer );
+		}
+		else {
+			attributeMappings.forEach( fetchableConsumer );
 		}
 	}
 
@@ -6389,11 +6389,11 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public void visitSubTypeAttributeMappings(Consumer<? super AttributeMapping> action) {
+		visitAttributeMappings( action );
 		if ( subclassMappingTypes != null ) {
 			subclassMappingTypes.forEach(
 					(s, subType) -> {
 						subType.visitDeclaredAttributeMappings( action );
-						subType.visitSubTypeAttributeMappings( action );
 					}
 			);
 		}

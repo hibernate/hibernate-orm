@@ -209,7 +209,7 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 
 
 	@Override
-	default void visitAttributeMappings(Consumer<AttributeMapping> action) {
+	default void visitAttributeMappings(Consumer<? super AttributeMapping> action) {
 		getAttributeMappings().forEach( action );
 	}
 

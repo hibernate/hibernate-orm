@@ -18,13 +18,16 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.FilterHelper;
+import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
 import org.hibernate.query.sqm.internal.SqmUtil;
+import org.hibernate.query.sqm.sql.internal.SqlAstQueryPartProcessingStateImpl;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.sql.ast.SqlAstJoinType;
@@ -89,34 +92,29 @@ public class MatchingIdSelectionHelper {
 		idSelectionQuery.getFromClause().addRoot( mutatingTableGroup );
 
 		final List<DomainResult<?>> domainResults = new ArrayList<>();
-
-		targetEntityDescriptor.getIdentifierMapping().forEachSelectable(
-				(position, selection) -> {
-					final TableReference tableReference = mutatingTableGroup.resolveTableReference(
-							mutatingTableGroup.getNavigablePath(),
-							selection.getContainingTableExpression()
-					);
-					final Expression expression = sqmConverter.getSqlExpressionResolver().resolveSqlExpression(
-							SqlExpressionResolver.createColumnReferenceKey( tableReference, selection.getSelectionExpression() ),
-							sqlAstProcessingState -> new ColumnReference(
-									tableReference,
-									selection,
-									sessionFactory
+		sqmConverter.getProcessingStateStack().push(
+				new SqlAstQueryPartProcessingStateImpl(
+						idSelectionQuery,
+						sqmConverter.getCurrentProcessingState(),
+						sqmConverter.getSqlAstCreationState(),
+						sqmConverter.getCurrentClauseStack()::getCurrent
+				)
+		);
+		targetEntityDescriptor.getIdentifierMapping().applySqlSelections(
+				mutatingTableGroup.getNavigablePath(),
+				mutatingTableGroup,
+				sqmConverter,
+				(selection, jdbcMapping) -> {
+					domainResults.add(
+							new BasicResult<>(
+									selection.getValuesArrayPosition(),
+									null,
+									jdbcMapping.getJavaTypeDescriptor()
 							)
 					);
-					idSelectionQuery.getSelectClause().addSqlSelection(
-							new SqlSelectionImpl(
-									position,
-									position + 1,
-									expression
-							)
-					);
-
-					//noinspection unchecked
-					domainResults.add( new BasicResult( position, null, selection.getJdbcMapping().getJavaTypeDescriptor() ) );
-
 				}
 		);
+		sqmConverter.getProcessingStateStack().pop();
 
 		final FilterPredicate filterPredicate = FilterHelper.createFilterPredicate(
 				executionContext.getSession().getLoadQueryInfluencers(),
@@ -236,6 +234,46 @@ public class MatchingIdSelectionHelper {
 				executionContext,
 				factory
 		);
+
+		sqmConverter.getProcessingStateStack().push(
+				new SqlAstQueryPartProcessingStateImpl(
+						matchingIdSelection.getQuerySpec(),
+						sqmConverter.getCurrentProcessingState(),
+						sqmConverter.getSqlAstCreationState(),
+						sqmConverter.getCurrentClauseStack()::getCurrent
+				)
+		);
+		entityDescriptor.visitSubTypeAttributeMappings(
+				attribute -> {
+					if ( attribute instanceof PluralAttributeMapping ) {
+						final PluralAttributeMapping pluralAttribute = (PluralAttributeMapping) attribute;
+
+						if ( pluralAttribute.getSeparateCollectionTable() != null ) {
+							// Ensure that the FK target columns are available
+							final boolean useFkTarget = !( pluralAttribute.getKeyDescriptor()
+									.getTargetPart() instanceof EntityIdentifierMapping );
+							if ( useFkTarget ) {
+								final TableGroup mutatingTableGroup = sqmConverter.getMutatingTableGroup();
+								pluralAttribute.getKeyDescriptor().getTargetPart().applySqlSelections(
+										mutatingTableGroup.getNavigablePath(),
+										mutatingTableGroup,
+										sqmConverter,
+										(selection, jdbcMapping) -> {
+											matchingIdSelection.getDomainResultDescriptors().add(
+													new BasicResult<>(
+															selection.getValuesArrayPosition(),
+															null,
+															jdbcMapping.getJavaTypeDescriptor()
+													)
+											);
+										}
+								);
+							}
+						}
+					}
+				}
+		);
+		sqmConverter.getProcessingStateStack().pop();
 
 		final JdbcServices jdbcServices = factory.getJdbcServices();
 		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();

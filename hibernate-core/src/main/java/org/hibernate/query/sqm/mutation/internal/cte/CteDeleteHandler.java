@@ -11,10 +11,12 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.mutation.internal.DeleteHandler;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
+import org.hibernate.query.sqm.sql.internal.SqlAstQueryPartProcessingStateImpl;
 import org.hibernate.query.sqm.tree.cte.SqmCteTable;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
@@ -27,6 +29,8 @@ import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.results.graph.basic.BasicResult;
 
 /**
  * Bulk-id delete handler that uses CTE and VALUES lists.
@@ -53,12 +57,42 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 			Map<SqmParameter, List<JdbcParameter>> parameterResolutions,
 			SessionFactoryImplementor factory) {
 		final TableGroup updatingTableGroup = sqmConverter.getMutatingTableGroup();
-		getEntityDescriptor().visitAttributeMappings(
+		final SelectStatement idSelectStatement = (SelectStatement) idSelectCte.getCteDefinition();
+		sqmConverter.getProcessingStateStack().push(
+				new SqlAstQueryPartProcessingStateImpl(
+						idSelectStatement.getQuerySpec(),
+						sqmConverter.getCurrentProcessingState(),
+						sqmConverter.getSqlAstCreationState(),
+						sqmConverter.getCurrentClauseStack()::getCurrent
+				)
+		);
+		getEntityDescriptor().visitSubTypeAttributeMappings(
 				attribute -> {
 					if ( attribute instanceof PluralAttributeMapping ) {
 						final PluralAttributeMapping pluralAttribute = (PluralAttributeMapping) attribute;
 
 						if ( pluralAttribute.getSeparateCollectionTable() != null ) {
+							// Ensure that the FK target columns are available
+							final boolean useFkTarget = !( pluralAttribute.getKeyDescriptor()
+									.getTargetPart() instanceof EntityIdentifierMapping );
+							if ( useFkTarget ) {
+								final TableGroup mutatingTableGroup = sqmConverter.getMutatingTableGroup();
+								pluralAttribute.getKeyDescriptor().getTargetPart().applySqlSelections(
+										mutatingTableGroup.getNavigablePath(),
+										mutatingTableGroup,
+										sqmConverter,
+										(selection, jdbcMapping) -> {
+											idSelectStatement.getDomainResultDescriptors().add(
+													new BasicResult<>(
+															selection.getValuesArrayPosition(),
+															null,
+															jdbcMapping.getJavaTypeDescriptor()
+													)
+											);
+										}
+								);
+							}
+
 							// this collection has a separate collection table, meaning it is one of:
 							//		1) element-collection
 							//		2) many-to-many
@@ -68,7 +102,7 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 							// collection table
 							final String tableExpression = pluralAttribute.getSeparateCollectionTable();
 							final CteTable dmlResultCte = new CteTable(
-									getCteTableName( tableExpression ),
+									getCteTableName( pluralAttribute ),
 									idSelectCte.getCteTable().getCteColumns(),
 									factory
 							);
@@ -85,7 +119,12 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 							);
 							final MutationStatement dmlStatement = new DeleteStatement(
 									dmlTableReference,
-									createIdSubQueryPredicate( columnReferences, idSelectCte, factory ),
+									createIdSubQueryPredicate(
+											columnReferences,
+											idSelectCte,
+											useFkTarget ? pluralAttribute.getKeyDescriptor().getTargetPart() : null,
+											factory
+									),
 									columnReferences
 							);
 							statement.addCteStatement( new CteStatement( dmlResultCte, dmlStatement ) );
@@ -93,6 +132,7 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 					}
 				}
 		);
+		sqmConverter.getProcessingStateStack().pop();
 
 		getEntityDescriptor().visitConstraintOrderedTables(
 				(tableExpression, tableColumnsVisitationSupplier) -> {
@@ -122,6 +162,14 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 					);
 					statement.addCteStatement( new CteStatement( dmlResultCte, dmlStatement ) );
 				}
+		);
+	}
+
+	protected String getCteTableName(PluralAttributeMapping pluralAttribute) {
+		final String hibernateEntityName = pluralAttribute.findContainingEntityMapping().getEntityName();
+		final String jpaEntityName = getSessionFactory().getJpaMetamodel().entity( hibernateEntityName ).getName();
+		return DML_RESULT_TABLE_NAME_PREFIX + jpaEntityName + "_" + pluralAttribute.getRootPathName().substring(
+				hibernateEntityName.length() + 1
 		);
 	}
 }

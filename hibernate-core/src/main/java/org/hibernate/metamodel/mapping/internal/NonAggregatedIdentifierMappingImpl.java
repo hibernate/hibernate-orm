@@ -8,6 +8,7 @@ package org.hibernate.metamodel.mapping.internal;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.function.BiConsumer;
 
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -19,9 +20,14 @@ import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.internal.AbstractCompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.type.ComponentType;
 
 /**
@@ -130,6 +136,32 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 		for ( int i = 0; i < idAttributeMappings.size(); i++ ) {
 			final SingularAttributeMapping attribute = idAttributeMappings.get( i );
 			attribute.breakDownJdbcValues( values[ i ], valueConsumer, session );
+		}
+	}
+
+	@Override
+	public void applySqlSelections(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			DomainResultCreationState creationState) {
+		for ( int i = 0; i < idAttributeMappings.size(); i++ ) {
+			idAttributeMappings.get( i ).applySqlSelections( navigablePath, tableGroup, creationState );
+		}
+	}
+
+	@Override
+	public void applySqlSelections(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			DomainResultCreationState creationState,
+			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+		for ( int i = 0; i < idAttributeMappings.size(); i++ ) {
+			idAttributeMappings.get( i ).applySqlSelections(
+					navigablePath,
+					tableGroup,
+					creationState,
+					selectionConsumer
+			);
 		}
 	}
 

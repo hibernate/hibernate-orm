@@ -19,6 +19,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.transaction.spi.IsolationDelegate;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
@@ -162,6 +163,15 @@ public final class ExecuteWithIdTableHelper {
 			Function<SharedSessionContractImplementor,String> sessionUidAccess,
 			EntityMappingType entityDescriptor,
 			ExecutionContext executionContext) {
+		return createIdTableSelectQuerySpec( idTable, null, sessionUidAccess, entityDescriptor, executionContext );
+	}
+
+	public static QuerySpec createIdTableSelectQuerySpec(
+			IdTable idTable,
+			ModelPart fkModelPart,
+			Function<SharedSessionContractImplementor,String> sessionUidAccess,
+			EntityMappingType entityDescriptor,
+			ExecutionContext executionContext) {
 		final QuerySpec querySpec = new QuerySpec( false );
 
 		final TableReference idTableReference = new TableReference(
@@ -182,7 +192,7 @@ public final class ExecuteWithIdTableHelper {
 
 		querySpec.getFromClause().addRoot( idTableGroup );
 
-		applyIdTableSelections( querySpec, idTableReference, idTable, executionContext );
+		applyIdTableSelections( querySpec, idTableReference, idTable, fkModelPart, executionContext );
 		applyIdTableRestrictions( querySpec, idTableReference, idTable, sessionUidAccess, executionContext );
 
 		return querySpec;
@@ -192,26 +202,51 @@ public final class ExecuteWithIdTableHelper {
 			QuerySpec querySpec,
 			TableReference tableReference,
 			IdTable idTable,
+			ModelPart fkModelPart,
 			ExecutionContext executionContext) {
-		for ( int i = 0; i < idTable.getIdTableColumns().size(); i++ ) {
-			final IdTableColumn idTableColumn = idTable.getIdTableColumns().get( i );
-			if ( idTableColumn != idTable.getSessionUidColumn() ) {
-				querySpec.getSelectClause().addSqlSelection(
-						new SqlSelectionImpl(
-								i + 1,
-								i,
-								new ColumnReference(
-										tableReference,
-										idTableColumn.getColumnName(),
-										false,
-										null,
-										null,
-										idTableColumn.getJdbcMapping(),
-										executionContext.getSession().getFactory()
-								)
-						)
-				);
+		if ( fkModelPart == null ) {
+			final int size = idTable.getEntityDescriptor().getIdentifierMapping().getJdbcTypeCount();
+			for ( int i = 0; i < size; i++ ) {
+				final IdTableColumn idTableColumn = idTable.getIdTableColumns().get( i );
+				if ( idTableColumn != idTable.getSessionUidColumn() ) {
+					querySpec.getSelectClause().addSqlSelection(
+							new SqlSelectionImpl(
+									i + 1,
+									i,
+									new ColumnReference(
+											tableReference,
+											idTableColumn.getColumnName(),
+											false,
+											null,
+											null,
+											idTableColumn.getJdbcMapping(),
+											executionContext.getSession().getFactory()
+									)
+							)
+					);
+				}
 			}
+		}
+		else {
+			fkModelPart.forEachSelectable(
+					(i, selectableMapping) -> {
+						querySpec.getSelectClause().addSqlSelection(
+								new SqlSelectionImpl(
+										i + 1,
+										i,
+										new ColumnReference(
+												tableReference,
+												selectableMapping.getSelectionExpression(),
+												false,
+												null,
+												null,
+												selectableMapping.getJdbcMapping(),
+												executionContext.getSession().getFactory()
+										)
+								)
+						);
+					}
+			);
 		}
 	}
 
@@ -219,7 +254,7 @@ public final class ExecuteWithIdTableHelper {
 			QuerySpec querySpec,
 			TableReference idTableReference,
 			IdTable idTable,
-			Function<SharedSessionContractImplementor,String> sessionUidAccess,
+			Function<SharedSessionContractImplementor, String> sessionUidAccess,
 			ExecutionContext executionContext) {
 		if ( idTable.getSessionUidColumn() != null ) {
 			querySpec.applyPredicate(

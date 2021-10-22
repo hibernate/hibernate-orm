@@ -9,6 +9,8 @@ package org.hibernate.sql.ast.tree.from;
 import java.util.List;
 import java.util.function.Consumer;
 
+import org.hibernate.metamodel.mapping.EntityValuedModelPart;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
@@ -68,7 +70,15 @@ public interface TableGroup extends SqlAstNode, ColumnReferenceQualifier, SqmPat
 
 	@Override
 	default void applySqlSelections(DomainResultCreationState creationState) {
-		getModelPart().applySqlSelections(
+		final ModelPartContainer modelPart = getModelPart();
+		final ModelPart modelPartToApply;
+		if ( modelPart instanceof EntityValuedModelPart ) {
+			modelPartToApply = ( (EntityValuedModelPart) modelPart ).getEntityMappingType();
+		}
+		else {
+			modelPartToApply = modelPart;
+		}
+		modelPartToApply.applySqlSelections(
 				getNavigablePath(),
 				creationState.getSqlAstCreationState().getFromClauseAccess().findTableGroup( getNavigablePath() ),
 				creationState

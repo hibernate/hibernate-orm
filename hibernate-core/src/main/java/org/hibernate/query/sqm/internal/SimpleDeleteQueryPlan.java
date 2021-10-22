@@ -137,26 +137,28 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 
 					final ForeignKeyDescriptor fkDescriptor = attributeMapping.getKeyDescriptor();
 					final Expression fkColumnExpression = MappingModelHelper.buildColumnReferenceExpression(
-							fkDescriptor,
+							fkDescriptor.getKeyPart(),
 							null,
 							factory
 					);
 
 					final QuerySpec matchingIdSubQuery = new QuerySpec( false );
 
+					final MutatingTableReferenceGroupWrapper tableGroup = new MutatingTableReferenceGroupWrapper(
+							new NavigablePath( attributeMapping.getRootPathName() ),
+							attributeMapping,
+							sqmInterpretation.getSqlAst().getTargetTable()
+					);
 					final Expression fkTargetColumnExpression = MappingModelHelper.buildColumnReferenceExpression(
-							fkDescriptor,
+							tableGroup,
+							fkDescriptor.getTargetPart(),
 							sqmInterpretation.getSqlExpressionResolver(),
 							factory
 					);
 					matchingIdSubQuery.getSelectClause().addSqlSelection( new SqlSelectionImpl( 1, 0, fkTargetColumnExpression ) );
 
 					matchingIdSubQuery.getFromClause().addRoot(
-							new MutatingTableReferenceGroupWrapper(
-									new NavigablePath( attributeMapping.getRootPathName() ),
-									attributeMapping,
-									sqmInterpretation.getSqlAst().getTargetTable()
-							)
+							tableGroup
 					);
 
 					matchingIdSubQuery.applyPredicate( sqmInterpretation.getSqlAst().getRestriction() );

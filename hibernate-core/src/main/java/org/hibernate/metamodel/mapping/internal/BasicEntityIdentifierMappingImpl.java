@@ -7,6 +7,7 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import java.util.Locale;
+import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
 import org.hibernate.engine.FetchStyle;
@@ -210,6 +211,18 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
 		resolveSqlSelection( navigablePath, tableGroup, true, creationState );
+	}
+
+	@Override
+	public void applySqlSelections(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			DomainResultCreationState creationState,
+			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+		selectionConsumer.accept(
+				resolveSqlSelection( navigablePath, tableGroup, true, creationState ),
+				getJdbcMapping()
+		);
 	}
 
 	private SqlSelection resolveSqlSelection(

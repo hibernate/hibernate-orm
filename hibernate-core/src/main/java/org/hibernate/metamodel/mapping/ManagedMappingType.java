@@ -47,7 +47,7 @@ public interface ManagedMappingType extends MappingType, FetchableContainer {
 	/**
 	 * Visit attributes defined on this class and any supers
 	 */
-	void visitAttributeMappings(Consumer<AttributeMapping> action);
+	void visitAttributeMappings(Consumer<? super AttributeMapping> action);
 
 	/**
 	 * Visit attributes defined on this class and any supers

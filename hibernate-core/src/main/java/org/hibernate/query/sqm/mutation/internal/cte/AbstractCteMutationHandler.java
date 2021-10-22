@@ -20,6 +20,7 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SqlExpressable;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
@@ -203,6 +204,7 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 		lockOptions.setAliasSpecificLockMode( explicitDmlTargetAlias, LockMode.WRITE );
 		final JdbcSelect select = translator.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
 		lockOptions.setAliasSpecificLockMode( explicitDmlTargetAlias, lockMode );
+		executionContext.getSession().autoFlushIfRequired( select.getAffectedTableNames() );
 		List<Object> list = jdbcServices.getJdbcSelectExecutor().list(
 				select,
 				jdbcParameterBindings,
@@ -230,6 +232,14 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 			List<? extends Expression> lhsExpressions,
 			CteStatement idSelectCte,
 			SessionFactoryImplementor factory) {
+		return createIdSubQueryPredicate( lhsExpressions, idSelectCte, null, factory );
+	}
+
+	protected Predicate createIdSubQueryPredicate(
+			List<? extends Expression> lhsExpressions,
+			CteStatement idSelectCte,
+			ModelPart fkModelPart,
+			SessionFactoryImplementor factory) {
 		final TableReference idSelectTableReference = new TableReference(
 				idSelectCte.getCteTable().getTableExpression(),
 				CTE_TABLE_IDENTIFIER,
@@ -238,23 +248,43 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 		);
 		final Junction predicate = new Junction( Junction.Nature.CONJUNCTION );
 		final List<CteColumn> cteColumns = idSelectCte.getCteTable().getCteColumns();
-		final int size = cteColumns.size();
+		final int size = lhsExpressions.size();
 		final QuerySpec subQuery = new QuerySpec( false, 1 );
 		subQuery.getFromClause().addRoot( new CteTableGroup( idSelectTableReference ) );
 		final SelectClause subQuerySelectClause = subQuery.getSelectClause();
-		for ( int i = 0; i < size; i++ ) {
-			final CteColumn cteColumn = cteColumns.get( i );
-			subQuerySelectClause.addSqlSelection(
-					new SqlSelectionImpl(
-							i + 1,
-							i,
-							new ColumnReference(
-									idSelectTableReference,
-									cteColumn.getColumnExpression(),
-									cteColumn.getJdbcMapping(),
-									factory
-							)
-					)
+		if ( fkModelPart == null ) {
+			for ( int i = 0; i < size; i++ ) {
+				final CteColumn cteColumn = cteColumns.get( i );
+				subQuerySelectClause.addSqlSelection(
+						new SqlSelectionImpl(
+								i + 1,
+								i,
+								new ColumnReference(
+										idSelectTableReference,
+										cteColumn.getColumnExpression(),
+										cteColumn.getJdbcMapping(),
+										factory
+								)
+						)
+				);
+			}
+		}
+		else {
+			fkModelPart.forEachSelectable(
+					(selectionIndex, selectableMapping) -> {
+						subQuerySelectClause.addSqlSelection(
+								new SqlSelectionImpl(
+										selectionIndex + 1,
+										selectionIndex,
+										new ColumnReference(
+												idSelectTableReference,
+												selectableMapping.getSelectionExpression(),
+												selectableMapping.getJdbcMapping(),
+												factory
+										)
+								)
+						);
+					}
 			);
 		}
 		final Expression lhs;

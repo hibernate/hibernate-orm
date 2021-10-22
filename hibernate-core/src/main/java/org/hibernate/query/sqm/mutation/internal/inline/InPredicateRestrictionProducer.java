@@ -13,6 +13,7 @@ import java.util.function.Supplier;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -48,6 +49,8 @@ public class InPredicateRestrictionProducer implements MatchingIdRestrictionProd
 	public InListPredicate produceRestriction(
 			List<?> matchingIdValues,
 			EntityMappingType entityDescriptor,
+			int valueIndex,
+			ModelPart valueModelPart,
 			TableReference mutatingTableReference,
 			Supplier<Consumer<SelectableConsumer>> columnsToMatchVisitationSupplier,
 			ExecutionContext executionContext) {

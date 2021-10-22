@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.sql.ast.tree.from.TableReference;
@@ -33,6 +34,8 @@ public interface MatchingIdRestrictionProducer {
 	Predicate produceRestriction(
 			List<?> matchingIdValues,
 			EntityMappingType entityDescriptor,
+			int valueIndex,
+			ModelPart valueModelPart,
 			TableReference mutatingTableReference,
 			Supplier<Consumer<SelectableConsumer>> columnsToMatchVisitationSupplier,
 			ExecutionContext executionContext);

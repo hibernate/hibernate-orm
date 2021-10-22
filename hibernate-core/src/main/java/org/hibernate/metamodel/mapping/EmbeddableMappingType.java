@@ -582,7 +582,7 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectableMapp
 			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
 		visitAttributeMappings(
 				attributeMapping ->
-						ManagedMappingType.super.applySqlSelections(
+						attributeMapping.applySqlSelections(
 								navigablePath,
 								tableGroup,
 								creationState,
@@ -742,7 +742,7 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectableMapp
 	}
 
 	@Override
-	public void visitAttributeMappings(Consumer<AttributeMapping> action) {
+	public void visitAttributeMappings(Consumer<? super AttributeMapping> action) {
 		attributeMappings.forEach( action );
 	}
 

@@ -24,6 +24,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.FilterHelper;
 import org.hibernate.internal.util.MutableInteger;
+import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
@@ -448,7 +449,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 				executionContext
 		);
 
-		final QuerySpec idTableSubQuery = ExecuteWithIdTableHelper.createIdTableSelectQuerySpec(
+		final QuerySpec idTableIdentifierSubQuery = ExecuteWithIdTableHelper.createIdTableSelectQuerySpec(
 				idTable,
 				sessionUidAccess,
 				entityDescriptor,
@@ -459,14 +460,26 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 				entityDescriptor,
 				(tableReference, attributeMapping) -> {
 					final ForeignKeyDescriptor fkDescriptor = attributeMapping.getKeyDescriptor();
-
+					final QuerySpec idTableFkSubQuery;
+					if ( fkDescriptor.getTargetPart() instanceof EntityIdentifierMapping ) {
+						idTableFkSubQuery = idTableIdentifierSubQuery;
+					}
+					else {
+						idTableFkSubQuery = ExecuteWithIdTableHelper.createIdTableSelectQuerySpec(
+								idTable,
+								fkDescriptor.getTargetPart(),
+								sessionUidAccess,
+								entityDescriptor,
+								executionContext
+						);
+					}
 					return new InSubQueryPredicate(
 							MappingModelHelper.buildColumnReferenceExpression(
 									fkDescriptor,
 									null,
 									sessionFactory
 							),
-							idTableSubQuery,
+							idTableFkSubQuery,
 							false
 					);
 
@@ -479,7 +492,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 				(tableExpression, tableKeyColumnVisitationSupplier) -> deleteFromTableUsingIdTable(
 						tableExpression,
 						tableKeyColumnVisitationSupplier,
-						idTableSubQuery,
+						idTableIdentifierSubQuery,
 						executionContext
 				)
 		);

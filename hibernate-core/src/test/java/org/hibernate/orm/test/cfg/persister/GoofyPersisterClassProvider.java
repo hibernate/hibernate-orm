@@ -700,7 +700,7 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public void visitAttributeMappings(Consumer<AttributeMapping> action) {
+		public void visitAttributeMappings(Consumer<? super AttributeMapping> action) {
 
 		}
 

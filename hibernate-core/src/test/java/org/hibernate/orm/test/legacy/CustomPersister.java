@@ -815,7 +815,7 @@ public class CustomPersister implements EntityPersister {
 	}
 
 	@Override
-	public void visitAttributeMappings(Consumer<AttributeMapping> action) {
+	public void visitAttributeMappings(Consumer<? super AttributeMapping> action) {
 
 	}
 

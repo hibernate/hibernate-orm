@@ -71,7 +71,7 @@ public class SqmMutationStrategyHelper {
 			return;
 		}
 
-		entityDescriptor.visitAttributeMappings(
+		entityDescriptor.visitSubTypeAttributeMappings(
 				attributeMapping -> {
 					if ( attributeMapping instanceof PluralAttributeMapping ) {
 						cleanUpCollectionTable(

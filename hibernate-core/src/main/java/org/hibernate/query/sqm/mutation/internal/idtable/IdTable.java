@@ -13,8 +13,12 @@ import java.util.function.Function;
 import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.Contributable;
+import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.entity.Joinable;
+import org.hibernate.sql.ast.tree.from.TableGroup;
 
 /**
  * @author Steve Ebersole
@@ -50,6 +54,32 @@ public class IdTable implements Exportable, Contributable {
 								)
 						)
 				)
+		);
+		entityDescriptor.visitSubTypeAttributeMappings(
+				attribute -> {
+					if ( attribute instanceof PluralAttributeMapping ) {
+						final PluralAttributeMapping pluralAttribute = (PluralAttributeMapping) attribute;
+
+						if ( pluralAttribute.getSeparateCollectionTable() != null ) {
+							// Ensure that the FK target columns are available
+							final ModelPart fkTarget = pluralAttribute.getKeyDescriptor().getTargetPart();
+							if ( !( fkTarget instanceof EntityIdentifierMapping ) ) {
+								fkTarget.forEachSelectable(
+										(columnIndex, selection) -> columns.add(
+												new IdTableColumn(
+														this,
+														selection.getSelectionExpression(),
+														selection.getJdbcMapping(),
+														dialect.getTypeName(
+																selection.getJdbcMapping().getJdbcTypeDescriptor()
+														)
+												)
+										)
+								);
+							}
+						}
+					}
+				}
 		);
 
 		this.dialect = dialect;

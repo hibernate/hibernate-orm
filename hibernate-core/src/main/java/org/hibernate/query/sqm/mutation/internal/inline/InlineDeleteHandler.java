@@ -12,6 +12,10 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.MutableInteger;
+import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
+import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
@@ -69,13 +73,13 @@ public class InlineDeleteHandler implements DeleteHandler {
 
 	@Override
 	public int execute(DomainQueryExecutionContext executionContext) {
-		final List<Object> ids = MatchingIdSelectionHelper.selectMatchingIds(
+		final List<Object> idsAndFks = MatchingIdSelectionHelper.selectMatchingIds(
 				sqmDeleteStatement,
 				domainParameterXref,
 				executionContext
 		);
 
-		if ( ids == null || ids.isEmpty() ) {
+		if ( idsAndFks == null || idsAndFks.isEmpty() ) {
 			return 0;
 		}
 
@@ -87,8 +91,8 @@ public class InlineDeleteHandler implements DeleteHandler {
 		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( domainParameterXref.getQueryParameterCount() );
 
 		// delete from the tables
-
-		entityDescriptor.visitAttributeMappings(
+		final MutableInteger valueIndexCounter = new MutableInteger();
+		entityDescriptor.visitSubTypeAttributeMappings(
 				attribute -> {
 					if ( attribute instanceof PluralAttributeMapping ) {
 						final PluralAttributeMapping pluralAttribute = (PluralAttributeMapping) attribute;
@@ -101,18 +105,29 @@ public class InlineDeleteHandler implements DeleteHandler {
 							//
 							// in all of these cases, we should clean up the matching rows in the
 							// collection table
+							final ModelPart fkTargetPart = pluralAttribute.getKeyDescriptor().getTargetPart();
+							final int valueIndex;
+							if ( fkTargetPart instanceof EntityIdentifierMapping ) {
+								valueIndex = 0;
+							}
+							else {
+								if ( valueIndexCounter.get() == 0 ) {
+									valueIndexCounter.set( entityDescriptor.getIdentifierMapping().getJdbcTypeCount() );
+								}
+								valueIndex = valueIndexCounter.get();
+								valueIndexCounter.plus( fkTargetPart.getJdbcTypeCount() );
+							}
 
-// todo (6.0) : implement this
-//							executeDelete(
-//									pluralAttribute.getSeparateCollectionTable(),
-//									matchingIdsPredicateProducer.produceRestriction(
-//											ids,
-//											() -> columnConsumer ->  ,
-//											executionContext
-//									),
-//									jdbcParameterBindings,
-//									executionContext
-//							);
+							executeDelete(
+									pluralAttribute.getSeparateCollectionTable(),
+									entityDescriptor,
+									() -> fkTargetPart::forEachSelectable,
+									idsAndFks,
+									valueIndex,
+									fkTargetPart,
+									jdbcParameterBindings,
+									executionContext
+							);
 						}
 					}
 				}
@@ -124,14 +139,16 @@ public class InlineDeleteHandler implements DeleteHandler {
 							tableExpression,
 							entityDescriptor,
 							tableKeyColumnsVisitationSupplier,
-							ids,
+							idsAndFks,
+							0,
+							null,
 							jdbcParameterBindings,
 							executionContext
 					);
 				}
 		);
 
-		return ids.size();
+		return idsAndFks.size();
 	}
 
 	private void executeDelete(
@@ -139,6 +156,8 @@ public class InlineDeleteHandler implements DeleteHandler {
 			EntityMappingType entityDescriptor,
 			Supplier<Consumer<SelectableConsumer>> tableKeyColumnsVisitationSupplier,
 			List<Object> ids,
+			int valueIndex,
+			ModelPart valueModelPart,
 			JdbcParameterBindings jdbcParameterBindings,
 			DomainQueryExecutionContext executionContext) {
 		final TableReference targetTableReference = new TableReference(
@@ -153,6 +172,8 @@ public class InlineDeleteHandler implements DeleteHandler {
 		final Predicate matchingIdsPredicate = matchingIdsPredicateProducer.produceRestriction(
 				ids,
 				entityDescriptor,
+				valueIndex,
+				valueModelPart,
 				targetTableReference,
 				tableKeyColumnsVisitationSupplier,
 				executionContextAdapter

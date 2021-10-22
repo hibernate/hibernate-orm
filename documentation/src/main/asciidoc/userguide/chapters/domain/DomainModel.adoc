@@ -16,11 +16,17 @@ With the coming of Jakarta Persistence, most of this information is now defined 
 This chapter will focus on Jakarta Persistence mapping where possible.
 For Hibernate mapping features not supported by Jakarta Persistence we will prefer Hibernate extension annotations.
 
+[NOTE]
+====
+This chapter mostly uses "implicit naming" for table names, column names, etc.  For details on
+adjusting these names see <<naming>>.
+====
+
 include::types.adoc[]
-include::naming.adoc[]
 include::basic_types.adoc[]
 include::embeddables.adoc[]
 include::entity.adoc[]
+include::naming.adoc[]
 include::access.adoc[]
 include::identifiers.adoc[]
 include::associations.adoc[]

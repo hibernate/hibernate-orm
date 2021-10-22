@@ -117,7 +117,7 @@ include::{sourcedir}/basic/ExplicitColumnNamingTest.java[tags=basic-annotation-e
 ====
 
 Here we use `@Column` to explicitly map the `description` attribute to the `NOTES` column, as opposed to the
-implicit column name `description`.
+implicit column name `description`.  See <<naming>> for additional details.
 
 The `@Column` annotation defines other mapping information as well. See its Javadocs for details.
 
@@ -133,7 +133,8 @@ The `@Column` annotation defines other mapping information as well. See its Java
 
 [NOTE]
 ====
-The `@Formula` annotation takes a native SQL clause which may affect database portability.
+* The `@Formula` annotation takes a native SQL clause which may affect database portability.
+* `@Formula` is a Hibernate-specific mapping construct and not covered by Jakarta Persistence.  Applications interested in portability should avoid its use.
 ====
 
 [[mapping-column-formula-example]]
@@ -204,10 +205,7 @@ This includes removal of the following deprecated legacy annotations:
 * `@AnyMetaDef#idType`
 
 See the 6.0 migration guide for discussions about migrating uses of these annotations
-====
 
-[NOTE]
-====
 The new annotations added as part of 6.0 support composing mappings in annotations
 through "meta-annotations".
 ====
@@ -238,255 +236,9 @@ provides 2 main approaches to influence this mapping resolution:
 These 2 approaches should be considered mutually exclusive.  A custom UserType will always
 take precedence over compositional annotations.
 
-See <<basic-bitset>> for examples of most of these approaches, mapping `BitSet` as a basic type.
+The next few sections look at common, standard Java types and discusses various ways to map them.
+See <<basic-bitset>> for examples of mapping `BitSet` as a basic type using all of these approaches.
 
-
-[[basic-mapping-composition]]
-==== Compositional basic mapping
-
-The compositional approach allows defining how the mapping should work in terms of influencing
-individual, basic-valued parts of the model:
-
-
-`JavaTypeDescriptor`:: Describes capabilities of the Java type as discussed in <<basic>>.  The descriptor
-    used can be influenced through `@JavaType` and `@JavaTypeRegistration`.  `@JavaTypeRegistration` is a global
-    form of `@JavaType`.
-`JdbcTypeDescriptor`:: Describes aspects of the JDBC type such as how to bind and extract values.  The descriptor
-    used can be influenced through `@JdbcType`, `@JdbcTypeCode` and `@JdbcTypeRegistration`.
-    `@JdbcTypeRegistration` is a global form of `@JdbcType` / `@JdbcTypeCode`.
-`BasicValueConverter`:: Describes the conversions that need to occur when reading from or writing to the database.
-    Some Java types (enums, e.g.) have an implicit conversion.  Users can specify an explicit conversion using
-    `AttributeConverter`.  See <<basic-jpa-convert>>.
-`MutabilityPlan`:: Describes whether the internal state of values of the type are mutable or immutable.
-    `MutabilityPlan` can be influenced by `@Mutability` or `@Immutable`
-
-When using the compositional approach, there are other ways to influence the resolution are covered
-in <<basic-enums>>, <<basic-temporal>>, <<basic-lob>> and <<basic-nationalized>>
-
-
-See <<basic-type-contributor>> for an alternative to `@JavaTypeRegistration` and `@JdbcTypeRegistration`.
-
-
-[[basic-mapping-custom]]
-==== Custom type mapping
-
-Another approach is to supply the implementation of the `org.hibernate.usertype.UserType` contract using `@CustomType`.
-
-There are also corresponding, specialized forms of `@CustomType` for specific model parts:
-
-* When mapping a Map, `@CustomType` describes the Map value while `@MapKeyCustomType` describe the Map key
-* When mapping a List or array, `@CustomType` describes the elements while `@ListIndexCustomType` describes the index
-* When mapping an id-bag, `@CustomType` describes the elements while `@CollectionIdCustomType` describes the collection-id
-* For other collection mappings, `@CustomType` describes the elements
-* For discriminated association mappings (`@Any` and `@ManyToAny`), `@CustomType` describes the discriminator value
-
-
-[[basic-nationalized]]
-==== Handling nationalized character data
-
-How nationalized character data is handled and stored depends on the underlying database.
-
-Most databases support storing nationalized character data through the standardized SQL
-NCHAR, NVARCHAR, LONGNVARCHAR and NCLOB variants.
-
-Others support storing nationalized data as part of CHAR, VARCHAR, LONGVARCHAR
-and CLOB.  Generally these databases do not support NCHAR, NVARCHAR, LONGNVARCHAR
-and NCLOB, even as aliased types.
-
-Ultimately Hibernate understands this through `Dialect#getNationalizationSupport()`
-
-To ensure nationalized character data gets stored and accessed correctly, `@Nationalized` can be used
-locally or `hibernate.use_nationalized_character_data` can be set globally.
-
-[NOTE]
-====
-`@Nationalized` and `hibernate.use_nationalized_character_data` can be used regardless
-of the specific database support for nationalized data and allows the application to
-work portably across databases with varying support.
-====
-
-[IMPORTANT]
-====
-For databases that do not support `NCLOB` data-types, it is unsupported to map
-the attribute using `java.sql.NClob`.  Use `java.sql.Clob` (which `NClob` extends)
-or use a materialized mapping (`String`, `char[]`, ...) instead.
-
-See also <<basic-lob>> regarding similar limitation for databases which do not support
-explicit `CLOB` data-type.
-====
-
-Considering we have the following database table:
-
-[[basic-nationalized-sql-example]]
-.`NVARCHAR` - SQL
-====
-[source, JAVA, indent=0]
-----
-include::{extrasdir}/basic/basic-nationalized-sql-example.sql[]
-----
-====
-
-To map a specific attribute to a nationalized variant data type, Hibernate defines the `@Nationalized` annotation.
-
-[[basic-nationalized-example]]
-.`NVARCHAR` mapping
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/NationalizedTest.java[tags=basic-nationalized-example]
-----
-====
-
-
-
-
-[[basic-lob]]
-==== Handling LOB data
-
-Mapping basic values to database LOB (Large OBject) types is handled using `@Lob`.
-
-[NOTE]
-====
-How JDBC deals with `LOB` data varies from driver to driver.  Hibernate tries to handle all these
-variances on your behalf.
-
-However, some drivers (i.e. PostgreSQL) are trickier and, in such cases, you may have to do some
-extra steps to get LOBs working.  Such discussions are beyond the scope of this guide.
-====
-
-[IMPORTANT]
-====
-For databases that do not support `CLOB` data-types, it is unsupported to map
-the attribute using `java.sql.Clob`.  Use a materialized mapping (`String`,
-`char[]`, ...) instead.
-====
-
-Mapping basic values to LOB types comes in 2 forms...
-
-===== LOB Locator
-
-The JDBC LOB locator types include:
-
-* `java.sql.Blob`
-* `java.sql.Clob`
-* `java.sql.NClob`
-
-Through references of these types, JDBC drivers can support more efficient access to the LOB data.
-Some drivers stream parts of the LOB data as needed, potentially freeing up memory space.
-
-However, they can be unnatural to deal with and have certain limitations.
-For example, a LOB locator is only portably valid during the duration of the transaction in which it was obtained.
-
-===== Materialized LOB
-
-Hibernate allows mapping LOB data using familiar Java types such as `String`, `char[]`, `byte[]`, etc.  Materialization
-handles the entire LOB contents in memory.
-
-This trade-off for more familiar is sometimes performance, though this depends on the driver.
-
-
-
-
-
-[[basic-temporal]]
-==== Handling temporal data
-
-Hibernate supports mapping temporal values in numerous ways, though ultimately these strategies
-boil down to the 3 main Date/Time types defined by the SQL specification:
-
-DATE:: Represents a calendar date by storing years, months and days.
-TIME:: Represents the time of a day by storing hours, minutes and seconds.
-TIMESTAMP:: Represents both a DATE and a TIME plus nanoseconds.
-
-The mapping of `java.time` temporal types to the specific SQL Date/Time types is implied as follows:
-
-DATE:: `java.time.LocalDate`
-TIME:: `java.time.LocalTime`, `java.time.OffsetTime`
-TIMESTAMP:: `java.time.Instant`, `java.time.LocalDateTime`, `java.time.OffsetDateTime` and `java.time.ZonedDateTime`
-
-Although Hibernate recommends the use of the `java.time` package for representing temporal values,
-it does support using `java.sql.Date`, `java.sql.Time`, `java.sql.Timestamp`, `java.util.Date` and
-`java.util.Calendar`.
-
-The mappings for `java.sql.Date`, `java.sql.Time`, `java.sql.Timestamp` are implicit:
-
-DATE:: `java.sql.Date`
-TIME:: `java.sql.Time`
-TIMESTAMP:: `java.sql.Timestamp`
-
-
-[IMPORTANT]
-====
-Applying `@Temporal` to `java.sql.Date`, `java.sql.Time`, `java.sql.Timestamp` or any of the `java.time` types
-is considered an exception
-====
-
-When using `java.util.Date` or `java.util.Calendar`, Hibernate assumes `TIMESTAMP`.  To alter that,
-use `@Temporal`.
-
-[[basic-temporal-java-util-example]]
-.Mapping java.util.Date
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/DatePrecisionTests.java[tags=basic-temporal-example]
-----
-====
-
-
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-[[basic-datetime-time-zone]]
-===== Using a specific time zone
-
-By default, Hibernate is going to use the https://docs.oracle.com/javase/8/docs/api/java/sql/PreparedStatement.html#setTimestamp-int-java.sql.Timestamp-[`PreparedStatement.setTimestamp(int parameterIndex, java.sql.Timestamp)`] or
-https://docs.oracle.com/javase/8/docs/api/java/sql/PreparedStatement.html#setTime-int-java.sql.Time-[`PreparedStatement.setTime(int parameterIndex, java.sql.Time x)`] when saving a `java.sql.Timestamp` or a `java.sql.Time` property.
-
-When the time zone is not specified, the JDBC driver is going to use the underlying JVM default time zone, which might not be suitable if the application is used from all across the globe.
-For this reason, it is very common to use a single reference time zone (e.g. UTC) whenever saving/loading data from the database.
-
-One alternative would be to configure all JVMs to use the reference time zone:
-
-Declaratively::
-+
-[source,java]
-----
-java -Duser.timezone=UTC ...
-----
-
-Programmatically::
-+
-[source,java]
-----
-TimeZone.setDefault( TimeZone.getTimeZone( "UTC" ) );
-----
-
-However, as explained in https://in.relation.to/2016/09/12/jdbc-time-zone-configuration-property/[this article], this is not always practical, especially for front-end nodes.
-For this reason, Hibernate offers the `hibernate.jdbc.time_zone` configuration property which can be configured:
-
-Declaratively, at the `SessionFactory` level::
-+
-[source,java]
-----
-settings.put(
-    AvailableSettings.JDBC_TIME_ZONE,
-    TimeZone.getTimeZone( "UTC" )
-);
-----
-
-Programmatically, on a per `Session` basis::
-+
-[source,java]
-----
-Session session = sessionFactory()
-    .withOptions()
-    .jdbcTimeZone( TimeZone.getTimeZone( "UTC" ) )
-    .openSession();
-----
-
-With this configuration property in place, Hibernate is going to call the https://docs.oracle.com/javase/8/docs/api/java/sql/PreparedStatement.html#setTimestamp-int-java.sql.Timestamp-java.util.Calendar-[`PreparedStatement.setTimestamp(int parameterIndex, java.sql.Timestamp, Calendar cal)`] or
-https://docs.oracle.com/javase/8/docs/api/java/sql/PreparedStatement.html#setTime-int-java.sql.Time-java.util.Calendar-[`PreparedStatement.setTime(int parameterIndex, java.sql.Time x, Calendar cal)`], where the `java.util.Calendar` references the time zone provided via the `hibernate.jdbc.time_zone` property.
 
 
 
@@ -1542,22 +1294,252 @@ For details, see the discussion of generators in <<chapters/domain/identifiers.a
 
 
 
+[[basic-mapping-composition]]
+==== Compositional basic mapping
+
+The compositional approach allows defining how the mapping should work in terms of influencing
+individual, basic-valued parts of the model:
+
+
+`JavaTypeDescriptor`:: Describes capabilities of the Java type as discussed in <<basic>>.  The descriptor
+used can be influenced through `@JavaType` and `@JavaTypeRegistration`.  `@JavaTypeRegistration` is a global
+form of `@JavaType`.
+`JdbcTypeDescriptor`:: Describes aspects of the JDBC type such as how to bind and extract values.  The descriptor
+used can be influenced through `@JdbcType`, `@JdbcTypeCode` and `@JdbcTypeRegistration`.
+`@JdbcTypeRegistration` is a global form of `@JdbcType` / `@JdbcTypeCode`.
+`BasicValueConverter`:: Describes the conversions that need to occur when reading from or writing to the database.
+Some Java types (enums, e.g.) have an implicit conversion.  Users can specify an explicit conversion using
+`AttributeConverter`.  See <<basic-jpa-convert>>.
+`MutabilityPlan`:: Describes whether the internal state of values of the type are mutable or immutable.
+`MutabilityPlan` can be influenced by `@Mutability` or `@Immutable`
+
+When using the compositional approach, there are other ways to influence the resolution are covered
+in <<basic-enums>>, <<basic-temporal>>, <<basic-lob>> and <<basic-nationalized>>
+
+
+See <<basic-type-contributor>> for an alternative to `@JavaTypeRegistration` and `@JdbcTypeRegistration`.
+
+
+[[basic-mapping-custom]]
+==== Custom type mapping
+
+Another approach is to supply the implementation of the `org.hibernate.usertype.UserType` contract using `@CustomType`.
+
+There are also corresponding, specialized forms of `@CustomType` for specific model parts:
+
+* When mapping a Map, `@CustomType` describes the Map value while `@MapKeyCustomType` describe the Map key
+* When mapping a List or array, `@CustomType` describes the elements while `@ListIndexCustomType` describes the index
+* When mapping an id-bag, `@CustomType` describes the elements while `@CollectionIdCustomType` describes the collection-id
+* For other collection mappings, `@CustomType` describes the elements
+* For discriminated association mappings (`@Any` and `@ManyToAny`), `@CustomType` describes the discriminator value
+
+
+[[basic-nationalized]]
+==== Handling nationalized character data
+
+How nationalized character data is handled and stored depends on the underlying database.
+
+Most databases support storing nationalized character data through the standardized SQL
+NCHAR, NVARCHAR, LONGNVARCHAR and NCLOB variants.
+
+Others support storing nationalized data as part of CHAR, VARCHAR, LONGVARCHAR
+and CLOB.  Generally these databases do not support NCHAR, NVARCHAR, LONGNVARCHAR
+and NCLOB, even as aliased types.
+
+Ultimately Hibernate understands this through `Dialect#getNationalizationSupport()`
+
+To ensure nationalized character data gets stored and accessed correctly, `@Nationalized` can be used
+locally or `hibernate.use_nationalized_character_data` can be set globally.
+
+[NOTE]
+====
+`@Nationalized` and `hibernate.use_nationalized_character_data` can be used regardless
+of the specific database support for nationalized data and allows the application to
+work portably across databases with varying support.
+====
+
+[IMPORTANT]
+====
+For databases that do not support `NCLOB` data-types, it is unsupported to map
+the attribute using `java.sql.NClob`.  Use `java.sql.Clob` (which `NClob` extends)
+or use a materialized mapping (`String`, `char[]`, ...) instead.
+
+See also <<basic-lob>> regarding similar limitation for databases which do not support
+explicit `CLOB` data-type.
+====
+
+Considering we have the following database table:
+
+[[basic-nationalized-sql-example]]
+.`NVARCHAR` - SQL
+====
+[source, JAVA, indent=0]
+----
+include::{extrasdir}/basic/basic-nationalized-sql-example.sql[]
+----
+====
+
+To map a specific attribute to a nationalized variant data type, Hibernate defines the `@Nationalized` annotation.
+
+[[basic-nationalized-example]]
+.`NVARCHAR` mapping
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/NationalizedTest.java[tags=basic-nationalized-example]
+----
+====
+
+
+
+
+[[basic-lob]]
+==== Handling LOB data
+
+Mapping basic values to database LOB (Large OBject) types is handled using `@Lob`.
+
+[NOTE]
+====
+How JDBC deals with `LOB` data varies from driver to driver.  Hibernate tries to handle all these
+variances on your behalf.
+
+However, some drivers (i.e. PostgreSQL) are trickier and, in such cases, you may have to do some
+extra steps to get LOBs working.  Such discussions are beyond the scope of this guide.
+====
+
+[IMPORTANT]
+====
+For databases that do not support `CLOB` data-types, it is unsupported to map
+the attribute using `java.sql.Clob`.  Use a materialized mapping (`String`,
+`char[]`, ...) instead.
+====
+
+Mapping basic values to LOB types comes in 2 forms...
+
+===== LOB Locator
+
+The JDBC LOB locator types include:
+
+* `java.sql.Blob`
+* `java.sql.Clob`
+* `java.sql.NClob`
+
+Through references of these types, JDBC drivers can support more efficient access to the LOB data.
+Some drivers stream parts of the LOB data as needed, potentially freeing up memory space.
+
+However, they can be unnatural to deal with and have certain limitations.
+For example, a LOB locator is only portably valid during the duration of the transaction in which it was obtained.
+
+===== Materialized LOB
+
+Hibernate allows mapping LOB data using familiar Java types such as `String`, `char[]`, `byte[]`, etc.  Materialization
+handles the entire LOB contents in memory.
+
+This trade-off for more familiar is sometimes performance, though this depends on the driver.
+
+
+
+
+
+[[basic-temporal]]
+==== Handling temporal data
+
+Hibernate supports mapping temporal values in numerous ways, though ultimately these strategies
+boil down to the 3 main Date/Time types defined by the SQL specification:
+
+DATE:: Represents a calendar date by storing years, months and days.
+TIME:: Represents the time of a day by storing hours, minutes and seconds.
+TIMESTAMP:: Represents both a DATE and a TIME plus nanoseconds.
+
+The mapping of `java.time` temporal types to the specific SQL Date/Time types is implied as follows:
+
+DATE:: `java.time.LocalDate`
+TIME:: `java.time.LocalTime`, `java.time.OffsetTime`
+TIMESTAMP:: `java.time.Instant`, `java.time.LocalDateTime`, `java.time.OffsetDateTime` and `java.time.ZonedDateTime`
+
+Although Hibernate recommends the use of the `java.time` package for representing temporal values,
+it does support using `java.sql.Date`, `java.sql.Time`, `java.sql.Timestamp`, `java.util.Date` and
+`java.util.Calendar`.
+
+The mappings for `java.sql.Date`, `java.sql.Time`, `java.sql.Timestamp` are implicit:
+
+DATE:: `java.sql.Date`
+TIME:: `java.sql.Time`
+TIMESTAMP:: `java.sql.Timestamp`
+
+
+[IMPORTANT]
+====
+Applying `@Temporal` to `java.sql.Date`, `java.sql.Time`, `java.sql.Timestamp` or any of the `java.time` types
+is considered an exception
+====
+
+When using `java.util.Date` or `java.util.Calendar`, Hibernate assumes `TIMESTAMP`.  To alter that,
+use `@Temporal`.
+
+[[basic-temporal-java-util-example]]
+.Mapping java.util.Date
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/DatePrecisionTests.java[tags=basic-temporal-example]
+----
+====
 
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-[[basic-type-contributor]]
-==== TypeContributor
+[[basic-datetime-time-zone]]
+===== Using a specific time zone
 
-`org.hibernate.boot.model.TypeContributor` is a contract for overriding or extending parts of the Hibernate type
-system.
+By default, Hibernate is going to use the https://docs.oracle.com/javase/8/docs/api/java/sql/PreparedStatement.html#setTimestamp-int-java.sql.Timestamp-[`PreparedStatement.setTimestamp(int parameterIndex, java.sql.Timestamp)`] or
+https://docs.oracle.com/javase/8/docs/api/java/sql/PreparedStatement.html#setTime-int-java.sql.Time-[`PreparedStatement.setTime(int parameterIndex, java.sql.Time x)`] when saving a `java.sql.Timestamp` or a `java.sql.Time` property.
 
-There are many ways to integrate a `TypeContributor`.  The most common is to define the `TypeContributor` as
-a Java service (see `java.util.ServiceLoader`).
+When the time zone is not specified, the JDBC driver is going to use the underlying JVM default time zone, which might not be suitable if the application is used from all across the globe.
+For this reason, it is very common to use a single reference time zone (e.g. UTC) whenever saving/loading data from the database.
 
-`TypeContributor` is passed a `TypeContributions` reference, which allows registration of custom `JavaType`,
-`JdbcType` and `BasicType` references.
+One alternative would be to configure all JVMs to use the reference time zone:
+
+Declaratively::
++
+[source,java]
+----
+java -Duser.timezone=UTC ...
+----
+
+Programmatically::
++
+[source,java]
+----
+TimeZone.setDefault( TimeZone.getTimeZone( "UTC" ) );
+----
+
+However, as explained in https://in.relation.to/2016/09/12/jdbc-time-zone-configuration-property/[this article], this is not always practical, especially for front-end nodes.
+For this reason, Hibernate offers the `hibernate.jdbc.time_zone` configuration property which can be configured:
+
+Declaratively, at the `SessionFactory` level::
++
+[source,java]
+----
+settings.put(
+    AvailableSettings.JDBC_TIME_ZONE,
+    TimeZone.getTimeZone( "UTC" )
+);
+----
+
+Programmatically, on a per `Session` basis::
++
+[source,java]
+----
+Session session = sessionFactory()
+    .withOptions()
+    .jdbcTimeZone( TimeZone.getTimeZone( "UTC" ) )
+    .openSession();
+----
+
+With this configuration property in place, Hibernate is going to call the https://docs.oracle.com/javase/8/docs/api/java/sql/PreparedStatement.html#setTimestamp-int-java.sql.Timestamp-java.util.Calendar-[`PreparedStatement.setTimestamp(int parameterIndex, java.sql.Timestamp, Calendar cal)`] or
+https://docs.oracle.com/javase/8/docs/api/java/sql/PreparedStatement.html#setTime-int-java.sql.Time-java.util.Calendar-[`PreparedStatement.setTime(int parameterIndex, java.sql.Time x, Calendar cal)`], where the `java.util.Calendar` references the time zone provided via the `hibernate.jdbc.time_zone` property.
 
 
 
@@ -1804,6 +1786,19 @@ include::{converter-sourcedir}/ConverterTest.java[tags=basic-attribute-converter
 By passing the associated Hibernate `Type`, you can use the `Caption` object when binding the query parameter value.
 
 
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[[basic-type-contributor]]
+==== TypeContributor
+
+`org.hibernate.boot.model.TypeContributor` is a contract for overriding or extending parts of the Hibernate type
+system.
+
+There are many ways to integrate a `TypeContributor`.  The most common is to define the `TypeContributor` as
+a Java service (see `java.util.ServiceLoader`).
+
+`TypeContributor` is passed a `TypeContributions` reference, which allows registration of custom `JavaType`,
+`JdbcType` and `BasicType` references.
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1973,7 +1968,7 @@ Once the reserved keywords are escaped, Hibernate will use the correct quotation
 This is usually double quotes, but SQL Server uses brackets and MySQL uses backticks.
 
 [[basic-quoting-example]]
-.Hibernate legacy quoting
+.Hibernate quoting
 ====
 [source, JAVA, indent=0]
 ----

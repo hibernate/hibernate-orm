@@ -92,9 +92,8 @@ public class UnionTableGroup implements VirtualTableGroup {
 		if ( tableGroupJoins == null ) {
 			tableGroupJoins = new ArrayList<>();
 		}
-		if ( !tableGroupJoins.contains( join ) ) {
-			tableGroupJoins.add( join );
-		}
+		assert !tableGroupJoins.contains( join );
+		tableGroupJoins.add( join );
 	}
 
 	@Override
@@ -102,9 +101,8 @@ public class UnionTableGroup implements VirtualTableGroup {
 		if ( nestedTableGroupJoins == null ) {
 			nestedTableGroupJoins = new ArrayList<>();
 		}
-		if ( !nestedTableGroupJoins.contains( join ) ) {
-			nestedTableGroupJoins.add( join );
-		}
+		assert !nestedTableGroupJoins.contains( join );
+		nestedTableGroupJoins.add( join );
 	}
 
 	@Override

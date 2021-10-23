@@ -6,6 +6,9 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NavigablePath;
@@ -31,6 +34,7 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E>, DomainResultProducer<E> {
 
 	private final boolean allowJoins;
+	private List<SqmJoin<?, ?>> orderedJoins;
 
 	public SqmRoot(
 			EntityDomainType<E> entityType,
@@ -66,6 +70,28 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E>, Doma
 
 	public boolean isAllowJoins() {
 		return allowJoins;
+	}
+
+	public List<SqmJoin<?, ?>> getOrderedJoins() {
+		return orderedJoins;
+	}
+
+	public void addOrderedJoin(SqmJoin<?, ?> join) {
+		if ( orderedJoins == null ) {
+			// If we encounter anything but an attribute join, we need to order joins strictly
+			if ( !( join instanceof SqmAttributeJoin<?, ?> ) ) {
+				orderedJoins = new ArrayList<>();
+				visitSqmJoins( this::addOrderedJoinTransitive );
+			}
+		}
+		else {
+			orderedJoins.add( join );
+		}
+	}
+
+	private void addOrderedJoinTransitive(SqmJoin<?, ?> join) {
+		orderedJoins.add( join );
+		join.visitSqmJoins( this::addOrderedJoinTransitive );
 	}
 
 	@Override
@@ -125,29 +151,6 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E>, Doma
 			}
 		}
 		return true;
-	}
-
-	@Override
-	public <X> JpaEntityJoin<X> join(Class<X> entityJavaType) {
-		return join( nodeBuilder().getDomainModel().entity( entityJavaType ) );
-	}
-
-	@Override
-	public <X> JpaEntityJoin<X> join(EntityDomainType<X> entity) {
-		return join( entity, SqmJoinType.INNER );
-	}
-
-	@Override
-	public <X> JpaEntityJoin<X> join(Class<X> entityJavaType, SqmJoinType joinType) {
-		return join( nodeBuilder().getDomainModel().entity( entityJavaType ), joinType );
-	}
-
-	@Override
-	public <X> JpaEntityJoin<X> join(EntityDomainType<X> entity, SqmJoinType joinType) {
-		final SqmEntityJoin<X> join = new SqmEntityJoin<>( entity, null, joinType, this );
-		//noinspection unchecked
-		addSqmJoin( (SqmJoin<E, ?>) join );
-		return join;
 	}
 
 	@Override

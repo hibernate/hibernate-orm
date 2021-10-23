@@ -91,9 +91,8 @@ public class TableGroupImpl implements TableGroup {
 		if ( tableGroupJoins == null ) {
 			tableGroupJoins = new ArrayList<>();
 		}
-		if ( !tableGroupJoins.contains( join ) ) {
-			tableGroupJoins.add( join );
-		}
+		assert !tableGroupJoins.contains( join );
+		tableGroupJoins.add( join );
 	}
 
 	@Override

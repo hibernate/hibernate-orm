@@ -82,6 +82,9 @@ import org.hibernate.metamodel.model.domain.internal.CompositeSqmPathSource;
 import org.hibernate.query.criteria.JpaPath;
 import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
+import org.hibernate.query.sqm.tree.SqmJoinType;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelatedRootJoin;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelation;
 import org.hibernate.sql.exec.internal.VersionTypeSeedParameterSpecification;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -1926,12 +1929,24 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final TableGroup tableGroup;
 		if ( sqmRoot.isCorrelated() ) {
 			final SessionFactoryImplementor sessionFactory = creationContext.getSessionFactory();
-			final TableGroup parentTableGroup = fromClauseIndex.findTableGroup(
-					sqmRoot.getCorrelationParent().getNavigablePath()
-			);
 			final EntityPersister entityDescriptor = resolveEntityPersister( sqmRoot.getReferencedPathSource() );
 			if ( sqmRoot.containsOnlyInnerJoins() ) {
 				// If we have just inner joins against a correlated root, we can render the joins as references
+				final SqmFrom<?, ?> from;
+				// If we correlate a join, we have to create a special SqmRoot shell called SqmCorrelatedRootJoin.
+				// The only purpose of that is to serve as SqmRoot, which is needed for the FROM clause.
+				// It will always contain just a single correlated join though, which is what is actually correlated
+				if ( sqmRoot instanceof SqmCorrelatedRootJoin<?> ) {
+					assert sqmRoot.getSqmJoins().size() == 1;
+					assert sqmRoot.getSqmJoins().get( 0 ).isCorrelated();
+					from = sqmRoot.getSqmJoins().get( 0 );
+				}
+				else {
+					from = sqmRoot;
+				}
+				final TableGroup parentTableGroup = fromClauseIndex.findTableGroup(
+						from.getCorrelationParent().getNavigablePath()
+				);
 				final SqlAliasBase sqlAliasBase = sqlAliasBaseManager.createSqlAliasBase( parentTableGroup.getGroupAlias() );
 				tableGroup = new CorrelatedTableGroup(
 						parentTableGroup,
@@ -1945,11 +1960,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				);
 
 				log.tracef( "Resolved SqmRoot [%s] to correlated TableGroup [%s]", sqmRoot, tableGroup );
-
-				consumeExplicitJoins( sqmRoot, tableGroup );
+				consumeExplicitJoins( from, tableGroup );
 				return;
 			}
 			else {
+				final TableGroup parentTableGroup = fromClauseIndex.findTableGroup(
+						sqmRoot.getCorrelationParent().getNavigablePath()
+				);
 				// If we have non-inner joins against a correlated root, we must render the root with a correlation predicate
 				tableGroup = entityDescriptor.createRootTableGroup(
 						true,
@@ -2042,7 +2059,33 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		fromClauseIndex.register( sqmRoot, tableGroup );
 		currentQuerySpec.getFromClause().addRoot( tableGroup );
 
-		consumeExplicitJoins( sqmRoot, tableGroup );
+		if ( sqmRoot.getOrderedJoins() == null ) {
+			consumeExplicitJoins( sqmRoot, tableGroup );
+		}
+		else {
+			if ( log.isTraceEnabled() ) {
+				log.tracef( "Visiting explicit joins for `%s`", sqmRoot.getNavigablePath() );
+			}
+			TableGroup lastTableGroup = tableGroup;
+			for ( SqmJoin<?, ?> join : sqmRoot.getOrderedJoins() ) {
+				final TableGroup ownerTableGroup;
+				if ( join.getLhs() == null ) {
+					ownerTableGroup = tableGroup;
+				}
+				else {
+					if ( join.getLhs() instanceof SqmCorrelation<?, ?> ) {
+						ownerTableGroup = fromClauseIndex.findTableGroup(
+								( (SqmCorrelation<?, ?>) join.getLhs() ).getCorrelatedRoot().getNavigablePath()
+						);
+					}
+					else {
+						ownerTableGroup = fromClauseIndex.findTableGroup( join.getLhs().getNavigablePath() );
+					}
+				}
+				assert ownerTableGroup != null;
+				lastTableGroup = consumeExplicitJoin( join, lastTableGroup, ownerTableGroup, false );
+			}
+		}
 	}
 
 	private EntityPersister resolveEntityPersister(EntityDomainType<?> entityDomainType) {
@@ -2054,29 +2097,38 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			log.tracef( "Visiting explicit joins for `%s`", sqmFrom.getNavigablePath() );
 		}
 		sqmFrom.visitSqmJoins(
-				sqmJoin -> consumeExplicitJoin( sqmJoin, lhsTableGroup )
+				sqmJoin -> consumeExplicitJoin( sqmJoin, lhsTableGroup, lhsTableGroup, true )
 		);
 	}
 
 	@SuppressWarnings("WeakerAccess")
-	protected void consumeExplicitJoin(SqmJoin<?, ?> sqmJoin, TableGroup lhsTableGroup) {
+	protected TableGroup consumeExplicitJoin(
+			SqmJoin<?, ?> sqmJoin,
+			TableGroup lhsTableGroup,
+			TableGroup ownerTableGroup,
+			boolean transitive) {
 		if ( sqmJoin instanceof SqmAttributeJoin<?, ?> ) {
-			consumeAttributeJoin( ( (SqmAttributeJoin<?, ?>) sqmJoin ), lhsTableGroup );
+			return consumeAttributeJoin( ( (SqmAttributeJoin<?, ?>) sqmJoin ), lhsTableGroup, ownerTableGroup, transitive );
 		}
 		else if ( sqmJoin instanceof SqmCrossJoin<?> ) {
-			consumeCrossJoin( ( (SqmCrossJoin<?>) sqmJoin ), lhsTableGroup );
+			return consumeCrossJoin( ( (SqmCrossJoin<?>) sqmJoin ), lhsTableGroup, transitive );
 		}
 		else if ( sqmJoin instanceof SqmEntityJoin<?> ) {
-			consumeEntityJoin( ( (SqmEntityJoin<?>) sqmJoin ), lhsTableGroup );
+			return consumeEntityJoin( ( (SqmEntityJoin<?>) sqmJoin ), lhsTableGroup, transitive );
 		}
 		else {
 			throw new InterpretationException( "Could not resolve SqmJoin [" + sqmJoin.getNavigablePath() + "] to TableGroupJoin" );
 		}
 	}
 
-	private void consumeAttributeJoin(SqmAttributeJoin<?, ?> sqmJoin, TableGroup lhsTableGroup) {
+	private TableGroup consumeAttributeJoin(
+			SqmAttributeJoin<?, ?> sqmJoin,
+			TableGroup lhsTableGroup,
+			TableGroup ownerTableGroup,
+			boolean transitive) {
 
 		final SqmPathSource<?> pathSource = sqmJoin.getReferencedPathSource();
+		final SqmJoinType sqmJoinType = sqmJoin.getSqmJoinType();
 
 		final TableGroupJoin joinedTableGroupJoin;
 		final TableGroup joinedTableGroup;
@@ -2084,7 +2136,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final NavigablePath sqmJoinNavigablePath = sqmJoin.getNavigablePath();
 		final NavigablePath parentNavigablePath = sqmJoinNavigablePath.getParent();
 
-		final ModelPart modelPart = lhsTableGroup.getModelPart().findSubPart(
+		final ModelPart modelPart = ownerTableGroup.getModelPart().findSubPart(
 				pathSource.getPathName(),
 				SqmMappingModelHelper.resolveExplicitTreatTarget( sqmJoin, this )
 		);
@@ -2108,11 +2160,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 			joinedTableGroupJoin = pluralAttributeMapping.createTableGroupJoin(
 					joinPath,
-					lhsTableGroup,
+					ownerTableGroup,
 					sqmJoin.getExplicitAlias(),
-					sqmJoin.getSqmJoinType().getCorrespondingSqlJoinType(),
+					sqmJoinType.getCorrespondingSqlJoinType(),
 					sqmJoin.isFetched(),
-					false,
 					this
 			);
 		}
@@ -2123,13 +2174,19 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 			joinedTableGroupJoin = ( (TableGroupJoinProducer) modelPart ).createTableGroupJoin(
 					joinPath,
-					lhsTableGroup,
+					ownerTableGroup,
 					sqmJoin.getExplicitAlias(),
-					sqmJoin.getSqmJoinType().getCorrespondingSqlJoinType(),
+					sqmJoinType.getCorrespondingSqlJoinType(),
 					sqmJoin.isFetched(),
-					false,
 					this
 			);
+
+			// Since this is an explicit join, we force the initialization of a possible lazy table group
+			// to retain the cardinality, but only if this is a non-trivial attribute join.
+			// Left or inner singular attribute joins without a predicate can be safely optimized away
+			if ( sqmJoin.getJoinPredicate() != null || sqmJoinType != SqmJoinType.INNER && sqmJoinType != SqmJoinType.LEFT ) {
+				joinedTableGroupJoin.getJoinedGroup().getPrimaryTableReference();
+			}
 		}
 
 		joinedTableGroup = joinedTableGroupJoin.getJoinedGroup();
@@ -2153,7 +2210,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			currentlyProcessingJoin = oldJoin;
 		}
 
-		consumeExplicitJoins( sqmJoin, joinedTableGroup );
+		if ( transitive ) {
+			consumeExplicitJoins( sqmJoin, joinedTableGroup );
+		}
+		return joinedTableGroup;
 	}
 
 	private NavigablePath getJoinNavigablePath(
@@ -2173,7 +2233,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 	}
 
-	private void consumeCrossJoin(SqmCrossJoin sqmJoin, TableGroup lhsTableGroup) {
+	private TableGroup consumeCrossJoin(SqmCrossJoin<?> sqmJoin, TableGroup lhsTableGroup, boolean transitive) {
 		final EntityPersister entityDescriptor = resolveEntityPersister( sqmJoin.getReferencedPathSource() );
 
 		final TableGroup tableGroup = entityDescriptor.createRootTableGroup(
@@ -2198,10 +2258,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		getFromClauseIndex().register( sqmJoin, tableGroup );
 
-		consumeExplicitJoins( sqmJoin, tableGroupJoin.getJoinedGroup() );
+		if ( transitive ) {
+			consumeExplicitJoins( sqmJoin, tableGroupJoin.getJoinedGroup() );
+		}
+		return tableGroup;
 	}
 
-	private void consumeEntityJoin(SqmEntityJoin sqmJoin, TableGroup lhsTableGroup) {
+	private TableGroup consumeEntityJoin(SqmEntityJoin<?> sqmJoin, TableGroup lhsTableGroup, boolean transitive) {
 		final EntityPersister entityDescriptor = resolveEntityPersister( sqmJoin.getReferencedPathSource() );
 
 		final SqlAstJoinType correspondingSqlJoinType = sqmJoin.getSqmJoinType().getCorrespondingSqlJoinType();
@@ -2236,8 +2299,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		// Note that we add the entity join after processing the predicate because implicit joins needed in there
 		// can be just ordered right before the entity join without changing the semantics
 		lhsTableGroup.addTableGroupJoin( tableGroupJoin );
-
-		consumeExplicitJoins( sqmJoin, tableGroupJoin.getJoinedGroup() );
+		if ( transitive ) {
+			consumeExplicitJoins( sqmJoin, tableGroupJoin.getJoinedGroup() );
+		}
+		return tableGroup;
 	}
 
 	private <X> X prepareReusablePath(SqmPath<?> sqmPath, Supplier<X> supplier) {
@@ -2354,13 +2419,20 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						null,
 						defaultSqlAstJoinType,
 						false,
-						// Implicit joins in the ON clause need to be added as nested table group joins
-						currentClauseStack.getCurrent() == Clause.FROM
-								// Except for entity joins, as we can order the implicit joins before the entity join
-								// See consumeEntityJoin for details
-								&& !( currentlyProcessingJoin instanceof SqmEntityJoin<?> ),
 						this
 				);
+				// Implicit joins in the ON clause of attribute joins need to be added as nested table group joins
+				// We don't have to do that for entity joins etc. as these do not have an inherent dependency on the lhs.
+				// We can just add the implicit join before the currently processing join
+				// See consumeEntityJoin for details
+				final boolean nested = currentClauseStack.getCurrent() == Clause.FROM
+						&& currentlyProcessingJoin instanceof SqmAttributeJoin<?, ?>;
+				if ( nested ) {
+					parentTableGroup.addNestedTableGroupJoin( tableGroupJoin );
+				}
+				else {
+					parentTableGroup.addTableGroupJoin( tableGroupJoin );
+				}
 				tableGroup = tableGroupJoin.getJoinedGroup();
 			}
 
@@ -2822,12 +2894,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 							null,
 							SqlAstJoinType.INNER,
 							false,
-							false,
 							sqlAliasBaseManager,
 							getSqlExpressionResolver(),
 							creationContext
 					);
 
+					parentTableGroup.addTableGroupJoin( tableGroupJoin );
 					return tableGroupJoin.getJoinedGroup();
 				}
 		);
@@ -4657,16 +4729,17 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			).getExpressionType();
 			// The creation of the table group join against the correlated table group
 			// has the side effect that the from and where clause of the sub-query are set
-			pluralAttributeMapping.createTableGroupJoin(
-					pluralPathNavPath,
-					tableGroup,
-					sqmPluralPath.getExplicitAlias(),
-					SqlAstJoinType.INNER,
-					false,
-					false,
-					sqlAliasBaseManager,
-					subQueryState,
-					creationContext
+			tableGroup.addTableGroupJoin(
+					pluralAttributeMapping.createTableGroupJoin(
+							pluralPathNavPath,
+							tableGroup,
+							sqmPluralPath.getExplicitAlias(),
+							SqlAstJoinType.INNER,
+							false,
+							sqlAliasBaseManager,
+							subQueryState,
+							creationContext
+					)
 			);
 
 			final ForeignKeyDescriptor collectionKeyDescriptor = pluralAttributeMapping.getKeyDescriptor();
@@ -5072,9 +5145,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 										alias,
 										tableGroupJoinProducer.getDefaultSqlAstJoinType( lhs ),
 										true,
-										false,
 										this
 								);
+								lhs.addTableGroupJoin( tableGroupJoin );
 								return tableGroupJoin.getJoinedGroup();
 							}
 					);

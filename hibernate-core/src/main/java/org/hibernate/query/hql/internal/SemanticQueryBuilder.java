@@ -1628,7 +1628,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	@SuppressWarnings("WeakerAccess")
-	protected void consumeQualifiedJoin(HqlParser.QualifiedJoinContext parserJoin, SqmRoot<?> sqmRoot) {
+	protected <X> void consumeQualifiedJoin(HqlParser.QualifiedJoinContext parserJoin, SqmRoot<X> sqmRoot) {
 		final SqmJoinType joinType;
 		final int firstJoinTypeSymbolType;
 		if ( parserJoin.getChild( 0 ) instanceof HqlParser.JoinTypeQualifierContext
@@ -1676,22 +1676,22 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		);
 
 		try {
-			//noinspection rawtypes
-			final SqmQualifiedJoin join = (SqmQualifiedJoin) qualifiedJoinRhsContext.getChild( 0 ).accept( this );
+			//noinspection unchecked
+			final SqmQualifiedJoin<X, ?> join = (SqmQualifiedJoin<X, ?>) qualifiedJoinRhsContext.getChild( 0 ).accept( this );
 
 			// we need to set the alias here because the path could be treated - the treat operator is
 			// not consumed by the identifierConsumer
 			join.setExplicitAlias( alias );
 
 			final HqlParser.QualifiedJoinPredicateContext qualifiedJoinPredicateContext = parserJoin.qualifiedJoinPredicate();
-			if ( join instanceof SqmEntityJoin ) {
-				//noinspection unchecked
+			if ( join instanceof SqmEntityJoin<?> ) {
 				sqmRoot.addSqmJoin( join );
 			}
 			else {
+				final SqmAttributeJoin<?, ?> attributeJoin = (SqmAttributeJoin<?, ?>) join;
 				if ( getCreationOptions().useStrictJpaCompliance() ) {
 					if ( join.getExplicitAlias() != null ) {
-						if ( ( (SqmAttributeJoin<?, ?>) join ).isFetched() ) {
+						if ( attributeJoin.isFetched() ) {
 							throw new StrictJpaComplianceViolation(
 									"Encountered aliased fetch join, but strict JPQL compliance was requested",
 									StrictJpaComplianceViolation.Type.ALIASED_FETCH_JOIN
@@ -1699,7 +1699,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 						}
 					}
 				}
-				if ( qualifiedJoinPredicateContext != null && ( (SqmAttributeJoin<?, ?>) join ).isFetched() ) {
+				if ( qualifiedJoinPredicateContext != null && attributeJoin.isFetched() ) {
 					throw new SemanticException( "with-clause not allowed on fetched associations; use filters" );
 				}
 			}

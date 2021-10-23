@@ -171,7 +171,6 @@ public abstract class AbstractCompositeIdentifierMapping
 			String explicitSourceAlias,
 			SqlAstJoinType sqlAstJoinType,
 			boolean fetched,
-			boolean nested,
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
@@ -187,15 +186,7 @@ public abstract class AbstractCompositeIdentifierMapping
 				creationContext
 		);
 
-		final TableGroupJoin join = new TableGroupJoin( navigablePath, SqlAstJoinType.LEFT, tableGroup, null );
-		if ( nested ) {
-			lhs.addNestedTableGroupJoin( join );
-		}
-		else {
-			lhs.addTableGroupJoin( join );
-		}
-
-		return join;
+		return new TableGroupJoin( navigablePath, SqlAstJoinType.LEFT, tableGroup, null );
 	}
 
 	@Override

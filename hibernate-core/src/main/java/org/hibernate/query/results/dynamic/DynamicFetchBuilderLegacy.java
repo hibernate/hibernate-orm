@@ -118,11 +118,11 @@ public class DynamicFetchBuilderLegacy implements DynamicFetchBuilder, NativeQue
 					tableAlias,
 					SqlAstJoinType.INNER,
 					true,
-					false,
 					s -> sqlAliasBase,
 					creationState.getSqlExpressionResolver(),
 					creationState.getCreationContext()
 			);
+			ownerTableGroup.addTableGroupJoin( tableGroupJoin );
 			creationState.getFromClauseAccess().registerTableGroup( fetchPath, tableGroup = tableGroupJoin.getJoinedGroup() );
 		}
 		else {

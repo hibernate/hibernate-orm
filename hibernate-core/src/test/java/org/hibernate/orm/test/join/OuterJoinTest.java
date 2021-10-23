@@ -129,6 +129,28 @@ public class OuterJoinTest {
 	}
 
 	@Test
+	public void testJoinOrderAttributeJoinDependsOnEntityJoin(EntityManagerFactoryScope scope) {
+		scope.inTransaction( em -> {
+			List<Tuple> resultList = em.createQuery(
+							"SELECT a.value, b.value, c.value " +
+									"FROM A a " +
+									"INNER JOIN a.cAssociationByKey c " +
+									"INNER JOIN B b ON a.key = b.key " +
+									"INNER JOIN c.association ca ON ca.key = b.key " +
+									"ORDER BY a.key, b.key, c.key",
+							Tuple.class
+					)
+					.getResultList();
+
+			assertEquals( 1, resultList.size() );
+
+			assertEquals( "a", resultList.get( 0 ).get( 0 ) );
+			assertEquals( "d", resultList.get( 0 ).get( 1 ) );
+			assertEquals( "g", resultList.get( 0 ).get( 2 ) );
+		} );
+	}
+
+	@Test
 	public void testJoinOrderWithRightNormalJoin(EntityManagerFactoryScope scope) {
 		scope.inTransaction( em -> {
 			List<Tuple> resultList = em.createQuery(

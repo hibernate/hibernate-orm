@@ -305,9 +305,9 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 							null,
 							SqlAstJoinType.INNER,
 							true,
-							false,
 							creationState.getSqlAstCreationState()
 					);
+					tableGroup.addTableGroupJoin( tableGroupJoin );
 					return tableGroupJoin.getJoinedGroup();
 				}
 		);

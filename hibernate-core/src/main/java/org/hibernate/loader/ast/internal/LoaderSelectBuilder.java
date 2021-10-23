@@ -421,9 +421,9 @@ public class LoaderSelectBuilder {
 							null,
 							SqlAstJoinType.LEFT,
 							true,
-							false,
 							sqlAstCreationState
 					);
+					rootTableGroup.addTableGroupJoin( tableGroupJoin );
 					tableGroup = tableGroupJoin.getJoinedGroup();
 					sqlAstCreationState.getFromClauseAccess().registerTableGroup( navigablePath, tableGroup );
 				}

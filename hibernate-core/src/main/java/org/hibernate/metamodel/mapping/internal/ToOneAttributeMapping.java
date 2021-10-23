@@ -716,27 +716,33 @@ public class ToOneAttributeMapping
 			final TableGroup tableGroup;
 			if ( fetchParent instanceof EntityResultJoinedSubclassImpl &&
 					( (EntityPersister) fetchParent.getReferencedModePart() ).findDeclaredAttributeMapping( getPartName() ) == null ) {
-				tableGroup = createTableGroupJoin(
+				final TableGroupJoin tableGroupJoin = createTableGroupJoin(
 						fetchablePath,
-						true,
-						getJoinType( fetchablePath, parentTableGroup ),
+						parentTableGroup,
 						resultVariable,
-						creationState,
-						parentTableGroup
+						getJoinType( fetchablePath, parentTableGroup ),
+						true,
+						creationState.getSqlAstCreationState()
 				);
+				parentTableGroup.addTableGroupJoin( tableGroupJoin );
+				tableGroup = tableGroupJoin.getJoinedGroup();
 				fromClauseAccess.registerTableGroup( fetchablePath, tableGroup );
 			}
 			else {
 				tableGroup = fromClauseAccess.resolveTableGroup(
 						fetchablePath,
-						np ->
-								createTableGroupJoin(
-										fetchablePath,
-										true,
-										resultVariable,
-										creationState,
-										parentTableGroup
-								)
+						np -> {
+							final TableGroupJoin tableGroupJoin = createTableGroupJoin(
+									fetchablePath,
+									parentTableGroup,
+									resultVariable,
+									getDefaultSqlAstJoinType( parentTableGroup ),
+									true,
+									creationState.getSqlAstCreationState()
+							);
+							parentTableGroup.addTableGroupJoin( tableGroupJoin );
+							return tableGroupJoin.getJoinedGroup();
+						}
 				);
 			}
 
@@ -839,9 +845,9 @@ public class ToOneAttributeMapping
 					null,
 					getDefaultSqlAstJoinType( tableGroup ),
 					true,
-					false,
 					creationState.getSqlAstCreationState()
 			);
+			tableGroup.addTableGroupJoin( tableGroupJoin );
 
 			creationState.getSqlAstCreationState().getFromClauseAccess().registerTableGroup(
 					navigablePath,
@@ -865,22 +871,6 @@ public class ToOneAttributeMapping
 					creationState
 			);
 		}
-	}
-
-	private TableGroup createTableGroupJoin(
-			NavigablePath fetchablePath,
-			boolean fetched,
-			String sourceAlias,
-			DomainResultCreationState creationState,
-			TableGroup parentTableGroup) {
-		return createTableGroupJoin(
-				fetchablePath,
-				fetched,
-				getDefaultSqlAstJoinType( parentTableGroup ),
-				sourceAlias,
-				creationState,
-				parentTableGroup
-		);
 	}
 
 	@Override
@@ -912,7 +902,6 @@ public class ToOneAttributeMapping
 				sourceAlias,
 				sqlAstJoinType,
 				fetched,
-				false,
 				creationState.getSqlAstCreationState()
 		);
 
@@ -931,7 +920,6 @@ public class ToOneAttributeMapping
 			String explicitSourceAlias,
 			SqlAstJoinType sqlAstJoinType,
 			boolean fetched,
-			boolean nested,
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
@@ -967,12 +955,6 @@ public class ToOneAttributeMapping
 						)
 				)
 		);
-		if ( nested ) {
-			lhs.addNestedTableGroupJoin( join );
-		}
-		else {
-			lhs.addTableGroupJoin( join );
-		}
 
 		if ( sqlAstJoinType == SqlAstJoinType.INNER && isNullable ) {
 			// Force initialization of the underlying table group join to retain cardinality

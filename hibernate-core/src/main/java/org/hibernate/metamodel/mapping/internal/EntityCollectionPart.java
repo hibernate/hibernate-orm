@@ -273,7 +273,6 @@ public class EntityCollectionPart
 			String explicitSourceAlias,
 			SqlAstJoinType sqlAstJoinType,
 			boolean fetched,
-			boolean nested,
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
@@ -283,7 +282,6 @@ public class EntityCollectionPart
 				explicitSourceAlias,
 				sqlAstJoinType,
 				fetched,
-				nested,
 				aliasBaseGenerator,
 				sqlExpressionResolver,
 				creationContext

@@ -311,10 +311,9 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 								null,
 								SqlAstJoinType.INNER,
 								false,
-								false,
 								sqlAstCreationState
 						);
-
+						parentTableGroup.addTableGroupJoin( tableGroupJoin );
 						return tableGroupJoin.getJoinedGroup();
 					}
 			);

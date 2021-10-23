@@ -572,9 +572,9 @@ public class PluralAttributeMappingImpl
 							null,
 							SqlAstJoinType.LEFT,
 							true,
-							false,
 							creationState.getSqlAstCreationState()
 					);
+					lhsTableGroup.addTableGroupJoin( tableGroupJoin );
 					return tableGroupJoin.getJoinedGroup();
 				}
 		);
@@ -625,7 +625,6 @@ public class PluralAttributeMappingImpl
 			String explicitSourceAlias,
 			SqlAstJoinType sqlAstJoinType,
 			boolean fetched,
-			boolean nested,
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
@@ -640,7 +639,7 @@ public class PluralAttributeMappingImpl
 				sqlExpressionResolver,
 				creationContext
 		);
-		final TableGroupJoin join = new TableGroupJoin(
+		return new TableGroupJoin(
 				navigablePath,
 				sqlAstJoinType,
 				tableGroup,
@@ -652,15 +651,6 @@ public class PluralAttributeMappingImpl
 						creationContext
 				)
 		);
-
-		if ( nested ) {
-			lhs.addNestedTableGroupJoin( join );
-		}
-		else {
-			lhs.addTableGroupJoin( join );
-		}
-
-		return join;
 	}
 
 	@Override

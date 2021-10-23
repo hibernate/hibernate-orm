@@ -107,9 +107,8 @@ public abstract class AbstractTableGroup extends AbstractColumnReferenceQualifie
 		if ( tableGroupJoins == null ) {
 			tableGroupJoins = new ArrayList<>();
 		}
-		if ( !tableGroupJoins.contains( join ) ) {
-			tableGroupJoins.add( join );
-		}
+		assert !tableGroupJoins.contains( join );
+		tableGroupJoins.add( join );
 	}
 
 	@Override
@@ -117,9 +116,8 @@ public abstract class AbstractTableGroup extends AbstractColumnReferenceQualifie
 		if ( nestedTableGroupJoins == null ) {
 			nestedTableGroupJoins = new ArrayList<>();
 		}
-		if ( !nestedTableGroupJoins.contains( join ) ) {
-			nestedTableGroupJoins.add( join );
-		}
+		assert !nestedTableGroupJoins.contains( join );
+		nestedTableGroupJoins.add( join );
 	}
 
 	@Override

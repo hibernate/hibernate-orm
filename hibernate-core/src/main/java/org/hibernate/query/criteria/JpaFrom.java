@@ -6,6 +6,9 @@
  */
 package org.hibernate.query.criteria;
 
+import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.sqm.tree.SqmJoinType;
+
 import jakarta.persistence.criteria.From;
 
 /**
@@ -16,4 +19,12 @@ import jakarta.persistence.criteria.From;
 public interface JpaFrom<O,T> extends JpaPath<T>, JpaFetchParent<O,T>, From<O,T> {
 	@Override
 	JpaFrom<O,T> getCorrelationParent();
+
+	<X> JpaEntityJoin<X> join(Class<X> entityJavaType);
+
+	<X> JpaEntityJoin<X> join(EntityDomainType<X> entity);
+
+	<X> JpaEntityJoin<X> join(Class<X> entityJavaType, SqmJoinType joinType);
+
+	<X> JpaEntityJoin<X> join(EntityDomainType<X> entity, SqmJoinType joinType);
 }

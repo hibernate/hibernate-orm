@@ -49,9 +49,7 @@ public class CorrelatedTableGroup extends AbstractTableGroup {
 
 	@Override
 	public void addTableGroupJoin(TableGroupJoin join) {
-		if ( getTableGroupJoins().contains( join ) ) {
-			return;
-		}
+		assert !getTableGroupJoins().contains( join );
 		assert join.getJoinType() == SqlAstJoinType.INNER;
 		querySpec.getFromClause().addRoot( join.getJoinedGroup() );
 		joinPredicateConsumer.accept( join.getPredicate() );

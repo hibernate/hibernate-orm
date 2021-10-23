@@ -32,6 +32,7 @@ import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SetPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.criteria.JpaEntityJoin;
 import org.hibernate.query.criteria.JpaPath;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -43,6 +44,7 @@ import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
+import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
@@ -142,7 +144,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 
 	@Override
 	public boolean hasJoins() {
-		return ! (joins == null || joins.isEmpty() );
+		return !( joins == null || joins.isEmpty() );
 	}
 
 	@Override
@@ -156,6 +158,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 			joins = new ArrayList<>();
 		}
 		joins.add( join );
+		findRoot().addOrderedJoin( join );
 	}
 
 	@Override
@@ -406,6 +409,29 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 						getNavigablePath().getFullPath()
 				)
 		);
+	}
+
+	@Override
+	public <X> JpaEntityJoin<X> join(Class<X> entityJavaType) {
+		return join( nodeBuilder().getDomainModel().entity( entityJavaType ) );
+	}
+
+	@Override
+	public <X> JpaEntityJoin<X> join(EntityDomainType<X> entity) {
+		return join( entity, SqmJoinType.INNER );
+	}
+
+	@Override
+	public <X> JpaEntityJoin<X> join(Class<X> entityJavaType, SqmJoinType joinType) {
+		return join( nodeBuilder().getDomainModel().entity( entityJavaType ), joinType );
+	}
+
+	@Override
+	public <X> JpaEntityJoin<X> join(EntityDomainType<X> entity, SqmJoinType joinType) {
+		final SqmEntityJoin<X> join = new SqmEntityJoin<>( entity, null, joinType, findRoot() );
+		//noinspection unchecked
+		addSqmJoin( (SqmJoin<T, ?>) join );
+		return join;
 	}
 
 	@Override

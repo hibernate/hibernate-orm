@@ -421,6 +421,7 @@ public class LoaderSelectBuilder {
 							null,
 							SqlAstJoinType.LEFT,
 							true,
+							false,
 							sqlAstCreationState
 					);
 					tableGroup = tableGroupJoin.getJoinedGroup();

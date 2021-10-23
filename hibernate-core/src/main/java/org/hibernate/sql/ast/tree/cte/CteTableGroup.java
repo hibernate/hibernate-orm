@@ -60,6 +60,11 @@ public class CteTableGroup implements TableGroup {
 	}
 
 	@Override
+	public List<TableGroupJoin> getNestedTableGroupJoins() {
+		return Collections.emptyList();
+	}
+
+	@Override
 	public boolean canUseInnerJoins() {
 		return false;
 	}
@@ -88,17 +93,21 @@ public class CteTableGroup implements TableGroup {
 	}
 
 	@Override
+	public void visitNestedTableGroupJoins(Consumer<TableGroupJoin> consumer) {
+	}
+
+	@Override
 	public String getGroupAlias() {
 		return null;
 	}
 
 	@Override
-	public boolean hasTableGroupJoins() {
-		return false;
+	public void addTableGroupJoin(TableGroupJoin join) {
+		throw new UnsupportedOperationException(  );
 	}
 
 	@Override
-	public void addTableGroupJoin(TableGroupJoin join) {
+	public void addNestedTableGroupJoin(TableGroupJoin join) {
 		throw new UnsupportedOperationException(  );
 	}
 

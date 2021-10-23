@@ -284,6 +284,7 @@ public class EmbeddedAttributeMapping
 			String explicitSourceAlias,
 			SqlAstJoinType sqlAstJoinType,
 			boolean fetched,
+			boolean nested,
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
@@ -299,14 +300,19 @@ public class EmbeddedAttributeMapping
 				creationContext
 		);
 
-		final TableGroupJoin tableGroupJoin = new TableGroupJoin(
+		final TableGroupJoin join = new TableGroupJoin(
 				navigablePath,
 				sqlAstJoinType,
 				tableGroup
 		);
-		lhs.addTableGroupJoin( tableGroupJoin );
+		if ( nested ) {
+			lhs.addNestedTableGroupJoin( join );
+		}
+		else {
+			lhs.addTableGroupJoin( join );
+		}
 
-		return tableGroupJoin;
+		return join;
 	}
 
 	@Override

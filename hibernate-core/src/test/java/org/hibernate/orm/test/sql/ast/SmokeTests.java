@@ -100,7 +100,7 @@ public class SmokeTests {
 
 					assertThat( rootTableGroup.getTableReferenceJoins().size(), is( 0 ) );
 
-					assertThat( rootTableGroup.hasTableGroupJoins(), is( false ) );
+					assertThat( rootTableGroup.getTableGroupJoins().isEmpty(), is( true ) );
 
 
 					// `s` is the "alias stem" for `SimpleEntity` and as it is the first entity with that stem in
@@ -159,7 +159,7 @@ public class SmokeTests {
 
 					assertThat( rootTableGroup.getTableReferenceJoins().size(), is( 0 ) );
 
-					assertThat( rootTableGroup.hasTableGroupJoins(), is( false ) );
+					assertThat( rootTableGroup.getTableGroupJoins().isEmpty(), is( true ) );
 
 
 					// `s` is the "alias stem" for `SimpleEntity` and as it is the first entity with that stem in

@@ -66,13 +66,13 @@ public class EntityCollectionPartTableGroup implements TableGroup {
 	}
 
 	@Override
-	public boolean canUseInnerJoins() {
-		return collectionTableGroup.canUseInnerJoins();
+	public List<TableGroupJoin> getNestedTableGroupJoins() {
+		return collectionTableGroup.getNestedTableGroupJoins();
 	}
 
 	@Override
-	public boolean hasTableGroupJoins() {
-		return collectionTableGroup.hasTableGroupJoins();
+	public boolean canUseInnerJoins() {
+		return collectionTableGroup.canUseInnerJoins();
 	}
 
 	@Override
@@ -81,8 +81,18 @@ public class EntityCollectionPartTableGroup implements TableGroup {
 	}
 
 	@Override
+	public void addNestedTableGroupJoin(TableGroupJoin join) {
+		collectionTableGroup.addNestedTableGroupJoin( join );
+	}
+
+	@Override
 	public void visitTableGroupJoins(Consumer<TableGroupJoin> consumer) {
 		collectionTableGroup.visitTableGroupJoins( consumer );
+	}
+
+	@Override
+	public void visitNestedTableGroupJoins(Consumer<TableGroupJoin> consumer) {
+		collectionTableGroup.visitNestedTableGroupJoins( consumer );
 	}
 
 	@Override

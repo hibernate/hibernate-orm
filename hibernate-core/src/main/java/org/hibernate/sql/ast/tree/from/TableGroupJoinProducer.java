@@ -8,7 +8,6 @@ package org.hibernate.sql.ast.tree.from;
 
 import java.util.function.Consumer;
 
-import org.hibernate.LockMode;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
@@ -33,6 +32,7 @@ public interface TableGroupJoinProducer extends TableGroupProducer {
 			String explicitSourceAlias,
 			SqlAstJoinType sqlAstJoinType,
 			boolean fetched,
+			boolean nested,
 			SqlAstCreationState creationState) {
 		return createTableGroupJoin(
 				navigablePath,
@@ -40,6 +40,7 @@ public interface TableGroupJoinProducer extends TableGroupProducer {
 				explicitSourceAlias,
 				sqlAstJoinType,
 				fetched,
+				nested,
 				creationState.getSqlAliasBaseGenerator(),
 				creationState.getSqlExpressionResolver(),
 				creationState.getCreationContext()
@@ -55,6 +56,7 @@ public interface TableGroupJoinProducer extends TableGroupProducer {
 			String explicitSourceAlias,
 			SqlAstJoinType sqlAstJoinType,
 			boolean fetched,
+			boolean nested,
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext);

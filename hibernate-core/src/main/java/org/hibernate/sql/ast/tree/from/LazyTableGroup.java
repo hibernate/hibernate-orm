@@ -106,8 +106,8 @@ public class LazyTableGroup extends AbstractColumnReferenceQualifier implements 
 	}
 
 	@Override
-	public boolean hasTableGroupJoins() {
-		return tableGroup != null && tableGroup.hasTableGroupJoins();
+	public List<TableGroupJoin> getNestedTableGroupJoins() {
+		return tableGroup == null ? Collections.emptyList() : tableGroup.getNestedTableGroupJoins();
 	}
 
 	@Override
@@ -116,9 +116,21 @@ public class LazyTableGroup extends AbstractColumnReferenceQualifier implements 
 	}
 
 	@Override
+	public void addNestedTableGroupJoin(TableGroupJoin join) {
+		getTableGroup().addNestedTableGroupJoin( join );
+	}
+
+	@Override
 	public void visitTableGroupJoins(Consumer<TableGroupJoin> consumer) {
 		if ( tableGroup != null ) {
 			tableGroup.visitTableGroupJoins( consumer );
+		}
+	}
+
+	@Override
+	public void visitNestedTableGroupJoins(Consumer<TableGroupJoin> consumer) {
+		if ( tableGroup != null ) {
+			tableGroup.visitNestedTableGroupJoins( consumer );
 		}
 	}
 
@@ -159,7 +171,7 @@ public class LazyTableGroup extends AbstractColumnReferenceQualifier implements 
 
 	@Override
 	public boolean isRealTableGroup() {
-		return false;
+		return tableGroup != null && tableGroup.isRealTableGroup();
 	}
 
 	@Override

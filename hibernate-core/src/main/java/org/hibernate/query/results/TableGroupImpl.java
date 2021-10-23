@@ -77,13 +77,13 @@ public class TableGroupImpl implements TableGroup {
 	}
 
 	@Override
-	public boolean canUseInnerJoins() {
-		return false;
+	public List<TableGroupJoin> getNestedTableGroupJoins() {
+		return Collections.emptyList();
 	}
 
 	@Override
-	public boolean hasTableGroupJoins() {
-		return tableGroupJoins != null && !tableGroupJoins.isEmpty();
+	public boolean canUseInnerJoins() {
+		return false;
 	}
 
 	@Override
@@ -97,10 +97,19 @@ public class TableGroupImpl implements TableGroup {
 	}
 
 	@Override
+	public void addNestedTableGroupJoin(TableGroupJoin join) {
+		addTableGroupJoin( join );
+	}
+
+	@Override
 	public void visitTableGroupJoins(Consumer<TableGroupJoin> consumer) {
 		if ( tableGroupJoins != null ) {
 			tableGroupJoins.forEach( consumer );
 		}
+	}
+
+	@Override
+	public void visitNestedTableGroupJoins(Consumer<TableGroupJoin> consumer) {
 	}
 
 	@Override

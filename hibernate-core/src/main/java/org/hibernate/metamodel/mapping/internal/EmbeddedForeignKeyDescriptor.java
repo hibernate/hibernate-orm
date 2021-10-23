@@ -37,7 +37,6 @@ import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.Junction;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
@@ -306,6 +305,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 							null,
 							SqlAstJoinType.INNER,
 							true,
+							false,
 							creationState.getSqlAstCreationState()
 					);
 					return tableGroupJoin.getJoinedGroup();

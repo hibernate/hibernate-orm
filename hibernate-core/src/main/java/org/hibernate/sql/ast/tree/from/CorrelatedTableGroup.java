@@ -71,6 +71,14 @@ public class CorrelatedTableGroup extends AbstractTableGroup {
 		if ( primaryTableReference != null ) {
 			return primaryTableReference;
 		}
+		for ( TableGroupJoin tableGroupJoin : getNestedTableGroupJoins() ) {
+			final TableReference groupTableReference = tableGroupJoin.getJoinedGroup()
+					.getPrimaryTableReference()
+					.getTableReference( navigablePath, tableExpression, allowFkOptimization );
+			if ( groupTableReference != null ) {
+				return groupTableReference;
+			}
+		}
 		for ( TableGroupJoin tableGroupJoin : getTableGroupJoins() ) {
 			final TableReference groupTableReference = tableGroupJoin.getJoinedGroup()
 					.getPrimaryTableReference()

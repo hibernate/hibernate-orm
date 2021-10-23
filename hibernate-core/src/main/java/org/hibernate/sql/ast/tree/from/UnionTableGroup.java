@@ -23,6 +23,7 @@ public class UnionTableGroup implements VirtualTableGroup {
 	private final boolean canUseInnerJoins;
 	private final NavigablePath navigablePath;
 	private List<TableGroupJoin> tableGroupJoins;
+	private List<TableGroupJoin> nestedTableGroupJoins;
 
 	private final UnionSubclassEntityPersister modelPart;
 	private final String sourceAlias;
@@ -72,8 +73,13 @@ public class UnionTableGroup implements VirtualTableGroup {
 	}
 
 	@Override
-	public boolean hasTableGroupJoins() {
-		return tableGroupJoins != null && !tableGroupJoins.isEmpty();
+	public List<TableGroupJoin> getNestedTableGroupJoins() {
+		return nestedTableGroupJoins == null ? Collections.emptyList() : Collections.unmodifiableList( nestedTableGroupJoins );
+	}
+
+	@Override
+	public boolean isRealTableGroup() {
+		return nestedTableGroupJoins != null && !nestedTableGroupJoins.isEmpty();
 	}
 
 	@Override
@@ -92,9 +98,26 @@ public class UnionTableGroup implements VirtualTableGroup {
 	}
 
 	@Override
+	public void addNestedTableGroupJoin(TableGroupJoin join) {
+		if ( nestedTableGroupJoins == null ) {
+			nestedTableGroupJoins = new ArrayList<>();
+		}
+		if ( !nestedTableGroupJoins.contains( join ) ) {
+			nestedTableGroupJoins.add( join );
+		}
+	}
+
+	@Override
 	public void visitTableGroupJoins(Consumer<TableGroupJoin> consumer) {
 		if ( tableGroupJoins != null ) {
 			tableGroupJoins.forEach( consumer );
+		}
+	}
+
+	@Override
+	public void visitNestedTableGroupJoins(Consumer<TableGroupJoin> consumer) {
+		if ( nestedTableGroupJoins != null ) {
+			nestedTableGroupJoins.forEach( consumer );
 		}
 	}
 
@@ -127,6 +150,15 @@ public class UnionTableGroup implements VirtualTableGroup {
 			boolean allowFkOptimization) {
 		if ( tableReference.getTableReference( navigablePath, tableExpression, allowFkOptimization ) != null ) {
 			return tableReference;
+		}
+		if ( nestedTableGroupJoins != null ) {
+			for ( TableGroupJoin tableGroupJoin : nestedTableGroupJoins ) {
+				final TableReference tableReference = tableGroupJoin.getJoinedGroup()
+						.resolveTableReference( navigablePath, tableExpression, allowFkOptimization );
+				if ( tableReference != null ) {
+					return tableReference;
+				}
+			}
 		}
 		if ( tableGroupJoins != null ) {
 			for ( TableGroupJoin tableGroupJoin : tableGroupJoins ) {

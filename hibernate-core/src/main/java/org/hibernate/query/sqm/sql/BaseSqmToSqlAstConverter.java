@@ -23,7 +23,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import jakarta.persistence.TemporalType;
-import jakarta.persistence.metamodel.EmbeddableType;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
@@ -373,8 +372,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private final Stack<FromClauseIndex> fromClauseIndexStack = new StandardStack<>();
 	private SqlAstProcessingState lastPoppedProcessingState;
 	private FromClauseIndex lastPoppedFromClauseIndex;
-	private SqlAstQueryPartProcessingStateImpl joinPredicateWrapper;
-	private SqmJoin<?, ?> currentJoin;
+	private SqmJoin<?, ?> currentlyProcessingJoin;
 
 	private final Stack<Clause> currentClauseStack = new StandardStack<>();
 
@@ -2114,6 +2112,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					sqmJoin.getExplicitAlias(),
 					sqmJoin.getSqmJoinType().getCorrespondingSqlJoinType(),
 					sqmJoin.isFetched(),
+					false,
 					this
 			);
 		}
@@ -2128,6 +2127,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					sqmJoin.getExplicitAlias(),
 					sqmJoin.getSqmJoinType().getCorrespondingSqlJoinType(),
 					sqmJoin.isFetched(),
+					false,
 					this
 			);
 		}
@@ -2147,22 +2147,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				throw new IllegalStateException();
 			}
 
-			final SqmJoin<?, ?> oldJoin = currentJoin;
-			currentJoin = sqmJoin;
-			final Predicate predicate = (Predicate) sqmJoin.getJoinPredicate().accept( this );
-			if ( joinPredicateWrapper == null ) {
-				joinedTableGroupJoin.applyPredicate( predicate );
-			}
-			else {
-				// See #prepareReusablePath for an explanation why this is necessary
-				popProcessingStateStack();
-
-				final QuerySpec querySpec = joinPredicateWrapper.getInflightQueryPart().getFirstQuerySpec();
-				querySpec.applyPredicate( predicate );
-				joinedTableGroupJoin.applyPredicate( new ExistsPredicate( querySpec, getBooleanType() ) );
-				joinPredicateWrapper = null;
-			}
-			currentJoin = oldJoin;
+			final SqmJoin<?, ?> oldJoin = currentlyProcessingJoin;
+			currentlyProcessingJoin = sqmJoin;
+			joinedTableGroupJoin.applyPredicate( (Predicate) sqmJoin.getJoinPredicate().accept( this ) );
+			currentlyProcessingJoin = oldJoin;
 		}
 
 		consumeExplicitJoins( sqmJoin, joinedTableGroup );
@@ -2236,29 +2224,20 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				tableGroup,
 				null
 		);
-		lhsTableGroup.addTableGroupJoin( tableGroupJoin );
-
-		consumeExplicitJoins( sqmJoin, tableGroupJoin.getJoinedGroup() );
 
 		// add any additional join restrictions
 		if ( sqmJoin.getJoinPredicate() != null ) {
-			final SqmJoin<?, ?> oldJoin = currentJoin;
-			currentJoin = sqmJoin;
-			final Predicate predicate = (Predicate) sqmJoin.getJoinPredicate().accept( this );
-			if ( joinPredicateWrapper == null ) {
-				tableGroupJoin.applyPredicate( predicate );
-			}
-			else {
-				// See #prepareReusablePath for an explanation why this is necessary
-				popProcessingStateStack();
-
-				final QuerySpec querySpec = joinPredicateWrapper.getInflightQueryPart().getFirstQuerySpec();
-				querySpec.applyPredicate( predicate );
-				tableGroupJoin.applyPredicate( new ExistsPredicate( querySpec, getBooleanType() ) );
-				joinPredicateWrapper = null;
-			}
-			currentJoin = oldJoin;
+			final SqmJoin<?, ?> oldJoin = currentlyProcessingJoin;
+			currentlyProcessingJoin = sqmJoin;
+			tableGroupJoin.applyPredicate( (Predicate) sqmJoin.getJoinPredicate().accept( this ) );
+			currentlyProcessingJoin = oldJoin;
 		}
+
+		// Note that we add the entity join after processing the predicate because implicit joins needed in there
+		// can be just ordered right before the entity join without changing the semantics
+		lhsTableGroup.addTableGroupJoin( tableGroupJoin );
+
+		consumeExplicitJoins( sqmJoin, tableGroupJoin.getJoinedGroup() );
 	}
 
 	private <X> X prepareReusablePath(SqmPath<?> sqmPath, Supplier<X> supplier) {
@@ -2271,41 +2250,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		final FromClauseIndex fromClauseIndex = fromClauseIndexStack.getCurrent();
 		final boolean useInnerJoin = currentClauseStack.getCurrent() == Clause.SELECT;
-		if ( currentClauseStack.getCurrent() == Clause.FROM && currentJoin instanceof SqmAttributeJoin<?, ?>
-				&& joinPredicateWrapper == null && needsJoinForPath( fromClauseIndex, sqmPath ) ) {
-			// If we encounter a reusable path that requires a join in the ON clause of an attribute join
-			// we have to transform the predicate into `.. on exists (select 1 from ... where ..)`
-			// Note that we don't need this for e.g. entity joins because the implicit joins needed in such ON clauses
-			// can be just ordered right before the entity join without changing the semantics
-			final QuerySpec querySpec = new QuerySpec( false );
-			final JdbcLiteral<Integer> jdbcLiteral = new JdbcLiteral<>( 1, basicType( Integer.class ) );
-			querySpec.getSelectClause().addSqlSelection(
-					new SqlSelectionImpl( 1, 0, jdbcLiteral )
-			);
-			joinPredicateWrapper = new SqlAstQueryPartProcessingStateImpl(
-					querySpec,
-					getCurrentProcessingState(),
-					this,
-					currentClauseStack::getCurrent
-			);
-			pushProcessingState( joinPredicateWrapper );
-			// Note that the pop must happen where the join predicate is applied
-			// This is necessary as we want to retain the FromClauseIndex of this newly created sub query
-			// while we are still processing expressions of the predicate
-			currentClauseStack.push( Clause.WHERE );
-			prepareReusablePath( fromClauseIndex, sqmPath, useInnerJoin, implicitJoinChecker );
-			currentClauseStack.pop();
-		}
-		else {
-			prepareReusablePath( fromClauseIndex, sqmPath, useInnerJoin, implicitJoinChecker );
-		}
+		prepareReusablePath( fromClauseIndex, sqmPath, useInnerJoin, implicitJoinChecker );
 		return supplier.get();
 	}
 
 	private TableGroup prepareReusablePath(
 			FromClauseIndex fromClauseIndex,
 			JpaPath<?> sqmPath,
-			boolean useInnerJoin, Consumer<TableGroup> implicitJoinChecker) {
+			boolean useInnerJoin,
+			Consumer<TableGroup> implicitJoinChecker) {
 		final JpaPath<?> parentPath = sqmPath.getParentPath();
 		final TableGroup tableGroup = fromClauseIndex.findTableGroup( parentPath.getNavigablePath() );
 		if ( tableGroup == null ) {
@@ -2352,105 +2305,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					createTreatTypeRestriction( treatedPath.getWrappedPath(), treatedPath.getTreatTarget() )
 			);
 		}
-	}
-
-	private boolean needsJoinForPath(FromClauseIndex fromClauseIndex, SqmPath<?> sqmPath) {
-		final JpaPath<?> parentPath = sqmPath.getParentPath();
-		final TableGroup parentTableGroup = fromClauseIndex.findTableGroup( parentPath.getNavigablePath() );
-		// First, check if we can find the table group for the direct parent
-		if ( parentTableGroup != null ) {
-			return needsJoinForPath( fromClauseIndex, parentTableGroup, sqmPath.getReferencedPathSource().getPathName() );
-		}
-		JpaPath<?> realParentPath = parentPath;
-		int realParentDistance = 0;
-		// Next, check if we can find the table group for the parent, after traversing up embeddable paths
-		if ( realParentPath.getModel() instanceof EmbeddableType<?> ) {
-			do {
-				realParentPath = realParentPath.getParentPath();
-				realParentDistance++;
-			} while ( realParentPath.getModel() instanceof EmbeddableType<?> );
-			final TableGroup assumedToOneTableGroup = fromClauseIndex.findTableGroup( realParentPath.getNavigablePath() );
-			if ( assumedToOneTableGroup != null ) {
-				if ( assumedToOneTableGroup.getModelPart() instanceof ToOneAttributeMapping ) {
-					realParentPath = parentPath.getParentPath();
-					final StringBuilder sb = new StringBuilder();
-					sb.append( sqmPath.getReferencedPathSource().getPathName() );
-					for ( int i = realParentDistance - 1; i >= 0; i-- ) {
-						sb.insert( 0, realParentPath.getNavigablePath().getUnaliasedLocalName() + '.' );
-						realParentPath = realParentPath.getParentPath();
-					}
-					return needsJoinForPath( fromClauseIndex, assumedToOneTableGroup, sb.toString() );
-				}
-				return false;
-			}
-		}
-		// Finally, check if we can find the grandparent table group
-		final TableGroup grandparentTableGroup = fromClauseIndex.findTableGroup( realParentPath.getParentPath().getNavigablePath() );
-		if ( grandparentTableGroup == null ) {
-			// without a grandparent, we always need a join
-			return true;
-		}
-
-		// With the grandparent available, we can determine if the model part is a to-one mapping
-		final ModelPart realParentModelPart = grandparentTableGroup.getModelPart().findSubPart(
-				realParentPath.getNavigablePath().getUnaliasedLocalName(),
-				null
-		);
-		// This must be a to-one otherwise we assume to always need a join
-		if ( !( realParentModelPart instanceof ToOneAttributeMapping ) ) {
-			return true;
-		}
-		final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) realParentModelPart;
-		final String path;
-		if ( realParentDistance == 0 ) {
-			path = sqmPath.getReferencedPathSource().getPathName();
-		}
-		else {
-			realParentPath = parentPath.getParentPath();
-			final StringBuilder sb = new StringBuilder();
-			sb.append( sqmPath.getReferencedPathSource().getPathName() );
-			for ( int i = realParentDistance - 1; i >= 0; i-- ) {
-				sb.insert( 0, realParentPath.getNavigablePath().getUnaliasedLocalName() + '.' );
-				realParentPath = realParentPath.getParentPath();
-			}
-			path = sb.toString();
-		}
-
-		return !toOneAttributeMapping.isTargetKeyPropertyPath( path );
-	}
-
-	private boolean needsJoinForPath(
-			FromClauseIndex fromClauseIndex,
-			TableGroup tableGroup,
-			String pathName) {
-		TableGroup parentTableGroup = tableGroup;
-		ToOneAttributeMapping toOneAttributeMapping;
-		ModelPartContainer modelPart = tableGroup.getModelPart();
-		String path;
-		if ( modelPart instanceof ToOneAttributeMapping ) {
-			toOneAttributeMapping = (ToOneAttributeMapping) modelPart;
-			path = pathName;
-		}
-		else {
-			if ( !( modelPart instanceof EmbeddableValuedModelPart ) ) {
-				return false;
-			}
-			StringBuilder sb = new StringBuilder();
-			sb.append( pathName );
-			do {
-				sb.insert( 0, modelPart.getPartName() + '.' );
-				parentTableGroup = fromClauseIndex.findTableGroup( parentTableGroup.getNavigablePath().getParent() );
-				modelPart = parentTableGroup.getModelPart();
-			} while ( modelPart instanceof EmbeddableValuedModelPart );
-			if ( !( modelPart instanceof ToOneAttributeMapping ) ) {
-				return false;
-			}
-			toOneAttributeMapping = (ToOneAttributeMapping) modelPart;
-			path = sb.toString();
-		}
-		final LazyTableGroup lazyTableGroup = (LazyTableGroup) parentTableGroup;
-		// Unless the lazy table group is not initialized and the requested sub part is not the FK
-		return !lazyTableGroup.isInitialized() && !toOneAttributeMapping.isTargetKeyPropertyPath( path );
 	}
 
 	private TableGroup createTableGroup(TableGroup parentTableGroup, SqmPath<?> joinedPath, boolean useInnerJoin) {
@@ -2500,6 +2354,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						null,
 						defaultSqlAstJoinType,
 						false,
+						// Implicit joins in the ON clause need to be added as nested table group joins
+						currentClauseStack.getCurrent() == Clause.FROM
+								// Except for entity joins, as we can order the implicit joins before the entity join
+								// See consumeEntityJoin for details
+								&& !( currentlyProcessingJoin instanceof SqmEntityJoin<?> ),
 						this
 				);
 				tableGroup = tableGroupJoin.getJoinedGroup();
@@ -2962,6 +2821,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 							parentTableGroup,
 							null,
 							SqlAstJoinType.INNER,
+							false,
 							false,
 							sqlAliasBaseManager,
 							getSqlExpressionResolver(),
@@ -4340,17 +4200,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public QueryPart visitSubQueryExpression(SqmSubQuery<?> sqmSubQuery) {
-		return visitQueryPart( sqmSubQuery.getQueryPart() );
-//
-//		final ExpressableType<?> expressableType = determineExpressableType( sqmSubQuery );
-//
-//		return new SubQuery(
-//				subQuerySpec,
-//				expressableType instanceof BasicValuedExpressableType<?>
-//						? ( (BasicValuedExpressableType) expressableType ).getSqlExpressableType( getTypeConfiguration() )
-//						: null,
-//				expressableType
-//		);
+		// The only purpose for tracking the current join is to
+		// Reset the current join for sub queries because in there, we won't add nested joins
+		final SqmJoin<?, ?> oldJoin = currentlyProcessingJoin;
+		currentlyProcessingJoin = null;
+		final QueryPart queryPart = visitQueryPart( sqmSubQuery.getQueryPart() );
+		currentlyProcessingJoin = oldJoin;
+		return queryPart;
 	}
 
 	@Override
@@ -4807,6 +4663,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					sqmPluralPath.getExplicitAlias(),
 					SqlAstJoinType.INNER,
 					false,
+					false,
 					sqlAliasBaseManager,
 					subQueryState,
 					creationContext
@@ -5215,6 +5072,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 										alias,
 										tableGroupJoinProducer.getDefaultSqlAstJoinType( lhs ),
 										true,
+										false,
 										this
 								);
 								return tableGroupJoin.getJoinedGroup();

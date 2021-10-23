@@ -25,6 +25,7 @@ public class CompositeTableGroup implements VirtualTableGroup {
 	private final boolean fetched;
 
 	private List<TableGroupJoin> tableGroupJoins;
+	private List<TableGroupJoin> nestedTableGroupJoins;
 
 	public CompositeTableGroup(
 			NavigablePath navigablePath,
@@ -74,13 +75,18 @@ public class CompositeTableGroup implements VirtualTableGroup {
 	}
 
 	@Override
-	public boolean canUseInnerJoins() {
-		return underlyingTableGroup.canUseInnerJoins();
+	public List<TableGroupJoin> getNestedTableGroupJoins() {
+		return nestedTableGroupJoins == null ? Collections.emptyList() : Collections.unmodifiableList( nestedTableGroupJoins );
 	}
 
 	@Override
-	public boolean hasTableGroupJoins() {
-		return tableGroupJoins != null && !tableGroupJoins.isEmpty();
+	public boolean isRealTableGroup() {
+		return nestedTableGroupJoins != null && !nestedTableGroupJoins.isEmpty();
+	}
+
+	@Override
+	public boolean canUseInnerJoins() {
+		return underlyingTableGroup.canUseInnerJoins();
 	}
 
 	@Override
@@ -94,9 +100,26 @@ public class CompositeTableGroup implements VirtualTableGroup {
 	}
 
 	@Override
+	public void addNestedTableGroupJoin(TableGroupJoin join) {
+		if ( nestedTableGroupJoins == null ) {
+			nestedTableGroupJoins = new ArrayList<>();
+		}
+		if ( !nestedTableGroupJoins.contains( join ) ) {
+			nestedTableGroupJoins.add( join );
+		}
+	}
+
+	@Override
 	public void visitTableGroupJoins(Consumer<TableGroupJoin> consumer) {
 		if ( tableGroupJoins != null ) {
 			tableGroupJoins.forEach( consumer );
+		}
+	}
+
+	@Override
+	public void visitNestedTableGroupJoins(Consumer<TableGroupJoin> consumer) {
+		if ( nestedTableGroupJoins != null ) {
+			nestedTableGroupJoins.forEach( consumer );
 		}
 	}
 
@@ -135,6 +158,14 @@ public class CompositeTableGroup implements VirtualTableGroup {
 		);
 		if ( tableReference != null ) {
 			return tableReference;
+		}
+		for ( TableGroupJoin tableGroupJoin : getNestedTableGroupJoins() ) {
+			final TableReference primaryTableReference = tableGroupJoin.getJoinedGroup()
+					.getPrimaryTableReference()
+					.getTableReference( navigablePath, tableExpression, allowFkOptimization );
+			if ( primaryTableReference != null ) {
+				return primaryTableReference;
+			}
 		}
 		for ( TableGroupJoin tableGroupJoin : getTableGroupJoins() ) {
 			final TableReference primaryTableReference = tableGroupJoin.getJoinedGroup()

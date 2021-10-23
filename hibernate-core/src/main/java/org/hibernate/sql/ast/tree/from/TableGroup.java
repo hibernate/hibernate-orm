@@ -41,14 +41,18 @@ public interface TableGroup extends SqlAstNode, ColumnReferenceQualifier, SqmPat
 	String getSourceAlias();
 
 	List<TableGroupJoin> getTableGroupJoins();
+
+	List<TableGroupJoin> getNestedTableGroupJoins();
 	
 	boolean canUseInnerJoins();
 
-	boolean hasTableGroupJoins();
-
 	void addTableGroupJoin(TableGroupJoin join);
 
+	void addNestedTableGroupJoin(TableGroupJoin join);
+
 	void visitTableGroupJoins(Consumer<TableGroupJoin> consumer);
+
+	void visitNestedTableGroupJoins(Consumer<TableGroupJoin> consumer);
 
 	void applyAffectedTableNames(Consumer<String> nameCollector);
 

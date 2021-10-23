@@ -202,6 +202,7 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 			String explicitSourceAlias,
 			SqlAstJoinType sqlAstJoinType,
 			boolean fetched,
+			boolean nested,
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
@@ -217,14 +218,19 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 				creationContext
 		);
 
-		final TableGroupJoin tableGroupJoin = new TableGroupJoin(
+		final TableGroupJoin join = new TableGroupJoin(
 				navigablePath,
 				sqlAstJoinType,
 				tableGroup,
 				null
 		);
-		lhs.addTableGroupJoin( tableGroupJoin );
-		return tableGroupJoin;
+		if ( nested ) {
+			lhs.addNestedTableGroupJoin( join );
+		}
+		else {
+			lhs.addTableGroupJoin( join );
+		}
+		return join;
 	}
 
 	@Override

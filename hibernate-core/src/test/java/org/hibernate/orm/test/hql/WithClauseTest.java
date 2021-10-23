@@ -13,7 +13,6 @@ import java.util.List;
 import org.hibernate.HibernateException;
 import org.hibernate.QueryException;
 import org.hibernate.dialect.DerbyDialect;
-import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.query.Query;
 
 import org.hibernate.testing.TestForIssue;
@@ -115,7 +114,6 @@ public class WithClauseTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = TiDBDialect.class, reason = "TiDB db does not support subqueries for ON condition")
 	public void testWithClauseWithImplicitJoin(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {

@@ -93,12 +93,12 @@ public class MutatingTableReferenceGroupWrapper implements VirtualTableGroup {
 	}
 
 	@Override
-	public boolean canUseInnerJoins() {
-		return false;
+	public List<TableGroupJoin> getNestedTableGroupJoins() {
+		return Collections.emptyList();
 	}
 
 	@Override
-	public boolean hasTableGroupJoins() {
+	public boolean canUseInnerJoins() {
 		return false;
 	}
 
@@ -108,7 +108,16 @@ public class MutatingTableReferenceGroupWrapper implements VirtualTableGroup {
 	}
 
 	@Override
+	public void addNestedTableGroupJoin(TableGroupJoin join) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public void visitTableGroupJoins(Consumer<TableGroupJoin> consumer) {
+	}
+
+	@Override
+	public void visitNestedTableGroupJoins(Consumer<TableGroupJoin> consumer) {
 	}
 
 	@Override

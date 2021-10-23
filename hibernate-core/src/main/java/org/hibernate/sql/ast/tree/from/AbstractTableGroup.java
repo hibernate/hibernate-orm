@@ -27,6 +27,7 @@ public abstract class AbstractTableGroup extends AbstractColumnReferenceQualifie
 	private final SqlAliasBase sqlAliasBase;
 
 	private List<TableGroupJoin> tableGroupJoins;
+	private List<TableGroupJoin> nestedTableGroupJoins;
 
 	private final SessionFactoryImplementor sessionFactory;
 
@@ -87,13 +88,18 @@ public abstract class AbstractTableGroup extends AbstractColumnReferenceQualifie
 	}
 
 	@Override
-	public boolean canUseInnerJoins() {
-		return canUseInnerJoins;
+	public List<TableGroupJoin> getNestedTableGroupJoins() {
+		return nestedTableGroupJoins == null ? Collections.emptyList() : Collections.unmodifiableList( nestedTableGroupJoins );
 	}
 
 	@Override
-	public boolean hasTableGroupJoins() {
-		return tableGroupJoins != null && !tableGroupJoins.isEmpty();
+	public boolean isRealTableGroup() {
+		return nestedTableGroupJoins != null && !nestedTableGroupJoins.isEmpty();
+	}
+
+	@Override
+	public boolean canUseInnerJoins() {
+		return canUseInnerJoins;
 	}
 
 	@Override
@@ -107,9 +113,26 @@ public abstract class AbstractTableGroup extends AbstractColumnReferenceQualifie
 	}
 
 	@Override
+	public void addNestedTableGroupJoin(TableGroupJoin join) {
+		if ( nestedTableGroupJoins == null ) {
+			nestedTableGroupJoins = new ArrayList<>();
+		}
+		if ( !nestedTableGroupJoins.contains( join ) ) {
+			nestedTableGroupJoins.add( join );
+		}
+	}
+
+	@Override
 	public void visitTableGroupJoins(Consumer<TableGroupJoin> consumer) {
 		if ( tableGroupJoins != null ) {
 			tableGroupJoins.forEach( consumer );
+		}
+	}
+
+	@Override
+	public void visitNestedTableGroupJoins(Consumer<TableGroupJoin> consumer) {
+		if ( nestedTableGroupJoins != null ) {
+			nestedTableGroupJoins.forEach( consumer );
 		}
 	}
 

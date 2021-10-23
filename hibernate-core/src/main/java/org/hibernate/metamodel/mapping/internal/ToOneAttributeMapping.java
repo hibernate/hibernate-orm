@@ -839,6 +839,7 @@ public class ToOneAttributeMapping
 					null,
 					getDefaultSqlAstJoinType( tableGroup ),
 					true,
+					false,
 					creationState.getSqlAstCreationState()
 			);
 
@@ -911,6 +912,7 @@ public class ToOneAttributeMapping
 				sourceAlias,
 				sqlAstJoinType,
 				fetched,
+				false,
 				creationState.getSqlAstCreationState()
 		);
 
@@ -929,6 +931,7 @@ public class ToOneAttributeMapping
 			String explicitSourceAlias,
 			SqlAstJoinType sqlAstJoinType,
 			boolean fetched,
+			boolean nested,
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
@@ -944,7 +947,7 @@ public class ToOneAttributeMapping
 				sqlExpressionResolver,
 				creationContext
 		);
-		final TableGroupJoin tableGroupJoin = new TableGroupJoin(
+		final TableGroupJoin join = new TableGroupJoin(
 				navigablePath,
 				sqlAstJoinType,
 				lazyTableGroup,
@@ -954,7 +957,7 @@ public class ToOneAttributeMapping
 		final TableReference lhsTableReference = lhs.resolveTableReference( navigablePath, identifyingColumnsTableExpression );
 
 		lazyTableGroup.setTableGroupInitializerCallback(
-				tableGroup -> tableGroupJoin.applyPredicate(
+				tableGroup -> join.applyPredicate(
 						foreignKeyDescriptor.generateJoinPredicate(
 								sideNature == ForeignKeyDescriptor.Nature.TARGET ? lhsTableReference : tableGroup.getPrimaryTableReference(),
 								sideNature == ForeignKeyDescriptor.Nature.TARGET ? tableGroup.getPrimaryTableReference() : lhsTableReference,
@@ -964,14 +967,19 @@ public class ToOneAttributeMapping
 						)
 				)
 		);
-		lhs.addTableGroupJoin( tableGroupJoin );
+		if ( nested ) {
+			lhs.addNestedTableGroupJoin( join );
+		}
+		else {
+			lhs.addTableGroupJoin( join );
+		}
 
 		if ( sqlAstJoinType == SqlAstJoinType.INNER && isNullable ) {
 			// Force initialization of the underlying table group join to retain cardinality
 			lazyTableGroup.getPrimaryTableReference();
 		}
 
-		return tableGroupJoin;
+		return join;
 	}
 
 	@Override
@@ -991,7 +999,7 @@ public class ToOneAttributeMapping
 				canUseInnerJoin,
 				navigablePath,
 				fetched,
-				() -> createTableGroupJoinInternal(
+				() -> createTableGroupInternal(
 						canUseInnerJoin,
 						navigablePath,
 						fetched,
@@ -1064,7 +1072,7 @@ public class ToOneAttributeMapping
 		return getDefaultSqlAstJoinType( tableGroup );
 	}
 
-	public TableGroup createTableGroupJoinInternal(
+	public TableGroup createTableGroupInternal(
 			boolean canUseInnerJoins,
 			NavigablePath navigablePath,
 			boolean fetched,

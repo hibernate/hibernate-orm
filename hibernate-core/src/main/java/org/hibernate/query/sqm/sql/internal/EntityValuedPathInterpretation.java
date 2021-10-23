@@ -311,6 +311,7 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 								null,
 								SqlAstJoinType.INNER,
 								false,
+								false,
 								sqlAstCreationState
 						);
 

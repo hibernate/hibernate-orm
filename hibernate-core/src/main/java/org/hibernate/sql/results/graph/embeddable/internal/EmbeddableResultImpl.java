@@ -54,6 +54,7 @@ public class EmbeddableResultImpl<T> extends AbstractFetchParent implements Embe
 							resultVariable,
 							SqlAstJoinType.INNER,
 							true,
+							false,
 							creationState.getSqlAstCreationState()
 					);
 

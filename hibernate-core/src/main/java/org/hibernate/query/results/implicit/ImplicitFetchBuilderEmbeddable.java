@@ -89,6 +89,7 @@ public class ImplicitFetchBuilderEmbeddable implements ImplicitFetchBuilder {
 							null,
 							SqlAstJoinType.INNER,
 							true,
+							false,
 							creationStateImpl
 					);
 					return tableGroupJoin.getJoinedGroup();

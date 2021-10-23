@@ -174,13 +174,13 @@ public class OrderByFragmentFunction extends AbstractSqmFunctionDescriptor {
 		}
 
 		@Override
-		public boolean canUseInnerJoins() {
-			return delegate.canUseInnerJoins();
+		public List<TableGroupJoin> getNestedTableGroupJoins() {
+			return delegate.getNestedTableGroupJoins();
 		}
 
 		@Override
-		public boolean hasTableGroupJoins() {
-			return delegate.hasTableGroupJoins();
+		public boolean canUseInnerJoins() {
+			return delegate.canUseInnerJoins();
 		}
 
 		@Override
@@ -189,8 +189,18 @@ public class OrderByFragmentFunction extends AbstractSqmFunctionDescriptor {
 		}
 
 		@Override
+		public void addNestedTableGroupJoin(TableGroupJoin join) {
+			delegate.addNestedTableGroupJoin( join );
+		}
+
+		@Override
 		public void visitTableGroupJoins(Consumer<TableGroupJoin> consumer) {
 			delegate.visitTableGroupJoins( consumer );
+		}
+
+		@Override
+		public void visitNestedTableGroupJoins(Consumer<TableGroupJoin> consumer) {
+			delegate.visitNestedTableGroupJoins( consumer );
 		}
 
 		@Override

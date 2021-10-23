@@ -115,7 +115,7 @@ public class StandardTableGroup extends AbstractTableGroup {
 
 	@Override
 	public boolean isRealTableGroup() {
-		return realTableGroup;
+		return realTableGroup || super.isRealTableGroup();
 	}
 
 	@Override
@@ -159,6 +159,12 @@ public class StandardTableGroup extends AbstractTableGroup {
 			return potentiallyCreateTableReference( tableExpression );
 		}
 
+		for ( TableGroupJoin tableGroupJoin : getNestedTableGroupJoins() ) {
+			final TableReference primaryTableReference = tableGroupJoin.getJoinedGroup().getPrimaryTableReference();
+			if ( primaryTableReference.getTableReference( navigablePath, tableExpression, allowFkOptimization ) != null ) {
+				return primaryTableReference;
+			}
+		}
 		for ( TableGroupJoin tableGroupJoin : getTableGroupJoins() ) {
 			final TableReference primaryTableReference = tableGroupJoin.getJoinedGroup().getPrimaryTableReference();
 			if ( primaryTableReference.getTableReference( navigablePath, tableExpression, allowFkOptimization ) != null ) {

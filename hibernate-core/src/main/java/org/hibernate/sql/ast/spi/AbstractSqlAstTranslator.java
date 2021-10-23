@@ -3403,9 +3403,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected void renderTableGroup(TableGroup tableGroup, Predicate predicate) {
-		// Without reference joins, even a real table group does not need parenthesis
+		// Without reference joins or nested join groups, even a real table group does not need parenthesis
 		final boolean realTableGroup = tableGroup.isRealTableGroup()
-				&& CollectionHelper.isNotEmpty( tableGroup.getTableReferenceJoins() );
+				&& ( CollectionHelper.isNotEmpty( tableGroup.getTableReferenceJoins() )
+				|| hasTableGroupsToRender( tableGroup.getNestedTableGroupJoins() ) );
 		if ( realTableGroup ) {
 			appendSql( OPEN_PARENTHESIS );
 		}
@@ -3415,6 +3416,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 		if ( realTableGroup ) {
 			renderTableReferenceJoins( tableGroup );
+			processNestedTableGroupJoins( tableGroup );
 			appendSql( CLOSE_PARENTHESIS );
 		}
 
@@ -3442,6 +3444,17 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			}
 			forUpdate.applyAliases( getDialect().getLockRowIdentifier( effectiveLockMode ), tableGroup );
 		}
+	}
+
+	private boolean hasTableGroupsToRender(List<TableGroupJoin> nestedTableGroupJoins) {
+		for ( TableGroupJoin nestedTableGroupJoin : nestedTableGroupJoins ) {
+			final TableGroup joinedGroup = nestedTableGroupJoin.getJoinedGroup();
+			if ( !( joinedGroup instanceof LazyTableGroup ) || ( (LazyTableGroup) joinedGroup ).isInitialized() ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	@SuppressWarnings("WeakerAccess")
@@ -3504,6 +3517,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	@SuppressWarnings("WeakerAccess")
+	protected void processNestedTableGroupJoins(TableGroup source) {
+		source.visitNestedTableGroupJoins( this::processTableGroupJoin );
+	}
+
+	@SuppressWarnings("WeakerAccess")
 	protected void processTableGroupJoin(TableGroupJoin tableGroupJoin) {
 		final TableGroup joinedGroup = tableGroupJoin.getJoinedGroup();
 
@@ -3513,6 +3531,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		else if ( !( joinedGroup instanceof LazyTableGroup ) || ( (LazyTableGroup) joinedGroup ).getUnderlyingTableGroup() != null ) {
 			appendSql( WHITESPACE );
 			SqlAstJoinType joinType = tableGroupJoin.getJoinType();
+			// todo (6.0): no exactly sure why this is necessary and IMO this should ideally go away.
+			//  I realized that inverse one-to-one associations with join tables are considered "non-nullable" in the boot model.
+			//  Due to that, we use an inner join for the table group join of that association which the following "works around"
+			//  IMO such an association should be considered nullable. It's also odd that the association
+			//  has the FK Side KEY, although it is clearly TARGET
+			//  See org.hibernate.orm.test.annotations.manytoone.ManyToOneJoinTest.testOneToOneJoinTable2
 			if ( !joinedGroup.isRealTableGroup() && joinType == SqlAstJoinType.INNER && !joinedGroup.getTableReferenceJoins().isEmpty() ) {
 				joinType = SqlAstJoinType.LEFT;
 			}

@@ -137,6 +137,7 @@ dependencies {
     javadocClasspath libraries.jakarta_validation
     javadocClasspath libraries.jakarta_cdi
     javadocClasspath libraries.jakarta_jacc
+    javadocClasspath libraries.jakarta_jsonb
     javadocClasspath libraries.ant
     javadocClasspath libraries.postgresql
     javadocClasspath gradleApi()
@@ -305,7 +306,7 @@ task uploadDocumentation(type:Exec) {
 }
 
 /**
- * Configuration of the distribution plugin, used to build release bundle as both ZIP and TGZ
+ * Configuration of the distribution plugin, used to build the ZIP and TGZ "release" bundles
  */
 distributions {
     main {
@@ -408,10 +409,9 @@ distZip.dependsOn assembleDocumentation
  */
 task buildBundles {
     group 'Release'
-    description 'Builds all release bundles'
+    description 'Builds all release bundles (pseudonym for `assembleDist`)'
 
-    dependsOn distZip
-    dependsOn distTar
+    dependsOn assembleDist
 }
 
 task uploadBundlesSourceForge(type: Exec) {

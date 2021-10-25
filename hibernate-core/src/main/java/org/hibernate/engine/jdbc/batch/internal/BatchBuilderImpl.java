@@ -6,15 +6,10 @@
  */
 package org.hibernate.engine.jdbc.batch.internal;
 
-import java.util.Map;
-
-import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
-import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.Manageable;
 
 /**
@@ -22,7 +17,7 @@ import org.hibernate.service.spi.Manageable;
  *
  * @author Steve Ebersole
  */
-public class BatchBuilderImpl implements BatchBuilder, Configurable, Manageable, BatchBuilderMXBean {
+public class BatchBuilderImpl implements BatchBuilder, Manageable, BatchBuilderMXBean {
 
 	private volatile int jdbcBatchSize;
 
@@ -39,11 +34,6 @@ public class BatchBuilderImpl implements BatchBuilder, Configurable, Manageable,
 	 */
 	public BatchBuilderImpl(int jdbcBatchSize) {
 		this.jdbcBatchSize = jdbcBatchSize;
-	}
-
-	@Override
-	public void configure(Map configurationValues) {
-		jdbcBatchSize = ConfigurationHelper.getInt( Environment.STATEMENT_BATCH_SIZE, configurationValues, jdbcBatchSize );
 	}
 
 	@Override

@@ -300,6 +300,20 @@ public class SessionImpl
 		return new ActionQueue( this );
 	}
 
+	/**
+	 * Override the implementation provided on SharedSessionContractImplementor
+	 * which is not very efficient: this method is hot in Hibernate Reactive, and could
+	 * be hot in some ORM contexts as well.
+	 * @return
+	 */
+	@Override
+	public Integer getConfiguredJdbcBatchSize() {
+		final Integer sessionJdbcBatchSize = getJdbcBatchSize();
+		return sessionJdbcBatchSize == null ?
+				fastSessionServices.defaultJdbcBatchSize :
+				sessionJdbcBatchSize;
+	}
+
 	private LockOptions getLockOptionsForRead() {
 		return this.lockOptions == null ? fastSessionServices.defaultLockOptions : this.lockOptions;
 	}

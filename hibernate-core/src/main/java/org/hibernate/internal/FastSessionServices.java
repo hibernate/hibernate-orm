@@ -160,6 +160,7 @@ public final class FastSessionServices {
 	final boolean discardOnClose;
 	final BaselineSessionEventsListenerBuilder defaultSessionEventListeners;
 	final LockOptions defaultLockOptions;
+	final int defaultJdbcBatchSize;
 
 	//Private fields:
 	private final Dialect dialect;
@@ -217,6 +218,7 @@ public final class FastSessionServices {
 		this.disallowOutOfTransactionUpdateOperations = !sessionFactoryOptions.isAllowOutOfTransactionUpdateOperations();
 		this.useStreamForLobBinding = Environment.useStreamsForBinary() || dialect.useInputStreamToInsertBlob();
 		this.requiresMultiTenantConnectionProvider = sf.getSettings().getMultiTenancyStrategy().requiresMultiTenantConnectionProvider();
+		this.defaultJdbcBatchSize = sessionFactoryOptions.getJdbcBatchSize();
 
 		//Some "hot" services:
 		this.connectionProvider = requiresMultiTenantConnectionProvider ? null : sr.getService( ConnectionProvider.class );

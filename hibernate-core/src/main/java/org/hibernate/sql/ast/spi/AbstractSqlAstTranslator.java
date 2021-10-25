@@ -3534,17 +3534,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 		else if ( !( joinedGroup instanceof LazyTableGroup ) || ( (LazyTableGroup) joinedGroup ).getUnderlyingTableGroup() != null ) {
 			appendSql( WHITESPACE );
-			SqlAstJoinType joinType = tableGroupJoin.getJoinType();
-			// todo (6.0): no exactly sure why this is necessary and IMO this should ideally go away.
-			//  I realized that inverse one-to-one associations with join tables are considered "non-nullable" in the boot model.
-			//  Due to that, we use an inner join for the table group join of that association which the following "works around"
-			//  IMO such an association should be considered nullable. It's also odd that the association
-			//  has the FK Side KEY, although it is clearly TARGET
-			//  See org.hibernate.orm.test.annotations.manytoone.ManyToOneJoinTest.testOneToOneJoinTable2
-			if ( !joinedGroup.isRealTableGroup() && joinType == SqlAstJoinType.INNER && !joinedGroup.getTableReferenceJoins().isEmpty() ) {
-				joinType = SqlAstJoinType.LEFT;
-			}
-			renderJoinType( joinType );
+			renderJoinType( tableGroupJoin.getJoinType() );
 
 			if ( tableGroupJoin.getPredicate() != null && !tableGroupJoin.getPredicate().isEmpty() ) {
 				renderTableGroup( joinedGroup, tableGroupJoin.getPredicate() );

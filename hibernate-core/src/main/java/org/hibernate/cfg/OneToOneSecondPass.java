@@ -198,6 +198,7 @@ public class OneToOneSecondPass implements SecondPass {
 					manyToOne.setLazy( value.isLazy() );
 					manyToOne.setReferencedEntityName( value.getReferencedEntityName() );
 					manyToOne.setUnwrapProxy( value.isUnwrapProxy() );
+					manyToOne.markAsLogicalOneToOne();
 					prop.setValue( manyToOne );
 					Iterator otherSideJoinKeyColumns = otherSideJoin.getKey().getColumnIterator();
 					while ( otherSideJoinKeyColumns.hasNext() ) {

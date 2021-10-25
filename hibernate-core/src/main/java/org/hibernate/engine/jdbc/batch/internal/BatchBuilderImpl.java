@@ -24,7 +24,7 @@ import org.hibernate.service.spi.Manageable;
  */
 public class BatchBuilderImpl implements BatchBuilder, Configurable, Manageable, BatchBuilderMXBean {
 
-	private int jdbcBatchSize;
+	private volatile int jdbcBatchSize;
 
 	/**
 	 * Constructs a BatchBuilderImpl

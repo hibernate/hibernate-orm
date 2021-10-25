@@ -35,7 +35,19 @@ public interface Queryable extends ModelPart {
 	ModelPart findSubPart(String name, EntityMappingType treatTargetType);
 
 	default ModelPart resolveSubPart(DotIdentifierSequence path) {
-		return path.resolve( (ModelPart) this, (part, name) -> ( (Queryable) part ).findSubPart( name, null ) );
+		return path.resolve(
+				(ModelPart) this,
+				(part, name) -> {
+					final String fullPath = part.getNavigableRole().getFullPath();
+					if ( fullPath.equals( name ) ) {
+						return part;
+					}
+					else {
+						return ( (Queryable) part ).findSubPart( name.substring( fullPath.length() + 1 ), null );
+					}
+				},
+				(part, name) -> ( (Queryable) part ).findSubPart( name, null )
+		);
 	}
 
 	/**

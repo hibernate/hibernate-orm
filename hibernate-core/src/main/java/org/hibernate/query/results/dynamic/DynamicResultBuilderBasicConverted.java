@@ -25,7 +25,7 @@ import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -48,7 +48,7 @@ public class DynamicResultBuilderBasicConverted<O,R> implements DynamicResultBui
 			AttributeConverter<O, R> converter,
 			SessionFactoryImplementor sessionFactory) {
 		final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();
-		final JavaTypeDescriptorRegistry jtdRegistry = typeConfiguration.getJavaTypeDescriptorRegistry();
+		final JavaTypeRegistry jtdRegistry = typeConfiguration.getJavaTypeDescriptorRegistry();
 
 		this.columnAlias = columnAlias;
 		this.domainJtd = jtdRegistry.getDescriptor( domainJavaType );
@@ -74,7 +74,7 @@ public class DynamicResultBuilderBasicConverted<O,R> implements DynamicResultBui
 			SessionFactoryImplementor sessionFactory) {
 		final ManagedBeanRegistry beans = sessionFactory.getServiceRegistry().getService( ManagedBeanRegistry.class );
 		final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();
-		final JavaTypeDescriptorRegistry jtdRegistry = typeConfiguration.getJavaTypeDescriptorRegistry();
+		final JavaTypeRegistry jtdRegistry = typeConfiguration.getJavaTypeDescriptorRegistry();
 
 		this.columnAlias = columnAlias;
 		this.domainJtd = jtdRegistry.getDescriptor( domainJavaType );

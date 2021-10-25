@@ -75,7 +75,7 @@ import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.query.TemporalUnit.*;
@@ -179,7 +179,7 @@ public class PostgreSQLDialect extends Dialect {
 			int jdbcTypeCode,
 			int precision,
 			int scale,
-			JdbcTypeDescriptorRegistry jdbcTypeDescriptorRegistry) {
+			JdbcTypeRegistry jdbcTypeRegistry) {
 		if ( jdbcTypeCode == SqlTypes.OTHER ) {
 			switch ( columnTypeName ) {
 				case "uuid":
@@ -194,7 +194,7 @@ public class PostgreSQLDialect extends Dialect {
 					break;
 			}
 		}
-		return jdbcTypeDescriptorRegistry.getDescriptor( jdbcTypeCode );
+		return jdbcTypeRegistry.getDescriptor( jdbcTypeCode );
 	}
 
 	@Override
@@ -989,7 +989,7 @@ public class PostgreSQLDialect extends Dialect {
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes(typeContributions, serviceRegistry);
 
-		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
+		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeDescriptorRegistry();
 		// For discussion of BLOB support in Postgres, as of 8.4, have a peek at
 		// <a href="http://jdbc.postgresql.org/documentation/84/binary-data.html">http://jdbc.postgresql.org/documentation/84/binary-data.html</a>.

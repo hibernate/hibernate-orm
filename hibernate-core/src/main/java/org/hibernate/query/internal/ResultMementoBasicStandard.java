@@ -18,7 +18,7 @@ import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.UserType;
 
@@ -81,7 +81,7 @@ public class ResultMementoBasicStandard implements ResultMementoBasic {
 				this.explicitJavaTypeDescriptor = registeredBasicType.getJavaTypeDescriptor();
 			}
 			else {
-				final JavaTypeDescriptorRegistry jtdRegistry = typeConfiguration.getJavaTypeDescriptorRegistry();
+				final JavaTypeRegistry jtdRegistry = typeConfiguration.getJavaTypeDescriptorRegistry();
 				final JavaType<Object> registeredJtd = jtdRegistry.getDescriptor( definition.type() );
 				final ManagedBeanRegistry beanRegistry = sessionFactory.getServiceRegistry().getService( ManagedBeanRegistry.class );
 				if ( BasicType.class.isAssignableFrom( registeredJtd.getJavaTypeClass() ) ) {

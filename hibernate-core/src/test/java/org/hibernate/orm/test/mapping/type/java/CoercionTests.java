@@ -19,7 +19,7 @@ import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.type.descriptor.java.CoercionException;
 import org.hibernate.type.descriptor.java.CoercionHelper;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -53,7 +53,7 @@ public class CoercionTests {
 	@Test
 	public void testCoercibleDetection(SessionFactoryScope scope) {
 		final TypeConfiguration typeConfiguration = scope.getSessionFactory().getTypeConfiguration();
-		final JavaTypeDescriptorRegistry jtdRegistry = typeConfiguration.getJavaTypeDescriptorRegistry();
+		final JavaTypeRegistry jtdRegistry = typeConfiguration.getJavaTypeDescriptorRegistry();
 
 		final JavaType<Integer> integerType = jtdRegistry.resolveDescriptor( Integer.class );
 		final JavaType<Long> longType = jtdRegistry.resolveDescriptor( Long.class );

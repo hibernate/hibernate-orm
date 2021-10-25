@@ -25,7 +25,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -53,7 +53,7 @@ public class OffsetDateTimeJavaTypeDescriptor extends AbstractTemporalJavaTypeDe
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeDescriptorIndicators stdIndicators) {
 		final TemporalType temporalPrecision = stdIndicators.getTemporalPrecision();
-		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = stdIndicators.getTypeConfiguration()
+		final JdbcTypeRegistry jdbcTypeRegistry = stdIndicators.getTypeConfiguration()
 				.getJdbcTypeDescriptorRegistry();
 		if ( temporalPrecision == null || temporalPrecision == TemporalType.TIMESTAMP ) {
 			return stdIndicators.getDefaultTimeZoneStorageStrategy() == TimeZoneStorageStrategy.NORMALIZE

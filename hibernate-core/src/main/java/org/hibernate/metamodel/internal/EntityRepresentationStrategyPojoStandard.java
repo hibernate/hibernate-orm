@@ -53,7 +53,7 @@ import org.hibernate.proxy.pojo.ProxyFactoryHelper;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 
 /**
  * @author Steve Ebersole
@@ -83,7 +83,7 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 			EntityPersister runtimeDescriptor,
 			RuntimeModelCreationContext creationContext) {
 		final SessionFactoryImplementor sessionFactory = creationContext.getSessionFactory();
-		final JavaTypeDescriptorRegistry jtdRegistry = creationContext.getTypeConfiguration()
+		final JavaTypeRegistry jtdRegistry = creationContext.getTypeConfiguration()
 				.getJavaTypeDescriptorRegistry();
 
 		final Class<?> mappedJavaType = bootDescriptor.getMappedClass();

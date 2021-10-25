@@ -63,7 +63,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JsonJdbcType;
 import org.hibernate.type.descriptor.jdbc.NullJdbcType;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import java.sql.CallableStatement;
 import java.sql.DatabaseMetaData;
@@ -309,16 +309,16 @@ public class MySQLDialect extends Dialect {
 			int jdbcTypeCode,
 			int precision,
 			int scale,
-			JdbcTypeDescriptorRegistry jdbcTypeDescriptorRegistry) {
+			JdbcTypeRegistry jdbcTypeRegistry) {
 		if ( jdbcTypeCode == Types.BIT ) {
-			return jdbcTypeDescriptorRegistry.getDescriptor( Types.BOOLEAN );
+			return jdbcTypeRegistry.getDescriptor( Types.BOOLEAN );
 		}
 		return super.resolveSqlTypeDescriptor(
 				columnTypeName,
 				jdbcTypeCode,
 				precision,
 				scale,
-				jdbcTypeDescriptorRegistry
+				jdbcTypeRegistry
 		);
 	}
 
@@ -406,7 +406,7 @@ public class MySQLDialect extends Dialect {
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
 
-		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
+		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeDescriptorRegistry();
 
 		if ( getMySQLVersion() >= 570) {

@@ -28,13 +28,13 @@ import org.jboss.logging.Logger;
  *
  * @since 5.3
  */
-public class JavaTypeDescriptorRegistry implements JavaTypeDescriptorBaseline.BaselineTarget, Serializable {
-	private static final Logger log = Logger.getLogger( JavaTypeDescriptorRegistry.class );
+public class JavaTypeRegistry implements JavaTypeDescriptorBaseline.BaselineTarget, Serializable {
+	private static final Logger log = Logger.getLogger( JavaTypeRegistry.class );
 
 	private final TypeConfiguration typeConfiguration;
 	private final ConcurrentHashMap<Type, JavaType<?>> descriptorsByType = new ConcurrentHashMap<>();
 
-	public JavaTypeDescriptorRegistry(TypeConfiguration typeConfiguration) {
+	public JavaTypeRegistry(TypeConfiguration typeConfiguration) {
 		this.typeConfiguration = typeConfiguration;
 		JavaTypeDescriptorBaseline.prime( this );
 	}
@@ -103,7 +103,7 @@ public class JavaTypeDescriptorRegistry implements JavaTypeDescriptorBaseline.Ba
 		JavaType<?> old = descriptorsByType.put( descriptor.getJavaType(), descriptor );
 		if ( old != null ) {
 			log.debugf(
-					"JavaTypeDescriptorRegistry entry replaced : %s -> %s (was %s)",
+					"JavaTypeRegistry entry replaced : %s -> %s (was %s)",
 					descriptor.getJavaType(),
 					descriptor,
 					old

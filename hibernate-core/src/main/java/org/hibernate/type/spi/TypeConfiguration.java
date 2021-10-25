@@ -57,10 +57,10 @@ import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.internal.BasicTypeImpl;
 
 import java.sql.Time;
@@ -99,8 +99,8 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// things available during both boot and runtime lifecycle phases
-	private final transient JavaTypeDescriptorRegistry javaTypeDescriptorRegistry;
-	private final transient JdbcTypeDescriptorRegistry jdbcTypeDescriptorRegistry;
+	private final transient JavaTypeRegistry javaTypeRegistry;
+	private final transient JdbcTypeRegistry jdbcTypeRegistry;
 	private final transient BasicTypeRegistry basicTypeRegistry;
 
 	private final transient Map<Integer, Set<String>> jdbcToHibernateTypeContributionMap = new HashMap<>();
@@ -108,8 +108,8 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	public TypeConfiguration() {
 		this.scope = new Scope( this );
 
-		this.javaTypeDescriptorRegistry = new JavaTypeDescriptorRegistry( this );
-		this.jdbcTypeDescriptorRegistry = new JdbcTypeDescriptorRegistry( this );
+		this.javaTypeRegistry = new JavaTypeRegistry( this );
+		this.jdbcTypeRegistry = new JdbcTypeRegistry( this );
 
 		this.basicTypeRegistry = new BasicTypeRegistry( this );
 		StandardBasicTypes.prime( this );
@@ -124,12 +124,12 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	}
 
 
-	public JavaTypeDescriptorRegistry getJavaTypeDescriptorRegistry() {
-		return javaTypeDescriptorRegistry;
+	public JavaTypeRegistry getJavaTypeDescriptorRegistry() {
+		return javaTypeRegistry;
 	}
 
-	public JdbcTypeDescriptorRegistry getJdbcTypeDescriptorRegistry() {
-		return jdbcTypeDescriptorRegistry;
+	public JdbcTypeRegistry getJdbcTypeDescriptorRegistry() {
+		return jdbcTypeRegistry;
 	}
 
 	public JdbcTypeDescriptorIndicators getCurrentBaseSqlTypeIndicators() {
@@ -232,7 +232,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 					basicTypeRegistration.getRegistrationKeys()
 			);
 
-			javaTypeDescriptorRegistry.resolveDescriptor(
+			javaTypeRegistry.resolveDescriptor(
 					basicType.getJavaType(),
 					() -> basicType.getJavaTypeDescriptor()
 			);
@@ -308,7 +308,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 					final ClassLoaderService cls = getServiceRegistry().getService( ClassLoaderService.class );
 					final Class<?> javaTypeClass = cls.classForName( name );
 
-					final JavaType<?> jtd = javaTypeDescriptorRegistry.resolveDescriptor( javaTypeClass );
+					final JavaType<?> jtd = javaTypeRegistry.resolveDescriptor( javaTypeClass );
 					final JdbcType jdbcType = jtd.getRecommendedJdbcType( getCurrentBaseSqlTypeIndicators() );
 					return basicTypeRegistry.resolve( jtd, jdbcType );
 				}
@@ -657,7 +657,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 					}
 
 					// otherwise, apply the creator
-					final JavaType<J> javaTypeDescriptor = javaTypeDescriptorRegistry.resolveDescriptor( javaType );
+					final JavaType<J> javaTypeDescriptor = javaTypeRegistry.resolveDescriptor( javaType );
 					return creator.apply( javaTypeDescriptor );
 				}
 		);

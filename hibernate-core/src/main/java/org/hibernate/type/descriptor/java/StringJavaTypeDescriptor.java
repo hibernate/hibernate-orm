@@ -16,7 +16,7 @@ import org.hibernate.engine.jdbc.internal.CharacterStreamImpl;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -42,7 +42,7 @@ public class StringJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<St
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeDescriptorIndicators stdIndicators) {
 		final TypeConfiguration typeConfiguration = stdIndicators.getTypeConfiguration();
-		final JdbcTypeDescriptorRegistry stdRegistry = typeConfiguration.getJdbcTypeDescriptorRegistry();
+		final JdbcTypeRegistry stdRegistry = typeConfiguration.getJdbcTypeDescriptorRegistry();
 
 		if ( stdIndicators.isLob() ) {
 			return stdIndicators.isNationalized()

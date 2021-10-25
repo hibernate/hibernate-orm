@@ -12,19 +12,16 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import org.hibernate.metamodel.MappingMetamodel;
-import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-
-import org.hamcrest.Matchers;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
@@ -44,7 +41,7 @@ public class ByteMappingTests {
 		// first, verify the type selections...
 		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
 		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( EntityOfBytes.class );
-		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = domainModel.getTypeConfiguration()
+		final JdbcTypeRegistry jdbcTypeRegistry = domainModel.getTypeConfiguration()
 				.getJdbcTypeDescriptorRegistry();
 
 		{

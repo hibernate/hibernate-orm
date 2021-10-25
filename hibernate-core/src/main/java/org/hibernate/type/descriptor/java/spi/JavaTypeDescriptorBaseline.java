@@ -73,15 +73,27 @@ import org.hibernate.type.descriptor.java.ZoneOffsetJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.ZonedDateTimeJavaTypeDescriptor;
 
 /**
- *
- * @author Steve Ebersole
+ * Primes the {@link BaselineTarget} (which is essentially the {@link JavaTypeRegistry})
+ * with Hibernate's baseline {@link JavaType} registrations
  */
 public class JavaTypeDescriptorBaseline {
+	/**
+	 * The target of the baseline registrations
+	 */
 	public interface BaselineTarget {
+		/**
+		 * Add a baseline registration
+		 */
 		void addBaselineDescriptor(JavaType<?> descriptor);
+		/**
+		 * Add a baseline registration
+		 */
 		void addBaselineDescriptor(Type describedJavaType, JavaType<?> descriptor);
 	}
 
+	/**
+	 * The process of registering all the baseline registrations
+	 */
 	@SuppressWarnings("unchecked")
 	public static void prime(BaselineTarget target) {
 		primePrimitive( target, ByteJavaTypeDescriptor.INSTANCE );
@@ -134,6 +146,13 @@ public class JavaTypeDescriptorBaseline {
 		target.addBaselineDescriptor( UUIDJavaTypeDescriptor.INSTANCE );
 		target.addBaselineDescriptor( InetAddressJavaTypeDescriptor.INSTANCE );
 
+		registerCollectionTypes( target );
+
+		target.addBaselineDescriptor( MapEntryJavaDescriptor.INSTANCE );
+	}
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	private static void registerCollectionTypes(BaselineTarget target) {
 		target.addBaselineDescriptor( new CollectionJavaTypeDescriptor( Collection.class, StandardBagSemantics.INSTANCE ) );
 		target.addBaselineDescriptor( new CollectionJavaTypeDescriptor( Object[].class, StandardArraySemantics.INSTANCE ) );
 		target.addBaselineDescriptor( new CollectionJavaTypeDescriptor( List.class, StandardListSemantics.INSTANCE ) );
@@ -148,8 +167,6 @@ public class JavaTypeDescriptorBaseline {
 		target.addBaselineDescriptor( new CollectionJavaTypeDescriptor( SortedMap.class, StandardSortedMapSemantics.INSTANCE ) );
 		target.addBaselineDescriptor( new CollectionJavaTypeDescriptor( TreeMap.class, StandardSortedMapSemantics.INSTANCE ) );
 		target.addBaselineDescriptor( new CollectionJavaTypeDescriptor( LinkedHashMap.class, StandardOrderedMapSemantics.INSTANCE ) );
-
-		target.addBaselineDescriptor( MapEntryJavaDescriptor.INSTANCE );
 	}
 
 	private static void primePrimitive(BaselineTarget target, JavaType descriptor) {

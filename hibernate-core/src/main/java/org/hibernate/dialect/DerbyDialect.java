@@ -60,7 +60,7 @@ import org.hibernate.type.descriptor.jdbc.DecimalJdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullResolvingJdbcType;
 import org.hibernate.type.descriptor.jdbc.SmallIntJdbcType;
 import org.hibernate.type.descriptor.jdbc.TimestampJdbcType;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import java.sql.Types;
 
@@ -498,7 +498,7 @@ public class DerbyDialect extends Dialect {
 	@Override
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
-		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
+		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeDescriptorRegistry();
 		if ( getVersion() < 1070 ) {
 			jdbcTypeRegistry.addDescriptor( Types.BOOLEAN, SmallIntJdbcType.INSTANCE );

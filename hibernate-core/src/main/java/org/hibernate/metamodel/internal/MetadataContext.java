@@ -51,7 +51,7 @@ import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -124,7 +124,7 @@ public class MetadataContext {
 		return typeConfiguration;
 	}
 
-	public JavaTypeDescriptorRegistry getJavaTypeDescriptorRegistry(){
+	public JavaTypeRegistry getJavaTypeDescriptorRegistry(){
 		return typeConfiguration.getJavaTypeDescriptorRegistry();
 	}
 
@@ -423,7 +423,7 @@ public class MetadataContext {
 	}
 
 	private EmbeddableTypeImpl<?> applyIdClassMetadata(Component identifier, Component idClass) {
-		final JavaTypeDescriptorRegistry registry = getTypeConfiguration()
+		final JavaTypeRegistry registry = getTypeConfiguration()
 				.getJavaTypeDescriptorRegistry();
 		final Class<?> componentClass = identifier.getComponentClass();
 		final JavaType<?> javaTypeDescriptor = registry.resolveManagedTypeDescriptor( componentClass );
@@ -660,7 +660,7 @@ public class MetadataContext {
 		return (BasicDomainType) basicDomainTypeMap.computeIfAbsent(
 				javaType,
 				jt -> {
-					final JavaTypeDescriptorRegistry registry =
+					final JavaTypeRegistry registry =
 							getTypeConfiguration()
 							.getJavaTypeDescriptorRegistry();
 					return new BasicTypeImpl<>( registry.resolveDescriptor( javaType ) );

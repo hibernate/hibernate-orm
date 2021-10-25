@@ -27,7 +27,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeReference;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -106,7 +106,7 @@ public class OracleLongLobTypeTest extends BaseUnitTestCase {
 			mappings.validate();
 
 			final PersistentClass entityBinding = mappings.getEntityBinding( entityClass.getName() );
-			final JdbcTypeDescriptorRegistry jdbcTypeRegistry = mappings.getTypeConfiguration()
+			final JdbcTypeRegistry jdbcTypeRegistry = mappings.getTypeConfiguration()
 					.getJdbcTypeDescriptorRegistry();
 
 			BasicType<?> type;

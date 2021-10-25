@@ -48,7 +48,7 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
@@ -132,14 +132,14 @@ public class TeradataDialect extends Dialect {
 			String columnTypeName, int jdbcTypeCode,
 			int precision,
 			int scale,
-			JdbcTypeDescriptorRegistry jdbcTypeDescriptorRegistry) {
+			JdbcTypeRegistry jdbcTypeRegistry) {
 		switch ( jdbcTypeCode ) {
 			case Types.BIT:
-				return jdbcTypeDescriptorRegistry.getDescriptor( Types.BOOLEAN );
+				return jdbcTypeRegistry.getDescriptor( Types.BOOLEAN );
 			case Types.NUMERIC:
 			case Types.DECIMAL:
 				if ( precision == 19 && scale == 0 ) {
-					return jdbcTypeDescriptorRegistry.getDescriptor( Types.BIGINT );
+					return jdbcTypeRegistry.getDescriptor( Types.BIGINT );
 				}
 		}
 		return super.resolveSqlTypeDescriptor(
@@ -147,7 +147,7 @@ public class TeradataDialect extends Dialect {
 				jdbcTypeCode,
 				precision,
 				scale,
-				jdbcTypeDescriptorRegistry
+				jdbcTypeRegistry
 		);
 	}
 

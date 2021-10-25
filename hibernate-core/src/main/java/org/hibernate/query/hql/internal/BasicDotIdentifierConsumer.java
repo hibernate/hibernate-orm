@@ -26,7 +26,7 @@ import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 
 /**
  * @asciidoc
@@ -216,14 +216,14 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 							.getService( ClassLoaderService.class )
 							.classForName( prefix );
 					if ( namedClass != null ) {
-						final JavaTypeDescriptorRegistry javaTypeDescriptorRegistry = creationContext.getJpaMetamodel()
+						final JavaTypeRegistry javaTypeRegistry = creationContext.getJpaMetamodel()
 								.getTypeConfiguration()
 								.getJavaTypeDescriptorRegistry();
 
 						if ( namedClass.isEnum() ) {
 							return new SqmEnumLiteral(
 									Enum.valueOf( (Class) namedClass, terminal ),
-									(EnumJavaTypeDescriptor) javaTypeDescriptorRegistry.resolveDescriptor( namedClass ),
+									(EnumJavaTypeDescriptor) javaTypeRegistry.resolveDescriptor( namedClass ),
 									terminal,
 									creationContext.getNodeBuilder()
 							);
@@ -232,7 +232,7 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 						try {
 							final Field referencedField = namedClass.getDeclaredField( terminal );
 							if ( referencedField != null ) {
-								final JavaType<?> fieldJtd = javaTypeDescriptorRegistry
+								final JavaType<?> fieldJtd = javaTypeRegistry
 										.getDescriptor( referencedField.getType() );
 								//noinspection unchecked
 								return new SqmFieldLiteral( referencedField, fieldJtd, creationContext.getNodeBuilder() );

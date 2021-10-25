@@ -66,7 +66,7 @@ import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.NullJdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsNullTypeJdbcType;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
@@ -610,30 +610,30 @@ public class OracleDialect extends Dialect {
 			int jdbcTypeCode,
 			int precision,
 			int scale,
-			JdbcTypeDescriptorRegistry jdbcTypeDescriptorRegistry) {
+			JdbcTypeRegistry jdbcTypeRegistry) {
 		// This is the reverse of what registerNumericTypeMappings registers
 		switch ( jdbcTypeCode ) {
 			case Types.NUMERIC:
 				// For some reason, the Oracle JDBC driver reports floats as numerics with scale -127
 				if ( scale == -127 ) {
 					if ( precision <= getFloatPrecision() ) {
-						return jdbcTypeDescriptorRegistry.getDescriptor( Types.FLOAT );
+						return jdbcTypeRegistry.getDescriptor( Types.FLOAT );
 					}
-					return jdbcTypeDescriptorRegistry.getDescriptor( Types.DOUBLE );
+					return jdbcTypeRegistry.getDescriptor( Types.DOUBLE );
 				}
 			case Types.DECIMAL:
 				if ( scale == 0 ) {
 					switch ( precision ) {
 						case 1:
-							return jdbcTypeDescriptorRegistry.getDescriptor( Types.BOOLEAN );
+							return jdbcTypeRegistry.getDescriptor( Types.BOOLEAN );
 						case 3:
-							return jdbcTypeDescriptorRegistry.getDescriptor( Types.TINYINT );
+							return jdbcTypeRegistry.getDescriptor( Types.TINYINT );
 						case 5:
-							return jdbcTypeDescriptorRegistry.getDescriptor( Types.SMALLINT );
+							return jdbcTypeRegistry.getDescriptor( Types.SMALLINT );
 						case 10:
-							return jdbcTypeDescriptorRegistry.getDescriptor( Types.INTEGER );
+							return jdbcTypeRegistry.getDescriptor( Types.INTEGER );
 						case 19:
-							return jdbcTypeDescriptorRegistry.getDescriptor( Types.BIGINT );
+							return jdbcTypeRegistry.getDescriptor( Types.BIGINT );
 					}
 				}
 		}
@@ -642,7 +642,7 @@ public class OracleDialect extends Dialect {
 				jdbcTypeCode,
 				precision,
 				scale,
-				jdbcTypeDescriptorRegistry
+				jdbcTypeRegistry
 		);
 	}
 

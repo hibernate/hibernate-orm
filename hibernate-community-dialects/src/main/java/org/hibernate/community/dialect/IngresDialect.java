@@ -54,7 +54,7 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import java.sql.Types;
 import jakarta.persistence.TemporalType;
@@ -183,16 +183,16 @@ public class IngresDialect extends Dialect {
 			int jdbcTypeCode,
 			int precision,
 			int scale,
-			JdbcTypeDescriptorRegistry jdbcTypeDescriptorRegistry) {
+			JdbcTypeRegistry jdbcTypeRegistry) {
 		if ( jdbcTypeCode == Types.BIT ) {
-			return jdbcTypeDescriptorRegistry.getDescriptor( Types.BOOLEAN );
+			return jdbcTypeRegistry.getDescriptor( Types.BOOLEAN );
 		}
 		return super.resolveSqlTypeDescriptor(
 				columnTypeName,
 				jdbcTypeCode,
 				precision,
 				scale,
-				jdbcTypeDescriptorRegistry
+				jdbcTypeRegistry
 		);
 	}
 

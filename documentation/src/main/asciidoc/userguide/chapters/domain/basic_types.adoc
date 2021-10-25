@@ -1298,23 +1298,178 @@ For details, see the discussion of generators in <<chapters/domain/identifiers.a
 ==== Compositional basic mapping
 
 The compositional approach allows defining how the mapping should work in terms of influencing
-individual, basic-valued parts of the model:
+individual parts that make up a basic-value mapping. This section will look at these individual
+parts and the specifics of influencing each.
 
 
-`JavaTypeDescriptor`:: Describes capabilities of the Java type as discussed in <<basic>>.  The descriptor
-used can be influenced through `@JavaType` and `@JavaTypeRegistration`.  `@JavaTypeRegistration` is a global
-form of `@JavaType`.
-`JdbcTypeDescriptor`:: Describes aspects of the JDBC type such as how to bind and extract values.  The descriptor
-used can be influenced through `@JdbcType`, `@JdbcTypeCode` and `@JdbcTypeRegistration`.
-`@JdbcTypeRegistration` is a global form of `@JdbcType` / `@JdbcTypeCode`.
-`BasicValueConverter`:: Describes the conversions that need to occur when reading from or writing to the database.
-Some Java types (enums, e.g.) have an implicit conversion.  Users can specify an explicit conversion using
-`AttributeConverter`.  See <<basic-jpa-convert>>.
-`MutabilityPlan`:: Describes whether the internal state of values of the type are mutable or immutable.
-`MutabilityPlan` can be influenced by `@Mutability` or `@Immutable`
 
-When using the compositional approach, there are other ways to influence the resolution are covered
+[[basic-mapping-composition-java]]
+===== JavaType
+
+Hibernate needs to understand certain aspects of the Java type to handle values properly and efficiently.
+Hibernate understands these capabilities through its `org.hibernate.type.descriptor.java.JavaType` contract.
+Hibernate provides built-in support for many JDK types (`Integer`, `String`, e.g.), but also supports the ability
+for the application to change the handling for any of the standard `JavaType` registrations as well as
+add in handling for non-standard types. Hibernate provides multiple ways for the application to influence
+the `JavaType` descriptor to use.
+
+The resolution can be influenced locally using the `@JavaType` annotation on a particular mapping.  The
+indicated descriptor will be used just for that mapping.  There are also forms of `@JavaType` for influencing
+the keys of a Map (`@MapKeyJavaType`), the index of a List or array (`@ListIndexJavaType`), the identifier
+of an ID-BAG mapping (`@CollectionIdJavaType`) as well as the discriminator (`@AnyDiscriminator`) and
+key (`@AnyKeyJavaClass`, `@AnyKeyJavaType`) of an ANY mapping.
+
+The resolution can also be influenced globally by registering the appropriate `JavaType` descriptor with the
+`JavaTypeRegistry`.  This approach is able to both "override" the handling for certain Java types or
+to register new types.  See <<basic-mapping-registries>> for discussion of `JavaTypeRegistry`.
+
+See <<basic-mapping-composition-resolution>> for a discussion of the process used to resolve the
+mapping composition.
+
+
+[[basic-mapping-composition-jdbc]]
+===== JdbcType
+
+Hibernate also needs to understand aspects of the JDBC type it should use (how it should bind values,
+how it should extract values, etc.) which is the role of its `org.hibernate.type.descriptor.jdbc.JdbcType`
+contract. Hibernate provides multiple ways for the application to influence the `JdbcType` descriptor to use.
+
+Locally, the resolution can be influenced using either the `@JdbcType` or `@JdbcTypeCode` annotations.  There
+are also annotations for influencing the `JdbcType` in relation to Map keys (`@MapKeyJdbcType`, `@MapKeyJdbcTypeCode`),
+the index of a List or array (`@ListIndexJdbcType`, `@ListIndexJdbcTypeCode`), the identifier of an ID-BAG mapping
+(`@CollectionIdJdbcType`, `@CollectionIdJdbcTypeCode`) as well as the key of an ANY mapping (`@AnyKeyJdbcType`,
+`@AnyKeyJdbcTypeCode`).  The `@JdbcType` specifies a specific `JdbcType` implementation to use while `@JdbcTypeCode`
+specifies a "code" that is then resolved against the `JdbcTypeRegistry`.
+
+[TIP]
+====
+The "type code" relative to a `JdbcType` generally maps to the corresponding value in `java.sql.Types`.
+registers entries in the `JdbcTypeRegistry` for all the standard `java.sql.Types` codes (aside from OTHER, which
+is special).  See <<basic-mapping-registries>> for more discussion.
+====
+
+Customizing the `JdbcTypeRegistry` can be accomplished through `@JdbcTypeRegistration` and
+`TypeContributor`.  See <<basic-mapping-registries>> for discussion of `JavaTypeRegistry`.
+See <<basic-type-contributor>> for discussion of `TypeContributor`.
+
+See the `@JdbcTypeCode` Javadoc for details.
+
+See <<basic-mapping-composition-resolution>> for a discussion of the process used to resolve the
+mapping composition.
+
+
+[[basic-mapping-composition-mutability]]
+===== MutabilityPlan
+
+`MutabilityPlan` is the means by which Hibernate understands how to deal with the domain value in terms
+of its internal mutability as well as related concerns such as making copies.  While it seems like a minor
+concern, it can have a major impact on performance.  See <<basic-jpa-convert-mutability>> for one case where
+this can manifest.  See also <<basic-bitset>> for another discussion.
+
+The `MutabilityPlan` for a mapping can be influenced by any of the following annotations:
+
+* `@Mutability`
+* `@Immutable`
+* `@MapKeyMutability`
+* `@CollectionIdMutability`
+
+Hibernate checks the following places for `@Mutability` and `@Immutable`, in order of precedence:
+
+. Local to the mapping
+. On the associated `AttributeConverter` implementation class (if one)
+. On the value's Java type
+
+In most cases, the fallback defined by `JavaType#getMutabilityPlan` is the proper strategy.
+
+Hibernate uses `MutabilityPlan` to:
+
+1. Check whether a value is considered dirty
+2. Make deep copies
+3. Marshal values to and from the second-level cache
+
+Generally speaking, immutable values perform better in all of these cases
+
+1. To check for dirtiness, Hibernate just needs to check object identity (`==`) as opposed
+    to equality (`Object#equals`).
+2. The same value instance can be used as the deep copy of itself.
+3. The same value can be used from the second-level cache as well as the value we put into the
+    second-level cache.
+
+If a particular Java type is considered mutable (a `Date` e.g.), `@Immuatble` or a immutable-specific
+`MutabilityPlan` implementation can be specified to have Hibernate treat the value as immutable.  This
+also acts as a contract from the application that the internal state of these objects is not changed
+by the application. Specifying that a mutable type is immutable and then changing the internal state
+will lead to problems; so only do this if the application unequivocally does not change the internal
+state.
+
+See <<basic-mapping-composition-resolution>> for a discussion of the process used to resolve the
+mapping composition.
+
+
+[[basic-mapping-composition-conversion]]
+===== BasicValueConverter
+
+`BasicValueConverter` is roughly analogous to `AttributeConverter` in that it describes a conversion to
+happen when reading or writing values of a basic-valued model part.  In fact, internally Hibernate wraps
+an applied `AttributeConverter` in a `BasicValueConverter`.  It also applies implicit `BasicValueConverter`
+converters in certain cases such as enum handling, etc.
+
+Hibernate does not provide an explicit facility to influence these conversions beyond `AttributeConverter`.
+See <<basic-jpa-convert>>.
+
+See <<basic-mapping-composition-resolution>> for a discussion of the process used to resolve the
+mapping composition.
+
+
+[[basic-mapping-composition-resolution]]
+===== Resolving the composition
+
+Using this composition approach, Hibernate will need to resolve certain parts of this mapping.  Often
+this involves "filling in the blanks" as it will be configured for just parts of the mapping.  This section
+outlines how this resolution happens.
+
+[NOTE]
+====
+This is a complicated process and is only covered at a high level for the most common cases here.
+
+For the full specifics, consult the source code for `org.hibernate.mapping.BasicValue#buildResolution`
+====
+
+First, we look for a custom type.  If found, this takes predence.  See <<basic-mapping-custom>> for details
+
+If an `AttributeConverter` is applied, we use it as the basis for the resolution
+
+. If `@JavaType` is also used, that specific `JavaType` is used for the converter's "domain type".  Otherwise,
+    the Java type defined by the converter as its "domain type" is resolved against the `JavaTypeRegistry`
+. If `@JdbcType` or `@JdbcTypeCode` is used, the indicated `JdbcType` is used and the converted "relational Java
+    type" is determined by `JdbcType#getJdbcRecommendedJavaTypeMapping`.  Otherwise, the Java type define by the
+    converter as its relational type is used and the `JdbcType` is determined by `JdbcType#getRecommendedJdbcType`
+. The `MutabilityPlan` can be specified using `@Mutability` or `@Immutable` on the `AttributeConverter` implementation,
+    the basic value mapping or the Java type used as the domain-type.  Otherwise, `JdbcType#getJdbcRecommendedJavaTypeMapping`
+    for the conversion's domain-type is used to determine the mutability-plan.
+
+Next we try to resolve the `JavaType` to use for the mapping.  We check for an explicit `@JavaType` and use the specified
+`JavaType` if found.  Next any "implicit" indication is checked; for example, the index for a List has the implicit Java type
+of `Integer`.  Next, we use reflection if possible. If we are unable to determine the `JavaType` to use through the preceeding
+steps, we try to resolve an explicitly specified `JdbcType` to use and, if found, use its
+`JdbcType#getJdbcRecommendedJavaTypeMapping` as the mapping's `JavaType`.  If we are not able to determine the
+`JavaType` by this point, an error is thrown.
+
+The `JavaType` resolved earlier is then inspected for a number of special cases.
+
+. For enum values, we check for an explicit `@Enumerated` and create an enumeration mapping.  Note that this resolution
+    still uses any explicit `JdbcType` indicators
+. For temporal values, we check for `@Temporal` and create an enumeration mapping.  Note that this resolution
+    still uses any explicit `JdbcType` indicators; this includes `@JdbcType` and `@JdbcTypeCode`, as well as
+    `@TimeZoneStorage` and `@TimeZoneColumn` if appropriate.
+
+The fallback at this point is to use the `JavaType` and `JdbcType` determined in earlier steps to create a
+JDBC-mapping (which encapsulates the `JavaType` and `JdbcType`) and combines it with the resolved `MutabilityPlan`
+
+
+When using the compositional approach, there are other ways to influence the resolution as covered
 in <<basic-enums>>, <<basic-temporal>>, <<basic-lob>> and <<basic-nationalized>>
+
 
 
 See <<basic-type-contributor>> for an alternative to `@JavaTypeRegistration` and `@JdbcTypeRegistration`.
@@ -1599,9 +1754,21 @@ If the Java type is not known to Hibernate, you will encounter the following mes
 > This can lead to significant performance problems when performing equality/dirty checking involving this Java type.
 > Consider registering a custom JavaTypeDescriptor or at least implementing equals/hashCode.
 
-A Java type is "known" if it has an entry in the `JavaTypeDescriptorRegistry`.  While Hibernate does load many JDK types into
-the `JavaTypeDescriptorRegistry`, an application can also expand the `JavaTypeDescriptorRegistry` by adding new `JavaType`
-entries.  This way, Hibernate will also know how to handle a specific Java Object type at the JDBC level.
+A Java type is "known" if it has an entry in the `JavaTypeRegistry`.  While Hibernate does load many JDK types into
+the `JavaTypeRegistry`, an application can also expand the `JavaTypeRegistry` by adding new `JavaType`
+entries as discussed in <<basic-mapping-composition>> and <<basic-type-contributor>>.
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1788,6 +1955,28 @@ By passing the associated Hibernate `Type`, you can use the `Caption` object whe
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+[[basic-mapping-registries]]
+==== Registries
+
+We've covered `JavaTypeRegistry` and `JdbcTypeRegistry` a few times now, mainly in regards to mapping resolution
+as discussed in <<basic-mapping-composition-resolution>>.  But they each also serve additional important roles.
+
+The `JavaTypeRegistry` is a registry of `JavaType` references keyed by Java type.  In addition to mapping resolution,
+this registry is used to handle `Class` references exposed in various APIs such as `Query` parameter types.
+`JavaType` references can be registered through `@JavaTypeRegistration`.
+
+The `JdbcTypeRegistry` is a registry of `JdbcType` references keyed by an integer code.  As discussed in
+<<basic-mapping-composition-jdbc>>, these type-codes typically match with the corresponding code from
+`java.sql.Types`, but that is not a requirement - integers other than those defined by `java.sql.Types` can
+be used.  This might be useful for mapping JDBC User Data Types (UDTs) or other specialized database-specific
+types (PostgreSQL's UUID type, e.g.).  In addition to its use in mapping resolution, this registry is also used
+as the primary source for resolving "discovered" values in a JDBC `ResultSet`.  `JdbcType` references can be
+registered through `@JdbcTypeRegistration`.
+
+See <<basic-type-contributor>> for an alternative to `@JavaTypeRegistration` and `@JdbcTypeRegistration` for
+registration.
+
+
 [[basic-type-contributor]]
 ==== TypeContributor
 
@@ -1799,6 +1988,14 @@ a Java service (see `java.util.ServiceLoader`).
 
 `TypeContributor` is passed a `TypeContributions` reference, which allows registration of custom `JavaType`,
 `JdbcType` and `BasicType` references.
+
+
+[[IMPORTANT]]
+====
+While `TypeContributor` still exposes the ability to register `BasicType` references, this is considered
+deprecated.  As of 6.0, these `BasicType` registrations are only used while interpreting `hbm.xml` mappings,
+which are themselves considered deprecated.  Use <<basic-mapping-custom>> or <<basic-mapping-composition>> instead.
+====
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

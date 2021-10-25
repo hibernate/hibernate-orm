@@ -13,7 +13,7 @@ import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeFamilyInformation;
 import org.hibernate.type.descriptor.jdbc.ObjectJdbcType;
-import org.hibernate.type.descriptor.jdbc.internal.JdbcTypeDescriptorBaseline;
+import org.hibernate.type.descriptor.jdbc.internal.JdbcTypeBaseline;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
@@ -26,14 +26,14 @@ import org.jboss.logging.Logger;
  *
  * @since 5.3
  */
-public class JdbcTypeDescriptorRegistry implements JdbcTypeDescriptorBaseline.BaselineTarget, Serializable {
-	private static final Logger log = Logger.getLogger( JdbcTypeDescriptorRegistry.class );
+public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serializable {
+	private static final Logger log = Logger.getLogger( JdbcTypeRegistry.class );
 
 	private final ConcurrentHashMap<Integer, JdbcType> descriptorMap = new ConcurrentHashMap<>();
 
-	public JdbcTypeDescriptorRegistry(TypeConfiguration typeConfiguration) {
+	public JdbcTypeRegistry(TypeConfiguration typeConfiguration) {
 //		this.typeConfiguration = typeConfiguration;
-		JdbcTypeDescriptorBaseline.prime( this );
+		JdbcTypeBaseline.prime( this );
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

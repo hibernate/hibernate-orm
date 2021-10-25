@@ -15,7 +15,7 @@ import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -35,7 +35,7 @@ public class Converters {
 		final ManagedBean<? extends AttributeConverter<O, R>> converterBean = beanRegistry.getBean( converterClass );
 
 		final TypeConfiguration typeConfiguration = sfi.getTypeConfiguration();
-		final JavaTypeDescriptorRegistry jtdRegistry = typeConfiguration.getJavaTypeDescriptorRegistry();
+		final JavaTypeRegistry jtdRegistry = typeConfiguration.getJavaTypeDescriptorRegistry();
 		final JavaType<? extends AttributeConverter<O, R>> converterJtd = jtdRegistry.getDescriptor( converterClass );
 
 		return new JpaAttributeConverterImpl<>( converterBean, converterJtd, domainJtd, relationalJtd );

@@ -32,7 +32,7 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import java.sql.DatabaseMetaData;
 import java.sql.Types;
@@ -71,12 +71,12 @@ public class MaxDBDialect extends Dialect {
 			int jdbcTypeCode,
 			int precision,
 			int scale,
-			JdbcTypeDescriptorRegistry jdbcTypeDescriptorRegistry) {
+			JdbcTypeRegistry jdbcTypeRegistry) {
 		switch ( jdbcTypeCode ) {
 			case Types.NUMERIC:
 			case Types.DECIMAL:
 				if ( precision == 19 && scale == 0 ) {
-					return jdbcTypeDescriptorRegistry.getDescriptor( Types.BIGINT );
+					return jdbcTypeRegistry.getDescriptor( Types.BIGINT );
 				}
 		}
 		return super.resolveSqlTypeDescriptor(
@@ -84,7 +84,7 @@ public class MaxDBDialect extends Dialect {
 				jdbcTypeCode,
 				precision,
 				scale,
-				jdbcTypeDescriptorRegistry
+				jdbcTypeRegistry
 		);
 	}
 

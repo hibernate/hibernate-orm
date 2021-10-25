@@ -22,7 +22,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.TinyIntJdbcType;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
@@ -50,7 +50,7 @@ public class MapKeyJdbcTypeTests {
 		final MetadataImplementor domainModel = scope.getDomainModel();
 		final Dialect dialect = domainModel.getDatabase().getDialect();
 		final NationalizationSupport nationalizationSupport = dialect.getNationalizationSupport();
-		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = domainModel.getTypeConfiguration()
+		final JdbcTypeRegistry jdbcTypeRegistry = domainModel.getTypeConfiguration()
 				.getJdbcTypeDescriptorRegistry();
 
 		final PersistentClass entityBinding = domainModel.getEntityBinding( MyEntity.class.getName() );

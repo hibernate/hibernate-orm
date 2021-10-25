@@ -6,7 +6,6 @@
  */
 package org.hibernate.userguide.mapping.basic;
 
-import java.sql.Types;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
@@ -19,7 +18,7 @@ import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -29,7 +28,6 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 
 /**
@@ -45,7 +43,7 @@ public class CharacterArrayNationalizedMappingTests {
 	public void verifyMappings(SessionFactoryScope scope) {
 		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
 		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( EntityWithCharArrays.class );
-		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = domainModel.getTypeConfiguration()
+		final JdbcTypeRegistry jdbcTypeRegistry = domainModel.getTypeConfiguration()
 				.getJdbcTypeDescriptorRegistry();
 
 		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();

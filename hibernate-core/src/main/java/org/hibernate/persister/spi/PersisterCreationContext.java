@@ -11,7 +11,7 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -38,7 +38,7 @@ public interface PersisterCreationContext {
 		return getSessionFactory().getServiceRegistry().getService( ManagedBeanRegistry.class );
 	}
 
-	default JavaTypeDescriptorRegistry getJavaTypeDescriptorRegistry() {
+	default JavaTypeRegistry getJavaTypeDescriptorRegistry() {
 		return getTypeConfiguration().getJavaTypeDescriptorRegistry();
 	}
 }

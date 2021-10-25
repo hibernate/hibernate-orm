@@ -18,7 +18,7 @@ import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -48,7 +48,7 @@ public abstract class ClobJdbcType implements AdjustableJdbcType {
 			JdbcTypeDescriptorIndicators indicators,
 			JavaType<?> domainJtd) {
 		final TypeConfiguration typeConfiguration = indicators.getTypeConfiguration();
-		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeDescriptorRegistry();
+		final JdbcTypeRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeDescriptorRegistry();
 		return indicators.isNationalized()
 				? jdbcTypeRegistry.getDescriptor( Types.NCLOB )
 				: jdbcTypeRegistry.getDescriptor( Types.CLOB );

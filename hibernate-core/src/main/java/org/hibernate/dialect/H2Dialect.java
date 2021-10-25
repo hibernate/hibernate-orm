@@ -57,7 +57,7 @@ import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNo
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import org.jboss.logging.Logger;
 
@@ -153,7 +153,7 @@ public class H2Dialect extends Dialect {
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
 
-		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
+		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeDescriptorRegistry();
 		jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptorIfAbsent( DurationIntervalSecondJdbcType.INSTANCE );

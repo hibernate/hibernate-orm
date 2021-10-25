@@ -10,7 +10,7 @@ import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.FIELD;
@@ -48,7 +48,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * of basic value mapping.
  *
  * @see JdbcType
- * @see JdbcTypeDescriptorRegistry
+ * @see JdbcTypeRegistry
  * @see MapKeyJdbcTypeCode
  * @see CollectionIdJdbcTypeCode
  * @see ListIndexJdbcTypeCode

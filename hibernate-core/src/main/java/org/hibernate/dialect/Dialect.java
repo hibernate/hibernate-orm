@@ -89,7 +89,7 @@ import org.hibernate.type.descriptor.jdbc.LongNVarcharJdbcType;
 import org.hibernate.type.descriptor.jdbc.NCharJdbcType;
 import org.hibernate.type.descriptor.jdbc.NClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.NVarcharJdbcType;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import jakarta.persistence.TemporalType;
 import java.io.InputStream;
@@ -261,8 +261,8 @@ public abstract class Dialect implements ConversionContext {
 			int jdbcTypeCode,
 			int precision,
 			int scale,
-			JdbcTypeDescriptorRegistry jdbcTypeDescriptorRegistry) {
-		return jdbcTypeDescriptorRegistry.getDescriptor( jdbcTypeCode );
+			JdbcTypeRegistry jdbcTypeRegistry) {
+		return jdbcTypeRegistry.getDescriptor( jdbcTypeCode );
 	}
 
 	public int resolveSqlTypeLength(

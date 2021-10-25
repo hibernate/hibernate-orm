@@ -14,7 +14,7 @@ import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.type.descriptor.converter.AttributeConverterMutabilityPlanImpl;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.java.spi.RegistryHelper;
 
 /**
@@ -48,7 +48,7 @@ public class JpaAttributeConverterImpl<O,R> implements JpaAttributeConverter<O,R
 		this.attributeConverterBean = attributeConverterBean;
 		this.converterJtd = converterJtd;
 
-		final JavaTypeDescriptorRegistry jtdRegistry = context.getJavaTypeDescriptorRegistry();
+		final JavaTypeRegistry jtdRegistry = context.getJavaTypeDescriptorRegistry();
 
 		jdbcJtd = jtdRegistry.getDescriptor( jdbcJavaType );
 		//noinspection unchecked

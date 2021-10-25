@@ -12,7 +12,7 @@ import jakarta.persistence.TemporalType;
 
 import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.type.descriptor.java.BasicJavaType;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -66,7 +66,7 @@ public interface JdbcTypeDescriptorIndicators {
 	 * When mapping a boolean type to the database what is the preferred SQL type code to use?
 	 * <p/>
 	 * Specifically names the key into the
-	 * {@link JdbcTypeDescriptorRegistry}.
+	 * {@link JdbcTypeRegistry}.
 	 */
 	default int getPreferredSqlTypeCodeForBoolean() {
 		return Types.BOOLEAN;

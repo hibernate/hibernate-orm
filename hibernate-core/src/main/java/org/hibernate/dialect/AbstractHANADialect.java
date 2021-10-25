@@ -62,7 +62,7 @@ import org.hibernate.type.descriptor.java.DataHelper;
 import org.hibernate.type.descriptor.java.DoubleJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.*;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.internal.BasicTypeImpl;
 
 import java.io.*;
@@ -1433,7 +1433,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		this.treatDoubleTypedFieldsAsDecimal = configurationService.getSetting( TREAT_DOUBLE_TYPED_FIELDS_AS_DECIMAL_PARAMETER_NAME, StandardConverters.BOOLEAN,
 				TREAT_DOUBLE_TYPED_FIELDS_AS_DECIMAL_DEFAULT_VALUE ).booleanValue();
 
-		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
+		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeDescriptorRegistry();
 		if ( this.treatDoubleTypedFieldsAsDecimal ) {
 			registerHibernateType( Types.FLOAT, StandardBasicTypes.BIG_DECIMAL.getName() );

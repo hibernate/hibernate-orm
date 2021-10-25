@@ -51,7 +51,7 @@ import org.hibernate.type.AnyType;
 import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 
 /**
  * A factory for building {@link Attribute} instances.  Exposes 3 main services for building<ol>
@@ -257,7 +257,7 @@ public class AttributeFactory {
 						return cached;
 					}
 
-					final JavaTypeDescriptorRegistry registry = context.getTypeConfiguration()
+					final JavaTypeRegistry registry = context.getTypeConfiguration()
 							.getJavaTypeDescriptorRegistry();
 					final JavaType<Y> javaTypeDescriptor = registry.resolveManagedTypeDescriptor( embeddableClass );
 

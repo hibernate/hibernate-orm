@@ -30,7 +30,7 @@ import org.hibernate.metamodel.model.convert.internal.OrdinalEnumValueConverter;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -63,7 +63,7 @@ public class SmokeTests {
 		final EntityPersister entityDescriptor = scope.getSessionFactory()
 				.getDomainModel()
 				.getEntityDescriptor( SimpleEntity.class );
-		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = entityDescriptor.getFactory()
+		final JdbcTypeRegistry jdbcTypeRegistry = entityDescriptor.getFactory()
 				.getTypeConfiguration()
 				.getJdbcTypeDescriptorRegistry();
 

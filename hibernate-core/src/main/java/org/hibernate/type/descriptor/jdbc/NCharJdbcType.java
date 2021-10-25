@@ -9,7 +9,7 @@ package org.hibernate.type.descriptor.jdbc;
 import java.sql.Types;
 
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -40,7 +40,7 @@ public class NCharJdbcType extends NVarcharJdbcType {
 		assert domainJtd != null;
 
 		final TypeConfiguration typeConfiguration = indicators.getTypeConfiguration();
-		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeDescriptorRegistry();
+		final JdbcTypeRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeDescriptorRegistry();
 
 		final int jdbcTypeCode;
 		if ( indicators.isLob() ) {

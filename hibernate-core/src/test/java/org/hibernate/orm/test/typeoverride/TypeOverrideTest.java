@@ -17,7 +17,7 @@ import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.IntegerJdbcType;
 import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcType;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.hibernate.testing.orm.junit.SkipForDialect;
@@ -47,7 +47,7 @@ public class TypeOverrideTest extends BaseSessionFactoryFunctionalTest {
 	@Test
 	public void testStandardBasicSqlTypeDescriptor() {
 		final Dialect dialect = getMetadata().getDatabase().getDialect();
-		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = getMetadata().getTypeConfiguration()
+		final JdbcTypeRegistry jdbcTypeRegistry = getMetadata().getTypeConfiguration()
 				.getJdbcTypeDescriptorRegistry();
 		// no override
 		assertSame( IntegerJdbcType.INSTANCE, jdbcTypeRegistry.getDescriptor( Types.INTEGER ) );

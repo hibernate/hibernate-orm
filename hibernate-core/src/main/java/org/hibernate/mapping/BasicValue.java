@@ -387,7 +387,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 
 		JavaType jtd = null;
 
-		// determine JTD if we can
+		// determine JavaType if we can
 
 		if ( explicitJavaTypeAccess != null ) {
 			final BasicJavaType explicitJtd = explicitJavaTypeAccess.apply( typeConfiguration );

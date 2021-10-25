@@ -39,7 +39,7 @@ import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
@@ -148,7 +148,7 @@ public class CockroachDialect extends Dialect {
 			int jdbcTypeCode,
 			int precision,
 			int scale,
-			JdbcTypeDescriptorRegistry jdbcTypeDescriptorRegistry) {
+			JdbcTypeRegistry jdbcTypeRegistry) {
 		if ( jdbcTypeCode == SqlTypes.OTHER ) {
 			switch ( columnTypeName ) {
 				case "uuid":
@@ -163,14 +163,14 @@ public class CockroachDialect extends Dialect {
 					break;
 			}
 		}
-		return jdbcTypeDescriptorRegistry.getDescriptor( jdbcTypeCode );
+		return jdbcTypeRegistry.getDescriptor( jdbcTypeCode );
 	}
 
 	@Override
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
 
-		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
+		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeDescriptorRegistry();
 		if ( driverKind == PostgreSQLDriverKind.PG_JDBC ) {
 			jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );

@@ -45,7 +45,7 @@ import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsNullTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.SmallIntJdbcType;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
@@ -92,16 +92,16 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 			int jdbcTypeCode,
 			int precision,
 			int scale,
-			JdbcTypeDescriptorRegistry jdbcTypeDescriptorRegistry) {
+			JdbcTypeRegistry jdbcTypeRegistry) {
 		switch ( jdbcTypeCode ) {
 			case Types.NUMERIC:
 			case Types.DECIMAL:
 				if ( precision == 19 && scale == 0 ) {
-					return jdbcTypeDescriptorRegistry.getDescriptor( Types.BIGINT );
+					return jdbcTypeRegistry.getDescriptor( Types.BIGINT );
 				}
 			case Types.TINYINT:
 				if ( jtdsDriver ) {
-					return jdbcTypeDescriptorRegistry.getDescriptor( Types.SMALLINT );
+					return jdbcTypeRegistry.getDescriptor( Types.SMALLINT );
 				}
 		}
 		return super.resolveSqlTypeDescriptor(
@@ -109,7 +109,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 				jdbcTypeCode,
 				precision,
 				scale,
-				jdbcTypeDescriptorRegistry
+				jdbcTypeRegistry
 		);
 	}
 
@@ -165,7 +165,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	@Override
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes(typeContributions, serviceRegistry);
-		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
+		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeDescriptorRegistry();
 		if ( jtdsDriver ) {
 			jdbcTypeRegistry.addDescriptor( Types.TINYINT, SmallIntJdbcType.INSTANCE );

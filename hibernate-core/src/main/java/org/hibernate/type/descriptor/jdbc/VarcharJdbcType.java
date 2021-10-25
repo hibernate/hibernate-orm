@@ -18,7 +18,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.internal.JdbcLiteralFormatterCharacterData;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -71,7 +71,7 @@ public class VarcharJdbcType implements AdjustableJdbcType {
 		assert domainJtd != null;
 
 		final TypeConfiguration typeConfiguration = indicators.getTypeConfiguration();
-		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeDescriptorRegistry();
+		final JdbcTypeRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeDescriptorRegistry();
 
 		final int jdbcTypeCode;
 		if ( indicators.isLob() ) {

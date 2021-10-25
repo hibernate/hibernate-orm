@@ -27,7 +27,7 @@ import org.hibernate.type.descriptor.java.CharacterArrayJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.CharacterJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.NClobJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.junit.jupiter.api.Test;
@@ -78,7 +78,7 @@ public class SimpleNationalizedTest {
 			ms.addAnnotatedClass( NationalizedEntity.class );
 
 			final Metadata metadata = ms.buildMetadata();
-			final JdbcTypeDescriptorRegistry jdbcTypeRegistry = metadata.getDatabase()
+			final JdbcTypeRegistry jdbcTypeRegistry = metadata.getDatabase()
 					.getTypeConfiguration()
 					.getJdbcTypeDescriptorRegistry();
 			PersistentClass pc = metadata.getEntityBinding( NationalizedEntity.class.getName() );

@@ -16,7 +16,7 @@ import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.results.ResultSetMapping;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 
 import org.jboss.logging.Logger;
 
@@ -74,7 +74,7 @@ public class Util {
 			Consumer<String> querySpaceConsumer,
 			ResultSetMappingResolutionContext context) {
 		final MappingMetamodel domainModel = context.getSessionFactory().getDomainModel();
-		final JavaTypeDescriptorRegistry javaTypeDescriptorRegistry = domainModel.getTypeConfiguration().getJavaTypeDescriptorRegistry();
+		final JavaTypeRegistry javaTypeRegistry = domainModel.getTypeConfiguration().getJavaTypeDescriptorRegistry();
 
 		for ( Class<?> resultSetMappingClass : resultSetMappingClasses ) {
 			final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( resultSetMappingClass );
@@ -85,7 +85,7 @@ public class Util {
 				}
 			}
 			else {
-				final JavaType<?> basicType = javaTypeDescriptorRegistry.getDescriptor(
+				final JavaType<?> basicType = javaTypeRegistry.getDescriptor(
 						resultSetMappingClass );
 				if ( basicType != null ) {
 					resultSetMapping.addResultBuilder( new ScalarDomainResultBuilder<>( basicType ) );

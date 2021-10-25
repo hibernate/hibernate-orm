@@ -97,7 +97,7 @@ import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -628,7 +628,7 @@ public class MappingModelCreationHelper {
 		final String sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromAttributeName( bootProperty.getName() );
 
 		final CollectionMappingType<?> collectionMappingType;
-		final JavaTypeDescriptorRegistry jtdRegistry = creationContext.getJavaTypeDescriptorRegistry();
+		final JavaTypeRegistry jtdRegistry = creationContext.getJavaTypeDescriptorRegistry();
 
 		final CollectionPart elementDescriptor = interpretElement(
 				bootValueMapping,
@@ -1495,7 +1495,7 @@ public class MappingModelCreationHelper {
 
 			final SessionFactoryImplementor sessionFactory = creationProcess.getCreationContext().getSessionFactory();
 			final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();
-			final JavaTypeDescriptorRegistry jtdRegistry = typeConfiguration.getJavaTypeDescriptorRegistry();
+			final JavaTypeRegistry jtdRegistry = typeConfiguration.getJavaTypeDescriptorRegistry();
 			final JavaType<Object> baseJtd = jtdRegistry.getDescriptor(Object.class);
 
 			return new DiscriminatedCollectionPart(

@@ -38,7 +38,7 @@ import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
  *
  * @author Chris Cranford
  */
-public class JdbcTypeDescriptorBaseline {
+public class JdbcTypeBaseline {
 	public interface BaselineTarget {
 		void addDescriptor(JdbcType descriptor);
 		void addDescriptor(int code, JdbcType descriptor);

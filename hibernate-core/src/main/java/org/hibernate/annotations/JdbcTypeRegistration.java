@@ -11,14 +11,14 @@ import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import static java.lang.annotation.ElementType.PACKAGE;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Describes a SqlTypeDescriptor to be added to the {@link JdbcTypeDescriptorRegistry}
+ * Describes a SqlTypeDescriptor to be added to the {@link JdbcTypeRegistry}
  *
  * Registrations applied to a package are processed before Hibernate begins to process
  * any attributes, etc.

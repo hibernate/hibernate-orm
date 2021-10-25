@@ -30,7 +30,7 @@ import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.TinyIntJdbcType;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
@@ -54,7 +54,7 @@ public class JdbcTypeTests {
 		final MetadataImplementor domainModel = scope.getDomainModel();
 		final Dialect dialect = domainModel.getDatabase().getDialect();
 		final NationalizationSupport nationalizationSupport = dialect.getNationalizationSupport();
-		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = domainModel.getTypeConfiguration()
+		final JdbcTypeRegistry jdbcTypeRegistry = domainModel.getTypeConfiguration()
 				.getJdbcTypeDescriptorRegistry();
 		final PersistentClass entityBinding = domainModel.getEntityBinding( SimpleEntity.class.getName() );
 

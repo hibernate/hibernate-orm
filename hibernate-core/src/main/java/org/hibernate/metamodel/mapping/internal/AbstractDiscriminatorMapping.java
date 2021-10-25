@@ -36,7 +36,7 @@ import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.metamodel.RepresentationMode.MAP;
@@ -305,7 +305,7 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 				BasicType underlyingDiscriminatorType,
 				final SessionFactoryImplementor sessionFactory) {
 			final TypeConfiguration typeConfiguration = sessionFactory.getDomainModel().getTypeConfiguration();
-			final JavaTypeDescriptorRegistry jtdRegistry = typeConfiguration.getJavaTypeDescriptorRegistry();
+			final JavaTypeRegistry jtdRegistry = typeConfiguration.getJavaTypeDescriptorRegistry();
 
 			final JavaType<Object> domainJtd;
 			final Function<String,Object> entityNameHandler;

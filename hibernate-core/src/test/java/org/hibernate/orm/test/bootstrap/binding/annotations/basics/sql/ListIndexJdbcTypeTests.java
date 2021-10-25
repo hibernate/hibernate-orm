@@ -18,7 +18,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.TinyIntJdbcType;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
@@ -46,7 +46,7 @@ public class ListIndexJdbcTypeTests {
 	public void verifyResolutions(DomainModelScope scope) {
 		final MetadataImplementor domainModel = scope.getDomainModel();
 		final PersistentClass entityBinding = domainModel.getEntityBinding( TheEntity.class.getName() );
-		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = domainModel.getTypeConfiguration()
+		final JdbcTypeRegistry jdbcTypeRegistry = domainModel.getTypeConfiguration()
 				.getJdbcTypeDescriptorRegistry();
 
 		verifyJdbcTypeCodes( entityBinding.getProperty( "listOfStrings" ), Types.TINYINT );

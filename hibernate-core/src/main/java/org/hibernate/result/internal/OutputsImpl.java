@@ -19,7 +19,6 @@ import jakarta.persistence.ParameterMode;
 
 import org.hibernate.JDBCException;
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
@@ -47,7 +46,7 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValues;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.spi.RowReader;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 
 import org.jboss.logging.Logger;
 
@@ -160,14 +159,14 @@ public class OutputsImpl implements Outputs {
 		final ProcedureCallImpl procedureCall = (ProcedureCallImpl) context;
 		final ResultSetMapping resultSetMapping = procedureCall.getResultSetMapping();
 
-		final JavaTypeDescriptorRegistry javaTypeDescriptorRegistry = context.getSession()
+		final JavaTypeRegistry javaTypeRegistry = context.getSession()
 				.getTypeConfiguration()
 				.getJavaTypeDescriptorRegistry();
 		procedureCall.getParameterBindings().visitBindings(
 				(parameterImplementor, queryParameterBinding) -> {
 					ProcedureParameter parameter = (ProcedureParameter) parameterImplementor;
 					if ( parameter.getMode() == ParameterMode.INOUT ) {
-						final JavaType<?> basicType = javaTypeDescriptorRegistry.getDescriptor(
+						final JavaType<?> basicType = javaTypeRegistry.getDescriptor(
 								parameterImplementor.getParameterType() );
 						if ( basicType != null ) {
 							resultSetMapping.addResultBuilder( new ScalarDomainResultBuilder<>( basicType ) );

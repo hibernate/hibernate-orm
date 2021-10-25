@@ -142,7 +142,7 @@ public class LongListTypeContributorTest extends BaseEntityManagerFunctionalTest
 
 		@Override
 		public void contribute(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
-//			JavaTypeDescriptorRegistry.INSTANCE.addDescriptor( StringifiedCollectionJavaTypeDescriptor.INSTANCE );
+//			JavaTypeRegistry.INSTANCE.addDescriptor( StringifiedCollectionJavaTypeDescriptor.INSTANCE );
 			typeContributions.contributeType( StringifiedCollectionType.INSTANCE );
 		}
 

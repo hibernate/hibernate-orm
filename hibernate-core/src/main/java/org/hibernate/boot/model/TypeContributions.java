@@ -9,8 +9,8 @@ package org.hibernate.boot.model;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypeTemplate;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.UserType;
@@ -25,16 +25,20 @@ public interface TypeContributions {
 
 	/**
 	 * Add the JavaTypeDescriptor to the {@link TypeConfiguration}'s
-	 * {@link JavaTypeDescriptorRegistry}
+	 * {@link JavaTypeRegistry}
 	 */
 	void contributeJavaTypeDescriptor(JavaType descriptor);
 
 	/**
 	 * Add the JdbcType to the {@link TypeConfiguration}'s
-	 * {@link JdbcTypeDescriptorRegistry}
+	 * {@link JdbcTypeRegistry}
 	 */
 	void contributeJdbcTypeDescriptor(JdbcType descriptor);
 
+	/**
+	 * @deprecated (6.0) See user-guide section `2.2.46. TypeContributor` for details - `basic_types.adoc`
+	 */
+	@Deprecated
 	void contributeType(BasicType type);
 
 	/**

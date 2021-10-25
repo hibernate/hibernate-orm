@@ -25,7 +25,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.CharacterJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -53,7 +53,7 @@ public class UseNationalizedCharDataSettingTest extends BaseUnitTestCase {
 			ms.addAnnotatedClass( NationalizedBySettingEntity.class );
 
 			final Metadata metadata = ms.buildMetadata();
-			final JdbcTypeDescriptorRegistry jdbcTypeRegistry = metadata.getDatabase()
+			final JdbcTypeRegistry jdbcTypeRegistry = metadata.getDatabase()
 					.getTypeConfiguration()
 					.getJdbcTypeDescriptorRegistry();
 			final PersistentClass pc = metadata.getEntityBinding( NationalizedBySettingEntity.class.getName() );
@@ -86,7 +86,7 @@ public class UseNationalizedCharDataSettingTest extends BaseUnitTestCase {
 			ms.addAnnotatedClass( NationalizedBySettingEntity.class );
 
 			final Metadata metadata = ms.buildMetadata();
-			final JdbcTypeDescriptorRegistry jdbcTypeRegistry = metadata.getDatabase()
+			final JdbcTypeRegistry jdbcTypeRegistry = metadata.getDatabase()
 					.getTypeConfiguration()
 					.getJdbcTypeDescriptorRegistry();
 			final PersistentClass pc = metadata.getEntityBinding( NationalizedBySettingEntity.class.getName() );

@@ -12,7 +12,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -25,12 +25,12 @@ import static org.junit.Assert.assertThat;
 /**
  * @author Andrea Boriero
  */
-public class JavaTypeDescriptorRegistryTest {
+public class JavaTypeRegistryTest {
 
 	@Test
 	public void testGetJavaTypeDescriptorRegistry() {
 		final TypeConfiguration typeConfiguration = new TypeConfiguration();
-		final JavaTypeDescriptorRegistry registry = new JavaTypeDescriptorRegistry( typeConfiguration );
+		final JavaTypeRegistry registry = new JavaTypeRegistry( typeConfiguration );
 
 		final JavaType<String> descriptor = registry.getDescriptor( String.class );
 
@@ -40,7 +40,7 @@ public class JavaTypeDescriptorRegistryTest {
 	@Test
 	public void testRegisterJavaTypeDescriptorRegistry(){
 		final TypeConfiguration typeConfiguration = new TypeConfiguration();
-		final JavaTypeDescriptorRegistry registry = new JavaTypeDescriptorRegistry( typeConfiguration );
+		final JavaTypeRegistry registry = new JavaTypeRegistry( typeConfiguration );
 
 		registry.addDescriptor( new CustomJavaType() );
 

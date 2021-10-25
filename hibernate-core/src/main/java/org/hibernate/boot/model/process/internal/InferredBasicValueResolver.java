@@ -391,7 +391,7 @@ public class InferredBasicValueResolver {
 		final TemporalType requestedTemporalPrecision = stdIndicators.getTemporalPrecision();
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// Case #1 - explicit JavaTypeDescriptor
+		// Case #1 - explicit JavaType
 
 		if ( explicitJavaType != null ) {
 			if ( !TemporalJavaTypeDescriptor.class.isInstance( explicitJavaType ) ) {

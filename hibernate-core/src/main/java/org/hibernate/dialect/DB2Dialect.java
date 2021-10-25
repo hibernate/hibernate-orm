@@ -47,7 +47,7 @@ import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.*;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
@@ -507,7 +507,7 @@ public class DB2Dialect extends Dialect {
 		super.contributeTypes( typeContributions, serviceRegistry );
 
 		final int version = getVersion();
-		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
+		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeDescriptorRegistry();
 
 		if ( version < 1100 ) {

@@ -32,6 +32,9 @@ import org.hibernate.property.access.spi.Getter;
  * @see org.hibernate.tuple.entity.EntityTuplizer
  * @see org.hibernate.tuple.component.ComponentTuplizer
  *
+ * @deprecated for removal in 6.0.  See instead `ManagedTypeRepresentationStrategy`
+ * and `RepresentationMode` in 6.0
+ *
  * @author Steve Ebersole
  *
  * @deprecated See {@link org.hibernate.metamodel.spi.ManagedTypeRepresentationStrategy}

@@ -20,7 +20,11 @@ import org.hibernate.tuple.Tuplizer;
  *
  * @author Gavin King
  * @author Steve Ebersole
+ *
+ * @deprecated for removal in 6.0.  See instead `ManagedTypeRepresentationStrategy`
+ * and `RepresentationMode` in 6.0
  */
+@Deprecated
 public interface ComponentTuplizer extends Tuplizer, Serializable {
 
 	/**

@@ -139,6 +139,7 @@ import static org.hibernate.cfg.AvailableSettings.VALIDATE_QUERY_PARAMETERS;
 import static org.hibernate.cfg.AvailableSettings.WRAP_RESULT_SETS;
 import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
 import static org.hibernate.internal.CoreLogging.messageLogger;
+import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 
 /**
  * In-flight state of {@link SessionFactoryOptions}
@@ -290,7 +291,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				() -> {
 					final Object value = configurationSettings.get( AvailableSettings.CDI_BEAN_MANAGER );
 					if ( value != null ) {
-						DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
+						DEPRECATION_LOGGER.deprecatedSetting(
 								AvailableSettings.CDI_BEAN_MANAGER,
 								AvailableSettings.JAKARTA_CDI_BEAN_MANAGER
 						);
@@ -692,7 +693,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 			// try the legacy (deprecated) JPA name
 			setting = configurationSettings.get( org.hibernate.cfg.AvailableSettings.INTERCEPTOR );
 			if ( setting != null ) {
-				DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
+				DEPRECATION_LOGGER.deprecatedSetting(
 						org.hibernate.cfg.AvailableSettings.INTERCEPTOR,
 						INTERCEPTOR
 				);
@@ -778,7 +779,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 			ConnectionReleaseMode specifiedReleaseMode,
 			Map configurationSettings,
 			TransactionCoordinatorBuilder transactionCoordinatorBuilder) {
-		DeprecationLogger.DEPRECATION_LOGGER.logUseOfDeprecatedConnectionHandlingSettings();
+		DEPRECATION_LOGGER.logUseOfDeprecatedConnectionHandlingSettings();
 
 		final ConnectionAcquisitionMode effectiveAcquisitionMode = specifiedAcquisitionMode == null
 				? ConnectionAcquisitionMode.AS_NEEDED

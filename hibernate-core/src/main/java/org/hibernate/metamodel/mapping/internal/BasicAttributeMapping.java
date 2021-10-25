@@ -282,7 +282,6 @@ public class BasicAttributeMapping
 		// returning a domain result assembler that returns LazyPropertyInitializer.UNFETCHED_PROPERTY
 		final EntityMappingType containingEntityMapping = findContainingEntityMapping();
 		if ( fetchTiming == FetchTiming.DELAYED
-				&& fetchParent.getReferencedModePart() == containingEntityMapping
 				&& containingEntityMapping.getEntityPersister().getPropertyLaziness()[getStateArrayPosition()] ) {
 			valuesArrayPosition = -1;
 		}

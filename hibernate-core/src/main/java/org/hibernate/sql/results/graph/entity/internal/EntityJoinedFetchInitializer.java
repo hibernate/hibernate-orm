@@ -30,7 +30,6 @@ import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 public class EntityJoinedFetchInitializer extends AbstractEntityInitializer {
 	private static final String CONCRETE_NAME = EntityJoinedFetchInitializer.class.getSimpleName();
 
-	private final ModelPart referencedModelPart;
 	private final boolean isEnhancedForLazyLoading;
 
 	protected EntityJoinedFetchInitializer(
@@ -50,7 +49,6 @@ public class EntityJoinedFetchInitializer extends AbstractEntityInitializer {
 				null,
 				creationState
 		);
-		this.referencedModelPart = referencedModelPart;
 		if ( getConcreteDescriptor() != null ) {
 			this.isEnhancedForLazyLoading = getConcreteDescriptor().getBytecodeEnhancementMetadata()
 					.isEnhancedForLazyLoading();
@@ -62,6 +60,7 @@ public class EntityJoinedFetchInitializer extends AbstractEntityInitializer {
 
 	@Override
 	protected Object getProxy(PersistenceContext persistenceContext) {
+		ModelPart referencedModelPart = getInitializedPart();
 		if ( referencedModelPart instanceof ToOneAttributeMapping ) {
 			final boolean unwrapProxy = ( (ToOneAttributeMapping) referencedModelPart ).isUnwrapProxy() && isEnhancedForLazyLoading;
 			if ( unwrapProxy ) {

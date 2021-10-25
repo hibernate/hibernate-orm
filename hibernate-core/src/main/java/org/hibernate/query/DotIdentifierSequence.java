@@ -24,13 +24,13 @@ public interface DotIdentifierSequence {
 		return getParent() == null;
 	}
 
-	default <T> T resolve(T base, BiFunction<T, String, T> resolver) {
+	default <T> T resolve(T base, BiFunction<T, String, T> baseResolver, BiFunction<T, String, T> resolver) {
 		final T result;
 		if ( getParent() == null ) {
-			result = base;
+			result = baseResolver.apply( base, getLocalName() );
 		}
 		else {
-			result = resolver.apply( getParent().resolve( base, resolver ), getLocalName() );
+			result = resolver.apply( getParent().resolve( base, baseResolver, resolver ), getLocalName() );
 		}
 		return result;
 	}

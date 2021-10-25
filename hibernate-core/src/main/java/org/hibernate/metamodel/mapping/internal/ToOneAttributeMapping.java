@@ -16,14 +16,18 @@ import java.util.function.Consumer;
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IndexedConsumer;
+import org.hibernate.mapping.Join;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.metamodel.mapping.AssociationKey;
 import org.hibernate.metamodel.mapping.CollectionPart;
@@ -38,6 +42,8 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.persister.collection.QueryableCollection;
+import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.EntityIdentifierNavigablePath;
@@ -99,6 +105,7 @@ public class ToOneAttributeMapping
 
 	private final String sqlAliasStem;
 	private final boolean isNullable;
+	private final boolean isKeyTableNullable;
 	private final boolean isConstrained;
 	private final boolean isIgnoreNotFound;
 	private final boolean unwrapProxy;
@@ -185,19 +192,74 @@ public class ToOneAttributeMapping
 			}
 			if ( referencedPropertyName == null ) {
 				String bidirectionalAttributeName = null;
-				final PersistentClass entityBinding = manyToOne.getMetadata().getEntityBinding( manyToOne.getReferencedEntityName() );
-				final Iterator<Property> propertyClosureIterator = entityBinding.getPropertyClosureIterator();
-				while (propertyClosureIterator.hasNext()) {
-					final Property property = propertyClosureIterator.next();
-					if ( property.getValue() instanceof Collection && name.equals( ( (Collection) property.getValue() ).getMappedByProperty() ) ) {
-						bidirectionalAttributeName = property.getName();
-						break;
+				final PersistentClass entityBinding = manyToOne.getMetadata()
+						.getEntityBinding( manyToOne.getReferencedEntityName() );
+				if ( cardinality == Cardinality.LOGICAL_ONE_TO_ONE ) {
+					// Handle join table cases
+					final Iterator<Join> joinClosureIterator = entityBinding.getJoinClosureIterator();
+					while ( joinClosureIterator.hasNext() ) {
+						final Join join = joinClosureIterator.next();
+						if ( join.getPersistentClass().getEntityName().equals( entityBinding.getEntityName() )
+								&& join.getPropertySpan() == 1
+								&& join.getTable() == manyToOne.getTable()
+								&& equal( join.getKey().getColumnIterator(), manyToOne.getColumnIterator() ) ) {
+							bidirectionalAttributeName = join.getPropertyIterator().next().getName();
+							break;
+						}
+					}
+					// Simple one-to-one mapped by cases
+					if ( bidirectionalAttributeName == null ) {
+						final Iterator<Property> propertyClosureIterator = entityBinding.getPropertyClosureIterator();
+						while ( propertyClosureIterator.hasNext() ) {
+							final Property property = propertyClosureIterator.next();
+							if ( property.getValue() instanceof OneToOne && name.equals( ( (OneToOne) property.getValue() ).getMappedByProperty() ) ) {
+								bidirectionalAttributeName = property.getName();
+								break;
+							}
+						}
+					}
+				}
+				else {
+					final Iterator<Property> propertyClosureIterator = entityBinding.getPropertyClosureIterator();
+					while ( propertyClosureIterator.hasNext() ) {
+						final Property property = propertyClosureIterator.next();
+						if ( property.getValue() instanceof Collection && name.equals( ( (Collection) property.getValue() ).getMappedByProperty() ) ) {
+							bidirectionalAttributeName = property.getName();
+							break;
+						}
 					}
 				}
 				this.bidirectionalAttributeName = bidirectionalAttributeName;
 			}
 			else {
 				this.bidirectionalAttributeName = referencedPropertyName;
+			}
+			if ( bootValue.isNullable() ) {
+				isKeyTableNullable = true;
+			}
+			else {
+				final JdbcServices jdbcServices = declaringEntityPersister.getFactory().getJdbcServices();
+				final String targetTableName = jdbcServices.getJdbcEnvironment()
+						.getQualifiedObjectNameFormatter()
+						.format(
+								manyToOne.getTable().getQualifiedTableName(),
+								jdbcServices.getDialect()
+						);
+				if ( CollectionPart.Nature.fromNameExact( navigableRole.getParent().getLocalName() ) != null ) {
+					final PluralAttributeMapping pluralAttribute = (PluralAttributeMapping) declaringEntityPersister.resolveSubPart(
+							navigableRole.getParent().getParent()
+					);
+					final QueryableCollection persister = (QueryableCollection) pluralAttribute.getCollectionDescriptor();
+					isKeyTableNullable = !persister.getTableName().equals( targetTableName );
+				}
+				else {
+					final AbstractEntityPersister persister = (AbstractEntityPersister) declaringEntityPersister;
+					final int tableIndex = ArrayHelper.indexOf(
+							persister.getTableNames(),
+							targetTableName
+					);
+					isKeyTableNullable = persister.isNullableTable( tableIndex );
+				}
 			}
 			isOptional = ( (ManyToOne) bootValue ).isIgnoreNotFound();
 		}
@@ -265,6 +327,7 @@ public class ToOneAttributeMapping
 				this.bidirectionalAttributeName = bidirectionalAttributeName;
 			}
 			isIgnoreNotFound = isNullable();
+			isKeyTableNullable = isNullable();
 			isOptional = ! bootValue.isConstrained();
 		}
 		isConstrained = bootValue.isConstrained();
@@ -344,6 +407,7 @@ public class ToOneAttributeMapping
 		this.navigableRole = original.navigableRole;
 		this.sqlAliasStem = original.sqlAliasStem;
 		this.isNullable = original.isNullable;
+		this.isKeyTableNullable = original.isKeyTableNullable;
 		this.isOptional = original.isOptional;
 		this.isIgnoreNotFound = original.isIgnoreNotFound;
 		this.unwrapProxy = original.unwrapProxy;
@@ -355,6 +419,23 @@ public class ToOneAttributeMapping
 		this.bidirectionalAttributeName = original.bidirectionalAttributeName;
 		this.declaringTableGroupProducer = original.declaringTableGroupProducer;
 		this.isConstrained = original.isConstrained;
+	}
+
+	private boolean equal(Iterator<Selectable> lhsColumns, Iterator<Selectable> rhsColumns) {
+		boolean hasNext;
+		do {
+			final Selectable lhs = lhsColumns.next();
+			final Selectable rhs = rhsColumns.next();
+			if ( !lhs.getText().equals( rhs.getText() ) ) {
+				return false;
+			}
+
+			hasNext = lhsColumns.hasNext();
+			if ( hasNext != rhsColumns.hasNext() ) {
+				return false;
+			}
+		} while ( hasNext );
+		return true;
 	}
 
 	private static void addPrefixedPropertyNames(
@@ -747,6 +828,16 @@ public class ToOneAttributeMapping
 			}
 
 			creationState.registerVisitedAssociationKey( foreignKeyDescriptor.getAssociationKey() );
+			if ( cardinality == Cardinality.LOGICAL_ONE_TO_ONE && bidirectionalAttributeName != null ) {
+				final ModelPart bidirectionalModelPart = entityMappingType.findSubPart( bidirectionalAttributeName );
+				// Add the inverse association key side as well to be able to resolve to a CircularFetch
+				if ( bidirectionalModelPart instanceof ToOneAttributeMapping ) {
+					final ToOneAttributeMapping bidirectionalAttribute = (ToOneAttributeMapping) bidirectionalModelPart;
+					creationState.registerVisitedAssociationKey(
+							bidirectionalAttribute.getForeignKeyDescriptor().getAssociationKey()
+					);
+				}
+			}
 			return new EntityFetchJoinedImpl(
 					fetchParent,
 					this,
@@ -875,7 +966,7 @@ public class ToOneAttributeMapping
 
 	@Override
 	public SqlAstJoinType getDefaultSqlAstJoinType(TableGroup parentTableGroup) {
-		if ( isNullable ) {
+		if ( isKeyTableNullable || isNullable ) {
 			return SqlAstJoinType.LEFT;
 		}
 		else if ( parentTableGroup.getModelPart() instanceof CollectionPart ) {

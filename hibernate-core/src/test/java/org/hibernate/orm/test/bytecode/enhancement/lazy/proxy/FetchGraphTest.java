@@ -131,17 +131,85 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Test
 	public void basicTypeLazyGroup() {
+
+		inSession(
+				session -> {
+					final String qry = "select d from D d";
+
+					final Query query = session.createQuery( qry );
+					final ScrollableResults scrollableResults = getScrollableResults( query );
+					while ( scrollableResults.next() ) {
+						final DEntity dEntity = (DEntity) scrollableResults.get();
+						assertFalse( Hibernate.isPropertyInitialized( dEntity, "blob" ) );
+						assertFalse( Hibernate.isPropertyInitialized( dEntity, "lazyString" ) );
+						assertFalse( Hibernate.isPropertyInitialized( dEntity, "lazyStringBlobGroup" ) );
+						assertTrue( Hibernate.isPropertyInitialized( dEntity, "nonLazyString" ) );
+					}
+				}
+		);
+
 		inSession(
 				session -> {
 					final DEntity dEntity = session.get( DEntity.class, 1L );
 					assertFalse( Hibernate.isPropertyInitialized( dEntity, "blob" ) );
 					assertFalse( Hibernate.isPropertyInitialized( dEntity, "lazyString" ) );
 					assertFalse( Hibernate.isPropertyInitialized( dEntity, "lazyStringBlobGroup" ) );
+
 					assertTrue( Hibernate.isPropertyInitialized( dEntity, "nonLazyString" ) );
+
 					dEntity.getBlob();
+
 					assertTrue( Hibernate.isPropertyInitialized( dEntity, "blob" ) );
 					assertTrue( Hibernate.isPropertyInitialized( dEntity, "lazyStringBlobGroup" ) );
+
 					assertFalse( Hibernate.isPropertyInitialized( dEntity, "lazyString" ) );
+				}
+		);
+
+		inSession(
+				session -> {
+					final DEntity dEntity = session.get( DEntity.class, 1L );
+					assertFalse( Hibernate.isPropertyInitialized( dEntity, "blob" ) );
+					assertFalse( Hibernate.isPropertyInitialized( dEntity, "lazyString" ) );
+					assertFalse( Hibernate.isPropertyInitialized( dEntity, "lazyStringBlobGroup" ) );
+
+					assertTrue( Hibernate.isPropertyInitialized( dEntity, "nonLazyString" ) );
+					dEntity.getBlob();
+
+					assertTrue( Hibernate.isPropertyInitialized( dEntity, "blob" ) );
+					assertTrue( Hibernate.isPropertyInitialized( dEntity, "lazyStringBlobGroup" ) );
+
+					assertFalse( Hibernate.isPropertyInitialized( dEntity, "lazyString" ) );
+				}
+		);
+
+		inSession(
+				session -> {
+					final String qry = "select e from E e join fetch e.d";
+
+					final Query query = session.createQuery( qry );
+					final List<EEntity> results = query.list();
+					results.forEach(
+							eEntity -> {
+								final DEntity dEntity = eEntity.getD();
+								assertFalse( Hibernate.isPropertyInitialized( dEntity, "blob" ) );
+								assertFalse( Hibernate.isPropertyInitialized( dEntity, "lazyString" ) );
+								assertFalse( Hibernate.isPropertyInitialized( dEntity, "lazyStringBlobGroup" ) );
+
+								assertTrue( Hibernate.isPropertyInitialized( dEntity, "nonLazyString" ) );
+								assertThat( dEntity.getNonLazyString(), is("I am not lazy") );
+
+								dEntity.getBlob();
+
+								assertTrue( Hibernate.isPropertyInitialized( dEntity, "blob" ) );
+
+								assertTrue( Hibernate.isPropertyInitialized( dEntity, "lazyStringBlobGroup" ) );
+								assertThat( dEntity.getLazyStringBlobGroup(), is("I am lazy as a blob") );
+
+								assertFalse( Hibernate.isPropertyInitialized( dEntity, "lazyString" ) );
+								assertThat( dEntity.getLazyString(), is("I am lazy") );
+							}
+					);
 				}
 		);
 	}
@@ -165,8 +233,8 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 					while ( scrollableResults.next() ) {
 						final EEntity eEntity = (EEntity) scrollableResults.get();
 						final DEntity dEntity = eEntity.getD();
-						assertFalse(Hibernate.isPropertyInitialized( dEntity, "blob" ));
-						assertTrue(Hibernate.isPropertyInitialized( dEntity, "nonLazyString" ));
+						assertFalse( Hibernate.isPropertyInitialized( dEntity, "blob" ) );
+						assertTrue( Hibernate.isPropertyInitialized( dEntity, "nonLazyString" ) );
 					}
 				}
 		);
@@ -628,6 +696,9 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 				session -> {
 					DEntity d = new DEntity();
 					d.setD( "bla" );
+					d.setLazyString( "I am lazy" );
+					d.setNonLazyString( "I am not lazy" );
+					d.setLazyStringBlobGroup( "I am lazy as a blob" );
 					d.setOid( 1 );
 
 					byte[] lBytes = "agdfagdfagfgafgsfdgasfdgfgasdfgadsfgasfdgasfdgasdasfdg".getBytes();
@@ -958,6 +1029,30 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		public void setG(GEntity g) {
 			this.g = g;
+		}
+
+		public String getNonLazyString() {
+			return nonLazyString;
+		}
+
+		public void setNonLazyString(String nonLazyString) {
+			this.nonLazyString = nonLazyString;
+		}
+
+		public String getLazyString() {
+			return lazyString;
+		}
+
+		public void setLazyString(String lazyString) {
+			this.lazyString = lazyString;
+		}
+
+		public String getLazyStringBlobGroup() {
+			return lazyStringBlobGroup;
+		}
+
+		public void setLazyStringBlobGroup(String lazyStringBlobGroup) {
+			this.lazyStringBlobGroup = lazyStringBlobGroup;
 		}
 	}
 

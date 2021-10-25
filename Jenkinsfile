@@ -192,11 +192,51 @@ stage('Build') {
 						if ( containerName != null ) {
 							sh "docker rm -f ${containerName}"
 						}
-						if ( buildEnv.notificationRecipients != null ) {
-							notifyBuildResult(
-								maintainers: buildEnv.notificationRecipients,
-								notifySuccessAfterSuccess: false
-							)
+						// Skip this for PRs
+						if ( !env.CHANGE_ID && buildEnv.notificationRecipients != null ) {
+							boolean success = currentBuild.result == 'SUCCESS'
+							String previousResult = currentBuild.previousBuild == null ? null : currentBuild.previousBuild.result == 'SUCCESS'
+
+							// Ignore success after success
+							if ( !( success && previousResult == 'SUCCESS' ) ) {
+								def subject
+								def body
+								if ( success ) {
+									if ( previousResult != 'SUCCESS' && previousResult != null ) {
+										subject = "${env.JOB_NAME} - Build ${env.BUILD_NUMBER} - Fixed"
+										body = """<p>${env.JOB_NAME} - Build ${env.BUILD_NUMBER} - Fixed:</p>
+											<p>Check console output at <a href='${env.BUILD_URL}'>${env.BUILD_URL}</a> to view the results.</p>"""
+									}
+									else {
+										subject = "${env.JOB_NAME} - Build ${env.BUILD_NUMBER} - Success"
+										body = """<p>${env.JOB_NAME} - Build ${env.BUILD_NUMBER} - Success:</p>
+											<p>Check console output at <a href='${env.BUILD_URL}'>${env.BUILD_URL}</a> to view the results.</p>"""
+									}
+								}
+								else if ( currentBuild.result == 'FAILURE' ) {
+									if ( previousResult != null && previousResult == "FAILURE" ) {
+										subject = "${env.JOB_NAME} - Build ${env.BUILD_NUMBER} - Still failing"
+										body = """<p>${env.JOB_NAME} - Build ${env.BUILD_NUMBER} - Still failing:</p>
+											<p>Check console output at <a href='${env.BUILD_URL}'>${env.BUILD_URL}</a> to view the results.</p>"""
+									}
+									else {
+										subject = "${env.JOB_NAME} - Build ${env.BUILD_NUMBER} - Failure"
+										body = """<p>${env.JOB_NAME} - Build ${env.BUILD_NUMBER} - Failure:</p>
+											<p>Check console output at <a href='${env.BUILD_URL}'>${env.BUILD_URL}</a> to view the results.</p>"""
+									}
+								}
+								else {
+									subject = "${env.JOB_NAME} - Build ${env.BUILD_NUMBER} - ${currentBuild.result}"
+									body = """<p>${env.JOB_NAME} - Build ${env.BUILD_NUMBER} - ${currentBuild.result}:</p>
+										<p>Check console output at <a href='${env.BUILD_URL}'>${env.BUILD_URL}</a> to view the results.</p>"""
+								}
+
+								emailext(
+										subject: subject,
+										body: body,
+										to: buildEnv.notificationRecipients
+								)
+							}
 						}
 					}
 				}

@@ -13,8 +13,6 @@ import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.Manageable;
@@ -25,7 +23,6 @@ import org.hibernate.service.spi.Manageable;
  * @author Steve Ebersole
  */
 public class BatchBuilderImpl implements BatchBuilder, Configurable, Manageable, BatchBuilderMXBean {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( BatchBuilderImpl.class );
 
 	private int jdbcBatchSize;
 

@@ -11,6 +11,7 @@ import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.AbstractDomainPath;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.TranslationContext;
 import org.hibernate.query.NavigablePath;
 
@@ -55,7 +56,7 @@ public class PluralAttributePath extends AbstractDomainPath {
 			if ( subPart instanceof CollectionPart ) {
 				return new CollectionPartPath( this, (CollectionPart) subPart );
 			}
-			else if ( !( subPart instanceof EmbeddableValuedModelPart ) ) {
+			else if ( !( subPart instanceof EmbeddableValuedModelPart || subPart instanceof ToOneAttributeMapping ) ) {
 				final CollectionPartPath elementPath = new CollectionPartPath(
 						this,
 						pluralAttributeMapping.getElementDescriptor()

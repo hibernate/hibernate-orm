@@ -10,6 +10,7 @@ import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.AbstractDomainPath;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.TranslationContext;
 import org.hibernate.query.NavigablePath;
 
@@ -64,9 +65,26 @@ public class DomainPathContinuation extends AbstractDomainPath {
 					subPart
 			);
 		}
+		if ( referencedModelPart instanceof ToOneAttributeMapping ) {
+			ToOneAttributeMapping toOneAttribute = (ToOneAttributeMapping) referencedModelPart;
+			if ( name.equals( toOneAttribute.getTargetKeyPropertyName() ) ) {
+				final ModelPart subPart = toOneAttribute.findSubPart( name );
+				if ( subPart == null ) {
+					throw new PathResolutionException(
+							"Could not resolve path token : " + referencedModelPart + " -> " + name
+					);
+				}
+
+				return new DomainPathContinuation(
+						navigablePath.append( name ),
+						this,
+						subPart
+				);
+			}
+		}
 
 		throw new PathResolutionException(
-				"Domain path of type `" +  referencedModelPart.getPartMappingType() +
+				"Domain path of type `" + referencedModelPart.getPartMappingType() +
 						"` -> `" + name + "`"
 		);
 	}

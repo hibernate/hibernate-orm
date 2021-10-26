@@ -1,9 +1,17 @@
 package org.hibernate.orm.test.batchfetch;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertNotNull;
+import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.spi.MetamodelImplementor;
+import org.hibernate.persister.entity.EntityPersister;
 
-import java.util.Map;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -11,38 +19,23 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 
-import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
-import org.hibernate.annotations.Fetch;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.loader.BatchFetchStyle;
-import org.hibernate.metamodel.spi.MetamodelImplementor;
-import org.hibernate.persister.entity.EntityPersister;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-public class BatchingEntityLoaderInitializationWithNoLockModeTest extends BaseEntityManagerFunctionalTestCase {
+@Jpa(
+		annotatedClasses = {
+				BatchingEntityLoaderInitializationWithNoLockModeTest.MainEntity.class,
+				BatchingEntityLoaderInitializationWithNoLockModeTest.SubEntity.class
+		},
+		properties = { @Setting(name = AvailableSettings.DEFAULT_BATCH_FETCH_SIZE, value = "5") }
+)
+public class BatchingEntityLoaderInitializationWithNoLockModeTest {
 
 	private Long mainId;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { MainEntity.class, SubEntity.class };
-	}
-
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	@Override
-	protected Map buildSettings() {
-		Map settings = super.buildSettings();
-		settings.put( AvailableSettings.BATCH_FETCH_STYLE, BatchFetchStyle.LEGACY );
-		settings.put( AvailableSettings.DEFAULT_BATCH_FETCH_SIZE, 5 );
-		return settings;
-	}
 
 	@Test
-	public void testJoin() {
-		doInJPA( this::entityManagerFactory, em -> {
+	public void testJoin(EntityManagerFactoryScope scope) {
+		scope.inTransaction( em -> {
 			SubEntity sub = new SubEntity();
 			em.persist( sub );
 
@@ -51,9 +44,9 @@ public class BatchingEntityLoaderInitializationWithNoLockModeTest extends BaseEn
 			em.persist( main );
 
 			this.mainId = main.getId();
-		});
+		} );
 
-		doInJPA( this::entityManagerFactory, em -> {
+		scope.inTransaction( em -> {
 			EntityPersister entityPersister = ( (MetamodelImplementor) em.getMetamodel() )
 					.entityPersister( MainEntity.class );
 
@@ -61,8 +54,9 @@ public class BatchingEntityLoaderInitializationWithNoLockModeTest extends BaseEn
 			LockOptions lockOptions = new LockOptions( LockMode.NONE );
 			lockOptions.setTimeOut( 10 );
 
-			MainEntity main = (MainEntity) entityPersister.load( this.mainId, null, lockOptions,
-					(SharedSessionContractImplementor) em );
+			MainEntity main = (MainEntity) entityPersister.
+					load( this.mainId, null, lockOptions, (SharedSessionContractImplementor) em );
+
 			assertNotNull( main.getSub() );
 		} );
 	}

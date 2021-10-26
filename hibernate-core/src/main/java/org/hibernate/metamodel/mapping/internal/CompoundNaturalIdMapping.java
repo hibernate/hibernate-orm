@@ -15,6 +15,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -602,6 +603,11 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		@Override
 		public NavigablePath getNavigablePath() {
 			return navigablePath;
+		}
+
+		@Override
+		public EntityKey getEntityKey() {
+			return null;
 		}
 
 		@Override

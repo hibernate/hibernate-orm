@@ -6,26 +6,27 @@
  */
 package org.hibernate.sql.results.graph.entity.internal;
 
-import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.function.Consumer;
 
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.log.LoggingHelper;
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
+import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.graph.AbstractFetchParentAccess;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Initializer;
-import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
+import org.hibernate.sql.results.graph.entity.AbstractEntityInitializer;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.graph.entity.EntityLoadingLogger;
 import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
@@ -33,23 +34,22 @@ import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 import static org.hibernate.internal.log.LoggingHelper.toLoggableString;
 
-/**
- * @author Andrea Boriero
- */
-public class EntitySelectFetchInitializer extends AbstractFetchParentAccess implements EntityInitializer {
-	private static final String CONCRETE_NAME = EntitySelectFetchInitializer.class.getSimpleName();
+public class BatchEntitySelectFetchInitializer extends AbstractFetchParentAccess implements EntityInitializer {
+	private static final String CONCRETE_NAME = BatchEntitySelectFetchInitializer.class.getSimpleName();
 
 	private FetchParentAccess parentAccess;
 	private final NavigablePath navigablePath;
-	private final boolean isEnhancedForLazyLoading;
 
 	protected final EntityPersister concreteDescriptor;
 	protected final DomainResultAssembler identifierAssembler;
 	private final ToOneAttributeMapping referencedModelPart;
 
 	protected Object entityInstance;
+	private EntityKey entityKey;
 
-	public EntitySelectFetchInitializer(
+	private Map<EntityKey, Object> toBatchLoad = new LinkedHashMap<>();
+
+	public BatchEntitySelectFetchInitializer(
 			FetchParentAccess parentAccess,
 			ToOneAttributeMapping referencedModelPart,
 			NavigablePath fetchedNavigable,
@@ -60,10 +60,9 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 		this.navigablePath = fetchedNavigable;
 		this.concreteDescriptor = concreteDescriptor;
 		this.identifierAssembler = identifierAssembler;
-		this.isEnhancedForLazyLoading = concreteDescriptor.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading();
 	}
 
-	public ModelPart getInitializedPart(){
+	public ModelPart getInitializedPart() {
 		return referencedModelPart;
 	}
 
@@ -74,58 +73,28 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 
 	@Override
 	public void resolveKey(RowProcessingState rowProcessingState) {
-		// nothing to do
+
+
 	}
 
 	@Override
 	public void resolveInstance(RowProcessingState rowProcessingState) {
+
 	}
 
 	@Override
 	public void initializeInstance(RowProcessingState rowProcessingState) {
-		List<AttributeMapping> attributeMappings;
-		if ( parentAccess instanceof EmbeddableInitializer ) {
-			attributeMappings = ( (EmbeddableInitializer) parentAccess ).getInitializedPart()
-					.getEmbeddableTypeDescriptor()
-					.getAttributeMappings();
-		}
-		else {
-			attributeMappings = ( (EntityInitializer) parentAccess ).getConcreteDescriptor().getAttributeMappings();
-		}
-
-		if ( !attributeMappings.contains( referencedModelPart ) ) {
-			return;
-		}
-
-		if ( entityInstance != null ) {
-			return;
-		}
-
 		final Object entityIdentifier = identifierAssembler.assemble( rowProcessingState );
-
 		if ( entityIdentifier == null ) {
 			return;
 		}
+		entityKey = new EntityKey( entityIdentifier, concreteDescriptor );
 
-		if ( EntityLoadingLogger.TRACE_ENABLED ) {
-			EntityLoadingLogger.LOGGER.tracef(
-					"(%s) Beginning Initializer#resolveInstance process for entity (%s) : %s",
-					StringHelper.collapse( this.getClass().getName() ),
-					getNavigablePath(),
-					entityIdentifier
-			);
-		}
-		final SharedSessionContractImplementor session = rowProcessingState.getSession();
-		final String entityName = concreteDescriptor.getEntityName();
-
-		final EntityKey entityKey = new EntityKey( entityIdentifier, concreteDescriptor );
-
-		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+		final PersistenceContext persistenceContext = rowProcessingState.getSession().getPersistenceContextInternal();
 		entityInstance = persistenceContext.getEntity( entityKey );
 		if ( entityInstance != null ) {
 			return;
 		}
-
 		Initializer initializer = rowProcessingState.getJdbcValuesSourceProcessingState()
 				.findInitializer( entityKey );
 
@@ -140,27 +109,16 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 			}
 			initializer.resolveInstance( rowProcessingState );
 			entityInstance = initializer.getInitializedInstance();
+			// EARLY EXIT!!!
 			return;
 		}
 
-		final LoadingEntityEntry existingLoadingEntry = session
+		final LoadingEntityEntry existingLoadingEntry = rowProcessingState.getSession()
 				.getPersistenceContext()
 				.getLoadContexts()
 				.findLoadingEntityEntry( entityKey );
 
 		if ( existingLoadingEntry != null ) {
-			if ( EntityLoadingLogger.DEBUG_ENABLED ) {
-				EntityLoadingLogger.LOGGER.debugf(
-						"(%s) Found existing loading entry [%s] - using loading instance",
-						CONCRETE_NAME,
-						toLoggableString(
-								getNavigablePath(),
-								entityIdentifier
-						)
-				);
-			}
-			this.entityInstance = existingLoadingEntry.getEntityInstance();
-
 			if ( existingLoadingEntry.getEntityInitializer() != this ) {
 				// the entity is already being loaded elsewhere
 				if ( EntityLoadingLogger.DEBUG_ENABLED ) {
@@ -171,46 +129,20 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 							existingLoadingEntry.getEntityInitializer()
 					);
 				}
+				this.entityInstance = existingLoadingEntry.getEntityInstance();
 
 				// EARLY EXIT!!!
 				return;
 			}
 		}
 
-		if ( EntityLoadingLogger.DEBUG_ENABLED ) {
-			EntityLoadingLogger.LOGGER.debugf(
-					"(%s) Invoking session#internalLoad for entity (%s) : %s",
-					CONCRETE_NAME,
-					toLoggableString( getNavigablePath(), entityIdentifier ),
-					entityIdentifier
-			);
-		}
-		entityInstance = session.internalLoad(
-				entityName,
-				entityIdentifier,
-				true,
-				referencedModelPart.isNullable() || referencedModelPart.isIgnoreNotFound()
-		);
-
-		if ( EntityLoadingLogger.DEBUG_ENABLED ) {
-			EntityLoadingLogger.LOGGER.debugf(
-					"(%s) Entity [%s] : %s has being loaded by session.internalLoad.",
-					CONCRETE_NAME,
-					toLoggableString( getNavigablePath(), entityIdentifier ),
-					entityIdentifier
-			);
-		}
-
-		final boolean unwrapProxy = referencedModelPart.isUnwrapProxy() && isEnhancedForLazyLoading;
-		if ( entityInstance instanceof HibernateProxy ) {
-			( (HibernateProxy) entityInstance ).getHibernateLazyInitializer().setUnwrap( unwrapProxy );
-		}
+		persistenceContext.getBatchFetchQueue().addBatchLoadableEntityKey( entityKey );
+		toBatchLoad.put( entityKey, parentAccess.getInitializedInstance() );
 	}
 
 	@Override
 	public void finishUpRow(RowProcessingState rowProcessingState) {
 		entityInstance = null;
-
 		clearParentResolutionListeners();
 	}
 
@@ -226,7 +158,7 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 
 	@Override
 	public EntityKey getEntityKey() {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		return entityKey;
 	}
 
 	@Override
@@ -252,5 +184,39 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 	@Override
 	public String toString() {
 		return "EntitySelectFetchInitializer(" + LoggingHelper.toLoggableString( getNavigablePath() ) + ")";
+	}
+
+	@Override
+	public void endLoading(ExecutionContext context) {
+		toBatchLoad.forEach(
+				(entityKey, parentInstance) -> {
+					final Object instance = context.getSession().internalLoad(
+							entityKey.getEntityName(),
+							entityKey.getIdentifier(),
+							true,
+							referencedModelPart.isNullable()
+					);
+					if ( instance != null ) {
+						( (AbstractEntityPersister) referencedModelPart.getDeclaringType() ).setPropertyValue(
+								parentInstance,
+								referencedModelPart.getPartName(),
+								instance
+						);
+						final EntityEntry entry = context.getSession()
+								.getPersistenceContext()
+								.getEntry( parentInstance );
+						final int propertyIndex = ( (UniqueKeyLoadable) ( (AbstractEntityInitializer) parentAccess ).getEntityDescriptor() ).getPropertyIndex(
+								referencedModelPart.getPartName() );
+						if ( entry != null ) {
+							final Object[] loadedState = entry.getLoadedState();
+							if ( loadedState != null ) {
+								loadedState[propertyIndex] = instance;
+							}
+						}
+					}
+				}
+		);
+		toBatchLoad = null;
+		parentAccess = null;
 	}
 }

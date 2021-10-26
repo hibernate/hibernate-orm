@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.results.graph.embeddable.internal;
 
+import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.embeddable.AbstractEmbeddableInitializer;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
@@ -22,7 +23,12 @@ public class EmbeddableResultInitializer extends AbstractEmbeddableInitializer {
 
 	@Override
 	public Object getParentKey() {
-		return null;
+		return findFirstEntityDescriptorAccess().getParentKey();
+	}
+
+	@Override
+	public EntityKey getEntityKey() {
+		return findFirstEntityDescriptorAccess().getEntityKey();
 	}
 
 	@Override

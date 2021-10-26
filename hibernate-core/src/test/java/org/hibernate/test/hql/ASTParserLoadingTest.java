@@ -214,7 +214,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 				"/org/hibernate/test/hql/ComponentContainer.hbm.xml",
 				"/org/hibernate/test/hql/VariousKeywordPropertyEntity.hbm.xml",
 				"/org/hibernate/test/hql/Constructor.hbm.xml",
-				"batchfetch/ProductLine.hbm.xml",
+				"/org/hibernate/orm/test/batchfetch/ProductLine.hbm.xml",
 				"/org/hibernate/orm/test/cid/Customer.hbm.xml",
 				"/org/hibernate/orm/test/cid/Order.hbm.xml",
 				"/org/hibernate/orm/test/cid/LineItem.hbm.xml",

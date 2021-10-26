@@ -39,7 +39,7 @@ public class EJBQLTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[]{
 			"hql/Animal.hbm.xml",
-			"batchfetch/ProductLine.hbm.xml",
+			"/org/hibernate/orm/test/batchfetch/ProductLine.hbm.xml",
 			"cid/Customer.hbm.xml",
 			"cid/Order.hbm.xml",
 			"cid/LineItem.hbm.xml",

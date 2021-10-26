@@ -581,6 +581,8 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			return existingLoadingEntry.getEntityInstance();
 		}
 
+		assert existingLoadingEntry == null || existingLoadingEntry.getEntityInstance() == null;
+
 		Object instance = null;
 
 		// this isEntityReturn bit is just for entity loaders, not hql/criteria

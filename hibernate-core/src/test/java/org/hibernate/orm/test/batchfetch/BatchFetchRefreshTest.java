@@ -4,11 +4,21 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.batchfetch;
+package org.hibernate.orm.test.batchfetch;
 
 import java.util.LinkedHashSet;
-import java.util.Map;
 import java.util.Set;
+
+import org.hibernate.cfg.AvailableSettings;
+
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -18,26 +28,29 @@ import jakarta.persistence.LockModeType;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
-import org.hibernate.cfg.AvailableSettings;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.*;
-
-public class BatchFetchRefreshTest extends BaseNonConfigCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				BatchFetchRefreshTest.Parent.class,
+				BatchFetchRefreshTest.Child.class
+		}
+)
+@SessionFactory
+@ServiceRegistry(
+		settings = @Setting(name = AvailableSettings.DEFAULT_BATCH_FETCH_SIZE, value = "8")
+)
+public class BatchFetchRefreshTest {
 
 	@Test
-
-	public void testRefreshWithBatch() {
-
-		doInHibernate( this::sessionFactory, session -> {
+	public void testRefreshWithBatch(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 
 			// Retrieve one of the parents into the session.
-			Parent parent = session.find(Parent.class, 1);
-			Assert.assertNotNull(parent);
+			Parent parent = session.find( Parent.class, 1 );
+			assertNotNull( parent );
 
 			// Retrieve children but keep their parents lazy!
 			// This allows batch fetching to do its thing when we refresh below.
@@ -50,16 +63,16 @@ public class BatchFetchRefreshTest extends BaseNonConfigCoreFunctionalTestCase {
 			parent.getChildren().size();
 
 			// Another interesting thing to note - em.getLockMode returns an incorrect value after the above refresh
-			Assert.assertEquals( LockModeType.PESSIMISTIC_WRITE, session.getLockMode( parent ) );
-		});
+			assertEquals( LockModeType.PESSIMISTIC_WRITE, session.getLockMode( parent ) );
+		} );
 	}
 
-	@Before
-	public void setupData() {
+	@BeforeEach
+	public void setupData(SessionFactoryScope scope) {
 		final int numParents = 5;
 		final int childrenPerParent = 2;
 
-		doInHibernate( this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 			int k = 1;
 			for ( int i = 1; i <= numParents; i++ ) {
 				Parent parent = new Parent();
@@ -69,7 +82,7 @@ public class BatchFetchRefreshTest extends BaseNonConfigCoreFunctionalTestCase {
 				session.persist( parent );
 
 				// Create some children for each parent...
-				for ( int j = 0; j < childrenPerParent; j++,k++ ) {
+				for ( int j = 0; j < childrenPerParent; j++, k++ ) {
 					Child child = new Child();
 					child.childId = k;
 					child.name = "Child_" + i + "_" + j;
@@ -79,22 +92,8 @@ public class BatchFetchRefreshTest extends BaseNonConfigCoreFunctionalTestCase {
 					session.persist( child );
 				}
 			}
-		});
+		} );
 
-	}
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				Parent.class,
-				Child.class
-		};
-	}
-
-	@Override
-	protected void addSettings(Map settings) {
-		super.addSettings( settings );
-		settings.put( AvailableSettings.DEFAULT_BATCH_FETCH_SIZE, "8" );
 	}
 
 	@Entity(name = "Parent")

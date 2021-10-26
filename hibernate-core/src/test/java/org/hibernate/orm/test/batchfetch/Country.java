@@ -4,21 +4,21 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.batchfetch;
+package org.hibernate.orm.test.batchfetch;
+
+import java.util.List;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "city")
-public class City {
+@Table(name = "country")
+public class Country {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
@@ -28,17 +28,15 @@ public class City {
 	@Column(name = "name")
 	private String name;
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "country_id")
-	private Country country;
+	@OneToMany(mappedBy = "country")
+	private List<City> cities;
 
-	public City() {
+	public Country() {
 	}
 
-	public City(String name, Country country) {
+	public Country(String name) {
 		super();
 		this.name = name;
-		this.country = country;
 	}
 
 	public Integer getId() {
@@ -57,16 +55,12 @@ public class City {
 		this.name = name;
 	}
 
-	public Country getCountry() {
-		return country;
-	}
-
-	public void setCountry(Country country) {
-		this.country = country;
+	public List<City> getCities() {
+		return cities;
 	}
 
 	@Override
 	public String toString() {
-		return name + " (" + ( country == null ? "?" : country.getName() ) + ")";
+		return name;
 	}
 }

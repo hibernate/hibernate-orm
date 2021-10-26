@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.results.graph.embeddable.internal;
 
+import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.embeddable.AbstractEmbeddableInitializer;
@@ -25,6 +26,11 @@ public class EmbeddableFetchInitializer
 
 	@Override
 	public Object getParentKey() {
-		return getFetchParentAccess().getParentKey();
+		return findFirstEntityDescriptorAccess().getParentKey();
+	}
+
+	@Override
+	public EntityKey getEntityKey() {
+		return findFirstEntityDescriptorAccess().getEntityKey();
 	}
 }

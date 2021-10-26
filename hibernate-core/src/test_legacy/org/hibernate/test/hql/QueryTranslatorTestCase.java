@@ -42,7 +42,7 @@ public abstract class QueryTranslatorTestCase extends BaseCoreFunctionalTestCase
 				"hql/CrazyIdFieldNames.hbm.xml",
 				"hql/SimpleEntityWithAssociation.hbm.xml",
 				"hql/ComponentContainer.hbm.xml",
-				"batchfetch/ProductLine.hbm.xml",
+				"/org/hibernate/orm/test/batchfetch/ProductLine.hbm.xml",
 				"cid/Customer.hbm.xml",
 				"cid/Order.hbm.xml",
 				"cid/LineItem.hbm.xml",

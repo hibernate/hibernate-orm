@@ -21,9 +21,9 @@ import org.junit.Test;
 
 @TestForIssue(jiraKey = "HHH-12666")
 @RequiresDialect(H2Dialect.class)
-public class StateObjectStateExceptionHandlingTest extends BaseExceptionHandlingTest {
+public class StaleObjectStateExceptionHandlingTest extends BaseExceptionHandlingTest {
 
-	public StateObjectStateExceptionHandlingTest(
+	public StaleObjectStateExceptionHandlingTest(
 			BootstrapMethod bootstrapMethod,
 			ExceptionHandlingSetting exceptionHandlingSetting,
 			ExceptionExpectations exceptionExpectations) {

@@ -12,7 +12,7 @@ import javax.persistence.OptimisticLockException;
 import javax.persistence.PersistenceException;
 import javax.persistence.RollbackException;
 
-import org.hibernate.StaleObjectStateException;
+import org.hibernate.StaleStateException;
 import org.hibernate.TransactionException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.exception.ConstraintViolationException;
@@ -68,7 +68,7 @@ interface ExceptionExpectations {
 			@Override
 			public void onStaleObjectMergeAndUpdateFlush(RuntimeException e) {
 				assertThat( e, instanceOf( OptimisticLockException.class ) );
-				assertThat( e.getCause(), instanceOf( StaleObjectStateException.class ) );
+				assertThat( e.getCause(), instanceOf( StaleStateException.class ) );
 			}
 
 			@Override
@@ -145,7 +145,7 @@ interface ExceptionExpectations {
 
 			@Override
 			public void onStaleObjectMergeAndUpdateFlush(RuntimeException e) {
-				assertThat( e, instanceOf( StaleObjectStateException.class ) );
+				assertThat( e, instanceOf( StaleStateException.class ) );
 			}
 
 			@Override
@@ -221,7 +221,7 @@ interface ExceptionExpectations {
 			@Override
 			public void onStaleObjectMergeAndUpdateFlush(RuntimeException e) {
 				assertThat( e, instanceOf( OptimisticLockException.class ) );
-				assertThat( e.getCause(), instanceOf( StaleObjectStateException.class ) );
+				assertThat( e.getCause(), instanceOf( StaleStateException.class ) );
 			}
 
 			@Override

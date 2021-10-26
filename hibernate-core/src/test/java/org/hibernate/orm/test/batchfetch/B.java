@@ -4,31 +4,41 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.batchfetch;
+package org.hibernate.orm.test.batchfetch;
+
+import org.hibernate.annotations.BatchSize;
 
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.IdClass;
 
 @Entity
-public class A {
+@IdClass(BId.class)
+@BatchSize(size = 1000)
+public class B {
+
   @Id
-  @GeneratedValue
-  private Integer id;
+  private Integer idPart1;
+
+  @Id
+  private Integer idPart2;
 
   private String otherProperty;
 
-  @OneToOne(fetch = FetchType.LAZY)
-  private B b;
-
-  public Integer getId() {
-    return id;
+  public Integer getIdPart1() {
+    return idPart1;
   }
 
-  public void setId(Integer id) {
-    this.id = id;
+  public void setIdPart1(Integer idPart1) {
+    this.idPart1 = idPart1;
+  }
+
+  public Integer getIdPart2() {
+    return idPart2;
+  }
+
+  public void setIdPart2(Integer idPart2) {
+    this.idPart2 = idPart2;
   }
 
   public String getOtherProperty() {
@@ -37,13 +47,5 @@ public class A {
 
   public void setOtherProperty(String otherProperty) {
     this.otherProperty = otherProperty;
-  }
-
-  public B getB() {
-    return b;
-  }
-
-  public void setB(B b) {
-    this.b = b;
   }
 }

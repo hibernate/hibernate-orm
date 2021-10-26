@@ -76,7 +76,7 @@ public class SingleIdEntityLoaderDynamicBatch<T> extends SingleIdEntityLoaderSup
 		if ( numberOfIds <= 1 ) {
 			initializeSingleIdLoaderIfNeeded( session );
 
-			final T result = singleIdLoader.load( pkValue, lockOptions, readOnly, session );
+			final T result = singleIdLoader.load( pkValue, entityInstance, lockOptions, readOnly, session );
 			if ( result == null ) {
 				// There was no entity with the specified ID. Make sure the EntityKey does not remain
 				// in the batch to avoid including it in future batches that get executed.
@@ -144,7 +144,14 @@ public class SingleIdEntityLoaderDynamicBatch<T> extends SingleIdEntityLoaderSup
 		JdbcSelectExecutorStandardImpl.INSTANCE.list(
 				jdbcSelect,
 				jdbcParameterBindings,
-				getExecutionContext( entityInstance, readOnly, session, subSelectFetchableKeysHandler ),
+				getExecutionContext(
+						pkValue,
+						entityInstance,
+						readOnly,
+						lockOptions,
+						session,
+						subSelectFetchableKeysHandler
+				),
 				RowTransformerPassThruImpl.instance(),
 				ListResultsConsumer.UniqueSemantic.FILTER
 		);
@@ -163,8 +170,10 @@ public class SingleIdEntityLoaderDynamicBatch<T> extends SingleIdEntityLoaderSup
 	}
 
 	private ExecutionContext getExecutionContext(
+			Object entityId,
 			Object entityInstance,
 			Boolean readOnly,
+			LockOptions lockOptions,
 			SharedSessionContractImplementor session,
 			SubselectFetch.RegistrationHandler subSelectFetchableKeysHandler) {
 		return new ExecutionContext() {
@@ -179,11 +188,21 @@ public class SingleIdEntityLoaderDynamicBatch<T> extends SingleIdEntityLoaderSup
 			}
 
 			@Override
+			public Object getEntityId() {
+				return entityId;
+			}
+
+			@Override
 			public QueryOptions getQueryOptions() {
 				return new QueryOptionsAdapter() {
 					@Override
 					public Boolean isReadOnly() {
 						return readOnly;
+					}
+
+					@Override
+					public LockOptions getLockOptions() {
+						return lockOptions;
 					}
 				};
 			}

@@ -1,7 +1,16 @@
-package org.hibernate.test.batchfetch;
+package org.hibernate.orm.test.batchfetch;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
+
+import org.hibernate.cfg.AvailableSettings;
+
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -9,33 +18,20 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.MappedSuperclass;
 
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-
-public class BatchFetchBootstrapTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-			JafSid.class, UserGroup.class
-		};
-	}
-
-	@Override
-	protected void configure(Configuration configuration) {
-		configuration.setProperty(AvailableSettings.DEFAULT_BATCH_FETCH_SIZE, "30");
-	}
-
-	@Override
-	protected void buildSessionFactory() {
-	}
+@DomainModel(
+		annotatedClasses = {
+				BatchFetchBootstrapTest.JafSid.class, BatchFetchBootstrapTest.UserGroup.class
+		}
+)
+@SessionFactory
+@ServiceRegistry(
+		settings = @Setting( name =  AvailableSettings.DEFAULT_BATCH_FETCH_SIZE, value = "30")
+)
+public class BatchFetchBootstrapTest {
 
 	@Test
 	public void test() {
-		super.buildSessionFactory();
 	}
 
 

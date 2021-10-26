@@ -15,6 +15,7 @@ import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.BiDirectionalFetch;
@@ -27,6 +28,7 @@ import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
+import org.hibernate.sql.results.graph.entity.internal.BatchEntitySelectFetchInitializer;
 import org.hibernate.sql.results.graph.entity.internal.EntityDelayedFetchInitializer;
 import org.hibernate.sql.results.graph.entity.internal.EntitySelectFetchByUniqueKeyInitializer;
 import org.hibernate.sql.results.graph.entity.internal.EntitySelectFetchInitializer;
@@ -116,13 +118,25 @@ public class CircularFetchImpl implements BiDirectionalFetch, Association {
 						);
 					}
 					if ( timing == FetchTiming.IMMEDIATE ) {
-						return new EntitySelectFetchInitializer(
-								parentAccess,
-								(ToOneAttributeMapping) referencedModelPart,
-								getReferencedPath(),
-								entityMappingType.getEntityPersister(),
-								resultAssembler
-						);
+						final EntityPersister entityPersister = entityMappingType.getEntityPersister();
+						if ( entityPersister.isBatchLoadable() ) {
+							return new BatchEntitySelectFetchInitializer(
+									parentAccess,
+									(ToOneAttributeMapping) referencedModelPart,
+									getReferencedPath(),
+									entityPersister,
+									resultAssembler
+							);
+						}
+						else {
+							return new EntitySelectFetchInitializer(
+									parentAccess,
+									(ToOneAttributeMapping) referencedModelPart,
+									getReferencedPath(),
+									entityPersister,
+									resultAssembler
+							);
+						}
 					}
 					else {
 						return new EntityDelayedFetchInitializer(

@@ -4,12 +4,20 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.batchfetch;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+package org.hibernate.orm.test.batchfetch;
 
 import java.time.ZonedDateTime;
 import java.util.List;
+
+import org.hibernate.cfg.AvailableSettings;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -21,34 +29,30 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Assert;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-public class BatchFetchReferencedColumnNameTest extends BaseCoreFunctionalTestCase {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[]{ Child.class, Parent.class };
-	}
-
-	@Override
-	protected void configure(Configuration configuration) {
-		super.configure( configuration );
-
-		configuration.setProperty( AvailableSettings.SHOW_SQL, Boolean.TRUE.toString() );
-		configuration.setProperty( AvailableSettings.FORMAT_SQL, Boolean.TRUE.toString() );
-
-		configuration.setProperty( AvailableSettings.DEFAULT_BATCH_FETCH_SIZE, "64" );
-	}
+@DomainModel(
+		annotatedClasses = {
+				BatchFetchReferencedColumnNameTest.Child.class,
+				BatchFetchReferencedColumnNameTest.Parent.class
+		}
+)
+@SessionFactory
+@ServiceRegistry(
+		settings = {
+				@Setting(name = AvailableSettings.SHOW_SQL, value = "true"),
+				@Setting(name = AvailableSettings.FORMAT_SQL, value = "true"),
+				@Setting(name = AvailableSettings.DEFAULT_BATCH_FETCH_SIZE, value = "64")
+		}
+)
+public class BatchFetchReferencedColumnNameTest {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-13059")
-	public void test() throws Exception {
-		doInHibernate( this::sessionFactory, session -> {
+	public void test(SessionFactoryScope scope) throws Exception {
+		scope.inTransaction( session -> {
 			Parent p = new Parent();
 			p.setId( 1L );
 			session.save( p );
@@ -66,11 +70,11 @@ public class BatchFetchReferencedColumnNameTest extends BaseCoreFunctionalTestCa
 			session.save( c2 );
 		} );
 
-		doInHibernate( this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 			Parent p = session.get( Parent.class, 1L );
-			Assert.assertNotNull( p );
+			assertNotNull( p );
 
-			Assert.assertEquals( 2, p.getChildren().size() );
+			assertEquals( 2, p.getChildren().size() );
 		} );
 	}
 

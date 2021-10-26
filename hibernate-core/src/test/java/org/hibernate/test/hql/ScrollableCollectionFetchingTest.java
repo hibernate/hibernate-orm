@@ -16,7 +16,6 @@ import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 
 import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -35,7 +34,6 @@ import static org.junit.Assert.fail;
  *
  * @author Steve Ebersole
  */
-@FailureExpected( jiraKey = "none", message = "Support for scrolling collection fetches not yet implemented" )
 public class ScrollableCollectionFetchingTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] { "hql/Animal.hbm.xml" };

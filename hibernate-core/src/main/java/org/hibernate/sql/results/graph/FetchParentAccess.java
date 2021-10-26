@@ -8,6 +8,7 @@ package org.hibernate.sql.results.graph;
 
 import java.util.function.Consumer;
 
+import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.query.NavigablePath;
 
 /**
@@ -25,6 +26,8 @@ public interface FetchParentAccess extends Initializer {
 	Object getParentKey();
 
 	NavigablePath getNavigablePath();
+
+	EntityKey getEntityKey();
 
 	/**
 	 * Register a listener to be notified when the parent is "resolved"

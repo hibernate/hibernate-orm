@@ -68,13 +68,24 @@ public class EntityFetchSelectImpl extends AbstractNonJoinedEntityFetch {
 								result.createResultAssembler( creationState )
 						);
 					}
-					return new EntitySelectFetchInitializer(
-							parentAccess,
-							fetchedAttribute,
-							getNavigablePath(),
-							entityPersister,
-							result.createResultAssembler( creationState )
-					);
+					if ( entityPersister.isBatchLoadable() ) {
+						return new BatchEntitySelectFetchInitializer(
+								parentAccess,
+								fetchedAttribute,
+								getNavigablePath(),
+								entityPersister,
+								result.createResultAssembler( creationState )
+						);
+					}
+					else {
+						return new EntitySelectFetchInitializer(
+								parentAccess,
+								fetchedAttribute,
+								getNavigablePath(),
+								entityPersister,
+								result.createResultAssembler( creationState )
+						);
+					}
 				}
 		);
 

@@ -26,6 +26,7 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.collection.CollectionInitializer;
+import org.hibernate.sql.results.graph.entity.AbstractEntityInitializer;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.internal.NullValueAssembler;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
@@ -165,8 +166,8 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 
 		final PropertyAccess parentInjectionPropertyAccess = embeddedModelPartDescriptor.getParentInjectionAttributePropertyAccess();
 
+		Initializer initializer = rowProcessingState.resolveInitializer( navigablePath.getParent() );
 		if ( parentInjectionPropertyAccess != null ) {
-			Initializer initializer = rowProcessingState.resolveInitializer( navigablePath.getParent() );
 			final Object owner;
 			if ( initializer instanceof CollectionInitializer ) {
 				owner = ( (CollectionInitializer) initializer ).getCollectionInstance().getOwner();
@@ -214,15 +215,27 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		else {
 			notifyParentResolutionListeners( compositeInstance );
 			if ( compositeInstance instanceof HibernateProxy ) {
-				Object target = embeddedModelPartDescriptor.getEmbeddableTypeDescriptor()
-						.getRepresentationStrategy()
-						.getInstantiator()
-						.instantiate( VALUE_ACCESS, rowProcessingState.getSession().getFactory() );
-				embeddedModelPartDescriptor.getEmbeddableTypeDescriptor().setPropertyValues(
-						target,
-						resolvedValues
-				);
-				( (HibernateProxy) compositeInstance ).getHibernateLazyInitializer().setImplementation( target );
+				if ( initializer != this ) {
+					( (AbstractEntityInitializer) initializer ).registerResolutionListener(
+							entityInstance -> {
+								embeddedModelPartDescriptor.getEmbeddableTypeDescriptor().setPropertyValues(
+										entityInstance,
+										resolvedValues
+								);
+							}
+					);
+				}
+				else {
+					Object target = embeddedModelPartDescriptor.getEmbeddableTypeDescriptor()
+							.getRepresentationStrategy()
+							.getInstantiator()
+							.instantiate( VALUE_ACCESS, rowProcessingState.getSession().getFactory() );
+					embeddedModelPartDescriptor.getEmbeddableTypeDescriptor().setPropertyValues(
+							target,
+							resolvedValues
+					);
+					( (HibernateProxy) compositeInstance ).getHibernateLazyInitializer().setImplementation( target );
+				}
 			}
 			// At this point, createEmptyCompositesEnabled is always true.
 			// We can only set the property values on the compositeInstance though if there is at least one non null value.

@@ -7,12 +7,7 @@
 package org.hibernate.sql.results.graph.entity.internal;
 
 import org.hibernate.LockMode;
-import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
-import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.PersistentAttributeInterceptable;
-import org.hibernate.engine.spi.PersistentAttributeInterceptor;
-import org.hibernate.engine.spi.Status;
 import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
@@ -22,7 +17,6 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.entity.AbstractEntityInitializer;
 import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;
-import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 /**
  * @author Andrea Boriero
@@ -83,22 +77,5 @@ public class EntityJoinedFetchInitializer extends AbstractEntityInitializer {
 	@Override
 	public String toString() {
 		return "EntityJoinedFetchInitializer(" + LoggingHelper.toLoggableString( getNavigablePath() ) + ")";
-	}
-
-	@Override
-	protected boolean skipInitialization(
-			Object toInitialize, RowProcessingState rowProcessingState, EntityEntry entry) {
-		if ( toInitialize instanceof PersistentAttributeInterceptable ) {
-			final PersistentAttributeInterceptor interceptor = ( (PersistentAttributeInterceptable) toInitialize ).$$_hibernate_getInterceptor();
-			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
-				if ( entry.getStatus() != Status.LOADING ) {
-					// Avoid loading the same entity proxy twice for the same result set: it could lead to errors,
-					// because some code writes to its input (ID in hydrated state replaced by the loaded entity, in particular).
-					return false;
-				}
-				return true;
-			}
-		}
-		return super.skipInitialization( toInitialize, rowProcessingState, entry );
 	}
 }

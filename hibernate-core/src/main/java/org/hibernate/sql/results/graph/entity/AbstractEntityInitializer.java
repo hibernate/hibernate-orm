@@ -17,11 +17,14 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.WrongClassException;
+import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.PersistentAttributeInterceptable;
+import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -91,6 +94,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	private Object entityInstance;
 	private Object entityInstanceForNotify;
 	private boolean missing;
+	private boolean isOwningInitializer;
 	private Object[] resolvedEntityState;
 
 	// todo (6.0) : ^^ need a better way to track whether we are loading the entity state or if something else is/has
@@ -473,6 +477,11 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		final Object proxy = getProxy( persistenceContext );
 		// Special case map proxy to avoid stack overflows
 		// We know that a map proxy will always be of "the right type" so just use that object
+		final LoadingEntityEntry existingLoadingEntry = persistenceContext
+				.getLoadContexts()
+				.findLoadingEntityEntry( entityKey );
+		setIsOwningInitializer(entityKey.getIdentifier(), existingLoadingEntry  );
+
 		if ( proxy != null && ( proxy instanceof MapProxy
 				|| entityDescriptor.getJavaTypeDescriptor().getJavaTypeClass().isInstance( proxy ) ) ) {
 			entityInstance = proxy;
@@ -488,11 +497,10 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				// initializer is already loading the entity
 				entityInstance = resolveInstance(
 						entityIdentifier,
+						existingLoadingEntry,
 						rowProcessingState,
-						session,
-						persistenceContext
+						session
 				);
-
 			}
 
 			if ( LockMode.NONE != lockMode ) {
@@ -536,16 +544,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		return persistenceContext.getProxy( entityKey );
 	}
 
-	private Object resolveInstance(
-			Object entityIdentifier,
-			RowProcessingState rowProcessingState,
-			SharedSessionContractImplementor session,
-			PersistenceContext persistenceContext) {
-		final LoadingEntityEntry existingLoadingEntry = persistenceContext
-				.getLoadContexts()
-				.findLoadingEntityEntry( entityKey );
-
-		Object instance = null;
+	private void setIsOwningInitializer(Object entityIdentifier,LoadingEntityEntry existingLoadingEntry) {
 		if ( existingLoadingEntry != null ) {
 			if ( EntityLoadingLogger.DEBUG_ENABLED ) {
 				EntityLoadingLogger.LOGGER.debugf(
@@ -554,38 +553,47 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 						toLoggableString( getNavigablePath(), entityIdentifier )
 				);
 			}
-
-			instance = existingLoadingEntry.getEntityInstance();
-
-			if ( existingLoadingEntry.getEntityInitializer() != this ) {
-				// the entity is already being loaded elsewhere
-				if ( EntityLoadingLogger.DEBUG_ENABLED ) {
-					EntityLoadingLogger.LOGGER.debugf(
-							"(%s) Entity [%s] being loaded by another initializer [%s] - skipping processing",
-							getSimpleConcreteImplName(),
-							toLoggableString( getNavigablePath(), entityIdentifier ),
-							existingLoadingEntry.getEntityInitializer()
-					);
-				}
-
-				// EARLY EXIT!!!
-				return instance;
+			if ( existingLoadingEntry.getEntityInitializer() == this ) {
+				isOwningInitializer = true;
 			}
 		}
+		else {
+			isOwningInitializer = true;
+		}
+	}
 
-		if ( instance == null ) {
-			// this isEntityReturn bit is just for entity loaders, not hql/criteria
-			if ( isEntityReturn() ) {
-				final Object requestedEntityId = rowProcessingState.getJdbcValuesSourceProcessingState()
-						.getProcessingOptions()
-						.getEffectiveOptionalId();
-				final Object optionalEntityInstance = rowProcessingState.getJdbcValuesSourceProcessingState()
-						.getProcessingOptions()
-						.getEffectiveOptionalObject();
-				if ( requestedEntityId != null && optionalEntityInstance != null && requestedEntityId.equals(
-						entityKey.getIdentifier() ) ) {
-					instance = optionalEntityInstance;
-				}
+	private Object resolveInstance(
+			Object entityIdentifier,
+			LoadingEntityEntry existingLoadingEntry,
+			RowProcessingState rowProcessingState,
+			SharedSessionContractImplementor session) {
+		if ( !isOwningInitializer ) {
+			// the entity is already being loaded elsewhere
+			if ( EntityLoadingLogger.DEBUG_ENABLED ) {
+				EntityLoadingLogger.LOGGER.debugf(
+						"(%s) Entity [%s] being loaded by another initializer [%s] - skipping processing",
+						getSimpleConcreteImplName(),
+						toLoggableString( getNavigablePath(), entityIdentifier ),
+						existingLoadingEntry.getEntityInitializer()
+				);
+			}
+			// EARLY EXIT!!!
+			return existingLoadingEntry.getEntityInstance();
+		}
+
+		Object instance = null;
+
+		// this isEntityReturn bit is just for entity loaders, not hql/criteria
+		if ( isEntityReturn() ) {
+			final Object requestedEntityId = rowProcessingState.getJdbcValuesSourceProcessingState()
+					.getProcessingOptions()
+					.getEffectiveOptionalId();
+			final Object optionalEntityInstance = rowProcessingState.getJdbcValuesSourceProcessingState()
+					.getProcessingOptions()
+					.getEffectiveOptionalObject();
+			if ( requestedEntityId != null && optionalEntityInstance != null && requestedEntityId.equals(
+					entityKey.getIdentifier() ) ) {
+				instance = optionalEntityInstance;
 			}
 		}
 
@@ -631,6 +639,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				entityKey,
 				loadingEntry
 		);
+
 		return instance;
 	}
 
@@ -644,7 +653,6 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 		final SharedSessionContractImplementor session = rowProcessingState.getJdbcValuesSourceProcessingState().getSession();
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
-
 		if ( entityInstance instanceof HibernateProxy ) {
 			LazyInitializer hibernateLazyInitializer = ( (HibernateProxy) entityInstance ).getHibernateLazyInitializer();
 			if ( !hibernateLazyInitializer.isUninitialized() ) {
@@ -655,9 +663,9 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			if ( instance == null ) {
 				instance = resolveInstance(
 						entityKey.getIdentifier(),
+						persistenceContext.getLoadContexts().findLoadingEntityEntry( entityKey ),
 						rowProcessingState,
-						session,
-						persistenceContext
+						session
 				);
 				initializeEntity( instance, rowProcessingState, session, persistenceContext );
 			}
@@ -865,10 +873,26 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		}
 	}
 
-	protected boolean skipInitialization(
+	private boolean skipInitialization(
 			Object toInitialize,
 			RowProcessingState rowProcessingState,
 			EntityEntry entry) {
+		if ( !isOwningInitializer ) {
+			return true;
+		}
+
+		if ( toInitialize instanceof PersistentAttributeInterceptable ) {
+			final PersistentAttributeInterceptor interceptor = ( (PersistentAttributeInterceptable) toInitialize ).$$_hibernate_getInterceptor();
+			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
+				if ( entry.getStatus() != Status.LOADING ) {
+					// Avoid loading the same entity proxy twice for the same result set: it could lead to errors,
+					// because some code writes to its input (ID in hydrated state replaced by the loaded entity, in particular).
+					return false;
+				}
+				return true;
+			}
+		}
+
 		// If the instance to initialize is the main entity, we can't skip this
 		// This can happen if we initialize an enhanced proxy
 		if ( entry.getStatus() != Status.LOADING ) {
@@ -890,7 +914,6 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		if ( persistenceContext.isDefaultReadOnly() ) {
 			return true;
 		}
-
 
 		final Boolean queryOption = rowProcessingState.getJdbcValuesSourceProcessingState().getQueryOptions().isReadOnly();
 
@@ -927,6 +950,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	@Override
 	public void finishUpRow(RowProcessingState rowProcessingState) {
 		// reset row state
+		isOwningInitializer = false;
 		concreteDescriptor = null;
 		entityKey = null;
 		entityInstance = null;

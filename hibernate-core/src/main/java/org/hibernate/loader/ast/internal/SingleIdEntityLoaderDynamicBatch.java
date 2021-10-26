@@ -58,6 +58,16 @@ public class SingleIdEntityLoaderDynamicBatch<T> extends SingleIdEntityLoaderSup
 
 	@Override
 	public T load(Object pkValue, LockOptions lockOptions, Boolean readOnly, SharedSessionContractImplementor session) {
+		return load( pkValue, null, lockOptions, readOnly, session );
+	}
+
+	@Override
+	public T load(
+			Object pkValue,
+			Object entityInstance,
+			LockOptions lockOptions,
+			Boolean readOnly,
+			SharedSessionContractImplementor session) {
 		final Object[] batchIds = session.getPersistenceContextInternal()
 				.getBatchFetchQueue()
 				.getBatchLoadableEntityIds( getLoadable(), pkValue, maxBatchSize );
@@ -134,43 +144,7 @@ public class SingleIdEntityLoaderDynamicBatch<T> extends SingleIdEntityLoaderSup
 		JdbcSelectExecutorStandardImpl.INSTANCE.list(
 				jdbcSelect,
 				jdbcParameterBindings,
-				new ExecutionContext() {
-					@Override
-					public SharedSessionContractImplementor getSession() {
-						return session;
-					}
-
-					@Override
-					public QueryOptions getQueryOptions() {
-						return new QueryOptionsAdapter() {
-							@Override
-							public Boolean isReadOnly() {
-								return readOnly;
-							}
-						};
-					}
-
-					@Override
-					public String getQueryIdentifier(String sql) {
-						return sql;
-					}
-
-					@Override
-					public void registerLoadingEntityEntry(EntityKey entityKey, LoadingEntityEntry entry) {
-						subSelectFetchableKeysHandler.addKey( entityKey );
-					}
-
-					@Override
-					public QueryParameterBindings getQueryParameterBindings() {
-						return QueryParameterBindings.NO_PARAM_BINDINGS;
-					}
-
-					@Override
-					public Callback getCallback() {
-						return null;
-					}
-
-				},
+				getExecutionContext( entityInstance, readOnly, session, subSelectFetchableKeysHandler ),
 				RowTransformerPassThruImpl.instance(),
 				ListResultsConsumer.UniqueSemantic.FILTER
 		);
@@ -185,17 +159,56 @@ public class SingleIdEntityLoaderDynamicBatch<T> extends SingleIdEntityLoaderSup
 		final EntityKey entityKey = session.generateEntityKey( pkValue, getLoadable().getEntityPersister() );
 		//noinspection unchecked
 		return (T) session.getPersistenceContext().getEntity( entityKey );
+
 	}
 
-	@Override
-	public T load(
-			Object pkValue,
+	private ExecutionContext getExecutionContext(
 			Object entityInstance,
-			LockOptions lockOptions,
 			Boolean readOnly,
-			SharedSessionContractImplementor session) {
-		initializeSingleIdLoaderIfNeeded( session );
-		return singleIdLoader.load( pkValue, entityInstance, lockOptions, readOnly, session );
+			SharedSessionContractImplementor session,
+			SubselectFetch.RegistrationHandler subSelectFetchableKeysHandler) {
+		return new ExecutionContext() {
+			@Override
+			public SharedSessionContractImplementor getSession() {
+				return session;
+			}
+
+			@Override
+			public Object getEntityInstance() {
+				return entityInstance;
+			}
+
+			@Override
+			public QueryOptions getQueryOptions() {
+				return new QueryOptionsAdapter() {
+					@Override
+					public Boolean isReadOnly() {
+						return readOnly;
+					}
+				};
+			}
+
+			@Override
+			public String getQueryIdentifier(String sql) {
+				return sql;
+			}
+
+			@Override
+			public void registerLoadingEntityEntry(EntityKey entityKey, LoadingEntityEntry entry) {
+				subSelectFetchableKeysHandler.addKey( entityKey );
+			}
+
+			@Override
+			public QueryParameterBindings getQueryParameterBindings() {
+				return QueryParameterBindings.NO_PARAM_BINDINGS;
+			}
+
+			@Override
+			public Callback getCallback() {
+				return null;
+			}
+
+		};
 	}
 
 	private void initializeSingleIdLoaderIfNeeded(SharedSessionContractImplementor session) {

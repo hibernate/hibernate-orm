@@ -148,12 +148,24 @@ public abstract class AbstractDomainPath implements DomainPath {
 			);
 		}
 		else if ( referenceModelPart instanceof EntityValuedModelPart ) {
-			final ModelPart subPart;
+			ModelPart subPart;
 			if ( ELEMENT_TOKEN.equals( modelPartName ) ) {
 				subPart = ( (EntityValuedModelPart) referenceModelPart ).getEntityMappingType().getIdentifierMapping();
 			}
 			else {
 				subPart = ( (EntityValuedModelPart) referenceModelPart ).findSubPart( modelPartName );
+				if ( subPart == null && referenceModelPart instanceof ToOneAttributeMapping ) {
+					// this is the case of sort by to-one attribute inside an embedded item,
+					// at this stage the foreign key descriptor should have been set on the attribute mapping,
+					// so we can generate a sub part valid for the order-by generation
+					ToOneAttributeMapping toOneAttribute = (ToOneAttributeMapping) referenceModelPart;
+					String foreignKeyModelPart = toOneAttribute.getAttributeName() + "."
+							+ toOneAttribute.getTargetKeyPropertyName();
+
+					if ( modelPartName.equals( foreignKeyModelPart ) ) {
+						subPart = toOneAttribute.findSubPart( toOneAttribute.getTargetKeyPropertyName() );
+					}
+				}
 			}
 			apply(
 					subPart,

@@ -78,7 +78,9 @@ public class DomainPathContinuation extends AbstractDomainPath {
 				return new DomainPathContinuation(
 						navigablePath.append( name ),
 						this,
-						subPart
+						// unfortunately at this stage the foreign key descriptor could not be set
+						// on the attribute mapping yet, so we need to defer the sub part extraction later
+						referencedModelPart
 				);
 			}
 		}

@@ -3,6 +3,29 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.6.1.Final (October 27, 2021)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31993
+
+** Bug
+    * [HHH-14899] - Dialect no longer controlling the default jdbc batch size to use
+    * [HHH-14891] - JTS package not updated in "spatial basic types table" in user guide
+    * [HHH-14881] - Converters defined through orm.xml are never retrieved from the CDI context
+    * [HHH-14880] - <converter class="..."> in orm.xml ignores the <package> element
+    * [HHH-14816] - Can not set lock mode with QueryHint due to type case problem
+    * [HHH-13766] - Attribute with AttributeConverter not updated when inline dirty checking is enabled
+
+** Improvement
+    * [HHH-14901] - Introduce a new BatchBuilder implementation, suitable for immutable code deployments
+    * [HHH-14883] - Fix an AsciiDoc rendering error in 'spatial' user guide
+    * [HHH-14882] - Minor implementation optimisations in internal StandardStack
+    * [HHH-14869] - Extract JPA listener definitions when building metadata rather than when creating the SessionFactory
+
+** Task
+    * [HHH-14900] - Minor code cleanup in BatchBuilderImpl
+
+
 Changes in 5.6.0.Final (October 11, 2021)
 ------------------------------------------------------------------------------------------------------------------------
 

@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm;
 
-import org.hibernate.HibernateException;
+import org.hibernate.QueryException;
 
 /**
  * Represents a general uncaught problem performing the interpretation.  This might indicate
@@ -14,14 +14,15 @@ import org.hibernate.HibernateException;
  *
  * @author Steve Ebersole
  */
-public class InterpretationException extends HibernateException {
+public class InterpretationException extends QueryException {
 	public InterpretationException(String query) {
 		this( query, null );
 	}
 
-	public InterpretationException(String query, Throwable cause) {
+	public InterpretationException(String query, Exception cause) {
 		super(
 				"Error interpreting query [" + query + "]; this may indicate a semantic (user query) problem or a bug in the parser",
+				query,
 				cause
 		);
 	}

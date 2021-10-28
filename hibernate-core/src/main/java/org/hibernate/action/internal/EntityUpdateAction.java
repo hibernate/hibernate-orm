@@ -10,18 +10,13 @@ import java.io.Serializable;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
+import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.engine.internal.Versioning;
-import org.hibernate.engine.spi.CachedNaturalIdValueSource;
-import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.SessionEventListenerManager;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.engine.spi.Status;
+import org.hibernate.engine.spi.*;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PostCommitUpdateEventListener;
@@ -32,6 +27,8 @@ import org.hibernate.event.spi.PreUpdateEventListener;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.stat.internal.StatsHelper;
 import org.hibernate.stat.spi.StatisticsImplementor;
+import org.hibernate.tuple.entity.EntityMetamodel;
+import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 
 /**
@@ -266,6 +263,28 @@ public class EntityUpdateAction extends EntityAction {
 				previousNaturalIdValues,
 				CachedNaturalIdValueSource.UPDATE
 		);
+
+		if (instance instanceof PersistentAttributeInterceptable) {
+			PersistentAttributeInterceptable interceptable = ((PersistentAttributeInterceptable) instance );
+			PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
+			EntityMetamodel entityMetamodel = getPersister().getEntityMetamodel();
+			final BytecodeEnhancementMetadata enhancementMetadata = entityMetamodel.getBytecodeEnhancementMetadata();
+			if (interceptor == null) {
+				persister.getEntityMetamodel().getBytecodeEnhancementMetadata().injectInterceptor(instance, entry.getEntityKey(), session);
+				interceptor = enhancementMetadata.extractLazyInterceptor(instance);
+
+				Type[] types = persister.getPropertyTypes();
+				final String[] propertyNames = persister.getPropertyNames();
+				final CascadeStyle[] cascadeStyles = persister.getPropertyCascadeStyles();
+				for ( int i = 0; i < types.length; i++) {
+					final String propertyName = propertyNames[i];
+					CascadeStyle cascadeStyle = cascadeStyles[i];
+					if(cascadeStyle != CascadeStyles.NONE) {
+						interceptor.attributeInitialized(propertyName);
+					}
+				}
+			}
+		}
 
 		postUpdate();
 

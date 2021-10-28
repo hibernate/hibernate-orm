@@ -559,6 +559,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 	public Object[] getPropertyValues(Object entity) {
 		final BytecodeEnhancementMetadata enhancementMetadata = entityMetamodel.getBytecodeEnhancementMetadata();
 		final LazyAttributesMetadata lazyAttributesMetadata = enhancementMetadata.getLazyAttributesMetadata();
+		final boolean enhancedForLazyLoading = enhancementMetadata.isEnhancedForLazyLoading();
 
 		final int span = entityMetamodel.getPropertySpan();
 		final String[] propertyNames = entityMetamodel.getPropertyNames();
@@ -569,6 +570,13 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 			// if the attribute is not lazy (bytecode sense), we can just use the value from the instance
 			// if the attribute is lazy but has been initialized we can just use the value from the instance
 			// todo : there should be a third case here when we merge transient instances
+			if(enhancedForLazyLoading) {
+				final BytecodeLazyAttributeInterceptor interceptor = enhancementMetadata.extractLazyInterceptor(entity);
+				if (interceptor == null && lazyAttributesMetadata.isLazyAttribute( propertyName ) && getters[j].get(entity) == null) {
+					result[j] = LazyPropertyInitializer.UNFETCHED_PROPERTY;
+					continue;
+				}
+			}
 			if ( ! lazyAttributesMetadata.isLazyAttribute( propertyName )
 					|| enhancementMetadata.isAttributeLoaded( entity, propertyName) ) {
 				result[j] = getters[j].get( entity );

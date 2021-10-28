@@ -7,18 +7,17 @@
 package org.hibernate.action.internal;
 
 import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
+import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributesMetadata;
+import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.engine.internal.Versioning;
-import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.SessionEventListenerManager;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.engine.spi.*;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PostCommitInsertEventListener;
@@ -29,6 +28,8 @@ import org.hibernate.event.spi.PreInsertEventListener;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.stat.internal.StatsHelper;
 import org.hibernate.stat.spi.StatisticsImplementor;
+import org.hibernate.tuple.entity.EntityMetamodel;
+import org.hibernate.type.Type;
 
 /**
  * The action for performing an entity insertion, for entities not defined to use IDENTITY generation.
@@ -149,6 +150,67 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 		}
 
 		handleNaturalIdPostSaveNotifications( id );
+
+		if (instance instanceof PersistentAttributeInterceptable) {
+			PersistentAttributeInterceptable interceptable = ((PersistentAttributeInterceptable) instance );
+			PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
+			EntityMetamodel entityMetamodel = getPersister().getEntityMetamodel();
+			final BytecodeEnhancementMetadata enhancementMetadata = entityMetamodel.getBytecodeEnhancementMetadata();
+			final LazyAttributesMetadata lazyAttributesMetadata = enhancementMetadata.getLazyAttributesMetadata();
+			if (interceptor == null) {
+				Type[] types = persister.getPropertyTypes();
+				final String[] propertyNames = persister.getPropertyNames();
+				final CascadeStyle[] cascadeStyles = persister.getPropertyCascadeStyles();
+				boolean needsInterceptor = false;
+				Set<String> initializedLazyFields = new HashSet<>();
+				for ( int i = 0; i < types.length; i++) {
+					if(!types[i].isAssociationType()) {
+						continue;
+					}
+					final String propertyName = propertyNames[i];
+					CascadeStyle cascadeStyle = cascadeStyles[i];
+					if(cascadeStyle != CascadeStyles.NONE) {
+						initializedLazyFields.add(propertyName);
+						continue;
+					}
+					Object propertyValue = persister.getEntityTuplizer().getGetter(i).get(instance);
+					if(propertyValue == null) {
+						if(types[i].isCollectionType()) {
+							needsInterceptor = true;
+							continue;
+						}
+					}
+					else {
+						if(propertyValue instanceof PersistentAttributeInterceptable) {
+							PersistentAttributeInterceptable interceptableProperty = ((PersistentAttributeInterceptable) propertyValue );
+							PersistentAttributeInterceptor propertyInterceptor = interceptableProperty.$$_hibernate_getInterceptor();
+							if(propertyInterceptor == null) {
+								needsInterceptor = true;
+								continue;
+							}
+							else {
+								if(lazyAttributesMetadata.isLazyAttribute(propertyName)) {
+									initializedLazyFields.add(propertyName);
+								}
+							}
+						}
+						if(types[i].isCollectionType()) {
+							if(lazyAttributesMetadata.isLazyAttribute(propertyName)) {
+								initializedLazyFields.add(propertyName);
+							}
+							continue;
+						}
+					}
+				}
+				if (needsInterceptor) {
+					persister.getBytecodeEnhancementMetadata().injectEnhancedEntityAsProxyInterceptor(instance, getEntityKey(), session);
+					interceptor = interceptable.$$_hibernate_getInterceptor();
+					for (String propertyName : initializedLazyFields) {
+						interceptor.attributeInitialized(propertyName);
+					}
+				}
+			}
+		}
 
 		postInsert();
 

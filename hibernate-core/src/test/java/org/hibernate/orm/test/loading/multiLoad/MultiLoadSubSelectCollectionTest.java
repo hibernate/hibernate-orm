@@ -88,25 +88,11 @@ public class MultiLoadSubSelectCollectionTest {
 						assertFalse( Hibernate.isInitialized( p.children ) );
 					}
 
-					// When the first collection is loaded, the full batch of 50 collections
+					// When the first collection is loaded, the full collection
 					// should be loaded.
 					Hibernate.initialize( list.get( 0 ).children );
 
-					for ( int i = 0; i < 50; i++ ) {
-						assertTrue( Hibernate.isInitialized( list.get( i ).children ) );
-						assertEquals( i + 1, list.get( i ).children.size() );
-					}
-
-					// The collections for the 51st through 56th entities should still be uninitialized
-					for ( int i = 50; i < 56; i++ ) {
-						assertFalse( Hibernate.isInitialized( list.get( i ).children ) );
-					}
-
-					// When the 51st collection gets initialized, the remaining collections should
-					// also be initialized.
-					Hibernate.initialize( list.get( 50 ).children );
-
-					for ( int i = 50; i < 56; i++ ) {
+					for ( int i = 0; i < 56; i++ ) {
 						assertTrue( Hibernate.isInitialized( list.get( i ).children ) );
 						assertEquals( i + 1, list.get( i ).children.size() );
 					}

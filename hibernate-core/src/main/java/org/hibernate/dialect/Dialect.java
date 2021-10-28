@@ -3074,13 +3074,17 @@ public abstract class Dialect implements ConversionContext {
 			if ( numberOfKeyColumns > 1 ) {
 				return paddedSize;
 			}
-			if ( paddedSize < getInExpressionCountLimit() ) {
-				return paddedSize;
+			final int inExpressionCountLimit = getInExpressionCountLimit();
+			if ( inExpressionCountLimit > 0 ) {
+				if ( paddedSize < inExpressionCountLimit ) {
+					return paddedSize;
+				}
+				else if ( numberOfKeys < inExpressionCountLimit ) {
+					return numberOfKeys;
+				}
+				return getInExpressionCountLimit();
 			}
-			else if ( numberOfKeys < getInExpressionCountLimit() ) {
-				return numberOfKeys;
-			}
-			return getInExpressionCountLimit();
+			return paddedSize;
 		}
 	};
 

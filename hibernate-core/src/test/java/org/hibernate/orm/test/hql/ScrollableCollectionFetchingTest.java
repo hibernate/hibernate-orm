@@ -151,7 +151,6 @@ public class ScrollableCollectionFetchingTest {
 				}
 		);
 
-
 		scope.inTransaction(
 				session -> {
 					assertNotNull(

@@ -42,16 +42,6 @@ public class JdbcDateJavaTypeDescriptor extends AbstractTemporalJavaTypeDescript
 	@SuppressWarnings("unused")
 	public static final DateTimeFormatter LITERAL_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE;
 
-	/**
-	 * Alias for {@link DateTimeFormatter#ISO_LOCAL_DATE}.
-	 *
-	 * Intended for use with logging
-	 *
-	 * @see #LITERAL_FORMATTER
-	 */
-	@SuppressWarnings({"unused", "WeakerAccess"})
-	public static final DateTimeFormatter LOGGABLE_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE;
-
 	public static class DateMutabilityPlan extends MutableMutabilityPlan<Date> {
 		public static final DateMutabilityPlan INSTANCE = new DateMutabilityPlan();
 		@Override
@@ -85,7 +75,7 @@ public class JdbcDateJavaTypeDescriptor extends AbstractTemporalJavaTypeDescript
 
 	@Override
 	public String toString(Date value) {
-		return LOGGABLE_FORMATTER.format( value.toInstant() );
+		return new SimpleDateFormat( DATE_FORMAT ).format( value );
 	}
 
 	@Override

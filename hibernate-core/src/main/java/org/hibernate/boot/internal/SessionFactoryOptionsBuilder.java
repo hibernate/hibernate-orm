@@ -492,7 +492,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 			}
 		}
 
-		this.jdbcBatchSize = ConfigurationHelper.getInt( STATEMENT_BATCH_SIZE, configurationSettings, 0 );
+		this.jdbcBatchSize = ConfigurationHelper.getInt( STATEMENT_BATCH_SIZE, configurationSettings, 1 );
 		if ( !meta.supportsBatchUpdates() ) {
 			this.jdbcBatchSize = 0;
 		}

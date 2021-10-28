@@ -111,16 +111,10 @@ public class InsertOrderingTest {
 	}
 
 	public static class StatsBatchBuilder extends BatchBuilderImpl {
-		private int jdbcBatchSize;
-
-		@Override
-		public void setJdbcBatchSize(int jdbcBatchSize) {
-			this.jdbcBatchSize = jdbcBatchSize;
-		}
 
 		@Override
 		public Batch buildBatch(BatchKey key, JdbcCoordinator jdbcCoordinator) {
-			return new StatsBatch( key, jdbcCoordinator, jdbcBatchSize );
+			return new StatsBatch( key, jdbcCoordinator, getJdbcBatchSize() );
 		}
 	}
 }

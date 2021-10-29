@@ -131,16 +131,16 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			if ( cidMapping.getAttributeCount() == 1 ) {
 				final AttributeMapping singleIdAttribute = cidMapping.getAttributes().get( 0 );
 				if ( singleIdAttribute.getMappedType() instanceof EntityMappingType ) {
-					final EntityMappingType dependentIdTargetMapping = (EntityMappingType) singleIdAttribute.getMappedType();
-					final EntityIdentifierMapping dependentIdTargetIdMapping = dependentIdTargetMapping.getIdentifierMapping();
-					final JavaType dependentParentIdJtd = dependentIdTargetIdMapping.getMappedType().getMappedJavaTypeDescriptor();
-					if ( dependentParentIdJtd.getJavaTypeClass().isInstance( event.getEntityId() ) ) {
+					final EntityMappingType parentIdTargetMapping = (EntityMappingType) singleIdAttribute.getMappedType();
+					final EntityIdentifierMapping parentIdTargetIdMapping = parentIdTargetMapping.getIdentifierMapping();
+					final JavaType parentIdJtd = parentIdTargetIdMapping.getMappedType().getMappedJavaTypeDescriptor();
+					if ( parentIdJtd.getJavaTypeClass().isInstance( event.getEntityId() ) ) {
 						// yep that's what we have...
 						loadByDerivedIdentitySimplePkValue(
 								event,
 								loadType,
 								persister,
-								(EntityPersister) dependentIdTargetMapping
+								(EntityPersister) parentIdTargetMapping
 						);
 						return;
 					}
@@ -158,14 +158,12 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			LoadEvent event,
 			LoadType options,
 			EntityPersister dependentPersister,
-//			EmbeddedComponentType dependentIdType,
 			EntityPersister parentPersister) {
 		final EventSource session = event.getSession();
 		final EntityKey parentEntityKey = session.generateEntityKey( event.getEntityId(), parentPersister );
 		final Object parent = doLoad( event, parentPersister, parentEntityKey, options );
 
 		final Object dependent = dependentPersister.instantiate( parent, session );
-		dependentPersister.setPropertyValues( dependent, new Object[] {parent} );
 		final EntityKey dependentEntityKey = session.generateEntityKey( dependent, dependentPersister );
 		event.setEntityId( dependent );
 

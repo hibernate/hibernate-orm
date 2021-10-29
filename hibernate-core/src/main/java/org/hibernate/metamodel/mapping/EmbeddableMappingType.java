@@ -615,7 +615,7 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectableMapp
 	public void visitFetchables(
 			Consumer<Fetchable> fetchableConsumer,
 			EntityMappingType treatTargetType) {
-		visitAttributeMappings( attributeMapping -> fetchableConsumer.accept( (Fetchable) attributeMapping ) );
+		visitAttributeMappings( attributeMapping -> fetchableConsumer.accept( attributeMapping ) );
 	}
 
 	@Override

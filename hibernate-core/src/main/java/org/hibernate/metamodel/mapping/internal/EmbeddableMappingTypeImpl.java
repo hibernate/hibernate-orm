@@ -114,37 +114,14 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 
 		creationProcess.registerInitializationCallback(
 				"EmbeddableMappingType(" + mappingType.getNavigableRole().getFullPath() + ")#finishInitialization",
-				() -> {
-					try {
-						final boolean finished = mappingType.finishInitialization(
+				() ->
+						mappingType.finishInitialization(
 								bootDescriptor,
 								compositeType,
 								rootTableExpression,
 								rootTableKeyColumnNames,
 								creationProcess
-						);
-
-						if ( finished ) {
-							return finished;
-						}
-					}
-					catch (Exception e) {
-						if ( e instanceof NonTransientException ) {
-							throw e;
-						}
-						MappingModelCreationLogger.LOGGER.debugf(
-								e,
-								"(DEBUG) Error finalizing EmbeddableMappingType(%s)",
-								mappingType.getNavigableRole()
-						);
-					}
-
-					MappingModelCreationLogger.LOGGER.debugf(
-							"EmbeddableMappingType(%s) finalization was not able to complete successfully",
-							mappingType.getNavigableRole()
-					);
-					return false;
-				}
+						)
 		);
 
 		return mappingType;

@@ -5588,15 +5588,10 @@ public abstract class AbstractEntityPersister
 			creationProcess.registerInitializationCallback(
 					"Entity(" + getEntityName() + ") `sqmMultiTableMutationStrategy` interpretation",
 					() -> {
-						try {
-							sqmMultiTableMutationStrategy = interpretSqmMultiTableStrategy(
-									this,
-									creationProcess
-							);
-						}
-						catch (Exception ex) {
-							return false;
-						}
+						sqmMultiTableMutationStrategy = interpretSqmMultiTableStrategy(
+								this,
+								creationProcess
+						);
 						if ( sqmMultiTableMutationStrategy == null ) {
 							return false;
 						}
@@ -5626,15 +5621,10 @@ public abstract class AbstractEntityPersister
 			creationProcess.registerInitializationCallback(
 					"Entity(" + getEntityName() + ") `sqmMultiTableInsertStrategy` interpretation",
 					() -> {
-						try {
-							sqmMultiTableInsertStrategy = interpretSqmMultiTableInsertStrategy(
-									this,
-									creationProcess
-							);
-						}
-						catch (Exception ex) {
-							return false;
-						}
+						sqmMultiTableInsertStrategy = interpretSqmMultiTableInsertStrategy(
+								this,
+								creationProcess
+						);
 						if ( sqmMultiTableInsertStrategy == null ) {
 							return false;
 						}

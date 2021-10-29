@@ -779,20 +779,8 @@ public class MappingModelCreationHelper {
 		creationProcess.registerInitializationCallback(
 				"PluralAttributeMapping(" + bootValueMapping.getRole() + ")#finishInitialization",
 				() -> {
-					try {
-						pluralAttributeMapping.finishInitialization( bootProperty, bootValueMapping, creationProcess );
-						return true;
-					}
-					catch (NotYetImplementedFor6Exception nye) {
-						throw nye;
-					}
-					catch (Exception e) {
-						if ( e instanceof NonTransientException ) {
-							throw e;
-						}
-
-						return false;
-					}
+					pluralAttributeMapping.finishInitialization( bootProperty, bootValueMapping, creationProcess );
+					return true;
 				}
 		);
 
@@ -1378,22 +1366,14 @@ public class MappingModelCreationHelper {
 			creationProcess.registerInitializationCallback(
 					"PluralAttributeMapping( " + bootValueMapping.getRole() + ") - index descriptor",
 					() -> {
-						try {
-							indexDescriptor.finishInitialization(
-									collectionDescriptor,
-									bootValueMapping,
-									indexEntityType.getRHSUniqueKeyPropertyName(),
-									creationProcess
-							);
+						indexDescriptor.finishInitialization(
+								collectionDescriptor,
+								bootValueMapping,
+								indexEntityType.getRHSUniqueKeyPropertyName(),
+								creationProcess
+						);
 
-							return true;
-						}
-						catch (NotYetImplementedFor6Exception nye) {
-							throw nye;
-						}
-						catch (Exception wait) {
-							return false;
-						}
+						return true;
 					}
 			);
 
@@ -1487,22 +1467,14 @@ public class MappingModelCreationHelper {
 			creationProcess.registerInitializationCallback(
 					"PluralAttributeMapping( " + elementDescriptor.getNavigableRole() + ") - index descriptor",
 					() -> {
-						try {
-							elementDescriptor.finishInitialization(
-									collectionDescriptor,
-									bootDescriptor,
-									elementEntityType.getRHSUniqueKeyPropertyName(),
-									creationProcess
-							);
+						elementDescriptor.finishInitialization(
+								collectionDescriptor,
+								bootDescriptor,
+								elementEntityType.getRHSUniqueKeyPropertyName(),
+								creationProcess
+						);
 
-							return true;
-						}
-						catch (NotYetImplementedFor6Exception nye) {
-							throw nye;
-						}
-						catch (Exception wait) {
-							return false;
-						}
+						return true;
 					}
 			);
 

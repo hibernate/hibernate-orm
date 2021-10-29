@@ -125,34 +125,14 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 
 		creationProcess.registerInitializationCallback(
 				"IdClassEmbeddable(" + navigableRole.getFullPath() + ")#finishInitialization",
-				() -> {
-					try {
-						final boolean finished = finishInitialization(
+				() ->
+						finishInitialization(
 								idClassSource,
 								idClassType,
 								idTable,
 								idColumns,
 								creationProcess
-						);
-
-						if ( finished ) {
-							return finished;
-						}
-					}
-					catch (Exception e) {
-						MappingModelCreationLogger.LOGGER.debugf(
-								e,
-								"(DEBUG) Error finalizing IdClassEmbeddable(%s)",
-								navigableRole
-						);
-					}
-
-					MappingModelCreationLogger.LOGGER.debugf(
-							"IdClassEmbeddable(%s) finalization was not able to complete successfully",
-							navigableRole
-					);
-					return false;
-				}
+						)
 		);
 
 	}

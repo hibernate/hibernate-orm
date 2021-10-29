@@ -82,40 +82,14 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 
 		creationProcess.registerInitializationCallback(
 				"VirtualIdEmbeddable(" + navigableRole.getFullPath() + ")#finishInitialization",
-				() -> {
-					try {
-						final boolean finished = finishInitialization(
+				() ->
+						finishInitialization(
 								virtualIdSource,
 								compositeType,
 								rootTableExpression,
 								rootTableKeyColumnNames,
 								creationProcess
-						);
-
-						if ( finished ) {
-							return finished;
-						}
-						else {
-							MappingModelCreationLogger.LOGGER.debugf(
-									"VirtualIdEmbeddable(%s) finalization was not able to complete successfully",
-									navigableRole.getFullPath()
-							);
-							return false;
-						}
-					}
-					catch (Exception e) {
-						if ( e instanceof NonTransientException ) {
-							throw e;
-						}
-
-						MappingModelCreationLogger.LOGGER.debugf(
-								e,
-								"(DEBUG) Error finalizing VirtualIdEmbeddable(%s)",
-								navigableRole.getFullPath()
-						);
-						return false;
-					}
-				}
+						)
 		);
 	}
 

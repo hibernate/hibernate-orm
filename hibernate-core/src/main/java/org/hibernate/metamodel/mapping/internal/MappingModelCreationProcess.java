@@ -7,6 +7,8 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -92,8 +94,8 @@ public class MappingModelCreationProcess {
 	private void executePostInitCallbacks() {
 		MappingModelCreationLogger.LOGGER.debugf( "Starting post-init callbacks" );
 
+		Map<PostInitCallbackEntry, Exception> exceptions = new HashMap<>();
 		while ( postInitCallbacks != null && !postInitCallbacks.isEmpty() ) {
-
 			// copy to avoid CCME
 			final ArrayList<PostInitCallbackEntry> copy = new ArrayList<>( postInitCallbacks );
 
@@ -108,6 +110,7 @@ public class MappingModelCreationProcess {
 					if ( completed ) {
 						anyCompleted = true;
 						postInitCallbacks.remove( callbackEntry );
+						exceptions.remove( callbackEntry );
 					}
 				}
 				catch (Exception e) {
@@ -118,6 +121,7 @@ public class MappingModelCreationProcess {
 						);
 						throw e;
 					}
+					exceptions.put( callbackEntry, e );
 
 					final String format = "Mapping-model creation encountered (possibly) transient error : %s";
 					if ( MappingModelCreationLogger.TRACE_ENABLED ) {
@@ -129,20 +133,23 @@ public class MappingModelCreationProcess {
 				}
 			}
 
-			if ( ! anyCompleted ) {
+			if ( !anyCompleted ) {
 				// none of the remaining callbacks could complete fully, this is an error
 				final StringBuilder buff = new StringBuilder(
 						"PostInitCallback queue could not be processed..."
 				);
-
 				postInitCallbacks.forEach(
 						callbackEntry -> buff.append( EOL )
 								.append( "        - " ).append( callbackEntry )
 				);
-
 				buff.append( EOL );
 
-				throw new IllegalStateException( buff.toString() );
+				final IllegalStateException illegalStateException = new IllegalStateException( buff.toString() );
+
+				for ( Map.Entry<PostInitCallbackEntry, Exception> entry : exceptions.entrySet() ) {
+					illegalStateException.addSuppressed( entry.getValue() );
+				}
+				throw illegalStateException;
 			}
 		}
 	}

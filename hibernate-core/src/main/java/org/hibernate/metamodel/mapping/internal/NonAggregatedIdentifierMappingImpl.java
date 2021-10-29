@@ -16,8 +16,8 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.ManyToOne;
-import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.internal.AbstractCompositeIdentifierMapping;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -42,8 +42,10 @@ import org.hibernate.type.ComponentType;
 public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentifierMapping {
 
 	private final List<SingularAttributeMapping> idAttributeMappings;
-	private final Component bootCidDescriptor;
-	private final Component bootIdClassDescriptor;
+	private final ComponentType bootIdComponentType;
+	private final ComponentType bootCidComponentType;
+
+	private final boolean[] isBootIdPropertyManyToOne;
 
 	public NonAggregatedIdentifierMappingImpl(
 			EmbeddableMappingType embeddableDescriptor,
@@ -64,8 +66,13 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 		);
 
 		this.idAttributeMappings = idAttributeMappings;
-		this.bootCidDescriptor = bootCidDescriptor;
-		this.bootIdClassDescriptor = bootIdClassDescriptor;
+		final int propertySpan = bootIdClassDescriptor.getPropertySpan();
+		isBootIdPropertyManyToOne = new boolean[propertySpan];
+		for ( int i = 0; i < propertySpan; i++ ) {
+			isBootIdPropertyManyToOne[i] = bootIdClassDescriptor.getProperty( i ).getValue() instanceof ManyToOne;
+		}
+		bootIdComponentType = (ComponentType) bootIdClassDescriptor.getType();
+		bootCidComponentType = (ComponentType) bootCidDescriptor.getType();
 	}
 
 	@Override
@@ -81,8 +88,8 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 	@Override
 	public Object getIdentifier(Object entity, SharedSessionContractImplementor session) {
 		if ( hasContainingClass() ) {
-			final Serializable disassemble = bootCidDescriptor.getType().disassemble( entity, session, null );
-			return bootIdClassDescriptor.getType().assemble( disassemble, session, null );
+			final Serializable disassemble = bootCidComponentType.disassemble( entity, session, null );
+			return bootIdComponentType.assemble( disassemble, session, null );
 		}
 		else {
 			return entity;
@@ -90,41 +97,62 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 	}
 
 	@Override
+	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+		if ( !getEmbeddableTypeDescriptor().getMappedJavaTypeDescriptor()
+				.getJavaTypeClass()
+				.isAssignableFrom( value.getClass() ) ) {
+			final Object[] result = new Object[idAttributeMappings.size()];
+			for ( int i = 0; i < idAttributeMappings.size(); i++ ) {
+				final AttributeMapping attributeMapping = idAttributeMappings.get( i );
+				Object o = attributeMapping.getPropertyAccess().getGetter().get( value );
+				result[i] = attributeMapping.disassemble( o, session );
+			}
+
+			return result;
+		}
+
+		return getEmbeddableTypeDescriptor().disassemble( value, session );
+	}
+
+	@Override
 	public void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session) {
-		final SessionFactoryImplementor factory = session.getFactory();
-		final Object[] propertyValues = ( (ComponentType) bootIdClassDescriptor.getType() )
-				.getPropertyValues( id, session );
-		forEachAttribute(
-				(position, attribute) -> {
-					Object propertyValue = propertyValues[position];
-					final Property property = bootIdClassDescriptor.getProperty( position );
-					if ( attribute instanceof ToOneAttributeMapping && !( property.getValue() instanceof ManyToOne ) ) {
-						final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attribute;
-						final EntityPersister entityPersister = toOneAttributeMapping.getEntityMappingType()
-								.getEntityPersister();
-						final EntityKey entityKey = session.generateEntityKey(
-								propertyValue,
-								entityPersister
-						);
-						final PersistenceContext persistenceContext = session.getPersistenceContext();
-						// it is conceivable there is a proxy, so check that first
-						propertyValue = persistenceContext.getProxy( entityKey );
-						if ( propertyValue == null ) {
-							// otherwise look for an initialized version
-							propertyValue = persistenceContext.getEntity( entityKey );
+		if ( !getEmbeddableTypeDescriptor().getMappedJavaTypeDescriptor().getJavaTypeClass().isAssignableFrom( id.getClass()) ) {
+			idAttributeMappings.get( 0 ).getPropertyAccess().getSetter().set( entity, id, session.getFactory() );
+		}
+		else {
+			final SessionFactoryImplementor factory = session.getFactory();
+			final Object[] propertyValues = bootIdComponentType.getPropertyValues( id, session );
+			forEachAttribute(
+					(position, attribute) -> {
+						Object propertyValue = propertyValues[position];
+						if ( attribute instanceof ToOneAttributeMapping && !isBootIdPropertyManyToOne[position] ) {
+							final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attribute;
+							final EntityPersister entityPersister = toOneAttributeMapping.getEntityMappingType()
+									.getEntityPersister();
+							final EntityKey entityKey = session.generateEntityKey(
+									propertyValue,
+									entityPersister
+							);
+							final PersistenceContext persistenceContext = session.getPersistenceContext();
+							// it is conceivable there is a proxy, so check that first
+							propertyValue = persistenceContext.getProxy( entityKey );
 							if ( propertyValue == null ) {
-								// get the association out of the entity itself
-								propertyValue = factory.getMetamodel()
-										.findEntityDescriptor( entity.getClass() )
-										.getPropertyValue( entity, toOneAttributeMapping.getAttributeName() );
+								// otherwise look for an initialized version
+								propertyValue = persistenceContext.getEntity( entityKey );
+								if ( propertyValue == null ) {
+									// get the association out of the entity itself
+									propertyValue = factory.getMetamodel()
+											.findEntityDescriptor( entity.getClass() )
+											.getPropertyValue( entity, toOneAttributeMapping.getAttributeName() );
+								}
 							}
 						}
+						attribute.getPropertyAccess()
+								.getSetter()
+								.set( entity, propertyValue, factory );
 					}
-					attribute.getPropertyAccess()
-							.getSetter()
-							.set( entity, propertyValue, factory );
-				}
-		);
+			);
+		}
 	}
 
 	@Override
@@ -186,6 +214,6 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 
 	@Override
 	public boolean hasContainingClass() {
-		return bootIdClassDescriptor != bootCidDescriptor;
+		return bootIdComponentType != bootCidComponentType;
 	}
 }

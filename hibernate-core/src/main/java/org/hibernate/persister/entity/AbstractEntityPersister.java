@@ -4811,10 +4811,6 @@ public abstract class AbstractEntityPersister
 		if ( entity instanceof SelfDirtinessTracker ) {
 			( (SelfDirtinessTracker) entity ).$$_hibernate_clearDirtyAttributes();
 		}
-
-		if ( singleIdEntityLoader instanceof Preparable ) {
-			( (Preparable) singleIdEntityLoader ).prepare();
-		}
 	}
 
 	public String[] getPropertyNames() {

@@ -60,6 +60,9 @@ configurations {
     }
 }
 
+// skip building this when `build` task is run from root, as many of our CI jobs do
+tasks.build.dependsOn.clear()
+
 dependencies {
     attributesSchema { schema ->
         schema.attribute(Bundling.BUNDLING_ATTRIBUTE) { matchStrategy ->

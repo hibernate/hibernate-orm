@@ -233,6 +233,20 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 	}
 
+	/**
+	 * Override the implementation provided on SharedSessionContractImplementor
+	 * which is not very efficient: this method is hot in Hibernate Reactive, and could
+	 * be hot in some ORM contexts as well.
+	 * @return
+	 */
+	@Override
+	public Integer getConfiguredJdbcBatchSize() {
+		final Integer sessionJdbcBatchSize = this.jdbcBatchSize;
+		return sessionJdbcBatchSize == null ?
+				fastSessionServices.defaultJdbcBatchSize :
+				sessionJdbcBatchSize;
+	}
+
 	protected void addSharedSessionTransactionObserver(TransactionCoordinator transactionCoordinator) {
 	}
 

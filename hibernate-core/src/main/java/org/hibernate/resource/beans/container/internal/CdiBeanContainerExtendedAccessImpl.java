@@ -8,6 +8,7 @@ package org.hibernate.resource.beans.container.internal;
 
 import jakarta.enterprise.inject.spi.BeanManager;
 
+import org.hibernate.Internal;
 import org.hibernate.resource.beans.container.spi.AbstractCdiBeanContainer;
 import org.hibernate.resource.beans.container.spi.BeanLifecycleStrategy;
 import org.hibernate.resource.beans.container.spi.ContainedBean;
@@ -85,6 +86,11 @@ public class CdiBeanContainerExtendedAccessImpl
 		if ( usableBeanManager == null ) {
 			throw new IllegalStateException( "ExtendedBeanManager.LifecycleListener callback not yet called: CDI not (yet) usable" );
 		}
+		return usableBeanManager;
+	}
+
+	@Internal
+	public BeanManager getBeanManager() {
 		return usableBeanManager;
 	}
 

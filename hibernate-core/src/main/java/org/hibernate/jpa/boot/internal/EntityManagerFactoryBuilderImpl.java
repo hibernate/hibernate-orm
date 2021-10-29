@@ -1364,7 +1364,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	// Phase 2 concerns ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	private Object validatorFactory;
-	private Object cdiBeanManager;
 	private DataSource dataSource;
 	private MetadataImplementor metadata;
 
@@ -1515,9 +1514,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 		if ( this.validatorFactory != null ) {
 			sfBuilder.applyValidatorFactory( validatorFactory );
-		}
-		if ( this.cdiBeanManager != null ) {
-			sfBuilder.applyBeanManager( cdiBeanManager );
 		}
 	}
 

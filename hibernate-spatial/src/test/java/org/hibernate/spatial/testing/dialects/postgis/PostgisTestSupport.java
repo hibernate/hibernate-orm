@@ -36,7 +36,7 @@ public class PostgisTestSupport extends TestSupport {
 	}
 
 	@Override
-	public PredicateRegexes predicateRegexes(){ return new PostgisPredicateRegexes();}
+	public PredicateRegexes predicateRegexes(){ return new PredicateRegexes("st_geomfromewkt");}
 
 	//TODO  put this in its own class (analogous to NativeSQLTemplates)
 	@Override
@@ -71,5 +71,3 @@ public class PostgisTestSupport extends TestSupport {
 	}
 
 }
-
-class PostgisPredicateRegexes extends PredicateRegexes { }

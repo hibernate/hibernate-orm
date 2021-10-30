@@ -27,6 +27,7 @@ import org.hibernate.spatial.dialect.WithCustomJPAFilter;
 
 import org.jboss.logging.Logger;
 
+import org.geolatte.geom.codec.Wkt;
 import org.geolatte.geom.codec.db.oracle.ConnectionFinder;
 import org.geolatte.geom.codec.db.oracle.OracleJDBCTypeFactory;
 

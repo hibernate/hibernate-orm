@@ -10,7 +10,6 @@ import java.io.Serializable;
 import java.util.Map;
 
 import org.hibernate.boot.model.TypeContributions;
-
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.GeolatteGeometryJavaTypeDescriptor;
@@ -41,7 +40,6 @@ class SqlServerSupport implements SpatialDialect, Serializable {
 	}
 
 
-	
 	public String getSpatialRelateSQL(String columnName, int spatialRelation) {
 		final String stfunction;
 		switch ( spatialRelation ) {
@@ -78,38 +76,38 @@ class SqlServerSupport implements SpatialDialect, Serializable {
 		return columnName + "." + stfunction + "(?) = 1";
 	}
 
-	
+
 	public String getSpatialFilterExpression(String columnName) {
 		return columnName + ".Filter(?) = 1";
 	}
 
-	
+
 	public String getSpatialAggregateSQL(String columnName, int aggregation) {
 		throw new UnsupportedOperationException( "No spatial aggregate SQL functions." );
 	}
 
-	
+
 	public String getDWithinSQL(String columnName) {
 		throw new UnsupportedOperationException( "SQL Server has no DWithin function." );
 	}
 
-	
+
 	public String getHavingSridSQL(String columnName) {
 		return columnName + ".STSrid = (?)";
 	}
 
-	
+
 	public String getIsEmptySQL(String columnName, boolean isEmpty) {
 		final String base = "(" + columnName + ".STIsEmpty() ";
 		return isEmpty ? base + " = 1 )" : base + " = 0 )";
 	}
 
-	
+
 	public boolean supportsFiltering() {
 		return true;
 	}
 
-	
+
 	public boolean supports(SpatialFunction function) {
 		return ( functions.get( function.toString() ) != null );
 	}

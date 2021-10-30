@@ -27,7 +27,7 @@ public class CockroachDBTestSupport extends TestSupport {
 
 	@Override
 	public PredicateRegexes predicateRegexes() {
-		return new CrPredicateRegexes();
+		return new PredicateRegexes("st_geomfromewkt");
 	}
 
 	@Override
@@ -55,5 +55,3 @@ public class CockroachDBTestSupport extends TestSupport {
 	}
 
 }
-
-class CrPredicateRegexes extends PredicateRegexes{ }

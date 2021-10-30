@@ -14,6 +14,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.spatial.GeolatteGeometryJavaTypeDescriptor;
+import org.hibernate.spatial.GeometryLiteralFormatter;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
@@ -52,22 +53,7 @@ public class PGGeometryType implements JdbcType {
 
 	@Override
 	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaTypeDescriptor) {
-		if ( javaTypeDescriptor instanceof GeolatteGeometryJavaTypeDescriptor ) {
-			return (appender, value, dialect, wrapperOptions) -> {
-				appender.appendSql( "ST_GeomFromEWKT('" );
-				appender.appendSql( value.toString() );
-				appender.appendSql( "')" );
-			};
-		}
-		return (appender, value, dialect, wrapperOptions) -> {
-			appender.appendSql( "ST_GeomFromEWKT('" );
-			appender.appendSql( jts2Gl( value ).toString() );
-			appender.appendSql( "')" );
-		};
-	}
-
-	private <T> Geometry<?> jts2Gl(T value) {
-		return JTS.from( (org.locationtech.jts.geom.Geometry) value );
+		return new GeometryLiteralFormatter<T>( javaTypeDescriptor, Wkt.Dialect.POSTGIS_EWKT_1, "ST_GeomFromEwkt" );
 	}
 
 	private PGGeometryType(Wkb.Dialect dialect) {

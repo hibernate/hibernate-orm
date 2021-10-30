@@ -10,6 +10,7 @@ package org.hibernate.spatial.dialect.mariadb;
 import org.hibernate.dialect.MariaDB103Dialect;
 import org.hibernate.spatial.SpatialDialect;
 
+@Deprecated
 public class MariaDB103SpatialDialect extends MariaDB103Dialect implements SpatialDialect {
 
 }

@@ -19,6 +19,8 @@ import org.hibernate.spatial.contributor.ContributorImplementor;
 import org.hibernate.spatial.dialect.postgis.PGGeometryType;
 import org.hibernate.spatial.dialect.postgis.PostgisSqmFunctionDescriptors;
 
+import org.geolatte.geom.codec.Wkt;
+
 public class CockroachDbContributor implements ContributorImplementor {
 
 	private final ServiceRegistry serviceRegistry;

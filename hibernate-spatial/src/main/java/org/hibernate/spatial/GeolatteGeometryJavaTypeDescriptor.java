@@ -25,6 +25,7 @@ import org.geolatte.geom.jts.JTS;
  */
 public class GeolatteGeometryJavaTypeDescriptor extends AbstractJavaTypeDescriptor<Geometry> {
 
+	final private Wkt.Dialect wktDialect;
 	/**
 	 * an instance of this descriptor
 	 */
@@ -34,17 +35,24 @@ public class GeolatteGeometryJavaTypeDescriptor extends AbstractJavaTypeDescript
 	 * Initialize a type descriptor for the geolatte-geom {@code Geometry} type.
 	 */
 	public GeolatteGeometryJavaTypeDescriptor() {
+		this( Wkt.Dialect.SFA_1_1_0 );
+	}
+
+	public GeolatteGeometryJavaTypeDescriptor(Wkt.Dialect wktDialect) {
 		super( Geometry.class );
+		this.wktDialect = Wkt.Dialect.SFA_1_1_0;
 	}
 
 	@Override
 	public String toString(Geometry value) {
-		return value.toString();
+		return Wkt.toWkt( value, wktDialect );
 	}
+
+
 
 	@Override
 	public Geometry fromString(CharSequence string) {
-		return Wkt.fromWkt( string.toString() );
+		return Wkt.fromWkt( string.toString(), wktDialect );
 	}
 
 	@Override

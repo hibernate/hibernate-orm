@@ -5,9 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
-package org.hibernate.spatial.testing.dialects.postgis;
+package org.hibernate.spatial.dialect.mysql;
 
-import org.hibernate.spatial.testing.dialects.NativeSQLTemplates;
-
-public class PostgisNativeSQLTemplates extends NativeSQLTemplates {
+public class MySQLDialectContributor {
 }

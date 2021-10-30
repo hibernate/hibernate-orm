@@ -49,7 +49,7 @@ public class TestSupportFactories {
 			return PostgisTestSupport.class;
 		}
 
-		if ( ( dialect instanceof SpatialDialect ) && MariaDBDialect.class.isAssignableFrom( dialect.getClass() ) ) {
+		if ( MariaDBDialect.class.isAssignableFrom( dialect.getClass() ) ) {
 			return MariaDBTestSupport.class;
 		}
 

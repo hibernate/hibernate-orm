@@ -41,7 +41,7 @@ sourceSets.test.resources {
 }
 
 tasks.test {
-    enabled =  ['pgsql', 'cockroachdb'].contains( project.db )
+    enabled =  ['pgsql', 'cockroachdb', 'mariadb'].contains( project.db )
 }
 
 tasks.test.include '**/*'

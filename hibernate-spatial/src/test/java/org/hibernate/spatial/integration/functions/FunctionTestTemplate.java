@@ -95,7 +95,7 @@ public class FunctionTestTemplate {
 			query.addScalar( "result", spatialFunction.getReturnType() );
 		}
 		if ( testGeometry != null ) {
-			query.setParameter( "filter", Wkt.toWkt( testGeometry ) );
+			query.setParameter( "filter", Wkt.toWkt( testGeometry, Wkt.Dialect.SFA_1_1_0 ) );
 		}
 
 		return query;
@@ -129,7 +129,7 @@ public class FunctionTestTemplate {
 	private Object mapRow(Object object) {
 		Data data = rowObjectMapper.apply( object );
 		if ( this.spatialFunction.returnsGeometry() ) {
-			data.datum = this.model.from.apply( codec.toGeometry( data.datum ) );
+			data.datum = data.datum != null ? this.model.from.apply( codec.toGeometry( data.datum ) ) : null;
 			return data;
 		}
 		return data;

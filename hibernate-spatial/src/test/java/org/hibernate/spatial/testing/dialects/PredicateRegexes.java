@@ -19,42 +19,42 @@ public class PredicateRegexes {
 
 	// Note that we alias the function invocation so that
 	// we can map the return value to the required type
-	public PredicateRegexes() {
+	public PredicateRegexes(String geomFromTextFunction) {
 		add(
 				"overlaps",
-				"select .* from .* where st_overlaps\\(.*geom\\s*,.*st_geomfromewkt\\(.*\\)\\s*=true.*",
+				"select .* from .* where st_overlaps\\(.*geom\\s*,.*" + geomFromTextFunction + "\\(.*\\)\\s*=.*",
 				"select .* from .* where st_overlaps\\(.*geom\\s*,.s*?\\)\\s*=\\s*?.*"
 		);
 		add(
 				"crosses",
-				"select .* from .* where st_crosses\\(.*geom\\s*,.*st_geomfromewkt\\(.*\\)\\s*=true.*",
+				"select .* from .* where st_crosses\\(.*geom\\s*,.*" + geomFromTextFunction + "\\(.*\\)\\s*=.*",
 				"select .* from .* where st_crosses\\(.*geom\\s*,.s*?\\)\\s*=\\s*?.*"
 
 		);
 		add(
 				"contains",
-				"select .* from .* where st_contains\\(.*geom\\s*,.*st_geomfromewkt\\(.*\\)\\s*=true.*",
+				"select .* from .* where st_contains\\(.*geom\\s*,.*" + geomFromTextFunction + "\\(.*\\)\\s*=.*",
 				"select .* from .* where st_contains\\(.*geom\\s*,.s*?\\)\\s*=\\s*?.*"
 		);
 		add(
 				"disjoint",
-				"select .* from .* where st_disjoint\\(.*geom\\s*,.*st_geomfromewkt\\(.*\\)\\s*=true.*",
+				"select .* from .* where st_disjoint\\(.*geom\\s*,.*" + geomFromTextFunction + "\\(.*\\)\\s*=.*",
 				"select .* from .* where st_disjoint\\(.*geom\\s*,.s*?\\)\\s*=\\s*?.*"
 		);
 		add(
 				"touches",
-				"select .* from .* where st_touches\\(.*geom\\s*,.*st_geomfromewkt\\(.*\\)\\s*=true.*",
+				"select .* from .* where st_touches\\(.*geom\\s*,.*" + geomFromTextFunction + "\\(.*\\)\\s*=.*",
 				"select .* from .* where st_touches\\(.*geom\\s*,.s*?\\)\\s*=\\s*?.*"
 		);
 		add(
 				"within",
-				"select .* from .* where st_within\\(.*geom\\s*,.*st_geomfromewkt\\(.*\\)\\s*=true.*",
+				"select .* from .* where st_within\\(.*geom\\s*,.*" + geomFromTextFunction + "\\(.*\\)\\s*=.*",
 				"select .* from .* where st_within\\(.*geom\\s*,.s*?\\)\\s*=\\s*?.*"
 
 		);
 		add(
 				"eq",
-				"select .* from .* where st_equals\\(.*geom\\s*,.*st_geomfromewkt\\(.*\\)\\s*=true.*",
+				"select .* from .* where st_equals\\(.*geom\\s*,.*" + geomFromTextFunction + "\\(.*\\)\\s*=.*",
 				"select .* from .* where st_equals\\(.*geom\\s*,.s*?\\)\\s*=\\s*?.*"
 		);
 

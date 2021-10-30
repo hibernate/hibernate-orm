@@ -13,10 +13,12 @@ import java.util.function.Function;
 
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.dialect.cockroachdb.CockroachDbContributor;
+import org.hibernate.spatial.dialect.mariadb.MariaDBDialectContributor;
 import org.hibernate.spatial.dialect.postgis.PostgisDialectContributor;
 
 class ContributorResolver {
@@ -29,6 +31,7 @@ class ContributorResolver {
 		//TypeContributorImplementor
 		CONTRIBUTOR_MAP.put( PostgreSQLDialect.class, PostgisDialectContributor::new );
 		CONTRIBUTOR_MAP.put( CockroachDialect.class, CockroachDbContributor::new );
+		CONTRIBUTOR_MAP.put( MariaDBDialect.class, MariaDBDialectContributor::new );
 	}
 
 	private ContributorResolver() {

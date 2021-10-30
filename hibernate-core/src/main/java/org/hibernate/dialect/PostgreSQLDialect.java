@@ -192,6 +192,10 @@ public class PostgreSQLDialect extends Dialect {
 				case "inet":
 					jdbcTypeCode = SqlTypes.INET;
 					break;
+				case "geometry":
+				case "geography":
+					jdbcTypeCode = SqlTypes.GEOMETRY;
+					break;
 			}
 		}
 		return jdbcTypeRegistry.getDescriptor( jdbcTypeCode );

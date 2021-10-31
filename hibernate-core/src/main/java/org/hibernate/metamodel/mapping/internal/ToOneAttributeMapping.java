@@ -425,8 +425,8 @@ public class ToOneAttributeMapping
 		return targetKeyPropertyName;
 	}
 
-	public boolean isTargetKeyPropertyPath(String path) {
-		return targetKeyPropertyNames.contains( path );
+	public Set<String> getTargetKeyPropertyNames() {
+		return targetKeyPropertyNames;
 	}
 
 	public Cardinality getCardinality() {

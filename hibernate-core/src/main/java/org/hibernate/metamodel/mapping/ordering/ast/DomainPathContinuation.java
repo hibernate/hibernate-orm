@@ -10,7 +10,6 @@ import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.AbstractDomainPath;
-import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.TranslationContext;
 import org.hibernate.query.NavigablePath;
 
@@ -20,9 +19,10 @@ import org.hibernate.query.NavigablePath;
  * @author Steve Ebersole
  */
 public class DomainPathContinuation extends AbstractDomainPath {
-	private final NavigablePath navigablePath;
+	protected final NavigablePath navigablePath;
+	protected final ModelPart referencedModelPart;
+
 	private final DomainPath lhs;
-	private final ModelPart referencedModelPart;
 
 	public DomainPathContinuation(NavigablePath navigablePath, DomainPath lhs, ModelPart referencedModelPart) {
 		this.navigablePath = navigablePath;
@@ -64,25 +64,6 @@ public class DomainPathContinuation extends AbstractDomainPath {
 					this,
 					subPart
 			);
-		}
-		if ( referencedModelPart instanceof ToOneAttributeMapping ) {
-			ToOneAttributeMapping toOneAttribute = (ToOneAttributeMapping) referencedModelPart;
-			if ( name.equals( toOneAttribute.getTargetKeyPropertyName() ) ) {
-				final ModelPart subPart = toOneAttribute.findSubPart( name );
-				if ( subPart == null ) {
-					throw new PathResolutionException(
-							"Could not resolve path token : " + referencedModelPart + " -> " + name
-					);
-				}
-
-				return new DomainPathContinuation(
-						navigablePath.append( name ),
-						this,
-						// unfortunately at this stage the foreign key descriptor could not be set
-						// on the attribute mapping yet, so we need to defer the sub part extraction later
-						referencedModelPart
-				);
-			}
 		}
 
 		throw new PathResolutionException(

@@ -10,6 +10,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.hibernate.DuplicateMappingException;
+import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
@@ -94,6 +95,7 @@ public class RootClassBinder extends AbstractBinder {
 		rc.setMetaAttributes(getMetaAttributes(table));
 		rc.setDiscriminatorValue( rc.getEntityName() );
 		rc.setTable(table);
+		rc.setOptimisticLockStyle(OptimisticLockStyle.NONE);
 		return rc;
 	}
 	

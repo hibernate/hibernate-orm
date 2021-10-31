@@ -64,6 +64,7 @@ class PrimaryKeyBinder extends AbstractBinder {
 				id, 
 				RevengUtils.createAssociationInfo(null, null, true, true));
 		rc.setIdentifierProperty(property);
+		rc.setDeclaredIdentifierProperty(property);
 		rc.setIdentifier(id);
 		return pki;
 	}

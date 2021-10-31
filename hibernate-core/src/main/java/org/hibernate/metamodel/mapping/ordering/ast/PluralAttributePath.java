@@ -56,21 +56,25 @@ public class PluralAttributePath extends AbstractDomainPath {
 			if ( subPart instanceof CollectionPart ) {
 				return new CollectionPartPath( this, (CollectionPart) subPart );
 			}
-			else if ( !( subPart instanceof EmbeddableValuedModelPart || subPart instanceof ToOneAttributeMapping ) ) {
-				final CollectionPartPath elementPath = new CollectionPartPath(
-						this,
-						pluralAttributeMapping.getElementDescriptor()
-				);
-
-				return new DomainPathContinuation(
-						elementPath.getNavigablePath().append( name ),
-						this,
-						pluralAttributeMapping.getElementDescriptor()
-				);
-			}
-			else {
+			if ( subPart instanceof EmbeddableValuedModelPart ) {
 				return new DomainPathContinuation( navigablePath.append( name ), this, subPart );
 			}
+			if ( subPart instanceof ToOneAttributeMapping ) {
+				return new FkDomainPathContinuation( navigablePath.append( name ), this,
+													(ToOneAttributeMapping) subPart );
+			}
+
+			// leaf case:
+			final CollectionPartPath elementPath = new CollectionPartPath(
+					this,
+					pluralAttributeMapping.getElementDescriptor()
+			);
+
+			return new DomainPathContinuation(
+					elementPath.getNavigablePath().append( name ),
+					this,
+					pluralAttributeMapping.getElementDescriptor()
+			);
 		}
 
 		// the above checks for explicit element or index descriptor references

@@ -13,6 +13,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.hibernate.spatial.GeometryLiteralFormatter;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
@@ -20,6 +21,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
+import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import org.geolatte.geom.ByteBuffer;
@@ -28,6 +30,7 @@ import org.geolatte.geom.Geometry;
 import org.geolatte.geom.codec.Wkb;
 import org.geolatte.geom.codec.WkbDecoder;
 import org.geolatte.geom.codec.WkbEncoder;
+import org.geolatte.geom.codec.Wkt;
 
 /**
  * Descriptor for MySQL Geometries.
@@ -49,6 +52,11 @@ public class MySQLGeometryType implements JdbcType {
 	@Override
 	public int getDefaultSqlTypeCode() {
 		return SqlTypes.GEOMETRY;
+	}
+
+	@Override
+	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaTypeDescriptor) {
+		return new GeometryLiteralFormatter<T>( javaTypeDescriptor, Wkt.Dialect.SFA_1_1_0, "ST_GeomFromText" );
 	}
 
 	@Override
@@ -98,7 +106,7 @@ public class MySQLGeometryType implements JdbcType {
 		};
 	}
 
-	private Geometry toGeometry(byte[] bytes) {
+	public Geometry toGeometry(byte[] bytes) {
 		if ( bytes == null ) {
 			return null;
 		}

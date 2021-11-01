@@ -53,10 +53,6 @@ public class MariaDBTestSupport extends TestSupport {
 				return MariaDBGeometryType.INSTANCE.toGeometry( (byte[])in );
 			}
 
-			@Override
-			public Object fromGeometry(Geometry<?> in) {
-				return Wkt.toWkt( in, Wkt.Dialect.MYSQL_WKT );
-			}
 		};
 	}
 }

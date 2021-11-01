@@ -36,7 +36,7 @@ public class PostgisTestSupport extends TestSupport {
 	}
 
 	@Override
-	public PredicateRegexes predicateRegexes(){ return new PredicateRegexes("st_geomfromewkt");}
+	public PredicateRegexes predicateRegexes(){ return new PredicateRegexes("st_geomfromtext");}
 
 	//TODO  put this in its own class (analogous to NativeSQLTemplates)
 	@Override
@@ -61,11 +61,6 @@ public class PostgisTestSupport extends TestSupport {
 			@Override
 			public Geometry<?> toGeometry(Object in) {
 				return PGGeometryType.INSTANCE_WKB_2.toGeometry( in );
-			}
-
-			@Override
-			public Object fromGeometry(Geometry<?> in) {
-				return Wkt.toWkt( in, Wkt.Dialect.POSTGIS_EWKT_1 );
 			}
 		};
 	}

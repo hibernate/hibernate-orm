@@ -14,5 +14,6 @@ import org.hibernate.spatial.SpatialDialect;
  *
  * @author Karel Maesen, Geovise BVBA
  */
+@Deprecated
 public class MySQL5SpatialDialect extends MySQL5Dialect implements SpatialDialect {
 }

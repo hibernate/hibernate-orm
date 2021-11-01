@@ -53,7 +53,7 @@ public class PGGeometryType implements JdbcType {
 
 	@Override
 	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaTypeDescriptor) {
-		return new GeometryLiteralFormatter<T>( javaTypeDescriptor, Wkt.Dialect.POSTGIS_EWKT_1, "ST_GeomFromEwkt" );
+		return new GeometryLiteralFormatter<T>( javaTypeDescriptor, Wkt.Dialect.SFA_1_1_0, "ST_GeomFromText" );
 	}
 
 	private PGGeometryType(Wkb.Dialect dialect) {

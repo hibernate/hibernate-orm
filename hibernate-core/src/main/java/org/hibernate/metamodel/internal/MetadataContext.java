@@ -687,7 +687,7 @@ public class MetadataContext {
 						domainType = (EmbeddableDomainType<J>) embeddableDomainType;
 						break;
 					}
-					else if ( cachedComponent.getComponentClass().equals( component.getComponentClass() ) ) {
+					else if ( cachedComponent.getComponentClass().equals( component.getComponentClass() ) || cachedComponent.isEmbedded() != component.isEmbedded() ) {
 						final int cachedComponentPropertySpan = cachedComponent.getPropertySpan();
 						if ( cachedComponentPropertySpan != component.getPropertySpan() ) {
 							throw new MappingException(

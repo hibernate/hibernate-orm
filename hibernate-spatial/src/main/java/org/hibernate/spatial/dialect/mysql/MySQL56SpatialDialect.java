@@ -23,6 +23,7 @@ import org.hibernate.spatial.SpatialDialect;
  *
  * @author Karel Maesen
  */
+@Deprecated
 public class MySQL56SpatialDialect extends MySQL55Dialect implements SpatialDialect {
 
 }

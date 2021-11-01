@@ -14,6 +14,7 @@ import org.hibernate.spatial.SpatialDialect;
  *
  * @author Karel Maesen, Boni Gopalan
  */
+@Deprecated
 public class MySQLSpatialDialect extends MySQLDialect implements SpatialDialect {
 
 }

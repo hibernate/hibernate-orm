@@ -10,6 +10,7 @@ package org.hibernate.spatial.testing;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.MariaDBDialect;
+import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 
 import org.hibernate.testing.orm.junit.DialectFeatureCheck;
@@ -26,6 +27,7 @@ public class IsSupportedBySpatial implements DialectFeatureCheck {
 	public boolean apply(Dialect dialect) {
 		return dialect instanceof PostgreSQLDialect
 				|| dialect instanceof CockroachDialect
+				|| dialect instanceof MySQLDialect
 				|| dialect instanceof MariaDBDialect;
 	}
 }

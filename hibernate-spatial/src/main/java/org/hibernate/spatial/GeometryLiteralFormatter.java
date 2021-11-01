@@ -31,17 +31,23 @@ public class GeometryLiteralFormatter<T> implements JdbcLiteralFormatter<T> {
 	}
 
 	@Override
+	//todo -- clean this up
 	public void appendJdbcLiteral(
 			SqlAppender appender, T value, Dialect dialect, WrapperOptions wrapperOptions) {
 		appender.appendSql( geomFromTextName );
+		int srid = 0;
 		appender.appendSql( "('" );
 		if ( javaType instanceof GeolatteGeometryJavaTypeDescriptor ) {
 			appender.appendSql( Wkt.toWkt( (Geometry<?>) value, wktDialect ) );
+			srid = ( (Geometry<?>) value ).getSRID();
 		}
 		else {
 			appender.appendSql( Wkt.toWkt( jts2Gl( value ), wktDialect ) );
+			srid = ( (org.locationtech.jts.geom.Geometry) value ).getSRID();
 		}
-		appender.appendSql( "')" );
+		appender.appendSql( "', " );
+		appender.appendSql( srid );
+		appender.appendSql(")");
 	}
 
 	private <T> Geometry<?> jts2Gl(T value) {

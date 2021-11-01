@@ -46,11 +46,6 @@ public class CockroachDBTestSupport extends TestSupport {
 			public Geometry<?> toGeometry(Object in) {
 				return PGGeometryType.INSTANCE_WKB_2.toGeometry( in );
 			}
-
-			@Override
-			public Object fromGeometry(Geometry<?> in) {
-				return Wkt.toWkt( in, Wkt.Dialect.POSTGIS_EWKT_1 );
-			}
 		};
 	}
 

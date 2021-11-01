@@ -10,6 +10,7 @@ package org.hibernate.spatial.testing;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.MariaDBDialect;
+import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.testing.datareader.TestSupport;
@@ -57,6 +58,10 @@ public class TestSupportFactories {
 			return CockroachDBTestSupport.class;
 		}
 
+		if ( MySQLDialect.class.isAssignableFrom( dialect.getClass() ) ) {
+			return dialect.getVersion() >= 800 ?  MySQL8TestSupport.class : MySQL56TestSupport.class;
+		}
+
 		if ( "org.hibernate.spatial.dialect.h2geodb.GeoDBDialect".equals( canonicalName ) ) {
 			return GeoDBTestSupport.class;
 		}
@@ -66,19 +71,7 @@ public class TestSupportFactories {
 		if ( "org.hibernate.spatial.dialect.sqlserver.SqlServer2012SpatialDialect".equals( canonicalName ) ) {
 			return SQLServerTestSupport.class;
 		}
-		if ( "org.hibernate.spatial.dialect.mysql.MySQLSpatialDialect".equals( canonicalName ) ||
-				"org.hibernate.spatial.dialect.mysql.MySQL5InnoDBSpatialDialect".equals( canonicalName ) ) {
-			return MySQLTestSupport.class;
-		}
 
-		if ( "org.hibernate.spatial.dialect.mysql.MySQL8SpatialDialect".equals( canonicalName ) ) {
-			return MySQL8TestSupport.class;
-		}
-
-		if ( "org.hibernate.spatial.dialect.mysql.MySQL56SpatialDialect".equals( canonicalName ) ||
-				"org.hibernate.spatial.dialect.mysql.MySQL56InnoDBSpatialDialect".equals( canonicalName ) ) {
-			return MySQL56TestSupport.class;
-		}
 		if ( "org.hibernate.spatial.dialect.oracle.OracleSpatial10gDialect".equals( canonicalName ) ||
 				"org.hibernate.spatial.dialect.oracle.OracleSpatialSDO10gDialect".equals( canonicalName ) ) {
 			return OracleSDOTestSupport.class;

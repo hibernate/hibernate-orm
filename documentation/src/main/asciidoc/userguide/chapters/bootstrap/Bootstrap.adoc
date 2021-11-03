@@ -315,7 +315,7 @@ In the `persistence.xml` configuration file above, the `orm.xml` XML file contai
 
 As previously seen, the Hibernate native bootstrap mechanism allows you to customize a great variety of configurations which are passed via the `Metadata` object.
 
-When using Hibernate as a JPA provider, the `EntityManagerFactory` is backed by a `SessionFactory`. For this reason, you might still want to use the `Metadata` object to pass various settings which cannot be supplied via the standard Hibernate <<appendices/Configurations.adoc, configuration settings>>.
+When using Hibernate as a JPA provider, the `EntityManagerFactory` is backed by a `SessionFactory`. For this reason, you might still want to use the `Metadata` object to pass various settings which cannot be supplied via the standard Hibernate <<appendices/Configurations.adoc#configurations,configuration settings>>.
 
 For this reason, you can use the
 https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/boot/spi/MetadataBuilderContributor.html[`MetadataBuilderContributor`] class as you can see in the following examples.

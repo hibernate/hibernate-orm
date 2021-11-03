@@ -79,6 +79,15 @@ public class EmbeddedIdentifierMappingImpl
 
 	@Override
 	public Object getIdentifier(Object entity, SharedSessionContractImplementor session) {
+		return getIdentifier( entity );
+	}
+
+	@Override
+	public Object getIdentifier(Object entity, SessionFactoryImplementor sessionFactory) {
+		return EmbeddedIdentifierMappingImpl.this.getIdentifier( entity );
+	}
+
+	private Object getIdentifier(Object entity) {
 		if ( entity instanceof HibernateProxy ) {
 			return ( (HibernateProxy) entity ).getHibernateLazyInitializer().getIdentifier();
 		}

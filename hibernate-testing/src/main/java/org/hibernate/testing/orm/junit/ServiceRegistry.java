@@ -72,14 +72,27 @@ public @interface ServiceRegistry {
 	Class<? extends StandardServiceInitiator>[] initiators() default {};
 
 	Service[] services() default {};
+	JavaService[] javaServices() default {};
 
 	Setting[] settings() default {};
 
 	SettingProvider[] settingProviders() default {};
 
+	/**
+	 * A Hibernate Service registration
+	 */
 	@interface Service {
 		Class<? extends org.hibernate.service.Service> role();
 		Class<? extends org.hibernate.service.Service> impl();
 	}
+
+	/**
+	 * A Java service loadable via {@link java.util.ServiceLoader}
+	 */
+	@interface JavaService {
+		Class<?> role();
+		Class<?>[] impls();
+	}
+
 
 }

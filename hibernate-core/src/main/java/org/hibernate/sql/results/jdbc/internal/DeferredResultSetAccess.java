@@ -214,7 +214,7 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 			}
 			try {
 				eventListenerManager.jdbcExecuteStatementStart();
-				resultSet = preparedStatement.executeQuery();
+				resultSet = wrapResultSet( preparedStatement.executeQuery() );
 			}
 			finally {
 				eventListenerManager.jdbcExecuteStatementEnd();
@@ -258,6 +258,10 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 		finally {
 			logicalConnection.afterStatement();
 		}
+	}
+
+	protected ResultSet wrapResultSet(ResultSet resultSet) throws SQLException {
+		return resultSet;
 	}
 
 	protected LockMode determineFollowOnLockMode(LockOptions lockOptions) {

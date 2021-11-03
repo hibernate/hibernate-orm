@@ -64,6 +64,7 @@ dependencies {
     testImplementation libraries.mockito_inline
     testImplementation libraries.jodaTime
     testImplementation libraries.assertj
+    testImplementation 'org.orbisgis:h2gis:1.5.0'
 
     testRuntimeOnly libraries.byteBuddy
     testRuntimeOnly libraries.jakarta_weld

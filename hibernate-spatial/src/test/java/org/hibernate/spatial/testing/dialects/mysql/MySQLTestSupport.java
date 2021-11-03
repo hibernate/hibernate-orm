@@ -8,26 +8,35 @@
 package org.hibernate.spatial.testing.dialects.mysql;
 
 
+import java.util.List;
 import java.util.Map;
 
 import org.hibernate.spatial.CommonSpatialFunction;
 import org.hibernate.spatial.GeomCodec;
-import org.hibernate.spatial.dialect.mariadb.MariaDBGeometryType;
 import org.hibernate.spatial.dialect.mysql.MySQLGeometryType;
-import org.hibernate.spatial.testing.AbstractExpectationsFactory;
-import org.hibernate.spatial.testing.JTSGeometryEquality;
 import org.hibernate.spatial.testing.datareader.TestData;
 import org.hibernate.spatial.testing.datareader.TestSupport;
 import org.hibernate.spatial.testing.dialects.NativeSQLTemplates;
 import org.hibernate.spatial.testing.dialects.PredicateRegexes;
 
 import org.geolatte.geom.Geometry;
+import org.geolatte.geom.crs.CoordinateReferenceSystems;
+import org.geolatte.geom.crs.CrsId;
+import org.geolatte.geom.crs.LinearUnit;
+import org.geolatte.geom.crs.ProjectedCoordinateReferenceSystem;
+
+import static org.geolatte.geom.builder.DSL.c;
+import static org.geolatte.geom.builder.DSL.polygon;
+import static org.geolatte.geom.builder.DSL.ring;
+
 
 /**
  * @author Karel Maesen, Geovise BVBA
  * creation-date: Oct 18, 2010
  */
 public class MySQLTestSupport extends TestSupport {
+
+	ProjectedCoordinateReferenceSystem crs = CoordinateReferenceSystems.mkProjected( CrsId.valueOf( 0 ), LinearUnit.METER );
 
 	@Override
 	public TestData createTestData(TestDataPurpose purpose) {
@@ -50,11 +59,31 @@ public class MySQLTestSupport extends TestSupport {
 	}
 
 	@Override
+	public List<CommonSpatialFunction> getExcludeFromTests() {
+		List<CommonSpatialFunction> exclusions = super.getExcludeFromTests();
+		//these actually work, but the st_geomfromtext normalises the interior rings on polygons/geometry collections
+		//thereby invalidating the test
+		//todo allow a more relaxed geometry comparison that treats rings the same regardless of CCW or CW order
+		exclusions.add(CommonSpatialFunction.ST_UNION);
+		exclusions.add( CommonSpatialFunction.ST_SYMDIFFERENCE );
+		return exclusions;
+	}
+
+	@Override
+	public Geometry<?> getFilterGeometry() {
+
+		return polygon(
+				crs,
+				ring( c( 0, 0 ), c( 0, 10 ), c( 10, 10 ), c( 10, 0 ), c( 0, 0 ) )
+		);
+	}
+
+	@Override
 	public GeomCodec codec() {
 		return new GeomCodec() {
 			@Override
 			public Geometry<?> toGeometry(Object in) {
-				return MySQLGeometryType.INSTANCE.toGeometry( (byte[])in );
+				return MySQLGeometryType.INSTANCE.toGeometry( (byte[]) in );
 			}
 
 		};

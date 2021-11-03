@@ -23,6 +23,8 @@ import org.hibernate.spatial.testing.domain.GeomEntityLike;
 
 import org.hibernate.testing.orm.junit.DialectContext;
 
+import org.geolatte.geom.Geometry;
+
 import static org.hibernate.spatial.testing.datareader.TestSupport.TestDataPurpose.SpatialFunctionsData;
 import static org.hibernate.spatial.testing.datareader.TestSupport.TestDataPurpose.StoreRetrieveData;
 
@@ -32,9 +34,11 @@ public class SpatialTestDataProvider {
 	protected final NativeSQLTemplates templates;
 	protected final PredicateRegexes predicateRegexes;
 	protected final Map<CommonSpatialFunction, String> hqlOverrides;
+	protected final Geometry<?> filterGeometry;
 	private final TestData funcTestData;
 	protected TestData testData;
 	protected GeomCodec codec;
+	protected List<CommonSpatialFunction> exludeFromTest;
 
 	public SpatialTestDataProvider() {
 		try {
@@ -44,7 +48,9 @@ public class SpatialTestDataProvider {
 			hqlOverrides = support.hqlOverrides();
 			codec = support.codec();
 			testData = support.createTestData( StoreRetrieveData );
+			exludeFromTest = support.getExcludeFromTests();
 			funcTestData = support.createTestData( SpatialFunctionsData );
+			filterGeometry = support.getFilterGeometry();
 		}
 		catch (InstantiationException | IllegalAccessException e) {
 			throw new RuntimeException( e );

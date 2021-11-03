@@ -36,16 +36,6 @@ import static org.geolatte.geom.crs.CoordinateReferenceSystems.WGS84;
 public class TestGeometryConstructionWithParameter extends SpatialTestBase {
 
 	final private Map<CommonSpatialFunction, String> templates = new HashMap<>();
-	final private Geometry<G2D> geometry = polygon(
-			WGS84,
-			ring(
-					g( 0, 0 ),
-					g( 10, 0 ),
-					g( 10, 10 ),
-					g( 0, 10 ),
-					g( 0, 0 )
-			)
-	);
 
 	TestGeometryConstructionWithParameter() {
 		templates.put(
@@ -92,7 +82,7 @@ public class TestGeometryConstructionWithParameter extends SpatialTestBase {
 			scope.inSession( session -> {
 				String hql = templates.get( func );
 				session.createQuery( hql )
-						.setParameter( "poly", geometry )
+						.setParameter( "poly", filterGeometry )
 						.getResultList();
 				//we just check that this parses for now.
 			} );

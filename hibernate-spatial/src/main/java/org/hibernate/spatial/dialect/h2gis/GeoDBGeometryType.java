@@ -14,6 +14,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.spatial.GeolatteGeometryJavaTypeDescriptor;
+import org.hibernate.spatial.GeometryLiteralFormatter;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
@@ -53,20 +54,7 @@ public class GeoDBGeometryType implements JdbcType {
 	//todo -- simplify as with postgis/mariadb
 	@Override
 	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaTypeDescriptor) {
-		return (appender, value, dialect, wrapperOptions) -> {
-			Geometry<?> geom;
-			if ( javaTypeDescriptor instanceof GeolatteGeometryJavaTypeDescriptor ) {
-				geom = (Geometry<?>) value;
-			}
-			else {
-				geom = jts2Gl( value );
-			}
-			appender.appendSql( "ST_GeomFromText('" );
-			appender.appendSql( Wkt.toWkt( geom, Wkt.Dialect.SFA_1_1_0 ) );
-			appender.appendSql( "'," );
-			appender.appendSql( ( geom.getSRID() ) );
-			appender.appendSql( ")" );
-		};
+		return new GeometryLiteralFormatter<T>( javaTypeDescriptor, Wkt.Dialect.SFA_1_1_0, "ST_GeomFromText" );
 	}
 
 	private <T> Geometry<?> jts2Gl(T value) {

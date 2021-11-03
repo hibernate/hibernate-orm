@@ -64,8 +64,9 @@ public class CommonFunctionTests extends SpatialTestBase {
 	public Stream<DynamicTest> testFunction() {
 
 		return
-				TestTemplates.all( templates, hqlOverrides )
+				TestTemplates.all( templates, hqlOverrides, filterGeometry )
 						.filter( f -> isSupported( f.function ) )
+						.filter( f -> !exludeFromTest.contains( f.function ) )
 						.flatMap( t -> Stream.of(
 								t.build( Model.JTSMODEL, codec ),
 								t.build( Model.GLMODEL, codec )
@@ -98,7 +99,11 @@ public class CommonFunctionTests extends SpatialTestBase {
 		return () -> {
 			expected = template.executeNativeQuery( scope );
 			received = template.executeHQL( scope, fnName );
-			assertEquals( expected, received );
+			if ( !expected.equals( received ) ) {
+				for ( int i = 0; i < expected.size(); i++ ) {
+					assertEquals( expected.get( i ), received.get( i ) );
+				}
+			}
 		};
 	}
 }

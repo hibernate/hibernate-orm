@@ -16,7 +16,6 @@ import org.hibernate.spatial.HSMessageLogger;
 import org.hibernate.spatial.JTSGeometryType;
 import org.hibernate.spatial.KeyedSqmFunctionDescriptors;
 import org.hibernate.spatial.contributor.ContributorImplementor;
-import org.hibernate.spatial.dialect.mariadb.MariaDBSqmFunctionDescriptors;
 
 public class MySQLDialectContributor implements ContributorImplementor {
 

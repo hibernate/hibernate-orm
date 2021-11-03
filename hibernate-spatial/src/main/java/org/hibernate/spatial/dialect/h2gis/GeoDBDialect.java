@@ -5,7 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
-package org.hibernate.spatial.dialect.h2geodb;
+package org.hibernate.spatial.dialect.h2gis;
 
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.spatial.SpatialDialect;

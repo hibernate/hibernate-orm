@@ -7,8 +7,11 @@
 
 package org.hibernate.spatial.testing;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Set;
 
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.spatial.CommonSpatialFunction;
 import org.hibernate.spatial.integration.SpatialTestDataProvider;
 import org.hibernate.spatial.testing.datareader.TestSupport;
@@ -16,11 +19,14 @@ import org.hibernate.spatial.testing.domain.GeomEntity;
 import org.hibernate.spatial.testing.domain.JtsGeomEntity;
 import org.hibernate.spatial.testing.domain.SpatialDomainModel;
 
+import org.hibernate.testing.orm.junit.DialectContext;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SessionFactoryScopeAware;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+
+import org.h2gis.functions.factory.H2GISFunctions;
 
 @DomainModel(modelDescriptorClasses = SpatialDomainModel.class)
 abstract public class SpatialTestBase
@@ -41,7 +47,17 @@ abstract public class SpatialTestBase
 					.getSqmFunctionRegistry()
 					.getFunctions()
 					.keySet();
-
+			if ( DialectContext.getDialect() instanceof H2Dialect ) {
+				this.scope.inSession( session -> {
+					try {
+						Connection cn = session.getJdbcConnectionAccess().obtainConnection();
+						H2GISFunctions.load( cn );
+					}
+					catch (SQLException e) {
+						throw new RuntimeException( e );
+					}
+				} );
+			}
 		}
 	}
 

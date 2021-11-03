@@ -10,7 +10,7 @@
  */
 package org.hibernate.spatial.testing.dialects.h2geodb;
 
-import org.hibernate.spatial.dialect.h2geodb.GeoDbWkb;
+import org.hibernate.spatial.dialect.h2gis.GeoDbWkb;
 import org.hibernate.spatial.testing.AbstractExpectationsFactory;
 import org.hibernate.spatial.testing.NativeSQLStatement;
 

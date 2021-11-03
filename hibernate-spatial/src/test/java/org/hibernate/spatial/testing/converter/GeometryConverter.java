@@ -9,7 +9,7 @@ package org.hibernate.spatial.testing.converter;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 
-import org.hibernate.spatial.dialect.h2geodb.GeoDbWkb;
+import org.hibernate.spatial.dialect.h2gis.GeoDbWkb;
 
 import org.geolatte.geom.Geometry;
 

@@ -22,7 +22,6 @@ dependencies {
     testImplementation project(':hibernate-testing')
     testImplementation project(':hibernate-ant')
     testImplementation project( path: ':hibernate-core', configuration: 'tests' )
-
     testImplementation libraries.jakarta_validation
     testImplementation libraries.jandex
     testImplementation libraries.classmate
@@ -30,6 +29,7 @@ dependencies {
     testImplementation libraries.dom4j
 
     testImplementation libraries.postgresql
+    testImplementation libraries.h2gis
 
     testRuntimeOnly libraries.jakarta_el
     testRuntimeOnly 'jaxen:jaxen:1.1'
@@ -41,7 +41,9 @@ sourceSets.test.resources {
 }
 
 tasks.test {
-    enabled =  ['pgsql', 'cockroachdb', 'mariadb', 'mysql_docker', 'mysql_docker'].contains( project.db )
+    // for now we cannot run with 'h2' project.db due to compatability issues
+    // H2 requires 4.200 but H2GIS 1.5 needs 4.197
+    enabled =  ['pgsql', 'pgsql_ci', 'cockroachdb', 'mariadb', 'mysql_docker', 'mysql_docker'].contains( project.db )
 }
 
 tasks.test.include '**/*'

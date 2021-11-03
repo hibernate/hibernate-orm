@@ -247,8 +247,11 @@ public class EntityCollectionPart
 
 	@Override
 	public ForeignKeyDescriptor getForeignKeyDescriptor() {
-		// todo (6.0) : this will not strictly work - we'd want a new ForeignKeyDescriptor that points the other direction
 		return collectionDescriptor.getAttributeMapping().getKeyDescriptor();
+	}
+
+	public ForeignKeyDescriptor getElementForeignKeyDescriptor(){
+		return collectionDescriptor.getAttributeMapping().getElementKeyDescriptor();
 	}
 
 	@Override

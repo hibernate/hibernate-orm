@@ -23,6 +23,7 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
+import org.hibernate.metamodel.mapping.internal.NonAggregatedIdentifierMappingImpl;
 import org.hibernate.metamodel.mapping.internal.SimpleForeignKeyDescriptor;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
@@ -120,7 +121,7 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 		}
 		else if ( mapping instanceof EntityAssociationMapping ) {
 			final EntityAssociationMapping associationMapping = (EntityAssociationMapping) mapping;
-			final ForeignKeyDescriptor fkDescriptor = associationMapping.getForeignKeyDescriptor();
+			ForeignKeyDescriptor fkDescriptor = associationMapping.getForeignKeyDescriptor();
 			final String lhsTable;
 			final ModelPart lhsPart;
 			boolean useKeyPart = associationMapping.getSideNature() == ForeignKeyDescriptor.Nature.KEY;
@@ -135,11 +136,20 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 				if ( pluralAttributeMapping.getSeparateCollectionTable() == null ) {
 					useKeyPart = true;
 					tableGroup = pluralTableGroup;
+					if ( ( (EntityCollectionPart) mapping ).getKeyTargetMatchPart() instanceof NonAggregatedIdentifierMappingImpl ) {
+						fkDescriptor = ( (EntityCollectionPart) associationMapping ).getElementForeignKeyDescriptor();
+					}
 				}
 			}
 			if ( useKeyPart ) {
-				lhsTable = fkDescriptor.getKeyTable();
-				lhsPart = fkDescriptor.getKeyPart();
+				if ( mapping instanceof EntityCollectionPart && ( (EntityCollectionPart) mapping ).getKeyTargetMatchPart() instanceof NonAggregatedIdentifierMappingImpl ) {
+					lhsTable = fkDescriptor.getTargetTable();
+					lhsPart = fkDescriptor.getTargetPart();
+				}
+				else {
+					lhsTable = fkDescriptor.getKeyTable();
+					lhsPart = fkDescriptor.getKeyPart();
+				}
 			}
 			else {
 				lhsTable = fkDescriptor.getTargetTable();

@@ -70,6 +70,7 @@ import org.hibernate.metamodel.mapping.SqlExpressable;
 import org.hibernate.metamodel.mapping.ValueMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedCollectionPart;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
+import org.hibernate.metamodel.mapping.internal.NonAggregatedIdentifierMappingImpl;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
@@ -2515,7 +2516,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) modelPart;
 			final CollectionPart elementDescriptor = pluralAttributeMapping.getElementDescriptor();
 			if ( elementDescriptor instanceof EntityCollectionPart ) {
-				keyPart = ( (EntityCollectionPart) elementDescriptor ).getKeyTargetMatchPart();
+				final EntityCollectionPart entityCollectionPart = (EntityCollectionPart) elementDescriptor;
+				if ( entityCollectionPart.getKeyTargetMatchPart() instanceof NonAggregatedIdentifierMappingImpl ) {
+					keyPart = entityCollectionPart.getElementForeignKeyDescriptor();
+				}
+				else {
+					keyPart = entityCollectionPart.getKeyTargetMatchPart();
+				}
 			}
 			else {
 				keyPart = elementDescriptor;
@@ -3668,7 +3675,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			BiConsumer<Integer,JdbcParameter> jdbcParameterConsumer) {
 		sqmParameterMappingModelTypes.put( expression, valueMapping );
 		final Bindable bindable;
-		if ( valueMapping instanceof Association ) {
+		if(valueMapping instanceof EntityCollectionPart){
+			bindable = ((EntityCollectionPart)valueMapping).getElementForeignKeyDescriptor();
+		}
+		else if ( valueMapping instanceof Association ) {
 			bindable = ( (Association) valueMapping ).getForeignKeyDescriptor();
 		}
 		else if ( valueMapping instanceof EntityMappingType ) {

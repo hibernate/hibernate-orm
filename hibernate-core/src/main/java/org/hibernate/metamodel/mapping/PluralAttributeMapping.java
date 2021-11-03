@@ -27,6 +27,8 @@ public interface PluralAttributeMapping
 
 	ForeignKeyDescriptor getKeyDescriptor();
 
+	ForeignKeyDescriptor getElementKeyDescriptor();
+
 	CollectionPart getIndexDescriptor();
 
 	@Override

@@ -385,6 +385,11 @@ public class PluralAttributeMappingImpl
 	}
 
 	@Override
+	public ForeignKeyDescriptor getElementKeyDescriptor() {
+		return elementFkDescriptor;
+	}
+
+	@Override
 	public CollectionPersister getCollectionDescriptor() {
 		return collectionDescriptor;
 	}

@@ -4581,8 +4581,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			final Expression lhsExpression = comparisonPredicate.getLeftHandExpression();
 
 			if ( lhsExpression instanceof QueryGroup ) {
-				final QueryGroup subquery = (QueryGroup) lhsExpression;
-
 				if ( rhsTuple.getExpressions().size() == 1 ) {
 					// Special case for tuples with arity 1 as any DBMS supports scalar IN predicates
 					renderComparison(
@@ -4602,7 +4600,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					emulateSubQueryRelationalRestrictionPredicate(
 							comparisonPredicate,
 							false,
-							subquery,
+							(QueryGroup) lhsExpression,
 							rhsTuple,
 							this::renderSelectTupleComparison,
 							// Since we switch the order of operands, we have to invert the operator

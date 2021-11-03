@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.function.BiConsumer;
 
+import org.hibernate.EntityNameResolver;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -23,12 +24,15 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
+import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.type.ComponentType;
+import org.hibernate.type.Type;
 
 /**
  * A "non-aggregated" composite identifier.
@@ -41,8 +45,8 @@ import org.hibernate.type.ComponentType;
 public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentifierMapping {
 
 	private final List<SingularAttributeMapping> idAttributeMappings;
-	private final ComponentType bootIdComponentType;
-	private final ComponentType bootCidComponentType;
+	private final ComponentType mappedIdComponentType;
+	private final ComponentType virtualComponentType;
 
 	private final boolean[] isBootIdPropertyManyToOne;
 
@@ -70,8 +74,8 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 		for ( int i = 0; i < propertySpan; i++ ) {
 			isBootIdPropertyManyToOne[i] = bootIdClassDescriptor.getProperty( i ).getValue() instanceof ManyToOne;
 		}
-		bootIdComponentType = (ComponentType) bootIdClassDescriptor.getType();
-		bootCidComponentType = (ComponentType) bootCidDescriptor.getType();
+		mappedIdComponentType = (ComponentType) bootIdClassDescriptor.getType();
+		virtualComponentType = (ComponentType) bootCidDescriptor.getType();
 	}
 
 	@Override
@@ -87,13 +91,74 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 	@Override
 	public Object getIdentifier(Object entity, SharedSessionContractImplementor session) {
 		if ( hasContainingClass() ) {
-			final Serializable disassemble = bootCidComponentType.disassemble( entity, session, null );
-			return bootIdComponentType.assemble( disassemble, session, null );
+			final Serializable disassemble = virtualComponentType.disassemble( entity, session, null );
+			return mappedIdComponentType.assemble( disassemble, session, null );
 		}
 		else {
 			return entity;
 		}
 	}
+
+	@Override
+	public Object getIdentifier(Object entity, SessionFactoryImplementor sessionFactory){
+		if ( hasContainingClass() ) {
+			final Object id = mappedIdComponentType.instantiate();
+			final Object[] propertyValues = virtualComponentType.getPropertyValues( entity );
+			final Type[] subTypes = virtualComponentType.getSubtypes();
+			final Type[] copierSubTypes = mappedIdComponentType.getSubtypes();
+			final int length = subTypes.length;
+			for ( int i = 0; i < length; i++ ) {
+				//JPA 2 @MapsId + @IdClass points to the pk of the entity
+				if ( subTypes[i].isAssociationType() && !copierSubTypes[i].isAssociationType()  ) {
+					propertyValues[i] = determineEntityId( propertyValues[i], sessionFactory );
+				}
+			}
+			mappedIdComponentType.setPropertyValues( id, propertyValues );
+			return id;
+		}
+		else {
+			return entity;
+		}
+	}
+
+	private static Object determineEntityId(Object entity, SessionFactoryImplementor sessionFactory) {
+		if ( entity == null ) {
+			return null;
+		}
+
+		if ( HibernateProxy.class.isInstance( entity ) ) {
+			// entity is a proxy, so we know it is not transient; just return ID from proxy
+			return ( (HibernateProxy) entity ).getHibernateLazyInitializer().getInternalIdentifier();
+		}
+
+		final EntityPersister persister = resolveEntityPersister(
+				entity,
+				sessionFactory
+		);
+
+		return persister.getIdentifier( entity, sessionFactory );
+	}
+
+	private static EntityPersister resolveEntityPersister(Object entity, SessionFactoryImplementor sessionFactory) {
+		assert sessionFactory != null;
+
+		String entityName = null;
+		final MetamodelImplementor metamodel = sessionFactory.getMetamodel();
+		for ( EntityNameResolver entityNameResolver : metamodel.getEntityNameResolvers() ) {
+			entityName = entityNameResolver.resolveEntityName( entity );
+			if ( entityName != null ) {
+				break;
+			}
+		}
+		if ( entityName == null ) {
+			// old fall-back
+			entityName = entity.getClass().getName();
+		}
+
+		return metamodel.findEntityDescriptor( entityName );
+	}
+
+
 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
@@ -120,7 +185,7 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 		}
 		else {
 			final SessionFactoryImplementor factory = session.getFactory();
-			final Object[] propertyValues = bootIdComponentType.getPropertyValues( id, session );
+			final Object[] propertyValues = mappedIdComponentType.getPropertyValues( id, session );
 			forEachAttribute(
 					(position, attribute) -> {
 						Object propertyValue = propertyValues[position];
@@ -213,6 +278,28 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 
 	@Override
 	public boolean hasContainingClass() {
-		return bootIdComponentType != bootCidComponentType;
+		return mappedIdComponentType != virtualComponentType;
 	}
+
+//	@Override
+//	public int forEachJdbcValue(
+//			Object value,
+//			Clause clause,
+//			int offset,
+//			JdbcValuesConsumer consumer,
+//			SharedSessionContractImplementor session) {
+//
+//		final List<AttributeMapping> attributeMappings = getEmbeddableTypeDescriptor().getAttributeMappings();
+//		int span = 0;
+//
+//		for ( int i = 0; i < attributeMappings.size(); i++ ) {
+//			final AttributeMapping attributeMapping = attributeMappings.get( i );
+//			if ( attributeMapping instanceof PluralAttributeMapping ) {
+//				continue;
+//			}
+//			final Object o = attributeMapping.getPropertyAccess().getGetter().get( value );
+//			span += attributeMapping.forEachJdbcValue( o, clause, span + offset, consumer, session );
+//		}
+//		return span;
+//	}
 }

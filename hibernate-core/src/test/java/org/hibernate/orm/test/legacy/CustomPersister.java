@@ -213,6 +213,11 @@ public class CustomPersister implements EntityPersister {
 	}
 
 	@Override
+	public Object getIdentifier(Object entity, SessionFactoryImplementor sessionFactoryImplementor) {
+		return ( (Custom) entity ).id;
+	}
+
+	@Override
 	public void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session) {
 		( (Custom) entity ).id = (String) id;
 	}

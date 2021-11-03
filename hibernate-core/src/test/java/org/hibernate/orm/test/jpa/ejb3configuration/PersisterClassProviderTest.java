@@ -581,6 +581,11 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
+		public Object getIdentifier(Object entity, SessionFactoryImplementor sessionFactoryImplementor) {
+			return null;
+		}
+
+		@Override
 		public void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session) {
 		}
 

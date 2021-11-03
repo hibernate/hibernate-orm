@@ -5026,12 +5026,17 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public Object getIdentifier(Object object) {
-		return getIdentifier( object, null );
+		return getIdentifier( object, getFactory() );
 	}
 
 	@Override
 	public Object getIdentifier(Object entity, SharedSessionContractImplementor session) {
 		return identifierMapping.getIdentifier( entity, session );
+	}
+
+	@Override
+	public Object getIdentifier(Object entity, SessionFactoryImplementor sessionFactory){
+		return identifierMapping.getIdentifier( entity, sessionFactory );
 	}
 
 	@Override

@@ -821,6 +821,8 @@ public interface EntityPersister
 	 */
 	Object getIdentifier(Object entity, SharedSessionContractImplementor session);
 
+	Object getIdentifier(Object entity, SessionFactoryImplementor sessionFactoryImplementor);
+
     /**
      * Inject the identifier value into the given entity.
 	 */

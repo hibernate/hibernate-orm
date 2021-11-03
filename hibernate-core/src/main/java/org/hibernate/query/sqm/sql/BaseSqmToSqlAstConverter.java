@@ -3326,8 +3326,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				associationKeyPart = identifierMapping;
 				associationKey = identifierMapping.getIdentifier(
 						literal.getLiteralValue(),
-						null
-				);
+						getCreationContext().getSessionFactory());
 			}
 			if ( associationKeyPart instanceof BasicValuedMapping ) {
 				return new QueryLiteral<>(

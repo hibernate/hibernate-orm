@@ -6,9 +6,6 @@
  */
 package org.hibernate.spatial.dialect.mysql;
 
-import org.hibernate.dialect.InnoDBStorageEngine;
-import org.hibernate.dialect.MySQLStorageEngine;
-
 /**
  * A Dialect for MySQL 5 using InnoDB engine, with support for its spatial features
  *

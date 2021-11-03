@@ -45,11 +45,6 @@ abstract public class SpatialPredicatesTest extends SpatialTestBase {
 
 	public final static TestSupport.TestDataPurpose PURPOSE = TestSupport.TestDataPurpose.SpatialFunctionsData;
 
-	static final Polygon<G2D> filter = polygon(
-			WGS84,
-			ring( g( 0, 0 ), g( 0, 10 ), g( 10, 10 ), g( 10, 0 ), g( 0, 0 ) )
-	);
-
 	@Override
 	public TestSupport.TestDataPurpose purpose() {
 		return PURPOSE;
@@ -117,7 +112,7 @@ abstract public class SpatialPredicatesTest extends SpatialTestBase {
 		try {
 			query.select( root )
 					.where( (Expression<Boolean>) method.invoke(
-							null, criteriaBuilder, root.get( "geom" ), model.from.apply( filter ) ) );
+							null, criteriaBuilder, root.get( "geom" ), model.from.apply( filterGeometry ) ) );
 		}
 		catch (IllegalAccessException | InvocationTargetException e) {
 			throw new JUnitException( "Failure to invoke Geometry Predicate", e );

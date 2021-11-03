@@ -21,6 +21,7 @@ import org.hibernate.spatial.CommonSpatialFunction;
 import org.hibernate.spatial.testing.dialects.NativeSQLTemplates;
 
 import org.geolatte.geom.G2D;
+import org.geolatte.geom.Geometry;
 import org.geolatte.geom.Polygon;
 
 import static org.geolatte.geom.builder.DSL.g;
@@ -37,14 +38,11 @@ public abstract class TestTemplates {
 		return new FunctionTestTemplate.Builder( function );
 	}
 
-	static final Polygon<G2D> filter = polygon(
-			WGS84,
-			ring( g( 0, 0 ), g( 0, 10 ), g( 10, 10 ), g( 10, 0 ), g( 0, 0 ) )
-	);
 
 	public static Stream<FunctionTestTemplate.Builder> all(
 			NativeSQLTemplates sqlTemplates,
-			Map<CommonSpatialFunction, String> hqlOverrides) {
+			Map<CommonSpatialFunction, String> hqlOverrides,
+			Geometry<?>filter) {
 
 		Map<CommonSpatialFunction, String> templates = sqlTemplates.all();
 		return templates

@@ -9,19 +9,18 @@ package org.hibernate.spatial.testing;
 
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.testing.datareader.TestSupport;
 import org.hibernate.spatial.testing.dialects.cockroachdb.CockroachDBTestSupport;
 import org.hibernate.spatial.testing.dialects.db2.DB2TestSupport;
-import org.hibernate.spatial.testing.dialects.h2geodb.GeoDBTestSupport;
+import org.hibernate.spatial.testing.dialects.h2geodb.H2GisTestSupport;
 import org.hibernate.spatial.testing.dialects.hana.HANATestSupport;
 import org.hibernate.spatial.testing.dialects.mariadb.MariaDBTestSupport;
 import org.hibernate.spatial.testing.dialects.mysql.MySQL56TestSupport;
 import org.hibernate.spatial.testing.dialects.mysql.MySQL8TestSupport;
-import org.hibernate.spatial.testing.dialects.mysql.MySQLTestSupport;
 import org.hibernate.spatial.testing.dialects.oracle.OracleSDOTestSupport;
 import org.hibernate.spatial.testing.dialects.postgis.PostgisTestSupport;
 import org.hibernate.spatial.testing.dialects.sqlserver.SQLServerTestSupport;
@@ -58,13 +57,15 @@ public class TestSupportFactories {
 			return CockroachDBTestSupport.class;
 		}
 
+
 		if ( MySQLDialect.class.isAssignableFrom( dialect.getClass() ) ) {
-			return dialect.getVersion() >= 800 ?  MySQL8TestSupport.class : MySQL56TestSupport.class;
+			return dialect.getVersion() >= 800 ? MySQL8TestSupport.class : MySQL56TestSupport.class;
 		}
 
-		if ( "org.hibernate.spatial.dialect.h2geodb.GeoDBDialect".equals( canonicalName ) ) {
-			return GeoDBTestSupport.class;
+		if ( H2Dialect.class.isAssignableFrom( dialect.getClass() ) ) {
+			return H2GisTestSupport.class;
 		}
+
 		if ( "org.hibernate.spatial.dialect.sqlserver.SqlServer2008SpatialDialect".equals( canonicalName ) ) {
 			return SQLServerTestSupport.class;
 		}

@@ -75,7 +75,7 @@ public class StoreAndRetrieveTests extends SpatialTestDataProvider implements Se
 	}
 
 	@Test
-	public void testStoringNullGeometries(SessionFactoryScope scope) {
+	public void  testStoringNullGeometries(SessionFactoryScope scope) {
 		scope.inTransaction( this::storeNullGeometry );
 		scope.inTransaction( this::retrieveAndCompareNullGeometry );
 	}

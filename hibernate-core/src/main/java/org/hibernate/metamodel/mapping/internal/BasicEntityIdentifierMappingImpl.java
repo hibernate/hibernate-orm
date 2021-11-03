@@ -126,6 +126,14 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 	}
 
 	@Override
+	public Object getIdentifier(Object entity, SessionFactoryImplementor sessionFactory) {
+		if ( entity instanceof HibernateProxy ) {
+			return ( (HibernateProxy) entity ).getHibernateLazyInitializer().getIdentifier();
+		}
+		return propertyAccess.getGetter().get( entity );
+	}
+
+	@Override
 	public void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session) {
 		propertyAccess.getSetter().set( entity, id, session.getFactory() );
 	}

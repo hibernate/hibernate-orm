@@ -79,7 +79,7 @@ public class LazyAttributeLoadingInterceptor extends AbstractLazyLoadInterceptor
 					final EntityPersister persister = session.getFactory().getMetamodel().entityPersister( getEntityName() );
 
 					if ( isTemporarySession ) {
-						final Object id = persister.getIdentifier( target, null );
+						final Object id = persister.getIdentifier( target, session );
 
 						// Add an entry for this entity in the PC of the temp Session
 						// NOTE : a few arguments that would be nice to pass along here...

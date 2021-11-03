@@ -324,7 +324,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		else {
 			final Class mappedClass = persister.getMappedClass();
 			if ( mappedClass.isAssignableFrom( x.getClass() ) ) {
-				id = persister.getIdentifier( x );
+				id = persister.getIdentifier( x, factory );
 			}
 			else {
 				id = x;
@@ -353,7 +353,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		}
 		else {
 			if ( mappedClass.isAssignableFrom( x.getClass() ) ) {
-				xid = persister.getIdentifier( x );
+				xid = persister.getIdentifier( x, factory );
 			}
 			else {
 				//JPA 2 case where @IdClass contains the id and not the associated entity
@@ -368,7 +368,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		}
 		else {
 			if ( mappedClass.isAssignableFrom( y.getClass() ) ) {
-				yid = persister.getIdentifier( y );
+				yid = persister.getIdentifier( y, factory );
 			}
 			else {
 				//JPA 2 case where @IdClass contains the id and not the associated entity
@@ -504,7 +504,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 				id = proxy.getHibernateLazyInitializer().getInternalIdentifier();
 			}
 			else {
-				id = persister.getIdentifier( value );
+				id = persister.getIdentifier( value, factory );
 			}
 
 			result.append( '#' )

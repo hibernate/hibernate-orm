@@ -58,12 +58,4 @@ public interface PersistentIdentifierGenerator extends IdentifierGenerator {
 	 * The key under which to find the {@link org.hibernate.boot.model.naming.ObjectNameNormalizer} in the config param map.
 	 */
 	String IDENTIFIER_NORMALIZER = "identifier_normalizer";
-
-	/**
-	 * Return a key unique to the underlying database objects. Prevents us from
-	 * trying to create/remove them multiple times.
-	 *
-	 * @return Object an identifying key for this generator
-	 */
-	Object generatorKey();
 }

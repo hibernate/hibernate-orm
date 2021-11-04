@@ -73,10 +73,6 @@ public class SequenceGenerator
 		return identifierType;
 	}
 
-	public Object generatorKey() {
-		return getSequenceName();
-	}
-
 	public String getSequenceName() {
 		return sequenceName;
 	}

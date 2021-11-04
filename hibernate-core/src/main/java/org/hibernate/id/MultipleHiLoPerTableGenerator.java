@@ -375,7 +375,4 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 
 	}
 
-	public Object generatorKey() {
-		return tableName;
-	}
 }

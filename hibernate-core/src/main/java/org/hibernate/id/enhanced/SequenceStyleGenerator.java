@@ -16,6 +16,7 @@ import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -297,7 +298,17 @@ public class SequenceStyleGenerator
 				incrementSize,
 				ConfigurationHelper.getInt( INITIAL_PARAM, params, -1 )
 		);
-		this.databaseStructure.prepare( optimizer );
+		this.databaseStructure.configure( optimizer );
+	}
+
+	@Override
+	public void registerExportables(Database database) {
+		databaseStructure.registerExportables( database );
+	}
+
+	@Override
+	public void initialize(SqlStringGenerationContext context) {
+		this.databaseStructure.initialize( context );
 	}
 
 	/**
@@ -535,13 +546,8 @@ public class SequenceStyleGenerator
 	}
 
 	@Override
-	public String determineBulkInsertionIdentifierGenerationSelectFragment(Dialect dialect) {
-		return dialect.getSelectSequenceNextValString( getDatabaseStructure().getName() );
-	}
-
-	@Override
-	public void registerExportables(Database database) {
-		databaseStructure.registerExportables( database );
+	public String determineBulkInsertionIdentifierGenerationSelectFragment(SqlStringGenerationContext context) {
+		return context.getDialect().getSelectSequenceNextValString( context.format( getDatabaseStructure().getPhysicalName() ) );
 	}
 
 	/**

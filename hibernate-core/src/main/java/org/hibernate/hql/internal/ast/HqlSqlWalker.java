@@ -897,7 +897,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 			}
 
 			final String fragment = capableGenerator.determineBulkInsertionIdentifierGenerationSelectFragment(
-					sessionFactoryHelper.getFactory().getDialect()
+					sessionFactoryHelper.getFactory().getSqlStringGenerationContext()
 			);
 			if ( fragment != null ) {
 				// we got a fragment from the generator, so alter the sql tree...

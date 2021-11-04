@@ -8,6 +8,7 @@ package org.hibernate.id.insert;
 
 import java.io.Serializable;
 
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
@@ -25,9 +26,10 @@ public interface InsertGeneratedIdentifierDelegate {
 	 * Build a {@link org.hibernate.sql.Insert} specific to the delegate's mode
 	 * of handling generated key values.
 	 *
+	 * @param context A context to help generate SQL strings
 	 * @return The insert object.
 	 */
-	IdentifierGeneratingInsert prepareIdentifierGeneratingInsert();
+	IdentifierGeneratingInsert prepareIdentifierGeneratingInsert(SqlStringGenerationContext context);
 
 	/**
 	 * Perform the indicated insert SQL statement and determine the identifier value

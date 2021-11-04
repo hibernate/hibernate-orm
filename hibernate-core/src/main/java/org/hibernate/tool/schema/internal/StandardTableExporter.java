@@ -16,6 +16,8 @@ import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.mapping.Column;
@@ -152,7 +154,9 @@ public class StandardTableExporter implements Exporter<Table> {
 
 		applyComments( table, tableName, sqlStrings );
 
-		applyInitCommands( table, sqlStrings );
+		SqlStringGenerationContext context =
+				new SqlStringGenerationContextImpl( metadata.getDatabase().getJdbcEnvironment() );
+		applyInitCommands( table, sqlStrings, context );
 
 		return sqlStrings.toArray( new String[ sqlStrings.size() ] );
 	}
@@ -173,8 +177,8 @@ public class StandardTableExporter implements Exporter<Table> {
 		}
 	}
 
-	protected void applyInitCommands(Table table, List<String> sqlStrings) {
-		for ( InitCommand initCommand : table.getInitCommands() ) {
+	protected void applyInitCommands(Table table, List<String> sqlStrings, SqlStringGenerationContext context) {
+		for ( InitCommand initCommand : table.getInitCommands( context ) ) {
 			Collections.addAll( sqlStrings, initCommand.getInitCommands() );
 		}
 	}

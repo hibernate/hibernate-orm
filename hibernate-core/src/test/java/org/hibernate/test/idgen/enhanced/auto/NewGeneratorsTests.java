@@ -70,9 +70,9 @@ public class NewGeneratorsTests extends BaseUnitTestCase {
 		final DatabaseStructure databaseStructure = generator.getDatabaseStructure();
 
 		// HHH-14491 - what we want to happen
-		assertThat( databaseStructure.getName(), is( "Entity1_SEQ" ) );
+		assertThat( databaseStructure.getPhysicalName().render(), is( "Entity1_SEQ" ) );
 		// or this depending on the discussion (Jira) about using entity name v. table name as the base
-		assertThat( databaseStructure.getName(), is( "tbl_1_SEQ" ) );
+		assertThat( databaseStructure.getPhysicalName().render(), is( "tbl_1_SEQ" ) );
 
 		// HHH-14491 - this is what we want to have happen
 		assertThat( databaseStructure.getIncrementSize(), is( 50 ) );

@@ -8,6 +8,7 @@ package org.hibernate.id;
 
 import java.io.Serializable;
 
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
@@ -29,7 +30,7 @@ public abstract class AbstractPostInsertGenerator
 	}
 
 	@Override
-	public String determineBulkInsertionIdentifierGenerationSelectFragment(Dialect dialect) {
+	public String determineBulkInsertionIdentifierGenerationSelectFragment(SqlStringGenerationContext context) {
 		return null;
 	}
 }

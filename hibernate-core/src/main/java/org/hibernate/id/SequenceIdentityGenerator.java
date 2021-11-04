@@ -13,6 +13,8 @@ import java.util.Properties;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.relational.QualifiedName;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.insert.AbstractReturningDelegate;
@@ -55,7 +57,7 @@ public class SequenceIdentityGenerator
 			PostInsertIdentityPersister persister,
 			Dialect dialect,
 			boolean isGetGeneratedKeysEnabled) throws HibernateException {
-		return new Delegate( persister, dialect, getSequenceName() );
+		return new Delegate( persister, getPhysicalSequenceName() );
 	}
 
 	@Override
@@ -64,22 +66,23 @@ public class SequenceIdentityGenerator
 	}
 
 	public static class Delegate extends AbstractReturningDelegate {
-		private final Dialect dialect;
-		private final String sequenceNextValFragment;
+		private final QualifiedName physicalSequenceName;
 		private final String[] keyColumns;
 
-		public Delegate(PostInsertIdentityPersister persister, Dialect dialect, String sequenceName) {
+		public Delegate(PostInsertIdentityPersister persister, QualifiedName physicalSequenceName) {
 			super( persister );
-			this.dialect = dialect;
-			this.sequenceNextValFragment = dialect.getSelectSequenceNextValString( sequenceName );
+			this.physicalSequenceName = physicalSequenceName;
 			this.keyColumns = getPersister().getRootTableKeyColumnNames();
 			if ( keyColumns.length > 1 ) {
 				throw new HibernateException( "sequence-identity generator cannot be used with with multi-column keys" );
 			}
 		}
 
-		public IdentifierGeneratingInsert prepareIdentifierGeneratingInsert() {
+		@Override
+		public IdentifierGeneratingInsert prepareIdentifierGeneratingInsert(SqlStringGenerationContext context) {
+			Dialect dialect = context.getDialect();
 			NoCommentsInsert insert = new NoCommentsInsert( dialect );
+			String sequenceNextValFragment = dialect.getSelectSequenceNextValString( context.format( physicalSequenceName ) );
 			insert.addColumn( getPersister().getRootTableKeyColumnNames()[0], sequenceNextValFragment );
 			return insert;
 		}

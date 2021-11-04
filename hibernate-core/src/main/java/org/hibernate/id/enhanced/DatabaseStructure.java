@@ -6,7 +6,10 @@
  */
 package org.hibernate.id.enhanced;
 
+import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
+import org.hibernate.boot.model.relational.QualifiedName;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
@@ -17,10 +20,14 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  */
 public interface DatabaseStructure extends ExportableProducer {
 	/**
-	 * The name of the database structure (table or sequence).
+	 * The physical name of the database structure (table or sequence).
+	 * <p>
+	 * Only available after {@link #registerExportables(Database)}
+	 * has been called.
+	 *
 	 * @return The structure name.
 	 */
-	String getName();
+	QualifiedName getPhysicalName();
 
 	/**
 	 * How many times has this structure been accessed through this reference?
@@ -54,8 +61,45 @@ public interface DatabaseStructure extends ExportableProducer {
 	 * but before first use.
 	 *
 	 * @param optimizer The optimizer being applied to the generator.
+	 *
+	 * @deprecated Use {@link #configure(Optimizer)} instead.
 	 */
-	void prepare(Optimizer optimizer);
+	@Deprecated
+	default void prepare(Optimizer optimizer) {
+	}
+
+	/**
+	 * Configures this structure with the given arguments.
+	 * <p>
+	 * Called just after instantiation, before {@link #initialize(SqlStringGenerationContext)}
+	 *
+	 * @param optimizer The optimizer being applied to the generator.
+	 */
+	default void configure(Optimizer optimizer) {
+		prepare( optimizer );
+	}
+
+	/**
+	 * Register database objects involved in this structure, e.g. sequences, tables, etc.
+	 * <p>
+	 * This method is called just once, after {@link #configure(Optimizer)},
+	 * but before {@link #initialize(SqlStringGenerationContext)}.
+	 *
+	 * @param database The database instance
+	 */
+	@Override
+	void registerExportables(Database database);
+
+	/**
+	 * Initializes this structure, in particular pre-generates SQL as necessary.
+	 * <p>
+	 * This method is called just once, after {@link #registerExportables(Database)},
+	 * before first use.
+	 *
+	 * @param context A context to help generate SQL strings
+	 */
+	default void initialize(SqlStringGenerationContext context) {
+	}
 
 	/**
 	 * Is the structure physically a sequence?

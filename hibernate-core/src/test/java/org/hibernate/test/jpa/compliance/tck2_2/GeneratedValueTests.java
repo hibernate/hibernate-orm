@@ -17,6 +17,7 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Sequence;
+import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
@@ -61,13 +62,13 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 					null,
 					(RootClass) entityMapping
 			);
+			generator.initialize( SqlStringGenerationContextImpl.forTests( bootModel.getDatabase().getJdbcEnvironment() ) );
 
 			final SequenceStyleGenerator sequenceStyleGenerator = assertTyping(
 					SequenceStyleGenerator.class,
 					generator
 			);
-
-			assertThat( sequenceStyleGenerator.getDatabaseStructure().getName(), is( "my_real_db_sequence" ) );
+			assertThat( sequenceStyleGenerator.getDatabaseStructure().getPhysicalName().render(), is( "my_real_db_sequence" ) );
 
 			// all the JPA defaults since they were not defined
 			assertThat( sequenceStyleGenerator.getDatabaseStructure().getInitialValue(), is( 100 ) );
@@ -91,6 +92,7 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 					null,
 					(RootClass) entityMapping
 			);
+			generator.initialize( SqlStringGenerationContextImpl.forTests( bootModel.getDatabase().getJdbcEnvironment() ) );
 
 			final SequenceStyleGenerator sequenceStyleGenerator = assertTyping(
 					SequenceStyleGenerator.class,
@@ -99,7 +101,7 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 
 			// PREFER_GENERATOR_NAME_AS_DEFAULT_SEQUENCE_NAME == false indicates that the legacy
 			// 		default (hibernate_sequence) should be used
-			assertThat( sequenceStyleGenerator.getDatabaseStructure().getName(), is( "hibernate_sequence" ) );
+			assertThat( sequenceStyleGenerator.getDatabaseStructure().getPhysicalName().render(), is( "hibernate_sequence" ) );
 
 			// the JPA defaults since they were not defined
 			assertThat( sequenceStyleGenerator.getDatabaseStructure().getInitialValue(), is( 1 ) );
@@ -121,6 +123,7 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 					null,
 					(RootClass) entityMapping
 			);
+			generator.initialize( SqlStringGenerationContextImpl.forTests( bootModel.getDatabase().getJdbcEnvironment() ) );
 
 			final SequenceStyleGenerator sequenceStyleGenerator = assertTyping(
 					SequenceStyleGenerator.class,
@@ -129,7 +132,7 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 
 			// PREFER_GENERATOR_NAME_AS_DEFAULT_SEQUENCE_NAME == true (the default) indicates that the generator-name
 			//		should be used as the default instead.
-			assertThat( sequenceStyleGenerator.getDatabaseStructure().getName(), is( "my_db_sequence" ) );
+			assertThat( sequenceStyleGenerator.getDatabaseStructure().getPhysicalName().render(), is( "my_db_sequence" ) );
 
 			// the JPA defaults since they were not defined
 			assertThat( sequenceStyleGenerator.getDatabaseStructure().getInitialValue(), is( 1 ) );
@@ -153,10 +156,11 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 				null,
 				(RootClass) entityMapping
 		);
+		generator.initialize( SqlStringGenerationContextImpl.forTests( bootModel.getDatabase().getJdbcEnvironment() ) );
 
 		final SequenceStyleGenerator sequenceStyleGenerator = assertTyping( SequenceStyleGenerator.class, generator );
 		// all the JPA defaults since they were not defined
-		assertThat( sequenceStyleGenerator.getDatabaseStructure().getName(), is( SequenceStyleGenerator.DEF_SEQUENCE_NAME ) );
+		assertThat( sequenceStyleGenerator.getDatabaseStructure().getPhysicalName().render(), is( SequenceStyleGenerator.DEF_SEQUENCE_NAME ) );
 		assertThat( sequenceStyleGenerator.getDatabaseStructure().getInitialValue(), is( 100 ) );
 		assertThat( sequenceStyleGenerator.getDatabaseStructure().getIncrementSize(), is( 500 ) );
 	}
@@ -177,13 +181,14 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 					null,
 					(RootClass) entityMapping
 			);
+			generator.initialize( SqlStringGenerationContextImpl.forTests( bootModel.getDatabase().getJdbcEnvironment() ) );
 
 			final SequenceStyleGenerator sequenceStyleGenerator = assertTyping(
 					SequenceStyleGenerator.class,
 					generator
 			);
 			// all the JPA defaults since they were not defined
-			assertThat( sequenceStyleGenerator.getDatabaseStructure().getName(), is( "my_db_sequence" ) );
+			assertThat( sequenceStyleGenerator.getDatabaseStructure().getPhysicalName().render(), is( "my_db_sequence" ) );
 			assertThat( sequenceStyleGenerator.getDatabaseStructure().getInitialValue(), is( 100 ) );
 			assertThat( sequenceStyleGenerator.getDatabaseStructure().getIncrementSize(), is( 500 ) );
 
@@ -215,6 +220,7 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 					null,
 					(RootClass) entityMapping
 			);
+			generator.initialize( SqlStringGenerationContextImpl.forTests( bootModel.getDatabase().getJdbcEnvironment() ) );
 
 			final TableGenerator tableGenerator = assertTyping( TableGenerator.class, generator );
 
@@ -240,6 +246,7 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 					null,
 					(RootClass) entityMapping
 			);
+			generator.initialize( SqlStringGenerationContextImpl.forTests( bootModel.getDatabase().getJdbcEnvironment() ) );
 
 			final TableGenerator tableGenerator = assertTyping( TableGenerator.class, generator );
 
@@ -265,6 +272,7 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 					null,
 					(RootClass) entityMapping
 			);
+			generator.initialize( SqlStringGenerationContextImpl.forTests( bootModel.getDatabase().getJdbcEnvironment() ) );
 
 			final TableGenerator tableGenerator = assertTyping( TableGenerator.class, generator );
 
@@ -292,6 +300,7 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 					null,
 					(RootClass) entityMapping
 			);
+			generator.initialize( SqlStringGenerationContextImpl.forTests( bootModel.getDatabase().getJdbcEnvironment() ) );
 
 			assertTyping( IncrementGenerator.class, generator );
 		}
@@ -311,6 +320,7 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 					null,
 					(RootClass) entityMapping
 			);
+			generator.initialize( SqlStringGenerationContextImpl.forTests( bootModel.getDatabase().getJdbcEnvironment() ) );
 
 			assertTyping( IncrementGenerator.class, generator );
 		}

@@ -9,6 +9,7 @@ package org.hibernate.tool.schema.spi;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.Exportable;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 
 /**
  * Defines a contract for exporting of database objects (tables, sequences, etc) for use in SQL {@code CREATE} and

@@ -21,6 +21,7 @@ import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -91,7 +92,7 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 	private static final String DEFAULT_VALUE_COLUMN = "sequence_next_hi_value";
 
 	private QualifiedName qualifiedTableName;
-	private String tableName;
+	private QualifiedName physicalTableName;
 	private String segmentColumnName;
 	private String segmentName;
 	private String valueColumnName;
@@ -175,7 +176,7 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 						rows = executeUpdate( updatePreparedStatement, statsCollector );
 					}
 					catch (SQLException sqle) {
-						LOG.error( LOG.unableToUpdateHiValue( tableName ), sqle );
+						LOG.error( LOG.unableToUpdateHiValue( physicalTableName.render() ), sqle );
 						throw sqle;
 					}
 					finally {
@@ -340,23 +341,23 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 			table.addColumn( valueColumn );
 		}
 
-		final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();
-
 		// allow physical naming strategies a chance to kick in
-		tableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-				table.getQualifiedTableName(),
-				jdbcEnvironment.getDialect()
-		);
+		physicalTableName = table.getQualifiedTableName();
+	}
+
+	@Override
+	public void initialize(SqlStringGenerationContext context) {
+		String formattedPhysicalTableName = context.format( physicalTableName );
 
 		query = "select " +
 				valueColumnName +
 				" from " +
-				jdbcEnvironment.getDialect().appendLockHint( LockMode.PESSIMISTIC_WRITE, tableName ) +
+				context.getDialect().appendLockHint( LockMode.PESSIMISTIC_WRITE, formattedPhysicalTableName ) +
 				" where " + segmentColumnName + " = '" + segmentName + "'" +
-				jdbcEnvironment.getDialect().getForUpdateString();
+				context.getDialect().getForUpdateString();
 
 		update = "update " +
-				tableName +
+				formattedPhysicalTableName +
 				" set " +
 				valueColumnName +
 				" = ? where " +
@@ -367,7 +368,7 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 				segmentName
 				+ "'";
 
-		insert = "insert into " + tableName +
+		insert = "insert into " + formattedPhysicalTableName +
 				"(" + segmentColumnName + ", " + valueColumnName + ") " +
 				"values('" + segmentName + "', ?)";
 

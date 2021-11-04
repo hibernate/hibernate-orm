@@ -22,6 +22,8 @@ import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.Sequence;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -187,7 +189,8 @@ public class SchemaDropperImpl implements SchemaDropper {
 			Formatter formatter,
 			GenerationTarget... targets) {
 		final Database database = metadata.getDatabase();
-		final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();
+		SqlStringGenerationContext sqlStringGenerationContext =
+				new SqlStringGenerationContextImpl( metadata.getDatabase().getJdbcEnvironment() );
 
 		boolean tryToDropCatalogs = false;
 		boolean tryToDropSchemas = false;
@@ -259,7 +262,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 			}
 
 			applySqlStrings(
-					auxiliaryDatabaseObject.sqlDropStrings( jdbcEnvironment.getDialect() ),
+					auxiliaryDatabaseObject.sqlDropStrings( sqlStringGenerationContext ),
 					formatter,
 					options,
 					targets

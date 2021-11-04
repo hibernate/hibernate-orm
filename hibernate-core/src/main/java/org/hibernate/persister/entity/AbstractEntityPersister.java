@@ -37,6 +37,7 @@ import org.hibernate.QueryException;
 import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.StaleStateException;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
@@ -2957,8 +2958,8 @@ public abstract class AbstractEntityPersister
 	 *
 	 * @return The insert SQL statement string
 	 */
-	public String generateIdentityInsertString(boolean[] includeProperty) {
-		Insert insert = identityDelegate.prepareIdentifierGeneratingInsert();
+	public String generateIdentityInsertString(SqlStringGenerationContext context, boolean[] includeProperty) {
+		Insert insert = identityDelegate.prepareIdentifierGeneratingInsert( context );
 		insert.setTableName( getTableName( 0 ) );
 
 		// add normal properties except lobs
@@ -4396,7 +4397,7 @@ public abstract class AbstractEntityPersister
 			identityDelegate = ( (PostInsertIdentifierGenerator) getIdentifierGenerator() )
 					.getInsertGeneratedIdentifierDelegate( this, getFactory().getDialect(), useGetGeneratedKeys() );
 			sqlIdentityInsertString = customSQLInsert[0] == null
-					? generateIdentityInsertString( getPropertyInsertability() )
+					? generateIdentityInsertString( factory.getSqlStringGenerationContext(), getPropertyInsertability() )
 					: substituteBrackets( customSQLInsert[0] );
 		}
 		else {

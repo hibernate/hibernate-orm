@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -25,6 +26,7 @@ import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedTableName;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.env.spi.QualifiedObjectNameFormatter;
@@ -67,7 +69,7 @@ public class Table implements RelationalModel, Serializable, Exportable {
 	private boolean hasDenormalizedTables;
 	private String comment;
 
-	private List<InitCommand> initCommands;
+	private List<Function<SqlStringGenerationContext, InitCommand>> initCommandProducers;
 
 	public Table() {
 	}
@@ -897,18 +899,30 @@ public class Table implements RelationalModel, Serializable, Exportable {
 		}
 	}
 
+	/**
+	 * @deprecated Use {@link #addInitCommand(Function)} instead.
+	 */
+	@Deprecated
 	public void addInitCommand(InitCommand command) {
-		if ( initCommands == null ) {
-			initCommands = new ArrayList<>();
-		}
-		initCommands.add( command );
+		addInitCommand( ignored -> command );
 	}
 
-	public List<InitCommand> getInitCommands() {
-		if ( initCommands == null ) {
+	public void addInitCommand(Function<SqlStringGenerationContext, InitCommand> commandProducer) {
+		if ( initCommandProducers == null ) {
+			initCommandProducers = new ArrayList<>();
+		}
+		initCommandProducers.add( commandProducer );
+	}
+
+	public List<InitCommand> getInitCommands(SqlStringGenerationContext context) {
+		if ( initCommandProducers == null ) {
 			return Collections.emptyList();
 		}
 		else {
+			List<InitCommand> initCommands = new ArrayList<>();
+			for ( Function<SqlStringGenerationContext, InitCommand> producer : initCommandProducers ) {
+				initCommands.add( producer.apply( context ) );
+			}
 			return Collections.unmodifiableList( initCommands );
 		}
 	}

@@ -64,7 +64,8 @@ public class BasicSequenceTest extends BaseCoreFunctionalTestCase {
 		EntityPersister persister = sessionFactory().getEntityPersister( overriddenEntityName );
 		assertClassAssignability( SequenceStyleGenerator.class, persister.getIdentifierGenerator().getClass() );
 		SequenceStyleGenerator generator = (SequenceStyleGenerator) persister.getIdentifierGenerator();
-		assertEquals( overriddenEntityName + SequenceStyleGenerator.DEF_SEQUENCE_SUFFIX, generator.getDatabaseStructure().getName() );
+		assertEquals( overriddenEntityName + SequenceStyleGenerator.DEF_SEQUENCE_SUFFIX,
+				generator.getDatabaseStructure().getPhysicalName().getObjectName().getText() );
 
 		Session s = openSession();
 		s.beginTransaction();

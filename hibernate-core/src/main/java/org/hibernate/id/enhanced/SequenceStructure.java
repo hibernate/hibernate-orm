@@ -15,6 +15,7 @@ import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.Sequence;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.IdentifierGeneratorHelper;
@@ -42,7 +43,7 @@ public class SequenceStructure implements DatabaseStructure {
 	private String sql;
 	private boolean applyIncrementSizeToSourceValues;
 	private int accessCounter;
-	protected String sequenceName;
+	protected QualifiedName physicalSequenceName;
 
 	public SequenceStructure(
 			JdbcEnvironment jdbcEnvironment,
@@ -58,8 +59,8 @@ public class SequenceStructure implements DatabaseStructure {
 	}
 
 	@Override
-	public String getName() {
-		return sequenceName;
+	public QualifiedName getPhysicalName() {
+		return physicalSequenceName;
 	}
 
 	@Override
@@ -132,14 +133,18 @@ public class SequenceStructure implements DatabaseStructure {
 	}
 
 	@Override
-	public void prepare(Optimizer optimizer) {
+	public void configure(Optimizer optimizer) {
 		applyIncrementSizeToSourceValues = optimizer.applyIncrementSizeToSourceValues();
 	}
 
 	@Override
 	public void registerExportables(Database database) {
 		buildSequence( database );
-		this.sql = database.getJdbcEnvironment().getDialect().getSequenceNextValString( sequenceName );
+	}
+
+	@Override
+	public void initialize(SqlStringGenerationContext context) {
+		this.sql = context.getDialect().getSequenceNextValString( context.format( physicalSequenceName ) );
 	}
 
 	@Override
@@ -170,9 +175,6 @@ public class SequenceStructure implements DatabaseStructure {
 			sequence = namespace.createSequence( logicalQualifiedSequenceName.getObjectName(), initialValue, sourceIncrementSize );
 		}
 
-		this.sequenceName = database.getJdbcEnvironment().getQualifiedObjectNameFormatter().format(
-				sequence.getName(),
-				database.getJdbcEnvironment().getDialect()
-		);
+		this.physicalSequenceName = sequence.getName();
 	}
 }

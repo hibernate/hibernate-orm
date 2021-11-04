@@ -7,7 +7,6 @@
 package org.hibernate.id.enhanced;
 
 import org.hibernate.boot.model.relational.ExportableProducer;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
@@ -57,20 +56,6 @@ public interface DatabaseStructure extends ExportableProducer {
 	 * @param optimizer The optimizer being applied to the generator.
 	 */
 	void prepare(Optimizer optimizer);
-
-	/**
-	 * Commands needed to create the underlying structures.
-	 * @param dialect The database dialect being used.
-	 * @return The creation commands.
-	 */
-	String[] sqlCreateStrings(Dialect dialect);
-
-	/**
-	 * Commands needed to drop the underlying structures.
-	 * @param dialect The database dialect being used.
-	 * @return The drop commands.
-	 */
-	String[] sqlDropStrings(Dialect dialect);
 
 	/**
 	 * Is the structure physically a sequence?

@@ -670,7 +670,6 @@ public class QuerySqmImpl<R>
 		return lockMode != null && lockMode.greaterThan( LockMode.READ );
 	}
 
-	@SuppressWarnings("unchecked")
 	private SelectQueryPlan<R> resolveSelectQueryPlan() {
 		// resolve (or make) the QueryPlan.  This QueryPlan might be an aggregation of multiple plans.
 		//

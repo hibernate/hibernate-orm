@@ -20,6 +20,7 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.query.EntityIdentifierNavigablePath;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.AbstractFetchParentAccess;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
@@ -79,10 +80,24 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 
 	@Override
 	public void resolveInstance(RowProcessingState rowProcessingState) {
+		// Defer the select by default to the initialize phase
+		// We only need to select in this phase if this is part of an identifier
+		NavigablePath np = navigablePath.getParent();
+		while ( np != null ) {
+			if ( np instanceof EntityIdentifierNavigablePath ) {
+				initializeInstance( rowProcessingState );
+				return;
+			}
+			np = np.getParent();
+		}
 	}
 
 	@Override
 	public void initializeInstance(RowProcessingState rowProcessingState) {
+		if ( entityInstance != null ) {
+			return;
+		}
+
 		List<AttributeMapping> attributeMappings;
 		if ( parentAccess instanceof EmbeddableInitializer ) {
 			attributeMappings = ( (EmbeddableInitializer) parentAccess ).getInitializedPart()
@@ -94,10 +109,6 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 		}
 
 		if ( !attributeMappings.contains( referencedModelPart ) ) {
-			return;
-		}
-
-		if ( entityInstance != null ) {
 			return;
 		}
 

@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -39,7 +40,6 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.UnknownPathException;
-import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmJoinType;
@@ -58,6 +58,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	private String alias;
 
 	private List<SqmJoin<T, ?>> joins;
+	private List<SqmFrom<?, ?>> treats;
 
 	protected AbstractSqmFrom(
 			NavigablePath navigablePath,
@@ -168,6 +169,38 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		}
 	}
 
+	@Override
+	public boolean hasTreats() {
+		return treats != null && !treats.isEmpty();
+	}
+
+	@Override
+	public List<SqmFrom<?, ?>> getSqmTreats() {
+		return treats == null ? Collections.emptyList() : treats;
+	}
+
+	protected <S, X extends SqmFrom<?, S>> X findTreat(EntityDomainType<S> targetType, String alias) {
+		if ( treats != null ) {
+			for ( SqmFrom<?, ?> treat : treats ) {
+				if ( treat.getModel() == targetType ) {
+					if ( treat.getExplicitAlias() == null && alias == null
+							|| Objects.equals( treat.getExplicitAlias(), alias ) ) {
+						//noinspection unchecked
+						return (X) treat;
+					}
+				}
+			}
+		}
+		return null;
+	}
+
+	protected <X extends SqmFrom<?, ?>> X addTreat(X treat) {
+		if ( treats == null ) {
+			treats = new ArrayList<>();
+		}
+		treats.add( treat );
+		return treat;
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// JPA

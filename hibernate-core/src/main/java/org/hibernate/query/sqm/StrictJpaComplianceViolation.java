@@ -31,6 +31,7 @@ public class StrictJpaComplianceViolation extends SemanticException {
 		IDENTIFICATION_VARIABLE_NOT_DECLARED_IN_FROM_CLAUSE( "use of an alias not declared in the FROM clause" ),
 		FQN_ENTITY_NAME( "use of FQN for entity name" ),
 		IMPLICIT_TREAT( "use of implicit treat" ),
+		MIXED_POSITIONAL_NAMED_PARAMETERS( "mix of positional and named parameters" ),
 		;
 
 		private final String description;

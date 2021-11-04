@@ -131,7 +131,7 @@ public class TableGroupImpl implements TableGroup {
 			NavigablePath navigablePath,
 			String tableExpression,
 			boolean allowFkOptimization) {
-		final TableReference tableReference = getTableReference( navigablePath, tableExpression, allowFkOptimization );
+		final TableReference tableReference = getTableReference( navigablePath, tableExpression, allowFkOptimization, true );
 		if ( tableReference == null ) {
 			throw new IllegalStateException( "Could not resolve binding for table `" + tableExpression + "`" );
 		}
@@ -143,14 +143,15 @@ public class TableGroupImpl implements TableGroup {
 	public TableReference getTableReference(
 			NavigablePath navigablePath,
 			String tableExpression,
-			boolean allowFkOptimization) {
-		if ( primaryTableReference.getTableReference( navigablePath , tableExpression, allowFkOptimization ) != null ) {
+			boolean allowFkOptimization,
+			boolean resolve) {
+		if ( primaryTableReference.getTableReference( navigablePath , tableExpression, allowFkOptimization, resolve ) != null ) {
 			return primaryTableReference;
 		}
 
 		for ( TableGroupJoin tableGroupJoin : getTableGroupJoins() ) {
 			final TableReference primaryTableReference = tableGroupJoin.getJoinedGroup().getPrimaryTableReference();
-			if ( primaryTableReference.getTableReference( navigablePath, tableExpression, allowFkOptimization ) != null ) {
+			if ( primaryTableReference.getTableReference( navigablePath, tableExpression, allowFkOptimization, resolve ) != null ) {
 				return primaryTableReference;
 			}
 		}

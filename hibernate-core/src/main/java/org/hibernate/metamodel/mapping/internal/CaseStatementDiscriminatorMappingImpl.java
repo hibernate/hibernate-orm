@@ -9,20 +9,29 @@ package org.hibernate.metamodel.mapping.internal;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.persister.entity.DiscriminatorType;
 import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
+import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.FetchParent;
+import org.hibernate.sql.results.graph.basic.BasicFetch;
 
 import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 
@@ -70,6 +79,31 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 	}
 
 	@Override
+	public BasicFetch generateFetch(
+			FetchParent fetchParent,
+			NavigablePath fetchablePath,
+			FetchTiming fetchTiming,
+			boolean selected,
+			String resultVariable,
+			DomainResultCreationState creationState) {
+		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
+		final TableGroup tableGroup = sqlAstCreationState.getFromClauseAccess().getTableGroup(
+				fetchParent.getNavigablePath()
+		);
+		// Since the expression is lazy, based on the available table reference joins,
+		// we need to force the initialization in case this is a fetch
+		tableDiscriminatorDetailsMap.forEach(
+				(tableName, tableDiscriminatorDetails) -> tableGroup.getTableReference(
+						fetchablePath,
+						tableName,
+						false,
+						true
+				)
+		);
+		return super.generateFetch( fetchParent, fetchablePath, fetchTiming, selected, resultVariable, creationState );
+	}
+
+	@Override
 	public Expression resolveSqlExpression(
 			NavigablePath navigablePath,
 			JdbcMapping jdbcMappingToUse,
@@ -82,37 +116,63 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 		);
 	}
 
-	private CaseSearchedExpression createCaseSearchedExpression(TableGroup entityTableGroup) {
-		final CaseSearchedExpression caseSearchedExpression = new CaseSearchedExpression( this );
+	private Expression createCaseSearchedExpression(TableGroup entityTableGroup) {
+		return new SelfRenderingExpression() {
+			CaseSearchedExpression caseSearchedExpression;
 
-		tableDiscriminatorDetailsMap.forEach( (tableName, tableDiscriminatorDetails) -> {
-			final TableReference tableReference = entityTableGroup.getTableReference( entityTableGroup.getNavigablePath(), tableName );
+			@Override
+			public void renderToSql(
+					SqlAppender sqlAppender,
+					SqlAstTranslator<?> walker,
+					SessionFactoryImplementor sessionFactory) {
+				if ( caseSearchedExpression == null ) {
+					// todo (6.0): possible optimization is to omit cases for table reference joins, that touch a super class, where a subclass is inner joined due to pruning
+					caseSearchedExpression = new CaseSearchedExpression( CaseStatementDiscriminatorMappingImpl.this );
+					tableDiscriminatorDetailsMap.forEach(
+							(tableName, tableDiscriminatorDetails) -> {
+								final TableReference tableReference = entityTableGroup.getTableReference(
+										entityTableGroup.getNavigablePath(),
+										tableName,
+										false,
+										false
+								);
 
-			if ( tableReference == null ) {
-				// assume this is because it is a table that is not part of the processing entity's sub-hierarchy
-				return;
+								if ( tableReference == null ) {
+									// assume this is because it is a table that is not part of the processing entity's sub-hierarchy
+									return;
+								}
+
+								final Predicate predicate = new NullnessPredicate(
+										new ColumnReference(
+												tableReference,
+												tableDiscriminatorDetails.getCheckColumnName(),
+												false,
+												null,
+												null,
+												getJdbcMapping(),
+												getSessionFactory()
+										),
+										true
+								);
+
+								caseSearchedExpression.when(
+										predicate,
+										new QueryLiteral<>(
+												tableDiscriminatorDetails.getDiscriminatorValue(),
+												getUnderlyingJdbcMappingType()
+										)
+								);
+							}
+					);
+				}
+				caseSearchedExpression.accept( walker );
 			}
 
-			final Predicate predicate = new NullnessPredicate(
-					new ColumnReference(
-							tableReference,
-							tableDiscriminatorDetails.getCheckColumnName(),
-							false,
-							null,
-							null,
-							getJdbcMapping(),
-							getSessionFactory()
-					),
-					true
-			);
-
-			caseSearchedExpression.when( predicate, new QueryLiteral<>(
-					tableDiscriminatorDetails.getDiscriminatorValue(),
-					getUnderlyingJdbcMappingType()
-			) );
-		} );
-
-		return caseSearchedExpression;
+			@Override
+			public JdbcMappingContainer getExpressionType() {
+				return CaseStatementDiscriminatorMappingImpl.this;
+			}
+		};
 	}
 
 	@Override

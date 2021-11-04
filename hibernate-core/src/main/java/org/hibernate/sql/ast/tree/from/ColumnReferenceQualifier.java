@@ -16,21 +16,26 @@ public interface ColumnReferenceQualifier {
 		return resolveTableReference( navigablePath, tableExpression, true );
 	}
 
+	default TableReference resolveTableReference(String tableExpression) {
+		return resolveTableReference( null, tableExpression, true );
+	}
+
 	TableReference resolveTableReference(
 			NavigablePath navigablePath,
 			String tableExpression,
 			boolean allowFkOptimization);
 
 	default TableReference getTableReference(NavigablePath navigablePath, String tableExpression) {
-		return getTableReference( navigablePath, tableExpression, true );
+		return getTableReference( navigablePath, tableExpression, true, false );
+	}
+
+	default TableReference getTableReference(String tableExpression) {
+		return getTableReference( null, tableExpression, true, false );
 	}
 
 	TableReference getTableReference(
 			NavigablePath navigablePath,
 			String tableExpression,
-			boolean allowFkOptimization);
-
-	default TableReference getTableReference(String tableExpression) {
-		return getTableReference( null, tableExpression, true );
-	}
+			boolean allowFkOptimization,
+			boolean resolve);
 }

@@ -72,8 +72,8 @@ public class SqmLiteralEntityType<T>
 	}
 
 	@Override
-	public SqmPath resolveIndexedAccess(
-			SqmExpression selector,
+	public SqmPath<?> resolveIndexedAccess(
+			SqmExpression<?> selector,
 			boolean isTerminal,
 			SqmCreationState creationState) {
 		throw new HqlInterpretationException( "Cannot dereference an entity name" );

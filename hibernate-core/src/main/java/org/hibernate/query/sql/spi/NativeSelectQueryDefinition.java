@@ -26,7 +26,7 @@ public interface NativeSelectQueryDefinition<R> {
 	 * @apiNote This returns query parameters in the order they were
 	 * encountered - potentially including "duplicate references" to a single parameter
 	 */
-	List<QueryParameterImplementor<?>> getQueryParameterList();
+	List<ParameterOccurrence> getQueryParameterOccurrences();
 
 	ResultSetMapping getResultSetMapping();
 

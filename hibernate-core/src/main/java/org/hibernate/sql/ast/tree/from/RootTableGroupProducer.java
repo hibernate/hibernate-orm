@@ -15,6 +15,7 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 
 /**
@@ -40,5 +41,6 @@ public interface RootTableGroupProducer extends TableGroupProducer, ModelPartCon
 			String explicitSourceAlias,
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
 			SqlAliasBase sqlAliasBase,
-			SqlAstCreationState creationState, SqlAstCreationContext creationContext);
+			SqlExpressionResolver expressionResolver,
+			SqlAstCreationContext creationContext);
 }

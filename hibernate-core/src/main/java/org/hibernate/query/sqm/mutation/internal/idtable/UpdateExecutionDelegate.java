@@ -230,7 +230,7 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 			);
 		}
 		else {
-			return tableGroup.getTableReference( tableGroup.getNavigablePath(), tableExpression );
+			return tableGroup.getTableReference( tableGroup.getNavigablePath(), tableExpression, true, true );
 		}
 	}
 

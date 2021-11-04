@@ -11,6 +11,7 @@ import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -48,9 +49,28 @@ public abstract class AbstractSqmAttributeJoin<O,T>
 			SqmJoinType joinType,
 			boolean fetched,
 			NodeBuilder nodeBuilder) {
+		this(
+				lhs,
+				SqmCreationHelper.buildSubNavigablePath( lhs, joinedNavigable.getName(), alias ),
+				joinedNavigable,
+				alias,
+				joinType,
+				fetched,
+				nodeBuilder
+		);
+	}
+
+	protected AbstractSqmAttributeJoin(
+			SqmFrom<?,O> lhs,
+			NavigablePath navigablePath,
+			SqmJoinable joinedNavigable,
+			String alias,
+			SqmJoinType joinType,
+			boolean fetched,
+			NodeBuilder nodeBuilder) {
 		//noinspection unchecked
 		super(
-				SqmCreationHelper.buildSubNavigablePath( lhs, joinedNavigable.getName(), alias ),
+				navigablePath,
 				(SqmPathSource<T>) joinedNavigable,
 				lhs,
 				alias,

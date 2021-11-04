@@ -4,10 +4,11 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.jpa.ql;
+package org.hibernate.orm.test.jpa.ql;
 
 import org.hibernate.Session;
-import org.hibernate.dialect.PostgreSQL81Dialect;
+import org.hibernate.dialect.PostgreSQLDialect;
+
 import org.hibernate.test.jpa.AbstractJPATest;
 import org.hibernate.test.jpa.MapContent;
 import org.hibernate.test.jpa.MapOwner;
@@ -29,7 +30,7 @@ public class MapIssueTest extends AbstractJPATest {
 	}
 
 	@Test
-	@RequiresDialect(value = PostgreSQL81Dialect.class, comment = "Requires support for using a correlated column in a join condition which H2 apparently does not support.")
+	@RequiresDialect(value = PostgreSQLDialect.class, comment = "Requires support for using a correlated column in a join condition which H2 apparently does not support. For simplicity just run this on PostgreSQL")
 	public void testWhereSubqueryMapKeyIsEntityWhereWithKey() {
 		Session s = openSession();
 		s.beginTransaction();

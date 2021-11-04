@@ -126,7 +126,7 @@ public class TableBasedUpdateHandler
 
 		final MultiTableSqmMutationConverter converterDelegate = new MultiTableSqmMutationConverter(
 				entityDescriptor,
-				getSqmDeleteOrUpdateStatement().getTarget().getExplicitAlias(),
+				getSqmDeleteOrUpdateStatement().getTarget(),
 				domainParameterXref,
 				executionContext.getQueryOptions(),
 				executionContext.getSession().getLoadQueryInfluencers(),

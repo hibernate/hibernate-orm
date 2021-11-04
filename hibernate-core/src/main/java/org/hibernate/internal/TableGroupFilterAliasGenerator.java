@@ -26,7 +26,7 @@ public class TableGroupFilterAliasGenerator implements FilterAliasGenerator {
 		if ( table == null ) {
 			table = defaultTable;
 		}
-		final TableReference tableReference = tableGroup.getTableReference( table );
+		final TableReference tableReference = tableGroup.getTableReference( null, table, true, true );
 		return tableReference == null ? null : tableReference.getIdentificationVariable();
 	}
 

@@ -6,12 +6,9 @@
  */
 package org.hibernate.sql.results.graph.entity;
 
-import java.util.ArrayList;
 import java.util.IdentityHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -22,6 +19,7 @@ import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.EntityUniqueKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
@@ -40,22 +38,23 @@ import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.proxy.map.MapProxy;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.results.graph.AbstractFetchParentAccess;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Fetch;
-import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.internal.NullValueAssembler;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.stat.spi.StatisticsImplementor;
+import org.hibernate.type.AssociationType;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 
 import static org.hibernate.internal.log.LoggingHelper.toLoggableString;
@@ -78,8 +77,6 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	private final EntityPersister rootEntityDescriptor;
 	private final NavigablePath navigablePath;
 	private final LockMode lockMode;
-
-	private final List<Initializer> identifierInitializers = new ArrayList<>();
 
 	private final DomainResultAssembler identifierAssembler;
 	private final DomainResultAssembler discriminatorAssembler;
@@ -104,7 +101,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			EntityResultGraphNode resultDescriptor,
 			NavigablePath navigablePath,
 			LockMode lockMode,
-			DomainResult<?> identifierResult,
+			Fetch identifierFetch,
 			Fetch discriminatorFetch,
 			DomainResult<Object> rowIdResult,
 			AssemblerCreationState creationState) {
@@ -125,50 +122,10 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		this.lockMode = lockMode;
 		assert lockMode != null;
 
-		if ( identifierResult != null ) {
-			this.identifierAssembler = identifierResult.createResultAssembler(
-					new AssemblerCreationState() {
-						@Override
-						public LockMode determineEffectiveLockMode(String identificationVariable) {
-							return creationState.determineEffectiveLockMode( identificationVariable );
-						}
-
-						@Override
-						public Initializer resolveInitializer(
-								NavigablePath navigablePath,
-								ModelPart fetchedModelPart,
-								Supplier<Initializer> producer) {
-							for ( int i = 0; i < identifierInitializers.size(); i++ ) {
-								final Initializer existing = identifierInitializers.get( i );
-								if ( existing.getNavigablePath().equals( navigablePath )
-										&& fetchedModelPart.getNavigableRole()
-										.equals( existing.getInitializedPart().getNavigableRole() ) ) {
-									assert fetchedModelPart == existing.getInitializedPart();
-									return existing;
-								}
-							}
-
-//							// also check the non-identifier initializers
-//							final Initializer otherExisting = creationState.resolveInitializer(
-//									navigablePath,
-//									() -> null
-//							);
-//
-//							if ( otherExisting != null ) {
-//								identifierInitializers.add( otherExisting );
-//								return otherExisting;
-//							}
-
-							final Initializer initializer = creationState.resolveInitializer( navigablePath, fetchedModelPart, producer );
-							identifierInitializers.add( initializer );
-							return initializer;
-						}
-
-						@Override
-						public SqlAstCreationContext getSqlAstCreationContext() {
-							return creationState.getSqlAstCreationContext();
-						}
-					}
+		if ( identifierFetch != null ) {
+			this.identifierAssembler = identifierFetch.createAssembler(
+					this,
+					creationState
 			);
 		}
 		else {
@@ -418,34 +375,10 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			return id;
 		}
 
-		initializeIdentifier( rowProcessingState );
 		return identifierAssembler.assemble(
 				rowProcessingState,
 				jdbcValuesSourceProcessingState.getProcessingOptions()
 		);
-	}
-
-	@SuppressWarnings("WeakerAccess")
-	protected void initializeIdentifier(RowProcessingState rowProcessingState) {
-		if ( EntityLoadingLogger.TRACE_ENABLED ) {
-			EntityLoadingLogger.LOGGER.tracef(
-					"(%s) Beginning Initializer#initializeIdentifier process for entity (%s) ",
-					StringHelper.collapse( this.getClass().getName() ),
-					getNavigablePath()
-			);
-		}
-
-		identifierInitializers.forEach( initializer -> initializer.resolveKey( rowProcessingState ) );
-		identifierInitializers.forEach( initializer -> initializer.resolveInstance( rowProcessingState ) );
-		identifierInitializers.forEach( initializer -> initializer.initializeInstance( rowProcessingState ) );
-
-		if ( EntityLoadingLogger.TRACE_ENABLED ) {
-			EntityLoadingLogger.LOGGER.tracef(
-					"(%s) Fiish Initializer#initializeIdentifier process for entity (%s) ",
-					StringHelper.collapse( this.getClass().getName() ),
-					getNavigablePath()
-			);
-		}
 	}
 
 	@Override
@@ -728,6 +661,35 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 		persistenceContext.addEntity( entityKey, toInitialize );
 
+		// Also register possible unique key entries
+		for ( Type propertyType : concreteDescriptor.getPropertyTypes() ) {
+			if ( propertyType instanceof AssociationType ) {
+				final AssociationType associationType = (AssociationType) propertyType;
+				final String ukName = associationType.getLHSPropertyName();
+				if ( ukName != null ) {
+					final int index = ( (UniqueKeyLoadable) concreteDescriptor ).getPropertyIndex( ukName );
+					final Type type = concreteDescriptor.getPropertyTypes()[index];
+
+					// polymorphism not really handled completely correctly,
+					// perhaps...well, actually its ok, assuming that the
+					// entity name used in the lookup is the same as the
+					// the one used here, which it will be
+
+					if ( resolvedEntityState[index] != null ) {
+						final EntityUniqueKey euk = new EntityUniqueKey(
+								concreteDescriptor.getRootEntityDescriptor().getEntityName(),
+								//polymorphism comment above
+								ukName,
+								resolvedEntityState[index],
+								type,
+								session.getFactory()
+						);
+						session.getPersistenceContextInternal().addEntity( euk, toInitialize );
+					}
+				}
+			}
+		}
+
 		final Object version;
 
 		if ( versionAssembler != null ) {
@@ -959,7 +921,6 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		entityInstanceForNotify = null;
 		missing = false;
 		resolvedEntityState = null;
-		identifierInitializers.forEach( initializer -> initializer.finishUpRow( rowProcessingState ) );
 		clearParentResolutionListeners();
 	}
 }

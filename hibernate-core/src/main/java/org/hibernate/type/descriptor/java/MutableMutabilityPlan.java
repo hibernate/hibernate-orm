@@ -16,6 +16,14 @@ import org.hibernate.SharedSessionContract;
  * @author Steve Ebersole
  */
 public abstract class MutableMutabilityPlan<T> implements MutabilityPlan<T> {
+
+	public static final MutableMutabilityPlan<Object> INSTANCE = new MutableMutabilityPlan<Object>() {
+		@Override
+		protected Object deepCopyNotNull(Object value) {
+			return value;
+		}
+	};
+
 	@Override
 	public boolean isMutable() {
 		return true;

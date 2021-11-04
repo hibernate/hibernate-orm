@@ -63,7 +63,8 @@ public class MutatingTableReferenceGroupWrapper implements VirtualTableGroup {
 	public TableReference getTableReference(
 			NavigablePath navigablePath,
 			String tableExpression,
-			boolean allowFkOptimization) {
+			boolean allowFkOptimization,
+			boolean resolve) {
 		return mutatingTableReference.getTableExpression().equals( tableExpression )
 				? mutatingTableReference
 				: null;
@@ -74,7 +75,7 @@ public class MutatingTableReferenceGroupWrapper implements VirtualTableGroup {
 			NavigablePath navigablePath,
 			String tableExpression,
 			boolean allowFkOptimization) {
-		return getTableReference( navigablePath, tableExpression, allowFkOptimization );
+		return getTableReference( navigablePath, tableExpression, allowFkOptimization, true );
 	}
 
 	@Override

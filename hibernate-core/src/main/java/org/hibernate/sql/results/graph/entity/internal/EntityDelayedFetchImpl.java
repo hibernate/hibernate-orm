@@ -23,14 +23,17 @@ import org.hibernate.sql.results.graph.entity.EntityInitializer;
 public class EntityDelayedFetchImpl extends AbstractNonJoinedEntityFetch {
 
 	private final DomainResult keyResult;
+	private final boolean selectByUniqueKey;
 
 	public EntityDelayedFetchImpl(
 			FetchParent fetchParent,
 			ToOneAttributeMapping fetchedAttribute,
 			NavigablePath navigablePath,
-			DomainResult keyResult) {
+			DomainResult keyResult,
+			boolean selectByUniqueKey) {
 		super( navigablePath, fetchedAttribute, fetchParent );
 		this.keyResult = keyResult;
+		this.selectByUniqueKey = selectByUniqueKey;
 	}
 
 	@Override
@@ -52,8 +55,10 @@ public class EntityDelayedFetchImpl extends AbstractNonJoinedEntityFetch {
 				navigablePath,
 				getEntityValuedModelPart(),
 				() -> new EntityDelayedFetchInitializer(
+						parentAccess,
 						navigablePath,
-						getEntityValuedModelPart(),
+						(ToOneAttributeMapping) getEntityValuedModelPart(),
+						selectByUniqueKey,
 						keyResult.createResultAssembler( creationState )
 				)
 		);

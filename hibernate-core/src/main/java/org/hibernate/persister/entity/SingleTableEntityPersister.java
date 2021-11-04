@@ -47,12 +47,12 @@ import org.hibernate.sql.InFragment;
 import org.hibernate.sql.Insert;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.InListPredicate;
 import org.hibernate.sql.ast.tree.predicate.Junction;
@@ -654,7 +654,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			if ( !queryable.isAbstract() ) {
 				values.add( queryable.getDiscriminatorSQLValue() );
 			}
-			else if ( queryable.hasSubclasses() ) {
+			if ( queryable.hasSubclasses() ) {
 				// if the treat is an abstract class, add the concrete implementations to values if any
 				Set<String> actualSubClasses = queryable.getEntityMetamodel().getSubclassEntityNames();
 
@@ -843,7 +843,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			String explicitSourceAlias,
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
 			SqlAliasBase sqlAliasBase,
-			SqlAstCreationState creationState,
+			SqlExpressionResolver expressionResolver,
 			SqlAstCreationContext creationContext) {
 		final TableGroup tableGroup = super.createRootTableGroup(
 				canUseInnerJoins,
@@ -851,14 +851,14 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 				explicitSourceAlias,
 				additionalPredicateCollectorAccess,
 				sqlAliasBase,
-				creationState,
+				expressionResolver,
 				creationContext
 		);
 
 		if ( additionalPredicateCollectorAccess != null && needsDiscriminator() ) {
 			final Predicate discriminatorPredicate = createDiscriminatorPredicate(
 					tableGroup,
-					creationState.getSqlExpressionResolver(),
+					expressionResolver,
 					creationContext
 			);
 			additionalPredicateCollectorAccess.get().accept( discriminatorPredicate );
@@ -949,6 +949,17 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 				sqlExpression,
 				ComparisonOperator.EQUAL,
 				new QueryLiteral<>( value, discriminatorType )
+		);
+	}
+
+	@Override
+	public void pruneForSubclasses(TableGroup tableGroup, Set<String> treatedEntityNames) {
+		if ( treatedEntityNames.contains( getEntityName() ) ) {
+			return;
+		}
+		final TableReference tableReference = tableGroup.getPrimaryTableReference();
+		tableReference.setPrunedTableExpression(
+				"(select * from " + getTableName() + " t where " + discriminatorFilterFragment( "t", treatedEntityNames ) + ")"
 		);
 	}
 

@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -42,12 +43,14 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.UnionTableGroup;
@@ -251,7 +254,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			String explicitSourceAlias,
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
 			SqlAliasBase sqlAliasBase,
-			SqlAstCreationState creationState,
+			SqlExpressionResolver expressionResolver,
 			SqlAstCreationContext creationContext) {
 		final TableReference tableReference = resolvePrimaryTableReference( sqlAliasBase );
 
@@ -390,6 +393,14 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		return isAbstract() || hasSubclasses();
 	}
 
+	@Override
+	public void pruneForSubclasses(TableGroup tableGroup, Set<String> treatedEntityNames) {
+		if ( treatedEntityNames.contains( getEntityName() ) ) {
+			return;
+		}
+		final TableReference tableReference = tableGroup.resolveTableReference( getRootTableName() );
+		tableReference.setPrunedTableExpression( generateSubquery( treatedEntityNames ) );
+	}
 
 	@Override
 	public void visitConstraintOrderedTables(ConstraintOrderedTableConsumer consumer) {
@@ -494,6 +505,68 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 										settings.getDefaultSchemaName()
 								)
 						);
+				buf.append( " union " );
+				if ( dialect.supportsUnionAll() ) {
+					buf.append( "all " );
+				}
+			}
+		}
+
+		if ( buf.length() > 2 ) {
+			//chop the last union (all)
+			buf.setLength( buf.length() - ( dialect.supportsUnionAll() ? 11 : 7 ) );
+		}
+
+		return buf.append( " )" ).toString();
+	}
+
+	protected String generateSubquery(Set<String> treated) {
+		if ( !hasSubclasses() ) {
+			return getTableName();
+		}
+
+		final Dialect dialect = getFactory().getJdbcServices().getDialect();
+
+		final LinkedHashMap<String, Map<String, SelectableMapping>> selectables = new LinkedHashMap<>();
+		visitSubTypeAttributeMappings(
+				attributeMapping -> attributeMapping.forEachSelectable(
+						(i, selectable) -> selectables.computeIfAbsent( selectable.getSelectionExpression(), k -> new HashMap<>() )
+								.put( selectable.getContainingTableExpression(), selectable )
+				)
+		);
+		final Set<String> treatedTableNames = new HashSet<>( treated.size() );
+		for ( String subclassName : treated ) {
+			final UnionSubclassEntityPersister subPersister = (UnionSubclassEntityPersister) getSubclassMappingType( subclassName );
+			for ( String subclassTableName : subPersister.getSubclassTableNames() ) {
+				if ( ArrayHelper.indexOf( subclassSpaces, subclassTableName ) != -1 ) {
+					treatedTableNames.add( subclassTableName );
+				}
+			}
+		}
+
+		final StringBuilder buf = new StringBuilder( subquery.length() )
+				.append( "( " );
+
+		for ( int i = 0; i < subclassTableNames.length; i++ ) {
+			final String subclassTableName = subclassTableNames[i];
+			if ( treatedTableNames.contains( subclassTableName ) ) {
+				buf.append( "select " );
+				for ( Map<String, SelectableMapping> selectableMappings : selectables.values() ) {
+					SelectableMapping selectableMapping = selectableMappings.get( subclassTableName );
+					if ( selectableMapping == null ) {
+						selectableMapping = selectableMappings.values().iterator().next();
+						final int sqlType = selectableMapping.getJdbcMapping().getJdbcTypeDescriptor()
+								.getDefaultSqlTypeCode();
+						buf.append( dialect.getSelectClauseNullString( sqlType ) )
+								.append( " as " );
+					}
+					buf.append(
+							new ColumnReference( (String) null, selectableMapping, getFactory() ).getExpressionText()
+					);
+					buf.append( ", " );
+				}
+				buf.append( i ).append( " as clazz_" );
+				buf.append( " from " ).append( subclassTableName );
 				buf.append( " union " );
 				if ( dialect.supportsUnionAll() ) {
 					buf.append( "all " );

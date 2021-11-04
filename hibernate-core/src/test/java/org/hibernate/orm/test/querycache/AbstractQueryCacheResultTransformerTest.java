@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.ListJoin;
 import jakarta.persistence.criteria.MapJoin;
@@ -746,11 +747,11 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 				CriteriaBuilder builder = s.getCriteriaBuilder();
 				JpaCriteriaQuery criteria = (JpaCriteriaQuery) builder.createQuery( Object[].class );
 				JpaRoot<Student> root = criteria.from( Student.class );
-				root.join( "preferredCourse", JoinType.LEFT );
+				Join<Object, Object> preferredCourse = root.join( "preferredCourse", JoinType.LEFT );
 				root.fetch( "enrolments", JoinType.LEFT );
 				criteria.orderBy( builder.asc( root.get( "studentNumber" ) ) );
 
-				criteria.multiselect( root, root.get( "preferredCourse" ) );
+				criteria.multiselect( root, preferredCourse );
 				return criteria;
 			}
 		};
@@ -759,7 +760,7 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 			@Override
 			public Query getQuery(Session s) {
 				return s.createQuery(
-						"select s, s.preferredCourse from Student s left join fetch s.enrolments left join s.preferredCourse order by s.studentNumber"
+						"select s, pc from Student s left join fetch s.enrolments left join s.preferredCourse pc order by s.studentNumber"
 				);
 			}
 		};
@@ -1506,22 +1507,15 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 
 				JpaCriteriaQuery criteria = (JpaCriteriaQuery) builder.createQuery( Object[].class );
 				Root<Student> root = criteria.from( Student.class );
-				root.join( "preferredCourse", JoinType.LEFT );
+				Join<Object, Object> preferredCourse = root.join( "preferredCourse", JoinType.LEFT );
 
-				criteria.multiselect( root, root.get( "preferredCourse" ) );
+				criteria.multiselect( root, preferredCourse );
 
 				criteria.orderBy( builder.asc( root.get( "studentNumber" ) ) );
 				return criteria;
 			}
 		};
 
-		HqlExecutor hqlExecutorUnaliased = new HqlExecutor() {
-			@Override
-			protected Query getQuery(Session s) {
-				return s.createQuery(
-						"select s, s.preferredCourse from Student s left join s.preferredCourse order by s.studentNumber" );
-			}
-		};
 		HqlExecutor hqlExecutorAliased = new HqlExecutor() {
 			@Override
 			protected Query getQuery(Session s) {
@@ -1539,8 +1533,7 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 			assertEquals( shermanExpected, shermanObjects[0] );
 			assertNull( shermanObjects[1] );
 		};
-		runTest( hqlExecutorUnaliased, criteriaExecutor, checker, false, scope );
-		runTest( hqlExecutorAliased, null, checker, false, scope );
+		runTest( hqlExecutorAliased, criteriaExecutor, checker, false, scope );
 	}
 
 	@Test

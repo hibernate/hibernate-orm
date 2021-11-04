@@ -65,7 +65,7 @@ public class DynamicFetchBuilderStandard
 		final SqlExpressionResolver sqlExpressionResolver = domainResultCreationState.getSqlAstCreationState().getSqlExpressionResolver();
 
 		final SelectableConsumer selectableConsumer = (selectionIndex, selectableMapping) -> {
-			final TableReference tableReference = ownerTableGroup.getTableReference(
+			final TableReference tableReference = ownerTableGroup.resolveTableReference(
 					fetchPath,
 					selectableMapping.getContainingTableExpression()
 			);

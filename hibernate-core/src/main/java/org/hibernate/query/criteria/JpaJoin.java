@@ -11,6 +11,7 @@ import jakarta.persistence.criteria.Fetch;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
 
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 
 /**
@@ -32,4 +33,10 @@ public interface JpaJoin<O, T> extends JpaJoinedFrom<O, T>, Join<O, T> {
 
 	@Override
 	JpaJoin<O, T> on(Predicate... restrictions);
+
+	@Override
+	<S extends T> JpaJoin<O, S> treatAs(Class<S> treatAsType);
+
+	@Override
+	<S extends T> JpaJoin<O, S> treatAs(EntityDomainType<S> treatAsType);
 }

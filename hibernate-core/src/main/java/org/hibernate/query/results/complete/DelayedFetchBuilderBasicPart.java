@@ -58,7 +58,6 @@ public class DelayedFetchBuilderBasicPart
 				parent,
 				fetchPath,
 				referencedModelPart,
-				true,
 				null,
 				FetchTiming.DELAYED,
 				isEnhancedForLazyLoading,

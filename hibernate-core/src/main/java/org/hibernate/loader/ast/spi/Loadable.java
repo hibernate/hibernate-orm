@@ -16,6 +16,7 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.from.RootTableGroupProducer;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
@@ -42,7 +43,8 @@ public interface Loadable extends ModelPart, RootTableGroupProducer {
 			NavigablePath navigablePath,
 			String explicitSourceAlias,
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
-			SqlAstCreationState creationState, SqlAstCreationContext creationContext) {
+			SqlAstCreationState creationState,
+			SqlAstCreationContext creationContext) {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
@@ -53,7 +55,8 @@ public interface Loadable extends ModelPart, RootTableGroupProducer {
 			String explicitSourceAlias,
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
 			SqlAliasBase sqlAliasBase,
-			SqlAstCreationState creationState, SqlAstCreationContext creationContext) {
+			SqlExpressionResolver expressionResolver,
+			SqlAstCreationContext creationContext) {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 }

@@ -44,6 +44,7 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 	private final String alias;
 
 	private ConsumerDelegate delegate;
+	private boolean treated;
 
 	public QualifiedJoinPathConsumer(
 			SqmRoot<?> sqmRoot,
@@ -78,6 +79,10 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 		);
 	}
 
+	public void setTreated(boolean treated) {
+		this.treated = treated;
+	}
+
 	@Override
 	public SemanticPathPart getConsumedPart() {
 		return delegate.getConsumedPart();
@@ -87,12 +92,18 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 	public void consumeIdentifier(String identifier, boolean isBase, boolean isTerminal) {
 		if ( isBase ) {
 			assert delegate == null;
-			delegate = resolveBase( identifier, isTerminal );
+			delegate = resolveBase( identifier, !treated && isTerminal );
 		}
 		else {
 			assert delegate != null;
-			delegate.consumeIdentifier( identifier, isTerminal );
+			delegate.consumeIdentifier( identifier, !treated && isTerminal );
 		}
+	}
+
+	@Override
+	public void consumeTreat(String entityName, boolean isTerminal) {
+		assert delegate != null;
+		delegate.consumeTreat( entityName, isTerminal );
 	}
 
 	private ConsumerDelegate resolveBase(String identifier, boolean isTerminal) {
@@ -187,6 +198,7 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 
 	private interface ConsumerDelegate {
 		void consumeIdentifier(String identifier, boolean isTerminal);
+		void consumeTreat(String entityName, boolean isTerminal);
 		SemanticPathPart getConsumedPart();
 	}
 
@@ -227,6 +239,14 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 		}
 
 		@Override
+		public void consumeTreat(String entityName, boolean isTerminal) {
+			final EntityDomainType<?> entityDomainType = creationState.getCreationContext().getJpaMetamodel()
+					.entity( entityName );
+			currentPath = currentPath.treatAs( entityDomainType, isTerminal ? alias : null );
+			creationState.getCurrentProcessingState().getPathRegistry().register( currentPath );
+		}
+
+		@Override
 		public SemanticPathPart getConsumedPart() {
 			return currentPath;
 		}
@@ -240,7 +260,7 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 		private final boolean fetch;
 		private final String alias;
 
-		private NavigablePath path = new NavigablePath();
+		private final StringBuilder path = new StringBuilder();
 
 		private SqmEntityJoin<?> join;
 
@@ -263,14 +283,17 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 
 		@Override
 		public void consumeIdentifier(String identifier, boolean isTerminal) {
-			path = path.append( identifier );
-
+			if ( path.length() != 0 ) {
+				path.append( '.' );
+			}
+			path.append( identifier );
 			if ( isTerminal ) {
+				final String fullPath = path.toString();
 				final EntityDomainType<?> joinedEntityType = creationState.getCreationContext()
 						.getJpaMetamodel()
-						.resolveHqlEntityReference( path.getFullPath() );
+						.resolveHqlEntityReference( fullPath );
 				if ( joinedEntityType == null ) {
-					throw new SemanticException( "Could not resolve join path - " + path.getFullPath() );
+					throw new SemanticException( "Could not resolve join path - " + fullPath );
 				}
 
 				assert ! ( joinedEntityType instanceof SqmPolymorphicRootDescriptor );
@@ -282,6 +305,11 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 				join = new SqmEntityJoin<>( joinedEntityType, alias, joinType, sqmRoot );
 				creationState.getCurrentProcessingState().getPathRegistry().register( join );
 			}
+		}
+
+		@Override
+		public void consumeTreat(String entityName, boolean isTerminal) {
+			throw new UnsupportedOperationException();
 		}
 
 		@Override

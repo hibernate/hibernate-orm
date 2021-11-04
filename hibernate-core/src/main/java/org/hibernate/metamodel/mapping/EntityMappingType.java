@@ -9,6 +9,7 @@ package org.hibernate.metamodel.mapping;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -195,8 +196,7 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 		return superMappingType.getRootEntityDescriptor();
 	}
 
-	default TableReference locateTableReference(TableGroup tableGroup) {
-		return tableGroup.getPrimaryTableReference();
+	default void pruneForSubclasses(TableGroup tableGroup, Set<String> treatedEntityNames) {
 	}
 
 	default boolean isAbstract() {
@@ -296,7 +296,7 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 				explicitSourceAlias,
 				additionalPredicateCollectorAccess,
 				creationState.getSqlAliasBaseGenerator().createSqlAliasBase( getSqlAliasStem() ),
-				creationState,
+				creationState.getSqlExpressionResolver(),
 				creationContext
 		);
 	}
@@ -308,7 +308,7 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 			String explicitSourceAlias,
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
 			SqlAliasBase sqlAliasBase,
-			SqlAstCreationState creationState,
+			SqlExpressionResolver expressionResolver,
 			SqlAstCreationContext creationContext) {
 		return getEntityPersister().createRootTableGroup(
 				canUseInnerJoins,
@@ -316,7 +316,7 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 				explicitSourceAlias,
 				additionalPredicateCollectorAccess,
 				sqlAliasBase,
-				creationState,
+				expressionResolver,
 				creationContext
 		);
 	}

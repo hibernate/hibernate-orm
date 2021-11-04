@@ -16,13 +16,17 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
  */
 public class SqmCreationHelper {
 	public static NavigablePath buildRootNavigablePath(String base, String alias) {
+		// Make sure we always create a unique alias, otherwise we might use a wrong table group for the same join
 		return alias == null
-				? new NavigablePath( base )
+				? new NavigablePath( base, Long.toString( System.nanoTime() ) )
 				: new NavigablePath( base, alias );
 	}
 
 	public static NavigablePath buildSubNavigablePath(NavigablePath lhs, String base, String alias) {
-		return lhs.append( base, alias );
+		// Make sure we always create a unique alias, otherwise we might use a wrong table group for the same join
+		return alias == null
+				? lhs.append( base, Long.toString( System.nanoTime() ) )
+				: lhs.append( base, alias );
 	}
 
 	public static NavigablePath buildSubNavigablePath(SqmPath<?> lhs, String subNavigable, String alias) {

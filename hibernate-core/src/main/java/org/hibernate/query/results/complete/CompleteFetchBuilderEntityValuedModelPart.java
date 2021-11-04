@@ -69,7 +69,7 @@ public class CompleteFetchBuilderEntityValuedModelPart
 		final TableGroup tableGroup = creationStateImpl.getFromClauseAccess().getTableGroup( navigablePath.getParent() );
 		modelPart.forEachSelectable(
 				(selectionIndex, selectableMapping) -> {
-					final TableReference tableReference = tableGroup.getTableReference( navigablePath, selectableMapping.getContainingTableExpression() );
+					final TableReference tableReference = tableGroup.resolveTableReference( navigablePath, selectableMapping.getContainingTableExpression() );
 					final String mappedColumn = selectableMapping.getSelectionExpression();
 					final String columnAlias = columnAliases.get( selectionIndex );
 					creationStateImpl.resolveSqlSelection(

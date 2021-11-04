@@ -10,6 +10,7 @@ import java.lang.reflect.Field;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.criteria.JpaPath;
 import org.hibernate.query.hql.HqlLogging;
 import org.hibernate.query.hql.spi.DotIdentifierConsumer;
 import org.hibernate.query.hql.spi.SemanticPathPart;
@@ -91,6 +92,13 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 		);
 
 		currentPart = currentPart.resolvePathPart( identifier, isTerminal, creationState );
+	}
+
+	@Override
+	public void consumeTreat(String entityName, boolean isTerminal) {
+		final EntityDomainType<?> entityDomainType = creationState.getCreationContext().getJpaMetamodel()
+				.entity( entityName );
+		currentPart = ( (SqmPath) currentPart ).treatAs( entityDomainType );
 	}
 
 	protected void reset() {
@@ -249,13 +257,13 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 			throw new ParsingException( "Could not interpret dot-ident : " + pathSoFar );
 		}
 
-		protected void validateAsRoot(SqmFrom pathRoot) {
+		protected void validateAsRoot(SqmFrom<?, ?> pathRoot) {
 
 		}
 
 		@Override
-		public SqmPath resolveIndexedAccess(
-				SqmExpression selector,
+		public SqmPath<?> resolveIndexedAccess(
+				SqmExpression<?> selector,
 				boolean isTerminal,
 				SqmCreationState processingState) {
 			return currentPart.resolveIndexedAccess( selector, isTerminal, processingState );

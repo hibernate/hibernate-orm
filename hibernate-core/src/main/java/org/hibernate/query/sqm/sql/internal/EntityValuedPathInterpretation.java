@@ -12,7 +12,6 @@ import java.util.List;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
-import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
@@ -20,27 +19,19 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
-import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.mapping.internal.SimpleForeignKeyDescriptor;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
-import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.SqlAstWalker;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.SqlTupleContainer;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 
 import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
@@ -53,16 +44,9 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 	public static <T> EntityValuedPathInterpretation<T> from(
 			SqmEntityValuedSimplePath<T> sqmPath,
 			SqmToSqlAstConverter sqlAstCreationState) {
-		final SqmPath<?> realPath;
-		if ( CollectionPart.Nature.fromNameExact( sqmPath.getNavigablePath().getUnaliasedLocalName() ) != null ) {
-			realPath = sqmPath.getLhs();
-		}
-		else {
-			realPath = sqmPath;
-		}
 		final TableGroup tableGroup = sqlAstCreationState
 				.getFromClauseAccess()
-				.findTableGroup( realPath.getLhs().getNavigablePath() );
+				.findTableGroup( sqmPath.getLhs().getNavigablePath() );
 
 		final EntityValuedModelPart mapping = (EntityValuedModelPart) sqlAstCreationState
 				.getFromClauseAccess()
@@ -124,19 +108,6 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 			final String lhsTable;
 			final ModelPart lhsPart;
 			boolean useKeyPart = associationMapping.getSideNature() == ForeignKeyDescriptor.Nature.KEY;
-			if ( mapping instanceof EntityCollectionPart ) {
-				// EntityCollectionPart always returns TARGET, but sometimes we still want to use the KEY (element) side.
-				// With a collection table, we can always use the TARGET for referring to the collection,
-				// but in case of a one-to-many without collection table, this would be problematic,
-				// as we can't use e.g. the primary key of the owner entity as substitution.
-				final TableGroup pluralTableGroup = sqlAstCreationState.getFromClauseAccess()
-						.findTableGroup( navigablePath.getParent() );
-				final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) pluralTableGroup.getModelPart();
-				if ( pluralAttributeMapping.getSeparateCollectionTable() == null ) {
-					useKeyPart = true;
-					tableGroup = pluralTableGroup;
-				}
-			}
 			if ( useKeyPart ) {
 				lhsTable = fkDescriptor.getKeyTable();
 				lhsPart = fkDescriptor.getKeyPart();
@@ -281,46 +252,4 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 		return (EntityValuedModelPart) super.getExpressionType();
 	}
 
-	@Override
-	public DomainResult<T> createDomainResult(String resultVariable, DomainResultCreationState creationState) {
-		final EntityValuedModelPart mappingType = getExpressionType();
-		if ( mappingType instanceof EntityAssociationMapping ) {
-			final NavigablePath navigablePath = getNavigablePath();
-
-			// for a to-one or to-many we may not have yet joined to the association table,
-			// but we need to because the association is a root return and needs to select
-			// all of the entity columns
-
-			final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
-			final FromClauseAccess fromClauseAccess = sqlAstCreationState.getFromClauseAccess();
-			final EntityAssociationMapping associationMapping = (EntityAssociationMapping) mappingType;
-			final TableGroup tableGroup = fromClauseAccess.resolveTableGroup(
-					navigablePath,
-					np -> {
-						final TableGroup parentTableGroup;
-						if ( getExpressionType() instanceof CollectionPart ) {
-							parentTableGroup = fromClauseAccess.findTableGroup( np.getParent().getParent() );
-						}
-						else {
-							parentTableGroup = getTableGroup();
-						}
-
-						final TableGroupJoin tableGroupJoin = associationMapping.createTableGroupJoin(
-								navigablePath,
-								parentTableGroup,
-								null,
-								SqlAstJoinType.INNER,
-								false,
-								sqlAstCreationState
-						);
-						parentTableGroup.addTableGroupJoin( tableGroupJoin );
-						return tableGroupJoin.getJoinedGroup();
-					}
-			);
-
-			return associationMapping.createDomainResult( navigablePath, tableGroup, resultVariable, creationState );
-		}
-
-		return super.createDomainResult( resultVariable, creationState );
-	}
 }

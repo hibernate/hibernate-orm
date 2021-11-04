@@ -159,7 +159,6 @@ public abstract class AbstractCompositeIdentifierMapping
 				fetchParent,
 				fetchTiming,
 				selected,
-				attributeMetadataAccess.resolveAttributeMetadata( null ).isNullable(),
 				creationState
 		);
 	}

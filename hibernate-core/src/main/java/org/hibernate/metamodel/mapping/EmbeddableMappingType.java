@@ -38,6 +38,7 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.DiscriminatedAssociationAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.mapping.internal.SelectableMappingsImpl;
@@ -52,6 +53,7 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableGroupProducer;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetchable;
@@ -176,7 +178,8 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectableMapp
 	}
 
 	private EmbeddableMappingType(
-			EmbeddableValuedModelPart valueMapping,
+			EmbeddedAttributeMapping valueMapping,
+			TableGroupProducer declaringTableGroupProducer,
 			SelectableMappings selectableMappings,
 			EmbeddableMappingType inverseMappingType,
 			MappingModelCreationProcess creationProcess) {
@@ -186,6 +189,7 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectableMapp
 		this.valueMapping = valueMapping;
 		this.createEmptyCompositesEnabled = inverseMappingType.isCreateEmptyCompositesEnabled();
 		this.selectableMappings = selectableMappings;
+		final ManagedMappingType declaringType = valueMapping.getDeclaringType();
 		creationProcess.registerInitializationCallback(
 				"EmbeddableMappingType(" + inverseMappingType.getNavigableRole().getFullPath() + ".{inverse})#finishInitialization",
 				() -> {
@@ -201,6 +205,7 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectableMapp
 							final BasicAttributeMapping original = (BasicAttributeMapping) attributeMapping;
 							final SelectableMapping selectableMapping = selectableMappings.getSelectable( currentIndex );
 							attributeMapping = BasicAttributeMapping.withSelectableMapping(
+									declaringType,
 									original,
 									original.getPropertyAccess(),
 									original.getValueGeneration(),
@@ -210,13 +215,18 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectableMapp
 						}
 						else if ( attributeMapping instanceof ToOneAttributeMapping ) {
 							final ToOneAttributeMapping original = (ToOneAttributeMapping) attributeMapping;
-							final ToOneAttributeMapping toOne = original.copy();
+							final ToOneAttributeMapping toOne = original.copy(
+									declaringType,
+									declaringTableGroupProducer
+							);
 							final int offset = currentIndex;
 							toOne.setIdentifyingColumnsTableExpression(
 									selectableMappings.getSelectable( offset ).getContainingTableExpression()
 							);
 							toOne.setForeignKeyDescriptor(
 									original.getForeignKeyDescriptor().withKeySelectionMapping(
+											declaringType,
+											declaringTableGroupProducer,
 											index -> selectableMappings.getSelectable( offset + index ),
 											creationProcess
 									)
@@ -237,10 +247,17 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectableMapp
 	}
 
 	public EmbeddableMappingType createInverseMappingType(
-			EmbeddableValuedModelPart valueMapping,
+			EmbeddedAttributeMapping valueMapping,
+			TableGroupProducer declaringTableGroupProducer,
 			SelectableMappings selectableMappings,
 			MappingModelCreationProcess creationProcess) {
-		return new EmbeddableMappingType( valueMapping, selectableMappings, this, creationProcess );
+		return new EmbeddableMappingType(
+				valueMapping,
+				declaringTableGroupProducer,
+				selectableMappings,
+				this,
+				creationProcess
+		);
 	}
 
 	private boolean finishInitialization(

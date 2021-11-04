@@ -117,7 +117,7 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 
 		final MultiTableSqmMutationConverter sqmConverter = new MultiTableSqmMutationConverter(
 				entityDescriptor,
-				sqmMutationStatement.getTarget().getExplicitAlias(),
+				sqmMutationStatement.getTarget(),
 				explicitDmlTargetAlias,
 				domainParameterXref,
 				executionContext.getQueryOptions(),
@@ -324,7 +324,7 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 			);
 		}
 		else {
-			return tableGroup.getTableReference( tableGroup.getNavigablePath(), tableExpression );
+			return tableGroup.getTableReference( tableGroup.getNavigablePath(), tableExpression, true, true );
 		}
 	}
 

@@ -3387,6 +3387,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 //			sqlAppender.appendSql( tableGroup.getGroupAlias() );
 //		}
 
+		processNestedTableGroupJoins( tableGroup );
 		processTableGroupJoins( tableGroup );
 		ModelPartContainer modelPart = tableGroup.getModelPart();
 		if ( modelPart instanceof AbstractEntityPersister ) {
@@ -3429,6 +3430,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 		if ( !realTableGroup ) {
 			renderTableReferenceJoins( tableGroup );
+			processNestedTableGroupJoins( tableGroup );
 		}
 		processTableGroupJoins( tableGroup );
 
@@ -3453,6 +3455,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	private boolean hasTableGroupsToRender(List<TableGroupJoin> nestedTableGroupJoins) {
 		for ( TableGroupJoin nestedTableGroupJoin : nestedTableGroupJoins ) {
 			final TableGroup joinedGroup = nestedTableGroupJoin.getJoinedGroup();
+			if ( joinedGroup instanceof VirtualTableGroup ) {
+				return !joinedGroup.getTableGroupJoins().isEmpty() || !joinedGroup.getNestedTableGroupJoins().isEmpty();
+			}
 			if ( !( joinedGroup instanceof LazyTableGroup ) || ( (LazyTableGroup) joinedGroup ).isInitialized() ) {
 				return true;
 			}
@@ -3531,6 +3536,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 		if ( joinedGroup instanceof VirtualTableGroup ) {
 			processTableGroupJoins( tableGroupJoin.getJoinedGroup() );
+			processNestedTableGroupJoins( tableGroupJoin.getJoinedGroup() );
 		}
 		else if ( !( joinedGroup instanceof LazyTableGroup ) || ( (LazyTableGroup) joinedGroup ).getUnderlyingTableGroup() != null ) {
 			appendSql( WHITESPACE );

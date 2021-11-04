@@ -114,10 +114,10 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 	}
 
 	@Override
-	<S extends T> SqmTreatedPath<T,S> treatAs(Class<S> treatJavaType) throws PathException;
+	<S extends T> SqmPath<S> treatAs(Class<S> treatJavaType);
 
 	@Override
-	<S extends T> SqmTreatedPath<T,S> treatAs(EntityDomainType<S> treatTarget) throws PathException;
+	<S extends T> SqmPath<S> treatAs(EntityDomainType<S> treatTarget);
 
 	default SqmRoot<?> findRoot() {
 		final SqmPath<?> lhs = getLhs();

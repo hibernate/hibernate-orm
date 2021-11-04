@@ -19,6 +19,7 @@ import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PropertyBasedMapping;
@@ -37,8 +38,8 @@ import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableGroupProducer;
 import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -61,16 +62,18 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	private AssociationKey associationKey;
 
 	public SimpleForeignKeyDescriptor(
+			ManagedMappingType keyDeclaringType,
 			BasicValuedModelPart keyModelPart,
 			PropertyAccess keyPropertyAccess,
 			SelectableMapping keySelectableMapping,
 			BasicValuedModelPart targetModelPart,
 			boolean refersToPrimaryKey,
 			boolean hasConstraint) {
-		this( keyModelPart, keyPropertyAccess, keySelectableMapping, targetModelPart, refersToPrimaryKey, hasConstraint, false );
+		this( keyDeclaringType, keyModelPart, keyPropertyAccess, keySelectableMapping, targetModelPart, refersToPrimaryKey, hasConstraint, false );
 	}
 
 	public SimpleForeignKeyDescriptor(
+			ManagedMappingType keyDeclaringType,
 			BasicValuedModelPart keyModelPart,
 			PropertyAccess keyPropertyAccess,
 			SelectableMapping keySelectableMapping,
@@ -82,6 +85,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 		assert targetModelPart != null;
 
 		keyModelPart = BasicAttributeMapping.withSelectableMapping(
+				keyDeclaringType,
 				keyModelPart,
 				keyPropertyAccess,
 				NoValueGeneration.INSTANCE,
@@ -131,9 +135,12 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 
 	@Override
 	public ForeignKeyDescriptor withKeySelectionMapping(
+			ManagedMappingType declaringType,
+			TableGroupProducer declaringTableGroupProducer,
 			IntFunction<SelectableMapping> selectableMappingAccess,
 			MappingModelCreationProcess creationProcess) {
 		return new SimpleForeignKeyDescriptor(
+				declaringType,
 				keySide.getModelPart(),
 				( (PropertyBasedMapping) keySide.getModelPart() ).getPropertyAccess(),
 				selectableMappingAccess.apply( 0 ),
@@ -148,8 +155,6 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
-		assert tableGroup.getTableReference( navigablePath, keySide.getModelPart().getContainingTableExpression() ) != null;
-
 		return createDomainResult(
 				navigablePath,
 				tableGroup,
@@ -160,8 +165,6 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 
 	@Override
 	public DomainResult<?> createTargetDomainResult(NavigablePath navigablePath, TableGroup tableGroup, DomainResultCreationState creationState) {
-		assert tableGroup.getTableReference( navigablePath, targetSide.getModelPart().getContainingTableExpression() ) != null;
-
 		return createDomainResult(
 				navigablePath,
 				tableGroup,
@@ -210,7 +213,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 
 		final TableReference tableReference = tableGroup.resolveTableReference(
-				navigablePath.append( getNavigableRole().getNavigableName() ),
+				navigablePath.append( getTargetPart().getFetchableName() ),
 				selectableMapping.getContainingTableExpression()
 		);
 		final String identificationVariable = tableReference.getIdentificationVariable();
@@ -269,11 +272,11 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			SqlAstJoinType sqlAstJoinType,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
-		final TableReference lhsTableReference = targetSideTableGroup.getTableReference(
+		final TableReference lhsTableReference = targetSideTableGroup.resolveTableReference(
 				targetSideTableGroup.getNavigablePath(),
 				targetSide.getModelPart().getContainingTableExpression()
 		);
-		final TableReference rhsTableKeyReference = keySideTableGroup.getTableReference(
+		final TableReference rhsTableKeyReference = keySideTableGroup.resolveTableReference(
 				keySide.getModelPart().getContainingTableExpression()
 		);
 
@@ -287,7 +290,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	}
 
 	protected TableReference getTableReference(TableGroup lhs, TableGroup tableGroup, String table) {
-		final NavigablePath navigablePath = lhs.getNavigablePath().append( getNavigableRole().getNavigableName() );
+		final NavigablePath navigablePath = lhs.getNavigablePath().append( getTargetPart().getFetchableName() );
 		if ( lhs.getPrimaryTableReference().getTableReference( navigablePath, table ) != null ) {
 			return lhs.getPrimaryTableReference();
 		}

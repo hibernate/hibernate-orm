@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.jpa.ql;
+package org.hibernate.orm.test.jpa.ql;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -210,7 +210,7 @@ public class JPAQLComplianceTest extends AbstractJPATest {
 
 		TransactionUtil2.inTransaction(
 				sessionFactory(),
-				s -> s.createQuery( "from Item" ).list().forEach( result -> s.delete( result ) )
+				s -> s.createQuery( "select i from Item i" ).list().forEach( result -> s.delete( result ) )
 		);
 
 	}

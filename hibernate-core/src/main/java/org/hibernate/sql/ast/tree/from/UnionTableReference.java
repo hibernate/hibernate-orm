@@ -41,7 +41,8 @@ public class UnionTableReference extends TableReference {
 	public TableReference getTableReference(
 			NavigablePath navigablePath,
 			String tableExpression,
-			boolean allowFkOptimization) {
+			boolean allowFkOptimization,
+			boolean resolve) {
 		if ( hasTableExpression( tableExpression ) ) {
 			return this;
 		}

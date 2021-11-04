@@ -272,8 +272,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	private final Stack<DotIdentifierConsumer> dotIdentifierConsumerStack;
 
-	private final Stack<TreatHandler> treatHandlerStack = new StandardStack<>( new TreatHandlerNormal() );
-
 	private final Stack<ParameterDeclarationContext> parameterDeclarationContextStack = new StandardStack<>();
 	private final Stack<SqmCreationProcessingState> processingStateStack = new StandardStack<>();
 
@@ -282,12 +280,16 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	private final JavaType<Map<?,?>> mapJavaTypeDescriptor;
 
 	private ParameterCollector parameterCollector;
+	private ParameterStyle parameterStyle;
 
 	@SuppressWarnings("WeakerAccess")
 	public SemanticQueryBuilder(SqmCreationOptions creationOptions, SqmCreationContext creationContext) {
 		this.creationOptions = creationOptions;
 		this.creationContext = creationContext;
 		this.dotIdentifierConsumerStack = new StandardStack<>( new BasicDotIdentifierConsumer( this ) );
+		this.parameterStyle = creationOptions.useStrictJpaCompliance()
+				? ParameterStyle.UNKNOWN
+				: ParameterStyle.MIXED;
 
 		this.integerDomainType = creationContext
 				.getNodeBuilder()
@@ -787,13 +789,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 
 		// visit from-clause first!!!
-		treatHandlerStack.push( new TreatHandlerFromClause() );
-		try {
-			sqmQuerySpec.setFromClause( visitFromClause( (HqlParser.FromClauseContext) ctx.getChild( fromIndex ) ) );
-		}
-		finally {
-			treatHandlerStack.pop();
-		}
+		sqmQuerySpec.setFromClause( visitFromClause( (HqlParser.FromClauseContext) ctx.getChild( fromIndex ) ) );
 
 		final SqmSelectClause selectClause;
 		if ( fromIndex == 1 ) {
@@ -817,13 +813,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		int currentIndex = fromIndex + 1;
 		final SqmWhereClause whereClause = new SqmWhereClause( creationContext.getNodeBuilder() );
 		if ( currentIndex < ctx.getChildCount() && ctx.getChild( currentIndex ) instanceof HqlParser.WhereClauseContext ) {
-			treatHandlerStack.push( new TreatHandlerNormal( DowncastLocation.WHERE ) );
-			try {
-				whereClause.setPredicate( (SqmPredicate) ctx.getChild( currentIndex++ ).accept( this ) );
-			}
-			finally {
-				treatHandlerStack.pop();
-			}
+			whereClause.setPredicate( (SqmPredicate) ctx.getChild( currentIndex++ ).accept( this ) );
 		}
 		sqmQuerySpec.setWhereClause( whereClause );
 
@@ -862,8 +852,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmSelectClause visitSelectClause(HqlParser.SelectClauseContext ctx) {
-		treatHandlerStack.push( new TreatHandlerNormal( DowncastLocation.SELECT ) );
-
 		// todo (6.0) : primer a select-clause-specific SemanticPathPart into the stack
 		final int selectionListIndex;
 		if ( ctx.getChild( 1 ) instanceof HqlParser.SelectionListContext ) {
@@ -873,24 +861,19 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			selectionListIndex = 2;
 		}
 
-		try {
-			final SqmSelectClause selectClause = new SqmSelectClause(
-					selectionListIndex == 2,
-					creationContext.getNodeBuilder()
-			);
-			final HqlParser.SelectionListContext selectionListContext = (HqlParser.SelectionListContext) ctx.getChild(
-					selectionListIndex
-			);
-			for ( ParseTree subCtx : selectionListContext.children ) {
-				if ( subCtx instanceof HqlParser.SelectionContext ) {
-					selectClause.addSelection( visitSelection( (HqlParser.SelectionContext) subCtx ) );
-				}
+		final SqmSelectClause selectClause = new SqmSelectClause(
+				selectionListIndex == 2,
+				creationContext.getNodeBuilder()
+		);
+		final HqlParser.SelectionListContext selectionListContext = (HqlParser.SelectionListContext) ctx.getChild(
+				selectionListIndex
+		);
+		for ( ParseTree subCtx : selectionListContext.children ) {
+			if ( subCtx instanceof HqlParser.SelectionContext ) {
+				selectClause.addSelection( visitSelection( (HqlParser.SelectionContext) subCtx ) );
 			}
-			return selectClause;
 		}
-		finally {
-			treatHandlerStack.pop();
-		}
+		return selectClause;
 	}
 
 	@Override
@@ -1409,30 +1392,23 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmFromClause visitFromClause(HqlParser.FromClauseContext parserFromClause) {
-		treatHandlerStack.push( new TreatHandlerFromClause() );
-
-		try {
-			final SqmFromClause fromClause;
-			if ( parserFromClause == null ) {
-				fromClause = new SqmFromClause();
-			}
-			else {
-				final int size = parserFromClause.getChildCount();
-				// Shift 1 bit instead of division by 2
-				final int estimatedSize = size >> 1;
-				fromClause = new SqmFromClause( estimatedSize );
-				for ( int i = 0; i < size; i++ ) {
-					final ParseTree parseTree = parserFromClause.getChild( i );
-					if ( parseTree instanceof HqlParser.FromClauseSpaceContext ) {
-						fromClause.addRoot( visitFromClauseSpace( (HqlParser.FromClauseSpaceContext) parseTree ) );
-					}
+		final SqmFromClause fromClause;
+		if ( parserFromClause == null ) {
+			fromClause = new SqmFromClause();
+		}
+		else {
+			final int size = parserFromClause.getChildCount();
+			// Shift 1 bit instead of division by 2
+			final int estimatedSize = size >> 1;
+			fromClause = new SqmFromClause( estimatedSize );
+			for ( int i = 0; i < size; i++ ) {
+				final ParseTree parseTree = parserFromClause.getChild( i );
+				if ( parseTree instanceof HqlParser.FromClauseSpaceContext ) {
+					fromClause.addRoot( visitFromClauseSpace( (HqlParser.FromClauseSpaceContext) parseTree ) );
 				}
 			}
-			return fromClause;
 		}
-		finally {
-			treatHandlerStack.pop();
-		}
+		return fromClause;
 	}
 
 	@Override
@@ -1678,10 +1654,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		try {
 			//noinspection unchecked
 			final SqmQualifiedJoin<X, ?> join = (SqmQualifiedJoin<X, ?>) qualifiedJoinRhsContext.getChild( 0 ).accept( this );
-
-			// we need to set the alias here because the path could be treated - the treat operator is
-			// not consumed by the identifierConsumer
-			join.setExplicitAlias( alias );
 
 			final HqlParser.QualifiedJoinPredicateContext qualifiedJoinPredicateContext = parserJoin.qualifiedJoinPredicate();
 			if ( join instanceof SqmEntityJoin<?> ) {
@@ -3129,6 +3101,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmNamedParameter<?> visitNamedParameter(HqlParser.NamedParameterContext ctx) {
+		parameterStyle = parameterStyle.withNamed();
 		final SqmNamedParameter<?> param = new SqmNamedParameter<>(
 				ctx.getChild( 1 ).getText(),
 				parameterDeclarationContextStack.getCurrent().isMultiValuedBindingAllowed(),
@@ -3143,6 +3116,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		if ( ctx.getChildCount() == 1 ) {
 			throw new SemanticException( "Encountered positional parameter which did not declare position (? instead of, e.g., ?1)" );
 		}
+		parameterStyle = parameterStyle.withPositional();
 		final SqmPositionalParameter<?> param = new SqmPositionalParameter<>(
 				Integer.parseInt( ctx.getChild( 1 ).getText() ),
 				parameterDeclarationContextStack.getCurrent().isMultiValuedBindingAllowed(),
@@ -4128,15 +4102,20 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmPath<?> visitTreatedNavigablePath(HqlParser.TreatedNavigablePathContext ctx) {
-		final SqmPath<?> sqmPath = consumeManagedTypeReference( (HqlParser.PathContext) ctx.getChild( 2 ) );
+		final DotIdentifierConsumer consumer = dotIdentifierConsumerStack.getCurrent();
+		if ( consumer instanceof QualifiedJoinPathConsumer ) {
+			( (QualifiedJoinPathConsumer) consumer ).setTreated( true );
+		}
+		consumeManagedTypeReference( (HqlParser.PathContext) ctx.getChild( 2 ) );
 
 		final String treatTargetName = ctx.getChild( 4 ).getText();
 		final String treatTargetEntityName = getCreationContext().getJpaMetamodel().qualifyImportableName( treatTargetName );
-		final EntityDomainType<?> treatTarget = getCreationContext().getJpaMetamodel().entity( treatTargetEntityName );
 
-		SqmPath<?> result = resolveTreatedPath( sqmPath, treatTarget );
+		final boolean hasContinuation = ctx.getChildCount() == 7;
+		consumer.consumeTreat( treatTargetEntityName, !hasContinuation );
+		SqmPath<?> result = (SqmPath<?>) consumer.getConsumedPart();
 
-		if ( ctx.getChildCount() == 7 ) {
+		if ( hasContinuation ) {
 			dotIdentifierConsumerStack.push(
 					new BasicDotIdentifierConsumer( result, this ) {
 						@Override
@@ -4153,11 +4132,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 
 		return result;
-	}
-
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private SqmTreatedPath<?, ?> resolveTreatedPath(SqmPath<?> sqmPath, EntityDomainType<?> treatTarget) {
-		return sqmPath.treatAs( (EntityDomainType) treatTarget );
 	}
 
 	@Override
@@ -4257,15 +4231,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final SqmPath<?> sqmPath = consumeDomainPath( parserPath );
 
 		final SqmPathSource<?> pathSource = sqmPath.getReferencedPathSource();
-
-		try {
-			// use the `#sqmAs` call to validate the path is a ManagedType
-			pathSource.sqmAs( ManagedDomainType.class );
+		if ( pathSource.getSqmPathType() instanceof ManagedDomainType<?> ) {
 			return sqmPath;
 		}
-		catch (Exception e) {
-			throw new SemanticException( "Expecting ManagedType valued path [" + sqmPath.getNavigablePath() + "], but found : " + pathSource.getSqmPathType() );
-		}
+		throw new SemanticException( "Expecting ManagedType valued path [" + sqmPath.getNavigablePath() + "], but found : " + pathSource.getSqmPathType() );
 	}
 
 	private SqmPath<?> consumePluralAttributeReference(HqlParser.PathContext parserPath) {
@@ -4278,40 +4247,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		throw new SemanticException( "Expecting plural attribute valued path [" + sqmPath.getNavigablePath() + "], but found : " + sqmPath.getReferencedPathSource().getSqmPathType() );
 	}
 
-	private interface TreatHandler {
-		void addDowncast(SqmFrom<?, ?> sqmFrom, IdentifiableDomainType<?> downcastTarget);
-	}
-
-	private static class TreatHandlerNormal implements TreatHandler {
-		private final DowncastLocation downcastLocation;
-
-		public TreatHandlerNormal() {
-			this( DowncastLocation.OTHER );
-		}
-
-		public TreatHandlerNormal(DowncastLocation downcastLocation) {
-			this.downcastLocation = downcastLocation;
-		}
-
-		@Override
-		public void addDowncast(
-				SqmFrom<?, ?> sqmFrom,
-				IdentifiableDomainType<?> downcastTarget) {
-//			( (MutableUsageDetails) sqmFrom.getUsageDetails() ).addDownCast( false, downcastTarget, downcastLocation );
-			throw new NotYetImplementedFor6Exception();
-		}
-	}
-
-	private static class TreatHandlerFromClause implements TreatHandler {
-		@Override
-		public void addDowncast(
-				SqmFrom<?, ?> sqmFrom,
-				IdentifiableDomainType<?> downcastTarget) {
-//			( (MutableUsageDetails) sqmFrom.getUsageDetails() ).addDownCast( true, downcastTarget, DowncastLocation.FROM );
-			throw new NotYetImplementedFor6Exception();
-		}
-	}
-	
 	private void checkFQNEntityNameJpaComplianceViolationIfNeeded(String name, EntityDomainType<?> entityDescriptor) {
 		if ( getCreationOptions().useStrictJpaCompliance() && ! name.equals( entityDescriptor.getName() ) ) {
 			// FQN is the only possible reason
@@ -4320,5 +4255,60 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					StrictJpaComplianceViolation.Type.FQN_ENTITY_NAME
 			);
 		}
+	}
+
+	private enum ParameterStyle {
+		UNKNOWN {
+			@Override
+			ParameterStyle withNamed() {
+				return NAMED;
+			}
+
+			@Override
+			ParameterStyle withPositional() {
+				return POSITIONAL;
+			}
+		},
+		NAMED {
+			@Override
+			ParameterStyle withNamed() {
+				return NAMED;
+			}
+
+			@Override
+			ParameterStyle withPositional() {
+				throw new StrictJpaComplianceViolation(
+						"Cannot mix positional and named parameters",
+						StrictJpaComplianceViolation.Type.MIXED_POSITIONAL_NAMED_PARAMETERS
+				);
+			}
+		},
+		POSITIONAL {
+			@Override
+			ParameterStyle withNamed() {
+				throw new StrictJpaComplianceViolation(
+						"Cannot mix positional and named parameters",
+						StrictJpaComplianceViolation.Type.MIXED_POSITIONAL_NAMED_PARAMETERS
+				);
+			}
+
+			@Override
+			ParameterStyle withPositional() {
+				return POSITIONAL;
+			}
+		},
+		MIXED {
+			@Override
+			ParameterStyle withNamed() {
+				return MIXED;
+			}
+
+			@Override
+			ParameterStyle withPositional() {
+				return MIXED;
+			}
+		};
+		abstract ParameterStyle withNamed();
+		abstract ParameterStyle withPositional();
 	}
 }

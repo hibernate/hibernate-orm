@@ -41,7 +41,7 @@ public class FullyQualifiedReflectivePath implements SemanticPathPart, FullyQual
 
 	@Override
 	public SqmPath<?> resolveIndexedAccess(
-			SqmExpression selector,
+			SqmExpression<?> selector,
 			boolean isTerminal,
 			SqmCreationState creationState) {
 		throw new UnsupportedOperationException( "Fully qualified reflective paths cannot contain indexed access" );

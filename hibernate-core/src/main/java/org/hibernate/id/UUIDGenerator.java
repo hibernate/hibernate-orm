@@ -38,7 +38,7 @@ import org.hibernate.type.descriptor.java.UUIDJavaTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class UUIDGenerator implements IdentifierGenerator, Configurable {
+public class UUIDGenerator implements IdentifierGenerator {
 	public static final String UUID_GEN_STRATEGY = "uuid_gen_strategy";
 	public static final String UUID_GEN_STRATEGY_CLASS = "uuid_gen_strategy_class";
 

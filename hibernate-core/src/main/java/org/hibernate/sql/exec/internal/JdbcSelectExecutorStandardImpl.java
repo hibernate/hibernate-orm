@@ -16,7 +16,6 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import org.hibernate.CacheMode;
-import org.hibernate.Internal;
 import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
 import org.hibernate.cache.spi.QueryKey;
@@ -90,28 +89,6 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		);
 	}
 
-	@Internal
-	public <R> List<R> list(
-			JdbcSelect jdbcSelect,
-			JdbcParameterBindings jdbcParameterBindings,
-			ExecutionContext executionContext,
-			RowTransformer<R> rowTransformer,
-			ListResultsConsumer.UniqueSemantic uniqueSemantic,
-			Function<Function<String, PreparedStatement>, DeferredResultSetAccess> resultSetAccessCreator) {
-		// Only do auto flushing for top level queries
-		return executeQuery(
-				jdbcSelect,
-				executionContext,
-				rowTransformer,
-				(sql) -> executionContext.getSession()
-						.getJdbcCoordinator()
-						.getStatementPreparer()
-						.prepareStatement( sql ),
-				resultSetAccessCreator,
-				ListResultsConsumer.instance( uniqueSemantic )
-		);
-	}
-
 	@Override
 	public <R> ScrollableResultsImplementor<R> scroll(
 			JdbcSelect jdbcSelect,
@@ -135,26 +112,6 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		);
 	}
 
-	@Internal
-	public <R> ScrollableResultsImplementor<R> scroll(
-			JdbcSelect jdbcSelect,
-			ExecutionContext executionContext,
-			RowTransformer<R> rowTransformer,
-			Function<Function<String, PreparedStatement>, DeferredResultSetAccess> resultSetAccessCreator) {
-		// Only do auto flushing for top level queries
-		return executeQuery(
-				jdbcSelect,
-				executionContext,
-				rowTransformer,
-				(sql) -> executionContext.getSession()
-						.getJdbcCoordinator()
-						.getStatementPreparer()
-						.prepareStatement( sql ),
-				resultSetAccessCreator,
-				ScrollableResultsConsumer.instance()
-		);
-	}
-
 	@Override
 	public <R> Stream<R> stream(
 			JdbcSelect jdbcSelect,
@@ -167,25 +124,6 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 				jdbcParameterBindings,
 				executionContext,
 				rowTransformer
-		);
-		final ScrollableResultsIterator<R> iterator = new ScrollableResultsIterator<>( scrollableResults );
-		final Spliterator<R> spliterator = Spliterators.spliteratorUnknownSize( iterator, Spliterator.NONNULL );
-
-		final Stream<R> stream = StreamSupport.stream( spliterator, false );
-		return stream.onClose( scrollableResults::close );
-	}
-
-	@Internal
-	public <R> Stream<R> stream(
-			JdbcSelect jdbcSelect,
-			ExecutionContext executionContext,
-			RowTransformer<R> rowTransformer,
-			Function<Function<String, PreparedStatement>, DeferredResultSetAccess> resultSetAccessCreator) {
-		final ScrollableResultsImplementor<R> scrollableResults = scroll(
-				jdbcSelect,
-				executionContext,
-				rowTransformer,
-				resultSetAccessCreator
 		);
 		final ScrollableResultsIterator<R> iterator = new ScrollableResultsIterator<>( scrollableResults );
 		final Spliterator<R> spliterator = Spliterators.spliteratorUnknownSize( iterator, Spliterator.NONNULL );
@@ -225,7 +163,6 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			}
 		}
 	}
-
 	private <T, R> T doExecuteQuery(
 			JdbcSelect jdbcSelect,
 			JdbcParameterBindings jdbcParameterBindings,
@@ -233,38 +170,19 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			RowTransformer<R> rowTransformer,
 			Function<String, PreparedStatement> statementCreator,
 			ResultsConsumer<T, R> resultsConsumer) {
-		return executeQuery(
-				jdbcSelect,
-				executionContext,
-				rowTransformer,
-				(sql) -> executionContext.getSession()
-						.getJdbcCoordinator()
-						.getStatementPreparer()
-						.prepareStatement( sql ),
-				(stmntCreator) -> new DeferredResultSetAccess(
-						jdbcSelect,
-						jdbcParameterBindings,
-						executionContext,
-						statementCreator
-				),
-				resultsConsumer
-		);
-	}
 
-	private <T, R> T executeQuery(
-			JdbcSelect jdbcSelect,
-			ExecutionContext executionContext,
-			RowTransformer<R> rowTransformer,
-			Function<String,PreparedStatement> statementCreator,
-			Function<Function<String, PreparedStatement>, DeferredResultSetAccess> resultSetAccessCreator,
-			ResultsConsumer<T,R> resultsConsumer) {
-		final DeferredResultSetAccess resultSetAccess = resultSetAccessCreator.apply( statementCreator );
+		final DeferredResultSetAccess deferredResultSetAccess = new DeferredResultSetAccess(
+				jdbcSelect,
+				jdbcParameterBindings,
+				executionContext,
+				statementCreator
+		);
 		final JdbcValues jdbcValues = resolveJdbcValuesSource(
-				executionContext.getQueryIdentifier( resultSetAccess.getFinalSql() ),
+				executionContext.getQueryIdentifier( deferredResultSetAccess.getFinalSql() ),
 				jdbcSelect,
 				resultsConsumer.canResultsBeCached(),
 				executionContext,
-				resultSetAccess
+				deferredResultSetAccess
 		);
 
 		if ( rowTransformer == null ) {
@@ -333,7 +251,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 				// because these lock options are only for Initializers.
 				// If we wouldn't omit this, the follow on lock requests would be no-ops,
 				// because the EntityEntrys would already have the desired lock mode
-				resultSetAccess.usesFollowOnLocking()
+				deferredResultSetAccess.usesFollowOnLocking()
 						? LockOptions.NONE
 						: executionContext.getQueryOptions().getLockOptions(),
 				rowTransformer,
@@ -445,8 +363,8 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		}
 		else {
 			SqlExecLogger.INSTANCE.debugf( "Skipping reading Query result cache data: cache-enabled = %s, cache-mode = %s",
-						queryCacheEnabled,
-						cacheMode.name()
+					queryCacheEnabled,
+					cacheMode.name()
 			);
 			cachedResults = null;
 			if ( queryCacheEnabled && canBeCached ) {

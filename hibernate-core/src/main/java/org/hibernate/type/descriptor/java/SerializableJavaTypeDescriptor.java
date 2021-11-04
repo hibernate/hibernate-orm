@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.io.Serializable;
 import java.sql.Blob;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.Arrays;
 
 import org.hibernate.HibernateException;
@@ -19,6 +20,8 @@ import org.hibernate.engine.jdbc.BinaryStream;
 import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 
 /**
  * Descriptor for general {@link Serializable} handling.
@@ -57,6 +60,14 @@ public class SerializableJavaTypeDescriptor<T extends Serializable> extends Abst
 			return ImmutableMutabilityPlan.INSTANCE;
 		}
 		return (MutabilityPlan<T>) SerializableMutabilityPlan.INSTANCE;
+	}
+
+	@Override
+	public JdbcType getRecommendedJdbcType(JdbcTypeDescriptorIndicators indicators) {
+		final int typeCode = indicators.isLob()
+				? Types.BLOB
+				: Types.LONGVARBINARY;
+		return indicators.getTypeConfiguration().getJdbcTypeDescriptorRegistry().getDescriptor( typeCode );
 	}
 
 	public String toString(T value) {

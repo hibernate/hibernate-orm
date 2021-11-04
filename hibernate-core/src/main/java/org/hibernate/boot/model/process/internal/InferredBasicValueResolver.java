@@ -163,22 +163,35 @@ public class InferredBasicValueResolver {
 					);
 				}
 				else {
-					// here we have the legacy case
-					//		- we mimic how this used to be done
+					// see if there is a registered BasicType for this JavaType and, if so, use it.
+					// this mimics the legacy handling
 					final BasicType registeredType = typeConfiguration.getBasicTypeRegistry().getRegisteredType( reflectedJtd.getJavaType() );
 
 					if ( registeredType != null ) {
+						// so here is the legacy resolution
 						legacyType = resolveSqlTypeIndicators( stdIndicators, registeredType, reflectedJtd );
 						jdbcMapping = legacyType;
 					}
-					else if ( reflectedJtd instanceof SerializableJavaTypeDescriptor || reflectedJtd.getJavaType() instanceof Serializable ) {
-						legacyType = new SerializableType<>( reflectedJtd );
-						jdbcMapping = legacyType;
-					}
 					else {
-						// let this fall through to the exception creation below
-						legacyType = null;
-						jdbcMapping = null;
+						// there was not a "legacy" BasicType registration,  so use `JavaType#getRecommendedJdbcType`, if
+						// one, to create a mapping
+						final JdbcType recommendedJdbcType = reflectedJtd.getRecommendedJdbcType( stdIndicators );
+						if ( recommendedJdbcType != null ) {
+							jdbcMapping = typeConfiguration.getBasicTypeRegistry().resolve(
+									reflectedJtd,
+									recommendedJdbcType
+							);
+							legacyType = jdbcMapping;
+						}
+						else if ( reflectedJtd instanceof SerializableJavaTypeDescriptor || reflectedJtd.getJavaType() instanceof Serializable ) {
+							legacyType = new SerializableType<>( reflectedJtd );
+							jdbcMapping = legacyType;
+						}
+						else {
+							// let this fall through to the exception creation below
+							legacyType = null;
+							jdbcMapping = null;
+						}
 					}
 				}
 			}

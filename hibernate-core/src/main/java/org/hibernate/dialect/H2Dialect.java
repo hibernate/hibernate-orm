@@ -147,6 +147,7 @@ public class H2Dialect extends Dialect {
 		registerColumnType( SqlTypes.UUID, "uuid" );
 		registerColumnType( SqlTypes.INTERVAL_SECOND, "interval second($p,$s)" );
 		registerColumnType( SqlTypes.GEOMETRY, "geometry" );
+		registerColumnType( SqlTypes.ARRAY, "array" );
 	}
 
 	@Override

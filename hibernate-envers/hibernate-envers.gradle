@@ -21,6 +21,7 @@ dependencies {
     annotationProcessor project( ':hibernate-jpamodelgen' )
 
     testImplementation project( ':hibernate-testing' )
+    testImplementation libraries.assertj
 }
 
 test {

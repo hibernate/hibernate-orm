@@ -93,7 +93,7 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmFunction;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
-import org.hibernate.query.sqm.tree.expression.SqmRestrictedSubQueryExpression;
+import org.hibernate.query.sqm.tree.expression.SqmModifiedSubQueryExpression;
 import org.hibernate.query.sqm.tree.expression.SqmTrimSpecification;
 import org.hibernate.query.sqm.tree.expression.SqmTuple;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
@@ -1344,28 +1344,28 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	public <Y> SqmRestrictedSubQueryExpression<Y> all(Subquery<Y> subquery) {
-		return new SqmRestrictedSubQueryExpression<>(
+	public <Y> SqmModifiedSubQueryExpression<Y> all(Subquery<Y> subquery) {
+		return new SqmModifiedSubQueryExpression<>(
 				(SqmSubQuery<Y>) subquery,
-				SqmRestrictedSubQueryExpression.Modifier.ALL,
+				SqmModifiedSubQueryExpression.Modifier.ALL,
 				this
 		);
 	}
 
 	@Override
-	public <Y> SqmRestrictedSubQueryExpression<Y> some(Subquery<Y> subquery) {
-		return new SqmRestrictedSubQueryExpression<>(
+	public <Y> SqmModifiedSubQueryExpression<Y> some(Subquery<Y> subquery) {
+		return new SqmModifiedSubQueryExpression<>(
 				(SqmSubQuery<Y>) subquery,
-				SqmRestrictedSubQueryExpression.Modifier.SOME,
+				SqmModifiedSubQueryExpression.Modifier.SOME,
 				this
 		);
 	}
 
 	@Override
-	public <Y> SqmRestrictedSubQueryExpression<Y> any(Subquery<Y> subquery) {
-		return new SqmRestrictedSubQueryExpression<>(
+	public <Y> SqmModifiedSubQueryExpression<Y> any(Subquery<Y> subquery) {
+		return new SqmModifiedSubQueryExpression<>(
 				(SqmSubQuery<Y>) subquery,
-				SqmRestrictedSubQueryExpression.Modifier.ANY,
+				SqmModifiedSubQueryExpression.Modifier.ANY,
 				this
 		);
 	}

@@ -17,7 +17,7 @@ import org.hibernate.query.sqm.tree.select.SqmSubQuery;
  *
  * @author Steve Ebersole
  */
-public class SqmRestrictedSubQueryExpression<T> extends AbstractSqmExpression<T> {
+public class SqmModifiedSubQueryExpression<T> extends AbstractSqmExpression<T> {
 	public enum Modifier {
 		ALL,
 		ANY,
@@ -27,7 +27,7 @@ public class SqmRestrictedSubQueryExpression<T> extends AbstractSqmExpression<T>
 	private final SqmSubQuery<T> subQuery;
 	private final Modifier modifier;
 
-	public SqmRestrictedSubQueryExpression(
+	public SqmModifiedSubQueryExpression(
 			SqmSubQuery<T> subquery,
 			Modifier modifier,
 			NodeBuilder builder) {
@@ -39,7 +39,7 @@ public class SqmRestrictedSubQueryExpression<T> extends AbstractSqmExpression<T>
 		);
 	}
 
-	public SqmRestrictedSubQueryExpression(
+	public SqmModifiedSubQueryExpression(
 			SqmSubQuery<T> subQuery,
 			Modifier modifier,
 			SqmExpressable<T> resultType,
@@ -59,7 +59,7 @@ public class SqmRestrictedSubQueryExpression<T> extends AbstractSqmExpression<T>
 
 	@Override
 	public <X> X accept(SemanticQueryWalker<X> walker) {
-		return walker.visitRestrictedSubQueryExpression( this );
+		return walker.visitModifiedSubQueryExpression( this );
 	}
 
 	@Override

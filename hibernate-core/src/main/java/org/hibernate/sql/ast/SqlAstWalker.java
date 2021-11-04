@@ -26,6 +26,7 @@ import org.hibernate.sql.ast.tree.expression.ExtractUnit;
 import org.hibernate.sql.ast.tree.expression.Format;
 import org.hibernate.sql.ast.tree.expression.JdbcLiteral;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.ast.tree.expression.ModifiedSubQueryExpression;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
 import org.hibernate.sql.ast.tree.expression.SqlSelectionExpression;
@@ -145,6 +146,8 @@ public interface SqlAstWalker {
 
 	void visitUnaryOperationExpression(UnaryOperation unaryOperationExpression);
 
+	void visitModifiedSubQueryExpression(ModifiedSubQueryExpression expression);
+
 	void visitBooleanExpressionPredicate(BooleanExpressionPredicate booleanExpressionPredicate);
 
 	void visitBetweenPredicate(BetweenPredicate betweenPredicate);
@@ -176,5 +179,4 @@ public interface SqlAstWalker {
 	void visitDuration(Duration duration);
 
 	void visitConversion(Conversion conversion);
-
 }

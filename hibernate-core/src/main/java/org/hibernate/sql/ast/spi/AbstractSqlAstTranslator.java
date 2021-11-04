@@ -94,6 +94,7 @@ import org.hibernate.sql.ast.tree.expression.JdbcLiteral;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.LiteralAsParameter;
+import org.hibernate.sql.ast.tree.expression.ModifiedSubQueryExpression;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
 import org.hibernate.sql.ast.tree.expression.SqlSelectionExpression;
@@ -3999,6 +4000,15 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 
 		unaryOperationExpression.getOperand().accept( this );
+	}
+
+	@Override
+	public void visitModifiedSubQueryExpression(ModifiedSubQueryExpression expression) {
+		final ModifiedSubQueryExpression.Modifier modifier = expression.getModifier();
+
+		appendSql( modifier.getSqlName() );
+		appendSql( " " );
+		expression.getSubQuery().accept( this );
 	}
 
 	@Override

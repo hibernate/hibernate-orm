@@ -85,6 +85,8 @@ import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedRootJoin;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelation;
+import org.hibernate.query.sqm.tree.expression.SqmModifiedSubQueryExpression;
+import org.hibernate.sql.ast.tree.expression.ModifiedSubQueryExpression;
 import org.hibernate.sql.exec.internal.VersionTypeSeedParameterSpecification;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -4268,6 +4270,27 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			return rhs;
 		}
 		return lhs;
+	}
+
+	@Override
+	public Object visitModifiedSubQueryExpression(SqmModifiedSubQueryExpression<?> expr) {
+		return new ModifiedSubQueryExpression(
+				visitSubQueryExpression( expr.getSubQuery() ),
+				convert( expr.getModifier() )
+		);
+	}
+
+	private ModifiedSubQueryExpression.Modifier convert(SqmModifiedSubQueryExpression.Modifier modifier) {
+		if ( modifier == SqmModifiedSubQueryExpression.Modifier.ALL ) {
+			return ModifiedSubQueryExpression.Modifier.ALL;
+		}
+		if ( modifier == SqmModifiedSubQueryExpression.Modifier.ANY ) {
+			return ModifiedSubQueryExpression.Modifier.ANY;
+		}
+		if ( modifier == SqmModifiedSubQueryExpression.Modifier.SOME ) {
+			return ModifiedSubQueryExpression.Modifier.SOME;
+		}
+		throw new IllegalStateException( "Unrecognized SqmModifiedSubQueryExpression.Modifier : " + modifier );
 	}
 
 	@Override

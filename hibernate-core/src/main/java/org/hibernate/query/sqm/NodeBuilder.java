@@ -50,7 +50,7 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmSetJoin;
 import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.query.sqm.tree.expression.SqmRestrictedSubQueryExpression;
+import org.hibernate.query.sqm.tree.expression.SqmModifiedSubQueryExpression;
 import org.hibernate.query.sqm.tree.expression.SqmTuple;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
@@ -354,13 +354,13 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 	<T> SqmFunction<T> function(String name, Class<T> type, Expression<?>[] args);
 
 	@Override
-	<Y> SqmRestrictedSubQueryExpression<Y> all(Subquery<Y> subquery);
+	<Y> SqmModifiedSubQueryExpression<Y> all(Subquery<Y> subquery);
 
 	@Override
-	<Y> SqmRestrictedSubQueryExpression<Y> some(Subquery<Y> subquery);
+	<Y> SqmModifiedSubQueryExpression<Y> some(Subquery<Y> subquery);
 
 	@Override
-	<Y> SqmRestrictedSubQueryExpression<Y> any(Subquery<Y> subquery);
+	<Y> SqmModifiedSubQueryExpression<Y> any(Subquery<Y> subquery);
 
 	@Override
 	<K, M extends Map<K, ?>> SqmExpression<Set<K>> keys(M map);

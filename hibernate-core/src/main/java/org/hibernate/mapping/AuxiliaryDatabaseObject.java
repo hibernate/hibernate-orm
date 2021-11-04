@@ -15,7 +15,10 @@ import org.hibernate.dialect.Dialect;
  * creating/dropping the schema.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated Use {@link org.hibernate.boot.model.relational.AuxiliaryDatabaseObject} instead.
  */
+@Deprecated
 public interface AuxiliaryDatabaseObject extends RelationalModel, Serializable {
 	/**
 	 * Add the given dialect name to the scope of dialects to which

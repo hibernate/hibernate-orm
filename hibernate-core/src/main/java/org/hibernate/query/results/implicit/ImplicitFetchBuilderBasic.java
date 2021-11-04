@@ -67,7 +67,7 @@ public class ImplicitFetchBuilderBasic implements ImplicitFetchBuilder, BasicVal
 
 		final Expression expression = creationStateImpl.resolveSqlExpression(
 				createColumnReferenceKey(
-						parentTableGroup.getTableReference( fetchPath, table ),
+						parentTableGroup.resolveTableReference( fetchPath, table ),
 						fetchable.getSelectionExpression()
 				),
 				processingState -> {
@@ -99,8 +99,6 @@ public class ImplicitFetchBuilderBasic implements ImplicitFetchBuilder, BasicVal
 				parent,
 				fetchPath,
 				fetchable,
-				// todo (6.0) - we don't know
-				true,
 				valueConverter,
 				FetchTiming.IMMEDIATE,
 				domainResultCreationState

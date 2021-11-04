@@ -6,6 +6,11 @@
  */
 package org.hibernate.query.criteria;
 
+import java.util.Map;
+
+import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.PathException;
+
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.MapJoin;
 import jakarta.persistence.criteria.Predicate;
@@ -15,7 +20,7 @@ import jakarta.persistence.criteria.Predicate;
  *
  * @author Steve Ebersole
  */
-public interface JpaMapJoin<O,K,V> extends JpaJoin<O,V>, MapJoin<O,K,V> {
+public interface JpaMapJoin<O,K,V> extends JpaPluralJoin<O, Map<K, V>, V>, MapJoin<O,K,V> {
 	@Override
 	JpaMapJoin<O, K, V> on(JpaExpression<Boolean> restriction);
 
@@ -29,4 +34,7 @@ public interface JpaMapJoin<O,K,V> extends JpaJoin<O,V>, MapJoin<O,K,V> {
 	JpaMapJoin<O, K, V> on(Predicate... restrictions);
 
 	<S extends V> JpaMapJoin<O, K, S> treatAs(Class<S> treatAsType);
+
+	@Override
+	<S extends V> JpaMapJoin<O, K, S> treatAs(EntityDomainType<S> treatJavaType);
 }

@@ -7,10 +7,12 @@
 package org.hibernate.query.sqm.tree.from;
 
 import org.hibernate.HibernateException;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaFetch;
 import org.hibernate.query.criteria.JpaJoin;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -35,6 +37,12 @@ public interface SqmAttributeJoin<O,T> extends SqmQualifiedJoin<O,T>, JpaFetch<O
 	SqmPredicate getJoinPredicate();
 
 	void setJoinPredicate(SqmPredicate predicate);
+
+	@Override
+	<S extends T> SqmAttributeJoin<O, S> treatAs(Class<S> treatJavaType);
+
+	@Override
+	<S extends T> SqmAttributeJoin<O, S> treatAs(EntityDomainType<S> treatTarget);
 
 	SqmAttributeJoin makeCopy(SqmCreationProcessingState creationProcessingState);
 

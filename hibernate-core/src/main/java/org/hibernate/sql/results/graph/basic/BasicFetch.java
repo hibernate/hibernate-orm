@@ -30,7 +30,6 @@ public class BasicFetch<T> implements Fetch, BasicResultGraphNode<T> {
 	private final NavigablePath navigablePath;
 	private final FetchParent fetchParent;
 	private final BasicValuedModelPart valuedMapping;
-	private final boolean nullable;
 
 	private final DomainResultAssembler<T> assembler;
 
@@ -41,7 +40,6 @@ public class BasicFetch<T> implements Fetch, BasicResultGraphNode<T> {
 			FetchParent fetchParent,
 			NavigablePath fetchablePath,
 			BasicValuedModelPart valuedMapping,
-			boolean nullable,
 			BasicValueConverter<T, ?> valueConverter,
 			FetchTiming fetchTiming,
 			DomainResultCreationState creationState) {
@@ -50,7 +48,6 @@ public class BasicFetch<T> implements Fetch, BasicResultGraphNode<T> {
 				fetchParent,
 				fetchablePath,
 				valuedMapping,
-				nullable,
 				valueConverter,
 				fetchTiming,
 				true,
@@ -63,12 +60,10 @@ public class BasicFetch<T> implements Fetch, BasicResultGraphNode<T> {
 			FetchParent fetchParent,
 			NavigablePath fetchablePath,
 			BasicValuedModelPart valuedMapping,
-			boolean nullable,
 			BasicValueConverter<T, ?> valueConverter,
 			FetchTiming fetchTiming,
 			boolean canBasicPartFetchBeDelayed,
 			DomainResultCreationState creationState) {
-		this.nullable = nullable;
 		this.navigablePath = fetchablePath;
 
 		this.fetchParent = fetchParent;

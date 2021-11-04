@@ -151,7 +151,7 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 				.getSessionFactory();
 
 		final TableGroup tableGroup = fromClauseAccess.getTableGroup( fetchParent.getNavigablePath().getParent() );
-		final TableReference tableReference = tableGroup.getTableReference( fetchablePath, table );
+		final TableReference tableReference = tableGroup.resolveTableReference( fetchablePath, table );
 
 		final Expression columnReference = sqlExpressionResolver.resolveSqlExpression(
 				SqlExpressionResolver.createColumnReferenceKey( tableReference, column ),
@@ -177,7 +177,6 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 				fetchParent,
 				fetchablePath,
 				this,
-				nullable,
 				null,
 				fetchTiming,
 				creationState

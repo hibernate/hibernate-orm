@@ -64,8 +64,10 @@ public class EntityDelayedResultImpl implements DomainResult {
 				getNavigablePath(),
 				entityValuedModelPart,
 				() -> new EntityDelayedFetchInitializer(
+						null,
 						getNavigablePath(),
 						(ToOneAttributeMapping) entityValuedModelPart,
+						false,
 						identifierResult.createResultAssembler( creationState )
 				)
 		);

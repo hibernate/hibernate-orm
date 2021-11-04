@@ -144,8 +144,8 @@ public class DomainPathPart implements SemanticPathPart {
 	}
 
 	@Override
-	public SqmPath resolveIndexedAccess(
-			SqmExpression selector,
+	public SqmPath<?> resolveIndexedAccess(
+			SqmExpression<?> selector,
 			boolean isTerminal,
 			SqmCreationState creationState) {
 		throw new NotYetImplementedFor6Exception( getClass() );

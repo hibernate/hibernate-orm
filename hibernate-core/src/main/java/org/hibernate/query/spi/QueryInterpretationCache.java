@@ -35,7 +35,7 @@ public interface QueryInterpretationCache {
 
 	HqlInterpretation resolveHqlInterpretation(String queryString, Function<String, SqmStatement<?>> creator);
 
-	SelectQueryPlan resolveSelectQueryPlan(Key key, Supplier<SelectQueryPlan> creator);
+	<R> SelectQueryPlan<R> resolveSelectQueryPlan(Key key, Supplier<SelectQueryPlan<R>> creator);
 
 	NonSelectQueryPlan getNonSelectQueryPlan(Key key);
 	void cacheNonSelectQueryPlan(Key key, NonSelectQueryPlan plan);

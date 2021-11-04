@@ -131,13 +131,16 @@ public class StandardTableGroup extends AbstractTableGroup {
 	}
 
 	@Override
-	public TableReference getTableReferenceInternal(
+	protected TableReference getTableReferenceInternal(
 			NavigablePath navigablePath,
-			String tableExpression, boolean allowFkOptimization) {
+			String tableExpression,
+			boolean allowFkOptimization,
+			boolean resolve) {
 		final TableReference tableReference = primaryTableReference.getTableReference(
 				navigablePath,
 				tableExpression,
-				allowFkOptimization
+				allowFkOptimization,
+				resolve
 		);
 		if ( tableReference != null ) {
 			return tableReference;
@@ -149,25 +152,25 @@ public class StandardTableGroup extends AbstractTableGroup {
 					final TableReferenceJoin join = tableJoins.get( i );
 					assert join != null;
 					final TableReference resolveTableReference = join.getJoinedTableReference()
-							.getTableReference( navigablePath, tableExpression, allowFkOptimization );
+							.getTableReference( navigablePath, tableExpression, allowFkOptimization, resolve );
 					if ( resolveTableReference != null ) {
 						return resolveTableReference;
 					}
 				}
 			}
 
-			return potentiallyCreateTableReference( tableExpression );
+			return resolve ? potentiallyCreateTableReference( tableExpression ) : null;
 		}
 
 		for ( TableGroupJoin tableGroupJoin : getNestedTableGroupJoins() ) {
 			final TableReference primaryTableReference = tableGroupJoin.getJoinedGroup().getPrimaryTableReference();
-			if ( primaryTableReference.getTableReference( navigablePath, tableExpression, allowFkOptimization ) != null ) {
+			if ( primaryTableReference.getTableReference( navigablePath, tableExpression, allowFkOptimization, resolve ) != null ) {
 				return primaryTableReference;
 			}
 		}
 		for ( TableGroupJoin tableGroupJoin : getTableGroupJoins() ) {
 			final TableReference primaryTableReference = tableGroupJoin.getJoinedGroup().getPrimaryTableReference();
-			if ( primaryTableReference.getTableReference( navigablePath, tableExpression, allowFkOptimization ) != null ) {
+			if ( primaryTableReference.getTableReference( navigablePath, tableExpression, allowFkOptimization, resolve ) != null ) {
 				return primaryTableReference;
 			}
 		}

@@ -8,6 +8,7 @@ package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.BagPersistentAttribute;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.TreatedNavigablePath;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
@@ -28,6 +29,10 @@ public class SqmTreatedBagJoin<O,T, S extends T> extends SqmBagJoin<O,S> impleme
 		//noinspection unchecked
 		super(
 				wrappedPath.getLhs(),
+				wrappedPath.getNavigablePath().treatAs(
+						treatTarget.getHibernateEntityName(),
+						alias
+				),
 				(BagPersistentAttribute<O, S>) wrappedPath.getAttribute(),
 				alias,
 				wrappedPath.getSqmJoinType(),

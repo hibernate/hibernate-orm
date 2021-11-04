@@ -145,12 +145,8 @@ public class JavaTypeRegistry implements JavaTypeDescriptorBaseline.BaselineTarg
 									return determinedPlan;
 								}
 
-								return new MutableMutabilityPlan<J>() {
-									@Override
-									protected J deepCopyNotNull(J value) {
-										return value;
-									}
-								};
+								//noinspection unchecked
+								return (MutabilityPlan<J>) MutableMutabilityPlan.INSTANCE;
 
 							},
 							typeConfiguration
@@ -159,8 +155,16 @@ public class JavaTypeRegistry implements JavaTypeDescriptorBaseline.BaselineTarg
 		);
 	}
 
-	@SuppressWarnings("unchecked")
 	public <J> JavaType<J> resolveManagedTypeDescriptor(Type javaType) {
+		return resolveManagedTypeDescriptor( javaType, false );
+	}
+
+	public <J> JavaType<J> resolveEntityTypeDescriptor(Type javaType) {
+		return resolveManagedTypeDescriptor( javaType, true );
+	}
+
+	@SuppressWarnings("unchecked")
+	private <J> JavaType<J> resolveManagedTypeDescriptor(Type javaType, boolean entity) {
 		return resolveDescriptor(
 				javaType,
 				() -> {
@@ -181,14 +185,10 @@ public class JavaTypeRegistry implements JavaTypeDescriptorBaseline.BaselineTarg
 						mutabilityPlan = determinedPlan;
 					}
 					else {
-						mutabilityPlan = new MutableMutabilityPlan<J>() {
-							@Override
-							protected J deepCopyNotNull(J value) {
-								return value;
-							}
-						};
+						mutabilityPlan = (MutabilityPlan<J>) MutableMutabilityPlan.INSTANCE;
 					}
-					return new JavaTypeDescriptorBasicAdaptor<>( javaTypeClass, mutabilityPlan );
+					return entity ? new EntityJavaTypeDescriptor<>( javaTypeClass, mutabilityPlan )
+							: new JavaTypeDescriptorBasicAdaptor<>( javaTypeClass, mutabilityPlan );
 				}
 		);
 	}

@@ -14,7 +14,6 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
-import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
@@ -23,6 +22,7 @@ import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.query.sqm.sql.internal.SqlAstProcessingStateImpl;
 import org.hibernate.query.sqm.sql.internal.SqlAstQueryPartProcessingStateImpl;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
+import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.query.sqm.tree.update.SqmAssignment;
@@ -63,7 +63,7 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 
 	public MultiTableSqmMutationConverter(
 			EntityMappingType mutatingEntityDescriptor,
-			String mutatingEntityExplicitAlias,
+			SqmRoot<?> sqmRoot,
 			DomainParameterXref domainParameterXref,
 			QueryOptions queryOptions,
 			LoadQueryInfluencers loadQueryInfluencers,
@@ -71,8 +71,8 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 			SqlAstCreationContext creationContext) {
 		this(
 				mutatingEntityDescriptor,
-				mutatingEntityExplicitAlias,
-				mutatingEntityExplicitAlias,
+				sqmRoot,
+				sqmRoot.getExplicitAlias(),
 				domainParameterXref,
 				queryOptions,
 				loadQueryInfluencers,
@@ -83,7 +83,7 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 
 	public MultiTableSqmMutationConverter(
 			EntityMappingType mutatingEntityDescriptor,
-			String mutatingEntityExplicitAlias,
+			SqmRoot<?> sqmRoot,
 			String sourceAlias,
 			DomainParameterXref domainParameterXref,
 			QueryOptions queryOptions,
@@ -101,10 +101,9 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 
 		pushProcessingState( rootProcessingState );
 
-		final NavigablePath navigablePath = new NavigablePath( mutatingEntityDescriptor.getEntityName(), mutatingEntityExplicitAlias );
 		this.mutatingTableGroup = mutatingEntityDescriptor.createRootTableGroup(
 				true,
-				navigablePath,
+				sqmRoot.getNavigablePath(),
 				sourceAlias,
 				// We don't care about the discriminator predicate,
 				// but we pass non-null to ensure table reference join predicates are generated
@@ -112,7 +111,7 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 				this,
 				creationContext.getSessionFactory() );
 
-		getFromClauseAccess().registerTableGroup( navigablePath, mutatingTableGroup );
+		getFromClauseAccess().registerTableGroup( sqmRoot.getNavigablePath(), mutatingTableGroup );
 	}
 
 	@SuppressWarnings("unused")

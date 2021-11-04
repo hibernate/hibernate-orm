@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.TreatedNavigablePath;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
@@ -20,10 +21,11 @@ public class SqmTreatedCrossJoin<T, S extends T> extends SqmCrossJoin<S> impleme
 
 	public SqmTreatedCrossJoin(
 			SqmCrossJoin<T> wrappedPath,
-			String alias,
-			EntityDomainType<S> treatTarget) {
+			EntityDomainType<S> treatTarget,
+			String alias) {
 		//noinspection unchecked
 		super(
+				wrappedPath.getNavigablePath().treatAs( treatTarget.getHibernateEntityName(), alias ),
 				(EntityDomainType<S>) wrappedPath.getReferencedPathSource().getSqmPathType(),
 				alias,
 				wrappedPath.getRoot()

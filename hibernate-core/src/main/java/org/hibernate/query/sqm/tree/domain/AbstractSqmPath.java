@@ -59,18 +59,6 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 		return (SqmPathSource<T>) super.getNodeType();
 	}
 
-	@SuppressWarnings("WeakerAccess")
-	protected AbstractSqmPath(SqmPathSource<T> referencedPathSource, SqmPath<?> lhs, NodeBuilder nodeBuilder) {
-		this(
-				lhs == null
-						? new NavigablePath( referencedPathSource.getPathName() )
-						: lhs.getNavigablePath().append( referencedPathSource.getPathName() ),
-				referencedPathSource,
-				lhs,
-				nodeBuilder
-		);
-	}
-
 	@Override
 	public NavigablePath getNavigablePath() {
 		return navigablePath;

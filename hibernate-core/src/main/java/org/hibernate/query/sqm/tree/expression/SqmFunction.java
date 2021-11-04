@@ -187,8 +187,8 @@ public abstract class SqmFunction<T> extends AbstractSqmExpression<T>
 	}
 
 	@Override
-	public SqmPath resolveIndexedAccess(
-			SqmExpression selector,
+	public SqmPath<?> resolveIndexedAccess(
+			SqmExpression<?> selector,
 			boolean isTerminal,
 			SqmCreationState creationState) {
 		throw new UnsupportedOperationException();

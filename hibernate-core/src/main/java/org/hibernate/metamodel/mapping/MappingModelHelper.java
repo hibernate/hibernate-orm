@@ -46,7 +46,7 @@ public class MappingModelHelper {
 							qualifier = selection.getContainingTableExpression();
 						}
 						else {
-							qualifier = tableGroup.getTableReference( selection.getContainingTableExpression() ).getIdentificationVariable();
+							qualifier = tableGroup.resolveTableReference( selection.getContainingTableExpression() ).getIdentificationVariable();
 						}
 						if ( sqlExpressionResolver == null ) {
 							colRef = new ColumnReference(
@@ -78,7 +78,7 @@ public class MappingModelHelper {
 				qualifier = basicPart.getContainingTableExpression();
 			}
 			else {
-				qualifier = tableGroup.getTableReference( basicPart.getContainingTableExpression() ).getIdentificationVariable();
+				qualifier = tableGroup.resolveTableReference( basicPart.getContainingTableExpression() ).getIdentificationVariable();
 			}
 			if ( sqlExpressionResolver == null ) {
 				return new ColumnReference(

@@ -19,7 +19,11 @@ import jakarta.persistence.metamodel.MapAttribute;
 import jakarta.persistence.metamodel.SetAttribute;
 import jakarta.persistence.metamodel.SingularAttribute;
 
+import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.PathException;
 import org.hibernate.query.criteria.JpaFrom;
+import org.hibernate.query.criteria.JpaJoin;
+import org.hibernate.query.criteria.JpaPath;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
@@ -64,6 +68,23 @@ public interface SqmFrom<O,T> extends SqmVisitableNode, SqmPath<T>, JpaFrom<O, T
 	 * Visit all associated joins
 	 */
 	void visitSqmJoins(Consumer<SqmJoin<T, ?>> consumer);
+
+	@Override
+	<S extends T> SqmFrom<?, S> treatAs(Class<S> treatAsType);
+
+	@Override
+	<S extends T> SqmFrom<?, S> treatAs(EntityDomainType<S> treatAsType);
+
+	<S extends T> SqmFrom<?, S> treatAs(Class<S> treatJavaType, String alias);
+
+	<S extends T> SqmFrom<?, S> treatAs(EntityDomainType<S> treatTarget, String alias);
+
+	boolean hasTreats();
+
+	/**
+	 * The treats associated with this SqmFrom
+	 */
+	List<SqmFrom<?,?>> getSqmTreats();
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

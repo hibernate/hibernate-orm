@@ -177,7 +177,6 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 				fetchParent,
 				fetchablePath,
 				this,
-				false,
 				null,
 				fetchTiming,
 				creationState

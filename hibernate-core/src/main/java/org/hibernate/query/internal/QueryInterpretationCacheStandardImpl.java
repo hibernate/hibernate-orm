@@ -76,17 +76,18 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 	}
 
 	@Override
-	public SelectQueryPlan resolveSelectQueryPlan(
+	public <R> SelectQueryPlan<R> resolveSelectQueryPlan(
 			Key key,
-			Supplier<SelectQueryPlan> creator) {
+			Supplier<SelectQueryPlan<R>> creator) {
 		log.tracef( "QueryPlan#getSelectQueryPlan(%s)", key );
 
-		final SelectQueryPlan cached = (SelectQueryPlan) queryPlanCache.get( key );
+		@SuppressWarnings("unchecked")
+		final SelectQueryPlan<R> cached = (SelectQueryPlan<R>) queryPlanCache.get( key );
 		if ( cached != null ) {
 			return cached;
 		}
 
-		final SelectQueryPlan plan = creator.get();
+		final SelectQueryPlan<R> plan = creator.get();
 		queryPlanCache.put( key.prepareForStore(), plan );
 		return plan;
 	}

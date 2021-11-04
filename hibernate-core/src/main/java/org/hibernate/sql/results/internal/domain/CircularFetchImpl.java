@@ -108,16 +108,16 @@ public class CircularFetchImpl implements BiDirectionalFetch, Association {
 				getNavigablePath(),
 				referencedModelPart,
 				() -> {
-					if ( selectByUniqueKey ) {
-						return new EntitySelectFetchByUniqueKeyInitializer(
-								parentAccess,
-								fetchable,
-								getNavigablePath(),
-								entityMappingType.getEntityPersister(),
-								resultAssembler
-						);
-					}
 					if ( timing == FetchTiming.IMMEDIATE ) {
+						if ( selectByUniqueKey ) {
+							return new EntitySelectFetchByUniqueKeyInitializer(
+									parentAccess,
+									fetchable,
+									getNavigablePath(),
+									entityMappingType.getEntityPersister(),
+									resultAssembler
+							);
+						}
 						final EntityPersister entityPersister = entityMappingType.getEntityPersister();
 						if ( entityPersister.isBatchLoadable() ) {
 							return new BatchEntitySelectFetchInitializer(
@@ -140,8 +140,10 @@ public class CircularFetchImpl implements BiDirectionalFetch, Association {
 					}
 					else {
 						return new EntityDelayedFetchInitializer(
+								parentAccess,
 								getReferencedPath(),
 								fetchable,
+								selectByUniqueKey,
 								resultAssembler
 						);
 					}
@@ -238,6 +240,7 @@ public class CircularFetchImpl implements BiDirectionalFetch, Association {
 
 		@Override
 		public Object assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {
+			initializer.resolveInstance( rowProcessingState );
 			return initializer.getInitializedInstance();
 		}
 

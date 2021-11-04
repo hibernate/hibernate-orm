@@ -23,6 +23,7 @@ public class TableReference implements SqlAstNode, ColumnReferenceQualifier {
 	private final String identificationVariable;
 
 	private final boolean isOptional;
+	private String prunedTableExpression;
 
 	public TableReference(
 			String tableExpression,
@@ -35,7 +36,7 @@ public class TableReference implements SqlAstNode, ColumnReferenceQualifier {
 	}
 
 	public String getTableExpression() {
-		return tableExpression;
+		return prunedTableExpression == null ? tableExpression : prunedTableExpression;
 	}
 
 	public String getIdentificationVariable() {
@@ -44,6 +45,10 @@ public class TableReference implements SqlAstNode, ColumnReferenceQualifier {
 
 	public boolean isOptional() {
 		return isOptional;
+	}
+
+	public void setPrunedTableExpression(String prunedTableExpression) {
+		this.prunedTableExpression = prunedTableExpression;
 	}
 
 	@Override
@@ -66,7 +71,8 @@ public class TableReference implements SqlAstNode, ColumnReferenceQualifier {
 	public TableReference getTableReference(
 			NavigablePath navigablePath,
 			String tableExpression,
-			boolean allowFkOptimization) {
+			boolean allowFkOptimization,
+			boolean resolve) {
 		if ( this.tableExpression.equals( tableExpression ) ) {
 			return this;
 		}

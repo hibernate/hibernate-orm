@@ -8,6 +8,7 @@ package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.TreatedNavigablePath;
 import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -27,13 +28,14 @@ public class SqmTreatedRoot<T, S extends T> extends SqmRoot<S> implements SqmTre
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public SqmTreatedRoot(
 			SqmRoot<T> wrappedPath,
-			EntityDomainType<S> treatTarget,
-			NodeBuilder nodeBuilder) {
+			EntityDomainType<S> treatTarget) {
 		super(
-				wrappedPath.getNavigablePath(),
+				wrappedPath.getNavigablePath().treatAs(
+						treatTarget.getHibernateEntityName()
+				),
 				(EntityDomainType) wrappedPath.getReferencedPathSource(),
 				null,
-				nodeBuilder
+				wrappedPath.nodeBuilder()
 		);
 		this.wrappedPath = wrappedPath;
 		this.treatTarget = treatTarget;

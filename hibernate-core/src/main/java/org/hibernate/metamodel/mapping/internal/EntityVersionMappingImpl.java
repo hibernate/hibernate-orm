@@ -200,7 +200,6 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 				fetchParent,
 				fetchablePath,
 				this,
-				false,
 				null,
 				fetchTiming,
 				creationState

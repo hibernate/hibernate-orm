@@ -16,11 +16,11 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
  *
  * @author Steve Ebersole
  */
-public class NonAggregatedCompositeSqmPathSource extends AbstractSqmPathSource implements CompositeSqmPathSource {
+public class NonAggregatedCompositeSqmPathSource<J> extends AbstractSqmPathSource<J> implements CompositeSqmPathSource<J> {
 	public NonAggregatedCompositeSqmPathSource(
 			String localName,
 			BindableType bindableType,
-			ManagedDomainType container) {
+			ManagedDomainType<J> container) {
 		super( localName, container, bindableType );
 	}
 
@@ -35,8 +35,8 @@ public class NonAggregatedCompositeSqmPathSource extends AbstractSqmPathSource i
 	}
 
 	@Override
-	public SqmPath createSqmPath(SqmPath lhs) {
-		return new NonAggregatedCompositeSimplePath(
+	public SqmPath<J> createSqmPath(SqmPath<?> lhs) {
+		return new NonAggregatedCompositeSimplePath<>(
 				lhs.getNavigablePath().append( getPathName() ),
 				this,
 				lhs,

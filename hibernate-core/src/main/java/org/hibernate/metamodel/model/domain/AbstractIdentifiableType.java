@@ -401,7 +401,7 @@ public abstract class AbstractIdentifiableType<J>
 		else if ( nonAggregatedIdAttributes != null && ! nonAggregatedIdAttributes.isEmpty() ) {
 			// non-aggregate composite id
 			if ( idClassType == null ) {
-				return new NonAggregatedCompositeSqmPathSource(
+				return new NonAggregatedCompositeSqmPathSource<>(
 						EntityIdentifierMapping.ROLE_LOCAL_NAME,
 						Bindable.BindableType.SINGULAR_ATTRIBUTE,
 						this

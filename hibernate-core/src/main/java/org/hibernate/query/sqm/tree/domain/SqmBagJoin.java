@@ -12,7 +12,7 @@ import jakarta.persistence.criteria.Predicate;
 
 import org.hibernate.metamodel.model.domain.BagPersistentAttribute;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.query.PathException;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.query.criteria.JpaCollectionJoin;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
@@ -34,6 +34,17 @@ public class SqmBagJoin<O, E> extends AbstractSqmPluralJoin<O,Collection<E>, E> 
 			boolean fetched,
 			NodeBuilder nodeBuilder) {
 		super( lhs, attribute, alias, sqmJoinType, fetched, nodeBuilder );
+	}
+
+	protected SqmBagJoin(
+			SqmFrom<?, O> lhs,
+			NavigablePath navigablePath,
+			BagPersistentAttribute<O,E> attribute,
+			String alias,
+			SqmJoinType joinType,
+			boolean fetched,
+			NodeBuilder nodeBuilder) {
+		super( lhs, navigablePath, attribute, alias, joinType, fetched, nodeBuilder );
 	}
 
 	@Override
@@ -85,15 +96,27 @@ public class SqmBagJoin<O, E> extends AbstractSqmPluralJoin<O,Collection<E>, E> 
 	}
 
 	@Override
-	public <S extends E> SqmTreatedBagJoin<O,E,S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
-		//noinspection unchecked
-		return new SqmTreatedBagJoin( this, treatTarget, null );
+	public <S extends E> SqmTreatedBagJoin<O,E,S> treatAs(EntityDomainType<S> treatTarget) {
+		return treatAs( treatTarget, null );
 	}
 
 	@Override
-	public SqmAttributeJoin makeCopy(SqmCreationProcessingState creationProcessingState) {
-		//noinspection unchecked
-		return new SqmBagJoin(
+	public <S extends E> SqmTreatedBagJoin<O,E,S> treatAs(Class<S> treatJavaType, String alias) {
+		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ), alias );
+	}
+
+	@Override
+	public <S extends E> SqmTreatedBagJoin<O,E,S> treatAs(EntityDomainType<S> treatTarget, String alias) {
+		final SqmTreatedBagJoin<O,E,S> treat = findTreat( treatTarget, alias );
+		if ( treat == null ) {
+			return addTreat( new SqmTreatedBagJoin<>( this, treatTarget, alias ) );
+		}
+		return treat;
+	}
+
+	@Override
+	public SqmAttributeJoin<O, E> makeCopy(SqmCreationProcessingState creationProcessingState) {
+		return new SqmBagJoin<>(
 				creationProcessingState.getPathRegistry().findFromByPath( getLhs().getNavigablePath() ),
 				getReferencedPathSource(),
 				getExplicitAlias(),

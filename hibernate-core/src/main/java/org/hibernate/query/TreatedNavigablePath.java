@@ -11,20 +11,39 @@ package org.hibernate.query;
  */
 public class TreatedNavigablePath extends NavigablePath {
 
-	public static final String ROLE_LOCAL_NAME = "{treated}";
-
 	public TreatedNavigablePath(NavigablePath parent, String entityTypeName) {
-		super( parent, ROLE_LOCAL_NAME, entityTypeName );
+		this( parent, entityTypeName, null );
+	}
+
+	public TreatedNavigablePath(NavigablePath parent, String entityTypeName, String alias) {
+		super(
+				parent,
+				alias == null ? "treat(" + parent.getFullPath() + " as " + entityTypeName + ")"
+						: "treat(" + parent.getFullPath() + " as " + entityTypeName + ")(" + alias + ")",
+				entityTypeName,
+				"treat(" + parent.getFullPath() + " as " + entityTypeName + ")"
+		);
+		assert !( parent instanceof TreatedNavigablePath );
+	}
+
+	@Override
+	public NavigablePath treatAs(String entityName) {
+		return new TreatedNavigablePath( getRealParent(), entityName );
+	}
+
+	@Override
+	public NavigablePath treatAs(String entityName, String alias) {
+		return new TreatedNavigablePath( getRealParent(), entityName, alias );
 	}
 
 	@Override
 	public String getLocalName() {
-		return ROLE_LOCAL_NAME;
+		return getUnaliasedLocalName();
 	}
 
 	@Override
 	public int hashCode() {
-		return getParent().getFullPath().hashCode();
+		return getFullPath().hashCode();
 	}
 
 	@Override

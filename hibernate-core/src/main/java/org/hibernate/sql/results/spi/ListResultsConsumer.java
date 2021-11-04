@@ -62,6 +62,7 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 			RowProcessingStateStandardImpl rowProcessingState,
 			RowReader<R> rowReader) {
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
+		RuntimeException ex = null;
 		try {
 			persistenceContext.getLoadContexts().register( jdbcValuesSourceProcessingState );
 
@@ -123,11 +124,30 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 
 			return results;
 		}
-		finally {
-			rowReader.finishUp( jdbcValuesSourceProcessingState );
-			jdbcValues.finishUp( session );
-			persistenceContext.initializeNonLazyCollections();
+		catch (RuntimeException e) {
+			ex = e;
 		}
+		finally {
+			try {
+				rowReader.finishUp( jdbcValuesSourceProcessingState );
+				jdbcValues.finishUp( session );
+				persistenceContext.initializeNonLazyCollections();
+			}
+			catch (RuntimeException e) {
+				if ( ex != null ) {
+					ex.addSuppressed( e );
+				}
+				else {
+					ex = e;
+				}
+			}
+			finally {
+				if ( ex != null ) {
+					throw ex;
+				}
+			}
+		}
+		throw new IllegalStateException( "Should not reach this!" );
 	}
 
 	@Override

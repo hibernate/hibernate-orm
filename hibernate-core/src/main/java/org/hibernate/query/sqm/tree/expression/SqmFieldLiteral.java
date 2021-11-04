@@ -221,8 +221,8 @@ public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressable<T>, 
 	}
 
 	@Override
-	public SqmPath resolveIndexedAccess(
-			SqmExpression selector,
+	public SqmPath<?> resolveIndexedAccess(
+			SqmExpression<?> selector,
 			boolean isTerminal,
 			SqmCreationState creationState) {
 		throw new SemanticException(

@@ -18,6 +18,7 @@ import org.hibernate.query.QueryParameter;
 import org.hibernate.query.internal.QueryParameterNamedImpl;
 import org.hibernate.query.internal.QueryParameterPositionalImpl;
 import org.hibernate.query.spi.QueryParameterImplementor;
+import org.hibernate.query.sql.spi.ParameterOccurrence;
 import org.hibernate.query.sql.spi.ParameterRecognizer;
 
 /**
@@ -37,8 +38,8 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 
 	private int ordinalParameterImplicitPosition;
 
-	private List<QueryParameterImplementor<?>> parameterList;
-	private StringBuilder sqlStringBuffer = new StringBuilder();
+	private List<ParameterOccurrence> parameterList;
+	private final StringBuilder sqlStringBuffer = new StringBuilder();
 
 	@SuppressWarnings("WeakerAccess")
 	public ParameterRecognizerImpl(SessionFactoryImplementor factory) {
@@ -77,7 +78,7 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 		return positionalQueryParameters;
 	}
 
-	public List<QueryParameterImplementor<?>> getParameterList() {
+	public List<ParameterOccurrence> getParameterList() {
 		return parameterList;
 	}
 
@@ -117,7 +118,7 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 			parameterList = new ArrayList<>();
 		}
 
-		parameterList.add( parameter );
+		parameterList.add( new ParameterOccurrence( parameter, sqlStringBuffer.length() ) );
 		sqlStringBuffer.append( "?" );
 	}
 
@@ -148,7 +149,7 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 			parameterList = new ArrayList<>();
 		}
 
-		parameterList.add( parameter );
+		parameterList.add( new ParameterOccurrence( parameter, sqlStringBuffer.length() ) );
 		sqlStringBuffer.append( "?" );
 	}
 
@@ -183,7 +184,7 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 			parameterList = new ArrayList<>();
 		}
 
-		parameterList.add( parameter );
+		parameterList.add( new ParameterOccurrence( parameter, sqlStringBuffer.length() ) );
 		sqlStringBuffer.append( "?" );
 	}
 

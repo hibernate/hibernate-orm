@@ -11,11 +11,13 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -30,6 +32,8 @@ import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollMode;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.query.spi.NativeQueryInterpreter;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -37,6 +41,7 @@ import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.AbstractSharedSessionContract;
+import org.hibernate.internal.util.MathHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
@@ -69,6 +74,7 @@ import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryInterpretationCache;
+import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
@@ -79,6 +85,7 @@ import org.hibernate.query.sql.spi.NativeSelectQueryDefinition;
 import org.hibernate.query.sql.spi.NativeSelectQueryPlan;
 import org.hibernate.query.sql.spi.NonSelectInterpretationsKey;
 import org.hibernate.query.sql.spi.ParameterInterpretation;
+import org.hibernate.query.sql.spi.ParameterOccurrence;
 import org.hibernate.query.sql.spi.SelectInterpretationsKey;
 import org.hibernate.sql.exec.internal.CallbackImpl;
 import org.hibernate.sql.exec.spi.Callback;
@@ -110,7 +117,7 @@ public class NativeQueryImpl<R>
 	private final String sqlString;
 
 	private final ParameterMetadataImplementor parameterMetadata;
-	private final List<QueryParameterImplementor<?>> occurrenceOrderedParamList;
+	private final List<ParameterOccurrence> parameterOccurrences;
 	private final QueryParameterBindings parameterBindings;
 
 	private final ResultSetMappingImpl resultSetMapping;
@@ -190,7 +197,7 @@ public class NativeQueryImpl<R>
 
 		this.sqlString = parameterInterpretation.getAdjustedSqlString();
 		this.parameterMetadata = parameterInterpretation.toParameterMetadata( session );
-		this.occurrenceOrderedParamList = parameterInterpretation.getOccurrenceOrderedParameters();
+		this.parameterOccurrences = parameterInterpretation.getOrderedParameterOccurrences();
 		this.parameterBindings = QueryParameterBindingsImpl.from(
 				parameterMetadata,
 				session.getFactory(),
@@ -327,7 +334,7 @@ public class NativeQueryImpl<R>
 
 		this.sqlString = parameterInterpretation.getAdjustedSqlString();
 		this.parameterMetadata = parameterInterpretation.toParameterMetadata( session );
-		this.occurrenceOrderedParamList = parameterInterpretation.getOccurrenceOrderedParameters();
+		this.parameterOccurrences = parameterInterpretation.getOrderedParameterOccurrences();
 		this.parameterBindings = QueryParameterBindingsImpl.from(
 				parameterMetadata,
 				session.getFactory(),
@@ -386,7 +393,7 @@ public class NativeQueryImpl<R>
 
 		this.sqlString = parameterInterpretation.getAdjustedSqlString();
 		this.parameterMetadata = parameterInterpretation.toParameterMetadata( session );
-		this.occurrenceOrderedParamList = parameterInterpretation.getOccurrenceOrderedParameters();
+		this.parameterOccurrences = parameterInterpretation.getOrderedParameterOccurrences();
 		this.parameterBindings = QueryParameterBindingsImpl.from(
 				parameterMetadata,
 				session.getFactory(),
@@ -571,11 +578,9 @@ public class NativeQueryImpl<R>
 
 	@Override
 	protected List<R> doList() {
-		//noinspection unchecked
 		return resolveSelectQueryPlan().performList( this );
 	}
 
-	@SuppressWarnings("unchecked")
 	private SelectQueryPlan<R> resolveSelectQueryPlan() {
 		final QueryInterpretationCache.Key cacheKey = generateSelectInterpretationsKey( resultSetMapping );
 		if ( cacheKey != null ) {
@@ -590,10 +595,11 @@ public class NativeQueryImpl<R>
 	}
 
 	private NativeSelectQueryPlan<R> createQueryPlan(ResultSetMapping resultSetMapping) {
-		final NativeSelectQueryDefinition queryDefinition = new NativeSelectQueryDefinition() {
+		final String sqlString = expandParameterLists();
+		final NativeSelectQueryDefinition<R> queryDefinition = new NativeSelectQueryDefinition<R>() {
 			@Override
 			public String getSqlString() {
-				return NativeQueryImpl.this.getQueryString();
+				return sqlString;
 			}
 
 			@Override
@@ -602,8 +608,8 @@ public class NativeQueryImpl<R>
 			}
 
 			@Override
-			public List<QueryParameterImplementor<?>> getQueryParameterList() {
-				return NativeQueryImpl.this.occurrenceOrderedParamList;
+			public List<ParameterOccurrence> getQueryParameterOccurrences() {
+				return NativeQueryImpl.this.parameterOccurrences;
 			}
 
 			@Override
@@ -622,6 +628,142 @@ public class NativeQueryImpl<R>
 				.createQueryPlan( queryDefinition, getSessionFactory() );
 	}
 
+	private String expandParameterLists() {
+		if ( parameterOccurrences == null || parameterOccurrences.isEmpty() ) {
+			return sqlString;
+		}
+		// HHH-1123
+		// Some DBs limit number of IN expressions.  For now, warn...
+		final Dialect dialect = getSessionFactory().getServiceRegistry().getService( JdbcServices.class ).getJdbcEnvironment().getDialect();
+		final boolean paddingEnabled = getSessionFactory().getSessionFactoryOptions().inClauseParameterPaddingEnabled();
+		final int inExprLimit = dialect.getInExpressionCountLimit();
+
+		StringBuilder sb = null;
+
+		// Handle parameter lists
+		int offset = 0;
+		for ( ParameterOccurrence occurrence : parameterOccurrences ) {
+			final QueryParameterImplementor<?> queryParameter = occurrence.getParameter();
+			final QueryParameterBinding<?> binding = parameterBindings.getBinding( queryParameter );
+			if ( !binding.isMultiValued() ) {
+				continue;
+			}
+			final Collection<?> bindValues = binding.getBindValues();
+
+			int bindValueCount = bindValues.size();
+			int bindValueMaxCount = determineBindValueMaxCount( paddingEnabled, inExprLimit, bindValueCount );
+
+			if ( inExprLimit > 0 && bindValueCount > inExprLimit ) {
+				log.tooManyInExpressions(
+						dialect.getClass().getName(),
+						inExprLimit,
+						queryParameter.getName() == null
+								? queryParameter.getPosition().toString()
+								: queryParameter.getName(),
+						bindValueCount
+				);
+			}
+
+			final int sourcePosition = occurrence.getSourcePosition();
+			if ( sourcePosition < 0 ) {
+				continue;
+			}
+
+			// check if placeholder is already immediately enclosed in parentheses
+			// (ignoring whitespace)
+			boolean isEnclosedInParens = true;
+			for ( int i = sourcePosition - 1; i >= 0; i-- ) {
+				final char ch = sqlString.charAt( i );
+				if ( !Character.isWhitespace( ch ) ) {
+					isEnclosedInParens = ch == '(';
+					break;
+				}
+			}
+			if ( isEnclosedInParens ) {
+				for ( int i = sourcePosition + 1; i < sqlString.length(); i++ ) {
+					final char ch = sqlString.charAt( i );
+					if ( !Character.isWhitespace( ch ) ) {
+						isEnclosedInParens = ch == ')';
+						break;
+					}
+				}
+			}
+
+			if ( bindValueCount == 1 && isEnclosedInParens ) {
+				// short-circuit for performance when only 1 value and the
+				// placeholder is already enclosed in parentheses...
+				continue;
+			}
+
+			if ( sb == null ) {
+				sb = new StringBuilder( sqlString.length() + 20 );
+				sb.append( sqlString );
+			}
+
+			final String expansionListAsString;
+			// HHH-8901
+			if ( bindValueMaxCount == 0 ) {
+				if ( isEnclosedInParens ) {
+					expansionListAsString = "null";
+				}
+				else {
+					expansionListAsString = "(null)";
+				}
+			}
+			else {
+				// Shift 1 bit instead of multiplication by 2
+				char[] chars;
+				if ( isEnclosedInParens ) {
+					chars = new char[( bindValueMaxCount << 1 ) - 1];
+					chars[0] = '?';
+					for ( int i = 1; i < bindValueMaxCount; i++ ) {
+						final int index = i << 1;
+						chars[index - 1] = ',';
+						chars[index] = '?';
+					}
+				}
+				else {
+					chars = new char[( bindValueMaxCount << 1 ) + 1];
+					chars[0] = '(';
+					chars[1] = '?';
+					for ( int i = 1; i < bindValueMaxCount; i++ ) {
+						final int index = i << 1;
+						chars[index] = ',';
+						chars[index + 1] = '?';
+					}
+					chars[chars.length - 1] = ')';
+				}
+
+				expansionListAsString = new String(chars);
+			}
+
+			final int start = sourcePosition + offset;
+			final int end = start + 1;
+			sb.replace( start, end, expansionListAsString );
+			offset += expansionListAsString.length() - 1;
+		}
+		return sb == null ? sqlString : sb.toString();
+	}
+
+	public static int determineBindValueMaxCount(boolean paddingEnabled, int inExprLimit, int bindValueCount) {
+		int bindValueMaxCount = bindValueCount;
+
+		final boolean inClauseParameterPaddingEnabled = paddingEnabled && bindValueCount > 2;
+
+		if ( inClauseParameterPaddingEnabled ) {
+			int bindValuePaddingCount = MathHelper.ceilingPowerOfTwo( bindValueCount );
+
+			if ( inExprLimit > 0 && bindValuePaddingCount > inExprLimit ) {
+				bindValuePaddingCount = inExprLimit;
+			}
+
+			if ( bindValueCount < bindValuePaddingCount ) {
+				bindValueMaxCount = bindValuePaddingCount;
+			}
+		}
+		return bindValueMaxCount;
+	}
+
 	private SelectInterpretationsKey generateSelectInterpretationsKey(JdbcValuesMappingProducer resultSetMapping) {
 		if ( !isCacheable( this ) ) {
 			return null;
@@ -635,8 +777,7 @@ public class NativeQueryImpl<R>
 		);
 	}
 
-	@SuppressWarnings("RedundantIfStatement")
-	private static boolean isCacheable(NativeQueryImpl query) {
+	private static boolean isCacheable(NativeQueryImpl<?> query) {
 		// todo (6.0): unless we move the limit rendering from DeferredResultSetAccess to NativeSelectQueryPlanImpl
 		//  we don't need to consider the limit here at all because that is applied on demand.
 		//  It certainly is better for performance to include the limit early, but then we might trash the cache
@@ -644,7 +785,8 @@ public class NativeQueryImpl<R>
 //			return false;
 //		}
 
-		return true;
+		// For now, don't cache plans that have parameter lists
+		return !query.parameterBindings.hasAnyMultiValuedBindings();
 	}
 
 	private static boolean hasLimit(Limit limit) {
@@ -669,7 +811,8 @@ public class NativeQueryImpl<R>
 		}
 
 		if ( queryPlan == null ) {
-			queryPlan = new NativeNonSelectQueryPlanImpl( sqlString, querySpaces, occurrenceOrderedParamList );
+			final String sqlString = expandParameterLists();
+			queryPlan = new NativeNonSelectQueryPlanImpl( sqlString, querySpaces, parameterOccurrences );
 			if ( cacheKey != null ) {
 				getSession().getFactory().getQueryEngine().getInterpretationCache().cacheNonSelectQueryPlan( cacheKey, queryPlan );
 			}
@@ -680,6 +823,10 @@ public class NativeQueryImpl<R>
 
 
 	protected NonSelectInterpretationsKey generateNonSelectInterpretationsKey() {
+		if ( !isCacheable( this ) ) {
+			return null;
+		}
+
 		// todo (6.0) - should this account for query-spaces in determining "cacheable"?
 		return new NonSelectInterpretationsKey(
 				getQueryString(),
@@ -1412,7 +1559,7 @@ public class NativeQueryImpl<R>
 
 	private static class ParameterInterpretationImpl implements ParameterInterpretation {
 		private final String sqlString;
-		private final List<QueryParameterImplementor<?>> parameterList;
+		private final List<ParameterOccurrence> parameterList;
 		private final Map<Integer, QueryParameterImplementor<?>> positionalParameters;
 		private final Map<String, QueryParameterImplementor<?>> namedParameters;
 
@@ -1424,7 +1571,7 @@ public class NativeQueryImpl<R>
 		}
 
 		@Override
-		public List<QueryParameterImplementor<?>> getOccurrenceOrderedParameters() {
+		public List<ParameterOccurrence> getOrderedParameterOccurrences() {
 			return parameterList;
 		}
 

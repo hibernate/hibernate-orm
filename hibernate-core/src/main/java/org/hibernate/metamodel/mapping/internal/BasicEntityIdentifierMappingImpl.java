@@ -31,6 +31,7 @@ import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.Clause;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
@@ -326,12 +327,19 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 			boolean selected,
 			String resultVariable,
 			DomainResultCreationState creationState) {
+		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
+		final TableGroup tableGroup = sqlAstCreationState.getFromClauseAccess().getTableGroup(
+				fetchParent.getNavigablePath()
+		);
+
+		assert tableGroup != null;
+
+		final SqlSelection sqlSelection = resolveSqlSelection( fetchablePath, tableGroup, false, creationState );
 		return new BasicFetch<>(
-				0,
+				sqlSelection.getValuesArrayPosition(),
 				fetchParent,
 				fetchablePath,
 				this,
-				false,
 				null,
 				FetchTiming.IMMEDIATE,
 				creationState

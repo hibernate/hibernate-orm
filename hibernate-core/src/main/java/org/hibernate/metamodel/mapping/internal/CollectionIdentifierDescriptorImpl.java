@@ -180,7 +180,6 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 				fetchParent,
 				fetchablePath,
 				this,
-				! selected,
 				null,
 				FetchTiming.IMMEDIATE,
 				creationState

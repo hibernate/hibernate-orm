@@ -19,6 +19,7 @@ import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.internal.AbstractCompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
@@ -175,7 +176,7 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 
 	@Override
 	public String getFetchableName() {
-		return "id";
+		return EntityIdentifierMapping.ROLE_LOCAL_NAME;
 	}
 
 	@Override

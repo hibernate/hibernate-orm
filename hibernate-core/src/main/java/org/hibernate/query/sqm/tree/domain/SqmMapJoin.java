@@ -13,6 +13,8 @@ import jakarta.persistence.criteria.Predicate;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
+import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.query.PathException;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaMapJoin;
@@ -38,6 +40,17 @@ public class SqmMapJoin<O, K, V>
 			boolean fetched,
 			NodeBuilder nodeBuilder) {
 		super( lhs, pluralValuedNavigable, alias, sqmJoinType, fetched, nodeBuilder );
+	}
+
+	protected SqmMapJoin(
+			SqmFrom<?, O> lhs,
+			NavigablePath navigablePath,
+			MapPersistentAttribute<O, K, V> pluralValuedNavigable,
+			String alias,
+			SqmJoinType joinType,
+			boolean fetched,
+			NodeBuilder nodeBuilder) {
+		super( lhs, navigablePath, pluralValuedNavigable, alias, joinType, fetched, nodeBuilder );
 	}
 
 	@Override
@@ -103,13 +116,27 @@ public class SqmMapJoin<O, K, V>
 	}
 
 	@Override
-	public <S extends V> SqmTreatedMapJoin<O, K, V, S> treatAs(Class<S> treatJavaType) throws PathException {
+	public <S extends V> SqmTreatedMapJoin<O, K, V, S> treatAs(Class<S> treatJavaType) {
 		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
 	}
 
 	@Override
-	public <S extends V> SqmTreatedMapJoin<O, K, V, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
-		return new SqmTreatedMapJoin<>( this, treatTarget, null );
+	public <S extends V> SqmTreatedMapJoin<O, K, V, S> treatAs(EntityDomainType<S> treatTarget) {
+		return treatAs( treatTarget, null );
+	}
+
+	@Override
+	public <S extends V> SqmTreatedMapJoin<O, K, V, S> treatAs(Class<S> treatJavaType, String alias) {
+		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ), alias );
+	}
+
+	@Override
+	public <S extends V> SqmTreatedMapJoin<O, K, V, S> treatAs(EntityDomainType<S> treatTarget, String alias) {
+		final SqmTreatedMapJoin<O, K, V, S> treat = findTreat( treatTarget, alias );
+		if ( treat == null ) {
+			return addTreat( new SqmTreatedMapJoin<>( this, treatTarget, alias ) );
+		}
+		return treat;
 	}
 
 	@Override

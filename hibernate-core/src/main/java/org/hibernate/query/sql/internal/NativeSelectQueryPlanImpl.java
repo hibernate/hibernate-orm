@@ -15,20 +15,14 @@ import java.util.Set;
 import org.hibernate.ScrollMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.EmptyScrollableResults;
-import org.hibernate.metamodel.mapping.BasicValuedMapping;
-import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.query.results.ResultSetMapping;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
-import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
-import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.sql.spi.NativeSelectQueryPlan;
+import org.hibernate.query.sql.spi.ParameterOccurrence;
 import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
-import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
-import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
@@ -44,14 +38,14 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 	private final String sql;
 	private final Set<String> affectedTableNames;
 
-	private final List<QueryParameterImplementor<?>> parameterList;
+	private final List<ParameterOccurrence> parameterList;
 
 	private final JdbcValuesMappingProducer resultSetMapping;
 
 	public NativeSelectQueryPlanImpl(
 			String sql,
 			Set<String> affectedTableNames,
-			List<QueryParameterImplementor<?>> parameterList,
+			List<ParameterOccurrence> parameterList,
 			ResultSetMapping resultSetMapping,
 			SessionFactoryImplementor sessionFactory) {
 		final ResultSetMappingProcessor processor = new ResultSetMappingProcessor( resultSetMapping, sessionFactory );
@@ -85,26 +79,12 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 			jdbcParameterBinders = new ArrayList<>( parameterList.size() );
 			jdbcParameterBindings = new JdbcParameterBindingsImpl( parameterList.size() );
 
-			for ( QueryParameterImplementor<?> param : parameterList ) {
-				QueryParameterBinding<?> binding = queryParameterBindings.getBinding( param );
-				AllowableParameterType<?> type = binding.getBindType();
-				if ( type == null ) {
-					type = param.getHibernateType();
-				}
-				if ( type == null ) {
-					type = executionContext.getSession().getTypeConfiguration().getBasicTypeForJavaType( Object.class );
-				}
-
-				final JdbcMapping jdbcMapping = ( (BasicValuedMapping) type ).getJdbcMapping();
-				final JdbcParameterImpl jdbcParameter = new JdbcParameterImpl( jdbcMapping );
-
-				jdbcParameterBinders.add( jdbcParameter );
-
-				jdbcParameterBindings.addBinding(
-						jdbcParameter,
-						new JdbcParameterBindingImpl( jdbcMapping, binding.getBindValue() )
-				);
-			}
+			jdbcParameterBindings.registerNativeQueryParameters(
+					queryParameterBindings,
+					parameterList,
+					jdbcParameterBinders,
+					executionContext.getSession().getFactory()
+			);
 		}
 
 		executionContext.getSession().autoFlushIfRequired( affectedTableNames );
@@ -150,26 +130,11 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 			jdbcParameterBinders = new ArrayList<>( parameterList.size() );
 			jdbcParameterBindings = new JdbcParameterBindingsImpl( parameterList.size() );
 
-			queryParameterBindings.visitBindings(
-					(param, binding) -> {
-						AllowableParameterType<?> type = binding.getBindType();
-						if ( type == null ) {
-							type = param.getHibernateType();
-						}
-						if ( type == null ) {
-							type = executionContext.getSession().getTypeConfiguration().getBasicTypeForJavaType( Object.class );
-						}
-
-						final JdbcMapping jdbcMapping = ( (BasicValuedMapping) type ).getJdbcMapping();
-						final JdbcParameterImpl jdbcParameter = new JdbcParameterImpl( jdbcMapping );
-
-						jdbcParameterBinders.add( jdbcParameter );
-
-						jdbcParameterBindings.addBinding(
-								jdbcParameter,
-								new JdbcParameterBindingImpl( jdbcMapping, binding.getBindValue() )
-						);
-					}
+			jdbcParameterBindings.registerNativeQueryParameters(
+					queryParameterBindings,
+					parameterList,
+					jdbcParameterBinders,
+					executionContext.getSession().getFactory()
 			);
 		}
 

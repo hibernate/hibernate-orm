@@ -60,9 +60,9 @@ import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
-import org.hibernate.sql.ast.tree.from.RootTableGroupProducer;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
+import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.InListPredicate;
@@ -401,21 +401,9 @@ public class LoaderSelectBuilder {
 			for ( ModelPart part : partsToSelect ) {
 				final NavigablePath navigablePath = rootNavigablePath.append( part.getPartName() );
 				final TableGroup tableGroup;
-				if ( part instanceof RootTableGroupProducer ) {
-					tableGroup = ( (RootTableGroupProducer) part ).createRootTableGroup(
-							true,
-							navigablePath,
-							null,
-							() -> rootQuerySpec::applyPredicate,
-							sqlAstCreationState,
-							creationContext
-					);
-					rootQuerySpec.getFromClause().addRoot( tableGroup );
-					sqlAstCreationState.getFromClauseAccess().registerTableGroup( navigablePath, tableGroup );
-				}
-				else if ( part instanceof ToOneAttributeMapping ) {
-					final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) part;
-					final TableGroupJoin tableGroupJoin = toOneAttributeMapping.createTableGroupJoin(
+				if ( part instanceof TableGroupJoinProducer ) {
+					final TableGroupJoinProducer tableGroupJoinProducer = (TableGroupJoinProducer) part;
+					final TableGroupJoin tableGroupJoin = tableGroupJoinProducer.createTableGroupJoin(
 							navigablePath,
 							rootTableGroup,
 							null,
@@ -613,8 +601,18 @@ public class LoaderSelectBuilder {
 					tableGroup
 			);
 			if ( manyToManyFilterPredicate != null ) {
-				assert tableGroup.getTableReferenceJoins().size() == 1;
-				tableGroup.getTableReferenceJoins().get( 0 ).applyPredicate( manyToManyFilterPredicate );
+				TableGroupJoin elementTableGroupJoin = null;
+				for ( TableGroupJoin nestedTableGroupJoin : tableGroup.getNestedTableGroupJoins() ) {
+					final NavigablePath navigablePath = nestedTableGroupJoin.getNavigablePath();
+					if ( navigablePath.getParent() == tableGroup.getNavigablePath()
+						&& CollectionPart.Nature.ELEMENT.getName().equals( navigablePath.getUnaliasedLocalName() ) ) {
+						elementTableGroupJoin = nestedTableGroupJoin;
+						break;
+					}
+				}
+
+				assert elementTableGroupJoin != null;
+				elementTableGroupJoin.applyPredicate( manyToManyFilterPredicate );
 			}
 		}
 	}

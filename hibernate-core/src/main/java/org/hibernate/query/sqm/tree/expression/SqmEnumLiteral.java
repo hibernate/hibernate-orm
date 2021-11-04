@@ -42,7 +42,7 @@ public class SqmEnumLiteral<E extends Enum<E>> extends AbstractSqmExpression<E> 
 		setExpressableType( this );
 	}
 
-	public Enum getEnumValue() {
+	public E getEnumValue() {
 		return enumValue;
 	}
 
@@ -74,8 +74,8 @@ public class SqmEnumLiteral<E extends Enum<E>> extends AbstractSqmExpression<E> 
 	}
 
 	@Override
-	public SqmPath resolveIndexedAccess(
-			SqmExpression selector,
+	public SqmPath<?> resolveIndexedAccess(
+			SqmExpression<?> selector,
 			boolean isTerminal,
 			SqmCreationState creationState) {
 		throw new SemanticException(

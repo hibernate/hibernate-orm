@@ -88,6 +88,7 @@ public class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> impleme
 		return javaType;
 	}
 
+	@Override
 	public NamedCallableQueryMemento.ParameterMemento toMemento() {
 		return session -> {
 			if ( getName() != null ) {

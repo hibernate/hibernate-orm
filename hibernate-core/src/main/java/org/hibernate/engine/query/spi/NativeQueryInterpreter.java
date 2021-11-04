@@ -44,7 +44,7 @@ public interface NativeQueryInterpreter extends Service {
 		return new NativeSelectQueryPlanImpl<>(
 				queryDefinition.getSqlString(),
 				queryDefinition.getAffectedTableNames(),
-				queryDefinition.getQueryParameterList(),
+				queryDefinition.getQueryParameterOccurrences(),
 				queryDefinition.getResultSetMapping(),
 				sessionFactory
 		);

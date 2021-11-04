@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
@@ -30,7 +31,7 @@ import org.hibernate.sql.results.graph.entity.AbstractEntityInitializer;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.internal.NullValueAssembler;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
-import org.hibernate.tuple.IdentifierAttribute;
+import org.hibernate.type.descriptor.java.spi.EntityJavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -133,13 +134,15 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 			return;
 		}
 
-		// Special handling for non-aggregated attribute _identifierMapper
-		// The _identifierMapper attribute uses the actual entity instance as container, so we use the fetch parent
-		// The identifier domain result on the other hand for that attribute has no fetch parent,
-		// but that's no issue because that attribute uses the id class as container class
+		// Special handling for non-aggregated attributes which use the actual entity instance as container,
+		// which we access through the fetch parent access.
+		// If this model part is an identifier, we must construct the instance as this is called during resolveKey
 		final EmbeddableMappingType embeddableTypeDescriptor = embeddedModelPartDescriptor.getEmbeddableTypeDescriptor();
 		if ( fetchParentAccess != null && embeddableTypeDescriptor.getMappedJavaTypeDescriptor().getJavaTypeClass()
-				.isAssignableFrom( fetchParentAccess.getInitializedPart().getJavaTypeDescriptor().getJavaTypeClass() ) ) {
+				.isAssignableFrom( fetchParentAccess.getInitializedPart().getJavaTypeDescriptor().getJavaTypeClass() )
+				&& embeddableTypeDescriptor.getMappedJavaTypeDescriptor() instanceof EntityJavaTypeDescriptor<?>
+				&& !( embeddedModelPartDescriptor instanceof CompositeIdentifierMapping )
+				&& !EntityIdentifierMapping.ROLE_LOCAL_NAME.equals( embeddedModelPartDescriptor.getFetchableName() ) ) {
 			fetchParentAccess.resolveInstance( rowProcessingState );
 			compositeInstance = fetchParentAccess.getInitializedInstance();
 		}

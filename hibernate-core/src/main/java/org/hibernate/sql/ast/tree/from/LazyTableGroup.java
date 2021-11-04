@@ -180,21 +180,23 @@ public class LazyTableGroup extends AbstractColumnReferenceQualifier implements 
 	}
 
 	@Override
-	public TableReference getTableReferenceInternal(
+	protected TableReference getTableReferenceInternal(
 			NavigablePath navigablePath,
 			String tableExpression,
-			boolean allowFkOptimization) {
+			boolean allowFkOptimization,
+			boolean resolve) {
 		if ( allowFkOptimization && ( navigablePath == null || navigablePathChecker.test( navigablePath, tableExpression ) ) ) {
 			final TableReference reference = parentTableGroup.getTableReference(
 					navigablePath,
 					tableExpression,
-					allowFkOptimization
+					allowFkOptimization,
+					resolve
 			);
 			if ( reference != null ) {
 				return reference;
 			}
 		}
-		return getTableGroup().getTableReference( navigablePath, tableExpression, allowFkOptimization );
+		return getTableGroup().getTableReference( navigablePath, tableExpression, allowFkOptimization, resolve );
 	}
 
 }

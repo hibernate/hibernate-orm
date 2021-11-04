@@ -101,6 +101,25 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 		this( "" );
 	}
 
+	NavigablePath(
+			NavigablePath parent,
+			String fullPath,
+			String unaliasedLocalName,
+			String identifierForTableGroup) {
+		this.parent = parent;
+		this.fullPath = fullPath;
+		this.unaliasedLocalName = unaliasedLocalName;
+		this.identifierForTableGroup = identifierForTableGroup;
+	}
+
+	public NavigablePath treatAs(String entityName) {
+		return new TreatedNavigablePath( this, entityName );
+	}
+
+	public NavigablePath treatAs(String entityName, String alias) {
+		return new TreatedNavigablePath( this, entityName, alias );
+	}
+
 	public NavigablePath append(String property) {
 		return new NavigablePath( this, property );
 	}

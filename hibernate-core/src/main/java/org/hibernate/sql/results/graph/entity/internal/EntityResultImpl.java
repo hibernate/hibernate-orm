@@ -48,15 +48,9 @@ public class EntityResultImpl extends AbstractEntityResultGraphNode implements E
 			String resultVariable,
 			EntityMappingType targetType,
 			DomainResultCreationState creationState) {
-		super(
-				entityValuedModelPart,
-				navigablePath,
-				creationState
-		);
+		super( entityValuedModelPart, navigablePath );
 		this.tableGroup = tableGroup;
 		this.resultVariable = resultVariable;
-
-		afterInitialize( creationState );
 	}
 
 	@Override
@@ -100,7 +94,7 @@ public class EntityResultImpl extends AbstractEntityResultGraphNode implements E
 						this,
 						getNavigablePath(),
 						getLockMode( creationState ),
-						getIdentifierResult(),
+						getIdentifierFetch(),
 						getDiscriminatorFetch(),
 						getRowIdResult(),
 						creationState

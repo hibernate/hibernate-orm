@@ -13,7 +13,6 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.PathException;
-import org.hibernate.query.criteria.JpaEntityJoin;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -23,7 +22,6 @@ import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmFrom;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedRoot;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedRoot;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
@@ -150,7 +148,7 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E>, Doma
 				return false;
 			}
 		}
-		return true;
+		return !hasTreats();
 	}
 
 	@Override
@@ -160,14 +158,27 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E>, Doma
 
 	@Override
 	public <S extends E> SqmTreatedRoot<E, S> treatAs(Class<S> treatJavaType) throws PathException {
-		return (SqmTreatedRoot<E, S>) treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
+		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
 	}
 
 	@Override
-	public <S extends E> SqmTreatedPath<E, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
-		return new SqmTreatedRoot<>( this, treatTarget, nodeBuilder() );
+	public <S extends E> SqmTreatedRoot<E, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
+		final SqmTreatedRoot<E, S> treat = findTreat( treatTarget, null );
+		if ( treat == null ) {
+			return addTreat( new SqmTreatedRoot<>( this, treatTarget ) );
+		}
+		return treat;
 	}
 
+	@Override
+	public <S extends E> SqmFrom<?, S> treatAs(Class<S> treatJavaType, String alias) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public <S extends E> SqmFrom<?, S> treatAs(EntityDomainType<S> treatTarget, String alias) {
+		throw new UnsupportedOperationException();
+	}
 
 	@Override
 	public DomainResult<E> createDomainResult(

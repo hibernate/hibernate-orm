@@ -14,11 +14,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.ObjectDeletedException;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.WrongClassException;
-import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
-import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
-import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributesMetadata;
-import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.engine.spi.CascadingAction;
@@ -43,7 +39,6 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.stat.spi.StatisticsImplementor;
-import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.TypeHelper;
 
@@ -460,26 +455,6 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 				target,
 				copyCache
 		);
-		EntityMetamodel entityMetamodel = persister.getEntityMetamodel();
-		final boolean enhancedForLazyLoading = PersistentAttributeInterceptable.class.isAssignableFrom( entity.getClass() );
-		final BytecodeEnhancementMetadata enhancementMetadata = entityMetamodel.getBytecodeEnhancementMetadata();
-		final LazyAttributesMetadata lazyAttributesMetadata = enhancementMetadata.getLazyAttributesMetadata();
-
-		if(enhancedForLazyLoading) {
-			final BytecodeLazyAttributeInterceptor interceptor = enhancementMetadata.extractLazyInterceptor(entity);
-			if (interceptor == null) {
-
-				final int span = entityMetamodel.getPropertySpan();
-				final String[] propertyNames = entityMetamodel.getPropertyNames();
-
-				for ( int j = 0; j < span; j++ ) {
-					final String propertyName = propertyNames[j];
-					if(lazyAttributesMetadata.isLazyAttribute( propertyName ) && copiedValues[j] == null) {
-						copiedValues[j] = LazyPropertyInitializer.UNFETCHED_PROPERTY;
-					}
-				}
-			}
-		}
 
 		persister.setPropertyValues( target, copiedValues );
 	}

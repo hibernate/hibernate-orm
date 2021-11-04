@@ -9,29 +9,30 @@ package org.hibernate.action.internal;
 import java.io.Serializable;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
-import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.cache.spi.entry.CacheEntry;
-import org.hibernate.collection.internal.PersistentSet;
-import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.Versioning;
-import org.hibernate.engine.spi.*;
-import org.hibernate.event.internal.EvictVisitor;
+import org.hibernate.engine.spi.CachedNaturalIdValueSource;
+import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.SessionEventListenerManager;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.engine.spi.Status;
 import org.hibernate.event.service.spi.EventListenerGroup;
-import org.hibernate.event.spi.*;
-import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.event.spi.EventType;
+import org.hibernate.event.spi.PostCommitUpdateEventListener;
+import org.hibernate.event.spi.PostUpdateEvent;
+import org.hibernate.event.spi.PostUpdateEventListener;
+import org.hibernate.event.spi.PreUpdateEvent;
+import org.hibernate.event.spi.PreUpdateEventListener;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.Joinable;
-import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.stat.internal.StatsHelper;
 import org.hibernate.stat.spi.StatisticsImplementor;
-import org.hibernate.tuple.NonIdentifierAttribute;
-import org.hibernate.tuple.entity.EntityMetamodel;
-import org.hibernate.type.*;
+import org.hibernate.type.TypeHelper;
 
 /**
  * The action for performing entity updates.
@@ -265,89 +266,6 @@ public class EntityUpdateAction extends EntityAction {
 				previousNaturalIdValues,
 				CachedNaturalIdValueSource.UPDATE
 		);
-
-		EntityMetamodel entityMetamodel = getPersister().getEntityMetamodel();
-
-		if (instance instanceof PersistentAttributeInterceptable) {
-			PersistentAttributeInterceptable interceptable = ((PersistentAttributeInterceptable) instance );
-			PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
-			final BytecodeEnhancementMetadata enhancementMetadata = entityMetamodel.getBytecodeEnhancementMetadata();
-			if (interceptor == null) {
-				persister.getEntityMetamodel().getBytecodeEnhancementMetadata().injectInterceptor(instance, entry.getEntityKey(), session);
-				interceptor = enhancementMetadata.extractLazyInterceptor(instance);
-
-				Type[] types = persister.getPropertyTypes();
-				final String[] propertyNames = persister.getPropertyNames();
-				final CascadeStyle[] cascadeStyles = persister.getPropertyCascadeStyles();
-				for ( int i = 0; i < types.length; i++) {
-					final String propertyName = propertyNames[i];
-					CascadeStyle cascadeStyle = cascadeStyles[i];
-					if(cascadeStyle != CascadeStyles.NONE) {
-						interceptor.attributeInitialized(propertyName);
-					}
-				}
-			}
-		}
-		else {
-			if (persister.hasProxy()) {
-				Type[] types = persister.getPropertyTypes();
-				final CascadeStyle[] cascadeStyles = persister.getPropertyCascadeStyles();
-				PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-				for ( int i = 0; i < types.length; i++) {
-					if(!types[i].isAssociationType()) {
-						continue;
-					}
-
-					final AssociationType type = (AssociationType) types[i];
-					if(type instanceof EntityType) {
-						EntityType entityType = (EntityType) type;
-						if (entityType.isEager(null)) {
-							continue;
-						}
-					}
-
-					CascadeStyle cascadeStyle = cascadeStyles[i];
-					if(cascadeStyle != CascadeStyles.NONE) {
-						continue;
-					}
-					Object propertyValue = persister.getEntityTuplizer().getGetter(i).get(instance);
-
-					if(types[i].isCollectionType()) {
-						continue;
-					}
-
-					if(propertyValue == null) {
-						continue;
-					}
-					else {
-						if(propertyValue instanceof HibernateProxy) {
-							continue;
-						}
-						EntityPersister propertyPersister = session.getEntityPersister( null, propertyValue );
-						if(propertyPersister.getEntityTuplizer().getProxyFactory() == null) {
-							continue;
-						}
-						if(!propertyPersister.canExtractIdOutOfEntity()) {
-							continue;
-						}
-						Serializable entityId = propertyPersister.getEntityTuplizer().getIdentifier(propertyValue, session);
-						Object proxy = null;
-						try {
-							proxy = propertyPersister.createProxy(entityId, session);
-							if(propertyValue != null) {
-								Hibernate.initialize(proxy);
-							}
-						}
-						catch (Exception e) {
-							continue;
-						}
-						final EntityKey keyToLoad = session.generateEntityKey( entityId, propertyPersister );
-						persistenceContext.addProxy( keyToLoad, proxy );
-						persister.getEntityTuplizer().setPropertyValue(instance, i, proxy);
-					}
-				}
-			}
-		}
 
 		postUpdate();
 

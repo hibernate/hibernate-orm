@@ -40,12 +40,7 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.tuple.IdentifierProperty;
 import org.hibernate.tuple.Instantiator;
-import org.hibernate.type.AssociationType;
-import org.hibernate.type.BasicType;
-import org.hibernate.type.ComponentType;
-import org.hibernate.type.CompositeType;
-import org.hibernate.type.EntityType;
-import org.hibernate.type.Type;
+import org.hibernate.type.*;
 
 
 /**
@@ -559,6 +554,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 	public Object[] getPropertyValues(Object entity) {
 		final BytecodeEnhancementMetadata enhancementMetadata = entityMetamodel.getBytecodeEnhancementMetadata();
 		final LazyAttributesMetadata lazyAttributesMetadata = enhancementMetadata.getLazyAttributesMetadata();
+		final boolean enhancedForLazyLoading = enhancementMetadata.isEnhancedForLazyLoading();
 
 		final int span = entityMetamodel.getPropertySpan();
 		final String[] propertyNames = entityMetamodel.getPropertyNames();
@@ -569,6 +565,20 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 			// if the attribute is not lazy (bytecode sense), we can just use the value from the instance
 			// if the attribute is lazy but has been initialized we can just use the value from the instance
 			// todo : there should be a third case here when we merge transient instances
+			if(enhancedForLazyLoading) {
+				final BytecodeLazyAttributeInterceptor interceptor = enhancementMetadata.extractLazyInterceptor(entity);
+				if (interceptor == null && lazyAttributesMetadata.isLazyAttribute( propertyName ) && getters[j].get(entity) == null) {
+					result[j] = LazyPropertyInitializer.UNFETCHED_PROPERTY;
+					continue;
+				}
+			}
+			else {
+				Type type = entityMetamodel.getPropertyTypes()[j];
+				if(type.isCollectionType() && ((CollectionType)type).getReturnedClass().isAssignableFrom(Serializable.class) && !((CollectionType)type).hasHolder() && entityMetamodel.isLazy() && getters[j].get(entity) == null) {
+					result[j] = LazyPropertyInitializer.UNFETCHED_PROPERTY;
+					continue;
+				}
+			}
 			if ( ! lazyAttributesMetadata.isLazyAttribute( propertyName )
 					|| enhancementMetadata.isAttributeLoaded( entity, propertyName) ) {
 				result[j] = getters[j].get( entity );

@@ -7,28 +7,31 @@
 package org.hibernate.action.internal;
 
 import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
+import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributesMetadata;
+import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.Versioning;
-import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.SessionEventListenerManager;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.engine.spi.*;
 import org.hibernate.event.service.spi.EventListenerGroup;
-import org.hibernate.event.spi.EventType;
-import org.hibernate.event.spi.PostCommitInsertEventListener;
-import org.hibernate.event.spi.PostInsertEvent;
-import org.hibernate.event.spi.PostInsertEventListener;
-import org.hibernate.event.spi.PreInsertEvent;
-import org.hibernate.event.spi.PreInsertEventListener;
+import org.hibernate.event.spi.*;
+import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.stat.internal.StatsHelper;
 import org.hibernate.stat.spi.StatisticsImplementor;
+import org.hibernate.tuple.entity.EntityMetamodel;
+import org.hibernate.type.AssociationType;
+import org.hibernate.type.CollectionType;
+import org.hibernate.type.EntityType;
+import org.hibernate.type.Type;
 
 /**
  * The action for performing an entity insertion, for entities not defined to use IDENTITY generation.
@@ -150,6 +153,168 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 
 		handleNaturalIdPostSaveNotifications( id );
 
+		EntityMetamodel entityMetamodel = getPersister().getEntityMetamodel();
+
+		if (entityMetamodel.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading()) {
+			PersistentAttributeInterceptable interceptable = ((PersistentAttributeInterceptable) instance );
+			PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
+			final BytecodeEnhancementMetadata enhancementMetadata = entityMetamodel.getBytecodeEnhancementMetadata();
+			final LazyAttributesMetadata lazyAttributesMetadata = enhancementMetadata.getLazyAttributesMetadata();
+			if (interceptor == null) {
+				Type[] types = persister.getPropertyTypes();
+				final String[] propertyNames = persister.getPropertyNames();
+				final CascadeStyle[] cascadeStyles = persister.getPropertyCascadeStyles();
+				boolean needsInterceptor = false;
+				Set<String> initializedLazyFields = new HashSet<>();
+				for ( int i = 0; i < types.length; i++) {
+					if(!types[i].isAssociationType()) {
+						continue;
+					}
+					final String propertyName = propertyNames[i];
+					CascadeStyle cascadeStyle = cascadeStyles[i];
+					if(cascadeStyle != CascadeStyles.NONE) {
+						initializedLazyFields.add(propertyName);
+						continue;
+					}
+					Object propertyValue = persister.getEntityTuplizer().getGetter(i).get(instance);
+					if(propertyValue == null) {
+						if(types[i].isCollectionType()) {
+							needsInterceptor = true;
+							continue;
+						}
+					}
+					else {
+						if(propertyValue instanceof PersistentAttributeInterceptable) {
+							PersistentAttributeInterceptable interceptableProperty = ((PersistentAttributeInterceptable) propertyValue );
+							PersistentAttributeInterceptor propertyInterceptor = interceptableProperty.$$_hibernate_getInterceptor();
+							if(propertyInterceptor == null) {
+								needsInterceptor = true;
+								continue;
+							}
+							else {
+								if(lazyAttributesMetadata.isLazyAttribute(propertyName)) {
+									initializedLazyFields.add(propertyName);
+								}
+							}
+						}
+						if(types[i].isCollectionType()) {
+							if(lazyAttributesMetadata.isLazyAttribute(propertyName)) {
+								initializedLazyFields.add(propertyName);
+							}
+							continue;
+						}
+					}
+				}
+				if (needsInterceptor) {
+					persister.getBytecodeEnhancementMetadata().injectEnhancedEntityAsProxyInterceptor(instance, getEntityKey(), session);
+					interceptor = interceptable.$$_hibernate_getInterceptor();
+					for (String propertyName : initializedLazyFields) {
+						interceptor.attributeInitialized(propertyName);
+					}
+				}
+			}
+		}
+		else {
+			if (persister.hasProxy()) {
+				Type[] types = persister.getPropertyTypes();
+				final CascadeStyle[] cascadeStyles = persister.getPropertyCascadeStyles();
+				PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+				for ( int i = 0; i < types.length; i++) {
+					if(!types[i].isAssociationType()) {
+						continue;
+					}
+					
+					final AssociationType type = (AssociationType) types[i];
+					if(type instanceof EntityType) {
+						EntityType entityType = (EntityType) type;
+						if (entityType.isEager(null)) {
+							continue;
+						}
+					}
+
+					CascadeStyle cascadeStyle = cascadeStyles[i];
+					if(cascadeStyle != CascadeStyles.NONE) {
+						continue;
+					}
+					Object propertyValue = persister.getEntityTuplizer().getGetter(i).get(instance);
+
+					if(types[i].isCollectionType()) {
+						final CollectionPersister collectionPersister = session.getFactory().getMetamodel().collectionPersister( ((CollectionType) types[i]).getRole() );
+
+						if ( !collectionPersister.isLazy()) {
+							continue;
+						}
+						if ( collectionPersister.getCollectionType().hasHolder() ) {
+							continue;
+						}
+						if ( collectionPersister.getKeyType().isComponentType()) {
+							continue;
+						}
+
+						Serializable entityId = persister.getEntityTuplizer().getIdentifier(instance, session);
+						final CollectionKey collectionKey = new CollectionKey( collectionPersister, entityId );
+						PersistentCollection oldCollection = persistenceContext.getCollection(collectionKey);
+
+						if(oldCollection != null) {
+							if (!Hibernate.isInitialized(oldCollection)) {
+								if (oldCollection == propertyValue) {
+									continue;
+								}
+							}
+						}
+						if(propertyValue instanceof PersistentCollection && Hibernate.isInitialized(propertyValue)) {
+							continue;
+						}
+
+						PersistentCollection newCollection = ((CollectionType)types[i]).instantiate( session, collectionPersister, entityId );
+						if(propertyValue != null) {
+							Hibernate.initialize(newCollection);
+						}
+						newCollection.setOwner( instance );
+						persistenceContext.addUninitializedCollection( collectionPersister, newCollection, entityId);
+						persister.getEntityTuplizer().setPropertyValue(instance, i, newCollection);
+						continue;
+					}
+
+					if(propertyValue == null) {
+						continue;
+					}
+					else {
+						if(propertyValue instanceof HibernateProxy) {
+							continue;
+						}
+						EntityPersister propertyPersister = null;
+						try {
+							propertyPersister = session.getEntityPersister(null, propertyValue);
+						}
+						catch (HibernateException he) {
+							// dynamic map entity will fail to determine type
+							continue;
+						}
+						if(propertyPersister.getEntityTuplizer().getProxyFactory() == null) {
+							continue;
+						}
+						if(!propertyPersister.canExtractIdOutOfEntity()) {
+							continue;
+						}
+						Serializable entityId = propertyPersister.getEntityTuplizer().getIdentifier(propertyValue, session);
+						Object proxy = null;
+						try {
+							proxy = propertyPersister.createProxy(entityId, session);
+							if(propertyValue != null) {
+								Hibernate.initialize(proxy);
+							}
+						}
+						catch (Exception e) {
+							continue;
+						}
+						final EntityKey keyToLoad = session.generateEntityKey( entityId, propertyPersister );
+						persistenceContext.addProxy(keyToLoad, proxy);
+						persister.getEntityTuplizer().setPropertyValue(instance, i, proxy);
+					}
+				}
+			}
+		}
 		postInsert();
 
 		if ( statistics.isStatisticsEnabled() && !veto ) {

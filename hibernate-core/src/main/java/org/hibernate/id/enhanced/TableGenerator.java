@@ -222,11 +222,6 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 
 	private String contributor;
 
-	@Override
-	public Object generatorKey() {
-		return qualifiedTableName.render();
-	}
-
 	/**
 	 * Type mapping for the identifier.
 	 *

@@ -520,6 +520,7 @@ public abstract class AbstractCollectionPersister
 					factory.getSettings().getDefaultSchemaName(),
 					null
 					);
+			identifierGenerator.initialize( creationContext.getSessionFactory().getSqlStringGenerationContext() );
 		}
 		else {
 			identifierType = null;

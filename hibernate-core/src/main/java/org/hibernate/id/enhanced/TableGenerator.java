@@ -24,6 +24,7 @@ import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -203,7 +204,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 	private Type identifierType;
 
 	private QualifiedName qualifiedTableName;
-	private String renderedTableName;
+	private QualifiedName physicalTableName;
 
 	private String segmentColumnName;
 	private String segmentValue;
@@ -492,30 +493,31 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 	}
 
 	@SuppressWarnings({"unchecked", "WeakerAccess"})
-	protected String buildSelectQuery(Dialect dialect) {
+	protected String buildSelectQuery(String formattedPhysicalTableName, SqlStringGenerationContext context) {
 		final String alias = "tbl";
 		final String query = "select " + StringHelper.qualify( alias, valueColumnName ) +
-				" from " + renderedTableName + ' ' + alias +
+				" from " + formattedPhysicalTableName + ' ' + alias +
 				" where " + StringHelper.qualify( alias, segmentColumnName ) + "=?";
 		final LockOptions lockOptions = new LockOptions( LockMode.PESSIMISTIC_WRITE );
 		lockOptions.setAliasSpecificLockMode( alias, LockMode.PESSIMISTIC_WRITE );
 		final Map updateTargetColumnsMap = Collections.singletonMap( alias, new String[] { valueColumnName } );
-		return dialect.applyLocksToSql( query, lockOptions, updateTargetColumnsMap );
+		return context.getDialect().applyLocksToSql( query, lockOptions, updateTargetColumnsMap );
 	}
 
 	@SuppressWarnings("WeakerAccess")
-	protected String buildUpdateQuery() {
-		return "update " + renderedTableName +
+	protected String buildUpdateQuery(String formattedPhysicalTableName, SqlStringGenerationContext context) {
+		return "update " + formattedPhysicalTableName +
 				" set " + valueColumnName + "=? " +
 				" where " + valueColumnName + "=? and " + segmentColumnName + "=?";
 	}
 
 	@SuppressWarnings("WeakerAccess")
-	protected String buildInsertQuery() {
-		return "insert into " + renderedTableName + " (" + segmentColumnName + ", " + valueColumnName + ") " + " values (?,?)";
+	protected String buildInsertQuery(String formattedPhysicalTableName, SqlStringGenerationContext context) {
+		return "insert into " + formattedPhysicalTableName + " (" + segmentColumnName + ", " + valueColumnName + ") " + " values (?,?)";
 	}
 
-	protected InitCommand generateInsertInitCommand() {
+	protected InitCommand generateInsertInitCommand(SqlStringGenerationContext context) {
+		String renderedTableName = context.format( physicalTableName );
 		int value = initialValue;
 		if ( storeLastUsedValue ) {
 			value = initialValue - 1;
@@ -613,7 +615,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 												rows = executeUpdate( updatePS, statsCollector );
 											}
 											catch (SQLException e) {
-												LOG.unableToUpdateQueryHiValue( renderedTableName, e );
+												LOG.unableToUpdateQueryHiValue( physicalTableName.render(), e );
 												throw e;
 											}
 										}
@@ -718,14 +720,15 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 		}
 
 		// allow physical naming strategies a chance to kick in
-		this.renderedTableName = database.getJdbcEnvironment().getQualifiedObjectNameFormatter().format(
-				table.getQualifiedTableName(),
-				dialect
-		);
-		table.addInitCommand( generateInsertInitCommand() );
+		this.physicalTableName = table.getQualifiedTableName();
+		table.addInitCommand( this::generateInsertInitCommand );
+	}
 
-		this.selectQuery = buildSelectQuery( dialect );
-		this.updateQuery = buildUpdateQuery();
-		this.insertQuery = buildInsertQuery();
+	@Override
+	public void initialize(SqlStringGenerationContext context) {
+		String formattedPhysicalTableName = context.format( physicalTableName );
+		this.selectQuery = buildSelectQuery( formattedPhysicalTableName, context );
+		this.updateQuery = buildUpdateQuery( formattedPhysicalTableName, context );
+		this.insertQuery = buildInsertQuery( formattedPhysicalTableName, context );
 	}
 }

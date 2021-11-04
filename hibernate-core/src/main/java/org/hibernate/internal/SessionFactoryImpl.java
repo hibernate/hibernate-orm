@@ -50,6 +50,8 @@ import org.hibernate.SessionFactoryObserver;
 import org.hibernate.StatelessSession;
 import org.hibernate.StatelessSessionBuilder;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -177,6 +179,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	private final transient SessionFactoryServiceRegistry serviceRegistry;
 	private final transient EventEngine eventEngine;
 	private final transient JdbcServices jdbcServices;
+	private final transient SqlStringGenerationContext sqlStringGenerationContext;
 
 	// todo : org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor too?
 
@@ -235,6 +238,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		this.uuid = options.getUuid();
 
 		jdbcServices = serviceRegistry.getService( JdbcServices.class );
+		sqlStringGenerationContext = new SqlStringGenerationContextImpl( jdbcServices.getJdbcEnvironment() );
 
 		this.properties = new HashMap<>();
 		this.properties.putAll( serviceRegistry.getService( ConfigurationService.class ).getSettings() );
@@ -300,6 +304,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 						settings.getDefaultSchemaName(),
 						(RootClass) model
 				);
+				generator.initialize( sqlStringGenerationContext );
 				identifierGenerators.put( model.getEntityName(), generator );
 			} );
 			bootMetamodel.validate();
@@ -606,6 +611,11 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	@Override
 	public JdbcServices getJdbcServices() {
 		return jdbcServices;
+	}
+
+	@Override
+	public SqlStringGenerationContext getSqlStringGenerationContext() {
+		return sqlStringGenerationContext;
 	}
 
 	public IdentifierGeneratorFactory getIdentifierGeneratorFactory() {

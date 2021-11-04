@@ -77,7 +77,7 @@ public class AutoGenerationTypeTests {
 			final DatabaseStructure database1Structure = entityIdGenerator.getDatabaseStructure();
 
 			// implicit name : `${entity-name}_seq`
-			assertThat( database1Structure.getName(), equalToIgnoringCase( "tbl_1_SEQ" ) );
+			assertThat( database1Structure.getPhysicalName().render(), equalToIgnoringCase( "tbl_1_SEQ" ) );
 			assertThat( database1Structure.getIncrementSize(), is( 50 ) );
 		}
 	}
@@ -107,7 +107,7 @@ public class AutoGenerationTypeTests {
 			final DatabaseStructure database2Structure = idGenerator.getDatabaseStructure();
 
 			// GeneratedValue#generator value
-			assertThat( database2Structure.getName(), equalToIgnoringCase( "id_seq" ) );
+			assertThat( database2Structure.getPhysicalName().render(), equalToIgnoringCase( "id_seq" ) );
 			assertThat( database2Structure.getIncrementSize(), is( 50 ) );
 		}
 	}
@@ -141,7 +141,7 @@ public class AutoGenerationTypeTests {
 
 			final DatabaseStructure idBagIdGeneratorDbStructure = collectionIdGenerator.getDatabaseStructure();
 
-			assertThat( idBagIdGeneratorDbStructure.getName(), equalToIgnoringCase( "tbl_2_seq" ) );
+			assertThat( idBagIdGeneratorDbStructure.getPhysicalName().render(), equalToIgnoringCase( "tbl_2_seq" ) );
 			assertThat( idBagIdGeneratorDbStructure.getIncrementSize(), is( 50 ) );
 		}
 	}

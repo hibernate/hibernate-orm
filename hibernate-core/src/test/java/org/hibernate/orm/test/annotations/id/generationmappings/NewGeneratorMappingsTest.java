@@ -60,7 +60,8 @@ public class NewGeneratorMappingsTest  {
 		IdentifierGenerator generator = persister.getIdentifierGenerator();
 		assertTrue( SequenceStyleGenerator.class.isInstance( generator ) );
 		SequenceStyleGenerator seqGenerator = (SequenceStyleGenerator) generator;
-		assertEquals( MinimalSequenceEntity.SEQ_NAME, seqGenerator.getDatabaseStructure().getName() );
+		assertEquals( MinimalSequenceEntity.SEQ_NAME,
+				seqGenerator.getDatabaseStructure().getPhysicalName().render() );
 		// 1 is the annotation default
 		assertEquals( 1, seqGenerator.getDatabaseStructure().getInitialValue() );
 		// 50 is the annotation default
@@ -85,7 +86,7 @@ public class NewGeneratorMappingsTest  {
 		IdentifierGenerator generator = persister.getIdentifierGenerator();
 		assertTrue( SequenceStyleGenerator.class.isInstance( generator ) );
 		SequenceStyleGenerator seqGenerator = (SequenceStyleGenerator) generator;
-		assertEquals( "AutoEntity_SEQ", seqGenerator.getDatabaseStructure().getName() );
+		assertEquals( "AutoEntity_SEQ", seqGenerator.getDatabaseStructure().getPhysicalName().render() );
 		assertEquals( SequenceStyleGenerator.DEFAULT_INITIAL_VALUE, seqGenerator.getDatabaseStructure().getInitialValue() );
 		assertEquals( SequenceStyleGenerator.DEFAULT_INCREMENT_SIZE, seqGenerator.getDatabaseStructure().getIncrementSize() );
 	}
@@ -96,7 +97,8 @@ public class NewGeneratorMappingsTest  {
 		IdentifierGenerator generator = persister.getIdentifierGenerator();
 		assertTrue( SequenceStyleGenerator.class.isInstance( generator ) );
 		SequenceStyleGenerator seqGenerator = (SequenceStyleGenerator) generator;
-		assertEquals( "AbstractTPCAutoEntity_SEQ", seqGenerator.getDatabaseStructure().getName() );
+		assertEquals( "AbstractTPCAutoEntity_SEQ",
+				seqGenerator.getDatabaseStructure().getPhysicalName().render() );
 		assertEquals( SequenceStyleGenerator.DEFAULT_INITIAL_VALUE, seqGenerator.getDatabaseStructure().getInitialValue() );
 		assertEquals( SequenceStyleGenerator.DEFAULT_INCREMENT_SIZE, seqGenerator.getDatabaseStructure().getIncrementSize() );
 	}
@@ -128,7 +130,7 @@ public class NewGeneratorMappingsTest  {
 		SequenceStyleGenerator seqGenerator = (SequenceStyleGenerator) generator;
 		assertEquals(
 				"DEDICATED_SEQ_TBL1" + DedicatedSequenceEntity1.SEQUENCE_SUFFIX,
-				seqGenerator.getDatabaseStructure().getName()
+				seqGenerator.getDatabaseStructure().getPhysicalName().render()
 		);
 
 		// Checking second entity.
@@ -138,7 +140,7 @@ public class NewGeneratorMappingsTest  {
 		seqGenerator = (SequenceStyleGenerator) generator;
 		assertEquals(
 				"DEDICATED_SEQ_TBL2" + DedicatedSequenceEntity1.SEQUENCE_SUFFIX,
-				seqGenerator.getDatabaseStructure().getName()
+				seqGenerator.getDatabaseStructure().getPhysicalName().render()
 		);
 	}
 }

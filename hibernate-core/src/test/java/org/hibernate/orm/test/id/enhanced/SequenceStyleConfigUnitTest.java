@@ -11,6 +11,7 @@ import java.util.Properties;
 import org.hibernate.MappingException;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -73,9 +74,9 @@ public class SequenceStyleConfigUnitTest {
 					serviceRegistry
 			);
 
-			generator.registerExportables(
-					new Database( buildingContext.getBuildingOptions() )
-			);
+			Database database = new Database( buildingContext.getBuildingOptions() );
+			generator.registerExportables( database );
+			generator.initialize( SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment() ) );
 
 			final DatabaseStructure databaseStructure = generator.getDatabaseStructure();
 			assertTrue( databaseStructure.isPhysicalSequence() );
@@ -84,7 +85,7 @@ public class SequenceStyleConfigUnitTest {
 			assertThat( optimizer, instanceOf( PooledOptimizer.class ) );
 			assertEquals( optimizer.getIncrementSize(), OptimizableGenerator.DEFAULT_INCREMENT_SIZE );
 
-			assertEquals( "ID_SEQ", databaseStructure.getName() );
+			assertEquals( "ID_SEQ", databaseStructure.getPhysicalName().render() );
 		}
 	}
 
@@ -119,9 +120,9 @@ public class SequenceStyleConfigUnitTest {
 					serviceRegistry
 			);
 
-			generator.registerExportables(
-					new Database( buildingContext.getBuildingOptions() )
-			);
+			Database database = new Database( buildingContext.getBuildingOptions() );
+			generator.registerExportables( database );
+			generator.initialize( SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment() ) );
 
 			final DatabaseStructure databaseStructure = generator.getDatabaseStructure();
 			final Optimizer optimizer = generator.getOptimizer();
@@ -130,7 +131,7 @@ public class SequenceStyleConfigUnitTest {
 			assertThat( optimizer, instanceOf( PooledOptimizer.class ) );
 			assertEquals( 50, databaseStructure.getIncrementSize());
 
-			assertEquals( "ID_SEQ", databaseStructure.getName() );
+			assertEquals( "ID_SEQ", databaseStructure.getPhysicalName().render() );
 		}
 	}
 
@@ -157,13 +158,14 @@ public class SequenceStyleConfigUnitTest {
 					serviceRegistry
 			);
 
-			generator.registerExportables(
-					new Database( buildingContext.getBuildingOptions() )
-			);
+			Database database = new Database( buildingContext.getBuildingOptions() );
+			generator.registerExportables( database );
+			generator.initialize( SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment() ) );
 
 			assertClassAssignability( TableStructure.class, generator.getDatabaseStructure().getClass() );
 			assertClassAssignability( PooledOptimizer.class, generator.getOptimizer().getClass() );
-			assertEquals( "ID_SEQ", generator.getDatabaseStructure().getName() );
+			assertEquals( "ID_SEQ",
+					generator.getDatabaseStructure().getPhysicalName().render() );
 		}
 
 		// for dialects which do support pooled sequences, we default to pooled+sequence
@@ -181,13 +183,14 @@ public class SequenceStyleConfigUnitTest {
 					props,
 					serviceRegistry
 			);
-			generator.registerExportables(
-					new Database( buildingContext.getBuildingOptions() )
-			);
+			Database database = new Database( buildingContext.getBuildingOptions() );
+			generator.registerExportables( database );
+			generator.initialize( SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment() ) );
 
 			assertClassAssignability( SequenceStructure.class, generator.getDatabaseStructure().getClass() );
 			assertClassAssignability( PooledOptimizer.class, generator.getOptimizer().getClass() );
-			assertEquals( "ID_SEQ", generator.getDatabaseStructure().getName() );
+			assertEquals( "ID_SEQ",
+					generator.getDatabaseStructure().getPhysicalName().render() );
 		}
 	}
 
@@ -212,13 +215,14 @@ public class SequenceStyleConfigUnitTest {
 					props,
 					serviceRegistry
 			);
-			generator.registerExportables(
-					new Database( buildingContext.getBuildingOptions() )
-			);
+			Database database = new Database( buildingContext.getBuildingOptions() );
+			generator.registerExportables( database );
+			generator.initialize( SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment() ) );
 
 			assertClassAssignability( TableStructure.class, generator.getDatabaseStructure().getClass() );
 			assertClassAssignability( PooledOptimizer.class, generator.getOptimizer().getClass() );
-			assertEquals( "ID_SEQ", generator.getDatabaseStructure().getName() );
+			assertEquals( "ID_SEQ",
+					generator.getDatabaseStructure().getPhysicalName().render() );
 		}
 	}
 
@@ -241,9 +245,9 @@ public class SequenceStyleConfigUnitTest {
 					props,
 					serviceRegistry
 			);
-			generator.registerExportables(
-					new Database( buildingContext.getBuildingOptions() )
-			);
+			Database database = new Database( buildingContext.getBuildingOptions() );
+			generator.registerExportables( database );
+			generator.initialize( SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment() ) );
 
 			final DatabaseStructure databaseStructure = generator.getDatabaseStructure();
 			final Optimizer optimizer = generator.getOptimizer();
@@ -252,7 +256,7 @@ public class SequenceStyleConfigUnitTest {
 			assertThat( optimizer, instanceOf( PooledOptimizer.class ) );
 			assertEquals( 50, databaseStructure.getIncrementSize());
 
-			assertEquals( "ID_SEQ", databaseStructure.getName() );
+			assertEquals( "ID_SEQ", databaseStructure.getPhysicalName().render() );
 		}
 	}
 
@@ -276,9 +280,9 @@ public class SequenceStyleConfigUnitTest {
 					props,
 					serviceRegistry
 			);
-			generator.registerExportables(
-					new Database( buildingContext.getBuildingOptions() )
-			);
+			Database database = new Database( buildingContext.getBuildingOptions() );
+			generator.registerExportables( database );
+			generator.initialize( SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment() ) );
 
 			assertClassAssignability( SequenceStructure.class, generator.getDatabaseStructure().getClass() );
 			assertClassAssignability( NoopOptimizer.class, generator.getOptimizer().getClass() );
@@ -296,9 +300,8 @@ public class SequenceStyleConfigUnitTest {
 					props,
 					serviceRegistry
 			);
-			generator.registerExportables(
-					new Database( buildingContext.getBuildingOptions() )
-			);
+			generator.registerExportables( database );
+			generator.initialize( SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment() ) );
 			assertClassAssignability( SequenceStructure.class, generator.getDatabaseStructure().getClass() );
 			assertClassAssignability( HiLoOptimizer.class, generator.getOptimizer().getClass() );
 			assertEquals( 20, generator.getOptimizer().getIncrementSize() );
@@ -315,9 +318,8 @@ public class SequenceStyleConfigUnitTest {
 					props,
 					serviceRegistry
 			);
-			generator.registerExportables(
-					new Database( buildingContext.getBuildingOptions() )
-			);
+			generator.registerExportables( database );
+			generator.initialize( SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment() ) );
 			// because the dialect reports to not support pooled seqyences, the expectation is that we will
 			// use a table for the backing structure...
 			assertClassAssignability( TableStructure.class, generator.getDatabaseStructure().getClass() );
@@ -342,9 +344,9 @@ public class SequenceStyleConfigUnitTest {
 					props,
 					serviceRegistry
 			);
-			generator.registerExportables(
-					new Database( buildingContext.getBuildingOptions() )
-			);
+			Database database = new Database( buildingContext.getBuildingOptions() );
+			generator.registerExportables( database );
+			generator.initialize( SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment() ) );
 			assertClassAssignability( SequenceStructure.class, generator.getDatabaseStructure().getClass() );
 			assertClassAssignability( PooledOptimizer.class, generator.getOptimizer().getClass() );
 
@@ -356,9 +358,8 @@ public class SequenceStyleConfigUnitTest {
 					props,
 					serviceRegistry
 			);
-			generator.registerExportables(
-					new Database( buildingContext.getBuildingOptions() )
-			);
+			generator.registerExportables( database );
+			generator.initialize( SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment() ) );
 			assertClassAssignability( SequenceStructure.class, generator.getDatabaseStructure().getClass() );
 			assertClassAssignability( PooledLoOptimizer.class, generator.getOptimizer().getClass() );
 
@@ -370,9 +371,8 @@ public class SequenceStyleConfigUnitTest {
 					props,
 					serviceRegistry
 			);
-			generator.registerExportables(
-					new Database( buildingContext.getBuildingOptions() )
-			);
+			generator.registerExportables( database );
+			generator.initialize( SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment() ) );
 			assertClassAssignability( SequenceStructure.class, generator.getDatabaseStructure().getClass() );
 			assertClassAssignability( PooledLoThreadLocalOptimizer.class, generator.getOptimizer().getClass() );
 		}

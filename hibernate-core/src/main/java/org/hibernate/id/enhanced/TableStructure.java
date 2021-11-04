@@ -19,6 +19,7 @@ import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedName;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
@@ -56,7 +57,7 @@ public class TableStructure implements DatabaseStructure {
 
 	private String contributor;
 
-	private String tableNameText;
+	private QualifiedName physicalTableName;
 	private String valueColumnNameText;
 
 	private String selectQuery;
@@ -84,8 +85,8 @@ public class TableStructure implements DatabaseStructure {
 	}
 
 	@Override
-	public String getName() {
-		return tableNameText;
+	public QualifiedName getPhysicalName() {
+		return physicalTableName;
 	}
 
 	@Override
@@ -141,7 +142,7 @@ public class TableStructure implements DatabaseStructure {
 									)) {
 										final ResultSet selectRS = executeQuery( selectStatement, statsCollector );
 										if ( !selectRS.next() ) {
-											final String err = "could not read a hi value - you need to populate the table: " + tableNameText;
+											final String err = "could not read a hi value - you need to populate the table: " + physicalTableName;
 											LOG.error( err );
 											throw new IdentifierGenerationException( err );
 										}
@@ -167,7 +168,7 @@ public class TableStructure implements DatabaseStructure {
 										rows = executeUpdate( updatePS, statsCollector );
 									}
 									catch (SQLException e) {
-										LOG.unableToUpdateQueryHiValue( tableNameText, e );
+										LOG.unableToUpdateQueryHiValue( physicalTableName.render(), e );
 										throw e;
 									}
 								} while ( rows == 0 );
@@ -248,22 +249,9 @@ public class TableStructure implements DatabaseStructure {
 			);
 			tableCreated = true;
 		}
+		this.physicalTableName = table.getQualifiedTableName();
 
-		this.tableNameText = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-				table.getQualifiedTableName(),
-				dialect
-		);
-
-		this.valueColumnNameText = logicalValueColumnNameIdentifier.render( dialect );
-
-
-		this.selectQuery = "select " + valueColumnNameText + " as id_val" +
-				" from " + dialect.appendLockHint( new LockOptions( LockMode.PESSIMISTIC_WRITE ), tableNameText ) +
-				dialect.getForUpdateString();
-
-		this.updateQuery = "update " + tableNameText +
-				" set " + valueColumnNameText + "= ?" +
-				" where " + valueColumnNameText + "=?";
+		valueColumnNameText = logicalValueColumnNameIdentifier.render( dialect );
 		if ( tableCreated ) {
 			ExportableColumn valueColumn = new ExportableColumn(
 					database,
@@ -274,9 +262,23 @@ public class TableStructure implements DatabaseStructure {
 
 			table.addColumn( valueColumn );
 
-			table.addInitCommand(
-					new InitCommand( "insert into " + tableNameText + " values ( " + initialValue + " )" )
-			);
+			table.addInitCommand( context -> new InitCommand( "insert into "
+					+ context.format( physicalTableName ) + " values ( " + initialValue + " )" ) );
 		}
+	}
+
+	@Override
+	public void initialize(SqlStringGenerationContext context) {
+		Dialect dialect = context.getDialect();
+
+		String formattedPhysicalTableName = context.format( physicalTableName );
+
+		this.selectQuery = "select " + valueColumnNameText + " as id_val" +
+				" from " + dialect.appendLockHint( new LockOptions( LockMode.PESSIMISTIC_WRITE ), formattedPhysicalTableName ) +
+				dialect.getForUpdateString();
+
+		this.updateQuery = "update " + formattedPhysicalTableName +
+				" set " + valueColumnNameText + "= ?" +
+				" where " + valueColumnNameText + "=?";
 	}
 }

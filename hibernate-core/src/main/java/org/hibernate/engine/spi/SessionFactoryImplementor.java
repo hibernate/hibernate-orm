@@ -20,6 +20,7 @@ import org.hibernate.Metamodel;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.cfg.Settings;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
@@ -206,6 +207,8 @@ public interface SessionFactoryImplementor
 	default Dialect getDialect() {
 		return getJdbcServices().getDialect();
 	}
+
+	SqlStringGenerationContext getSqlStringGenerationContext();
 
 	/**
 	 * Retrieves the SQLExceptionConverter in effect for this SessionFactory.

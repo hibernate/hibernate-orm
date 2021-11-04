@@ -81,6 +81,7 @@ public class SequenceStyleGeneratorBehavesLikeSequeceHiloGeneratorWitZeroIncreme
 		generator.registerExportables( metadata.getDatabase() );
 
 		sessionFactory = (SessionFactoryImplementor) metadata.buildSessionFactory();
+		generator.initialize( sessionFactory.getSqlStringGenerationContext() );
 		sequenceValueExtractor = new SequenceValueExtractor( sessionFactory.getDialect(), TEST_SEQUENCE );
 	}
 

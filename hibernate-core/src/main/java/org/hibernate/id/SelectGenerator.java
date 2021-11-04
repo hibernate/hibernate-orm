@@ -14,6 +14,7 @@ import java.util.Properties;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.insert.AbstractSelectingDelegate;
@@ -40,6 +41,7 @@ public class SelectGenerator extends AbstractPostInsertGenerator {
 		uniqueKeyPropertyName = params.getProperty( "key" );
 	}
 
+	@Override
 	public InsertGeneratedIdentifierDelegate getInsertGeneratedIdentifierDelegate(
 			PostInsertIdentityPersister persister,
 			Dialect dialect,
@@ -104,7 +106,8 @@ public class SelectGenerator extends AbstractPostInsertGenerator {
 			idType = (BasicType<?>) persister.getIdentifierType();
 		}
 
-		public IdentifierGeneratingInsert prepareIdentifierGeneratingInsert() {
+		@Override
+		public IdentifierGeneratingInsert prepareIdentifierGeneratingInsert(SqlStringGenerationContext context) {
 			return new IdentifierGeneratingInsert( dialect );
 		}
 

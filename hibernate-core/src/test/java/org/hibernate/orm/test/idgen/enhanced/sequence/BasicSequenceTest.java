@@ -72,7 +72,8 @@ public class BasicSequenceTest {
 		assertThat( persister.getIdentifierGenerator(), instanceOf( SequenceStyleGenerator.class ) );
 
 		final SequenceStyleGenerator generator = (SequenceStyleGenerator) persister.getIdentifierGenerator();
-		assertEquals( "ID_SEQ_BSC_ENTITY" + SequenceStyleGenerator.DEF_SEQUENCE_SUFFIX, generator.getDatabaseStructure().getName() );
+		assertEquals( "ID_SEQ_BSC_ENTITY" + SequenceStyleGenerator.DEF_SEQUENCE_SUFFIX,
+				generator.getDatabaseStructure().getPhysicalName().render() );
 
 		scope.inTransaction(
 				(s) -> {

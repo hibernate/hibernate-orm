@@ -3031,7 +3031,7 @@ public abstract class AbstractEntityPersister
 	 * @return The insert SQL statement string
 	 */
 	public String generateIdentityInsertString(boolean[] includeProperty) {
-		Insert insert = identityDelegate.prepareIdentifierGeneratingInsert();
+		Insert insert = identityDelegate.prepareIdentifierGeneratingInsert( factory.getSqlStringGenerationContext() );
 		insert.setTableName( getTableName( 0 ) );
 
 		// add normal properties except lobs

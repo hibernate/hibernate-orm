@@ -11,6 +11,8 @@ import java.util.Properties;
 import org.hibernate.Session;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -79,7 +81,10 @@ public class SequenceHiLoGeneratorTest {
 		);
 
 		Metadata metadata = new MetadataSources( serviceRegistry ).buildMetadata();
-		generator.registerExportables( metadata.getDatabase() );
+		Database database = metadata.getDatabase();
+		generator.registerExportables( database );
+
+		generator.initialize( SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment() ) );
 
 		sessionFactory = (SessionFactoryImplementor) metadata.buildSessionFactory();
 		sequenceValueExtractor = new SequenceValueExtractor( sessionFactory.getDialect(), TEST_SEQUENCE );

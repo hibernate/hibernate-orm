@@ -7,6 +7,7 @@
 package org.hibernate.id;
 
 import org.hibernate.HibernateException;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 

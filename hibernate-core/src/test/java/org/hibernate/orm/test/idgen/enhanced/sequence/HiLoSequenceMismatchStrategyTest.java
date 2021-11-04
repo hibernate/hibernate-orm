@@ -104,7 +104,7 @@ public class HiLoSequenceMismatchStrategyTest {
 		assertThat( optimizer, instanceOf( HiLoOptimizer.class ) );
 		assertThat( optimizer.getIncrementSize(), not( is( 1 ) ) );
 
-		assertThat( generator.getDatabaseStructure().getName(), is( sequenceName ) );
+		assertThat( generator.getDatabaseStructure().getPhysicalName().render(), is( sequenceName ) );
 	}
 
 	@Entity(name = "TestEntity")

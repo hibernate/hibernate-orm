@@ -11,7 +11,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Properties;
 
-import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.boot.model.relational.Database;
@@ -19,8 +18,7 @@ import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
 import org.hibernate.boot.model.relational.Sequence;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.log.DeprecationLogger;
@@ -68,7 +66,7 @@ public class SequenceGenerator
 	private String contributor;
 
 	private QualifiedName logicalQualifiedSequenceName;
-	private String sequenceName;
+	private QualifiedName physicalSequenceName;
 	private Type identifierType;
 	private String sql;
 
@@ -76,8 +74,8 @@ public class SequenceGenerator
 		return identifierType;
 	}
 
-	public String getSequenceName() {
-		return sequenceName;
+	public QualifiedName getPhysicalSequenceName() {
+		return physicalSequenceName;
 	}
 
 	@Override
@@ -158,8 +156,8 @@ public class SequenceGenerator
 	}
 
 	@Override
-	public String determineBulkInsertionIdentifierGenerationSelectFragment(Dialect dialect) {
-		return dialect.getSequenceSupport().getSelectSequenceNextValString( getSequenceName() );
+	public String determineBulkInsertionIdentifierGenerationSelectFragment(SqlStringGenerationContext context) {
+		return context.getDialect().getSequenceSupport().getSelectSequenceNextValString( context.format( getPhysicalSequenceName() ) );
 	}
 
 	@Override
@@ -185,14 +183,12 @@ public class SequenceGenerator
 					)
 			);
 		}
+		this.physicalSequenceName = sequence.getName();
+	}
 
-		final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();
-		final Dialect dialect = jdbcEnvironment.getDialect();
-
-		this.sequenceName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-				sequence.getName(),
-				dialect
-		);
-		this.sql = jdbcEnvironment.getDialect().getSequenceSupport().getSequenceNextValString( sequenceName );
+	@Override
+	public void initialize(SqlStringGenerationContext context) {
+		String formattedPhysicalSequenceName = context.format( physicalSequenceName );
+		this.sql = context.getDialect().getSequenceSupport().getSequenceNextValString( formattedPhysicalSequenceName );
 	}
 }

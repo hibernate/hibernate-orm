@@ -13,6 +13,7 @@ import java.sql.SQLException;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.insert.AbstractReturningDelegate;
@@ -67,7 +68,7 @@ public class IdentityGenerator extends AbstractPostInsertGenerator {
 		}
 
 		@Override
-		public IdentifierGeneratingInsert prepareIdentifierGeneratingInsert() {
+		public IdentifierGeneratingInsert prepareIdentifierGeneratingInsert(SqlStringGenerationContext context) {
 			InsertSelectIdentityInsert insert = new InsertSelectIdentityInsert( dialect );
 			insert.addIdentityColumn( persister.getRootTableKeyColumnNames()[0] );
 			return insert;
@@ -120,7 +121,7 @@ public class IdentityGenerator extends AbstractPostInsertGenerator {
 		}
 
 		@Override
-		public IdentifierGeneratingInsert prepareIdentifierGeneratingInsert() {
+		public IdentifierGeneratingInsert prepareIdentifierGeneratingInsert(SqlStringGenerationContext context) {
 			IdentifierGeneratingInsert insert = new IdentifierGeneratingInsert( dialect );
 			insert.addIdentityColumn( persister.getRootTableKeyColumnNames()[0] );
 			return insert;

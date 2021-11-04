@@ -12,7 +12,6 @@ import org.junit.Test;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
@@ -57,7 +56,7 @@ public class HibernateSequenceTest extends BaseCoreFunctionalTestCase {
 		SequenceStyleGenerator seqGenerator = (SequenceStyleGenerator) generator;
 		Assert.assertEquals(
 				Table.qualify( null, SCHEMA_NAME, SequenceStyleGenerator.DEF_SEQUENCE_NAME ),
-				seqGenerator.getDatabaseStructure().getName()
+				seqGenerator.getDatabaseStructure().getPhysicalName().render()
 		);
 	}
 

@@ -14,6 +14,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
@@ -77,6 +78,16 @@ public interface IdentifierGenerator extends Configurable, ExportableProducer {
 	 */
 	@Override
 	default void registerExportables(Database database) {
+	}
+
+	/**
+	 * Initializes this instance, in particular pre-generates SQL as necessary.
+	 * <p>
+	 * This method is called after {@link #registerExportables(Database)}, before first use.
+	 *
+	 * @param context A context to help generate SQL strings
+	 */
+	default void initialize(SqlStringGenerationContext context) {
 	}
 
 	/**

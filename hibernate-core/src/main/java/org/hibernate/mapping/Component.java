@@ -16,6 +16,7 @@ import java.util.Map;
 import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -512,6 +513,11 @@ public class Component extends SimpleValue implements MetaAttributable {
 		@Override
 		public void registerExportables(Database database) {
 			subGenerator.registerExportables( database );
+		}
+
+		@Override
+		public void initialize(SqlStringGenerationContext context) {
+			subGenerator.initialize( context );
 		}
 	}
 

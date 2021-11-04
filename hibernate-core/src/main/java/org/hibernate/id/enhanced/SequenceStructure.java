@@ -11,12 +11,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.HibernateException;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.Sequence;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.IdentifierGeneratorHelper;
@@ -142,16 +140,6 @@ public class SequenceStructure implements DatabaseStructure {
 	public void registerExportables(Database database) {
 		buildSequence( database );
 		this.sql = database.getJdbcEnvironment().getDialect().getSequenceNextValString( sequenceName );
-	}
-
-	@Override
-	public String[] sqlCreateStrings(Dialect dialect) throws HibernateException {
-		return dialect.getCreateSequenceStrings( sequenceName, initialValue, getSourceIncrementSize() );
-	}
-
-	@Override
-	public String[] sqlDropStrings(Dialect dialect) throws HibernateException {
-		return dialect.getDropSequenceStrings( sequenceName );
 	}
 
 	@Override

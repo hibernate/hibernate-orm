@@ -16,7 +16,6 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Properties;
 
-import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
@@ -706,21 +705,6 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 		finally {
 			statsCollector.jdbcExecuteStatementEnd();
 		}
-	}
-
-	@Override
-	public String[] sqlCreateStrings(Dialect dialect) throws HibernateException {
-		return new String[] {
-				dialect.getCreateTableString() + ' ' + renderedTableName + " ( "
-						+ segmentColumnName + ' ' + dialect.getTypeName( Types.VARCHAR, segmentValueLength, 0, 0 ) + " not null "
-						+ ", " + valueColumnName + ' ' + dialect.getTypeName( Types.BIGINT )
-						+ ", primary key ( " + segmentColumnName + " ) )" + dialect.getTableTypeString()
-		};
-	}
-
-	@Override
-	public String[] sqlDropStrings(Dialect dialect) throws HibernateException {
-		return new String[] { dialect.getDropTableString( renderedTableName ) };
 	}
 
 	@Override

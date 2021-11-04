@@ -9,6 +9,7 @@ package org.hibernate.sql.exec.internal;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -25,6 +26,7 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -110,13 +112,29 @@ public abstract class AbstractJdbcParameter
 		else {
 			valueClass = binding.getBindValue().getClass();
 		}
-		final BasicType<?> basicType = executionContext.getSession()
-				.getFactory()
-				.getTypeConfiguration()
-				.getBasicTypeRegistry()
-				.getRegisteredType( valueClass );
 
-		return basicType.getJdbcMapping();
+		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
+		final TypeConfiguration typeConfiguration = factory.getTypeConfiguration();
+
+		final BasicType<?> basicType = typeConfiguration.getBasicTypeRegistry().getRegisteredType( valueClass );
+		if ( basicType != null ) {
+			return basicType.getJdbcMapping();
+		}
+
+		final BasicType<?> defaultForJavaType = typeConfiguration.getBasicTypeForJavaType( valueClass );
+		if ( defaultForJavaType != null ) {
+			return defaultForJavaType;
+		}
+
+		final JavaType<Object> javaType = typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( valueClass );
+		if ( javaType != null ) {
+			final JdbcType recommendedJdbcType = javaType.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() );
+			if ( recommendedJdbcType != null ) {
+				return typeConfiguration.getBasicTypeRegistry().resolve( javaType, recommendedJdbcType );
+			}
+		}
+
+		return null;
 	}
 
 	@Override

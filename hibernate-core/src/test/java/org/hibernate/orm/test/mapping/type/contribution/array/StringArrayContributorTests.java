@@ -18,6 +18,8 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
+import org.assertj.core.util.Arrays;
+
 /**
  * @author Steve Ebersole
  */
@@ -40,6 +42,15 @@ public class StringArrayContributorTests {
 		scope.inTransaction( (session) -> {
 			session.createQuery( "select p.tags from Post p" ).list();
 		} );
+	}
+
+	@Test
+	public void testAsQueryParameter(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			session.createQuery( "select p  from Post p where array_contains(:arr, p.title) = true" )
+					.setParameter( "arr", Arrays.array( "a", "b" ) )
+					.list();
+		});
 	}
 
 	@AfterEach

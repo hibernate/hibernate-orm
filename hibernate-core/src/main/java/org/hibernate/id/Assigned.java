@@ -23,7 +23,7 @@ import org.hibernate.type.Type;
  *
  * @author Gavin King
  */
-public class Assigned implements IdentifierGenerator, Configurable {
+public class Assigned implements IdentifierGenerator {
 	private String entityName;
 
 	public Serializable generate(SharedSessionContractImplementor session, Object obj) throws HibernateException {

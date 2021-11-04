@@ -24,7 +24,6 @@ import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
-import org.hibernate.id.Configurable;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.SequenceMismatchStrategy;
@@ -101,7 +100,7 @@ import org.jboss.logging.Logger;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public class SequenceStyleGenerator
-		implements PersistentIdentifierGenerator, BulkInsertionCapableIdentifierGenerator, Configurable {
+		implements PersistentIdentifierGenerator, BulkInsertionCapableIdentifierGenerator {
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			CoreMessageLogger.class,

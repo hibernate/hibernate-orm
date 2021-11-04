@@ -45,7 +45,7 @@ import org.jboss.logging.Logger;
  */
 @Deprecated
 public class SequenceGenerator
-		implements PersistentIdentifierGenerator, BulkInsertionCapableIdentifierGenerator, Configurable {
+		implements PersistentIdentifierGenerator, BulkInsertionCapableIdentifierGenerator {
 
 	private static final Logger LOG = Logger.getLogger( SequenceGenerator.class.getName() );
 

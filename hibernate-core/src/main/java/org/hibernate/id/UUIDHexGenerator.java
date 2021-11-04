@@ -29,7 +29,7 @@ import org.hibernate.type.Type;
  *
  * @author Gavin King
  */
-public class UUIDHexGenerator extends AbstractUUIDGenerator implements Configurable {
+public class UUIDHexGenerator extends AbstractUUIDGenerator {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( UUIDHexGenerator.class );
 
 	private static boolean WARNED;

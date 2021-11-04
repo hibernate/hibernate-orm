@@ -7,10 +7,16 @@
 package org.hibernate.id;
 
 import java.io.Serializable;
+import java.util.Properties;
 import javax.persistence.GeneratedValue;
 
 import org.hibernate.HibernateException;
+import org.hibernate.MappingException;
+import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.type.Type;
 
 /**
  * The general contract between a class that generates unique
@@ -29,9 +35,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  * @author Gavin King
  *
  * @see PersistentIdentifierGenerator
- * @see Configurable
  */
-public interface IdentifierGenerator {
+public interface IdentifierGenerator extends Configurable, ExportableProducer {
 	/**
 	 * The configuration parameter holding the entity name
 	 */
@@ -47,6 +52,32 @@ public interface IdentifierGenerator {
 	 * {@link IdentifierGenerator} as it is configured.
 	 */
 	String GENERATOR_NAME = "GENERATOR_NAME";
+
+	/**
+	 * Configure this instance, given the value of parameters
+	 * specified by the user as <tt>&lt;param&gt;</tt> elements.
+	 * <p>
+	 * This method is called just once, following instantiation, and before {@link #registerExportables(Database)}.
+	 *
+	 * @param type The id property type descriptor
+	 * @param params param values, keyed by parameter name
+	 * @param serviceRegistry Access to service that may be needed.
+	 * @throws MappingException If configuration fails.
+	 */
+	@Override
+	default void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
+	}
+
+	/**
+	 * Register database objects used by this identifier generator, e.g. sequences, tables, etc.
+	 * <p>
+	 * This method is called just once, after {@link #configure(Type, Properties, ServiceRegistry)}.
+	 *
+	 * @param database The database instance
+	 */
+	@Override
+	default void registerExportables(Database database) {
+	}
 
 	/**
 	 * Generate a new identifier.

@@ -31,7 +31,7 @@ import org.hibernate.type.Type;
  *
  * @author Gavin King
  */
-public class SelectGenerator extends AbstractPostInsertGenerator implements Configurable {
+public class SelectGenerator extends AbstractPostInsertGenerator {
 	private String uniqueKeyPropertyName;
 
 	@Override

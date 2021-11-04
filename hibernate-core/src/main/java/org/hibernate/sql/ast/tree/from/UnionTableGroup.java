@@ -137,7 +137,8 @@ public class UnionTableGroup implements VirtualTableGroup {
 	public TableReference getTableReference(
 			NavigablePath navigablePath,
 			String tableExpression,
-			boolean allowFkOptimization) {
+			boolean allowFkOptimization,
+			boolean resolve) {
 		return resolveTableReference( navigablePath, tableExpression, allowFkOptimization );
 	}
 
@@ -146,7 +147,7 @@ public class UnionTableGroup implements VirtualTableGroup {
 			NavigablePath navigablePath,
 			String tableExpression,
 			boolean allowFkOptimization) {
-		if ( tableReference.getTableReference( navigablePath, tableExpression, allowFkOptimization ) != null ) {
+		if ( tableReference.getTableReference( navigablePath, tableExpression, allowFkOptimization, true ) != null ) {
 			return tableReference;
 		}
 		if ( nestedTableGroupJoins != null ) {

@@ -6,11 +6,9 @@
  */
 package org.hibernate.query.sqm;
 
-import java.util.Locale;
 import jakarta.persistence.metamodel.Bindable;
 
 import org.hibernate.metamodel.model.domain.DomainType;
-import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.SqmExpressableAccessor;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 
@@ -51,21 +49,5 @@ public interface SqmPathSource<J> extends SqmExpressable<J>, Bindable<J>, SqmExp
 	@Override
 	default SqmExpressable<J> getExpressable() {
 		return (SqmExpressable<J>) getSqmPathType();
-	}
-
-	default <X extends DomainType> X sqmAs(Class<X> targetType) {
-		if ( targetType.isInstance( this ) ) {
-			//noinspection unchecked
-			return (X) this;
-		}
-
-		throw new IllegalArgumentException(
-				String.format(
-						Locale.ROOT,
-						"`%s` cannot be treated as `%s`",
-						getClass().getName(),
-						targetType.getName()
-				)
-		);
 	}
 }

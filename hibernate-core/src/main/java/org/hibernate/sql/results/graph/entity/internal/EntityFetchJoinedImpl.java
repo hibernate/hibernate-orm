@@ -42,6 +42,7 @@ public class EntityFetchJoinedImpl extends AbstractNonLazyEntityFetch {
 				null,
 				creationState
 		);
+		this.entityResult.afterInitialize( this, creationState );
 	}
 
 	@Override
@@ -56,7 +57,7 @@ public class EntityFetchJoinedImpl extends AbstractNonLazyEntityFetch {
 						getReferencedModePart(),
 						getNavigablePath(),
 						creationState.determineEffectiveLockMode( sourceAlias ),
-						entityResult.getIdentifierResult(),
+						entityResult.getIdentifierFetch(),
 						entityResult.getDiscriminatorFetch(),
 						creationState
 				)

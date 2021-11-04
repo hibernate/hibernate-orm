@@ -20,7 +20,7 @@ public interface ParameterInterpretation {
 	 * Access to the defined parameters in the order they were encountered,
 	 * potentially including "duplicate references" to a single parameter
 	 */
-	List<QueryParameterImplementor<?>> getOccurrenceOrderedParameters();
+	List<ParameterOccurrence> getOrderedParameterOccurrences();
 
 	/**
 	 * Create the ParameterMetadata representation of this interpretation

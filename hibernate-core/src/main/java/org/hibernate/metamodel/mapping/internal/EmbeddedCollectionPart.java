@@ -159,7 +159,6 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 				fetchParent,
 				FetchTiming.IMMEDIATE,
 				selected,
-				true,
 				creationState
 		);
 	}

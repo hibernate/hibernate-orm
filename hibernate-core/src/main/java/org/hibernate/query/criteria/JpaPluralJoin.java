@@ -6,31 +6,31 @@
  */
 package org.hibernate.query.criteria;
 
-import java.util.Set;
-
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 
 import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.PluralJoin;
 import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.SetJoin;
 
 /**
  * Specialization of {@link JpaJoin} for {@link java.util.Set} typed attribute joins
  *
  * @author Steve Ebersole
  */
-public interface JpaSetJoin<O, T> extends JpaPluralJoin<O, Set<T>, T>, SetJoin<O, T> {
+public interface JpaPluralJoin<O, C, E> extends JpaJoin<O, E>, PluralJoin<O, C, E> {
+	@Override
+	PluralPersistentAttribute<? super O, C, E> getAttribute();
 
-	JpaSetJoin<O, T> on(JpaExpression<Boolean> restriction);
+	JpaPluralJoin<O, ? extends C, E> on(JpaExpression<Boolean> restriction);
 
-	JpaSetJoin<O, T> on(Expression<Boolean> restriction);
+	JpaPluralJoin<O, ? extends C, E> on(Expression<Boolean> restriction);
 
-	JpaSetJoin<O, T> on(JpaPredicate... restrictions);
+	JpaPluralJoin<O, ? extends C, E> on(JpaPredicate... restrictions);
 
-	JpaSetJoin<O, T> on(Predicate... restrictions);
+	JpaPluralJoin<O, ? extends C, E> on(Predicate... restrictions);
 
-	<S extends T> JpaSetJoin<O, S> treatAs(Class<S> treatAsType);
+	<S extends E> JpaPluralJoin<O, ?, S> treatAs(Class<S> treatAsType);
 
-	<S extends T> JpaSetJoin<O, S> treatAs(EntityDomainType<S> treatAsType);
+	<S extends E> JpaPluralJoin<O, ?, S> treatAs(EntityDomainType<S> treatAsType);
 }

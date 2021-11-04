@@ -240,8 +240,8 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 		final TypeConfiguration typeConfiguration = session.getFactory().getTypeConfiguration();
 
 		if ( binding.getBindType() instanceof JavaTypedExpressable ) {
-			final JavaTypedExpressable javaTypedExpressable = (JavaTypedExpressable) binding.getBindType();
-			final JavaType jtd = javaTypedExpressable.getExpressableJavaTypeDescriptor();
+			final JavaTypedExpressable<?> javaTypedExpressable = (JavaTypedExpressable<?>) binding.getBindType();
+			final JavaType<?> jtd = javaTypedExpressable.getExpressableJavaTypeDescriptor();
 			if ( jtd.getJavaTypeClass() != null ) {
 				// avoid dynamic models
 				return typeConfiguration.getBasicTypeForJavaType( jtd.getJavaTypeClass() );

@@ -114,8 +114,9 @@ public class EntityCollectionPartTableGroup implements TableGroup {
 	public TableReference getTableReference(
 			NavigablePath navigablePath,
 			String tableExpression,
-			boolean allowFkOptimization) {
-		return collectionTableGroup.getTableReference( navigablePath, tableExpression, allowFkOptimization );
+			boolean allowFkOptimization,
+			boolean resolve) {
+		return collectionTableGroup.getTableReference( navigablePath, tableExpression, allowFkOptimization, resolve );
 	}
 
 	@Override

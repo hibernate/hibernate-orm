@@ -106,6 +106,7 @@ public class BasicAttributeMapping
 	}
 
 	public static BasicAttributeMapping withSelectableMapping(
+			ManagedMappingType declaringType,
 			BasicValuedModelPart original,
 			PropertyAccess propertyAccess,
 			ValueGeneration valueGeneration,
@@ -114,19 +115,16 @@ public class BasicAttributeMapping
 		int stateArrayPosition = 0;
 		StateArrayContributorMetadataAccess attributeMetadataAccess = null;
 		BasicValueConverter<?, ?> valueConverter = null;
-		ManagedMappingType declaringType = null;
 		if ( original instanceof SingleAttributeIdentifierMapping ) {
 			final SingleAttributeIdentifierMapping mapping = (SingleAttributeIdentifierMapping) original;
 			attributeName = mapping.getAttributeName();
 			attributeMetadataAccess = null;
-			declaringType = mapping.findContainingEntityMapping();
 		}
 		else if ( original instanceof SingularAttributeMapping ) {
 			final SingularAttributeMapping mapping = (SingularAttributeMapping) original;
 			attributeName = mapping.getAttributeName();
 			stateArrayPosition = mapping.getStateArrayPosition();
 			attributeMetadataAccess = mapping.getAttributeMetadataAccess();
-			declaringType = mapping.getDeclaringType();
 		}
 		if ( original instanceof ConvertibleModelPart ) {
 			valueConverter = ( (ConvertibleModelPart) original ).getValueConverter();
@@ -212,7 +210,7 @@ public class BasicAttributeMapping
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final SqlSelection sqlSelection = resolveSqlSelection( tableGroup, true, creationState );
+		final SqlSelection sqlSelection = resolveSqlSelection( navigablePath, tableGroup, true, creationState );
 
 		//noinspection unchecked
 		return new BasicResult(
@@ -225,12 +223,13 @@ public class BasicAttributeMapping
 	}
 
 	private SqlSelection resolveSqlSelection(
+			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			boolean allowFkOptimization,
 			DomainResultCreationState creationState) {
 		final SqlExpressionResolver expressionResolver = creationState.getSqlAstCreationState().getSqlExpressionResolver();
 		final TableReference tableReference = tableGroup.resolveTableReference(
-				tableGroup.getNavigablePath().append( getNavigableRole().getNavigableName() ),
+				navigablePath,
 				getContainingTableExpression(),
 				allowFkOptimization
 		);
@@ -257,7 +256,7 @@ public class BasicAttributeMapping
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
-		resolveSqlSelection( tableGroup, true, creationState );
+		resolveSqlSelection( navigablePath, tableGroup, true, creationState );
 	}
 
 	@Override
@@ -266,7 +265,7 @@ public class BasicAttributeMapping
 			TableGroup tableGroup,
 			DomainResultCreationState creationState,
 			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
-		selectionConsumer.accept( resolveSqlSelection( tableGroup, true, creationState ), getJdbcMapping() );
+		selectionConsumer.accept( resolveSqlSelection( navigablePath, tableGroup, true, creationState ), getJdbcMapping() );
 	}
 
 	@Override
@@ -293,7 +292,7 @@ public class BasicAttributeMapping
 
 			assert tableGroup != null;
 
-			final SqlSelection sqlSelection = resolveSqlSelection( tableGroup, false, creationState );
+			final SqlSelection sqlSelection = resolveSqlSelection( fetchablePath, tableGroup, true, creationState );
 			valuesArrayPosition = sqlSelection.getValuesArrayPosition();
 		}
 
@@ -302,7 +301,6 @@ public class BasicAttributeMapping
 				fetchParent,
 				fetchablePath,
 				this,
-				getAttributeMetadataAccess().resolveAttributeMetadata( null ).isNullable(),
 				valueConverter,
 				fetchTiming,
 				creationState

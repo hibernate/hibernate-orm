@@ -1052,6 +1052,7 @@ identifier
 	| UPDATE
 	| UPPER
 	| VALUE
+	| VALUES
 	| VERSION
 	| VERSIONED
 	| WEEK

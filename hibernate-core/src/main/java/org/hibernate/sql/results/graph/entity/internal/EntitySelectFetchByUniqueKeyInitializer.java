@@ -44,15 +44,15 @@ public class EntitySelectFetchByUniqueKeyInitializer extends EntitySelectFetchIn
 			return;
 		}
 		final String entityName = concreteDescriptor.getEntityName();
-		String uniqueKeyPropertyName = fetchedAttribute.getBidirectionalAttributeName();
+		final String uniqueKeyPropertyName = fetchedAttribute.getBidirectionalAttributeName();
 
 		final SharedSessionContractImplementor session = rowProcessingState.getSession();
 
-		EntityUniqueKey euk = new EntityUniqueKey(
+		final EntityUniqueKey euk = new EntityUniqueKey(
 				entityName,
 				uniqueKeyPropertyName,
 				entityIdentifier,
-				concreteDescriptor.getIdentifierType(),
+				concreteDescriptor.getPropertyType( uniqueKeyPropertyName ),
 				session.getFactory()
 		);
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();

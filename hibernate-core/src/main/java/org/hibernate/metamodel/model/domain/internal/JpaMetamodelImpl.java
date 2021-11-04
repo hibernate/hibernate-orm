@@ -592,7 +592,7 @@ public class JpaMetamodelImpl implements JpaMetamodel, Serializable {
 		else {
 			javaTypeDescriptor = context.getTypeConfiguration()
 					.getJavaTypeDescriptorRegistry()
-					.resolveManagedTypeDescriptor( javaType );
+					.resolveEntityTypeDescriptor( javaType );
 		}
 
 		final EntityTypeImpl<?> entityType = new EntityTypeImpl(

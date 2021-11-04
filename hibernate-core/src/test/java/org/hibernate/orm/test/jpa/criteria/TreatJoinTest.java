@@ -81,8 +81,9 @@ public class TreatJoinTest extends BaseEntityManagerFunctionalTestCase {
 			CriteriaQuery<Bid> query = cb.createQuery( Bid.class );
 			Root<Bid> bid = query.from( Bid.class );
 
-			cb.treat( bid.join( "item" ), Book.class );
-			cb.treat( bid.join( "item" ), Car.class );
+			Join<Object, Object> item = bid.join( "item" );
+			cb.treat( item, Book.class );
+			cb.treat( item, Car.class );
 
 			query.select( bid );
 

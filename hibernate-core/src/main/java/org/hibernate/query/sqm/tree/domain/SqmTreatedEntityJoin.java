@@ -7,7 +7,9 @@
 package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.TreatedNavigablePath;
 import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
@@ -22,12 +24,15 @@ public class SqmTreatedEntityJoin<T, S extends T> extends SqmEntityJoin<S> imple
 	public SqmTreatedEntityJoin(
 			SqmEntityJoin<T> wrappedPath,
 			EntityDomainType<S> treatTarget,
-			String alias,
-			SqmJoinType joinType) {
+			String alias) {
 		super(
+				wrappedPath.getNavigablePath().treatAs(
+						treatTarget.getHibernateEntityName(),
+						alias
+				),
 				treatTarget,
 				alias,
-				joinType,
+				wrappedPath.getSqmJoinType(),
 				wrappedPath.getRoot()
 		);
 		this.wrappedPath = wrappedPath;

@@ -46,7 +46,7 @@ public class QueryInterpretationCacheDisabledImpl implements QueryInterpretation
 	}
 
 	@Override
-	public SelectQueryPlan resolveSelectQueryPlan(Key key, Supplier<SelectQueryPlan> creator) {
+	public <R> SelectQueryPlan<R> resolveSelectQueryPlan(Key key, Supplier<SelectQueryPlan<R>> creator) {
 		return null;
 	}
 

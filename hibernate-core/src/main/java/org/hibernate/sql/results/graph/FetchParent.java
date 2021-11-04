@@ -65,7 +65,8 @@ public interface FetchParent extends DomainResultGraphNode {
 				fetchParentType = fetchableEntityType;
 			}
 			if ( fetchParentType != fetchableEntityType ) {
-				return new TreatedNavigablePath( getNavigablePath(), fetchableEntityType.getEntityName() )
+				// todo (6.0): if the fetchParentType is a subtype of fetchableEntityType this shouldn't be necessary
+				return getNavigablePath().treatAs( fetchableEntityType.getEntityName() )
 						.append( fetchableName );
 			}
 			return getNavigablePath().append( fetchableName );

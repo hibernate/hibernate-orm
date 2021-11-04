@@ -15,6 +15,7 @@ import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableGroupProducer;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -102,15 +103,15 @@ public interface ForeignKeyDescriptor extends VirtualModelPart {
 			DomainResultCreationState creationState);
 
 	Predicate generateJoinPredicate(
-			TableGroup lhs,
-			TableGroup tableGroup,
+			TableGroup targetSideTableGroup,
+			TableGroup keySideTableGroup,
 			SqlAstJoinType sqlAstJoinType,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext);
 
 	Predicate generateJoinPredicate(
-			TableReference lhs,
-			TableReference rhs,
+			TableReference targetSideReference,
+			TableReference keySideReference,
 			SqlAstJoinType sqlAstJoinType,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext);
@@ -149,6 +150,8 @@ public interface ForeignKeyDescriptor extends VirtualModelPart {
 	 * Return a copy of this foreign key descriptor with the selectable mappings as provided by the given accessor.
 	 */
 	ForeignKeyDescriptor withKeySelectionMapping(
+			ManagedMappingType declaringType,
+			TableGroupProducer declaringTableGroupProducer,
 			IntFunction<SelectableMapping> selectableMappingAccess,
 			MappingModelCreationProcess creationProcess);
 

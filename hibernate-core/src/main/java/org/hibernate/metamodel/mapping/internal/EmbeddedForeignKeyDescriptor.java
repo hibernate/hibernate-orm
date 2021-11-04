@@ -19,6 +19,7 @@ import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
@@ -27,6 +28,7 @@ import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.Clause;
@@ -36,6 +38,7 @@ import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
+import org.hibernate.sql.ast.tree.from.TableGroupProducer;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.Junction;
@@ -101,6 +104,8 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 	private EmbeddedForeignKeyDescriptor(
 			EmbeddedForeignKeyDescriptor original,
 			String keyTable,
+			ManagedMappingType keyDeclaringType,
+			TableGroupProducer keyDeclaringTableGroupProducer,
 			SelectableMappings keySelectableMappings,
 			MappingModelCreationProcess creationProcess) {
 		this.keyTable = keyTable;
@@ -112,6 +117,8 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 				Nature.KEY,
 				EmbeddedAttributeMapping.createInverseModelPart(
 						original.targetSide.getModelPart(),
+						keyDeclaringType,
+						keyDeclaringTableGroupProducer,
 						keySelectableMappings,
 						creationProcess
 				)
@@ -158,6 +165,8 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 
 	@Override
 	public ForeignKeyDescriptor withKeySelectionMapping(
+			ManagedMappingType declaringType,
+			TableGroupProducer declaringTableGroupProducer,
 			IntFunction<SelectableMapping> selectableMappingAccess,
 			MappingModelCreationProcess creationProcess) {
 		SelectableMapping[] selectionMappings = new SelectableMapping[keySelectableMappings.getJdbcTypeCount()];
@@ -167,6 +176,8 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 		return new EmbeddedForeignKeyDescriptor(
 				this,
 				selectionMappings[0].getContainingTableExpression(),
+				declaringType,
+				declaringTableGroupProducer,
 				new SelectableMappingsImpl( selectionMappings ),
 				creationProcess
 		);
@@ -340,11 +351,11 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 			SqlAstJoinType sqlAstJoinType,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
-		final TableReference lhsTableReference = targetSideTableGroup.getTableReference(
+		final TableReference lhsTableReference = targetSideTableGroup.resolveTableReference(
 				targetSideTableGroup.getNavigablePath(),
 				targetTable
 		);
-		final TableReference rhsTableKeyReference = keySideTableGroup.getTableReference( keyTable );
+		final TableReference rhsTableKeyReference = keySideTableGroup.resolveTableReference( keyTable );
 
 		return generateJoinPredicate(
 				lhsTableReference,

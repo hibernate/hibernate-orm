@@ -110,7 +110,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 
 		converter = new MultiTableSqmMutationConverter(
 				entityDescriptor,
-				sqmDelete.getTarget().getExplicitAlias(),
+				sqmDelete.getTarget(),
 				domainParameterXref,
 				queryOptions,
 				loadQueryInfluencers,
@@ -288,7 +288,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 			);
 		}
 		else {
-			return tableGroup.getTableReference( tableGroup.getNavigablePath(), tableExpression );
+			return tableGroup.getTableReference( tableGroup.getNavigablePath(), tableExpression, true, true );
 		}
 	}
 

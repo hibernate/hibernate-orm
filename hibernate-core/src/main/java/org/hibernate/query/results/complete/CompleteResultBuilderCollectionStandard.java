@@ -146,7 +146,7 @@ public class CompleteResultBuilderCollectionStandard implements CompleteResultBu
 			creationStateImpl.resolveSqlSelection(
 					creationStateImpl.resolveSqlExpression(
 							SqlExpressionResolver.createColumnReferenceKey(
-									tableGroup.getTableReference( selectableMapping.getContainingTableExpression() ),
+									tableGroup.resolveTableReference( selectableMapping.getContainingTableExpression() ),
 									selectableMapping.getSelectionExpression()
 							),
 							processingState -> {

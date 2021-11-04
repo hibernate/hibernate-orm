@@ -141,11 +141,12 @@ public class OrderByFragmentFunction extends AbstractSqmFunctionDescriptor {
 		public TableReference getTableReference(
 				NavigablePath navigablePath,
 				String tableExpression,
-				boolean allowFkOptimization) {
+				boolean allowFkOptimization,
+				boolean resolve) {
 			if ( tableExpression.equals( normalTableExpression ) ) {
 				tableExpression = auditTableExpression;
 			}
-			return delegate.getTableReference( navigablePath, tableExpression, allowFkOptimization );
+			return delegate.getTableReference( navigablePath, tableExpression, allowFkOptimization, resolve );
 		}
 
 		@Override

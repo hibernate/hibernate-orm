@@ -73,7 +73,8 @@ public class CteTableGroup implements TableGroup {
 	public TableReference getTableReference(
 			NavigablePath navigablePath,
 			String tableExpression,
-			boolean allowFkOptimization) {
+			boolean allowFkOptimization,
+			boolean resolve) {
 		if ( cteTableReference.getTableExpression().equals( tableExpression ) ) {
 			return cteTableReference;
 		}

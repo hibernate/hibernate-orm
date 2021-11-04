@@ -47,16 +47,16 @@ public class DomainParameterXref {
 		final Map<SqmParameter,QueryParameterImplementor<?>> xrefMap = new TreeMap<>(
 				(o1, o2) -> {
 					if ( o1 instanceof SqmNamedParameter ) {
-						final SqmNamedParameter one = (SqmNamedParameter) o1;
-						final SqmNamedParameter another = (SqmNamedParameter) o2;
-
-						return one.getName().compareTo( another.getName() );
+						final SqmNamedParameter<?> one = (SqmNamedParameter<?>) o1;
+						return o2 instanceof SqmNamedParameter<?>
+								? one.getName().compareTo( ((SqmNamedParameter<?>) o2).getName() )
+								: -1;
 					}
 					else if ( o1 instanceof SqmPositionalParameter ) {
-						final SqmPositionalParameter one = (SqmPositionalParameter) o1;
-						final SqmPositionalParameter another = (SqmPositionalParameter) o2;
-
-						return one.getPosition().compareTo( another.getPosition() );
+						final SqmPositionalParameter<?> one = (SqmPositionalParameter<?>) o1;
+						return o2 instanceof SqmPositionalParameter<?>
+								? one.getPosition().compareTo( ( (SqmPositionalParameter<?>) o2 ).getPosition() )
+								: 1;
 					}
 					else if ( o1 instanceof SqmJpaCriteriaParameterWrapper
 							&& o2 instanceof SqmJpaCriteriaParameterWrapper ) {
@@ -101,7 +101,7 @@ public class DomainParameterXref {
 					sqmParameter,
 					p -> {
 						if ( sqmParameter instanceof SqmJpaCriteriaParameterWrapper ) {
-							return ( (SqmJpaCriteriaParameterWrapper) sqmParameter ).getJpaCriteriaParameter();
+							return ( (SqmJpaCriteriaParameterWrapper<?>) sqmParameter ).getJpaCriteriaParameter();
 						}
 						else if ( sqmParameter.getName() != null ) {
 							return QueryParameterNamedImpl.fromSqm( sqmParameter );

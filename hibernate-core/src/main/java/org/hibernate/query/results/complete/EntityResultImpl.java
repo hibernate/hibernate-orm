@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.function.Function;
 
 import org.hibernate.LockMode;
+import org.hibernate.engine.FetchTiming;
 import org.hibernate.internal.util.MutableObject;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
@@ -19,7 +20,6 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
-import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
@@ -37,7 +37,7 @@ public class EntityResultImpl implements EntityResult {
 	private final NavigablePath navigablePath;
 	private final EntityValuedModelPart entityValuedModelPart;
 
-	private final DomainResult<?> identifierResult;
+	private final Fetch identifierFetch;
 	private final BasicFetch<?> discriminatorFetch;
 	private final List<Fetch> fetches;
 
@@ -102,17 +102,20 @@ public class EntityResultImpl implements EntityResult {
 		}
 
 		if ( idFetchRef.isNotSet() ) {
-			identifierResult = ResultsHelper.implicitIdentifierResult(
-					identifierMapping,
+			identifierFetch = ( (Fetchable) identifierMapping ).generateFetch(
+					this,
 					new EntityIdentifierNavigablePath(
 							navigablePath,
 							ResultsHelper.attributeName( identifierMapping )
 					),
+					FetchTiming.IMMEDIATE,
+					true,
+					null,
 					creationState
 			);
 		}
 		else {
-			this.identifierResult = idFetchRef.get().asResult( creationState );
+			this.identifierFetch = idFetchRef.get();
 		}
 	}
 
@@ -161,7 +164,7 @@ public class EntityResultImpl implements EntityResult {
 						this,
 						getNavigablePath(),
 						lockMode,
-						identifierResult,
+						identifierFetch,
 						discriminatorFetch,
 						null,
 						creationState

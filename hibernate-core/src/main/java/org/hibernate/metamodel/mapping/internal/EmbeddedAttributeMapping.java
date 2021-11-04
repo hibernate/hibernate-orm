@@ -43,6 +43,7 @@ import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.from.CompositeTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
+import org.hibernate.sql.ast.tree.from.TableGroupProducer;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -110,6 +111,8 @@ public class EmbeddedAttributeMapping
 
 	// Constructor is only used for creating the inverse attribute mapping
 	private EmbeddedAttributeMapping(
+			ManagedMappingType keyDeclaringType,
+			TableGroupProducer declaringTableGroupProducer,
 			SelectableMappings selectableMappings,
 			EmbeddableValuedModelPart inverseModelPart,
 			MappingModelCreationProcess creationProcess) {
@@ -118,11 +121,7 @@ public class EmbeddedAttributeMapping
 				-1,
 				null,
 				inverseModelPart.getMappedFetchOptions(),
-				inverseModelPart instanceof AttributeMapping
-						? ( (AttributeMapping) inverseModelPart ).getDeclaringType()
-						: inverseModelPart instanceof EntityIdentifierMapping
-						? inverseModelPart.findContainingEntityMapping()
-						: null,
+				keyDeclaringType,
 				null,
 				null
 		);
@@ -132,6 +131,7 @@ public class EmbeddedAttributeMapping
 		this.tableExpression = selectableMappings.getSelectable( 0 ).getContainingTableExpression();
 		this.embeddableMappingType = inverseModelPart.getEmbeddableTypeDescriptor().createInverseMappingType(
 				this,
+				declaringTableGroupProducer,
 				selectableMappings,
 				creationProcess
 		);
@@ -140,9 +140,17 @@ public class EmbeddedAttributeMapping
 
 	public static EmbeddableValuedModelPart createInverseModelPart(
 			EmbeddableValuedModelPart modelPart,
+			ManagedMappingType keyDeclaringType,
+			TableGroupProducer declaringTableGroupProducer,
 			SelectableMappings selectableMappings,
 			MappingModelCreationProcess creationProcess) {
-		return new EmbeddedAttributeMapping( selectableMappings, modelPart, creationProcess );
+		return new EmbeddedAttributeMapping(
+				keyDeclaringType,
+				declaringTableGroupProducer,
+				selectableMappings,
+				modelPart,
+				creationProcess
+		);
 	}
 
 	@Override
@@ -225,7 +233,6 @@ public class EmbeddedAttributeMapping
 				fetchParent,
 				fetchTiming,
 				selected,
-				getAttributeMetadataAccess().resolveAttributeMetadata( null ).isNullable(),
 				creationState
 		);
 	}

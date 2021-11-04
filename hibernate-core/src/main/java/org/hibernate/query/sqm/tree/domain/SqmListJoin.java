@@ -12,6 +12,8 @@ import jakarta.persistence.criteria.Predicate;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
+import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.query.PathException;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaListJoin;
@@ -37,6 +39,17 @@ public class SqmListJoin<O,E>
 			boolean fetched,
 			NodeBuilder nodeBuilder) {
 		super( lhs, listAttribute, alias, sqmJoinType, fetched, nodeBuilder );
+	}
+
+	protected SqmListJoin(
+			SqmFrom<?, O> lhs,
+			NavigablePath navigablePath,
+			ListPersistentAttribute<O, E> listAttribute,
+			String alias,
+			SqmJoinType joinType,
+			boolean fetched,
+			NodeBuilder nodeBuilder) {
+		super( lhs, navigablePath, listAttribute, alias, joinType, fetched, nodeBuilder );
 	}
 
 	@Override
@@ -88,12 +101,26 @@ public class SqmListJoin<O,E>
 
 	@Override
 	public <S extends E> SqmTreatedListJoin<O,E,S> treatAs(Class<S> treatAsType) {
-		return treatAs( nodeBuilder().getDomainModel().entity( treatAsType ) );
+		return treatAs( nodeBuilder().getDomainModel().entity( treatAsType ), null );
 	}
 
 	@Override
-	public <S extends E> SqmTreatedListJoin<O,E,S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
-		return new SqmTreatedListJoin<>( this, treatTarget, null );
+	public <S extends E> SqmTreatedListJoin<O,E,S> treatAs(EntityDomainType<S> treatTarget) {
+		return treatAs( treatTarget, null );
+	}
+
+	@Override
+	public <S extends E> SqmTreatedListJoin<O,E,S> treatAs(Class<S> treatJavaType, String alias) {
+		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ), alias );
+	}
+
+	@Override
+	public <S extends E> SqmTreatedListJoin<O,E,S> treatAs(EntityDomainType<S> treatTarget, String alias) {
+		final SqmTreatedListJoin<O,E,S> treat = findTreat( treatTarget, alias );
+		if ( treat == null ) {
+			return addTreat( new SqmTreatedListJoin<>( this, treatTarget, alias ) );
+		}
+		return treat;
 	}
 
 	@Override

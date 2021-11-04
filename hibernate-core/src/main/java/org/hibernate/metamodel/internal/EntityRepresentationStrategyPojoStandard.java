@@ -87,7 +87,7 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 				.getJavaTypeDescriptorRegistry();
 
 		final Class<?> mappedJavaType = bootDescriptor.getMappedClass();
-		this.mappedJtd = jtdRegistry.resolveManagedTypeDescriptor( mappedJavaType );
+		this.mappedJtd = jtdRegistry.resolveEntityTypeDescriptor( mappedJavaType );
 
 		final Class<?> proxyJavaType = bootDescriptor.getProxyInterface();
 		if ( proxyJavaType != null ) {

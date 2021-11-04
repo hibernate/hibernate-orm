@@ -8,6 +8,8 @@ package org.hibernate.persister.entity;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -54,12 +56,14 @@ import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.InFragment;
 import org.hibernate.sql.Insert;
+import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -1293,11 +1297,76 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		if ( hasSubclasses() ) {
+			final EntityResultJoinedSubclassImpl entityResultJoinedSubclass = new EntityResultJoinedSubclassImpl(
+					navigablePath,
+					this,
+					tableGroup,
+					resultVariable,
+					creationState
+			);
+			entityResultJoinedSubclass.afterInitialize( entityResultJoinedSubclass, creationState );
 			//noinspection unchecked
-			return new EntityResultJoinedSubclassImpl( navigablePath, this, tableGroup, resultVariable, creationState );
+			return entityResultJoinedSubclass;
 		}
 		else {
 			return super.createDomainResult( navigablePath, tableGroup, resultVariable, creationState );
+		}
+	}
+
+	@Override
+	public void pruneForSubclasses(TableGroup tableGroup, Set<String> treatedEntityNames) {
+		if ( treatedEntityNames.contains( getEntityName() ) ) {
+			return;
+		}
+		final Set<TableReference> retainedTableReferences = new HashSet<>( treatedEntityNames.size() );
+		final Set<String> sharedSuperclassTables = new HashSet<>();
+
+		for ( String treatedEntityName : treatedEntityNames ) {
+			final JoinedSubclassEntityPersister subPersister = (JoinedSubclassEntityPersister) getSubclassMappingType( treatedEntityName );
+			final String[] subclassTableNames = subPersister.getSubclassTableNames();
+			if ( tableGroup.canUseInnerJoins() ) {
+				if ( sharedSuperclassTables.isEmpty() ) {
+					for ( int i = 0; i < subclassTableNames.length; i++ ) {
+						if ( subPersister.isClassOrSuperclassTable[i] ) {
+							sharedSuperclassTables.add( subclassTableNames[i] );
+						}
+					}
+				}
+				else {
+					sharedSuperclassTables.retainAll( Arrays.asList( subclassTableNames ) );
+				}
+			}
+			// todo (6.0): no need to resolve all table references, only the ones needed for cardinality
+			for ( int i = 0; i < subclassTableNames.length; i++ ) {
+				retainedTableReferences.add( tableGroup.resolveTableReference( null, subclassTableNames[i], false ) );
+			}
+		}
+		final List<TableReferenceJoin> tableReferenceJoins = tableGroup.getTableReferenceJoins();
+		if ( sharedSuperclassTables.isEmpty() ) {
+			tableReferenceJoins
+					.removeIf( join -> !retainedTableReferences.contains( join.getJoinedTableReference() ) );
+		}
+		else {
+			final TableReferenceJoin[] oldJoins = tableReferenceJoins.toArray( new TableReferenceJoin[0] );
+			tableReferenceJoins.clear();
+			for ( TableReferenceJoin oldJoin : oldJoins ) {
+				final TableReference joinedTableReference = oldJoin.getJoinedTableReference();
+				if ( retainedTableReferences.contains( joinedTableReference ) ) {
+					if ( oldJoin.getJoinType() != SqlAstJoinType.INNER
+							&& sharedSuperclassTables.contains( joinedTableReference.getTableExpression() ) ) {
+						tableReferenceJoins.add(
+								new TableReferenceJoin(
+										SqlAstJoinType.INNER,
+										joinedTableReference,
+										oldJoin.getPredicate()
+								)
+						);
+					}
+					else {
+						tableReferenceJoins.add( oldJoin );
+					}
+				}
+			}
 		}
 	}
 

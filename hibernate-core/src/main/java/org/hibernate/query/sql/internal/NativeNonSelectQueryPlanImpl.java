@@ -13,18 +13,12 @@ import java.util.Set;
 
 import org.hibernate.action.internal.BulkOperationCleanupAction;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.mapping.BasicValuedMapping;
-import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.NonSelectQueryPlan;
-import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
-import org.hibernate.query.spi.QueryParameterImplementor;
+import org.hibernate.query.sql.spi.ParameterOccurrence;
 import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
-import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
-import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.internal.StandardJdbcMutationExecutor;
 import org.hibernate.sql.exec.spi.JdbcMutation;
 import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
@@ -39,12 +33,12 @@ public class NativeNonSelectQueryPlanImpl implements NonSelectQueryPlan {
 	private final String sql;
 	private final Set<String> affectedTableNames;
 
-	private final List<QueryParameterImplementor<?>> parameterList;
+	private final List<ParameterOccurrence> parameterList;
 
 	public NativeNonSelectQueryPlanImpl(
 			String sql,
 			Set<String> affectedTableNames,
-			List<QueryParameterImplementor<?>> parameterList) {
+			List<ParameterOccurrence> parameterList) {
 		this.sql = sql;
 		this.affectedTableNames = affectedTableNames;
 		this.parameterList = parameterList;
@@ -66,26 +60,12 @@ public class NativeNonSelectQueryPlanImpl implements NonSelectQueryPlan {
 			jdbcParameterBinders = new ArrayList<>( parameterList.size() );
 			jdbcParameterBindings = new JdbcParameterBindingsImpl( parameterList.size() );
 
-			for ( QueryParameterImplementor<?> param : parameterList ) {
-				QueryParameterBinding<?> binding = queryParameterBindings.getBinding( param );
-				AllowableParameterType<?> type = binding.getBindType();
-				if ( type == null ) {
-					type = param.getHibernateType();
-				}
-				if ( type == null ) {
-					type = executionContext.getSession().getTypeConfiguration().getBasicTypeForJavaType( Object.class );
-				}
-
-				final JdbcMapping jdbcMapping = ( (BasicValuedMapping) type ).getJdbcMapping();
-				final JdbcParameterImpl jdbcParameter = new JdbcParameterImpl( jdbcMapping );
-
-				jdbcParameterBinders.add( jdbcParameter );
-
-				jdbcParameterBindings.addBinding(
-						jdbcParameter,
-						new JdbcParameterBindingImpl( jdbcMapping, binding.getBindValue() )
-				);
-			}
+			jdbcParameterBindings.registerNativeQueryParameters(
+					queryParameterBindings,
+					parameterList,
+					jdbcParameterBinders,
+					executionContext.getSession().getFactory()
+			);
 		}
 
 		final JdbcMutation jdbcMutation = new NativeJdbcMutation(

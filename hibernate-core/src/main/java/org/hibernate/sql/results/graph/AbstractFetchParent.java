@@ -26,8 +26,9 @@ public abstract class AbstractFetchParent implements FetchParent {
 		this.navigablePath = navigablePath;
 	}
 
-	protected void afterInitialize(DomainResultCreationState creationState) {
-		this.fetches = creationState.visitFetches( this );
+	public void afterInitialize(FetchParent fetchParent, DomainResultCreationState creationState) {
+		assert fetches == null;
+		this.fetches = creationState.visitFetches( fetchParent );
 	}
 
 	public FetchableContainer getFetchContainer() {

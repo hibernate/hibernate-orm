@@ -1171,7 +1171,7 @@ public abstract class AbstractCollectionPersister
 				null,
 				() -> p -> {},
 				new SqlAliasBaseConstant( alias ),
-				sqlAstCreationState,
+				sqlAstCreationState.getSqlExpressionResolver(),
 				getFactory()
 		);
 
@@ -1828,7 +1828,7 @@ public abstract class AbstractCollectionPersister
 				buffer.append( " and " );
 			}
 			assert elementPersister instanceof Joinable;
-			final TableReference tableReference = tableGroup.getTableReference( ( (Joinable) elementPersister ).getTableName() );
+			final TableReference tableReference = tableGroup.resolveTableReference( ( (Joinable) elementPersister ).getTableName() );
 			buffer.append( StringHelper.replace( manyToManyWhereTemplate, Template.TEMPLATE, tableReference.getIdentificationVariable() ) );
 		}
 

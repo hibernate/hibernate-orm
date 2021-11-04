@@ -33,6 +33,7 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
+import org.hibernate.sql.results.internal.ResultsHelper;
 import org.hibernate.sql.results.internal.RowTransformerPassThruImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 
@@ -163,13 +164,22 @@ public class CollectionLoaderSubSelectFetch implements CollectionLoader {
 		);
 
 		if ( subSelectFetchedCollections != null && ! subSelectFetchedCollections.isEmpty() ) {
-			subSelectFetchedCollections.forEach( (c) -> {
-				if ( c.wasInitialized() ) {
-					return;
-				}
+			subSelectFetchedCollections.forEach(
+					c -> {
+						if ( c.wasInitialized() ) {
+							return;
+						}
 
-				c.initializeEmptyCollection( getLoadable().getCollectionDescriptor() );
-			} );
+						c.initializeEmptyCollection( getLoadable().getCollectionDescriptor() );
+						ResultsHelper.finalizeCollectionLoading(
+								persistenceContext,
+								getLoadable().getCollectionDescriptor(),
+								c,
+								c.getKey(),
+								true
+						);
+					}
+			);
 
 			subSelectFetchedCollections.clear();
 		}

@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.tree.from;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.query.PathException;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
@@ -29,8 +30,21 @@ public class SqmCrossJoin<T> extends AbstractSqmFrom<T, T> implements SqmJoin<T,
 			EntityDomainType<T> joinedEntityDescriptor,
 			String alias,
 			SqmRoot<?> sqmRoot) {
+		this(
+				buildRootNavigablePath( joinedEntityDescriptor.getHibernateEntityName(), alias ),
+				joinedEntityDescriptor,
+				alias,
+				sqmRoot
+		);
+	}
+
+	protected SqmCrossJoin(
+			NavigablePath navigablePath,
+			EntityDomainType<T> joinedEntityDescriptor,
+			String alias,
+			SqmRoot<?> sqmRoot) {
 		super(
-				buildRootNavigablePath( alias, joinedEntityDescriptor.getHibernateEntityName() ),
+				navigablePath,
 				joinedEntityDescriptor,
 				sqmRoot,
 				alias,
@@ -88,7 +102,21 @@ public class SqmCrossJoin<T> extends AbstractSqmFrom<T, T> implements SqmJoin<T,
 
 	@Override
 	public <S extends T> SqmTreatedCrossJoin<T, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
-		return new SqmTreatedCrossJoin<>( this, null, treatTarget );
+		final SqmTreatedCrossJoin<T, S> treat = findTreat( treatTarget, null );
+		if ( treat == null ) {
+			return addTreat( new SqmTreatedCrossJoin<>( this, treatTarget, null ) );
+		}
+		return treat;
+	}
+
+	@Override
+	public <S extends T> SqmFrom<?, S> treatAs(Class<S> treatJavaType, String alias) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public <S extends T> SqmFrom<?, S> treatAs(EntityDomainType<S> treatTarget, String alias) {
+		throw new UnsupportedOperationException();
 	}
 
 	public SqmCrossJoin<T> makeCopy(SqmCreationProcessingState creationProcessingState) {

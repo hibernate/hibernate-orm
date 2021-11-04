@@ -6,6 +6,10 @@
  */
 package org.hibernate.query.criteria;
 
+import java.util.List;
+
+import org.hibernate.metamodel.model.domain.EntityDomainType;
+
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.ListJoin;
 import jakarta.persistence.criteria.Predicate;
@@ -15,7 +19,7 @@ import jakarta.persistence.criteria.Predicate;
  *
  * @author Steve Ebersole
  */
-public interface JpaListJoin<O, T> extends JpaJoin<O, T>, ListJoin<O, T> {
+public interface JpaListJoin<O, T> extends JpaPluralJoin<O, List<T>, T>, ListJoin<O, T> {
 	@Override
 	JpaListJoin<O, T> on(JpaExpression<Boolean> restriction);
 
@@ -30,4 +34,7 @@ public interface JpaListJoin<O, T> extends JpaJoin<O, T>, ListJoin<O, T> {
 
 	@Override
 	<S extends T> JpaListJoin<O, S> treatAs(Class<S> treatAsType);
+
+	@Override
+	<S extends T> JpaListJoin<O, S> treatAs(EntityDomainType<S> treatAsType);
 }

@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.tree.from;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.query.PathException;
 import org.hibernate.query.criteria.JpaEntityJoin;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
@@ -34,14 +35,22 @@ public class SqmEntityJoin<T> extends AbstractSqmJoin<T, T> implements SqmQualif
 			String alias,
 			SqmJoinType joinType,
 			SqmRoot<?> sqmRoot) {
-		super(
+		this(
 				SqmCreationHelper.buildRootNavigablePath( joinedEntityDescriptor.getHibernateEntityName(), alias ),
 				joinedEntityDescriptor,
-				sqmRoot,
 				alias,
 				joinType,
-				sqmRoot.nodeBuilder()
+				sqmRoot
 		);
+	}
+
+	protected SqmEntityJoin(
+			NavigablePath navigablePath,
+			EntityDomainType<T> joinedEntityDescriptor,
+			String alias,
+			SqmJoinType joinType,
+			SqmRoot<?> sqmRoot) {
+		super( navigablePath, joinedEntityDescriptor, sqmRoot, alias, joinType, sqmRoot.nodeBuilder() );
 		this.sqmRoot = sqmRoot;
 	}
 
@@ -106,7 +115,21 @@ public class SqmEntityJoin<T> extends AbstractSqmJoin<T, T> implements SqmQualif
 	}
 	@Override
 	public <S extends T> SqmTreatedEntityJoin<T,S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
-		return new SqmTreatedEntityJoin<>( this, treatTarget, null, getSqmJoinType() );
+		final SqmTreatedEntityJoin<T,S> treat = findTreat( treatTarget, null );
+		if ( treat == null ) {
+			return addTreat( new SqmTreatedEntityJoin<>( this, treatTarget, null ) );
+		}
+		return treat;
+	}
+
+	@Override
+	public <S extends T> SqmFrom<?, S> treatAs(Class<S> treatJavaType, String alias) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public <S extends T> SqmFrom<?, S> treatAs(EntityDomainType<S> treatTarget, String alias) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override

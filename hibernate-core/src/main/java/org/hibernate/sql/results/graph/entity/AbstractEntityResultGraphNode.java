@@ -12,6 +12,7 @@ import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityRowIdMapping;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
@@ -23,6 +24,9 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.AbstractFetchParent;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.FetchParent;
+import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -35,54 +39,60 @@ import static org.hibernate.query.results.ResultsHelper.attributeName;
  */
 public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent implements EntityResultGraphNode {
 	private final EntityValuedModelPart referencedModelPart;
-	private final DomainResult<?> identifierResult;
-	private final BasicFetch<?> discriminatorFetch;
-	private final DomainResult<Object> rowIdResult;
+	private Fetch identifierFetch;
+	private BasicFetch<?> discriminatorFetch;
+	private DomainResult<Object> rowIdResult;
 
-	public AbstractEntityResultGraphNode(
-			EntityValuedModelPart referencedModelPart,
-			NavigablePath navigablePath,
-			DomainResultCreationState creationState) {
+	public AbstractEntityResultGraphNode(EntityValuedModelPart referencedModelPart, NavigablePath navigablePath) {
 		super( referencedModelPart.getEntityMappingType(), navigablePath );
 		this.referencedModelPart = referencedModelPart;
+	}
 
+	@Override
+	public void afterInitialize(FetchParent fetchParent, DomainResultCreationState creationState) {
 		final EntityMappingType entityDescriptor = referencedModelPart.getEntityMappingType();
-
-		final TableGroup entityTableGroup = creationState.getSqlAstCreationState().getFromClauseAccess().findTableGroup( navigablePath );
-
 		final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
-
+		final NavigablePath navigablePath = getNavigablePath();
+		final TableGroup entityTableGroup = creationState.getSqlAstCreationState().getFromClauseAccess()
+				.getTableGroup( navigablePath );
 		final EntityIdentifierNavigablePath identifierNavigablePath = new EntityIdentifierNavigablePath( navigablePath, attributeName( identifierMapping ) );
 		if ( navigablePath.getParent() == null && !creationState.forceIdentifierSelection() ) {
-			identifierResult = null;
+			identifierFetch = null;
 			visitIdentifierMapping( identifierNavigablePath, creationState, identifierMapping, entityTableGroup );
 		}
 		else if ( referencedModelPart instanceof ToOneAttributeMapping ) {
 			// If we don't do this here, LazyTableGroup#getTableReferenceInternal would have to use the target table in case {id} is encountered
 			if ( ( (ToOneAttributeMapping) referencedModelPart ).canJoinForeignKey( identifierMapping ) ) {
-				identifierResult = ( (ToOneAttributeMapping) referencedModelPart ).getForeignKeyDescriptor()
-						.createKeyDomainResult(
-								navigablePath,
-								creationState.getSqlAstCreationState()
-										.getFromClauseAccess()
-										.findTableGroup( navigablePath.getParent() ),
+				final ForeignKeyDescriptor foreignKeyDescriptor = ( (ToOneAttributeMapping) referencedModelPart ).getForeignKeyDescriptor();
+				identifierFetch = ( (Fetchable) foreignKeyDescriptor.getKeyPart() )
+						.generateFetch(
+								fetchParent,
+								fetchParent.getNavigablePath()
+										.append( ( (Fetchable) foreignKeyDescriptor.getKeyPart() ).getFetchableName() ),
+								FetchTiming.IMMEDIATE,
+								true,
+								null,
 								creationState
 						);
 
 			}
 			else {
-				identifierResult = identifierMapping.createDomainResult(
+				identifierFetch = ( (Fetchable) identifierMapping ).generateFetch(
+						fetchParent,
 						identifierNavigablePath,
-						( (LazyTableGroup) entityTableGroup ).getTableGroup(),
+						FetchTiming.IMMEDIATE,
+						true,
 						null,
 						creationState
 				);
 			}
 		}
 		else {
-			identifierResult = identifierMapping.createDomainResult(
+			identifierFetch = ( (Fetchable) identifierMapping ).generateFetch(
+					fetchParent,
 					identifierNavigablePath,
-					entityTableGroup,
+					FetchTiming.IMMEDIATE,
+					true,
 					null,
 					creationState
 			);
@@ -92,7 +102,7 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 		// No need to fetch the discriminator if this type does not have subclasses
 		if ( discriminatorMapping != null && entityDescriptor.hasSubclasses() ) {
 			discriminatorFetch = discriminatorMapping.generateFetch(
-					this,
+					fetchParent,
 					navigablePath.append( EntityDiscriminatorMapping.ROLE_NAME ),
 					FetchTiming.IMMEDIATE,
 					true,
@@ -116,6 +126,7 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 					creationState
 			);
 		}
+		super.afterInitialize( fetchParent, creationState );
 	}
 
 	private void visitIdentifierMapping(
@@ -171,8 +182,8 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 		return getEntityValuedModelPart().getEntityMappingType().getMappedJavaTypeDescriptor();
 	}
 
-	public DomainResult getIdentifierResult() {
-		return identifierResult;
+	public Fetch getIdentifierFetch() {
+		return identifierFetch;
 	}
 
 	public BasicFetch<?> getDiscriminatorFetch() {

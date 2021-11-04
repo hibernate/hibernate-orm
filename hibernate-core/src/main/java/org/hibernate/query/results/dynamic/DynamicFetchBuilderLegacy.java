@@ -148,7 +148,7 @@ public class DynamicFetchBuilderLegacy implements DynamicFetchBuilder, NativeQue
 						resolveSqlSelection(
 								columnNames.get( selectionIndex ),
 								createColumnReferenceKey(
-										tableGroup.getTableReference( selectableMapping.getContainingTableExpression() ),
+										tableGroup.resolveTableReference( selectableMapping.getContainingTableExpression() ),
 										selectableMapping.getSelectionExpression()
 								),
 								selectableMapping.getJdbcMapping(),

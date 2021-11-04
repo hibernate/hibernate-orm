@@ -11,9 +11,9 @@ import java.util.Set;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -27,11 +27,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SessionFactory
 public class JoinFetchElementCollectionTest {
 
-	@Test
-	@TestForIssue(jiraKey = "HHH-8206")
-	@FailureExpected(jiraKey = "HHH-8206", reason = "This is not explicitly supported, however should arguably throw an exception")
-	public void testJoinFetchesByPath(SessionFactoryScope scope) {
-		Set<EmailAddress> emailAddresses = new HashSet<EmailAddress>();
+	private Set<EmailAddress> emailAddresses;
+
+	@BeforeAll
+	public void prepareData(SessionFactoryScope scope) {
+		Set<EmailAddress> emailAddresses = new HashSet<>();
 		emailAddresses.add( new EmailAddress( "test1@test.com" ) );
 		emailAddresses.add( new EmailAddress( "test2@test.com" ) );
 		emailAddresses.add( new EmailAddress( "test3@test.com" ) );
@@ -49,6 +49,12 @@ public class JoinFetchElementCollectionTest {
 					user = (User) session.merge( user );
 				}
 		);
+		this.emailAddresses = emailAddresses;
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-8206")
+	public void testJoinFetchesByPath(SessionFactoryScope scope) {
 		// Session 2: Retrieve the user object and check if the sets have the expected values
 		scope.inTransaction(
 				session -> {
@@ -67,24 +73,6 @@ public class JoinFetchElementCollectionTest {
 	@Test
 	@TestForIssue(jiraKey = "HHH-5465")
 	public void testJoinFetchElementCollection(SessionFactoryScope scope) {
-		Set<EmailAddress> emailAddresses = new HashSet<EmailAddress>();
-		emailAddresses.add( new EmailAddress( "test1@test.com" ) );
-		emailAddresses.add( new EmailAddress( "test2@test.com" ) );
-		emailAddresses.add( new EmailAddress( "test3@test.com" ) );
-
-		// Session 1: Insert a user with email addresses but no emailAddresses2
-		scope.inTransaction(
-				session -> {
-					User user = new User();
-					user.setName( "john" );
-					Contact contact = new Contact();
-					contact.setName( "John Doe" );
-					contact.setEmailAddresses( emailAddresses );
-					contact = (Contact) session.merge( contact );
-					user.setContact( contact );
-					user = (User) session.merge( user );
-				}
-		);
 		// Session 2: Retrieve the user object and check if the sets have the expected values
 		scope.inTransaction(
 				session -> {

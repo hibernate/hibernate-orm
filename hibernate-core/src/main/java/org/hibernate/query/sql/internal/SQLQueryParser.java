@@ -165,9 +165,6 @@ public class SQLQueryParser {
 				result.append( '{' ).append( aliasPath ).append( '}' );
 			}
 		}
-
-		// Possibly handle :something parameters for the query ?
-
 		return result.toString();
 	}
 

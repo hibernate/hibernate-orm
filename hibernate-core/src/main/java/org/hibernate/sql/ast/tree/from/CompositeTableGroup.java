@@ -140,8 +140,9 @@ public class CompositeTableGroup implements VirtualTableGroup {
 	public TableReference getTableReference(
 			NavigablePath navigablePath,
 			String tableExpression,
-			boolean allowFkOptimization) {
-		return underlyingTableGroup.getTableReference( navigablePath, tableExpression, allowFkOptimization );
+			boolean allowFkOptimization,
+			boolean resolve) {
+		return underlyingTableGroup.getTableReference( navigablePath, tableExpression, allowFkOptimization, resolve );
 	}
 
 	@Override
@@ -152,7 +153,8 @@ public class CompositeTableGroup implements VirtualTableGroup {
 		final TableReference tableReference = underlyingTableGroup.getTableReference(
 				navigablePath,
 				tableExpression,
-				allowFkOptimization
+				allowFkOptimization,
+				true
 		);
 		if ( tableReference != null ) {
 			return tableReference;
@@ -160,7 +162,7 @@ public class CompositeTableGroup implements VirtualTableGroup {
 		for ( TableGroupJoin tableGroupJoin : getNestedTableGroupJoins() ) {
 			final TableReference primaryTableReference = tableGroupJoin.getJoinedGroup()
 					.getPrimaryTableReference()
-					.getTableReference( navigablePath, tableExpression, allowFkOptimization );
+					.getTableReference( navigablePath, tableExpression, allowFkOptimization, true );
 			if ( primaryTableReference != null ) {
 				return primaryTableReference;
 			}
@@ -168,7 +170,7 @@ public class CompositeTableGroup implements VirtualTableGroup {
 		for ( TableGroupJoin tableGroupJoin : getTableGroupJoins() ) {
 			final TableReference primaryTableReference = tableGroupJoin.getJoinedGroup()
 					.getPrimaryTableReference()
-					.getTableReference( navigablePath, tableExpression, allowFkOptimization );
+					.getTableReference( navigablePath, tableExpression, allowFkOptimization, true );
 			if ( primaryTableReference != null ) {
 				return primaryTableReference;
 			}

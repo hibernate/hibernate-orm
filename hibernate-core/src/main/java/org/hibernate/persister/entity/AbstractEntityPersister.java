@@ -216,7 +216,6 @@ import org.hibernate.sql.ast.spi.SqlAliasBaseConstant;
 import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.AliasedExpression;
@@ -1266,8 +1265,16 @@ public abstract class AbstractEntityPersister
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
+		final EntityResultImpl entityResult = new EntityResultImpl(
+				navigablePath,
+				this,
+				tableGroup,
+				resultVariable,
+				creationState
+		);
+		entityResult.afterInitialize( entityResult, creationState );
 		//noinspection unchecked
-		return new EntityResultImpl( navigablePath, this, tableGroup, resultVariable, creationState );
+		return entityResult;
 	}
 
 	@Override
@@ -1313,10 +1320,8 @@ public abstract class AbstractEntityPersister
 			String explicitSourceAlias,
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
 			SqlAliasBase sqlAliasBase,
-			SqlAstCreationState creationState,
+			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
-		final SqlExpressionResolver sqlExpressionResolver = creationState.getSqlExpressionResolver();
-
 		final TableReference primaryTableReference = createPrimaryTableReference(
 				sqlAliasBase,
 				sqlExpressionResolver,
@@ -1905,7 +1910,7 @@ public abstract class AbstractEntityPersister
 				null,
 				() -> p -> {},
 				new SqlAliasBaseConstant( alias ),
-				sqlAstCreationState,
+				sqlAstCreationState.getSqlExpressionResolver(),
 				getFactory()
 		);
 
@@ -6397,6 +6402,10 @@ public abstract class AbstractEntityPersister
 					}
 			);
 		}
+	}
+
+	protected EntityMappingType getSubclassMappingType(String subclassName) {
+		return subclassMappingTypes != null ? subclassMappingTypes.get( subclassName ) : null;
 	}
 
 

@@ -12,6 +12,7 @@ import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.EntityUniqueKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
@@ -20,10 +21,12 @@ import org.hibernate.loader.entity.CacheEntityLoaderHelper;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.AbstractFetchParentAccess;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
+import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
@@ -36,19 +39,25 @@ import org.hibernate.stat.spi.StatisticsImplementor;
  */
 public class EntityDelayedFetchInitializer extends AbstractFetchParentAccess implements EntityInitializer {
 
+	private final FetchParentAccess parentAccess;
 	private final NavigablePath navigablePath;
-	private final EntityValuedFetchable referencedModelPart;
+	private final ToOneAttributeMapping referencedModelPart;
+	private final boolean selectByUniqueKey;
 	private final DomainResultAssembler identifierAssembler;
 
 	private Object entityInstance;
 	private Object identifier;
 
 	public EntityDelayedFetchInitializer(
+			FetchParentAccess parentAccess,
 			NavigablePath fetchedNavigable,
-			EntityValuedFetchable referencedModelPart,
+			ToOneAttributeMapping referencedModelPart,
+			boolean selectByUniqueKey,
 			DomainResultAssembler identifierAssembler) {
+		this.parentAccess = parentAccess;
 		this.navigablePath = fetchedNavigable;
 		this.referencedModelPart = referencedModelPart;
+		this.selectByUniqueKey = selectByUniqueKey;
 		this.identifierAssembler = identifierAssembler;
 	}
 
@@ -79,26 +88,63 @@ public class EntityDelayedFetchInitializer extends AbstractFetchParentAccess imp
 			entityInstance = null;
 		}
 		else {
+			final SharedSessionContractImplementor session = rowProcessingState.getSession();
 			final EntityPersister concreteDescriptor = referencedModelPart.getEntityMappingType().getEntityPersister();
-			final EntityKey entityKey = new EntityKey( identifier, concreteDescriptor );
-			final PersistenceContext persistenceContext = rowProcessingState.getSession().getPersistenceContext();
+			if ( !selectByUniqueKey ) {
+				final EntityKey entityKey = new EntityKey( identifier, concreteDescriptor );
+				final PersistenceContext persistenceContext = session.getPersistenceContext();
 
-			final LoadingEntityEntry loadingEntityLocally = persistenceContext.getLoadContexts()
-					.findLoadingEntityEntry( entityKey );
-			if ( loadingEntityLocally != null ) {
-				entityInstance = loadingEntityLocally.getEntityInstance();
+				final LoadingEntityEntry loadingEntityLocally = persistenceContext.getLoadContexts()
+						.findLoadingEntityEntry( entityKey );
+				if ( loadingEntityLocally != null ) {
+					entityInstance = loadingEntityLocally.getEntityInstance();
+				}
 			}
-			else {
-				if ( referencedModelPart.isOptional() ) {
+			if ( entityInstance == null ) {
+				if ( referencedModelPart.isOptional() && parentAccess != null && parentAccess.getInitializedPart()
+						.findContainingEntityMapping()
+						.getEntityPersister()
+						.getBytecodeEnhancementMetadata()
+						.isEnhancedForLazyLoading() ) {
 					entityInstance = LazyPropertyInitializer.UNFETCHED_PROPERTY;
 				}
 				else {
-					entityInstance = rowProcessingState.getSession().internalLoad(
-							concreteDescriptor.getEntityName(),
-							identifier,
-							false,
-							false
-					);
+					if ( selectByUniqueKey ) {
+						final String uniqueKeyPropertyName = referencedModelPart.getBidirectionalAttributeName();
+						final EntityUniqueKey euk = new EntityUniqueKey(
+								concreteDescriptor.getEntityName(),
+								uniqueKeyPropertyName,
+								identifier,
+								concreteDescriptor.getIdentifierType(),
+								session.getFactory()
+						);
+						final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+						entityInstance = persistenceContext.getEntity( euk );
+						if ( entityInstance == null ) {
+							entityInstance = ( (UniqueKeyLoadable) concreteDescriptor ).loadByUniqueKey(
+									uniqueKeyPropertyName,
+									identifier,
+									session
+							);
+
+							// If the entity was not in the Persistence Context, but was found now,
+							// add it to the Persistence Context
+							if ( entityInstance != null ) {
+								persistenceContext.addEntity( euk, entityInstance );
+							}
+						}
+						if ( entityInstance != null ) {
+							entityInstance = persistenceContext.proxyFor( entityInstance );
+						}
+					}
+					else {
+						entityInstance = session.internalLoad(
+								concreteDescriptor.getEntityName(),
+								identifier,
+								false,
+								false
+						);
+					}
 
 					if ( entityInstance instanceof HibernateProxy ) {
 						( (HibernateProxy) entityInstance ).getHibernateLazyInitializer()

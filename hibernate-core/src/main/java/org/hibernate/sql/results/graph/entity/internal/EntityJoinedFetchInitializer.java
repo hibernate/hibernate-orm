@@ -26,20 +26,20 @@ public class EntityJoinedFetchInitializer extends AbstractEntityInitializer {
 
 	private final boolean isEnhancedForLazyLoading;
 
-	protected EntityJoinedFetchInitializer(
+	public EntityJoinedFetchInitializer(
 			EntityResultGraphNode resultDescriptor,
 			ModelPart referencedModelPart,
 			NavigablePath navigablePath,
 			LockMode lockMode,
-			DomainResult<?> identifierResult,
-			Fetch discriminatorResult,
+			Fetch identifierFetch,
+			Fetch discriminatorFetch,
 			AssemblerCreationState creationState) {
 		super(
 				resultDescriptor,
 				navigablePath,
 				lockMode,
-				identifierResult,
-				discriminatorResult,
+				identifierFetch,
+				discriminatorFetch,
 				null,
 				creationState
 		);

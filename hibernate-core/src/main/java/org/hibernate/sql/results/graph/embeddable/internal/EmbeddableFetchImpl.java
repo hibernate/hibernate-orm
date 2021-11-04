@@ -38,7 +38,6 @@ public class EmbeddableFetchImpl extends AbstractFetchParent implements Embeddab
 	private final FetchTiming fetchTiming;
 	private final TableGroup tableGroup;
 	private final boolean hasTableGroup;
-	private final boolean nullable;
 
 	public EmbeddableFetchImpl(
 			NavigablePath navigablePath,
@@ -46,7 +45,6 @@ public class EmbeddableFetchImpl extends AbstractFetchParent implements Embeddab
 			FetchParent fetchParent,
 			FetchTiming fetchTiming,
 			boolean hasTableGroup,
-			boolean nullable,
 			DomainResultCreationState creationState) {
 		super( embeddedPartDescriptor.getEmbeddableTypeDescriptor(), navigablePath );
 		this.embeddedPartDescriptor = embeddedPartDescriptor;
@@ -54,7 +52,6 @@ public class EmbeddableFetchImpl extends AbstractFetchParent implements Embeddab
 		this.fetchParent = fetchParent;
 		this.fetchTiming = fetchTiming;
 		this.hasTableGroup = hasTableGroup;
-		this.nullable = nullable;
 
 		this.tableGroup = creationState.getSqlAstCreationState().getFromClauseAccess().resolveTableGroup(
 				getNavigablePath(),
@@ -66,7 +63,7 @@ public class EmbeddableFetchImpl extends AbstractFetchParent implements Embeddab
 							getNavigablePath(),
 							lhsTableGroup,
 							null,
-							nullable ? SqlAstJoinType.LEFT : SqlAstJoinType.INNER,
+							SqlAstJoinType.INNER,
 							true,
 							creationState.getSqlAstCreationState()
 					);
@@ -76,7 +73,7 @@ public class EmbeddableFetchImpl extends AbstractFetchParent implements Embeddab
 
 		);
 
-		afterInitialize( creationState );
+		afterInitialize( this, creationState );
 	}
 
 	@Override

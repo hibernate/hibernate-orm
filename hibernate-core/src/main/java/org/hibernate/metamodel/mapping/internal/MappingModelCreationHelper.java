@@ -76,6 +76,7 @@ import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.collection.SQLLoadableCollection;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
@@ -84,6 +85,7 @@ import org.hibernate.property.access.internal.ChainedPropertyAccessImpl;
 import org.hibernate.property.access.internal.PropertyAccessStrategyMapImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
+import org.hibernate.sql.ast.tree.from.TableGroupProducer;
 import org.hibernate.tuple.ValueGeneration;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.AssociationType;
@@ -908,6 +910,17 @@ public class MappingModelCreationHelper {
 		final ModelPart fkTarget;
 		final String lhsPropertyName = collectionDescriptor.getCollectionType().getLHSPropertyName();
 		final boolean isReferenceToPrimaryKey = lhsPropertyName == null;
+		final ManagedMappingType keyDeclaringType;
+		if ( collectionDescriptor.getElementType().isEntityType() ) {
+			keyDeclaringType = ( (QueryableCollection) collectionDescriptor ).getElementPersister();
+		}
+		else {
+			// This is not "really correct" but it is as good as it gets.
+			// The key declaring type serves as declaring type for the inverse model part of a FK.
+			// Most of the time, there is a proper managed type, but not for basic collections.
+			// Since the declaring type is needed for certain operations, we use the one from the target side of the FK
+			keyDeclaringType = declaringType;
+		}
 		if ( isReferenceToPrimaryKey ) {
 			fkTarget = collectionDescriptor.getOwnerEntityPersister().getIdentifierMapping();
 		}
@@ -929,6 +942,7 @@ public class MappingModelCreationHelper {
 			);
 			attributeMapping.setForeignKeyDescriptor(
 					new SimpleForeignKeyDescriptor(
+							keyDeclaringType,
 							simpleFkTarget,
 							null,
 							keySelectableMapping,
@@ -943,6 +957,9 @@ public class MappingModelCreationHelper {
 					buildEmbeddableForeignKeyDescriptor(
 							(EmbeddableValuedModelPart) fkTarget,
 							bootValueMapping,
+							keyDeclaringType,
+							collectionDescriptor.getAttributeMapping(),
+							false,
 							dialect,
 							creationProcess
 					);
@@ -1025,6 +1042,8 @@ public class MappingModelCreationHelper {
 				final EmbeddedForeignKeyDescriptor embeddedForeignKeyDescriptor = buildEmbeddableForeignKeyDescriptor(
 						(EmbeddableValuedModelPart) modelPart,
 						bootValueMapping,
+						attributeMapping.getDeclaringType(),
+						attributeMapping.findContainingEntityMapping(),
 						true,
 						dialect,
 						creationProcess
@@ -1058,12 +1077,15 @@ public class MappingModelCreationHelper {
 			if ( inversePropertyAccess == null ) {
 				// So far, OneToOne mappings are only supported based on the owner's PK
 				if ( bootValueMapping instanceof OneToOne ) {
-					declaringKeyPart = (BasicValuedModelPart) attributeMapping.findContainingEntityMapping().getIdentifierMapping();
+					declaringKeyPart = simpleFkTarget;
+					final EntityIdentifierMapping identifierMapping = attributeMapping.findContainingEntityMapping()
+							.getIdentifierMapping();
+					declaringKeyPropertyAccess = ( (PropertyBasedMapping) identifierMapping ).getPropertyAccess();
 				}
 				else {
 					declaringKeyPart = simpleFkTarget;
+					declaringKeyPropertyAccess = ( (PropertyBasedMapping) declaringKeyPart ).getPropertyAccess();
 				}
-				declaringKeyPropertyAccess = ( (PropertyBasedMapping) declaringKeyPart ).getPropertyAccess();
 			}
 			else {
 				declaringKeyPart = simpleFkTarget;
@@ -1094,6 +1116,7 @@ public class MappingModelCreationHelper {
 			}
 
 			final ForeignKeyDescriptor foreignKeyDescriptor = new SimpleForeignKeyDescriptor(
+					attributeMapping.getDeclaringType(),
 					declaringKeyPart,
 					declaringKeyPropertyAccess,
 					keySelectableMapping,
@@ -1108,6 +1131,8 @@ public class MappingModelCreationHelper {
 			final EmbeddedForeignKeyDescriptor embeddedForeignKeyDescriptor = buildEmbeddableForeignKeyDescriptor(
 					(EmbeddableValuedModelPart) fkTarget,
 					bootValueMapping,
+					attributeMapping.getDeclaringType(),
+					attributeMapping.findContainingEntityMapping(),
 					swapDirection,
 					dialect,
 					creationProcess
@@ -1179,20 +1204,8 @@ public class MappingModelCreationHelper {
 	public static EmbeddedForeignKeyDescriptor buildEmbeddableForeignKeyDescriptor(
 			EmbeddableValuedModelPart embeddableValuedModelPart,
 			Value bootValueMapping,
-			Dialect dialect,
-			MappingModelCreationProcess creationProcess) {
-		return buildEmbeddableForeignKeyDescriptor(
-				embeddableValuedModelPart,
-				bootValueMapping,
-				false,
-				dialect,
-				creationProcess
-		);
-	}
-
-	private static EmbeddedForeignKeyDescriptor buildEmbeddableForeignKeyDescriptor(
-			EmbeddableValuedModelPart embeddableValuedModelPart,
-			Value bootValueMapping,
+			ManagedMappingType keyDeclaringType,
+			TableGroupProducer keyDeclaringTableGroupProducer,
 			boolean inverse,
 			Dialect dialect,
 			MappingModelCreationProcess creationProcess) {
@@ -1241,6 +1254,8 @@ public class MappingModelCreationHelper {
 					embeddableValuedModelPart,
 					EmbeddedAttributeMapping.createInverseModelPart(
 							embeddableValuedModelPart,
+							keyDeclaringType,
+							keyDeclaringTableGroupProducer,
 							keySelectableMappings,
 							creationProcess
 					),
@@ -1256,6 +1271,8 @@ public class MappingModelCreationHelper {
 			return new EmbeddedForeignKeyDescriptor(
 					EmbeddedAttributeMapping.createInverseModelPart(
 							embeddableValuedModelPart,
+							keyDeclaringType,
+							keyDeclaringTableGroupProducer,
 							keySelectableMappings,
 							creationProcess
 					),

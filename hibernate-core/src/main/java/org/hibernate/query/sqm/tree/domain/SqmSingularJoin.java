@@ -10,9 +10,11 @@ import java.util.Locale;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.query.PathException;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SqmJoinable;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
@@ -32,6 +34,17 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> implemen
 		super( lhs, joinedNavigable, alias, joinType, fetched, nodeBuilder );
 	}
 
+	protected SqmSingularJoin(
+			SqmFrom<?, O> lhs,
+			NavigablePath navigablePath,
+			SingularPersistentAttribute<O, T> joinedNavigable,
+			String alias,
+			SqmJoinType joinType,
+			boolean fetched,
+			NodeBuilder nodeBuilder) {
+		super( lhs, navigablePath, joinedNavigable, alias, joinType, fetched, nodeBuilder );
+	}
+
 	@Override
 	public SingularPersistentAttribute<O, T> getReferencedPathSource() {
 		return (SingularPersistentAttribute<O, T>) super.getReferencedPathSource();
@@ -49,13 +62,27 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> implemen
 	}
 
 	@Override
-	public <S extends T> SqmTreatedSingularJoin<O,T,S> treatAs(Class<S> treatJavaType) throws PathException {
+	public <S extends T> SqmTreatedSingularJoin<O,T,S> treatAs(Class<S> treatJavaType) {
 		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
 	}
 
 	@Override
-	public <S extends T> SqmTreatedSingularJoin<O,T,S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
-		return new SqmTreatedSingularJoin<>( this, treatTarget, null );
+	public <S extends T> SqmTreatedSingularJoin<O,T,S> treatAs(EntityDomainType<S> treatTarget) {
+		return treatAs( treatTarget, null );
+	}
+
+	@Override
+	public <S extends T> SqmTreatedSingularJoin<O,T,S> treatAs(Class<S> treatJavaType, String alias) {
+		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ), alias );
+	}
+
+	@Override
+	public <S extends T> SqmTreatedSingularJoin<O,T,S> treatAs(EntityDomainType<S> treatTarget, String alias) {
+		final SqmTreatedSingularJoin<O, T, S> treat = findTreat( treatTarget, alias );
+		if ( treat == null ) {
+			return addTreat( new SqmTreatedSingularJoin<>( this, treatTarget, alias ) );
+		}
+		return treat;
 	}
 
 	@Override

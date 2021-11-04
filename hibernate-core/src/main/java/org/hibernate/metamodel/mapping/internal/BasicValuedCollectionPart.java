@@ -230,7 +230,6 @@ public class BasicValuedCollectionPart
 				fetchParent,
 				fetchablePath,
 				this,
-				false,
 				valueConverter,
 				FetchTiming.IMMEDIATE,
 				creationState

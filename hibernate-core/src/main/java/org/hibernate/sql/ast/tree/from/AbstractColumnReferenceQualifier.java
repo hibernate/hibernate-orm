@@ -34,7 +34,8 @@ public abstract class AbstractColumnReferenceQualifier implements ColumnReferenc
 		final TableReference tableReference = getTableReferenceInternal(
 				navigablePath,
 				tableExpression,
-				allowFkOptimization
+				allowFkOptimization,
+				true
 		);
 		if ( tableReference == null ) {
 			throw new IllegalStateException( "Could not resolve binding for table `" + tableExpression + "`" );
@@ -47,18 +48,21 @@ public abstract class AbstractColumnReferenceQualifier implements ColumnReferenc
 	public TableReference getTableReference(
 			NavigablePath navigablePath,
 			String tableExpression,
-			boolean allowFkOptimization) {
-		return getTableReferenceInternal( navigablePath, tableExpression, allowFkOptimization );
+			boolean allowFkOptimization,
+			boolean resolve) {
+		return getTableReferenceInternal( navigablePath, tableExpression, allowFkOptimization, resolve );
 	}
 
 	protected TableReference getTableReferenceInternal(
 			NavigablePath navigablePath,
 			String tableExpression,
-			boolean allowFkOptimization) {
+			boolean allowFkOptimization,
+			boolean resolve) {
 		final TableReference primaryTableReference = getPrimaryTableReference().getTableReference(
 				navigablePath,
 				tableExpression,
-				allowFkOptimization
+				allowFkOptimization,
+				resolve
 		);
 		if ( primaryTableReference != null) {
 			return primaryTableReference;
@@ -68,7 +72,8 @@ public abstract class AbstractColumnReferenceQualifier implements ColumnReferenc
 			final TableReference tableReference = tableJoin.getJoinedTableReference().getTableReference(
 					navigablePath,
 					tableExpression,
-					allowFkOptimization
+					allowFkOptimization,
+					resolve
 			);
 			if ( tableReference != null) {
 				return tableReference;

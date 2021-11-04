@@ -101,7 +101,7 @@ import static org.hibernate.jpa.QueryHints.SPEC_HINT_TIMEOUT;
  */
 @SuppressWarnings("WeakerAccess")
 public abstract class AbstractQuery<R> implements QueryImplementor<R> {
-	private static final EntityManagerMessageLogger log = HEMLogging.messageLogger( AbstractQuery.class );
+	protected static final EntityManagerMessageLogger log = HEMLogging.messageLogger( AbstractQuery.class );
 
 	private final SharedSessionContractImplementor session;
 

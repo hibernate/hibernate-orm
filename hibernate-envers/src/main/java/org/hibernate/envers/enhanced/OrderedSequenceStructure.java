@@ -6,7 +6,6 @@
  */
 package org.hibernate.envers.enhanced;
 
-import org.hibernate.HibernateException;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.QualifiedName;
@@ -34,18 +33,6 @@ public class OrderedSequenceStructure extends SequenceStructure {
 			Class numberType) {
 		super( jdbcEnvironment, qualifiedSequenceName, initialValue, incrementSize, numberType );
 		this.sequenceObject = new OrderedSequence();
-	}
-
-	@Override
-	public String[] sqlCreateStrings(Dialect dialect) throws HibernateException {
-		// delegate to auxiliary object
-		return sequenceObject.sqlCreateStrings( dialect );
-	}
-
-	@Override
-	public String[] sqlDropStrings(Dialect dialect) throws HibernateException {
-		// delegate to auxiliary object
-		return sequenceObject.sqlDropStrings( dialect );
 	}
 
 	@Override

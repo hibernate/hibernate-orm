@@ -60,32 +60,6 @@ public interface PersistentIdentifierGenerator extends IdentifierGenerator {
 	String IDENTIFIER_NORMALIZER = "identifier_normalizer";
 
 	/**
-	 * The SQL required to create the underlying database objects.
-	 *
-	 * @param dialect The dialect against which to generate the create command(s)
-	 *
-	 * @return The create command(s)
-	 *
-	 * @throws HibernateException problem creating the create command(s)
-	 * @deprecated Utilize the ExportableProducer contract instead
-	 */
-	@Deprecated
-	String[] sqlCreateStrings(Dialect dialect) throws HibernateException;
-
-	/**
-	 * The SQL required to remove the underlying database objects.
-	 *
-	 * @param dialect The dialect against which to generate the drop command(s)
-	 *
-	 * @return The drop command(s)
-	 *
-	 * @throws HibernateException problem creating the drop command(s)
-	 * @deprecated Utilize the ExportableProducer contract instead
-	 */
-	@Deprecated
-	String[] sqlDropStrings(Dialect dialect) throws HibernateException;
-
-	/**
 	 * Return a key unique to the underlying database objects. Prevents us from
 	 * trying to create/remove them multiple times.
 	 *

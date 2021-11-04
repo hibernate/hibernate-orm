@@ -145,17 +145,6 @@ public class SequenceGenerator
 	}
 
 	@Override
-	@SuppressWarnings( {"deprecation"})
-	public String[] sqlCreateStrings(Dialect dialect) throws HibernateException {
-		return dialect.getCreateSequenceStrings( sequenceName, 1, 1 );
-	}
-
-	@Override
-	public String[] sqlDropStrings(Dialect dialect) throws HibernateException {
-		return dialect.getDropSequenceStrings( sequenceName );
-	}
-
-	@Override
 	public boolean supportsBulkInsertionIdentifierGeneration() {
 		return true;
 	}

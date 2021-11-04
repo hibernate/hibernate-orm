@@ -10,10 +10,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Types;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
@@ -218,19 +216,6 @@ public class TableStructure implements DatabaseStructure {
 		finally {
 			statsCollector.jdbcExecuteStatementEnd();
 		}
-	}
-
-	@Override
-	public String[] sqlCreateStrings(Dialect dialect) throws HibernateException {
-		return new String[] {
-				dialect.getCreateTableString() + " " + tableNameText + " ( " + valueColumnNameText + " " + dialect.getTypeName( Types.BIGINT ) + " )",
-				"insert into " + tableNameText + " values ( " + initialValue + " )"
-		};
-	}
-
-	@Override
-	public String[] sqlDropStrings(Dialect dialect) throws HibernateException {
-		return new String[] { dialect.getDropTableString( tableNameText ) };
 	}
 
 	@Override

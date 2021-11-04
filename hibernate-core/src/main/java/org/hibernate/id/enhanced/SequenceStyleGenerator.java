@@ -12,7 +12,6 @@ import java.util.Properties;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.boot.SchemaAutoTooling;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.QualifiedName;
@@ -530,16 +529,6 @@ public class SequenceStyleGenerator
 	@Override
 	public Object generatorKey() {
 		return databaseStructure.getName();
-	}
-
-	@Override
-	public String[] sqlCreateStrings(Dialect dialect) throws HibernateException {
-		return databaseStructure.sqlCreateStrings( dialect );
-	}
-
-	@Override
-	public String[] sqlDropStrings(Dialect dialect) throws HibernateException {
-		return databaseStructure.sqlDropStrings( dialect );
 	}
 
 

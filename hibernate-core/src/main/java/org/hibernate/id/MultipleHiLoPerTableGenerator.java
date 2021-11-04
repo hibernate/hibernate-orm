@@ -14,7 +14,6 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Properties;
 
-import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.Identifier;
@@ -22,7 +21,6 @@ import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -375,20 +373,6 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 
 
 
-	}
-
-	public String[] sqlCreateStrings(Dialect dialect) throws HibernateException {
-		return new String[] {
-				dialect.getCreateTableString()
-						+ ' ' + tableName + " ( "
-						+ segmentColumnName + ' ' + dialect.getTypeName( Types.VARCHAR, keySize, 0, 0 ) + ",  "
-						+ valueColumnName + ' ' + dialect.getTypeName( Types.INTEGER )
-						+ " )" + dialect.getTableTypeString()
-		};
-	}
-
-	public String[] sqlDropStrings(Dialect dialect) throws HibernateException {
-		return new String[] {dialect.getDropTableString( tableName )};
 	}
 
 	public Object generatorKey() {

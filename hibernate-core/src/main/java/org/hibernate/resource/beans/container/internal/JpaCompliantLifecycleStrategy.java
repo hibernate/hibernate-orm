@@ -104,6 +104,21 @@ public class JpaCompliantLifecycleStrategy implements BeanLifecycleStrategy {
 				return;
 			}
 
+			if ( beanManager == null ) {
+				try {
+					beanInstance = fallbackProducer.produceBeanInstance( beanType );
+					return;
+				}
+				catch (Exception e) {
+					// the CDI BeanManager is not know to be ready for use and the
+					// fallback-producer was unable to create the bean...
+					throw new IllegalStateException(
+							"CDI BeanManager is not known to be ready for use and the fallback-producer was unable to create the bean",
+							new NotYetReadyException( e )
+					);
+				}
+			}
+
 			final AnnotatedType<B> annotatedType;
 			try {
 				annotatedType = beanManager.createAnnotatedType( beanType );

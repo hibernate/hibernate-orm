@@ -9,7 +9,7 @@ package org.hibernate.spatial.testing.converter;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 
-import org.hibernate.spatial.dialect.h2gis.GeoDbWkb;
+import org.hibernate.spatial.dialect.h2gis.H2GISWkb;
 
 import org.geolatte.geom.Geometry;
 
@@ -23,7 +23,7 @@ public class GeometryConverter implements AttributeConverter<Geometry, byte[]> {
 		if ( attribute == null ) {
 			return null;
 		}
-		return GeoDbWkb.to( attribute );
+		return H2GISWkb.to( attribute );
 	}
 
 	@Override
@@ -31,6 +31,6 @@ public class GeometryConverter implements AttributeConverter<Geometry, byte[]> {
 		if ( dbData == null ) {
 			return null;
 		}
-		return GeoDbWkb.from( dbData );
+		return H2GISWkb.from( dbData );
 	}
 }

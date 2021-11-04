@@ -11,17 +11,16 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataBuilderImplementor;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.spatial.GeolatteGeometryJavaTypeDescriptor;
-import org.hibernate.spatial.dialect.h2gis.GeoDBDialect;
 import org.hibernate.tool.schema.Action;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import org.geolatte.geom.Geometry;
@@ -33,13 +32,12 @@ import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 /**
  * @author Steve Ebersole
  */
-@Ignore
 public class GeometryConverterTest extends BaseUnitTestCase {
 
 	@Test
 	public void testConverterUsage() {
 		try (final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
-				.applySetting( AvailableSettings.DIALECT, GeoDBDialect.class )
+				.applySetting( AvailableSettings.DIALECT, H2Dialect.class )
 				.applySetting( AvailableSettings.HBM2DDL_AUTO, Action.CREATE_DROP )
 				.build()) {
 			final MetadataSources metadataSources = new MetadataSources( ssr )

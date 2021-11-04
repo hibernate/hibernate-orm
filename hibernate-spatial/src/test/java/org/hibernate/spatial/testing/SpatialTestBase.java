@@ -48,15 +48,7 @@ abstract public class SpatialTestBase
 					.getFunctions()
 					.keySet();
 			if ( DialectContext.getDialect() instanceof H2Dialect ) {
-				this.scope.inSession( session -> {
-					try {
-						Connection cn = session.getJdbcConnectionAccess().obtainConnection();
-						H2GISFunctions.load( cn );
-					}
-					catch (SQLException e) {
-						throw new RuntimeException( e );
-					}
-				} );
+				initH2GISExtensionsForInMemDb();
 			}
 		}
 	}
@@ -82,6 +74,19 @@ abstract public class SpatialTestBase
 
 	public boolean isSupported(CommonSpatialFunction function) {
 		return supportedFunctions.contains( function.name() );
+	}
+
+
+	private void initH2GISExtensionsForInMemDb() {
+		this.scope.inSession( session -> {
+			try {
+				Connection cn = session.getJdbcConnectionAccess().obtainConnection();
+				H2GISFunctions.load( cn );
+			}
+			catch (SQLException e) {
+				throw new RuntimeException( e );
+			}
+		} );
 	}
 
 }

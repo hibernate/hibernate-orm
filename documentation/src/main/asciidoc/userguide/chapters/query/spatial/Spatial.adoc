@@ -199,11 +199,11 @@ The dialect `CockroachDB` support the `GEOMETRY` type in CockroachDB v20.2 and l
 The `GEOGRAPHY` type is not currently supported.
 ====
 
-GeoDB (H2)::
-The `GeoDBDialect` supports the GeoDB a spatial extension of the H2 in-memory database.
+H2GIS::
+The `H2DBDialect` supports the H2GIS, a spatial extension of the H2 in-memory database.
 [NOTE]
 ====
-The dialect has been tested with GeoDB version 0.7
+The dialect has been tested with H2GIS version 1.5
 ====
 
 DB2::

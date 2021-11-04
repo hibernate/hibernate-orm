@@ -22,6 +22,7 @@ import org.hibernate.spatial.SpatialDialect;
  * Rectangles (MBR's). This dialect my therefore produce different results than the other MySQL spatial dialects.
  *
  * @author Karel Maesen
+ * @deprecated Spatial Dialects are no longer needed
  */
 @Deprecated
 public class MySQL56SpatialDialect extends MySQL55Dialect implements SpatialDialect {

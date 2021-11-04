@@ -78,7 +78,7 @@ import org.hibernate.type.Type;
  * @deprecated Use {@link org.hibernate.id.enhanced.TableGenerator} instead.
  */
 @Deprecated
-public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenerator, Configurable {
+public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenerator {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( MultipleHiLoPerTableGenerator.class );
 
 	public static final String ID_TABLE = "table";
@@ -253,6 +253,7 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 		}
 	}
 
+	@Override
 	@SuppressWarnings({"StatementWithEmptyBody", "deprecation"})
 	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
 		returnClass = type.getReturnedClass();

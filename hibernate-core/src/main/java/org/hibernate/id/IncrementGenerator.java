@@ -38,7 +38,7 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  * @author Brett Meyer
  */
-public class IncrementGenerator implements IdentifierGenerator, Configurable {
+public class IncrementGenerator implements IdentifierGenerator {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( IncrementGenerator.class );
 
 	private Class returnClass;

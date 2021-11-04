@@ -6,23 +6,25 @@
  */
 package org.hibernate.id;
 
+import java.util.Properties;
+
 import org.hibernate.HibernateException;
-import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.type.Type;
 
 /**
  * An <tt>IdentifierGenerator</tt> that requires creation of database objects.
  * <br><br>
- * All <tt>PersistentIdentifierGenerator</tt>s that also implement
- * <tt>Configurable</tt> have access to a special mapping parameter: schema
+ * All <tt>PersistentIdentifierGenerator</tt>s have access to a special mapping parameter
+ * in their {@link #configure(Type, Properties, ServiceRegistry)} method: schema
  *
  * @author Gavin King
  * @author Steve Ebersole
  *
  * @see IdentifierGenerator
- * @see Configurable
  */
-public interface PersistentIdentifierGenerator extends IdentifierGenerator, ExportableProducer {
+public interface PersistentIdentifierGenerator extends IdentifierGenerator {
 
 	/**
 	 * The configuration parameter holding the schema name

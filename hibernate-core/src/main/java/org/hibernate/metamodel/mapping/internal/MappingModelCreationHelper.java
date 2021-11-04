@@ -1031,6 +1031,10 @@ public class MappingModelCreationHelper {
 				);
 				attributeMapping.setForeignKeyDescriptor( embeddedForeignKeyDescriptor );
 			}
+			else if ( modelPart == null ) {
+				throw new IllegalArgumentException( "Unable to find attribute " + bootProperty.getPersistentClass()
+						.getEntityName() + " -> " + bootProperty.getName() );
+			}
 			else {
 				throw new NotYetImplementedFor6Exception(
 						"Support for foreign-keys based on `" + modelPart + "` not yet implemented: " +

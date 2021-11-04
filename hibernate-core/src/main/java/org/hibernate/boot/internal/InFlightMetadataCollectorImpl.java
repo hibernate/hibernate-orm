@@ -44,7 +44,6 @@ import org.hibernate.boot.model.naming.ImplicitIndexNameSource;
 import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Database;
-import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.source.internal.ImplicitColumnNamingSecondPass;
@@ -2309,9 +2308,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 					entityBinding
 			);
 
-			if ( ig instanceof ExportableProducer ) {
-				( (ExportableProducer) ig ).registerExportables( getDatabase() );
-			}
+			ig.registerExportables( getDatabase() );
 		}
 		catch (MappingException e) {
 			// ignore this for now.  The reasoning being "non-reflective" binding as needed

@@ -19,7 +19,6 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.id.Assigned;
-import org.hibernate.id.Configurable;
 import org.hibernate.id.ForeignGenerator;
 import org.hibernate.id.GUIDGenerator;
 import org.hibernate.id.IdentifierGenerator;
@@ -140,9 +139,7 @@ public class DefaultIdentifierGeneratorFactory
 						FallbackBeanInstanceProducer.INSTANCE
 				).getBeanInstance();
 			}
-			if ( identifierGenerator instanceof Configurable ) {
-				( ( Configurable ) identifierGenerator ).configure( type, config, serviceRegistry );
-			}
+			identifierGenerator.configure( type, config, serviceRegistry );
 			return identifierGenerator;
 		}
 		catch ( Exception e ) {

@@ -16,7 +16,6 @@ import java.util.Objects;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.Database;
-import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.model.source.internal.hbm.MappingDocument;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
@@ -522,9 +521,7 @@ public class Component extends SimpleValue implements MetaAttributable {
 
 		@Override
 		public void registerExportables(Database database) {
-			if ( ExportableProducer.class.isInstance( subGenerator ) ) {
-				( (ExportableProducer) subGenerator ).registerExportables( database );
-			}
+			subGenerator.registerExportables( database );
 		}
 	}
 

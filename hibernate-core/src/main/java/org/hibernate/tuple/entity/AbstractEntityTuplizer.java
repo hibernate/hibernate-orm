@@ -40,12 +40,7 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.tuple.IdentifierProperty;
 import org.hibernate.tuple.Instantiator;
-import org.hibernate.type.AssociationType;
-import org.hibernate.type.BasicType;
-import org.hibernate.type.ComponentType;
-import org.hibernate.type.CompositeType;
-import org.hibernate.type.EntityType;
-import org.hibernate.type.Type;
+import org.hibernate.type.*;
 
 
 /**
@@ -573,6 +568,13 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 			if(enhancedForLazyLoading) {
 				final BytecodeLazyAttributeInterceptor interceptor = enhancementMetadata.extractLazyInterceptor(entity);
 				if (interceptor == null && lazyAttributesMetadata.isLazyAttribute( propertyName ) && getters[j].get(entity) == null) {
+					result[j] = LazyPropertyInitializer.UNFETCHED_PROPERTY;
+					continue;
+				}
+			}
+			else {
+				Type type = entityMetamodel.getPropertyTypes()[j];
+				if(type.isCollectionType() && ((CollectionType)type).getReturnedClass().isAssignableFrom(Serializable.class) && !((CollectionType)type).hasHolder() && entityMetamodel.isLazy() && getters[j].get(entity) == null) {
 					result[j] = LazyPropertyInitializer.UNFETCHED_PROPERTY;
 					continue;
 				}

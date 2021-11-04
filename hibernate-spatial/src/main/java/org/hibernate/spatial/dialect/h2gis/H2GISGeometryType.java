@@ -13,7 +13,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import org.hibernate.spatial.GeolatteGeometryJavaTypeDescriptor;
 import org.hibernate.spatial.GeometryLiteralFormatter;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
@@ -34,12 +33,12 @@ import org.geolatte.geom.jts.JTS;
  *
  * @author Karel Maesen, Geovise BVBA
  */
-public class GeoDBGeometryType implements JdbcType {
+public class H2GISGeometryType implements JdbcType {
 
 	/**
 	 * An instance of this Descriptor
 	 */
-	public static final GeoDBGeometryType INSTANCE = new GeoDBGeometryType();
+	public static final H2GISGeometryType INSTANCE = new H2GISGeometryType();
 
 	@Override
 	public int getJdbcTypeCode() {
@@ -51,16 +50,10 @@ public class GeoDBGeometryType implements JdbcType {
 		return SqlTypes.GEOMETRY;
 	}
 
-	//todo -- simplify as with postgis/mariadb
 	@Override
 	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaTypeDescriptor) {
 		return new GeometryLiteralFormatter<T>( javaTypeDescriptor, Wkt.Dialect.SFA_1_1_0, "ST_GeomFromText" );
 	}
-
-	private <T> Geometry<?> jts2Gl(T value) {
-		return JTS.from( (org.locationtech.jts.geom.Geometry) value );
-	}
-
 
 	@Override
 	public <X> ValueBinder<X> getBinder(final JavaType<X> javaTypeDescriptor) {
@@ -69,14 +62,14 @@ public class GeoDBGeometryType implements JdbcType {
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 					throws SQLException {
 				final Geometry geometry = getJavaTypeDescriptor().unwrap( value, Geometry.class, options );
-				st.setBytes( index, GeoDbWkb.to( geometry ) );
+				st.setBytes( index, H2GISWkb.to( geometry ) );
 			}
 
 			@Override
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
 				final Geometry geometry = getJavaTypeDescriptor().unwrap( value, Geometry.class, options );
-				st.setBytes( name, GeoDbWkb.to( geometry ) );
+				st.setBytes( name, H2GISWkb.to( geometry ) );
 			}
 		};
 	}
@@ -87,18 +80,18 @@ public class GeoDBGeometryType implements JdbcType {
 
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-				return getJavaTypeDescriptor().wrap( GeoDbWkb.from( rs.getObject( paramIndex ) ), options );
+				return getJavaTypeDescriptor().wrap( H2GISWkb.from( rs.getObject( paramIndex ) ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-				return getJavaTypeDescriptor().wrap( GeoDbWkb.from( statement.getObject( index ) ), options );
+				return getJavaTypeDescriptor().wrap( H2GISWkb.from( statement.getObject( index ) ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
 					throws SQLException {
-				return getJavaTypeDescriptor().wrap( GeoDbWkb.from( statement.getObject( name ) ), options );
+				return getJavaTypeDescriptor().wrap( H2GISWkb.from( statement.getObject( name ) ), options );
 			}
 		};
 	}

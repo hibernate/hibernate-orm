@@ -14,8 +14,8 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.GeolatteGeometryType;
 import org.hibernate.spatial.HSMessageLogger;
 import org.hibernate.spatial.JTSGeometryType;
+import org.hibernate.spatial.KeyedSqmFunctionDescriptors;
 import org.hibernate.spatial.contributor.ContributorImplementor;
-import org.hibernate.spatial.dialect.postgis.PGGeometryType;
 import org.hibernate.spatial.dialect.postgis.PostgisSqmFunctionDescriptors;
 
 public class H2GisDialectContributor implements ContributorImplementor {
@@ -28,16 +28,16 @@ public class H2GisDialectContributor implements ContributorImplementor {
 
 	public void contributeTypes(TypeContributions typeContributions) {
 		HSMessageLogger.LOGGER.typeContributions( this.getClass().getCanonicalName() );
-		typeContributions.contributeType( new GeolatteGeometryType( GeoDBGeometryType.INSTANCE ) );
-		typeContributions.contributeType( new JTSGeometryType( GeoDBGeometryType.INSTANCE ) );
+		typeContributions.contributeType( new GeolatteGeometryType( H2GISGeometryType.INSTANCE ) );
+		typeContributions.contributeType( new JTSGeometryType( H2GISGeometryType.INSTANCE ) );
 	}
 
 	@Override
 	public void contributeFunctions(FunctionContributions functionContributions) {
 		HSMessageLogger.LOGGER.functionContributions( this.getClass().getCanonicalName() );
-		final PostgisSqmFunctionDescriptors postgisFunctions = new PostgisSqmFunctionDescriptors( functionContributions );
+		final KeyedSqmFunctionDescriptors functions = new H2SqmFunctionDescriptors( functionContributions );
 		final SqmFunctionRegistry functionRegistry = functionContributions.getFunctionRegistry();
-		postgisFunctions.asMap().forEach( (key, desc) -> {
+		functions.asMap().forEach( (key, desc) -> {
 			functionRegistry.register( key.getName(), desc );
 			key.getAltName().ifPresent( altName -> functionRegistry.registerAlternateKey( altName, key.getName() ) );
 		} );

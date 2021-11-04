@@ -8,9 +8,9 @@
 /**
  *
  */
-package org.hibernate.spatial.testing.dialects.h2geodb;
+package org.hibernate.spatial.testing.dialects.h2gis;
 
-import org.hibernate.spatial.dialect.h2gis.GeoDbWkb;
+import org.hibernate.spatial.dialect.h2gis.H2GISWkb;
 import org.hibernate.spatial.testing.AbstractExpectationsFactory;
 import org.hibernate.spatial.testing.NativeSQLStatement;
 
@@ -25,9 +25,9 @@ import org.locationtech.jts.geom.Point;
  *
  * @Author Jan Boonen, Geodan IT b.v.
  */
-public class GeoDBExpectationsFactory extends AbstractExpectationsFactory {
+public class H2GISExpectationsFactory extends AbstractExpectationsFactory {
 
-	public GeoDBExpectationsFactory() {
+	public H2GISExpectationsFactory() {
 		super();
 	}
 
@@ -356,7 +356,7 @@ public class GeoDBExpectationsFactory extends AbstractExpectationsFactory {
 
 	@Override
 	protected Geometry decode(Object o) {
-		return JTS.to( GeoDbWkb.from( o ) );
+		return JTS.to( H2GISWkb.from( o ) );
 	}
 
 }

@@ -33,21 +33,21 @@ import org.geolatte.geom.crs.CoordinateReferenceSystems;
 import org.geolatte.geom.jts.JTS;
 
 /**
- * A utility class to serialize from/to GeoDB WKB's.
+ * A utility class to serialize from/to H2GIS WKB's.
  * <p/>
  * <p>Note: this utility makes it unnecessary to have a dependency on GeoDB. As long as GeoDB is
  * not available in common maven repositories, such a dependency is to be avoided.</p>
  *
  * @author Karel Maesen, Geovise BVBA
  */
-public class GeoDbWkb {
+public class H2GISWkb {
 
 	private static final HSMessageLogger LOGGER = Logger.getMessageLogger(
 			HSMessageLogger.class,
-			GeoDbWkb.class.getName()
+			H2GISWkb.class.getName()
 	);
 
-	private GeoDbWkb() {
+	private H2GISWkb() {
 	}
 
 	/**
@@ -113,6 +113,7 @@ public class GeoDbWkb {
 		return new Polygon<C2D>( ps, CoordinateReferenceSystems.PROJECTED_2D_METER );
 	}
 
+	//todo This type of function really belongs in a general helper class
 	private static ByteBuffer toByteBuffer(Blob blob) {
 		final ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		final byte[] buf = new byte[1024];

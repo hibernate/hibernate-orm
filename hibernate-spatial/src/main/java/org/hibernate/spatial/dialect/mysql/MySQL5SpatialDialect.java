@@ -13,6 +13,7 @@ import org.hibernate.spatial.SpatialDialect;
  * A Dialect for MySQL 5 using InnoDB engine, with support for its spatial features
  *
  * @author Karel Maesen, Geovise BVBA
+ * @deprecated Spatial Dialects are no longer needed
  */
 @Deprecated
 public class MySQL5SpatialDialect extends MySQL5Dialect implements SpatialDialect {

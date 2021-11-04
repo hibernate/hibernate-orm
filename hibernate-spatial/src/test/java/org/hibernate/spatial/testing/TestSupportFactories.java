@@ -16,7 +16,7 @@ import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.spatial.testing.datareader.TestSupport;
 import org.hibernate.spatial.testing.dialects.cockroachdb.CockroachDBTestSupport;
 import org.hibernate.spatial.testing.dialects.db2.DB2TestSupport;
-import org.hibernate.spatial.testing.dialects.h2geodb.H2GisTestSupport;
+import org.hibernate.spatial.testing.dialects.h2gis.H2GisTestSupport;
 import org.hibernate.spatial.testing.dialects.hana.HANATestSupport;
 import org.hibernate.spatial.testing.dialects.mariadb.MariaDBTestSupport;
 import org.hibernate.spatial.testing.dialects.mysql.MySQL56TestSupport;

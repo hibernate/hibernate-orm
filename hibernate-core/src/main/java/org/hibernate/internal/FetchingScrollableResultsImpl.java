@@ -53,13 +53,9 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 	}
 
 	private static <R> EntityInitializer extractResultInitializer(RowReader<R> rowReader) {
-		for ( Initializer initializer : rowReader.getInitializers() ) {
-			if ( initializer instanceof EntityInitializer ) {
-				EntityInitializer entityInitializer = (EntityInitializer) initializer;
-				if ( entityInitializer instanceof EntityResultInitializer ) {
-					return entityInitializer;
-				}
-			}
+		Initializer initializer = rowReader.getInitializers().get( rowReader.getInitializers().size() - 1 );
+		if ( initializer instanceof EntityInitializer ) {
+			return (EntityInitializer) initializer;
 		}
 		return null;
 	}
@@ -123,9 +119,6 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 			// In the latter scenario, the previous logical row
 			// really is the last logical row.
 			//
-			// In all other cases, we should process back two
-			// logical records (the current logic row, plus the
-			// previous logical row).
 			if ( getRowProcessingState().isAfterLast() && maxPosition != null && currentPosition > maxPosition ) {
 				// position cursor to the last row
 				getRowProcessingState().last();
@@ -138,7 +131,6 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 				// in skipping
 
 				getRowProcessingState().previous();
-//				getRowProcessingState().previous();
 
 				// sequentially read the result set in reverse until we recognize
 				// a change in the key value.  At that point, we are pointed at
@@ -323,8 +315,6 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 		final EntityKey entityKey = getEntityKey();
 
 		currentRow = rowReader.readRow( getRowProcessingState(), getProcessingOptions() );
-
-//		currentRow = new Object[] {row};
 
 		getRowProcessingState().finishRowProcessing();
 

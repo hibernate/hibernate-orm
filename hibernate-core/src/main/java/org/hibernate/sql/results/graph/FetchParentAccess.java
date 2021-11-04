@@ -27,8 +27,6 @@ public interface FetchParentAccess extends Initializer {
 
 	NavigablePath getNavigablePath();
 
-	EntityKey getEntityKey();
-
 	/**
 	 * Register a listener to be notified when the parent is "resolved"
 	 *

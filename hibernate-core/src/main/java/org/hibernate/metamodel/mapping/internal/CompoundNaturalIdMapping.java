@@ -606,11 +606,6 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		}
 
 		@Override
-		public EntityKey getEntityKey() {
-			return null;
-		}
-
-		@Override
 		public ModelPart getInitializedPart() {
 			return naturalIdMapping;
 		}

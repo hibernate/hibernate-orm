@@ -6,6 +6,8 @@
  */
 package org.hibernate.orm.test.embeddable;
 
+import java.util.List;
+
 import org.hibernate.Session;
 import org.hibernate.query.Query;
 
@@ -80,6 +82,13 @@ public class MappedByEmbeddableTest extends BaseCoreFunctionalTestCase {
 			loadContaining( session, 2, 1 );
 			loadContaining( session, 1, 2 );
 			loadContaining( session, 3, 3 );
+		} );
+
+		inTransaction( session -> {
+			Query<Contained> query = session.createQuery( "select c from contained c", Contained.class );
+
+			List<Contained> containeds = query.list();
+			assertThat( containeds ).hasSize( 3 );
 		} );
 	}
 

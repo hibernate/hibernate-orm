@@ -248,11 +248,6 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 	private Optimizer optimizer;
 	private long accessCount;
 
-	@Override
-	public Object generatorKey() {
-		return qualifiedTableName.render();
-	}
-
 	/**
 	 * Type mapping for the identifier.
 	 *

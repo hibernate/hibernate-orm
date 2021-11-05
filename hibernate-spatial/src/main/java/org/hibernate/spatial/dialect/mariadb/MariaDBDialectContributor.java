@@ -16,6 +16,7 @@ import org.hibernate.spatial.HSMessageLogger;
 import org.hibernate.spatial.JTSGeometryType;
 import org.hibernate.spatial.KeyedSqmFunctionDescriptors;
 import org.hibernate.spatial.contributor.ContributorImplementor;
+import org.hibernate.spatial.dialect.mysql.MySQLGeometryJdbcType;
 
 public class MariaDBDialectContributor implements ContributorImplementor {
 
@@ -27,8 +28,8 @@ public class MariaDBDialectContributor implements ContributorImplementor {
 
 	public void contributeTypes(TypeContributions typeContributions) {
 		HSMessageLogger.LOGGER.typeContributions( this.getClass().getCanonicalName() );
-		typeContributions.contributeType( new GeolatteGeometryType( MariaDBGeometryJdbcType.INSTANCE ) );
-		typeContributions.contributeType( new JTSGeometryType( MariaDBGeometryJdbcType.INSTANCE ) );
+		typeContributions.contributeType( new GeolatteGeometryType( MySQLGeometryJdbcType.INSTANCE ) );
+		typeContributions.contributeType( new JTSGeometryType( MySQLGeometryJdbcType.INSTANCE ) );
 	}
 
 	@Override

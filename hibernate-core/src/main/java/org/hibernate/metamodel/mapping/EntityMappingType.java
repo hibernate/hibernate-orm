@@ -18,6 +18,7 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
+import org.hibernate.metamodel.MetamodelUnsupportedOperationException;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NavigablePath;
@@ -354,7 +355,7 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 			SqlAliasBase sqlAliasBase,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
-		throw new UnsupportedOperationException(
+		throw new MetamodelUnsupportedOperationException(
 				"Entity mapping does not support primary TableReference creation [" +
 						getClass().getName() + " : " + getEntityName() + "]"
 		);
@@ -366,7 +367,7 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 			TableReference lhs,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
-		throw new UnsupportedOperationException(
+		throw new MetamodelUnsupportedOperationException(
 				"Entity mapping does not support primary TableReference join creation [" +
 						getClass().getName() + " : " + getEntityName() + "]"
 		);

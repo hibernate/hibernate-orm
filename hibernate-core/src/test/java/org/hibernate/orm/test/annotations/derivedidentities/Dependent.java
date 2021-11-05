@@ -7,7 +7,7 @@
 
 // $Id:$
 
-package org.hibernate.test.annotations.derivedidentities;
+package org.hibernate.orm.test.annotations.derivedidentities;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.ManyToOne;

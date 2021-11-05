@@ -7,6 +7,7 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.MetamodelUnsupportedOperationException;
 import org.hibernate.metamodel.mapping.GeneratedValueResolver;
 import org.hibernate.tuple.GenerationTiming;
 
@@ -26,6 +27,6 @@ public class NoGeneratedValueResolver implements GeneratedValueResolver {
 
 	@Override
 	public Object resolveGeneratedValue(Object[] row, Object entity, SharedSessionContractImplementor session) {
-		throw new UnsupportedOperationException( "NoGeneratedValueResolver does not support generated values" );
+		throw new MetamodelUnsupportedOperationException( "NoGeneratedValueResolver does not support generated values" );
 	}
 }

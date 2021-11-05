@@ -41,6 +41,9 @@ import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
+import org.hibernate.boot.internal.MetadataImpl;
+import org.hibernate.boot.internal.SessionFactoryBuilderImpl;
+import org.hibernate.boot.internal.SessionFactoryOptionsBuilder;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -94,38 +97,53 @@ public class DefaultCatalogAndSchemaTest {
 	private static final String CUSTOM_DELETE_SQL_PART_2 = ", {h-domain}";
 	private static final String CUSTOM_DELETE_SQL_PART_3 = " WHERE id = ?";
 
-	@Parameterized.Parameters(name = "configuredXmlMappingPath = {0}, configuredDefaultCatalog = {1}, configuredDefaultSchema = {2}")
+	enum SettingsMode {
+		// "Standard" way of providing settings, though configuration properties:
+		// both metadata and session factory receive the same settings
+		METADATA_SERVICE_REGISTRY,
+		// An alternative way of providing settings so that they are applied late,
+		// when the session factory is created.
+		// This mode is used by frameworks relying on build-time initialization of the application,
+		// like Quarkus and its "static init".
+		SESSION_FACTORY_SERVICE_REGISTRY;
+	}
+
+	@Parameterized.Parameters(name = "settingsMode = {0}, configuredXmlMappingPath = {1}, configuredDefaultCatalog = {2}, configuredDefaultSchema = {3}")
 	public static List<Object[]> params() {
 		List<Object[]> params = new ArrayList<>();
-		for ( String defaultCatalog : Arrays.asList( null, "someDefaultCatalog" ) ) {
-			for ( String defaultSchema : Arrays.asList( null, "someDefaultSchema" ) ) {
-				params.add( new Object[] { null, defaultCatalog, defaultSchema,
-						// The default catalog/schema should be used when
-						// there is no implicit catalog/schema defined in the mapping.
-						defaultCatalog, defaultSchema } );
+		for ( SettingsMode mode : SettingsMode.values() ) {
+			for ( String defaultCatalog : Arrays.asList( null, "someDefaultCatalog" ) ) {
+				for ( String defaultSchema : Arrays.asList( null, "someDefaultSchema" ) ) {
+					params.add( new Object[] { mode, null, defaultCatalog, defaultSchema,
+							// The default catalog/schema should be used when
+							// there is no implicit catalog/schema defined in the mapping.
+							defaultCatalog, defaultSchema } );
+				}
 			}
-		}
-		params.add( new Object[] { "implicit-global-catalog-and-schema.orm.xml",
-				null, null,
-				"someImplicitCatalog", "someImplicitSchema" } );
+			params.add( new Object[] { mode, "implicit-global-catalog-and-schema.orm.xml",
+					null, null,
+					"someImplicitCatalog", "someImplicitSchema" } );
 		// HHH-14922: Inconsistent precedence of orm.xml implicit catalog/schema over "default_catalog"/"default_schema"
-//		params.add( new Object[] { "implicit-global-catalog-and-schema.orm.xml",
-//				"someDefaultCatalog", "someDefaultSchema",
-//				// The implicit catalog/schema defined in the mapping should take precedence
-//				// over the default catalog/schema defined in settings.
-//				"someImplicitCatalog", "someImplicitSchema" } );
+//			params.add( new Object[] { mode, "implicit-global-catalog-and-schema.orm.xml",
+//					"someDefaultCatalog", "someDefaultSchema",
+//					// The implicit catalog/schema defined in the mapping should take precedence
+//					// over the default catalog/schema defined in settings.
+//					"someImplicitCatalog", "someImplicitSchema" } );
+		}
 		return params;
 	}
 
 	@Parameterized.Parameter
-	public String configuredXmlMappingPath;
+	public SettingsMode settingsMode;
 	@Parameterized.Parameter(1)
-	public String configuredDefaultCatalog;
+	public String configuredXmlMappingPath;
 	@Parameterized.Parameter(2)
-	public String configuredDefaultSchema;
+	public String configuredDefaultCatalog;
 	@Parameterized.Parameter(3)
-	public String expectedDefaultCatalog;
+	public String configuredDefaultSchema;
 	@Parameterized.Parameter(4)
+	public String expectedDefaultCatalog;
+	@Parameterized.Parameter(5)
 	public String expectedDefaultSchema;
 
 	private MetadataImplementor metadata;
@@ -164,7 +182,17 @@ public class DefaultCatalogAndSchemaTest {
 				EntityWithExplicitQualifiersWithLegacySequenceGenerator.class
 		);
 
-		StandardServiceRegistry serviceRegistry = createStandardServiceRegistry( configuredDefaultCatalog, configuredDefaultSchema );
+		StandardServiceRegistry serviceRegistry;
+		switch ( settingsMode ) {
+			case METADATA_SERVICE_REGISTRY:
+				serviceRegistry = createStandardServiceRegistry( configuredDefaultCatalog, configuredDefaultSchema );
+				break;
+			case SESSION_FACTORY_SERVICE_REGISTRY:
+				serviceRegistry = createStandardServiceRegistry( null, null );
+				break;
+			default:
+				throw new IllegalStateException( "Unknown settings mode: " + settingsMode );
+		}
 
 		final MetadataSources metadataSources = new MetadataSources( serviceRegistry );
 		metadataSources.addInputStream( getClass().getResourceAsStream( "implicit-file-level-catalog-and-schema.orm.xml" ) );
@@ -179,7 +207,19 @@ public class DefaultCatalogAndSchemaTest {
 		final MetadataBuilder metadataBuilder = metadataSources.getMetadataBuilder();
 		metadata = (MetadataImplementor) metadataBuilder.build();
 
-		SessionFactoryBuilder sfb = metadata.getSessionFactoryBuilder();
+		SessionFactoryBuilder sfb;
+		switch ( settingsMode ) {
+			case METADATA_SERVICE_REGISTRY:
+				sfb = metadata.getSessionFactoryBuilder();
+				break;
+			case SESSION_FACTORY_SERVICE_REGISTRY:
+				serviceRegistry = createStandardServiceRegistry( configuredDefaultCatalog, configuredDefaultSchema );
+				sfb = new SessionFactoryBuilderImpl( metadata, new SessionFactoryOptionsBuilder( serviceRegistry,
+						((MetadataImpl) metadata).getBootstrapContext() ) );
+				break;
+			default:
+				throw new IllegalStateException( "Unknown settings mode: " + settingsMode );
+		}
 
 		sessionFactory = (SessionFactoryImplementor) sfb.build();
 		toClose.add( sessionFactory );

@@ -356,6 +356,14 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 		return accessCount;
 	}
 
+	/**
+	 * @deprecated Exposed for tests only.
+	 */
+	@Deprecated
+	public String[] getAllSqlForTests() {
+		return new String[] { selectQuery, insertQuery, updateQuery };
+	}
+
 	@Override
 	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
 		storeLastUsedValue = serviceRegistry.getService( ConfigurationService.class )

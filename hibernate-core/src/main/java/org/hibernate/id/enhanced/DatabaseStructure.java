@@ -78,4 +78,12 @@ public interface DatabaseStructure extends ExportableProducer {
 	 * @return {@code true} if the actual database structure is a sequence; {@code false} otherwise.
 	 */
 	boolean isPhysicalSequence();
+
+	/**
+	 * @deprecated Exposed for tests only.
+	 */
+	@Deprecated
+	public default String[] getAllSqlForTests() {
+		return new String[] { };
+	}
 }

@@ -81,6 +81,14 @@ public class SequenceGenerator
 		return sequenceName;
 	}
 
+	/**
+	 * @deprecated Exposed for tests only.
+	 */
+	@Deprecated
+	public String[] getAllSqlForTests() {
+		return new String[] { sql };
+	}
+
 	@Override
 	@SuppressWarnings("StatementWithEmptyBody")
 	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {

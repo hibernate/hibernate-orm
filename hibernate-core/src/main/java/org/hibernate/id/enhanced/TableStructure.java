@@ -100,6 +100,11 @@ public class TableStructure implements DatabaseStructure {
 	}
 
 	@Override
+	public String[] getAllSqlForTests() {
+		return new String[] { selectQuery, updateQuery };
+	}
+
+	@Override
 	public void prepare(Optimizer optimizer) {
 		applyIncrementSizeToSourceValues = optimizer.applyIncrementSizeToSourceValues();
 	}

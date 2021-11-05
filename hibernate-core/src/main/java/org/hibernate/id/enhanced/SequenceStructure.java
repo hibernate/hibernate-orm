@@ -80,6 +80,11 @@ public class SequenceStructure implements DatabaseStructure {
 	}
 
 	@Override
+	public String[] getAllSqlForTests() {
+		return new String[] { sql };
+	}
+
+	@Override
 	public AccessCallback buildCallback(final SharedSessionContractImplementor session) {
 		if ( sql == null ) {
 			throw new AssertionFailure( "SequenceStyleGenerator's SequenceStructure was not properly initialized" );

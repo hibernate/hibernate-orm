@@ -66,7 +66,7 @@ public class SerializableJavaTypeDescriptor<T extends Serializable> extends Abst
 	public JdbcType getRecommendedJdbcType(JdbcTypeDescriptorIndicators indicators) {
 		final int typeCode = indicators.isLob()
 				? Types.BLOB
-				: Types.LONGVARBINARY;
+				: Types.VARBINARY;
 		return indicators.getTypeConfiguration().getJdbcTypeDescriptorRegistry().getDescriptor( typeCode );
 	}
 

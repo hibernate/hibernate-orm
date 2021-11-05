@@ -26,6 +26,7 @@ import org.hibernate.jpa.spi.MutableJpaCompliance;
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
+import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.jandex.IndexView;
@@ -180,4 +181,14 @@ public interface BootstrapContext {
 	 * @todo verify this ^^
 	 */
 	void release();
+
+	/**
+	 * To support envers
+	 */
+	void registerAdHocBasicType(BasicTypeImpl<?> basicType);
+
+	/**
+	 * To support envers
+	 */
+	<T> BasicTypeImpl<T> resolveAdHocBasicType(String key);
 }

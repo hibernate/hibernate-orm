@@ -19,11 +19,11 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 import org.hibernate.type.internal.ImmutableConvertedBasicTypeImpl;
 import org.hibernate.type.internal.ImmutableNamedBasicTypeImpl;
 import org.hibernate.type.internal.NamedBasicTypeImpl;
-import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.UserType;
 
@@ -152,14 +152,26 @@ public class BasicTypeRegistry implements Serializable {
 	}
 
 	/**
-	 * Find an existing BasicType registration for the given JavaTypeDescriptor and
-	 * SqlTypeDescriptor combo or create (and register) one.
+	 * Find an existing BasicType registration for the given JavaType descriptor and
+	 * JdbcType descriptor combo or create (and register) one.
 	 */
 	public <J> BasicType<J> resolve(JavaType<J> jtdToUse, JdbcType stdToUse) {
 		return resolve(
 				jtdToUse,
 				stdToUse,
-				() -> new BasicTypeImpl<>( jtdToUse, stdToUse )
+				() -> {
+					final BasicTypeImpl<J> basicType = new BasicTypeImpl<>( jtdToUse, stdToUse );
+
+					// if we are still building mappings, register this ad-hoc type via a
+					// unique code.  this is to support envers
+					try {
+						typeConfiguration.getMetadataBuildingContext().getBootstrapContext().registerAdHocBasicType( basicType );
+					}
+					catch (Exception ignore) {
+					}
+
+					return basicType;
+				}
 		);
 	}
 

@@ -25,6 +25,7 @@ import org.hibernate.boot.model.process.internal.NamedBasicTypeResolution;
 import org.hibernate.boot.model.process.internal.NamedConverterResolution;
 import org.hibernate.boot.model.process.internal.UserTypeResolution;
 import org.hibernate.boot.model.process.internal.VersionResolution;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
@@ -51,6 +52,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
+import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.TypeConfigurationAware;
 import org.hibernate.usertype.DynamicParameterizedType;
@@ -500,9 +502,8 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 			TypeConfiguration typeConfiguration,
 			MetadataBuildingContext context) {
 
-		final ManagedBeanRegistry managedBeanRegistry = context.getBootstrapContext()
-				.getServiceRegistry()
-				.getService( ManagedBeanRegistry.class );
+		final StandardServiceRegistry serviceRegistry = context.getBootstrapContext().getServiceRegistry();
+		final ManagedBeanRegistry managedBeanRegistry = serviceRegistry.getService( ManagedBeanRegistry.class );
 
 		final JpaAttributeConverterCreationContext converterCreationContext = new JpaAttributeConverterCreationContext() {
 			@Override
@@ -519,8 +520,10 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 
 		// Name could refer to:
 		//		1) a named converter - HBM support for JPA's AttributeConverter via its `type="..."` XML attribute
-		//		2) basic type "resolution key"
-		//		3) UserType or BasicType class name - directly, or through a TypeDefinition
+		//		2) a "named composed" mapping - like (1), this is mainly to support envers since it tells
+		//			Hibernate the mappings via DOM.  See `org.hibernate.type.internal.BasicTypeImpl`
+		//		3) basic type "resolution key"
+		//		4) UserType or BasicType class name - directly, or through a TypeDefinition
 
 		if ( name.startsWith( ConverterDescriptor.TYPE_NAME_PREFIX  ) ) {
 			return NamedConverterResolution.from(
@@ -530,6 +533,18 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 					explicitMutabilityPlanAccess,
 					stdIndicators,
 					converterCreationContext,
+					context
+			);
+		}
+
+		if ( name.startsWith( BasicTypeImpl.EXTERNALIZED_PREFIX ) ) {
+			final BasicTypeImpl<Object> basicType = context.getBootstrapContext().resolveAdHocBasicType( name );
+
+			return new NamedBasicTypeResolution(
+					basicType.getJavaTypeDescriptor(),
+					basicType,
+					null,
+					explicitMutabilityPlanAccess,
 					context
 			);
 		}
@@ -661,7 +676,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 	}
 
 	public void setExplicitTypeName(String typeName) {
-		this.explicitTypeName = typeName;;
+		this.explicitTypeName = typeName;
 	}
 
 	public void setTypeName(String typeName) {

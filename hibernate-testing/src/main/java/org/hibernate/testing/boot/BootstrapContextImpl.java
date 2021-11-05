@@ -28,6 +28,7 @@ import org.hibernate.metamodel.internal.ManagedTypeRepresentationResolverStandar
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
+import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.jandex.IndexView;
@@ -149,6 +150,15 @@ public class BootstrapContextImpl implements BootstrapContext {
 	@Override
 	public ManagedTypeRepresentationResolver getRepresentationStrategySelector() {
 		return ManagedTypeRepresentationResolverStandard.INSTANCE;
+	}
+
+	@Override
+	public void registerAdHocBasicType(BasicTypeImpl<?> basicType) {
+	}
+
+	@Override
+	public <T> BasicTypeImpl<T> resolveAdHocBasicType(String key) {
+		return null;
 	}
 
 	@Override

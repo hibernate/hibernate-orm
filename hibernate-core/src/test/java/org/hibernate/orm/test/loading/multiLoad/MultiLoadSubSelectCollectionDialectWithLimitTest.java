@@ -1,9 +1,3 @@
-/*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
- */
 package org.hibernate.orm.test.loading.multiLoad;
 
 import java.util.ArrayList;
@@ -14,11 +8,16 @@ import org.hibernate.Hibernate;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.H2Dialect;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SettingProvider;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,16 +36,32 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * @author Steve Ebersole
- * @author Gail Badner
- */
 @DomainModel(annotatedClasses = {
-		MultiLoadSubSelectCollectionTest.Parent.class,
-		MultiLoadSubSelectCollectionTest.Child.class
+		MultiLoadSubSelectCollectionDialectWithLimitTest.Parent.class,
+		MultiLoadSubSelectCollectionDialectWithLimitTest.Child.class
 })
+@ServiceRegistry(
+		settingProviders = @SettingProvider( provider = MultiLoadSubSelectCollectionDialectWithLimitTest.TestSettingProvider.class, settingName = AvailableSettings.DIALECT)
+)
 @SessionFactory(generateStatistics = true)
-public class MultiLoadSubSelectCollectionTest {
+@RequiresDialect( H2Dialect.class )
+public class MultiLoadSubSelectCollectionDialectWithLimitTest {
+
+
+	public static class TestSettingProvider implements SettingProvider.Provider {
+
+		@Override
+		public String getSetting() {
+			return TestDialect.class.getName();
+		}
+	}
+
+	public static class TestDialect extends H2Dialect{
+		@Override
+		public int getInExpressionCountLimit() {
+			return 50;
+		}
+	}
 
 	@BeforeEach
 	public void before(SessionFactoryScope scope) {
@@ -85,11 +100,25 @@ public class MultiLoadSubSelectCollectionTest {
 						assertFalse( Hibernate.isInitialized( p.children ) );
 					}
 
-					// When the first collection is loaded, the full collection
+					// When the first collection is loaded, the full batch of 50 collections
 					// should be loaded.
 					Hibernate.initialize( list.get( 0 ).children );
 
-					for ( int i = 0; i < 56; i++ ) {
+					for ( int i = 0; i < 50; i++ ) {
+						assertTrue( Hibernate.isInitialized( list.get( i ).children ) );
+						assertEquals( i + 1, list.get( i ).children.size() );
+					}
+
+					// The collections for the 51st through 56th entities should still be uninitialized
+					for ( int i = 50; i < 56; i++ ) {
+						assertFalse( Hibernate.isInitialized( list.get( i ).children ) );
+					}
+
+					// When the 51st collection gets initialized, the remaining collections should
+					// also be initialized.
+					Hibernate.initialize( list.get( 50 ).children );
+
+					for ( int i = 50; i < 56; i++ ) {
 						assertTrue( Hibernate.isInitialized( list.get( i ).children ) );
 						assertEquals( i + 1, list.get( i ).children.size() );
 					}

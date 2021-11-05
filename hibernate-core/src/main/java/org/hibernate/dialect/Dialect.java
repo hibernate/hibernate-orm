@@ -3068,8 +3068,16 @@ public abstract class Dialect implements ConversionContext {
 
 	protected final BatchLoadSizingStrategy STANDARD_DEFAULT_BATCH_LOAD_SIZING_STRATEGY = new BatchLoadSizingStrategy() {
 		@Override
-		public int determineOptimalBatchLoadSize(int numberOfKeyColumns, int numberOfKeys) {
-			int paddedSize = MathHelper.ceilingPowerOfTwo( numberOfKeys );
+		public int determineOptimalBatchLoadSize(int numberOfKeyColumns, int numberOfKeys, boolean inClauseParameterPaddingEnabled) {
+			final int paddedSize;
+
+			if ( inClauseParameterPaddingEnabled ) {
+				paddedSize = MathHelper.ceilingPowerOfTwo( numberOfKeys );
+			}
+			else {
+				paddedSize = numberOfKeys;
+			}
+
 			// For tuples, there is no limit, so we can just use the power of two padding approach
 			if ( numberOfKeyColumns > 1 ) {
 				return paddedSize;

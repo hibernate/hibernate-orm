@@ -1,6 +1,7 @@
 package org.hibernate.test.lazyload;
 
 import org.hibernate.LazyInitializationException;
+import org.hibernate.annotations.Cascade;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
@@ -27,7 +28,9 @@ public class LazyLoadingIndexing1Test extends BaseEntityManagerFunctionalTestCas
                 SerialNumber.class,
                 Vendor.class,
                 Manufacturer.class,
-                ItemText.class
+                ItemText.class,
+                PurchaseOrder.class,
+                PurchaseOrderDetail.class
         };
     }
 
@@ -253,6 +256,42 @@ public class LazyLoadingIndexing1Test extends BaseEntityManagerFunctionalTestCas
 
             entityManager.refresh(i);
             assertThat(i.getName()).isEqualTo("Item 11 Test update with lazy init collection");
+        });
+
+        // test that Cascade DETACH does not inhibit indexing for serial number in purchase order entity
+        doInJPA(this::entityManagerFactory, entityManager -> {
+            PurchaseOrder po = new PurchaseOrder(1L);
+            entityManager.persist(po);
+
+            PurchaseOrderDetail purchaseOrderDetail = new PurchaseOrderDetail(1L, po, new Item(1L));
+            entityManager.persist(purchaseOrderDetail);
+        });
+
+        // make sure serial number remains reachable from po after persist/flush
+        doInJPA(this::entityManagerFactory, entityManager -> {
+            PurchaseOrderDetail purchaseOrderDetail = new PurchaseOrderDetail(1L);
+            purchaseOrderDetail.setPo(new PurchaseOrder(1L));
+            SerialNumber serialNumber = new SerialNumber(1L);
+            serialNumber.setPurchaseOrderDetail(purchaseOrderDetail);
+            serialNumber.setSerialNumber("ABCDEFG");
+            entityManager.persist(serialNumber);
+            entityManager.flush();
+
+            assertThat(serialNumber.getPurchaseOrderDetail().getPo().getPoDetails()).hasSize(1);
+        });
+
+        // make sure serial number remains reachable from po after merge/flush
+        doInJPA(this::entityManagerFactory, entityManager -> {
+            PurchaseOrder po = entityManager.find(PurchaseOrder.class, 1L);
+            po.setPoDescription("New Description");
+            entityManager.merge(po);
+            entityManager.flush();
+
+            assertThat(po.getPoDetails()).hasSize(1);
+
+            for (PurchaseOrderDetail pod : po.getPoDetails()) {
+                assertThat(pod.getSerialNumbers()).hasSize(1);
+            }
         });
     }
 
@@ -511,6 +550,7 @@ public class LazyLoadingIndexing1Test extends BaseEntityManagerFunctionalTestCas
         private Item item;
         private String serialNumber;
         private SalesOrderDetail salesOrderDetail;
+        private PurchaseOrderDetail purchaseOrderDetail;
 
         public SerialNumber() {
 
@@ -552,6 +592,14 @@ public class LazyLoadingIndexing1Test extends BaseEntityManagerFunctionalTestCas
             this.salesOrderDetail = salesOrderDetail;
         }
 
+        @ManyToOne(fetch = FetchType.LAZY)
+        public PurchaseOrderDetail getPurchaseOrderDetail() {
+            return purchaseOrderDetail;
+        }
+
+        public void setPurchaseOrderDetail(PurchaseOrderDetail purchaseOrderDetail) {
+            this.purchaseOrderDetail = purchaseOrderDetail;
+        }
     }
 
     @Entity
@@ -650,5 +698,95 @@ public class LazyLoadingIndexing1Test extends BaseEntityManagerFunctionalTestCas
             this.item = item;
         }
 
+    }
+
+    @Entity
+    public static class PurchaseOrder extends BusinessEntity {
+        public PurchaseOrder() {
+
+        }
+
+        public PurchaseOrder(long id) {
+            super(id);
+        }
+
+        private String poDescription;
+        private Set<PurchaseOrderDetail> poDetails;
+
+        public String getPoDescription() {
+            return poDescription;
+        }
+
+        public void setPoDescription(String poDescription) {
+            this.poDescription = poDescription;
+        }
+
+        @OneToMany(mappedBy = "po")
+        @Cascade({org.hibernate.annotations.CascadeType.DETACH})
+        public Set<PurchaseOrderDetail> getPoDetails() {
+            return poDetails;
+        }
+
+        public void setPoDetails(Set<PurchaseOrderDetail> poDetails) {
+            this.poDetails = poDetails;
+        }
+    }
+
+    @Entity
+    public static class PurchaseOrderDetail extends BusinessEntity {
+        private PurchaseOrder po;
+        private Item item;
+        private String vendorRmaNumber;
+        private Set<SerialNumber> serialNumbers;
+
+        public PurchaseOrderDetail() {
+
+        }
+
+        public PurchaseOrderDetail(long id) {
+            super(id);
+        }
+
+        public PurchaseOrderDetail(Long id, PurchaseOrder po, Item item) {
+            super(id);
+            this.po = po;
+            this.item = item;
+        }
+
+        @ManyToOne(fetch = FetchType.LAZY)
+        public Item getItem() {
+            return item;
+        }
+
+        public void setItem(Item item) {
+            this.item = item;
+        }
+
+        @ManyToOne(fetch = FetchType.LAZY)
+        public PurchaseOrder getPo() {
+            return this.po;
+        }
+
+        public void setPo(PurchaseOrder Po) {
+            this.po = Po;
+        }
+
+
+        @OneToMany(mappedBy = "purchaseOrderDetail")
+        public Set<SerialNumber> getSerialNumbers() {
+            return serialNumbers;
+        }
+
+        public void setSerialNumbers(Set<SerialNumber> serialNumbers) {
+            this.serialNumbers = serialNumbers;
+        }
+
+        public String getVendorRmaNumber() {
+            return vendorRmaNumber;
+        }
+
+        public void setVendorRmaNumber(String vendorRmaNumber) {
+            this.vendorRmaNumber = vendorRmaNumber;
+        }
     }
 }

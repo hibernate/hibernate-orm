@@ -7,30 +7,28 @@
 
 // $Id:$
 
-package org.hibernate.test.annotations.derivedidentities;
+package org.hibernate.orm.test.annotations.derivedidentities;
 import java.io.Serializable;
-import jakarta.persistence.Embeddable;
 
 /**
  * @author Hardy Ferentschik
  */
-@Embeddable
-public class DependentId implements Serializable {
-	String name;
+public class EmployerId implements Serializable {
+	String name; // matches name of @Id attribute
+	long employee; // matches name of @Id attribute and type of Employee PK
 
-	long empPK;	// corresponds to PK type of Employee
-
-	public DependentId() {
+	public EmployerId() {
 	}
 
-	public DependentId(long empPK, String name) {
-		this.empPK = empPK;
+	public EmployerId(String name) {
 		this.name = name;
 	}
 
 	public String getName() {
 		return name;
 	}
+
+	public void setEmployee(long employee) {
+		this.employee = employee;
+	}
 }
-
-

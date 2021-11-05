@@ -47,6 +47,7 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.MappingMetamodel;
+import org.hibernate.metamodel.MetamodelUnsupportedOperationException;
 import org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
@@ -763,13 +764,10 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 	}
 
 	@Override
-	public MappingModelExpressable lenientlyResolveMappingExpressable(SqmExpressable<?> sqmExpressable, Function<NavigablePath, TableGroup> tableGroupLocator) {
-		try {
-			return resolveMappingExpressable( sqmExpressable, tableGroupLocator );
-		}
-		catch (UnsupportedOperationException e) {
-			return null;
-		}
+	public MappingModelExpressable lenientlyResolveMappingExpressable(
+			SqmExpressable<?> sqmExpressable,
+			Function<NavigablePath, TableGroup> tableGroupLocator) {
+		return resolveMappingExpressable( sqmExpressable, tableGroupLocator );
 	}
 
 
@@ -828,8 +826,7 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 					? createdMappingModelExpressable
 					: existingMappingModelExpressable;
 		}
-
-		throw new UnsupportedOperationException( "Cannot determine proper mapping model expressable for " + sqmExpressable );
+		return null;
 	}
 
 	@Override

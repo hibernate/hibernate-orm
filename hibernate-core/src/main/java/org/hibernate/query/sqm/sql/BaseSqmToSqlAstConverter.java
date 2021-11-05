@@ -46,6 +46,7 @@ import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.loader.MultipleBagFetchException;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.MappingMetamodel;
+import org.hibernate.metamodel.MetamodelUnsupportedOperationException;
 import org.hibernate.metamodel.mapping.Association;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
@@ -3518,13 +3519,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	protected MappingModelExpressable<?> lenientlyResolveMappingExpressable(SqmExpressable<?> nodeType) {
-		try {
-			return resolveMappingExpressable( nodeType );
-		}
-		catch (UnsupportedOperationException e) {
-			// todo (6.0) : log?
-			return null;
-		}
+		return resolveMappingExpressable( nodeType );
 	}
 
 	protected MappingModelExpressable<?> resolveMappingExpressable(SqmExpressable<?> nodeType) {
@@ -4472,14 +4467,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private MappingModelExpressable<?> determineCurrentExpressable(SqmTypedNode<?> expression) {
-		try {
-			return creationContext
-					.getDomainModel()
-					.resolveMappingExpressable( expression.getNodeType(), getFromClauseIndex()::findTableGroup );
-		}
-		catch (UnsupportedOperationException e) {
-			return null;
-		}
+		return creationContext
+				.getDomainModel()
+				.resolveMappingExpressable( expression.getNodeType(), getFromClauseIndex()::findTableGroup );
 	}
 
 	private <X> X visitWithInferredType(SqmExpression<?> expression, SqmExpression<?> inferred) {
@@ -4495,28 +4485,23 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private <X> X visitWithLenientInferredType(SqmExpression<?> expression, SqmExpression<?> inferred) {
 		inferrableTypeAccessStack.push(
 				() -> {
-					try {
-						final MappingModelExpressable<?> definedType = creationContext
-								.getDomainModel()
-								.resolveMappingExpressable( expression.getNodeType(), getFromClauseIndex()::findTableGroup );
-						if ( definedType != null ) {
-							return definedType;
-						}
+					MappingModelExpressable<?> definedType = creationContext
+							.getDomainModel()
+							.resolveMappingExpressable(
+									expression.getNodeType(),
+									getFromClauseIndex()::findTableGroup
+							);
+					if ( definedType != null ) {
+						return definedType;
 					}
-					catch (UnsupportedOperationException ignore) {
-						// todo (6.0) : log?
-					}
-
-					try {
-						final MappingModelExpressable<?> definedType = creationContext
-								.getDomainModel()
-								.lenientlyResolveMappingExpressable( inferred.getNodeType(), getFromClauseIndex()::findTableGroup );
-						if ( definedType != null ) {
-							return definedType;
-						}
-					}
-					catch (UnsupportedOperationException ignore) {
-						// todo (6.0) : log?
+					definedType = creationContext
+							.getDomainModel()
+							.lenientlyResolveMappingExpressable(
+									inferred.getNodeType(),
+									getFromClauseIndex()::findTableGroup
+							);
+					if ( definedType != null ) {
+						return definedType;
 					}
 
 					return null;

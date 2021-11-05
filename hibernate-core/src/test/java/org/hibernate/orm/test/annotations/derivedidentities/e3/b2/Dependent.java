@@ -1,4 +1,4 @@
-package org.hibernate.test.annotations.derivedidentities.e3.b2;
+package org.hibernate.orm.test.annotations.derivedidentities.e3.b2;
 
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
@@ -7,14 +7,13 @@ import jakarta.persistence.MapsId;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name="`Policy`")
-public class Policy {
+@Table(name="`Dependent`")
+public class Dependent {
+
 	@EmbeddedId
-	PolicyId id;
+	DependentId id;
 
-
-	@MapsId("depPK")
+	@MapsId("empPK")
 	@ManyToOne
-	Dependent dep;
-
+	Employee emp;
 }

@@ -28,6 +28,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.AttributeClassification;
+import org.hibernate.metamodel.MetamodelUnsupportedOperationException;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.model.domain.AbstractIdentifiableType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
@@ -496,7 +497,7 @@ public class AttributeFactory {
 					context
 			);
 		}
-		throw new UnsupportedOperationException( "oops, we are missing something: " + propertyMapping );
+		throw new MetamodelUnsupportedOperationException( "oops, we are missing something: " + propertyMapping );
 	}
 
 	public static AttributeClassification determineSingularAssociationClassification(Member member) {

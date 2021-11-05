@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
+import org.hibernate.metamodel.MetamodelUnsupportedOperationException;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
@@ -92,11 +93,11 @@ public class DiscriminatorSqmPath extends AbstractSqmPath implements SelfInterpr
 
 	@Override
 	public SqmTreatedPath treatAs(Class treatJavaType) throws PathException {
-		throw new UnsupportedOperationException( "Cannot apply TREAT operator to discriminator path" );
+		throw new MetamodelUnsupportedOperationException( "Cannot apply TREAT operator to discriminator path" );
 	}
 
 	@Override
 	public SqmTreatedPath treatAs(EntityDomainType treatTarget) throws PathException {
-		throw new UnsupportedOperationException( "Cannot apply TREAT operator to discriminator path" );
+		throw new MetamodelUnsupportedOperationException( "Cannot apply TREAT operator to discriminator path" );
 	}
 }

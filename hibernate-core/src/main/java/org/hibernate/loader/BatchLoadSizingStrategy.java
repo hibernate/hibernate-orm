@@ -13,5 +13,5 @@ package org.hibernate.loader;
  */
 @FunctionalInterface
 public interface BatchLoadSizingStrategy {
-	int determineOptimalBatchLoadSize(int numberOfKeyColumns, int numberOfKeys);
+	int determineOptimalBatchLoadSize(int numberOfKeyColumns, int numberOfKeys, boolean inClauseParameterPaddingEnabled);
 }

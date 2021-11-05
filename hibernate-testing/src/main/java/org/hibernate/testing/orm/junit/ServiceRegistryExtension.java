@@ -183,7 +183,7 @@ public class ServiceRegistryExtension
 			}
 
 			for ( SettingProvider providerAnn : serviceRegistryAnn.settingProviders() ) {
-				final Class<? extends SettingProvider.Provider<?>> providerImpl = providerAnn.provider();
+				final Class<? extends SettingProvider.Provider> providerImpl = providerAnn.provider();
 				final SettingProvider.Provider<?> provider = providerImpl.getConstructor().newInstance();
 				ssrb.applySetting( providerAnn.settingName(), provider.getSetting() );
 			}

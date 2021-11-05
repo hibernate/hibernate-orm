@@ -118,7 +118,8 @@ public class MultiIdLoaderStandard<T> implements MultiIdEntityLoader<T> {
 		else {
 			maxBatchSize = dialect.getDefaultBatchLoadSizingStrategy().determineOptimalBatchLoadSize(
 					idJdbcTypeCount,
-					ids.length
+					ids.length,
+					sessionFactory.getSessionFactoryOptions().inClauseParameterPaddingEnabled()
 			);
 		}
 
@@ -448,7 +449,8 @@ public class MultiIdLoaderStandard<T> implements MultiIdEntityLoader<T> {
 		else {
 			maxBatchSize = session.getJdbcServices().getJdbcEnvironment().getDialect().getDefaultBatchLoadSizingStrategy().determineOptimalBatchLoadSize(
 					entityDescriptor.getIdentifierType().getColumnSpan( session.getFactory() ),
-					numberOfIdsLeft
+					numberOfIdsLeft,
+					sessionFactory.getSessionFactoryOptions().inClauseParameterPaddingEnabled()
 			);
 		}
 

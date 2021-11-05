@@ -15,5 +15,5 @@ public @interface SettingProvider {
 	}
 
 	String settingName();
-	Class<? extends Provider<?>> provider();
+	Class<? extends Provider> provider();
 }

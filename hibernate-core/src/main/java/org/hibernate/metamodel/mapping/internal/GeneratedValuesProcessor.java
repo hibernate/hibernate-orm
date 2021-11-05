@@ -17,6 +17,7 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.internal.LoaderSelectBuilder;
+import org.hibernate.metamodel.MetamodelUnsupportedOperationException;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.GeneratedValueResolver;
 import org.hibernate.metamodel.mapping.InDatabaseGeneratedValueResolver;
@@ -165,7 +166,7 @@ public class GeneratedValuesProcessor {
 
 					@Override
 					public Callback getCallback() {
-						throw new UnsupportedOperationException( "Follow-on locking not supported yet" );
+						throw new MetamodelUnsupportedOperationException( "Follow-on locking not supported yet" );
 					}
 
 				},

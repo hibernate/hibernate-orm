@@ -6,39 +6,28 @@
  */
 
 // $Id:$
-package org.hibernate.test.annotations.derivedidentities;
+
+package org.hibernate.orm.test.annotations.derivedidentities;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
 /**
  * @author Hardy Ferentschik
  */
 @Entity
-public class Employee {
+public class Person {
 	@Id
-	@GeneratedValue
-	long id;
+	private String ssn;
 
-	String name;
-
-	public Employee() {
+	private Person() {
 	}
 
-	public Employee( String name) {
-		this.name = name;
+	public Person(String ssn) {
+		this.ssn = ssn;
 	}
 
-	public long getId() {
-		return id;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setId(long id) {
-		this.id = id;
+	public String getSsn() {
+		return ssn;
 	}
 }
 

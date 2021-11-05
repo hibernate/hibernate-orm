@@ -1,4 +1,4 @@
-package org.hibernate.test.annotations.derivedidentities.e3.b3;
+package org.hibernate.orm.test.annotations.derivedidentities.e3.b3;
 
 import jakarta.persistence.*;
 

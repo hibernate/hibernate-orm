@@ -15,6 +15,7 @@ import jakarta.persistence.metamodel.Bindable;
 import jakarta.persistence.metamodel.IdentifiableType;
 import jakarta.persistence.metamodel.SingularAttribute;
 
+import org.hibernate.metamodel.MetamodelUnsupportedOperationException;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.model.domain.internal.BasicSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
@@ -417,7 +418,7 @@ public abstract class AbstractIdentifiableType<J>
 		}
 		else {
 			if ( isIdMappingRequired() ) {
-				throw new UnsupportedOperationException( "Could not build SqmPathSource for entity identifier : " + getTypeName() );
+				throw new MetamodelUnsupportedOperationException( "Could not build SqmPathSource for entity identifier : " + getTypeName() );
 			}
 			return null;
 		}

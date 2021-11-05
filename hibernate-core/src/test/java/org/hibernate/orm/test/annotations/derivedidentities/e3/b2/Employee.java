@@ -1,4 +1,4 @@
-package org.hibernate.test.annotations.derivedidentities.e3.b2;
+package org.hibernate.orm.test.annotations.derivedidentities.e3.b2;
 
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;

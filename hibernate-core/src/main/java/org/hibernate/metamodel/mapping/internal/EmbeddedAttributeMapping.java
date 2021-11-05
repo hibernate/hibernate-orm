@@ -14,6 +14,7 @@ import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -81,6 +82,35 @@ public class EmbeddedAttributeMapping
 			ManagedMappingType declaringType,
 			PropertyAccess propertyAccess,
 			ValueGeneration valueGeneration) {
+		this(
+			name,
+			navigableRole,
+			stateArrayPosition,
+			tableExpression,
+			attributeMetadataAccess,
+			getPropertyAccess(parentInjectionAttributeName,	  embeddableMappingType),
+			mappedFetchTiming,
+			mappedFetchStyle,
+			embeddableMappingType,
+			declaringType,
+			propertyAccess,
+			valueGeneration
+		);
+	}
+
+	public EmbeddedAttributeMapping(
+			String name,
+			NavigableRole navigableRole,
+			int stateArrayPosition,
+			String tableExpression,
+			StateArrayContributorMetadataAccess attributeMetadataAccess,
+			PropertyAccess parentInjectionAttributePropertyAccess,
+			FetchTiming mappedFetchTiming,
+			FetchStyle mappedFetchStyle,
+			EmbeddableMappingType embeddableMappingType,
+			ManagedMappingType declaringType,
+			PropertyAccess propertyAccess,
+			ValueGeneration valueGeneration) {
 		super(
 				name,
 				stateArrayPosition,
@@ -93,19 +123,11 @@ public class EmbeddedAttributeMapping
 		);
 		this.navigableRole = navigableRole;
 
-		if ( parentInjectionAttributeName != null ) {
-			parentInjectionAttributePropertyAccess = PropertyAccessStrategyBasicImpl.INSTANCE.buildPropertyAccess(
-					embeddableMappingType.getMappedJavaTypeDescriptor().getJavaTypeClass(),
-					parentInjectionAttributeName
-			);
-		}
-		else {
-			parentInjectionAttributePropertyAccess = null;
-		}
-
+		this.parentInjectionAttributePropertyAccess = parentInjectionAttributePropertyAccess;
 		this.tableExpression = tableExpression;
 
 		this.embeddableMappingType = embeddableMappingType;
+
 	}
 
 	// Constructor is only used for creating the inverse attribute mapping
@@ -344,5 +366,38 @@ public class EmbeddedAttributeMapping
 	@Override
 	public String toString() {
 		return "EmbeddedAttributeMapping(" + navigableRole + ")@" + System.identityHashCode( this );
+	}
+
+	public AttributeMapping copy(ManagedMappingType declaringType) {
+		return new EmbeddedAttributeMapping(
+				getAttributeName(),
+				getNavigableRole(),
+				getStateArrayPosition(),
+				tableExpression,
+				getAttributeMetadataAccess(),
+				getParentInjectionAttributePropertyAccess(),
+				getTiming(),
+				getStyle(),
+				getEmbeddableTypeDescriptor(),
+				declaringType,
+				getPropertyAccess(),
+				getValueGeneration()
+		);
+	}
+
+	private static PropertyAccess getPropertyAccess(
+			String parentInjectionAttributeName,
+			EmbeddableMappingType embeddableMappingType) {
+		final PropertyAccess parentInjectionAttributePropertyAccess;
+		if ( parentInjectionAttributeName != null ) {
+			parentInjectionAttributePropertyAccess = PropertyAccessStrategyBasicImpl.INSTANCE.buildPropertyAccess(
+					embeddableMappingType.getMappedJavaTypeDescriptor().getJavaTypeClass(),
+					parentInjectionAttributeName
+			);
+		}
+		else {
+			parentInjectionAttributePropertyAccess = null;
+		}
+		return parentInjectionAttributePropertyAccess;
 	}
 }

@@ -13,6 +13,8 @@ import jakarta.persistence.metamodel.EntityType;
 import org.hibernate.graph.internal.SubGraphImpl;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.metamodel.MetamodelUnsupportedOperationException;
+import org.hibernate.metamodel.MetamodelUnsupportedOperationException;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.model.domain.AbstractIdentifiableType;
@@ -187,7 +189,7 @@ public class EntityTypeImpl<J>
 
 	@Override
 	public SqmPath<J> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource) {
-		throw new UnsupportedOperationException(
+		throw new MetamodelUnsupportedOperationException(
 				"EntityType cannot be used to create an SqmPath - that would be an SqmFrom which are created directly"
 		);
 	}

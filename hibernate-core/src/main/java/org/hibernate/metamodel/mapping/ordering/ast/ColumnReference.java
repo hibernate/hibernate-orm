@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.mapping.ordering.ast;
 
+import org.hibernate.metamodel.MetamodelUnsupportedOperationException;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -54,7 +55,7 @@ public class ColumnReference implements OrderingExpression, SequencePart {
 			String name,
 			boolean isTerminal,
 			TranslationContext translationContext) {
-		throw new UnsupportedOperationException( "ColumnReference cannot be de-referenced" );
+		throw new MetamodelUnsupportedOperationException( "ColumnReference cannot be de-referenced" );
 	}
 
 	@Override

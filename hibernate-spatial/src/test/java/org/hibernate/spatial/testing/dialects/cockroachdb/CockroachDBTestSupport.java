@@ -8,7 +8,7 @@
 package org.hibernate.spatial.testing.dialects.cockroachdb;
 
 import org.hibernate.spatial.GeomCodec;
-import org.hibernate.spatial.dialect.postgis.PGGeometryType;
+import org.hibernate.spatial.dialect.postgis.PGGeometryJdbcType;
 import org.hibernate.spatial.testing.datareader.TestData;
 import org.hibernate.spatial.testing.datareader.TestSupport;
 import org.hibernate.spatial.testing.dialects.NativeSQLTemplates;
@@ -16,7 +16,6 @@ import org.hibernate.spatial.testing.dialects.PredicateRegexes;
 import org.hibernate.spatial.testing.dialects.postgis.PostgisNativeSQLTemplates;
 
 import org.geolatte.geom.Geometry;
-import org.geolatte.geom.codec.Wkt;
 
 public class CockroachDBTestSupport extends TestSupport {
 
@@ -44,7 +43,7 @@ public class CockroachDBTestSupport extends TestSupport {
 		return new GeomCodec() {
 			@Override
 			public Geometry<?> toGeometry(Object in) {
-				return PGGeometryType.INSTANCE_WKB_2.toGeometry( in );
+				return PGGeometryJdbcType.INSTANCE_WKB_2.toGeometry( in );
 			}
 		};
 	}

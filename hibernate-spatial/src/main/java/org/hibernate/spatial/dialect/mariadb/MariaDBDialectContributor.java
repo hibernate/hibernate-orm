@@ -27,8 +27,8 @@ public class MariaDBDialectContributor implements ContributorImplementor {
 
 	public void contributeTypes(TypeContributions typeContributions) {
 		HSMessageLogger.LOGGER.typeContributions( this.getClass().getCanonicalName() );
-		typeContributions.contributeType( new GeolatteGeometryType( MariaDBGeometryType.INSTANCE ) );
-		typeContributions.contributeType( new JTSGeometryType( MariaDBGeometryType.INSTANCE ) );
+		typeContributions.contributeType( new GeolatteGeometryType( MariaDBGeometryJdbcType.INSTANCE ) );
+		typeContributions.contributeType( new JTSGeometryType( MariaDBGeometryJdbcType.INSTANCE ) );
 	}
 
 	@Override

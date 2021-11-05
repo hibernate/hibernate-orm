@@ -5,7 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
-package org.hibernate.spatial.dialect.mysql;
+package org.hibernate.spatial.dialect.mariadb;
 
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
@@ -32,17 +32,11 @@ import org.geolatte.geom.codec.WkbDecoder;
 import org.geolatte.geom.codec.WkbEncoder;
 import org.geolatte.geom.codec.Wkt;
 
-/**
- * Descriptor for MySQL Geometries.
- *
- * @author Karel Maesen, Geovise BVBA
- */
-public class MySQLGeometryType implements JdbcType {
+public class MariaDBGeometryJdbcType implements JdbcType {
 
-	/**
-	 * An instance of this Descriptor
-	 */
-	public static final MySQLGeometryType INSTANCE = new MySQLGeometryType();
+	public static final MariaDBGeometryJdbcType INSTANCE = new MariaDBGeometryJdbcType();
+	final WkbEncoder encoder = Wkb.newEncoder( Wkb.Dialect.MYSQL_WKB );
+	final WkbDecoder decoder = Wkb.newDecoder( Wkb.Dialect.MYSQL_WKB );
 
 	@Override
 	public int getJdbcTypeCode() {
@@ -60,33 +54,35 @@ public class MySQLGeometryType implements JdbcType {
 	}
 
 	@Override
-	public <X> ValueBinder<X> getBinder(final JavaType<X> javaTypeDescriptor) {
+	public <X> ValueBinder<X> getBinder(JavaType<X> javaTypeDescriptor) {
+
 		return new BasicBinder<X>( javaTypeDescriptor, this ) {
 			@Override
-			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
-					throws SQLException {
-				final WkbEncoder encoder = Wkb.newEncoder( Wkb.Dialect.MYSQL_WKB );
-				final Geometry geometry = getJavaTypeDescriptor().unwrap( value, Geometry.class, options );
-				final ByteBuffer buffer = encoder.encode( geometry, ByteOrder.NDR );
-				final byte[] bytes = ( buffer == null ? null : buffer.toByteArray() );
+			protected void doBind(
+					PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
+				final byte[] bytes = valueToByteArray( value, options );
 				st.setBytes( index, bytes );
 			}
 
 			@Override
-			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
-					throws SQLException {
-				final WkbEncoder encoder = Wkb.newEncoder( Wkb.Dialect.MYSQL_WKB );
-				final Geometry geometry = getJavaTypeDescriptor().unwrap( value, Geometry.class, options );
-				final ByteBuffer buffer = encoder.encode( geometry, ByteOrder.NDR );
-				final byte[] bytes = ( buffer == null ? null : buffer.toByteArray() );
+			protected void doBind(
+					CallableStatement st, X value, String name, WrapperOptions options) throws SQLException {
+				final byte[] bytes = valueToByteArray( value, options );
 				st.setBytes( name, bytes );
+			}
+
+			private byte[] valueToByteArray(X value, WrapperOptions options) {
+				final Geometry<?> geometry = getJavaTypeDescriptor().unwrap( value, Geometry.class, options );
+				final ByteBuffer buffer = encoder.encode( geometry, ByteOrder.NDR );
+				return buffer == null ? null : buffer.toByteArray();
 			}
 		};
 	}
 
 	@Override
-	public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaTypeDescriptor) {
+	public <X> ValueExtractor<X> getExtractor(JavaType<X> javaTypeDescriptor) {
 		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
+
 
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
@@ -106,13 +102,11 @@ public class MySQLGeometryType implements JdbcType {
 		};
 	}
 
-	public Geometry toGeometry(byte[] bytes) {
+	public Geometry<?> toGeometry(byte[] bytes) {
 		if ( bytes == null ) {
 			return null;
 		}
 		final ByteBuffer buffer = ByteBuffer.from( bytes );
-		final WkbDecoder decoder = Wkb.newDecoder( Wkb.Dialect.MYSQL_WKB );
 		return decoder.decode( buffer );
 	}
-
 }

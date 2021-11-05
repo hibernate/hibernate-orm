@@ -28,8 +28,8 @@ public class MySQLDialectContributor implements ContributorImplementor {
 	@Override
 	public void contributeTypes(TypeContributions typeContributions) {
 		HSMessageLogger.LOGGER.typeContributions( this.getClass().getCanonicalName() );
-		typeContributions.contributeType( new GeolatteGeometryType( MySQLGeometryType.INSTANCE ) );
-		typeContributions.contributeType( new JTSGeometryType( MySQLGeometryType.INSTANCE ) );
+		typeContributions.contributeType( new GeolatteGeometryType( MySQLGeometryJdbcType.INSTANCE ) );
+		typeContributions.contributeType( new JTSGeometryType( MySQLGeometryJdbcType.INSTANCE ) );
 	}
 
 	@Override

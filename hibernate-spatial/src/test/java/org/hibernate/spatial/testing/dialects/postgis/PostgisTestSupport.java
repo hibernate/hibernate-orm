@@ -13,14 +13,13 @@ import java.util.Map;
 
 import org.hibernate.spatial.CommonSpatialFunction;
 import org.hibernate.spatial.GeomCodec;
-import org.hibernate.spatial.dialect.postgis.PGGeometryType;
+import org.hibernate.spatial.dialect.postgis.PGGeometryJdbcType;
 import org.hibernate.spatial.testing.datareader.TestData;
 import org.hibernate.spatial.testing.datareader.TestSupport;
 import org.hibernate.spatial.testing.dialects.NativeSQLTemplates;
 import org.hibernate.spatial.testing.dialects.PredicateRegexes;
 
 import org.geolatte.geom.Geometry;
-import org.geolatte.geom.codec.Wkt;
 
 /**
  * @author Karel Maesen, Geovise BVBA
@@ -36,7 +35,7 @@ public class PostgisTestSupport extends TestSupport {
 	}
 
 	@Override
-	public PredicateRegexes predicateRegexes(){ return new PredicateRegexes("st_geomfromtext");}
+	public PredicateRegexes predicateRegexes(){ return new PredicateRegexes("st_geomfromewkt");}
 
 	//TODO  put this in its own class (analogous to NativeSQLTemplates)
 	@Override
@@ -57,10 +56,11 @@ public class PostgisTestSupport extends TestSupport {
 
 
 	public GeomCodec codec() {
+		//This appears actually no longer needed after changing to JavaType/jdbcType
 		return new GeomCodec() {
 			@Override
 			public Geometry<?> toGeometry(Object in) {
-				return PGGeometryType.INSTANCE_WKB_2.toGeometry( in );
+				return (Geometry<?>)in;
 			}
 		};
 	}

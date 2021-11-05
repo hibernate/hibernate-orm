@@ -54,6 +54,14 @@ public class IncrementGenerator implements IdentifierGenerator {
 
 	private IntegralDataTypeHolder previousValueHolder;
 
+	/**
+	 * @deprecated Exposed for tests only.
+	 */
+	@Deprecated
+	public String[] getAllSqlForTests() {
+		return new String[] { sql };
+	}
+
 	@Override
 	public synchronized Serializable generate(SharedSessionContractImplementor session, Object object) throws HibernateException {
 		if ( sql != null ) {

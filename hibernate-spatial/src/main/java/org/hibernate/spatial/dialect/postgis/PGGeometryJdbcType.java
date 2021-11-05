@@ -13,8 +13,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import org.hibernate.spatial.GeolatteGeometryJavaTypeDescriptor;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.spatial.GeometryLiteralFormatter;
+import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
@@ -33,7 +34,6 @@ import org.geolatte.geom.codec.WkbDecoder;
 import org.geolatte.geom.codec.WkbEncoder;
 import org.geolatte.geom.codec.Wkt;
 import org.geolatte.geom.codec.WktDecoder;
-import org.geolatte.geom.jts.JTS;
 import org.postgresql.util.PGobject;
 
 /**
@@ -41,22 +41,22 @@ import org.postgresql.util.PGobject;
  *
  * @author Karel Maesen, Geovise BVBA
  */
-public class PGGeometryType implements JdbcType {
+public class PGGeometryJdbcType implements JdbcType {
 
 
 	private final Wkb.Dialect wkbDialect;
 
 	// Type descriptor instance using EWKB v1 (postgis versions < 2.2.2)
-	public static final PGGeometryType INSTANCE_WKB_1 = new PGGeometryType( Wkb.Dialect.POSTGIS_EWKB_1 );
+	public static final PGGeometryJdbcType INSTANCE_WKB_1 = new PGGeometryJdbcType( Wkb.Dialect.POSTGIS_EWKB_1 );
 	// Type descriptor instance using EWKB v2 (postgis versions >= 2.2.2, see: https://trac.osgeo.org/postgis/ticket/3181)
-	public static final PGGeometryType INSTANCE_WKB_2 = new PGGeometryType( Wkb.Dialect.POSTGIS_EWKB_2 );
+	public static final PGGeometryJdbcType INSTANCE_WKB_2 = new PGGeometryJdbcType( Wkb.Dialect.POSTGIS_EWKB_2 );
 
 	@Override
 	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaTypeDescriptor) {
-		return new GeometryLiteralFormatter<T>( javaTypeDescriptor, Wkt.Dialect.SFA_1_1_0, "ST_GeomFromText" );
+		return new PGGeometryLiteralFormatter<>( javaTypeDescriptor );
 	}
 
-	private PGGeometryType(Wkb.Dialect dialect) {
+	private PGGeometryJdbcType(Wkb.Dialect dialect) {
 		wkbDialect = dialect;
 	}
 
@@ -64,10 +64,12 @@ public class PGGeometryType implements JdbcType {
 		if ( object == null ) {
 			return null;
 		}
-		ByteBuffer buffer = null;
+		ByteBuffer buffer;
 		if ( object instanceof PGobject ) {
 			String pgValue = ( (PGobject) object ).getValue();
-
+			if (pgValue == null) {
+				return null;
+			}
 			if ( pgValue.startsWith( "00" ) || pgValue.startsWith( "01" ) ) {
 				//we have a WKB because this pgValue starts with the bit-order byte
 				buffer = ByteBuffer.from( pgValue );
@@ -149,5 +151,20 @@ public class PGGeometryType implements JdbcType {
 				return getJavaTypeDescriptor().wrap( toGeometry( statement.getObject( name ) ), options );
 			}
 		};
+	}
+
+	static class PGGeometryLiteralFormatter<T> extends GeometryLiteralFormatter<T> {
+		public PGGeometryLiteralFormatter(JavaType<T> javaType) {
+			super( javaType, Wkt.Dialect.POSTGIS_EWKT_1, "" );
+		}
+
+		@Override
+		public void appendJdbcLiteral(
+				SqlAppender appender, T value, Dialect dialect, WrapperOptions wrapperOptions) {
+			Geometry<?> geom = javaType.unwrap( value, Geometry.class, wrapperOptions );
+			appender.appendSql( "st_geomfromewkt('" );
+			appender.appendSql( Wkt.toWkt( geom, wktDialect ) );
+			appender.appendSql( "')" );
+		}
 	}
 }

@@ -13,7 +13,7 @@ import java.util.Map;
 
 import org.hibernate.spatial.CommonSpatialFunction;
 import org.hibernate.spatial.GeomCodec;
-import org.hibernate.spatial.dialect.mysql.MySQLGeometryType;
+import org.hibernate.spatial.dialect.mysql.MySQLGeometryJdbcType;
 import org.hibernate.spatial.testing.datareader.TestData;
 import org.hibernate.spatial.testing.datareader.TestSupport;
 import org.hibernate.spatial.testing.dialects.NativeSQLTemplates;
@@ -83,7 +83,7 @@ public class MySQLTestSupport extends TestSupport {
 		return new GeomCodec() {
 			@Override
 			public Geometry<?> toGeometry(Object in) {
-				return MySQLGeometryType.INSTANCE.toGeometry( (byte[]) in );
+				return MySQLGeometryJdbcType.INSTANCE.toGeometry( (byte[]) in );
 			}
 
 		};

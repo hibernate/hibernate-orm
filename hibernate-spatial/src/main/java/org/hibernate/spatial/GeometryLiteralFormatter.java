@@ -20,9 +20,9 @@ import org.geolatte.geom.jts.JTS;
 
 public class GeometryLiteralFormatter<T> implements JdbcLiteralFormatter<T> {
 
-	private final JavaType<T> javaType;
-	private final Wkt.Dialect wktDialect;
-	private final String geomFromTextName;
+	protected final JavaType<T> javaType;
+	protected final Wkt.Dialect wktDialect;
+	protected final String geomFromTextName;
 
 	public GeometryLiteralFormatter(JavaType<T> javaType, Wkt.Dialect wktDialect, String geomFromTextName) {
 		this.javaType = javaType;
@@ -33,21 +33,15 @@ public class GeometryLiteralFormatter<T> implements JdbcLiteralFormatter<T> {
 	@Override
 	public void appendJdbcLiteral(
 			SqlAppender appender, T value, Dialect dialect, WrapperOptions wrapperOptions) {
-		Geometry<?> geom;
-		if ( javaType instanceof GeolatteGeometryJavaTypeDescriptor ) {
-			geom = (Geometry<?>) value;
-		}
-		else {
-			geom = jts2Gl( value );
-		}
-		appender.appendSql( "ST_GeomFromText('" );
-		appender.appendSql( Wkt.toWkt( geom, Wkt.Dialect.SFA_1_1_0 ) );
+		Geometry<?> geom = javaType.unwrap( value, Geometry.class, wrapperOptions );
+		appender.appendSql( geomFromTextName );
+		appender.appendSql( Wkt.toWkt( geom, wktDialect ) );
 		appender.appendSql( "'," );
 		appender.appendSql( ( Math.max( geom.getSRID(), 0 ) ) );
 		appender.appendSql( ")" );
 	}
 
-	private <T> Geometry<?> jts2Gl(T value) {
+	private Geometry<?> jts2Gl(T value) {
 		return JTS.from( (org.locationtech.jts.geom.Geometry) value );
 	}
 

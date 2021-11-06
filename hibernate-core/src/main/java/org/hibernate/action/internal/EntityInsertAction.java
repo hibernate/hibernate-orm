@@ -255,13 +255,10 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 					if(types[i].isCollectionType()) {
 						final CollectionPersister collectionPersister = session.getFactory().getMetamodel().collectionPersister( ((CollectionType) types[i]).getRole() );
 
-						if ( !collectionPersister.isLazy()) {
-							continue;
-						}
-						if ( collectionPersister.getCollectionType().hasHolder() ) {
-							continue;
-						}
-						if ( collectionPersister.getKeyType().isComponentType()) {
+						if ( !collectionPersister.isLazy()
+								|| collectionPersister.getCollectionType().hasHolder()
+								|| collectionPersister.getKeyType().isComponentType()
+								|| (propertyValue instanceof PersistentCollection && Hibernate.isInitialized(propertyValue))) {
 							continue;
 						}
 
@@ -269,14 +266,9 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 						final CollectionKey collectionKey = new CollectionKey( collectionPersister, entityId );
 						PersistentCollection oldCollection = persistenceContext.getCollection(collectionKey);
 
-						if(oldCollection != null) {
-							if (!Hibernate.isInitialized(oldCollection)) {
-								if (oldCollection == propertyValue) {
-									continue;
-								}
-							}
-						}
-						if(propertyValue instanceof PersistentCollection && Hibernate.isInitialized(propertyValue)) {
+						if(oldCollection != null &&
+								!Hibernate.isInitialized(oldCollection) &&
+								oldCollection == propertyValue) {
 							continue;
 						}
 
@@ -290,6 +282,7 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 						continue;
 					}
 
+					// the property is not a collection
 					if(propertyValue == null) {
 						continue;
 					}
@@ -305,10 +298,8 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 							// dynamic map entity will fail to determine type
 							continue;
 						}
-						if(propertyPersister.getEntityTuplizer().getProxyFactory() == null) {
-							continue;
-						}
-						if(!propertyPersister.canExtractIdOutOfEntity()) {
+						if(propertyPersister.getEntityTuplizer().getProxyFactory() == null
+								|| !propertyPersister.canExtractIdOutOfEntity()) {
 							continue;
 						}
 						Serializable entityId = propertyPersister.getEntityTuplizer().getIdentifier(propertyValue, session);

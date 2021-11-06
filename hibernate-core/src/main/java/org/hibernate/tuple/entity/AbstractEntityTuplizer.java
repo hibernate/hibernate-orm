@@ -570,23 +570,30 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 			// if the attribute is not lazy (bytecode sense), we can just use the value from the instance
 			// if the attribute is lazy but has been initialized we can just use the value from the instance
 			// todo : there should be a third case here when we merge transient instances
+			Object propertyValue = getters[j].get(entity);
 			if(enhancedForLazyLoading) {
 				final BytecodeLazyAttributeInterceptor interceptor = enhancementMetadata.extractLazyInterceptor(entity);
-				if (interceptor == null && lazyAttributesMetadata.isLazyAttribute( propertyName ) && getters[j].get(entity) == null) {
+				if (interceptor == null
+						&& lazyAttributesMetadata.isLazyAttribute( propertyName )
+						&& propertyValue == null) {
 					result[j] = LazyPropertyInitializer.UNFETCHED_PROPERTY;
 					continue;
 				}
 			}
 			else {
 				Type type = entityMetamodel.getPropertyTypes()[j];
-				if(type.isCollectionType() && ((CollectionType)type).getReturnedClass().isAssignableFrom(Serializable.class) && !((CollectionType)type).hasHolder() && entityMetamodel.isLazy() && getters[j].get(entity) == null) {
+				if(type.isCollectionType()
+						&& type.getReturnedClass().isAssignableFrom(Serializable.class) // permits assignment of UNFETCHED_PROPERTY
+						&& !((CollectionType)type).hasHolder()
+						&& entityMetamodel.isLazy()
+						&& propertyValue == null) {
 					result[j] = LazyPropertyInitializer.UNFETCHED_PROPERTY;
 					continue;
 				}
 			}
 			if ( ! lazyAttributesMetadata.isLazyAttribute( propertyName )
 					|| enhancementMetadata.isAttributeLoaded( entity, propertyName) ) {
-				result[j] = getters[j].get( entity );
+				result[j] = propertyValue;
 			}
 			else {
 				result[j] = LazyPropertyInitializer.UNFETCHED_PROPERTY;

@@ -184,40 +184,10 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 					if(!types[i].isAssociationType()) {
 						continue;
 					}
-					final String propertyName = propertyNames[i];
-					CascadeStyle cascadeStyle = cascadeStyles[i];
-					if(cascadeStyle != CascadeStyles.NONE) {
-						initializedLazyFields.add(propertyName);
-						continue;
-					}
 					Object propertyValue = persister.getEntityTuplizer().getGetter(i).get(instance);
-					if(propertyValue == null) {
-						if(types[i].isCollectionType()) {
-							needsInterceptor = true;
-							continue;
-						}
-					}
-					else {
-						if(propertyValue instanceof PersistentAttributeInterceptable) {
-							PersistentAttributeInterceptable interceptableProperty = ((PersistentAttributeInterceptable) propertyValue );
-							PersistentAttributeInterceptor propertyInterceptor = interceptableProperty.$$_hibernate_getInterceptor();
-							if(propertyInterceptor == null) {
-								needsInterceptor = true;
-								continue;
-							}
-							else {
-								if(lazyAttributesMetadata.isLazyAttribute(propertyName)) {
-									initializedLazyFields.add(propertyName);
-								}
-							}
-						}
-						if(types[i].isCollectionType()) {
-							if(lazyAttributesMetadata.isLazyAttribute(propertyName)) {
-								initializedLazyFields.add(propertyName);
-							}
-							continue;
-						}
-					}
+					needsInterceptor = needsInterceptor ||
+							ifNeedsInterceptor(propertyValue, propertyNames[i], cascadeStyles[i], initializedLazyFields,
+							lazyAttributesMetadata.isLazyAttribute(propertyNames[i]), types[i]) ;
 				}
 				if (needsInterceptor) {
 					persister.getBytecodeEnhancementMetadata().injectEnhancedEntityAsProxyInterceptor(instance, getEntityKey(), session);
@@ -327,6 +297,33 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 		}
 
 		markExecuted();
+	}
+
+	private boolean ifNeedsInterceptor(Object propertyValue, String propertyName, CascadeStyle cascadeStyle,
+									   Set<String> initializedLazyFields, boolean lazy, Type type) {
+		if(cascadeStyle != CascadeStyles.NONE) {
+			initializedLazyFields.add(propertyName);
+			return false;
+		}
+		if(propertyValue == null && type.isCollectionType()) {
+			return true;
+		}
+		else {
+			if(propertyValue instanceof PersistentAttributeInterceptable) {
+				PersistentAttributeInterceptable interceptableProperty = ((PersistentAttributeInterceptable) propertyValue);
+				PersistentAttributeInterceptor propertyInterceptor = interceptableProperty.$$_hibernate_getInterceptor();
+				if (propertyInterceptor == null) {
+					return true;
+				}
+				if (lazy) {
+					initializedLazyFields.add(propertyName);
+				}
+			}
+			if(type.isCollectionType() && lazy) {
+				initializedLazyFields.add(propertyName);
+			}
+		}
+		return false;
 	}
 
 	protected boolean cacheInsert(EntityPersister persister, Object ck) {

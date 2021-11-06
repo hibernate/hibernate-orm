@@ -225,7 +225,8 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 					EntityPersister propertyPersister = null;
 					try {
 						propertyPersister = session.getEntityPersister(null, propertyValue);
-					} catch (HibernateException he) {
+					}
+					catch (HibernateException he) {
 						// dynamic map entity will fail to determine type
 						continue;
 					}
@@ -240,7 +241,8 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 						if (propertyValue != null) {
 							Hibernate.initialize(proxy);
 						}
-					} catch (Exception e) {
+					}
+					catch (Exception e) {
 						continue;
 					}
 					final EntityKey keyToLoad = session.generateEntityKey(propertyEntityId, propertyPersister);
@@ -299,8 +301,7 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 		return true;
 	}
 
-	private boolean ifNeedsInterceptor(Object propertyValue, String propertyName, CascadeStyle cascadeStyle,
-									   Set<String> initializedLazyFields, boolean lazy, Type type) {
+	private boolean ifNeedsInterceptor(Object propertyValue, String propertyName, CascadeStyle cascadeStyle, Set<String> initializedLazyFields, boolean lazy, Type type) {
 		if(cascadeStyle != CascadeStyles.NONE) {
 			initializedLazyFields.add(propertyName);
 			return false;

@@ -6,11 +6,6 @@
  */
 package org.hibernate.tuple.entity;
 
-import java.io.Serializable;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-
 import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
@@ -40,7 +35,17 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.tuple.IdentifierProperty;
 import org.hibernate.tuple.Instantiator;
-import org.hibernate.type.*;
+import org.hibernate.type.AssociationType;
+import org.hibernate.type.CollectionType;
+import org.hibernate.type.ComponentType;
+import org.hibernate.type.CompositeType;
+import org.hibernate.type.EntityType;
+import org.hibernate.type.Type;
+
+import java.io.Serializable;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 
 
 /**

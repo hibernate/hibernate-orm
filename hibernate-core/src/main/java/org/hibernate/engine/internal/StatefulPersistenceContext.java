@@ -669,6 +669,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			final PersistentAttributeInterceptable interceptable = (PersistentAttributeInterceptable) maybeProxy;
 			final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
 			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
+				( (EnhancementAsProxyLazinessInterceptor) interceptor ).setSession( session );
 				( (EnhancementAsProxyLazinessInterceptor) interceptor ).forceInitialize( maybeProxy, null );
 			}
 			return maybeProxy;

@@ -6,6 +6,7 @@
  */
 package org.hibernate.tuple.entity;
 
+import java.io.Serializable;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -13,7 +14,9 @@ import java.util.Set;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
+import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributesMetadata;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
@@ -38,6 +41,7 @@ import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
+import org.hibernate.type.*;
 
 
 /**
@@ -477,12 +481,46 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 
 	@Override
 	public Object[] getPropertyValuesToInsert(Object entity, Map mergeMap, SharedSessionContractImplementor session) {
+		final BytecodeEnhancementMetadata enhancementMetadata = entityMetamodel.getBytecodeEnhancementMetadata();
+		final LazyAttributesMetadata lazyAttributesMetadata = enhancementMetadata.getLazyAttributesMetadata();
+		final boolean enhancedForLazyLoading = enhancementMetadata.isEnhancedForLazyLoading();
+
 		final int span = entityMetamodel.getPropertySpan();
+		final String[] propertyNames = entityMetamodel.getPropertyNames();
 		final Object[] result = new Object[span];
 
 		for ( int j = 0; j < span; j++ ) {
-			result[j] = getters[j].getForInsert( entity, mergeMap, session );
+			final String propertyName = propertyNames[j];
+			Object propertyValue = getters[j].get(entity);
+			if(enhancedForLazyLoading) {
+				final BytecodeLazyAttributeInterceptor interceptor = enhancementMetadata.extractLazyInterceptor(entity);
+				if (interceptor == null
+						&& lazyAttributesMetadata.isLazyAttribute( propertyName )
+						&& propertyValue == null) {
+					result[j] = LazyPropertyInitializer.UNFETCHED_PROPERTY;
+					continue;
+				}
+			}
+			else {
+				Type type = entityMetamodel.getPropertyTypes()[j];
+				if(type.isCollectionType()
+						&& type.getReturnedClass().isAssignableFrom(Serializable.class) // permits assignment of UNFETCHED_PROPERTY
+						&& !((CollectionType)type).hasHolder()
+						&& entityMetamodel.isLazy()
+						&& propertyValue == null) {
+					result[j] = LazyPropertyInitializer.UNFETCHED_PROPERTY;
+					continue;
+				}
+			}
+			if ( ! lazyAttributesMetadata.isLazyAttribute( propertyName )
+					|| enhancementMetadata.isAttributeLoaded( entity, propertyName) ) {
+				result[j] = getters[j].getForInsert( entity, mergeMap, session);
+			}
+			else {
+				result[j] = LazyPropertyInitializer.UNFETCHED_PROPERTY;
+			}
 		}
+
 		return result;
 	}
 

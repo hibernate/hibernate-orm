@@ -38,7 +38,6 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.stat.internal.StatsHelper;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.tuple.entity.EntityMetamodel;
-import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
@@ -182,40 +181,10 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 					if(!types[i].isAssociationType()) {
 						continue;
 					}
-					final String propertyName = propertyNames[i];
-					CascadeStyle cascadeStyle = cascadeStyles[i];
-					if(cascadeStyle != CascadeStyles.NONE) {
-						initializedLazyFields.add(propertyName);
-						continue;
-					}
 					Object propertyValue = persister.getPropertyValue(instance, i);
-					if(propertyValue == null) {
-						if(types[i].isCollectionType()) {
-							needsInterceptor = true;
-							continue;
-						}
-					}
-					else {
-						if(propertyValue instanceof PersistentAttributeInterceptable) {
-							PersistentAttributeInterceptable interceptableProperty = ((PersistentAttributeInterceptable) propertyValue );
-							PersistentAttributeInterceptor propertyInterceptor = interceptableProperty.$$_hibernate_getInterceptor();
-							if(propertyInterceptor == null) {
-								needsInterceptor = true;
-								continue;
-							}
-							else {
-								if(lazyAttributesMetadata.isLazyAttribute(propertyName)) {
-									initializedLazyFields.add(propertyName);
-								}
-							}
-						}
-						if(types[i].isCollectionType()) {
-							if(lazyAttributesMetadata.isLazyAttribute(propertyName)) {
-								initializedLazyFields.add(propertyName);
-							}
-							continue;
-						}
-					}
+					needsInterceptor = needsInterceptor ||
+							ifNeedsInterceptor(propertyValue, propertyNames[i], cascadeStyles[i], initializedLazyFields,
+							lazyAttributesMetadata.isLazyAttribute(propertyNames[i]), types[i]) ;
 				}
 				if (needsInterceptor) {
 					persister.getBytecodeEnhancementMetadata().injectEnhancedEntityAsProxyInterceptor(instance, getEntityKey(), session);
@@ -232,89 +201,51 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 				final CascadeStyle[] cascadeStyles = persister.getPropertyCascadeStyles();
 				PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 				for ( int i = 0; i < types.length; i++) {
-					if(!types[i].isAssociationType()) {
-						continue;
-					}
-					
-					final AssociationType type = (AssociationType) types[i];
-					if(type instanceof EntityType) {
-						EntityType entityType = (EntityType) type;
-						if (entityType.isEager(null)) {
-							continue;
-						}
-					}
-
-					CascadeStyle cascadeStyle = cascadeStyles[i];
-					if(cascadeStyle != CascadeStyles.NONE) {
-						continue;
-					}
 					Object propertyValue = persister.getPropertyValue(instance, i);
 
-					if(types[i].isCollectionType()) {
-						final CollectionPersister collectionPersister = session.getFactory().getMetamodel().collectionPersister( ((CollectionType) types[i]).getRole() );
+					if (!proxyAfterInsert(instance, types[i], propertyValue, cascadeStyles[i], session)) {
+						continue;
+					}
 
-						if ( !collectionPersister.isLazy() ||
-								collectionPersister.getCollectionType().hasHolder() ||
-								collectionPersister.getKeyType().isComponentType() ||
-								(propertyValue instanceof PersistentCollection && Hibernate.isInitialized(propertyValue))) {
-							continue;
-						}
-
+					if (types[i].isCollectionType()) {
 						Object entityId = persister.getIdentifier(instance, session);
-						final CollectionKey collectionKey = new CollectionKey( collectionPersister, entityId );
-						PersistentCollection oldCollection = persistenceContext.getCollection(collectionKey);
-
-						if(oldCollection != null) {
-							if (!Hibernate.isInitialized(oldCollection) && oldCollection == propertyValue) {
-								continue;
-							}
-						}
-
-						PersistentCollection newCollection = ((CollectionType)types[i]).instantiate( session, collectionPersister, entityId );
-						if(propertyValue != null) {
+						final CollectionPersister collectionPersister = session.getFactory().getMetamodel().collectionPersister(((CollectionType) types[i]).getRole());
+						PersistentCollection newCollection = ((CollectionType) types[i]).instantiate(session, collectionPersister, entityId);
+						if (propertyValue != null) {
 							Hibernate.initialize(newCollection);
 						}
-						newCollection.setOwner( instance );
-						persistenceContext.addUninitializedCollection( collectionPersister, newCollection, entityId);
+						newCollection.setOwner(instance);
+						persistenceContext.addUninitializedCollection(collectionPersister, newCollection, entityId);
 						persister.setPropertyValue(instance, i, newCollection);
 						continue;
 					}
 
-					// by now we know this is not a collection type
-					if(propertyValue == null) {
+					EntityPersister propertyPersister = null;
+					try {
+						propertyPersister = session.getEntityPersister(null, propertyValue);
+					}
+					catch (HibernateException he) {
+						// dynamic map entity will fail to determine type
 						continue;
 					}
-					else {
-						if(propertyValue instanceof HibernateProxy) {
-							continue;
-						}
-						EntityPersister propertyPersister = null;
-						try {
-							propertyPersister = session.getEntityPersister(null, propertyValue);
-						}
-						catch (HibernateException he) {
-							// dynamic map entity will fail to determine type
-							continue;
-						}
-						if(propertyPersister.getRepresentationStrategy().getProxyFactory() == null ||
-								!propertyPersister.canExtractIdOutOfEntity()) {
-							continue;
-						}
-						Object entityId = propertyPersister.getIdentifier(propertyValue, session);
-						Object proxy = null;
-						try {
-							proxy = propertyPersister.createProxy(entityId, session);
-							if(propertyValue != null) {
-								Hibernate.initialize(proxy);
-							}
-						}
-						catch (Exception e) {
-							continue;
-						}
-						final EntityKey keyToLoad = session.generateEntityKey( entityId, propertyPersister );
-						persistenceContext.addProxy(keyToLoad, proxy);
-						persister.setPropertyValue(instance, i, proxy);
+					if (propertyPersister.getRepresentationStrategy().getProxyFactory() == null
+							|| !propertyPersister.canExtractIdOutOfEntity()) {
+						continue;
 					}
+					Object propertyEntityId = propertyPersister.getIdentifier(propertyValue, session);
+					Object proxy = null;
+					try {
+						proxy = propertyPersister.createProxy(propertyEntityId, session);
+						if (propertyValue != null) {
+							Hibernate.initialize(proxy);
+						}
+					}
+					catch (Exception e) {
+						continue;
+					}
+					final EntityKey keyToLoad = session.generateEntityKey(propertyEntityId, propertyPersister);
+					persistenceContext.addProxy(keyToLoad, proxy);
+					persister.setPropertyValue(instance, i, proxy);
 				}
 			}
 		}
@@ -325,6 +256,73 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 		}
 
 		markExecuted();
+	}
+
+	private boolean proxyAfterInsert(Object instance, Type type, Object propertyValue, CascadeStyle cascadeStyle, SharedSessionContractImplementor session) {
+		if(!type.isAssociationType()
+				|| propertyValue instanceof HibernateProxy
+				|| cascadeStyle != CascadeStyles.NONE) {
+			return false;
+		}
+
+		if(type instanceof EntityType && ((EntityType) type).isEager(null)) {
+			return false;
+		}
+
+		if(type.isCollectionType()) {
+			final CollectionPersister collectionPersister = session.getFactory().getMetamodel().collectionPersister( ((CollectionType) type).getRole() );
+
+			if ( !collectionPersister.isLazy()
+					|| collectionPersister.getCollectionType().hasHolder()
+					|| collectionPersister.getKeyType().isComponentType()
+					|| (propertyValue instanceof PersistentCollection && Hibernate.isInitialized(propertyValue))) {
+				return false;
+			}
+
+			Object entityId = getPersister().getIdentifier(instance, session);
+			final CollectionKey collectionKey = new CollectionKey( collectionPersister, entityId );
+			PersistentCollection oldCollection = session.getPersistenceContext().getCollection(collectionKey);
+
+			if(oldCollection != null
+					&& !Hibernate.isInitialized(oldCollection)
+					&& oldCollection == propertyValue) {
+				return false;
+			}
+
+			return true;
+		}
+
+		if(propertyValue == null) {
+			return false;
+		}
+
+		return true;
+	}
+
+	private boolean ifNeedsInterceptor(Object propertyValue, String propertyName, CascadeStyle cascadeStyle, Set<String> initializedLazyFields, boolean lazy, Type type) {
+		if(cascadeStyle != CascadeStyles.NONE) {
+			initializedLazyFields.add(propertyName);
+			return false;
+		}
+		if(propertyValue == null && type.isCollectionType()) {
+			return true;
+		}
+		else {
+			if(propertyValue instanceof PersistentAttributeInterceptable) {
+				PersistentAttributeInterceptable interceptableProperty = ((PersistentAttributeInterceptable) propertyValue);
+				PersistentAttributeInterceptor propertyInterceptor = interceptableProperty.$$_hibernate_getInterceptor();
+				if (propertyInterceptor == null) {
+					return true;
+				}
+				if (lazy) {
+					initializedLazyFields.add(propertyName);
+				}
+			}
+			if(type.isCollectionType() && lazy) {
+				initializedLazyFields.add(propertyName);
+			}
+		}
+		return false;
 	}
 
 	protected boolean cacheInsert(EntityPersister persister, Object ck) {

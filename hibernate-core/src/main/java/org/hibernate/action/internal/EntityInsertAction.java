@@ -38,7 +38,6 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.stat.internal.StatsHelper;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.tuple.entity.EntityMetamodel;
-import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
@@ -204,89 +203,49 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 				final CascadeStyle[] cascadeStyles = persister.getPropertyCascadeStyles();
 				PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 				for ( int i = 0; i < types.length; i++) {
-					if(!types[i].isAssociationType()) {
-						continue;
-					}
-					
-					final AssociationType type = (AssociationType) types[i];
-					if(type instanceof EntityType) {
-						EntityType entityType = (EntityType) type;
-						if (entityType.isEager(null)) {
-							continue;
-						}
-					}
-
-					CascadeStyle cascadeStyle = cascadeStyles[i];
-					if(cascadeStyle != CascadeStyles.NONE) {
-						continue;
-					}
 					Object propertyValue = persister.getEntityTuplizer().getGetter(i).get(instance);
 
-					if(types[i].isCollectionType()) {
-						final CollectionPersister collectionPersister = session.getFactory().getMetamodel().collectionPersister( ((CollectionType) types[i]).getRole() );
+					if (!proxyAfterInsert(instance, types[i], propertyValue, cascadeStyles[i], session)) {
+						continue;
+					}
 
-						if ( !collectionPersister.isLazy()
-								|| collectionPersister.getCollectionType().hasHolder()
-								|| collectionPersister.getKeyType().isComponentType()
-								|| (propertyValue instanceof PersistentCollection && Hibernate.isInitialized(propertyValue))) {
-							continue;
-						}
-
+					if (types[i].isCollectionType()) {
 						Serializable entityId = persister.getEntityTuplizer().getIdentifier(instance, session);
-						final CollectionKey collectionKey = new CollectionKey( collectionPersister, entityId );
-						PersistentCollection oldCollection = persistenceContext.getCollection(collectionKey);
-
-						if(oldCollection != null &&
-								!Hibernate.isInitialized(oldCollection) &&
-								oldCollection == propertyValue) {
-							continue;
-						}
-
-						PersistentCollection newCollection = ((CollectionType)types[i]).instantiate( session, collectionPersister, entityId );
-						if(propertyValue != null) {
+						final CollectionPersister collectionPersister = session.getFactory().getMetamodel().collectionPersister(((CollectionType) types[i]).getRole());
+						PersistentCollection newCollection = ((CollectionType) types[i]).instantiate(session, collectionPersister, entityId);
+						if (propertyValue != null) {
 							Hibernate.initialize(newCollection);
 						}
-						newCollection.setOwner( instance );
-						persistenceContext.addUninitializedCollection( collectionPersister, newCollection, entityId);
+						newCollection.setOwner(instance);
+						persistenceContext.addUninitializedCollection(collectionPersister, newCollection, entityId);
 						persister.getEntityTuplizer().setPropertyValue(instance, i, newCollection);
 						continue;
 					}
 
-					// the property is not a collection
-					if(propertyValue == null) {
+					EntityPersister propertyPersister = null;
+					try {
+						propertyPersister = session.getEntityPersister(null, propertyValue);
+					} catch (HibernateException he) {
+						// dynamic map entity will fail to determine type
 						continue;
 					}
-					else {
-						if(propertyValue instanceof HibernateProxy) {
-							continue;
-						}
-						EntityPersister propertyPersister = null;
-						try {
-							propertyPersister = session.getEntityPersister(null, propertyValue);
-						}
-						catch (HibernateException he) {
-							// dynamic map entity will fail to determine type
-							continue;
-						}
-						if(propertyPersister.getEntityTuplizer().getProxyFactory() == null
-								|| !propertyPersister.canExtractIdOutOfEntity()) {
-							continue;
-						}
-						Serializable entityId = propertyPersister.getEntityTuplizer().getIdentifier(propertyValue, session);
-						Object proxy = null;
-						try {
-							proxy = propertyPersister.createProxy(entityId, session);
-							if(propertyValue != null) {
-								Hibernate.initialize(proxy);
-							}
-						}
-						catch (Exception e) {
-							continue;
-						}
-						final EntityKey keyToLoad = session.generateEntityKey( entityId, propertyPersister );
-						persistenceContext.addProxy(keyToLoad, proxy);
-						persister.getEntityTuplizer().setPropertyValue(instance, i, proxy);
+					if (propertyPersister.getEntityTuplizer().getProxyFactory() == null
+							|| !propertyPersister.canExtractIdOutOfEntity()) {
+						continue;
 					}
+					Serializable propertyEntityId = propertyPersister.getEntityTuplizer().getIdentifier(propertyValue, session);
+					Object proxy = null;
+					try {
+						proxy = propertyPersister.createProxy(propertyEntityId, session);
+						if (propertyValue != null) {
+							Hibernate.initialize(proxy);
+						}
+					} catch (Exception e) {
+						continue;
+					}
+					final EntityKey keyToLoad = session.generateEntityKey(propertyEntityId, propertyPersister);
+					persistenceContext.addProxy(keyToLoad, proxy);
+					persister.getEntityTuplizer().setPropertyValue(instance, i, proxy);
 				}
 			}
 		}
@@ -297,6 +256,47 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 		}
 
 		markExecuted();
+	}
+
+	private boolean proxyAfterInsert(Object instance, Type type, Object propertyValue, CascadeStyle cascadeStyle, SharedSessionContractImplementor session) {
+		if(!type.isAssociationType()
+				|| propertyValue instanceof HibernateProxy
+				|| cascadeStyle != CascadeStyles.NONE) {
+			return false;
+		}
+
+		if(type instanceof EntityType && ((EntityType) type).isEager(null)) {
+			return false;
+		}
+
+		if(type.isCollectionType()) {
+			final CollectionPersister collectionPersister = session.getFactory().getMetamodel().collectionPersister( ((CollectionType) type).getRole() );
+
+			if ( !collectionPersister.isLazy()
+					|| collectionPersister.getCollectionType().hasHolder()
+					|| collectionPersister.getKeyType().isComponentType()
+					|| (propertyValue instanceof PersistentCollection && Hibernate.isInitialized(propertyValue))) {
+				return false;
+			}
+
+			Serializable entityId = getPersister().getEntityTuplizer().getIdentifier(instance, session);
+			final CollectionKey collectionKey = new CollectionKey( collectionPersister, entityId );
+			PersistentCollection oldCollection = session.getPersistenceContext().getCollection(collectionKey);
+
+			if(oldCollection != null
+					&& !Hibernate.isInitialized(oldCollection)
+					&& oldCollection == propertyValue) {
+				return false;
+			}
+
+			return true;
+		}
+
+		if(propertyValue == null) {
+			return false;
+		}
+
+		return true;
 	}
 
 	private boolean ifNeedsInterceptor(Object propertyValue, String propertyName, CascadeStyle cascadeStyle,

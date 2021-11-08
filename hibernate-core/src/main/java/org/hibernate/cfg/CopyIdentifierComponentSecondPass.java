@@ -16,8 +16,6 @@ import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
-import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -33,7 +31,7 @@ import org.jboss.logging.Logger;
 /**
  * @author Emmanuel Bernard
  */
-public class CopyIdentifierComponentSecondPass implements SecondPass {
+public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 	private static final Logger log = Logger.getLogger( CopyIdentifierComponentSecondPass.class );
 
 	private final String referencedEntityName;
@@ -46,12 +44,25 @@ public class CopyIdentifierComponentSecondPass implements SecondPass {
 			String referencedEntityName,
 			Ejb3JoinColumn[] joinColumns,
 			MetadataBuildingContext buildingContext) {
+		super( comp, joinColumns );
 		this.component = comp;
 		this.referencedEntityName = referencedEntityName;
 		this.buildingContext = buildingContext;
 		this.joinColumns = joinColumns;
 	}
 
+	@Override
+	public String getReferencedEntityName() {
+		return referencedEntityName;
+	}
+
+	@Override
+	public boolean isInPrimaryKey() {
+		// This second pass is apparently only ever used to initialize composite identifiers
+		return true;
+	}
+
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public void doSecondPass(Map persistentClasses) throws MappingException {
 		PersistentClass referencedPersistentClass = (PersistentClass) persistentClasses.get( referencedEntityName );
@@ -218,9 +229,5 @@ public class CopyIdentifierComponentSecondPass implements SecondPass {
 		mappingColumn.setLength( column.getLength() );
 		mappingColumn.setPrecision( column.getPrecision() );
 		mappingColumn.setScale( column.getScale() );
-	}
-
-	public boolean dependentUpon( CopyIdentifierComponentSecondPass other ) {
-		return this.referencedEntityName.equals( other.component.getOwner().getEntityName() );
 	}
 }

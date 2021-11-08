@@ -57,7 +57,6 @@ import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.NaturalIdUniqueKeyBinder;
 import org.hibernate.cfg.AnnotatedClassType;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.CopyIdentifierComponentSecondPass;
 import org.hibernate.cfg.CreateKeySecondPass;
 import org.hibernate.cfg.FkSecondPass;
 import org.hibernate.cfg.IdGeneratorResolverSecondPass;
@@ -1504,7 +1503,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 	private ArrayList<IdGeneratorResolverSecondPass> idGeneratorResolverSecondPassList;
 	private ArrayList<SetSimpleValueTypeSecondPass> setSimpleValueTypeSecondPassList;
-	private ArrayList<CopyIdentifierComponentSecondPass> copyIdentifierComponentSecondPasList;
 	private ArrayList<FkSecondPass> fkSecondPassList;
 	private ArrayList<CreateKeySecondPass> createKeySecondPasList;
 	private ArrayList<SecondaryTableSecondPass> secondaryTableSecondPassList;
@@ -1525,9 +1523,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		}
 		else if ( secondPass instanceof SetSimpleValueTypeSecondPass ) {
 			addSetSimpleValueTypeSecondPass( (SetSimpleValueTypeSecondPass) secondPass, onTopOfTheQueue );
-		}
-		else if ( secondPass instanceof CopyIdentifierComponentSecondPass ) {
-			addCopyIdentifierComponentSecondPass( (CopyIdentifierComponentSecondPass) secondPass, onTopOfTheQueue );
 		}
 		else if ( secondPass instanceof FkSecondPass ) {
 			addFkSecondPass( (FkSecondPass) secondPass, onTopOfTheQueue );
@@ -1574,15 +1569,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			idGeneratorResolverSecondPassList = new ArrayList<>();
 		}
 		addSecondPass( secondPass, idGeneratorResolverSecondPassList, onTopOfTheQueue );
-	}
-
-	private void addCopyIdentifierComponentSecondPass(
-			CopyIdentifierComponentSecondPass secondPass,
-			boolean onTopOfTheQueue) {
-		if ( copyIdentifierComponentSecondPasList == null ) {
-			copyIdentifierComponentSecondPasList = new ArrayList<>();
-		}
-		addSecondPass( secondPass, copyIdentifierComponentSecondPasList, onTopOfTheQueue );
 	}
 
 	private void addFkSecondPass(FkSecondPass secondPass, boolean onTopOfTheQueue) {
@@ -1635,8 +1621,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			processSecondPasses( implicitColumnNamingSecondPassList );
 			processSecondPasses( setSimpleValueTypeSecondPassList );
 
-			processCopyIdentifierSecondPassesInOrder();
-
 			processFkSecondPassesInOrder();
 
 			processSecondPasses( createKeySecondPasList );
@@ -1661,14 +1645,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		}
 	}
 
-	private void processCopyIdentifierSecondPassesInOrder() {
-		if ( copyIdentifierComponentSecondPasList == null ) {
-			return;
-		}
-		sortCopyIdentifierComponentSecondPasses();
-		processSecondPasses( copyIdentifierComponentSecondPasList );
-	}
-
 	private void processSecondPasses(ArrayList<? extends SecondPass> secondPasses) {
 		if ( secondPasses == null ) {
 			return;
@@ -1680,39 +1656,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 		secondPasses.clear();
 	}
-
-	private void sortCopyIdentifierComponentSecondPasses() {
-
-		ArrayList<CopyIdentifierComponentSecondPass> sorted =
-				new ArrayList<>( copyIdentifierComponentSecondPasList.size() );
-		Set<CopyIdentifierComponentSecondPass> toSort = new HashSet<>( copyIdentifierComponentSecondPasList );
-		topologicalSort( sorted, toSort );
-		copyIdentifierComponentSecondPasList = sorted;
-	}
-
-	/* naive O(n^3) topological sort */
-	private void topologicalSort( List<CopyIdentifierComponentSecondPass> sorted, Set<CopyIdentifierComponentSecondPass> toSort ) {
-		while (!toSort.isEmpty()) {
-			CopyIdentifierComponentSecondPass independent = null;
-
-			searchForIndependent:
-			for ( CopyIdentifierComponentSecondPass secondPass : toSort ) {
-				for ( CopyIdentifierComponentSecondPass other : toSort ) {
-					if (secondPass.dependentUpon( other )) {
-						continue searchForIndependent;
-					}
-				}
-				independent = secondPass;
-				break;
-			}
-			if (independent == null) {
-				throw new MappingException( "cyclic dependency in derived identities" );
-			}
-			toSort.remove( independent );
-			sorted.add( independent );
-		}
-	}
-
 
 	private void processFkSecondPassesInOrder() {
 		if ( fkSecondPassList == null || fkSecondPassList.isEmpty() ) {

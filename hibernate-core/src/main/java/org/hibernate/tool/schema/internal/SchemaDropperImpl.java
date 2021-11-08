@@ -216,7 +216,9 @@ public class SchemaDropperImpl implements SchemaDropper {
 			}
 
 			applySqlStrings(
-					dialect.getAuxiliaryDatabaseObjectExporter().getSqlDropStrings( auxiliaryDatabaseObject, metadata ),
+					dialect.getAuxiliaryDatabaseObjectExporter().getSqlDropStrings( auxiliaryDatabaseObject, metadata,
+							sqlStringGenerationContext
+					),
 					formatter,
 					options,
 					targets
@@ -230,7 +232,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 			}
 
 			// we need to drop all constraints/indexes prior to dropping the tables
-			applyConstraintDropping( namespace, metadata, formatter, options, targets );
+			applyConstraintDropping( namespace, metadata, formatter, options, sqlStringGenerationContext, targets );
 
 			// now it's safe to drop the tables
 			for ( Table table : namespace.getTables() ) {
@@ -241,7 +243,9 @@ public class SchemaDropperImpl implements SchemaDropper {
 					continue;
 				}
 				checkExportIdentifier( table, exportIdentifiers );
-				applySqlStrings( dialect.getTableExporter().getSqlDropStrings( table, metadata ), formatter, options,targets );
+				applySqlStrings( dialect.getTableExporter().getSqlDropStrings( table, metadata,
+						sqlStringGenerationContext
+				), formatter, options,targets );
 			}
 
 			for ( Sequence sequence : namespace.getSequences() ) {
@@ -249,7 +253,9 @@ public class SchemaDropperImpl implements SchemaDropper {
 					continue;
 				}
 				checkExportIdentifier( sequence, exportIdentifiers );
-				applySqlStrings( dialect.getSequenceExporter().getSqlDropStrings( sequence, metadata ), formatter, options, targets );
+				applySqlStrings( dialect.getSequenceExporter().getSqlDropStrings( sequence, metadata,
+						sqlStringGenerationContext
+				), formatter, options, targets );
 			}
 		}
 
@@ -313,6 +319,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 			Metadata metadata,
 			Formatter formatter,
 			ExecutionOptions options,
+			SqlStringGenerationContext sqlStringGenerationContext,
 			GenerationTarget... targets) {
 		final Dialect dialect = metadata.getDatabase().getJdbcEnvironment().getDialect();
 
@@ -332,7 +339,9 @@ public class SchemaDropperImpl implements SchemaDropper {
 			while ( fks.hasNext() ) {
 				final ForeignKey foreignKey = (ForeignKey) fks.next();
 				applySqlStrings(
-						dialect.getForeignKeyExporter().getSqlDropStrings( foreignKey, metadata ),
+						dialect.getForeignKeyExporter().getSqlDropStrings( foreignKey, metadata,
+								sqlStringGenerationContext
+						),
 						formatter,
 						options,
 						targets

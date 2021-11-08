@@ -11,6 +11,7 @@ import java.util.Set;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Namespace;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.internal.Formatter;
 import org.hibernate.mapping.Table;
@@ -47,6 +48,7 @@ public class IndividuallySchemaMigratorImpl extends AbstractSchemaMigrator {
 			boolean tryToCreateSchemas,
 			Set<Identifier> exportedCatalogs,
 			Namespace namespace,
+			SqlStringGenerationContext sqlStringGenerationContext,
 			GenerationTarget[] targets) {
 		final NameSpaceTablesInformation tablesInformation =
 				new NameSpaceTablesInformation( metadata.getDatabase().getJdbcEnvironment().getIdentifierHelper() );
@@ -68,11 +70,12 @@ public class IndividuallySchemaMigratorImpl extends AbstractSchemaMigrator {
 					checkExportIdentifier( table, exportIdentifiers );
 					final TableInformation tableInformation = existingDatabase.getTableInformation( table.getQualifiedTableName() );
 					if ( tableInformation == null ) {
-						createTable( table, dialect, metadata, formatter, options, targets );
+						createTable( table, dialect, metadata, formatter, options, sqlStringGenerationContext, targets );
 					}
 					else if ( tableInformation.isPhysicalTable() ) {
 						tablesInformation.addTableInformation( tableInformation );
-						migrateTable( table, tableInformation, dialect, metadata, formatter, options, targets );
+						migrateTable( table, tableInformation, dialect, metadata, formatter, options,
+								sqlStringGenerationContext, targets );
 					}
 				}
 			}
@@ -81,8 +84,10 @@ public class IndividuallySchemaMigratorImpl extends AbstractSchemaMigrator {
 				if ( schemaFilter.includeTable( table ) && table.isPhysicalTable() ) {
 					final TableInformation tableInformation = tablesInformation.getTableInformation( table );
 					if ( tableInformation == null || tableInformation.isPhysicalTable() ) {
-						applyIndexes( table, tableInformation, dialect, metadata, formatter, options, targets );
-						applyUniqueKeys( table, tableInformation, dialect, metadata, formatter, options, targets );
+						applyIndexes( table, tableInformation, dialect, metadata, formatter, options,
+								sqlStringGenerationContext, targets );
+						applyUniqueKeys( table, tableInformation, dialect, metadata, formatter, options,
+								sqlStringGenerationContext, targets );
 					}
 				}
 			}

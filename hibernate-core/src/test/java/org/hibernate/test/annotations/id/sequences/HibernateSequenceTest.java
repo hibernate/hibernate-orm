@@ -55,7 +55,7 @@ public class HibernateSequenceTest extends BaseCoreFunctionalTestCase {
 		Assert.assertTrue( SequenceStyleGenerator.class.isInstance( generator ) );
 		SequenceStyleGenerator seqGenerator = (SequenceStyleGenerator) generator;
 		Assert.assertEquals(
-				Table.qualify( null, SCHEMA_NAME, SequenceStyleGenerator.DEF_SEQUENCE_NAME ),
+				SCHEMA_NAME + "." + SequenceStyleGenerator.DEF_SEQUENCE_NAME,
 				seqGenerator.getDatabaseStructure().getPhysicalName().render()
 		);
 	}

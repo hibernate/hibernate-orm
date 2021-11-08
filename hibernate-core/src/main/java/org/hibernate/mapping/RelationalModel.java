@@ -6,7 +6,7 @@
  */
 package org.hibernate.mapping;
 import org.hibernate.HibernateException;
-import org.hibernate.dialect.Dialect;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.spi.Mapping;
 
 /**
@@ -17,6 +17,6 @@ import org.hibernate.engine.spi.Mapping;
  */
 @Deprecated
 public interface RelationalModel {
-	String sqlCreateString(Dialect dialect, Mapping p, String defaultCatalog, String defaultSchema) throws HibernateException;
-	String sqlDropString(Dialect dialect, String defaultCatalog, String defaultSchema);
+	String sqlCreateString(Mapping p, SqlStringGenerationContext context, String defaultCatalog, String defaultSchema) throws HibernateException;
+	String sqlDropString(SqlStringGenerationContext context, String defaultCatalog, String defaultSchema);
 }

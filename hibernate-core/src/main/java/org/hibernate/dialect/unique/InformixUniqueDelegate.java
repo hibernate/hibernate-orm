@@ -7,6 +7,7 @@
 package org.hibernate.dialect.unique;
 
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.UniqueKey;
 
@@ -24,13 +25,11 @@ public class InformixUniqueDelegate extends DefaultUniqueDelegate {
 	// legacy model ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata) {
+	public String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata,
+			SqlStringGenerationContext context) {
 		// Do this here, rather than allowing UniqueKey/Constraint to do it.
 		// We need full, simplified control over whether or not it happens.
-		final String tableName = metadata.getDatabase().getJdbcEnvironment().getQualifiedObjectNameFormatter().format(
-				uniqueKey.getTable().getQualifiedTableName(),
-				metadata.getDatabase().getJdbcEnvironment().getDialect()
-		);
+		final String tableName = context.format( uniqueKey.getTable().getQualifiedTableName() );
 		final String constraintName = dialect.quote( uniqueKey.getName() );
 		return dialect.getAlterTableString( tableName )
 				+ " add constraint " + uniqueConstraintSql( uniqueKey ) + " constraint " + constraintName;

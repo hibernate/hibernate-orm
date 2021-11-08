@@ -12,6 +12,8 @@ import java.util.Optional;
 
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.envers.enhanced.OrderedSequenceGenerator;
 import org.hibernate.envers.enhanced.SequenceIdRevisionEntity;
@@ -43,11 +45,13 @@ public class MonotonicRevisionNumberTest extends BaseEnversFunctionalTestCase {
 		Assert.assertTrue( OrderedSequenceGenerator.class.isInstance( generator ) );
 
 		Database database = metadata().getDatabase();
+		SqlStringGenerationContext sqlStringGenerationContext =
+				SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment() );
 		Optional<AuxiliaryDatabaseObject> sequenceOptional = database.getAuxiliaryDatabaseObjects().stream()
 				.filter( o -> "REVISION_GENERATOR".equals( o.getExportIdentifier() ) )
 				.findFirst();
 		assertThat( sequenceOptional ).isPresent();
-		String[] sqlCreateStrings = sequenceOptional.get().sqlCreateStrings( database.getDialect() );
+		String[] sqlCreateStrings = sequenceOptional.get().sqlCreateStrings( sqlStringGenerationContext );
 		Assert.assertTrue(
 				"Oracle sequence needs to be ordered in RAC environment.",
 				sqlCreateStrings[0].toLowerCase().endsWith( " order" )

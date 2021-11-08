@@ -14,6 +14,7 @@ import org.hibernate.boot.model.TruthValue;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedTableName;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.internal.Formatter;
 import org.hibernate.testing.TestForIssue;
@@ -44,7 +45,12 @@ public class AbstractSchemaMigratorTest {
     public void testForeignKeyPreExistenceDetectionIgnoresCaseForTableAndColumnName() {
         final AbstractSchemaMigrator schemaMigrator = new AbstractSchemaMigrator(null, null) {
             @Override
-            protected NameSpaceTablesInformation performTablesMigration(Metadata metadata, DatabaseInformation existingDatabase, ExecutionOptions options, Dialect dialect, Formatter formatter, Set<String> exportIdentifiers, boolean tryToCreateCatalogs, boolean tryToCreateSchemas, Set<Identifier> exportedCatalogs, Namespace namespace, GenerationTarget[] targets) { return null; }
+            protected NameSpaceTablesInformation performTablesMigration(Metadata metadata,
+					DatabaseInformation existingDatabase, ExecutionOptions options, Dialect dialect,
+					Formatter formatter, Set<String> exportIdentifiers, boolean tryToCreateCatalogs,
+					boolean tryToCreateSchemas, Set<Identifier> exportedCatalogs, Namespace namespace,
+					SqlStringGenerationContext sqlStringGenerationContext,
+					GenerationTarget[] targets) { return null; }
         };
 
         final TableInformation existingTableInformation = mock(TableInformation.class);

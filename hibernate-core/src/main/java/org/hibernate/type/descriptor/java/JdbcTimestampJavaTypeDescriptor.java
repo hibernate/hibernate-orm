@@ -6,6 +6,7 @@
  */
 package org.hibernate.type.descriptor.java;
 
+import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.ZoneId;
@@ -31,7 +32,10 @@ import org.hibernate.type.spi.TypeConfiguration;
 /**
  * Descriptor for {@link Timestamp} handling.
  *
- * @author Steve Ebersole
+ * @implSpec Unlike most {@link JavaType} implementations, can handle 2 different "domain
+ * representations" (most map just a single type): general {@link Date} values in addition
+ * to {@link Timestamp} values.  This capability is shared with
+ * {@link JdbcDateJavaTypeDescriptor} and {@link JdbcTimeJavaTypeDescriptor}.
  */
 public class JdbcTimestampJavaTypeDescriptor extends AbstractTemporalJavaTypeDescriptor<Date> implements VersionJavaType<Date> {
 	public static final JdbcTimestampJavaTypeDescriptor INSTANCE = new JdbcTimestampJavaTypeDescriptor();
@@ -48,25 +52,9 @@ public class JdbcTimestampJavaTypeDescriptor extends AbstractTemporalJavaTypeDes
 	public static final DateTimeFormatter LITERAL_FORMATTER = DateTimeFormatter.ofPattern( TIMESTAMP_FORMAT )
 			.withZone( ZoneId.from( ZoneOffset.UTC ) );
 
-	public static class TimestampMutabilityPlan extends MutableMutabilityPlan<Date> {
-		public static final TimestampMutabilityPlan INSTANCE = new TimestampMutabilityPlan();
-		@Override
-		public Date deepCopyNotNull(Date value) {
-			if ( value instanceof Timestamp ) {
-				Timestamp orig = (Timestamp) value;
-				Timestamp ts = new Timestamp( orig.getTime() );
-				ts.setNanos( orig.getNanos() );
-				return ts;
-			}
-			else {
-				return new Date( value.getTime() );
-			}
-		}
-	}
-
 	@SuppressWarnings("WeakerAccess")
 	public JdbcTimestampJavaTypeDescriptor() {
-		super( Date.class, TimestampMutabilityPlan.INSTANCE );
+		super( Timestamp.class, TimestampMutabilityPlan.INSTANCE );
 	}
 
 	@Override
@@ -75,33 +63,9 @@ public class JdbcTimestampJavaTypeDescriptor extends AbstractTemporalJavaTypeDes
 	}
 
 	@Override
-	public JdbcType getRecommendedJdbcType(JdbcTypeDescriptorIndicators context) {
-		return context.getTypeConfiguration().getJdbcTypeDescriptorRegistry().getDescriptor( Types.TIMESTAMP );
-	}
-
-	@Override
-	protected <X> TemporalJavaTypeDescriptor<X> forTimestampPrecision(TypeConfiguration typeConfiguration) {
-		//noinspection unchecked
-		return (TemporalJavaTypeDescriptor<X>) this;
-	}
-
-	@Override
-	public String toString(Date value) {
-		return LITERAL_FORMATTER.format( value.toInstant() );
-	}
-
-	@Override
-	public Date fromString(CharSequence string) {
-		try {
-			final TemporalAccessor accessor = LITERAL_FORMATTER.parse( string );
-			return new Timestamp(
-					accessor.getLong( ChronoField.INSTANT_SECONDS ) * 1000L
-							+ accessor.get( ChronoField.NANO_OF_SECOND ) / 1_000_000
-			);
-		}
-		catch ( DateTimeParseException pe) {
-			throw new HibernateException( "could not parse timestamp string" + string, pe );
-		}
+	public boolean isInstance(Object value) {
+		// this check holds true for java.sql.Timestamp as well
+		return value instanceof Date;
 	}
 
 	@Override
@@ -143,41 +107,50 @@ public class JdbcTimestampJavaTypeDescriptor extends AbstractTemporalJavaTypeDes
 		return Long.valueOf( value.getTime() / 1000 ).hashCode();
 	}
 
-	@SuppressWarnings({ "unchecked" })
 	@Override
-	public <X> X unwrap(Date value, Class<X> type, WrapperOptions options) {
+	public Date coerce(Object value, CoercionContext coercionContext) {
+		return wrap( value, null );
+	}
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Override
+	public Object unwrap(Date value, Class type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
+
 		if ( Timestamp.class.isAssignableFrom( type ) ) {
-			final Timestamp rtn = value instanceof Timestamp
-					? ( Timestamp ) value
+			return value instanceof Timestamp
+					? (Timestamp) value
 					: new Timestamp( value.getTime() );
-			return (X) rtn;
 		}
-		if ( java.sql.Date.class.isAssignableFrom( type ) ) {
-			final java.sql.Date rtn = value instanceof java.sql.Date
-					? ( java.sql.Date ) value
-					: new java.sql.Date( value.getTime() );
-			return (X) rtn;
-		}
-		if ( java.sql.Time.class.isAssignableFrom( type ) ) {
-			final java.sql.Time rtn = value instanceof java.sql.Time
-					? ( java.sql.Time ) value
-					: new java.sql.Time( value.getTime() );
-			return (X) rtn;
-		}
+
 		if ( Date.class.isAssignableFrom( type ) ) {
-			return (X) value;
+			return value;
 		}
+
 		if ( Calendar.class.isAssignableFrom( type ) ) {
 			final GregorianCalendar cal = new GregorianCalendar();
 			cal.setTimeInMillis( value.getTime() );
-			return (X) cal;
+			return cal;
 		}
+
 		if ( Long.class.isAssignableFrom( type ) ) {
-			return (X) Long.valueOf( value.getTime() );
+			return value.getTime();
 		}
+
+		if ( java.sql.Date.class.isAssignableFrom( type ) ) {
+			return value instanceof java.sql.Date
+					? ( java.sql.Date ) value
+					: new java.sql.Date( value.getTime() );
+		}
+
+		if ( java.sql.Time.class.isAssignableFrom( type ) ) {
+			return value instanceof java.sql.Time
+					? ( java.sql.Time ) value
+					: new java.sql.Time( value.getTime() );
+		}
+
 		throw unknownUnwrap( type );
 	}
 
@@ -190,6 +163,10 @@ public class JdbcTimestampJavaTypeDescriptor extends AbstractTemporalJavaTypeDes
 			return (Timestamp) value;
 		}
 
+		if ( value instanceof Date ) {
+			return new Timestamp( ( (Date) value ).getTime() );
+		}
+
 		if ( value instanceof Long ) {
 			return new Timestamp( (Long) value );
 		}
@@ -198,11 +175,37 @@ public class JdbcTimestampJavaTypeDescriptor extends AbstractTemporalJavaTypeDes
 			return new Timestamp( ( (Calendar) value ).getTimeInMillis() );
 		}
 
-		if ( value instanceof Date ) {
-			return new Timestamp( ( (Date) value ).getTime() );
-		}
-
 		throw unknownWrap( value.getClass() );
+	}
+
+	@Override
+	public String toString(Date value) {
+		return LITERAL_FORMATTER.format( value.toInstant() );
+	}
+
+	@Override
+	public Date fromString(CharSequence string) {
+		try {
+			final TemporalAccessor accessor = LITERAL_FORMATTER.parse( string );
+			return new Timestamp(
+					accessor.getLong( ChronoField.INSTANT_SECONDS ) * 1000L
+							+ accessor.get( ChronoField.NANO_OF_SECOND ) / 1_000_000
+			);
+		}
+		catch ( DateTimeParseException pe) {
+			throw new HibernateException( "could not parse timestamp string" + string, pe );
+		}
+	}
+
+	@Override
+	public JdbcType getRecommendedJdbcType(JdbcTypeDescriptorIndicators context) {
+		return context.getTypeConfiguration().getJdbcTypeDescriptorRegistry().getDescriptor( Types.TIMESTAMP );
+	}
+
+	@Override
+	protected <X> TemporalJavaTypeDescriptor<X> forTimestampPrecision(TypeConfiguration typeConfiguration) {
+		//noinspection unchecked
+		return (TemporalJavaTypeDescriptor<X>) this;
 	}
 
 	@Override
@@ -220,4 +223,21 @@ public class JdbcTimestampJavaTypeDescriptor extends AbstractTemporalJavaTypeDes
 		return new Timestamp( System.currentTimeMillis() );
 	}
 
+
+	public static class TimestampMutabilityPlan extends MutableMutabilityPlan<Date> {
+		public static final TimestampMutabilityPlan INSTANCE = new TimestampMutabilityPlan();
+		@Override
+		public Date deepCopyNotNull(Date value) {
+			if ( value instanceof Timestamp ) {
+				// make sure to get the nanos
+				final Timestamp orig = (Timestamp) value;
+				final Timestamp copy = new Timestamp( orig.getTime() );
+				copy.setNanos( orig.getNanos() );
+				return copy;
+			}
+			else {
+				return new Date( value.getTime() );
+			}
+		}
+	}
 }

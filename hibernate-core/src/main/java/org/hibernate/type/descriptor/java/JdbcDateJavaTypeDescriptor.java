@@ -15,18 +15,21 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
-import jakarta.persistence.TemporalType;
-
 import org.hibernate.HibernateException;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import jakarta.persistence.TemporalType;
+
 /**
  * Descriptor for {@link java.sql.Date} handling.
  *
- * @author Steve Ebersole
+ * @implSpec Unlike most {@link JavaType} implementations, can handle 2 different "domain
+ * representations" (most map just a single type): general {@link Date} values in addition
+ * to {@link java.sql.Date} values.  This capability is shared with
+ * {@link JdbcTimeJavaTypeDescriptor} and {@link JdbcTimestampJavaTypeDescriptor}.
  */
 public class JdbcDateJavaTypeDescriptor extends AbstractTemporalJavaTypeDescriptor<Date> {
 	public static final JdbcDateJavaTypeDescriptor INSTANCE = new JdbcDateJavaTypeDescriptor();
@@ -42,19 +45,9 @@ public class JdbcDateJavaTypeDescriptor extends AbstractTemporalJavaTypeDescript
 	@SuppressWarnings("unused")
 	public static final DateTimeFormatter LITERAL_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE;
 
-	public static class DateMutabilityPlan extends MutableMutabilityPlan<Date> {
-		public static final DateMutabilityPlan INSTANCE = new DateMutabilityPlan();
-		@Override
-		public Date deepCopyNotNull(Date value) {
-			return value instanceof java.sql.Date
-					? new java.sql.Date( value.getTime() )
-					: new Date( value.getTime() );
-		}
-	}
-
 	@SuppressWarnings("WeakerAccess")
 	public JdbcDateJavaTypeDescriptor() {
-		super( Date.class, DateMutabilityPlan.INSTANCE );
+		super( java.sql.Date.class, DateMutabilityPlan.INSTANCE );
 	}
 
 	@Override
@@ -63,29 +56,10 @@ public class JdbcDateJavaTypeDescriptor extends AbstractTemporalJavaTypeDescript
 	}
 
 	@Override
-	public JdbcType getRecommendedJdbcType(JdbcTypeDescriptorIndicators context) {
-		return context.getTypeConfiguration().getJdbcTypeDescriptorRegistry().getDescriptor( Types.DATE );
-	}
-
-	@Override
-	protected <X> TemporalJavaTypeDescriptor<X> forDatePrecision(TypeConfiguration typeConfiguration) {
-		//noinspection unchecked
-		return (TemporalJavaTypeDescriptor<X>) this;
-	}
-
-	@Override
-	public String toString(Date value) {
-		return new SimpleDateFormat( DATE_FORMAT ).format( value );
-	}
-
-	@Override
-	public Date fromString(CharSequence string) {
-		try {
-			return new Date( new SimpleDateFormat(DATE_FORMAT).parse( string.toString() ).getTime() );
-		}
-		catch ( ParseException pe) {
-			throw new HibernateException( "could not parse date string" + string, pe );
-		}
+	public boolean isInstance(Object value) {
+		// this check holds true for java.sql.Date as well
+		return value instanceof Date
+				&& !( value instanceof java.sql.Time );
 	}
 
 	@Override
@@ -93,6 +67,7 @@ public class JdbcDateJavaTypeDescriptor extends AbstractTemporalJavaTypeDescript
 		if ( one == another ) {
 			return true;
 		}
+
 		if ( one == null || another == null ) {
 			return false;
 		}
@@ -101,8 +76,8 @@ public class JdbcDateJavaTypeDescriptor extends AbstractTemporalJavaTypeDescript
 			return true;
 		}
 
-		Calendar calendar1 = Calendar.getInstance();
-		Calendar calendar2 = Calendar.getInstance();
+		final Calendar calendar1 = Calendar.getInstance();
+		final Calendar calendar2 = Calendar.getInstance();
 		calendar1.setTime( one );
 		calendar2.setTime( another );
 
@@ -113,7 +88,7 @@ public class JdbcDateJavaTypeDescriptor extends AbstractTemporalJavaTypeDescript
 
 	@Override
 	public int extractHashCode(Date value) {
-		Calendar calendar = Calendar.getInstance();
+		final Calendar calendar = Calendar.getInstance();
 		calendar.setTime( value );
 		int hashCode = 1;
 		hashCode = 31 * hashCode + calendar.get( Calendar.MONTH );
@@ -122,56 +97,80 @@ public class JdbcDateJavaTypeDescriptor extends AbstractTemporalJavaTypeDescript
 		return hashCode;
 	}
 
-	@SuppressWarnings({ "unchecked" })
 	@Override
-	public <X> X unwrap(Date value, Class<X> type, WrapperOptions options) {
+	public Date coerce(Object value, CoercionContext coercionContext) {
+		return wrap( value, null );
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public Object unwrap(Date value, Class type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
+
+		if ( LocalDate.class.isAssignableFrom( type ) ) {
+			return unwrapLocalDate( value );
+		}
+
 		if ( java.sql.Date.class.isAssignableFrom( type ) ) {
-			final java.sql.Date rtn = value instanceof java.sql.Date
-					? ( java.sql.Date ) value
-					: new java.sql.Date( value.getTime() );
-			return (X) rtn;
+			return unwrapSqlDate( value );
 		}
-		if ( java.sql.Time.class.isAssignableFrom( type ) ) {
-			final java.sql.Time rtn = value instanceof java.sql.Time
-					? ( java.sql.Time ) value
-					: new java.sql.Time( value.getTime() );
-			return (X) rtn;
+
+		if ( java.util.Date.class.isAssignableFrom( type ) ) {
+			return value;
 		}
-		if ( java.sql.Timestamp.class.isAssignableFrom( type ) ) {
-			final java.sql.Timestamp rtn = value instanceof java.sql.Timestamp
-					? ( java.sql.Timestamp ) value
-					: new java.sql.Timestamp( value.getTime() );
-			return (X) rtn;
+
+		if ( Long.class.isAssignableFrom( type ) ) {
+			return unwrapDateEpoch( value );
 		}
-		if ( Date.class.isAssignableFrom( type ) ) {
-			return (X) value;
+
+		if ( String.class.isAssignableFrom( type ) ) {
+			return toString( value );
 		}
+
 		if ( Calendar.class.isAssignableFrom( type ) ) {
 			final GregorianCalendar cal = new GregorianCalendar();
-			cal.setTimeInMillis( value.getTime() );
-			return (X) cal;
+			cal.setTimeInMillis( unwrapDateEpoch( value ) );
+			return cal;
 		}
-		if ( Long.class.isAssignableFrom( type ) ) {
-			return (X) Long.valueOf( value.getTime() );
+
+		if ( java.sql.Timestamp.class.isAssignableFrom( type ) ) {
+			return new java.sql.Timestamp( value.getTime() );
 		}
-		if ( LocalDate.class.isAssignableFrom( type ) ) {
-			if ( value instanceof java.sql.Date ) {
-				return (X) ( (java.sql.Date) value ).toLocalDate();
-			}
+
+		if ( java.sql.Time.class.isAssignableFrom( type ) ) {
+			throw new IllegalArgumentException( "Illegal attempt to treat `java.sql.Date` as `java.sql.Time`" );
 		}
+
 		throw unknownUnwrap( type );
 	}
 
+	private LocalDate unwrapLocalDate(Date value) {
+		return value instanceof java.sql.Date
+				? ( (java.sql.Date) value ).toLocalDate()
+				: new java.sql.Date( value.getTime() ).toLocalDate();
+	}
+
+	private java.sql.Date unwrapSqlDate(Date value) {
+		return value instanceof java.sql.Date
+				? (java.sql.Date) value
+				: new java.sql.Date( value.getTime() );
+
+	}
+
+	private static long unwrapDateEpoch(Date value) {
+		return value.getTime();
+	}
+
 	@Override
-	public <X> Date wrap(X value, WrapperOptions options) {
+	public Date wrap(Object value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
+
 		if ( value instanceof java.sql.Date ) {
-			return (Date) value;
+			return (java.sql.Date) value;
 		}
 
 		if ( value instanceof Long ) {
@@ -191,5 +190,43 @@ public class JdbcDateJavaTypeDescriptor extends AbstractTemporalJavaTypeDescript
 		}
 
 		throw unknownWrap( value.getClass() );
+	}
+
+	@Override
+	public String toString(Date value) {
+		return new SimpleDateFormat( DATE_FORMAT ).format( value );
+	}
+
+	@Override
+	public Date fromString(CharSequence string) {
+		try {
+			return new java.sql.Date( new SimpleDateFormat(DATE_FORMAT).parse( string.toString() ).getTime() );
+		}
+		catch ( ParseException pe) {
+			throw new HibernateException( "could not parse date string" + string, pe );
+		}
+	}
+
+	@Override
+	public JdbcType getRecommendedJdbcType(JdbcTypeDescriptorIndicators context) {
+		return context.getTypeConfiguration().getJdbcTypeDescriptorRegistry().getDescriptor( Types.DATE );
+	}
+
+	@Override
+	protected <X> TemporalJavaTypeDescriptor<X> forDatePrecision(TypeConfiguration typeConfiguration) {
+		//noinspection unchecked
+		return (TemporalJavaTypeDescriptor<X>) this;
+	}
+
+	public static class DateMutabilityPlan extends MutableMutabilityPlan<Date> {
+		public static final DateMutabilityPlan INSTANCE = new DateMutabilityPlan();
+		@Override
+		public Date deepCopyNotNull(Date value) {
+			if ( value instanceof java.sql.Date ) {
+				return value;
+			}
+
+			return new java.sql.Date( value.getTime() );
+		}
 	}
 }

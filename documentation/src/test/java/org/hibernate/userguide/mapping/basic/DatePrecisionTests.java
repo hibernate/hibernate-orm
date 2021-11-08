@@ -6,6 +6,8 @@
  */
 package org.hibernate.userguide.mapping.basic;
 
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.Instant;
 import java.util.Date;
@@ -45,7 +47,7 @@ public class DatePrecisionTests {
 			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
 			final TemporalJavaTypeDescriptor jtd = (TemporalJavaTypeDescriptor) jdbcMapping.getJavaTypeDescriptor();
 			assertThat( jtd, is( attribute.getJavaTypeDescriptor() ) );
-			assertThat( jtd.getJavaTypeClass(), equalTo( Date.class ) );
+			assertThat( jtd.getJavaTypeClass(), equalTo( Timestamp.class ) );
 			assertThat( jtd.getPrecision(), equalTo( TemporalType.TIMESTAMP ) );
 			assertThat( jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo( Types.TIMESTAMP ) );
 		}
@@ -55,7 +57,7 @@ public class DatePrecisionTests {
 			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
 			final TemporalJavaTypeDescriptor jtd = (TemporalJavaTypeDescriptor) jdbcMapping.getJavaTypeDescriptor();
 			assertThat( jtd, is( attribute.getJavaTypeDescriptor() ) );
-			assertThat( jtd.getJavaTypeClass(), equalTo( Date.class ) );
+			assertThat( jtd.getJavaTypeClass(), equalTo( java.sql.Date.class ) );
 			assertThat( jtd.getPrecision(), equalTo( TemporalType.DATE ) );
 			assertThat( jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo( Types.DATE ) );
 		}
@@ -65,7 +67,7 @@ public class DatePrecisionTests {
 			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
 			final TemporalJavaTypeDescriptor jtd = (TemporalJavaTypeDescriptor) jdbcMapping.getJavaTypeDescriptor();
 			assertThat( jtd, is( attribute.getJavaTypeDescriptor() ) );
-			assertThat( jtd.getJavaTypeClass(), equalTo( Date.class ) );
+			assertThat( jtd.getJavaTypeClass(), equalTo( Time.class ) );
 			assertThat( jtd.getPrecision(), equalTo( TemporalType.TIME ) );
 			assertThat( jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo( Types.TIME ) );
 		}

@@ -16,6 +16,7 @@ import org.hibernate.Filter;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
 
 /**
@@ -74,12 +75,11 @@ public class FilterImpl implements Filter, Serializable {
 	 */
 	public Filter setParameter(String name, Object value) throws IllegalArgumentException {
 		// Make sure this is a defined parameter and check the incoming value type
-		// TODO: what should be the actual exception type here?
-		Type type = definition.getParameterType( name );
+		BasicType<?> type = (BasicType<?>) definition.getParameterType( name );
 		if ( type == null ) {
 			throw new IllegalArgumentException( "Undefined filter parameter [" + name + "]" );
 		}
-		if ( value != null && !type.getReturnedClass().isAssignableFrom( value.getClass() ) ) {
+		if ( value != null && !type.getJavaTypeDescriptor().isInstance( value ) ) {
 			throw new IllegalArgumentException( "Incorrect type for parameter [" + name + "]" );
 		}
 		parameters.put( name, value );

@@ -28,11 +28,32 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public interface JavaType<T> extends Serializable {
 	/**
-	 * Get the Java type described
+	 * Get the Java type (Type) described
+	 *
+	 * @see #getJavaTypeClass
 	 */
 	default Type getJavaType() {
 		// default on this side since #getJavaTypeClass is the currently implemented method
 		return getJavaTypeClass();
+	}
+
+	/**
+	 * Get the Java type (Class) described
+	 *
+	 * @see #getJavaType
+	 */
+	default Class<T> getJavaTypeClass() {
+		return ReflectHelper.getClass( getJavaType() );
+	}
+
+	/**
+	 * Is the given value an instance of the described type?
+	 *
+	 * Generally this comes down to {@link #getJavaTypeClass() getJavaTypeClass().}{@link Class#isInstance isInstance()},
+	 * though some descriptors (mainly the java.sql.Date, Time and Timestamp descriptors) might need different semantics
+	 */
+	default boolean isInstance(Object value) {
+		return getJavaTypeClass().isInstance( value );
 	}
 
 	/**
@@ -197,15 +218,6 @@ public interface JavaType<T> extends Serializable {
 	default <X> T coerce(X value, CoercionContext coercionContext) {
 		//noinspection unchecked
 		return (T) value;
-	}
-
-	/**
-	 * Retrieve the Java type handled here.
-	 *
-	 * @return The Java type.
-	 */
-	default Class<T> getJavaTypeClass() {
-		return ReflectHelper.getClass( getJavaType() );
 	}
 
 	/**

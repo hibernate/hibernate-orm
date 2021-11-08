@@ -15,20 +15,22 @@ import org.hibernate.type.spi.TypeConfiguration;
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractTemporalJavaTypeDescriptor<T> extends AbstractClassJavaTypeDescriptor<T> implements TemporalJavaTypeDescriptor<T> {
+public abstract class AbstractTemporalJavaTypeDescriptor<T>
+		extends AbstractClassJavaTypeDescriptor<T>
+		implements TemporalJavaTypeDescriptor<T> {
 
-	protected AbstractTemporalJavaTypeDescriptor(Class<T> type) {
+	protected AbstractTemporalJavaTypeDescriptor(Class<? extends T> type) {
 		super( type );
 	}
 
-	protected AbstractTemporalJavaTypeDescriptor(Class<T> type, MutabilityPlan<T> mutabilityPlan) {
+	protected AbstractTemporalJavaTypeDescriptor(Class<? extends T> type, MutabilityPlan<? extends T> mutabilityPlan) {
 		super( type, mutabilityPlan );
 	}
 
 	public AbstractTemporalJavaTypeDescriptor(
-			Class<T> type,
-			MutabilityPlan<T> mutabilityPlan,
-			Comparator<T> comparator) {
+			Class<? extends T> type,
+			MutabilityPlan<? extends T> mutabilityPlan,
+			Comparator<? extends T> comparator) {
 		super( type, mutabilityPlan, comparator );
 	}
 
@@ -62,19 +64,19 @@ public abstract class AbstractTemporalJavaTypeDescriptor<T> extends AbstractClas
 
 	protected <X> TemporalJavaTypeDescriptor<X> forTimestampPrecision(TypeConfiguration typeConfiguration) {
 		throw new UnsupportedOperationException(
-				toString() + " as `jakarta.persistence.TemporalType.TIMESTAMP` not supported"
+				this + " as `jakarta.persistence.TemporalType.TIMESTAMP` not supported"
 		);
 	}
 
 	protected <X> TemporalJavaTypeDescriptor<X> forDatePrecision(TypeConfiguration typeConfiguration) {
 		throw new UnsupportedOperationException(
-				toString() + " as `jakarta.persistence.TemporalType.DATE` not supported"
+				this + " as `jakarta.persistence.TemporalType.DATE` not supported"
 		);
 	}
 
 	protected <X> TemporalJavaTypeDescriptor<X> forTimePrecision(TypeConfiguration typeConfiguration) {
 		throw new UnsupportedOperationException(
-				toString() + " as `jakarta.persistence.TemporalType.TIME` not supported"
+				this + " as `jakarta.persistence.TemporalType.TIME` not supported"
 		);
 	}
 

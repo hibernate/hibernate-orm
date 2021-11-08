@@ -6,6 +6,7 @@
  */
 package org.hibernate.orm.test.bootstrap.binding.annotations.basics;
 
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Iterator;
@@ -61,7 +62,7 @@ public class SimpleEntityTypeResolutionsTests {
 				case "someDate": {
 					assertThat(
 							propertyResolution.getDomainJavaDescriptor().getJavaTypeClass(),
-							sameInstance( Date.class )
+							sameInstance( Timestamp.class )
 					);
 					assertThat( propertyValue.getTemporalPrecision(), is( TemporalType.TIMESTAMP ) );
 					break;

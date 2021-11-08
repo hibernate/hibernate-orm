@@ -16,14 +16,14 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
-import jakarta.persistence.TemporalType;
-
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import jakarta.persistence.TemporalType;
 
 /**
  * Descriptor for {@link Time} handling.
@@ -48,24 +48,21 @@ public class JdbcTimeJavaTypeDescriptor extends AbstractTemporalJavaTypeDescript
 	@SuppressWarnings("unused")
 	public static final DateTimeFormatter LOGGABLE_FORMATTER = DateTimeFormatter.ISO_LOCAL_TIME;
 
-	public static class TimeMutabilityPlan extends MutableMutabilityPlan<Date> {
-		public static final TimeMutabilityPlan INSTANCE = new TimeMutabilityPlan();
-		@Override
-		public Date deepCopyNotNull(Date value) {
-			return value instanceof Time
-					? new Time( value.getTime() )
-					: new Date( value.getTime() );
-		}
-	}
-
 	@SuppressWarnings("WeakerAccess")
 	public JdbcTimeJavaTypeDescriptor() {
-		super( Date.class, TimeMutabilityPlan.INSTANCE );
+		super( Time.class, TimeMutabilityPlan.INSTANCE );
 	}
 
 	@Override
 	public TemporalType getPrecision() {
 		return TemporalType.TIME;
+	}
+
+	@Override
+	public boolean isInstance(Object value) {
+		// this check holds true for java.sql.Time as well
+		return value instanceof Date
+				&& !( value instanceof java.sql.Date );
 	}
 
 	@Override
@@ -96,7 +93,7 @@ public class JdbcTimeJavaTypeDescriptor extends AbstractTemporalJavaTypeDescript
 
 	@Override
 	public int extractHashCode(Date value) {
-		Calendar calendar = Calendar.getInstance();
+		final Calendar calendar = Calendar.getInstance();
 		calendar.setTime( value );
 		int hashCode = 1;
 		hashCode = 31 * hashCode + calendar.get( Calendar.HOUR_OF_DAY );
@@ -111,6 +108,7 @@ public class JdbcTimeJavaTypeDescriptor extends AbstractTemporalJavaTypeDescript
 		if ( one == another ) {
 			return true;
 		}
+
 		if ( one == null || another == null ) {
 			return false;
 		}
@@ -119,8 +117,8 @@ public class JdbcTimeJavaTypeDescriptor extends AbstractTemporalJavaTypeDescript
 			return true;
 		}
 
-		Calendar calendar1 = Calendar.getInstance();
-		Calendar calendar2 = Calendar.getInstance();
+		final Calendar calendar1 = Calendar.getInstance();
+		final Calendar calendar2 = Calendar.getInstance();
 		calendar1.setTime( one );
 		calendar2.setTime( another );
 
@@ -130,55 +128,71 @@ public class JdbcTimeJavaTypeDescriptor extends AbstractTemporalJavaTypeDescript
 				&& calendar1.get( Calendar.MILLISECOND ) == calendar2.get( Calendar.MILLISECOND );
 	}
 
-	@SuppressWarnings({ "unchecked" })
 	@Override
-	public <X> X unwrap(Date value, Class<X> type, WrapperOptions options) {
+	public Date coerce(Object value, CoercionContext coercionContext) {
+		return wrap( value, null );
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public Object unwrap(Date value, Class type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
+
+		if ( LocalTime.class.isAssignableFrom( type ) ) {
+			return value instanceof java.sql.Time
+					? ( (java.sql.Time) value ).toLocalTime()
+					: new java.sql.Time( value.getTime() ).toLocalTime();
+		}
+
 		if ( Time.class.isAssignableFrom( type ) ) {
-			final Time rtn = value instanceof Time
-					? ( Time ) value
+			return value instanceof Time
+					? value
 					: new Time( value.getTime() );
-			return (X) rtn;
 		}
-		if ( java.sql.Date.class.isAssignableFrom( type ) ) {
-			final java.sql.Date rtn = value instanceof java.sql.Date
-					? ( java.sql.Date ) value
-					: new java.sql.Date( value.getTime() );
-			return (X) rtn;
-		}
-		if ( java.sql.Timestamp.class.isAssignableFrom( type ) ) {
-			final java.sql.Timestamp rtn = value instanceof java.sql.Timestamp
-					? ( java.sql.Timestamp ) value
-					: new java.sql.Timestamp( value.getTime() );
-			return (X) rtn;
-		}
+
 		if ( Date.class.isAssignableFrom( type ) ) {
-			return (X) value;
+			return value;
 		}
+
+		if ( Long.class.isAssignableFrom( type ) ) {
+			return value.getTime();
+		}
+
+		if ( String.class.isAssignableFrom( type ) ) {
+			return toString( value );
+		}
+
 		if ( Calendar.class.isAssignableFrom( type ) ) {
 			final GregorianCalendar cal = new GregorianCalendar();
 			cal.setTimeInMillis( value.getTime() );
-			return (X) cal;
+			return cal;
 		}
-		if ( Long.class.isAssignableFrom( type ) ) {
-			return (X) Long.valueOf( value.getTime() );
+
+		if ( java.sql.Timestamp.class.isAssignableFrom( type ) ) {
+			return new java.sql.Timestamp( value.getTime() );
 		}
-		if ( LocalTime.class.isAssignableFrom( type ) ) {
-			if ( value instanceof Time ) {
-				return (X) ( (Time) value ).toLocalTime();
-			}
+
+		if ( java.sql.Date.class.isAssignableFrom( type ) ) {
+			throw new IllegalArgumentException( "Illegal attempt to treat `java.sql.Time` as `java.sql.Date`" );
 		}
+
 		throw unknownUnwrap( type );
 	}
+
 	@Override
-	public <X> Date wrap(X value, WrapperOptions options) {
+	public Date wrap(Object value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
-		if ( value instanceof Time ) {
-			return (Time) value;
+
+		if ( value instanceof LocalTime ) {
+			return Time.valueOf( (LocalTime) value );
+		}
+
+		if ( value instanceof Date ) {
+			return (Date) value;
 		}
 
 		if ( value instanceof Long ) {
@@ -189,19 +203,29 @@ public class JdbcTimeJavaTypeDescriptor extends AbstractTemporalJavaTypeDescript
 			return new Time( ( (Calendar) value ).getTimeInMillis() );
 		}
 
-		if ( value instanceof Date ) {
-			return new Time( ( (Date) value ).getTime() );
-		}
-
-		if ( value instanceof LocalTime ) {
-			return Time.valueOf( (LocalTime) value );
-		}
-
 		throw unknownWrap( value.getClass() );
 	}
 
 	@Override
 	public int getDefaultSqlPrecision(Dialect dialect, JdbcType jdbcType) {
-		return 0; //seconds (currently ignored since Dialects don't parameterize time type by precision)
+		//seconds (currently ignored since Dialects don't parameterize time type by precision)
+		return 0;
+	}
+
+
+	public static class TimeMutabilityPlan extends MutableMutabilityPlan<Date> {
+		public static final TimeMutabilityPlan INSTANCE = new TimeMutabilityPlan();
+		@Override
+		public Date deepCopyNotNull(Date value) {
+			if ( value == null ) {
+				return null;
+			}
+
+			if ( value instanceof Time ) {
+				return value;
+			}
+
+			return new Time( value.getTime() );
+		}
 	}
 }

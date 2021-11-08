@@ -66,12 +66,23 @@ public class JdbcTimestampJavaTypeDescriptor extends AbstractTemporalJavaTypeDes
 
 	@SuppressWarnings("WeakerAccess")
 	public JdbcTimestampJavaTypeDescriptor() {
-		super( Date.class, TimestampMutabilityPlan.INSTANCE );
+		super( Timestamp.class, TimestampMutabilityPlan.INSTANCE );
 	}
 
 	@Override
 	public TemporalType getPrecision() {
 		return TemporalType.TIMESTAMP;
+	}
+
+	@Override
+	public boolean isInstance(Object value) {
+		// this check holds true for java.sql.Timestamp as well
+		return value instanceof Date;
+	}
+
+	@Override
+	public Date coerce(Object value, CoercionContext coercionContext) {
+		return wrap( value, null );
 	}
 
 	@Override
@@ -143,41 +154,45 @@ public class JdbcTimestampJavaTypeDescriptor extends AbstractTemporalJavaTypeDes
 		return Long.valueOf( value.getTime() / 1000 ).hashCode();
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
-	public <X> X unwrap(Date value, Class<X> type, WrapperOptions options) {
+	public Object unwrap(Date value, Class type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
+
 		if ( Timestamp.class.isAssignableFrom( type ) ) {
-			final Timestamp rtn = value instanceof Timestamp
-					? ( Timestamp ) value
+			return value instanceof Timestamp
+					? (Timestamp) value
 					: new Timestamp( value.getTime() );
-			return (X) rtn;
 		}
-		if ( java.sql.Date.class.isAssignableFrom( type ) ) {
-			final java.sql.Date rtn = value instanceof java.sql.Date
-					? ( java.sql.Date ) value
-					: new java.sql.Date( value.getTime() );
-			return (X) rtn;
-		}
-		if ( java.sql.Time.class.isAssignableFrom( type ) ) {
-			final java.sql.Time rtn = value instanceof java.sql.Time
-					? ( java.sql.Time ) value
-					: new java.sql.Time( value.getTime() );
-			return (X) rtn;
-		}
+
 		if ( Date.class.isAssignableFrom( type ) ) {
-			return (X) value;
+			return value;
 		}
+
 		if ( Calendar.class.isAssignableFrom( type ) ) {
 			final GregorianCalendar cal = new GregorianCalendar();
 			cal.setTimeInMillis( value.getTime() );
-			return (X) cal;
+			return cal;
 		}
+
 		if ( Long.class.isAssignableFrom( type ) ) {
-			return (X) Long.valueOf( value.getTime() );
+			return value.getTime();
 		}
+
+		if ( java.sql.Date.class.isAssignableFrom( type ) ) {
+			return value instanceof java.sql.Date
+					? ( java.sql.Date ) value
+					: new java.sql.Date( value.getTime() );
+		}
+
+		if ( java.sql.Time.class.isAssignableFrom( type ) ) {
+			return value instanceof java.sql.Time
+					? ( java.sql.Time ) value
+					: new java.sql.Time( value.getTime() );
+		}
+
 		throw unknownUnwrap( type );
 	}
 
@@ -190,16 +205,16 @@ public class JdbcTimestampJavaTypeDescriptor extends AbstractTemporalJavaTypeDes
 			return (Timestamp) value;
 		}
 
+		if ( value instanceof Date ) {
+			return new Timestamp( ( (Date) value ).getTime() );
+		}
+
 		if ( value instanceof Long ) {
 			return new Timestamp( (Long) value );
 		}
 
 		if ( value instanceof Calendar ) {
 			return new Timestamp( ( (Calendar) value ).getTimeInMillis() );
-		}
-
-		if ( value instanceof Date ) {
-			return new Timestamp( ( (Date) value ).getTime() );
 		}
 
 		throw unknownWrap( value.getClass() );

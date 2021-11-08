@@ -142,6 +142,21 @@ public class QueryParameterBindingValidator {
 			}
 		}
 
+		// ugh
+//		if ( value instanceof Date ) {
+//			if ( expectedType.equals( java.sql.Date.class ) ) {
+//				return true;
+//			}
+//
+//			if ( expectedType.equals( java.sql.Time.class ) ) {
+//				return true;
+//			}
+//
+//			if ( expectedType.equals( java.sql.Timestamp.class ) ) {
+//				return true;
+//			}
+//		}
+
 		return false;
 	}
 

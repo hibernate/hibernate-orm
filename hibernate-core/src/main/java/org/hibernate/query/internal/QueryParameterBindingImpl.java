@@ -180,13 +180,13 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 			this.bindType = clarifiedType;
 		}
 
-		if ( ! getTypeConfiguration().getSessionFactory().getJpaMetamodel().getJpaCompliance().isLoadByIdComplianceEnabled() ) {
+//		if ( ! getTypeConfiguration().getSessionFactory().getJpaMetamodel().getJpaCompliance().isLoadByIdComplianceEnabled() ) {
 			if ( bindType != null ) {
 				value = bindType.getExpressableJavaTypeDescriptor().coerce( value, this );
 			}
 			else if ( queryParameter.getHibernateType() != null ) {
 				value = queryParameter.getHibernateType().getExpressableJavaTypeDescriptor().coerce( value, this );
-			}
+//			}
 		}
 
 		if ( isBindingValidationRequired ) {

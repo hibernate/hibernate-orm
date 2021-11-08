@@ -36,7 +36,7 @@ public abstract class AbstractClassJavaTypeDescriptor<T> implements BasicJavaTyp
 	 * @see #AbstractClassJavaTypeDescriptor(Class, MutabilityPlan)
 	 */
 	@SuppressWarnings({ "unchecked" })
-	protected AbstractClassJavaTypeDescriptor(Class<T> type) {
+	protected AbstractClassJavaTypeDescriptor(Class<? extends T> type) {
 		this( type, (MutabilityPlan<T>) ImmutableMutabilityPlan.INSTANCE );
 	}
 
@@ -47,7 +47,7 @@ public abstract class AbstractClassJavaTypeDescriptor<T> implements BasicJavaTyp
 	 * @param mutabilityPlan The plan for handling mutability aspects of the java type.
 	 */
 	@SuppressWarnings({ "unchecked" })
-	protected AbstractClassJavaTypeDescriptor(Class<T> type, MutabilityPlan<T> mutabilityPlan) {
+	protected AbstractClassJavaTypeDescriptor(Class<? extends T> type, MutabilityPlan<? extends T> mutabilityPlan) {
 		this(
 				type,
 				mutabilityPlan,
@@ -64,13 +64,14 @@ public abstract class AbstractClassJavaTypeDescriptor<T> implements BasicJavaTyp
 	 * @param mutabilityPlan The plan for handling mutability aspects of the java type.
 	 * @param comparator The comparator for handling comparison of values
 	 */
+	@SuppressWarnings("unchecked")
 	protected AbstractClassJavaTypeDescriptor(
-			Class<T> type,
-			MutabilityPlan<T> mutabilityPlan,
-			Comparator<T> comparator) {
-		this.type = type;
-		this.mutabilityPlan = mutabilityPlan;
-		this.comparator = comparator;
+			Class<? extends T> type,
+			MutabilityPlan<? extends T> mutabilityPlan,
+			Comparator<? extends T> comparator) {
+		this.type = (Class<T>) type;
+		this.mutabilityPlan = (MutabilityPlan<T>) mutabilityPlan;
+		this.comparator = (Comparator<T>) comparator;
 	}
 
 	@Override
@@ -107,11 +108,11 @@ public abstract class AbstractClassJavaTypeDescriptor<T> implements BasicJavaTyp
 		return (value == null) ? "null" : value.toString();
 	}
 
-	protected HibernateException unknownUnwrap(Class conversionType) {
+	protected HibernateException unknownUnwrap(Class<?> conversionType) {
 		return JavaTypeDescriptorHelper.unknownUnwrap( type, conversionType, this );
 	}
 
-	protected HibernateException unknownWrap(Class conversionType) {
+	protected HibernateException unknownWrap(Class<?> conversionType) {
 		return JavaTypeDescriptorHelper.unknownWrap( conversionType, type, this );
 	}
 }

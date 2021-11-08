@@ -66,7 +66,6 @@ import org.hibernate.engine.internal.MutableEntityEntryFactory;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
@@ -5803,15 +5802,12 @@ public abstract class AbstractEntityPersister
 		return 0;
 	}
 
-	protected String determineTableName(Table table, JdbcEnvironment jdbcEnvironment) {
+	protected String determineTableName(Table table) {
 		if ( table.getSubselect() != null ) {
 			return "( " + table.getSubselect() + " )";
 		}
 
-		return jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-				table.getQualifiedTableName(),
-				jdbcEnvironment.getDialect()
-		);
+		return factory.getSqlStringGenerationContext().format( table.getQualifiedTableName() );
 	}
 
 	@Override

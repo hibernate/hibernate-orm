@@ -20,6 +20,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.cfg.Settings;
@@ -85,11 +86,10 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 		final SessionFactoryImplementor factory = creationContext.getSessionFactory();
 		final Database database = creationContext.getMetadata().getDatabase();
-		final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();
 
 		// TABLE
 
-		tableName = determineTableName( persistentClass.getTable(), jdbcEnvironment );
+		tableName = determineTableName( persistentClass.getTable() );
 
 		//Custom SQL
 
@@ -168,7 +168,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		HashSet<String> subclassTables = new HashSet();
 		Iterator<Table> subclassTableIter = persistentClass.getSubclassTableClosureIterator();
 		while ( subclassTableIter.hasNext() ) {
-			subclassTables.add( determineTableName( subclassTableIter.next(), jdbcEnvironment ) );
+			subclassTables.add( determineTableName( subclassTableIter.next() ) );
 		}
 		subclassSpaces = ArrayHelper.toStringArray( subclassTables );
 
@@ -182,7 +182,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			while ( tableIter.hasNext() ) {
 				Table tab = tableIter.next();
 				if ( !tab.isAbstractUnionTable() ) {
-					final String tableName = determineTableName( tab, jdbcEnvironment );
+					final String tableName = determineTableName( tab );
 					tableNames.add( tableName );
 					String[] key = new String[idColumnSpan];
 					Iterator<Column> citer = tab.getPrimaryKey().getColumnIterator();
@@ -363,10 +363,11 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 		Dialect dialect = getFactory().getDialect();
 		Settings settings = getFactory().getSettings();
+		SqlStringGenerationContext sqlStringGenerationContext = getFactory().getSqlStringGenerationContext();
 
 		if ( !model.hasSubclasses() ) {
 			return model.getTable().getQualifiedName(
-					dialect,
+					sqlStringGenerationContext,
 					settings.getDefaultCatalogName(),
 					settings.getDefaultSchemaName()
 			);
@@ -414,7 +415,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 				buf.append( " from " )
 						.append(
 								table.getQualifiedName(
-										dialect,
+										sqlStringGenerationContext,
 										settings.getDefaultCatalogName(),
 										settings.getDefaultSchemaName()
 								)

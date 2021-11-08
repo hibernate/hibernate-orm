@@ -7,6 +7,9 @@
 package org.hibernate.dialect.unique;
 
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
 
 /**
@@ -38,11 +41,11 @@ public interface UniqueDelegate {
 	 * This is intended for dialects which do not support unique constraints
 	 * 
 	 * @param column The column to which to apply the unique
-	 *
+	 * @param context A context for SQL string generation
 	 * @return The fragment (usually "unique"), empty string indicates the uniqueness will be indicated using a
 	 * different approach
 	 */
-	public String getColumnDefinitionUniquenessFragment(org.hibernate.mapping.Column column);
+	public String getColumnDefinitionUniquenessFragment(Column column, SqlStringGenerationContext context);
 
 	/**
 	 * Get the fragment that can be used to apply unique constraints as part of table creation.  The implementation
@@ -53,30 +56,32 @@ public interface UniqueDelegate {
 	 * Intended for Dialects which support unique constraint definitions, but just not in separate ALTER statements.
 	 *
 	 * @param table The table for which to generate the unique constraints fragment
-	 *
+	 * @param context A context for SQL string generation
 	 * @return The fragment, typically in the form {@code ", unique(col1, col2), unique( col20)"}.  NOTE: The leading
 	 * comma is important!
 	 */
-	public String getTableCreationUniqueConstraintsFragment(org.hibernate.mapping.Table table);
+	public String getTableCreationUniqueConstraintsFragment(Table table, SqlStringGenerationContext context);
 
 	/**
 	 * Get the SQL ALTER TABLE command to be used to create the given UniqueKey.
 	 *
 	 * @param uniqueKey The UniqueKey instance.  Contains all information about the columns
 	 * @param metadata Access to the bootstrap mapping information
-	 *
+	 * @param context A context for SQL string generation
 	 * @return The ALTER TABLE command
 	 */
-	public String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata);
+	public String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata,
+			SqlStringGenerationContext context);
 
 	/**
 	 * Get the SQL ALTER TABLE command to be used to drop the given UniqueKey.
 	 *
 	 * @param uniqueKey The UniqueKey instance.  Contains all information about the columns
 	 * @param metadata Access to the bootstrap mapping information
-	 *
+	 * @param context A context for SQL string generation
 	 * @return The ALTER TABLE command
 	 */
-	public String getAlterTableToDropUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata);
+	public String getAlterTableToDropUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata,
+			SqlStringGenerationContext context);
 
 }

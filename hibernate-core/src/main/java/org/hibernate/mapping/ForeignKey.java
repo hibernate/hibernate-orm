@@ -11,6 +11,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
 
@@ -54,11 +55,13 @@ public class ForeignKey extends Constraint {
 		}
 	}
 
+	@Override
 	public String sqlConstraintString(
-			Dialect dialect,
+			SqlStringGenerationContext context,
 			String constraintName,
 			String defaultCatalog,
 			String defaultSchema) {
+		Dialect dialect = context.getDialect();
 		String[] columnNames = new String[getColumnSpan()];
 		String[] referencedColumnNames = new String[getColumnSpan()];
 
@@ -87,7 +90,7 @@ public class ForeignKey extends Constraint {
 						constraintName,
 						columnNames,
 						referencedTable.getQualifiedName(
-								dialect,
+								context,
 								defaultCatalog,
 								defaultSchema
 						),
@@ -172,8 +175,11 @@ public class ForeignKey extends Constraint {
 		this.keyDefinition = keyDefinition;
 	}
 	
-	public String sqlDropString(Dialect dialect, String defaultCatalog, String defaultSchema) {
-		String tableName = getTable().getQualifiedName( dialect, defaultCatalog, defaultSchema );
+	@Override
+	public String sqlDropString(SqlStringGenerationContext context,
+			String defaultCatalog, String defaultSchema) {
+		Dialect dialect = context.getDialect();
+		String tableName = getTable().getQualifiedName( context, defaultCatalog, defaultSchema );
 		final StringBuilder buf = new StringBuilder( dialect.getAlterTableString( tableName ) );
 		buf.append( dialect.getDropForeignKeyString() );
 		if ( dialect.supportsIfExistsBeforeConstraintName() ) {

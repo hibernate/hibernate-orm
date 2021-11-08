@@ -325,7 +325,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 					jdbcServices,
 					buildLocalConnectionAccess(),
 					metadata,
-					sessionFactoryOptions
+					sessionFactoryOptions,
+					sqlStringGenerationContext
 			);
 
 			SchemaManagementToolCoordinator.process(

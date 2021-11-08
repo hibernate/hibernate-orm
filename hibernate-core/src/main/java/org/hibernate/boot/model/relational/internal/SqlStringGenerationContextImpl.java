@@ -11,6 +11,7 @@ import org.hibernate.boot.model.relational.QualifiedSequenceName;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.env.spi.QualifiedObjectNameFormatter;
 
@@ -22,16 +23,24 @@ public class SqlStringGenerationContextImpl
 	}
 
 	private final Dialect dialect;
+	private final IdentifierHelper identifierHelper;
 	private final QualifiedObjectNameFormatter qualifiedObjectNameFormatter;
 
+	@SuppressWarnings("deprecation")
 	public SqlStringGenerationContextImpl(JdbcEnvironment jdbcEnvironment) {
 		this.dialect = jdbcEnvironment.getDialect();
+		this.identifierHelper = jdbcEnvironment.getIdentifierHelper();
 		this.qualifiedObjectNameFormatter = jdbcEnvironment.getQualifiedObjectNameFormatter();
 	}
 
 	@Override
 	public Dialect getDialect() {
 		return dialect;
+	}
+
+	@Override
+	public IdentifierHelper getIdentifierHelper() {
+		return identifierHelper;
 	}
 
 	@Override
@@ -49,4 +58,17 @@ public class SqlStringGenerationContextImpl
 		return qualifiedObjectNameFormatter.format( qualifiedName, dialect );
 	}
 
+	@Override
+	public String formatWithoutCatalog(QualifiedSequenceName qualifiedName) {
+		QualifiedSequenceName nameToFormat;
+		if ( qualifiedName.getCatalogName() != null
+				|| qualifiedName.getSchemaName() == null && defaultSchema != null ) {
+			nameToFormat = new QualifiedSequenceName( null,
+					schemaWithDefault( qualifiedName.getSchemaName() ), qualifiedName.getSequenceName() );
+		}
+		else {
+			nameToFormat = qualifiedName;
+		}
+		return qualifiedObjectNameFormatter.format( nameToFormat, dialect );
+	}
 }

@@ -12,6 +12,7 @@ import java.util.Map;
 
 import org.hibernate.QueryException;
 import org.hibernate.boot.model.relational.QualifiedTableName;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
@@ -48,7 +49,8 @@ public abstract class AbstractMultiTableBulkIdStrategyImpl<TT extends IdTableInf
 			JdbcServices jdbcServices,
 			JdbcConnectionAccess connectionAccess,
 			MetadataImplementor metadata,
-			SessionFactoryOptions sessionFactoryOptions) {
+			SessionFactoryOptions sessionFactoryOptions,
+			SqlStringGenerationContext sqlStringGenerationContext) {
 		// build/get Table representation of the bulk-id tables - subclasses need hooks
 		// for each:
 		// 		handle DDL
@@ -66,9 +68,8 @@ public abstract class AbstractMultiTableBulkIdStrategyImpl<TT extends IdTableInf
 				continue;
 			}
 
-			final String idTableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-					determineIdTableName( jdbcEnvironment, entityBinding ),
-					jdbcEnvironment.getDialect()
+			final String idTableName = sqlStringGenerationContext.format(
+					determineIdTableName( jdbcEnvironment, entityBinding )
 			);
 			final Table idTable = new Table();
 			idTable.setName( idTableName );
@@ -81,7 +82,9 @@ public abstract class AbstractMultiTableBulkIdStrategyImpl<TT extends IdTableInf
 			}
 			augmentIdTableDefinition( idTable );
 
-			final TT idTableInfo = buildIdTableInfo( entityBinding, idTable, jdbcServices, metadata, context );
+			final TT idTableInfo = buildIdTableInfo( entityBinding, idTable, jdbcServices, metadata, context,
+					sqlStringGenerationContext
+			);
 			idTableInfoMap.put( entityBinding.getEntityName(), idTableInfo );
 		}
 
@@ -125,16 +128,17 @@ public abstract class AbstractMultiTableBulkIdStrategyImpl<TT extends IdTableInf
 			Table idTable,
 			JdbcServices jdbcServices,
 			MetadataImplementor metadata,
-			CT context);
+			CT context,
+			SqlStringGenerationContext sqlStringGenerationContext);
 
 
-	protected String buildIdTableCreateStatement(Table idTable, JdbcServices jdbcServices, MetadataImplementor metadata) {
-		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
-		final Dialect dialect = jdbcEnvironment.getDialect();
+	protected String buildIdTableCreateStatement(Table idTable, MetadataImplementor metadata,
+			SqlStringGenerationContext sqlStringGenerationContext) {
+		final Dialect dialect = sqlStringGenerationContext.getDialect();
 
 		StringBuilder buffer = new StringBuilder( getIdTableSupport().getCreateIdTableCommand() )
 				.append( ' ' )
-				.append( jdbcEnvironment.getQualifiedObjectNameFormatter().format( idTable.getQualifiedTableName(), dialect ) )
+				.append( sqlStringGenerationContext.format( idTable.getQualifiedTableName() ) )
 				.append( " (" );
 
 		Iterator<Column> itr = idTable.getColumnIterator();
@@ -169,12 +173,9 @@ public abstract class AbstractMultiTableBulkIdStrategyImpl<TT extends IdTableInf
 		return buffer.toString();
 	}
 
-	protected String buildIdTableDropStatement(Table idTable, JdbcServices jdbcServices) {
-		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
-		final Dialect dialect = jdbcEnvironment.getDialect();
-
+	protected String buildIdTableDropStatement(Table idTable, SqlStringGenerationContext sqlStringGenerationContext) {
 		return getIdTableSupport().getDropIdTableCommand() + " "
-				+ jdbcEnvironment.getQualifiedObjectNameFormatter().format( idTable.getQualifiedTableName(), dialect );
+				+ sqlStringGenerationContext.format( idTable.getQualifiedTableName() );
 	}
 
 	protected void finishPreparation(

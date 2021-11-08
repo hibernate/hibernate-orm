@@ -55,7 +55,9 @@ public interface JdbcEnvironment extends Service {
 	 * Obtain support for formatting qualified object names.
 	 *
 	 * @return Qualified name support.
+	 * @deprecated Use a provided {@link org.hibernate.boot.model.relational.SqlStringGenerationContext} instead.
 	 */
+	@Deprecated
 	QualifiedObjectNameFormatter getQualifiedObjectNameFormatter();
 
 	/**

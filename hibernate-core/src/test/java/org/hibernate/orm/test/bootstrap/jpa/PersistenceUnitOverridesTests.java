@@ -18,6 +18,7 @@ import javax.persistence.spi.PersistenceProvider;
 import javax.persistence.spi.PersistenceUnitInfo;
 import javax.sql.DataSource;
 
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.access.AccessType;
@@ -519,7 +520,8 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 				JdbcServices jdbcServices,
 				JdbcConnectionAccess connectionAccess,
 				MetadataImplementor metadata,
-				SessionFactoryOptions sessionFactoryOptions) {
+				SessionFactoryOptions sessionFactoryOptions,
+				SqlStringGenerationContext sqlStringGenerationContext) {
 
 		}
 

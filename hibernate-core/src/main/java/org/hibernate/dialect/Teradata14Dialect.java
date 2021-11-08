@@ -17,6 +17,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.QualifiedNameImpl;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -214,22 +215,19 @@ public class Teradata14Dialect extends TeradataDialect {
 		}
 
 		@Override
-		public String[] getSqlCreateStrings(Index index, Metadata metadata) {
+		public String[] getSqlCreateStrings(Index index, Metadata metadata,
+				SqlStringGenerationContext context) {
 			final JdbcEnvironment jdbcEnvironment = metadata.getDatabase().getJdbcEnvironment();
-			final String tableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-					index.getTable().getQualifiedTableName(),
-					jdbcEnvironment.getDialect()
-			);
+			final String tableName = context.format( index.getTable().getQualifiedTableName() );
 
 			final String indexNameForCreation;
 			if ( getDialect().qualifyIndexName() ) {
-				indexNameForCreation = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
+				indexNameForCreation = context.format(
 						new QualifiedNameImpl(
 								index.getTable().getQualifiedTableName().getCatalogName(),
 								index.getTable().getQualifiedTableName().getSchemaName(),
 								jdbcEnvironment.getIdentifierHelper().toIdentifier( index.getName() )
-						),
-						jdbcEnvironment.getDialect()
+						)
 				);
 			}
 			else {

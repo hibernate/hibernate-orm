@@ -11,6 +11,8 @@ import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.service.ServiceRegistry;
@@ -22,6 +24,7 @@ import org.hibernate.tool.schema.extract.spi.ExtractionContext;
 public class ImprovedExtractionContextImpl implements ExtractionContext {
 	private final ServiceRegistry serviceRegistry;
 	private final JdbcEnvironment jdbcEnvironment;
+	private final SqlStringGenerationContext sqlStringGenerationContext;
 	private final DdlTransactionIsolator ddlTransactionIsolator;
 	private final Identifier defaultCatalog;
 	private final Identifier defaultSchema;
@@ -39,6 +42,7 @@ public class ImprovedExtractionContextImpl implements ExtractionContext {
 			DatabaseObjectAccess databaseObjectAccess) {
 		this.serviceRegistry = serviceRegistry;
 		this.jdbcEnvironment = jdbcEnvironment;
+		this.sqlStringGenerationContext = new SqlStringGenerationContextImpl( jdbcEnvironment );
 		this.ddlTransactionIsolator = ddlTransactionIsolator;
 		this.defaultCatalog = defaultCatalog;
 		this.defaultSchema = defaultSchema;
@@ -53,6 +57,11 @@ public class ImprovedExtractionContextImpl implements ExtractionContext {
 	@Override
 	public JdbcEnvironment getJdbcEnvironment() {
 		return jdbcEnvironment;
+	}
+
+	@Override
+	public SqlStringGenerationContext getSqlStringGenerationContext() {
+		return sqlStringGenerationContext;
 	}
 
 	@Override

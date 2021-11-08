@@ -16,7 +16,9 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Sequence;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -181,7 +183,10 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 					null,
 					(RootClass) entityMapping
 			);
-			generator.initialize( SqlStringGenerationContextImpl.forTests( bootModel.getDatabase().getJdbcEnvironment() ) );
+			Database database = bootModel.getDatabase();
+			SqlStringGenerationContext sqlStringGenerationContext =
+					SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment() );
+			generator.initialize( sqlStringGenerationContext );
 
 			final SequenceStyleGenerator sequenceStyleGenerator = assertTyping(
 					SequenceStyleGenerator.class,
@@ -192,13 +197,13 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 			assertThat( sequenceStyleGenerator.getDatabaseStructure().getInitialValue(), is( 100 ) );
 			assertThat( sequenceStyleGenerator.getDatabaseStructure().getIncrementSize(), is( 500 ) );
 
-			final Sequence sequence = bootModel.getDatabase()
-					.getDefaultNamespace()
+			final Sequence sequence = database.getDefaultNamespace()
 					.locateSequence( Identifier.toIdentifier( "my_db_sequence" ) );
 			assertThat( sequence, notNullValue() );
 			final String[] sqlCreateStrings = new H2Dialect().getSequenceExporter().getSqlCreateStrings(
 					sequence,
-					bootModel
+					bootModel,
+					sqlStringGenerationContext
 			);
 			assertThat( sqlCreateStrings.length, is( 1 ) );
 			final String cmd = sqlCreateStrings[0].toLowerCase();

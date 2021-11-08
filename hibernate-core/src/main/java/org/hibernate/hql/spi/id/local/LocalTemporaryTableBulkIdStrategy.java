@@ -7,6 +7,7 @@
 package org.hibernate.hql.spi.id.local;
 
 import org.hibernate.boot.TempTableDdlTransactionHandling;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -111,17 +112,15 @@ public class LocalTemporaryTableBulkIdStrategy
 			Table idTable,
 			JdbcServices jdbcServices,
 			MetadataImplementor metadata,
-			PreparationContextImpl context) {
-		String dropStatement = buildIdTableDropStatement( idTable, jdbcServices );
+			PreparationContextImpl context,
+			SqlStringGenerationContext sqlStringGenerationContext) {
+		String dropStatement = buildIdTableDropStatement( idTable, sqlStringGenerationContext );
 		if ( dropIdTables ) {
 			context.dropStatements.add( dropStatement );
 		}
 		return new IdTableInfoImpl(
-				jdbcServices.getJdbcEnvironment().getQualifiedObjectNameFormatter().format(
-						idTable.getQualifiedTableName(),
-						jdbcServices.getJdbcEnvironment().getDialect()
-				),
-				buildIdTableCreateStatement( idTable, jdbcServices, metadata ),
+				sqlStringGenerationContext.format( idTable.getQualifiedTableName() ),
+				buildIdTableCreateStatement( idTable, metadata, sqlStringGenerationContext ),
 				dropStatement
 		);
 	}

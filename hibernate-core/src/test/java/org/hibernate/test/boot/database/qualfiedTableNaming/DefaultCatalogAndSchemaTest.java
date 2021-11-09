@@ -77,7 +77,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 @RunWith(CustomParameterized.class)
-@TestForIssue(jiraKey = "HHH-14921")
+@TestForIssue(jiraKey = { "HHH-14921", "HHH-14922" })
 public class DefaultCatalogAndSchemaTest {
 
 	private static final String SQL_QUOTE_CHARACTER_CLASS = "([`\"]|\\[|\\])";
@@ -123,12 +123,11 @@ public class DefaultCatalogAndSchemaTest {
 			params.add( new Object[] { mode, "implicit-global-catalog-and-schema.orm.xml",
 					null, null,
 					"someImplicitCatalog", "someImplicitSchema" } );
-		// HHH-14922: Inconsistent precedence of orm.xml implicit catalog/schema over "default_catalog"/"default_schema"
-//			params.add( new Object[] { mode, "implicit-global-catalog-and-schema.orm.xml",
-//					"someDefaultCatalog", "someDefaultSchema",
-//					// The implicit catalog/schema defined in the mapping should take precedence
-//					// over the default catalog/schema defined in settings.
-//					"someImplicitCatalog", "someImplicitSchema" } );
+			params.add( new Object[] { mode, "implicit-global-catalog-and-schema.orm.xml",
+					"someDefaultCatalog", "someDefaultSchema",
+					// The implicit catalog/schema defined in the mapping should take precedence
+					// over the default catalog/schema defined in settings.
+					"someImplicitCatalog", "someImplicitSchema" } );
 		}
 		return params;
 	}

@@ -1101,7 +1101,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 	}
 
-	public static Interceptor configuredInterceptor(Interceptor interceptor, SessionFactoryOptions options) {
+	public static Interceptor configuredInterceptor(Interceptor interceptor, boolean explicitNoInterceptor, SessionFactoryOptions options) {
 		// NOTE : DO NOT return EmptyInterceptor.INSTANCE from here as a "default for the Session"
 		// 		we "filter" that one out here.  The return from here should represent the
 		//		explicitly configured Interceptor (if one).  Return null from here instead; Session
@@ -1114,6 +1114,12 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		// prefer the SF-scoped interceptor, prefer that to any Session-scoped interceptor prototype
 		if ( options.getInterceptor() != null && options.getInterceptor() != EmptyInterceptor.INSTANCE ) {
 			return options.getInterceptor();
+		}
+
+		// If explicitly asking for no interceptor and there is no SessionFactory-scoped interceptors, then
+		// no need to inherit from the configured stateless session ones.
+		if ( explicitNoInterceptor ) {
+			return null;
 		}
 
 		// then check the Session-scoped interceptor prototype
@@ -1157,6 +1163,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		private String tenantIdentifier;
 		private TimeZone jdbcTimeZone;
 		private boolean queryParametersValidationEnabled;
+		private boolean explicitNoInterceptor;
 
 		private List<SessionEventListener> listeners;
 
@@ -1258,7 +1265,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		@Override
 		public Interceptor getInterceptor() {
-			return configuredInterceptor( interceptor, sessionFactory.getSessionFactoryOptions() );
+			return configuredInterceptor( interceptor, explicitNoInterceptor, sessionFactory.getSessionFactoryOptions() );
 		}
 
 		@Override
@@ -1307,6 +1314,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		@SuppressWarnings("unchecked")
 		public T interceptor(Interceptor interceptor) {
 			this.interceptor = interceptor;
+			this.explicitNoInterceptor = false;
 			return (T) this;
 		}
 
@@ -1314,6 +1322,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		@SuppressWarnings("unchecked")
 		public T noInterceptor() {
 			this.interceptor = EmptyInterceptor.INSTANCE;
+			this.explicitNoInterceptor = true;
 			return (T) this;
 		}
 
@@ -1473,7 +1482,7 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		@Override
 		public Interceptor getInterceptor() {
-			return configuredInterceptor( EmptyInterceptor.INSTANCE, sessionFactory.getSessionFactoryOptions() );
+			return configuredInterceptor( EmptyInterceptor.INSTANCE, false, sessionFactory.getSessionFactoryOptions() );
 
 		}
 

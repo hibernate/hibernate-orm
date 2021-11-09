@@ -279,6 +279,12 @@ test {
 	}
 
 	maxHeapSize = '3G'
+	// Allow to exclude specific tests
+	if (project.hasProperty('excludeTests')) {
+		filter {
+			excludeTestsMatching project.property('excludeTests').toString()
+		}
+	}
 }
 
 

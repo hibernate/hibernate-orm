@@ -19,3 +19,65 @@ configure `hibernate.bytecode.provider=javassist`: remove the property if you're
 
 A side effect is that Hibenate ORM no longer lists javassist among its dependencies.
 
+=== Changes to the DDL type for CLOB in PostgreSQL81Dialect and its subclasses
+
+As of 5.6.2, the default PostgreSQL DDL type for CLOB columns i.e. fields annotated with `@Lob` or with the type `java.sql.Clob`
+will be the `oid` type whereas before, the type `text` was used. The `text` type does not support streaming data
+and is, even if TOASTed, materialized eagerly by the server, which is not what one would expect for LOB types.
+
+All PostgreSQL JDBC drivers unfortunately just store the `oid` it created for a `java.sql.Clob` into the `text` column.
+Although reading back the value with the CLOB API works, PostgreSQL has no knowledge of the reference to the LOB,
+because the `oid` is not known to PostgreSQL, leading to data loss when `vacuumlo` (the utility to clean up unused LOBs) runs.
+To avoid the data loss, it is required to use the `oid` type so that `vacuumlo` can see the reference.
+
+Updating to 5.6.2 does not require any schema or application changes by default, but we highly recommend
+that you migrate existing `text` columns for LOBs to `oid` to prevent data loss due to the activity of `vacuumlo`.
+
+[source,sql]
+----
+alter table test_entity
+alter column clobfield
+set data type oid using clobfield::oid
+----
+
+If you are overriding the `JdbcTypeDescriptor` for `CLOB` to use e.g. `VarcharTypeDescriptor` in a custom PostgreSQL dialect,
+beware that you will also have to override the column type in the custom dialect, as with "pgjdbc",
+it is not possible to read/write an `oid` column with the JDBC `ResultSet#getString/Statement#setString` methods.
+
+[source,java]
+----
+registerColumnType( Types.CLOB, "text" );
+----
+
+Alternatively, you can remove the `JdbcTypeDescriptor` override and migrate to `oid` with
+
+[source,sql]
+----
+alter table test_entity
+alter column clobfield
+set data type oid using lo_from_bytea(0, cast(clobfield as bytea))
+----
+
+The switch to `oid` might have a negative impact on performance for small values that are fetched often,
+because the value is stored in a different file system page than the row, even for small values
+The benefit of the `oid` type is that it allows streaming the content and reduces the row size.
+
+Users that just want a large text type but don't care about streaming should use the Hibernate type `text`:
+
+[source,java]
+----
+@Entity
+public class TestEntity {
+
+    @org.hibernate.annotations.Type( type = "text" )
+    String clobField;
+
+	//...
+}
+----
+
+This will map to `java.sql.Types.LONGVARCHAR` for which Hibernate dialects register a DDL type that supports access
+via the `ResultSet#getString/Statement#setString` methods i.e. in case of PostgreSQL the type `text`.
+
+The `@Lob` annotation should only be used to force the use of the `ResultSet#getClob/Statement#setClob` JDBC driver methods,
+which is in turn necessary for streaming data.

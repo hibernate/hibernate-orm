@@ -114,7 +114,7 @@ public class PostgreSQL81Dialect extends Dialect {
 		registerColumnType( Types.BINARY, "bytea" );
 		registerColumnType( Types.LONGVARCHAR, "text" );
 		registerColumnType( Types.LONGVARBINARY, "bytea" );
-		registerColumnType( Types.CLOB, "text" );
+		registerColumnType( Types.CLOB, "oid" );
 		registerColumnType( Types.BLOB, "oid" );
 		registerColumnType( Types.NUMERIC, "numeric($p, $s)" );
 		registerColumnType( Types.OTHER, "uuid" );

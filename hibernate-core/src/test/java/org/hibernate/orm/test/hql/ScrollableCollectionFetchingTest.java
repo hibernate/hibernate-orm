@@ -12,7 +12,6 @@ import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.SybaseASEDialect;
-import org.hibernate.query.sqm.InterpretationException;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -65,7 +64,7 @@ public class ScrollableCollectionFetchingTest {
 
 	@Test
 	@SkipForDialect(dialectClass = SybaseASEDialect.class, version = 1500, matchSubTypes = true, reason = "HHH-5229")
-	@SkipForDialect(dialectClass = AbstractHANADialect.class, reason = "HANA only supports forward-only cursors.")
+	@SkipForDialect(dialectClass = AbstractHANADialect.class, matchSubTypes = true, reason = "HANA only supports forward-only cursors.")
 	public void testScrollingJoinFetchesEmptyResultSet(SessionFactoryScope scope) {
 		scope.inTransaction(
 				s -> {
@@ -132,7 +131,7 @@ public class ScrollableCollectionFetchingTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTemporaryTable.class)
-	@SkipForDialect(dialectClass = AbstractHANADialect.class, reason = "HANA only supports forward-only cursors")
+	@SkipForDialect(dialectClass = AbstractHANADialect.class, matchSubTypes = true, reason = "HANA only supports forward-only cursors")
 	public void testScrollingJoinFetchesSingleRowResultSet(SessionFactoryScope scope) {
 
 		scope.inTransaction(
@@ -258,7 +257,7 @@ public class ScrollableCollectionFetchingTest {
 	)
 	public void testScrollingJoinFetchesForward(SessionFactoryScope scope) {
 		TestData data = new TestData();
-		data.prepare(scope);
+		data.prepare( scope );
 
 		scope.inTransaction(
 				s -> {
@@ -282,10 +281,10 @@ public class ScrollableCollectionFetchingTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTemporaryTable.class)
-	@SkipForDialect(dialectClass = AbstractHANADialect.class, reason = "HANA only supports forward-only cursors.")
+	@SkipForDialect(dialectClass = AbstractHANADialect.class, matchSubTypes = true, reason = "HANA only supports forward-only cursors.")
 	public void testScrollingJoinFetchesReverse(SessionFactoryScope scope) {
 		TestData data = new TestData();
-		data.prepare(scope);
+		data.prepare( scope );
 
 		scope.inTransaction(
 				s -> {
@@ -310,7 +309,7 @@ public class ScrollableCollectionFetchingTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTemporaryTable.class)
-	@SkipForDialect(dialectClass = AbstractHANADialect.class, reason = "HANA only supports forward-only cursors.")
+	@SkipForDialect(dialectClass = AbstractHANADialect.class, matchSubTypes = true, reason = "HANA only supports forward-only cursors.")
 	public void testScrollingJoinFetchesPositioning(SessionFactoryScope scope) {
 		TestData data = new TestData();
 		data.prepare( scope );

@@ -155,16 +155,18 @@ public class OverriddenMappingDefaults implements MappingDefaults {
 			this.implicitCacheAccessType = parentDefaults.getImplicitCacheAccessType();
 		}
 
-		public Builder setImplicitSchemaName(String implicitSchemaName) {
-			if ( StringHelper.isNotEmpty( implicitSchemaName ) ) {
-				this.implicitSchemaName = implicitSchemaName;
+		public Builder setImplicitSchemaName(String schemaName) {
+			if ( StringHelper.isEmpty( implicitSchemaName ) ) {
+				// the value from "higher up" should have precedence
+				implicitSchemaName = schemaName;
 			}
 			return this;
 		}
 
-		public Builder setImplicitCatalogName(String implicitCatalogName) {
-			if ( StringHelper.isNotEmpty( implicitCatalogName ) ) {
-				this.implicitCatalogName = implicitCatalogName;
+		public Builder setImplicitCatalogName(String catalogName) {
+			if ( StringHelper.isEmpty( implicitCatalogName ) ) {
+				// the value from "higher up" should have precedence
+				implicitCatalogName = catalogName;
 			}
 			return this;
 		}

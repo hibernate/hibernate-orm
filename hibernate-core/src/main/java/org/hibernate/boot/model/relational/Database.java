@@ -25,7 +25,13 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * @author Steve Ebersole
+ * Keeps track of boot-time descriptors for various database namespaces and objects.
+ *
+ * @implNote Note about {@link #defaultNamespace} versus {@link #implicitNamespace} - the former
+ * comes exclusively from the {@link org.hibernate.cfg.AvailableSettings#DEFAULT_SCHEMA} and
+ * {@link org.hibernate.cfg.AvailableSettings#DEFAULT_CATALOG} settings; the latter is either the
+ * {@link #defaultNamespace} or an "adjusted" implicit namespace (see {@link #adjustDefaultNamespace}).
+ * {@link #defaultNamespace}, if specified, always has precedence for
  */
 public class Database {
 
@@ -36,6 +42,8 @@ public class Database {
 	private final Map<String,AuxiliaryDatabaseObject> auxiliaryDatabaseObjects = new HashMap<>();
 	private final ServiceRegistry serviceRegistry;
 	private final PhysicalNamingStrategy physicalNamingStrategy;
+
+	private final Namespace defaultNamespace;
 
 	private Namespace implicitNamespace;
 	private List<InitCommand> initCommands;
@@ -51,12 +59,17 @@ public class Database {
 		this.physicalNamingStrategy = buildingOptions.getPhysicalNamingStrategy();
 		this.dialect = determineDialect( buildingOptions );
 
-		this.implicitNamespace = makeNamespace(
-				new Namespace.Name(
-						toIdentifier( buildingOptions.getMappingDefaults().getImplicitCatalogName() ),
-						toIdentifier( buildingOptions.getMappingDefaults().getImplicitSchemaName() )
-				)
-		);
+		final Identifier defaultCatalogName = toIdentifier( buildingOptions.getMappingDefaults().getImplicitCatalogName() );
+		final Identifier defaultSchemaName = toIdentifier( buildingOptions.getMappingDefaults().getImplicitSchemaName() );
+
+		if ( defaultCatalogName == null && defaultSchemaName == null ) {
+			defaultNamespace = null;
+			implicitNamespace = makeNamespace( new Namespace.Name( null, null ) );
+		}
+		else {
+			defaultNamespace = makeNamespace( new Namespace.Name( defaultCatalogName, defaultSchemaName ) );
+			implicitNamespace = defaultNamespace;
+		}
 	}
 
 	private static Dialect determineDialect(MetadataBuildingOptions buildingOptions) {
@@ -116,6 +129,10 @@ public class Database {
 	}
 
 	public Namespace locateNamespace(Identifier catalogName, Identifier schemaName) {
+		if ( defaultNamespace != null ) {
+			return defaultNamespace;
+		}
+
 		if ( catalogName == null && schemaName == null ) {
 			return getDefaultNamespace();
 		}
@@ -129,6 +146,10 @@ public class Database {
 	}
 
 	public Namespace adjustDefaultNamespace(Identifier catalogName, Identifier schemaName) {
+		if ( defaultNamespace != null ) {
+			return defaultNamespace;
+		}
+
 		final Namespace.Name name = new Namespace.Name( catalogName, schemaName );
 		if ( implicitNamespace.getName().equals( name ) ) {
 			return implicitNamespace;

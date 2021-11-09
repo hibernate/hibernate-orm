@@ -65,9 +65,9 @@ public class PostgreSqlLobStringTest extends BaseCoreFunctionalTestCase {
 															   "        (?, ?, ?, -1)"
 											   )) {
 												   int index = 1;
-												   statement.setString(index++, value1);
-												   statement.setString(index++, value2);
-												   statement.setString(index++, value3);
+												   statement.setClob( index++, session.getLobHelper().createClob( value1 ) );
+												   statement.setClob( index++, session.getLobHelper().createClob( value2 ) );
+												   statement.setClob( index++, session.getLobHelper().createClob( value3 ) );
 
 												   assertEquals( 1, statement.executeUpdate() );
 											   }
@@ -77,57 +77,63 @@ public class PostgreSqlLobStringTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testBadClobDataSavedAsStringFails() {
-		try {
-			doInHibernate( this::sessionFactory, session -> {
-							   final Query query = session.createQuery( "from TestEntity" );
+		doInHibernate( this::sessionFactory, session -> {
+			final Query query = session.createQuery( "from TestEntity" );
 
-							   final List<TestEntity> results = query.list();
+			final List<TestEntity> results = query.list();
 
-							   fail("Exception thrown expected");
-						   } );
-		}
-		catch (Exception e) {
-			Exception rootException = (Exception) ExceptionUtil.rootCause( e );
-			assertTrue( rootException.getMessage().startsWith( "Bad value for type long" ) );
-		}
+			assertThat( results.size(), is( 1 ) );
+
+			final TestEntity testEntity = results.get( 0 );
+			assertThat( testEntity.getFirstLobField(), is( value1 ) );
+			assertThat( testEntity.getSecondLobField(), is( value2 ) );
+			final Clob clobField = testEntity.getClobField();
+			try {
+
+				assertThat( clobField.getSubString( 1, (int) clobField.length() ), is( value3 ) );
+			}
+			catch (SQLException e) {
+				fail( e.getMessage() );
+			}
+		} );
 	}
 
 	@Test
 	public void testBadClobDataSavedAsStringworksAfterUpdate() {
 		doInHibernate( this::sessionFactory, session -> {
 
-						   session.doWork( connection -> {
-											   try(Statement statement = connection.createStatement()) {
-												   statement.executeUpdate(
-														   "update test_entity\n" +
-																   "set \n" +
-																   "    clobfield = lo_from_bytea(0, cast(clobfield as bytea)),\n" +
-																   "    firstlobfield = lo_from_bytea(0, cast(firstlobfield as bytea)),\n" +
-																   "    secondlobfield = lo_from_bytea(0, cast(secondlobfield as bytea))"
-												   );
-											   }
-										   } );
-					   } );
+			session.doWork( connection -> {
+				try (Statement statement = connection.createStatement()) {
+					statement.executeUpdate(
+							"update test_entity\n" +
+									"set \n" +
+									"    clobfield = lo_from_bytea(0, lo_get(clobfield)),\n" +
+									"    firstlobfield = lo_from_bytea(0, lo_get(firstlobfield)),\n" +
+									"    secondlobfield = lo_from_bytea(0, lo_get(secondlobfield))"
+					);
+				}
+			} );
+		} );
 
 		doInHibernate( this::sessionFactory, session -> {
-						   final Query query = session.createQuery( "from TestEntity" );
+			final Query query = session.createQuery( "from TestEntity" );
 
-						   final List<TestEntity> results = query.list();
+			final List<TestEntity> results = query.list();
 
-						   assertThat( results.size(), is( 1 ) );
+			assertThat( results.size(), is( 1 ) );
 
-						   final TestEntity testEntity = results.get( 0 );
-						   assertThat( testEntity.getFirstLobField(), is( value1 ) );
-						   assertThat( testEntity.getSecondLobField(), is( value2 ) );
-						   final Clob clobField = testEntity.getClobField();
-						   try {
+			final TestEntity testEntity = results.get( 0 );
+			assertThat( testEntity.getFirstLobField(), is( value1 ) );
+			assertThat( testEntity.getSecondLobField(), is( value2 ) );
+			final Clob clobField = testEntity.getClobField();
+			try {
 
-							   assertThat( clobField.getSubString( 1, (int) clobField.length() ), is( value3 ) );
-						   }
-						   catch (SQLException e) {
-							   fail( e.getMessage() );
-						   }
-					   } );
+				assertThat( clobField.getSubString( 1, (int) clobField.length() ), is( value3 ) );
+			}
+			catch (SQLException e) {
+				fail( e.getMessage() );
+			}
+		} );
 	}
 
 	@Entity(name = "TestEntity")

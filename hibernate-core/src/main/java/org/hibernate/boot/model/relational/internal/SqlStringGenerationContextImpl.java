@@ -47,7 +47,7 @@ public class SqlStringGenerationContextImpl
 	 */
 	public static SqlStringGenerationContext fromExplicit(JdbcEnvironment jdbcEnvironment,
 			Database database, String defaultCatalog, String defaultSchema) {
-		Namespace.Name implicitNamespaceName = database.getDefaultNamespace().getPhysicalName();
+		Namespace.Name implicitNamespaceName = database.getPhysicalImplicitNamespaceName();
 		IdentifierHelper identifierHelper = jdbcEnvironment.getIdentifierHelper();
 		NameQualifierSupport nameQualifierSupport = jdbcEnvironment.getNameQualifierSupport();
 		Identifier actualDefaultCatalog = null;
@@ -108,8 +108,45 @@ public class SqlStringGenerationContextImpl
 	}
 
 	@Override
+	public Identifier catalogWithDefault(Identifier explicitCatalogOrNull) {
+		return explicitCatalogOrNull != null ? explicitCatalogOrNull : defaultCatalog;
+	}
+
+	@Override
 	public Identifier getDefaultSchema() {
 		return defaultSchema;
+	}
+
+	@Override
+	public Identifier schemaWithDefault(Identifier explicitSchemaOrNull) {
+		return explicitSchemaOrNull != null ? explicitSchemaOrNull : defaultSchema;
+	}
+
+	private QualifiedTableName withDefaults(QualifiedTableName name) {
+		if ( name.getCatalogName() == null && defaultCatalog != null
+				|| name.getSchemaName() == null && defaultSchema != null ) {
+			return new QualifiedTableName( catalogWithDefault( name.getCatalogName() ),
+					schemaWithDefault( name.getSchemaName() ), name.getTableName() );
+		}
+		return name;
+	}
+
+	private QualifiedSequenceName withDefaults(QualifiedSequenceName name) {
+		if ( name.getCatalogName() == null && defaultCatalog != null
+				|| name.getSchemaName() == null && defaultSchema != null ) {
+			return new QualifiedSequenceName( catalogWithDefault( name.getCatalogName() ),
+					schemaWithDefault( name.getSchemaName() ), name.getSequenceName() );
+		}
+		return name;
+	}
+
+	private QualifiedName withDefaults(QualifiedName name) {
+		if ( name.getCatalogName() == null && defaultCatalog != null
+				|| name.getSchemaName() == null && defaultSchema != null ) {
+			return new QualifiedSequenceName( catalogWithDefault( name.getCatalogName() ),
+					schemaWithDefault( name.getSchemaName() ), name.getObjectName() );
+		}
+		return name;
 	}
 
 	@Override
@@ -127,44 +164,13 @@ public class SqlStringGenerationContextImpl
 		return qualifiedObjectNameFormatter.format( withDefaults( qualifiedName ), dialect );
 	}
 
-	private QualifiedTableName withDefaults(QualifiedTableName name) {
-		if ( name.getCatalogName() == null && defaultCatalog != null
-				|| name.getSchemaName() == null && defaultSchema != null ) {
-			return new QualifiedTableName( withDefault( name.getCatalogName(), defaultCatalog ),
-					withDefault( name.getSchemaName(), defaultSchema ), name.getTableName() );
-		}
-		return name;
-	}
-
-	private QualifiedSequenceName withDefaults(QualifiedSequenceName name) {
-		if ( name.getCatalogName() == null && defaultCatalog != null
-				|| name.getSchemaName() == null && defaultSchema != null ) {
-			return new QualifiedSequenceName( withDefault( name.getCatalogName(), defaultCatalog ),
-					withDefault( name.getSchemaName(), defaultSchema ), name.getSequenceName() );
-		}
-		return name;
-	}
-
-	private QualifiedName withDefaults(QualifiedName name) {
-		if ( name.getCatalogName() == null && defaultCatalog != null
-				|| name.getSchemaName() == null && defaultSchema != null ) {
-			return new QualifiedSequenceName( withDefault( name.getCatalogName(), defaultCatalog ),
-					withDefault( name.getSchemaName(), defaultSchema ), name.getObjectName() );
-		}
-		return name;
-	}
-
-	private static Identifier withDefault(Identifier value, Identifier defaultValue) {
-		return value != null ? value : defaultValue;
-	}
-
 	@Override
 	public String formatWithoutCatalog(QualifiedSequenceName qualifiedName) {
 		QualifiedSequenceName nameToFormat;
 		if ( qualifiedName.getCatalogName() != null
 				|| qualifiedName.getSchemaName() == null && defaultSchema != null ) {
 			nameToFormat = new QualifiedSequenceName( null,
-					withDefault( qualifiedName.getSchemaName(), defaultSchema ), qualifiedName.getSequenceName() );
+					schemaWithDefault( qualifiedName.getSchemaName() ), qualifiedName.getSequenceName() );
 		}
 		else {
 			nameToFormat = qualifiedName;

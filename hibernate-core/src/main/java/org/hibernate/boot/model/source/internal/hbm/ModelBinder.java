@@ -796,17 +796,13 @@ public class ModelBinder {
 			// YUCK!  but cannot think of a clean way to do this given the string-config based scheme
 			params.put( PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER, objectNameNormalizer);
 
-			if ( database.getDefaultNamespace().getPhysicalName().getSchema() != null ) {
-				params.setProperty(
-						PersistentIdentifierGenerator.SCHEMA,
-						database.getDefaultNamespace().getPhysicalName().getSchema().render( database.getDialect() )
-				);
+			String implicitSchemaName = metadataBuildingContext.getMappingDefaults().getImplicitSchemaName();
+			if ( implicitSchemaName != null ) {
+				params.setProperty( PersistentIdentifierGenerator.SCHEMA, implicitSchemaName );
 			}
-			if ( database.getDefaultNamespace().getPhysicalName().getCatalog() != null ) {
-				params.setProperty(
-						PersistentIdentifierGenerator.CATALOG,
-						database.getDefaultNamespace().getPhysicalName().getCatalog().render( database.getDialect() )
-				);
+			String implicitCatalogName = metadataBuildingContext.getMappingDefaults().getImplicitCatalogName();
+			if ( implicitCatalogName != null ) {
+				params.setProperty( PersistentIdentifierGenerator.CATALOG, implicitCatalogName );
 			}
 
 			params.putAll( generator.getParameters() );
@@ -3051,7 +3047,7 @@ public class ModelBinder {
 			return database.toIdentifier( tableSpecSource.getExplicitCatalogName() );
 		}
 		else {
-			return database.getDefaultNamespace().getName().getCatalog();
+			return database.toIdentifier( metadataBuildingContext.getMappingDefaults().getImplicitCatalogName() );
 		}
 	}
 
@@ -3060,7 +3056,7 @@ public class ModelBinder {
 			return database.toIdentifier( tableSpecSource.getExplicitSchemaName() );
 		}
 		else {
-			return database.getDefaultNamespace().getName().getSchema();
+			return database.toIdentifier( metadataBuildingContext.getMappingDefaults().getImplicitSchemaName() );
 		}
 	}
 

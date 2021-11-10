@@ -12,7 +12,6 @@ import java.sql.SQLException;
 
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
-import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.service.ServiceRegistry;
@@ -26,8 +25,6 @@ public class ImprovedExtractionContextImpl implements ExtractionContext {
 	private final JdbcEnvironment jdbcEnvironment;
 	private final SqlStringGenerationContext sqlStringGenerationContext;
 	private final DdlTransactionIsolator ddlTransactionIsolator;
-	private final Identifier defaultCatalog;
-	private final Identifier defaultSchema;
 
 	private final DatabaseObjectAccess databaseObjectAccess;
 
@@ -36,16 +33,13 @@ public class ImprovedExtractionContextImpl implements ExtractionContext {
 	public ImprovedExtractionContextImpl(
 			ServiceRegistry serviceRegistry,
 			JdbcEnvironment jdbcEnvironment,
+			SqlStringGenerationContext sqlStringGenerationContext,
 			DdlTransactionIsolator ddlTransactionIsolator,
-			Identifier defaultCatalog,
-			Identifier defaultSchema,
 			DatabaseObjectAccess databaseObjectAccess) {
 		this.serviceRegistry = serviceRegistry;
 		this.jdbcEnvironment = jdbcEnvironment;
-		this.sqlStringGenerationContext = new SqlStringGenerationContextImpl( jdbcEnvironment );
+		this.sqlStringGenerationContext = sqlStringGenerationContext;
 		this.ddlTransactionIsolator = ddlTransactionIsolator;
-		this.defaultCatalog = defaultCatalog;
-		this.defaultSchema = defaultSchema;
 		this.databaseObjectAccess = databaseObjectAccess;
 	}
 
@@ -87,12 +81,12 @@ public class ImprovedExtractionContextImpl implements ExtractionContext {
 
 	@Override
 	public Identifier getDefaultCatalog() {
-		return defaultCatalog;
+		return sqlStringGenerationContext.getDefaultCatalog();
 	}
 
 	@Override
 	public Identifier getDefaultSchema() {
-		return defaultSchema;
+		return sqlStringGenerationContext.getDefaultSchema();
 	}
 
 	@Override

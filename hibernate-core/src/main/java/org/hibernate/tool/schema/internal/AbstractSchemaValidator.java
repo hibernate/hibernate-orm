@@ -13,7 +13,10 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.Sequence;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
@@ -58,13 +61,18 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 			Metadata metadata,
 			ExecutionOptions options,
 			ContributableMatcher contributableInclusionFilter) {
+		SqlStringGenerationContext sqlStringGenerationContext = SqlStringGenerationContextImpl.fromConfigurationMap(
+				tool.getServiceRegistry().getService( JdbcEnvironment.class ),
+				metadata.getDatabase(),
+				options.getConfigurationValues()
+		);
 		final JdbcContext jdbcContext = tool.resolveJdbcContext( options.getConfigurationValues() );
 
 		final DdlTransactionIsolator isolator = tool.getDdlTransactionIsolator( jdbcContext );
 		final DatabaseInformation databaseInformation = Helper.buildDatabaseInformation(
 				tool.getServiceRegistry(),
 				isolator,
-				metadata.getDatabase().getDefaultNamespace().getName(),
+				sqlStringGenerationContext,
 				tool
 		);
 

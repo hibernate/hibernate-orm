@@ -23,7 +23,6 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.DynamicFilterAliasGenerator;
@@ -479,9 +478,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		while ( iter.hasNext() ) {
 			Property prop = iter.next();
 			String tabname = prop.getValue().getTable().getQualifiedName(
-					factory.getSqlStringGenerationContext(),
-					factory.getSettings().getDefaultCatalogName(),
-					factory.getSettings().getDefaultSchemaName()
+					factory.getSqlStringGenerationContext()
 			);
 			propertyTableNumbers[i] = getTableId( tabname, this.tableNames );
 			naturalOrderPropertyTableNumbers[i] = getTableId( tabname, naturalOrderTableNames );
@@ -501,9 +498,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			Property prop = iter.next();
 			Table tab = prop.getValue().getTable();
 			String tabname = tab.getQualifiedName(
-					factory.getSqlStringGenerationContext(),
-					factory.getSettings().getDefaultCatalogName(),
-					factory.getSettings().getDefaultSchemaName()
+					factory.getSqlStringGenerationContext()
 			);
 			Integer tabnum = getTableId( tabname, subclassTableNameClosure );
 			propTableNumbers.add( tabnum );
@@ -549,13 +544,11 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 				notNullColumnTableNumbers = new int[subclassSpan];
 				final int id = getTableId(
 						table.getQualifiedName(
-								factory.getSqlStringGenerationContext(),
-								factory.getSettings().getDefaultCatalogName(),
-								factory.getSettings().getDefaultSchemaName()
-						),
-						subclassTableNameClosure
-				);
-				notNullColumnTableNumbers[subclassSpanMinusOne] = id;
+								factory.getSqlStringGenerationContext()
+					),
+					subclassTableNameClosure
+			);
+			notNullColumnTableNumbers[subclassSpanMinusOne] = id;
 				notNullColumnNames = new String[subclassSpan];
 				notNullColumnNames[subclassSpanMinusOne] = subclassTableKeyColumnClosure[id][0]; //( (Column) model.getTable().getPrimaryKey().getColumnIterator().next() ).getName();
 			}
@@ -618,9 +611,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 					subclassesByDiscriminatorValue.put( discriminatorValue, sc.getEntityName() );
 					int id = getTableId(
 							table.getQualifiedName(
-									factory.getSqlStringGenerationContext(),
-									factory.getSettings().getDefaultCatalogName(),
-									factory.getSettings().getDefaultSchemaName()
+									factory.getSqlStringGenerationContext()
 							),
 							subclassTableNameClosure
 					);
@@ -753,9 +744,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			SessionFactoryImplementor factory) {
 
 		final String tableName = persistentClass.getTable().getQualifiedName(
-				factory.getSqlStringGenerationContext(),
-				factory.getSettings().getDefaultCatalogName(),
-				factory.getSettings().getDefaultSchemaName()
+				factory.getSqlStringGenerationContext()
 		);
 
 		associateSubclassNamesToSubclassTableIndex( tableName, classNames, mapping );
@@ -764,9 +753,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		while ( itr.hasNext() ) {
 			final Join join = itr.next();
 			final String secondaryTableName = join.getTable().getQualifiedName(
-					factory.getSqlStringGenerationContext(),
-					factory.getSettings().getDefaultCatalogName(),
-					factory.getSettings().getDefaultSchemaName()
+					factory.getSqlStringGenerationContext()
 			);
 			associateSubclassNamesToSubclassTableIndex( secondaryTableName, classNames, mapping );
 		}

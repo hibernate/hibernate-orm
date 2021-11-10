@@ -14,6 +14,7 @@ import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
 import org.hibernate.boot.model.relational.QualifiedTableName;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.service.ServiceRegistry;
@@ -39,16 +40,15 @@ public class DatabaseInformationImpl
 	public DatabaseInformationImpl(
 			ServiceRegistry serviceRegistry,
 			JdbcEnvironment jdbcEnvironment,
+			SqlStringGenerationContext sqlStringGenerationContext,
 			DdlTransactionIsolator ddlTransactionIsolator,
-			Namespace.Name defaultNamespace,
 			SchemaManagementTool tool) throws SQLException {
 		this.jdbcEnvironment = jdbcEnvironment;
 		this.extractionContext = tool.getExtractionTool().createExtractionContext(
 				serviceRegistry,
 				jdbcEnvironment,
+				sqlStringGenerationContext,
 				ddlTransactionIsolator,
-				defaultNamespace.getCatalog(),
-				defaultNamespace.getSchema(),
 				this
 		);
 

@@ -280,6 +280,26 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 		return ImmutableEntityUpdateQueryHandlingMode.WARNING;
 	}
 
+	/**
+	 * The default catalog to use in generated SQL when a catalog wasn't specified in the mapping,
+	 * neither explicitly nor implicitly (see the concept of implicit catalog in XML mapping).
+	 *
+	 * @return The default catalog to use.
+	 */
+	default String getDefaultCatalog() {
+		return null;
+	}
+
+	/**
+	 * The default schema to use in generated SQL when a catalog wasn't specified in the mapping,
+	 * neither explicitly nor implicitly (see the concept of implicit schema in XML mapping).
+	 *
+	 * @return The default schema to use.
+	 */
+	default String getDefaultSchema() {
+		return null;
+	}
+
 	default boolean inClauseParameterPaddingEnabled() {
 		return false;
 	}

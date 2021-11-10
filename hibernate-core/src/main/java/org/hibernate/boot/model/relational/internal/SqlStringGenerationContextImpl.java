@@ -6,31 +6,90 @@
  */
 package org.hibernate.boot.model.relational.internal;
 
+import java.util.Map;
+
+import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.jdbc.env.spi.QualifiedObjectNameFormatter;
 
 public class SqlStringGenerationContextImpl
 		implements SqlStringGenerationContext {
 
+	/**
+	 * @param jdbcEnvironment The JDBC environment, to extract the dialect, identifier helper, etc.
+	 * @param database The database metadata, to retrieve the implicit namespace name configured through XML mapping.
+	 * @param configurationMap The configuration map, holding settings such as {@link AvailableSettings#DEFAULT_SCHEMA}.
+	 * @return An {@link SqlStringGenerationContext}.
+	 */
+	public static SqlStringGenerationContext fromConfigurationMap(JdbcEnvironment jdbcEnvironment,
+			Database database, Map<String, Object> configurationMap) {
+		String defaultCatalog = (String) configurationMap.get( AvailableSettings.DEFAULT_CATALOG );
+		String defaultSchema = (String) configurationMap.get( AvailableSettings.DEFAULT_SCHEMA );
+		return fromExplicit( jdbcEnvironment, database, defaultCatalog, defaultSchema );
+	}
+
+	/**
+	 * @param jdbcEnvironment The JDBC environment, to extract the dialect, identifier helper, etc.
+	 * @param database The database metadata, to retrieve the implicit namespace name configured through XML mapping.
+	 * @param defaultCatalog The default catalog to use, unless an implicit catalog was configured through XML mapping.
+	 * @param defaultSchema The default schema to use, unless an implicit schema was configured through XML mapping.
+	 * @return An {@link SqlStringGenerationContext}.
+	 */
+	public static SqlStringGenerationContext fromExplicit(JdbcEnvironment jdbcEnvironment,
+			Database database, String defaultCatalog, String defaultSchema) {
+		Namespace.Name implicitNamespaceName = database.getDefaultNamespace().getPhysicalName();
+		IdentifierHelper identifierHelper = jdbcEnvironment.getIdentifierHelper();
+		NameQualifierSupport nameQualifierSupport = jdbcEnvironment.getNameQualifierSupport();
+		Identifier actualDefaultCatalog = null;
+		if ( nameQualifierSupport.supportsCatalogs() ) {
+			actualDefaultCatalog = implicitNamespaceName.getCatalog() != null
+					? implicitNamespaceName.getCatalog()
+					: identifierHelper.toIdentifier( defaultCatalog );
+		}
+		Identifier actualDefaultSchema = null;
+		if ( nameQualifierSupport.supportsSchemas() ) {
+			actualDefaultSchema = implicitNamespaceName.getSchema() != null
+					? implicitNamespaceName.getSchema()
+					: identifierHelper.toIdentifier( defaultSchema );
+		}
+		return new SqlStringGenerationContextImpl( jdbcEnvironment, actualDefaultCatalog, actualDefaultSchema );
+	}
+
 	public static SqlStringGenerationContext forTests(JdbcEnvironment jdbcEnvironment) {
-		return new SqlStringGenerationContextImpl( jdbcEnvironment );
+		return forTests( jdbcEnvironment, null, null );
+	}
+
+	public static SqlStringGenerationContext forTests(JdbcEnvironment jdbcEnvironment,
+			String defaultCatalog, String defaultSchema) {
+		IdentifierHelper identifierHelper = jdbcEnvironment.getIdentifierHelper();
+		return new SqlStringGenerationContextImpl( jdbcEnvironment,
+				identifierHelper.toIdentifier( defaultCatalog ), identifierHelper.toIdentifier( defaultSchema ) );
 	}
 
 	private final Dialect dialect;
 	private final IdentifierHelper identifierHelper;
 	private final QualifiedObjectNameFormatter qualifiedObjectNameFormatter;
+	private final Identifier defaultCatalog;
+	private final Identifier defaultSchema;
 
 	@SuppressWarnings("deprecation")
-	public SqlStringGenerationContextImpl(JdbcEnvironment jdbcEnvironment) {
+	private SqlStringGenerationContextImpl(JdbcEnvironment jdbcEnvironment,
+			Identifier defaultCatalog, Identifier defaultSchema) {
 		this.dialect = jdbcEnvironment.getDialect();
 		this.identifierHelper = jdbcEnvironment.getIdentifierHelper();
 		this.qualifiedObjectNameFormatter = jdbcEnvironment.getQualifiedObjectNameFormatter();
+		this.defaultCatalog = defaultCatalog;
+		this.defaultSchema = defaultSchema;
 	}
 
 	@Override
@@ -44,26 +103,68 @@ public class SqlStringGenerationContextImpl
 	}
 
 	@Override
+	public Identifier getDefaultCatalog() {
+		return defaultCatalog;
+	}
+
+	@Override
+	public Identifier getDefaultSchema() {
+		return defaultSchema;
+	}
+
+	@Override
 	public String format(QualifiedTableName qualifiedName) {
-		return qualifiedObjectNameFormatter.format( qualifiedName, dialect );
+		return qualifiedObjectNameFormatter.format( withDefaults( qualifiedName ), dialect );
 	}
 
 	@Override
 	public String format(QualifiedSequenceName qualifiedName) {
-		return qualifiedObjectNameFormatter.format( qualifiedName, dialect );
+		return qualifiedObjectNameFormatter.format( withDefaults( qualifiedName ), dialect );
 	}
 
 	@Override
 	public String format(QualifiedName qualifiedName) {
-		return qualifiedObjectNameFormatter.format( qualifiedName, dialect );
+		return qualifiedObjectNameFormatter.format( withDefaults( qualifiedName ), dialect );
+	}
+
+	private QualifiedTableName withDefaults(QualifiedTableName name) {
+		if ( name.getCatalogName() == null && defaultCatalog != null
+				|| name.getSchemaName() == null && defaultSchema != null ) {
+			return new QualifiedTableName( withDefault( name.getCatalogName(), defaultCatalog ),
+					withDefault( name.getSchemaName(), defaultSchema ), name.getTableName() );
+		}
+		return name;
+	}
+
+	private QualifiedSequenceName withDefaults(QualifiedSequenceName name) {
+		if ( name.getCatalogName() == null && defaultCatalog != null
+				|| name.getSchemaName() == null && defaultSchema != null ) {
+			return new QualifiedSequenceName( withDefault( name.getCatalogName(), defaultCatalog ),
+					withDefault( name.getSchemaName(), defaultSchema ), name.getSequenceName() );
+		}
+		return name;
+	}
+
+	private QualifiedName withDefaults(QualifiedName name) {
+		if ( name.getCatalogName() == null && defaultCatalog != null
+				|| name.getSchemaName() == null && defaultSchema != null ) {
+			return new QualifiedSequenceName( withDefault( name.getCatalogName(), defaultCatalog ),
+					withDefault( name.getSchemaName(), defaultSchema ), name.getObjectName() );
+		}
+		return name;
+	}
+
+	private static Identifier withDefault(Identifier value, Identifier defaultValue) {
+		return value != null ? value : defaultValue;
 	}
 
 	@Override
 	public String formatWithoutCatalog(QualifiedSequenceName qualifiedName) {
 		QualifiedSequenceName nameToFormat;
-		if ( qualifiedName.getCatalogName() != null ) {
+		if ( qualifiedName.getCatalogName() != null
+				|| qualifiedName.getSchemaName() == null && defaultSchema != null ) {
 			nameToFormat = new QualifiedSequenceName( null,
-					qualifiedName.getSchemaName(), qualifiedName.getSequenceName() );
+					withDefault( qualifiedName.getSchemaName(), defaultSchema ), qualifiedName.getSequenceName() );
 		}
 		else {
 			nameToFormat = qualifiedName;

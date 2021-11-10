@@ -55,7 +55,7 @@ public class Index implements RelationalModel, Exportable, Serializable {
 			String name,
 			String defaultCatalog,
 			String defaultSchema) {
-		return buildSqlDropIndexString( name, table.getQualifiedName( context, defaultCatalog, defaultSchema ) );
+		return buildSqlDropIndexString( name, table.getQualifiedName( context ) );
 	}
 
 	public static String buildSqlDropIndexString(
@@ -76,7 +76,7 @@ public class Index implements RelationalModel, Exportable, Serializable {
 		return buildSqlCreateIndexString(
 				context.getDialect(),
 				name,
-				table.getQualifiedName( context, defaultCatalog, defaultSchema ),
+				table.getQualifiedName( context ),
 				columns,
 				columnOrderMap,
 				unique
@@ -151,7 +151,7 @@ public class Index implements RelationalModel, Exportable, Serializable {
 		Dialect dialect = context.getDialect();
 		return "drop index " +
 				StringHelper.qualify(
-						table.getQualifiedName( context, defaultCatalog, defaultSchema ),
+						table.getQualifiedName( context ),
 						getQuotedName( dialect )
 				);
 	}

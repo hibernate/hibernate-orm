@@ -90,9 +90,7 @@ public class ForeignKey extends Constraint {
 						constraintName,
 						columnNames,
 						referencedTable.getQualifiedName(
-								context,
-								defaultCatalog,
-								defaultSchema
+								context
 						),
 						referencedColumnNames,
 						isReferenceToPrimaryKey()
@@ -179,7 +177,7 @@ public class ForeignKey extends Constraint {
 	public String sqlDropString(SqlStringGenerationContext context,
 			String defaultCatalog, String defaultSchema) {
 		Dialect dialect = context.getDialect();
-		String tableName = getTable().getQualifiedName( context, defaultCatalog, defaultSchema );
+		String tableName = getTable().getQualifiedName( context );
 		final StringBuilder buf = new StringBuilder( dialect.getAlterTableString( tableName ) );
 		buf.append( dialect.getDropForeignKeyString() );
 		if ( dialect.supportsIfExistsBeforeConstraintName() ) {

@@ -2702,6 +2702,7 @@ public class ModelBinder {
 			if ( componentBinding.getOwner().hasPojoRepresentation() ) {
 				log.debugf( "Binding virtual component [%s] to owner class [%s]", role, componentBinding.getOwner().getClassName() );
 				componentBinding.setComponentClassName( componentBinding.getOwner().getClassName() );
+				componentBinding.setClassName( explicitComponentClassName );
 			}
 			else {
 				log.debugf( "Binding virtual component [%s] as dynamic", role );

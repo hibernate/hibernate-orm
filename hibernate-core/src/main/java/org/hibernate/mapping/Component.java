@@ -53,6 +53,7 @@ public class Component extends SimpleValue implements MetaAttributable {
 	private Map metaAttributes;
 	private boolean isKey;
 	private String roleName;
+	private String className;
 
 	private Map<RepresentationMode,String> tuplizerImpls;
 
@@ -166,6 +167,30 @@ public class Component extends SimpleValue implements MetaAttributable {
 
 	public void setComponentClassName(String componentClass) {
 		this.componentClassName = componentClass;
+	}
+
+	public void setClassName(String className){
+		this.className = className;
+	}
+
+	/*
+		For a component representing an IdClass the componentClassName is the name of the owner class
+
+		e.g.
+
+		@Entity
+		@IdClass(DependentId.class)
+		public class Dependent {
+
+		}
+
+		componentClassName = Dependent while className = DependentId
+	 */
+	public String getClassName() {
+		if ( className == null ) {
+			return componentClassName;
+		}
+		return className;
 	}
 
 	public void setEmbedded(boolean embedded) {

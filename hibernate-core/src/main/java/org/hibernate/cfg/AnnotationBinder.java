@@ -2907,6 +2907,7 @@ public final class AnnotationBinder {
 		//FIXME shouldn't identifier mapper use getClassOrElementName? Need to be checked.
 		if ( isIdentifierMapper || ( isComponentEmbedded && inferredData.getPropertyName() == null ) ) {
 			comp.setComponentClassName( comp.getOwner().getClassName() );
+			comp.setClassName( inferredData.getClassOrElementName() );
 		}
 		else {
 			comp.setComponentClassName( inferredData.getClassOrElementName() );

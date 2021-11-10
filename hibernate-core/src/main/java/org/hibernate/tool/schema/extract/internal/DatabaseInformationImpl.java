@@ -32,6 +32,7 @@ import org.hibernate.tool.schema.spi.SchemaManagementTool;
 public class DatabaseInformationImpl
 		implements DatabaseInformation, ExtractionContext.DatabaseObjectAccess {
 	private final JdbcEnvironment jdbcEnvironment;
+	private final SqlStringGenerationContext sqlStringGenerationContext;
 	private final ExtractionContext extractionContext;
 	private final InformationExtractor extractor;
 
@@ -44,6 +45,7 @@ public class DatabaseInformationImpl
 			DdlTransactionIsolator ddlTransactionIsolator,
 			SchemaManagementTool tool) throws SQLException {
 		this.jdbcEnvironment = jdbcEnvironment;
+		this.sqlStringGenerationContext = sqlStringGenerationContext;
 		this.extractionContext = tool.getExtractionTool().createExtractionContext(
 				serviceRegistry,
 				jdbcEnvironment,
@@ -78,12 +80,13 @@ public class DatabaseInformationImpl
 
 	@Override
 	public boolean catalogExists(Identifier catalog) {
-		return extractor.catalogExists( catalog );
+		return extractor.catalogExists( sqlStringGenerationContext.catalogWithDefault( catalog ) );
 	}
 
 	@Override
 	public boolean schemaExists(Namespace.Name namespace) {
-		return extractor.schemaExists( namespace.getCatalog(), namespace.getSchema() );
+		return extractor.schemaExists( sqlStringGenerationContext.catalogWithDefault( namespace.getCatalog() ),
+				sqlStringGenerationContext.schemaWithDefault( namespace.getSchema() ) );
 	}
 
 	@Override
@@ -108,15 +111,16 @@ public class DatabaseInformationImpl
 		}
 
 		return extractor.getTable(
-				tableName.getCatalogName(),
-				tableName.getSchemaName(),
+				sqlStringGenerationContext.catalogWithDefault( tableName.getCatalogName() ),
+				sqlStringGenerationContext.schemaWithDefault( tableName.getSchemaName() ),
 				tableName.getTableName()
 		);
 	}
 
 	@Override
 	public NameSpaceTablesInformation getTablesInformation(Namespace namespace) {
-		return extractor.getTables( namespace.getPhysicalName().getCatalog(), namespace.getPhysicalName().getSchema() );
+		return extractor.getTables( sqlStringGenerationContext.catalogWithDefault( namespace.getPhysicalName().getCatalog() ),
+				sqlStringGenerationContext.schemaWithDefault( namespace.getPhysicalName().getSchema() ) );
 	}
 
 	@Override

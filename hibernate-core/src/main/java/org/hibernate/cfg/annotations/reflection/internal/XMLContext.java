@@ -124,12 +124,12 @@ public class XMLContext implements Serializable {
 			managedTypeOverride.put( className, element );
 			Default mergedDefaults = new Default();
 			// Apply entity mapping defaults
-			mergedDefaults.override( defaults );
+			mergedDefaults.overrideWithCatalogAndSchema( defaults );
 			// ... then apply entity settings
 			Default fileDefaults = new Default();
 			fileDefaults.setMetadataComplete( element.isMetadataComplete() );
 			fileDefaults.setAccess( element.getAccess() );
-			mergedDefaults.override( fileDefaults );
+			mergedDefaults.overrideWithCatalogAndSchema( fileDefaults );
 			// ... and we get the merged defaults for that entity
 			defaultsOverride.put( className, mergedDefaults );
 
@@ -196,13 +196,19 @@ public class XMLContext implements Serializable {
 		return buildSafeClassName( className, defaults.getPackageName() );
 	}
 
-	public Default getDefault(String className) {
+	public Default getDefaultWithoutGlobalCatalogAndSchema(String className) {
 		Default xmlDefault = new Default();
-		xmlDefault.override( globalDefaults );
+		xmlDefault.overrideWithoutCatalogAndSchema( globalDefaults );
 		if ( className != null ) {
 			Default entityMappingOverriding = defaultsOverride.get( className );
-			xmlDefault.override( entityMappingOverriding );
+			xmlDefault.overrideWithCatalogAndSchema( entityMappingOverriding );
 		}
+		return xmlDefault;
+	}
+
+	public Default getDefaultWithGlobalCatalogAndSchema() {
+		Default xmlDefault = new Default();
+		xmlDefault.overrideWithCatalogAndSchema( globalDefaults );
 		return xmlDefault;
 	}
 
@@ -292,19 +298,25 @@ public class XMLContext implements Serializable {
 			this.cascadePersist = cascadePersist;
 		}
 
-		public void override(Default globalDefault) {
+		public void overrideWithCatalogAndSchema(Default override) {
+			overrideWithoutCatalogAndSchema( override );
+			if ( override != null ) {
+				if ( override.getSchema() != null ) {
+					schema = override.getSchema();
+				}
+				if ( override.getCatalog() != null ) {
+					catalog = override.getCatalog();
+				}
+			}
+		}
+
+		public void overrideWithoutCatalogAndSchema(Default globalDefault) {
 			if ( globalDefault != null ) {
 				if ( globalDefault.getAccess() != null ) {
 					access = globalDefault.getAccess();
 				}
 				if ( globalDefault.getPackageName() != null ) {
 					packageName = globalDefault.getPackageName();
-				}
-				if ( globalDefault.getSchema() != null ) {
-					schema = globalDefault.getSchema();
-				}
-				if ( globalDefault.getCatalog() != null ) {
-					catalog = globalDefault.getCatalog();
 				}
 				if ( globalDefault.getDelimitedIdentifier() != null ) {
 					delimitedIdentifier = globalDefault.getDelimitedIdentifier();

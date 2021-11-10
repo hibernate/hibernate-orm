@@ -7,6 +7,7 @@
 package org.hibernate.orm.test.annotations.id.sequences;
 
 
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
@@ -45,9 +46,10 @@ public class HibernateSequenceTest {
 		IdentifierGenerator generator = persister.getIdentifierGenerator();
 		assertTrue( SequenceStyleGenerator.class.isInstance( generator ) );
 		SequenceStyleGenerator seqGenerator = (SequenceStyleGenerator) generator;
+		SqlStringGenerationContext sqlStringGenerationContext = scope.getSessionFactory().getSqlStringGenerationContext();
 		assertEquals(
 				Table.qualify( null, SCHEMA_NAME, "HibernateSequenceEntity_SEQ" ),
-				seqGenerator.getDatabaseStructure().getPhysicalName().render()
+				sqlStringGenerationContext.format( seqGenerator.getDatabaseStructure().getPhysicalName() )
 		);
 	}
 

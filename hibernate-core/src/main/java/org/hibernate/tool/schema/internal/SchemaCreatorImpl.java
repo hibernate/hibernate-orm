@@ -260,7 +260,8 @@ public class SchemaCreatorImpl implements SchemaCreator {
 
 				if ( tryToCreateCatalogs ) {
 					final Identifier catalogLogicalName = namespace.getName().getCatalog();
-					final Identifier catalogPhysicalName = namespace.getPhysicalName().getCatalog();
+					final Identifier catalogPhysicalName =
+							sqlStringGenerationContext.catalogWithDefault( namespace.getPhysicalName().getCatalog() );
 
 					if ( catalogPhysicalName != null && !exportedCatalogs.contains( catalogLogicalName ) ) {
 						applySqlStrings(
@@ -273,9 +274,11 @@ public class SchemaCreatorImpl implements SchemaCreator {
 					}
 				}
 
-				if ( tryToCreateSchemas && namespace.getPhysicalName().getSchema() != null ) {
+				final Identifier schemaPhysicalName =
+						sqlStringGenerationContext.schemaWithDefault( namespace.getPhysicalName().getSchema() );
+				if ( tryToCreateSchemas && schemaPhysicalName != null ) {
 					applySqlStrings(
-							dialect.getCreateSchemaCommand( namespace.getPhysicalName().getSchema().render( dialect ) ),
+							dialect.getCreateSchemaCommand( schemaPhysicalName.render( dialect ) ),
 							formatter,
 							options,
 							targets

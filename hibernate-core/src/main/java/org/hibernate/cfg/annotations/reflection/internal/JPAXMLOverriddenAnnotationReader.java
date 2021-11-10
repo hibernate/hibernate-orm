@@ -407,7 +407,9 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 	 */
 	private void initAnnotations() {
 		if ( annotations == null ) {
-			XMLContext.Default defaults = xmlContext.getDefault( className );
+			// We don't want the global catalog and schema here: they are applied much later,
+			// when SQL gets rendered.
+			XMLContext.Default defaults = xmlContext.getDefaultWithoutGlobalCatalogAndSchema( className );
 			if ( className != null && propertyName == null ) {
 				//is a class
 				ManagedType managedTypeOverride = xmlContext.getManagedTypeOverride( className );

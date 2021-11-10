@@ -59,9 +59,7 @@ public class FilterConfiguration {
 		}
 		else if ( persistentClass != null ) {
 			String table = persistentClass.getTable().getQualifiedName(
-					factory.getSqlStringGenerationContext(),
-					factory.getSettings().getDefaultCatalogName(),
-					factory.getSettings().getDefaultSchemaName()
+					factory.getSqlStringGenerationContext()
 			);
 			return Collections.singletonMap( null, table );
 		}

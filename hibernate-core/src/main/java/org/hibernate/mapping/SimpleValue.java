@@ -300,6 +300,14 @@ public abstract class SimpleValue implements KeyValue {
 	@Override
 	public IdentifierGenerator createIdentifierGenerator(
 			IdentifierGeneratorFactory identifierGeneratorFactory,
+			Dialect dialect,
+			RootClass rootClass) throws MappingException {
+		return createIdentifierGenerator( identifierGeneratorFactory, dialect, null, null, rootClass );
+	}
+
+	@Override
+	public IdentifierGenerator createIdentifierGenerator(
+			IdentifierGeneratorFactory identifierGeneratorFactory,
 			Dialect dialect, 
 			String defaultCatalog, 
 			String defaultSchema, 
@@ -310,11 +318,10 @@ public abstract class SimpleValue implements KeyValue {
 		}
 
 		final Properties params = new Properties();
-		
-		//if the hibernate-mapping did not specify a schema/catalog, use the defaults
-		//specified by properties - but note that if the schema/catalog were specified
-		//in hibernate-mapping, or as params, they will already be initialized and
-		//will override the values set here (they are in identifierGeneratorProperties)
+
+		// This is for backwards compatibility only;
+		// when this method is called by Hibernate ORM, defaultSchema and defaultCatalog are always
+		// null, and defaults are handled later.
 		if ( defaultSchema != null ) {
 			params.setProperty( PersistentIdentifierGenerator.SCHEMA, defaultSchema);
 		}
@@ -326,7 +333,6 @@ public abstract class SimpleValue implements KeyValue {
 		// default initial value and allocation size per-JPA defaults
 		params.setProperty( OptimizableGenerator.INITIAL_PARAM, String.valueOf( OptimizableGenerator.DEFAULT_INITIAL_VALUE ) );
 		params.setProperty( OptimizableGenerator.INCREMENT_PARAM, String.valueOf( OptimizableGenerator.DEFAULT_INCREMENT_SIZE ) );
-
 		//init the table here instead of earlier, so that we can get a quoted table name
 		//TODO: would it be better to simply pass the qualified table name, instead of
 		//      splitting it up into schema/catalog/table names
@@ -470,7 +476,7 @@ public abstract class SimpleValue implements KeyValue {
 	public boolean isConstrained() {
 		return !"none".equals( foreignKeyName ) && !hasFormula();
 	}
-	
+
 	public String getForeignKeyDefinition() {
 		return foreignKeyDefinition;
 	}

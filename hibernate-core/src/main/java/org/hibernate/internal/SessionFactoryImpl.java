@@ -238,10 +238,11 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		this.uuid = options.getUuid();
 
 		jdbcServices = serviceRegistry.getService( JdbcServices.class );
-		sqlStringGenerationContext = new SqlStringGenerationContextImpl( jdbcServices.getJdbcEnvironment() );
+
+		ConfigurationService configurationService = serviceRegistry.getService( ConfigurationService.class );
 
 		this.properties = new HashMap<>();
-		this.properties.putAll( serviceRegistry.getService( ConfigurationService.class ).getSettings() );
+		this.properties.putAll( configurationService.getSettings() );
 		if ( !properties.containsKey( AvailableSettings.JPA_VALIDATION_FACTORY )
 				&& !properties.containsKey( AvailableSettings.JAKARTA_VALIDATION_FACTORY ) ) {
 			if ( getSessionFactoryOptions().getValidatorFactoryReference() != null ) {
@@ -258,6 +259,10 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		maskOutSensitiveInformation(this.properties);
 		logIfEmptyCompositesEnabled( this.properties );
+
+		sqlStringGenerationContext = SqlStringGenerationContextImpl.fromExplicit(
+				jdbcServices.getJdbcEnvironment(), bootMetamodel.getDatabase(),
+				options.getDefaultCatalog(), options.getDefaultSchema() );
 
 		this.cacheAccess = this.serviceRegistry.getService( CacheImplementor.class );
 		this.jpaPersistenceUnitUtil = new PersistenceUnitUtilImpl( this );
@@ -300,8 +305,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 				IdentifierGenerator generator = model.getIdentifier().createIdentifierGenerator(
 						bootMetamodel.getIdentifierGeneratorFactory(),
 						jdbcServices.getJdbcEnvironment().getDialect(),
-						settings.getDefaultCatalogName(),
-						settings.getDefaultSchemaName(),
 						(RootClass) model
 				);
 				generator.initialize( sqlStringGenerationContext );

@@ -50,7 +50,6 @@ import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.id.uuid.LocalObjectUuidHelper;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.NullnessHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
@@ -94,6 +93,8 @@ import static org.hibernate.cfg.AvailableSettings.CONVENTIONAL_JAVA_CONSTANTS;
 import static org.hibernate.cfg.AvailableSettings.CRITERIA_VALUE_HANDLING_MODE;
 import static org.hibernate.cfg.AvailableSettings.CUSTOM_ENTITY_DIRTINESS_STRATEGY;
 import static org.hibernate.cfg.AvailableSettings.DEFAULT_BATCH_FETCH_SIZE;
+import static org.hibernate.cfg.AvailableSettings.DEFAULT_CATALOG;
+import static org.hibernate.cfg.AvailableSettings.DEFAULT_SCHEMA;
 import static org.hibernate.cfg.AvailableSettings.DELAY_ENTITY_LOADER_CREATIONS;
 import static org.hibernate.cfg.AvailableSettings.DISCARD_PC_ON_CLOSE;
 import static org.hibernate.cfg.AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS;
@@ -253,6 +254,12 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private boolean queryParametersValidationEnabled;
 	private ValueHandlingMode criteriaValueHandlingMode;
 	private ImmutableEntityUpdateQueryHandlingMode immutableEntityUpdateQueryHandlingMode;
+	// These two settings cannot be modified from the builder,
+	// in order to maintain consistency.
+	// Indeed, other components (the schema tools) also make use of these settings,
+	// and THOSE do not have access to session factory options.
+	private final String defaultCatalog;
+	private final String defaultSchema;
 
 	private Map<String, SqmFunctionDescriptor> sqlFunctions;
 
@@ -575,6 +582,9 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.immutableEntityUpdateQueryHandlingMode = ImmutableEntityUpdateQueryHandlingMode.interpret(
 				configurationSettings.get( IMMUTABLE_ENTITY_UPDATE_QUERY_HANDLING_MODE )
 		);
+
+		this.defaultCatalog = ConfigurationHelper.getString( DEFAULT_CATALOG, configurationSettings );
+		this.defaultSchema = ConfigurationHelper.getString( DEFAULT_SCHEMA, configurationSettings );
 
 		this.inClauseParameterPaddingEnabled =  ConfigurationHelper.getBoolean(
 				IN_CLAUSE_PARAMETER_PADDING,
@@ -1146,6 +1156,16 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	public ImmutableEntityUpdateQueryHandlingMode getImmutableEntityUpdateQueryHandlingMode() {
 		return immutableEntityUpdateQueryHandlingMode;
+	}
+
+	@Override
+	public String getDefaultCatalog() {
+		return defaultCatalog;
+	}
+
+	@Override
+	public String getDefaultSchema() {
+		return defaultSchema;
 	}
 
 	@Override

@@ -27,7 +27,6 @@ import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.tool.schema.extract.spi.ColumnInformation;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
@@ -121,18 +120,11 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 		return contributor;
 	}
 
-	public String getQualifiedName(SqlStringGenerationContext context, String defaultCatalog, String defaultSchema) {
+	public String getQualifiedName(SqlStringGenerationContext context) {
 		if ( subselect != null ) {
 			return "( " + subselect + " )";
 		}
-		IdentifierHelper identifierHelper = context.getIdentifierHelper();
-		Identifier usedSchema = schema == null ?
-				identifierHelper.toIdentifier( defaultSchema ) :
-				schema;
-		Identifier usedCatalog = catalog == null ?
-				identifierHelper.toIdentifier( defaultCatalog ) :
-				catalog;
-		return context.format( new QualifiedTableName( usedCatalog, usedSchema, name ) );
+		return context.format( new QualifiedTableName( catalog, schema, name ) );
 	}
 
 	/**
@@ -422,16 +414,8 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 			Dialect dialect,
 			Metadata metadata,
 			TableInformation tableInfo,
-			Identifier defaultCatalog,
-			Identifier defaultSchema,
 			SqlStringGenerationContext sqlStringGenerationContext) throws HibernateException {
-		final String tableName = sqlStringGenerationContext.format(
-				new QualifiedTableName(
-					catalog != null ? catalog : defaultCatalog,
-					schema != null ? schema : defaultSchema,
-					name
-				)
-		);
+		final String tableName = sqlStringGenerationContext.format( new QualifiedTableName( catalog, schema, name ) );
 
 		StringBuilder root = new StringBuilder( dialect.getAlterTableString( tableName ) )
 				.append( ' ' )
@@ -507,7 +491,7 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 		Dialect dialect = context.getDialect();
 		StringBuilder buf = new StringBuilder( hasPrimaryKey() ? dialect.getCreateTableString() : dialect.getCreateMultisetTableString() )
 				.append( ' ' )
-				.append( getQualifiedName( context, defaultCatalog, defaultSchema ) )
+				.append( getQualifiedName( context ) )
 				.append( " (" );
 
 		boolean identityColumn = idValue != null && idValue.isIdentityColumn( p.getIdentifierGeneratorFactory(), dialect );
@@ -601,7 +585,7 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 	@Override
 	public String sqlDropString(SqlStringGenerationContext context, String defaultCatalog, String defaultSchema) {
 		Dialect dialect = context.getDialect();
-		return dialect.getDropTableString( getQualifiedName( context, defaultCatalog, defaultSchema ) );
+		return dialect.getDropTableString( getQualifiedName( context ) );
 	}
 
 	public PrimaryKey getPrimaryKey() {

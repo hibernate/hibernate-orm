@@ -243,8 +243,9 @@ public class SchemaCreatorImpl implements SchemaCreator {
 		}
 
 		final Database database = metadata.getDatabase();
-		SqlStringGenerationContext sqlStringGenerationContext =
-				new SqlStringGenerationContextImpl( database.getJdbcEnvironment() );
+		final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();
+		SqlStringGenerationContext sqlStringGenerationContext = SqlStringGenerationContextImpl.fromConfigurationMap(
+				jdbcEnvironment, database, options.getConfigurationValues() );
 
 		final Set<String> exportIdentifiers = CollectionHelper.setOfSize( 50 );
 

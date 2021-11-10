@@ -67,6 +67,7 @@ import org.hibernate.sql.ast.tree.from.LazyTableGroup;
 import org.hibernate.sql.ast.tree.from.MappedByTableGroup;
 import org.hibernate.sql.ast.tree.from.PluralTableGroup;
 import org.hibernate.sql.ast.tree.from.StandardTableGroup;
+import org.hibernate.sql.ast.tree.from.StandardVirtualTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
@@ -79,6 +80,7 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
+import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableFetchImpl;
 import org.hibernate.sql.results.graph.entity.EntityFetch;
 import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 import org.hibernate.sql.results.graph.entity.internal.EntityDelayedFetchImpl;
@@ -995,6 +997,29 @@ public class ToOneAttributeMapping
 				tableGroup = tableGroupJoin.getJoinedGroup();
 				fromClauseAccess.registerTableGroup( fetchablePath, tableGroup );
 			}
+			else if ( fetchParent instanceof EmbeddableFetchImpl ) {
+				final TableGroup existingTableGroup = fromClauseAccess.findTableGroup(
+						fetchablePath
+				);
+				final TableGroupJoin tableGroupJoin = createTableGroupJoin(
+						fetchablePath,
+						parentTableGroup,
+						resultVariable,
+						getJoinType( fetchablePath, parentTableGroup ),
+						true,
+						false,
+						creationState.getSqlAstCreationState()
+				);
+				final TableGroup joinedGroup = tableGroupJoin.getJoinedGroup();
+				if ( existingTableGroup == null || joinedGroup instanceof LazyTableGroup && existingTableGroup instanceof StandardVirtualTableGroup ) {
+					parentTableGroup.addTableGroupJoin( tableGroupJoin );
+					fromClauseAccess.registerTableGroup( fetchablePath, joinedGroup );
+					tableGroup = joinedGroup;
+				}
+				else {
+					tableGroup = existingTableGroup;
+				}
+			}
 			else {
 				tableGroup = fromClauseAccess.resolveTableGroup(
 						fetchablePath,
@@ -1025,7 +1050,7 @@ public class ToOneAttributeMapping
 					);
 				}
 			}
-			return new EntityFetchJoinedImpl(
+			final EntityFetchJoinedImpl entityFetchJoined = new EntityFetchJoinedImpl(
 					fetchParent,
 					this,
 					tableGroup,
@@ -1033,6 +1058,7 @@ public class ToOneAttributeMapping
 					fetchablePath,
 					creationState
 			);
+			return entityFetchJoined;
 		}
 
 		/*

@@ -45,6 +45,7 @@ import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.InFragment;
 import org.hibernate.sql.Insert;
+import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
@@ -844,6 +845,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
 			SqlAliasBase sqlAliasBase,
 			SqlExpressionResolver expressionResolver,
+			FromClauseAccess fromClauseAccess,
 			SqlAstCreationContext creationContext) {
 		final TableGroup tableGroup = super.createRootTableGroup(
 				canUseInnerJoins,
@@ -852,6 +854,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 				additionalPredicateCollectorAccess,
 				sqlAliasBase,
 				expressionResolver,
+				fromClauseAccess,
 				creationContext
 		);
 
@@ -954,9 +957,12 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 	@Override
 	public void pruneForSubclasses(TableGroup tableGroup, Set<String> treatedEntityNames) {
+		// If the base type is part of the treatedEntityNames this means we can't optimize this,
+		// as the table group is e.g. returned through a select
 		if ( treatedEntityNames.contains( getEntityName() ) ) {
 			return;
 		}
+		// The optimization is to simply add the discriminator filter fragment for all treated entity names
 		final TableReference tableReference = tableGroup.getPrimaryTableReference();
 		tableReference.setPrunedTableExpression(
 				"(select * from " + getTableName() + " t where " + discriminatorFilterFragment( "t", treatedEntityNames ) + ")"

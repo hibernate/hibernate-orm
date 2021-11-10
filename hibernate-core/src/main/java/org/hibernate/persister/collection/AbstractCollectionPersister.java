@@ -465,6 +465,18 @@ public abstract class AbstractCollectionPersister
 					indexFormulas[i] = indexForm.getFormula();
 					hasFormula = true;
 				}
+				// Treat a mapped-by index like a formula to avoid trying to set it in insert/update
+				// Previously this was a sub-query formula, but was changed to represent the proper mapping
+				// which enables optimizations for queries. The old insert/update code wasn't adapted yet though.
+				// For now, this is good enough, because the formula is never used anymore,
+				// since all read paths go through the new code that can properly handle this case
+				else if ( indexedCollection instanceof org.hibernate.mapping.Map
+						&& ( (org.hibernate.mapping.Map) indexedCollection ).getMapKeyPropertyName() != null ) {
+					Column indexCol = (Column) s;
+					indexFormulaTemplates[i] = Template.TEMPLATE + indexCol.getQuotedName( dialect );
+					indexFormulas[i] = indexCol.getQuotedName( dialect );
+					hasFormula = true;
+				}
 				else {
 					Column indexCol = (Column) s;
 					indexColumnNames[i] = indexCol.getQuotedName( dialect );
@@ -1172,6 +1184,7 @@ public abstract class AbstractCollectionPersister
 				() -> p -> {},
 				new SqlAliasBaseConstant( alias ),
 				sqlAstCreationState.getSqlExpressionResolver(),
+				sqlAstCreationState.getFromClauseAccess(),
 				getFactory()
 		);
 

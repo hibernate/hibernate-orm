@@ -7,6 +7,7 @@
 package org.hibernate.metamodel.model.domain.internal;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -35,9 +36,16 @@ public class EntitySqmPathSource<J> extends AbstractSqmPathSource<J> {
 	}
 
 	@Override
-	public SqmPath<J> createSqmPath(SqmPath<?> lhs) {
+	public SqmPath<J> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource) {
+		final NavigablePath navigablePath;
+		if ( intermediatePathSource == null ) {
+			navigablePath = lhs.getNavigablePath().append( getPathName() );
+		}
+		else {
+			navigablePath = lhs.getNavigablePath().append( intermediatePathSource.getPathName() ).append( getPathName() );
+		}
 		return new SqmEntityValuedSimplePath<>(
-				lhs.getNavigablePath().append( getPathName() ),
+				navigablePath,
 				this,
 				lhs,
 				lhs.nodeBuilder()

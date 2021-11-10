@@ -186,8 +186,7 @@ public class EntityTypeImpl<J>
 	}
 
 	@Override
-	public SqmPath<J> createSqmPath(
-			SqmPath<?> lhs) {
+	public SqmPath<J> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource) {
 		throw new UnsupportedOperationException(
 				"EntityType cannot be used to create an SqmPath - that would be an SqmFrom which are created directly"
 		);

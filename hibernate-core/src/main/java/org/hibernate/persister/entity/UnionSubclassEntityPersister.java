@@ -47,6 +47,7 @@ import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
@@ -255,6 +256,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
 			SqlAliasBase sqlAliasBase,
 			SqlExpressionResolver expressionResolver,
+			FromClauseAccess fromClauseAccess,
 			SqlAstCreationContext creationContext) {
 		final TableReference tableReference = resolvePrimaryTableReference( sqlAliasBase );
 
@@ -395,10 +397,13 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 	@Override
 	public void pruneForSubclasses(TableGroup tableGroup, Set<String> treatedEntityNames) {
+		// If the base type is part of the treatedEntityNames this means we can't optimize this,
+		// as the table group is e.g. returned through a select
 		if ( treatedEntityNames.contains( getEntityName() ) ) {
 			return;
 		}
 		final TableReference tableReference = tableGroup.resolveTableReference( getRootTableName() );
+		// Replace the default union sub-query with a specially created one that only selects the tables for the treated entity names
 		tableReference.setPrunedTableExpression( generateSubquery( treatedEntityNames ) );
 	}
 
@@ -527,6 +532,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 		final Dialect dialect = getFactory().getJdbcServices().getDialect();
 
+		// Collect all selectables of every entity subtype and group by selection expression as well as table name
 		final LinkedHashMap<String, Map<String, SelectableMapping>> selectables = new LinkedHashMap<>();
 		visitSubTypeAttributeMappings(
 				attributeMapping -> attributeMapping.forEachSelectable(
@@ -534,6 +540,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 								.put( selectable.getContainingTableExpression(), selectable )
 				)
 		);
+		// Collect the concrete subclass table names for the treated entity names
 		final Set<String> treatedTableNames = new HashSet<>( treated.size() );
 		for ( String subclassName : treated ) {
 			final UnionSubclassEntityPersister subPersister = (UnionSubclassEntityPersister) getSubclassMappingType( subclassName );
@@ -544,6 +551,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			}
 		}
 
+		// Create a union sub-query for the table names, like generateSubquery(PersistentClass model, Mapping mapping)
 		final StringBuilder buf = new StringBuilder( subquery.length() )
 				.append( "( " );
 
@@ -554,6 +562,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 				for ( Map<String, SelectableMapping> selectableMappings : selectables.values() ) {
 					SelectableMapping selectableMapping = selectableMappings.get( subclassTableName );
 					if ( selectableMapping == null ) {
+						// If there is no selectable mapping for a table name, we render a null expression
 						selectableMapping = selectableMappings.values().iterator().next();
 						final int sqlType = selectableMapping.getJdbcMapping().getJdbcTypeDescriptor()
 								.getDefaultSqlTypeCode();

@@ -43,7 +43,7 @@ public final class DialectContext {
 			}
 		}
 		catch (ClassNotFoundException cnfe) {
-			throw new HibernateException( "Dialect class not found: " + dialectName );
+			throw new HibernateException( "Dialect class not found: " + dialectName, cnfe );
 		}
 		catch (Exception e) {
 			throw new HibernateException( "Could not instantiate given dialect class: " + dialectName, e );

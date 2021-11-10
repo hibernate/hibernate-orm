@@ -31,7 +31,9 @@ import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.from.PluralTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.ResultsLogger;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
@@ -129,7 +131,7 @@ public class BasicValuedCollectionPart
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final SqlSelection sqlSelection = resolveSqlSelection( tableGroup, creationState );
+		final SqlSelection sqlSelection = resolveSqlSelection( navigablePath, tableGroup, true, creationState );
 
 		//noinspection unchecked
 		return new BasicResult(
@@ -141,17 +143,35 @@ public class BasicValuedCollectionPart
 		);
 	}
 
-	private SqlSelection resolveSqlSelection(TableGroup tableGroup, DomainResultCreationState creationState) {
+	private SqlSelection resolveSqlSelection(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			boolean allowFkOptimization,
+			DomainResultCreationState creationState) {
 		final SqlExpressionResolver exprResolver = creationState.getSqlAstCreationState().getSqlExpressionResolver();
-
+		final TableGroup targetTableGroup;
+		// If the index is part of the element table group, we must use that explicitly here because the index is basic
+		// and thus there is no index table group registered. The logic in the PluralTableGroup prevents from looking
+		// into the element table group though because the element table group navigable path is not the parent of this navigable path
+		if ( nature == Nature.INDEX &&  collectionDescriptor.getAttributeMapping().getIndexMetadata().getIndexPropertyName() != null ) {
+			targetTableGroup = ( (PluralTableGroup) tableGroup ).getElementTableGroup();
+		}
+		else {
+			targetTableGroup = tableGroup;
+		}
+		final TableReference tableReference = targetTableGroup.resolveTableReference(
+				navigablePath,
+				getContainingTableExpression(),
+				allowFkOptimization
+		);
 		return exprResolver.resolveSqlSelection(
 				exprResolver.resolveSqlExpression(
 						SqlExpressionResolver.createColumnReferenceKey(
-								tableGroup.getPrimaryTableReference(),
+								tableReference,
 								selectableMapping.getSelectionExpression()
 						),
 						sqlAstProcessingState -> new ColumnReference(
-								tableGroup.getPrimaryTableReference().getIdentificationVariable(),
+								tableReference,
 								selectableMapping,
 								creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()
 						)
@@ -164,7 +184,7 @@ public class BasicValuedCollectionPart
 	@Override
 	public void applySqlSelections(
 			NavigablePath navigablePath, TableGroup tableGroup, DomainResultCreationState creationState) {
-		resolveSqlSelection( tableGroup, creationState );
+		resolveSqlSelection( navigablePath, tableGroup, true, creationState );
 	}
 
 	@Override
@@ -173,7 +193,7 @@ public class BasicValuedCollectionPart
 			TableGroup tableGroup,
 			DomainResultCreationState creationState,
 			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
-		selectionConsumer.accept( resolveSqlSelection( tableGroup, creationState ), getJdbcMapping() );
+		selectionConsumer.accept( resolveSqlSelection( navigablePath, tableGroup, true, creationState ), getJdbcMapping() );
 	}
 
 	@Override
@@ -223,7 +243,7 @@ public class BasicValuedCollectionPart
 		final TableGroup tableGroup = creationState.getSqlAstCreationState()
 				.getFromClauseAccess()
 				.findTableGroup( parentNavigablePath );
-		final SqlSelection sqlSelection = resolveSqlSelection( tableGroup, creationState );
+		final SqlSelection sqlSelection = resolveSqlSelection( fetchablePath, tableGroup, true, creationState );
 
 		return new BasicFetch<>(
 				sqlSelection.getValuesArrayPosition(),

@@ -6,45 +6,104 @@
  */
 package org.hibernate.orm.test.jpa.ql;
 
-import org.hibernate.Session;
 import org.hibernate.dialect.PostgreSQLDialect;
 
-import org.hibernate.test.jpa.AbstractJPATest;
 import org.hibernate.test.jpa.MapContent;
 import org.hibernate.test.jpa.MapOwner;
 import org.hibernate.test.jpa.Relationship;
-import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
-import org.junit.Test;
+import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
 @TestForIssue(jiraKey = "HHH-14279")
-public class MapIssueTest extends AbstractJPATest {
-
-	@Override
-	public String[] getMappings() {
-		return new String[] {};
-	}
-
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { MapOwner.class, MapContent.class, Relationship.class};
-	}
+@DomainModel(
+		annotatedClasses = {
+				MapOwner.class, MapContent.class, Relationship.class
+		})
+@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
+public class MapIssueTest {
 
 	@Test
 	@RequiresDialect(value = PostgreSQLDialect.class, comment = "Requires support for using a correlated column in a join condition which H2 apparently does not support. For simplicity just run this on PostgreSQL")
-	public void testWhereSubqueryMapKeyIsEntityWhereWithKey() {
-		Session s = openSession();
-		s.beginTransaction();
-		s.createQuery( "select r from Relationship r where exists (select 1 from MapOwner as o left join o.contents c with key(c) = r)" ).list();
-		s.getTransaction().commit();
-		s.close();
+	public void testWhereSubqueryMapKeyIsEntityWhereWithKey(SessionFactoryScope scope) {
+		scope.inTransaction(
+				s -> {
+					s.createQuery( "select r from Relationship r where exists (select 1 from MapOwner as o left join o.contents c with key(c) = r)" ).list();
+				}
+		);
 	}
 
 	@Test
-	public void testMapKeyIsEntityWhereWithKey() {
-		Session s = openSession();
-		s.beginTransaction();
-		s.createQuery( "select 1 from MapOwner as o left join o.contents c where c.id is not null" ).list();
-		s.getTransaction().commit();
-		s.close();
+	public void testOnlyCollectionTableJoined(SessionFactoryScope scope) {
+		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		statementInspector.clear();
+		scope.inTransaction(
+				s -> {
+					s.createQuery( "select 1 from MapOwner as o left join o.contents c where c.id is not null" ).list();
+					statementInspector.assertExecutedCount( 1 );
+					// Assert only the collection table is joined
+					statementInspector.assertNumberOfJoins( 0, 1 );
+				}
+		);
+	}
+
+	@Test
+	public void testMapKeyJoinIsOmitted(SessionFactoryScope scope) {
+		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		statementInspector.clear();
+		scope.inTransaction(
+				s -> {
+					s.createQuery( "select c from MapOwner as o left join o.contents c join c.relationship r where r.id is not null" ).list();
+					statementInspector.assertExecutedCount( 1 );
+					// Assert 2 joins, collection table and collection element. No need to join the relationship because it is not nullable
+					statementInspector.assertNumberOfJoins( 0, 2 );
+				}
+		);
+	}
+
+	@Test
+	public void testMapKeyJoinIsReused(SessionFactoryScope scope) {
+		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		statementInspector.clear();
+		scope.inTransaction(
+				s -> {
+					s.createQuery( "select key(c), c from MapOwner as o left join o.contents c join c.relationship r where r.name is not null" ).list();
+					statementInspector.assertExecutedCount( 1 );
+					// Assert 3 joins, collection table, collection element and relationship
+					statementInspector.assertNumberOfJoins( 0, 3 );
+				}
+		);
+	}
+
+	@Test
+	public void testMapKeyJoinIsReusedForFurtherJoin(SessionFactoryScope scope) {
+		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		statementInspector.clear();
+		scope.inTransaction(
+				s -> {
+					s.createQuery( "select key(c), c from MapOwner as o left join o.contents c join c.relationship r join r.self s where s.name is not null" ).list();
+					statementInspector.assertExecutedCount( 1 );
+					// Assert 3 joins, collection table, collection element, relationship and self
+					statementInspector.assertNumberOfJoins( 0, 4 );
+				}
+		);
+	}
+
+	@Test
+	public void testMapKeyJoinIsReusedForFurtherJoinAndElementJoinIsProperlyOrdered(SessionFactoryScope scope) {
+		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
+		statementInspector.clear();
+		scope.inTransaction(
+				s -> {
+					s.createQuery( "select key(c), c from MapOwner as o left join o.contents c join c.relationship r join r.self s join c.relationship2 where s.name is not null" ).list();
+					statementInspector.assertExecutedCount( 1 );
+					// Assert 3 joins, collection table, collection element, relationship, relationship2 and self
+					statementInspector.assertNumberOfJoins( 0, 5 );
+				}
+		);
 	}
 }

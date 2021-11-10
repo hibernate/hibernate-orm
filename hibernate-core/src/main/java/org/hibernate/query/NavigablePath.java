@@ -155,6 +155,16 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 		return identifierForTableGroup;
 	}
 
+	public boolean isParent(NavigablePath navigablePath) {
+		while ( navigablePath != null ) {
+			if ( this.equals( navigablePath.getParent() ) ) {
+				return true;
+			}
+			navigablePath = navigablePath.getParent();
+		}
+		return false;
+	}
+
 	@Override
 	public String toString() {
 		return fullPath;

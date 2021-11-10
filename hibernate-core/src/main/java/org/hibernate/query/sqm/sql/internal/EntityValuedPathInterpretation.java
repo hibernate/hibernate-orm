@@ -17,10 +17,9 @@ import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
-import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
-import org.hibernate.metamodel.mapping.internal.SimpleForeignKeyDescriptor;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
@@ -104,26 +103,21 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 		}
 		else if ( mapping instanceof EntityAssociationMapping ) {
 			final EntityAssociationMapping associationMapping = (EntityAssociationMapping) mapping;
-			final ForeignKeyDescriptor fkDescriptor = associationMapping.getForeignKeyDescriptor();
-			final String lhsTable;
+			final ModelPart keyTargetMatchPart = associationMapping.getKeyTargetMatchPart();
 			final ModelPart lhsPart;
-			boolean useKeyPart = associationMapping.getSideNature() == ForeignKeyDescriptor.Nature.KEY;
-			if ( useKeyPart ) {
-				lhsTable = fkDescriptor.getKeyTable();
-				lhsPart = fkDescriptor.getKeyPart();
+			if ( keyTargetMatchPart instanceof ToOneAttributeMapping ) {
+				lhsPart = ( (ToOneAttributeMapping) keyTargetMatchPart ).getKeyTargetMatchPart();
 			}
 			else {
-				lhsTable = fkDescriptor.getTargetTable();
-				lhsPart = fkDescriptor.getTargetPart();
+				lhsPart = keyTargetMatchPart;
 			}
-			final TableReference tableReference = tableGroup.resolveTableReference(
-					navigablePath,
-					lhsTable
-			);
 
-			if ( fkDescriptor instanceof SimpleForeignKeyDescriptor ) {
+			if ( lhsPart instanceof BasicValuedModelPart ) {
 				final BasicValuedModelPart basicValuedModelPart = (BasicValuedModelPart) lhsPart;
-
+				final TableReference tableReference = tableGroup.resolveTableReference(
+						navigablePath,
+						basicValuedModelPart.getContainingTableExpression()
+				);
 				sqlExpression = sqlExprResolver.resolveSqlExpression(
 						createColumnReferenceKey( tableReference, basicValuedModelPart.getSelectionExpression() ),
 						processingState -> new ColumnReference(
@@ -134,21 +128,27 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 				);
 			}
 			else {
-				final List<Expression> expressions = new ArrayList<>( fkDescriptor.getJdbcTypeCount() );
+				final List<Expression> expressions = new ArrayList<>( lhsPart.getJdbcTypeCount() );
 				lhsPart.forEachSelectable(
-						(selectionIndex, selectableMapping) -> expressions.add(
-								sqlExprResolver.resolveSqlExpression(
-										createColumnReferenceKey(
-												tableReference,
-												selectableMapping.getSelectionExpression()
-										),
-										processingState -> new ColumnReference(
-												tableReference,
-												selectableMapping,
-												sessionFactory
-										)
-								)
-						)
+						(selectionIndex, selectableMapping) -> {
+							final TableReference tableReference = tableGroup.resolveTableReference(
+									navigablePath,
+									selectableMapping.getContainingTableExpression()
+							);
+							expressions.add(
+									sqlExprResolver.resolveSqlExpression(
+											createColumnReferenceKey(
+													tableReference,
+													selectableMapping.getSelectionExpression()
+											),
+											processingState -> new ColumnReference(
+													tableReference,
+													selectableMapping,
+													sessionFactory
+											)
+									)
+							);
+						}
 				);
 				sqlExpression = new SqlTuple( expressions, lhsPart );
 			}

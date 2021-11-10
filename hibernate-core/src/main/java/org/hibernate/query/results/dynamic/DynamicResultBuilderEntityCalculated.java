@@ -114,6 +114,7 @@ public class DynamicResultBuilderEntityCalculated implements DynamicResultBuilde
 				null,
 				new SqlAliasBaseConstant( tableAlias ),
 				creationStateImpl,
+				creationStateImpl.getFromClauseAccess(),
 				creationStateImpl.getCreationContext()
 		);
 

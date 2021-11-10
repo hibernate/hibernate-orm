@@ -137,6 +137,14 @@ public class SqlTreePrinter {
 			);
 		}
 
+		final List<TableGroupJoin> nestedTableGroupJoins = tableGroup.getNestedTableGroupJoins();
+		if ( ! nestedTableGroupJoins.isEmpty() ) {
+			logNode(
+					"NestedTableGroupJoins",
+					() -> tableGroup.visitNestedTableGroupJoins( this::visitTableGroupJoin )
+			);
+		}
+
 		final List<TableGroupJoin> tableGroupJoins = tableGroup.getTableGroupJoins();
 		if ( ! tableGroupJoins.isEmpty() ) {
 			logNode(

@@ -57,6 +57,15 @@ public class CorrelatedTableGroup extends AbstractTableGroup {
 	}
 
 	@Override
+	public void addNestedTableGroupJoin(TableGroupJoin join) {
+		assert !getTableGroupJoins().contains( join );
+		assert join.getJoinType() == SqlAstJoinType.INNER;
+		querySpec.getFromClause().addRoot( join.getJoinedGroup() );
+		joinPredicateConsumer.accept( join.getPredicate() );
+		super.addNestedTableGroupJoin( join );
+	}
+
+	@Override
 	protected TableReference getTableReferenceInternal(
 			NavigablePath navigablePath,
 			String tableExpression,

@@ -40,8 +40,14 @@ public class BasicSqmPathSource<J>
 	}
 
 	@Override
-	public SqmPath<J> createSqmPath(SqmPath<?> lhs) {
-		final NavigablePath navigablePath = lhs.getNavigablePath().append( getPathName() );
+	public SqmPath<J> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource) {
+		final NavigablePath navigablePath;
+		if ( intermediatePathSource == null ) {
+			navigablePath = lhs.getNavigablePath().append( getPathName() );
+		}
+		else {
+			navigablePath = lhs.getNavigablePath().append( intermediatePathSource.getPathName() ).append( getPathName() );
+		}
 		return new SqmBasicValuedSimplePath<>(
 				navigablePath,
 				this,

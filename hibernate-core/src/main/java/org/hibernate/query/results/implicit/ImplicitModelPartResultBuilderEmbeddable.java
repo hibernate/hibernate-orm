@@ -70,6 +70,7 @@ public class ImplicitModelPartResultBuilderEmbeddable
 							null,
 							SqlAstJoinType.INNER,
 							true,
+							false,
 							creationStateImpl
 					);
 

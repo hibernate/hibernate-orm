@@ -35,6 +35,7 @@ public interface PluralAttributeMapping
 	interface IndexMetadata {
 		CollectionPart getIndexDescriptor();
 		int getListIndexBase();
+		String getIndexPropertyName();
 	}
 
 	IndexMetadata getIndexMetadata();

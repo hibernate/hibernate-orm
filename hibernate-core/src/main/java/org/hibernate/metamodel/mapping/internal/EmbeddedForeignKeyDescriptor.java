@@ -28,7 +28,6 @@ import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.Clause;
@@ -316,6 +315,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 							null,
 							SqlAstJoinType.INNER,
 							true,
+							false,
 							creationState.getSqlAstCreationState()
 					);
 					tableGroup.addTableGroupJoin( tableGroupJoin );

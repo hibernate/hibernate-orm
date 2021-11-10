@@ -2,6 +2,7 @@ package org.hibernate.test.jpa;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
 
 @Entity
 public class Relationship {
@@ -9,6 +10,8 @@ public class Relationship {
 	@Id
 	private Long id;
 	private String name;
+	@ManyToOne
+	private Relationship self;
 
 	public Long getId() {
 		return id;

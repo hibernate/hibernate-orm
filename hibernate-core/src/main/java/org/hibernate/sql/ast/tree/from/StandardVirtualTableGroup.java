@@ -11,29 +11,28 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
+import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.query.NavigablePath;
 
 /**
- * @author Steve Ebersole
+ * @author Christian Beikov
  */
-public class CompositeTableGroup implements VirtualTableGroup {
+public class StandardVirtualTableGroup implements VirtualTableGroup {
 	private final NavigablePath navigablePath;
-	private final EmbeddableValuedModelPart compositionMapping;
-
+	private final ModelPartContainer modelPart;
 	private final TableGroup underlyingTableGroup;
 	private final boolean fetched;
 
 	private List<TableGroupJoin> tableGroupJoins;
 	private List<TableGroupJoin> nestedTableGroupJoins;
 
-	public CompositeTableGroup(
+	public StandardVirtualTableGroup(
 			NavigablePath navigablePath,
-			EmbeddableValuedModelPart compositionMapping,
+			ModelPartContainer modelPart,
 			TableGroup underlyingTableGroup,
 			boolean fetched) {
 		this.navigablePath = navigablePath;
-		this.compositionMapping = compositionMapping;
+		this.modelPart = modelPart;
 		this.underlyingTableGroup = underlyingTableGroup;
 		this.fetched = fetched;
 	}
@@ -44,7 +43,7 @@ public class CompositeTableGroup implements VirtualTableGroup {
 	}
 
 	@Override
-	public EmbeddableValuedModelPart getExpressionType() {
+	public ModelPartContainer getExpressionType() {
 		return getModelPart();
 	}
 
@@ -60,8 +59,8 @@ public class CompositeTableGroup implements VirtualTableGroup {
 	}
 
 	@Override
-	public EmbeddableValuedModelPart getModelPart() {
-		return compositionMapping;
+	public ModelPartContainer getModelPart() {
+		return modelPart;
 	}
 
 	@Override
@@ -137,24 +136,34 @@ public class CompositeTableGroup implements VirtualTableGroup {
 	}
 
 	@Override
+	public TableReference resolveTableReference(
+			NavigablePath navigablePath,
+			String tableExpression,
+			boolean allowFkOptimization) {
+		final TableReference tableReference = getTableReference(
+				navigablePath,
+				tableExpression,
+				allowFkOptimization,
+				true
+		);
+		if ( tableReference == null ) {
+			throw new IllegalStateException( "Could not resolve binding for table `" + tableExpression + "`" );
+		}
+
+		return tableReference;
+	}
+
+	@Override
 	public TableReference getTableReference(
 			NavigablePath navigablePath,
 			String tableExpression,
 			boolean allowFkOptimization,
 			boolean resolve) {
-		return underlyingTableGroup.getTableReference( navigablePath, tableExpression, allowFkOptimization, resolve );
-	}
-
-	@Override
-	public TableReference resolveTableReference(
-			NavigablePath navigablePath,
-			String tableExpression,
-			boolean allowFkOptimization) {
 		final TableReference tableReference = underlyingTableGroup.getTableReference(
 				navigablePath,
 				tableExpression,
 				allowFkOptimization,
-				true
+				resolve
 		);
 		if ( tableReference != null ) {
 			return tableReference;
@@ -162,7 +171,7 @@ public class CompositeTableGroup implements VirtualTableGroup {
 		for ( TableGroupJoin tableGroupJoin : getNestedTableGroupJoins() ) {
 			final TableReference primaryTableReference = tableGroupJoin.getJoinedGroup()
 					.getPrimaryTableReference()
-					.getTableReference( navigablePath, tableExpression, allowFkOptimization, true );
+					.getTableReference( navigablePath, tableExpression, allowFkOptimization, resolve );
 			if ( primaryTableReference != null ) {
 				return primaryTableReference;
 			}
@@ -170,12 +179,12 @@ public class CompositeTableGroup implements VirtualTableGroup {
 		for ( TableGroupJoin tableGroupJoin : getTableGroupJoins() ) {
 			final TableReference primaryTableReference = tableGroupJoin.getJoinedGroup()
 					.getPrimaryTableReference()
-					.getTableReference( navigablePath, tableExpression, allowFkOptimization, true );
+					.getTableReference( navigablePath, tableExpression, allowFkOptimization, resolve );
 			if ( primaryTableReference != null ) {
 				return primaryTableReference;
 			}
 		}
-		throw new IllegalStateException( "Could not resolve binding for table `" + tableExpression + "`" );
+		return null;
 	}
 
 }

@@ -22,12 +22,23 @@ import org.hibernate.type.SortedMapType;
  * the key columns + index columns.
  */
 public class Map extends IndexedCollection {
+
+	private String mapKeyPropertyName;
+
 	public Map(MetadataBuildingContext buildingContext, PersistentClass owner) {
 		super( buildingContext, owner );
 	}
 	
 	public boolean isMap() {
 		return true;
+	}
+
+	public String getMapKeyPropertyName() {
+		return mapKeyPropertyName;
+	}
+
+	public void setMapKeyPropertyName(String mapKeyPropertyName) {
+		this.mapKeyPropertyName = mapKeyPropertyName;
 	}
 
 	@Override

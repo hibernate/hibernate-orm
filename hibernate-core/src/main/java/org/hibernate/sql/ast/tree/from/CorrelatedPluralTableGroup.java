@@ -6,49 +6,32 @@
  */
 package org.hibernate.sql.ast.tree.from;
 
-import java.util.function.BiFunction;
-import java.util.function.Predicate;
+import java.util.function.Consumer;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.ast.tree.select.QuerySpec;
 
 /**
- * A table group for collection tables of plural attributes.
+ * A table group for correlated plural attributes.
  *
  * @author Christian Beikov
  */
-public class CollectionTableGroup extends StandardTableGroup implements PluralTableGroup {
+public class CorrelatedPluralTableGroup extends CorrelatedTableGroup implements PluralTableGroup {
 
 	private TableGroup indexTableGroup;
 	private TableGroup elementTableGroup;
 
-	public CollectionTableGroup(
-			boolean canUseInnerJoins,
-			NavigablePath navigablePath,
-			PluralAttributeMapping tableGroupProducer,
-			boolean fetched,
-			String sourceAlias,
-			TableReference primaryTableReference,
-			boolean realTableGroup,
+	public CorrelatedPluralTableGroup(
+			TableGroup correlatedTableGroup,
 			SqlAliasBase sqlAliasBase,
-			Predicate<String> tableReferenceJoinNameChecker,
-			BiFunction<String, TableGroup, TableReferenceJoin> tableReferenceJoinCreator,
+			QuerySpec querySpec,
+			Consumer<Predicate> joinPredicateConsumer,
 			SessionFactoryImplementor sessionFactory) {
-		super(
-				canUseInnerJoins,
-				navigablePath,
-				tableGroupProducer,
-				fetched,
-				sourceAlias,
-				primaryTableReference,
-				realTableGroup,
-				sqlAliasBase,
-				tableReferenceJoinNameChecker,
-				tableReferenceJoinCreator,
-				sessionFactory
-		);
+		super( correlatedTableGroup, sqlAliasBase, querySpec, joinPredicateConsumer, sessionFactory );
 	}
 
 	@Override
@@ -69,13 +52,11 @@ public class CollectionTableGroup extends StandardTableGroup implements PluralTa
 	public void registerIndexTableGroup(TableGroupJoin indexTableGroupJoin) {
 		assert this.indexTableGroup == null;
 		this.indexTableGroup = indexTableGroupJoin.getJoinedGroup();
-		addNestedTableGroupJoin( indexTableGroupJoin );
 	}
 
 	public void registerElementTableGroup(TableGroupJoin elementTableGroupJoin) {
 		assert this.elementTableGroup == null;
 		this.elementTableGroup = elementTableGroupJoin.getJoinedGroup();
-		addNestedTableGroupJoin( elementTableGroupJoin );
 	}
 
 	@Override

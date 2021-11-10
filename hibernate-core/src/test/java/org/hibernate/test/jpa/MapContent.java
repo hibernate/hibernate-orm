@@ -11,6 +11,8 @@ public class MapContent {
 	private Long id;
 	@ManyToOne(optional = false)
 	private Relationship relationship;
+	@ManyToOne
+	private Relationship relationship2;
 
 	public Long getId() {
 		return id;

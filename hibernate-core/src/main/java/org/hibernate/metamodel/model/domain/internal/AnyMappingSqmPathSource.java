@@ -46,9 +46,15 @@ public class AnyMappingSqmPathSource<J> extends AbstractSqmPathSource<J> {
 	}
 
 	@Override
-	public SqmPath<J> createSqmPath(SqmPath<?> lhs) {
-		final NavigablePath navigablePath = lhs.getNavigablePath().append( getPathName() );
-		return new SqmAnyValuedSimplePath( navigablePath, this, lhs, lhs.nodeBuilder() );
+	public SqmPath<J> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource) {
+		final NavigablePath navigablePath;
+		if ( intermediatePathSource == null ) {
+			navigablePath = lhs.getNavigablePath().append( getPathName() );
+		}
+		else {
+			navigablePath = lhs.getNavigablePath().append( intermediatePathSource.getPathName() ).append( getPathName() );
+		}
+		return new SqmAnyValuedSimplePath<>( navigablePath, this, lhs, lhs.nodeBuilder() );
 	}
 
 }

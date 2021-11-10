@@ -42,9 +42,16 @@ public interface SqmPathSource<J> extends SqmExpressable<J>, Bindable<J>, SqmExp
 	SqmPathSource<?> findSubPathSource(String name);
 
 	/**
+	 * Returns the intermediate SqmPathSource for a path source previously acquired via {@link #findSubPathSource(String)}.
+	 */
+	default SqmPathSource<?> getIntermediatePathSource(SqmPathSource<?> pathSource) {
+		return null;
+	}
+
+	/**
 	 * Create an SQM path for this source relative to the given left-hand side
 	 */
-	SqmPath<J> createSqmPath(SqmPath<?> lhs);
+	SqmPath<J> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource);
 
 	@Override
 	default SqmExpressable<J> getExpressable() {

@@ -233,7 +233,6 @@ public class BasicAttributeMapping
 				getContainingTableExpression(),
 				allowFkOptimization
 		);
-		final String tableAlias = tableReference.getIdentificationVariable();
 		return expressionResolver.resolveSqlSelection(
 				expressionResolver.resolveSqlExpression(
 						SqlExpressionResolver.createColumnReferenceKey(
@@ -241,7 +240,7 @@ public class BasicAttributeMapping
 								mappedColumnExpression
 						),
 						sqlAstProcessingState -> new ColumnReference(
-								tableAlias,
+								tableReference,
 								this,
 								creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()
 						)

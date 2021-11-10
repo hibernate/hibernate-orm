@@ -22,7 +22,7 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
  *
  * @author Christian Beikov
  */
-public class OneToManyTableGroup extends AbstractColumnReferenceQualifier implements TableGroup {
+public class OneToManyTableGroup extends AbstractColumnReferenceQualifier implements TableGroup, PluralTableGroup {
 	private final SessionFactoryImplementor sessionFactory;
 	private final PluralAttributeMapping pluralAttributeMapping;
 	private final TableGroup elementTableGroup;
@@ -52,8 +52,14 @@ public class OneToManyTableGroup extends AbstractColumnReferenceQualifier implem
 		return sessionFactory;
 	}
 
+	@Override
 	public TableGroup getElementTableGroup() {
 		return elementTableGroup;
+	}
+
+	@Override
+	public TableGroup getIndexTableGroup() {
+		return indexTableGroup;
 	}
 
 	public void registerIndexTableGroup(TableGroupJoin indexTableGroupJoin) {
@@ -163,7 +169,8 @@ public class OneToManyTableGroup extends AbstractColumnReferenceQualifier implem
 				allowFkOptimization,
 				resolve
 		);
-		if ( tableReference != null || indexTableGroup == null ) {
+		if ( tableReference != null || indexTableGroup == null
+				|| navigablePath != null && indexTableGroup.getNavigablePath().isParent( navigablePath ) ) {
 			return tableReference;
 		}
 

@@ -33,9 +33,9 @@ import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.sql.ast.tree.from.CompositeTableGroup;
 import org.hibernate.sql.ast.tree.from.FromClause;
 import org.hibernate.sql.ast.tree.from.LazyTableGroup;
+import org.hibernate.sql.ast.tree.from.StandardVirtualTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
@@ -164,7 +164,7 @@ public class EntityGraphLoadPlanBuilderTest implements SessionFactoryScopeAware 
 										TableGroup::getClass
 								) );
 						Map<String, Class<? extends TableGroup> > expectedTableGroupByName = new HashMap<>();
-						expectedTableGroupByName.put( "homeAddress", CompositeTableGroup.class );
+						expectedTableGroupByName.put( "homeAddress", StandardVirtualTableGroup.class );
 						expectedTableGroupByName.put( "company", LazyTableGroup.class );
 						assertThat( tableGroupByName, is( expectedTableGroupByName ) );
 					} );
@@ -245,25 +245,30 @@ public class EntityGraphLoadPlanBuilderTest implements SessionFactoryScopeAware 
 					// Check the from-clause
 					assertPluralAttributeJoinedGroup( sqlAst, "shipAddresses", tableGroup -> {
 						if ( graphSemantic == GraphSemantic.LOAD ) {
-							assertThat( tableGroup.getTableGroupJoins(), hasSize( 1 ) );
+							assertThat( tableGroup.getTableGroupJoins(), isEmpty() );
+							assertThat( tableGroup.getNestedTableGroupJoins(), hasSize( 1 ) );
 
-							final TableGroup compositeTableGroup = CollectionUtils.getOnlyElement( tableGroup.getTableGroupJoins() )
+							final TableGroup compositeTableGroup = CollectionUtils.getOnlyElement( tableGroup.getNestedTableGroupJoins() )
 									.getJoinedGroup();
-							assertThat( compositeTableGroup, instanceOf( CompositeTableGroup.class ) );
+							assertThat( compositeTableGroup, instanceOf( StandardVirtualTableGroup.class ) );
 							assertThat( compositeTableGroup.getTableGroupJoins(), hasSize( 1 ) );
+							assertThat( compositeTableGroup.getNestedTableGroupJoins(), isEmpty() );
 
 							final TableGroup countryTableGroup = CollectionUtils.getOnlyElement( compositeTableGroup.getTableGroupJoins() )
 									.getJoinedGroup();
 							assertThat( countryTableGroup.getModelPart().getPartName(), is( "country" ) );
 
 							assertThat( countryTableGroup.getTableGroupJoins(), isEmpty() );
+							assertThat( countryTableGroup.getNestedTableGroupJoins(), isEmpty() );
 						}
 						else {
-							assertThat( tableGroup.getTableGroupJoins(), hasSize( 1 ) );
+							assertThat( tableGroup.getTableGroupJoins(), isEmpty() );
+							assertThat( tableGroup.getNestedTableGroupJoins(), hasSize( 1 ) );
 
-							final TableGroup compositeTableGroup = CollectionUtils.getOnlyElement( tableGroup.getTableGroupJoins() ).getJoinedGroup();
-							assertThat( compositeTableGroup, instanceOf( CompositeTableGroup.class ) );
+							final TableGroup compositeTableGroup = CollectionUtils.getOnlyElement( tableGroup.getNestedTableGroupJoins() ).getJoinedGroup();
+							assertThat( compositeTableGroup, instanceOf( StandardVirtualTableGroup.class ) );
 							assertThat( compositeTableGroup.getTableGroupJoins(), isEmpty() );
+							assertThat( compositeTableGroup.getNestedTableGroupJoins(), isEmpty() );
 						}
 					} );
 
@@ -315,7 +320,7 @@ public class EntityGraphLoadPlanBuilderTest implements SessionFactoryScopeAware 
 		final TableGroup joinedGroup = CollectionUtils.getOnlyElement( tableGroup.getTableGroupJoins() ).getJoinedGroup();
 		assertThat( joinedGroup.getModelPart().getPartName(), is( "homeAddress" ) );
 		assertThat( joinedGroup.getModelPart(), instanceOf( EmbeddedAttributeMapping.class ) );
-		assertThat( joinedGroup, instanceOf( CompositeTableGroup.class ) );
+		assertThat( joinedGroup, instanceOf( StandardVirtualTableGroup.class ) );
 	}
 
 	// util methods for verifying 'domain-result' graph ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

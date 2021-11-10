@@ -57,7 +57,7 @@ public class EntityDelayedFetchImpl extends AbstractNonJoinedEntityFetch {
 				() -> new EntityDelayedFetchInitializer(
 						parentAccess,
 						navigablePath,
-						getEntityValuedModelPart(),
+						(ToOneAttributeMapping) getEntityValuedModelPart(),
 						selectByUniqueKey,
 						keyResult.createResultAssembler( creationState )
 				)

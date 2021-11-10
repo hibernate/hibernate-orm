@@ -34,7 +34,6 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.sqm.sql.internal.SqmPathInterpretation;
-import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.sql.ast.tree.cte.CteMaterialization;
 import org.hibernate.sql.ast.tree.cte.CteSearchClauseKind;
 import org.hibernate.query.FetchClauseType;
@@ -3358,7 +3357,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				String separator = NO_SEPARATOR;
 				for ( TableGroup root : fromClause.getRoots() ) {
 					appendSql( separator );
-					renderTableGroup( root );
+					renderTableGroup( root, null );
 					separator = COMA_SEPARATOR;
 				}
 			}
@@ -3369,26 +3368,18 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	@SuppressWarnings("WeakerAccess")
-	protected void renderTableGroup(TableGroup tableGroup) {
-		// NOTE : commented out blocks render the TableGroup as a CTE
-
-//		if ( tableGroup.getGroupAlias() !=  null ) {
-//			sqlAppender.appendSql( OPEN_PARENTHESIS );
-//		}
-
+	protected void renderTableGroup(TableGroup tableGroup, List<TableGroupJoin> tableGroupJoinCollector) {
 		final LockMode effectiveLockMode = getEffectiveLockMode( tableGroup.getSourceAlias() );
 		final boolean usesLockHint = renderTableReference( tableGroup.getPrimaryTableReference(), effectiveLockMode );
 
 		renderTableReferenceJoins( tableGroup );
-
-//		if ( tableGroup.getGroupAlias() !=  null ) {
-//			sqlAppender.appendSql( CLOSE_PARENTHESIS );
-//			sqlAppender.appendSql( AS_KEYWORD );
-//			sqlAppender.appendSql( tableGroup.getGroupAlias() );
-//		}
-
-		processNestedTableGroupJoins( tableGroup );
-		processTableGroupJoins( tableGroup );
+		processNestedTableGroupJoins( tableGroup, tableGroupJoinCollector );
+		if ( tableGroupJoinCollector != null ) {
+			tableGroupJoinCollector.addAll( tableGroup.getTableGroupJoins() );
+		}
+		else {
+			processTableGroupJoins( tableGroup );
+		}
 		ModelPartContainer modelPart = tableGroup.getModelPart();
 		if ( modelPart instanceof AbstractEntityPersister ) {
 			String[] querySpaces = (String[]) ( (AbstractEntityPersister) modelPart ).getQuerySpaces();
@@ -3407,22 +3398,36 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
-	protected void renderTableGroup(TableGroup tableGroup, Predicate predicate) {
+	protected void renderTableGroup(TableGroup tableGroup, Predicate predicate, List<TableGroupJoin> tableGroupJoinCollector) {
 		// Without reference joins or nested join groups, even a real table group does not need parenthesis
 		final boolean realTableGroup = tableGroup.isRealTableGroup()
 				&& ( CollectionHelper.isNotEmpty( tableGroup.getTableReferenceJoins() )
-				|| hasTableGroupsToRender( tableGroup.getNestedTableGroupJoins() ) );
+				|| hasNestedTableGroupsToRender( tableGroup.getNestedTableGroupJoins() ) );
 		if ( realTableGroup ) {
 			appendSql( OPEN_PARENTHESIS );
 		}
 
 		final LockMode effectiveLockMode = getEffectiveLockMode( tableGroup.getSourceAlias() );
 		final boolean usesLockHint = renderTableReference( tableGroup.getPrimaryTableReference(), effectiveLockMode );
+		final List<TableGroupJoin> tableGroupJoins;
 
 		if ( realTableGroup ) {
+			// For real table groups, we collect all normal table group joins within that table group
+			// The purpose of that is to render them in-order outside of the group/parenthesis
+			// This is necessary for at least Derby but is also a lot easier to read
 			renderTableReferenceJoins( tableGroup );
-			processNestedTableGroupJoins( tableGroup );
+			if ( tableGroupJoinCollector == null ) {
+				tableGroupJoins = new ArrayList<>();
+				processNestedTableGroupJoins( tableGroup, tableGroupJoins );
+			}
+			else {
+				tableGroupJoins = null;
+				processNestedTableGroupJoins( tableGroup, tableGroupJoinCollector );
+			}
 			appendSql( CLOSE_PARENTHESIS );
+		}
+		else {
+			tableGroupJoins = null;
 		}
 
 		appendSql( " on " );
@@ -3430,9 +3435,19 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 		if ( !realTableGroup ) {
 			renderTableReferenceJoins( tableGroup );
-			processNestedTableGroupJoins( tableGroup );
+			processNestedTableGroupJoins( tableGroup, tableGroupJoinCollector );
 		}
-		processTableGroupJoins( tableGroup );
+		if ( tableGroupJoinCollector != null ) {
+			tableGroupJoinCollector.addAll( tableGroup.getTableGroupJoins() );
+		}
+		else {
+			if ( tableGroupJoins != null ) {
+				for ( TableGroupJoin tableGroupJoin : tableGroupJoins ) {
+					processTableGroupJoin( tableGroupJoin, null );
+				}
+			}
+			processTableGroupJoins( tableGroup );
+		}
 
 		ModelPartContainer modelPart = tableGroup.getModelPart();
 		if ( modelPart instanceof AbstractEntityPersister ) {
@@ -3452,13 +3467,22 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
-	private boolean hasTableGroupsToRender(List<TableGroupJoin> nestedTableGroupJoins) {
+	private boolean hasNestedTableGroupsToRender(List<TableGroupJoin> nestedTableGroupJoins) {
 		for ( TableGroupJoin nestedTableGroupJoin : nestedTableGroupJoins ) {
 			final TableGroup joinedGroup = nestedTableGroupJoin.getJoinedGroup();
-			if ( joinedGroup instanceof VirtualTableGroup ) {
-				return !joinedGroup.getTableGroupJoins().isEmpty() || !joinedGroup.getNestedTableGroupJoins().isEmpty();
+			final TableGroup realTableGroup;
+			if ( joinedGroup instanceof LazyTableGroup ) {
+				realTableGroup = ( (LazyTableGroup) joinedGroup ).getUnderlyingTableGroup();
 			}
-			if ( !( joinedGroup instanceof LazyTableGroup ) || ( (LazyTableGroup) joinedGroup ).isInitialized() ) {
+			else {
+				realTableGroup = joinedGroup;
+			}
+			if ( realTableGroup instanceof VirtualTableGroup ) {
+				if ( hasNestedTableGroupsToRender( realTableGroup.getNestedTableGroupJoins() ) ) {
+					return true;
+				}
+			}
+			else if ( realTableGroup != null ) {
 				return true;
 			}
 		}
@@ -3522,31 +3546,43 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@SuppressWarnings("WeakerAccess")
 	protected void processTableGroupJoins(TableGroup source) {
-		source.visitTableGroupJoins( this::processTableGroupJoin );
+		source.visitTableGroupJoins( tableGroupJoin -> processTableGroupJoin( tableGroupJoin, null ) );
 	}
 
 	@SuppressWarnings("WeakerAccess")
-	protected void processNestedTableGroupJoins(TableGroup source) {
-		source.visitNestedTableGroupJoins( this::processTableGroupJoin );
+	protected void processNestedTableGroupJoins(TableGroup source, List<TableGroupJoin> tableGroupJoinCollector) {
+		source.visitNestedTableGroupJoins( tableGroupJoin -> processTableGroupJoin( tableGroupJoin, tableGroupJoinCollector ) );
 	}
 
 	@SuppressWarnings("WeakerAccess")
-	protected void processTableGroupJoin(TableGroupJoin tableGroupJoin) {
+	protected void processTableGroupJoin(TableGroupJoin tableGroupJoin, List<TableGroupJoin> tableGroupJoinCollector) {
 		final TableGroup joinedGroup = tableGroupJoin.getJoinedGroup();
-
-		if ( joinedGroup instanceof VirtualTableGroup ) {
-			processTableGroupJoins( tableGroupJoin.getJoinedGroup() );
-			processNestedTableGroupJoins( tableGroupJoin.getJoinedGroup() );
+		final TableGroup realTableGroup;
+		if ( joinedGroup instanceof LazyTableGroup ) {
+			realTableGroup = ( (LazyTableGroup) joinedGroup ).getUnderlyingTableGroup();
 		}
-		else if ( !( joinedGroup instanceof LazyTableGroup ) || ( (LazyTableGroup) joinedGroup ).getUnderlyingTableGroup() != null ) {
+		else {
+			realTableGroup = joinedGroup;
+		}
+
+		if ( realTableGroup instanceof VirtualTableGroup ) {
+			processNestedTableGroupJoins( realTableGroup, tableGroupJoinCollector );
+			if ( tableGroupJoinCollector != null ) {
+				tableGroupJoinCollector.addAll( realTableGroup.getTableGroupJoins() );
+			}
+			else {
+				processTableGroupJoins( realTableGroup );
+			}
+		}
+		else if ( realTableGroup != null ) {
 			appendSql( WHITESPACE );
 			renderJoinType( tableGroupJoin.getJoinType() );
 
 			if ( tableGroupJoin.getPredicate() != null && !tableGroupJoin.getPredicate().isEmpty() ) {
-				renderTableGroup( joinedGroup, tableGroupJoin.getPredicate() );
+				renderTableGroup( realTableGroup, tableGroupJoin.getPredicate(), tableGroupJoinCollector );
 			}
 			else {
-				renderTableGroup( joinedGroup );
+				renderTableGroup( realTableGroup, tableGroupJoinCollector );
 			}
 		}
 	}

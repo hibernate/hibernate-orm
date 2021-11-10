@@ -20,6 +20,14 @@ public interface ColumnReferenceQualifier {
 		return resolveTableReference( null, tableExpression, true );
 	}
 
+	/**
+	 * Like {@link #getTableReference(NavigablePath, String, boolean, boolean)}, but will throw an exception if no
+	 * table reference can be found, even after resolving possible table reference joins.
+	 *
+	 * @param navigablePath The path for which to look up the table reference, may be null
+	 * @param tableExpression The table expression for which to look up the table reference
+	 * @param allowFkOptimization Whether a foreign key optimization is allowed i.e. use the FK column on the key-side
+	 */
 	TableReference resolveTableReference(
 			NavigablePath navigablePath,
 			String tableExpression,
@@ -33,6 +41,14 @@ public interface ColumnReferenceQualifier {
 		return getTableReference( null, tableExpression, true, false );
 	}
 
+	/**
+	 * Returns the table reference for the table expression, or null if not found.
+	 *
+	 * @param navigablePath The path for which to look up the table reference, may be null
+	 * @param tableExpression The table expression for which to look up the table reference
+	 * @param allowFkOptimization Whether a foreign key optimization is allowed i.e. use the FK column on the key-side
+	 * @param resolve Whether to potentially create table reference joins for this table group
+	 */
 	TableReference getTableReference(
 			NavigablePath navigablePath,
 			String tableExpression,

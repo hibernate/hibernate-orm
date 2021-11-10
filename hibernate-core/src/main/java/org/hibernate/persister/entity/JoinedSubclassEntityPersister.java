@@ -1315,6 +1315,8 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 	@Override
 	public void pruneForSubclasses(TableGroup tableGroup, Set<String> treatedEntityNames) {
+		// If the base type is part of the treatedEntityNames this means we can't optimize this,
+		// as the table group is e.g. returned through a select
 		if ( treatedEntityNames.contains( getEntityName() ) ) {
 			return;
 		}
@@ -1324,29 +1326,33 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		for ( String treatedEntityName : treatedEntityNames ) {
 			final JoinedSubclassEntityPersister subPersister = (JoinedSubclassEntityPersister) getSubclassMappingType( treatedEntityName );
 			final String[] subclassTableNames = subPersister.getSubclassTableNames();
-			if ( tableGroup.canUseInnerJoins() ) {
-				if ( sharedSuperclassTables.isEmpty() ) {
-					for ( int i = 0; i < subclassTableNames.length; i++ ) {
-						if ( subPersister.isClassOrSuperclassTable[i] ) {
-							sharedSuperclassTables.add( subclassTableNames[i] );
-						}
+			// For every treated entity name, we collect table names that are needed by all treated entity names
+			// In mathematical terms, sharedSuperclassTables will be the "intersection" of the table names of all treated entities
+			if ( sharedSuperclassTables.isEmpty() ) {
+				for ( int i = 0; i < subclassTableNames.length; i++ ) {
+					if ( subPersister.isClassOrSuperclassTable[i] ) {
+						sharedSuperclassTables.add( subclassTableNames[i] );
 					}
 				}
-				else {
-					sharedSuperclassTables.retainAll( Arrays.asList( subclassTableNames ) );
-				}
 			}
+			else {
+				sharedSuperclassTables.retainAll( Arrays.asList( subclassTableNames ) );
+			}
+			// Add the table references for all table names of the treated entities as we have to retain these table references.
+			// Table references not appearing in this set can later be pruned away
 			// todo (6.0): no need to resolve all table references, only the ones needed for cardinality
 			for ( int i = 0; i < subclassTableNames.length; i++ ) {
 				retainedTableReferences.add( tableGroup.resolveTableReference( null, subclassTableNames[i], false ) );
 			}
 		}
 		final List<TableReferenceJoin> tableReferenceJoins = tableGroup.getTableReferenceJoins();
-		if ( sharedSuperclassTables.isEmpty() ) {
-			tableReferenceJoins
-					.removeIf( join -> !retainedTableReferences.contains( join.getJoinedTableReference() ) );
-		}
-		else {
+		// The optimization is to remove all table reference joins that are not contained in the retainedTableReferences
+		// In addition, we switch from a possible LEFT join, to an inner join for all sharedSuperclassTables
+		// For now, we can only do this if the table group reports canUseInnerJoins or isRealTableGroup,
+		// because the switch for table reference joins to INNER must be cardinality preserving.
+		// If canUseInnerJoins is true, this is trivially given, but also if the table group is real
+		// i.e. with parenthesis around, as that means the table reference joins will be isolated
+		if ( tableGroup.canUseInnerJoins() || tableGroup.isRealTableGroup() ) {
 			final TableReferenceJoin[] oldJoins = tableReferenceJoins.toArray( new TableReferenceJoin[0] );
 			tableReferenceJoins.clear();
 			for ( TableReferenceJoin oldJoin : oldJoins ) {
@@ -1367,6 +1373,10 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 					}
 				}
 			}
+		}
+		else {
+			tableReferenceJoins
+					.removeIf( join -> !retainedTableReferences.contains( join.getJoinedTableReference() ) );
 		}
 	}
 

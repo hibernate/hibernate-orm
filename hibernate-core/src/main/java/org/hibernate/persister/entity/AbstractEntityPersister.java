@@ -210,6 +210,7 @@ import org.hibernate.sql.Template;
 import org.hibernate.sql.Update;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
+import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SimpleFromClauseAccessImpl;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAliasBaseConstant;
@@ -1321,6 +1322,7 @@ public abstract class AbstractEntityPersister
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
 			SqlAliasBase sqlAliasBase,
 			SqlExpressionResolver sqlExpressionResolver,
+			FromClauseAccess fromClauseAccess,
 			SqlAstCreationContext creationContext) {
 		final TableReference primaryTableReference = createPrimaryTableReference(
 				sqlAliasBase,
@@ -1911,6 +1913,7 @@ public abstract class AbstractEntityPersister
 				() -> p -> {},
 				new SqlAliasBaseConstant( alias ),
 				sqlAstCreationState.getSqlExpressionResolver(),
+				sqlAstCreationState.getFromClauseAccess(),
 				getFactory()
 		);
 

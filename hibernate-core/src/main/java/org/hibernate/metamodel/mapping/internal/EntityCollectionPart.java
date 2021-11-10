@@ -19,6 +19,7 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IndexedCollection;
+import org.hibernate.mapping.Map;
 import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.ToOne;
@@ -33,12 +34,14 @@ import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
+import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
@@ -49,6 +52,7 @@ import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.LazyTableGroup;
 import org.hibernate.sql.ast.tree.from.OneToManyTableGroup;
+import org.hibernate.sql.ast.tree.from.PluralTableGroup;
 import org.hibernate.sql.ast.tree.from.StandardTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
@@ -95,7 +99,10 @@ public class EntityCollectionPart
 		this.entityMappingType = entityMappingType;
 		final String referencedPropertyName;
 		if ( bootModelValue instanceof OneToMany ) {
-			referencedPropertyName = null;
+			final String mappedByProperty = collectionDescriptor.getMappedByProperty();
+			referencedPropertyName = mappedByProperty == null || mappedByProperty.isEmpty()
+					? null
+					: mappedByProperty;
 		}
 		else {
 			referencedPropertyName = ( (ToOne) bootModelValue ).getReferencedPropertyName();
@@ -139,7 +146,20 @@ public class EntityCollectionPart
 			this.targetKeyPropertyNames = targetKeyPropertyNames;
 		}
 		else if ( bootModelValue instanceof OneToMany ) {
-			this.targetKeyPropertyNames = Collections.singleton( referencedPropertyName );
+			final Set<String> targetKeyPropertyNames = new HashSet<>( 2 );
+			int dotIndex = -1;
+			while ( ( dotIndex = referencedPropertyName.indexOf( '.', dotIndex + 1 ) ) != -1 ) {
+				targetKeyPropertyNames.add( referencedPropertyName.substring( 0, dotIndex ) );
+			}
+			final Type propertyType = ( (PropertyMapping) entityMappingType.getEntityPersister() )
+					.toType( referencedPropertyName );
+			ToOneAttributeMapping.addPrefixedPropertyNames(
+					targetKeyPropertyNames,
+					referencedPropertyName,
+					propertyType,
+					creationProcess.getCreationContext().getSessionFactory()
+			);
+			this.targetKeyPropertyNames = targetKeyPropertyNames;
 		}
 		else {
 			final EntityMetamodel entityMetamodel = entityMappingType.getEntityPersister().getEntityMetamodel();
@@ -152,7 +172,7 @@ public class EntityCollectionPart
 			}
 			else {
 				final String mapsIdAttributeName;
-				if ( ( mapsIdAttributeName = ToOneAttributeMapping.mapsId( entityMappingType, referencedPropertyName ) ) != null ) {
+				if ( ( mapsIdAttributeName = ToOneAttributeMapping.findMapsIdPropertyName( entityMappingType, referencedPropertyName ) ) != null ) {
 					final Set<String> targetKeyPropertyNames = new HashSet<>( 2 );
 					targetKeyPropertyNames.add( referencedPropertyName );
 					ToOneAttributeMapping.addPrefixedPropertyNames(
@@ -177,7 +197,32 @@ public class EntityCollectionPart
 			String fkTargetModelPartName,
 			MappingModelCreationProcess creationProcess) {
 		if ( fkTargetModelPartName == null ) {
-			fkTargetModelPart = entityMappingType.getIdentifierMapping();
+			if ( nature == Nature.INDEX ) {
+				final String mapKeyPropertyName = ( (Map) bootValueMapping ).getMapKeyPropertyName();
+				if ( mapKeyPropertyName == null ) {
+					fkTargetModelPart = entityMappingType.getIdentifierMapping();
+				}
+				else {
+					final EntityPersister elementPersister = ( (EntityType) collectionDescriptor.getElementType() )
+							.getAssociatedEntityPersister( creationProcess.getCreationContext().getSessionFactory() );
+					fkTargetModelPart = elementPersister.findByPath( mapKeyPropertyName );
+					if ( fkTargetModelPart == null ) {
+						throw new RuntimeException( "Couldn't find model part for path [" + mapKeyPropertyName + "] on entity: " + elementPersister.getEntityName() );
+					}
+				}
+			}
+			else {
+				final String mappedByProperty = bootValueMapping.getMappedByProperty();
+				if ( collectionDescriptor.isOneToMany() && mappedByProperty != null && !mappedByProperty.isEmpty() ) {
+					fkTargetModelPart = entityMappingType.findByPath( mappedByProperty );
+					if ( fkTargetModelPart == null ) {
+						throw new RuntimeException( "Couldn't find model part for path [" + mappedByProperty + "] on entity: " + entityMappingType.getEntityName() );
+					}
+				}
+				else {
+					fkTargetModelPart = entityMappingType.getIdentifierMapping();
+				}
+			}
 		}
 		else {
 			fkTargetModelPart = entityMappingType.findSubPart( fkTargetModelPartName, null );
@@ -206,15 +251,35 @@ public class EntityCollectionPart
 			MappingModelCreationProcess creationProcess,
 			Dialect dialect) {
 		final EntityPersister associatedEntityDescriptor =  creationProcess.getEntityPersister( entityType.getAssociatedEntityName() );
-		final ModelPart fkTargetPart = entityType.isReferenceToPrimaryKey()
-				? associatedEntityDescriptor.getIdentifierMapping()
-				: associatedEntityDescriptor.findSubPart( entityType.getRHSUniqueKeyPropertyName() );
+		// If this is mapped by a to-one attribute, we can use the FK of that attribute
+		if ( fkTargetModelPart instanceof ToOneAttributeMapping ) {
+			final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) fkTargetModelPart;
+			if ( toOneAttributeMapping.getForeignKeyDescriptor() == null ) {
+				throw new RuntimeException( "Not yet ready: " + toOneAttributeMapping );
+			}
+			return toOneAttributeMapping.getForeignKeyDescriptor();
+		}
+		final ModelPart fkTargetPart = fkTargetModelPart;
 
+		final String fkKeyTableName;
+		if ( nature == Nature.INDEX ) {
+			final String indexPropertyName = collectionDescriptor.getAttributeMapping()
+					.getIndexMetadata()
+					.getIndexPropertyName();
+			if ( indexPropertyName == null ) {
+				fkKeyTableName = ( (Joinable) collectionDescriptor ).getTableName();
+			}
+			else {
+				fkKeyTableName = fkBootDescriptorSource.getTable().getQuotedName( dialect );
+			}
+		}
+		else {
+			fkKeyTableName = ( (Joinable) collectionDescriptor ).getTableName();
+		}
 		if ( fkTargetPart instanceof BasicValuedModelPart ) {
 			final BasicValuedModelPart basicFkTargetPart = (BasicValuedModelPart) fkTargetPart;
-			final Joinable collectionDescriptorAsJoinable = (Joinable) collectionDescriptor;
 			final SelectableMapping keySelectableMapping = SelectableMappingImpl.from(
-					collectionDescriptorAsJoinable.getTableName(),
+					fkKeyTableName,
 					fkBootDescriptorSource.getColumnIterator().next(),
 					basicFkTargetPart.getJdbcMapping(),
 					dialect,
@@ -284,7 +349,9 @@ public class EntityCollectionPart
 
 	@Override
 	public ModelPart getKeyTargetMatchPart() {
-		return fkTargetModelPart;
+		return collectionDescriptor.isOneToMany()
+				? entityMappingType.getIdentifierMapping()
+				: fkTargetModelPart;
 	}
 
 	@Override
@@ -308,35 +375,26 @@ public class EntityCollectionPart
 	}
 
 	@Override
-	public EntityFetch generateFetch(
-			FetchParent fetchParent,
-			NavigablePath fetchablePath,
-			FetchTiming fetchTiming,
-			boolean selected,
-			String resultVariable,
-			DomainResultCreationState creationState) {
-		// find or create the TableGroup associated with this `fetchablePath`
-		final FromClauseAccess fromClauseAccess = creationState.getSqlAstCreationState().getFromClauseAccess();
-		creationState.registerVisitedAssociationKey( getForeignKeyDescriptor().getAssociationKey() );
+	public ModelPart findSubPart(String name) {
+		return findSubPart( name, null );
+	}
 
-		final TableGroup partTableGroup = fromClauseAccess.resolveTableGroup(
-				fetchablePath,
-				np -> {
-					final TableGroup parentTableGroup = fromClauseAccess.getTableGroup( np.getParent() );
-					if ( collectionDescriptor.isOneToMany() && nature == Nature.ELEMENT ) {
-						return ( (OneToManyTableGroup) parentTableGroup ).getElementTableGroup();
-					}
-					for ( TableGroupJoin nestedTableGroupJoin : parentTableGroup.getNestedTableGroupJoins() ) {
-						if ( nestedTableGroupJoin.getNavigablePath().equals( np ) ) {
-							return nestedTableGroupJoin.getJoinedGroup();
-						}
-					}
-
-					throw new IllegalStateException( "Could not find table group for: " + np );
-				}
-		);
-
-		return new EntityFetchJoinedImpl( fetchParent, this, partTableGroup, selected, fetchablePath, creationState );
+	@Override
+	public ModelPart findSubPart(String name, EntityMappingType targetType) {
+		// Prefer resolving the key part of the foreign key rather than the target part if possible
+		// to allow deferring the initialization of the target table group, omitting it if possible.
+		// This is not possible for one-to-many associations because we need to create the target table group eagerly,
+		// to preserve the cardinality. Also, the OneToManyTableGroup has no reference to the parent table group
+		if ( !collectionDescriptor.isOneToMany() && targetKeyPropertyNames.contains( name ) ) {
+			if ( fkDescriptor.getTargetPart() instanceof NonAggregatedIdentifierMappingImpl ) {
+				return ( (ModelPartContainer) fkDescriptor.getKeyPart() ).findSubPart( name, targetType );
+			}
+			if ( fkTargetModelPart instanceof ToOneAttributeMapping ) {
+				return fkTargetModelPart;
+			}
+			return fkDescriptor.getKeyPart();
+		}
+		return EntityValuedFetchable.super.findSubPart( name, targetType );
 	}
 
 	@Override
@@ -355,28 +413,40 @@ public class EntityCollectionPart
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
+		final TableGroup partTableGroup = resolveTableGroup( navigablePath, creationState );
+		return entityMappingType.createDomainResult( navigablePath, partTableGroup, resultVariable, creationState );
+	}
+
+	@Override
+	public EntityFetch generateFetch(
+			FetchParent fetchParent,
+			NavigablePath fetchablePath,
+			FetchTiming fetchTiming,
+			boolean selected,
+			String resultVariable,
+			DomainResultCreationState creationState) {
+		creationState.registerVisitedAssociationKey( getForeignKeyDescriptor().getAssociationKey() );
+
+		final TableGroup partTableGroup = resolveTableGroup( fetchablePath, creationState );
+		return new EntityFetchJoinedImpl( fetchParent, this, partTableGroup, selected, fetchablePath, creationState );
+	}
+
+	private TableGroup resolveTableGroup(NavigablePath fetchablePath, DomainResultCreationState creationState) {
 		final FromClauseAccess fromClauseAccess = creationState.getSqlAstCreationState().getFromClauseAccess();
-		final TableGroup partTableGroup = fromClauseAccess.resolveTableGroup(
-				navigablePath,
+		return fromClauseAccess.resolveTableGroup(
+				fetchablePath,
 				np -> {
-					final TableGroup parentTableGroup = fromClauseAccess.getTableGroup( np.getParent() );
-					if ( collectionDescriptor.isOneToMany() && nature == Nature.ELEMENT ) {
-						return ( (OneToManyTableGroup) parentTableGroup ).getElementTableGroup();
+					final PluralTableGroup parentTableGroup = (PluralTableGroup) fromClauseAccess.getTableGroup( np.getParent() );
+					switch ( nature ) {
+						case ELEMENT:
+							return parentTableGroup.getElementTableGroup();
+						case INDEX:
+							return parentTableGroup.getIndexTableGroup();
 					}
-					final TableGroupJoin tableGroupJoin = createTableGroupJoin(
-							navigablePath,
-							parentTableGroup,
-							resultVariable,
-							SqlAstJoinType.INNER,
-							true,
-							creationState.getSqlAstCreationState()
-					);
-					parentTableGroup.addTableGroupJoin( tableGroupJoin );
-					return tableGroupJoin.getJoinedGroup();
+
+					throw new IllegalStateException( "Could not find table group for: " + np );
 				}
 		);
-
-		return entityMappingType.createDomainResult( navigablePath, partTableGroup, resultVariable, creationState );
 	}
 
 	@Override
@@ -452,8 +522,10 @@ public class EntityCollectionPart
 			String explicitSourceAlias,
 			SqlAstJoinType sqlAstJoinType,
 			boolean fetched,
+			boolean addsPredicate,
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
+			FromClauseAccess fromClauseAccess,
 			SqlAstCreationContext creationContext) {
 		if ( collectionDescriptor.isOneToMany() && nature == Nature.ELEMENT ) {
 			// If this is a one-to-many, the element part is already available, so we return a TableGroupJoin "hull"
@@ -474,6 +546,7 @@ public class EntityCollectionPart
 				null,
 				aliasBaseGenerator,
 				sqlExpressionResolver,
+				fromClauseAccess,
 				creationContext
 		);
 		final TableGroupJoin join = new TableGroupJoin(
@@ -483,13 +556,11 @@ public class EntityCollectionPart
 				null
 		);
 
-		final TableReference keySideTableReference = collectionTableGroup.getPrimaryTableReference();
-
 		lazyTableGroup.setTableGroupInitializerCallback(
 				tableGroup -> join.applyPredicate(
 						fkDescriptor.generateJoinPredicate(
 								tableGroup.getPrimaryTableReference(),
-								keySideTableReference,
+								collectionTableGroup.resolveTableReference( fkDescriptor.getKeyTable() ),
 								sqlAstJoinType,
 								sqlExpressionResolver,
 								creationContext
@@ -510,6 +581,7 @@ public class EntityCollectionPart
 			Consumer<Predicate> predicateConsumer,
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
+			FromClauseAccess fromClauseAccess,
 			SqlAstCreationContext creationContext) {
 		final SqlAliasBase sqlAliasBase = aliasBaseGenerator.createSqlAliasBase( getSqlAliasStem() );
 		final boolean canUseInnerJoin = sqlAstJoinType == SqlAstJoinType.INNER || lhs.canUseInnerJoins();

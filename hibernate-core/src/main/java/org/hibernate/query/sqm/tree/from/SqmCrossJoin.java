@@ -111,12 +111,12 @@ public class SqmCrossJoin<T> extends AbstractSqmFrom<T, T> implements SqmJoin<T,
 
 	@Override
 	public <S extends T> SqmFrom<?, S> treatAs(Class<S> treatJavaType, String alias) {
-		throw new UnsupportedOperationException();
+		throw new UnsupportedOperationException( "Cross join treats can not be aliased" );
 	}
 
 	@Override
 	public <S extends T> SqmFrom<?, S> treatAs(EntityDomainType<S> treatTarget, String alias) {
-		throw new UnsupportedOperationException();
+		throw new UnsupportedOperationException( "Cross join treats can not be aliased" );
 	}
 
 	public SqmCrossJoin<T> makeCopy(SqmCreationProcessingState creationProcessingState) {

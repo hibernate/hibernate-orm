@@ -37,12 +37,24 @@ public interface SqlStringGenerationContext {
 	Identifier getDefaultCatalog();
 
 	/**
+	 * @param explicitCatalogOrNull An explicitly configured catalog, or {@code null}.
+	 * @return The given identifier if non-{@code null}, or the default catalog otherwise.
+	 */
+	Identifier catalogWithDefault(Identifier explicitCatalogOrNull);
+
+	/**
 	 * @return The default schema, used for table/sequence names that do not explicitly mention a schema.
 	 * May be {@code null}.
 	 * This default is generally applied automatically by the {@link #format(QualifiedName) format methods},
 	 * but in some cases it can be useful to access it directly.
 	 */
 	Identifier getDefaultSchema();
+
+	/**
+	 * @param explicitSchemaOrNull An explicitly configured schema, or {@code null}.
+	 * @return The given identifier if non-{@code null}, or the default schema otherwise.
+	 */
+	Identifier schemaWithDefault(Identifier explicitSchemaOrNull);
 
 	/**
 	 * Render a formatted a table name

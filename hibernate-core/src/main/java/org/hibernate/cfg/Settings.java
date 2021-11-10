@@ -50,8 +50,8 @@ public final class Settings {
 	public Settings(SessionFactoryOptions sessionFactoryOptions, Metadata metadata) {
 		this(
 				sessionFactoryOptions,
-				extractName( metadata.getDatabase().getDefaultNamespace().getName().getCatalog() ),
-				extractName( metadata.getDatabase().getDefaultNamespace().getName().getSchema() )
+				extractName( metadata.getDatabase().getPhysicalImplicitNamespaceName().getCatalog() ),
+				extractName( metadata.getDatabase().getPhysicalImplicitNamespaceName().getSchema() )
 		);
 	}
 

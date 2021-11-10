@@ -149,7 +149,6 @@ import org.hibernate.cfg.annotations.TableBinder;
 import org.hibernate.cfg.internal.NullableDiscriminatorColumnSecondPass;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.FilterDefinition;
-import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jpa.event.internal.CallbackDefinitionResolverLegacyImpl;
@@ -466,20 +465,6 @@ public final class AnnotationBinder {
 		}
 
 		IdentifierGeneratorDefinition.Builder definitionBuilder = new IdentifierGeneratorDefinition.Builder();
-
-		if ( context.getMappingDefaults().getImplicitSchemaName() != null ) {
-			definitionBuilder.addParam(
-					PersistentIdentifierGenerator.SCHEMA,
-					context.getMappingDefaults().getImplicitSchemaName()
-			);
-		}
-
-		if ( context.getMappingDefaults().getImplicitCatalogName() != null ) {
-			definitionBuilder.addParam(
-					PersistentIdentifierGenerator.CATALOG,
-					context.getMappingDefaults().getImplicitCatalogName()
-			);
-		}
 
 		if ( generatorAnn instanceof TableGenerator ) {
 			context.getBuildingOptions().getIdGenerationTypeInterpreter().interpretTableGenerator(

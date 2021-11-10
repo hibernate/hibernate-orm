@@ -804,15 +804,6 @@ public class ModelBinder {
 			// YUCK!  but cannot think of a clean way to do this given the string-config based scheme
 			params.put( PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER, objectNameNormalizer);
 
-			String implicitSchemaName = metadataBuildingContext.getMappingDefaults().getImplicitSchemaName();
-			if ( implicitSchemaName != null ) {
-				params.setProperty( PersistentIdentifierGenerator.SCHEMA, implicitSchemaName );
-			}
-			String implicitCatalogName = metadataBuildingContext.getMappingDefaults().getImplicitCatalogName();
-			if ( implicitCatalogName != null ) {
-				params.setProperty( PersistentIdentifierGenerator.CATALOG, implicitCatalogName );
-			}
-
 			params.putAll( generator.getParameters() );
 
 			identifierValue.setIdentifierGeneratorProperties( params );
@@ -2966,7 +2957,7 @@ public class ModelBinder {
 			return database.toIdentifier( tableSpecSource.getExplicitSchemaName() );
 		}
 		else {
-			return database.toIdentifier( metadataBuildingContext.getMappingDefaults().getImplicitSchemaName() );
+			return null;
 		}
 	}
 

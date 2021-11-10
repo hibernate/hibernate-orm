@@ -174,7 +174,7 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch, Assoc
 		throw new UnsupportedOperationException();
 	}
 
-	private static class CircularFetchAssembler implements DomainResultAssembler {
+	public static class CircularFetchAssembler implements DomainResultAssembler {
 		private final NavigablePath circularPath;
 		private final JavaType javaTypeDescriptor;
 		private final ToOneAttributeMapping fetchable;

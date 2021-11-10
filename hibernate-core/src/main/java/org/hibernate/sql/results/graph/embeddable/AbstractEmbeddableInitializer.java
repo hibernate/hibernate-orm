@@ -8,6 +8,7 @@ package org.hibernate.sql.results.graph.embeddable;
 
 import java.util.IdentityHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Supplier;
 
 import org.hibernate.NotYetImplementedFor6Exception;
@@ -30,6 +31,7 @@ import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 import org.hibernate.sql.results.graph.entity.AbstractEntityInitializer;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.internal.NullValueAssembler;
+import org.hibernate.sql.results.internal.domain.CircularBiDirectionalFetchImpl;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.descriptor.java.spi.EntityJavaTypeDescriptor;
 
@@ -200,14 +202,17 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		);
 
 		boolean areAllValuesNull = true;
-		for ( Map.Entry<StateArrayContributorMapping, DomainResultAssembler> entry : assemblerMap.entrySet() ) {
-			final Object contributorValue = entry.getValue().assemble(
+		final Set<Map.Entry<StateArrayContributorMapping, DomainResultAssembler>> entries = assemblerMap.entrySet();
+		final int size = entries.size();
+		for ( Map.Entry<StateArrayContributorMapping, DomainResultAssembler> entry : entries ) {
+			final DomainResultAssembler value = entry.getValue();
+			final Object contributorValue = value.assemble(
 					rowProcessingState,
 					rowProcessingState.getJdbcValuesSourceProcessingState().getProcessingOptions()
 			);
 
-			resolvedValues[ entry.getKey().getStateArrayPosition() ] = contributorValue;
-			if ( contributorValue != null ) {
+			resolvedValues[entry.getKey().getStateArrayPosition()] = contributorValue;
+			if ( contributorValue != null && ( !( value instanceof CircularBiDirectionalFetchImpl.CircularFetchAssembler ) || size == 1 ) ) {
 				areAllValuesNull = false;
 			}
 		}

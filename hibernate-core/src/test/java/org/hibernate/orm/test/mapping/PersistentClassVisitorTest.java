@@ -6,10 +6,6 @@
  */
 package org.hibernate.test.mapping;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -19,26 +15,31 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SingleTableSubclass;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.UnionSubclass;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
+
 import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Simple smoke style tests to make sure visitors keep working.
  * 
  * @author max
  */
-public class PersistentClassVisitorTest extends BaseUnitTestCase {
+@BaseUnitTest
+public class PersistentClassVisitorTest {
 
 	private StandardServiceRegistry serviceRegistry;
 	private MetadataBuildingContext metadataBuildingContext;
 
-	@Before
+	@BeforeEach
 	public void prepare() {
 		serviceRegistry = new StandardServiceRegistryBuilder().build();
 		metadataBuildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
 	}
 
-	@After
+	@AfterEach
 	public void release() {
 		StandardServiceRegistryBuilder.destroy( serviceRegistry );
 	}

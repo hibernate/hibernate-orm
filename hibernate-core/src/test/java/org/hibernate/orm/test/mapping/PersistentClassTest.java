@@ -13,25 +13,29 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class PersistentClassTest extends BaseUnitTestCase {
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.fail;
+
+@BaseUnitTest
+public class PersistentClassTest {
 
 	private StandardServiceRegistry serviceRegistry;
 	private MetadataBuildingContext metadataBuildingContext;
 
-	@Before
+	@BeforeEach
 	public void prepare() {
 		serviceRegistry = new StandardServiceRegistryBuilder().build();
 		metadataBuildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
 	}
 
-	@After
+	@AfterEach
 	public void release() {
 		StandardServiceRegistryBuilder.destroy( serviceRegistry );
 	}
@@ -40,20 +44,20 @@ public class PersistentClassTest extends BaseUnitTestCase {
 	public void testGetMappedClass() {
 		RootClass pc = new RootClass( metadataBuildingContext );
 		pc.setClassName(String.class.getName());
-		Assert.assertEquals(String.class.getName(), pc.getClassName());
-		Assert.assertEquals(String.class, pc.getMappedClass());
+		assertEquals(String.class.getName(), pc.getClassName());
+		assertEquals(String.class, pc.getMappedClass());
 		pc.setClassName(Integer.class.getName());
-		Assert.assertEquals(Integer.class, pc.getMappedClass());
+		assertEquals(Integer.class, pc.getMappedClass());
 	}
 	
 	@Test
 	public void testGetProxyInterface() {
 		RootClass pc = new RootClass( metadataBuildingContext );
 		pc.setProxyInterfaceName(String.class.getName());
-		Assert.assertEquals(String.class.getName(), pc.getProxyInterfaceName());
-		Assert.assertEquals(String.class, pc.getProxyInterface());
+		assertEquals(String.class.getName(), pc.getProxyInterfaceName());
+		assertEquals(String.class, pc.getProxyInterface());
 		pc.setProxyInterfaceName(Integer.class.getName());
-		Assert.assertEquals(Integer.class, pc.getProxyInterface());
+		assertEquals(Integer.class, pc.getProxyInterface());
 	}
 	
 	@Test
@@ -62,11 +66,11 @@ public class PersistentClassTest extends BaseUnitTestCase {
 		Property p = new Property();
 		p.setName("name");
 		pc.addProperty(p);
-		Assert.assertEquals(p, pc.getProperty("name"));
-		Assert.assertEquals(p, pc.getProperty("name.test"));
+		assertEquals(p, pc.getProperty("name"));
+		assertEquals(p, pc.getProperty("name.test"));
 		try {
-			Assert.assertNull(pc.getProperty("test"));
-			Assert.fail("MappingException expected");
+			assertNull(pc.getProperty("test"));
+			fail("MappingException expected");
 		} catch (MappingException e) {
 			// expected
 		}

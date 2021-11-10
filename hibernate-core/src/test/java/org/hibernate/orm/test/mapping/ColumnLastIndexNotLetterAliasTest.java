@@ -13,9 +13,9 @@ import org.hibernate.dialect.PostgreSQL94Dialect;
 import org.hibernate.mapping.Column;
 
 import org.hibernate.testing.TestForIssue;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Aliases should always be lower-case. This tests that an alias for

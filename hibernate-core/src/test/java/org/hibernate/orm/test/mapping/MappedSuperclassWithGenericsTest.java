@@ -14,20 +14,18 @@ import jakarta.persistence.IdClass;
 import jakarta.persistence.MappedSuperclass;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.junit.jupiter.api.Test;
 
 @TestForIssue(jiraKey = "HHH-14499")
-public class MappedSuperclassWithGenericsTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				IntermediateAbstractMapped.class,
-				BaseEntity.class,
-				AbstractGenericMappedSuperType.class,
-		};
-	}
+@DomainModel(
+		annotatedClasses = {
+				MappedSuperclassWithGenericsTest.IntermediateAbstractMapped.class,
+				MappedSuperclassWithGenericsTest.BaseEntity.class,
+				MappedSuperclassWithGenericsTest.AbstractGenericMappedSuperType.class,
+		}
+)
+public class MappedSuperclassWithGenericsTest {
 
 	@Test
 	public void testIt() {

@@ -6,18 +6,23 @@
  */
 package org.hibernate.test.idclass;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.orm.test.util.SchemaUtil.getColumnNames;
-
 import java.io.Serializable;
+
+import org.hibernate.boot.spi.MetadataImplementor;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.ManyToOne;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.orm.test.util.SchemaUtil.getColumnNames;
 
 /**
  * Test that bootstrap doesn't throw an exception
@@ -27,29 +32,33 @@ import org.junit.Test;
  * This test used to fail on bootstrap with the following error:
  * <p>
  * org.hibernate.MappingException: identifier mapping has wrong number of columns: org.hibernate.test.idclass.IdClassForNestedIdWithAssociationTest$NestedIdClassEntity type: component[idClassEntity,key3]
- * 	at org.hibernate.mapping.RootClass.validate(RootClass.java:273)
- * 	at org.hibernate.boot.internal.MetadataImpl.validate(MetadataImpl.java:359)
- * 	at org.hibernate.internal.SessionFactoryImpl.<init>(SessionFactoryImpl.java:307)
- * 	at org.hibernate.boot.internal.SessionFactoryBuilderImpl.build(SessionFactoryBuilderImpl.java:471)
- * 	at org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase.buildResources(BaseNonConfigCoreFunctionalTestCase.java:165)
- * 	at org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase.startUp(BaseNonConfigCoreFunctionalTestCase.java:141)
- * 	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
- * 	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
- * 	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
- * 	at java.base/java.lang.reflect.Method.invoke(Method.java:566)
- * 	at org.hibernate.testing.junit4.TestClassMetadata.performCallbackInvocation(TestClassMetadata.java:205)
+ * at org.hibernate.mapping.RootClass.validate(RootClass.java:273)
+ * at org.hibernate.boot.internal.MetadataImpl.validate(MetadataImpl.java:359)
+ * at org.hibernate.internal.SessionFactoryImpl.<init>(SessionFactoryImpl.java:307)
+ * at org.hibernate.boot.internal.SessionFactoryBuilderImpl.build(SessionFactoryBuilderImpl.java:471)
+ * at org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase.buildResources(BaseNonConfigCoreFunctionalTestCase.java:165)
+ * at org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase.startUp(BaseNonConfigCoreFunctionalTestCase.java:141)
+ * at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+ * at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+ * at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+ * at java.base/java.lang.reflect.Method.invoke(Method.java:566)
+ * at org.hibernate.testing.junit4.TestClassMetadata.performCallbackInvocation(TestClassMetadata.java:205)
  */
+@DomainModel(
+		annotatedClasses = {
+				IdClassForNestedIdWithAssociationTest.BasicEntity.class,
+				IdClassForNestedIdWithAssociationTest.IdClassEntity.class,
+				IdClassForNestedIdWithAssociationTest.NestedIdClassEntity.class
+		}
+)
+@SessionFactory
 @TestForIssue(jiraKey = "HHH-14918")
-public class IdClassForNestedIdWithAssociationTest extends BaseNonConfigCoreFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { BasicEntity.class, IdClassEntity.class, NestedIdClassEntity.class };
-	}
+public class IdClassForNestedIdWithAssociationTest {
 
 	@Test
-	public void metadataTest() {
-		assertThat( getColumnNames( "NestedIdClassEntity", metadata() ) )
+	public void metadataTest(SessionFactoryScope scope) {
+		final MetadataImplementor metadata = scope.getMetadataImplementor();
+		assertThat( getColumnNames( "NestedIdClassEntity", metadata ) )
 				// Just check we're using copied IDs; otherwise the test wouldn't be able to reproduce HHH-14918.
 				.containsExactlyInAnyOrder( "idClassEntity_basicEntity_key1", "idClassEntity_key2", "key3" );
 	}
@@ -58,8 +67,8 @@ public class IdClassForNestedIdWithAssociationTest extends BaseNonConfigCoreFunc
 	// but it feels wrong to have a test class with just an empty test method,
 	// so just check that persisting/loading works correctly.
 	@Test
-	public void smokeTest() {
-		inTransaction( s -> {
+	public void smokeTest(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			BasicEntity basic = new BasicEntity( 1L );
 			s.persist( basic );
 			IdClassEntity idClass = new IdClassEntity( basic, 2L );
@@ -68,7 +77,7 @@ public class IdClassForNestedIdWithAssociationTest extends BaseNonConfigCoreFunc
 			s.persist( nestedIdClass );
 		} );
 
-		inTransaction( s -> {
+		scope.inTransaction( s -> {
 			NestedIdClassEntity nestedIdClass = s.get(
 					NestedIdClassEntity.class,
 					new NestedIdClassEntity.NestedIdClassEntityId( 1L, 2L, 3L )

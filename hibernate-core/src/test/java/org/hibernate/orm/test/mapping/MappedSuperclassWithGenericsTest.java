@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.mapping;
+package org.hibernate.orm.test.mapping;
 
 import java.io.Serializable;
 import java.util.Objects;
@@ -15,6 +15,7 @@ import jakarta.persistence.MappedSuperclass;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
 import org.junit.jupiter.api.Test;
 
 @TestForIssue(jiraKey = "HHH-14499")
@@ -25,6 +26,7 @@ import org.junit.jupiter.api.Test;
 				MappedSuperclassWithGenericsTest.AbstractGenericMappedSuperType.class,
 		}
 )
+@SessionFactory
 public class MappedSuperclassWithGenericsTest {
 
 	@Test

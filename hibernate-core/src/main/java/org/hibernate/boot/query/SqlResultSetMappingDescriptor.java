@@ -29,6 +29,7 @@ import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
+import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.internal.FetchMementoBasicStandard;
 import org.hibernate.query.internal.FetchMementoEntityStandard;
@@ -414,6 +415,10 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 				subPart = ( (ModelPartContainer) subPart ).findSubPart( propertyPathParts[i], null );
 			}
 
+			return getFetchMemento( navigablePath, subPart );
+		}
+
+		private FetchMemento getFetchMemento(NavigablePath navigablePath, ModelPart subPart) {
 			if ( subPart instanceof BasicValuedModelPart ) {
 				assert columnNames.size() == 1;
 				final BasicValuedModelPart basicPart = (BasicValuedModelPart) subPart;
@@ -423,8 +428,13 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 			else if ( subPart instanceof EntityValuedFetchable ) {
 				return new FetchMementoEntityStandard( navigablePath, (EntityValuedFetchable) subPart, columnNames );
 			}
+			else if( subPart instanceof EmbeddedAttributeMapping ){
+				final ModelPart subPart1 = ( (EmbeddedAttributeMapping) subPart ).findSubPart( propertyPath.substring(
+						propertyPath.indexOf( "." ) + 1), null );
+				return getFetchMemento( navigablePath,subPart1 );
+			}
 			throw new NotYetImplementedFor6Exception(
-					"Only support for basic-valued model-parts have been implemented : " + propertyPath
+					"Only support for basic-valued, entity-valued and embedded model-parts have been implemented : " + propertyPath
 							+ " [" + subPart + "]"
 			);
 		}

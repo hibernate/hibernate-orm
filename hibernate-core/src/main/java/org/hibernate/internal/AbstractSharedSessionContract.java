@@ -71,6 +71,9 @@ import org.hibernate.query.sql.spi.NativeQueryImplementor;
 import org.hibernate.query.sqm.internal.QuerySqmImpl;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
+import org.hibernate.query.sqm.tree.select.SqmQueryGroup;
+import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
+import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
@@ -990,11 +993,17 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		checkOpen();
 
 		try {
-			return new QuerySqmImpl<>(
-					(SqmStatement<T>) criteriaQuery,
-					criteriaQuery.getResultType(),
-					this
-			);
+			final SqmSelectStatement<T> selectStatement = (SqmSelectStatement<T>) criteriaQuery;
+			if ( ! ( selectStatement.getQueryPart() instanceof SqmQueryGroup ) ) {
+				final SqmQuerySpec<T> querySpec = selectStatement.getQuerySpec();
+				if ( querySpec.getSelectClause().getSelections().isEmpty() ) {
+					if ( querySpec.getFromClause().getRoots().size() == 1 ) {
+						querySpec.getSelectClause().setSelection( querySpec.getFromClause().getRoots().get(0) );
+					}
+				}
+			}
+
+			return new QuerySqmImpl<>( selectStatement, criteriaQuery.getResultType(), this );
 		}
 		catch ( RuntimeException e ) {
 			throw getExceptionConverter().convert( e );

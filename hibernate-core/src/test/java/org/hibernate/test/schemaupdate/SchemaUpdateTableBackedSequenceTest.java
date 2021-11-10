@@ -78,7 +78,7 @@ public class SchemaUpdateTableBackedSequenceTest extends BaseUnitTestCase {
 		// lets make sure the InitCommand is there
 		assertEquals( 1, database.getDefaultNamespace().getTables().size() );
 		Table table = database.getDefaultNamespace().getTables().iterator().next();
-		SqlStringGenerationContext context = SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment() );
+		SqlStringGenerationContext context = SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment(), null, null );
 		assertEquals( 1, table.getInitCommands( context ).size() );
 
 		final TargetImpl target = new TargetImpl();

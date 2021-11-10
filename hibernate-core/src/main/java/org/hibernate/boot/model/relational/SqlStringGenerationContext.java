@@ -6,6 +6,7 @@
  */
 package org.hibernate.boot.model.relational;
 
+import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 
@@ -26,6 +27,22 @@ public interface SqlStringGenerationContext {
 	 * Note that the Identifiers returned from this helper already account for auto-quoting.
 	 */
 	IdentifierHelper getIdentifierHelper();
+
+	/**
+	 * @return The default catalog, used for table/sequence names that do not explicitly mention a catalog.
+	 * May be {@code null}.
+	 * This default is generally applied automatically by the {@link #format(QualifiedName) format methods},
+	 * but in some cases it can be useful to access it directly.
+	 */
+	Identifier getDefaultCatalog();
+
+	/**
+	 * @return The default schema, used for table/sequence names that do not explicitly mention a schema.
+	 * May be {@code null}.
+	 * This default is generally applied automatically by the {@link #format(QualifiedName) format methods},
+	 * but in some cases it can be useful to access it directly.
+	 */
+	Identifier getDefaultSchema();
 
 	/**
 	 * Render a formatted a table name

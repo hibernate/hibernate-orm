@@ -64,7 +64,9 @@ public class JPAXMLOverriddenAnnotationReaderTest extends BaseUnitTestCase {
 		);
 		assertNotNull( reader.getAnnotation( Table.class ) );
 		assertEquals( "@Table not overridden", "tbl_admin", reader.getAnnotation( Table.class ).name() );
-		assertEquals( "Default schema not overridden", "myschema", reader.getAnnotation( Table.class ).schema() );
+		// The default schema is assigned later, when we generate SQL.
+		// See DefaultCatalogAndSchemaTest.
+		assertEquals( "Default schema overridden too soon", "", reader.getAnnotation( Table.class ).schema() );
 		assertEquals(
 				"Proper @Table.uniqueConstraints", 2,
 				reader.getAnnotation( Table.class ).uniqueConstraints()[0].columnNames().length
@@ -88,7 +90,9 @@ public class JPAXMLOverriddenAnnotationReaderTest extends BaseUnitTestCase {
 		assertEquals( "default fails", 50, reader.getAnnotation( SequenceGenerator.class ).allocationSize() );
 		assertNotNull( "TableOverriding not working", reader.getAnnotation( TableGenerator.class ) );
 		assertEquals( "wrong tble name", "tablehilo", reader.getAnnotation( TableGenerator.class ).table() );
-		assertEquals( "no schema overriding", "myschema", reader.getAnnotation( TableGenerator.class ).schema() );
+		// The default schema is assigned later, when we generate SQL.
+		// See DefaultCatalogAndSchemaTest.
+		assertEquals( "Default schema overridden too soon", "", reader.getAnnotation( TableGenerator.class ).schema() );
 
 		reader = new JPAXMLOverriddenAnnotationReader( Match.class, context, bootstrapContext );
 		assertNotNull( reader.getAnnotation( Table.class ) );
@@ -98,10 +102,14 @@ public class JPAXMLOverriddenAnnotationReaderTest extends BaseUnitTestCase {
 		assertEquals(
 				"Java annotation not taken into account", "matchschema", reader.getAnnotation( Table.class ).schema()
 		);
-		assertEquals( "Overriding not taken into account", "mycatalog", reader.getAnnotation( Table.class ).catalog() );
+		// The default schema is assigned later, when we generate SQL.
+		// See DefaultCatalogAndSchemaTest.
+		assertEquals( "Default catalog overridden too soon", "", reader.getAnnotation( Table.class ).catalog() );
 		assertNotNull( "SecondaryTable swallowed", reader.getAnnotation( SecondaryTables.class ) );
+		// The default schema is assigned later, when we generate SQL.
+		// See DefaultCatalogAndSchemaTest.
 		assertEquals(
-				"Default schema not taken into account", "myschema",
+				"Default schema not taken into account", "",
 				reader.getAnnotation( SecondaryTables.class ).value()[0].schema()
 		);
 		assertNotNull( reader.getAnnotation( Inheritance.class ) );
@@ -194,15 +202,14 @@ public class JPAXMLOverriddenAnnotationReaderTest extends BaseUnitTestCase {
 		assertEquals(
 				"Metadata complete should ignore java annotations", "", reader.getAnnotation( Entity.class ).name()
 		);
-		assertNotNull( reader.getAnnotation( Table.class ) );
-		assertEquals( "@Table should not be used", "", reader.getAnnotation( Table.class ).name() );
-		assertEquals( "Default schema not overriden", "myschema", reader.getAnnotation( Table.class ).schema() );
+		// The default schema is assigned later, when we generate SQL.
+		// See DefaultCatalogAndSchemaTest.
+		assertNull( "Default schema overridden too soon", reader.getAnnotation( Table.class ) );
 
 		reader = new JPAXMLOverriddenAnnotationReader( Match.class, context, bootstrapContext );
-		assertNotNull( reader.getAnnotation( Table.class ) );
-		assertEquals( "@Table should not be used", "", reader.getAnnotation( Table.class ).name() );
-		assertEquals( "Overriding not taken into account", "myschema", reader.getAnnotation( Table.class ).schema() );
-		assertEquals( "Overriding not taken into account", "mycatalog", reader.getAnnotation( Table.class ).catalog() );
+		// The default schema is assigned later, when we generate SQL.
+		// See DefaultCatalogAndSchemaTest.
+		assertNull( "Default schema overridden too soon", reader.getAnnotation( Table.class ) );
 		assertNull( "Ignore Java annotation", reader.getAnnotation( SecondaryTable.class ) );
 		assertNull( "Ignore Java annotation", reader.getAnnotation( SecondaryTables.class ) );
 		assertNull( "Ignore Java annotation", reader.getAnnotation( Inheritance.class ) );

@@ -94,7 +94,7 @@ public final class JPAXMLOverriddenMetadataProvider implements MetadataProvider 
 		else {
 			if ( defaults == null ) {
 				defaults = new HashMap<>();
-				XMLContext.Default xmlDefaults = xmlContext.getDefault( null );
+				XMLContext.Default xmlDefaults = xmlContext.getDefaultWithGlobalCatalogAndSchema();
 
 				defaults.put( "schema", xmlDefaults.getSchema() );
 				defaults.put( "catalog", xmlDefaults.getCatalog() );

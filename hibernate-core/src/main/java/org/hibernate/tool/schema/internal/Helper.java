@@ -14,7 +14,7 @@ import java.sql.SQLException;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import org.hibernate.boot.model.relational.Namespace;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -176,15 +176,15 @@ public class Helper {
 	public static DatabaseInformation buildDatabaseInformation(
 			ServiceRegistry serviceRegistry,
 			DdlTransactionIsolator ddlTransactionIsolator,
-			Namespace.Name defaultNamespace,
+			SqlStringGenerationContext sqlStringGenerationContext,
 			SchemaManagementTool tool) {
 		final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
 		try {
 			return new DatabaseInformationImpl(
 					serviceRegistry,
 					jdbcEnvironment,
+					sqlStringGenerationContext,
 					ddlTransactionIsolator,
-					defaultNamespace,
 					tool
 			);
 		}

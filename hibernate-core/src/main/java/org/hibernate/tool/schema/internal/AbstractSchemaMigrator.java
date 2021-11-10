@@ -28,6 +28,7 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.internal.Formatter;
 import org.hibernate.internal.util.StringHelper;
@@ -91,6 +92,11 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 
 	@Override
 	public void doMigration(Metadata metadata, ExecutionOptions options, TargetDescriptor targetDescriptor) {
+		SqlStringGenerationContext sqlStringGenerationContext = SqlStringGenerationContextImpl.fromConfigurationMap(
+				tool.getServiceRegistry().getService( JdbcEnvironment.class ),
+				metadata.getDatabase(),
+				options.getConfigurationValues()
+		);
 		if ( !targetDescriptor.getTargetTypes().isEmpty() ) {
 			final JdbcContext jdbcContext = tool.resolveJdbcContext( options.getConfigurationValues() );
 			final DdlTransactionIsolator ddlTransactionIsolator = tool.getDdlTransactionIsolator( jdbcContext );
@@ -98,7 +104,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 				final DatabaseInformation databaseInformation = Helper.buildDatabaseInformation(
 						tool.getServiceRegistry(),
 						ddlTransactionIsolator,
-						metadata.getDatabase().getDefaultNamespace().getName(),
+						sqlStringGenerationContext,
 						tool
 				);
 
@@ -114,7 +120,8 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 					}
 
 					try {
-						performMigration( metadata, databaseInformation, options, jdbcContext.getDialect(), targets );
+						performMigration( metadata, databaseInformation, options, jdbcContext.getDialect(),
+								sqlStringGenerationContext, targets );
 					}
 					finally {
 						for ( GenerationTarget target : targets ) {
@@ -161,6 +168,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			DatabaseInformation existingDatabase,
 			ExecutionOptions options,
 			Dialect dialect,
+			SqlStringGenerationContext sqlStringGenerationContext,
 			GenerationTarget... targets) {
 		final boolean format = Helper.interpretFormattingEnabled( options.getConfigurationValues() );
 		final Formatter formatter = format ? FormatStyle.DDL.getFormatter() : FormatStyle.NONE.getFormatter();
@@ -168,8 +176,6 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 		final Set<String> exportIdentifiers = new HashSet<String>( 50 );
 
 		final Database database = metadata.getDatabase();
-		SqlStringGenerationContext sqlStringGenerationContext =
-				new SqlStringGenerationContextImpl( database.getJdbcEnvironment() );
 
 		// Drop all AuxiliaryDatabaseObjects
 		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : database.getAuxiliaryDatabaseObjects() ) {
@@ -311,8 +317,6 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 						dialect,
 						metadata,
 						tableInformation,
-						database.getDefaultNamespace().getPhysicalName().getCatalog(),
-						database.getDefaultNamespace().getPhysicalName().getSchema(),
 						sqlStringGenerationContext
 				),
 				formatter,

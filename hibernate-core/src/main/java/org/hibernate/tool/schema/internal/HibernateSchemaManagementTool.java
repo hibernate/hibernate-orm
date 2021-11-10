@@ -10,6 +10,7 @@ import java.sql.Connection;
 import java.util.Map;
 
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
@@ -375,16 +376,14 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 		public ExtractionContext createExtractionContext(
 				ServiceRegistry serviceRegistry,
 				JdbcEnvironment jdbcEnvironment,
+				SqlStringGenerationContext sqlStringGenerationContext,
 				DdlTransactionIsolator ddlTransactionIsolator,
-				Identifier defaultCatalog,
-				Identifier defaultSchema,
 				ExtractionContext.DatabaseObjectAccess databaseObjectAccess) {
 			return new ImprovedExtractionContextImpl(
 					serviceRegistry,
 					jdbcEnvironment,
+					sqlStringGenerationContext,
 					ddlTransactionIsolator,
-					defaultCatalog,
-					defaultSchema,
 					databaseObjectAccess
 			);
 		}

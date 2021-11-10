@@ -12,7 +12,6 @@ import java.sql.SQLException;
 
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
-import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.service.ServiceRegistry;
@@ -27,8 +26,6 @@ public class ExtractionContextImpl implements ExtractionContext {
 	private final SqlStringGenerationContext sqlStringGenerationContext;
 	private final JdbcConnectionAccess jdbcConnectionAccess;
 	private final DatabaseObjectAccess registeredTableAccess;
-	private final Identifier defaultCatalogName;
-	private final Identifier defaultSchemaName;
 
 	private Connection jdbcConnection;
 	private DatabaseMetaData jdbcDatabaseMetaData;
@@ -36,17 +33,14 @@ public class ExtractionContextImpl implements ExtractionContext {
 	public ExtractionContextImpl(
 			ServiceRegistry serviceRegistry,
 			JdbcEnvironment jdbcEnvironment,
+			SqlStringGenerationContext sqlStringGenerationContext,
 			JdbcConnectionAccess jdbcConnectionAccess,
-			DatabaseObjectAccess registeredTableAccess,
-			Identifier defaultCatalogName,
-			Identifier defaultSchemaName) {
+			DatabaseObjectAccess registeredTableAccess) {
 		this.serviceRegistry = serviceRegistry;
 		this.jdbcEnvironment = jdbcEnvironment;
-		this.sqlStringGenerationContext = new SqlStringGenerationContextImpl( jdbcEnvironment );
+		this.sqlStringGenerationContext = sqlStringGenerationContext;
 		this.jdbcConnectionAccess = jdbcConnectionAccess;
 		this.registeredTableAccess = registeredTableAccess;
-		this.defaultCatalogName = defaultCatalogName;
-		this.defaultSchemaName = defaultSchemaName;
 	}
 
 	@Override
@@ -92,12 +86,12 @@ public class ExtractionContextImpl implements ExtractionContext {
 
 	@Override
 	public Identifier getDefaultCatalog() {
-		return defaultCatalogName;
+		return sqlStringGenerationContext.getDefaultCatalog();
 	}
 
 	@Override
 	public Identifier getDefaultSchema() {
-		return defaultSchemaName;
+		return sqlStringGenerationContext.getDefaultSchema();
 	}
 
 	@Override

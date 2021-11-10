@@ -25,7 +25,6 @@ import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.cfg.Settings;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -367,9 +366,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 		if ( !model.hasSubclasses() ) {
 			return model.getTable().getQualifiedName(
-					sqlStringGenerationContext,
-					settings.getDefaultCatalogName(),
-					settings.getDefaultSchemaName()
+					sqlStringGenerationContext
 			);
 		}
 
@@ -415,9 +412,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 				buf.append( " from " )
 						.append(
 								table.getQualifiedName(
-										sqlStringGenerationContext,
-										settings.getDefaultCatalogName(),
-										settings.getDefaultSchemaName()
+										sqlStringGenerationContext
 								)
 						);
 				buf.append( " union " );

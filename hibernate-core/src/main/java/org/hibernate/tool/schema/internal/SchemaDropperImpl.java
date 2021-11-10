@@ -189,8 +189,8 @@ public class SchemaDropperImpl implements SchemaDropper {
 			Formatter formatter,
 			GenerationTarget... targets) {
 		final Database database = metadata.getDatabase();
-		SqlStringGenerationContext sqlStringGenerationContext =
-				new SqlStringGenerationContextImpl( metadata.getDatabase().getJdbcEnvironment() );
+		SqlStringGenerationContext sqlStringGenerationContext = SqlStringGenerationContextImpl.fromConfigurationMap(
+				metadata.getDatabase().getJdbcEnvironment(), database, options.getConfigurationValues());
 
 		boolean tryToDropCatalogs = false;
 		boolean tryToDropSchemas = false;

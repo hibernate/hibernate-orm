@@ -499,17 +499,12 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		public MappingDefaultsImpl(StandardServiceRegistry serviceRegistry) {
 			final ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
 
-			this.implicitSchemaName = configService.getSetting(
-					AvailableSettings.DEFAULT_SCHEMA,
-					StandardConverters.STRING,
-					null
-			);
-
-			this.implicitCatalogName = configService.getSetting(
-					AvailableSettings.DEFAULT_CATALOG,
-					StandardConverters.STRING,
-					null
-			);
+			// AvailableSettings.DEFAULT_SCHEMA and AvailableSettings.DEFAULT_CATALOG
+			// are taken into account later, at runtime, when rendering table/sequence names.
+			// These fields are exclusively about mapping defaults,
+			// overridden in XML mappings or through setters in MetadataBuilder.
+			this.implicitSchemaName = null;
+			this.implicitCatalogName = null;
 
 			this.implicitlyQuoteIdentifiers = configService.getSetting(
 					AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS,

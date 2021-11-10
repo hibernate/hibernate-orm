@@ -185,7 +185,7 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 			String defaultCatalog, String defaultSchema) {
 		Dialect dialect = context.getDialect();
 		if ( isGenerated( dialect ) ) {
-			final String tableName = getTable().getQualifiedName( context, defaultCatalog, defaultSchema );
+			final String tableName = getTable().getQualifiedName( context );
 			return String.format(
 					Locale.ROOT,
 					"%s evictData constraint %s",
@@ -208,7 +208,7 @@ public abstract class Constraint implements RelationalModel, Exportable, Seriali
 			// empty string.  Prevent blank "alter table" statements.
 			String constraintString = sqlConstraintString( context, getName(), defaultCatalog, defaultSchema );
 			if ( !StringHelper.isEmpty( constraintString ) ) {
-				final String tableName = getTable().getQualifiedName( context, defaultCatalog, defaultSchema );
+				final String tableName = getTable().getQualifiedName( context );
 				return dialect.getAlterTableString( tableName ) + " " + constraintString;
 			}
 		}

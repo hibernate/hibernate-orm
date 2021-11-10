@@ -8,6 +8,7 @@ package org.hibernate.tool.schema.spi;
 
 import org.hibernate.Incubating;
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.service.ServiceRegistry;
@@ -26,9 +27,8 @@ public interface ExtractionTool {
 	ExtractionContext createExtractionContext(
 			ServiceRegistry serviceRegistry,
 			JdbcEnvironment jdbcEnvironment,
+			SqlStringGenerationContext sqlStringGenerationContext,
 			DdlTransactionIsolator ddlTransactionIsolator,
-			Identifier defaultCatalog,
-			Identifier defaultSchema,
 			ExtractionContext.DatabaseObjectAccess databaseObjectAccess);
 
 	InformationExtractor createInformationExtractor(ExtractionContext extractionContext);

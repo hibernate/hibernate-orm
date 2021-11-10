@@ -82,7 +82,9 @@ import static org.hibernate.cfg.AvailableSettings.CONVENTIONAL_JAVA_CONSTANTS;
 import static org.hibernate.cfg.AvailableSettings.CRITERIA_LITERAL_HANDLING_MODE;
 import static org.hibernate.cfg.AvailableSettings.CUSTOM_ENTITY_DIRTINESS_STRATEGY;
 import static org.hibernate.cfg.AvailableSettings.DEFAULT_BATCH_FETCH_SIZE;
+import static org.hibernate.cfg.AvailableSettings.DEFAULT_CATALOG;
 import static org.hibernate.cfg.AvailableSettings.DEFAULT_ENTITY_MODE;
+import static org.hibernate.cfg.AvailableSettings.DEFAULT_SCHEMA;
 import static org.hibernate.cfg.AvailableSettings.DELAY_ENTITY_LOADER_CREATIONS;
 import static org.hibernate.cfg.AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS;
 import static org.hibernate.cfg.AvailableSettings.FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH;
@@ -242,6 +244,12 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private boolean queryParametersValidationEnabled;
 	private LiteralHandlingMode criteriaLiteralHandlingMode;
 	private ImmutableEntityUpdateQueryHandlingMode immutableEntityUpdateQueryHandlingMode;
+	// These two settings cannot be modified from the builder,
+	// in order to maintain consistency.
+	// Indeed, other components (the schema tools) also make use of these settings,
+	// and THOSE do not have access to session factory options.
+	private final String defaultCatalog;
+	private final String defaultSchema;
 
 	private Map<String, SQLFunction> sqlFunctions;
 
@@ -530,6 +538,9 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.immutableEntityUpdateQueryHandlingMode = ImmutableEntityUpdateQueryHandlingMode.interpret(
 				configurationSettings.get( IMMUTABLE_ENTITY_UPDATE_QUERY_HANDLING_MODE )
 		);
+
+		this.defaultCatalog = ConfigurationHelper.getString( DEFAULT_CATALOG, configurationSettings );
+		this.defaultSchema = ConfigurationHelper.getString( DEFAULT_SCHEMA, configurationSettings );
 
 		this.inClauseParameterPaddingEnabled =  ConfigurationHelper.getBoolean(
 				IN_CLAUSE_PARAMETER_PADDING,
@@ -1048,6 +1059,16 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
+	public String getDefaultCatalog() {
+		return defaultCatalog;
+	}
+
+	@Override
+	public String getDefaultSchema() {
+		return defaultSchema;
+	}
+
+	@Override
 	public boolean jdbcStyleParamsZeroBased() {
 		return this.jdbcStyleParamsZeroBased;
 	}
@@ -1091,7 +1112,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	public boolean isOmitJoinOfSuperclassTablesEnabled() {
 		return omitJoinOfSuperclassTablesEnabled;
 	}
-
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// In-flight mutation access

@@ -2197,8 +2197,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		// for now we only handle id generators as ExportableProducers
 
 		final Dialect dialect = getDatabase().getJdbcEnvironment().getDialect();
-		final String defaultCatalog = extractName( getDatabase().getDefaultNamespace().getName().getCatalog(), dialect );
-		final String defaultSchema = extractName( getDatabase().getDefaultNamespace().getName().getSchema(), dialect );
 
 		for ( PersistentClass entityBinding : entityBindingMap.values() ) {
 			if ( entityBinding.isInherited() ) {
@@ -2208,8 +2206,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			handleIdentifierValueBinding(
 					entityBinding.getIdentifier(),
 					dialect,
-					defaultCatalog,
-					defaultSchema,
 					(RootClass) entityBinding
 			);
 		}
@@ -2222,8 +2218,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			handleIdentifierValueBinding(
 					( (IdentifierCollection) collection ).getIdentifier(),
 					dialect,
-					defaultCatalog,
-					defaultSchema,
 					null
 			);
 		}
@@ -2232,8 +2226,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	private void handleIdentifierValueBinding(
 			KeyValue identifierValueBinding,
 			Dialect dialect,
-			String defaultCatalog,
-			String defaultSchema,
 			RootClass entityBinding) {
 		// todo : store this result (back into the entity or into the KeyValue, maybe?)
 		// 		This process of instantiating the id-generator is called multiple times.
@@ -2243,8 +2235,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			final IdentifierGenerator ig = identifierValueBinding.createIdentifierGenerator(
 					getIdentifierGeneratorFactory(),
 					dialect,
-					defaultCatalog,
-					defaultSchema,
 					entityBinding
 			);
 

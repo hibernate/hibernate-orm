@@ -454,8 +454,6 @@ public abstract class AbstractCollectionPersister
 			identifierGenerator = idColl.getIdentifier().createIdentifierGenerator(
 					creationContext.getMetadata().getIdentifierGeneratorFactory(),
 					factory.getDialect(),
-					factory.getSettings().getDefaultCatalogName(),
-					factory.getSettings().getDefaultSchemaName(),
 					null
 					);
 			identifierGenerator.initialize( creationContext.getSessionFactory().getSqlStringGenerationContext() );

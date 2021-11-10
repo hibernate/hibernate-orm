@@ -52,13 +52,9 @@ import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 import org.hibernate.type.descriptor.converter.AttributeConverterSqlTypeDescriptorAdapter;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
-import org.hibernate.type.descriptor.sql.JdbcTypeJavaClassMappings;
 import org.hibernate.type.descriptor.sql.LobTypeMappings;
 import org.hibernate.type.descriptor.sql.NationalizedTypeMappings;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.DynamicParameterizedType;
 
 /**
@@ -279,6 +275,14 @@ public class SimpleValue implements KeyValue {
 	@Override
 	public IdentifierGenerator createIdentifierGenerator(
 			IdentifierGeneratorFactory identifierGeneratorFactory,
+			Dialect dialect,
+			RootClass rootClass) throws MappingException {
+		return createIdentifierGenerator( identifierGeneratorFactory, dialect, null, null, rootClass );
+	}
+
+	@Override
+	public IdentifierGenerator createIdentifierGenerator(
+			IdentifierGeneratorFactory identifierGeneratorFactory,
 			Dialect dialect, 
 			String defaultCatalog, 
 			String defaultSchema, 
@@ -289,18 +293,17 @@ public class SimpleValue implements KeyValue {
 		}
 
 		Properties params = new Properties();
-		
-		//if the hibernate-mapping did not specify a schema/catalog, use the defaults
-		//specified by properties - but note that if the schema/catalog were specified
-		//in hibernate-mapping, or as params, they will already be initialized and
-		//will override the values set here (they are in identifierGeneratorProperties)
+
+		// This is for backwards compatibility only;
+		// when this method is called by Hibernate ORM, defaultSchema and defaultCatalog are always
+		// null, and defaults are handled later.
 		if ( defaultSchema!=null ) {
 			params.setProperty(PersistentIdentifierGenerator.SCHEMA, defaultSchema);
 		}
 		if ( defaultCatalog!=null ) {
 			params.setProperty(PersistentIdentifierGenerator.CATALOG, defaultCatalog);
 		}
-		
+
 		//pass the entity-name, if not a collection-id
 		if (rootClass!=null) {
 			params.setProperty( IdentifierGenerator.ENTITY_NAME, rootClass.getEntityName() );

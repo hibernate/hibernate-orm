@@ -224,9 +224,14 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		// for potential future use
 	}
 
+	@SuppressWarnings("unchecked,rawtypes")
 	@Override
 	public SqmSelectStatement<Object> createQuery() {
-		return new SqmSelectStatement<>( Object.class, this );
+		// IMPORTANT: we want to pass null here for the result-type
+		// to indicate that we do not know.  this will allow later
+		// calls to `SqmSelectStatement#select`, `SqmSelectStatement#multiSelect`,
+		// etc. to influence the result type
+		return new SqmSelectStatement<Object>( (Class) null, this );
 	}
 
 	@Override

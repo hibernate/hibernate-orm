@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.annotations.embeddables;
+package org.hibernate.orm.test.annotations.embeddables;
 
 import java.io.Serializable;
 import java.sql.PreparedStatement;
@@ -19,37 +19,37 @@ import org.hibernate.usertype.UserType;
 /**
  * @author Chris Pheby
  */
-public class DollarValueUserType implements UserType {
+public class MyDateUserType implements UserType {
 
 	@Override
 	public int[] sqlTypes() {
-		return new int[] {Types.BIGINT};
+		return new int[] {Types.DATE};
 	}
 
 	@Override
-	public Class<DollarValue> returnedClass() {
-		return DollarValue.class;
+	public Class<MyDate> returnedClass() {
+		return MyDate.class;
 	}
 
 	@Override
 	public boolean equals(Object x, Object y) throws HibernateException {
-		if (!(x instanceof DollarValue) || !(y instanceof DollarValue)) {
-			throw new HibernateException("Expected DollarValue");
+		if (!(x instanceof MyDate) || !(y instanceof MyDate)) {
+			throw new HibernateException("Expected MyDate");
 		}
-		return ((DollarValue)x).getAmount().equals(((DollarValue)y).getAmount());
+		return ((MyDate)x).getDate().equals(((MyDate)y).getDate());
 	}
 
 	@Override
 	public int hashCode(Object x) throws HibernateException {
-		if (!(x instanceof DollarValue)) {
-			throw new HibernateException("Expected DollarValue");
+		if (!(x instanceof MyDate)) {
+			throw new HibernateException("Expected MyDate");
 		}
-		return ((DollarValue)x).getAmount().hashCode();
+		return ((MyDate)x).getDate().hashCode();
 	}
 
 	@Override
 	public Object nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
-		return new DollarValue( rs.getBigDecimal( position ) );
+		return new MyDate( rs.getDate( position ) );
 	}
 
 	@Override
@@ -58,12 +58,14 @@ public class DollarValueUserType implements UserType {
 			Object value,
 			int index,
 			SharedSessionContractImplementor session) throws HibernateException, SQLException {
-		st.setBigDecimal(index, ((DollarValue)value).getAmount());
+		st.setDate(index, new java.sql.Date(((MyDate)value).getDate().getTime()));
 	}
 
 	@Override
 	public Object deepCopy(Object value) throws HibernateException {
-		return new DollarValue();
+		MyDate result = new MyDate();
+
+		return result;
 	}
 
 	@Override

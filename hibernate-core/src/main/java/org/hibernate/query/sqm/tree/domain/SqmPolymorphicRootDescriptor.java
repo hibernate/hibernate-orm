@@ -373,7 +373,7 @@ public class SqmPolymorphicRootDescriptor<T> implements EntityDomainType<T> {
 	}
 
 	@Override
-	public SqmPath<T> createSqmPath(SqmPath<?> lhs) {
+	public SqmPath<T> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource) {
 		throw new UnsupportedOperationException();
 	}
 

@@ -22,6 +22,7 @@ import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
@@ -196,6 +197,31 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 		return superMappingType.getRootEntityDescriptor();
 	}
 
+	/**
+	 * Adapts the table group and its table reference as well as table reference joins
+	 * in a way such that unnecessary tables or joins are omitted if possible,
+	 * based on the given treated entity names.
+	 *
+	 * The goal is to e.g. remove join inheritance "branches" or union selects that are impossible.
+	 *
+	 * Consider the following example:
+	 * <code>
+	 *     class BaseEntity {}
+	 *     class Sub1 extends BaseEntity {}
+	 *     class Sub1Sub1 extends Sub1 {}
+	 *     class Sub1Sub2 extends Sub1 {}
+	 *     class Sub2 extends BaseEntity {}
+	 *     class Sub2Sub1 extends Sub2 {}
+	 *     class Sub2Sub2 extends Sub2 {}
+	 * </code>
+	 *
+	 * If the <code>treatedEntityNames</code> only contains <code>Sub1</code> or any of its subtypes,
+	 * this means that <code>Sub2</code> and all subtypes are impossible,
+	 * thus the joins/selects for these types shall be omitted in the given table group.
+	 *
+	 * @param tableGroup The table group to prune subclass tables for
+	 * @param treatedEntityNames The entity names for which path usages were registered
+	 */
 	default void pruneForSubclasses(TableGroup tableGroup, Set<String> treatedEntityNames) {
 	}
 
@@ -297,6 +323,7 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 				additionalPredicateCollectorAccess,
 				creationState.getSqlAliasBaseGenerator().createSqlAliasBase( getSqlAliasStem() ),
 				creationState.getSqlExpressionResolver(),
+				creationState.getFromClauseAccess(),
 				creationContext
 		);
 	}
@@ -309,6 +336,7 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
 			SqlAliasBase sqlAliasBase,
 			SqlExpressionResolver expressionResolver,
+			FromClauseAccess fromClauseAccess,
 			SqlAstCreationContext creationContext) {
 		return getEntityPersister().createRootTableGroup(
 				canUseInnerJoins,
@@ -317,6 +345,7 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 				additionalPredicateCollectorAccess,
 				sqlAliasBase,
 				expressionResolver,
+				fromClauseAccess,
 				creationContext
 		);
 	}

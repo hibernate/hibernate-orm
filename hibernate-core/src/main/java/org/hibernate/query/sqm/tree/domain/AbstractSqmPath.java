@@ -155,7 +155,7 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	protected <X> SqmPath<X> resolvePath(String attributeName, SqmPathSource<X> pathSource) {
 		if ( reusablePaths == null ) {
 			reusablePaths = new HashMap<>();
-			final SqmPath<X> path = pathSource.createSqmPath( this );
+			final SqmPath<X> path = pathSource.createSqmPath( this, getReferencedPathSource().getIntermediatePathSource( pathSource ) );
 			reusablePaths.put( attributeName, path );
 			return path;
 		}
@@ -163,7 +163,7 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 			//noinspection unchecked
 			return (SqmPath<X>) reusablePaths.computeIfAbsent(
 					attributeName,
-					name -> pathSource.createSqmPath( this )
+					name -> pathSource.createSqmPath( this, getReferencedPathSource().getIntermediatePathSource( pathSource ) )
 			);
 		}
 	}

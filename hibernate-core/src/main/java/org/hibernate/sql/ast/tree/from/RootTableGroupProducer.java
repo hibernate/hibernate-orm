@@ -12,6 +12,7 @@ import java.util.function.Supplier;
 import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
@@ -33,7 +34,8 @@ public interface RootTableGroupProducer extends TableGroupProducer, ModelPartCon
 			NavigablePath navigablePath,
 			String explicitSourceAlias,
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
-			SqlAstCreationState creationState, SqlAstCreationContext creationContext);
+			SqlAstCreationState creationState,
+			SqlAstCreationContext creationContext);
 
 	TableGroup createRootTableGroup(
 			boolean canUseInnerJoins,
@@ -42,5 +44,6 @@ public interface RootTableGroupProducer extends TableGroupProducer, ModelPartCon
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
 			SqlAliasBase sqlAliasBase,
 			SqlExpressionResolver expressionResolver,
+			FromClauseAccess fromClauseAccess,
 			SqlAstCreationContext creationContext);
 }

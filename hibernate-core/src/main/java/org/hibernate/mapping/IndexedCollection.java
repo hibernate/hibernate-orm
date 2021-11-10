@@ -54,15 +54,16 @@ public abstract class IndexedCollection extends Collection {
 			pk.addColumns( getKey().getColumnIterator() );
 
 			// index should be last column listed
-			boolean isFormula = false;
-			Iterator iter = getIndex().getColumnIterator();
+			boolean indexIsPartOfElement = false;
+			final Iterator<Selectable> iter = getIndex().getColumnIterator();
 			while ( iter.hasNext() ) {
-				if ( ( (Selectable) iter.next() ).isFormula() ) {
-					isFormula=true;
+				final Selectable selectable = iter.next();
+				if ( selectable.isFormula() || !getCollectionTable().containsColumn( (Column) selectable ) ) {
+					indexIsPartOfElement = true;
 				}
 			}
-			if (isFormula) {
-				//if it is a formula index, use the element columns in the PK
+			if ( indexIsPartOfElement ) {
+				//if it is part of the element, use the element columns in the PK
 				pk.addColumns( getElement().getColumnIterator() );
 			}
 			else {

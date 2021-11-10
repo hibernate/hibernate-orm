@@ -172,12 +172,12 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E>, Doma
 
 	@Override
 	public <S extends E> SqmFrom<?, S> treatAs(Class<S> treatJavaType, String alias) {
-		throw new UnsupportedOperationException();
+		throw new UnsupportedOperationException( "Root treats can not be aliased" );
 	}
 
 	@Override
 	public <S extends E> SqmFrom<?, S> treatAs(EntityDomainType<S> treatTarget, String alias) {
-		throw new UnsupportedOperationException();
+		throw new UnsupportedOperationException( "Root treats can not be aliased" );
 	}
 
 	@Override

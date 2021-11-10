@@ -34,6 +34,20 @@ public interface Queryable extends ModelPart {
 	 */
 	ModelPart findSubPart(String name, EntityMappingType treatTargetType);
 
+	default ModelPart findByPath(String path) {
+		int nextStart = 0;
+		int dotIndex;
+		Queryable modelPartContainer = this;
+		while ( ( dotIndex = path.indexOf( '.', nextStart ) ) != -1 ) {
+			modelPartContainer = (Queryable) modelPartContainer.findSubPart(
+					path.substring( nextStart, dotIndex ),
+					null
+			);
+			nextStart = dotIndex + 1;
+		}
+		return modelPartContainer.findSubPart( path.substring( nextStart ), null );
+	}
+
 	default ModelPart resolveSubPart(DotIdentifierSequence path) {
 		return path.resolve(
 				(ModelPart) this,

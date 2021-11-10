@@ -8,10 +8,7 @@ package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.query.TreatedNavigablePath;
-import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmCreationState;
-import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.UnknownPathException;
@@ -104,7 +101,7 @@ public class SqmTreatedRoot<T, S extends T> extends SqmRoot<S> implements SqmTre
 						throw UnknownPathException.unknownSubPath( this, name );
 					}
 
-					return subSource.createSqmPath( this );
+					return subSource.createSqmPath( this, null );
 				}
 		);
 	}

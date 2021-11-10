@@ -48,6 +48,48 @@ public interface TableGroup extends SqlAstNode, ColumnReferenceQualifier, SqmPat
 
 	void addTableGroupJoin(TableGroupJoin join);
 
+	/**
+	 * A nested table group join is a join against a table group,
+	 * that is ensured to be joined against the primary table reference and table reference joins in isolation,
+	 * prior to doing other table group joins e.g.
+	 *
+	 * <code>
+	 * select *
+	 * from entity1 e
+	 * left join (
+	 * 	 collection_table c1
+	 * 	 join association a on a.id = c1.target_id
+	 * ) on c1.entity_id = e.id and c1.key = 1
+	 * </code>
+	 *
+	 * is modeled as
+	 *
+	 * <code>
+	 * TableGroup(
+	 *     primaryTableReference = TableReference(entity1, e),
+	 *     tableGroupJoins = [
+	 *         TableGroupJoin(
+	 *             TableGroup(
+	 *                 primaryTableReference = TableReference(collection_table, c1),
+	 *                 nestedTableGroupJoins = [
+	 *                     TableGroupJoin(
+	 *                         TableGroup(
+	 *                             primaryTableReference = TableReference(association, a)
+	 *                         )
+	 *                     )
+	 *                 ]
+	 *             )
+	 *         )
+	 *     ]
+	 * )
+	 * </code>
+	 *
+	 * This is necessary to correctly retain the cardinality of an HQL join like e.g.
+	 *
+	 * <code>
+	 *     from Entity1 e left join e.collectionAssociation c on key(c) = 1
+	 * </code>
+	 */
 	void addNestedTableGroupJoin(TableGroupJoin join);
 
 	void visitTableGroupJoins(Consumer<TableGroupJoin> consumer);

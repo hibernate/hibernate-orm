@@ -48,7 +48,7 @@ public class SqmMaxIndexPath<T> extends AbstractSqmSpecificPluralPartPath<T> {
 			String name,
 			boolean isTerminal,
 			SqmCreationState creationState) {
-		return indexPathSource.createSqmPath( this );
+		return indexPathSource.createSqmPath( this, null );
 	}
 
 	@Override

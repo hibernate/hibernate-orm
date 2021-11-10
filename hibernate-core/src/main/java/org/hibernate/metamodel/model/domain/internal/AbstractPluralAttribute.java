@@ -83,6 +83,11 @@ public abstract class AbstractPluralAttribute<D, C, E>
 	}
 
 	@Override
+	public SqmPathSource<?> getIntermediatePathSource(SqmPathSource<?> pathSource) {
+		return pathSource == elementPathSource ? null : elementPathSource;
+	}
+
+	@Override
 	public CollectionType getCollectionType() {
 		return getCollectionClassification().toJpaClassification();
 	}
@@ -130,10 +135,15 @@ public abstract class AbstractPluralAttribute<D, C, E>
 	}
 
 	@Override
-	public SqmPath<E> createSqmPath(SqmPath<?> lhs) {
-		final NavigablePath navigablePath = lhs.getNavigablePath().append( getPathName() );
-		//noinspection unchecked
-		return new SqmPluralValuedSimplePath(
+	public SqmPath<E> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource) {
+		final NavigablePath navigablePath;
+		if ( intermediatePathSource == null ) {
+			navigablePath = lhs.getNavigablePath().append( getPathName() );
+		}
+		else {
+			navigablePath = lhs.getNavigablePath().append( intermediatePathSource.getPathName() ).append( getPathName() );
+		}
+		return new SqmPluralValuedSimplePath<>(
 				navigablePath,
 				this,
 				lhs,

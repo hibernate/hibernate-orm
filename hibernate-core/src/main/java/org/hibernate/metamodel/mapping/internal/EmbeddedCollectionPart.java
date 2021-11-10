@@ -29,6 +29,7 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
+import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
@@ -37,7 +38,8 @@ import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
-import org.hibernate.sql.ast.tree.from.CompositeTableGroup;
+import org.hibernate.sql.ast.tree.from.PluralTableGroup;
+import org.hibernate.sql.ast.tree.from.StandardVirtualTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
@@ -97,6 +99,8 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
+		// Make sure the pre-created table group for the part is registered under its navigable path
+		resolveTableGroup( navigablePath, creationState );
 		return new EmbeddableResultImpl<>(
 				navigablePath,
 				this,
@@ -153,6 +157,8 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 			boolean selected,
 			String resultVariable,
 			DomainResultCreationState creationState) {
+		// Make sure the pre-created table group for the part is registered under its navigable path
+		resolveTableGroup( fetchablePath, creationState );
 		return new EmbeddableFetchImpl(
 				fetchablePath,
 				this,
@@ -160,6 +166,24 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 				FetchTiming.IMMEDIATE,
 				selected,
 				creationState
+		);
+	}
+
+	private TableGroup resolveTableGroup(NavigablePath fetchablePath, DomainResultCreationState creationState) {
+		final FromClauseAccess fromClauseAccess = creationState.getSqlAstCreationState().getFromClauseAccess();
+		return fromClauseAccess.resolveTableGroup(
+				fetchablePath,
+				np -> {
+					final PluralTableGroup parentTableGroup = (PluralTableGroup) fromClauseAccess.getTableGroup( np.getParent() );
+					switch ( nature ) {
+						case ELEMENT:
+							return parentTableGroup.getElementTableGroup();
+						case INDEX:
+							return parentTableGroup.getIndexTableGroup();
+					}
+
+					throw new IllegalStateException( "Could not find table group for: " + np );
+				}
 		);
 	}
 
@@ -201,8 +225,10 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 			String explicitSourceAlias,
 			SqlAstJoinType sqlAstJoinType,
 			boolean fetched,
+			boolean addsPredicate,
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
+			FromClauseAccess fromClauseAccess,
 			SqlAstCreationContext creationContext) {
 		final TableGroup tableGroup = createRootTableGroupJoin(
 				navigablePath,
@@ -213,6 +239,7 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 				null,
 				aliasBaseGenerator,
 				sqlExpressionResolver,
+				fromClauseAccess,
 				creationContext
 		);
 
@@ -229,10 +256,11 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 			Consumer<Predicate> predicateConsumer,
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
+			FromClauseAccess fromClauseAccess,
 			SqlAstCreationContext creationContext) {
 		assert lhs.getModelPart() instanceof PluralAttributeMapping;
 
-		return new CompositeTableGroup( navigablePath, this, lhs, fetched );
+		return new StandardVirtualTableGroup( navigablePath, this, lhs, fetched );
 	}
 
 	@Override

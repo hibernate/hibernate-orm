@@ -52,7 +52,7 @@ public class SqmIndexedCollectionAccessPath<T> extends AbstractSqmPath<T> implem
 			boolean isTerminal,
 			SqmCreationState creationState) {
 		final SqmPathSource<?> subPathSource = getReferencedPathSource().getElementPathSource().findSubPathSource( name );
-		return subPathSource.createSqmPath( this );
+		return subPathSource.createSqmPath( this, getReferencedPathSource().getElementPathSource() );
 	}
 
 	@Override

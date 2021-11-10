@@ -18,6 +18,11 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 
 /**
+ * The purpose of this table group is to defer creating the actual table group until it is really needed.
+ * If it is not needed, we can safely skip rendering it. This is useful for ToOneAttributeMapping and EntityCollectionPart,
+ * where we need a table group for the association, but aren't sure which columns are needed yet.
+ * Deferring initialization enables getting away with fewer joins in case only foreign key columns are used.
+ *
  * @author Christian Beikov
  */
 public class LazyTableGroup extends AbstractColumnReferenceQualifier implements TableGroup {

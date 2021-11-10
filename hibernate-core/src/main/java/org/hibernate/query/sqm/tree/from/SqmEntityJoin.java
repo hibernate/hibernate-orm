@@ -124,12 +124,12 @@ public class SqmEntityJoin<T> extends AbstractSqmJoin<T, T> implements SqmQualif
 
 	@Override
 	public <S extends T> SqmFrom<?, S> treatAs(Class<S> treatJavaType, String alias) {
-		throw new UnsupportedOperationException();
+		throw new UnsupportedOperationException( "Entity join treats can not be aliased" );
 	}
 
 	@Override
 	public <S extends T> SqmFrom<?, S> treatAs(EntityDomainType<S> treatTarget, String alias) {
-		throw new UnsupportedOperationException();
+		throw new UnsupportedOperationException( "Entity join treats can not be aliased" );
 	}
 
 	@Override

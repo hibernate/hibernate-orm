@@ -70,6 +70,11 @@ class MapAttributeImpl<X, K, V> extends AbstractPluralAttribute<X, Map<K, V>, V>
 	}
 
 	@Override
+	public SqmPathSource<?> getIntermediatePathSource(SqmPathSource<?> pathSource) {
+		return pathSource == getElementPathSource() || pathSource == keyPathSource ? null : getElementPathSource();
+	}
+
+	@Override
 	public SimpleDomainType<K> getKeyType() {
 		return (SimpleDomainType<K>) keyPathSource.getSqmPathType();
 	}

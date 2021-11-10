@@ -44,7 +44,6 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.NonAggregatedIdentifierMappingImpl;
 import org.hibernate.metamodel.mapping.internal.SimpleForeignKeyDescriptor;
-import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.Joinable;
@@ -52,6 +51,7 @@ import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.EntityIdentifierNavigablePath;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
+import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SimpleFromClauseAccessImpl;
 import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
@@ -60,6 +60,7 @@ import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
+import org.hibernate.sql.ast.tree.from.PluralTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
@@ -395,6 +396,7 @@ public class LoaderSelectBuilder {
 
 		rootQuerySpec.getFromClause().addRoot( rootTableGroup );
 		sqlAstCreationState.getFromClauseAccess().registerTableGroup( rootNavigablePath, rootTableGroup );
+		registerPluralTableGroupParts( sqlAstCreationState.getFromClauseAccess(), rootTableGroup );
 
 		if ( partsToSelect != null && !partsToSelect.isEmpty() ) {
 			domainResults = new ArrayList<>( partsToSelect.size() );
@@ -409,11 +411,13 @@ public class LoaderSelectBuilder {
 							null,
 							SqlAstJoinType.LEFT,
 							true,
+							false,
 							sqlAstCreationState
 					);
 					rootTableGroup.addTableGroupJoin( tableGroupJoin );
 					tableGroup = tableGroupJoin.getJoinedGroup();
 					sqlAstCreationState.getFromClauseAccess().registerTableGroup( navigablePath, tableGroup );
+					registerPluralTableGroupParts( sqlAstCreationState.getFromClauseAccess(), tableGroup );
 				}
 				else {
 					tableGroup = rootTableGroup;
@@ -470,7 +474,7 @@ public class LoaderSelectBuilder {
 
 		if ( loadable instanceof PluralAttributeMapping ) {
 			final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) loadable;
-			applyFiltering( rootQuerySpec, rootTableGroup, pluralAttributeMapping );
+			applyFiltering( rootQuerySpec, rootTableGroup, pluralAttributeMapping, sqlAstCreationState.getFromClauseAccess() );
 			applyOrdering( rootTableGroup, pluralAttributeMapping );
 		}
 		else if ( loadable instanceof Joinable ) {
@@ -580,10 +584,10 @@ public class LoaderSelectBuilder {
 	private void applyFiltering(
 			QuerySpec querySpec,
 			TableGroup tableGroup,
-			PluralAttributeMapping pluralAttributeMapping) {
+			PluralAttributeMapping pluralAttributeMapping,
+			FromClauseAccess fromClauseAccess) {
 		final CollectionPersister collectionPersister = pluralAttributeMapping.getCollectionDescriptor();
-		final Joinable joinable = collectionPersister
-					.getCollectionType()
+		final Joinable joinable = collectionPersister.getCollectionType()
 					.getAssociatedJoinable( creationContext.getSessionFactory() );
 		final Predicate filterPredicate = FilterHelper.createFilterPredicate(
 				loadQueryInfluencers,
@@ -601,18 +605,23 @@ public class LoaderSelectBuilder {
 					tableGroup
 			);
 			if ( manyToManyFilterPredicate != null ) {
-				TableGroupJoin elementTableGroupJoin = null;
-				for ( TableGroupJoin nestedTableGroupJoin : tableGroup.getNestedTableGroupJoins() ) {
-					final NavigablePath navigablePath = nestedTableGroupJoin.getNavigablePath();
-					if ( navigablePath.getParent() == tableGroup.getNavigablePath()
-						&& CollectionPart.Nature.ELEMENT.getName().equals( navigablePath.getUnaliasedLocalName() ) ) {
-						elementTableGroupJoin = nestedTableGroupJoin;
-						break;
-					}
+				final NavigablePath parentNavigablePath = tableGroup.getNavigablePath().getParent();
+				if ( parentNavigablePath == null ) {
+					querySpec.applyPredicate( manyToManyFilterPredicate );
 				}
+				else {
+					final TableGroup parentTableGroup = fromClauseAccess.getTableGroup( parentNavigablePath );
+					TableGroupJoin pluralTableGroupJoin = null;
+					for ( TableGroupJoin nestedTableGroupJoin : parentTableGroup.getTableGroupJoins() ) {
+						if ( nestedTableGroupJoin.getNavigablePath() == tableGroup.getNavigablePath() ) {
+							pluralTableGroupJoin = nestedTableGroupJoin;
+							break;
+						}
+					}
 
-				assert elementTableGroupJoin != null;
-				elementTableGroupJoin.applyPredicate( manyToManyFilterPredicate );
+					assert pluralTableGroupJoin != null;
+					pluralTableGroupJoin.applyPredicate( manyToManyFilterPredicate );
+				}
 			}
 		}
 	}
@@ -852,7 +861,8 @@ public class LoaderSelectBuilder {
 						applyFiltering(
 								querySpec,
 								joinTableGroup,
-								pluralAttributeMapping
+								pluralAttributeMapping,
+								creationState.getFromClauseAccess()
 						);
 						applyOrdering(
 								querySpec,
@@ -945,6 +955,7 @@ public class LoaderSelectBuilder {
 
 		rootQuerySpec.getFromClause().addRoot( rootTableGroup );
 		sqlAstCreationState.getFromClauseAccess().registerTableGroup( rootNavigablePath, rootTableGroup );
+		registerPluralTableGroupParts( sqlAstCreationState.getFromClauseAccess(), rootTableGroup );
 
 		// generate and apply the restriction
 		applySubSelectRestriction(
@@ -956,7 +967,7 @@ public class LoaderSelectBuilder {
 		);
 
 		// NOTE : no need to check - we are explicitly processing a plural-attribute
-		applyFiltering( rootQuerySpec, rootTableGroup, attributeMapping );
+		applyFiltering( rootQuerySpec, rootTableGroup, attributeMapping, sqlAstCreationState.getFromClauseAccess() );
 		applyOrdering( rootTableGroup, attributeMapping );
 
 		// register the jdbc-parameters
@@ -1102,6 +1113,24 @@ public class LoaderSelectBuilder {
 		subQuery.applyPredicate( loadingSqlAst.getWhereClauseRestrictions() );
 
 		return subQuery;
+	}
+
+	private void registerPluralTableGroupParts(FromClauseAccess fromClauseAccess, TableGroup tableGroup) {
+		if ( tableGroup instanceof PluralTableGroup ) {
+			final PluralTableGroup pluralTableGroup = (PluralTableGroup) tableGroup;
+			if ( pluralTableGroup.getElementTableGroup() != null ) {
+				fromClauseAccess.registerTableGroup(
+						pluralTableGroup.getElementTableGroup().getNavigablePath(),
+						pluralTableGroup.getElementTableGroup()
+				);
+			}
+			if ( pluralTableGroup.getIndexTableGroup() != null ) {
+				fromClauseAccess.registerTableGroup(
+						pluralTableGroup.getIndexTableGroup().getNavigablePath(),
+						pluralTableGroup.getIndexTableGroup()
+				);
+			}
+		}
 	}
 }
 

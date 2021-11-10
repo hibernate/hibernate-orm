@@ -39,6 +39,7 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.ManyToOne;
+import org.hibernate.mapping.Map;
 import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.PersistentClass;
@@ -56,6 +57,7 @@ import org.hibernate.metamodel.mapping.CollectionIdentifierDescriptor;
 import org.hibernate.metamodel.mapping.CollectionMappingType;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.GeneratedValueResolver;
+import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PropertyBasedMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
@@ -619,7 +621,8 @@ public class MappingModelCreationHelper {
 
 		final RuntimeModelCreationContext creationContext = creationProcess.getCreationContext();
 		final SessionFactoryImplementor sessionFactory = creationContext.getSessionFactory();
-		final Dialect dialect = sessionFactory.getJdbcServices().getJdbcEnvironment().getDialect();
+		final JdbcEnvironment jdbcEnvironment = sessionFactory.getJdbcServices().getJdbcEnvironment();
+		final Dialect dialect = jdbcEnvironment.getDialect();
 		final MappingMetamodel domainModel = creationContext.getDomainModel();
 
 		final CollectionPersister collectionDescriptor = domainModel.findCollectionDescriptor( bootValueMapping.getRole() );
@@ -736,11 +739,20 @@ public class MappingModelCreationHelper {
 						jtdRegistry.getDescriptor( mapJavaType ),
 						collectionSemantics
 				);
-
+				final String mapKeyTableExpression;
+				if ( bootValueMapping instanceof Map && ( (Map) bootValueMapping ).getMapKeyPropertyName() != null ) {
+					mapKeyTableExpression = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
+							( (Map) bootValueMapping ).getIndex().getTable().getQualifiedTableName(),
+							dialect
+					);
+				}
+				else {
+					mapKeyTableExpression = tableExpression;
+				}
 				indexDescriptor = interpretMapKey(
 						bootValueMapping,
 						collectionDescriptor,
-						tableExpression,
+						mapKeyTableExpression,
 						sqlAliasStem,
 						dialect,
 						creationProcess
@@ -888,7 +900,8 @@ public class MappingModelCreationHelper {
 			MappingModelCreationProcess creationProcess) {
 		ModelPart attributeMappingSubPart = null;
 		if ( !StringHelper.isEmpty( collectionDescriptor.getMappedByProperty() ) ) {
-			attributeMappingSubPart = attributeMapping.findSubPart( collectionDescriptor.getMappedByProperty(), null );
+			attributeMappingSubPart = ( (ModelPartContainer) attributeMapping.getElementDescriptor().getPartMappingType() )
+					.findSubPart( collectionDescriptor.getMappedByProperty(), null );
 		}
 
 		if ( attributeMappingSubPart instanceof ToOneAttributeMapping ) {
@@ -1300,13 +1313,19 @@ public class MappingModelCreationHelper {
 			final Type identifierOrUniqueKeyType = entityType.getIdentifierOrUniqueKeyType(
 					creationProcess.getCreationContext().getSessionFactory()
 			);
-			componentType = (ComponentType) identifierOrUniqueKeyType;
-			if ( bootValueMapping instanceof ToOne ) {
-				sorted = ( (ToOne) bootValueMapping ).isSorted();
+			if ( identifierOrUniqueKeyType instanceof ComponentType ) {
+				componentType = (ComponentType) identifierOrUniqueKeyType;
+				if ( bootValueMapping instanceof ToOne ) {
+					sorted = ( (ToOne) bootValueMapping ).isSorted();
+				}
+				else {
+					// Assume one-to-many is sorted, because it always uses the primary key value
+					sorted = true;
+				}
 			}
 			else {
-				// Assume one-to-many is sorted, because it always uses the primary key value
-				sorted = true;
+				// This happens when we have a one-to-many with a mapped-by associations that has a basic FK
+				return new int[] { 0 };
 			}
 		}
 		// Consider the reordering if available

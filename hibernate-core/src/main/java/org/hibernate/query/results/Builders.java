@@ -40,11 +40,8 @@ import org.hibernate.query.results.implicit.ImplicitFetchBuilderEmbeddable;
 import org.hibernate.query.results.implicit.ImplicitFetchBuilderEntity;
 import org.hibernate.query.results.implicit.ImplicitFetchBuilderPlural;
 import org.hibernate.query.results.implicit.ImplicitModelPartResultBuilderEntity;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
-import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetchable;
-import org.hibernate.sql.results.graph.collection.internal.EntityCollectionPartTableGroup;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -277,23 +274,14 @@ public class Builders {
 
 		if ( fetchable instanceof EntityCollectionPart ) {
 			final EntityCollectionPart entityCollectionPart = (EntityCollectionPart) fetchable;
-			return (parent, fetchablePath, jdbcResultsMetadata, legacyFetchResolver, domainResultCreationState) -> {
-				final FromClauseAccess fromClauseAccess = domainResultCreationState.getSqlAstCreationState()
-						.getFromClauseAccess();
-				final TableGroup collectionTableGroup = fromClauseAccess.findTableGroup( parent.getNavigablePath() );
-				fromClauseAccess.registerTableGroup(
-						fetchablePath,
-						new EntityCollectionPartTableGroup( fetchablePath, collectionTableGroup, entityCollectionPart )
-				);
-				return parent.generateFetchableFetch(
-						entityCollectionPart,
-						fetchablePath,
-						FetchTiming.IMMEDIATE,
-						true,
-						null,
-						domainResultCreationState
-				);
-			};
+			return (parent, fetchablePath, jdbcResultsMetadata, legacyFetchResolver, domainResultCreationState) -> parent.generateFetchableFetch(
+					entityCollectionPart,
+					fetchablePath,
+					FetchTiming.IMMEDIATE,
+					true,
+					null,
+					domainResultCreationState
+			);
 		}
 
 		throw new UnsupportedOperationException();

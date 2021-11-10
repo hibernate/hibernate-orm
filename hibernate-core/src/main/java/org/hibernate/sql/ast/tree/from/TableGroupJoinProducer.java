@@ -10,6 +10,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
+import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
@@ -32,6 +33,7 @@ public interface TableGroupJoinProducer extends TableGroupProducer {
 			String explicitSourceAlias,
 			SqlAstJoinType sqlAstJoinType,
 			boolean fetched,
+			boolean addsPredicate,
 			SqlAstCreationState creationState) {
 		return createTableGroupJoin(
 				navigablePath,
@@ -39,8 +41,10 @@ public interface TableGroupJoinProducer extends TableGroupProducer {
 				explicitSourceAlias,
 				sqlAstJoinType,
 				fetched,
+				addsPredicate,
 				creationState.getSqlAliasBaseGenerator(),
 				creationState.getSqlExpressionResolver(),
+				creationState.getFromClauseAccess(),
 				creationState.getCreationContext()
 		);
 	}
@@ -54,8 +58,10 @@ public interface TableGroupJoinProducer extends TableGroupProducer {
 			String explicitSourceAlias,
 			SqlAstJoinType sqlAstJoinType,
 			boolean fetched,
+			boolean addsPredicate,
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
+			FromClauseAccess fromClauseAccess,
 			SqlAstCreationContext creationContext);
 
 	/**
@@ -78,6 +84,7 @@ public interface TableGroupJoinProducer extends TableGroupProducer {
 				predicateConsumer,
 				creationState.getSqlAliasBaseGenerator(),
 				creationState.getSqlExpressionResolver(),
+				creationState.getFromClauseAccess(),
 				creationState.getCreationContext()
 		);
 	}
@@ -94,5 +101,6 @@ public interface TableGroupJoinProducer extends TableGroupProducer {
 			Consumer<Predicate> predicateConsumer,
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
+			FromClauseAccess fromClauseAccess,
 			SqlAstCreationContext creationContext);
 }

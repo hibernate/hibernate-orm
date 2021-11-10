@@ -35,7 +35,7 @@ public class DiscriminatorSqmPathSource<D> extends AbstractSqmPathSource<D>
 	}
 
 	@Override
-	public SqmPath<D> createSqmPath(SqmPath<?> lhs) {
+	public SqmPath<D> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource) {
 		return new DiscriminatorSqmPath( this, lhs, entityDomainType, entityMapping, lhs.nodeBuilder() );
 	}
 

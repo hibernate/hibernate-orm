@@ -147,7 +147,6 @@ public class TreatKeywordTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-9862" )
-//	@FailureExpected( jiraKey = "HHH-9862" )
 	public void testRestrictionsOnJoinedSubclasses() {
 		Session s = openSession();
 		s.beginTransaction();

@@ -64,7 +64,7 @@ public class SqmAnyValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 			throw UnknownPathException.unknownSubPath( this, name );
 		}
 
-		return subPathSource.createSqmPath( this );
+		return subPathSource.createSqmPath( this, getReferencedPathSource().getIntermediatePathSource( subPathSource ) );
 
 	}
 

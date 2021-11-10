@@ -138,7 +138,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 						throw UnknownPathException.unknownSubPath( this, name );
 					}
 
-					return subSource.createSqmPath( this );
+					return subSource.createSqmPath( this, getReferencedPathSource().getIntermediatePathSource( subSource ) );
 				}
 		);
 	}

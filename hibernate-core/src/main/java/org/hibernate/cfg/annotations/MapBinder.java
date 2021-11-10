@@ -57,6 +57,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
+import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.sql.Template;
@@ -185,6 +186,7 @@ public class MapBinder extends CollectionBinder {
 					mapProperty.getValue(), map, targetPropertyName, associatedClass, targetPropertyPersistentClass, buildingContext
 			);
 			map.setIndex( indexValue );
+			map.setMapKeyPropertyName( mapKeyPropertyName );
 		}
 		else {
 			//this is a true Map mapping
@@ -411,13 +413,14 @@ public class MapBinder extends CollectionBinder {
 			PersistentClass associatedClass,
 			PersistentClass targetPropertyPersistentClass,
 			MetadataBuildingContext buildingContext) {
-		final Value element = collection.getElement();
-		final String fromAndWhere = resolveFromAndWhere(
-				collection,
-				associatedClass,
-				targetPropertyPersistentClass,
-				element
-		);
+		final Table mapKeyTable;
+		// HHH-11005 - only if we are OneToMany and location of map key property is at a different level, need to add a select
+		if ( !associatedClass.equals( targetPropertyPersistentClass ) ) {
+			mapKeyTable = targetPropertyPersistentClass.getTable();
+		}
+		else {
+			mapKeyTable = associatedClass.getTable();
+		}
 
 		if ( value instanceof Component ) {
 			Component component = (Component) value;
@@ -452,36 +455,22 @@ public class MapBinder extends CollectionBinder {
 			final BasicValue sourceValue = (BasicValue) value;
 			final DependantBasicValue dependantBasicValue = new DependantBasicValue(
 					getBuildingContext(),
-					collection.getTable(),
+					mapKeyTable,
 					sourceValue,
 					false,
 					false
 			);
 
-			String formulaString;
-
 			final Selectable sourceValueColumn = sourceValue.getColumn();
 			if ( sourceValueColumn instanceof Column ) {
-				formulaString = ( (Column) sourceValueColumn ).getQuotedName();
+				dependantBasicValue.addColumn( ( (Column) sourceValueColumn ).clone() );
 			}
 			else if ( sourceValueColumn instanceof Formula ) {
-				formulaString = ( (Formula) sourceValueColumn ).getFormula();
+				dependantBasicValue.addFormula( new Formula( ( (Formula) sourceValueColumn ).getFormula() ) );
 			}
 			else {
 				throw new AssertionFailure( "Unknown element column type : " + sourceValueColumn.getClass() );
 			}
-
-			if ( fromAndWhere != null ) {
-				final Dialect dialect = buildingContext.getBootstrapContext().getServiceRegistry()
-						.getService( JdbcServices.class )
-						.getDialect();
-				formulaString = Template.renderWhereStringTemplate( formulaString, "$alias$", dialect );
-				formulaString = "(select " + formulaString + fromAndWhere + ")";
-				formulaString = StringHelper.replace( formulaString, "$alias$", "a987" );
-			}
-
-			final Formula formula = new Formula( formulaString );
-			dependantBasicValue.addFormula( formula );
 
 			return dependantBasicValue;
 		}
@@ -490,7 +479,7 @@ public class MapBinder extends CollectionBinder {
 			SimpleValue targetValue;
 			if ( value instanceof ManyToOne ) {
 				ManyToOne sourceManyToOne = (ManyToOne) sourceValue;
-				ManyToOne targetManyToOne = new ManyToOne( getBuildingContext(), collection.getCollectionTable() );
+				ManyToOne targetManyToOne = new ManyToOne( getBuildingContext(), mapKeyTable );
 				targetManyToOne.setFetchMode( FetchMode.DEFAULT );
 				targetManyToOne.setLazy( true );
 				//targetValue.setIgnoreNotFound( ); does not make sense for a map key
@@ -498,116 +487,26 @@ public class MapBinder extends CollectionBinder {
 				targetValue = targetManyToOne;
 			}
 			else {
-				targetValue = new BasicValue( getBuildingContext(), collection.getCollectionTable() );
+				targetValue = new BasicValue( getBuildingContext(), mapKeyTable );
 				targetValue.copyTypeFrom( sourceValue );
 			}
-			Iterator columns = sourceValue.getColumnIterator();
-			Random random = new Random();
+			final Iterator<Selectable> columns = sourceValue.getColumnIterator();
 			while ( columns.hasNext() ) {
-				Object current = columns.next();
-				Formula formula = new Formula();
-				String formulaString;
+				Selectable current = columns.next();
 				if ( current instanceof Column ) {
-					formulaString = ( (Column) current ).getQuotedName();
+					targetValue.addColumn( ( (Column) current ).clone() );
 				}
 				else if ( current instanceof Formula ) {
-					formulaString = ( (Formula) current ).getFormula();
+					targetValue.addFormula( new Formula( ( (Formula) current ).getFormula() ) );
 				}
 				else {
 					throw new AssertionFailure( "Unknown element in column iterator: " + current.getClass() );
 				}
-				if ( fromAndWhere != null ) {
-					final Dialect dialect = buildingContext.getBootstrapContext().getServiceRegistry()
-							.getService( JdbcServices.class )
-							.getDialect();
-					formulaString = Template.renderWhereStringTemplate( formulaString, "$alias$", dialect );
-					formulaString = "(select " + formulaString + fromAndWhere + ")";
-					formulaString = StringHelper.replace(
-							formulaString,
-							"$alias$",
-							"a" + random.nextInt( 16 )
-					);
-				}
-				formula.setFormula( formulaString );
-				targetValue.addFormula( formula );
-
 			}
 			return targetValue;
 		}
 		else {
 			throw new AssertionFailure( "Unknown type encountered for map key: " + value.getClass() );
 		}
-	}
-
-	private String resolveFromAndWhere(
-			Collection collection,
-			PersistentClass associatedClass,
-			PersistentClass targetPropertyPersistentClass,
-			Value element) {
-		if ( ! OneToMany.class.isInstance( element ) ) {
-			String referencedPropertyName = null;
-			if ( element instanceof ToOne ) {
-				referencedPropertyName = ( (ToOne) element ).getReferencedPropertyName();
-			}
-			else if ( element instanceof DependantValue ) {
-				//TODO this never happen I think
-				if ( propertyName != null ) {
-					referencedPropertyName = collection.getReferencedPropertyName();
-				}
-				else {
-					throw new AnnotationException( "SecondaryTable JoinColumn cannot reference a non primary key" );
-				}
-			}
-			Iterator<Selectable> referencedEntityColumns;
-			if ( referencedPropertyName == null ) {
-				referencedEntityColumns = associatedClass.getIdentifier().getColumnIterator();
-			}
-			else {
-				Property referencedProperty = associatedClass.getRecursiveProperty( referencedPropertyName );
-				referencedEntityColumns = referencedProperty.getColumnIterator();
-			}
-			return getFromAndWhereFormula(
-					associatedClass.getTable().getQualifiedTableName().toString(),
-					element.getColumnIterator(),
-					referencedEntityColumns
-			);
-		}
-		else {
-			// HHH-11005 - only if we are OneToMany and location of map key property is at a different level, need to add a select
-			if ( !associatedClass.equals( targetPropertyPersistentClass ) ) {
-				return getFromAndWhereFormula(
-						targetPropertyPersistentClass.getTable()
-								.getQualifiedTableName()
-								.toString(),
-						element.getColumnIterator(),
-						associatedClass.getIdentifier().getColumnIterator()
-				);
-			}
-		}
-
-		return null;
-	}
-
-	private String getFromAndWhereFormula(
-			String tableName,
-			Iterator<Selectable> collectionTableColumns,
-			Iterator<Selectable> referencedEntityColumns) {
-		String alias = "$alias$";
-		StringBuilder fromAndWhereSb = new StringBuilder( " from " )
-				.append( tableName )
-				//.append(" as ") //Oracle doesn't support it in subqueries
-				.append( " " )
-				.append( alias ).append( " where " );
-		while ( collectionTableColumns.hasNext() ) {
-			Column colColumn = (Column) collectionTableColumns.next();
-			Column refColumn = (Column) referencedEntityColumns.next();
-			fromAndWhereSb.append( alias )
-					.append( '.' )
-					.append( refColumn.getQuotedName() )
-					.append( '=' )
-					.append( colColumn.getQuotedName() )
-					.append( " and " );
-		}
-		return fromAndWhereSb.substring( 0, fromAndWhereSb.length() - 5 );
 	}
 }

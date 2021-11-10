@@ -61,8 +61,8 @@ public final class Settings {
 
 	public Settings(SessionFactoryOptions sessionFactoryOptions, String defaultCatalogName, String defaultSchemaName) {
 		this.sessionFactoryOptions = sessionFactoryOptions;
-		this.defaultCatalogName = defaultCatalogName != null ? defaultCatalogName : sessionFactoryOptions.getDefaultCatalog();
-		this.defaultSchemaName = defaultSchemaName != null ? defaultSchemaName : sessionFactoryOptions.getDefaultSchema();
+		this.defaultCatalogName = sessionFactoryOptions.getDefaultCatalog() != null ? sessionFactoryOptions.getDefaultCatalog() : defaultCatalogName;
+		this.defaultSchemaName = sessionFactoryOptions.getDefaultSchema() != null ? sessionFactoryOptions.getDefaultSchema() : defaultSchemaName;
 
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf( "SessionFactory name : %s", sessionFactoryOptions.getSessionFactoryName() );

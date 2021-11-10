@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.mapping.hhh14276;
+package org.hibernate.orm.test.mapping.hhh14276;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
@@ -14,8 +14,8 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.sqm.mutation.internal.inline.InlineStrategy;
 
-import org.hibernate.test.mapping.hhh14276.entity.PlayerStat;
-import org.hibernate.test.mapping.hhh14276.entity.Score;
+import org.hibernate.orm.test.mapping.hhh14276.entity.PlayerStat;
+import org.hibernate.orm.test.mapping.hhh14276.entity.Score;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Before;
 import org.junit.Test;

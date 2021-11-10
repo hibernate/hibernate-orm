@@ -1,4 +1,4 @@
-package org.hibernate.test.mapping.hhh14343.entity;
+package org.hibernate.orm.test.mapping.hhh14343.entity;
 
 import java.io.Serializable;
 

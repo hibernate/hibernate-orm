@@ -129,9 +129,9 @@ public class DefaultCatalogAndSchemaTest {
 			// HHH-14922: Inconsistent precedence of orm.xml implicit catalog/schema over "default_catalog"/"default_schema"
 			params.add( new Object[] { mode, "implicit-global-catalog-and-schema.orm.xml",
 					"someDefaultCatalog", "someDefaultSchema",
-					// The implicit catalog/schema defined in the mapping should take precedence
-					// over the default catalog/schema defined in settings.
-					"someImplicitCatalog", "someImplicitSchema"  } );
+					// The default catalog/schema should replace the
+					// implicit catalog/schema defined in the mapping.
+					"someDefaultCatalog", "someDefaultSchema"  } );
 		}
 		return params;
 	}

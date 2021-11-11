@@ -52,7 +52,7 @@ public class GeometryConverterTest extends BaseUnitTestCase {
 
 				assertThat(
 						typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Geometry.class ),
-						sameInstance( GeolatteGeometryJavaTypeDescriptor.INSTANCE )
+						sameInstance( GeolatteGeometryJavaTypeDescriptor.GEOMETRY_INSTANCE )
 				);
 
 				// todo (5.3) : what to assert wrt to SqlTypeDescriptor?  Anything?

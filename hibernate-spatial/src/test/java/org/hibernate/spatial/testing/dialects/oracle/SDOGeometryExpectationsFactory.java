@@ -24,7 +24,7 @@ import org.locationtech.jts.geom.Point;
 public class SDOGeometryExpectationsFactory extends AbstractExpectationsFactory {
 
 	private final SDOGeometryValueExtractor decoder = new SDOGeometryValueExtractor(
-			JTSGeometryJavaTypeDescriptor.INSTANCE,
+			JTSGeometryJavaTypeDescriptor.GEOMETRY_INSTANCE,
 			null
 	);
 

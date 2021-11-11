@@ -33,8 +33,8 @@ import static org.hamcrest.Matchers.nullValue;
 )
 @ServiceRegistry(
 		settings = @Setting(
-				name = AvailableSettings.JPA_METAMODEL_POPULATION,
-				value = "ignoreUnsupported"
+				name = AvailableSettings.STATIC_METAMODEL_POPULATION,
+				value = "skipUnsupported"
 		)
 )
 @DomainModel( annotatedClasses = BasicContributorTests.MainEntity.class )

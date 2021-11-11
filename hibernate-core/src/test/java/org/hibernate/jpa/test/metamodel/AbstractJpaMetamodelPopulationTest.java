@@ -76,7 +76,7 @@ public abstract class AbstractJpaMetamodelPopulationTest extends BaseEntityManag
 	@Override
 	protected void addConfigOptions(Map options) {
 		super.addConfigOptions( options );
-		options.put( AvailableSettings.JPA_METAMODEL_POPULATION, getJpaMetamodelPopulationValue() );
+		options.put( AvailableSettings.STATIC_METAMODEL_POPULATION, getJpaMetamodelPopulationValue() );
 	}
 
 	@Test
@@ -120,7 +120,7 @@ public abstract class AbstractJpaMetamodelPopulationTest extends BaseEntityManag
 			assertEquals( 8, metamodel.getManagedTypes().size() );
 		}
 		else {
-			// When ignoreUnsupported is used, any managed-type that refers to a dynamic-map entity type
+			// When skipUnsupported is used, any managed-type that refers to a dynamic-map entity type
 			// or a managed type that is owned by said dynamic-map entity type should be excluded.
 			// Therefore this collection should only include 3 elements
 			// EntityType(SimpleAnnotated)

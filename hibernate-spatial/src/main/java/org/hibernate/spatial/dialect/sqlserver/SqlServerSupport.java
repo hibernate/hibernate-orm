@@ -12,10 +12,6 @@ import java.util.Map;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.spatial.GeolatteGeometryJavaTypeDescriptor;
-import org.hibernate.spatial.GeolatteGeometryType;
-import org.hibernate.spatial.JTSGeometryJavaTypeDescriptor;
-import org.hibernate.spatial.JTSGeometryType;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.SpatialRelation;
@@ -32,11 +28,6 @@ class SqlServerSupport implements SpatialDialect, Serializable {
 	}
 
 	void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
-		typeContributions.contributeType( new GeolatteGeometryType( SqlServer2008GeometryType.INSTANCE ) );
-		typeContributions.contributeType( new JTSGeometryType( SqlServer2008GeometryType.INSTANCE ) );
-
-		typeContributions.contributeJavaTypeDescriptor( GeolatteGeometryJavaTypeDescriptor.INSTANCE );
-		typeContributions.contributeJavaTypeDescriptor( JTSGeometryJavaTypeDescriptor.INSTANCE );
 	}
 
 

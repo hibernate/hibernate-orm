@@ -12,15 +12,21 @@ import java.util.Locale;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractJavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 
+import org.geolatte.geom.jts.JTS;
 import org.geolatte.geom.jts.JTSUtils;
 import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.GeometryCollection;
+import org.locationtech.jts.geom.LineString;
+import org.locationtech.jts.geom.MultiLineString;
+import org.locationtech.jts.geom.MultiPoint;
+import org.locationtech.jts.geom.MultiPolygon;
+import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.geom.Polygon;
 import org.locationtech.jts.io.ParseException;
 import org.locationtech.jts.io.WKTReader;
-import org.geolatte.geom.jts.JTS;
 
 /**
  * Descriptor for JTS {@code Geometry}s.
@@ -33,13 +39,28 @@ public class JTSGeometryJavaTypeDescriptor extends AbstractJavaTypeDescriptor<Ge
 	/**
 	 * An instance of this descriptor
 	 */
-	public static final JavaType<Geometry> INSTANCE = new JTSGeometryJavaTypeDescriptor();
+	public static final JTSGeometryJavaTypeDescriptor GEOMETRY_INSTANCE = new JTSGeometryJavaTypeDescriptor(
+			Geometry.class );
+	public static final JTSGeometryJavaTypeDescriptor POINT_INSTANCE = new JTSGeometryJavaTypeDescriptor(
+			Point.class );
+	public static final JTSGeometryJavaTypeDescriptor LINESTRING_INSTANCE = new JTSGeometryJavaTypeDescriptor(
+			LineString.class );
+	public static final JTSGeometryJavaTypeDescriptor POLYGON_INSTANCE = new JTSGeometryJavaTypeDescriptor(
+			Polygon.class );
+	public static final JTSGeometryJavaTypeDescriptor GEOMETRYCOLL_INSTANCE = new JTSGeometryJavaTypeDescriptor(
+			GeometryCollection.class );
+	public static final JTSGeometryJavaTypeDescriptor MULTIPOINT_INSTANCE = new JTSGeometryJavaTypeDescriptor(
+			MultiPoint.class );
+	public static final JTSGeometryJavaTypeDescriptor MULTILINESTRING_INSTANCE = new JTSGeometryJavaTypeDescriptor(
+			MultiLineString.class );
+	public static final JTSGeometryJavaTypeDescriptor MULTIPOLYGON_INSTANCE = new JTSGeometryJavaTypeDescriptor(
+			MultiPolygon.class );
 
 	/**
 	 * Initialize a type descriptor for the geolatte-geom {@code Geometry} type.
 	 */
-	public JTSGeometryJavaTypeDescriptor() {
-		super( Geometry.class );
+	public JTSGeometryJavaTypeDescriptor(Class<? extends Geometry> type) {
+		super( type );
 	}
 
 	@Override
@@ -68,6 +89,7 @@ public class JTSGeometryJavaTypeDescriptor extends AbstractJavaTypeDescriptor<Ge
 		return JTSUtils.equalsExact3D( one, another );
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public <X> X unwrap(Geometry value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
@@ -90,13 +112,13 @@ public class JTSGeometryJavaTypeDescriptor extends AbstractJavaTypeDescriptor<Ge
 		if ( value == null ) {
 			return null;
 		}
-		if ( Geometry.class.isInstance( value ) ) {
+		if ( value instanceof Geometry ) {
 			return (Geometry) value;
 		}
-		if ( org.geolatte.geom.Geometry.class.isInstance( value ) ) {
-			return JTS.to( (org.geolatte.geom.Geometry) value );
+		if ( value instanceof org.geolatte.geom.Geometry ) {
+			return JTS.to( (org.geolatte.geom.Geometry<?>) value );
 		}
-		if ( CharSequence.class.isInstance( value ) ) {
+		if ( value instanceof CharSequence ) {
 			return fromString( (CharSequence) value );
 		}
 		throw unknownWrap( value.getClass() );

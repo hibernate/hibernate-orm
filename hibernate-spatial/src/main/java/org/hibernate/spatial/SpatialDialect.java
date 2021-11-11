@@ -12,7 +12,7 @@ import java.io.Serializable;
  * Describes the features of a spatially enabled dialect.
  *
  * @author Karel Maesen
- * @deprecated To be removed in 6
+ * @deprecated SpatialDialects are no longer needed since Hibernate 6.0
  */
 @Deprecated
 public interface SpatialDialect extends Serializable {

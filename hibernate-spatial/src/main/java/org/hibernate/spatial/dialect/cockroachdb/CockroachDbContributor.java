@@ -12,9 +12,7 @@ import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.FunctionKey;
-import org.hibernate.spatial.GeolatteGeometryType;
 import org.hibernate.spatial.HSMessageLogger;
-import org.hibernate.spatial.JTSGeometryType;
 import org.hibernate.spatial.contributor.ContributorImplementor;
 import org.hibernate.spatial.dialect.postgis.PGGeometryJdbcType;
 import org.hibernate.spatial.dialect.postgis.PostgisSqmFunctionDescriptors;
@@ -28,10 +26,9 @@ public class CockroachDbContributor implements ContributorImplementor {
 	}
 
 	@Override
-	public void contributeTypes(TypeContributions typeContributions) {
+	public void contributeJdbcTypes(TypeContributions typeContributions) {
 		HSMessageLogger.LOGGER.typeContributions( this.getClass().getCanonicalName() );
-		typeContributions.contributeType( new GeolatteGeometryType( PGGeometryJdbcType.INSTANCE_WKB_2 ) );
-		typeContributions.contributeType( new JTSGeometryType( PGGeometryJdbcType.INSTANCE_WKB_2 ) );
+		typeContributions.contributeJdbcTypeDescriptor( PGGeometryJdbcType.INSTANCE_WKB_2 );
 	}
 
 	@Override

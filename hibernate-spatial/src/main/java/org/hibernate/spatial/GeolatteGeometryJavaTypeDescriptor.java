@@ -14,6 +14,13 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 
 import org.geolatte.geom.Geometry;
+import org.geolatte.geom.GeometryCollection;
+import org.geolatte.geom.LineString;
+import org.geolatte.geom.MultiLineString;
+import org.geolatte.geom.MultiPoint;
+import org.geolatte.geom.MultiPolygon;
+import org.geolatte.geom.Point;
+import org.geolatte.geom.Polygon;
 import org.geolatte.geom.codec.Wkt;
 import org.geolatte.geom.jts.JTS;
 
@@ -29,17 +36,33 @@ public class GeolatteGeometryJavaTypeDescriptor extends AbstractJavaTypeDescript
 	/**
 	 * an instance of this descriptor
 	 */
-	public static final GeolatteGeometryJavaTypeDescriptor INSTANCE = new GeolatteGeometryJavaTypeDescriptor();
+	public static final GeolatteGeometryJavaTypeDescriptor GEOMETRY_INSTANCE = new GeolatteGeometryJavaTypeDescriptor(
+			Geometry.class );
+	public static final GeolatteGeometryJavaTypeDescriptor POINT_INSTANCE = new GeolatteGeometryJavaTypeDescriptor(
+			Point.class );
+	public static final GeolatteGeometryJavaTypeDescriptor LINESTRING_INSTANCE = new GeolatteGeometryJavaTypeDescriptor(
+			LineString.class );
+	public static final GeolatteGeometryJavaTypeDescriptor POLYGON_INSTANCE = new GeolatteGeometryJavaTypeDescriptor(
+			Polygon.class );
+	public static final GeolatteGeometryJavaTypeDescriptor GEOMETRYCOLL_INSTANCE = new GeolatteGeometryJavaTypeDescriptor(
+			GeometryCollection.class );
+	public static final GeolatteGeometryJavaTypeDescriptor MULTIPOINT_INSTANCE = new GeolatteGeometryJavaTypeDescriptor(
+			MultiPoint.class );
+	public static final GeolatteGeometryJavaTypeDescriptor MULTILINESTRING_INSTANCE = new GeolatteGeometryJavaTypeDescriptor(
+			MultiLineString.class );
+	public static final GeolatteGeometryJavaTypeDescriptor MULTIPOLYGON_INSTANCE = new GeolatteGeometryJavaTypeDescriptor(
+			MultiPolygon.class );
+
 
 	/**
 	 * Initialize a type descriptor for the geolatte-geom {@code Geometry} type.
 	 */
-	public GeolatteGeometryJavaTypeDescriptor() {
-		this( Wkt.Dialect.SFA_1_1_0 );
+	public GeolatteGeometryJavaTypeDescriptor(Class<? extends Geometry> type) {
+		this( type, Wkt.Dialect.SFA_1_1_0 );
 	}
 
-	public GeolatteGeometryJavaTypeDescriptor(Wkt.Dialect wktDialect) {
-		super( Geometry.class );
+	public GeolatteGeometryJavaTypeDescriptor(Class<? extends Geometry> type, Wkt.Dialect wktDialect) {
+		super( type );
 		this.wktDialect = Wkt.Dialect.SFA_1_1_0;
 	}
 
@@ -47,7 +70,6 @@ public class GeolatteGeometryJavaTypeDescriptor extends AbstractJavaTypeDescript
 	public String toString(Geometry value) {
 		return Wkt.toWkt( value, wktDialect );
 	}
-
 
 
 	@Override

@@ -202,10 +202,7 @@ create transform for db2gse.st_geometry db2_program (
 
 Hibernate Spatial comes with the following types:
 
-jts_geometry::
-	Handled by `org.hibernate.spatial.JTSGeometryType`, it maps a database geometry column type to a `org.locationtech.jts.geom.Geometry` entity property type.
-geolatte_geometry::
-	Handled by `org.hibernate.spatial.GeolatteGeometryType`, it maps a database geometry column type to an `org.geolatte.geom.Geometry` entity property type.
+TODO
 
 It suffices to declare a property as either a JTS or a Geolatte-geom `Geometry` and Hibernate Spatial will map it using the
 relevant type.

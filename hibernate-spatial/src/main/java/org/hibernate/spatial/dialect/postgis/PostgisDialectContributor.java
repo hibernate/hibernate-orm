@@ -11,11 +11,7 @@ import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.spatial.GeolatteGeometryJavaTypeDescriptor;
-import org.hibernate.spatial.GeolatteGeometryType;
 import org.hibernate.spatial.HSMessageLogger;
-import org.hibernate.spatial.JTSGeometryJavaTypeDescriptor;
-import org.hibernate.spatial.JTSGeometryType;
 import org.hibernate.spatial.contributor.ContributorImplementor;
 
 public class PostgisDialectContributor implements ContributorImplementor {
@@ -26,12 +22,9 @@ public class PostgisDialectContributor implements ContributorImplementor {
 		this.serviceRegistryegistry = serviceRegistry;
 	}
 
-	public void contributeTypes(TypeContributions typeContributions) {
+	@Override
+	public void contributeJdbcTypes(TypeContributions typeContributions) {
 		HSMessageLogger.LOGGER.typeContributions( this.getClass().getCanonicalName() );
-//		typeContributions.contributeType( new GeolatteGeometryType( PGGeometryJdbcType.INSTANCE_WKB_2 ) );
-//		typeContributions.contributeType( new JTSGeometryType( PGGeometryJdbcType.INSTANCE_WKB_2 ) );
-		typeContributions.contributeJavaTypeDescriptor( GeolatteGeometryJavaTypeDescriptor.INSTANCE );
-		typeContributions.contributeJavaTypeDescriptor( JTSGeometryJavaTypeDescriptor.INSTANCE );
 		typeContributions.contributeJdbcTypeDescriptor( PGGeometryJdbcType.INSTANCE_WKB_2 );
 	}
 

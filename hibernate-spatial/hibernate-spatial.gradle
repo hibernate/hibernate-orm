@@ -39,7 +39,7 @@ sourceSets.test.resources {
 }
 
 tasks.test {
-	// for now we cannot run with 'h2' project.db due to compatability issues H2 requires 4.200 but H2GIS 1.5 needs 4.197
+
 	enabled = ['pgsql',
 			   'h2',
 			   'pgsql_ci',

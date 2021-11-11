@@ -128,15 +128,15 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
-
 import static java.util.Arrays.asList;
 import static org.hibernate.query.internal.QueryHelper.highestPrecedenceType;
 
 /**
  * Acts as a JPA {@link jakarta.persistence.criteria.CriteriaBuilder} by
  * using SQM nodes as the JPA Criteria nodes
- * 
+ *
  * @author Steve Ebersole
  */
 public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, Serializable {
@@ -308,7 +308,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	public <X, T> SqmExpression<X> cast(JpaExpression<T> expression, Class<X> castTargetJavaType) {
 		final BasicDomainType<X> type = getTypeConfiguration().standardBasicTypeForJavaType( castTargetJavaType );
-		return getFunctionDescriptor("cast").generateSqmExpression(
+		return getFunctionDescriptor( "cast" ).generateSqmExpression(
 				asList( (SqmTypedNode<?>) expression, new SqmCastTarget<>( type, this ) ),
 				type,
 				queryEngine,
@@ -1450,7 +1450,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			}
 			else {
 				//noinspection unchecked
-				basicType = getTypeConfiguration().getBasicTypeForJavaType( (Class<T>) value.getClass() );
+				basicType = guessType( value );
 			}
 			return new JpaCriteriaParameter<>(
 					basicType,
@@ -1458,6 +1458,25 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 					this
 			);
 		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private <T> BasicType<T> guessType(T value) {
+		BasicType<T> basicType;
+		Class<T> valueClass = (Class<T>) value.getClass();
+		basicType = getTypeConfiguration().getBasicTypeForJavaType( valueClass );
+		if ( basicType == null ) {
+			final JavaType<Object> javaType = getTypeConfiguration().getJavaTypeDescriptorRegistry()
+					.getDescriptor( valueClass );
+			if ( javaType != null ) {
+				final JdbcType recommendedJdbcType = javaType.getRecommendedJdbcType( getTypeConfiguration().getCurrentBaseSqlTypeIndicators() );
+				if ( recommendedJdbcType != null ) {
+					basicType = (BasicType<T>) getTypeConfiguration().getBasicTypeRegistry().resolve( javaType, recommendedJdbcType);
+				}
+			}
+		}
+		assert basicType != null;
+		return basicType;
 	}
 
 	@Override
@@ -1538,7 +1557,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	private SqmFunctionDescriptor getFunctionDescriptor(String name) {
-		return queryEngine.getSqmFunctionRegistry().findFunctionDescriptor( name);
+		return queryEngine.getSqmFunctionRegistry().findFunctionDescriptor( name );
 	}
 
 	@Override

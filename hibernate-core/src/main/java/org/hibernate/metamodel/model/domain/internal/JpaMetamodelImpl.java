@@ -43,6 +43,7 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting;
 import org.hibernate.metamodel.internal.MetadataContext;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
@@ -488,6 +489,7 @@ public class JpaMetamodelImpl implements JpaMetamodel, Serializable {
 
 	public void processJpa(
 			MetadataImplementor bootMetamodel,
+			MappingMetamodel mappingMetamodel,
 			Map<Class, String> entityProxyInterfaceMap,
 			JpaStaticMetaModelPopulationSetting jpaStaticMetaModelPopulationSetting,
 			Collection<NamedEntityGraphDefinition> namedEntityGraphDefinitions,
@@ -495,60 +497,61 @@ public class JpaMetamodelImpl implements JpaMetamodel, Serializable {
 		bootMetamodel.getImports().forEach( ( k, v ) ->  this.nameToImportMap.put( k, new ImportInfo<>( v, null ) ) );
 		this.entityProxyInterfaceMap.putAll( entityProxyInterfaceMap );
 
-		// todo (6.0) : I believe there should be a distinction here between building the JPA metamodel and pushing that metamodel to the `X_` model
-		//		- JpaStaticMetaModelPopulationSetting is meant to control the latter part - populating the `X_` model
-		if ( jpaStaticMetaModelPopulationSetting != JpaStaticMetaModelPopulationSetting.DISABLED ) {
-			MetadataContext context = new MetadataContext(
-					this,
-					runtimeModelCreationContext,
-					bootMetamodel.getMappedSuperclassMappingsCopy(),
-					jpaStaticMetaModelPopulationSetting
-			);
+		final MetadataContext context = new MetadataContext(
+				this,
+				mappingMetamodel,
+				bootMetamodel,
+				jpaStaticMetaModelPopulationSetting,
+				runtimeModelCreationContext
+		);
 
-			for ( PersistentClass entityBinding : bootMetamodel.getEntityBindings() ) {
-				locateOrBuildEntityType( entityBinding, context, typeConfiguration );
-			}
-			handleUnusedMappedSuperclasses( context, typeConfiguration );
 
-			context.wrapUp();
+		for ( PersistentClass entityBinding : bootMetamodel.getEntityBindings() ) {
+			locateOrBuildEntityType( entityBinding, context, typeConfiguration );
+		}
+		handleUnusedMappedSuperclasses( context, typeConfiguration );
 
-			this.jpaEntityTypeMap.putAll( context.getEntityTypesByEntityName() );
-			this.jpaMappedSuperclassTypeMap.putAll( context.getMappedSuperclassTypeMap() );
+		context.wrapUp();
 
-			for ( EmbeddableDomainType<?> embeddable : context.getEmbeddableTypeSet() ) {
-				this.jpaEmbeddableDescriptorMap.put( embeddable.getJavaType(), embeddable );
-			}
-			Stream.concat(
-					context.getEntityTypesByEntityName().values().stream(),
-					Stream.concat(
-							context.getMappedSuperclassTypeMap().values().stream(),
-							context.getEmbeddableTypeSet().stream()
-					)
-			).forEach( managedDomainType -> {
-				managedDomainType.visitAttributes( persistentAttribute -> {
-					if ( persistentAttribute.getJavaType() != null && persistentAttribute.getJavaType().isEnum() ) {
-						@SuppressWarnings("unchecked")
-						Class<Enum<?>> enumClass = (Class<Enum<?>>) persistentAttribute.getJavaType();
-						Enum<?>[] enumConstants = enumClass.getEnumConstants();
-						for ( Enum<?> enumConstant : enumConstants ) {
-							String qualifiedEnumLiteral = enumConstant.getDeclaringClass()
-									.getSimpleName() + "." + enumConstant.name();
+		this.jpaEntityTypeMap.putAll( context.getEntityTypesByEntityName() );
+		this.jpaMappedSuperclassTypeMap.putAll( context.getMappedSuperclassTypeMap() );
 
-							this.allowedEnumLiteralTexts.computeIfAbsent(
-									enumConstant.name(),
-									k -> new ConcurrentHashMap<>()
-							).put( enumClass, enumConstant );
-							this.allowedEnumLiteralTexts.computeIfAbsent(
-									qualifiedEnumLiteral,
-									k -> new ConcurrentHashMap<>()
-							).put( enumClass, enumConstant );
-						}
-					}
-				} );
-			} );
+		for ( EmbeddableDomainType<?> embeddable : context.getEmbeddableTypeSet() ) {
+			this.jpaEmbeddableDescriptorMap.put( embeddable.getJavaType(), embeddable );
 		}
 
+		domainTypeStream( context ).forEach( (managedDomainType) -> managedDomainType.visitAttributes( persistentAttribute -> {
+			if ( persistentAttribute.getJavaType() != null && persistentAttribute.getJavaType().isEnum() ) {
+				@SuppressWarnings("unchecked")
+				Class<Enum<?>> enumClass = (Class<Enum<?>>) persistentAttribute.getJavaType();
+				Enum<?>[] enumConstants = enumClass.getEnumConstants();
+				for ( Enum<?> enumConstant : enumConstants ) {
+					String qualifiedEnumLiteral = enumConstant.getDeclaringClass()
+							.getSimpleName() + "." + enumConstant.name();
+
+					this.allowedEnumLiteralTexts.computeIfAbsent(
+							enumConstant.name(),
+							k -> new ConcurrentHashMap<>()
+					).put( enumClass, enumConstant );
+					this.allowedEnumLiteralTexts.computeIfAbsent(
+							qualifiedEnumLiteral,
+							k -> new ConcurrentHashMap<>()
+					).put( enumClass, enumConstant );
+				}
+			}
+		} ) );
+
 		applyNamedEntityGraphs( namedEntityGraphDefinitions );
+	}
+
+	private static Stream<ManagedDomainType<?>> domainTypeStream(MetadataContext context) {
+		return Stream.concat(
+				context.getEntityTypesByEntityName().values().stream(),
+				Stream.concat(
+						context.getMappedSuperclassTypeMap().values().stream(),
+						context.getEmbeddableTypeSet().stream()
+				)
+		);
 	}
 
 	private EntityDomainType<?> locateOrBuildEntityType(

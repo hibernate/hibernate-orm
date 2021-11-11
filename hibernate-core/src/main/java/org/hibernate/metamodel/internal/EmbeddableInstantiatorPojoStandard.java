@@ -10,12 +10,13 @@ import java.lang.reflect.Constructor;
 import java.util.function.Supplier;
 
 import org.hibernate.InstantiationException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.mapping.Component;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -27,16 +28,16 @@ import org.hibernate.type.descriptor.java.JavaType;
 public class EmbeddableInstantiatorPojoStandard extends AbstractPojoInstantiator implements EmbeddableInstantiator {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( PojoInstantiatorImpl.class );
 
+	private final Supplier<EmbeddableMappingType> embeddableMappingAccess;
 	private final Constructor<?> constructor;
 
 	public EmbeddableInstantiatorPojoStandard(
-			@SuppressWarnings("unused") Component bootDescriptor,
+			Supplier<EmbeddableMappingType> embeddableMappingAccess,
 			JavaType<?> javaTypeDescriptor) {
 		super( javaTypeDescriptor.getJavaTypeClass() );
 
-		constructor = resolveConstructor( javaTypeDescriptor.getJavaTypeClass() );
-
-		// todo (6.0) : add support for constructor value injection
+		this.embeddableMappingAccess = embeddableMappingAccess;
+		this.constructor = resolveConstructor( javaTypeDescriptor.getJavaTypeClass() );
 	}
 
 	protected static Constructor<?> resolveConstructor(Class<?> mappedPojoClass) {
@@ -55,16 +56,27 @@ public class EmbeddableInstantiatorPojoStandard extends AbstractPojoInstantiator
 		if ( isAbstract() ) {
 			throw new InstantiationException( "Cannot instantiate abstract class or interface: ", getMappedPojoClass() );
 		}
-		else if ( constructor == null ) {
+
+		if ( constructor == null ) {
 			throw new InstantiationException( "No default constructor for embeddable: ", getMappedPojoClass() );
 		}
-		else {
-			try {
-				return constructor.newInstance( (Object[]) null );
+
+		if ( valuesAccess != null ) {
+			if ( constructor.getParameterTypes().length > 0 ) {
+				// constructor injection
+				throw new NotYetImplementedFor6Exception( "Constructor injection for embeddables not yet implemented" );
 			}
-			catch ( Exception e ) {
-				throw new InstantiationException( "Could not instantiate entity: ", getMappedPojoClass(), e );
+		}
+
+		try {
+			final Object instance = constructor.newInstance();
+			if ( valuesAccess != null ) {
+				embeddableMappingAccess.get().setPropertyValues( instance, valuesAccess.get() );
 			}
+			return instance;
+		}
+		catch ( Exception e ) {
+			throw new InstantiationException( "Could not instantiate embeddable: ", getMappedPojoClass(), e );
 		}
 	}
 }

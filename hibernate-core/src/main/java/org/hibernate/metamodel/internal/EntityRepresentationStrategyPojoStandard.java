@@ -54,6 +54,7 @@ import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
+import org.hibernate.type.spi.CompositeTypeImplementor;
 
 /**
  * @author Steve Ebersole
@@ -112,12 +113,14 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 				if ( bootDescriptor.getIdentifierMapper() != null ) {
 					mapsIdRepresentationStrategy = new EmbeddableRepresentationStrategyPojo(
 							bootDescriptor.getIdentifierMapper(),
+							() -> ( ( CompositeTypeImplementor) bootDescriptor.getIdentifierMapper().getType() ).getMappingModelPart().getEmbeddableTypeDescriptor(),
 							creationContext
 					);
 				}
 				else if ( bootDescriptorIdentifier != null ) {
 					mapsIdRepresentationStrategy = new EmbeddableRepresentationStrategyPojo(
 							(Component) bootDescriptorIdentifier,
+							() -> ( ( CompositeTypeImplementor) bootDescriptor.getIdentifierMapper().getType() ).getMappingModelPart().getEmbeddableTypeDescriptor(),
 							creationContext
 					);
 				}

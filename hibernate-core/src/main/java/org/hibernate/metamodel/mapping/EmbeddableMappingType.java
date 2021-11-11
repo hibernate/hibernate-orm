@@ -92,15 +92,10 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectableMapp
 			MappingModelCreationProcess creationProcess) {
 		final RuntimeModelCreationContext creationContext = creationProcess.getCreationContext();
 
-		final EmbeddableRepresentationStrategy representationStrategy = creationContext.getBootstrapContext()
-				.getRepresentationStrategySelector()
-				.resolveStrategy( bootDescriptor, creationContext );
-
 		final EmbeddableMappingType mappingType = new EmbeddableMappingType(
 				bootDescriptor,
-				representationStrategy,
 				embeddedPartBuilder,
-				creationContext.getSessionFactory()
+				creationContext
 		);
 
 		if ( compositeType instanceof CompositeTypeImplementor ) {
@@ -157,12 +152,15 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectableMapp
 
 	private EmbeddableMappingType(
 			Component bootDescriptor,
-			EmbeddableRepresentationStrategy representationStrategy,
 			Function<EmbeddableMappingType, EmbeddableValuedModelPart> embeddedPartBuilder,
-			SessionFactoryImplementor sessionFactory) {
+			RuntimeModelCreationContext creationContext) {
+		this.representationStrategy = creationContext
+				.getBootstrapContext()
+				.getRepresentationStrategySelector()
+				.resolveStrategy( bootDescriptor, () -> this, creationContext );
+
 		this.embeddableJtd = representationStrategy.getMappedJavaTypeDescriptor();
-		this.representationStrategy = representationStrategy;
-		this.sessionFactory = sessionFactory;
+		this.sessionFactory = creationContext.getSessionFactory();
 
 		this.valueMapping = embeddedPartBuilder.apply( this );
 

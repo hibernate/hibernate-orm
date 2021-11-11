@@ -233,6 +233,7 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 
 		( (JpaMetamodelImpl) this.jpaMetamodel ).processJpa(
 				bootModel,
+				this,
 				entityProxyInterfaceMap,
 				jpaStaticMetaModelPopulationSetting,
 				bootModel.getNamedEntityGraphs().values(),

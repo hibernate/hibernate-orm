@@ -7,6 +7,7 @@
 package org.hibernate.metamodel.internal;
 
 import java.util.Locale;
+import java.util.function.Supplier;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
@@ -20,6 +21,7 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.IndexBackref;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.RepresentationMode;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
@@ -39,6 +41,7 @@ public class EmbeddableRepresentationStrategyPojo extends AbstractEmbeddableRepr
 
 	public EmbeddableRepresentationStrategyPojo(
 			Component bootDescriptor,
+			Supplier<EmbeddableMappingType> runtimeDescriptorAccess,
 			RuntimeModelCreationContext creationContext) {
 		super(
 				bootDescriptor,
@@ -64,10 +67,10 @@ public class EmbeddableRepresentationStrategyPojo extends AbstractEmbeddableRepr
 				false
 		);
 
-		this.instantiator = determineInstantiator( bootDescriptor );
+		this.instantiator = determineInstantiator( runtimeDescriptorAccess );
 	}
 
-	private EmbeddableInstantiator determineInstantiator(Component bootDescriptor) {
+	private EmbeddableInstantiator determineInstantiator(Supplier<EmbeddableMappingType> runtimeDescriptorAccess) {
 		if ( reflectionOptimizer != null && reflectionOptimizer.getInstantiationOptimizer() != null ) {
 			final ReflectionOptimizer.InstantiationOptimizer instantiationOptimizer = reflectionOptimizer.getInstantiationOptimizer();
 			return new EmbeddableInstantiatorPojoOptimized(
@@ -77,7 +80,7 @@ public class EmbeddableRepresentationStrategyPojo extends AbstractEmbeddableRepr
 		}
 
 		return new EmbeddableInstantiatorPojoStandard(
-				bootDescriptor,
+				runtimeDescriptorAccess,
 				getEmbeddableJavaTypeDescriptor()
 		);
 	}

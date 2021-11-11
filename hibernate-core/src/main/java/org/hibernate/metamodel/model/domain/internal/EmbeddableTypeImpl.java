@@ -7,16 +7,12 @@
 package org.hibernate.metamodel.model.domain.internal;
 
 import java.io.Serializable;
-import java.util.Map;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.graph.internal.SubGraphImpl;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.metamodel.model.domain.AbstractManagedType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
-import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
-import org.hibernate.metamodel.spi.ManagedTypeRepresentationStrategy;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -31,38 +27,13 @@ public class EmbeddableTypeImpl<J>
 		implements EmbeddableDomainType<J>, Serializable {
 
 	private final boolean isDynamic;
-	private final EmbeddableRepresentationStrategy representationStrategy;
 
 	public EmbeddableTypeImpl(
 			JavaType<J> javaTypeDescriptor,
-			EmbeddableRepresentationStrategy representationStrategy,
 			boolean isDynamic,
 			JpaMetamodel domainMetamodel) {
 		super( javaTypeDescriptor.getJavaType().getTypeName(), javaTypeDescriptor, null, domainMetamodel );
-		this.representationStrategy = representationStrategy;
 		this.isDynamic = isDynamic;
-	}
-
-	public EmbeddableTypeImpl(
-			String name,
-			JpaMetamodel domainMetamodel) {
-		//noinspection unchecked
-		super(
-				name,
-				(JavaType) domainMetamodel.getTypeConfiguration()
-						.getJavaTypeDescriptorRegistry()
-						.getDescriptor( Map.class ),
-				null,
-				domainMetamodel
-		);
-
-		// todo (6.0) : need ManagedTypeRepresentationStrategy impls
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
-
-	@Override
-	public ManagedTypeRepresentationStrategy getRepresentationStrategy() {
-		return representationStrategy;
 	}
 
 	@Override

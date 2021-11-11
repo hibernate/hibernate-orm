@@ -7,9 +7,12 @@
 package org.hibernate.metamodel.internal;
 
 
+import java.util.function.Supplier;
+
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.RepresentationMode;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
@@ -58,6 +61,7 @@ public class ManagedTypeRepresentationResolverStandard implements ManagedTypeRep
 	@Override
 	public EmbeddableRepresentationStrategy resolveStrategy(
 			Component bootDescriptor,
+			Supplier<EmbeddableMappingType> runtimeDescriptorAccess,
 			RuntimeModelCreationContext creationContext) {
 //		RepresentationMode representation = bootDescriptor.getExplicitRepresentationMode();
 		RepresentationMode representation = null;
@@ -71,7 +75,7 @@ public class ManagedTypeRepresentationResolverStandard implements ManagedTypeRep
 		}
 
 		if ( representation == RepresentationMode.MAP ) {
-			return new EmbeddableRepresentationStrategyMap( bootDescriptor, creationContext );
+			return new EmbeddableRepresentationStrategyMap( bootDescriptor, runtimeDescriptorAccess, creationContext );
 		}
 		else {
 			// todo (6.0) : fix this
@@ -80,7 +84,7 @@ public class ManagedTypeRepresentationResolverStandard implements ManagedTypeRep
 			//
 			//		instead, resolve ReflectionOptimizer once - here - and pass along to
 			//		StandardPojoRepresentationStrategy
-			return new EmbeddableRepresentationStrategyPojo( bootDescriptor, creationContext );
+			return new EmbeddableRepresentationStrategyPojo( bootDescriptor, runtimeDescriptorAccess, creationContext );
 		}
 	}
 }

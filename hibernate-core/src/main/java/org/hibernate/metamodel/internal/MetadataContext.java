@@ -15,14 +15,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import jakarta.persistence.metamodel.Attribute;
-import jakarta.persistence.metamodel.IdentifiableType;
-import jakarta.persistence.metamodel.SingularAttribute;
-import jakarta.persistence.metamodel.Type;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.HEMLogging;
 import org.hibernate.internal.util.ReflectHelper;
@@ -48,11 +45,15 @@ import org.hibernate.metamodel.model.domain.internal.EmbeddableTypeImpl;
 import org.hibernate.metamodel.model.domain.internal.EntityTypeImpl;
 import org.hibernate.metamodel.model.domain.internal.MappedSuperclassTypeImpl;
 import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
-import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import jakarta.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.IdentifiableType;
+import jakarta.persistence.metamodel.SingularAttribute;
+import jakarta.persistence.metamodel.Type;
 
 /**
  * Defines a context for storing information during the building of the {@link MappingMetamodelImpl}.
@@ -101,15 +102,16 @@ public class MetadataContext {
 
 	public MetadataContext(
 			JpaMetamodel jpaMetamodel,
-			RuntimeModelCreationContext runtimeModelCreationContext,
-			Set<MappedSuperclass> mappedSuperclasses,
-			JpaStaticMetaModelPopulationSetting jpaStaticMetaModelPopulationSetting) {
+			MappingMetamodel mappingMetamodel,
+			MetadataImplementor bootMetamodel,
+			JpaStaticMetaModelPopulationSetting jpaStaticMetaModelPopulationSetting,
+			RuntimeModelCreationContext runtimeModelCreationContext) {
 		this.jpaMetamodel = jpaMetamodel;
-		this.runtimeModelCreationContext = runtimeModelCreationContext;
-		this.metamodel = runtimeModelCreationContext.getSessionFactory().getMetamodel();
-		this.knownMappedSuperclasses = mappedSuperclasses;
+		this.metamodel = mappingMetamodel;
+		this.knownMappedSuperclasses = bootMetamodel.getMappedSuperclassMappingsCopy();
 		this.typeConfiguration = runtimeModelCreationContext.getTypeConfiguration();
 		this.jpaStaticMetaModelPopulationSetting = jpaStaticMetaModelPopulationSetting;
+		this.runtimeModelCreationContext = runtimeModelCreationContext;
 	}
 
 	public RuntimeModelCreationContext getRuntimeModelCreationContext() {
@@ -177,9 +179,20 @@ public class MetadataContext {
 		assert embeddableType.getJavaType() != null;
 		assert ! Map.class.isAssignableFrom( embeddableType.getJavaType() );
 
-		embeddablesToProcess.computeIfAbsent( embeddableType.getJavaType(), k -> new ArrayList<>( 1 ) )
-			.add( embeddableType );
+		embeddablesToProcess
+				.computeIfAbsent( embeddableType.getJavaType(), k -> new ArrayList<>( 1 ) )
+				.add( embeddableType );
+		registerComponentByEmbeddable( embeddableType, bootDescriptor );
+	}
+
+	public void registerComponentByEmbeddable(
+			EmbeddableDomainType<?> embeddableType,
+			Component bootDescriptor) {
 		componentByEmbeddable.put( embeddableType, bootDescriptor );
+	}
+
+	public Component getEmbeddableBootDescriptor(EmbeddableDomainType<?> embeddableType) {
+		return componentByEmbeddable.get( embeddableType );
 	}
 
 	public void registerMappedSuperclassType(
@@ -428,15 +441,8 @@ public class MetadataContext {
 		final Class<?> componentClass = identifier.getComponentClass();
 		final JavaType<?> javaTypeDescriptor = registry.resolveManagedTypeDescriptor( componentClass );
 
-		final EmbeddableRepresentationStrategy representationStrategy = getTypeConfiguration()
-				.getMetadataBuildingContext()
-				.getBuildingOptions()
-				.getManagedTypeRepresentationResolver()
-				.resolveStrategy( idClass, getRuntimeModelCreationContext() );
-
 		final EmbeddableTypeImpl<?> embeddableType = new EmbeddableTypeImpl<>(
 				javaTypeDescriptor,
-				representationStrategy,
 				false,
 				getJpaMetamodel()
 		);

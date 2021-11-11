@@ -11,10 +11,6 @@ import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.util.Iterator;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.metamodel.Attribute;
-import jakarta.persistence.metamodel.Type;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.internal.EntityManagerMessageLogger;
@@ -29,6 +25,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.AttributeClassification;
 import org.hibernate.metamodel.RepresentationMode;
+import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.model.domain.AbstractIdentifiableType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
@@ -52,6 +49,12 @@ import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
+import org.hibernate.type.spi.CompositeTypeImplementor;
+
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.Type;
 
 /**
  * A factory for building {@link Attribute} instances.  Exposes 3 main services for building<ol>
@@ -231,21 +234,16 @@ public class AttributeFactory {
 				final Component component = (Component) typeContext.getHibernateValue();
 				final EmbeddableTypeImpl<Y> embeddableType;
 
-				final EmbeddableRepresentationStrategy representationStrategy = context.getTypeConfiguration()
-						.getMetadataBuildingContext()
-						.getBuildingOptions()
-						.getManagedTypeRepresentationResolver()
-						.resolveStrategy( component, context.getRuntimeModelCreationContext() );
-
 				if ( component.isDynamic() ) {
 					final JavaType javaTypeDescriptor = context.getJavaTypeDescriptorRegistry().getDescriptor( Map.class );
 
 					embeddableType = new EmbeddableTypeImpl<>(
 							javaTypeDescriptor,
-							representationStrategy,
 							true,
 							context.getJpaMetamodel()
 					);
+
+					context.registerComponentByEmbeddable( embeddableType, component );
 				}
 				else {
 					// we should have a non-dynamic embeddable
@@ -263,7 +261,6 @@ public class AttributeFactory {
 
 					embeddableType = new EmbeddableTypeImpl<>(
 							javaTypeDescriptor,
-							representationStrategy,
 							false,
 							context.getJpaMetamodel()
 					);
@@ -585,16 +582,23 @@ public class AttributeFactory {
 
 	private static final MemberResolver embeddedMemberResolver = (attributeContext, metadataContext) -> {
 		// the owner is an embeddable
-		final EmbeddableDomainType<?> ownerType = (EmbeddableDomainType) attributeContext.getOwnerType();
+		final EmbeddableDomainType<?> ownerType = (EmbeddableDomainType<?>) attributeContext.getOwnerType();
+		final Component ownerBootDescriptor = metadataContext.getEmbeddableBootDescriptor( ownerType );
 
-		if ( ownerType.getRepresentationStrategy().getMode() == RepresentationMode.MAP ) {
+		final CompositeTypeImplementor ownerComponentType = (CompositeTypeImplementor) ownerBootDescriptor.getType();
+		final EmbeddableValuedModelPart ownerMappingModelDescriptor = ownerComponentType.getMappingModelPart();
+		final EmbeddableRepresentationStrategy ownerRepStrategy = ownerMappingModelDescriptor
+				.getEmbeddableTypeDescriptor()
+				.getRepresentationStrategy();
+
+		if ( ownerRepStrategy.getMode() == RepresentationMode.MAP ) {
 			return new MapMember(
 					attributeContext.getPropertyMapping().getName(),
 					attributeContext.getPropertyMapping().getType().getReturnedClass()
 			);
 		}
 		else {
-			return ownerType.getRepresentationStrategy()
+			return ownerRepStrategy
 					.resolvePropertyAccess( attributeContext.getPropertyMapping() )
 					.getGetter()
 					.getMember();

@@ -402,14 +402,27 @@ public class MetadataContext {
 
 			// Handle the actual id-attributes
 			final Component cidValue = (Component) persistentClass.getIdentifier();
-			final Iterator<Property> cidPropertyItr = cidValue.getPropertyIterator();
+			final Iterator<Property> cidPropertyItr;
+			final int propertySpan;
+			final EmbeddableTypeImpl<?> idClassType;
+			final Component identifierMapper = persistentClass.getIdentifierMapper();
+			if ( identifierMapper != null ) {
+				cidPropertyItr = identifierMapper.getPropertyIterator();
+				propertySpan = identifierMapper.getPropertySpan();
+				idClassType = applyIdClassMetadata( (Component) persistentClass.getIdentifier(), identifierMapper );
+			}
+			else {
+				cidPropertyItr = cidValue.getPropertyIterator();
+				propertySpan = cidValue.getPropertySpan();
+				idClassType = null;
+			}
 
 			assert cidValue.isEmbedded();
 
 			AbstractIdentifiableType idType = (AbstractIdentifiableType) entityTypesByEntityName.get( cidValue.getOwner().getEntityName() );
 			Set idAttributes = idType.getIdClassAttributesSafely();
 			if ( idAttributes == null ) {
-				idAttributes = new HashSet<>( cidValue.getPropertySpan() );
+				idAttributes = new HashSet<>( propertySpan );
 				while ( cidPropertyItr.hasNext() ) {
 					final Property cidSubProperty = cidPropertyItr.next();
 					final SingularPersistentAttribute<?, Object> cidSubAttr = attributeFactory.buildIdAttribute(
@@ -421,15 +434,6 @@ public class MetadataContext {
 				}
 			}
 
-			// see if it also has an IdClass (identifier-mapper)
-			final Component idClass = persistentClass.getIdentifierMapper();
-			final EmbeddableTypeImpl<?> idClassType;
-			if ( idClass != null ) {
-				idClassType = applyIdClassMetadata( (Component) persistentClass.getIdentifier(), idClass );
-			}
-			else {
-				idClassType = null;
-			}
 
 			( ( AttributeContainer) identifiableType ).getInFlightAccess().applyNonAggregatedIdAttributes( idAttributes, idClassType );
 		}

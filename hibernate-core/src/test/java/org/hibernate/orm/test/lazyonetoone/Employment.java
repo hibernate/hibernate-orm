@@ -6,7 +6,7 @@
  */
 
 //$Id: Employment.java 5686 2005-02-12 07:27:32Z steveebersole $
-package org.hibernate.test.lazyonetoone;
+package org.hibernate.orm.test.lazyonetoone;
 import java.io.Serializable;
 import java.util.Date;
 

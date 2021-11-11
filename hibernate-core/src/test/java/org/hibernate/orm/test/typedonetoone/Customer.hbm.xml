@@ -19,7 +19,7 @@
 
 -->
 
-<hibernate-mapping package="org.hibernate.test.typedonetoone">
+<hibernate-mapping package="org.hibernate.orm.test.typedonetoone">
 
 	<class name="Customer">
 	

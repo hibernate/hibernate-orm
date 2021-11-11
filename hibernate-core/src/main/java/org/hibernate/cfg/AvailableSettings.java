@@ -2187,6 +2187,24 @@ public interface AvailableSettings {
 	String CRITERIA_VALUE_HANDLING_MODE = "hibernate.criteria.value_handling_mode";
 
 	/**
+	 * Allows setting default value for all {@link JpaCompliance} flags.  Individual
+	 * flags can still be overridden individually using its specific setting
+	 *
+	 * @see #JPA_TRANSACTION_COMPLIANCE
+	 * @see #JPA_QUERY_COMPLIANCE
+	 * @see #JPA_LIST_COMPLIANCE
+	 * @see #JPA_ORDER_BY_MAPPING_COMPLIANCE
+	 * @see #JPA_CLOSED_COMPLIANCE
+	 * @see #JPA_PROXY_COMPLIANCE
+	 * @see #JPA_CACHING_COMPLIANCE
+	 * @see #JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE
+	 * @see #JPA_LOAD_BY_ID_COMPLIANCE
+	 *
+	 * @since 6.0
+	 */
+	String JPA_COMPLIANCE = "hibernate.jpa.compliance";
+
+	/**
 	 * Should Hibernate's {@link Transaction} behave as
 	 * defined by the spec for JPA's {@link jakarta.persistence.EntityTransaction}
 	 * since it extends the JPA one.

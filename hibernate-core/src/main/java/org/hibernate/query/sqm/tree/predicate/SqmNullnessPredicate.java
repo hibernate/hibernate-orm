@@ -44,4 +44,9 @@ public class SqmNullnessPredicate extends AbstractNegatableSqmPredicate {
 			sb.append( " is null" );
 		}
 	}
+
+	@Override
+	protected SqmNegatablePredicate createNegatedNode() {
+		return new SqmNullnessPredicate( expression, !isNegated(), nodeBuilder() );
+	}
 }

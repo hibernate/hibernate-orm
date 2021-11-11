@@ -150,6 +150,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return new SqmCriteriaNodeBuilder(
 				sf.getUuid(),
 				sf.getName(),
+				sf.getSessionFactoryOptions().getJpaCompliance().isJpaQueryComplianceEnabled(),
 				sf.getQueryEngine(),
 				() -> sf.getRuntimeMetamodels().getJpaMetamodel(),
 				sf.getServiceRegistry(),
@@ -159,6 +160,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	private final String uuid;
 	private final String name;
+	private final transient boolean jpaComplianceEnabled;
 	private final transient QueryEngine queryEngine;
 	private final transient Supplier<JpaMetamodel> domainModelAccess;
 	private final transient ServiceRegistry serviceRegistry;
@@ -169,12 +171,14 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	public SqmCriteriaNodeBuilder(
 			String uuid,
 			String name,
+			boolean jpaComplianceEnabled,
 			QueryEngine queryEngine,
 			Supplier<JpaMetamodel> domainModelAccess,
 			ServiceRegistry serviceRegistry,
 			ValueHandlingMode criteriaValueHandlingMode) {
 		this.uuid = uuid;
 		this.name = name;
+		this.jpaComplianceEnabled = jpaComplianceEnabled;
 		this.queryEngine = queryEngine;
 		this.domainModelAccess = domainModelAccess;
 		this.serviceRegistry = serviceRegistry;
@@ -184,6 +188,11 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	public JpaMetamodel getDomainModel() {
 		return domainModelAccess.get();
+	}
+
+	@Override
+	public boolean isJpaQueryComplianceEnabled() {
+		return jpaComplianceEnabled;
 	}
 
 	@Override

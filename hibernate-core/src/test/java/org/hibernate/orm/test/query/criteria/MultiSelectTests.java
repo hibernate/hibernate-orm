@@ -217,6 +217,26 @@ public class MultiSelectTests {
 		} );
 	}
 
+	@Test
+	public void tupleSelectionArrayTest(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			final CriteriaBuilder nodeBuilder = session.getFactory().getNodeBuilder();
+
+			final CriteriaQuery<Tuple> criteria = nodeBuilder.createTupleQuery();
+			final Root<BasicEntity> root = criteria.from( BasicEntity.class );
+
+			Selection<?>[] s = { root.get("id"), root.get("data") };
+			criteria.select(nodeBuilder.tuple(s));
+
+			final List<Tuple> results = session.createQuery( criteria ).list();
+			assertThat( results ).hasSize( 1 );
+			final Tuple firstResult = results.get( 0 );
+			assertThat( firstResult.getElements() ).hasSize( 2 );
+			assertThat( firstResult.get(0) ).isEqualTo( 1 );
+			assertThat( firstResult.get(1) ).isEqualTo( "abc" );
+		} );
+	}
+
 	@BeforeEach
 	public void createTestData(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> session.persist( new BasicEntity( 1, "abc" ) ) );

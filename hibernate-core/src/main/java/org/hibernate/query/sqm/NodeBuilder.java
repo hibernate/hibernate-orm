@@ -78,6 +78,8 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 		return getDomainModel().getTypeConfiguration();
 	}
 
+	boolean isJpaQueryComplianceEnabled();
+
 	ServiceRegistry getServiceRegistry();
 
 	QueryEngine getQueryEngine();

@@ -8,8 +8,8 @@ package org.hibernate.query.sqm.tree.predicate;
 
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
@@ -69,5 +69,10 @@ public class SqmBetweenPredicate extends AbstractNegatableSqmPredicate {
 		lowerBound.appendHqlString( sb );
 		sb.append( " and " );
 		upperBound.appendHqlString( sb );
+	}
+
+	@Override
+	protected SqmNegatablePredicate createNegatedNode() {
+		return new SqmBetweenPredicate( expression, lowerBound, upperBound, ! isNegated(), nodeBuilder() );
 	}
 }

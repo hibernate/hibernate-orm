@@ -139,4 +139,9 @@ public class SqmInListPredicate<T> extends AbstractNegatableSqmPredicate impleme
 		}
 		sb.append( ')' );
 	}
+
+	@Override
+	protected SqmNegatablePredicate createNegatedNode() {
+		return new SqmInListPredicate<>( testExpression, listExpressions, !isNegated(), nodeBuilder() );
+	}
 }

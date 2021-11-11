@@ -56,4 +56,9 @@ public class SqmMemberOfPredicate extends AbstractNegatableSqmPredicate {
 		sb.append( " member of " );
 		pluralPath.appendHqlString( sb );
 	}
+
+	@Override
+	protected SqmNegatablePredicate createNegatedNode() {
+		return new SqmMemberOfPredicate( leftHandExpression, pluralPath, !isNegated(), nodeBuilder() );
+	}
 }

@@ -40,6 +40,13 @@ public class SqmComparisonPredicate extends AbstractNegatableSqmPredicate {
 		rightHandExpression.applyInferableType( expressableType );
 	}
 
+	private SqmComparisonPredicate(SqmComparisonPredicate affirmativeForm) {
+		super( true, affirmativeForm.nodeBuilder() );
+		this.leftHandExpression = affirmativeForm.leftHandExpression;
+		this.rightHandExpression = affirmativeForm.rightHandExpression;
+		this.operator = affirmativeForm.operator;
+	}
+
 	public SqmExpression<?> getLeftHandExpression() {
 		return leftHandExpression;
 	}
@@ -53,13 +60,13 @@ public class SqmComparisonPredicate extends AbstractNegatableSqmPredicate {
 	}
 
 	@Override
-	public boolean isNegated() {
-		return false;
+	public void negate() {
+		this.operator = this.operator.negated();
 	}
 
 	@Override
-	public void negate() {
-		this.operator = this.operator.negated();
+	protected SqmNegatablePredicate createNegatedNode() {
+		return new SqmComparisonPredicate( this );
 	}
 
 	@Override

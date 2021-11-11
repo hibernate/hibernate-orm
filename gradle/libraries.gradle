@@ -10,7 +10,11 @@
 ext {
 
     junitVersion = '4.13.2'
+    junitVintageVersion = '5.7.1'
+    junit5Version = '5.7.1'
+
     h2Version = '1.4.197'
+
     bytemanVersion = '4.0.16' //Compatible with JDK 17
     jnpVersion = '5.0.6.CR1'
 
@@ -47,7 +51,6 @@ ext {
     graalvmVersion = '21.2.0'
 
     micrometerVersion = '1.6.1'
-
     libraries = [
             // Ant
             ant:            'org.apache.ant:ant:1.8.2',
@@ -116,8 +119,14 @@ ext {
 
             // ~~~~~~~~~~~~~~~~~~~~~~~~~~ testing
 
+            junit5_api:     "org.junit.jupiter:junit-jupiter-api:${junit5Version}",
+            junit5_jupiter: "org.junit.jupiter:junit-jupiter-engine:${junit5Version}",
+            junit5_params : "org.junit.jupiter:junit-jupiter-params:${junit5Version}",
+            junit:          "junit:junit:${junitVersion}",
+            junit5_vintage: "org.junit.vintage:junit-vintage-engine:${junitVintageVersion}",
+
             log4j2:          "org.apache.logging.log4j:log4j-core:2.14.1",
-            junit:           "junit:junit:${junitVersion}",
+
             byteman:         "org.jboss.byteman:byteman:${bytemanVersion}",
             byteman_install: "org.jboss.byteman:byteman-install:${bytemanVersion}",
             byteman_bmunit:  "org.jboss.byteman:byteman-bmunit:${bytemanVersion}",
@@ -189,7 +198,8 @@ ext {
             jboss_annotation_spec_jar   : 'org.jboss.spec.javax.annotation:jboss-annotations-api_1.2_spec:1.0.0.Final',
 
             graalvm_nativeimage         : "org.graalvm.nativeimage:svm:${graalvmVersion}"
-        ]
+    ]
+
 }
 
 configurations.all {

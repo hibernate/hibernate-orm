@@ -13,7 +13,14 @@ apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 dependencies {
     compile project( ':hibernate-core' )
     compile( libraries.jta )
-    compile( libraries.junit )
+
+    compile libraries.junit
+    compile libraries.junit5_api
+    compile libraries.junit5_params
+
+    compile 'org.hamcrest:hamcrest-all:1.3'
+    compile libraries.assertj
+
     compile( libraries.byteman )
     compile( libraries.byteman_install )
     compile( libraries.byteman_bmunit )

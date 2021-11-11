@@ -66,7 +66,17 @@ dependencies {
 	annotationProcessor( libraries.logging )
 	annotationProcessor( libraries.logging_annotations )
 
-	testCompile( libraries.junit )
+
+	// JUnit dependencies made up of:
+	// 		* JUnit 5
+	// 		* the Jupiter engine which runs JUnit 5 based tests
+	//		* the "vintage" engine - which runs JUnit 3 and 4 based tests
+	testCompile libraries.junit5_api
+	testCompile libraries.junit5_jupiter
+	testCompile libraries.junit5_params
+	testCompile libraries.junit
+	testCompile libraries.junit5_vintage
+
 	testCompile( libraries.byteman )
 	testCompile( libraries.byteman_install )
 	testCompile( libraries.byteman_bmunit )

@@ -12,9 +12,9 @@ import org.hibernate.testing.TestForIssue;
  * @author Chris Cranford
  */
 @TestForIssue(jiraKey = "HHH-12871")
-public class JpaMetamodelIgnoreUnsupportedPopulationTest extends AbstractJpaMetamodelPopulationTest {
+public class JpaMetamodelskipUnsupportedPopulationTest extends AbstractJpaMetamodelPopulationTest {
 	@Override
 	protected String getJpaMetamodelPopulationValue() {
-		return "ignoreUnsupported";
+		return "skipUnsupported";
 	}
 }

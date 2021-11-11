@@ -27,6 +27,22 @@ public class MutableJpaComplianceImpl implements MutableJpaCompliance {
 	private boolean cachingCompliance;
 	private boolean loadByIdCompliance;
 
+	public MutableJpaComplianceImpl(Map configurationSettings) {
+		this(
+				configurationSettings,
+				ConfigurationHelper.getBoolean(
+						AvailableSettings.JPA_COMPLIANCE,
+						configurationSettings,
+						false
+				)
+		);
+	}
+
+	/**
+	 * Generallythe
+	 * @param configurationSettings
+	 * @param jpaByDefault
+	 */
 	@SuppressWarnings("ConstantConditions")
 	public MutableJpaComplianceImpl(Map configurationSettings, boolean jpaByDefault) {
 		final Object legacyQueryCompliance = configurationSettings.get( AvailableSettings.JPAQL_STRICT_COMPLIANCE );

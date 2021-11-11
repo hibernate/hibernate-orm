@@ -93,7 +93,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 		final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
 		final ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
 
-		this.jpaCompliance = new MutableJpaComplianceImpl( configService.getSettings(), false );
+		this.jpaCompliance = new MutableJpaComplianceImpl( configService.getSettings() );
 		this.scanOptions = new StandardScanOptions(
 				(String) configService.getSettings().get( AvailableSettings.SCANNER_DISCOVERY ),
 				false

@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * @author Steve Ebersole
  */
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/generated/mapping/ComponentOwner.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/mapping/generated/ComponentOwner.hbm.xml"
 )
 @SessionFactory
 @RequiresDialect( value = OracleDialect.class, version = 900 )

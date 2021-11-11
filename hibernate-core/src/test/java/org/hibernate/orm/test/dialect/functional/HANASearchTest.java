@@ -9,23 +9,21 @@ package org.hibernate.orm.test.dialect.functional;
 import java.sql.PreparedStatement;
 
 import org.hibernate.Transaction;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.HANAColumnStoreDialect;
 import org.hibernate.query.Query;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -36,15 +34,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * 
  * @author Jonathan Bregler
  */
-@ServiceRegistry(
-		settings = {
-				@Setting(name = AvailableSettings.HBM2DDL_AUTO, value = "none")
-		}
-)
 @DomainModel(
 		annotatedClasses = { HANASearchTest.SearchEntity.class }
 )
-@SessionFactory
+@SessionFactory(exportSchema = false)
 @RequiresDialect(HANAColumnStoreDialect.class)
 @SkipForDialect(dialectClass = HANAColumnStoreDialect.class, version = 400)
 public class HANASearchTest {
@@ -82,6 +75,13 @@ public class HANASearchTest {
 							}
 						}
 				)
+		);
+	}
+
+	@AfterEach
+	protected void cleanupTestData(SessionFactoryScope scope) throws Exception {
+		scope.inTransaction(
+				session -> session.createQuery( "delete from " + ENTITY_NAME ).executeUpdate()
 		);
 	}
 
@@ -164,7 +164,6 @@ public class HANASearchTest {
 					t.commit();
 
 					session.beginTransaction();
-					session.beginTransaction();
 					Query<Object[]> legacyQuery = session.createQuery(
 							"select b, snippets(c), highlighted(c), score() from " + ENTITY_NAME
 									+ " b where contains(b.c, 'string')",
@@ -227,7 +226,7 @@ public class HANASearchTest {
 	@Test
 	@TestForIssue(jiraKey = "HHH-13021")
 	public void testFuzzy(SessionFactoryScope scope) {
-		scope.inTransaction(
+		scope.inSession(
 				session -> {
 					Transaction t = session.beginTransaction();
 					SearchEntity entity = new SearchEntity();

@@ -20,6 +20,7 @@ import org.hibernate.id.insert.AbstractSelectingDelegate;
 import org.hibernate.id.insert.IdentifierGeneratingInsert;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
 
 /**
@@ -84,7 +85,7 @@ public class SelectGenerator extends AbstractPostInsertGenerator implements Conf
 
 		private final String uniqueKeyPropertyName;
 		private final Type uniqueKeyType;
-		private final Type idType;
+		private final BasicType<?> idType;
 
 		private final String idSelectString;
 
@@ -94,15 +95,13 @@ public class SelectGenerator extends AbstractPostInsertGenerator implements Conf
 				String suppliedUniqueKeyPropertyName) {
 			super( persister );
 
-			throw new NotYetImplementedFor6Exception( getClass() );
+			this.persister = persister;
+			this.dialect = dialect;
+			this.uniqueKeyPropertyName = determineNameOfPropertyToUse( persister, suppliedUniqueKeyPropertyName );
 
-//			this.persister = persister;
-//			this.dialect = dialect;
-//			this.uniqueKeyPropertyName = determineNameOfPropertyToUse( persister, suppliedUniqueKeyPropertyName );
-//
-//			idSelectString = persister.getSelectByUniqueKeyString( uniqueKeyPropertyName );
-//			uniqueKeyType = persister.getPropertyType( uniqueKeyPropertyName );
-//			idType = persister.getIdentifierType();
+			idSelectString = persister.getSelectByUniqueKeyString( uniqueKeyPropertyName );
+			uniqueKeyType = persister.getPropertyType( uniqueKeyPropertyName );
+			idType = (BasicType<?>) persister.getIdentifierType();
 		}
 
 		public IdentifierGeneratingInsert prepareIdentifierGeneratingInsert() {
@@ -135,13 +134,11 @@ public class SelectGenerator extends AbstractPostInsertGenerator implements Conf
 				);
 			}
 
-			throw new NotYetImplementedFor6Exception( getClass() );
-//			return idType.nullSafeGet(
-//					rs,
-//					persister.getRootTableKeyColumnNames(),
-//					session,
-//					entity
-//			);
+			return idType.getJdbcValueExtractor().extract(
+					rs,
+					1,
+					session
+			);
 		}
 	}
 }

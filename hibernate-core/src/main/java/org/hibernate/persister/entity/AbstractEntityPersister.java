@@ -5547,6 +5547,12 @@ public abstract class AbstractEntityPersister
 		creationProcess.registerInitializationCallback(
 				"Entity(" + getEntityName() + ") `staticFetchableList` generator",
 				() -> {
+					if ( hasInsertGeneratedProperties() ) {
+						insertGeneratedValuesProcessor = createGeneratedValuesProcessor( GenerationTiming.INSERT );
+					}
+					if ( hasUpdateGeneratedProperties() ) {
+						updateGeneratedValuesProcessor = createGeneratedValuesProcessor( GenerationTiming.ALWAYS );
+					}
 					staticFetchableList = new ArrayList<>( attributeMappings.size() );
 					visitSubTypeAttributeMappings( attributeMapping -> staticFetchableList.add( attributeMapping ) );
 					return true;
@@ -5623,13 +5629,6 @@ public abstract class AbstractEntityPersister
 		}
 		else {
 			naturalIdMapping = null;
-		}
-
-		if ( hasInsertGeneratedProperties() ) {
-			insertGeneratedValuesProcessor = createGeneratedValuesProcessor( GenerationTiming.INSERT );
-		}
-		if ( hasUpdateGeneratedProperties() ) {
-			updateGeneratedValuesProcessor = createGeneratedValuesProcessor( GenerationTiming.ALWAYS );
 		}
 	}
 

@@ -3813,7 +3813,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			BiConsumer<Integer,JdbcParameter> jdbcParameterConsumer) {
 		sqmParameterMappingModelTypes.put( expression, valueMapping );
 		final Bindable bindable;
-		if ( valueMapping instanceof Association ) {
+		if( valueMapping instanceof EntityCollectionPart){
+			bindable = ((EntityCollectionPart)valueMapping).getKeyTargetMatchPart();
+		}
+		else if ( valueMapping instanceof Association ) {
 			bindable = ( (Association) valueMapping ).getForeignKeyDescriptor();
 		}
 		else if ( valueMapping instanceof EntityMappingType ) {

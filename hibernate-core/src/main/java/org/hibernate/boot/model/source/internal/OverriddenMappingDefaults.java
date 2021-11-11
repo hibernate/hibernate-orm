@@ -8,7 +8,8 @@ package org.hibernate.boot.model.source.internal;
 
 import org.hibernate.boot.spi.MappingDefaults;
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.internal.util.StringHelper;
+
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 
 /**
  * Represents a "nested level" in the mapping defaults stack.
@@ -155,16 +156,16 @@ public class OverriddenMappingDefaults implements MappingDefaults {
 			this.implicitCacheAccessType = parentDefaults.getImplicitCacheAccessType();
 		}
 
-		public Builder setImplicitSchemaName(String implicitSchemaName) {
-			if ( StringHelper.isNotEmpty( implicitSchemaName ) ) {
-				this.implicitSchemaName = implicitSchemaName;
+		public Builder setImplicitSchemaName(String schemaName) {
+			if ( isNotEmpty( schemaName ) ) {
+				implicitSchemaName = schemaName;
 			}
 			return this;
 		}
 
-		public Builder setImplicitCatalogName(String implicitCatalogName) {
-			if ( StringHelper.isNotEmpty( implicitCatalogName ) ) {
-				this.implicitCatalogName = implicitCatalogName;
+		public Builder setImplicitCatalogName(String catalogName) {
+			if ( isNotEmpty( catalogName ) ) {
+				implicitCatalogName = catalogName;
 			}
 			return this;
 		}
@@ -175,28 +176,28 @@ public class OverriddenMappingDefaults implements MappingDefaults {
 		}
 
 		public Builder setImplicitIdColumnName(String implicitIdColumnName) {
-			if ( StringHelper.isNotEmpty( implicitIdColumnName ) ) {
+			if ( isNotEmpty( implicitIdColumnName ) ) {
 				this.implicitIdColumnName = implicitIdColumnName;
 			}
 			return this;
 		}
 
 		public Builder setImplicitTenantIdColumnName(String implicitTenantIdColumnName) {
-			if ( StringHelper.isNotEmpty( implicitTenantIdColumnName ) ) {
+			if ( isNotEmpty( implicitTenantIdColumnName ) ) {
 				this.implicitTenantIdColumnName = implicitTenantIdColumnName;
 			}
 			return this;
 		}
 
 		public Builder setImplicitDiscriminatorColumnName(String implicitDiscriminatorColumnName) {
-			if ( StringHelper.isNotEmpty( implicitDiscriminatorColumnName ) ) {
+			if ( isNotEmpty( implicitDiscriminatorColumnName ) ) {
 				this.implicitDiscriminatorColumnName = implicitDiscriminatorColumnName;
 			}
 			return this;
 		}
 
 		public Builder setImplicitPackageName(String implicitPackageName) {
-			if ( StringHelper.isNotEmpty( implicitPackageName ) ) {
+			if ( isNotEmpty( implicitPackageName ) ) {
 				this.implicitPackageName = implicitPackageName;
 			}
 			return this;
@@ -208,14 +209,14 @@ public class OverriddenMappingDefaults implements MappingDefaults {
 		}
 
 		public Builder setImplicitCascadeStyleName(String implicitCascadeStyleName) {
-			if ( StringHelper.isNotEmpty( implicitCascadeStyleName ) ) {
+			if ( isNotEmpty( implicitCascadeStyleName ) ) {
 				this.implicitCascadeStyleName = implicitCascadeStyleName;
 			}
 			return this;
 		}
 
 		public Builder setImplicitPropertyAccessorName(String implicitPropertyAccessorName) {
-			if ( StringHelper.isNotEmpty( implicitPropertyAccessorName ) ) {
+			if ( isNotEmpty( implicitPropertyAccessorName ) ) {
 				this.implicitPropertyAccessorName = implicitPropertyAccessorName;
 			}
 			return this;

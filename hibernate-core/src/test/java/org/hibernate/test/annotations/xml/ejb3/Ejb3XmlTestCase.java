@@ -84,7 +84,7 @@ public abstract class Ejb3XmlTestCase extends BaseUnitTestCase {
 		XMLMappingHelper xmlHelper = new XMLMappingHelper();
 		JaxbEntityMappings mappings = xmlHelper.readOrmXmlMappings( is, resourceName );
 		XMLContext context = new XMLContext( bootstrapContext );
-		context.addDocument( mappings );
+		context.addDocument( mappings, null );
 		return context;
 	}
 }

@@ -403,7 +403,7 @@ public class JPAXMLOverriddenAnnotationReaderTest extends BaseUnitTestCase {
 		XMLMappingHelper xmlHelper = new XMLMappingHelper();
 		JaxbEntityMappings mappings = xmlHelper.readOrmXmlMappings( ormfile );
 		XMLContext context = new XMLContext( bootstrapContext );
-		context.addDocument( mappings );
+		context.addDocument( mappings, null );
 		return context;
 	}
 }

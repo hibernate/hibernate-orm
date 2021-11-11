@@ -14,8 +14,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Objects;
+import java.util.Properties;
 import javax.persistence.AttributeConverter;
 
 import org.hibernate.FetchMode;
@@ -24,6 +24,8 @@ import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
+import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
@@ -52,13 +54,9 @@ import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 import org.hibernate.type.descriptor.converter.AttributeConverterSqlTypeDescriptorAdapter;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.spi.JdbcRecommendedSqlTypeMappingContext;
-import org.hibernate.type.descriptor.sql.JdbcTypeJavaClassMappings;
 import org.hibernate.type.descriptor.sql.LobTypeMappings;
 import org.hibernate.type.descriptor.sql.NationalizedTypeMappings;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.DynamicParameterizedType;
 
 /**
@@ -71,6 +69,7 @@ public class SimpleValue implements KeyValue {
 	public static final String DEFAULT_ID_GEN_STRATEGY = "assigned";
 
 	private final MetadataImplementor metadata;
+	private final Namespace.Name defaultNamespaceName;
 
 	private final List<Selectable> columns = new ArrayList<>();
 	private final List<Boolean> insertability = new ArrayList<>();
@@ -100,6 +99,13 @@ public class SimpleValue implements KeyValue {
 	@Deprecated
 	public SimpleValue(MetadataImplementor metadata) {
 		this.metadata = metadata;
+
+		// store the default namespace in effect when this SimpleValue is
+		// created so that we can properly determine the namespace to use
+		// as default for database objects created relative to the mapped
+		// value.  Generally this means tables, sequences, etc. for
+		// identifier generators
+		defaultNamespaceName = metadata.getDatabase().getDefaultNamespace().getName();
 	}
 
 	/**
@@ -122,6 +128,13 @@ public class SimpleValue implements KeyValue {
 	public SimpleValue(MetadataBuildingContext buildingContext, Table table) {
 		this.metadata = buildingContext.getMetadataCollector();
 		this.table = table;
+
+		// store the default namespace in effect when this SimpleValue is
+		// created so that we can properly determine the namespace to use
+		// as default for database objects created relative to the mapped
+		// value.  Generally this means tables, sequences, etc. for
+		// identifier generators
+		defaultNamespaceName = metadata.getDatabase().getDefaultNamespace().getName();
 	}
 
 	public MetadataImplementor getMetadata() {
@@ -288,21 +301,34 @@ public class SimpleValue implements KeyValue {
 			return identifierGenerator;
 		}
 
-		Properties params = new Properties();
-		
-		//if the hibernate-mapping did not specify a schema/catalog, use the defaults
-		//specified by properties - but note that if the schema/catalog were specified
-		//in hibernate-mapping, or as params, they will already be initialized and
-		//will override the values set here (they are in identifierGeneratorProperties)
-		if ( defaultSchema!=null ) {
-			params.setProperty(PersistentIdentifierGenerator.SCHEMA, defaultSchema);
+		final Properties params = new Properties();
+
+		// Determine the "default" catalog and schema to pass along to the generator
+		// for any database objects (sequence, table, etc.) it maps when no explicit schema
+		// or catalog were specified
+		if ( defaultNamespaceName != null
+				&& ( defaultNamespaceName.getCatalog() != null || defaultNamespaceName.getSchema() != null ) ) {
+			final Identifier implicitCatalog = defaultNamespaceName.getCatalog();
+			final Identifier implicitSchema = defaultNamespaceName.getSchema();
+			if ( implicitCatalog != null ) {
+				params.setProperty( PersistentIdentifierGenerator.CATALOG, implicitCatalog.getText() );
+			}
+			if ( implicitSchema != null ) {
+				params.setProperty( PersistentIdentifierGenerator.SCHEMA, implicitSchema.getText() );
+			}
 		}
-		if ( defaultCatalog!=null ) {
-			params.setProperty(PersistentIdentifierGenerator.CATALOG, defaultCatalog);
+		else {
+			if ( defaultCatalog != null ) {
+				params.setProperty( PersistentIdentifierGenerator.CATALOG, defaultCatalog );
+			}
+
+			if ( defaultSchema != null ) {
+				params.setProperty( PersistentIdentifierGenerator.SCHEMA, defaultSchema);
+			}
 		}
 		
 		//pass the entity-name, if not a collection-id
-		if (rootClass!=null) {
+		if ( rootClass != null ) {
 			params.setProperty( IdentifierGenerator.ENTITY_NAME, rootClass.getEntityName() );
 			params.setProperty( IdentifierGenerator.JPA_ENTITY_NAME, rootClass.getJpaEntityName() );
 		}
@@ -310,18 +336,18 @@ public class SimpleValue implements KeyValue {
 		//init the table here instead of earlier, so that we can get a quoted table name
 		//TODO: would it be better to simply pass the qualified table name, instead of
 		//      splitting it up into schema/catalog/table names
-		String tableName = getTable().getQuotedName(dialect);
+		String tableName = getTable().getQuotedName( dialect );
 		params.setProperty( PersistentIdentifierGenerator.TABLE, tableName );
 		
 		//pass the column name (a generated id almost always has a single column)
-		String columnName = ( (Column) getColumnIterator().next() ).getQuotedName(dialect);
+		String columnName = ( (Column) getColumnIterator().next() ).getQuotedName( dialect );
 		params.setProperty( PersistentIdentifierGenerator.PK, columnName );
 		
 		if (rootClass!=null) {
 			StringBuilder tables = new StringBuilder();
-			Iterator iter = rootClass.getIdentityTables().iterator();
+			final Iterator<Table> iter = rootClass.getIdentityTables().iterator();
 			while ( iter.hasNext() ) {
-				Table table= (Table) iter.next();
+				final Table table = iter.next();
 				tables.append( table.getQuotedName(dialect) );
 				if ( iter.hasNext() ) {
 					tables.append(", ");

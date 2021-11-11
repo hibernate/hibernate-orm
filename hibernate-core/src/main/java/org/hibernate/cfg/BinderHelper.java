@@ -525,15 +525,6 @@ public class BinderHelper {
 				PersistentIdentifierGenerator.TABLE, table.getName()
 		);
 
-		final String implicitCatalogName = buildingContext.getBuildingOptions().getMappingDefaults().getImplicitCatalogName();
-		if ( implicitCatalogName != null ) {
-			params.put( PersistentIdentifierGenerator.CATALOG, implicitCatalogName );
-		}
-		final String implicitSchemaName = buildingContext.getBuildingOptions().getMappingDefaults().getImplicitSchemaName();
-		if ( implicitSchemaName != null ) {
-			params.put( PersistentIdentifierGenerator.SCHEMA, implicitSchemaName );
-		}
-
 		if ( id.getColumnSpan() == 1 ) {
 			params.setProperty(
 					PersistentIdentifierGenerator.PK,

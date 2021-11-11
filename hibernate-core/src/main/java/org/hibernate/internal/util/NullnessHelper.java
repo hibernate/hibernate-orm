@@ -6,6 +6,7 @@
  */
 package org.hibernate.internal.util;
 
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
@@ -56,5 +57,11 @@ public class NullnessHelper {
 		}
 
 		return null;
+	}
+
+	public static <T> void ifNotNull(T value, Consumer<T> consumer) {
+		if ( value != null ) {
+			consumer.accept( value );
+		}
 	}
 }

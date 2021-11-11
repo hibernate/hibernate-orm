@@ -27,13 +27,19 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistenceUnitMetadata;
 import org.hibernate.boot.jaxb.mapping.spi.ManagedType;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
+import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.annotations.reflection.AttributeConverterDefinitionCollector;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
+
+import static org.hibernate.internal.util.NullnessHelper.ifNotNull;
+import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 
 /**
  * A helper for consuming orm.xml mappings.
@@ -61,31 +67,38 @@ public class XMLContext implements Serializable {
 	}
 
 	/**
-	 * @param entityMappings The xml document to add
-	 * @return Add an xml document to this context and return the list of added class names.
+	 * Adds the `<entity-mappings/>` document to the context and returns
+	 * a list of added class names.
 	 */
-	@SuppressWarnings( "unchecked" )
-	public List<String> addDocument(JaxbEntityMappings entityMappings) {
+	public List<String> addDocument(
+			JaxbEntityMappings entityMappings,
+			MetadataBuildingContext buildingContext) {
 		hasContext = true;
-		List<String> addedClasses = new ArrayList<>();
+
+		final List<String> addedClasses = new ArrayList<>();
+
 		//global defaults
-		JaxbPersistenceUnitMetadata metadata = entityMappings.getPersistenceUnitMetadata();
+		final JaxbPersistenceUnitMetadata metadata = entityMappings.getPersistenceUnitMetadata();
 		if ( metadata != null ) {
 			if ( globalDefaults == null ) {
 				globalDefaults = new Default();
-				globalDefaults.setMetadataComplete(
-						metadata.getXmlMappingMetadataComplete() != null ?
-								Boolean.TRUE :
-								null
-				);
-				JaxbPersistenceUnitDefaults defaultElement = metadata.getPersistenceUnitDefaults();
-				if ( defaultElement != null ) {
-					globalDefaults.setSchema( defaultElement.getSchema() );
-					globalDefaults.setCatalog( defaultElement.getCatalog() );
-					globalDefaults.setAccess( defaultElement.getAccess() );
-					globalDefaults.setCascadePersist( defaultElement.getCascadePersist() != null ? Boolean.TRUE : null );
-					globalDefaults.setDelimitedIdentifiers( defaultElement.getDelimitedIdentifiers() != null ? Boolean.TRUE : null );
-					defaultEntityListeners.addAll( addEntityListenerClasses( defaultElement.getEntityListeners(), null, addedClasses ) );
+				globalDefaults.setMetadataComplete( metadata.getXmlMappingMetadataComplete() != null );
+
+				if ( buildingContext != null ) {
+					final Database database = buildingContext.getMetadataCollector().getDatabase();
+					final Namespace.Name currentDefaultNamespace = database.getDefaultNamespace().getName();
+					ifNotNull( currentDefaultNamespace.getSchema(), (schema) -> globalDefaults.setSchema( schema.getCanonicalName() ) );
+					ifNotNull( currentDefaultNamespace.getCatalog(), (catalog) -> globalDefaults.setCatalog( catalog.getCanonicalName() ) );
+				}
+
+				final JaxbPersistenceUnitDefaults defaultsElement = metadata.getPersistenceUnitDefaults();
+				if ( defaultsElement != null ) {
+					ifNotNull( defaultsElement.getSchema(), globalDefaults::setSchema );
+					ifNotNull( defaultsElement.getCatalog(), globalDefaults::setCatalog );
+					ifNotNull( defaultsElement.getAccess(), globalDefaults::setAccess );
+					globalDefaults.setCascadePersist( defaultsElement.getCascadePersist() != null ? Boolean.TRUE : null );
+					globalDefaults.setDelimitedIdentifiers( defaultsElement.getDelimitedIdentifiers() != null ? Boolean.TRUE : null );
+					defaultEntityListeners.addAll( addEntityListenerClasses( defaultsElement.getEntityListeners(), null, addedClasses ) );
 				}
 			}
 			else {
@@ -93,40 +106,43 @@ public class XMLContext implements Serializable {
 			}
 		}
 
-		//entity mapping default
-		Default entityMappingDefault = new Default();
-		String packageName = entityMappings.getPackage();
-		entityMappingDefault.setPackageName( packageName );
-		entityMappingDefault.setSchema( entityMappings.getSchema() );
-		entityMappingDefault.setCatalog( entityMappings.getCatalog() );
-		entityMappingDefault.setAccess( entityMappings.getAccess() );
+		// defaults for `<entity-mappings/>`
+		final Default entityMappingsDefaults = new Default( globalDefaults );
+		final String packageName = entityMappings.getPackage();
+		ifNotNull( packageName, entityMappingsDefaults::setPackageName );
+		ifNotNull( entityMappings.getCatalog(), entityMappingsDefaults::setCatalog );
+		ifNotNull( entityMappings.getSchema(), entityMappingsDefaults::setSchema );
+		ifNotNull( entityMappings.getAccess(), entityMappingsDefaults::setAccess );
+
 		defaultElements.add( entityMappings );
 
 		setLocalAttributeConverterDefinitions( entityMappings.getConverter(), packageName );
 
-		addClass( entityMappings.getEntity(), packageName, entityMappingDefault, addedClasses );
+		addClass( entityMappings.getEntity(), packageName, entityMappingsDefaults, addedClasses );
 
-		addClass( entityMappings.getMappedSuperclass(), packageName, entityMappingDefault, addedClasses );
+		addClass( entityMappings.getMappedSuperclass(), packageName, entityMappingsDefaults, addedClasses );
 
-		addClass( entityMappings.getEmbeddable(), packageName, entityMappingDefault, addedClasses );
+		addClass( entityMappings.getEmbeddable(), packageName, entityMappingsDefaults, addedClasses );
 
 		return addedClasses;
 	}
 
 	private void addClass(List<? extends ManagedType> managedTypes, String packageName, Default defaults, List<String> addedClasses) {
 		for (ManagedType element : managedTypes) {
-			String className = buildSafeClassName( element.getClazz(), packageName );
+			final String className = buildSafeClassName( element.getClazz(), packageName );
 			if ( managedTypeOverride.containsKey( className ) ) {
 				//maybe switch it to warn?
 				throw new IllegalStateException( "Duplicate XML entry for " + className );
 			}
 			addedClasses.add( className );
 			managedTypeOverride.put( className, element );
-			Default mergedDefaults = new Default();
+
+			final Default mergedDefaults = new Default();
 			// Apply entity mapping defaults
 			mergedDefaults.override( defaults );
+
 			// ... then apply entity settings
-			Default fileDefaults = new Default();
+			final Default fileDefaults = new Default();
 			fileDefaults.setMetadataComplete( element.isMetadataComplete() );
 			fileDefaults.setAccess( element.getAccess() );
 			mergedDefaults.override( fileDefaults );
@@ -239,6 +255,21 @@ public class XMLContext implements Serializable {
 		private Boolean metadataComplete;
 		private Boolean cascadePersist;
 		private Boolean delimitedIdentifier;
+
+		public Default() {
+		}
+
+		public Default(Default parentDefaults) {
+			if ( parentDefaults != null ) {
+				access = parentDefaults.getAccess();
+				packageName = nullIfEmpty( parentDefaults.getPackageName() );
+				schema = nullIfEmpty( parentDefaults.getSchema() );
+				catalog = nullIfEmpty( parentDefaults.getCatalog() );
+				metadataComplete = parentDefaults.getMetadataComplete();
+				cascadePersist = parentDefaults.getCascadePersist();
+				delimitedIdentifier = parentDefaults.getDelimitedIdentifier();
+			}
+		}
 
 		public AccessType getAccess() {
 			return access;

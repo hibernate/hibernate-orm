@@ -34,6 +34,7 @@ public class GeometryLiteralFormatter<T> implements JdbcLiteralFormatter<T> {
 			SqlAppender appender, T value, Dialect dialect, WrapperOptions wrapperOptions) {
 		Geometry<?> geom = javaType.unwrap( value, Geometry.class, wrapperOptions );
 		appender.appendSql( geomFromTextName );
+		appender.appendSql("('");
 		appender.appendSql( Wkt.toWkt( geom, wktDialect ) );
 		appender.appendSql( "'," );
 		appender.appendSql( ( Math.max( geom.getSRID(), 0 ) ) );

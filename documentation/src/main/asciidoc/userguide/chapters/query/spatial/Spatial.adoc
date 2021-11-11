@@ -146,14 +146,14 @@ In may cases, this strategy will suffice.
 If not, you can provide your own implementation of this interface on the classpath, and configure it in the `hibernate.spatial.connection_finder` property.
 Note that implementations must be thread-safe and have a default no-args constructor.
 SQL Server::
-Currently, The `GEOGRAPHY` type is not currently supported.
+The `GEOGRAPHY` type is not currently supported.
 
 
 CockroachDB::
 The dialect `CockroachDB` support the `GEOMETRY` type in CockroachDB v20.2 and later. The `GEOGRAPHY` type is currently not supported.
 
 H2GIS::
-The `H2DBDialect` supports the H2GIS, a spatial extension of the H2 in-memory database. This dialect can be used as a replacement for the `GeoDB` dialect that was supported in previous versions. The major difference with `GeoDB` is that the  `GEOGRAPHY` column type is not present in `H2GIS`.
+The `H2Dialect` supports H2GIS, a spatial extension of the H2 in-memory database. This dialect can be used as a replacement for the `GeoDB` dialect that was supported in previous versions. The major difference with `GeoDB` is that the  `GEOGRAPHY` column type is currently not present in `H2GIS`.
 
 DB2::
 The `DB2SpatialDialect` supports the spatial extensions of the DB2 LUW database. 
@@ -163,7 +163,7 @@ The dialect does not support DB2 for z/OS or DB2 column-oriented databases.
 In order to use the DB2 Hibernate Spatial capabilities, it is necessary to first execute the following
 SQL statements which will allow DB2 to accept Extended WellKnown Text (EWKT) data and return EWKT data.
 One way to do this is to copy these statements into a file such as ewkt.sql and execute it in a DB2 command window
-with a command sucha as `db2 -tvf ewkt.sql`.
+with a command such as `db2 -tvf ewkt.sql`.
 
 [source, SQL, indent=0]
 ----

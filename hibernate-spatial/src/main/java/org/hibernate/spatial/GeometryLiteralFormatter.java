@@ -16,7 +16,6 @@ import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 
 import org.geolatte.geom.Geometry;
 import org.geolatte.geom.codec.Wkt;
-import org.geolatte.geom.jts.JTS;
 
 public class GeometryLiteralFormatter<T> implements JdbcLiteralFormatter<T> {
 
@@ -39,10 +38,6 @@ public class GeometryLiteralFormatter<T> implements JdbcLiteralFormatter<T> {
 		appender.appendSql( "'," );
 		appender.appendSql( ( Math.max( geom.getSRID(), 0 ) ) );
 		appender.appendSql( ")" );
-	}
-
-	private Geometry<?> jts2Gl(T value) {
-		return JTS.from( (org.locationtech.jts.geom.Geometry) value );
 	}
 
 }

@@ -37,9 +37,7 @@
         <drop>
             <![CDATA[DROP TRIGGER t_iu_part_gen_comp]]>
         </drop>
-        <dialect-scope name="org.hibernate.dialect.Oracle9iDialect"/>
-        <dialect-scope name="org.hibernate.dialect.Oracle10gDialect"/>
-        <dialect-scope name="org.hibernate.dialect.Oracle12cDialect"/>
+        <dialect-scope name="org.hibernate.dialect.OracleDialect"/>
     </database-object>
 
 </hibernate-mapping>

@@ -34,6 +34,7 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.tuple.GenerationTiming;
+import org.hibernate.tuple.InDatabaseValueGenerationStrategy;
 
 /**
  * @author Steve Ebersole
@@ -58,31 +59,44 @@ public class GeneratedValuesProcessor {
 		// is applied before the insert/update happens.
 
 		final List<StateArrayContributorMapping> generatedValuesToSelect = new ArrayList<>();
+		// todo (6.0): for now, we rely on the entity metamodel as composite attributes report GenerationTiming.NEVER
+		//  even if they have attributes that would need generation
+		final InDatabaseValueGenerationStrategy[] inDatabaseValueGenerationStrategies = entityDescriptor.getEntityPersister()
+				.getEntityMetamodel()
+				.getInDatabaseValueGenerationStrategies();
 		entityDescriptor.visitAttributeMappings( (attr) -> {
 			//noinspection RedundantClassCall
 			if ( ! StateArrayContributorMapping.class.isInstance( attr ) ) {
 				return;
 			}
-
-			if ( attr.getValueGeneration().getGenerationTiming() == GenerationTiming.NEVER ) {
+			final StateArrayContributorMapping mapping = (StateArrayContributorMapping) attr;
+			final InDatabaseValueGenerationStrategy inDatabaseValueGenerationStrategy = inDatabaseValueGenerationStrategies[mapping.getStateArrayPosition()];
+			if ( inDatabaseValueGenerationStrategy.getGenerationTiming() == GenerationTiming.NEVER ) {
 				return;
 			}
-
-			final GeneratedValueResolver generatedValueResolver = GeneratedValueResolver.from(
-					attr.getValueGeneration(),
+			final GeneratedValueResolver generatedValueResolver = new InDatabaseGeneratedValueResolver(
 					timing,
 					generatedValuesToSelect.size()
 			);
-
-			//noinspection RedundantClassCall
-			if ( ! InDatabaseGeneratedValueResolver.class.isInstance( generatedValueResolver ) ) {
-				// again, we only care about in in-db generations here
-				return;
-			}
+//			if ( attr.getValueGeneration().getGenerationTiming() == GenerationTiming.NEVER ) {
+//				return;
+//			}
+//
+//			final GeneratedValueResolver generatedValueResolver = GeneratedValueResolver.from(
+//					attr.getValueGeneration(),
+//					timing,
+//					generatedValuesToSelect.size()
+//			);
+//
+//			//noinspection RedundantClassCall
+//			if ( ! InDatabaseGeneratedValueResolver.class.isInstance( generatedValueResolver ) ) {
+//				// again, we only care about in in-db generations here
+//				return;
+//			}
 
 			// this attribute is generated for the timing we are processing...
-			valueDescriptors.add( new GeneratedValueDescriptor( generatedValueResolver, (StateArrayContributorMapping) attr ) );
-			generatedValuesToSelect.add( (StateArrayContributorMapping) attr );
+			valueDescriptors.add( new GeneratedValueDescriptor( generatedValueResolver, mapping ) );
+			generatedValuesToSelect.add( mapping );
 		});
 
 		if ( generatedValuesToSelect.isEmpty() ) {

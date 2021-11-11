@@ -33,10 +33,16 @@ public abstract class AbstractNegatableSqmPredicate extends AbstractSqmPredicate
 		this.negated = !this.negated;
 	}
 
+	protected abstract SqmNegatablePredicate createNegatedNode();
+
 	@Override
 	public SqmNegatablePredicate not() {
 		// in certain cases JPA required that this always return
-		// a new instance.  we may need to allow for that here (compliance?)
+		// a new instance.
+		if ( nodeBuilder().isJpaQueryComplianceEnabled() ) {
+			return createNegatedNode();
+		}
+
 		negate();
 		return this;
 	}

@@ -19,7 +19,14 @@ public class SqmExistsPredicate extends AbstractNegatableSqmPredicate {
 	public SqmExistsPredicate(
 			SqmExpression<?> expression,
 			NodeBuilder nodeBuilder) {
-		super( nodeBuilder );
+		this( expression, false, nodeBuilder );
+	}
+
+	public SqmExistsPredicate(
+			SqmExpression<?> expression,
+			boolean negated,
+			NodeBuilder nodeBuilder) {
+		super( negated, nodeBuilder );
 		this.expression = expression;
 
 		expression.applyInferableType( expression.getNodeType() );
@@ -43,5 +50,10 @@ public class SqmExistsPredicate extends AbstractNegatableSqmPredicate {
 			sb.append( "exists " );
 		}
 		expression.appendHqlString( sb );
+	}
+
+	@Override
+	protected SqmNegatablePredicate createNegatedNode() {
+		return new SqmExistsPredicate( expression, !isNegated(), nodeBuilder() );
 	}
 }

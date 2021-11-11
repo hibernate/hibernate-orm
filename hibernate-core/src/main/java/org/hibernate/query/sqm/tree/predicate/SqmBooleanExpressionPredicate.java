@@ -22,8 +22,17 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 public class SqmBooleanExpressionPredicate extends AbstractNegatableSqmPredicate {
 	private final SqmExpression<Boolean> booleanExpression;
 
-	public SqmBooleanExpressionPredicate(SqmExpression<Boolean> booleanExpression, NodeBuilder nodeBuilder) {
-		super( nodeBuilder );
+	public SqmBooleanExpressionPredicate(
+			SqmExpression<Boolean> booleanExpression,
+			NodeBuilder nodeBuilder) {
+		this( booleanExpression, false, nodeBuilder );
+	}
+
+	public SqmBooleanExpressionPredicate(
+			SqmExpression<Boolean> booleanExpression,
+			boolean negated,
+			NodeBuilder nodeBuilder) {
+		super( negated, nodeBuilder );
 
 		assert booleanExpression.getNodeType() != null;
 		final Class<?> expressionJavaType = booleanExpression.getNodeType().getExpressableJavaTypeDescriptor().getJavaTypeClass();
@@ -49,5 +58,10 @@ public class SqmBooleanExpressionPredicate extends AbstractNegatableSqmPredicate
 	@Override
 	public void appendHqlString(StringBuilder sb) {
 		booleanExpression.appendHqlString( sb );
+	}
+
+	@Override
+	protected SqmNegatablePredicate createNegatedNode() {
+		return new SqmBooleanExpressionPredicate( booleanExpression, !isNegated(), nodeBuilder() );
 	}
 }

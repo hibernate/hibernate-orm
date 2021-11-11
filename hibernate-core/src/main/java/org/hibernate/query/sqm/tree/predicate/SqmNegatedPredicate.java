@@ -44,4 +44,9 @@ public class SqmNegatedPredicate extends AbstractNegatableSqmPredicate {
 		wrappedPredicate.appendHqlString( sb );
 		sb.append( ')' );
 	}
+
+	@Override
+	protected SqmNegatablePredicate createNegatedNode() {
+		return new SqmNegatedPredicate( this, nodeBuilder() );
+	}
 }

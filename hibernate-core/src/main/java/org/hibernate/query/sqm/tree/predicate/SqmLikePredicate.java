@@ -100,4 +100,9 @@ public class SqmLikePredicate extends AbstractNegatableSqmPredicate {
 			escapeCharacter.appendHqlString( sb );
 		}
 	}
+
+	@Override
+	protected SqmNegatablePredicate createNegatedNode() {
+		return new SqmLikePredicate( matchExpression, pattern, escapeCharacter, !isNegated(), nodeBuilder() );
+	}
 }

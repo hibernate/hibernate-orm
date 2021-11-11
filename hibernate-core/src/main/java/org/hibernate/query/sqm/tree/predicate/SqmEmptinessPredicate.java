@@ -43,4 +43,9 @@ public class SqmEmptinessPredicate extends AbstractNegatableSqmPredicate {
 			sb.append( " is empty" );
 		}
 	}
+
+	@Override
+	protected SqmNegatablePredicate createNegatedNode() {
+		return new SqmEmptinessPredicate( pluralPath, !isNegated(), nodeBuilder() );
+	}
 }

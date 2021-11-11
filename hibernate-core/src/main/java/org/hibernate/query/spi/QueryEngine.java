@@ -25,6 +25,7 @@ import org.hibernate.engine.query.spi.NativeQueryInterpreter;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.hql.HqlTranslator;
@@ -57,10 +58,7 @@ import org.jboss.logging.Logger;
 public class QueryEngine {
 	private static final Logger LOG_HQL_FUNCTIONS = CoreLogging.logger( "org.hibernate.LOG_HQL_FUNCTIONS" );
 
-	public static QueryEngine from(
-			SessionFactoryImplementor sessionFactory,
-			MetadataImplementor metadata) {
-		final SqmCreationContext sqmCreationContext = sessionFactory;
+	public static QueryEngine from(SessionFactoryImplementor sessionFactory, MetadataImplementor metadata) {
 		final QueryEngineOptions queryEngineOptions = sessionFactory.getSessionFactoryOptions();
 		final SqmCreationOptions sqmCreationOptions = new SqmCreationOptionsStandard( sessionFactory );
 
@@ -68,7 +66,7 @@ public class QueryEngine {
 		final HqlTranslator hqlTranslator = resolveHqlTranslator(
 				queryEngineOptions,
 				dialect,
-				sqmCreationContext,
+				sessionFactory,
 				sqmCreationOptions
 		);
 
@@ -91,6 +89,7 @@ public class QueryEngine {
 		return new QueryEngine(
 				sessionFactory.getUuid(),
 				sessionFactory.getName(),
+				sessionFactory.getSessionFactoryOptions().getJpaCompliance(),
 				() -> sessionFactory.getRuntimeMetamodels().getJpaMetamodel(),
 				sessionFactory.getSessionFactoryOptions().getCriteriaValueHandlingMode(),
 				sessionFactory.getSessionFactoryOptions().getPreferredSqlTypeCodeForBoolean(),
@@ -119,6 +118,7 @@ public class QueryEngine {
 	public QueryEngine(
 			String uuid,
 			String name,
+			JpaCompliance jpaCompliance,
 			Supplier<JpaMetamodel> jpaMetamodelAccess,
 			ValueHandlingMode criteriaValueHandlingMode,
 			int preferredSqlTypeCodeForBoolean,
@@ -140,6 +140,7 @@ public class QueryEngine {
 		this.criteriaBuilder = new SqmCriteriaNodeBuilder(
 				uuid,
 				name,
+				jpaCompliance.isJpaQueryComplianceEnabled(),
 				this,
 				jpaMetamodelAccess,
 				serviceRegistry,
@@ -212,6 +213,7 @@ public class QueryEngine {
 		this.criteriaBuilder = new SqmCriteriaNodeBuilder(
 				uuid,
 				name,
+				false,
 				this,
 				() -> jpaMetamodel,
 				serviceRegistry,

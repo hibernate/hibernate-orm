@@ -16,6 +16,7 @@ import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.SqmTreeCreationLogger;
+import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
 import org.hibernate.query.sqm.tree.jpa.AbstractJpaSelection;
 import org.hibernate.query.sqm.tree.predicate.SqmInPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
@@ -30,6 +31,11 @@ public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> i
 
 	public AbstractSqmExpression(SqmExpressable<T> type, NodeBuilder criteriaBuilder) {
 		super( type, criteriaBuilder );
+	}
+
+	@Override
+	public SqmCriteriaNodeBuilder nodeBuilder() {
+		return (SqmCriteriaNodeBuilder) super.nodeBuilder();
 	}
 
 	@Override

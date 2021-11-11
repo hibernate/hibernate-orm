@@ -92,4 +92,14 @@ public class SqmInSubQueryPredicate<T> extends AbstractNegatableSqmPredicate imp
 		sb.append( " in " );
 		subQueryExpression.appendHqlString( sb );
 	}
+
+	@Override
+	protected SqmNegatablePredicate createNegatedNode() {
+		return new SqmInSubQueryPredicate<>(
+				testExpression,
+				subQueryExpression,
+				!isNegated(),
+				nodeBuilder()
+		);
+	}
 }

@@ -46,7 +46,6 @@ import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.loader.MultipleBagFetchException;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.MappingMetamodel;
-import org.hibernate.metamodel.MetamodelUnsupportedOperationException;
 import org.hibernate.metamodel.mapping.Association;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
@@ -3396,7 +3395,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				associationKeyPart = identifierMapping;
 				associationKey = identifierMapping.getIdentifier(
 						literal.getLiteralValue(),
-						getCreationContext().getSessionFactory());
+						null
+				);
 			}
 			if ( associationKeyPart instanceof BasicValuedMapping ) {
 				return new QueryLiteral<>(
@@ -3808,11 +3808,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			BiConsumer<Integer,JdbcParameter> jdbcParameterConsumer) {
 		sqmParameterMappingModelTypes.put( expression, valueMapping );
 		final Bindable bindable;
-		if( valueMapping instanceof EntityCollectionPart){
-			bindable = ((EntityCollectionPart)valueMapping).getKeyTargetMatchPart();
-		}
-		else if ( valueMapping instanceof Association ) {
-			bindable = ( (Association) valueMapping ).getForeignKeyDescriptor();
+		if ( valueMapping instanceof EntityAssociationMapping ) {
+			bindable = ( (EntityAssociationMapping) valueMapping ).getKeyTargetMatchPart();
 		}
 		else if ( valueMapping instanceof EntityMappingType ) {
 			bindable = ( (EntityMappingType) valueMapping ).getIdentifierMapping();

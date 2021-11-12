@@ -407,6 +407,8 @@ public class MetadataContext {
 			final EmbeddableTypeImpl<?> idClassType;
 			final Component identifierMapper = persistentClass.getIdentifierMapper();
 			if ( identifierMapper != null ) {
+//				cidPropertyItr = cidValue.getPropertyIterator();
+//				propertySpan = cidValue.getPropertySpan();
 				cidPropertyItr = identifierMapper.getPropertyIterator();
 				propertySpan = identifierMapper.getPropertySpan();
 				idClassType = applyIdClassMetadata( (Component) persistentClass.getIdentifier(), identifierMapper );
@@ -445,13 +447,11 @@ public class MetadataContext {
 		final Class<?> componentClass = identifier.getComponentClass();
 		final JavaType<?> javaTypeDescriptor = registry.resolveManagedTypeDescriptor( componentClass );
 
-		final EmbeddableTypeImpl<?> embeddableType = new EmbeddableTypeImpl<>(
+		return new EmbeddableTypeImpl<>(
 				javaTypeDescriptor,
 				false,
 				getJpaMetamodel()
 		);
-		registerEmbeddableType( embeddableType, idClass );
-		return embeddableType;
 	}
 
 	@SuppressWarnings({"unchecked", "rawtypes"})
@@ -691,7 +691,7 @@ public class MetadataContext {
 						domainType = (EmbeddableDomainType<J>) embeddableDomainType;
 						break;
 					}
-					else if ( cachedComponent.getComponentClass().equals( component.getComponentClass() ) || cachedComponent.isEmbedded() != component.isEmbedded() ) {
+					else if ( cachedComponent.getComponentClass().equals( component.getComponentClass() ) ) {
 						final int cachedComponentPropertySpan = cachedComponent.getPropertySpan();
 						if ( cachedComponentPropertySpan != component.getPropertySpan() ) {
 							throw new MappingException(

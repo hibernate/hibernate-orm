@@ -15,6 +15,7 @@ import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.AssociationKey;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
@@ -485,7 +486,10 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 		if ( modelPart instanceof SingleAttributeIdentifierMapping ) {
 			return ( (SingleAttributeIdentifierMapping) modelPart ).getIdentifier( targetObject, session );
 		}
-		// Otherwise this is a key based on the target object i.e. without id-class
+		else if ( modelPart instanceof CompositeIdentifierMapping ) {
+			return ( (CompositeIdentifierMapping) modelPart ).getIdentifier( targetObject, session );
+		}
+		// Otherwise, this is a key based on the target object i.e. without id-class
 		return targetObject;
 	}
 

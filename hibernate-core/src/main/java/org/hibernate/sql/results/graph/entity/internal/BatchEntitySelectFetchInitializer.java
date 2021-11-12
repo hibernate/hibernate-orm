@@ -84,6 +84,10 @@ public class BatchEntitySelectFetchInitializer extends AbstractFetchParentAccess
 
 	@Override
 	public void initializeInstance(RowProcessingState rowProcessingState) {
+		if ( !isAttributeAssignableToConcreteDescriptor() ) {
+			return;
+		}
+
 		final Object entityIdentifier = identifierAssembler.assemble( rowProcessingState );
 		if ( entityIdentifier == null ) {
 			return;
@@ -138,6 +142,21 @@ public class BatchEntitySelectFetchInitializer extends AbstractFetchParentAccess
 
 		persistenceContext.getBatchFetchQueue().addBatchLoadableEntityKey( entityKey );
 		toBatchLoad.put( entityKey, parentAccess.getInitializedInstance() );
+	}
+
+	protected boolean isAttributeAssignableToConcreteDescriptor() {
+		if ( parentAccess instanceof EntityInitializer ) {
+			final AbstractEntityPersister concreteDescriptor = (AbstractEntityPersister) ( (EntityInitializer) parentAccess ).getConcreteDescriptor();
+			if ( concreteDescriptor.isPolymorphic() ) {
+				final AbstractEntityPersister declaringType = (AbstractEntityPersister) referencedModelPart.getDeclaringType();
+				if ( concreteDescriptor != declaringType ) {
+					if ( !declaringType.getEntityMetamodel().getSubclassEntityNames().contains( concreteDescriptor.getEntityMetamodel().getName() ) ) {
+						return false;
+					}
+				}
+			}
+		}
+		return true;
 	}
 
 	@Override

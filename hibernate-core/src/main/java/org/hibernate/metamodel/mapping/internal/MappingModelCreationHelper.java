@@ -7,7 +7,6 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.SortedMap;
@@ -15,7 +14,6 @@ import java.util.SortedSet;
 import java.util.function.BiConsumer;
 
 import org.hibernate.FetchMode;
-import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.SharedSessionContract;
@@ -29,7 +27,6 @@ import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.CascadeStyle;
-import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Any;
@@ -76,6 +73,7 @@ import org.hibernate.metamodel.mapping.StateArrayContributorMetadata;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.QueryableCollection;
@@ -89,10 +87,8 @@ import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
 import org.hibernate.sql.ast.tree.from.TableGroupProducer;
 import org.hibernate.tuple.ValueGeneration;
-import org.hibernate.type.AnyType;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
@@ -102,6 +98,7 @@ import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
+import org.hibernate.type.spi.CompositeTypeImplementor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -165,14 +162,20 @@ public class MappingModelCreationHelper {
 			BiConsumer<String,SingularAttributeMapping> idSubAttributeConsumer,
 			MappingModelCreationProcess creationProcess) {
 		final Component bootIdClassComponent = (Component) bootEntityDescriptor.getIdentifier();
-
+		final Component bootVirtualComponent;
+		if ( bootEntityDescriptor.getIdentifierMapper() == null ) {
+			// If there is no id-class, there apparently also is no id mapper
+			bootVirtualComponent = bootIdClassComponent;
+		}
+		else {
+			bootVirtualComponent = bootEntityDescriptor.getIdentifierMapper();
+		}
 		final EmbeddableMappingType embeddableMappingType = EmbeddableMappingType.from(
-				bootIdClassComponent,
-				cidType,
+				bootVirtualComponent,
+				(CompositeType) bootVirtualComponent.getType(),
 				rootTableName,
 				rootTableKeyColumnNames,
 				attributeMappingType -> {
-					final SessionFactoryImplementor sessionFactory = creationProcess.getCreationContext().getSessionFactory();
 					final PropertyAccess propertyAccess = PropertyAccessStrategyMapImpl.INSTANCE.buildPropertyAccess(
 							null,
 							EntityIdentifierMapping.ROLE_LOCAL_NAME
@@ -180,103 +183,56 @@ public class MappingModelCreationHelper {
 					final StateArrayContributorMetadataAccess attributeMetadataAccess = getStateArrayContributorMetadataAccess(
 							propertyAccess
 					);
-					Component bootComponentDescriptor = bootEntityDescriptor.getIdentifierMapper();
-					if ( bootComponentDescriptor == null ) {
-						bootComponentDescriptor = bootIdClassComponent;
+
+					final EmbeddableMappingType idClassType;
+					if ( bootIdClassComponent != bootVirtualComponent ) {
+						idClassType = EmbeddableMappingType.from(
+								bootIdClassComponent,
+								(CompositeType) bootIdClassComponent.getType(),
+								rootTableName,
+								rootTableKeyColumnNames,
+								idClassEmbeddableType -> new EmbeddedAttributeMapping(
+										"{id-class}",
+										entityPersister.getNavigableRole()
+												.append( EntityIdentifierMapping.ROLE_LOCAL_NAME )
+												.append( "{id-class}" ),
+										-1,
+										null,
+										attributeMetadataAccess,
+										(String) null,
+										FetchTiming.IMMEDIATE,
+										FetchStyle.JOIN,
+										idClassEmbeddableType,
+										entityPersister,
+										propertyAccess,
+										null
+								),
+								creationProcess
+						);
 					}
-					final List<SingularAttributeMapping> idAttributeMappings = new ArrayList<>( bootComponentDescriptor.getPropertySpan() );
-					final Iterator<Property> bootIdSubPropertyItr = bootComponentDescriptor.getPropertyIterator();
-
-					int columnsConsumedSoFar = 0;
-
-					while ( bootIdSubPropertyItr.hasNext() ) {
-						final Property bootIdSubProperty = bootIdSubPropertyItr.next();
-						final Type idSubPropertyType = bootIdSubProperty.getType();
-
-						if ( idSubPropertyType instanceof AnyType ) {
-							throw new HibernateException(
-									"AnyType property `" + bootEntityDescriptor.getEntityName() + "#" + bootIdSubProperty.getName() +
-											"` cannot be used as part of entity identifier "
-							);
-						}
-
-						if ( idSubPropertyType instanceof CollectionType ) {
-							throw new HibernateException(
-									"Plural property `" + bootEntityDescriptor.getEntityName() + "#" + bootIdSubProperty.getName() +
-											"` cannot be used as part of entity identifier "
-							);
-						}
-
-						final SingularAttributeMapping idSubAttribute;
-
-						if ( idSubPropertyType instanceof BasicType ) {
-							//noinspection rawtypes
-							idSubAttribute = buildBasicAttributeMapping(
-									bootIdSubProperty.getName(),
-									entityPersister.getNavigableRole().append( bootIdSubProperty.getName() ),
-									idAttributeMappings.size(),
-									bootIdSubProperty,
-									attributeMappingType,
-									(BasicType) idSubPropertyType,
-									rootTableName,
-									rootTableKeyColumnNames[columnsConsumedSoFar],
-									false,
-									null,
-									null,
-									entityPersister.getRepresentationStrategy().resolvePropertyAccess( bootIdSubProperty ),
-									CascadeStyles.ALL,
-									creationProcess
-							);
-							columnsConsumedSoFar++;
-						}
-						else if ( idSubPropertyType instanceof CompositeType ) {
-							// nested composite
-							throw new NotYetImplementedFor6Exception();
-						}
-						else if ( idSubPropertyType instanceof EntityType ) {
-							// key-many-to-one
-							final EntityType keyManyToOnePropertyType = (EntityType) idSubPropertyType;
-
-							idSubAttribute = buildSingularAssociationAttributeMapping(
-									bootIdSubProperty.getName(),
-									entityPersister.getNavigableRole().append( EntityIdentifierMapping.ROLE_LOCAL_NAME ),
-									idAttributeMappings.size(),
-									bootIdSubProperty,
-									attributeMappingType,
-									entityPersister,
-									keyManyToOnePropertyType,
-									entityPersister.getRepresentationStrategy().resolvePropertyAccess( bootIdSubProperty ),
-									CascadeStyles.ALL,
-									creationProcess
-							);
-
-							columnsConsumedSoFar += keyManyToOnePropertyType.getColumnSpan( sessionFactory );
-						}
-						else {
-							throw new UnsupportedOperationException();
-						}
-
-						idAttributeMappings.add( idSubAttribute );
-						if ( bootComponentDescriptor == null ) {
-							idSubAttributeConsumer.accept( idSubAttribute.getAttributeName(), idSubAttribute );
-						}
+					else {
+						idClassType = attributeMappingType;
 					}
-
 					return new NonAggregatedIdentifierMappingImpl(
 							attributeMappingType,
 							entityPersister,
-							idAttributeMappings,
+							idClassType,
 							attributeMetadataAccess,
 							rootTableName,
-							bootIdClassComponent,
-							bootComponentDescriptor,
 							creationProcess
 					);
 				},
 				creationProcess
 		);
 
-		return (CompositeIdentifierMapping) embeddableMappingType.getEmbeddedValueMapping();
+		// Inject the model part also in the composite type of the id-class, because that is what we actually "instantiate"
+		// which needs the model part for instantiation
+		final CompositeIdentifierMapping compositeIdentifierMapping = (CompositeIdentifierMapping) embeddableMappingType.getEmbeddedValueMapping();
+		( (CompositeTypeImplementor) bootEntityDescriptor.getIdentifier().getType() ).injectMappingModelPart(
+				(EmbeddableValuedModelPart) compositeIdentifierMapping,
+				creationProcess
+		);
+		return compositeIdentifierMapping;
 	}
 
 
@@ -910,7 +866,7 @@ public class MappingModelCreationHelper {
 			setReferencedAttributeForeignKeyDescriptor(
 					attributeMapping,
 					referencedAttributeMapping,
-					(EntityPersister) referencedAttributeMapping.getDeclaringType(),
+					referencedAttributeMapping.findContainingEntityMapping().getEntityPersister(),
 					collectionDescriptor.getMappedByProperty(),
 					dialect,
 					creationProcess

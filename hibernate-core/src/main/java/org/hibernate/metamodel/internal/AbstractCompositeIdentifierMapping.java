@@ -16,14 +16,12 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
-import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
@@ -69,7 +67,7 @@ public abstract class AbstractCompositeIdentifierMapping
 	private final EntityMappingType entityMapping;
 	private final EmbeddableMappingType embeddableDescriptor;
 
-	private final SessionFactoryImplementor sessionFactory;
+	protected final SessionFactoryImplementor sessionFactory;
 
 	public AbstractCompositeIdentifierMapping(
 			StateArrayContributorMetadataAccess attributeMetadataAccess,
@@ -87,13 +85,14 @@ public abstract class AbstractCompositeIdentifierMapping
 				.appendContainer( EntityIdentifierMapping.ROLE_LOCAL_NAME );
 	}
 
-	/**
-	 * Does the identifier have a corresponding EmbeddableId or IdClass?
-	 *
-	 * @return false if there is not an IdCass or an EmbeddableId
-	 */
-	public boolean hasContainingClass(){
+	@Override
+	public boolean hasContainingClass() {
 		return true;
+	}
+
+	@Override
+	public EmbeddableMappingType getMappedIdEmbeddableTypeDescriptor() {
+		return embeddableDescriptor;
 	}
 
 	@Override
@@ -124,26 +123,6 @@ public abstract class AbstractCompositeIdentifierMapping
 	@Override
 	public NavigableRole getNavigableRole() {
 		return navigableRole;
-	}
-
-	@Override
-	public int forEachSelectable(int offset, SelectableConsumer consumer) {
-		int span = 0;
-		final List<SingularAttributeMapping> attributes = getAttributes();
-		for ( int i = 0; i < attributes.size(); i++ ) {
-			final SingularAttributeMapping attribute = attributes.get( i );
-			if ( attribute instanceof ToOneAttributeMapping ) {
-				final ToOneAttributeMapping associationAttributeMapping = (ToOneAttributeMapping) attribute;
-				span += associationAttributeMapping.getForeignKeyDescriptor().visitKeySelectables(
-						span + offset,
-						consumer
-				);
-			}
-			else {
-				span += attribute.forEachSelectable( span + offset, consumer );
-			}
-		}
-		return span;
 	}
 
 	@Override

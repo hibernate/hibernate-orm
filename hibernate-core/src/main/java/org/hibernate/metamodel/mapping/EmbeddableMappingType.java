@@ -36,7 +36,7 @@ import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
-import org.hibernate.metamodel.MetamodelUnsupportedOperationException;
+import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.DiscriminatedAssociationAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
@@ -239,7 +239,7 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectableMapp
 							currentIndex = attributeMapping.getJdbcTypeCount();
 						}
 						else {
-							throw new MetamodelUnsupportedOperationException(
+							throw new UnsupportedMappingException(
 									"Only basic and to-one attributes are supported in composite fks" );
 						}
 						this.attributeMappings.add( attributeMapping );

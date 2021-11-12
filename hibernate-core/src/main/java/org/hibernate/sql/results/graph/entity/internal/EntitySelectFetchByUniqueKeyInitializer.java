@@ -15,6 +15,7 @@ import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 /**
@@ -36,6 +37,10 @@ public class EntitySelectFetchByUniqueKeyInitializer extends EntitySelectFetchIn
 	@Override
 	public void initializeInstance(RowProcessingState rowProcessingState) {
 		if ( entityInstance != null ) {
+			return;
+		}
+
+		if ( !isAttributeAssignableToConcreteDescriptor() ) {
 			return;
 		}
 

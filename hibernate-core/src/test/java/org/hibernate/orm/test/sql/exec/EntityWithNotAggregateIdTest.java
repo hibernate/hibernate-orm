@@ -11,13 +11,11 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.testing.orm.domain.gambit.EntityWithNotAggregateId;
 import org.hibernate.testing.orm.domain.gambit.EntityWithNotAggregateId.PK;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -32,7 +30,6 @@ import static org.hamcrest.core.IsNull.notNullValue;
 )
 @ServiceRegistry
 @SessionFactory(generateStatistics = true)
-@Disabled(value = "non aggregate composit id has not been yet implemented")
 public class EntityWithNotAggregateIdTest {
 
 	private PK entityId;
@@ -54,7 +51,7 @@ public class EntityWithNotAggregateIdTest {
 	public void tearDown(SessionFactoryScope scope) {
 		scope.inTransaction(
 				sesison ->
-						sesison.createQuery( "delete from EntityWithIdClass" ).executeUpdate()
+						sesison.createQuery( "delete from EntityWithNotAggregateId" ).executeUpdate()
 		);
 	}
 
@@ -64,7 +61,7 @@ public class EntityWithNotAggregateIdTest {
 		statistics.clear();
 		scope.inTransaction(
 				session -> {
-					final String value = session.createQuery( "select e.data FROM EntityWithIdClass e", String.class )
+					final String value = session.createQuery( "select e.data FROM EntityWithNotAggregateId e", String.class )
 							.uniqueResult();
 					assertThat( value, is( "test" ) );
 				}
@@ -79,7 +76,7 @@ public class EntityWithNotAggregateIdTest {
 		scope.inTransaction(
 				session -> {
 					final EntityWithNotAggregateId loaded = session.createQuery(
-							"select e FROM EntityWithIdClass e",
+							"select e FROM EntityWithNotAggregateId e",
 							EntityWithNotAggregateId.class
 					).uniqueResult();
 					assertThat( loaded.getData(), is( "test" ) );
@@ -95,9 +92,9 @@ public class EntityWithNotAggregateIdTest {
 		statistics.clear();
 		scope.inTransaction(
 				session -> {
-					final EntityWithNotAggregateId value = session.createQuery(
-							"select e.id FROM EntityWithIdClass e",
-							EntityWithNotAggregateId.class
+					final EntityWithNotAggregateId.PK value = session.createQuery(
+							"select e.id FROM EntityWithNotAggregateId e",
+							EntityWithNotAggregateId.PK.class
 					).uniqueResult();
 					assertThat( value, equalTo( entityId ) );
 				}

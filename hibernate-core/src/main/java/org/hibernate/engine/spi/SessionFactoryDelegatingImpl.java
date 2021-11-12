@@ -257,6 +257,11 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
+	public String bestGuessEntityName(Object object) {
+		return delegate.bestGuessEntityName( object );
+	}
+
+	@Override
 	public StatisticsImplementor getStatisticsImplementor() {
 		return delegate.getStatistics();
 	}

@@ -67,7 +67,6 @@ import org.hibernate.sql.ast.tree.from.LazyTableGroup;
 import org.hibernate.sql.ast.tree.from.MappedByTableGroup;
 import org.hibernate.sql.ast.tree.from.PluralTableGroup;
 import org.hibernate.sql.ast.tree.from.StandardTableGroup;
-import org.hibernate.sql.ast.tree.from.StandardVirtualTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
@@ -80,7 +79,6 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
-import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableFetchImpl;
 import org.hibernate.sql.results.graph.entity.EntityFetch;
 import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 import org.hibernate.sql.results.graph.entity.internal.EntityDelayedFetchImpl;
@@ -556,6 +554,9 @@ public class ToOneAttributeMapping
 			if ( prefix == null ) {
 				newPrefix = propertyName;
 			}
+			else if ( propertyName == null ) {
+				newPrefix = prefix;
+			}
 			else {
 				newPrefix = prefix + "." + propertyName;
 			}
@@ -904,13 +905,30 @@ public class ToOneAttributeMapping
 		// The referencedNavigablePath can be null if this is a collection initialization
 		if ( referencedNavigablePath != null ) {
 			if ( hasBidirectionalFetchParent ) {
+				// If this is the key side, we must ensure that the key is not null, so we create a domain result for it
+				// In the CircularBiDirectionalFetchImpl we return null if the key is null instead of the bidirectional value
+				final DomainResult<?> keyDomainResult;
+				// For now, we don't do this if the key table is nullable to avoid an additional join
+				if ( sideNature == ForeignKeyDescriptor.Nature.KEY && !isKeyTableNullable ) {
+					keyDomainResult = foreignKeyDescriptor.createKeyDomainResult(
+							fetchablePath,
+							creationState.getSqlAstCreationState()
+									.getFromClauseAccess()
+									.findTableGroup( realFetchParent.getNavigablePath() ),
+							creationState
+					);
+				}
+				else {
+					keyDomainResult = null;
+				}
 				return new CircularBiDirectionalFetchImpl(
 						FetchTiming.IMMEDIATE,
 						fetchablePath,
 						fetchParent,
 						this,
 						LockMode.READ,
-						referencedNavigablePath
+						referencedNavigablePath,
+						keyDomainResult
 				);
 			}
 			else {
@@ -996,29 +1014,6 @@ public class ToOneAttributeMapping
 				parentTableGroup.addTableGroupJoin( tableGroupJoin );
 				tableGroup = tableGroupJoin.getJoinedGroup();
 				fromClauseAccess.registerTableGroup( fetchablePath, tableGroup );
-			}
-			else if ( fetchParent instanceof EmbeddableFetchImpl ) {
-				final TableGroup existingTableGroup = fromClauseAccess.findTableGroup(
-						fetchablePath
-				);
-				final TableGroupJoin tableGroupJoin = createTableGroupJoin(
-						fetchablePath,
-						parentTableGroup,
-						resultVariable,
-						getJoinType( fetchablePath, parentTableGroup ),
-						true,
-						false,
-						creationState.getSqlAstCreationState()
-				);
-				final TableGroup joinedGroup = tableGroupJoin.getJoinedGroup();
-				if ( existingTableGroup == null || joinedGroup instanceof LazyTableGroup && existingTableGroup instanceof StandardVirtualTableGroup ) {
-					parentTableGroup.addTableGroupJoin( tableGroupJoin );
-					fromClauseAccess.registerTableGroup( fetchablePath, joinedGroup );
-					tableGroup = joinedGroup;
-				}
-				else {
-					tableGroup = existingTableGroup;
-				}
 			}
 			else {
 				tableGroup = fromClauseAccess.resolveTableGroup(
@@ -1196,7 +1191,14 @@ public class ToOneAttributeMapping
 		}
 		else {
 			if ( parentTableGroup.canUseInnerJoins() ) {
-				return SqlAstJoinType.INNER;
+				final Class<?> attributeDeclaringType = declaringTableGroupProducer.getJavaTypeDescriptor().getJavaTypeClass();
+				final Class<?> parentTableGroupType = parentTableGroup.getModelPart().getJavaTypeDescriptor().getJavaTypeClass();
+
+				// This attribute mapping must be declared on the parent table group type or one of its super types
+				// If not, this is a fetch for a subtype of the parent table group, which might be left joined
+				if ( attributeDeclaringType.isAssignableFrom( parentTableGroupType ) ) {
+					return SqlAstJoinType.INNER;
+				}
 			}
 			return SqlAstJoinType.LEFT;
 		}

@@ -302,7 +302,6 @@ public class BasicValuedCollectionPart
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
 		if ( valueConverter != null ) {
-			//noinspection unchecked
 			return valueConverter.toRelationalValue( value );
 		}
 		return value;

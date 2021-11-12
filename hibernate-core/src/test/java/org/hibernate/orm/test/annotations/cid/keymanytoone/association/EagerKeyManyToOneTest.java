@@ -70,8 +70,7 @@ public class EagerKeyManyToOneTest {
 						assertSame( card, cf.getPrimaryKey().getCard() );
 
 						statementInspector.assertExecutedCount( 1 );
-						// Since Key have no additional state, it's not necessary to join their tables
-						statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 2 );
+						statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 3 );
 					}
 					catch (StackOverflowError soe) {
 						fail( "eager + key-many-to-one caused stack-overflow in annotations" );

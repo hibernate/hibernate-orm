@@ -26,6 +26,7 @@ import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.BiDirectionalFetch;
+import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
@@ -51,6 +52,7 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch, Assoc
 	private final FetchParent fetchParent;
 	private final LockMode lockMode;
 	private final NavigablePath referencedNavigablePath;
+	private final DomainResult<?> keyDomainResult;
 
 	public CircularBiDirectionalFetchImpl(
 			FetchTiming timing,
@@ -58,13 +60,15 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch, Assoc
 			FetchParent fetchParent,
 			ToOneAttributeMapping fetchable,
 			LockMode lockMode,
-			NavigablePath referencedNavigablePath) {
+			NavigablePath referencedNavigablePath,
+			DomainResult<?> keyDomainResult) {
 		this.timing = timing;
 		this.fetchParent = fetchParent;
 		this.navigablePath = navigablePath;
 		this.fetchable = fetchable;
 		this.lockMode = lockMode;
 		this.referencedNavigablePath = referencedNavigablePath;
+		this.keyDomainResult = keyDomainResult;
 	}
 
 	@Override
@@ -99,7 +103,8 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch, Assoc
 		return new CircularFetchAssembler(
 				fetchable,
 				getReferencedPath(),
-				fetchable.getJavaTypeDescriptor()
+				fetchable.getJavaTypeDescriptor(),
+				keyDomainResult == null ? null : keyDomainResult.createResultAssembler( creationState )
 		);
 	}
 
@@ -174,22 +179,31 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch, Assoc
 		throw new UnsupportedOperationException();
 	}
 
-	public static class CircularFetchAssembler implements DomainResultAssembler {
+	private static class CircularFetchAssembler implements DomainResultAssembler<Object> {
 		private final NavigablePath circularPath;
-		private final JavaType javaTypeDescriptor;
+		private final JavaType<?> javaTypeDescriptor;
 		private final ToOneAttributeMapping fetchable;
+		private final DomainResultAssembler<?> keyDomainResultAssembler;
 
 		public CircularFetchAssembler(
 				ToOneAttributeMapping fetchable,
 				NavigablePath circularPath,
-				JavaType javaTypeDescriptor) {
+				JavaType<?> javaTypeDescriptor,
+				DomainResultAssembler<?> keyDomainResultAssembler) {
 			this.fetchable = fetchable;
 			this.circularPath = circularPath;
 			this.javaTypeDescriptor = javaTypeDescriptor;
+			this.keyDomainResultAssembler = keyDomainResultAssembler;
 		}
 
 		@Override
 		public Object assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {
+			if ( keyDomainResultAssembler != null ) {
+				final Object foreignKey = keyDomainResultAssembler.assemble( rowProcessingState, options );
+				if ( foreignKey == null ) {
+					return null;
+				}
+			}
 			EntityInitializer initializer = resolveCircularInitializer( rowProcessingState );
 			if ( initializer == null ) {
 				if ( circularPath.getParent() != null ) {

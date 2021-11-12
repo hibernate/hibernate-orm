@@ -6,7 +6,6 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import java.util.List;
 import java.util.function.BiConsumer;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -15,7 +14,6 @@ import org.hibernate.metamodel.internal.AbstractCompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.proxy.HibernateProxy;
@@ -79,15 +77,6 @@ public class EmbeddedIdentifierMappingImpl
 
 	@Override
 	public Object getIdentifier(Object entity, SharedSessionContractImplementor session) {
-		return getIdentifier( entity );
-	}
-
-	@Override
-	public Object getIdentifier(Object entity, SessionFactoryImplementor sessionFactory) {
-		return EmbeddedIdentifierMappingImpl.this.getIdentifier( entity );
-	}
-
-	private Object getIdentifier(Object entity) {
 		if ( entity instanceof HibernateProxy ) {
 			return ( (HibernateProxy) entity ).getHibernateLazyInitializer().getIdentifier();
 		}
@@ -116,17 +105,6 @@ public class EmbeddedIdentifierMappingImpl
 		return getEmbeddableTypeDescriptor().getNumberOfAttributeMappings();
 	}
 
-
-	@Override
-	public int getAttributeCount() {
-		return getEmbeddableTypeDescriptor().getNumberOfAttributeMappings();
-	}
-
-	@Override
-	@SuppressWarnings( { "unchecked", "rawtypes" } )
-	public List<SingularAttributeMapping> getAttributes() {
-		return (List) getEmbeddableTypeDescriptor().getAttributeMappings();
-	}
 
 	@Override
 	public PropertyAccess getPropertyAccess() {
@@ -161,8 +139,9 @@ public class EmbeddedIdentifierMappingImpl
 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		final Object[] result = new Object[getAttributeCount()];
-		forEachAttribute(
+		final EmbeddableMappingType embeddableTypeDescriptor = getEmbeddableTypeDescriptor();
+		final Object[] result = new Object[embeddableTypeDescriptor.getNumberOfAttributeMappings()];
+		embeddableTypeDescriptor.forEachAttributeMapping(
 				(i, mapping) -> {
 					Object o = mapping.getPropertyAccess().getGetter().get( value );
 					result[i] = mapping.disassemble( o, session );

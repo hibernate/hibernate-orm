@@ -7,7 +7,6 @@
 package org.hibernate.metamodel.mapping;
 
 import org.hibernate.engine.spi.IdentifierValue;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
@@ -31,10 +30,6 @@ public interface EntityIdentifierMapping extends ValueMapping, ModelPart {
 	IdentifierValue getUnsavedStrategy();
 
 	Object getIdentifier(Object entity, SharedSessionContractImplementor session);
-
-	Object getIdentifier(Object entity, SessionFactoryImplementor sessionFactory);
-
 	void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session);
-
 	Object instantiate();
 }

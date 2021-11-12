@@ -6,6 +6,8 @@
  */
 package org.hibernate.event.internal;
 
+import java.util.List;
+
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.NonUniqueObjectException;
@@ -30,6 +32,7 @@ import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
@@ -126,20 +129,28 @@ public class DefaultLoadEventListener implements LoadEventListener {
 		// dependent objects parent.  This is part of its generally goofy derived identity "feature"
 		final EntityIdentifierMapping idMapping = persister.getIdentifierMapping();
 		if ( idMapping instanceof CompositeIdentifierMapping ) {
-			final CompositeIdentifierMapping cidMapping = (CompositeIdentifierMapping) idMapping;
-
-			if ( cidMapping.getAttributeCount() == 1 ) {
-				final AttributeMapping singleIdAttribute = cidMapping.getAttributes().get( 0 );
+			final CompositeIdentifierMapping compositeIdMapping = (CompositeIdentifierMapping) idMapping;
+			final List<AttributeMapping> attributeMappings = compositeIdMapping.getPartMappingType().getAttributeMappings();
+			if ( attributeMappings.size() == 1 ) {
+				final AttributeMapping singleIdAttribute = attributeMappings.get( 0 );
 				if ( singleIdAttribute.getMappedType() instanceof EntityMappingType ) {
 					final EntityMappingType parentIdTargetMapping = (EntityMappingType) singleIdAttribute.getMappedType();
 					final EntityIdentifierMapping parentIdTargetIdMapping = parentIdTargetMapping.getIdentifierMapping();
-					final JavaType parentIdJtd = parentIdTargetIdMapping.getMappedType().getMappedJavaTypeDescriptor();
+					final MappingType mappedType;
+					if ( parentIdTargetIdMapping instanceof CompositeIdentifierMapping ) {
+						mappedType = ( (CompositeIdentifierMapping) parentIdTargetIdMapping ).getMappedIdEmbeddableTypeDescriptor();
+					}
+					else {
+						mappedType = parentIdTargetIdMapping.getMappedType();
+					}
+					final JavaType<?> parentIdJtd = mappedType.getMappedJavaTypeDescriptor();
 					if ( parentIdJtd.getJavaTypeClass().isInstance( event.getEntityId() ) ) {
 						// yep that's what we have...
 						loadByDerivedIdentitySimplePkValue(
 								event,
 								loadType,
 								persister,
+								compositeIdMapping,
 								(EntityPersister) parentIdTargetMapping
 						);
 						return;
@@ -158,12 +169,17 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			LoadEvent event,
 			LoadType options,
 			EntityPersister dependentPersister,
+			CompositeIdentifierMapping dependentIdType,
 			EntityPersister parentPersister) {
 		final EventSource session = event.getSession();
 		final EntityKey parentEntityKey = session.generateEntityKey( event.getEntityId(), parentPersister );
 		final Object parent = doLoad( event, parentPersister, parentEntityKey, options );
 
-		final Object dependent = dependentPersister.instantiate( parent, session );
+		final Object dependent = dependentIdType.instantiate();
+		dependentIdType.getPartMappingType().setPropertyValues(
+				dependent,
+				new Object[] { parent }
+		);
 		final EntityKey dependentEntityKey = session.generateEntityKey( dependent, dependentPersister );
 		event.setEntityId( dependent );
 

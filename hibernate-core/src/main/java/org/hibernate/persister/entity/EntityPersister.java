@@ -810,18 +810,8 @@ public interface EntityPersister
 
 	/**
 	 * Get the identifier of an instance (throw an exception if no identifier property)
-	 *
-	 * @deprecated Use {@link #getIdentifier(Object,SharedSessionContractImplementor)} instead
-	 */
-	@Deprecated
-	Object getIdentifier(Object object) throws HibernateException;
-
-	/**
-	 * Get the identifier of an instance (throw an exception if no identifier property)
 	 */
 	Object getIdentifier(Object entity, SharedSessionContractImplementor session);
-
-	Object getIdentifier(Object entity, SessionFactoryImplementor sessionFactoryImplementor);
 
     /**
      * Inject the identifier value into the given entity.

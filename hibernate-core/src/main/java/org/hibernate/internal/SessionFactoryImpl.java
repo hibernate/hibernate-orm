@@ -37,6 +37,7 @@ import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EmptyInterceptor;
+import org.hibernate.EntityNameResolver;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
@@ -76,6 +77,7 @@ import org.hibernate.engine.jndi.spi.JndiService;
 import org.hibernate.engine.profile.Association;
 import org.hibernate.engine.profile.Fetch;
 import org.hibernate.engine.profile.FetchProfile;
+import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionBuilderImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -109,7 +111,9 @@ import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.SessionFactoryBasedWrapperOptions;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.HibernateProxyHelper;
+import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.query.QueryLogging;
 import org.hibernate.query.hql.spi.HqlQueryImplementor;
 import org.hibernate.query.named.NamedObjectRepository;
@@ -195,6 +199,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	private final transient SessionBuilder defaultSessionOpenOptions;
 	private final transient SessionBuilder temporarySessionOpenOptions;
 	private final transient StatelessSessionBuilder defaultStatelessOptions;
+	private final transient EntityNameResolver entityNameResolver;
 
 	public SessionFactoryImpl(
 			final MetadataImplementor bootMetamodel,
@@ -393,6 +398,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			//As last operation, delete all caches from ReflectionManager
 			//(not modelled as a listener as we want this to be last)
 			bootMetamodel.getMetadataBuildingOptions().getReflectionManager().reset();
+
+			this.entityNameResolver = new CoordinatingEntityNameResolver( this, getInterceptor() );
 		}
 		catch (Exception e) {
 			for ( Integrator integrator : serviceRegistry.getService( IntegratorService.class ).getIntegrators() ) {
@@ -716,6 +723,20 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	@Override
 	public RootGraphImplementor findEntityGraphByName(String name) {
 		return getMetamodel().findEntityGraphByName( name );
+	}
+
+	@Override
+	public String bestGuessEntityName(Object object) {
+		if ( object instanceof HibernateProxy ) {
+			LazyInitializer initializer = ( (HibernateProxy) object ).getHibernateLazyInitializer();
+			// it is possible for this method to be called during flush processing,
+			// so make certain that we do not accidentally initialize an uninitialized proxy
+			if ( initializer.isUninitialized() ) {
+				return initializer.getEntityName();
+			}
+			object = initializer.getImplementation();
+		}
+		return entityNameResolver.resolveEntityName( object );
 	}
 
 	@Override

@@ -15,7 +15,6 @@ import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -25,7 +24,7 @@ import org.hibernate.loader.ast.internal.MultiNaturalIdLoaderStandard;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
 import org.hibernate.mapping.IndexedConsumer;
-import org.hibernate.metamodel.MetamodelUnsupportedOperationException;
+import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -156,7 +155,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 			return values;
 		}
 
-		throw new MetamodelUnsupportedOperationException( "Do not know how to normalize compound natural-id value : " + incoming );
+		throw new UnsupportedMappingException( "Do not know how to normalize compound natural-id value : " + incoming );
 	}
 
 	@Override

@@ -6,34 +6,37 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import java.io.Serializable;
 import java.util.List;
 import java.util.function.BiConsumer;
 
-import org.hibernate.EntityNameResolver;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.mapping.Component;
-import org.hibernate.mapping.ManyToOne;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.internal.AbstractCompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.SingularAttributeMapping;
+import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
-import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
+import org.hibernate.sql.ast.Clause;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
-import org.hibernate.type.ComponentType;
-import org.hibernate.type.Type;
 
 /**
  * A "non-aggregated" composite identifier.
@@ -45,22 +48,15 @@ import org.hibernate.type.Type;
  */
 public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentifierMapping {
 
-	private final List<SingularAttributeMapping> idAttributeMappings;
-	private final ComponentType mappedIdComponentType;
-	private final ComponentType virtualComponentType;
-
-	private final boolean[] isBootIdPropertyManyToOne;
+	private final EmbeddableMappingType mappedIdEmbeddableType;
 
 	public NonAggregatedIdentifierMappingImpl(
 			EmbeddableMappingType embeddableDescriptor,
 			EntityMappingType entityMapping,
-			List<SingularAttributeMapping> idAttributeMappings,
+			EmbeddableMappingType mappedIdEmbeddableType,
 			StateArrayContributorMetadataAccess attributeMetadataAccess,
 			String rootTableName,
-			Component bootIdClassDescriptor,
-			Component bootCidDescriptor,
 			MappingModelCreationProcess creationProcess) {
-		// todo (6.0) : handle MapsId
 		super(
 				attributeMetadataAccess,
 				embeddableDescriptor,
@@ -69,106 +65,25 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 				creationProcess.getCreationContext().getSessionFactory()
 		);
 
-		this.idAttributeMappings = idAttributeMappings;
-		final int propertySpan = bootIdClassDescriptor.getPropertySpan();
-		isBootIdPropertyManyToOne = new boolean[propertySpan];
-		for ( int i = 0; i < propertySpan; i++ ) {
-			isBootIdPropertyManyToOne[i] = bootIdClassDescriptor.getProperty( i ).getValue() instanceof ManyToOne;
-		}
-		mappedIdComponentType = (ComponentType) bootIdClassDescriptor.getType();
-		virtualComponentType = (ComponentType) bootCidDescriptor.getType();
+		this.mappedIdEmbeddableType = mappedIdEmbeddableType;
 	}
 
 	@Override
-	public int getAttributeCount() {
-		return idAttributeMappings.size();
+	public boolean hasContainingClass() {
+		return mappedIdEmbeddableType != getEmbeddableTypeDescriptor();
 	}
 
 	@Override
-	public List<SingularAttributeMapping> getAttributes() {
-		return idAttributeMappings;
+	public EmbeddableMappingType getMappedIdEmbeddableTypeDescriptor() {
+		return mappedIdEmbeddableType;
 	}
-
-	@Override
-	public Object getIdentifier(Object entity, SharedSessionContractImplementor session) {
-		if ( hasContainingClass() ) {
-			final Serializable disassemble = virtualComponentType.disassemble( entity, session, null );
-			return mappedIdComponentType.assemble( disassemble, session, null );
-		}
-		else {
-			return entity;
-		}
-	}
-
-	@Override
-	public Object getIdentifier(Object entity, SessionFactoryImplementor sessionFactory){
-		if ( hasContainingClass() ) {
-			final Object id = mappedIdComponentType.instantiate();
-			final Object[] propertyValues = virtualComponentType.getPropertyValues( entity );
-			final Type[] subTypes = virtualComponentType.getSubtypes();
-			final Type[] copierSubTypes = mappedIdComponentType.getSubtypes();
-			final int length = subTypes.length;
-			for ( int i = 0; i < length; i++ ) {
-				//JPA 2 @MapsId + @IdClass points to the pk of the entity
-				if ( subTypes[i].isAssociationType() && !copierSubTypes[i].isAssociationType()  ) {
-					propertyValues[i] = determineEntityId( propertyValues[i], sessionFactory );
-				}
-			}
-			mappedIdComponentType.setPropertyValues( id, propertyValues );
-			return id;
-		}
-		else {
-			return entity;
-		}
-	}
-
-	private static Object determineEntityId(Object entity, SessionFactoryImplementor sessionFactory) {
-		if ( entity == null ) {
-			return null;
-		}
-
-		if ( HibernateProxy.class.isInstance( entity ) ) {
-			// entity is a proxy, so we know it is not transient; just return ID from proxy
-			return ( (HibernateProxy) entity ).getHibernateLazyInitializer().getInternalIdentifier();
-		}
-
-		final EntityPersister persister = resolveEntityPersister(
-				entity,
-				sessionFactory
-		);
-
-		return persister.getIdentifier( entity, sessionFactory );
-	}
-
-	private static EntityPersister resolveEntityPersister(Object entity, SessionFactoryImplementor sessionFactory) {
-		assert sessionFactory != null;
-
-		String entityName = null;
-		final MetamodelImplementor metamodel = sessionFactory.getMetamodel();
-		for ( EntityNameResolver entityNameResolver : metamodel.getEntityNameResolvers() ) {
-			entityName = entityNameResolver.resolveEntityName( entity );
-			if ( entityName != null ) {
-				break;
-			}
-		}
-		if ( entityName == null ) {
-			// old fall-back
-			entityName = entity.getClass().getName();
-		}
-
-		return metamodel.findEntityDescriptor( entityName );
-	}
-
-
 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		if ( !getEmbeddableTypeDescriptor().getMappedJavaTypeDescriptor()
-				.getJavaTypeClass()
-				.isAssignableFrom( value.getClass() ) ) {
-			final Object[] result = new Object[idAttributeMappings.size()];
-			for ( int i = 0; i < idAttributeMappings.size(); i++ ) {
-				final AttributeMapping attributeMapping = idAttributeMappings.get( i );
+		if ( hasContainingClass() ) {
+			final Object[] result = new Object[mappedIdEmbeddableType.getAttributeMappings().size()];
+			for ( int i = 0; i < mappedIdEmbeddableType.getAttributeMappings().size(); i++ ) {
+				final AttributeMapping attributeMapping = mappedIdEmbeddableType.getAttributeMappings().get( i );
 				Object o = attributeMapping.getPropertyAccess().getGetter().get( value );
 				result[i] = attributeMapping.disassemble( o, session );
 			}
@@ -180,44 +95,175 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 	}
 
 	@Override
-	public void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session) {
-		if ( !getEmbeddableTypeDescriptor().getMappedJavaTypeDescriptor().getJavaTypeClass().isAssignableFrom( id.getClass()) ) {
-			idAttributeMappings.get( 0 ).getPropertyAccess().getSetter().set( entity, id, session.getFactory() );
+	public int forEachJdbcValue(
+			Object value,
+			Clause clause,
+			int offset,
+			JdbcValuesConsumer valuesConsumer,
+			SharedSessionContractImplementor session) {
+		if ( hasContainingClass() ) {
+			int span = 0;
+			for ( int i = 0; i < mappedIdEmbeddableType.getAttributeMappings().size(); i++ ) {
+				final AttributeMapping attributeMapping = mappedIdEmbeddableType.getAttributeMappings().get( i );
+				final Object o = attributeMapping.getPropertyAccess().getGetter().get( value );
+				if ( attributeMapping instanceof ToOneAttributeMapping ) {
+					final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attributeMapping;
+					final ForeignKeyDescriptor fkDescriptor = toOneAttributeMapping.getForeignKeyDescriptor();
+					final Object identifier = fkDescriptor.getAssociationKeyFromSide(
+							o,
+							toOneAttributeMapping.getSideNature().inverse(),
+							session
+					);
+					span += fkDescriptor.forEachJdbcValue(
+							identifier,
+							clause,
+							span + offset,
+							valuesConsumer,
+							session
+					);
+				}
+				else {
+					span += attributeMapping.forEachJdbcValue( o, clause, span + offset, valuesConsumer, session );
+				}
+			}
+			return span;
+		}
+		return super.forEachJdbcValue( value, clause, offset, valuesConsumer, session );
+	}
+
+	@Override
+	public SqlTuple toSqlExpression(
+			TableGroup tableGroup,
+			Clause clause,
+			SqmToSqlAstConverter walker,
+			SqlAstCreationState sqlAstCreationState) {
+		if ( hasContainingClass() ) {
+			final SelectableMappings selectableMappings = getEmbeddableTypeDescriptor();
+			final List<ColumnReference> columnReferences = CollectionHelper.arrayList( selectableMappings.getJdbcTypeCount() );
+			final NavigablePath navigablePath = tableGroup.getNavigablePath()
+					.append( getNavigableRole().getNavigableName() );
+			final TableReference defaultTableReference = tableGroup.resolveTableReference(
+					navigablePath,
+					getContainingTableExpression()
+			);
+			int offset = 0;
+			for ( AttributeMapping attributeMapping : mappedIdEmbeddableType.getAttributeMappings() ) {
+				offset += attributeMapping.forEachSelectable(
+						offset,
+						(columnIndex, selection) -> {
+							final TableReference tableReference = selection.getContainingTableExpression().equals(
+									defaultTableReference.getTableExpression() )
+									? defaultTableReference
+									: tableGroup.resolveTableReference(
+									navigablePath,
+									selection.getContainingTableExpression()
+							);
+							final Expression columnReference = sqlAstCreationState.getSqlExpressionResolver()
+									.resolveSqlExpression(
+											SqlExpressionResolver.createColumnReferenceKey(
+													tableReference,
+													selection.getSelectionExpression()
+											),
+											sqlAstProcessingState -> new ColumnReference(
+													tableReference.getIdentificationVariable(),
+													selection,
+													sqlAstCreationState.getCreationContext().getSessionFactory()
+											)
+									);
+
+							columnReferences.add( (ColumnReference) columnReference );
+						}
+				);
+			}
+
+			return new SqlTuple( columnReferences, this );
+		}
+		return super.toSqlExpression( tableGroup, clause, walker, sqlAstCreationState );
+	}
+
+	@Override
+	public Object getIdentifier(Object entity, SharedSessionContractImplementor session) {
+		if ( hasContainingClass() ) {
+			final Object id = mappedIdEmbeddableType.getRepresentationStrategy().getInstantiator().instantiate(
+					null,
+					sessionFactory
+			);
+			final List<AttributeMapping> attributeMappings = getEmbeddableTypeDescriptor().getAttributeMappings();
+			final List<AttributeMapping> idClassAttributeMappings = mappedIdEmbeddableType.getAttributeMappings();
+			final Object[] propertyValues = new Object[attributeMappings.size()];
+			for ( int i = 0; i < propertyValues.length; i++ ) {
+				final AttributeMapping attributeMapping = attributeMappings.get( i );
+				final Object o = attributeMapping.getPropertyAccess().getGetter().get( entity );
+				if ( o == null ) {
+					final AttributeMapping idClassAttributeMapping = idClassAttributeMappings.get( i );
+					if ( idClassAttributeMapping.getPropertyAccess().getGetter().getReturnTypeClass().isPrimitive() ) {
+						propertyValues[i] = idClassAttributeMapping.getExpressableJavaTypeDescriptor().getDefaultValue();
+					}
+					else {
+						propertyValues[i] = null;
+					}
+				}
+				//JPA 2 @MapsId + @IdClass points to the pk of the entity
+				else if ( attributeMapping instanceof ToOneAttributeMapping
+						&& !( idClassAttributeMappings.get( i ) instanceof ToOneAttributeMapping ) ) {
+					final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attributeMapping;
+					final ModelPart targetPart = toOneAttributeMapping.getForeignKeyDescriptor().getPart(
+							toOneAttributeMapping.getSideNature().inverse()
+					);
+					if ( targetPart instanceof EntityIdentifierMapping ) {
+						propertyValues[i] = ( (EntityIdentifierMapping) targetPart ).getIdentifier( o, session );
+					}
+					else {
+						propertyValues[i] = o;
+						assert false;
+					}
+				}
+				else {
+					propertyValues[i] = o;
+				}
+			}
+			mappedIdEmbeddableType.setPropertyValues( id, propertyValues );
+			return id;
 		}
 		else {
-			final SessionFactoryImplementor factory = session.getFactory();
-			final Object[] propertyValues = mappedIdComponentType.getPropertyValues( id, session );
-			forEachAttribute(
-					(position, attribute) -> {
-						Object propertyValue = propertyValues[position];
-						if ( attribute instanceof ToOneAttributeMapping && !isBootIdPropertyManyToOne[position] ) {
-							final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attribute;
-							final EntityPersister entityPersister = toOneAttributeMapping.getEntityMappingType()
-									.getEntityPersister();
-							final EntityKey entityKey = session.generateEntityKey(
-									propertyValue,
-									entityPersister
-							);
-							final PersistenceContext persistenceContext = session.getPersistenceContext();
-							// it is conceivable there is a proxy, so check that first
-							propertyValue = persistenceContext.getProxy( entityKey );
-							if ( propertyValue == null ) {
-								// otherwise look for an initialized version
-								propertyValue = persistenceContext.getEntity( entityKey );
-								if ( propertyValue == null ) {
-									// get the association out of the entity itself
-									propertyValue = factory.getMetamodel()
-											.findEntityDescriptor( entity.getClass() )
-											.getPropertyValue( entity, toOneAttributeMapping.getAttributeName() );
-								}
+			return entity;
+		}
+	}
+
+	@Override
+	public void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session) {
+		final List<AttributeMapping> mappedIdAttributeMappings = mappedIdEmbeddableType.getAttributeMappings();
+		final Object[] propertyValues = new Object[mappedIdAttributeMappings.size()];
+		final SessionFactoryImplementor factory = session.getFactory();
+		getEmbeddableTypeDescriptor().forEachAttributeMapping(
+				(position, attribute) -> {
+					final AttributeMapping mappedIdAttributeMapping = mappedIdAttributeMappings.get( position );
+					final Object o = mappedIdAttributeMapping.getPropertyAccess().getGetter().get( id );
+					if ( attribute instanceof ToOneAttributeMapping && !( mappedIdAttributeMapping instanceof ToOneAttributeMapping ) ) {
+						final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attribute;
+						final EntityPersister entityPersister = toOneAttributeMapping.getEntityMappingType()
+								.getEntityPersister();
+						final EntityKey entityKey = session.generateEntityKey( o, entityPersister );
+						final PersistenceContext persistenceContext = session.getPersistenceContext();
+						// it is conceivable there is a proxy, so check that first
+						propertyValues[position] = persistenceContext.getProxy( entityKey );
+						if ( propertyValues[position] == null ) {
+							// otherwise look for an initialized version
+							propertyValues[position] = persistenceContext.getEntity( entityKey );
+							if ( propertyValues[position] == null ) {
+								// get the association out of the entity itself
+								propertyValues[position] = factory.getMetamodel()
+										.findEntityDescriptor( entity.getClass() )
+										.getPropertyValue( entity, toOneAttributeMapping.getAttributeName() );
 							}
 						}
-						attribute.getPropertyAccess()
-								.getSetter()
-								.set( entity, propertyValue, factory );
 					}
-			);
-		}
+					else {
+						propertyValues[position] = o;
+					}
+				}
+		);
+		getEmbeddableTypeDescriptor().setPropertyValues( entity, propertyValues );
 	}
 
 	@Override
@@ -225,10 +271,10 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 		assert domainValue instanceof Object[];
 
 		final Object[] values = (Object[]) domainValue;
-		assert values.length == idAttributeMappings.size();
+		assert values.length == mappedIdEmbeddableType.getAttributeMappings().size();
 
-		for ( int i = 0; i < idAttributeMappings.size(); i++ ) {
-			final SingularAttributeMapping attribute = idAttributeMappings.get( i );
+		for ( int i = 0; i < mappedIdEmbeddableType.getAttributeMappings().size(); i++ ) {
+			final AttributeMapping attribute = mappedIdEmbeddableType.getAttributeMappings().get( i );
 			attribute.breakDownJdbcValues( values[ i ], valueConsumer, session );
 		}
 	}
@@ -238,8 +284,8 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
-		for ( int i = 0; i < idAttributeMappings.size(); i++ ) {
-			idAttributeMappings.get( i ).applySqlSelections( navigablePath, tableGroup, creationState );
+		for ( int i = 0; i < mappedIdEmbeddableType.getAttributeMappings().size(); i++ ) {
+			mappedIdEmbeddableType.getAttributeMappings().get( i ).applySqlSelections( navigablePath, tableGroup, creationState );
 		}
 	}
 
@@ -249,8 +295,8 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 			TableGroup tableGroup,
 			DomainResultCreationState creationState,
 			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
-		for ( int i = 0; i < idAttributeMappings.size(); i++ ) {
-			idAttributeMappings.get( i ).applySqlSelections(
+		for ( int i = 0; i < mappedIdEmbeddableType.getAttributeMappings().size(); i++ ) {
+			mappedIdEmbeddableType.getAttributeMappings().get( i ).applySqlSelections(
 					navigablePath,
 					tableGroup,
 					creationState,
@@ -274,11 +320,6 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 
 	@Override
 	public int getNumberOfFetchables() {
-		return idAttributeMappings.size();
-	}
-
-	@Override
-	public boolean hasContainingClass() {
-		return mappedIdComponentType != virtualComponentType;
+		return mappedIdEmbeddableType.getNumberOfFetchables();
 	}
 }

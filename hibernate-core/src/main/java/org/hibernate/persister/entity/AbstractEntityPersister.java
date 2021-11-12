@@ -5027,19 +5027,13 @@ public abstract class AbstractEntityPersister
 		return getPropertyValue( baseValue, baseValueType, propertyName, nextDotIndex );
 	}
 
-	@Override
 	public Object getIdentifier(Object object) {
-		return getIdentifier( object, getFactory() );
+		return getIdentifier( object, null );
 	}
 
 	@Override
 	public Object getIdentifier(Object entity, SharedSessionContractImplementor session) {
 		return identifierMapping.getIdentifier( entity, session );
-	}
-
-	@Override
-	public Object getIdentifier(Object entity, SessionFactoryImplementor sessionFactory){
-		return identifierMapping.getIdentifier( entity, sessionFactory );
 	}
 
 	@Override

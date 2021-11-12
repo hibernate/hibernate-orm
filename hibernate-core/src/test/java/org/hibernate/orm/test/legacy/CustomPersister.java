@@ -203,17 +203,7 @@ public class CustomPersister implements EntityPersister {
 	}
 
 	@Override
-	public Serializable getIdentifier(Object object) throws HibernateException {
-		return ( (Custom) object ).id;
-	}
-
-	@Override
 	public Serializable getIdentifier(Object entity, SharedSessionContractImplementor session) {
-		return ( (Custom) entity ).id;
-	}
-
-	@Override
-	public Object getIdentifier(Object entity, SessionFactoryImplementor sessionFactoryImplementor) {
 		return ( (Custom) entity ).id;
 	}
 

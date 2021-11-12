@@ -9,20 +9,18 @@ package org.hibernate.orm.test.jpa.ql;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.Session;
 import org.hibernate.query.Query;
 import org.hibernate.query.SemanticException;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.transaction.TransactionUtil2;
-import org.hibernate.test.jpa.AbstractJPATest;
-import org.hibernate.test.jpa.Item;
-import org.junit.Test;
+import org.hibernate.orm.test.jpa.model.AbstractJPATest;
+import org.hibernate.orm.test.jpa.model.Item;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import static org.hibernate.testing.orm.junit.ExtraAssertions.assertTyping;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Tests for various JPAQL compliance issues
@@ -30,61 +28,72 @@ import static org.junit.Assert.fail;
  * @author Steve Ebersole
  */
 public class JPAQLComplianceTest extends AbstractJPATest {
+
 	@Test
 	public void testAliasNameSameAsUnqualifiedEntityName() {
-		Session s = openSession();
-		s.beginTransaction();
-		s.createQuery( "select item from Item item" ).list();
-		s.createQuery( "select item from Item item where item.name = 'a'" ).list();
-		s.getTransaction().commit();
-		s.close();
+		inTransaction(
+				session -> {
+					session.createQuery( "select item from Item item" ).list();
+					session.createQuery( "select item from Item item where item.name = 'a'" ).list();
+
+				}
+		);
 	}
 
 	@Test
 	public void testIdentifierCaseSensitive() {
-		Session s = openSession( );
 		// a control test (a user reported that the JPA 'case insensitivity' support
 		// caused problems with the "discriminator resolution" code; unable to reproduce)...
-		s.createQuery( "select E from MyEntity e where other.class = MySubclassEntity" );
-		s.createQuery( "select e from MyEntity e where e.other.class = MySubclassEntity" );
-		s.createQuery( "select e from MyEntity E where e.class = MySubclassEntity" );
+		inSession(
+				session -> {
+					session.createQuery( "select E from MyEntity e where other.class = MySubclassEntity" );
+					session.createQuery( "select e from MyEntity e where e.other.class = MySubclassEntity" );
+					session.createQuery( "select e from MyEntity E where e.class = MySubclassEntity" );
 
-		s.createQuery( "select object(I) from Item i").list();
-		s.close();
+					session.createQuery( "select object(I) from Item i" ).list();
+				}
+		);
 	}
 
 	@Test
 	public void testIdentifierCasesensitivityAndDuplicateFromElements() {
-		Session s = openSession();
-		s.createQuery( "select e from MyEntity e where exists (select 1 from MyEntity e2 where e2.other.name  = 'something' and e2.other.other = e)" );
-		s.close();
+		inSession(
+				session ->
+						session.createQuery(
+								"select e from MyEntity e where exists (select 1 from MyEntity e2 where e2.other.name  = 'something' and e2.other.other = e)" )
+		);
 	}
 
 	@Test
 	public void testGeneratedSubquery() {
-		Session s = openSession();
-		s.createQuery( "select c FROM Item c WHERE c.parts IS EMPTY" ).list();
-		s.close();
+		inSession(
+				session ->
+						session.createQuery( "select c FROM Item c WHERE c.parts IS EMPTY" ).list()
+
+		);
 	}
 
 	@Test
 	public void testOrderByAlias() {
-		Session s = openSession();
-		s.createQuery( "select c.name as myname FROM Item c ORDER BY myname" ).list();
-		s.createQuery( "select p.name as name, p.stockNumber as stockNo, p.unitPrice as uPrice FROM Part p ORDER BY name, abs( p.unitPrice ), stockNo" ).list();
-		s.close();
+		inSession(
+				session -> {
+					session.createQuery( "select c.name as myname FROM Item c ORDER BY myname" ).list();
+					session.createQuery(
+									"select p.name as name, p.stockNumber as stockNo, p.unitPrice as uPrice FROM Part p ORDER BY name, abs( p.unitPrice ), stockNo" )
+							.list();
+				} );
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-12290")
 	public void testParametersMixturePositionalAndNamed() {
-		TransactionUtil2.inTransaction(
-				sessionFactory(),
+		inTransaction(
 				s -> {
 					try {
 						s.createQuery( "select item from Item item where item.id = ?1 and item.name = :name" ).list();
 						fail( "Expecting QuerySyntaxException because of named and positional parameters mixture" );
-					} catch ( IllegalArgumentException e ) {
+					}
+					catch (IllegalArgumentException e) {
 						assertNotNull( e.getCause() );
 						assertTyping( SemanticException.class, e.getCause() );
 					}
@@ -95,8 +104,7 @@ public class JPAQLComplianceTest extends AbstractJPATest {
 	@Test
 	@TestForIssue(jiraKey = "HHH-12290")
 	public void testParametersMixtureNamedAndPositional() {
-		TransactionUtil2.inTransaction(
-				sessionFactory(),
+		inTransaction(
 				s -> {
 					try {
 						s.createQuery( "select item from Item item where item.id = :id and item.name = ?1" ).list();
@@ -113,10 +121,10 @@ public class JPAQLComplianceTest extends AbstractJPATest {
 	@Test
 	@TestForIssue(jiraKey = "HHH-12290")
 	public void testReusedNamedCollectionParam() {
-		TransactionUtil2.inTransaction(
-				sessionFactory(),
+		inTransaction(
 				session -> {
-					Query q = session.createQuery( "select e from MyEntity e where e.surname in (:values) or e.name in (:values)" );
+					Query q = session.createQuery(
+							"select e from MyEntity e where e.surname in (:values) or e.name in (:values)" );
 					List<String> params = new ArrayList<>();
 					params.add( "name" );
 					params.add( "other" );
@@ -129,8 +137,7 @@ public class JPAQLComplianceTest extends AbstractJPATest {
 	@Test
 	@TestForIssue(jiraKey = "HHH-12290")
 	public void testReusedPositionalCollectionParam() {
-		TransactionUtil2.inTransaction(
-				sessionFactory(),
+		inTransaction(
 				session -> {
 					Query q = session.createQuery( "select e from MyEntity e where e.name in (?1) or e.surname in (?1)" );
 					List<String> params = new ArrayList<>();
@@ -149,11 +156,11 @@ public class JPAQLComplianceTest extends AbstractJPATest {
 	@Test
 	@TestForIssue(jiraKey = "HHH-12290")
 	public void testParametersMixtureNamedCollectionAndPositional() {
-		TransactionUtil2.inTransaction(
-				sessionFactory(),
+		inTransaction(
 				s -> {
 					try {
-						Query q = s.createQuery( "select item from Item item where item.id in (?1) and item.name = :name" );
+						Query q = s.createQuery(
+								"select item from Item item where item.id in (?1) and item.name = :name" );
 						List<Long> params = new ArrayList<>();
 						params.add( 0L );
 						params.add( 1L );
@@ -178,16 +185,14 @@ public class JPAQLComplianceTest extends AbstractJPATest {
 		final Item item2 = new Item( "Computer" );
 		item2.setId( 2L );
 
-		TransactionUtil2.inTransaction(
-				sessionFactory(),
+		inTransaction(
 				s -> {
 					s.save( item );
 					s.save( item2 );
 				}
 		);
 
-		TransactionUtil2.inTransaction(
-				sessionFactory(),
+		inTransaction(
 				s -> {
 					Query q = s.createQuery(
 							"select item from Item item where item.id in(?1) and item.name in (?2) and item.id in(?1)" );
@@ -208,8 +213,7 @@ public class JPAQLComplianceTest extends AbstractJPATest {
 				}
 		);
 
-		TransactionUtil2.inTransaction(
-				sessionFactory(),
+		inTransaction(
 				s -> s.createQuery( "select i from Item i" ).list().forEach( result -> s.delete( result ) )
 		);
 

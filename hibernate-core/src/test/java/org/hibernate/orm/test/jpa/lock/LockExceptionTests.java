@@ -7,47 +7,49 @@
 package org.hibernate.orm.test.jpa.lock;
 
 import java.util.Collections;
+
+import org.hibernate.LockOptions;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.orm.test.jpa.model.AbstractJPATest;
+import org.hibernate.orm.test.jpa.model.Item;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.jdbc.SQLServerSnapshotIsolationConnectionProvider;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.transaction.TransactionUtil2;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Test;
+
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.LockTimeoutException;
 import jakarta.persistence.PessimisticLockException;
 
-import org.hibernate.LockOptions;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
-
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.jdbc.SQLServerSnapshotIsolationConnectionProvider;
-import org.hibernate.testing.transaction.TransactionUtil2;
-import org.hibernate.test.jpa.AbstractJPATest;
-import org.hibernate.test.jpa.Item;
-import org.junit.Test;
-
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Steve Ebersole
  */
-@RequiresDialectFeature(DialectChecks.SupportNoWait.class)
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportNoWait.class)
 public class LockExceptionTests extends AbstractJPATest {
 
 	private SQLServerSnapshotIsolationConnectionProvider connectionProvider = new SQLServerSnapshotIsolationConnectionProvider();
 
 	@Override
-	public void configure(Configuration cfg) {
-		super.configure( cfg );
-		if( SQLServerDialect.class.isAssignableFrom( DIALECT.getClass() )) {
-			connectionProvider.setConnectionProvider( (ConnectionProvider) cfg.getProperties().get( AvailableSettings.CONNECTION_PROVIDER ) );
-			cfg.getProperties().put( AvailableSettings.CONNECTION_PROVIDER, connectionProvider );
+	protected void applySettings(StandardServiceRegistryBuilder builder) {
+		super.applySettings( builder );
+		if ( SQLServerDialect.class.isAssignableFrom( DIALECT.getClass() ) ) {
+			connectionProvider.setConnectionProvider( (ConnectionProvider) builder.getSettings()
+					.get( AvailableSettings.CONNECTION_PROVIDER ) );
+			builder.applySetting( AvailableSettings.CONNECTION_PROVIDER, connectionProvider );
 		}
 	}
 
-	@Override
-	protected void releaseSessionFactory() {
-		super.releaseSessionFactory();
+	@AfterAll
+	protected void tearDown() {
 		connectionProvider.stop();
 	}
 
@@ -84,9 +86,6 @@ public class LockExceptionTests extends AbstractJPATest {
 						);
 					}
 			);
-		}
-		catch (Exception e) {
-			log.error( "Exception thrown", e );
 		}
 		finally {
 			inTransaction(

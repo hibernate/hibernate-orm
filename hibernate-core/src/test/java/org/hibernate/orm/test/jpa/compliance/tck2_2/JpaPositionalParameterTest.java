@@ -6,13 +6,12 @@
  */
 package org.hibernate.orm.test.jpa.compliance.tck2_2;
 
-import jakarta.persistence.Parameter;
-
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.transaction.TransactionUtil2;
-import org.hibernate.test.jpa.AbstractJPATest;
-import org.junit.Test;
+import org.hibernate.orm.test.jpa.model.AbstractJPATest;
+import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.Parameter;
 
 import static org.hamcrest.CoreMatchers.either;
 import static org.hamcrest.CoreMatchers.is;
@@ -23,15 +22,15 @@ import static org.hamcrest.MatcherAssert.assertThat;
  * @author Steve Ebersole
  */
 public class JpaPositionalParameterTest extends AbstractJPATest {
+
 	@Test
 	public void testPositionalParameters() {
-		TransactionUtil2.inTransaction(
-				sessionFactory(),
+		inTransaction(
 				session -> {
 					Query query = session.createQuery( "select i from Item i where name = ?1 or name = ?2" );
 					for ( Parameter<?> parameter : query.getParameters() ) {
 						assertThat( parameter.getPosition(), notNullValue() );
-						assertThat( parameter.getPosition(), either( is(1) ).or( is(2) ) );
+						assertThat( parameter.getPosition(), either( is( 1 ) ).or( is( 2 ) ) );
 					}
 				}
 		);

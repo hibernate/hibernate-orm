@@ -21,6 +21,8 @@ import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.query.FetchClauseType;
 
+import org.hibernate.testing.DialectCheck;
+
 /**
  * Container class for different implementation of the {@link DialectFeatureCheck} interface.
  *
@@ -348,6 +350,12 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsOrderByInSubquery implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect.supportsOrderByInSubquery();
+		}
+	}
+
+	public static class SupportNoWait implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.supportsNoWait();
 		}
 	}
 

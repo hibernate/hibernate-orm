@@ -6,21 +6,20 @@
  */
 package org.hibernate.test.jpa.naturalid;
 
+import org.hibernate.Transaction;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.Environment;
+
+import org.hibernate.orm.test.jpa.model.AbstractJPATest;
+import org.junit.jupiter.api.Test;
+
 import jakarta.persistence.PersistenceException;
 
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.fail;
 
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
-import org.hibernate.test.jpa.AbstractJPATest;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 /**
  * copied from {@link org.hibernate.orm.test.mapping.naturalid.immutable.ImmutableNaturalIdTest}
@@ -29,110 +28,111 @@ import static org.junit.Assert.fail;
  */
 public class ImmutableNaturalIdTest extends AbstractJPATest {
 	@Override
-	public String[] getMappings() {
-		return new String[] { "jpa/naturalid/User.hbm.xml" };
+	protected String[] getOrmXmlFiles() {
+		return new String[] { "org/hibernate/test/jpa/naturalid/User.hbm.xml" };
 	}
 
 	@Override
-	public void configure(Configuration cfg) {
-		super.configure( cfg );
-		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, "true" );
-		cfg.setProperty( Environment.USE_QUERY_CACHE, "true" );
-		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
+	protected void applySettings(StandardServiceRegistryBuilder builder) {
+		super.applySettings( builder );
+		builder.applySetting( Environment.USE_SECOND_LEVEL_CACHE, "true" );
+		builder.applySetting( Environment.USE_QUERY_CACHE, "true" );
+		builder.applySetting( Environment.GENERATE_STATISTICS, "true" );
 	}
 
 	@Test
 	public void testUpdate() {
 		// prepare some test data...
-		Session session = openSession();
-    	session.beginTransaction();
-	  	User user = new User();
-    	user.setUserName( "steve" );
-    	user.setEmail( "steve@hibernate.org" );
-    	user.setPassword( "brewhaha" );
-		session.save( user );
-    	session.getTransaction().commit();
-    	session.close();
+		User user = new User();
+		inTransaction(
+				session -> {
+					user.setUserName( "steve" );
+					user.setEmail( "steve@hibernate.org" );
+					user.setPassword( "brewhaha" );
+					session.save( user );
+				}
+		);
 
 		// 'user' is now a detached entity, so lets change a property and reattch...
 		user.setPassword( "homebrew" );
-		session = openSession();
-		session.beginTransaction();
-		session.update( user );
-		session.getTransaction().commit();
-		session.close();
+		inTransaction(
+				session ->
+						session.update( user )
+		);
 
 		// clean up
-		session = openSession();
-		session.beginTransaction();
-		session.delete( user );
-		session.getTransaction().commit();
-		session.close();
+		inTransaction(
+				session ->
+						session.delete( user )
+		);
 	}
 
 	@Test
 	public void testNaturalIdCheck() throws Exception {
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
+		sessionFactoryScope().inSession(
+				session -> {
+					Transaction t = session.beginTransaction();
 
-		User u = new User( "steve", "superSecret" );
-		s.persist( u );
-		u.setUserName( "Steve" );
-		try {
-			s.flush();
-			fail();
-		}
-		catch ( PersistenceException p ) {
-			//expected
-			t.rollback();
-		}
-		u.setUserName( "steve" );
-		s.delete( u );
-		s.close();
+					User u = new User( "steve", "superSecret" );
+					session.persist( u );
+					u.setUserName( "Steve" );
+					try {
+						session.flush();
+						fail( "PersistenceException expected" );
+					}
+					catch (PersistenceException p) {
+						//expected
+						t.rollback();
+					}
+					u.setUserName( "steve" );
+					session.delete( u );
+					session.close();
+				}
+		);
+
 	}
 
 	@Test
 	public void testSimpleNaturalIdLoadAccessCache() {
-		Session s = openSession();
-		s.beginTransaction();
-		User u = new User( "steve", "superSecret" );
-		s.persist( u );
-		s.getTransaction().commit();
-		s.close();
+		inTransaction(
+				session -> {
+					User u = new User( "steve", "superSecret" );
+					session.persist( u );
+				}
+		);
 
-		s = openSession();
-		s.beginTransaction();
-		u = (User) s.bySimpleNaturalId( User.class ).load( "steve" );
-		assertNotNull( u );
-		User u2 = (User) s.bySimpleNaturalId( User.class ).getReference( "steve" );
-		assertTrue( u == u2 );
-		s.getTransaction().commit();
-		s.close();
+		inTransaction(
+				session -> {
+					User u = session.bySimpleNaturalId( User.class ).load( "steve" );
+					assertNotNull( u );
+					User u2 = session.bySimpleNaturalId( User.class ).getReference( "steve" );
+					assertSame( u2, u );
+				}
+		);
 
-		s = openSession();
-		s.beginTransaction();
-		s.createQuery( "delete User" ).executeUpdate();
-		s.getTransaction().commit();
-		s.close();
+		inTransaction(
+				session ->
+						session.createQuery( "delete User" ).executeUpdate()
+		);
 	}
 
 	@Test
 	public void testNaturalIdLoadAccessCache() {
-		Session s = openSession();
-		s.beginTransaction();
-		User u = new User( "steve", "superSecret" );
-		s.persist( u );
-		s.getTransaction().commit();
-		s.close();
+		inTransaction(
+				session -> {
+					User u = new User( "steve", "superSecret" );
+					session.persist( u );
+				}
+		);
 
 		sessionFactory().getStatistics().clear();
 
-		s = openSession();
-		s.beginTransaction();
-		u = (User) s.byNaturalId( User.class ).using( "userName", "steve" ).load();
-		assertNotNull( u );
-		s.getTransaction().commit();
-		s.close();
+		inTransaction(
+				session -> {
+					User u = (User) session.byNaturalId( User.class ).using( "userName", "steve" ).load();
+					assertNotNull( u );
+				}
+		);
 
 		assertEquals( 1, sessionFactory().getStatistics().getEntityLoadCount() );
 		assertEquals( 0, sessionFactory().getStatistics().getSecondLevelCacheMissCount() );
@@ -142,36 +142,40 @@ public class ImmutableNaturalIdTest extends AbstractJPATest {
 		assertEquals( 0, sessionFactory().getStatistics().getNaturalIdCacheHitCount() );
 		assertEquals( 0, sessionFactory().getStatistics().getNaturalIdCachePutCount() );
 
-		s = openSession();
-		s.beginTransaction();
-		User v = new User( "gavin", "supsup" );
-		s.persist( v );
-		s.getTransaction().commit();
-		s.close();
+		inTransaction(
+				session -> {
+					User v = new User( "gavin", "supsup" );
+					session.persist( v );
+				}
+		);
 
 		sessionFactory().getStatistics().clear();
 
-		s = openSession();
-		s.beginTransaction();
-		u = (User) s.byNaturalId( User.class ).using( "userName", "steve" ).load();
-		assertNotNull( u );
-		assertEquals( 1, sessionFactory().getStatistics().getEntityLoadCount() );
-		assertEquals( 1, sessionFactory().getStatistics().getNaturalIdQueryExecutionCount() );//0: incorrect stats since hbm.xml can't enable NaturalId caching
-		assertEquals( 0, sessionFactory().getStatistics().getNaturalIdCacheHitCount() );
-		u = (User) s.byNaturalId( User.class ).using( "userName", "steve" ).load();
-		assertNotNull( u );
-		assertEquals( 1, sessionFactory().getStatistics().getEntityLoadCount() );
-		assertEquals( 1, sessionFactory().getStatistics().getNaturalIdQueryExecutionCount() );//0: incorrect stats since hbm.xml can't enable NaturalId caching
-		assertEquals( 0, sessionFactory().getStatistics().getNaturalIdCacheHitCount() );
-		s.getTransaction().commit();
-		s.close();
+		inTransaction(
+				session -> {
+					User u = session.byNaturalId( User.class ).using( "userName", "steve" ).load();
+					assertNotNull( u );
+					assertEquals( 1, sessionFactory().getStatistics().getEntityLoadCount() );
+					assertEquals(
+							1,
+							sessionFactory().getStatistics().getNaturalIdQueryExecutionCount()
+					);//0: incorrect stats since hbm.xml can't enable NaturalId caching
+					assertEquals( 0, sessionFactory().getStatistics().getNaturalIdCacheHitCount() );
+					u = session.byNaturalId( User.class ).using( "userName", "steve" ).load();
+					assertNotNull( u );
+					assertEquals( 1, sessionFactory().getStatistics().getEntityLoadCount() );
+					assertEquals(
+							1,
+							sessionFactory().getStatistics().getNaturalIdQueryExecutionCount()
+					);//0: incorrect stats since hbm.xml can't enable NaturalId caching
+					assertEquals( 0, sessionFactory().getStatistics().getNaturalIdCacheHitCount() );
 
-		s = openSession();
-		s.beginTransaction();
-		s.createQuery( "delete User" ).executeUpdate();
-		s.getTransaction().commit();
-		s.close();
+				}
+		);
+
+		inTransaction(
+				session ->
+						session.createQuery( "delete User" ).executeUpdate()
+		);
 	}
-
-
 }

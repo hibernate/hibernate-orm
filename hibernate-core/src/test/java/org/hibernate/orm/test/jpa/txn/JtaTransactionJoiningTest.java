@@ -6,32 +6,32 @@
  */
 package org.hibernate.orm.test.jpa.txn;
 
-import org.hibernate.Session;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
+import org.hibernate.orm.test.jpa.model.AbstractJPATest;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
 
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
-import org.hibernate.testing.junit4.ExtraAssertions;
-import org.hibernate.test.jpa.AbstractJPATest;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.ExtraAssertions;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Steve Ebersole
  */
 public class JtaTransactionJoiningTest extends AbstractJPATest {
+
 	@Override
-	public void configure(Configuration cfg) {
-		super.configure( cfg );
-		TestingJtaBootstrap.prepare( cfg.getProperties() );
-		cfg.setProperty(
+	protected void applySettings(StandardServiceRegistryBuilder builder) {
+		super.applySettings( builder );
+		TestingJtaBootstrap.prepare( builder.getSettings() );
+		builder.applySetting(
 				AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY,
 				JtaTransactionCoordinatorBuilderImpl.class.getName()
 		);
@@ -41,48 +41,47 @@ public class JtaTransactionJoiningTest extends AbstractJPATest {
 	public void testExplicitJoining() throws Exception {
 		assertFalse( JtaStatusHelper.isActive( TestingJtaPlatformImpl.INSTANCE.getTransactionManager() ) );
 
-		SessionImplementor session = (SessionImplementor) sessionFactory().withOptions()
+		try (SessionImplementor session = (SessionImplementor) sessionFactory().withOptions()
 				.autoJoinTransactions( false )
-				.openSession();
+				.openSession()) {
+			ExtraAssertions.assertTyping( JtaTransactionCoordinatorImpl.class, session.getTransactionCoordinator() );
+			JtaTransactionCoordinatorImpl transactionCoordinator = (JtaTransactionCoordinatorImpl) session.getTransactionCoordinator();
 
-		ExtraAssertions.assertTyping( JtaTransactionCoordinatorImpl.class, session.getTransactionCoordinator() );
-		JtaTransactionCoordinatorImpl transactionCoordinator = (JtaTransactionCoordinatorImpl) session.getTransactionCoordinator();
+			assertFalse( transactionCoordinator.isSynchronizationRegistered() );
+			assertFalse( transactionCoordinator.isJtaTransactionCurrentlyActive() );
+			assertFalse( transactionCoordinator.isJoined() );
 
-		assertFalse( transactionCoordinator.isSynchronizationRegistered() );
-		assertFalse( transactionCoordinator.isJtaTransactionCurrentlyActive() );
-		assertFalse( transactionCoordinator.isJoined() );
+			session.getFlushMode();  // causes a call to TransactionCoordinator#pulse
 
-		session.getFlushMode();  // causes a call to TransactionCoordinator#pulse
+			assertFalse( transactionCoordinator.isSynchronizationRegistered() );
+			assertFalse( transactionCoordinator.isJtaTransactionCurrentlyActive() );
+			assertFalse( transactionCoordinator.isJoined() );
 
-		assertFalse( transactionCoordinator.isSynchronizationRegistered() );
-		assertFalse( transactionCoordinator.isJtaTransactionCurrentlyActive() );
-		assertFalse( transactionCoordinator.isJoined() );
+			TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
+			assertTrue( JtaStatusHelper.isActive( TestingJtaPlatformImpl.INSTANCE.getTransactionManager() ) );
+			assertTrue( transactionCoordinator.isJtaTransactionCurrentlyActive() );
+			assertFalse( transactionCoordinator.isJoined() );
+			assertFalse( transactionCoordinator.isSynchronizationRegistered() );
 
-		assertTrue( JtaStatusHelper.isActive( TestingJtaPlatformImpl.INSTANCE.getTransactionManager() ) );
-		assertTrue( transactionCoordinator.isJtaTransactionCurrentlyActive() );
-		assertFalse( transactionCoordinator.isJoined() );
-		assertFalse( transactionCoordinator.isSynchronizationRegistered() );
+			session.getFlushMode();
 
-		session.getFlushMode();
+			assertTrue( JtaStatusHelper.isActive( TestingJtaPlatformImpl.INSTANCE.getTransactionManager() ) );
+			assertTrue( transactionCoordinator.isJtaTransactionCurrentlyActive() );
+			assertFalse( transactionCoordinator.isSynchronizationRegistered() );
+			assertFalse( transactionCoordinator.isJoined() );
 
-		assertTrue( JtaStatusHelper.isActive( TestingJtaPlatformImpl.INSTANCE.getTransactionManager() ) );
-		assertTrue( transactionCoordinator.isJtaTransactionCurrentlyActive() );
-		assertFalse( transactionCoordinator.isSynchronizationRegistered() );
-		assertFalse( transactionCoordinator.isJoined() );
+			transactionCoordinator.explicitJoin();
+			session.getFlushMode();
 
-		transactionCoordinator.explicitJoin();
-		session.getFlushMode();
-
-		assertTrue( JtaStatusHelper.isActive( TestingJtaPlatformImpl.INSTANCE.getTransactionManager() ) );
-		assertTrue( transactionCoordinator.isJtaTransactionCurrentlyActive() );
-		assertTrue( transactionCoordinator.isSynchronizationRegistered() );
-		assertTrue( transactionCoordinator.isJoined() );
-
-		((Session) session).close();
-
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
+			assertTrue( JtaStatusHelper.isActive( TestingJtaPlatformImpl.INSTANCE.getTransactionManager() ) );
+			assertTrue( transactionCoordinator.isJtaTransactionCurrentlyActive() );
+			assertTrue( transactionCoordinator.isSynchronizationRegistered() );
+			assertTrue( transactionCoordinator.isJoined() );
+		}
+		finally {
+			TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
+		}
 	}
 
 	@Test
@@ -92,11 +91,14 @@ public class JtaTransactionJoiningTest extends AbstractJPATest {
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		assertTrue( JtaStatusHelper.isActive( TestingJtaPlatformImpl.INSTANCE.getTransactionManager() ) );
 
-		SessionImplementor session = (SessionImplementor) sessionFactory().withOptions()
+		try (SessionImplementor session = (SessionImplementor) sessionFactory().withOptions()
 				.autoJoinTransactions( false )
-				.openSession();
-
-		session.getFlushMode();
+				.openSession()) {
+			session.getFlushMode();
+		}
+		finally {
+			TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
+		}
 	}
 
 	@Test
@@ -106,17 +108,17 @@ public class JtaTransactionJoiningTest extends AbstractJPATest {
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		assertTrue( JtaStatusHelper.isActive( TestingJtaPlatformImpl.INSTANCE.getTransactionManager() ) );
 
-		SessionImplementor session = (SessionImplementor) sessionFactory().openSession();
-		ExtraAssertions.assertTyping( JtaTransactionCoordinatorImpl.class, session.getTransactionCoordinator() );
-		JtaTransactionCoordinatorImpl transactionCoordinator = (JtaTransactionCoordinatorImpl) session.getTransactionCoordinator();
+		try (SessionImplementor session = (SessionImplementor) sessionFactory().openSession()) {
+			ExtraAssertions.assertTyping( JtaTransactionCoordinatorImpl.class, session.getTransactionCoordinator() );
+			JtaTransactionCoordinatorImpl transactionCoordinator = (JtaTransactionCoordinatorImpl) session.getTransactionCoordinator();
 
-		assertTrue( transactionCoordinator.isSynchronizationRegistered() );
-		assertTrue( transactionCoordinator.isActive() );
-		assertTrue( transactionCoordinator.isJoined() );
-
-		( (Session) session ).close();
-
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
+			assertTrue( transactionCoordinator.isSynchronizationRegistered() );
+			assertTrue( transactionCoordinator.isActive() );
+			assertTrue( transactionCoordinator.isJoined() );
+		}
+		finally {
+			TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
+		}
 	}
 
 }

@@ -8,9 +8,8 @@ package org.hibernate.orm.test.query.hql;
 
 import org.hibernate.Session;
 
-import org.junit.Test;
-
-import org.hibernate.test.jpa.AbstractJPATest;
+import org.hibernate.orm.test.jpa.model.AbstractJPATest;
+import org.junit.jupiter.api.Test;
 
 /**
  * Test use of the JPA 2.1 FUNCTION keyword.
@@ -21,17 +20,17 @@ public class FunctionKeywordTest extends AbstractJPATest {
 
 	@Test
 	public void basicFixture() {
-		Session s = openSession();
-		s.createQuery( "select i from Item i where substring( i.name, 1, 3 ) = 'abc'" )
-				.list();
-		s.close();
+		try (Session session = sessionFactoryScope().getSessionFactory().openSession()) {
+			session.createQuery( "select i from Item i where substring( i.name, 1, 3 ) = 'abc'" )
+					.list();
+		}
 	}
 
 	@Test
 	public void basicTest() {
-		Session s = openSession();
-		s.createQuery( "select i from Item i where function( 'substring', i.name, 1, 3 ) = 'abc'" )
-				.list();
-		s.close();
+		try (Session session = sessionFactoryScope().getSessionFactory().openSession()) {
+			session.createQuery( "select i from Item i where function( 'substring', i.name, 1, 3 ) = 'abc'" )
+					.list();
+		}
 	}
 }

@@ -7,6 +7,13 @@
 package org.hibernate.test.hql.joinedSubclass;
 
 import java.util.List;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
+
 import jakarta.persistence.Basic;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -19,79 +26,51 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
-import org.junit.Test;
-
-import org.hibernate.Session;
-
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
 /**
  * @author Stephen Fikes
  * @author Gail Badner
  */
-public class JoinedSubclassSubQueryTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				JoinedSubclassSubQueryTest.InvestmentCompany.class,
+				JoinedSubclassSubQueryTest.Person.class,
+				JoinedSubclassSubQueryTest.Employee.class
+		}
+)
+@SessionFactory
+public class JoinedSubclassSubQueryTest {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-11182")
-	public void testSubQueryConstraintPropertyInSuperclassTable() {
+	public void testSubQueryConstraintPropertyInSuperclassTable(SessionFactoryScope scope) {
 
-		Session s = openSession();
-		try {
-			s.getTransaction().begin();
-			// employee.firstName is in Person table (not Employee)
-			String queryHQL = "from InvestmentCompany investmentCompany "
-					+ "where exists "
-					+ "(select employee "
-					+ "from investmentCompany.employees as employee "
-					+ "  where employee.firstName = 'Joe')";
-			s.createQuery( queryHQL ).uniqueResult();
-			s.getTransaction().commit();
-		}
-		catch (Exception e) {
-			if ( s.getTransaction() != null && s.getTransaction().isActive() ) {
-				s.getTransaction().rollback();
-			}
-			throw e;
-		}
-		finally {
-			s.close();
-		}
+		scope.inTransaction(
+				session -> {
+					// employee.firstName is in Person table (not Employee)
+					String queryHQL = "from InvestmentCompany investmentCompany "
+							+ "where exists "
+							+ "(select employee "
+							+ "from investmentCompany.employees as employee "
+							+ "  where employee.firstName = 'Joe')";
+					session.createQuery( queryHQL ).uniqueResult();
+				}
+		);
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-11182")
-	public void testSubQueryConstraintPropertyInEntityTable() {
-
-		Session s = openSession();
-		try {
-			s.getTransaction().begin();
-			// employee.employeeNumber is in Employee table
-			String queryHQL = "from InvestmentCompany investmentCompany "
-					+ "where exists "
-					+ "(select employee "
-					+ "from investmentCompany.employees as employee "
-					+ "  where employee.employeeNumber = 666 )";
-			s.createQuery( queryHQL ).uniqueResult();
-		}
-		catch (Exception e) {
-			if ( s.getTransaction() != null && s.getTransaction().isActive() ) {
-				s.getTransaction().rollback();
-			}
-			throw e;
-		}
-		finally {
-			s.close();
-		}
-	}
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				InvestmentCompany.class,
-				Person.class,
-				Employee.class
-		};
+	public void testSubQueryConstraintPropertyInEntityTable(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					// employee.employeeNumber is in Employee table
+					String queryHQL = "from InvestmentCompany investmentCompany "
+							+ "where exists "
+							+ "(select employee "
+							+ "from investmentCompany.employees as employee "
+							+ "  where employee.employeeNumber = 666 )";
+					session.createQuery( queryHQL ).uniqueResult();
+				}
+		);
 	}
 
 	@Entity(name = "InvestmentCompany")

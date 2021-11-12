@@ -13,7 +13,7 @@ import java.sql.Statement;
 
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * This {@link ConnectionProvider} extends any other ConnectionProvider that would be used by default taken the current configuration properties, and it

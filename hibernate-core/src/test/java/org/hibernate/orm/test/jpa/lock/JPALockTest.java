@@ -9,22 +9,23 @@ package org.hibernate.orm.test.jpa.lock;
 import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.orm.test.jpa.model.AbstractJPATest;
+import org.hibernate.orm.test.jpa.model.Item;
+import org.hibernate.orm.test.jpa.model.MyEntity;
 
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.test.jpa.AbstractJPATest;
-import org.hibernate.test.jpa.Item;
-import org.hibernate.test.jpa.MyEntity;
 import org.hibernate.testing.jdbc.SQLServerSnapshotIsolationConnectionProvider;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Tests specifically relating to section 3.3.5.3 [Lock Modes] of the
@@ -32,23 +33,23 @@ import static org.junit.Assert.fail;
  *
  * @author Steve Ebersole
  */
-@RequiresDialectFeature( DialectChecks.DoesReadCommittedNotCauseWritersToBlockReadersCheck.class )
+@RequiresDialectFeature(feature = DialectFeatureChecks.DoesReadCommittedNotCauseWritersToBlockReadersCheck.class)
 public class JPALockTest extends AbstractJPATest {
 
 	private SQLServerSnapshotIsolationConnectionProvider connectionProvider = new SQLServerSnapshotIsolationConnectionProvider();
 
 	@Override
-	public void configure(Configuration cfg) {
-		super.configure( cfg );
-		if( SQLServerDialect.class.isAssignableFrom( DIALECT.getClass() )) {
-			connectionProvider.setConnectionProvider( (ConnectionProvider) cfg.getProperties().get( AvailableSettings.CONNECTION_PROVIDER ) );
-			cfg.getProperties().put( AvailableSettings.CONNECTION_PROVIDER, connectionProvider );
+	protected void applySettings(StandardServiceRegistryBuilder builder) {
+		super.applySettings( builder );
+		if ( SQLServerDialect.class.isAssignableFrom( DIALECT.getClass() ) ) {
+			connectionProvider.setConnectionProvider( (ConnectionProvider) builder.getSettings()
+					.get( AvailableSettings.CONNECTION_PROVIDER ) );
+			builder.applySetting( AvailableSettings.CONNECTION_PROVIDER, connectionProvider );
 		}
 	}
 
-	@Override
-	protected void releaseSessionFactory() {
-		super.releaseSessionFactory();
+	@AfterAll
+	protected void tearDown() {
 		connectionProvider.stop();
 	}
 
@@ -87,42 +88,72 @@ public class JPALockTest extends AbstractJPATest {
 		}
 		final String initialName = "lock test";
 		// set up some test data
-		Session s1 = sessionFactory().openSession();
-		Transaction t1 = s1.beginTransaction();
-		Item item = new Item();
-		item.setName( initialName );
-		s1.save( item );
-		t1.commit();
-		s1.close();
+		Item it = new Item();
+		Long itemId = fromTransaction(
+				session -> {
+					it.setName( initialName );
+					session.save( it );
+					return it.getId();
+				}
+		);
 
-		Long itemId = item.getId();
+		Session s1 = null;
+		Session s2 = null;
+		Item item;
+		try {
+			// do the isolated update
+			s1 = sessionFactory().openSession();
+			s1.beginTransaction();
+			item = s1.get( Item.class, itemId );
+			s1.lock( item, LockMode.UPGRADE );
+			item.setName( "updated" );
+			s1.flush();
 
-		// do the isolated update
-		s1 = sessionFactory().openSession();
-		t1 = s1.beginTransaction();
-		item = (Item) s1.get( Item.class, itemId );
-		s1.lock( item, LockMode.UPGRADE );
-		item.setName( "updated" );
-		s1.flush();
+			s2 = sessionFactory().openSession();
+			Transaction t2 = s2.beginTransaction();
+			Item item2 = s2.get( Item.class, itemId );
+			assertEquals( initialName, item2.getName(), "isolation not maintained" );
 
-		Session s2 = sessionFactory().openSession();
-		Transaction t2 = s2.beginTransaction();
-		Item item2 = (Item) s2.get( Item.class, itemId );
-		assertEquals( "isolation not maintained", initialName, item2.getName() );
+			s1.getTransaction().commit();
+			s1.close();
 
-		t1.commit();
-		s1.close();
+			item2 = s2.get( Item.class, itemId );
+			assertEquals( initialName, item2.getName(), "repeatable read not maintained" );
+			t2.commit();
+			s2.close();
+		}
+		finally {
+			if ( s1 != null ) {
+				try {
+					if ( s1.getTransaction().isActive() ) {
+						s1.getTransaction().rollback();
+					}
+				}
+				finally {
+					if ( s1.isOpen() ) {
+						s1.close();
+					}
+				}
+			}
 
-		item2 = (Item) s2.get( Item.class, itemId );
-		assertEquals( "repeatable read not maintained", initialName, item2.getName() );
-		t2.commit();
-		s2.close();
+			if ( s2 != null ) {
+				try {
+					if ( s2.getTransaction().isActive() ) {
+						s2.getTransaction().rollback();
+					}
+				}
+				finally {
+					if ( s2.isOpen() ) {
+						s2.close();
+					}
+				}
+			}
+		}
 
-		s1 = sessionFactory().openSession();
-		t1 = s1.beginTransaction();
-		s1.delete( item );
-		t1.commit();
-		s1.close();
+		inTransaction(
+				session ->
+						session.delete( item )
+		);
 	}
 
 	/**
@@ -154,77 +185,101 @@ public class JPALockTest extends AbstractJPATest {
 		}
 		final String initialName = "lock test";
 		// set up some test data
-		Session s1 = sessionFactory().openSession();
-		Transaction t1 = s1.beginTransaction();
-		Item item = new Item();
-		item.setName( initialName );
-		s1.save( item );
-		MyEntity myEntity = new MyEntity();
-		myEntity.setName( "Test" );
-		s1.save( myEntity );
-		t1.commit();
-		s1.close();
+		Item it = new Item();
+		MyEntity entity = new MyEntity();
+		inTransaction(
+				session -> {
+					it.setName( initialName );
+					session.save( it );
+					entity.setName( "Test" );
+					session.save( entity );
+				}
+		);
 
-		Long itemId = item.getId();
-		long initialVersion = item.getVersion();
-
-		s1 = sessionFactory().openSession();
-		t1 = s1.beginTransaction();
-		item = (Item) s1.get( Item.class, itemId );
-		s1.lock( item, LockMode.FORCE );
-		assertEquals( "no forced version increment", initialVersion + 1, item.getVersion() );
-
-		myEntity = (MyEntity) s1.get( MyEntity.class, myEntity.getId() );
-		s1.lock( myEntity, LockMode.FORCE );
-		assertTrue( "LockMode.FORCE on a un-versioned entity should degrade nicely to UPGRADE", true );
-
-		s1.lock( item, LockMode.FORCE );
-		assertEquals( "subsequent LockMode.FORCE did not no-op", initialVersion + 1, item.getVersion() );
-
-		Session s2 = sessionFactory().openSession();
-		Transaction t2 = s2.beginTransaction();
-		Item item2 = (Item) s2.get( Item.class, itemId );
-		assertEquals( "isolation not maintained", initialName, item2.getName() );
-
-		item.setName( "updated-1" );
-		s1.flush();
-		// currently an unfortunate side effect...
-		assertEquals( initialVersion + 2, item.getVersion() );
-
-		t1.commit();
-		s1.close();
-
-		item2.setName( "updated" );
+		Long itemId = it.getId();
+		long initialVersion = it.getVersion();
+		Session s1 = null;
+		Session s2 = null;
+		MyEntity myEntity;
+		Item item;
 		try {
-			t2.commit();
-			fail( "optimistic lock should have failed" );
-		}
-		catch (Throwable t) {
-			// expected behavior
+			s1 = sessionFactory().openSession();
+			s1.beginTransaction();
+			item = s1.get( Item.class, itemId );
+			s1.lock( item, LockMode.FORCE );
+			assertEquals( initialVersion + 1, item.getVersion(), "no forced version increment" );
+
+			myEntity = s1.get( MyEntity.class, entity.getId() );
+			s1.lock( myEntity, LockMode.FORCE );
+			assertTrue(  true, "LockMode.FORCE on a un-versioned entity should degrade nicely to UPGRADE" );
+
+			s1.lock( item, LockMode.FORCE );
+			assertEquals( initialVersion + 1, item.getVersion(), "subsequent LockMode.FORCE did not no-op" );
+
+			s2 = sessionFactory().openSession();
+			s2.beginTransaction();
+			Item item2 = s2.get( Item.class, itemId );
+			assertEquals( initialName, item2.getName(), "isolation not maintained" );
+
+			item.setName( "updated-1" );
+			s1.flush();
+			// currently an unfortunate side effect...
+			assertEquals( initialVersion + 2, item.getVersion() );
+
+			s1.getTransaction().commit();
+			s1.close();
+
+			item2.setName( "updated" );
 			try {
-				t2.rollback();
+				s2.getTransaction().commit();
+				fail( "optimistic lock should have failed" );
 			}
-			catch (Throwable ignore) {
-				// ignore
-			}
-			if ( t instanceof AssertionError ) {
-				throw (AssertionError) t;
+			catch (Throwable t) {
+				// expected behavior
+				try {
+					s2.getTransaction().rollback();
+				}
+				catch (Throwable ignore) {
+					// ignore
+				}
+				if ( t instanceof AssertionError ) {
+					throw (AssertionError) t;
+				}
 			}
 		}
 		finally {
-			try {
-				s2.close();
+			if ( s1 != null ) {
+				try {
+					if ( s1.getTransaction().isActive() ) {
+						s1.getTransaction().rollback();
+					}
+				}
+				finally {
+					if ( s1.isOpen() ) {
+						s1.close();
+					}
+				}
 			}
-			catch (Throwable ignore) {
-				// ignore
+
+			if ( s2 != null ) {
+				try {
+					if ( s2.getTransaction().isActive() ) {
+						s2.getTransaction().rollback();
+					}
+				}
+				finally {
+					if ( s2.isOpen() ) {
+						s2.close();
+					}
+				}
 			}
 		}
 
-		s1 = sessionFactory().openSession();
-		t1 = s1.beginTransaction();
-		s1.delete( item );
-		s1.delete( myEntity );
-		t1.commit();
-		s1.close();
+		inTransaction(
+				session -> {
+					session.delete( item );
+					session.delete( myEntity );
+				}
+		);
 	}
 }

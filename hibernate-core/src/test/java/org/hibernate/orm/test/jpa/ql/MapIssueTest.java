@@ -8,9 +8,9 @@ package org.hibernate.orm.test.jpa.ql;
 
 import org.hibernate.dialect.PostgreSQLDialect;
 
-import org.hibernate.test.jpa.MapContent;
-import org.hibernate.test.jpa.MapOwner;
-import org.hibernate.test.jpa.Relationship;
+import org.hibernate.orm.test.jpa.model.MapContent;
+import org.hibernate.orm.test.jpa.model.MapOwner;
+import org.hibernate.orm.test.jpa.model.Relationship;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;

@@ -6,6 +6,9 @@
  */
 package org.hibernate.orm.test.jpa.ql;
 
+import org.hibernate.orm.test.jpa.model.AbstractJPATest;
+import org.junit.jupiter.api.Test;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorType;
@@ -15,11 +18,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.Table;
-
-import org.hibernate.Session;
-
-import org.hibernate.test.jpa.AbstractJPATest;
-import org.junit.Test;
 
 /**
  * Mainly a test for testing compliance with the fact that "identification variables" (aliases) need to
@@ -31,44 +29,52 @@ public class IdentificationVariablesTest extends AbstractJPATest {
 
 	@Test
 	public void testUsageInSelect() {
-		Session s = openSession();
-		s.createQuery( "select I from Item i" ).list();
-		s.close();
+		inSession(
+				session ->
+						session.createQuery( "select I from Item i" ).list()
+		);
 	}
 
 	@Test
 	public void testUsageInPath() {
-		Session s = openSession();
-		s.createQuery( "select I from Item i where I.name = 'widget'" ).list();
-		s.close();
+		inSession(
+				session ->
+						session.createQuery( "select I from Item i where I.name = 'widget'" ).list()
+		);
 	}
 
 	@Test
 	public void testMixedTckUsage() {
-		Session s = openSession();
-		s.createQuery( "Select DISTINCT OBJECT(P) from Product p where P.quantity < 10" ).list();
-		s.close();
+		inSession(
+				session ->
+						session.createQuery( "Select DISTINCT OBJECT(P) from Product p where P.quantity < 10" ).list()
+		);
 	}
 
 	@Test
 	public void testUsageInJpaInCollectionSyntax() {
-		Session s = openSession();
-		s.createQuery( "SELECT DISTINCT object(i) FROM Item I, IN(i.parts) ip where ip.stockNumber = '123'" ).list();
-		s.close();
+		inSession(
+				session ->
+						session.createQuery(
+										"SELECT DISTINCT object(i) FROM Item I, IN(i.parts) ip where ip.stockNumber = '123'" )
+								.list()
+		);
 	}
 
 	@Test
 	public void testUsageInDistinct() {
-		Session s = openSession();
-		s.createQuery( "select distinct(I) from Item i" ).list();
-		s.close();
+		inSession(
+				session ->
+						session.createQuery( "select distinct(I) from Item i" ).list()
+		);
 	}
 
 	@Test
 	public void testUsageInSelectObject() {
-		Session s = openSession();
-		s.createQuery( "select OBJECT(I) from Item i" ).list();
-		s.close();
+		inSession(
+				session ->
+						session.createQuery( "select OBJECT(I) from Item i" ).list()
+		);
 	}
 
 	@Override
@@ -76,11 +82,11 @@ public class IdentificationVariablesTest extends AbstractJPATest {
 		return new Class[] { Product.class };
 	}
 
-	@Entity( name = "Product")
-	@Table( name = "PROD" )
-	@Inheritance( strategy = InheritanceType.SINGLE_TABLE )
-	@DiscriminatorColumn( name = "PRODUCT_TYPE", discriminatorType = DiscriminatorType.STRING )
-	@DiscriminatorValue( "Product" )
+	@Entity(name = "Product")
+	@Table(name = "PROD")
+	@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+	@DiscriminatorColumn(name = "PRODUCT_TYPE", discriminatorType = DiscriminatorType.STRING)
+	@DiscriminatorValue("Product")
 	public static class Product {
 		private String id;
 		private String name;

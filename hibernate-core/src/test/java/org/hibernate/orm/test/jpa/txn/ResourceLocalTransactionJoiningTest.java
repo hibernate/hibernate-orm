@@ -7,39 +7,38 @@
 package org.hibernate.orm.test.jpa.txn;
 
 import org.hibernate.Session;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl;
-import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
-import org.hibernate.testing.junit4.ExtraAssertions;
-import org.hibernate.test.jpa.AbstractJPATest;
+import org.hibernate.testing.orm.junit.ExtraAssertions;
+import org.hibernate.orm.test.jpa.model.AbstractJPATest;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Test;
-
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Steve Ebersole
  */
 public class ResourceLocalTransactionJoiningTest extends AbstractJPATest {
+
 	@Override
-	public void configure(Configuration cfg) {
-		super.configure( cfg );
-		TestingJtaBootstrap.prepare( cfg.getProperties() );
-		cfg.setProperty(
+	protected void applySettings(StandardServiceRegistryBuilder builder) {
+		super.applySettings( builder );
+		TestingJtaBootstrap.prepare( builder.getSettings() );
+		builder.applySetting(
 				AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY,
 				JdbcResourceLocalTransactionCoordinatorBuilderImpl.class.getName()
 		);
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9859" )
+	@TestForIssue(jiraKey = "HHH-9859")
 	public void testExpectations() {
 		// JPA spec is very vague on what should happen here.  It does vaguely
 		// imply that jakarta.persistence.EntityManager.joinTransaction() should only be used
@@ -47,21 +46,24 @@ public class ResourceLocalTransactionJoiningTest extends AbstractJPATest {
 		// And the TCK in fact does test calls to jakarta.persistence.EntityManager.isJoinedToTransaction()
 		// from resource-local EMs, so lets make sure those work..
 
-		Session session = sessionFactory().openSession();
-		JdbcResourceLocalTransactionCoordinatorImpl tc = ExtraAssertions.assertTyping(
-				JdbcResourceLocalTransactionCoordinatorImpl.class,
-				( (SessionImplementor) session ).getTransactionCoordinator()
-		);
-		assertFalse( tc.isJoined() );
+		try (Session session = sessionFactory().openSession()) {
+			JdbcResourceLocalTransactionCoordinatorImpl tc = ExtraAssertions.assertTyping(
+					JdbcResourceLocalTransactionCoordinatorImpl.class,
+					( (SessionImplementor) session ).getTransactionCoordinator()
+			);
+			assertFalse( tc.isJoined() );
 
-		session.beginTransaction();
-		tc = ExtraAssertions.assertTyping(
-				JdbcResourceLocalTransactionCoordinatorImpl.class,
-				( (SessionImplementor) session ).getTransactionCoordinator()
-		);
-		assertTrue( tc.isJoined() );
-
-		session.getTransaction().rollback();
-		session.close();
+			session.beginTransaction();
+			try {
+				tc = ExtraAssertions.assertTyping(
+						JdbcResourceLocalTransactionCoordinatorImpl.class,
+						( (SessionImplementor) session ).getTransactionCoordinator()
+				);
+				assertTrue( tc.isJoined() );
+			}
+			finally {
+				session.getTransaction().rollback();
+			}
+		}
 	}
 }

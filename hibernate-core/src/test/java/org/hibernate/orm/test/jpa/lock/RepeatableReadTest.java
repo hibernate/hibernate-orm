@@ -8,27 +8,27 @@ package org.hibernate.orm.test.jpa.lock;
 
 import java.math.BigDecimal;
 
-import org.junit.Test;
-
 import org.hibernate.LockMode;
-import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
-import org.hibernate.Transaction;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.exception.SQLGrammarException;
-import org.hibernate.test.jpa.AbstractJPATest;
-import org.hibernate.test.jpa.Item;
-import org.hibernate.test.jpa.Part;
-import org.hibernate.testing.jdbc.SQLServerSnapshotIsolationConnectionProvider;
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.orm.test.jpa.model.AbstractJPATest;
+import org.hibernate.orm.test.jpa.model.Item;
+import org.hibernate.orm.test.jpa.model.Part;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import org.hibernate.testing.jdbc.SQLServerSnapshotIsolationConnectionProvider;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+
 
 /**
  * Test that the Hibernate Session complies with REPEATABLE_READ isolation
@@ -36,247 +36,252 @@ import static org.junit.Assert.fail;
  *
  * @author Steve Ebersole
  */
-@RequiresDialectFeature( DialectChecks.DoesReadCommittedNotCauseWritersToBlockReadersCheck.class )
+@RequiresDialectFeature(feature = DialectFeatureChecks.DoesReadCommittedNotCauseWritersToBlockReadersCheck.class)
 public class RepeatableReadTest extends AbstractJPATest {
 
 	private SQLServerSnapshotIsolationConnectionProvider connectionProvider = new SQLServerSnapshotIsolationConnectionProvider();
 
 	@Override
-	public void configure(Configuration cfg) {
-		super.configure( cfg );
-		if( SQLServerDialect.class.isAssignableFrom( DIALECT.getClass() )) {
-			connectionProvider.setConnectionProvider( (ConnectionProvider) cfg.getProperties().get( AvailableSettings.CONNECTION_PROVIDER ) );
-			cfg.getProperties().put( AvailableSettings.CONNECTION_PROVIDER, connectionProvider );
+	protected void applySettings(StandardServiceRegistryBuilder builder) {
+		super.applySettings( builder );
+		if ( SQLServerDialect.class.isAssignableFrom( DIALECT.getClass() ) ) {
+			connectionProvider.setConnectionProvider( (ConnectionProvider) builder.getSettings()
+					.get( AvailableSettings.CONNECTION_PROVIDER ) );
+			builder.applySetting( AvailableSettings.CONNECTION_PROVIDER, connectionProvider );
 		}
 	}
 
-	@Override
-	protected void releaseSessionFactory() {
-		super.releaseSessionFactory();
+	@AfterAll
+	protected void tearDown() {
 		connectionProvider.stop();
 	}
+
 
 	@Test
 	public void testStaleVersionedInstanceFoundInQueryResult() {
 		String check = "EJB3 Specification";
-		Session s1 = sessionFactory().openSession();
-		Transaction t1 = s1.beginTransaction();
-		Item item = new Item( check );
-		s1.save(  item );
-		t1.commit();
-		s1.close();
+		Item it = new Item( check );
+		inTransaction(
+				session -> {
+					session.save( it );
+				}
+		);
 
-		Long itemId = item.getId();
-		long initialVersion = item.getVersion();
+		Long itemId = it.getId();
+		long initialVersion = it.getVersion();
 
 		// Now, open a new Session and re-load the item...
-		s1 = sessionFactory().openSession();
-		t1 = s1.beginTransaction();
-		item = ( Item ) s1.get( Item.class, itemId );
+		inTransaction(
+				s1 -> {
+					Item item = s1.get( Item.class, itemId );
 
-		// now that the item is associated with the persistence-context of that session,
-		// open a new session and modify it "behind the back" of the first session
-		Session s2 = sessionFactory().openSession();
-		Transaction t2 = s2.beginTransaction();
-		Item item2 = ( Item ) s2.get( Item.class, itemId );
-		item2.setName( "EJB3 Persistence Spec" );
-		t2.commit();
-		s2.close();
+					// now that the item is associated with the persistence-context of that session,
+					// open a new session and modify it "behind the back" of the first session
+					inTransaction(
+							s2 -> {
+								Item item2 = s2.get( Item.class, itemId );
+								item2.setName( "EJB3 Persistence Spec" );
+							}
+					);
 
-		// at this point, s1 now contains stale data, so try an hql query which
-		// returns said item and make sure we get the previously associated state
-		// (i.e., the old name and the old version)
-		item2 = ( Item ) s1.createQuery( "select i from Item i" ).list().get( 0 );
-		assertTrue( item == item2 );
-		assertEquals( "encountered non-repeatable read", check, item2.getName() );
-		assertEquals( "encountered non-repeatable read", initialVersion, item2.getVersion() );
+					// at this point, s1 now contains stale data, so try an hql query which
+					// returns said item and make sure we get the previously associated state
+					// (i.e., the old name and the old version)
+					Item item2 = (Item) s1.createQuery( "select i from Item i" ).list().get( 0 );
+					assertTrue( item == item2 );
+					assertEquals( check, item2.getName(), "encountered non-repeatable read" );
+					assertEquals( initialVersion, item2.getVersion(), "encountered non-repeatable read" );
 
-		t1.commit();
-		s1.close();
+				}
+		);
 
 		// clean up
-		s1 = sessionFactory().openSession();
-		t1 = s1.beginTransaction();
-		s1.createQuery( "delete Item" ).executeUpdate();
-		t1.commit();
-		s1.close();
+		inTransaction(
+				session ->
+						session.createQuery( "delete Item" ).executeUpdate()
+		);
 	}
 
 	@Test
 	public void testStaleVersionedInstanceFoundOnLock() {
-		if ( ! readCommittedIsolationMaintained( "repeatable read tests" ) ) {
+		if ( !readCommittedIsolationMaintained( "repeatable read tests" ) ) {
 			return;
 		}
 		String check = "EJB3 Specification";
-		Session s1 = sessionFactory().openSession();
-		Transaction t1 = s1.beginTransaction();
-		Item item = new Item( check );
-		s1.save(  item );
-		t1.commit();
-		s1.close();
+		Item it = new Item( check );
+		inTransaction(
+				session -> {
+					session.save( it );
+				}
+		);
 
-		Long itemId = item.getId();
-		long initialVersion = item.getVersion();
+		Long itemId = it.getId();
+		long initialVersion = it.getVersion();
 
 		// Now, open a new Session and re-load the item...
-		s1 = sessionFactory().openSession();
-		t1 = s1.beginTransaction();
-		item = ( Item ) s1.get( Item.class, itemId );
+		inSession(
+				s1 -> {
+					s1.beginTransaction();
+					try {
+						Item item = s1.get( Item.class, itemId );
 
-		// now that the item is associated with the persistence-context of that session,
-		// open a new session and modify it "behind the back" of the first session
-		Session s2 = sessionFactory().openSession();
-		Transaction t2 = s2.beginTransaction();
-		Item item2 = ( Item ) s2.get( Item.class, itemId );
-		item2.setName( "EJB3 Persistence Spec" );
-		t2.commit();
-		s2.close();
+						// now that the item is associated with the persistence-context of that session,
+						// open a new session and modify it "behind the back" of the first session
+						inTransaction(
+								s2 -> {
+									Item item2 = s2.get( Item.class, itemId );
+									item2.setName( "EJB3 Persistence Spec" );
+								}
+						);
 
-		// at this point, s1 now contains stale data, so acquire a READ lock
-		// and make sure we get the already associated state (i.e., the old
-		// name and the old version)
-		s1.lock( item, LockMode.READ );
-		item2 = ( Item ) s1.get( Item.class, itemId );
-		assertTrue( item == item2 );
-		assertEquals( "encountered non-repeatable read", check, item2.getName() );
-		assertEquals( "encountered non-repeatable read", initialVersion, item2.getVersion() );
+						// at this point, s1 now contains stale data, so acquire a READ lock
+						// and make sure we get the already associated state (i.e., the old
+						// name and the old version)
+						s1.lock( item, LockMode.READ );
+						Item item2 = (Item) s1.get( Item.class, itemId );
+						assertTrue( item == item2 );
+						assertEquals( check, item2.getName(), "encountered non-repeatable read" );
+						assertEquals( initialVersion, item2.getVersion(), "encountered non-repeatable read" );
 
-		// attempt to acquire an UPGRADE lock; this should fail
-		try {
-			s1.lock( item, LockMode.UPGRADE );
-			fail( "expected UPGRADE lock failure" );
-		}
-		catch( StaleObjectStateException expected ) {
-			// this is the expected behavior
-		}
-		catch( SQLGrammarException t ) {
-			if ( getDialect() instanceof SQLServerDialect ) {
-				// sql-server (using snapshot isolation) reports this as a grammar exception /:)
-				//
-				// not to mention that it seems to "lose track" of the transaction in this scenario...
-				t1.rollback();
-				t1 = s1.beginTransaction();
-			}
-			else {
-				throw t;
-			}
-		}
+						// attempt to acquire an UPGRADE lock; this should fail
 
-		t1.commit();
-		s1.close();
+						s1.lock( item, LockMode.UPGRADE );
+						fail( "expected UPGRADE lock failure" );
+					}
+					catch (StaleObjectStateException expected) {
+						// this is the expected behavior
+					}
+					catch (SQLGrammarException t) {
+						if ( getDialect() instanceof SQLServerDialect ) {
+							// sql-server (using snapshot isolation) reports this as a grammar exception /:)
+							//
+							// not to mention that it seems to "lose track" of the transaction in this scenario...
+							s1.getTransaction().rollback();
+						}
+						else {
+							throw t;
+						}
+					}
+					finally {
+						s1.getTransaction().rollback();
+					}
+
+				}
+		);
 
 		// clean up
-		s1 = sessionFactory().openSession();
-		t1 = s1.beginTransaction();
-		s1.createQuery( "delete Item" ).executeUpdate();
-		t1.commit();
-		s1.close();
+		inTransaction(
+				session ->
+						session.createQuery( "delete Item" ).executeUpdate()
+		);
 	}
 
 	@Test
 	public void testStaleNonVersionedInstanceFoundInQueryResult() {
 		String check = "Lock Modes";
-		Session s1 = sessionFactory().openSession();
-		Transaction t1 = s1.beginTransaction();
-		Part part = new Part( new Item( "EJB3 Specification" ), check, "3.3.5.3", new BigDecimal( 0.0 ) );
-		s1.save( part );
-		t1.commit();
-		s1.close();
+		Part p = new Part( new Item( "EJB3 Specification" ), check, "3.3.5.3", new BigDecimal( 0.0 ) );
+		inTransaction(
+				session -> {
+					session.save( p );
+				}
+		);
 
-		Long partId = part.getId();
+		Long partId = p.getId();
 
 		// Now, open a new Session and re-load the part...
-		s1 = sessionFactory().openSession();
-		t1 = s1.beginTransaction();
-		part = ( Part ) s1.get( Part.class, partId );
 
-		// now that the item is associated with the persistence-context of that session,
-		// open a new session and modify it "behind the back" of the first session
-		Session s2 = sessionFactory().openSession();
-		Transaction t2 = s2.beginTransaction();
-		Part part2 = ( Part ) s2.get( Part.class, partId );
-		part2.setName( "Lock Mode Types" );
-		t2.commit();
-		s2.close();
+		inTransaction(
+				s1 -> {
+					Part part = s1.get( Part.class, partId );
 
-		// at this point, s1 now contains stale data, so try an hql query which
-		// returns said part and make sure we get the previously associated state
-		// (i.e., the old name)
-		part2 = ( Part ) s1.createQuery( "select p from Part p" ).list().get( 0 );
-		assertTrue( part == part2 );
-		assertEquals( "encountered non-repeatable read", check, part2.getName() );
+					// now that the item is associated with the persistence-context of that session,
+					// open a new session and modify it "behind the back" of the first session
+					inTransaction(
+							s2 -> {
+								Part part2 = s2.get( Part.class, partId );
+								part2.setName( "Lock Mode Types" );
+							}
+					);
 
-		t1.commit();
-		s1.close();
+					// at this point, s1 now contains stale data, so try an hql query which
+					// returns said part and make sure we get the previously associated state
+					// (i.e., the old name)
+					Part part2 = (Part) s1.createQuery( "select p from Part p" ).list().get( 0 );
+					assertTrue( part == part2 );
+					assertEquals( check, part2.getName(), "encountered non-repeatable read" );
+				}
+		);
 
 		// clean up
-		s1 = sessionFactory().openSession();
-		t1 = s1.beginTransaction();
-		s1.delete( part2 );
-		s1.delete( part2.getItem() );
-		t1.commit();
-		s1.close();
+		inTransaction(
+				session -> {
+					Part part = (Part) session.createQuery( "select p from Part p" ).list().get( 0 );
+
+					session.delete( part );
+					session.delete( part.getItem() );
+				}
+		);
 	}
 
 	@Test
 	public void testStaleNonVersionedInstanceFoundOnLock() {
-		if ( ! readCommittedIsolationMaintained( "repeatable read tests" ) ) {
+		if ( !readCommittedIsolationMaintained( "repeatable read tests" ) ) {
 			return;
 		}
 		String check = "Lock Modes";
-		Session s1 = sessionFactory().openSession();
-		Transaction t1 = s1.beginTransaction();
-		Part part = new Part( new Item( "EJB3 Specification" ), check, "3.3.5.3", new BigDecimal( 0.0 ) );
-		s1.save( part );
-		t1.commit();
-		s1.close();
+		Part p = new Part( new Item( "EJB3 Specification" ), check, "3.3.5.3", new BigDecimal( 0.0 ) );
+		inTransaction(
+				session -> {
+					session.save( p );
+				}
+		);
 
-		Long partId = part.getId();
+		Long partId = p.getId();
 
 		// Now, open a new Session and re-load the part...
-		s1 = sessionFactory().openSession();
-		t1 = s1.beginTransaction();
-		part = ( Part ) s1.get( Part.class, partId );
+		inTransaction(
+				s1 -> {
+					Part part = s1.get( Part.class, partId );
 
-		// now that the item is associated with the persistence-context of that session,
-		// open a new session and modify it "behind the back" of the first session
-		Session s2 = sessionFactory().openSession();
-		Transaction t2 = s2.beginTransaction();
-		Part part2 = ( Part ) s2.get( Part.class, partId );
-		part2.setName( "Lock Mode Types" );
-		t2.commit();
-		s2.close();
+					// now that the item is associated with the persistence-context of that session,
+					// open a new session and modify it "behind the back" of the first session
+					inTransaction(
+							s2 -> {
+								Part part2 = s2.get( Part.class, partId );
+								part2.setName( "Lock Mode Types" );
+							}
+					);
 
-		// at this point, s1 now contains stale data, so acquire a READ lock
-		// and make sure we get the already associated state (i.e., the old
-		// name and the old version)
-		s1.lock( part, LockMode.READ );
-		part2 = ( Part ) s1.get( Part.class, partId );
-		assertTrue( part == part2 );
-		assertEquals( "encountered non-repeatable read", check, part2.getName() );
+					// at this point, s1 now contains stale data, so acquire a READ lock
+					// and make sure we get the already associated state (i.e., the old
+					// name and the old version)
+					s1.lock( part, LockMode.READ );
+					Part part2 = s1.get( Part.class, partId );
+					assertTrue( part == part2 );
+					assertEquals( check, part2.getName(), "encountered non-repeatable read" );
 
-		// then acquire an UPGRADE lock; this should fail
-		try {
-			s1.lock( part, LockMode.UPGRADE );
-		}
-		catch( Throwable t ) {
-			// SQLServer, for example, immediately throws an exception here...
-			t1.rollback();
-			t1 = s1.beginTransaction();
-		}
-		part2 = ( Part ) s1.get( Part.class, partId );
-		assertTrue( part == part2 );
-		assertEquals( "encountered non-repeatable read", check, part2.getName() );
-
-		t1.commit();
-		s1.close();
+					// then acquire an UPGRADE lock; this should fail
+					try {
+						s1.lock( part, LockMode.UPGRADE );
+					}
+					catch (Throwable t) {
+						// SQLServer, for example, immediately throws an exception here...
+						s1.getTransaction().rollback();
+						s1.beginTransaction();
+					}
+					part2 = s1.get( Part.class, partId );
+					assertTrue( part == part2 );
+					assertEquals( check, part2.getName(), "encountered non-repeatable read" );
+				}
+		);
 
 		// clean up
-		s1 = sessionFactory().openSession();
-		t1 = s1.beginTransaction();
-		s1.delete( part );
-		s1.delete( part.getItem() );
-		t1.commit();
-		s1.close();
+		inTransaction(
+				session -> {
+					Part part = session.get( Part.class, partId );
+					session.delete( part );
+					session.delete( part.getItem() );
+				}
+		);
 	}
 }

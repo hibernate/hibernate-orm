@@ -6,27 +6,34 @@
  */
 package org.hibernate.orm.test.jpa.compliance.tck2_2;
 
-import jakarta.persistence.LockModeType;
+import org.hibernate.orm.test.jpa.model.AbstractJPATest;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.test.jpa.AbstractJPATest;
-import org.junit.Test;
+import jakarta.persistence.LockModeType;
 
 /**
  * @author Steve Ebersole
  */
 public class NonSelectQueryLockMode extends AbstractJPATest {
 
-	@Test( expected = IllegalStateException.class )
+	@Test
 	public void testNonSelectQueryGetLockMode() {
-		inTransaction(
-				session -> session.createQuery( "delete Item" ).getLockMode()
+		Assertions.assertThrows(
+				IllegalStateException.class,
+				() -> inTransaction(
+						session -> session.createQuery( "delete Item" ).getLockMode()
+				)
 		);
 	}
 
-	@Test( expected = IllegalStateException.class )
+	@Test
 	public void testNonSelectQuerySetLockMode() {
-		inTransaction(
-				session -> session.createQuery( "delete Item" ).setLockMode( LockModeType.PESSIMISTIC_WRITE )
+		Assertions.assertThrows(
+				IllegalStateException.class,
+				() -> inTransaction(
+						session -> session.createQuery( "delete Item" ).setLockMode( LockModeType.PESSIMISTIC_WRITE )
+				)
 		);
 	}
 }

@@ -91,26 +91,7 @@ public class ServiceRegistryExtension
 				ssrProducer = (ServiceRegistryProducer) testInstance;
 			}
 			else {
-				ssrProducer = ssrb -> {
-					if ( !context.getElement().isPresent() ) {
-						throw new RuntimeException( "Unable to determine how to handle given ExtensionContext : " + context.getDisplayName() );
-					}
-
-					// set some baseline test settings
-					ssrb.applySetting( AvailableSettings.STATEMENT_INSPECTOR, org.hibernate.testing.jdbc.SQLStatementInspector.class );
-
-					final Optional<ServiceRegistry> ssrAnnWrapper = AnnotationSupport.findAnnotation(
-							context.getElement().get(),
-							ServiceRegistry.class
-					);
-
-					if ( ssrAnnWrapper.isPresent() ) {
-						final ServiceRegistry serviceRegistryAnn = ssrAnnWrapper.get();
-						configureServices( serviceRegistryAnn, ssrb );
-					}
-
-					return ssrb.build();
-				};
+				ssrProducer = new ServiceRegistryProducerImpl(context);
 			}
 
 			final ServiceRegistryScopeImpl scope = new ServiceRegistryScopeImpl( bsrProducer, ssrProducer );
@@ -125,6 +106,39 @@ public class ServiceRegistryExtension
 		}
 
 		return existingScope;
+	}
+
+	private static class ServiceRegistryProducerImpl implements ServiceRegistryProducer{
+		private final ExtensionContext context;
+		public ServiceRegistryProducerImpl(ExtensionContext context) {
+			this.context = context;
+			if ( !context.getElement().isPresent() ) {
+				throw new RuntimeException( "Unable to determine how to handle given ExtensionContext : " + context.getDisplayName() );
+			}
+		}
+
+		@Override
+		public StandardServiceRegistry produceServiceRegistry(StandardServiceRegistryBuilder ssrb) {
+			// set some baseline test settings
+			ssrb.applySetting( AvailableSettings.STATEMENT_INSPECTOR, org.hibernate.testing.jdbc.SQLStatementInspector.class );
+
+			final Optional<ServiceRegistry> ssrAnnWrapper = AnnotationSupport.findAnnotation(
+					context.getElement().get(),
+					ServiceRegistry.class
+			);
+
+			if ( ssrAnnWrapper.isPresent() ) {
+				final ServiceRegistry serviceRegistryAnn = ssrAnnWrapper.get();
+				configureServices( serviceRegistryAnn, ssrb );
+			}
+
+			return ssrb.build();
+		}
+
+		@Override
+		public void prepareBootstrapRegistryBuilder(BootstrapServiceRegistryBuilder bsrb) {
+
+		}
 	}
 
 	private static void configureIntegrators(
@@ -255,6 +269,7 @@ public class ServiceRegistryExtension
 
 		private StandardServiceRegistry createRegistry() {
 			BootstrapServiceRegistryBuilder bsrb = new BootstrapServiceRegistryBuilder().enableAutoClose();
+			ssrProducer.prepareBootstrapRegistryBuilder(bsrb);
 
 			final org.hibernate.boot.registry.BootstrapServiceRegistry bsr = bsrProducer.produceServiceRegistry( bsrb );
 			try {

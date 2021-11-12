@@ -112,6 +112,10 @@ public class JavaTypeRegistry implements JavaTypeDescriptorBaseline.BaselineTarg
 		performInjections( descriptor );
 	}
 
+	public <J> JavaType<J> findDescriptor(Type javaType) {
+		return (JavaType<J>) descriptorsByType.get( javaType );
+	}
+
 	public <J> JavaType<J> resolveDescriptor(Type javaType, Supplier<JavaType<J>> creator) {
 		final JavaType<?> cached = descriptorsByType.get( javaType );
 		if ( cached != null ) {

@@ -126,28 +126,30 @@ public class H2Dialect extends Dialect {
 		// http://code.google.com/p/h2database/issues/detail?id=235
 		getDefaultProperties().setProperty( AvailableSettings.NON_CONTEXTUAL_LOB_CREATION, "true" );
 
+		registerColumnType( SqlTypes.ARRAY, "array" );
 		if ( version >= 104032 ) {
 			this.sequenceInformationExtractor = version >= 104201
 					? SequenceInformationExtractorLegacyImpl.INSTANCE
 					: SequenceInformationExtractorH2DatabaseImpl.INSTANCE;
 			this.querySequenceString = "select * from INFORMATION_SCHEMA.SEQUENCES";
 			registerColumnType( Types.DECIMAL,  "numeric($p,$s)" );
+			if ( version >= 104197 ) {
+				registerColumnType( SqlTypes.UUID, "uuid" );
+				registerColumnType( SqlTypes.GEOMETRY, "geometry" );
+				if ( version >= 104198 ) {
+					registerColumnType( SqlTypes.INTERVAL_SECOND, "interval second($p,$s)" );
+				}
+			}
 		}
 		else {
 			this.sequenceInformationExtractor = SequenceInformationExtractorNoOpImpl.INSTANCE;
 			this.querySequenceString = null;
+			if ( version < 200 ) {
+				// prior to version 2.0, H2 reported NUMERIC columns as DECIMAL,
+				// which caused problems for schema update tool
+				registerColumnType( Types.NUMERIC, "decimal($p,$s)" );
+			}
 		}
-
-		if ( version < 200 ) {
-			// prior to version 2.0, H2 reported NUMERIC columns as DECIMAL,
-			// which caused problems for schema update tool
-			registerColumnType( Types.NUMERIC, "decimal($p,$s)" );
-		}
-
-		registerColumnType( SqlTypes.UUID, "uuid" );
-		registerColumnType( SqlTypes.INTERVAL_SECOND, "interval second($p,$s)" );
-		registerColumnType( SqlTypes.GEOMETRY, "geometry" );
-		registerColumnType( SqlTypes.ARRAY, "array" );
 	}
 
 	@Override
@@ -156,8 +158,13 @@ public class H2Dialect extends Dialect {
 
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeDescriptorRegistry();
-		jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
-		jdbcTypeRegistry.addDescriptorIfAbsent( DurationIntervalSecondJdbcType.INSTANCE );
+
+		if ( version >= 104197 ) {
+			jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
+			if ( version >= 104198 ) {
+				jdbcTypeRegistry.addDescriptorIfAbsent( DurationIntervalSecondJdbcType.INSTANCE );
+			}
+		}
 	}
 
 	private static int parseBuildId(DialectResolutionInfo info) {
@@ -205,7 +212,9 @@ public class H2Dialect extends Dialect {
 		CommonFunctionFactory.dayOfWeekMonthYear( queryEngine );
 		CommonFunctionFactory.weekQuarter( queryEngine );
 		CommonFunctionFactory.daynameMonthname( queryEngine );
-		CommonFunctionFactory.localtimeLocaltimestamp( queryEngine );
+		if ( useLocalTime ) {
+			CommonFunctionFactory.localtimeLocaltimestamp( queryEngine );
+		}
 		CommonFunctionFactory.bitLength( queryEngine );
 		CommonFunctionFactory.octetLength( queryEngine );
 		CommonFunctionFactory.ascii( queryEngine );

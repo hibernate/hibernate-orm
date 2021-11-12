@@ -47,8 +47,6 @@ public class SchemaDropToOutputScriptTest {
 	private File output;
 	private ServiceRegistry serviceRegistry;
 	private MetadataImplementor metadata;
-	private final String dropMyEntityTable = "drop table if exists MyEntity";
-	private final String dropMySecondEntityTable = "drop table if exists MySecondEntity";
 
 
 	@BeforeEach
@@ -113,8 +111,8 @@ public class SchemaDropToOutputScriptTest {
 		);
 		List<String> commands = Files.readAllLines( output.toPath() );
 		assertThat( commands.size(), is( 2 ) );
-		assertThat( commands.get( 0 ), containsString( dropMyEntityTable ) );
-		assertThat( commands.get( 1 ), containsString( dropMySecondEntityTable ) );
+		assertThat( commands.get( 0 ), containsString( getDropMyEntityTable() ) );
+		assertThat( commands.get( 1 ), containsString( getDropMySecondEntityTable() ) );
 	}
 
 	@Test
@@ -131,8 +129,8 @@ public class SchemaDropToOutputScriptTest {
 		);
 		List<String> commands = Files.readAllLines( output.toPath() );
 		assertThat( commands.size(), is( 11 ) );
-		assertThat( commands.get( 9 ), containsString( dropMyEntityTable ) );
-		assertThat( commands.get( 10 ), containsString( dropMySecondEntityTable ) );
+		assertThat( commands.get( 9 ), containsString( getDropMyEntityTable() ) );
+		assertThat( commands.get( 10 ), containsString( getDropMySecondEntityTable() ) );
 	}
 
 	@Test
@@ -149,8 +147,26 @@ public class SchemaDropToOutputScriptTest {
 		);
 		List<String> commands = Files.readAllLines( output.toPath() );
 		assertThat( commands.size(), is( 11 ) );
-		assertThat( commands.get( 9 ), containsString( dropMyEntityTable ) );
-		assertThat( commands.get( 10 ), containsString( dropMySecondEntityTable ) );
+		assertThat( commands.get( 9 ), containsString( getDropMyEntityTable() ) );
+		assertThat( commands.get( 10 ), containsString( getDropMySecondEntityTable() ) );
+	}
+
+	public String getDropMyEntityTable() {
+		if ( metadata.getDatabase().getDialect().supportsIfExistsBeforeTableName() ) {
+			return "drop table if exists MyEntity";
+		}
+		else {
+			return "drop table MyEntity if exists";
+		}
+	}
+
+	public String getDropMySecondEntityTable() {
+		if ( metadata.getDatabase().getDialect().supportsIfExistsBeforeTableName() ) {
+			return "drop table if exists MySecondEntity";
+		}
+		else {
+			return "drop table MySecondEntity if exists";
+		}
 	}
 
 	@Entity(name = "MyEntity")

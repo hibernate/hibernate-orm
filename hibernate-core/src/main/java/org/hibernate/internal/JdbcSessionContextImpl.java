@@ -70,16 +70,6 @@ public class JdbcSessionContextImpl implements JdbcSessionContext {
 	}
 
 	@Override
-	public ConnectionReleaseMode getConnectionReleaseMode() {
-		return connectionHandlingMode.getReleaseMode();
-	}
-
-	@Override
-	public ConnectionAcquisitionMode getConnectionAcquisitionMode() {
-		return connectionHandlingMode.getAcquisitionMode();
-	}
-
-	@Override
 	public StatementInspector getStatementInspector() {
 		return statementInspector;
 	}

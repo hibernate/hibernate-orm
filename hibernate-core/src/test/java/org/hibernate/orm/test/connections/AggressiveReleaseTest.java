@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
@@ -21,6 +20,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.internal.util.SerializationHelper;
+import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
 import org.hibernate.stat.Statistics;
 
@@ -48,7 +48,7 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 		TestingJtaBootstrap.prepare( settings );
 //		settings.put( Environment.TRANSACTION_STRATEGY, CMTTransactionFactory.class.getName() );
 		settings.put( AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY, JtaTransactionCoordinatorBuilderImpl.class.getName() );
-		settings.put( Environment.RELEASE_CONNECTIONS, ConnectionReleaseMode.AFTER_STATEMENT.toString() );
+		settings.put( Environment.CONNECTION_HANDLING, PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT.toString() );
 		settings.put( Environment.GENERATE_STATISTICS, "true" );
 		settings.put( Environment.STATEMENT_BATCH_SIZE, "0" );
 	}

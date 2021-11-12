@@ -226,14 +226,6 @@ public interface DeprecationLogger extends BasicLogger {
 
 	@LogMessage(level = WARN)
 	@Message(
-			id = 90000023,
-			value = "Encountered use of deprecated Connection handling settings [hibernate.connection.acquisition_mode]" +
-					"or [hibernate.connection.release_mode]; use [hibernate.connection.handling_mode] instead"
-	)
-	void logUseOfDeprecatedConnectionHandlingSettings();
-
-	@LogMessage(level = WARN)
-	@Message(
 			id = 90000024,
 			value = "Application requested zero be used as the base for JDBC-style parameters found in native-queries; " +
 					"this is a *temporary* backwards-compatibility setting to help applications  using versions prior to " +

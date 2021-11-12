@@ -6,8 +6,6 @@
  */
 package org.hibernate.resource.transaction.spi;
 
-import org.hibernate.ConnectionAcquisitionMode;
-import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.transaction.backend.jdbc.internal.DdlTransactionIsolatorNonJtaImpl;
 import org.hibernate.resource.transaction.backend.jta.internal.DdlTransactionIsolatorJtaImpl;
@@ -39,22 +37,6 @@ public interface TransactionCoordinatorBuilder extends Service {
 	boolean isJta();
 
 	PhysicalConnectionHandlingMode getDefaultConnectionHandlingMode();
-
-	/**
-	 * @deprecated (since 5.2) Use {@link #getDefaultConnectionHandlingMode} instead
-	 */
-	@Deprecated
-	default ConnectionAcquisitionMode getDefaultConnectionAcquisitionMode() {
-		return getDefaultConnectionHandlingMode().getAcquisitionMode();
-	}
-
-	/**
-	 * @deprecated (since 5.2) Use {@link #getDefaultConnectionHandlingMode} instead
-	 */
-	@Deprecated
-	default ConnectionReleaseMode getDefaultConnectionReleaseMode() {
-		return getDefaultConnectionHandlingMode().getReleaseMode();
-	}
 
 	default DdlTransactionIsolator buildDdlTransactionIsolator(JdbcContext jdbcContext) {
 		return isJta() ? new DdlTransactionIsolatorJtaImpl( jdbcContext ) : new DdlTransactionIsolatorNonJtaImpl( jdbcContext );

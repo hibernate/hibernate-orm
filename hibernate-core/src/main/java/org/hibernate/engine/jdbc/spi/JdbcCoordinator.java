@@ -162,30 +162,6 @@ public interface JdbcCoordinator extends Serializable, TransactionCoordinatorOwn
 	boolean isReadyForSerialization();
 
 	/**
-	 * The release mode under which this logical connection is operating.
-	 *
-	 * @return the release mode.
-	 *
-	 * @deprecated (since 5.2) use {@link PhysicalConnectionHandlingMode} via {@link #getLogicalConnection} instead
-	 */
-	@Deprecated
-	default ConnectionReleaseMode getConnectionReleaseMode() {
-		return getLogicalConnection().getConnectionHandlingMode().getReleaseMode();
-	}
-
-	/**
-	 * The mode for physical handling of the JDBC Connection
-	 *
-	 * @return The JDBC Connection handlng mode
-	 *
-	 * @deprecated (since 5.2) access via {@link #getLogicalConnection} instead
-	 */
-	@Deprecated
-	default PhysicalConnectionHandlingMode getConnectionHandlingMode() {
-		return getLogicalConnection().getConnectionHandlingMode();
-	}
-
-	/**
 	 * @deprecated (since 5.2) access via {@link #getLogicalConnection} instead
 	 */
 	@Deprecated

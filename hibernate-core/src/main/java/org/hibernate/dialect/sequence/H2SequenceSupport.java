@@ -6,12 +6,14 @@
  */
 package org.hibernate.dialect.sequence;
 
+import org.hibernate.MappingException;
+
 /**
  * Sequence support for {@link org.hibernate.dialect.H2Dialect}.
  *
  * @author Gavin King
  */
-public final class H2SequenceSupport extends ANSISequenceSupport {
+public final class H2SequenceSupport implements SequenceSupport {
 
 	public static final SequenceSupport INSTANCE = new H2SequenceSupport();
 
@@ -21,12 +23,12 @@ public final class H2SequenceSupport extends ANSISequenceSupport {
 	}
 
 	@Override
-	public String getSequenceNextValString(String sequenceName) {
-		return "call " + getSelectSequenceNextValString( sequenceName );
+	public String getSelectSequenceNextValString(String sequenceName) {
+		return sequenceName + ".nextval";
 	}
 
 	@Override
-	public String getSequencePreviousValString(String sequenceName) {
-		return "call " + getSelectSequencePreviousValString( sequenceName );
+	public String getSelectSequencePreviousValString(String sequenceName) throws MappingException {
+		return sequenceName + ".currval";
 	}
 }

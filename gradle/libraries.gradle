@@ -13,7 +13,7 @@ ext {
     junitVintageVersion = '5.7.1'
     junit5Version = '5.7.1'
 
-    h2Version = '1.4.200'
+    h2Version = '1.4.197'
     bytemanVersion = '4.0.16' //Compatible with JDK16
     jnpVersion = '5.0.6.CR1'
 

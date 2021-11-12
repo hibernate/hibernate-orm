@@ -10,31 +10,30 @@ import java.sql.Timestamp;
 import java.time.OffsetDateTime;
 
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import org.junit.jupiter.api.Test;
+
 import static org.junit.Assert.assertEquals;
 
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialect(H2Dialect.class)
-public class EmbeddedIdDatabaseGeneratedValueTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Event.class };
-	}
+// On H2 1.4.199+ CURRENT_TIMESTAMP returns a timestamp with timezone
+@RequiresDialect(value = H2Dialect.class, version = 104199)
+@DomainModel(annotatedClasses = Event.class)
+@SessionFactory
+public class EmbeddedIdDatabaseGeneratedValueTest {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-13096")
-	public void test() {
-		final EventId eventId = doInJPA( this::entityManagerFactory, entityManager -> {
-			// On H2 1.4.199+ CURRENT_TIMESTAMP returns a timestamp with timezone
+	public void test(SessionFactoryScope scope) {
+		final EventId eventId = scope.fromTransaction( entityManager -> {
 			//tag::identifiers-composite-generated-database-example[]
 			OffsetDateTime currentTimestamp = (OffsetDateTime) entityManager
 			.createNativeQuery(
@@ -55,7 +54,7 @@ public class EmbeddedIdDatabaseGeneratedValueTest extends BaseEntityManagerFunct
 			return event.getId();
 		} );
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.fromSession( entityManager -> {
 
 			Event event = entityManager.find( Event.class, eventId );
 

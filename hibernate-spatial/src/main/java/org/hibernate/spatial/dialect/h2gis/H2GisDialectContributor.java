@@ -17,10 +17,10 @@ import org.hibernate.spatial.contributor.ContributorImplementor;
 
 public class H2GisDialectContributor implements ContributorImplementor {
 
-	private final ServiceRegistry serviceRegistryegistry;
+	private final ServiceRegistry serviceRegistry;
 
 	public H2GisDialectContributor(ServiceRegistry serviceRegistry) {
-		this.serviceRegistryegistry = serviceRegistry;
+		this.serviceRegistry = serviceRegistry;
 	}
 
 	public void contributeJdbcTypes(TypeContributions typeContributions) {
@@ -42,6 +42,6 @@ public class H2GisDialectContributor implements ContributorImplementor {
 
 	@Override
 	public ServiceRegistry getServiceRegistry() {
-		return this.serviceRegistryegistry;
+		return this.serviceRegistry;
 	}
 }

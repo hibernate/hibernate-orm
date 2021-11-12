@@ -1467,7 +1467,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		basicType = getTypeConfiguration().getBasicTypeForJavaType( valueClass );
 		if ( basicType == null ) {
 			final JavaType<Object> javaType = getTypeConfiguration().getJavaTypeDescriptorRegistry()
-					.getDescriptor( valueClass );
+					.findDescriptor( valueClass );
 			if ( javaType != null ) {
 				final JdbcType recommendedJdbcType = javaType.getRecommendedJdbcType( getTypeConfiguration().getCurrentBaseSqlTypeIndicators() );
 				if ( recommendedJdbcType != null ) {

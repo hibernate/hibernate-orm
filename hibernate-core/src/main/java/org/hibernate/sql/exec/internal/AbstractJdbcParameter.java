@@ -15,6 +15,7 @@ import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.mapping.SqlExpressable;
+import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
@@ -102,38 +103,15 @@ public abstract class AbstractJdbcParameter
 	}
 
 	private JdbcMapping guessBindType(ExecutionContext executionContext, JdbcParameterBinding binding, JdbcMapping jdbcMapping) {
-		final Class<?> valueClass;
-		if ( binding.getBindValue() == null ) {
-			if ( jdbcMapping != null ) {
-				return jdbcMapping;
-			}
-			valueClass = Object.class;
-		}
-		else {
-			valueClass = binding.getBindValue().getClass();
+		if ( binding.getBindValue() == null &&  jdbcMapping != null ) {
+			return jdbcMapping;
 		}
 
-		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
-		final TypeConfiguration typeConfiguration = factory.getTypeConfiguration();
-
-		final BasicType<?> basicType = typeConfiguration.getBasicTypeRegistry().getRegisteredType( valueClass );
-		if ( basicType != null ) {
-			return basicType.getJdbcMapping();
+		final AllowableParameterType<?> parameterType = executionContext.getSession().getFactory()
+				.resolveParameterBindType( binding.getBindValue() );
+		if ( parameterType instanceof JdbcMapping ) {
+			return (JdbcMapping) parameterType;
 		}
-
-		final BasicType<?> defaultForJavaType = typeConfiguration.getBasicTypeForJavaType( valueClass );
-		if ( defaultForJavaType != null ) {
-			return defaultForJavaType;
-		}
-
-		final JavaType<Object> javaType = typeConfiguration.getJavaTypeDescriptorRegistry().findDescriptor( valueClass );
-		if ( javaType != null ) {
-			final JdbcType recommendedJdbcType = javaType.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() );
-			if ( recommendedJdbcType != null ) {
-				return typeConfiguration.getBasicTypeRegistry().resolve( javaType, recommendedJdbcType );
-			}
-		}
-
 		return null;
 	}
 

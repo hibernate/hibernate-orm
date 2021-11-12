@@ -71,6 +71,8 @@ import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting.determineJpaMetaModelPopulationSetting;
@@ -833,17 +835,28 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 	}
 
 	@Override
-	public  <T> AllowableParameterType<T> resolveQueryParameterType(Class<T> javaType) {
-		final BasicType basicType = getTypeConfiguration().getBasicTypeForJavaType( javaType );
-		if ( basicType != null ) {
-			//noinspection unchecked
+	public  <T> AllowableParameterType<T> resolveQueryParameterType(Class<T> javaClass) {
+		final BasicType<T> basicType = getTypeConfiguration().getBasicTypeForJavaType( javaClass );
+		// For enums, we simply don't know the exact mapping if there is no basic type registered
+		if ( basicType != null || javaClass.isEnum() ) {
 			return basicType;
 		}
 
-		final ManagedDomainType<T> managedType = jpaMetamodel.findManagedType( javaType );
-		if ( managedType instanceof AllowableParameterType ) {
-			//noinspection unchecked
-			return (AllowableParameterType) managedType;
+		final ManagedDomainType<T> managedType = jpaMetamodel.findManagedType( javaClass );
+		if ( managedType != null ) {
+			return managedType;
+		}
+
+		final JavaType<T> javaType = getTypeConfiguration().getJavaTypeDescriptorRegistry()
+				.findDescriptor( javaClass );
+		if ( javaType != null ) {
+			final JdbcType recommendedJdbcType = javaType.getRecommendedJdbcType( getTypeConfiguration().getCurrentBaseSqlTypeIndicators() );
+			if ( recommendedJdbcType != null ) {
+				return getTypeConfiguration().getBasicTypeRegistry().resolve(
+						javaType,
+						recommendedJdbcType
+				);
+			}
 		}
 
 		return null;

@@ -900,10 +900,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			return new SqmLiteralNull<>( this );
 		}
 
-		//noinspection unchecked
 		return new SqmLiteral<>(
 				value,
-				getTypeConfiguration().standardBasicTypeForJavaType( (Class<T>) value.getClass() ),
+				queryEngine.getTypeConfiguration().getSessionFactory().resolveParameterBindType( value ),
 				this
 		);
 	}
@@ -1444,39 +1443,12 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			return literal( value );
 		}
 		else {
-			final BasicType<T> basicType;
-			if ( value == null ) {
-				basicType = null;
-			}
-			else {
-				//noinspection unchecked
-				basicType = guessType( value );
-			}
 			return new JpaCriteriaParameter<>(
-					basicType,
+					queryEngine.getTypeConfiguration().getSessionFactory().resolveParameterBindType( value ),
 					value,
 					this
 			);
 		}
-	}
-
-	@SuppressWarnings("unchecked")
-	private <T> BasicType<T> guessType(T value) {
-		BasicType<T> basicType;
-		Class<T> valueClass = (Class<T>) value.getClass();
-		basicType = getTypeConfiguration().getBasicTypeForJavaType( valueClass );
-		if ( basicType == null ) {
-			final JavaType<Object> javaType = getTypeConfiguration().getJavaTypeDescriptorRegistry()
-					.findDescriptor( valueClass );
-			if ( javaType != null ) {
-				final JdbcType recommendedJdbcType = javaType.getRecommendedJdbcType( getTypeConfiguration().getCurrentBaseSqlTypeIndicators() );
-				if ( recommendedJdbcType != null ) {
-					basicType = (BasicType<T>) getTypeConfiguration().getBasicTypeRegistry().resolve( javaType, recommendedJdbcType);
-				}
-			}
-		}
-		assert basicType != null;
-		return basicType;
 	}
 
 	@Override

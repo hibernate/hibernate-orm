@@ -1081,7 +1081,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
-	public AllowableParameterType<?> resolveParameterBindType(Object bindValue) {
+	public <T> AllowableParameterType<T> resolveParameterBindType(T bindValue) {
 		if ( bindValue == null ) {
 			// we can't guess
 			return null;
@@ -1091,7 +1091,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
-	public AllowableParameterType<?> resolveParameterBindType(Class<?> javaType) {
+	public <T> AllowableParameterType<T> resolveParameterBindType(Class<T> javaType) {
 		return getMetamodel().resolveQueryParameterType( javaType );
 	}
 

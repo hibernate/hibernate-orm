@@ -16,7 +16,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  */
 public interface QueryParameterBindingTypeResolver {
-	AllowableParameterType<?> resolveParameterBindType(Object bindValue);
-	AllowableParameterType<?> resolveParameterBindType(Class<?> clazz);
+	<T> AllowableParameterType<T> resolveParameterBindType(T bindValue);
+	<T> AllowableParameterType<T> resolveParameterBindType(Class<T> clazz);
 	TypeConfiguration getTypeConfiguration();
 }

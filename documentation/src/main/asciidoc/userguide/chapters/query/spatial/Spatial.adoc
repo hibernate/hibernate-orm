@@ -150,7 +150,7 @@ The `GEOGRAPHY` type is not currently supported.
 
 
 CockroachDB::
-The dialect `CockroachDB` support the `GEOMETRY` type in CockroachDB v20.2 and later. The `GEOGRAPHY` type is currently not supported.
+The dialect `CockroachDialect` supports the `GEOMETRY` type in CockroachDB v20.2 and later. The `GEOGRAPHY` type is currently not supported.
 
 H2GIS::
 The `H2Dialect` supports H2GIS, a spatial extension of the H2 in-memory database. This dialect can be used as a replacement for the `GeoDB` dialect that was supported in previous versions. The major difference with `GeoDB` is that the  `GEOGRAPHY` column type is currently not present in `H2GIS`.

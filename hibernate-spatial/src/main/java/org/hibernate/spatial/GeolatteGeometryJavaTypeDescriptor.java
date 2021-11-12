@@ -63,7 +63,7 @@ public class GeolatteGeometryJavaTypeDescriptor extends AbstractJavaTypeDescript
 
 	public GeolatteGeometryJavaTypeDescriptor(Class<? extends Geometry> type, Wkt.Dialect wktDialect) {
 		super( type );
-		this.wktDialect = Wkt.Dialect.SFA_1_1_0;
+		this.wktDialect = wktDialect;
 	}
 
 	@Override

@@ -9,8 +9,8 @@ package org.hibernate.metamodel;
 import org.hibernate.HibernateException;
 import org.hibernate.metamodel.mapping.NonTransientException;
 
-public class MetamodelUnsupportedOperationException extends HibernateException implements NonTransientException {
-	public MetamodelUnsupportedOperationException(String message) {
+public class UnsupportedMappingException extends HibernateException implements NonTransientException {
+	public UnsupportedMappingException(String message) {
 		super( message );
 	}
 }

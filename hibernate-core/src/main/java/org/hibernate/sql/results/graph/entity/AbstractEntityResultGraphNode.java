@@ -12,14 +12,12 @@ import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityRowIdMapping;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
-import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.query.EntityIdentifierNavigablePath;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.ast.tree.from.LazyTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.AbstractFetchParent;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -59,33 +57,6 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 		if ( navigablePath.getParent() == null && !creationState.forceIdentifierSelection() ) {
 			identifierFetch = null;
 			visitIdentifierMapping( identifierNavigablePath, creationState, identifierMapping, entityTableGroup );
-		}
-		else if ( referencedModelPart instanceof ToOneAttributeMapping ) {
-			// If we don't do this here, LazyTableGroup#getTableReferenceInternal would have to use the target table in case {id} is encountered
-			if ( ( (ToOneAttributeMapping) referencedModelPart ).canJoinForeignKey( identifierMapping ) ) {
-				final ForeignKeyDescriptor foreignKeyDescriptor = ( (ToOneAttributeMapping) referencedModelPart ).getForeignKeyDescriptor();
-				identifierFetch = ( (Fetchable) foreignKeyDescriptor.getKeyPart() )
-						.generateFetch(
-								fetchParent,
-								fetchParent.getNavigablePath()
-										.append( ( (Fetchable) foreignKeyDescriptor.getKeyPart() ).getFetchableName() ),
-								FetchTiming.IMMEDIATE,
-								true,
-								null,
-								creationState
-						);
-
-			}
-			else {
-				identifierFetch = ( (Fetchable) identifierMapping ).generateFetch(
-						fetchParent,
-						identifierNavigablePath,
-						FetchTiming.IMMEDIATE,
-						true,
-						null,
-						creationState
-				);
-			}
 		}
 		else {
 			identifierFetch = ( (Fetchable) identifierMapping ).generateFetch(

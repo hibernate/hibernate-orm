@@ -259,6 +259,11 @@ public interface SessionFactoryImplementor
 	RootGraphImplementor<?> findEntityGraphByName(String name);
 
 	/**
+	 * The best guess entity name for an entity not in an association
+	 */
+	String bestGuessEntityName(Object object);
+
+	/**
 	 * @deprecated (since 5.2) Use {@link MetamodelImplementor#entityPersister(Class)} instead.
 	 */
 	@Deprecated

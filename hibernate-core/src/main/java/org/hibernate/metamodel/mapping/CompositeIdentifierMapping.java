@@ -10,7 +10,6 @@ package org.hibernate.metamodel.mapping;
 import java.util.List;
 
 import org.hibernate.engine.spi.IdentifierValue;
-import org.hibernate.mapping.IndexedConsumer;
 
 /**
  * Support for composite identifier mappings
@@ -18,25 +17,24 @@ import org.hibernate.mapping.IndexedConsumer;
  * @author Andrea Boriero
  */
 public interface CompositeIdentifierMapping extends EntityIdentifierMapping {
-	/**
-	 * The number of attributes associated with this composite
-	 */
-	int getAttributeCount();
-
-	/**
-	 * The attributes associated with this composite
-	 */
-	List<SingularAttributeMapping> getAttributes();
-
-	default void forEachAttribute(IndexedConsumer<SingularAttributeMapping> consumer) {
-		final List<SingularAttributeMapping> attributes = getAttributes();
-		for ( int i = 0; i < attributes.size(); i++ ) {
-			consumer.accept( i, attributes.get( i ) );
-		}
-	}
 
 	@Override
 	default IdentifierValue getUnsavedStrategy() {
 		return IdentifierValue.UNDEFINED;
 	}
+
+	/**
+	 * Does the identifier have a corresponding EmbeddableId or IdClass?
+	 *
+	 * @return false if there is not an IdCass or an EmbeddableId
+	 */
+	boolean hasContainingClass();
+
+	EmbeddableMappingType getPartMappingType();
+
+	/**
+	 * Returns the embeddable type descriptor of the id-class, if there is one,
+	 * otherwise the one of the virtual embeddable mapping type.
+	 */
+	EmbeddableMappingType getMappedIdEmbeddableTypeDescriptor();
 }

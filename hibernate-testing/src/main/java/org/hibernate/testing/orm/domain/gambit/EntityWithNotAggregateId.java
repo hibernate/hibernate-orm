@@ -70,5 +70,29 @@ public class EntityWithNotAggregateId {
 		public void setValue2(String value2) {
 			this.value2 = value2;
 		}
+
+		@Override
+		public boolean equals(Object o) {
+			if ( this == o ) {
+				return true;
+			}
+			if ( o == null || getClass() != o.getClass() ) {
+				return false;
+			}
+
+			PK pk = (PK) o;
+
+			if ( value1 != null ? !value1.equals( pk.value1 ) : pk.value1 != null ) {
+				return false;
+			}
+			return value2 != null ? value2.equals( pk.value2 ) : pk.value2 == null;
+		}
+
+		@Override
+		public int hashCode() {
+			int result = value1 != null ? value1.hashCode() : 0;
+			result = 31 * result + ( value2 != null ? value2.hashCode() : 0 );
+			return result;
+		}
 	}
 }

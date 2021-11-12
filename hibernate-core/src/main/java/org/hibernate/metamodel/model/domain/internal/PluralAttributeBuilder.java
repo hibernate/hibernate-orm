@@ -15,7 +15,7 @@ import java.util.Set;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.AttributeClassification;
 import org.hibernate.metamodel.CollectionClassification;
-import org.hibernate.metamodel.MetamodelUnsupportedOperationException;
+import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.internal.AttributeFactory;
 import org.hibernate.metamodel.internal.MetadataContext;
 import org.hibernate.metamodel.internal.PluralAttributeMetadata;
@@ -125,7 +125,7 @@ public class PluralAttributeBuilder<D, C, E, K> {
 			return new BagAttributeImpl<>( builder, metadataContext );
 		}
 
-		throw new MetamodelUnsupportedOperationException( "Unknown collection: " + attributeJtd.getJavaType() );
+		throw new UnsupportedMappingException( "Unknown collection: " + attributeJtd.getJavaType() );
 	}
 
 	private static SimpleDomainType<?> determineListIndexOrMapKeyType(

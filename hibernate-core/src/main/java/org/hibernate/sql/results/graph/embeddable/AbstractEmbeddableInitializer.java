@@ -12,12 +12,16 @@ import java.util.Set;
 import java.util.function.Supplier;
 
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.StateArrayContributorMapping;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
+import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.query.NavigablePath;
@@ -31,7 +35,6 @@ import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 import org.hibernate.sql.results.graph.entity.AbstractEntityInitializer;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.internal.NullValueAssembler;
-import org.hibernate.sql.results.internal.domain.CircularBiDirectionalFetchImpl;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.descriptor.java.spi.EntityJavaTypeDescriptor;
 
@@ -65,7 +68,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		this.resolvedValues = new Object[ numOfAttrs ];
 		this.assemblerMap = new IdentityHashMap<>( numOfAttrs );
 
-		embeddableTypeDescriptor.visitStateArrayContributors(
+		embeddedModelPartDescriptor.visitFetchables(
 				stateArrayContributor -> {
 					final Fetch fetch = resultDescriptor.findFetch( stateArrayContributor );
 
@@ -73,8 +76,9 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 							? new NullValueAssembler<>( stateArrayContributor.getJavaTypeDescriptor() )
 							: fetch.createAssembler( this, creationState );
 
-					assemblerMap.put( stateArrayContributor, stateAssembler );
-				}
+					assemblerMap.put( (StateArrayContributorMapping) stateArrayContributor, stateAssembler );
+				},
+				null
 		);
 
 		// We never want to create empty composites for the FK target or PK, otherwise collections would break
@@ -140,6 +144,14 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		// which we access through the fetch parent access.
 		// If this model part is an identifier, we must construct the instance as this is called during resolveKey
 		final EmbeddableMappingType embeddableTypeDescriptor = embeddedModelPartDescriptor.getEmbeddableTypeDescriptor();
+		final EmbeddableRepresentationStrategy representationStrategy;
+		if ( embeddedModelPartDescriptor instanceof CompositeIdentifierMapping ) {
+			representationStrategy = ( (CompositeIdentifierMapping) embeddedModelPartDescriptor ).getMappedIdEmbeddableTypeDescriptor()
+					.getRepresentationStrategy();
+		}
+		else {
+			representationStrategy = embeddableTypeDescriptor.getRepresentationStrategy();
+		}
 		if ( fetchParentAccess != null && embeddableTypeDescriptor.getMappedJavaTypeDescriptor().getJavaTypeClass()
 				.isAssignableFrom( fetchParentAccess.getInitializedPart().getJavaTypeDescriptor().getJavaTypeClass() )
 				&& embeddableTypeDescriptor.getMappedJavaTypeDescriptor() instanceof EntityJavaTypeDescriptor<?>
@@ -150,9 +162,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		}
 
 		if ( compositeInstance == null ) {
-			compositeInstance = embeddableTypeDescriptor
-					.getRepresentationStrategy()
-					.getInstantiator()
+			compositeInstance = representationStrategy.getInstantiator()
 					.instantiate( null, rowProcessingState.getSession().getFactory() );
 		}
 
@@ -201,14 +211,14 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		final Set<Map.Entry<StateArrayContributorMapping, DomainResultAssembler>> entries = assemblerMap.entrySet();
 		final int size = entries.size();
 		for ( Map.Entry<StateArrayContributorMapping, DomainResultAssembler> entry : entries ) {
-			final DomainResultAssembler value = entry.getValue();
-			final Object contributorValue = value.assemble(
+			final DomainResultAssembler<?> assembler = entry.getValue();
+			final Object contributorValue = assembler.assemble(
 					rowProcessingState,
 					rowProcessingState.getJdbcValuesSourceProcessingState().getProcessingOptions()
 			);
 
 			resolvedValues[entry.getKey().getStateArrayPosition()] = contributorValue;
-			if ( contributorValue != null && ( !( value instanceof CircularBiDirectionalFetchImpl.CircularFetchAssembler ) || size == 1 ) ) {
+			if ( contributorValue != null ) {
 				areAllValuesNull = false;
 			}
 		}
@@ -221,12 +231,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 			if ( compositeInstance instanceof HibernateProxy ) {
 				if ( initializer != this ) {
 					( (AbstractEntityInitializer) initializer ).registerResolutionListener(
-							entityInstance -> {
-								embeddedModelPartDescriptor.getEmbeddableTypeDescriptor().setPropertyValues(
-										entityInstance,
-										resolvedValues
-								);
-							}
+							entity -> setPropertyValuesOnTarget( entity, rowProcessingState.getSession() )
 					);
 				}
 				else {
@@ -234,10 +239,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 							.getRepresentationStrategy()
 							.getInstantiator()
 							.instantiate( null, rowProcessingState.getSession().getFactory() );
-					embeddedModelPartDescriptor.getEmbeddableTypeDescriptor().setPropertyValues(
-							target,
-							resolvedValues
-					);
+					setPropertyValuesOnTarget( target, rowProcessingState.getSession() );
 					( (HibernateProxy) compositeInstance ).getHibernateLazyInitializer().setImplementation( target );
 				}
 			}
@@ -250,12 +252,43 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 			// but that might cause unexpected outcomes for Hibernate 5 users that use createEmptyCompositesEnabled when updating.
 			// You can see the need for this by running EmptyCompositeEquivalentToNullTest
 			else if ( !areAllValuesNull ) {
-				embeddedModelPartDescriptor.getEmbeddableTypeDescriptor().setPropertyValues(
-						compositeInstance,
-						resolvedValues
+				setPropertyValuesOnTarget( compositeInstance, rowProcessingState.getSession() );
+			}
+		}
+	}
+
+	private void setPropertyValuesOnTarget(Object compositeInstance, SharedSessionContractImplementor session) {
+		final EmbeddableMappingType embeddableTypeDescriptor;
+		if ( embeddedModelPartDescriptor instanceof CompositeIdentifierMapping ) {
+			final CompositeIdentifierMapping compositeIdentifierMapping = (CompositeIdentifierMapping) this.embeddedModelPartDescriptor;
+			embeddableTypeDescriptor = compositeIdentifierMapping.getMappedIdEmbeddableTypeDescriptor();
+			if ( compositeIdentifierMapping.hasContainingClass() ) {
+				// For id-classes, we might have to transform from the virtual representation to the id-class representation
+				// in case the virtual representation contains a to-one attribute, that is mapped by an embeddable in the id-class
+				embeddedModelPartDescriptor.getEmbeddableTypeDescriptor().forEachAttributeMapping(
+						(index, attributeMapping) -> {
+							final AttributeMapping idClassAttribute = embeddableTypeDescriptor.getAttributeMappings().get( index );
+							if ( attributeMapping instanceof ToOneAttributeMapping && !( idClassAttribute instanceof ToOneAttributeMapping ) ) {
+								final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attributeMapping;
+								final Object associationKey = toOneAttributeMapping.getForeignKeyDescriptor()
+										.getAssociationKeyFromSide(
+												resolvedValues[index],
+												toOneAttributeMapping.getSideNature().inverse(),
+												session
+										);
+								resolvedValues[index] = associationKey;
+							}
+						}
 				);
 			}
 		}
+		else {
+			embeddableTypeDescriptor = embeddedModelPartDescriptor.getEmbeddableTypeDescriptor();
+		}
+		embeddableTypeDescriptor.setPropertyValues(
+				compositeInstance,
+				resolvedValues
+		);
 	}
 
 	@Override

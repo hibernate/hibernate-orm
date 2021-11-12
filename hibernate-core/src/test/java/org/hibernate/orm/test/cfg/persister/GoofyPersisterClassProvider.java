@@ -561,17 +561,7 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public Serializable getIdentifier(Object object) {
-			return null;
-		}
-
-		@Override
 		public Serializable getIdentifier(Object entity, SharedSessionContractImplementor session) {
-			return null;
-		}
-
-		@Override
-		public Object getIdentifier(Object entity, SessionFactoryImplementor sessionFactoryImplementor) {
 			return null;
 		}
 

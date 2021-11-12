@@ -6,7 +6,6 @@
  */
 package org.hibernate.sql.results.graph.entity.internal;
 
-import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.NotYetImplementedFor6Exception;
@@ -15,9 +14,10 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
+import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.query.EntityIdentifierNavigablePath;
@@ -26,7 +26,6 @@ import org.hibernate.sql.results.graph.AbstractFetchParentAccess;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Initializer;
-import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.graph.entity.EntityLoadingLogger;
 import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
@@ -40,7 +39,7 @@ import static org.hibernate.internal.log.LoggingHelper.toLoggableString;
 public class EntitySelectFetchInitializer extends AbstractFetchParentAccess implements EntityInitializer {
 	private static final String CONCRETE_NAME = EntitySelectFetchInitializer.class.getSimpleName();
 
-	private FetchParentAccess parentAccess;
+	private final FetchParentAccess parentAccess;
 	private final NavigablePath navigablePath;
 	private final boolean isEnhancedForLazyLoading;
 
@@ -81,10 +80,10 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 	@Override
 	public void resolveInstance(RowProcessingState rowProcessingState) {
 		// Defer the select by default to the initialize phase
-		// We only need to select in this phase if this is part of an identifier
+		// We only need to select in this phase if this is part of an identifier or foreign key
 		NavigablePath np = navigablePath.getParent();
 		while ( np != null ) {
-			if ( np instanceof EntityIdentifierNavigablePath ) {
+			if ( np instanceof EntityIdentifierNavigablePath || ForeignKeyDescriptor.PART_NAME.equals( np.getUnaliasedLocalName() ) ) {
 				initializeInstance( rowProcessingState );
 				return;
 			}
@@ -98,17 +97,7 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 			return;
 		}
 
-		List<AttributeMapping> attributeMappings;
-		if ( parentAccess instanceof EmbeddableInitializer ) {
-			attributeMappings = ( (EmbeddableInitializer) parentAccess ).getInitializedPart()
-					.getEmbeddableTypeDescriptor()
-					.getAttributeMappings();
-		}
-		else {
-			attributeMappings = ( (EntityInitializer) parentAccess ).getConcreteDescriptor().getAttributeMappings();
-		}
-
-		if ( !attributeMappings.contains( referencedModelPart ) ) {
+		if ( !isAttributeAssignableToConcreteDescriptor() ) {
 			return;
 		}
 
@@ -216,6 +205,21 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 		if ( entityInstance instanceof HibernateProxy ) {
 			( (HibernateProxy) entityInstance ).getHibernateLazyInitializer().setUnwrap( unwrapProxy );
 		}
+	}
+
+	protected boolean isAttributeAssignableToConcreteDescriptor() {
+		if ( parentAccess instanceof EntityInitializer ) {
+			final AbstractEntityPersister concreteDescriptor = (AbstractEntityPersister) ( (EntityInitializer) parentAccess ).getConcreteDescriptor();
+			if ( concreteDescriptor.isPolymorphic() ) {
+				final AbstractEntityPersister declaringType = (AbstractEntityPersister) referencedModelPart.getDeclaringType();
+				if ( concreteDescriptor != declaringType ) {
+					if ( !declaringType.getEntityMetamodel().getSubclassEntityNames().contains( concreteDescriptor.getEntityMetamodel().getName() ) ) {
+						return false;
+					}
+				}
+			}
+		}
+		return true;
 	}
 
 	@Override

@@ -29,7 +29,6 @@ public class EmbeddableForeignKeyResultImpl<T>
 		extends AbstractFetchParent
 		implements EmbeddableResultGraphNode, DomainResult<T> {
 
-	private static final String ROLE_LOCAL_NAME = "{fk}";
 	private final String resultVariable;
 
 	public EmbeddableForeignKeyResultImpl(

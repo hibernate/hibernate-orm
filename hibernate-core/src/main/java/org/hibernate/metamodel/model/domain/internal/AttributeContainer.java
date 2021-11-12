@@ -6,10 +6,9 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
-import java.util.List;
 import java.util.Set;
 
-import org.hibernate.metamodel.MetamodelUnsupportedOperationException;
+import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
@@ -31,7 +30,7 @@ public interface AttributeContainer<J> {
 		 * or an aggregated composite id ({@link jakarta.persistence.EmbeddedId})
 		 */
 		default void applyIdAttribute(SingularPersistentAttribute<J, ?> idAttribute) {
-			throw new MetamodelUnsupportedOperationException(
+			throw new UnsupportedMappingException(
 					"AttributeContainer [" + getClass().getName() + "] does not support identifiers"
 			);
 		}
@@ -39,7 +38,7 @@ public interface AttributeContainer<J> {
 		default void applyNonAggregatedIdAttributes(
 				Set<SingularPersistentAttribute<? super J, ?>> idAttributes,
 				EmbeddableDomainType<?> idClassType) {
-			throw new MetamodelUnsupportedOperationException(
+			throw new UnsupportedMappingException(
 					"AttributeContainer [" + getClass().getName() + "] does not support identifiers"
 			);
 		}
@@ -50,13 +49,13 @@ public interface AttributeContainer<J> {
 		 * 		because of its dependence on declaring-type, etc that we may not be able to do
 		 */
 		default void applyIdClassAttributes(Set<SingularPersistentAttribute<? super J, ?>> idClassAttributes) {
-			throw new MetamodelUnsupportedOperationException(
+			throw new UnsupportedMappingException(
 					"AttributeContainer [" + getClass().getName() + "] does not support identifiers"
 			);
 		}
 
 		default void applyVersionAttribute(SingularPersistentAttribute<J, ?> versionAttribute) {
-			throw new MetamodelUnsupportedOperationException(
+			throw new UnsupportedMappingException(
 					"AttributeContainer [" + getClass().getName() + "] does not support versions"
 			);
 		}

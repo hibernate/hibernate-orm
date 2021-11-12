@@ -33,11 +33,4 @@ public interface PrimitiveJavaType<J extends Serializable> extends BasicJavaType
 	 * Get the Java type that describes an array of this type's primitive variant.
 	 */
 	Class<?> getPrimitiveArrayClass();
-
-	/**`
-	 * Get this Java type's default value.
-	 *
-	 * @return The default value.
-	 */
-	J getDefaultValue();
 }

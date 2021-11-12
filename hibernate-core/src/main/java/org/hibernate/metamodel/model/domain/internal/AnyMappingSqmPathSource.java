@@ -6,7 +6,7 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
-import org.hibernate.metamodel.MetamodelUnsupportedOperationException;
+import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.model.domain.AnyMappingDomainType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.query.NavigablePath;
@@ -43,7 +43,7 @@ public class AnyMappingSqmPathSource<J> extends AbstractSqmPathSource<J> {
 			return keyPathSource;
 		}
 
-		throw new MetamodelUnsupportedOperationException( "De-referencing parts of an ANY mapping, other than the key, is not supported" );
+		throw new UnsupportedMappingException( "De-referencing parts of an ANY mapping, other than the key, is not supported" );
 	}
 
 	@Override

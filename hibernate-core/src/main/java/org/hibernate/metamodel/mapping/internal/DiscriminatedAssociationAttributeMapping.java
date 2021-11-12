@@ -14,6 +14,7 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.IndexedConsumer;
@@ -55,6 +56,7 @@ public class DiscriminatedAssociationAttributeMapping
 		implements DiscriminatedAssociationModelPart {
 	private final NavigableRole navigableRole;
 	private final DiscriminatedAssociationMapping discriminatorMapping;
+	private final SessionFactoryImplementor sessionFactory;
 
 	public DiscriminatedAssociationAttributeMapping(
 			NavigableRole attributeRole,
@@ -88,6 +90,7 @@ public class DiscriminatedAssociationAttributeMapping
 				bootValueMapping,
 				creationProcess
 		);
+		this.sessionFactory = creationProcess.getCreationContext().getSessionFactory();
 	}
 
 	@Override
@@ -192,8 +195,14 @@ public class DiscriminatedAssociationAttributeMapping
 	}
 
 	private EntityMappingType determineConcreteType(Object entity, SharedSessionContractImplementor session) {
-		final String entityName = session.bestGuessEntityName( entity );
-		return session.getFactory()
+		final String entityName;
+		if ( session == null ) {
+			entityName = sessionFactory.bestGuessEntityName( entity );
+		}
+		else {
+			entityName = session.bestGuessEntityName( entity );
+		}
+		return sessionFactory
 				.getRuntimeMetamodels()
 				.getEntityMappingType( entityName );
 	}

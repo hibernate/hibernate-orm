@@ -15,6 +15,7 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -136,6 +137,7 @@ public class EmbeddedAttributeMapping
 			TableGroupProducer declaringTableGroupProducer,
 			SelectableMappings selectableMappings,
 			EmbeddableValuedModelPart inverseModelPart,
+			EmbeddableMappingType embeddableTypeDescriptor,
 			MappingModelCreationProcess creationProcess) {
 		super(
 				inverseModelPart.getFetchableName(),
@@ -150,7 +152,7 @@ public class EmbeddedAttributeMapping
 		this.navigableRole = inverseModelPart.getNavigableRole().getParent().append( inverseModelPart.getFetchableName() );
 
 		this.tableExpression = selectableMappings.getSelectable( 0 ).getContainingTableExpression();
-		this.embeddableMappingType = inverseModelPart.getEmbeddableTypeDescriptor().createInverseMappingType(
+		this.embeddableMappingType = embeddableTypeDescriptor.createInverseMappingType(
 				this,
 				declaringTableGroupProducer,
 				selectableMappings,
@@ -165,11 +167,19 @@ public class EmbeddedAttributeMapping
 			TableGroupProducer declaringTableGroupProducer,
 			SelectableMappings selectableMappings,
 			MappingModelCreationProcess creationProcess) {
+		final EmbeddableMappingType embeddableTypeDescriptor;
+		if ( modelPart instanceof CompositeIdentifierMapping ) {
+			embeddableTypeDescriptor = ( (CompositeIdentifierMapping) modelPart ).getMappedIdEmbeddableTypeDescriptor();
+		}
+		else {
+			embeddableTypeDescriptor = modelPart.getEmbeddableTypeDescriptor();
+		}
 		return new EmbeddedAttributeMapping(
 				keyDeclaringType,
 				declaringTableGroupProducer,
 				selectableMappings,
 				modelPart,
+				embeddableTypeDescriptor,
 				creationProcess
 		);
 	}

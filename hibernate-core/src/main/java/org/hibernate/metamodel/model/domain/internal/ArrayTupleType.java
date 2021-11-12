@@ -9,7 +9,7 @@ package org.hibernate.metamodel.model.domain.internal;
 import java.util.Arrays;
 import java.util.List;
 
-import org.hibernate.metamodel.MetamodelUnsupportedOperationException;
+import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
@@ -47,12 +47,12 @@ public class ArrayTupleType implements TupleType<Object[]>, AllowableParameterTy
 
 	@Override
 	public String getComponentName(int index) {
-		throw new MetamodelUnsupportedOperationException( "Array tuple has no component names" );
+		throw new UnsupportedMappingException( "Array tuple has no component names" );
 	}
 
 	@Override
 	public List<String> getComponentNames() {
-		throw new MetamodelUnsupportedOperationException( "Array tuple has no component names" );
+		throw new UnsupportedMappingException( "Array tuple has no component names" );
 	}
 
 	@Override
@@ -62,7 +62,7 @@ public class ArrayTupleType implements TupleType<Object[]>, AllowableParameterTy
 
 	@Override
 	public SqmExpressable<?> get(String componentName) {
-		throw new MetamodelUnsupportedOperationException( "Array tuple has no component names" );
+		throw new UnsupportedMappingException( "Array tuple has no component names" );
 	}
 
 	@Override

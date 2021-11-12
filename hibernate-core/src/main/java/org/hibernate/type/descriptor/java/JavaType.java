@@ -74,6 +74,15 @@ public interface JavaType<T> extends Serializable {
 	}
 
 	/**
+	 * Get this Java type's default value.
+	 *
+	 * @return The default value.
+	 */
+	default T getDefaultValue() {
+		return null;
+	}
+
+	/**
 	 * Obtain the "recommended" SQL type descriptor for this Java type.  The recommended
 	 * aspect comes from the JDBC spec (mostly).
 	 *

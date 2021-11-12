@@ -437,12 +437,12 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
-	public AllowableParameterType<?> resolveParameterBindType(Object bindValue) {
+	public <T> AllowableParameterType<T> resolveParameterBindType(T bindValue) {
 		return delegate.resolveParameterBindType( bindValue );
 	}
 
 	@Override
-	public AllowableParameterType<?> resolveParameterBindType(Class<?> clazz) {
+	public <T> AllowableParameterType<T> resolveParameterBindType(Class<T> clazz) {
 		return delegate.resolveParameterBindType( clazz );
 	}
 

@@ -126,7 +126,7 @@ public abstract class AbstractJdbcParameter
 			return defaultForJavaType;
 		}
 
-		final JavaType<Object> javaType = typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( valueClass );
+		final JavaType<Object> javaType = typeConfiguration.getJavaTypeDescriptorRegistry().findDescriptor( valueClass );
 		if ( javaType != null ) {
 			final JdbcType recommendedJdbcType = javaType.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() );
 			if ( recommendedJdbcType != null ) {

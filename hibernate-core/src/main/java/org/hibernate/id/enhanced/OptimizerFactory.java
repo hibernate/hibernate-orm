@@ -105,51 +105,6 @@ public class OptimizerFactory {
 	}
 
 	/**
-	 * Deprecated!
-	 *
-	 * @deprecated Use {@link StandardOptimizerDescriptor#getExternalName()} via {@link StandardOptimizerDescriptor#NONE}
-	 */
-	@Deprecated
-	@SuppressWarnings( {"UnusedDeclaration"})
-	public static final String NONE = StandardOptimizerDescriptor.NONE.getExternalName();
-
-	/**
-	 * Deprecated!
-	 *
-	 * @deprecated Use {@link StandardOptimizerDescriptor#getExternalName()} via {@link StandardOptimizerDescriptor#HILO}
-	 */
-	@Deprecated
-	@SuppressWarnings( {"UnusedDeclaration"})
-	public static final String HILO = StandardOptimizerDescriptor.HILO.getExternalName();
-
-	/**
-	 * Deprecated!
-	 *
-	 * @deprecated Use {@link StandardOptimizerDescriptor#getExternalName()} via {@link StandardOptimizerDescriptor#LEGACY_HILO}
-	 */
-	@Deprecated
-	@SuppressWarnings( {"UnusedDeclaration"})
-	public static final String LEGACY_HILO = "legacy-hilo";
-
-	/**
-	 * Deprecated!
-	 *
-	 * @deprecated Use {@link StandardOptimizerDescriptor#getExternalName()} via {@link StandardOptimizerDescriptor#POOLED}
-	 */
-	@Deprecated
-	@SuppressWarnings( {"UnusedDeclaration"})
-	public static final String POOL = "pooled";
-
-	/**
-	 * Deprecated!
-	 *
-	 * @deprecated Use {@link StandardOptimizerDescriptor#getExternalName()} via {@link StandardOptimizerDescriptor#POOLED_LO}
-	 */
-	@Deprecated
-	@SuppressWarnings( {"UnusedDeclaration"})
-	public static final String POOL_LO = "pooled-lo";
-
-	/**
 	 * Determine the optimizer to use when there was not one explicitly specified.
 	 */
 	public static String determineImplicitOptimizerName(int incrementSize, Properties configSettings) {
@@ -163,10 +118,8 @@ public class OptimizerFactory {
 			return preferredPooledOptimizerStrategy;
 		}
 
-		// otherwise fallback to the fallback strategy (considering the deprecated PREFER_POOLED_VALUES_LO setting)
-		return ConfigurationHelper.getBoolean( AvailableSettings.PREFER_POOLED_VALUES_LO, configSettings, false )
-				? StandardOptimizerDescriptor.POOLED_LO.getExternalName()
-				: StandardOptimizerDescriptor.POOLED.getExternalName();
+		// otherwise fallback to the fallback strategy
+		return StandardOptimizerDescriptor.POOLED.getExternalName();
 	}
 
 	private OptimizerFactory() {

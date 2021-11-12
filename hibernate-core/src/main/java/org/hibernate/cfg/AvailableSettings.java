@@ -1158,13 +1158,6 @@ public interface AvailableSettings {
 	String PROXOOL_CONFIG_PREFIX = "hibernate.proxool";
 
 	/**
-	 * Proxool/Hibernate property prefix
-	 * @deprecated Use {@link #PROXOOL_CONFIG_PREFIX} instead
-	 */
-	@Deprecated
-	String PROXOOL_PREFIX = PROXOOL_CONFIG_PREFIX;
-
-	/**
 	 * Proxool property to configure the Proxool Provider using an XML (<tt>/path/to/file.xml</tt>)
 	 */
 	String PROXOOL_XML = "hibernate.proxool.xml";
@@ -1302,15 +1295,6 @@ public interface AvailableSettings {
 	String BYTECODE_PROVIDER = "hibernate.bytecode.provider";
 
 	String JPAQL_STRICT_COMPLIANCE= "hibernate.query.jpaql_strict_compliance";
-
-	/**
-	 * When using pooled {@link org.hibernate.id.enhanced.Optimizer optimizers}, prefer interpreting the
-	 * database value as the lower (lo) boundary.  The default is to interpret it as the high boundary.
-	 *
-	 * @deprecated Use {@link #PREFERRED_POOLED_OPTIMIZER} instead
-	 */
-	@Deprecated
-	String PREFER_POOLED_VALUES_LO = "hibernate.id.optimizer.pooled.prefer_lo";
 
 	/**
 	 * When a generator specified an increment-size and an optimizer was not explicitly specified, which of

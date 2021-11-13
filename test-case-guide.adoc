@@ -9,7 +9,7 @@ This is meant as a guide for writing test cases to be attached to bug reports in
 There are a number of tenants that make up a good test case as opposed to a poor one.  In fact there are a few guides for this across the web including (http://stackoverflow.com/help/mcve[MCVE]) and (http://sscce.org/[SSCCE]).  These guides all assert the same ideas albeit using different terms.  Given the ubiquity of StackOverflow and the fact that the MCVE guidelines were written specifically for StackOverflow, we will use those terms here as we assume most developers have seen them before:
 
 * (M)inimal - Provide just the minimal information needed.  If second level caching is irrelevant to the bug report then the test should not use second level caching.  If entity inheritance is irrelevant then do not use it in the test.  If your application uses Spring Data, remove Spring Data from the test.
-* (C)omplete - Provide all information needed to reproduce the problem.  If a bug only occurs when using bytecode enhancement, then the test should include bytecode enhancement.  In other words the test should be self-contained.
+* \(C)omplete - Provide all information needed to reproduce the problem.  If a bug only occurs when using bytecode enhancement, then the test should include bytecode enhancement.  In other words the test should be self-contained.
 * (V)erifiable - The test should actually reproduce the problem being reported.
 
 

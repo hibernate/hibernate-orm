@@ -19,6 +19,7 @@ import java.util.Set;
 import javax.persistence.criteria.AbstractQuery;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Fetch;
+import javax.persistence.criteria.From;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.ParameterExpression;
@@ -483,6 +484,11 @@ public class QueryStructure<T> implements Serializable {
 					.append( ( (FromImplementor) fetch ).renderTableExpression( renderingContext ) );
 
 			renderFetches( jpaqlQuery, renderingContext, fetch.getFetches() );
+
+			if (fetch instanceof From) {
+				From from = (From) fetch;
+				renderJoins(jpaqlQuery, renderingContext, from.getJoins());
+			}
 		}
 	}
 }

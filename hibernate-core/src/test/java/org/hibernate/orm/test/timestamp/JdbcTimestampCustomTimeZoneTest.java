@@ -4,38 +4,35 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.timestamp;
+package org.hibernate.orm.test.timestamp;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.Time;
-import java.time.Instant;
-import java.time.OffsetTime;
+import java.sql.Timestamp;
 import java.util.Calendar;
-import java.util.Map;
 import java.util.TimeZone;
-import java.util.concurrent.TimeUnit;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
 
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.MySQL5Dialect;
+import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.testing.orm.jdbc.PreparedStatementSpyConnectionProvider;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 import org.mockito.ArgumentCaptor;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.times;
@@ -44,12 +41,15 @@ import static org.mockito.Mockito.verify;
 /**
  * @author Vlad Mihalcea
  */
-@SkipForDialect(MySQL5Dialect.class)
-@RequiresDialectFeature(DialectChecks.SupportsJdbcDriverProxying.class)
-public class JdbcTimeCustomTimeZoneTest
-		extends BaseNonConfigCoreFunctionalTestCase {
+@SkipForDialect(dialectClass = MySQLDialect.class, matchSubTypes = true)
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJdbcDriverProxying.class)
+public class JdbcTimestampCustomTimeZoneTest
+		extends BaseSessionFactoryFunctionalTest {
 
-	private PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider( true, false );
+	private PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider(
+			true,
+			false
+	);
 
 	private static final TimeZone TIME_ZONE = TimeZone.getTimeZone(
 			"America/Los_Angeles" );
@@ -62,21 +62,21 @@ public class JdbcTimeCustomTimeZoneTest
 	}
 
 	@Override
-	protected void addSettings(Map settings) {
-		connectionProvider.setConnectionProvider( (ConnectionProvider) settings.get( AvailableSettings.CONNECTION_PROVIDER ) );
-		settings.put(
+	protected void applySettings(StandardServiceRegistryBuilder builder) {
+		connectionProvider.setConnectionProvider( (ConnectionProvider) builder.getSettings()
+				.get( AvailableSettings.CONNECTION_PROVIDER ) );
+		builder.applySetting(
 				AvailableSettings.CONNECTION_PROVIDER,
 				connectionProvider
 		);
-		settings.put(
+		builder.applySetting(
 				AvailableSettings.JDBC_TIME_ZONE,
 				TIME_ZONE
 		);
 	}
 
-	@Override
+	@AfterAll
 	protected void releaseResources() {
-		super.releaseResources();
 		connectionProvider.stop();
 	}
 
@@ -84,7 +84,7 @@ public class JdbcTimeCustomTimeZoneTest
 	public void testTimeZone() {
 
 		connectionProvider.clear();
-		doInHibernate( this::sessionFactory, s -> {
+		inTransaction( s -> {
 			Person person = new Person();
 			person.id = 1L;
 			s.persist( person );
@@ -97,9 +97,9 @@ public class JdbcTimeCustomTimeZoneTest
 		try {
 			ArgumentCaptor<Calendar> calendarArgumentCaptor = ArgumentCaptor.forClass(
 					Calendar.class );
-			verify( ps, times( 1 ) ).setTime(
+			verify( ps, times( 1 ) ).setTimestamp(
 					anyInt(),
-					any( Time.class ),
+					any( Timestamp.class ),
 					calendarArgumentCaptor.capture()
 			);
 			assertEquals(
@@ -107,32 +107,31 @@ public class JdbcTimeCustomTimeZoneTest
 					calendarArgumentCaptor.getValue().getTimeZone()
 			);
 		}
-		catch ( SQLException e ) {
+		catch (SQLException e) {
 			fail( e.getMessage() );
 		}
 
 		connectionProvider.clear();
-		doInHibernate( this::sessionFactory, s -> {
+		inTransaction( s -> {
 			s.doWork( connection -> {
-				try ( Statement st = connection.createStatement() ) {
-					try ( ResultSet rs = st.executeQuery(
-							"select createdOn from Person" ) ) {
+				try (Statement st = connection.createStatement()) {
+					try (ResultSet rs = st.executeQuery(
+							"select createdOn from Person" )) {
 						while ( rs.next() ) {
-							Time time = rs.getTime( 1 );
-							Time offsetTime = Time.valueOf( OffsetTime.ofInstant(
-									Instant.ofEpochMilli( 0 ),
-									TIME_ZONE.toZoneId()
-							).toLocalTime() );
-							assertEquals( offsetTime, time );
+							Timestamp timestamp = rs.getTimestamp( 1 );
+							int offsetDiff = TimeZone.getDefault()
+									.getOffset( 0 ) - TIME_ZONE.getOffset( 0 );
+							assertEquals(
+									Math.abs( Long.valueOf( offsetDiff )
+													  .longValue() ),
+									Math.abs( timestamp.getTime() )
+							);
 						}
 					}
 				}
 			} );
 			Person person = s.find( Person.class, 1L );
-			assertEquals(
-					0,
-					person.createdOn.getTime() % TimeUnit.DAYS.toSeconds( 1 )
-			);
+			assertEquals( 0, person.createdOn.getTime() );
 		} );
 	}
 
@@ -142,7 +141,7 @@ public class JdbcTimeCustomTimeZoneTest
 		@Id
 		private Long id;
 
-		private Time createdOn = new Time( 0 );
+		private Timestamp createdOn = new Timestamp( 0 );
 	}
 }
 

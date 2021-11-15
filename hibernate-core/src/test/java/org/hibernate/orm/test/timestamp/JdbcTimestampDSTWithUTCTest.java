@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.timestamp;
+package org.hibernate.orm.test.timestamp;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -12,60 +12,59 @@ import java.sql.Statement;
 import java.sql.Time;
 import java.time.LocalTime;
 import java.util.GregorianCalendar;
-import java.util.Map;
 import java.util.TimeZone;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.MySQL5Dialect;
+import org.hibernate.dialect.MySQLDialect;
 
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 import org.jboss.logging.Logger;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialectFeature(DialectChecks.SupportsJdbcDriverProxying.class)
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJdbcDriverProxying.class)
 @TestForIssue(jiraKey = "HHH-12988")
-@SkipForDialect(MySQL5Dialect.class)
-public class JdbcTimestampDSTWithUTCTest
-		extends BaseNonConfigCoreFunctionalTestCase {
+@SkipForDialect(dialectClass = MySQLDialect.class, matchSubTypes = true)
+@DomainModel(
+		annotatedClasses = JdbcTimestampDSTWithUTCTest.Person.class
+)
+@SessionFactory
+@ServiceRegistry(
+		settings = @Setting(name = AvailableSettings.JDBC_TIME_ZONE, value = "UTC")
+)
+public class JdbcTimestampDSTWithUTCTest {
 
 	protected final Logger log = Logger.getLogger( getClass() );
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Person.class
-		};
-	}
-
-	@Override
-	protected void addSettings(Map settings) {
-		settings.put(
-				AvailableSettings.JDBC_TIME_ZONE,
-				"UTC"
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session ->
+						session.createQuery( "delete from Person" ).executeUpdate()
 		);
 	}
 
-	@Override
-	protected boolean isCleanupTestDataRequired() {
-		return true;
-	}
-
 	@Test
-	public void testHibernate() {
-		doInHibernate( this::sessionFactory, session -> {
+	public void testHibernate(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			Person person = new Person();
 
 			person.setId( 1L );
@@ -74,7 +73,7 @@ public class JdbcTimestampDSTWithUTCTest
 			session.persist( person );
 		} );
 
-		doInHibernate( this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 			Person person = session.find( Person.class, 1L );
 
 			assertEquals( LocalTime.of( 12, 0, 0 ), person.getShiftStartTime() );
@@ -82,8 +81,8 @@ public class JdbcTimestampDSTWithUTCTest
 	}
 
 	@Test
-	public void testJDBC() {
-		doInHibernate( this::sessionFactory, session -> {
+	public void testJDBC(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			session.doWork( connection -> {
 
 				Time time = Time.valueOf( LocalTime.of( 12, 0, 0 ) );
@@ -110,8 +109,8 @@ public class JdbcTimestampDSTWithUTCTest
 	}
 
 	@Test
-	public void testDBTimeValueAsEpochDST() {
-		doInHibernate( this::sessionFactory, session -> {
+	public void testDBTimeValueAsEpochDST(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			session.doWork( connection -> {
 
 				Time time = Time.valueOf( LocalTime.of( 12, 0, 0 ) );

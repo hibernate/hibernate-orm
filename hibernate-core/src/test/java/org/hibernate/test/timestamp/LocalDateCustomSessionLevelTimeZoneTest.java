@@ -9,27 +9,29 @@ package org.hibernate.test.timestamp;
 import java.time.LocalDate;
 import java.util.Map;
 import java.util.TimeZone;
+
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.jdbc.ConnectionProviderDelegate;
+import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Test;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.MySQL5Dialect;
-
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.jdbc.ConnectionProviderDelegate;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernateSessionBuilder;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialect(MySQL5Dialect.class)
-public class LocalDateCustomSessionLevelTimeZoneTest
-		extends BaseNonConfigCoreFunctionalTestCase {
+@RequiresDialect(value = MySQLDialect.class)
+public class LocalDateCustomSessionLevelTimeZoneTest extends BaseSessionFactoryFunctionalTest {
 
 	private static final TimeZone TIME_ZONE = TimeZone.getTimeZone(
 			"Europe/Berlin" );
@@ -38,16 +40,16 @@ public class LocalDateCustomSessionLevelTimeZoneTest
 		@Override
 		public void configure(Map configurationValues) {
 			String url = (String) configurationValues.get( AvailableSettings.URL );
-			if(!url.contains( "?" )) {
+			if ( !url.contains( "?" ) ) {
 				url += "?";
 			}
-			else if(!url.endsWith( "&" )) {
+			else if ( !url.endsWith( "&" ) ) {
 				url += "&";
 			}
 
 			url += "useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=Europe/Berlin";
 
-			configurationValues.put( AvailableSettings.URL, url);
+			configurationValues.put( AvailableSettings.URL, url );
 			super.configure( configurationValues );
 		}
 	};
@@ -60,21 +62,22 @@ public class LocalDateCustomSessionLevelTimeZoneTest
 	}
 
 	@Override
-	protected void addSettings(Map settings) {
-		settings.put(
+	protected void applySettings(StandardServiceRegistryBuilder builder) {
+		connectionProvider.setConnectionProvider( (ConnectionProvider) builder.getSettings()
+				.get( AvailableSettings.CONNECTION_PROVIDER ) );
+		builder.applySetting(
 				AvailableSettings.CONNECTION_PROVIDER,
 				connectionProvider
 		);
 	}
 
-	@Override
+	@AfterAll
 	protected void releaseResources() {
-		super.releaseResources();
 		connectionProvider.stop();
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11396" )
+	@TestForIssue(jiraKey = "HHH-11396")
 	public void testTimeZone() {
 		TimeZone old = TimeZone.getDefault();
 		try {

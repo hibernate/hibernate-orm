@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.timestamp;
+package org.hibernate.orm.test.timestamp;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -12,27 +12,27 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.Calendar;
-import java.util.Map;
 import java.util.TimeZone;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
 
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.MySQL5Dialect;
+import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.testing.orm.jdbc.PreparedStatementSpyConnectionProvider;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 import org.mockito.ArgumentCaptor;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernateSessionBuilder;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.times;
@@ -41,10 +41,10 @@ import static org.mockito.Mockito.verify;
 /**
  * @author Vlad Mihalcea
  */
-@SkipForDialect(MySQL5Dialect.class)
-@RequiresDialectFeature(DialectChecks.SupportsJdbcDriverProxying.class)
+@SkipForDialect(dialectClass = MySQLDialect.class, matchSubTypes = true)
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJdbcDriverProxying.class)
 public class JdbcTimestampCustomSessionLevelTimeZoneTest
-		extends BaseNonConfigCoreFunctionalTestCase {
+		extends BaseSessionFactoryFunctionalTest {
 
 	private PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider( true, false );
 
@@ -59,17 +59,16 @@ public class JdbcTimestampCustomSessionLevelTimeZoneTest
 	}
 
 	@Override
-	protected void addSettings(Map settings) {
-		connectionProvider.setConnectionProvider( (ConnectionProvider) settings.get( AvailableSettings.CONNECTION_PROVIDER ) );
-		settings.put(
+	protected void applySettings(StandardServiceRegistryBuilder builder) {
+		connectionProvider.setConnectionProvider( (ConnectionProvider) builder.getSettings().get( AvailableSettings.CONNECTION_PROVIDER ) );
+		builder.applySetting(
 				AvailableSettings.CONNECTION_PROVIDER,
 				connectionProvider
 		);
 	}
 
-	@Override
+	@AfterAll
 	protected void releaseResources() {
-		super.releaseResources();
 		connectionProvider.stop();
 	}
 

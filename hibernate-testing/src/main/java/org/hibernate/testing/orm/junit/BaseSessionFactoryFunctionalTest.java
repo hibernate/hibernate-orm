@@ -16,7 +16,11 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
+import org.hibernate.Session;
+import org.hibernate.SessionBuilder;
+import org.hibernate.Transaction;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
@@ -37,6 +41,7 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
 
 import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
+import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.jupiter.api.AfterEach;
 
 import org.jboss.logging.Logger;
@@ -317,6 +322,54 @@ public abstract class BaseSessionFactoryFunctionalTest
 		}
 		catch (ExecutionException e) {
 			throw new RuntimeException( e.getCause() );
+		}
+	}
+
+	/**
+	 * Execute function in a Hibernate transaction without return value
+	 *
+	 * @param sessionBuilderSupplier SessionFactory supplier
+	 * @param function function
+	 */
+	public static void doInHibernateSessionBuilder(
+			Supplier<SessionBuilder> sessionBuilderSupplier,
+			TransactionUtil.HibernateTransactionConsumer function) {
+		Session session = null;
+		Transaction txn = null;
+		try {
+			session = sessionBuilderSupplier.get().openSession();
+			function.beforeTransactionCompletion();
+			txn = session.beginTransaction();
+
+			function.accept( session );
+			if ( !txn.getRollbackOnly() ) {
+				txn.commit();
+			}
+			else {
+				try {
+					txn.rollback();
+				}
+				catch (Exception e) {
+					log.error( "Rollback failure", e );
+				}
+			}
+		}
+		catch ( Throwable t ) {
+			if ( txn != null && txn.isActive() ) {
+				try {
+					txn.rollback();
+				}
+				catch (Exception e) {
+					log.error( "Rollback failure", e );
+				}
+			}
+			throw t;
+		}
+		finally {
+			function.afterTransactionCompletion();
+			if ( session != null ) {
+				session.close();
+			}
 		}
 	}
 

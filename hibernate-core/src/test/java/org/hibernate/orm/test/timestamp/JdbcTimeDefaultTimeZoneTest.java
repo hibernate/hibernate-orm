@@ -4,28 +4,29 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.timestamp;
+package org.hibernate.orm.test.timestamp;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Time;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
 
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.testing.orm.jdbc.PreparedStatementSpyConnectionProvider;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.times;
@@ -34,12 +35,14 @@ import static org.mockito.Mockito.verify;
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialectFeature(DialectChecks.SupportsJdbcDriverProxying.class)
-
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJdbcDriverProxying.class)
 public class JdbcTimeDefaultTimeZoneTest
-		extends BaseNonConfigCoreFunctionalTestCase {
+		extends BaseSessionFactoryFunctionalTest {
 
-	private PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider( true, false );
+	private PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider(
+			true,
+			false
+	);
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -49,17 +52,17 @@ public class JdbcTimeDefaultTimeZoneTest
 	}
 
 	@Override
-	protected void addSettings(Map settings) {
-		connectionProvider.setConnectionProvider( (ConnectionProvider) settings.get( AvailableSettings.CONNECTION_PROVIDER ) );
-		settings.put(
+	protected void applySettings(StandardServiceRegistryBuilder builder) {
+		connectionProvider.setConnectionProvider( (ConnectionProvider) builder.getSettings()
+				.get( AvailableSettings.CONNECTION_PROVIDER ) );
+		builder.applySetting(
 				AvailableSettings.CONNECTION_PROVIDER,
 				connectionProvider
 		);
 	}
 
-	@Override
+	@AfterAll
 	protected void releaseResources() {
-		super.releaseResources();
 		connectionProvider.stop();
 	}
 
@@ -67,7 +70,7 @@ public class JdbcTimeDefaultTimeZoneTest
 	public void testTimeZone() {
 
 		connectionProvider.clear();
-		doInHibernate( this::sessionFactory, s -> {
+		inTransaction( s -> {
 			Person person = new Person();
 			person.id = 1L;
 			s.persist( person );
@@ -80,11 +83,11 @@ public class JdbcTimeDefaultTimeZoneTest
 		try {
 			verify( ps, times( 1 ) ).setTime( anyInt(), any( Time.class ) );
 		}
-		catch ( SQLException e ) {
+		catch (SQLException e) {
 			fail( e.getMessage() );
 		}
 
-		doInHibernate( this::sessionFactory, s -> {
+		inTransaction( s -> {
 			Person person = s.find( Person.class, 1L );
 			assertEquals(
 					0,

@@ -8,16 +8,13 @@ package org.hibernate.sql.results.graph.entity.internal;
 
 import java.util.function.Consumer;
 
-import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.EntityUniqueKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.log.LoggingHelper;
-import org.hibernate.loader.entity.CacheEntityLoaderHelper;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
@@ -27,11 +24,10 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.AbstractFetchParentAccess;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.entity.AbstractEntityInitializer;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
-import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
-import org.hibernate.stat.spi.StatisticsImplementor;
 
 /**
  * @author Andrea Boriero
@@ -72,7 +68,7 @@ public class EntityDelayedFetchInitializer extends AbstractFetchParentAccess imp
 	}
 
 	@Override
-	public ModelPart getInitializedPart(){
+	public ModelPart getInitializedPart() {
 		return referencedModelPart;
 	}
 
@@ -121,6 +117,11 @@ public class EntityDelayedFetchInitializer extends AbstractFetchParentAccess imp
 						final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 						entityInstance = persistenceContext.getEntity( euk );
 						if ( entityInstance == null ) {
+							if ( ((AbstractEntityInitializer) this.parentAccess).getEntityDescriptor()
+									.getBytecodeEnhancementMetadata()
+									.isEnhancedForLazyLoading()  ) {
+								return;
+							}
 							entityInstance = ( (UniqueKeyLoadable) concreteDescriptor ).loadByUniqueKey(
 									uniqueKeyPropertyName,
 									identifier,

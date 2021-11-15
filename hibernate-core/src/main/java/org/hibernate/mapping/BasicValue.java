@@ -777,6 +777,11 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 		return temporalPrecision;
 	}
 
+	@Override
+	public Object accept(ValueVisitor visitor) {
+		return visitor.accept(this);
+	}
+
 	/**
 	 * Resolved form of {@link BasicValue} as part of interpreting the
 	 * boot-time model into the run-time model

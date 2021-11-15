@@ -98,3 +98,4 @@ List<Object[]> postAndComments = entityManager.createStoredProcedureQuery( "fn_p
 
 * JMX integration
 * JACC integration
+* The 'hibernate.classLoader.application', 'hibernate.classLoader.resources', 'hibernate.classLoader.hibernate' and 'hibernate.classLoader.environment' configuration properties have been removed.

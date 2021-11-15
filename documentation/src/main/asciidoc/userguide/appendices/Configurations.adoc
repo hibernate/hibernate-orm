@@ -1062,22 +1062,10 @@ The property name defines the role (e.g. `allowed`) and the entity class name (e
 A String identifying the policy context whose PolicyConfiguration interface is to be returned. The value passed to this parameter must not be null.
 
 [[configurations-classloader]]
-=== ClassLoaders properties
+=== ClassLoaders property
 
 `*hibernate.classLoaders*`::
 Used to define a `java.util.Collection<ClassLoader>` or the `ClassLoader` instance Hibernate should use for class-loading and resource-lookups.
-
-`*hibernate.classLoader.application*`::
-Names the `ClassLoader` used to load user application classes.
-
-`*hibernate.classLoader.resources*`::
-Names the `ClassLoader` Hibernate should use to perform resource loading.
-
-`*hibernate.classLoader.hibernate*`::
-Names the `ClassLoader` responsible for loading Hibernate classes.  By default, this is the `ClassLoader` that loaded this class.
-
-`*hibernate.classLoader.environment*`::
-Names the `ClassLoader` used when Hibernate is unable to locates classes on the `hibernate.classLoader.application` or `hibernate.classLoader.hibernate`.
 
 [[configurations-bootstrap]]
 === Bootstrap properties

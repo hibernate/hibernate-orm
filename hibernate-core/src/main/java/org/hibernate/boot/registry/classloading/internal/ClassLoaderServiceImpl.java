@@ -108,11 +108,6 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 			providedClassLoaders.addAll( classLoaders );
 		}
 
-		addIfSet( providedClassLoaders, AvailableSettings.APP_CLASSLOADER, configValues );
-		addIfSet( providedClassLoaders, AvailableSettings.RESOURCES_CLASSLOADER, configValues );
-		addIfSet( providedClassLoaders, AvailableSettings.HIBERNATE_CLASSLOADER, configValues );
-		addIfSet( providedClassLoaders, AvailableSettings.ENVIRONMENT_CLASSLOADER, configValues );
-
 		return new ClassLoaderServiceImpl( providedClassLoaders,TcclLookupPrecedence.AFTER );
 	}
 

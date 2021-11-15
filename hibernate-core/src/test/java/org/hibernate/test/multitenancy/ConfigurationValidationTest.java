@@ -6,12 +6,12 @@
  */
 package org.hibernate.test.multitenancy;
 
-import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
+import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
@@ -54,7 +54,7 @@ public class ConfigurationValidationTest extends BaseUnitTestCase {
 		try {
 			serviceRegistry	= (ServiceRegistryImplementor) new StandardServiceRegistryBuilder()
 					.applySetting( Environment.MULTI_TENANT, MultiTenancyStrategy.SCHEMA  )
-					.applySetting( Environment.RELEASE_CONNECTIONS, ConnectionReleaseMode.AFTER_STATEMENT.name() )
+					.applySetting( Environment.CONNECTION_HANDLING, PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT.name() )
 					.addService(
 							MultiTenantConnectionProvider.class,
 							new TestingConnectionProvider(

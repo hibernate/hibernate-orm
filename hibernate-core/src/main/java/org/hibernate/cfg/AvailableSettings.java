@@ -854,32 +854,7 @@ public interface AvailableSettings {
 	String FLUSH_BEFORE_COMPLETION = "hibernate.transaction.flush_before_completion";
 
 	/**
-	 * Specifies how Hibernate should acquire JDBC connections.  Should generally only configure
-	 * this or {@link #RELEASE_CONNECTIONS}, not both
-	 *
-	 * @see org.hibernate.ConnectionAcquisitionMode
-	 *
-	 * @since 5.1
-	 *
-	 * @deprecated (since 5.2) use {@link #CONNECTION_HANDLING} instead
-	 */
-	@Deprecated
-	String ACQUIRE_CONNECTIONS = "hibernate.connection.acquisition_mode";
-
-	/**
-	 * Specifies how Hibernate should release JDBC connections.  Should generally only configure
-	 * this or {@link #ACQUIRE_CONNECTIONS}, not both
-	 *
-	 * @see org.hibernate.ConnectionReleaseMode
-	 *
-	 * @deprecated (since 5.2) use {@link #CONNECTION_HANDLING} instead
-	 */
-	@Deprecated
-	String RELEASE_CONNECTIONS = "hibernate.connection.release_mode";
-
-	/**
 	 * Specifies how Hibernate should manage JDBC connections in terms of acquiring and releasing.
-	 * Supersedes {@link #ACQUIRE_CONNECTIONS} and {@link #RELEASE_CONNECTIONS}
 	 *
 	 * @see org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode
 	 *
@@ -1183,13 +1158,6 @@ public interface AvailableSettings {
 	String PROXOOL_CONFIG_PREFIX = "hibernate.proxool";
 
 	/**
-	 * Proxool/Hibernate property prefix
-	 * @deprecated Use {@link #PROXOOL_CONFIG_PREFIX} instead
-	 */
-	@Deprecated
-	String PROXOOL_PREFIX = PROXOOL_CONFIG_PREFIX;
-
-	/**
 	 * Proxool property to configure the Proxool Provider using an XML (<tt>/path/to/file.xml</tt>)
 	 */
 	String PROXOOL_XML = "hibernate.proxool.xml";
@@ -1327,15 +1295,6 @@ public interface AvailableSettings {
 	String BYTECODE_PROVIDER = "hibernate.bytecode.provider";
 
 	String JPAQL_STRICT_COMPLIANCE= "hibernate.query.jpaql_strict_compliance";
-
-	/**
-	 * When using pooled {@link org.hibernate.id.enhanced.Optimizer optimizers}, prefer interpreting the
-	 * database value as the lower (lo) boundary.  The default is to interpret it as the high boundary.
-	 *
-	 * @deprecated Use {@link #PREFERRED_POOLED_OPTIMIZER} instead
-	 */
-	@Deprecated
-	String PREFER_POOLED_VALUES_LO = "hibernate.id.optimizer.pooled.prefer_lo";
 
 	/**
 	 * When a generator specified an increment-size and an optimizer was not explicitly specified, which of

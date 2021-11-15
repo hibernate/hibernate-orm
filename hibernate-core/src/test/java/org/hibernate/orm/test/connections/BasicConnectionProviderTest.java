@@ -8,10 +8,10 @@ package org.hibernate.orm.test.connections;
 
 import java.util.Map;
 
-import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.Session;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 
 import org.hibernate.testing.RequiresDialect;
 
@@ -37,6 +37,6 @@ public class BasicConnectionProviderTest extends ConnectionManagementTestCase {
 	@SuppressWarnings("unchecked")
 	protected void addSettings(Map settings) {
 		super.addSettings( settings );
-		settings.put( Environment.RELEASE_CONNECTIONS, ConnectionReleaseMode.ON_CLOSE.toString() );
+		settings.put( Environment.CONNECTION_HANDLING, PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_HOLD.toString() );
 	}
 }

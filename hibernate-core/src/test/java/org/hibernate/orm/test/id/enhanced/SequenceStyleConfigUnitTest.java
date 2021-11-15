@@ -348,7 +348,7 @@ public class SequenceStyleConfigUnitTest {
 			assertClassAssignability( SequenceStructure.class, generator.getDatabaseStructure().getClass() );
 			assertClassAssignability( PooledOptimizer.class, generator.getOptimizer().getClass() );
 
-			props.setProperty( Environment.PREFER_POOLED_VALUES_LO, "true" );
+			props.setProperty( Environment.PREFERRED_POOLED_OPTIMIZER, StandardOptimizerDescriptor.POOLED_LO.getExternalName() );
 			generator = new SequenceStyleGenerator();
 			generator.configure(
 					new TypeConfiguration().getBasicTypeRegistry()

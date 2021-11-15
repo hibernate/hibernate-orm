@@ -10,11 +10,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
 
 import org.hibernate.testing.DialectChecks;
@@ -49,7 +49,7 @@ public class CMTTest extends BaseNonConfigCoreFunctionalTestCase {
 		settings.put( AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY, JtaTransactionCoordinatorBuilderImpl.class.getName() );
 		settings.put( AvailableSettings.AUTO_CLOSE_SESSION, "true" );
 		settings.put( AvailableSettings.FLUSH_BEFORE_COMPLETION, "true" );
-		settings.put( AvailableSettings.RELEASE_CONNECTIONS, ConnectionReleaseMode.AFTER_STATEMENT.toString() );
+		settings.put( AvailableSettings.CONNECTION_HANDLING, PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT.toString() );
 		settings.put( AvailableSettings.GENERATE_STATISTICS, "true" );
 		settings.put( AvailableSettings.USE_QUERY_CACHE, "true" );
 		settings.put( AvailableSettings.CACHE_REGION_PREFIX, "" );

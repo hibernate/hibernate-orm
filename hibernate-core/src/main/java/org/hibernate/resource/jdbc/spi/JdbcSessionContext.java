@@ -6,8 +6,6 @@
  */
 package org.hibernate.resource.jdbc.spi;
 
-import org.hibernate.ConnectionAcquisitionMode;
-import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.ServiceRegistry;
 
@@ -24,18 +22,6 @@ public interface JdbcSessionContext {
 	PhysicalConnectionHandlingMode getPhysicalConnectionHandlingMode();
 
 	boolean doesConnectionProviderDisableAutoCommit();
-
-	/**
-	 * @deprecated Use {@link #getPhysicalConnectionHandlingMode} instead
-	 */
-	@Deprecated
-	ConnectionReleaseMode getConnectionReleaseMode();
-
-	/**
-	 * @deprecated Use {@link #getPhysicalConnectionHandlingMode} instead
-	 */
-	@Deprecated
-	ConnectionAcquisitionMode getConnectionAcquisitionMode();
 
 	StatementInspector getStatementInspector();
 

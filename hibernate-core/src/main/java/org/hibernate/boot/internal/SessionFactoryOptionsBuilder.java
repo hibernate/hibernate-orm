@@ -78,7 +78,6 @@ import org.hibernate.type.FormatMapper;
 import org.hibernate.type.JacksonJsonFormatMapper;
 import org.hibernate.type.JsonBJsonFormatMapper;
 
-import static org.hibernate.cfg.AvailableSettings.ACQUIRE_CONNECTIONS;
 import static org.hibernate.cfg.AvailableSettings.ALLOW_JTA_TRANSACTION_ACCESS;
 import static org.hibernate.cfg.AvailableSettings.ALLOW_REFRESH_DETACHED_ENTITY;
 import static org.hibernate.cfg.AvailableSettings.ALLOW_UPDATE_OUTSIDE_TRANSACTION;
@@ -119,7 +118,6 @@ import static org.hibernate.cfg.AvailableSettings.QUERY_CACHE_FACTORY;
 import static org.hibernate.cfg.AvailableSettings.QUERY_STARTUP_CHECKING;
 import static org.hibernate.cfg.AvailableSettings.QUERY_STATISTICS_MAX_SIZE;
 import static org.hibernate.cfg.AvailableSettings.QUERY_SUBSTITUTIONS;
-import static org.hibernate.cfg.AvailableSettings.RELEASE_CONNECTIONS;
 import static org.hibernate.cfg.AvailableSettings.SESSION_FACTORY_NAME;
 import static org.hibernate.cfg.AvailableSettings.SESSION_FACTORY_NAME_IS_JNDI;
 import static org.hibernate.cfg.AvailableSettings.SESSION_SCOPED_INTERCEPTOR;
@@ -744,7 +742,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		};
 	}
 
-	@SuppressWarnings("deprecation")
 	private PhysicalConnectionHandlingMode interpretConnectionHandlingMode(
 			Map configurationSettings,
 			StandardServiceRegistry serviceRegistry) {
@@ -756,53 +753,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 			return specifiedHandlingMode;
 		}
 
-
 		final TransactionCoordinatorBuilder transactionCoordinatorBuilder = serviceRegistry.getService( TransactionCoordinatorBuilder.class );
-
-		// see if the deprecated ConnectionAcquisitionMode/ConnectionReleaseMode were used..
-		final ConnectionAcquisitionMode specifiedAcquisitionMode = ConnectionAcquisitionMode.interpret(
-				configurationSettings.get( ACQUIRE_CONNECTIONS )
-		);
-		final ConnectionReleaseMode specifiedReleaseMode = ConnectionReleaseMode.interpret(
-				configurationSettings.get( RELEASE_CONNECTIONS )
-		);
-		if ( specifiedAcquisitionMode != null || specifiedReleaseMode != null ) {
-			return interpretConnectionHandlingMode( specifiedAcquisitionMode, specifiedReleaseMode, configurationSettings, transactionCoordinatorBuilder );
-		}
-
 		return transactionCoordinatorBuilder.getDefaultConnectionHandlingMode();
-	}
-
-	@SuppressWarnings("deprecation")
-	private PhysicalConnectionHandlingMode interpretConnectionHandlingMode(
-			ConnectionAcquisitionMode specifiedAcquisitionMode,
-			ConnectionReleaseMode specifiedReleaseMode,
-			Map configurationSettings,
-			TransactionCoordinatorBuilder transactionCoordinatorBuilder) {
-		DEPRECATION_LOGGER.logUseOfDeprecatedConnectionHandlingSettings();
-
-		final ConnectionAcquisitionMode effectiveAcquisitionMode = specifiedAcquisitionMode == null
-				? ConnectionAcquisitionMode.AS_NEEDED
-				: specifiedAcquisitionMode;
-
-		final ConnectionReleaseMode effectiveReleaseMode;
-		if ( specifiedReleaseMode == null ) {
-			// check the actual setting.  If we get in here it *should* be "auto" or null
-			final String releaseModeName = ConfigurationHelper.getString( RELEASE_CONNECTIONS, configurationSettings, "auto" );
-			assert "auto".equalsIgnoreCase( releaseModeName );
-			// nothing was specified (or someone happened to configure the "magic" value)
-			if ( effectiveAcquisitionMode == ConnectionAcquisitionMode.IMMEDIATELY ) {
-				effectiveReleaseMode = ConnectionReleaseMode.ON_CLOSE;
-			}
-			else {
-				effectiveReleaseMode = transactionCoordinatorBuilder.getDefaultConnectionReleaseMode();
-			}
-		}
-		else {
-			effectiveReleaseMode = specifiedReleaseMode;
-		}
-
-		return PhysicalConnectionHandlingMode.interpret( effectiveAcquisitionMode, effectiveReleaseMode );
 	}
 
 	private static FormatMapper determineJsonFormatMapper(Object setting, StrategySelector strategySelector) {

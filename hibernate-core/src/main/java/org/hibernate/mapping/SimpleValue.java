@@ -368,10 +368,6 @@ public abstract class SimpleValue implements KeyValue {
 				.getService( ConfigurationService.class );
 
 		params.put(
-				AvailableSettings.PREFER_POOLED_VALUES_LO,
-				cs.getSetting( AvailableSettings.PREFER_POOLED_VALUES_LO, StandardConverters.BOOLEAN, false )
-		);
-		params.put(
 				IdentifierGenerator.CONTRIBUTOR_NAME,
 				buildingContext.getCurrentContributorName()
 		);

@@ -646,8 +646,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @see org.hibernate.cfg.AvailableSettings#ACQUIRE_CONNECTIONS
-	 * @see org.hibernate.cfg.AvailableSettings#RELEASE_CONNECTIONS
+	 * @see org.hibernate.cfg.AvailableSettings#CONNECTION_HANDLING
 	 * @see org.hibernate.ConnectionAcquisitionMode
 	 * @see ConnectionReleaseMode
 	 */

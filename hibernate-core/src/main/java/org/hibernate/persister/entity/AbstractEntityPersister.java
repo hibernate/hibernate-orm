@@ -2696,7 +2696,7 @@ public abstract class AbstractEntityPersister
 	private Map<SingularAttributeMapping, SingleUniqueKeyEntityLoader<?>> uniqueKeyLoadersNew;
 
 	protected SingleUniqueKeyEntityLoader<?> getUniqueKeyLoader(String attributeName) {
-		final SingularAttributeMapping attribute = (SingularAttributeMapping) findSubPart( attributeName );
+		final SingularAttributeMapping attribute = (SingularAttributeMapping) findByPath( attributeName );
 		final SingleUniqueKeyEntityLoader<?> existing;
 		if ( uniqueKeyLoadersNew == null ) {
 			uniqueKeyLoadersNew = new IdentityHashMap<>();

@@ -1101,6 +1101,14 @@ public final class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 	}
 
+	/**
+	 * @deprecated use {@link #configuredInterceptor(Interceptor, boolean, SessionFactoryOptions)}
+	 */
+	@Deprecated
+	public static Interceptor configuredInterceptor(Interceptor interceptor, SessionFactoryOptions options) {
+		return configuredInterceptor( interceptor, false, options );
+	}
+
 	public static Interceptor configuredInterceptor(Interceptor interceptor, boolean explicitNoInterceptor, SessionFactoryOptions options) {
 		// NOTE : DO NOT return EmptyInterceptor.INSTANCE from here as a "default for the Session"
 		// 		we "filter" that one out here.  The return from here should represent the

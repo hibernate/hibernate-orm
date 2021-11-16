@@ -1481,17 +1481,6 @@ public interface AvailableSettings {
 	 */
 	String HBM2DDL_CREATE_NAMESPACES = "hibernate.hbm2ddl.create_namespaces";
 
-
-	/**
-	 * Specifies whether to automatically create also the database schema/catalog.
-	 * The default is false.
-	 *
-	 * @since 5.0
-	 * @deprecated
-	 */
-	@Deprecated
-	String HBM2DLL_CREATE_NAMESPACES = "hibernate.hbm2dll.create_namespaces";
-
 	/**
 	 * @deprecated Use {@link #JAKARTA_HBM2DDL_CREATE_SCHEMAS} instead
 	 */
@@ -1908,12 +1897,6 @@ public interface AvailableSettings {
 	 * @since 5.0
 	 */
 	String EXTRA_PHYSICAL_TABLE_TYPES = "hibernate.hbm2ddl.extra_physical_table_types";
-
-	/**
-	 * @deprecated use {@link #EXTRA_PHYSICAL_TABLE_TYPES} instead.
-	 */
-	@Deprecated
-	String DEPRECATED_EXTRA_PHYSICAL_TABLE_TYPES = "hibernate.hbm2dll.extra_physical_table_types";
 
 	/**
 	 * Unique columns and unique keys both use unique constraints in most dialects.

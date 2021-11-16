@@ -137,9 +137,6 @@ public class Helper {
 		if ( configurationValues.containsKey( AvailableSettings.HBM2DDL_CREATE_NAMESPACES ) ) {
 			count++;
 		}
-		if ( configurationValues.containsKey( AvailableSettings.HBM2DLL_CREATE_NAMESPACES ) ) {
-			count++;
-		}
 		if ( count > 1 ) {
 			log.multipleSchemaCreationSettingsDefined();
 		}
@@ -155,12 +152,7 @@ public class Helper {
 						ConfigurationHelper.getBoolean(
 								AvailableSettings.HBM2DDL_CREATE_NAMESPACES,
 								configurationValues,
-								//And finally fall back to the old name this had before we fixed the typo:
-								ConfigurationHelper.getBoolean(
-										AvailableSettings.HBM2DLL_CREATE_NAMESPACES,
-										configurationValues,
-										false
-								)
+								false
 						)
 				)
 		);

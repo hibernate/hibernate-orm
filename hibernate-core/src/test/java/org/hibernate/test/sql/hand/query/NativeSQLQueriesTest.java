@@ -76,7 +76,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 )
 @SessionFactory
 // todo (6.0): needs a composite user type mechanism e.g. by providing a custom ComponentTuplizer/Instantiator
-@Disabled( value = "Missing support for composite user types" )
 public class NativeSQLQueriesTest {
 
 	protected String getOrganizationFetchJoinEmploymentSQL() {

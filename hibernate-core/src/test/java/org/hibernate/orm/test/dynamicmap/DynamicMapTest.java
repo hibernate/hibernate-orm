@@ -4,33 +4,32 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.dynamicmap;
+package org.hibernate.orm.test.dynamicmap;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.notNullValue;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertThat;
 
-@TestForIssue( jiraKey = "HHH-12539")
-public class DynamicMapTest extends BaseCoreFunctionalTestCase {
-	@Override
-	protected String[] getMappings() {
-		return new String[] {
-				"dynamicmap/Test.hbm.xml"
-		};
-	}
+@TestForIssue(jiraKey = "HHH-12539")
+@DomainModel(
+		xmlMappings = "org/hibernate/orm/test/dynamicmap/Test.hbm.xml"
+)
+@SessionFactory
+public class DynamicMapTest {
 
 	@Test
-	public void bootstrappingTest() {
-		doInHibernate( this::sessionFactory, session -> {
+	public void bootstrappingTest(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			Map item1 = new HashMap();
 			item1.put( "name", "cup" );
 			item1.put( "description", "abc" );
@@ -41,7 +40,7 @@ public class DynamicMapTest extends BaseCoreFunctionalTestCase {
 			session.save( "Item1", item1 );
 		} );
 
-		doInHibernate( this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 			List result = session.createQuery( "from Item1" ).list();
 			assertThat( result.size(), is( 1 ) );
 			Map item1 = (Map) result.get( 0 );

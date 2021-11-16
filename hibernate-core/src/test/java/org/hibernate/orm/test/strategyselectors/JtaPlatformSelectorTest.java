@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.strategyselectors;
+package org.hibernate.orm.test.strategyselectors;
 
 import org.hibernate.boot.registry.selector.internal.DefaultJtaPlatformSelector;
 import org.hibernate.engine.transaction.jta.platform.internal.AtomikosJtaPlatform;
@@ -26,8 +26,10 @@ import org.hibernate.engine.transaction.jta.platform.internal.WebSphereLibertyJt
 import org.hibernate.engine.transaction.jta.platform.internal.WeblogicJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class JtaPlatformSelectorTest {
 
@@ -167,8 +169,8 @@ public class JtaPlatformSelectorTest {
 
 	private static void expectResolution(final DefaultJtaPlatformSelector strategySelector, final Class expectedType, final String name) {
 		Class<? extends JtaPlatform> aClass = strategySelector.resolve( name );
-		Assert.assertNotNull( aClass );
-		Assert.assertEquals( expectedType, aClass );
+		assertNotNull( aClass );
+		assertEquals( expectedType, aClass );
 	}
 
 }

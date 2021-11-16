@@ -18,7 +18,7 @@
 
 -->
 
-<hibernate-mapping package="org.hibernate.test.idclass">
+<hibernate-mapping package="org.hibernate.orm.test.idclass">
 	
 	<class name="Customer">
 		<composite-id class="CustomerId" mapped="true">

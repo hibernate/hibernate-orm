@@ -176,7 +176,7 @@ ext {
 
             c3p0:            "com.mchange:c3p0:0.9.5.5",
             ehcache:         "net.sf.ehcache:ehcache:2.10.6",
-            ehcache3:        "org.ehcache:ehcache:3.8.1",
+            ehcache3:        "org.ehcache:ehcache:3.10.0-alpha0",
             jcache:          "javax.cache:cache-api:1.0.0",
             proxool:         "proxool:proxool:0.8.3",
             hikaricp:        "com.zaxxer:HikariCP:3.2.0",

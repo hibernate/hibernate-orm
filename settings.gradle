@@ -125,7 +125,7 @@ include 'hibernate-hikaricp'
 include 'hibernate-vibur'
 include 'hibernate-agroal'
 
-//include 'hibernate-jcache'
+include 'hibernate-jcache'
 
 include 'hibernate-micrometer'
 include 'hibernate-graalvm'

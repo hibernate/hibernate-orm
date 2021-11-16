@@ -12,8 +12,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
 
 import org.hibernate.query.Query;
 import org.hibernate.Session;

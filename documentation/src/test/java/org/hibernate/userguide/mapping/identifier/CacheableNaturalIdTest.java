@@ -11,14 +11,16 @@ import java.util.Map;
 import org.hibernate.Session;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.NaturalIdCache;
+import org.hibernate.cache.jcache.JCacheHelper;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.FailureExpected;
 import org.junit.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+
+import javax.cache.configuration.MutableConfiguration;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
@@ -26,15 +28,14 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Vlad Mihalcea
  */
-@FailureExpected( jiraKey = "", message = "Relies on hibernate-jcache + JCache + Ehcache - Ehcache uses JAXB and has not been updated to use Jakarta" )
 public class CacheableNaturalIdTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
 	public void buildEntityManagerFactory() {
-//		JCacheHelper.locateStandardCacheManager().createCache( "default-update-timestamps-region", new MutableConfiguration<>() );
-//		JCacheHelper.locateStandardCacheManager().createCache( "default-query-results-region", new MutableConfiguration<>() );
-//		JCacheHelper.locateStandardCacheManager().createCache( "org.hibernate.userguide.mapping.identifier.CacheableNaturalIdTest$Book##NaturalId", new MutableConfiguration<>() );
-////		JCacheHelper.locateStandardCacheManager().createCache( "", new MutableConfiguration<>() );
+		JCacheHelper.locateStandardCacheManager().createCache( "default-update-timestamps-region", new MutableConfiguration<>() );
+		JCacheHelper.locateStandardCacheManager().createCache( "default-query-results-region", new MutableConfiguration<>() );
+		JCacheHelper.locateStandardCacheManager().createCache( "org.hibernate.userguide.mapping.identifier.CacheableNaturalIdTest$Book##NaturalId", new MutableConfiguration<>() );
+//		JCacheHelper.locateStandardCacheManager().createCache( "", new MutableConfiguration<>() );
 
 		super.buildEntityManagerFactory();
 	}

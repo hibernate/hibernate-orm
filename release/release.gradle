@@ -130,8 +130,8 @@ dependencies {
     vibur project( ':hibernate-vibur' )
     javadocSources project( path: ':hibernate-vibur', configuration: 'javadocSources' )
 
-//    jcache project( ':hibernate-jcache' )
-//    javadocSources project( path: ':hibernate-jcache', configuration: 'javadocSources' )
+    jcache project( ':hibernate-jcache' )
+    javadocSources project( path: ':hibernate-jcache', configuration: 'javadocSources' )
 
     jpamodelgen project( ':hibernate-jpamodelgen' )
     javadocSources project( path: ':hibernate-jpamodelgen', configuration: 'javadocSources' )

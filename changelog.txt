@@ -3,6 +3,15 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.3.24.Final (November 16, 2021)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31988
+
+** Bug
+    * [HHH-14540] - Interceptor instance is shared between ORM session and Enver's temporary session resulting in multiple calls.
+
+
 Changes in 5.3.23.Final (September 29, 2021)
 ------------------------------------------------------------------------------------------------------------------------
 

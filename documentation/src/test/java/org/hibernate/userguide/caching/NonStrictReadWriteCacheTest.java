@@ -11,10 +11,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.cache.jcache.JCacheHelper;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.FailureExpected;
 import org.junit.Test;
 
 import jakarta.persistence.Cacheable;
@@ -27,29 +27,30 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Version;
 
+import javax.cache.configuration.MutableConfiguration;
+
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
 
 /**
  * @author Vlad Mihalcea
  */
-@FailureExpected( jiraKey = "", message = "Relies on hibernate-jcache + JCache + Ehcache - Ehcache uses JAXB and has not been updated to use Jakarta" )
 public class NonStrictReadWriteCacheTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
 	public void buildEntityManagerFactory() {
-//		JCacheHelper.locateStandardCacheManager().createCache(
-//				"hibernate.test.org.hibernate.userguide.caching.NonStrictReadWriteCacheTest$Person",
-//				new MutableConfiguration<>()
-//		);
-//		JCacheHelper.locateStandardCacheManager().createCache(
-//				"hibernate.test.org.hibernate.userguide.caching.NonStrictReadWriteCacheTest$Phone",
-//				new MutableConfiguration<>()
-//		);
-//		JCacheHelper.locateStandardCacheManager().createCache(
-//				"hibernate.test.org.hibernate.userguide.caching.NonStrictReadWriteCacheTest$Person.phones",
-//				new MutableConfiguration<>()
-//		);
+		JCacheHelper.locateStandardCacheManager().createCache(
+				"hibernate.test.org.hibernate.userguide.caching.NonStrictReadWriteCacheTest$Person",
+				new MutableConfiguration<>()
+		);
+		JCacheHelper.locateStandardCacheManager().createCache(
+				"hibernate.test.org.hibernate.userguide.caching.NonStrictReadWriteCacheTest$Phone",
+				new MutableConfiguration<>()
+		);
+		JCacheHelper.locateStandardCacheManager().createCache(
+				"hibernate.test.org.hibernate.userguide.caching.NonStrictReadWriteCacheTest$Person.phones",
+				new MutableConfiguration<>()
+		);
 
 		super.buildEntityManagerFactory();
 	}

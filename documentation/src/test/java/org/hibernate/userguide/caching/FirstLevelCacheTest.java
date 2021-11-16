@@ -8,8 +8,10 @@ package org.hibernate.userguide.caching;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.hibernate.Session;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Test;
@@ -31,6 +33,13 @@ public class FirstLevelCacheTest extends BaseEntityManagerFunctionalTestCase {
     protected Class<?>[] getAnnotatedClasses() {
         return new Class<?>[] { Person.class };
     }
+
+	@Override
+	@SuppressWarnings( "unchecked" )
+	protected void addConfigOptions(Map options) {
+		options.put(AvailableSettings.USE_SECOND_LEVEL_CACHE, Boolean.TRUE.toString());
+		options.put(AvailableSettings.CACHE_REGION_FACTORY, "jcache");
+	}
 
     @Test
     public void testCache() {

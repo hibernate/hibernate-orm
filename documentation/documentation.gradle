@@ -29,7 +29,7 @@ dependencies {
 	testImplementation project(':hibernate-testing')
 	testImplementation project(':hibernate-envers')
 	testImplementation project(':hibernate-spatial')
-//	testImplementation project( ':hibernate-jcache' )
+	testImplementation project(':hibernate-jcache')
 	testImplementation project( path: ':hibernate-core', configuration: 'tests' )
 
 	testImplementation 'org.apache.commons:commons-lang3:3.4'
@@ -39,7 +39,11 @@ dependencies {
 	testImplementation libraries.mockito_inline
 
 	testRuntimeOnly libraries.wildfly_transaction_client
-	testRuntimeOnly libraries.ehcache3
+	testRuntimeOnly(libraries.ehcache3) {
+		capabilities {
+			requireCapability 'org.ehcache.modules:ehcache-xml-jakarta'
+		}
+	}
 }
 
 

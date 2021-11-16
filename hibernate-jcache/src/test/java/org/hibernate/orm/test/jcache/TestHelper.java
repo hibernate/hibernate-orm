@@ -31,6 +31,7 @@ import org.hibernate.orm.test.jcache.domain.VersionedItem;
 import org.hibernate.orm.test.jcache.domain.Event;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.testing.orm.junit.DialectContext;
 import org.hibernate.tool.schema.Action;
 
 import static org.hibernate.cache.jcache.JCacheHelper.locateStandardCacheManager;
@@ -121,7 +122,7 @@ public class TestHelper {
 				.applySetting( AvailableSettings.HBM2DDL_DATABASE_ACTION, Action.CREATE_DROP )
 				.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
 
-		if ( H2Dialect.class.equals( Dialect.getDialect().getClass() ) ) {
+		if ( H2Dialect.class.equals( DialectContext.getDialect().getClass() ) ) {
 			ssrb.applySetting( AvailableSettings.URL, "jdbc:h2:mem:db-mvcc" );
 		}
 		return ssrb;

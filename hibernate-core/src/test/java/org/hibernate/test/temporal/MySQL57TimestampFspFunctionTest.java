@@ -14,6 +14,7 @@ import jakarta.persistence.Table;
 
 import org.junit.Test;
 
+import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.query.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;

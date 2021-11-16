@@ -407,11 +407,9 @@ public class MetadataContext {
 			final EmbeddableTypeImpl<?> idClassType;
 			final Component identifierMapper = persistentClass.getIdentifierMapper();
 			if ( identifierMapper != null ) {
-//				cidPropertyItr = cidValue.getPropertyIterator();
-//				propertySpan = cidValue.getPropertySpan();
 				cidPropertyItr = identifierMapper.getPropertyIterator();
 				propertySpan = identifierMapper.getPropertySpan();
-				idClassType = applyIdClassMetadata( (Component) persistentClass.getIdentifier(), identifierMapper );
+				idClassType = applyIdClassMetadata( (Component) persistentClass.getIdentifier() );
 			}
 			else {
 				cidPropertyItr = cidValue.getPropertyIterator();
@@ -441,17 +439,19 @@ public class MetadataContext {
 		}
 	}
 
-	private EmbeddableTypeImpl<?> applyIdClassMetadata(Component identifier, Component idClass) {
+	private EmbeddableTypeImpl<?> applyIdClassMetadata(Component idClassComponent) {
 		final JavaTypeRegistry registry = getTypeConfiguration()
 				.getJavaTypeDescriptorRegistry();
-		final Class<?> componentClass = identifier.getComponentClass();
+		final Class<?> componentClass = idClassComponent.getComponentClass();
 		final JavaType<?> javaTypeDescriptor = registry.resolveManagedTypeDescriptor( componentClass );
 
-		return new EmbeddableTypeImpl<>(
+		final EmbeddableTypeImpl<?> embeddableType = new EmbeddableTypeImpl<>(
 				javaTypeDescriptor,
 				false,
 				getJpaMetamodel()
 		);
+		registerEmbeddableType( embeddableType, idClassComponent );
+		return embeddableType;
 	}
 
 	@SuppressWarnings({"unchecked", "rawtypes"})

@@ -857,6 +857,7 @@ public class ModelBinder {
 				idClassName,
 				rootEntityDescriptor.getClassName(),
 				idPropertyName,
+				idPropertyName == null,
 				idClassName == null && idPropertyName == null,
 				identifierSource.getEmbeddableSource().isDynamic(),
 				identifierSource.getIdentifierAttributeSource().getXmlNodeName()
@@ -902,6 +903,7 @@ public class ModelBinder {
 				idClassName,
 				rootEntityDescriptor.getClassName(),
 				null,
+				true,
 				idClassName == null,
 				false,
 				null
@@ -921,11 +923,13 @@ public class ModelBinder {
 					null,
 					null,
 					true,
+					true,
 					false,
 					null
 			);
 
-			rootEntityDescriptor.setIdentifierMapper(mapper);
+			rootEntityDescriptor.setIdentifierMapper( mapper );
+			rootEntityDescriptor.setDeclaredIdentifierMapper( mapper );
 			Property property = new Property();
 			property.setName( PropertyPath.IDENTIFIER_MAPPER_PROPERTY );
 			property.setUpdateable( false );
@@ -2658,6 +2662,7 @@ public class ModelBinder {
 				explicitComponentClassName,
 				containingClassName,
 				propertyName,
+				false,
 				isVirtual,
 				embeddableSource.isDynamic(),
 				xmlNodeName
@@ -2680,6 +2685,7 @@ public class ModelBinder {
 			String explicitComponentClassName,
 			String containingClassName,
 			String propertyName,
+			boolean isComponentEmbedded,
 			boolean isVirtual,
 			boolean isDynamic,
 			String xmlNodeName) {
@@ -2688,7 +2694,7 @@ public class ModelBinder {
 
 		componentBinding.setRoleName( role );
 
-		componentBinding.setEmbedded( isVirtual );
+		componentBinding.setEmbedded( isComponentEmbedded );
 
 		// todo : better define the conditions in this if/else
 		if ( isDynamic ) {

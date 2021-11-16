@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.idclass;
+package org.hibernate.orm.test.idclass;
 
 import org.junit.Test;
 
@@ -20,9 +20,9 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Gavin King
  */
-public class IdClassTest extends BaseCoreFunctionalTestCase {
+public class IdClassHbmTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
-		return new String[] { "idclass/Customer.hbm.xml" };
+		return new String[] { "/org/hibernate/orm/test/idclass/Customer.hbm.xml" };
 	}
 
 	@Override

@@ -160,6 +160,7 @@ public class AuditProcess implements BeforeTransactionCompletionProcess {
 						.connection()
 						.autoClose( false )
 						.connectionHandlingMode( PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION )
+						.noInterceptor()
 						.openSession();
 				executeInSession( temporarySession );
 				temporarySession.flush();

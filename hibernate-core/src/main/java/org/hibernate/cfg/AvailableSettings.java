@@ -1331,30 +1331,6 @@ public interface AvailableSettings {
 	String HBM2DDL_CONNECTION = "javax.persistence.schema-generation-connection";
 
 	/**
-	 * @deprecated Use {@link #DIALECT_DB_NAME} instead
-	 */
-	@Deprecated
-	String HBM2DDL_DB_NAME = DIALECT_DB_NAME;
-
-	/**
-	 * @deprecated Use {@link #DIALECT_DB_VERSION} instead
-	 */
-	@Deprecated
-	String HBM2DDL_DB_VERSION = "javax.persistence.database-product-version";
-
-	/**
-	 * @deprecated Use {@link #DIALECT_DB_MAJOR_VERSION} instead
-	 */
-	@Deprecated
-	String HBM2DDL_DB_MAJOR_VERSION = "javax.persistence.database-major-version";
-
-	/**
-	 * @deprecated Use {@link #DIALECT_DB_MINOR_VERSION} instead
-	 */
-	@Deprecated
-	String HBM2DDL_DB_MINOR_VERSION = "javax.persistence.database-minor-version";
-
-	/**
 	 * Specifies whether schema generation commands for schema creation are to be determined based on object/relational
 	 * mapping metadata, DDL scripts, or a combination of the two.  See {@link SourceType} for valid set of values.
 	 * If no value is specified, a default is assumed as follows:<ul>
@@ -1528,7 +1504,7 @@ public interface AvailableSettings {
 	 *
 	 * For Dialect resolution, {@value #JAKARTA_HBM2DDL_DB_NAME} and optionally
 	 * {@value JAKARTA_HBM2DDL_DB_VERSION}, {@value #JAKARTA_HBM2DDL_DB_MAJOR_VERSION}
-	 * and {@value #HBM2DDL_DB_MINOR_VERSION} can be used instead
+	 * and {@value #JAKARTA_HBM2DDL_DB_MINOR_VERSION} can be used instead
 	 *
 	 * @see #JAKARTA_HBM2DDL_DB_NAME
 	 * @see #JAKARTA_HBM2DDL_DB_VERSION
@@ -1544,7 +1520,7 @@ public interface AvailableSettings {
 	 *
 	 * For cases when the name of the database vendor is not enough alone, a combination of
 	 * {@value JAKARTA_HBM2DDL_DB_VERSION}, {@value #JAKARTA_HBM2DDL_DB_MAJOR_VERSION}
-	 * {@value #HBM2DDL_DB_MINOR_VERSION} can be used instead
+	 * {@value #JAKARTA_HBM2DDL_DB_MINOR_VERSION} can be used instead
 	 *
 	 * @see #JAKARTA_HBM2DDL_DB_VERSION
 	 * @see #JAKARTA_HBM2DDL_DB_MAJOR_VERSION

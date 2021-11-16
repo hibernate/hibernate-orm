@@ -10,15 +10,16 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.Map;
 
-import javax.persistence.EntityManager;
-import javax.transaction.TransactionManager;
+import jakarta.persistence.EntityManager;
+import jakarta.transaction.TransactionManager;
 
 import org.hibernate.FlushMode;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.envers.test.Priority;
-import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.internal.SessionImpl;
+import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
+import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.orm.test.envers.entities.StrTestEntity;
+
 import org.junit.Test;
 
 import org.hibernate.testing.jta.TestingJtaBootstrap;

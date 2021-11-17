@@ -33,7 +33,7 @@ Also, note that the features are heavily tested against Karaf 3.0.3 as a part of
 However, they'll likely work on other versions as well.
 
 hibernate-osgi, theoretically, supports a variety of OSGi containers, such as Equinox.
-In that case, please use `features.xm` as a reference for necessary bundles to activate and their correct ordering.
+In that case, please use `features.xml` as a reference for necessary bundles to activate and their correct ordering.
 However, note that Karaf starts a number of bundles automatically, several of which would need to be installed manually on alternatives.
 
 === QuickStarts/Demos

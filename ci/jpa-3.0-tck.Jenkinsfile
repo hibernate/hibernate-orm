@@ -8,9 +8,9 @@ pipeline {
         jdk 'OpenJDK 8 Latest'
     }
     parameters {
-        choice(name: 'IMAGE_JDK', choices: ['jdk8', 'jdk11'], description: 'The JDK base image version to use for the TCK image.')
-        string(name: 'TCK_VERSION', defaultValue: '3.0.0', description: 'The version of the Jakarta JPA TCK i.e. `2.2.0` or `3.0.1`')
-        string(name: 'TCK_SHA', defaultValue: 'b08c8887f00306f8bb7ebe54c4c810f3452519f5395733637ccc639b5081aebf', description: 'The SHA256 of the Jakarta JPA TCK that is distributed under https://download.eclipse.org/jakartaee/persistence/3.0/jakarta-persistence-tck-${TCK_VERSION}.zip.sha256')
+        choice(name: 'IMAGE_JDK', choices: ['jdk11'], description: 'The JDK base image version to use for the TCK image.')
+        string(name: 'TCK_VERSION', defaultValue: '3.0.1', description: 'The version of the Jakarta JPA TCK i.e. `2.2.0` or `3.0.1`')
+        string(name: 'TCK_SHA', defaultValue: '0e77804ead3990a53cdc325d2b0ddc1b15a3993d7866e5aa3717cc55d95f8bbc', description: 'The SHA256 of the Jakarta JPA TCK that is distributed under https://download.eclipse.org/jakartaee/persistence/3.0/jakarta-persistence-tck-${TCK_VERSION}.zip.sha256')
         booleanParam(name: 'NO_SLEEP', defaultValue: true, description: 'Whether the NO_SLEEP patch should be applied to speed up the TCK execution')
 	}
     stages {
@@ -18,7 +18,7 @@ pipeline {
         	steps {
 				script {
 					docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-						docker.image('openjdk:8-jdk').pull()
+						docker.image('openjdk:11-jdk').pull()
 					}
 				}
 				dir('hibernate') {

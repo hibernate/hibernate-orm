@@ -235,41 +235,6 @@ public interface AvailableSettings {
 	String TC_CLASSLOADER = "hibernate.classLoader.tccl_lookup_precedence";
 
 	/**
-	 * Names the {@link ClassLoader} used to load user application classes.
-	 * @since 4.0
-	 *
-	 * @deprecated Use {@link #CLASSLOADERS} instead
-	 */
-	@Deprecated
-	String APP_CLASSLOADER = "hibernate.classLoader.application";
-
-	/**
-	 * Names the {@link ClassLoader} Hibernate should use to perform resource loading.
-	 * @since 4.0
-	 * @deprecated Use {@link #CLASSLOADERS} instead
-	 */
-	@Deprecated
-	String RESOURCES_CLASSLOADER = "hibernate.classLoader.resources";
-
-	/**
-	 * Names the {@link ClassLoader} responsible for loading Hibernate classes.  By default this is
-	 * the {@link ClassLoader} that loaded this class.
-	 * @since 4.0
-	 * @deprecated Use {@link #CLASSLOADERS} instead
-	 */
-	@Deprecated
-	String HIBERNATE_CLASSLOADER = "hibernate.classLoader.hibernate";
-
-	/**
-	 * Names the {@link ClassLoader} used when Hibernate is unable to locate classes on the
-	 * {@link #APP_CLASSLOADER} or {@link #HIBERNATE_CLASSLOADER}.
-	 * @since 4.0
-	 * @deprecated Use {@link #CLASSLOADERS} instead
-	 */
-	@Deprecated
-	String ENVIRONMENT_CLASSLOADER = "hibernate.classLoader.environment";
-
-	/**
 	 * Setting that controls whether we seek out JPA "static metamodel" classes and populate them.  Accepts
 	 * 3 values:<ul>
 	 *     <li>
@@ -1366,30 +1331,6 @@ public interface AvailableSettings {
 	String HBM2DDL_CONNECTION = "javax.persistence.schema-generation-connection";
 
 	/**
-	 * @deprecated Use {@link #DIALECT_DB_NAME} instead
-	 */
-	@Deprecated
-	String HBM2DDL_DB_NAME = DIALECT_DB_NAME;
-
-	/**
-	 * @deprecated Use {@link #DIALECT_DB_VERSION} instead
-	 */
-	@Deprecated
-	String HBM2DDL_DB_VERSION = "javax.persistence.database-product-version";
-
-	/**
-	 * @deprecated Use {@link #DIALECT_DB_MAJOR_VERSION} instead
-	 */
-	@Deprecated
-	String HBM2DDL_DB_MAJOR_VERSION = "javax.persistence.database-major-version";
-
-	/**
-	 * @deprecated Use {@link #DIALECT_DB_MINOR_VERSION} instead
-	 */
-	@Deprecated
-	String HBM2DDL_DB_MINOR_VERSION = "javax.persistence.database-minor-version";
-
-	/**
 	 * Specifies whether schema generation commands for schema creation are to be determined based on object/relational
 	 * mapping metadata, DDL scripts, or a combination of the two.  See {@link SourceType} for valid set of values.
 	 * If no value is specified, a default is assumed as follows:<ul>
@@ -1516,17 +1457,6 @@ public interface AvailableSettings {
 	 */
 	String HBM2DDL_CREATE_NAMESPACES = "hibernate.hbm2ddl.create_namespaces";
 
-
-	/**
-	 * Specifies whether to automatically create also the database schema/catalog.
-	 * The default is false.
-	 *
-	 * @since 5.0
-	 * @deprecated
-	 */
-	@Deprecated
-	String HBM2DLL_CREATE_NAMESPACES = "hibernate.hbm2dll.create_namespaces";
-
 	/**
 	 * @deprecated Use {@link #JAKARTA_HBM2DDL_CREATE_SCHEMAS} instead
 	 */
@@ -1574,7 +1504,7 @@ public interface AvailableSettings {
 	 *
 	 * For Dialect resolution, {@value #JAKARTA_HBM2DDL_DB_NAME} and optionally
 	 * {@value JAKARTA_HBM2DDL_DB_VERSION}, {@value #JAKARTA_HBM2DDL_DB_MAJOR_VERSION}
-	 * and {@value #HBM2DDL_DB_MINOR_VERSION} can be used instead
+	 * and {@value #JAKARTA_HBM2DDL_DB_MINOR_VERSION} can be used instead
 	 *
 	 * @see #JAKARTA_HBM2DDL_DB_NAME
 	 * @see #JAKARTA_HBM2DDL_DB_VERSION
@@ -1590,7 +1520,7 @@ public interface AvailableSettings {
 	 *
 	 * For cases when the name of the database vendor is not enough alone, a combination of
 	 * {@value JAKARTA_HBM2DDL_DB_VERSION}, {@value #JAKARTA_HBM2DDL_DB_MAJOR_VERSION}
-	 * {@value #HBM2DDL_DB_MINOR_VERSION} can be used instead
+	 * {@value #JAKARTA_HBM2DDL_DB_MINOR_VERSION} can be used instead
 	 *
 	 * @see #JAKARTA_HBM2DDL_DB_VERSION
 	 * @see #JAKARTA_HBM2DDL_DB_MAJOR_VERSION
@@ -1943,12 +1873,6 @@ public interface AvailableSettings {
 	 * @since 5.0
 	 */
 	String EXTRA_PHYSICAL_TABLE_TYPES = "hibernate.hbm2ddl.extra_physical_table_types";
-
-	/**
-	 * @deprecated use {@link #EXTRA_PHYSICAL_TABLE_TYPES} instead.
-	 */
-	@Deprecated
-	String DEPRECATED_EXTRA_PHYSICAL_TABLE_TYPES = "hibernate.hbm2dll.extra_physical_table_types";
 
 	/**
 	 * Unique columns and unique keys both use unique constraints in most dialects.

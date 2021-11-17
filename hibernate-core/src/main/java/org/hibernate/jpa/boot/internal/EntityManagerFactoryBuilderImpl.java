@@ -89,7 +89,6 @@ import jakarta.persistence.PersistenceException;
 import jakarta.persistence.spi.PersistenceUnitTransactionType;
 
 import static org.hibernate.cfg.AvailableSettings.ALLOW_REFRESH_DETACHED_ENTITY;
-import static org.hibernate.cfg.AvailableSettings.APP_CLASSLOADER;
 import static org.hibernate.cfg.AvailableSettings.CFG_XML_FILE;
 import static org.hibernate.cfg.AvailableSettings.CLASSLOADERS;
 import static org.hibernate.cfg.AvailableSettings.CLASS_CACHE_PREFIX;
@@ -464,14 +463,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 				bsrBuilder.applyClassLoader( providedClassLoader );
 			}
 
-			final ClassLoader appClassLoader = (ClassLoader) integrationSettings.get( APP_CLASSLOADER );
-			if ( appClassLoader != null ) {
-				LOG.debugf(
-						"Found use of deprecated `%s` setting; use `%s` instead.",
-						APP_CLASSLOADER,
-						CLASSLOADERS
-				);
-			}
 			final Object classLoadersSetting = integrationSettings.get( CLASSLOADERS );
 			if ( classLoadersSetting != null ) {
 				if ( java.util.Collection.class.isInstance( classLoadersSetting ) ) {

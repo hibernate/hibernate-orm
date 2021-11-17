@@ -11,6 +11,7 @@ import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
@@ -49,7 +50,7 @@ public class ExcludeUnlistedClassesTest extends BaseUnitTestCase {
 		// see src/test/resources/org/hibernate/jpa/test/persistenceunit/persistence.xml
 		
 		final Map<String, Object> properties = new HashMap<String, Object>();
-		properties.put( AvailableSettings.RESOURCES_CLASSLOADER, new TestClassLoader() );
+		properties.put( AvailableSettings.CLASSLOADERS, Arrays.asList( new TestClassLoader() ) );
 		final List<ParsedPersistenceXmlDescriptor> parsedDescriptors = PersistenceXmlParser.locatePersistenceUnits(
 				properties );
 		

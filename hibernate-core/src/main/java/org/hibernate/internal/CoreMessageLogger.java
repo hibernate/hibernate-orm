@@ -1811,7 +1811,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void unsupportedMappedSuperclassWithEntityInheritance(String entityName);
 
 	@LogMessage(level = WARN)
-	@Message(value = "Multiple configuration properties defined to create schema. Choose at most one among 'javax.persistence.create-database-schemas', 'hibernate.hbm2ddl.create_namespaces', 'hibernate.hbm2dll.create_namespaces' (this last being deprecated).", id = 504)
+	@Message(value = "Multiple configuration properties defined to create schema. Choose at most one among 'jakarta.persistence.create-database-schemas' or 'hibernate.hbm2ddl.create_namespaces'.", id = 504)
 	void multipleSchemaCreationSettingsDefined();
 
 	@LogMessage(level = WARN)

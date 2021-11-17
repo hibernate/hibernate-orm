@@ -51,11 +51,11 @@ import org.hibernate.tool.schema.spi.TargetDescriptor;
 
 import org.jboss.logging.Logger;
 
+import static org.hibernate.cfg.AvailableSettings.DIALECT_DB_MAJOR_VERSION;
+import static org.hibernate.cfg.AvailableSettings.DIALECT_DB_MINOR_VERSION;
 import static org.hibernate.cfg.AvailableSettings.DIALECT_DB_NAME;
 import static org.hibernate.cfg.AvailableSettings.DIALECT_DB_VERSION;
 import static org.hibernate.cfg.AvailableSettings.HBM2DDL_CONNECTION;
-import static org.hibernate.cfg.AvailableSettings.HBM2DDL_DB_MAJOR_VERSION;
-import static org.hibernate.cfg.AvailableSettings.HBM2DDL_DB_MINOR_VERSION;
 import static org.hibernate.cfg.AvailableSettings.HBM2DDL_DELIMITER;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DB_MAJOR_VERSION;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DB_MINOR_VERSION;
@@ -258,9 +258,9 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 			final String dbMajor = (String) coalesceSuppliedValues(
 					() -> configurationValues.get( JAKARTA_HBM2DDL_DB_MAJOR_VERSION ),
 					() -> {
-						final String name = (String) configurationValues.get( HBM2DDL_DB_MAJOR_VERSION );
+						final String name = (String) configurationValues.get( DIALECT_DB_MAJOR_VERSION );
 						if ( StringHelper.isNotEmpty( name ) ) {
-							DEPRECATION_LOGGER.deprecatedSetting( HBM2DDL_DB_MAJOR_VERSION, JAKARTA_HBM2DDL_DB_MAJOR_VERSION );
+							DEPRECATION_LOGGER.deprecatedSetting( DIALECT_DB_MAJOR_VERSION, JAKARTA_HBM2DDL_DB_MAJOR_VERSION );
 						}
 						return name;
 					}
@@ -269,9 +269,9 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 			final String dbMinor = (String) coalesceSuppliedValues(
 					() -> configurationValues.get( JAKARTA_HBM2DDL_DB_MINOR_VERSION ),
 					() -> {
-						final String name = (String) configurationValues.get( HBM2DDL_DB_MINOR_VERSION );
+						final String name = (String) configurationValues.get( DIALECT_DB_MINOR_VERSION );
 						if ( StringHelper.isNotEmpty( name ) ) {
-							DEPRECATION_LOGGER.deprecatedSetting( HBM2DDL_DB_MINOR_VERSION, JAKARTA_HBM2DDL_DB_MINOR_VERSION );
+							DEPRECATION_LOGGER.deprecatedSetting( DIALECT_DB_MINOR_VERSION, JAKARTA_HBM2DDL_DB_MINOR_VERSION );
 						}
 						return name;
 					}

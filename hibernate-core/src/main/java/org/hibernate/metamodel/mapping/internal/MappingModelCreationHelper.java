@@ -53,6 +53,7 @@ import org.hibernate.metamodel.mapping.CollectionIdentifierDescriptor;
 import org.hibernate.metamodel.mapping.CollectionMappingType;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -232,8 +233,16 @@ public class MappingModelCreationHelper {
 			}
 		};
 
-		final FetchTiming fetchTiming = bootProperty.isLazy() ? FetchTiming.DELAYED : FetchTiming.IMMEDIATE;
-		final FetchStyle fetchStyle = bootProperty.isLazy() ? FetchStyle.SELECT : FetchStyle.JOIN;
+		final FetchTiming fetchTiming;
+		final FetchStyle fetchStyle;
+		if ( declaringType instanceof EmbeddableMappingType ) {
+			fetchTiming = FetchTiming.IMMEDIATE;
+			fetchStyle = FetchStyle.JOIN;
+		}
+		else {
+			fetchTiming = bootProperty.isLazy() ? FetchTiming.DELAYED : FetchTiming.IMMEDIATE;
+			fetchStyle = bootProperty.isLazy() ? FetchStyle.SELECT : FetchStyle.JOIN;
+		}
 		final ValueGeneration valueGeneration = bootProperty.getValueGenerationStrategy();
 
 		if ( valueConverter != null ) {

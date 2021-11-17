@@ -187,7 +187,7 @@ The `@Column` annotation defines other mapping information as well. See its Java
 
 We said before that a Hibernate type is not a Java type, nor an SQL type, but that it understands both and performs the marshalling between them.
 But looking at the basic type mappings from the previous examples,
-how did Hibernate know to use its `org.hibernate.type.StringType` for mapping for `java.lang.String` attributes,
+how did Hibernate know to use its `org.hibernate.type.StringType` for mapping `java.lang.String` attributes,
 or its `org.hibernate.type.IntegerType` for mapping `java.lang.Integer` attributes?
 
 The answer lies in a service inside Hibernate called the `org.hibernate.type.BasicTypeRegistry`, which essentially maintains a map of `org.hibernate.type.BasicType` (an `org.hibernate.type.Type` specialization) instances keyed by a name.

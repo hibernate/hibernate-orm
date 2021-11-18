@@ -572,9 +572,15 @@ public class ToOneAttributeMapping
 	public void setForeignKeyDescriptor(ForeignKeyDescriptor foreignKeyDescriptor) {
 		assert identifyingColumnsTableExpression != null;
 		this.foreignKeyDescriptor = foreignKeyDescriptor;
-		this.sideNature = foreignKeyDescriptor.getAssociationKey().getTable().equals( identifyingColumnsTableExpression )
-				? ForeignKeyDescriptor.Nature.KEY
-				: ForeignKeyDescriptor.Nature.TARGET;
+		if ( cardinality == Cardinality.ONE_TO_ONE && bidirectionalAttributeName != null ) {
+			this.sideNature = ForeignKeyDescriptor.Nature.TARGET;
+		}
+		else {
+			this.sideNature = foreignKeyDescriptor.getAssociationKey().getTable().equals(
+					identifyingColumnsTableExpression )
+					? ForeignKeyDescriptor.Nature.KEY
+					: ForeignKeyDescriptor.Nature.TARGET;
+		}
 
 		// We can only use the parent table group if the FK is located there and ignoreNotFound is false
 		// If this is not the case, the FK is not constrained or on a join/secondary table, so we need a join
@@ -738,36 +744,35 @@ public class ToOneAttributeMapping
 
 				We have a circularity but it is not bidirectional
 			 */
-			if ( sideNature == ForeignKeyDescriptor.Nature.KEY ) {
-				final TableGroup parentTableGroup = creationState
-						.getSqlAstCreationState()
-						.getFromClauseAccess()
-						.getTableGroup( fetchParent.getNavigablePath() );
-				final DomainResult<?> foreignKeyDomainResult;
-				assert !creationState.isResolvingCircularFetch();
-				try {
-					creationState.setResolvingCircularFetch( true );
-					foreignKeyDomainResult = foreignKeyDescriptor.createKeyDomainResult(
-							fetchablePath,
-							parentTableGroup,
-							creationState
-					);
-				}
-				finally {
-					creationState.setResolvingCircularFetch( false );
-				}
-				return new CircularFetchImpl(
-						this,
-						getEntityMappingType(),
-						fetchTiming,
+			final TableGroup parentTableGroup = creationState
+					.getSqlAstCreationState()
+					.getFromClauseAccess()
+					.getTableGroup( fetchParent.getNavigablePath() );
+			final DomainResult<?> foreignKeyDomainResult;
+			assert !creationState.isResolvingCircularFetch();
+			try {
+				creationState.setResolvingCircularFetch( true );
+				foreignKeyDomainResult = foreignKeyDescriptor.createDomainResult(
 						fetchablePath,
-						fetchParent,
-						this,
-						isSelectByUniqueKey( sideNature ),
-						fetchablePath,
-						foreignKeyDomainResult
+						parentTableGroup,
+						sideNature,
+						creationState
 				);
 			}
+			finally {
+				creationState.setResolvingCircularFetch( false );
+			}
+			return new CircularFetchImpl(
+					this,
+					getEntityMappingType(),
+					fetchTiming,
+					fetchablePath,
+					fetchParent,
+					this,
+					isSelectByUniqueKey( sideNature ),
+					fetchablePath,
+					foreignKeyDomainResult
+			);
 		}
 		return null;
 	}
@@ -998,6 +1003,7 @@ public class ToOneAttributeMapping
 				|| fetchParent.getNavigablePath() instanceof TreatedNavigablePath
 				&& parentNavigablePath.equals( fetchParent.getNavigablePath().getRealParent() );
 
+
 		if ( fetchTiming == FetchTiming.IMMEDIATE && selected ) {
 			final TableGroup tableGroup;
 			if ( fetchParent instanceof EntityResultJoinedSubclassImpl &&
@@ -1034,15 +1040,17 @@ public class ToOneAttributeMapping
 				);
 			}
 
-			creationState.registerVisitedAssociationKey( foreignKeyDescriptor.getAssociationKey() );
+			final boolean added = creationState.registerVisitedAssociationKey( foreignKeyDescriptor.getAssociationKey() );
+			AssociationKey additionalAssociationKey = null;
 			if ( cardinality == Cardinality.LOGICAL_ONE_TO_ONE && bidirectionalAttributeName != null ) {
 				final ModelPart bidirectionalModelPart = entityMappingType.findSubPart( bidirectionalAttributeName );
 				// Add the inverse association key side as well to be able to resolve to a CircularFetch
 				if ( bidirectionalModelPart instanceof ToOneAttributeMapping ) {
 					final ToOneAttributeMapping bidirectionalAttribute = (ToOneAttributeMapping) bidirectionalModelPart;
-					creationState.registerVisitedAssociationKey(
-							bidirectionalAttribute.getForeignKeyDescriptor().getAssociationKey()
-					);
+					final AssociationKey secondKey = bidirectionalAttribute.getForeignKeyDescriptor().getAssociationKey();
+					if ( creationState.registerVisitedAssociationKey( secondKey ) ) {
+						additionalAssociationKey = secondKey;
+					}
 				}
 			}
 			final EntityFetchJoinedImpl entityFetchJoined = new EntityFetchJoinedImpl(
@@ -1053,6 +1061,12 @@ public class ToOneAttributeMapping
 					fetchablePath,
 					creationState
 			);
+			if ( added ) {
+				creationState.removeVisitedAssociationKey( foreignKeyDescriptor.getAssociationKey() );
+			}
+			if ( additionalAssociationKey != null ) {
+				creationState.removeVisitedAssociationKey( additionalAssociationKey );
+			}
 			return entityFetchJoined;
 		}
 

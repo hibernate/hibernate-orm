@@ -24,6 +24,7 @@ import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -252,7 +253,7 @@ public class ForeignKeyConstraintTest {
 		@jakarta.persistence.Column( name = "MATRICULATION_NUMBER" )
 		public String matriculationNumber;
 
-		@ManyToOne
+		@ManyToOne(fetch = FetchType.LAZY)
 		@JoinColumns(
 				value = {
 						@JoinColumn( name = "CAR_NR", referencedColumnName = "CAR_NR" ),
@@ -262,7 +263,7 @@ public class ForeignKeyConstraintTest {
 		)
 		public Car car;
 
-		@ManyToOne
+		@ManyToOne(fetch = FetchType.LAZY)
 		@JoinColumns(
 				value = {
 						@JoinColumn( name = "CAR_NR2", referencedColumnName = "CAR_NR" ),
@@ -272,7 +273,7 @@ public class ForeignKeyConstraintTest {
 		)
 		public Car car2;
 
-		@OneToOne
+		@OneToOne(fetch = FetchType.LAZY)
 		@JoinColumns(
 				value = {
 						@JoinColumn( name = "CAR_NR3", referencedColumnName = "CAR_NR" ),
@@ -282,7 +283,7 @@ public class ForeignKeyConstraintTest {
 		)
 		public Car car3;
 
-		@OneToOne
+		@OneToOne(fetch = FetchType.LAZY)
 		@JoinColumns(
 				value = {
 						@JoinColumn( name = "CAR_NR4", referencedColumnName = "CAR_NR" ),
@@ -372,19 +373,19 @@ public class ForeignKeyConstraintTest {
 
 		public String color;
 
-		@ManyToOne
+		@ManyToOne(fetch = FetchType.LAZY)
 		@JoinColumn( name = "OWNER_PERSON_ID", foreignKey = @ForeignKey( name = "FK_CAR_OWNER") )
 		public Person owner;
 
-		@ManyToOne
+		@ManyToOne(fetch = FetchType.LAZY)
 		@JoinColumn( name = "OWNER_PERSON_ID2", foreignKey = @ForeignKey( name = "FK_CAR_OWNER2", value = ConstraintMode.NO_CONSTRAINT ) )
 		public Person owner2;
 
-		@OneToOne
+		@OneToOne(fetch = FetchType.LAZY)
 		@JoinColumn( name = "OWNER_PERSON_ID3", foreignKey = @ForeignKey( name = "FK_CAR_OWNER3") )
 		public Person owner3;
 
-		@OneToOne
+		@OneToOne(fetch = FetchType.LAZY)
 		@JoinColumn( name = "OWNER_PERSON_ID4", foreignKey = @ForeignKey( name = "FK_CAR_OWNER4", value = ConstraintMode.NO_CONSTRAINT ) )
 		public Person owner4;
 

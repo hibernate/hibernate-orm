@@ -378,26 +378,37 @@ public class PluralAttributeMappingImpl
 			DomainResultCreationState creationState) {
 		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
 
-		creationState.registerVisitedAssociationKey( fkDescriptor.getAssociationKey() );
+		final boolean added = creationState.registerVisitedAssociationKey( fkDescriptor.getAssociationKey() );
 
-		if ( fetchTiming == FetchTiming.IMMEDIATE ) {
-			if ( selected ) {
-				final TableGroup collectionTableGroup = resolveCollectionTableGroup(
-						fetchParent,
-						fetchablePath,
-						creationState,
-						sqlAstCreationState
-				);
+		try {
+			if ( fetchTiming == FetchTiming.IMMEDIATE ) {
+				if ( selected ) {
+					final TableGroup collectionTableGroup = resolveCollectionTableGroup(
+							fetchParent,
+							fetchablePath,
+							creationState,
+							sqlAstCreationState
+					);
 
-				return new EagerCollectionFetch(
-						fetchablePath,
-						this,
-						collectionTableGroup,
-						fetchParent,
-						creationState
-				);
+					return new EagerCollectionFetch(
+							fetchablePath,
+							this,
+							collectionTableGroup,
+							fetchParent,
+							creationState
+					);
+				}
+				else {
+					return createSelectEagerCollectionFetch(
+							fetchParent,
+							fetchablePath,
+							creationState,
+							sqlAstCreationState
+					);
+				}
 			}
-			else {
+
+			if ( getCollectionDescriptor().getCollectionType().hasHolder() ) {
 				return createSelectEagerCollectionFetch(
 						fetchParent,
 						fetchablePath,
@@ -405,13 +416,16 @@ public class PluralAttributeMappingImpl
 						sqlAstCreationState
 				);
 			}
-		}
 
-		if ( getCollectionDescriptor().getCollectionType().hasHolder() ) {
-			return createSelectEagerCollectionFetch( fetchParent, fetchablePath, creationState, sqlAstCreationState );
+			return createDelayedCollectionFetch( fetchParent, fetchablePath, creationState, sqlAstCreationState );
 		}
-
-		return createDelayedCollectionFetch( fetchParent, fetchablePath, creationState, sqlAstCreationState );
+		finally {
+			// This is only necessary because the association key is too general i.e. also matching FKs that other associations would match
+			// and on top of this, we are not handling circular fetches for plural attributes yet
+			if ( added ) {
+				creationState.removeVisitedAssociationKey( fkDescriptor.getAssociationKey() );
+			}
+		}
 	}
 
 	private Fetch createSelectEagerCollectionFetch(

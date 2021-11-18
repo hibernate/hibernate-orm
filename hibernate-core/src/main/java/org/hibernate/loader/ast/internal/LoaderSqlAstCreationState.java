@@ -148,8 +148,13 @@ public class LoaderSqlAstCreationState
 	}
 
 	@Override
-	public void registerVisitedAssociationKey(AssociationKey associationKey) {
-		visitedAssociationKeys.add( associationKey );
+	public boolean registerVisitedAssociationKey(AssociationKey associationKey) {
+		return visitedAssociationKeys.add( associationKey );
+	}
+
+	@Override
+	public void removeVisitedAssociationKey(AssociationKey associationKey) {
+		visitedAssociationKeys.remove( associationKey );
 	}
 
 	@Override

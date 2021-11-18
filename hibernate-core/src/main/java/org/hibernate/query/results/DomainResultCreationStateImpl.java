@@ -175,7 +175,8 @@ public class DomainResultCreationStateImpl
 	}
 
 	@Override
-	public void registerVisitedAssociationKey(AssociationKey associationKey) {
+	public boolean registerVisitedAssociationKey(AssociationKey associationKey) {
+		return false;
 	}
 
 	@Override

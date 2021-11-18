@@ -425,10 +425,21 @@ public class EntityCollectionPart
 			boolean selected,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		creationState.registerVisitedAssociationKey( getForeignKeyDescriptor().getAssociationKey() );
+		final boolean added = creationState.registerVisitedAssociationKey( getForeignKeyDescriptor().getAssociationKey() );
 
 		final TableGroup partTableGroup = resolveTableGroup( fetchablePath, creationState );
-		return new EntityFetchJoinedImpl( fetchParent, this, partTableGroup, selected, fetchablePath, creationState );
+		final EntityFetchJoinedImpl fetch = new EntityFetchJoinedImpl(
+				fetchParent,
+				this,
+				partTableGroup,
+				selected,
+				fetchablePath,
+				creationState
+		);
+		if ( added ) {
+			creationState.removeVisitedAssociationKey( getForeignKeyDescriptor().getAssociationKey() );
+		}
+		return fetch;
 	}
 
 	private TableGroup resolveTableGroup(NavigablePath fetchablePath, DomainResultCreationState creationState) {

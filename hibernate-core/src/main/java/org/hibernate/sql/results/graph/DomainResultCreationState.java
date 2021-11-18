@@ -31,7 +31,11 @@ public interface DomainResultCreationState {
 		return (SqlAliasBaseManager) getSqlAstCreationState().getSqlAliasBaseGenerator();
 	}
 
-	default void registerVisitedAssociationKey(AssociationKey associationKey){
+	default boolean registerVisitedAssociationKey(AssociationKey associationKey) {
+		return false;
+	}
+
+	default void removeVisitedAssociationKey(AssociationKey associationKey){
 	}
 
 	default boolean isAssociationKeyVisited(AssociationKey associationKey){

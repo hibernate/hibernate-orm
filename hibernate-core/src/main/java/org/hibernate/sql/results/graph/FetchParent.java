@@ -12,7 +12,7 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.Association;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.IEmbeddableMappingType;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.query.EntityIdentifierNavigablePath;
@@ -54,7 +54,7 @@ public interface FetchParent extends DomainResultGraphNode {
 			final FetchableContainer referencedMappingContainer = getReferencedMappingContainer();
 			final EntityMappingType fetchableEntityType = fetchable.findContainingEntityMapping();
 			final EntityMappingType fetchParentType;
-			if ( referencedMappingContainer instanceof IEmbeddableMappingType
+			if ( referencedMappingContainer instanceof EmbeddableMappingType
 					|| referencedMappingContainer instanceof EmbeddableValuedModelPart ) {
 				fetchParentType = referencedMappingContainer.findContainingEntityMapping();
 			}

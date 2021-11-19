@@ -10,7 +10,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
-import org.hibernate.metamodel.mapping.IEmbeddableMappingType;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
@@ -28,7 +28,7 @@ public interface NonAggregatedIdentifierMapping extends CompositeIdentifierMappi
 	 * Think of an AttributeConverter for id values.  Handles representation
 	 * difference between virtual and id-class mappings
 	 */
-	interface IdentifierValueMapper extends IEmbeddableMappingType  {
+	interface IdentifierValueMapper extends EmbeddableMappingType {
 		EmbeddableValuedModelPart getEmbeddedPart();
 
 		Object getIdentifier(Object entity, SharedSessionContractImplementor session);

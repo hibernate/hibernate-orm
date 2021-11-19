@@ -9,7 +9,7 @@ package org.hibernate.sql.results.graph.embeddable.internal;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
-import org.hibernate.metamodel.mapping.IEmbeddableMappingType;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.AbstractFetchParent;
@@ -93,8 +93,8 @@ public class EmbeddableForeignKeyResultImpl<T>
 	}
 
 	@Override
-	public IEmbeddableMappingType getReferencedMappingType() {
-		return (IEmbeddableMappingType) getFetchContainer().getPartMappingType();
+	public EmbeddableMappingType getReferencedMappingType() {
+		return (EmbeddableMappingType) getFetchContainer().getPartMappingType();
 	}
 
 	@Override
@@ -103,8 +103,8 @@ public class EmbeddableForeignKeyResultImpl<T>
 	}
 
 	@Override
-	public IEmbeddableMappingType getFetchContainer() {
-		return (IEmbeddableMappingType) super.getFetchContainer();
+	public EmbeddableMappingType getFetchContainer() {
+		return (EmbeddableMappingType) super.getFetchContainer();
 	}
 
 	@Override

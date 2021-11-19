@@ -132,7 +132,7 @@ public class MappingModelCreationProcess {
 			if ( ! anyCompleted ) {
 				// none of the remaining callbacks could complete fully, this is an error
 				final StringBuilder buff = new StringBuilder(
-						"MappingModelCreationProcess$PostInitCallback queue could not be processed..."
+						"PostInitCallback queue could not be processed..."
 				);
 
 				postInitCallbacks.forEach(
@@ -198,7 +198,7 @@ public class MappingModelCreationProcess {
 
 		private boolean process() {
 			MappingModelCreationLogger.LOGGER.debugf(
-					"Starting MappingModelCreationProcess.PostInitCallbackEntry processing : %s",
+					"Starting PostInitCallbackEntry : %s",
 					description
 			);
 			return callback.process();
@@ -206,7 +206,7 @@ public class MappingModelCreationProcess {
 
 		@Override
 		public String toString() {
-			return "MappingModelCreationProcess.PostInitCallbackEntry - " + description;
+			return "PostInitCallbackEntry - " + description;
 		}
 	}
 }

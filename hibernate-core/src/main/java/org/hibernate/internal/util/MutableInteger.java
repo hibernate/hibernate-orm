@@ -33,6 +33,12 @@ public class MutableInteger {
 		return value++;
 	}
 
+	public int getAndIncrementBy(int i) {
+		final int local = value;
+		value += i;
+		return local;
+	}
+
 	public int incrementAndGet() {
 		return ++value;
 	}
@@ -47,6 +53,18 @@ public class MutableInteger {
 
 	public void increase() {
 		++value;
+	}
+
+	public void increment() {
+		++value;
+	}
+
+	public void incrementBy(int i) {
+		value += i;
+	}
+
+	public void increase(int i) {
+		value += i;
 	}
 
 	public void plus(int i) {

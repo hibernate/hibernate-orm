@@ -28,11 +28,11 @@ public interface CompositeIdentifierMapping extends EntityIdentifierMapping {
 	 */
 	boolean hasContainingClass();
 
-	IEmbeddableMappingType getPartMappingType();
+	EmbeddableMappingType getPartMappingType();
 
 	/**
 	 * Returns the embeddable type descriptor of the id-class, if there is one,
 	 * otherwise the one of the virtual embeddable mapping type.
 	 */
-	IEmbeddableMappingType getMappedIdEmbeddableTypeDescriptor();
+	EmbeddableMappingType getMappedIdEmbeddableTypeDescriptor();
 }

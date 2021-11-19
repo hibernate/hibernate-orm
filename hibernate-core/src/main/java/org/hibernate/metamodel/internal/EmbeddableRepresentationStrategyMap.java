@@ -13,7 +13,7 @@ import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.RepresentationMode;
-import org.hibernate.metamodel.mapping.IEmbeddableMappingType;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -30,7 +30,7 @@ public class EmbeddableRepresentationStrategyMap implements EmbeddableRepresenta
 
 	public EmbeddableRepresentationStrategyMap(
 			Component bootDescriptor,
-			Supplier<IEmbeddableMappingType> runtimeDescriptorAccess,
+			Supplier<EmbeddableMappingType> runtimeDescriptorAccess,
 			RuntimeModelCreationContext creationContext) {
 		this.mapJtd = creationContext.getTypeConfiguration().getJavaTypeDescriptorRegistry().getDescriptor( Map.class );
 		this.instantiator = new EmbeddableInstantiatorDynamicMap( bootDescriptor, runtimeDescriptorAccess );

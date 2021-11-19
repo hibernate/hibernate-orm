@@ -30,7 +30,7 @@ import org.hibernate.sql.results.graph.FetchableContainer;
  * @author Steve Ebersole
  */
 public interface EmbeddableValuedModelPart extends ModelPart, Fetchable, FetchableContainer, TableGroupJoinProducer {
-	IEmbeddableMappingType getEmbeddableTypeDescriptor();
+	EmbeddableMappingType getEmbeddableTypeDescriptor();
 
 	@Override
 	default int getJdbcTypeCount() {

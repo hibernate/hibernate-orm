@@ -54,7 +54,6 @@ import org.hibernate.metamodel.mapping.CollectionIdentifierDescriptor;
 import org.hibernate.metamodel.mapping.CollectionMappingType;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
-import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -130,7 +129,7 @@ public class MappingModelCreationHelper {
 				propertyAccess
 		);
 
-		final EmbeddableMappingType embeddableMappingType = EmbeddableMappingType.from(
+		final EmbeddableMappingTypeImpl embeddableMappingType = EmbeddableMappingTypeImpl.from(
 				(Component) bootProperty.getValue(),
 				cidType,
 				rootTableName,
@@ -400,7 +399,7 @@ public class MappingModelCreationHelper {
 		);
 
 		final Component component = (Component) bootProperty.getValue();
-		final EmbeddableMappingType embeddableMappingType = EmbeddableMappingType.from(
+		final EmbeddableMappingTypeImpl embeddableMappingType = EmbeddableMappingTypeImpl.from(
 				component,
 				attrType,
 				tableExpression,
@@ -1388,7 +1387,7 @@ public class MappingModelCreationHelper {
 			final CompositeType compositeType = (CompositeType) component.getType();
 
 
-			final EmbeddableMappingType mappingType = EmbeddableMappingType.from(
+			final EmbeddableMappingTypeImpl mappingType = EmbeddableMappingTypeImpl.from(
 					component,
 					compositeType,
 					inflightDescriptor -> new EmbeddedCollectionPart(
@@ -1479,7 +1478,7 @@ public class MappingModelCreationHelper {
 			final CompositeType compositeType = (CompositeType) collectionDescriptor.getElementType();
 
 
-			final EmbeddableMappingType mappingType = EmbeddableMappingType.from(
+			final EmbeddableMappingTypeImpl mappingType = EmbeddableMappingTypeImpl.from(
 					component,
 					compositeType,
 					embeddableMappingType -> new EmbeddedCollectionPart(

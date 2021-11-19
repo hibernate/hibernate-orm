@@ -11,7 +11,7 @@ import java.util.function.Supplier;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Component;
-import org.hibernate.metamodel.mapping.IEmbeddableMappingType;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 
 /**
@@ -22,11 +22,11 @@ import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 public class EmbeddableInstantiatorDynamicMap
 		extends AbstractDynamicMapInstantiator
 		implements EmbeddableInstantiator {
-	private final Supplier<IEmbeddableMappingType> runtimeDescriptorAccess;
+	private final Supplier<EmbeddableMappingType> runtimeDescriptorAccess;
 
 	public EmbeddableInstantiatorDynamicMap(
 			Component bootDescriptor,
-			Supplier<IEmbeddableMappingType> runtimeDescriptorAccess) {
+			Supplier<EmbeddableMappingType> runtimeDescriptorAccess) {
 		super( bootDescriptor.getRoleName() );
 		this.runtimeDescriptorAccess = runtimeDescriptorAccess;
 	}
@@ -36,7 +36,7 @@ public class EmbeddableInstantiatorDynamicMap
 		final Map<?,?> dataMap = generateDataMap();
 
 		if ( valuesAccess != null ) {
-			final IEmbeddableMappingType mappingType = runtimeDescriptorAccess.get();
+			final EmbeddableMappingType mappingType = runtimeDescriptorAccess.get();
 			mappingType.setPropertyValues( dataMap, valuesAccess.get() );
 		}
 

@@ -14,7 +14,7 @@ import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Value;
-import org.hibernate.metamodel.mapping.IEmbeddableMappingType;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
@@ -80,7 +80,7 @@ public class SelectableMappingsImpl implements SelectableMappings {
 		return new SelectableMappingsImpl( selectableMappings );
 	}
 
-	public static SelectableMappings from(IEmbeddableMappingType embeddableMappingType) {
+	public static SelectableMappings from(EmbeddableMappingType embeddableMappingType) {
 		final int propertySpan = embeddableMappingType.getNumberOfAttributeMappings();
 		final List<SelectableMapping> selectableMappings = CollectionHelper.arrayList( propertySpan );
 

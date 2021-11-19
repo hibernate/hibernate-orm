@@ -11,7 +11,7 @@ import java.util.function.BiConsumer;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.internal.AbstractCompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.IEmbeddableMappingType;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.proxy.HibernateProxy;
@@ -30,14 +30,14 @@ public class EmbeddedIdentifierMappingImpl
 		extends AbstractCompositeIdentifierMapping
 		implements SingleAttributeIdentifierMapping {
 	private final String name;
-	private final IEmbeddableMappingType embeddableDescriptor;
+	private final EmbeddableMappingType embeddableDescriptor;
 	private final PropertyAccess propertyAccess;
 
 	@SuppressWarnings("WeakerAccess")
 	public EmbeddedIdentifierMappingImpl(
 			EntityMappingType entityMapping,
 			String name,
-			IEmbeddableMappingType embeddableDescriptor,
+			EmbeddableMappingType embeddableDescriptor,
 			PropertyAccess propertyAccess,
 			String tableExpression,
 			MappingModelCreationProcess creationProcess) {
@@ -54,12 +54,12 @@ public class EmbeddedIdentifierMappingImpl
 	}
 
 	@Override
-	public IEmbeddableMappingType getPartMappingType() {
+	public EmbeddableMappingType getPartMappingType() {
 		return embeddableDescriptor;
 	}
 
 	@Override
-	public IEmbeddableMappingType getMappedIdEmbeddableTypeDescriptor() {
+	public EmbeddableMappingType getMappedIdEmbeddableTypeDescriptor() {
 		return getMappedType();
 	}
 
@@ -142,7 +142,7 @@ public class EmbeddedIdentifierMappingImpl
 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		final IEmbeddableMappingType embeddableTypeDescriptor = getEmbeddableTypeDescriptor();
+		final EmbeddableMappingType embeddableTypeDescriptor = getEmbeddableTypeDescriptor();
 		final Object[] result = new Object[embeddableTypeDescriptor.getNumberOfAttributeMappings()];
 		embeddableTypeDescriptor.forEachAttributeMapping(
 				(i, mapping) -> {

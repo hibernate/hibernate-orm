@@ -19,10 +19,9 @@ import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
-import org.hibernate.metamodel.mapping.IEmbeddableMappingType;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableMappings;
-import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
@@ -83,12 +82,12 @@ public abstract class AbstractCompositeIdentifierMapping
 	}
 
 	@Override
-	public IEmbeddableMappingType getMappedType() {
+	public EmbeddableMappingType getMappedType() {
 		return getPartMappingType();
 	}
 
 	@Override
-	public IEmbeddableMappingType getEmbeddableTypeDescriptor() {
+	public EmbeddableMappingType getEmbeddableTypeDescriptor() {
 		return getPartMappingType();
 	}
 

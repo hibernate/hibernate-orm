@@ -7,7 +7,7 @@
 package org.hibernate.metamodel.mapping.ordering.ast;
 
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
-import org.hibernate.metamodel.mapping.IEmbeddableMappingType;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.AbstractDomainPath;
 import org.hibernate.metamodel.mapping.ordering.TranslationContext;
@@ -52,7 +52,7 @@ public class DomainPathContinuation extends AbstractDomainPath {
 			boolean isTerminal,
 			TranslationContext translationContext) {
 		if ( referencedModelPart instanceof EmbeddableValuedModelPart ) {
-			final IEmbeddableMappingType embeddableMappingType = (IEmbeddableMappingType) referencedModelPart.getPartMappingType();
+			final EmbeddableMappingType embeddableMappingType = (EmbeddableMappingType) referencedModelPart.getPartMappingType();
 			final ModelPart subPart = embeddableMappingType.findSubPart( name, null );
 			if ( subPart == null ) {
 				throw new PathResolutionException(

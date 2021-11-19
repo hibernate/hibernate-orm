@@ -35,11 +35,11 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.mapping.internal.EmbeddableMappingTypeImpl;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.IEmbeddableMappingType;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelCreationLogger;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -468,12 +468,12 @@ public class IdClassEmbeddable implements IdentifierValueMapper {
 	}
 
 	@Override
-	public IEmbeddableMappingType createInverseMappingType(
+	public EmbeddableMappingType createInverseMappingType(
 			EmbeddedAttributeMapping valueMapping,
 			TableGroupProducer declaringTableGroupProducer,
 			SelectableMappings selectableMappings,
 			MappingModelCreationProcess creationProcess) {
-		return new EmbeddableMappingType(
+		return new EmbeddableMappingTypeImpl(
 				valueMapping,
 				declaringTableGroupProducer,
 				selectableMappings,

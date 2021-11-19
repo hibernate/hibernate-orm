@@ -24,7 +24,7 @@ import org.hibernate.metamodel.mapping.AssociationKey;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
-import org.hibernate.metamodel.mapping.IEmbeddableMappingType;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.NonAggregatedIdentifierMappingImpl;
 import org.hibernate.query.EntityIdentifierNavigablePath;
@@ -334,8 +334,8 @@ public class DomainResultCreationStateImpl
 			if ( fetchable instanceof Association && fetchable.getMappedFetchOptions().getTiming() == FetchTiming.DELAYED ) {
 				final Association association = (Association) fetchable;
 				final ForeignKeyDescriptor foreignKeyDescriptor = association.getForeignKeyDescriptor();
-				if ( foreignKeyDescriptor.getPartMappingType() instanceof IEmbeddableMappingType ) {
-					relativePathStack.push( relativePath.append( ( (IEmbeddableMappingType) foreignKeyDescriptor.getPartMappingType() ).getPartName() ) );
+				if ( foreignKeyDescriptor.getPartMappingType() instanceof EmbeddableMappingType ) {
+					relativePathStack.push( relativePath.append( ( (EmbeddableMappingType) foreignKeyDescriptor.getPartMappingType() ).getPartName() ) );
 				}
 				else {
 					relativePathStack.push( relativePath.append( foreignKeyDescriptor.getPartName() ) );

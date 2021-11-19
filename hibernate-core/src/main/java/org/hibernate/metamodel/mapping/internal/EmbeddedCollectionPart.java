@@ -16,7 +16,7 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.IEmbeddableMappingType;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -61,7 +61,7 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 	private final NavigableRole navigableRole;
 	private final CollectionPersister collectionDescriptor;
 	private final Nature nature;
-	private final IEmbeddableMappingType embeddableMappingType;
+	private final EmbeddableMappingType embeddableMappingType;
 
 	private final String containingTableExpression;
 
@@ -72,7 +72,7 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 	public EmbeddedCollectionPart(
 			CollectionPersister collectionDescriptor,
 			Nature nature,
-			IEmbeddableMappingType embeddableMappingType,
+			EmbeddableMappingType embeddableMappingType,
 			String parentInjectionAttributeName,
 			String containingTableExpression,
 			String sqlAliasStem) {
@@ -116,7 +116,7 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 	}
 
 	@Override
-	public IEmbeddableMappingType getEmbeddableTypeDescriptor() {
+	public EmbeddableMappingType getEmbeddableTypeDescriptor() {
 		return embeddableMappingType;
 	}
 

@@ -20,7 +20,7 @@ import org.hibernate.metamodel.internal.AbstractCompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
-import org.hibernate.metamodel.mapping.IEmbeddableMappingType;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableMappings;
@@ -105,12 +105,12 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 	}
 
 	@Override
-	public IEmbeddableMappingType getMappedType() {
+	public EmbeddableMappingType getMappedType() {
 		return virtualIdEmbeddable;
 	}
 
 	@Override
-	public IEmbeddableMappingType getPartMappingType() {
+	public EmbeddableMappingType getPartMappingType() {
 		return getMappedType();
 	}
 
@@ -135,7 +135,7 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 	}
 
 	@Override
-	public IEmbeddableMappingType getMappedIdEmbeddableTypeDescriptor() {
+	public EmbeddableMappingType getMappedIdEmbeddableTypeDescriptor() {
 		return identifierValueMapper;
 	}
 

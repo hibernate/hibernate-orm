@@ -34,7 +34,6 @@ import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.IEmbeddableMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelCreationLogger;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -417,12 +416,12 @@ public class VirtualIdEmbeddable implements IdentifierValueMapper {
 	}
 
 	@Override
-	public IEmbeddableMappingType createInverseMappingType(
+	public EmbeddableMappingType createInverseMappingType(
 			EmbeddedAttributeMapping valueMapping,
 			TableGroupProducer declaringTableGroupProducer,
 			SelectableMappings selectableMappings,
 			MappingModelCreationProcess creationProcess) {
-		return new EmbeddableMappingType(
+		return new EmbeddableMappingTypeImpl(
 				valueMapping,
 				declaringTableGroupProducer,
 				selectableMappings,

@@ -14,8 +14,8 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.RuntimeMetamodels;
 import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.IEmbeddableMappingType;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 
@@ -100,7 +100,7 @@ public class AttributeOrderingTests {
 		assertThat( theComponentAttrMapping.getAttributeName(), is( "theComponent" ) );
 		assertThat( entityMappingType.getEntityPersister().getPropertyNames()[ 2 ], is( "theComponent" ) );
 
-		final EmbeddableMappingType embeddable = theComponentAttrMapping.getMappedType();
+		final IEmbeddableMappingType embeddable = theComponentAttrMapping.getMappedType();
 		final ArrayList<AttributeMapping> embeddableAttributeMappings = new ArrayList<>( embeddable.getAttributeMappings() );
 		assertThat( embeddableAttributeMappings.get( 0 ).getAttributeName(), is( "nestedAnything" ) );
 		assertThat( embeddableAttributeMappings.get( 1 ).getAttributeName(), is( "nestedName" ) );

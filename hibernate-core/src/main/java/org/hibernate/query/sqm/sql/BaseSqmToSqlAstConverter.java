@@ -53,7 +53,6 @@ import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.Bindable;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.ConvertibleModelPart;
-import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
@@ -62,6 +61,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
+import org.hibernate.metamodel.mapping.IEmbeddableMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
@@ -3858,9 +3858,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final int size = groupedExpressions.size();
 		final List<Expression> expressions = new ArrayList<>( size );
 		final MappingModelExpressable<?> mappingModelExpressable = inferrableTypeAccessStack.getCurrent().get();
-		final EmbeddableMappingType embeddableMappingType;
+		final IEmbeddableMappingType embeddableMappingType;
 		if ( mappingModelExpressable instanceof ValueMapping ) {
-			embeddableMappingType = (EmbeddableMappingType) ( (ValueMapping) mappingModelExpressable ).getMappedType();
+			embeddableMappingType = (IEmbeddableMappingType) ( (ValueMapping) mappingModelExpressable ).getMappedType();
 		}
 		else {
 			embeddableMappingType = null;

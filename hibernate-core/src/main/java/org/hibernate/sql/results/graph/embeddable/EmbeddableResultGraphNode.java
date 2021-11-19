@@ -6,11 +6,11 @@
  */
 package org.hibernate.sql.results.graph.embeddable;
 
+import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
+import org.hibernate.metamodel.mapping.IEmbeddableMappingType;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.DomainResultGraphNode;
 import org.hibernate.sql.results.graph.FetchParent;
-import org.hibernate.metamodel.mapping.EmbeddableMappingType;
-import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
-import org.hibernate.query.NavigablePath;
 
 /**
  * @author Steve Ebersole
@@ -25,5 +25,5 @@ public interface EmbeddableResultGraphNode extends DomainResultGraphNode, FetchP
 	EmbeddableValuedModelPart getReferencedMappingContainer();
 
 	@Override
-	EmbeddableMappingType getReferencedMappingType();
+	IEmbeddableMappingType getReferencedMappingType();
 }

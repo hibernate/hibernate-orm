@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.tuple.ValueGeneration;
@@ -33,6 +34,17 @@ public interface AttributeMapping extends ModelPart, ValueMapping, Fetchable, Pr
 	 * The getter/setter access to this attribute
 	 */
 	PropertyAccess getPropertyAccess();
+
+	/**
+	 * Convenient access to getting the value for this attribute from the "owner"
+	 */
+	default Object getValue(Object container, SharedSessionContractImplementor session) {
+		return getPropertyAccess().getGetter().get( container );
+	}
+
+	default void setValue(Object container, Object value, SharedSessionContractImplementor session) {
+		getPropertyAccess().getSetter().set( container, value, session.getSessionFactory() );
+	}
 
 	/**
 	 * The value generation strategy to use for this attribute.

@@ -15,14 +15,15 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
-import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
-import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
+import org.hibernate.metamodel.mapping.IEmbeddableMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
+import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.query.NavigablePath;
@@ -62,27 +63,18 @@ public abstract class AbstractCompositeIdentifierMapping
 	private final NavigableRole navigableRole;
 	private final String tableExpression;
 
-	private final StateArrayContributorMetadataAccess attributeMetadataAccess;
-
 	private final EntityMappingType entityMapping;
-	private final EmbeddableMappingType embeddableDescriptor;
 
 	protected final SessionFactoryImplementor sessionFactory;
 
 	public AbstractCompositeIdentifierMapping(
-			StateArrayContributorMetadataAccess attributeMetadataAccess,
-			EmbeddableMappingType embeddableDescriptor,
 			EntityMappingType entityMapping,
 			String tableExpression,
-			SessionFactoryImplementor sessionFactory) {
-		this.attributeMetadataAccess = attributeMetadataAccess;
-		this.embeddableDescriptor = embeddableDescriptor;
+			MappingModelCreationProcess creationProcess) {
+		this.navigableRole = entityMapping.getNavigableRole().appendContainer( EntityIdentifierMapping.ROLE_LOCAL_NAME );
 		this.entityMapping = entityMapping;
 		this.tableExpression = tableExpression;
-		this.sessionFactory = sessionFactory;
-
-		this.navigableRole = entityMapping.getNavigableRole()
-				.appendContainer( EntityIdentifierMapping.ROLE_LOCAL_NAME );
+		this.sessionFactory = creationProcess.getCreationContext().getSessionFactory();
 	}
 
 	@Override
@@ -91,28 +83,18 @@ public abstract class AbstractCompositeIdentifierMapping
 	}
 
 	@Override
-	public EmbeddableMappingType getMappedIdEmbeddableTypeDescriptor() {
-		return embeddableDescriptor;
+	public IEmbeddableMappingType getMappedType() {
+		return getPartMappingType();
 	}
 
 	@Override
-	public EmbeddableMappingType getMappedType() {
-		return embeddableDescriptor;
-	}
-
-	@Override
-	public EmbeddableMappingType getPartMappingType() {
-		return getEmbeddableTypeDescriptor();
+	public IEmbeddableMappingType getEmbeddableTypeDescriptor() {
+		return getPartMappingType();
 	}
 
 	@Override
 	public JavaType<?> getJavaTypeDescriptor() {
-		return getEmbeddableTypeDescriptor().getMappedJavaTypeDescriptor();
-	}
-
-	@Override
-	public EmbeddableMappingType getEmbeddableTypeDescriptor() {
-		return embeddableDescriptor;
+		return getPartMappingType().getMappedJavaTypeDescriptor();
 	}
 
 	@Override
@@ -188,14 +170,14 @@ public abstract class AbstractCompositeIdentifierMapping
 
 	@Override
 	public ModelPart findSubPart(String name, EntityMappingType treatTargetType) {
-		return embeddableDescriptor.findSubPart( name, treatTargetType );
+		return getPartMappingType().findSubPart( name, treatTargetType );
 	}
 
 	@Override
 	public void visitSubParts(
 			Consumer<ModelPart> consumer,
 			EntityMappingType treatTargetType) {
-		embeddableDescriptor.visitSubParts( consumer, treatTargetType );
+		getPartMappingType().visitSubParts( consumer, treatTargetType );
 	}
 
 	@Override

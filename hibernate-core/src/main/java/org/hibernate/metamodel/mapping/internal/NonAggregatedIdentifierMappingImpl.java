@@ -14,16 +14,16 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.mapping.Component;
+import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.internal.AbstractCompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
-import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
+import org.hibernate.metamodel.mapping.IEmbeddableMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableMappings;
-import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
@@ -46,44 +46,105 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
  * @author Steve Ebersole
  * @apiNote Technically a MapsId id does not have to be composite; we still handle that this class however
  */
-public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentifierMapping {
+public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentifierMapping implements NonAggregatedIdentifierMapping {
+	private final VirtualIdEmbeddable virtualIdEmbeddable;
+	private final IdClassEmbeddable idClassEmbeddable;
 
-	private final EmbeddableMappingType mappedIdEmbeddableType;
+	private final IdentifierValueMapper identifierValueMapper;
 
 	public NonAggregatedIdentifierMappingImpl(
-			EmbeddableMappingType embeddableDescriptor,
-			EntityMappingType entityMapping,
-			EmbeddableMappingType mappedIdEmbeddableType,
-			StateArrayContributorMetadataAccess attributeMetadataAccess,
+			EntityPersister entityPersister,
+			RootClass bootEntityDescriptor,
 			String rootTableName,
+			String[] rootTableKeyColumnNames,
 			MappingModelCreationProcess creationProcess) {
-		super(
-				attributeMetadataAccess,
-				embeddableDescriptor,
-				entityMapping,
-				rootTableName,
-				creationProcess.getCreationContext().getSessionFactory()
-		);
+		super( entityPersister, rootTableName, creationProcess );
+		if ( bootEntityDescriptor.getIdentifierMapper() == null
+				|| bootEntityDescriptor.getIdentifierMapper() == bootEntityDescriptor.getIdentifier() ) {
+			// cid -> getIdentifier
+			// idClass -> null
+			final Component virtualIdSource = (Component) bootEntityDescriptor.getIdentifier();
 
-		this.mappedIdEmbeddableType = mappedIdEmbeddableType;
+			virtualIdEmbeddable = new VirtualIdEmbeddable(
+					virtualIdSource,
+					this,
+					entityPersister,
+					rootTableName,
+					rootTableKeyColumnNames,
+					creationProcess
+			);
+			idClassEmbeddable = null;
+			identifierValueMapper = virtualIdEmbeddable;
+		}
+		else {
+			// cid = getIdentifierMapper
+			// idClass = getIdentifier
+			final Component virtualIdSource = bootEntityDescriptor.getIdentifierMapper();
+			final Component idClassSource = (Component) bootEntityDescriptor.getIdentifier();
+
+			virtualIdEmbeddable = new VirtualIdEmbeddable(
+					virtualIdSource,
+					this,
+					entityPersister,
+					rootTableName,
+					rootTableKeyColumnNames,
+					creationProcess
+			);
+			idClassEmbeddable = new IdClassEmbeddable(
+					idClassSource,
+					bootEntityDescriptor,
+					this,
+					entityPersister,
+					rootTableName,
+					rootTableKeyColumnNames,
+					virtualIdEmbeddable,
+					creationProcess
+			);
+			identifierValueMapper = idClassEmbeddable;
+		}
+	}
+
+	@Override
+	public IEmbeddableMappingType getMappedType() {
+		return virtualIdEmbeddable;
+	}
+
+	@Override
+	public IEmbeddableMappingType getPartMappingType() {
+		return getMappedType();
+	}
+
+	@Override
+	public IdClassEmbeddable getIdClassEmbeddable() {
+		return idClassEmbeddable;
+	}
+
+	@Override
+	public VirtualIdEmbeddable getVirtualIdEmbeddable() {
+		return virtualIdEmbeddable;
+	}
+
+	@Override
+	public IdentifierValueMapper getIdentifierValueMapper() {
+		return identifierValueMapper;
 	}
 
 	@Override
 	public boolean hasContainingClass() {
-		return mappedIdEmbeddableType != getEmbeddableTypeDescriptor();
+		return identifierValueMapper != getEmbeddableTypeDescriptor();
 	}
 
 	@Override
-	public EmbeddableMappingType getMappedIdEmbeddableTypeDescriptor() {
-		return mappedIdEmbeddableType;
+	public IEmbeddableMappingType getMappedIdEmbeddableTypeDescriptor() {
+		return identifierValueMapper;
 	}
 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
 		if ( hasContainingClass() ) {
-			final Object[] result = new Object[mappedIdEmbeddableType.getAttributeMappings().size()];
-			for ( int i = 0; i < mappedIdEmbeddableType.getAttributeMappings().size(); i++ ) {
-				final AttributeMapping attributeMapping = mappedIdEmbeddableType.getAttributeMappings().get( i );
+			final Object[] result = new Object[ identifierValueMapper.getAttributeMappings().size()];
+			for ( int i = 0; i < identifierValueMapper.getAttributeMappings().size(); i++ ) {
+				final AttributeMapping attributeMapping = identifierValueMapper.getAttributeMappings().get( i );
 				Object o = attributeMapping.getPropertyAccess().getGetter().get( value );
 				result[i] = attributeMapping.disassemble( o, session );
 			}
@@ -103,8 +164,8 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 			SharedSessionContractImplementor session) {
 		if ( hasContainingClass() ) {
 			int span = 0;
-			for ( int i = 0; i < mappedIdEmbeddableType.getAttributeMappings().size(); i++ ) {
-				final AttributeMapping attributeMapping = mappedIdEmbeddableType.getAttributeMappings().get( i );
+			for ( int i = 0; i < identifierValueMapper.getAttributeMappings().size(); i++ ) {
+				final AttributeMapping attributeMapping = identifierValueMapper.getAttributeMappings().get( i );
 				final Object o = attributeMapping.getPropertyAccess().getGetter().get( value );
 				if ( attributeMapping instanceof ToOneAttributeMapping ) {
 					final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attributeMapping;
@@ -147,7 +208,7 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 					getContainingTableExpression()
 			);
 			int offset = 0;
-			for ( AttributeMapping attributeMapping : mappedIdEmbeddableType.getAttributeMappings() ) {
+			for ( AttributeMapping attributeMapping : identifierValueMapper.getAttributeMappings() ) {
 				offset += attributeMapping.forEachSelectable(
 						offset,
 						(columnIndex, selection) -> {
@@ -184,12 +245,12 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 	@Override
 	public Object getIdentifier(Object entity, SharedSessionContractImplementor session) {
 		if ( hasContainingClass() ) {
-			final Object id = mappedIdEmbeddableType.getRepresentationStrategy().getInstantiator().instantiate(
+			final Object id = identifierValueMapper.getRepresentationStrategy().getInstantiator().instantiate(
 					null,
 					sessionFactory
 			);
 			final List<AttributeMapping> attributeMappings = getEmbeddableTypeDescriptor().getAttributeMappings();
-			final List<AttributeMapping> idClassAttributeMappings = mappedIdEmbeddableType.getAttributeMappings();
+			final List<AttributeMapping> idClassAttributeMappings = identifierValueMapper.getAttributeMappings();
 			final Object[] propertyValues = new Object[attributeMappings.size()];
 			for ( int i = 0; i < propertyValues.length; i++ ) {
 				final AttributeMapping attributeMapping = attributeMappings.get( i );
@@ -222,7 +283,7 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 					propertyValues[i] = o;
 				}
 			}
-			mappedIdEmbeddableType.setPropertyValues( id, propertyValues );
+			identifierValueMapper.setPropertyValues( id, propertyValues );
 			return id;
 		}
 		else {
@@ -232,7 +293,7 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 
 	@Override
 	public void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session) {
-		final List<AttributeMapping> mappedIdAttributeMappings = mappedIdEmbeddableType.getAttributeMappings();
+		final List<AttributeMapping> mappedIdAttributeMappings = identifierValueMapper.getAttributeMappings();
 		final Object[] propertyValues = new Object[mappedIdAttributeMappings.size()];
 		final SessionFactoryImplementor factory = session.getFactory();
 		getEmbeddableTypeDescriptor().forEachAttributeMapping(
@@ -271,10 +332,10 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 		assert domainValue instanceof Object[];
 
 		final Object[] values = (Object[]) domainValue;
-		assert values.length == mappedIdEmbeddableType.getAttributeMappings().size();
+		assert values.length == identifierValueMapper.getAttributeMappings().size();
 
-		for ( int i = 0; i < mappedIdEmbeddableType.getAttributeMappings().size(); i++ ) {
-			final AttributeMapping attribute = mappedIdEmbeddableType.getAttributeMappings().get( i );
+		for ( int i = 0; i < identifierValueMapper.getAttributeMappings().size(); i++ ) {
+			final AttributeMapping attribute = identifierValueMapper.getAttributeMappings().get( i );
 			attribute.breakDownJdbcValues( values[ i ], valueConsumer, session );
 		}
 	}
@@ -284,8 +345,8 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
-		for ( int i = 0; i < mappedIdEmbeddableType.getAttributeMappings().size(); i++ ) {
-			mappedIdEmbeddableType.getAttributeMappings().get( i ).applySqlSelections( navigablePath, tableGroup, creationState );
+		for ( int i = 0; i < identifierValueMapper.getAttributeMappings().size(); i++ ) {
+			identifierValueMapper.getAttributeMappings().get( i ).applySqlSelections( navigablePath, tableGroup, creationState );
 		}
 	}
 
@@ -295,8 +356,8 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 			TableGroup tableGroup,
 			DomainResultCreationState creationState,
 			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
-		for ( int i = 0; i < mappedIdEmbeddableType.getAttributeMappings().size(); i++ ) {
-			mappedIdEmbeddableType.getAttributeMappings().get( i ).applySqlSelections(
+		for ( int i = 0; i < identifierValueMapper.getAttributeMappings().size(); i++ ) {
+			identifierValueMapper.getAttributeMappings().get( i ).applySqlSelections(
 					navigablePath,
 					tableGroup,
 					creationState,
@@ -320,6 +381,6 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 
 	@Override
 	public int getNumberOfFetchables() {
-		return mappedIdEmbeddableType.getNumberOfFetchables();
+		return identifierValueMapper.getNumberOfFetchables();
 	}
 }

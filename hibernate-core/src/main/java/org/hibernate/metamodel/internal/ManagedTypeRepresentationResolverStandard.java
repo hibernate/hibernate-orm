@@ -12,7 +12,7 @@ import java.util.function.Supplier;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.RepresentationMode;
-import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.mapping.IEmbeddableMappingType;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
@@ -61,7 +61,7 @@ public class ManagedTypeRepresentationResolverStandard implements ManagedTypeRep
 	@Override
 	public EmbeddableRepresentationStrategy resolveStrategy(
 			Component bootDescriptor,
-			Supplier<EmbeddableMappingType> runtimeDescriptorAccess,
+			Supplier<IEmbeddableMappingType> runtimeDescriptorAccess,
 			RuntimeModelCreationContext creationContext) {
 //		RepresentationMode representation = bootDescriptor.getExplicitRepresentationMode();
 		RepresentationMode representation = null;

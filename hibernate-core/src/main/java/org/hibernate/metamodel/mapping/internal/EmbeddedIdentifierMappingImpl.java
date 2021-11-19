@@ -8,13 +8,11 @@ package org.hibernate.metamodel.mapping.internal;
 
 import java.util.function.BiConsumer;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.internal.AbstractCompositeIdentifierMapping;
-import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.IEmbeddableMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.query.NavigablePath;
@@ -32,32 +30,37 @@ public class EmbeddedIdentifierMappingImpl
 		extends AbstractCompositeIdentifierMapping
 		implements SingleAttributeIdentifierMapping {
 	private final String name;
+	private final IEmbeddableMappingType embeddableDescriptor;
 	private final PropertyAccess propertyAccess;
 
 	@SuppressWarnings("WeakerAccess")
 	public EmbeddedIdentifierMappingImpl(
 			EntityMappingType entityMapping,
 			String name,
-			EmbeddableMappingType embeddableDescriptor,
-			StateArrayContributorMetadataAccess attributeMetadataAccess,
+			IEmbeddableMappingType embeddableDescriptor,
 			PropertyAccess propertyAccess,
 			String tableExpression,
-			SessionFactoryImplementor sessionFactory) {
-		super(
-				attributeMetadataAccess,
-				embeddableDescriptor,
-				entityMapping,
-				tableExpression,
-				sessionFactory
-		);
+			MappingModelCreationProcess creationProcess) {
+		super( entityMapping, tableExpression, creationProcess );
 
 		this.name = name;
+		this.embeddableDescriptor = embeddableDescriptor;
 		this.propertyAccess = propertyAccess;
 	}
 
 	@Override
 	public String getPartName() {
 		return name;
+	}
+
+	@Override
+	public IEmbeddableMappingType getPartMappingType() {
+		return embeddableDescriptor;
+	}
+
+	@Override
+	public IEmbeddableMappingType getMappedIdEmbeddableTypeDescriptor() {
+		return getMappedType();
 	}
 
 	@Override
@@ -139,7 +142,7 @@ public class EmbeddedIdentifierMappingImpl
 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		final EmbeddableMappingType embeddableTypeDescriptor = getEmbeddableTypeDescriptor();
+		final IEmbeddableMappingType embeddableTypeDescriptor = getEmbeddableTypeDescriptor();
 		final Object[] result = new Object[embeddableTypeDescriptor.getNumberOfAttributeMappings()];
 		embeddableTypeDescriptor.forEachAttributeMapping(
 				(i, mapping) -> {

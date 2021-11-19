@@ -16,9 +16,9 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
-import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.IEmbeddableMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -66,7 +66,7 @@ public class EmbeddedAttributeMapping
 	private final NavigableRole navigableRole;
 
 	private final String tableExpression;
-	private final EmbeddableMappingType embeddableMappingType;
+	private final IEmbeddableMappingType embeddableMappingType;
 	private final PropertyAccess parentInjectionAttributePropertyAccess;
 
 	@SuppressWarnings("WeakerAccess")
@@ -79,7 +79,7 @@ public class EmbeddedAttributeMapping
 			String parentInjectionAttributeName,
 			FetchTiming mappedFetchTiming,
 			FetchStyle mappedFetchStyle,
-			EmbeddableMappingType embeddableMappingType,
+			IEmbeddableMappingType embeddableMappingType,
 			ManagedMappingType declaringType,
 			PropertyAccess propertyAccess,
 			ValueGeneration valueGeneration) {
@@ -89,7 +89,7 @@ public class EmbeddedAttributeMapping
 			stateArrayPosition,
 			tableExpression,
 			attributeMetadataAccess,
-			getPropertyAccess(parentInjectionAttributeName,	  embeddableMappingType),
+			getPropertyAccess(parentInjectionAttributeName,	embeddableMappingType),
 			mappedFetchTiming,
 			mappedFetchStyle,
 			embeddableMappingType,
@@ -108,7 +108,7 @@ public class EmbeddedAttributeMapping
 			PropertyAccess parentInjectionAttributePropertyAccess,
 			FetchTiming mappedFetchTiming,
 			FetchStyle mappedFetchStyle,
-			EmbeddableMappingType embeddableMappingType,
+			IEmbeddableMappingType embeddableMappingType,
 			ManagedMappingType declaringType,
 			PropertyAccess propertyAccess,
 			ValueGeneration valueGeneration) {
@@ -137,7 +137,7 @@ public class EmbeddedAttributeMapping
 			TableGroupProducer declaringTableGroupProducer,
 			SelectableMappings selectableMappings,
 			EmbeddableValuedModelPart inverseModelPart,
-			EmbeddableMappingType embeddableTypeDescriptor,
+			IEmbeddableMappingType embeddableTypeDescriptor,
 			MappingModelCreationProcess creationProcess) {
 		super(
 				inverseModelPart.getFetchableName(),
@@ -167,7 +167,7 @@ public class EmbeddedAttributeMapping
 			TableGroupProducer declaringTableGroupProducer,
 			SelectableMappings selectableMappings,
 			MappingModelCreationProcess creationProcess) {
-		final EmbeddableMappingType embeddableTypeDescriptor;
+		final IEmbeddableMappingType embeddableTypeDescriptor;
 		if ( modelPart instanceof CompositeIdentifierMapping ) {
 			embeddableTypeDescriptor = ( (CompositeIdentifierMapping) modelPart ).getMappedIdEmbeddableTypeDescriptor();
 		}
@@ -185,12 +185,12 @@ public class EmbeddedAttributeMapping
 	}
 
 	@Override
-	public EmbeddableMappingType getMappedType() {
+	public IEmbeddableMappingType getMappedType() {
 		return getEmbeddableTypeDescriptor();
 	}
 
 	@Override
-	public EmbeddableMappingType getEmbeddableTypeDescriptor() {
+	public IEmbeddableMappingType getEmbeddableTypeDescriptor() {
 		return embeddableMappingType;
 	}
 
@@ -397,7 +397,7 @@ public class EmbeddedAttributeMapping
 
 	private static PropertyAccess getPropertyAccess(
 			String parentInjectionAttributeName,
-			EmbeddableMappingType embeddableMappingType) {
+			IEmbeddableMappingType embeddableMappingType) {
 		final PropertyAccess parentInjectionAttributePropertyAccess;
 		if ( parentInjectionAttributeName != null ) {
 			parentInjectionAttributePropertyAccess = PropertyAccessStrategyBasicImpl.INSTANCE.buildPropertyAccess(

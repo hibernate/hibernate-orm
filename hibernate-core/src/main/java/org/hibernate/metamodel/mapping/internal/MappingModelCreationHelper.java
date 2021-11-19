@@ -53,27 +53,27 @@ import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.CollectionIdentifierDescriptor;
 import org.hibernate.metamodel.mapping.CollectionMappingType;
 import org.hibernate.metamodel.mapping.CollectionPart;
-import org.hibernate.metamodel.mapping.GeneratedValueResolver;
-import org.hibernate.metamodel.mapping.ModelPartContainer;
-import org.hibernate.metamodel.mapping.PropertyBasedMapping;
-import org.hibernate.metamodel.mapping.SelectableMapping;
-import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
+import org.hibernate.metamodel.mapping.GeneratedValueResolver;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.NonTransientException;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.PropertyBasedMapping;
+import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadata;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.QueryableCollection;
@@ -82,7 +82,6 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.walking.internal.FetchOptionsHelper;
 import org.hibernate.property.access.internal.ChainedPropertyAccessImpl;
-import org.hibernate.property.access.internal.PropertyAccessStrategyMapImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
 import org.hibernate.sql.ast.tree.from.TableGroupProducer;
@@ -98,7 +97,6 @@ import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
-import org.hibernate.type.spi.CompositeTypeImplementor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -141,10 +139,9 @@ public class MappingModelCreationHelper {
 						entityPersister,
 						attributeName,
 						embeddable,
-						attributeMetadataAccess,
 						propertyAccess,
 						rootTableName,
-						creationProcess.getCreationContext().getSessionFactory()
+						creationProcess
 				),
 				creationProcess
 		);
@@ -161,78 +158,88 @@ public class MappingModelCreationHelper {
 			PersistentClass bootEntityDescriptor,
 			BiConsumer<String,SingularAttributeMapping> idSubAttributeConsumer,
 			MappingModelCreationProcess creationProcess) {
-		final Component bootIdClassComponent = (Component) bootEntityDescriptor.getIdentifier();
-		final Component bootVirtualComponent;
-		if ( bootEntityDescriptor.getIdentifierMapper() == null ) {
-			// If there is no id-class, there apparently also is no id mapper
-			bootVirtualComponent = bootIdClassComponent;
-		}
-		else {
-			bootVirtualComponent = bootEntityDescriptor.getIdentifierMapper();
-		}
-		final EmbeddableMappingType embeddableMappingType = EmbeddableMappingType.from(
-				bootVirtualComponent,
-				(CompositeType) bootVirtualComponent.getType(),
+		return new NonAggregatedIdentifierMappingImpl(
+				entityPersister,
+				bootEntityDescriptor.getRootClass(),
 				rootTableName,
 				rootTableKeyColumnNames,
-				attributeMappingType -> {
-					final PropertyAccess propertyAccess = PropertyAccessStrategyMapImpl.INSTANCE.buildPropertyAccess(
-							null,
-							EntityIdentifierMapping.ROLE_LOCAL_NAME
-					);
-					final StateArrayContributorMetadataAccess attributeMetadataAccess = getStateArrayContributorMetadataAccess(
-							propertyAccess
-					);
-
-					final EmbeddableMappingType idClassType;
-					if ( bootIdClassComponent != bootVirtualComponent ) {
-						idClassType = EmbeddableMappingType.from(
-								bootIdClassComponent,
-								(CompositeType) bootIdClassComponent.getType(),
-								rootTableName,
-								rootTableKeyColumnNames,
-								idClassEmbeddableType -> new EmbeddedAttributeMapping(
-										"{id-class}",
-										entityPersister.getNavigableRole()
-												.append( EntityIdentifierMapping.ROLE_LOCAL_NAME )
-												.append( "{id-class}" ),
-										-1,
-										null,
-										attributeMetadataAccess,
-										(String) null,
-										FetchTiming.IMMEDIATE,
-										FetchStyle.JOIN,
-										idClassEmbeddableType,
-										entityPersister,
-										propertyAccess,
-										null
-								),
-								creationProcess
-						);
-					}
-					else {
-						idClassType = attributeMappingType;
-					}
-					return new NonAggregatedIdentifierMappingImpl(
-							attributeMappingType,
-							entityPersister,
-							idClassType,
-							attributeMetadataAccess,
-							rootTableName,
-							creationProcess
-					);
-				},
 				creationProcess
 		);
 
-		// Inject the model part also in the composite type of the id-class, because that is what we actually "instantiate"
-		// which needs the model part for instantiation
-		final CompositeIdentifierMapping compositeIdentifierMapping = (CompositeIdentifierMapping) embeddableMappingType.getEmbeddedValueMapping();
-		( (CompositeTypeImplementor) bootEntityDescriptor.getIdentifier().getType() ).injectMappingModelPart(
-				(EmbeddableValuedModelPart) compositeIdentifierMapping,
-				creationProcess
-		);
-		return compositeIdentifierMapping;
+//		final Component bootIdClassComponent = (Component) bootEntityDescriptor.getIdentifier();
+//		final Component bootVirtualComponent;
+//		if ( bootEntityDescriptor.getIdentifierMapper() == null ) {
+//			// If there is no id-class, there apparently also is no id mapper
+//			bootVirtualComponent = bootIdClassComponent;
+//		}
+//		else {
+//			bootVirtualComponent = bootEntityDescriptor.getIdentifierMapper();
+//		}
+//
+//		final EmbeddableMappingType embeddableMappingType = EmbeddableMappingType.from(
+//				bootVirtualComponent,
+//				(CompositeType) bootVirtualComponent.getType(),
+//				rootTableName,
+//				rootTableKeyColumnNames,
+//				attributeMappingType -> {
+//					final PropertyAccess propertyAccess = PropertyAccessStrategyMapImpl.INSTANCE.buildPropertyAccess(
+//							null,
+//							EntityIdentifierMapping.ROLE_LOCAL_NAME
+//					);
+//					final StateArrayContributorMetadataAccess attributeMetadataAccess = getStateArrayContributorMetadataAccess(
+//							propertyAccess
+//					);
+//
+//					final EmbeddableMappingType idClassType;
+//					if ( bootIdClassComponent != bootVirtualComponent ) {
+//						idClassType = EmbeddableMappingType.from(
+//								bootIdClassComponent,
+//								(CompositeType) bootIdClassComponent.getType(),
+//								rootTableName,
+//								rootTableKeyColumnNames,
+//								idClassEmbeddableType -> new EmbeddedAttributeMapping(
+//										"{id-class}",
+//										entityPersister.getNavigableRole()
+//												.append( EntityIdentifierMapping.ROLE_LOCAL_NAME )
+//												.append( "{id-class}" ),
+//										-1,
+//										null,
+//										attributeMetadataAccess,
+//										(String) null,
+//										FetchTiming.IMMEDIATE,
+//										FetchStyle.JOIN,
+//										idClassEmbeddableType,
+//										entityPersister,
+//										propertyAccess,
+//										null
+//								),
+//								creationProcess
+//						);
+//					}
+//					else {
+//						idClassType = attributeMappingType;
+//					}
+//					return new NonAggregatedIdentifierMappingImpl(
+//							attributeMappingType,
+//							entityPersister,
+//							idClassType,
+//							attributeMetadataAccess,
+//							rootTableName,
+//							creationProcess
+//					);
+//				},
+//				creationProcess
+//		);
+//
+//		// Inject the model part also in the composite type of the id-class, because that is what we actually "instantiate"
+//		// which needs the model part for instantiation
+////		final CompositeIdentifierMapping compositeIdentifierMapping = (CompositeIdentifierMapping) virtualIdEmbeddable.getEmbeddedValueMapping();
+////		( (CompositeTypeImplementor) virtualIdSource.getType() ).injectMappingModelPart(
+////				(EmbeddableValuedModelPart) compositeIdentifierMapping,
+////				creationProcess
+////		);
+//
+//		return compositeIdentifierMapping;
 	}
 
 
@@ -510,54 +517,58 @@ public class MappingModelCreationHelper {
 	}
 
 	@SuppressWarnings("rawtypes")
-	protected static StateArrayContributorMetadataAccess getStateArrayContributorMetadataAccess(
-			PropertyAccess propertyAccess) {
-		return entityMappingType -> new StateArrayContributorMetadata() {
+	public static StateArrayContributorMetadataAccess getStateArrayContributorMetadataAccess(PropertyAccess propertyAccess) {
+		return new StateArrayContributorMetadataAccess() {
+			final StateArrayContributorMetadata contributorMetadata = new StateArrayContributorMetadata() {
+				private final MutabilityPlan mutabilityPlan = ImmutableMutabilityPlan.INSTANCE;
 
-			private final MutabilityPlan mutabilityPlan = ImmutableMutabilityPlan.INSTANCE;
+				@Override
+				public PropertyAccess getPropertyAccess() {
+					return propertyAccess;
+				}
 
+				@Override
+				public MutabilityPlan getMutabilityPlan() {
+					return mutabilityPlan;
+				}
+
+				@Override
+				public boolean isNullable() {
+					return false;
+				}
+
+				@Override
+				public boolean isInsertable() {
+					return true;
+				}
+
+				@Override
+				public boolean isUpdatable() {
+					return false;
+				}
+
+				@Override
+				public boolean isIncludedInDirtyChecking() {
+
+					return false;
+				}
+
+				@Override
+				public boolean isIncludedInOptimisticLocking() {
+					// todo (6.0) : do not sure this is correct
+					return true;
+				}
+
+				@Override
+				public CascadeStyle getCascadeStyle() {
+					// todo (6.0) : do not sure this is correct
+					return null;
+				}
+			};
 
 			@Override
-			public PropertyAccess getPropertyAccess() {
-				return propertyAccess;
-			}
-
-			@Override
-			public MutabilityPlan getMutabilityPlan() {
-				return mutabilityPlan;
-			}
-
-			@Override
-			public boolean isNullable() {
-				return false;
-			}
-
-			@Override
-			public boolean isInsertable() {
-				return true;
-			}
-
-			@Override
-			public boolean isUpdatable() {
-				return false;
-			}
-
-			@Override
-			public boolean isIncludedInDirtyChecking() {
-
-				return false;
-			}
-
-			@Override
-			public boolean isIncludedInOptimisticLocking() {
-				// todo (6.0) : do not sure this is correct
-				return true;
-			}
-
-			@Override
-			public CascadeStyle getCascadeStyle() {
-				// todo (6.0) : do not sure this is correct
-				return null;
+			public StateArrayContributorMetadata resolveAttributeMetadata(EntityMappingType entityMappingType) {
+				return contributorMetadata;
 			}
 		};
 	}

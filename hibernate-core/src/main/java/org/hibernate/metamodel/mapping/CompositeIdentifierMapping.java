@@ -7,8 +7,6 @@
 package org.hibernate.metamodel.mapping;
 
 
-import java.util.List;
-
 import org.hibernate.engine.spi.IdentifierValue;
 
 /**
@@ -30,11 +28,11 @@ public interface CompositeIdentifierMapping extends EntityIdentifierMapping {
 	 */
 	boolean hasContainingClass();
 
-	EmbeddableMappingType getPartMappingType();
+	IEmbeddableMappingType getPartMappingType();
 
 	/**
 	 * Returns the embeddable type descriptor of the id-class, if there is one,
 	 * otherwise the one of the virtual embeddable mapping type.
 	 */
-	EmbeddableMappingType getMappedIdEmbeddableTypeDescriptor();
+	IEmbeddableMappingType getMappedIdEmbeddableTypeDescriptor();
 }

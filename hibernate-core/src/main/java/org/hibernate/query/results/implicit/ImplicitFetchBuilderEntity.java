@@ -14,8 +14,8 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
+import org.hibernate.metamodel.mapping.IEmbeddableMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.query.NavigablePath;
@@ -61,8 +61,8 @@ public class ImplicitFetchBuilderEntity implements ImplicitFetchBuilder {
 		final Map<NavigablePath, FetchBuilder> fetchBuilders;
 		if ( explicitAssociationKeyFetchBuilder == null ) {
 			final MappingType partMappingType = foreignKeyDescriptor.getPartMappingType();
-			if ( partMappingType instanceof EmbeddableMappingType ) {
-				final EmbeddableMappingType embeddableValuedModelPart = (EmbeddableMappingType) partMappingType;
+			if ( partMappingType instanceof IEmbeddableMappingType ) {
+				final IEmbeddableMappingType embeddableValuedModelPart = (IEmbeddableMappingType) partMappingType;
 				fetchBuilders = new LinkedHashMap<>( embeddableValuedModelPart.getNumberOfFetchables() );
 				embeddableValuedModelPart.visitFetchables(
 						subFetchable -> {

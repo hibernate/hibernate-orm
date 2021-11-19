@@ -11,7 +11,7 @@ import java.util.function.Supplier;
 import org.hibernate.Incubating;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.mapping.IEmbeddableMappingType;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -38,6 +38,6 @@ public interface ManagedTypeRepresentationResolver {
 	 */
 	EmbeddableRepresentationStrategy resolveStrategy(
 			Component bootDescriptor,
-			Supplier<EmbeddableMappingType> runtimeDescriptor,
+			Supplier<IEmbeddableMappingType> runtimeDescriptor,
 			RuntimeModelCreationContext creationContext);
 }

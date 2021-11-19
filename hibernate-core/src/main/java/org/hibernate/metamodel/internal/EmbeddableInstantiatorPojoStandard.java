@@ -16,7 +16,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.mapping.IEmbeddableMappingType;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -28,11 +28,11 @@ import org.hibernate.type.descriptor.java.JavaType;
 public class EmbeddableInstantiatorPojoStandard extends AbstractPojoInstantiator implements EmbeddableInstantiator {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( PojoInstantiatorImpl.class );
 
-	private final Supplier<EmbeddableMappingType> embeddableMappingAccess;
+	private final Supplier<IEmbeddableMappingType> embeddableMappingAccess;
 	private final Constructor<?> constructor;
 
 	public EmbeddableInstantiatorPojoStandard(
-			Supplier<EmbeddableMappingType> embeddableMappingAccess,
+			Supplier<IEmbeddableMappingType> embeddableMappingAccess,
 			JavaType<?> javaTypeDescriptor) {
 		super( javaTypeDescriptor.getJavaTypeClass() );
 

@@ -21,7 +21,7 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.IndexBackref;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.RepresentationMode;
-import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.mapping.IEmbeddableMappingType;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
@@ -41,7 +41,7 @@ public class EmbeddableRepresentationStrategyPojo extends AbstractEmbeddableRepr
 
 	public EmbeddableRepresentationStrategyPojo(
 			Component bootDescriptor,
-			Supplier<EmbeddableMappingType> runtimeDescriptorAccess,
+			Supplier<IEmbeddableMappingType> runtimeDescriptorAccess,
 			RuntimeModelCreationContext creationContext) {
 		super(
 				bootDescriptor,
@@ -70,7 +70,7 @@ public class EmbeddableRepresentationStrategyPojo extends AbstractEmbeddableRepr
 		this.instantiator = determineInstantiator( runtimeDescriptorAccess );
 	}
 
-	private EmbeddableInstantiator determineInstantiator(Supplier<EmbeddableMappingType> runtimeDescriptorAccess) {
+	private EmbeddableInstantiator determineInstantiator(Supplier<IEmbeddableMappingType> runtimeDescriptorAccess) {
 		if ( reflectionOptimizer != null && reflectionOptimizer.getInstantiationOptimizer() != null ) {
 			final ReflectionOptimizer.InstantiationOptimizer instantiationOptimizer = reflectionOptimizer.getInstantiationOptimizer();
 			return new EmbeddableInstantiatorPojoOptimized(

@@ -8,8 +8,8 @@ package org.hibernate.sql.results.graph.embeddable.internal;
 
 import java.util.List;
 
-import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
+import org.hibernate.metamodel.mapping.IEmbeddableMappingType;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
@@ -89,8 +89,8 @@ public class EmbeddableResultImpl<T> extends AbstractFetchParent implements Embe
 	}
 
 	@Override
-	public EmbeddableMappingType getFetchContainer() {
-		return (EmbeddableMappingType) super.getFetchContainer();
+	public IEmbeddableMappingType getFetchContainer() {
+		return (IEmbeddableMappingType) super.getFetchContainer();
 	}
 
 	@Override
@@ -99,7 +99,7 @@ public class EmbeddableResultImpl<T> extends AbstractFetchParent implements Embe
 	}
 
 	@Override
-	public EmbeddableMappingType getReferencedMappingType() {
+	public IEmbeddableMappingType getReferencedMappingType() {
 		return getFetchContainer();
 	}
 

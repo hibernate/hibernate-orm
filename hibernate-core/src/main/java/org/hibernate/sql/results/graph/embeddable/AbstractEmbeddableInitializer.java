@@ -9,16 +9,15 @@ package org.hibernate.sql.results.graph.embeddable;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Supplier;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
-import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
+import org.hibernate.metamodel.mapping.IEmbeddableMappingType;
 import org.hibernate.metamodel.mapping.StateArrayContributorMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
@@ -63,7 +62,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		this.embeddedModelPartDescriptor = resultDescriptor.getReferencedMappingContainer();
 		this.fetchParentAccess = fetchParentAccess;
 
-		final EmbeddableMappingType embeddableTypeDescriptor = embeddedModelPartDescriptor.getEmbeddableTypeDescriptor();
+		final IEmbeddableMappingType embeddableTypeDescriptor = embeddedModelPartDescriptor.getEmbeddableTypeDescriptor();
 		final int numOfAttrs = embeddableTypeDescriptor.getNumberOfAttributeMappings();
 		this.resolvedValues = new Object[ numOfAttrs ];
 		this.assemblerMap = new IdentityHashMap<>( numOfAttrs );
@@ -143,7 +142,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		// Special handling for non-aggregated attributes which use the actual entity instance as container,
 		// which we access through the fetch parent access.
 		// If this model part is an identifier, we must construct the instance as this is called during resolveKey
-		final EmbeddableMappingType embeddableTypeDescriptor = embeddedModelPartDescriptor.getEmbeddableTypeDescriptor();
+		final IEmbeddableMappingType embeddableTypeDescriptor = embeddedModelPartDescriptor.getEmbeddableTypeDescriptor();
 		final EmbeddableRepresentationStrategy representationStrategy;
 		if ( embeddedModelPartDescriptor instanceof CompositeIdentifierMapping ) {
 			representationStrategy = ( (CompositeIdentifierMapping) embeddedModelPartDescriptor ).getMappedIdEmbeddableTypeDescriptor()
@@ -258,7 +257,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 	}
 
 	private void setPropertyValuesOnTarget(Object compositeInstance, SharedSessionContractImplementor session) {
-		final EmbeddableMappingType embeddableTypeDescriptor;
+		final IEmbeddableMappingType embeddableTypeDescriptor;
 		if ( embeddedModelPartDescriptor instanceof CompositeIdentifierMapping ) {
 			final CompositeIdentifierMapping compositeIdentifierMapping = (CompositeIdentifierMapping) this.embeddedModelPartDescriptor;
 			embeddableTypeDescriptor = compositeIdentifierMapping.getMappedIdEmbeddableTypeDescriptor();

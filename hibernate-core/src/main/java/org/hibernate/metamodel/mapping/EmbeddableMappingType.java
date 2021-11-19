@@ -74,7 +74,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 /**
  * @author Steve Ebersole
  */
-public class EmbeddableMappingType implements ManagedMappingType, SelectableMappings {
+public class EmbeddableMappingType implements IEmbeddableMappingType {
 
 	public static EmbeddableMappingType from(
 			Component bootDescriptor,
@@ -176,15 +176,15 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectableMapp
 
 	}
 
-	private EmbeddableMappingType(
+	public EmbeddableMappingType(
 			EmbeddedAttributeMapping valueMapping,
 			TableGroupProducer declaringTableGroupProducer,
 			SelectableMappings selectableMappings,
-			EmbeddableMappingType inverseMappingType,
+			IEmbeddableMappingType inverseMappingType,
 			MappingModelCreationProcess creationProcess) {
-		this.embeddableJtd = inverseMappingType.embeddableJtd;
-		this.representationStrategy = inverseMappingType.representationStrategy;
-		this.sessionFactory = inverseMappingType.sessionFactory;
+		this.embeddableJtd = inverseMappingType.getJavaTypeDescriptor();
+		this.representationStrategy = inverseMappingType.getRepresentationStrategy();
+		this.sessionFactory = creationProcess.getCreationContext().getSessionFactory();
 		this.valueMapping = valueMapping;
 		this.createEmptyCompositesEnabled = inverseMappingType.isCreateEmptyCompositesEnabled();
 		this.selectableMappings = selectableMappings;
@@ -192,14 +192,14 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectableMapp
 		creationProcess.registerInitializationCallback(
 				"EmbeddableMappingType(" + inverseMappingType.getNavigableRole().getFullPath() + ".{inverse})#finishInitialization",
 				() -> {
-					if ( inverseMappingType.attributeMappings.isEmpty() ) {
+					if ( inverseMappingType.getAttributeMappings().isEmpty() ) {
 						return false;
 					}
 					// Reset the attribute mappings that were added in previous attempts
 					this.attributeMappings.clear();
 					int currentIndex = 0;
 					// We copy the attributes from the inverse mappings and replace the selection mappings
-					for ( AttributeMapping attributeMapping : inverseMappingType.attributeMappings ) {
+					for ( AttributeMapping attributeMapping : inverseMappingType.getAttributeMappings() ) {
 						if ( attributeMapping instanceof BasicAttributeMapping ) {
 							final BasicAttributeMapping original = (BasicAttributeMapping) attributeMapping;
 							final SelectableMapping selectableMapping = selectableMappings.getSelectable( currentIndex );
@@ -249,6 +249,7 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectableMapp
 		);
 	}
 
+	@Override
 	public EmbeddableMappingType createInverseMappingType(
 			EmbeddedAttributeMapping valueMapping,
 			TableGroupProducer declaringTableGroupProducer,
@@ -547,6 +548,7 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectableMapp
 		attributeMappings.add( attributeMapping );
 	}
 
+	@Override
 	public EmbeddableValuedModelPart getEmbeddedValueMapping() {
 		return valueMapping;
 	}
@@ -556,6 +558,7 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectableMapp
 		return embeddableJtd;
 	}
 
+	@Override
 	public EmbeddableRepresentationStrategy getRepresentationStrategy() {
 		return representationStrategy;
 	}
@@ -778,6 +781,7 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectableMapp
 		visitAttributeMappings( consumer::accept );
 	}
 
+	@Override
 	public Object[] getPropertyValues(Object compositeInstance) {
 		final Object[] results = new Object[attributeMappings.size()];
 		for ( int i = 0; i < attributeMappings.size(); i++ ) {
@@ -791,6 +795,7 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectableMapp
 		return results;
 	}
 
+	@Override
 	public void setPropertyValues(Object compositeInstance, Object[] resolvedValues) {
 		// todo (6.0) : reflection optimizer...
 		for ( int i = 0; i < attributeMappings.size(); i++ ) {
@@ -803,6 +808,7 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectableMapp
 		}
 	}
 
+	@Override
 	public boolean isCreateEmptyCompositesEnabled() {
 		return createEmptyCompositesEnabled;
 	}

@@ -7,12 +7,15 @@
 package org.hibernate.loader;
 
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.query.NavigablePath;
 
 /**
  * @author Steve Ebersole
  */
 public class PropertyPath {
-	public static final String IDENTIFIER_MAPPER_PROPERTY = "_identifierMapper";
+	public static final String IDENTIFIER_MAPPER_PROPERTY = NavigablePath.IDENTIFIER_MAPPER_PROPERTY;
+
+
 	private final PropertyPath parent;
 	private final String property;
 	private final String fullPath;

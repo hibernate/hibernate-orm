@@ -17,7 +17,7 @@ import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
- * @author Steve Ebersole
+ * EmbeddableRepresentationStrategy for an IdClass mapping
  */
 public class IdClassRepresentationStrategy implements EmbeddableRepresentationStrategy {
 	private final JavaType<?> idClassType;
@@ -25,7 +25,7 @@ public class IdClassRepresentationStrategy implements EmbeddableRepresentationSt
 
 	public IdClassRepresentationStrategy(IdClassEmbeddable idClassEmbeddable) {
 		this.idClassType = idClassEmbeddable.getMappedJavaTypeDescriptor();
-		this.instantiator = new EmbeddableInstantiatorPojoStandard( () -> idClassEmbeddable, idClassType );
+		this.instantiator = new EmbeddableInstantiatorPojoStandard( idClassType, () -> idClassEmbeddable );
 	}
 
 	@Override

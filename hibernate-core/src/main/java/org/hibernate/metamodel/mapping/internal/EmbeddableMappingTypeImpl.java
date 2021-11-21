@@ -155,7 +155,6 @@ public class EmbeddableMappingTypeImpl implements EmbeddableMappingType, Selecta
 	private SelectableMappings selectableMappings;
 
 	private final EmbeddableValuedModelPart valueMapping;
-	private NavigableRole embeddedRole;
 
 	private final boolean createEmptyCompositesEnabled;
 
@@ -354,10 +353,10 @@ public class EmbeddableMappingTypeImpl implements EmbeddableMappingType, Selecta
 				final boolean updateable = bootPropertyDescriptor.isUpdateable();
 				final boolean includeInOptimisticLocking = bootPropertyDescriptor.isOptimisticLocked();
 				final CascadeStyle cascadeStyle = compositeType.getCascadeStyle( attributeIndex );
-				final MutabilityPlan mutabilityPlan;
+				final MutabilityPlan<?> mutabilityPlan;
 
 				if ( updateable ) {
-					mutabilityPlan = new MutabilityPlan() {
+					mutabilityPlan = new MutabilityPlan<Object>() {
 						@Override
 						public boolean isMutable() {
 							return true;
@@ -394,7 +393,7 @@ public class EmbeddableMappingTypeImpl implements EmbeddableMappingType, Selecta
 					}
 
 					@Override
-					public MutabilityPlan getMutabilityPlan() {
+					public MutabilityPlan<?> getMutabilityPlan() {
 						return mutabilityPlan;
 					}
 
@@ -523,7 +522,7 @@ public class EmbeddableMappingTypeImpl implements EmbeddableMappingType, Selecta
 
 		// We need the attribute mapping types to finish initialization first before we can build the column mappings
 		creationProcess.registerInitializationCallback(
-				"EmbeddableMappingType(" + embeddedRole + ")#initColumnMappings",
+				"EmbeddableMappingType(" + getEmbeddedValueMapping().getNavigableRole().getFullPath() + ")#initColumnMappings",
 				this::initColumnMappings
 		);
 		return true;
@@ -560,7 +559,7 @@ public class EmbeddableMappingTypeImpl implements EmbeddableMappingType, Selecta
 	}
 
 	@Override
-	public JavaType getMappedJavaTypeDescriptor() {
+	public JavaType<?> getMappedJavaTypeDescriptor() {
 		return embeddableJtd;
 	}
 
@@ -625,10 +624,8 @@ public class EmbeddableMappingTypeImpl implements EmbeddableMappingType, Selecta
 	}
 
 	@Override
-	public void visitFetchables(
-			Consumer<Fetchable> fetchableConsumer,
-			EntityMappingType treatTargetType) {
-		visitAttributeMappings( attributeMapping -> fetchableConsumer.accept( attributeMapping ) );
+	public void visitFetchables(Consumer<Fetchable> fetchableConsumer, EntityMappingType treatTargetType) {
+		visitAttributeMappings( fetchableConsumer );
 	}
 
 	@Override
@@ -780,10 +777,8 @@ public class EmbeddableMappingTypeImpl implements EmbeddableMappingType, Selecta
 	}
 
 	@Override
-	public void visitSubParts(
-			Consumer<ModelPart> consumer,
-			EntityMappingType treatTargetType) {
-		visitAttributeMappings( consumer::accept );
+	public void visitSubParts(Consumer<ModelPart> consumer, EntityMappingType treatTargetType) {
+		visitAttributeMappings( consumer );
 	}
 
 	public Object[] getPropertyValues(Object compositeInstance) {

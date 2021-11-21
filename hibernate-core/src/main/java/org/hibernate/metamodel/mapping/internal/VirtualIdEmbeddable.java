@@ -37,6 +37,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelCreationLogger;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.NonTransientException;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
@@ -67,7 +68,7 @@ import org.hibernate.type.spi.CompositeTypeImplementor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
-import static org.hibernate.metamodel.mapping.internal.NonAggregatedIdentifierMapping.IdentifierValueMapper;
+import static org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping.IdentifierValueMapper;
 
 /**
  * Embeddable describing the virtual-id aspect of a non-aggregated composite id
@@ -104,7 +105,7 @@ public class VirtualIdEmbeddable implements IdentifierValueMapper {
 		final CompositeType compositeType = (CompositeType) virtualIdSource.getType();
 		this.attributeMappings = arrayList( (compositeType).getPropertyNames().length );
 
-		// todo (6.0) : can this be a separate VirtualIdEmbedded?
+		// todo (6.0) : can/should this be a separate VirtualIdEmbedded?
 		( (CompositeTypeImplementor) compositeType ).injectMappingModelPart( idMapping, creationProcess );
 
 		creationProcess.registerInitializationCallback(
@@ -142,56 +143,6 @@ public class VirtualIdEmbeddable implements IdentifierValueMapper {
 						);
 						return false;
 					}
-				}
-		);
-	}
-
-	public VirtualIdEmbeddable(
-			NonAggregatedIdentifierMapping idMapping,
-			EntityMappingType identifiedEntityMapping,
-			Component bootDescriptor,
-			CompositeType compositeType,
-			String rootTableExpression,
-			String[] rootTableKeyColumnNames,
-			MappingModelCreationProcess creationProcess) {
-		this.sessionFactory = creationProcess.getCreationContext().getSessionFactory();
-
-		this.navigableRole = idMapping.getNavigableRole();
-		this.idMapping = idMapping;
-		this.javaType = identifiedEntityMapping.getJavaTypeDescriptor();
-		this.attributeMappings = arrayList( compositeType.getPropertyNames().length );
-
-		this.representationStrategy = new VirtualIdRepresentationStrategy( identifiedEntityMapping );
-
-		( (CompositeTypeImplementor) compositeType ).injectMappingModelPart( getEmbeddedValueMapping(), creationProcess );
-
-		creationProcess.registerInitializationCallback(
-				"EmbeddableMappingType(" + navigableRole.getFullPath() + ")#finishInitialization",
-				() -> {
-					try {
-						final boolean finished = finishInitialization(
-								bootDescriptor,
-								compositeType,
-								rootTableExpression,
-								rootTableKeyColumnNames,
-								creationProcess
-						);
-
-						if ( finished ) {
-							return finished;
-						}
-					}
-					catch (Exception e) {
-						if ( e instanceof NonTransientException ) {
-							throw e;
-						}
-					}
-
-					MappingModelCreationLogger.LOGGER.debugf(
-							"EmbeddableMappingType(%s) finalization was not able to complete successfully",
-							navigableRole
-					);
-					return false;
 				}
 		);
 	}

@@ -20,12 +20,6 @@ import org.hibernate.sql.ast.tree.from.TableGroupProducer;
  * @see EmbeddableValuedModelPart
  */
 public interface EmbeddableMappingType extends ManagedMappingType, SelectableMappings {
-	EmbeddableMappingType createInverseMappingType(
-			EmbeddedAttributeMapping valueMapping,
-			TableGroupProducer declaringTableGroupProducer,
-			SelectableMappings selectableMappings,
-			MappingModelCreationProcess creationProcess);
-
 	EmbeddableValuedModelPart getEmbeddedValueMapping();
 
 	EmbeddableRepresentationStrategy getRepresentationStrategy();
@@ -35,6 +29,12 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 	void setPropertyValues(Object compositeInstance, Object[] resolvedValues);
 
 	boolean isCreateEmptyCompositesEnabled();
+
+	EmbeddableMappingType createInverseMappingType(
+			EmbeddedAttributeMapping valueMapping,
+			TableGroupProducer declaringTableGroupProducer,
+			SelectableMappings selectableMappings,
+			MappingModelCreationProcess creationProcess);
 
 	@Override
 	default int forEachSelectable(SelectableConsumer consumer) {

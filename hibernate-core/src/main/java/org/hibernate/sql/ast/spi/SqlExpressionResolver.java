@@ -8,10 +8,13 @@ package org.hibernate.sql.ast.spi;
 
 import java.util.function.Function;
 
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static java.util.Locale.ROOT;
 
 /**
  * Resolution of a SqlSelection reference for a given SqlSelectable.  Some
@@ -52,6 +55,15 @@ public interface SqlExpressionResolver {
 				? tableReference.getTableExpression()
 				: tableReference.getIdentificationVariable();
 		return qualifier + columnExpression;
+	}
+
+	/**
+	 * Convenience form for creating a key from TableReference and SelectableMapping
+	 */
+	static String createColumnReferenceKey(TableReference tableReference, SelectableMapping selectable) {
+		assert selectable.getContainingTableExpression().equals( tableReference.getTableExpression() )
+				: String.format( ROOT, "Expecting tables to match between TableReference (%s) and SelectableMapping (%s)", tableReference.getTableExpression(), selectable.getContainingTableExpression() );
+		return createColumnReferenceKey( tableReference, selectable.getSelectionExpression() );
 	}
 
 	/**

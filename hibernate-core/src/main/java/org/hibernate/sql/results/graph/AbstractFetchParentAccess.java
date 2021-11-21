@@ -39,5 +39,7 @@ public abstract class AbstractFetchParentAccess implements FetchParentAccess {
 		for ( Consumer<Object> listener : listeners ) {
 			listener.accept( parentInstance );
 		}
+
+		listeners.clear();
 	}
 }

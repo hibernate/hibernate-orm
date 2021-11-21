@@ -9,6 +9,7 @@ package org.hibernate.metamodel.internal;
 import java.util.function.Supplier;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -17,21 +18,25 @@ import static org.hibernate.bytecode.spi.ReflectionOptimizer.InstantiationOptimi
 /**
  * Support for instantiating embeddables as POJO representation
  * using bytecode optimizer
- *
- * @author Steve Ebersole
  */
 public class EmbeddableInstantiatorPojoOptimized extends AbstractPojoInstantiator implements EmbeddableInstantiator {
+	private final Supplier<EmbeddableMappingType> embeddableMappingAccess;
 	private final InstantiationOptimizer instantiationOptimizer;
 
 	public EmbeddableInstantiatorPojoOptimized(
 			JavaType<?> javaTypeDescriptor,
+			Supplier<EmbeddableMappingType> embeddableMappingAccess,
 			InstantiationOptimizer instantiationOptimizer) {
 		super( javaTypeDescriptor.getJavaTypeClass() );
+		this.embeddableMappingAccess = embeddableMappingAccess;
 		this.instantiationOptimizer = instantiationOptimizer;
 	}
 
 	@Override
 	public Object instantiate(Supplier<Object[]> valuesAccess, SessionFactoryImplementor sessionFactory) {
-		return instantiationOptimizer.newInstance();
+		final Object embeddable = instantiationOptimizer.newInstance();
+		final EmbeddableMappingType embeddableMapping = embeddableMappingAccess.get();
+		embeddableMapping.setPropertyValues( embeddable, valuesAccess.get() );
+		return embeddable;
 	}
 }

@@ -6,18 +6,22 @@
  */
 package org.hibernate.metamodel.spi;
 
+import java.util.function.IntFunction;
 import java.util.function.Supplier;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**
  * Contract for instantiating embeddable values
- *
- * @author Steve Ebersole
  */
 public interface EmbeddableInstantiator extends Instantiator {
 	/**
 	 * Create an instance of the embeddable
 	 */
 	Object instantiate(Supplier<Object[]> valuesAccess, SessionFactoryImplementor sessionFactory);
+
+//	default Object instantiate(IntFunction<Object> valueAccess, SessionFactoryImplementor sessionFactory) {
+//		throw new NotYetImplementedFor6Exception( getClass() );
+//	}
 }

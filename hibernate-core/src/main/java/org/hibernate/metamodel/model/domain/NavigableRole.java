@@ -10,6 +10,7 @@ import java.util.Objects;
 
 import org.hibernate.query.DotIdentifierSequence;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.query.NavigablePath;
 
 /**
  * Poorly named.
@@ -21,7 +22,7 @@ import org.hibernate.internal.util.StringHelper;
  * @author Steve Ebersole
  */
 public class NavigableRole implements DotIdentifierSequence {
-	public static final String IDENTIFIER_MAPPER_PROPERTY = "_identifierMapper";
+	public static final String IDENTIFIER_MAPPER_PROPERTY = NavigablePath.IDENTIFIER_MAPPER_PROPERTY;
 
 	private final NavigableRole parent;
 	private final String localName;

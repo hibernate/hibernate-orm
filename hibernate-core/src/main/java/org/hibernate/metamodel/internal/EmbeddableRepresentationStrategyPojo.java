@@ -75,14 +75,12 @@ public class EmbeddableRepresentationStrategyPojo extends AbstractEmbeddableRepr
 			final ReflectionOptimizer.InstantiationOptimizer instantiationOptimizer = reflectionOptimizer.getInstantiationOptimizer();
 			return new EmbeddableInstantiatorPojoOptimized(
 					getEmbeddableJavaTypeDescriptor(),
+					runtimeDescriptorAccess,
 					instantiationOptimizer
 			);
 		}
 
-		return new EmbeddableInstantiatorPojoStandard(
-				runtimeDescriptorAccess,
-				getEmbeddableJavaTypeDescriptor()
-		);
+		return new EmbeddableInstantiatorPojoStandard( getEmbeddableJavaTypeDescriptor(), runtimeDescriptorAccess );
 	}
 
 	@Override

@@ -22,7 +22,6 @@ import org.hibernate.property.access.spi.Setter;
 import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.proxy.map.MapProxyFactory;
 import org.hibernate.tuple.DynamicMapInstantiator;
-import org.hibernate.tuple.Instantiator;
 
 /**
  * An {@link EntityTuplizer} specific to the dynamic-map entity mode.
@@ -54,11 +53,6 @@ public class DynamicMapEntityTuplizer extends AbstractEntityTuplizer {
 	@Override
 	protected Setter buildPropertySetter(Property mappedProperty, PersistentClass mappedEntity) {
 		return buildPropertyAccess( mappedProperty ).getSetter();
-	}
-
-	@Override
-	protected Instantiator buildInstantiator(EntityMetamodel entityMetamodel, PersistentClass mappingInfo) {
-		return new DynamicMapInstantiator( mappingInfo );
 	}
 
 	@Override

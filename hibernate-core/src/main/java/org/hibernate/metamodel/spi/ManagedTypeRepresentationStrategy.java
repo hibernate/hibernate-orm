@@ -24,7 +24,7 @@ import org.hibernate.type.descriptor.java.JavaType;
  * both IdentifiableType and EmbeddableType types but that requires (planned)
  * changes to the Hibernate type system that will not happen until a later date
  *
- * @author Steve Ebersole
+ * @see ManagedTypeRepresentationResolver
  */
 @Incubating
 public interface ManagedTypeRepresentationStrategy {

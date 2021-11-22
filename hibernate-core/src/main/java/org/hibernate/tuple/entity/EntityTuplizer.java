@@ -37,7 +37,12 @@ public interface EntityTuplizer extends Tuplizer {
 	 * @param session The session from which is requests originates
 	 *
      * @return The identifier value.
+	 *
+	 * @deprecated (as of 6.0) - no longer used internally and to be removed.
+	 * Use {@link org.hibernate.metamodel.mapping.EntityIdentifierMapping#getIdentifier}
+	 * instead
      */
+	@Deprecated
 	Object getIdentifier(Object entity, SharedSessionContractImplementor session);
 
 	/**

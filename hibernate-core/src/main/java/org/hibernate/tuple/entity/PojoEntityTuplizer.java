@@ -121,16 +121,6 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 	}
 
 	@Override
-	protected Instantiator buildInstantiator(EntityMetamodel entityMetamodel, PersistentClass persistentClass) {
-		if ( optimizer == null ) {
-			return new PojoEntityInstantiator( entityMetamodel, persistentClass, null );
-		}
-		else {
-			return new PojoEntityInstantiator( entityMetamodel, persistentClass, optimizer.getInstantiationOptimizer() );
-		}
-	}
-
-	@Override
 	public Object[] getPropertyValuesToInsert(Object entity, Map mergeMap, SharedSessionContractImplementor session) {
 		if ( shouldGetAllProperties( entity ) && optimizer != null && optimizer.getAccessOptimizer() != null ) {
 			return getPropertyValuesWithOptimizer( entity );

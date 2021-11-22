@@ -12,8 +12,7 @@ import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.test.dynamicentity.ProxyHelper;
-import org.hibernate.test.dynamicentity.tuplizer.MyEntityInstantiator;
-import org.hibernate.tuple.Instantiator;
+
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.PojoEntityTuplizer;
 
@@ -29,11 +28,6 @@ public class MyEntityTuplizer extends PojoEntityTuplizer {
 	@Override
 	public EntityNameResolver[] getEntityNameResolvers() {
 		return new EntityNameResolver[] { MyEntityNameResolver.INSTANCE };
-	}
-
-	@Override
-	protected Instantiator buildInstantiator(EntityMetamodel entityMetamodel, PersistentClass persistentClass) {
-		return new MyEntityInstantiator( persistentClass.getEntityName() );
 	}
 
 	@Override

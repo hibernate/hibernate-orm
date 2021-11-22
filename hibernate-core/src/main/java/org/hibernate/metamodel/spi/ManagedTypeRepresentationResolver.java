@@ -20,8 +20,6 @@ import org.hibernate.persister.entity.EntityPersister;
  * @apiNote Like ManagedTypeRepresentationStrategy itself, incubating because we
  * currently need to differentiate between strategy for entity/mapped-superclass
  * versus strategy for embeddables
- *
- * @author Steve Ebersole
  */
 @Incubating
 public interface ManagedTypeRepresentationResolver {

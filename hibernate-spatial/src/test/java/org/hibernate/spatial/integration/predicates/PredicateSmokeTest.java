@@ -11,14 +11,13 @@ import java.util.List;
 
 import org.hibernate.spatial.predicate.GeolatteSpatialPredicates;
 import org.hibernate.spatial.testing.IsSupportedBySpatial;
+import org.hibernate.spatial.testing.SpatialSessionFactoryAware;
 import org.hibernate.spatial.testing.domain.GeomEntity;
 import org.hibernate.spatial.testing.domain.SpatialDomainModel;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.SessionFactoryScopeAware;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -33,11 +32,10 @@ import static org.geolatte.geom.builder.DSL.ring;
 import static org.geolatte.geom.crs.CoordinateReferenceSystems.WGS84;
 
 @DomainModel(modelDescriptorClasses = SpatialDomainModel.class)
-@RequiresDialectFeature(feature = IsSupportedBySpatial.class)
 @SessionFactory
-public class PredicateSmokeTest implements SessionFactoryScopeAware {
+@RequiresDialectFeature(feature = IsSupportedBySpatial.class)
+public class PredicateSmokeTest extends SpatialSessionFactoryAware {
 
-	private SessionFactoryScope scope;
 	Polygon<G2D> poly = polygon(
 			WGS84,
 			ring( g( 0, 0 ), g( 0, 10 ), g( 10, 10 ), g( 10, 0 ), g( 0, 0 ) )
@@ -56,9 +54,4 @@ public class PredicateSmokeTest implements SessionFactoryScopeAware {
 		} );
 	}
 
-
-	@Override
-	public void injectSessionFactoryScope(SessionFactoryScope scope) {
-		this.scope = scope;
-	}
 }

@@ -108,8 +108,6 @@ public @interface Jpa {
 	 */
 	boolean loadByIdComplianceEnabled() default false;
 
-	Class<? extends StatementInspector> statementInspectorClass() default StatementInspector.class;
-
 	boolean excludeUnlistedClasses() default false;
 
 	StandardDomainModel[] standardModels() default {};

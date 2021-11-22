@@ -19,7 +19,9 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
 public interface EntityManagerFactoryScope {
 	EntityManagerFactory getEntityManagerFactory();
 	void releaseEntityManagerFactory();
+
 	StatementInspector getStatementInspector();
+	<T extends StatementInspector> T getStatementInspector(Class<T> type);
 
 	void inEntityManager(Consumer<EntityManager> action);
 	void inTransaction(Consumer<EntityManager> action);

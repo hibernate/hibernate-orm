@@ -11,7 +11,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.SortedMap;
 import java.util.SortedSet;
-import java.util.function.BiConsumer;
 
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
@@ -68,7 +67,6 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.PropertyBasedMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
-import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadata;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
@@ -149,9 +147,7 @@ public class MappingModelCreationHelper {
 			EntityPersister entityPersister,
 			String rootTableName,
 			String[] rootTableKeyColumnNames,
-			CompositeType cidType,
 			PersistentClass bootEntityDescriptor,
-			BiConsumer<String,SingularAttributeMapping> idSubAttributeConsumer,
 			MappingModelCreationProcess creationProcess) {
 		return new NonAggregatedIdentifierMappingImpl(
 				entityPersister,
@@ -160,81 +156,6 @@ public class MappingModelCreationHelper {
 				rootTableKeyColumnNames,
 				creationProcess
 		);
-
-//		final Component bootIdClassComponent = (Component) bootEntityDescriptor.getIdentifier();
-//		final Component bootVirtualComponent;
-//		if ( bootEntityDescriptor.getIdentifierMapper() == null ) {
-//			// If there is no id-class, there apparently also is no id mapper
-//			bootVirtualComponent = bootIdClassComponent;
-//		}
-//		else {
-//			bootVirtualComponent = bootEntityDescriptor.getIdentifierMapper();
-//		}
-//
-//		final EmbeddableMappingType embeddableMappingType = EmbeddableMappingType.from(
-//				bootVirtualComponent,
-//				(CompositeType) bootVirtualComponent.getType(),
-//				rootTableName,
-//				rootTableKeyColumnNames,
-//				attributeMappingType -> {
-//					final PropertyAccess propertyAccess = PropertyAccessStrategyMapImpl.INSTANCE.buildPropertyAccess(
-//							null,
-//							EntityIdentifierMapping.ROLE_LOCAL_NAME
-//					);
-//					final StateArrayContributorMetadataAccess attributeMetadataAccess = getStateArrayContributorMetadataAccess(
-//							propertyAccess
-//					);
-//
-//					final EmbeddableMappingType idClassType;
-//					if ( bootIdClassComponent != bootVirtualComponent ) {
-//						idClassType = EmbeddableMappingType.from(
-//								bootIdClassComponent,
-//								(CompositeType) bootIdClassComponent.getType(),
-//								rootTableName,
-//								rootTableKeyColumnNames,
-//								idClassEmbeddableType -> new EmbeddedAttributeMapping(
-//										"{id-class}",
-//										entityPersister.getNavigableRole()
-//												.append( EntityIdentifierMapping.ROLE_LOCAL_NAME )
-//												.append( "{id-class}" ),
-//										-1,
-//										null,
-//										attributeMetadataAccess,
-//										(String) null,
-//										FetchTiming.IMMEDIATE,
-//										FetchStyle.JOIN,
-//										idClassEmbeddableType,
-//										entityPersister,
-//										propertyAccess,
-//										null
-//								),
-//								creationProcess
-//						);
-//					}
-//					else {
-//						idClassType = attributeMappingType;
-//					}
-//					return new NonAggregatedIdentifierMappingImpl(
-//							attributeMappingType,
-//							entityPersister,
-//							idClassType,
-//							attributeMetadataAccess,
-//							rootTableName,
-//							creationProcess
-//					);
-//				},
-//				creationProcess
-//		);
-//
-//		// Inject the model part also in the composite type of the id-class, because that is what we actually "instantiate"
-//		// which needs the model part for instantiation
-////		final CompositeIdentifierMapping compositeIdentifierMapping = (CompositeIdentifierMapping) virtualIdEmbeddable.getEmbeddedValueMapping();
-////		( (CompositeTypeImplementor) virtualIdSource.getType() ).injectMappingModelPart(
-////				(EmbeddableValuedModelPart) compositeIdentifierMapping,
-////				creationProcess
-////		);
-//
-//		return compositeIdentifierMapping;
 	}
 
 
@@ -319,6 +240,7 @@ public class MappingModelCreationHelper {
 			// we want to "decompose" the "type" into its various pieces as expected by the mapping
 			assert valueConverter.getRelationalJavaDescriptor() == resolution.getRelationalJavaDescriptor();
 
+			//noinspection unchecked
 			final BasicType<?> mappingBasicType = creationProcess.getCreationContext()
 					.getDomainModel()
 					.getTypeConfiguration()

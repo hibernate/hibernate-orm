@@ -9,7 +9,6 @@ package org.hibernate.persister.entity;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -1215,7 +1214,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			}
 
 			// otherwise we have a non-encapsulated composite-identifier
-			return generateNonEncapsulatedCompositeIdentifierMapping( creationProcess, bootEntityDescriptor, cidType );
+			return generateNonEncapsulatedCompositeIdentifierMapping( creationProcess, bootEntityDescriptor );
 		}
 
 		return new BasicEntityIdentifierMappingImpl(
@@ -1265,17 +1264,14 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 	protected EntityIdentifierMapping generateNonEncapsulatedCompositeIdentifierMapping(
 			MappingModelCreationProcess creationProcess,
-			PersistentClass bootEntityDescriptor,
-			CompositeType cidType) {
+			PersistentClass bootEntityDescriptor) {
 		assert declaredAttributeMappings != null;
 
 		return MappingModelCreationHelper.buildNonEncapsulatedCompositeIdentifierMapping(
 				this,
 				getTableName(),
 				tableKeyColumns[0],
-				cidType,
 				bootEntityDescriptor,
-				declaredAttributeMappings::put,
 				creationProcess
 		);
 	}

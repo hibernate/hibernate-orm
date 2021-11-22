@@ -5878,7 +5878,7 @@ public abstract class AbstractEntityPersister
 			}
 
 			// otherwise we have a non-encapsulated composite-identifier
-			return generateNonEncapsulatedCompositeIdentifierMapping( creationProcess, bootEntityDescriptor, cidType );
+			return generateNonEncapsulatedCompositeIdentifierMapping( creationProcess, bootEntityDescriptor );
 		}
 
 		return new BasicEntityIdentifierMappingImpl(
@@ -5894,17 +5894,14 @@ public abstract class AbstractEntityPersister
 
 	protected EntityIdentifierMapping generateNonEncapsulatedCompositeIdentifierMapping(
 			MappingModelCreationProcess creationProcess,
-			PersistentClass bootEntityDescriptor,
-			CompositeType cidType) {
+			PersistentClass bootEntityDescriptor) {
 		assert declaredAttributeMappings != null;
 
 		return MappingModelCreationHelper.buildNonEncapsulatedCompositeIdentifierMapping(
 				this,
 				getTableName(),
 				getRootTableKeyColumnNames(),
-				cidType,
 				bootEntityDescriptor,
-				declaredAttributeMappings::put,
 				creationProcess
 		);
 	}

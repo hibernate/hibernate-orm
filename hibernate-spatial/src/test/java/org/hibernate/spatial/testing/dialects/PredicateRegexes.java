@@ -53,6 +53,11 @@ public class PredicateRegexes {
 
 		);
 		add(
+				"intersects",
+				"select .* from .* where st_intersects\\(.*geom\\s*,.*" + geomFromTextFunction + "\\(.*\\)\\s*=.*",
+				"select .* from .* where st_intersects\\(.*geom\\s*,.s*?\\)\\s*=\\s*?.*"
+		);
+		add(
 				"eq",
 				"select .* from .* where st_equals\\(.*geom\\s*,.*" + geomFromTextFunction + "\\(.*\\)\\s*=.*",
 				"select .* from .* where st_equals\\(.*geom\\s*,.s*?\\)\\s*=\\s*?.*"

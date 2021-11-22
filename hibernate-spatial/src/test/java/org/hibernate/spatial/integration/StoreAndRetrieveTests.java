@@ -10,11 +10,11 @@ package org.hibernate.spatial.integration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import jakarta.persistence.Query;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.spatial.testing.IsSupportedBySpatial;
+import org.hibernate.spatial.testing.SpatialSessionFactoryAware;
 import org.hibernate.spatial.testing.datareader.TestDataElement;
 import org.hibernate.spatial.testing.domain.GeomEntity;
 import org.hibernate.spatial.testing.domain.GeomEntityLike;
@@ -25,11 +25,12 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.SessionFactoryScopeAware;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+
+import jakarta.persistence.Query;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -39,11 +40,9 @@ import static org.junit.jupiter.api.Assertions.assertNull;
  * Created by Karel Maesen, Geovise BVBA on 15/02/2018.
  */
 @DomainModel(modelDescriptorClasses = SpatialDomainModel.class)
-@RequiresDialectFeature( feature = IsSupportedBySpatial.class)
+@RequiresDialectFeature(feature = IsSupportedBySpatial.class)
 @SessionFactory
-public class StoreAndRetrieveTests extends SpatialTestDataProvider implements SessionFactoryScopeAware {
-
-	SessionFactoryScope scope;
+public class StoreAndRetrieveTests extends SpatialSessionFactoryAware {
 
 	private Map<Integer, Object> stored = new HashMap<>();
 
@@ -52,14 +51,14 @@ public class StoreAndRetrieveTests extends SpatialTestDataProvider implements Se
 	public void testStoringGeomEntity(final Class entityClass) {
 
 		//check whether we retrieve exactly what we store
-		scope.inTransaction( session -> storeTestObjects ( session, entityClass) );
+		scope.inTransaction( session -> storeTestObjects( session, entityClass ) );
 		scope.inTransaction( session -> retrieveAndCompare( session, entityClass ) );
 	}
 
 	@AfterEach
 	public void cleanTables(SessionFactoryScope scope) {
-		scope.inTransaction( session -> session.createQuery( "delete from GeomEntity").executeUpdate() );
-		scope.inTransaction( session -> session.createQuery( "delete from JtsGeomEntity").executeUpdate() );
+		scope.inTransaction( session -> session.createQuery( "delete from GeomEntity" ).executeUpdate() );
+		scope.inTransaction( session -> session.createQuery( "delete from JtsGeomEntity" ).executeUpdate() );
 	}
 
 	@SuppressWarnings("unchecked")
@@ -75,7 +74,7 @@ public class StoreAndRetrieveTests extends SpatialTestDataProvider implements Se
 	}
 
 	@Test
-	public void  testStoringNullGeometries(SessionFactoryScope scope) {
+	public void testStoringNullGeometries(SessionFactoryScope scope) {
 		scope.inTransaction( this::storeNullGeometry );
 		scope.inTransaction( this::retrieveAndCompareNullGeometry );
 	}
@@ -111,8 +110,5 @@ public class StoreAndRetrieveTests extends SpatialTestDataProvider implements Se
 		assertNull( entity.getGeom() );
 	}
 
-	@Override
-	public void injectSessionFactoryScope(SessionFactoryScope scope) {
-		this.scope = scope;
-	}
+
 }

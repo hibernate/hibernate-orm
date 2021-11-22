@@ -12,10 +12,6 @@ import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Stream;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.Root;
 
 import org.hibernate.spatial.integration.Model;
 import org.hibernate.spatial.predicate.GeolatteSpatialPredicates;
@@ -31,13 +27,11 @@ import org.junit.jupiter.api.TestFactory;
 import org.junit.jupiter.api.function.Executable;
 import org.junit.platform.commons.JUnitException;
 
-import org.geolatte.geom.G2D;
-import org.geolatte.geom.Polygon;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Root;
 
-import static org.geolatte.geom.builder.DSL.g;
-import static org.geolatte.geom.builder.DSL.polygon;
-import static org.geolatte.geom.builder.DSL.ring;
-import static org.geolatte.geom.crs.CoordinateReferenceSystems.WGS84;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SuppressWarnings({ "unchecked", "rawtypes" })

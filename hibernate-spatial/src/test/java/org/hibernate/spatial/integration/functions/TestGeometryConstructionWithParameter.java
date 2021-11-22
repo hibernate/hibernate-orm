@@ -23,13 +23,9 @@ import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 import org.junit.jupiter.api.function.Executable;
 
-import org.geolatte.geom.G2D;
-import org.geolatte.geom.Geometry;
-
 import static org.geolatte.geom.builder.DSL.g;
 import static org.geolatte.geom.builder.DSL.polygon;
 import static org.geolatte.geom.builder.DSL.ring;
-import static org.geolatte.geom.crs.CoordinateReferenceSystems.WGS84;
 
 @RequiresDialectFeature(feature = IsSupportedBySpatial.class)
 @SessionFactory

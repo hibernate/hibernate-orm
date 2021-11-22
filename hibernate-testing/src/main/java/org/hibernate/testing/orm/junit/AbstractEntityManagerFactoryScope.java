@@ -50,6 +50,12 @@ abstract class AbstractEntityManagerFactoryScope implements EntityManagerFactory
 	}
 
 	@Override
+	public <T extends StatementInspector> T getStatementInspector(Class<T> type) {
+		//noinspection unchecked
+		return (T) getStatementInspector();
+	}
+
+	@Override
 	public void close() {
 		if ( !active ) {
 			return;

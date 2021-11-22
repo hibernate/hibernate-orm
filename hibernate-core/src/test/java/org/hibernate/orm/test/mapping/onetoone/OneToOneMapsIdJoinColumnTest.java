@@ -8,15 +8,14 @@ package org.hibernate.orm.test.mapping.onetoone;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 
-import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AvailableSettings;
 
+import org.hibernate.testing.orm.jdbc.DefaultSQLStatementInspectorSettingProvider;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -37,18 +36,11 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 		settingProviders = {
 				@SettingProvider(
 						settingName = AvailableSettings.STATEMENT_INSPECTOR,
-						provider = OneToOneMapsIdJoinColumnTest.SQLStatementInspectorProvider.class
+						provider = DefaultSQLStatementInspectorSettingProvider.class
 				)
 		}
 )
 public class OneToOneMapsIdJoinColumnTest {
-
-	public static class SQLStatementInspectorProvider implements SettingProvider.Provider<Class> {
-		@Override
-		public Class getSetting() {
-			return SQLStatementInspector.class;
-		}
-	}
 
 	@BeforeEach
 	public void setUp(EntityManagerFactoryScope scope) {
@@ -67,7 +59,7 @@ public class OneToOneMapsIdJoinColumnTest {
 
 	@Test
 	public void testLifecycle(EntityManagerFactoryScope scope) {
-		SQLStatementInspector statementInspector = getSqlStatementInspector( scope );
+		SQLStatementInspector statementInspector = scope.getStatementInspector( SQLStatementInspector.class );
 
 		statementInspector.clear();
 		scope.inTransaction( entityManager -> {
@@ -83,12 +75,6 @@ public class OneToOneMapsIdJoinColumnTest {
 			assertSame( details.getPerson(), person );
 			statementInspector.assertExecutedCount( 0 );
 		} );
-	}
-
-	private SQLStatementInspector getSqlStatementInspector(EntityManagerFactoryScope scope) {
-		EntityManagerFactory entityManagerFactory = scope.getEntityManagerFactory();
-		SessionFactory sessionFactory = entityManagerFactory.unwrap( SessionFactory.class );
-		return (SQLStatementInspector) sessionFactory.getSessionFactoryOptions().getStatementInspector();
 	}
 
 	@Entity(name = "Person")

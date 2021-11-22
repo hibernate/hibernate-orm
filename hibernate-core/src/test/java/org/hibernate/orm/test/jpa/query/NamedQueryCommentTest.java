@@ -25,6 +25,7 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.orm.jdbc.DefaultSQLStatementInspectorSettingProvider;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -48,7 +49,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 		settingProviders = {
 				@SettingProvider(
 						settingName = AvailableSettings.STATEMENT_INSPECTOR,
-						provider = NamedQueryCommentTest.StatementInspectorSettingProvider.class
+						provider = DefaultSQLStatementInspectorSettingProvider.class
 				)
 		}
 )
@@ -61,6 +62,9 @@ public class NamedQueryCommentTest {
 
 	@BeforeAll
 	public void setUp(EntityManagerFactoryScope scope) {
+
+		statementInspector = scope.getStatementInspector( SQLStatementInspector.class );
+
 		scope.inTransaction(
 				entityManager -> {
 					for ( String title : GAME_TITLES ) {
@@ -292,11 +296,4 @@ public class NamedQueryCommentTest {
 		}
 	}
 
-	public static class StatementInspectorSettingProvider implements SettingProvider.Provider<StatementInspector> {
-		@Override
-		public StatementInspector getSetting() {
-			statementInspector = new SQLStatementInspector();
-			return statementInspector;
-		}
-	}
 }

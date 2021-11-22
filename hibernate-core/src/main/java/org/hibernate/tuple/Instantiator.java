@@ -11,8 +11,11 @@ import java.io.Serializable;
 /**
  * Contract for implementors responsible for instantiating entity/component instances.
  *
- * @author Steve Ebersole
+ * @deprecated (as of 6.0) This contract is no longer used by Hibernate.  Implement/use
+ * {@link org.hibernate.metamodel.spi.Instantiator} instead.  See
+ * {@link org.hibernate.metamodel.spi.ManagedTypeRepresentationStrategy}
  */
+@Deprecated
 public interface Instantiator extends Serializable {
 
 	/**

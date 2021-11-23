@@ -219,6 +219,7 @@ public class OutputsImpl implements Outputs {
 				null,
 				this.context.getQueryOptions(),
 				resultSetMapping.resolve( resultSetAccess, getSessionFactory() ),
+				null,
 				executionContext
 		);
 

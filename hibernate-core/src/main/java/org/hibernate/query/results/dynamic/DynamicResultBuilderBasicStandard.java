@@ -136,7 +136,11 @@ public class DynamicResultBuilderBasicStandard implements DynamicResultBuilderBa
 						basicType = explicitType;
 					}
 					else {
-						basicType = jdbcResultsMetadata.resolveType( jdbcPosition, explicitJavaTypeDescriptor );
+						basicType = jdbcResultsMetadata.resolveType(
+								jdbcPosition,
+								explicitJavaTypeDescriptor,
+								sessionFactory
+						);
 					}
 					return new SqlSelectionImpl( valuesArrayPosition, (BasicValuedMapping) basicType );
 				}

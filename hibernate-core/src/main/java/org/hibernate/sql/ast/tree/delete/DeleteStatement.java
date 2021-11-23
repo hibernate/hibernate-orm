@@ -24,6 +24,7 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
  */
 public class DeleteStatement extends AbstractMutationStatement {
 
+	public static final String DEFAULT_ALIAS = "to_delete_";
 	private final Predicate restriction;
 
 	public DeleteStatement(TableReference targetTable, Predicate restriction) {

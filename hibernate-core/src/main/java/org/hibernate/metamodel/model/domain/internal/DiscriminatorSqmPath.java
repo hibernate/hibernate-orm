@@ -87,7 +87,7 @@ public class DiscriminatorSqmPath extends AbstractSqmPath implements SelfInterpr
 	}
 
 	@Override
-	public SemanticPathPart resolvePathPart(String name, boolean isTerminal, SqmCreationState creationState) {
+	public SqmPath<?> resolvePathPart(String name, boolean isTerminal, SqmCreationState creationState) {
 		throw new IllegalStateException( "Discriminator cannot be de-referenced" );
 	}
 

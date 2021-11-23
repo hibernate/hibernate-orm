@@ -7,11 +7,12 @@
 package org.hibernate.metamodel.mapping;
 
 import org.hibernate.sql.results.graph.Fetchable;
+import org.hibernate.type.descriptor.java.JavaTypedExpressable;
 
 /**
  * @author Steve Ebersole
  */
-public interface CollectionPart extends ModelPart, Fetchable {
+public interface CollectionPart extends ModelPart, Fetchable, JavaTypedExpressable {
 	enum Nature {
 		ELEMENT( "{element}" ),
 		INDEX( "{index}" ),

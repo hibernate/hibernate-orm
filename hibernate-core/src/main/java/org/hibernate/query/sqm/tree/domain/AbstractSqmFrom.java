@@ -24,6 +24,7 @@ import jakarta.persistence.metamodel.PluralAttribute;
 import jakarta.persistence.metamodel.SetAttribute;
 import jakarta.persistence.metamodel.SingularAttribute;
 
+import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.model.domain.BagPersistentAttribute;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
@@ -44,6 +45,7 @@ import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
+import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
@@ -129,18 +131,84 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 			String name,
 			boolean isTerminal,
 			SqmCreationState creationState) {
-		final NavigablePath subNavPath = getNavigablePath().append( name );
-		return creationState.getProcessingStateStack().getCurrent().getPathRegistry().resolvePath(
-				subNavPath,
-				snp -> {
-					final SqmPathSource<?> subSource = getReferencedPathSource().findSubPathSource( name );
-					if ( subSource == null ) {
-						throw UnknownPathException.unknownSubPath( this, name );
+		// Try to resolve an existing attribute join without ON clause
+		SqmPath<?> resolvedPath = null;
+		ModelPartContainer modelPartContainer = null;
+		for ( SqmJoin<?, ?> sqmJoin : getSqmJoins() ) {
+			if ( sqmJoin instanceof SqmAttributeJoin<?, ?>
+					&& name.equals( sqmJoin.getReferencedPathSource().getPathName() ) ) {
+				final SqmAttributeJoin<?, ?> attributeJoin = (SqmAttributeJoin<?, ?>) sqmJoin;
+				if ( attributeJoin.getOn() == null ) {
+					// todo (6.0): to match the expectation of the JPA spec I think we also have to check
+					//  that the join type is INNER or the default join type for the attribute,
+					//  but as far as I understand, in 5.x we expect to ignore this behavior
+//							if ( attributeJoin.getSqmJoinType() != SqmJoinType.INNER ) {
+//								if ( attributeJoin.getAttribute().isCollection() ) {
+//									continue;
+//								}
+//								if ( modelPartContainer == null ) {
+//									modelPartContainer = findModelPartContainer( attributeJoin, creationState );
+//								}
+//								final TableGroupJoinProducer joinProducer = (TableGroupJoinProducer) modelPartContainer.findSubPart(
+//										name,
+//										null
+//								);
+//								if ( attributeJoin.getSqmJoinType().getCorrespondingSqlJoinType() != joinProducer.getDefaultSqlAstJoinType( null ) ) {
+//									continue;
+//								}
+//							}
+					resolvedPath = sqmJoin;
+					if ( attributeJoin.isFetched() ) {
+						break;
 					}
-
-					return subSource.createSqmPath( this, getReferencedPathSource().getIntermediatePathSource( subSource ) );
 				}
-		);
+			}
+		}
+		if ( resolvedPath != null ) {
+			return resolvedPath;
+		}
+		final SqmPath<?> sqmPath = get( name );
+		creationState.getProcessingStateStack().getCurrent().getPathRegistry().register( sqmPath );
+		return sqmPath;
+	}
+
+	private ModelPartContainer findModelPartContainer(SqmAttributeJoin<?, ?> attributeJoin, SqmCreationState creationState) {
+		final SqmFrom<?, ?> lhs = attributeJoin.getLhs();
+		if ( lhs instanceof SqmAttributeJoin<?, ?> ) {
+			final SqmAttributeJoin<?, ?> lhsAttributeJoin = (SqmAttributeJoin<?, ?>) lhs;
+			if ( lhsAttributeJoin.getReferencedPathSource() instanceof EntityDomainType<?> ) {
+				final String entityName = ( (EntityDomainType<?>) lhsAttributeJoin.getReferencedPathSource() ).getHibernateEntityName();
+				return (ModelPartContainer) creationState.getCreationContext().getQueryEngine()
+						.getTypeConfiguration()
+						.getSessionFactory()
+						.getMetamodel()
+						.entityPersister( entityName )
+						.findSubPart( attributeJoin.getAttribute().getName(), null );
+			}
+			else {
+				return (ModelPartContainer) findModelPartContainer( lhsAttributeJoin, creationState )
+						.findSubPart( attributeJoin.getAttribute().getName(), null );
+			}
+		}
+		else {
+			final String entityName;
+			if ( lhs instanceof SqmRoot<?> ) {
+				entityName = ( (SqmRoot<?>) lhs ).getEntityName();
+			}
+			else if ( lhs instanceof SqmEntityJoin<?> ) {
+				entityName = ( (SqmEntityJoin<?>) lhs ).getEntityName();
+			}
+			else {
+				assert lhs instanceof SqmCrossJoin<?>;
+				entityName = ( (SqmCrossJoin<?>) lhs ).getEntityName();
+			}
+			return (ModelPartContainer) creationState.getCreationContext().getQueryEngine()
+					.getTypeConfiguration()
+					.getSessionFactory()
+					.getMetamodel()
+					.entityPersister( entityName )
+					.findSubPart( attributeJoin.getAttribute().getName(), null );
+		}
 	}
 
 	@Override

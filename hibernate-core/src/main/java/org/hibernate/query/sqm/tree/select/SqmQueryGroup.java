@@ -22,6 +22,7 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
+import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -111,8 +112,12 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 	}
 
 	@Override
-	public void validateQueryGroupFetchStructure() {
-		validateQueryGroupFetchStructure( getFirstQuerySpec() );
+	public void validateFetchStructureAndOwners() {
+		final SqmQuerySpec<T> firstQuerySpec = getFirstQuerySpec();
+		// We only need to validate the first query spec regarding fetch owner,
+		// because the fetch structure must match in all query parts of the group which we validate next
+		firstQuerySpec.validateFetchOwners();
+		validateQueryGroupFetchStructure( firstQuerySpec );
 	}
 
 	private void validateQueryGroupFetchStructure(SqmQuerySpec<?> firstQuerySpec) {

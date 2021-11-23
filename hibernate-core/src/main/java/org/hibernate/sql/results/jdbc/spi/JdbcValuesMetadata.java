@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.results.jdbc.spi;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -32,6 +33,9 @@ public interface JdbcValuesMetadata {
 	/**
 	 * The basic type of a particular result value by position
 	 */
-	<J> BasicType<J> resolveType(int position, JavaType<J> explicitJavaTypeDescriptor);
+	<J> BasicType<J> resolveType(
+			int position,
+			JavaType<J> explicitJavaTypeDescriptor,
+			SessionFactoryImplementor sessionFactory);
 
 }

@@ -34,6 +34,7 @@ import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.internal.cte.CteStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -154,6 +155,9 @@ public class DB2Dialect extends Dialect {
 	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
+
+		// AVG by default uses the input type, so we possibly need to cast the argument type, hence a special function
+		CommonFunctionFactory.avg_castingNonDoubleArguments( this, queryEngine, SqlAstNodeRenderingMode.DEFAULT );
 
 		CommonFunctionFactory.cot( queryEngine );
 		CommonFunctionFactory.degrees( queryEngine );

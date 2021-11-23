@@ -61,7 +61,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 			final TableReference tableReference = tableGroup.resolveTableReference( getNavigablePath(), selection.getContainingTableExpression() );
 			return creationState.getSqlExpressionResolver().resolveSqlExpression(
 					SqlExpressionResolver.createColumnReferenceKey(
-							selection.getContainingTableExpression(),
+							tableReference,
 							selection.getSelectionExpression()
 					),
 					sqlAstProcessingState -> new ColumnReference(
@@ -247,7 +247,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 		final TableReference tableReference = tableGroup.resolveTableReference( getNavigablePath(), selection.getContainingTableExpression() );
 		final Expression expression = creationState.getSqlExpressionResolver().resolveSqlExpression(
 				SqlExpressionResolver.createColumnReferenceKey(
-						selection.getContainingTableExpression(),
+						tableReference,
 						selection.getSelectionExpression()
 				),
 				sqlAstProcessingState -> new ColumnReference(

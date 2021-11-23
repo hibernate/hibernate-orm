@@ -360,6 +360,11 @@ public class EntityCollectionPart
 	}
 
 	@Override
+	public JavaType<?> getExpressableJavaTypeDescriptor() {
+		return getJavaTypeDescriptor();
+	}
+
+	@Override
 	public NavigableRole getNavigableRole() {
 		return navigableRole;
 	}

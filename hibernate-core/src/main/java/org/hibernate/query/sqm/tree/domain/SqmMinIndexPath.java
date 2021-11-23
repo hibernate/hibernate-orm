@@ -44,11 +44,13 @@ public class SqmMinIndexPath<T> extends AbstractSqmSpecificPluralPartPath<T> {
 	}
 
 	@Override
-	public SemanticPathPart resolvePathPart(
+	public SqmPath<?> resolvePathPart(
 			String name,
 			boolean isTerminal,
 			SqmCreationState creationState) {
-		return indexPathSource.createSqmPath( this, null );
+		final SqmPath<?> sqmPath = get( name );
+		creationState.getProcessingStateStack().getCurrent().getPathRegistry().register( sqmPath );
+		return sqmPath;
 	}
 
 	@Override

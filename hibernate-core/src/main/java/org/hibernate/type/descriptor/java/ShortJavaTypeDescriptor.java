@@ -38,6 +38,17 @@ public class ShortJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<Sho
 		return Short.valueOf( string.toString() );
 	}
 
+	@Override
+	public boolean isWider(JavaType<?> javaType) {
+		switch ( javaType.getJavaType().getTypeName() ) {
+			case "byte":
+			case "java.lang.Byte":
+				return true;
+			default:
+				return false;
+		}
+	}
+
 	@SuppressWarnings({ "unchecked" })
 	@Override
 	public <X> X unwrap(Short value, Class<X> type, WrapperOptions options) {

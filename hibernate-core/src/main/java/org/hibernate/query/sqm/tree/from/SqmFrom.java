@@ -49,9 +49,6 @@ public interface SqmFrom<O,T> extends SqmVisitableNode, SqmPath<T>, JpaFrom<O, T
 	@Override
 	SqmPathSource<T> getReferencedPathSource();
 
-	@Override
-	SqmPath<?> resolvePathPart(String name, boolean isTerminal, SqmCreationState creationState);
-
 	boolean hasJoins();
 
 	/**

@@ -86,7 +86,7 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@SkipForDialect(value = AbstractHANADialect.class, comment = "invalid name of function or procedure: SYSDATE")
 	public void testNativeQueryWithFormulaAttributeWithoutAlias() {
-		String sql = "select TABLE_NAME , current_date() from ALL_TABLES  where TABLE_NAME = 'AUDIT_ACTIONS' ";
+		String sql = "select TABLE_NAME , " + getDialect().currentDate() + ", null as daysOld from ALL_TABLES  where TABLE_NAME = 'AUDIT_ACTIONS' ";
 		Session s = openSession();
 		s.beginTransaction();
 		s.createNativeQuery( sql ).addEntity( "t", AllTables.class ).list();
@@ -119,13 +119,13 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 		s.flush();
 		s.clear();
 
-		List chaoses = s.createQuery( "from Chaos where chaos_size is null or chaos_size = :chaos_size" )
-				.setParameter( "chaos_size", null )
+		List chaoses = s.createQuery( "from Chaos where size is null or size = :size" )
+				.setParameter( "size", null )
 				.list();
 		assertEquals( 1, chaoses.size() );
 
-		chaoses = s.createQuery( "from Chaos where chaos_size = :chaos_size" )
-				.setParameter( "chaos_size", null )
+		chaoses = s.createQuery( "from Chaos where size = :size" )
+				.setParameter( "size", null )
 				.list();
 		// should be no results because null != null
 		assertEquals( 0, chaoses.size() );
@@ -159,13 +159,13 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 		s.flush();
 		s.clear();
 
-		List chaoses = s.createQuery( "from Chaos where chaos_size is null or chaos_size = :chaos_size" )
-				.setParameter( "chaos_size", null, StandardBasicTypes.LONG )
+		List chaoses = s.createQuery( "from Chaos where size is null or size = :size" )
+				.setParameter( "size", null, StandardBasicTypes.LONG )
 				.list();
 		assertEquals( 1, chaoses.size() );
 
-		chaoses = s.createQuery( "from Chaos where chaos_size = :chaos_size" )
-				.setParameter( "chaos_size", null, StandardBasicTypes.LONG )
+		chaoses = s.createQuery( "from Chaos where size = :size" )
+				.setParameter( "size", null, StandardBasicTypes.LONG )
 				.list();
 		// should be no results because null != null
 		assertEquals( 0, chaoses.size() );

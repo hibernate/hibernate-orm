@@ -6,13 +6,10 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
-import org.hibernate.query.SemanticException;
-import org.hibernate.query.hql.spi.SemanticPathPart;
-import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.hql.spi.SqmCreationState;
+import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.SqmPathSource;
 
 /**
  * @author Steve Ebersole
@@ -30,15 +27,13 @@ public class SqmMaxElementPath<T> extends AbstractSqmSpecificPluralPartPath<T> {
 	}
 
 	@Override
-	public SemanticPathPart resolvePathPart(
+	public SqmPath<?> resolvePathPart(
 			String name,
 			boolean isTerminal,
 			SqmCreationState creationState) {
-		if ( getPluralAttribute().getElementPathSource().getSqmPathType() instanceof ManagedDomainType ) {
-			return getPluralAttribute().getElementPathSource().createSqmPath( this, null );
-		}
-
-		throw new SemanticException( "Collection element cannot be de-referenced : " + getPluralDomainPath().getNavigablePath() );
+		final SqmPath<?> sqmPath = get( name );
+		creationState.getProcessingStateStack().getCurrent().getPathRegistry().register( sqmPath );
+		return sqmPath;
 	}
 
 	@Override

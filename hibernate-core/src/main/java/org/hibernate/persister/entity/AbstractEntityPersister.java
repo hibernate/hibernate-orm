@@ -5558,10 +5558,15 @@ public abstract class AbstractEntityPersister
 			creationProcess.registerInitializationCallback(
 					"Entity(" + getEntityName() + ") `sqmMultiTableMutationStrategy` interpretation",
 					() -> {
-						sqmMultiTableMutationStrategy = interpretSqmMultiTableStrategy(
-								this,
-								creationProcess
-						);
+						try {
+							sqmMultiTableMutationStrategy = interpretSqmMultiTableStrategy(
+									this,
+									creationProcess
+							);
+						}
+						catch (Exception ex) {
+							return false;
+						}
 						if ( sqmMultiTableMutationStrategy == null ) {
 							return false;
 						}

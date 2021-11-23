@@ -35,7 +35,11 @@ public class FkDomainPathContinuation extends DomainPathContinuation {
 	}
 
 	@Override
-	public SequencePart resolvePathPart(String name, boolean isTerminal, TranslationContext translationContext) {
+	public SequencePart resolvePathPart(
+			String name,
+			String identifier,
+			boolean isTerminal,
+			TranslationContext translationContext) {
 		HashSet<String> furtherPaths = new LinkedHashSet<>( possiblePaths.size() );
 		for ( String path : possiblePaths ) {
 			if ( !path.startsWith( name ) ) {

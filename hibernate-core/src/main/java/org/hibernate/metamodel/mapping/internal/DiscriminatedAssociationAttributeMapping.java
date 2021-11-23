@@ -10,7 +10,6 @@ import java.io.Serializable;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
@@ -33,8 +32,17 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.Clause;
+import org.hibernate.sql.ast.SqlAstJoinType;
+import org.hibernate.sql.ast.spi.FromClauseAccess;
+import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
+import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.ast.tree.from.StandardVirtualTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableGroupJoin;
+import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
@@ -53,7 +61,7 @@ import org.hibernate.type.descriptor.java.MutabilityPlan;
  */
 public class DiscriminatedAssociationAttributeMapping
 		extends AbstractSingularAttributeMapping
-		implements DiscriminatedAssociationModelPart {
+		implements DiscriminatedAssociationModelPart, TableGroupJoinProducer {
 	private final NavigableRole navigableRole;
 	private final DiscriminatedAssociationMapping discriminatorMapping;
 	private final SessionFactoryImplementor sessionFactory;
@@ -141,17 +149,24 @@ public class DiscriminatedAssociationAttributeMapping
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		return discriminatorMapping.createDomainResult(
+				navigablePath,
+				tableGroup,
+				resultVariable,
+				creationState
+		);
 	}
 
 	@Override
 	public void applySqlSelections(NavigablePath navigablePath, TableGroup tableGroup, DomainResultCreationState creationState) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		discriminatorMapping.getDiscriminatorPart().applySqlSelections( navigablePath, tableGroup, creationState );
+		discriminatorMapping.getKeyPart().applySqlSelections( navigablePath, tableGroup, creationState );
 	}
 
 	@Override
 	public void applySqlSelections(NavigablePath navigablePath, TableGroup tableGroup, DomainResultCreationState creationState, BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		discriminatorMapping.getDiscriminatorPart().applySqlSelections( navigablePath, tableGroup, creationState, selectionConsumer );
+		discriminatorMapping.getKeyPart().applySqlSelections( navigablePath, tableGroup, creationState, selectionConsumer );
 	}
 
 	@Override
@@ -360,5 +375,63 @@ public class DiscriminatedAssociationAttributeMapping
 			final SharedSessionContractImplementor persistenceContext = (SharedSessionContractImplementor) session;
 			return anyType.assemble( cached, persistenceContext, null );
 		}
+	}
+
+	@Override
+	public TableGroupJoin createTableGroupJoin(
+			NavigablePath navigablePath,
+			TableGroup lhs,
+			String explicitSourceAlias,
+			SqlAstJoinType sqlAstJoinType,
+			boolean fetched,
+			boolean addsPredicate,
+			SqlAliasBaseGenerator aliasBaseGenerator,
+			SqlExpressionResolver sqlExpressionResolver,
+			FromClauseAccess fromClauseAccess,
+			SqlAstCreationContext creationContext) {
+		final TableGroup tableGroup = createRootTableGroupJoin(
+				navigablePath,
+				lhs,
+				explicitSourceAlias,
+				sqlAstJoinType,
+				fetched,
+				null,
+				aliasBaseGenerator,
+				sqlExpressionResolver,
+				fromClauseAccess,
+				creationContext
+		);
+
+		return new TableGroupJoin( navigablePath, sqlAstJoinType, tableGroup );
+	}
+
+	@Override
+	public TableGroup createRootTableGroupJoin(
+			NavigablePath navigablePath,
+			TableGroup lhs,
+			String explicitSourceAlias,
+			SqlAstJoinType sqlAstJoinType,
+			boolean fetched,
+			Consumer<Predicate> predicateConsumer,
+			SqlAliasBaseGenerator aliasBaseGenerator,
+			SqlExpressionResolver sqlExpressionResolver,
+			FromClauseAccess fromClauseAccess,
+			SqlAstCreationContext creationContext) {
+		return new StandardVirtualTableGroup(
+				navigablePath,
+				this,
+				lhs,
+				fetched
+		);
+	}
+
+	@Override
+	public SqlAstJoinType getDefaultSqlAstJoinType(TableGroup parentTableGroup) {
+		return SqlAstJoinType.LEFT;
+	}
+
+	@Override
+	public String getSqlAliasStem() {
+		return getAttributeName();
 	}
 }

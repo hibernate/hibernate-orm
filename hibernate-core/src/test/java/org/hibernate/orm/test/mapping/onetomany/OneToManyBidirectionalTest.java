@@ -623,7 +623,6 @@ public class OneToManyBidirectionalTest {
 	}
 
 	@Test
-	@FailureExpected(reason = "It should throw an exception because query specified join fetching, but the owner of the fetched association was not present in the select list")
 	public void testItemJoinWithFetchJoin(SessionFactoryScope scope) {
 		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
 		Assertions.assertThrows( IllegalArgumentException.class, () ->

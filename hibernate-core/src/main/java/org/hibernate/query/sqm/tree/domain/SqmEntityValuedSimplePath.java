@@ -28,19 +28,13 @@ public class SqmEntityValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 	}
 
 	@Override
-	public SemanticPathPart resolvePathPart(
+	public SqmPath<?> resolvePathPart(
 			String name,
 			boolean isTerminal,
 			SqmCreationState creationState) {
-		final SqmPathSource<T> referencedPathSource = getReferencedPathSource();
-		final SqmPathSource<?> subPathSource = referencedPathSource.findSubPathSource( name );
-
-		assert getLhs() == null || creationState.getProcessingStateStack()
-				.getCurrent()
-				.getPathRegistry()
-				.findPath( getLhs().getNavigablePath() ) != null;
-
-		return subPathSource.createSqmPath( this, getReferencedPathSource().getIntermediatePathSource( subPathSource ) );
+		final SqmPath<?> sqmPath = get( name );
+		creationState.getProcessingStateStack().getCurrent().getPathRegistry().register( sqmPath );
+		return sqmPath;
 	}
 
 	@Override

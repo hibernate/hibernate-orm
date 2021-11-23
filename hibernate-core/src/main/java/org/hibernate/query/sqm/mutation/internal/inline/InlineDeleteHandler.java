@@ -162,7 +162,7 @@ public class InlineDeleteHandler implements DeleteHandler {
 			DomainQueryExecutionContext executionContext) {
 		final TableReference targetTableReference = new TableReference(
 				targetTableExpression,
-				null,
+				DeleteStatement.DEFAULT_ALIAS,
 				false,
 				sessionFactory
 		);

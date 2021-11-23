@@ -1545,7 +1545,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 			throw getSession().getExceptionConverter().convert( e );
 		}
 		finally {
-			afterQuery( true );
+			afterQuery( success );
 		}
 	}
 

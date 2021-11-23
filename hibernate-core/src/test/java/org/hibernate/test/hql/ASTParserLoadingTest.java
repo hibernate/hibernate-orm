@@ -36,25 +36,22 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.Oracle8iDialect;
-import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.dialect.SQLServer2008Dialect;
 import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.MultipleBagFetchException;
-import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.EntitySqmPathSource;
 import org.hibernate.orm.test.any.hbm.IntegerPropertyValue;
 import org.hibernate.orm.test.any.hbm.PropertySet;
 import org.hibernate.orm.test.any.hbm.PropertyValue;
 import org.hibernate.orm.test.any.hbm.StringPropertyValue;
 import org.hibernate.query.Query;
-import org.hibernate.query.SemanticException;
 import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.internal.QuerySqmImpl;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -290,8 +287,6 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-8699")
-	// For now, restrict to H2.  Selecting w/ predicate functions cause issues for too many dialects.
-	@RequiresDialect(value = H2Dialect.class, jiraKey = "HHH-9052")
 	public void testBooleanPredicate() {
 		final Constructor created = fromTransaction(
 				(session) -> {
@@ -307,7 +302,15 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 				(session) -> {
 					final String qry = "select new Constructor( c.id, c.id is not null, c.id = c.id, c.id + 1, concat( c.id, 'foo' ) ) from Constructor c where c.id = :id";
 					final Constructor result = (Constructor) session.createQuery(qry ).setParameter( "id", created.getId() ).uniqueResult();
-					assertEquals( created, result );
+					assertEquals( 1, Constructor.getConstructorExecutionCount() );
+					Constructor expected = new Constructor(
+							created.getId(),
+							true,
+							true,
+							created.getId() + 1,
+							created.getId() + "foo"
+					);
+					assertEquals( expected, result );
 				}
 		);
 	}
@@ -336,7 +339,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 					assertEquals( 1, selections.size() );
 					SqmSelection<?> typeSelection = selections.get( 0 );
 					// always integer for joined
-					assertEquals( Integer.class, typeSelection.getNodeJavaTypeDescriptor().getJavaTypeClass() );
+					assertEquals( Class.class, typeSelection.getNodeJavaTypeDescriptor().getJavaTypeClass() );
 
 					// test
 					query = session.createQuery( "select type(a) from Animal a where type(a) = Dog" );
@@ -1063,8 +1066,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		if ( getDialect() instanceof AbstractHANADialect ) {
 			s.createQuery( "from Animal where abs(cast(1 as double) - cast(:param as double)) = 1.0" ).setParameter( "param", 1 ).list();
 		}
-		else if ( !( getDialect() instanceof PostgreSQLDialect || getDialect() instanceof PostgreSQL81Dialect
-				|| getDialect() instanceof MySQLDialect ) ) {
+		else if ( !( getDialect() instanceof PostgreSQLDialect || getDialect() instanceof MySQLDialect ) ) {
 			s.createQuery( "from Animal where abs(cast(1 as float) - cast(:param as float)) = 1.0" ).setParameter( "param", 1 ).list();
 		}
 
@@ -1580,7 +1582,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 					assertEquals( 1, sqmStatement.getQuerySpec().getSelectClause().getSelections().size() );
 					final SqmSelection<?> selection = sqmStatement.getQuerySpec().getSelectClause().getSelections().get( 0 );
 					final SqmExpressable<?> selectionType = selection.getSelectableNode().getNodeType();
-					assertThat( selectionType, CoreMatchers.instanceOf( EmbeddableDomainType.class ) );
+					assertThat( selectionType, CoreMatchers.instanceOf( EmbeddedSqmPathSource.class ) );
 					assertEquals( Name.class, selection.getNodeJavaTypeDescriptor().getJavaTypeClass() );
 
 
@@ -1861,7 +1863,6 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 					final SqmExpressable<?> selectionType = selection.getSelectableNode().getNodeType();
 					assertThat( selectionType, instanceOf( EntityDomainType.class ) );
 					assertThat( selectionType.getExpressableJavaTypeDescriptor().getJavaTypeClass(), equalTo( Animal.class ) );
-					assertThat( selection.getAlias(), is( "a" ) );
 				}
 		);
 		Session s = openSession();
@@ -2235,14 +2236,13 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		verifyAnimalZooSelection( q );
 
 		List<Zoo> zoos = (List<Zoo>) q.list();
-		assertEquals( 3, zoos.size() );
+		assertEquals( 2, zoos.size() );
 		assertEquals( otherZoo.getName(), zoos.get( 0 ).getName() );
 		assertEquals( 2, zoos.get( 0 ).getMammals().size() );
 		assertEquals( 2, zoos.get( 0 ).getAnimals().size() );
-		assertSame( zoos.get( 0 ), zoos.get( 1 ) );
-		assertEquals( zoo.getName(), zoos.get( 2 ).getName() );
-		assertEquals( 1, zoos.get( 2 ).getMammals().size() );
-		assertEquals( 1, zoos.get( 2 ).getAnimals().size() );
+		assertEquals( zoo.getName(), zoos.get( 1 ).getName() );
+		assertEquals( 1, zoos.get( 1 ).getMammals().size() );
+		assertEquals( 1, zoos.get( 1 ).getAnimals().size() );
 		s.clear();
 		s.delete(plat);
 		s.delete( zebra );
@@ -2685,7 +2685,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	public void testIndexParams() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
-		s.createQuery( "from Zoo zoo where zoo.mammals[:name] = :id" )
+		s.createQuery( "from Zoo zoo where zoo.mammals[:name].id = :id" )
 			.setParameter( "name", "Walrus" )
 			.setParameter( "id", Long.valueOf( 123 ) )
 			.list();
@@ -2713,7 +2713,6 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-    @SkipForDialect( value = SybaseASE15Dialect.class, jiraKey = "HHH-6424")
 	public void testAggregation() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -2757,8 +2756,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		assertEquals( 3L, results[2] );
 		// avg() should return a double
 		assertTrue( Double.class.isInstance( results[3] ) );
-		if (getDialect() instanceof SQLServer2008Dialect) assertEquals( 1.0D, results[3] );
-		else assertEquals( 1.5D, results[3] );
+		assertEquals( 1.5D, results[3] );
 		s.delete(h);
 		s.delete(h2);
 		s.getTransaction().commit();
@@ -2798,10 +2796,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		product.setProductId( "4321" );
 		s.save( product );
 
-		List list = s.createQuery("from java.lang.Comparable").list();
-		assertEquals( list.size(), 0 );
-
-		list = s.createQuery("from java.lang.Object").list();
+		List list = s.createQuery("from java.lang.Object").list();
 		assertEquals( list.size(), 1 );
 
 		s.delete(product);
@@ -2851,23 +2846,23 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 		// No idea why teradata doesn't support this
 //		if ( ! ( getDialect() instanceof SybaseDialect ) && ! ( getDialect() instanceof SQLServerDialect || getDialect() instanceof TeradataDialect ) ) {
-		if ( ! ( getDialect() instanceof SybaseDialect ) && ! ( getDialect() instanceof SQLServerDialect ) ) {
-			// In TransactSQL (the variant spoken by Sybase and SQLServer), the str() function
-			// is explicitly intended for numeric values only...
-			String dateStr1 = (String) session.createQuery("select str(current_date) from Animal").uniqueResult();
-			String dateStr2 = (String) session.createQuery("select str(year(current_date))||'-'||str(month(current_date))||'-'||str(day(current_date)) from Animal").uniqueResult();
-			System.out.println(dateStr1 + '=' + dateStr2);
-			if ( ! ( getDialect() instanceof Oracle8iDialect ) ) { //Oracle renders the name of the month :(
-				String[] dp1 = StringHelper.split("-", dateStr1);
-				String[] dp2 = StringHelper.split( "-", dateStr2 );
-				for (int i=0; i<3; i++) {
-					if ( dp1[i].startsWith( "0" ) ) {
-						dp1[i] = dp1[i].substring( 1 );
-					}
-					assertEquals( dp1[i], dp2[i] );
+//		if ( ! ( getDialect() instanceof SybaseDialect ) && ! ( getDialect() instanceof SQLServerDialect ) ) {
+		// In TransactSQL (the variant spoken by Sybase and SQLServer), the str() function
+		// is explicitly intended for numeric values only...
+		String dateStr1 = (String) session.createQuery("select str(current_date) from Animal").uniqueResult();
+		String dateStr2 = (String) session.createQuery("select str(year(current_date))||'-'||str(month(current_date))||'-'||str(day(current_date)) from Animal").uniqueResult();
+		System.out.println(dateStr1 + '=' + dateStr2);
+		if ( ! ( getDialect() instanceof Oracle8iDialect ) ) { //Oracle renders the name of the month :(
+			String[] dp1 = StringHelper.split("-", dateStr1);
+			String[] dp2 = StringHelper.split( "-", dateStr2 );
+			for (int i=0; i<3; i++) {
+				if ( dp1[i].startsWith( "0" ) ) {
+					dp1[i] = dp1[i].substring( 1 );
 				}
+				assertEquals( dp1[i], dp2[i] );
 			}
 		}
+//		}
 		session.delete(an);
 		txn.commit();
 		session.close();
@@ -3169,7 +3164,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 		session = openSession();
 		txn = session.beginTransaction();
-		List results = session.createQuery( "from Zoo z join z.mammals m" ).list();
+		List results = session.createQuery( "select z, m from Zoo z join z.mammals m" ).list();
 		assertEquals( "Incorrect result size", 1, results.size() );
 		assertTrue( "Incorrect result return type", results.get( 0 ) instanceof Object[] );
 		Object[] resultObjects = ( Object[] ) results.get( 0 );
@@ -3541,36 +3536,23 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testIllegalMixedTransformerQueries() {
+	public void testSelectNewTransformerQueries() {
+		createTestBaseData();
 		Session session = openSession();
 		Transaction t = session.beginTransaction();
-		try {
-			getSelectNewQuery( session ).setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP).list();
-			fail("'select new' together with a resulttransformer should result in error!");
-		}
-		catch (IllegalArgumentException e) {
-			assertTyping( QueryException.class, e.getCause() );
-		}
-		catch(QueryException he) {
-			assertTrue(he.getMessage().indexOf("ResultTransformer")==0);
-		}
-
-		try {
-			getSelectNewQuery( session ).setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP).scroll();
-			fail("'select new' together with a resulttransformer should result in error!");
-		}
-		catch (IllegalArgumentException e) {
-			assertTyping( QueryException.class, e.getCause() );
-		}
-		catch(HibernateException he) {
-			assertTrue(he.getMessage().indexOf("ResultTransformer")==0);
-		}
+		List list = session.createQuery( "select new Animal(an.description, an.bodyWeight) as animal from Animal an order by an.description" )
+				.setResultTransformer( Transformers.ALIAS_TO_ENTITY_MAP )
+				.list();
+		assertEquals( 2, list.size() );
+		Map<String, Animal> m1 = (Map<String, Animal>) list.get( 0 );
+		Map<String, Animal> m2 = (Map<String, Animal>) list.get( 1 );
+		assertEquals( 1, m1.size() );
+		assertEquals( 1, m2.size() );
+		assertEquals( "Mammal #1", m1.get( "animal" ).getDescription() );
+		assertEquals( "Mammal #2", m2.get( "animal" ).getDescription() );
 		t.commit();
 		session.close();
-	}
-
-	private Query getSelectNewQuery(Session session) {
-		return session.createQuery( "select new Animal(an.description, an.bodyWeight) from Animal an" );
+		destroyTestBaseData();
 	}
 
 	@Test
@@ -3739,7 +3721,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		 * PostgreSQL >= 8.3.7 typecasts are no longer automatically allowed
 		 * <link>http://www.postgresql.org/docs/current/static/release-8-3.html</link>
 		 */
-		if ( getDialect() instanceof PostgreSQLDialect || getDialect() instanceof PostgreSQL81Dialect
+		if ( getDialect() instanceof PostgreSQLDialect
 				|| getDialect() instanceof HSQLDialect
 				|| getDialect() instanceof CockroachDialect ) {
 			hql = "from Animal a where bit_length(str(a.bodyWeight)) = 24";
@@ -3749,7 +3731,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		}
 
 		session.createQuery(hql).list();
-		if ( getDialect() instanceof PostgreSQLDialect || getDialect() instanceof PostgreSQL81Dialect
+		if ( getDialect() instanceof PostgreSQLDialect
 				|| getDialect() instanceof HSQLDialect
 				|| getDialect() instanceof CockroachDialect ) {
 			hql = "select bit_length(str(a.bodyWeight)) from Animal a";
@@ -3798,8 +3780,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		}
 		catch (IllegalArgumentException e) {
 			final Throwable cause = e.getCause();
-			assertThat( cause, instanceOf( SemanticException.class ) );
-			assertTrue( cause.getMessage().contains( "expecting EOF, found ')'" ) );
+			assertThat( cause, instanceOf( ParsingException.class ) );
+			assertTrue( cause.getMessage().contains( "mismatched input ')' expecting {<EOF>" ) );
 		}
 	}
 

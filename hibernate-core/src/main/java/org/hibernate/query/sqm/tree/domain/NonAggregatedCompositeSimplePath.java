@@ -34,16 +34,13 @@ public class NonAggregatedCompositeSimplePath<T> extends SqmEntityValuedSimplePa
 	}
 	
 	@Override
-	public SemanticPathPart resolvePathPart(
+	public SqmPath<?> resolvePathPart(
 			String name,
 			boolean isTerminal,
 			SqmCreationState creationState) {
-		final SqmPathSource<?> subPathSource = getReferencedPathSource().findSubPathSource( name );
-		if ( subPathSource == null ) {
-			throw UnknownPathException.unknownSubPath( this, name );
-		}
-
-		return subPathSource.createSqmPath( this, getReferencedPathSource().getIntermediatePathSource( subPathSource ) );
+		final SqmPath<?> sqmPath = get( name );
+		creationState.getProcessingStateStack().getCurrent().getPathRegistry().register( sqmPath );
+		return sqmPath;
 	}
 
 	@Override

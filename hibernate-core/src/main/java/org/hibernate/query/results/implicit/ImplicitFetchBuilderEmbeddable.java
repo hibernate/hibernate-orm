@@ -28,7 +28,6 @@ import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 
 import static org.hibernate.query.results.ResultsHelper.impl;
-import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 
 /**
  * @author Steve Ebersole

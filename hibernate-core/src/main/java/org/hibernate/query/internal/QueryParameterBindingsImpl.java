@@ -9,6 +9,7 @@ package org.hibernate.query.internal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.IdentityHashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -195,6 +196,8 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 		for ( QueryParameterBinding<?> binding : parameterBindingMap.values() ) {
 			final MappingModelExpressable<?> mappingType = determineMappingType( binding, persistenceContext );
 			assert mappingType instanceof JavaTypedExpressable;
+			//noinspection unchecked
+			final JavaType<Object> javaType = ( (JavaTypedExpressable<Object>) mappingType ).getExpressableJavaTypeDescriptor();
 
 			if ( binding.isMultiValued() ) {
 				for ( Object bindValue : binding.getBindValues() ) {
@@ -203,8 +206,9 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 					final Object disassembled = mappingType.disassemble( bindValue, persistenceContext );
 					allBindValues.add( disassembled );
 
-					//noinspection unchecked
-					final int valueHashCode = ( (JavaTypedExpressable<Object>) mappingType ).getExpressableJavaTypeDescriptor().extractHashCode( bindValue );
+					final int valueHashCode = bindValue != null
+							? javaType.extractHashCode( bindValue )
+							: 0;
 
 					hashCode = 31 * hashCode + valueHashCode;
 				}
@@ -215,8 +219,9 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 				final Object disassembled = mappingType.disassemble( bindValue, persistenceContext );
 				allBindValues.add( disassembled );
 
-				//noinspection unchecked
-				final int valueHashCode = ( (JavaTypedExpressable<Object>) mappingType ).getExpressableJavaTypeDescriptor().extractHashCode( bindValue );
+				final int valueHashCode = bindValue != null
+						? javaType.extractHashCode( bindValue )
+						: 0;
 
 				hashCode = 31 * hashCode + valueHashCode;
 			}
@@ -249,12 +254,19 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 		}
 
 		if ( binding.isMultiValued() ) {
-			final Object firstBindValue = binding.getBindValues().iterator().next();
-			return typeConfiguration.getBasicTypeForJavaType( firstBindValue.getClass() );
+			final Iterator<?> iterator = binding.getBindValues().iterator();
+			Object firstNonNullBindValue = null;
+			if ( iterator.hasNext() && firstNonNullBindValue == null ) {
+				firstNonNullBindValue = iterator.next();
+			}
+			if ( firstNonNullBindValue != null ) {
+				return typeConfiguration.getBasicTypeForJavaType( firstNonNullBindValue.getClass() );
+			}
 		}
-		else {
+		else if ( binding.getBindValue() != null ) {
 			return typeConfiguration.getBasicTypeForJavaType( binding.getBindValue().getClass() );
 		}
+		return typeConfiguration.getBasicTypeForJavaType( binding.getBindType().getJavaType() );
 	}
 
 

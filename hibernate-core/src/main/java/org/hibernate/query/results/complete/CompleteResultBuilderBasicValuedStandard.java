@@ -119,7 +119,11 @@ public class CompleteResultBuilderBasicValuedStandard implements CompleteResultB
 								basicType = explicitType;
 							}
 							else {
-								basicType = jdbcResultsMetadata.resolveType( jdbcPosition, explicitJavaTypeDescriptor );
+								basicType = jdbcResultsMetadata.resolveType(
+										jdbcPosition,
+										explicitJavaTypeDescriptor,
+										sessionFactory
+								);
 							}
 
 							final int valuesArrayPosition = ResultsHelper.jdbcPositionToValuesArrayPosition( jdbcPosition );

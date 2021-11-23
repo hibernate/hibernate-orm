@@ -185,6 +185,9 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		// For SQL-Server we need to cast certain arguments to varchar(max) to be able to concat them
 		CommonFunctionFactory.aggregates( this, queryEngine, SqlAstNodeRenderingMode.DEFAULT, "+", "varchar(max)" );
 
+		// AVG by default uses the input type, so we possibly need to cast the argument type, hence a special function
+		CommonFunctionFactory.avg_castingNonDoubleArguments( this, queryEngine, SqlAstNodeRenderingMode.DEFAULT );
+
 		CommonFunctionFactory.truncate_round( queryEngine );
 		CommonFunctionFactory.everyAny_sumIif( queryEngine );
 		CommonFunctionFactory.bitLength_pattern( queryEngine, "datalength(?1) * 8" );

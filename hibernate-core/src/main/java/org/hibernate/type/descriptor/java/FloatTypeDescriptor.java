@@ -96,6 +96,25 @@ public class FloatTypeDescriptor extends AbstractClassJavaTypeDescriptor<Float> 
 	}
 
 	@Override
+	public boolean isWider(JavaType<?> javaType) {
+		switch ( javaType.getJavaType().getTypeName() ) {
+			case "byte":
+			case "java.lang.Byte":
+			case "short":
+			case "java.lang.Short":
+			case "int":
+			case "java.lang.Integer":
+			case "long":
+			case "java.lang.Long":
+			case "java.math.BigInteger":
+			case "java.math.BigDecimal":
+				return true;
+			default:
+				return false;
+		}
+	}
+
+	@Override
 	public Class getPrimitiveClass() {
 		return float.class;
 	}

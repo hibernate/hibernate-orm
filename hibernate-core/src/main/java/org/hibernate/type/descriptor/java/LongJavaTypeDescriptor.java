@@ -93,6 +93,21 @@ public class LongJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<Long
 	}
 
 	@Override
+	public boolean isWider(JavaType<?> javaType) {
+		switch ( javaType.getJavaType().getTypeName() ) {
+			case "byte":
+			case "java.lang.Byte":
+			case "short":
+			case "java.lang.Short":
+			case "int":
+			case "java.lang.Integer":
+				return true;
+			default:
+				return false;
+		}
+	}
+
+	@Override
 	public <X> Long coerce(X value, CoercionContext coercionContext) {
 		if ( value == null ) {
 			return null;

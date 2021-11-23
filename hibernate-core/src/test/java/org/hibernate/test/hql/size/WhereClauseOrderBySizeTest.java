@@ -26,7 +26,7 @@ import org.hibernate.annotations.ResultCheckStyle;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.dialect.PostgreSQL82Dialect;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.RequiresDialect;
@@ -34,7 +34,7 @@ import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
 @TestForIssue(jiraKey = "HHH-14585")
-@RequiresDialect(value = PostgreSQL82Dialect.class, comment = "Other databases may not support boolean data types")
+@RequiresDialect(value = PostgreSQLDialect.class, comment = "Other databases may not support boolean data types")
 @RequiresDialect(value = H2Dialect.class, comment = "Other databases may not support boolean data types")
 public class WhereClauseOrderBySizeTest extends BaseEntityManagerFunctionalTestCase {
 
@@ -63,15 +63,9 @@ public class WhereClauseOrderBySizeTest extends BaseEntityManagerFunctionalTestC
 							"SELECT p FROM Person p ORDER BY size(p.books) DESC",
 							Person.class
 					);
-					final TypedQuery<Person> orderByWorking = entityManager.createQuery(
-							"SELECT p FROM Person p ORDER BY p.books.size DESC",
-							Person.class
-					);
 
 					List<Person> dbPeopleBroken = orderByBroken.getResultList();
-					List<Person> dbPeopleWorking = orderByWorking.getResultList();
-					assertEquals( Arrays.asList( alice, bob ), dbPeopleWorking );
-					assertEquals( dbPeopleWorking, dbPeopleBroken );
+					assertEquals( Arrays.asList( alice, bob ), dbPeopleBroken );
 
 					// add 2 books to Bob
 					final Book book2 = new Book();
@@ -83,9 +77,7 @@ public class WhereClauseOrderBySizeTest extends BaseEntityManagerFunctionalTestC
 					entityManager.persist( book3 );
 
 					dbPeopleBroken = orderByBroken.getResultList();
-					dbPeopleWorking = orderByWorking.getResultList();
-					assertEquals( Arrays.asList( bob, alice ), dbPeopleWorking );
-					assertEquals( dbPeopleWorking, dbPeopleBroken );
+					assertEquals( Arrays.asList( bob, alice ), dbPeopleBroken );
 
 					// remove (soft-deleting) both Bob's books
 					entityManager.remove( book2 );
@@ -93,9 +85,7 @@ public class WhereClauseOrderBySizeTest extends BaseEntityManagerFunctionalTestC
 
 					// result lists are not equal anymore
 					dbPeopleBroken = orderByBroken.getResultList();
-					dbPeopleWorking = orderByWorking.getResultList();
-					assertEquals( Arrays.asList( alice, bob ), dbPeopleWorking );
-					assertEquals( dbPeopleWorking, dbPeopleBroken );
+					assertEquals( Arrays.asList( alice, bob ), dbPeopleBroken );
 				}
 		);
 	}

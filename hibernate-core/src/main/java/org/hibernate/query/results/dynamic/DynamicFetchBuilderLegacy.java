@@ -210,6 +210,11 @@ public class DynamicFetchBuilderLegacy implements DynamicFetchBuilder, NativeQue
 	}
 
 	@Override
+	public List<String> getColumnAliases() {
+		return columnNames;
+	}
+
+	@Override
 	public NativeQuery.FetchReturn setLockMode(LockMode lockMode) {
 		return null;
 	}

@@ -301,7 +301,8 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 
 	@Override
 	public void visitColumnReference(ColumnReference columnReference) {
-		if ( getDmlTargetTableAlias() != null && getDmlTargetTableAlias().equals( columnReference.getQualifier() ) ) {
+		final String dmlTargetTableAlias = getDmlTargetTableAlias();
+		if ( dmlTargetTableAlias != null && dmlTargetTableAlias.equals( columnReference.getQualifier() ) ) {
 			// Sybase needs a table name prefix
 			// but not if this is a restricted union table reference subquery
 			final QuerySpec currentQuerySpec = (QuerySpec) getQueryPartStack().getCurrent();
@@ -317,11 +318,11 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 				// This is fine for now as this is only temporary anyway until we render aliases for table references
 				appendSql(
 						columnReference.getColumnExpression()
-								.replaceAll( "(\\b)(" + getDmlTargetTableAlias() + "\\.)(\\b)", "$1$3" )
+								.replaceAll( "(\\b)(" + dmlTargetTableAlias + "\\.)(\\b)", "$1$3" )
 				);
 			}
 			else {
-				appendSql( ( (MutationStatement) getStatement() ).getTargetTable().getTableExpression() );
+				appendSql( getCurrentDmlStatement().getTargetTable().getTableExpression() );
 				appendSql( '.' );
 				appendSql( columnReference.getColumnExpression() );
 			}

@@ -31,6 +31,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.DomainType;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.Query;
@@ -226,7 +227,7 @@ public class QuerySqmImpl<R>
 			SqmUtil.verifyIsSelectStatement( sqmStatement, null );
 			final SqmQueryPart<R> queryPart = ( (SqmSelectStatement<R>) sqmStatement ).getQueryPart();
 			// For criteria queries, we have to validate the fetch structure here
-			queryPart.validateQueryGroupFetchStructure();
+			queryPart.validateFetchStructureAndOwners();
 			visitQueryReturnType(
 					queryPart,
 					resultType,
@@ -627,7 +628,12 @@ public class QuerySqmImpl<R>
 				executionContextToUse = this;
 			}
 			else {
-				executionContextToUse = new DelegatingDomainQueryExecutionContext( this );
+				executionContextToUse = new DelegatingDomainQueryExecutionContext( this ) {
+					@Override
+					public QueryOptions getQueryOptions() {
+						return normalizedQueryOptions;
+					}
+				};
 			}
 		}
 		else {
@@ -792,11 +798,23 @@ public class QuerySqmImpl<R>
 	}
 
 	private NonSelectQueryPlan buildDeleteQueryPlan() {
-		final SqmDeleteStatement<R> sqmDelete = (SqmDeleteStatement<R>) getSqmStatement();
+		final SqmDeleteStatement<R>[] concreteSqmStatements = QuerySplitter.split(
+				(SqmDeleteStatement<R>) getSqmStatement(),
+				getSessionFactory()
+		);
 
-		final String entityNameToDelete = sqmDelete.getTarget().getReferencedPathSource().getHibernateEntityName();
+		if ( concreteSqmStatements.length > 1 ) {
+			return buildAggregatedDeleteQueryPlan( concreteSqmStatements );
+		}
+		else {
+			return buildConcreteDeleteQueryPlan( concreteSqmStatements[0] );
+		}
+	}
+
+	private NonSelectQueryPlan buildConcreteDeleteQueryPlan(SqmDeleteStatement<R> sqmDelete) {
+		final EntityDomainType<?> entityDomainType = sqmDelete.getTarget().getReferencedPathSource();
+		final String entityNameToDelete = entityDomainType.getHibernateEntityName();
 		final EntityPersister entityDescriptor = getSessionFactory().getDomainModel().findEntityDescriptor( entityNameToDelete );
-
 		final SqmMultiTableMutationStrategy multiTableStrategy = entityDescriptor.getSqmMultiTableMutationStrategy();
 		if ( multiTableStrategy == null ) {
 			return new SimpleDeleteQueryPlan( entityDescriptor, sqmDelete, domainParameterXref );
@@ -804,6 +822,16 @@ public class QuerySqmImpl<R>
 		else {
 			return new MultiTableDeleteQueryPlan( sqmDelete, domainParameterXref, multiTableStrategy );
 		}
+	}
+
+	private NonSelectQueryPlan buildAggregatedDeleteQueryPlan(SqmDeleteStatement<R>[] concreteSqmStatements) {
+		final NonSelectQueryPlan[] aggregatedQueryPlans = new NonSelectQueryPlan[ concreteSqmStatements.length ];
+
+		for ( int i = 0, x = concreteSqmStatements.length; i < x; i++ ) {
+			aggregatedQueryPlans[i] = buildConcreteDeleteQueryPlan( concreteSqmStatements[i] );
+		}
+
+		return new AggregatedNonSelectQueryPlanImpl( aggregatedQueryPlans );
 	}
 
 	private NonSelectQueryPlan buildUpdateQueryPlan() {

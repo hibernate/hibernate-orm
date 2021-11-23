@@ -12,6 +12,7 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.sql.results.ResultsLogger;
 import org.hibernate.sql.results.caching.internal.QueryCachePutManagerDisabledImpl;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMapping;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 /**
@@ -39,19 +40,30 @@ public class JdbcValuesCacheHit extends AbstractJdbcValues {
 		this.resolvedMapping = resolvedMapping;
 	}
 
-	public JdbcValuesCacheHit(List<Object[]> cachedResults, JdbcValuesMapping resolvedMapping) {
+	public JdbcValuesCacheHit(List<Object> cachedResults, JdbcValuesMapping resolvedMapping) {
 		this( extractData( cachedResults ), resolvedMapping );
 	}
 
-	private static Object[][] extractData(List<Object[]> cachedResults) {
+	private static Object[][] extractData(List<Object> cachedResults) {
 		if ( CollectionHelper.isEmpty( cachedResults ) ) {
 			return NO_DATA;
 		}
 
-		final Object[][] data = new Object[cachedResults.size()][];
-		for ( int i = 0; i < cachedResults.size(); i++ ) {
-			final Object[] row = cachedResults.get( i );
-			data[ i ] = row;
+		final Object[][] data;
+		if ( cachedResults.get( 0 ) instanceof JdbcValuesMetadata ) {
+			final int end = cachedResults.size() - 1;
+			data = new Object[end][];
+			for ( int i = 0; i < end; i++ ) {
+				final Object[] row = (Object[]) cachedResults.get( i + 1 );
+				data[i] = row;
+			}
+		}
+		else {
+			data = new Object[cachedResults.size()][];
+			for ( int i = 0; i < cachedResults.size(); i++ ) {
+				final Object[] row = (Object[]) cachedResults.get( i );
+				data[i] = row;
+			}
 		}
 
 		return data;

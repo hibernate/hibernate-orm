@@ -7,7 +7,9 @@
 package org.hibernate.query.sqm.sql.internal;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
@@ -31,6 +33,7 @@ import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.SqlTupleContainer;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.update.Assignable;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 
 import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
@@ -38,7 +41,8 @@ import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnRefere
 /**
  * @author Koen Aers
  */
-public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpretation<T> implements SqlTupleContainer {
+public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpretation<T> implements SqlTupleContainer,
+		Assignable {
 
 	public static <T> EntityValuedPathInterpretation<T> from(
 			SqmEntityValuedSimplePath<T> sqmPath,
@@ -233,11 +237,33 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 	}
 
 	@Override
+	public List<ColumnReference> getColumnReferences() {
+		if ( sqlExpression instanceof SqlTuple ) {
+			//noinspection unchecked
+			return (List<ColumnReference>) ( (SqlTuple) sqlExpression ).getExpressions();
+		}
+		return Collections.singletonList( (ColumnReference) sqlExpression );
+	}
+
+	@Override
+	public void visitColumnReferences(Consumer<ColumnReference> columnReferenceConsumer) {
+		if ( sqlExpression instanceof SqlTuple ) {
+			for ( Expression e : ( (SqlTuple) sqlExpression ).getExpressions() ) {
+				columnReferenceConsumer.accept( (ColumnReference) e );
+			}
+		}
+		else {
+			columnReferenceConsumer.accept( (ColumnReference) sqlExpression );
+		}
+	}
+
+	@Override
 	public SqlTuple getSqlTuple() {
 		return sqlExpression instanceof SqlTuple
 				? (SqlTuple) sqlExpression
 				: null;
 	}
+
 	@Override
 	public void applySqlSelections(DomainResultCreationState creationState) {
 		creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(

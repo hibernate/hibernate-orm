@@ -15,16 +15,22 @@ import org.hibernate.sql.ast.tree.select.QueryPart;
  */
 public class ExistsPredicate implements Predicate {
 
+	private final boolean negated;
 	private final QueryPart expression;
 	private final JdbcMappingContainer expressionType;
 
-	public ExistsPredicate(QueryPart expression, JdbcMappingContainer expressionType) {
+	public ExistsPredicate(QueryPart expression, boolean negated, JdbcMappingContainer expressionType) {
+		this.negated = negated;
 		this.expression = expression;
 		this.expressionType = expressionType;
 	}
 
 	public QueryPart getExpression() {
 		return expression;
+	}
+
+	public boolean isNegated() {
+		return negated;
 	}
 
 	@Override

@@ -48,6 +48,7 @@ public class DomainPathContinuation extends AbstractDomainPath {
 	@Override
 	public SequencePart resolvePathPart(
 			String name,
+			String identifier,
 			boolean isTerminal,
 			TranslationContext translationContext) {
 		if ( referencedModelPart instanceof EmbeddableValuedModelPart ) {

@@ -33,9 +33,9 @@ sortSpecification
 	;
 
 expression
-	: function
-	| identifier
-	| dotIdentifier
+	: function		# FunctionExpression
+	| identifier	# IdentifierExpression
+	| dotIdentifier	# DotIdentifierExpression
 	;
 
 function
@@ -52,7 +52,23 @@ packagedFunction
 	;
 
 functionArguments
-	: OPEN_PAREN expression* CLOSE_PAREN
+	: OPEN_PAREN (functionArgument ( COMMA functionArgument )* )? CLOSE_PAREN
+	;
+
+functionArgument
+	: expression
+    | literal
+	;
+
+literal
+	: STRING_LITERAL
+	| INTEGER_LITERAL
+	| LONG_LITERAL
+	| BIG_INTEGER_LITERAL
+	| FLOAT_LITERAL
+	| DOUBLE_LITERAL
+	| BIG_DECIMAL_LITERAL
+	| HEX_LITERAL
 	;
 
 collationSpecification
@@ -69,6 +85,7 @@ nullsPrecedence
 
 identifier
 	: IDENTIFIER
+	| QUOTED_IDENTIFIER
 	// keyword-as-identifier
 	| FIRST
 	| LAST
@@ -78,5 +95,5 @@ identifier
 	;
 
 dotIdentifier
-	: IDENTIFIER (DOT IDENTIFIER)+
+	: identifier (DOT identifier)+
 	;

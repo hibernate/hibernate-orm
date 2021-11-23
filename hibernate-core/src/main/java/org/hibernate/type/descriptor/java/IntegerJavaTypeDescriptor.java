@@ -93,6 +93,19 @@ public class IntegerJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<I
 	}
 
 	@Override
+	public boolean isWider(JavaType<?> javaType) {
+		switch ( javaType.getJavaType().getTypeName() ) {
+			case "byte":
+			case "java.lang.Byte":
+			case "short":
+			case "java.lang.Short":
+				return true;
+			default:
+				return false;
+		}
+	}
+
+	@Override
 	public Class getPrimitiveClass() {
 		return int.class;
 	}

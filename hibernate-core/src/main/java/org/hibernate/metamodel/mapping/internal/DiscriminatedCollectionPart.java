@@ -145,6 +145,11 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 	}
 
 	@Override
+	public JavaType<?> getExpressableJavaTypeDescriptor() {
+		return getJavaTypeDescriptor();
+	}
+
+	@Override
 	public NavigableRole getNavigableRole() {
 		return partRole;
 	}

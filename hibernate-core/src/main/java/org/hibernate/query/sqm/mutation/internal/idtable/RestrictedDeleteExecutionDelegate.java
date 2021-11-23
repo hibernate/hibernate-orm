@@ -12,7 +12,6 @@ import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -23,6 +22,7 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.FilterHelper;
+import org.hibernate.internal.util.MutableBoolean;
 import org.hibernate.internal.util.MutableInteger;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -51,7 +51,7 @@ import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.ast.tree.from.UnionTableGroup;
+import org.hibernate.sql.ast.tree.from.UnionTableReference;
 import org.hibernate.sql.ast.tree.predicate.FilterPredicate;
 import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
@@ -107,9 +107,9 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 		this.idTableExporterAccess = idTableExporterAccess;
 		this.sessionUidAccess = sessionUidAccess;
 		this.sessionFactory = sessionFactory;
-
-		converter = new MultiTableSqmMutationConverter(
+		this.converter = new MultiTableSqmMutationConverter(
 				entityDescriptor,
+				sqmDelete,
 				sqmDelete.getTarget(),
 				domainParameterXref,
 				queryOptions,
@@ -149,12 +149,12 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 		//		2) we also inspect each ColumnReference that is part of the where-clause to see which
 		//			table it comes from.  if all of the referenced columns (if any at all) are from the root table
 		//			we can perform all of the deletes without using an id-table
-		final AtomicBoolean needsIdTableWrapper = new AtomicBoolean( false );
+		final MutableBoolean needsIdTableWrapper = new MutableBoolean( false );
 		Predicate predicate = converter.visitWhereClause(
 				sqmDelete.getWhereClause(),
 				columnReference -> {
 					if ( ! hierarchyRootTableReference.getIdentificationVariable().equals( columnReference.getQualifier() ) ) {
-						needsIdTableWrapper.set( true );
+						needsIdTableWrapper.setValue( true );
 					}
 				},
 				(sqmParameter, mappingType, jdbcParameters) -> {
@@ -172,11 +172,17 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 				deletingTableGroup
 		);
 		if ( filterPredicate != null ) {
-			needsIdTableWrapper.set( true );
+			needsIdTableWrapper.setValue( true );
 			predicate = SqlAstTreeHelper.combinePredicates( predicate, filterPredicate );
 		}
+		converter.pruneTableGroupJoins();
 
-		boolean needsIdTable = needsIdTableWrapper.get();
+		// We need an id table if we want to delete from an intermediate table to avoid FK violations
+		// The intermediate table has a FK to the root table, so we can't delete from the root table first
+		// Deleting from the intermediate table first also isn't possible,
+		// because that is the source for deletion in other tables, hence we need an id table
+		final boolean needsIdTable = needsIdTableWrapper.getValue()
+				|| entityDescriptor != entityDescriptor.getRootEntityDescriptor();
 
 		final SqmJdbcExecutionContextAdapter executionContextAdapter = SqmJdbcExecutionContextAdapter.omittingLockingAndPaging( executionContext );
 
@@ -208,17 +214,9 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 			Map<SqmParameter, MappingModelExpressable> paramTypeResolutions,
 			SqlExpressionResolver sqlExpressionResolver,
 			ExecutionContext executionContext) {
-		final EntityPersister rootEntityPersister;
-		final String rootEntityName = entityDescriptor.getEntityPersister().getRootEntityName();
-		if ( rootEntityName.equals( entityDescriptor.getEntityName() ) ) {
-			rootEntityPersister = entityDescriptor.getEntityPersister();
-		}
-		else {
-			rootEntityPersister = sessionFactory.getDomainModel().findEntityDescriptor( rootEntityName );
-		}
+		assert entityDescriptor == entityDescriptor.getRootEntityDescriptor();
 
-		final MutableInteger rows = new MutableInteger();
-
+		final EntityPersister rootEntityPersister = entityDescriptor.getEntityPersister();
 		final String rootTableName = ( (Joinable) rootEntityPersister ).getTableName();
 		final TableReference rootTableReference = tableGroup.resolveTableReference(
 				tableGroup.getNavigablePath(),
@@ -247,48 +245,114 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 				executionContext.getSession()
 		);
 
-		entityDescriptor.visitConstraintOrderedTables(
-				(tableExpression, tableKeyColumnVisitationSupplier) -> {
-					if ( tableExpression.equals( rootTableName ) ) {
-						rows.set(
-								deleteFromRootTableWithoutIdTable(
-										rootTableReference,
-										suppliedPredicate,
-										jdbcParameterBindings,
-										executionContext
-								)
-						);
+		SqmMutationStrategyHelper.cleanUpCollectionTables(
+				entityDescriptor,
+				(tableReference, attributeMapping) -> {
+					// No need for a predicate if there is no supplied predicate i.e. this is a full cleanup
+					if ( suppliedPredicate == null ) {
+						return null;
+					}
+					final ForeignKeyDescriptor fkDescriptor = attributeMapping.getKeyDescriptor();
+					final QuerySpec idSelectFkSubQuery;
+					// todo (6.0): based on the location of the attribute mapping, we could prune the table group of the subquery
+					if ( fkDescriptor.getTargetPart() instanceof EntityIdentifierMapping ) {
+						idSelectFkSubQuery = matchingIdSubQuerySpec;
 					}
 					else {
-						rows.set(
-								rows.get() + deleteFromNonRootTableWithoutIdTable(
-										resolveUnionTableReference( tableGroup, tableExpression ),
+						idSelectFkSubQuery = ExecuteWithoutIdTableHelper.createIdMatchingSubQuerySpec(
+								tableGroup.getNavigablePath(),
+								rootTableReference,
+								suppliedPredicate,
+								rootEntityPersister,
+								sqlExpressionResolver,
+								sessionFactory
+						);
+					}
+					return new InSubQueryPredicate(
+							MappingModelHelper.buildColumnReferenceExpression(
+									fkDescriptor,
+									null,
+									sessionFactory
+							),
+							idSelectFkSubQuery,
+							false
+					);
+
+				},
+				jdbcParameterBindings,
+				executionContext
+		);
+
+		if ( rootTableReference instanceof UnionTableReference ) {
+			final MutableInteger rows = new MutableInteger();
+			entityDescriptor.visitConstraintOrderedTables(
+					(tableExpression, tableKeyColumnVisitationSupplier) -> {
+						final TableReference tableReference = new TableReference(
+								tableExpression,
+								tableGroup.getPrimaryTableReference().getIdentificationVariable(),
+								false,
+								sessionFactory
+						);
+						final QuerySpec idMatchingSubQuerySpec;
+						// No need for a predicate if there is no supplied predicate i.e. this is a full cleanup
+						if ( suppliedPredicate == null ) {
+							idMatchingSubQuerySpec = null;
+						}
+						else {
+							idMatchingSubQuerySpec = matchingIdSubQuerySpec;
+						}
+						rows.plus(
+								deleteFromNonRootTableWithoutIdTable(
+										tableReference,
 										tableKeyColumnVisitationSupplier,
 										sqlExpressionResolver,
 										tableGroup,
-										matchingIdSubQuerySpec,
+										idMatchingSubQuerySpec,
 										jdbcParameterBindings,
 										executionContext
 								)
 						);
 					}
-				}
-		);
-
-		return rows.get();
-	}
-
-	private TableReference resolveUnionTableReference(TableGroup tableGroup, String tableExpression) {
-		if ( tableGroup instanceof UnionTableGroup ) {
-			return new TableReference(
-					tableExpression,
-					tableGroup.getPrimaryTableReference().getIdentificationVariable(),
-					false,
-					sessionFactory
 			);
+			return rows.get();
 		}
 		else {
-			return tableGroup.getTableReference( tableGroup.getNavigablePath(), tableExpression, true, true );
+			entityDescriptor.visitConstraintOrderedTables(
+					(tableExpression, tableKeyColumnVisitationSupplier) -> {
+						if ( !tableExpression.equals( rootTableName ) ) {
+							final TableReference tableReference = tableGroup.getTableReference(
+									tableGroup.getNavigablePath(),
+									tableExpression,
+									true,
+									true
+							);
+							final QuerySpec idMatchingSubQuerySpec;
+							// No need for a predicate if there is no supplied predicate i.e. this is a full cleanup
+							if ( suppliedPredicate == null ) {
+								idMatchingSubQuerySpec = null;
+							}
+							else {
+								idMatchingSubQuerySpec = matchingIdSubQuerySpec;
+							}
+							deleteFromNonRootTableWithoutIdTable(
+									tableReference,
+									tableKeyColumnVisitationSupplier,
+									sqlExpressionResolver,
+									tableGroup,
+									idMatchingSubQuerySpec,
+									jdbcParameterBindings,
+									executionContext
+							);
+						}
+					}
+			);
+
+			return deleteFromRootTableWithoutIdTable(
+					rootTableReference,
+					suppliedPredicate,
+					jdbcParameterBindings,
+					executionContext
+			);
 		}
 	}
 
@@ -304,7 +368,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 		);
 	}
 
-	private int  deleteFromNonRootTableWithoutIdTable(
+	private int deleteFromNonRootTableWithoutIdTable(
 			TableReference targetTableReference,
 			Supplier<Consumer<SelectableConsumer>> tableKeyColumnVisitationSupplier,
 			SqlExpressionResolver sqlExpressionResolver,
@@ -315,50 +379,62 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 		assert targetTableReference != null;
 		log.tracef( "deleteFromNonRootTable - %s", targetTableReference.getTableExpression() );
 
-		/*
-		 * delete from sub_table
-		 * where sub_id in (
-		 * 		select root_id from root_table
-		 * 		where {predicate}
-		 * )
-		 */
-
-		/*
-		 * Create the `sub_id` reference as the LHS of the in-subquery predicate
-		 */
-		final List<ColumnReference> deletingTableColumnRefs = new ArrayList<>();
-		tableKeyColumnVisitationSupplier.get().accept(
-				(columnIndex, selection) -> {
-					assert targetTableReference.getTableReference( selection.getContainingTableExpression() ) != null;
-
-					final Expression expression = sqlExpressionResolver.resolveSqlExpression(
-							SqlExpressionResolver.createColumnReferenceKey( targetTableReference, selection.getSelectionExpression() ),
-							sqlAstProcessingState -> new ColumnReference(
-									targetTableReference,
-									selection,
-									sessionFactory
-							)
-					);
-
-					deletingTableColumnRefs.add( (ColumnReference) expression );
-				}
+		final TableReference deleteTableReference = new TableReference(
+				targetTableReference.getTableExpression(),
+				DeleteStatement.DEFAULT_ALIAS,
+				true,
+				sessionFactory
 		);
-
-		final Expression deletingTableColumnRefsExpression;
-		if ( deletingTableColumnRefs.size() == 1 ) {
-			deletingTableColumnRefsExpression = deletingTableColumnRefs.get( 0 );
+		final Predicate tableDeletePredicate;
+		if ( matchingIdSubQuerySpec == null ) {
+			tableDeletePredicate = null;
 		}
 		else {
-			deletingTableColumnRefsExpression = new SqlTuple( deletingTableColumnRefs, entityDescriptor.getIdentifierMapping() );
+			/*
+			 * delete from sub_table
+			 * where sub_id in (
+			 * 		select root_id from root_table
+			 * 		where {predicate}
+			 * )
+			 */
+
+			/*
+			 * Create the `sub_id` reference as the LHS of the in-subquery predicate
+			 */
+			final List<ColumnReference> deletingTableColumnRefs = new ArrayList<>();
+			tableKeyColumnVisitationSupplier.get().accept(
+					(columnIndex, selection) -> {
+						assert deleteTableReference.getTableReference( selection.getContainingTableExpression() ) != null;
+
+						final Expression expression = sqlExpressionResolver.resolveSqlExpression(
+								SqlExpressionResolver.createColumnReferenceKey( deleteTableReference, selection.getSelectionExpression() ),
+								sqlAstProcessingState -> new ColumnReference(
+										deleteTableReference,
+										selection,
+										sessionFactory
+								)
+						);
+
+						deletingTableColumnRefs.add( (ColumnReference) expression );
+					}
+			);
+
+			final Expression deletingTableColumnRefsExpression;
+			if ( deletingTableColumnRefs.size() == 1 ) {
+				deletingTableColumnRefsExpression = deletingTableColumnRefs.get( 0 );
+			}
+			else {
+				deletingTableColumnRefsExpression = new SqlTuple( deletingTableColumnRefs, entityDescriptor.getIdentifierMapping() );
+			}
+
+			tableDeletePredicate = new InSubQueryPredicate(
+					deletingTableColumnRefsExpression,
+					matchingIdSubQuerySpec,
+					false
+			);
 		}
 
-		final InSubQueryPredicate idMatchPredicate = new InSubQueryPredicate(
-				deletingTableColumnRefsExpression,
-				matchingIdSubQuerySpec,
-				false
-		);
-
-		final DeleteStatement sqlAstDelete = new DeleteStatement( targetTableReference, idMatchPredicate );
+		final DeleteStatement sqlAstDelete = new DeleteStatement( deleteTableReference, tableDeletePredicate );
 		final int rows = executeSqlDelete(
 				sqlAstDelete,
 				jdbcParameterBindings,
@@ -510,6 +586,12 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
 
 		final TableKeyExpressionCollector keyColumnCollector = new TableKeyExpressionCollector( entityDescriptor );
+		final TableReference targetTable = new TableReference(
+				tableExpression,
+				DeleteStatement.DEFAULT_ALIAS,
+				true,
+				factory
+		);
 
 		tableKeyColumnVisitationSupplier.get().accept(
 				(columnIndex, selection) -> {
@@ -520,7 +602,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 
 					keyColumnCollector.apply(
 							new ColumnReference(
-									(String) null,
+									targetTable,
 									selection,
 									factory
 							)
@@ -535,10 +617,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 		);
 
 		executeSqlDelete(
-				new DeleteStatement(
-						new TableReference( tableExpression, null, true, factory ),
-						predicate
-				),
+				new DeleteStatement( targetTable, predicate ),
 				JdbcParameterBindings.NO_BINDINGS,
 				executionContext
 		);

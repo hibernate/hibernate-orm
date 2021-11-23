@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.mapping.ordering;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.spi.JpaCompliance;
 
 /**
@@ -14,5 +15,10 @@ import org.hibernate.jpa.spi.JpaCompliance;
  * @author Steve Ebersole
  */
 public interface TranslationContext {
-	JpaCompliance getJpaCompliance();
+
+	SessionFactoryImplementor getFactory();
+
+	default JpaCompliance getJpaCompliance() {
+		return getFactory().getSessionFactoryOptions().getJpaCompliance();
+	}
 }

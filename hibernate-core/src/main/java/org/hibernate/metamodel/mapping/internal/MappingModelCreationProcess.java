@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.mapping.MappingModelCreationLogger;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NonTransientException;

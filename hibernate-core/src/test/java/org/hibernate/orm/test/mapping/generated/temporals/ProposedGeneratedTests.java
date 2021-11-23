@@ -35,7 +35,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SkipForDialect( dialectClass = SybaseASEDialect.class, matchSubTypes = true, reason = "CURRENT_TIMESTAMP not supported in insert/update in Sybase ASE. Also see https://groups.google.com/g/comp.databases.sybase/c/j-RxPnF3img" )
 public class ProposedGeneratedTests {
 	@Test
-	public void test(SessionFactoryScope scope) {
+	public void test(SessionFactoryScope scope) throws InterruptedException {
 		final GeneratedInstantEntity created = scope.fromTransaction( (session) -> {
 			final GeneratedInstantEntity entity = new GeneratedInstantEntity( 1, "tsifr" );
 			session.persist( entity );
@@ -47,6 +47,9 @@ public class ProposedGeneratedTests {
 		assertThat( created.createdAt ).isEqualTo( created.updatedAt );
 
 		created.name = "first";
+
+		// Precision is in milliseconds, so sleep a bit to ensure the TS changes
+		Thread.sleep( 10L );
 
 		// then changing
 		final GeneratedInstantEntity merged = scope.fromTransaction( (session) -> {

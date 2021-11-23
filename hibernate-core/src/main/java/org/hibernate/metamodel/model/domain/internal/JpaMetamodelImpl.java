@@ -10,11 +10,14 @@ import java.io.ObjectStreamException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import jakarta.persistence.EntityGraph;
@@ -79,16 +82,16 @@ public class JpaMetamodelImpl implements JpaMetamodel, Serializable {
 	private final TypeConfiguration typeConfiguration;
 	private final JpaCompliance jpaCompliance;
 
-	private final Map<String, EntityDomainType<?>> jpaEntityTypeMap = new ConcurrentHashMap<>();
-	private final Map<Class<?>, MappedSuperclassDomainType<?>> jpaMappedSuperclassTypeMap = new ConcurrentHashMap<>();
-	private final Map<Class, EmbeddableDomainType<?>> jpaEmbeddableDescriptorMap = new ConcurrentHashMap<>();
-	private final Map<String, Map<Class<?>, Enum<?>>> allowedEnumLiteralTexts = new ConcurrentHashMap<>();
+	private final Map<String, EntityDomainType<?>> jpaEntityTypeMap = new TreeMap<>(); // Need ordering for deterministic implementers list in SqmPolymorphicRootDescriptor
+	private final Map<Class<?>, MappedSuperclassDomainType<?>> jpaMappedSuperclassTypeMap = new HashMap<>();
+	private final Map<Class, EmbeddableDomainType<?>> jpaEmbeddableDescriptorMap = new HashMap<>();
+	private final Map<String, Map<Class<?>, Enum<?>>> allowedEnumLiteralTexts = new HashMap<>();
 
 	private final transient Map<String, RootGraphImplementor> entityGraphMap = new ConcurrentHashMap<>();
 
 	private final Map<Class, SqmPolymorphicRootDescriptor<?>> polymorphicEntityReferenceMap = new ConcurrentHashMap<>();
 
-	private final Map<Class, String> entityProxyInterfaceMap = new ConcurrentHashMap<>();
+	private final Map<Class, String> entityProxyInterfaceMap = new HashMap<>();
 
 	private final Map<String, ImportInfo<?>> nameToImportMap = new ConcurrentHashMap<>();
 
@@ -465,6 +468,18 @@ public class JpaMetamodelImpl implements JpaMetamodel, Serializable {
 			visitEntityTypes(
 					entityDomainType -> {
 						if ( javaType.isAssignableFrom( entityDomainType.getJavaType() ) ) {
+							final ManagedDomainType<?> superType = entityDomainType.getSuperType();
+							// If the entity super type is also assignable, skip adding this entity type
+							if ( superType instanceof EntityDomainType<?>
+									&& javaType.isAssignableFrom( superType.getJavaType() ) ) {
+								final Queryable entityPersister = (Queryable) typeConfiguration.getSessionFactory()
+										.getMetamodel()
+										.getEntityDescriptor( ( (EntityDomainType<?>) superType ).getHibernateEntityName() );
+								// But only skip adding this type if the parent doesn't require explicit polymorphism
+								if ( !entityPersister.isExplicitPolymorphism() ) {
+									return;
+								}
+							}
 							final Queryable entityPersister = (Queryable) typeConfiguration.getSessionFactory()
 									.getMetamodel()
 									.getEntityDescriptor( entityDomainType.getHibernateEntityName() );
@@ -531,11 +546,11 @@ public class JpaMetamodelImpl implements JpaMetamodel, Serializable {
 
 					this.allowedEnumLiteralTexts.computeIfAbsent(
 							enumConstant.name(),
-							k -> new ConcurrentHashMap<>()
+							k -> new HashMap<>()
 					).put( enumClass, enumConstant );
 					this.allowedEnumLiteralTexts.computeIfAbsent(
 							qualifiedEnumLiteral,
-							k -> new ConcurrentHashMap<>()
+							k -> new HashMap<>()
 					).put( enumClass, enumConstant );
 				}
 			}

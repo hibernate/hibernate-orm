@@ -49,7 +49,7 @@ public class InsertUpdateTests {
 		);
 	}
 
-	@Test @FailureExpected(reason = "update broken for embedded")
+	@Test
 	public void testUpdateEmbedded(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

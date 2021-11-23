@@ -122,7 +122,13 @@ public class DynamicResultBuilderBasicConverted<O,R> implements DynamicResultBui
 							else {
 								jdbcPosition = currentJdbcPosition;
 							}
-							final BasicType<?> basicType = jdbcResultsMetadata.resolveType( jdbcPosition, basicValueConverter.getRelationalJavaDescriptor() );
+							final BasicType<?> basicType = jdbcResultsMetadata.resolveType(
+									jdbcPosition,
+									basicValueConverter.getRelationalJavaDescriptor(),
+									domainResultCreationState.getSqlAstCreationState()
+											.getCreationContext()
+											.getSessionFactory()
+							);
 
 							final int valuesArrayPosition = ResultsHelper.jdbcPositionToValuesArrayPosition( jdbcPosition );
 							return new SqlSelectionImpl( valuesArrayPosition, (BasicValuedMapping) basicType );

@@ -513,7 +513,7 @@ public abstract class Dialect implements ConversionContext {
 
 		//aggregate functions, supported on every database
 
-		CommonFunctionFactory.aggregates( this, queryEngine, SqlAstNodeRenderingMode.DEFAULT );
+		CommonFunctionFactory.aggregates( this, queryEngine, SqlAstNodeRenderingMode.DEFAULT, "||", null );
 
 		//the ANSI SQL-defined aggregate functions any() and every() are only
 		//supported on one database, but can be emulated using sum() and case,
@@ -1834,7 +1834,7 @@ public abstract class Dialect implements ConversionContext {
 			EntityMappingType entityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
 		return new PersistentTableStrategy(
-				new IdTable( entityDescriptor, name -> name, this ),
+				new IdTable( entityDescriptor, name -> name, this, runtimeModelCreationContext ),
 				AfterUseAction.CLEAN,
 				PhysicalIdTableExporter::new,
 				runtimeModelCreationContext.getSessionFactory()

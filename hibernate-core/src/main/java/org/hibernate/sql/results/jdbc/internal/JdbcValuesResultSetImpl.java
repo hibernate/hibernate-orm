@@ -9,7 +9,6 @@ package org.hibernate.sql.results.jdbc.internal;
 import java.sql.SQLException;
 import java.util.Arrays;
 
-import org.hibernate.CacheMode;
 import org.hibernate.HibernateException;
 import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.cache.spi.QueryResultsCache;
@@ -17,12 +16,12 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.exec.ExecutionException;
-import org.hibernate.sql.exec.internal.JdbcExecHelper;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.caching.QueryCachePutManager;
 import org.hibernate.sql.results.caching.internal.QueryCachePutManagerDisabledImpl;
 import org.hibernate.sql.results.caching.internal.QueryCachePutManagerEnabledImpl;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMapping;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 /**
@@ -45,8 +44,9 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 			String queryIdentifier,
 			QueryOptions queryOptions,
 			JdbcValuesMapping valuesMapping,
+			JdbcValuesMetadata metadataForCache,
 			ExecutionContext executionContext) {
-		super( resolveQueryCachePutManager( executionContext, queryOptions, queryCacheKey, queryIdentifier ) );
+		super( resolveQueryCachePutManager( executionContext, queryOptions, queryCacheKey, queryIdentifier, metadataForCache ) );
 		this.resultSetAccess = resultSetAccess;
 		this.valuesMapping = valuesMapping;
 		this.executionContext = executionContext;
@@ -59,22 +59,18 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 			ExecutionContext executionContext,
 			QueryOptions queryOptions,
 			QueryKey queryCacheKey,
-			String queryIdentifier) {
-		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
-		final boolean queryCacheEnabled = factory
-				.getSessionFactoryOptions()
-				.isQueryCacheEnabled();
-		final CacheMode cacheMode = JdbcExecHelper.resolveCacheMode( executionContext );
-
-		if ( queryCacheEnabled && cacheMode.isPutEnabled() ) {
-			final QueryResultsCache queryCache = factory
-					.getCache()
+			String queryIdentifier,
+			JdbcValuesMetadata metadataForCache) {
+		if ( queryCacheKey != null ) {
+			final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
+			final QueryResultsCache queryCache = factory.getCache()
 					.getQueryResultsCache( queryOptions.getResultCacheRegionName() );
 			return new QueryCachePutManagerEnabledImpl(
 					queryCache,
 					factory.getStatistics(),
 					queryCacheKey,
-					queryIdentifier
+					queryIdentifier,
+					metadataForCache
 			);
 		}
 		else {

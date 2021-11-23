@@ -46,4 +46,8 @@ public class CurrentFunction
 		return "";
 	}
 
+	@Override
+	public boolean alwaysIncludesParentheses() {
+		return sql.indexOf( '(' ) != -1;
+	}
 }

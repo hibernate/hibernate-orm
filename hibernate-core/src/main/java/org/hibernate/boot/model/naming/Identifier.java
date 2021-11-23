@@ -26,25 +26,18 @@ public class Identifier implements Comparable<Identifier> {
 	 * If passed text is {@code null}, {@code null} is returned.
 	 * <p/>
 	 * If passed text is surrounded in quote markers, the generated Identifier
-	 * is considered quoted.  Quote markers include back-ticks (`), and
-	 * double-quotes (").
+	 * is considered quoted.  Quote markers include back-ticks (`),
+	 * double-quotes (") and brackets ([ and ]).
+	 *
+	 * If the text, after trimming, contains a character that is not a valid identifier character,
+	 * the identifier is treated as quoted.
 	 *
 	 * @param text The text form
 	 *
 	 * @return The identifier form, or {@code null} if text was {@code null}
 	 */
 	public static Identifier toIdentifier(String text) {
-		if ( StringHelper.isEmpty( text ) ) {
-			return null;
-		}
-		final String trimmedText = text.trim();
-		if ( isQuoted( trimmedText ) ) {
-			final String bareName = trimmedText.substring( 1, trimmedText.length() - 1 );
-			return new Identifier( bareName, true );
-		}
-		else {
-			return new Identifier( trimmedText, false );
-		}
+		return toIdentifier( text, false );
 	}
 
 	/**
@@ -53,8 +46,11 @@ public class Identifier implements Comparable<Identifier> {
 	 * If passed text is {@code null}, {@code null} is returned.
 	 * <p/>
 	 * If passed text is surrounded in quote markers, the generated Identifier
-	 * is considered quoted.  Quote markers include back-ticks (`), and
-	 * double-quotes (").
+	 * is considered quoted.  Quote markers include back-ticks (`),
+	 * double-quotes (") and brackets ([ and ]).
+	 *
+	 * If the text, after trimming, contains a character that is not a valid identifier character,
+	 * the identifier is treated as quoted.
 	 *
 	 * @param text The text form
 	 * @param quote Whether to quote unquoted text forms
@@ -62,17 +58,65 @@ public class Identifier implements Comparable<Identifier> {
 	 * @return The identifier form, or {@code null} if text was {@code null}
 	 */
 	public static Identifier toIdentifier(String text, boolean quote) {
+		return toIdentifier( text, quote, true );
+	}
+
+	/**
+	 * Means to generate an {@link Identifier} instance from its simple text form.
+	 * <p/>
+	 * If passed text is {@code null}, {@code null} is returned.
+	 * <p/>
+	 * If passed text is surrounded in quote markers, the generated Identifier
+	 * is considered quoted.  Quote markers include back-ticks (`),
+	 * double-quotes (") and brackets ([ and ]).
+	 *
+	 * @param text The text form
+	 * @param quote Whether to quote unquoted text forms
+	 * @param quoteOnNonIdentifierChar Controls whether to treat the result as quoted if text contains characters that are invalid for identifiers
+	 *
+	 * @return The identifier form, or {@code null} if text was {@code null}
+	 */
+	public static Identifier toIdentifier(String text, boolean quote, boolean quoteOnNonIdentifierChar) {
 		if ( StringHelper.isEmpty( text ) ) {
 			return null;
 		}
-		final String trimmedText = text.trim();
-		if ( isQuoted( trimmedText ) ) {
-			final String bareName = trimmedText.substring( 1, trimmedText.length() - 1 );
-			return new Identifier( bareName, true );
+		int start = 0;
+		int end = text.length();
+		while ( start < end ) {
+			if ( !Character.isWhitespace( text.charAt( start ) ) ) {
+				break;
+			}
+			start++;
 		}
-		else {
-			return new Identifier( trimmedText, quote );
+		while ( start < end ) {
+			if ( !Character.isWhitespace( text.charAt( end - 1 ) ) ) {
+				break;
+			}
+			end--;
 		}
+		if ( isQuoted( text, start, end ) ) {
+			start++;
+			end--;
+			quote = true;
+		}
+		else if ( quoteOnNonIdentifierChar && !quote ) {
+			// Check the letters to determine if we must quote the text
+			char c = text.charAt( start );
+			if ( !Character.isLetter( c ) && c != '_' ) {
+				// SQL identifiers must begin with a letter or underscore
+				quote = true;
+			}
+			else {
+				for ( int i = start + 1; i < end; i++ ) {
+					c = text.charAt( i );
+					if ( !Character.isLetterOrDigit( c ) && c != '_' ) {
+						quote = true;
+						break;
+					}
+				}
+			}
+		}
+		return new Identifier( text.substring( start, end ), quote );
 	}
 
 	/**
@@ -91,9 +135,21 @@ public class Identifier implements Comparable<Identifier> {
 	 * @return {@code true} if the given identifier text is considered quoted; {@code false} otherwise.
 	 */
 	public static boolean isQuoted(String name) {
-		return ( name.startsWith( "`" ) && name.endsWith( "`" ) )
-				|| ( name.startsWith( "[" ) && name.endsWith( "]" ) )
-				|| ( name.startsWith( "\"" ) && name.endsWith( "\"" ) );
+		return isQuoted( name, 0, name.length() );
+	}
+
+	public static boolean isQuoted(String name, int start, int end) {
+		if ( start + 2 < end ) {
+			switch ( name.charAt( start ) ) {
+				case '`':
+					return name.charAt( end - 1 ) == '`';
+				case '[':
+					return name.charAt( end - 1 ) == ']';
+				case '"':
+					return name.charAt( end - 1 ) == '"';
+			}
+		}
+		return false;
 	}
 
 	public static String unQuote(String name) {

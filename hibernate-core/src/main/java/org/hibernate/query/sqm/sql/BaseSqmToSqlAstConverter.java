@@ -82,6 +82,7 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.CompositeSqmPathSource;
 import org.hibernate.query.criteria.JpaPath;
+import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
 import org.hibernate.query.sqm.tree.SqmJoinType;
@@ -368,12 +369,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private final EntityGraphTraversalState entityGraphTraversalState;
 
 	private int fetchDepth;
+	private String currentBagRole;
 	private boolean resolvingCircularFetch;
 	private ForeignKeyDescriptor.Nature currentlyResolvingForeignKeySide;
 	private SqmQueryPart<?> currentSqmQueryPart;
 
 	private Map<String, FilterPredicate> collectionFilterPredicates;
-	private OrderByFragmentConsumer orderByFragmentConsumer;
+	private List<Map.Entry<OrderByFragment, TableGroup>> orderByFragments;
 
 	private final SqlAliasBaseManager sqlAliasBaseManager = new SqlAliasBaseManager();
 	private final Stack<SqlAstProcessingState> processingStateStack = new StandardStack<>();
@@ -1134,6 +1136,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		for ( SqmDynamicInstantiationArgument<?> sqmArgument : sqmDynamicInstantiation.getArguments() ) {
 			final SqmSelectableNode<?> selectableNode = sqmArgument.getSelectableNode();
+			if ( selectableNode instanceof SqmPath<?> ) {
+				prepareForSelection( (SqmPath<?>) selectableNode );
+			}
 			final DomainResultProducer<?> argumentResultProducer = (DomainResultProducer<?>) selectableNode.accept( this );
 			dynamicInstantiation.addArgument( sqmArgument.getAlias(), argumentResultProducer, this );
 		}
@@ -1423,10 +1428,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		pushProcessingState( processingState );
 
 		try {
-			if ( topLevel ) {
-				orderByFragmentConsumer = new StandardOrderByFragmentConsumer();
-			}
-
 			// we want to visit the from-clause first
 			visitFromClause( sqmQuerySpec.getFromClause() );
 
@@ -1451,12 +1452,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			visitOrderByOffsetAndFetch( sqmQuerySpec, sqlQuerySpec );
 
 			if ( topLevel && statement instanceof SqmSelectStatement<?> ) {
-				orderByFragmentConsumer.visitFragments(
-						(orderByFragment, tableGroup) -> {
-							orderByFragment.apply( sqlQuerySpec, tableGroup, this );
-						}
-				);
-				orderByFragmentConsumer = null;
+				if ( orderByFragments != null ) {
+					orderByFragments.forEach(
+							entry -> entry.getKey().apply(
+									sqlQuerySpec,
+									entry.getValue(),
+									this
+							)
+					);
+					orderByFragments = null;
+				}
 				applyCollectionFilterPredicates( sqlQuerySpec );
 			}
 
@@ -1498,33 +1503,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	private TableGroup findTableGroupByPath(NavigablePath navigablePath) {
 		return getFromClauseAccess().getTableGroup( navigablePath );
-	}
-
-	private interface OrderByFragmentConsumer {
-		void accept(OrderByFragment orderByFragment, TableGroup tableGroup);
-
-		void visitFragments(BiConsumer<OrderByFragment,TableGroup> consumer);
-	}
-
-	private static class StandardOrderByFragmentConsumer implements OrderByFragmentConsumer {
-		private Map<OrderByFragment, TableGroup> fragments;
-
-		@Override
-		public void accept(OrderByFragment orderByFragment, TableGroup tableGroup) {
-			if ( fragments == null ) {
-				fragments = new LinkedHashMap<>();
-			}
-			fragments.put( orderByFragment, tableGroup );
-		}
-
-		@Override
-		public void visitFragments(BiConsumer<OrderByFragment, TableGroup> consumer) {
-			if ( fragments == null || fragments.isEmpty() ) {
-				return;
-			}
-
-			fragments.forEach( consumer );
-		}
 	}
 
 	protected void applyCollectionFilterPredicates(QuerySpec sqlQuerySpec) {
@@ -2410,8 +2388,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			implicitJoinChecker = BaseSqmToSqlAstConverter::verifyManipulationImplicitJoin;
 		}
 		final FromClauseIndex fromClauseIndex = fromClauseIndexStack.getCurrent();
-		final boolean useInnerJoin = currentClauseStack.getCurrent() == Clause.SELECT;
-		prepareReusablePath( fromClauseIndex, sqmPath, useInnerJoin, implicitJoinChecker );
+		prepareReusablePath( fromClauseIndex, sqmPath, false, implicitJoinChecker );
 		return supplier.get();
 	}
 
@@ -2437,6 +2414,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			);
 			if ( parentPath instanceof SqmTreatedPath<?, ?> ) {
 				fromClauseIndex.register( (SqmPath<?>) parentPath, parentTableGroup );
+				return parentTableGroup;
 			}
 			final TableGroup newTableGroup = createTableGroup( parentTableGroup, (SqmPath<?>) parentPath, useInnerJoin );
 			if ( newTableGroup != null ) {
@@ -2974,6 +2952,14 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					this,
 					creationContext
 			);
+			final FilterPredicate filterPredicate = FilterHelper.createFilterPredicate(
+					getLoadQueryInfluencers(),
+					(Joinable) pluralAttributeMapping.getCollectionDescriptor(),
+					tableGroup
+			);
+			if ( filterPredicate != null ) {
+				subQuerySpec.applyPredicate( filterPredicate );
+			}
 
 			getFromClauseAccess().registerTableGroup( pluralPath.getNavigablePath(), tableGroup );
 			registerPluralTableGroupParts( tableGroup );
@@ -3109,6 +3095,14 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					this,
 					creationContext
 			);
+			final FilterPredicate filterPredicate = FilterHelper.createFilterPredicate(
+					getLoadQueryInfluencers(),
+					(Joinable) pluralAttributeMapping.getCollectionDescriptor(),
+					tableGroup
+			);
+			if ( filterPredicate != null ) {
+				subQuerySpec.applyPredicate( filterPredicate );
+			}
 
 			getFromClauseAccess().registerTableGroup( pluralPartPath.getNavigablePath(), tableGroup );
 			registerPluralTableGroupParts( tableGroup );
@@ -3687,6 +3681,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		log.debugf( "Determining mapping-model type for generalized SqmExpression : %s", sqmExpression );
 		final SqmExpressable<?> nodeType = sqmExpression.getNodeType();
+		if ( nodeType == null ) {
+			// We can't determine the type of the expression
+			return null;
+		}
 		final MappingModelExpressable valueMapping = domainModel.resolveMappingExpressable(
 				nodeType,
 				this::findTableGroupByPath
@@ -4040,20 +4038,19 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private BasicValuedMapping getExpressionType(SqmBinaryArithmetic<?> expression) {
-		final SqmExpressable<?> leftHandOperandType = expression.getLeftHandOperand().getNodeType();
-		if ( leftHandOperandType instanceof BasicValuedMapping ) {
-			return (BasicValuedMapping) leftHandOperandType;
+		final SqmExpressable<?> sqmExpressable = QueryHelper.highestPrecedenceType(
+				expression.getLeftHandOperand().getNodeType(),
+				expression.getRightHandOperand().getNodeType()
+		);
+		if ( sqmExpressable instanceof BasicValuedMapping ) {
+			return (BasicValuedMapping) sqmExpressable;
 		}
-		else {
-			final SqmExpressable<?> rightHandOperandType = expression.getRightHandOperand().getNodeType();
-			if ( rightHandOperandType instanceof BasicValuedMapping ) {
-				return (BasicValuedMapping) rightHandOperandType;
-			}
-
+		else if ( sqmExpressable != null ) {
 			return getTypeConfiguration().getBasicTypeForJavaType(
-					leftHandOperandType.getExpressableJavaTypeDescriptor().getJavaTypeClass()
+					sqmExpressable.getExpressableJavaTypeDescriptor().getJavaTypeClass()
 			);
 		}
+		return JavaObjectType.INSTANCE;
 	}
 
 	private Expression toSqlExpression(Object value) {
@@ -4664,33 +4661,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		);
 	}
 
-//	@Override
-//	public Object visitPluralAttributeElementBinding(PluralAttributeElementBinding binding) {
-//		final TableGroup resolvedTableGroup = fromClauseIndex.findResolvedTableGroup( binding.getFromElement() );
-//
-//		return getCurrentDomainReferenceExpressionBuilder().buildPluralAttributeElementReferenceExpression(
-//				binding,
-//				resolvedTableGroup,
-//				PersisterHelper.convert( binding.getNavigablePath() )
-//		);
-//	}
-//
-//	@Override
-//	public ColumnReference visitExplicitColumnReference(SqmColumnReference sqmColumnReference) {
-//		final TableGroup tableGroup = fromClauseIndex.findTableGroup(
-//				sqmColumnReference.getSqmFromBase().getNavigablePath()
-//		);
-//
-//		final ColumnReference columnReference = tableGroup.locateColumnReferenceByName( sqmColumnReference.getColumnName() );
-//
-//		if ( columnReference == null ) {
-//			throw new HibernateException( "Could not resolve ColumnReference" );
-//		}
-//
-//		return columnReference;
-//	}
-
-
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Predicates
 
@@ -4763,6 +4733,14 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					this,
 					creationContext
 			);
+			final FilterPredicate filterPredicate = FilterHelper.createFilterPredicate(
+					getLoadQueryInfluencers(),
+					(Joinable) pluralAttributeMapping.getCollectionDescriptor(),
+					tableGroup
+			);
+			if ( filterPredicate != null ) {
+				subQuerySpec.applyPredicate( filterPredicate );
+			}
 
 			getFromClauseAccess().registerTableGroup( pluralPath.getNavigablePath(), tableGroup );
 			registerPluralTableGroupParts( tableGroup );
@@ -4837,8 +4815,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		finally {
 			inferrableTypeAccessStack.pop();
 		}
-
-		return new ComparisonPredicate( lhs, predicate.getSqmOperator(), rhs, getBooleanType() );
+		ComparisonOperator sqmOperator = predicate.getSqmOperator();
+		if ( predicate.isNegated() ) {
+			sqmOperator = sqmOperator.negated();
+		}
+		return new ComparisonPredicate( lhs, sqmOperator, rhs, getBooleanType() );
 	}
 
 	@Override
@@ -4906,11 +4887,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					new SqlSelectionImpl( 1, 0, jdbcLiteral )
 			);
 
-			final ExistsPredicate existsPredicate = new ExistsPredicate( subQuerySpec, getBooleanType() );
-			if ( predicate.isNegated() ) {
-				return existsPredicate;
-			}
-			return new NegatedPredicate( existsPredicate );
+			return new ExistsPredicate( subQuerySpec, !predicate.isNegated(), getBooleanType() );
 		}
 		finally {
 			popProcessingStateStack();
@@ -5081,19 +5058,22 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			SqmParameter<?> sqmParameter,
 			QueryParameterImplementor<?> domainParam,
 			QueryParameterBinding<?> domainParamBinding) {
+		final Iterator<?> iterator = domainParamBinding.getBindValues().iterator();
 
 		final InListPredicate inListPredicate = new InListPredicate(
 				(Expression) sqmPredicate.getTestExpression().accept( this ),
 				sqmPredicate.isNegated(),
 				getBooleanType()
 		);
+		if ( !iterator.hasNext() ) {
+			return inListPredicate;
+		}
 
 		inferrableTypeAccessStack.push(
 				() -> determineValueMapping( sqmPredicate.getTestExpression() )
 		);
 
 		try {
-			final Iterator<?> iterator = domainParamBinding.getBindValues().iterator();
 			inListPredicate.addExpression( consumeSingleSqmParameter( sqmParameter ) );
 			iterator.next();
 			while ( iterator.hasNext() ) {
@@ -5145,7 +5125,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public Object visitExistsPredicate(SqmExistsPredicate predicate) {
-		return new ExistsPredicate( (QueryPart) predicate.getExpression().accept( this ), getBooleanType() );
+		return new ExistsPredicate(
+				(QueryPart) predicate.getExpression().accept( this ),
+				predicate.isNegated(),
+				getBooleanType()
+		);
 	}
 
 	@Override
@@ -5174,165 +5158,192 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 //				.getOrMakeJavaDescriptor( namedClass );
 	}
 
-	@Override
-	public List<Fetch> visitFetches(FetchParent fetchParent) {
-		final List<Fetch> fetches = CollectionHelper.arrayList( fetchParent.getReferencedMappingType().getNumberOfFetchables() );
-		final List<String> bagRoles = new ArrayList<>();
+	public void addFetch(List<Fetch> fetches, FetchParent fetchParent, Fetchable fetchable, Boolean isKeyFetchable) {
+		final NavigablePath resolvedNavigablePath = fetchParent.resolveNavigablePath( fetchable );
 
-		final BiConsumer<Fetchable, Boolean> fetchableBiConsumer = (fetchable, isKeyFetchable) -> {
-			final NavigablePath resolvedNavigablePath = fetchParent.resolveNavigablePath( fetchable );
+		final String alias;
+		FetchTiming fetchTiming = fetchable.getMappedFetchOptions().getTiming();
+		boolean joined = false;
 
-			final String alias;
-			FetchTiming fetchTiming = fetchable.getMappedFetchOptions().getTiming();
-			boolean joined = false;
+		EntityGraphTraversalState.TraversalResult traversalResult = null;
+		final FromClauseIndex fromClauseIndex = getFromClauseIndex();
+		final SqmAttributeJoin<?, ?> fetchedJoin = fromClauseIndex.findFetchedJoinByPath( resolvedNavigablePath );
+		boolean explicitFetch = false;
 
-			EntityGraphTraversalState.TraversalResult traversalResult = null;
-			final FromClauseIndex fromClauseIndex = getFromClauseIndex();
-			final SqmAttributeJoin<?, ?> fetchedJoin = fromClauseIndex.findFetchedJoinByPath( resolvedNavigablePath );
-			boolean explicitFetch = false;
+		final NavigablePath fetchablePath;
+		if ( fetchedJoin != null ) {
+			fetchablePath = fetchedJoin.getNavigablePath();
+			// there was an explicit fetch in the SQM
+			//		there should be a TableGroupJoin registered for this `fetchablePath` already
+			assert fromClauseIndex.getTableGroup( fetchedJoin.getNavigablePath() ) != null;
 
-			final NavigablePath fetchablePath;
-			if ( fetchedJoin != null ) {
-				fetchablePath = fetchedJoin.getNavigablePath();
-				// there was an explicit fetch in the SQM
-				//		there should be a TableGroupJoin registered for this `fetchablePath` already
-				assert fromClauseIndex.getTableGroup( fetchedJoin.getNavigablePath() ) != null;
-
-				if ( fetchedJoin.isFetched() ) {
-					fetchTiming = FetchTiming.IMMEDIATE;
-				}
-				joined = true;
-				alias = fetchedJoin.getExplicitAlias();
-				explicitFetch = true;
+			if ( fetchedJoin.isFetched() ) {
+				fetchTiming = FetchTiming.IMMEDIATE;
 			}
-			else {
-				fetchablePath = resolvedNavigablePath;
-				// there was not an explicit fetch in the SQM
-				alias = null;
+			joined = true;
+			alias = fetchedJoin.getExplicitAlias();
+			explicitFetch = true;
+		}
+		else {
+			fetchablePath = resolvedNavigablePath;
+			// there was not an explicit fetch in the SQM
+			alias = null;
 
-				if ( !( fetchable instanceof CollectionPart ) ) {
-					if ( entityGraphTraversalState != null ) {
-						traversalResult = entityGraphTraversalState.traverse( fetchParent, fetchable, isKeyFetchable );
-						fetchTiming = traversalResult.getFetchTiming();
-						joined = traversalResult.isJoined();
-						explicitFetch = true;
-					}
-					else if ( getLoadQueryInfluencers().hasEnabledFetchProfiles() ) {
-						// There is no point in checking the fetch profile if it can't affect this fetchable
-						if ( fetchTiming != FetchTiming.IMMEDIATE || fetchable.incrementFetchDepth() ) {
-							final String fetchableRole = fetchable.getNavigableRole().getFullPath();
+			if ( !( fetchable instanceof CollectionPart ) ) {
+				if ( entityGraphTraversalState != null ) {
+					traversalResult = entityGraphTraversalState.traverse(
+							fetchParent,
+							fetchable,
+							isKeyFetchable
+					);
+					fetchTiming = traversalResult.getFetchTiming();
+					joined = traversalResult.isJoined();
+					explicitFetch = true;
+				}
+				else if ( getLoadQueryInfluencers().hasEnabledFetchProfiles() ) {
+					// There is no point in checking the fetch profile if it can't affect this fetchable
+					if ( fetchTiming != FetchTiming.IMMEDIATE || fetchable.incrementFetchDepth() ) {
+						final String fetchableRole = fetchable.getNavigableRole().getFullPath();
 
-							for ( String enabledFetchProfileName : getLoadQueryInfluencers().getEnabledFetchProfileNames() ) {
-								final FetchProfile enabledFetchProfile = getCreationContext().getSessionFactory()
-										.getFetchProfile( enabledFetchProfileName );
-								final org.hibernate.engine.profile.Fetch profileFetch = enabledFetchProfile.getFetchByRole(
-										fetchableRole );
+						for ( String enabledFetchProfileName : getLoadQueryInfluencers()
+								.getEnabledFetchProfileNames() ) {
+							final FetchProfile enabledFetchProfile = getCreationContext()
+									.getSessionFactory()
+									.getFetchProfile( enabledFetchProfileName );
+							final org.hibernate.engine.profile.Fetch profileFetch = enabledFetchProfile.getFetchByRole(
+									fetchableRole );
 
-								if ( profileFetch != null ) {
-									fetchTiming = FetchTiming.IMMEDIATE;
-									joined = joined || profileFetch.getStyle() == org.hibernate.engine.profile.Fetch.Style.JOIN;
-									explicitFetch = true;
+							if ( profileFetch != null ) {
+								fetchTiming = FetchTiming.IMMEDIATE;
+								joined = joined || profileFetch.getStyle() == org.hibernate.engine.profile.Fetch.Style.JOIN;
+								explicitFetch = true;
+
+								if ( currentBagRole != null && fetchable instanceof PluralAttributeMapping ) {
+									final CollectionClassification collectionClassification = ( (PluralAttributeMapping) fetchable ).getMappedType()
+											.getCollectionSemantics()
+											.getCollectionClassification();
+									if ( collectionClassification == CollectionClassification.BAG ) {
+										// To avoid a MultipleBagFetchException due to fetch profiles in a circular model,
+										// we skip join fetching in case we encounter an existing bag role
+										joined = false;
+									}
 								}
 							}
 						}
 					}
 				}
+			}
 
-				final TableGroup existingJoinedGroup = fromClauseIndex.findTableGroup( fetchablePath );
-				if ( existingJoinedGroup !=  null ) {
-					// we can use this to trigger the fetch from the joined group.
+			final TableGroup existingJoinedGroup = fromClauseIndex.findTableGroup( fetchablePath );
+			if ( existingJoinedGroup != null ) {
+				// we can use this to trigger the fetch from the joined group.
 
-					// todo (6.0) : do we want to do this though?
-					//  	On the positive side it would allow EntityGraph to use the existing TableGroup.  But that ties in
-					//  	to the discussion above regarding how to handle eager and EntityGraph (JOIN versus SELECT).
-					//		Can be problematic if the existing one is restricted
-					//fetchTiming = FetchTiming.IMMEDIATE;
-				}
+				// todo (6.0) : do we want to do this though?
+				//  	On the positive side it would allow EntityGraph to use the existing TableGroup.  But that ties in
+				//  	to the discussion above regarding how to handle eager and EntityGraph (JOIN versus SELECT).
+				//		Can be problematic if the existing one is restricted
+				//fetchTiming = FetchTiming.IMMEDIATE;
+			}
 
-				// lastly, account for any app-defined max-fetch-depth
-				final Integer maxDepth = getCreationContext().getMaximumFetchDepth();
-				if ( maxDepth != null ) {
-					if ( fetchDepth >= maxDepth ) {
-						joined = false;
-					}
-				}
-
-				if ( joined && fetchable instanceof TableGroupJoinProducer ) {
-					TableGroupJoinProducer tableGroupJoinProducer = (TableGroupJoinProducer) fetchable;
-					fromClauseIndex.resolveTableGroup(
-							fetchablePath,
-							np -> {
-								// generate the join
-								final TableGroup lhs = fromClauseIndex.getTableGroup( fetchParent.getNavigablePath() );
-								final TableGroupJoin tableGroupJoin = ( (TableGroupJoinProducer) fetchable ).createTableGroupJoin(
-										fetchablePath,
-										lhs,
-										alias,
-										tableGroupJoinProducer.getDefaultSqlAstJoinType( lhs ),
-										true,
-										false,
-										this
-								);
-								lhs.addTableGroupJoin( tableGroupJoin );
-								return tableGroupJoin.getJoinedGroup();
-							}
-					);
+			// lastly, account for any app-defined max-fetch-depth
+			final Integer maxDepth = getCreationContext().getMaximumFetchDepth();
+			if ( maxDepth != null ) {
+				if ( fetchDepth >= maxDepth ) {
+					joined = false;
 				}
 			}
 
-			final boolean incrementFetchDepth = fetchable.incrementFetchDepth();
-			try {
-				if ( incrementFetchDepth ) {
-					fetchDepth++;
-				}
-				// There is no need to check for circular fetches if this is an explicit fetch
-				if ( !explicitFetch && !isResolvingCircularFetch() ) {
-					final Fetch biDirectionalFetch = fetchable.resolveCircularFetch(
-							fetchablePath,
-							fetchParent,
-							fetchTiming,
-							this
-					);
-
-					if ( biDirectionalFetch != null ) {
-						fetches.add( biDirectionalFetch );
-						return;
-					}
-				}
-				final Fetch fetch = buildFetch( fetchablePath, fetchParent, fetchable, fetchTiming, joined, alias );
-
-				if ( fetch != null ) {
-					if ( fetch.getTiming() == FetchTiming.IMMEDIATE && fetchable instanceof PluralAttributeMapping ) {
-						final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) fetchable;
-						final CollectionClassification collectionClassification = pluralAttributeMapping.getMappedType()
-								.getCollectionSemantics()
-								.getCollectionClassification();
-						if ( collectionClassification == CollectionClassification.BAG ) {
-							bagRoles.add( fetchable.getNavigableRole().getNavigableName() );
+			if ( joined && fetchable instanceof TableGroupJoinProducer ) {
+				TableGroupJoinProducer tableGroupJoinProducer = (TableGroupJoinProducer) fetchable;
+				fromClauseIndex.resolveTableGroup(
+						fetchablePath,
+						np -> {
+							// generate the join
+							final TableGroup lhs = fromClauseIndex.getTableGroup( fetchParent.getNavigablePath() );
+							final TableGroupJoin tableGroupJoin = ( (TableGroupJoinProducer) fetchable ).createTableGroupJoin(
+									fetchablePath,
+									lhs,
+									alias,
+									tableGroupJoinProducer.getDefaultSqlAstJoinType( lhs ),
+									true,
+									false,
+									BaseSqmToSqlAstConverter.this
+							);
+							lhs.addTableGroupJoin( tableGroupJoin );
+							return tableGroupJoin.getJoinedGroup();
 						}
-					}
+				);
+			}
+		}
 
-					fetches.add( fetch );
+		final boolean incrementFetchDepth = fetchable.incrementFetchDepth();
+		try {
+			if ( incrementFetchDepth ) {
+				fetchDepth++;
+			}
+			// There is no need to check for circular fetches if this is an explicit fetch
+			if ( !explicitFetch && !isResolvingCircularFetch() ) {
+				final Fetch biDirectionalFetch = fetchable.resolveCircularFetch(
+						fetchablePath,
+						fetchParent,
+						fetchTiming,
+						this
+				);
+
+				if ( biDirectionalFetch != null ) {
+					fetches.add( biDirectionalFetch );
+					return;
 				}
 			}
-			finally {
-				if ( incrementFetchDepth ) {
-					fetchDepth--;
+			final Fetch fetch = buildFetch(
+					fetchablePath,
+					fetchParent,
+					fetchable,
+					fetchTiming,
+					joined,
+					alias
+			);
+
+			if ( fetch != null ) {
+				if ( fetch.getTiming() == FetchTiming.IMMEDIATE && fetchable instanceof PluralAttributeMapping ) {
+					final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) fetchable;
+					final CollectionClassification collectionClassification = pluralAttributeMapping.getMappedType()
+							.getCollectionSemantics()
+							.getCollectionClassification();
+					if ( collectionClassification == CollectionClassification.BAG ) {
+						if ( currentBagRole != null ) {
+							throw new MultipleBagFetchException(
+									Arrays.asList(
+											currentBagRole,
+											fetchable.getNavigableRole().getNavigableName()
+									)
+							);
+						}
+						currentBagRole = fetchable.getNavigableRole().getNavigableName();
+					}
 				}
-				if ( entityGraphTraversalState != null && traversalResult != null ) {
-					entityGraphTraversalState.backtrack( traversalResult.getPreviousContext() );
-				}
+				fetches.add( fetch );
 			}
-		};
+		}
+		finally {
+			if ( incrementFetchDepth ) {
+				fetchDepth--;
+			}
+			if ( entityGraphTraversalState != null && traversalResult != null ) {
+				entityGraphTraversalState.backtrack( traversalResult.getPreviousContext() );
+			}
+		}
+	}
+
+	@Override
+	public List<Fetch> visitFetches(FetchParent fetchParent) {
+		final List<Fetch> fetches = CollectionHelper.arrayList( fetchParent.getReferencedMappingType().getNumberOfFetchables() );
 
 // todo (6.0) : determine how to best handle TREAT
 //		fetchParent.getReferencedMappingContainer().visitKeyFetchables( fetchableBiConsumer, treatTargetType );
 //		fetchParent.getReferencedMappingContainer().visitFetchables( fetchableBiConsumer, treatTargetType );
-		fetchParent.getReferencedMappingContainer().visitKeyFetchables( fetchable -> fetchableBiConsumer.accept( fetchable, true ), null );
-		fetchParent.getReferencedMappingContainer().visitFetchables( fetchable -> fetchableBiConsumer.accept( fetchable, false ), null );
-		if ( bagRoles.size() > 1 ) {
-			throw new MultipleBagFetchException( bagRoles );
-		}
+		fetchParent.getReferencedMappingContainer().visitKeyFetchables( fetchable -> addFetch( fetches, fetchParent, fetchable, true ), null );
+		fetchParent.getReferencedMappingContainer().visitFetchables( fetchable -> addFetch( fetches, fetchParent, fetchable, false ), null );
 		return fetches;
 	}
 
@@ -5400,16 +5411,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					}
 				}
 
-				if ( orderByFragmentConsumer != null ) {
+				if ( currentQuerySpec().isRoot() ) {
 					assert tableGroup.getModelPart() == pluralAttributeMapping;
-
-					if ( pluralAttributeMapping.getOrderByFragment() != null ) {
-						orderByFragmentConsumer.accept( pluralAttributeMapping.getOrderByFragment(), tableGroup );
-					}
-
-					if ( pluralAttributeMapping.getManyToManyOrderByFragment() != null ) {
-						orderByFragmentConsumer.accept( pluralAttributeMapping.getManyToManyOrderByFragment(), tableGroup );
-					}
+					applyOrdering( tableGroup, pluralAttributeMapping );
 				}
 			}
 
@@ -5426,6 +5430,23 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					e
 			);
 		}
+	}
+
+	private void applyOrdering(TableGroup tableGroup, PluralAttributeMapping pluralAttributeMapping) {
+		if ( pluralAttributeMapping.getOrderByFragment() != null ) {
+			applyOrdering( tableGroup, pluralAttributeMapping.getOrderByFragment() );
+		}
+
+		if ( pluralAttributeMapping.getManyToManyOrderByFragment() != null ) {
+			applyOrdering( tableGroup, pluralAttributeMapping.getManyToManyOrderByFragment() );
+		}
+	}
+
+	private void applyOrdering(TableGroup tableGroup, OrderByFragment orderByFragment) {
+		if ( orderByFragments == null ) {
+			orderByFragments = new ArrayList<>();
+		}
+		orderByFragments.add( new AbstractMap.SimpleEntry<>( orderByFragment, tableGroup ) );
 	}
 
 	@Override

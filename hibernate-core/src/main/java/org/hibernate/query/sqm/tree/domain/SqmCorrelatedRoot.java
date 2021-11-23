@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 
@@ -34,6 +35,22 @@ public class SqmCorrelatedRoot<T> extends SqmRoot<T> implements SqmPathWrapper<T
 	@Override
 	public SqmPath<T> getWrappedPath() {
 		return getCorrelationParent();
+	}
+
+	@Override
+	public String getExplicitAlias() {
+		return correlationParent.getExplicitAlias();
+	}
+
+	@Override
+	public void setExplicitAlias(String explicitAlias) {
+		throw new UnsupportedOperationException( "Can't set alias on a correlated root" );
+	}
+
+	@Override
+	public JpaSelection<T> alias(String name) {
+		setAlias( name );
+		return this;
 	}
 
 	@Override

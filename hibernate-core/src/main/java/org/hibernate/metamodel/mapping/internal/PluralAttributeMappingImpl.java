@@ -31,6 +31,7 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.Queryable;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragmentTranslator;
@@ -212,7 +213,7 @@ public class PluralAttributeMappingImpl
 		final boolean hasManyToManyOrder = bootDescriptor.getManyToManyOrdering() != null;
 
 		if ( hasOrder || hasManyToManyOrder ) {
-			final TranslationContext context = () -> collectionDescriptor.getFactory().getSessionFactoryOptions().getJpaCompliance();
+			final TranslationContext context = collectionDescriptor::getFactory;
 
 			if ( hasOrder ) {
 				if ( log.isDebugEnabled() ) {
@@ -796,29 +797,22 @@ public class PluralAttributeMappingImpl
 
 	@Override
 	public ModelPart findSubPart(String name, EntityMappingType treatTargetType) {
+		if ( elementDescriptor instanceof Queryable ) {
+			final ModelPart subPart = ( (Queryable) elementDescriptor ).findSubPart( name, null );
+			if ( subPart != null ) {
+				return subPart;
+			}
+		}
 		final CollectionPart.Nature nature = CollectionPart.Nature.fromName( name );
-		if ( nature == CollectionPart.Nature.ELEMENT ) {
-			return elementDescriptor;
-		}
-
-		if ( nature == CollectionPart.Nature.INDEX ) {
-			return indexDescriptor;
-		}
-
-		if ( nature == CollectionPart.Nature.ID ) {
-			return identifierDescriptor;
-		}
-
-		if ( elementDescriptor instanceof EntityCollectionPart ) {
-			return ( (EntityCollectionPart) elementDescriptor ).findSubPart( name );
-		}
-
-		if ( elementDescriptor instanceof EmbeddedCollectionPart ) {
-			return ( (EmbeddedCollectionPart) elementDescriptor ).findSubPart( name, treatTargetType );
-		}
-
-		if ( elementDescriptor instanceof DiscriminatedCollectionPart ) {
-			return ( (DiscriminatedCollectionPart) elementDescriptor ).findSubPart( name, treatTargetType );
+		if ( nature != null ) {
+			switch ( nature ) {
+				case ELEMENT:
+					return elementDescriptor;
+				case INDEX:
+					return indexDescriptor;
+				case ID:
+					return identifierDescriptor;
+			}
 		}
 
 		return null;

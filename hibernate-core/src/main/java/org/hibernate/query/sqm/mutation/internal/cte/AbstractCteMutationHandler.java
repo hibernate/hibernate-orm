@@ -117,6 +117,7 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 
 		final MultiTableSqmMutationConverter sqmConverter = new MultiTableSqmMutationConverter(
 				entityDescriptor,
+				sqmMutationStatement,
 				sqmMutationStatement.getTarget(),
 				explicitDmlTargetAlias,
 				domainParameterXref,
@@ -140,6 +141,7 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 				columnReference -> {},
 				(sqmParam, mappingType, jdbcParameters) -> paramTypeResolutions.put( sqmParam, mappingType )
 		);
+		sqmConverter.pruneTableGroupJoins();
 
 		final CteStatement idSelectCte = new CteStatement(
 				BaseSqmToSqlAstConverter.createCteTable( getCteTable(), factory ),
@@ -165,7 +167,7 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 				.getSqlAstTranslatorFactory()
 				.buildSelectTranslator( factory, statement );
 
-		final Expression count = createCountStart( factory, sqmConverter );
+		final Expression count = createCountStar( factory, sqmConverter );
 		domainResults.add(
 				new BasicResult<>(
 						0,
@@ -215,7 +217,7 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 		return ( (Number) list.get( 0 ) ).intValue();
 	}
 
-	private Expression createCountStart(
+	private Expression createCountStar(
 			SessionFactoryImplementor factory,
 			MultiTableSqmMutationConverter sqmConverter) {
 		final SqmExpression<?> arg = new SqmStar( factory.getNodeBuilder() );

@@ -78,7 +78,7 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 				getRenderingSupport(),
 				resolveSqlAstArguments( getArguments(), walker ),
 				resultType,
-				getMappingModelExpressable( walker, resultType )
+				resultType == null ? null : getMappingModelExpressable( walker, resultType )
 		);
 	}
 

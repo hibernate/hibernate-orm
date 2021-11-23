@@ -192,7 +192,9 @@ public class H2Dialect extends Dialect {
 		super.initializeFunctionRegistry( queryEngine );
 
 		// H2 needs an actual argument type for aggregates like SUM, AVG, MIN, MAX to determine the result type
-		CommonFunctionFactory.aggregates( this, queryEngine, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
+		CommonFunctionFactory.aggregates( this, queryEngine, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER, "||", null );
+		// AVG by default uses the input type, so we possibly need to cast the argument type, hence a special function
+		CommonFunctionFactory.avg_castingNonDoubleArguments( this, queryEngine, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
 
 		CommonFunctionFactory.pi( queryEngine );
 		CommonFunctionFactory.cot( queryEngine );
@@ -374,7 +376,7 @@ public class H2Dialect extends Dialect {
 			EntityMappingType entityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
 		return new LocalTemporaryTableStrategy(
-				new IdTable( entityDescriptor, basename -> "HT_" + basename, this ),
+				new IdTable( entityDescriptor, basename -> "HT_" + basename, this, runtimeModelCreationContext ),
 				this::getTypeName,
 				AfterUseAction.CLEAN,
 				TempTableDdlTransactionHandling.NONE,

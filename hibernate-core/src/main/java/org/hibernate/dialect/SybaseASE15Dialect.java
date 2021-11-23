@@ -12,6 +12,7 @@ import org.hibernate.dialect.function.AnsiTrimEmulationFunction;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
+import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.TinyIntTypeDescriptor;
@@ -435,5 +436,10 @@ public class SybaseASE15Dialect extends SybaseDialect {
 	@Override
 	public boolean supportsPartitionBy() {
 		return false;
+	}
+
+	@Override
+	public NameQualifierSupport getNameQualifierSupport() {
+		return NameQualifierSupport.BOTH;
 	}
 }

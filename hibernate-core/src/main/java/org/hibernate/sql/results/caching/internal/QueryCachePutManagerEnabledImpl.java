@@ -14,6 +14,7 @@ import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.cache.spi.QueryResultsCache;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.results.caching.QueryCachePutManager;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 /**
@@ -27,17 +28,21 @@ public class QueryCachePutManagerEnabledImpl implements QueryCachePutManager {
 	private final StatisticsImplementor statistics;
 	private final QueryKey queryKey;
 	private final String queryIdentifier;
-	private final List<Object[]> dataToCache = new ArrayList<>();
+	private final List<Object> dataToCache = new ArrayList<>();
 
 	public QueryCachePutManagerEnabledImpl(
 			QueryResultsCache queryCache,
 			StatisticsImplementor statistics,
 			QueryKey queryKey,
-			String queryIdentifier) {
+			String queryIdentifier,
+			JdbcValuesMetadata metadataForCache) {
 		this.queryCache = queryCache;
 		this.statistics = statistics;
 		this.queryKey = queryKey;
 		this.queryIdentifier = queryIdentifier;
+		if ( metadataForCache != null ) {
+			dataToCache.add( metadataForCache );
+		}
 	}
 
 	@Override

@@ -127,6 +127,11 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 		throw new ParsingException( "Could not find root" );
 	}
 
+	SqmPath<?> resolvePathPart(
+			String name,
+			boolean isTerminal,
+			SqmCreationState creationState);
+
 	@Override
 	default SqmPath<?> resolveIndexedAccess(
 			SqmExpression<?> selector,

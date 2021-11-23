@@ -906,7 +906,8 @@ public class OracleDialect extends Dialect {
 				new IdTable(
 						rootEntityDescriptor,
 						name -> "HT_" + ( name.length() > 27 ? name.substring( 0, 27 ) : name ),
-						this
+						this,
+						runtimeModelCreationContext
 				),
 				() -> new TempIdTableExporter( false, this::getTypeName ) {
 					@Override

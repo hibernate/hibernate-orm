@@ -21,6 +21,7 @@ import org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.query.sqm.sql.internal.SqlAstProcessingStateImpl;
 import org.hibernate.query.sqm.sql.internal.SqlAstQueryPartProcessingStateImpl;
+import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
@@ -63,6 +64,7 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 
 	public MultiTableSqmMutationConverter(
 			EntityMappingType mutatingEntityDescriptor,
+			SqmStatement<?> statement,
 			SqmRoot<?> sqmRoot,
 			DomainParameterXref domainParameterXref,
 			QueryOptions queryOptions,
@@ -71,6 +73,7 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 			SqlAstCreationContext creationContext) {
 		this(
 				mutatingEntityDescriptor,
+				statement,
 				sqmRoot,
 				sqmRoot.getExplicitAlias(),
 				domainParameterXref,
@@ -83,6 +86,7 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 
 	public MultiTableSqmMutationConverter(
 			EntityMappingType mutatingEntityDescriptor,
+			SqmStatement<?> statement,
 			SqmRoot<?> sqmRoot,
 			String sourceAlias,
 			DomainParameterXref domainParameterXref,
@@ -90,7 +94,7 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 			LoadQueryInfluencers loadQueryInfluencers,
 			QueryParameterBindings domainParameterBindings,
 			SqlAstCreationContext creationContext) {
-		super( creationContext, null, queryOptions, loadQueryInfluencers, domainParameterXref, domainParameterBindings );
+		super( creationContext, statement, queryOptions, loadQueryInfluencers, domainParameterXref, domainParameterBindings );
 		this.mutatingEntityDescriptor = mutatingEntityDescriptor;
 
 		final SqlAstProcessingStateImpl rootProcessingState = new SqlAstProcessingStateImpl(
@@ -112,6 +116,11 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 				creationContext.getSessionFactory() );
 
 		getFromClauseAccess().registerTableGroup( sqmRoot.getNavigablePath(), mutatingTableGroup );
+	}
+
+	@Override
+	public void pruneTableGroupJoins() {
+		super.pruneTableGroupJoins();
 	}
 
 	@SuppressWarnings("unused")
@@ -139,22 +148,12 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 		this.parameterResolutionConsumer = parameterResolutionConsumer;
 
 		for ( SqmAssignment assignment : setClause.getAssignments() ) {
-			visitAssignment( assignment, assignmentConsumer );
+			assignmentConsumer.accept( visitAssignment( assignment ) );
 		}
 	}
 
 	public List<Assignment> visitSetClause(SqmSetClause setClause) {
 		throw new UnsupportedOperationException();
-	}
-
-	private void visitAssignment(
-			SqmAssignment sqmAssignment,
-			Consumer<Assignment> assignmentConsumer) {
-		final Assignable assignable = (Assignable) sqmAssignment.getTargetPath().accept( this );
-
-		final Expression value = (Expression) sqmAssignment.getValue().accept( this );
-
-		assignmentConsumer.accept( new Assignment( assignable, value ) );
 	}
 
 	@Override

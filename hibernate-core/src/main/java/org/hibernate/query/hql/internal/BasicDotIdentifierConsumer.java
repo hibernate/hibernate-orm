@@ -10,7 +10,6 @@ import java.lang.reflect.Field;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.query.criteria.JpaPath;
 import org.hibernate.query.hql.HqlLogging;
 import org.hibernate.query.hql.spi.DotIdentifierConsumer;
 import org.hibernate.query.hql.spi.SemanticPathPart;
@@ -48,7 +47,7 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 	private final SqmCreationState creationState;
 
-	private String pathSoFar;
+	private StringBuilder pathSoFar = new StringBuilder();
 	private SemanticPathPart currentPart;
 
 	public BasicDotIdentifierConsumer(SqmCreationState creationState) {
@@ -76,12 +75,10 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 			reset();
 		}
 
-		if ( pathSoFar == null ) {
-			pathSoFar = identifier;
+		if ( pathSoFar.length() != 0 ) {
+			pathSoFar.append( '.' );
 		}
-		else {
-			pathSoFar += ( '.' + identifier );
-		}
+		pathSoFar.append( identifier );
 
 		HqlLogging.QUERY_LOGGER.tracef(
 				"BasicDotIdentifierHandler#consumeIdentifier( %s, %s, %s ) - %s",
@@ -102,7 +99,7 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 	}
 
 	protected void reset() {
-		pathSoFar = null;
+		pathSoFar.setLength( 0 );
 		currentPart = createBasePart();
 	}
 
@@ -179,7 +176,8 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 				return this;
 			}
 
-			final String importableName = creationContext.getJpaMetamodel().qualifyImportableName( pathSoFar );
+			final String path = pathSoFar.toString();
+			final String importableName = creationContext.getJpaMetamodel().qualifyImportableName( path );
 			if ( importableName != null ) {
 				final EntityDomainType<?> entityDomainType = creationContext.getJpaMetamodel().entity( importableName );
 				if ( entityDomainType != null ) {
@@ -189,7 +187,7 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 
 			final SqmFunctionDescriptor functionDescriptor = creationContext.getQueryEngine()
 					.getSqmFunctionRegistry()
-					.findFunctionDescriptor( pathSoFar );
+					.findFunctionDescriptor( path );
 			if ( functionDescriptor != null ) {
 				return functionDescriptor.generateSqmExpression(
 						null,
@@ -212,10 +210,10 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 //			}
 
 			// see if it is a named field/enum reference
-			final int splitPosition = pathSoFar.lastIndexOf( '.' );
+			final int splitPosition = path.lastIndexOf( '.' );
 			if ( splitPosition > 0 ) {
-				final String prefix = pathSoFar.substring( 0, splitPosition );
-				final String terminal = pathSoFar.substring( splitPosition + 1 );
+				final String prefix = path.substring( 0, splitPosition );
+				final String terminal = path.substring( splitPosition + 1 );
 				//TODO: try interpreting paths of form foo.bar.Foo.Bar as foo.bar.Foo$Bar
 
 				try {
@@ -254,7 +252,7 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 				}
 			}
 
-			throw new ParsingException( "Could not interpret dot-ident : " + pathSoFar );
+			throw new ParsingException( "Could not interpret dot-ident : " + path );
 		}
 
 		protected void validateAsRoot(SqmFrom<?, ?> pathRoot) {

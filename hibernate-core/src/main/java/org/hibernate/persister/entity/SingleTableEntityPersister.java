@@ -939,8 +939,8 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		}
 		final Object value = getDiscriminatorValue();
 		final boolean hasNotNullDiscriminator = value == NOT_NULL_DISCRIMINATOR;
-		final boolean hasNullDiscrininator = value == NULL_DISCRIMINATOR;
-		if ( hasNotNullDiscriminator || hasNullDiscrininator ) {
+		final boolean hasNullDiscriminator = value == NULL_DISCRIMINATOR;
+		if ( hasNotNullDiscriminator || hasNullDiscriminator ) {
 			final NullnessPredicate nullnessPredicate = new NullnessPredicate( sqlExpression );
 			if ( hasNotNullDiscriminator ) {
 				return new NegatedPredicate( nullnessPredicate );

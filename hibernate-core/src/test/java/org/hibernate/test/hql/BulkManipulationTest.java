@@ -232,19 +232,8 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testSelectWithNamedParamProjection() {
 		Session s = openSession();
-		try {
-			s.createQuery( "select :someParameter, id from Car" );
-			fail( "Should throw an unsupported exception" );
-		}
-		catch (IllegalArgumentException e) {
-			assertTyping( QueryException.class, e.getCause() );
-		}
-		catch (QueryException q) {
-			// allright
-		}
-		finally {
-			s.close();
-		}
+		// Ensure this works by executing it
+		s.createQuery( "select :someParameter, id from Car" ).setParameter( "someParameter", 1 ).getResultList();
 	}
 
 	@Test
@@ -315,19 +304,12 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		t = s.beginTransaction();
 
-		try {
-			Query q1 = s.createQuery(
-					"insert into Pickup (id, owner, vin) select :id, (select :description from Animal a where a.description = :description), :vin from Car" );
-			fail( "Unsupported exception should have been thrown" );
-		}
-		catch (IllegalArgumentException e) {
-			assertTyping( QueryException.class, e.getCause() );
-		}
-		catch (QueryException e) {
-			assertTrue( e.getMessage()
-								.indexOf(
-										"Use of parameters in subqueries of INSERT INTO DML statements is not supported." ) > -1 );
-		}
+		Query q1 = s.createQuery(
+				"insert into Pickup (id, owner, vin) select :id, (select :description from Animal a where a.description = :description), :vin from Car" );
+		q1.setParameter( "id", 10L );
+		q1.setParameter( "description", "Frog" );
+		q1.setParameter( "vin", "some" );
+		q1.executeUpdate();
 
 		t.commit();
 		t = s.beginTransaction();

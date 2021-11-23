@@ -15,18 +15,35 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
  * @author Steve Ebersole
  */
 public class SqmCreationHelper {
+
+	/**
+	 * This is a special alias that we use for implicit joins within the FROM clause.
+	 * Passing this alias will cause that we don't generate a unique alias for a path,
+	 * but instead use a <code>null</code> alias.
+	 *
+	 * The effect of this is, that we use the same table group for a query like
+	 * `... exists ( from alias.intermediate.attribute where alias.intermediate.otherAttribute is not null )`
+	 * for the path in the FROM clause and the one in the WHERE clause.
+	 */
+	public static final String IMPLICIT_ALIAS = "{implicit}";
+
 	public static NavigablePath buildRootNavigablePath(String base, String alias) {
-		// Make sure we always create a unique alias, otherwise we might use a wrong table group for the same join
-		return alias == null
-				? new NavigablePath( base, Long.toString( System.nanoTime() ) )
-				: new NavigablePath( base, alias );
+		return new NavigablePath( base, determineAlias( alias ) );
 	}
 
 	public static NavigablePath buildSubNavigablePath(NavigablePath lhs, String base, String alias) {
+		return lhs.append( base, determineAlias( alias ) );
+	}
+
+	private static String determineAlias(String alias) {
 		// Make sure we always create a unique alias, otherwise we might use a wrong table group for the same join
-		return alias == null
-				? lhs.append( base, Long.toString( System.nanoTime() ) )
-				: lhs.append( base, alias );
+		if ( alias == null ) {
+			return Long.toString( System.nanoTime() );
+		}
+		else if ( alias == IMPLICIT_ALIAS ) {
+			return null;
+		}
+		return alias;
 	}
 
 	public static NavigablePath buildSubNavigablePath(SqmPath<?> lhs, String subNavigable, String alias) {

@@ -26,18 +26,30 @@ public class RootSequencePart implements SequencePart {
 	@Override
 	public SequencePart resolvePathPart(
 			String name,
+			String identifier,
 			boolean isTerminal,
 			TranslationContext translationContext) {
 		// could be a column-reference (isTerminal would have to be true) or a domain-path
 
-		final DomainPath subDomainPath = pluralAttributePath.resolvePathPart( name, isTerminal, translationContext );
+		final DomainPath subDomainPath = pluralAttributePath.resolvePathPart(
+				name,
+				identifier,
+				isTerminal,
+				translationContext
+		);
 		if ( subDomainPath != null ) {
 			return subDomainPath;
 		}
 
 		if ( isTerminal ) {
 			// assume a column-reference
-			return new ColumnReference( name, false, pluralAttributePath.getNavigablePath() );
+			return new ColumnReference(
+					translationContext.getFactory()
+							.getJdbcServices()
+							.getDialect()
+							.quote( identifier ),
+					false
+			);
 		}
 
 		throw new PathResolutionException(

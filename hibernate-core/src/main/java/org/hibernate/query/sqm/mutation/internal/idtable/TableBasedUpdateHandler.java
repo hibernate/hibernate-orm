@@ -126,6 +126,7 @@ public class TableBasedUpdateHandler
 
 		final MultiTableSqmMutationConverter converterDelegate = new MultiTableSqmMutationConverter(
 				entityDescriptor,
+				getSqmDeleteOrUpdateStatement(),
 				getSqmDeleteOrUpdateStatement().getTarget(),
 				domainParameterXref,
 				executionContext.getQueryOptions(),
@@ -203,6 +204,7 @@ public class TableBasedUpdateHandler
 		if ( filterPredicate != null ) {
 			predicate = SqlAstTreeHelper.combinePredicates( predicate, filterPredicate );
 		}
+		converterDelegate.pruneTableGroupJoins();
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// cross-reference the TableReference by alias.  The TableGroup already

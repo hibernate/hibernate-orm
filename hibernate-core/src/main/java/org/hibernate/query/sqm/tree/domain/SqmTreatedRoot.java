@@ -7,11 +7,9 @@
 package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.query.NavigablePath;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.query.sqm.UnknownPathException;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 
@@ -85,25 +83,9 @@ public class SqmTreatedRoot<T, S extends T> extends SqmRoot<S> implements SqmTre
 			String name,
 			boolean isTerminal,
 			SqmCreationState creationState) {
-		final NavigablePath subNavPath = getNavigablePath().append( name );
-		return creationState.getProcessingStateStack().getCurrent().getPathRegistry().resolvePath(
-				subNavPath,
-				snp -> {
-					final SqmPathSource<?> subSource;
-					if ( creationState.getCreationOptions().useStrictJpaCompliance() ) {
-						subSource = getManagedType().findSubPathSource( name );
-					}
-					else {
-						subSource = treatTarget.findSubPathSource( name );
-					}
-
-					if ( subSource == null ) {
-						throw UnknownPathException.unknownSubPath( this, name );
-					}
-
-					return subSource.createSqmPath( this, null );
-				}
-		);
+		final SqmPath<?> sqmPath = get( name );
+		creationState.getProcessingStateStack().getCurrent().getPathRegistry().register( sqmPath );
+		return sqmPath;
 	}
 
 	@Override

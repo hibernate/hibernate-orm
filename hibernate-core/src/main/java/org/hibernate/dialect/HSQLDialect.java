@@ -55,6 +55,7 @@ import org.hibernate.query.sqm.mutation.internal.idtable.IdTable;
 import org.hibernate.query.sqm.mutation.internal.idtable.LocalTemporaryTableStrategy;
 import org.hibernate.query.sqm.mutation.internal.idtable.TempIdTableExporter;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -154,6 +155,9 @@ public class HSQLDialect extends Dialect {
 	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
+
+		// AVG by default uses the input type, so we possibly need to cast the argument type, hence a special function
+		CommonFunctionFactory.avg_castingNonDoubleArguments( this, queryEngine, SqlAstNodeRenderingMode.DEFAULT );
 
 		CommonFunctionFactory.cot( queryEngine );
 		CommonFunctionFactory.radians( queryEngine );
@@ -511,7 +515,7 @@ public class HSQLDialect extends Dialect {
 
 		if ( version < 200 ) {
 			return new GlobalTemporaryTableStrategy(
-					new IdTable( rootEntityDescriptor, name -> "HT_" + name, this ),
+					new IdTable( rootEntityDescriptor, name -> "HT_" + name, this, runtimeModelCreationContext ),
 					() -> new TempIdTableExporter( false, this::getTypeName ),
 					// Version 1.8 GLOBAL TEMPORARY table definitions persist beyond the end
 					// of the session (by default, data is cleared at commit).
@@ -523,7 +527,7 @@ public class HSQLDialect extends Dialect {
 			return new LocalTemporaryTableStrategy(
 					// With HSQLDB 2.0, the table name is qualified with MODULE to assist the drop
 					// statement (in-case there is a global name beginning with HT_)
-					new IdTable( rootEntityDescriptor, name -> "MODULE.HT_" + name, this ),
+					new IdTable( rootEntityDescriptor, name -> "MODULE.HT_" + name, this, runtimeModelCreationContext ),
 					() -> new TempIdTableExporter( true, this::getTypeName ) {
 						@Override
 						protected String getCreateCommand() {

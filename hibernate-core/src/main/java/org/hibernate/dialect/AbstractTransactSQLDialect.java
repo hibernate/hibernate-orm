@@ -260,7 +260,7 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 			EntityMappingType entityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
 		return new LocalTemporaryTableStrategy(
-				new IdTable( entityDescriptor, basename -> "#" + basename, this ),
+				new IdTable( entityDescriptor, basename -> "#" + basename, this, runtimeModelCreationContext ),
 				() -> new TempIdTableExporter( true, this::getTypeName ) {
 					@Override
 					protected String getCreateCommand() {

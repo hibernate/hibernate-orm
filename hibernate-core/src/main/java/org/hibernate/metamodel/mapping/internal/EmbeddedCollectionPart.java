@@ -42,6 +42,7 @@ import org.hibernate.sql.ast.tree.from.PluralTableGroup;
 import org.hibernate.sql.ast.tree.from.StandardVirtualTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
+import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
@@ -199,15 +200,16 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 		getEmbeddableTypeDescriptor().forEachSelectable(
 				(columnIndex, selection) -> {
 					assert containingTableExpression.equals( selection.getContainingTableExpression() );
+					final TableReference tableReference = tableGroup.resolveTableReference(
+							tableGroup.getNavigablePath()
+									.append( getNavigableRole().getNavigableName() ),
+							selection.getContainingTableExpression()
+					);
 					expressions.add(
 							sqlExpressionResolver.resolveSqlExpression(
-									SqlExpressionResolver.createColumnReferenceKey( selection.getContainingTableExpression(), selection.getSelectionExpression() ),
+									SqlExpressionResolver.createColumnReferenceKey( tableReference, selection.getSelectionExpression() ),
 									sqlAstProcessingState -> new ColumnReference(
-											tableGroup.resolveTableReference(
-													tableGroup.getNavigablePath()
-															.append( getNavigableRole().getNavigableName() ),
-													selection.getContainingTableExpression()
-											),
+											tableReference,
 											selection,
 											sqlAstCreationState.getCreationContext().getSessionFactory()
 									)
@@ -298,6 +300,11 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 	@Override
 	public JavaType<?> getJavaTypeDescriptor() {
 		return getEmbeddableTypeDescriptor().getJavaTypeDescriptor();
+	}
+
+	@Override
+	public JavaType<?> getExpressableJavaTypeDescriptor() {
+		return getJavaTypeDescriptor();
 	}
 
 	@Override

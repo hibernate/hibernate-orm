@@ -29,7 +29,7 @@ public class SqmIndexedCollectionAccessPath<T> extends AbstractSqmPath<T> implem
 		//noinspection unchecked
 		super(
 				navigablePath,
-				(PluralPersistentAttribute<?, ?, T>) pluralDomainPath.getReferencedPathSource(),
+				( (PluralPersistentAttribute<?, ?, T>) pluralDomainPath.getReferencedPathSource() ).getElementPathSource(),
 				pluralDomainPath,
 				pluralDomainPath.nodeBuilder()
 		);
@@ -41,18 +41,18 @@ public class SqmIndexedCollectionAccessPath<T> extends AbstractSqmPath<T> implem
 		return selectorExpression;
 	}
 
-	@Override
-	public PluralPersistentAttribute<?, ?, T> getReferencedPathSource() {
-		return (PluralPersistentAttribute<?, ?, T>) super.getReferencedPathSource();
+	public PluralPersistentAttribute<?, ?, T> getPluralAttribute() {
+		return (PluralPersistentAttribute<?, ?, T>) getLhs().getReferencedPathSource();
 	}
 
 	@Override
-	public SemanticPathPart resolvePathPart(
+	public SqmPath<?> resolvePathPart(
 			String name,
 			boolean isTerminal,
 			SqmCreationState creationState) {
-		final SqmPathSource<?> subPathSource = getReferencedPathSource().getElementPathSource().findSubPathSource( name );
-		return subPathSource.createSqmPath( this, getReferencedPathSource().getElementPathSource() );
+		final SqmPath<?> sqmPath = get( name );
+		creationState.getProcessingStateStack().getCurrent().getPathRegistry().register( sqmPath );
+		return sqmPath;
 	}
 
 	@Override

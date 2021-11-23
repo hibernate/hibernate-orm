@@ -63,6 +63,10 @@ public class DynamicInstantiation<T> implements DomainResultProducer {
 			throw new ConversionException( "Unexpected call to DynamicInstantiation#addAgument after previously complete" );
 		}
 
+		if ( arguments == null ) {
+			arguments = new ArrayList<>();
+		}
+
 		if ( List.class.equals( getTargetJavaTypeDescriptor().getJavaTypeClass() ) ) {
 			// really should not have an alias...
 			if ( alias != null && log.isDebugEnabled() ) {
@@ -75,19 +79,10 @@ public class DynamicInstantiation<T> implements DomainResultProducer {
 			}
 		}
 		else if ( Map.class.equals( getTargetJavaTypeDescriptor().getJavaTypeClass() ) ) {
-			// must have an alias...
+			// Retain the default alias we also used in 5.x which is the position
 			if ( alias == null ) {
-				log.warnf(
-						"Argument [%s] for dynamic Map instantiation did not declare an 'injection alias', " +
-								"but such aliases are needed for dynamic Map instantiations; " +
-								"will likely cause problems later processing query results",
-						argumentResultProducer.toString()
-				);
+				alias = Integer.toString( arguments.size() );
 			}
-		}
-
-		if ( arguments == null ) {
-			arguments = new ArrayList<>();
 		}
 
 		arguments.add( new DynamicInstantiationArgument<>( argumentResultProducer, alias ) );

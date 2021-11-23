@@ -27,6 +27,7 @@ import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -1704,13 +1705,6 @@ public class CommonFunctionFactory {
 	public static void aggregates(
 			Dialect dialect,
 			QueryEngine queryEngine,
-			SqlAstNodeRenderingMode inferenceArgumentRenderingMode) {
-		aggregates( dialect, queryEngine, inferenceArgumentRenderingMode, "||", null );
-	}
-
-	public static void aggregates(
-			Dialect dialect,
-			QueryEngine queryEngine,
 			SqlAstNodeRenderingMode inferenceArgumentRenderingMode,
 			String concatOperator,
 			String concatArgumentCastType) {
@@ -1837,7 +1831,28 @@ public class CommonFunctionFactory {
 
 		queryEngine.getSqmFunctionRegistry().register(
 				CountFunction.FUNCTION_NAME,
-				new CountFunction( dialect, queryEngine.getTypeConfiguration(), concatOperator, concatArgumentCastType )
+				new CountFunction(
+						dialect,
+						queryEngine.getTypeConfiguration(),
+						inferenceArgumentRenderingMode,
+						concatOperator,
+						concatArgumentCastType
+				)
+		);
+	}
+
+	public static void avg_castingNonDoubleArguments(
+			Dialect dialect,
+			QueryEngine queryEngine,
+			SqlAstNodeRenderingMode inferenceArgumentRenderingMode) {
+		queryEngine.getSqmFunctionRegistry().register(
+				AvgFunction.FUNCTION_NAME,
+				new AvgFunction(
+						dialect,
+						queryEngine.getTypeConfiguration(),
+						inferenceArgumentRenderingMode,
+						dialect.getTypeName( SqlTypes.DOUBLE )
+				)
 		);
 	}
 

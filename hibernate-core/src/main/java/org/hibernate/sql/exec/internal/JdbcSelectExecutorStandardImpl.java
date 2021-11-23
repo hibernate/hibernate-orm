@@ -6,8 +6,10 @@
  */
 package org.hibernate.sql.exec.internal;
 
+import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.util.List;
+import java.util.Set;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.concurrent.TimeUnit;
@@ -23,6 +25,7 @@ import org.hibernate.cache.spi.QueryResultsCache;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.internal.ScrollableResultsIterator;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
@@ -44,6 +47,7 @@ import org.hibernate.sql.results.jdbc.internal.ResultSetAccess;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMapping;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.sql.results.spi.ResultsConsumer;
@@ -51,6 +55,8 @@ import org.hibernate.sql.results.spi.RowReader;
 import org.hibernate.sql.results.spi.RowTransformer;
 import org.hibernate.sql.results.spi.ScrollableResultsConsumer;
 import org.hibernate.stat.spi.StatisticsImplementor;
+import org.hibernate.type.BasicType;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Steve Ebersole
@@ -305,18 +311,22 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		final SessionFactoryImplementor factory = session.getFactory();
 		final boolean queryCacheEnabled = factory.getSessionFactoryOptions().isQueryCacheEnabled();
 
-		final List<Object[]> cachedResults;
-
-
+		final List<Object> cachedResults;
 		final CacheMode cacheMode = JdbcExecHelper.resolveCacheMode( executionContext );
 
 		final JdbcValuesMappingProducer mappingProducer = jdbcSelect.getJdbcValuesMappingProducer();
-		final JdbcValuesMapping jdbcValuesMapping = mappingProducer.resolve( resultSetAccess, factory );
-
+		final boolean cacheable = queryCacheEnabled && canBeCached;
 		final QueryKey queryResultsCacheKey;
 
-		if ( queryCacheEnabled && cacheMode.isGetEnabled() && canBeCached ) {
+		if ( cacheable && cacheMode.isGetEnabled() ) {
 			SqlExecLogger.INSTANCE.debugf( "Reading Query result cache data per CacheMode#isGetEnabled [%s]", cacheMode.name() );
+			final Set<String> querySpaces = jdbcSelect.getAffectedTableNames();
+			if ( querySpaces == null || querySpaces.size() == 0 ) {
+				SqlExecLogger.INSTANCE.tracev( "Unexpected querySpaces is {0}", ( querySpaces == null ? querySpaces : "empty" ) );
+			}
+			else {
+				SqlExecLogger.INSTANCE.tracev( "querySpaces is {0}", querySpaces );
+			}
 
 			final QueryResultsCache queryCache = factory
 					.getCache()
@@ -340,7 +350,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 					queryResultsCacheKey,
 					// todo (6.0) : `querySpaces` and `session` make perfect sense as args, but its odd passing those into this method just to pass along
 					//		atm we do not even collect querySpaces, but we need to
-					jdbcSelect.getAffectedTableNames(),
+					querySpaces,
 					session
 			);
 
@@ -367,7 +377,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 					cacheMode.name()
 			);
 			cachedResults = null;
-			if ( queryCacheEnabled && canBeCached ) {
+			if ( cacheable && cacheMode.isPutEnabled() ) {
 				queryResultsCacheKey = QueryKey.from(
 						jdbcSelect.getSql(),
 						executionContext.getQueryOptions().getLimit(),
@@ -381,18 +391,174 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		}
 
 		if ( cachedResults == null ) {
+			final JdbcValuesMetadata metadataForCache;
+			final JdbcValuesMapping jdbcValuesMapping;
+			if ( queryResultsCacheKey == null ) {
+				jdbcValuesMapping = mappingProducer.resolve( resultSetAccess, factory );
+				metadataForCache = null;
+			}
+			else {
+				// If we need to put the values into the cache, we need to be able to capture the JdbcValuesMetadata
+				final CapturingJdbcValuesMetadata capturingMetadata = new CapturingJdbcValuesMetadata( resultSetAccess );
+				jdbcValuesMapping = mappingProducer.resolve( capturingMetadata, factory );
+				metadataForCache = capturingMetadata.resolveMetadataForCache();
+			}
 			return new JdbcValuesResultSetImpl(
 					resultSetAccess,
 					queryResultsCacheKey,
 					queryIdentifier,
 					executionContext.getQueryOptions(),
 					jdbcValuesMapping,
+					metadataForCache,
 					executionContext
 			);
 		}
 		else {
+			final JdbcValuesMapping jdbcValuesMapping;
+			if ( cachedResults.isEmpty() || !( cachedResults.get( 0 ) instanceof JdbcValuesMetadata ) ) {
+				jdbcValuesMapping = mappingProducer.resolve( resultSetAccess, factory );
+			}
+			else {
+				jdbcValuesMapping = mappingProducer.resolve( (JdbcValuesMetadata) cachedResults.get( 0 ), factory );
+			}
 			return new JdbcValuesCacheHit( cachedResults, jdbcValuesMapping );
 		}
 	}
 
+	private static class CapturingJdbcValuesMetadata implements JdbcValuesMetadata {
+		private final ResultSetAccess resultSetAccess;
+		private String[] columnNames;
+		private BasicType<?>[] types;
+
+		public CapturingJdbcValuesMetadata(ResultSetAccess resultSetAccess) {
+			this.resultSetAccess = resultSetAccess;
+		}
+
+		private void initializeArrays() {
+			final int columnCount = resultSetAccess.getColumnCount();
+			columnNames = new String[columnCount];
+			types = new BasicType[columnCount];
+		}
+
+		@Override
+		public int getColumnCount() {
+			if ( columnNames == null ) {
+				initializeArrays();
+			}
+			return columnNames.length;
+		}
+
+		@Override
+		public int resolveColumnPosition(String columnName) {
+			if ( columnNames == null ) {
+				initializeArrays();
+			}
+			int position;
+			if ( columnNames == null ) {
+				position = resultSetAccess.resolveColumnPosition( columnName );
+				columnNames[position - 1] = columnName;
+			}
+			else if ( ( position = ArrayHelper.indexOf( columnNames, columnName ) + 1 ) == 0 ) {
+				position = resultSetAccess.resolveColumnPosition( columnName );
+				columnNames[position - 1] = columnName;
+			}
+			return position;
+		}
+
+		@Override
+		public String resolveColumnName(int position) {
+			if ( columnNames == null ) {
+				initializeArrays();
+			}
+			String name;
+			if ( columnNames == null ) {
+				name = resultSetAccess.resolveColumnName( position );
+				columnNames[position - 1] = name;
+			}
+			else if ( ( name = columnNames[position - 1] ) == null ) {
+				name = resultSetAccess.resolveColumnName( position );
+				columnNames[position - 1] = name;
+			}
+			return name;
+		}
+
+		@Override
+		public <J> BasicType<J> resolveType(
+				int position,
+				JavaType<J> explicitJavaTypeDescriptor,
+				SessionFactoryImplementor sessionFactory) {
+			if ( columnNames == null ) {
+				initializeArrays();
+			}
+			final BasicType<J> basicType = resultSetAccess.resolveType(
+					position,
+					explicitJavaTypeDescriptor,
+					sessionFactory
+			);
+			types[position - 1] = basicType;
+			return basicType;
+		}
+
+		public JdbcValuesMetadata resolveMetadataForCache() {
+			if ( columnNames == null ) {
+				return null;
+			}
+			return new CachedJdbcValuesMetadata( columnNames, types );
+		}
+	}
+
+	private static class CachedJdbcValuesMetadata implements JdbcValuesMetadata, Serializable {
+		private final String[] columnNames;
+		private final BasicType<?>[] types;
+
+		public CachedJdbcValuesMetadata(String[] columnNames, BasicType<?>[] types) {
+			this.columnNames = columnNames;
+			this.types = types;
+		}
+
+		@Override
+		public int getColumnCount() {
+			return columnNames.length;
+		}
+
+		@Override
+		public int resolveColumnPosition(String columnName) {
+			final int position = ArrayHelper.indexOf( columnNames, columnName ) + 1;
+			if ( position == 0 ) {
+				throw new IllegalStateException( "Unexpected resolving of unavailable column: " + columnName );
+			}
+			return position;
+		}
+
+		@Override
+		public String resolveColumnName(int position) {
+			final String name = columnNames[position - 1];
+			if ( name == null ) {
+				throw new IllegalStateException( "Unexpected resolving of unavailable column at position: " + position );
+			}
+			return name;
+		}
+
+		@Override
+		public <J> BasicType<J> resolveType(
+				int position,
+				JavaType<J> explicitJavaTypeDescriptor,
+				SessionFactoryImplementor sessionFactory) {
+			final BasicType<?> type = types[position - 1];
+			if ( type == null ) {
+				throw new IllegalStateException( "Unexpected resolving of unavailable column at position: " + position );
+			}
+			if ( explicitJavaTypeDescriptor == null || type.getJavaTypeDescriptor() == explicitJavaTypeDescriptor ) {
+				//noinspection unchecked
+				return (BasicType<J>) type;
+			}
+			else {
+				return sessionFactory.getTypeConfiguration().getBasicTypeRegistry().resolve(
+						explicitJavaTypeDescriptor,
+						type.getJdbcTypeDescriptor()
+				);
+			}
+		}
+
+	}
 }

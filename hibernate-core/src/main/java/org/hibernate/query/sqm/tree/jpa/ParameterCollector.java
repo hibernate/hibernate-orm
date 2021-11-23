@@ -235,7 +235,7 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 	@Override
 	public Object visitIndexedPluralAccessPath(SqmIndexedCollectionAccessPath<?> path) {
 		path.getLhs().accept( this );
-		withTypeInference( path.getReferencedPathSource().getIndexPathSource(), () -> path.getSelectorExpression().accept( this ) );
+		withTypeInference( path.getPluralAttribute().getIndexPathSource(), () -> path.getSelectorExpression().accept( this ) );
 		return path;
 	}
 

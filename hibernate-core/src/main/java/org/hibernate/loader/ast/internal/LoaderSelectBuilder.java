@@ -6,6 +6,7 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -251,7 +252,7 @@ public class LoaderSelectBuilder {
 	private final EntityGraphTraversalState entityGraphTraversalState;
 
 	private int fetchDepth;
-	private Map<OrderByFragment, TableGroup> orderByFragments;
+	private List<Map.Entry<OrderByFragment, TableGroup>> orderByFragments;
 	private boolean hasCollectionJoinFetches;
 	private String currentBagRole;
 
@@ -483,9 +484,9 @@ public class LoaderSelectBuilder {
 
 		if ( orderByFragments != null ) {
 			orderByFragments.forEach(
-					(orderByFragment, tableGroup) -> orderByFragment.apply(
+					entry -> entry.getKey().apply(
 							rootQuerySpec,
-							tableGroup,
+							entry.getValue(),
 							sqlAstCreationState
 					)
 			);
@@ -652,9 +653,9 @@ public class LoaderSelectBuilder {
 
 	private void applyOrdering(TableGroup tableGroup, OrderByFragment orderByFragment) {
 		if ( orderByFragments == null ) {
-			orderByFragments = new LinkedHashMap<>();
+			orderByFragments = new ArrayList<>();
 		}
-		orderByFragments.put( orderByFragment, tableGroup );
+		orderByFragments.add( new AbstractMap.SimpleEntry<>( orderByFragment, tableGroup ) );
 	}
 
 	private List<Fetch> visitFetches(
@@ -1010,13 +1011,14 @@ public class LoaderSelectBuilder {
 		if ( jdbcTypeCount == 1 ) {
 			assert fkDescriptor instanceof SimpleForeignKeyDescriptor;
 			final SimpleForeignKeyDescriptor simpleFkDescriptor = (SimpleForeignKeyDescriptor) fkDescriptor;
+			final TableReference tableReference = rootTableGroup.resolveTableReference(
+					navigablePath,
+					simpleFkDescriptor.getContainingTableExpression()
+			);
 			fkExpression = sqlAstCreationState.getSqlExpressionResolver().resolveSqlExpression(
-					createColumnReferenceKey(
-							simpleFkDescriptor.getContainingTableExpression(),
-							simpleFkDescriptor.getSelectionExpression()
-					),
+					createColumnReferenceKey( tableReference, simpleFkDescriptor.getSelectionExpression() ),
 					sqlAstProcessingState -> new ColumnReference(
-							rootTableGroup.resolveTableReference( navigablePath, simpleFkDescriptor.getContainingTableExpression() ),
+							tableReference,
 							simpleFkDescriptor.getSelectionExpression(),
 							false,
 							null,
@@ -1029,21 +1031,26 @@ public class LoaderSelectBuilder {
 		else {
 			final List<ColumnReference> columnReferences = new ArrayList<>( jdbcTypeCount );
 			fkDescriptor.forEachSelectable(
-					(columnIndex, selection) ->
-							columnReferences.add(
-									(ColumnReference) sqlAstCreationState.getSqlExpressionResolver()
-											.resolveSqlExpression(
-													createColumnReferenceKey(
-															selection.getContainingTableExpression(),
-															selection.getSelectionExpression()
-													),
-													sqlAstProcessingState -> new ColumnReference(
-															rootTableGroup.resolveTableReference( navigablePath, selection.getContainingTableExpression() ),
-															selection,
-															this.creationContext.getSessionFactory()
-													)
-											)
-							)
+					(columnIndex, selection) -> {
+						final TableReference tableReference = rootTableGroup.resolveTableReference(
+								navigablePath,
+								selection.getContainingTableExpression()
+						);
+						columnReferences.add(
+								(ColumnReference) sqlAstCreationState.getSqlExpressionResolver()
+										.resolveSqlExpression(
+												createColumnReferenceKey(
+														tableReference,
+														selection.getSelectionExpression()
+												),
+												sqlAstProcessingState -> new ColumnReference(
+														tableReference,
+														selection,
+														this.creationContext.getSessionFactory()
+												)
+										)
+						);
+					}
 			);
 
 			fkExpression = new SqlTuple( columnReferences, fkDescriptor );

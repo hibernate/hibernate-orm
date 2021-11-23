@@ -27,8 +27,7 @@ public class QueryHelper {
 			return types[0];
 		}
 
-		//noinspection unchecked
-		SqmExpressable<? extends T> highest = highestPrecedenceType2( (SqmExpressable) types[0], types[1] );
+		SqmExpressable<? extends T> highest = highestPrecedenceType2( types[0], types[1] );
 		for ( int i = 2; i < types.length; i++ ) {
 			highest = highestPrecedenceType2( highest, types[i] );
 		}
@@ -58,6 +57,9 @@ public class QueryHelper {
 		}
 
 		// any other precedence rules?
+		if ( type2.getExpressableJavaTypeDescriptor().isWider( type1.getExpressableJavaTypeDescriptor() ) ) {
+			return type2;
+		}
 
 		return type1;
 	}

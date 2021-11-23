@@ -48,6 +48,7 @@ public class PluralAttributePath extends AbstractDomainPath {
 	@Override
 	public DomainPath resolvePathPart(
 			String name,
+			String identifier,
 			boolean isTerminal,
 			TranslationContext translationContext) {
 		final ModelPart subPart = pluralAttributeMapping.findSubPart( name, null );
@@ -60,8 +61,11 @@ public class PluralAttributePath extends AbstractDomainPath {
 				return new DomainPathContinuation( navigablePath.append( name ), this, subPart );
 			}
 			if ( subPart instanceof ToOneAttributeMapping ) {
-				return new FkDomainPathContinuation( navigablePath.append( name ), this,
-													(ToOneAttributeMapping) subPart );
+				return new FkDomainPathContinuation(
+						navigablePath.append( name ),
+						this,
+						(ToOneAttributeMapping) subPart
+				);
 			}
 
 			// leaf case:

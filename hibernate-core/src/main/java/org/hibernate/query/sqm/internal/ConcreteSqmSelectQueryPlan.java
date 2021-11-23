@@ -34,6 +34,7 @@ import org.hibernate.query.sqm.sql.SqmTranslation;
 import org.hibernate.query.sqm.sql.SqmTranslator;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
+import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -239,12 +240,17 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 			SqmSelectStatement sqm,
 			QueryOptions queryOptions) {
 		final List<String> aliases = new ArrayList<>();
-		sqm.getQuerySpec().getSelectClause().getSelections().forEach(
-				sqmSelection ->
-					sqmSelection.getSelectableNode().visitSubSelectableNodes(
-							subSelection -> aliases.add( subSelection.getAlias() )
-					)
-		);
+		for ( SqmSelection<?> sqmSelection : sqm.getQuerySpec().getSelectClause().getSelections() ) {
+			// The row a tuple transformer gets to see only contains 1 element for a dynamic instantiation
+			if ( sqmSelection.getSelectableNode() instanceof SqmDynamicInstantiation<?> ) {
+				aliases.add( sqmSelection.getAlias() );
+			}
+			else {
+				sqmSelection.getSelectableNode().visitSubSelectableNodes(
+						subSelection -> aliases.add( subSelection.getAlias() )
+				);
+			}
+		}
 
 		return new RowTransformerTupleTransformerAdapter<>(
 				ArrayHelper.toStringArray( aliases ), queryOptions.getTupleTransformer()

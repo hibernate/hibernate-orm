@@ -84,7 +84,7 @@ public class WhereAnnotatedOneToManySizeTest extends BaseCoreFunctionalTestCase 
 	@After
 	public void after() {
 		inTransaction( session -> {
-			session.createQuery( "DELETE FROM City c" ).executeUpdate();
+			session.createNativeQuery( "DELETE FROM City" ).executeUpdate();
 			session.createQuery( "DELETE FROM Region c" ).executeUpdate();
 		} );
 	}
@@ -104,20 +104,6 @@ public class WhereAnnotatedOneToManySizeTest extends BaseCoreFunctionalTestCase 
 	}
 
 	@Test
-	@SkipForDialect(value = DB2Dialect.class, comment = "DB2 does not support correlated subqueries in the ORDER BY clause")
-	@SkipForDialect(value = AbstractHANADialect.class, comment = "HANA db does not support correlated subqueries in the ORDER BY clause")
-	@SkipForDialect(value = TiDBDialect.class, comment = "TiDB db does not support correlated subqueries in the ORDER BY clause")
-	public void orderBy_dotSize() {
-		inSession( session -> {
-			QueryImplementor<Object[]> query = session.createQuery(
-					"select r, r.cities.size from Region r order by r.cities.size desc" );
-			List<Object[]> result = query.getResultList();
-			assertThat( result ).extracting( f -> f[0] ).extracting( "name" ).containsExactly( "Lombardy", "Lazio" );
-			assertThat( result ).extracting( f -> f[1] ).containsExactly( 2, 1 );
-		} );
-	}
-
-	@Test
 	public void project_sizeOf() {
 		inSession( session -> {
 			QueryImplementor<Integer> query = session.createQuery(
@@ -127,13 +113,4 @@ public class WhereAnnotatedOneToManySizeTest extends BaseCoreFunctionalTestCase 
 		} );
 	}
 
-	@Test
-	public void project_dotSize() {
-		inSession( session -> {
-			QueryImplementor<Integer> query = session.createQuery(
-					"SELECT r.cities.size FROM Region r", Integer.class );
-			List<Integer> cityCounts = query.getResultList();
-			assertThat( cityCounts ).containsExactlyInAnyOrder( 1, 2 );
-		} );
-	}
 }

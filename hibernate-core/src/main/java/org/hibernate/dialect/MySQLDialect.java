@@ -697,7 +697,7 @@ public class MySQLDialect extends Dialect {
 			RuntimeModelCreationContext runtimeModelCreationContext) {
 
 		return new LocalTemporaryTableStrategy(
-				new IdTable( rootEntityDescriptor, basename -> "HT_" + basename, this ),
+				new IdTable( rootEntityDescriptor, basename -> "HT_" + basename, this, runtimeModelCreationContext ),
 				() -> new TempIdTableExporter( true, this::getTypeName ) {
 					@Override
 					protected String getCreateCommand() {

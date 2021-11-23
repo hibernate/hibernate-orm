@@ -220,6 +220,14 @@ public interface JavaType<T> extends Serializable {
 	 */
 	<X> T wrap(X value, WrapperOptions options);
 
+	/**
+	 * Returns whether this java type is wider than the given type
+	 * i.e. if the given type can be widened to this java type.
+	 */
+	default boolean isWider(JavaType<?> javaType) {
+		return false;
+	}
+
 	interface CoercionContext {
 		TypeConfiguration getTypeConfiguration();
 	}

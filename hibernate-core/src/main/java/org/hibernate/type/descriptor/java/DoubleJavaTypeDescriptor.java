@@ -96,6 +96,27 @@ public class DoubleJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<Do
 		throw unknownWrap( value.getClass() );
 	}
 
+	@Override
+	public boolean isWider(JavaType<?> javaType) {
+		switch ( javaType.getJavaType().getTypeName() ) {
+			case "byte":
+			case "java.lang.Byte":
+			case "short":
+			case "java.lang.Short":
+			case "int":
+			case "java.lang.Integer":
+			case "long":
+			case "java.lang.Long":
+			case "float":
+			case "java.lang.Float":
+			case "java.math.BigInteger":
+			case "java.math.BigDecimal":
+				return true;
+			default:
+				return false;
+		}
+	}
+
 	@SuppressWarnings("rawtypes")
 	@Override
 	public Class getPrimitiveClass() {

@@ -104,7 +104,7 @@ public class SqmMutationStrategyHelper {
 		else {
 			// element-collection or many-to-many - delete the collection-table row
 
-			final TableReference tableReference = new TableReference( separateCollectionTable, null, true, sessionFactory );
+			final TableReference tableReference = new TableReference( separateCollectionTable, DeleteStatement.DEFAULT_ALIAS, true, sessionFactory );
 
 			final DeleteStatement sqlAstDelete = new DeleteStatement(
 					tableReference,

@@ -160,7 +160,7 @@ public final class ExecuteWithIdTableHelper {
 
 	public static QuerySpec createIdTableSelectQuerySpec(
 			IdTable idTable,
-			Function<SharedSessionContractImplementor,String> sessionUidAccess,
+			Function<SharedSessionContractImplementor, String> sessionUidAccess,
 			EntityMappingType entityDescriptor,
 			ExecutionContext executionContext) {
 		return createIdTableSelectQuerySpec( idTable, null, sessionUidAccess, entityDescriptor, executionContext );
@@ -169,14 +169,14 @@ public final class ExecuteWithIdTableHelper {
 	public static QuerySpec createIdTableSelectQuerySpec(
 			IdTable idTable,
 			ModelPart fkModelPart,
-			Function<SharedSessionContractImplementor,String> sessionUidAccess,
+			Function<SharedSessionContractImplementor, String> sessionUidAccess,
 			EntityMappingType entityDescriptor,
 			ExecutionContext executionContext) {
 		final QuerySpec querySpec = new QuerySpec( false );
 
 		final TableReference idTableReference = new TableReference(
 				idTable.getTableExpression(),
-				null,
+				IdTable.DEFAULT_ALIAS,
 				true,
 				executionContext.getSession().getFactory()
 		);

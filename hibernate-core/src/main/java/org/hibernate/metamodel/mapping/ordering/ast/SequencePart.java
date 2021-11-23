@@ -16,6 +16,7 @@ import org.hibernate.metamodel.mapping.ordering.TranslationContext;
 public interface SequencePart {
 	SequencePart resolvePathPart(
 			String name,
+			String identifier,
 			boolean isTerminal,
 			TranslationContext translationContext);
 }

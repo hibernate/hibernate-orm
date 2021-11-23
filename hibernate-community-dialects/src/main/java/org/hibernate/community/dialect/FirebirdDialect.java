@@ -870,7 +870,7 @@ public class FirebirdDialect extends Dialect {
 		return getVersion() < 210
 				? super.getFallbackSqmMutationStrategy( entityDescriptor, runtimeModelCreationContext )
 				: new GlobalTemporaryTableStrategy(
-						new IdTable( entityDescriptor, name -> "HT_" + name, this ),
+						new IdTable( entityDescriptor, name -> "HT_" + name, this, runtimeModelCreationContext ),
 						() -> new TempIdTableExporter( false, this::getTypeName ) {
 							@Override
 							protected String getCreateOptions() {

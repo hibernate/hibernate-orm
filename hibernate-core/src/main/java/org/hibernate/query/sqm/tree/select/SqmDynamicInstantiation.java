@@ -243,16 +243,6 @@ public class SqmDynamicInstantiation<T>
 	}
 
 	@Override
-	public String getAlias() {
-		return null;
-	}
-
-	@Override
-	public JpaSelection<T> alias(String name) {
-		return null;
-	}
-
-	@Override
 	public boolean isCompoundSelection() {
 		return false;
 	}

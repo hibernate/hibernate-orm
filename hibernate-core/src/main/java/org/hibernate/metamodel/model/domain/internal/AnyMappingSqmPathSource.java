@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
+import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.model.domain.AnyMappingDomainType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
@@ -19,7 +20,7 @@ import static jakarta.persistence.metamodel.Bindable.BindableType.SINGULAR_ATTRI
 /**
  * @author Steve Ebersole
  */
-public class AnyMappingSqmPathSource<J> extends AbstractSqmPathSource<J> {
+public class AnyMappingSqmPathSource<J> extends AbstractSqmPathSource<J> implements AllowableParameterType<J> {
 	private final SqmPathSource<?> keyPathSource;
 
 	@SuppressWarnings("WeakerAccess")
@@ -58,4 +59,14 @@ public class AnyMappingSqmPathSource<J> extends AbstractSqmPathSource<J> {
 		return new SqmAnyValuedSimplePath<>( navigablePath, this, lhs, lhs.nodeBuilder() );
 	}
 
+	@Override
+	public PersistenceType getPersistenceType() {
+		// todo (6.0): no idea what is best here
+		return PersistenceType.EMBEDDABLE;
+	}
+
+	@Override
+	public Class<J> getJavaType() {
+		return getBindableJavaType();
+	}
 }

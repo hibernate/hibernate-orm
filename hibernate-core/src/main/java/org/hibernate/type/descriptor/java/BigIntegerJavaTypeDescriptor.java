@@ -97,6 +97,23 @@ public class BigIntegerJavaTypeDescriptor extends AbstractClassJavaTypeDescripto
 	}
 
 	@Override
+	public boolean isWider(JavaType<?> javaType) {
+		switch ( javaType.getJavaType().getTypeName() ) {
+			case "byte":
+			case "java.lang.Byte":
+			case "short":
+			case "java.lang.Short":
+			case "int":
+			case "java.lang.Integer":
+			case "long":
+			case "java.lang.Long":
+				return true;
+			default:
+				return false;
+		}
+	}
+
+	@Override
 	public long getDefaultSqlLength(Dialect dialect, JdbcType jdbcType) {
 		return getDefaultSqlPrecision( dialect, jdbcType )+1;
 	}

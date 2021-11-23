@@ -144,7 +144,8 @@ public class ManyToManyHqlMemberOfQueryTest {
 					List<Person> persons = session.createQuery(
 							"select p " +
 									"from Person p " +
-									"where :call member of p.phones.calls", Person.class )
+									"join p.phones phone " +
+									"where :call member of phone.calls", Person.class )
 							.setParameter( "call", call )
 							.getResultList();
 					assertEquals( 1, persons.size() );

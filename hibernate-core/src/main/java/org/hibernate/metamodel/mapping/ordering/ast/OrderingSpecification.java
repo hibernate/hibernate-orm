@@ -22,18 +22,9 @@ public class OrderingSpecification implements Node {
 	private NullPrecedence nullPrecedence = NullPrecedence.NONE;
 	private String orderByValue;
 
-	public String getOrderByValue() {
-		return orderByValue;
-	}
-
 	public OrderingSpecification(OrderingExpression orderingExpression, String orderByValue) {
 		this.orderingExpression = orderingExpression;
 		this.orderByValue = orderByValue;
-	}
-
-	public OrderingSpecification(OrderingExpression orderingExpression, String orderByValue,SortOrder sortOrder) {
-		this(orderingExpression, orderByValue);
-		this.sortOrder = sortOrder;
 	}
 
 	public OrderingExpression getExpression() {
@@ -62,6 +53,10 @@ public class OrderingSpecification implements Node {
 
 	public void setNullPrecedence(NullPrecedence nullPrecedence) {
 		this.nullPrecedence = nullPrecedence;
+	}
+
+	public String getOrderByValue() {
+		return orderByValue;
 	}
 
 	public void setOrderByValue(String orderByValue) {

@@ -9,7 +9,6 @@ package org.hibernate.query.hql.internal;
 import java.util.Locale;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.query.NavigablePath;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.hql.HqlInterpretationException;
 import org.hibernate.query.hql.spi.DotIdentifierConsumer;
@@ -19,11 +18,13 @@ import org.hibernate.query.sqm.SqmJoinable;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.hql.spi.SqmCreationState;
+import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.SqmPolymorphicRootDescriptor;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 
 import org.jboss.logging.Logger;
@@ -37,7 +38,7 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 	private static final Logger log = Logger.getLogger( QualifiedJoinPathConsumer.class );
 
 	private final SqmCreationState creationState;
-	private final SqmRoot sqmRoot;
+	private final SqmRoot<?> sqmRoot;
 
 	private final SqmJoinType joinType;
 	private final boolean fetch;
@@ -110,7 +111,7 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 		final SqmCreationProcessingState processingState = creationState.getCurrentProcessingState();
 		final SqmPathRegistry pathRegistry = processingState.getPathRegistry();
 
-		final SqmFrom pathRootByAlias = pathRegistry.findFromByAlias( identifier );
+		final SqmFrom<?, Object> pathRootByAlias = pathRegistry.findFromByAlias( identifier );
 		if ( pathRootByAlias != null ) {
 			// identifier is an alias (identification variable)
 
@@ -127,7 +128,7 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 			);
 		}
 
-		final SqmFrom pathRootByExposedNavigable = pathRegistry.findFromExposing( identifier );
+		final SqmFrom<?, Object> pathRootByExposedNavigable = pathRegistry.findFromExposing( identifier );
 		if ( pathRootByExposedNavigable != null ) {
 			return new AttributeJoinDelegate(
 					createJoin( pathRootByExposedNavigable, identifier, isTerminal ),
@@ -152,7 +153,7 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 		);
 	}
 
-	private SqmFrom createJoin(SqmFrom lhs, String identifier, boolean isTerminal) {
+	private SqmFrom<?, ?> createJoin(SqmFrom<?, Object> lhs, String identifier, boolean isTerminal) {
 		return createJoin(
 				lhs,
 				identifier,
@@ -164,15 +165,16 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 		);
 	}
 
-	private static SqmFrom createJoin(
-			SqmFrom lhs,
+	private static SqmFrom<?, Object> createJoin(
+			SqmFrom<?, Object> lhs,
 			String name,
 			SqmJoinType joinType,
 			String alias,
 			boolean fetch,
 			boolean isTerminal,
 			SqmCreationState creationState) {
-		final SqmPathSource subPathSource = lhs.getReferencedPathSource().findSubPathSource( name );
+		//noinspection unchecked
+		final SqmPathSource<Object> subPathSource = (SqmPathSource<Object>) lhs.getReferencedPathSource().findSubPathSource( name );
 		if ( subPathSource == null ) {
 			throw new HqlInterpretationException(
 					String.format(
@@ -183,14 +185,22 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 					)
 			);
 		}
-		final SqmAttributeJoin join = ( (SqmJoinable) subPathSource ).createSqmJoin(
+		if ( !isTerminal ) {
+			for ( SqmJoin<?, ?> sqmJoin : lhs.getSqmJoins() ) {
+				if ( sqmJoin.getAlias() == null && sqmJoin.getReferencedPathSource() == subPathSource ) {
+					//noinspection unchecked
+					return (SqmFrom<?, Object>) sqmJoin;
+				}
+			}
+		}
+		@SuppressWarnings("unchecked")
+		final SqmAttributeJoin<Object, Object> join = ( (SqmJoinable) subPathSource ).createSqmJoin(
 				lhs,
 				joinType,
-				isTerminal ? alias : null,
+				isTerminal ? alias : SqmCreationHelper.IMPLICIT_ALIAS,
 				fetch,
 				creationState
 		);
-		//noinspection unchecked
 		lhs.addSqmJoin( join );
 		creationState.getCurrentProcessingState().getPathRegistry().register( join );
 		return join;
@@ -209,10 +219,10 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 		private final boolean fetch;
 		private final String alias;
 
-		private SqmFrom currentPath;
+		private SqmFrom<?, Object> currentPath;
 
 		public AttributeJoinDelegate(
-				SqmFrom base,
+				SqmFrom<?, ?> base,
 				SqmJoinType joinType,
 				boolean fetch,
 				String alias,
@@ -222,7 +232,8 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 			this.alias = alias;
 			this.creationState = creationState;
 
-			this.currentPath = base;
+			//noinspection unchecked
+			this.currentPath = (SqmFrom<?, Object>) base;
 		}
 
 		@Override
@@ -240,7 +251,7 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 
 		@Override
 		public void consumeTreat(String entityName, boolean isTerminal) {
-			final EntityDomainType<?> entityDomainType = creationState.getCreationContext().getJpaMetamodel()
+			final EntityDomainType<Object> entityDomainType = creationState.getCreationContext().getJpaMetamodel()
 					.entity( entityName );
 			currentPath = currentPath.treatAs( entityDomainType, isTerminal ? alias : null );
 			creationState.getCurrentProcessingState().getPathRegistry().register( currentPath );
@@ -254,7 +265,7 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 
 	private static class ExpectingEntityJoinDelegate implements ConsumerDelegate {
 		private final SqmCreationState creationState;
-		private final SqmRoot sqmRoot;
+		private final SqmRoot<?> sqmRoot;
 
 		private final SqmJoinType joinType;
 		private final boolean fetch;
@@ -267,7 +278,7 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 		public ExpectingEntityJoinDelegate(
 				String identifier,
 				boolean isTerminal,
-				SqmRoot sqmRoot,
+				SqmRoot<?> sqmRoot,
 				SqmJoinType joinType,
 				String alias,
 				boolean fetch,

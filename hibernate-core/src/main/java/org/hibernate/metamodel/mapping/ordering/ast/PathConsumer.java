@@ -26,7 +26,7 @@ public class PathConsumer {
 
 	private final SequencePart rootSequencePart;
 
-	private String pathSoFar;
+	private StringBuilder pathSoFar = new StringBuilder();
 	private SequencePart currentPart;
 
 	public PathConsumer(
@@ -41,32 +41,33 @@ public class PathConsumer {
 		return currentPart;
 	}
 
-	public void consumeIdentifier(String identifier, boolean isBase, boolean isTerminal) {
+	public void consumeIdentifier(
+			String unquotedIdentifier,
+			String identifier, boolean isBase,
+			boolean isTerminal) {
 		if ( isBase ) {
 			// each time we start a new sequence we need to reset our state
 			reset();
 		}
 
-		if ( pathSoFar == null ) {
-			pathSoFar = identifier;
+		if ( pathSoFar.length() != 0 ) {
+			pathSoFar.append( '.' );
 		}
-		else {
-			pathSoFar += ( '.' + identifier );
-		}
+		pathSoFar.append( unquotedIdentifier );
 
 		log.tracef(
 				"BasicDotIdentifierHandler#consumeIdentifier( %s, %s, %s ) - %s",
-				identifier,
+				unquotedIdentifier,
 				isBase,
 				isTerminal,
 				pathSoFar
 		);
 
-		currentPart = currentPart.resolvePathPart( identifier, isTerminal, translationContext );
+		currentPart = currentPart.resolvePathPart( unquotedIdentifier, identifier, isTerminal, translationContext );
 	}
 
 	private void reset() {
-		pathSoFar = null;
+		pathSoFar.setLength( 0 );
 		currentPart = rootSequencePart;
 	}
 }

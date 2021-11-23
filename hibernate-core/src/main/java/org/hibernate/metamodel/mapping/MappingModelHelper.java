@@ -57,7 +57,7 @@ public class MappingModelHelper {
 						}
 						else {
 							colRef = (ColumnReference) sqlExpressionResolver.resolveSqlExpression(
-									createColumnReferenceKey( selection.getContainingTableExpression(), selection.getSelectionExpression() ),
+									createColumnReferenceKey( qualifier, selection.getSelectionExpression() ),
 									sqlAstProcessingState -> new ColumnReference(
 											qualifier,
 											selection,
@@ -89,7 +89,7 @@ public class MappingModelHelper {
 			}
 			else {
 				return sqlExpressionResolver.resolveSqlExpression(
-						createColumnReferenceKey( basicPart.getContainingTableExpression(), basicPart.getSelectionExpression() ),
+						createColumnReferenceKey( qualifier, basicPart.getSelectionExpression() ),
 						sqlAstProcessingState -> new ColumnReference(
 								qualifier,
 								basicPart,

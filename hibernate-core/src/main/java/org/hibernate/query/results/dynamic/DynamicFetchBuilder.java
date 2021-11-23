@@ -6,6 +6,8 @@
  */
 package org.hibernate.query.results.dynamic;
 
+import java.util.List;
+
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.sql.results.graph.Fetchable;
@@ -14,4 +16,5 @@ import org.hibernate.sql.results.graph.Fetchable;
  * @author Steve Ebersole
  */
 public interface DynamicFetchBuilder extends FetchBuilder, NativeQuery.ReturnProperty {
+	List<String> getColumnAliases();
 }

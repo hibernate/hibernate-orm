@@ -99,4 +99,17 @@ public class StringJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<St
 
 		throw unknownWrap( value.getClass() );
 	}
+
+	@Override
+	public boolean isWider(JavaType<?> javaType) {
+		switch ( javaType.getJavaType().getTypeName() ) {
+			case "char":
+			case "char[]":
+			case "java.lang.Character":
+			case "java.lang.Character[]":
+				return true;
+			default:
+				return false;
+		}
+	}
 }

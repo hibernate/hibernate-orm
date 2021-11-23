@@ -211,6 +211,9 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 		// For SQL-Server we need to cast certain arguments to varchar(16384) to be able to concat them
 		CommonFunctionFactory.aggregates( this, queryEngine, SqlAstNodeRenderingMode.DEFAULT, "+", "varchar(16384)" );
 
+		// AVG by default uses the input type, so we possibly need to cast the argument type, hence a special function
+		CommonFunctionFactory.avg_castingNonDoubleArguments( this, queryEngine, SqlAstNodeRenderingMode.DEFAULT );
+
 		queryEngine.getSqmFunctionRegistry().register( "concat", new SybaseConcatFunction( this, queryEngine.getTypeConfiguration() ) );
 
 		//this doesn't work 100% on earlier versions of Sybase

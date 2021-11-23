@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
 import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
@@ -69,11 +70,13 @@ public class SqmPluralValuedSimplePath<E> extends AbstractSqmSimplePath<E> {
 			boolean isTerminal,
 			SqmCreationState creationState) {
 		// this is a reference to a collection outside of the from-clause...
-		final NavigablePath navigablePath = getNavigablePath().append( name );
-		return creationState.getProcessingStateStack().getCurrent().getPathRegistry().resolvePath(
-				navigablePath,
-				np -> get( np.getUnaliasedLocalName() )
-		);
+		final CollectionPart.Nature nature = CollectionPart.Nature.fromNameExact( name );
+		if ( nature == null ) {
+			throw new SemanticException( "illegal attempt to dereference collection [" + getNavigablePath() + "] with element property reference [" + name + "]" );
+		}
+		final SqmPath<?> sqmPath = get( name );
+		creationState.getProcessingStateStack().getCurrent().getPathRegistry().register( sqmPath );
+		return sqmPath;
 	}
 
 	@Override
@@ -86,8 +89,12 @@ public class SqmPluralValuedSimplePath<E> extends AbstractSqmSimplePath<E> {
 		final NavigablePath navigablePath = getNavigablePath().getParent().append(
 				getNavigablePath().getUnaliasedLocalName(),
 				alias
-		);
-		SqmFrom<?, ?> path = pathRegistry.findFromByPath( navigablePath );
+		).append( CollectionPart.Nature.ELEMENT.getName() );
+		final SqmFrom<?, ?> indexedPath = pathRegistry.findFromByPath( navigablePath );
+		if ( indexedPath != null ) {
+			return indexedPath;
+		}
+		SqmFrom<?, ?> path = pathRegistry.findFromByPath( navigablePath.getParent() );
 		if ( path == null ) {
 			final PluralPersistentAttribute<?, ?, E> referencedPathSource = getReferencedPathSource();
 			final SqmFrom<?, Object> parent = pathRegistry.resolveFrom( getLhs() );
@@ -124,11 +131,13 @@ public class SqmPluralValuedSimplePath<E> extends AbstractSqmSimplePath<E> {
 			parent.addSqmJoin( join );
 			pathRegistry.register( path = join );
 		}
-		return new SqmIndexedCollectionAccessPath<>(
-				path.getNavigablePath(),
+		final SqmIndexedCollectionAccessPath<Object> result = new SqmIndexedCollectionAccessPath<>(
+				navigablePath,
 				path,
 				selector
 		);
+		pathRegistry.register( result );
+		return result;
 	}
 
 	@Override

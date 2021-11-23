@@ -42,6 +42,9 @@ BIG_DECIMAL_SUFFIX : [bB] [dD];
 fragment
 BIG_INTEGER_SUFFIX : [bB] [iI];
 
+// Although this is not 100% correct because this accepts leading zeros,
+// we stick to this because temporal literals use this rule for simplicity.
+// Since we don't support octal literals, this shouldn't really be a big issue
 fragment
 INTEGER_NUMBER
 	: DIGIT+
@@ -73,8 +76,8 @@ fragment SINGLE_QUOTE : '\'';
 fragment DOUBLE_QUOTE : '"';
 
 STRING_LITERAL
-	: DOUBLE_QUOTE ( ~('"') | ESCAPE_SEQUENCE | DOUBLE_QUOTE DOUBLE_QUOTE )* DOUBLE_QUOTE
-	| SINGLE_QUOTE ( ~('\'') | ESCAPE_SEQUENCE | SINGLE_QUOTE SINGLE_QUOTE )* SINGLE_QUOTE
+	: DOUBLE_QUOTE ( ESCAPE_SEQUENCE | DOUBLE_QUOTE DOUBLE_QUOTE | ~('"') )* DOUBLE_QUOTE
+	| SINGLE_QUOTE ( ESCAPE_SEQUENCE | SINGLE_QUOTE SINGLE_QUOTE | ~('\'') )* SINGLE_QUOTE
 	;
 
 fragment BACKSLASH : '\\';
@@ -318,5 +321,5 @@ fragment
 BACKTICK : '`';
 
 QUOTED_IDENTIFIER
-	: BACKTICK ( ~([\\`]) | ESCAPE_SEQUENCE )* BACKTICK
+	: BACKTICK ( ESCAPE_SEQUENCE | '\\' BACKTICK | ~([`]) )* BACKTICK
 	;

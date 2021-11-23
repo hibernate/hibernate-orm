@@ -18,6 +18,7 @@ import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
@@ -169,13 +170,23 @@ public class DynamicResultBuilderEntityStandard
 				}
 		);
 		final TableReference tableReference = tableGroup.getPrimaryTableReference();
-
-		if ( idColumnNames != null ) {
+		final List<String> idColumnAliases;
+		final DynamicFetchBuilder idFetchBuilder;
+		if ( this.idColumnNames != null ) {
+			idColumnAliases = this.idColumnNames;
+		}
+		else if ( ( idFetchBuilder = findIdFetchBuilder() ) != null ) {
+			idColumnAliases = idFetchBuilder.getColumnAliases();
+		}
+		else {
+			idColumnAliases = null;
+		}
+		if ( idColumnAliases != null ) {
 			final EntityIdentifierMapping identifierMapping = entityMapping.getIdentifierMapping();
 			identifierMapping.forEachSelectable(
 					(selectionIndex, selectableMapping) -> {
 						resolveSqlSelection(
-								idColumnNames.get( selectionIndex ),
+								idColumnAliases.get( selectionIndex ),
 								createColumnReferenceKey( tableReference, selectableMapping.getSelectionExpression() ),
 								selectableMapping.getJdbcMapping(),
 								jdbcResultsMetadata,
@@ -227,6 +238,14 @@ public class DynamicResultBuilderEntityStandard
 		finally {
 			creationState.popExplicitFetchMementoResolver();
 		}
+	}
+
+	private DynamicFetchBuilder findIdFetchBuilder() {
+		final EntityIdentifierMapping identifierMapping = entityMapping.getIdentifierMapping();
+		if ( identifierMapping instanceof SingleAttributeIdentifierMapping ) {
+			return findFetchBuilder( ( (SingleAttributeIdentifierMapping) identifierMapping ).getAttributeName() );
+		}
+		return findFetchBuilder( identifierMapping.getPartName() );
 	}
 
 	private void resolveSqlSelection(

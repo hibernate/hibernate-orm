@@ -8,13 +8,11 @@ package org.hibernate.query.hql.internal;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.function.Function;
 
-import org.hibernate.internal.util.MutableInteger;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.hql.HqlLogging;
@@ -115,27 +113,6 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 					)
 			);
 		}
-	}
-
-	@Override
-	public <X> SqmPath<X> findPath(NavigablePath path) {
-		final SqmPath<?> found = sqmPathByPath.get( path );
-		if ( found != null ) {
-			//noinspection unchecked
-			return (SqmPath<X>) found;
-		}
-
-		if ( associatedProcessingState.getParentProcessingState() != null ) {
-			final SqmFrom<?, X> containingQueryFrom = associatedProcessingState.getParentProcessingState()
-					.getPathRegistry()
-					.findFromByPath( path );
-			if ( containingQueryFrom != null ) {
-				// todo (6.0) create a correlation?
-				return containingQueryFrom;
-			}
-		}
-
-		return null;
 	}
 
 	@Override
@@ -245,21 +222,6 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 		register( sqmFrom );
 		//noinspection unchecked
 		return (X) sqmFrom;
-	}
-
-	@Override
-	public <X> SqmPath<X> resolvePath(NavigablePath navigablePath, Function<NavigablePath, SqmPath<X>> creator) {
-		SqmTreeCreationLogger.LOGGER.tracef( "SqmProcessingIndex#resolvePath(NavigablePath) : %s", navigablePath );
-
-		final SqmPath<?> existing = sqmPathByPath.get( navigablePath );
-		if ( existing != null ) {
-			//noinspection unchecked
-			return (SqmPath<X>) existing;
-		}
-
-		final SqmPath<X> sqmPath = creator.apply( navigablePath );
-		register( sqmPath );
-		return sqmPath;
 	}
 
 	private boolean definesAttribute(SqmPathSource<?> containerType, String name) {

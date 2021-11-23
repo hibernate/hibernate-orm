@@ -92,6 +92,44 @@ List<Object[]> postAndComments = entityManager.createStoredProcedureQuery( "fn_p
 * Functions
 * Multi-table bulk manipulation HQL/Criteria query handling
 
+=== Remove support for special plural attribute properties
+
+Prior to 6.0, it was possible to de-reference special properties on plural attributes like `size` which was dropped.
+The special properties lead to confusion and were sometimes ambiguous. The replacement is the function syntax.
+
+size::
+The collection size can be determined by using the `size( pluralAttribute )` function instead
+
+elements::
+The collection elements can be referred to by using the `value( pluralAttribute )` function instead
+
+indices::
+The collection indices can be referred to by using the `index( pluralAttribute )` or `key( pluralAttribute )` function instead
+
+index::
+The collection index can be referred to by using the `index( pluralAttribute )` or `key( pluralAttribute )` function instead
+
+maxindex::
+The collection maximum index can be determined by using the `maxindex( pluralAttribute )` function instead
+
+minindex::
+The collection minimum index can be determined by using the `minindex( pluralAttribute )` function instead
+
+maxelement::
+The collection maximum element can be determined by using the `maxelement( pluralAttribute )` function instead
+
+minelement::
+The collection minimum element can be determined by using the `minelement( pluralAttribute )` function instead
+
+=== Remove support for comparing association against FK value
+
+Previously Hibernate did allow comparing an association with an FK value like `... where alias.association = 1`
+or `... where alias.association = alias.association.id` or even `... where alias.association = :param` where `param`
+is bound to an integer `1`. This was supported prior to Hibernate 6.0 if the foreign key for the association is an integer.
+
+The right way to do this is de-referencing the association by the FK attribute `... where alias.association.id = 1`
+which is guaranteed to not produce a join, or use an entity reference for `... where alias.association = :param`
+where `param` is bound to `entityManager.getReference(EntityClass.class, 1)`.
 
 === Removals
 

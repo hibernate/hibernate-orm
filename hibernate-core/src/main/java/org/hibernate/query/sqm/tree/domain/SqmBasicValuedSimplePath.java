@@ -46,7 +46,7 @@ public class SqmBasicValuedSimplePath<T>
 	// SemanticPathPart
 
 	@Override
-	public SemanticPathPart resolvePathPart(
+	public SqmPath<?> resolvePathPart(
 			String name,
 			boolean isTerminal,
 			SqmCreationState creationState) {

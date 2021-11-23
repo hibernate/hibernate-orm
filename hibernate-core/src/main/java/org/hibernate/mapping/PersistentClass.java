@@ -542,6 +542,22 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		}
 	}
 
+	public Property getSubclassProperty(String propertyName) throws MappingException {
+		Property identifierProperty = getIdentifierProperty();
+		if ( identifierProperty != null
+				&& identifierProperty.getName().equals( StringHelper.root( propertyName ) ) ) {
+			return identifierProperty;
+		}
+		else {
+			Iterator<Property> iter = getSubclassPropertyClosureIterator();
+			Component identifierMapper = getIdentifierMapper();
+			if ( identifierMapper != null ) {
+				iter = new JoinedIterator<>( identifierMapper.getPropertyIterator(), iter );
+			}
+			return getProperty( propertyName, iter );
+		}
+	}
+
 	/**
 	 * Check to see if this PersistentClass defines a property with the given name.
 	 *

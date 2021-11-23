@@ -52,7 +52,7 @@ setClause
 	;
 
 assignment
-	: dotIdentifierSequence EQUAL expression
+	: dotIdentifierSequence EQUAL expressionOrPredicate
 	;
 
 insertStatement
@@ -68,7 +68,7 @@ valuesList
 	;
 
 values
-	: LEFT_PAREN expression (COMMA expression)* RIGHT_PAREN
+	: LEFT_PAREN expressionOrPredicate (COMMA expressionOrPredicate)* RIGHT_PAREN
 	;
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -116,20 +116,14 @@ pathRoot
 	: entityName identificationVariableDef?
 	;
 
-/**
- * Specialized dotIdentifierSequence for cases where we expect an entity-name.  We handle it specially
- * for the sake of performance.  Specifically we concatenate together the entity name as we walk the
- * parse tree.  Relying on the `EntiytNameContext#getText` or `DotIdentifierSequenceContext#getText`
- * performs walk to determine the name.
- */
 entityName
-	returns [String fullNameText]
-	: (i=identifier { $fullNameText = _localctx.i.getText(); }) (DOT c=identifier { $fullNameText += ("." + _localctx.c.getText() ); })*
+	: identifier (DOT identifier)*
 	;
 
 identificationVariableDef
 	: (AS identifier)
 	| IDENTIFIER
+	| QUOTED_IDENTIFIER
 	;
 
 crossJoin
@@ -171,19 +165,14 @@ selectionList
 	;
 
 selection
-	: selectExpression resultIdentifier?
+	: selectExpression identificationVariableDef?
 	;
 
 selectExpression
 	:	dynamicInstantiation
 	|	jpaSelectObjectSyntax
 	|	mapEntrySelection
-	|	expression
-	;
-
-resultIdentifier
-	: (AS identifier)
-	| IDENTIFIER
+	|	expressionOrPredicate
 	;
 
 
@@ -206,11 +195,11 @@ dynamicInstantiationArgs
 	;
 
 dynamicInstantiationArg
-	:	dynamicInstantiationArgExpression (AS? identifier)?
+	:	dynamicInstantiationArgExpression identificationVariableDef?
 	;
 
 dynamicInstantiationArgExpression
-	:	expression
+	:	expressionOrPredicate
 	|	dynamicInstantiation
 	;
 
@@ -428,10 +417,10 @@ comparisonOperator
 	;
 
 inList
-	: (ELEMENTS|INDICES) LEFT_PAREN dotIdentifierSequence RIGHT_PAREN		# PersistentCollectionReferenceInList
-	| LEFT_PAREN expression (COMMA expression)*	RIGHT_PAREN					# ExplicitTupleInList
-	| LEFT_PAREN subQuery RIGHT_PAREN										# SubQueryInList
-	| parameter 															# ParamInList
+	: (ELEMENTS|INDICES) LEFT_PAREN dotIdentifierSequence RIGHT_PAREN				# PersistentCollectionReferenceInList
+	| LEFT_PAREN (expressionOrPredicate (COMMA expressionOrPredicate)*)? RIGHT_PAREN# ExplicitTupleInList
+	| LEFT_PAREN subQuery RIGHT_PAREN												# SubQueryInList
+	| parameter 																	# ParamInList
 	;
 
 likeEscape
@@ -444,16 +433,17 @@ likeEscape
 
 expression
 	//highest to lowest precedence
-	: LEFT_PAREN expression RIGHT_PAREN						# GroupedExpression
-	| LEFT_PAREN expression (COMMA expression)* RIGHT_PAREN	# TupleExpression
-	| LEFT_PAREN subQuery RIGHT_PAREN						# SubQueryExpression
-	| primaryExpression collationSpecification?				# CollateExpression
-	| signOperator expression								# UnaryExpression
-	| expression datetimeField  							# ToDurationExpression
-	| expression BY datetimeField							# FromDurationExpression
-	| expression multiplicativeOperator expression			# MultiplicationExpression
-	| expression additiveOperator expression				# AdditionExpression
-	| expression DOUBLE_PIPE expression						# ConcatenationExpression
+	: LEFT_PAREN expression RIGHT_PAREN												# GroupedExpression
+	| LEFT_PAREN expressionOrPredicate (COMMA expressionOrPredicate)+ RIGHT_PAREN	# TupleExpression
+	| LEFT_PAREN subQuery RIGHT_PAREN												# SubQueryExpression
+	| primaryExpression collationSpecification?										# CollateExpression
+	| signOperator numericLiteral													# UnaryNumericLiteralExpression
+	| signOperator expression														# UnaryExpression
+	| expression datetimeField  													# ToDurationExpression
+	| expression BY datetimeField													# FromDurationExpression
+	| expression multiplicativeOperator expression									# MultiplicationExpression
+	| expression additiveOperator expression										# AdditionExpression
+	| expression DOUBLE_PIPE expression												# ConcatenationExpression
 	;
 
 primaryExpression
@@ -464,8 +454,14 @@ primaryExpression
 	| entityIdReference									# EntityIdExpression
 	| entityVersionReference							# EntityVersionExpression
 	| entityNaturalIdReference							# EntityNaturalIdExpression
-	| path												# PathExpression
+	| syntacticDomainPath (pathContinuation)?			# SyntacticPathExpression
 	| function											# FunctionExpression
+	| generalPathFragment								# GeneralPathExpression
+	;
+
+expressionOrPredicate
+	: expression
+	| predicate
 	;
 
 multiplicativeOperator
@@ -506,15 +502,15 @@ caseList
 	;
 
 simpleCaseList
-	: CASE expression (simpleCaseWhen)+ (caseOtherwise)? END
+	: CASE expressionOrPredicate (simpleCaseWhen)+ (caseOtherwise)? END
 	;
 
 simpleCaseWhen
-	: WHEN expression THEN expression
+	: WHEN expression THEN expressionOrPredicate
 	;
 
 caseOtherwise
-	: ELSE expression
+	: ELSE expressionOrPredicate
 	;
 
 searchedCaseList
@@ -522,24 +518,28 @@ searchedCaseList
 	;
 
 searchedCaseWhen
-	: WHEN predicate THEN expression
+	: WHEN predicate THEN expressionOrPredicate
 	;
 
 literal
 	: STRING_LITERAL
-	| INTEGER_LITERAL
+	| NULL
+	| TRUE
+	| FALSE
+	| numericLiteral
+	| binaryLiteral
+	| temporalLiteral
+	| generalizedLiteral
+	;
+
+numericLiteral
+	: INTEGER_LITERAL
 	| LONG_LITERAL
 	| BIG_INTEGER_LITERAL
 	| FLOAT_LITERAL
 	| DOUBLE_LITERAL
 	| BIG_DECIMAL_LITERAL
 	| HEX_LITERAL
-	| NULL
-	| TRUE
-	| FALSE
-	| binaryLiteral
-	| temporalLiteral
-	| generalizedLiteral
 	;
 
 binaryLiteral
@@ -652,7 +652,7 @@ genericFunctionName
 	;
 
 nonStandardFunctionArguments
-	: (DISTINCT | datetimeField COMMA)? expression (COMMA expression)*
+	: (DISTINCT | datetimeField COMMA)? expressionOrPredicate (COMMA expressionOrPredicate)*
 	;
 
 jpaCollectionFunction
@@ -897,11 +897,11 @@ positionFunctionStringArgument
 	;
 
 cube
-	: CUBE LEFT_PAREN expression (COMMA expression)* RIGHT_PAREN
+	: CUBE LEFT_PAREN expressionOrPredicate (COMMA expressionOrPredicate)* RIGHT_PAREN
 	;
 
 rollup
-	: ROLLUP LEFT_PAREN expression (COMMA expression)* RIGHT_PAREN
+	: ROLLUP LEFT_PAREN expressionOrPredicate (COMMA expressionOrPredicate)* RIGHT_PAREN
 	;
 
 /**
@@ -941,13 +941,15 @@ identifier
 	| COS
 	| COUNT
 	| CROSS
+	| CUBE
+	| CURRENT
 	| CURRENT_DATE
 	| CURRENT_INSTANT
 	| CURRENT_TIME
 	| CURRENT_TIMESTAMP
 	| DATE
 	| DAY
-	| DAY
+	| DATETIME
 	| DELETE
 	| DESC
 	| DISTINCT
@@ -958,11 +960,13 @@ identifier
 	| ENTRY
 	| ESCAPE
 	| EVERY
+	| EXCEPT
 	| EXISTS
 	| EXP
 	| EXTRACT
 	| FETCH
 	| FILTER
+	| FIRST
 	| FLOOR
 	| FOR
 	| FORMAT
@@ -971,6 +975,7 @@ identifier
 	| FUNCTION
 	| GREATEST
 	| GROUP
+	| HAVING
 	| HOUR
 	| ID
 	| IFNULL
@@ -981,10 +986,12 @@ identifier
 	| INNER
 	| INSERT
 	| INSTANT
+	| INTERSECT
 	| INTO
 	| IS
 	| JOIN
 	| KEY
+	| LAST
 	| LEADING
 	| LEAST
 	| LEFT
@@ -993,13 +1000,16 @@ identifier
 	| LIMIT
 	| LIST
 	| LN
+	| LOCAL
+    | LOCAL_DATE
+    | LOCAL_DATETIME
+    | LOCAL_TIME
 	| LOCATE
 	| LOWER
 	| MAP
 	| MAX
 	| MAXELEMENT
 	| MAXINDEX
-	| MEMBER
 	| MEMBER
 	| MICROSECOND
 	| MILLISECOND
@@ -1012,22 +1022,32 @@ identifier
 	| NANOSECOND
 	| NATURALID
 	| NEW
+	| NEXT
 	| NOT
 	| NULLIF
+	| NULLS
 	| OBJECT
 	| OF
+	| OFFSET
+	| OFFSET_DATETIME
 	| ON
+	| ONLY
 	| OR
 	| ORDER
 	| OUTER
+	| OVERLAY
 	| PAD
+	| PERCENT
+	| PLACING
 	| POSITION
 	| POWER
 	| QUARTER
 	| REPLACE
 	| RIGHT
-	| RIGHT
+	| ROLLUP
 	| ROUND
+	| ROW
+	| ROWS
 	| SECOND
 	| SELECT
 	| SET
@@ -1041,6 +1061,7 @@ identifier
 	| SUM
 	| TAN
 	| THEN
+	| TIES
 	| TIME
 	| TIMESTAMP
 	| TIMEZONE_HOUR
@@ -1049,6 +1070,7 @@ identifier
 	| TREAT
 	| TRIM
 	| TYPE
+	| UNION
 	| UPDATE
 	| UPPER
 	| VALUE
@@ -1056,6 +1078,7 @@ identifier
 	| VERSION
 	| VERSIONED
 	| WEEK
+	| WHEN
 	| WHERE
 	| WITH
 	| YEAR) {

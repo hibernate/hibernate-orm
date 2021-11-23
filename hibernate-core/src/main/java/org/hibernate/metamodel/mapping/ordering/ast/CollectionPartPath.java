@@ -56,6 +56,7 @@ public class CollectionPartPath extends AbstractDomainPath {
 	@Override
 	public SequencePart resolvePathPart(
 			String name,
+			String identifier,
 			boolean isTerminal,
 			TranslationContext translationContext) {
 		if ( referencedPart instanceof EmbeddedCollectionPart ) {

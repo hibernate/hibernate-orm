@@ -34,12 +34,10 @@ import org.hibernate.sql.ast.tree.select.SortSpecification;
 public class ColumnReference implements OrderingExpression, SequencePart {
 	private final String columnExpression;
 	private final boolean isColumnExpressionFormula;
-	private final NavigablePath rootPath;
 
-	public ColumnReference(String columnExpression, boolean isColumnExpressionFormula, NavigablePath rootPath) {
+	public ColumnReference(String columnExpression, boolean isColumnExpressionFormula) {
 		this.columnExpression = columnExpression;
 		this.isColumnExpressionFormula = isColumnExpressionFormula;
-		this.rootPath = rootPath;
 	}
 
 	public String getColumnExpression() {
@@ -48,14 +46,6 @@ public class ColumnReference implements OrderingExpression, SequencePart {
 
 	public boolean isColumnExpressionFormula() {
 		return isColumnExpressionFormula;
-	}
-
-	@Override
-	public SequencePart resolvePathPart(
-			String name,
-			boolean isTerminal,
-			TranslationContext translationContext) {
-		throw new UnsupportedMappingException( "ColumnReference cannot be de-referenced" );
 	}
 
 	@Override
@@ -83,6 +73,15 @@ public class ColumnReference implements OrderingExpression, SequencePart {
 						creationState.getCreationContext().getSessionFactory()
 				)
 		);
+	}
+
+	@Override
+	public SequencePart resolvePathPart(
+			String name,
+			String identifier,
+			boolean isTerminal,
+			TranslationContext translationContext) {
+		throw new UnsupportedMappingException( "ColumnReference cannot be de-referenced" );
 	}
 
 	@Override

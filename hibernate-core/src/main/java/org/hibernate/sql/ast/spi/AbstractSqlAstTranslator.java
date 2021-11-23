@@ -28,6 +28,7 @@ import org.hibernate.QueryException;
 import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.SelectItemReferenceStrategy;
 import org.hibernate.internal.util.MathHelper;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.persister.entity.EntityPersister;
@@ -184,7 +185,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	private final Dialect dialect;
 	private final Statement statement;
 	private final Set<String> affectedTableNames = new HashSet<>();
-	private String dmlTargetTableAlias;
+	private MutationStatement dmlStatement;
 	private boolean needsSelectAliases;
 	// We must reset the queryPartForRowNumbering fields to null if a query part is visited that does not
 	// contribute to the row numbering i.e. if the query part is a sub-query in the where clause.
@@ -343,11 +344,15 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected String getDmlTargetTableAlias() {
-		return dmlTargetTableAlias;
+		return dmlStatement == null ? null : dmlStatement.getTargetTable().getIdentificationVariable();
 	}
 
 	protected Statement getStatement() {
 		return statement;
+	}
+
+	public MutationStatement getCurrentDmlStatement() {
+		return dmlStatement;
 	}
 
 	protected SqlAstNodeRenderingMode getParameterRenderingMode() {
@@ -777,42 +782,42 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitSelectStatement(SelectStatement statement) {
-		String oldDmlTargetTableAlias = dmlTargetTableAlias;
-		dmlTargetTableAlias = null;
+		MutationStatement oldDmlStatement = dmlStatement;
+		dmlStatement = null;
 		try {
 			visitCteContainer( statement );
 			statement.getQueryPart().accept( this );
 		}
 		finally {
-			dmlTargetTableAlias = oldDmlTargetTableAlias;
+			dmlStatement = oldDmlStatement;
 		}
 	}
 
 	@Override
 	public void visitDeleteStatement(DeleteStatement statement) {
-		String oldDmlTargetTableAlias = dmlTargetTableAlias;
-		dmlTargetTableAlias = null;
+		MutationStatement oldDmlStatement = dmlStatement;
+		dmlStatement = null;
 		try {
 			visitCteContainer( statement );
-			dmlTargetTableAlias = statement.getTargetTable().getIdentificationVariable();
+			dmlStatement = statement;
 			visitDeleteStatementOnly( statement );
 		}
 		finally {
-			dmlTargetTableAlias = oldDmlTargetTableAlias;
+			dmlStatement = oldDmlStatement;
 		}
 	}
 
 	@Override
 	public void visitUpdateStatement(UpdateStatement statement) {
-		String oldDmlTargetTableAlias = dmlTargetTableAlias;
-		dmlTargetTableAlias = null;
+		MutationStatement oldDmlTargetTableAlias = dmlStatement;
+		dmlStatement = null;
 		try {
 			visitCteContainer( statement );
-			dmlTargetTableAlias = statement.getTargetTable().getIdentificationVariable();
+			dmlStatement = statement;
 			visitUpdateStatementOnly( statement );
 		}
 		finally {
-			dmlTargetTableAlias = oldDmlTargetTableAlias;
+			dmlStatement = oldDmlTargetTableAlias;
 		}
 	}
 
@@ -823,14 +828,14 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitInsertStatement(InsertStatement statement) {
-		String oldDmlTargetTableAlias = dmlTargetTableAlias;
-		dmlTargetTableAlias = null;
+		MutationStatement oldDmlStatement = dmlStatement;
+		dmlStatement = null;
 		try {
 			visitCteContainer( statement );
 			visitInsertStatementOnly( statement );
 		}
 		finally {
-			dmlTargetTableAlias = oldDmlTargetTableAlias;
+			dmlStatement = oldDmlStatement;
 		}
 	}
 
@@ -3060,10 +3065,22 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				if ( e instanceof SqlSelectionExpression ) {
 					return (SqlSelectionExpression) e;
 				}
+				else if ( e instanceof SqmPathInterpretation<?> ) {
+					final Expression sqlExpression = ( (SqmPathInterpretation<?>) e ).getSqlExpression();
+					if ( sqlExpression instanceof SqlSelectionExpression ) {
+						return (SqlSelectionExpression) sqlExpression;
+					}
+				}
 			}
 		}
 		else if ( expression instanceof SqlSelectionExpression ) {
 			return (SqlSelectionExpression) expression;
+		}
+		else if ( expression instanceof SqmPathInterpretation<?> ) {
+			final Expression sqlExpression = ( (SqmPathInterpretation<?>) expression ).getSqlExpression();
+			if ( sqlExpression instanceof SqlSelectionExpression ) {
+				return (SqlSelectionExpression) sqlExpression;
+			}
 		}
 		return null;
 	}
@@ -3620,21 +3637,35 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitColumnReference(ColumnReference columnReference) {
+		final String dmlTargetTableAlias = getDmlTargetTableAlias();
 		if ( dmlTargetTableAlias != null && dmlTargetTableAlias.equals( columnReference.getQualifier() ) ) {
 			// todo (6.0) : use the Dialect to determine how to handle column references
 			//		- specifically should they use the table-alias, the table-expression
 			//			or neither for its qualifier
 
-			// for now, use the unqualified form
+			final String tableExpression = getCurrentDmlStatement().getTargetTable().getTableExpression();
+			// Qualify the column reference with the table expression only in subqueries
+			final boolean qualifyColumn = !queryPartStack.isEmpty();
 			if ( columnReference.isColumnExpressionFormula() ) {
 				// For formulas, we have to replace the qualifier as the alias was already rendered into the formula
 				// This is fine for now as this is only temporary anyway until we render aliases for table references
+				final String replacement;
+				if ( qualifyColumn ) {
+					replacement = "$1" + tableExpression + ".$3";
+				}
+				else {
+					replacement = "$1$3";
+				}
 				appendSql(
 						columnReference.getColumnExpression()
-								.replaceAll( "(\\b)(" + dmlTargetTableAlias + "\\.)(\\b)", "$1$3" )
+								.replaceAll( "(\\b)(" + dmlTargetTableAlias + "\\.)(\\b)", replacement )
 				);
 			}
 			else {
+				if ( qualifyColumn ) {
+					appendSql( tableExpression );
+					appendSql( '.' );
+				}
 				appendSql( columnReference.getColumnExpression() );
 			}
 		}
@@ -4465,6 +4496,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitExistsPredicate(ExistsPredicate existsPredicate) {
+		if ( existsPredicate.isNegated() ) {
+			appendSql( "not " );
+		}
 		appendSql( "exists" );
 		existsPredicate.getExpression().accept( this );
 	}
@@ -4577,11 +4611,27 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		final SqlTuple tuple;
 		if ( ( tuple = SqlTupleContainer.getSqlTuple( expression ) ) != null ) {
 			String separator = NO_SEPARATOR;
-			for ( Expression exp : tuple.getExpressions() ) {
-				appendSql( separator );
-				exp.accept( this );
-				appendSql( predicateValue );
-				separator = " and ";
+			// HQL has different semantics for the not null check on embedded attribute mappings
+			// as the embeddable is not considered as null, if at least one sub-part is not null
+			if ( nullnessPredicate.isNegated() && expression.getExpressionType() instanceof AttributeMapping ) {
+				appendSql( '(' );
+				for ( Expression exp : tuple.getExpressions() ) {
+					appendSql( separator );
+					exp.accept( this );
+					appendSql( predicateValue );
+					separator = " or ";
+				}
+				appendSql( ')' );
+			}
+			// For the is null check, and also for tuples in SQL in general,
+			// the semantics is that all sub-parts must match the predicate
+			else {
+				for ( Expression exp : tuple.getExpressions() ) {
+					appendSql( separator );
+					exp.accept( this );
+					appendSql( predicateValue );
+					separator = " and ";
+				}
 			}
 		}
 		else {

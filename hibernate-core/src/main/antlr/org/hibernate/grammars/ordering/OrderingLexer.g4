@@ -22,10 +22,13 @@ WS : ( ' ' | '\t' | '\f' | EOL ) -> skip;
 fragment
 EOL	: [\r\n]+;
 
+fragment
+DIGIT : [0-9];
+
 INTEGER_LITERAL : INTEGER_NUMBER ;
 
 fragment
-INTEGER_NUMBER : ('0' | '1'..'9' '0'..'9'*) ;
+INTEGER_NUMBER : ('0' | '1'..'9' DIGIT*) ;
 
 LONG_LITERAL : INTEGER_NUMBER ('l'|'L');
 
@@ -34,7 +37,7 @@ BIG_INTEGER_LITERAL : INTEGER_NUMBER ('bi'|'BI') ;
 HEX_LITERAL : '0' ('x'|'X') HEX_DIGIT+ ('l'|'L')? ;
 
 fragment
-HEX_DIGIT : ('0'..'9'|'a'..'f'|'A'..'F') ;
+HEX_DIGIT : (DIGIT|'a'..'f'|'A'..'F') ;
 
 OCTAL_LITERAL : '0' ('0'..'7')+ ('l'|'L')? ;
 
@@ -42,10 +45,10 @@ FLOAT_LITERAL : FLOATING_POINT_NUMBER ('f'|'F')? ;
 
 fragment
 FLOATING_POINT_NUMBER
-	: ('0'..'9')+ '.' ('0'..'9')* EXPONENT?
-	| '.' ('0'..'9')+ EXPONENT?
-	| ('0'..'9')+ EXPONENT
-	| ('0'..'9')+
+	: DIGIT+ '.' DIGIT* EXPONENT?
+	| '.' DIGIT+ EXPONENT?
+	| DIGIT+ EXPONENT
+	| DIGIT+
 	;
 
 DOUBLE_LITERAL : FLOATING_POINT_NUMBER ('d'|'D') ;
@@ -53,15 +56,18 @@ DOUBLE_LITERAL : FLOATING_POINT_NUMBER ('d'|'D') ;
 BIG_DECIMAL_LITERAL : FLOATING_POINT_NUMBER ('bd'|'BD') ;
 
 fragment
-EXPONENT : ('e'|'E') ('+'|'-')? ('0'..'9')+ ;
+EXPONENT : ('e'|'E') ('+'|'-')? DIGIT+ ;
+
+fragment SINGLE_QUOTE : '\'';
+fragment DOUBLE_QUOTE : '"';
 
 CHARACTER_LITERAL
-	:	'\'' ( ESCAPE_SEQUENCE | ~('\''|'\\') ) '\'' {setText(getText().substring(1, getText().length()-1));}
+	: SINGLE_QUOTE ( ESCAPE_SEQUENCE | SINGLE_QUOTE SINGLE_QUOTE | ~('\'') ) SINGLE_QUOTE
 	;
 
 STRING_LITERAL
-	:	'"' ( ESCAPE_SEQUENCE | ~('\\'|'"') )* '"' {setText(getText().substring(1, getText().length()-1));}
-	|	('\'' ( ESCAPE_SEQUENCE | ~('\\'|'\'') )* '\'')+ {setText(getText().substring(1, getText().length()-1).replace("''", "'"));}
+	: DOUBLE_QUOTE ( ESCAPE_SEQUENCE | DOUBLE_QUOTE DOUBLE_QUOTE | ~('"') )* DOUBLE_QUOTE
+	| SINGLE_QUOTE ( ESCAPE_SEQUENCE | SINGLE_QUOTE SINGLE_QUOTE | ~('\'') )* SINGLE_QUOTE
 	;
 
 fragment
@@ -107,12 +113,19 @@ DESC	: [dD] [eE] [sS] [cC] ( [eE] [nN] [dD] [iI] [nN] [gG] )?;
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Identifiers
 
+fragment
+LETTER : [a-zA-Z\u0080-\ufffe_$];
+
+// Identifiers
 IDENTIFIER
-	:	('a'..'z'|'A'..'Z'|'_'|'$'|'\u0080'..'\ufffe')('a'..'z'|'A'..'Z'|'_'|'$'|'0'..'9'|'\u0080'..'\ufffe')*
+	: LETTER (LETTER | DIGIT)*
 	;
 
+fragment
+BACKTICK : '`';
+
 QUOTED_IDENTIFIER
-	: '`' ( ESCAPE_SEQUENCE | ~('\\'|'`') )* '`'
+	: BACKTICK ( ESCAPE_SEQUENCE | '\\' BACKTICK | ~([`]) )* BACKTICK
 	;
 
 

@@ -18,12 +18,12 @@ import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.PostgresPlusDialect;
-import org.hibernate.dialect.SybaseASE15Dialect;
+import org.hibernate.dialect.SybaseASEDialect;
 
 import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.SkipLog;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -35,7 +35,7 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Gail Badner
  */
-@SkipForDialect(value = SybaseASE15Dialect.class, jiraKey = "HHH-6426")
+@SkipForDialect(value = SybaseASEDialect.class, jiraKey = "HHH-6426")
 @SkipForDialect(value = PostgresPlusDialect.class, comment = "Almost all of the tests result in 'ambiguous column' errors.")
 public class FunctionNameAsColumnTest extends BaseCoreFunctionalTestCase {
 	@Override
@@ -167,8 +167,8 @@ public class FunctionNameAsColumnTest extends BaseCoreFunctionalTestCase {
 					CriteriaQuery<EntityWithFunctionAsColumnHolder> criteria = criteriaBuilder.createQuery(
 							EntityWithFunctionAsColumnHolder.class );
 					Root<EntityWithFunctionAsColumnHolder> root = criteria.from( EntityWithFunctionAsColumnHolder.class );
-					root.fetch( "entityWithArgFunctionAsColumns", JoinType.LEFT )
-							.fetch( "nextHolder", JoinType.LEFT )
+					root.fetch( "entityWithArgFunctionAsColumns", JoinType.LEFT );
+					root.fetch( "nextHolder", JoinType.LEFT )
 							.fetch( "entityWithArgFunctionAsColumns", JoinType.LEFT );
 					criteria.where( criteriaBuilder.isNotNull( root.get( "nextHolder" ) ) );
 
@@ -199,11 +199,10 @@ public class FunctionNameAsColumnTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testGetMultiColumnSameNameAsNoArgFunctionHQL() {
-//		SQLFunction function = sessionFactory().getSqlFunctionRegistry().findSQLFunction( "current_date" );
-//		if ( function == null || function.hasParenthesesIfNoArguments() ) {
-//			SkipLog.reportSkip( "current_date reuires ()", "tests noarg function that does not require ()" );
-//			return;
-//		}
+		Assume.assumeFalse(
+				"current_date requires () but test is for noarg function that does not require ()",
+				sessionFactory().getJdbcServices().getDialect().currentDate().contains( "(" )
+		);
 
 		inTransaction(
 				s -> {
@@ -231,7 +230,6 @@ public class FunctionNameAsColumnTest extends BaseCoreFunctionalTestCase {
 			assertTrue( Hibernate.isInitialized( holder1.getNextHolder() ) );
 			assertTrue( Hibernate.isInitialized( holder1.getNextHolder().getEntityWithNoArgFunctionAsColumns() ) );
 			assertEquals( 1, holder1.getEntityWithNoArgFunctionAsColumns().size() );
-			s.getTransaction().commit();
 			s.close();
 
 			EntityWithNoArgFunctionAsColumn e1 = (EntityWithNoArgFunctionAsColumn) holder1.getEntityWithNoArgFunctionAsColumns().iterator().next();
@@ -255,11 +253,10 @@ public class FunctionNameAsColumnTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testGetMultiColumnSameNameAsNoArgFunctionCriteria() {
-//		SQLFunction function = sessionFactory().getSqlFunctionRegistry().findSQLFunction( "current_date" );
-//		if ( function == null || function.hasParenthesesIfNoArguments() ) {
-//			SkipLog.reportSkip( "current_date reuires ()", "tests noarg function that does not require ()" );
-//			return;
-//		}
+		Assume.assumeFalse(
+				"current_date requires () but test is for noarg function that does not require ()",
+				sessionFactory().getJdbcServices().getDialect().currentDate().contains( "(" )
+		);
 
 		EntityWithFunctionAsColumnHolder holder1 = new EntityWithFunctionAsColumnHolder();
 		EntityWithFunctionAsColumnHolder holder2 = new EntityWithFunctionAsColumnHolder();
@@ -283,9 +280,9 @@ public class FunctionNameAsColumnTest extends BaseCoreFunctionalTestCase {
 					CriteriaQuery<EntityWithFunctionAsColumnHolder> criteria = criteriaBuilder.createQuery(
 							EntityWithFunctionAsColumnHolder.class );
 					Root<EntityWithFunctionAsColumnHolder> root = criteria.from( EntityWithFunctionAsColumnHolder.class );
-					root.fetch( "entityWithArgFunctionAsColumns", JoinType.LEFT )
-							.fetch( "nextHolder", JoinType.LEFT )
-							.fetch( "entityWithArgFunctionAsColumns", JoinType.LEFT );
+					root.fetch( "entityWithNoArgFunctionAsColumns", JoinType.LEFT );
+					root.fetch( "nextHolder", JoinType.LEFT )
+							.fetch( "entityWithNoArgFunctionAsColumns", JoinType.LEFT );
 					criteria.where( criteriaBuilder.isNotNull( root.get( "nextHolder" ) ) );
 					EntityWithFunctionAsColumnHolder holder = s.createQuery( criteria ).uniqueResult();
 //		holder1 = ( EntityWithFunctionAsColumnHolder ) s.createCriteria( EntityWithFunctionAsColumnHolder.class )
@@ -315,11 +312,10 @@ public class FunctionNameAsColumnTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testNoArgFcnAndColumnSameNameAsNoArgFunctionHQL() {
-//		SQLFunction function = sessionFactory().getSqlFunctionRegistry().findSQLFunction( "current_date" );
-//		if ( function == null || function.hasParenthesesIfNoArguments() ) {
-//			SkipLog.reportSkip( "current_date reuires ()", "tests noarg function that does not require ()" );
-//			return;
-//		}
+		Assume.assumeFalse(
+				"current_date requires () but test is for noarg function that does not require ()",
+				sessionFactory().getJdbcServices().getDialect().currentDate().contains( "(" )
+		);
 
 		EntityWithNoArgFunctionAsColumn e1 = new EntityWithNoArgFunctionAsColumn();
 		EntityWithNoArgFunctionAsColumn e2 = new EntityWithNoArgFunctionAsColumn();
@@ -358,11 +354,6 @@ public class FunctionNameAsColumnTest extends BaseCoreFunctionalTestCase {
 
 	@After
 	public void cleanup() {
-//		SQLFunction function = sessionFactory().getSqlFunctionRegistry().findSQLFunction( "current_date" );
-//		if ( function == null || function.hasParenthesesIfNoArguments() ) {
-//			SkipLog.reportSkip( "current_date reuires ()", "tests noarg function that does not require ()" );
-//			return;
-//		}
 		inTransaction(
 				s -> {
 					s.createQuery( "delete from EntityWithArgFunctionAsColumn" ).executeUpdate();

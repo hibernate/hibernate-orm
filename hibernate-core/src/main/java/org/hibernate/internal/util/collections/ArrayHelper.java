@@ -29,7 +29,7 @@ public final class ArrayHelper {
 
 	public static int indexOf(Object[] array, Object object) {
 		for ( int i = 0; i < array.length; i++ ) {
-			if ( array[i].equals( object ) ) {
+			if ( object.equals( array[i] ) ) {
 				return i;
 			}
 		}

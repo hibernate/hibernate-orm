@@ -148,7 +148,7 @@ public abstract class SqmQueryPart<T> implements SqmVisitableNode, JpaQueryPart<
 		return this;
 	}
 
-	public abstract void validateQueryGroupFetchStructure();
+	public abstract void validateFetchStructureAndOwners();
 
 	public void appendHqlString(StringBuilder sb) {
 		if ( orderByClause == null ) {

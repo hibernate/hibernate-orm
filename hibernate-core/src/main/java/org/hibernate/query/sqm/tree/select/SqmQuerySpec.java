@@ -14,7 +14,9 @@ import java.util.Set;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
 
+import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.query.FetchClauseType;
+import org.hibernate.query.SemanticException;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaOrder;
 import org.hibernate.query.criteria.JpaPredicate;
@@ -24,6 +26,8 @@ import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmNode;
+import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
+import org.hibernate.query.sqm.tree.domain.SqmTreatedRoot;
 import org.hibernate.query.sqm.tree.expression.SqmAliasedNodeRef;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
@@ -345,8 +349,86 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 	}
 
 	@Override
-	public void validateQueryGroupFetchStructure() {
-		// No-op
+	public void validateFetchStructureAndOwners() {
+		validateFetchOwners();
+	}
+
+	public void validateFetchOwners() {
+		if ( getFromClause() == null ) {
+			return;
+		}
+		final Set<SqmFrom<?, ?>> selectedFromSet;
+		if ( selectClause == null || selectClause.getSelections().isEmpty() ) {
+			selectedFromSet = Collections.singleton( getFromClause().getRoots().get( 0 ) );
+		}
+		else {
+			selectedFromSet = new HashSet<>( selectClause.getSelections().size() );
+			for ( SqmSelection<?> selection : selectClause.getSelections() ) {
+				collectSelectedFromSet( selectedFromSet, selection.getSelectableNode() );
+			}
+		}
+
+		for ( SqmRoot<?> root : getFromClause().getRoots() ) {
+			validateFetchOwners( selectedFromSet, root );
+		}
+	}
+
+	private void collectSelectedFromSet(Set<SqmFrom<?, ?>> selectedFromSet, SqmSelectableNode<?> selectableNode) {
+		if ( selectableNode instanceof SqmJpaCompoundSelection<?> ) {
+			final SqmJpaCompoundSelection<?> compoundSelection = (SqmJpaCompoundSelection<?>) selectableNode;
+			for ( SqmSelectableNode<?> selectionItem : compoundSelection.getSelectionItems() ) {
+				collectSelectedFromSet( selectedFromSet, selectionItem );
+			}
+		}
+		else if ( selectableNode instanceof SqmDynamicInstantiation<?> ) {
+			final SqmDynamicInstantiation<?> instantiation = (SqmDynamicInstantiation<?>) selectableNode;
+			for ( SqmDynamicInstantiationArgument<?> selectionItem : instantiation.getArguments() ) {
+				collectSelectedFromSet( selectedFromSet, selectionItem.getSelectableNode() );
+			}
+		}
+		else if ( selectableNode instanceof SqmFrom<?, ?> ) {
+			collectSelectedFromSet( selectedFromSet, (SqmFrom<?, ?>) selectableNode );
+		}
+	}
+
+	private void collectSelectedFromSet(Set<SqmFrom<?, ?>> selectedFromSet, SqmFrom<?, ?> sqmFrom) {
+		selectedFromSet.add( sqmFrom );
+		for ( SqmJoin<?, ?> sqmJoin : sqmFrom.getSqmJoins() ) {
+			if ( sqmJoin.getReferencedPathSource().getSqmPathType() instanceof EmbeddableDomainType<?> ) {
+				collectSelectedFromSet( selectedFromSet, sqmJoin );
+			}
+		}
+
+		for ( SqmFrom<?, ?> sqmTreat : sqmFrom.getSqmTreats() ) {
+			collectSelectedFromSet( selectedFromSet, sqmTreat );
+		}
+	}
+
+	private void validateFetchOwners(Set<SqmFrom<?, ?>> selectedFromSet, SqmFrom<?, ?> owner) {
+		for ( SqmJoin<?, ?> sqmJoin : owner.getSqmJoins() ) {
+			if ( sqmJoin instanceof SqmAttributeJoin<?, ?> ) {
+				final SqmAttributeJoin<?, ?> attributeJoin = (SqmAttributeJoin<?, ?>) sqmJoin;
+				if ( attributeJoin.isFetched() ) {
+					assertFetchOwner( selectedFromSet, owner, sqmJoin );
+					// Only need to check the first level
+					continue;
+				}
+			}
+			validateFetchOwners( selectedFromSet, sqmJoin );
+		}
+		for ( SqmFrom<?, ?> sqmTreat : owner.getSqmTreats() ) {
+			validateFetchOwners( selectedFromSet, sqmTreat );
+		}
+	}
+
+	private void assertFetchOwner(Set<SqmFrom<?, ?>> selectedFromSet, SqmFrom<?, ?> owner, SqmJoin<?, ?> sqmJoin) {
+		if ( !selectedFromSet.contains( owner ) ) {
+			throw new SemanticException(
+					"query specified join fetching, but the owner " +
+							"of the fetched association was not present in the select list " +
+							"[" + sqmJoin.asLoggableText() + "]"
+			);
+		}
 	}
 
 	@Override

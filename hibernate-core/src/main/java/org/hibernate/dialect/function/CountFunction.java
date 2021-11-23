@@ -43,10 +43,16 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 
 	public static final String FUNCTION_NAME = "count";
 	private final Dialect dialect;
+	private final SqlAstNodeRenderingMode defaultArgumentRenderingMode;
 	private final String concatOperator;
 	private final String concatArgumentCastType;
 
-	public CountFunction(Dialect dialect, TypeConfiguration typeConfiguration, String concatOperator, String concatArgumentCastType) {
+	public CountFunction(
+			Dialect dialect,
+			TypeConfiguration typeConfiguration,
+			SqlAstNodeRenderingMode defaultArgumentRenderingMode,
+			String concatOperator,
+			String concatArgumentCastType) {
 		super(
 				FUNCTION_NAME,
 				FunctionKind.AGGREGATE,
@@ -56,6 +62,7 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 				)
 		);
 		this.dialect = dialect;
+		this.defaultArgumentRenderingMode = defaultArgumentRenderingMode;
 		this.concatOperator = concatOperator;
 		this.concatArgumentCastType = concatArgumentCastType;
 	}
@@ -159,11 +166,11 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 						filter.accept( translator );
 						sqlAppender.appendSql( " and " );
 					}
-					translator.render( expressions.get( 0 ), SqlAstNodeRenderingMode.DEFAULT );
+					translator.render( expressions.get( 0 ), defaultArgumentRenderingMode );
 					sqlAppender.appendSql( " is not null" );
 					for ( int i = 1; i < expressions.size(); i++ ) {
 						sqlAppender.appendSql( " and " );
-						translator.render( expressions.get( i ), SqlAstNodeRenderingMode.DEFAULT );
+						translator.render( expressions.get( i ), defaultArgumentRenderingMode );
 						sqlAppender.appendSql( " is not null" );
 					}
 					sqlAppender.appendSql( " then 1 else null end" );
@@ -219,7 +226,7 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 		}
 		// Rendering the tuple will add parenthesis around
 		else if ( requiresParenthesis ) {
-			translator.render( tuple, SqlAstNodeRenderingMode.DEFAULT );
+			translator.render( tuple, defaultArgumentRenderingMode );
 		}
 		else {
 			renderCommaSeparatedList( sqlAppender, translator, expressions );
@@ -230,10 +237,10 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 			SqlAppender sqlAppender,
 			SqlAstTranslator<?> translator,
 			List<? extends Expression> expressions) {
-		translator.render( expressions.get( 0 ), SqlAstNodeRenderingMode.DEFAULT );
+		translator.render( expressions.get( 0 ), defaultArgumentRenderingMode );
 		for ( int i = 1; i < expressions.size(); i++ ) {
 			sqlAppender.appendSql( ',' );
-			translator.render( expressions.get( i ), SqlAstNodeRenderingMode.DEFAULT );
+			translator.render( expressions.get( i ), defaultArgumentRenderingMode );
 		}
 	}
 
@@ -251,24 +258,24 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 				sqlAppender.appendSql( "1" );
 			}
 			else {
-				translator.render( realArg, SqlAstNodeRenderingMode.DEFAULT );
+				translator.render( realArg, defaultArgumentRenderingMode );
 			}
 			sqlAppender.appendSql( " else null end" );
 		}
 		else {
-			translator.render( realArg, SqlAstNodeRenderingMode.DEFAULT );
+			translator.render( realArg, defaultArgumentRenderingMode );
 		}
 	}
 
 	private void renderCastedArgument(SqlAppender sqlAppender, SqlAstTranslator<?> translator, Expression realArg) {
 		if ( concatArgumentCastType == null ) {
-			translator.render( realArg, SqlAstNodeRenderingMode.DEFAULT );
+			translator.render( realArg, defaultArgumentRenderingMode );
 		}
 		else {
 			final JdbcMapping sourceMapping = realArg.getExpressionType().getJdbcMappings().get( 0 );
 			// No need to cast if we already have a string
 			if ( sourceMapping.getCastType() == CastType.STRING ) {
-				translator.render( realArg, SqlAstNodeRenderingMode.DEFAULT );
+				translator.render( realArg, defaultArgumentRenderingMode );
 			}
 			else {
 				final String cast = dialect.castPattern( sourceMapping.getCastType(), CastType.STRING );

@@ -270,6 +270,8 @@ exec sp_dboption $SYBASE_DB, 'full logging for alter table', true
 go
 sp_dboption $SYBASE_DB, \"select into\", true
 go
+sp_dboption tempdb, 'ddl in tran', true
+go
 EOSQL
 
 /opt/sybase/OCS-16_0/bin/isql -Usa -P myPassword -S MYSYBASE -i ./init1.sql

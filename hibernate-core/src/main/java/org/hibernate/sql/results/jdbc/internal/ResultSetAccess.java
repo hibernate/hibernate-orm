@@ -72,7 +72,10 @@ public interface ResultSetAccess extends JdbcValuesMetadata {
 	}
 
 	@Override
-	default <J> BasicType<J> resolveType(int position, JavaType<J> explicitJavaTypeDescriptor) {
+	default <J> BasicType<J> resolveType(
+			int position,
+			JavaType<J> explicitJavaTypeDescriptor,
+			SessionFactoryImplementor sessionFactory) {
 		final TypeConfiguration typeConfiguration = getFactory().getTypeConfiguration();
 		final JdbcServices jdbcServices = getFactory().getJdbcServices();
 		try {

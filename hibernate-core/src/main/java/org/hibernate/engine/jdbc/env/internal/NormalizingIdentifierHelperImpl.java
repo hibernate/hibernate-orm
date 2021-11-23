@@ -91,7 +91,7 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 
 	@Override
 	public Identifier applyGlobalQuoting(String text) {
-		return Identifier.toIdentifier( text, globallyQuoteIdentifiers && !globallyQuoteIdentifiersSkipColumnDefinitions );
+		return Identifier.toIdentifier( text, globallyQuoteIdentifiers && !globallyQuoteIdentifiersSkipColumnDefinitions, false );
 	}
 
 	@Override

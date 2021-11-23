@@ -129,4 +129,9 @@ public class DynamicFetchBuilderStandard
 		columnNames.add( columnAlias );
 		return this;
 	}
+
+	@Override
+	public List<String> getColumnAliases() {
+		return columnNames;
+	}
 }

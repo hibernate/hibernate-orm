@@ -167,17 +167,15 @@ public class StatsTest extends BaseUnitTestCase {
 			assertEquals( maxTime, sf.getStatistics().getQueryExecutionMaxTime() );
 //		assertEquals( continents, stats.getQueryExecutionMaxTimeQueryString() );
 
-			Iterator itr = s.createQuery( continents ).list().iterator();
-			// iterate() should increment the execution count
+			s.createQuery( continents ).list().iterator();
 			assertEquals( "unexpected execution count", 2, continentStats.getExecutionCount() );
-			// but should not effect the cumulative row count
-			assertEquals( "unexpected row count", results, continentStats.getExecutionRowCount() );
-			Hibernate.close( itr );
+			assertEquals( "unexpected row count", 2, continentStats.getExecutionRowCount() );
+
 
 			ScrollableResults scrollableResults = s.createQuery( continents ).scroll();
 			// same deal with scroll()...
-			assertEquals( "unexpected execution count", 3, continentStats.getExecutionCount() );
-			assertEquals( "unexpected row count", results, continentStats.getExecutionRowCount() );
+			assertEquals( "unexpected execution count", 2, continentStats.getExecutionCount() );
+			assertEquals( "unexpected row count", 2, continentStats.getExecutionRowCount() );
 			// scroll through data because SybaseASE15Dialect throws NullPointerException
 			// if data is not read before closing the ResultSet
 			while ( scrollableResults.next() ) {

@@ -11,6 +11,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import org.hibernate.HibernateError;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.tuple.GenerationTiming;
 
@@ -48,8 +49,8 @@ public class ProposedGeneratedTests {
 
 		created.name = "first";
 
-		// Precision is in milliseconds, so sleep a bit to ensure the TS changes
-		Thread.sleep( 10L );
+		//We need to wait a little to make sure the timestamps produced are different
+		waitALittle();
 
 		// then changing
 		final GeneratedInstantEntity merged = scope.fromTransaction( (session) -> {
@@ -63,6 +64,9 @@ public class ProposedGeneratedTests {
 		assertThat( merged.updatedAt ).isNotEqualTo( created.updatedAt );
 
 		assertThat( merged ).isNotNull();
+
+		//We need to wait a little to make sure the timestamps produced are different
+		waitALittle();
 
 		// lastly, make sure we can load it..
 		final GeneratedInstantEntity loaded = scope.fromTransaction( (session) -> {
@@ -98,4 +102,14 @@ public class ProposedGeneratedTests {
 			this.name = name;
 		}
 	}
+
+	private static void waitALittle() {
+		try {
+			Thread.sleep( 10 );
+		}
+		catch (InterruptedException e) {
+			throw new HibernateError( "Unexpected wakeup from test sleep" );
+		}
+	}
+
 }

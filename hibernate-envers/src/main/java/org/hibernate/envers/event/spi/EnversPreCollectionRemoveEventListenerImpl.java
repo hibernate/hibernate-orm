@@ -20,6 +20,7 @@ import org.hibernate.event.spi.PreCollectionRemoveEventListener;
  * @author HernпїЅn Chanfreau
  * @author Steve Ebersole
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Chris Cranford
  */
 public class EnversPreCollectionRemoveEventListenerImpl
 		extends BaseEnversCollectionEventListener
@@ -43,7 +44,7 @@ public class EnversPreCollectionRemoveEventListenerImpl
 			}
 			else {
 				// HHH-7510 - Avoid LazyInitializationException when global_with_modified_flag = true
-				if ( getEnversService().getGlobalConfiguration().isGlobalWithModifiedFlag() ) {
+				if ( getEnversService().getConfig().isModifiedFlagsEnabled() ) {
 					initializeCollection( event );
 				}
 			}

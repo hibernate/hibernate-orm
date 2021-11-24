@@ -179,7 +179,7 @@ public class ToOneIdMapper extends AbstractToOneMapper {
 							referencedEntityName,
 							entityId,
 							revision,
-							RevisionType.DEL.equals( data.get( enversService.getAuditEntitiesConfiguration().getRevisionTypePropName() ) ),
+							RevisionType.DEL.equals( data.get( enversService.getConfig().getRevisionTypePropertyName() ) ),
 							enversService
 					);
 				}
@@ -190,7 +190,7 @@ public class ToOneIdMapper extends AbstractToOneMapper {
 							referencedEntityName,
 							entityId,
 							revision,
-							RevisionType.DEL.equals( data.get( enversService.getAuditEntitiesConfiguration().getRevisionTypePropName() ) ),
+							RevisionType.DEL.equals( data.get( enversService.getConfig().getRevisionTypePropertyName() ) ),
 							enversService
 					);
 				}

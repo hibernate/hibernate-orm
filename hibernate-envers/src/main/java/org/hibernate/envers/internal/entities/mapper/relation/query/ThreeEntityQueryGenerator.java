@@ -7,13 +7,11 @@
 package org.hibernate.envers.internal.entities.mapper.relation.query;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
-import org.hibernate.envers.configuration.internal.GlobalConfiguration;
+import org.hibernate.envers.configuration.Configuration;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleComponentData;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleIdData;
 import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
-import org.hibernate.envers.strategy.AuditStrategy;
 import org.hibernate.internal.util.StringHelper;
 
 import static org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants.DEL_REVISION_TYPE_PARAMETER;
@@ -37,9 +35,7 @@ public final class ThreeEntityQueryGenerator extends AbstractRelationQueryGenera
 	private final MiddleComponentData[] componentDatas;
 
 	public ThreeEntityQueryGenerator(
-			GlobalConfiguration globalCfg,
-			AuditEntitiesConfiguration verEntCfg,
-			AuditStrategy auditStrategy,
+			Configuration configuration,
 			String versionsMiddleEntityName,
 			MiddleIdData referencingIdData,
 			MiddleIdData referencedIdData,
@@ -48,9 +44,7 @@ public final class ThreeEntityQueryGenerator extends AbstractRelationQueryGenera
 			String orderByCollectionRole,
 			MiddleComponentData... componentData) {
 		super(
-				globalCfg,
-				verEntCfg,
-				auditStrategy,
+				configuration,
 				versionsMiddleEntityName,
 				referencingIdData,
 				revisionTypeInId,
@@ -111,7 +105,7 @@ public final class ThreeEntityQueryGenerator extends AbstractRelationQueryGenera
 
 	@Override
 	protected QueryBuilder buildQueryBuilderCommon(SessionFactoryImplementor sessionFactory) {
-		final String originalIdPropertyName = verEntCfg.getOriginalIdPropName();
+		final String originalIdPropertyName = configuration.getOriginalIdPropertyName();
 		final String eeOriginalIdPropertyPath = MIDDLE_ENTITY_ALIAS + "." + originalIdPropertyName;
 		// SELECT new list(ee) FROM middleEntity ee
 		final QueryBuilder qb = new QueryBuilder( entityName, MIDDLE_ENTITY_ALIAS, sessionFactory );
@@ -147,18 +141,18 @@ public final class ThreeEntityQueryGenerator extends AbstractRelationQueryGenera
 
 	@Override
 	protected void applyValidPredicates(QueryBuilder qb, Parameters rootParameters, boolean inclusive) {
-		final String revisionPropertyPath = verEntCfg.getRevisionNumberPath();
-		final String originalIdPropertyName = verEntCfg.getOriginalIdPropName();
+		final String revisionPropertyPath = configuration.getRevisionNumberPath();
+		final String originalIdPropertyName = configuration.getOriginalIdPropertyName();
 		final String eeOriginalIdPropertyPath = MIDDLE_ENTITY_ALIAS + "." + originalIdPropertyName;
 		final String revisionTypePropName = getRevisionTypePath();
 		// (selecting e entities at revision :revision)
 		// --> based on auditStrategy (see above)
 		auditStrategy.addEntityAtRevisionRestriction(
-				globalCfg,
+				configuration,
 				qb,
 				rootParameters,
 				REFERENCED_ENTITY_ALIAS + "." + revisionPropertyPath,
-				REFERENCED_ENTITY_ALIAS + "." + verEntCfg.getRevisionEndFieldName(),
+				REFERENCED_ENTITY_ALIAS + "." + configuration.getRevisionEndFieldName(),
 				false,
 				referencedIdData,
 				revisionPropertyPath,
@@ -170,11 +164,11 @@ public final class ThreeEntityQueryGenerator extends AbstractRelationQueryGenera
 		// (selecting f entities at revision :revision)
 		// --> based on auditStrategy (see above)
 		auditStrategy.addEntityAtRevisionRestriction(
-				globalCfg,
+				configuration,
 				qb,
 				rootParameters,
 				INDEX_ENTITY_ALIAS + "." + revisionPropertyPath,
-				INDEX_ENTITY_ALIAS + "." + verEntCfg.getRevisionEndFieldName(),
+				INDEX_ENTITY_ALIAS + "." + configuration.getRevisionEndFieldName(),
 				false,
 				indexIdData,
 				revisionPropertyPath,
@@ -189,7 +183,7 @@ public final class ThreeEntityQueryGenerator extends AbstractRelationQueryGenera
 				qb,
 				rootParameters,
 				revisionPropertyPath,
-				verEntCfg.getRevisionEndFieldName(),
+				configuration.getRevisionEndFieldName(),
 				true,
 				referencingIdData,
 				entityName,
@@ -225,7 +219,7 @@ public final class ThreeEntityQueryGenerator extends AbstractRelationQueryGenera
 		final Parameters valid = disjoint.addSubParameters( "and" );
 		// Restrictions to match all rows deleted at exactly given revision.
 		final Parameters removed = disjoint.addSubParameters( "and" );
-		final String revisionPropertyPath = verEntCfg.getRevisionNumberPath();
+		final String revisionPropertyPath = configuration.getRevisionNumberPath();
 		final String revisionTypePropName = getRevisionTypePath();
 		// Excluding current revision, because we need to match data valid at the previous one.
 		applyValidPredicates( remQb, valid, false );

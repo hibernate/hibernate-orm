@@ -6,7 +6,7 @@
  */
 package org.hibernate.envers.configuration.internal.metadata;
 
-import org.hibernate.MappingException;
+import org.hibernate.envers.boot.EnversMappingException;
 import org.hibernate.mapping.JoinedSubclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.SingleTableSubclass;
@@ -47,6 +47,6 @@ public enum InheritanceType {
 			return InheritanceType.TABLE_PER_CLASS;
 		}
 
-		throw new MappingException( "Unknown subclass class: " + subclass.getClass() );
+		throw new EnversMappingException( "Unknown subclass class: " + subclass.getClass() );
 	}
 }

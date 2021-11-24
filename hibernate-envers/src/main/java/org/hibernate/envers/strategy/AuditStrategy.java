@@ -8,7 +8,7 @@ package org.hibernate.envers.strategy;
 
 import org.hibernate.Session;
 import org.hibernate.envers.boot.internal.EnversService;
-import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
+import org.hibernate.envers.configuration.Configuration;
 import org.hibernate.envers.internal.entities.mapper.PersistentCollectionChangeData;
 
 /**
@@ -31,7 +31,7 @@ public interface AuditStrategy extends org.hibernate.envers.strategy.spi.AuditSt
 	 * @param id Id of the entity.
 	 * @param data Audit data to persist
 	 * @param revision Current revision data
-	 * @deprecated (since 5.2.1), use {@link org.hibernate.envers.strategy.spi.AuditStrategy#perform(Session, String, AuditEntitiesConfiguration, Object, Object, Object)}
+	 * @deprecated (since 5.2.1), use {@link org.hibernate.envers.strategy.spi.AuditStrategy#perform(Session, String, Configuration, Object, Object, Object)}
 	 */
 	@Deprecated
 	default void perform(
@@ -44,7 +44,7 @@ public interface AuditStrategy extends org.hibernate.envers.strategy.spi.AuditSt
 		perform(
 				session,
 				entityName,
-				enversService.getAuditEntitiesConfiguration(),
+				enversService.getConfig(),
 				id,
 				data,
 				revision
@@ -61,7 +61,7 @@ public interface AuditStrategy extends org.hibernate.envers.strategy.spi.AuditSt
 	 * @param enversService The EnversService
 	 * @param persistentCollectionChangeData Collection change data to be persisted.
 	 * @param revision Current revision data
-	 * @deprecated (since 5.2.1), use {@link #performCollectionChange(Session, String, String, AuditEntitiesConfiguration, PersistentCollectionChangeData, Object)}
+	 * @deprecated (since 5.2.1), use {@link #performCollectionChange(Session, String, String, Configuration, PersistentCollectionChangeData, Object)}
 	 */
 	@Deprecated
 	default void performCollectionChange(
@@ -75,7 +75,7 @@ public interface AuditStrategy extends org.hibernate.envers.strategy.spi.AuditSt
 				session,
 				entityName,
 				propertyName,
-				enversService.getAuditEntitiesConfiguration(),
+				enversService.getConfig(),
 				persistentCollectionChangeData,
 				revision
 		);

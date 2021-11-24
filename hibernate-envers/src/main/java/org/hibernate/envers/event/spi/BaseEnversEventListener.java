@@ -6,7 +6,6 @@
  */
 package org.hibernate.envers.event.spi;
 
-import java.io.Serializable;
 import java.util.Set;
 
 import org.hibernate.engine.spi.SessionImplementor;
@@ -28,6 +27,7 @@ import org.hibernate.proxy.HibernateProxy;
  * @author HernпїЅn Chanfreau
  * @author Steve Ebersole
  * @author Michal Skowronek (mskowr at o2 dot pl)
+ * @author Chris Cranford
  */
 public abstract class BaseEnversEventListener implements EnversListener {
 	private final EnversService enversService;
@@ -48,7 +48,7 @@ public abstract class BaseEnversEventListener implements EnversListener {
 			Object[] oldState,
 			SessionImplementor session) {
 		// Checking if this is enabled in configuration ...
-		if ( !enversService.getGlobalConfiguration().isGenerateRevisionsForCollections() ) {
+		if ( !enversService.getConfig().isGenerateRevisionsForCollections() ) {
 			return;
 		}
 

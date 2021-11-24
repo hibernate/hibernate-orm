@@ -13,7 +13,7 @@ import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.boot.internal.EnversService;
-import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
+import org.hibernate.envers.configuration.Configuration;
 import org.hibernate.envers.internal.entities.mapper.id.IdMapper;
 import org.hibernate.envers.strategy.AuditStrategy;
 
@@ -48,16 +48,16 @@ public abstract class AbstractAuditWorkUnit implements AuditWorkUnit {
 	}
 
 	protected void fillDataWithId(Map<String, Object> data, Object revision) {
-		final AuditEntitiesConfiguration entitiesCfg = enversService.getAuditEntitiesConfiguration();
+		final Configuration configuration = enversService.getConfig();
 
 		final Map<String, Object> originalId = new HashMap<>();
-		originalId.put( entitiesCfg.getRevisionFieldName(), revision );
+		originalId.put( configuration.getRevisionFieldName(), revision );
 
 		final IdMapper idMapper = enversService.getEntitiesConfigurations().get( getEntityName() ).getIdMapper();
 		idMapper.mapToMapFromId( sessionImplementor, originalId, id );
 
-		data.put( entitiesCfg.getRevisionTypePropName(), revisionType );
-		data.put( entitiesCfg.getOriginalIdPropName(), originalId );
+		data.put( configuration.getRevisionTypePropertyName(), revisionType );
+		data.put( configuration.getOriginalIdPropertyName(), originalId );
 	}
 
 	@Override
@@ -91,7 +91,7 @@ public abstract class AbstractAuditWorkUnit implements AuditWorkUnit {
 	public void undo(Session session) {
 		if ( isPerformed() ) {
 			session.delete(
-					enversService.getAuditEntitiesConfiguration().getAuditEntityName( getEntityName() ),
+					enversService.getConfig().getAuditEntityName( getEntityName() ),
 					performedData
 			);
 			session.flush();

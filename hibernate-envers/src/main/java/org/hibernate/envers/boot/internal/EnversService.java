@@ -8,8 +8,7 @@ package org.hibernate.envers.boot.internal;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
-import org.hibernate.envers.configuration.internal.GlobalConfiguration;
+import org.hibernate.envers.configuration.Configuration;
 import org.hibernate.envers.configuration.internal.MappingCollector;
 import org.hibernate.envers.internal.entities.EntitiesConfigurations;
 import org.hibernate.envers.internal.revisioninfo.ModifiedEntityNamesReader;
@@ -27,6 +26,7 @@ import org.hibernate.service.ServiceRegistry;
  * a means to share the old AuditConfiguration.
  *
  * @author Steve Ebersole
+ * @author Chris Cranford
  */
 public interface EnversService extends Service {
 	/**
@@ -55,9 +55,7 @@ public interface EnversService extends Service {
 
 	void initialize(MetadataImplementor metadata, MappingCollector mappingCollector);
 
-	GlobalConfiguration getGlobalConfiguration();
-
-	AuditEntitiesConfiguration getAuditEntitiesConfiguration();
+	Configuration getConfig();
 
 	AuditProcessManager getAuditProcessManager();
 

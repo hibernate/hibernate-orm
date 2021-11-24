@@ -52,7 +52,7 @@ public class ComponentAuditingData extends PropertyAuditingData implements Audit
 
 	public Iterable<String> getNonSyntheticPropertyNames() {
 		return properties.entrySet().stream()
-				.filter( e -> !e.getValue().isSyntheic() )
+				.filter( e -> !e.getValue().isSynthetic() )
 				.map( Map.Entry::getKey )
 				.collect( Collectors.toList() );
 	}

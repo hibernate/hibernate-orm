@@ -7,9 +7,9 @@
 package org.hibernate.envers.strategy.spi;
 
 import org.hibernate.Incubating;
-import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
+import org.hibernate.envers.boot.model.PersistentEntity;
+import org.hibernate.envers.configuration.Configuration;
 
-import org.dom4j.Element;
 
 /**
  * Describes an audit mapping context.
@@ -18,28 +18,35 @@ import org.dom4j.Element;
  */
 @Incubating
 public class MappingContext {
-	private Element auditEntityMapping;
-	private Element revisionEntityMapping;
-	private AuditEntitiesConfiguration auditEntityConfiguration;
+	private final PersistentEntity mapping;
+	private final Configuration configuration;
+	private final String revisionInfoPropertyType;
+	private final String revisionInfoExplicitTypeName;
 
 	public MappingContext(
-			Element auditEntityMapping,
-			Element revisionEntityMapping,
-			AuditEntitiesConfiguration auditEntitiesConfiguration) {
-		this.auditEntityMapping = auditEntityMapping;
-		this.revisionEntityMapping = revisionEntityMapping;
-		this.auditEntityConfiguration = auditEntitiesConfiguration;
+			PersistentEntity mapping,
+			Configuration configuration,
+			String revisionInfoPropertyType,
+			String revisionInfoExplicitTypeName) {
+		this.mapping = mapping;
+		this.configuration = configuration;
+		this.revisionInfoPropertyType = revisionInfoPropertyType;
+		this.revisionInfoExplicitTypeName = revisionInfoExplicitTypeName;
 	}
 
-	public Element getAuditEntityMapping() {
-		return auditEntityMapping;
+	public PersistentEntity getEntityMapping() {
+		return mapping;
 	}
 
-	public Element getRevisionEntityMapping() {
-		return revisionEntityMapping;
+	public Configuration getConfiguration() {
+		return configuration;
 	}
 
-	public AuditEntitiesConfiguration getAuditEntityConfiguration() {
-		return auditEntityConfiguration;
+	public String getRevisionInfoPropertyType() {
+		return revisionInfoPropertyType;
+	}
+
+	public String getRevisionInfoExplicitTypeName() {
+		return revisionInfoExplicitTypeName;
 	}
 }

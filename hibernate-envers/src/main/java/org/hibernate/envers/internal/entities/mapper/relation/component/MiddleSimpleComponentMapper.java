@@ -9,20 +9,21 @@ package org.hibernate.envers.internal.entities.mapper.relation.component;
 import java.util.Map;
 
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
+import org.hibernate.envers.configuration.Configuration;
 import org.hibernate.envers.internal.entities.EntityInstantiator;
 import org.hibernate.envers.internal.tools.query.Parameters;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
  */
 public final class MiddleSimpleComponentMapper implements MiddleComponentMapper {
+	private final Configuration configuration;
 	private final String propertyName;
-	private final AuditEntitiesConfiguration verEntCfg;
 
-	public MiddleSimpleComponentMapper(AuditEntitiesConfiguration verEntCfg, String propertyName) {
+	public MiddleSimpleComponentMapper(Configuration configuration, String propertyName) {
+		this.configuration = configuration;
 		this.propertyName = propertyName;
-		this.verEntCfg = verEntCfg;
 	}
 
 	@Override
@@ -30,7 +31,7 @@ public final class MiddleSimpleComponentMapper implements MiddleComponentMapper 
 	public Object mapToObjectFromFullMap(
 			EntityInstantiator entityInstantiator, Map<String, Object> data,
 			Object dataObject, Number revision) {
-		return ( (Map<String, Object>) data.get( verEntCfg.getOriginalIdPropName() ) ).get( propertyName );
+		return ( (Map<String, Object>) data.get( configuration.getOriginalIdPropertyName() ) ).get( propertyName );
 	}
 
 	@Override

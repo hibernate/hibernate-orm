@@ -7,8 +7,8 @@
 package org.hibernate.envers;
 
 import java.io.Serializable;
-import java.text.DateFormat;
 import java.util.Date;
+
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
@@ -16,6 +16,7 @@ import jakarta.persistence.Transient;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
  */
 @MappedSuperclass
 public class DefaultRevisionEntity implements Serializable {
@@ -75,6 +76,6 @@ public class DefaultRevisionEntity implements Serializable {
 	@Override
 	public String toString() {
 		return "DefaultRevisionEntity(id = " + id
-				+ ", revisionDate = " + DateFormat.getDateTimeInstance().format( getRevisionDate() ) + ")";
+				+ ", revisionDate = " + DateTimeFormatter.INSTANCE.format(getRevisionDate() ) + ")";
 	}
 }

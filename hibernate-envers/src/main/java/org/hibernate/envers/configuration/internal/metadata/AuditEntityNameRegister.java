@@ -9,7 +9,7 @@ package org.hibernate.envers.configuration.internal.metadata;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.hibernate.MappingException;
+import org.hibernate.envers.boot.EnversMappingException;
 
 /**
  * A register of all audit entity names used so far.
@@ -35,7 +35,7 @@ public class AuditEntityNameRegister {
 	 */
 	public void register(String auditEntityName) {
 		if ( auditEntityNames.contains( auditEntityName ) ) {
-			throw new MappingException( "The audit entity name '" + auditEntityName + "' is already registered." );
+			throw new EnversMappingException( "The audit entity name '" + auditEntityName + "' is already registered." );
 		}
 
 		auditEntityNames.add( auditEntityName );

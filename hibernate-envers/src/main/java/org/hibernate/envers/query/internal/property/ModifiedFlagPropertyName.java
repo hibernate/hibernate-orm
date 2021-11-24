@@ -6,13 +6,14 @@
  */
 package org.hibernate.envers.query.internal.property;
 
-import org.hibernate.envers.boot.internal.EnversService;
-import org.hibernate.envers.configuration.internal.metadata.MetadataTools;
+import org.hibernate.envers.boot.internal.ModifiedColumnNameResolver;
+import org.hibernate.envers.configuration.Configuration;
 
 /**
  * PropertyNameGetter for modified flags
  *
  * @author Michal Skowronek (mskowr at o2 dot pl)
+ * @author Chris Cranford
  */
 public class ModifiedFlagPropertyName implements PropertyNameGetter {
 	private final PropertyNameGetter propertyNameGetter;
@@ -21,10 +22,9 @@ public class ModifiedFlagPropertyName implements PropertyNameGetter {
 		this.propertyNameGetter = propertyNameGetter;
 	}
 
-	public String get(EnversService enversService) {
-		return MetadataTools.getModifiedFlagPropertyName(
-				propertyNameGetter.get( enversService ),
-				enversService.getGlobalConfiguration().getModifiedFlagSuffix()
-		);
+	@Override
+	public String get(Configuration configuration) {
+		final String suffix = configuration.getModifiedFlagsSuffix();
+		return ModifiedColumnNameResolver.getName( propertyNameGetter.get( configuration ), suffix );
 	}
 }

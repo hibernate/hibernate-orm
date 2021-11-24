@@ -153,7 +153,7 @@ public abstract class BaseEnversCollectionEventListener extends BaseEnversEventL
 			final boolean isInverse = collectionEntry.getLoadedPersister().isInverse();
 			final boolean isOneToMany = collectionEntry.getLoadedPersister() instanceof OneToManyPersister;
 			if ( isInverse || isOneToMany ) {
-				return getEnversService().getGlobalConfiguration().isGenerateRevisionsForCollections();
+				return getEnversService().getConfig().isGenerateRevisionsForCollections();
 			}
 			return true;
 		}
@@ -220,7 +220,7 @@ public abstract class BaseEnversCollectionEventListener extends BaseEnversEventL
 			final Object relatedObj = changeData.getChangedElement();
 			final Serializable relatedId = (Serializable) relatedIdMapper.mapToIdFromEntity( relatedObj );
 			final RevisionType revType = (RevisionType) changeData.getData().get(
-					getEnversService().getAuditEntitiesConfiguration().getRevisionTypePropName()
+					getEnversService().getConfig().getRevisionTypePropertyName()
 			);
 
 			// This can be different from relatedEntityName, in case of inheritance (the real entity may be a subclass
@@ -272,7 +272,7 @@ public abstract class BaseEnversCollectionEventListener extends BaseEnversEventL
 			PersistentCollectionChangeWorkUnit workUnit,
 			RelationDescription rd) {
 		// Checking if this is enabled in configuration ...
-		if ( !getEnversService().getGlobalConfiguration().isGenerateRevisionsForCollections() ) {
+		if ( !getEnversService().getConfig().isGenerateRevisionsForCollections() ) {
 			return;
 		}
 

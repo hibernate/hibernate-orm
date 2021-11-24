@@ -7,8 +7,7 @@
 package org.hibernate.envers.strategy.internal;
 
 import org.hibernate.Session;
-import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
-import org.hibernate.envers.configuration.internal.GlobalConfiguration;
+import org.hibernate.envers.configuration.Configuration;
 import org.hibernate.envers.internal.entities.mapper.PersistentCollectionChangeData;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleComponentData;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleIdData;
@@ -40,11 +39,11 @@ public class DefaultAuditStrategy implements AuditStrategy {
 	public void perform(
 			Session session,
 			String entityName,
-			AuditEntitiesConfiguration auditEntitiesConfiguration,
+			Configuration configuration,
 			Object id,
 			Object data,
 			Object revision) {
-		session.save( auditEntitiesConfiguration.getAuditEntityName( entityName ), data );
+		session.save( configuration.getAuditEntityName( entityName ), data );
 		sessionCacheCleaner.scheduleAuditDataRemoval( session, data );
 	}
 
@@ -53,7 +52,7 @@ public class DefaultAuditStrategy implements AuditStrategy {
 			Session session,
 			String entityName,
 			String propertyName,
-			AuditEntitiesConfiguration auditEntitiesConfiguration,
+			Configuration configuration,
 			PersistentCollectionChangeData persistentCollectionChangeData,
 			Object revision) {
 		session.save( persistentCollectionChangeData.getEntityName(), persistentCollectionChangeData.getData() );
@@ -69,7 +68,7 @@ public class DefaultAuditStrategy implements AuditStrategy {
 	 */
 	@Override
 	public void addEntityAtRevisionRestriction(
-			GlobalConfiguration globalCfg,
+			Configuration configuration,
 			QueryBuilder rootQueryBuilder,
 			Parameters parameters,
 			String revisionProperty,
@@ -96,7 +95,7 @@ public class DefaultAuditStrategy implements AuditStrategy {
 		);
 
 		// add subquery to rootParameters
-		String subqueryOperator = globalCfg.getCorrelatedSubqueryOperator();
+		String subqueryOperator = configuration.getCorrelatedSubqueryOperator();
 		parameters.addWhere( revisionProperty, addAlias, subqueryOperator, maxERevQb );
 	}
 

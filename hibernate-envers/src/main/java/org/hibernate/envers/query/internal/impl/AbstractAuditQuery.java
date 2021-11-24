@@ -40,6 +40,7 @@ import static org.hibernate.envers.internal.entities.mapper.relation.query.Query
 /**
  * @author Adam Warski (adam at warski dot org)
  * @author HernпїЅn Chanfreau
+ * @author Chris Cranford
  */
 public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 	protected EntityInstantiator entityInstantiator;
@@ -80,7 +81,7 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 
 		entityClassName = cls.getName();
 		this.entityName = entityName;
-		versionsEntityName = enversService.getAuditEntitiesConfiguration().getAuditEntityName( entityName );
+		versionsEntityName = enversService.getConfig().getAuditEntityName( entityName );
 		if ( !enversService.getEntitiesConfigurations().isVersioned( entityName ) ) {
 			throw new NotAuditedException( entityName, "Entity [" + entityName + "] is not versioned" );
 		}
@@ -134,7 +135,7 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 	// Projection and order
 
 	public AuditQuery addProjection(AuditProjection projection) {
-		AuditProjection.ProjectionData projectionData = projection.getData( enversService );
+		AuditProjection.ProjectionData projectionData = projection.getData( enversService.getConfig() );
 		String projectionEntityAlias = projectionData.getAlias( REFERENCED_ENTITY_ALIAS );
 		String projectionEntityName = aliasToEntityNameMap.get( projectionEntityAlias );
 		registerProjection( projectionEntityName, projection );
@@ -164,7 +165,7 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 
 	public AuditQuery addOrder(AuditOrder order) {
 		hasOrder = true;
-		AuditOrder.OrderData orderData = order.getData( enversService );
+		AuditOrder.OrderData orderData = order.getData( enversService.getConfig() );
 		String orderEntityAlias = orderData.getAlias( REFERENCED_ENTITY_ALIAS );
 		String orderEntityName = aliasToEntityNameMap.get( orderEntityAlias );
 		String propertyName = CriteriaTools.determinePropertyName(

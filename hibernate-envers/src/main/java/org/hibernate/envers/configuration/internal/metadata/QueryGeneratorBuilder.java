@@ -9,9 +9,8 @@ package org.hibernate.envers.configuration.internal.metadata;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.MappingException;
-import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
-import org.hibernate.envers.configuration.internal.GlobalConfiguration;
+import org.hibernate.envers.boot.EnversMappingException;
+import org.hibernate.envers.configuration.Configuration;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleComponentData;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleIdData;
 import org.hibernate.envers.internal.entities.mapper.relation.query.OneEntityQueryGenerator;
@@ -19,7 +18,6 @@ import org.hibernate.envers.internal.entities.mapper.relation.query.RelationQuer
 import org.hibernate.envers.internal.entities.mapper.relation.query.ThreeEntityQueryGenerator;
 import org.hibernate.envers.internal.entities.mapper.relation.query.TwoEntityOneAuditedQueryGenerator;
 import org.hibernate.envers.internal.entities.mapper.relation.query.TwoEntityQueryGenerator;
-import org.hibernate.envers.strategy.AuditStrategy;
 
 /**
  * Builds query generators, for reading collection middle tables, along with any related entities.
@@ -29,9 +27,7 @@ import org.hibernate.envers.strategy.AuditStrategy;
  * @author Chris Cranford
  */
 public final class QueryGeneratorBuilder {
-	private final GlobalConfiguration globalCfg;
-	private final AuditEntitiesConfiguration verEntCfg;
-	private final AuditStrategy auditStrategy;
+	private final Configuration configuration;
 	private final MiddleIdData referencingIdData;
 	private final String auditMiddleEntityName;
 	private final List<MiddleIdData> idDatas;
@@ -39,16 +35,12 @@ public final class QueryGeneratorBuilder {
 	private final String orderByCollectionRole;
 
 	QueryGeneratorBuilder(
-			GlobalConfiguration globalCfg,
-			AuditEntitiesConfiguration verEntCfg,
-			AuditStrategy auditStrategy,
+			Configuration configuration,
 			MiddleIdData referencingIdData,
 			String auditMiddleEntityName,
 			boolean revisionTypeInId,
 			String orderByCollectionRole) {
-		this.globalCfg = globalCfg;
-		this.verEntCfg = verEntCfg;
-		this.auditStrategy = auditStrategy;
+		this.configuration = configuration;
 		this.referencingIdData = referencingIdData;
 		this.auditMiddleEntityName = auditMiddleEntityName;
 		this.orderByCollectionRole = orderByCollectionRole;
@@ -64,34 +56,53 @@ public final class QueryGeneratorBuilder {
 	RelationQueryGenerator build(MiddleComponentData... componentDatas) {
 		if ( idDatas.size() == 0 ) {
 			return new OneEntityQueryGenerator(
-					globalCfg, verEntCfg, auditStrategy, auditMiddleEntityName, referencingIdData,
-					revisionTypeInId, componentDatas
+					configuration,
+					auditMiddleEntityName,
+					referencingIdData,
+					revisionTypeInId,
+					componentDatas
 			);
 		}
 		else if ( idDatas.size() == 1 ) {
 			if ( idDatas.get( 0 ).isAudited() ) {
 				return new TwoEntityQueryGenerator(
-						globalCfg, verEntCfg, auditStrategy, auditMiddleEntityName, referencingIdData,
-						idDatas.get( 0 ), revisionTypeInId, orderByCollectionRole, componentDatas
+						configuration,
+						auditMiddleEntityName,
+						referencingIdData,
+						idDatas.get( 0 ),
+						revisionTypeInId,
+						orderByCollectionRole,
+						componentDatas
 				);
 			}
 			else {
 				return new TwoEntityOneAuditedQueryGenerator(
-						globalCfg, verEntCfg, auditStrategy, auditMiddleEntityName, referencingIdData,
-						idDatas.get( 0 ), revisionTypeInId, orderByCollectionRole, componentDatas
+						configuration,
+						auditMiddleEntityName,
+						referencingIdData,
+						idDatas.get( 0 ),
+						revisionTypeInId,
+						orderByCollectionRole,
+						componentDatas
 				);
 			}
 		}
 		else if ( idDatas.size() == 2 ) {
 			// All entities must be audited.
 			if ( !idDatas.get( 0 ).isAudited() || !idDatas.get( 1 ).isAudited() ) {
-				throw new MappingException(
+				throw new EnversMappingException(
 						"Ternary relations using @Audited(targetAuditMode = NOT_AUDITED) are not supported."
 				);
 			}
 			return new ThreeEntityQueryGenerator(
-					globalCfg, verEntCfg, auditStrategy, auditMiddleEntityName, referencingIdData,
-					idDatas.get( 0 ), idDatas.get( 1 ), revisionTypeInId, orderByCollectionRole, componentDatas
+					configuration,
+					auditMiddleEntityName,
+					referencingIdData,
+					idDatas.get( 0 ),
+					idDatas.get( 1 ),
+					revisionTypeInId,
+					orderByCollectionRole,
+					componentDatas
 			);
 		}
 		else {

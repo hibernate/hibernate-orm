@@ -12,8 +12,7 @@ import java.util.Map;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.RevisionType;
-import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
-import org.hibernate.envers.configuration.internal.GlobalConfiguration;
+import org.hibernate.envers.configuration.Configuration;
 import org.hibernate.envers.internal.entities.RevisionTypeType;
 import org.hibernate.envers.internal.entities.mapper.id.IdMapper;
 import org.hibernate.envers.internal.entities.mapper.id.QueryParameterData;
@@ -34,8 +33,7 @@ import static org.hibernate.envers.internal.entities.mapper.relation.query.Query
  * @author Chris Cranford
  */
 public abstract class AbstractRelationQueryGenerator implements RelationQueryGenerator {
-	protected final GlobalConfiguration globalCfg;
-	protected final AuditEntitiesConfiguration verEntCfg;
+	protected final Configuration configuration;
 	protected final AuditStrategy auditStrategy;
 	protected final MiddleIdData referencingIdData;
 	protected final boolean revisionTypeInId;
@@ -46,17 +44,14 @@ public abstract class AbstractRelationQueryGenerator implements RelationQueryGen
 	private String queryRemovedString;
 
 	protected AbstractRelationQueryGenerator(
-			GlobalConfiguration globalCfg,
-			AuditEntitiesConfiguration verEntCfg,
-			AuditStrategy auditStrategy,
+			Configuration configuration,
 			String entityName,
 			MiddleIdData referencingIdData,
 			boolean revisionTypeInId,
 			String orderByCollectionRole) {
-		this.globalCfg = globalCfg;
-		this.verEntCfg = verEntCfg;
+		this.configuration = configuration;
 		this.entityName = entityName;
-		this.auditStrategy = auditStrategy;
+		this.auditStrategy = configuration.getAuditStrategy();
 		this.referencingIdData = referencingIdData;
 		this.revisionTypeInId = revisionTypeInId;
 		this.orderByCollectionRole = orderByCollectionRole;
@@ -109,9 +104,9 @@ public abstract class AbstractRelationQueryGenerator implements RelationQueryGen
 
 	protected String getRevisionTypePath() {
 		if ( revisionTypeInId ) {
-			return verEntCfg.getOriginalIdPropName() + "." + verEntCfg.getRevisionTypePropName();
+			return configuration.getOriginalIdPropertyName() + "." + configuration.getRevisionTypePropertyName();
 		}
-		return verEntCfg.getRevisionTypePropName();
+		return configuration.getRevisionTypePropertyName();
 	}
 
 	/**

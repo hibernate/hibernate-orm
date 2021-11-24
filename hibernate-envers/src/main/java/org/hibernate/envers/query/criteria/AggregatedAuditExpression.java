@@ -20,6 +20,7 @@ import org.hibernate.envers.query.internal.property.PropertyNameGetter;
 /**
  * @author Adam Warski (adam at warski dot org)
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Chris Cranford
  */
 public class AggregatedAuditExpression implements AuditCriterion, ExtendableCriterion {
 	private String alias;
@@ -69,7 +70,7 @@ public class AggregatedAuditExpression implements AuditCriterion, ExtendableCrit
 		// Make sure our conditions are ANDed together even if the parent Parameters have a different connective
 		Parameters subParams = parameters.addSubParameters( Parameters.AND );
 		// This will be the aggregated query, containing all the specified conditions
-		String auditEntityName = enversService.getAuditEntitiesConfiguration().getAuditEntityName( entityName );
+		String auditEntityName = enversService.getConfig().getAuditEntityName( entityName );
 		String subQueryAlias = qb.generateAlias();
 		QueryBuilder subQb = qb.newSubQueryBuilder( auditEntityName, subQueryAlias );
 		aliasToEntityNameMap.put( subQueryAlias, entityName );
@@ -92,7 +93,7 @@ public class AggregatedAuditExpression implements AuditCriterion, ExtendableCrit
 
 		// Correlating subquery with the outer query by entity id. See JIRA HHH-7827.
 		if ( correlate ) {
-			final String originalIdPropertyName = enversService.getAuditEntitiesConfiguration().getOriginalIdPropName();
+			final String originalIdPropertyName = enversService.getConfig().getOriginalIdPropertyName();
 			enversService.getEntitiesConfigurations().get( entityName ).getIdMapper().addIdsEqualToQuery(
 					subQb.getRootParameters(),
 					subQb.getRootAlias() + "." + originalIdPropertyName,

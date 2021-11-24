@@ -18,11 +18,12 @@ import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.boot.internal.EnversService;
-import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
+import org.hibernate.envers.configuration.Configuration;
 import org.hibernate.envers.internal.entities.mapper.PersistentCollectionChangeData;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
  */
 public class PersistentCollectionChangeWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit {
 	private final List<PersistentCollectionChangeData> collectionChanges;
@@ -77,12 +78,12 @@ public class PersistentCollectionChangeWorkUnit extends AbstractAuditWorkUnit im
 	@Override
 	@SuppressWarnings({"unchecked"})
 	public void perform(Session session, Object revisionData) {
-		final AuditEntitiesConfiguration entitiesCfg = enversService.getAuditEntitiesConfiguration();
+		final Configuration configuration = enversService.getConfig();
 
 		for ( PersistentCollectionChangeData persistentCollectionChangeData : collectionChanges ) {
 			// Setting the revision number
-			( (Map<String, Object>) persistentCollectionChangeData.getData().get( entitiesCfg.getOriginalIdPropName() ) )
-					.put( entitiesCfg.getRevisionFieldName(), revisionData );
+			( (Map<String, Object>) persistentCollectionChangeData.getData().get( configuration.getOriginalIdPropertyName() ) )
+					.put( configuration.getRevisionFieldName(), revisionData );
 
 			auditStrategy.performCollectionChange(
 					session,
@@ -158,7 +159,7 @@ public class PersistentCollectionChangeWorkUnit extends AbstractAuditWorkUnit im
 				else {
 					// If the changes collide, checking if the first one isn't a DEL, and the second a subsequent ADD
 					// If so, removing the change alltogether.
-					final String revTypePropName = enversService.getAuditEntitiesConfiguration().getRevisionTypePropName();
+					final String revTypePropName = enversService.getConfig().getRevisionTypePropertyName();
 					if ( RevisionType.ADD.equals( newChangesIdMap.get( originalOriginalId ).getData().get( revTypePropName ) )
 							&& RevisionType.DEL.equals( originalCollectionChangeData.getData().get( revTypePropName ) ) ) {
 						newChangesIdMap.remove( originalOriginalId );
@@ -188,7 +189,7 @@ public class PersistentCollectionChangeWorkUnit extends AbstractAuditWorkUnit im
 	}
 
 	private Object getOriginalId(PersistentCollectionChangeData persistentCollectionChangeData) {
-		return persistentCollectionChangeData.getData().get( enversService.getAuditEntitiesConfiguration().getOriginalIdPropName() );
+		return persistentCollectionChangeData.getData().get( enversService.getConfig().getOriginalIdPropertyName() );
 	}
 
 	/**

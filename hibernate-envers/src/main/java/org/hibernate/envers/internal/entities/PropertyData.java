@@ -12,7 +12,7 @@ import org.hibernate.envers.ModificationStore;
 import org.hibernate.type.Type;
 
 /**
- * Holds information on a property that is audited.
+ * The runtime representation of an audited property.
  *
  * @author Adam Warski (adam at warski dot org)
  * @author Chris Cranford

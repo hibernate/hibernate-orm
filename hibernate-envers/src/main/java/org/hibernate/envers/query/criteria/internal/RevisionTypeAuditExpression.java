@@ -13,6 +13,7 @@ import org.hibernate.envers.internal.tools.query.QueryBuilder;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
  */
 public class RevisionTypeAuditExpression extends AbstractAtomicExpression {
 	private Object value;
@@ -32,6 +33,6 @@ public class RevisionTypeAuditExpression extends AbstractAtomicExpression {
 			String alias,
 			QueryBuilder qb,
 			Parameters parameters) {
-		parameters.addWhereWithParam( alias, enversService.getAuditEntitiesConfiguration().getRevisionTypePropName(), op, value );
+		parameters.addWhereWithParam( alias, enversService.getConfig().getRevisionTypePropertyName(), op, value );
 	}
 }

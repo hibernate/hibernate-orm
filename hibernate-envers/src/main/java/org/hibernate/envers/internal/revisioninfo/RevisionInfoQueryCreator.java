@@ -7,6 +7,7 @@
 package org.hibernate.envers.internal.revisioninfo;
 
 import java.util.Date;
+import java.util.Locale;
 import java.util.Set;
 
 import org.hibernate.Session;
@@ -42,6 +43,7 @@ public class RevisionInfoQueryCreator {
 	public Query<?> getRevisionDateQuery(Session session, Number revision) {
 		return session.createQuery(
 				String.format(
+						Locale.ENGLISH,
 						REVISION_DATE_QUERY,
 						revisionInfoTimestampName,
 						revisionInfoEntityName,
@@ -53,6 +55,7 @@ public class RevisionInfoQueryCreator {
 	public Query<?> getRevisionNumberForDateQuery(Session session, Date date) {
 		return session.createQuery(
 				String.format(
+						Locale.ENGLISH,
 						REVISION_NUMBER_FOR_DATE_QUERY,
 						revisionInfoIdName,
 						revisionInfoEntityName,
@@ -63,7 +66,7 @@ public class RevisionInfoQueryCreator {
 
 	public Query<?> getRevisionsQuery(Session session, Set<Number> revisions) {
 		return session.createQuery(
-				String.format( REVISIONS_QUERY, revisionInfoEntityName, revisionInfoIdName )
+				String.format( Locale.ENGLISH, REVISIONS_QUERY, revisionInfoEntityName, revisionInfoIdName )
 		).setParameter( REVISIONS_QUERY_PARAMETER, revisions );
 	}
 }

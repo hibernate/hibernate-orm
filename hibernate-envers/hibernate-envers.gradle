@@ -13,8 +13,8 @@ apply plugin: 'org.hibernate.matrix-test'
 dependencies {
     api project( ':hibernate-core' )
 
-    // TODO HHH-13703: get rid of this dependency
-    implementation libraries.dom4j
+    implementation libraries.jakarta_jaxb_api
+    implementation libraries.jakarta_jaxb_runtime
 
     compileOnly libraries.ant
 

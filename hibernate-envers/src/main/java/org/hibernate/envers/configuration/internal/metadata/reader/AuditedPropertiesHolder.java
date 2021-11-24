@@ -6,12 +6,14 @@
  */
 package org.hibernate.envers.configuration.internal.metadata.reader;
 
+import java.util.List;
 
 /**
  * Implementations hold other audited properties.
  *
  * @author Adam Warski (adam at warski dot org)
  * @author Hern&aacut;n Chanfreau
+ * @author Chris Cranford
  */
 public interface AuditedPropertiesHolder {
 	/**
@@ -29,7 +31,6 @@ public interface AuditedPropertiesHolder {
 	 */
 	PropertyAuditingData getPropertyAuditingData(String propertyName);
 
-
 	/**
 	 * @return true if the holder contains any audited property
 	 */
@@ -40,4 +41,8 @@ public interface AuditedPropertiesHolder {
 	 */
 	boolean contains(String propertyName);
 
+	/**
+	 * @return the holder's property audit overrides
+	 */
+	List<AuditOverrideData> getAuditingOverrides();
 }

@@ -11,12 +11,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
 import jakarta.persistence.ElementCollection;
-import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Lob;
 import jakarta.persistence.MapKey;
 import jakarta.persistence.MapKeyEnumerated;
@@ -24,12 +24,9 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Version;
 
 import org.hibernate.HibernateException;
-import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.envers.AuditJoinTable;
 import org.hibernate.envers.AuditMappedBy;
 import org.hibernate.envers.AuditOverride;
@@ -38,9 +35,9 @@ import org.hibernate.envers.Audited;
 import org.hibernate.envers.ModificationStore;
 import org.hibernate.envers.NotAudited;
 import org.hibernate.envers.RelationTargetAuditMode;
-import org.hibernate.envers.configuration.internal.GlobalConfiguration;
-import org.hibernate.envers.configuration.internal.metadata.MetadataTools;
-import org.hibernate.envers.internal.EnversMessageLogger;
+import org.hibernate.envers.boot.EnversMappingException;
+import org.hibernate.envers.boot.internal.ModifiedColumnNameResolver;
+import org.hibernate.envers.boot.spi.EnversMetadataBuildingContext;
 import org.hibernate.envers.internal.tools.MappingTools;
 import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.envers.internal.tools.StringTools;
@@ -49,7 +46,6 @@ import org.hibernate.loader.PropertyPath;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Value;
-import org.jboss.logging.Logger;
 
 import static org.hibernate.envers.internal.tools.Tools.newHashMap;
 import static org.hibernate.envers.internal.tools.Tools.newHashSet;
@@ -67,16 +63,15 @@ import static org.hibernate.envers.internal.tools.Tools.newHashSet;
  * @author Chris Cranford
  */
 public class AuditedPropertiesReader {
-	private static final EnversMessageLogger LOG = Logger.getMessageLogger(
-			EnversMessageLogger.class,
-			AuditedPropertiesReader.class.getName()
-	);
+
+	private static final AuditJoinTableData DEFAULT_AUDIT_JOIN_TABLE = new AuditJoinTableData();
+
+	public static final String NO_PREFIX = "";
 
 	protected final ModificationStore defaultStore;
 	private final PersistentPropertiesSource persistentPropertiesSource;
 	private final AuditedPropertiesHolder auditedPropertiesHolder;
-	private final GlobalConfiguration globalCfg;
-	private final ReflectionManager reflectionManager;
+	private final EnversMetadataBuildingContext metadataBuildingContext;
 	private final String propertyNamePrefix;
 
 	private final Map<String, String> propertyAccessedPersistentProperties;
@@ -92,17 +87,23 @@ public class AuditedPropertiesReader {
 	private final Set<XClass> overriddenNotAuditedClasses;
 
 	public AuditedPropertiesReader(
+			EnversMetadataBuildingContext metadataBuildingContext,
+			ModificationStore defaultStore,
+			PersistentPropertiesSource persistentPropertiesSource,
+			AuditedPropertiesHolder auditedPropertiesHolder) {
+		this ( metadataBuildingContext, defaultStore, persistentPropertiesSource, auditedPropertiesHolder, NO_PREFIX );
+	}
+
+	public AuditedPropertiesReader(
+			EnversMetadataBuildingContext metadataBuildingContext,
 			ModificationStore defaultStore,
 			PersistentPropertiesSource persistentPropertiesSource,
 			AuditedPropertiesHolder auditedPropertiesHolder,
-			GlobalConfiguration globalCfg,
-			ReflectionManager reflectionManager,
 			String propertyNamePrefix) {
 		this.defaultStore = defaultStore;
 		this.persistentPropertiesSource = persistentPropertiesSource;
 		this.auditedPropertiesHolder = auditedPropertiesHolder;
-		this.globalCfg = globalCfg;
-		this.reflectionManager = reflectionManager;
+		this.metadataBuildingContext = metadataBuildingContext;
 		this.propertyNamePrefix = propertyNamePrefix;
 
 		propertyAccessedPersistentProperties = newHashMap();
@@ -121,8 +122,8 @@ public class AuditedPropertiesReader {
 		// First reading the access types for the persistent properties.
 		readPersistentPropertiesAccess();
 
-		if ( persistentPropertiesSource instanceof DynamicComponentSource ) {
-			addPropertiesFromDynamicComponent( (DynamicComponentSource) persistentPropertiesSource );
+		if ( persistentPropertiesSource.isDynamicComponent() ) {
+			addPropertiesFromDynamicComponent( persistentPropertiesSource );
 		}
 		else {
 			// Retrieve classes and properties that are explicitly marked for auditing process by any superclass
@@ -143,6 +144,7 @@ public class AuditedPropertiesReader {
 	 */
 	private void readAuditOverrides(XClass clazz) {
 		/* TODO: Code to remove with @Audited.auditParents - start. */
+		final ReflectionManager reflectionManager = metadataBuildingContext.getReflectionManager();
 		final Audited allClassAudited = clazz.getAnnotation( Audited.class );
 		if ( allClassAudited != null && allClassAudited.auditParents().length > 0 ) {
 			for ( Class c : allClassAudited.auditParents() ) {
@@ -216,7 +218,7 @@ public class AuditedPropertiesReader {
 			return Arrays.asList( auditOverrides.value() );
 		}
 		else if ( auditOverrides != null && auditOverride != null ) {
-			throw new MappingException(
+			throw new EnversMappingException(
 					"@AuditOverrides annotation should encapsulate all @AuditOverride declarations. " +
 							"Please revise Envers annotations applied to class " + clazz.getName() + "."
 			);
@@ -225,14 +227,14 @@ public class AuditedPropertiesReader {
 	}
 
 	/**
-	 * Checks whether one class is assignable from another. If not {@link MappingException} is thrown.
+	 * Checks whether one class is assignable from another. If not {@link EnversMappingException} is thrown.
 	 *
 	 * @param child Subclass.
 	 * @param parent Superclass.
 	 */
 	private void checkSuperclass(XClass child, XClass parent) {
 		if ( !parent.isAssignableFrom( child ) ) {
-			throw new MappingException(
+			throw new EnversMappingException(
 					"Class " + parent.getName() + " is not assignable from " + child.getName() + ". " +
 							"Please revise Envers annotations applied to " + child.getName() + " type."
 			);
@@ -240,7 +242,7 @@ public class AuditedPropertiesReader {
 	}
 
 	/**
-	 * Checks whether class contains property with a given name. If not {@link MappingException} is thrown.
+	 * Checks whether class contains property with a given name. If not {@link EnversMappingException} is thrown.
 	 *
 	 * @param clazz Class.
 	 * @param propertyName Property name.
@@ -250,7 +252,7 @@ public class AuditedPropertiesReader {
 	private XProperty getProperty(XClass clazz, String propertyName) {
 		final XProperty property = ReflectionTools.getProperty( clazz, propertyName );
 		if ( property == null ) {
-			throw new MappingException(
+			throw new EnversMappingException(
 					"Property '" + propertyName + "' not found in class " + clazz.getName() + ". " +
 							"Please revise Envers annotations applied to class " + persistentPropertiesSource.getXClass() + "."
 			);
@@ -317,10 +319,10 @@ public class AuditedPropertiesReader {
 		return allClassAudited;
 	}
 
-	private void addPropertiesFromDynamicComponent(DynamicComponentSource dynamicComponentSource) {
-		Audited audited = computeAuditConfiguration( dynamicComponentSource.getXClass() );
+	private void addPropertiesFromDynamicComponent(PersistentPropertiesSource propertiesSource) {
+		Audited audited = computeAuditConfiguration( propertiesSource.getXClass() );
 		if ( !fieldAccessedPersistentProperties.isEmpty() ) {
-			throw new MappingException(
+			throw new EnversMappingException(
 					"Audited dynamic component cannot have properties with access=\"field\" for properties: " +
 							fieldAccessedPersistentProperties +
 							". \n Change properties access=\"property\", to make it work)"
@@ -333,7 +335,7 @@ public class AuditedPropertiesReader {
 				final Value propertyValue = persistentPropertiesSource.getProperty( property ).getValue();
 				if ( propertyValue instanceof Component ) {
 					this.addFromComponentProperty(
-							new DynamicProperty( dynamicComponentSource, property ),
+							new DynamicProperty( propertiesSource, property ),
 							accessType,
 							(Component) propertyValue,
 							audited
@@ -341,7 +343,7 @@ public class AuditedPropertiesReader {
 				}
 				else {
 					this.addFromNotComponentProperty(
-							new DynamicProperty( dynamicComponentSource, property ),
+							new DynamicProperty( propertiesSource, property ),
 							accessType,
 							audited
 					);
@@ -433,14 +435,15 @@ public class AuditedPropertiesReader {
 			// Marking component properties as placed directly in class (not inside another component).
 			componentData.setBeanName( null );
 
-			final ClassLoaderService classLoaderService = globalCfg.getEnversService().getClassLoaderService();
-
-			final PersistentPropertiesSource componentPropertiesSource = new ComponentPropertiesSource(
-					classLoaderService, reflectionManager,
+			final PersistentPropertiesSource componentPropertiesSource = PersistentPropertiesSource.forComponent(
+					metadataBuildingContext,
 					propertyValue
 			);
 			final AuditedPropertiesReader audPropReader = new AuditedPropertiesReader(
-					ModificationStore.FULL, componentPropertiesSource, componentData, globalCfg, reflectionManager,
+					metadataBuildingContext,
+					ModificationStore.FULL,
+					componentPropertiesSource,
+					componentData,
 					propertyNamePrefix + MappingTools.createComponentPrefix( embeddedName )
 			);
 			audPropReader.read();
@@ -459,21 +462,18 @@ public class AuditedPropertiesReader {
 
 		final PersistentPropertiesSource componentPropertiesSource;
 		if ( propertyValue.isDynamic() ) {
-			componentPropertiesSource = new DynamicComponentSource( reflectionManager, propertyValue, property );
+			final XClass xClass = metadataBuildingContext.getReflectionManager().toXClass( Map.class );
+			componentPropertiesSource = PersistentPropertiesSource.forComponent( propertyValue, xClass, true );
 		}
 		else {
-			final ClassLoaderService classLoaderService = this.globalCfg.getEnversService().getClassLoaderService();
-			componentPropertiesSource = new ComponentPropertiesSource(
-					classLoaderService,
-					reflectionManager, propertyValue );
+			componentPropertiesSource = PersistentPropertiesSource.forComponent( metadataBuildingContext, propertyValue );
 		}
 
 		final ComponentAuditedPropertiesReader audPropReader = new ComponentAuditedPropertiesReader(
+				metadataBuildingContext,
 				ModificationStore.FULL,
 				componentPropertiesSource,
 				componentData,
-				globalCfg,
-				reflectionManager,
 				propertyNamePrefix + MappingTools.createComponentPrefix( property.getName() )
 		);
 		audPropReader.read();
@@ -521,7 +521,7 @@ public class AuditedPropertiesReader {
 		else {
 			// if the optimistic locking field has to be unversioned and the current property
 			// is the optimistic locking field, don't audit it
-			if ( globalCfg.isDoNotAuditOptimisticLockingField() ) {
+			if ( metadataBuildingContext.getConfiguration().isDoNotAuditOptimisticLockingField() ) {
 				final Version jpaVer = property.getAnnotation( Version.class );
 				if ( jpaVer != null ) {
 					return false;
@@ -530,7 +530,8 @@ public class AuditedPropertiesReader {
 		}
 
 		final String propertyName = propertyNamePrefix + property.getName();
-		if ( !this.checkAudited( property, propertyData,propertyName, allClassAudited, globalCfg.getModifiedFlagSuffix() ) ) {
+		final String modifiedFlagsSuffix = metadataBuildingContext.getConfiguration().getModifiedFlagsSuffix();
+		if ( !this.checkAudited( property, propertyData,propertyName, allClassAudited, modifiedFlagsSuffix ) ) {
 			return false;
 		}
 
@@ -559,16 +560,17 @@ public class AuditedPropertiesReader {
 			if ( property.isAnnotationPresent( ElementCollection.class ) ) {
 				if ( property.isAnnotationPresent( Lob.class ) ) {
 					if ( !property.getCollectionClass().isAssignableFrom( Map.class ) ) {
-						throw new MappingException(
+						throw new EnversMappingException(
 								"@ElementCollection combined with @Lob is only supported for Map collection types."
 						);
 					}
 				}
 			}
 		}
-		catch ( MappingException e ) {
+		catch ( EnversMappingException e ) {
 			throw new HibernateException(
 					String.format(
+							Locale.ENGLISH,
 							"Invalid mapping in [%s] for property [%s]",
 							property.getDeclaringClass().getName(),
 							property.getName()
@@ -597,7 +599,7 @@ public class AuditedPropertiesReader {
 			propertyData.setStore( aud.modStore() );
 			propertyData.setRelationTargetAuditMode( aud.targetAuditMode() );
 			propertyData.setUsingModifiedFlag( checkUsingModifiedFlag( aud ) );
-			propertyData.setModifiedFlagName( MetadataTools.getModifiedFlagPropertyName( propertyName, modifiedFlagSuffix ) );
+			propertyData.setModifiedFlagName( ModifiedColumnNameResolver.getName( propertyName, modifiedFlagSuffix ) );
 			if ( !StringTools.isEmpty( aud.modifiedColumnName() ) ) {
 				propertyData.setExplicitModifiedFlagName( aud.modifiedColumnName() );
 			}
@@ -610,13 +612,13 @@ public class AuditedPropertiesReader {
 
 	protected boolean checkUsingModifiedFlag(Audited aud) {
 		// HHH-10468
-		if ( globalCfg.hasSettingForUsingModifiedFlag() ) {
+		if ( metadataBuildingContext.getConfiguration().hasSettingForUseModifiedFlag() ) {
 			// HHH-10468
 			// Modify behavior so that if the global setting has been set by user properties, then
 			// the audit behavior should be a disjunction between the global setting and the field
 			// annotation.  This allows the annotation to take precedence when the global value is
 			// false and for the global setting to take precedence when true.
-			return globalCfg.isGlobalWithModifiedFlag() || aud.withModifiedFlag();
+			return metadataBuildingContext.getConfiguration().isModifiedFlagsEnabled() || aud.withModifiedFlag();
 		}
 		// no global setting enabled, use the annotation's value only.
 		return aud.withModifiedFlag();
@@ -664,12 +666,12 @@ public class AuditedPropertiesReader {
 
 		final AuditJoinTable overrideJoinTable = overriddenAuditedPropertiesJoinTables.get( property );
 		if ( overrideJoinTable != null ) {
-			propertyData.setJoinTable( overrideJoinTable );
+			propertyData.setJoinTable( new AuditJoinTableData( overrideJoinTable ) );
 		}
 		else {
 			final AuditJoinTable propertyJoinTable = property.getAnnotation( AuditJoinTable.class );
 			if ( propertyJoinTable != null ) {
-				propertyData.setJoinTable( propertyJoinTable );
+				propertyData.setJoinTable( new AuditJoinTableData( propertyJoinTable ) );
 			}
 			else {
 				propertyData.setJoinTable( DEFAULT_AUDIT_JOIN_TABLE );
@@ -704,19 +706,16 @@ public class AuditedPropertiesReader {
 	 * @return {@code false} if isAudited() of the override annotation was set to
 	 */
 	private boolean processPropertyAuditingOverrides(XProperty property, PropertyAuditingData propertyData) {
-		// if this property is part of a component, process all override annotations
-		if ( this.auditedPropertiesHolder instanceof ComponentAuditingData ) {
-			final List<AuditOverride> overrides = ( (ComponentAuditingData) this.auditedPropertiesHolder ).getAuditingOverrides();
-			for ( AuditOverride override : overrides ) {
-				if ( property.getName().equals( override.name() ) ) {
-					// the override applies to this property
-					if ( !override.isAudited() ) {
-						return false;
-					}
-					else {
-						if ( override.auditJoinTable() != null ) {
-							propertyData.setJoinTable( override.auditJoinTable() );
-						}
+		// Only components register audit overrides, classes will have no entries.
+		for ( AuditOverrideData override : auditedPropertiesHolder.getAuditingOverrides() ) {
+			if ( property.getName().equals( override.getName() ) ) {
+				// the override applies to this property
+				if ( !override.isAudited() ) {
+					return false;
+				}
+				else {
+					if ( override.getAuditJoinTableData() != null ) {
+						propertyData.setJoinTable( override.getAuditJoinTableData() );
 					}
 				}
 			}
@@ -755,82 +754,4 @@ public class AuditedPropertiesReader {
 			return this.getClass();
 		}
 	};
-
-	private static final AuditJoinTable DEFAULT_AUDIT_JOIN_TABLE = new AuditJoinTable() {
-		@Override
-		public String name() {
-			return "";
-		}
-
-		@Override
-		public String schema() {
-			return "";
-		}
-
-		@Override
-		public String catalog() {
-			return "";
-		}
-
-		@Override
-		public JoinColumn[] inverseJoinColumns() {
-			return new JoinColumn[0];
-		}
-
-		@Override
-		public Class<? extends Annotation> annotationType() {
-			return this.getClass();
-		}
-	};
-
-	public static class ComponentPropertiesSource implements PersistentPropertiesSource {
-		private final XClass xclass;
-		private final Component component;
-
-		protected ComponentPropertiesSource(XClass xClazz, Component component) {
-			this.xclass = xClazz;
-			this.component = component;
-		}
-
-		public ComponentPropertiesSource(
-				ClassLoaderService classLoaderService,
-				ReflectionManager reflectionManager,
-				Component component) {
-			try {
-				Class<Object> objectClass = classLoaderService.classForName( component.getComponentClassName() );
-				this.xclass = reflectionManager.toXClass( objectClass );
-			}
-			catch ( ClassLoadingException e ) {
-				throw new MappingException( e );
-			}
-			this.component = component;
-		}
-
-		@Override
-		@SuppressWarnings({ "unchecked" })
-		public Iterator<Property> getPropertyIterator() {
-			return component.getPropertyIterator();
-		}
-
-		@Override
-		public Property getProperty(String propertyName) {
-			return component.getProperty( propertyName );
-		}
-
-		@Override
-		public XClass getXClass() {
-			return xclass;
-		}
-	}
-
-	public static class DynamicComponentSource extends ComponentPropertiesSource {
-
-		private XProperty baseProperty;
-
-		public DynamicComponentSource(ReflectionManager reflectionManager, Component component, XProperty baseProperty) {
-			super( reflectionManager.toXClass( Map.class ), component );
-			this.baseProperty = baseProperty;
-		}
-	}
-
 }

@@ -10,6 +10,7 @@ import java.util.Comparator;
 import java.util.SortedSet;
 
 import org.hibernate.envers.boot.internal.EnversService;
+import org.hibernate.envers.configuration.Configuration;
 import org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor.Initializor;
 import org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor.SortedSetCollectionInitializor;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
@@ -21,11 +22,16 @@ public final class SortedSetCollectionMapper extends BasicCollectionMapper<Sorte
 	private final Comparator comparator;
 
 	public SortedSetCollectionMapper(
+			Configuration configuration,
 			CommonCollectionMapperData commonCollectionMapperData,
-			Class<? extends SortedSet> collectionClass, Class<? extends SortedSet> proxyClass,
-			MiddleComponentData elementComponentData, Comparator comparator, boolean ordinalInId,
+			Class<? extends SortedSet> collectionClass,
+			Class<? extends SortedSet> proxyClass,
+			MiddleComponentData elementComponentData,
+			Comparator comparator,
+			boolean ordinalInId,
 			boolean revisionTypeInId) {
 		super(
+				configuration,
 				commonCollectionMapperData,
 				collectionClass,
 				proxyClass,

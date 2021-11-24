@@ -13,16 +13,17 @@ import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 
 /**
- * This class prenteds to be property but in fact it represents entry in the map (for dynamic component)
+ * This class pretends to be property but in fact it represents entry in the map (for dynamic component)
  *
  * @author Lukasz Zuchowski (author at zuchos dot com)
+ * @author Chris Cranford
  */
 public class DynamicProperty implements XProperty {
 
-	private AuditedPropertiesReader.DynamicComponentSource source;
-	private String propertyName;
+	private final PersistentPropertiesSource source;
+	private final String propertyName;
 
-	public DynamicProperty(AuditedPropertiesReader.DynamicComponentSource source, String propertyName) {
+	public DynamicProperty(PersistentPropertiesSource source, String propertyName) {
 		this.source = source;
 		this.propertyName = propertyName;
 	}
@@ -48,7 +49,7 @@ public class DynamicProperty implements XProperty {
 	}
 
 	@Override
-	public Class<? extends Collection> getCollectionClass() {
+	public Class<? extends Collection<?>> getCollectionClass() {
 		return null;
 	}
 

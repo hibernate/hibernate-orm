@@ -7,7 +7,6 @@
 package org.hibernate.envers.enhanced;
 
 import java.io.Serializable;
-import java.text.DateFormat;
 import java.util.Date;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
@@ -16,12 +15,14 @@ import jakarta.persistence.Transient;
 
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
+import org.hibernate.envers.DateTimeFormatter;
 import org.hibernate.envers.RevisionNumber;
 import org.hibernate.envers.RevisionTimestamp;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Chris Cranford
  */
 @MappedSuperclass
 public class SequenceIdRevisionEntity implements Serializable {
@@ -89,8 +90,8 @@ public class SequenceIdRevisionEntity implements Serializable {
 
 	@Override
 	public String toString() {
-		return "SequenceIdRevisionEntity(id = " + id + ", revisionDate = " + DateFormat.getDateTimeInstance().format(
-				getRevisionDate()
-		) + ")";
+		return "SequenceIdRevisionEntity(id = " + id
+				+ ", revisionDate = " + DateTimeFormatter.INSTANCE.format(getRevisionDate() )
+				+ ")";
 	}
 }

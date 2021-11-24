@@ -7,18 +7,20 @@
 package org.hibernate.envers.query.projection;
 
 import org.hibernate.envers.boot.internal.EnversService;
+import org.hibernate.envers.configuration.Configuration;
 import org.hibernate.envers.internal.entities.EntityInstantiator;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
  */
 public interface AuditProjection {
+
 	/**
-	 * @param enversService The EnversService
-	 *
-	 * @return the projection data
+	 * @param configuration the configuration
+	 * @return get the project data
 	 */
-	ProjectionData getData(EnversService enversService);
+	ProjectionData getData(Configuration configuration);
 
 	/**
 	 * @param enversService the Envers service

@@ -14,21 +14,23 @@ import org.hibernate.envers.internal.entities.mapper.PropertyMapper;
 import org.hibernate.envers.internal.entities.mapper.id.IdMapper;
 
 /**
+ * Runtime representation of an entity that may or may not be audited.
+ *
  * @author Adam Warski (adam at warski dot org)
  * @author HernпїЅn Chanfreau
  * @author Chris Cranford
  */
 public class EntityConfiguration {
-	private String versionsEntityName;
+	private final String versionsEntityName;
 	/**
 	 * Holds the className for instantiation the configured entity
 	 */
-	private String entityClassName;
-	private IdMappingData idMappingData;
-	private ExtendedPropertyMapper propertyMapper;
+	private final String entityClassName;
+	private final IdMappingData idMappingData;
+	private final ExtendedPropertyMapper propertyMapper;
 	// Maps from property name
-	private Map<String, RelationDescription> relations;
-	private String parentEntityName;
+	private final Map<String, RelationDescription> relations;
+	private final String parentEntityName;
 
 	public EntityConfiguration(
 			String versionsEntityName,
@@ -54,8 +56,15 @@ public class EntityConfiguration {
 		relations.put(
 				fromPropertyName,
 				RelationDescription.toOne(
-						fromPropertyName, RelationType.TO_ONE, toEntityName, null, idMapper, null,
-						null, insertable, ignoreNotFound
+						fromPropertyName,
+						RelationType.TO_ONE,
+						toEntityName,
+						null,
+						idMapper,
+						null,
+						null,
+						insertable,
+						ignoreNotFound
 				)
 		);
 	}
@@ -69,8 +78,15 @@ public class EntityConfiguration {
 		relations.put(
 				fromPropertyName,
 				RelationDescription.toOne(
-						fromPropertyName, RelationType.TO_ONE_NOT_OWNING, toEntityName, mappedByPropertyName,
-						idMapper, null, null, true, ignoreNotFound
+						fromPropertyName,
+						RelationType.TO_ONE_NOT_OWNING,
+						toEntityName,
+						mappedByPropertyName,
+						idMapper,
+						null,
+						null,
+						true,
+						ignoreNotFound
 				)
 		);
 	}
@@ -86,8 +102,15 @@ public class EntityConfiguration {
 		relations.put(
 				fromPropertyName,
 				RelationDescription.toMany(
-						fromPropertyName, RelationType.TO_MANY_NOT_OWNING, toEntityName, mappedByPropertyName,
-						idMapper, fakeBidirectionalRelationMapper, fakeBidirectionalRelationIndexMapper, true, indexed
+						fromPropertyName,
+						RelationType.TO_MANY_NOT_OWNING,
+						toEntityName,
+						mappedByPropertyName,
+						idMapper,
+						fakeBidirectionalRelationMapper,
+						fakeBidirectionalRelationIndexMapper,
+						true,
+						indexed
 				)
 		);
 	}
@@ -96,7 +119,15 @@ public class EntityConfiguration {
 		relations.put(
 				fromPropertyName,
 				RelationDescription.toMany(
-						fromPropertyName, RelationType.TO_MANY_MIDDLE, toEntityName, null, null, null, null, true, false
+						fromPropertyName,
+						RelationType.TO_MANY_MIDDLE,
+						toEntityName,
+						null,
+						null,
+						null,
+						null,
+						true,
+						false
 				)
 		);
 	}
@@ -105,8 +136,15 @@ public class EntityConfiguration {
 		relations.put(
 				fromPropertyName,
 				RelationDescription.toMany(
-						fromPropertyName, RelationType.TO_MANY_MIDDLE_NOT_OWNING, toEntityName, mappedByPropertyName,
-						null, null, null, true, false
+						fromPropertyName,
+						RelationType.TO_MANY_MIDDLE_NOT_OWNING,
+						toEntityName,
+						mappedByPropertyName,
+						null,
+						null,
+						null,
+						true,
+						false
 				)
 		);
 	}

@@ -6,14 +6,7 @@
  */
 package org.hibernate.envers.boot.internal;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedWriter;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.io.Writer;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -23,7 +16,6 @@ import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
 import org.hibernate.boot.jaxb.internal.MappingBinder;
-import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.model.source.internal.hbm.MappingDocument;
 import org.hibernate.boot.spi.AdditionalJaxbMappingProducer;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -36,14 +28,15 @@ import org.hibernate.service.ServiceRegistry;
 import org.jboss.jandex.IndexView;
 import org.jboss.logging.Logger;
 
-import org.dom4j.Document;
-import org.dom4j.io.OutputFormat;
-import org.dom4j.io.XMLWriter;
-
 import static org.hibernate.cfg.AvailableSettings.XML_MAPPING_ENABLED;
+
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBException;
+import jakarta.xml.bind.Marshaller;
 
 /**
  * @author Steve Ebersole
+ * @author Chris Cranford
  */
 public class AdditionalJaxbMappingProducerImpl implements AdditionalJaxbMappingProducer {
 	private static final Logger log = Logger.getLogger( AdditionalJaxbMappingProducerImpl.class );
@@ -74,53 +67,30 @@ public class AdditionalJaxbMappingProducerImpl implements AdditionalJaxbMappingP
 		// atm we do not have distinct origin info for envers
 		final Origin origin = new Origin( SourceType.OTHER, "envers" );
 
-		final MappingCollector mappingCollector = (document) -> {
-			logXml( document );
+		final MappingCollector mappingCollector = new MappingCollector() {
+			@Override
+			public void addDocument(JaxbHbmHibernateMapping mapping) {
+				log.infof( "Adding JAXB document mapping" );
+				try {
+					JAXBContext context = JAXBContext.newInstance( JaxbHbmHibernateMapping.class );
+					Marshaller marshaller = context.createMarshaller();
+					marshaller.setProperty ( Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE );
 
-			final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			try {
-				final Writer w = new BufferedWriter( new OutputStreamWriter( baos, "UTF-8" ) );
-				final XMLWriter xw = new XMLWriter( w, new OutputFormat( " ", true ) );
-				xw.write( document );
-				w.flush();
+					StringWriter sw = new StringWriter();
+					marshaller.marshal( mapping, sw );
+
+					EnversBootLogger.BOOT_LOGGER.jaxbContribution( sw.toString() );
+					log.trace( "------------------------------------------------------------" );
+				}
+				catch (JAXBException e) {
+					throw new RuntimeException( "Error dumping enhanced class", e );
+				}
+				additionalMappingDocuments.add( new MappingDocument( "envers", mapping, origin, buildingContext ) );
 			}
-			catch (IOException e) {
-				throw new HibernateException( "Unable to bind Envers-generated XML", e );
-			}
-
-			ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream( baos.toByteArray() );
-			BufferedInputStream bufferedInputStream = new BufferedInputStream( byteArrayInputStream );
-			final Binding<JaxbHbmHibernateMapping> jaxbBinding = mappingBinder.bind( bufferedInputStream, origin );
-
-			final JaxbHbmHibernateMapping jaxbRoot = jaxbBinding.getRoot();
-			additionalMappingDocuments.add( new MappingDocument( "envers", jaxbRoot, origin, buildingContext ) );
 		};
 
 		enversService.initialize( metadata, mappingCollector );
 
 		return additionalMappingDocuments;
-	}
-
-	private static void logXml(Document document) {
-		if ( ! EnversBootLogger.DEBUG_ENABLED ) {
-			return;
-		}
-
-		final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-		final Writer w = new PrintWriter( outputStream );
-
-		try {
-			final XMLWriter xw = new XMLWriter( w, new OutputFormat( " ", true ) );
-			xw.write( document );
-			w.flush();
-		}
-		catch (IOException e1) {
-			throw new RuntimeException( "Error dumping enhanced class", e1 );
-		}
-
-		EnversBootLogger.BOOT_LOGGER.jaxbContribution( outputStream.toString() );
-
-		log.tracef( "Envers-generate entity mapping -----------------------------\n%s", outputStream.toString() );
-		log.trace( "------------------------------------------------------------" );
 	}
 }

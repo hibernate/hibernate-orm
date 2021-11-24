@@ -6,8 +6,7 @@
  */
 package org.hibernate.envers.configuration.internal;
 
-import org.dom4j.Document;
-import org.dom4j.DocumentException;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
 
 /**
  * Used in building the AuditConfiguration to allow callbacks for generated audit entities.
@@ -15,7 +14,8 @@ import org.dom4j.DocumentException;
  * The idea here is to allow a Envers to "callback" with any
  *
  * @author Steve Ebersole
+ * @author Chris Cranford
  */
 public interface MappingCollector {
-	void addDocument(Document document) throws DocumentException;
+	void addDocument(JaxbHbmHibernateMapping mapping);
 }

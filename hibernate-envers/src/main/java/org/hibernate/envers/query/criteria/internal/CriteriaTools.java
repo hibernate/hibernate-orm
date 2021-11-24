@@ -23,6 +23,7 @@ import org.hibernate.type.Type;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
  */
 public abstract class CriteriaTools {
 	public static void checkPropertyNotARelation(
@@ -62,7 +63,12 @@ public abstract class CriteriaTools {
 			AuditReaderImplementor versionsReader,
 			String entityName,
 			PropertyNameGetter propertyNameGetter) {
-		return determinePropertyName( enversService, versionsReader, entityName, propertyNameGetter.get( enversService ) );
+		return determinePropertyName(
+				enversService,
+				versionsReader,
+				entityName,
+				propertyNameGetter.get( enversService.getConfig() )
+		);
 	}
 
 	/**
@@ -82,19 +88,19 @@ public abstract class CriteriaTools {
 
 		if ( AuditId.IDENTIFIER_PLACEHOLDER.equals( propertyName ) ) {
 			final String identifierPropertyName = sessionFactory.getMetamodel().entityPersister( entityName ).getIdentifierPropertyName();
-			propertyName = enversService.getAuditEntitiesConfiguration().getOriginalIdPropName() + "." + identifierPropertyName;
+			propertyName = enversService.getConfig().getOriginalIdPropertyName() + "." + identifierPropertyName;
 		}
 		else {
 			final List<String> identifierPropertyNames = identifierPropertyNames( sessionFactory, entityName );
 			if ( identifierPropertyNames.contains( propertyName ) ) {
-				propertyName = enversService.getAuditEntitiesConfiguration().getOriginalIdPropName() + "." + propertyName;
+				propertyName = enversService.getConfig().getOriginalIdPropertyName() + "." + propertyName;
 			}
 			else if ( propertyName != null ) {
 				// if property starts with an identifier prefix ( e.g. embedded ids ), substitute with the originalId property
 				// because Envers performs replacement this automatically during the mapping.
 				for ( String identifierPropertyName : identifierPropertyNames ) {
 					if ( propertyName.startsWith( identifierPropertyName + "." ) ) {
-						propertyName = enversService.getAuditEntitiesConfiguration().getOriginalIdPropName() +
+						propertyName = enversService.getConfig().getOriginalIdPropertyName() +
 								propertyName.substring( identifierPropertyName.length() );
 						break;
 					}

@@ -18,7 +18,7 @@ import jakarta.persistence.criteria.JoinType;
 
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.boot.internal.EnversService;
-import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
+import org.hibernate.envers.configuration.Configuration;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.entities.mapper.ExtendedPropertyMapper;
@@ -32,6 +32,7 @@ import org.hibernate.proxy.HibernateProxy;
 /**
  * @author Adam Warski (adam at warski dot org)
  * @author HernпїЅn Chanfreau
+ * @author Chris Cranford
  */
 public class RevisionsOfEntityQuery extends AbstractAuditQuery {
 	private final boolean selectEntitiesOnly;
@@ -72,10 +73,10 @@ public class RevisionsOfEntityQuery extends AbstractAuditQuery {
 	}
 
 	private Number getRevisionNumber(Map versionsEntity) {
-		AuditEntitiesConfiguration verEntCfg = enversService.getAuditEntitiesConfiguration();
+		Configuration configuration = enversService.getConfig();
 
-		String originalId = verEntCfg.getOriginalIdPropName();
-		String revisionPropertyName = verEntCfg.getRevisionFieldName();
+		String originalId = configuration.getOriginalIdPropertyName();
+		String revisionPropertyName = configuration.getRevisionFieldName();
 
 		Object revisionInfoObject = ( (Map) versionsEntity.get( originalId ) ).get( revisionPropertyName );
 
@@ -90,7 +91,7 @@ public class RevisionsOfEntityQuery extends AbstractAuditQuery {
 
 	@SuppressWarnings({"unchecked"})
 	public List list() throws AuditException {
-		AuditEntitiesConfiguration verEntCfg = enversService.getAuditEntitiesConfiguration();
+		Configuration configuration = enversService.getConfig();
 
         /*
 		The query that should be executed in the versions table:
@@ -102,7 +103,7 @@ public class RevisionsOfEntityQuery extends AbstractAuditQuery {
          */
 		if ( !selectDeletedEntities ) {
 			// e.revision_type != DEL AND
-			qb.getRootParameters().addWhereWithParam( verEntCfg.getRevisionTypePropName(), "<>", RevisionType.DEL );
+			qb.getRootParameters().addWhereWithParam( configuration.getRevisionTypePropertyName(), "<>", RevisionType.DEL );
 		}
 
 		// all specified conditions, transformed
@@ -118,14 +119,14 @@ public class RevisionsOfEntityQuery extends AbstractAuditQuery {
 		}
 
 		if ( !hasProjection() && !hasOrder ) {
-			String revisionPropertyPath = verEntCfg.getRevisionNumberPath();
+			String revisionPropertyPath = configuration.getRevisionNumberPath();
 			qb.addOrder( QueryConstants.REFERENCED_ENTITY_ALIAS, revisionPropertyPath, true );
 		}
 
 		if ( !selectEntitiesOnly ) {
-			qb.addFrom( enversService.getAuditEntitiesConfiguration().getRevisionInfoEntityName(), "r", true );
+			qb.addFrom( configuration.getRevisionInfo().getRevisionInfoEntityName(), "r", true );
 			qb.getRootParameters().addWhere(
-					enversService.getAuditEntitiesConfiguration().getRevisionNumberPath(),
+					configuration.getRevisionNumberPath(),
 					true,
 					"=",
 					"r.id",
@@ -156,7 +157,7 @@ public class RevisionsOfEntityQuery extends AbstractAuditQuery {
 		final Set<String> changedPropertyNames = new HashSet<>();
 		// we're only interested in changed properties on modification rows.
 		if ( revisionType == RevisionType.MOD ) {
-			final String modifiedFlagSuffix = enversService.getGlobalConfiguration().getModifiedFlagSuffix();
+			final String modifiedFlagSuffix = enversService.getConfig().getModifiedFlagsSuffix();
 			for ( Map.Entry<String, Object> entry : dataMap.entrySet() ) {
 				final String key = entry.getKey();
 				if  ( key.endsWith( modifiedFlagSuffix ) ) {
@@ -205,7 +206,7 @@ public class RevisionsOfEntityQuery extends AbstractAuditQuery {
 			return entity;
 		}
 
-		final String revisionTypePropertyName = enversService.getAuditEntitiesConfiguration().getRevisionTypePropName();
+		final String revisionTypePropertyName = enversService.getConfig().getRevisionTypePropertyName();
 		Object revisionType = versionsData.get( revisionTypePropertyName );
 		if ( !includePropertyChanges ) {
 			return new Object[] { entity, revisionData, revisionType };

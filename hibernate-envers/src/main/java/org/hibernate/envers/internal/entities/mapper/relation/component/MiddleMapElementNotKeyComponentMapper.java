@@ -9,7 +9,6 @@ package org.hibernate.envers.internal.entities.mapper.relation.component;
 import java.util.Map;
 
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
 import org.hibernate.envers.internal.entities.EntityInstantiator;
 import org.hibernate.envers.internal.tools.query.Parameters;
 
@@ -31,11 +30,9 @@ import org.hibernate.envers.internal.tools.query.Parameters;
  */
 public class MiddleMapElementNotKeyComponentMapper implements MiddleComponentMapper {
 	private final String propertyName;
-	private final AuditEntitiesConfiguration verEntCfg;
 
-	public MiddleMapElementNotKeyComponentMapper(AuditEntitiesConfiguration verEntCfg, String propertyName) {
+	public MiddleMapElementNotKeyComponentMapper(String propertyName) {
 		this.propertyName = propertyName;
-		this.verEntCfg = verEntCfg;
 	}
 
 	@Override

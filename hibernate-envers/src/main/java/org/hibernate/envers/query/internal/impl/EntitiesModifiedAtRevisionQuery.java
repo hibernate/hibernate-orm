@@ -10,7 +10,6 @@ import java.util.Collection;
 import java.util.List;
 
 import org.hibernate.envers.boot.internal.EnversService;
-import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
 import org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.query.criteria.AuditCriterion;
@@ -23,6 +22,8 @@ import static org.hibernate.envers.internal.entities.mapper.relation.query.Query
  * of a certain type has not been changed in a given revision.
  *
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Chris Cranford
+ *
  * @see EntitiesAtRevisionQuery
  */
 public class EntitiesModifiedAtRevisionQuery extends AbstractAuditQuery {
@@ -56,8 +57,7 @@ public class EntitiesModifiedAtRevisionQuery extends AbstractAuditQuery {
          * (all specified conditions, transformed, on the "e" entity) AND
          * e.revision = :revision
          */
-		AuditEntitiesConfiguration verEntCfg = enversService.getAuditEntitiesConfiguration();
-		String revisionPropertyPath = verEntCfg.getRevisionNumberPath();
+		String revisionPropertyPath = enversService.getConfig().getRevisionNumberPath();
 		qb.getRootParameters().addWhereWithParam( revisionPropertyPath, "=", revision );
 
 		// all specified conditions

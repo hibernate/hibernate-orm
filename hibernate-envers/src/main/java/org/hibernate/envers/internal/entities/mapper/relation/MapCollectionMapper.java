@@ -19,6 +19,7 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.boot.internal.EnversService;
+import org.hibernate.envers.configuration.Configuration;
 import org.hibernate.envers.internal.entities.mapper.PersistentCollectionChangeData;
 import org.hibernate.envers.internal.entities.mapper.PropertyMapper;
 import org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor.Initializor;
@@ -35,11 +36,14 @@ public class MapCollectionMapper<T extends Map> extends AbstractCollectionMapper
 	protected final MiddleComponentData indexComponentData;
 
 	public MapCollectionMapper(
+			Configuration configuration,
 			CommonCollectionMapperData commonCollectionMapperData,
-			Class<? extends T> collectionClass, Class<? extends T> proxyClass,
-			MiddleComponentData elementComponentData, MiddleComponentData indexComponentData,
+			Class<? extends T> collectionClass,
+			Class<? extends T> proxyClass,
+			MiddleComponentData elementComponentData,
+			MiddleComponentData indexComponentData,
 			boolean revisionTypeInId) {
-		super( commonCollectionMapperData, collectionClass, proxyClass, false, revisionTypeInId );
+		super( configuration, commonCollectionMapperData, collectionClass, proxyClass, false, revisionTypeInId );
 		this.elementComponentData = elementComponentData;
 		this.indexComponentData = indexComponentData;
 	}

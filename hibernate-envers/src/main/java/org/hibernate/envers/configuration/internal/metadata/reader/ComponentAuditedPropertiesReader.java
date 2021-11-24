@@ -6,12 +6,11 @@
  */
 package org.hibernate.envers.configuration.internal.metadata.reader;
 
-import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.ModificationStore;
-import org.hibernate.envers.configuration.internal.GlobalConfiguration;
-import org.hibernate.envers.configuration.internal.metadata.MetadataTools;
+import org.hibernate.envers.boot.internal.ModifiedColumnNameResolver;
+import org.hibernate.envers.boot.spi.EnversMetadataBuildingContext;
 import org.hibernate.internal.util.StringHelper;
 
 /**
@@ -19,33 +18,47 @@ import org.hibernate.internal.util.StringHelper;
  *
  * @author Hern&aacut;n Chanfreau
  * @author Michal Skowronek (mskowr at o2 dot pl)
+ * @author Chris Cranford
  */
 public class ComponentAuditedPropertiesReader extends AuditedPropertiesReader {
 
 	public ComponentAuditedPropertiesReader(
+			EnversMetadataBuildingContext metadataBuildingContext,
+			ModificationStore defaultStore,
+			PersistentPropertiesSource persistentPropertiesSource,
+			AuditedPropertiesHolder auditedPropertiesHolder) {
+		this( metadataBuildingContext, defaultStore, persistentPropertiesSource, auditedPropertiesHolder, NO_PREFIX );
+	}
+
+	public ComponentAuditedPropertiesReader(
+			EnversMetadataBuildingContext metadataBuildingContext,
 			ModificationStore defaultStore,
 			PersistentPropertiesSource persistentPropertiesSource,
 			AuditedPropertiesHolder auditedPropertiesHolder,
-			GlobalConfiguration globalCfg, ReflectionManager reflectionManager,
 			String propertyNamePrefix) {
 		super(
-				defaultStore, persistentPropertiesSource, auditedPropertiesHolder,
-				globalCfg, reflectionManager, propertyNamePrefix
+				metadataBuildingContext,
+				defaultStore,
+				persistentPropertiesSource,
+				auditedPropertiesHolder,
+				propertyNamePrefix
 		);
 	}
 
 	@Override
 	protected boolean checkAudited(
 			XProperty property,
-			PropertyAuditingData propertyData, String propertyName,
-			Audited allClassAudited, String modifiedFlagSuffix) {
+			PropertyAuditingData propertyData,
+			String propertyName,
+			Audited allClassAudited,
+			String modifiedFlagSuffix) {
 		// Checking if this property is explicitly audited or if all properties are.
 		final Audited aud = property.getAnnotation( Audited.class );
 		if ( aud != null ) {
 			propertyData.setStore( aud.modStore() );
 			propertyData.setRelationTargetAuditMode( aud.targetAuditMode() );
 			propertyData.setUsingModifiedFlag( checkUsingModifiedFlag( aud ) );
-			propertyData.setModifiedFlagName( MetadataTools.getModifiedFlagPropertyName( propertyName, modifiedFlagSuffix ) );
+			propertyData.setModifiedFlagName( ModifiedColumnNameResolver.getName( propertyName, modifiedFlagSuffix ) );
 			if ( StringHelper.isNotEmpty( aud.modifiedColumnName() ) ) {
 				propertyData.setExplicitModifiedFlagName( aud.modifiedColumnName() );
 			}

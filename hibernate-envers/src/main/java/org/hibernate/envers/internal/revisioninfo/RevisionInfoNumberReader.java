@@ -19,8 +19,9 @@ import org.hibernate.service.ServiceRegistry;
 public class RevisionInfoNumberReader {
 	private final Getter revisionIdGetter;
 
-	public RevisionInfoNumberReader(Class<?> revisionInfoClass, PropertyData revisionInfoIdData, ServiceRegistry serviceRegistry) {
+	public RevisionInfoNumberReader(Class<?> revisionInfoClass, PropertyData revisionInfoIdData, ServiceRegistry serviceRegistry, RevisionInfoGenerator generator) {
 		revisionIdGetter = ReflectionTools.getGetter( revisionInfoClass, revisionInfoIdData, serviceRegistry );
+		generator.setRevisionInfoNumberReader( this );
 	}
 
 	public Number getRevisionNumber(Object revision) {

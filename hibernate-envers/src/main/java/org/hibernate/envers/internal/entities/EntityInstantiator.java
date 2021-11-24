@@ -22,6 +22,7 @@ import org.hibernate.proxy.LazyInitializer;
 /**
  * @author Adam Warski (adam at warski dot org)
  * @author Hern&aacute;n Chanfreau
+ * @author Chris Cranford
  */
 public class EntityInstantiator {
 	private final EnversService enversService;
@@ -57,10 +58,7 @@ public class EntityInstantiator {
 
 		// First mapping the primary key
 		final IdMapper idMapper = enversService.getEntitiesConfigurations().get( entityName ).getIdMapper();
-		final Map originalId = (Map) versionsEntity.get(
-				enversService.getAuditEntitiesConfiguration()
-						.getOriginalIdPropName()
-		);
+		final Map originalId = (Map) versionsEntity.get( enversService.getConfig().getOriginalIdPropertyName() );
 
 		// Fixes HHH-4751 issue (@IdClass with @ManyToOne relation mapping inside)
 		// Note that identifiers are always audited
@@ -104,7 +102,7 @@ public class EntityInstantiator {
 
 	@SuppressWarnings({"unchecked"})
 	private void replaceNonAuditIdProxies(Map versionsEntity, Number revision) {
-		final Map originalId = (Map) versionsEntity.get( enversService.getAuditEntitiesConfiguration().getOriginalIdPropName() );
+		final Map originalId = (Map) versionsEntity.get( enversService.getConfig().getOriginalIdPropertyName() );
 		for ( Object key : originalId.keySet() ) {
 			final Object value = originalId.get( key );
 			if ( value instanceof HibernateProxy ) {
@@ -125,7 +123,7 @@ public class EntityInstantiator {
 							revision,
 							RevisionType.DEL.equals(
 									versionsEntity.get(
-											enversService.getAuditEntitiesConfiguration().getRevisionTypePropName()
+											enversService.getConfig().getRevisionTypePropertyName()
 									)
 							),
 							enversService

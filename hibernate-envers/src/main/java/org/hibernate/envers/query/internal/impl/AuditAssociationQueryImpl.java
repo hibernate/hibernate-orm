@@ -19,7 +19,7 @@ import org.hibernate.FlushMode;
 import org.hibernate.Incubating;
 import org.hibernate.LockMode;
 import org.hibernate.envers.boot.internal.EnversService;
-import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
+import org.hibernate.envers.configuration.Configuration;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.RelationDescription;
 import org.hibernate.envers.internal.entities.mapper.id.IdMapper;
@@ -35,6 +35,7 @@ import org.hibernate.envers.query.projection.AuditProjection;
 
 /**
  * @author Felix Feisst (feisst dot felix at gmail dot com)
+ * @author Chris Cranford
  */
 @Incubating
 public class AuditAssociationQueryImpl<Q extends AuditQueryImplementor>
@@ -147,7 +148,7 @@ public class AuditAssociationQueryImpl<Q extends AuditQueryImplementor>
 
 	@Override
 	public AuditAssociationQueryImpl<Q> addProjection(AuditProjection projection) {
-		AuditProjection.ProjectionData projectionData = projection.getData( enversService );
+		AuditProjection.ProjectionData projectionData = projection.getData( enversService.getConfig() );
 		String projectionEntityAlias = projectionData.getAlias( alias );
 		String projectionEntityName = aliasToEntityNameMap.get( projectionEntityAlias );
 		String propertyName = CriteriaTools.determinePropertyName(
@@ -168,7 +169,7 @@ public class AuditAssociationQueryImpl<Q extends AuditQueryImplementor>
 
 	@Override
 	public AuditAssociationQueryImpl<Q> addOrder(AuditOrder order) {
-		AuditOrder.OrderData orderData = order.getData( enversService );
+		AuditOrder.OrderData orderData = order.getData( enversService.getConfig() );
 		String orderEntityAlias = orderData.getAlias( alias );
 		String orderEntityName = aliasToEntityNameMap.get( orderEntityAlias );
 		String propertyName = CriteriaTools.determinePropertyName(
@@ -241,12 +242,12 @@ public class AuditAssociationQueryImpl<Q extends AuditQueryImplementor>
 
 	protected void addCriterionsToQuery(AuditReaderImplementor versionsReader) {
 		if ( enversService.getEntitiesConfigurations().isVersioned( entityName ) ) {
-			String auditEntityName = enversService.getAuditEntitiesConfiguration().getAuditEntityName( entityName );
+			Configuration configuration = enversService.getConfig();
+			String auditEntityName = configuration.getAuditEntityName( entityName );
 			Parameters joinConditionParameters = queryBuilder.addJoin( joinType, auditEntityName, alias, false );
 
 			// owner.reference_id = target.originalId.id
-			AuditEntitiesConfiguration verEntCfg = enversService.getAuditEntitiesConfiguration();
-			String originalIdPropertyName = verEntCfg.getOriginalIdPropName();
+			String originalIdPropertyName = configuration.getOriginalIdPropertyName();
 			IdMapper idMapperTarget = enversService.getEntitiesConfigurations().get( entityName ).getIdMapper();
 			final String prefix = alias.concat( "." ).concat( originalIdPropertyName );
 			ownerAssociationIdMapper.addIdsEqualToQuery(
@@ -258,25 +259,25 @@ public class AuditAssociationQueryImpl<Q extends AuditQueryImplementor>
 
 			// filter revision of target entity
 			Parameters parametersToUse = parameters;
-			String revisionPropertyPath = verEntCfg.getRevisionNumberPath();
+			String revisionPropertyPath = configuration.getRevisionNumberPath();
 			if (joinType == JoinType.LEFT) {
 				parametersToUse = parameters.addSubParameters( Parameters.OR );
 				parametersToUse.addNullRestriction( revisionPropertyPath, true );
 				parametersToUse = parametersToUse.addSubParameters( Parameters.AND );
 			}
 			MiddleIdData referencedIdData = new MiddleIdData(
-					verEntCfg,
+					configuration,
 					enversService.getEntitiesConfigurations().get( entityName ).getIdMappingData(),
 					null,
 					entityName,
 					enversService.getEntitiesConfigurations().isVersioned( entityName )
 			);
 			enversService.getAuditStrategy().addEntityAtRevisionRestriction(
-					enversService.getGlobalConfiguration(),
+					configuration,
 					queryBuilder,
 					parametersToUse,
 					revisionPropertyPath,
-					verEntCfg.getRevisionEndFieldName(),
+					configuration.getRevisionEndFieldName(),
 					true,
 					referencedIdData,
 					revisionPropertyPath,

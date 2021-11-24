@@ -168,7 +168,7 @@ public class ExtendedEnumTypeTest extends BaseEnversJPAFunctionalTestCase {
 			final EnversService enversService = sessionFactory.getServiceRegistry().getService( EnversService.class );
 
 			final String entityName = entityPersister.getEntityName();
-			final String auditEntityName = enversService.getAuditEntitiesConfiguration().getAuditEntityName( entityName );
+			final String auditEntityName = enversService.getConfig().getAuditEntityName( entityName );
 
 			final EntityPersister auditedEntityPersister = sessionFactory.getMetamodel().entityPersister( auditEntityName );
 

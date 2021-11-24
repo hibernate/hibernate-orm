@@ -15,10 +15,15 @@ import org.hibernate.envers.internal.entities.mapper.relation.component.MiddleCo
  * of the component is
  *
  * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
  */
 public final class MiddleComponentData {
 	private final MiddleComponentMapper componentMapper;
 	private final int componentIndex;
+
+	public MiddleComponentData(MiddleComponentMapper componentMapper) {
+		this( componentMapper, 0 );
+	}
 
 	public MiddleComponentData(MiddleComponentMapper componentMapper, int componentIndex) {
 		this.componentMapper = componentMapper;

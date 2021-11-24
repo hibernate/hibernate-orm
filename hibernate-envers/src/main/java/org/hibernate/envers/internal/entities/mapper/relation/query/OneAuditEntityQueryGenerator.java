@@ -7,14 +7,12 @@
 package org.hibernate.envers.internal.entities.mapper.relation.query;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
-import org.hibernate.envers.configuration.internal.GlobalConfiguration;
+import org.hibernate.envers.configuration.Configuration;
 import org.hibernate.envers.internal.entities.mapper.id.AbstractCompositeIdMapper;
 import org.hibernate.envers.internal.entities.mapper.id.IdMapper;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleIdData;
 import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
-import org.hibernate.envers.strategy.AuditStrategy;
 import org.hibernate.internal.util.StringHelper;
 
 import static org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants.DEL_REVISION_TYPE_PARAMETER;
@@ -35,9 +33,7 @@ public final class OneAuditEntityQueryGenerator extends AbstractRelationQueryGen
 	private final MiddleIdData referencedIdData;
 
 	public OneAuditEntityQueryGenerator(
-			GlobalConfiguration globalCfg,
-			AuditEntitiesConfiguration verEntCfg,
-			AuditStrategy auditStrategy,
+			Configuration configuration,
 			MiddleIdData referencingIdData,
 			String referencedEntityName,
 			MiddleIdData referencedIdData,
@@ -46,10 +42,8 @@ public final class OneAuditEntityQueryGenerator extends AbstractRelationQueryGen
 			boolean mappedByKey,
 			String orderByCollectionRole) {
 		super(
-				globalCfg,
-				verEntCfg,
-				auditStrategy,
-				verEntCfg.getAuditEntityName( referencedEntityName ),
+				configuration,
+				configuration.getAuditEntityName( referencedEntityName ),
 				referencingIdData,
 				revisionTypeInId,
 				orderByCollectionRole
@@ -60,12 +54,7 @@ public final class OneAuditEntityQueryGenerator extends AbstractRelationQueryGen
 
 		// HHH-11770 We use AbstractCompositeIdMapper here to handle EmbeddedIdMapper and MultipleIdMappper support
 		// so that OneAuditEntityQueryGenerator supports mappings to both @IdClass and @EmbeddedId components.
-		if ( ( referencedIdData.getOriginalMapper() instanceof AbstractCompositeIdMapper ) && mappedByKey ) {
-			multipleIdMapperKey = true;
-		}
-		else {
-			multipleIdMapperKey = false;
-		}
+		multipleIdMapperKey = (referencedIdData.getOriginalMapper() instanceof AbstractCompositeIdMapper) && mappedByKey;
 
 		/*
 		 * The valid query that we need to create:
@@ -115,19 +104,19 @@ public final class OneAuditEntityQueryGenerator extends AbstractRelationQueryGen
 
 	@Override
 	protected void applyValidPredicates(QueryBuilder qb, Parameters rootParameters, boolean inclusive) {
-		final String revisionPropertyPath = verEntCfg.getRevisionNumberPath();
+		final String revisionPropertyPath = configuration.getRevisionNumberPath();
 		// (selecting e entities at revision :revision)
 		// --> based on auditStrategy (see above)
 		auditStrategy.addEntityAtRevisionRestriction(
-				globalCfg,
+				configuration,
 				qb,
 				rootParameters,
 				revisionPropertyPath,
-				verEntCfg.getRevisionEndFieldName(),
+				configuration.getRevisionEndFieldName(),
 				true,
 				referencedIdData,
 				revisionPropertyPath,
-				verEntCfg.getOriginalIdPropName(),
+				configuration.getOriginalIdPropertyName(),
 				REFERENCED_ENTITY_ALIAS,
 				REFERENCED_ENTITY_ALIAS_DEF_AUD_STR,
 				true
@@ -146,13 +135,13 @@ public final class OneAuditEntityQueryGenerator extends AbstractRelationQueryGen
 		// Excluding current revision, because we need to match data valid at the previous one.
 		applyValidPredicates( remQb, valid, false );
 		// e.revision = :revision
-		removed.addWhereWithNamedParam( verEntCfg.getRevisionNumberPath(), false, "=", REVISION_PARAMETER );
+		removed.addWhereWithNamedParam( configuration.getRevisionNumberPath(), false, "=", REVISION_PARAMETER );
 		// e.revision_type = DEL
 		removed.addWhereWithNamedParam( getRevisionTypePath(), false, "=", DEL_REVISION_TYPE_PARAMETER );
 	}
 
 	private IdMapper getMultipleIdPrefixedMapper() {
-		final String prefix = verEntCfg.getOriginalIdPropName() + "." + mappedBy + ".";
+		final String prefix = configuration.getOriginalIdPropertyName() + "." + mappedBy + ".";
 		return referencingIdData.getOriginalMapper().prefixMappedProperties( prefix );
 	}
 }

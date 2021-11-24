@@ -15,6 +15,7 @@ import org.hibernate.envers.internal.tools.query.QueryBuilder;
  * A criterion that expresses that the id of an entity is equal or not equal to some specified value.
  *
  * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
  */
 public class IdentifierEqAuditExpression extends AbstractAtomicExpression {
 	private final Object id;
@@ -34,7 +35,7 @@ public class IdentifierEqAuditExpression extends AbstractAtomicExpression {
 			String alias,
 			QueryBuilder qb,
 			Parameters parameters) {
-		String prefix = enversService.getAuditEntitiesConfiguration().getOriginalIdPropName();
+		String prefix = enversService.getConfig().getOriginalIdPropertyName();
 		enversService.getEntitiesConfigurations().get( entityName )
 				.getIdMapper()
 				.addIdEqualsToQuery( parameters, id, alias, prefix, equals );

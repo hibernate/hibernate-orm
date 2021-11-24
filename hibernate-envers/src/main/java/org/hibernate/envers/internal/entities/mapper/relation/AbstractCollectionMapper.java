@@ -23,6 +23,7 @@ import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.boot.internal.EnversService;
+import org.hibernate.envers.configuration.Configuration;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.entities.mapper.AbstractPropertyMapper;
@@ -39,6 +40,7 @@ import org.hibernate.property.access.spi.Setter;
  * @author Chris Cranford
  */
 public abstract class AbstractCollectionMapper<T> extends AbstractPropertyMapper {
+	protected final Configuration configuration;
 	protected final CommonCollectionMapperData commonCollectionMapperData;
 	protected final Class<? extends T> collectionClass;
 	protected final boolean ordinalInId;
@@ -47,11 +49,13 @@ public abstract class AbstractCollectionMapper<T> extends AbstractPropertyMapper
 	private final Constructor<? extends T> proxyConstructor;
 
 	protected AbstractCollectionMapper(
+			Configuration configuration,
 			CommonCollectionMapperData commonCollectionMapperData,
 			Class<? extends T> collectionClass,
 			Class<? extends T> proxyClass,
 			boolean ordinalInId,
 			boolean revisionTypeInId) {
+		this.configuration = configuration;
 		this.commonCollectionMapperData = commonCollectionMapperData;
 		this.collectionClass = collectionClass;
 		this.ordinalInId = ordinalInId;
@@ -95,7 +99,7 @@ public abstract class AbstractCollectionMapper<T> extends AbstractPropertyMapper
 	protected Map<String, Object> createIdMap(int ordinal) {
 		final Map<String, Object> idMap = new HashMap<>();
 		if ( ordinalInId ) {
-			idMap.put( commonCollectionMapperData.getVerEntCfg().getEmbeddableSetOrdinalPropertyName(), ordinal );
+			idMap.put( configuration.getEmbeddableSetOrdinalPropertyName(), ordinal );
 		}
 		return idMap;
 	}
@@ -111,7 +115,7 @@ public abstract class AbstractCollectionMapper<T> extends AbstractPropertyMapper
 		for ( Object changedObj : changed ) {
 			final Map<String, Object> entityData = new HashMap<>();
 			final Map<String, Object> originalId = createIdMap( ordinal++ );
-			entityData.put( commonCollectionMapperData.getVerEntCfg().getOriginalIdPropName(), originalId );
+			entityData.put( configuration.getOriginalIdPropertyName(), originalId );
 
 			collectionChanges.add(
 					new PersistentCollectionChangeData(
@@ -124,10 +128,8 @@ public abstract class AbstractCollectionMapper<T> extends AbstractPropertyMapper
 			// Mapping collection element and index (if present).
 			mapToMapFromObject( session, originalId, entityData, changedObj );
 
-			( revisionTypeInId ? originalId : entityData ).put(
-					commonCollectionMapperData.getVerEntCfg()
-							.getRevisionTypePropName(), revisionType
-			);
+			final Map<String, Object> dataMap = revisionTypeInId ? originalId : entityData;
+			dataMap.put( configuration.getRevisionTypePropertyName(), revisionType );
 		}
 	}
 
@@ -278,7 +280,7 @@ public abstract class AbstractCollectionMapper<T> extends AbstractPropertyMapper
 			final Object primaryKey,
 			final AuditReaderImplementor versionsReader,
 			final Number revision) {
-		final String revisionTypePropertyName = enversService.getAuditEntitiesConfiguration().getRevisionTypePropName();
+		final String revisionTypePropertyName = enversService.getConfig().getRevisionTypePropertyName();
 
 		// construct the collection proxy
 		final Object collectionProxy;

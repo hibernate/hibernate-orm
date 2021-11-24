@@ -10,6 +10,7 @@ package org.hibernate.envers.configuration;
  * Configuration property names.
  *
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Chris Cranford
  */
 public interface EnversSettings {
 	/**
@@ -142,4 +143,15 @@ public interface EnversSettings {
 	 * @since 5.4.7
 	 */
 	String MODIFIED_COLUMN_NAMING_STRATEGY = "org.hibernate.envers.modified_column_naming_strategy";
+
+	/**
+	 * Deletion of a revision entity will cause a foreign key constraint database error when at least one
+	 * audit record exists for that revision. By enabling this feature, deletion of the revision entity
+	 * will also force all audit records associated to that revision to be deleted via cascade.
+	 *
+	 * Defaults to {@literal false}.
+	 *
+	 * @since 4.3.0
+	 */
+	String CASCADE_DELETE_REVISION = "org.hibernate.envers.cascade_delete_revision";
 }

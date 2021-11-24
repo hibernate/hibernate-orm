@@ -18,6 +18,7 @@ import org.hibernate.persister.entity.EntityPersister;
 /**
  * @author Adam Warski (adam at warski dot org)
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Chris Cranford
  */
 public class DelWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit {
 	private final Object[] state;
@@ -48,7 +49,7 @@ public class DelWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
 		final Map<String, Object> data = new HashMap<>();
 		fillDataWithId( data, revisionData );
 
-		if ( enversService.getGlobalConfiguration().isStoreDataAtDelete() ) {
+		if ( enversService.getConfig().isStoreDataAtDelete() ) {
 			enversService.getEntitiesConfigurations().get( getEntityName() ).getPropertyMapper().map(
 					sessionImplementor,
 					data,

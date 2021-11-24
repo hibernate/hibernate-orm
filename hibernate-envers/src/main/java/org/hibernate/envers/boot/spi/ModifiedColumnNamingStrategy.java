@@ -7,11 +7,10 @@
 package org.hibernate.envers.boot.spi;
 
 import org.hibernate.Incubating;
-import org.hibernate.envers.configuration.internal.GlobalConfiguration;
+import org.hibernate.envers.boot.model.AttributeContainer;
+import org.hibernate.envers.configuration.Configuration;
 import org.hibernate.envers.configuration.internal.metadata.reader.PropertyAuditingData;
 import org.hibernate.mapping.Value;
-
-import org.dom4j.Element;
 
 /**
  * Defines a naming strategy for applying modified columns to the audited entity metamodel.
@@ -24,14 +23,14 @@ public interface ModifiedColumnNamingStrategy {
 	/**
 	 * Adds modified columns to the audited entity metamodel.
 	 *
-	 * @param globalCfg the envers global configuration
+	 * @param configuration the envers configuration
 	 * @param value the property value
-	 * @param parent the parent audited entity metamodel
+	 * @param mapping the entity mapping model
 	 * @param propertyAuditingData the property auditing data
 	 */
 	void addModifiedColumns(
-			GlobalConfiguration globalCfg,
+			Configuration configuration,
 			Value value,
-			Element parent,
-			PropertyAuditingData propertyAuditingData);
+			AttributeContainer mapping,
+			PropertyAuditingData propertyAuditingData);	
 }

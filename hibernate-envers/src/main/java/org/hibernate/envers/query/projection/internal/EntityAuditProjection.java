@@ -9,11 +9,13 @@ package org.hibernate.envers.query.projection.internal;
 import java.util.Map;
 
 import org.hibernate.envers.boot.internal.EnversService;
+import org.hibernate.envers.configuration.Configuration;
 import org.hibernate.envers.internal.entities.EntityInstantiator;
 import org.hibernate.envers.query.projection.AuditProjection;
 
 /**
  * @author Felix Feisst (feisst dot felix at gmail dot com)
+ * @author Chris Cranford
  */
 public class EntityAuditProjection implements AuditProjection {
 
@@ -26,7 +28,7 @@ public class EntityAuditProjection implements AuditProjection {
 	}
 
 	@Override
-	public ProjectionData getData(final EnversService enversService) {
+	public ProjectionData getData(Configuration configuration) {
 		// no property is selected, instead the whole entity (alias) is selected
 		return new ProjectionData( null, alias, null, distinct );
 	}

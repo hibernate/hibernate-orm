@@ -309,6 +309,9 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public NameQualifierSupport getNameQualifierSupport() {
+		if ( version >= 1500 ) {
+			return NameQualifierSupport.BOTH;
+		}
 		return NameQualifierSupport.CATALOG;
 	}
 

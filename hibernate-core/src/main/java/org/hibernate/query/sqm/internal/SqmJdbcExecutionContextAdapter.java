@@ -68,4 +68,14 @@ public class SqmJdbcExecutionContextAdapter implements ExecutionContext {
 	public Callback getCallback() {
 		return sqmExecutionContext.getCallback();
 	}
+
+	@Override
+	public boolean hasQueryExecutionToBeAddedToStatistics() {
+		return true;
+	}
+
+	@Override
+	public String getQueryIdentifier(String sql) {
+		return sql;
+	}
 }

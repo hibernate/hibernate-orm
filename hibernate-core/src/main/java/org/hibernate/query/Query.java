@@ -132,6 +132,10 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 		return list();
 	}
 
+	default Stream<R> getResultStream() {
+		return stream();
+	}
+
 	/**
 	 * Convenience method to return a single instance that matches
 	 * the query, or {@code null} if the query returns no results.

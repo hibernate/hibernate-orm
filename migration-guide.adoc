@@ -62,9 +62,9 @@ Passing null or not is now triggered by whether setting the parameter was called
 
 === HQL results
 
-Hql queries that joins an Entity `Person` with an Entity `Address` without specifying a select clause `from Address a join a.address` does not return anymore a `List<Object[]>`but a list of `Person`.
+HQL queries that use joins without specifying a select clause e.g. `from Person p join p.address` do not return a `List<Object[]>` with an entry per join anymore, but a list of `Person`.
 
-The hql query `select a,ad from Address a join a.address ad` returns instead a `List<Object[]>`.
+The HQL query `select p,a from Person p join p.address a` returns instead a `List<Object[]>`.
 
 e.g.
 ```
@@ -85,14 +85,19 @@ class Address {
 
 }
 
-List<A> result = session.createQuery("from Address a join a.address").list()
+List<Person> result = session.createQuery("from Person p join p.address").list();
+
+List<Object[]> results = session.createQuery("select p, a from Person p join p.address a").list();
 
 ```
 
+==== Stream
+
+`jakarta.persistence.Query#getResultStream()` and `org.hibernate.query.Query#stream()` do not return a `Stream` decorator anymore, so in order to close the underlying IO resources is now necessary to explicitly call the `Stream#close()` method. The JDK `Stream` documentation is quite explicit about the need for an explicit call to `close` by the user to avoid resource leakages, so we build upon this requirement.
 
 ==== Iterate
 
-The `Query#iterate()` method has been removed.
+The `Query#iterate()` method has been removed. The alternative is to use `Query#stream()` or `Query#getResultStream()`.
 
 === Native Query
 

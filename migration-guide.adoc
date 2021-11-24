@@ -30,7 +30,6 @@ Jakarta Persistence.  This can update package names in source, settings, xsd ref
 NOTE: As far as the XSD and setting changes, Hibernate does support both sets as a temporary aid
 in migration.  It logs a deprecation warning when the Java EE variants are used.
 
-
 === Reading from JDBC
 
 Read-by-position rather than read-by-name
@@ -101,3 +100,89 @@ List<Object[]> postAndComments = entityManager.createStoredProcedureQuery( "fn_p
 * @Deprecated features:
     ** 'hibernate.classLoader.application', 'hibernate.classLoader.resources', 'hibernate.classLoader.hibernate' and 'hibernate.classLoader.environment': use 'hibernate.classLoaders' instead.
     ** 'hibernate.hbm2dll.create_namespaces': use 'jakarta.persistence.create-database-schemas' or 'hibernate.hbm2ddl.create_namespaces'
+
+=== Fetch behaviour change
+
+We changed the way we detect circularity, we do not follow anymore a deep first detection, so what happens is that in a model like
+
+```
+@Entity
+class Node {
+
+    @ManyToOne
+    Node node1;
+
+    @ManyToOne
+    Node node2;
+
+}
+```
+
+being all eager we are executing a query with 4 joins
+
+```
+FROM Node
+JOIN Node.node1
+JOIN Node.node1.node2
+JOIN Node.node2
+JOIN Node.node2.node1
+```
+
+whereas before we
+```
+FROM Node
+JOIN Node.node1
+JOIN Node.node1.node2
+```
+
+and issue a select for `Node.node2` if the FK of `Node.node2` is not null
+
+```
+FROM Node.node2
+JOIN Node.node2.node1
+JOIN Node.node2.node1.node2
+```
+
+In this simple example this is not such a big deal, but if we increase the number of eager fetched self-associations
+to e.g. 3 like here:
+
+```
+@Entity
+class Node {
+
+    @ManyToOne
+    Node node1;
+
+    @ManyToOne
+    Node node2;
+
+    @ManyToOne
+    Node node3;
+
+}
+```
+
+this results in mind-blowing 15 joins
+
+```
+FROM Node
+JOIN Node.node1
+JOIN Node.node1.node2
+JOIN Node.node1.node2.node3
+JOIN Node.node1.node3
+JOIN Node.node1.node3.node2
+JOIN Node.node2
+JOIN Node.node2.node1
+JOIN Node.node2.node1.node3
+JOIN Node.node2.node3
+JOIN Node.node2.node3.node1
+JOIN Node.node3
+JOIN Node.node3.node1
+JOIN Node.node3.node1.node2
+JOIN Node.node3.node2
+JOIN Node.node3.node2.node1
+```
+
+as you can see, this leads to a lot of joins very quickly, but the behavior of 5.x simply was not intuitive.
+To avoid creating so many joins, and also in general, we recommend that you use lazy fetching i.e. `@ManyToOne(fetch = FetchType.LAZY)`
+or `@OneToOne(fetch = FetchType.LAZY)` for most associations, but this is especially important if you have multiple self-referencing associations as you can see in the example.

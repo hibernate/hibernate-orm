@@ -32,7 +32,6 @@ import org.hibernate.envers.AuditMappedBy;
 import org.hibernate.envers.AuditOverride;
 import org.hibernate.envers.AuditOverrides;
 import org.hibernate.envers.Audited;
-import org.hibernate.envers.ModificationStore;
 import org.hibernate.envers.NotAudited;
 import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.envers.boot.EnversMappingException;
@@ -68,7 +67,6 @@ public class AuditedPropertiesReader {
 
 	public static final String NO_PREFIX = "";
 
-	protected final ModificationStore defaultStore;
 	private final PersistentPropertiesSource persistentPropertiesSource;
 	private final AuditedPropertiesHolder auditedPropertiesHolder;
 	private final EnversMetadataBuildingContext metadataBuildingContext;
@@ -88,19 +86,16 @@ public class AuditedPropertiesReader {
 
 	public AuditedPropertiesReader(
 			EnversMetadataBuildingContext metadataBuildingContext,
-			ModificationStore defaultStore,
 			PersistentPropertiesSource persistentPropertiesSource,
 			AuditedPropertiesHolder auditedPropertiesHolder) {
-		this ( metadataBuildingContext, defaultStore, persistentPropertiesSource, auditedPropertiesHolder, NO_PREFIX );
+		this ( metadataBuildingContext, persistentPropertiesSource, auditedPropertiesHolder, NO_PREFIX );
 	}
 
 	public AuditedPropertiesReader(
 			EnversMetadataBuildingContext metadataBuildingContext,
-			ModificationStore defaultStore,
 			PersistentPropertiesSource persistentPropertiesSource,
 			AuditedPropertiesHolder auditedPropertiesHolder,
 			String propertyNamePrefix) {
-		this.defaultStore = defaultStore;
 		this.persistentPropertiesSource = persistentPropertiesSource;
 		this.auditedPropertiesHolder = auditedPropertiesHolder;
 		this.metadataBuildingContext = metadataBuildingContext;
@@ -441,7 +436,6 @@ public class AuditedPropertiesReader {
 			);
 			final AuditedPropertiesReader audPropReader = new AuditedPropertiesReader(
 					metadataBuildingContext,
-					ModificationStore.FULL,
 					componentPropertiesSource,
 					componentData,
 					propertyNamePrefix + MappingTools.createComponentPrefix( embeddedName )
@@ -471,7 +465,6 @@ public class AuditedPropertiesReader {
 
 		final ComponentAuditedPropertiesReader audPropReader = new ComponentAuditedPropertiesReader(
 				metadataBuildingContext,
-				ModificationStore.FULL,
 				componentPropertiesSource,
 				componentData,
 				propertyNamePrefix + MappingTools.createComponentPrefix( property.getName() )
@@ -596,7 +589,6 @@ public class AuditedPropertiesReader {
 			aud = DEFAULT_AUDITED;
 		}
 		if ( aud != null ) {
-			propertyData.setStore( aud.modStore() );
 			propertyData.setRelationTargetAuditMode( aud.targetAuditMode() );
 			propertyData.setUsingModifiedFlag( checkUsingModifiedFlag( aud ) );
 			propertyData.setModifiedFlagName( ModifiedColumnNameResolver.getName( propertyName, modifiedFlagSuffix ) );
@@ -724,11 +716,6 @@ public class AuditedPropertiesReader {
 	}
 
 	private static final Audited DEFAULT_AUDITED = new Audited() {
-		@Override
-		public ModificationStore modStore() {
-			return ModificationStore.FULL;
-		}
-
 		@Override
 		public RelationTargetAuditMode targetAuditMode() {
 			return RelationTargetAuditMode.AUDITED;

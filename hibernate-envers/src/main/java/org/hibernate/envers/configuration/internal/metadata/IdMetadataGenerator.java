@@ -9,8 +9,6 @@ package org.hibernate.envers.configuration.internal.metadata;
 import java.util.Iterator;
 import java.util.Locale;
 
-import org.hibernate.envers.ModificationStore;
-import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.envers.boot.EnversMappingException;
 import org.hibernate.envers.boot.model.AttributeContainer;
 import org.hibernate.envers.boot.model.CompositeIdentifier;
@@ -259,8 +257,7 @@ public final class IdMetadataGenerator extends AbstractMetadataGenerator {
 		return new PropertyData(
 				property.getName(),
 				property.getName(),
-				property.getPropertyAccessorName(),
-				ModificationStore.FULL
+				property.getPropertyAccessorName()
 		);
 	}
 

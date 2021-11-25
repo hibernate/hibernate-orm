@@ -18,7 +18,6 @@ import java.util.TreeSet;
 
 import jakarta.persistence.EnumType;
 
-import org.hibernate.envers.ModificationStore;
 import org.hibernate.envers.boot.model.Attribute;
 import org.hibernate.envers.boot.model.AttributeContainer;
 import org.hibernate.envers.boot.model.BasicAttribute;
@@ -326,7 +325,6 @@ public abstract class AbstractCollectionMetadataGenerator extends AbstractMetada
 
 		new ComponentAuditedPropertiesReader(
 				getMetadataBuildingContext(),
-				ModificationStore.FULL,
 				PersistentPropertiesSource.forComponent( getMetadataBuildingContext(), component ),
 				auditData
 		).read();

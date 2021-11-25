@@ -496,7 +496,7 @@ public class RevisionInfoConfiguration {
 		}
 
 		private PropertyData createPropertyData(String name, String accessType) {
-			return new PropertyData( name, name, accessType, null );
+			return new PropertyData( name, name, accessType );
 		}
 
 		private boolean isAnyType(XClass clazz, Class<?>... types) {

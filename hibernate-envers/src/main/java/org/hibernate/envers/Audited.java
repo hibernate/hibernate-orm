@@ -24,13 +24,6 @@ import java.lang.annotation.Target;
 @Target({ElementType.TYPE, ElementType.METHOD, ElementType.FIELD})
 public @interface Audited {
 	/**
-	 * Specifies modification store to use
-	 * @deprecated since 5.2, to be removed in 6.0 with no replacement.
-	 */
-	@Deprecated
-	ModificationStore modStore() default ModificationStore.FULL;
-
-	/**
 	 * Specifies if the entity that is the target of the relation should be audited or not. If not, then when
 	 * reading a historic version an audited entity, the relation will always point to the "current" entity.
 	 * This is useful for dictionary-like entities, which don't change and don't need to be audited.

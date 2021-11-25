@@ -11,7 +11,7 @@ import java.lang.annotation.Annotation;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.envers.AuditTable;
 import org.hibernate.envers.Audited;
-import org.hibernate.envers.ModificationStore;
+import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.envers.SecondaryAuditTable;
 import org.hibernate.envers.SecondaryAuditTables;
 import org.hibernate.envers.boot.spi.EnversMetadataBuildingContext;
@@ -31,11 +31,11 @@ public final class AnnotationsMetadataReader {
 		this.metadataBuildingContext = metadataBuildingContext;
 	}
 
-	private ModificationStore getDefaultAudited(XClass clazz) {
+	private RelationTargetAuditMode getDefaultAudited(XClass clazz) {
 		final Audited defaultAudited = clazz.getAnnotation( Audited.class );
 
 		if ( defaultAudited != null ) {
-			return defaultAudited.modStore();
+			return defaultAudited.targetAuditMode();
 		}
 		else {
 			return null;
@@ -77,14 +77,13 @@ public final class AnnotationsMetadataReader {
 		final ClassAuditingData auditData = new ClassAuditingData( persistentClass );
 		final XClass xclass = metadataBuildingContext.getReflectionManager().toXClass( persistentClass.getMappedClass() );
 
-		final ModificationStore defaultStore = getDefaultAudited( xclass );
-		if ( defaultStore != null ) {
+		final RelationTargetAuditMode auditMode = getDefaultAudited( xclass );
+		if ( auditMode != null ) {
 			auditData.setDefaultAudited( true );
 		}
 
 		new AuditedPropertiesReader(
 				metadataBuildingContext,
-				defaultStore,
 				PersistentPropertiesSource.forClass( persistentClass, xclass ),
 				auditData
 		).read();

@@ -24,7 +24,7 @@
 
 -->
 
-<hibernate-mapping package="org.hibernate.test.propertyref.inheritence.joined">
+<hibernate-mapping package="org.hibernate.orm.test.propertyref.inheritence.joined">
 
 	<class name="Person" table="J_SBCLS_PROPREF_PERS">
 		<id name="id">

@@ -4,32 +4,35 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.propertyref.inheritence.joined;
+package org.hibernate.orm.test.propertyref.inheritence.joined;
+
+import org.hibernate.Hibernate;
+
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.JoinType;
 
-import org.hibernate.Hibernate;
-
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Gavin King
  */
-public class JoinedSubclassPropertyRefTest extends BaseCoreFunctionalTestCase {
-	public String[] getMappings() {
-		return new String[] { "propertyref/inheritence/joined/Person.hbm.xml" };
-	}
+@DomainModel(
+		xmlMappings = "org/hibernate/orm/test/propertyref/inheritence/joined/Person.hbm.xml"
+)
+@SessionFactory
+public class JoinedSubclassPropertyRefTest {
 
 	@Test
-	public void testPropertyRefToJoinedSubclass() {
+	public void testPropertyRefToJoinedSubclass(SessionFactoryScope scope) {
 		Person person = new Person();
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					person.setName( "Gavin King" );
 					BankAccount acc = new BankAccount();
@@ -41,7 +44,7 @@ public class JoinedSubclassPropertyRefTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Person p = session.get( Person.class, person.getId() );
 					assertNotNull( p.getBankAccount() );
@@ -49,7 +52,7 @@ public class JoinedSubclassPropertyRefTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
 					CriteriaQuery<Person> criteria = criteriaBuilder.createQuery( Person.class );
@@ -64,7 +67,7 @@ public class JoinedSubclassPropertyRefTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> session.delete( person )
 		);
 	}

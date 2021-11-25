@@ -6,7 +6,7 @@
  */
 
 //$Id: Parent.java 4378 2004-08-19 10:12:11Z oneovthafew $
-package org.hibernate.test.onetomany;
+package org.hibernate.orm.test.onetomany;
 import java.util.Collection;
 import java.util.HashSet;
 

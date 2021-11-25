@@ -19,7 +19,7 @@
 -->
 
 <hibernate-mapping 
-	package="org.hibernate.test.onetomany">
+	package="org.hibernate.orm.test.onetomany">
 
 	<class name="Parent">
 		<id name="id" 

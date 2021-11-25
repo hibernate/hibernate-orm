@@ -4,41 +4,39 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.stats;
-
-import java.util.Map;
-import jakarta.persistence.EntityManagerFactory;
+package org.hibernate.orm.test.stats;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
+import jakarta.persistence.EntityManagerFactory;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 
 /**
  * @author Vlad Mihalcea
  */
+@Jpa(
+		properties = { @Setting(name = AvailableSettings.QUERY_STATISTICS_MAX_SIZE, value = "100") }
+)
 public class ExplicitQueryStatsMaxSizeTest extends QueryStatsMaxSizeTest {
 
-	public static final int QUERY_STATISTICS_MAX_SIZE = 100;
-
-	@Override
-	protected void addConfigOptions(Map options) {
-		super.addConfigOptions( options );
-		options.put( AvailableSettings.QUERY_STATISTICS_MAX_SIZE, QUERY_STATISTICS_MAX_SIZE );
-	}
 
 	@Override
 	protected int expectedQueryStatisticsMaxSize() {
-		return QUERY_STATISTICS_MAX_SIZE;
+		return 100;
 	}
 
 	@Test
-	public void testMaxSize() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testMaxSize(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			EntityManagerFactory entityManagerFactory = entityManager.getEntityManagerFactory();
 			SessionFactory sessionFactory = entityManagerFactory.unwrap( SessionFactory.class );
 

@@ -4,46 +4,36 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.stats;
+package org.hibernate.orm.test.stats;
 
-import java.util.Map;
+import org.hibernate.SessionFactory;
+import org.hibernate.annotations.NaturalId;
+import org.hibernate.stat.Statistics;
+
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Id;
 
-import org.hibernate.SessionFactory;
-import org.hibernate.annotations.NaturalId;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.stat.Statistics;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 /**
  * @author Vlad Mihalcea
  */
-public class QueryStatsMaxSizeTest extends BaseEntityManagerFunctionalTestCase {
+@Jpa(
+		annotatedClasses = QueryStatsMaxSizeTest.Employee.class,
+		generateStatistics = true
+)
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Employee.class,
-		};
-	}
-
-	@Override
-	protected void addConfigOptions(Map options) {
-		options.put( AvailableSettings.GENERATE_STATISTICS, "true" );
-	}
+public class QueryStatsMaxSizeTest {
 
 	@Test
-	public void test() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void test(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			EntityManagerFactory entityManagerFactory = entityManager.getEntityManagerFactory();
 			SessionFactory sessionFactory = entityManagerFactory.unwrap( SessionFactory.class );
 

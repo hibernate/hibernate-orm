@@ -4,43 +4,37 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.stats;
+package org.hibernate.orm.test.stats;
 
 import java.util.HashSet;
-import java.util.Iterator;
 
-import org.hibernate.Hibernate;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.hibernate.Transaction;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.stat.QueryStatistics;
+import org.hibernate.stat.spi.StatisticsImplementor;
 
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * Show the difference between fetch and load
  *
  * @author Emmanuel Bernard
  */
-public class StatsTest extends BaseUnitTestCase {
-	public String[] getMappings() {
-		return new String[] { "stats/Continent.hbm.xml" };
-	}
+@DomainModel(
+		xmlMappings = "org/hibernate/orm/test/stats/Continent.hbm.xml"
+)
+@org.hibernate.testing.orm.junit.SessionFactory(
+		generateStatistics = true
+)
+public class StatsTest {
 
-	private Configuration buildBaseConfiguration() {
-		return new Configuration()
-				.addResource( "org/hibernate/test/stats/Continent.hbm.xml" )
-				.setProperty( AvailableSettings.GENERATE_STATISTICS, "true" );
-	}
-//
 //	@Test
 //	@SuppressWarnings( {"UnusedAssignment"})
 //	public void testCollectionFetchVsLoad() throws Exception {
@@ -144,101 +138,102 @@ public class StatsTest extends BaseUnitTestCase {
 //	}
 
 	@Test
-	public void testQueryStatGathering() {
-		try (SessionFactory sf = buildBaseConfiguration()
-				.setProperty( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
-				.buildSessionFactory()) {
-
-			Session s = sf.openSession();
-			Transaction tx = s.beginTransaction();
-			fillDb( s );
-			tx.commit();
-			s.close();
-
-			s = sf.openSession();
-			tx = s.beginTransaction();
-			final String continents = "from Continent";
-			int results = s.createQuery( continents ).list().size();
-			QueryStatistics continentStats = sf.getStatistics().getQueryStatistics( continents );
-			assertNotNull( "stats were null", continentStats );
-			assertEquals( "unexpected execution count", 1, continentStats.getExecutionCount() );
-			assertEquals( "unexpected row count", results, continentStats.getExecutionRowCount() );
-			long maxTime = continentStats.getExecutionMaxTime();
-			assertEquals( maxTime, sf.getStatistics().getQueryExecutionMaxTime() );
+	public void testQueryStatGathering(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final String continents = "from Continent";
+					int results = session.createQuery( continents ).list().size();
+					final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
+					QueryStatistics continentStats = statistics.getQueryStatistics( continents );
+					assertNotNull( continentStats, "stats were null" );
+					assertEquals( 1, continentStats.getExecutionCount(), "unexpected execution count" );
+					assertEquals( results, continentStats.getExecutionRowCount(), "unexpected row count" );
+					long maxTime = continentStats.getExecutionMaxTime();
+					assertEquals( maxTime, statistics.getQueryExecutionMaxTime() );
 //		assertEquals( continents, stats.getQueryExecutionMaxTimeQueryString() );
 
-			s.createQuery( continents ).list().iterator();
-			assertEquals( "unexpected execution count", 2, continentStats.getExecutionCount() );
-			assertEquals( "unexpected row count", 2, continentStats.getExecutionRowCount() );
+					session.createQuery( continents ).list().iterator();
+					assertEquals( 2, continentStats.getExecutionCount(), "unexpected execution count" );
+					assertEquals( 2, continentStats.getExecutionRowCount(), "unexpected row count" );
 
 
-			ScrollableResults scrollableResults = s.createQuery( continents ).scroll();
-			// same deal with scroll()...
-			assertEquals( "unexpected execution count", 2, continentStats.getExecutionCount() );
-			assertEquals( "unexpected row count", 2, continentStats.getExecutionRowCount() );
-			// scroll through data because SybaseASE15Dialect throws NullPointerException
-			// if data is not read before closing the ResultSet
-			while ( scrollableResults.next() ) {
-				// do nothing
-			}
-			scrollableResults.close();
-			tx.commit();
-			s.close();
+					try (ScrollableResults scrollableResults = session.createQuery( continents ).scroll()) {
+						// same deal with scroll()...
+						assertEquals( 2, continentStats.getExecutionCount(), "unexpected execution count" );
+						assertEquals( 2, continentStats.getExecutionRowCount(), "unexpected row count" );
+						// scroll through data because SybaseASE15Dialect throws NullPointerException
+						// if data is not read before closing the ResultSet
+						while ( scrollableResults.next() ) {
+							// do nothing
+						}
+					}
+				}
+		);
 
-			// explicitly check that statistics for "split queries" get collected
-			// under the original query
-			sf.getStatistics().clear();
+		// explicitly check that statistics for "split queries" get collected
+		// under the original query
+		scope.getSessionFactory().getStatistics().clear();
 
-			s = sf.openSession();
-			tx = s.beginTransaction();
-			final String localities = "from Locality";
-			results = s.createQuery( localities ).list().size();
-			QueryStatistics localityStats = sf.getStatistics().getQueryStatistics( localities );
-			assertNotNull( "stats were null", localityStats );
-			// ...one for each split query
-			assertEquals( "unexpected execution count", 2, localityStats.getExecutionCount() );
-			assertEquals( "unexpected row count", results, localityStats.getExecutionRowCount() );
-			maxTime = localityStats.getExecutionMaxTime();
-			assertEquals( maxTime, sf.getStatistics().getQueryExecutionMaxTime() );
+		scope.inTransaction(
+				session -> {
+					final String localities = "from Locality";
+					int results = session.createQuery( localities ).list().size();
+					final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
+					QueryStatistics localityStats = statistics.getQueryStatistics( localities );
+					assertNotNull( localityStats, "stats were null" );
+					// ...one for each split query
+					assertEquals( 2, localityStats.getExecutionCount(), "unexpected execution count" );
+					assertEquals( results, localityStats.getExecutionRowCount(), "unexpected row count" );
+					long maxTime = localityStats.getExecutionMaxTime();
+					assertEquals( maxTime, statistics.getQueryExecutionMaxTime() );
 //		assertEquals( localities, stats.getQueryExecutionMaxTimeQueryString() );
-			tx.commit();
-			s.close();
-			assertFalse( s.isOpen() );
+				}
+		);
 
-			// native sql queries
-			sf.getStatistics().clear();
+		// native sql queries
+		scope.getSessionFactory().getStatistics().clear();
 
-			s = sf.openSession();
-			tx = s.beginTransaction();
-			final String sql = "select id, name from Country";
-			results = s.createNativeQuery( sql ).addEntity( Country.class ).list().size();
-			QueryStatistics sqlStats = sf.getStatistics().getQueryStatistics( sql );
-			assertNotNull( "sql stats were null", sqlStats );
-			assertEquals( "unexpected execution count", 1, sqlStats.getExecutionCount() );
-			assertEquals( "unexpected row count", results, sqlStats.getExecutionRowCount() );
-			maxTime = sqlStats.getExecutionMaxTime();
-			assertEquals( maxTime, sf.getStatistics().getQueryExecutionMaxTime() );
+		scope.inTransaction(
+				session -> {
+					final String sql = "select id, name from Country";
+					int results = session.createNativeQuery( sql ).addEntity( Country.class ).list().size();
+					final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
+					QueryStatistics sqlStats = statistics.getQueryStatistics( sql );
+					assertNotNull( sqlStats, "sql stats were null" );
+					assertEquals( 1, sqlStats.getExecutionCount(), "unexpected execution count" );
+					assertEquals( results, sqlStats.getExecutionRowCount(), "unexpected row count" );
+					long maxTime = sqlStats.getExecutionMaxTime();
+					assertEquals( maxTime, statistics.getQueryExecutionMaxTime() );
 //		assertEquals( sql, stats.getQueryExecutionMaxTimeQueryString() );
-			tx.commit();
-			s.close();
+				}
+		);
+	}
 
-			s = sf.openSession();
-			tx = s.beginTransaction();
-			cleanDb( s );
-			tx.commit();
-			s.close();
-		}
+	@BeforeEach
+	public void setUp(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session ->
+						fillDb( session )
+		);
+	}
+
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session ->
+						cleanDb( session )
+		);
 	}
 
 	private Continent fillDb(Session s) {
 		Continent europe = new Continent();
-		europe.setName("Europe");
+		europe.setName( "Europe" );
 		Country france = new Country();
-		france.setName("France");
+		france.setName( "France" );
 		europe.setCountries( new HashSet() );
-		europe.getCountries().add(france);
-		s.persist(france);
-		s.persist(europe);
+		europe.getCountries().add( france );
+		s.persist( france );
+		s.persist( europe );
 		return europe;
 	}
 

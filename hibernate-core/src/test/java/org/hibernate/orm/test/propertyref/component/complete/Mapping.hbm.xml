@@ -14,7 +14,7 @@
      
 -->
 
-<hibernate-mapping package="org.hibernate.test.propertyref.component.complete">
+<hibernate-mapping package="org.hibernate.orm.test.propertyref.component.complete">
 	
 	<class name="Person" table="COMP_COMP_PROPREF_PERSON">
 		<id name="id">

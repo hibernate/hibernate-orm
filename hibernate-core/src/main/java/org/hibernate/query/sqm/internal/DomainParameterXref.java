@@ -11,7 +11,6 @@ import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
 
 import org.hibernate.HibernateException;
@@ -258,4 +257,5 @@ public class DomainParameterXref {
 
 		expansions.clear();
 	}
+
 }

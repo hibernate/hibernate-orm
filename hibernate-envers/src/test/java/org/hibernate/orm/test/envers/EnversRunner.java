@@ -12,14 +12,23 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import org.hibernate.testing.envers.RequiresAuditStrategy;
 import org.hibernate.testing.junit4.CustomRunner;
+import org.hibernate.testing.junit4.Helper;
+
+import org.hibernate.envers.strategy.internal.DefaultAuditStrategy;
+import org.hibernate.envers.strategy.spi.AuditStrategy;
 import org.junit.runner.Runner;
 import org.junit.runner.manipulation.NoTestsRemainException;
+import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Suite;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.InitializationError;
+import org.junit.runners.model.Statement;
 import org.junit.runners.model.TestClass;
+
+import org.jboss.logging.Logger;
 
 /**
  * Copied & modified from {@link Parameterized}.
@@ -32,12 +41,18 @@ import org.junit.runners.model.TestClass;
  * annotations to work.
  *
  * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
  */
 public class EnversRunner extends Suite {
+
+	private static final Logger LOG = Logger.getLogger( EnversRunner.class );
+
 	private class TestClassCustomRunnerForParameters extends CustomRunner {
 		private final int fParameterSetNumber;
 
 		private final List<Object[]> fParameterList;
+
+		private boolean ignoreAllTests;
 
 		TestClassCustomRunnerForParameters(Class<?> type, List<Object[]> parameterList, int i)
 				throws InitializationError, NoTestsRemainException {
@@ -56,6 +71,48 @@ public class EnversRunner extends Suite {
 				((BaseEnversFunctionalTestCase) testInstance).setTestData( computeParams() );
 			}
 			return testInstance;
+		}
+
+		@Override
+		protected Statement withBeforeClasses(Statement statement) {
+			if ( !isAuditStrategyAllowed( getTestClass().getAnnotation( RequiresAuditStrategy.class ) ) ) {
+				LOG.infof( "Required audit strategy not available, test class '%s' skipped.", getTestClass().getName() );
+				ignoreAllTests = true;
+				return statement;
+			}
+			return super.withBeforeClasses( statement );
+		}
+
+		@Override
+		protected void runChild(FrameworkMethod method, RunNotifier notifier) {
+			if ( !isAuditStrategyAllowed( method ) ) {
+				if ( !ignoreAllTests ) {
+					LOG.infof( "Required audit strategy not available, test '%s' skipped.", method.getName() );
+				}
+				notifier.fireTestIgnored( describeChild( method ) );
+				return;
+			}
+			super.runChild( method, notifier );
+		}
+
+		private boolean isAuditStrategyAllowed(FrameworkMethod method) {
+			return isAuditStrategyAllowed( Helper.locateAnnotation( RequiresAuditStrategy.class, method, getTestClass() ) );
+		}
+
+		private boolean isAuditStrategyAllowed(RequiresAuditStrategy auditStrategyAnn) {
+			if ( auditStrategyAnn == null ) {
+				// if there is no annotation, then execution is permissible
+				return true;
+			}
+
+			// if an annotation exists, verify its allowed
+			final String strategyNameInUse = getStrategyClassSimpleName();
+			for ( Class<? extends AuditStrategy> strategy : auditStrategyAnn.value() ) {
+				if ( strategy.getSimpleName().equals( strategyNameInUse ) ) {
+					return true;
+				}
+			}
+			return false;
 		}
 
 		private Object[] computeParams() throws Exception {
@@ -85,6 +142,15 @@ public class EnversRunner extends Suite {
 					"%s[%s]", method.getName(),
 					fParameterSetNumber
 			);
+		}
+
+		private String getStrategyClassSimpleName() {
+			Object name = fParameterList.get( fParameterSetNumber )[ 0 ];
+			if ( name != null ) {
+				String strategyName = (String) name;
+				name = strategyName.substring( strategyName.lastIndexOf( "." ) + 1 );
+			}
+			return ( name != null ? name.toString() : DefaultAuditStrategy.class.getSimpleName() );
 		}
 
 		@Override

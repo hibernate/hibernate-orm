@@ -4,31 +4,30 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.annotations.xml.hbm;
+package org.hibernate.orm.test.annotations.xml.hbm;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 
+import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.jaxb.spi.Binding;
-import org.hibernate.cfg.Configuration;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @TestForIssue(jiraKey = "HHH-14530")
-public class PreParsedHbmXmlTest extends BaseCoreFunctionalTestCase {
+public class PreParsedHbmXmlTest extends BaseSessionFactoryFunctionalTest {
 
 	@Override
-	protected void addMappings(Configuration configuration) {
-		super.addMappings( configuration );
+	protected void applyMetadataSources(MetadataSources metadataSources) {
 		try (InputStream xmlStream = Thread.currentThread().getContextClassLoader()
-				.getResourceAsStream( "org/hibernate/test/annotations/xml/hbm/pre-parsed-hbm.xml" )) {
-			Binding<?> parsed = configuration.getXmlMappingBinderAccess().bind( xmlStream );
-			configuration.addXmlMapping( parsed );
+				.getResourceAsStream( "org/hibernate/orm/test/annotations/xml/hbm/pre-parsed-hbm.xml" )) {
+			Binding<?> parsed = metadataSources.getXmlMappingBinderAccess().bind( xmlStream );
+			metadataSources.addXmlBinding( parsed );
 		}
 		catch (IOException e) {
 			throw new UncheckedIOException( e );

@@ -6,16 +6,15 @@
  */
 
 //$Id$
-package org.hibernate.test.annotations.xml.hbm;
+package org.hibernate.orm.test.annotations.xml.hbm;
 
 
 /**
  * @author Emmanuel Bernard
  */
-public class Government {
+public class CloudType {
 	private Integer id;
 	private String name;
-	private PrimeMinister primeMinister;
 
 	public Integer getId() {
 		return id;
@@ -31,13 +30,5 @@ public class Government {
 
 	public void setName(String name) {
 		this.name = name;
-	}
-
-	public PrimeMinister getPrimeMinister() {
-		return primeMinister;
-	}
-
-	public void setPrimeMinister(PrimeMinister primeMinister) {
-		this.primeMinister = primeMinister;
 	}
 }

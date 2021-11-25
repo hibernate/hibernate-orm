@@ -6,18 +6,14 @@
  */
 
 //$Id$
-package org.hibernate.test.annotations.xml.hbm;
+package org.hibernate.orm.test.annotations.xml.hbm;
 
 
 /**
  * @author Emmanuel Bernard
  */
-public interface Z extends java.io.Serializable {
-  public Integer getZId();
+public interface B extends A {
+	public Integer getBId();
 
-  public void setZId(Integer zId);
-
-  public B getB();
-
-  public void setB(B b);
+	public void setBId(Integer bId);
 }

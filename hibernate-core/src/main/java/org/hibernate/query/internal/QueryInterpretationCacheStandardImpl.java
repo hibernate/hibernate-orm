@@ -52,7 +52,7 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 	 */
 	private final BoundedConcurrentHashMap<Key, QueryPlan> queryPlanCache;
 
-	private final BoundedConcurrentHashMap<String, HqlInterpretation> hqlInterpretationCache;
+	private final BoundedConcurrentHashMap<String, ImmutableHqlInterpretation> hqlInterpretationCache;
 	private final BoundedConcurrentHashMap<String, ParameterInterpretation> nativeQueryParamCache;
 	private final Supplier<StatisticsImplementor> statisticsSupplier;
 
@@ -111,41 +111,38 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 		final StatisticsImplementor statistics = statisticsSupplier.get();
 		final boolean stats = statistics.isStatisticsEnabled();
 		final long startTime = ( stats ) ? System.nanoTime() : 0L;
-		final HqlInterpretation cached = hqlInterpretationCache.get( queryString );
-		if ( cached != null ) {
+
+		ImmutableHqlInterpretation immutableHqlInterpretation = hqlInterpretationCache.get( queryString );
+		if ( immutableHqlInterpretation == null ) {
+			log.debugf( "Creating and caching HqlInterpretation - %s", queryString );
+			immutableHqlInterpretation = create( queryString, creator );
+			hqlInterpretationCache.put( queryString, immutableHqlInterpretation );
+
+			if ( stats ) {
+				final long endTime = System.nanoTime();
+				final long microseconds = TimeUnit.MICROSECONDS.convert( endTime - startTime, TimeUnit.NANOSECONDS );
+				statistics.queryCompiled( queryString, microseconds );
+			}
+		}
+		else {
 			if ( stats ) {
 				statistics.queryPlanCacheHit( queryString );
 			}
-			return cached;
 		}
 
-		log.debugf( "Creating and caching HqlInterpretation - %s", queryString );
+		DomainParameterXref domainParameterXref;
 
-		final SqmStatement<?> sqmStatement = creator.apply( queryString );
-		final DomainParameterXref domainParameterXref;
-		final ParameterMetadataImplementor parameterMetadata;
-
-		if ( sqmStatement.getSqmParameters().isEmpty() ) {
+		if ( immutableHqlInterpretation.sqmStatement.getSqmParameters().isEmpty() ) {
 			domainParameterXref = DomainParameterXref.empty();
-			parameterMetadata = ParameterMetadataImpl.EMPTY;
 		}
 		else {
-			domainParameterXref = DomainParameterXref.from( sqmStatement );
-			parameterMetadata = new ParameterMetadataImpl( domainParameterXref.getQueryParameters() );
+			domainParameterXref = DomainParameterXref.from( immutableHqlInterpretation.sqmStatement );
 		}
 
-		final HqlInterpretation interpretation = new SimpleHqlInterpretationImpl(
-				sqmStatement,
-				parameterMetadata,
+		return new SimpleHqlInterpretationImpl(
+				immutableHqlInterpretation.sqmStatement,
+				immutableHqlInterpretation.parameterMetadata,
 				domainParameterXref);
-		hqlInterpretationCache.put( queryString, interpretation );
-
-		if ( stats ) {
-			final long endTime = System.nanoTime();
-			final long microseconds = TimeUnit.MICROSECONDS.convert( endTime - startTime, TimeUnit.NANOSECONDS );
-			statistics.queryCompiled( queryString, microseconds );
-		}
-		return interpretation;
 	}
 
 	@Override
@@ -174,5 +171,33 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 		hqlInterpretationCache.clear();
 		nativeQueryParamCache.clear();
 		queryPlanCache.clear();
+	}
+
+	private ImmutableHqlInterpretation create(String queryString, Function<String, SqmStatement<?>> creator) {
+		final SqmStatement<?> sqmStatement = creator.apply( queryString );
+		final ParameterMetadataImplementor parameterMetadata;
+
+		if ( sqmStatement.getSqmParameters().isEmpty() ) {
+			parameterMetadata = ParameterMetadataImpl.EMPTY;
+		}
+		else {
+			// TODO Avoid to recreate the DomainParameterXref twice
+			parameterMetadata = new ParameterMetadataImpl( DomainParameterXref.from( sqmStatement ).getQueryParameters() );
+		}
+
+		return new ImmutableHqlInterpretation( sqmStatement, parameterMetadata);
+	}
+
+	private static class ImmutableHqlInterpretation {
+
+		private final SqmStatement sqmStatement;
+		private final ParameterMetadataImplementor parameterMetadata;
+
+		public ImmutableHqlInterpretation(
+				SqmStatement sqmStatement,
+				ParameterMetadataImplementor parameterMetadata) {
+			this.sqmStatement = sqmStatement;
+			this.parameterMetadata = parameterMetadata;
+		}
 	}
 }

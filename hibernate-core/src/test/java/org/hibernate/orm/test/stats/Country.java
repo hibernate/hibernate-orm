@@ -5,17 +5,31 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
-//$Id: Continent.java 6736 2005-05-09 16:09:38Z epbernard $
-package org.hibernate.test.stats;
-import java.util.Set;
+//$Id: Country.java 6736 2005-05-09 16:09:38Z epbernard $
+package org.hibernate.orm.test.stats;
+
 
 /**
  * @author Emmanuel Bernard
  */
-public class Continent {
+public class Country {
 	private Integer id;
 	private String name;
-	private Set countries;
+
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (!(o instanceof Country)) return false;
+
+		final Country country = (Country) o;
+
+		if (!name.equals(country.name)) return false;
+
+		return true;
+	}
+
+	public int hashCode() {
+		return name.hashCode();
+	}
 
 	public Integer getId() {
 		return id;
@@ -32,13 +46,4 @@ public class Continent {
 	public void setName(String name) {
 		this.name = name;
 	}
-
-	public Set getCountries() {
-		return countries;
-	}
-
-	public void setCountries(Set countries) {
-		this.countries = countries;
-	}
-
 }

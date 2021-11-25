@@ -12,6 +12,7 @@ import java.util.Map;
 
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.envers.strategy.internal.DefaultAuditStrategy;
 import org.hibernate.orm.test.envers.BaseEnversFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.entities.customtype.UnspecifiedEnumTypeEntity;
@@ -21,11 +22,13 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.envers.RequiresAuditStrategy;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @TestForIssue(jiraKey = "HHH-7780")
+@RequiresAuditStrategy(DefaultAuditStrategy.class)
 public class UnspecifiedEnumTypeTest extends BaseEnversFunctionalTestCase {
 	private Long id = null;
 

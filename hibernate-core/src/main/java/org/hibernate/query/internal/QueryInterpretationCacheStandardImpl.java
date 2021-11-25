@@ -112,10 +112,23 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 		final boolean stats = statistics.isStatisticsEnabled();
 		final long startTime = ( stats ) ? System.nanoTime() : 0L;
 
+		final DomainParameterXref domainParameterXref;
 		ImmutableHqlInterpretation immutableHqlInterpretation = hqlInterpretationCache.get( queryString );
 		if ( immutableHqlInterpretation == null ) {
 			log.debugf( "Creating and caching HqlInterpretation - %s", queryString );
-			immutableHqlInterpretation = create( queryString, creator );
+			final SqmStatement<?> sqmStatement = creator.apply( queryString );
+			final ParameterMetadataImplementor parameterMetadata;
+
+			if ( sqmStatement.getSqmParameters().isEmpty() ) {
+				domainParameterXref = DomainParameterXref.empty();
+				parameterMetadata = ParameterMetadataImpl.EMPTY;
+			}
+			else {
+				domainParameterXref = DomainParameterXref.from( sqmStatement );
+				parameterMetadata = new ParameterMetadataImpl( domainParameterXref.getQueryParameters() );
+			}
+
+			immutableHqlInterpretation = new ImmutableHqlInterpretation( sqmStatement, parameterMetadata);
 			hqlInterpretationCache.put( queryString, immutableHqlInterpretation );
 
 			if ( stats ) {
@@ -128,15 +141,13 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 			if ( stats ) {
 				statistics.queryPlanCacheHit( queryString );
 			}
-		}
 
-		DomainParameterXref domainParameterXref;
-
-		if ( immutableHqlInterpretation.sqmStatement.getSqmParameters().isEmpty() ) {
-			domainParameterXref = DomainParameterXref.empty();
-		}
-		else {
-			domainParameterXref = DomainParameterXref.from( immutableHqlInterpretation.sqmStatement );
+			if ( immutableHqlInterpretation.sqmStatement.getSqmParameters().isEmpty() ) {
+				domainParameterXref = DomainParameterXref.empty();
+			}
+			else {
+				domainParameterXref = DomainParameterXref.from( immutableHqlInterpretation.sqmStatement );
+			}
 		}
 
 		return new SimpleHqlInterpretationImpl(
@@ -171,21 +182,6 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 		hqlInterpretationCache.clear();
 		nativeQueryParamCache.clear();
 		queryPlanCache.clear();
-	}
-
-	private ImmutableHqlInterpretation create(String queryString, Function<String, SqmStatement<?>> creator) {
-		final SqmStatement<?> sqmStatement = creator.apply( queryString );
-		final ParameterMetadataImplementor parameterMetadata;
-
-		if ( sqmStatement.getSqmParameters().isEmpty() ) {
-			parameterMetadata = ParameterMetadataImpl.EMPTY;
-		}
-		else {
-			// TODO Avoid to recreate the DomainParameterXref twice
-			parameterMetadata = new ParameterMetadataImpl( DomainParameterXref.from( sqmStatement ).getQueryParameters() );
-		}
-
-		return new ImmutableHqlInterpretation( sqmStatement, parameterMetadata);
 	}
 
 	private static class ImmutableHqlInterpretation {

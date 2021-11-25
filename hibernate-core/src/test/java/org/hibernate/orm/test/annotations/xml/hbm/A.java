@@ -4,16 +4,17 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-
-//$Id$
-package org.hibernate.test.annotations.xml.hbm;
-
+package org.hibernate.orm.test.annotations.xml.hbm;
 
 /**
  * @author Emmanuel Bernard
  */
-public interface B extends A {
-	public Integer getBId();
+public interface A extends java.io.Serializable {
+	public Integer getAId();
 
-	public void setBId(Integer bId);
+	public void setAId(Integer aId);
+
+	String getDescription();
+
+	void setDescription(String description);
 }

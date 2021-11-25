@@ -6,7 +6,7 @@
  */
 
 //$Id:PrimeMinister.java 9793 2006-04-26 02:20:18 -0400 (mer., 26 avr. 2006) epbernard $
-package org.hibernate.test.annotations.xml.hbm;
+package org.hibernate.orm.test.annotations.xml.hbm;
 import java.util.Set;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

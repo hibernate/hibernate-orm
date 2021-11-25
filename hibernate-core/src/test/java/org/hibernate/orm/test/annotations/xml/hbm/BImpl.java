@@ -6,7 +6,7 @@
  */
 
 //$Id$
-package org.hibernate.test.annotations.xml.hbm;
+package org.hibernate.orm.test.annotations.xml.hbm;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 

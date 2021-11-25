@@ -6,7 +6,7 @@
  */
 
 //$Id$
-package org.hibernate.test.annotations.xml.hbm;
+package org.hibernate.orm.test.annotations.xml.hbm;
 import java.util.HashSet;
 import java.util.Set;
 import jakarta.persistence.Entity;

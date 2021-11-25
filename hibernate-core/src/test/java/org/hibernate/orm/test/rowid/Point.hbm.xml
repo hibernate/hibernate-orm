@@ -13,9 +13,9 @@
   
 -->
 
-<hibernate-mapping package="org.hibernate.test.rowid">
+<hibernate-mapping package="org.hibernate.orm.test.rowid">
 
-	<typedef name="rowid" class="org.hibernate.test.rowid.RowIdType"/>
+	<typedef name="rowid" class="org.hibernate.orm.test.rowid.RowIdType"/>
 	
 	<class name="Point" rowid="rowid">
 		<composite-id>

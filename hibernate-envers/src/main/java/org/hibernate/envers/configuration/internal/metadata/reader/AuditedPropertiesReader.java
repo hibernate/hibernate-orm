@@ -369,12 +369,16 @@ public class AuditedPropertiesReader {
 				allClassAudited
 		);
 
-		if ( allClassAudited != null || !auditedPropertiesHolder.isEmpty() ) {
+		if ( isClassHierarchyTraversalNeeded( allClassAudited ) ) {
 			final XClass superclazz = clazz.getSuperclass();
 			if ( !clazz.isInterface() && !"java.lang.Object".equals( superclazz.getName() ) ) {
 				addPropertiesFromClass( superclazz );
 			}
 		}
+	}
+
+	protected boolean isClassHierarchyTraversalNeeded(Audited allClassAudited) {
+		return allClassAudited != null || !auditedPropertiesHolder.isEmpty();
 	}
 
 	private void addFromProperties(
@@ -713,6 +717,22 @@ public class AuditedPropertiesReader {
 			}
 		}
 		return true;
+	}
+
+	protected boolean isOverriddenNotAudited(XProperty property) {
+		return overriddenNotAuditedProperties.contains( property );
+	}
+
+	protected boolean isOverriddenNotAudited(XClass clazz) {
+		return overriddenNotAuditedClasses.contains( clazz );
+	}
+
+	protected boolean isOverriddenAudited(XProperty property) {
+		return overriddenAuditedProperties.contains( property );
+	}
+
+	protected boolean isOverriddenAudited(XClass clazz) {
+		return overriddenAuditedClasses.contains( clazz );
 	}
 
 	private static final Audited DEFAULT_AUDITED = new Audited() {

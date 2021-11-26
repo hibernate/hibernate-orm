@@ -26,8 +26,8 @@ includeBuild('hibernate-orm-build')
 
 apply from: file( 'gradle/gradle-enterprise.gradle' )
 
-if ( !JavaVersion.current().java8Compatible ) {
-    throw new GradleException( "Gradle must be run with Java 8 or later" )
+if ( !JavaVersion.current().java11Compatible ) {
+    throw new GradleException( "Gradle must be run with Java 11 or later" )
 }
 
 buildCache {
@@ -38,7 +38,7 @@ buildCache {
     remote(HttpBuildCache) { enabled = false }
 }
 
-gradle.ext.baselineJavaVersion = JavaLanguageVersion.of( 8 )
+gradle.ext.baselineJavaVersion = JavaLanguageVersion.of( 11 )
 
 // Gradle does bytecode transformation on tests.
 // You can't use bytecode higher than what Gradle supports, even with toolchains.
@@ -129,18 +129,7 @@ include 'hibernate-jcache'
 
 include 'hibernate-micrometer'
 include 'hibernate-graalvm'
-
-// The plugin used to generate Java modules was compiled using JDK11.
-// This means even with toolchains, Gradle needs to be run with Java 11+ in order to run Java modules ITs.
-// We might be able to get rid of that limitation by relying on Gradle's built-in support for Java modules,
-// but I (Yoann) tried and failed to make it work.
-// See https://docs.gradle.org/current/samples/sample_java_modules_multi_project.html
-if ( JavaVersion.current().isJava11Compatible() && gradle.ext.javaVersions.test.release.asInt() >= 9 ) {
-    include 'hibernate-integrationtest-java-modules'
-}
-else {
-    logger.warn( '[WARN] Skipping Java module path integration tests because the JDK does not support it' )
-}
+include 'hibernate-integrationtest-java-modules'
 
 include 'documentation'
 include 'release'

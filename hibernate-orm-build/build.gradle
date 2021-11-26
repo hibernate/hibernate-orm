@@ -20,8 +20,8 @@ dependencies {
 
 tasks.compileJava {
 	options.encoding = 'UTF-8'
-	sourceCompatibility = 8
-	targetCompatibility = 8
+	sourceCompatibility = 11
+	targetCompatibility = 11
 }
 
 gradlePlugin {

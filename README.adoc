@@ -18,7 +18,7 @@ for its CI needs. See
 
 == Building from sources
 
-The build requires at least Java 8 JDK.
+The build requires at least Java 11 JDK.
 
 Hibernate uses https://gradle.org[Gradle] as its build tool. See the _Gradle Primer_ section below if you are new to
 Gradle.

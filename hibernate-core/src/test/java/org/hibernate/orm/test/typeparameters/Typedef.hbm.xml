@@ -9,7 +9,7 @@
 <hibernate-mapping>
 
 	<typedef name="nullToMinusOne"
-		class="org.hibernate.test.typeparameters.DefaultValueIntegerType">
+		class="org.hibernate.orm.test.typeparameters.DefaultValueIntegerType">
 		<param name="default">-1</param>
 	</typedef>
 	

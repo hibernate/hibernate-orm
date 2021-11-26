@@ -7,10 +7,10 @@
   -->
 <!DOCTYPE hibernate-mapping SYSTEM "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
-<hibernate-mapping package="org.hibernate.test.typeparameters">
+<hibernate-mapping package="org.hibernate.orm.test.typeparameters">
 
 	<typedef name="nullToTwo"
-		class="org.hibernate.test.typeparameters.DefaultValueIntegerType">
+		class="org.hibernate.orm.test.typeparameters.DefaultValueIntegerType">
 		<param name="default">2</param>
 	</typedef>
 
@@ -19,7 +19,7 @@
             <generator class="increment"/>
         </id>
         <property name="valueOne" column="VALUE_ONE">
-			<type name="org.hibernate.test.typeparameters.DefaultValueIntegerType">
+			<type name="org.hibernate.orm.test.typeparameters.DefaultValueIntegerType">
 				<param name="default">1</param>
 			</type>
 		</property>

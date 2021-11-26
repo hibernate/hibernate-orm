@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.readonly;
+package org.hibernate.orm.test.readonly;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
@@ -18,14 +18,21 @@ import org.hibernate.Transaction;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.proxy.HibernateProxy;
 
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.test.readonly.AbstractReadOnlyTest;
+import org.hibernate.test.readonly.Container;
+import org.hibernate.test.readonly.DataPoint;
+import org.hibernate.test.readonly.Info;
+import org.hibernate.test.readonly.Owner;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Model:
@@ -48,15 +55,14 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Gail Badner
  */
+@DomainModel(
+		xmlMappings = { "org/hibernate/test/readonly/DataPoint.hbm.xml" }
+)
 public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
-	@Override
-	public String[] getMappings() {
-		return new String[] { "readonly/DataPoint.hbm.xml" };
-	}
 
 	@Test
 	@SuppressWarnings( {"unchecked"})
-	public void testExistingModifiableAfterSetSessionReadOnly() {
+	public void testExistingModifiableAfterSetSessionReadOnly(SessionFactoryScope scope) {
 		Container cOrig = createContainer();
 		Set expectedInitializedObjects = new HashSet(
 				Arrays.asList(
@@ -74,7 +80,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		);
 		Set expectedReadOnlyObjects = new HashSet();
 
-		Session s = openSession();
+		Session s = openSession(scope);
 		assertFalse( s.isDefaultReadOnly() );
 		Transaction t = s.beginTransaction();
 		s.save( cOrig );
@@ -97,7 +103,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		assertSame( cOrig, c );
 		checkContainer( cOrig, expectedInitializedObjects, expectedReadOnlyObjects, s );
 		s.evict( cOrig );
-		c = ( Container ) s.get( Container.class, cOrig.getId()  );
+		c = s.get( Container.class, cOrig.getId()  );
 		assertNotSame( cOrig, c );
 		expectedInitializedObjects = new HashSet(
 				Arrays.asList(
@@ -140,7 +146,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		checkContainer( c, expectedInitializedObjects, expectedReadOnlyObjects, s );
 		t.commit();
 		s.close();
-		s = openSession();
+		s = openSession(scope);
 		t = s.beginTransaction();
 		s.createQuery("delete from DataPoint").executeUpdate();
 		s.createQuery("delete from Container").executeUpdate();
@@ -153,7 +159,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 
 	@Test
 	@SuppressWarnings( {"unchecked"})
-	public void testExistingReadOnlyAfterSetSessionModifiable() {
+	public void testExistingReadOnlyAfterSetSessionModifiable(SessionFactoryScope scope) {
 
 		Container cOrig = createContainer();
 		Set expectedInitializedObjects = new HashSet(
@@ -171,7 +177,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 				)
 		);
 		Set expectedReadOnlyObjects = new HashSet();
-		Session s = openSession();
+		Session s = openSession(scope);
 		assertFalse( s.isDefaultReadOnly() );
 		Transaction t = s.beginTransaction();
 		s.save( cOrig );
@@ -182,7 +188,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		t.commit();
 		s.close();
 
-		s = openSession();
+		s = openSession(scope);
 		t = s.beginTransaction();
 		s.setDefaultReadOnly( true );
 		Container c = ( Container ) s.get( Container.class, cOrig.getId()  );
@@ -230,7 +236,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		checkContainer( c, expectedInitializedObjects, expectedReadOnlyObjects, s );
 		t.commit();
 		s.close();
-		s = openSession();
+		s = openSession(scope);
 		t = s.beginTransaction();
 		s.createQuery("delete from DataPoint").executeUpdate();
 		s.createQuery("delete from Container").executeUpdate();
@@ -243,7 +249,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 
 	@Test
 	@SuppressWarnings( {"unchecked"})
-	public void testExistingReadOnlyAfterSetSessionModifiableExisting() {
+	public void testExistingReadOnlyAfterSetSessionModifiableExisting(SessionFactoryScope scope) {
 		Container cOrig = createContainer();
 		Set expectedInitializedObjects = new HashSet(
 				Arrays.asList(
@@ -261,7 +267,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		);
 		Set expectedReadOnlyObjects = new HashSet();
 		DataPoint lazyDataPointOrig = ( DataPoint ) cOrig.getLazyDataPoints().iterator().next();
-		Session s = openSession();
+		Session s = openSession(scope);
 		assertFalse( s.isDefaultReadOnly() );
 		Transaction t = s.beginTransaction();
 		s.save( cOrig );
@@ -272,7 +278,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		t.commit();
 		s.close();
 
-		s = openSession();
+		s = openSession(scope);
 		t = s.beginTransaction();
 		s.setDefaultReadOnly( true );
 		Container c = ( Container ) s.get( Container.class, cOrig.getId()  );
@@ -321,7 +327,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		checkContainer( c, expectedInitializedObjects, expectedReadOnlyObjects, s );
 		t.commit();
 		s.close();
-		s = openSession();
+		s = openSession(scope);
 		t = s.beginTransaction();
 		s.createQuery("delete from DataPoint").executeUpdate();
 		s.createQuery("delete from Container").executeUpdate();
@@ -334,7 +340,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 
 	@SuppressWarnings( {"unchecked"})
 	@Test
- 	public void testExistingReadOnlyAfterSetSessionModifiableExistingEntityReadOnly() {
+ 	public void testExistingReadOnlyAfterSetSessionModifiableExistingEntityReadOnly(SessionFactoryScope scope) {
 		Container cOrig = createContainer();
 		Set expectedInitializedObjects = new HashSet(
 				Arrays.asList(
@@ -352,7 +358,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		);
 		Set expectedReadOnlyObjects = new HashSet();
 		DataPoint lazyDataPointOrig = ( DataPoint ) cOrig.getLazyDataPoints().iterator().next();
-		Session s = openSession();
+		Session s = openSession(scope);
 		assertFalse( s.isDefaultReadOnly() );
 		Transaction t = s.beginTransaction();
 		s.save( cOrig );
@@ -363,7 +369,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		t.commit();
 		s.close();
 
-		s = openSession();
+		s = openSession(scope);
 		t = s.beginTransaction();
 		s.setDefaultReadOnly( true );
 		Container c = ( Container ) s.get( Container.class, cOrig.getId()  );
@@ -415,7 +421,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		checkContainer( c, expectedInitializedObjects, expectedReadOnlyObjects, s );
 		t.commit();
 		s.close();
-		s = openSession();
+		s = openSession(scope);
 		t = s.beginTransaction();
 		s.createQuery("delete from DataPoint").executeUpdate();
 		s.createQuery("delete from Container").executeUpdate();
@@ -428,7 +434,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 
 	@SuppressWarnings( {"unchecked"})
 	@Test
-	public void testExistingReadOnlyAfterSetSessionModifiableProxyExisting() {
+	public void testExistingReadOnlyAfterSetSessionModifiableProxyExisting(SessionFactoryScope scope) {
 		Container cOrig = createContainer();
 		Set expectedInitializedObjects = new HashSet(
 				Arrays.asList(
@@ -446,7 +452,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		);
 		Set expectedReadOnlyObjects = new HashSet();
 		DataPoint lazyDataPointOrig = ( DataPoint ) cOrig.getLazyDataPoints().iterator().next();
-		Session s = openSession();
+		Session s = openSession(scope);
 		assertFalse( s.isDefaultReadOnly() );
 		Transaction t = s.beginTransaction();
 		s.save( cOrig );
@@ -457,7 +463,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		t.commit();
 		s.close();
 
-		s = openSession();
+		s = openSession(scope);
 		t = s.beginTransaction();
 		s.setDefaultReadOnly( true );
 		Container c = ( Container ) s.get( Container.class, cOrig.getId()  );
@@ -506,7 +512,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		checkContainer( c, expectedInitializedObjects, expectedReadOnlyObjects, s );
 		t.commit();
 		s.close();
-		s = openSession();
+		s = openSession(scope);
 		t = s.beginTransaction();
 		s.createQuery("delete from DataPoint").executeUpdate();
 		s.createQuery("delete from Container").executeUpdate();
@@ -519,7 +525,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 
 	@SuppressWarnings( {"unchecked"})
 	@Test
-	public void testExistingReadOnlyAfterSetSessionModifiableExistingProxyReadOnly() {
+	public void testExistingReadOnlyAfterSetSessionModifiableExistingProxyReadOnly(SessionFactoryScope scope) {
 		Container cOrig = createContainer();
 		Set expectedInitializedObjects = new HashSet(
 				Arrays.asList(
@@ -537,7 +543,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		);
 		Set expectedReadOnlyObjects = new HashSet();
 		DataPoint lazyDataPointOrig = ( DataPoint ) cOrig.getLazyDataPoints().iterator().next();
-		Session s = openSession();
+		Session s = openSession(scope);
 		assertFalse( s.isDefaultReadOnly() );
 		Transaction t = s.beginTransaction();
 		s.save( cOrig );
@@ -548,7 +554,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		t.commit();
 		s.close();
 
-		s = openSession();
+		s = openSession(scope);
 		t = s.beginTransaction();
 		s.setDefaultReadOnly( true );
 		Container c = ( Container ) s.get( Container.class, cOrig.getId()  );
@@ -600,7 +606,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		checkContainer( c, expectedInitializedObjects, expectedReadOnlyObjects, s );
 		t.commit();
 		s.close();
-		s = openSession();
+		s = openSession(scope);
 		t = s.beginTransaction();
 		s.createQuery("delete from DataPoint").executeUpdate();
 		s.createQuery("delete from Container").executeUpdate();
@@ -612,7 +618,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 
 	@SuppressWarnings( {"unchecked"})
 	@Test
-	public void testDefaultModifiableWithReadOnlyQueryForEntity() {
+	public void testDefaultModifiableWithReadOnlyQueryForEntity(SessionFactoryScope scope) {
 		Container cOrig = createContainer();
 		Set expectedInitializedObjects = new HashSet(
 				Arrays.asList(
@@ -630,7 +636,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		);
 		Set expectedReadOnlyObjects = new HashSet();
 
-		Session s = openSession();
+		Session s = openSession(scope);
 		assertFalse( s.isDefaultReadOnly() );
 		Transaction t = s.beginTransaction();
 		s.save( cOrig );
@@ -641,7 +647,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		t.commit();
 		s.close();
 
-		s = openSession();
+		s = openSession(scope);
 		t = s.beginTransaction();
 		assertFalse( s.isDefaultReadOnly() );
 		Container c = ( Container ) s.createQuery( "from Container where id=" + cOrig.getId() )
@@ -687,7 +693,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		checkContainer( c, expectedInitializedObjects, expectedReadOnlyObjects, s );
 		t.commit();
 		s.close();
-		s = openSession();
+		s = openSession(scope);
 		t = s.beginTransaction();
 		s.createQuery("delete from DataPoint").executeUpdate();
 		s.createQuery("delete from Container").executeUpdate();
@@ -699,7 +705,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 
 	@SuppressWarnings( {"unchecked"})
 	@Test
-	public void testDefaultReadOnlyWithModifiableQueryForEntity() {
+	public void testDefaultReadOnlyWithModifiableQueryForEntity(SessionFactoryScope scope) {
 		Container cOrig = createContainer();
 		Set expectedInitializedObjects = new HashSet(
 				Arrays.asList(
@@ -717,7 +723,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		);
 		Set expectedReadOnlyObjects = new HashSet();
 
-		Session s = openSession();
+		Session s = openSession(scope);
 		assertFalse( s.isDefaultReadOnly() );
 		Transaction t = s.beginTransaction();
 		s.save( cOrig );
@@ -728,7 +734,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		t.commit();
 		s.close();
 
-		s = openSession();
+		s = openSession(scope);
 		t = s.beginTransaction();
 		s.setDefaultReadOnly( true );
 		assertTrue( s.isDefaultReadOnly() );
@@ -762,7 +768,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		checkContainer( c, expectedInitializedObjects, expectedReadOnlyObjects, s );
 		t.commit();
 		s.close();
-		s = openSession();
+		s = openSession(scope);
 		t = s.beginTransaction();
 		s.createQuery("delete from DataPoint").executeUpdate();
 		s.createQuery("delete from Container").executeUpdate();
@@ -774,7 +780,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 
 	@SuppressWarnings( {"unchecked"})
 	@Test
-	public void testDefaultReadOnlyWithQueryForEntity() {
+	public void testDefaultReadOnlyWithQueryForEntity(SessionFactoryScope scope) {
 		Container cOrig = createContainer();
 		Set expectedInitializedObjects = new HashSet(
 				Arrays.asList(
@@ -792,7 +798,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		);
 		Set expectedReadOnlyObjects = new HashSet();
 
-		Session s = openSession();
+		Session s = openSession(scope);
 		assertFalse( s.isDefaultReadOnly() );
 		Transaction t = s.beginTransaction();
 		s.save( cOrig );
@@ -803,7 +809,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		t.commit();
 		s.close();
 
-		s = openSession();
+		s = openSession(scope);
 		t = s.beginTransaction();
 		s.setDefaultReadOnly( true );
 		assertTrue( s.isDefaultReadOnly() );
@@ -850,7 +856,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		checkContainer( c, expectedInitializedObjects, expectedReadOnlyObjects, s );
 		t.commit();
 		s.close();
-		s = openSession();
+		s = openSession(scope);
 		t = s.beginTransaction();
 		s.createQuery("delete from DataPoint").executeUpdate();
 		s.createQuery("delete from Container").executeUpdate();
@@ -862,7 +868,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 
 	@SuppressWarnings( {"unchecked"})
 	@Test
-	public void testDefaultModifiableWithQueryForEntity() {
+	public void testDefaultModifiableWithQueryForEntity(SessionFactoryScope scope) {
 		Container cOrig = createContainer();
 		Set expectedInitializedObjects = new HashSet(
 				Arrays.asList(
@@ -880,7 +886,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		);
 		Set expectedReadOnlyObjects = new HashSet();
 
-		Session s = openSession();
+		Session s = openSession(scope);
 		assertFalse( s.isDefaultReadOnly() );
 		Transaction t = s.beginTransaction();
 		s.save( cOrig );
@@ -891,7 +897,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		t.commit();
 		s.close();
 
-		s = openSession();
+		s = openSession(scope);
 		t = s.beginTransaction();
 		assertFalse( s.isDefaultReadOnly() );
 		Container c = ( Container ) s.createQuery( "from Container where id=" + cOrig.getId() )
@@ -924,7 +930,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		checkContainer( c, expectedInitializedObjects, expectedReadOnlyObjects, s );
 		t.commit();
 		s.close();
-		s = openSession();
+		s = openSession(scope);
 		t = s.beginTransaction();
 		s.createQuery("delete from DataPoint").executeUpdate();
 		s.createQuery("delete from Container").executeUpdate();
@@ -936,7 +942,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 
 	@SuppressWarnings( {"unchecked"})
 	@Test
-	public void testDefaultModifiableWithReadOnlyQueryForCollectionEntities() {
+	public void testDefaultModifiableWithReadOnlyQueryForCollectionEntities(SessionFactoryScope scope) {
 		Container cOrig = createContainer();
 		Set expectedInitializedObjects = new HashSet(
 				Arrays.asList(
@@ -954,7 +960,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		);
 		Set expectedReadOnlyObjects = new HashSet();
 
-		Session s = openSession();
+		Session s = openSession(scope);
 		assertFalse( s.isDefaultReadOnly() );
 		Transaction t = s.beginTransaction();
 		s.save( cOrig );
@@ -965,7 +971,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		t.commit();
 		s.close();
 
-		s = openSession();
+		s = openSession(scope);
 		t = s.beginTransaction();
 		assertFalse( s.isDefaultReadOnly() );
 		DataPoint dp = ( DataPoint ) s.createQuery( "select c.lazyDataPoints from Container c join c.lazyDataPoints where c.id=" + cOrig.getId() )
@@ -973,7 +979,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		assertTrue( s.isReadOnly( dp ) );
 		t.commit();
 		s.close();
-		s = openSession();
+		s = openSession(scope);
 		t = s.beginTransaction();
 		s.createQuery("delete from DataPoint").executeUpdate();
 		s.createQuery("delete from Container").executeUpdate();
@@ -1035,6 +1041,10 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 			assertNotNull( entity );
 			assertEquals( isExpectedToBeReadOnly, s.isReadOnly( entity ));
 		}
+	}
+
+	private Session openSession(SessionFactoryScope scope) {
+		return scope.getSessionFactory().openSession();
 	}
 
 }

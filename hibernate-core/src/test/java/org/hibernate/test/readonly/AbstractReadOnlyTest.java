@@ -7,50 +7,54 @@
 package org.hibernate.test.readonly;
 
 import org.hibernate.CacheMode;
-import org.hibernate.Session;
-import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SettingProvider;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 
 /**
  * @author Gail Badner
  */
-public abstract class AbstractReadOnlyTest extends BaseCoreFunctionalTestCase {
-	@Override
-	public void configure(Configuration cfg) {
-		cfg.setProperty( Environment.GENERATE_STATISTICS, "true");
-		cfg.setProperty( Environment.STATEMENT_BATCH_SIZE, "0" );
+@SessionFactory(
+		generateStatistics = true
+)
+@ServiceRegistry(
+		settings = @Setting(name = Environment.STATEMENT_BATCH_SIZE, value = "0"),
+		settingProviders = @SettingProvider(settingName = AvailableSettings.JAKARTA_SHARED_CACHE_RETRIEVE_MODE, provider = AbstractReadOnlyTest.CacheModeProvider.class)
+)
+public abstract class AbstractReadOnlyTest {
+
+	public static class CacheModeProvider implements SettingProvider.Provider<CacheMode> {
+
+		@Override
+		public CacheMode getSetting() {
+			return CacheMode.IGNORE;
+		}
 	}
 
-	public Session openSession() {
-		Session s = super.openSession();
-		s.setCacheMode( getSessionCacheMode() );
-		return s;
+	protected void clearCounts(SessionFactoryScope scope) {
+		scope.getSessionFactory().getStatistics().clear();
 	}
 
-	protected CacheMode getSessionCacheMode() {
-		return CacheMode.IGNORE;
+	protected void assertInsertCount(int expected, SessionFactoryScope scope) {
+		int inserts = (int) scope.getSessionFactory().getStatistics().getEntityInsertCount();
+		assertEquals( expected, inserts, "unexpected insert count" );
 	}
 
-	protected void clearCounts() {
-		sessionFactory().getStatistics().clear();
+	protected void assertUpdateCount(int expected, SessionFactoryScope scope) {
+		int updates = (int) scope.getSessionFactory().getStatistics().getEntityUpdateCount();
+		assertEquals( expected, updates, "unexpected update counts" );
 	}
 
-	protected void assertInsertCount(int expected) {
-		int inserts = ( int ) sessionFactory().getStatistics().getEntityInsertCount();
-		assertEquals( "unexpected insert count", expected, inserts );
-	}
-
-	protected void assertUpdateCount(int expected) {
-		int updates = ( int ) sessionFactory().getStatistics().getEntityUpdateCount();
-		assertEquals( "unexpected update counts", expected, updates );
-	}
-
-	protected void assertDeleteCount(int expected) {
-		int deletes = ( int ) sessionFactory().getStatistics().getEntityDeleteCount();
-		assertEquals( "unexpected delete counts", expected, deletes );
+	protected void assertDeleteCount(int expected, SessionFactoryScope scope) {
+		int deletes = (int) scope.getSessionFactory().getStatistics().getEntityDeleteCount();
+		assertEquals( expected, deletes, "unexpected delete counts" );
 	}
 }

@@ -69,10 +69,8 @@ task release {
 		def javaVersionsInUse = [gradle.ext.javaVersions.main.compiler, gradle.ext.javaVersions.main.release,
 								 gradle.ext.javaVersions.test.compiler, gradle.ext.javaVersions.test.release,
 								 gradle.ext.javaVersions.test.launcher].toSet()
-		// Force to release with JDK 8. It used to not work on JDK11 because of the hibernate-orm-modules module,
-		// but this limitation might be resolved now that this module has been deleted?
-		if ( javaVersionsInUse != [JavaLanguageVersion.of( 8 )].toSet() ) {
-			throw new IllegalStateException( "Please use JDK 8 to perform the release. Currently using: ${javaVersionsInUse}" )
+		if ( javaVersionsInUse != [JavaLanguageVersion.of( 11 )].toSet() ) {
+			throw new IllegalStateException( "Please use JDK 11 to perform the release. Currently using: ${javaVersionsInUse}" )
 		}
 	}
 }

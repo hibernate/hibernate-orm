@@ -87,10 +87,8 @@ else {
 }
 
 tasks.test {
-	if ( gradle.ext.javaVersions.test.launcher.asInt() >= 9 ) {
-		// Needs add-opens because Gradle uses illegal accesses to inject... mocks? Something like that.
-		jvmArgs( ['--add-opens', 'java.base/java.lang=ALL-UNNAMED'] )
-	}
+	// Needs add-opens because Gradle uses illegal accesses to inject... mocks? Something like that.
+	jvmArgs( ['--add-opens', 'java.base/java.lang=ALL-UNNAMED'] )
 }
 
 task release {

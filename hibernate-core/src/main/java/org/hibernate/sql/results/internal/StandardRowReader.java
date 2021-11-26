@@ -127,26 +127,6 @@ public class StandardRowReader<T> implements RowReader<T> {
 		// todo (6.0) : we may want to split handling of initializers into specific sub-type handling
 		//		- meaning we'd have something like:
 
-//		for ( EntityInitializer initializer : entityInitializers ) {
-//			initializer.resolveKey( rowProcessingState );
-//		}
-//
-//		for ( EntityInitializer initializer : collectionInitializers ) {
-//			initializer.resolveKey( rowProcessingState );
-//		}
-//
-//		for ( Initializer initializer : entityInitializers ) {
-//			initializer.resolveInstance( rowProcessingState );
-//		}
-//
-//		for ( EntityInitializer initializer : collectionInitializers ) {
-//			initializer.resolveInstance( rowProcessingState );
-//		}
-
-
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// old
-
 		final int numberOfInitializers = initializers.size();
 
 		for ( int i = 0; i < numberOfInitializers; i++ ) {

@@ -590,9 +590,6 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
 		if ( entityInstance instanceof HibernateProxy ) {
 			LazyInitializer hibernateLazyInitializer = ( (HibernateProxy) entityInstance ).getHibernateLazyInitializer();
-			if ( !hibernateLazyInitializer.isUninitialized() ) {
-				return;
-			}
 
 			Object instance = persistenceContext.getEntity( entityKey );
 			if ( instance == null ) {

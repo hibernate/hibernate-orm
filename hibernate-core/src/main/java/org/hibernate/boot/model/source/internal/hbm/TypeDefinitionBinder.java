@@ -45,7 +45,7 @@ public class TypeDefinitionBinder {
 			);
 		}
 
-		context.getTypeDefinitionRegistry().register( definition );
+		context.getMetadataCollector().getTypeDefinitionRegistry().register( definition );
 	}
 
 }

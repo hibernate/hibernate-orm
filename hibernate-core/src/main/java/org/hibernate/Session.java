@@ -479,7 +479,7 @@ public interface Session extends SharedSessionContract, EntityManager, AutoClose
 	 *
 	 * @return an updated persistent instance
 	 */
-	Object merge(Object object);
+	<T> T merge(T object);
 
 	/**
 	 * Copy the state of the given object onto the persistent object with the same
@@ -497,7 +497,7 @@ public interface Session extends SharedSessionContract, EntityManager, AutoClose
 	 *
 	 * @return an updated persistent instance
 	 */
-	Object merge(String entityName, Object object);
+	<T> T merge(String entityName, T object);
 
 	/**
 	 * Make a transient instance persistent. This operation cascades to associated

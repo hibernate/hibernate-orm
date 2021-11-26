@@ -789,15 +789,15 @@ public class SessionImpl
 	// merge() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public Object merge(String entityName, Object object) throws HibernateException {
+	public <T> T merge(String entityName, T object) throws HibernateException {
 		checkOpen();
-		return fireMerge( new MergeEvent( entityName, object, this ) );
+		return (T) fireMerge( new MergeEvent( entityName, object, this ) );
 	}
 
 	@Override
-	public Object merge(Object object) throws HibernateException {
+	public <T> T merge(T object) throws HibernateException {
 		checkOpen();
-		return fireMerge( new MergeEvent( null, object, this ));
+		return (T) fireMerge( new MergeEvent( null, object, this ));
 	}
 
 	@Override

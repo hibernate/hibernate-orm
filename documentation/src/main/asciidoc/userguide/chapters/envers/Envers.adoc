@@ -257,6 +257,10 @@ This property is only evaluated if the `ValidityAuditStrategy` is used.
 Column name of the timestamp of the end revision until which the data was valid.
 Only used if the `ValidityAuditStrategy` is used, and `org.hibernate.envers.audit_strategy_validity_store_revend_timestamp` evaluates to true.
 
+`*org.hibernate.envers.audit_strategy_validity_revend_timestamp_numeric*`(default: `false` )::
+Boolean flag that controls whether the revision end timestamp field is treated as a `Long` data type.
+Only used if the `ValidityAuditStrategy` is used, and `org.hibernate.envers.audit_strategy_validity_store_revend_timestamp` evaluates to true.
+
 `*org.hibernate.envers.use_revision_entity_with_native_id*` (default: `true` )::
 Boolean flag that determines the strategy of revision number generation.
 Default implementation of revision entity uses native identifier generator.
@@ -320,6 +324,7 @@ The following configuration options have been added recently and should be regar
 .  `org.hibernate.envers.modified_column_naming_strategy`
 .  `org.hibernate.envers.original_id_prop_name`
 .  `org.hibernate.envers.find_by_revision_exact_match`
+.  `org.hibernate.envers.audit_strategy_validity_revend_timestamp_numeric`
 ====
 
 [[envers-additional-mappings]]
@@ -1488,6 +1493,8 @@ Optionally, you can also override the default values using following properties:
 `org.hibernate.envers.audit_strategy_validity_end_rev_field_name`
 
 `org.hibernate.envers.audit_strategy_validity_revend_timestamp_field_name`
+
+`org.hibernate.envers.audit_strategy_validity_revend_timestamp_numeric`
 
 For more information, see <<envers-configuration>>.
 ====

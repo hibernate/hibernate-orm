@@ -109,7 +109,13 @@ public class ValidityAuditStrategy implements AuditStrategy {
 
 		if ( mappingContext.getConfiguration().isRevisionEndTimestampEnabled() ) {
 			// add a column for the timestamp of the end revision
-			final String revisionInfoTimestampTypeName = StandardBasicTypes.TIMESTAMP.getName();
+			final String revisionInfoTimestampTypeName;
+			if ( mappingContext.getConfiguration().isRevisionEndTimestampNumeric() ) {
+				revisionInfoTimestampTypeName = StandardBasicTypes.LONG.getName();
+			}
+			else {
+				revisionInfoTimestampTypeName = StandardBasicTypes.TIMESTAMP.getName();
+			}
 			final BasicAttribute revEndTimestampMapping = new BasicAttribute(
 					mappingContext.getConfiguration().getRevisionEndTimestampFieldName(),
 					revisionInfoTimestampTypeName,
@@ -225,13 +231,11 @@ public class ValidityAuditStrategy implements AuditStrategy {
 										// set [, REVEND_TSTMP = ?]
 										if ( isRevisionEndTimestampEnabled ) {
 											final Object revEndTimestampObj = revisionTimestampGetter.get( revision );
-											final Date revisionEndTimestamp = convertRevEndTimestampToDate( revEndTimestampObj );
+											final Object revEndValue = getRevEndTimestampValue( configuration, revEndTimestampObj );
 											final Type revEndTsType = rootAuditedEntityQueryable.getPropertyType(
 													configuration.getRevisionEndTimestampFieldName()
 											);
-											revEndTsType.nullSafeSet(
-													preparedStatement, revisionEndTimestamp, index, sessionImplementor
-											);
+											revEndTsType.nullSafeSet( preparedStatement, revEndValue, index, sessionImplementor );
 											index += revEndTsType.getColumnSpan( sessionImplementor.getFactory() );
 										}
 
@@ -443,6 +447,20 @@ public class ValidityAuditStrategy implements AuditStrategy {
 			return (Date) revEndTimestampObj;
 		}
 		return new Date( (Long) revEndTimestampObj );
+	}
+
+	private Long convertRevEndTimestampToLong(Object revEndTimstampObj) {
+		if ( revEndTimstampObj instanceof Date ) {
+			return ( (Date) revEndTimstampObj ).getTime();
+		}
+		return (Long) revEndTimstampObj;
+	}
+
+	private Object getRevEndTimestampValue(Configuration configuration, Object value) {
+		if ( configuration.isRevisionEndTimestampNumeric() ) {
+			return convertRevEndTimestampToLong( value );
+		}
+		return convertRevEndTimestampToDate( value );
 	}
 
 	private Queryable getQueryable(String entityName, SessionImplementor sessionImplementor) {

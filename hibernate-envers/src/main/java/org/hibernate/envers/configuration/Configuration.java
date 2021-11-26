@@ -90,6 +90,7 @@ public class Configuration {
 	private final String revisionEndTimestampFieldName;
 	private final String embeddableSetOrdinalPropertyName;
 	private final boolean revisionEndTimestampEnabled;
+	private final boolean revisionEndTimestampNumeric;
 
 	private final Map<String, String> customAuditTableNames = new HashMap<>();
 
@@ -152,9 +153,14 @@ public class Configuration {
 					EnversSettings.AUDIT_STRATEGY_VALIDITY_REVEND_TIMESTAMP_FIELD_NAME,
 					DEFAULT_REV_TSTMP_FIELD
 			);
+			revisionEndTimestampNumeric = configProps.getBoolean(
+					EnversSettings.AUDIT_STRATEGY_VALIDITY_REVEND_TIMESTAMP_NUMERIC,
+					false
+			);
 		}
 		else {
 			revisionEndTimestampFieldName = null;
+			revisionEndTimestampNumeric = false;
 		}
 
 		embeddableSetOrdinalPropertyName = configProps.getString(
@@ -217,6 +223,10 @@ public class Configuration {
 
 	public boolean isRevisionEndTimestampEnabled() {
 		return revisionEndTimestampEnabled;
+	}
+
+	public boolean isRevisionEndTimestampNumeric() {
+		return revisionEndTimestampNumeric;
 	}
 
 	public String getDefaultCatalogName() {

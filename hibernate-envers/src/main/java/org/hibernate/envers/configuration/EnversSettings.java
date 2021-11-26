@@ -111,6 +111,14 @@ public interface EnversSettings {
 	String AUDIT_STRATEGY_VALIDITY_REVEND_TIMESTAMP_FIELD_NAME = "org.hibernate.envers.audit_strategy_validity_revend_timestamp_field_name";
 
 	/**
+	 * Determines whether the timestamp of the end revision is stored as a numeric data type.
+	 * Defaults to {@literal false}.
+	 *
+	 * @since 6.0
+	 */
+	String AUDIT_STRATEGY_VALIDITY_REVEND_TIMESTAMP_NUMERIC = "org.hibernate.envers.audit_strategy_validity_revend_timestamp_numeric";
+
+	/**
 	 * Name of column used for storing ordinal of the change in sets of embeddable elements. Defaults to {@literal SETORDINAL}.
 	 */
 	String EMBEDDABLE_SET_ORDINAL_FIELD_NAME = "org.hibernate.envers.embeddable_set_ordinal_field_name";

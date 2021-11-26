@@ -60,7 +60,7 @@ public class PropertyData {
 		this.accessType = accessType;
 	}
 
-	private PropertyData(String name, String beanName, String accessType, Type propertyType) {
+	public PropertyData(String name, String beanName, String accessType, Type propertyType) {
 		this( name, beanName, accessType );
 		this.propertyType = propertyType;
 	}

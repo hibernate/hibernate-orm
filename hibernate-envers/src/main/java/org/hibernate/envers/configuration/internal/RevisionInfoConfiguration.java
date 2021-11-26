@@ -6,6 +6,7 @@
  */
 package org.hibernate.envers.configuration.internal;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Set;
@@ -36,14 +37,17 @@ import org.hibernate.envers.enhanced.OrderedSequenceGenerator;
 import org.hibernate.envers.enhanced.SequenceIdRevisionEntity;
 import org.hibernate.envers.enhanced.SequenceIdTrackingModifiedEntitiesRevisionEntity;
 import org.hibernate.envers.internal.entities.PropertyData;
+import org.hibernate.envers.internal.entities.RevisionTimestampData;
 import org.hibernate.envers.internal.revisioninfo.DefaultRevisionInfoGenerator;
 import org.hibernate.envers.internal.revisioninfo.DefaultTrackingModifiedEntitiesRevisionInfoGenerator;
 import org.hibernate.envers.internal.revisioninfo.ModifiedEntityNamesReader;
 import org.hibernate.envers.internal.revisioninfo.RevisionInfoGenerator;
 import org.hibernate.envers.internal.revisioninfo.RevisionInfoNumberReader;
 import org.hibernate.envers.internal.revisioninfo.RevisionInfoQueryCreator;
+import org.hibernate.envers.internal.revisioninfo.RevisionTimestampValueResolver;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.service.ServiceRegistry;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -103,8 +107,7 @@ public class RevisionInfoConfiguration {
 		revisionInfoQueryCreator = new RevisionInfoQueryCreator(
 				resolver.revisionInfoEntityName,
 				resolver.revisionInfoIdData.getName(),
-				resolver.revisionInfoTimestampData.getName(),
-				isTimestampAsDate( revisionInfoTimestampTypeName )
+				resolver.timestampValueResolver
 		);
 
 		if ( configuration.isTrackEntitiesChanged() ) {
@@ -230,12 +233,25 @@ public class RevisionInfoConfiguration {
 		return mapping;
 	}
 
-	private boolean isTimestampAsDate(String typeName) {
-		return "date".equals( typeName ) || "time".equals( typeName ) || "timestamp".equals( typeName );
-	}
-
 	private org.hibernate.envers.boot.model.Column createColumn(String name, String type) {
 		return new org.hibernate.envers.boot.model.Column( name, null, null, null, type, null, null );
+	}
+
+	private RevisionTimestampValueResolver createRevisionTimestampResolver(
+			Class<?> revisionInfoClass,
+			PropertyData revisionInfoTimestampData,
+			String typeName,
+			ServiceRegistry serviceRegistry) {
+		return new RevisionTimestampValueResolver(
+				revisionInfoClass,
+				new RevisionTimestampData(
+						revisionInfoTimestampData.getName(),
+						revisionInfoTimestampData.getBeanName(),
+						revisionInfoTimestampData.getAccessType(),
+						typeName
+				),
+				serviceRegistry
+		);
 	}
 
 	private class RevisionEntityResolver {
@@ -258,6 +274,7 @@ public class RevisionInfoConfiguration {
 		private String revisionInfoTimestampTypeName;
 		private String revisionPropType;
 		private String revisionPropSqlType;
+		private RevisionTimestampValueResolver timestampValueResolver;
 
 		public RevisionEntityResolver(MetadataImplementor metadata, ReflectionManager reflectionManager) {
 			this.metadata = metadata;
@@ -328,7 +345,12 @@ public class RevisionInfoConfiguration {
 				final Property timestampProperty = persistentClass.getProperty( revisionInfoTimestampData.getName() );
 				revisionInfoTimestampTypeName = timestampProperty.getType().getName();
 
-				boolean timestampAsDate = isTimestampAsDate( revisionInfoTimestampTypeName );
+				timestampValueResolver = createRevisionTimestampResolver(
+						revisionInfoClass,
+						revisionInfoTimestampData,
+						revisionInfoTimestampTypeName,
+						metadata.getMetadataBuildingOptions().getServiceRegistry()
+				);
 
 				if ( useEntityTrackingRevisionEntity( revisionInfoClass ) ) {
 					// If tracking modified entities is enabled, custom revision info entity is a subtype
@@ -337,8 +359,7 @@ public class RevisionInfoConfiguration {
 							revisionInfoEntityName,
 							revisionInfoClass,
 							revisionListenerClass,
-							revisionInfoTimestampData,
-							timestampAsDate,
+							timestampValueResolver,
 							modifiedEntityNamesData,
 							metadata.getMetadataBuildingOptions().getServiceRegistry()
 					);
@@ -349,8 +370,7 @@ public class RevisionInfoConfiguration {
 							revisionInfoEntityName,
 							revisionInfoClass,
 							revisionListenerClass,
-							revisionInfoTimestampData,
-							timestampAsDate,
+							timestampValueResolver,
 							metadata.getMetadataBuildingOptions().getServiceRegistry()
 					);
 				}
@@ -359,33 +379,42 @@ public class RevisionInfoConfiguration {
 			if ( revisionInfoGenerator == null ) {
 
 				revisionListenerClass = getRevisionListenerClass( RevisionListener.class );
-				boolean timestampAsDate = isTimestampAsDate( revisionInfoTimestampTypeName );
 
 				if ( configuration.isTrackEntitiesChanged() ) {
 					revisionInfoClass = configuration.isNativeIdEnabled()
 							? DefaultTrackingModifiedEntitiesRevisionEntity.class
 							: SequenceIdTrackingModifiedEntitiesRevisionEntity.class;
 					revisionInfoEntityName = revisionInfoClass.getName();
-					revisionInfoGenerator = new DefaultTrackingModifiedEntitiesRevisionInfoGenerator(
-							revisionInfoEntityName,
-							revisionInfoClass,
-							revisionListenerClass,
-							revisionInfoTimestampData,
-							timestampAsDate,
-							modifiedEntityNamesData,
-							metadata.getMetadataBuildingOptions().getServiceRegistry()
-					);
 				}
 				else {
 					revisionInfoClass = configuration.isNativeIdEnabled()
 							? DefaultRevisionEntity.class
 							: SequenceIdRevisionEntity.class;
+				}
+
+				timestampValueResolver = createRevisionTimestampResolver(
+						revisionInfoClass,
+						revisionInfoTimestampData,
+						revisionInfoTimestampTypeName,
+						metadata.getMetadataBuildingOptions().getServiceRegistry()
+				);
+
+				if ( configuration.isTrackEntitiesChanged() ) {
+					revisionInfoGenerator = new DefaultTrackingModifiedEntitiesRevisionInfoGenerator(
+							revisionInfoEntityName,
+							revisionInfoClass,
+							revisionListenerClass,
+							timestampValueResolver,
+							modifiedEntityNamesData,
+							metadata.getMetadataBuildingOptions().getServiceRegistry()
+					);
+				}
+				else {
 					revisionInfoGenerator = new DefaultRevisionInfoGenerator(
 							revisionInfoEntityName,
 							revisionInfoClass,
 							revisionListenerClass,
-							revisionInfoTimestampData,
-							timestampAsDate,
+							timestampValueResolver,
 							metadata.getMetadataBuildingOptions().getServiceRegistry()
 					);
 				}
@@ -464,12 +493,12 @@ public class RevisionInfoConfiguration {
 			}
 
 			final XClass propertyType = property.getType();
-			if ( isAnyType( propertyType, Long.class, Long.TYPE, Date.class, java.sql.Date.class ) ) {
+			if ( isAnyType( propertyType, Long.class, Long.TYPE, Date.class, LocalDateTime.class, java.sql.Date.class ) ) {
 				revisionInfoTimestampData = createPropertyData( property, accessType );
 				revisionTimestampFound = true;
 			}
 			else {
-				throwUnexpectedAnnotatedType( property, RevisionTimestamp.class, "long, Long, Date, or java.sql.Date" );
+				throwUnexpectedAnnotatedType( property, RevisionTimestamp.class, "long, Long, Date, LocalDateTime, or java.sql.Date" );
 			}
 		}
 		

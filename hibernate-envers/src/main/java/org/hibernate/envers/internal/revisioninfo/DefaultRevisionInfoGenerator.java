@@ -7,18 +7,14 @@
 package org.hibernate.envers.internal.revisioninfo;
 
 import java.lang.reflect.Constructor;
-import java.util.Date;
 
 import org.hibernate.Session;
 import org.hibernate.envers.EntityTrackingRevisionListener;
 import org.hibernate.envers.RevisionListener;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.exception.AuditException;
-import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.synchronization.SessionCacheCleaner;
-import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.property.access.spi.Setter;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.ServiceRegistry;
@@ -31,10 +27,9 @@ import org.hibernate.service.ServiceRegistry;
 public class DefaultRevisionInfoGenerator implements RevisionInfoGenerator {
 	private final String revisionInfoEntityName;
 	private final ManagedBean<? extends RevisionListener> listenerManagedBean;
-	private final Setter revisionTimestampSetter;
-	private final boolean timestampAsDate;
 	private final Constructor<?> revisionInfoClassConstructor;
 	private final SessionCacheCleaner sessionCacheCleaner;
+	private final RevisionTimestampValueResolver timestampValueResolver;
 
 	private RevisionInfoNumberReader revisionInfoNumberReader;
 
@@ -42,14 +37,12 @@ public class DefaultRevisionInfoGenerator implements RevisionInfoGenerator {
 			String revisionInfoEntityName,
 			Class<?> revisionInfoClass,
 			Class<? extends RevisionListener> listenerClass,
-			PropertyData revisionInfoTimestampData,
-			boolean timestampAsDate,
+			RevisionTimestampValueResolver timestampValueResolver,
 			ServiceRegistry serviceRegistry) {
 		this.revisionInfoEntityName = revisionInfoEntityName;
-		this.timestampAsDate = timestampAsDate;
+		this.timestampValueResolver = timestampValueResolver;
 
 		this.revisionInfoClassConstructor = ReflectHelper.getDefaultConstructor( revisionInfoClass );
-		this.revisionTimestampSetter = ReflectionTools.getSetter( revisionInfoClass, revisionInfoTimestampData, serviceRegistry );
 
 		this.listenerManagedBean = resolveRevisionListenerBean( listenerClass, serviceRegistry );
 
@@ -80,8 +73,7 @@ public class DefaultRevisionInfoGenerator implements RevisionInfoGenerator {
 			throw new RuntimeException( e );
 		}
 
-		final long timestamp = System.currentTimeMillis();
-		revisionTimestampSetter.set( revisionInfo, timestampAsDate ? new Date( timestamp ) : timestamp, null );
+		timestampValueResolver.resolveNow( revisionInfo );
 
 		if ( listenerManagedBean != null ) {
 			listenerManagedBean.getBeanInstance().newRevision( revisionInfo );

@@ -6,6 +6,7 @@
  */
 package org.hibernate.envers.internal.reader;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -186,6 +187,26 @@ public class AuditReaderImpl implements AuditReaderImplementor {
 
 	@Override
 	public Number getRevisionNumberForDate(Date date) {
+		checkNotNull( date, "Date of revision" );
+		checkSession();
+
+		final Query<?> query = enversService.getRevisionInfoQueryCreator().getRevisionNumberForDateQuery( session, date );
+
+		try {
+			final Number res = (Number) query.uniqueResult();
+			if ( res == null ) {
+				throw new RevisionDoesNotExistException( date );
+			}
+
+			return res;
+		}
+		catch (NonUniqueResultException e) {
+			throw new AuditException( e );
+		}
+	}
+
+	@Override
+	public Number getRevisionNumberForDate(LocalDateTime date) {
 		checkNotNull( date, "Date of revision" );
 		checkSession();
 

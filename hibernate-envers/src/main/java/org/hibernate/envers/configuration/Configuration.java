@@ -7,7 +7,6 @@
 package org.hibernate.envers.configuration;
 
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Callable;
@@ -21,7 +20,6 @@ import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.envers.RevisionListener;
 import org.hibernate.envers.boot.EnversMappingException;
 import org.hibernate.envers.boot.internal.EnversService;
-import org.hibernate.envers.boot.internal.EnversServiceImpl;
 import org.hibernate.envers.boot.internal.LegacyModifiedColumnNamingStrategy;
 import org.hibernate.envers.boot.spi.ModifiedColumnNamingStrategy;
 import org.hibernate.envers.configuration.internal.RevisionInfoConfiguration;
@@ -29,7 +27,6 @@ import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.envers.internal.tools.StringTools;
 import org.hibernate.envers.strategy.AuditStrategy;
 import org.hibernate.envers.strategy.DefaultAuditStrategy;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 
 /**
@@ -109,8 +106,10 @@ public class Configuration {
 		modifiedFlagsSuffix = configProps.getString( EnversSettings.MODIFIED_FLAG_SUFFIX, DEFAULT_MODIFIED_FLAG_SUFFIX );
 
 		revisionListenerClass = resolveRevisionListener( configProps, enversService );
-		modifiedColumnNamingStrategy = resolveModifiedColumnNamingStrategy( configProps, enversService );
-		auditStrategy = resolveAuditStrategy( configProps, enversService );
+
+		final StrategySelector strategySelector = enversService.getServiceRegistry().getService( StrategySelector.class );
+		modifiedColumnNamingStrategy = resolveModifiedColumnNamingStrategy( configProps, strategySelector );
+		auditStrategy = resolveAuditStrategy( configProps, strategySelector );
 
 		nativeIdEnabled = configProps.getBoolean( EnversSettings.USE_REVISION_ENTITY_WITH_NATIVE_ID, true );
 		allowIdentifierReuse = configProps.getBoolean( EnversSettings.ALLOW_IDENTIFIER_REUSE, false );
@@ -373,8 +372,7 @@ public class Configuration {
 
 	private static ModifiedColumnNamingStrategy resolveModifiedColumnNamingStrategy(
 			ConfigurationProperties configProps,
-			EnversService enversService) {
-		final StrategySelector selector = enversService.getServiceRegistry().getService( StrategySelector.class );
+			StrategySelector selector) {
 		return selector.resolveDefaultableStrategy(
 				ModifiedColumnNamingStrategy.class,
 				configProps.getString( EnversSettings.MODIFIED_COLUMN_NAMING_STRATEGY ),
@@ -386,28 +384,12 @@ public class Configuration {
 		);
 	}
 
-	private static AuditStrategy resolveAuditStrategy(ConfigurationProperties configProps, EnversService enversService) {
-		final String className = configProps.getString( EnversSettings.AUDIT_STRATEGY, DefaultAuditStrategy.class.getName() );
-		try {
-			Class<?> auditStrategy = null;
-			try {
-				auditStrategy = EnversServiceImpl.class.getClassLoader().loadClass( className );
-			}
-			catch (Exception e) {
-				auditStrategy = ReflectionTools.loadClass( className, enversService.getClassLoaderService() );
-			}
-			return (AuditStrategy) ReflectHelper.getDefaultConstructor( auditStrategy ).newInstance();
-		}
-		catch (Exception e) {
-			throw new EnversMappingException(
-					String.format(
-							Locale.ENGLISH,
-							"Unable to create AuditStrategy [%s] instance.",
-							className
-					),
-					e
-			);
-		}
+	private static AuditStrategy resolveAuditStrategy(ConfigurationProperties configProps, StrategySelector selector) {
+		return selector.resolveDefaultableStrategy(
+				AuditStrategy.class,
+				configProps.getString( EnversSettings.AUDIT_STRATEGY, DefaultAuditStrategy.class.getName() ),
+				(Callable<AuditStrategy>) () -> new DefaultAuditStrategy()
+		);
 	}
 
 	private static class ConfigurationProperties {

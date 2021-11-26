@@ -11,3 +11,4 @@
 # See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
 #
 org.hibernate.envers.boot.internal.ModifiedColumnNamingStrategyRegistrationProvider
+org.hibernate.envers.boot.internal.AuditStrategyRegistrationProvider

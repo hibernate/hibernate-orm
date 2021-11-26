@@ -55,7 +55,7 @@ public class PersistentSortedMap<K,E> extends PersistentMap<K,E> implements Sort
 	 */
 	@Deprecated
 	public PersistentSortedMap(SessionImplementor session) {
-		this( (SharedSessionContractImplementor) session, (Comparator<K>) null );
+		this( session, (Comparator<K>) null );
 	}
 
 	/**

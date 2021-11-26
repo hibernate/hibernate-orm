@@ -52,7 +52,7 @@ public class PersistentSortedSet<E> extends PersistentSet<E> implements SortedSe
 	 */
 	@Deprecated
 	public PersistentSortedSet(SessionImplementor session) {
-		this( (SharedSessionContractImplementor) session, (Comparator<E>) null );
+		this( session, (Comparator<E>) null );
 	}
 
 	/**

@@ -22,16 +22,18 @@ public class MappingContext {
 	private final Configuration configuration;
 	private final String revisionInfoPropertyType;
 	private final String revisionInfoExplicitTypeName;
-
+	private final boolean revisionEndTimestampOnly;
 	public MappingContext(
 			PersistentEntity mapping,
 			Configuration configuration,
 			String revisionInfoPropertyType,
-			String revisionInfoExplicitTypeName) {
+			String revisionInfoExplicitTypeName,
+			boolean revisionEndTimestampOnly) {
 		this.mapping = mapping;
 		this.configuration = configuration;
 		this.revisionInfoPropertyType = revisionInfoPropertyType;
 		this.revisionInfoExplicitTypeName = revisionInfoExplicitTypeName;
+		this.revisionEndTimestampOnly = revisionEndTimestampOnly;
 	}
 
 	public PersistentEntity getEntityMapping() {
@@ -48,5 +50,9 @@ public class MappingContext {
 
 	public String getRevisionInfoExplicitTypeName() {
 		return revisionInfoExplicitTypeName;
+	}
+
+	public boolean isRevisionEndTimestampOnly() {
+		return revisionEndTimestampOnly;
 	}
 }

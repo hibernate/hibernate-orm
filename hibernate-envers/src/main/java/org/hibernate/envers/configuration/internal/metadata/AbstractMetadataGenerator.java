@@ -14,6 +14,7 @@ import org.hibernate.envers.boot.EnversMappingException;
 import org.hibernate.envers.boot.model.AttributeContainer;
 import org.hibernate.envers.boot.model.BasicAttribute;
 import org.hibernate.envers.boot.model.Identifier;
+import org.hibernate.envers.boot.model.JoinedSubclassPersistentEntity;
 import org.hibernate.envers.boot.model.PersistentEntity;
 import org.hibernate.envers.boot.spi.EnversMetadataBuildingContext;
 import org.hibernate.envers.configuration.Configuration;
@@ -110,9 +111,25 @@ public abstract class AbstractMetadataGenerator {
 						entity,
 						metadataBuildingContext.getConfiguration(),
 						metadataBuildingContext.getConfiguration().getRevisionTypePropertyType(),
-						metadataBuildingContext.getConfiguration().getRevisionInfo().getRevisionInfoClass().getName()
+						metadataBuildingContext.getConfiguration().getRevisionInfo().getRevisionInfoClass().getName(),
+						false
 				)
 		);
+	}
+
+	protected void addAuditStrategyRevisionEndTimestampOnly(PersistentEntity entity) {
+		if ( ( entity instanceof JoinedSubclassPersistentEntity ) ) {
+			// Only joined subclass entities are allowed to add revision timestamp to associated tables
+			metadataBuildingContext.getConfiguration().getAuditStrategy().addAdditionalColumns(
+					new MappingContext(
+							entity,
+							metadataBuildingContext.getConfiguration(),
+							metadataBuildingContext.getConfiguration().getRevisionTypePropertyType(),
+							metadataBuildingContext.getConfiguration().getRevisionInfo().getRevisionInfoClass().getName(),
+							true
+					)
+			);
+		}
 	}
 
 	protected void addRevisionTypeToAttributeContainer(AttributeContainer container, boolean key) {

@@ -261,6 +261,13 @@ Only used if the `ValidityAuditStrategy` is used, and `org.hibernate.envers.audi
 Boolean flag that controls whether the revision end timestamp field is treated as a `Long` data type.
 Only used if the `ValidityAuditStrategy` is used, and `org.hibernate.envers.audit_strategy_validity_store_revend_timestamp` evaluates to true.
 
+`*org.hibernate.envers.audit_strategy_validity_revend_timestamp_legacy_placement*`(default: `true` )::
+Boolean flag that controls whether the revision end timestamp field is propagated to the joined subclass audit tables.
+Only used if the `ValidityAuditStrategy` is used, and `org.hibernate.envers.audit_strategy_validity_store_revend_timestamp` evaluates to true.
++
+When set to `true`, the legacy mapping behavior is used such that the revision end timestamp is only maintained in the root entity audit table.
+When set to `false`, the revision end timestamp is maintained in both the root entity and joined subclass audit tables; allowing the potential to apply database partitioning to the joined subclass tables just like the root entity audit tables.
+
 `*org.hibernate.envers.use_revision_entity_with_native_id*` (default: `true` )::
 Boolean flag that determines the strategy of revision number generation.
 Default implementation of revision entity uses native identifier generator.

@@ -342,6 +342,10 @@ public final class AuditMetadataGenerator extends AbstractMetadataGenerator {
 		// HHH-7940 - New synthetic property support for @IndexColumn/@OrderColumn dynamic properties
 		addSynthetics( entity, auditingData, propertyMapper, mappingData, persistentClass.getEntityName() );
 
+		if ( !configuration.isRevisionEndTimestampUseLegacyPlacement() ) {
+			addAuditStrategyRevisionEndTimestampOnly( entity );
+		}
+
 		mappingData.addMapping( entity );
 
 		// Storing the generated configuration

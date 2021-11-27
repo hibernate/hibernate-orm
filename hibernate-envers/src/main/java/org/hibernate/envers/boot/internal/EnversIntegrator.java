@@ -43,7 +43,7 @@ public class EnversIntegrator implements Integrator {
 			Metadata metadata,
 			BootstrapContext bootstrapContext,
 			SessionFactoryImplementor sessionFactory) {
-		final ServiceRegistry serviceRegistry = bootstrapContext.getServiceRegistry();
+		final ServiceRegistry serviceRegistry = sessionFactory.getServiceRegistry();
 		final EnversService enversService = serviceRegistry.getService( EnversService.class );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

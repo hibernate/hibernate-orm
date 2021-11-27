@@ -8,12 +8,13 @@
 package org.hibernate.orm.test.envers.integration.inheritance.joined.primarykeyjoin;
 
 import java.util.Arrays;
+
 import jakarta.persistence.EntityManager;
 
+import org.hibernate.mapping.PersistentClass;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.integration.inheritance.joined.ParentEntity;
-import org.hibernate.mapping.Column;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -82,11 +83,10 @@ public class ChildPrimaryKeyJoinAuditing extends BaseEnversJPAFunctionalTestCase
 
 	@Test
 	public void testChildIdColumnName() {
-		Assert.assertEquals(
-				"other_id",
-				((Column) metadata().getEntityBinding(
-						"org.hibernate.orm.test.envers.integration.inheritance.joined.primarykeyjoin.ChildPrimaryKeyJoinEntity_AUD"
-				).getKey().getColumnIterator().next()).getName()
-		);
+		// Hibernate now sorts columns that are part of the key and therefore this test needs to test
+		// for the existence of the specific key column rather than the expectation that is exists at
+		// a specific order in the iterator.
+		final PersistentClass persistentClass = metadata().getEntityBinding( ChildPrimaryKeyJoinEntity.class.getName() + "_AUD" );
+		Assert.assertNotNull( getColumnFromIteratorByName( persistentClass.getKey().getColumnIterator(), "other_id" ) );
 	}
 }

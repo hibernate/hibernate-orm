@@ -22,6 +22,8 @@ import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.boot.internal.EnversIntegrator;
+import org.hibernate.envers.boot.internal.EnversService;
+import org.hibernate.envers.configuration.Configuration;
 import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
@@ -37,6 +39,8 @@ import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 import org.hibernate.testing.junit4.Helper;
 import org.hibernate.testing.orm.jpa.PersistenceUnitDescriptorAdapter;
 import org.hibernate.testing.orm.junit.DialectContext;
+
+import org.hibernate.service.ServiceRegistry;
 import org.junit.After;
 
 import jakarta.persistence.EntityManager;
@@ -298,5 +302,10 @@ public abstract class BaseEnversJPAFunctionalTestCase extends AbstractEnversTest
 		}
 		em = entityManagerFactory.createEntityManager( properties );
 		return em;
+	}
+
+	public Configuration getConfiguration() {
+		final ServiceRegistry serviceRegistry = metadata().getMetadataBuildingOptions().getServiceRegistry();
+		return serviceRegistry.getService( EnversService.class ).getConfig();
 	}
 }

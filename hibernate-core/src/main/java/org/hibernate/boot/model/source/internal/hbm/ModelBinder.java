@@ -618,7 +618,7 @@ public class ModelBinder {
 		keyBinding.setCascadeDeleteEnabled( entitySource.isCascadeDeleteEnabled() );
 		relationalObjectBinder.bindColumns(
 				mappingDocument,
-				entitySource.getPrimaryKeyColumnSources(),
+				sortColumns( entitySource.getPrimaryKeyColumnSources(), entityDescriptor.getIdentifier() ),
 				keyBinding,
 				false,
 				new RelationalObjectBinder.ColumnNamingDelegate() {

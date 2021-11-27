@@ -7,10 +7,13 @@
 package org.hibernate.orm.test.envers;
 
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.testing.cleaner.DatabaseCleaner;
 
+import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Selectable;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
@@ -46,5 +49,15 @@ public abstract class AbstractEnversTest {
 
 	public String getAuditStrategy() {
 		return auditStrategy;
+	}
+
+	protected Column getColumnFromIteratorByName(Iterator<Selectable> iterator, String columnName) {
+		while ( iterator.hasNext() ) {
+			Column column = (Column) iterator.next();
+			if ( column.getName().equals( columnName) ) {
+				return column;
+			}
+		}
+		return null;
 	}
 }

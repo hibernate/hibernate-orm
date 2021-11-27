@@ -494,9 +494,9 @@ public class ValidityAuditStrategy implements AuditStrategy {
 
 		// HHH-9062 - update inherited
 		if ( configuration.isRevisionEndTimestampEnabled() && !configuration.isRevisionEndTimestampUseLegacyPlacement() ) {
-			if ( entity instanceof JoinedSubclassEntityPersister) {
+			if ( entity instanceof JoinedSubclassEntityPersister ) {
 				// iterate subclasses, excluding root
-				while ( entity.getEntityMetamodel().getSuperclass() != null ) {
+				while ( entity.getMappedSuperclass() != null ) {
 					contexts.add(
 							getNonRootUpdateContext(
 									entityName,
@@ -566,8 +566,8 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		}
 
 		// Apply "WHERE (entity_id) = ?"
-		context.addPrimaryKeyColumns( entity.getIdentifierColumnNames() );
-		context.bind( id, entity.getIdentifierType() );
+		context.addPrimaryKeyColumns( rootEntity.getIdentifierColumnNames() );
+		context.bind( id, rootEntity.getIdentifierType() );
 
 		// Apply "AND REV <> ?"
 		final String path = configuration.getRevisionNumberPath();
@@ -629,8 +629,6 @@ public class ValidityAuditStrategy implements AuditStrategy {
 
 		// Apply "AND REVEND_TSTMP is null"
 		context.addWhereColumn( auditEntity.toColumns( revEndTimestampColumnName )[ 0 ], " is null" );
-
-		session.createQuery( "From " + auditEntityName + " WHERE originalId.REV.id <> " + revisionNumber ).list();
 
 		return context;
 	}

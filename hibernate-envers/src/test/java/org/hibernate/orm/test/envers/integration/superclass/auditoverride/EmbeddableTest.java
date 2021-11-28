@@ -257,7 +257,7 @@ public class EmbeddableTest extends BaseEnversJPAFunctionalTestCase {
         }
     }
 
-    @Entity
+    @Entity(name = "aeoe")
     @Audited
     public static class AuditedEmbeddableOverrideEntity {
         @Id
@@ -296,7 +296,7 @@ public class EmbeddableTest extends BaseEnversJPAFunctionalTestCase {
         }
     }
 
-    @Entity
+    @Entity(name = "naee")
     @Audited
     public static class NotAuditedEmbeddableEntity {
         @Id
@@ -323,7 +323,7 @@ public class EmbeddableTest extends BaseEnversJPAFunctionalTestCase {
         }
     }
 
-    @Entity
+    @Entity(name = "foee")
     @Audited
     public static class FullOverrideEmbeddableEntity {
         @Id
@@ -349,7 +349,7 @@ public class EmbeddableTest extends BaseEnversJPAFunctionalTestCase {
         }
     }
 
-    @Entity
+    @Entity(name = "oee")
     @Audited
     public static class OverrideEmbeddableEntity {
         @Id
@@ -375,7 +375,7 @@ public class EmbeddableTest extends BaseEnversJPAFunctionalTestCase {
         }
     }
 
-    @Entity
+    @Entity(name = "sewpoe")
     @Audited
     public static class SimpleEmbeddableWithPropertyOverrideEntity {
         @Id
@@ -402,7 +402,7 @@ public class EmbeddableTest extends BaseEnversJPAFunctionalTestCase {
         }
     }
 
-    @Entity
+    @Entity(name = "see")
     @Audited
     public static class SimpleEmbeddableEntity {
         @Id
@@ -429,7 +429,7 @@ public class EmbeddableTest extends BaseEnversJPAFunctionalTestCase {
     }
 
 
-    @Entity
+    @Entity(name = "sewoe")
     @Audited
     public static class SimpleEmbeddableWithOverrideEntity {
         @Id

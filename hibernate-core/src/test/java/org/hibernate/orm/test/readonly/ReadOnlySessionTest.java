@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.readonly;
+package org.hibernate.orm.test.readonly;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -34,8 +34,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @DomainModel(
 		xmlMappings = {
-				"org/hibernate/test/readonly/DataPoint.hbm.xml",
-				"org/hibernate/test/readonly/TextHolder.hbm.xml"
+				"org/hibernate/orm/test/readonly/DataPoint.hbm.xml",
+				"org/hibernate/orm/test/readonly/TextHolder.hbm.xml"
 		}
 )
 public class ReadOnlySessionTest extends AbstractReadOnlyTest {

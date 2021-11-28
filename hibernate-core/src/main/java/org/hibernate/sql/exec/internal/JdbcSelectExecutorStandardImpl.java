@@ -18,6 +18,7 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import org.hibernate.CacheMode;
+import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
 import org.hibernate.cache.spi.QueryKey;
@@ -25,11 +26,17 @@ import org.hibernate.cache.spi.QueryResultsCache;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.query.Limit;
+import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.internal.ScrollableResultsIterator;
+import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.sql.exec.SqlExecLogger;
+import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
@@ -57,6 +64,9 @@ import org.hibernate.sql.results.spi.ScrollableResultsConsumer;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 
 /**
  * @author Steve Ebersole
@@ -104,7 +114,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			RowTransformer<R> rowTransformer) {
 		final SharedSessionContractImplementor session = executionContext.getSession();
 		session.autoFlushIfRequired( jdbcSelect.getAffectedTableNames() );
-		return executeQuery(
+		return executeQueryScroll(
 				jdbcSelect,
 				jdbcParameterBindings,
 				executionContext,
@@ -168,6 +178,150 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 				persistenceContext.setDefaultReadOnly( defaultReadOnlyOrig );
 			}
 		}
+	}
+
+	private <T, R> T executeQueryScroll(
+			JdbcSelect jdbcSelect,
+			JdbcParameterBindings jdbcParameterBindings,
+			ExecutionContext executionContext,
+			RowTransformer<R> rowTransformer,
+			Function<String, PreparedStatement> statementCreator,
+			ResultsConsumer<T, R> resultsConsumer) {
+		return doExecuteQuery(
+				jdbcSelect,
+				jdbcParameterBindings,
+				getScrollContext( executionContext, executionContext.getSession().getPersistenceContext() ),
+				rowTransformer,
+				statementCreator,
+				resultsConsumer
+		);
+	}
+
+	/*
+		When `Query#scroll()` is call the query is not executed immediately, a new ExecutionContext with the values of the `persistenceContext.isDefaultReadOnly()` and of the `queryOptions.isReadOnly()`
+		set at the moment of the Query#scroll() call is created in order to use it when the query will be executed.
+	 */
+	private ExecutionContext getScrollContext(ExecutionContext context, PersistenceContext persistenceContext) {
+		final QueryOptions queryOptions = context.getQueryOptions();
+		final Boolean readOnly;
+		if ( queryOptions.isReadOnly() == null ) {
+			readOnly = persistenceContext.isDefaultReadOnly();
+		}
+		else {
+			readOnly = queryOptions.isReadOnly();
+		}
+		final Integer timeout = queryOptions.getTimeout();
+		final FlushMode flushMode = queryOptions.getFlushMode();
+		final AppliedGraph appliedGraph = queryOptions.getAppliedGraph();
+		final TupleTransformer tupleTransformer = queryOptions.getTupleTransformer();
+		final ResultListTransformer resultListTransformer = queryOptions.getResultListTransformer();
+		final Boolean resultCachingEnabled = queryOptions.isResultCachingEnabled();
+		final CacheRetrieveMode cacheRetrieveMode = queryOptions.getCacheRetrieveMode();
+		final CacheStoreMode cacheStoreMode = queryOptions.getCacheStoreMode();
+		final String resultCacheRegionName = queryOptions.getResultCacheRegionName();
+		final LockOptions lockOptions = queryOptions.getLockOptions();
+		final String comment = queryOptions.getComment();
+		final List<String> databaseHints = queryOptions.getDatabaseHints();
+		final Integer fetchSize = queryOptions.getFetchSize();
+		final Limit limit = queryOptions.getLimit();
+
+		return new ExecutionContext() {
+			@Override
+			public QueryOptions getQueryOptions() {
+
+				return new QueryOptions() {
+					@Override
+					public Integer getTimeout() {
+						return timeout;
+					}
+
+					@Override
+					public FlushMode getFlushMode() {
+						return flushMode;
+					}
+
+					@Override
+					public Boolean isReadOnly() {
+						return readOnly;
+					}
+
+					@Override
+					public AppliedGraph getAppliedGraph() {
+						return appliedGraph;
+					}
+
+					@Override
+					public TupleTransformer getTupleTransformer() {
+						return tupleTransformer;
+					}
+
+					@Override
+					public ResultListTransformer getResultListTransformer() {
+						return resultListTransformer;
+					}
+
+					@Override
+					public Boolean isResultCachingEnabled() {
+						return resultCachingEnabled;
+					}
+
+					@Override
+					public CacheRetrieveMode getCacheRetrieveMode() {
+						return cacheRetrieveMode;
+					}
+
+					@Override
+					public CacheStoreMode getCacheStoreMode() {
+						return cacheStoreMode;
+					}
+
+					@Override
+					public String getResultCacheRegionName() {
+						return resultCacheRegionName;
+					}
+
+					@Override
+					public LockOptions getLockOptions() {
+						return lockOptions;
+					}
+
+					@Override
+					public String getComment() {
+						return comment;
+					}
+
+					@Override
+					public List<String> getDatabaseHints() {
+						return databaseHints;
+					}
+
+					@Override
+					public Integer getFetchSize() {
+						return fetchSize;
+					}
+
+					@Override
+					public Limit getLimit() {
+						return limit;
+					}
+				};
+			}
+
+			@Override
+			public QueryParameterBindings getQueryParameterBindings() {
+				return context.getQueryParameterBindings();
+			}
+
+			@Override
+			public Callback getCallback() {
+				return context.getCallback();
+			}
+
+			@Override
+			public SharedSessionContractImplementor getSession() {
+				return context.getSession();
+			}
+		};
 	}
 	private <T, R> T doExecuteQuery(
 			JdbcSelect jdbcSelect,

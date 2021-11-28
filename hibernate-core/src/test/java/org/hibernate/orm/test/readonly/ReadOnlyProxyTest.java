@@ -21,8 +21,6 @@ import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.test.readonly.AbstractReadOnlyTest;
-import org.hibernate.test.readonly.DataPoint;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -40,8 +38,8 @@ import static org.junit.jupiter.api.Assertions.fail;
  */
 @DomainModel(
 		xmlMappings = {
-				"org/hibernate/test/readonly/DataPoint.hbm.xml",
-				"org/hibernate/test/readonly/TextHolder.hbm.xml"
+				"org/hibernate/orm/test/readonly/DataPoint.hbm.xml",
+				"org/hibernate/orm/test/readonly/TextHolder.hbm.xml"
 		}
 )
 public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
@@ -50,533 +48,704 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 	public void testReadOnlyViaSessionDoesNotInit(SessionFactoryScope scope) {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE, scope );
 
-		Session s = openSession( scope );
-		s.setCacheMode( CacheMode.IGNORE );
-		s.beginTransaction();
-		DataPoint dp = (DataPoint) s.load( DataPoint.class, new Long( dpOrig.getId() ) );
-		assertTrue( dp instanceof HibernateProxy );
-		checkReadOnly( s, dp, false );
-		assertFalse( Hibernate.isInitialized( dp ) );
-		s.setReadOnly( dp, true );
-		checkReadOnly( s, dp, true );
-		assertFalse( Hibernate.isInitialized( dp ) );
-		s.setReadOnly( dp, false );
-		checkReadOnly( s, dp, false );
-		assertFalse( Hibernate.isInitialized( dp ) );
-		s.flush();
-		checkReadOnly( s, dp, false );
-		assertFalse( Hibernate.isInitialized( dp ) );
-		s.getTransaction().commit();
-		checkReadOnly( s, dp, false );
-		assertFalse( Hibernate.isInitialized( dp ) );
-		s.close();
+		scope.inSession(
+				session -> {
+					session.setCacheMode( CacheMode.IGNORE );
+					session.beginTransaction();
+					try {
+						DataPoint dp = session.load( DataPoint.class, dpOrig.getId() );
+						assertTrue( dp instanceof HibernateProxy );
+						checkReadOnly( session, dp, false );
+						assertFalse( Hibernate.isInitialized( dp ) );
+						session.setReadOnly( dp, true );
+						checkReadOnly( session, dp, true );
+						assertFalse( Hibernate.isInitialized( dp ) );
+						session.setReadOnly( dp, false );
+						checkReadOnly( session, dp, false );
+						assertFalse( Hibernate.isInitialized( dp ) );
+						session.flush();
+						checkReadOnly( session, dp, false );
+						assertFalse( Hibernate.isInitialized( dp ) );
+						session.getTransaction().commit();
+						checkReadOnly( session, dp, false );
+						assertFalse( Hibernate.isInitialized( dp ) );
+					}
+					finally {
+						if ( session.getTransaction().isActive() ) {
+							session.getTransaction().rollback();
+						}
+					}
+				}
+		);
 
-		s = openSession( scope );
-		s.beginTransaction();
-		dp = (DataPoint) s.get( DataPoint.class, dpOrig.getId() );
-		assertEquals( dpOrig.getId(), dp.getId() );
-		assertEquals( dpOrig.getDescription(), dp.getDescription() );
-		assertEquals( dpOrig.getX(), dp.getX() );
-		assertEquals( dpOrig.getY(), dp.getY() );
-		s.delete( dp );
-		s.getTransaction().commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					DataPoint dp = session.get( DataPoint.class, dpOrig.getId() );
+					assertEquals( dpOrig.getId(), dp.getId() );
+					assertEquals( dpOrig.getDescription(), dp.getDescription() );
+					assertEquals( dpOrig.getX(), dp.getX() );
+					assertEquals( dpOrig.getY(), dp.getY() );
+					session.delete( dp );
+				}
+		);
 	}
 
 	@Test
 	public void testReadOnlyViaLazyInitializerDoesNotInit(SessionFactoryScope scope) {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE, scope );
 
-		Session s = openSession( scope );
-		s.setCacheMode( CacheMode.IGNORE );
-		s.beginTransaction();
-		DataPoint dp = (DataPoint) s.load( DataPoint.class, new Long( dpOrig.getId() ) );
-		assertTrue( dp instanceof HibernateProxy );
-		LazyInitializer dpLI = ( (HibernateProxy) dp ).getHibernateLazyInitializer();
-		checkReadOnly( s, dp, false );
-		assertFalse( Hibernate.isInitialized( dp ) );
-		dpLI.setReadOnly( true );
-		checkReadOnly( s, dp, true );
-		assertFalse( Hibernate.isInitialized( dp ) );
-		dpLI.setReadOnly( false );
-		checkReadOnly( s, dp, false );
-		assertFalse( Hibernate.isInitialized( dp ) );
-		s.flush();
-		checkReadOnly( s, dp, false );
-		assertFalse( Hibernate.isInitialized( dp ) );
-		s.getTransaction().commit();
-		checkReadOnly( s, dp, false );
-		assertFalse( Hibernate.isInitialized( dp ) );
-		s.close();
+		scope.inSession(
+				session -> {
+					session.setCacheMode( CacheMode.IGNORE );
+					session.beginTransaction();
+					try {
+						DataPoint dp = session.load( DataPoint.class, dpOrig.getId() );
+						assertTrue( dp instanceof HibernateProxy );
+						LazyInitializer dpLI = ( (HibernateProxy) dp ).getHibernateLazyInitializer();
+						checkReadOnly( session, dp, false );
+						assertFalse( Hibernate.isInitialized( dp ) );
+						dpLI.setReadOnly( true );
+						checkReadOnly( session, dp, true );
+						assertFalse( Hibernate.isInitialized( dp ) );
+						dpLI.setReadOnly( false );
+						checkReadOnly( session, dp, false );
+						assertFalse( Hibernate.isInitialized( dp ) );
+						session.flush();
+						checkReadOnly( session, dp, false );
+						assertFalse( Hibernate.isInitialized( dp ) );
+						session.getTransaction().commit();
+						checkReadOnly( session, dp, false );
+						assertFalse( Hibernate.isInitialized( dp ) );
+					}
+					finally {
+						if ( session.getTransaction().isActive() ) {
+							session.getTransaction().rollback();
+						}
+					}
+				}
+		);
 
-		s = openSession( scope );
-		s.beginTransaction();
-		dp = (DataPoint) s.get( DataPoint.class, dpOrig.getId() );
-		assertEquals( dpOrig.getId(), dp.getId() );
-		assertEquals( dpOrig.getDescription(), dp.getDescription() );
-		assertEquals( dpOrig.getX(), dp.getX() );
-		assertEquals( dpOrig.getY(), dp.getY() );
-		s.delete( dp );
-		s.getTransaction().commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					DataPoint dp = session.get( DataPoint.class, dpOrig.getId() );
+					assertEquals( dpOrig.getId(), dp.getId() );
+					assertEquals( dpOrig.getDescription(), dp.getDescription() );
+					assertEquals( dpOrig.getX(), dp.getX() );
+					assertEquals( dpOrig.getY(), dp.getY() );
+					session.delete( dp );
+				}
+		);
 	}
 
 	@Test
 	public void testReadOnlyViaSessionNoChangeAfterInit(SessionFactoryScope scope) {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE, scope );
 
-		Session s = openSession( scope );
-		s.setCacheMode( CacheMode.IGNORE );
-		s.beginTransaction();
-		DataPoint dp = (DataPoint) s.load( DataPoint.class, new Long( dpOrig.getId() ) );
-		assertTrue( dp instanceof HibernateProxy );
-		checkReadOnly( s, dp, false );
-		assertFalse( Hibernate.isInitialized( dp ) );
-		Hibernate.initialize( dp );
-		assertTrue( Hibernate.isInitialized( dp ) );
-		checkReadOnly( s, dp, false );
-		s.getTransaction().commit();
-		s.close();
+		scope.inSession(
+				session -> {
+					session.setCacheMode( CacheMode.IGNORE );
+					session.beginTransaction();
+					try {
+						DataPoint dp = session.load( DataPoint.class, dpOrig.getId() );
+						assertTrue( dp instanceof HibernateProxy );
+						checkReadOnly( session, dp, false );
+						assertFalse( Hibernate.isInitialized( dp ) );
+						Hibernate.initialize( dp );
+						assertTrue( Hibernate.isInitialized( dp ) );
+						checkReadOnly( session, dp, false );
+						session.getTransaction().commit();
+					}
+					finally {
+						if ( session.getTransaction().isActive() ) {
+							session.getTransaction().rollback();
+						}
+					}
+				}
+		);
 
-		s = openSession( scope );
-		s.setCacheMode( CacheMode.IGNORE );
-		s.beginTransaction();
-		dp = (DataPoint) s.load( DataPoint.class, new Long( dpOrig.getId() ) );
-		assertTrue( dp instanceof HibernateProxy );
-		s.setReadOnly( dp, true );
-		checkReadOnly( s, dp, true );
-		assertFalse( Hibernate.isInitialized( dp ) );
-		Hibernate.initialize( dp );
-		assertTrue( Hibernate.isInitialized( dp ) );
-		checkReadOnly( s, dp, true );
-		s.getTransaction().commit();
-		s.close();
+		scope.inSession(
+				session -> {
+					session.setCacheMode( CacheMode.IGNORE );
+					session.beginTransaction();
+					try {
+						DataPoint dp = session.load( DataPoint.class, dpOrig.getId() );
+						assertTrue( dp instanceof HibernateProxy );
+						session.setReadOnly( dp, true );
+						checkReadOnly( session, dp, true );
+						assertFalse( Hibernate.isInitialized( dp ) );
+						Hibernate.initialize( dp );
+						assertTrue( Hibernate.isInitialized( dp ) );
+						checkReadOnly( session, dp, true );
+						session.getTransaction().commit();
+					}
+					finally {
+						if ( session.getTransaction().isActive() ) {
+							session.getTransaction().rollback();
+						}
+					}
+				}
+		);
 
-		s = openSession( scope );
-		s.setCacheMode( CacheMode.IGNORE );
-		s.beginTransaction();
-		dp = (DataPoint) s.load( DataPoint.class, new Long( dpOrig.getId() ) );
-		assertTrue( dp instanceof HibernateProxy );
-		s.setReadOnly( dp, true );
-		checkReadOnly( s, dp, true );
-		assertFalse( Hibernate.isInitialized( dp ) );
-		s.setReadOnly( dp, false );
-		checkReadOnly( s, dp, false );
-		assertFalse( Hibernate.isInitialized( dp ) );
-		Hibernate.initialize( dp );
-		assertTrue( Hibernate.isInitialized( dp ) );
-		checkReadOnly( s, dp, false );
-		s.getTransaction().commit();
-		s.close();
+		scope.inSession(
+				session -> {
+					session.setCacheMode( CacheMode.IGNORE );
+					session.beginTransaction();
+					try {
+						DataPoint dp = session.load( DataPoint.class, dpOrig.getId() );
+						assertTrue( dp instanceof HibernateProxy );
+						session.setReadOnly( dp, true );
+						checkReadOnly( session, dp, true );
+						assertFalse( Hibernate.isInitialized( dp ) );
+						session.setReadOnly( dp, false );
+						checkReadOnly( session, dp, false );
+						assertFalse( Hibernate.isInitialized( dp ) );
+						Hibernate.initialize( dp );
+						assertTrue( Hibernate.isInitialized( dp ) );
+						checkReadOnly( session, dp, false );
+						session.getTransaction().commit();
+					}
+					finally {
+						if ( session.getTransaction().isActive() ) {
+							session.getTransaction().rollback();
+						}
+					}
+				}
+		);
 
-		s = openSession( scope );
-		s.beginTransaction();
-		dp = (DataPoint) s.get( DataPoint.class, dpOrig.getId() );
-		assertEquals( dpOrig.getId(), dp.getId() );
-		assertEquals( dpOrig.getDescription(), dp.getDescription() );
-		assertEquals( dpOrig.getX(), dp.getX() );
-		assertEquals( dpOrig.getY(), dp.getY() );
-		s.delete( dp );
-		s.getTransaction().commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					DataPoint dp = session.get( DataPoint.class, dpOrig.getId() );
+					assertEquals( dpOrig.getId(), dp.getId() );
+					assertEquals( dpOrig.getDescription(), dp.getDescription() );
+					assertEquals( dpOrig.getX(), dp.getX() );
+					assertEquals( dpOrig.getY(), dp.getY() );
+					session.delete( dp );
+				}
+		);
 	}
 
 	@Test
 	public void testReadOnlyViaLazyInitializerNoChangeAfterInit(SessionFactoryScope scope) {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE, scope );
 
-		Session s = openSession( scope );
-		s.setCacheMode( CacheMode.IGNORE );
-		s.beginTransaction();
-		DataPoint dp = (DataPoint) s.load( DataPoint.class, new Long( dpOrig.getId() ) );
-		assertTrue( dp instanceof HibernateProxy );
-		LazyInitializer dpLI = ( (HibernateProxy) dp ).getHibernateLazyInitializer();
-		checkReadOnly( s, dp, false );
-		assertTrue( dpLI.isUninitialized() );
-		Hibernate.initialize( dp );
-		assertFalse( dpLI.isUninitialized() );
-		checkReadOnly( s, dp, false );
-		s.getTransaction().commit();
-		s.close();
+		scope.inSession(
+				session -> {
+					session.setCacheMode( CacheMode.IGNORE );
+					session.beginTransaction();
+					try {
+						DataPoint dp = session.load( DataPoint.class, dpOrig.getId() );
+						assertTrue( dp instanceof HibernateProxy );
+						LazyInitializer dpLI = ( (HibernateProxy) dp ).getHibernateLazyInitializer();
+						checkReadOnly( session, dp, false );
+						assertTrue( dpLI.isUninitialized() );
+						Hibernate.initialize( dp );
+						assertFalse( dpLI.isUninitialized() );
+						checkReadOnly( session, dp, false );
+						session.getTransaction().commit();
+					}
+					finally {
+						if ( session.getTransaction().isActive() ) {
+							session.getTransaction().rollback();
+						}
+					}
+				}
+		);
 
-		s = openSession( scope );
-		s.setCacheMode( CacheMode.IGNORE );
-		s.beginTransaction();
-		dp = (DataPoint) s.load( DataPoint.class, new Long( dpOrig.getId() ) );
-		assertTrue( dp instanceof HibernateProxy );
-		dpLI = ( (HibernateProxy) dp ).getHibernateLazyInitializer();
-		dpLI.setReadOnly( true );
-		checkReadOnly( s, dp, true );
-		assertTrue( dpLI.isUninitialized() );
-		Hibernate.initialize( dp );
-		assertFalse( dpLI.isUninitialized() );
-		checkReadOnly( s, dp, true );
-		s.getTransaction().commit();
-		s.close();
+		scope.inSession(
+				session -> {
+					session.setCacheMode( CacheMode.IGNORE );
+					session.beginTransaction();
+					try {
+						DataPoint dp = session.load( DataPoint.class, dpOrig.getId() );
+						assertTrue( dp instanceof HibernateProxy );
+						LazyInitializer dpLI = ( (HibernateProxy) dp ).getHibernateLazyInitializer();
+						dpLI.setReadOnly( true );
+						checkReadOnly( session, dp, true );
+						assertTrue( dpLI.isUninitialized() );
+						Hibernate.initialize( dp );
+						assertFalse( dpLI.isUninitialized() );
+						checkReadOnly( session, dp, true );
+						session.getTransaction().commit();
+					}
+					finally {
+						if ( session.getTransaction().isActive() ) {
+							session.getTransaction().rollback();
+						}
+					}
+				}
+		);
 
-		s = openSession( scope );
-		s.setCacheMode( CacheMode.IGNORE );
-		s.beginTransaction();
-		dp = (DataPoint) s.load( DataPoint.class, new Long( dpOrig.getId() ) );
-		assertTrue( dp instanceof HibernateProxy );
-		dpLI = ( (HibernateProxy) dp ).getHibernateLazyInitializer();
-		dpLI.setReadOnly( true );
-		checkReadOnly( s, dp, true );
-		assertTrue( dpLI.isUninitialized() );
-		dpLI.setReadOnly( false );
-		checkReadOnly( s, dp, false );
-		assertTrue( dpLI.isUninitialized() );
-		Hibernate.initialize( dp );
-		assertFalse( dpLI.isUninitialized() );
-		checkReadOnly( s, dp, false );
-		s.getTransaction().commit();
-		s.close();
+		scope.inSession(
+				session -> {
+					session.setCacheMode( CacheMode.IGNORE );
+					session.beginTransaction();
+					try {
+						DataPoint dp = session.load( DataPoint.class, dpOrig.getId() );
+						assertTrue( dp instanceof HibernateProxy );
+						LazyInitializer dpLI = ( (HibernateProxy) dp ).getHibernateLazyInitializer();
+						dpLI.setReadOnly( true );
+						checkReadOnly( session, dp, true );
+						assertTrue( dpLI.isUninitialized() );
+						dpLI.setReadOnly( false );
+						checkReadOnly( session, dp, false );
+						assertTrue( dpLI.isUninitialized() );
+						Hibernate.initialize( dp );
+						assertFalse( dpLI.isUninitialized() );
+						checkReadOnly( session, dp, false );
+						session.getTransaction().commit();
+					}
+					finally {
+						if ( session.getTransaction().isActive() ) {
+							session.getTransaction().rollback();
+						}
+					}
+				}
+		);
 
-		s = openSession( scope );
-		s.beginTransaction();
-		dp = (DataPoint) s.get( DataPoint.class, dpOrig.getId() );
-		assertEquals( dpOrig.getId(), dp.getId() );
-		assertEquals( dpOrig.getDescription(), dp.getDescription() );
-		assertEquals( dpOrig.getX(), dp.getX() );
-		assertEquals( dpOrig.getY(), dp.getY() );
-		s.delete( dp );
-		s.getTransaction().commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					DataPoint dp = session.get( DataPoint.class, dpOrig.getId() );
+					assertEquals( dpOrig.getId(), dp.getId() );
+					assertEquals( dpOrig.getDescription(), dp.getDescription() );
+					assertEquals( dpOrig.getX(), dp.getX() );
+					assertEquals( dpOrig.getY(), dp.getY() );
+					session.delete( dp );
+				}
+		);
 	}
 
 	@Test
 	public void testReadOnlyViaSessionBeforeInit(SessionFactoryScope scope) {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE, scope );
 
-		Session s = openSession( scope );
-		s.setCacheMode( CacheMode.IGNORE );
-		s.beginTransaction();
-		DataPoint dp = (DataPoint) s.load( DataPoint.class, new Long( dpOrig.getId() ) );
-		assertTrue( dp instanceof HibernateProxy );
-		s.setReadOnly( dp, true );
-		dp.setDescription( "changed" );
-		assertTrue( Hibernate.isInitialized( dp ) );
-		assertEquals( "changed", dp.getDescription() );
-		checkReadOnly( s, dp, true );
-		s.flush();
-		s.getTransaction().commit();
-		s.close();
+		scope.inSession(
+				session -> {
+					session.setCacheMode( CacheMode.IGNORE );
+					session.beginTransaction();
+					try {
+						DataPoint dp = session.load( DataPoint.class, dpOrig.getId() );
+						assertTrue( dp instanceof HibernateProxy );
+						session.setReadOnly( dp, true );
+						dp.setDescription( "changed" );
+						assertTrue( Hibernate.isInitialized( dp ) );
+						assertEquals( "changed", dp.getDescription() );
+						checkReadOnly( session, dp, true );
+						session.flush();
+						session.getTransaction().commit();
+					}
+					finally {
+						if ( session.getTransaction().isActive() ) {
+							session.getTransaction().rollback();
+						}
+					}
+				}
+		);
 
-		s = openSession( scope );
-		s.beginTransaction();
-		dp = (DataPoint) s.get( DataPoint.class, dpOrig.getId() );
-		assertEquals( dpOrig.getId(), dp.getId() );
-		assertEquals( dpOrig.getDescription(), dp.getDescription() );
-		assertEquals( dpOrig.getX(), dp.getX() );
-		assertEquals( dpOrig.getY(), dp.getY() );
-		s.delete( dp );
-		s.getTransaction().commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					DataPoint dp = session.get( DataPoint.class, dpOrig.getId() );
+					assertEquals( dpOrig.getId(), dp.getId() );
+					assertEquals( dpOrig.getDescription(), dp.getDescription() );
+					assertEquals( dpOrig.getX(), dp.getX() );
+					assertEquals( dpOrig.getY(), dp.getY() );
+					session.delete( dp );
+				}
+		);
 	}
 
 	@Test
 	public void testModifiableViaSessionBeforeInit(SessionFactoryScope scope) {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE, scope );
 
-		Session s = openSession( scope );
-		s.setCacheMode( CacheMode.IGNORE );
-		s.beginTransaction();
-		DataPoint dp = (DataPoint) s.load( DataPoint.class, new Long( dpOrig.getId() ) );
-		assertTrue( dp instanceof HibernateProxy );
-		checkReadOnly( s, dp, false );
-		dp.setDescription( "changed" );
-		assertTrue( Hibernate.isInitialized( dp ) );
-		assertEquals( "changed", dp.getDescription() );
-		checkReadOnly( s, dp, false );
-		s.flush();
-		s.getTransaction().commit();
-		s.close();
+		scope.inSession(
+				session -> {
+					session.setCacheMode( CacheMode.IGNORE );
+					session.beginTransaction();
+					try {
+						DataPoint dp = session.load( DataPoint.class, dpOrig.getId() );
+						assertTrue( dp instanceof HibernateProxy );
+						checkReadOnly( session, dp, false );
+						dp.setDescription( "changed" );
+						assertTrue( Hibernate.isInitialized( dp ) );
+						assertEquals( "changed", dp.getDescription() );
+						checkReadOnly( session, dp, false );
+						session.flush();
+						session.getTransaction().commit();
+					}
+					finally {
+						if ( session.getTransaction().isActive() ) {
+							session.getTransaction().rollback();
+						}
+					}
+				}
+		);
 
-		s = openSession( scope );
-		s.beginTransaction();
-		dp = (DataPoint) s.get( DataPoint.class, dpOrig.getId() );
-		assertEquals( dpOrig.getId(), dp.getId() );
-		assertEquals( "changed", dp.getDescription() );
-		assertEquals( dpOrig.getX(), dp.getX() );
-		assertEquals( dpOrig.getY(), dp.getY() );
-		s.delete( dp );
-		s.getTransaction().commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					DataPoint dp = session.get( DataPoint.class, dpOrig.getId() );
+					assertEquals( dpOrig.getId(), dp.getId() );
+					assertEquals( "changed", dp.getDescription() );
+					assertEquals( dpOrig.getX(), dp.getX() );
+					assertEquals( dpOrig.getY(), dp.getY() );
+					session.delete( dp );
+				}
+		);
 	}
 
 	@Test
 	public void testReadOnlyViaSessionBeforeInitByModifiableQuery(SessionFactoryScope scope) {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE, scope );
 
-		Session s = openSession( scope );
-		s.setCacheMode( CacheMode.IGNORE );
-		s.beginTransaction();
-		DataPoint dp = (DataPoint) s.load( DataPoint.class, new Long( dpOrig.getId() ) );
-		assertTrue( dp instanceof HibernateProxy );
-		assertFalse( Hibernate.isInitialized( dp ) );
-		checkReadOnly( s, dp, false );
-		s.setReadOnly( dp, true );
-		assertFalse( Hibernate.isInitialized( dp ) );
-		checkReadOnly( s, dp, true );
-		assertFalse( Hibernate.isInitialized( dp ) );
-		DataPoint dpFromQuery = (DataPoint) s.createQuery( "from DataPoint where id=" + dpOrig.getId() ).setReadOnly(
-				false ).uniqueResult();
-		assertTrue( Hibernate.isInitialized( dpFromQuery ) );
-		assertSame( dp, dpFromQuery );
-		checkReadOnly( s, dp, true );
-		dp.setDescription( "changed" );
-		assertEquals( "changed", dp.getDescription() );
-		s.flush();
-		s.getTransaction().commit();
-		s.close();
+		scope.inSession(
+				session -> {
+					session.setCacheMode( CacheMode.IGNORE );
+					session.beginTransaction();
+					try {
+						DataPoint dp = session.load( DataPoint.class, dpOrig.getId() );
+						assertTrue( dp instanceof HibernateProxy );
+						assertFalse( Hibernate.isInitialized( dp ) );
+						checkReadOnly( session, dp, false );
+						session.setReadOnly( dp, true );
+						assertFalse( Hibernate.isInitialized( dp ) );
+						checkReadOnly( session, dp, true );
+						assertFalse( Hibernate.isInitialized( dp ) );
+						DataPoint dpFromQuery = (DataPoint) session.createQuery( "from DataPoint where id=" + dpOrig.getId() )
+								.setReadOnly(
+										false )
+								.uniqueResult();
+						assertTrue( Hibernate.isInitialized( dpFromQuery ) );
+						assertSame( dp, dpFromQuery );
+						checkReadOnly( session, dp, true );
+						dp.setDescription( "changed" );
+						assertEquals( "changed", dp.getDescription() );
+						session.flush();
+						session.getTransaction().commit();
+					}
+					finally {
+						if ( session.getTransaction().isActive() ) {
+							session.getTransaction().rollback();
+						}
+					}
+				}
+		);
 
-		s = openSession( scope );
-		s.beginTransaction();
-		dp = (DataPoint) s.get( DataPoint.class, dpOrig.getId() );
-		assertEquals( dpOrig.getId(), dp.getId() );
-		assertEquals( dpOrig.getDescription(), dp.getDescription() );
-		assertEquals( dpOrig.getX(), dp.getX() );
-		assertEquals( dpOrig.getY(), dp.getY() );
-		s.delete( dp );
-		s.getTransaction().commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					DataPoint dp = session.get( DataPoint.class, dpOrig.getId() );
+					assertEquals( dpOrig.getId(), dp.getId() );
+					assertEquals( dpOrig.getDescription(), dp.getDescription() );
+					assertEquals( dpOrig.getX(), dp.getX() );
+					assertEquals( dpOrig.getY(), dp.getY() );
+					session.delete( dp );
+				}
+		);
 	}
 
 	@Test
 	public void testReadOnlyViaSessionBeforeInitByReadOnlyQuery(SessionFactoryScope scope) {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE, scope );
 
-		Session s = openSession( scope );
-		s.setCacheMode( CacheMode.IGNORE );
-		s.beginTransaction();
-		DataPoint dp = (DataPoint) s.load( DataPoint.class, new Long( dpOrig.getId() ) );
-		assertTrue( dp instanceof HibernateProxy );
-		assertFalse( Hibernate.isInitialized( dp ) );
-		checkReadOnly( s, dp, false );
-		s.setReadOnly( dp, true );
-		checkReadOnly( s, dp, true );
-		DataPoint dpFromQuery = (DataPoint) s.createQuery( "from DataPoint where id=" + dpOrig.getId() ).setReadOnly(
-				true ).uniqueResult();
-		assertTrue( Hibernate.isInitialized( dpFromQuery ) );
-		assertSame( dp, dpFromQuery );
-		checkReadOnly( s, dp, true );
-		dp.setDescription( "changed" );
-		assertEquals( "changed", dp.getDescription() );
-		s.flush();
-		s.getTransaction().commit();
-		s.close();
+		scope.inSession(
+				session -> {
+					session.setCacheMode( CacheMode.IGNORE );
+					session.beginTransaction();
+					try {
+						DataPoint dp = session.load( DataPoint.class, dpOrig.getId() );
+						assertTrue( dp instanceof HibernateProxy );
+						assertFalse( Hibernate.isInitialized( dp ) );
+						checkReadOnly( session, dp, false );
+						session.setReadOnly( dp, true );
+						checkReadOnly( session, dp, true );
+						DataPoint dpFromQuery = (DataPoint) session.createQuery( "from DataPoint where id=" + dpOrig.getId() )
+								.setReadOnly(
+										true )
+								.uniqueResult();
+						assertTrue( Hibernate.isInitialized( dpFromQuery ) );
+						assertSame( dp, dpFromQuery );
+						checkReadOnly( session, dp, true );
+						dp.setDescription( "changed" );
+						assertEquals( "changed", dp.getDescription() );
+						session.flush();
+						session.getTransaction().commit();
+					}
+					finally {
+						if ( session.getTransaction().isActive() ) {
+							session.getTransaction().rollback();
+						}
+					}
+				}
+		);
 
-		s = openSession( scope );
-		s.beginTransaction();
-		dp = (DataPoint) s.get( DataPoint.class, dpOrig.getId() );
-		assertEquals( dpOrig.getId(), dp.getId() );
-		assertEquals( dpOrig.getDescription(), dp.getDescription() );
-		assertEquals( dpOrig.getX(), dp.getX() );
-		assertEquals( dpOrig.getY(), dp.getY() );
-		s.delete( dp );
-		s.getTransaction().commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					DataPoint dp = session.get( DataPoint.class, dpOrig.getId() );
+					assertEquals( dpOrig.getId(), dp.getId() );
+					assertEquals( dpOrig.getDescription(), dp.getDescription() );
+					assertEquals( dpOrig.getX(), dp.getX() );
+					assertEquals( dpOrig.getY(), dp.getY() );
+					session.delete( dp );
+				}
+		);
 	}
 
 	@Test
 	public void testModifiableViaSessionBeforeInitByModifiableQuery(SessionFactoryScope scope) {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE, scope );
 
-		Session s = openSession( scope );
-		s.setCacheMode( CacheMode.IGNORE );
-		s.beginTransaction();
-		DataPoint dp = (DataPoint) s.load( DataPoint.class, new Long( dpOrig.getId() ) );
-		assertTrue( dp instanceof HibernateProxy );
-		assertFalse( Hibernate.isInitialized( dp ) );
-		checkReadOnly( s, dp, false );
-		DataPoint dpFromQuery = (DataPoint) s.createQuery( "from DataPoint where id=" + dpOrig.getId() ).setReadOnly(
-				false ).uniqueResult();
-		assertTrue( Hibernate.isInitialized( dpFromQuery ) );
-		assertSame( dp, dpFromQuery );
-		checkReadOnly( s, dp, false );
-		dp.setDescription( "changed" );
-		assertEquals( "changed", dp.getDescription() );
-		s.flush();
-		s.getTransaction().commit();
-		s.close();
+		scope.inSession(
+				session -> {
+					session.setCacheMode( CacheMode.IGNORE );
+					session.beginTransaction();
+					try {
+						DataPoint dp = session.load( DataPoint.class, dpOrig.getId() );
+						assertTrue( dp instanceof HibernateProxy );
+						assertFalse( Hibernate.isInitialized( dp ) );
+						checkReadOnly( session, dp, false );
+						DataPoint dpFromQuery = (DataPoint) session.createQuery( "from DataPoint where id=" + dpOrig.getId() )
+								.setReadOnly(
+										false )
+								.uniqueResult();
+						assertTrue( Hibernate.isInitialized( dpFromQuery ) );
+						assertSame( dp, dpFromQuery );
+						checkReadOnly( session, dp, false );
+						dp.setDescription( "changed" );
+						assertEquals( "changed", dp.getDescription() );
+						session.flush();
+						session.getTransaction().commit();
+					}
+					finally {
+						if ( session.getTransaction().isActive() ) {
+							session.getTransaction().rollback();
+						}
+					}
+				}
+		);
 
-		s = openSession( scope );
-		s.beginTransaction();
-		dp = (DataPoint) s.get( DataPoint.class, dpOrig.getId() );
-		assertEquals( dpOrig.getId(), dp.getId() );
-		assertEquals( "changed", dp.getDescription() );
-		assertEquals( dpOrig.getX(), dp.getX() );
-		assertEquals( dpOrig.getY(), dp.getY() );
-		s.delete( dp );
-		s.getTransaction().commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					DataPoint dp = session.get( DataPoint.class, dpOrig.getId() );
+					assertEquals( dpOrig.getId(), dp.getId() );
+					assertEquals( "changed", dp.getDescription() );
+					assertEquals( dpOrig.getX(), dp.getX() );
+					assertEquals( dpOrig.getY(), dp.getY() );
+					session.delete( dp );
+				}
+		);
 	}
 
 	@Test
 	public void testModifiableViaSessionBeforeInitByReadOnlyQuery(SessionFactoryScope scope) {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE, scope );
 
-		Session s = openSession( scope );
-		s.setCacheMode( CacheMode.IGNORE );
-		s.beginTransaction();
-		DataPoint dp = (DataPoint) s.load( DataPoint.class, new Long( dpOrig.getId() ) );
-		assertTrue( dp instanceof HibernateProxy );
-		checkReadOnly( s, dp, false );
-		assertFalse( Hibernate.isInitialized( dp ) );
-		DataPoint dpFromQuery = (DataPoint) s.createQuery( "from DataPoint where id=" + dpOrig.getId() ).setReadOnly(
-				true ).uniqueResult();
-		assertTrue( Hibernate.isInitialized( dpFromQuery ) );
-		assertSame( dp, dpFromQuery );
-		checkReadOnly( s, dp, false );
-		dp.setDescription( "changed" );
-		assertEquals( "changed", dp.getDescription() );
-		s.flush();
-		s.getTransaction().commit();
-		s.close();
+		scope.inSession(
+				session -> {
+					session.setCacheMode( CacheMode.IGNORE );
+					session.beginTransaction();
+					try {
+						DataPoint dp = session.load( DataPoint.class, dpOrig.getId() );
+						assertTrue( dp instanceof HibernateProxy );
+						checkReadOnly( session, dp, false );
+						assertFalse( Hibernate.isInitialized( dp ) );
+						DataPoint dpFromQuery = (DataPoint) session.createQuery( "from DataPoint where id=" + dpOrig.getId() )
+								.setReadOnly(
+										true )
+								.uniqueResult();
+						assertTrue( Hibernate.isInitialized( dpFromQuery ) );
+						assertSame( dp, dpFromQuery );
+						checkReadOnly( session, dp, false );
+						dp.setDescription( "changed" );
+						assertEquals( "changed", dp.getDescription() );
+						session.flush();
+						session.getTransaction().commit();
+					}
+					finally {
+						if ( session.getTransaction().isActive() ) {
+							session.getTransaction().rollback();
+						}
+					}
+				}
+		);
 
-		s = openSession( scope );
-		s.beginTransaction();
-		dp = (DataPoint) s.get( DataPoint.class, dpOrig.getId() );
-		assertEquals( dpOrig.getId(), dp.getId() );
-		assertEquals( "changed", dp.getDescription() );
-		assertEquals( dpOrig.getX(), dp.getX() );
-		assertEquals( dpOrig.getY(), dp.getY() );
-		s.delete( dp );
-		s.getTransaction().commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					DataPoint dp = session.get( DataPoint.class, dpOrig.getId() );
+					assertEquals( dpOrig.getId(), dp.getId() );
+					assertEquals( "changed", dp.getDescription() );
+					assertEquals( dpOrig.getX(), dp.getX() );
+					assertEquals( dpOrig.getY(), dp.getY() );
+					session.delete( dp );
+				}
+		);
 	}
 
 	@Test
 	public void testReadOnlyViaLazyInitializerBeforeInit(SessionFactoryScope scope) {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE, scope );
 
-		Session s = openSession( scope );
-		s.setCacheMode( CacheMode.IGNORE );
-		s.beginTransaction();
-		DataPoint dp = (DataPoint) s.load( DataPoint.class, new Long( dpOrig.getId() ) );
-		assertTrue( dp instanceof HibernateProxy );
-		LazyInitializer dpLI = ( (HibernateProxy) dp ).getHibernateLazyInitializer();
-		assertTrue( dpLI.isUninitialized() );
-		checkReadOnly( s, dp, false );
-		dpLI.setReadOnly( true );
-		checkReadOnly( s, dp, true );
-		dp.setDescription( "changed" );
-		assertFalse( dpLI.isUninitialized() );
-		assertEquals( "changed", dp.getDescription() );
-		checkReadOnly( s, dp, true );
-		s.flush();
-		s.getTransaction().commit();
-		s.close();
+		scope.inSession(
+				session -> {
+					session.setCacheMode( CacheMode.IGNORE );
+					session.beginTransaction();
+					try {
+						DataPoint dp = session.load( DataPoint.class, dpOrig.getId() );
+						assertTrue( dp instanceof HibernateProxy );
+						LazyInitializer dpLI = ( (HibernateProxy) dp ).getHibernateLazyInitializer();
+						assertTrue( dpLI.isUninitialized() );
+						checkReadOnly( session, dp, false );
+						dpLI.setReadOnly( true );
+						checkReadOnly( session, dp, true );
+						dp.setDescription( "changed" );
+						assertFalse( dpLI.isUninitialized() );
+						assertEquals( "changed", dp.getDescription() );
+						checkReadOnly( session, dp, true );
+						session.flush();
+						session.getTransaction().commit();
+					}
+					finally {
+						if ( session.getTransaction().isActive() ) {
+							session.getTransaction().rollback();
+						}
+					}
+				}
+		);
 
-		s = openSession( scope );
-		s.beginTransaction();
-		dp = (DataPoint) s.get( DataPoint.class, dpOrig.getId() );
-		assertEquals( dpOrig.getId(), dp.getId() );
-		assertEquals( dpOrig.getDescription(), dp.getDescription() );
-		assertEquals( dpOrig.getX(), dp.getX() );
-		assertEquals( dpOrig.getY(), dp.getY() );
-		s.delete( dp );
-		s.getTransaction().commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					DataPoint dp = session.get( DataPoint.class, dpOrig.getId() );
+					assertEquals( dpOrig.getId(), dp.getId() );
+					assertEquals( dpOrig.getDescription(), dp.getDescription() );
+					assertEquals( dpOrig.getX(), dp.getX() );
+					assertEquals( dpOrig.getY(), dp.getY() );
+					session.delete( dp );
+				}
+		);
 	}
 
 	@Test
 	public void testModifiableViaLazyInitializerBeforeInit(SessionFactoryScope scope) {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE, scope );
 
-		Session s = openSession( scope );
-		s.setCacheMode( CacheMode.IGNORE );
-		s.beginTransaction();
-		DataPoint dp = (DataPoint) s.load( DataPoint.class, new Long( dpOrig.getId() ) );
-		assertTrue( dp instanceof HibernateProxy );
-		LazyInitializer dpLI = ( (HibernateProxy) dp ).getHibernateLazyInitializer();
-		assertTrue( dp instanceof HibernateProxy );
-		assertTrue( dpLI.isUninitialized() );
-		checkReadOnly( s, dp, false );
-		dp.setDescription( "changed" );
-		assertFalse( dpLI.isUninitialized() );
-		assertEquals( "changed", dp.getDescription() );
-		checkReadOnly( s, dp, false );
-		s.flush();
-		s.getTransaction().commit();
-		s.close();
+		scope.inSession(
+				session -> {
+					session.setCacheMode( CacheMode.IGNORE );
+					session.beginTransaction();
+					try {
+						DataPoint dp = session.load( DataPoint.class, dpOrig.getId() );
+						assertTrue( dp instanceof HibernateProxy );
+						LazyInitializer dpLI = ( (HibernateProxy) dp ).getHibernateLazyInitializer();
+						assertTrue( dp instanceof HibernateProxy );
+						assertTrue( dpLI.isUninitialized() );
+						checkReadOnly( session, dp, false );
+						dp.setDescription( "changed" );
+						assertFalse( dpLI.isUninitialized() );
+						assertEquals( "changed", dp.getDescription() );
+						checkReadOnly( session, dp, false );
+						session.flush();
+						session.getTransaction().commit();
+					}
+					finally {
+						if ( session.getTransaction().isActive() ) {
+							session.getTransaction().rollback();
+						}
+					}
+				}
+		);
 
-		s = openSession( scope );
-		s.beginTransaction();
-		dp = (DataPoint) s.get( DataPoint.class, dpOrig.getId() );
-		assertEquals( dpOrig.getId(), dp.getId() );
-		assertEquals( "changed", dp.getDescription() );
-		assertEquals( dpOrig.getX(), dp.getX() );
-		assertEquals( dpOrig.getY(), dp.getY() );
-		s.delete( dp );
-		s.getTransaction().commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					DataPoint dp = session.get( DataPoint.class, dpOrig.getId() );
+					assertEquals( dpOrig.getId(), dp.getId() );
+					assertEquals( "changed", dp.getDescription() );
+					assertEquals( dpOrig.getX(), dp.getX() );
+					assertEquals( dpOrig.getY(), dp.getY() );
+					session.delete( dp );
+				}
+		);
 	}
 
 	@Test
 	public void testReadOnlyViaLazyInitializerAfterInit(SessionFactoryScope scope) {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE, scope );
 
-		Session s = openSession( scope );
-		s.setCacheMode( CacheMode.IGNORE );
-		s.beginTransaction();
-		DataPoint dp = (DataPoint) s.load( DataPoint.class, new Long( dpOrig.getId() ) );
-		assertTrue( dp instanceof HibernateProxy );
-		LazyInitializer dpLI = ( (HibernateProxy) dp ).getHibernateLazyInitializer();
-		assertTrue( dpLI.isUninitialized() );
-		checkReadOnly( s, dp, false );
-		dp.setDescription( "changed" );
-		assertFalse( dpLI.isUninitialized() );
-		assertEquals( "changed", dp.getDescription() );
-		checkReadOnly( s, dp, false );
-		dpLI.setReadOnly( true );
-		checkReadOnly( s, dp, true );
-		s.flush();
-		s.getTransaction().commit();
-		s.close();
+		scope.inSession(
+				session -> {
+					session.setCacheMode( CacheMode.IGNORE );
+					session.beginTransaction();
+					try {
+						DataPoint dp = session.load( DataPoint.class, dpOrig.getId() );
+						assertTrue( dp instanceof HibernateProxy );
+						LazyInitializer dpLI = ( (HibernateProxy) dp ).getHibernateLazyInitializer();
+						assertTrue( dpLI.isUninitialized() );
+						checkReadOnly( session, dp, false );
+						dp.setDescription( "changed" );
+						assertFalse( dpLI.isUninitialized() );
+						assertEquals( "changed", dp.getDescription() );
+						checkReadOnly( session, dp, false );
+						dpLI.setReadOnly( true );
+						checkReadOnly( session, dp, true );
+						session.flush();
+						session.getTransaction().commit();
+					}
+					finally {
+						if ( session.getTransaction().isActive() ) {
+							session.getTransaction().rollback();
+						}
+					}
+				}
+		);
 
-		s = openSession( scope );
-		s.beginTransaction();
-		dp = (DataPoint) s.get( DataPoint.class, dpOrig.getId() );
-		assertEquals( dpOrig.getId(), dp.getId() );
-		assertEquals( dpOrig.getDescription(), dp.getDescription() );
-		assertEquals( dpOrig.getX(), dp.getX() );
-		assertEquals( dpOrig.getY(), dp.getY() );
-		s.delete( dp );
-		s.getTransaction().commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					DataPoint dp = session.get( DataPoint.class, dpOrig.getId() );
+					assertEquals( dpOrig.getId(), dp.getId() );
+					assertEquals( dpOrig.getDescription(), dp.getDescription() );
+					assertEquals( dpOrig.getX(), dp.getX() );
+					assertEquals( dpOrig.getY(), dp.getY() );
+					session.delete( dp );
+				}
+		);
 	}
 
 	@Test
 	public void testModifiableViaLazyInitializerAfterInit(SessionFactoryScope scope) {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE, scope );
 
-		Session s = openSession( scope );
-		s.setCacheMode( CacheMode.IGNORE );
-		s.beginTransaction();
-		DataPoint dp = (DataPoint) s.load( DataPoint.class, new Long( dpOrig.getId() ) );
-		assertTrue( dp instanceof HibernateProxy );
-		LazyInitializer dpLI = ( (HibernateProxy) dp ).getHibernateLazyInitializer();
-		assertTrue( dpLI.isUninitialized() );
-		checkReadOnly( s, dp, false );
-		dp.setDescription( "changed" );
-		assertFalse( dpLI.isUninitialized() );
-		assertEquals( "changed", dp.getDescription() );
-		checkReadOnly( s, dp, false );
-		s.flush();
-		s.getTransaction().commit();
-		s.close();
+		scope.inSession(
+				session -> {
+					session.setCacheMode( CacheMode.IGNORE );
+					session.beginTransaction();
+					try {
+						DataPoint dp = session.load( DataPoint.class, dpOrig.getId() );
+						assertTrue( dp instanceof HibernateProxy );
+						LazyInitializer dpLI = ( (HibernateProxy) dp ).getHibernateLazyInitializer();
+						assertTrue( dpLI.isUninitialized() );
+						checkReadOnly( session, dp, false );
+						dp.setDescription( "changed" );
+						assertFalse( dpLI.isUninitialized() );
+						assertEquals( "changed", dp.getDescription() );
+						checkReadOnly( session, dp, false );
+						session.flush();
+						session.getTransaction().commit();
+					}
+					finally {
+						if ( session.getTransaction().isActive() ) {
+							session.getTransaction().rollback();
+						}
+					}
 
-		s = openSession( scope );
-		s.beginTransaction();
-		dp = (DataPoint) s.get( DataPoint.class, dpOrig.getId() );
-		assertEquals( dpOrig.getId(), dp.getId() );
-		assertEquals( "changed", dp.getDescription() );
-		assertEquals( dpOrig.getX(), dp.getX() );
-		assertEquals( dpOrig.getY(), dp.getY() );
-		s.delete( dp );
-		s.getTransaction().commit();
-		s.close();
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					DataPoint dp = session.get( DataPoint.class, dpOrig.getId() );
+					assertEquals( dpOrig.getId(), dp.getId() );
+					assertEquals( "changed", dp.getDescription() );
+					assertEquals( dpOrig.getX(), dp.getX() );
+					assertEquals( dpOrig.getY(), dp.getY() );
+					session.delete( dp );
+				}
+		);
 	}
 
 	@Test
@@ -584,45 +753,59 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 	public void testModifyToReadOnlyToModifiableIsUpdated(SessionFactoryScope scope) {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE, scope );
 
-		Session s = openSession( scope );
-		s.setCacheMode( CacheMode.IGNORE );
-		s.beginTransaction();
-		DataPoint dp = (DataPoint) s.load( DataPoint.class, new Long( dpOrig.getId() ) );
-		assertTrue( dp instanceof HibernateProxy );
-		assertFalse( Hibernate.isInitialized( dp ) );
-		checkReadOnly( s, dp, false );
-		dp.setDescription( "changed" );
-		assertTrue( Hibernate.isInitialized( dp ) );
-		assertEquals( "changed", dp.getDescription() );
-		s.setReadOnly( dp, true );
-		checkReadOnly( s, dp, true );
-		s.setReadOnly( dp, false );
-		checkReadOnly( s, dp, false );
-		assertEquals( "changed", dp.getDescription() );
-		s.flush();
-		s.getTransaction().commit();
-		s.close();
+		scope.inSession(
+				session -> {
+					session.setCacheMode( CacheMode.IGNORE );
+					session.beginTransaction();
+					try {
+						DataPoint dp = session.load( DataPoint.class, dpOrig.getId() );
+						assertTrue( dp instanceof HibernateProxy );
+						assertFalse( Hibernate.isInitialized( dp ) );
+						checkReadOnly( session, dp, false );
+						dp.setDescription( "changed" );
+						assertTrue( Hibernate.isInitialized( dp ) );
+						assertEquals( "changed", dp.getDescription() );
+						session.setReadOnly( dp, true );
+						checkReadOnly( session, dp, true );
+						session.setReadOnly( dp, false );
+						checkReadOnly( session, dp, false );
+						assertEquals( "changed", dp.getDescription() );
+						session.flush();
+						session.getTransaction().commit();
+					}
+					finally {
+						if ( session.getTransaction().isActive() ) {
+							session.getTransaction().rollback();
+						}
+					}
+				}
+		);
 
-		s = openSession( scope );
-		s.beginTransaction();
-		dp = (DataPoint) s.get( DataPoint.class, dpOrig.getId() );
-		assertEquals( dpOrig.getId(), dp.getId() );
-		assertEquals( dpOrig.getDescription(), dp.getDescription() );
-		assertEquals( dpOrig.getX(), dp.getX() );
-		assertEquals( dpOrig.getY(), dp.getY() );
-		try {
-			assertEquals( "changed", dp.getDescription() );
-			// should fail due to HHH-4642
-		}
-		finally {
-			s.getTransaction().rollback();
-			s.close();
-			s = openSession( scope );
-			s.beginTransaction();
-			s.delete( dp );
-			s.getTransaction().commit();
-			s.close();
-		}
+		scope.inSession(
+				session -> {
+					session.beginTransaction();
+					try {
+						DataPoint dp = session.get( DataPoint.class, dpOrig.getId() );
+						assertEquals( dpOrig.getId(), dp.getId() );
+						assertEquals( dpOrig.getDescription(), dp.getDescription() );
+						assertEquals( dpOrig.getX(), dp.getX() );
+						assertEquals( dpOrig.getY(), dp.getY() );
+
+						assertEquals( "changed", dp.getDescription() );
+						// should fail due to HHH-4642
+					}
+					finally {
+						session.getTransaction().rollback();
+					}
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					DataPoint dp = session.get( DataPoint.class, dpOrig.getId() );
+					session.delete( dp );
+				}
+		);
 	}
 
 	@Test
@@ -630,213 +813,273 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 	public void testReadOnlyModifiedToModifiableIsUpdated(SessionFactoryScope scope) {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE, scope );
 
-		Session s = openSession( scope );
-		s.setCacheMode( CacheMode.IGNORE );
-		s.beginTransaction();
-		DataPoint dp = (DataPoint) s.load( DataPoint.class, new Long( dpOrig.getId() ) );
-		assertTrue( dp instanceof HibernateProxy );
-		assertFalse( Hibernate.isInitialized( dp ) );
-		checkReadOnly( s, dp, false );
-		s.setReadOnly( dp, true );
-		checkReadOnly( s, dp, true );
-		dp.setDescription( "changed" );
-		assertTrue( Hibernate.isInitialized( dp ) );
-		assertEquals( "changed", dp.getDescription() );
-		s.setReadOnly( dp, false );
-		checkReadOnly( s, dp, false );
-		assertEquals( "changed", dp.getDescription() );
-		s.flush();
-		s.getTransaction().commit();
-		s.close();
+		scope.inSession(
+				session -> {
+					session.setCacheMode( CacheMode.IGNORE );
+					session.beginTransaction();
+					try {
+						DataPoint dp = session.load( DataPoint.class, dpOrig.getId() );
+						assertTrue( dp instanceof HibernateProxy );
+						assertFalse( Hibernate.isInitialized( dp ) );
+						checkReadOnly( session, dp, false );
+						session.setReadOnly( dp, true );
+						checkReadOnly( session, dp, true );
+						dp.setDescription( "changed" );
+						assertTrue( Hibernate.isInitialized( dp ) );
+						assertEquals( "changed", dp.getDescription() );
+						session.setReadOnly( dp, false );
+						checkReadOnly( session, dp, false );
+						assertEquals( "changed", dp.getDescription() );
+						session.flush();
+						session.getTransaction().commit();
+					}
+					finally {
+						if ( session.getTransaction().isActive() ) {
+							session.getTransaction().rollback();
+						}
+					}
+				}
+		);
 
-		s = openSession( scope );
-		s.beginTransaction();
-		dp = (DataPoint) s.get( DataPoint.class, dpOrig.getId() );
-		assertEquals( dpOrig.getId(), dp.getId() );
-		assertEquals( dpOrig.getDescription(), dp.getDescription() );
-		assertEquals( dpOrig.getX(), dp.getX() );
-		assertEquals( dpOrig.getY(), dp.getY() );
-		try {
-			assertEquals( "changed", dp.getDescription() );
-			// should fail due to HHH-4642
-		}
-		finally {
-			s.getTransaction().rollback();
-			s.close();
-			s = openSession( scope );
-			s.beginTransaction();
-			s.delete( dp );
-			s.getTransaction().commit();
-			s.close();
-		}
+		scope.inSession(
+				session -> {
+					session.beginTransaction();
+					try {
+						DataPoint dp = session.get( DataPoint.class, dpOrig.getId() );
+						assertEquals( dpOrig.getId(), dp.getId() );
+						assertEquals( dpOrig.getDescription(), dp.getDescription() );
+						assertEquals( dpOrig.getX(), dp.getX() );
+						assertEquals( dpOrig.getY(), dp.getY() );
+
+						assertEquals( "changed", dp.getDescription() );
+						// should fail due to HHH-4642
+					}
+					finally {
+						session.getTransaction().rollback();
+					}
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					DataPoint dp = session.get( DataPoint.class, dpOrig.getId() );
+					session.delete( dp );
+				}
+		);
 	}
 
 	@Test
 	public void testReadOnlyChangedEvictedUpdate(SessionFactoryScope scope) {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE, scope );
 
-		Session s = openSession( scope );
-		s.setCacheMode( CacheMode.IGNORE );
-		s.beginTransaction();
-		DataPoint dp = (DataPoint) s.load( DataPoint.class, new Long( dpOrig.getId() ) );
-		assertTrue( dp instanceof HibernateProxy );
-		assertFalse( Hibernate.isInitialized( dp ) );
-		checkReadOnly( s, dp, false );
-		s.setReadOnly( dp, true );
-		checkReadOnly( s, dp, true );
-		dp.setDescription( "changed" );
-		assertTrue( Hibernate.isInitialized( dp ) );
-		assertEquals( "changed", dp.getDescription() );
-		s.evict( dp );
-		assertFalse( s.contains( dp ) );
-		s.update( dp );
-		checkReadOnly( s, dp, false );
-		assertEquals( "changed", dp.getDescription() );
-		s.flush();
-		s.getTransaction().commit();
-		s.close();
+		scope.inSession(
+				session -> {
+					session.setCacheMode( CacheMode.IGNORE );
+					session.beginTransaction();
+					try {
+						DataPoint dp = session.load( DataPoint.class, dpOrig.getId() );
+						assertTrue( dp instanceof HibernateProxy );
+						assertFalse( Hibernate.isInitialized( dp ) );
+						checkReadOnly( session, dp, false );
+						session.setReadOnly( dp, true );
+						checkReadOnly( session, dp, true );
+						dp.setDescription( "changed" );
+						assertTrue( Hibernate.isInitialized( dp ) );
+						assertEquals( "changed", dp.getDescription() );
+						session.evict( dp );
+						assertFalse( session.contains( dp ) );
+						session.update( dp );
+						checkReadOnly( session, dp, false );
+						assertEquals( "changed", dp.getDescription() );
+						session.flush();
+						session.getTransaction().commit();
+					}
+					finally {
+						if ( session.getTransaction().isActive() ) {
+							session.getTransaction().rollback();
+						}
+					}
 
-		s = openSession( scope );
-		s.beginTransaction();
-		dp = (DataPoint) s.get( DataPoint.class, dpOrig.getId() );
-		assertEquals( "changed", dp.getDescription() );
-		assertEquals( dpOrig.getId(), dp.getId() );
-		assertEquals( dpOrig.getX(), dp.getX() );
-		assertEquals( dpOrig.getY(), dp.getY() );
-		s.delete( dp );
-		s.getTransaction().commit();
-		s.close();
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					DataPoint dp = session.get( DataPoint.class, dpOrig.getId() );
+					assertEquals( "changed", dp.getDescription() );
+					assertEquals( dpOrig.getId(), dp.getId() );
+					assertEquals( dpOrig.getX(), dp.getX() );
+					assertEquals( dpOrig.getY(), dp.getY() );
+					session.delete( dp );
+				}
+		);
 	}
 
 	@Test
 	public void testReadOnlyToModifiableInitWhenModifiedIsUpdated(SessionFactoryScope scope) {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE, scope );
 
-		Session s = openSession( scope );
-		s.setCacheMode( CacheMode.IGNORE );
-		s.beginTransaction();
-		DataPoint dp = (DataPoint) s.load( DataPoint.class, new Long( dpOrig.getId() ) );
-		assertTrue( dp instanceof HibernateProxy );
-		checkReadOnly( s, dp, false );
-		s.setReadOnly( dp, true );
-		checkReadOnly( s, dp, true );
-		s.setReadOnly( dp, false );
-		checkReadOnly( s, dp, false );
-		assertFalse( Hibernate.isInitialized( dp ) );
-		dp.setDescription( "changed" );
-		assertTrue( Hibernate.isInitialized( dp ) );
-		assertEquals( "changed", dp.getDescription() );
-		s.flush();
-		s.getTransaction().commit();
-		s.close();
+		scope.inSession(
+				session -> {
+					session.setCacheMode( CacheMode.IGNORE );
+					session.beginTransaction();
+					try {
+						DataPoint dp = session.load( DataPoint.class, dpOrig.getId() );
+						assertTrue( dp instanceof HibernateProxy );
+						checkReadOnly( session, dp, false );
+						session.setReadOnly( dp, true );
+						checkReadOnly( session, dp, true );
+						session.setReadOnly( dp, false );
+						checkReadOnly( session, dp, false );
+						assertFalse( Hibernate.isInitialized( dp ) );
+						dp.setDescription( "changed" );
+						assertTrue( Hibernate.isInitialized( dp ) );
+						assertEquals( "changed", dp.getDescription() );
+						session.flush();
+						session.getTransaction().commit();
+					}
+					finally {
+						if ( session.getTransaction().isActive() ) {
+							session.getTransaction().rollback();
+						}
+					}
+				}
+		);
 
-		s = openSession( scope );
-		s.beginTransaction();
-		dp = (DataPoint) s.get( DataPoint.class, dpOrig.getId() );
-		assertEquals( dpOrig.getId(), dp.getId() );
-		assertEquals( "changed", dp.getDescription() );
-		assertEquals( dpOrig.getX(), dp.getX() );
-		assertEquals( dpOrig.getY(), dp.getY() );
-		s.delete( dp );
-		s.getTransaction().commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					DataPoint dp = session.get( DataPoint.class, dpOrig.getId() );
+					assertEquals( dpOrig.getId(), dp.getId() );
+					assertEquals( "changed", dp.getDescription() );
+					assertEquals( dpOrig.getX(), dp.getX() );
+					assertEquals( dpOrig.getY(), dp.getY() );
+					session.delete( dp );
+				}
+		);
 	}
 
 	@Test
 	public void testReadOnlyInitToModifiableModifiedIsUpdated(SessionFactoryScope scope) {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE, scope );
 
-		Session s = openSession( scope );
-		s.setCacheMode( CacheMode.IGNORE );
-		s.beginTransaction();
-		DataPoint dp = (DataPoint) s.load( DataPoint.class, new Long( dpOrig.getId() ) );
-		assertTrue( dp instanceof HibernateProxy );
-		checkReadOnly( s, dp, false );
-		s.setReadOnly( dp, true );
-		checkReadOnly( s, dp, true );
-		assertFalse( Hibernate.isInitialized( dp ) );
-		Hibernate.initialize( dp );
-		assertTrue( Hibernate.isInitialized( dp ) );
-		checkReadOnly( s, dp, true );
-		s.setReadOnly( dp, false );
-		checkReadOnly( s, dp, false );
-		dp.setDescription( "changed" );
-		assertTrue( Hibernate.isInitialized( dp ) );
-		assertEquals( "changed", dp.getDescription() );
-		s.flush();
-		s.getTransaction().commit();
-		s.close();
+		scope.inSession(
+				session -> {
+					session.setCacheMode( CacheMode.IGNORE );
+					session.beginTransaction();
+					try {
+						DataPoint dp = session.load( DataPoint.class, dpOrig.getId() );
+						assertTrue( dp instanceof HibernateProxy );
+						checkReadOnly( session, dp, false );
+						session.setReadOnly( dp, true );
+						checkReadOnly( session, dp, true );
+						assertFalse( Hibernate.isInitialized( dp ) );
+						Hibernate.initialize( dp );
+						assertTrue( Hibernate.isInitialized( dp ) );
+						checkReadOnly( session, dp, true );
+						session.setReadOnly( dp, false );
+						checkReadOnly( session, dp, false );
+						dp.setDescription( "changed" );
+						assertTrue( Hibernate.isInitialized( dp ) );
+						assertEquals( "changed", dp.getDescription() );
+						session.flush();
+						session.getTransaction().commit();
+					}
+					finally {
+						if ( session.getTransaction().isActive() ) {
+							session.getTransaction().rollback();
+						}
+					}
+				}
+		);
 
-		s = openSession( scope );
-		s.beginTransaction();
-		dp = (DataPoint) s.get( DataPoint.class, dpOrig.getId() );
-		assertEquals( dpOrig.getId(), dp.getId() );
-		assertEquals( "changed", dp.getDescription() );
-		assertEquals( dpOrig.getX(), dp.getX() );
-		assertEquals( dpOrig.getY(), dp.getY() );
-		s.delete( dp );
-		s.getTransaction().commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					DataPoint dp = session.get( DataPoint.class, dpOrig.getId() );
+					assertEquals( dpOrig.getId(), dp.getId() );
+					assertEquals( "changed", dp.getDescription() );
+					assertEquals( dpOrig.getX(), dp.getX() );
+					assertEquals( dpOrig.getY(), dp.getY() );
+					session.delete( dp );
+				}
+		);
 	}
 
 	@Test
 	public void testReadOnlyModifiedUpdate(SessionFactoryScope scope) {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE, scope );
 
-		Session s = openSession( scope );
-		s.setCacheMode( CacheMode.IGNORE );
-		s.beginTransaction();
-		DataPoint dp = (DataPoint) s.load( DataPoint.class, new Long( dpOrig.getId() ) );
-		assertTrue( dp instanceof HibernateProxy );
-		checkReadOnly( s, dp, false );
-		s.setReadOnly( dp, true );
-		checkReadOnly( s, dp, true );
-		assertFalse( Hibernate.isInitialized( dp ) );
-		dp.setDescription( "changed" );
-		assertTrue( Hibernate.isInitialized( dp ) );
-		assertEquals( "changed", dp.getDescription() );
-		checkReadOnly( s, dp, true );
-		s.update( dp );
-		s.flush();
-		s.getTransaction().commit();
-		s.close();
+		scope.inSession(
+				session -> {
+					session.setCacheMode( CacheMode.IGNORE );
+					session.beginTransaction();
+					try {
+						DataPoint dp = session.load( DataPoint.class, dpOrig.getId() );
+						assertTrue( dp instanceof HibernateProxy );
+						checkReadOnly( session, dp, false );
+						session.setReadOnly( dp, true );
+						checkReadOnly( session, dp, true );
+						assertFalse( Hibernate.isInitialized( dp ) );
+						dp.setDescription( "changed" );
+						assertTrue( Hibernate.isInitialized( dp ) );
+						assertEquals( "changed", dp.getDescription() );
+						checkReadOnly( session, dp, true );
+						session.update( dp );
+						session.flush();
+						session.getTransaction().commit();
+					}
+					finally {
+						if ( session.getTransaction().isActive() ) {
+							session.getTransaction().rollback();
+						}
+					}
+				}
+		);
 
-		s = openSession( scope );
-		s.beginTransaction();
-		dp = (DataPoint) s.get( DataPoint.class, dpOrig.getId() );
-		assertEquals( dpOrig.getId(), dp.getId() );
-		assertEquals( dpOrig.getDescription(), dp.getDescription() );
-		assertEquals( dpOrig.getX(), dp.getX() );
-		assertEquals( dpOrig.getY(), dp.getY() );
-		s.delete( dp );
-		s.getTransaction().commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					DataPoint dp = session.get( DataPoint.class, dpOrig.getId() );
+					assertEquals( dpOrig.getId(), dp.getId() );
+					assertEquals( dpOrig.getDescription(), dp.getDescription() );
+					assertEquals( dpOrig.getX(), dp.getX() );
+					assertEquals( dpOrig.getY(), dp.getY() );
+					session.delete( dp );
+				}
+		);
 	}
 
 	@Test
 	public void testReadOnlyDelete(SessionFactoryScope scope) {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE, scope );
 
-		Session s = openSession( scope );
-		s.setCacheMode( CacheMode.IGNORE );
-		s.beginTransaction();
-		DataPoint dp = (DataPoint) s.load( DataPoint.class, new Long( dpOrig.getId() ) );
-		assertTrue( dp instanceof HibernateProxy );
-		checkReadOnly( s, dp, false );
-		s.setReadOnly( dp, true );
-		checkReadOnly( s, dp, true );
-		assertFalse( Hibernate.isInitialized( dp ) );
-		s.delete( dp );
-		s.flush();
-		s.getTransaction().commit();
-		s.close();
+		scope.inSession(
+				session -> {
+					session.setCacheMode( CacheMode.IGNORE );
+					session.beginTransaction();
+					try {
+						DataPoint dp = session.load( DataPoint.class, dpOrig.getId() );
+						assertTrue( dp instanceof HibernateProxy );
+						checkReadOnly( session, dp, false );
+						session.setReadOnly( dp, true );
+						checkReadOnly( session, dp, true );
+						assertFalse( Hibernate.isInitialized( dp ) );
+						session.delete( dp );
+						session.flush();
+						session.getTransaction().commit();
+					}
+					finally {
+						if ( session.getTransaction().isActive() ) {
+							session.getTransaction().rollback();
+						}
+					}
+				}
+		);
 
-		s = openSession( scope );
-		s.beginTransaction();
-		dp = (DataPoint) s.get( DataPoint.class, dpOrig.getId() );
-		assertNull( dp );
-		s.getTransaction().commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					DataPoint dp = session.get( DataPoint.class, dpOrig.getId() );
+					assertNull( dp );
+				}
+		);
 	}
 
 	@Test
@@ -855,7 +1098,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s = openSession( scope );
 		s.setCacheMode( CacheMode.IGNORE );
 		t = s.beginTransaction();
-		dp = (DataPoint) s.load( DataPoint.class, dp.getId() );
+		dp = s.load( DataPoint.class, dp.getId() );
 		s.setReadOnly( dp, true );
 		assertFalse( Hibernate.isInitialized( dp ) );
 		s.refresh( dp );
@@ -876,7 +1119,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 
 		s.clear();
 		t = s.beginTransaction();
-		dp = (DataPoint) s.get( DataPoint.class, dp.getId() );
+		dp = s.get( DataPoint.class, dp.getId() );
 		assertEquals( "original", dp.getDescription() );
 		s.delete( dp );
 		t.commit();
@@ -907,7 +1150,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s = openSession( scope );
 		s.setCacheMode( CacheMode.IGNORE );
 		t = s.beginTransaction();
-		dp = (DataPoint) s.get( DataPoint.class, dp.getId() );
+		dp = s.get( DataPoint.class, dp.getId() );
 		s.delete( dp );
 		s.flush();
 		try {
@@ -925,7 +1168,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s = openSession( scope );
 		t = s.beginTransaction();
 		s.setCacheMode( CacheMode.IGNORE );
-		DataPoint dpProxyInit = (DataPoint) s.load( DataPoint.class, dp.getId() );
+		DataPoint dpProxyInit = s.load( DataPoint.class, dp.getId() );
 		assertEquals( "original", dp.getDescription() );
 		s.delete( dpProxyInit );
 		t.commit();
@@ -981,7 +1224,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s = openSession( scope );
 		s.setCacheMode( CacheMode.IGNORE );
 		t = s.beginTransaction();
-		dp = (DataPoint) s.load( DataPoint.class, dp.getId() );
+		dp = s.load( DataPoint.class, dp.getId() );
 		assertFalse( Hibernate.isInitialized( dp ) );
 		assertFalse( s.isReadOnly( dp ) );
 		s.setReadOnly( dp, true );
@@ -1002,7 +1245,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 
 		s.clear();
 		t = s.beginTransaction();
-		dp = (DataPoint) s.get( DataPoint.class, dp.getId() );
+		dp = s.get( DataPoint.class, dp.getId() );
 		assertEquals( "original", dp.getDescription() );
 		s.delete( dp );
 		t.commit();
@@ -1016,7 +1259,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		Session s = openSession( scope );
 		s.setCacheMode( CacheMode.IGNORE );
 		s.beginTransaction();
-		DataPoint dp = (DataPoint) s.load( DataPoint.class, new Long( dpOrig.getId() ) );
+		DataPoint dp = s.load( DataPoint.class, dpOrig.getId() );
 		assertTrue( dp instanceof HibernateProxy );
 		checkReadOnly( s, dp, false );
 		assertFalse( Hibernate.isInitialized( dp ) );
@@ -1031,7 +1274,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s = openSession( scope );
 		s.setCacheMode( CacheMode.IGNORE );
 		s.beginTransaction();
-		DataPoint dpLoaded = (DataPoint) s.load( DataPoint.class, new Long( dpOrig.getId() ) );
+		DataPoint dpLoaded = s.load( DataPoint.class, dpOrig.getId() );
 		assertTrue( dpLoaded instanceof HibernateProxy );
 		checkReadOnly( s, dpLoaded, false );
 		s.setReadOnly( dpLoaded, true );
@@ -1065,7 +1308,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		Session s = openSession( scope );
 		s.setCacheMode( CacheMode.IGNORE );
 		s.beginTransaction();
-		DataPoint dp = (DataPoint) s.load( DataPoint.class, new Long( dpOrig.getId() ) );
+		DataPoint dp = s.load( DataPoint.class, dpOrig.getId() );
 		assertTrue( dp instanceof HibernateProxy );
 		checkReadOnly( s, dp, false );
 		assertFalse( Hibernate.isInitialized( dp ) );
@@ -1080,7 +1323,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s = openSession( scope );
 		s.setCacheMode( CacheMode.IGNORE );
 		s.beginTransaction();
-		DataPoint dpLoaded = (DataPoint) s.load( DataPoint.class, new Long( dpOrig.getId() ) );
+		DataPoint dpLoaded = s.load( DataPoint.class, dpOrig.getId() );
 		assertTrue( dpLoaded instanceof HibernateProxy );
 		assertFalse( Hibernate.isInitialized( dpLoaded ) );
 		Hibernate.initialize( dpLoaded );
@@ -1098,7 +1341,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 
 		s = openSession( scope );
 		s.beginTransaction();
-		dp = (DataPoint) s.get( DataPoint.class, dpOrig.getId() );
+		dp = s.get( DataPoint.class, dpOrig.getId() );
 		assertEquals( dpOrig.getId(), dp.getId() );
 		assertEquals( dpOrig.getDescription(), dp.getDescription() );
 		assertEquals( dpOrig.getX(), dp.getX() );
@@ -1115,7 +1358,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		Session s = openSession( scope );
 		s.setCacheMode( CacheMode.IGNORE );
 		s.beginTransaction();
-		DataPoint dp = (DataPoint) s.load( DataPoint.class, new Long( dpOrig.getId() ) );
+		DataPoint dp = s.load( DataPoint.class, dpOrig.getId() );
 		assertTrue( dp instanceof HibernateProxy );
 		checkReadOnly( s, dp, false );
 		assertFalse( Hibernate.isInitialized( dp ) );
@@ -1131,7 +1374,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s = openSession( scope );
 		s.setCacheMode( CacheMode.IGNORE );
 		s.beginTransaction();
-		DataPoint dpLoaded = (DataPoint) s.load( DataPoint.class, new Long( dpOrig.getId() ) );
+		DataPoint dpLoaded = s.load( DataPoint.class, dpOrig.getId() );
 		assertTrue( dpLoaded instanceof HibernateProxy );
 		checkReadOnly( s, dpLoaded, false );
 		s.setReadOnly( dpLoaded, true );
@@ -1148,7 +1391,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 
 		s = openSession( scope );
 		s.beginTransaction();
-		dp = (DataPoint) s.get( DataPoint.class, dpOrig.getId() );
+		dp = s.get( DataPoint.class, dpOrig.getId() );
 		assertEquals( dpOrig.getId(), dp.getId() );
 		assertEquals( dpOrig.getDescription(), dp.getDescription() );
 		assertEquals( dpOrig.getX(), dp.getX() );
@@ -1165,7 +1408,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		Session s = openSession( scope );
 		s.setCacheMode( CacheMode.IGNORE );
 		s.beginTransaction();
-		DataPoint dp = (DataPoint) s.load( DataPoint.class, new Long( dpOrig.getId() ) );
+		DataPoint dp = s.load( DataPoint.class, dpOrig.getId() );
 		assertTrue( dp instanceof HibernateProxy );
 		checkReadOnly( s, dp, false );
 		assertFalse( Hibernate.isInitialized( dp ) );
@@ -1181,7 +1424,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s = openSession( scope );
 		s.setCacheMode( CacheMode.IGNORE );
 		s.beginTransaction();
-		DataPoint dpLoaded = (DataPoint) s.load( DataPoint.class, new Long( dpOrig.getId() ) );
+		DataPoint dpLoaded = s.load( DataPoint.class, dpOrig.getId() );
 		assertTrue( dpLoaded instanceof HibernateProxy );
 		assertFalse( Hibernate.isInitialized( dpLoaded ) );
 		Hibernate.initialize( dpLoaded );
@@ -1199,7 +1442,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 
 		s = openSession( scope );
 		s.beginTransaction();
-		dp = (DataPoint) s.get( DataPoint.class, dpOrig.getId() );
+		dp = s.get( DataPoint.class, dpOrig.getId() );
 		assertEquals( dpOrig.getId(), dp.getId() );
 		assertEquals( dpOrig.getDescription(), dp.getDescription() );
 		assertEquals( dpOrig.getX(), dp.getX() );
@@ -1216,7 +1459,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		Session s = openSession( scope );
 		s.setCacheMode( CacheMode.IGNORE );
 		s.beginTransaction();
-		DataPoint dp = (DataPoint) s.load( DataPoint.class, new Long( dpOrig.getId() ) );
+		DataPoint dp = s.load( DataPoint.class, dpOrig.getId() );
 		assertTrue( dp instanceof HibernateProxy );
 		checkReadOnly( s, dp, false );
 		assertFalse( Hibernate.isInitialized( dp ) );
@@ -1231,7 +1474,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s = openSession( scope );
 		s.setCacheMode( CacheMode.IGNORE );
 		s.beginTransaction();
-		DataPoint dpEntity = (DataPoint) s.get( DataPoint.class, new Long( dpOrig.getId() ) );
+		DataPoint dpEntity = s.get( DataPoint.class, dpOrig.getId() );
 		assertFalse( dpEntity instanceof HibernateProxy );
 		assertFalse( s.isReadOnly( dpEntity ) );
 		s.setReadOnly( dpEntity, true );
@@ -1246,7 +1489,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 
 		s = openSession( scope );
 		s.beginTransaction();
-		dp = (DataPoint) s.get( DataPoint.class, dpOrig.getId() );
+		dp = s.get( DataPoint.class, dpOrig.getId() );
 		assertEquals( dpOrig.getId(), dp.getId() );
 		assertEquals( dpOrig.getDescription(), dp.getDescription() );
 		assertEquals( dpOrig.getX(), dp.getX() );
@@ -1264,7 +1507,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s.setCacheMode( CacheMode.IGNORE );
 
 		s.beginTransaction();
-		DataPoint dp = (DataPoint) s.load( DataPoint.class, new Long( dpOrig.getId() ) );
+		DataPoint dp = s.load( DataPoint.class, dpOrig.getId() );
 		assertTrue( dp instanceof HibernateProxy );
 		assertFalse( Hibernate.isInitialized( dp ) );
 		checkReadOnly( s, dp, false );
@@ -1290,7 +1533,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 
 		s = openSession( scope );
 		s.beginTransaction();
-		dp = (DataPoint) s.get( DataPoint.class, dpOrig.getId() );
+		dp = s.get( DataPoint.class, dpOrig.getId() );
 		assertEquals( dpOrig.getId(), dp.getId() );
 		assertEquals( dpOrig.getDescription(), dp.getDescription() );
 		assertEquals( dpOrig.getX(), dp.getX() );
@@ -1308,7 +1551,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s.setCacheMode( CacheMode.IGNORE );
 
 		s.beginTransaction();
-		DataPoint dp = (DataPoint) s.load( DataPoint.class, new Long( dpOrig.getId() ) );
+		DataPoint dp = s.load( DataPoint.class, dpOrig.getId() );
 		assertTrue( dp instanceof HibernateProxy );
 		assertFalse( Hibernate.isInitialized( dp ) );
 		checkReadOnly( s, dp, false );
@@ -1334,7 +1577,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 
 		s = openSession( scope );
 		s.beginTransaction();
-		dp = (DataPoint) s.get( DataPoint.class, dpOrig.getId() );
+		dp = s.get( DataPoint.class, dpOrig.getId() );
 		assertEquals( dpOrig.getId(), dp.getId() );
 		assertEquals( "changed", dp.getDescription() );
 		assertEquals( dpOrig.getX(), dp.getX() );
@@ -1468,7 +1711,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s.setCacheMode( CacheMode.IGNORE );
 
 		s.beginTransaction();
-		DataPoint dp = (DataPoint) s.load( DataPoint.class, new Long( dpOrig.getId() ) );
+		DataPoint dp = s.load( DataPoint.class, dpOrig.getId() );
 		assertTrue( dp instanceof HibernateProxy );
 		assertFalse( Hibernate.isInitialized( dp ) );
 		checkReadOnly( s, dp, false );
@@ -1500,7 +1743,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s.setCacheMode( CacheMode.IGNORE );
 
 		s.beginTransaction();
-		DataPoint dp = (DataPoint) s.load( DataPoint.class, new Long( dpOrig.getId() ) );
+		DataPoint dp = s.load( DataPoint.class, dpOrig.getId() );
 		assertTrue( dp instanceof HibernateProxy );
 		assertFalse( Hibernate.isInitialized( dp ) );
 		checkReadOnly( s, dp, false );
@@ -1530,7 +1773,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s.setCacheMode( CacheMode.IGNORE );
 
 		s.beginTransaction();
-		DataPoint dp = (DataPoint) s.load( DataPoint.class, new Long( dpOrig.getId() ) );
+		DataPoint dp = s.load( DataPoint.class, dpOrig.getId() );
 		assertTrue( dp instanceof HibernateProxy );
 		assertFalse( Hibernate.isInitialized( dp ) );
 		checkReadOnly( s, dp, false );
@@ -1562,7 +1805,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s.setCacheMode( CacheMode.IGNORE );
 
 		s.beginTransaction();
-		DataPoint dp = (DataPoint) s.load( DataPoint.class, new Long( dpOrig.getId() ) );
+		DataPoint dp = s.load( DataPoint.class, dpOrig.getId() );
 		assertTrue( dp instanceof HibernateProxy );
 		assertFalse( Hibernate.isInitialized( dp ) );
 		checkReadOnly( s, dp, false );
@@ -1596,7 +1839,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s.setCacheMode( CacheMode.IGNORE );
 
 		s.beginTransaction();
-		DataPoint dp = (DataPoint) s.load( DataPoint.class, new Long( dpOrig.getId() ) );
+		DataPoint dp = s.load( DataPoint.class, dpOrig.getId() );
 		assertTrue( dp instanceof HibernateProxy );
 		assertFalse( Hibernate.isInitialized( dp ) );
 		checkReadOnly( s, dp, false );
@@ -1631,7 +1874,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s.setCacheMode( CacheMode.IGNORE );
 
 		s.beginTransaction();
-		DataPoint dp = (DataPoint) s.load( DataPoint.class, new Long( dpOrig.getId() ) );
+		DataPoint dp = s.load( DataPoint.class, dpOrig.getId() );
 		assertTrue( dp instanceof HibernateProxy );
 		assertFalse( Hibernate.isInitialized( dp ) );
 		checkReadOnly( s, dp, false );
@@ -1663,7 +1906,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s.setCacheMode( CacheMode.IGNORE );
 
 		s.beginTransaction();
-		DataPoint dp = (DataPoint) s.load( DataPoint.class, new Long( dpOrig.getId() ) );
+		DataPoint dp = s.load( DataPoint.class, dpOrig.getId() );
 		assertTrue( dp instanceof HibernateProxy );
 		assertFalse( Hibernate.isInitialized( dp ) );
 		checkReadOnly( s, dp, false );

@@ -6,7 +6,7 @@
  */
 
 //$Id: Enrolment.java 6970 2005-05-31 20:24:41Z oneovthafew $
-package org.hibernate.test.readonly;
+package org.hibernate.orm.test.readonly;
 import java.io.Serializable;
 
 /**

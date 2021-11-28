@@ -6,7 +6,7 @@
  */
 
 //$Id: Student.java 9116 2006-01-23 21:21:01Z steveebersole $
-package org.hibernate.test.readonly;
+package org.hibernate.orm.test.readonly;
 import java.util.HashSet;
 import java.util.Set;
 

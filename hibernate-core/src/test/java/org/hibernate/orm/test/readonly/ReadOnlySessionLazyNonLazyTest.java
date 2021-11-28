@@ -20,11 +20,6 @@ import org.hibernate.proxy.HibernateProxy;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.test.readonly.AbstractReadOnlyTest;
-import org.hibernate.test.readonly.Container;
-import org.hibernate.test.readonly.DataPoint;
-import org.hibernate.test.readonly.Info;
-import org.hibernate.test.readonly.Owner;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -56,7 +51,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Gail Badner
  */
 @DomainModel(
-		xmlMappings = { "org/hibernate/test/readonly/DataPoint.hbm.xml" }
+		xmlMappings = { "org/hibernate/orm/test/readonly/DataPoint.hbm.xml" }
 )
 public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 

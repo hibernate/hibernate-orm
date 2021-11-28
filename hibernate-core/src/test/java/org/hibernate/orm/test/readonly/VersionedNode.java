@@ -7,7 +7,7 @@
 
 //$Id: $
 
-package org.hibernate.test.readonly;
+package org.hibernate.orm.test.readonly;
 import java.util.HashSet;
 import java.util.Set;
 

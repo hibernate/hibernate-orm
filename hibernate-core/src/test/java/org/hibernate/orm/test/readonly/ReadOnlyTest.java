@@ -17,9 +17,6 @@ import org.hibernate.Transaction;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.test.readonly.AbstractReadOnlyTest;
-import org.hibernate.test.readonly.DataPoint;
-import org.hibernate.test.readonly.TextHolder;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -34,8 +31,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @DomainModel(
 		xmlMappings = {
-				"org/hibernate/test/readonly/DataPoint.hbm.xml",
-				"org/hibernate/test/readonly/TextHolder.hbm.xml"
+				"org/hibernate/orm/test/readonly/DataPoint.hbm.xml",
+				"org/hibernate/orm/test/readonly/TextHolder.hbm.xml"
 		}
 )
 public class ReadOnlyTest extends AbstractReadOnlyTest {

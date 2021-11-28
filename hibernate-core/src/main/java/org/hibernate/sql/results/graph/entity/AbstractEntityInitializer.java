@@ -872,13 +872,8 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	private boolean isReadOnly(
 			RowProcessingState rowProcessingState,
 			SharedSessionContractImplementor persistenceContext) {
-		if ( persistenceContext.isDefaultReadOnly() ) {
-			return true;
-		}
-
-		final Boolean queryOption = rowProcessingState.getJdbcValuesSourceProcessingState().getQueryOptions().isReadOnly();
-
-		return queryOption == null ? false : queryOption;
+		final Boolean readOnly = rowProcessingState.getQueryOptions().isReadOnly();
+		return readOnly == null ? persistenceContext.isDefaultReadOnly() : readOnly;
 	}
 
 	private void preLoad(RowProcessingState rowProcessingState) {

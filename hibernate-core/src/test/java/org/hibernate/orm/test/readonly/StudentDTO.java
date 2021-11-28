@@ -9,7 +9,7 @@
  * Created on 28-Jan-2005
  *
  */
-package org.hibernate.test.readonly;
+package org.hibernate.orm.test.readonly;
 
 
 /**

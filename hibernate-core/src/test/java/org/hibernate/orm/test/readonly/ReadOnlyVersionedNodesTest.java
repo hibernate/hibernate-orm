@@ -9,8 +9,6 @@ package org.hibernate.orm.test.readonly;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.test.readonly.AbstractReadOnlyTest;
-import org.hibernate.test.readonly.VersionedNode;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -23,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
  * @author Gail Badner
  */
 @DomainModel(
-		xmlMappings = "org/hibernate/test/readonly/VersionedNode.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/readonly/VersionedNode.hbm.xml"
 )
 public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 

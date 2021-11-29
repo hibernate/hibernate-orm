@@ -6,7 +6,7 @@
  */
 
 //$Id$
-package org.hibernate.test.annotations.various;
+package org.hibernate.orm.test.annotations.various;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;

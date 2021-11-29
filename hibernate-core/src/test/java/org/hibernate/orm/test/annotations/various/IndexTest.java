@@ -8,70 +8,80 @@ package org.hibernate.orm.test.annotations.various;
 
 import java.util.Date;
 
-import org.junit.Test;
-
-import org.hibernate.Session;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.test.annotations.various.Conductor;
-import org.hibernate.test.annotations.various.ProfessionalAgreement;
-import org.hibernate.test.annotations.various.Truck;
-import org.hibernate.test.annotations.various.Vehicule;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Emmanuel Bernard
  */
-public class IndexTest extends BaseCoreFunctionalTestCase {
-	@Test
-	public void testIndexManyToOne() throws Exception {
-		//TODO find a way to test indexes???
-		Session s = openSession();
-		s.getTransaction().begin();
-		Conductor emmanuel = new Conductor();
-		emmanuel.setName( "Emmanuel" );
-		s.persist( emmanuel );
-		Vehicule tank = new Vehicule();
-		tank.setCurrentConductor( emmanuel );
-		tank.setRegistrationNumber( "324VX43" );
-		s.persist( tank );
-		s.flush();
-		s.delete( tank );
-		s.delete( emmanuel );
-		s.getTransaction().rollback();
-		s.close();
-	}
-
-	@Test
-	public void testIndexAndJoined() throws Exception {
-		Session s = openSession();
-		s.getTransaction().begin();
-		Conductor cond = new Conductor();
-		cond.setName( "Bob" );
-		s.persist( cond );
-		ProfessionalAgreement agreement = new ProfessionalAgreement();
-		agreement.setExpirationDate( new Date() );
-		s.persist( agreement );
-		Truck truck = new Truck();
-		truck.setAgreement( agreement );
-		truck.setWeight( 20 );
-		truck.setRegistrationNumber( "2003424" );
-		truck.setYear( 2005 );
-		truck.setCurrentConductor( cond );
-		s.persist( truck );
-		s.flush();
-		s.delete( truck );
-		s.delete( agreement );
-		s.delete( cond );
-		s.getTransaction().rollback();
-		s.close();
-	}
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[]{
+@DomainModel(
+		annotatedClasses = {
 				Conductor.class,
 				Vehicule.class,
 				ProfessionalAgreement.class,
 				Truck.class
-		};
+		}
+)
+@SessionFactory
+public class IndexTest {
+
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery( "delete from Conductor" ).executeUpdate();
+					session.createQuery( "delete from Vehicule" ).executeUpdate();
+					session.createQuery( "delete from ProfessionalAgreement" ).executeUpdate();
+					session.createQuery( "delete from Truck" ).executeUpdate();
+				}
+		);
 	}
+
+	@Test
+	public void testIndexManyToOne(SessionFactoryScope scope) {
+		//TODO find a way to test indexes???
+		scope.inTransaction(
+				session -> {
+					Conductor emmanuel = new Conductor();
+					emmanuel.setName( "Emmanuel" );
+					session.persist( emmanuel );
+					Vehicule tank = new Vehicule();
+					tank.setCurrentConductor( emmanuel );
+					tank.setRegistrationNumber( "324VX43" );
+					session.persist( tank );
+					session.flush();
+					session.delete( tank );
+					session.delete( emmanuel );
+				}
+		);
+	}
+
+	@Test
+	public void testIndexAndJoined(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					Conductor cond = new Conductor();
+					cond.setName( "Bob" );
+					session.persist( cond );
+					ProfessionalAgreement agreement = new ProfessionalAgreement();
+					agreement.setExpirationDate( new Date() );
+					session.persist( agreement );
+					Truck truck = new Truck();
+					truck.setAgreement( agreement );
+					truck.setWeight( 20 );
+					truck.setRegistrationNumber( "2003424" );
+					truck.setYear( 2005 );
+					truck.setCurrentConductor( cond );
+					session.persist( truck );
+					session.flush();
+					session.delete( truck );
+					session.delete( agreement );
+					session.delete( cond );
+				}
+		);
+	}
+
 }

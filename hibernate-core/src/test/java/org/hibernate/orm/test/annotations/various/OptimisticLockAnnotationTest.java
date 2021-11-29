@@ -6,50 +6,48 @@
  */
 package org.hibernate.orm.test.annotations.various;
 
-import org.junit.Test;
 
-import org.hibernate.Session;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.test.annotations.various.Conductor;
-
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Test for the @OptimisticLock annotation.
  *
  * @author Emmanuel Bernard
  */
-public class OptimisticLockAnnotationTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = Conductor.class
+)
+@SessionFactory
+public class OptimisticLockAnnotationTest {
+
 	@Test
-	public void testOptimisticLockExcludeOnNameProperty() throws Exception {
-		Conductor c = new Conductor();
-		c.setName( "Bob" );
-		Session s = openSession();
-		s.getTransaction().begin();
-		s.persist( c );
-		s.flush();
+	public void testOptimisticLockExcludeOnNameProperty(SessionFactoryScope scope) {
 
-		s.clear();
 
-		c = ( Conductor ) s.get( Conductor.class, c.getId() );
-		Long version = c.getVersion();
-		c.setName( "Don" );
-		s.flush();
+		scope.inTransaction(
+				session -> {
+					Conductor c = new Conductor();
+					c.setName( "Bob" );
+					session.persist( c );
+					session.flush();
 
-		s.clear();
+					session.clear();
 
-		c = ( Conductor ) s.get( Conductor.class, c.getId() );
-		assertEquals( version, c.getVersion() );
+					c = session.get( Conductor.class, c.getId() );
+					Long version = c.getVersion();
+					c.setName( "Don" );
+					session.flush();
 
-		s.getTransaction().rollback();
-		s.close();
-	}
+					session.clear();
 
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				Conductor.class
-		};
+					c = session.get( Conductor.class, c.getId() );
+					assertEquals( version, c.getVersion() );
+				}
+		);
 	}
 }

@@ -351,7 +351,7 @@ public class DomainResultCreationStateImpl
 				}
 				FetchBuilder explicitFetchBuilder = fetchBuilderResolverStack
 						.getCurrent()
-						.apply(  fullPath );
+						.apply( fullPath );
 
 				final FetchBuilder fetchBuilder;
 				if ( explicitFetchBuilder != null ) {

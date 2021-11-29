@@ -345,9 +345,14 @@ public class DomainResultCreationStateImpl
 				relativePathStack.push( relativePath );
 			}
 			try {
-				final FetchBuilder explicitFetchBuilder = fetchBuilderResolverStack
+				String fullPath = relativePath.getFullPath();
+				if ( fullPath.contains( EntityIdentifierMapping.ROLE_LOCAL_NAME ) ) {
+					fullPath = fullPath.replace( EntityIdentifierMapping.ROLE_LOCAL_NAME + ".", "" );
+				}
+				FetchBuilder explicitFetchBuilder = fetchBuilderResolverStack
 						.getCurrent()
-						.apply( relativePath.getFullPath() );
+						.apply(  fullPath );
+
 				final FetchBuilder fetchBuilder;
 				if ( explicitFetchBuilder != null ) {
 					fetchBuilder = explicitFetchBuilder;

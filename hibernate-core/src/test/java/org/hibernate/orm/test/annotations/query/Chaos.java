@@ -6,7 +6,7 @@
  */
 
 //$Id$
-package org.hibernate.test.annotations.query;
+package org.hibernate.orm.test.annotations.query;
 import java.util.HashSet;
 import java.util.Set;
 import jakarta.persistence.Column;

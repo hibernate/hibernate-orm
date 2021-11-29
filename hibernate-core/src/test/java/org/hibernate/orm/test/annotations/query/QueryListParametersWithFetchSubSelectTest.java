@@ -4,27 +4,31 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.test.annotations.query;
+package org.hibernate.orm.test.annotations.query;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import org.hibernate.Hibernate;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.TypedQuery;
-
-import org.hibernate.Hibernate;
-import org.hibernate.annotations.Fetch;
-import org.hibernate.annotations.FetchMode;
-import org.hibernate.cfg.Configuration;
-
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.jdbc.SQLStatementInterceptor;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -33,23 +37,20 @@ import static org.assertj.core.api.Assertions.assertThat;
  * particularly when using {@code @Fetch(FetchMode.SUBSELECT)}
  * (because this fetch mode involves building a map of parameters).
  */
-public class QueryListParametersWithFetchSubSelectTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				QueryListParametersWithFetchSubSelectTest.Parent.class,
+				QueryListParametersWithFetchSubSelectTest.Child.class
+		}
+)
+@SessionFactory(
+		statementInspectorClass = SQLStatementInspector.class
+)
+public class QueryListParametersWithFetchSubSelectTest {
 
-	private SQLStatementInterceptor sqlStatementInterceptor;
-
-	@Override
-	protected void configure(Configuration configuration) {
-		sqlStatementInterceptor = new SQLStatementInterceptor( configuration );
-	}
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { Parent.class, Child.class };
-	}
-
-	@Override
-	protected void afterSessionFactoryBuilt() {
-		inTransaction( s -> {
+	@BeforeAll
+	protected void setUp(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			for ( int i = 0; i < 10; i++ ) {
 				Parent parent = new Parent( i );
 				s.persist( parent );
@@ -63,10 +64,11 @@ public class QueryListParametersWithFetchSubSelectTest extends BaseCoreFunctiona
 	}
 
 	@Test
-	public void simple() {
+	public void simpleTest(SessionFactoryScope scope) {
+		final SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
 		sqlStatementInterceptor.clear();
 
-		inTransaction( s -> {
+		scope.inTransaction( s -> {
 			TypedQuery<Parent> query = s.createQuery( "select p from Parent p where id in :ids", Parent.class );
 			query.setParameter( "ids", Arrays.asList( 0, 1, 2 ) );
 			List<Parent> results = query.getResultList();
@@ -82,10 +84,12 @@ public class QueryListParametersWithFetchSubSelectTest extends BaseCoreFunctiona
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-14439")
-	public void reusingQueryWithFewerNamedParameters() {
+	public void reusingQueryWithFewerNamedParameters(SessionFactoryScope scope) {
+		final SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+
 		sqlStatementInterceptor.clear();
 
-		inTransaction( s -> {
+		scope.inTransaction( s -> {
 			TypedQuery<Parent> query = s.createQuery( "select p from Parent p where id in :ids", Parent.class );
 
 			query.setParameter( "ids", Arrays.asList( 0, 1, 2, 3 ) );
@@ -115,25 +119,27 @@ public class QueryListParametersWithFetchSubSelectTest extends BaseCoreFunctiona
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-14439")
-	public void reusingQueryWithFewerOrdinalParameters() {
+	public void reusingQueryWithFewerOrdinalParameters(SessionFactoryScope scope) {
+		final SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+
 		sqlStatementInterceptor.clear();
 
-		inTransaction( s -> {
-			TypedQuery<Parent> query = s.createQuery( "select p from Parent p where id in ?0", Parent.class );
+		scope.inTransaction( s -> {
+			TypedQuery<Parent> query = s.createQuery( "select p from Parent p where id in ?1", Parent.class );
 
-			query.setParameter( 0, Arrays.asList( 0, 1, 2, 3 ) );
+			query.setParameter( 1, Arrays.asList( 0, 1, 2, 3 ) );
 			List<Parent> results = query.getResultList();
 			assertThat( results )
 					.allSatisfy( parent -> assertThat( Hibernate.isInitialized( parent.getChildren() ) ).isTrue() )
 					.extracting( Parent::getId ).containsExactly( 0, 1, 2, 3 );
 
-			query.setParameter( 0, Arrays.asList( 4, 5, 6 ) );
+			query.setParameter( 1, Arrays.asList( 4, 5, 6 ) );
 			results = query.getResultList();
 			assertThat( results )
 					.allSatisfy( parent -> assertThat( Hibernate.isInitialized( parent.getChildren() ) ).isTrue() )
 					.extracting( Parent::getId ).containsExactly( 4, 5, 6 );
 
-			query.setParameter( 0, Arrays.asList( 7, 8 ) );
+			query.setParameter( 1, Arrays.asList( 7, 8 ) );
 			results = query.getResultList();
 			assertThat( results )
 					.allSatisfy( parent -> assertThat( Hibernate.isInitialized( parent.getChildren() ) ).isTrue() )

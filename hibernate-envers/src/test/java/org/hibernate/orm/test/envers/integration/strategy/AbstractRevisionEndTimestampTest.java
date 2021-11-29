@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.SybaseASE15Dialect;
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.envers.enhanced.SequenceIdRevisionEntity;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
@@ -58,7 +58,7 @@ public abstract class AbstractRevisionEndTimestampTest extends BaseEnversJPAFunc
 				// revision end timestamp field as well.
 				final Date timestamp = (Date) timestampParentClass;
 				final Dialect dialect = getDialect();
-				if ( dialect instanceof SybaseASE15Dialect) {
+				if ( dialect instanceof SybaseDialect ) {
 					// Sybase DATETIME are accurate to 1/300 second on platforms that support that level of
 					// granularity.
 					assertEquals( timestamp.getTime() / 1000.0, revisionEnd.getTimestamp() / 1000.0, 1.0 / 300.0 );

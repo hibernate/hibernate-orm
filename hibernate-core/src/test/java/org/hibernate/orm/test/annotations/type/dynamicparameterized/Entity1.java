@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.annotations.type.dynamicparameterized;
+package org.hibernate.orm.test.annotations.type.dynamicparameterized;
 
 import org.hibernate.annotations.CustomType;
 import org.hibernate.annotations.Parameter;
@@ -36,31 +36,31 @@ import jakarta.persistence.Table;
  * @author Daniel Gredler
  */
 @Entity
-@Table(name = "ENTITY2")
+@Table(name = "ENTITY1")
 @Access(AccessType.FIELD)
-public class Entity2 extends AbstractEntity {
+public class Entity1 extends AbstractEntity {
 
 	@Column(name = "PROP1")
 	@CustomType( MyStringType.class )
-	String entity2_Prop1;
+	String entity1_Prop1;
 
 	@Column(name = "PROP2")
 	@CustomType( MyStringType.class )
-	String entity2_Prop2;
+	String entity1_Prop2;
 
 	@Column(name = "PROP3")
-	@CustomType( MyStringType.class )
-	String entity2_Prop3;
+	@CustomType( value = MyStringType.class, parameters = @Parameter(name = "suffix", value = "foo"))
+	String entity1_Prop3;
 
 	@Column(name = "PROP4")
-	@CustomType( MyStringType.class )
-	String entity2_Prop4;
+	@CustomType( value = MyStringType.class, parameters = @Parameter(name = "suffix", value = "bar"))
+	String entity1_Prop4;
 
 	@Column(name = "PROP5")
-	@CustomType( value = MyStringType.class, parameters = @Parameter(name = "suffix", value = "blah"))
-	String entity2_Prop5;
+	@CustomType( MyStringType.class )
+	String entity1_Prop5;
 
 	@Column(name = "PROP6")
-	@CustomType( value = MyStringType.class, parameters = @Parameter(name = "suffix", value = "yeah"))
-	String entity2_Prop6;
+	@CustomType( MyStringType.class )
+	String entity1_Prop6;
 }

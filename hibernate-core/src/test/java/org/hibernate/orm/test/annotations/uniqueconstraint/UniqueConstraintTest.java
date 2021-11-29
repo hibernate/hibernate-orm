@@ -12,9 +12,6 @@ import org.hibernate.JDBCException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.test.annotations.uniqueconstraint.Building;
-import org.hibernate.test.annotations.uniqueconstraint.House;
-import org.hibernate.test.annotations.uniqueconstraint.Room;
 import org.junit.Test;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;

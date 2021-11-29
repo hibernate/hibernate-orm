@@ -6,7 +6,7 @@
  */
 
 //$Id$
-package org.hibernate.test.annotations.query;
+package org.hibernate.orm.test.annotations.query;
 import java.util.Date;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

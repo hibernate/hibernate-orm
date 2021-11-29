@@ -21,25 +21,46 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.annotations.type.dynamicparameterized;
+package org.hibernate.orm.test.annotations.type.dynamicparameterized;
 
-import java.util.Date;
+import org.hibernate.annotations.CustomType;
+import org.hibernate.annotations.Parameter;
 
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
 import jakarta.persistence.Column;
-import jakarta.persistence.Id;
-import jakarta.persistence.MappedSuperclass;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 
 /**
  * @author Daniel Gredler
  */
-@MappedSuperclass
-public abstract class AbstractEntity {
+@Entity
+@Table(name = "ENTITY2")
+@Access(AccessType.FIELD)
+public class Entity2 extends AbstractEntity {
 
-	@Id
-	@Temporal(TemporalType.DATE)
-	@Column(name = "ID")
-	Date id;
+	@Column(name = "PROP1")
+	@CustomType( MyStringType.class )
+	String entity2_Prop1;
 
+	@Column(name = "PROP2")
+	@CustomType( MyStringType.class )
+	String entity2_Prop2;
+
+	@Column(name = "PROP3")
+	@CustomType( MyStringType.class )
+	String entity2_Prop3;
+
+	@Column(name = "PROP4")
+	@CustomType( MyStringType.class )
+	String entity2_Prop4;
+
+	@Column(name = "PROP5")
+	@CustomType( value = MyStringType.class, parameters = @Parameter(name = "suffix", value = "blah"))
+	String entity2_Prop5;
+
+	@Column(name = "PROP6")
+	@CustomType( value = MyStringType.class, parameters = @Parameter(name = "suffix", value = "yeah"))
+	String entity2_Prop6;
 }

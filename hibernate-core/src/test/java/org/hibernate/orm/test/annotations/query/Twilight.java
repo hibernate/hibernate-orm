@@ -5,27 +5,29 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
-//$Id$
-package org.hibernate.test.annotations.query;
+//$Id: BasicHibernateAnnotationsTest.java 17531 2009-09-22 17:43:48Z epbernard $
+
+package org.hibernate.orm.test.annotations.query;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 
 /**
- * @author Emmanuel Bernard
+ * @author Sharath Reddy
  */
 @Entity
-@Table(name="CASIMIR_PARTICULE")
-public class CasimirParticle {
+public class Twilight extends Darkness {
+
+	private int id;
+	
 	@Id
-	private Long id;
-
-
-	public Long getId() {
+	@GeneratedValue
+	public Integer getId() {
 		return id;
 	}
 
-	public void setId(Long id) {
+	public void setId(Integer id) {
 		this.id = id;
 	}
+
 }

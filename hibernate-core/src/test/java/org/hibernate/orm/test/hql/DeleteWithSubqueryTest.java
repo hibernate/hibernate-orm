@@ -8,10 +8,10 @@ package org.hibernate.orm.test.hql;
 
 import org.hibernate.Session;
 import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.test.annotations.query.Attrset;
-import org.hibernate.test.annotations.query.Attrvalue;
-import org.hibernate.test.annotations.query.Employee;
-import org.hibernate.test.annotations.query.Employeegroup;
+import org.hibernate.orm.test.annotations.query.Attrset;
+import org.hibernate.orm.test.annotations.query.Attrvalue;
+import org.hibernate.orm.test.annotations.query.Employee;
+import org.hibernate.orm.test.annotations.query.Employeegroup;
 import org.hibernate.test.hql.Panel;
 import org.hibernate.test.hql.TrtPanel;
 import org.hibernate.testing.SkipForDialect;

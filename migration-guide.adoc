@@ -60,7 +60,24 @@ Passing null or not is now triggered by whether setting the parameter was called
 
 === Query
 
-=== HQL results
+=== Ordinal Parameters binding
+
+HQL ordinal parameter binding is 1-based, this means that queries like
+
+```
+s.createQuery( "select p from Parent p where id in ?0", Parent.class );
+query.setParameter( 0, Arrays.asList( 0, 1, 2, 3 ) );
+```
+
+that uses a 0-based positional binding are not supported, and they should be changed to the following
+
+```
+s.createQuery( "select p from Parent p where id in ?`", Parent.class );
+query.setParameter( 1, Arrays.asList( 0, 1, 2, 3 ) );
+```
+
+
+==== HQL results
 
 HQL queries that use joins without specifying a select clause e.g. `from Person p join p.address` do not return a `List<Object[]>` with an entry per join anymore, but a list of `Person`.
 

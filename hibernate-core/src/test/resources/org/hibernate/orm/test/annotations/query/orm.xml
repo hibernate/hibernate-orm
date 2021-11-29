@@ -16,11 +16,11 @@
     <named-native-query name="night.getAll.bySQL" result-set-mapping="sqlmapping">
         <query>select id, night_duration, night_date as dte, area_id from Night where night_duration > ?</query>
     </named-native-query>
-    <named-native-query name="getAreaByNative" result-class="org.hibernate.test.annotations.query.Area">
+    <named-native-query name="getAreaByNative" result-class="org.hibernate.orm.test.annotations.query.Area">
         <query>select * from tbl_area</query>
     </named-native-query>
     <sql-result-set-mapping name="sqlmapping">
-        <entity-result entity-class="org.hibernate.test.annotations.query.Night">
+        <entity-result entity-class="org.hibernate.orm.test.annotations.query.Night">
             <field-result name="id" column="id"/>
             <field-result name="duration" column="night_duration"/>
             <field-result name="date" column="dte"/>

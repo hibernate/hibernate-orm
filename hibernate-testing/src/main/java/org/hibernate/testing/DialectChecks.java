@@ -268,4 +268,10 @@ abstract public class DialectChecks {
 		}
 	}
 
+	public static class SupportsTemporaryTableIdentity implements DialectCheck {
+		public boolean isMatch(Dialect dialect) {
+			return dialect.supportsTemporaryTablePrimaryKey();
+		}
+	}
+
 }

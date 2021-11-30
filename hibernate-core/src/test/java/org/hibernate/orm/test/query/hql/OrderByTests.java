@@ -22,12 +22,12 @@ import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
-import org.hibernate.test.hql.Address;
-import org.hibernate.test.hql.Human;
-import org.hibernate.test.hql.Mammal;
-import org.hibernate.test.hql.Name;
-import org.hibernate.test.hql.StateProvince;
-import org.hibernate.test.hql.Zoo;
+import org.hibernate.orm.test.hql.Address;
+import org.hibernate.orm.test.hql.Human;
+import org.hibernate.orm.test.hql.Mammal;
+import org.hibernate.orm.test.hql.Name;
+import org.hibernate.orm.test.hql.StateProvince;
+import org.hibernate.orm.test.hql.Zoo;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -49,6 +49,11 @@ public class OrderByTests extends BaseCoreFunctionalTestCase {
 	Mammal zoo1Mammal2;
 	Human zoo2Director1;
 	Human zoo2Director2;
+
+	@Override
+	protected String getBaseForMappings() {
+		return "org/hibernate/orm/test/";
+	}
 
 	@Override
 	public String[] getMappings() {

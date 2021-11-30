@@ -22,6 +22,7 @@ import org.hibernate.query.sqm.StrictJpaComplianceViolation;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 import org.hibernate.sql.ast.SqlAstWalker;
+import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
@@ -43,8 +44,8 @@ public class BasicValuedPathInterpretation<T> extends AbstractSqmPathInterpretat
 			SqlAstCreationState sqlAstCreationState,
 			SemanticQueryWalker sqmWalker,
 			boolean jpaQueryComplianceEnabled) {
-		final TableGroup tableGroup = sqlAstCreationState.getFromClauseAccess()
-				.getTableGroup( sqmPath.getLhs().getNavigablePath() );
+		final FromClauseAccess fromClauseAccess = sqlAstCreationState.getFromClauseAccess();
+		final TableGroup tableGroup = fromClauseAccess.getTableGroup( sqmPath.getNavigablePath().getParent() );
 
 		EntityMappingType treatTarget = null;
 		if ( jpaQueryComplianceEnabled ) {

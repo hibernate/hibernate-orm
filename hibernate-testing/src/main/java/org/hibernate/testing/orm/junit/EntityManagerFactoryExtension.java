@@ -24,8 +24,8 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
-import org.hibernate.query.sqm.mutation.internal.idtable.GlobalTemporaryTableStrategy;
-import org.hibernate.query.sqm.mutation.internal.idtable.LocalTemporaryTableStrategy;
+import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
+import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.tool.schema.Action;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
@@ -159,8 +159,8 @@ public class EntityManagerFactoryExtension
 		}
 
 		final Map<String, Object> integrationSettings = new HashMap<>();
-		integrationSettings.put( GlobalTemporaryTableStrategy.DROP_ID_TABLES, "true" );
-		integrationSettings.put( LocalTemporaryTableStrategy.DROP_ID_TABLES, "true" );
+		integrationSettings.put( GlobalTemporaryTableMutationStrategy.DROP_ID_TABLES, "true" );
+		integrationSettings.put( LocalTemporaryTableMutationStrategy.DROP_ID_TABLES, "true" );
 		if ( !integrationSettings.containsKey( Environment.CONNECTION_PROVIDER ) ) {
 			integrationSettings.put(
 					AvailableSettings.CONNECTION_PROVIDER,

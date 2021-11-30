@@ -12,6 +12,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import org.hibernate.HibernateError;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.CurrentTimestamp;
@@ -54,6 +55,9 @@ public class InDbGenerationsWithAnnotationsTests {
 
 			saved.name = "changed";
 
+			//We need to wait a little to make sure the timestamps produced are different
+			waitALittle();
+
 			// then changing
 			final AuditedEntity merged = scope.fromTransaction( session, (s) -> {
 				return (AuditedEntity) session.merge( saved );
@@ -63,6 +67,9 @@ public class InDbGenerationsWithAnnotationsTests {
 			assertThat( merged.createdOn ).isNotNull();
 			assertThat( merged.lastUpdatedOn ).isNotNull();
 			assertThat( merged.lastUpdatedOn ).isNotEqualTo( merged.createdOn );
+
+			//We need to wait a little to make sure the timestamps produced are different
+			waitALittle();
 
 			// lastly, make sure we can load it..
 			final AuditedEntity loaded = scope.fromTransaction( session, (s) -> {
@@ -99,6 +106,15 @@ public class InDbGenerationsWithAnnotationsTests {
 		public AuditedEntity(Integer id, String name) {
 			this.id = id;
 			this.name = name;
+		}
+	}
+
+	private static void waitALittle() {
+		try {
+			Thread.sleep( 10 );
+		}
+		catch (InterruptedException e) {
+			throw new HibernateError( "Unexpected wakeup from test sleep" );
 		}
 	}
 }

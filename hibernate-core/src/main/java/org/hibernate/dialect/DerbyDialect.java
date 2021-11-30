@@ -8,11 +8,10 @@ package org.hibernate.dialect;
 
 import org.hibernate.HibernateException;
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.function.DerbyConcatFunction;
+import org.hibernate.dialect.function.CastingConcatFunction;
 import org.hibernate.dialect.function.DerbyLpadEmulation;
 import org.hibernate.dialect.function.DerbyRpadEmulation;
 import org.hibernate.dialect.function.CaseLeastGreatestEmulation;
@@ -36,10 +35,13 @@ import org.hibernate.query.CastType;
 import org.hibernate.query.IntervalType;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.query.sqm.mutation.internal.idtable.AfterUseAction;
-import org.hibernate.query.sqm.mutation.internal.idtable.IdTable;
-import org.hibernate.query.sqm.mutation.internal.idtable.LocalTemporaryTableStrategy;
-import org.hibernate.query.sqm.mutation.internal.idtable.TempIdTableExporter;
+import org.hibernate.dialect.temptable.TemporaryTable;
+import org.hibernate.query.sqm.mutation.internal.temptable.BeforeUseAction;
+import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
+import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableInsertStrategy;
+import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
+import org.hibernate.dialect.temptable.TemporaryTableKind;
+import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
@@ -56,6 +58,7 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.descriptor.java.BigDecimalJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.DecimalJdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullResolvingJdbcType;
 import org.hibernate.type.descriptor.jdbc.SmallIntJdbcType;
@@ -199,6 +202,8 @@ public class DerbyDialect extends Dialect {
 				"||",
 				getCastTypeName( stringType, null, null, null )
 		);
+		// AVG by default uses the input type, so we possibly need to cast the argument type, hence a special function
+		CommonFunctionFactory.avg_castingNonDoubleArguments( this, queryEngine, SqlAstNodeRenderingMode.DEFAULT );
 
 		CommonFunctionFactory.concat_pipeOperator( queryEngine );
 		CommonFunctionFactory.cot( queryEngine );
@@ -220,13 +225,22 @@ public class DerbyDialect extends Dialect {
 		CommonFunctionFactory.leftRight_substrLength( queryEngine );
 		CommonFunctionFactory.characterLength_length( queryEngine, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
 		CommonFunctionFactory.power_expLn( queryEngine );
+		CommonFunctionFactory.bitLength_pattern( queryEngine, "length(?1)*8" );
 
 		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "round", "floor(?1*1e?2+0.5)/1e?2")
 				.setReturnTypeResolver( useArgType(1) )
 				.setExactArgumentCount( 2 )
 				.register();
 
-		queryEngine.getSqmFunctionRegistry().register( "concat", new DerbyConcatFunction( this, queryEngine.getTypeConfiguration() ) );
+		queryEngine.getSqmFunctionRegistry().register(
+				"concat",
+				new CastingConcatFunction(
+						this,
+						"||",
+						SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER,
+						queryEngine.getTypeConfiguration()
+				)
+		);
 
 		//no way I can see to pad with anything other than spaces
 		queryEngine.getSqmFunctionRegistry().register( "lpad", new DerbyLpadEmulation( queryEngine.getTypeConfiguration() ) );
@@ -324,8 +338,9 @@ public class DerbyDialect extends Dialect {
 					case FLOAT:
 					case DOUBLE:
 						// Derby can't cast to char directly, but needs to be cast to decimal first...
-						return "cast(trim(cast(cast(?1 as decimal) as char(254))) as ?2)";
+						return "cast(trim(cast(cast(?1 as decimal(" + getDefaultDecimalPrecision() + "," + BigDecimalJavaTypeDescriptor.INSTANCE.getDefaultSqlScale( this, null ) + ")) as char(254))) as ?2)";
 					case INTEGER:
+					case LONG:
 					case FIXED:
 						return "cast(trim(cast(?1 as char(254))) as ?2)";
 				}
@@ -773,7 +788,7 @@ public class DerbyDialect extends Dialect {
 	 *     The DECLARE GLOBAL TEMPORARY TABLE statement defines a temporary table for the current connection.
 	 * </pre>
 	 *
-	 * {@link DB2Dialect} returns a {@link org.hibernate.query.sqm.mutation.internal.idtable.GlobalTemporaryTableStrategy} that
+	 * {@link DB2Dialect} returns a {@link GlobalTemporaryTableMutationStrategy} that
 	 * will make temporary tables created at startup and hence unavailable for subsequent connections.<br/>
 	 * see HHH-10238.
 	 */
@@ -781,32 +796,65 @@ public class DerbyDialect extends Dialect {
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new LocalTemporaryTableStrategy(
-				new IdTable(
+		return new LocalTemporaryTableMutationStrategy(
+				TemporaryTable.createIdTable(
 						rootEntityDescriptor,
-						basename -> "session.HT_" + basename,
+						basename -> "session." + TemporaryTable.ID_TABLE_PREFIX + basename,
 						this,
 						runtimeModelCreationContext
 				),
-				() -> new TempIdTableExporter( true, this::getTypeName ) {
-					@Override
-					protected String getCreateCommand() {
-						return "declare global temporary table";
-					}
-
-					@Override
-					protected String getCreateOptions() {
-						return "not logged";
-					}
-				},
-				AfterUseAction.CLEAN,
-				TempTableDdlTransactionHandling.NONE,
 				runtimeModelCreationContext.getSessionFactory()
 		);
 	}
 
 	@Override
+	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
+			EntityMappingType rootEntityDescriptor,
+			RuntimeModelCreationContext runtimeModelCreationContext) {
+		return new LocalTemporaryTableInsertStrategy(
+				TemporaryTable.createEntityTable(
+						rootEntityDescriptor,
+						name -> "session." + TemporaryTable.ENTITY_TABLE_PREFIX + name,
+						this,
+						runtimeModelCreationContext
+				),
+				runtimeModelCreationContext.getSessionFactory()
+		);
+	}
+
+	@Override
+	public TemporaryTableKind getSupportedTemporaryTableKind() {
+		return TemporaryTableKind.LOCAL;
+	}
+
+	@Override
+	public String getTemporaryTableCreateOptions() {
+		return "not logged";
+	}
+
+	@Override
+	public boolean supportsTemporaryTablePrimaryKey() {
+		return false;
+	}
+
+	@Override
+	public String getTemporaryTableCreateCommand() {
+		return "declare global temporary table";
+	}
+
+	@Override
+	public BeforeUseAction getTemporaryTableBeforeUseAction() {
+		return BeforeUseAction.CREATE;
+	}
+
+	@Override
 	public boolean supportsPartitionBy() {
 		return false;
+	}
+
+	@Override
+	public boolean supportsWindowFunctions() {
+		// It seems at least the row_number function is supported as of 10.4
+		return getVersion() >= 1040;
 	}
 }

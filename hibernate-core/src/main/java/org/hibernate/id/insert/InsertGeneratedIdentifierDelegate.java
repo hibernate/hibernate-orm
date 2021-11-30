@@ -30,6 +30,16 @@ public interface InsertGeneratedIdentifierDelegate {
 	IdentifierGeneratingInsert prepareIdentifierGeneratingInsert(SqlStringGenerationContext context);
 
 	/**
+	 * Append SQL specific to the delegate's mode
+	 * of handling generated key values.
+	 *
+	 * @return The insert SQL.
+	 */
+	default String prepareIdentifierGeneratingInsert(String insertSQL) {
+		return insertSQL;
+	}
+
+	/**
 	 * Perform the indicated insert SQL statement and determine the identifier value
 	 * generated.
 	 *

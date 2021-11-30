@@ -29,8 +29,8 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
-import org.hibernate.query.sqm.mutation.internal.idtable.GlobalTemporaryTableStrategy;
-import org.hibernate.query.sqm.mutation.internal.idtable.LocalTemporaryTableStrategy;
+import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
+import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
 
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
@@ -148,8 +148,8 @@ public abstract class BaseEnversJPAFunctionalTestCase extends AbstractEnversTest
 			config.put( AvailableSettings.ORM_XML_FILES, dds );
 		}
 
-		config.put( GlobalTemporaryTableStrategy.DROP_ID_TABLES, "true" );
-		config.put( LocalTemporaryTableStrategy.DROP_ID_TABLES, "true" );
+		config.put( GlobalTemporaryTableMutationStrategy.DROP_ID_TABLES, "true" );
+		config.put( LocalTemporaryTableMutationStrategy.DROP_ID_TABLES, "true" );
 		if ( !Environment.getProperties().containsKey( AvailableSettings.CONNECTION_PROVIDER ) ) {
 			config.put(
 					AvailableSettings.CONNECTION_PROVIDER,

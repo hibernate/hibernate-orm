@@ -25,6 +25,7 @@ import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
@@ -230,6 +231,10 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 
 	default SqmMultiTableMutationStrategy getSqmMultiTableMutationStrategy(){
 		return getEntityPersister().getSqmMultiTableMutationStrategy();
+	}
+
+	default SqmMultiTableInsertStrategy getSqmMultiTableInsertStrategy() {
+		return getEntityPersister().getSqmMultiTableInsertStrategy();
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

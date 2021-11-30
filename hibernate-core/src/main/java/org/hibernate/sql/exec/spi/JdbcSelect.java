@@ -148,24 +148,29 @@ public class JdbcSelect extends AbstractJdbcOperation {
 	}
 
 	private boolean isCompatible(JdbcParameter parameter, Integer requestedValue, int defaultValue) {
-		final int value;
-		if ( requestedValue == null ) {
-			value = defaultValue;
+		if ( parameter == null ) {
+			return requestedValue == null;
 		}
 		else {
-			value = requestedValue;
-		}
-		if ( parameter != null ) {
 			final JdbcParameterBinding jdbcParameterBinding = appliedParameters.get( parameter );
-			if ( jdbcParameterBinding != null ) {
-				if ( value != (int) jdbcParameterBinding.getBindValue() ) {
-					return false;
+			if ( jdbcParameterBinding == null ) {
+				// If this query includes the parameter this is only compatible when a requested value is given through the query options
+				// If not, this query string contains limit/offset but the query options don't request that
+				// Considering this case compatible would lead to binding null for limit/offset which is invalid
+				// todo (6.0): maybe it's better if the presence/absence is part of the cache key the cache?
+				//  org.hibernate.query.internal.QueryInterpretationCacheStandardImpl.hqlInterpretationCache
+				return requestedValue != null;
+			}
+			else {
+				final int value;
+				if ( requestedValue == null ) {
+					value = defaultValue;
 				}
+				else {
+					value = requestedValue;
+				}
+				return value != (int) jdbcParameterBinding.getBindValue();
 			}
 		}
-		else if ( value != defaultValue ) {
-			return false;
-		}
-		return true;
 	}
 }

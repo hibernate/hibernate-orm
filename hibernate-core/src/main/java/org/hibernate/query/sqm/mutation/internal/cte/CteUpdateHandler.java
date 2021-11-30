@@ -18,6 +18,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
+import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
 import org.hibernate.query.sqm.mutation.internal.UpdateHandler;
@@ -34,7 +35,6 @@ import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
-import org.hibernate.sql.ast.tree.from.UnionTableGroup;
 import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 
@@ -49,7 +49,7 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 			SqmCteTable cteTable,
 			SqmUpdateStatement sqmStatement,
 			DomainParameterXref domainParameterXref,
-			CteStrategy strategy,
+			CteMutationStrategy strategy,
 			SessionFactoryImplementor sessionFactory) {
 		super( cteTable, sqmStatement, domainParameterXref, strategy, sessionFactory );
 	}
@@ -103,7 +103,7 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 			collectTableReference( updatingTableGroup.getTableReferenceJoins().get( i ), tableReferenceByAlias::put );
 		}
 
-		final Map<String, List<Assignment>> assignmentsByTable = CollectionHelper.mapOfSize(
+		final Map<TableReference, List<Assignment>> assignmentsByTable = CollectionHelper.mapOfSize(
 				updatingTableGroup.getTableReferenceJoins().size() + 1
 		);
 
@@ -111,11 +111,11 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 			final Assignment assignment = assignments.get( i );
 			final List<ColumnReference> assignmentColumnRefs = assignment.getAssignable().getColumnReferences();
 
-			String assignmentTableReference = null;
+			TableReference assignmentTableReference = null;
 
 			for ( int c = 0; c < assignmentColumnRefs.size(); c++ ) {
 				final ColumnReference columnReference = assignmentColumnRefs.get( c );
-				final String tableReference = resolveTableReference(
+				final TableReference tableReference = resolveTableReference(
 						columnReference,
 						tableReferenceByAlias
 				);
@@ -144,18 +144,18 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 							idSelectCte.getCteTable().getCteColumns(),
 							factory
 					);
-					final List<Assignment> assignmentList;
-					if ( updatingTableGroup instanceof UnionTableGroup ) {
-						assignmentList = assignmentsByTable.get( updatingTableGroup.getPrimaryTableReference().getTableExpression() );
-					}
-					else {
-						assignmentList = assignmentsByTable.get( tableExpression );
-						if ( assignmentList == null ) {
-							return;
-						}
+					final TableReference updatingTableReference = updatingTableGroup.getTableReference(
+							updatingTableGroup.getNavigablePath(),
+							tableExpression,
+							true,
+							true
+					);
+					final List<Assignment> assignmentList = assignmentsByTable.get( updatingTableReference );
+					if ( assignmentList == null ) {
+						return;
 					}
 					final TableReference dmlTableReference = resolveUnionTableReference(
-							updatingTableGroup,
+							updatingTableReference,
 							tableExpression
 					);
 					final List<ColumnReference> columnReferences = new ArrayList<>( idSelectCte.getCteTable().getCteColumns().size() );
@@ -191,15 +191,14 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 		collectTableReference( tableReferenceJoin.getJoinedTableReference(), consumer );
 	}
 
-	private String resolveTableReference(
+	private TableReference resolveTableReference(
 			ColumnReference columnReference,
 			Map<String, TableReference> tableReferenceByAlias) {
-		final String qualifier = columnReference.getQualifier();
-		final TableReference tableReferenceByQualifier = tableReferenceByAlias.get( qualifier );
+		final TableReference tableReferenceByQualifier = tableReferenceByAlias.get( columnReference.getQualifier() );
 		if ( tableReferenceByQualifier != null ) {
-			return tableReferenceByQualifier.getTableExpression();
+			return tableReferenceByQualifier;
 		}
 
-		return qualifier;
+		throw new SemanticException( "Assignment referred to column of a joined association: " + columnReference );
 	}
 }

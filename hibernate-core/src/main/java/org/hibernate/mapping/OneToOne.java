@@ -109,6 +109,12 @@ public class OneToOne extends ToOne {
 		}
 		return list;
 	}
+
+	@Override
+	public Iterator<Selectable> getConstraintColumnIterator() {
+		return identifier.getColumnIterator();
+	}
+
 	/**
 	 * Returns the constrained.
 	 * @return boolean

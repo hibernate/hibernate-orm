@@ -64,10 +64,6 @@ public class LazyTableGroup extends AbstractColumnReferenceQualifier implements 
 
 	}
 
-	public boolean isInitialized() {
-		return tableGroup != null;
-	}
-
 	public TableGroup getUnderlyingTableGroup() {
 		return tableGroup;
 	}
@@ -80,12 +76,18 @@ public class LazyTableGroup extends AbstractColumnReferenceQualifier implements 
 		tableGroup = tableGroupSupplier.get();
 		if ( tableGroupConsumer != null ) {
 			tableGroupConsumer.accept( tableGroup );
+			tableGroupConsumer = null;
 		}
 		return tableGroup;
 	}
 
 	public void setTableGroupInitializerCallback(Consumer<TableGroup> tableGroupConsumer) {
-		this.tableGroupConsumer = tableGroupConsumer;
+		if ( tableGroup != null ) {
+			tableGroupConsumer.accept( tableGroup );
+		}
+		else {
+			this.tableGroupConsumer = tableGroupConsumer;
+		}
 	}
 
 	@Override

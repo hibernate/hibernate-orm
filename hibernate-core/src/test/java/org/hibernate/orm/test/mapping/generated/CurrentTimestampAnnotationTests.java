@@ -11,6 +11,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import org.hibernate.HibernateError;
 import org.hibernate.annotations.CurrentTimestamp;
 import org.hibernate.tuple.GenerationTiming;
 
@@ -45,6 +46,9 @@ public class CurrentTimestampAnnotationTests {
 
 		created.name = "first";
 
+		//We need to wait a little to make sure the timestamps produced are different
+		waitALittle();
+
 		// then changing
 		final AuditedEntity merged = scope.fromTransaction( (session) -> {
 			return (AuditedEntity) session.merge( created );
@@ -57,6 +61,9 @@ public class CurrentTimestampAnnotationTests {
 		assertThat( merged.lastUpdatedAt ).isNotNull();
 		assertThat( merged.lastUpdatedAt ).isNotEqualTo( merged.createdAt );
 		assertThat( merged.lastUpdatedAt ).isNotEqualTo( created.createdAt );
+
+		//We need to wait a little to make sure the timestamps produced are different
+		waitALittle();
 
 		// lastly, make sure we can load it..
 		final AuditedEntity loaded = scope.fromTransaction( (session) -> {
@@ -89,6 +96,15 @@ public class CurrentTimestampAnnotationTests {
 		public AuditedEntity(Integer id, String name) {
 			this.id = id;
 			this.name = name;
+		}
+	}
+
+	private static void waitALittle() {
+		try {
+			Thread.sleep( 10 );
+		}
+		catch (InterruptedException e) {
+			throw new HibernateError( "Unexpected wakeup from test sleep" );
 		}
 	}
 }

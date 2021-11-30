@@ -217,6 +217,10 @@ public abstract class SimpleValue implements KeyValue {
 		return columns;
 	}
 
+	public Iterator<Selectable> getConstraintColumnIterator() {
+		return getColumnIterator();
+	}
+
 	public String getTypeName() {
 		return typeName;
 	}

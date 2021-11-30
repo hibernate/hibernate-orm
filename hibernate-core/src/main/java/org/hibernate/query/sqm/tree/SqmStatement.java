@@ -41,7 +41,7 @@ public interface SqmStatement<T> extends SqmQuery<T>, JpaQueryableCriteria<T>, S
 			}
 
 			@Override
-			public Map<JpaCriteriaParameter<?>, Supplier<SqmJpaCriteriaParameterWrapper<?>>> getJpaCriteriaParamResolutions() {
+			public Map<JpaCriteriaParameter<?>, SqmJpaCriteriaParameterWrapper<?>> getJpaCriteriaParamResolutions() {
 				return Collections.emptyMap();
 			}
 		};
@@ -51,6 +51,6 @@ public interface SqmStatement<T> extends SqmQuery<T>, JpaQueryableCriteria<T>, S
 		}
 
 		Set<SqmParameter<?>> getSqmParameters();
-		Map<JpaCriteriaParameter<?>, Supplier<SqmJpaCriteriaParameterWrapper<?>>> getJpaCriteriaParamResolutions();
+		Map<JpaCriteriaParameter<?>, SqmJpaCriteriaParameterWrapper<?>> getJpaCriteriaParamResolutions();
 	}
 }

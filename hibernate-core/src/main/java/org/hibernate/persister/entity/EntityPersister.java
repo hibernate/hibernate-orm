@@ -41,6 +41,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.internal.InFlightEntityMappingType;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.persister.walking.spi.EntityDefinition;
+import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
 import org.hibernate.sql.ast.tree.from.RootTableGroupProducer;
@@ -155,6 +156,10 @@ public interface EntityPersister
 	 * does not define multiple tables
 	 */
 	default SqmMultiTableMutationStrategy getSqmMultiTableMutationStrategy() {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	default SqmMultiTableInsertStrategy getSqmMultiTableInsertStrategy() {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 

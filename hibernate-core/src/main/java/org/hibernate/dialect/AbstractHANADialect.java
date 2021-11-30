@@ -1180,6 +1180,11 @@ public abstract class AbstractHANADialect extends Dialect {
 	}
 
 	@Override
+	public int getMaxIdentifierLength() {
+		return 127;
+	}
+
+	@Override
 	public LimitHandler getLimitHandler() {
 		return LimitOffsetLimitHandler.INSTANCE;
 	}

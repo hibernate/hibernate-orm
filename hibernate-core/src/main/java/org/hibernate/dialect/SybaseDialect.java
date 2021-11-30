@@ -9,7 +9,6 @@ package org.hibernate.dialect;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.function.SybaseConcatFunction;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
@@ -214,8 +213,6 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 		// AVG by default uses the input type, so we possibly need to cast the argument type, hence a special function
 		CommonFunctionFactory.avg_castingNonDoubleArguments( this, queryEngine, SqlAstNodeRenderingMode.DEFAULT );
 
-		queryEngine.getSqmFunctionRegistry().register( "concat", new SybaseConcatFunction( this, queryEngine.getTypeConfiguration() ) );
-
 		//this doesn't work 100% on earlier versions of Sybase
 		//which were missing the third parameter in charindex()
 		//TODO: we could emulate it with substring() like in Postgres
@@ -240,6 +237,11 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	@Override
 	public String getCurrentSchemaCommand() {
 		return "select db_name()";
+	}
+
+	@Override
+	public int getMaxIdentifierLength() {
+		return 128;
 	}
 
 	@Override

@@ -11,6 +11,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import org.hibernate.HibernateError;
 import org.hibernate.annotations.CurrentTimestamp;
 import org.hibernate.tuple.GenerationTiming;
 
@@ -49,6 +50,9 @@ public class GeneratedInstantTests {
 
 		created.name = "first";
 
+		//We need to wait a little to make sure the timestamps produced are different
+		waitALittle();
+
 		// then changing
 		final GeneratedInstantEntity merged = scope.fromTransaction( (session) -> {
 			return (GeneratedInstantEntity) session.merge( created );
@@ -65,6 +69,9 @@ public class GeneratedInstantTests {
 //		assertThat( merged.updatedAt2 ).isNotNull();
 //		assertThat( merged.createdAt2 ).isEqualTo( created.createdAt2 );
 //		assertThat( merged.updatedAt2 ).isNotEqualTo( created.updatedAt2 );
+
+		//We need to wait a little to make sure the timestamps produced are different
+		waitALittle();
 
 		// lastly, make sure we can load it..
 		final GeneratedInstantEntity loaded = scope.fromTransaction( (session) -> {
@@ -110,6 +117,15 @@ public class GeneratedInstantTests {
 		public GeneratedInstantEntity(Integer id, String name) {
 			this.id = id;
 			this.name = name;
+		}
+	}
+
+	private static void waitALittle() {
+		try {
+			Thread.sleep( 10 );
+		}
+		catch (InterruptedException e) {
+			throw new HibernateError( "Unexpected wakeup from test sleep" );
 		}
 	}
 }

@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.select;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -19,10 +20,10 @@ import org.hibernate.query.criteria.JpaOrder;
 import org.hibernate.query.criteria.JpaQueryGroup;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
-import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -112,21 +113,26 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 	}
 
 	@Override
-	public void validateFetchStructureAndOwners() {
+	public void validateQueryStructureAndFetchOwners() {
 		final SqmQuerySpec<T> firstQuerySpec = getFirstQuerySpec();
 		// We only need to validate the first query spec regarding fetch owner,
 		// because the fetch structure must match in all query parts of the group which we validate next
 		firstQuerySpec.validateFetchOwners();
-		validateQueryGroupFetchStructure( firstQuerySpec );
-	}
-
-	private void validateQueryGroupFetchStructure(SqmQuerySpec<?> firstQuerySpec) {
 		final List<SqmSelection<?>> firstSelections = firstQuerySpec.getSelectClause().getSelections();
 		final int firstSelectionSize = firstSelections.size();
+		final List<SqmTypedNode<?>> typedNodes = new ArrayList<>( firstSelectionSize );
+		for ( int i = 0; i < firstSelectionSize; i++ ) {
+			typedNodes.add( firstSelections.get( i ).getSelectableNode() );
+		}
+		validateQueryGroupFetchStructure( typedNodes );
+	}
+
+	private void validateQueryGroupFetchStructure(List<? extends SqmTypedNode<?>> typedNodes) {
+		final int firstSelectionSize = typedNodes.size();
 		for ( int i = 0; i < queryParts.size(); i++ ) {
 			final SqmQueryPart<T> queryPart = queryParts.get( i );
 			if ( queryPart instanceof SqmQueryGroup<?> ) {
-				( (SqmQueryGroup<Object>) queryPart ).validateQueryGroupFetchStructure( firstQuerySpec );
+				( (SqmQueryGroup<Object>) queryPart ).validateQueryGroupFetchStructure( typedNodes );
 			}
 			else {
 				final SqmQuerySpec<?> querySpec = (SqmQuerySpec<?>) queryPart;
@@ -135,15 +141,15 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 					throw new SemanticException( "All query parts in a query group must have the same arity!" );
 				}
 				for ( int j = 0; j < firstSelectionSize; j++ ) {
-					final SqmSelection<?> firstSqmSelection = firstSelections.get( j );
+					final SqmTypedNode<?> firstSqmSelection = typedNodes.get( j );
 					final JavaType<?> firstJavaTypeDescriptor = firstSqmSelection.getNodeJavaTypeDescriptor();
 					if ( firstJavaTypeDescriptor != selections.get( j ).getNodeJavaTypeDescriptor() ) {
 						throw new SemanticException(
 								"Select items of the same index must have the same java type across all query parts!"
 						);
 					}
-					if ( firstSqmSelection.getSelectableNode() instanceof SqmFrom<?, ?> ) {
-						final SqmFrom<?, ?> firstFrom = (SqmFrom<?, ?>) firstSqmSelection.getSelectableNode();
+					if ( firstSqmSelection instanceof SqmFrom<?, ?> ) {
+						final SqmFrom<?, ?> firstFrom = (SqmFrom<?, ?>) firstSqmSelection;
 						final SqmFrom<?, ?> from = (SqmFrom<?, ?>) selections.get( j ).getSelectableNode();
 						validateFetchesMatch( firstFrom, from );
 					}

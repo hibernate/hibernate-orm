@@ -61,7 +61,7 @@ import org.hibernate.type.descriptor.java.MutabilityPlan;
  */
 public class DiscriminatedAssociationAttributeMapping
 		extends AbstractSingularAttributeMapping
-		implements DiscriminatedAssociationModelPart, TableGroupJoinProducer {
+		implements DiscriminatedAssociationModelPart {
 	private final NavigableRole navigableRole;
 	private final DiscriminatedAssociationMapping discriminatorMapping;
 	private final SessionFactoryImplementor sessionFactory;

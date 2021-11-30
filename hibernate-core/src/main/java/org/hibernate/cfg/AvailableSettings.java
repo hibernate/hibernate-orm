@@ -951,6 +951,13 @@ public interface AvailableSettings {
 	String QUERY_MULTI_TABLE_MUTATION_STRATEGY = "hibernate.query.mutation_strategy";
 
 	/**
+	 * Defines the "global" strategy to use for handling HQL and Criteria insert queries.
+	 *
+	 * Names the {@link org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy} to use.
+	 */
+	String QUERY_MULTI_TABLE_INSERT_STRATEGY = "hibernate.query.insert_strategy";
+
+	/**
 	 * A comma-separated list of token substitutions to use when translating a Hibernate
 	 * query to SQL
 	 */

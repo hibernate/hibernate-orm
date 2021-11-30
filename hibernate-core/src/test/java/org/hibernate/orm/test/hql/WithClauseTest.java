@@ -20,9 +20,6 @@ import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.test.hql.Human;
-import org.hibernate.test.hql.SimpleAssociatedEntity;
-import org.hibernate.test.hql.SimpleEntityWithAssociation;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,8 +37,8 @@ import static org.junit.jupiter.api.Assertions.fail;
  */
 @DomainModel(
 		xmlMappings = {
-				"org/hibernate/test/hql/Animal.hbm.xml",
-				"org/hibernate/test/hql/SimpleEntityWithAssociation.hbm.xml",
+				"org/hibernate/orm/test/hql/Animal.hbm.xml",
+				"org/hibernate/orm/test/hql/SimpleEntityWithAssociation.hbm.xml",
 		}
 )
 @SessionFactory

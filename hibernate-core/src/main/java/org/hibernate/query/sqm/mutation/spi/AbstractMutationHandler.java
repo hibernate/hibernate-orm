@@ -15,13 +15,13 @@ import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
  * @author Steve Ebersole
  */
 public abstract class AbstractMutationHandler implements Handler {
-	private final SqmDeleteOrUpdateStatement sqmDeleteOrUpdateStatement;
+	private final SqmDeleteOrUpdateStatement<?> sqmDeleteOrUpdateStatement;
 
 	private final SessionFactoryImplementor sessionFactory;
 	private final EntityMappingType entityDescriptor;
 
 	public AbstractMutationHandler(
-			SqmDeleteOrUpdateStatement sqmDeleteOrUpdateStatement,
+			SqmDeleteOrUpdateStatement<?> sqmDeleteOrUpdateStatement,
 			SessionFactoryImplementor sessionFactory) {
 		this.sqmDeleteOrUpdateStatement = sqmDeleteOrUpdateStatement;
 		this.sessionFactory = sessionFactory;
@@ -34,7 +34,7 @@ public abstract class AbstractMutationHandler implements Handler {
 
 	}
 
-	public SqmDeleteOrUpdateStatement getSqmDeleteOrUpdateStatement() {
+	public SqmDeleteOrUpdateStatement<?> getSqmDeleteOrUpdateStatement() {
 		return sqmDeleteOrUpdateStatement;
 	}
 

@@ -30,7 +30,6 @@ import org.hibernate.query.Query;
 import org.hibernate.transform.DistinctRootEntityResultTransformer;
 
 import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
@@ -173,7 +172,6 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected(jiraKey = "none", message = "v6 imperfection")
 	public void testCombinedClassAndCollectionFiltersEnabled() {
 
 		inSession(
@@ -327,7 +325,6 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected(jiraKey = "none", message = "v6 imperfection")
 	public void testCriteriaControl() {
 
 		// the subquery...
@@ -359,7 +356,6 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected(jiraKey = "none", message = "v6 imperfection")
 	public void testCriteriaSubqueryWithFilters() {
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Criteria-subquery test
@@ -522,7 +518,6 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected(jiraKey = "none", message = "v6 imperfection")
 	public void testHQLSubqueryWithFilters() {
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// HQL subquery with filters test
@@ -630,7 +625,6 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected(jiraKey = "none", message = "v6 imperfection")
 	public void testFilterApplicationOnHqlQueryWithImplicitSubqueryContainingPositionalParameter() {
 		inTransaction(
 				session -> {
@@ -662,7 +656,6 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected(jiraKey = "none", message = "v6 imperfection")
 	public void testFilterApplicationOnHqlQueryWithImplicitSubqueryContainingNamedParameter() {
 		inTransaction(
 				session -> {
@@ -785,7 +778,6 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected(jiraKey = "none", message = "v6 imperfection")
 	public void testInStyleFilterParameter() {
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// one-to-many loading tests

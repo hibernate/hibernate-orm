@@ -7,7 +7,10 @@
 package org.hibernate.sql.ast.tree.expression;
 
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.query.BinaryArithmeticOperator;
+import org.hibernate.query.SemanticException;
+import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -51,17 +54,26 @@ public class BinaryArithmeticExpression implements Expression, DomainResultProdu
 	public DomainResult createDomainResult(
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final SqlSelection sqlSelection = creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
-				this,
-				resultType.getJdbcMapping().getJavaTypeDescriptor(),
-				creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
-		);
+		final SqlSelection sqlSelection = resolveSqlSelection( creationState );
 
 		//noinspection unchecked
 		return new BasicResult(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
 				resultType.getJdbcMapping().getJavaTypeDescriptor()
+		);
+	}
+
+	@Override
+	public void applySqlSelections(DomainResultCreationState creationState) {
+		resolveSqlSelection( creationState );
+	}
+
+	public SqlSelection resolveSqlSelection(DomainResultCreationState creationState) {
+		return creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
+				this,
+				resultType.getJdbcMapping().getJavaTypeDescriptor(),
+				creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
 		);
 	}
 

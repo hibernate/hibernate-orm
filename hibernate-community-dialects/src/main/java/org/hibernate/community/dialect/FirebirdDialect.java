@@ -40,10 +40,11 @@ import org.hibernate.query.CastType;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
-import org.hibernate.query.sqm.mutation.internal.idtable.AfterUseAction;
-import org.hibernate.query.sqm.mutation.internal.idtable.GlobalTemporaryTableStrategy;
-import org.hibernate.query.sqm.mutation.internal.idtable.IdTable;
-import org.hibernate.query.sqm.mutation.internal.idtable.TempIdTableExporter;
+import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableInsertStrategy;
+import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
+import org.hibernate.dialect.temptable.TemporaryTable;
+import org.hibernate.dialect.temptable.TemporaryTableKind;
+import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -484,6 +485,11 @@ public class FirebirdDialect extends Dialect {
 		return getVersion() < 400 ? 20 : 52;
 	}
 
+	@Override
+	public int getMaxIdentifierLength() {
+		return getVersion() < 400 ? 31 : 63;
+	}
+
 	public IdentifierHelper buildIdentifierHelper(
 			IdentifierHelperBuilder builder,
 			DatabaseMetaData dbMetaData) throws SQLException {
@@ -869,16 +875,39 @@ public class FirebirdDialect extends Dialect {
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(EntityMappingType entityDescriptor, RuntimeModelCreationContext runtimeModelCreationContext) {
 		return getVersion() < 210
 				? super.getFallbackSqmMutationStrategy( entityDescriptor, runtimeModelCreationContext )
-				: new GlobalTemporaryTableStrategy(
-						new IdTable( entityDescriptor, name -> "HT_" + name, this, runtimeModelCreationContext ),
-						() -> new TempIdTableExporter( false, this::getTypeName ) {
-							@Override
-							protected String getCreateOptions() {
-								return "on commit delete rows";
-							}
-						},
-						AfterUseAction.CLEAN,
-						runtimeModelCreationContext.getSessionFactory()
+				: new GlobalTemporaryTableMutationStrategy(
+					TemporaryTable.createIdTable(
+							entityDescriptor,
+							name -> TemporaryTable.ID_TABLE_PREFIX + name,
+							this,
+							runtimeModelCreationContext
+					),
+					runtimeModelCreationContext.getSessionFactory()
 				);
+	}
+
+	@Override
+	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(EntityMappingType entityDescriptor, RuntimeModelCreationContext runtimeModelCreationContext) {
+		return getVersion() < 210
+				? super.getFallbackSqmInsertStrategy( entityDescriptor, runtimeModelCreationContext )
+				: new GlobalTemporaryTableInsertStrategy(
+				TemporaryTable.createEntityTable(
+						entityDescriptor,
+						name -> TemporaryTable.ENTITY_TABLE_PREFIX + name,
+						this,
+						runtimeModelCreationContext
+				),
+				runtimeModelCreationContext.getSessionFactory()
+		);
+	}
+
+	@Override
+	public TemporaryTableKind getSupportedTemporaryTableKind() {
+		return TemporaryTableKind.GLOBAL;
+	}
+
+	@Override
+	public String getTemporaryTableCreateOptions() {
+		return "on commit delete rows";
 	}
 }

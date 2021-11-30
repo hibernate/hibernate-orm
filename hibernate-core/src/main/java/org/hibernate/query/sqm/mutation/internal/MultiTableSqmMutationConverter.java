@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.mutation.internal;
 
 import java.util.List;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -14,6 +15,7 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
@@ -24,6 +26,7 @@ import org.hibernate.query.sqm.sql.internal.SqlAstQueryPartProcessingStateImpl;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
+import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.query.sqm.tree.update.SqmAssignment;
@@ -162,6 +165,19 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 				(Assignable) sqmAssignment.getTargetPath().accept( this ),
 				(Expression) sqmAssignment.getValue().accept( this )
 		);
+	}
+	/**
+	 * Specialized hook to visit the assignments defined by the update SQM allow
+	 * "listening" for each SQL assignment.
+	 */
+	public AdditionalInsertValues visitInsertionTargetPaths(
+			BiConsumer<Assignable, List<ColumnReference>> targetColumnReferenceConsumer,
+			SqmInsertStatement<?> sqmStatement,
+			EntityPersister entityDescriptor,
+			TableGroup tableGroup,
+			SqmParameterResolutionConsumer parameterResolutionConsumer) {
+		this.parameterResolutionConsumer = parameterResolutionConsumer;
+		return visitInsertionTargetPaths( targetColumnReferenceConsumer, sqmStatement, entityDescriptor, tableGroup );
 	}
 
 	public Predicate visitWhereClause(

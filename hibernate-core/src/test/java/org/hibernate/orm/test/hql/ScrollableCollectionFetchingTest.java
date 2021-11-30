@@ -19,7 +19,6 @@ import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.hibernate.test.hql.Animal;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -38,7 +37,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author Steve Ebersole
  */
 @DomainModel(
-		xmlMappings = "org/hibernate/test/hql/Animal.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/hql/Animal.hbm.xml"
 )
 @SessionFactory
 public class ScrollableCollectionFetchingTest {

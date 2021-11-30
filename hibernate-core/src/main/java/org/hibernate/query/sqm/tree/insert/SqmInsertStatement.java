@@ -19,6 +19,6 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
  * @author Steve Ebersole
  */
 public interface SqmInsertStatement<T> extends SqmDmlStatement<T> {
-	List<SqmPath> getInsertionTargetPaths();
-	void visitInsertionTargetPaths(Consumer<SqmPath> consumer);
+	List<SqmPath<?>> getInsertionTargetPaths();
+	void visitInsertionTargetPaths(Consumer<SqmPath<?>> consumer);
 }

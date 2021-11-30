@@ -14,7 +14,6 @@ import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
-import org.hibernate.sql.exec.spi.ExecutionContext;
 
 /**
  * Pluggable strategy for defining how mutation (`UPDATE` or `DELETE`) queries should be handled when the target
@@ -55,7 +54,7 @@ public interface SqmMultiTableMutationStrategy {
 	 * @return The number of rows affected
 	 */
 	int executeUpdate(
-			SqmUpdateStatement sqmUpdateStatement,
+			SqmUpdateStatement<?> sqmUpdateStatement,
 			DomainParameterXref domainParameterXref,
 			DomainQueryExecutionContext context);
 
@@ -65,7 +64,7 @@ public interface SqmMultiTableMutationStrategy {
 	 * @return The number of rows affected
 	 */
 	int executeDelete(
-			SqmDeleteStatement sqmDeleteStatement,
+			SqmDeleteStatement<?> sqmDeleteStatement,
 			DomainParameterXref domainParameterXref,
 			DomainQueryExecutionContext context);
 }

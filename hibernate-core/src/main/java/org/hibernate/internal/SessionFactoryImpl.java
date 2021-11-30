@@ -857,6 +857,12 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 										jdbcConnectionAccess
 								);
 							}
+							if ( entityPersister.getSqmMultiTableInsertStrategy() != null ) {
+								entityPersister.getSqmMultiTableInsertStrategy().release(
+										this,
+										jdbcConnectionAccess
+								);
+							}
 						}
 				);
 				( (MappingMetamodelImpl) runtimeMetamodels.getMappingMetamodel() ).close();

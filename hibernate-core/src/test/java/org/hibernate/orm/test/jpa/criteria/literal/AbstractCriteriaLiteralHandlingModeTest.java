@@ -15,7 +15,10 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.query.CastType;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
+import org.hibernate.type.SqlTypes;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import org.hibernate.testing.jdbc.SQLStatementInterceptor;
 import org.junit.Before;
@@ -89,6 +92,26 @@ public abstract class AbstractCriteriaLiteralHandlingModeTest extends BaseEntity
 
 			sqlStatementInterceptor.assertExecuted( expectedSQL() );
 		} );
+	}
+
+	protected String casted(String expression, CastType castType) {
+		final TypeConfiguration typeConfiguration = entityManagerFactory().getTypeConfiguration();
+		return getDialect().castPattern( CastType.OTHER, castType )
+				.replace(
+						"?2",
+						getDialect().getTypeName(
+								SqlTypes.VARCHAR,
+								getDialect().getSizeStrategy().resolveSize(
+										typeConfiguration.getJdbcTypeDescriptorRegistry()
+												.getDescriptor(SqlTypes.VARCHAR ),
+										typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( String.class ),
+										null,
+										null,
+										null
+								)
+						)
+				)
+				.replace( "?1", expression );
 	}
 
 	protected abstract String expectedSQL();

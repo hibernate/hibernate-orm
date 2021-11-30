@@ -31,6 +31,7 @@ import org.hibernate.sql.ast.tree.expression.FunctionExpression;
 import org.hibernate.sql.ast.tree.expression.JdbcLiteral;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.ModifiedSubQueryExpression;
+import org.hibernate.sql.ast.tree.expression.Over;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
 import org.hibernate.sql.ast.tree.expression.SqlSelectionExpression;
@@ -232,6 +233,11 @@ class AggregateFunctionChecker implements SqlAstWalker {
 	@Override
 	public void visitSelfRenderingPredicate(SelfRenderingPredicate selfRenderingPredicate) {
 		selfRenderingPredicate.getSelfRenderingExpression().accept( this );
+	}
+
+	@Override
+	public void visitOver(Over over) {
+		over.getExpression().accept( this );
 	}
 
 	// --- to ignore ---

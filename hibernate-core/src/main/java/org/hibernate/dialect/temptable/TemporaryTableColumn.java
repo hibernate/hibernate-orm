@@ -1,0 +1,76 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ */
+package org.hibernate.dialect.temptable;
+
+import org.hibernate.metamodel.mapping.JdbcMapping;
+
+/**
+ * A column in a IdTable.  As these columns mirror the entity id columns, we know a few things about it inherently,
+ * such as being non-nullable
+ *
+ * @author Steve Ebersole
+ */
+public class TemporaryTableColumn {
+	private final TemporaryTable containingTable;
+	private final String columnName;
+	private final JdbcMapping jdbcMapping;
+	private final String sqlTypeName;
+	private final boolean nullable;
+	private final boolean primaryKey;
+
+	public TemporaryTableColumn(
+			TemporaryTable containingTable,
+			String columnName,
+			JdbcMapping jdbcMapping,
+			String sqlTypeName,
+			boolean nullable) {
+		this( containingTable, columnName, jdbcMapping, sqlTypeName, nullable, false );
+	}
+
+	public TemporaryTableColumn(
+			TemporaryTable containingTable,
+			String columnName,
+			JdbcMapping jdbcMapping,
+			String sqlTypeName,
+			boolean nullable,
+			boolean primaryKey) {
+		this.containingTable = containingTable;
+		this.columnName = columnName;
+		this.jdbcMapping = jdbcMapping;
+		this.sqlTypeName = sqlTypeName;
+		this.nullable = nullable;
+		this.primaryKey = primaryKey;
+	}
+
+	public TemporaryTable getContainingTable() {
+		return containingTable;
+	}
+
+	public String getColumnName() {
+		return columnName;
+	}
+
+	public JdbcMapping getJdbcMapping() {
+		return jdbcMapping;
+	}
+
+	public String getDefaultValue() {
+		return null;
+	}
+
+	public String getSqlTypeDefinition() {
+		return sqlTypeName;
+	}
+
+	public boolean isNullable() {
+		return nullable;
+	}
+
+	public boolean isPrimaryKey() {
+		return primaryKey;
+	}
+}

@@ -23,7 +23,7 @@ import org.hibernate.query.sqm.tree.from.SqmRoot;
  * @author Steve Ebersole
  */
 public abstract class AbstractSqmInsertStatement<T> extends AbstractSqmDmlStatement<T> implements SqmInsertStatement<T> {
-	private List<SqmPath> insertionTargetPaths;
+	private List<SqmPath<?>> insertionTargetPaths;
 
 	protected AbstractSqmInsertStatement(SqmQuerySource querySource, NodeBuilder nodeBuilder) {
 		super( querySource, nodeBuilder );
@@ -34,17 +34,17 @@ public abstract class AbstractSqmInsertStatement<T> extends AbstractSqmDmlStatem
 	}
 
 	@Override
-	public List<SqmPath> getInsertionTargetPaths() {
+	public List<SqmPath<?>> getInsertionTargetPaths() {
 		return insertionTargetPaths == null
 				? Collections.emptyList()
 				: Collections.unmodifiableList( insertionTargetPaths );
 	}
 
-	public void setInsertionTargetPaths(List<SqmPath> insertionTargetPaths) {
+	public void setInsertionTargetPaths(List<SqmPath<?>> insertionTargetPaths) {
 		this.insertionTargetPaths = insertionTargetPaths;
 	}
 
-	public void addInsertTargetStateField(SqmPath stateField) {
+	public void addInsertTargetStateField(SqmPath<?> stateField) {
 		if ( insertionTargetPaths == null ) {
 			insertionTargetPaths = new ArrayList<>();
 		}
@@ -52,7 +52,7 @@ public abstract class AbstractSqmInsertStatement<T> extends AbstractSqmDmlStatem
 	}
 
 	@Override
-	public void visitInsertionTargetPaths(Consumer<SqmPath> consumer) {
+	public void visitInsertionTargetPaths(Consumer<SqmPath<?>> consumer) {
 		if ( insertionTargetPaths != null ) {
 			insertionTargetPaths.forEach( consumer );
 		}

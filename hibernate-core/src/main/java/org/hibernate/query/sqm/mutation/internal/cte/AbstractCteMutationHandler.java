@@ -45,9 +45,8 @@ import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
-import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.ast.tree.from.UnionTableGroup;
+import org.hibernate.sql.ast.tree.from.UnionTableReference;
 import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
 import org.hibernate.sql.ast.tree.predicate.Junction;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
@@ -74,13 +73,13 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 
 	private final SqmCteTable cteTable;
 	private final DomainParameterXref domainParameterXref;
-	private final CteStrategy strategy;
+	private final CteMutationStrategy strategy;
 
 	public AbstractCteMutationHandler(
 			SqmCteTable cteTable,
-			SqmDeleteOrUpdateStatement sqmStatement,
+			SqmDeleteOrUpdateStatement<?> sqmStatement,
 			DomainParameterXref domainParameterXref,
-			CteStrategy strategy,
+			CteMutationStrategy strategy,
 			SessionFactoryImplementor sessionFactory) {
 		super( sqmStatement, sessionFactory );
 		this.cteTable = cteTable;
@@ -97,7 +96,7 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 		return domainParameterXref;
 	}
 
-	public CteStrategy getStrategy() {
+	public CteMutationStrategy getStrategy() {
 		return strategy;
 	}
 
@@ -315,18 +314,18 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 
 
 	protected TableReference resolveUnionTableReference(
-			TableGroup tableGroup,
+			TableReference tableReference,
 			String tableExpression) {
-		if ( tableGroup instanceof UnionTableGroup ) {
+		if ( tableReference instanceof UnionTableReference ) {
 			return new TableReference(
 					tableExpression,
-					tableGroup.getPrimaryTableReference().getIdentificationVariable(),
-					false,
+					tableReference.getIdentificationVariable(),
+					tableReference.isOptional(),
 					getSessionFactory()
 			);
 		}
 		else {
-			return tableGroup.getTableReference( tableGroup.getNavigablePath(), tableExpression, true, true );
+			return tableReference;
 		}
 	}
 

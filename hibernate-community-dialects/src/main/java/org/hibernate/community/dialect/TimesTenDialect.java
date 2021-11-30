@@ -25,10 +25,11 @@ import org.hibernate.persister.entity.Lockable;
 import org.hibernate.query.IntervalType;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.query.sqm.mutation.internal.idtable.AfterUseAction;
-import org.hibernate.query.sqm.mutation.internal.idtable.GlobalTemporaryTableStrategy;
-import org.hibernate.query.sqm.mutation.internal.idtable.IdTable;
-import org.hibernate.query.sqm.mutation.internal.idtable.TempIdTableExporter;
+import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableInsertStrategy;
+import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
+import org.hibernate.dialect.temptable.TemporaryTable;
+import org.hibernate.dialect.temptable.TemporaryTableKind;
+import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -313,22 +314,40 @@ public class TimesTenDialect extends Dialect {
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new GlobalTemporaryTableStrategy(
-				new IdTable(
+		return new GlobalTemporaryTableMutationStrategy(
+				TemporaryTable.createIdTable(
 						rootEntityDescriptor,
-						name -> name.length() > 30 ? name.substring( 0, 30 ) : name,
+						name -> TemporaryTable.ID_TABLE_PREFIX + name,
 						this,
 						runtimeModelCreationContext
 				),
-				() -> new TempIdTableExporter( false, this::getTypeName ) {
-					@Override
-					protected String getCreateOptions() {
-						return "on commit delete rows";
-					}
-				},
-				AfterUseAction.CLEAN,
 				runtimeModelCreationContext.getSessionFactory()
 		);
+	}
+
+	@Override
+	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
+			EntityMappingType rootEntityDescriptor,
+			RuntimeModelCreationContext runtimeModelCreationContext) {
+		return new GlobalTemporaryTableInsertStrategy(
+				TemporaryTable.createEntityTable(
+						rootEntityDescriptor,
+						name -> TemporaryTable.ENTITY_TABLE_PREFIX + name,
+						this,
+						runtimeModelCreationContext
+				),
+				runtimeModelCreationContext.getSessionFactory()
+		);
+	}
+
+	@Override
+	public TemporaryTableKind getSupportedTemporaryTableKind() {
+		return TemporaryTableKind.GLOBAL;
+	}
+
+	@Override
+	public String getTemporaryTableCreateOptions() {
+		return "on commit delete rows";
 	}
 
 	@Override
@@ -352,6 +371,17 @@ public class TimesTenDialect extends Dialect {
 		else {
 			return new SelectLockingStrategy( lockable, lockMode );
 		}
+	}
+
+	@Override
+	public int getMaxAliasLength() {
+		// Max identifier length is 30, but Hibernate needs to add "uniqueing info" so we account for that
+		return 20;
+	}
+
+	@Override
+	public int getMaxIdentifierLength() {
+		return 30;
 	}
 
 	@Override

@@ -12,7 +12,7 @@ import java.util.Map;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.query.sqm.mutation.internal.inline.InlineStrategy;
+import org.hibernate.query.sqm.mutation.internal.inline.InlineMutationStrategy;
 
 import org.hibernate.orm.test.mapping.hhh14276.entity.PlayerStat;
 import org.hibernate.orm.test.mapping.hhh14276.entity.Score;
@@ -33,7 +33,7 @@ public class NestedIdClassDerivedIdentifiersTest extends BaseEntityManagerFuncti
 	@Override
 	protected void addConfigOptions(Map options) {
 		options.put( AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS, Boolean.TRUE );
-		options.put( AvailableSettings.QUERY_MULTI_TABLE_MUTATION_STRATEGY, InlineStrategy.class.getName() );
+		options.put( AvailableSettings.QUERY_MULTI_TABLE_MUTATION_STRATEGY, InlineMutationStrategy.class.getName() );
 	}
 
 	@Before

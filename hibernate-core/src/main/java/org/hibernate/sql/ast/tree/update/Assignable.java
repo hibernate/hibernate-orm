@@ -17,6 +17,8 @@ import org.hibernate.sql.ast.tree.expression.ColumnReference;
 public interface Assignable {
 	List<ColumnReference> getColumnReferences();
 
-	void visitColumnReferences(Consumer<ColumnReference> columnReferenceConsumer);
+	default void visitColumnReferences(Consumer<ColumnReference> columnReferenceConsumer) {
+		getColumnReferences().forEach( columnReferenceConsumer );
+	}
 
 }

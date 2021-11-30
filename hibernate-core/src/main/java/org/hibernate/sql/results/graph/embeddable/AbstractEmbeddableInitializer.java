@@ -9,6 +9,7 @@ package org.hibernate.sql.results.graph.embeddable;
 import java.util.List;
 
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
@@ -45,13 +46,18 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 	private final NavigablePath navigablePath;
 	private final EmbeddableValuedModelPart embedded;
 	private final EmbeddableRepresentationStrategy representationStrategy;
-	private FetchParentAccess fetchParentAccess;
+	private final FetchParentAccess fetchParentAccess;
+	private final boolean createEmptyCompositesEnabled;
+	private final SessionFactoryImplementor sessionFactory;
 
 	private final List<DomainResultAssembler<?>> assemblers;
 
 	// per-row state
+	// 		NOTE : technically `resolvedValues` need not be instance state,
+	//			but keeping it here allows for not creating arrays for each
+	//			and every row
 	private final Object[] resolvedValues;
-	private final boolean createEmptyCompositesEnabled;
+	private Boolean allValuesNull;
 	private Object compositeInstance;
 
 
@@ -97,6 +103,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 				&& !EntityIdentifierMapping.ROLE_LOCAL_NAME.equals( navigablePath.getLocalName() )
 				&& embeddableTypeDescriptor.isCreateEmptyCompositesEnabled();
 
+		sessionFactory = creationState.getSqlAstCreationContext().getSessionFactory();
 	}
 
 	@Override
@@ -120,30 +127,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 
 	@Override
 	public void resolveKey(RowProcessingState rowProcessingState) {
-		if ( compositeInstance != null ) {
-			return;
-		}
-
-		final PropertyAccess parentInjectionPropertyAccess = embedded.getParentInjectionAttributePropertyAccess();
-		final FetchParentAccess fetchParentAccess = getFetchParentAccess();
-
-		if ( parentInjectionPropertyAccess != null && fetchParentAccess != null ) {
-			fetchParentAccess.findFirstEntityDescriptorAccess().registerResolutionListener(
-					// todo (6.0) : this is the legacy behavior
-					// 		- the first entity is injected as the parent, even if the composite
-					//		is defined on another composite
-					owner -> {
-						if ( compositeInstance == null ) {
-							return;
-						}
-						parentInjectionPropertyAccess.getSetter().set(
-								compositeInstance,
-								owner,
-								rowProcessingState.getSession().getFactory()
-						);
-					}
-			);
-		}
+		// nothing to do
 	}
 
 	@Override
@@ -169,7 +153,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		if ( compositeInstance == null ) {
 			compositeInstance = representationStrategy
 					.getInstantiator()
-					.instantiate( null, rowProcessingState.getSession().getFactory() );
+					.instantiate( null, sessionFactory );
 		}
 
 		EmbeddableLoadingLogger.INSTANCE.debugf(
@@ -179,33 +163,10 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 	}
 
 	@Override
-	public void initializeInstance(RowProcessingState rowProcessingState) {
-		final PropertyAccess parentInjectionPropertyAccess = embedded.getParentInjectionAttributePropertyAccess();
-		final Initializer initializer = rowProcessingState.resolveInitializer( navigablePath.getParent() );
+	public void initializeInstance(RowProcessingState processingState) {
+		final Initializer initializer = processingState.resolveInitializer( navigablePath.getParent() );
 
-		if ( parentInjectionPropertyAccess != null ) {
-			final Object owner;
-			if ( initializer instanceof CollectionInitializer ) {
-				owner = ( (CollectionInitializer) initializer ).getCollectionInstance().getOwner();
-			}
-			else if ( initializer instanceof EntityInitializer ) {
-				owner = ( (EntityInitializer) initializer ).getEntityInstance();
-
-				parentInjectionPropertyAccess.getSetter().set(
-						compositeInstance,
-						owner,
-						rowProcessingState.getSession().getFactory()
-				);
-			}
-			else {
-				throw new NotYetImplementedFor6Exception( getClass() );
-			}
-			parentInjectionPropertyAccess.getSetter().set(
-					compositeInstance,
-					owner,
-					rowProcessingState.getSession().getFactory()
-			);
-		}
+		handleParentInjection( processingState );
 
 		EmbeddableLoadingLogger.INSTANCE.debugf(
 				"Initializing composite instance [%s]",
@@ -216,8 +177,8 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		for ( int i = 0; i < assemblers.size(); i++ ) {
 			final DomainResultAssembler<?> assembler = assemblers.get( i );
 			final Object contributorValue = assembler.assemble(
-					rowProcessingState,
-					rowProcessingState.getJdbcValuesSourceProcessingState().getProcessingOptions()
+					processingState,
+					processingState.getJdbcValuesSourceProcessingState().getProcessingOptions()
 			);
 
 			resolvedValues[i] = contributorValue;
@@ -234,14 +195,14 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 			if ( compositeInstance instanceof HibernateProxy ) {
 				if ( initializer != this ) {
 					( (AbstractEntityInitializer) initializer ).registerResolutionListener(
-							entity -> setPropertyValuesOnTarget( entity, rowProcessingState.getSession() )
+							entity -> setPropertyValuesOnTarget( entity, processingState.getSession() )
 					);
 				}
 				else {
 					Object target = representationStrategy
 							.getInstantiator()
-							.instantiate( null, rowProcessingState.getSession().getFactory() );
-					setPropertyValuesOnTarget( target, rowProcessingState.getSession() );
+							.instantiate( null, sessionFactory );
+					setPropertyValuesOnTarget( target, processingState.getSession() );
 					( (HibernateProxy) compositeInstance ).getHibernateLazyInitializer().setImplementation( target );
 				}
 			}
@@ -254,9 +215,94 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 			// but that might cause unexpected outcomes for Hibernate 5 users that use createEmptyCompositesEnabled when updating.
 			// You can see the need for this by running EmptyCompositeEquivalentToNullTest
 			else if ( !areAllValuesNull ) {
-				setPropertyValuesOnTarget( compositeInstance, rowProcessingState.getSession() );
+				setPropertyValuesOnTarget( compositeInstance, processingState.getSession() );
 			}
 		}
+	}
+	private void handleParentInjection(RowProcessingState processingState) {
+		final PropertyAccess parentInjectionAccess = embedded.getParentInjectionAttributePropertyAccess();
+		if ( parentInjectionAccess == null ) {
+			// embeddable defined no parent injection
+			return;
+		}
+
+		// todo (6.0) : should we initialize the composite instance if we get here and it is null (not NULL_MARKER)?
+
+		// we want to avoid injection for `NULL_MARKER`
+		final Object compositeInstance = getCompositeInstance();
+		if ( compositeInstance == null ) {
+			EmbeddableLoadingLogger.INSTANCE.debugf(
+					"Skipping parent injection for null embeddable [%s]",
+					navigablePath
+			);
+			return;
+		}
+
+		final Object parent = determineParentInstance( processingState );
+		if ( parent == null ) {
+			EmbeddableLoadingLogger.INSTANCE.debugf(
+					"Unable to determine parent for injection into embeddable [%s]",
+					navigablePath
+			);
+			return;
+		}
+
+		EmbeddableLoadingLogger.INSTANCE.debugf(
+				"Injecting parent into embeddable [%s] : `%s` -> `%s`",
+				navigablePath,
+				parent,
+				compositeInstance
+		);
+
+		parentInjectionAccess.getSetter().set(
+				compositeInstance,
+				parent,
+				sessionFactory
+		);
+	}
+
+	private Object determineParentInstance(RowProcessingState processingState) {
+		// use `fetchParentAccess` if it is available - it is more efficient
+		// and the correct way to do it.
+
+		// NOTE: indicates that we are initializing a DomainResult as opposed to a Fetch
+		// todo (6.0) - this^^ does not work atm when the embeddable is the key or
+		//  element of a collection because it passes in null as the fetch-parent-access.
+		//  it should really pass the collection-initializer as the fetch-parent,
+		//  or at least the fetch-parent of the collection could get passed.
+		if ( fetchParentAccess != null ) {
+			// the embeddable being initialized is a fetch, so use the fetchParentAccess
+			// to get the parent reference
+			//
+			// at the moment, this uses the legacy behavior of injecting the "first
+			// containing entity" as the parent.  however,
+			// todo (6.x) - allow injection of containing composite as parent if
+			//  	it is the direct parent
+
+			final FetchParentAccess firstEntityDescriptorAccess = fetchParentAccess.findFirstEntityDescriptorAccess();
+			return firstEntityDescriptorAccess.getInitializedInstance();
+		}
+
+		// Otherwise, fallback to determining the parent-initializer by path
+		//		todo (6.0) - this is the part that should be "subsumed" based on the
+		//			comment above
+
+		final NavigablePath parentPath = navigablePath.getParent();
+		if ( parentPath == null ) {
+			return null;
+		}
+
+		final Initializer parentInitializer = processingState.resolveInitializer( parentPath );
+
+		if ( parentInitializer instanceof CollectionInitializer ) {
+			return ( (CollectionInitializer) parentInitializer ).getCollectionInstance().getOwner();
+		}
+
+		if ( parentInitializer instanceof EntityInitializer ) {
+			return ( (EntityInitializer) parentInitializer ).getEntityInstance();
+		}
+
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	private void setPropertyValuesOnTarget(Object compositeInstance, SharedSessionContractImplementor session) {

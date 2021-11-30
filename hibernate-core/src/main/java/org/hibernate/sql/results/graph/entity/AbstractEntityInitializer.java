@@ -610,7 +610,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			entityInstanceForNotify = entityInstance;
 		}
 
-		notifyParentResolutionListeners( entityInstanceForNotify );
+		notifyResolutionListeners( entityInstanceForNotify );
 	}
 
 	private void initializeEntity(
@@ -913,6 +913,6 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		entityInstanceForNotify = null;
 		missing = false;
 		resolvedEntityState = null;
-		clearParentResolutionListeners();
+		clearResolutionListeners();
 	}
 }

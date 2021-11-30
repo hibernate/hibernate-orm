@@ -24,10 +24,6 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 
 	EmbeddableRepresentationStrategy getRepresentationStrategy();
 
-	Object[] getPropertyValues(Object compositeInstance);
-
-	void setPropertyValues(Object compositeInstance, Object[] resolvedValues);
-
 	boolean isCreateEmptyCompositesEnabled();
 
 	EmbeddableMappingType createInverseMappingType(

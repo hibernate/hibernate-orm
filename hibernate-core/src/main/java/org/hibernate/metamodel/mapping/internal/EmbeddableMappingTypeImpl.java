@@ -18,6 +18,7 @@ import java.util.function.Function;
 import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.SharedSessionContract;
+import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.FetchTiming;
@@ -744,6 +745,11 @@ public class EmbeddableMappingTypeImpl implements EmbeddableMappingType, Selecta
 	}
 
 	@Override
+	public AttributeMapping getAttributeMapping(int position) {
+		return attributeMappings.get( position );
+	}
+
+	@Override
 	public AttributeMapping findAttributeMapping(String name) {
 		for ( int i = 0; i < attributeMappings.size(); i++ ) {
 			final AttributeMapping attr = attributeMappings.get( i );
@@ -795,7 +801,15 @@ public class EmbeddableMappingTypeImpl implements EmbeddableMappingType, Selecta
 	}
 
 	public void setPropertyValues(Object compositeInstance, Object[] resolvedValues) {
-		// todo (6.0) : reflection optimizer...
+		final ReflectionOptimizer reflectionOptimizer = representationStrategy.getReflectionOptimizer();
+		if ( reflectionOptimizer != null ) {
+			final ReflectionOptimizer.AccessOptimizer accessOptimizer = reflectionOptimizer.getAccessOptimizer();
+			if ( accessOptimizer != null ) {
+				accessOptimizer.setPropertyValues( compositeInstance, resolvedValues );
+			}
+			return;
+		}
+
 		for ( int i = 0; i < attributeMappings.size(); i++ ) {
 			attributeMappings.get( i )
 					.getAttributeMetadataAccess()

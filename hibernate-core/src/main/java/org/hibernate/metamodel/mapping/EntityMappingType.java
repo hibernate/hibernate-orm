@@ -384,6 +384,11 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 	}
 
 	@Override
+	default AttributeMapping getAttributeMapping(int position) {
+		return getEntityPersister().getAttributeMapping( position );
+	}
+
+	@Override
 	default JavaType getMappedJavaTypeDescriptor() {
 		return getEntityPersister().getMappedJavaTypeDescriptor();
 	}

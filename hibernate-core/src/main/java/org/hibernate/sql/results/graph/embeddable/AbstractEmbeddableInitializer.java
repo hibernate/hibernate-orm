@@ -230,7 +230,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 			compositeInstance = null;
 		}
 		else {
-			notifyParentResolutionListeners( compositeInstance );
+			notifyResolutionListeners( compositeInstance );
 			if ( compositeInstance instanceof HibernateProxy ) {
 				if ( initializer != this ) {
 					( (AbstractEntityInitializer) initializer ).registerResolutionListener(
@@ -296,7 +296,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 	@Override
 	public void finishUpRow(RowProcessingState rowProcessingState) {
 		compositeInstance = null;
-		clearParentResolutionListeners();
+		clearResolutionListeners();
 	}
 
 	@Override

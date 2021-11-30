@@ -100,7 +100,7 @@ public class VirtualIdEmbeddable implements IdentifierValueMapper {
 		this.idMapping = idMapping;
 		this.javaType = identifiedEntityMapping.getJavaTypeDescriptor();
 
-		this.representationStrategy = new VirtualIdRepresentationStrategy( identifiedEntityMapping );
+		this.representationStrategy = new VirtualIdRepresentationStrategy( this, identifiedEntityMapping );
 
 		final CompositeType compositeType = (CompositeType) virtualIdSource.getType();
 		this.attributeMappings = arrayList( (compositeType).getPropertyNames().length );
@@ -259,6 +259,11 @@ public class VirtualIdEmbeddable implements IdentifierValueMapper {
 	@Override
 	public int getNumberOfAttributeMappings() {
 		return attributeMappings.size();
+	}
+
+	@Override
+	public AttributeMapping getAttributeMapping(int position) {
+		return attributeMappings.get( position );
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })

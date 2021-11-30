@@ -11,7 +11,8 @@ import java.util.List;
 import java.util.function.Consumer;
 
 /**
- * @author Steve Ebersole
+ * Base support for FetchParentAccess implementations.  Mainly adds support for
+ * registering and managing resolution listeners
  */
 public abstract class AbstractFetchParentAccess implements FetchParentAccess {
 	private List<Consumer<Object>> listeners;
@@ -25,19 +26,19 @@ public abstract class AbstractFetchParentAccess implements FetchParentAccess {
 		listeners.add( listener );
 	}
 
-	protected void clearParentResolutionListeners() {
+	protected void clearResolutionListeners() {
 		if ( listeners != null ) {
 			listeners.clear();
 		}
 	}
 
-	protected void notifyParentResolutionListeners(Object parentInstance) {
+	protected void notifyResolutionListeners(Object resolvedInstance) {
 		if ( listeners == null ) {
 			return;
 		}
 
 		for ( Consumer<Object> listener : listeners ) {
-			listener.accept( parentInstance );
+			listener.accept( resolvedInstance );
 		}
 
 		listeners.clear();

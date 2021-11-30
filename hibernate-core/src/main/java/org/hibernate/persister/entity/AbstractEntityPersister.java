@@ -5811,6 +5811,11 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
+	public AttributeMapping getAttributeMapping(int position) {
+		return attributeMappings.get( position );
+	}
+
+	@Override
 	public int getNumberOfDeclaredAttributeMappings() {
 		return declaredAttributeMappings.size();
 	}

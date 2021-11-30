@@ -226,7 +226,7 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 	public void finishUpRow(RowProcessingState rowProcessingState) {
 		entityInstance = null;
 
-		clearParentResolutionListeners();
+		clearResolutionListeners();
 	}
 
 	@Override

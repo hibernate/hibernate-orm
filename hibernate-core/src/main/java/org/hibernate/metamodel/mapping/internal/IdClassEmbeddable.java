@@ -308,6 +308,11 @@ public class IdClassEmbeddable implements IdentifierValueMapper {
 	}
 
 	@Override
+	public AttributeMapping getAttributeMapping(int position) {
+		return attributeMappings.get( position );
+	}
+
+	@Override
 	public boolean isCreateEmptyCompositesEnabled() {
 		// generally we do not want empty composites for identifiers
 		return false;

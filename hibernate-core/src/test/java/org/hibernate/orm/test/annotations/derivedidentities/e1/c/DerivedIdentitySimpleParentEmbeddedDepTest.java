@@ -35,16 +35,19 @@ public class DerivedIdentitySimpleParentEmbeddedDepTest extends BaseNonConfigCor
 		s.persist( d );
 		s.flush();
 		s.clear();
-		d = getDerivedClassById( e, s, Dependent.class, d.name );
+		d = getDerivedClassById( e, d.name, s );
 		assertEquals( e.empId, d.emp.empId );
 		s.getTransaction().rollback();
 		s.close();
 	}
 
-	private <T> T getDerivedClassById(Employee e, Session s, Class<T> clazz, String name) {
-		return ( T )
-				s.createQuery( "from " + clazz.getName() + " d where d.name = :name and d.emp.empId = :empId")
-					.setParameter( "empId", e.empId ).setParameter( "name", name ).uniqueResult();
+	private Dependent getDerivedClassById(Employee e, String name, Session s) {
+		final String qry = "from Dependent d where d.name = :name and d.emp.empId = :empId";
+
+		return s.createQuery( qry, Dependent.class )
+				.setParameter( "empId", e.empId )
+				.setParameter( "name", name )
+				.uniqueResult();
 	}
 
 	@Override

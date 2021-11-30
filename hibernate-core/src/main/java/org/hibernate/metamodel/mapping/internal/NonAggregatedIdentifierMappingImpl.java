@@ -41,11 +41,11 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 
 /**
  * A "non-aggregated" composite identifier.
- * <p>
- * This is an identifier mapped using JPA's {@link jakarta.persistence.MapsId} feature.
  *
- * @author Steve Ebersole
- * @apiNote Technically a MapsId id does not have to be composite; we still handle that this class however
+ * This is an identifier defined using more than one {@link jakarta.persistence.Id}
+ * attribute with zero-or-more {@link jakarta.persistence.MapsId}.
+ *
+ * Can also be a single {@link jakarta.persistence.Id} with {@link jakarta.persistence.MapsId}
  */
 public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentifierMapping implements NonAggregatedIdentifierMapping {
 	private final VirtualIdEmbeddable virtualIdEmbeddable;
@@ -132,7 +132,7 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 
 	@Override
 	public boolean hasContainingClass() {
-		return identifierValueMapper != getEmbeddableTypeDescriptor();
+		return idClassEmbeddable != null;
 	}
 
 	@Override

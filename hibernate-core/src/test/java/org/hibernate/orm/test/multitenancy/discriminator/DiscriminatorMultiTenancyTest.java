@@ -5,7 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
-package org.hibernate.test.multitenancy.discriminator;
+package org.hibernate.orm.test.multitenancy.discriminator;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -36,7 +36,7 @@ import org.hibernate.testing.cache.CachingRegionFactory;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.transaction.TransactionUtil;
-import org.hibernate.test.multitenancy.schema.Customer;
+import org.hibernate.orm.test.multitenancy.schema.Customer;
 import org.hibernate.orm.test.util.DdlTransactionIsolatorTestingImpl;
 import org.junit.After;
 import org.junit.Assert;

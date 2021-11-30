@@ -11,9 +11,11 @@ import java.util.function.Supplier;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
+import org.hibernate.bytecode.spi.ProxyFactoryFactory;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.Backref;
@@ -67,16 +69,27 @@ public class EmbeddableRepresentationStrategyPojo extends AbstractEmbeddableRepr
 				false
 		);
 
-		this.instantiator = determineInstantiator( runtimeDescriptorAccess );
+		this.instantiator = determineInstantiator( bootDescriptor, runtimeDescriptorAccess, creationContext );
 	}
 
-	private EmbeddableInstantiator determineInstantiator(Supplier<EmbeddableMappingType> runtimeDescriptorAccess) {
+	private EmbeddableInstantiator determineInstantiator(
+			Component bootDescriptor,
+			Supplier<EmbeddableMappingType> runtimeDescriptorAccess,
+			RuntimeModelCreationContext creationContext) {
 		if ( reflectionOptimizer != null && reflectionOptimizer.getInstantiationOptimizer() != null ) {
 			final ReflectionOptimizer.InstantiationOptimizer instantiationOptimizer = reflectionOptimizer.getInstantiationOptimizer();
 			return new EmbeddableInstantiatorPojoOptimized(
 					getEmbeddableJavaTypeDescriptor(),
 					runtimeDescriptorAccess,
 					instantiationOptimizer
+			);
+		}
+
+		if ( bootDescriptor.isEmbedded() && ReflectHelper.isAbstractClass( bootDescriptor.getComponentClass() ) ) {
+			final ProxyFactoryFactory proxyFactoryFactory = creationContext.getSessionFactory().getServiceRegistry().getService( ProxyFactoryFactory.class );
+			return new EmbeddableInstantiatorProxied(
+					bootDescriptor.getComponentClass(),
+					proxyFactoryFactory.buildBasicProxyFactory( bootDescriptor.getComponentClass() )
 			);
 		}
 

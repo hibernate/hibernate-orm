@@ -29,12 +29,14 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.collection.CollectionInitializer;
-import org.hibernate.sql.results.graph.entity.AbstractEntityInitializer;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.internal.NullValueAssembler;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.EntityJavaTypeDescriptor;
 
+import static java.lang.Boolean.FALSE;
+import static java.lang.Boolean.TRUE;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
 /**
@@ -85,6 +87,10 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		this.resolvedValues = new Object[ numOfAttrs ];
 		this.assemblers = arrayList( numOfAttrs );
 
+		// todo (6.0) - why not just use the "maps id" form right here?
+		//		( (CompositeIdentifierMapping) embedded ).getMappedIdEmbeddableTypeDescriptor()
+		//		in theory this should let us avoid the explicit maps-id handling via `setPropertyValuesOnTarget`
+
 		embeddableTypeDescriptor.visitFetchables(
 				stateArrayContributor -> {
 					final Fetch fetch = resultDescriptor.findFetch( stateArrayContributor );
@@ -126,12 +132,21 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 	}
 
 	@Override
-	public void resolveKey(RowProcessingState rowProcessingState) {
+	public FetchParentAccess findFirstEntityDescriptorAccess() {
+		return getFetchParentAccess().findFirstEntityDescriptorAccess();
+	}
+
+	@Override
+	public void resolveKey(RowProcessingState processingState) {
 		// nothing to do
 	}
 
 	@Override
-	public void resolveInstance(RowProcessingState rowProcessingState) {
+	public void resolveInstance(RowProcessingState processingState) {
+		reallyResolve( processingState );
+	}
+
+	private void reallyResolve(RowProcessingState processingState) {
 		if ( compositeInstance != null ) {
 			return;
 		}
@@ -140,14 +155,25 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		// which we access through the fetch parent access.
 		// If this model part is an identifier, we must construct the instance as this is called during resolveKey
 		final EmbeddableMappingType embeddableTypeDescriptor = embedded.getEmbeddableTypeDescriptor();
+		final JavaType<?> embeddableJtd = embeddableTypeDescriptor.getMappedJavaTypeDescriptor();
 
-		if ( fetchParentAccess != null && embeddableTypeDescriptor.getMappedJavaTypeDescriptor().getJavaTypeClass()
-				.isAssignableFrom( fetchParentAccess.getInitializedPart().getJavaTypeDescriptor().getJavaTypeClass() )
-				&& embeddableTypeDescriptor.getMappedJavaTypeDescriptor() instanceof EntityJavaTypeDescriptor<?>
+		if ( fetchParentAccess != null &&
+				embeddableJtd.getJavaTypeClass().isAssignableFrom( fetchParentAccess.getInitializedPart().getJavaTypeDescriptor().getJavaTypeClass() )
+				&& embeddableJtd instanceof EntityJavaTypeDescriptor<?>
 				&& !( embedded instanceof CompositeIdentifierMapping )
 				&& !EntityIdentifierMapping.ROLE_LOCAL_NAME.equals( embedded.getFetchableName() ) ) {
-			fetchParentAccess.resolveInstance( rowProcessingState );
+			EmbeddableLoadingLogger.INSTANCE.debugf(
+					"Linking composite instance to fetch-parent [%s] - %s",
+					navigablePath,
+					fetchParentAccess
+			);
+			fetchParentAccess.resolveInstance( processingState );
 			compositeInstance = fetchParentAccess.getInitializedInstance();
+			EmbeddableLoadingLogger.INSTANCE.debugf(
+					"Done linking composite instance to fetch-parent [%s] - %s",
+					navigablePath,
+					compositeInstance
+			);
 		}
 
 		if ( compositeInstance == null ) {
@@ -164,37 +190,24 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 
 	@Override
 	public void initializeInstance(RowProcessingState processingState) {
-		final Initializer initializer = processingState.resolveInitializer( navigablePath.getParent() );
-
-		handleParentInjection( processingState );
-
 		EmbeddableLoadingLogger.INSTANCE.debugf(
 				"Initializing composite instance [%s]",
 				navigablePath
 		);
 
-		boolean areAllValuesNull = true;
-		for ( int i = 0; i < assemblers.size(); i++ ) {
-			final DomainResultAssembler<?> assembler = assemblers.get( i );
-			final Object contributorValue = assembler.assemble(
-					processingState,
-					processingState.getJdbcValuesSourceProcessingState().getProcessingOptions()
-			);
+		handleParentInjection( processingState );
 
-			resolvedValues[i] = contributorValue;
-			if ( contributorValue != null ) {
-				areAllValuesNull = false;
-			}
-		}
+		extractRowState( processingState );
 
-		if ( !createEmptyCompositesEnabled && areAllValuesNull ) {
+		if ( !createEmptyCompositesEnabled && allValuesNull == TRUE ) {
 			compositeInstance = null;
 		}
 		else {
 			notifyResolutionListeners( compositeInstance );
 			if ( compositeInstance instanceof HibernateProxy ) {
-				if ( initializer != this ) {
-					( (AbstractEntityInitializer) initializer ).registerResolutionListener(
+				final Initializer parentInitializer = processingState.resolveInitializer( navigablePath.getParent() );
+				if ( parentInitializer != this ) {
+					( (FetchParentAccess) parentInitializer ).registerResolutionListener(
 							entity -> setPropertyValuesOnTarget( entity, processingState.getSession() )
 					);
 				}
@@ -214,11 +227,28 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 			// A possible alternative could be to initialize the resolved values for primitive fields to their default value,
 			// but that might cause unexpected outcomes for Hibernate 5 users that use createEmptyCompositesEnabled when updating.
 			// You can see the need for this by running EmptyCompositeEquivalentToNullTest
-			else if ( !areAllValuesNull ) {
+			else if ( allValuesNull == FALSE ) {
 				setPropertyValuesOnTarget( compositeInstance, processingState.getSession() );
 			}
 		}
 	}
+
+	private void extractRowState(RowProcessingState processingState) {
+		allValuesNull = true;
+		for ( int i = 0; i < assemblers.size(); i++ ) {
+			final DomainResultAssembler<?> assembler = assemblers.get( i );
+			final Object contributorValue = assembler.assemble(
+					processingState,
+					processingState.getJdbcValuesSourceProcessingState().getProcessingOptions()
+			);
+
+			resolvedValues[i] = contributorValue;
+			if ( contributorValue != null ) {
+				allValuesNull = false;
+			}
+		}
+	}
+
 	private void handleParentInjection(RowProcessingState processingState) {
 		final PropertyAccess parentInjectionAccess = embedded.getParentInjectionAttributePropertyAccess();
 		if ( parentInjectionAccess == null ) {
@@ -229,8 +259,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		// todo (6.0) : should we initialize the composite instance if we get here and it is null (not NULL_MARKER)?
 
 		// we want to avoid injection for `NULL_MARKER`
-		final Object compositeInstance = getCompositeInstance();
-		if ( compositeInstance == null ) {
+		if ( compositeInstance == null || compositeInstance == NULL_MARKER ) {
 			EmbeddableLoadingLogger.INSTANCE.debugf(
 					"Skipping parent injection for null embeddable [%s]",
 					navigablePath
@@ -342,11 +371,12 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 	@Override
 	public void finishUpRow(RowProcessingState rowProcessingState) {
 		compositeInstance = null;
+		allValuesNull = null;
 		clearResolutionListeners();
 	}
 
 	@Override
-	public FetchParentAccess findFirstEntityDescriptorAccess() {
-		return getFetchParentAccess().findFirstEntityDescriptorAccess();
+	public String toString() {
+		return getClass().getSimpleName() + "(" + navigablePath + ") : `" + getInitializedPart().getJavaTypeDescriptor().getJavaTypeClass() + "`";
 	}
 }

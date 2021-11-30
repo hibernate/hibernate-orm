@@ -48,7 +48,7 @@ public final class EntityKey implements Serializable {
 	public EntityKey(Object id, EntityPersister persister) {
 		this.persister = persister;
 		if ( id == null ) {
-			throw new AssertionFailure( "null identifier" );
+			throw new AssertionFailure( "null identifier (" + persister.getEntityName() + ")" );
 		}
 		this.identifier = id;
 		this.hashCode = generateHashCode();

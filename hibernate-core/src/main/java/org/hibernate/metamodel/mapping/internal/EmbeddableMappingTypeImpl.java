@@ -811,12 +811,8 @@ public class EmbeddableMappingTypeImpl implements EmbeddableMappingType, Selecta
 		}
 
 		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			attributeMappings.get( i )
-					.getAttributeMetadataAccess()
-					.resolveAttributeMetadata( null )
-					.getPropertyAccess()
-					.getSetter()
-					.set( compositeInstance, resolvedValues[i], sessionFactory );
+			final AttributeMapping attributeMapping = attributeMappings.get( i );
+			attributeMapping.setValue( compositeInstance, resolvedValues[i], sessionFactory );
 		}
 	}
 

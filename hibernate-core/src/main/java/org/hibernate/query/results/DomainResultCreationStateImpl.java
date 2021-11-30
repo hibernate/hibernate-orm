@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.results;
 
+import java.util.AbstractMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,12 +22,15 @@ import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.mapping.Association;
 import org.hibernate.metamodel.mapping.AssociationKey;
+import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
-import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.internal.BasicValuedCollectionPart;
 import org.hibernate.metamodel.mapping.internal.NonAggregatedIdentifierMappingImpl;
+import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
 import org.hibernate.query.EntityIdentifierNavigablePath;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
@@ -74,7 +78,7 @@ public class DomainResultCreationStateImpl
 	private final SessionFactoryImplementor sessionFactory;
 
 	private final Stack<Function<String, FetchBuilder>> fetchBuilderResolverStack = new StandardStack<>( fetchableName -> null );
-	private final Stack<NavigablePath> relativePathStack = new StandardStack<>();
+	private final Stack<Map.Entry<String, NavigablePath>> relativePathStack = new StandardStack<>();
 	private Map<String, LockMode> registeredLockModes;
 	private boolean processingKeyFetches = false;
 	private boolean resolvingCircularFetch;
@@ -123,7 +127,8 @@ public class DomainResultCreationStateImpl
 	}
 
 	public NavigablePath getCurrentRelativePath() {
-		return relativePathStack.getCurrent();
+		final Map.Entry<String, NavigablePath> entry = relativePathStack.getCurrent();
+		return entry == null ? null : entry.getValue();
 	}
 
 	public void pushExplicitFetchMementoResolver(Function<String, FetchBuilder> resolver) {
@@ -326,33 +331,47 @@ public class DomainResultCreationStateImpl
 
 		final Consumer<Fetchable> fetchableConsumer = fetchable -> {
 			final String fetchableName = fetchable.getFetchableName();
-			final NavigablePath fetchPath = fetchParent.resolveNavigablePath( fetchable );
-			final NavigablePath relativePath = relativePathStack.isEmpty()
-					? new NavigablePath( fetchableName )
-					: relativePathStack.getCurrent().append( fetchableName );
+			Map.Entry<String, NavigablePath> currentEntry;
+			if ( relativePathStack.isEmpty() ) {
+				currentEntry = new AbstractMap.SimpleEntry<>(
+						getRelativePath( "", fetchable, fetchableContainer ),
+						new NavigablePath( fetchableName )
+				);
+			}
+			else {
+				final Map.Entry<String, NavigablePath> oldEntry = relativePathStack.getCurrent();
+				final String key = oldEntry.getKey();
+				currentEntry = new AbstractMap.SimpleEntry<>(
+						getRelativePath( !key.isEmpty() ? key : "", fetchable, fetchableContainer ),
+						oldEntry.getValue().append( fetchableName )
+				);
+			}
 			// todo (6.0): figure out if we can somehow create the navigable paths in a better way
+			final String fullPath = currentEntry.getKey();
+			FetchBuilder explicitFetchBuilder = fetchBuilderResolverStack
+					.getCurrent()
+					.apply( fullPath );
 			if ( fetchable instanceof Association && fetchable.getMappedFetchOptions().getTiming() == FetchTiming.DELAYED ) {
 				final Association association = (Association) fetchable;
 				final ForeignKeyDescriptor foreignKeyDescriptor = association.getForeignKeyDescriptor();
-				if ( foreignKeyDescriptor.getPartMappingType() instanceof EmbeddableMappingType ) {
-					relativePathStack.push( relativePath.append( ( (EmbeddableMappingType) foreignKeyDescriptor.getPartMappingType() ).getPartName() ) );
-				}
-				else {
-					relativePathStack.push( relativePath.append( foreignKeyDescriptor.getPartName() ) );
-				}
-			}
-			else {
-				relativePathStack.push( relativePath );
-			}
-			try {
-				String fullPath = relativePath.getFullPath();
-				if ( fullPath.contains( EntityIdentifierMapping.ROLE_LOCAL_NAME ) ) {
-					fullPath = fullPath.replace( EntityIdentifierMapping.ROLE_LOCAL_NAME + ".", "" );
-				}
-				FetchBuilder explicitFetchBuilder = fetchBuilderResolverStack
-						.getCurrent()
-						.apply( fullPath );
 
+				final String partName = attributeName( foreignKeyDescriptor.getSide( association.getSideNature().inverse() )
+						.getModelPart());
+
+				if ( explicitFetchBuilder == null && partName != null ) {
+					currentEntry = new AbstractMap.SimpleEntry<>(
+							currentEntry.getKey() + "." + partName,
+							currentEntry.getValue().append( partName )
+					);
+					explicitFetchBuilder = fetchBuilderResolverStack
+							.getCurrent()
+							.apply( currentEntry.getKey() );
+				}
+			}
+			relativePathStack.push( currentEntry );
+			try {
+
+				final NavigablePath fetchPath = fetchParent.resolveNavigablePath( fetchable );
 				final FetchBuilder fetchBuilder;
 				if ( explicitFetchBuilder != null ) {
 					fetchBuilder = explicitFetchBuilder;
@@ -385,6 +404,7 @@ public class DomainResultCreationStateImpl
 			finally {
 				relativePathStack.pop();
 			}
+
 		};
 
 		boolean previous = this.processingKeyFetches;
@@ -394,11 +414,30 @@ public class DomainResultCreationStateImpl
 			final EntityValuedModelPart entityValuedFetchable = (EntityValuedModelPart) fetchableContainer;
 			final EntityIdentifierMapping identifierMapping = entityValuedFetchable.getEntityMappingType().getIdentifierMapping();
 			final boolean idClass = identifierMapping instanceof NonAggregatedIdentifierMappingImpl;
+			final String identifierAttributeName = attributeName( identifierMapping );
 			if ( idClass ) {
+				final Map.Entry<String, NavigablePath> oldEntry = relativePathStack.getCurrent();
 				relativePathStack.push(
-						new EntityIdentifierNavigablePath(
-								relativePathStack.getCurrent(),
-								attributeName( identifierMapping )
+						new AbstractMap.SimpleEntry<>(
+								oldEntry == null ? "" : oldEntry.getKey(),
+								new EntityIdentifierNavigablePath(
+										oldEntry == null ? fetchParent.getNavigablePath() : oldEntry.getValue(),
+										identifierAttributeName
+								)
+						)
+				);
+			}
+			else if ( identifierMapping instanceof CompositeIdentifierMapping ) {
+				final Map.Entry<String, NavigablePath> oldEntry = relativePathStack.getCurrent();
+				relativePathStack.push(
+						new AbstractMap.SimpleEntry<>(
+								oldEntry == null ?
+										identifierAttributeName :
+										oldEntry.getKey() + "." + identifierAttributeName,
+								new EntityIdentifierNavigablePath(
+										oldEntry == null ? fetchParent.getNavigablePath() : oldEntry.getValue(),
+										identifierAttributeName
+								)
 						)
 				);
 			}
@@ -423,6 +462,16 @@ public class DomainResultCreationStateImpl
 		fetchableContainer.visitKeyFetchables( fetchableConsumer, null );
 		fetchableContainer.visitFetchables( fetchableConsumer, null );
 		return fetches;
+	}
+
+	private String getRelativePath(String oldEntry, Fetchable fetchable, FetchableContainer fetchableContainer) {
+		if ( fetchable instanceof AttributeMapping || fetchable instanceof SingleAttributeIdentifierMapping || fetchable instanceof BasicValuedCollectionPart ) {
+			if ( !oldEntry.equals( "" ) ) {
+				return oldEntry + '.' + fetchable.getFetchableName();
+			}
+			return fetchable.getFetchableName();
+		}
+		return oldEntry;
 	}
 
 	@Override

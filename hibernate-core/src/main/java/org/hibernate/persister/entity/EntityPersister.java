@@ -415,6 +415,11 @@ public interface EntityPersister
 	IdentifierGenerator getIdentifierGenerator();
 
 	@Override
+	default AttributeMapping getAttributeMapping(int position) {
+		return getAttributeMappings().get( position );
+	}
+
+	@Override
 	default void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
 		final List<AttributeMapping> attributeMappings = getAttributeMappings();
 		if ( domainValue instanceof Object[] ) {

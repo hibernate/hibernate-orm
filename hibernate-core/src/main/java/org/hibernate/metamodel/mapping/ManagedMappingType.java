@@ -35,6 +35,11 @@ public interface ManagedMappingType extends MappingType, FetchableContainer {
 	 */
 	int getNumberOfAttributeMappings();
 
+	/**
+	 * Retrieve an attribute by its contributor position
+	 */
+	AttributeMapping getAttributeMapping(int position);
+
 	default AttributeMapping findAttributeMapping(String name) {
 		return null;
 	}
@@ -58,6 +63,10 @@ public interface ManagedMappingType extends MappingType, FetchableContainer {
 			consumer.accept( i, attributeMappings.get( i ) );
 		}
 	}
+
+	Object[] getPropertyValues(Object compositeInstance);
+
+	void setPropertyValues(Object compositeInstance, Object[] resolvedValues);
 
 	/**
 	 * @todo (6.0) : consider dropping this in favor of a form passing the ManagedMappingType

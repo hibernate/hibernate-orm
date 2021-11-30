@@ -162,7 +162,7 @@ public class BatchEntitySelectFetchInitializer extends AbstractFetchParentAccess
 	@Override
 	public void finishUpRow(RowProcessingState rowProcessingState) {
 		entityInstance = null;
-		clearParentResolutionListeners();
+		clearResolutionListeners();
 	}
 
 	@Override

@@ -27,9 +27,9 @@ public class VirtualIdRepresentationStrategy implements EmbeddableRepresentation
 	private final EntityMappingType entityMappingType;
 	private final EmbeddableInstantiator instantiator;
 
-	public VirtualIdRepresentationStrategy(EntityMappingType entityMappingType) {
+	public VirtualIdRepresentationStrategy(VirtualIdEmbeddable virtualIdEmbeddable, EntityMappingType entityMappingType) {
 		this.entityMappingType = entityMappingType;
-		instantiator = new InstantiatorAdapter( entityMappingType.getRepresentationStrategy().getInstantiator() );
+		this.instantiator = new InstantiatorAdapter( virtualIdEmbeddable, entityMappingType );
 	}
 
 	@Override
@@ -61,15 +61,24 @@ public class VirtualIdRepresentationStrategy implements EmbeddableRepresentation
 	}
 
 	private static class InstantiatorAdapter implements EmbeddableInstantiator {
+		private final VirtualIdEmbeddable virtualIdEmbeddable;
 		private final EntityInstantiator entityInstantiator;
 
-		public InstantiatorAdapter(EntityInstantiator entityInstantiator) {
-			this.entityInstantiator = entityInstantiator;
+		public InstantiatorAdapter(VirtualIdEmbeddable virtualIdEmbeddable, EntityMappingType entityMappingType) {
+			this.virtualIdEmbeddable = virtualIdEmbeddable;
+			this.entityInstantiator = entityMappingType.getRepresentationStrategy().getInstantiator();
 		}
 
 		@Override
 		public Object instantiate(Supplier<Object[]> valuesAccess, SessionFactoryImplementor sessionFactory) {
-			return entityInstantiator.instantiate( sessionFactory );
+			final Object instantiated = entityInstantiator.instantiate( sessionFactory );
+			if ( valuesAccess != null ) {
+				final Object[] values = valuesAccess.get();
+				if ( values != null ) {
+					virtualIdEmbeddable.setPropertyValues( instantiated, values );
+				}
+			}
+			return instantiated;
 		}
 
 		@Override

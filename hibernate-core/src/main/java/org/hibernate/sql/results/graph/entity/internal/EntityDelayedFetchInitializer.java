@@ -160,7 +160,7 @@ public class EntityDelayedFetchInitializer extends AbstractFetchParentAccess imp
 				}
 			}
 
-			notifyParentResolutionListeners( entityInstance );
+			notifyResolutionListeners( entityInstance );
 		}
 	}
 
@@ -189,7 +189,7 @@ public class EntityDelayedFetchInitializer extends AbstractFetchParentAccess imp
 		entityInstance = null;
 		identifier = null;
 
-		clearParentResolutionListeners();
+		clearResolutionListeners();
 	}
 
 	@Override

@@ -23,9 +23,7 @@ import org.hibernate.stat.Statistics;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * Test case for NaturalId annotation. See ANN-750.
@@ -106,17 +104,61 @@ public class NaturalIdOnSingleManyToOneTest extends BaseCoreFunctionalTestCase {
 		assertEquals( 1, results.size() );
 		assertEquals( "NaturalId Cache Hits", 0, stats.getNaturalIdCacheHitCount() );
 		assertEquals( "NaturalId Cache Misses", 1, stats.getNaturalIdCacheMissCount() );
-		assertEquals( "NaturalId Cache Puts", 2, stats.getNaturalIdCachePutCount() ); // one for Citizen, one for NaturalIdOnManyToOne
+		assertEquals( "NaturalId Cache Puts", 1, stats.getNaturalIdCachePutCount() ); // one for NaturalIdOnManyToOne
 		assertEquals( "NaturalId Cache Queries", 1, stats.getNaturalIdQueryExecutionCount() );
 
 		// query a second time - result should be in session cache
 		criteria.list();
 		assertEquals( "NaturalId Cache Hits", 0, stats.getNaturalIdCacheHitCount() );
 		assertEquals( "NaturalId Cache Misses", 1, stats.getNaturalIdCacheMissCount() );
-		assertEquals( "NaturalId Cache Puts", 2, stats.getNaturalIdCachePutCount() );
+		assertEquals( "NaturalId Cache Puts", 1, stats.getNaturalIdCachePutCount() );
 		assertEquals( "NaturalId Cache Queries", 1, stats.getNaturalIdQueryExecutionCount() );
 
 		// cleanup
+		tx.rollback();
+		s.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-14943")
+	public void testManyToOneNaturalLoadByNaturalId() {
+		NaturalIdOnManyToOne singleManyToOne1 = new NaturalIdOnManyToOne();
+		NaturalIdOnManyToOne singleManyToOne2 = new NaturalIdOnManyToOne();
+
+		Citizen c1 = new Citizen();
+		c1.setFirstname( "Emmanuel" );
+		c1.setLastname( "Bernard" );
+		c1.setSsn( "1234" );
+
+		State france = new State();
+		france.setName( "Ile de France" );
+		c1.setState( france );
+
+		singleManyToOne1.setCitizen( c1 );
+		singleManyToOne2.setCitizen( null );
+
+		Session s = openSession();
+		Transaction tx = s.beginTransaction();
+		s.persist( france );
+		s.persist( c1 );
+		s.persist( singleManyToOne1 );
+		s.persist( singleManyToOne2 );
+		tx.commit();
+		s.close();
+
+
+		s = openSession();
+		s.getSessionFactory().getCache().evictNaturalIdData(); // we want to go to the database
+		tx = s.beginTransaction();
+		NaturalIdOnManyToOne instance1 = s.byNaturalId(NaturalIdOnManyToOne.class).using("citizen",c1).load();
+		assertNotNull(instance1);
+		assertNotNull(instance1.getCitizen());
+
+		NaturalIdOnManyToOne instance2 = s.byNaturalId(NaturalIdOnManyToOne.class).using("citizen", null).load();
+
+		assertNotNull(instance2);
+		assertNull(instance2.getCitizen());
+
 		tx.rollback();
 		s.close();
 	}

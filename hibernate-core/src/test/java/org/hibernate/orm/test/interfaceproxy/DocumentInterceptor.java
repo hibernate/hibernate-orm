@@ -5,8 +5,8 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
-//$Id: DocumentInterceptor.java 8670 2005-11-25 17:36:29Z epbernard $
-package org.hibernate.test.mixed;
+//$Id: DocumentInterceptor.java 7860 2005-08-11 21:58:23Z oneovthafew $
+package org.hibernate.orm.test.interfaceproxy;
 
 import java.io.Serializable;
 import java.util.Calendar;
@@ -23,21 +23,16 @@ import org.hibernate.type.Type;
  */
 public class DocumentInterceptor implements Interceptor {
 
-
-	public boolean onLoad(
-			Object entity, Serializable id, Object[] state,
-			String[] propertyNames, Type[] types
-	) throws CallbackException {
+	public boolean onLoad(Object entity, Serializable id, Object[] state,
+			String[] propertyNames, Type[] types) throws CallbackException {
 		return false;
 	}
 
-	public boolean onFlushDirty(
-			Object entity, Serializable id,
+	public boolean onFlushDirty(Object entity, Serializable id,
 			Object[] currentState, Object[] previousState,
-			String[] propertyNames, Type[] types
-	) throws CallbackException {
+			String[] propertyNames, Type[] types) throws CallbackException {
 		if ( entity instanceof Document ) {
-			currentState[3] = Calendar.getInstance();
+			currentState[2] = Calendar.getInstance();
 			return true;
 		}
 		else {
@@ -45,12 +40,10 @@ public class DocumentInterceptor implements Interceptor {
 		}
 	}
 
-	public boolean onSave(
-			Object entity, Object id, Object[] state,
-			String[] propertyNames, Type[] types
-	) throws CallbackException {
+	public boolean onSave(Object entity, Object id, Object[] state,
+			String[] propertyNames, Type[] types) throws CallbackException {
 		if ( entity instanceof Document ) {
-			state[4] = state[3] = Calendar.getInstance();
+			state[3] = state[2] = Calendar.getInstance();
 			return true;
 		}
 		else {
@@ -58,10 +51,8 @@ public class DocumentInterceptor implements Interceptor {
 		}
 	}
 
-	public void onDelete(
-			Object entity, Serializable id, Object[] state,
-			String[] propertyNames, Type[] types
-	) throws CallbackException {
+	public void onDelete(Object entity, Serializable id, Object[] state,
+			String[] propertyNames, Type[] types) throws CallbackException {
 
 	}
 
@@ -77,11 +68,9 @@ public class DocumentInterceptor implements Interceptor {
 		return null;
 	}
 
-	public int[] findDirty(
-			Object entity, Serializable id,
+	public int[] findDirty(Object entity, Serializable id,
 			Object[] currentState, Object[] previousState,
-			String[] propertyNames, Type[] types
-	) {
+			String[] propertyNames, Type[] types) {
 		return null;
 	}
 
@@ -98,25 +87,16 @@ public class DocumentInterceptor implements Interceptor {
 		return null;
 	}
 
-	public void afterTransactionBegin(Transaction tx) {
-	}
-
-	public void afterTransactionCompletion(Transaction tx) {
-	}
-
-	public void beforeTransactionCompletion(Transaction tx) {
-	}
+	public void afterTransactionBegin(Transaction tx) {}
+	public void afterTransactionCompletion(Transaction tx) {}
+	public void beforeTransactionCompletion(Transaction tx) {}
 
 	public String onPrepareStatement(String sql) {
 		return sql;
 	}
 
-	public void onCollectionRecreate(Object collection, Serializable key) throws CallbackException {
-	}
+	public void onCollectionRecreate(Object collection, Serializable key) throws CallbackException {}
+	public void onCollectionRemove(Object collection, Serializable key) throws CallbackException {}
+	public void onCollectionUpdate(Object collection, Serializable key) throws CallbackException {}
 
-	public void onCollectionRemove(Object collection, Serializable key) throws CallbackException {
-	}
-
-	public void onCollectionUpdate(Object collection, Serializable key) throws CallbackException {
-	}
 }

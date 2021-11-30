@@ -9,6 +9,7 @@ package org.hibernate;
 import java.io.Serializable;
 
 import org.hibernate.metamodel.RepresentationMode;
+import org.hibernate.type.Type;
 
 /**
  * An interceptor that does nothing.  May be used as a base class for application-defined custom interceptors.
@@ -25,6 +26,12 @@ public class EmptyInterceptor implements Interceptor, Serializable {
 	public static final Interceptor INSTANCE = new EmptyInterceptor();
 
 	protected EmptyInterceptor() {}
+
+	@Override
+	public boolean onSave(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types)
+			throws CallbackException {
+		return false;
+	}
 
 	@Override
 	public Object instantiate(String entityName, RepresentationMode representationMode, Object id) throws CallbackException {

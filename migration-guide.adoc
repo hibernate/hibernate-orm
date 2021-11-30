@@ -180,6 +180,20 @@ where `param` is bound to `entityManager.getReference(EntityClass.class, 1)`.
     ** 'hibernate.classLoader.application', 'hibernate.classLoader.resources', 'hibernate.classLoader.hibernate' and 'hibernate.classLoader.environment': use 'hibernate.classLoaders' instead.
     ** 'hibernate.hbm2dll.create_namespaces': use 'jakarta.persistence.create-database-schemas' or 'hibernate.hbm2ddl.create_namespaces'
 
+=== org.hibernate.Interceptors
+
+The method
+```
+boolean onSave(Object entity, Serializable id, Object[] state, String[] propertyNames, Type[] types)
+```
+
+has been removed in favour of
+```
+boolean onSave(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types)
+```
+
+
+
 === Fetch behaviour change
 
 We changed the way we detect circularity, we do not follow anymore a deep first detection, so what happens is that in a model like

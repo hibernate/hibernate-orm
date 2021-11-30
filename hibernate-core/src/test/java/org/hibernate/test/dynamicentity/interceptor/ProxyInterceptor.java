@@ -31,6 +31,7 @@ public class ProxyInterceptor extends EmptyInterceptor {
 	 * @param object The presumed entity instance.
 	 * @return The entity name (pointing to the proper entity mapping).
 	 */
+	@Override
 	public String getEntityName(Object object) {
 		String entityName = ProxyHelper.extractEntityName( object );
 		if ( entityName == null ) {

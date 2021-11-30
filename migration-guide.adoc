@@ -361,3 +361,13 @@ for various basic types named with a suffix of `TypeDescriptor`.
 
 The `SqlTypeDescriptor` interface was renamed to `JdbcType` and implementations were renamed to have the suffix `JdbcType`.
 The package was also changed from `org.hibernate.type.descriptor.sql` to `org.hibernate.type.descriptor.jdbc`.
+
+=== Dropped support for pass-through HQL tokens
+
+The use of plain HQL identifiers in e.g. functions which couldn't be interpreted as an attribute of a `FROM` root
+were passed through as-is to SQL in Hibernate 5.x which was dropped in 6.0 because we believe this is unsafe
+and might lead to surprising results. HQL queries that relied on this, need to be changed and use the newly introduced
+`sql` function, which allows passing through the content of a string literal to SQL.
+
+An HQL query like `select substring( e.description, 21, 11, octets ) from AnEntity e`, which relies on this for passing through `octets`
+can be migrated to `select substring( e.description, 21, 11, sql('octets') ) from AnEntity e`.

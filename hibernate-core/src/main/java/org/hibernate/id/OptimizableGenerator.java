@@ -46,4 +46,6 @@ public interface OptimizableGenerator extends IdentifierGenerator, ExportablePro
 	 * NOTE : has precedence over {@link #INCREMENT_PARAM}
 	 */
 	String OPT_PARAM = "optimizer";
+
+	Optimizer getOptimizer();
 }

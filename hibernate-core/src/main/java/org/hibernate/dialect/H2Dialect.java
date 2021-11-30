@@ -15,7 +15,6 @@ import org.hibernate.query.FetchClauseType;
 import org.hibernate.query.IntervalType;
 import org.hibernate.query.NullOrdering;
 import org.hibernate.PessimisticLockException;
-import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.hint.IndexQueryHintHandler;
@@ -39,9 +38,12 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.query.sqm.mutation.internal.idtable.AfterUseAction;
-import org.hibernate.query.sqm.mutation.internal.idtable.IdTable;
-import org.hibernate.query.sqm.mutation.internal.idtable.LocalTemporaryTableStrategy;
+import org.hibernate.dialect.temptable.TemporaryTable;
+import org.hibernate.query.sqm.mutation.internal.temptable.BeforeUseAction;
+import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableInsertStrategy;
+import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
+import org.hibernate.dialect.temptable.TemporaryTableKind;
+import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
@@ -375,13 +377,40 @@ public class H2Dialect extends Dialect {
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
 			EntityMappingType entityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new LocalTemporaryTableStrategy(
-				new IdTable( entityDescriptor, basename -> "HT_" + basename, this, runtimeModelCreationContext ),
-				this::getTypeName,
-				AfterUseAction.CLEAN,
-				TempTableDdlTransactionHandling.NONE,
+		return new LocalTemporaryTableMutationStrategy(
+				TemporaryTable.createIdTable(
+						entityDescriptor,
+						basename -> TemporaryTable.ID_TABLE_PREFIX + basename,
+						this,
+						runtimeModelCreationContext
+				),
 				runtimeModelCreationContext.getSessionFactory()
 		);
+	}
+
+	@Override
+	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
+			EntityMappingType entityDescriptor,
+			RuntimeModelCreationContext runtimeModelCreationContext) {
+		return new LocalTemporaryTableInsertStrategy(
+				TemporaryTable.createEntityTable(
+						entityDescriptor,
+						name -> TemporaryTable.ENTITY_TABLE_PREFIX + name,
+						this,
+						runtimeModelCreationContext
+				),
+				runtimeModelCreationContext.getSessionFactory()
+		);
+	}
+
+	@Override
+	public TemporaryTableKind getSupportedTemporaryTableKind() {
+		return TemporaryTableKind.LOCAL;
+	}
+
+	@Override
+	public BeforeUseAction getTemporaryTableBeforeUseAction() {
+		return BeforeUseAction.CREATE;
 	}
 
 	@Override

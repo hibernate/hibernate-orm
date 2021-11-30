@@ -44,7 +44,7 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 			SqmCteTable cteTable,
 			SqmDeleteStatement<?> sqmDeleteStatement,
 			DomainParameterXref domainParameterXref,
-			CteStrategy strategy,
+			CteMutationStrategy strategy,
 			SessionFactoryImplementor sessionFactory) {
 		super( cteTable, sqmDeleteStatement, domainParameterXref, strategy, sessionFactory );
 	}
@@ -141,8 +141,14 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 							idSelectCte.getCteTable().getCteColumns(),
 							factory
 					);
+					final TableReference updatingTableReference = updatingTableGroup.getTableReference(
+							updatingTableGroup.getNavigablePath(),
+							tableExpression,
+							true,
+							true
+					);
 					final TableReference dmlTableReference = resolveUnionTableReference(
-							updatingTableGroup,
+							updatingTableReference,
 							tableExpression
 					);
 					final List<ColumnReference> columnReferences = new ArrayList<>( idSelectCte.getCteTable().getCteColumns().size() );

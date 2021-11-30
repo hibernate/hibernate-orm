@@ -7,7 +7,7 @@
 package org.hibernate.orm.test.inheritance;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.query.sqm.mutation.internal.inline.InlineStrategy;
+import org.hibernate.query.sqm.mutation.internal.inline.InlineMutationStrategy;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 import org.hibernate.testing.TestForIssue;
@@ -54,7 +54,7 @@ public class InheritanceDeleteBatchTest {
 	public static class TableMutationStrategyProvider implements SettingProvider.Provider<String> {
 		@Override
 		public String getSetting() {
-			return InlineStrategy.class.getName();
+			return InlineMutationStrategy.class.getName();
 		}
 	}
 

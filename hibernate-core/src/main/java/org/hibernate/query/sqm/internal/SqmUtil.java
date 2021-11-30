@@ -444,7 +444,7 @@ public class SqmUtil {
 				}
 
 				@Override
-				public Map<JpaCriteriaParameter<?>, Supplier<SqmJpaCriteriaParameterWrapper<?>>> getJpaCriteriaParamResolutions() {
+				public Map<JpaCriteriaParameter<?>, SqmJpaCriteriaParameterWrapper<?>> getJpaCriteriaParamResolutions() {
 					return Collections.emptyMap();
 				}
 			};
@@ -513,7 +513,7 @@ public class SqmUtil {
 
 	private static class ParameterResolutionsImpl implements SqmStatement.ParameterResolutions {
 		private final Set<SqmParameter<?>> sqmParameters;
-		private final Map<JpaCriteriaParameter<?>, Supplier<SqmJpaCriteriaParameterWrapper<?>>> jpaCriteriaParamResolutions;
+		private final Map<JpaCriteriaParameter<?>, SqmJpaCriteriaParameterWrapper<?>> jpaCriteriaParamResolutions;
 
 		public ParameterResolutionsImpl(
 				Set<SqmParameter<?>> sqmParameters,
@@ -527,16 +527,11 @@ public class SqmUtil {
 				this.jpaCriteriaParamResolutions = new IdentityHashMap<>( CollectionHelper.determineProperSizing( jpaCriteriaParamResolutions ) );
 				for ( Map.Entry<JpaCriteriaParameter<?>, List<SqmJpaCriteriaParameterWrapper<?>>> entry : jpaCriteriaParamResolutions.entrySet() ) {
 					final Iterator<SqmJpaCriteriaParameterWrapper<?>> itr = entry.getValue().iterator();
-					this.jpaCriteriaParamResolutions.put(
-							entry.getKey(),
-							() -> {
-								if ( itr.hasNext() ) {
-									return itr.next();
-								}
-								throw new IllegalStateException( "SqmJpaCriteriaParameterWrapper references for JpaCriteriaParameter [" + entry.getKey() + "] already exhausted" );
-							}
-					);
-
+					if ( !itr.hasNext() ) {
+						throw new IllegalStateException(
+								"SqmJpaCriteriaParameterWrapper references for JpaCriteriaParameter [" + entry.getKey() + "] already exhausted" );
+					}
+					this.jpaCriteriaParamResolutions.put( entry.getKey(), itr.next() );
 				}
 			}
 		}
@@ -547,7 +542,7 @@ public class SqmUtil {
 		}
 
 		@Override
-		public Map<JpaCriteriaParameter<?>, Supplier<SqmJpaCriteriaParameterWrapper<?>>> getJpaCriteriaParamResolutions() {
+		public Map<JpaCriteriaParameter<?>, SqmJpaCriteriaParameterWrapper<?>> getJpaCriteriaParamResolutions() {
 			return jpaCriteriaParamResolutions;
 		}
 	}

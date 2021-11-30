@@ -6,15 +6,11 @@
  */
 package org.hibernate.metamodel.mapping.ordering.ast;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.SortOrder;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
+import org.hibernate.sql.ast.tree.expression.SelfRenderingSqlFragmentExpression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
@@ -27,28 +23,10 @@ import org.hibernate.sql.ast.tree.select.SortSpecification;
  *
  * @author Christian Beikov
  */
-public class SelfRenderingOrderingExpression implements OrderingExpression, SelfRenderingExpression {
-	private final String expression;
+public class SelfRenderingOrderingExpression extends SelfRenderingSqlFragmentExpression implements OrderingExpression {
 
 	public SelfRenderingOrderingExpression(String expression) {
-		this.expression = expression;
-	}
-
-	public String getExpression() {
-		return expression;
-	}
-
-	@Override
-	public JdbcMappingContainer getExpressionType() {
-		return null;
-	}
-
-	@Override
-	public void renderToSql(
-			SqlAppender sqlAppender,
-			SqlAstTranslator<?> walker,
-			SessionFactoryImplementor sessionFactory) {
-		sqlAppender.append( expression );
+		super( expression );
 	}
 
 	@Override

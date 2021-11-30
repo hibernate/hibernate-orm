@@ -74,6 +74,11 @@ public class IdentityGenerator extends AbstractPostInsertGenerator {
 		}
 
 		@Override
+		public String prepareIdentifierGeneratingInsert(String insertSQL) {
+			return dialect.getIdentityColumnSupport().appendIdentitySelectToInsert( insertSQL );
+		}
+
+		@Override
 		protected PreparedStatement prepare(String insertSQL, SharedSessionContractImplementor session) throws SQLException {
 			return session
 					.getJdbcCoordinator()

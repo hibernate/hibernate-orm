@@ -495,6 +495,11 @@ public class SybaseASEDialect extends SybaseDialect {
 	}
 
 	@Override
+	public int getMaxIdentifierLength() {
+		return 255;
+	}
+
+	@Override
 	public boolean supportsValuesListForInsert() {
 		return false;
 	}

@@ -1825,4 +1825,8 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "The Javassist based BytecodeProvider has been removed: remove the `hibernate.bytecode.provider` configuration property to switch to the default provider", id = 508)
 	HibernateException usingRemovedJavassistBytecodeProvider();
 
+	@LogMessage(level = WARN)
+	@Message(value = "Multi-table insert is not available due to missing identity and window function support for: %s", id = 509)
+	void multiTableInsertNotAvailable(String entityName);
+
 }

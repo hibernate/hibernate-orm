@@ -8,6 +8,8 @@ package org.hibernate.orm.test.pagination;
 
 import java.util.List;
 
+import org.hibernate.dialect.DerbyDialect;
+
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfLists;
 import org.hibernate.testing.orm.domain.gambit.EnumValue;
@@ -18,6 +20,7 @@ import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -69,6 +72,7 @@ public class FetchClausePaginationTest {
 
     @Test
     @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsWithTies.class)
+    @SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby only supports row_number, but this requires the dense_rank window function")
     public void testFetchWithTies(SessionFactoryScope scope) {
         scope.inSession(
                 session -> {

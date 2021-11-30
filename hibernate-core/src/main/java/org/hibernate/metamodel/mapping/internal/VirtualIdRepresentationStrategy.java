@@ -55,10 +55,7 @@ public class VirtualIdRepresentationStrategy implements EmbeddableRepresentation
 
 	@Override
 	public PropertyAccess resolvePropertyAccess(Property bootAttributeDescriptor) {
-		return PropertyAccessStrategyMixedImpl.INSTANCE.buildPropertyAccess(
-				entityMappingType.getMappedJavaTypeDescriptor().getJavaTypeClass(),
-				bootAttributeDescriptor.getName()
-		);
+		return entityMappingType.getRepresentationStrategy().resolvePropertyAccess( bootAttributeDescriptor );
 	}
 
 	private static class InstantiatorAdapter implements StandardEmbeddableInstantiator {

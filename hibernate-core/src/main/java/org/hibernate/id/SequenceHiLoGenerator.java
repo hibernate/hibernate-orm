@@ -12,6 +12,7 @@ import org.hibernate.MappingException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.enhanced.AccessCallback;
 import org.hibernate.id.enhanced.LegacyHiLoAlgorithmOptimizer;
+import org.hibernate.id.enhanced.Optimizer;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
@@ -36,6 +37,11 @@ public class SequenceHiLoGenerator extends SequenceGenerator {
 	private int maxLo;
 
 	private LegacyHiLoAlgorithmOptimizer hiloOptimizer;
+
+	@Override
+	public Optimizer getOptimizer() {
+		return hiloOptimizer;
+	}
 
 	@Override
 	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {

@@ -26,10 +26,10 @@ import org.hibernate.cache.internal.SimpleCacheKeysFactory;
 import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
-import org.hibernate.query.sqm.mutation.internal.cte.CteStrategy;
-import org.hibernate.query.sqm.mutation.internal.idtable.GlobalTemporaryTableStrategy;
-import org.hibernate.query.sqm.mutation.internal.idtable.LocalTemporaryTableStrategy;
-import org.hibernate.query.sqm.mutation.internal.idtable.PersistentTableStrategy;
+import org.hibernate.query.sqm.mutation.internal.cte.CteMutationStrategy;
+import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
+import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
+import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
@@ -171,23 +171,23 @@ public class StrategySelectorBuilder {
 	private void addSqmMultiTableMutationStrategies(StrategySelectorImpl strategySelector) {
 		strategySelector.registerStrategyImplementor(
 				SqmMultiTableMutationStrategy.class,
-				CteStrategy.SHORT_NAME,
-				CteStrategy.class
+				CteMutationStrategy.SHORT_NAME,
+				CteMutationStrategy.class
 		);
 		strategySelector.registerStrategyImplementor(
 				SqmMultiTableMutationStrategy.class,
-				GlobalTemporaryTableStrategy.SHORT_NAME,
-				GlobalTemporaryTableStrategy.class
+				GlobalTemporaryTableMutationStrategy.SHORT_NAME,
+				GlobalTemporaryTableMutationStrategy.class
 		);
 		strategySelector.registerStrategyImplementor(
 				SqmMultiTableMutationStrategy.class,
-				LocalTemporaryTableStrategy.SHORT_NAME,
-				LocalTemporaryTableStrategy.class
+				LocalTemporaryTableMutationStrategy.SHORT_NAME,
+				LocalTemporaryTableMutationStrategy.class
 		);
 		strategySelector.registerStrategyImplementor(
 				SqmMultiTableMutationStrategy.class,
-				PersistentTableStrategy.SHORT_NAME,
-				PersistentTableStrategy.class
+				PersistentTableMutationStrategy.SHORT_NAME,
+				PersistentTableMutationStrategy.class
 		);
 	}
 

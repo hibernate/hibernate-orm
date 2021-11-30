@@ -40,6 +40,8 @@ public interface EntityDiscriminatorMapping extends VirtualModelPart, BasicValue
 
 	String getConcreteEntityNameForDiscriminatorValue(Object value);
 
+	boolean isPhysical();
+
 	/**
 	 * Create the appropriate SQL expression for this discriminator
 	 *

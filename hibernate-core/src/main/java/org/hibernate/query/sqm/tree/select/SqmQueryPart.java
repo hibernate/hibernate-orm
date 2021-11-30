@@ -14,6 +14,7 @@ import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaOrder;
 import org.hibernate.query.criteria.JpaQueryPart;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.type.StandardBasicTypes;
@@ -148,7 +149,7 @@ public abstract class SqmQueryPart<T> implements SqmVisitableNode, JpaQueryPart<
 		return this;
 	}
 
-	public abstract void validateFetchStructureAndOwners();
+	public abstract void validateQueryStructureAndFetchOwners();
 
 	public void appendHqlString(StringBuilder sb) {
 		if ( orderByClause == null ) {

@@ -1214,6 +1214,11 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
+	protected boolean isPhysicalDiscriminator() {
+		return explicitDiscriminatorColumnName != null;
+	}
+
+	@Override
 	protected EntityDiscriminatorMapping generateDiscriminatorMapping(MappingModelCreationProcess modelCreationProcess) {
 		EntityMappingType superMappingType = getSuperMappingType();
 		if ( superMappingType != null ) {

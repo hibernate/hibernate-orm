@@ -10,6 +10,7 @@ import java.util.Map;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.query.CastType;
 import org.hibernate.query.criteria.ValueHandlingMode;
 
 import org.hibernate.testing.RequiresDialect;
@@ -30,7 +31,9 @@ public class CriteriaLiteralHandlingModeBindTest extends AbstractCriteriaLiteral
 		return config;
 	}
 
+	@Override
 	protected String expectedSQL() {
-		return "select ?,b1_0.name from Book b1_0 where b1_0.id=? and b1_0.name=?";
+		final String expression = casted( "?", CastType.STRING );
+		return "select " + expression + ",b1_0.name from Book b1_0 where b1_0.id=? and b1_0.name=?";
 	}
 }

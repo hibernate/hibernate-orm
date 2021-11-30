@@ -16,7 +16,6 @@ import org.hibernate.LockMode;
 import org.hibernate.query.IntervalType;
 import org.hibernate.query.NullOrdering;
 import org.hibernate.StaleObjectStateException;
-import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.HSQLIdentityColumnSupport;
@@ -49,11 +48,15 @@ import org.hibernate.persister.entity.Lockable;
 import org.hibernate.query.CastType;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.query.sqm.mutation.internal.idtable.AfterUseAction;
-import org.hibernate.query.sqm.mutation.internal.idtable.GlobalTemporaryTableStrategy;
-import org.hibernate.query.sqm.mutation.internal.idtable.IdTable;
-import org.hibernate.query.sqm.mutation.internal.idtable.LocalTemporaryTableStrategy;
-import org.hibernate.query.sqm.mutation.internal.idtable.TempIdTableExporter;
+import org.hibernate.query.sqm.mutation.internal.temptable.AfterUseAction;
+import org.hibernate.query.sqm.mutation.internal.temptable.BeforeUseAction;
+import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableInsertStrategy;
+import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
+import org.hibernate.dialect.temptable.TemporaryTable;
+import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableInsertStrategy;
+import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
+import org.hibernate.dialect.temptable.TemporaryTableKind;
+import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -514,31 +517,91 @@ public class HSQLDialect extends Dialect {
 		// can happen in the middle of a transaction
 
 		if ( version < 200 ) {
-			return new GlobalTemporaryTableStrategy(
-					new IdTable( rootEntityDescriptor, name -> "HT_" + name, this, runtimeModelCreationContext ),
-					() -> new TempIdTableExporter( false, this::getTypeName ),
-					// Version 1.8 GLOBAL TEMPORARY table definitions persist beyond the end
-					// of the session (by default, data is cleared at commit).
-					AfterUseAction.CLEAN,
+			return new GlobalTemporaryTableMutationStrategy(
+					TemporaryTable.createIdTable(
+							rootEntityDescriptor,
+							basename -> TemporaryTable.ID_TABLE_PREFIX + basename,
+							this,
+							runtimeModelCreationContext
+					),
 					runtimeModelCreationContext.getSessionFactory()
 			);
 		}
 		else {
-			return new LocalTemporaryTableStrategy(
+			return new LocalTemporaryTableMutationStrategy(
 					// With HSQLDB 2.0, the table name is qualified with MODULE to assist the drop
 					// statement (in-case there is a global name beginning with HT_)
-					new IdTable( rootEntityDescriptor, name -> "MODULE.HT_" + name, this, runtimeModelCreationContext ),
-					() -> new TempIdTableExporter( true, this::getTypeName ) {
-						@Override
-						protected String getCreateCommand() {
-							return "declare local temporary table";
-						}
-					},
-					AfterUseAction.DROP,
-					TempTableDdlTransactionHandling.NONE,
+					TemporaryTable.createIdTable(
+							rootEntityDescriptor,
+							basename -> "MODULE." + TemporaryTable.ID_TABLE_PREFIX + basename,
+							this,
+							runtimeModelCreationContext
+					),
 					runtimeModelCreationContext.getSessionFactory()
 			);
 		}
+	}
+
+	@Override
+	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
+			EntityMappingType rootEntityDescriptor,
+			RuntimeModelCreationContext runtimeModelCreationContext) {
+
+		// Hibernate uses this information for temporary tables that it uses for its own operations
+		// therefore the appropriate strategy is taken with different versions of HSQLDB
+
+		// All versions of HSQLDB support GLOBAL TEMPORARY tables where the table
+		// definition is shared by all users but data is private to the session
+		// HSQLDB 2.0 also supports session-based LOCAL TEMPORARY tables where
+		// the definition and data is private to the session and table declaration
+		// can happen in the middle of a transaction
+
+		if ( version < 200 ) {
+			return new GlobalTemporaryTableInsertStrategy(
+					TemporaryTable.createEntityTable(
+							rootEntityDescriptor,
+							name -> TemporaryTable.ENTITY_TABLE_PREFIX + name,
+							this,
+							runtimeModelCreationContext
+					),
+					runtimeModelCreationContext.getSessionFactory()
+			);
+		}
+		else {
+			return new LocalTemporaryTableInsertStrategy(
+					// With HSQLDB 2.0, the table name is qualified with MODULE to assist the drop
+					// statement (in-case there is a global name beginning with HT_)
+					TemporaryTable.createEntityTable(
+							rootEntityDescriptor,
+							name -> "MODULE." + TemporaryTable.ENTITY_TABLE_PREFIX + name,
+							this,
+							runtimeModelCreationContext
+					),
+					runtimeModelCreationContext.getSessionFactory()
+			);
+		}
+	}
+
+	@Override
+	public TemporaryTableKind getSupportedTemporaryTableKind() {
+		return version < 200 ? TemporaryTableKind.GLOBAL : TemporaryTableKind.LOCAL;
+	}
+
+	@Override
+	public String getTemporaryTableCreateCommand() {
+		return version < 200 ? super.getTemporaryTableCreateCommand() : "declare local temporary table";
+	}
+
+	@Override
+	public AfterUseAction getTemporaryTableAfterUseAction() {
+		// Version 1.8 GLOBAL TEMPORARY table definitions persist beyond the end
+		// of the session (by default, data is cleared at commit).
+		return version < 200 ? AfterUseAction.CLEAN : AfterUseAction.DROP;
+	}
+
+	@Override
+	public BeforeUseAction getTemporaryTableBeforeUseAction() {
+		return version < 200 ? BeforeUseAction.NONE : BeforeUseAction.CREATE;
 	}
 
 	// current timestamp support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

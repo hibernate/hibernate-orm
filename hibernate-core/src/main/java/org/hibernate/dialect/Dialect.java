@@ -10,7 +10,9 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.dialect.sequence.NoSequenceSupport;
+import org.hibernate.dialect.temptable.TemporaryTableExporter;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.internal.util.MathHelper;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -60,10 +62,14 @@ import org.hibernate.query.TrimSpec;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.query.sqm.mutation.internal.idtable.AfterUseAction;
-import org.hibernate.query.sqm.mutation.internal.idtable.IdTable;
-import org.hibernate.query.sqm.mutation.internal.idtable.PersistentTableStrategy;
-import org.hibernate.query.sqm.mutation.internal.idtable.PhysicalIdTableExporter;
+import org.hibernate.query.sqm.mutation.internal.temptable.AfterUseAction;
+import org.hibernate.dialect.temptable.TemporaryTable;
+import org.hibernate.query.sqm.mutation.internal.temptable.BeforeUseAction;
+import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableInsertStrategy;
+import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableMutationStrategy;
+import org.hibernate.dialect.temptable.TemporaryTableKind;
+import org.hibernate.dialect.temptable.StandardTemporaryTableExporter;
+import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.service.ServiceRegistry;
@@ -711,6 +717,8 @@ public abstract class Dialect implements ConversionContext {
 				)
 		);
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "current_instant", "instant" ); //deprecated legacy!
+
+		queryEngine.getSqmFunctionRegistry().register( "sql", new SqlFunction() );
 	}
 
 	/**
@@ -1481,6 +1489,11 @@ public abstract class Dialect implements ConversionContext {
 		return true;
 	}
 
+	public boolean supportsTemporaryTablePrimaryKey() {
+		// Most databases do
+		return true;
+	}
+
 	// limit/offset support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
@@ -1833,10 +1846,27 @@ public abstract class Dialect implements ConversionContext {
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
 			EntityMappingType entityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new PersistentTableStrategy(
-				new IdTable( entityDescriptor, name -> name, this, runtimeModelCreationContext ),
-				AfterUseAction.CLEAN,
-				PhysicalIdTableExporter::new,
+		return new PersistentTableMutationStrategy(
+				TemporaryTable.createIdTable(
+						entityDescriptor,
+						basename -> TemporaryTable.ID_TABLE_PREFIX + basename,
+						this,
+						runtimeModelCreationContext
+				),
+				runtimeModelCreationContext.getSessionFactory()
+		);
+	}
+
+	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
+			EntityMappingType entityDescriptor,
+			RuntimeModelCreationContext runtimeModelCreationContext) {
+		return new PersistentTableInsertStrategy(
+				TemporaryTable.createEntityTable(
+						entityDescriptor,
+						name -> TemporaryTable.ENTITY_TABLE_PREFIX + name,
+						this,
+						runtimeModelCreationContext
+				),
 				runtimeModelCreationContext.getSessionFactory()
 		);
 	}
@@ -2123,6 +2153,15 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
+	 * What is the maximum identifier length supported by the dialect?
+	 *
+	 * @return The maximum length.
+	 */
+	public int getMaxIdentifierLength() {
+		return Integer.MAX_VALUE;
+	}
+
+	/**
 	 * The SQL literal value to which this database maps boolean values.
 	 *
 	 * @param bool The boolean value
@@ -2243,12 +2282,13 @@ public abstract class Dialect implements ConversionContext {
 
 	// DDL support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	private StandardTableExporter tableExporter = new StandardTableExporter( this );
-	protected StandardSequenceExporter sequenceExporter = new StandardSequenceExporter( this );
-	private StandardIndexExporter indexExporter = new StandardIndexExporter( this );
-	private StandardForeignKeyExporter foreignKeyExporter = new StandardForeignKeyExporter( this );
-	private StandardUniqueKeyExporter uniqueKeyExporter = new StandardUniqueKeyExporter( this );
-	private StandardAuxiliaryDatabaseObjectExporter auxiliaryObjectExporter = new StandardAuxiliaryDatabaseObjectExporter( this );
+	private final StandardTableExporter tableExporter = new StandardTableExporter( this );
+	private final StandardSequenceExporter sequenceExporter = new StandardSequenceExporter( this );
+	private final StandardIndexExporter indexExporter = new StandardIndexExporter( this );
+	private final StandardForeignKeyExporter foreignKeyExporter = new StandardForeignKeyExporter( this );
+	private final StandardUniqueKeyExporter uniqueKeyExporter = new StandardUniqueKeyExporter( this );
+	private final StandardAuxiliaryDatabaseObjectExporter auxiliaryObjectExporter = new StandardAuxiliaryDatabaseObjectExporter( this );
+	private final StandardTemporaryTableExporter temporaryTableExporter = new StandardTemporaryTableExporter( this );
 
 	public Exporter<Table> getTableExporter() {
 		return tableExporter;
@@ -2272,6 +2312,61 @@ public abstract class Dialect implements ConversionContext {
 
 	public Exporter<AuxiliaryDatabaseObject> getAuxiliaryDatabaseObjectExporter() {
 		return auxiliaryObjectExporter;
+	}
+
+	public TemporaryTableExporter getTemporaryTableExporter() {
+		return temporaryTableExporter;
+	}
+
+	public TemporaryTableKind getSupportedTemporaryTableKind() {
+		return TemporaryTableKind.PERSISTENT;
+	}
+
+	public String getTemporaryTableCreateOptions() {
+		return null;
+	}
+
+	public String getTemporaryTableCreateCommand() {
+		final TemporaryTableKind kind = getSupportedTemporaryTableKind();
+		switch ( kind ) {
+			case PERSISTENT:
+				return "create table";
+			case LOCAL:
+				return "create local temporary table";
+			case GLOBAL:
+				return "create global temporary table";
+		}
+		throw new UnsupportedOperationException( "Unsupported kind: " + kind );
+	}
+
+	public String getTemporaryTableDropCommand() {
+		return "drop table";
+	}
+
+	public String getTemporaryTableTruncateCommand() {
+		return "delete from";
+	}
+
+	/**
+	 * Annotation to be appended to the end of each COLUMN clause for temporary tables.
+	 *
+	 * @param sqlTypeCode The SQL type code
+	 * @return The annotation to be appended (e.g. "COLLATE DATABASE_DEFAULT" in SQLServer SQL)
+	 */
+	public String getCreateTemporaryTableColumnAnnotation(int sqlTypeCode) {
+		return "";
+	}
+
+	public TempTableDdlTransactionHandling getTemporaryTableDdlTransactionHandling() {
+		return TempTableDdlTransactionHandling.NONE;
+	}
+
+	public AfterUseAction getTemporaryTableAfterUseAction() {
+		return AfterUseAction.CLEAN;
+	}
+
+	public BeforeUseAction getTemporaryTableBeforeUseAction() {
+		return BeforeUseAction.NONE;
 	}
 
 	/**
@@ -3780,15 +3875,5 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public TimeZoneSupport getTimeZoneSupport() {
 		return TimeZoneSupport.NONE;
-	}
-
-	/**
-	 * Annotation to be appended to the end of each COLUMN clause for temporary tables.
-	 *
-	 * @param sqlTypeCode The SQL type code
-	 * @return The annotation to be appended (e.g. "COLLATE DATABASE_DEFAULT" in SQLServer SQL)
-	 */
-	public String getCreateTemporaryTableColumnAnnotation(int sqlTypeCode) {
-		return "";
 	}
 }

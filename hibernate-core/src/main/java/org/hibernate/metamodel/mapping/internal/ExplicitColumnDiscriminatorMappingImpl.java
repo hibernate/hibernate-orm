@@ -27,6 +27,7 @@ public class ExplicitColumnDiscriminatorMappingImpl extends AbstractDiscriminato
 	private final String tableExpression;
 	private final String columnName;
 	private final String columnFormula;
+	private final boolean isPhysical;
 
 	public ExplicitColumnDiscriminatorMappingImpl(
 			EntityPersister entityDescriptor,
@@ -34,9 +35,11 @@ public class ExplicitColumnDiscriminatorMappingImpl extends AbstractDiscriminato
 			String tableExpression,
 			String columnExpression,
 			boolean isFormula,
+			boolean isPhysical,
 			MappingModelCreationProcess creationProcess) {
 		super( discriminatorType.getJdbcMapping(), entityDescriptor, discriminatorType, creationProcess );
 		this.tableExpression = tableExpression;
+		this.isPhysical = isPhysical;
 		if ( isFormula ) {
 			columnName = null;
 			columnFormula = columnExpression;
@@ -94,5 +97,10 @@ public class ExplicitColumnDiscriminatorMappingImpl extends AbstractDiscriminato
 	@Override
 	public boolean isFormula() {
 		return columnFormula != null;
+	}
+
+	@Override
+	public boolean isPhysical() {
+		return isPhysical;
 	}
 }

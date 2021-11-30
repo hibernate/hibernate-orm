@@ -22,7 +22,15 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.SqlAstJoinType;
+import org.hibernate.sql.ast.spi.FromClauseAccess;
+import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
+import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.tree.from.StandardVirtualTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableGroupJoin;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
@@ -189,5 +197,63 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
 		int span = getDiscriminatorPart().forEachJdbcType( offset, action );
 		return span + getKeyPart().forEachJdbcType( offset + span, action );
+	}
+
+	@Override
+	public TableGroupJoin createTableGroupJoin(
+			NavigablePath navigablePath,
+			TableGroup lhs,
+			String explicitSourceAlias,
+			SqlAstJoinType sqlAstJoinType,
+			boolean fetched,
+			boolean addsPredicate,
+			SqlAliasBaseGenerator aliasBaseGenerator,
+			SqlExpressionResolver sqlExpressionResolver,
+			FromClauseAccess fromClauseAccess,
+			SqlAstCreationContext creationContext) {
+		final TableGroup tableGroup = createRootTableGroupJoin(
+				navigablePath,
+				lhs,
+				explicitSourceAlias,
+				sqlAstJoinType,
+				fetched,
+				null,
+				aliasBaseGenerator,
+				sqlExpressionResolver,
+				fromClauseAccess,
+				creationContext
+		);
+
+		return new TableGroupJoin( navigablePath, sqlAstJoinType, tableGroup );
+	}
+
+	@Override
+	public TableGroup createRootTableGroupJoin(
+			NavigablePath navigablePath,
+			TableGroup lhs,
+			String explicitSourceAlias,
+			SqlAstJoinType sqlAstJoinType,
+			boolean fetched,
+			Consumer<Predicate> predicateConsumer,
+			SqlAliasBaseGenerator aliasBaseGenerator,
+			SqlExpressionResolver sqlExpressionResolver,
+			FromClauseAccess fromClauseAccess,
+			SqlAstCreationContext creationContext) {
+		return new StandardVirtualTableGroup(
+				navigablePath,
+				this,
+				lhs,
+				fetched
+		);
+	}
+
+	@Override
+	public SqlAstJoinType getDefaultSqlAstJoinType(TableGroup parentTableGroup) {
+		return SqlAstJoinType.LEFT;
+	}
+
+	@Override
+	public String getSqlAliasStem() {
+		return collectionDescriptor.getAttributeMapping().getSqlAliasStem();
 	}
 }

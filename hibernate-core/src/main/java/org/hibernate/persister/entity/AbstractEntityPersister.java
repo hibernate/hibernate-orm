@@ -99,9 +99,12 @@ import org.hibernate.engine.spi.ValueInclusion;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.LoadEvent;
 import org.hibernate.id.Assigned;
+import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.PostInsertIdentifierGenerator;
 import org.hibernate.id.PostInsertIdentityPersister;
+import org.hibernate.id.enhanced.Optimizer;
 import org.hibernate.id.insert.Binder;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.internal.CoreLogging;
@@ -201,6 +204,7 @@ import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sql.internal.SQLQueryParser;
 import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
+import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.sql.Alias;
 import org.hibernate.sql.Delete;
@@ -285,6 +289,7 @@ public abstract class AbstractEntityPersister
 	private MultiNaturalIdLoader<?> multiNaturalIdLoader;
 
 	private SqmMultiTableMutationStrategy sqmMultiTableMutationStrategy;
+	private SqmMultiTableInsertStrategy sqmMultiTableInsertStrategy;
 
 	private final NavigableRole navigableRole;
 
@@ -5561,7 +5566,8 @@ public abstract class AbstractEntityPersister
 				}
 		);
 
-		if ( isMultiTable() ) {
+		boolean needsMultiTableInsert;
+		if ( needsMultiTableInsert = isMultiTable() ) {
 			creationProcess.registerInitializationCallback(
 					"Entity(" + getEntityName() + ") `sqmMultiTableMutationStrategy` interpretation",
 					() -> {
@@ -5590,6 +5596,44 @@ public abstract class AbstractEntityPersister
 		}
 		else {
 			sqmMultiTableMutationStrategy = null;
+		}
+
+		if ( !needsMultiTableInsert && getIdentifierGenerator() instanceof BulkInsertionCapableIdentifierGenerator ) {
+			if ( getIdentifierGenerator() instanceof OptimizableGenerator ) {
+				final Optimizer optimizer = ( (OptimizableGenerator) getIdentifierGenerator() ).getOptimizer();
+				needsMultiTableInsert = optimizer != null && optimizer.getIncrementSize() > 1;
+			}
+		}
+
+		if ( needsMultiTableInsert ) {
+			creationProcess.registerInitializationCallback(
+					"Entity(" + getEntityName() + ") `sqmMultiTableInsertStrategy` interpretation",
+					() -> {
+						try {
+							sqmMultiTableInsertStrategy = interpretSqmMultiTableInsertStrategy(
+									this,
+									creationProcess
+							);
+						}
+						catch (Exception ex) {
+							return false;
+						}
+						if ( sqmMultiTableInsertStrategy == null ) {
+							return false;
+						}
+						sqmMultiTableInsertStrategy.prepare(
+								creationProcess,
+								creationContext.getSessionFactory()
+										.getJdbcServices()
+										.getBootstrapJdbcConnectionAccess()
+						);
+						return true;
+					}
+			);
+
+		}
+		else {
+			sqmMultiTableInsertStrategy = null;
 		}
 	}
 
@@ -5709,12 +5753,30 @@ public abstract class AbstractEntityPersister
 				entityMappingDescriptor,
 				creationProcess
 		);
+	}
 
+	protected static SqmMultiTableInsertStrategy interpretSqmMultiTableInsertStrategy(
+			AbstractEntityPersister entityMappingDescriptor,
+			MappingModelCreationProcess creationProcess) {
+		// we need the boot model so we can have access to the Table
+		final RootClass entityBootDescriptor = (RootClass) creationProcess.getCreationContext()
+				.getBootModel()
+				.getEntityBinding( entityMappingDescriptor.getRootEntityName() );
+
+		return SqmMutationStrategyHelper.resolveInsertStrategy(
+				entityBootDescriptor,
+				entityMappingDescriptor,
+				creationProcess
+		);
 	}
 
 	@Override
 	public SqmMultiTableMutationStrategy getSqmMultiTableMutationStrategy() {
 		return sqmMultiTableMutationStrategy;
+	}
+
+	public SqmMultiTableInsertStrategy getSqmMultiTableInsertStrategy() {
+		return sqmMultiTableInsertStrategy;
 	}
 
 	protected int getStateArrayInitialPosition(MappingModelCreationProcess creationProcess) {
@@ -5728,6 +5790,10 @@ public abstract class AbstractEntityPersister
 			stateArrayPosition = 0;
 		}
 		return stateArrayPosition;
+	}
+
+	protected boolean isPhysicalDiscriminator() {
+		return getDiscriminatorFormulaTemplate() == null;
 	}
 
 	protected EntityDiscriminatorMapping generateDiscriminatorMapping(MappingModelCreationProcess modelCreationProcess) {
@@ -5748,6 +5814,7 @@ public abstract class AbstractEntityPersister
 					getTableName(),
 					discriminatorColumnExpression,
 					getDiscriminatorFormulaTemplate() != null,
+					isPhysicalDiscriminator(),
 					modelCreationProcess
 			);
 		}
@@ -6236,6 +6303,13 @@ public abstract class AbstractEntityPersister
 		if ( superMappingType != null ) {
 			final ModelPart superDefinedAttribute = superMappingType.findSubPart( name, superMappingType );
 			if ( superDefinedAttribute != null ) {
+				// Prefer the identifier mapping of the concrete class
+				if ( superDefinedAttribute instanceof EntityIdentifierMapping ) {
+					final ModelPart identifierModelPart = getIdentifierModelPart( name, treatTargetType );
+					if ( identifierModelPart != null ) {
+						return identifierModelPart;
+					}
+				}
 				return superDefinedAttribute;
 			}
 		}

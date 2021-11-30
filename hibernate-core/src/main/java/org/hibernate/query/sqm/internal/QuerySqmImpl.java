@@ -36,6 +36,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryTypeMismatchException;
+import org.hibernate.query.SemanticException;
 import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
 import org.hibernate.query.hql.internal.QuerySplitter;
 import org.hibernate.query.hql.spi.HqlQueryImplementor;
@@ -59,15 +60,21 @@ import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.tree.SqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmStatement;
+import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
+import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
+import org.hibernate.query.sqm.tree.insert.SqmInsertValuesStatement;
+import org.hibernate.query.sqm.tree.insert.SqmValues;
 import org.hibernate.query.sqm.tree.select.SqmQueryGroup;
 import org.hibernate.query.sqm.tree.select.SqmQueryPart;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
@@ -142,6 +149,9 @@ public class QuerySqmImpl<R>
 		else if ( sqmStatement instanceof SqmUpdateStatement<?> ) {
 			verifyImmutableEntityUpdate( hqlString, (SqmUpdateStatement<R>) sqmStatement, producer.getFactory() );
 		}
+		else if ( sqmStatement instanceof SqmInsertStatement<?> ) {
+			verifyInsertTypesMatch( hqlString, (SqmInsertStatement<R>) sqmStatement );
+		}
 		this.resultType = resultType;
 		this.domainParameterXref = hqlInterpretation.getDomainParameterXref();
 		this.parameterMetadata = hqlInterpretation.getParameterMetadata();
@@ -203,6 +213,9 @@ public class QuerySqmImpl<R>
 		else if ( sqmStatement instanceof SqmUpdateStatement<?> ) {
 			verifyImmutableEntityUpdate( hqlString, (SqmUpdateStatement<R>) sqmStatement, producer.getFactory() );
 		}
+		else if ( sqmStatement instanceof SqmInsertStatement<?> ) {
+			verifyInsertTypesMatch( hqlString, (SqmInsertStatement<R>) sqmStatement );
+		}
 
 		this.parameterMetadata = hqlInterpretation.getParameterMetadata();
 		this.domainParameterXref = hqlInterpretation.getDomainParameterXref();
@@ -227,7 +240,7 @@ public class QuerySqmImpl<R>
 			SqmUtil.verifyIsSelectStatement( sqmStatement, null );
 			final SqmQueryPart<R> queryPart = ( (SqmSelectStatement<R>) sqmStatement ).getQueryPart();
 			// For criteria queries, we have to validate the fetch structure here
-			queryPart.validateFetchStructureAndOwners();
+			queryPart.validateQueryStructureAndFetchOwners();
 			visitQueryReturnType(
 					queryPart,
 					resultType,
@@ -240,6 +253,9 @@ public class QuerySqmImpl<R>
 			if ( updateStatement.getSetClause() == null || updateStatement.getSetClause().getAssignments().isEmpty() ) {
 				throw new IllegalArgumentException( "No assignments specified as part of UPDATE criteria" );
 			}
+		}
+		else if ( sqmStatement instanceof SqmInsertStatement<?> ) {
+			verifyInsertTypesMatch( CRITERIA_HQL_STRING, (SqmInsertStatement<R>) sqmStatement );
 		}
 
 		this.hqlString = CRITERIA_HQL_STRING;
@@ -422,7 +438,7 @@ public class QuerySqmImpl<R>
 				.getSessionFactoryOptions()
 				.getImmutableEntityUpdateQueryHandlingMode();
 
-		String querySpaces = Arrays.toString( entityDescriptor.getQuerySpaces() );
+		final String querySpaces = Arrays.toString( entityDescriptor.getQuerySpaces() );
 
 		switch ( immutableEntityUpdateQueryHandlingMode ) {
 			case WARNING:
@@ -436,9 +452,65 @@ public class QuerySqmImpl<R>
 				throw new UnsupportedOperationException(
 						"The " + immutableEntityUpdateQueryHandlingMode + " is not supported!"
 				);
-
 		}
 	}
+
+	private void verifyInsertTypesMatch(String hqlString, SqmInsertStatement<R> sqmStatement) {
+		final List<SqmPath<?>> insertionTargetPaths = sqmStatement.getInsertionTargetPaths();
+		if ( sqmStatement instanceof SqmInsertValuesStatement<?> ) {
+			final SqmInsertValuesStatement<R> statement = (SqmInsertValuesStatement<R>) sqmStatement;
+			for ( SqmValues sqmValues : statement.getValuesList() ) {
+				verifyInsertTypesMatch( hqlString, insertionTargetPaths, sqmValues.getExpressions() );
+			}
+		}
+		else {
+			final SqmInsertSelectStatement<R> statement = (SqmInsertSelectStatement<R>) sqmStatement;
+			final List<SqmSelection<?>> selections = statement.getSelectQueryPart()
+					.getFirstQuerySpec()
+					.getSelectClause()
+					.getSelections();
+			verifyInsertTypesMatch( hqlString, insertionTargetPaths, selections );
+			statement.getSelectQueryPart().validateQueryStructureAndFetchOwners();
+		}
+	}
+
+	private void verifyInsertTypesMatch(
+			String hqlString,
+			List<SqmPath<?>> insertionTargetPaths,
+			List<? extends SqmTypedNode<?>> expressions) {
+		final int size = insertionTargetPaths.size();
+		final int expressionsSize = expressions.size();
+		if ( size != expressionsSize ) {
+			throw new SemanticException(
+				String.format(
+						"Expected insert attribute count [%d] did not match Query selection count [%d]",
+						size,
+						expressionsSize
+				),
+				hqlString,
+				null
+			);
+		}
+		for ( int i = 0; i < expressionsSize; i++ ) {
+			final SqmTypedNode<?> expression = expressions.get( i );
+			if ( expression.getNodeJavaTypeDescriptor() == null ) {
+				continue;
+			}
+			if ( insertionTargetPaths.get( i ).getJavaTypeDescriptor() != expression.getNodeJavaTypeDescriptor() ) {
+				throw new SemanticException(
+						String.format(
+								"Expected insert attribute type [%s] did not match Query selection type [%s] at selection index [%d]",
+								insertionTargetPaths.get( i ).getJavaTypeDescriptor().getJavaType().getTypeName(),
+								expression.getNodeJavaTypeDescriptor().getJavaType().getTypeName(),
+								i
+						),
+						hqlString,
+						null
+				);
+			}
+		}
+	}
+
 
 	public SessionFactoryImplementor getSessionFactory() {
 		return getSession().getFactory();
@@ -852,17 +924,16 @@ public class QuerySqmImpl<R>
 	private NonSelectQueryPlan buildInsertQueryPlan() {
 		final SqmInsertStatement<R> sqmInsert = (SqmInsertStatement<R>) getSqmStatement();
 
-//		final String entityNameToUpdate = sqmInsert.getTarget().getReferencedPathSource().getHibernateEntityName();
-//		final EntityPersister entityDescriptor = getSessionFactory().getDomainModel().findEntityDescriptor( entityNameToUpdate );
+		final String entityNameToInsert = sqmInsert.getTarget().getReferencedPathSource().getHibernateEntityName();
+		final EntityPersister entityDescriptor = getSessionFactory().getDomainModel().findEntityDescriptor( entityNameToInsert );
 
-//		final SqmMultiTableMutationStrategy multiTableStrategy = entityDescriptor.getSqmMultiTableMutationStrategy();
-//		if ( multiTableStrategy == null ) {
+		final SqmMultiTableInsertStrategy multiTableStrategy = entityDescriptor.getSqmMultiTableInsertStrategy();
+		if ( multiTableStrategy == null ) {
 			return new SimpleInsertQueryPlan( sqmInsert, domainParameterXref );
-//		}
-//		else {
-			//TODO:
-//			return new MultiTableUpdateQueryPlan( sqmInsert, domainParameterXref, multiTableStrategy );
-//		}
+		}
+		else {
+			return new MultiTableInsertQueryPlan( sqmInsert, domainParameterXref, multiTableStrategy );
+		}
 	}
 
 	@Override

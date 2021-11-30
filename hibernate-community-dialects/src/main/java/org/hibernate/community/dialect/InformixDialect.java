@@ -6,7 +6,6 @@
  */
 package org.hibernate.community.dialect;
 
-import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.Replacer;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -33,10 +32,13 @@ import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
-import org.hibernate.query.sqm.mutation.internal.idtable.AfterUseAction;
-import org.hibernate.query.sqm.mutation.internal.idtable.IdTable;
-import org.hibernate.query.sqm.mutation.internal.idtable.LocalTemporaryTableStrategy;
-import org.hibernate.query.sqm.mutation.internal.idtable.TempIdTableExporter;
+import org.hibernate.query.sqm.mutation.internal.temptable.AfterUseAction;
+import org.hibernate.dialect.temptable.TemporaryTable;
+import org.hibernate.query.sqm.mutation.internal.temptable.BeforeUseAction;
+import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableInsertStrategy;
+import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
+import org.hibernate.dialect.temptable.TemporaryTableKind;
+import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.sql.SqmTranslator;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
@@ -387,23 +389,55 @@ public class InformixDialect extends Dialect {
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new LocalTemporaryTableStrategy(
-				new IdTable( rootEntityDescriptor, basename -> "HT_" + basename, this, runtimeModelCreationContext ),
-				() -> new TempIdTableExporter( true, this::getTypeName ) {
-					@Override
-					protected String getCreateCommand() {
-						return "create temp table";
-					}
-
-					@Override
-					protected String getCreateOptions() {
-						return "with no log";
-					}
-				},
-				AfterUseAction.NONE,
-				TempTableDdlTransactionHandling.NONE,
+		return new LocalTemporaryTableMutationStrategy(
+				TemporaryTable.createIdTable(
+						rootEntityDescriptor,
+						basename -> TemporaryTable.ID_TABLE_PREFIX + basename,
+						this,
+						runtimeModelCreationContext
+				),
 				runtimeModelCreationContext.getSessionFactory()
 		);
+	}
+
+	@Override
+	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
+			EntityMappingType rootEntityDescriptor,
+			RuntimeModelCreationContext runtimeModelCreationContext) {
+		return new LocalTemporaryTableInsertStrategy(
+				TemporaryTable.createEntityTable(
+						rootEntityDescriptor,
+						name -> TemporaryTable.ENTITY_TABLE_PREFIX + name,
+						this,
+						runtimeModelCreationContext
+				),
+				runtimeModelCreationContext.getSessionFactory()
+		);
+	}
+
+	@Override
+	public TemporaryTableKind getSupportedTemporaryTableKind() {
+		return TemporaryTableKind.LOCAL;
+	}
+
+	@Override
+	public String getTemporaryTableCreateOptions() {
+		return "with no log";
+	}
+
+	@Override
+	public String getTemporaryTableCreateCommand() {
+		return "create temp table";
+	}
+
+	@Override
+	public AfterUseAction getTemporaryTableAfterUseAction() {
+		return AfterUseAction.NONE;
+	}
+
+	@Override
+	public BeforeUseAction getTemporaryTableBeforeUseAction() {
+		return BeforeUseAction.CREATE;
 	}
 
 	@Override

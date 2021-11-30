@@ -420,6 +420,11 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
+	protected boolean isPhysicalDiscriminator() {
+		return false;
+	}
+
+	@Override
 	protected EntityDiscriminatorMapping generateDiscriminatorMapping(MappingModelCreationProcess modelCreationProcess) {
 		if ( hasSubclasses() ) {
 			return super.generateDiscriminatorMapping( modelCreationProcess );

@@ -8,6 +8,7 @@ package org.hibernate.sql.ast.tree.insert;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -30,6 +31,10 @@ public class InsertStatement extends AbstractMutationStatement {
 
 	public InsertStatement(TableReference targetTable) {
 		super( targetTable );
+	}
+
+	public InsertStatement(TableReference targetTable, List<ColumnReference> returningColumns) {
+		super( new LinkedHashMap<>(), targetTable, returningColumns );
 	}
 
 	public InsertStatement(boolean withRecursive, Map<String, CteStatement> cteStatements, TableReference targetTable, List<ColumnReference> returningColumns) {

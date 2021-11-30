@@ -469,7 +469,8 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		final CacheMode cacheMode = JdbcExecHelper.resolveCacheMode( executionContext );
 
 		final JdbcValuesMappingProducer mappingProducer = jdbcSelect.getJdbcValuesMappingProducer();
-		final boolean cacheable = queryCacheEnabled && canBeCached;
+		final boolean cacheable = queryCacheEnabled && canBeCached
+				&& executionContext.getQueryOptions().isResultCachingEnabled() == Boolean.TRUE;
 		final QueryKey queryResultsCacheKey;
 
 		if ( cacheable && cacheMode.isGetEnabled() ) {
@@ -482,8 +483,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 				SqlExecLogger.INSTANCE.tracev( "querySpaces is {0}", querySpaces );
 			}
 
-			final QueryResultsCache queryCache = factory
-					.getCache()
+			final QueryResultsCache queryCache = factory.getCache()
 					.getQueryResultsCache( executionContext.getQueryOptions().getResultCacheRegionName() );
 
 			// todo (6.0) : not sure that it is at all important that we account for QueryResults

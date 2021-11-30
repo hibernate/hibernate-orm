@@ -8,6 +8,7 @@ package org.hibernate.internal;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -208,11 +209,28 @@ public class FilterHelper {
 			if ( ! (parameterType instanceof JdbcMapping ) ) {
 				throw new MappingException( String.format( "parameter [%s] for filter [%s] is not of JdbcMapping type", parameterName, filterName ) );
 			}
+			final JdbcMapping jdbcMapping = (JdbcMapping) parameterType;
 			final Object parameterValue = enabledFilter.getParameter( parameterName );
 			if ( parameterValue == null ) {
 				throw new MappingException( String.format( "unknown parameter [%s] for filter [%s]", parameterName, filterName ) );
 			}
-			parameters.add( new FilterJdbcParameter( (JdbcMapping) parameterType, parameterValue ) );
+			if ( parameterValue instanceof Iterable && !jdbcMapping.getJavaTypeDescriptor().isInstance( parameterValue ) ) {
+				final Iterator<?> iterator = ( (Iterable<?>) parameterValue ).iterator();
+				if ( iterator.hasNext() ) {
+					parameters.add( new FilterJdbcParameter( jdbcMapping, iterator.next() ) );
+					while ( iterator.hasNext() ) {
+						sb.append( ",?" );
+						parameters.add( new FilterJdbcParameter( jdbcMapping, iterator.next() ) );
+					}
+				}
+				else {
+					// We need a dummy value if the list is empty
+					parameters.add( new FilterJdbcParameter( jdbcMapping, null ) );
+				}
+			}
+			else {
+				parameters.add( new FilterJdbcParameter( jdbcMapping, parameterValue ) );
+			}
 		}
 		sb.append( filterFragment, pos, filterFragment.length() );
 		return new FilterPredicate( sb.toString(), parameters );

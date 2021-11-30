@@ -338,7 +338,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			final ParseTree parseTree = ctx.getChild( 0 );
 			if ( parseTree instanceof HqlParser.SelectStatementContext ) {
 				final SqmSelectStatement<R> selectStatement = visitSelectStatement( (HqlParser.SelectStatementContext) parseTree );
-				selectStatement.getQueryPart().validateFetchStructureAndOwners();
+				selectStatement.getQueryPart().validateQueryStructureAndFetchOwners();
 				return selectStatement;
 			}
 			else if ( parseTree instanceof HqlParser.InsertStatementContext ) {

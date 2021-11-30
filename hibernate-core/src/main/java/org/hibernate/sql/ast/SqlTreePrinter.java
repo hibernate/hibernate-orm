@@ -107,7 +107,7 @@ public class SqlTreePrinter {
 	}
 
 	private void logTableGroupDetails(TableGroup tableGroup) {
-		if (tableGroup instanceof LazyTableGroup ) {
+		if ( tableGroup instanceof LazyTableGroup ) {
 			TableGroup underlyingTableGroup = ( (LazyTableGroup) tableGroup ).getUnderlyingTableGroup();
 			if ( underlyingTableGroup != null ) {
 				logTableGroupDetails( underlyingTableGroup );

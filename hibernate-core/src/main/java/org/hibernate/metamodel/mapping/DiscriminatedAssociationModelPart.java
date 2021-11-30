@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
 
@@ -19,7 +20,7 @@ import org.hibernate.sql.results.graph.FetchableContainer;
  *
  * @author Steve Ebersole
  */
-public interface DiscriminatedAssociationModelPart extends Fetchable, FetchableContainer {
+public interface DiscriminatedAssociationModelPart extends Fetchable, FetchableContainer, TableGroupJoinProducer {
 	BasicValuedModelPart getDiscriminatorPart();
 	BasicValuedModelPart getKeyPart();
 

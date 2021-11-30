@@ -26,8 +26,6 @@ import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmNode;
-import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
-import org.hibernate.query.sqm.tree.domain.SqmTreatedRoot;
 import org.hibernate.query.sqm.tree.expression.SqmAliasedNodeRef;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
@@ -196,10 +194,24 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 
 	@Override
 	public SqmQuerySpec<T> setSelection(JpaSelection<T> selection) {
-		assert getSelectClause() != null;
+		final SqmSelectClause selectClause = getSelectClause();
+		assert selectClause != null;
 		// NOTE : this call comes from JPA which inherently supports just a
-		// single (possibly "compound") selection
-		getSelectClause().setSelection( (SqmSelectableNode<?>) selection );
+		// single (possibly "compound") selection.
+		// We have this special case where we return the SqmSelectClause itself if it doesn't have exactly 1 item
+		if ( selection instanceof SqmSelectClause ) {
+			if ( selection != selectClause ) {
+				final SqmSelectClause sqmSelectClause = (SqmSelectClause) selection;
+				final List<SqmSelection<?>> selections = sqmSelectClause.getSelections();
+				selectClause.setSelection( selections.get( 0 ).getSelectableNode() );
+				for ( int i = 1; i < selections.size(); i++ ) {
+					selectClause.addSelection( selections.get( i ) );
+				}
+			}
+		}
+		else {
+			selectClause.setSelection( (SqmSelectableNode<?>) selection );
+		}
 		return this;
 	}
 
@@ -349,7 +361,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 	}
 
 	@Override
-	public void validateFetchStructureAndOwners() {
+	public void validateQueryStructureAndFetchOwners() {
 		validateFetchOwners();
 	}
 

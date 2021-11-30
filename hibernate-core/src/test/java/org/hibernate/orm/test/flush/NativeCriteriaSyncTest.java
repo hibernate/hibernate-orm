@@ -15,7 +15,7 @@ import jakarta.persistence.criteria.Root;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 
-import org.hibernate.test.hql.SimpleEntityWithAssociation;
+import org.hibernate.orm.test.hql.SimpleEntityWithAssociation;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -56,6 +56,11 @@ public class NativeCriteriaSyncTest extends BaseCoreFunctionalTestCase {
 //			criteria.createCriteria( "manyToManyAssociatedEntities" ).add( Restrictions.eq( "name", "e2" ) );
 //			assertEquals( 1, criteria.list().size() );
 		} );
+	}
+
+	@Override
+	protected String getBaseForMappings() {
+		return "org/hibernate/orm/test/";
 	}
 
 	@Override

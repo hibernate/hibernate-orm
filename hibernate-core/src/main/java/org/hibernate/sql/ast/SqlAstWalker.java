@@ -27,6 +27,7 @@ import org.hibernate.sql.ast.tree.expression.Format;
 import org.hibernate.sql.ast.tree.expression.JdbcLiteral;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.ModifiedSubQueryExpression;
+import org.hibernate.sql.ast.tree.expression.Over;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
 import org.hibernate.sql.ast.tree.expression.SqlSelectionExpression;
@@ -127,6 +128,8 @@ public interface SqlAstWalker {
 	void visitEvery(Every every);
 
 	void visitSummarization(Summarization every);
+
+	void visitOver(Over over);
 
 	void visitSelfRenderingExpression(SelfRenderingExpression expression);
 

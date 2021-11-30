@@ -6,6 +6,8 @@
  */
 package org.hibernate.query.sqm.sql;
 
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -39,6 +41,12 @@ import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.spi.AppliedGraph;
+import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
+import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
+import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.id.OptimizableGenerator;
+import org.hibernate.id.PostInsertIdentifierGenerator;
+import org.hibernate.id.enhanced.Optimizer;
 import org.hibernate.internal.FilterHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.collections.Stack;
@@ -48,6 +56,7 @@ import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.Association;
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.Bindable;
@@ -72,6 +81,7 @@ import org.hibernate.metamodel.mapping.SqlExpressable;
 import org.hibernate.metamodel.mapping.ValueMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedCollectionPart;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
+import org.hibernate.metamodel.mapping.internal.ExplicitColumnDiscriminatorMappingImpl;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
@@ -89,8 +99,11 @@ import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedRootJoin;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelation;
 import org.hibernate.query.sqm.tree.expression.SqmModifiedSubQueryExpression;
+import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
 import org.hibernate.sql.ast.tree.expression.ModifiedSubQueryExpression;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedRoot;
+import org.hibernate.sql.ast.tree.expression.Over;
+import org.hibernate.sql.ast.tree.expression.SelfRenderingSqlFragmentExpression;
 import org.hibernate.sql.ast.tree.from.CorrelatedPluralTableGroup;
 import org.hibernate.sql.ast.tree.from.PluralTableGroup;
 import org.hibernate.sql.exec.internal.VersionTypeSeedParameterSpecification;
@@ -316,6 +329,8 @@ import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.internal.JdbcParametersImpl;
+import org.hibernate.sql.exec.spi.ExecutionContext;
+import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParameters;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
@@ -364,7 +379,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private final DomainParameterXref domainParameterXref;
 	private final QueryParameterBindings domainParameterBindings;
 	private final Map<SqmParameter,MappingModelExpressable> sqmParameterMappingModelTypes = new LinkedHashMap<>();
-	private final Map<JpaCriteriaParameter<?>, Supplier<SqmJpaCriteriaParameterWrapper<?>>> jpaCriteriaParamResolutions;
+	private final Map<JpaCriteriaParameter<?>, SqmJpaCriteriaParameterWrapper<?>> jpaCriteriaParamResolutions;
 	private final List<DomainResult<?>> domainResults;
 	private final EntityGraphTraversalState entityGraphTraversalState;
 
@@ -436,16 +451,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			else {
 				this.entityGraphTraversalState = null;
 			}
-		}
-		else if ( statement instanceof SqmInsertSelectStatement ) {
-			this.domainResults = new ArrayList<>(
-					( (SqmInsertSelectStatement<?>) statement ).getSelectQueryPart()
-							.getFirstQuerySpec()
-							.getSelectClause()
-							.getSelectionItems()
-							.size()
-			);
-			this.entityGraphTraversalState = null;
 		}
 		else {
 			this.domainResults = null;
@@ -957,8 +962,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		);
 		currentClauseStack.push( Clause.INSERT );
 		final InsertStatement insertStatement;
-		boolean needsVersionInsert = entityDescriptor.isVersioned();
-
+		final AdditionalInsertValues additionalInsertValues;
 		try {
 			final NavigablePath rootPath = sqmStatement.getTarget().getNavigablePath();
 			final TableGroup rootTableGroup = entityDescriptor.createRootTableGroup(
@@ -970,11 +974,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					getCreationContext()
 			);
 
-			if ( !rootTableGroup.getTableReferenceJoins().isEmpty()
-					|| !rootTableGroup.getTableGroupJoins().isEmpty() ) {
-				throw new HibernateException( "Not expecting multiple table references for an SQM INSERT-SELECT" );
-			}
-
 			getFromClauseAccess().registerTableGroup( rootPath, rootTableGroup );
 
 			insertStatement = new InsertStatement(
@@ -983,35 +982,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					rootTableGroup.getPrimaryTableReference(),
 					Collections.emptyList()
 			);
+			additionalInsertValues = visitInsertionTargetPaths(
+					(assigable, references) -> insertStatement.addTargetColumnReferences( references ),
+					sqmStatement,
+					entityDescriptor,
+					rootTableGroup
+			);
 
-			final List<SqmPath> targetPaths = sqmStatement.getInsertionTargetPaths();
-			if ( needsVersionInsert ) {
-				final String versionAttributeName = entityDescriptor.getVersionMapping().getVersionAttribute().getAttributeName();
-				for ( int i = 0; i < targetPaths.size(); i++ ) {
-					final SqmPath<?> path = targetPaths.get( i );
-					if ( versionAttributeName.equals( path.getNavigablePath().getLocalName() ) ) {
-						needsVersionInsert = false;
-					}
-					final Assignable assignable = (Assignable) path.accept( this );
-					insertStatement.addTargetColumnReferences( assignable.getColumnReferences() );
-				}
-				if ( needsVersionInsert ) {
-					final List<ColumnReference> targetColumnReferences = BasicValuedPathInterpretation.from(
-							(SqmBasicValuedSimplePath<?>) sqmStatement.getTarget()
-									.get( versionAttributeName ),
-							this,
-							this,
-							jpaQueryComplianceEnabled ).getColumnReferences();
-					assert targetColumnReferences.size() == 1;
-
-					insertStatement.addTargetColumnReferences( targetColumnReferences );
-				}
-			}
-			else {
-				for ( int i = 0; i < targetPaths.size(); i++ ) {
-					final Assignable assignable = (Assignable) targetPaths.get( i ).accept( this );
-					insertStatement.addTargetColumnReferences( assignable.getColumnReferences() );
-				}
+			if ( !rootTableGroup.getTableReferenceJoins().isEmpty()
+					|| !rootTableGroup.getTableGroupJoins().isEmpty() ) {
+				throw new SemanticException( "Not expecting multiple table references for an SQM INSERT-SELECT" );
 			}
 		}
 		finally {
@@ -1023,20 +1003,17 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				visitQueryPart( selectQueryPart )
 		);
 
-		if ( needsVersionInsert ) {
-			final Expression expression = new VersionTypeSeedParameterSpecification(
-					entityDescriptor.getVersionMapping().getJdbcMapping(),
-					entityDescriptor.getVersionJavaTypeDescriptor()
-			);
-			insertStatement.getSourceSelectStatement().forEachQuerySpec(
-					querySpec -> {
-						querySpec.getSelectClause().addSqlSelection(
-								// The position is irrelevant as this is only needed for insert
-								new SqlSelectionImpl( 1, 0, expression )
-						);
-					}
-			);
-		}
+		insertStatement.getSourceSelectStatement().forEachQuerySpec(
+				querySpec -> {
+					final boolean appliedRowNumber = additionalInsertValues.applySelections(
+							querySpec,
+							creationContext.getSessionFactory()
+					);
+					// Just make sure that if we get here, a row number will never be applied
+					// If this requires the special row number handling, it should use the mutation strategy
+					assert !appliedRowNumber;
+				}
+		);
 
 		return insertStatement;
 	}
@@ -1078,34 +1055,284 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 			getFromClauseAccess().registerTableGroup( rootPath, rootTableGroup );
 
-			final InsertStatement insertValuesStatement = new InsertStatement(
+			final InsertStatement insertStatement = new InsertStatement(
 					sqmStatement.isWithRecursive(),
 					cteStatements,
 					rootTableGroup.getPrimaryTableReference(),
 					Collections.emptyList()
 			);
 
-			List<SqmPath> targetPaths = sqmStatement.getInsertionTargetPaths();
-			for ( SqmPath target : targetPaths ) {
-				Assignable assignable = (Assignable) target.accept( this );
-				insertValuesStatement.addTargetColumnReferences( assignable.getColumnReferences() );
+			final AdditionalInsertValues additionalInsertValues = visitInsertionTargetPaths(
+					(assigable, references) -> insertStatement.addTargetColumnReferences( references ),
+					sqmStatement,
+					entityDescriptor,
+					rootTableGroup
+			);
+
+			if ( !rootTableGroup.getTableReferenceJoins().isEmpty()
+					|| !rootTableGroup.getTableGroupJoins().isEmpty() ) {
+				throw new SemanticException( "Not expecting multiple table references for an SQM INSERT-SELECT" );
 			}
 
 			List<SqmValues> valuesList = sqmStatement.getValuesList();
 			for ( SqmValues sqmValues : valuesList ) {
-				insertValuesStatement.getValuesList().add( visitValues( sqmValues ) );
+				final Values values = visitValues( sqmValues );
+				additionalInsertValues.applyValues( values );
+				insertStatement.getValuesList().add( values );
 			}
 
-			return insertValuesStatement;
+			return insertStatement;
 		}
 		finally {
 			popProcessingStateStack();
 		}
 	}
 
+	public AdditionalInsertValues visitInsertionTargetPaths(
+			BiConsumer<Assignable, List<ColumnReference>> targetColumnReferenceConsumer,
+			SqmInsertStatement<?> sqmStatement,
+			EntityPersister entityDescriptor, TableGroup rootTableGroup) {
+		final List<SqmPath<?>> targetPaths = sqmStatement.getInsertionTargetPaths();
+		final EntityDiscriminatorMapping discriminatorMapping = entityDescriptor.getDiscriminatorMapping();
+		IdentifierGenerator identifierGenerator = entityDescriptor.getIdentifierGenerator();
+		Expression versionExpression = null;
+		Expression discriminatorExpression = null;
+		BasicEntityIdentifierMapping identifierMapping = null;
+		if ( entityDescriptor.isVersioned() ) {
+			final String identifierPropertyName = entityDescriptor.getIdentifierPropertyName();
+			final String versionAttributeName = entityDescriptor.getVersionMapping().getVersionAttribute().getAttributeName();
+			boolean needsVersionInsert = true;
+			for ( int i = 0; i < targetPaths.size(); i++ ) {
+				final SqmPath<?> path = targetPaths.get( i );
+				if ( identifierPropertyName.equals( path.getNavigablePath().getLocalName() ) ) {
+					identifierGenerator = null;
+				}
+				else if ( versionAttributeName.equals( path.getNavigablePath().getLocalName() ) ) {
+					needsVersionInsert = false;
+				}
+				final Assignable assignable = (Assignable) path.accept( this );
+				targetColumnReferenceConsumer.accept( assignable, assignable.getColumnReferences() );
+			}
+			if ( needsVersionInsert ) {
+				final BasicValuedPathInterpretation<?> versionPath = BasicValuedPathInterpretation.from(
+						(SqmBasicValuedSimplePath<?>) sqmStatement.getTarget()
+								.get( versionAttributeName ),
+						this,
+						this,
+						jpaQueryComplianceEnabled
+				);
+				final List<ColumnReference> targetColumnReferences = versionPath.getColumnReferences();
+				assert targetColumnReferences.size() == 1;
+
+				targetColumnReferenceConsumer.accept( versionPath, targetColumnReferences );
+				versionExpression = new VersionTypeSeedParameterSpecification(
+						entityDescriptor.getVersionMapping().getJdbcMapping(),
+						entityDescriptor.getVersionJavaTypeDescriptor()
+				);
+			}
+		}
+		else if ( identifierGenerator != null
+				&& !( identifierGenerator instanceof PostInsertIdentifierGenerator )
+				&& !( identifierGenerator instanceof CompositeNestedGeneratedValueGenerator ) ) {
+			final String identifierPropertyName = entityDescriptor.getIdentifierPropertyName();
+			for ( int i = 0; i < targetPaths.size(); i++ ) {
+				final SqmPath<?> path = targetPaths.get( i );
+				if ( identifierPropertyName.equals( path.getNavigablePath().getLocalName() ) ) {
+					identifierGenerator = null;
+				}
+				final Assignable assignable = (Assignable) path.accept( this );
+				targetColumnReferenceConsumer.accept( assignable, assignable.getColumnReferences() );
+			}
+		}
+		else {
+			for ( int i = 0; i < targetPaths.size(); i++ ) {
+				final Assignable assignable = (Assignable) targetPaths.get( i ).accept( this );
+				targetColumnReferenceConsumer.accept( assignable, assignable.getColumnReferences() );
+			}
+		}
+		if ( discriminatorMapping != null && discriminatorMapping.isPhysical() ) {
+			final BasicValuedPathInterpretation<?> discriminatorPath = new BasicValuedPathInterpretation<>(
+					new ColumnReference(
+							rootTableGroup.resolveTableReference( discriminatorMapping.getContainingTableExpression() ),
+							discriminatorMapping,
+							getCreationContext().getSessionFactory()
+					),
+					rootTableGroup.getNavigablePath().append( discriminatorMapping.getPartName() ),
+					discriminatorMapping,
+					rootTableGroup
+			);
+			targetColumnReferenceConsumer.accept( discriminatorPath, discriminatorPath.getColumnReferences() );
+			discriminatorExpression = new QueryLiteral<>(
+					entityDescriptor.getDiscriminatorValue(),
+					discriminatorMapping
+			);
+
+		}
+		// This uses identity generation, so we don't need to list the column
+		if ( identifierGenerator instanceof PostInsertIdentifierGenerator
+				|| identifierGenerator instanceof CompositeNestedGeneratedValueGenerator ) {
+			identifierGenerator = null;
+		}
+		else if ( identifierGenerator != null ) {
+			identifierMapping = (BasicEntityIdentifierMapping) entityDescriptor.getIdentifierMapping();
+			final BasicValuedPathInterpretation<?> identifierPath = new BasicValuedPathInterpretation<>(
+					new ColumnReference(
+							rootTableGroup.resolveTableReference( identifierMapping.getContainingTableExpression() ),
+							identifierMapping,
+							getCreationContext().getSessionFactory()
+					),
+					rootTableGroup.getNavigablePath().append( identifierMapping.getPartName() ),
+					identifierMapping,
+					rootTableGroup
+			);
+			targetColumnReferenceConsumer.accept( identifierPath, identifierPath.getColumnReferences() );
+		}
+
+		return new AdditionalInsertValues(
+				versionExpression,
+				discriminatorExpression,
+				identifierGenerator,
+				identifierMapping
+		);
+	}
+
+	public static class AdditionalInsertValues {
+		private final Expression versionExpression;
+		private final Expression discriminatorExpression;
+		private final IdentifierGenerator identifierGenerator;
+		private final BasicEntityIdentifierMapping identifierMapping;
+		private Expression identifierGeneratorParameter;
+		private SqlSelection versionSelection;
+		private SqlSelection discriminatorSelection;
+		private SqlSelection identifierSelection;
+
+		public AdditionalInsertValues(
+				Expression versionExpression,
+				Expression discriminatorExpression,
+				IdentifierGenerator identifierGenerator,
+				BasicEntityIdentifierMapping identifierMapping) {
+			this.versionExpression = versionExpression;
+			this.discriminatorExpression = discriminatorExpression;
+			this.identifierGenerator = identifierGenerator;
+			this.identifierMapping = identifierMapping;
+		}
+
+		public void applyValues(Values values) {
+			final List<Expression> expressions = values.getExpressions();
+			if ( versionExpression != null ) {
+				expressions.add( versionExpression );
+			}
+			if ( discriminatorExpression != null ) {
+				expressions.add( discriminatorExpression );
+			}
+			if ( identifierGenerator != null ) {
+				if ( identifierGeneratorParameter == null ) {
+					identifierGeneratorParameter = new IdGeneratorParameter( identifierMapping, identifierGenerator );
+				}
+				expressions.add( identifierGeneratorParameter );
+			}
+		}
+
+		/**
+		 * Returns true if the identifier can't be applied directly and needs to be generated separately.
+		 * As a replacement for the identifier, the special row_number column should be filled.
+		 */
+		public boolean applySelections(QuerySpec querySpec, SessionFactoryImplementor sessionFactory) {
+			final SelectClause selectClause = querySpec.getSelectClause();
+			if ( versionExpression != null ) {
+				if ( versionSelection == null ) {
+					// The position is irrelevant as this is only needed for insert
+					versionSelection = new SqlSelectionImpl( 1, 0, versionExpression );
+				}
+				selectClause.addSqlSelection( versionSelection );
+			}
+			if ( discriminatorExpression != null ) {
+				if ( discriminatorSelection == null ) {
+					// The position is irrelevant as this is only needed for insert
+					discriminatorSelection = new SqlSelectionImpl( 1, 0, discriminatorExpression );
+				}
+				selectClause.addSqlSelection( discriminatorSelection );
+			}
+			if ( identifierGenerator != null ) {
+				if ( identifierSelection == null ) {
+					if ( !( identifierGenerator instanceof BulkInsertionCapableIdentifierGenerator )
+							|| !( (BulkInsertionCapableIdentifierGenerator) identifierGenerator ).supportsBulkInsertionIdentifierGeneration() ) {
+						throw new SemanticException(
+								"SQM INSERT-SELECT without bulk insertion capable identifier generator: " + identifierGenerator );
+					}
+					if ( identifierGenerator instanceof OptimizableGenerator ) {
+						final Optimizer optimizer = ( (OptimizableGenerator) identifierGenerator ).getOptimizer();
+						if ( optimizer != null && optimizer.getIncrementSize() > 1 ) {
+							// This is a special case where we have a sequence with an optimizer
+							final BasicType<Integer> rowNumberType = sessionFactory.getTypeConfiguration()
+									.getBasicTypeForJavaType( Integer.class );
+							identifierSelection = new SqlSelectionImpl(
+									1,
+									0,
+									new Over(
+										new SelfRenderingFunctionSqlAstExpression(
+												"row_number",
+												(appender, args, walker) -> appender.appendSql( "row_number()" ),
+												Collections.emptyList(),
+												rowNumberType,
+												rowNumberType
+										),
+										Collections.emptyList(),
+										Collections.emptyList()
+									)
+							);
+							selectClause.addSqlSelection( identifierSelection );
+							return true;
+						}
+					}
+					final String fragment = ( (BulkInsertionCapableIdentifierGenerator) identifierGenerator ).determineBulkInsertionIdentifierGenerationSelectFragment(
+							sessionFactory.getSqlStringGenerationContext()
+					);
+					// The position is irrelevant as this is only needed for insert
+					identifierSelection = new SqlSelectionImpl(
+							1,
+							0,
+							new SelfRenderingSqlFragmentExpression( fragment )
+					);
+				}
+				selectClause.addSqlSelection( identifierSelection );
+			}
+			return requiresRowNumberIntermediate();
+		}
+
+		public boolean requiresRowNumberIntermediate() {
+			return identifierSelection != null
+					&& !( identifierSelection.getExpression() instanceof SelfRenderingSqlFragmentExpression );
+		}
+	}
+
+	private static class IdGeneratorParameter extends JdbcParameterImpl {
+
+		private final IdentifierGenerator generator;
+
+		public IdGeneratorParameter(BasicEntityIdentifierMapping identifierMapping, IdentifierGenerator generator) {
+			super( identifierMapping.getJdbcMapping() );
+			this.generator = generator;
+		}
+
+		@Override
+		public void bindParameterValue(
+				PreparedStatement statement,
+				int startPosition,
+				JdbcParameterBindings jdbcParamBindings,
+				ExecutionContext executionContext) throws SQLException {
+			getJdbcMapping().getJdbcValueBinder().bind(
+					statement,
+					generator.generate( executionContext.getSession(), null ),
+					startPosition,
+					executionContext.getSession()
+			);
+		}
+	}
+
 	@Override
 	public Values visitValues(SqmValues sqmValues) {
-		Values values = new Values();
+		final Values values = new Values();
 		for ( SqmExpression<?> expression : sqmValues.getExpressions() ) {
 			values.getExpressions().add( (Expression) expression.accept( this ) );
 		}
@@ -1265,17 +1492,23 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	public static CteTable createCteTable(SqmCteTable sqmCteTable, SessionFactoryImplementor factory) {
-		final List<SqmCteTableColumn> sqmCteColumns = sqmCteTable.getColumns();
+		return createCteTable( sqmCteTable, sqmCteTable.getColumns(), factory );
+	}
+
+	public static CteTable createCteTable(
+			SqmCteTable sqmCteTable,
+			List<SqmCteTableColumn> sqmCteColumns,
+			SessionFactoryImplementor factory) {
 		final List<CteColumn> sqlCteColumns = new ArrayList<>( sqmCteColumns.size() );
 
 		for ( int i = 0; i < sqmCteColumns.size(); i++ ) {
 			final SqmCteTableColumn sqmCteTableColumn = sqmCteColumns.get( i );
-			ModelPart modelPart = sqmCteTableColumn.getType();
-			if ( modelPart instanceof Association ) {
-				modelPart = ( (Association) modelPart ).getForeignKeyDescriptor();
+			ValueMapping valueMapping = sqmCteTableColumn.getType();
+			if ( valueMapping instanceof Association ) {
+				valueMapping = ( (Association) valueMapping ).getForeignKeyDescriptor();
 			}
-			if ( modelPart instanceof EmbeddableValuedModelPart ) {
-				modelPart.forEachJdbcType(
+			if ( valueMapping instanceof EmbeddableValuedModelPart ) {
+				valueMapping.forEachJdbcType(
 						(index, jdbcMapping) -> {
 							sqlCteColumns.add(
 									new CteColumn(
@@ -1290,7 +1523,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				sqlCteColumns.add(
 						new CteColumn(
 								sqmCteTableColumn.getColumnName(),
-								( (BasicValuedMapping) modelPart ).getJdbcMapping()
+								( (BasicValuedMapping) valueMapping ).getJdbcMapping()
 						)
 				);
 			}
@@ -2288,6 +2521,32 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		getFromClauseIndex().register( sqmJoin, joinedTableGroup );
 		registerPluralTableGroupParts( joinedTableGroup );
+		// For joins we also need to register the table groups for the treats
+		if ( joinedTableGroup instanceof PluralTableGroup ) {
+			final PluralTableGroup pluralTableGroup = (PluralTableGroup) joinedTableGroup;
+			for ( SqmFrom<?, ?> sqmTreat : sqmJoin.getSqmTreats() ) {
+				if ( pluralTableGroup.getElementTableGroup() != null ) {
+					getFromClauseAccess().registerTableGroup(
+							sqmTreat.getNavigablePath().append( CollectionPart.Nature.ELEMENT.getName() ),
+							pluralTableGroup.getElementTableGroup()
+					);
+				}
+				if ( pluralTableGroup.getIndexTableGroup() != null ) {
+					getFromClauseAccess().registerTableGroup(
+							sqmTreat.getNavigablePath().append( CollectionPart.Nature.INDEX.getName() ),
+							pluralTableGroup.getIndexTableGroup()
+					);
+				}
+			}
+		}
+		else {
+			for ( SqmFrom<?, ?> sqmTreat : sqmJoin.getSqmTreats() ) {
+				getFromClauseAccess().registerTableGroup(
+						sqmTreat.getNavigablePath(),
+						joinedTableGroup
+				);
+			}
+		}
 
 		// add any additional join restrictions
 		if ( sqmJoin.getJoinPredicate() != null ) {
@@ -3845,11 +4104,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			throw new IllegalStateException( "No JpaCriteriaParameter resolutions registered" );
 		}
 
-		final Supplier<SqmJpaCriteriaParameterWrapper<?>> supplier = jpaCriteriaParamResolutions.get( expression );
+		final SqmJpaCriteriaParameterWrapper<?> supplier = jpaCriteriaParamResolutions.get( expression );
 		if ( supplier == null ) {
 			throw new IllegalStateException( "Criteria parameter [" + expression + "] not known to be a parameter of the processing tree" );
 		}
-		return supplier.get();
+		return supplier;
 	}
 
 	@Override
@@ -5047,8 +5306,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		if ( !domainParamBinding.isMultiValued() ) {
 			return null;
 		}
-		final SqmJpaCriteriaParameterWrapper<?> sqmWrapper = jpaCriteriaParamResolutions.get( jpaCriteriaParameter )
-				.get();
+		final SqmJpaCriteriaParameterWrapper<?> sqmWrapper = jpaCriteriaParamResolutions.get( jpaCriteriaParameter );
 
 		return processInSingleParameter( sqmPredicate, sqmWrapper, jpaCriteriaParameter, domainParamBinding );
 	}

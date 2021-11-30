@@ -165,6 +165,7 @@ public class SequenceStyleGenerator
 	 *
 	 * @return Value for property 'optimizer'.
 	 */
+	@Override
 	public Optimizer getOptimizer() {
 		return optimizer;
 	}
@@ -545,11 +546,8 @@ public class SequenceStyleGenerator
 
 	@Override
 	public boolean supportsBulkInsertionIdentifierGeneration() {
-		// it does, as long as
-		// 		1) there is no (non-noop) optimizer in use
-		//		2) the underlying structure is a sequence
-		return NoopOptimizer.class.isInstance( getOptimizer() )
-				&& getDatabaseStructure().isPhysicalSequence();
+		// it does, as long as the underlying structure is a sequence
+		return getDatabaseStructure().isPhysicalSequence();
 	}
 
 	@Override

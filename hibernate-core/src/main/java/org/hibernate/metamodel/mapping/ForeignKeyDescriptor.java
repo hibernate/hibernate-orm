@@ -24,7 +24,7 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 /**
  * Descriptor for foreign-keys
  */
-public interface ForeignKeyDescriptor extends VirtualModelPart {
+public interface ForeignKeyDescriptor extends VirtualModelPart, ValueMapping {
 
 	enum Nature {
 		KEY,

@@ -18,7 +18,6 @@ import org.hibernate.query.CastType;
 import org.hibernate.query.IntervalType;
 import org.hibernate.query.NullOrdering;
 import org.hibernate.PessimisticLockException;
-import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.hint.IndexQueryHintHandler;
@@ -44,10 +43,13 @@ import org.hibernate.metamodel.mapping.SqlExpressable;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.query.sqm.mutation.internal.idtable.AfterUseAction;
-import org.hibernate.query.sqm.mutation.internal.idtable.IdTable;
-import org.hibernate.query.sqm.mutation.internal.idtable.LocalTemporaryTableStrategy;
-import org.hibernate.query.sqm.mutation.internal.idtable.TempIdTableExporter;
+import org.hibernate.query.sqm.mutation.internal.temptable.AfterUseAction;
+import org.hibernate.dialect.temptable.TemporaryTable;
+import org.hibernate.query.sqm.mutation.internal.temptable.BeforeUseAction;
+import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableInsertStrategy;
+import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
+import org.hibernate.dialect.temptable.TemporaryTableKind;
+import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -696,23 +698,67 @@ public class MySQLDialect extends Dialect {
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
 
-		return new LocalTemporaryTableStrategy(
-				new IdTable( rootEntityDescriptor, basename -> "HT_" + basename, this, runtimeModelCreationContext ),
-				() -> new TempIdTableExporter( true, this::getTypeName ) {
-					@Override
-					protected String getCreateCommand() {
-						return "create temporary table if not exists";
-					}
-
-					@Override
-					protected String getDropCommand() {
-						return "drop temporary table";
-					}
-				},
-				AfterUseAction.DROP,
-				TempTableDdlTransactionHandling.NONE,
+		return new LocalTemporaryTableMutationStrategy(
+				TemporaryTable.createIdTable(
+						rootEntityDescriptor,
+						basename -> TemporaryTable.ID_TABLE_PREFIX + basename,
+						this,
+						runtimeModelCreationContext
+				),
 				runtimeModelCreationContext.getSessionFactory()
 		);
+	}
+
+	@Override
+	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
+			EntityMappingType rootEntityDescriptor,
+			RuntimeModelCreationContext runtimeModelCreationContext) {
+
+		return new LocalTemporaryTableInsertStrategy(
+				TemporaryTable.createEntityTable(
+						rootEntityDescriptor,
+						name -> TemporaryTable.ENTITY_TABLE_PREFIX + name,
+						this,
+						runtimeModelCreationContext
+				),
+				runtimeModelCreationContext.getSessionFactory()
+		);
+	}
+
+	@Override
+	public TemporaryTableKind getSupportedTemporaryTableKind() {
+		return TemporaryTableKind.LOCAL;
+	}
+
+	@Override
+	public String getTemporaryTableCreateCommand() {
+		return "create temporary table if not exists";
+	}
+
+	@Override
+	public String getTemporaryTableDropCommand() {
+		return "drop temporary table";
+	}
+
+	@Override
+	public AfterUseAction getTemporaryTableAfterUseAction() {
+		return AfterUseAction.DROP;
+	}
+
+	@Override
+	public BeforeUseAction getTemporaryTableBeforeUseAction() {
+		return BeforeUseAction.CREATE;
+	}
+
+	@Override
+	public int getMaxAliasLength() {
+		// Max alias length is 256, but Hibernate needs to add "uniqueing info" so we account for that
+		return 246;
+	}
+
+	@Override
+	public int getMaxIdentifierLength() {
+		return 64;
 	}
 
 	@Override

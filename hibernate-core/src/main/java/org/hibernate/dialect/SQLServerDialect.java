@@ -165,6 +165,11 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	public int getMaxIdentifierLength() {
+		return 128;
+	}
+
+	@Override
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
 
@@ -288,7 +293,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public String currentDate() {
-		return currentTimestamp();
+		return "convert(date,getdate())";
 	}
 
 	@Override

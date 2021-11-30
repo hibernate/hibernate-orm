@@ -57,7 +57,9 @@ import org.hibernate.query.IntervalType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.query.sqm.mutation.internal.cte.CteStrategy;
+import org.hibernate.query.sqm.mutation.internal.cte.CteInsertStrategy;
+import org.hibernate.query.sqm.mutation.internal.cte.CteMutationStrategy;
+import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -617,7 +619,14 @@ public class PostgreSQLDialect extends Dialect {
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new CteStrategy( rootEntityDescriptor, runtimeModelCreationContext );
+		return new CteMutationStrategy( rootEntityDescriptor, runtimeModelCreationContext );
+	}
+
+	@Override
+	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
+			EntityMappingType rootEntityDescriptor,
+			RuntimeModelCreationContext runtimeModelCreationContext) {
+		return new CteInsertStrategy( rootEntityDescriptor, runtimeModelCreationContext );
 	}
 
 	@Override
@@ -744,6 +753,11 @@ public class PostgreSQLDialect extends Dialect {
 	@Override
 	public NationalizationSupport getNationalizationSupport() {
 		return NationalizationSupport.IMPLICIT;
+	}
+
+	@Override
+	public int getMaxIdentifierLength() {
+		return 63;
 	}
 
 	@Override

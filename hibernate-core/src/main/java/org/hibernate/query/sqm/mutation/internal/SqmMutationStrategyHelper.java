@@ -17,6 +17,7 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.spi.SqlOmittingQueryOptions;
+import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.from.TableReference;
@@ -59,6 +60,31 @@ public class SqmMutationStrategyHelper {
 				.getJdbcEnvironment()
 				.getDialect()
 				.getFallbackSqmMutationStrategy( rootEntityDescriptor, creationContext );
+	}
+
+	/**
+	 * Standard resolution of SqmInsertStrategy to use for a given
+	 * entity hierarchy.
+	 */
+	public static SqmMultiTableInsertStrategy resolveInsertStrategy(
+			RootClass entityBootDescriptor,
+			EntityMappingType rootEntityDescriptor,
+			MappingModelCreationProcess creationProcess) {
+		final RuntimeModelCreationContext creationContext = creationProcess.getCreationContext();
+		final SessionFactoryImplementor sessionFactory = creationContext.getSessionFactory();
+		final SessionFactoryOptions options = sessionFactory.getSessionFactoryOptions();
+
+		final SqmMultiTableInsertStrategy specifiedStrategy = options.getCustomSqmMultiTableInsertStrategy();
+		if ( specifiedStrategy != null ) {
+			return specifiedStrategy;
+		}
+
+		// todo (6.0) : add capability define strategy per-hierarchy
+
+		return sessionFactory.getServiceRegistry().getService( JdbcServices.class )
+				.getJdbcEnvironment()
+				.getDialect()
+				.getFallbackSqmInsertStrategy( rootEntityDescriptor, creationContext );
 	}
 
 	public static void cleanUpCollectionTables(

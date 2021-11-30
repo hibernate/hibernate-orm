@@ -11,6 +11,7 @@ import java.util.Map;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
+import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 
@@ -60,4 +61,10 @@ public interface QueryEngineOptions {
 	 * target of the mutation is a multi-table entity.
 	 */
 	SqmMultiTableMutationStrategy getCustomSqmMultiTableMutationStrategy();
+
+	/**
+	 * Contract for handling SQM trees representing insertion (INSERT) queries where the
+	 * target of the mutation is a multi-table entity.
+	 */
+	SqmMultiTableInsertStrategy getCustomSqmMultiTableInsertStrategy();
 }

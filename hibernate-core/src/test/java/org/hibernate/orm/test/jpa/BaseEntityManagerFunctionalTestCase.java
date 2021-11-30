@@ -29,8 +29,8 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
-import org.hibernate.query.sqm.mutation.internal.idtable.GlobalTemporaryTableStrategy;
-import org.hibernate.query.sqm.mutation.internal.idtable.LocalTemporaryTableStrategy;
+import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
+import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
 
 import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -228,8 +228,8 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 			config.put( AvailableSettings.ORM_XML_FILES, dds );
 		}
 
-		config.put( GlobalTemporaryTableStrategy.DROP_ID_TABLES, "true" );
-		config.put( LocalTemporaryTableStrategy.DROP_ID_TABLES, "true" );
+		config.put( GlobalTemporaryTableMutationStrategy.DROP_ID_TABLES, "true" );
+		config.put( LocalTemporaryTableMutationStrategy.DROP_ID_TABLES, "true" );
 		if ( !config.containsKey( Environment.CONNECTION_PROVIDER ) ) {
 			config.put(
 					AvailableSettings.CONNECTION_PROVIDER,

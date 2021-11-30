@@ -310,6 +310,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 	 *
 	 * @return Out optimizer.
 	 */
+	@Override
 	public final Optimizer getOptimizer() {
 		return optimizer;
 	}

@@ -445,6 +445,11 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 	}
 
 	@Override
+	public MappingType getMappedType() {
+		return getPartMappingType();
+	}
+
+	@Override
 	public MappingType getPartMappingType() {
 		return targetSide.getModelPart().getPartMappingType();
 	}

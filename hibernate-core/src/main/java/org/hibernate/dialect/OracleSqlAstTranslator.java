@@ -20,10 +20,13 @@ import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.FunctionExpression;
 import org.hibernate.sql.ast.tree.expression.Literal;
+import org.hibernate.sql.ast.tree.expression.Over;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.from.UnionTableGroup;
+import org.hibernate.sql.ast.tree.from.ValuesTableReference;
 import org.hibernate.sql.ast.tree.insert.Values;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
@@ -245,6 +248,52 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 	}
 
 	@Override
+	protected void renderValuesTableReference(ValuesTableReference tableReference) {
+		final List<Values> valuesList = tableReference.getValuesList();
+		if ( valuesList.size() < 2 ) {
+			super.renderValuesTableReference( tableReference );
+		}
+		else {
+			append( '(' );
+			// Oracle doesn't support a multi-values insert
+			// So we render a select union emulation instead
+			final Stack<Clause> clauseStack = getClauseStack();
+			clauseStack.push( Clause.VALUES );
+			try {
+				// We render the first select statement with aliases
+				clauseStack.push( Clause.SELECT );
+
+				try {
+					appendSql( "select " );
+
+					renderCommaSeparatedSelectExpression(
+							valuesList.get( 0 ).getExpressions(),
+							tableReference.getColumnNames()
+					);
+					appendSql( getFromDualForSelectOnly() );
+				}
+				finally {
+					clauseStack.pop();
+				}
+				// The others, without the aliases
+				for ( int i = 1; i < valuesList.size(); i++ ) {
+					appendSql( " union all " );
+					renderExpressionsAsSubquery( valuesList.get( i ).getExpressions() );
+				}
+			}
+			finally {
+				clauseStack.pop();
+			}
+			append( ')' );
+			final String identificationVariable = tableReference.getIdentificationVariable();
+			if ( identificationVariable != null ) {
+				append( WHITESPACE );
+				append( tableReference.getIdentificationVariable() );
+			}
+		}
+	}
+
+	@Override
 	public void visitQueryGroup(QueryGroup queryGroup) {
 		if ( shouldEmulateFetchClause( queryGroup ) ) {
 			emulateFetchOffsetWithWindowFunctions( queryGroup, true );
@@ -285,6 +334,22 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 		else {
 			super.renderRowNumber( selectClause, queryPart );
 		}
+	}
+
+	@Override
+	public void visitOver(Over over) {
+		final Expression expression = over.getExpression();
+		if ( expression instanceof FunctionExpression && "row_number".equals( ( (FunctionExpression) expression ).getFunctionName() ) ) {
+			if ( over.getPartitions().isEmpty() && over.getOrderList().isEmpty()
+					&& over.getStartKind() == Over.FrameKind.UNBOUNDED_PRECEDING
+					&& over.getEndKind() == Over.FrameKind.CURRENT_ROW
+					&& over.getExclusion() == Over.FrameExclusion.NO_OTHERS ) {
+				// Oracle doesn't allow an empty over clause for the row_number() function
+				append( "rownum" );
+				return;
+			}
+		}
+		super.visitOver( over );
 	}
 
 	@Override

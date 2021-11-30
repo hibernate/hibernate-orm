@@ -349,6 +349,11 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
+	public int getMaxIdentifierLength() {
+		return 63;
+	}
+
+	@Override
 	public void appendDateTimeLiteral(
 			SqlAppender appender,
 			TemporalAccessor temporalAccessor,

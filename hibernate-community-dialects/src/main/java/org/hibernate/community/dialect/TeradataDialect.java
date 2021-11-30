@@ -31,10 +31,11 @@ import org.hibernate.query.IntervalType;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.query.sqm.mutation.internal.idtable.AfterUseAction;
-import org.hibernate.query.sqm.mutation.internal.idtable.GlobalTemporaryTableStrategy;
-import org.hibernate.query.sqm.mutation.internal.idtable.IdTable;
-import org.hibernate.query.sqm.mutation.internal.idtable.TempIdTableExporter;
+import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableInsertStrategy;
+import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
+import org.hibernate.dialect.temptable.TemporaryTable;
+import org.hibernate.dialect.temptable.TemporaryTableKind;
+import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -294,43 +295,52 @@ public class TeradataDialect extends Dialect {
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new GlobalTemporaryTableStrategy(
-				new IdTable( rootEntityDescriptor, basename -> "HT_" + basename, this, runtimeModelCreationContext ),
-				() -> new TempIdTableExporter( false, this::getTypeName ) {
-					@Override
-					public String getCreateOptions() {
-						return "on commit preserve rows";
-					}
-				},
-				AfterUseAction.CLEAN,
+		return new GlobalTemporaryTableMutationStrategy(
+				TemporaryTable.createIdTable(
+						rootEntityDescriptor,
+						basename -> TemporaryTable.ID_TABLE_PREFIX + basename,
+						this,
+						runtimeModelCreationContext
+				),
 				runtimeModelCreationContext.getSessionFactory()
 		);
 	}
 
-//	@Override
-//	public String generateIdTableName(String baseName) {
-//		return IdTableSupportStandardImpl.INSTANCE.generateIdTableName( baseName );
-//	}
-//
-//	@Override
-//	public String getCreateIdTableCommand() {
-//		return "create global temporary table";
-//	}
-//
-//	@Override
-//	public String getCreateIdTableStatementOptions() {
-//		return " on commit preserve rows";
-//	}
-//
-//	@Override
-//	public String getDropIdTableCommand() {
-//		return "drop table";
-//	}
-//
-//	@Override
-//	public String getTruncateIdTableCommand() {
-//		return "delete from";
-//	}
+	@Override
+	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
+			EntityMappingType rootEntityDescriptor,
+			RuntimeModelCreationContext runtimeModelCreationContext) {
+		return new GlobalTemporaryTableInsertStrategy(
+				TemporaryTable.createEntityTable(
+						rootEntityDescriptor,
+						name -> TemporaryTable.ENTITY_TABLE_PREFIX + name,
+						this,
+						runtimeModelCreationContext
+				),
+				runtimeModelCreationContext.getSessionFactory()
+		);
+	}
+
+	@Override
+	public TemporaryTableKind getSupportedTemporaryTableKind() {
+		return TemporaryTableKind.GLOBAL;
+	}
+
+	@Override
+	public String getTemporaryTableCreateOptions() {
+		return "on commit preserve rows";
+	}
+
+	@Override
+	public int getMaxAliasLength() {
+		// Max identifier length is 30, but Hibernate needs to add "uniqueing info" so we account for that
+		return 20;
+	}
+
+	@Override
+	public int getMaxIdentifierLength() {
+		return 30;
+	}
 
 	@Override
 	public boolean supportsCascadeDelete() {

@@ -128,7 +128,7 @@ public class SqmSelectClause extends AbstractSqmNode implements SqmAliasedExpres
 
 	@Override
 	public boolean isCompoundSelection() {
-		return false;
+		return true;
 	}
 
 	@Override

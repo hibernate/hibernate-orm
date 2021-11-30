@@ -21,6 +21,7 @@ import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.id.enhanced.Optimizer;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
@@ -87,7 +88,11 @@ public class SequenceGenerator
 	}
 
 	@Override
-	@SuppressWarnings("StatementWithEmptyBody")
+	public Optimizer getOptimizer() {
+		return null;
+	}
+
+	@Override
 	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
 		DeprecationLogger.DEPRECATION_LOGGER.deprecatedSequenceGenerator( getClass().getName() );
 

@@ -19,6 +19,8 @@ import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.sql.ast.SqlAstWalker;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
@@ -122,5 +124,31 @@ public class SqmParameterInterpretation implements Expression, DomainResultProdu
 		return resolvedExpression instanceof SqlTuple
 				? (SqlTuple) resolvedExpression
 				: null;
+	}
+
+	@Override
+	public void applySqlSelections(DomainResultCreationState creationState) {
+		resolveSqlSelection( creationState );
+	}
+
+	public SqlSelection resolveSqlSelection(DomainResultCreationState creationState) {
+		if ( resolvedExpression instanceof SqlTuple ) {
+			throw new SemanticException( "Composite query parameter cannot be used in select" );
+		}
+
+		AllowableParameterType nodeType = sqmParameter.getNodeType();
+		if ( nodeType == null ) {
+			final QueryParameterBinding<?> binding = queryParameterBindingResolver.apply( queryParameter );
+			nodeType = binding.getBindType();
+		}
+
+		return creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
+				resolvedExpression,
+				nodeType.getExpressableJavaTypeDescriptor(),
+				creationState.getSqlAstCreationState()
+						.getCreationContext()
+						.getSessionFactory()
+						.getTypeConfiguration()
+		);
 	}
 }

@@ -41,8 +41,8 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.jdbc.Work;
-import org.hibernate.query.sqm.mutation.internal.idtable.GlobalTemporaryTableStrategy;
-import org.hibernate.query.sqm.mutation.internal.idtable.LocalTemporaryTableStrategy;
+import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
+import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 
 import org.hibernate.testing.AfterClassOnce;
@@ -193,8 +193,8 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		}
 		configuration.setImplicitNamingStrategy( ImplicitNamingStrategyLegacyJpaImpl.INSTANCE );
 		configuration.setProperty( Environment.DIALECT, getDialect().getClass().getName() );
-		configuration.getProperties().put( GlobalTemporaryTableStrategy.DROP_ID_TABLES, "true" );
-		configuration.getProperties().put( LocalTemporaryTableStrategy.DROP_ID_TABLES, "true" );
+		configuration.getProperties().put( GlobalTemporaryTableMutationStrategy.DROP_ID_TABLES, "true" );
+		configuration.getProperties().put( LocalTemporaryTableMutationStrategy.DROP_ID_TABLES, "true" );
 		if ( !Environment.getProperties().containsKey( Environment.CONNECTION_PROVIDER ) ) {
 			configuration.getProperties().put(
 					AvailableSettings.CONNECTION_PROVIDER,

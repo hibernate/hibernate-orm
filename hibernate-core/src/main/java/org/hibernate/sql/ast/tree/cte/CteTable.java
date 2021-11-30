@@ -63,6 +63,10 @@ public class CteTable {
 		return cteColumns;
 	}
 
+	public CteTable withName(String name) {
+		return new CteTable( name, cteColumns, sessionFactory );
+	}
+
 	public QuerySpec createCteDefinition(
 			List<?> matchingIds,
 			Bindable bindable,

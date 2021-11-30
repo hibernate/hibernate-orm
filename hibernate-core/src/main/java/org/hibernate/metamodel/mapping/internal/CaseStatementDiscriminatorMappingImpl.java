@@ -79,6 +79,11 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 	}
 
 	@Override
+	public boolean isPhysical() {
+		return false;
+	}
+
+	@Override
 	public BasicFetch generateFetch(
 			FetchParent fetchParent,
 			NavigablePath fetchablePath,

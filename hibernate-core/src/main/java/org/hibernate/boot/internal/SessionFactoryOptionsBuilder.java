@@ -64,6 +64,7 @@ import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
+import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
@@ -217,6 +218,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	// Queries
 	private HqlTranslator hqlTranslator;
 	private SqmMultiTableMutationStrategy sqmMultiTableMutationStrategy;
+	private SqmMultiTableInsertStrategy sqmMultiTableInsertStrategy;
 	private SqmFunctionRegistry sqmFunctionRegistry;
 	private SqmTranslatorFactory sqmTranslatorFactory;
 	private Boolean useOfJdbcNamedParametersEnabled;
@@ -430,6 +432,18 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				strategySelector
 		);
 
+		final String sqmInsertStrategyImplName = ConfigurationHelper.extractValue(
+				AvailableSettings.QUERY_MULTI_TABLE_INSERT_STRATEGY,
+				configurationSettings,
+				() -> null
+		);
+
+		this.sqmMultiTableInsertStrategy = resolveSqmInsertStrategy(
+				sqmInsertStrategyImplName,
+				serviceRegistry,
+				strategySelector
+		);
+
 		this.useOfJdbcNamedParametersEnabled = cfgService.getSetting( CALLABLE_NAMED_PARAMS_ENABLED, BOOLEAN, true );
 
 		this.querySubstitutions = ConfigurationHelper.toMap( QUERY_SUBSTITUTIONS, " ,=;:\n\t\r\f", configurationSettings );
@@ -634,6 +648,54 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 						}
 						else if ( parameterTypes.length == 0 ) {
 							emptyConstructor = (Constructor<SqmMultiTableMutationStrategy>) declaredConstructor;
+						}
+					}
+
+					try {
+						if ( dialectConstructor != null ) {
+							return dialectConstructor.newInstance(
+									serviceRegistry.getService( JdbcServices.class ).getDialect()
+							);
+						}
+						else if ( emptyConstructor != null ) {
+							return emptyConstructor.newInstance();
+						}
+					}
+					catch (Exception e) {
+						throw new StrategySelectionException(
+								String.format( "Could not instantiate named strategy class [%s]", strategyClass.getName() ),
+								e
+						);
+					}
+					throw new IllegalArgumentException( "Cannot instantiate the class [" + strategyClass.getName() + "] because it does not have a constructor that accepts a dialect or an empty constructor!" );
+				}
+		);
+	}
+
+	private SqmMultiTableInsertStrategy resolveSqmInsertStrategy(
+			String strategyName,
+			StandardServiceRegistry serviceRegistry,
+			StrategySelector strategySelector) {
+		if ( strategyName == null ) {
+			return null;
+		}
+
+		return strategySelector.resolveStrategy(
+				SqmMultiTableInsertStrategy.class,
+				strategyName,
+				(SqmMultiTableInsertStrategy) null,
+				strategyClass -> {
+					Constructor<SqmMultiTableInsertStrategy> dialectConstructor = null;
+					Constructor<SqmMultiTableInsertStrategy> emptyConstructor = null;
+					// todo (6.0) : formalize the allowed constructor parameterizations
+					for ( Constructor<?> declaredConstructor : strategyClass.getDeclaredConstructors() ) {
+						final Class<?>[] parameterTypes = declaredConstructor.getParameterTypes();
+						if ( parameterTypes.length == 1 && parameterTypes[0] == Dialect.class ) {
+							dialectConstructor = (Constructor<SqmMultiTableInsertStrategy>) declaredConstructor;
+							break;
+						}
+						else if ( parameterTypes.length == 0 ) {
+							emptyConstructor = (Constructor<SqmMultiTableInsertStrategy>) declaredConstructor;
 						}
 					}
 
@@ -896,6 +958,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	public SqmMultiTableMutationStrategy getCustomSqmMultiTableMutationStrategy() {
 		return sqmMultiTableMutationStrategy;
+	}
+
+	@Override
+	public SqmMultiTableInsertStrategy getCustomSqmMultiTableInsertStrategy() {
+		return sqmMultiTableInsertStrategy;
 	}
 
 	@Override

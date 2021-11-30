@@ -28,39 +28,6 @@ public class NestedIdClassTests {
 	@Test
 	public void smokeTest(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			final String qry = "from Payment p join fetch p.id.order o join fetch o.id.customer";
-			session.createQuery( qry ).list();
-		});
-		scope.inTransaction( (session) -> {
-			final String qry = "from Payment p join fetch p.order o join fetch o.customer";
-			session.createQuery( qry ).list();
-		});
-	}
-
-	@Test
-	public void smokeTest2(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			final String qry = "from Payment p";
-			final Payment payment = session.createQuery( qry, Payment.class ).uniqueResult();
-			assertThat( payment ).isNotNull();
-			assertThat( payment.accountNumber ).isNotNull();
-			assertThat( payment.order ).isNotNull();
-
-			assertThat( payment.order.orderNumber ).isNotNull();
-			assertThat( payment.order.customer ).isNotNull();
-
-			assertThat( payment.order.customer.id ).isNotNull();
-			assertThat( payment.order.customer.name ).isNotNull();
-		});
-		scope.inTransaction( (session) -> {
-			final String qry = "from Payment p join fetch p.order o join fetch o.customer";
-			session.createQuery( qry ).list();
-		});
-	}
-
-	@Test
-	public void smokeTest3(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
 			final Payment payment = session.get( Payment.class, new PaymentId( new OrderId( 1, 1 ), "123" ) );
 			assertThat( payment ).isNotNull();
 			assertThat( payment.accountNumber ).isNotNull();

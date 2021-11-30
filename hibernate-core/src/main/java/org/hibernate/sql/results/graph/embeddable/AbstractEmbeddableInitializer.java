@@ -52,6 +52,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 
 	private final NavigablePath navigablePath;
 	private final EmbeddableValuedModelPart embedded;
+	private final EmbeddableMappingType representationEmbeddable;
 	private final EmbeddableRepresentationStrategy representationStrategy;
 	private final FetchParentAccess fetchParentAccess;
 	private final boolean createEmptyCompositesEnabled;
@@ -78,23 +79,18 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		this.fetchParentAccess = fetchParentAccess;
 
 		final EmbeddableMappingType embeddableTypeDescriptor = embedded.getEmbeddableTypeDescriptor();
-
 		if ( embedded instanceof CompositeIdentifierMapping ) {
-			representationStrategy = ( (CompositeIdentifierMapping) embedded )
-					.getMappedIdEmbeddableTypeDescriptor()
-					.getRepresentationStrategy();
+			representationEmbeddable = ( (CompositeIdentifierMapping) embedded ).getMappedIdEmbeddableTypeDescriptor();
 		}
 		else {
-			representationStrategy = embeddableTypeDescriptor.getRepresentationStrategy();
+			representationEmbeddable = embeddableTypeDescriptor;
 		}
+
+		representationStrategy = representationEmbeddable.getRepresentationStrategy();
 
 		final int numOfAttrs = embeddableTypeDescriptor.getNumberOfAttributeMappings();
 		this.resolvedValues = new Object[ numOfAttrs ];
 		this.assemblers = arrayList( numOfAttrs );
-
-		// todo (6.0) - why not just use the "maps id" form right here?
-		//		( (CompositeIdentifierMapping) embedded ).getMappedIdEmbeddableTypeDescriptor()
-		//		in theory this should let us avoid the explicit maps-id handling via `setPropertyValuesOnTarget`
 
 		embeddableTypeDescriptor.visitFetchables(
 				stateArrayContributor -> {
@@ -162,36 +158,25 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		prepareCompositeInstance( processingState );
 		handleParentInjection( processingState );
 
-		if ( !createEmptyCompositesEnabled && allValuesNull == TRUE ) {
-			compositeInstance = NULL_MARKER;
-		}
-		else {
+		if ( compositeInstance != NULL_MARKER ) {
 			notifyResolutionListeners( compositeInstance );
 			if ( compositeInstance instanceof HibernateProxy ) {
 				final Initializer parentInitializer = processingState.resolveInitializer( navigablePath.getParent() );
 				if ( parentInitializer != this ) {
 					( (FetchParentAccess) parentInitializer ).registerResolutionListener(
-							entity -> setPropertyValuesOnTarget( entity, processingState.getSession() )
+							(entity) -> setPropertyValuesOnTarget( entity, processingState )
 					);
 				}
 				else {
 					Object target = representationStrategy
 							.getInstantiator()
 							.instantiate( null, sessionFactory );
-					setPropertyValuesOnTarget( target, processingState.getSession() );
+					setPropertyValuesOnTarget( target, processingState );
 					( (HibernateProxy) compositeInstance ).getHibernateLazyInitializer().setImplementation( target );
 				}
 			}
-			// At this point, createEmptyCompositesEnabled is always true.
-			// We can only set the property values on the compositeInstance though if there is at least one non null value.
-			// If the values are all null, we would normally not create a composite instance at all because no values exist.
-			// Setting all properties to null could cause IllegalArgumentExceptions though when the component has primitive properties.
-			// To avoid this exception and align with what Hibernate 5 did, we skip setting properties if all values are null.
-			// A possible alternative could be to initialize the resolved values for primitive fields to their default value,
-			// but that might cause unexpected outcomes for Hibernate 5 users that use createEmptyCompositesEnabled when updating.
-			// You can see the need for this by running EmptyCompositeEquivalentToNullTest
 			else if ( allValuesNull == FALSE ) {
-				setPropertyValuesOnTarget( compositeInstance, processingState.getSession() );
+				setPropertyValuesOnTarget( compositeInstance, processingState );
 			}
 		}
 	}
@@ -227,9 +212,12 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		}
 
 		if ( compositeInstance == null ) {
-			compositeInstance = representationStrategy
-					.getInstantiator()
-					.instantiate( null, sessionFactory );
+			compositeInstance = createCompositeInstance(
+					navigablePath,
+					representationStrategy,
+					processingState,
+					sessionFactory
+			);
 		}
 
 		EmbeddableLoadingLogger.INSTANCE.debugf(
@@ -252,6 +240,22 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 				allValuesNull = false;
 			}
 		}
+	}
+
+	private Object createCompositeInstance(
+			NavigablePath navigablePath,
+			EmbeddableRepresentationStrategy representationStrategy,
+			RowProcessingState processingState,
+			SessionFactoryImplementor sessionFactory) {
+		if ( !createEmptyCompositesEnabled && allValuesNull == TRUE ) {
+			return NULL_MARKER;
+		}
+
+		final Object instance = representationStrategy.getInstantiator().instantiate( null, sessionFactory );
+
+		EmbeddableLoadingLogger.INSTANCE.debugf( "Created composite instance [%s] : %s", navigablePath, instance );
+
+		return instance;
 	}
 
 	private void handleParentInjection(RowProcessingState processingState) {
@@ -339,38 +343,41 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
-	private void setPropertyValuesOnTarget(Object compositeInstance, SharedSessionContractImplementor session) {
-		final EmbeddableMappingType embeddableTypeDescriptor;
+	private void setPropertyValuesOnTarget(Object compositeInstance, RowProcessingState processingState) {
+		applyMapsId( processingState );
+		representationEmbeddable.setPropertyValues( compositeInstance, resolvedValues );
+	}
+
+	private void applyMapsId(RowProcessingState processingState) {
+		final SharedSessionContractImplementor session = processingState.getSession();
 		if ( embedded instanceof CompositeIdentifierMapping ) {
-			final CompositeIdentifierMapping compositeIdentifierMapping = (CompositeIdentifierMapping) embedded;
-			embeddableTypeDescriptor = compositeIdentifierMapping.getMappedIdEmbeddableTypeDescriptor();
-			if ( compositeIdentifierMapping.hasContainingClass() ) {
-				// For id-classes, we might have to transform from the virtual representation to the id-class representation
-				// in case the virtual representation contains a to-one attribute, that is mapped by an embeddable in the id-class
-				embedded.getEmbeddableTypeDescriptor().forEachAttributeMapping(
-						(index, attributeMapping) -> {
-							final AttributeMapping idClassAttribute = embeddableTypeDescriptor.getAttributeMappings().get( index );
-							if ( attributeMapping instanceof ToOneAttributeMapping && !( idClassAttribute instanceof ToOneAttributeMapping ) ) {
-								final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attributeMapping;
+			final CompositeIdentifierMapping cid = (CompositeIdentifierMapping) embedded;
+			final EmbeddableMappingType mappedIdEmbeddable = cid.getMappedIdEmbeddableTypeDescriptor();
+			if ( cid.hasContainingClass() ) {
+				final EmbeddableMappingType virtualIdEmbeddable = embedded.getEmbeddableTypeDescriptor();
+				if ( virtualIdEmbeddable == mappedIdEmbeddable ) {
+					return;
+				}
+
+				virtualIdEmbeddable.forEachAttributeMapping(
+						(position, virtualIdAttribute) -> {
+							final AttributeMapping mappedIdAttribute = mappedIdEmbeddable.getAttributeMapping( position );
+
+							if ( virtualIdAttribute instanceof ToOneAttributeMapping
+									&& !( mappedIdAttribute instanceof ToOneAttributeMapping ) ) {
+								final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) virtualIdAttribute;
 								final ForeignKeyDescriptor fkDescriptor = toOneAttributeMapping.getForeignKeyDescriptor();
 								final Object associationKey = fkDescriptor.getAssociationKeyFromSide(
-										resolvedValues[index],
+										resolvedValues[position],
 										toOneAttributeMapping.getSideNature().inverse(),
 										session
 								);
-								resolvedValues[index] = associationKey;
+								resolvedValues[position] = associationKey;
 							}
 						}
 				);
 			}
 		}
-		else {
-			embeddableTypeDescriptor = embedded.getEmbeddableTypeDescriptor();
-		}
-		embeddableTypeDescriptor.setPropertyValues(
-				compositeInstance,
-				resolvedValues
-		);
 	}
 
 	@Override

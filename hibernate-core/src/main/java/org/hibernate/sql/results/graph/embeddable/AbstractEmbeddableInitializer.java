@@ -43,7 +43,12 @@ import static org.hibernate.internal.util.collections.CollectionHelper.arrayList
  * @author Steve Ebersole
  */
 public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentAccess implements EmbeddableInitializer {
-	public static final Object NULL_MARKER = new Object();
+	private static final Object NULL_MARKER = new Object() {
+		@Override
+		public String toString() {
+			return "Composite NULL_MARKER";
+		}
+	};
 
 	private final NavigablePath navigablePath;
 	private final EmbeddableValuedModelPart embedded;
@@ -143,10 +148,55 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 
 	@Override
 	public void resolveInstance(RowProcessingState processingState) {
-		reallyResolve( processingState );
+		// nothing to do
 	}
 
-	private void reallyResolve(RowProcessingState processingState) {
+	@Override
+	public void initializeInstance(RowProcessingState processingState) {
+		EmbeddableLoadingLogger.INSTANCE.debugf(
+				"Initializing composite instance [%s]",
+				navigablePath
+		);
+
+		extractRowState( processingState );
+		prepareCompositeInstance( processingState );
+		handleParentInjection( processingState );
+
+		if ( !createEmptyCompositesEnabled && allValuesNull == TRUE ) {
+			compositeInstance = NULL_MARKER;
+		}
+		else {
+			notifyResolutionListeners( compositeInstance );
+			if ( compositeInstance instanceof HibernateProxy ) {
+				final Initializer parentInitializer = processingState.resolveInitializer( navigablePath.getParent() );
+				if ( parentInitializer != this ) {
+					( (FetchParentAccess) parentInitializer ).registerResolutionListener(
+							entity -> setPropertyValuesOnTarget( entity, processingState.getSession() )
+					);
+				}
+				else {
+					Object target = representationStrategy
+							.getInstantiator()
+							.instantiate( null, sessionFactory );
+					setPropertyValuesOnTarget( target, processingState.getSession() );
+					( (HibernateProxy) compositeInstance ).getHibernateLazyInitializer().setImplementation( target );
+				}
+			}
+			// At this point, createEmptyCompositesEnabled is always true.
+			// We can only set the property values on the compositeInstance though if there is at least one non null value.
+			// If the values are all null, we would normally not create a composite instance at all because no values exist.
+			// Setting all properties to null could cause IllegalArgumentExceptions though when the component has primitive properties.
+			// To avoid this exception and align with what Hibernate 5 did, we skip setting properties if all values are null.
+			// A possible alternative could be to initialize the resolved values for primitive fields to their default value,
+			// but that might cause unexpected outcomes for Hibernate 5 users that use createEmptyCompositesEnabled when updating.
+			// You can see the need for this by running EmptyCompositeEquivalentToNullTest
+			else if ( allValuesNull == FALSE ) {
+				setPropertyValuesOnTarget( compositeInstance, processingState.getSession() );
+			}
+		}
+	}
+
+	private void prepareCompositeInstance(RowProcessingState processingState) {
 		if ( compositeInstance != null ) {
 			return;
 		}
@@ -186,51 +236,6 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 				"Created composite instance [%s]",
 				navigablePath
 		);
-	}
-
-	@Override
-	public void initializeInstance(RowProcessingState processingState) {
-		EmbeddableLoadingLogger.INSTANCE.debugf(
-				"Initializing composite instance [%s]",
-				navigablePath
-		);
-
-		handleParentInjection( processingState );
-
-		extractRowState( processingState );
-
-		if ( !createEmptyCompositesEnabled && allValuesNull == TRUE ) {
-			compositeInstance = null;
-		}
-		else {
-			notifyResolutionListeners( compositeInstance );
-			if ( compositeInstance instanceof HibernateProxy ) {
-				final Initializer parentInitializer = processingState.resolveInitializer( navigablePath.getParent() );
-				if ( parentInitializer != this ) {
-					( (FetchParentAccess) parentInitializer ).registerResolutionListener(
-							entity -> setPropertyValuesOnTarget( entity, processingState.getSession() )
-					);
-				}
-				else {
-					Object target = representationStrategy
-							.getInstantiator()
-							.instantiate( null, sessionFactory );
-					setPropertyValuesOnTarget( target, processingState.getSession() );
-					( (HibernateProxy) compositeInstance ).getHibernateLazyInitializer().setImplementation( target );
-				}
-			}
-			// At this point, createEmptyCompositesEnabled is always true.
-			// We can only set the property values on the compositeInstance though if there is at least one non null value.
-			// If the values are all null, we would normally not create a composite instance at all because no values exist.
-			// Setting all properties to null could cause IllegalArgumentExceptions though when the component has primitive properties.
-			// To avoid this exception and align with what Hibernate 5 did, we skip setting properties if all values are null.
-			// A possible alternative could be to initialize the resolved values for primitive fields to their default value,
-			// but that might cause unexpected outcomes for Hibernate 5 users that use createEmptyCompositesEnabled when updating.
-			// You can see the need for this by running EmptyCompositeEquivalentToNullTest
-			else if ( allValuesNull == FALSE ) {
-				setPropertyValuesOnTarget( compositeInstance, processingState.getSession() );
-			}
-		}
 	}
 
 	private void extractRowState(RowProcessingState processingState) {

@@ -13,6 +13,7 @@ import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
 import org.hibernate.query.EntityIdentifierNavigablePath;
 import org.hibernate.query.NavigablePath;
@@ -106,10 +107,16 @@ public class ResultsHelper {
 		);
 	}
 
-	public static String attributeName(EntityIdentifierMapping identifierMapping) {
-		return identifierMapping instanceof SingleAttributeIdentifierMapping
-				? ( (SingleAttributeIdentifierMapping) identifierMapping ).getAttributeName()
-				: null;
+	public static String attributeName(ModelPart identifierMapping) {
+		if ( identifierMapping instanceof EntityIdentifierMapping ) {
+			return identifierMapping instanceof SingleAttributeIdentifierMapping
+					? ( (SingleAttributeIdentifierMapping) identifierMapping ).getAttributeName()
+					: null;
+		}
+		else {
+			return identifierMapping.getPartName();
+		}
+
 	}
 
 	public static DomainResult convertIdFetchToResult(Fetch fetch, DomainResultCreationState creationState) {

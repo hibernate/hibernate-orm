@@ -19,8 +19,13 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.FailureExpected;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.transaction.TransactionUtil2;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -29,74 +34,50 @@ import org.junit.jupiter.api.Test;
  * @author Steve Ebersole
  */
 @SuppressWarnings("WeakerAccess")
+@DomainModel( annotatedClasses = {
+		SmokeTests.SystemAccess.class,
+		SmokeTests.Order.class,
+		SmokeTests.LineItem.class
+} )
+@SessionFactory
 public class SmokeTests {
 	@Test
-	@FailureExpected( reason = "See org.hibernate.metamodel.mapping.internal.NonAggregatedIdentifierMappingImpl#createDomainResult" )
-	public void simpleTest() {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
-		try {
-			final SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) new MetadataSources( ssr )
-					.addAnnotatedClass( SystemAccess.class )
-					.buildMetadata()
-					.buildSessionFactory();
-			TransactionUtil2.inTransaction(
-					sessionFactory,
-					session -> {
-						session.createQuery( "select a from SystemAccess a" ).list();
-					}
-			);
-		}
-		finally {
-			StandardServiceRegistryBuilder.destroy( ssr );
-		}
+	public void simpleTest(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			session.createQuery( "select a from SystemAccess a" ).list();
+		} );
 	}
 
 	@Test
-	@FailureExpected( reason = "Support for non-aggregated composite-ids not yet fully implemented" )
-	public void keyManyToOneTest() {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
-
-		try {
-			final SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) new MetadataSources( ssr )
-					.addAnnotatedClass( Order.class )
-					.addAnnotatedClass( LineItem.class )
-					.buildMetadata()
-					.buildSessionFactory();
-			TransactionUtil2.inTransaction(
-					sessionFactory,
-					session -> {
-						session.createQuery( "select i from LineItem i" ).list();
-					}
-			);
-		}
-		finally {
-			StandardServiceRegistryBuilder.destroy( ssr );
-		}
+	public void keyManyToOneTest(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			session.createQuery( "select i from LineItem i" ).list();
+		} );
 	}
 
-//	@BeforeEach
-//	public void createTestData(SessionFactoryScope scope) {
-//		scope.inTransaction(
-//				session -> {
-//					final Order order = new Order( 1, "123-abc" );
-//					session.persist( order );
-//
-//					session.persist( new LineItem( order, 1, "xyz", 500 ) );
-//					session.persist( new LineItem( order, 2, "tuv", 60 ) );
-//					session.persist( new LineItem( order, 3, "def", 350 ) );
-//				}
-//		);
-//	}
-//
-//	@AfterEach
-//	public void cleanUpTestData(SessionFactoryScope scope) {
-//		scope.inTransaction(
-//				session -> {
-//					session.createQuery( "delete LineItem" ).executeUpdate();
-//					session.createQuery( "delete Order" ).executeUpdate();
-//				}
-//		);
-//	}
+	@BeforeEach
+	public void createTestData(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final Order order = new Order( 1, "123-abc" );
+					session.persist( order );
+
+					session.persist( new LineItem( order, 1, "xyz", 500 ) );
+					session.persist( new LineItem( order, 2, "tuv", 60 ) );
+					session.persist( new LineItem( order, 3, "def", 350 ) );
+				}
+		);
+	}
+
+	@AfterEach
+	public void dropTestData(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery( "delete LineItem" ).executeUpdate();
+					session.createQuery( "delete Order" ).executeUpdate();
+				}
+		);
+	}
 
 	@Entity( name = "SystemAccess" )
 	@Table( name = "`access`" )

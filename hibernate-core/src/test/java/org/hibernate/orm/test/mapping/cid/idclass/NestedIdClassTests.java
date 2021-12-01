@@ -41,6 +41,14 @@ public class NestedIdClassTests {
 		});
 	}
 
+	@Test
+	public void testHqlIdAttributeReference(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			session.createQuery( "from Payment p where p.order.orderNumber = '123'" ).list();
+			session.createQuery( "from Payment p where p.id.order.orderNumber = '123'" ).list();
+		});
+	}
+
 	@BeforeEach
 	public void createTestData(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {

@@ -275,6 +275,32 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			String rootTableExpression,
 			String[] rootTableKeyColumnNames,
 			MappingModelCreationProcess creationProcess) {
+// for some reason I cannot get this to work, though only a single test fails - `CompositeElementTest`
+//		return finishInitialization(
+//				getNavigableRole(),
+//				bootDescriptor,
+//				compositeType,
+//				rootTableExpression,
+//				rootTableKeyColumnNames,
+//				this,
+//				representationStrategy,
+//				(name, type) -> {},
+//				(column, jdbcEnvironment) -> getTableIdentifierExpression(
+//						column.getValue().getTable(),
+//						jdbcEnvironment
+//				),
+//				this::addAttribute,
+//				() -> {
+//					// We need the attribute mapping types to finish initialization first before we can build the column mappings
+//					creationProcess.registerInitializationCallback(
+//							"EmbeddableMappingType(" + getEmbeddedValueMapping().getNavigableRole().getFullPath() + ")#initColumnMappings",
+//							this::initColumnMappings
+//					);
+//				},
+//				creationProcess
+//		);
+// todo (6.0) - get this ^^ to work, or drop the comment
+
 		final SessionFactoryImplementor sessionFactory = creationProcess.getCreationContext().getSessionFactory();
 		final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();
 		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();

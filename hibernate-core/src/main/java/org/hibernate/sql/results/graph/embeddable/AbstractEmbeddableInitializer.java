@@ -62,11 +62,8 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 	private final List<DomainResultAssembler<?>> assemblers;
 
 	// per-row state
-	// 		NOTE : technically `resolvedValues` need not be instance state,
-	//			but keeping it here allows for not creating arrays for each
-	//			and every row
-	private final Object[] resolvedValues;
-	private Boolean allValuesNull;
+	private final Object[] rowState;
+	private Boolean stateAllNull;
 	private Boolean stateInjected;
 	private Object compositeInstance;
 
@@ -91,7 +88,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		representationStrategy = representationEmbeddable.getRepresentationStrategy();
 
 		final int numOfAttrs = embeddableTypeDescriptor.getNumberOfAttributeMappings();
-		this.resolvedValues = new Object[ numOfAttrs ];
+		this.rowState = new Object[ numOfAttrs ];
 		this.assemblers = arrayList( numOfAttrs );
 
 		embeddableTypeDescriptor.visitFetchables(
@@ -169,7 +166,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 				final Initializer parentInitializer = processingState.resolveInitializer( navigablePath.getParent() );
 				if ( parentInitializer != this ) {
 					( (FetchParentAccess) parentInitializer ).registerResolutionListener( (entity) -> {
-						representationEmbeddable.setPropertyValues( entity, resolvedValues );
+						representationEmbeddable.setPropertyValues( entity, rowState );
 						stateInjected = true;
 					} );
 				}
@@ -180,9 +177,9 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 					// NOTE: `valuesAccess` is set to null to indicate that all values are null,
 					//		as opposed to returning the all-null value array.  the instantiator
 					//		interprets that as the values are not known or were all null.
-					final Supplier<Object[]> valuesAccess = allValuesNull
+					final Supplier<Object[]> valuesAccess = stateAllNull
 							? null
-							: () -> resolvedValues;
+							: () -> rowState;
 					final Object target = representationStrategy
 							.getInstantiator()
 							.instantiate( valuesAccess, sessionFactory);
@@ -190,10 +187,10 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 					( (HibernateProxy) compositeInstance ).getHibernateLazyInitializer().setImplementation( target );
 				}
 			}
-			else if ( allValuesNull == FALSE && stateInjected != TRUE ) {
+			else if ( stateAllNull == FALSE && stateInjected != TRUE ) {
 				// todo (6.0) : i think this is still called for cases where
 				//  	we have already done the "ctor injection"
-				representationEmbeddable.setPropertyValues( compositeInstance, resolvedValues );
+				representationEmbeddable.setPropertyValues( compositeInstance, rowState );
 				stateInjected = true;
 			}
 		}
@@ -235,7 +232,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 	}
 
 	private void extractRowState(RowProcessingState processingState) {
-		allValuesNull = true;
+		stateAllNull = true;
 		for ( int i = 0; i < assemblers.size(); i++ ) {
 			final DomainResultAssembler<?> assembler = assemblers.get( i );
 			final Object contributorValue = assembler.assemble(
@@ -243,9 +240,9 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 					processingState.getJdbcValuesSourceProcessingState().getProcessingOptions()
 			);
 
-			resolvedValues[i] = contributorValue;
+			rowState[i] = contributorValue;
 			if ( contributorValue != null ) {
-				allValuesNull = false;
+				stateAllNull = false;
 			}
 		}
 
@@ -272,11 +269,11 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 								final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) virtualIdAttribute;
 								final ForeignKeyDescriptor fkDescriptor = toOneAttributeMapping.getForeignKeyDescriptor();
 								final Object associationKey = fkDescriptor.getAssociationKeyFromSide(
-										resolvedValues[position],
+										rowState[position],
 										toOneAttributeMapping.getSideNature().inverse(),
 										session
 								);
-								resolvedValues[position] = associationKey;
+								rowState[position] = associationKey;
 							}
 						}
 				);
@@ -289,13 +286,13 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 			EmbeddableRepresentationStrategy representationStrategy,
 			RowProcessingState processingState,
 			SessionFactoryImplementor sessionFactory) {
-		if ( !createEmptyCompositesEnabled && allValuesNull == TRUE ) {
+		if ( !createEmptyCompositesEnabled && stateAllNull == TRUE ) {
 			return NULL_MARKER;
 		}
 
-		final Supplier<Object[]> valuesAccess = allValuesNull == TRUE
+		final Supplier<Object[]> valuesAccess = stateAllNull == TRUE
 				? null
-				: () -> resolvedValues;
+				: () -> rowState;
 		final Object instance = representationStrategy.getInstantiator().instantiate( valuesAccess, sessionFactory );
 		stateInjected = true;
 
@@ -388,7 +385,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 	@Override
 	public void finishUpRow(RowProcessingState rowProcessingState) {
 		compositeInstance = null;
-		allValuesNull = null;
+		stateAllNull = null;
 		stateInjected = null;
 
 		clearResolutionListeners();

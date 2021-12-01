@@ -7,7 +7,7 @@
 
 //$Id: Document.java 8670 2005-11-25 17:36:29Z epbernard $
 
-package org.hibernate.test.mixed;
+package org.hibernate.orm.test.mixed;
 import java.sql.Blob;
 import java.util.Calendar;
 

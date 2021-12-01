@@ -32,7 +32,7 @@
 
 <hibernate-mapping
 
-        package="org.hibernate.test.mixed">
+        package="org.hibernate.orm.test.mixed">
 
 
     <class name="Item"

@@ -4,7 +4,20 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.inheritance;
+package org.hibernate.orm.test.inheritance;
+
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.query.sqm.mutation.internal.inline.InlineStrategy;
+import org.hibernate.stat.spi.StatisticsImplementor;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SettingProvider;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -13,47 +26,41 @@ import jakarta.persistence.InheritanceType;
 import jakarta.persistence.Query;
 import jakarta.persistence.Table;
 
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.query.sqm.mutation.internal.inline.InlineStrategy;
-import org.hibernate.stat.spi.StatisticsImplementor;
-
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Before;
-import org.junit.Test;
-
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 
 /**
  * @author Andrea Boriero
  */
 @TestForIssue(jiraKey = "HHH-13214")
-public class InheritanceDeleteBatchTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				InheritanceDeleteBatchTest.TestEntity.class,
+				InheritanceDeleteBatchTest.TestEntityType1.class,
+				InheritanceDeleteBatchTest.TestEntityType2.class
+		}
+)
+@SessionFactory(
+		generateStatistics = true
+)
+@ServiceRegistry(
+		settingProviders = @SettingProvider(
+				settingName = AvailableSettings.QUERY_MULTI_TABLE_MUTATION_STRATEGY,
+				provider = InheritanceDeleteBatchTest.TableMutationStrategyProvider.class
+		)
+)
+public class InheritanceDeleteBatchTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				TestEntity.class,
-				TestEntityType1.class,
-				TestEntityType2.class
-		};
+	public static class TableMutationStrategyProvider implements SettingProvider.Provider<String> {
+		@Override
+		public String getSetting() {
+			return InlineStrategy.class.getName();
+		}
 	}
 
-	@Override
-	protected void configure(Configuration configuration) {
-		configuration.setProperty(
-				AvailableSettings.QUERY_MULTI_TABLE_MUTATION_STRATEGY,
-				InlineStrategy.class.getName()
-		);
-		configuration.setProperty( AvailableSettings.GENERATE_STATISTICS, "true" );
-	}
-
-	@Before
-	public void setUp() {
-		doInHibernate( this::sessionFactory, session -> {
+	@BeforeEach
+	public void setUp(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			session.persist( new TestEntity( 1 ) );
 			session.persist( new TestEntityType1( 2 ) );
 			session.persist( new TestEntityType2( 3 ) );
@@ -62,10 +69,10 @@ public class InheritanceDeleteBatchTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testDelete() {
-		StatisticsImplementor statistics = sessionFactory().getStatistics();
+	public void testDelete(SessionFactoryScope scope) {
+		StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
 		statistics.clear();
-		doInHibernate( this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 			for ( int i = 1; i <= 4; i++ ) {
 				Query deleteQuery = session.createQuery( "delete TestEntity e where e.id = :id" );
 				deleteQuery.setParameter( "id", i );

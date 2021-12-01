@@ -315,7 +315,7 @@ public class MatchingIdSelectionHelper {
 				idSelectJdbcOperation,
 				jdbcParameterBindings,
 				SqmJdbcExecutionContextAdapter.omittingLockingAndPaging( executionContext ),
-				row -> row,
+				row -> row[0],
 				ListResultsConsumer.UniqueSemantic.FILTER
 		);
 	}

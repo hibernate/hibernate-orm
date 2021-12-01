@@ -91,13 +91,4 @@ public class SimpleNaturalIdLoader<T> extends AbstractNaturalIdLoader<T> {
 			);
 		}
 	}
-
-	@Override
-	public Object resolveIdToNaturalId(Object id, SharedSessionContractImplementor session) {
-		final Object rawValue = super.resolveIdToNaturalId( id, session );
-		assert rawValue instanceof Object[];
-
-		return ( (Object[]) rawValue )[0];
-	}
-
 }

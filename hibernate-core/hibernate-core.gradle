@@ -187,7 +187,7 @@ task generateEnversStaticMetamodel(
     ]
 
     // put static metamodel classes back out to the source tree since they're version controlled.
-    destinationDir = new File( "${projectDir}/src/main/java" )
+    destinationDirectory = new File( "${projectDir}/src/main/java" )
 }
 
 tasks.withType( Test.class ).each { test ->

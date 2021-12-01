@@ -44,6 +44,7 @@ public class EmbeddableRepresentationStrategyPojo extends AbstractEmbeddableRepr
 	public EmbeddableRepresentationStrategyPojo(
 			Component bootDescriptor,
 			Supplier<EmbeddableMappingType> runtimeDescriptorAccess,
+			EmbeddableInstantiator customInstantiator,
 			RuntimeModelCreationContext creationContext) {
 		super(
 				bootDescriptor,
@@ -69,7 +70,9 @@ public class EmbeddableRepresentationStrategyPojo extends AbstractEmbeddableRepr
 				false
 		);
 
-		this.instantiator = determineInstantiator( bootDescriptor, runtimeDescriptorAccess, creationContext );
+		this.instantiator = customInstantiator != null
+				? customInstantiator
+				: determineInstantiator( bootDescriptor, runtimeDescriptorAccess, creationContext );
 	}
 
 	private EmbeddableInstantiator determineInstantiator(

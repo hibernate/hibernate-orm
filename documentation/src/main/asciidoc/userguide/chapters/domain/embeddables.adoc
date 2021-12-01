@@ -1,6 +1,10 @@
 [[embeddables]]
 === Embeddable types
+:rootProjectDir: ../../../../../../..
 :sourcedir: ../../../../../test/java/org/hibernate/userguide/mapping/embeddable
+:coreProjectDir: {rootProjectDir}/hibernate-core
+:coreTestSrcDir: {rootProjectDir}/hibernate-core/src/test/java
+:instantiatorTestDir: {coreTestSrcDir}/org/hibernate/orm/test/mapping/embeddable/strategy/instantiator
 :extrasdir: extras
 
 Historically Hibernate called these components.
@@ -76,28 +80,22 @@ include::{sourcedir}/SimpleEmbeddableEquivalentTest.java[tag=embeddable-type-map
 
 The composition form is certainly more object-oriented, and that becomes more evident as we work with multiple embeddable types.
 
-[[embeddable-multiple]]
-==== Multiple embeddable types
-
-Although from an object-oriented perspective, it's much more convenient to work with embeddable types, this example doesn't work as-is.
-When the same embeddable type is included multiple times in the same parent entity type, the Jakarta Persistence specification demands to set the associated column names explicitly.
-
-This requirement is due to how object properties are mapped to database columns.
-By default, Jakarta Persistence expects a database column having the same name with its associated object property.
-When including multiple embeddables, the implicit name-based mapping rule doesn't work anymore because multiple object properties could end-up being mapped to the same database column.
-
-We have a few options to handle this issue.
-
 [[embeddable-override]]
 ==== Overriding Embeddable types
 
-Jakarta Persistence defines the `@AttributeOverride` annotation to handle this scenario.
-This way, the mapping conflict is resolved by setting up explicit name-based property-column type mappings.
+Although from an object-oriented perspective, it's much more convenient to work with embeddable types, when we reuse the same
+embeddable multiple times on the same class, the Jakarta Persistence specification requires to set the associated column names explicitly.
 
-If an Embeddable type is used multiple times in some entity, you need to use the
-{jpaJavadocUrlPrefix}AttributeOverride.html[`@AttributeOverride`] and
-{jpaJavadocUrlPrefix}AssociationOverride.html[`@AssociationOverride`] annotations
-to override the default column names defined by the Embeddable.
+This requirement is due to how object properties are mapped to database columns.
+By default, Jakarta Persistence expects a database column having the same name with its associated object property.
+When including multiple embeddables, the implicit name-based mapping rule doesn't work anymore because multiple object
+properties could end-up being mapped to the same database column.
+
+When an embeddable type is used multiple times, Jakarta Persistence defines the `@AttributeOverride`
+and `@AssociationOverride` annotations to handle this scenario to override the default column names defined
+by the Embeddable.
+
+NOTE: See <<embeddable-multiple-namingstrategy>> for an alternative to using `@AttributeOverride` and `@AssociationOverride`
 
 Considering you have the following `Publisher` embeddable type
 which defines a `@ManyToOne` association with the `Country` entity:
@@ -135,46 +133,6 @@ include::{extrasdir}/embeddable/embeddable-type-override-mapping-example.sql[]
 ----
 ====
 
-[[embeddable-multiple-namingstrategy]]
-==== Embeddables and ImplicitNamingStrategy
-
-[IMPORTANT]
-====
-The `ImplicitNamingStrategyComponentPathImpl` is a Hibernate-specific feature.
-Users concerned with Jakarta Persistence provider portability should instead prefer explicit column naming with `@AttributeOverride`.
-====
-
-Hibernate naming strategies are covered in detail in <<chapters/domain/naming.adoc#naming,Naming>>.
-However, for the purposes of this discussion, Hibernate has the capability to interpret implicit column names in a way that is safe for use with multiple embeddable types.
-
-[[embeddable-multiple-namingstrategy-entity-mapping]]
-.Implicit multiple embeddable type mapping
-====
-[source,java]
-----
-include::{sourcedir}/EmbeddableImplicitOverrideTest.java[tag=embeddable-multiple-namingstrategy-entity-mapping, indent=0]
-----
-====
-
-To make it work, you need to use the `ImplicitNamingStrategyComponentPathImpl` naming strategy.
-
-[[embeddable-multiple-ImplicitNamingStrategyComponentPathImpl]]
-.Enabling implicit embeddable type mapping using the component path naming strategy
-====
-[source,java]
-----
-include::{sourcedir}/EmbeddableImplicitOverrideTest.java[tag=embeddable-multiple-ImplicitNamingStrategyComponentPathImpl, indent=0]
-----
-====
-
-Now the "path" to attributes are used in the implicit column naming:
-
-[source,sql]
-----
-include::{extrasdir}/embeddable/embeddable-multiple-namingstrategy-entity-mapping.sql[]
-----
-
-You could even develop your own naming strategy to do other types of implicit naming strategies.
 
 [[embeddable-collections]]
 ==== Collections of embeddable types
@@ -293,3 +251,81 @@ include::{sourcedir}/ParentTest.java[tags=embeddable-Parent-fetching-example]
 ====
 
 Therefore, the `@Parent` annotation is used to define the association between an embeddable type and the owning entity.
+
+
+[[embeddable-instantiator]]
+==== Custom instantiation
+
+Jakarta Persistence requires embeddable classes to follow Java Bean conventions.  Part of this is the
+definition of a non-arg constructor.  However, not all value compositions applications might map as embeddable
+values follow Java Bean conventions - e.g. a struct or Java 15 record.
+
+Hibernate allows the use of a custom instantiator for creating the embeddable instances through the
+`org.hibernate.metamodel.spi.EmbeddableInstantiator` contract.  The custom instantiator is specified
+using the `@org.hibernate.annotations.EmbeddableInstantiator` annotation.  Which can either be defined
+on the property:
+
+[[embeddable-instantiator-property-ex]]
+.`@EmbeddableInstantiator` on attribute
+====
+[source, JAVA, indent=0]
+----
+include::{instantiatorTestDir}/embedded/Name.java[tags=embeddable-instantiator-property]
+include::{instantiatorTestDir}/embedded/Person.java[tags=embeddable-instantiator-property]
+----
+====
+
+or on the embeddable class:
+
+[[embeddable-instantiator-class-ex]]
+.`@EmbeddableInstantiator` on class
+====
+[source, JAVA, indent=0]
+----
+include::{instantiatorTestDir}/embeddable/Name.java[tags=embeddable-instantiator-class]
+include::{instantiatorTestDir}/embeddable/Person.java[tags=embeddable-instantiator-class]
+----
+====
+
+
+
+[[embeddable-multiple-namingstrategy]]
+==== Embeddables and ImplicitNamingStrategy
+
+[IMPORTANT]
+====
+The `ImplicitNamingStrategyComponentPathImpl` is a Hibernate-specific feature.
+Users concerned with Jakarta Persistence provider portability should instead prefer explicit column naming with `@AttributeOverride`.
+====
+
+Hibernate naming strategies are covered in detail in <<chapters/domain/naming.adoc#naming,Naming>>.
+However, for the purposes of this discussion, Hibernate has the capability to interpret implicit column names in a way that is safe for use with multiple embeddable types.
+
+[[embeddable-multiple-namingstrategy-entity-mapping]]
+.Implicit multiple embeddable type mapping
+====
+[source,java]
+----
+include::{sourcedir}/EmbeddableImplicitOverrideTest.java[tag=embeddable-multiple-namingstrategy-entity-mapping, indent=0]
+----
+====
+
+To make it work, you need to use the `ImplicitNamingStrategyComponentPathImpl` naming strategy.
+
+[[embeddable-multiple-ImplicitNamingStrategyComponentPathImpl]]
+.Enabling implicit embeddable type mapping using the component path naming strategy
+====
+[source,java]
+----
+include::{sourcedir}/EmbeddableImplicitOverrideTest.java[tag=embeddable-multiple-ImplicitNamingStrategyComponentPathImpl, indent=0]
+----
+====
+
+Now the "path" to attributes are used in the implicit column naming:
+
+[source,sql]
+----
+include::{extrasdir}/embeddable/embeddable-multiple-namingstrategy-entity-mapping.sql[]
+----
+
+You could even develop your own naming strategy to do other types of implicit naming strategies.

@@ -10,7 +10,6 @@ import java.util.function.Supplier;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
-import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import static org.hibernate.bytecode.spi.ReflectionOptimizer.InstantiationOptimizer;
@@ -19,7 +18,7 @@ import static org.hibernate.bytecode.spi.ReflectionOptimizer.InstantiationOptimi
  * Support for instantiating embeddables as POJO representation
  * using bytecode optimizer
  */
-public class EmbeddableInstantiatorPojoOptimized extends AbstractPojoInstantiator implements EmbeddableInstantiator {
+public class EmbeddableInstantiatorPojoOptimized extends AbstractPojoInstantiator implements StandardEmbeddableInstantiator {
 	private final Supplier<EmbeddableMappingType> embeddableMappingAccess;
 	private final InstantiationOptimizer instantiationOptimizer;
 

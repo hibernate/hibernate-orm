@@ -12,7 +12,6 @@ import java.util.function.Supplier;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Component;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
-import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 
 /**
  * Support for instantiating embeddables as dynamic-map representation
@@ -21,7 +20,7 @@ import org.hibernate.metamodel.spi.EmbeddableInstantiator;
  */
 public class EmbeddableInstantiatorDynamicMap
 		extends AbstractDynamicMapInstantiator
-		implements EmbeddableInstantiator {
+		implements StandardEmbeddableInstantiator {
 	private final Supplier<EmbeddableMappingType> runtimeDescriptorAccess;
 
 	public EmbeddableInstantiatorDynamicMap(

@@ -12,6 +12,7 @@ import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.RepresentationMode;
+import org.hibernate.metamodel.internal.StandardEmbeddableInstantiator;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
@@ -60,7 +61,7 @@ public class VirtualIdRepresentationStrategy implements EmbeddableRepresentation
 		);
 	}
 
-	private static class InstantiatorAdapter implements EmbeddableInstantiator {
+	private static class InstantiatorAdapter implements StandardEmbeddableInstantiator {
 		private final VirtualIdEmbeddable virtualIdEmbeddable;
 		private final EntityInstantiator entityInstantiator;
 

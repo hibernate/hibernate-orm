@@ -93,6 +93,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
+import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 
 import org.jboss.logging.Logger;
 
@@ -1597,6 +1598,7 @@ public abstract class CollectionBinder {
 						inferredData = new PropertyPreloadedData( AccessType.PROPERTY, "collection&&element", elementClass );
 					}
 				}
+
 				//TODO be smart with isNullable
 				boolean isNullable = true;
 				Component component = AnnotationBinder.fillComponent(
@@ -1608,6 +1610,7 @@ public abstract class CollectionBinder {
 						false,
 						false,
 						true,
+						resolveCustomInstantiator( property, elementClass ),
 						buildingContext,
 						inheritanceStatePerClass
 				);
@@ -1667,6 +1670,20 @@ public abstract class CollectionBinder {
 			bindManytoManyInverseFk( collectionEntity, inverseJoinColumns, element, unique, buildingContext );
 		}
 
+	}
+
+	private Class<? extends EmbeddableInstantiator> resolveCustomInstantiator(XProperty property, XClass embeddableClass) {
+		final org.hibernate.annotations.EmbeddableInstantiator propertyAnnotation = property.getAnnotation( org.hibernate.annotations.EmbeddableInstantiator.class );
+		if ( propertyAnnotation != null ) {
+			return propertyAnnotation.value();
+		}
+
+		final org.hibernate.annotations.EmbeddableInstantiator classAnnotation = embeddableClass.getAnnotation( org.hibernate.annotations.EmbeddableInstantiator.class );
+		if ( classAnnotation != null ) {
+			return classAnnotation.value();
+		}
+
+		return null;
 	}
 
 	private String extractHqlOrderBy(jakarta.persistence.OrderBy jpaOrderBy) {

@@ -37,6 +37,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.UnsupportedMappingException;
+import org.hibernate.metamodel.internal.StandardEmbeddableInstantiator;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
@@ -45,6 +46,7 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.MappingModelCreationLogger;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.NonTransientException;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
@@ -129,6 +131,9 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 						}
 					}
 					catch (Exception e) {
+						if ( e instanceof NonTransientException ) {
+							throw e;
+						}
 						MappingModelCreationLogger.LOGGER.debugf(
 								e,
 								"(DEBUG) Error finalizing EmbeddableMappingType(%s)",
@@ -550,6 +555,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				"EmbeddableMappingType(" + getEmbeddedValueMapping().getNavigableRole().getFullPath() + ")#initColumnMappings",
 				this::initColumnMappings
 		);
+
 		return true;
 	}
 

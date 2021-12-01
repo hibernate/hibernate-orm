@@ -13,11 +13,13 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 
 /**
  * @author Steve Ebersole
@@ -74,8 +76,26 @@ public class ManagedTypeRepresentationResolverStandard implements ManagedTypeRep
 			}
 		}
 
+		final EmbeddableInstantiator customInstantiator;
+		if ( bootDescriptor.getCustomInstantiator() != null ) {
+			final Class<? extends EmbeddableInstantiator> customInstantiatorImpl = bootDescriptor.getCustomInstantiator();
+			customInstantiator = creationContext.getBootstrapContext()
+					.getServiceRegistry()
+					.getService( ManagedBeanRegistry.class )
+					.getBean( customInstantiatorImpl )
+					.getBeanInstance();
+		}
+		else {
+			customInstantiator = null;
+		}
+
 		if ( representation == RepresentationMode.MAP ) {
-			return new EmbeddableRepresentationStrategyMap( bootDescriptor, runtimeDescriptorAccess, creationContext );
+			return new EmbeddableRepresentationStrategyMap(
+					bootDescriptor,
+					runtimeDescriptorAccess,
+					customInstantiator,
+					creationContext
+			);
 		}
 		else {
 			// todo (6.0) : fix this
@@ -84,7 +104,12 @@ public class ManagedTypeRepresentationResolverStandard implements ManagedTypeRep
 			//
 			//		instead, resolve ReflectionOptimizer once - here - and pass along to
 			//		StandardPojoRepresentationStrategy
-			return new EmbeddableRepresentationStrategyPojo( bootDescriptor, runtimeDescriptorAccess, creationContext );
+			return new EmbeddableRepresentationStrategyPojo(
+					bootDescriptor,
+					runtimeDescriptorAccess,
+					customInstantiator,
+					creationContext
+			);
 		}
 	}
 }

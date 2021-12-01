@@ -120,6 +120,7 @@ import org.hibernate.mapping.SingleTableSubclass;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.UnionSubclass;
+import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -1158,6 +1159,7 @@ public final class AnnotationBinder {
 					true,
 					true,
 					false,
+					null,
 					context,
 					inheritanceStatePerClass
 			);
@@ -2286,6 +2288,11 @@ public final class AnnotationBinder {
 					}
 				}
 
+				if ( ! isComponent ) {
+					if ( property.isAnnotationPresent( Embedded.class ) ) {
+
+					}
+				}
 				isComponent = isComponent
 						|| property.isAnnotationPresent( Embedded.class )
 						|| property.isAnnotationPresent( EmbeddedId.class )
@@ -2300,7 +2307,10 @@ public final class AnnotationBinder {
 						);
 						referencedEntityName = mapsIdProperty.getClassOrElementName();
 					}
-					AccessType propertyAccessor = entityBinder.getPropertyAccessor( property );
+
+					final AccessType propertyAccessor = entityBinder.getPropertyAccessor( property );
+					final Class<? extends EmbeddableInstantiator> customInstantiatorImpl = determineCustomInstantiator( property, returnedClass );
+
 					propertyBinder = bindComponent(
 							inferredData,
 							propertyHolder,
@@ -2312,6 +2322,7 @@ public final class AnnotationBinder {
 							isId,
 							inheritanceStatePerClass,
 							referencedEntityName,
+							customInstantiatorImpl,
 							isOverridden ? ( Ejb3JoinColumn[] ) columns : null
 					);
 				}
@@ -2444,6 +2455,25 @@ public final class AnnotationBinder {
 				}
 			}
 		}
+	}
+
+	private static Class<? extends EmbeddableInstantiator> determineCustomInstantiator(XProperty property, XClass returnedClass) {
+		if ( property.isAnnotationPresent( EmbeddedId.class ) ) {
+			// we don't allow custom instantiators for composite ids
+			return null;
+		}
+
+		final org.hibernate.annotations.EmbeddableInstantiator propertyAnnotation = property.getAnnotation( org.hibernate.annotations.EmbeddableInstantiator.class );
+		if ( propertyAnnotation != null ) {
+			return propertyAnnotation.value();
+		}
+
+		final org.hibernate.annotations.EmbeddableInstantiator classAnnotation = returnedClass.getAnnotation( org.hibernate.annotations.EmbeddableInstantiator.class );
+		if ( classAnnotation != null ) {
+			return classAnnotation.value();
+		}
+
+		return null;
 	}
 
 	private static boolean isGlobalGeneratorNameGlobal(MetadataBuildingContext context) {
@@ -2659,10 +2689,11 @@ public final class AnnotationBinder {
 			boolean isId, //is an identifier
 			Map<XClass, InheritanceState> inheritanceStatePerClass,
 			String referencedEntityName, //is a component who is overridden by a @MapsId
+			Class<? extends EmbeddableInstantiator> customInstantiatorImpl,
 			Ejb3JoinColumn[] columns) {
 		Component comp;
 		if ( referencedEntityName != null ) {
-			comp = createComponent( propertyHolder, inferredData, isComponentEmbedded, isIdentifierMapper, buildingContext );
+			comp = createComponent( propertyHolder, inferredData, isComponentEmbedded, isIdentifierMapper, customInstantiatorImpl, buildingContext );
 			SecondPass sp = new CopyIdentifierComponentSecondPass(
 					comp,
 					referencedEntityName,
@@ -2675,7 +2706,7 @@ public final class AnnotationBinder {
 			comp = fillComponent(
 					propertyHolder, inferredData, propertyAccessor, !isId, entityBinder,
 					isComponentEmbedded, isIdentifierMapper,
-					false, buildingContext, inheritanceStatePerClass
+					false, customInstantiatorImpl, buildingContext, inheritanceStatePerClass
 			);
 		}
 		if ( isId ) {
@@ -2721,6 +2752,7 @@ public final class AnnotationBinder {
 			boolean isComponentEmbedded,
 			boolean isIdentifierMapper,
 			boolean inSecondPass,
+			Class<? extends EmbeddableInstantiator> customInstantiatorImpl,
 			MetadataBuildingContext buildingContext,
 			Map<XClass, InheritanceState> inheritanceStatePerClass) {
 		return fillComponent(
@@ -2733,6 +2765,7 @@ public final class AnnotationBinder {
 				isComponentEmbedded,
 				isIdentifierMapper,
 				inSecondPass,
+				customInstantiatorImpl,
 				buildingContext,
 				inheritanceStatePerClass
 		);
@@ -2748,6 +2781,7 @@ public final class AnnotationBinder {
 			boolean isComponentEmbedded,
 			boolean isIdentifierMapper,
 			boolean inSecondPass,
+			Class<? extends EmbeddableInstantiator> customInstantiatorImpl,
 			MetadataBuildingContext buildingContext,
 			Map<XClass, InheritanceState> inheritanceStatePerClass) {
 		/**
@@ -2755,7 +2789,8 @@ public final class AnnotationBinder {
 		 * Because it's a value type, there is no bidirectional association, hence second pass
 		 * ordering does not matter
 		 */
-		Component comp = createComponent( propertyHolder, inferredData, isComponentEmbedded, isIdentifierMapper, buildingContext );
+		Component comp = createComponent( propertyHolder, inferredData, isComponentEmbedded, isIdentifierMapper, customInstantiatorImpl, buildingContext );
+
 		String subpath = BinderHelper.getPath( propertyHolder, inferredData );
 		LOG.tracev( "Binding component with path: {0}", subpath );
 		PropertyHolder subHolder = PropertyHolderBuilder.buildPropertyHolder(
@@ -2899,6 +2934,7 @@ public final class AnnotationBinder {
 			PropertyData inferredData,
 			boolean isComponentEmbedded,
 			boolean isIdentifierMapper,
+			Class<? extends EmbeddableInstantiator> customInstantiatorImpl,
 			MetadataBuildingContext context) {
 		Component comp = new Component( context, propertyHolder.getPersistentClass() );
 		comp.setEmbedded( isComponentEmbedded );
@@ -2911,6 +2947,7 @@ public final class AnnotationBinder {
 		else {
 			comp.setComponentClassName( inferredData.getClassOrElementName() );
 		}
+		comp.setCustomInstantiator( customInstantiatorImpl );
 		return comp;
 	}
 
@@ -2954,6 +2991,7 @@ public final class AnnotationBinder {
 					isEmbedded,
 					isIdentifierMapper,
 					false,
+					null,
 					buildingContext,
 					inheritanceStatePerClass
 			);

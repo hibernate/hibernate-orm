@@ -4,37 +4,33 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.metamodel.internal;
+package org.hibernate.orm.test.mapping.embeddable.strategy.instantiator.embedded;
 
 import java.util.function.Supplier;
 
-import org.hibernate.bytecode.spi.BasicProxyFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 
 /**
- * EmbeddableInstantiator used for instantiating "proxies" of an embeddable.
+ * @author Steve Ebersole
  */
-public class EmbeddableInstantiatorProxied implements StandardEmbeddableInstantiator {
-	private final Class<?> proxiedClass;
-	private final BasicProxyFactory factory;
-
-	public EmbeddableInstantiatorProxied(Class proxiedClass, BasicProxyFactory factory) {
-		this.proxiedClass = proxiedClass;
-		this.factory = factory;
-	}
-
+public class NameInstantiator implements EmbeddableInstantiator {
 	@Override
 	public Object instantiate(Supplier<Object[]> valuesAccess, SessionFactoryImplementor sessionFactory) {
-		return factory.getProxy();
+		final Object[] values = valuesAccess.get();
+		// alphabetical
+		final String first = (String) values[0];
+		final String last = (String) values[1];
+		return new Name( first, last );
 	}
 
 	@Override
 	public boolean isInstance(Object object, SessionFactoryImplementor sessionFactory) {
-		return proxiedClass.isInstance( object );
+		return object instanceof Name;
 	}
 
 	@Override
 	public boolean isSameClass(Object object, SessionFactoryImplementor sessionFactory) {
-		return object.getClass() == proxiedClass;
+		return object.getClass().equals( Name.class );
 	}
 }

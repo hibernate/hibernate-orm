@@ -296,6 +296,7 @@ public class MapBinder extends CollectionBinder {
 							false,
 							false,
 							true,
+							null,
 							buildingContext,
 							inheritanceStatePerClass
 					);

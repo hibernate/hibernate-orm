@@ -41,6 +41,7 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
+import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.tuple.AnnotationValueGeneration;
 import org.hibernate.tuple.GenerationTiming;
@@ -222,6 +223,7 @@ public class PropertyBinder {
 							new PropertyPreloadedData(null, null, null),
 							true,
 							false,
+							resolveCustomInstantiator( property, returnedClass ),
 							buildingContext
 					);
 					rootClass.setIdentifier( identifier );
@@ -258,6 +260,20 @@ public class PropertyBinder {
 			holder.addProperty( prop, columns, declaringClass );
 		}
 		return prop;
+	}
+
+	private Class<? extends EmbeddableInstantiator> resolveCustomInstantiator(XProperty property, XClass embeddableClass) {
+		final org.hibernate.annotations.EmbeddableInstantiator propertyAnnotation = property.getAnnotation( org.hibernate.annotations.EmbeddableInstantiator.class );
+		if ( propertyAnnotation != null ) {
+			return propertyAnnotation.value();
+		}
+
+		final org.hibernate.annotations.EmbeddableInstantiator classAnnotation = embeddableClass.getAnnotation( org.hibernate.annotations.EmbeddableInstantiator.class );
+		if ( classAnnotation != null ) {
+			return classAnnotation.value();
+		}
+
+		return null;
 	}
 
 	//used when the value is provided and the binding is done elsewhere

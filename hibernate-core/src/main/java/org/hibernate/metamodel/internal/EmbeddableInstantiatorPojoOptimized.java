@@ -36,7 +36,7 @@ public class EmbeddableInstantiatorPojoOptimized extends AbstractPojoInstantiato
 	public Object instantiate(Supplier<Object[]> valuesAccess, SessionFactoryImplementor sessionFactory) {
 		final Object embeddable = instantiationOptimizer.newInstance();
 		final EmbeddableMappingType embeddableMapping = embeddableMappingAccess.get();
-		embeddableMapping.setPropertyValues( embeddable, valuesAccess.get() );
+		embeddableMapping.setValues( embeddable, valuesAccess.get() );
 		return embeddable;
 	}
 }

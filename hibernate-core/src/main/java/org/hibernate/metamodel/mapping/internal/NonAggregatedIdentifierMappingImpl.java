@@ -284,7 +284,7 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 					propertyValues[i] = o;
 				}
 			}
-			identifierValueMapper.setPropertyValues( id, propertyValues );
+			identifierValueMapper.setValues( id, propertyValues );
 			return id;
 		}
 		else {
@@ -325,7 +325,7 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 					}
 				}
 		);
-		getEmbeddableTypeDescriptor().setPropertyValues( entity, propertyValues );
+		getEmbeddableTypeDescriptor().setValues( entity, propertyValues );
 	}
 
 	@Override

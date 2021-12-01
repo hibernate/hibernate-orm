@@ -83,7 +83,7 @@ public class EmbeddedIdMapper extends AbstractCompositeIdMapper implements Simpl
 							}
 
 							if ( ret ) {
-								setter.set( obj, subObj, null );
+								setter.set( obj, subObj );
 							}
 
 							return ret;

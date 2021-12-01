@@ -64,9 +64,17 @@ public interface ManagedMappingType extends MappingType, FetchableContainer {
 		}
 	}
 
-	Object[] getPropertyValues(Object compositeInstance);
+	Object[] getValues(Object instance);
 
-	void setPropertyValues(Object compositeInstance, Object[] resolvedValues);
+	default Object getValue(Object instance, int position) {
+		return getAttributeMapping( position ).getValue( instance );
+	}
+
+	void setValues(Object instance, Object[] resolvedValues);
+
+	default void setValue(Object instance, int position, Object value) {
+		getAttributeMapping( position ).setValue( instance, value );
+	}
 
 	/**
 	 * @todo (6.0) : consider dropping this in favor of a form passing the ManagedMappingType

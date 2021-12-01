@@ -95,11 +95,11 @@ public class VirtualEntitySingleIdMapper extends SingleIdMapper {
 						}
 
 						if ( !value.getClass().equals( propertyData.getVirtualReturnClass() ) ) {
-							setter.set( objTo, getAssociatedEntityIdMapper().mapToIdFromEntity( value ), null );
+							setter.set( objTo, getAssociatedEntityIdMapper().mapToIdFromEntity( value ) );
 						}
 						else {
 							// This means we're setting the object
-							setter.set( objTo, value, null );
+							setter.set( objTo, value );
 						}
 
 						return null;
@@ -135,10 +135,10 @@ public class VirtualEntitySingleIdMapper extends SingleIdMapper {
 						);
 
 						if ( paramClass != null && paramClass.equals( propertyData.getVirtualReturnClass() ) ) {
-							setter.set( obj, getAssociatedEntityIdMapper().mapToIdFromEntity( value ), null );
+							setter.set( obj, getAssociatedEntityIdMapper().mapToIdFromEntity( value ) );
 						}
 						else {
-							setter.set( obj, value, null );
+							setter.set( obj, value );
 						}
 
 						return true;

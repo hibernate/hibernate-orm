@@ -18,16 +18,8 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
  * @author Steve Ebersole
  */
 public interface Setter extends Serializable {
-	/**
-	 * Set the property value from the given instance
-	 *
-	 * @param target The instance upon which to set the given value.
-	 * @param value The value to be set on the target.
-	 * @param factory The session factory from which this request originated.
-	 *
-	 * @throws org.hibernate.HibernateException
-	 */
-	void set(Object target, Object value, SessionFactoryImplementor factory);
+
+	void set(Object target, Object value);
 
 	/**
 	 * Optional operation (may return {@code null})

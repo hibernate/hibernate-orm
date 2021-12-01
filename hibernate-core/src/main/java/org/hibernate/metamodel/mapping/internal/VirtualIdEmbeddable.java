@@ -62,7 +62,6 @@ import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
-import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.spi.CompositeTypeImplementor;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -73,19 +72,13 @@ import static org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping.Ide
 /**
  * Embeddable describing the virtual-id aspect of a non-aggregated composite id
  */
-public class VirtualIdEmbeddable implements IdentifierValueMapper {
-
+public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements IdentifierValueMapper {
 	private final NavigableRole navigableRole;
 	private final NonAggregatedIdentifierMapping idMapping;
-	private final JavaType<?> javaType;
-
-	//	private final VirtualIdEmbedded embedded;
 	private final VirtualIdRepresentationStrategy representationStrategy;
 
 	private final List<SingularAttributeMapping> attributeMappings;
 	private SelectableMappings selectableMappings;
-
-	private final SessionFactoryImplementor sessionFactory;
 
 	public VirtualIdEmbeddable(
 			Component virtualIdSource,
@@ -94,12 +87,10 @@ public class VirtualIdEmbeddable implements IdentifierValueMapper {
 			String rootTableExpression,
 			String[] rootTableKeyColumnNames,
 			MappingModelCreationProcess creationProcess) {
-		this.sessionFactory = creationProcess.getCreationContext().getSessionFactory();
+		super( creationProcess );
 
 		this.navigableRole = idMapping.getNavigableRole();
 		this.idMapping = idMapping;
-		this.javaType = identifiedEntityMapping.getJavaTypeDescriptor();
-
 		this.representationStrategy = new VirtualIdRepresentationStrategy( this, identifiedEntityMapping );
 
 		final CompositeType compositeType = (CompositeType) virtualIdSource.getType();
@@ -158,7 +149,7 @@ public class VirtualIdEmbeddable implements IdentifierValueMapper {
 	@Override
 	public Object getIdentifier(Object entity, SharedSessionContractImplementor session) {
 		return representationStrategy.getInstantiator().instantiate(
-				() -> getPropertyValues( entity ),
+				() -> getValues( entity ),
 				session.getSessionFactory()
 		);
 	}
@@ -166,7 +157,7 @@ public class VirtualIdEmbeddable implements IdentifierValueMapper {
 	@Override
 	public void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session) {
 		if ( entity != id ) {
-			setPropertyValues( entity, getPropertyValues( id ) );
+			setValues( entity, getValues( id ) );
 		}
 	}
 
@@ -185,11 +176,6 @@ public class VirtualIdEmbeddable implements IdentifierValueMapper {
 	}
 
 	@Override
-	public JavaType<?> getMappedJavaTypeDescriptor() {
-		return javaType;
-	}
-
-	@Override
 	public EmbeddableValuedModelPart getEmbeddedValueMapping() {
 		return getEmbeddedPart();
 	}
@@ -200,21 +186,14 @@ public class VirtualIdEmbeddable implements IdentifierValueMapper {
 	}
 
 	@Override
-	public Object[] getPropertyValues(Object composite) {
-		final Object[] values = new Object[ attributeMappings.size() ];
+	public AttributeMapping findAttributeMapping(String name) {
 		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			final SingularAttributeMapping attributeMapping = attributeMappings.get( i );
-			values[i] = attributeMapping.getPropertyAccess().getGetter().get( composite );
+			final AttributeMapping attr = attributeMappings.get( i );
+			if ( name.equals( attr.getAttributeName() ) ) {
+				return attr;
+			}
 		}
-		return values;
-	}
-
-	@Override
-	public void setPropertyValues(Object composite, Object[] resolvedValues) {
-		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			final SingularAttributeMapping attributeMapping = attributeMappings.get( i );
-			attributeMapping.getPropertyAccess().getSetter().set( composite, resolvedValues[i], sessionFactory );
-		}
+		return null;
 	}
 
 	@Override
@@ -338,7 +317,7 @@ public class VirtualIdEmbeddable implements IdentifierValueMapper {
 	@Override
 	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
 		attributeMappings.forEach( (attribute) -> {
-			final Object attributeValue = attribute.getValue( domainValue, session );
+			final Object attributeValue = attribute.getValue( domainValue );
 			attribute.breakDownJdbcValues( attributeValue, valueConsumer, session );
 		} );
 	}

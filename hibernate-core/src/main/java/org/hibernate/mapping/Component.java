@@ -515,7 +515,7 @@ public class Component extends SimpleValue implements MetaAttributable {
 		@Override
 		public void execute(SharedSessionContractImplementor session, Object incomingObject, Object injectionContext) {
 			final Object generatedValue = subGenerator.generate( session, incomingObject );
-			injector.set( injectionContext, generatedValue, session.getFactory() );
+			injector.set( injectionContext, generatedValue );
 		}
 
 		@Override

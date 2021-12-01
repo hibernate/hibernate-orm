@@ -37,7 +37,7 @@ public class EmbeddableInstantiatorDynamicMap
 
 		if ( valuesAccess != null ) {
 			final EmbeddableMappingType mappingType = runtimeDescriptorAccess.get();
-			mappingType.setPropertyValues( dataMap, valuesAccess.get() );
+			mappingType.setValues( dataMap, valuesAccess.get() );
 		}
 
 		return dataMap;

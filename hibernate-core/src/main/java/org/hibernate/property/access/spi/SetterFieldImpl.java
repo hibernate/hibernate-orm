@@ -47,7 +47,7 @@ public class SetterFieldImpl implements Setter {
 	}
 
 	@Override
-	public void set(Object target, Object value, SessionFactoryImplementor factory) {
+	public void set(Object target, Object value) {
 		try {
 			field.set( target, value );
 		}

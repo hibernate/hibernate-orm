@@ -12,7 +12,6 @@ import java.lang.reflect.Method;
 
 import org.hibernate.PropertyAccessException;
 import org.hibernate.PropertySetterAccessException;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 
@@ -39,7 +38,7 @@ public class SetterMethodImpl implements Setter {
 	}
 
 	@Override
-	public void set(Object target, Object value, SessionFactoryImplementor factory) {
+	public void set(Object target, Object value) {
 		try {
 			setterMethod.invoke( target, value );
 		}

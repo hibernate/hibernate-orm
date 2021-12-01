@@ -316,7 +316,7 @@ public abstract class AbstractCollectionMapper<T> extends AbstractPropertyMapper
 									enversService.getServiceRegistry()
 							);
 
-							setter.set( obj, collectionProxy, null );
+							setter.set( obj, collectionProxy );
 
 							return null;
 						}

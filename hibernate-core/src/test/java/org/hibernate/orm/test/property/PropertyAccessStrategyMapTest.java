@@ -58,7 +58,7 @@ public class PropertyAccessStrategyMapTest extends BaseUnitTestCase {
 
 		final HashMap<String, String> map = new HashMap<>();
 
-		access.getSetter().set( map, value, null );
+		access.getSetter().set( map, value );
 		assertEquals( value, map.get( key ) );
 		assertEquals( value, access.getGetter().get( map ) );
 	}

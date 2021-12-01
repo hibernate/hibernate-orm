@@ -13,6 +13,8 @@ import java.lang.reflect.ParameterizedType;
 import java.util.Iterator;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.PropertyNotFoundException;
 import org.hibernate.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.HEMLogging;
 import org.hibernate.mapping.Collection;
@@ -26,6 +28,8 @@ import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.AttributeClassification;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.RepresentationMode;
+import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.model.domain.AbstractIdentifiableType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
@@ -608,23 +612,31 @@ public class AttributeFactory {
 
 
 	private static final MemberResolver virtualIdentifierMemberResolver = (attributeContext, metadataContext) -> {
-		final AbstractIdentifiableType identifiableType = (AbstractIdentifiableType) attributeContext.getOwnerType();
+		final AbstractIdentifiableType<?> identifiableType = (AbstractIdentifiableType<?>) attributeContext.getOwnerType();
 		final EntityMetamodel entityMetamodel = getDeclarerEntityMetamodel( identifiableType, metadataContext );
 		if ( !entityMetamodel.getIdentifierProperty().isVirtual() ) {
 			throw new IllegalArgumentException( "expecting IdClass mapping" );
 		}
+
 		org.hibernate.type.Type type = entityMetamodel.getIdentifierProperty().getType();
 		if ( !(type instanceof EmbeddedComponentType) ) {
 			throw new IllegalArgumentException( "expecting IdClass mapping" );
 		}
 
-		final EmbeddedComponentType componentType = (EmbeddedComponentType) type;
 		final String attributeName = attributeContext.getPropertyMapping().getName();
+		final EmbeddedComponentType componentType = (EmbeddedComponentType) type;
+		final EmbeddableValuedModelPart embeddedPart = ( (CompositeTypeImplementor) componentType ).getMappingModelPart();
+		assert embeddedPart != null;
+		final EmbeddableMappingType embeddable = embeddedPart.getEmbeddableTypeDescriptor();
+		final AttributeMapping attributeMapping = embeddable.findAttributeMapping( attributeName );
+		if ( attributeMapping == null ) {
+			throw new PropertyNotFoundException(
+					"Unable to locate property named " + attributeName + " on " + embeddable.getJavaTypeDescriptor().getJavaTypeClass().getName()
+			);
+		}
 
-		final Getter getter = componentType.getComponentTuplizer()
-				.getGetter( componentType.getPropertyIndex( attributeName ) );
-
-		return PropertyAccessMapImpl.GetterImpl.class.isInstance( getter )
+		final Getter getter = attributeMapping.getPropertyAccess().getGetter();
+		return getter instanceof PropertyAccessMapImpl.GetterImpl
 				? new MapMember( attributeName, attributeContext.getPropertyMapping().getType().getReturnedClass() )
 				: getter.getMember();
 	};

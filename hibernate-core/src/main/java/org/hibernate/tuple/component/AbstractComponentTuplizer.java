@@ -65,7 +65,7 @@ public abstract class AbstractComponentTuplizer implements ComponentTuplizer {
 
 	public void setPropertyValues(Object component, Object[] values) throws HibernateException {
 		for ( int i = 0; i < propertySpan; i++ ) {
-			setters[i].set( component, values[i], null );
+			setters[i].set( component, values[i] );
 		}
 	}
 

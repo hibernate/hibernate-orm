@@ -788,24 +788,48 @@ public interface EntityPersister
 	 */
 	Class<?> getConcreteProxyClass();
 
+	default void setValues(Object object, Object[] values) {
+		setPropertyValues( object, values );
+	}
+
 	/**
 	 * Set the given values to the mapped properties of the given object
+	 *
+	 * @deprecated as of 6.0.  Use {@link #setValues} instead
 	 */
+	@Deprecated
 	void setPropertyValues(Object object, Object[] values);
+
+	default void setValue(Object object, int i, Object value) {
+		setPropertyValue( object, i, value );
+	}
 
 	/**
 	 * Set the value of a particular property
+	 *
+	 * @deprecated as of 6.0.  Use {@link #setValue} instead
 	 */
+	@Deprecated
 	void setPropertyValue(Object object, int i, Object value);
 
-	/**
-	 * Return the (loaded) values of the mapped properties of the object (not including backrefs)
-	 */
-	Object[] getPropertyValues(Object object);
+	default Object[] getValues(Object object) {
+		return getPropertyValues( object );
+	}
 
 	/**
-	 * Get the value of a particular property
+	 * @deprecated as of 6.0.  Use {@link #getValues} instead
 	 */
+	@Deprecated
+	Object[] getPropertyValues(Object object);
+
+	default Object getValue(Object object, int i) {
+		return getValue( object, i );
+	}
+
+	/**
+	 * @deprecated as of 6.0.  Use {@link #getValue} instead
+	 */
+	@Deprecated
 	Object getPropertyValue(Object object, int i) throws HibernateException;
 
 	/**

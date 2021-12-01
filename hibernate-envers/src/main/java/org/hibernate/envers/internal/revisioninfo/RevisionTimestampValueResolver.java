@@ -35,13 +35,13 @@ public class RevisionTimestampValueResolver {
 
 	public void resolveNow(Object object) {
 		if ( timestampData.isTimestampDate() ) {
-			revisionTimestampSetter.set( object, new Date(), null );
+			revisionTimestampSetter.set( object, new Date() );
 		}
 		else if ( timestampData.isTimestampLocalDateTime() ) {
-			revisionTimestampSetter.set(object, LocalDateTime.now(), null );
+			revisionTimestampSetter.set(object, LocalDateTime.now() );
 		}
 		else {
-			revisionTimestampSetter.set( object, System.currentTimeMillis(), null );
+			revisionTimestampSetter.set( object, System.currentTimeMillis() );
 		}
 	}
 

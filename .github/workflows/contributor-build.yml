@@ -17,7 +17,7 @@ on:
       - 'wip/6.0'
 jobs:
   build:
-    name: Java 8
+    name: Java 11
     runs-on: ubuntu-latest
     # We want to know the test results of all matrix entries
     continue-on-error: true
@@ -62,10 +62,10 @@ jobs:
         env:
           RDBMS: ${{ matrix.rdbms }}
         run: ci/database-start.sh
-      - name: Set up Java 8
+      - name: Set up Java 11
         uses: actions/setup-java@v1
         with:
-          java-version: 1.8
+          java-version: 11
       - name: Get year/month for cache key
         id: get-date
         run: |
@@ -90,48 +90,7 @@ jobs:
         uses: actions/upload-artifact@v2
         if: failure()
         with:
-          name: test-reports-java8-${{ matrix.rdbms }}
-          path: |
-            ./**/target/reports/tests/
-            ./**/target/reports/checkstyle/
-      - name: Omit produced artifacts from build cache
-        run: ./ci/before-cache.sh
-  build11:
-    name: Java 11
-    runs-on: ubuntu-latest
-    # We want to know the test results of all matrix entries
-    continue-on-error: true
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          persist-credentials: false
-      - name: Set up Java 11
-        uses: actions/setup-java@v1
-        with:
-          java-version: 11
-      - name: Get year/month for cache key
-        id: get-date
-        run: |
-          echo "::set-output name=yearmonth::$(/bin/date -u "+%Y-%m")"
-        shell: bash
-      - name: Cache Maven local repository
-        uses: actions/cache@v2
-        id: cache-maven
-        with:
-          path: |
-            ~/.m2/repository
-            ~/.gradle/caches/
-            ~/.gradle/wrapper/
-          # refresh cache every month to avoid unlimited growth
-          key: maven-localrepo-${{ steps.get-date.outputs.yearmonth }}
-      - name: Run build script
-        run: ./ci/build-github.sh
-        shell: bash
-      - name: Upload test reports (if Gradle failed)
-        uses: actions/upload-artifact@v2
-        if: failure()
-        with:
-          name: test-reports-java11
+          name: test-reports-java11-${{ matrix.rdbms }}
           path: |
             ./**/target/reports/tests/
             ./**/target/reports/checkstyle/

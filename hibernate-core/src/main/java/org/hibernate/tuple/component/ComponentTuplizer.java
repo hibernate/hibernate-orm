@@ -36,13 +36,6 @@ public interface ComponentTuplizer extends Tuplizer, Serializable {
 	public boolean isMethodOf(Method method);
 
 	/**
-	 * Generate a new, empty entity.
-	 *
-	 * @return The new, empty entity instance.
-	 */
-	public Object instantiate();
-
-	/**
 	 * Extract the current values contained on the given entity.
 	 *
 	 * @param entity The entity from which to extract values.

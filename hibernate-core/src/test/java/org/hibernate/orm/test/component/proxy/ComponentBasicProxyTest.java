@@ -8,43 +8,40 @@ package org.hibernate.orm.test.component.proxy;
 
 import java.util.List;
 
-import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.type.ComponentType;
+import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
+import org.hibernate.metamodel.spi.EmbeddableInstantiator;
+import org.hibernate.type.spi.CompositeTypeImplementor;
 
 import org.hibernate.testing.TestForIssue;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.NotImplementedYet;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Guillaume Smet
  * @author Oliver Libutzki
  */
-public class ComponentBasicProxyTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[]{
-				Person.class, Adult.class
-		};
-	}
+@DomainModel( annotatedClasses = { Person.class, Adult.class } )
+@SessionFactory
+public class ComponentBasicProxyTest {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-12786")
-	public void testBasicProxyingWithProtectedMethodCalledInConstructor() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testBasicProxyingWithProtectedMethodCalledInConstructor(SessionFactoryScope scope) {
+		scope.inTransaction( (entityManager) -> {
 			Adult adult = new Adult();
 			adult.setName( "Arjun Kumar" );
 			entityManager.persist( adult );
 		} );
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( (entityManager) -> {
 			List<Adult> adultsCalledArjun = entityManager
 					.createQuery( "SELECT a from Adult a WHERE a.name = :name", Adult.class )
 					.setParameter( "name", "Arjun Kumar" ).getResultList();
@@ -55,25 +52,18 @@ public class ComponentBasicProxyTest extends BaseEntityManagerFunctionalTestCase
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-12791")
-	public void testOnlyOneProxyClassGenerated() {
-		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+	public void testOnlyOneProxyClassGenerated(DomainModelScope domainModelScope, SessionFactoryScope sfScope) {
+		final SessionFactoryImplementor sessionFactory = sfScope.getSessionFactory();
 
-		try {
-			Metadata metadata = new MetadataSources( ssr ).addAnnotatedClass( Person.class )
-					.getMetadataBuilder()
-					.build();
-			PersistentClass persistentClass = metadata.getEntityBinding( Person.class.getName() );
+		final PersistentClass personDescriptor = domainModelScope.getDomainModel().getEntityBinding( Person.class.getName() );
+		final CompositeTypeImplementor componentType = (CompositeTypeImplementor) personDescriptor.getIdentifierMapper().getType();
+		final EmbeddableValuedModelPart embedded = componentType.getMappingModelPart();
+		final EmbeddableInstantiator instantiator = embedded.getEmbeddableTypeDescriptor()
+				.getRepresentationStrategy()
+				.getInstantiator();
 
-			ComponentType componentType1 = (ComponentType) persistentClass.getIdentifierMapper().getType();
-			Object instance1 = componentType1.instantiate();
-
-			ComponentType componentType2 = (ComponentType) persistentClass.getIdentifierMapper().getType();
-			Object instance2 = componentType2.instantiate();
-
-			assertEquals( instance1.getClass(), instance2.getClass() );
-		}
-		finally {
-			StandardServiceRegistryBuilder.destroy( ssr );
-		}
+		final Object instance1 = instantiator.instantiate( null, sessionFactory );
+		final Object instance2 = instantiator.instantiate( null, sessionFactory );
+		assertThat( instance1.getClass() ).isEqualTo( instance2.getClass() );
 	}
 }

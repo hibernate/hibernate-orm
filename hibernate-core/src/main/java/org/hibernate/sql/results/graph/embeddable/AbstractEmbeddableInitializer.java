@@ -67,6 +67,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 	//			and every row
 	private final Object[] resolvedValues;
 	private Boolean allValuesNull;
+	private Boolean stateInjected;
 	private Object compositeInstance;
 
 
@@ -155,6 +156,8 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 				navigablePath
 		);
 
+		stateInjected = false;
+
 		extractRowState( processingState );
 		prepareCompositeInstance( processingState );
 		handleParentInjection( processingState );
@@ -165,9 +168,10 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 			if ( compositeInstance instanceof HibernateProxy ) {
 				final Initializer parentInitializer = processingState.resolveInitializer( navigablePath.getParent() );
 				if ( parentInitializer != this ) {
-					( (FetchParentAccess) parentInitializer ).registerResolutionListener(
-							(entity) -> representationEmbeddable.setPropertyValues( entity, resolvedValues )
-					);
+					( (FetchParentAccess) parentInitializer ).registerResolutionListener( (entity) -> {
+						representationEmbeddable.setPropertyValues( entity, resolvedValues );
+						stateInjected = true;
+					} );
 				}
 				else {
 					// At this point, createEmptyCompositesEnabled is always true, so we generate
@@ -182,13 +186,15 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 					final Object target = representationStrategy
 							.getInstantiator()
 							.instantiate( valuesAccess, sessionFactory);
+					stateInjected = true;
 					( (HibernateProxy) compositeInstance ).getHibernateLazyInitializer().setImplementation( target );
 				}
 			}
-			else if ( allValuesNull == FALSE ) {
+			else if ( allValuesNull == FALSE && stateInjected != TRUE ) {
 				// todo (6.0) : i think this is still called for cases where
 				//  	we have already done the "ctor injection"
 				representationEmbeddable.setPropertyValues( compositeInstance, resolvedValues );
+				stateInjected = true;
 			}
 		}
 	}
@@ -290,8 +296,8 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		final Supplier<Object[]> valuesAccess = allValuesNull == TRUE
 				? null
 				: () -> resolvedValues;
-
 		final Object instance = representationStrategy.getInstantiator().instantiate( valuesAccess, sessionFactory );
+		stateInjected = true;
 
 		EmbeddableLoadingLogger.INSTANCE.debugf( "Created composite instance [%s] : %s", navigablePath, instance );
 
@@ -299,12 +305,6 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 	}
 
 	private void handleParentInjection(RowProcessingState processingState) {
-		final PropertyAccess parentInjectionAccess = embedded.getParentInjectionAttributePropertyAccess();
-		if ( parentInjectionAccess == null ) {
-			// embeddable defined no parent injection
-			return;
-		}
-
 		// todo (6.0) : should we initialize the composite instance if we get here and it is null (not NULL_MARKER)?
 
 		// we want to avoid injection for `NULL_MARKER`
@@ -313,6 +313,12 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 					"Skipping parent injection for null embeddable [%s]",
 					navigablePath
 			);
+			return;
+		}
+
+		final PropertyAccess parentInjectionAccess = embedded.getParentInjectionAttributePropertyAccess();
+		if ( parentInjectionAccess == null ) {
+			// embeddable defined no parent injection
 			return;
 		}
 
@@ -332,11 +338,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 				compositeInstance
 		);
 
-		parentInjectionAccess.getSetter().set(
-				compositeInstance,
-				parent,
-				sessionFactory
-		);
+		parentInjectionAccess.getSetter().set( compositeInstance, parent, sessionFactory );
 	}
 
 	private Object determineParentInstance(RowProcessingState processingState) {
@@ -387,6 +389,8 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 	public void finishUpRow(RowProcessingState rowProcessingState) {
 		compositeInstance = null;
 		allValuesNull = null;
+		stateInjected = null;
+
 		clearResolutionListeners();
 	}
 

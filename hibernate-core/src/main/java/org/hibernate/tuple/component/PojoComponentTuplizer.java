@@ -15,7 +15,6 @@ import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ProxyFactoryFactory;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.cfg.Environment;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
@@ -24,7 +23,6 @@ import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.tuple.Instantiator;
-import org.hibernate.tuple.PojoInstantiator;
 
 /**
  * A {@link ComponentTuplizer} specific to the pojo entity mode.
@@ -108,19 +106,6 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 			}
 		}
 		return false;
-	}
-
-	protected Instantiator buildInstantiator(Component component) {
-		if ( component.isEmbedded() && ReflectHelper.isAbstractClass( this.componentClass ) ) {
-			ProxyFactoryFactory proxyFactoryFactory = component.getServiceRegistry().getService( ProxyFactoryFactory.class );
-			return new ProxiedInstantiator( this.componentClass, proxyFactoryFactory );
-		}
-		if ( optimizer == null ) {
-			return new PojoInstantiator( this.componentClass, null );
-		}
-		else {
-			return new PojoInstantiator( this.componentClass, optimizer.getInstantiationOptimizer() );
-		}
 	}
 
 	protected Getter buildGetter(Component component, Property prop) {

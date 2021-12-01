@@ -12,8 +12,6 @@ import org.hibernate.mapping.Property;
 import org.hibernate.property.access.internal.PropertyAccessStrategyMapImpl;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.Setter;
-import org.hibernate.tuple.DynamicMapInstantiator;
-import org.hibernate.tuple.Instantiator;
 
 /**
  * A {@link ComponentTuplizer} specific to the dynamic-map entity mode.
@@ -25,10 +23,6 @@ public class DynamicMapComponentTuplizer extends AbstractComponentTuplizer {
 
 	public Class getMappedClass() {
 		return Map.class;
-	}
-
-	protected Instantiator buildInstantiator(Component component) {
-		return new DynamicMapInstantiator();
 	}
 
 	public DynamicMapComponentTuplizer(Component component) {

@@ -13,8 +13,6 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.orm.test.jpa.model.AbstractJPATest;
 
-import org.hibernate.test.jpa.naturalid.ClassWithIdentityColumn;
-import org.hibernate.test.jpa.naturalid.Group;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;

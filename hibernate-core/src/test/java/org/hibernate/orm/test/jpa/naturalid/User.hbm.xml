@@ -14,7 +14,7 @@
   This mapping illustrates use of <natural-id mutable="false"/>
 
 -->
-<hibernate-mapping package="org.hibernate.test.jpa.naturalid">
+<hibernate-mapping package="org.hibernate.orm.test.jpa.naturalid">
 
     <class name="User" table="IMM_NAT_ID_USER" lazy="true">
         <comment>Users may bid for or sell auction items.</comment>

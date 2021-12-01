@@ -105,7 +105,7 @@ public abstract class AbstractToOneMapper extends AbstractPropertyMapper {
 									propertyData,
 									serviceRegistry
 							);
-							setter.set( targetObject, value, null );
+							setter.set( targetObject, value );
 
 							return null;
 						}

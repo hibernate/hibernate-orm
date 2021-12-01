@@ -117,7 +117,7 @@ public class SinglePropertyMapper extends AbstractPropertyMapper implements Simp
 
 							// We only set a null value if the field is not primitive. Otherwise, we leave it intact.
 							if ( value != null || !isPrimitive( setter, propertyData, obj.getClass() ) ) {
-								setter.set( obj, value, null );
+								setter.set( obj, value );
 							}
 
 							return null;

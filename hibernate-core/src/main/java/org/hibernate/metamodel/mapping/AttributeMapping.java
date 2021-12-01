@@ -39,23 +39,12 @@ public interface AttributeMapping extends ModelPart, ValueMapping, Fetchable, Pr
 	/**
 	 * Convenient access to getting the value for this attribute from the "owner"
 	 */
-	default Object getValue(Object container, SharedSessionContractImplementor session) {
-		return getValue( container, session.getSessionFactory() );
-	}
-
-	/**
-	 * Convenient access to getting the value for this attribute from the "owner"
-	 */
-	default Object getValue(Object container, SessionFactoryImplementor sessionFactory) {
+	default Object getValue(Object container) {
 		return getPropertyAccess().getGetter().get( container );
 	}
 
-	default void setValue(Object container, Object value, SharedSessionContractImplementor session) {
-		setValue( container, value, session.getSessionFactory() );
-	}
-
-	default void setValue(Object container, Object value, SessionFactoryImplementor sessionFactory) {
-		getPropertyAccess().getSetter().set( container, value, sessionFactory );
+	default void setValue(Object container, Object value) {
+		getPropertyAccess().getSetter().set( container, value );
 	}
 
 	/**

@@ -4890,6 +4890,7 @@ public abstract class AbstractEntityPersister
 		return proxyJavaTypeDescriptor != null ? proxyJavaTypeDescriptor.getJavaTypeClass() : javaTypeDescriptor.getJavaTypeClass();
 	}
 
+	@Override
 	public void setPropertyValues(Object object, Object[] values) {
 		if ( accessOptimizer != null ) {
 			accessOptimizer.setPropertyValues( object, values );
@@ -4902,7 +4903,7 @@ public abstract class AbstractEntityPersister
 							final Object value = values[stateArrayPosition];
 							if ( value != UNFETCHED_PROPERTY ) {
 								final Setter setter = attribute.getPropertyAccess().getSetter();
-								setter.set( object, value, getFactory() );
+								setter.set( object, value );
 							}
 						}
 				);
@@ -4915,7 +4916,7 @@ public abstract class AbstractEntityPersister
 							final Object value = values[stateArrayPosition];
 							if ( value != UNFETCHED_PROPERTY ) {
 								final Setter setter = attribute.getPropertyAccess().getSetter();
-								setter.set( object, value, getFactory() );
+								setter.set( object, value );
 							}
 
 						},
@@ -4925,11 +4926,13 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
+	@Override
 	public void setPropertyValue(Object object, int i, Object value) {
 		final String propertyName = getPropertyNames()[i];
 		setPropertyValue( object, propertyName, value );
 	}
 
+	@Override
 	public Object[] getPropertyValues(Object object) {
 		if ( accessOptimizer != null ) {
 			return accessOptimizer.getPropertyValues( object );
@@ -5103,8 +5106,7 @@ public abstract class AbstractEntityPersister
 		if ( versionMapping != null ) {
 			versionMapping.getVersionAttribute().getPropertyAccess().getSetter().set(
 					entity,
-					versionMapping.getUnsavedStrategy().getDefaultValue( currentVersion ),
-					getFactory()
+					versionMapping.getUnsavedStrategy().getDefaultValue( currentVersion )
 			);
 		}
 	}
@@ -5284,7 +5286,7 @@ public abstract class AbstractEntityPersister
 	public void setPropertyValue(Object object, String propertyName, Object value) {
 		final AttributeMapping attributeMapping = (AttributeMapping) findSubPart( propertyName, this );
 		final AttributeMetadata attributeMetadata = attributeMapping.getAttributeMetadataAccess().resolveAttributeMetadata( this );
-		attributeMetadata.getPropertyAccess().getSetter().set( object, value, getFactory() );
+		attributeMetadata.getPropertyAccess().getSetter().set( object, value );
 	}
 
 	public static int getTableId(String tableName, String[] tables) {

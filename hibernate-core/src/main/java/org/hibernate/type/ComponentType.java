@@ -97,10 +97,6 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 		return isKey;
 	}
 
-	public ComponentTuplizer getComponentTuplizer() {
-		return componentTuplizer;
-	}
-
 	@Override
 	public int getColumnSpan(Mapping mapping) throws MappingException {
 		int span = 0;
@@ -382,11 +378,11 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 		return getPropertyValue( component, i );
 	}
 
-	public Object getPropertyValue(Object component, int i)
-			throws HibernateException {
-		if (component == null) {
-			component = new Object[propertySpan];
+	public Object getPropertyValue(Object component, int i) {
+		if ( component == null ) {
+			return null;
 		}
+
 		if ( component instanceof Object[] ) {
 			// A few calls to hashCode pass the property values already in an
 			// Object[] (ex: QueryKey hash codes for cached queries).
@@ -395,7 +391,9 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 			return ( (Object[]) component )[i];
 		}
 		else {
-			return componentTuplizer.getPropertyValue( component, i );
+			return mappingModelPart
+					.getEmbeddableTypeDescriptor()
+					.getValue( component, i );
 		}
 	}
 
@@ -407,9 +405,9 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 	@Override
 	public Object[] getPropertyValues(Object component) {
 		if (component == null) {
-			component = new Object[propertySpan];
+			return new Object[propertySpan];
 		}
-		if ( component instanceof Object[] ) {
+		else if ( component instanceof Object[] ) {
 			// A few calls to hashCode pass the property values already in an
 			// Object[] (ex: QueryKey hash codes for cached queries).
 			// It's easiest to just check for the condition here prior to
@@ -417,14 +415,15 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 			return (Object[]) component;
 		}
 		else {
-			return componentTuplizer.getPropertyValues( component );
+			return mappingModelPart
+					.getEmbeddableTypeDescriptor()
+					.getValues( component );
 		}
 	}
 
 	@Override
-	public void setPropertyValues(Object component, Object[] values)
-			throws HibernateException {
-		componentTuplizer.setPropertyValues( component, values );
+	public void setPropertyValues(Object component, Object[] values) {
+		mappingModelPart.getEmbeddableTypeDescriptor().setValues( component, values );
 	}
 
 	@Override
@@ -486,7 +485,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 		//equals()/hashCode() implementations
 		final PropertyAccess parentAccess = mappingModelPart().getParentInjectionAttributePropertyAccess();
 		if ( parentAccess != null ) {
-			parentAccess.getSetter().set( result, parentAccess.getGetter().get( component ), factory );
+			parentAccess.getSetter().set( result, parentAccess.getGetter().get( component ) );
 		}
 
 		return result;

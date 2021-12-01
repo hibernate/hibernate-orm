@@ -64,7 +64,7 @@ public class SingleIdMapper extends AbstractIdMapper implements SimpleIdMapperBu
 								propertyData,
 								getServiceRegistry()
 						);
-						setter.set( obj, value, null );
+						setter.set( obj, value );
 						return true;
 					}
 				}
@@ -164,7 +164,7 @@ public class SingleIdMapper extends AbstractIdMapper implements SimpleIdMapperBu
 								getServiceRegistry()
 						);
 
-						setter.set( objTo, getter.get( objFrom ), null );
+						setter.set( objTo, getter.get( objFrom ) );
 						return null;
 					}
 				}

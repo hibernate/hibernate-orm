@@ -138,11 +138,11 @@ public class ComponentPropertyMapper extends AbstractPropertyMapper implements C
 
 								if ( isAllPropertiesNull( data ) ) {
 									// single property, but default value need not be null, so we'll set it to null anyway
-									setter.set( obj, null, null );
+									setter.set( obj, null );
 								}
 								else {
 									// set the component
-									setter.set( obj, subObj, null );
+									setter.set( obj, subObj );
 									delegate.mapToEntityFromMap( enversService, subObj, data, primaryKey, versionsReader, revision );
 								}
 							}

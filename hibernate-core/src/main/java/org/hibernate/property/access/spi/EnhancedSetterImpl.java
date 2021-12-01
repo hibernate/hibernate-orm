@@ -36,9 +36,8 @@ public class EnhancedSetterImpl extends SetterFieldImpl {
 	}
 
 	@Override
-	public void set(Object target, Object value, SessionFactoryImplementor factory) {
-
-		super.set( target, value, factory );
+	public void set(Object target, Object value) {
+		super.set( target, value );
 
 		// This sets the component relation for dirty tracking purposes
 		if ( target instanceof CompositeOwner && value instanceof CompositeTracker ) {

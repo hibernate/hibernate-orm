@@ -74,7 +74,7 @@ public class EmbeddableInstantiatorPojoStandard extends AbstractPojoInstantiator
 				// A possible alternative could be to initialize the resolved values for primitive fields to their default value,
 				// but that might cause unexpected outcomes for Hibernate 5 users that use createEmptyCompositesEnabled when updating.
 				// You can see the need for this by running EmptyCompositeEquivalentToNullTest
-				embeddableMappingAccess.get().setPropertyValues( instance, valuesAccess.get() );
+				embeddableMappingAccess.get().setValues( instance, valuesAccess.get() );
 			}
 
 			return instance;

@@ -11,7 +11,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.Map;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
@@ -107,7 +106,7 @@ public class PropertyAccessStrategyNoopImpl implements PropertyAccessStrategy {
 		public static final SetterImpl INSTANCE = new SetterImpl();
 
 		@Override
-		public void set(Object target, Object value, SessionFactoryImplementor factory) {
+		public void set(Object target, Object value) {
 		}
 
 		@Override

@@ -185,7 +185,7 @@ public class GeneratedValuesProcessor {
 					.resolveAttributeMetadata( entityDescriptor )
 					.getPropertyAccess()
 					.getSetter()
-					.set( entity, generatedValue, sessionFactory );
+					.set( entity, generatedValue );
 		}
 	}
 

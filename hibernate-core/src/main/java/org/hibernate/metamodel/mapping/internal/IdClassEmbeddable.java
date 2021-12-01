@@ -78,10 +78,9 @@ import static org.hibernate.internal.util.collections.CollectionHelper.arrayList
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.getStateArrayContributorMetadataAccess;
 
 /**
- * EmbeddableMappingType implementation describing an
- * {@link jakarta.persistence.IdClass}
+ * EmbeddableMappingType implementation describing an {@link jakarta.persistence.IdClass}
  */
-public class IdClassEmbeddable implements IdentifierValueMapper {
+public class IdClassEmbeddable extends AbstractEmbeddableMapping implements IdentifierValueMapper {
 	private final NavigableRole navigableRole;
 	private final NonAggregatedIdentifierMapping idMapping;
 	private final VirtualIdEmbeddable virtualIdEmbeddable;
@@ -93,8 +92,6 @@ public class IdClassEmbeddable implements IdentifierValueMapper {
 	private final List<SingularAttributeMapping> attributeMappings;
 	private SelectableMappings selectableMappings;
 
-	private final SessionFactoryImplementor sessionFactory;
-
 	public IdClassEmbeddable(
 			Component idClassSource,
 			RootClass bootEntityDescriptor,
@@ -104,7 +101,7 @@ public class IdClassEmbeddable implements IdentifierValueMapper {
 			String[] idColumns,
 			VirtualIdEmbeddable virtualIdEmbeddable,
 			MappingModelCreationProcess creationProcess) {
-		this.sessionFactory = creationProcess.getCreationContext().getSessionFactory();
+		super( creationProcess );
 
 		this.navigableRole = idMapping.getNavigableRole().append( NavigablePath.IDENTIFIER_MAPPER_PROPERTY );
 		this.idMapping = idMapping;
@@ -231,7 +228,7 @@ public class IdClassEmbeddable implements IdentifierValueMapper {
 			}
 		}
 
-		setPropertyValues( id, propertyValues );
+		setValues( id, propertyValues );
 
 		return id;
 	}
@@ -270,7 +267,7 @@ public class IdClassEmbeddable implements IdentifierValueMapper {
 				}
 		);
 
-		virtualIdEmbeddable.setPropertyValues( entity, propertyValues );
+		virtualIdEmbeddable.setValues( entity, propertyValues );
 	}
 
 
@@ -348,24 +345,6 @@ public class IdClassEmbeddable implements IdentifierValueMapper {
 	}
 
 	@Override
-	public Object[] getPropertyValues(Object composite) {
-		final Object[] values = new Object[ attributeMappings.size() ];
-		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			final SingularAttributeMapping attributeMapping = attributeMappings.get( i );
-			values[i] = attributeMapping.getPropertyAccess().getGetter().get( composite );
-		}
-		return values;
-	}
-
-	@Override
-	public void setPropertyValues(Object composite, Object[] resolvedValues) {
-		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			final SingularAttributeMapping attributeMapping = attributeMappings.get( i );
-			attributeMapping.getPropertyAccess().getSetter().set( composite, resolvedValues[i], sessionFactory );
-		}
-	}
-
-	@Override
 	public int getNumberOfFetchables() {
 		return getNumberOfAttributeMappings();
 	}
@@ -394,7 +373,7 @@ public class IdClassEmbeddable implements IdentifierValueMapper {
 	@Override
 	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
 		attributeMappings.forEach( (attribute) -> {
-			final Object attributeValue = attribute.getValue( domainValue, session );
+			final Object attributeValue = attribute.getValue( domainValue );
 			attribute.breakDownJdbcValues( attributeValue, valueConsumer, session );
 		} );
 	}

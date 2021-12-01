@@ -176,7 +176,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 		final Object parent = doLoad( event, parentPersister, parentEntityKey, options );
 
 		final Object dependent = dependentIdType.instantiate();
-		dependentIdType.getPartMappingType().setPropertyValues(
+		dependentIdType.getPartMappingType().setValues(
 				dependent,
 				new Object[] { parent }
 		);

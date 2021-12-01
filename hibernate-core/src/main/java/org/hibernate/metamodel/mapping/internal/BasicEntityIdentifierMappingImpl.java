@@ -127,7 +127,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 
 	@Override
 	public void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session) {
-		propertyAccess.getSetter().set( entity, id, session.getFactory() );
+		propertyAccess.getSetter().set( entity, id );
 	}
 
 	@Override

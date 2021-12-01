@@ -75,7 +75,7 @@ public class VirtualIdRepresentationStrategy implements EmbeddableRepresentation
 			if ( valuesAccess != null ) {
 				final Object[] values = valuesAccess.get();
 				if ( values != null ) {
-					virtualIdEmbeddable.setPropertyValues( instantiated, values );
+					virtualIdEmbeddable.setValues( instantiated, values );
 				}
 			}
 			return instantiated;

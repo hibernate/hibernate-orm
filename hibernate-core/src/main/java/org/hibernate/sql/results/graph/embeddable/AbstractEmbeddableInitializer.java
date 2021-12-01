@@ -166,7 +166,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 				final Initializer parentInitializer = processingState.resolveInitializer( navigablePath.getParent() );
 				if ( parentInitializer != this ) {
 					( (FetchParentAccess) parentInitializer ).registerResolutionListener( (entity) -> {
-						representationEmbeddable.setPropertyValues( entity, rowState );
+						representationEmbeddable.setValues( entity, rowState );
 						stateInjected = true;
 					} );
 				}
@@ -188,9 +188,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 				}
 			}
 			else if ( stateAllNull == FALSE && stateInjected != TRUE ) {
-				// todo (6.0) : i think this is still called for cases where
-				//  	we have already done the "ctor injection"
-				representationEmbeddable.setPropertyValues( compositeInstance, rowState );
+				representationEmbeddable.setValues( compositeInstance, rowState );
 				stateInjected = true;
 			}
 		}
@@ -335,7 +333,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 				compositeInstance
 		);
 
-		parentInjectionAccess.getSetter().set( compositeInstance, parent, sessionFactory );
+		parentInjectionAccess.getSetter().set( compositeInstance, parent );
 	}
 
 	private Object determineParentInstance(RowProcessingState processingState) {

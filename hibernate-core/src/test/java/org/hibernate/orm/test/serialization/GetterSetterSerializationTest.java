@@ -82,7 +82,7 @@ public class GetterSetterSerializationTest {
 
 		final Setter setterClone = (Setter) ois.readObject();
 		final PK pkNew = new PK( 2L );
-		setterClone.set( entity, pkNew, null  );
+		setterClone.set( entity, pkNew  );
 
 		assertSame( pkNew, getter.get( entity ) );
 	}
@@ -132,7 +132,7 @@ public class GetterSetterSerializationTest {
 
 		final Setter setterClone = (Setter) ois.readObject();
 		final PK pkNew = new PK( 2L );
-		setterClone.set( entity, pkNew, null  );
+		setterClone.set( entity, pkNew );
 
 		assertSame( pkNew, getter.get( entity ) );
 	}

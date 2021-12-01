@@ -18,7 +18,6 @@ import java.util.function.Function;
 import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.SharedSessionContract;
-import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.FetchTiming;
@@ -50,14 +49,12 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
-import org.hibernate.metamodel.mapping.StateArrayContributorMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadata;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.Clause;
@@ -81,9 +78,12 @@ import org.hibernate.type.spi.CompositeTypeImplementor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * @author Steve Ebersole
+ * Describes a "normal" embeddable.
+ *
+ * NOTE: At the moment, this class is used to describe some non-normal cases: mainly
+ * composite fks
  */
-public class EmbeddableMappingTypeImpl implements EmbeddableMappingType, SelectableMappings {
+public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping implements SelectableMappings {
 
 	public static EmbeddableMappingTypeImpl from(
 			Component bootDescriptor,
@@ -150,8 +150,6 @@ public class EmbeddableMappingTypeImpl implements EmbeddableMappingType, Selecta
 	private final JavaType<?> embeddableJtd;
 	private final EmbeddableRepresentationStrategy representationStrategy;
 
-	private final SessionFactoryImplementor sessionFactory;
-
 	private final List<AttributeMapping> attributeMappings = new ArrayList<>();
 	private SelectableMappings selectableMappings;
 
@@ -163,14 +161,13 @@ public class EmbeddableMappingTypeImpl implements EmbeddableMappingType, Selecta
 			Component bootDescriptor,
 			Function<EmbeddableMappingType, EmbeddableValuedModelPart> embeddedPartBuilder,
 			RuntimeModelCreationContext creationContext) {
+		super( creationContext );
 		this.representationStrategy = creationContext
 				.getBootstrapContext()
 				.getRepresentationStrategySelector()
 				.resolveStrategy( bootDescriptor, () -> this, creationContext );
 
 		this.embeddableJtd = representationStrategy.getMappedJavaTypeDescriptor();
-		this.sessionFactory = creationContext.getSessionFactory();
-
 		this.valueMapping = embeddedPartBuilder.apply( this );
 
 		final ConfigurationService cs = sessionFactory.getServiceRegistry()
@@ -190,9 +187,10 @@ public class EmbeddableMappingTypeImpl implements EmbeddableMappingType, Selecta
 			SelectableMappings selectableMappings,
 			EmbeddableMappingType inverseMappingType,
 			MappingModelCreationProcess creationProcess) {
+		super( creationProcess );
+
 		this.embeddableJtd = inverseMappingType.getJavaTypeDescriptor();
 		this.representationStrategy = inverseMappingType.getRepresentationStrategy();
-		this.sessionFactory = creationProcess.getCreationContext().getSessionFactory();
 		this.valueMapping = valueMapping;
 		this.createEmptyCompositesEnabled = inverseMappingType.isCreateEmptyCompositesEnabled();
 		this.selectableMappings = selectableMappings;
@@ -785,35 +783,6 @@ public class EmbeddableMappingTypeImpl implements EmbeddableMappingType, Selecta
 	@Override
 	public void visitSubParts(Consumer<ModelPart> consumer, EntityMappingType treatTargetType) {
 		visitAttributeMappings( consumer );
-	}
-
-	public Object[] getPropertyValues(Object compositeInstance) {
-		final Object[] results = new Object[attributeMappings.size()];
-		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			final StateArrayContributorMapping attr = (StateArrayContributorMapping) attributeMappings.get( i );
-			final Getter getter = attr.getAttributeMetadataAccess()
-					.resolveAttributeMetadata( null )
-					.getPropertyAccess()
-					.getGetter();
-			results[ attr.getStateArrayPosition() ] = getter.get( compositeInstance );
-		}
-		return results;
-	}
-
-	public void setPropertyValues(Object compositeInstance, Object[] resolvedValues) {
-		final ReflectionOptimizer reflectionOptimizer = representationStrategy.getReflectionOptimizer();
-		if ( reflectionOptimizer != null ) {
-			final ReflectionOptimizer.AccessOptimizer accessOptimizer = reflectionOptimizer.getAccessOptimizer();
-			if ( accessOptimizer != null ) {
-				accessOptimizer.setPropertyValues( compositeInstance, resolvedValues );
-			}
-			return;
-		}
-
-		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			final AttributeMapping attributeMapping = attributeMappings.get( i );
-			attributeMapping.setValue( compositeInstance, resolvedValues[i], sessionFactory );
-		}
 	}
 
 	public boolean isCreateEmptyCompositesEnabled() {

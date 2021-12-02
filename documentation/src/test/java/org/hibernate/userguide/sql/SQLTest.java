@@ -19,6 +19,7 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.loader.NonUniqueDiscoveredSqlAliasException;
+import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.transform.Transformers;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.userguide.model.AddressType;
@@ -41,6 +42,7 @@ import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
@@ -762,6 +764,10 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 			}
 			//end::sql-jpa-composite-key-entity-associations_named-query-example[]
 			assertEquals(1, tuples.size());
+			SpaceShip spaceShip = (SpaceShip) tuples.get( 0 )[0];
+			assertNotNull( spaceShip.getCaptain() );
+			assertTrue( spaceShip.getCaptain() instanceof HibernateProxy );
+			assertTrue( ( (HibernateProxy) spaceShip.getCaptain() ).getHibernateLazyInitializer().isUninitialized() );
 		});
 	}
 

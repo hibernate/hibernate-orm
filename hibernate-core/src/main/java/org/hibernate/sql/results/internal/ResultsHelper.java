@@ -18,9 +18,11 @@ import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.entry.CollectionCacheEntry;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.collection.internal.PersistentArrayHolder;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.BatchFetchQueue;
 import org.hibernate.engine.spi.CollectionEntry;
+import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -28,6 +30,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.EntityPersister;
@@ -145,6 +148,14 @@ public class ResultsHelper {
 		}
 
 		if ( collectionDescriptor.getCollectionType().hasHolder() ) {
+			// in case of PersistentArrayHolder we have to realign the EntityEntry loaded state with
+			// the entity values
+			final Object owner = collectionInstance.getOwner();
+			final EntityEntry entry = persistenceContext.getEntry( owner );
+			final PluralAttributeMapping mapping = collectionDescriptor.getAttributeMapping();
+			final int propertyIndex = mapping.getStateArrayPosition();
+			final Object[] loadedState = entry.getLoadedState();
+			loadedState[propertyIndex] = mapping.getValue( owner );
 			persistenceContext.addCollectionHolder( collectionInstance );
 		}
 

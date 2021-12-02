@@ -3,6 +3,56 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.0.0.Beta2 (December 02, 2021)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31969
+
+** Bug
+    * [HHH-14914] - Passing an ExtendedBeanManager which is never notified leads to runtime errors
+    * [HHH-14913] - sub-query modifiers are ignored
+    * [HHH-14877] - FetchMode.SUBSELECT ignored
+    * [HHH-14876] - Parameter padding for IN clauses doesn't work in Hibernate 6.0.0.Beta1
+    * [HHH-14875] - Slow query log seems to be missing in Hibernate 6.0.0.Beta1
+    * [HHH-14874] - Lazy loading of basic attributes in different @LazyGroups throws ArrayIndexOutOfBoundsException
+    * [HHH-9862] - Multiple TREAT operators does not work properly for joined inheritance
+    * [HHH-9229] - @Audited and @AuditOverride does not work consistently for embeddables that extend a mapped superclass
+    * [HHH-9228] - @AuditOverride has no affect if an embeddable is @Audited
+
+** Deprecation
+    * [HHH-11469] - Remove ModificationStore 
+
+** Improvement
+    * [HHH-14928] - Document CDI integration
+    * [HHH-14925] - Switch from BasicType to JavaType/JdbcType for Geometry types
+    * [HHH-14836] - Provide `ExtensionTypes` class to hold the non-standard type codes
+    * [HHH-14803] - Upgrade spatial support for MariaDB
+    * [HHH-14802] - Upgrade spatial support for CockroachDB
+    * [HHH-14801] - Upgrade spatial support for Postgis
+    * [HHH-14800] - Remove need for SpatialDialects
+    * [HHH-14738] - Update tests for hibernate-spatial to junit5 
+    * [HHH-14403] - Walk Fetchables for a container width-first rather than depth-first
+    * [HHH-12077] - Support short-naming of audit strategies via configuration.
+    * [HHH-11483] - Build models based on JAXB rather than using Dom4J
+    * [HHH-10496] - Allow RevisionTimestamp to be of type java.time.LocalDateTime
+
+** New Feature
+    * [HHH-14906] - Support H2GIS in Spatial
+    * [HHH-14663] - Add testing for s390x to Jenkins CI
+    * [HHH-14576] - Support TiDB
+    * [HHH-10925] - Add annotation to ignore specific tests based on audit strategy being used.
+    * [HHH-9062] - Validity audit strategy: end revision timestamp is not stored in tables for joined subclasses
+    * [HHH-6210] - ValidityAuditStrategy doesn't support a numeric column for the revision end timestamp
+    * [HHH-5529] - Bulk delete on Entity with @ElementCollection ignores the @CollectionTable
+
+** Task
+    * [HHH-14946] - Require JDK 11
+    * [HHH-14923] - Allow CriteriaQuery to determine its "return type" as part of setting the selection
+    * [HHH-14919] - Improve handling for java.sql.Date, Time and Timestamp
+    * [HHH-14890] - One-to-one mapped-by referencing embedded nested property doesn't work in Hibernate 6.0.0.Beta1
+    * [HHH-13395] - Update Envers to use the new Integrator signature.
+
+
 
 Changes in 6.0.0.Beta2 (December 02, 2021)
 ------------------------------------------------------------------------------------------------------------------------

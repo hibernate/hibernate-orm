@@ -8,11 +8,15 @@ package org.hibernate.orm.test.mapping.embeddable.strategy.instantiator.embeddab
 
 import org.hibernate.annotations.EmbeddableInstantiator;
 
+import jakarta.persistence.Column;
+
 
 //tag::embeddable-instantiator-class[]
 @EmbeddableInstantiator( NameInstantiator.class )
 public class Name {
+	@Column(name = "first_name")
 	private final String first;
+	@Column(name = "last_name")
 	private final String last;
 
 	private Name() {

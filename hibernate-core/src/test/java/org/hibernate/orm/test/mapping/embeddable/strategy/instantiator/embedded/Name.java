@@ -6,9 +6,13 @@
  */
 package org.hibernate.orm.test.mapping.embeddable.strategy.instantiator.embedded;
 
+import jakarta.persistence.Column;
+
 //tag::embeddable-instantiator-property[]
 public class Name {
+	@Column(name = "first_name")
 	private final String first;
+	@Column(name = "last_name")
 	private final String last;
 
 	private Name() {

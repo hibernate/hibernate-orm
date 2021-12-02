@@ -61,6 +61,7 @@ import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.GeneratedValueResolver;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
+import org.hibernate.metamodel.mapping.MappingModelCreationLogger;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.NonTransientException;
@@ -96,6 +97,8 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.metamodel.mapping.MappingModelCreationLogger.LOGGER;
 
 /**
  * @author Steve Ebersole
@@ -236,6 +239,13 @@ public class MappingModelCreationHelper {
 		final FetchTiming fetchTiming;
 		final FetchStyle fetchStyle;
 		if ( declaringType instanceof EmbeddableMappingType ) {
+			if ( bootProperty.isLazy() ) {
+				LOGGER.debugf(
+						"Attribute was declared lazy, but is part of an embeddable - `%s#%s` - LAZY will be ignored",
+						declaringType.getNavigableRole().getFullPath(),
+						bootProperty.getName()
+				);
+			}
 			fetchTiming = FetchTiming.IMMEDIATE;
 			fetchStyle = FetchStyle.JOIN;
 		}

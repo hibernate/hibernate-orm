@@ -323,28 +323,31 @@ public class JpaMetamodelImpl implements JpaMetamodel, Serializable {
 		return importInfo == null ? null : importInfo.importedName;
 	}
 
-	private <T> ImportInfo<T> resolveImport(String name) {
-		//noinspection unchecked
-		final ImportInfo<T> result = (ImportInfo<T>) nameToImportMap.computeIfAbsent( name, unknownName -> {
+	private <T> ImportInfo<T> resolveImport(final String name) {
+		final ImportInfo<?> importInfo = nameToImportMap.get( name );
+		if ( importInfo != null ) {
+			return importInfo == INVALID_IMPORT ? null : (ImportInfo<T>) importInfo;
+		}
+		else {
 			// see if the name is a fully-qualified class name
-			final Class<T> loadedClass = resolveRequestedClass( unknownName );
+			final Class<T> loadedClass = resolveRequestedClass( name );
 			if ( loadedClass == null ) {
-				// it is NOT a fully-qualified class name - add a marker entry
-				//		so we do not keep trying later
+				// it is NOT a fully-qualified class name - add a marker entry so we do not keep trying later
 				// note that ConcurrentHashMap does not support null value so a marker entry is needed
-				return INVALID_IMPORT;
+				// [HHH-14948] But only add it if the cache size isn't getting too large, as in some use cases
+				// the queries are dynamically generated and this cache could lead to memory leaks when left unbounded.
+				if ( nameToImportMap.size() < 1_000 ) {
+					nameToImportMap.put( name, INVALID_IMPORT );
+				}
+				return null;
 			}
 			else {
 				// it is a fully-qualified class name - add it to the cache
 				//		so we do not keep trying later
-				return new ImportInfo<>( unknownName, loadedClass );
+				final ImportInfo<T> info = new ImportInfo<>( name, loadedClass );
+				nameToImportMap.put( name, info );
+				return info;
 			}
-		} );
-		if ( result == INVALID_IMPORT ) {
-			return null;
-		}
-		else {
-			return result;
 		}
 	}
 

@@ -93,7 +93,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
-import org.hibernate.metamodel.spi.EmbeddableInstantiator;
+import org.hibernate.metamodel.EmbeddableInstantiator;
 
 import org.jboss.logging.Logger;
 

@@ -49,7 +49,7 @@ import org.hibernate.mapping.Join;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
-import org.hibernate.metamodel.spi.EmbeddableInstantiator;
+import org.hibernate.metamodel.EmbeddableInstantiator;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 

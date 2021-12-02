@@ -11,13 +11,12 @@ import java.util.List;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
-import org.hibernate.metamodel.spi.EmbeddableInstantiator;
+import org.hibernate.metamodel.EmbeddableInstantiator;
 import org.hibernate.type.spi.CompositeTypeImplementor;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
-import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;

@@ -122,7 +122,7 @@ import org.hibernate.mapping.SingleTableSubclass;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.UnionSubclass;
-import org.hibernate.metamodel.spi.EmbeddableInstantiator;
+import org.hibernate.metamodel.EmbeddableInstantiator;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;

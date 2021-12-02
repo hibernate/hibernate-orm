@@ -6,6 +6,8 @@
  */
 package org.hibernate.orm.test.mapping.embeddable.strategy.instantiator.registered;
 
+import org.hibernate.metamodel.EmbeddableInstantiator;
+
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -14,7 +16,7 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Tests for custom {@link org.hibernate.metamodel.spi.EmbeddableInstantiator} usage,
+ * Tests for custom {@link EmbeddableInstantiator} usage,
  * specified as a registration
  */
 @DomainModel( annotatedClasses = { Person.class, Name.class } )

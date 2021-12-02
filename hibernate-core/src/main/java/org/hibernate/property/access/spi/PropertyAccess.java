@@ -12,6 +12,8 @@ package org.hibernate.property.access.spi;
  * <p/>
  * Instances are obtained from {@link PropertyAccessStrategy}
  *
+ * @see org.hibernate.metamodel.ManagedTypeRepresentationStrategy
+ *
  * @author Steve Ebersole
  * @author Gavin King
  */

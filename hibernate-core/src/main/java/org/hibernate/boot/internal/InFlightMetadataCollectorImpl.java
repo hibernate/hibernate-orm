@@ -98,7 +98,7 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
-import org.hibernate.metamodel.spi.EmbeddableInstantiator;
+import org.hibernate.metamodel.EmbeddableInstantiator;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.type.descriptor.java.JavaType;

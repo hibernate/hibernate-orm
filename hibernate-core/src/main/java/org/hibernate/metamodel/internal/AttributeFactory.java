@@ -13,7 +13,6 @@ import java.lang.reflect.ParameterizedType;
 import java.util.Iterator;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.HEMLogging;
@@ -44,7 +43,7 @@ import org.hibernate.metamodel.model.domain.internal.MapMember;
 import org.hibernate.metamodel.model.domain.internal.MappedSuperclassTypeImpl;
 import org.hibernate.metamodel.model.domain.internal.PluralAttributeBuilder;
 import org.hibernate.metamodel.model.domain.internal.SingularAttributeImpl;
-import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
+import org.hibernate.metamodel.EmbeddableRepresentationStrategy;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.internal.PropertyAccessMapImpl;
 import org.hibernate.property.access.spi.Getter;

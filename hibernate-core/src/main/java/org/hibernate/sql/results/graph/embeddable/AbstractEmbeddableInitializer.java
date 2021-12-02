@@ -19,7 +19,7 @@ import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
-import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
+import org.hibernate.metamodel.EmbeddableRepresentationStrategy;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.query.NavigablePath;

@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
-import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
+import org.hibernate.metamodel.EmbeddableRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.type.descriptor.java.JavaType;

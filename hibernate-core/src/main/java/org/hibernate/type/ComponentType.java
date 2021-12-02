@@ -29,7 +29,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
-import org.hibernate.metamodel.spi.EmbeddableInstantiator;
+import org.hibernate.metamodel.EmbeddableInstantiator;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.tuple.StandardProperty;
 import org.hibernate.tuple.ValueGeneration;

@@ -6,6 +6,7 @@
  */
 package org.hibernate.tuple;
 
+import org.hibernate.metamodel.ManagedTypeRepresentationStrategy;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.property.access.spi.Getter;
 
@@ -34,7 +35,7 @@ import org.hibernate.property.access.spi.Getter;
  *
  * @author Steve Ebersole
  *
- * @deprecated See {@link org.hibernate.metamodel.spi.ManagedTypeRepresentationStrategy}
+ * @deprecated See {@link ManagedTypeRepresentationStrategy}
  */
 @Deprecated
 public interface Tuplizer {

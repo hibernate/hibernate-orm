@@ -9,6 +9,7 @@ package org.hibernate.metamodel.spi;
 import java.util.function.Consumer;
 
 import org.hibernate.EntityNameResolver;
+import org.hibernate.metamodel.ManagedTypeRepresentationStrategy;
 import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.type.descriptor.java.JavaType;
 

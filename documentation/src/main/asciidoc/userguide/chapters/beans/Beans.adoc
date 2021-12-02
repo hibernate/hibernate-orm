@@ -86,5 +86,5 @@ Hibernate supports using the following integrations as managed beans:
 * `org.hibernate.type.descriptor.jdbc.JdbcType`
 * `org.hibernate.type.descriptor.java.BasicJavaType`
 * `org.hibernate.type.descriptor.java.MutabilityPlan`
-* `org.hibernate.metamodel.spi.EmbeddableInstantiator`
+* `org.hibernate.metamodel.EmbeddableInstantiator`
 * `org.hibernate.envers.RevisionListener`

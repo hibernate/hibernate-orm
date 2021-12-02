@@ -29,7 +29,7 @@ import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.metamodel.RepresentationMode;
-import org.hibernate.metamodel.spi.EmbeddableInstantiator;
+import org.hibernate.metamodel.EmbeddableInstantiator;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.tuple.component.ComponentMetamodel;
 import org.hibernate.type.ComponentType;

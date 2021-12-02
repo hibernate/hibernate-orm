@@ -8,6 +8,7 @@ package org.hibernate.metamodel.mapping;
 
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.IntFunction;
 
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.sql.results.graph.FetchableContainer;

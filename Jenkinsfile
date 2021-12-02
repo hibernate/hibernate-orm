@@ -30,30 +30,30 @@ helper.runWithNotification {
 
 stage('Configure') {
 	this.environments = [
-// 		buildEnv('8', 'h2'),
-// 		buildEnv('8', 'hsqldb'),
-// 		buildEnv('8', 'derby'),
-// 		buildEnv('8', 'mysql8'),
-// 		buildEnv('8', 'mariadb'),
-// 		buildEnv('8', 'postgresql_9_5'),
-// 		buildEnv('8', 'postgresql_13'),
-// 		buildEnv('8', 'oracle'),
-		buildEnv('8', 'oracle_ee'),
-// 		buildEnv('8', 'db2'),
-// 		buildEnv('8', 'mssql'),
-// 		buildEnv('8', 'sybase'),
-		buildEnv('8', 'hana', 'HANA'),
-		buildEnv('8', 's390x', 's390x'),
-		buildEnv('8', 'tidb', 'tidb', 'tidb_hibernate@pingcap.com'),
+// 		buildEnv('11', 'h2'),
+// 		buildEnv('11', 'hsqldb'),
+// 		buildEnv('11', 'derby'),
+// 		buildEnv('11', 'mysql8'),
+// 		buildEnv('11', 'mariadb'),
+// 		buildEnv('11', 'postgresql_9_5'),
+// 		buildEnv('11', 'postgresql_13'),
+// 		buildEnv('11', 'oracle'),
+		buildEnv('11', 'oracle_ee'),
+// 		buildEnv('11', 'db2'),
+// 		buildEnv('11', 'mssql'),
+// 		buildEnv('11', 'sybase'),
+		buildEnv('11', 'hana', 'HANA'),
+		buildEnv('11', 's390x', 's390x'),
+		buildEnv('11', 'tidb', 'tidb', 'tidb_hibernate@pingcap.com'),
 		// Disable EDB for now as the image is not available anymore
-// 		buildEnv('8', 'edb')
+// 		buildEnv('11', 'edb')
 	];
 
 	helper.configure {
 		file 'job-configuration.yaml'
 		// We don't require the following, but the build helper plugin apparently does
 		jdk {
-			defaultTool 'OpenJDK 8 Latest'
+			defaultTool 'OpenJDK 11 Latest'
 		}
 		maven {
 			defaultTool 'Apache Maven 3.8'

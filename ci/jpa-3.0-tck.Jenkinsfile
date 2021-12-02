@@ -5,7 +5,7 @@ pipeline {
         label 'LongDuration'
     }
     tools {
-        jdk 'OpenJDK 8 Latest'
+        jdk 'OpenJDK 11 Latest'
     }
     parameters {
         choice(name: 'IMAGE_JDK', choices: ['jdk11'], description: 'The JDK base image version to use for the TCK image.')

@@ -87,6 +87,7 @@ public class SmokeTests {
 		private String accessCode;
 
 		@Id
+		@Column(name = "system_id")
 		public String getSystem() {
 			return system;
 		}

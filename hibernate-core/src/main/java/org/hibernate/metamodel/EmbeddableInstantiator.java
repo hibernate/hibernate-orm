@@ -16,7 +16,7 @@ import org.hibernate.metamodel.spi.Instantiator;
  * Contract for instantiating embeddable values
  * 
  * NOTE : incubating until the proposed 
- * `instantiate(IntFunction<Object> valueAccess, SessionFactoryImplementor sessionFactory)`
+ * `instantiate(IntFunction valueAccess, SessionFactoryImplementor sessionFactory)`
  * form can be implemented
  *
  * @see org.hibernate.annotations.EmbeddableInstantiator

@@ -14,7 +14,8 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * @author Steve Ebersole
+ * Tests for custom {@link org.hibernate.metamodel.spi.EmbeddableInstantiator} usage,
+ * specified on the embedded
  */
 @DomainModel( annotatedClasses = { Person.class, Name.class } )
 @SessionFactory

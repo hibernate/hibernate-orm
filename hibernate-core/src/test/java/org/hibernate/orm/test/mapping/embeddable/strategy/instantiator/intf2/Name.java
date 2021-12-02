@@ -4,8 +4,17 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
+package org.hibernate.orm.test.mapping.embeddable.strategy.instantiator.intf2;
 
 /**
- * Tests for custom {@link org.hibernate.metamodel.spi.EmbeddableInstantiator} usage
+ * @author Steve Ebersole
  */
-package org.hibernate.orm.test.mapping.embeddable.strategy.instantiator.registered;
+public class Name {
+	String getFirstName() {
+		return "John";
+	}
+
+	String getLastName() {
+		return "Doe";
+	}
+}

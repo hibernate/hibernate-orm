@@ -326,17 +326,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		assert values.length == attributes.size();
 
 		for ( int i = 0; i < attributes.size(); i++ ) {
-			final SingularAttributeMapping attributeMapping = attributes.get( i );
-			final Object value = values[ i ];
-			if ( attributeMapping instanceof ToOneAttributeMapping ) {
-				final ToOneAttributeMapping toOne = (ToOneAttributeMapping) attributeMapping;
-				final ForeignKeyDescriptor fKDescriptor = toOne.getForeignKeyDescriptor();
-				final Object keyValue = value == null ? null : fKDescriptor.disassemble( value, session );
-				fKDescriptor.breakDownJdbcValues( keyValue, valueConsumer, session );
-			}
-			else {
-				attributeMapping.breakDownJdbcValues( value, valueConsumer, session );
-			}
+			attributes.get( i ).breakDownJdbcValues( values[ i ], valueConsumer, session );
 		}
 	}
 

@@ -1527,7 +1527,11 @@ public class ToOneAttributeMapping
 			Object domainValue,
 			JdbcValueConsumer valueConsumer,
 			SharedSessionContractImplementor session) {
-		foreignKeyDescriptor.breakDownJdbcValues( domainValue, valueConsumer, session );
+		foreignKeyDescriptor.breakDownJdbcValues(
+				foreignKeyDescriptor.getAssociationKeyFromSide( domainValue, sideNature.inverse(), session ),
+				valueConsumer,
+				session
+		);
 	}
 
 	@Override
@@ -1578,18 +1582,34 @@ public class ToOneAttributeMapping
 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		return foreignKeyDescriptor.disassemble( value, session );
+		return foreignKeyDescriptor.disassemble(
+				foreignKeyDescriptor.getAssociationKeyFromSide( value, sideNature.inverse(), session ),
+				session
+		);
 	}
 
 	@Override
-	public int forEachDisassembledJdbcValue(Object value, Clause clause, int offset, JdbcValuesConsumer valuesConsumer, SharedSessionContractImplementor session) {
+	public int forEachDisassembledJdbcValue(
+			Object value,
+			Clause clause,
+			int offset,
+			JdbcValuesConsumer valuesConsumer,
+			SharedSessionContractImplementor session) {
 		return foreignKeyDescriptor.forEachDisassembledJdbcValue( value, clause, offset, valuesConsumer, session );
 	}
 
 	@Override
-	public int forEachJdbcValue(Object value, Clause clause, int offset, JdbcValuesConsumer consumer, SharedSessionContractImplementor session) {
+	public int forEachJdbcValue(
+			Object value,
+			Clause clause,
+			int offset,
+			JdbcValuesConsumer consumer,
+			SharedSessionContractImplementor session) {
 		return foreignKeyDescriptor.forEachDisassembledJdbcValue(
-				foreignKeyDescriptor.disassemble( value, session ),
+				foreignKeyDescriptor.disassemble(
+						foreignKeyDescriptor.getAssociationKeyFromSide( value, sideNature.inverse(), session ),
+						session
+				),
 				clause,
 				offset,
 				consumer,

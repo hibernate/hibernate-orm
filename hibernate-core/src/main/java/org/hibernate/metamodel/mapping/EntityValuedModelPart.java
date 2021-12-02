@@ -74,32 +74,17 @@ public interface EntityValuedModelPart extends FetchableContainer {
 
 	@Override
 	default int getJdbcTypeCount() {
-		int span = 0;
-		final List<AttributeMapping> attributeMappings = getEntityMappingType().getAttributeMappings();
-		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			span += attributeMappings.get( i ).getJdbcTypeCount();
-		}
-		return span;
+		return getEntityMappingType().getJdbcTypeCount();
 	}
 
 	@Override
 	default int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
-		int span = 0;
-		final List<AttributeMapping> attributeMappings = getEntityMappingType().getAttributeMappings();
-		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			span += attributeMappings.get( i ).forEachJdbcType( span + offset, action );
-		}
-		return span;
+		return getEntityMappingType().forEachJdbcType( offset, action );
 	}
 
 	@Override
 	default Object disassemble(Object value, SharedSessionContractImplementor session) {
-		if ( value == null ) {
-			return null;
-		}
-		final EntityIdentifierMapping identifierMapping = getEntityMappingType().getIdentifierMapping();
-		final Object identifier = identifierMapping.getIdentifier( value, session );
-		return identifierMapping.disassemble( identifier, session );
+		return getEntityMappingType().disassemble( value, session );
 	}
 
 	@Override
@@ -119,12 +104,6 @@ public interface EntityValuedModelPart extends FetchableContainer {
 			int offset,
 			JdbcValuesConsumer consumer,
 			SharedSessionContractImplementor session) {
-		int span = 0;
-		final List<AttributeMapping> attributeMappings = getEntityMappingType().getAttributeMappings();
-		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			final AttributeMapping attributeMapping = attributeMappings.get( i );
-			span += attributeMapping.forEachJdbcValue( value, clause, span + offset, consumer, session );
-		}
-		return span;
+		return getEntityMappingType().forEachJdbcValue( value, clause, offset, consumer, session );
 	}
 }

@@ -142,18 +142,7 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		if ( hasContainingClass() ) {
-			final Object[] result = new Object[ identifierValueMapper.getAttributeMappings().size()];
-			for ( int i = 0; i < identifierValueMapper.getAttributeMappings().size(); i++ ) {
-				final AttributeMapping attributeMapping = identifierValueMapper.getAttributeMappings().get( i );
-				Object o = attributeMapping.getPropertyAccess().getGetter().get( value );
-				result[i] = attributeMapping.disassemble( o, session );
-			}
-
-			return result;
-		}
-
-		return getEmbeddableTypeDescriptor().disassemble( value, session );
+		return identifierValueMapper.disassemble( value, session );
 	}
 
 	@Override
@@ -163,34 +152,7 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
-		if ( hasContainingClass() ) {
-			int span = 0;
-			for ( int i = 0; i < identifierValueMapper.getAttributeMappings().size(); i++ ) {
-				final AttributeMapping attributeMapping = identifierValueMapper.getAttributeMappings().get( i );
-				final Object o = attributeMapping.getPropertyAccess().getGetter().get( value );
-				if ( attributeMapping instanceof ToOneAttributeMapping ) {
-					final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attributeMapping;
-					final ForeignKeyDescriptor fkDescriptor = toOneAttributeMapping.getForeignKeyDescriptor();
-					final Object identifier = fkDescriptor.getAssociationKeyFromSide(
-							o,
-							toOneAttributeMapping.getSideNature().inverse(),
-							session
-					);
-					span += fkDescriptor.forEachJdbcValue(
-							identifier,
-							clause,
-							span + offset,
-							valuesConsumer,
-							session
-					);
-				}
-				else {
-					span += attributeMapping.forEachJdbcValue( o, clause, span + offset, valuesConsumer, session );
-				}
-			}
-			return span;
-		}
-		return super.forEachJdbcValue( value, clause, offset, valuesConsumer, session );
+		return identifierValueMapper.forEachJdbcValue( value, clause, offset, valuesConsumer, session );
 	}
 
 	@Override
@@ -331,14 +293,7 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 	@Override
 	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
 		assert domainValue instanceof Object[];
-
-		final Object[] values = (Object[]) domainValue;
-		assert values.length == identifierValueMapper.getAttributeMappings().size();
-
-		for ( int i = 0; i < identifierValueMapper.getAttributeMappings().size(); i++ ) {
-			final AttributeMapping attribute = identifierValueMapper.getAttributeMappings().get( i );
-			attribute.breakDownJdbcValues( values[ i ], valueConsumer, session );
-		}
+		identifierValueMapper.breakDownJdbcValues( domainValue, valueConsumer, session );
 	}
 
 	@Override
@@ -346,9 +301,7 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
-		for ( int i = 0; i < identifierValueMapper.getAttributeMappings().size(); i++ ) {
-			identifierValueMapper.getAttributeMappings().get( i ).applySqlSelections( navigablePath, tableGroup, creationState );
-		}
+		identifierValueMapper.applySqlSelections( navigablePath, tableGroup, creationState );
 	}
 
 	@Override
@@ -357,14 +310,7 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 			TableGroup tableGroup,
 			DomainResultCreationState creationState,
 			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
-		for ( int i = 0; i < identifierValueMapper.getAttributeMappings().size(); i++ ) {
-			identifierValueMapper.getAttributeMappings().get( i ).applySqlSelections(
-					navigablePath,
-					tableGroup,
-					creationState,
-					selectionConsumer
-			);
-		}
+		identifierValueMapper.applySqlSelections( navigablePath, tableGroup, creationState, selectionConsumer );
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

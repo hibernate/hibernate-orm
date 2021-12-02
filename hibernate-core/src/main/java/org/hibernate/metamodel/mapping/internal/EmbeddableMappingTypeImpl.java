@@ -623,33 +623,6 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 	}
 
 	@Override
-	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState) {
-		visitAttributeMappings(
-				attributeMapping -> attributeMapping.applySqlSelections( navigablePath, tableGroup, creationState )
-		);
-	}
-
-	@Override
-	public void applySqlSelections(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState,
-			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
-		visitAttributeMappings(
-				attributeMapping ->
-						attributeMapping.applySqlSelections(
-								navigablePath,
-								tableGroup,
-								creationState,
-								selectionConsumer
-						)
-		);
-	}
-
-	@Override
 	public int getNumberOfFetchables() {
 		return attributeMappings.size();
 	}

@@ -20,9 +20,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 
-//tag::embeddable-instantiator-registration[]
-@Entity(name = "Person")
 @Table(name = "persons")
+//tag::embeddable-instantiator-registration[]
+@Entity
 @EmbeddableInstantiatorRegistration( embeddableClass = Name.class, instantiator = NameInstantiator.class )
 public class Person {
 	@Id

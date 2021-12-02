@@ -262,8 +262,9 @@ values follow Java Bean conventions - e.g. a struct or Java 15 record.
 
 Hibernate allows the use of a custom instantiator for creating the embeddable instances through the
 `org.hibernate.metamodel.spi.EmbeddableInstantiator` contract.  The custom instantiator is specified
-using the `@org.hibernate.annotations.EmbeddableInstantiator` annotation.  Which can either be defined
-on the property:
+using the `@org.hibernate.annotations.EmbeddableInstantiator` annotation.
+
+A custom instantiator can be defined on the property:
 
 [[embeddable-instantiator-property-ex]]
 .`@EmbeddableInstantiator` on attribute
@@ -271,6 +272,7 @@ on the property:
 [source, JAVA, indent=0]
 ----
 include::{instantiatorTestDir}/embedded/Name.java[tags=embeddable-instantiator-property]
+
 include::{instantiatorTestDir}/embedded/Person.java[tags=embeddable-instantiator-property]
 ----
 ====
@@ -283,12 +285,13 @@ or on the embeddable class:
 [source, JAVA, indent=0]
 ----
 include::{instantiatorTestDir}/embeddable/Name.java[tags=embeddable-instantiator-class]
+
 include::{instantiatorTestDir}/embeddable/Person.java[tags=embeddable-instantiator-class]
 ----
 ====
 
 
-Additionally, instantiators can be registered:
+or registered:
 
 [[embeddable-instantiator-registration-ex]]
 .`@EmbeddableInstantiatorRegistration`
@@ -296,6 +299,7 @@ Additionally, instantiators can be registered:
 [source, JAVA, indent=0]
 ----
 include::{instantiatorTestDir}/registered/Name.java[tags=embeddable-instantiator-registration]
+
 include::{instantiatorTestDir}/registered/Person.java[tags=embeddable-instantiator-registration]
 ----
 ====

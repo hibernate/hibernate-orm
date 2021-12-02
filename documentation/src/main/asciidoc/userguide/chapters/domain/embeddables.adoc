@@ -288,6 +288,20 @@ include::{instantiatorTestDir}/embeddable/Person.java[tags=embeddable-instantiat
 ====
 
 
+Additionally, instantiators can be registered:
+
+[[embeddable-instantiator-registration-ex]]
+.`@EmbeddableInstantiatorRegistration`
+====
+[source, JAVA, indent=0]
+----
+include::{instantiatorTestDir}/registered/Name.java[tags=embeddable-instantiator-registration]
+include::{instantiatorTestDir}/registered/Person.java[tags=embeddable-instantiator-registration]
+----
+====
+
+
+
 
 [[embeddable-multiple-namingstrategy]]
 ==== Embeddables and ImplicitNamingStrategy

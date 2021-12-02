@@ -1610,7 +1610,7 @@ public abstract class CollectionBinder {
 						false,
 						false,
 						true,
-						resolveCustomInstantiator( property, elementClass ),
+						resolveCustomInstantiator( property, elementClass, buildingContext ),
 						buildingContext,
 						inheritanceStatePerClass
 				);
@@ -1672,15 +1672,23 @@ public abstract class CollectionBinder {
 
 	}
 
-	private Class<? extends EmbeddableInstantiator> resolveCustomInstantiator(XProperty property, XClass embeddableClass) {
+	private Class<? extends EmbeddableInstantiator> resolveCustomInstantiator(
+			XProperty property,
+			XClass propertyClass,
+			MetadataBuildingContext context) {
 		final org.hibernate.annotations.EmbeddableInstantiator propertyAnnotation = property.getAnnotation( org.hibernate.annotations.EmbeddableInstantiator.class );
 		if ( propertyAnnotation != null ) {
 			return propertyAnnotation.value();
 		}
 
-		final org.hibernate.annotations.EmbeddableInstantiator classAnnotation = embeddableClass.getAnnotation( org.hibernate.annotations.EmbeddableInstantiator.class );
+		final org.hibernate.annotations.EmbeddableInstantiator classAnnotation = propertyClass.getAnnotation( org.hibernate.annotations.EmbeddableInstantiator.class );
 		if ( classAnnotation != null ) {
 			return classAnnotation.value();
+		}
+
+		final Class<?> embeddableClass = context.getBootstrapContext().getReflectionManager().toClass( propertyClass );
+		if ( embeddableClass != null ) {
+			return context.getMetadataCollector().findRegisteredEmbeddableInstantiator( embeddableClass );
 		}
 
 		return null;

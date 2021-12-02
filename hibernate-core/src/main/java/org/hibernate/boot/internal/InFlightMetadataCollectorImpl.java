@@ -98,6 +98,7 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
+import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -398,6 +399,26 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	public void addJdbcTypeRegistration(int typeCode, JdbcType jdbcType) {
 		getTypeConfiguration().getJdbcTypeDescriptorRegistry().addDescriptor( typeCode, jdbcType );
 	}
+
+	private Map<Class<?>, Class<? extends EmbeddableInstantiator>> registeredInstantiators;
+
+	@Override
+	public void registerEmbeddableInstantiator(Class<?> embeddableType, Class<? extends EmbeddableInstantiator> instantiator) {
+		if ( registeredInstantiators == null ) {
+			registeredInstantiators = new HashMap<>();
+		}
+		registeredInstantiators.put( embeddableType, instantiator );
+	}
+
+	@Override
+	public Class<? extends EmbeddableInstantiator> findRegisteredEmbeddableInstantiator(Class<?> embeddableType) {
+		if ( registeredInstantiators == null ) {
+			return null;
+		}
+
+		return registeredInstantiators.get( embeddableType );
+	}
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// attribute converters

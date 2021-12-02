@@ -33,6 +33,8 @@ import org.hibernate.annotations.Columns;
 import org.hibernate.annotations.Comment;
 import org.hibernate.annotations.DiscriminatorFormula;
 import org.hibernate.annotations.DiscriminatorOptions;
+import org.hibernate.annotations.EmbeddableInstantiatorRegistration;
+import org.hibernate.annotations.EmbeddableInstantiatorRegistrations;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchProfile;
 import org.hibernate.annotations.FetchProfiles;
@@ -350,6 +352,7 @@ public final class AnnotationBinder {
 		}
 
 		handleTypeDescriptorRegistrations( pckg, context );
+		bindEmbeddableInstantiatorRegistrations( pckg, context );
 
 		bindGenericGenerators( pckg, context );
 		bindQueries( pckg, context );
@@ -782,6 +785,7 @@ public final class AnnotationBinder {
 		// try to find class level generators
 		HashMap<String, IdentifierGeneratorDefinition> classGenerators = buildGenerators( clazzToProcess, context );
 		handleTypeDescriptorRegistrations( clazzToProcess, context );
+		bindEmbeddableInstantiatorRegistrations( clazzToProcess, context );
 
 		// check properties
 		final InheritanceState.ElementsToProcess elementsToProcess = inheritanceState.getElementsToProcess();
@@ -908,6 +912,36 @@ public final class AnnotationBinder {
 		final Class<? extends BasicJavaType<?>> jtdClass = annotation.descriptorClass();
 		final BasicJavaType<?> jtd = managedBeanRegistry.getBean( jtdClass ).getBeanInstance();
 		context.getMetadataCollector().addJavaTypeRegistration( annotation.javaType(), jtd );
+	}
+
+	private static void bindEmbeddableInstantiatorRegistrations(XAnnotatedElement annotatedElement, MetadataBuildingContext context) {
+		final ManagedBeanRegistry managedBeanRegistry = context.getBootstrapContext()
+				.getServiceRegistry()
+				.getService( ManagedBeanRegistry.class );
+
+		final EmbeddableInstantiatorRegistration instantiatorReg = annotatedElement.getAnnotation( EmbeddableInstantiatorRegistration.class );
+		if ( instantiatorReg != null ) {
+			handleEmbeddableInstantiatorRegistration( context, managedBeanRegistry, instantiatorReg );
+		}
+		else {
+			final EmbeddableInstantiatorRegistrations annotation = annotatedElement.getAnnotation( EmbeddableInstantiatorRegistrations.class );
+			if ( annotation != null ) {
+				final EmbeddableInstantiatorRegistration[] registrations = annotation.value();
+				for ( int i = 0; i < registrations.length; i++ ) {
+					handleEmbeddableInstantiatorRegistration( context, managedBeanRegistry, registrations[i] );
+				}
+			}
+		}
+	}
+
+	private static void handleEmbeddableInstantiatorRegistration(
+			MetadataBuildingContext context,
+			ManagedBeanRegistry managedBeanRegistry,
+			EmbeddableInstantiatorRegistration annotation) {
+		context.getMetadataCollector().registerEmbeddableInstantiator(
+				annotation.embeddableClass(),
+				annotation.instantiator()
+		);
 	}
 
 	/**
@@ -2309,7 +2343,7 @@ public final class AnnotationBinder {
 					}
 
 					final AccessType propertyAccessor = entityBinder.getPropertyAccessor( property );
-					final Class<? extends EmbeddableInstantiator> customInstantiatorImpl = determineCustomInstantiator( property, returnedClass );
+					final Class<? extends EmbeddableInstantiator> customInstantiatorImpl = determineCustomInstantiator( property, returnedClass, context );
 
 					propertyBinder = bindComponent(
 							inferredData,
@@ -2457,7 +2491,10 @@ public final class AnnotationBinder {
 		}
 	}
 
-	private static Class<? extends EmbeddableInstantiator> determineCustomInstantiator(XProperty property, XClass returnedClass) {
+	private static Class<? extends EmbeddableInstantiator> determineCustomInstantiator(
+			XProperty property,
+			XClass returnedClass,
+			MetadataBuildingContext context) {
 		if ( property.isAnnotationPresent( EmbeddedId.class ) ) {
 			// we don't allow custom instantiators for composite ids
 			return null;
@@ -2471,6 +2508,11 @@ public final class AnnotationBinder {
 		final org.hibernate.annotations.EmbeddableInstantiator classAnnotation = returnedClass.getAnnotation( org.hibernate.annotations.EmbeddableInstantiator.class );
 		if ( classAnnotation != null ) {
 			return classAnnotation.value();
+		}
+
+		final Class embeddableClass = context.getBootstrapContext().getReflectionManager().toClass( returnedClass );
+		if ( embeddableClass != null ) {
+			return context.getMetadataCollector().findRegisteredEmbeddableInstantiator( embeddableClass );
 		}
 
 		return null;
@@ -2912,6 +2954,7 @@ public final class AnnotationBinder {
 					buildingContext.getMetadataCollector().addSecondPass( secondPass );
 
 					handleTypeDescriptorRegistrations( property, buildingContext );
+					bindEmbeddableInstantiatorRegistrations( property, buildingContext );
 				}
 				else {
 					Map<String, IdentifierGeneratorDefinition> localGenerators = new HashMap<>( buildGenerators( property, buildingContext ) );

@@ -28,11 +28,7 @@ import org.hibernate.tuple.Tuplizer;
  *
  * @author Gavin King
  * @author Steve Ebersole
- *
- * @deprecated for removal in 6.0.  See instead `ManagedTypeRepresentationStrategy`
- * and `RepresentationMode` in 6.0
  */
-@Deprecated
 public interface EntityTuplizer extends Tuplizer {
 	/**
 	 * Return the entity-mode handled by this tuplizer instance.

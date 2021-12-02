@@ -324,22 +324,10 @@ public abstract class AbstractEntitySourceImpl
 		return jaxbEntityMapping.isSelectBeforeUpdate();
 	}
 
-	/**
-	 * @deprecated to be removed in 6.0.  Starting in 6.0 the mode is inferred
-	 * from the entity-type mapping
-	 */
-	@Deprecated
 	protected EntityMode determineEntityMode() {
 		return StringHelper.isNotEmpty( entityNamingSource.getClassName() ) ? EntityMode.POJO : EntityMode.MAP;
 	}
 
-	/**
-	 * @deprecated to be removed in 6.0.  Starting in 6.0 the mode is inferred
-	 * from the entity-type mapping
-	 *
-	 * See `ManagedTypeRepresentationStrategy` and `RepresentationMode` in 6.0
-	 */
-	@Deprecated
 	@Override
 	public Map<EntityMode, String> getTuplizerClassMap() {
 		return tuplizerClassMap;

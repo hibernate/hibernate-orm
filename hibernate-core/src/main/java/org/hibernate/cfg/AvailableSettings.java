@@ -1409,10 +1409,7 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 
 	/**
 	 * The EntityMode in which set the Session opened from the SessionFactory.
-	 *
-	 * @deprecated An entity-type has one "mode" relative to any SessionFactory.
 	 */
-	@Deprecated
 	String DEFAULT_ENTITY_MODE = "hibernate.default_entity_mode";
 
 	/**

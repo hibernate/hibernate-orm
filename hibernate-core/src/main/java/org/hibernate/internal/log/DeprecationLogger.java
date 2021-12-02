@@ -297,10 +297,4 @@ public interface DeprecationLogger extends BasicLogger {
 	)
 	void deprecatedJmxBeanRegistration(String name);
 
-	@LogMessage(level = WARN)
-	@Message(
-			id = 90000031,
-			value = "Encountered deprecated setting [%s] which is planned for removal"
-	)
-	void deprecatedSetting(String setting);
 }

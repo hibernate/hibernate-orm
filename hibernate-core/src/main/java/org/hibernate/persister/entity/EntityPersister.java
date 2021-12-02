@@ -823,7 +823,7 @@ public interface EntityPersister
 	Object[] getPropertyValues(Object object);
 
 	default Object getValue(Object object, int i) {
-		return getValue( object, i );
+		return getPropertyValue( object, i );
 	}
 
 	/**

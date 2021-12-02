@@ -9,6 +9,7 @@ package org.hibernate.orm.test.envers.integration.reventity;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 
 import jakarta.persistence.EntityManager;
@@ -60,7 +61,7 @@ public class LocalDateTimeTest extends BaseEnversJPAFunctionalTestCase {
             em.persist( entity );
             em.getTransaction().commit();
 
-            timestampEnd = Instant.now();
+            timestampEnd = Instant.now().plus( 1L, ChronoUnit.SECONDS );
         }
         catch( InterruptedException x ) {
             fail( "Unexpected interrupted exception" );

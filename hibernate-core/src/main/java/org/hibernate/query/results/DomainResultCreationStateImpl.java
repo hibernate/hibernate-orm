@@ -342,7 +342,7 @@ public class DomainResultCreationStateImpl
 				final Map.Entry<String, NavigablePath> oldEntry = relativePathStack.getCurrent();
 				final String key = oldEntry.getKey();
 				currentEntry = new AbstractMap.SimpleEntry<>(
-						getRelativePath( !key.isEmpty() ? key : "", fetchable, fetchableContainer ),
+						getRelativePath( key, fetchable, fetchableContainer ),
 						oldEntry.getValue().append( fetchableName )
 				);
 			}
@@ -351,6 +351,18 @@ public class DomainResultCreationStateImpl
 			FetchBuilder explicitFetchBuilder = fetchBuilderResolverStack
 					.getCurrent()
 					.apply( fullPath );
+			DynamicFetchBuilderLegacy fetchBuilderLegacy;
+			if ( explicitFetchBuilder == null ) {
+				fetchBuilderLegacy = legacyFetchResolver.resolve(
+						fromClauseAccess.findTableGroup( fetchParent.getNavigablePath() )
+								.getPrimaryTableReference()
+								.getIdentificationVariable(),
+						fetchableName
+				);
+			}
+			else {
+				fetchBuilderLegacy = null;
+			}
 			if ( fetchable instanceof Association && fetchable.getMappedFetchOptions().getTiming() == FetchTiming.DELAYED ) {
 				final Association association = (Association) fetchable;
 				final ForeignKeyDescriptor foreignKeyDescriptor = association.getForeignKeyDescriptor();
@@ -358,7 +370,8 @@ public class DomainResultCreationStateImpl
 				final String partName = attributeName( foreignKeyDescriptor.getSide( association.getSideNature().inverse() )
 						.getModelPart());
 
-				if ( explicitFetchBuilder == null && partName != null ) {
+				// If there are no fetch builders for this association, we only want to fetch the FK
+				if ( explicitFetchBuilder == null && fetchBuilderLegacy == null && partName != null ) {
 					currentEntry = new AbstractMap.SimpleEntry<>(
 							currentEntry.getKey() + "." + partName,
 							currentEntry.getValue().append( partName )
@@ -366,6 +379,14 @@ public class DomainResultCreationStateImpl
 					explicitFetchBuilder = fetchBuilderResolverStack
 							.getCurrent()
 							.apply( currentEntry.getKey() );
+					if ( explicitFetchBuilder == null ) {
+						fetchBuilderLegacy = legacyFetchResolver.resolve(
+								fromClauseAccess.findTableGroup( fetchParent.getNavigablePath() )
+										.getPrimaryTableReference()
+										.getIdentificationVariable(),
+								fetchableName
+						);
+					}
 				}
 			}
 			relativePathStack.push( currentEntry );
@@ -377,12 +398,6 @@ public class DomainResultCreationStateImpl
 					fetchBuilder = explicitFetchBuilder;
 				}
 				else {
-					final DynamicFetchBuilderLegacy fetchBuilderLegacy = legacyFetchResolver.resolve(
-							fromClauseAccess.findTableGroup( fetchParent.getNavigablePath() )
-									.getPrimaryTableReference()
-									.getIdentificationVariable(),
-							fetchableName
-					);
 					if ( fetchBuilderLegacy == null ) {
 						fetchBuilder = Builders.implicitFetchBuilder( fetchPath, fetchable, this );
 					}

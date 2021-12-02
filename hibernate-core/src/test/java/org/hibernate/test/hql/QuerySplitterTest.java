@@ -6,11 +6,15 @@
  */
 package org.hibernate.test.hql;
 
+import java.lang.reflect.Field;
+import java.util.Map;
+import java.util.stream.IntStream;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
 import org.hibernate.hql.internal.QuerySplitter;
+import org.hibernate.metamodel.internal.MetamodelImpl;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
@@ -45,6 +49,29 @@ public class QuerySplitterTest extends BaseNonConfigCoreFunctionalTestCase {
 				"from org.hibernate.test.hql.QuerySplitterTest$Employee where name = 'He is the, Employee Number 1'",
 				results[0]
 		);
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-14948")
+	public void testMemoryConsumptionOfFailedImportsCache() throws NoSuchFieldException, IllegalAccessException {
+
+		IntStream.range( 0, 1001 )
+				.forEach( i -> QuerySplitter.concreteQueries(
+						"from Employee e join e.company" + i,
+						sessionFactory()
+				) );
+
+		MetamodelImpl metamodel = (MetamodelImpl) sessionFactory().getMetamodel();
+
+		Field field = MetamodelImpl.class.getDeclaredField( "imports" );
+		field.setAccessible( true );
+
+		//noinspection unchecked
+		Map<String, String> imports = (Map<String, String>) field.get( metamodel );
+
+		// VERY hard-coded, but considering the possibility of a regression of a memory-related issue,
+		// it should be worth it
+		assertEquals( 1000, imports.size() );
 	}
 
 	@Test

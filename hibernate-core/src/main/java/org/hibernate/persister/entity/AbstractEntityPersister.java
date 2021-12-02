@@ -6430,19 +6430,63 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
+	public int getJdbcTypeCount() {
+		return getIdentifierMapping().getJdbcTypeCount();
+	}
+
+	@Override
+	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+		return getIdentifierMapping().forEachJdbcType( offset, action );
+	}
+
+	@Override
+	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+		if ( value == null ) {
+			return null;
+		}
+		final EntityIdentifierMapping identifierMapping = getIdentifierMapping();
+		final Object identifier = identifierMapping.getIdentifier( value, session );
+		return identifierMapping.disassemble( identifier, session );
+	}
+
+	@Override
+	public int forEachDisassembledJdbcValue(
+			Object value,
+			Clause clause,
+			int offset,
+			JdbcValuesConsumer valuesConsumer,
+			SharedSessionContractImplementor session) {
+		return getIdentifierMapping().forEachDisassembledJdbcValue(
+				value,
+				clause,
+				offset,
+				valuesConsumer,
+				session
+				);
+	}
+
+	@Override
 	public int forEachJdbcValue(
 			Object value,
 			Clause clause,
 			int offset,
 			JdbcValuesConsumer consumer,
 			SharedSessionContractImplementor session) {
-		int span = 0;
-		final List<AttributeMapping> mappings = getAttributeMappings();
-		for ( int i = 0; i < mappings.size(); i++ ) {
-			final AttributeMapping attributeMapping = mappings.get( i );
-			span += attributeMapping.forEachJdbcValue( value, clause, span + offset, consumer, session );
+		final EntityIdentifierMapping identifierMapping = getIdentifierMapping();
+		final Object identifier;
+		if ( value == null ) {
+			identifier = null;
 		}
-		return span;
+		else {
+			identifier = identifierMapping.disassemble( identifierMapping.getIdentifier( value, session ), session );
+		}
+		return identifierMapping.forEachDisassembledJdbcValue(
+				identifier,
+				clause,
+				offset,
+				consumer,
+				session
+		);
 	}
 
 	@Override

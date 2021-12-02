@@ -7,12 +7,19 @@
 package org.hibernate.metamodel.mapping;
 
 import java.util.List;
+import java.util.function.BiConsumer;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
+import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupProducer;
+import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
 
 /**
  * Describes an embeddable - the actual type
@@ -48,4 +55,39 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 
 	@Override
 	int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action);
+
+	// Make this abstract again to ensure subclasses implement this method
+	@Override
+	<T> DomainResult<T> createDomainResult(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			String resultVariable,
+			DomainResultCreationState creationState);
+
+	@Override
+	default void applySqlSelections(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			DomainResultCreationState creationState) {
+		visitAttributeMappings(
+				attributeMapping -> attributeMapping.applySqlSelections( navigablePath, tableGroup, creationState )
+		);
+	}
+
+	@Override
+	default void applySqlSelections(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			DomainResultCreationState creationState,
+			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+		visitAttributeMappings(
+				attributeMapping ->
+						attributeMapping.applySqlSelections(
+								navigablePath,
+								tableGroup,
+								creationState,
+								selectionConsumer
+						)
+		);
+	}
 }

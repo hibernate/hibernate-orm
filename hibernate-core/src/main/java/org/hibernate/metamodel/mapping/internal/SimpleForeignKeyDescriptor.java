@@ -328,13 +328,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		if ( value == null ) {
-			return null;
-		}
-		if ( refersToPrimaryKey && value instanceof HibernateProxy ) {
-			return ( (HibernateProxy) value ).getHibernateLazyInitializer().getIdentifier();
-		}
-		return ( (PropertyBasedMapping) targetSide.getModelPart() ).getPropertyAccess().getGetter().get( value );
+		return value;
 	}
 
 	@Override

@@ -6,17 +6,10 @@
  */
 package org.hibernate.orm.test.mapping.embeddable.strategy.instantiator.intf;
 
-import jakarta.persistence.Basic;
-import jakarta.persistence.Embeddable;
-
 /**
  * @author Steve Ebersole
  */
-@Embeddable
 public interface Name {
-	@Basic
 	String getFirstName();
-
-	@Basic
 	String getLastName();
 }

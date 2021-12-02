@@ -6,13 +6,13 @@
  */
 package org.hibernate.orm.test.mapping.embeddable.strategy.instantiator.intf;
 
-import java.lang.reflect.Method;
-
+import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -21,11 +21,15 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * @author Steve Ebersole
+ * Builds on {@link org.hibernate.orm.test.mapping.embeddable.strategy.instantiator.intf2.InstantiationTests}
+ * attempting to map an interface.
+ *
+ * At the moment this does not work, as Hibernate fails without setters
  */
 @DomainModel( annotatedClasses = { Person.class, NameImpl.class } )
 @SessionFactory
-@NotImplementedYet( strict = false )
+@NotImplementedYet( reason = "Hibernate requires setter" )
+@JiraKey( "HHH-14950" )
 public class InstantiationTests {
 	@Test
 	public void modelTest(DomainModelScope scope) {
@@ -33,6 +37,10 @@ public class InstantiationTests {
 			final Property name = personMapping.getProperty( "name" );
 			final Component nameMapping = (Component) name.getValue();
 			assertThat( nameMapping.getPropertySpan() ).isEqualTo( 2 );
+
+			final Property aliases = personMapping.getProperty( "aliases" );
+			final Component aliasMapping = (Component) ( (Collection) aliases.getValue() ).getElement();
+			assertThat( aliasMapping.getPropertySpan() ).isEqualTo( 2 );
 		});
 	}
 

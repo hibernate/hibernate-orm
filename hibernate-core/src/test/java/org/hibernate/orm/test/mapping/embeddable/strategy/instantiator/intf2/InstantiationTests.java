@@ -12,6 +12,8 @@ import org.hibernate.mapping.Property;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.junit.jupiter.api.Test;
 
@@ -28,6 +30,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @DomainModel( annotatedClasses = { Person.class, Name.class } )
 @SessionFactory
+@NotImplementedYet( reason = "Hibernate requires setter" )
+@JiraKey( "HHH-14950" )
 public class InstantiationTests {
 	@Test
 	public void modelTest(DomainModelScope scope) {

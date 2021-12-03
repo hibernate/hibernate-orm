@@ -38,6 +38,19 @@ public interface DatabaseVersion {
 	 */
 	int getDatabaseMinorVersion();
 
+	/**
+	 * Get a simple int representing the version based on the formula
+	 * {@code ({major) * 10000}) + (minor * 1000)} where minor == {@link #NO_VERSION}
+	 * is normalized to zero
+	 */
+	default int getCanonicalVersion() {
+		final int major = getDatabaseMajorVersion();
+		final int minor = getDatabaseMinorVersion() == NO_VERSION
+				? 0
+				: getDatabaseMinorVersion();
+		return ( major * 10000 ) + ( minor * 1000 );
+	}
+
 	default boolean isAfter(DatabaseVersion other) {
 		return isAfter( other.getDatabaseMajorVersion(), other.getDatabaseMinorVersion() );
 	}

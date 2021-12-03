@@ -29,7 +29,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Steve Ebersole
  */
 @DomainModel( annotatedClasses = { Person.class, Name.class } )
-@SessionFactory
+@SessionFactory( exportSchema = false )
 public class EmbeddableAccessTests {
 	@Test
 	public void verifyBootModel(DomainModelScope scope) {

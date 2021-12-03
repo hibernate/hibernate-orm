@@ -97,6 +97,7 @@ import org.hibernate.metamodel.EmbeddableInstantiator;
 
 import org.jboss.logging.Logger;
 
+import jakarta.persistence.Access;
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.AttributeOverrides;
 import jakarta.persistence.CollectionTable;
@@ -112,6 +113,8 @@ import jakarta.persistence.MapKey;
 import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.OneToMany;
 
+import static jakarta.persistence.AccessType.FIELD;
+import static jakarta.persistence.AccessType.PROPERTY;
 import static org.hibernate.cfg.BinderHelper.toAliasEntityMap;
 import static org.hibernate.cfg.BinderHelper.toAliasTableMap;
 
@@ -1565,17 +1568,30 @@ public abstract class CollectionBinder {
 
 				EntityBinder entityBinder = new EntityBinder();
 				PersistentClass owner = collValue.getOwner();
-				boolean isPropertyAnnotated;
-				//FIXME support @Access for collection of elements
-				//String accessType = access != null ? access.value() : null;
-				if ( owner.getIdentifierProperty() != null ) {
-					isPropertyAnnotated = owner.getIdentifierProperty().getPropertyAccessorName().equals( "property" );
+
+				final AccessType baseAccessType;
+				final Access accessAnn = property.getAnnotation( Access.class );
+				if ( accessAnn != null ) {
+					// the attribute is locally annotated with `@Access`, use that
+					baseAccessType = accessAnn.value() == PROPERTY
+							? AccessType.PROPERTY
+							: AccessType.FIELD;
+				}
+				else if ( owner.getIdentifierProperty() != null ) {
+					// use the access for the owning entity's id attribute, if one
+					baseAccessType = owner.getIdentifierProperty().getPropertyAccessorName().equals( "property" )
+							? AccessType.PROPERTY
+							: AccessType.FIELD;
 				}
 				else if ( owner.getIdentifierMapper() != null && owner.getIdentifierMapper().getPropertySpan() > 0 ) {
-					Property prop = (Property) owner.getIdentifierMapper().getPropertyIterator().next();
-					isPropertyAnnotated = prop.getPropertyAccessorName().equals( "property" );
+					// use the access for the owning entity's "id mapper", if one
+					Property prop = owner.getIdentifierMapper().getPropertyIterator().next();
+					baseAccessType = prop.getPropertyAccessorName().equals( "property" )
+							? AccessType.PROPERTY
+							: AccessType.FIELD;
 				}
 				else {
+					// otherwise...
 					throw new AssertionFailure( "Unable to guess collection property accessor name" );
 				}
 
@@ -1604,7 +1620,7 @@ public abstract class CollectionBinder {
 				Component component = AnnotationBinder.fillComponent(
 						holder,
 						inferredData,
-						isPropertyAnnotated ? AccessType.PROPERTY : AccessType.FIELD,
+						baseAccessType,
 						isNullable,
 						entityBinder,
 						false,

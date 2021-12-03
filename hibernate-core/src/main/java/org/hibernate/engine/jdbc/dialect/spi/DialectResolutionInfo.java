@@ -6,6 +6,8 @@
  */
 package org.hibernate.engine.jdbc.dialect.spi;
 
+import org.hibernate.dialect.DatabaseVersion;
+
 /**
  * Exposes information about the database and JDBC driver that can be used in resolving the appropriate Dialect
  * to use.
@@ -13,7 +15,7 @@ package org.hibernate.engine.jdbc.dialect.spi;
  * The information here mimics part of the JDBC {@link java.sql.DatabaseMetaData} contract, specifically the portions
  * about database and driver names and versions.
  */
-public interface DialectResolutionInfo extends DialectVersionDetails {
+public interface DialectResolutionInfo extends DatabaseVersion {
 
 	/**
 	 * Obtain access to the database name, as returned from {@link java.sql.DatabaseMetaData#getDatabaseProductName()}
@@ -44,6 +46,26 @@ public interface DialectResolutionInfo extends DialectVersionDetails {
 	 * @see java.sql.DatabaseMetaData#getDriverName()
 	 */
 	String getDriverName();
+
+	/**
+	 * Obtain access to the major version of the JDBC driver, as returned from
+	 * {@link java.sql.DatabaseMetaData#getDriverMajorVersion()} ()} for the target database.
+	 *
+	 * @return The JDBC driver major version, or {@value #NO_VERSION} to indicate "no version information"
+	 *
+	 * @see java.sql.DatabaseMetaData#getDriverMajorVersion()
+	 */
+	int getDriverMajorVersion();
+
+	/**
+	 * Obtain access to the minor version of the JDBC driver, as returned from
+	 * {@link java.sql.DatabaseMetaData#getDriverMinorVersion()} for the target database.
+	 *
+	 * @return The JDBC driver minor version, or {@value #NO_VERSION} to indicate "no version information"
+	 *
+	 * @see java.sql.DatabaseMetaData#getDriverMinorVersion()
+	 */
+	int getDriverMinorVersion();
 
 	/**
 	 * Obtain access to the SQL keywords of the JDBC driver, as returned from

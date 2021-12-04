@@ -28,11 +28,13 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @DomainModel( annotatedClasses = { Person.class, NameImpl.class } )
 @SessionFactory
-@FailureExpected( jiraKey = "HHH-14950" )
+@FailureExpected( jiraKey = "HHH-14950", reason = "Model has no setters, which is not supported" )
 @JiraKey( "HHH-14950" )
 public class InstantiationTests {
 
-	// for some reason, these tests fail a local build even though they are marked @FailureExpected
+	// these tests fail the build even though they are marked @FailureExpected because the
+	// failure happens while creating the test "fixtures" (here the boot model) which JUnit
+	// does not like
 
 //	@Test
 	public void modelTest(DomainModelScope scope) {

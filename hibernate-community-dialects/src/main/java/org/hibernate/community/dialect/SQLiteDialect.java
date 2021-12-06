@@ -16,6 +16,7 @@ import jakarta.persistence.TemporalType;
 
 import org.hibernate.ScrollMode;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.community.dialect.identity.SQLiteIdentityColumnSupport;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.NationalizationSupport;
@@ -116,7 +117,7 @@ public class SQLiteDialect extends Dialect {
 			super( dialect );
 		}
 		@Override
-		public String getColumnDefinitionUniquenessFragment(Column column) {
+		public String getColumnDefinitionUniquenessFragment(Column column, SqlStringGenerationContext context) {
 			return " unique";
 		}
 	}

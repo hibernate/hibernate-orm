@@ -24,6 +24,8 @@ import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.Sequence;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
@@ -241,6 +243,8 @@ public class SchemaCreatorImpl implements SchemaCreator {
 		}
 
 		final Database database = metadata.getDatabase();
+		SqlStringGenerationContext sqlStringGenerationContext =
+				new SqlStringGenerationContextImpl( database.getJdbcEnvironment() );
 
 		final Set<String> exportIdentifiers = CollectionHelper.setOfSize( 50 );
 
@@ -290,7 +294,8 @@ public class SchemaCreatorImpl implements SchemaCreator {
 				applySqlStrings(
 						dialect.getAuxiliaryDatabaseObjectExporter().getSqlCreateStrings(
 								auxiliaryDatabaseObject,
-								metadata
+								metadata,
+								sqlStringGenerationContext
 						),
 						formatter,
 						options,
@@ -321,7 +326,8 @@ public class SchemaCreatorImpl implements SchemaCreator {
 				applySqlStrings(
 						dialect.getSequenceExporter().getSqlCreateStrings(
 								sequence,
-								metadata
+								metadata,
+								sqlStringGenerationContext
 						),
 //						dialect.getCreateSequenceStrings(
 //								jdbcEnvironment.getQualifiedObjectNameFormatter().format( sequence.getName(), dialect ),
@@ -351,7 +357,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 				checkExportIdentifier( table, exportIdentifiers );
 
 				applySqlStrings(
-						dialect.getTableExporter().getSqlCreateStrings( table, metadata ),
+						dialect.getTableExporter().getSqlCreateStrings( table, metadata, sqlStringGenerationContext ),
 						formatter,
 						options,
 						targets
@@ -377,7 +383,9 @@ public class SchemaCreatorImpl implements SchemaCreator {
 					final Index index = (Index) indexItr.next();
 					checkExportIdentifier( index, exportIdentifiers );
 					applySqlStrings(
-							dialect.getIndexExporter().getSqlCreateStrings( index, metadata ),
+							dialect.getIndexExporter().getSqlCreateStrings( index, metadata,
+									sqlStringGenerationContext
+							),
 							formatter,
 							options,
 							targets
@@ -390,7 +398,9 @@ public class SchemaCreatorImpl implements SchemaCreator {
 					final UniqueKey uniqueKey = (UniqueKey) ukItr.next();
 					checkExportIdentifier( uniqueKey, exportIdentifiers );
 					applySqlStrings(
-							dialect.getUniqueKeyExporter().getSqlCreateStrings( uniqueKey, metadata ),
+							dialect.getUniqueKeyExporter().getSqlCreateStrings( uniqueKey, metadata,
+									sqlStringGenerationContext
+							),
 							formatter,
 							options,
 							targets
@@ -421,7 +431,9 @@ public class SchemaCreatorImpl implements SchemaCreator {
 				while ( fkItr.hasNext() ) {
 					final ForeignKey foreignKey = (ForeignKey) fkItr.next();
 					applySqlStrings(
-							dialect.getForeignKeyExporter().getSqlCreateStrings( foreignKey, metadata ),
+							dialect.getForeignKeyExporter().getSqlCreateStrings( foreignKey, metadata,
+									sqlStringGenerationContext
+							),
 							formatter,
 							options,
 							targets
@@ -436,7 +448,9 @@ public class SchemaCreatorImpl implements SchemaCreator {
 					&& !auxiliaryDatabaseObject.beforeTablesOnCreation() ) {
 				checkExportIdentifier( auxiliaryDatabaseObject, exportIdentifiers );
 				applySqlStrings(
-						dialect.getAuxiliaryDatabaseObjectExporter().getSqlCreateStrings( auxiliaryDatabaseObject, metadata ),
+						dialect.getAuxiliaryDatabaseObjectExporter().getSqlCreateStrings( auxiliaryDatabaseObject, metadata,
+								sqlStringGenerationContext
+						),
 						formatter,
 						options,
 						targets

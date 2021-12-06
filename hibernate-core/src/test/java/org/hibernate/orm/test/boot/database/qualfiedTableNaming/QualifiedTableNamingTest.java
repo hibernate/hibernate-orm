@@ -64,9 +64,8 @@ public class QualifiedTableNamingTest extends BaseNonConfigCoreFunctionalTestCas
 
 			assertEquals( 1, namespace.getTables().size() );
 
-			expectedName = metadata().getDatabase().getJdbcEnvironment().getQualifiedObjectNameFormatter().format(
-					namespace.getTables().iterator().next().getQualifiedTableName(),
-					getDialect()
+			expectedName = sessionFactory().getSqlStringGenerationContext().format(
+					namespace.getTables().iterator().next().getQualifiedTableName()
 			);
 		}
 

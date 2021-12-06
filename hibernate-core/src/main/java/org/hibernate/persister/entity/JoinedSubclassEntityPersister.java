@@ -168,7 +168,6 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 		final SessionFactoryImplementor factory = creationContext.getSessionFactory();
 		final Database database = creationContext.getMetadata().getDatabase();
-		final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();
 
 		// DISCRIMINATOR
 
@@ -256,7 +255,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		while ( tItr.hasNext() ) {
 			final Table table = tItr.next();
 			final KeyValue key = kItr.next();
-			final String tableName = determineTableName( table, jdbcEnvironment );
+			final String tableName = determineTableName( table );
 			tableNames.add( tableName );
 			String[] keyCols = new String[idColumnSpan];
 			String[] keyColReaders = new String[idColumnSpan];
@@ -289,7 +288,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			isInverseTable[tableIndex] = join.isInverse();
 
 			Table table = join.getTable();
-			final String tableName = determineTableName( table, jdbcEnvironment );
+			final String tableName = determineTableName( table );
 			tableNames.add( tableName );
 
 			KeyValue key = join.getKey();
@@ -334,7 +333,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			isLazies.add( Boolean.FALSE );
 			isInverses.add( Boolean.FALSE );
 			isNullables.add( Boolean.FALSE );
-			final String tableName = determineTableName( tab, jdbcEnvironment );
+			final String tableName = determineTableName( tab );
 			subclassTableNames.add( tableName );
 			String[] key = new String[idColumnSpan];
 			Iterator<Column> cItr = tab.getPrimaryKey().getColumnIterator();
@@ -356,7 +355,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			isNullables.add( join.isOptional() );
 			isLazies.add( join.isLazy() );
 
-			String joinTableName = determineTableName( joinTable, jdbcEnvironment );
+			String joinTableName = determineTableName( joinTable );
 			subclassTableNames.add( joinTableName );
 			String[] key = new String[idColumnSpan];
 			Iterator<Column> citer = joinTable.getPrimaryKey().getColumnIterator();
@@ -480,7 +479,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		while ( iter.hasNext() ) {
 			Property prop = iter.next();
 			String tabname = prop.getValue().getTable().getQualifiedName(
-					factory.getJdbcServices().getDialect(),
+					factory.getSqlStringGenerationContext(),
 					factory.getSettings().getDefaultCatalogName(),
 					factory.getSettings().getDefaultSchemaName()
 			);
@@ -502,7 +501,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			Property prop = iter.next();
 			Table tab = prop.getValue().getTable();
 			String tabname = tab.getQualifiedName(
-					factory.getJdbcServices().getDialect(),
+					factory.getSqlStringGenerationContext(),
 					factory.getSettings().getDefaultCatalogName(),
 					factory.getSettings().getDefaultSchemaName()
 			);
@@ -544,13 +543,13 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 				Table table = persistentClass.getTable();
 				final Object convertedDiscriminatorValue = discriminatorType.getJavaTypeDescriptor().fromString( discriminatorSQLString );
 				discriminatorValues = new String[subclassSpan];
-				initDiscriminatorProperties( factory, jdbcEnvironment, subclassSpanMinusOne, table, convertedDiscriminatorValue
+				initDiscriminatorProperties( factory, subclassSpanMinusOne, table, convertedDiscriminatorValue
 				);
 
 				notNullColumnTableNumbers = new int[subclassSpan];
 				final int id = getTableId(
 						table.getQualifiedName(
-								factory.getJdbcServices().getDialect(),
+								factory.getSqlStringGenerationContext(),
 								factory.getSettings().getDefaultCatalogName(),
 								factory.getSettings().getDefaultSchemaName()
 						),
@@ -615,11 +614,11 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 						// "foo.class = Bar" works in HQL
 						discriminatorValue = sc.getSubclassId();
 					}
-					initDiscriminatorProperties( factory, jdbcEnvironment, k, table, discriminatorValue );
+					initDiscriminatorProperties( factory, k, table, discriminatorValue );
 					subclassesByDiscriminatorValue.put( discriminatorValue, sc.getEntityName() );
 					int id = getTableId(
 							table.getQualifiedName(
-									factory.getJdbcServices().getDialect(),
+									factory.getSqlStringGenerationContext(),
 									factory.getSettings().getDefaultCatalogName(),
 									factory.getSettings().getDefaultSchemaName()
 							),
@@ -645,11 +644,10 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 	private void initDiscriminatorProperties(
 			SessionFactoryImplementor factory,
-			JdbcEnvironment jdbcEnvironment,
 			int k,
 			Table table,
 			Object discriminatorValue) {
-		final String tableName = determineTableName( table, jdbcEnvironment );
+		final String tableName = determineTableName( table );
 		final String columnName = table.getPrimaryKey().getColumn( 0 ).getQuotedName( factory.getJdbcServices().getDialect() );
 		discriminatorValuesByTableName.put( tableName, discriminatorValue );
 		discriminatorColumnNameByTableName.put( tableName, columnName );
@@ -755,7 +753,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			SessionFactoryImplementor factory) {
 
 		final String tableName = persistentClass.getTable().getQualifiedName(
-				factory.getJdbcServices().getDialect(),
+				factory.getSqlStringGenerationContext(),
 				factory.getSettings().getDefaultCatalogName(),
 				factory.getSettings().getDefaultSchemaName()
 		);
@@ -766,7 +764,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		while ( itr.hasNext() ) {
 			final Join join = itr.next();
 			final String secondaryTableName = join.getTable().getQualifiedName(
-					factory.getJdbcServices().getDialect(),
+					factory.getSqlStringGenerationContext(),
 					factory.getSettings().getDefaultCatalogName(),
 					factory.getSettings().getDefaultSchemaName()
 			);

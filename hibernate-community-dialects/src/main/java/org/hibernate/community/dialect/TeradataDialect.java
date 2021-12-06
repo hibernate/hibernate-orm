@@ -11,6 +11,7 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.QualifiedNameImpl;
 import org.hibernate.boot.model.relational.QualifiedTableName;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -19,7 +20,6 @@ import org.hibernate.community.dialect.identity.Teradata14IdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
@@ -543,23 +543,18 @@ public class TeradataDialect extends Dialect {
 		}
 
 		@Override
-		public String[] getSqlCreateStrings(Index index, Metadata metadata) {
-			final JdbcEnvironment jdbcEnvironment = metadata.getDatabase().getJdbcEnvironment();
+		public String[] getSqlCreateStrings(Index index, Metadata metadata, SqlStringGenerationContext context) {
 			QualifiedTableName qualifiedTableName = index.getTable().getQualifiedTableName();
-			final String tableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-					qualifiedTableName,
-					jdbcEnvironment.getDialect()
-			);
+			final String tableName = context.format( qualifiedTableName );
 
 			final String indexNameForCreation;
 			if ( getDialect().qualifyIndexName() ) {
-				indexNameForCreation = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
+				indexNameForCreation = context.format(
 						new QualifiedNameImpl(
 								qualifiedTableName.getCatalogName(),
 								qualifiedTableName.getSchemaName(),
 								Identifier.toIdentifier( index.getName() )
-						),
-						jdbcEnvironment.getDialect()
+						)
 				);
 			}
 			else {

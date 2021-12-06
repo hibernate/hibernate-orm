@@ -27,8 +27,7 @@ import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.engine.jdbc.env.spi.QualifiedObjectNameFormatter;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.tool.schema.extract.spi.ColumnInformation;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
@@ -122,28 +121,23 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 		return contributor;
 	}
 
-	/**
-	 * @deprecated Should use {@link QualifiedObjectNameFormatter#format} on QualifiedObjectNameFormatter
-	 * obtained from {@link JdbcEnvironment}
-	 */
-	@Deprecated
-	public String getQualifiedName(Dialect dialect, String defaultCatalog, String defaultSchema) {
+	public String getQualifiedName(SqlStringGenerationContext context, String defaultCatalog, String defaultSchema) {
 		if ( subselect != null ) {
 			return "( " + subselect + " )";
 		}
-		String quotedName = getQuotedName( dialect );
-		String usedSchema = schema == null ?
-				defaultSchema :
-				getQuotedSchema( dialect );
-		String usedCatalog = catalog == null ?
-				defaultCatalog :
-				getQuotedCatalog( dialect );
-		return qualify( usedCatalog, usedSchema, quotedName );
+		IdentifierHelper identifierHelper = context.getIdentifierHelper();
+		Identifier usedSchema = schema == null ?
+				identifierHelper.toIdentifier( defaultSchema ) :
+				schema;
+		Identifier usedCatalog = catalog == null ?
+				identifierHelper.toIdentifier( defaultCatalog ) :
+				catalog;
+		return context.format( new QualifiedTableName( usedCatalog, usedSchema, name ) );
 	}
 
 	/**
-	 * @deprecated Should use {@link QualifiedObjectNameFormatter#format} on QualifiedObjectNameFormatter
-	 * obtained from {@link JdbcEnvironment}
+	 * @deprecated Should build a {@link QualifiedTableName}
+	 * then use {@link SqlStringGenerationContext#format(QualifiedTableName)}.
 	 */
 	@Deprecated
 	public static String qualify(String catalog, String schema, String table) {
@@ -429,17 +423,14 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 			Metadata metadata,
 			TableInformation tableInfo,
 			Identifier defaultCatalog,
-			Identifier defaultSchema) throws HibernateException {
-
-		final JdbcEnvironment jdbcEnvironment = metadata.getDatabase().getJdbcEnvironment();
-
-		final String tableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
+			Identifier defaultSchema,
+			SqlStringGenerationContext sqlStringGenerationContext) throws HibernateException {
+		final String tableName = sqlStringGenerationContext.format(
 				new QualifiedTableName(
 					catalog != null ? catalog : defaultCatalog,
 					schema != null ? schema : defaultSchema,
 					name
-				),
-				dialect
+				)
 		);
 
 		StringBuilder root = new StringBuilder( dialect.getAlterTableString( tableName ) )
@@ -479,7 +470,7 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 					UniqueKey uk = getOrCreateUniqueKey( keyName );
 					uk.addColumn( column );
 					alter.append( dialect.getUniqueDelegate()
-							.getColumnDefinitionUniquenessFragment( column ) );
+							.getColumnDefinitionUniquenessFragment( column, sqlStringGenerationContext ) );
 				}
 
 				String checkConstraint = column.checkConstraint();
@@ -510,10 +501,13 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 		return getPrimaryKey() != null;
 	}
 
-	public String sqlCreateString(Dialect dialect, Mapping p, String defaultCatalog, String defaultSchema) {
+	@Override
+	public String sqlCreateString(Mapping p, SqlStringGenerationContext context, String defaultCatalog,
+			String defaultSchema) {
+		Dialect dialect = context.getDialect();
 		StringBuilder buf = new StringBuilder( hasPrimaryKey() ? dialect.getCreateTableString() : dialect.getCreateMultisetTableString() )
 				.append( ' ' )
-				.append( getQualifiedName( dialect, defaultCatalog, defaultSchema ) )
+				.append( getQualifiedName( context, defaultCatalog, defaultSchema ) )
 				.append( " (" );
 
 		boolean identityColumn = idValue != null && idValue.isIdentityColumn( p.getIdentifierGeneratorFactory(), dialect );
@@ -562,7 +556,7 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 				UniqueKey uk = getOrCreateUniqueKey( keyName );
 				uk.addColumn( col );
 				buf.append( dialect.getUniqueDelegate()
-						.getColumnDefinitionUniquenessFragment( col ) );
+						.getColumnDefinitionUniquenessFragment( col, context ) );
 			}
 
 			String checkConstraint = col.checkConstraint();
@@ -585,7 +579,7 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 					.append( getPrimaryKey().sqlConstraintString( dialect ) );
 		}
 
-		buf.append( dialect.getUniqueDelegate().getTableCreationUniqueConstraintsFragment( this ) );
+		buf.append( dialect.getUniqueDelegate().getTableCreationUniqueConstraintsFragment( this, context ) );
 
 		if ( dialect.supportsTableCheck() ) {
 			for ( String checkConstraint : checkConstraints ) {
@@ -604,8 +598,10 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 		return buf.append( dialect.getTableTypeString() ).toString();
 	}
 
-	public String sqlDropString(Dialect dialect, String defaultCatalog, String defaultSchema) {
-		return dialect.getDropTableString( getQualifiedName( dialect, defaultCatalog, defaultSchema ) );
+	@Override
+	public String sqlDropString(SqlStringGenerationContext context, String defaultCatalog, String defaultSchema) {
+		Dialect dialect = context.getDialect();
+		return dialect.getDropTableString( getQualifiedName( context, defaultCatalog, defaultSchema ) );
 	}
 
 	public PrimaryKey getPrimaryKey() {
@@ -809,25 +805,6 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 
 	public Iterator<String> getCheckConstraintsIterator() {
 		return checkConstraints.iterator();
-	}
-
-	public Iterator<String> sqlCommentStrings(Dialect dialect, String defaultCatalog, String defaultSchema) {
-		List<String> comments = new ArrayList<>();
-		if ( dialect.supportsCommentOn() ) {
-			String tableName = getQualifiedName( dialect, defaultCatalog, defaultSchema );
-			if ( comment != null ) {
-				comments.add( "comment on table " + tableName + " is '" + comment + "'" );
-			}
-			Iterator<Column> iter = getColumnIterator();
-			while ( iter.hasNext() ) {
-				Column column = (Column) iter.next();
-				String columnComment = column.getComment();
-				if ( columnComment != null ) {
-					comments.add( "comment on column " + tableName + '.' + column.getQuotedName( dialect ) + " is '" + columnComment + "'" );
-				}
-			}
-		}
-		return comments.iterator();
 	}
 
 	@Override

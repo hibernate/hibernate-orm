@@ -289,7 +289,6 @@ public abstract class AbstractCollectionPersister
 				: null;
 
 		final Database database = creationContext.getMetadata().getDatabase();
-		final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();
 
 		this.factory = creationContext.getSessionFactory();
 		this.cacheAccessStrategy = cacheAccessStrategy;
@@ -321,7 +320,7 @@ public abstract class AbstractCollectionPersister
 		isArray = collectionBootDescriptor.isArray();
 		subselectLoadable = collectionBootDescriptor.isSubselectLoadable();
 
-		qualifiedTableName = determineTableName( table, jdbcEnvironment );
+		qualifiedTableName = determineTableName( table );
 
 		int spacesSize = 1 + collectionBootDescriptor.getSynchronizedTables().size();
 		spaces = new String[spacesSize];
@@ -691,15 +690,12 @@ public abstract class AbstractCollectionPersister
 		return comparator;
 	}
 
-	protected String determineTableName(Table table, JdbcEnvironment jdbcEnvironment) {
+	protected String determineTableName(Table table) {
 		if ( table.getSubselect() != null ) {
 			return "( " + table.getSubselect() + " )";
 		}
 
-		return jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-				table.getQualifiedTableName(),
-				jdbcEnvironment.getDialect()
-		);
+		return factory.getSqlStringGenerationContext().format( table.getQualifiedTableName() );
 	}
 
 //	private class ColumnMapperImpl implements ColumnMapper {

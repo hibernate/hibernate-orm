@@ -12,6 +12,7 @@ import org.hibernate.StaleObjectStateException;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.boot.model.relational.Sequence;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.lock.LockingStrategy;
 import org.hibernate.dialect.lock.LockingStrategyException;
@@ -783,12 +784,12 @@ public class SpannerDialect extends Dialect {
 	static class EmptyExporter<T extends Exportable> implements Exporter<T> {
 
 		@Override
-		public String[] getSqlCreateStrings(T exportable, Metadata metadata) {
+		public String[] getSqlCreateStrings(T exportable, Metadata metadata, SqlStringGenerationContext context) {
 			return ArrayHelper.EMPTY_STRING_ARRAY;
 		}
 
 		@Override
-		public String[] getSqlDropStrings(T exportable, Metadata metadata) {
+		public String[] getSqlDropStrings(T exportable, Metadata metadata, SqlStringGenerationContext context) {
 			return ArrayHelper.EMPTY_STRING_ARRAY;
 		}
 	}
@@ -818,22 +819,22 @@ public class SpannerDialect extends Dialect {
 	static class DoNothingUniqueDelegate implements UniqueDelegate {
 
 		@Override
-		public String getColumnDefinitionUniquenessFragment(Column column) {
+		public String getColumnDefinitionUniquenessFragment(Column column, SqlStringGenerationContext context) {
 			return "";
 		}
 
 		@Override
-		public String getTableCreationUniqueConstraintsFragment(Table table) {
+		public String getTableCreationUniqueConstraintsFragment(Table table, SqlStringGenerationContext context) {
 			return "";
 		}
 
 		@Override
-		public String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata) {
+		public String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata, SqlStringGenerationContext context) {
 			return "";
 		}
 
 		@Override
-		public String getAlterTableToDropUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata) {
+		public String getAlterTableToDropUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata, SqlStringGenerationContext context) {
 			return "";
 		}
 	}

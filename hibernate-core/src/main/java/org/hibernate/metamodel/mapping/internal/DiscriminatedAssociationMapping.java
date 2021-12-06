@@ -15,9 +15,10 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Any;
@@ -65,11 +66,9 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 			MappingModelCreationProcess creationProcess) {
 		final SessionFactoryImplementor sessionFactory = creationProcess.getCreationContext().getSessionFactory();
 
-		final JdbcEnvironment jdbcEnvironment = sessionFactory.getJdbcServices().getJdbcEnvironment();
-		final String tableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-				bootValueMapping.getTable().getQualifiedTableName(),
-				jdbcEnvironment.getDialect()
-		);
+		final SqlStringGenerationContext sqlStringGenerationContext = sessionFactory.getSqlStringGenerationContext();
+		final Dialect dialect = sqlStringGenerationContext.getDialect();
+		final String tableName = sqlStringGenerationContext.format( bootValueMapping.getTable().getQualifiedTableName() );
 
 		assert bootValueMapping.getColumnSpan() == 2;
 		final Iterator<Selectable> columnIterator = bootValueMapping.getColumnIterator();
@@ -86,7 +85,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 				containerRole.append( AnyDiscriminatorPart.ROLE_NAME),
 				declaringModelPart,
 				tableName,
-				metaColumn.getText( jdbcEnvironment.getDialect() ),
+				metaColumn.getText( dialect ),
 				bootValueMapping.isNullable(),
 				(MetaType) anyType.getDiscriminatorType()
 		);
@@ -97,7 +96,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 				containerRole.append( AnyKeyPart.ROLE_NAME),
 				declaringModelPart,
 				tableName,
-				keyColumn.getText( jdbcEnvironment.getDialect() ),
+				keyColumn.getText( dialect ),
 				bootValueMapping.isNullable(),
 				keyType
 		);

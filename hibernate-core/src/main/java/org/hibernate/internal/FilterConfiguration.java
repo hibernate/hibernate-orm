@@ -59,7 +59,7 @@ public class FilterConfiguration {
 		}
 		else if ( persistentClass != null ) {
 			String table = persistentClass.getTable().getQualifiedName(
-					factory.getDialect(),
+					factory.getSqlStringGenerationContext(),
 					factory.getSettings().getDefaultCatalogName(),
 					factory.getSettings().getDefaultSchemaName()
 			);

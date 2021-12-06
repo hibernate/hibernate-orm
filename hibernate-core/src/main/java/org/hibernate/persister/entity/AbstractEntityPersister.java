@@ -5327,15 +5327,12 @@ public abstract class AbstractEntityPersister
 		return 0;
 	}
 
-	protected String determineTableName(Table table, JdbcEnvironment jdbcEnvironment) {
+	protected String determineTableName(Table table) {
 		if ( table.getSubselect() != null ) {
 			return "( " + table.getSubselect() + " )";
 		}
 
-		return jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-				table.getQualifiedTableName(),
-				jdbcEnvironment.getDialect()
-		);
+		return factory.getSqlStringGenerationContext().format( table.getQualifiedTableName() );
 	}
 
 	@Override

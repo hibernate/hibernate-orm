@@ -3272,7 +3272,7 @@ public abstract class AbstractEntityPersister
 			if ( useBatch ) {
 				insert = session
 						.getJdbcCoordinator()
-						.getBatch(insertBatchKey)
+						.getBatch( insertBatchKey )
 						.getBatchStatement( sql, callable );
 			}
 			else {
@@ -3292,7 +3292,7 @@ public abstract class AbstractEntityPersister
 				dehydrate( id, fields, null, notNull, propertyColumnInsertable, j, insert, session, index, false );
 
 				if ( useBatch ) {
-					session.getJdbcCoordinator().getBatch(insertBatchKey).addToBatch();
+					session.getJdbcCoordinator().getBatch( insertBatchKey ).addToBatch();
 				}
 				else {
 					expectation.verifyOutcome(

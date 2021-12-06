@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.orm.test.mapping.cid.query;
+package org.hibernate.orm.test.mapping.embeddable.initializer;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.FailureExpected;
@@ -22,39 +22,25 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DomainModel( annotatedClasses = { Customer.class, Order.class } )
 @SessionFactory
 public class EmbeddableInitializerTests {
+	@Test
+	public void testGet(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			final Order order = session.get( Order.class, new OrderId( 1, 1 ) );
+
+			assertThat( order ).isNotNull();
+
+			assertThat( order.orderNumber ).isNotNull();
+			assertThat( order.customer ).isNotNull();
+
+			assertThat( order.customer.id ).isNotNull();
+			assertThat( order.customer.name ).isNotNull();
+		});
+	}
 
 	@Test
-	public void testHqlVirtualIdReferences(SessionFactoryScope scope) {
+	public void testQuery(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			session.createQuery( "from Order o where o.orderNumber = 123" ).list();
-			session.createQuery( "from Order o where o.customer = 1" ).list();
-			session.createQuery( "from Order o where o.customer.id = 1" ).list();
-		} );
-	}
-
-	@Test
-	public void testHqlIdClassReferences(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			session.createQuery( "from Order o where o.id.orderNumber = 123" ).list();
-		} );
-	}
-
-	@Test
-	@FailureExpected(
-			reason = "Mismatched expectations - some parts of the translation expect this to be the key-many-to-one" +
-					" while other parts expect the basic IdClass reference"
-	)
-	public void testHqlIdClassReferencesBug(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			session.createQuery( "from Order o where o.id.customer = 1" ).list();
-		} );
-	}
-
-	@Test
-	@FailureExpected( reason = "This is an invalid query" )
-	public void testHqlInvalidIdClassReferences(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			session.createQuery( "from Order o where o.id.customer.id = 1" ).list();
 		} );
 	}
 

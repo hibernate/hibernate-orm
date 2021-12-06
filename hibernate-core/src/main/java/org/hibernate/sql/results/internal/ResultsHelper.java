@@ -103,12 +103,27 @@ public class ResultsHelper {
 				}
 		);
 
+		logInitializers( initializerMap );
+
 		//noinspection rawtypes
-		return new StandardRowReader<>(
-				(List) assemblers,
-				initializers,
-				rowTransformer
-		);
+		return new StandardRowReader<>( (List) assemblers, initializers, rowTransformer );
+	}
+
+	private static void logInitializers(Map<NavigablePath, Initializer> initializerMap) {
+		if ( ! ResultsLogger.DEBUG_ENABLED ) {
+			return;
+		}
+
+		ResultsLogger.LOGGER.debug( "Initializer list" );
+		initializerMap.forEach( (navigablePath, initializer) -> {
+			ResultsLogger.LOGGER.debugf(
+					"    %s -> %s@%s (%s)",
+					navigablePath.getFullPath(),
+					initializer,
+					initializer.hashCode(),
+					initializer.getInitializedPart()
+			);
+		} );
 	}
 
 	public static void finalizeCollectionLoading(

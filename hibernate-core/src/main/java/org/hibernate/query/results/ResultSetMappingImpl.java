@@ -246,8 +246,13 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 				}
 			}
 		}
-		final Map<String, LockMode> registeredLockModes = creationState.getRegisteredLockModes();
-		return new JdbcValuesMappingImpl( sqlSelections, domainResults, rowSize, registeredLockModes );
+
+		return new JdbcValuesMappingImpl(
+				sqlSelections,
+				domainResults,
+				rowSize,
+				creationState.getRegisteredLockModes()
+		);
 	}
 
 	private static void addColumns(Set<String> aliases, Set<String> knownDuplicateAliases, String[] columns) {

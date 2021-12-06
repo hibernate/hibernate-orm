@@ -23,6 +23,7 @@ import org.hibernate.metamodel.EmbeddableRepresentationStrategy;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.results.ResultsLogger;
 import org.hibernate.sql.results.graph.AbstractFetchParentAccess;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
@@ -139,19 +140,18 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 	@Override
 	public void resolveKey(RowProcessingState processingState) {
 		// nothing to do
+		EmbeddableLoadingLogger.INSTANCE.debugf( "EmbeddableInitializer#resolveKey : %s", navigablePath.getFullPath() );
 	}
 
 	@Override
 	public void resolveInstance(RowProcessingState processingState) {
 		// nothing to do
+		EmbeddableLoadingLogger.INSTANCE.debugf( "EmbeddableInitializer#resolveInstance : %s", navigablePath.getFullPath() );
 	}
 
 	@Override
 	public void initializeInstance(RowProcessingState processingState) {
-		EmbeddableLoadingLogger.INSTANCE.debugf(
-				"Initializing composite instance [%s]",
-				navigablePath
-		);
+		EmbeddableLoadingLogger.INSTANCE.debugf( "Initializing composite instance [%s]", navigablePath );
 
 		stateInjected = false;
 

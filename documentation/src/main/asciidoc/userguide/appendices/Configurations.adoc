@@ -1101,8 +1101,8 @@ Like a `PersisterClassResolver`, the `PersisterFactory` can be used to customize
 `*hibernate.service.allow_crawling*` (e.g. `true` (default value) or `false`)::
 Crawl all available service bindings for an alternate registration of a given Hibernate `Service`.
 
-`*hibernate.metadata_builder_contributor*` (e.g. The instance, the class or the fully qualified class name of a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/jpa/boot/spi/MetadataBuilderContributor.html[`MetadataBuilderContributor`])::
-Used to define an instance, the class or the fully qualified class name of a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/jpa/boot/spi/MetadataBuilderContributor.html[`MetadataBuilderContributor`] which can be used to configure the `MetadataBuilder` when bootstrapping via the JPA `EntityManagerFactory`.
+`*hibernate.metadata_builder_contributor*` (e.g. The instance, the class or the fully qualified class name of a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/boot/spi/MetadataBuilderContributor.html[`MetadataBuilderContributor`])::
+Used to define an instance, the class or the fully qualified class name of a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/boot/spi/MetadataBuilderContributor.html[`MetadataBuilderContributor`] which can be used to configure the `MetadataBuilder` when bootstrapping via the JPA `EntityManagerFactory`.
 
 [[configurations-misc]]
 === Miscellaneous properties

@@ -20,6 +20,7 @@ import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.OnExpectedFailure;
 import org.hibernate.testing.OnFailure;
+import org.hibernate.testing.orm.UnclosedFixtureResourcesLogging;
 
 import org.jboss.logging.Logger;
 
@@ -29,9 +30,6 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class TestClassMetadata {
-
-	private static final Logger log = Logger.getLogger( TestClassMetadata.class );
-
 	private static final Object[] NO_ARGS = new Object[0];
 	private final Class testClass;
 
@@ -170,7 +168,7 @@ public class TestClassMetadata {
 
 	public void performBeforeClassCallbacks(Object target) {
 		if ( SessionFactoryRegistry.INSTANCE.hasRegistrations() ) {
-			log.warnf( "Open SessionFactory instances found prior to start of test class [%s]", testClass.getName() );
+			UnclosedFixtureResourcesLogging.LOGGER.warnf( "Open SessionFactory instances found prior to start of test class [%s]", testClass.getName() );
 		}
 		performCallbacks( beforeClassOnceMethods, target );
 	}
@@ -215,7 +213,7 @@ public class TestClassMetadata {
 	public void performAfterClassCallbacks(Object target) {
 		performCallbacks( afterClassOnceMethods, target );
 		if ( SessionFactoryRegistry.INSTANCE.hasRegistrations() ) {
-			log.warnf( "Open SessionFactory instances found after completion of test class [%s]; closing them", testClass.getName() );
+			UnclosedFixtureResourcesLogging.LOGGER.warnf( "Open SessionFactory instances found after completion of test class [%s]; closing them", testClass.getName() );
 			SessionFactoryRegistry.INSTANCE.clearRegistrations();
 		}
 	}

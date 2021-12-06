@@ -6,8 +6,11 @@
  */
 package org.hibernate.orm.test.loading;
 
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -15,16 +18,19 @@ import jakarta.persistence.OneToOne;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class LoadContainedInDoubleContainingTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				LoadContainedInDoubleContainingTest.Containing.class,
+				LoadContainedInDoubleContainingTest.OtherContained.class,
+				LoadContainedInDoubleContainingTest.Contained.class
+		}
+)
+@SessionFactory
+public class LoadContainedInDoubleContainingTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Containing.class, OtherContained.class, Contained.class };
-	}
-
-	@Test
-	public void test() {
-		inTransaction( session -> {
+	@BeforeEach
+	public void setUp(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			Containing containing = new Containing( 1, "initial" );
 			OtherContained otherContained = new OtherContained( 2, "initial" );
 			containing.setOtherContained( otherContained );
@@ -32,18 +38,19 @@ public class LoadContainedInDoubleContainingTest extends BaseCoreFunctionalTestC
 			session.persist( containing );
 			session.persist( otherContained );
 		} );
+	}
 
-		inTransaction( session -> {
-			OtherContained entity = session.load( OtherContained.class, 2 );
-			String text = entity.getText();
+	@Test
+	public void test(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			OtherContained otherContained = session.load( OtherContained.class, 2 );
+			String text = otherContained.getText();
 			assertThat( text ).isEqualTo( "initial" );
 		} );
 	}
 
-	@Entity(name = Containing.NAME)
+	@Entity(name = "Containing")
 	public static class Containing {
-
-		static final String NAME = "Containing";
 
 		@Id
 		private Integer id;
@@ -69,33 +76,38 @@ public class LoadContainedInDoubleContainingTest extends BaseCoreFunctionalTestC
 		public Integer getId() {
 			return id;
 		}
+
 		public void setId(Integer id) {
 			this.id = id;
 		}
+
 		public String getText() {
 			return text;
 		}
+
 		public void setText(String text) {
 			this.text = text;
 		}
+
 		public Contained getContained() {
 			return contained;
 		}
+
 		public void setContained(Contained contained) {
 			this.contained = contained;
 		}
+
 		public OtherContained getOtherContained() {
 			return otherContained;
 		}
+
 		public void setOtherContained(OtherContained otherContained) {
 			this.otherContained = otherContained;
 		}
 	}
 
-	@Entity(name = Contained.NAME)
+	@Entity(name = "Contained")
 	public static class Contained {
-
-		static final String NAME = "Contained";
 
 		@Id
 		private Integer id;
@@ -115,27 +127,30 @@ public class LoadContainedInDoubleContainingTest extends BaseCoreFunctionalTestC
 		public Integer getId() {
 			return id;
 		}
+
 		public void setId(Integer id) {
 			this.id = id;
 		}
+
 		public String getText() {
 			return text;
 		}
+
 		public void setText(String text) {
 			this.text = text;
 		}
+
 		public Containing getContaining() {
 			return containing;
 		}
+
 		public void setContaining(Containing containing) {
 			this.containing = containing;
 		}
 	}
 
-	@Entity(name = OtherContained.NAME)
+	@Entity(name = "OtherContained")
 	public static class OtherContained {
-
-		static final String NAME = "OtherContained";
 
 		@Id
 		private Integer id;
@@ -155,18 +170,23 @@ public class LoadContainedInDoubleContainingTest extends BaseCoreFunctionalTestC
 		public Integer getId() {
 			return id;
 		}
+
 		public void setId(Integer id) {
 			this.id = id;
 		}
+
 		public String getText() {
 			return text;
 		}
+
 		public void setText(String text) {
 			this.text = text;
 		}
+
 		public Containing getContaining() {
 			return containing;
 		}
+
 		public void setContaining(Containing containing) {
 			this.containing = containing;
 		}

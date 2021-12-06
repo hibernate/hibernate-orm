@@ -8,7 +8,6 @@ package org.hibernate.sql.results.graph;
 
 import java.util.List;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.mapping.AssociationKey;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -50,9 +49,7 @@ public interface DomainResultCreationState {
 	 * Resolve the ModelPart associated with a given NavigablePath.  More specific ModelParts should be preferred - e.g.
 	 * the SingularAssociationAttributeMapping rather than just the EntityTypeMapping for the associated type
 	 */
-	default ModelPart resolveModelPart(NavigablePath navigablePath) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
+	ModelPart resolveModelPart(NavigablePath navigablePath);
 
 	/**
 	 * Visit fetches for the given parent.

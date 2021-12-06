@@ -15,6 +15,7 @@ import org.hibernate.PropertyAccessException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.property.access.internal.AbstractFieldSerialForm;
+import org.hibernate.proxy.HibernateProxy;
 
 /**
  * Field-based implementation of Setter
@@ -67,15 +68,19 @@ public class SetterFieldImpl implements Setter {
 				);
 			}
 			else {
+				final String valueType;
+				if ( value instanceof HibernateProxy ) {
+					valueType = ( (HibernateProxy) value ).getHibernateLazyInitializer().getEntityName();
+				}
+				else {
+					valueType = value.getClass().getTypeName();
+				}
 				throw new PropertyAccessException(
 						e,
 						String.format(
 								Locale.ROOT,
-								"Could not set value [%s (`%s`)] by reflection",
-								value,
-								value == null ? "<null>" : value.getClass().getTypeName(),
-								containerClass == null ? "<dynamic>" : containerClass.getTypeName(),
-								propertyName
+								"Could not set value of type [%s]",
+								valueType
 						),
 						true,
 						containerClass,

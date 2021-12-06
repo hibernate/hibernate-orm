@@ -31,6 +31,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.ToOne;
+import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.AssociationKey;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
@@ -236,7 +237,10 @@ public class ToOneAttributeMapping
 						final Iterator<Property> propertyClosureIterator = entityBinding.getPropertyClosureIterator();
 						while ( propertyClosureIterator.hasNext() ) {
 							final Property property = propertyClosureIterator.next();
-							if ( property.getValue() instanceof OneToOne && name.equals( ( (OneToOne) property.getValue() ).getMappedByProperty() ) ) {
+							if ( property.getValue() instanceof OneToOne
+									&& name.equals( ( (OneToOne) property.getValue() ).getMappedByProperty() )
+									&& ( (OneToOne) property.getValue() ).getReferencedEntityName().equals(
+									declaringType.getJavaTypeDescriptor().getJavaType().getTypeName() ) ) {
 								bidirectionalAttributeName = property.getName();
 								break;
 							}
@@ -247,7 +251,11 @@ public class ToOneAttributeMapping
 					final Iterator<Property> propertyClosureIterator = entityBinding.getPropertyClosureIterator();
 					while ( propertyClosureIterator.hasNext() ) {
 						final Property property = propertyClosureIterator.next();
-						if ( property.getValue() instanceof Collection && name.equals( ( (Collection) property.getValue() ).getMappedByProperty() ) ) {
+						final Value value = property.getValue();
+						if ( value instanceof Collection
+								&& name.equals( ( (Collection) value ).getMappedByProperty() )
+								&& ( (Collection) value ).getElement().getType().getName()
+								.equals( declaringType.getJavaTypeDescriptor().getJavaType().getTypeName() ) ) {
 							bidirectionalAttributeName = property.getName();
 							break;
 						}
@@ -1046,6 +1054,7 @@ public class ToOneAttributeMapping
 				final ModelPart bidirectionalModelPart = entityMappingType.findSubPart( bidirectionalAttributeName );
 				// Add the inverse association key side as well to be able to resolve to a CircularFetch
 				if ( bidirectionalModelPart instanceof ToOneAttributeMapping ) {
+					assert bidirectionalModelPart.getPartMappingType() == declaringTableGroupProducer;
 					final ToOneAttributeMapping bidirectionalAttribute = (ToOneAttributeMapping) bidirectionalModelPart;
 					final AssociationKey secondKey = bidirectionalAttribute.getForeignKeyDescriptor().getAssociationKey();
 					if ( creationState.registerVisitedAssociationKey( secondKey ) ) {

@@ -7,12 +7,15 @@
 package org.hibernate.tool.schema.ast;
 
 import org.jboss.logging.Logger;
-import org.jboss.logging.annotations.ValidIdRange;
 
 /**
- * @author Steve Ebersole
+ * Logging specific to parsing of SQL import scripts used in schema export.
+ *
+ * These scripts are processed using Antlr and this logging relates to
+ * that parsing.
+ *
+ * @todo (6.0) - implement usage of this
  */
-@ValidIdRange( )
 public class SqlScriptLogging {
 	public static final String SCRIPT_LOGGER_NAME = "org.hibernate.orm.tooling.schema.script";
 	public static final Logger SCRIPT_LOGGER = Logger.getLogger( SCRIPT_LOGGER_NAME );

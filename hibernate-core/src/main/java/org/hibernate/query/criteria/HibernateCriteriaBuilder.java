@@ -9,6 +9,7 @@ package org.hibernate.query.criteria;
 import java.util.Map;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.Expression;
+import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Predicate;
 
 /**
@@ -66,5 +67,21 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @return size expression
 	 */
 	<M extends Map<?,?>> Expression<Integer> mapSize(M map);
+
+	/**
+	 * Create an ordering by the ascending value of the expression.
+	 * @param x  expression used to define the ordering
+	 * @param nullsFirst Whether <code>null</code> should be sorted first
+	 * @return ascending ordering corresponding to the expression
+	 */
+	Order asc(Expression<?> x, boolean nullsFirst);
+
+	/**
+	 * Create an ordering by the descending value of the expression.
+	 * @param x  expression used to define the ordering
+	 * @param nullsFirst Whether <code>null</code> should be sorted first
+	 * @return descending ordering corresponding to the expression
+	 */
+	Order desc(Expression<?> x, boolean nullsFirst);
 
 }

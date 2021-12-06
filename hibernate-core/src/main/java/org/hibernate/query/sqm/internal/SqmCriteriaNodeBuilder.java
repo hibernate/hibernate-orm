@@ -63,6 +63,7 @@ import org.hibernate.query.criteria.JpaCoalesce;
 import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaExpression;
+import org.hibernate.query.criteria.JpaOrder;
 import org.hibernate.query.criteria.JpaParameterExpression;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.criteria.ValueHandlingMode;
@@ -395,6 +396,24 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	public SqmSortSpecification desc(Expression<?> x) {
 		return new SqmSortSpecification( (SqmExpression<?>) x, SortOrder.DESCENDING );
+	}
+
+	@Override
+	public JpaOrder asc(Expression<?> x, boolean nullsFirst) {
+		return new SqmSortSpecification(
+				(SqmExpression<?>) x,
+				SortOrder.ASCENDING,
+				nullsFirst ? NullPrecedence.FIRST : NullPrecedence.LAST
+		);
+	}
+
+	@Override
+	public JpaOrder desc(Expression<?> x, boolean nullsFirst) {
+		return new SqmSortSpecification(
+				(SqmExpression<?>) x,
+				SortOrder.DESCENDING,
+				nullsFirst ? NullPrecedence.FIRST : NullPrecedence.LAST
+		);
 	}
 
 	@Override

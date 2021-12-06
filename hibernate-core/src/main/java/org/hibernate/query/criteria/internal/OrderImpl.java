@@ -19,14 +19,20 @@ public class OrderImpl implements Order, Serializable {
 
 	private final Expression<?> expression;
 	private final boolean ascending;
+	private final Boolean nullsFirst;
 
 	public OrderImpl(Expression<?> expression) {
-		this( expression, true );
+		this( expression, true, null );
 	}
 
 	public OrderImpl(Expression<?> expression, boolean ascending) {
+		this(expression, ascending, null);
+	}
+
+	public OrderImpl(Expression<?> expression, boolean ascending, Boolean nullsFirst) {
 		this.expression = expression;
 		this.ascending = ascending;
+		this.nullsFirst = nullsFirst;
 	}
 
 	public Order reverse() {
@@ -39,5 +45,9 @@ public class OrderImpl implements Order, Serializable {
 
 	public Expression<?> getExpression() {
 		return expression;
+	}
+
+	public Boolean getNullsFirst() {
+		return nullsFirst;
 	}
 }

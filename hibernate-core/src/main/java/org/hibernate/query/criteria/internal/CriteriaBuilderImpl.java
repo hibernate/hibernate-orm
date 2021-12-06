@@ -250,8 +250,16 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 		return new OrderImpl( x, false );
 	}
 
+	@Override
+	public Order asc(Expression<?> x, boolean nullsFirst) {
+		return new OrderImpl( x, true, nullsFirst );
+	}
 
-	// predicates ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	@Override
+	public Order desc(Expression<?> x, boolean nullsFirst) {
+		return new OrderImpl( x, false, nullsFirst );
+	}
+// predicates ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	public Predicate wrap(Expression<Boolean> expression) {
 		if ( Predicate.class.isInstance( expression ) ) {

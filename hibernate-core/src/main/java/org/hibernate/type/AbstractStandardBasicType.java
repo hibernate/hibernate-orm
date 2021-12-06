@@ -251,32 +251,6 @@ public abstract class AbstractStandardBasicType<T>
 		return isDirty( oldHydratedState, currentState );
 	}
 
-	private final Object nullSafeGet(
-			ResultSet rs,
-			String[] names,
-			SharedSessionContractImplementor session,
-			Object owner) throws SQLException {
-		return nullSafeGet( rs, names[0], session );
-	}
-
-	private final Object nullSafeGet(ResultSet rs, String name, SharedSessionContractImplementor session, Object owner)
-			throws SQLException {
-		return nullSafeGet( rs, name, session );
-	}
-
-	public final T nullSafeGet(ResultSet rs, String name, final SharedSessionContractImplementor session) throws SQLException {
-		return nullSafeGet( rs, name, (WrapperOptions) session );
-	}
-
-	protected final T nullSafeGet(ResultSet rs, String name, WrapperOptions options) throws SQLException {
-//		return remapSqlTypeDescriptor( options ).getExtractor( javaTypeDescriptor ).extract( rs, name, options );
-		throw new UnsupportedOperationException( "Reading JDBC results by name/alias is no longer supported (" + getClass().getTypeName() + ")" );
-	}
-
-	public Object get(ResultSet rs, String name, SharedSessionContractImplementor session) throws HibernateException, SQLException {
-		return nullSafeGet( rs, name, session );
-	}
-
 	@Override
 	public final void nullSafeSet(
 			PreparedStatement st,
@@ -289,10 +263,6 @@ public abstract class AbstractStandardBasicType<T>
 
 	protected void nullSafeSet(PreparedStatement st, T value, int index, WrapperOptions options) throws SQLException {
 		jdbcType.getBinder( javaTypeDescriptor ).bind( st, value, index, options );
-	}
-
-	public void set(PreparedStatement st, T value, int index, SharedSessionContractImplementor session) throws HibernateException, SQLException {
-		nullSafeSet( st, value, index, (WrapperOptions) session );
 	}
 
 	@Override

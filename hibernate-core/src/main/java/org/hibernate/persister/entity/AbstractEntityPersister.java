@@ -3257,7 +3257,7 @@ public abstract class AbstractEntityPersister
 				.toStatementString();
 	}
 
-	private BasicBatchKey inserBatchKey;
+	private BasicBatchKey insertBatchKey;
 
 	/**
 	 * Perform an SQL INSERT.
@@ -3298,8 +3298,8 @@ public abstract class AbstractEntityPersister
 						jdbcBatchSizeToUse > 1 &&
 						getIdentifierGenerator().supportsJdbcBatchInserts();
 
-		if ( useBatch && inserBatchKey == null ) {
-			inserBatchKey = new BasicBatchKey(
+		if ( useBatch && insertBatchKey == null ) {
+			insertBatchKey = new BasicBatchKey(
 					getEntityName() + "#INSERT",
 					expectation
 			);
@@ -3312,7 +3312,7 @@ public abstract class AbstractEntityPersister
 			if ( useBatch ) {
 				insert = session
 						.getJdbcCoordinator()
-						.getBatch( inserBatchKey )
+						.getBatch( insertBatchKey )
 						.getBatchStatement( sql, callable );
 			}
 			else {
@@ -3332,7 +3332,7 @@ public abstract class AbstractEntityPersister
 				dehydrate( id, fields, null, notNull, propertyColumnInsertable, j, insert, session, index, false );
 
 				if ( useBatch ) {
-					session.getJdbcCoordinator().getBatch( inserBatchKey ).addToBatch();
+					session.getJdbcCoordinator().getBatch( insertBatchKey ).addToBatch();
 				}
 				else {
 					expectation.verifyOutcome(

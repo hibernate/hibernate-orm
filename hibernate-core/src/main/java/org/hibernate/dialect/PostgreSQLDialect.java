@@ -125,7 +125,7 @@ public class PostgreSQLDialect extends Dialect {
 		//use oid as the blob type on Postgres because
 		//the JDBC driver is rubbish
 		registerColumnType( Types.BLOB, "oid" );
-		registerColumnType( Types.CLOB, "text" );
+		registerColumnType( Types.CLOB, "oid" );
 
 		//there are no nchar/nvarchar types in Postgres
 		registerColumnType( Types.NCHAR, "char($l)" );

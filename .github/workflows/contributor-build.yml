@@ -9,12 +9,10 @@ name: Hibernate ORM build
 on:
   push:
     branches:
-      - 'main'
-      - 'wip/6.0'
+      - '5.6'
   pull_request:
     branches:
-      - 'main'
-      - 'wip/6.0'
+      - '5.6'
 jobs:
   build:
     name: Java 8

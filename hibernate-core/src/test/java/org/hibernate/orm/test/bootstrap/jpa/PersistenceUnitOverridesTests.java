@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Properties;
 import javax.sql.DataSource;
 
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
@@ -565,7 +566,8 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 //				JdbcServices jdbcServices,
 //				JdbcConnectionAccess connectionAccess,
 //				MetadataImplementor metadata,
-//				SessionFactoryOptions sessionFactoryOptions) {
+//				SessionFactoryOptions sessionFactoryOptions,
+//				SqlStringGenerationContext sqlStringGenerationContext) {
 //
 //		}
 //

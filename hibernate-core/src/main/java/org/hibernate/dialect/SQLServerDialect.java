@@ -11,6 +11,7 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
 import org.hibernate.boot.model.relational.Sequence;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.SQLServerFormatEmulation;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -847,14 +848,12 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		}
 
 		@Override
-		protected String getFormattedSequenceName(QualifiedSequenceName name, Metadata metadata) {
-			if ( name.getCatalogName() != null ) {
-				// SQL Server does not allow the catalog in the sequence name.
-				// See https://docs.microsoft.com/en-us/sql/t-sql/statements/create-sequence-transact-sql?view=sql-server-ver15&viewFallbackFrom=sql-server-ver12
-				// Keeping the catalog in the name does not break on ORM, but it fails using Vert.X for Reactive.
-				name = new QualifiedSequenceName( null, name.getSchemaName(), name.getObjectName() );
-			}
-			return super.getFormattedSequenceName( name, metadata );
+		protected String getFormattedSequenceName(QualifiedSequenceName name, Metadata metadata,
+				SqlStringGenerationContext context) {
+			// SQL Server does not allow the catalog in the sequence name.
+			// See https://docs.microsoft.com/en-us/sql/t-sql/statements/create-sequence-transact-sql?view=sql-server-ver15&viewFallbackFrom=sql-server-ver12
+			// Keeping the catalog in the name does not break on ORM, but it fails using Vert.X for Reactive.
+			return context.formatWithoutCatalog( name );
 		}
 	}
 

@@ -10,9 +10,9 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -476,7 +476,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 						throw new IllegalAttributeType( "An IdClass cannot define <any/> attributes : " + attributeName );
 					}
 				},
-				(column, jdbcEnvironment) -> getTableIdentifierExpression( column.getValue().getTable(), jdbcEnvironment ),
+				(column, jdbcEnvironment) -> getTableIdentifierExpression( column.getValue().getTable(), creationProcess ),
 				this::addAttribute,
 				() -> {
 					// We need the attribute mapping types to finish initialization first before we can build the column mappings
@@ -489,12 +489,11 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 		);
 	}
 
-	private static String getTableIdentifierExpression(Table table, JdbcEnvironment jdbcEnvironment) {
-		return jdbcEnvironment
-				.getQualifiedObjectNameFormatter().format(
-						table.getQualifiedTableName(),
-						jdbcEnvironment.getDialect()
-				);
+	private static String getTableIdentifierExpression(Table table, MappingModelCreationProcess creationProcess) {
+		final SqlStringGenerationContext sqlStringGenerationContext = creationProcess.getCreationContext()
+				.getSessionFactory()
+				.getSqlStringGenerationContext();
+		return sqlStringGenerationContext.format( table.getQualifiedTableName() );
 	}
 
 	private boolean initColumnMappings() {

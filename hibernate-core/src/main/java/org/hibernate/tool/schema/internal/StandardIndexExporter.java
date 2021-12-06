@@ -11,6 +11,7 @@ import java.util.Map;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.QualifiedNameImpl;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.internal.util.StringHelper;
@@ -34,22 +35,18 @@ public class StandardIndexExporter implements Exporter<Index> {
 	}
 
 	@Override
-	public String[] getSqlCreateStrings(Index index, Metadata metadata) {
+	public String[] getSqlCreateStrings(Index index, Metadata metadata, SqlStringGenerationContext context) {
 		final JdbcEnvironment jdbcEnvironment = metadata.getDatabase().getJdbcEnvironment();
-		final String tableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-				index.getTable().getQualifiedTableName(),
-				dialect
-		);
+		final String tableName = context.format( index.getTable().getQualifiedTableName() );
 
 		final String indexNameForCreation;
 		if ( dialect.qualifyIndexName() ) {
-			indexNameForCreation = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
+			indexNameForCreation = context.format(
 					new QualifiedNameImpl(
 							index.getTable().getQualifiedTableName().getCatalogName(),
 							index.getTable().getQualifiedTableName().getSchemaName(),
 							jdbcEnvironment.getIdentifierHelper().toIdentifier( index.getQuotedName( dialect ) )
-					),
-					jdbcEnvironment.getDialect()
+					)
 			);
 		}
 		else {
@@ -83,16 +80,12 @@ public class StandardIndexExporter implements Exporter<Index> {
 	}
 
 	@Override
-	public String[] getSqlDropStrings(Index index, Metadata metadata) {
+	public String[] getSqlDropStrings(Index index, Metadata metadata, SqlStringGenerationContext context) {
 		if ( !dialect.dropConstraints() ) {
 			return NO_COMMANDS;
 		}
 
-		final JdbcEnvironment jdbcEnvironment = metadata.getDatabase().getJdbcEnvironment();
-		final String tableName = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-				index.getTable().getQualifiedTableName(),
-				dialect
-		);
+		final String tableName = context.format( index.getTable().getQualifiedTableName() );
 
 		final String indexNameForCreation;
 		if ( dialect.qualifyIndexName() ) {

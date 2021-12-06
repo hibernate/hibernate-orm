@@ -137,11 +137,10 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl extends AbstractInform
 		final ExtractionContext extractionContext = getExtractionContext();
 		// We use this dummy query to retrieve the table information through the ResultSetMetaData
 		// This is significantly better than to use the DatabaseMetaData especially on Oracle with synonyms enable
-		final String tableName = extractionContext.getJdbcEnvironment().getQualifiedObjectNameFormatter().format(
+		final String tableName = extractionContext.getSqlStringGenerationContext().format(
 				// The name comes from the database, so the case is correct
 				// But we quote here to avoid issues with reserved words
-				tableInformation.getName().quote(),
-				extractionContext.getJdbcEnvironment().getDialect()
+				tableInformation.getName().quote()
 		);
 
 		try {

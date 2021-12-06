@@ -12,6 +12,7 @@ import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.Namespace.Name;
 import org.hibernate.boot.model.relational.QualifiedTableName;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.internal.Formatter;
@@ -60,12 +61,10 @@ public class CheckForExistingForeignKeyTest {
 				ExecutionOptions options,
 				ContributableMatcher inclusionFilter,
 				Dialect dialect,
-				Formatter formatter,
-				Set<String> exportIdentifiers,
-				boolean tryToCreateCatalogs,
+				Formatter formatter, Set<String> exportIdentifiers, boolean tryToCreateCatalogs,
 				boolean tryToCreateSchemas,
-				Set<Identifier> exportedCatalogs,
-				Namespace namespace,
+				Set<Identifier> exportedCatalogs, Namespace namespace,
+				SqlStringGenerationContext sqlStringGenerationContext,
 				GenerationTarget[] targets) {
 			return null;
 		}

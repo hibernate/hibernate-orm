@@ -10,6 +10,9 @@ import java.util.Properties;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
@@ -55,8 +58,13 @@ public class Db2GenerationTest {
 
 			assertEquals( 1, metadata.getDatabase().getDefaultNamespace().getTables().size() );
 
-			final Table table = metadata.getDatabase().getDefaultNamespace().getTables().iterator().next();
-			final String[] createCommands = new DB2Dialect().getTableExporter().getSqlCreateStrings( table, metadata );
+			Database database = metadata.getDatabase();
+			final Table table = database.getDefaultNamespace().getTables().iterator().next();
+			SqlStringGenerationContext sqlStringGenerationContext =
+					SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment() );
+			final String[] createCommands = new DB2Dialect().getTableExporter().getSqlCreateStrings( table, metadata,
+					sqlStringGenerationContext
+			);
 			assertThat( createCommands[0], containsString( "sequence_name varchar(255) not null" ) );
 		}
 		finally {
@@ -93,8 +101,13 @@ public class Db2GenerationTest {
 
 			assertEquals( 1, metadata.getDatabase().getDefaultNamespace().getTables().size() );
 
-			final Table table = metadata.getDatabase().getDefaultNamespace().getTables().iterator().next();
-			final String[] createCommands = new DB2Dialect().getTableExporter().getSqlCreateStrings( table, metadata );
+			Database database = metadata.getDatabase();
+			final Table table = database.getDefaultNamespace().getTables().iterator().next();
+			SqlStringGenerationContext sqlStringGenerationContext =
+					SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment() );
+			final String[] createCommands = new DB2Dialect().getTableExporter().getSqlCreateStrings( table, metadata,
+					sqlStringGenerationContext
+			);
 			assertThat( createCommands[0], containsString( "sequence_name varchar(255) not null" ) );
 		}
 		finally {

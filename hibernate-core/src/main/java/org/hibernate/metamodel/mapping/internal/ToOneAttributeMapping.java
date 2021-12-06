@@ -15,9 +15,9 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.StringHelper;
@@ -270,13 +270,8 @@ public class ToOneAttributeMapping
 				isKeyTableNullable = true;
 			}
 			else {
-				final JdbcServices jdbcServices = declaringEntityPersister.getFactory().getJdbcServices();
-				final String targetTableName = jdbcServices.getJdbcEnvironment()
-						.getQualifiedObjectNameFormatter()
-						.format(
-								manyToOne.getTable().getQualifiedTableName(),
-								jdbcServices.getDialect()
-						);
+				final SqlStringGenerationContext sqlStringGenerationContext = declaringEntityPersister.getFactory().getSqlStringGenerationContext();
+				final String targetTableName = sqlStringGenerationContext.format( manyToOne.getTable().getQualifiedTableName() );
 				if ( CollectionPart.Nature.fromNameExact( navigableRole.getParent().getLocalName() ) != null ) {
 					final PluralAttributeMapping pluralAttribute = (PluralAttributeMapping) declaringEntityPersister.resolveSubPart(
 							navigableRole.getParent().getParent()

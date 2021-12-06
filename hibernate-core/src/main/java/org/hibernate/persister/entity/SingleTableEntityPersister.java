@@ -143,7 +143,6 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		final SessionFactoryImplementor factory = creationContext.getSessionFactory();
 
 		final Database database = creationContext.getMetadata().getDatabase();
-		final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();
 
 		// CLASS + TABLE
 
@@ -153,7 +152,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		isNullableTable = new boolean[joinSpan];
 		keyColumnNames = new String[joinSpan][];
 		final Table table = persistentClass.getRootTable();
-		qualifiedTableNames[0] = determineTableName( table, jdbcEnvironment );
+		qualifiedTableNames[0] = determineTableName( table );
 
 		isInverseTable[0] = false;
 		isNullableTable[0] = false;
@@ -194,7 +193,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		final Dialect dialect = factory.getJdbcServices().getDialect();
 		while ( joinIter.hasNext() ) {
 			Join join = joinIter.next();
-			qualifiedTableNames[j] = determineTableName( join.getTable(), jdbcEnvironment );
+			qualifiedTableNames[j] = determineTableName( join.getTable() );
 			isInverseTable[j] = join.isInverse();
 			isNullableTable[j] = join.isOptional();
 			cascadeDeleteEnabled[j] = join.getKey().isCascadeDeleteEnabled() &&
@@ -271,7 +270,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			isDeferreds.add( isDeferred );
 			hasDeferred |= isDeferred;
 
-			String joinTableName = determineTableName( join.getTable(), jdbcEnvironment );
+			String joinTableName = determineTableName( join.getTable() );
 			subclassTables.add( joinTableName );
 
 			Iterator<Selectable> iter = join.getKey().getColumnIterator();

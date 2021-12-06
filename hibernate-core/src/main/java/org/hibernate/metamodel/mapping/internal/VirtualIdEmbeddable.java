@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.IndexedConsumer;
@@ -371,7 +371,7 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 						throw new IllegalAttributeType( "A \"virtual id\" cannot define <any/> attributes : " + attributeName );
 					}
 				},
-				(column, jdbcEnvironment) -> getTableIdentifierExpression( column.getValue().getTable(), jdbcEnvironment ),
+				(column, jdbcEnvironment) -> getTableIdentifierExpression( column.getValue().getTable(), creationProcess ),
 				this::addAttribute,
 				() -> {
 					// We need the attribute mapping types to finish initialization first before we can build the column mappings
@@ -384,14 +384,11 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 		);
 	}
 
-
-
-	private static String getTableIdentifierExpression(Table table, JdbcEnvironment jdbcEnvironment) {
-		return jdbcEnvironment
-				.getQualifiedObjectNameFormatter().format(
-						table.getQualifiedTableName(),
-						jdbcEnvironment.getDialect()
-				);
+	private static String getTableIdentifierExpression(Table table, MappingModelCreationProcess creationProcess) {
+		final SqlStringGenerationContext sqlStringGenerationContext = creationProcess.getCreationContext()
+				.getSessionFactory()
+				.getSqlStringGenerationContext();
+		return sqlStringGenerationContext.format( table.getQualifiedTableName() );
 	}
 
 	private boolean initColumnMappings() {

@@ -17,6 +17,7 @@ import java.util.function.Function;
 import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.SharedSessionContract;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.FetchTiming;
@@ -339,7 +340,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 					if ( selectable instanceof Column ) {
 						containingTableExpression = getTableIdentifierExpression(
 								( (Column) selectable ).getValue().getTable(),
-								jdbcEnvironment
+								creationProcess
 						);
 					}
 					else {
@@ -556,12 +557,11 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		return true;
 	}
 
-	private static String getTableIdentifierExpression(Table table, JdbcEnvironment jdbcEnvironment) {
-		return jdbcEnvironment
-				.getQualifiedObjectNameFormatter().format(
-						table.getQualifiedTableName(),
-						jdbcEnvironment.getDialect()
-				);
+	private static String getTableIdentifierExpression(Table table, MappingModelCreationProcess creationProcess) {
+		final SqlStringGenerationContext sqlStringGenerationContext = creationProcess.getCreationContext()
+				.getSessionFactory()
+				.getSqlStringGenerationContext();
+		return sqlStringGenerationContext.format( table.getQualifiedTableName() );
 	}
 
 	private boolean initColumnMappings() {

@@ -16,6 +16,7 @@ import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.SharedSessionContract;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.collection.internal.StandardArraySemantics;
 import org.hibernate.collection.internal.StandardBagSemantics;
 import org.hibernate.collection.internal.StandardIdentifierBagSemantics;
@@ -24,7 +25,6 @@ import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
@@ -524,8 +524,8 @@ public class MappingModelCreationHelper {
 
 		final RuntimeModelCreationContext creationContext = creationProcess.getCreationContext();
 		final SessionFactoryImplementor sessionFactory = creationContext.getSessionFactory();
-		final JdbcEnvironment jdbcEnvironment = sessionFactory.getJdbcServices().getJdbcEnvironment();
-		final Dialect dialect = jdbcEnvironment.getDialect();
+		final SqlStringGenerationContext sqlStringGenerationContext = sessionFactory.getSqlStringGenerationContext();
+		final Dialect dialect = sqlStringGenerationContext.getDialect();
 		final MappingMetamodel domainModel = creationContext.getDomainModel();
 
 		final CollectionPersister collectionDescriptor = domainModel.findCollectionDescriptor( bootValueMapping.getRole() );
@@ -644,9 +644,8 @@ public class MappingModelCreationHelper {
 				);
 				final String mapKeyTableExpression;
 				if ( bootValueMapping instanceof Map && ( (Map) bootValueMapping ).getMapKeyPropertyName() != null ) {
-					mapKeyTableExpression = jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-							( (Map) bootValueMapping ).getIndex().getTable().getQualifiedTableName(),
-							dialect
+					mapKeyTableExpression = sqlStringGenerationContext.format(
+							( (Map) bootValueMapping ).getIndex().getTable().getQualifiedTableName()
 					);
 				}
 				else {
@@ -1281,14 +1280,10 @@ public class MappingModelCreationHelper {
 	}
 
 	private static String getTableIdentifierExpression(Table table, MappingModelCreationProcess creationProcess) {
-		final JdbcEnvironment jdbcEnvironment = creationProcess.getCreationContext()
-				.getMetadata()
-				.getDatabase()
-				.getJdbcEnvironment();
-		return jdbcEnvironment.getQualifiedObjectNameFormatter().format(
-				table.getQualifiedTableName(),
-				jdbcEnvironment.getDialect()
-		);
+		final SqlStringGenerationContext sqlStringGenerationContext = creationProcess.getCreationContext()
+				.getSessionFactory()
+				.getSqlStringGenerationContext();
+		return sqlStringGenerationContext.format( table.getQualifiedTableName() );
 	}
 
 	private static CollectionPart interpretMapKey(

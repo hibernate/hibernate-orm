@@ -9,8 +9,10 @@ package org.hibernate.dialect;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.HANAIdentityColumnSupport;
@@ -697,14 +699,16 @@ public abstract class AbstractHANADialect extends Dialect {
 	private final StandardTableExporter hanaTableExporter = new StandardTableExporter( this ) {
 
 		@Override
-		public String[] getSqlCreateStrings(Table table, org.hibernate.boot.Metadata metadata) {
-			String[] sqlCreateStrings = super.getSqlCreateStrings( table, metadata );
+		public String[] getSqlCreateStrings(Table table, Metadata metadata,
+				SqlStringGenerationContext context) {
+			String[] sqlCreateStrings = super.getSqlCreateStrings( table, metadata, context );
 			return quoteTypeIfNecessary( table, sqlCreateStrings, getCreateTableString() );
 		}
 
 		@Override
-		public String[] getSqlDropStrings(Table table, org.hibernate.boot.Metadata metadata) {
-			String[] sqlDropStrings = super.getSqlDropStrings( table, metadata );
+		public String[] getSqlDropStrings(Table table, Metadata metadata,
+				SqlStringGenerationContext context) {
+			String[] sqlDropStrings = super.getSqlDropStrings( table, metadata, context );
 			return quoteTypeIfNecessary( table, sqlDropStrings, "drop table" );
 		}
 

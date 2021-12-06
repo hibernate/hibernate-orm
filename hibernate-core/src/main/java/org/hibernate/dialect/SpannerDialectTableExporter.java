@@ -7,6 +7,7 @@
 package org.hibernate.dialect;
 
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Index;
@@ -46,7 +47,7 @@ class SpannerDialectTableExporter implements Exporter<Table> {
 	}
 
 	@Override
-	public String[] getSqlCreateStrings(Table table, Metadata metadata) {
+	public String[] getSqlCreateStrings(Table table, Metadata metadata, SqlStringGenerationContext context) {
 
 		Collection<Column> keyColumns;
 
@@ -66,10 +67,10 @@ class SpannerDialectTableExporter implements Exporter<Table> {
 			keyColumns = Collections.emptyList();
 		}
 
-		return getTableString( table, keyColumns );
+		return getTableString( table, keyColumns, context );
 	}
 
-	private String[] getTableString(Table table, Iterable<Column> keyColumns) {
+	private String[] getTableString(Table table, Iterable<Column> keyColumns, SqlStringGenerationContext context) {
 		String primaryKeyColNames = StreamSupport.stream( keyColumns.spliterator(), false )
 				.map( Column::getName )
 				.collect( Collectors.joining( "," ) );
@@ -90,7 +91,7 @@ class SpannerDialectTableExporter implements Exporter<Table> {
 		statements.add(
 				MessageFormat.format(
 						this.createTableTemplate,
-						table.getQualifiedTableName().render(),
+						context.format( table.getQualifiedTableName() ),
 						colsAndTypes.toString(),
 						primaryKeyColNames
 				) );
@@ -105,7 +106,7 @@ class SpannerDialectTableExporter implements Exporter<Table> {
 	}
 
 	@Override
-	public String[] getSqlDropStrings(Table table, Metadata metadata) {
+	public String[] getSqlDropStrings(Table table, Metadata metadata, SqlStringGenerationContext context) {
 
 		/* Cloud Spanner requires examining the metadata to find all indexes and interleaved tables.
 		 * These must be dropped before the given table can be dropped.
@@ -118,7 +119,7 @@ class SpannerDialectTableExporter implements Exporter<Table> {
 			dropStrings.add( "drop index " + index.next().getName() );
 		}
 
-		dropStrings.add( this.spannerDialect.getDropTableString( table.getQualifiedTableName().render() ) );
+		dropStrings.add( this.spannerDialect.getDropTableString( context.format( table.getQualifiedTableName() ) ) );
 
 		return dropStrings.toArray( new String[0] );
 	}

@@ -21,7 +21,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
  */
 public abstract class AbstractSingleColumnStandardBasicType<T>
 		extends AbstractStandardBasicType<T>
-		implements SingleColumnType<T> {
+		implements Type {
 
 	public AbstractSingleColumnStandardBasicType(JdbcType jdbcType, JavaType<T> javaTypeDescriptor) {
 		super( jdbcType, javaTypeDescriptor );

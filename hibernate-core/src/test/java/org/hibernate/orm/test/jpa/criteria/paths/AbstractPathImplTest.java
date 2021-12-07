@@ -12,10 +12,10 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Root;
 
-import org.hibernate.jpa.test.metamodel.AbstractMetamodelSpecificTest;
-import org.hibernate.jpa.test.metamodel.Order;
-import org.hibernate.jpa.test.metamodel.Thing;
-import org.hibernate.jpa.test.metamodel.ThingWithQuantity;
+import org.hibernate.orm.test.jpa.metamodel.AbstractMetamodelSpecificTest;
+import org.hibernate.orm.test.jpa.metamodel.Order;
+import org.hibernate.orm.test.jpa.metamodel.Thing;
+import org.hibernate.orm.test.jpa.metamodel.ThingWithQuantity;
 
 import org.hibernate.testing.orm.junit.ExpectedException;
 import org.junit.jupiter.api.AfterEach;

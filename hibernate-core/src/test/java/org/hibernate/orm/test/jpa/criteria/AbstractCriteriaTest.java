@@ -6,24 +6,24 @@
  */
 package org.hibernate.orm.test.jpa.criteria;
 
-import org.hibernate.jpa.test.metamodel.Address;
-import org.hibernate.jpa.test.metamodel.Alias;
-import org.hibernate.jpa.test.metamodel.Country;
-import org.hibernate.jpa.test.metamodel.CreditCard;
-import org.hibernate.jpa.test.metamodel.Customer;
-import org.hibernate.jpa.test.metamodel.Entity1;
-import org.hibernate.jpa.test.metamodel.Entity2;
-import org.hibernate.jpa.test.metamodel.Entity3;
-import org.hibernate.jpa.test.metamodel.Info;
-import org.hibernate.jpa.test.metamodel.LineItem;
-import org.hibernate.jpa.test.metamodel.Order;
-import org.hibernate.jpa.test.metamodel.Phone;
-import org.hibernate.jpa.test.metamodel.Product;
-import org.hibernate.jpa.test.metamodel.ShelfLife;
-import org.hibernate.jpa.test.metamodel.Spouse;
-import org.hibernate.jpa.test.metamodel.Thing;
-import org.hibernate.jpa.test.metamodel.ThingWithQuantity;
-import org.hibernate.jpa.test.metamodel.VersionedEntity;
+import org.hibernate.orm.test.jpa.metamodel.Address;
+import org.hibernate.orm.test.jpa.metamodel.Alias;
+import org.hibernate.orm.test.jpa.metamodel.Country;
+import org.hibernate.orm.test.jpa.metamodel.CreditCard;
+import org.hibernate.orm.test.jpa.metamodel.Customer;
+import org.hibernate.orm.test.jpa.metamodel.Entity1;
+import org.hibernate.orm.test.jpa.metamodel.Entity2;
+import org.hibernate.orm.test.jpa.metamodel.Entity3;
+import org.hibernate.orm.test.jpa.metamodel.Info;
+import org.hibernate.orm.test.jpa.metamodel.LineItem;
+import org.hibernate.orm.test.jpa.metamodel.Order;
+import org.hibernate.orm.test.jpa.metamodel.Phone;
+import org.hibernate.orm.test.jpa.metamodel.Product;
+import org.hibernate.orm.test.jpa.metamodel.ShelfLife;
+import org.hibernate.orm.test.jpa.metamodel.Spouse;
+import org.hibernate.orm.test.jpa.metamodel.Thing;
+import org.hibernate.orm.test.jpa.metamodel.ThingWithQuantity;
+import org.hibernate.orm.test.jpa.metamodel.VersionedEntity;
 
 import org.hibernate.testing.orm.junit.Jpa;
 

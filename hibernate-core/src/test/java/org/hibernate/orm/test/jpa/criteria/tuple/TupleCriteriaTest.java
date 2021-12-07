@@ -16,9 +16,9 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Root;
 
-import org.hibernate.jpa.test.metamodel.AbstractMetamodelSpecificTest;
-import org.hibernate.jpa.test.metamodel.Customer;
-import org.hibernate.jpa.test.metamodel.Customer_;
+import org.hibernate.orm.test.jpa.metamodel.AbstractMetamodelSpecificTest;
+import org.hibernate.orm.test.jpa.metamodel.Customer;
+import org.hibernate.orm.test.jpa.metamodel.Customer_;
 
 import org.junit.jupiter.api.Test;
 

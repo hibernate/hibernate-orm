@@ -14,10 +14,10 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.ListJoin;
 import jakarta.persistence.criteria.Root;
 
-import org.hibernate.jpa.test.metamodel.AbstractMetamodelSpecificTest;
-import org.hibernate.jpa.test.metamodel.Address;
-import org.hibernate.jpa.test.metamodel.Address_;
-import org.hibernate.jpa.test.metamodel.Phone;
+import org.hibernate.orm.test.jpa.metamodel.AbstractMetamodelSpecificTest;
+import org.hibernate.orm.test.jpa.metamodel.Address;
+import org.hibernate.orm.test.jpa.metamodel.Address_;
+import org.hibernate.orm.test.jpa.metamodel.Phone;
 import org.hibernate.testing.TestForIssue;
 
 import org.junit.jupiter.api.AfterEach;

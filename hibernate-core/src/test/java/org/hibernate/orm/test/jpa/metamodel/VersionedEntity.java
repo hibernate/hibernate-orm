@@ -4,21 +4,20 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.jpa.test.metamodel;
+package org.hibernate.orm.test.jpa.metamodel;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.Inheritance;
-import jakarta.persistence.InheritanceType;
+import jakarta.persistence.Version;
 
 /**
- * @author James Gilbertson
+ * @author Steve Ebersole
  */
 @Entity
-@Inheritance(strategy = InheritanceType.JOINED)
-public class Thing {
+public class VersionedEntity {
 	private String id;
 	private String name;
+	private int version;
 
 	@Id
 	public String getId() {
@@ -35,5 +34,14 @@ public class Thing {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	@Version
+	public int getVersion() {
+		return version;
+	}
+
+	public void setVersion(int version) {
+		this.version = version;
 	}
 }

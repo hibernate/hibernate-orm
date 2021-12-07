@@ -9,9 +9,6 @@ package org.hibernate.boot.spi;
 import java.util.Collection;
 import java.util.Map;
 
-import jakarta.xml.bind.JAXBContext;
-import javax.xml.stream.XMLInputFactory;
-
 import org.hibernate.Incubating;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.boot.CacheRegionDefinition;
@@ -22,6 +19,7 @@ import org.hibernate.boot.internal.ClassmateContext;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
@@ -49,6 +47,10 @@ public interface BootstrapContext {
 	BeanInstanceProducer getBeanInstanceProducer();
 
 	MetadataBuildingOptions getMetadataBuildingOptions();
+
+	default IdentifierGeneratorFactory getIdentifierGeneratorFactory() {
+		return getMetadataBuildingOptions().getIdentifierGeneratorFactory();
+	}
 
 	boolean isJpaBootstrap();
 

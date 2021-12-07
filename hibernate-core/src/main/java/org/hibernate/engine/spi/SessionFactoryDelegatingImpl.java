@@ -12,11 +12,6 @@ import java.util.Map;
 import java.util.Set;
 import javax.naming.NamingException;
 import javax.naming.Reference;
-import jakarta.persistence.EntityGraph;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceUnitUtil;
-import jakarta.persistence.Query;
-import jakarta.persistence.SynchronizationType;
 
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
@@ -40,7 +35,6 @@ import org.hibernate.event.spi.EventEngine;
 import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.FastSessionServices;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
@@ -58,6 +52,12 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceUnitUtil;
+import jakarta.persistence.Query;
+import jakarta.persistence.SynchronizationType;
 
 /**
  * Base delegating implementation of the SessionFactory and SessionFactoryImplementor
@@ -360,11 +360,6 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	@Override
 	public DeserializationResolver getDeserializationResolver() {
 		return delegate.getDeserializationResolver();
-	}
-
-	@Override
-	public IdentifierGeneratorFactory getIdentifierGeneratorFactory() {
-		return delegate.getIdentifierGeneratorFactory();
 	}
 
 	@Override

@@ -6,14 +6,7 @@
  */
 package org.hibernate.orm.test.jpa.compliance.tck2_2;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.SequenceGenerator;
-
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
@@ -22,7 +15,7 @@ import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.id.IdentifierGenerator;
@@ -35,6 +28,12 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.SequenceGenerator;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -53,12 +52,12 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 	@Test
 	public void baseline() {
 		try (final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build()) {
-			final Metadata bootModel = new MetadataSources( ssr )
+			final MetadataImplementor bootModel = (MetadataImplementor) new MetadataSources( ssr )
 					.addAnnotatedClass( ExplicitGeneratorEntity.class )
 					.buildMetadata();
 			final PersistentClass entityMapping = bootModel.getEntityBinding( ExplicitGeneratorEntity.class.getName() );
 			final IdentifierGenerator generator = entityMapping.getIdentifier().createIdentifierGenerator(
-					bootModel.getIdentifierGeneratorFactory(),
+					bootModel.getMetadataBuildingOptions().getIdentifierGeneratorFactory(),
 					ssr.getService( JdbcEnvironment.class ).getDialect(),
 					null,
 					null,
@@ -81,12 +80,12 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 	@Test
 	public void testImplicitSequenceGenerator() {
 		try (final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build()) {
-			final Metadata bootModel = new MetadataSources( ssr )
+			final MetadataImplementor bootModel = (MetadataImplementor) new MetadataSources( ssr )
 					.addAnnotatedClass( ImplicitSequenceGeneratorEntity.class )
 					.buildMetadata();
 			final PersistentClass entityMapping = bootModel.getEntityBinding( ImplicitSequenceGeneratorEntity.class.getName() );
 			final IdentifierGenerator generator = entityMapping.getIdentifier().createIdentifierGenerator(
-					bootModel.getIdentifierGeneratorFactory(),
+					bootModel.getMetadataBuildingOptions().getIdentifierGeneratorFactory(),
 					ssr.getService( JdbcEnvironment.class ).getDialect(),
 					null,
 					null,
@@ -112,12 +111,12 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 	@Test
 	public void testImplicitSequenceGeneratorGeneratorName() {
 		try (final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build()) {
-			final Metadata bootModel = new MetadataSources( ssr )
+			final MetadataImplementor bootModel = (MetadataImplementor) new MetadataSources( ssr )
 					.addAnnotatedClass( ImplicitSequenceGeneratorEntity.class )
 					.buildMetadata();
 			final PersistentClass entityMapping = bootModel.getEntityBinding( ImplicitSequenceGeneratorEntity.class.getName() );
 			final IdentifierGenerator generator = entityMapping.getIdentifier().createIdentifierGenerator(
-					bootModel.getIdentifierGeneratorFactory(),
+					bootModel.getMetadataBuildingOptions().getIdentifierGeneratorFactory(),
 					ssr.getService( JdbcEnvironment.class ).getDialect(),
 					null,
 					null,
@@ -144,13 +143,13 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 	public void testExplicitSequenceGeneratorImplicitNamePreferGeneratorName() {
 		// this should be the default behavior
 		try (final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build()) {
-			final Metadata bootModel = new MetadataSources( ssr )
+			final MetadataImplementor bootModel = (MetadataImplementor) new MetadataSources( ssr )
 					.addAnnotatedClass( ExplicitSequenceGeneratorImplicitNameEntity.class )
 					.buildMetadata();
 			final PersistentClass entityMapping = bootModel.getEntityBinding(
 					ExplicitSequenceGeneratorImplicitNameEntity.class.getName() );
 			final IdentifierGenerator generator = entityMapping.getIdentifier().createIdentifierGenerator(
-					bootModel.getIdentifierGeneratorFactory(),
+					bootModel.getMetadataBuildingOptions().getIdentifierGeneratorFactory(),
 					ssr.getService( JdbcEnvironment.class ).getDialect(),
 					null,
 					null,
@@ -191,12 +190,12 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 	@Test
 	public void testImplicitTableGenerator() {
 		try (final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build()) {
-			final Metadata bootModel = new MetadataSources( ssr )
+			final MetadataImplementor bootModel = (MetadataImplementor) new MetadataSources( ssr )
 					.addAnnotatedClass( ImplicitTableGeneratorEntity.class )
 					.buildMetadata();
 			final PersistentClass entityMapping = bootModel.getEntityBinding( ImplicitTableGeneratorEntity.class.getName() );
 			final IdentifierGenerator generator = entityMapping.getIdentifier().createIdentifierGenerator(
-					bootModel.getIdentifierGeneratorFactory(),
+					bootModel.getMetadataBuildingOptions().getIdentifierGeneratorFactory(),
 					ssr.getService( JdbcEnvironment.class ).getDialect(),
 					null,
 					null,
@@ -217,12 +216,12 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 	@Test
 	public void testExplicitTableGeneratorImplicitName() {
 		try (final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build()) {
-			final Metadata bootModel = new MetadataSources( ssr )
+			final MetadataImplementor bootModel = (MetadataImplementor) new MetadataSources( ssr )
 					.addAnnotatedClass( ExplicitTableGeneratorImplicitNameEntity.class )
 					.buildMetadata();
 			final PersistentClass entityMapping = bootModel.getEntityBinding( ExplicitTableGeneratorImplicitNameEntity.class.getName() );
 			final IdentifierGenerator generator = entityMapping.getIdentifier().createIdentifierGenerator(
-					bootModel.getIdentifierGeneratorFactory(),
+					bootModel.getMetadataBuildingOptions().getIdentifierGeneratorFactory(),
 					ssr.getService( JdbcEnvironment.class ).getDialect(),
 					null,
 					null,
@@ -243,12 +242,12 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 	@Test
 	public void testExplicitTableGenerator() {
 		try (final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build()) {
-			final Metadata bootModel = new MetadataSources( ssr )
+			final MetadataImplementor bootModel = (MetadataImplementor) new MetadataSources( ssr )
 					.addAnnotatedClass( ExplicitTableGeneratorEntity.class )
 					.buildMetadata();
 			final PersistentClass entityMapping = bootModel.getEntityBinding( ExplicitTableGeneratorEntity.class.getName() );
 			final IdentifierGenerator generator = entityMapping.getIdentifier().createIdentifierGenerator(
-					bootModel.getIdentifierGeneratorFactory(),
+					bootModel.getMetadataBuildingOptions().getIdentifierGeneratorFactory(),
 					ssr.getService( JdbcEnvironment.class ).getDialect(),
 					null,
 					null,
@@ -271,12 +270,12 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 	@Test
 	public void testExplicitIncrementGenerator() {
 		try (final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build()) {
-			final Metadata bootModel = new MetadataSources( ssr )
+			final MetadataImplementor bootModel = (MetadataImplementor) new MetadataSources( ssr )
 					.addAnnotatedClass( ExplicitIncrementGeneratorEntity.class )
 					.buildMetadata();
 			final PersistentClass entityMapping = bootModel.getEntityBinding( ExplicitIncrementGeneratorEntity.class.getName() );
 			final IdentifierGenerator generator = entityMapping.getIdentifier().createIdentifierGenerator(
-					bootModel.getIdentifierGeneratorFactory(),
+					bootModel.getMetadataBuildingOptions().getIdentifierGeneratorFactory(),
 					ssr.getService( JdbcEnvironment.class ).getDialect(),
 					null,
 					null,
@@ -291,12 +290,12 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 	@Test
 	public void testImplicitIncrementGenerator() {
 		try (final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build()) {
-			final Metadata bootModel = new MetadataSources( ssr )
+			final MetadataImplementor bootModel = (MetadataImplementor) new MetadataSources( ssr )
 					.addAnnotatedClass( ImplicitIncrementGeneratorEntity.class )
 					.buildMetadata();
 			final PersistentClass entityMapping = bootModel.getEntityBinding( ImplicitIncrementGeneratorEntity.class.getName() );
 			final IdentifierGenerator generator = entityMapping.getIdentifier().createIdentifierGenerator(
-					bootModel.getIdentifierGeneratorFactory(),
+					bootModel.getMetadataBuildingOptions().getIdentifierGeneratorFactory(),
 					ssr.getService( JdbcEnvironment.class ).getDialect(),
 					null,
 					null,

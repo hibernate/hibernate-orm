@@ -513,10 +513,10 @@ public abstract class AbstractCollectionPersister
 			identifierColumnAlias = col.getAlias( dialect );
 			// unquotedIdentifierColumnName = identifierColumnAlias;
 			identifierGenerator = idColl.getIdentifier().createIdentifierGenerator(
-					creationContext.getMetadata().getIdentifierGeneratorFactory(),
+					persisterCreationContext.getBootstrapContext().getIdentifierGeneratorFactory(),
 					factory.getDialect(),
 					null
-					);
+			);
 			identifierGenerator.initialize( creationContext.getSessionFactory().getSqlStringGenerationContext() );
 		}
 		else {

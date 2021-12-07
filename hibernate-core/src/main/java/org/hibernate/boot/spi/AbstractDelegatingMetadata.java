@@ -25,7 +25,6 @@ import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.MappedSuperclass;
@@ -52,11 +51,6 @@ public abstract class AbstractDelegatingMetadata implements MetadataImplementor 
 
 	protected MetadataImplementor delegate() {
 		return delegate;
-	}
-
-	@Override
-	public IdentifierGeneratorFactory getIdentifierGeneratorFactory() {
-		return delegate.getIdentifierGeneratorFactory();
 	}
 
 	@Override

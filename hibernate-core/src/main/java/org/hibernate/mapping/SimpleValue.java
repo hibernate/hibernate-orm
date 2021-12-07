@@ -389,7 +389,6 @@ public abstract class SimpleValue implements KeyValue {
 			);
 		}
 
-		identifierGeneratorFactory.setDialect( dialect );
 		identifierGenerator = identifierGeneratorFactory.createIdentifierGenerator(
 				identifierGeneratorStrategy,
 				getType(),
@@ -429,7 +428,6 @@ public abstract class SimpleValue implements KeyValue {
 	}
 	
 	public boolean isIdentityColumn(IdentifierGeneratorFactory identifierGeneratorFactory, Dialect dialect) {
-		identifierGeneratorFactory.setDialect( dialect );
 		return IdentityGenerator.class.isAssignableFrom(identifierGeneratorFactory.getIdentifierGeneratorClass( identifierGeneratorStrategy ));
 	}
 

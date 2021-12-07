@@ -27,14 +27,14 @@ import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.Sequence;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.spi.BootstrapContext;
-import org.hibernate.boot.spi.MetadataBuildingOptions;
-import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
 import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.spi.MetadataBuildingOptions;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryBuilderFactory;
 import org.hibernate.boot.spi.SessionFactoryBuilderImplementor;
 import org.hibernate.boot.spi.SessionFactoryBuilderService;
@@ -46,7 +46,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
-import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
@@ -78,8 +77,6 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private final MetadataBuildingOptions metadataBuildingOptions;
 	private final BootstrapContext bootstrapContext;
 
-	private final MutableIdentifierGeneratorFactory identifierGeneratorFactory;
-
 	private final Map<String,PersistentClass> entityBindingMap;
 	private final List<Component> composites;
 	private final Map<Class, MappedSuperclass> mappedSuperclassMap;
@@ -101,7 +98,6 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	public MetadataImpl(
 			UUID uuid,
 			MetadataBuildingOptions metadataBuildingOptions,
-			MutableIdentifierGeneratorFactory identifierGeneratorFactory,
 			Map<String, PersistentClass> entityBindingMap,
 			List<Component> composites,
 			Map<Class, MappedSuperclass> mappedSuperclassMap,
@@ -121,7 +117,6 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			BootstrapContext bootstrapContext) {
 		this.uuid = uuid;
 		this.metadataBuildingOptions = metadataBuildingOptions;
-		this.identifierGeneratorFactory = identifierGeneratorFactory;
 		this.entityBindingMap = entityBindingMap;
 		this.composites = composites;
 		this.mappedSuperclassMap = mappedSuperclassMap;
@@ -200,11 +195,6 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	@Override
 	public Database getDatabase() {
 		return database;
-	}
-
-	@Override
-	public MutableIdentifierGeneratorFactory getIdentifierGeneratorFactory() {
-		return identifierGeneratorFactory;
 	}
 
 	@Override

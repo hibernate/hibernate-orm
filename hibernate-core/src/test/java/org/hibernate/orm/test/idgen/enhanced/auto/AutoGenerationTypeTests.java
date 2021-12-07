@@ -22,12 +22,12 @@ import org.hibernate.id.IncrementGenerator;
 import org.hibernate.id.UUIDGenerator;
 import org.hibernate.id.enhanced.DatabaseStructure;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
-import org.hibernate.id.factory.internal.DefaultIdentifierGeneratorFactory;
+import org.hibernate.id.factory.IdentifierGeneratorFactory;
+import org.hibernate.id.factory.internal.StandardIdentifierGeneratorFactory;
 import org.hibernate.mapping.IdentifierBag;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 import org.hibernate.testing.orm.junit.FailureExpectedExtension;
 import org.junit.jupiter.api.Test;
@@ -61,8 +61,7 @@ public class AutoGenerationTypeTests {
 					.addAnnotatedClass( Entity2.class )
 					.buildMetadata();
 
-			final DefaultIdentifierGeneratorFactory generatorFactory = new DefaultIdentifierGeneratorFactory();
-			generatorFactory.injectServices( (ServiceRegistryImplementor) ssr );
+			final IdentifierGeneratorFactory generatorFactory = new StandardIdentifierGeneratorFactory( ssr );
 
 			final PersistentClass entityBinding = metadata.getEntityBinding( Entity1.class.getName() );
 			final KeyValue idMapping = entityBinding.getRootClass().getIdentifier();
@@ -91,8 +90,7 @@ public class AutoGenerationTypeTests {
 					.addAnnotatedClass( Entity2.class )
 					.buildMetadata();
 
-			final DefaultIdentifierGeneratorFactory generatorFactory = new DefaultIdentifierGeneratorFactory();
-			generatorFactory.injectServices( (ServiceRegistryImplementor) ssr );
+			final IdentifierGeneratorFactory generatorFactory = new StandardIdentifierGeneratorFactory( ssr );
 
 			final PersistentClass entityBinding = metadata.getEntityBinding( Entity2.class.getName() );
 			final KeyValue idMapping = entityBinding.getRootClass().getIdentifier();
@@ -120,8 +118,7 @@ public class AutoGenerationTypeTests {
 					.addAnnotatedClass( Entity2.class )
 					.buildMetadata();
 
-			final DefaultIdentifierGeneratorFactory generatorFactory = new DefaultIdentifierGeneratorFactory();
-			generatorFactory.injectServices( (ServiceRegistryImplementor) ssr );
+			final IdentifierGeneratorFactory generatorFactory = new StandardIdentifierGeneratorFactory( ssr );
 
 			final PersistentClass entity1Binding = metadata.getEntityBinding( Entity1.class.getName() );
 
@@ -153,8 +150,7 @@ public class AutoGenerationTypeTests {
 					.addAnnotatedClass( Entity4.class )
 					.buildMetadata();
 
-			final DefaultIdentifierGeneratorFactory generatorFactory = new DefaultIdentifierGeneratorFactory();
-			generatorFactory.injectServices( (ServiceRegistryImplementor) ssr );
+			final IdentifierGeneratorFactory generatorFactory = new StandardIdentifierGeneratorFactory( ssr );
 
 			final PersistentClass entityBinding = metadata.getEntityBinding( Entity4.class.getName() );
 			final KeyValue idMapping = entityBinding.getRootClass().getIdentifier();
@@ -177,8 +173,7 @@ public class AutoGenerationTypeTests {
 					.addAnnotatedClass( Entity3.class )
 					.buildMetadata();
 
-			final DefaultIdentifierGeneratorFactory generatorFactory = new DefaultIdentifierGeneratorFactory();
-			generatorFactory.injectServices( (ServiceRegistryImplementor) ssr );
+			final IdentifierGeneratorFactory generatorFactory = new StandardIdentifierGeneratorFactory( ssr );
 
 			final PersistentClass entityBinding = metadata.getEntityBinding( Entity3.class.getName() );
 			final KeyValue idMapping = entityBinding.getRootClass().getIdentifier();

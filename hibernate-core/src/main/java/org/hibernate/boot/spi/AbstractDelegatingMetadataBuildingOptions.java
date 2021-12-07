@@ -21,6 +21,7 @@ import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.MetadataSourceType;
+import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.jboss.jandex.IndexView;
 
@@ -51,6 +52,11 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 	@Override
 	public MappingDefaults getMappingDefaults() {
 		return delegate.getMappingDefaults();
+	}
+
+	@Override
+	public IdentifierGeneratorFactory getIdentifierGeneratorFactory() {
+		return delegate.getIdentifierGeneratorFactory();
 	}
 
 	@Override

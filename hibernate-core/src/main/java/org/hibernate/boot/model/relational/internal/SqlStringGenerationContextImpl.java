@@ -31,8 +31,10 @@ public class SqlStringGenerationContextImpl
 	 * @param configurationMap The configuration map, holding settings such as {@link AvailableSettings#DEFAULT_SCHEMA}.
 	 * @return An {@link SqlStringGenerationContext}.
 	 */
-	public static SqlStringGenerationContext fromConfigurationMap(JdbcEnvironment jdbcEnvironment,
-			Database database, Map<String, Object> configurationMap) {
+	public static SqlStringGenerationContext fromConfigurationMap(
+			JdbcEnvironment jdbcEnvironment,
+			Database database,
+			Map<String, Object> configurationMap) {
 		String defaultCatalog = (String) configurationMap.get( AvailableSettings.DEFAULT_CATALOG );
 		String defaultSchema = (String) configurationMap.get( AvailableSettings.DEFAULT_SCHEMA );
 		return fromExplicit( jdbcEnvironment, database, defaultCatalog, defaultSchema );
@@ -45,11 +47,15 @@ public class SqlStringGenerationContextImpl
 	 * @param defaultSchema The default schema to use; if {@code null}, will use the implicit schema that was configured through XML mapping.
 	 * @return An {@link SqlStringGenerationContext}.
 	 */
-	public static SqlStringGenerationContext fromExplicit(JdbcEnvironment jdbcEnvironment,
-			Database database, String defaultCatalog, String defaultSchema) {
-		Namespace.Name implicitNamespaceName = database.getPhysicalImplicitNamespaceName();
-		IdentifierHelper identifierHelper = jdbcEnvironment.getIdentifierHelper();
-		NameQualifierSupport nameQualifierSupport = jdbcEnvironment.getNameQualifierSupport();
+	public static SqlStringGenerationContext fromExplicit(
+			JdbcEnvironment jdbcEnvironment,
+			Database database,
+			String defaultCatalog,
+			String defaultSchema) {
+		final Namespace.Name implicitNamespaceName = database.getPhysicalImplicitNamespaceName();
+		final IdentifierHelper identifierHelper = jdbcEnvironment.getIdentifierHelper();
+		final NameQualifierSupport nameQualifierSupport = jdbcEnvironment.getNameQualifierSupport();
+
 		Identifier actualDefaultCatalog = null;
 		if ( nameQualifierSupport.supportsCatalogs() ) {
 			actualDefaultCatalog = identifierHelper.toIdentifier( defaultCatalog );
@@ -57,6 +63,7 @@ public class SqlStringGenerationContextImpl
 				actualDefaultCatalog = implicitNamespaceName.getCatalog();
 			}
 		}
+
 		Identifier actualDefaultSchema = null;
 		if ( nameQualifierSupport.supportsSchemas() ) {
 			actualDefaultSchema = identifierHelper.toIdentifier( defaultSchema );
@@ -64,6 +71,7 @@ public class SqlStringGenerationContextImpl
 				actualDefaultSchema = implicitNamespaceName.getSchema();
 			}
 		}
+
 		return new SqlStringGenerationContextImpl( jdbcEnvironment, actualDefaultCatalog, actualDefaultSchema );
 	}
 
@@ -85,8 +93,10 @@ public class SqlStringGenerationContextImpl
 	private final Identifier defaultSchema;
 
 	@SuppressWarnings("deprecation")
-	private SqlStringGenerationContextImpl(JdbcEnvironment jdbcEnvironment,
-			Identifier defaultCatalog, Identifier defaultSchema) {
+	private SqlStringGenerationContextImpl(
+			JdbcEnvironment jdbcEnvironment,
+			Identifier defaultCatalog,
+			Identifier defaultSchema) {
 		this.dialect = jdbcEnvironment.getDialect();
 		this.identifierHelper = jdbcEnvironment.getIdentifierHelper();
 		this.qualifiedObjectNameFormatter = jdbcEnvironment.getQualifiedObjectNameFormatter();

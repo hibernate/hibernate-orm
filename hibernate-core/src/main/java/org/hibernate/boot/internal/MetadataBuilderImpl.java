@@ -61,6 +61,8 @@ import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.id.factory.IdentifierGeneratorFactory;
+import org.hibernate.id.factory.internal.StandardIdentifierGeneratorFactory;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
@@ -522,7 +524,9 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			implements MetadataBuildingOptions, JpaOrmXmlPersistenceUnitDefaultAware {
 		private final StandardServiceRegistry serviceRegistry;
 		private final MappingDefaultsImpl mappingDefaults;
+		private final IdentifierGeneratorFactory identifierGeneratorFactory;
 		private final TimeZoneStorageStrategy defaultTimezoneStorage;
+
 		// todo (6.0) : remove bootstrapContext property along with the deprecated methods
 		private BootstrapContext bootstrapContext;
 
@@ -549,6 +553,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 		public MetadataBuildingOptionsImpl(StandardServiceRegistry serviceRegistry) {
 			this.serviceRegistry = serviceRegistry;
+			this.identifierGeneratorFactory = new StandardIdentifierGeneratorFactory( serviceRegistry );
 
 			final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
 			final ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
@@ -721,6 +726,11 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		@Override
 		public MappingDefaults getMappingDefaults() {
 			return mappingDefaults;
+		}
+
+		@Override
+		public IdentifierGeneratorFactory getIdentifierGeneratorFactory() {
+			return identifierGeneratorFactory;
 		}
 
 		@Override

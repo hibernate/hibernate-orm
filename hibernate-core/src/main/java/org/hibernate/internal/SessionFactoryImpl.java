@@ -302,8 +302,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			//Generators:
 			this.identifierGenerators = new HashMap<>();
 			bootMetamodel.getEntityBindings().stream().filter( model -> !model.isInherited() ).forEach( model -> {
-				IdentifierGenerator generator = model.getIdentifier().createIdentifierGenerator(
-						bootMetamodel.getIdentifierGeneratorFactory(),
+				final IdentifierGenerator generator = model.getIdentifier().createIdentifierGenerator(
+						bootstrapContext.getIdentifierGeneratorFactory(),
 						jdbcServices.getJdbcEnvironment().getDialect(),
 						(RootClass) model
 				);

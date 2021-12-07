@@ -18,6 +18,7 @@ import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Constraint;
@@ -36,7 +37,9 @@ public class StandardTableExporter implements Exporter<Table> {
 	}
 
 	@Override
-	public String[] getSqlCreateStrings(Table table, Metadata metadata,
+	public String[] getSqlCreateStrings(
+			Table table,
+			Metadata metadata,
 			SqlStringGenerationContext context) {
 		final QualifiedName tableName = new QualifiedNameParser.NameParts(
 				Identifier.toIdentifier( table.getCatalog(), table.isCatalogQuoted() ),
@@ -54,7 +57,7 @@ public class StandardTableExporter implements Exporter<Table> {
 
 			boolean isPrimaryKeyIdentity = table.hasPrimaryKey()
 					&& table.getIdentifierValue() != null
-					&& table.getIdentifierValue().isIdentityColumn( metadata.getIdentifierGeneratorFactory(), dialect );
+					&& table.getIdentifierValue().isIdentityColumn( ( (MetadataImplementor) metadata ).getMetadataBuildingOptions().getIdentifierGeneratorFactory(), dialect );
 			// this is the much better form moving forward as we move to metamodel
 			//boolean isPrimaryKeyIdentity = hasPrimaryKey
 			//				&& table.getPrimaryKey().getColumnSpan() == 1

@@ -46,13 +46,13 @@ public class GeneratedValueTest {
 				.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
 				.build();
 		try {
-			Metadata metadata = new MetadataSources( ssr ).addAnnotatedClass( TheEntity.class ).buildMetadata();
-			( (MetadataImpl) metadata ).validate();
+			MetadataImpl metadata = (MetadataImpl) new MetadataSources( ssr ).addAnnotatedClass( TheEntity.class ).buildMetadata();
+			metadata.validate();
 
 			PersistentClass entityBinding = metadata.getEntityBinding( TheEntity.class.getName() );
 			assertEquals( UUID.class, entityBinding.getIdentifier().getType().getReturnedClass() );
 			IdentifierGenerator generator = entityBinding.getIdentifier().createIdentifierGenerator(
-					metadata.getIdentifierGeneratorFactory(),
+					metadata.getMetadataBuildingOptions().getIdentifierGeneratorFactory(),
 					metadata.getDatabase().getDialect(),
 					null,
 					null,

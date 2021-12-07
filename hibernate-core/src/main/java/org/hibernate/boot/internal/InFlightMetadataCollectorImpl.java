@@ -75,8 +75,6 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.id.factory.IdentifierGeneratorFactory;
-import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -127,7 +125,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	private final AttributeConverterManager attributeConverterManager = new AttributeConverterManager();
 
 	private final UUID uuid;
-	private final MutableIdentifierGeneratorFactory identifierGeneratorFactory;
 
 	private final Map<String,PersistentClass> entityBindingMap = new HashMap<>();
 	private final List<Component> composites = new ArrayList<>();
@@ -174,9 +171,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		this.bootstrapContext = bootstrapContext;
 		this.uuid = UUID.randomUUID();
 		this.options = options;
-
-		this.identifierGeneratorFactory = options.getServiceRegistry()
-				.getService( MutableIdentifierGeneratorFactory.class );
 
 		for ( Map.Entry<String, SqmFunctionDescriptor> sqlFunctionEntry : bootstrapContext.getSqlFunctions().entrySet() ) {
 			if ( sqlFunctionMap == null ) {
@@ -263,11 +257,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	@Override
 	public void visitRegisteredComponents(Consumer<Component> consumer) {
 		composites.forEach( consumer );
-	}
-
-	@Override
-	public IdentifierGeneratorFactory getIdentifierGeneratorFactory() {
-		return identifierGeneratorFactory;
 	}
 
 	@Override
@@ -2228,7 +2217,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			return new MetadataImpl(
 					uuid,
 					options,
-					identifierGeneratorFactory,
 					entityBindingMap,
 					composites,
 					mappedSuperClasses,
@@ -2293,7 +2281,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		//		it could be done better
 		try {
 			final IdentifierGenerator ig = identifierValueBinding.createIdentifierGenerator(
-					getIdentifierGeneratorFactory(),
+					bootstrapContext.getIdentifierGeneratorFactory(),
 					dialect,
 					entityBinding
 			);

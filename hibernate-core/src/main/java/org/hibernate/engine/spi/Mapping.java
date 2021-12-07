@@ -7,7 +7,6 @@
 package org.hibernate.engine.spi;
 
 import org.hibernate.MappingException;
-import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.type.Type;
 
 /**
@@ -19,19 +18,14 @@ import org.hibernate.type.Type;
  * @see org.hibernate.internal.SessionFactoryImpl
  * @see org.hibernate.cfg.Configuration
  * @author Gavin King
+ *
+ * @deprecated (since 6.0) Use {@link org.hibernate.type.spi.TypeConfiguration},
+ * {@link org.hibernate.boot.Metadata} or {@link org.hibernate.metamodel.RuntimeMetamodels}
+ * to access such information
  */
+@Deprecated
 public interface Mapping {
-	/**
-	 * Allow access to the id generator factory, though this is only needed/allowed from configuration.
-	 *
-	 * @return Access to the identifier generator factory
-	 *
-	 * @deprecated temporary solution 
-	 */
-	@Deprecated
-	public IdentifierGeneratorFactory getIdentifierGeneratorFactory();
-
-	public Type getIdentifierType(String className) throws MappingException;
-	public String getIdentifierPropertyName(String className) throws MappingException;
-	public Type getReferencedPropertyType(String className, String propertyName) throws MappingException;
+	Type getIdentifierType(String className) throws MappingException;
+	String getIdentifierPropertyName(String className) throws MappingException;
+	Type getReferencedPropertyType(String className, String propertyName) throws MappingException;
 }

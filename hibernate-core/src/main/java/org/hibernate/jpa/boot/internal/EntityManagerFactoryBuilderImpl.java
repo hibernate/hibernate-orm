@@ -55,7 +55,6 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.beanvalidation.BeanValidationIntegrator;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.util.NullnessHelper;
@@ -68,7 +67,6 @@ import org.hibernate.jpa.boot.spi.StrategyRegistrationProviderList;
 import org.hibernate.jpa.boot.spi.TypeContributorList;
 import org.hibernate.jpa.internal.util.LogHelper;
 import org.hibernate.jpa.internal.util.PersistenceUnitTransactionTypeHelper;
-import org.hibernate.jpa.spi.IdentifierGeneratorStrategyProvider;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
@@ -261,11 +259,8 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 			this.standardServiceRegistry = ssrBuilder.build();
 
-			configureIdentifierGenerators( standardServiceRegistry );
-
 			final MetadataSources metadataSources = new MetadataSources( bsr );
-			this.metamodelBuilder = (MetadataBuilderImplementor) metadataSources.getMetadataBuilder(
-					standardServiceRegistry );
+			this.metamodelBuilder = (MetadataBuilderImplementor) metadataSources.getMetadataBuilder( standardServiceRegistry );
 			List<ConverterDescriptor> attributeConverterDefinitions = applyMappingResources( metadataSources );
 
 			applyMetamodelBuilderSettings( mergedSettings, attributeConverterDefinitions );
@@ -1211,29 +1206,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		}
 
 		return new CacheRegionDefinition( cacheType, role, usage, region, lazyProperty );
-	}
-
-	private void configureIdentifierGenerators(StandardServiceRegistry ssr) {
-		final StrategySelector strategySelector = ssr.getService( StrategySelector.class );
-
-		// apply id generators
-		final Object idGeneratorStrategyProviderSetting = configurationValues.remove( AvailableSettings.IDENTIFIER_GENERATOR_STRATEGY_PROVIDER );
-		if ( idGeneratorStrategyProviderSetting != null ) {
-			final IdentifierGeneratorStrategyProvider idGeneratorStrategyProvider = strategySelector.resolveStrategy(
-					IdentifierGeneratorStrategyProvider.class,
-					idGeneratorStrategyProviderSetting
-			);
-			final MutableIdentifierGeneratorFactory identifierGeneratorFactory = ssr.getService( MutableIdentifierGeneratorFactory.class );
-			if ( identifierGeneratorFactory == null ) {
-				throw persistenceException(
-						"Application requested custom identifier generator strategies, " +
-								"but the MutableIdentifierGeneratorFactory could not be found"
-				);
-			}
-			for ( Map.Entry<String,Class<?>> entry : idGeneratorStrategyProvider.getStrategies().entrySet() ) {
-				identifierGeneratorFactory.register( entry.getKey(), entry.getValue() );
-			}
-		}
 	}
 
 	@SuppressWarnings("unchecked")

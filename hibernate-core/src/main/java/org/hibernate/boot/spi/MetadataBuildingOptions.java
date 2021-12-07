@@ -7,7 +7,6 @@
 package org.hibernate.boot.spi;
 
 import java.util.List;
-import jakarta.persistence.SharedCacheMode;
 
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.TimeZoneStorageStrategy;
@@ -24,11 +23,14 @@ import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.MetadataSourceType;
 import org.hibernate.collection.internal.StandardCollectionSemanticsResolver;
 import org.hibernate.collection.spi.CollectionSemanticsResolver;
+import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.metamodel.internal.ManagedTypeRepresentationResolverStandard;
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.jandex.IndexView;
+
+import jakarta.persistence.SharedCacheMode;
 
 /**
  * Describes the options used while building the Metadata object (during
@@ -52,6 +54,8 @@ public interface MetadataBuildingOptions {
 	 * @return The mapping defaults
 	 */
 	MappingDefaults getMappingDefaults();
+
+	IdentifierGeneratorFactory getIdentifierGeneratorFactory();
 
 	TimeZoneStorageStrategy getDefaultTimeZoneStorage();
 
@@ -249,7 +253,7 @@ public interface MetadataBuildingOptions {
 	 * Should we create constraint by default?
 	 *
 	 * @see jakarta.persistence.ConstraintMode#PROVIDER_DEFAULT
-	 * @see org.hibernate.cfg.AvailableSettings#DEFAULT_CONSTRAINT_MODE
+	 * @see org.hibernate.cfg.AvailableSettings#HBM2DDL_DEFAULT_CONSTRAINT_MODE
 	 *
 	 * @return {@code true} if not create constraint by default; {@code false} otherwise.
 	 */

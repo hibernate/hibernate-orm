@@ -32,7 +32,8 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.id.factory.internal.DefaultIdentifierGeneratorFactory;
+import org.hibernate.id.factory.IdentifierGeneratorFactory;
+import org.hibernate.id.factory.internal.StandardIdentifierGeneratorFactory;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
 import org.hibernate.resource.beans.container.spi.BeanContainer.LifecycleOptions;
@@ -73,8 +74,7 @@ public class UserDefinedGeneratorsTests {
 					.addAnnotatedClass( Entity2.class )
 					.buildMetadata();
 
-			final DefaultIdentifierGeneratorFactory generatorFactory = new DefaultIdentifierGeneratorFactory();
-			generatorFactory.injectServices( (ServiceRegistryImplementor) ssr );
+			final IdentifierGeneratorFactory generatorFactory = new StandardIdentifierGeneratorFactory( ssr );
 
 			final PersistentClass entityBinding1 = metadata.getEntityBinding( Entity1.class.getName() );
 			final PersistentClass entityBinding2 = metadata.getEntityBinding( Entity2.class.getName() );

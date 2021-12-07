@@ -5,9 +5,9 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.id.factory;
+
 import java.util.Properties;
 
-import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.type.Type;
@@ -24,17 +24,6 @@ public interface IdentifierGeneratorFactory {
 	 * @return the dialect
 	 */
 	Dialect getDialect();
-
-	/**
-	 * Allow injection of the dialect to use.
-	 *
-	 * @param dialect The dialect
-	 *
-	 * @deprecated The intention is that Dialect should be required to be specified up-front and it would then get
-	 * ctor injected.
-	 */
-	@Deprecated
-	void setDialect(Dialect dialect);
 
 	/**
 	 * Given a strategy, retrieve the appropriate identifier generator instance.

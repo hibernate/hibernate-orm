@@ -1340,3 +1340,14 @@ See the <<chapters/pc/PersistenceContext.adoc#pc-where-example,`@Where` mapping>
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/WhereJoinTable.html[`@WhereJoinTable`] annotation is used to specify a custom SQL `WHERE` clause used when fetching a join collection table.
 
 See the <<chapters/pc/PersistenceContext.adoc#pc-where-join-table, `@WhereJoinTable` mapping>> section for more info.
+
+[[annotations-hibernate-attributebindertype]]
+==== `@AttributeBinderType`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/AttributeBinderType.html[`@AttributeBinderType`] annotation is used to specify that the current annotation type should is used to drive
+customized model binding.
+
+[[annotations-hibernate-tenantid]]
+==== `@TenantId`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/TenantId.html[`@TenantId`] annotation identifies a field of an entity that holds a tenant id in discriminator-based multitenancy.

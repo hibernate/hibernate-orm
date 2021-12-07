@@ -5337,11 +5337,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	protected String determineTableName(Table table) {
-		if ( table.getSubselect() != null ) {
-			return "( " + table.getSubselect() + " )";
-		}
-
-		return factory.getSqlStringGenerationContext().format( table.getQualifiedTableName() );
+		return MappingModelCreationHelper.getTableIdentifierExpression( table, factory );
 	}
 
 	@Override

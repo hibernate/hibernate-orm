@@ -682,7 +682,7 @@ public class EntityCollectionPart
 				fetched,
 				sourceAlias,
 				primaryTableReference,
-				false,
+				true,
 				sqlAliasBase,
 				(tableExpression) -> getEntityMappingType().containsTableReference( tableExpression ),
 				(tableExpression, tg) -> getEntityMappingType().createTableReferenceJoin(

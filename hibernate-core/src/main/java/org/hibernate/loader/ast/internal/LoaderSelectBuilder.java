@@ -52,6 +52,7 @@ import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.EntityIdentifierNavigablePath;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
+import org.hibernate.sql.ast.spi.AliasCollector;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SimpleFromClauseAccessImpl;
 import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
@@ -935,9 +936,11 @@ public class LoaderSelectBuilder {
 
 		final NavigablePath rootNavigablePath = new NavigablePath( loadable.getRootPathName() );
 
+		// We need to initialize the acronymMap based on subselect.getLoadingSqlAst() to avoid alias collisions
+		final Map<String, TableReference> tableReferences = AliasCollector.getTableReferences( subselect.getLoadingSqlAst() );
 		final LoaderSqlAstCreationState sqlAstCreationState = new LoaderSqlAstCreationState(
 				rootQuerySpec,
-				new SqlAliasBaseManager(),
+				new SqlAliasBaseManager( tableReferences.keySet() ),
 				new SimpleFromClauseAccessImpl(),
 				lockOptions,
 				this::visitFetches,

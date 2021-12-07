@@ -79,6 +79,7 @@ import org.hibernate.mapping.Value;
 import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
 import org.hibernate.metamodel.mapping.internal.PluralAttributeMappingImpl;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.NavigableRole;
@@ -689,11 +690,7 @@ public abstract class AbstractCollectionPersister
 	}
 
 	protected String determineTableName(Table table) {
-		if ( table.getSubselect() != null ) {
-			return "( " + table.getSubselect() + " )";
-		}
-
-		return factory.getSqlStringGenerationContext().format( table.getQualifiedTableName() );
+		return MappingModelCreationHelper.getTableIdentifierExpression( table, factory );
 	}
 
 //	private class ColumnMapperImpl implements ColumnMapper {

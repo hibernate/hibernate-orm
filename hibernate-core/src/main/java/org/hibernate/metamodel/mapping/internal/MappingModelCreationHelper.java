@@ -644,8 +644,9 @@ public class MappingModelCreationHelper {
 				);
 				final String mapKeyTableExpression;
 				if ( bootValueMapping instanceof Map && ( (Map) bootValueMapping ).getMapKeyPropertyName() != null ) {
-					mapKeyTableExpression = sqlStringGenerationContext.format(
-							( (Map) bootValueMapping ).getIndex().getTable().getQualifiedTableName()
+					mapKeyTableExpression = getTableIdentifierExpression(
+							( (Map) bootValueMapping ).getIndex().getTable(),
+							creationProcess
 					);
 				}
 				else {
@@ -1279,11 +1280,16 @@ public class MappingModelCreationHelper {
 		}
 	}
 
-	private static String getTableIdentifierExpression(Table table, MappingModelCreationProcess creationProcess) {
-		final SqlStringGenerationContext sqlStringGenerationContext = creationProcess.getCreationContext()
-				.getSessionFactory()
-				.getSqlStringGenerationContext();
-		return sqlStringGenerationContext.format( table.getQualifiedTableName() );
+	public static String getTableIdentifierExpression(Table table, MappingModelCreationProcess creationProcess) {
+		return getTableIdentifierExpression( table, creationProcess.getCreationContext().getSessionFactory() );
+	}
+
+	public static String getTableIdentifierExpression(Table table, SessionFactoryImplementor sessionFactory) {
+		if ( table.getSubselect() != null ) {
+			return "( " + table.getSubselect() + " )";
+		}
+
+		return sessionFactory.getSqlStringGenerationContext().format( table.getQualifiedTableName() );
 	}
 
 	private static CollectionPart interpretMapKey(

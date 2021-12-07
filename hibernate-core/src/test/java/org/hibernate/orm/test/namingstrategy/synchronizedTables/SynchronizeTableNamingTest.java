@@ -54,7 +54,7 @@ public class SynchronizeTableNamingTest {
 	@Test
 	public void testHbmXmlHandling() {
 		final Metadata metadata = new MetadataSources( ssr )
-				.addResource( "org/hibernate/test/namingstrategy/synchronizedTables/mapping.hbm.xml" )
+				.addResource( "org/hibernate/orm/test/namingstrategy/synchronizedTables/mapping.hbm.xml" )
 				.getMetadataBuilder()
 				.applyPhysicalNamingStrategy( TestingPhysicalNamingStrategy.INSTANCE )
 				.build();

@@ -371,7 +371,7 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 						throw new IllegalAttributeType( "A \"virtual id\" cannot define <any/> attributes : " + attributeName );
 					}
 				},
-				(column, jdbcEnvironment) -> getTableIdentifierExpression( column.getValue().getTable(), creationProcess ),
+				(column, jdbcEnvironment) -> MappingModelCreationHelper.getTableIdentifierExpression( column.getValue().getTable(), creationProcess ),
 				this::addAttribute,
 				() -> {
 					// We need the attribute mapping types to finish initialization first before we can build the column mappings
@@ -382,13 +382,6 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 				},
 				creationProcess
 		);
-	}
-
-	private static String getTableIdentifierExpression(Table table, MappingModelCreationProcess creationProcess) {
-		final SqlStringGenerationContext sqlStringGenerationContext = creationProcess.getCreationContext()
-				.getSessionFactory()
-				.getSqlStringGenerationContext();
-		return sqlStringGenerationContext.format( table.getQualifiedTableName() );
 	}
 
 	private boolean initColumnMappings() {

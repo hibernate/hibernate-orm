@@ -338,7 +338,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 						columnExpression = selectable.getText( dialect );
 					}
 					if ( selectable instanceof Column ) {
-						containingTableExpression = getTableIdentifierExpression(
+						containingTableExpression = MappingModelCreationHelper.getTableIdentifierExpression(
 								( (Column) selectable ).getValue().getTable(),
 								creationProcess
 						);
@@ -555,13 +555,6 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		);
 
 		return true;
-	}
-
-	private static String getTableIdentifierExpression(Table table, MappingModelCreationProcess creationProcess) {
-		final SqlStringGenerationContext sqlStringGenerationContext = creationProcess.getCreationContext()
-				.getSessionFactory()
-				.getSqlStringGenerationContext();
-		return sqlStringGenerationContext.format( table.getQualifiedTableName() );
 	}
 
 	private boolean initColumnMappings() {

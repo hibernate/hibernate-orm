@@ -6,7 +6,6 @@
  */
 package org.hibernate.type.descriptor.java;
 
-import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.ZoneId;
@@ -236,7 +235,7 @@ public class JdbcTimestampJavaTypeDescriptor extends AbstractTemporalJavaTypeDes
 				return copy;
 			}
 			else {
-				return new Date( value.getTime() );
+				return new Timestamp( value.getTime() );
 			}
 		}
 	}

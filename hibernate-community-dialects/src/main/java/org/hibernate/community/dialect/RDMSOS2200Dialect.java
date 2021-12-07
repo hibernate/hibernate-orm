@@ -6,15 +6,25 @@
  */
 package org.hibernate.community.dialect;
 
+import java.sql.Types;
+
 import org.hibernate.LockMode;
+import org.hibernate.community.dialect.sequence.RDMSSequenceSupport;
 import org.hibernate.dialect.AbstractTransactSQLDialect;
+import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.lock.*;
+import org.hibernate.dialect.lock.LockingStrategy;
+import org.hibernate.dialect.lock.OptimisticForceIncrementLockingStrategy;
+import org.hibernate.dialect.lock.OptimisticLockingStrategy;
+import org.hibernate.dialect.lock.PessimisticForceIncrementLockingStrategy;
+import org.hibernate.dialect.lock.PessimisticReadUpdateLockingStrategy;
+import org.hibernate.dialect.lock.PessimisticWriteUpdateLockingStrategy;
+import org.hibernate.dialect.lock.SelectLockingStrategy;
+import org.hibernate.dialect.lock.UpdateLockingStrategy;
 import org.hibernate.dialect.pagination.FetchLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.community.dialect.sequence.RDMSSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -35,8 +45,9 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import org.jboss.logging.Logger;
 
-import java.sql.Types;
 import jakarta.persistence.TemporalType;
+
+import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
 
 /**
  * This is the Hibernate dialect for the Unisys 2200 Relational Database (RDMS).
@@ -114,8 +125,8 @@ public class RDMSOS2200Dialect extends Dialect {
 	}
 
 	@Override
-	public int getVersion() {
-		return 0;
+	public DatabaseVersion getVersion() {
+		return ZERO_VERSION;
 	}
 
 	@Override

@@ -35,21 +35,18 @@ import org.hibernate.type.StandardBasicTypes;
  * @author <a href="mailto:jonathan.bregler@sap.com">Jonathan Bregler</a>
  */
 public class HANAColumnStoreDialect extends AbstractHANADialect {
-	private final int version;
-
 	public HANAColumnStoreDialect(DialectResolutionInfo info) {
-		this( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
+		this( info.makeCopy() );
 		registerKeywords( info );
 	}
 	
 	public HANAColumnStoreDialect() {
-		this( 300 );
+		this( DatabaseVersion.make( 3, 0 ) );
 	}
 
-	public HANAColumnStoreDialect(int version) {
-		super();
-		this.version = version;
-		if ( this.version >= 400 ) {
+	public HANAColumnStoreDialect(DatabaseVersion version) {
+		super( version );
+		if ( version.isSince( 4 ) ) {
 			registerColumnType( Types.CHAR, "nvarchar(1)" );
 			registerColumnType( Types.VARCHAR, 5000, "nvarchar($l)" );
 			registerColumnType( Types.LONGVARCHAR, 5000, "nvarchar($l)" );
@@ -73,7 +70,7 @@ public class HANAColumnStoreDialect extends AbstractHANADialect {
 	}
 
 	@Override
-	public int getVersion(){
+	public DatabaseVersion getVersion(){
 		return version;
 	}
 
@@ -177,7 +174,7 @@ public class HANAColumnStoreDialect extends AbstractHANADialect {
 
 	@Override
 	protected boolean supportsAsciiStringTypes() {
-		if ( version >= 400 ) {
+		if ( version.isSince( 4 ) ) {
 			return false;
 		}
 		return true;
@@ -185,7 +182,7 @@ public class HANAColumnStoreDialect extends AbstractHANADialect {
 
 	@Override
 	protected Boolean useUnicodeStringTypesDefault() {
-		if ( version >= 400 ) {
+		if ( version.isSince( 4 ) ) {
 			return Boolean.TRUE;
 		}
 		return Boolean.FALSE;
@@ -193,7 +190,7 @@ public class HANAColumnStoreDialect extends AbstractHANADialect {
 
 	@Override
 	public boolean isUseUnicodeStringTypes() {
-		if ( version >= 400 ) {
+		if ( version.isSince( 4 ) ) {
 			return true;
 		}
 		return super.isUseUnicodeStringTypes();

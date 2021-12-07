@@ -16,7 +16,6 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.CastType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -35,36 +34,38 @@ import org.hibernate.type.StandardBasicTypes;
  */
 public class MariaDBDialect extends MySQLDialect {
 
-	private final int version;
+	private final DatabaseVersion version;
 
 	public MariaDBDialect() {
-		this(500);
+		this( DatabaseVersion.make( 5 ) );
 	}
 
 	public MariaDBDialect(DialectResolutionInfo info) {
-		this(
-				info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10,
-				getCharacterSetBytesPerCharacter( info.unwrap( DatabaseMetaData.class ) )
-		);
+		this( info.makeCopy(), getCharacterSetBytesPerCharacter( info.unwrap( DatabaseMetaData.class ) ) );
 		registerKeywords( info );
 	}
 
-	public MariaDBDialect(int version) {
+	public MariaDBDialect(DatabaseVersion version) {
 		// Let's be conservative and assume people use a 4 byte character set
 		this( version, 4 );
 	}
 
-	public MariaDBDialect(int version, int characterSetBytesPerCharacter) {
-		super( version < 530 ? 500 : 570, characterSetBytesPerCharacter );
+	public MariaDBDialect(DatabaseVersion version, int characterSetBytesPerCharacter) {
+		super(
+				version.isBefore( 5, 3 )
+						? DatabaseVersion.make( 5 )
+						: DatabaseVersion.make( 5, 7 ),
+				characterSetBytesPerCharacter
+		);
 		this.version = version;
 	}
 
 	protected int getMaxVarcharLen() {
-		return getMySQLVersion() < 500 ? 255 : 65_534;
+		return getMySQLVersion().isBefore( 5 ) ? 255 : 65_534;
 	}
 
 	@Override
-	public int getVersion() {
+	public DatabaseVersion getVersion() {
 		return version;
 	}
 
@@ -77,7 +78,7 @@ public class MariaDBDialect extends MySQLDialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry(queryEngine);
 
-		if ( getVersion() >= 1020 ) {
+		if ( getVersion().isSince( 10, 2 ) ) {
 			queryEngine.getSqmFunctionRegistry().registerNamed(
 					"json_valid",
 					queryEngine.getTypeConfiguration()
@@ -100,12 +101,12 @@ public class MariaDBDialect extends MySQLDialect {
 
 	@Override
 	public boolean supportsWindowFunctions() {
-		return getVersion() >= 1020;
+		return getVersion().isSince( 10, 2 );
 	}
 
 	@Override
 	public boolean supportsColumnCheck() {
-		return getVersion() >= 1020;
+		return getVersion().isSince( 10, 2 );
 	}
 
 	@Override
@@ -115,17 +116,17 @@ public class MariaDBDialect extends MySQLDialect {
 
 	@Override
 	public boolean supportsIfExistsBeforeConstraintName() {
-		return getVersion() >= 1000;
+		return getVersion().isSince( 10 );
 	}
 
 	@Override
 	public boolean supportsIfExistsAfterAlterTable() {
-		return getVersion() >= 1050;
+		return getVersion().isSince( 10, 5 );
 	}
 
 	@Override
 	public SequenceSupport getSequenceSupport() {
-		return getVersion() < 1030
+		return getVersion().isBefore( 10, 3 )
 				? super.getSequenceSupport()
 				: MariaDBSequenceSupport.INSTANCE;
 	}
@@ -147,17 +148,17 @@ public class MariaDBDialect extends MySQLDialect {
 	@Override
 	public boolean supportsSkipLocked() {
 		//only supported on MySQL and as of 10.6
-		return getVersion() >= 1060;
+		return getVersion().isSince( 10, 6 );
 	}
 
 	@Override
 	public boolean supportsNoWait() {
-		return getVersion() >= 1030;
+		return getVersion().isSince( 10, 3 );
 	}
 
 	@Override
 	public boolean supportsWait() {
-		return getVersion() >= 1030;
+		return getVersion().isSince( 10, 3 );
 	}
 
 	@Override

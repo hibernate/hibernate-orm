@@ -15,7 +15,7 @@ package org.hibernate.dialect;
 public class MySQL8Dialect extends MySQLDialect {
 
 	public MySQL8Dialect() {
-		super(800);
+		super( DatabaseVersion.make( 8 ) );
 
 		// MySQL doesn't add the new reserved keywords to their JDBC driver to preserve backward compatibility.
 

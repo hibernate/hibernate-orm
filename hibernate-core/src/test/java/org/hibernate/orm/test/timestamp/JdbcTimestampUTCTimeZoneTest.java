@@ -20,7 +20,7 @@ import org.junit.jupiter.api.AfterAll;
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialect(value = PostgreSQLDialect.class, version = 820)
+@RequiresDialect(value = PostgreSQLDialect.class, majorVersion = 8, minorVersion = 2)
 public class JdbcTimestampUTCTimeZoneTest extends JdbcTimestampWithoutUTCTimeZoneTest {
 
 	private TimeZoneConnectionProvider connectionProvider;

@@ -38,7 +38,7 @@ public class SequenceGeneratorTest {
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSequences.class)
 	@SkipForDialect(
 			dialectClass = SQLServerDialect.class,
-			version = 2012,
+			majorVersion = 11,
 			reason = "SQLServer2012Dialect initializes sequence to minimum value (e.g., Long.MIN_VALUE; Hibernate assumes it is uninitialized.",
 			matchSubTypes = true
 	)

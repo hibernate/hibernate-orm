@@ -6,16 +6,19 @@
  */
 package org.hibernate.community.dialect;
 
+import java.sql.Types;
+
 import org.hibernate.cfg.Environment;
+import org.hibernate.community.dialect.identity.Ingres10IdentityColumnSupport;
+import org.hibernate.community.dialect.identity.Ingres9IdentityColumnSupport;
+import org.hibernate.community.dialect.pagination.FirstLimitHandler;
+import org.hibernate.community.dialect.pagination.IngresLimitHandler;
+import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
-import org.hibernate.community.dialect.identity.Ingres10IdentityColumnSupport;
-import org.hibernate.community.dialect.identity.Ingres9IdentityColumnSupport;
-import org.hibernate.community.dialect.pagination.FirstLimitHandler;
-import org.hibernate.community.dialect.pagination.IngresLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.ANSISequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
@@ -57,7 +60,6 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
-import java.sql.Types;
 import jakarta.persistence.TemporalType;
 
 /**
@@ -88,27 +90,27 @@ public class IngresDialect extends Dialect {
 
 	private final LimitHandler limitHandler;
 
-	private final int version;
+	private final DatabaseVersion version;
 
 	private final SequenceSupport sequenceSupport;
 
 	public IngresDialect(DialectResolutionInfo info) {
-		this( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
+		this( info.makeCopy() );
 		registerKeywords( info );
 	}
 
 	public IngresDialect() {
-		this(920);
+		this( DatabaseVersion.make( 9, 2 ) );
 	}
 
 	/**
 	 * Constructs a IngresDialect
 	 */
-	public IngresDialect(int version) {
+	public IngresDialect(DatabaseVersion version) {
 		super();
 		this.version = version;
 
-		if ( getVersion() < 1000 ) {
+		if ( version.isBefore( 10 ) ) {
 			registerColumnType( Types.BOOLEAN, "tinyint" );
 		}
 		else {
@@ -138,7 +140,7 @@ public class IngresDialect extends Dialect {
 		//note: 'long nvarchar' is a synonym for 'nclob'
 		registerColumnType( Types.NVARCHAR, "long nvarchar($l)" );
 
-		if ( getVersion() >= 930 ) {
+		if ( getVersion().isSince( 9, 3 ) ) {
 			// Not completely necessary, given that Ingres
 			// can be configured to set DATE = ANSIDATE
 			registerColumnType( Types.DATE, "ansidate" );
@@ -156,25 +158,25 @@ public class IngresDialect extends Dialect {
 		// Ingres JDBC Driver returns table and object keys as BINARY values.
 		getDefaultProperties().setProperty( Environment.USE_GET_GENERATED_KEYS, "false" );
 
-		if ( getVersion() < 1000 ) {
+		if ( getVersion().isBefore( 10 ) ) {
 			// There is no support for a native boolean type that accepts values
 			// of true, false or unknown. Using the tinyint type requires
 			// substitutions of true and false.
 			getDefaultProperties().setProperty( Environment.QUERY_SUBSTITUTIONS, "true=1,false=0" );
 		}
 
-		limitHandler = getVersion() < 930 ? FirstLimitHandler.INSTANCE : IngresLimitHandler.INSTANCE;
+		limitHandler = getVersion().isBefore( 9, 3 ) ? FirstLimitHandler.INSTANCE : IngresLimitHandler.INSTANCE;
 
 		sequenceSupport = new ANSISequenceSupport() {
 			@Override
 			public boolean supportsPooledSequences() {
-				return getVersion() >= 930;
+				return getVersion().isSince( 9, 3 );
 			}
 		};
 	}
 
 	@Override
-	public int getVersion() {
+	public DatabaseVersion getVersion() {
 		return version;
 	}
 
@@ -199,12 +201,12 @@ public class IngresDialect extends Dialect {
 
 	@Override
 	public int getPreferredSqlTypeCodeForBoolean() {
-		return getVersion() < 1000 ? Types.BIT : Types.BOOLEAN;
+		return getVersion().isBefore( 10 ) ? Types.BIT : Types.BOOLEAN;
 	}
 
 	@Override
 	public void appendBooleanValueString(SqlAppender appender, boolean bool) {
-		if ( getVersion() < 1000 ) {
+		if ( getVersion().isBefore( 10 ) ) {
 			appender.appendSql( bool ? '1' : '0' );
 		}
 		else {
@@ -351,7 +353,7 @@ public class IngresDialect extends Dialect {
 
 	@Override
 	public String getQuerySequencesString() {
-		return getVersion() < 930
+		return getVersion().isBefore( 9, 3 )
 				? "select seq_name from iisequence"
 				: "select seq_name from iisequences";
 	}
@@ -373,10 +375,10 @@ public class IngresDialect extends Dialect {
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
-		if ( getVersion() >= 1000 ) {
+		if ( getVersion().isSince( 10 ) ) {
 			return new Ingres10IdentityColumnSupport();
 		}
-		else if (getVersion() >= 930) {
+		else if ( getVersion().isSince( 9, 3 ) ) {
 			return new Ingres9IdentityColumnSupport();
 		}
 		else {
@@ -406,7 +408,7 @@ public class IngresDialect extends Dialect {
 
 	@Override
 	public boolean supportsCurrentTimestampSelection() {
-		return getVersion() >= 930;
+		return getVersion().isSince( 9, 3 );
 	}
 
 	@Override
@@ -458,7 +460,7 @@ public class IngresDialect extends Dialect {
 
 	@Override
 	public boolean supportsUnionAll() {
-		return getVersion() >= 930;
+		return getVersion().isSince( 9, 3 );
 	}
 
 	@Override
@@ -470,7 +472,7 @@ public class IngresDialect extends Dialect {
 	@Override
 	public boolean supportsSubqueryInSelect() {
 		// At least according to HHH-4961
-		return getVersion() >= 1000;
+		return getVersion().isSince( 10 );
 	}
 
 	@Override
@@ -483,12 +485,12 @@ public class IngresDialect extends Dialect {
 
 	@Override
 	public boolean doesReadCommittedCauseWritersToBlockReaders() {
-		return getVersion() >= 930;
+		return getVersion().isSince( 9, 3 );
 	}
 
 	@Override
 	public boolean doesRepeatableReadCauseReadersToBlockWriters() {
-		return getVersion() >= 930;
+		return getVersion().isSince( 9, 3 );
 	}
 
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -526,6 +528,6 @@ public class IngresDialect extends Dialect {
 
 	@Override
 	public boolean supportsFetchClause(FetchClauseType type) {
-		return getVersion() >= 930;
+		return getVersion().isSince( 9, 3 );
 	}
 }

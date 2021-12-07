@@ -37,7 +37,7 @@ import static org.hamcrest.core.Is.is;
  */
 @TestForIssue(jiraKey = "HHH-14835")
 @BaseUnitTest
-@RequiresDialect(value = SQLServerDialect.class, version = 12)
+@RequiresDialect(value = SQLServerDialect.class, majorVersion = 12)
 public class SchemaExportSqlServerWithSequenceDefaultSchemaCatalog {
 	protected ServiceRegistry serviceRegistry;
 	protected MetadataImplementor metadata;

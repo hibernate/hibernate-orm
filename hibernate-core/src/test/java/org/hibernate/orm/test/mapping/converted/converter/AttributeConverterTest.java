@@ -453,7 +453,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			final int expectedJdbcTypeCode;
 			if ( metadata.getDatabase().getDialect() instanceof HANAColumnStoreDialect
 					// Only for SAP HANA Cloud
-					&& metadata.getDatabase().getDialect().getVersion() >= 400 ) {
+					&& metadata.getDatabase().getDialect().getVersion().isSince( 4 ) ) {
 				expectedJdbcTypeCode = Types.NVARCHAR;
 			}
 			else {

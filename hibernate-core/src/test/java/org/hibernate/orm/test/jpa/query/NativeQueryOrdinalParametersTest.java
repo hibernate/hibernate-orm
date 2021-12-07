@@ -123,8 +123,8 @@ public class NativeQueryOrdinalParametersTest {
 	@Test
 	@TestForIssue(jiraKey = "HHH-12532")
 	// Add RequiresDialect be Cockroach version 201
-	@RequiresDialect( value = PostgreSQLDialect.class, version = 820 )
-	@RequiresDialect( value = CockroachDialect.class, version = 2010 )
+	@RequiresDialect( value = PostgreSQLDialect.class, majorVersion = 8, minorVersion = 2 )
+	@RequiresDialect( value = CockroachDialect.class, majorVersion = 20, minorVersion = 1 )
 	public void testCteNativeQueryOrdinalParameter(EntityManagerFactoryScope scope) {
 
 		Node root1 = new Node();

@@ -51,7 +51,7 @@ import org.junit.jupiter.api.Test;
 		xmlMappings = "org/hibernate/orm/test/dialect/function/Product.hbm.xml"
 )
 @SessionFactory
-@RequiresDialect(value = SybaseASEDialect.class, version = 1100)
+@RequiresDialect(value = SybaseASEDialect.class, majorVersion = 11)
 public class SybaseASEFunctionTest {
 
 	private Calendar calendar = Calendar.getInstance();

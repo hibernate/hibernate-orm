@@ -833,7 +833,7 @@ public class NativeSQLQueriesTest {
 	}
 
 	@Test
-	@RequiresDialect(value = MySQLDialect.class, version = 500)
+	@RequiresDialect(value = MySQLDialect.class, majorVersion = 5)
 	public void testEscapeColonInSQL(SessionFactoryScope scope) throws QueryException {
 		scope.inTransaction(
 				session -> {

@@ -16,7 +16,7 @@ package org.hibernate.dialect;
 public class PostgreSQL95Dialect extends PostgreSQLDialect {
 
 	public PostgreSQL95Dialect() {
-		super(950);
+		super( DatabaseVersion.make( 9, 5 ) );
 	}
 
 }

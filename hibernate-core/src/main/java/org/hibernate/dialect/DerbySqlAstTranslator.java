@@ -259,12 +259,12 @@ public class DerbySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 	}
 
 	private boolean supportsParameterOffsetFetchExpression() {
-		return getDialect().getVersion() >= 1060;
+		return getDialect().getVersion().isSince( 10, 6 );
 	}
 
 	private boolean supportsOffsetFetchClause() {
 		// Before version 10.5 Derby didn't support OFFSET and FETCH
-		return getDialect().getVersion() >= 1050;
+		return getDialect().getVersion().isSince( 10, 5 );
 	}
 
 }

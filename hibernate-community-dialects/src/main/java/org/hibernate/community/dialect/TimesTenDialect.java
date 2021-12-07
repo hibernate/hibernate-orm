@@ -9,6 +9,7 @@ package org.hibernate.community.dialect;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -44,6 +45,8 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import java.sql.Types;
 import jakarta.persistence.TemporalType;
+
+import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
 
 /**
  * A SQL dialect for TimesTen 5.1.
@@ -103,8 +106,8 @@ public class TimesTenDialect extends Dialect {
 	}
 
 	@Override
-	public int getVersion() {
-		return 0;
+	public DatabaseVersion getVersion() {
+		return ZERO_VERSION;
 	}
 
 	@Override

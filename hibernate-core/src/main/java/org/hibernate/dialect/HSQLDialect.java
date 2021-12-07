@@ -9,12 +9,8 @@ package org.hibernate.dialect;
 import java.sql.DatabaseMetaData;
 import java.sql.Types;
 
-import jakarta.persistence.TemporalType;
-
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
-import org.hibernate.query.IntervalType;
-import org.hibernate.query.NullOrdering;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -33,6 +29,8 @@ import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.sequence.HSQLSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.temptable.TemporaryTable;
+import org.hibernate.dialect.temptable.TemporaryTableKind;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -46,16 +44,16 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.query.CastType;
+import org.hibernate.query.IntervalType;
+import org.hibernate.query.NullOrdering;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.internal.temptable.AfterUseAction;
 import org.hibernate.query.sqm.mutation.internal.temptable.BeforeUseAction;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
-import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
-import org.hibernate.dialect.temptable.TemporaryTableKind;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
@@ -69,6 +67,8 @@ import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorHS
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 
 import org.jboss.logging.Logger;
+
+import jakarta.persistence.TemporalType;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 
@@ -88,21 +88,21 @@ public class HSQLDialect extends Dialect {
 	/**
 	 * version is 180 for 1.8.0 or 200 for 2.0.0
 	 */
-	private final int version;
+	private final DatabaseVersion version;
 
 	public HSQLDialect(DialectResolutionInfo info) {
-		this( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
+		this( info.makeCopy() );
 		registerKeywords( info );
 	}
 
 	public HSQLDialect() {
-		this( 180 );
+		this( DatabaseVersion.make( 1, 8 ) );
 	}
 
-	public HSQLDialect(int version) {
+	public HSQLDialect(DatabaseVersion version) {
 		super();
 
-		if ( version == 180 ) {
+		if ( version.isSame( 1, 8 ) ) {
 			version = reflectedVersion( version );
 		}
 
@@ -118,7 +118,7 @@ public class HSQLDialect extends Dialect {
 		//(See HHH-10364)
 		registerColumnType( Types.NCLOB, "clob" );
 
-		if ( this.version < 200 ) {
+		if ( this.version.isBefore( 2 ) ) {
 			//Older versions of HSQL did not accept
 			//precision for the 'numeric' type
 			registerColumnType( Types.NUMERIC, "numeric" );
@@ -128,21 +128,23 @@ public class HSQLDialect extends Dialect {
 			registerColumnType( Types.CLOB, "longvarchar" );
 		}
 
-		if ( this.version >= 250 ) {
+		if ( this.version.isSince( 2, 5 ) ) {
 			registerKeyword( "period" );
 		}
 
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 	}
 
-	private static int reflectedVersion(int version) {
+	private static DatabaseVersion reflectedVersion(DatabaseVersion version) {
 		try {
-			final Class props = ReflectHelper.classForName("org.hsqldb.persist.HsqlDatabaseProperties");
+			final Class<?> props = ReflectHelper.classForName("org.hsqldb.persist.HsqlDatabaseProperties");
 			final String versionString = (String) props.getDeclaredField("THIS_VERSION").get( null );
 
-			return Integer.parseInt( versionString.substring(0, 1) ) * 100
-				+  Integer.parseInt( versionString.substring(2, 3) ) * 10
-				+  Integer.parseInt( versionString.substring(4, 5) );
+			return new SimpleDatabaseVersion(
+					Integer.parseInt( versionString.substring( 0, 1 ) ),
+					Integer.parseInt( versionString.substring( 2, 3 ) ),
+					Integer.parseInt( versionString.substring( 4, 5 ) )
+			);
 		}
 		catch (Throwable e) {
 			// might be a very old version, or not accessible in class path
@@ -151,7 +153,7 @@ public class HSQLDialect extends Dialect {
 	}
 
 	@Override
-	public int getVersion() {
+	public DatabaseVersion getVersion() {
 		return version;
 	}
 
@@ -206,13 +208,13 @@ public class HSQLDialect extends Dialect {
 		CommonFunctionFactory.addMonths( queryEngine );
 		CommonFunctionFactory.monthsBetween( queryEngine );
 
-		if ( version >= 200 ) {
+		if ( version.isSince( 2 ) ) {
 			//SYSDATE is similar to LOCALTIMESTAMP but it returns the timestamp when it is called
 			CommonFunctionFactory.sysdate( queryEngine );
 		}
 
 		// from v. 2.2.0 ROWNUM() is supported in all modes as the equivalent of Oracle ROWNUM
-		if ( version > 219 ) {
+		if ( version.isSince( 2, 2 ) ) {
 			CommonFunctionFactory.rownum( queryEngine );
 		}
 	}
@@ -355,7 +357,7 @@ public class HSQLDialect extends Dialect {
 
 	@Override
 	public String getForUpdateString() {
-		if ( version >= 200 ) {
+		if ( version.isSince( 2 ) ) {
 			return " for update";
 		}
 		else {
@@ -365,8 +367,8 @@ public class HSQLDialect extends Dialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		return version < 200 ? LegacyHSQLLimitHandler.INSTANCE
-			: version < 250 ? LimitOffsetLimitHandler.INSTANCE
+		return version.isBefore( 2 ) ? LegacyHSQLLimitHandler.INSTANCE
+			: version.isBefore( 2, 5 ) ? LimitOffsetLimitHandler.INSTANCE
 			: OffsetFetchLimitHandler.INSTANCE;
 	}
 
@@ -385,7 +387,7 @@ public class HSQLDialect extends Dialect {
 
 	@Override
 	public boolean supportsColumnCheck() {
-		return version >= 200;
+		return version.isSince( 2 );
 	}
 
 	@Override
@@ -406,7 +408,7 @@ public class HSQLDialect extends Dialect {
 
 	@Override
 	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
-		return version < 200 ? EXTRACTOR_18 : EXTRACTOR_20;
+		return version.isBefore( 2 ) ? EXTRACTOR_18 : EXTRACTOR_20;
 	}
 
 	private static final ViolatedConstraintNameExtractor EXTRACTOR_18 =
@@ -516,7 +518,7 @@ public class HSQLDialect extends Dialect {
 		// the definition and data is private to the session and table declaration
 		// can happen in the middle of a transaction
 
-		if ( version < 200 ) {
+		if ( version.isBefore( 2 ) ) {
 			return new GlobalTemporaryTableMutationStrategy(
 					TemporaryTable.createIdTable(
 							rootEntityDescriptor,
@@ -556,7 +558,7 @@ public class HSQLDialect extends Dialect {
 		// the definition and data is private to the session and table declaration
 		// can happen in the middle of a transaction
 
-		if ( version < 200 ) {
+		if ( version.isBefore( 2 ) ) {
 			return new GlobalTemporaryTableInsertStrategy(
 					TemporaryTable.createEntityTable(
 							rootEntityDescriptor,
@@ -584,24 +586,24 @@ public class HSQLDialect extends Dialect {
 
 	@Override
 	public TemporaryTableKind getSupportedTemporaryTableKind() {
-		return version < 200 ? TemporaryTableKind.GLOBAL : TemporaryTableKind.LOCAL;
+		return version.isBefore( 2 ) ? TemporaryTableKind.GLOBAL : TemporaryTableKind.LOCAL;
 	}
 
 	@Override
 	public String getTemporaryTableCreateCommand() {
-		return version < 200 ? super.getTemporaryTableCreateCommand() : "declare local temporary table";
+		return version.isBefore( 2 ) ? super.getTemporaryTableCreateCommand() : "declare local temporary table";
 	}
 
 	@Override
 	public AfterUseAction getTemporaryTableAfterUseAction() {
 		// Version 1.8 GLOBAL TEMPORARY table definitions persist beyond the end
 		// of the session (by default, data is cleared at commit).
-		return version < 200 ? AfterUseAction.CLEAN : AfterUseAction.DROP;
+		return version.isBefore( 2 ) ? AfterUseAction.CLEAN : AfterUseAction.DROP;
 	}
 
 	@Override
 	public BeforeUseAction getTemporaryTableBeforeUseAction() {
-		return version < 200 ? BeforeUseAction.NONE : BeforeUseAction.CREATE;
+		return version.isBefore( 2 ) ? BeforeUseAction.NONE : BeforeUseAction.CREATE;
 	}
 
 	// current timestamp support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -649,7 +651,7 @@ public class HSQLDialect extends Dialect {
 			case OPTIMISTIC_FORCE_INCREMENT:
 				return new OptimisticForceIncrementLockingStrategy(lockable, lockMode);
 		}
-		if ( version < 200 ) {
+		if ( version.isBefore( 2 ) ) {
 			return new ReadUncommittedLockingStrategy( lockable, lockMode );
 		}
 		else {
@@ -674,19 +676,19 @@ public class HSQLDialect extends Dialect {
 
 	@Override
 	public boolean supportsCommentOn() {
-		return version >= 200;
+		return version.isSince( 2 );
 	}
 
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
 	public boolean doesReadCommittedCauseWritersToBlockReaders() {
-		return version >= 200;
+		return version.isSince( 2 );
 	}
 
 	@Override
 	public boolean doesRepeatableReadCauseReadersToBlockWriters() {
-		return version >= 200;
+		return version.isSince( 2 );
 	}
 
 	@Override
@@ -707,7 +709,7 @@ public class HSQLDialect extends Dialect {
 	@Override
 	public boolean supportsTupleDistinctCounts() {
 		// from v. 2.2.9 is added support for COUNT(DISTINCT ...) with multiple arguments
-		return version >= 229;
+		return version.isSince( 2, 2, 9 );
 	}
 
 	@Override
@@ -722,7 +724,7 @@ public class HSQLDialect extends Dialect {
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
-		return new HSQLIdentityColumnSupport( this.version);
+		return new HSQLIdentityColumnSupport( this.version );
 	}
 
 	@Override

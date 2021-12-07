@@ -17,7 +17,7 @@ package org.hibernate.dialect;
 public class SQLServer2012Dialect extends SQLServerDialect {
 
 	public SQLServer2012Dialect() {
-		super(11);
+		super( DatabaseVersion.make( 11 ) );
 	}
 
 }

@@ -8,6 +8,7 @@ package org.hibernate.community.dialect;
 
 import org.hibernate.LockMode;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -55,6 +56,7 @@ import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtract
  * @author Jonathan Levinson
  */
 public class CacheDialect extends Dialect {
+	private final DatabaseVersion version = DatabaseVersion.make( 0, 0 );
 
 	public CacheDialect() {
 		super();
@@ -90,8 +92,8 @@ public class CacheDialect extends Dialect {
 	}
 
 	@Override
-	public int getVersion() {
-		return 0;
+	public DatabaseVersion getVersion() {
+		return version;
 	}
 
 	@Override

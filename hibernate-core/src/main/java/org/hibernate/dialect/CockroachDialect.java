@@ -6,6 +6,16 @@
  */
 package org.hibernate.dialect;
 
+import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.time.temporal.TemporalAccessor;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.TimeZone;
+
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -41,16 +51,6 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
-import java.sql.DatabaseMetaData;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.time.temporal.TemporalAccessor;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.TimeZone;
-
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.query.TemporalUnit.DAY;
@@ -70,27 +70,24 @@ public class CockroachDialect extends Dialect {
 
 	// * no support for java.sql.Clob
 
-	private final int version;
+	private final DatabaseVersion version;
 	private final PostgreSQLDriverKind driverKind;
 
 	public CockroachDialect() {
-		this( 1920 );
+		this( DatabaseVersion.make( 19, 2 ) );
 	}
 
 	public CockroachDialect(DialectResolutionInfo info) {
-		this(
-				info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10,
-				PostgreSQLDriverKind.determineKind( info )
-		);
+		this( info.makeCopy(), PostgreSQLDriverKind.determineKind( info ) );
 		registerKeywords( info );
 	}
 
-	public CockroachDialect(int version) {
+	public CockroachDialect(DatabaseVersion version) {
 		// Assume PgJDBC by default
 		this( version, PostgreSQLDriverKind.PG_JDBC );
 	}
 
-	public CockroachDialect(int version, PostgreSQLDriverKind driverKind) {
+	public CockroachDialect(DatabaseVersion version, PostgreSQLDriverKind driverKind) {
 		super();
 
 		this.version = version;
@@ -118,7 +115,7 @@ public class CockroachDialect extends Dialect {
 		registerColumnType( SqlTypes.INTERVAL_SECOND, "interval second($s)" );
 
 		// Prefer jsonb if possible
-		if ( getVersion() >= 2000 ) {
+		if ( getVersion().isSince( 20, 0 ) ) {
 			registerColumnType( SqlTypes.INET, "inet" );
 			registerColumnType( SqlTypes.JSON, "jsonb" );
 		}
@@ -132,12 +129,11 @@ public class CockroachDialect extends Dialect {
 	@Override
 	public String getTypeName(int code, Size size) throws HibernateException {
 		// The maximum scale for `interval second` is 6 unfortunately so we have to use numeric by default
-		switch ( code ) {
-			case SqlTypes.INTERVAL_SECOND:
-				final Integer scale = size.getScale();
-				if ( scale == null || scale > 6 ) {
-					return getTypeName( SqlTypes.NUMERIC, size );
-				}
+		if ( code == SqlTypes.INTERVAL_SECOND ) {
+			final Integer scale = size.getScale();
+			if ( scale == null || scale > 6 ) {
+				return getTypeName( SqlTypes.NUMERIC, size );
+			}
 		}
 		return super.getTypeName( code, size );
 	}
@@ -180,7 +176,7 @@ public class CockroachDialect extends Dialect {
 			jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
 			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLIntervalSecondJdbcType.INSTANCE );
 
-			if ( getVersion() >= 2000 ) {
+			if ( getVersion().isSince( 20, 0 ) ) {
 				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLInetJdbcType.INSTANCE );
 				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLJsonbJdbcType.INSTANCE );
 			}
@@ -191,7 +187,7 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
-	public int getVersion() {
+	public DatabaseVersion getVersion() {
 		return version;
 	}
 
@@ -541,7 +537,7 @@ public class CockroachDialect extends Dialect {
 	@Override
 	public String getForUpdateString(LockOptions lockOptions) {
 		// Support was added in 20.1: https://www.cockroachlabs.com/docs/v20.1/select-for-update.html
-		if ( getVersion() < 2010 ) {
+		if ( getVersion().isBefore( 20, 1 ) ) {
 			return "";
 		}
 		return super.getForUpdateString( lockOptions );
@@ -550,7 +546,7 @@ public class CockroachDialect extends Dialect {
 	@Override
 	public String getForUpdateString(String aliases, LockOptions lockOptions) {
 		// Support was added in 20.1: https://www.cockroachlabs.com/docs/v20.1/select-for-update.html
-		if ( getVersion() < 2010 ) {
+		if ( getVersion().isBefore( 20, 1 ) ) {
 			return "";
 		}
 		/*
@@ -668,7 +664,7 @@ public class CockroachDialect extends Dialect {
 
 	@Override
 	public boolean supportsNoWait() {
-		return getVersion() >= 2010;
+		return getVersion().isSince( 20, 1 );
 	}
 
 	@Override
@@ -678,12 +674,12 @@ public class CockroachDialect extends Dialect {
 
 	@Override
 	public boolean supportsSkipLocked() {
-		return getVersion() >= 2010;
+		return getVersion().isSince( 20, 1 );
 	}
 
 	@Override
 	public RowLockStrategy getWriteRowLockStrategy() {
-		return getVersion() >= 2010 ? RowLockStrategy.TABLE : RowLockStrategy.NONE;
+		return getVersion().isSince( 20, 1 ) ? RowLockStrategy.TABLE : RowLockStrategy.NONE;
 	}
 
 	@Override

@@ -20,7 +20,7 @@ package org.hibernate.dialect;
 public class Oracle9iDialect extends OracleDialect {
 
 	public Oracle9iDialect() {
-		super( 900 );
+		super( DatabaseVersion.make( 9 ) );
 	}
 
 }

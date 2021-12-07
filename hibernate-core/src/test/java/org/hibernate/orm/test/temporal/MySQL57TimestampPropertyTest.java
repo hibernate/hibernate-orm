@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 /**
  * @author Gail Badner
  */
-@RequiresDialect(value = MySQLDialect.class, version = 570)
+@RequiresDialect(value = MySQLDialect.class, majorVersion = 5, minorVersion = 7)
 @TestForIssue(jiraKey = "HHH-8401")
 @DomainModel(
 		annotatedClasses = MySQL57TimestampPropertyTest.Entity.class

@@ -25,6 +25,7 @@ import java.util.function.Predicate;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.service.ServiceRegistry;
@@ -38,6 +39,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -56,8 +58,8 @@ public abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalT
 		catch (Exception e) {
 			return new Dialect() {
 				@Override
-				public int getVersion(){
-					return 0;
+				public DatabaseVersion getVersion(){
+					return ZERO_VERSION;
 				}
 			};
 		}
@@ -308,7 +310,7 @@ public abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalT
 
 		@SafeVarargs
 		public final S alsoTestRemappingsWithH2(Class<? extends AbstractRemappingH2Dialect> ... dialectClasses) {
-			if ( dialect instanceof H2Dialect && !( (H2Dialect) dialect ).hasDstBug() ) {
+			if ( dialect instanceof H2Dialect && !( (H2Dialect) dialect ).hasOddDstBehavior() ) {
 				// Only test remappings with H2
 				Collections.addAll( remappingDialectClasses, dialectClasses );
 			}

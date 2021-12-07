@@ -6,6 +6,7 @@
  */
 package org.hibernate.dialect.pagination;
 
+import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.query.Limit;
 
 import java.util.regex.Matcher;
@@ -14,10 +15,9 @@ import java.util.regex.Matcher;
  * A {@link LimitHandler} for Oracle prior to 12c, which uses {@code ROWNUM}.
  */
 public class LegacyOracleLimitHandler extends AbstractLimitHandler {
+	private final DatabaseVersion version;
 
-	private final int version;
-
-	public LegacyOracleLimitHandler(int version) {
+	public LegacyOracleLimitHandler(DatabaseVersion version) {
 		this.version = version;
 	}
 
@@ -38,7 +38,7 @@ public class LegacyOracleLimitHandler extends AbstractLimitHandler {
 		final StringBuilder pagingSelect = new StringBuilder( sql.length() + 100 );
 		if ( hasOffset ) {
 			pagingSelect.append( "select * from (select row_.*,rownum rownum_ from (" ).append( sql );
-			if ( version < 900 ) {
+			if ( version.isBefore( 9 ) ) {
 				pagingSelect.append( ") row_) where rownum_<=? and rownum_>?" );
 			}
 			else {

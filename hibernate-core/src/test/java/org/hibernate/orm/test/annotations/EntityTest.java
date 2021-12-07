@@ -376,7 +376,7 @@ public class EntityTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = OracleDialect.class, version = 1000, reason = "oracle12c returns time in getDate.  For now, skip.")
+	@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 10, reason = "oracle12c returns time in getDate.  For now, skip.")
 	public void testTemporalType(SessionFactoryScope scope) {
 		final ZoneId zoneId = ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof MySQLDialect ) ? ZoneId.of( "UTC")
 				: ZoneId.systemDefault();

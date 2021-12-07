@@ -30,7 +30,7 @@ import org.hibernate.type.StandardBasicTypes;
 public class HANACloudColumnStoreDialect extends HANAColumnStoreDialect {
 
 	public HANACloudColumnStoreDialect() {
-		super( 400 );
+		super( DatabaseVersion.make( 4 ) );
 	}
 
 }

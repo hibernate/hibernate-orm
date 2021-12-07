@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 )
 @SessionFactory(exportSchema = false)
 @RequiresDialect(HANAColumnStoreDialect.class)
-@SkipForDialect(dialectClass = HANAColumnStoreDialect.class, version = 400)
+@SkipForDialect(dialectClass = HANAColumnStoreDialect.class, majorVersion = 4)
 public class HANASearchTest {
 
 	private static final String ENTITY_NAME = "SearchEntity";

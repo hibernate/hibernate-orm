@@ -17,7 +17,7 @@ package org.hibernate.dialect;
 public class MySQL55Dialect extends MySQLDialect {
 
 	public MySQL55Dialect() {
-		super(550);
+		super( DatabaseVersion.make( 5, 5 ) );
 	}
 
 }

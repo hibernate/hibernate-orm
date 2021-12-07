@@ -43,7 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Vlad Mihalcea
  */
 @TestForIssue(jiraKey = "HHH-11236")
-@RequiresDialect(value = MySQLDialect.class, version = 500)
+@RequiresDialect(value = MySQLDialect.class, majorVersion = 5)
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJdbcDriverProxying.class)
 @BaseUnitTest
 public class MySQLDropConstraintThrowsExceptionTest {

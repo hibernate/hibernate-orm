@@ -35,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialect(value = SQLServerDialect.class, version = 11)
+@RequiresDialect(value = SQLServerDialect.class, majorVersion = 11)
 @TestForIssue( jiraKey = "HHH-12704" )
 @Jpa(
 		annotatedClasses = {

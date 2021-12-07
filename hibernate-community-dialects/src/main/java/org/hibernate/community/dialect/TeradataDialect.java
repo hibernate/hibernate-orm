@@ -13,6 +13,7 @@ import org.hibernate.boot.model.relational.QualifiedNameImpl;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -70,20 +71,20 @@ import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtract
  */
 public class TeradataDialect extends Dialect {
 
-	private final int version;
+	private final DatabaseVersion version;
 
 	private static final int PARAM_LIST_SIZE_LIMIT = 1024;
 
 	public TeradataDialect(DialectResolutionInfo info) {
-		this( info.getDatabaseMajorVersion() );
+		this( info.makeCopy() );
 		registerKeywords( info );
 	}
 
 	public TeradataDialect() {
-		this(12);
+		this( DatabaseVersion.make( 12, 0 ) );
 	}
 
-	public TeradataDialect(int version) {
+	public TeradataDialect(DatabaseVersion version) {
 		super();
 		this.version = version;
 
@@ -94,7 +95,7 @@ public class TeradataDialect extends Dialect {
 		registerColumnType( Types.BINARY, "byte($l)" );
 		registerColumnType( Types.VARBINARY, "varbyte($l)" );
 
-		if ( getVersion() < 13 ) {
+		if ( getVersion().isBefore( 13 ) ) {
 			registerColumnType( Types.BIGINT, "numeric(19,0)" );
 		}
 		else {
@@ -115,7 +116,7 @@ public class TeradataDialect extends Dialect {
 		registerKeyword( "account" );
 		registerKeyword( "class" );
 
-		if ( getVersion() < 14 ) {
+		if ( getVersion().isBefore( 14 ) ) {
 			// use getBytes instead of getBinaryStream
 			getDefaultProperties().setProperty( Environment.USE_STREAMS_FOR_BINARY, "false" );
 			// no batch statements
@@ -164,7 +165,7 @@ public class TeradataDialect extends Dialect {
 	}
 
 	@Override
-	public int getVersion() {
+	public DatabaseVersion getVersion() {
 		return version;
 	}
 
@@ -175,7 +176,7 @@ public class TeradataDialect extends Dialect {
 
 	@Override
 	public int getDefaultDecimalPrecision() {
-		return getVersion() < 14 ? 18 : 38;
+		return getVersion().isBefore( 14 ) ? 18 : 38;
 	}
 
 	@Override
@@ -257,7 +258,7 @@ public class TeradataDialect extends Dialect {
 				.setExactArgumentCount( 2 )
 				.register();
 
-		if ( getVersion() >= 14 ) {
+		if ( getVersion().isSince( 14 ) ) {
 
 			//list actually taken from Teradata 15 docs
 			CommonFunctionFactory.lastDay( queryEngine );
@@ -288,7 +289,7 @@ public class TeradataDialect extends Dialect {
 
 	@Override
 	public String getAddColumnString() {
-		return getVersion() < 14 ? super.getAddColumnString() : "add";
+		return getVersion().isBefore( 14 ) ? super.getAddColumnString() : "add";
 	}
 
 	@Override
@@ -468,7 +469,7 @@ public class TeradataDialect extends Dialect {
 
 	@Override
 	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
-		return getVersion() < 14 ? super.getViolatedConstraintNameExtractor() : EXTRACTOR;
+		return getVersion().isBefore( 14 ) ? super.getViolatedConstraintNameExtractor() : EXTRACTOR;
 	}
 
 	private static ViolatedConstraintNameExtractor EXTRACTOR =
@@ -514,12 +515,12 @@ public class TeradataDialect extends Dialect {
 
 	@Override
 	public boolean useFollowOnLocking(String sql, QueryOptions queryOptions) {
-		return getVersion() >= 14;
+		return getVersion().isSince( 14 );
 	}
 
 	@Override
 	public String getWriteLockString(int timeout) {
-		if ( getVersion() < 14 ) {
+		if ( getVersion().isBefore( 14 ) ) {
 			return super.getWriteLockString( timeout );
 		}
 		String sMsg = " Locking row for write ";
@@ -531,7 +532,7 @@ public class TeradataDialect extends Dialect {
 
 	@Override
 	public String getReadLockString(int timeout) {
-		if ( getVersion() < 14 ) {
+		if ( getVersion().isBefore( 14 ) ) {
 			return super.getReadLockString( timeout );
 		}
 		String sMsg = " Locking row for read  ";
@@ -592,14 +593,14 @@ public class TeradataDialect extends Dialect {
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
-		return getVersion() < 14
+		return getVersion().isBefore( 14 )
 				? super.getIdentityColumnSupport()
 				: new Teradata14IdentityColumnSupport();
 	}
 
 	@Override
 	public String applyLocksToSql(String sql, LockOptions aliasedLockOptions, Map<String, String[]> keyColumnNames) {
-		return getVersion() < 14
+		return getVersion().isBefore( 14 )
 				? super.applyLocksToSql( sql, aliasedLockOptions, keyColumnNames )
 				: new ForUpdateFragment( this, aliasedLockOptions, keyColumnNames ).toFragmentString() + " " + sql;
 	}

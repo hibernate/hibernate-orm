@@ -6,17 +6,21 @@
  */
 package org.hibernate.community.dialect;
 
+import java.sql.Types;
+
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
+import org.hibernate.community.dialect.identity.CUBRIDIdentityColumnSupport;
+import org.hibernate.community.dialect.sequence.CUBRIDSequenceSupport;
+import org.hibernate.community.dialect.sequence.SequenceInformationExtractorCUBRIDDatabaseImpl;
+import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.community.dialect.identity.CUBRIDIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitLimitHandler;
-import org.hibernate.community.dialect.sequence.CUBRIDSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -31,16 +35,17 @@ import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
-import org.hibernate.community.dialect.sequence.SequenceInformationExtractorCUBRIDDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
-import java.sql.Types;
-
 import jakarta.persistence.TemporalType;
 
-import static org.hibernate.query.TemporalUnit.*;
+import static org.hibernate.query.TemporalUnit.HOUR;
+import static org.hibernate.query.TemporalUnit.MINUTE;
+import static org.hibernate.query.TemporalUnit.NANOSECOND;
+import static org.hibernate.query.TemporalUnit.NATIVE;
+import static org.hibernate.query.TemporalUnit.SECOND;
 
 /**
  * An SQL dialect for CUBRID (8.3.x and later).
@@ -48,6 +53,7 @@ import static org.hibernate.query.TemporalUnit.*;
  * @author Seok Jeong Il
  */
 public class CUBRIDDialect extends Dialect {
+	private static final DatabaseVersion VERSION = DatabaseVersion.make( 0, 0 );
 
 	/**
 	 * Constructs a CUBRIDDialect
@@ -110,8 +116,8 @@ public class CUBRIDDialect extends Dialect {
 	}
 
 	@Override
-	public int getVersion() {
-		return 0;
+	public DatabaseVersion getVersion() {
+		return VERSION;
 	}
 
 	@Override

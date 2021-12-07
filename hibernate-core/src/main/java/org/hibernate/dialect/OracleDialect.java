@@ -6,6 +6,14 @@
  */
 package org.hibernate.dialect;
 
+import java.sql.CallableStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.hibernate.LockOptions;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.TypeContributions;
@@ -69,18 +77,15 @@ import org.hibernate.type.descriptor.jdbc.NullJdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsNullTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
-import java.sql.CallableStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.util.Locale;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
-import static org.hibernate.query.TemporalUnit.*;
+import static org.hibernate.query.TemporalUnit.DAY;
+import static org.hibernate.query.TemporalUnit.HOUR;
+import static org.hibernate.query.TemporalUnit.MINUTE;
+import static org.hibernate.query.TemporalUnit.MONTH;
+import static org.hibernate.query.TemporalUnit.SECOND;
+import static org.hibernate.query.TemporalUnit.YEAR;
 
 /**
  * A dialect for Oracle 8i and above.
@@ -100,18 +105,18 @@ public class OracleDialect extends Dialect {
 	public static final String PREFER_LONG_RAW = "hibernate.dialect.oracle.prefer_long_raw";
 
 	private final LimitHandler limitHandler;
-	private final int version;
+	private final DatabaseVersion version;
 
 	public OracleDialect(DialectResolutionInfo info) {
-		this( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() );
+		this( info.makeCopy() );
 		registerKeywords( info );
 	}
 
 	public OracleDialect() {
-		this( 800 );
+		this( DatabaseVersion.make( 8, 0 ) );
 	}
 
-	public OracleDialect(int version) {
+	public OracleDialect(DatabaseVersion version) {
 		super();
 		this.version = version;
 
@@ -129,7 +134,7 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
-	public int getVersion() {
+	public DatabaseVersion getVersion() {
 		return version;
 	}
 
@@ -178,7 +183,7 @@ public class OracleDialect extends Dialect {
 		CommonFunctionFactory.regrLinearRegressionAggregates( queryEngine );
 		CommonFunctionFactory.bitLength_pattern( queryEngine, "vsize(?1)*8" );
 
-		if ( getVersion() < 900 ) {
+		if ( getVersion().isBefore( 9 ) ) {
 			queryEngine.getSqmFunctionRegistry().register( "coalesce", new NvlCoalesceEmulation() );
 		}
 		else {
@@ -207,7 +212,7 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public String currentDate() {
-		return getVersion() < 900 ? currentTimestamp() : "current_date";
+		return getVersion().isBefore( 9 ) ? currentTimestamp() : "current_date";
 	}
 
 	@Override
@@ -217,7 +222,7 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public String currentTimestamp() {
-		return getVersion() < 900 ? "sysdate" : currentTimestampWithTimeZone();
+		return getVersion().isBefore( 9 ) ? "sysdate" : currentTimestampWithTimeZone();
 	}
 
 	@Override
@@ -227,12 +232,12 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public String currentLocalTimestamp() {
-		return getVersion() < 900 ? currentTimestamp() : "localtimestamp";
+		return getVersion().isBefore( 9 ) ? currentTimestamp() : "localtimestamp";
 	}
 
 	@Override
 	public String currentTimestampWithTimeZone() {
-		return getVersion() < 900 ? currentTimestamp() : "current_timestamp";
+		return getVersion().isBefore( 9 ) ? currentTimestamp() : "current_timestamp";
 	}
 
 
@@ -519,7 +524,7 @@ public class OracleDialect extends Dialect {
 	}
 
 	protected void registerCharacterTypeMappings() {
-		if ( getVersion() < 900) {
+		if ( getVersion().isBefore( 9 ) ) {
 			registerColumnType( Types.VARCHAR, 4000, "varchar2($l)" );
 			registerColumnType( Types.VARCHAR, "clob" );
 		}
@@ -549,7 +554,7 @@ public class OracleDialect extends Dialect {
 	}
 
 	protected void registerDateTimeTypeMappings() {
-		if ( getVersion() < 900 ) {
+		if ( getVersion().isBefore( 9 ) ) {
 			registerColumnType( Types.DATE, "date" );
 			registerColumnType( Types.TIME, "date" );
 			registerColumnType( Types.TIMESTAMP, "date" );
@@ -567,7 +572,7 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public TimeZoneSupport getTimeZoneSupport() {
-		return getVersion() >= 900 ? TimeZoneSupport.NATIVE : TimeZoneSupport.NONE;
+		return getVersion().isSince( 9 ) ? TimeZoneSupport.NATIVE : TimeZoneSupport.NONE;
 	}
 
 	protected void registerBinaryTypeMappings() {
@@ -579,7 +584,7 @@ public class OracleDialect extends Dialect {
 	}
 
 	protected void registerExtendedTypeMappings() {
-		if ( getVersion() >= 1000 ) {
+		if ( getVersion().isSince( 10 ) ) {
 			registerColumnType( SqlTypes.GEOMETRY, "MDSYS.SDO_GEOMETRY" );
 		}
 	}
@@ -591,7 +596,7 @@ public class OracleDialect extends Dialect {
 		getDefaultProperties().setProperty( Environment.USE_STREAMS_FOR_BINARY, "true" );
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 
-		if ( getVersion() < 1200 ) {
+		if ( getVersion().isBefore( 12 ) ) {
 			// Oracle driver reports to support getGeneratedKeys(), but they only
 			// support the version taking an array of the names of the columns to
 			// be returned (via its RETURNING clause).  No other driver seems to
@@ -661,7 +666,7 @@ public class OracleDialect extends Dialect {
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
 
-		if ( getVersion() >= 1200 ) {
+		if ( getVersion().isSince( 12 ) ) {
 			// account for Oracle's deprecated support for LONGVARBINARY
 			// prefer BLOB, unless the user explicitly opts out
 			boolean preferLong = serviceRegistry.getService( ConfigurationService.class ).getSetting(
@@ -709,7 +714,7 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
-		return getVersion() < 1200
+		return getVersion().isBefore( 12 )
 				? super.getIdentityColumnSupport()
 				: new Oracle12cIdentityColumnSupport();
 	}
@@ -721,7 +726,7 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public String getSelectClauseNullString(int sqlType) {
-		if ( getVersion() >= 900 ) {
+		if ( getVersion().isSince( 9 ) ) {
 			return super.getSelectClauseNullString(sqlType);
 		}
 		else {
@@ -742,7 +747,7 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public String getCurrentTimestampSelectString() {
-		return getVersion() < 900
+		return getVersion().isBefore( 9 )
 				? "select sysdate from dual"
 				: "select systimestamp from dual";
 	}
@@ -1042,7 +1047,7 @@ public class OracleDialect extends Dialect {
 	public boolean supportsFetchClause(FetchClauseType type) {
 		// Until 12.2 there was a bug in the Oracle query rewriter causing ORA-00918
 		// when the query contains duplicate implicit aliases in the select clause
-		return getVersion() >= 1202;
+		return getVersion().isSince( 12, 2 );
 	}
 
 	@Override
@@ -1052,12 +1057,12 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public boolean supportsNoWait() {
-		return getVersion() >= 900;
+		return getVersion().isSince( 9 );
 	}
 
 	@Override
 	public boolean supportsSkipLocked() {
-		return getVersion() >= 1000;
+		return getVersion().isSince( 10 );
 	}
 
 	@Override

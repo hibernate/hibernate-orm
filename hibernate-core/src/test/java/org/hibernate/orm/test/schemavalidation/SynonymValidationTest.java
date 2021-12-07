@@ -37,7 +37,7 @@ import org.junit.jupiter.api.Test;
  *
  * @author Brett Meyer
  */
-@RequiresDialect(value = OracleDialect.class, version = 900)
+@RequiresDialect(value = OracleDialect.class, majorVersion = 9)
 public class SynonymValidationTest extends BaseSessionFactoryFunctionalTest {
 
 	private StandardServiceRegistry ssr;

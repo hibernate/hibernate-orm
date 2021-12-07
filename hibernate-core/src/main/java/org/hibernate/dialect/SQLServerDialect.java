@@ -80,20 +80,20 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
 public class SQLServerDialect extends AbstractTransactSQLDialect {
 	private static final int PARAM_LIST_SIZE_LIMIT = 2100;
 
-	private final int version;
+	private final DatabaseVersion version;
 
 	private StandardSequenceExporter exporter;
 
 	public SQLServerDialect(DialectResolutionInfo info) {
-		this( info.getDatabaseMajorVersion() );
+		this( info.makeCopy() );
 		registerKeywords( info );
 	}
 
 	public SQLServerDialect() {
-		this( 8 );
+		this( DatabaseVersion.make( 8, 0 ) );
 	}
 
-	public SQLServerDialect(int version) {
+	public SQLServerDialect(DatabaseVersion version) {
 		super();
 		this.version = version;
 
@@ -101,7 +101,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		//but 'float' is double precision by default
 		registerColumnType( Types.DOUBLE, "float" );
 
-		if ( getVersion() >= 10 ) {
+		if ( getVersion().isSince( 10 ) ) {
 			registerColumnType( Types.DATE, "date" );
 			registerColumnType( Types.TIME, "time" );
 			registerColumnType( Types.TIMESTAMP, "datetime2($p)" );
@@ -109,7 +109,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 			registerColumnType( SqlTypes.GEOMETRY, "geometry" );
 		}
 
-		if ( getVersion() >= 11 ) {
+		if ( getVersion().isSince( 11 ) ) {
 			exporter = new SqlServerSequenceExporter( this );
 		}
 
@@ -117,7 +117,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		registerColumnType( Types.NVARCHAR, 4000, "nvarchar($l)" );
 		registerColumnType( Types.VARBINARY, 8000, "varbinary($l)" );
 
-		if ( getVersion() < 9 ) {
+		if ( getVersion().isBefore( 9 ) ) {
 			registerColumnType( Types.VARBINARY, "image" );
 			registerColumnType( Types.VARCHAR, "text" );
 		}
@@ -147,13 +147,13 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	public int getVersion() {
+	public DatabaseVersion getVersion() {
 		return version;
 	}
 
 	@Override
 	public TimeZoneSupport getTimeZoneSupport() {
-		return getVersion() >= 10 ? TimeZoneSupport.NATIVE : TimeZoneSupport.NONE;
+		return getVersion().isSince( 10 ) ? TimeZoneSupport.NATIVE : TimeZoneSupport.NONE;
 	}
 
 	@Override
@@ -198,13 +198,13 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		CommonFunctionFactory.everyAny_sumIif( queryEngine );
 		CommonFunctionFactory.bitLength_pattern( queryEngine, "datalength(?1) * 8" );
 
-		if ( getVersion() >= 10 ) {
+		if ( getVersion().isSince( 10 ) ) {
 			CommonFunctionFactory.locate_charindex( queryEngine );
 			CommonFunctionFactory.stddevPopSamp_stdevp( queryEngine );
 			CommonFunctionFactory.varPopSamp_varp( queryEngine );
 		}
 
-		if ( getVersion() >= 11 ) {
+		if ( getVersion().isSince( 11 ) ) {
 			queryEngine.getSqmFunctionRegistry().register( "format", new SQLServerFormatEmulation( this, queryEngine.getTypeConfiguration() ) );
 
 			//actually translate() was added in 2017 but
@@ -308,10 +308,10 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		if ( getVersion() >= 11 ) {
+		if ( getVersion().isSince( 11 ) ) {
 			return SQLServer2012LimitHandler.INSTANCE;
 		}
-		else if ( getVersion() >= 9 ) {
+		else if ( getVersion().isSince( 9 ) ) {
 			//this is a stateful class, don't cache
 			//it in the Dialect!
 			return new SQLServer2005LimitHandler();
@@ -323,7 +323,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public boolean supportsValuesList() {
-		return getVersion() >= 10;
+		return getVersion().isSince( 10 );
 	}
 
 	@Override
@@ -338,7 +338,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public boolean supportsIfExistsBeforeTableName() {
-		if ( getVersion() >= 16 ) {
+		if ( getVersion().isSince( 16 ) ) {
 			return true;
 		}
 		return super.supportsIfExistsBeforeTableName();
@@ -346,7 +346,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public boolean supportsIfExistsBeforeConstraintName() {
-		if ( getVersion() >= 16 ) {
+		if ( getVersion().isSince( 16 ) ) {
 			return true;
 		}
 		return super.supportsIfExistsBeforeConstraintName();
@@ -359,7 +359,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public String appendLockHint(LockOptions lockOptions, String tableName) {
-		if ( getVersion() >= 9 ) {
+		if ( getVersion().isSince( 9 ) ) {
 			LockMode lockMode = lockOptions.getAliasSpecificLockMode( tableName );
 			if (lockMode == null) {
 				lockMode = lockOptions.getLockMode();
@@ -462,17 +462,17 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public boolean supportsNonQueryWithCTE() {
-		return getVersion() >= 9;
+		return getVersion().isSince( 9 );
 	}
 
 	@Override
 	public boolean supportsSkipLocked() {
-		return getVersion() >= 9;
+		return getVersion().isSince( 9 );
 	}
 
 	@Override
 	public boolean supportsNoWait() {
-		return getVersion() >= 9;
+		return getVersion().isSince( 9 );
 	}
 
 	@Override
@@ -482,10 +482,10 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public SequenceSupport getSequenceSupport() {
-		if ( getVersion() < 11 ) {
+		if ( getVersion().isBefore( 11 ) ) {
 			return NoSequenceSupport.INSTANCE;
 		}
-		else if ( getVersion() >= 16 ) {
+		else if ( getVersion().isSince( 16 ) ) {
 			return SQLServer16SequenceSupport.INSTANCE;
 		}
 		else {
@@ -495,7 +495,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public String getQuerySequencesString() {
-		return getVersion() < 11
+		return getVersion().isBefore( 11 )
 				? super.getQuerySequencesString() //null
 				// The upper-case name should work on both case-sensitive
 				// and case-insensitive collations.
@@ -504,7 +504,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public String getQueryHintString(String sql, String hints) {
-		if ( getVersion() < 11 ) {
+		if ( getVersion().isBefore( 11 ) ) {
 			return super.getQueryHintString( sql, hints );
 		}
 
@@ -529,7 +529,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public boolean supportsNullPrecedence() {
-		return getVersion() < 10;
+		return getVersion().isBefore( 10 );
 	}
 
 	@Override
@@ -544,12 +544,12 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public boolean supportsFetchClause(FetchClauseType type) {
-		return getVersion() >= 11;
+		return getVersion().isSince( 11 );
 	}
 
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
-		if ( getVersion() < 9 ) {
+		if ( getVersion().isBefore( 9 ) ) {
 			return super.buildSQLExceptionConversionDelegate(); //null
 		}
 		return (sqlException, message, sql) -> {
@@ -611,7 +611,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 				return "(datepart(second,?2)+datepart(nanosecond,?2)/1e9)";
 			case WEEK:
 				// Thanks https://www.sqlservercentral.com/articles/a-simple-formula-to-calculate-the-iso-week-number
-				if ( getVersion() < 10 ) {
+				if ( getVersion().isBefore( 10 ) ) {
 					return "(DATEPART(dy,DATEADD(dd,DATEDIFF(dd,'17530101',?2)/7*7,'17530104'))+6)/7)";
 				}
 			default:
@@ -641,27 +641,26 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
-		switch (unit) {
-			case NATIVE:
-				//use microsecond as the "native" precision
-				return "datediff_big(microsecond,?2,?3)";
-			default:
-				//datediff() returns an int, and can easily
-				//overflow when dealing with "physical"
-				//durations, so use datediff_big()
-				return unit.normalized() == NANOSECOND
-						? "datediff_big(?1,?2,?3)"
-						: "datediff(?1,?2,?3)";
+		if ( unit == TemporalUnit.NATIVE ) {//use microsecond as the "native" precision
+			return "datediff_big(microsecond,?2,?3)";
 		}
+
+		//datediff() returns an int, and can easily
+		//overflow when dealing with "physical"
+		//durations, so use datediff_big()
+		return unit.normalized() == NANOSECOND
+				? "datediff_big(?1,?2,?3)"
+				: "datediff(?1,?2,?3)";
 	}
 
 	@Override
 	public String translateDurationField(TemporalUnit unit) {
-		switch (unit) {
-			//use microsecond as the "native" precision
-			case NATIVE: return "microsecond";
-			default: return super.translateDurationField(unit);
+		//use microsecond as the "native" precision
+		if ( unit == TemporalUnit.NATIVE ) {
+			return "microsecond";
 		}
+
+		return super.translateDurationField( unit );
 	}
 
 	@Override
@@ -827,7 +826,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public String[] getDropSchemaCommand(String schemaName) {
-		if ( getVersion() >= 16 ) {
+		if ( getVersion().isSince( 16 ) ) {
 			return new String[] { "drop schema if exists " + schemaName };
 		}
 		return super.getDropSchemaCommand( schemaName );

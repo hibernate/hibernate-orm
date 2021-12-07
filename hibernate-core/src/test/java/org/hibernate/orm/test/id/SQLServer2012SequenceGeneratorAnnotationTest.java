@@ -46,7 +46,7 @@ public class SQLServer2012SequenceGeneratorAnnotationTest {
 	 */
 	@Test
 	@TestForIssue(jiraKey = "HHH-8814")
-	@RequiresDialect(value = SQLServerDialect.class, version = 2012)
+	@RequiresDialect(value = SQLServerDialect.class, majorVersion = 11)
 	public void testStartOfSequence(SessionFactoryScope scope) {
 		final Person person = scope.fromTransaction( session -> {
 			final Person _person = new Person();

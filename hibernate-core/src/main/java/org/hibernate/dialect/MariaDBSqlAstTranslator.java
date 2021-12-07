@@ -120,6 +120,6 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 	}
 
 	private boolean supportsWindowFunctions() {
-		return getDialect().getVersion() >= 1020;
+		return getDialect().getVersion().isSince( 10, 2 );
 	}
 }

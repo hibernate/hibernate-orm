@@ -41,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Brett Meyer
  */
 
-@RequiresDialect(value = SQLServerDialect.class, version = 11)
+@RequiresDialect(value = SQLServerDialect.class, majorVersion = 11)
 @DomainModel(
 		annotatedClasses = { QueryHintSQLServer2012Test.Employee.class, QueryHintSQLServer2012Test.Department.class }
 )

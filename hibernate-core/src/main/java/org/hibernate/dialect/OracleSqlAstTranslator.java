@@ -6,7 +6,6 @@
  */
 package org.hibernate.dialect;
 
-import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -368,7 +367,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 	@Override
 	protected void visitCaseSearchedExpression(CaseSearchedExpression caseSearchedExpression, boolean inSelect) {
 		// Oracle did not add support for CASE until 9i
-		if ( getDialect().getVersion() < 900 ) {
+		if ( getDialect().getVersion().isBefore( 9 ) ) {
 			visitDecodeCaseSearchedExpression( caseSearchedExpression );
 		}
 		else {
@@ -400,7 +399,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 
 	@Override
 	protected boolean supportsRowValueConstructorSyntaxInInList() {
-		return getDialect().getVersion() >= 820;
+		return getDialect().getVersion().isSince( 8, 2 );
 	}
 
 	@Override
@@ -410,7 +409,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 
 	@Override
 	protected boolean supportsRowValueConstructorSyntaxInInSubQuery() {
-		return getDialect().getVersion() >= 900;
+		return getDialect().getVersion().isSince( 9 );
 	}
 
 	@Override

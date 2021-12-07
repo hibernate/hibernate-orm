@@ -32,7 +32,7 @@ import org.junit.jupiter.api.Test;
  * @author Andrea Boriero
  */
 @TestForIssue(jiraKey = "HHH-10529")
-@RequiresDialect(value = SQLServerDialect.class, version = 10)
+@RequiresDialect(value = SQLServerDialect.class, majorVersion = 10)
 public class SQLServer2008NVarCharTypeTest {
 	private StandardServiceRegistry ssr;
 	private MetadataImplementor metadata;

@@ -15,6 +15,7 @@ import jakarta.persistence.Id;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
@@ -24,6 +25,7 @@ import org.hibernate.testing.jdbc.JdbcMocks;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
+import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -90,8 +92,8 @@ public class QualifiedTableNamingTest extends BaseNonConfigCoreFunctionalTestCas
 		}
 
 		@Override
-		public int getVersion() {
-			return 0;
+		public DatabaseVersion getVersion() {
+			return ZERO_VERSION;
 		}
 	}
 

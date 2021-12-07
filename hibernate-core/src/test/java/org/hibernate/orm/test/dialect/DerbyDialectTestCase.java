@@ -6,6 +6,7 @@
  */
 package org.hibernate.orm.test.dialect;
 
+import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.query.Limit;
 
@@ -29,7 +30,7 @@ public class DerbyDialectTestCase extends BaseUnitTestCase {
 		final String input = "select * from tablename t where t.cat = 5";
 		final String expected = "select * from tablename t where t.cat = 5 fetch first " + limit + " rows only";
 
-		final String actual = new DerbyDialect( 1050 ).getLimitHandler().processSql( input, toRowSelection( 0, limit ) );
+		final String actual = new DerbyDialect( DatabaseVersion.make( 10, 5 ) ).getLimitHandler().processSql( input, toRowSelection( 0, limit ) );
 		assertEquals( expected, actual );
 	}
 
@@ -41,7 +42,7 @@ public class DerbyDialectTestCase extends BaseUnitTestCase {
 		final String input = "select * from tablename t where t.cat = 5";
 		final String expected = "select * from tablename t where t.cat = 5 offset " + offset + " rows fetch next " + limit + " rows only";
 
-		final String actual = new DerbyDialect( 1050 ).getLimitHandler().processSql( input, toRowSelection( offset, limit ) );
+		final String actual = new DerbyDialect( DatabaseVersion.make( 10, 5 ) ).getLimitHandler().processSql( input, toRowSelection( offset, limit ) );
 		assertEquals( expected, actual );
 	}
 
@@ -54,7 +55,7 @@ public class DerbyDialectTestCase extends BaseUnitTestCase {
 		final String expected = "select c11 as col1, c12 as col2, c13 as col13 from t1 offset " + offset
 				+ " rows fetch next " + limit + " rows only for update of c11, c13";
 
-		final String actual = new DerbyDialect( 1050 ).getLimitHandler().processSql( input, toRowSelection( offset, limit ) );
+		final String actual = new DerbyDialect( DatabaseVersion.make( 10, 5 ) ).getLimitHandler().processSql( input, toRowSelection( offset, limit ) );
 		assertEquals( expected, actual );
 	}
 
@@ -67,7 +68,7 @@ public class DerbyDialectTestCase extends BaseUnitTestCase {
 		final String expected = "select c11 as col1, c12 as col2, c13 as col13 from t1 where flight_id between 'AA1111' and 'AA1112' offset " + offset
 				+ " rows fetch next " + limit + " rows only with rr";
 
-		final String actual = new DerbyDialect( 1050 ).getLimitHandler().processSql( input, toRowSelection( offset, limit ) );
+		final String actual = new DerbyDialect( DatabaseVersion.make( 10, 5 ) ).getLimitHandler().processSql( input, toRowSelection( offset, limit ) );
 		assertEquals( expected, actual );
 	}
 
@@ -80,7 +81,7 @@ public class DerbyDialectTestCase extends BaseUnitTestCase {
 		final String expected = "select c11 as col1, c12 as col2, c13 as col13 from t1 where flight_id between 'AA1111' and 'AA1112' offset " + offset
 				+ " rows fetch next " + limit + " rows only for update of c11,c13 with rr";
 
-		final String actual = new DerbyDialect( 1050 ).getLimitHandler().processSql( input, toRowSelection( offset, limit ) );
+		final String actual = new DerbyDialect( DatabaseVersion.make( 10, 5 ) ).getLimitHandler().processSql( input, toRowSelection( offset, limit ) );
 		assertEquals( expected, actual );
 	}
 

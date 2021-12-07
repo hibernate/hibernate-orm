@@ -110,7 +110,7 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 			QuerySpec querySpec,
 			ForUpdateClause forUpdateClause,
 			Boolean followOnLocking) {
-		if ( getDialect().getVersion() < 200 ) {
+		if ( getDialect().getVersion().isBefore( 2 ) ) {
 			return LockStrategy.NONE;
 		}
 		return super.determineLockingStrategy( querySpec, forUpdateClause, followOnLocking );
@@ -118,7 +118,7 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 
 	@Override
 	protected void renderForUpdateClause(QuerySpec querySpec, ForUpdateClause forUpdateClause) {
-		if ( getDialect().getVersion() < 200 ) {
+		if ( getDialect().getVersion().isBefore( 2 ) ) {
 			return;
 		}
 		super.renderForUpdateClause( querySpec, forUpdateClause );
@@ -215,6 +215,6 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 	}
 
 	private boolean supportsOffsetFetchClause() {
-		return getDialect().getVersion() >= 250;
+		return getDialect().getVersion().isSince( 2, 5 );
 	}
 }

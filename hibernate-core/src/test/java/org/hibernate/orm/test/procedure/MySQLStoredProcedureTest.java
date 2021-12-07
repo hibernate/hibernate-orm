@@ -51,8 +51,8 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialect(value = MySQLDialect.class, matchSubTypes = false, version = 500)
-@RequiresDialect(value = MariaDBDialect.class, version = 500)
+@RequiresDialect(value = MySQLDialect.class, matchSubTypes = false, majorVersion = 5)
+@RequiresDialect(value = MariaDBDialect.class, majorVersion = 5)
 @Jpa(
 		annotatedClasses = {
 				Person.class,

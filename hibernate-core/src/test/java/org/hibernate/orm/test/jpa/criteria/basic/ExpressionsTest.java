@@ -21,10 +21,10 @@ import jakarta.persistence.criteria.Root;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.query.Query;
-import org.hibernate.jpa.test.metamodel.AbstractMetamodelSpecificTest;
-import org.hibernate.jpa.test.metamodel.Phone;
-import org.hibernate.jpa.test.metamodel.Product;
-import org.hibernate.jpa.test.metamodel.Product_;
+import org.hibernate.orm.test.jpa.metamodel.AbstractMetamodelSpecificTest;
+import org.hibernate.orm.test.jpa.metamodel.Phone;
+import org.hibernate.orm.test.jpa.metamodel.Product;
+import org.hibernate.orm.test.jpa.metamodel.Product_;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.SkipForDialect;

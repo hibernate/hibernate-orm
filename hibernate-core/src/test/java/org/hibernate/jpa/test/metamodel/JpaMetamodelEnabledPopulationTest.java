@@ -6,6 +6,8 @@
  */
 package org.hibernate.jpa.test.metamodel;
 
+import org.hibernate.orm.test.jpa.metamodel.AbstractJpaMetamodelPopulationTest;
+
 import org.hibernate.testing.TestForIssue;
 
 /**

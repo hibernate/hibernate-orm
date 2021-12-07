@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import org.hibernate.jpa.test.metamodel.AbstractMetamodelSpecificTest;
+import org.hibernate.orm.test.jpa.metamodel.AbstractMetamodelSpecificTest;
 
 /**
  * @author Erich Heard

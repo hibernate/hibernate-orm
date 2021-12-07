@@ -16,12 +16,12 @@ import jakarta.persistence.criteria.Root;
 
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.OracleDialect;
-import org.hibernate.jpa.test.metamodel.AbstractMetamodelSpecificTest;
-import org.hibernate.jpa.test.metamodel.CreditCard;
-import org.hibernate.jpa.test.metamodel.CreditCard_;
-import org.hibernate.jpa.test.metamodel.Customer_;
-import org.hibernate.jpa.test.metamodel.Order;
-import org.hibernate.jpa.test.metamodel.Order_;
+import org.hibernate.orm.test.jpa.metamodel.AbstractMetamodelSpecificTest;
+import org.hibernate.orm.test.jpa.metamodel.CreditCard;
+import org.hibernate.orm.test.jpa.metamodel.CreditCard_;
+import org.hibernate.orm.test.jpa.metamodel.Customer_;
+import org.hibernate.orm.test.jpa.metamodel.Order;
+import org.hibernate.orm.test.jpa.metamodel.Order_;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SkipForDialect;

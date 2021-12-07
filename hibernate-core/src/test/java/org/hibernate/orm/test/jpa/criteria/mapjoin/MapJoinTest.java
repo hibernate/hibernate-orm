@@ -12,11 +12,11 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.MapJoin;
 import jakarta.persistence.criteria.Root;
 
-import org.hibernate.jpa.test.metamodel.AbstractMetamodelSpecificTest;
-import org.hibernate.jpa.test.metamodel.MapEntity;
-import org.hibernate.jpa.test.metamodel.MapEntityLocal;
-import org.hibernate.jpa.test.metamodel.MapEntityLocal_;
-import org.hibernate.jpa.test.metamodel.MapEntity_;
+import org.hibernate.orm.test.jpa.metamodel.AbstractMetamodelSpecificTest;
+import org.hibernate.orm.test.jpa.metamodel.MapEntity;
+import org.hibernate.orm.test.jpa.metamodel.MapEntityLocal;
+import org.hibernate.orm.test.jpa.metamodel.MapEntityLocal_;
+import org.hibernate.orm.test.jpa.metamodel.MapEntity_;
 
 import org.junit.jupiter.api.Test;
 

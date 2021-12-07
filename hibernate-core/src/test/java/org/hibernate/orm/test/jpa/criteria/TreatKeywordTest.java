@@ -19,9 +19,9 @@ import jakarta.persistence.criteria.Root;
 import jakarta.persistence.metamodel.EntityType;
 
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.jpa.test.metamodel.Thing;
-import org.hibernate.jpa.test.metamodel.ThingWithQuantity;
-import org.hibernate.jpa.test.metamodel.ThingWithQuantity_;
+import org.hibernate.orm.test.jpa.metamodel.Thing;
+import org.hibernate.orm.test.jpa.metamodel.ThingWithQuantity;
+import org.hibernate.orm.test.jpa.metamodel.ThingWithQuantity_;
 
 import org.hibernate.testing.TestForIssue;
 import org.junit.Assert;

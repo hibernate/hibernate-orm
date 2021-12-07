@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.jpa.test.metamodel;
+package org.hibernate.orm.test.jpa.metamodel;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -30,14 +30,14 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "entity2")
-public class Entity2 {
+@Table(name = "entity1")
+public class Entity1 {
 	@Id
 	private long id;
 
 	@ManyToOne
-	@JoinColumn(name="entity3_id")
-	private Entity3 entity3;
+	@JoinColumn(name="entity2_id", nullable = false)
+	private Entity2 entity2;
 
 	private String value;
 }

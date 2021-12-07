@@ -8,8 +8,6 @@ package org.hibernate.orm.test.jpa.metamodel;
 
 import jakarta.persistence.Entity;
 
-import org.hibernate.jpa.test.metamodel.BaseEmbeddedEntity;
-
 /**
  * @author Christian Beikov
  */

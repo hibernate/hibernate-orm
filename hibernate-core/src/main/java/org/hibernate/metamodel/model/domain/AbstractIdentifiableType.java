@@ -22,6 +22,7 @@ import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.NonAggregatedCompositeSqmPathSource;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
 
 import org.jboss.logging.Logger;
 
@@ -142,16 +143,19 @@ public abstract class AbstractIdentifiableType<J>
 	}
 
 	private void checkType(SingularPersistentAttribute<?, ?> attribute, Class<?> javaType) {
-		if ( ! javaType.isAssignableFrom( attribute.getType().getJavaType() ) ) {
-			throw new IllegalArgumentException(
-					String.format(
-							"Attribute [%s#%s : %s] not castable to requested type [%s]",
-							getTypeName(),
-							attribute.getName(),
-							attribute.getType().getJavaType().getName(),
-							javaType.getName()
-					)
-			);
+		if ( !javaType.isAssignableFrom( attribute.getType().getJavaType() ) ) {
+			final JavaType<?> attributeJavaTypeDescriptor = attribute.getAttributeJavaTypeDescriptor();
+			if ( !( attributeJavaTypeDescriptor instanceof PrimitiveJavaType ) || ( (PrimitiveJavaType) attributeJavaTypeDescriptor ).getPrimitiveClass() != javaType ) {
+				throw new IllegalArgumentException(
+						String.format(
+								"Attribute [%s#%s : %s] not castable to requested type [%s]",
+								getTypeName(),
+								attribute.getName(),
+								attribute.getType().getJavaType().getName(),
+								javaType.getName()
+						)
+				);
+			}
 		}
 	}
 

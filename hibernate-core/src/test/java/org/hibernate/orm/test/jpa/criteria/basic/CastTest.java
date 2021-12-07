@@ -14,8 +14,8 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
 import org.hibernate.dialect.DerbyDialect;
-import org.hibernate.jpa.test.metamodel.Product;
-import org.hibernate.jpa.test.metamodel.Product_;
+import org.hibernate.orm.test.jpa.metamodel.Product;
+import org.hibernate.orm.test.jpa.metamodel.Product_;
 import org.hibernate.orm.test.jpa.criteria.AbstractCriteriaTest;
 
 import org.hibernate.testing.SkipForDialect;

@@ -10,10 +10,10 @@ import jakarta.persistence.criteria.CollectionJoin;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
-import org.hibernate.jpa.test.metamodel.LineItem;
-import org.hibernate.jpa.test.metamodel.LineItem_;
-import org.hibernate.jpa.test.metamodel.Order;
-import org.hibernate.jpa.test.metamodel.Order_;
+import org.hibernate.orm.test.jpa.metamodel.LineItem;
+import org.hibernate.orm.test.jpa.metamodel.LineItem_;
+import org.hibernate.orm.test.jpa.metamodel.Order;
+import org.hibernate.orm.test.jpa.metamodel.Order_;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.junit.jupiter.api.Test;

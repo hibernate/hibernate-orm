@@ -13,11 +13,11 @@ import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
 
-import org.hibernate.jpa.test.metamodel.AbstractMetamodelSpecificTest;
-import org.hibernate.jpa.test.metamodel.Customer;
-import org.hibernate.jpa.test.metamodel.Customer_;
-import org.hibernate.jpa.test.metamodel.Order;
-import org.hibernate.jpa.test.metamodel.Order_;
+import org.hibernate.orm.test.jpa.metamodel.AbstractMetamodelSpecificTest;
+import org.hibernate.orm.test.jpa.metamodel.Customer;
+import org.hibernate.orm.test.jpa.metamodel.Customer_;
+import org.hibernate.orm.test.jpa.metamodel.Order;
+import org.hibernate.orm.test.jpa.metamodel.Order_;
 
 import org.junit.jupiter.api.Test;
 

@@ -16,7 +16,8 @@ import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Associates an annotation with an {@link AttributeBinder}.
+ * Associates a user-defined annotation with an {@link AttributeBinder},
+ * allowing the annotation to drive some custom model binding.
  *
  * @author Gavin King
  */
@@ -27,5 +28,5 @@ public @interface AttributeBinderType {
 	/**
 	 * @return a type which implements {@link AttributeBinder}
 	 */
-	Class<? extends AttributeBinder> binder();
+	Class<? extends AttributeBinder<?>> binder();
 }

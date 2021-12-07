@@ -402,7 +402,13 @@ public abstract class SimpleValue implements KeyValue {
 		if ( rootClass != null ) {
 			params.setProperty( IdentifierGenerator.ENTITY_NAME, rootClass.getEntityName() );
 			params.setProperty( IdentifierGenerator.JPA_ENTITY_NAME, rootClass.getJpaEntityName() );
-			params.setProperty( OptimizableGenerator.IMPLICIT_NAME_BASE, getTable().getName() );
+			// The table name is not really a good default for subselect entities, so use the JPA entity name which is short
+			if ( getTable().isSubselect() ) {
+				params.setProperty( OptimizableGenerator.IMPLICIT_NAME_BASE, rootClass.getJpaEntityName() );
+			}
+			else {
+				params.setProperty( OptimizableGenerator.IMPLICIT_NAME_BASE, getTable().getName() );
+			}
 
 			final StringBuilder tables = new StringBuilder();
 			final Iterator<Table> itr = rootClass.getIdentityTables().iterator();

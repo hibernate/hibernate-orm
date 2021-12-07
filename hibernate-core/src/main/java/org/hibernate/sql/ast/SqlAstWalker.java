@@ -143,9 +143,9 @@ public interface SqlAstWalker {
 
 	void visitParameter(JdbcParameter jdbcParameter);
 
-	void visitJdbcLiteral(JdbcLiteral jdbcLiteral);
+	void visitJdbcLiteral(JdbcLiteral<?> jdbcLiteral);
 
-	void visitQueryLiteral(QueryLiteral queryLiteral);
+	void visitQueryLiteral(QueryLiteral<?> queryLiteral);
 
 	void visitUnaryOperationExpression(UnaryOperation unaryOperationExpression);
 

@@ -30,6 +30,7 @@ import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
+import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.AssociationKey;
@@ -271,8 +272,7 @@ public class ToOneAttributeMapping
 				isKeyTableNullable = true;
 			}
 			else {
-				final SqlStringGenerationContext sqlStringGenerationContext = declaringEntityPersister.getFactory().getSqlStringGenerationContext();
-				final String targetTableName = sqlStringGenerationContext.format( manyToOne.getTable().getQualifiedTableName() );
+				final String targetTableName = MappingModelCreationHelper.getTableIdentifierExpression( manyToOne.getTable(), declaringEntityPersister.getFactory() );
 				if ( CollectionPart.Nature.fromNameExact( navigableRole.getParent().getLocalName() ) != null ) {
 					final PluralAttributeMapping pluralAttribute = (PluralAttributeMapping) declaringEntityPersister.resolveSubPart(
 							navigableRole.getParent().getParent()
@@ -496,7 +496,7 @@ public class ToOneAttributeMapping
 		this.isConstrained = original.isConstrained;
 	}
 
-	private boolean equal(Iterator<Selectable> lhsColumns, Iterator<Selectable> rhsColumns) {
+	private static boolean equal(Iterator<Selectable> lhsColumns, Iterator<Selectable> rhsColumns) {
 		boolean hasNext;
 		do {
 			final Selectable lhs = lhsColumns.next();
@@ -1490,7 +1490,7 @@ public class ToOneAttributeMapping
 				fetched,
 				sourceAlias,
 				primaryTableReference,
-				false,
+				true,
 				sqlAliasBase,
 				(tableExpression) -> getEntityMappingType().containsTableReference( tableExpression ),
 				(tableExpression, tg) -> getEntityMappingType().createTableReferenceJoin(

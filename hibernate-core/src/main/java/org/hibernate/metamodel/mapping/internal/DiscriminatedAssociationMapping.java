@@ -66,9 +66,11 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 			MappingModelCreationProcess creationProcess) {
 		final SessionFactoryImplementor sessionFactory = creationProcess.getCreationContext().getSessionFactory();
 
-		final SqlStringGenerationContext sqlStringGenerationContext = sessionFactory.getSqlStringGenerationContext();
-		final Dialect dialect = sqlStringGenerationContext.getDialect();
-		final String tableName = sqlStringGenerationContext.format( bootValueMapping.getTable().getQualifiedTableName() );
+		final Dialect dialect = sessionFactory.getSqlStringGenerationContext().getDialect();
+		final String tableName = MappingModelCreationHelper.getTableIdentifierExpression(
+				bootValueMapping.getTable(),
+				creationProcess
+		);
 
 		assert bootValueMapping.getColumnSpan() == 2;
 		final Iterator<Selectable> columnIterator = bootValueMapping.getColumnIterator();

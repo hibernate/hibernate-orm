@@ -8,23 +8,17 @@
 package org.hibernate.sql.ast.spi;
 
 import org.hibernate.query.sqm.tree.expression.Conversion;
-import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.expression.AggregateFunctionExpression;
 import org.hibernate.sql.ast.tree.expression.Any;
-import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
-import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
-import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.CastTarget;
-import org.hibernate.sql.ast.tree.expression.Collate;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Distinct;
 import org.hibernate.sql.ast.tree.expression.Duration;
 import org.hibernate.sql.ast.tree.expression.DurationUnit;
 import org.hibernate.sql.ast.tree.expression.EntityTypeLiteral;
 import org.hibernate.sql.ast.tree.expression.Every;
-import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.ExtractUnit;
 import org.hibernate.sql.ast.tree.expression.Format;
 import org.hibernate.sql.ast.tree.expression.FunctionExpression;
@@ -35,37 +29,23 @@ import org.hibernate.sql.ast.tree.expression.Over;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
 import org.hibernate.sql.ast.tree.expression.SqlSelectionExpression;
-import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Star;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.expression.TrimSpecification;
-import org.hibernate.sql.ast.tree.expression.UnaryOperation;
 import org.hibernate.sql.ast.tree.from.FromClause;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.insert.InsertStatement;
-import org.hibernate.sql.ast.tree.predicate.BetweenPredicate;
-import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
-import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.ExistsPredicate;
 import org.hibernate.sql.ast.tree.predicate.FilterPredicate;
-import org.hibernate.sql.ast.tree.predicate.GroupedPredicate;
 import org.hibernate.sql.ast.tree.predicate.InListPredicate;
 import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
-import org.hibernate.sql.ast.tree.predicate.Junction;
-import org.hibernate.sql.ast.tree.predicate.LikePredicate;
-import org.hibernate.sql.ast.tree.predicate.NegatedPredicate;
-import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.ast.tree.predicate.SelfRenderingPredicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
-import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 
@@ -74,7 +54,7 @@ import org.hibernate.sql.ast.tree.update.UpdateStatement;
  *
  * @author Christian Beikov
  */
-class AggregateFunctionChecker implements SqlAstWalker {
+public class AggregateFunctionChecker extends AbstractSqlAstWalker {
 
 	private static final AggregateFunctionChecker INSTANCE = new AggregateFunctionChecker();
 
@@ -92,16 +72,6 @@ class AggregateFunctionChecker implements SqlAstWalker {
 	}
 
 	@Override
-	public void visitAny(Any any) {
-		throw new AggregateFunctionException();
-	}
-
-	@Override
-	public void visitEvery(Every every) {
-		throw new AggregateFunctionException();
-	}
-
-	@Override
 	public void visitSelfRenderingExpression(SelfRenderingExpression expression) {
 		if ( expression instanceof AggregateFunctionExpression ) {
 			throw new AggregateFunctionException();
@@ -114,133 +84,26 @@ class AggregateFunctionChecker implements SqlAstWalker {
 	}
 
 	@Override
-	public void visitSortSpecification(SortSpecification sortSpecification) {
-		sortSpecification.getSortExpression().accept( this );
-	}
-
-	@Override
-	public void visitSelectClause(SelectClause selectClause) {
-		for ( SqlSelection sqlSelection : selectClause.getSqlSelections() ) {
-			sqlSelection.accept( this );
-		}
-	}
-
-	@Override
-	public void visitSqlSelection(SqlSelection sqlSelection) {
-		sqlSelection.getExpression().accept( this );
-	}
-
-	@Override
-	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
-		arithmeticExpression.getLeftHandOperand().accept( this );
-		arithmeticExpression.getRightHandOperand().accept( this );
-	}
-
-	@Override
-	public void visitCaseSearchedExpression(CaseSearchedExpression caseSearchedExpression) {
-		for ( CaseSearchedExpression.WhenFragment whenFragment : caseSearchedExpression.getWhenFragments() ) {
-			whenFragment.getPredicate().accept( this );
-			whenFragment.getResult().accept( this );
-		}
-		if ( caseSearchedExpression.getOtherwise() != null ) {
-			caseSearchedExpression.getOtherwise().accept( this );
-		}
-	}
-
-	@Override
-	public void visitCaseSimpleExpression(CaseSimpleExpression caseSimpleExpression) {
-		caseSimpleExpression.getFixture().accept( this );
-		for ( CaseSimpleExpression.WhenFragment whenFragment : caseSimpleExpression.getWhenFragments() ) {
-			whenFragment.getCheckValue().accept( this );
-			whenFragment.getResult().accept( this );
-		}
-		if ( caseSimpleExpression.getOtherwise() != null ) {
-			caseSimpleExpression.getOtherwise().accept( this );
-		}
-	}
-
-	@Override
-	public void visitTuple(SqlTuple tuple) {
-		for ( Expression expression : tuple.getExpressions() ) {
-			expression.accept( this );
-		}
-	}
-
-	@Override
-	public void visitCollate(Collate collate) {
-		collate.getExpression().accept( this );
-	}
-
-	@Override
-	public void visitUnaryOperationExpression(UnaryOperation unaryOperationExpression) {
-		unaryOperationExpression.getOperand().accept( this );
-	}
-
-	@Override
-	public void visitModifiedSubQueryExpression(ModifiedSubQueryExpression expression) {
-		expression.getSubQuery().accept( this );
-	}
-
-	@Override
-	public void visitBooleanExpressionPredicate(BooleanExpressionPredicate booleanExpressionPredicate) {
-		booleanExpressionPredicate.getExpression().accept( this );
-	}
-
-	@Override
-	public void visitBetweenPredicate(BetweenPredicate betweenPredicate) {
-		betweenPredicate.getExpression().accept( this );
-		betweenPredicate.getLowerBound().accept( this );
-		betweenPredicate.getUpperBound().accept( this );
-	}
-
-	@Override
-	public void visitGroupedPredicate(GroupedPredicate groupedPredicate) {
-		groupedPredicate.getSubPredicate().accept( this );
-	}
-
-	@Override
-	public void visitJunction(Junction junction) {
-		for ( Predicate predicate : junction.getPredicates() ) {
-			predicate.accept( this );
-		}
-	}
-
-	@Override
-	public void visitLikePredicate(LikePredicate likePredicate) {
-		likePredicate.getMatchExpression().accept( this );
-		if ( likePredicate.getEscapeCharacter() != null ) {
-			likePredicate.getEscapeCharacter().accept( this );
-		}
-		likePredicate.getPattern().accept( this );
-	}
-
-	@Override
-	public void visitNegatedPredicate(NegatedPredicate negatedPredicate) {
-		negatedPredicate.getPredicate().accept( this );
-	}
-
-	@Override
-	public void visitNullnessPredicate(NullnessPredicate nullnessPredicate) {
-		nullnessPredicate.getExpression().accept( this );
-	}
-
-	@Override
-	public void visitRelationalPredicate(ComparisonPredicate comparisonPredicate) {
-		comparisonPredicate.getLeftHandExpression().accept( this );
-		comparisonPredicate.getRightHandExpression().accept( this );
-	}
-
-	@Override
-	public void visitSelfRenderingPredicate(SelfRenderingPredicate selfRenderingPredicate) {
-		selfRenderingPredicate.getSelfRenderingExpression().accept( this );
-	}
-
-	@Override
 	public void visitOver(Over over) {
-		over.getExpression().accept( this );
+		// Only need to visit the expression over which the window is created as the window definition can't have aggregates
+		// If the expression is an aggregate function, this means the aggregate is used as window function, which is fine
+		// We only care about actually aggregating functions, which might be an argument of this function though
+		if ( over.getExpression() instanceof AggregateFunctionExpression ) {
+			final AggregateFunctionExpression aggregate = (AggregateFunctionExpression) over.getExpression();
+			for ( SqlAstNode argument : aggregate.getArguments() ) {
+				argument.accept( this );
+			}
+			if ( aggregate.getFilter() != null ) {
+				aggregate.getFilter().accept( this );
+			}
+		}
+		else {
+			over.getExpression().accept( this );
+		}
 	}
 
 	// --- to ignore ---
+	// There is no need to look into the following AST nodes as the aggregate check is only for the top level
 
 	@Override
 	public void visitSelectStatement(SelectStatement statement) {
@@ -323,6 +186,18 @@ class AggregateFunctionChecker implements SqlAstWalker {
 	}
 
 	@Override
+	public void visitModifiedSubQueryExpression(ModifiedSubQueryExpression expression) {
+	}
+
+	@Override
+	public void visitAny(Any any) {
+	}
+
+	@Override
+	public void visitEvery(Every every) {
+	}
+
+	@Override
 	public void visitExistsPredicate(ExistsPredicate existsPredicate) {
 	}
 
@@ -335,11 +210,11 @@ class AggregateFunctionChecker implements SqlAstWalker {
 	}
 
 	@Override
-	public void visitJdbcLiteral(JdbcLiteral jdbcLiteral) {
+	public void visitJdbcLiteral(JdbcLiteral<?> jdbcLiteral) {
 	}
 
 	@Override
-	public void visitQueryLiteral(QueryLiteral queryLiteral) {
+	public void visitQueryLiteral(QueryLiteral<?> queryLiteral) {
 	}
 
 	@Override

@@ -476,7 +476,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 						throw new IllegalAttributeType( "An IdClass cannot define <any/> attributes : " + attributeName );
 					}
 				},
-				(column, jdbcEnvironment) -> getTableIdentifierExpression( column.getValue().getTable(), creationProcess ),
+				(column, jdbcEnvironment) -> MappingModelCreationHelper.getTableIdentifierExpression( column.getValue().getTable(), creationProcess ),
 				this::addAttribute,
 				() -> {
 					// We need the attribute mapping types to finish initialization first before we can build the column mappings
@@ -487,13 +487,6 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 				},
 				creationProcess
 		);
-	}
-
-	private static String getTableIdentifierExpression(Table table, MappingModelCreationProcess creationProcess) {
-		final SqlStringGenerationContext sqlStringGenerationContext = creationProcess.getCreationContext()
-				.getSessionFactory()
-				.getSqlStringGenerationContext();
-		return sqlStringGenerationContext.format( table.getQualifiedTableName() );
 	}
 
 	private boolean initColumnMappings() {

@@ -4174,12 +4174,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	@Override
-	public void visitJdbcLiteral(JdbcLiteral jdbcLiteral) {
+	public void visitJdbcLiteral(JdbcLiteral<?> jdbcLiteral) {
 		visitLiteral( jdbcLiteral );
 	}
 
 	@Override
-	public void visitQueryLiteral(QueryLiteral queryLiteral) {
+	public void visitQueryLiteral(QueryLiteral<?> queryLiteral) {
 		visitLiteral( queryLiteral );
 	}
 

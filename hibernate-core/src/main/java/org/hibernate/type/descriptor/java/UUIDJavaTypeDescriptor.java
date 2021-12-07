@@ -114,6 +114,33 @@ public class UUIDJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<UUID
 		}
 	}
 
+	public static class NoDashesStringTransformer implements ValueTransformer {
+		public static final NoDashesStringTransformer INSTANCE = new NoDashesStringTransformer();
+
+		public String transform(UUID uuid) {
+			final String stringForm = ToStringTransformer.INSTANCE.transform( uuid );
+			return stringForm.substring( 0, 8 )
+					+ stringForm.substring( 9, 13 )
+					+ stringForm.substring( 14, 18 )
+					+ stringForm.substring( 19, 23 )
+					+ stringForm.substring( 24 );
+		}
+
+		public UUID parse(Object value) {
+			final String stringValue = (String) value;
+			final String uuidString = stringValue.substring( 0, 8 )
+					+ "-"
+					+ stringValue.substring( 8, 12 )
+					+ "-"
+					+ stringValue.substring( 12, 16 )
+					+ "-"
+					+ stringValue.substring( 16, 20 )
+					+ "-"
+					+ stringValue.substring( 20 );
+			return UUID.fromString( uuidString );
+		}
+	}
+
 	public static class ToBytesTransformer implements ValueTransformer {
 		public static final ToBytesTransformer INSTANCE = new ToBytesTransformer();
 

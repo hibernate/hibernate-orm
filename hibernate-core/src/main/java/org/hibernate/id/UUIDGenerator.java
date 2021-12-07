@@ -39,27 +39,21 @@ import org.hibernate.type.descriptor.java.UUIDJavaTypeDescriptor;
  * @author Steve Ebersole
  */
 public class UUIDGenerator implements IdentifierGenerator {
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( UUIDGenerator.class );
+
 	public static final String UUID_GEN_STRATEGY = "uuid_gen_strategy";
 	public static final String UUID_GEN_STRATEGY_CLASS = "uuid_gen_strategy_class";
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( UUIDGenerator.class );
 
 	private UUIDGenerationStrategy strategy;
 	private UUIDJavaTypeDescriptor.ValueTransformer valueTransformer;
 
-	public static UUIDGenerator buildSessionFactoryUniqueIdentifierGenerator() {
-		final UUIDGenerator generator = new UUIDGenerator();
-		generator.strategy = StandardRandomStrategy.INSTANCE;
-		generator.valueTransformer = UUIDJavaTypeDescriptor.ToStringTransformer.INSTANCE;
-		return generator;
-	}
-
 	@Override
 	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
-		// check first for the strategy instance
+		// check first for an explicit strategy instance
 		strategy = (UUIDGenerationStrategy) params.get( UUID_GEN_STRATEGY );
+
 		if ( strategy == null ) {
-			// next check for the strategy class
+			// next check for an explicit strategy class
 			final String strategyClassName = params.getProperty( UUID_GEN_STRATEGY_CLASS );
 			if ( strategyClassName != null ) {
 				try {
@@ -77,6 +71,7 @@ public class UUIDGenerator implements IdentifierGenerator {
 				}
 			}
 		}
+
 		if ( strategy == null ) {
 			// lastly use the standard random generator
 			strategy = StandardRandomStrategy.INSTANCE;
@@ -86,6 +81,7 @@ public class UUIDGenerator implements IdentifierGenerator {
 			valueTransformer = UUIDJavaTypeDescriptor.PassThroughTransformer.INSTANCE;
 		}
 		else if ( String.class.isAssignableFrom( type.getReturnedClass() ) ) {
+			// todo (6.0) : allow for org.hibernate.type.descriptor.java.UUIDJavaTypeDescriptor.NoDashesStringTransformer
 			valueTransformer = UUIDJavaTypeDescriptor.ToStringTransformer.INSTANCE;
 		}
 		else if ( byte[].class.isAssignableFrom( type.getReturnedClass() ) ) {

@@ -534,17 +534,6 @@ public interface AvailableSettings {
 	String DEFAULT_CACHE_CONCURRENCY_STRATEGY = "hibernate.cache.default_cache_concurrency_strategy";
 
 	/**
-	 * Setting which indicates whether or not the new {@link org.hibernate.id.IdentifierGenerator} are used
-	 * for AUTO, TABLE and SEQUENCE.
-	 * <p/>
-	 * Default is {@code true}.  Existing applications may want to disable this (set it {@code false}) for
-	 * upgrade compatibility.
-	 *
-	 * @see MetadataBuilder#enableNewIdentifierGeneratorSupport
-	 */
-	String USE_NEW_ID_GENERATOR_MAPPINGS = "hibernate.id.new_generator_mappings";
-
-	/**
 	 * @see MetadataBuilder#enableImplicitForcingOfDiscriminatorsInSelect(boolean)
 	 */
 	String FORCE_DISCRIMINATOR_IN_SELECTS_BY_DEFAULT = "hibernate.discriminator.force_in_select";

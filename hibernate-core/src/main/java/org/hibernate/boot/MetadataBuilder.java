@@ -6,9 +6,6 @@
  */
 package org.hibernate.boot;
 
-import jakarta.persistence.AttributeConverter;
-import jakarta.persistence.SharedCacheMode;
-
 import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
 import org.hibernate.boot.archive.scan.spi.ScanOptions;
 import org.hibernate.boot.archive.scan.spi.Scanner;
@@ -26,6 +23,9 @@ import org.hibernate.type.BasicType;
 import org.hibernate.usertype.UserType;
 
 import org.jboss.jandex.IndexView;
+
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.SharedCacheMode;
 
 /**
  * Contract for specifying various overrides to be used in metamodel building.
@@ -185,28 +185,6 @@ public interface MetadataBuilder {
 	 * @see org.hibernate.cfg.AvailableSettings#SCANNER_ARCHIVE_INTERPRETER
 	 */
 	MetadataBuilder applyArchiveDescriptorFactory(ArchiveDescriptorFactory factory);
-
-	/**
-	 * Should we enable support for the "new" (since 3.2) identifier generator mappings for
-	 * handling:<ul>
-	 *     <li>{@link jakarta.persistence.GenerationType#SEQUENCE}</li>
-	 *     <li>{@link jakarta.persistence.GenerationType#IDENTITY}</li>
-	 *     <li>{@link jakarta.persistence.GenerationType#TABLE}</li>
-	 *     <li>{@link jakarta.persistence.GenerationType#AUTO}</li>
-	 * </ul>
-	 * <p/>
-	 * Its default is defined by the {@link org.hibernate.cfg.AvailableSettings#USE_NEW_ID_GENERATOR_MAPPINGS}
-	 * setting if using property-based configuration.
-	 *
-	 *
-	 * @param enable {@code true} to enable; {@code false} to disable; don't call for
-	 * default.
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @see org.hibernate.cfg.AvailableSettings#USE_NEW_ID_GENERATOR_MAPPINGS
-	 */
-	MetadataBuilder enableNewIdentifierGeneratorSupport(boolean enable);
 
 	/**
 	 * Should we process or ignore explicitly defined discriminators in the case

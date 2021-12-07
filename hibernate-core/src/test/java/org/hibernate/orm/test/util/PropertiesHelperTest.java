@@ -57,7 +57,7 @@ public class PropertiesHelperTest extends BaseUnitTestCase {
 
 		String str = ConfigurationHelper.getString( "my.nonexistent.prop", props, "did.not.exist" );
 		assertEquals( "did.not.exist", str );
-		str = ConfigurationHelper.getString( "my.nonexistent.prop", props, null );
+		str = ConfigurationHelper.getString( "my.nonexistent.prop", props );
 		assertNull( str );
 		str = ConfigurationHelper.getString( "my.string.prop", props, "na" );
 		assertEquals( "replacement did not occur", "string", str );

@@ -8,22 +8,20 @@ package org.hibernate.boot.internal;
 
 import java.util.ArrayList;
 import java.util.UUID;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.SequenceGenerator;
-import jakarta.persistence.TableGenerator;
 
 import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.BinderHelper;
 import org.hibernate.id.IncrementGenerator;
-import org.hibernate.id.MultipleHiLoPerTableGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
-import org.hibernate.id.SequenceHiLoGenerator;
 import org.hibernate.id.UUIDGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.TableGenerator;
 
 /**
  * The root (composition) IdGenerationTypeInterpreter.
@@ -75,131 +73,11 @@ public class IdGeneratorInterpreterImpl implements IdGeneratorStrategyInterprete
 		}
 	}
 
-	public void enableLegacyFallback() {
-		fallbackInterpreter = LegacyFallbackInterpreter.INSTANCE;
-	}
-
-	public void disableLegacyFallback() {
-		fallbackInterpreter = FallbackInterpreter.INSTANCE;
-	}
-
 	public void addInterpreterDelegate(IdGeneratorStrategyInterpreter delegate) {
 		if ( delegates == null ) {
 			delegates = new ArrayList<>();
 		}
 		delegates.add( delegate );
-	}
-
-	private static class LegacyFallbackInterpreter implements IdGeneratorStrategyInterpreter {
-		/**
-		 * Singleton access
-		 */
-		public static final LegacyFallbackInterpreter INSTANCE = new LegacyFallbackInterpreter();
-
-		@Override
-		public String determineGeneratorName(GenerationType generationType, GeneratorNameDeterminationContext context) {
-			switch ( generationType ) {
-				case IDENTITY: {
-					return "identity";
-				}
-				case SEQUENCE: {
-					return "seqhilo";
-				}
-				case TABLE: {
-					return MultipleHiLoPerTableGenerator.class.getName();
-				}
-				default: {
-					// AUTO
-
-					if ( "increment".equalsIgnoreCase( context.getGeneratedValueGeneratorName() ) ) {
-						return IncrementGenerator.class.getName();
-					}
-
-					final Class javaType = context.getIdType();
-					if ( UUID.class.isAssignableFrom( javaType ) ) {
-						return UUIDGenerator.class.getName();
-					}
-
-					return "native";
-				}
-			}
-		}
-
-		@Override
-		public void interpretTableGenerator(
-				TableGenerator tableGeneratorAnnotation,
-				IdentifierGeneratorDefinition.Builder definitionBuilder) {
-			definitionBuilder.setName( tableGeneratorAnnotation.name() );
-			definitionBuilder.setStrategy( MultipleHiLoPerTableGenerator.class.getName() );
-
-			if ( !BinderHelper.isEmptyAnnotationValue( tableGeneratorAnnotation.table() ) ) {
-				definitionBuilder.addParam(
-						MultipleHiLoPerTableGenerator.ID_TABLE,
-						tableGeneratorAnnotation.table()
-				);
-			}
-			if ( !BinderHelper.isEmptyAnnotationValue( tableGeneratorAnnotation.catalog() ) ) {
-				definitionBuilder.addParam(
-						PersistentIdentifierGenerator.CATALOG,
-						tableGeneratorAnnotation.catalog()
-				);
-			}
-			if ( !BinderHelper.isEmptyAnnotationValue( tableGeneratorAnnotation.schema() ) ) {
-				definitionBuilder.addParam(
-						PersistentIdentifierGenerator.SCHEMA,
-						tableGeneratorAnnotation.schema()
-				);
-			}
-
-			if ( !BinderHelper.isEmptyAnnotationValue( tableGeneratorAnnotation.pkColumnName() ) ) {
-				definitionBuilder.addParam(
-						MultipleHiLoPerTableGenerator.PK_COLUMN_NAME,
-						tableGeneratorAnnotation.pkColumnName()
-				);
-			}
-			if ( !BinderHelper.isEmptyAnnotationValue( tableGeneratorAnnotation.valueColumnName() ) ) {
-				definitionBuilder.addParam(
-						MultipleHiLoPerTableGenerator.VALUE_COLUMN_NAME,
-						tableGeneratorAnnotation.valueColumnName()
-				);
-			}
-			if ( !BinderHelper.isEmptyAnnotationValue( tableGeneratorAnnotation.pkColumnValue() ) ) {
-				definitionBuilder.addParam(
-						MultipleHiLoPerTableGenerator.PK_VALUE_NAME,
-						tableGeneratorAnnotation.pkColumnValue()
-				);
-			}
-			definitionBuilder.addParam(
-					MultipleHiLoPerTableGenerator.MAX_LO,
-					String.valueOf( tableGeneratorAnnotation.allocationSize() - 1 )
-			);
-
-			// TODO : implement unique-constraint support
-			if ( tableGeneratorAnnotation.uniqueConstraints() != null
-					&& tableGeneratorAnnotation.uniqueConstraints().length > 0 ) {
-				log.ignoringTableGeneratorConstraints( tableGeneratorAnnotation.name() );
-			}
-		}
-
-		@Override
-		@SuppressWarnings("deprecation")
-		public void interpretSequenceGenerator(
-				SequenceGenerator sequenceGeneratorAnnotation,
-				IdentifierGeneratorDefinition.Builder definitionBuilder) {
-			definitionBuilder.setName( sequenceGeneratorAnnotation.name() );
-
-			definitionBuilder.setStrategy( "seqhilo" );
-
-			if ( !BinderHelper.isEmptyAnnotationValue( sequenceGeneratorAnnotation.sequenceName() ) ) {
-				definitionBuilder.addParam( org.hibernate.id.SequenceGenerator.SEQUENCE, sequenceGeneratorAnnotation.sequenceName() );
-			}
-			//FIXME: work on initialValue() through SequenceGenerator.PARAMETERS
-			//		steve : or just use o.h.id.enhanced.SequenceStyleGenerator
-			if ( sequenceGeneratorAnnotation.initialValue() != 1 ) {
-				log.unsupportedInitialValue( AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS );
-			}
-			definitionBuilder.addParam( SequenceHiLoGenerator.MAX_LO, String.valueOf( sequenceGeneratorAnnotation.allocationSize() - 1 ) );
-		}
 	}
 
 	private static class FallbackInterpreter implements IdGeneratorStrategyInterpreter {

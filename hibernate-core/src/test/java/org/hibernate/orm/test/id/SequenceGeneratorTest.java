@@ -27,9 +27,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		xmlMappings = "org/hibernate/orm/test/id/Person.hbm.xml"
 )
 @SessionFactory(statementInspectorClass = SQLStatementInspector.class)
-@ServiceRegistry(
-		settings = @Setting(name = Environment.USE_NEW_ID_GENERATOR_MAPPINGS, value = "false")
-)
 public class SequenceGeneratorTest {
 
 

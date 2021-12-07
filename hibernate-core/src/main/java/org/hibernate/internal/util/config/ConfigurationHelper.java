@@ -63,8 +63,24 @@ public final class ConfigurationHelper {
 	 * @return The value.
 	 */
 	public static String getString(String name, Map values, String defaultValue) {
-		final String value = getString( name, values );
-		return value == null ? defaultValue : value;
+		return getString( name, values, () -> defaultValue );
+	}
+
+	/**
+	 * Get the config value as a {@link String}
+	 *
+	 * @param name The config setting name.
+	 * @param values The map of config values
+	 *
+	 * @return The value, or null if not found
+	 */
+	public static String getString(String name, Map<?,?> values, Supplier<String> defaultValueSupplier) {
+		final Object value = values.get( name );
+		if ( value != null ) {
+			return value.toString();
+		}
+
+		return defaultValueSupplier.get();
 	}
 
 	/**

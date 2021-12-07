@@ -49,7 +49,7 @@ import org.jboss.logging.Logger;
  *   </tr>
  *   <tr>
  *     <td>{@link #SEQUENCE_PARAM}</td>
- *     <td>{@link #DEF_SEQUENCE_NAME}</td>
+ *     <td>N/A</td>
  *     <td>The name of the sequence/table to use to store/retrieve values</td>
  *   </tr>
  *   <tr>
@@ -107,13 +107,7 @@ public class SequenceStyleGenerator
 	 * based on the entity / collection-role name
 	 */
 	public static final String SEQUENCE_PARAM = "sequence_name";
-
-	/**
-	 * @deprecated As of 6.0 with no replacement - `hibernate_sequence` as a real, implicit exportable name
-	 * is no longer supported.  No effect
-	 */
-	@Deprecated
-	public static final String DEF_SEQUENCE_NAME = "hibernate_sequence";
+	public static final String ALT_SEQUENCE_PARAM = "sequence";
 
 	/**
 	 * Specifies the suffix to use for an implicit sequence name - appended to the entity-name / collection-role
@@ -295,7 +289,12 @@ public class SequenceStyleGenerator
 				ConfigurationHelper.getString( SCHEMA, params )
 		);
 
-		final String sequenceName = ConfigurationHelper.getString( SEQUENCE_PARAM, params );
+		final String sequenceName = ConfigurationHelper.getString(
+				SEQUENCE_PARAM,
+				params,
+				() -> ConfigurationHelper.getString( ALT_SEQUENCE_PARAM, params )
+		);
+
 		if ( StringHelper.isNotEmpty( sequenceName ) ) {
 			// we have an explicit name, use it
 			if ( sequenceName.contains( "." ) ) {

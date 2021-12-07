@@ -40,9 +40,7 @@ public class SequenceExportTest extends BaseUnitTestCase {
 
 	@Before
 	public void prepare() {
-		ssr = new StandardServiceRegistryBuilder()
-				.applySetting( AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS, "true" )
-				.build();
+		ssr = new StandardServiceRegistryBuilder().build();
 	}
 
 	@After

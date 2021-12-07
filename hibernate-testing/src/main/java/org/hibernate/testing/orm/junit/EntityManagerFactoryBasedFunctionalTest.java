@@ -112,8 +112,6 @@ public class EntityManagerFactoryBasedFunctionalTest
 			settings.put( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
 		}
 
-		settings.put( AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
-
 		return settings;
 	}
 

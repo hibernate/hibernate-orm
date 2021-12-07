@@ -20,7 +20,7 @@ import jakarta.persistence.Lob;
 @Entity
 public class Document implements Serializable {
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO) // Required to use SequenceIdentityGenerator in test case for HHH-8103.
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
 
 	private Integer revision;

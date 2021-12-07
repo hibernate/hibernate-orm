@@ -12,10 +12,6 @@ import org.hibernate.boot.model.naming.Identifier;
 
 /**
  * Mainly this is used to support legacy sequence exporting.
- *
- * @author Steve Ebersole
- *
- * @see org.hibernate.id.SequenceGenerator
  */
 public class NamedAuxiliaryDatabaseObject
 		extends SimpleAuxiliaryDatabaseObject
@@ -29,16 +25,6 @@ public class NamedAuxiliaryDatabaseObject
 			String dropString,
 			Set<String> dialectScopes) {
 		super( namespace, createString, dropString, dialectScopes );
-		this.name = name;
-	}
-
-	public NamedAuxiliaryDatabaseObject(
-			String name,
-			Namespace namespace,
-			String[] createStrings,
-			String[] dropStrings,
-			Set<String> dialectScopes) {
-		super( namespace, createStrings, dropStrings, dialectScopes );
 		this.name = name;
 	}
 

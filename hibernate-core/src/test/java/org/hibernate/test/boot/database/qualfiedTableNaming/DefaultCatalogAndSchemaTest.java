@@ -6,8 +6,6 @@
  */
 package org.hibernate.test.boot.database.qualfiedTableNaming;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -17,21 +15,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
-import jakarta.persistence.Basic;
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Entity;
-import jakarta.persistence.ForeignKey;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Inheritance;
-import jakarta.persistence.InheritanceType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.SequenceGenerator;
-import jakarta.persistence.Table;
-import jakarta.persistence.TableGenerator;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.GenericGenerator;
@@ -58,7 +41,6 @@ import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.persister.entity.AbstractEntityPersister;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableStrategy;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -78,6 +60,24 @@ import org.hibernate.testing.junit4.CustomParameterized;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+
+import jakarta.persistence.Basic;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.Table;
+import jakarta.persistence.TableGenerator;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(CustomParameterized.class)
 @TestForIssue(jiraKey = { "HHH-14921", "HHH-14922" })
@@ -176,16 +176,12 @@ public class DefaultCatalogAndSchemaTest {
 				EntityWithExplicitQualifiersWithTableGenerator.class,
 				EntityWithDefaultQualifiersWithSequenceGenerator.class,
 				EntityWithExplicitQualifiersWithSequenceGenerator.class,
-				EntityWithDefaultQualifiersWithSeqHiLoGenerator.class,
-				EntityWithExplicitQualifiersWithSeqHiLoGenerator.class,
 				EntityWithDefaultQualifiersWithIncrementGenerator.class,
 				EntityWithExplicitQualifiersWithIncrementGenerator.class,
 				EntityWithDefaultQualifiersWithSequenceIdentityGenerator.class,
 				EntityWithExplicitQualifiersWithSequenceIdentityGenerator.class,
 				EntityWithDefaultQualifiersWithEnhancedSequenceGenerator.class,
-				EntityWithExplicitQualifiersWithEnhancedSequenceGenerator.class,
-				EntityWithDefaultQualifiersWithLegacySequenceGenerator.class,
-				EntityWithExplicitQualifiersWithLegacySequenceGenerator.class
+				EntityWithExplicitQualifiersWithEnhancedSequenceGenerator.class
 		);
 
 		StandardServiceRegistry serviceRegistry;
@@ -341,16 +337,12 @@ public class DefaultCatalogAndSchemaTest {
 		verifyEntityPersisterQualifiers( EntityWithExplicitQualifiersWithTableGenerator.class, expectedExplicitQualifier() );
 		verifyEntityPersisterQualifiers( EntityWithDefaultQualifiersWithSequenceGenerator.class, expectedDefaultQualifier() );
 		verifyEntityPersisterQualifiers( EntityWithExplicitQualifiersWithSequenceGenerator.class, expectedExplicitQualifier() );
-		verifyEntityPersisterQualifiers( EntityWithDefaultQualifiersWithSeqHiLoGenerator.class, expectedDefaultQualifier() );
-		verifyEntityPersisterQualifiers( EntityWithExplicitQualifiersWithSeqHiLoGenerator.class, expectedExplicitQualifier() );
 		verifyEntityPersisterQualifiers( EntityWithDefaultQualifiersWithIncrementGenerator.class, expectedDefaultQualifier() );
 		verifyEntityPersisterQualifiers( EntityWithExplicitQualifiersWithIncrementGenerator.class, expectedExplicitQualifier() );
 		verifyEntityPersisterQualifiers( EntityWithDefaultQualifiersWithSequenceIdentityGenerator.class, expectedDefaultQualifier() );
 		verifyEntityPersisterQualifiers( EntityWithExplicitQualifiersWithSequenceIdentityGenerator.class, expectedExplicitQualifier() );
 		verifyEntityPersisterQualifiers( EntityWithDefaultQualifiersWithEnhancedSequenceGenerator.class, expectedDefaultQualifier() );
 		verifyEntityPersisterQualifiers( EntityWithExplicitQualifiersWithEnhancedSequenceGenerator.class, expectedExplicitQualifier() );
-		verifyEntityPersisterQualifiers( EntityWithDefaultQualifiersWithLegacySequenceGenerator.class, expectedDefaultQualifier() );
-		verifyEntityPersisterQualifiers( EntityWithExplicitQualifiersWithLegacySequenceGenerator.class, expectedExplicitQualifier() );
 	}
 
 	private void verifyEntityPersisterQualifiers(Class<?> entityClass, ExpectedQualifier expectedQualifier) {
@@ -471,32 +463,6 @@ public class DefaultCatalogAndSchemaTest {
 	}
 
 	@Test
-	public void legacySequenceGenerator() {
-		org.hibernate.id.SequenceGenerator generator = idGenerator( org.hibernate.id.SequenceGenerator.class,
-				EntityWithDefaultQualifiersWithLegacySequenceGenerator.class );
-		verifyOnlyQualifier( generator.getAllSqlForTests(), SqlType.RUNTIME,
-				EntityWithDefaultQualifiersWithLegacySequenceGenerator.NAME, expectedDefaultQualifier() );
-
-		generator = idGenerator( org.hibernate.id.SequenceGenerator.class,
-				EntityWithExplicitQualifiersWithLegacySequenceGenerator.class );
-		verifyOnlyQualifier( generator.getAllSqlForTests(), SqlType.RUNTIME,
-				EntityWithExplicitQualifiersWithLegacySequenceGenerator.NAME, expectedExplicitQualifier() );
-	}
-
-	@Test
-	public void seqHiLoGenerator() {
-		org.hibernate.id.SequenceHiLoGenerator generator = idGenerator( org.hibernate.id.SequenceHiLoGenerator.class,
-				EntityWithDefaultQualifiersWithSeqHiLoGenerator.class );
-		verifyOnlyQualifier( generator.getAllSqlForTests(), SqlType.RUNTIME,
-				EntityWithDefaultQualifiersWithSeqHiLoGenerator.NAME, expectedDefaultQualifier() );
-
-		generator = idGenerator( org.hibernate.id.SequenceHiLoGenerator.class,
-				EntityWithExplicitQualifiersWithSeqHiLoGenerator.class );
-		verifyOnlyQualifier( generator.getAllSqlForTests(), SqlType.RUNTIME,
-				EntityWithExplicitQualifiersWithSeqHiLoGenerator.NAME, expectedExplicitQualifier() );
-	}
-
-	@Test
 	public void incrementGenerator() {
 		org.hibernate.id.IncrementGenerator generator = idGenerator( org.hibernate.id.IncrementGenerator.class,
 				EntityWithDefaultQualifiersWithIncrementGenerator.class );
@@ -507,19 +473,6 @@ public class DefaultCatalogAndSchemaTest {
 				EntityWithExplicitQualifiersWithIncrementGenerator.class );
 		verifyOnlyQualifier( generator.getAllSqlForTests(), SqlType.RUNTIME,
 				EntityWithExplicitQualifiersWithIncrementGenerator.NAME, expectedExplicitQualifier() );
-	}
-
-	@Test
-	public void sequenceIdentityGenerator() {
-		org.hibernate.id.SequenceIdentityGenerator generator = idGenerator( org.hibernate.id.SequenceIdentityGenerator.class,
-				EntityWithDefaultQualifiersWithSequenceIdentityGenerator.class );
-		verifyOnlyQualifier( generator.getAllSqlForTests(), SqlType.RUNTIME,
-				EntityWithDefaultQualifiersWithSequenceIdentityGenerator.NAME, expectedDefaultQualifier() );
-
-		generator = idGenerator( org.hibernate.id.SequenceIdentityGenerator.class,
-				EntityWithExplicitQualifiersWithSequenceIdentityGenerator.class );
-		verifyOnlyQualifier( generator.getAllSqlForTests(), SqlType.RUNTIME,
-				EntityWithExplicitQualifiersWithSequenceIdentityGenerator.NAME, expectedExplicitQualifier() );
 	}
 
 	private <T extends IdentifierGenerator> T idGenerator(Class<T> expectedType, Class<?> entityClass) {
@@ -558,16 +511,12 @@ public class DefaultCatalogAndSchemaTest {
 		verifyOnlyQualifier( sql, SqlType.DDL, EntityWithExplicitQualifiersWithTableGenerator.NAME, expectedExplicitQualifier() );
 		verifyOnlyQualifier( sql, SqlType.DDL, EntityWithDefaultQualifiersWithSequenceGenerator.NAME, expectedDefaultQualifier() );
 		verifyOnlyQualifier( sql, SqlType.DDL, EntityWithExplicitQualifiersWithSequenceGenerator.NAME, expectedExplicitQualifier() );
-		verifyOnlyQualifier( sql, SqlType.DDL, EntityWithDefaultQualifiersWithSeqHiLoGenerator.NAME, expectedDefaultQualifier() );
-		verifyOnlyQualifier( sql, SqlType.DDL, EntityWithExplicitQualifiersWithSeqHiLoGenerator.NAME, expectedExplicitQualifier() );
 		verifyOnlyQualifier( sql, SqlType.DDL, EntityWithDefaultQualifiersWithIncrementGenerator.NAME, expectedDefaultQualifier() );
 		verifyOnlyQualifier( sql, SqlType.DDL, EntityWithExplicitQualifiersWithIncrementGenerator.NAME, expectedExplicitQualifier() );
 		verifyOnlyQualifier( sql, SqlType.DDL, EntityWithDefaultQualifiersWithSequenceIdentityGenerator.NAME, expectedDefaultQualifier() );
 		verifyOnlyQualifier( sql, SqlType.DDL, EntityWithExplicitQualifiersWithSequenceIdentityGenerator.NAME, expectedExplicitQualifier() );
 		verifyOnlyQualifier( sql, SqlType.DDL, EntityWithDefaultQualifiersWithEnhancedSequenceGenerator.NAME, expectedDefaultQualifier() );
 		verifyOnlyQualifier( sql, SqlType.DDL, EntityWithExplicitQualifiersWithEnhancedSequenceGenerator.NAME, expectedExplicitQualifier() );
-		verifyOnlyQualifier( sql, SqlType.DDL, EntityWithDefaultQualifiersWithLegacySequenceGenerator.NAME, expectedDefaultQualifier() );
-		verifyOnlyQualifier( sql, SqlType.DDL, EntityWithExplicitQualifiersWithLegacySequenceGenerator.NAME, expectedExplicitQualifier() );
 	}
 
 	private enum SqlType {
@@ -1079,36 +1028,6 @@ public class DefaultCatalogAndSchemaTest {
 		private String basic;
 	}
 
-	@Entity(name = EntityWithDefaultQualifiersWithSeqHiLoGenerator.NAME)
-	public static class EntityWithDefaultQualifiersWithSeqHiLoGenerator {
-		public static final String NAME = "EntityWithDefaultQualifiersWithSeqHiLoGenerator";
-		@Id
-		@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = NAME + "_generator")
-		@GenericGenerator(name = NAME + "_generator", strategy = "org.hibernate.id.SequenceHiLoGenerator", parameters = {
-				@Parameter(name = "sequence", value = NAME + "_seq"),
-				@Parameter(name = "max_lo", value = "5")
-		})
-		private Long id;
-		@Basic
-		private String basic;
-	}
-
-	@Entity(name = EntityWithExplicitQualifiersWithSeqHiLoGenerator.NAME)
-	@Table(catalog = EXPLICIT_CATALOG, schema = EXPLICIT_SCHEMA)
-	public static class EntityWithExplicitQualifiersWithSeqHiLoGenerator {
-		public static final String NAME = "EntityWithExplicitQualifiersWithSeqHiLoGenerator";
-		@Id
-		@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = NAME + "_generator")
-		@GenericGenerator(name = NAME + "_generator", strategy = "org.hibernate.id.SequenceHiLoGenerator", parameters = {
-				@Parameter(name = "sequence", value = NAME + "_seq"),
-				@Parameter(name = "max_lo", value = "5"),
-				@Parameter(name = "catalog", value = EXPLICIT_CATALOG),
-				@Parameter(name = "schema", value = EXPLICIT_SCHEMA)
-		})
-		private Long id;
-		@Basic
-		private String basic;
-	}
 
 	@Entity(name = EntityWithDefaultQualifiersWithIncrementGenerator.NAME)
 	public static class EntityWithDefaultQualifiersWithIncrementGenerator {
@@ -1186,36 +1105,6 @@ public class DefaultCatalogAndSchemaTest {
 		@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = NAME + "_generator")
 		@GenericGenerator(name = NAME + "_generator", strategy = "enhanced-sequence", parameters = {
 				@Parameter(name = "sequence_name", value = NAME + "_seq"),
-				@Parameter(name = "catalog", value = EXPLICIT_CATALOG),
-				@Parameter(name = "schema", value = EXPLICIT_SCHEMA)
-		})
-		private Long id;
-		@Basic
-		private String basic;
-	}
-
-
-	@Entity(name = EntityWithDefaultQualifiersWithLegacySequenceGenerator.NAME)
-	public static class EntityWithDefaultQualifiersWithLegacySequenceGenerator {
-		public static final String NAME = "EntityWithDefaultQualifiersWithLegacySequenceGenerator";
-		@Id
-		@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = NAME + "_generator")
-		@GenericGenerator(name = NAME + "_generator", strategy = "org.hibernate.id.SequenceGenerator", parameters = {
-				@Parameter(name = "sequence", value = NAME + "_seq")
-		})
-		private Long id;
-		@Basic
-		private String basic;
-	}
-
-	@Entity(name = EntityWithExplicitQualifiersWithLegacySequenceGenerator.NAME)
-	@Table(catalog = EXPLICIT_CATALOG, schema = EXPLICIT_SCHEMA)
-	public static class EntityWithExplicitQualifiersWithLegacySequenceGenerator {
-		public static final String NAME = "EntityWithExplicitQualifiersWithLegacySequenceGenerator";
-		@Id
-		@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = NAME + "_generator")
-		@GenericGenerator(name = NAME + "_generator", strategy = "org.hibernate.id.SequenceGenerator", parameters = {
-				@Parameter(name = "sequence", value = NAME + "_seq"),
 				@Parameter(name = "catalog", value = EXPLICIT_CATALOG),
 				@Parameter(name = "schema", value = EXPLICIT_SCHEMA)
 		})

@@ -39,7 +39,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 				UnidirectionalOneToManyIndexColumnTest.Child.class
 		},
 		integrationSettings = {
-				@Setting(name = AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS, value = "true"),
 				@Setting(name = AvailableSettings.HBM2DDL_AUTO, value = "create-drop"),
 				@Setting(name = AvailableSettings.IMPLICIT_NAMING_STRATEGY, value = "org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl")
 		}

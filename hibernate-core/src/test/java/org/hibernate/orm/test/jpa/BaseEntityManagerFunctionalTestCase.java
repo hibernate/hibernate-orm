@@ -189,7 +189,6 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 		if ( createSchema() ) {
 			settings.put( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
 		}
-		settings.put( AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
 		settings.put( AvailableSettings.DIALECT, getDialect().getClass().getName() );
 		return settings;
 	}

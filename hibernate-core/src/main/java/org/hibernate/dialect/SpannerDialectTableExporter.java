@@ -6,14 +6,6 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.relational.SqlStringGenerationContext;
-import org.hibernate.id.enhanced.SequenceStyleGenerator;
-import org.hibernate.mapping.Column;
-import org.hibernate.mapping.Index;
-import org.hibernate.mapping.Table;
-import org.hibernate.tool.schema.spi.Exporter;
-
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -22,6 +14,13 @@ import java.util.Iterator;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
+
+import org.hibernate.boot.Metadata;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Index;
+import org.hibernate.mapping.Table;
+import org.hibernate.tool.schema.spi.Exporter;
 
 /**
  * The exporter for Cloud Spanner CREATE and DROP table statements.
@@ -94,13 +93,8 @@ class SpannerDialectTableExporter implements Exporter<Table> {
 						context.format( table.getQualifiedTableName() ),
 						colsAndTypes.toString(),
 						primaryKeyColNames
-				) );
-
-		// Hibernate requires the special hibernate_sequence table to be populated with an initial val.
-		if ( table.getName().equals( SequenceStyleGenerator.DEF_SEQUENCE_NAME ) ) {
-			statements.add( "INSERT INTO " + SequenceStyleGenerator.DEF_SEQUENCE_NAME + " ("
-					+ SequenceStyleGenerator.DEF_VALUE_COLUMN + ") VALUES(1)" );
-		}
+				)
+		);
 
 		return statements.toArray( new String[0] );
 	}

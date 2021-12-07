@@ -6,25 +6,22 @@
  */
 package org.hibernate.orm.test.nationalized;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Lob;
-import jakarta.persistence.Table;
-
 import org.hibernate.annotations.Nationalized;
-import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
+import jakarta.persistence.Table;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -39,9 +36,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 		annotatedClasses = NationalizedLobFieldTest.MyEntity.class
 )
 @SessionFactory
-@ServiceRegistry(
-		settings = @Setting(name = AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS, value = "false")
-)
 public class NationalizedLobFieldTest {
 
 	@BeforeEach

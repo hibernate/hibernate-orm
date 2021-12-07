@@ -13,10 +13,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.hibernate.MappingException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.id.Assigned;
 import org.hibernate.id.ForeignGenerator;
@@ -25,9 +23,6 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.IncrementGenerator;
 import org.hibernate.id.SelectGenerator;
-import org.hibernate.id.SequenceGenerator;
-import org.hibernate.id.SequenceHiLoGenerator;
-import org.hibernate.id.SequenceIdentityGenerator;
 import org.hibernate.id.UUIDGenerator;
 import org.hibernate.id.UUIDHexGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
@@ -36,6 +31,7 @@ import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
+import org.hibernate.resource.beans.container.spi.ContainedBean;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.ServiceRegistry;
@@ -50,7 +46,7 @@ import org.hibernate.type.Type;
  */
 @SuppressWarnings( { "deprecation" ,"rawtypes" ,"serial" } )
 public class DefaultIdentifierGeneratorFactory
-		implements MutableIdentifierGeneratorFactory, Serializable, ServiceRegistryAwareService {
+		implements MutableIdentifierGeneratorFactory, Serializable, ServiceRegistryAwareService, BeanContainer.LifecycleOptions {
 
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DefaultIdentifierGeneratorFactory.class );
 
@@ -78,18 +74,18 @@ public class DefaultIdentifierGeneratorFactory
 	 */
 	public DefaultIdentifierGeneratorFactory(boolean ignoreBeanContainer) {
 		this.ignoreBeanContainer = ignoreBeanContainer;
+		register( "uuid", UUIDHexGenerator.class );
 		register( "uuid2", UUIDGenerator.class );
-		register( "guid", GUIDGenerator.class );			// can be done with UUIDGenerator + strategy
-		register( "uuid", UUIDHexGenerator.class );			// "deprecated" for new use
-		register( "uuid.hex", UUIDHexGenerator.class ); 	// uuid.hex is deprecated
+		register( "uuid.hex", UUIDHexGenerator.class );
+		// could be done with UUIDGenerator + strategy
+		register( "guid", GUIDGenerator.class );
+
 		register( "assigned", Assigned.class );
 		register( "identity", IdentityGenerator.class );
 		register( "select", SelectGenerator.class );
 		register( "sequence", SequenceStyleGenerator.class );
-		register( "seqhilo", SequenceHiLoGenerator.class );
 		register( "increment", IncrementGenerator.class );
 		register( "foreign", ForeignGenerator.class );
-		register( "sequence-identity", SequenceIdentityGenerator.class );
 		register( "enhanced-sequence", SequenceStyleGenerator.class );
 		register( "enhanced-table", TableGenerator.class );
 	}
@@ -121,23 +117,12 @@ public class DefaultIdentifierGeneratorFactory
 				identifierGenerator = ( IdentifierGenerator ) clazz.newInstance();
 			}
 			else {
-				identifierGenerator = ( IdentifierGenerator ) beanContainer.getBean(
+				final ContainedBean<IdentifierGenerator> generatorBean = beanContainer.getBean(
 						clazz,
-						new BeanContainer.LifecycleOptions() {
-
-							@Override
-							public boolean canUseCachedReferences() {
-								return false;
-							}
-
-							@Override
-							public boolean useJpaCompliantCreation() {
-								return true;
-							}
-
-						},
+						this,
 						FallbackBeanInstanceProducer.INSTANCE
-				).getBeanInstance();
+				);
+				identifierGenerator = generatorBean.getBeanInstance();
 			}
 			identifierGenerator.configure( type, config, serviceRegistry );
 			return identifierGenerator;
@@ -146,6 +131,16 @@ public class DefaultIdentifierGeneratorFactory
 			final String entityName = config.getProperty( IdentifierGenerator.ENTITY_NAME );
 			throw new MappingException( String.format( "Could not instantiate id generator [entity-name=%s]", entityName ), e );
 		}
+	}
+
+	@Override
+	public boolean canUseCachedReferences() {
+		return false;
+	}
+
+	@Override
+	public boolean useJpaCompliantCreation() {
+		return true;
 	}
 
 	@Override
@@ -177,16 +172,6 @@ public class DefaultIdentifierGeneratorFactory
 		if ( ! this.ignoreBeanContainer ) {
 			this.beanContainer = serviceRegistry.getService( ManagedBeanRegistry.class ).getBeanContainer();
 			//else we just have beanContainer = null;
-		}
-
-		final boolean useNewIdentifierGenerators = configService.getSetting(
-				AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS,
-				StandardConverters.BOOLEAN,
-				true
-		);
-
-		if ( ! useNewIdentifierGenerators ) {
-			register( "sequence", SequenceGenerator.class );
 		}
 	}
 }

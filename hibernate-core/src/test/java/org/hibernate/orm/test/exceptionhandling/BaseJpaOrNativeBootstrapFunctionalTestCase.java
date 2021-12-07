@@ -288,7 +288,6 @@ public abstract class BaseJpaOrNativeBootstrapFunctionalTestCase extends BaseUni
 		if ( createSchema() ) {
 			properties.put( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
 		}
-		properties.put( AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
 		properties.put( AvailableSettings.DIALECT, getDialect().getClass().getName() );
 
 		return properties;

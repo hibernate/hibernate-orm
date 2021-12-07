@@ -53,12 +53,6 @@ public class QueryLockingTest extends BaseEntityManagerFunctionalTestCase {
 		return new Class[] {Person.class, Lockable.class, LocalEntity.class};
 	}
 
-	@Override
-	@SuppressWarnings({ "unchecked" })
-	protected void addConfigOptions(Map options) {
-		options.put( org.hibernate.cfg.AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
-	}
-
 	@Test
 	public void testOverallLockMode() {
 		EntityManager em = getOrCreateEntityManager();

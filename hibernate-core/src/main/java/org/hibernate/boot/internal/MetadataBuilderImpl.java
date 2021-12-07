@@ -59,6 +59,7 @@ import org.hibernate.cfg.MetadataSourceType;
 import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
+import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -555,7 +556,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			this.mappingDefaults = new MappingDefaultsImpl( serviceRegistry );
 
 			this.defaultTimezoneStorage = resolveTimeZoneStorageStrategy( serviceRegistry, configService );
-			this.multiTenancyEnabled =  configService.getSettings().containsKey( AvailableSettings.MULTI_TENANT_CONNECTION_PROVIDER );
+			this.multiTenancyEnabled = serviceRegistry.getService(MultiTenantConnectionProvider.class)!=null;
 
 			this.xmlMappingEnabled = configService.getSetting(
 					AvailableSettings.XML_MAPPING_ENABLED,

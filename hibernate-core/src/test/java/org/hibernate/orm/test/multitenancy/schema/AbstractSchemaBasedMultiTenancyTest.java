@@ -35,10 +35,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsNull.notNullValue;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernateSessionBuilder;
-import static org.junit.Assert.assertThat;
 
 /**
  * @author Steve Ebersole

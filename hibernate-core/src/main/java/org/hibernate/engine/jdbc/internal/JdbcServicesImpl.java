@@ -14,6 +14,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
+import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -48,7 +49,7 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 		this.jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
 		assert jdbcEnvironment != null : "JdbcEnvironment was not found!";
 
-		this.multiTenancyEnabled = configValues.containsKey( AvailableSettings.MULTI_TENANT_CONNECTION_PROVIDER );
+		this.multiTenancyEnabled = serviceRegistry.getService(MultiTenantConnectionProvider.class)!=null;
 
 		final boolean showSQL = ConfigurationHelper.getBoolean( Environment.SHOW_SQL, configValues, false );
 		final boolean formatSQL = ConfigurationHelper.getBoolean( Environment.FORMAT_SQL, configValues, false );

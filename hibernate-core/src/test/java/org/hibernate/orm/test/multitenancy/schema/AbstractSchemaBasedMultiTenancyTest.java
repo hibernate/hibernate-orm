@@ -9,7 +9,6 @@ package org.hibernate.orm.test.multitenancy.schema;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.SessionBuilder;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
@@ -61,7 +60,6 @@ public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantC
 		T multiTenantConnectionProvider = buildMultiTenantConnectionProvider();
 
 		Map settings = new HashMap();
-		settings.put( Environment.MULTI_TENANT, MultiTenancyStrategy.SCHEMA );
 		settings.put( Environment.CACHE_REGION_FACTORY, CachingRegionFactory.class.getName() );
 		settings.put( Environment.GENERATE_STATISTICS, "true" );
 
@@ -178,7 +176,7 @@ public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantC
 		// make sure we get the correct people back, from cache
 		// first, jboss
 		doInHibernateSessionBuilder( this::jboss, session -> {
-			Customer customer = (Customer) session.load( Customer.class, 1L );
+			Customer customer = session.load( Customer.class, 1L );
 			Assert.assertEquals( "steve", customer.getName() );
 			// also, make sure this came from second level
 			Assert.assertEquals( 1, sessionFactory.getStatistics().getSecondLevelCacheHitCount() );
@@ -187,7 +185,7 @@ public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantC
 		sessionFactory.getStatistics().clear();
 		// then, acme
 		doInHibernateSessionBuilder( this::acme, session -> {
-			Customer customer = (Customer) session.load( Customer.class, 1L );
+			Customer customer = session.load( Customer.class, 1L );
 			Assert.assertEquals( "john", customer.getName() );
 			// also, make sure this came from second level
 			Assert.assertEquals( 1, sessionFactory.getStatistics().getSecondLevelCacheHitCount() );
@@ -198,7 +196,7 @@ public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantC
 		sessionFactory.getCache().evictEntityRegions();
 		// first jboss
 		doInHibernateSessionBuilder( this::jboss, session -> {
-			Customer customer = (Customer) session.load( Customer.class, 1L );
+			Customer customer = session.load( Customer.class, 1L );
 			Assert.assertEquals( "steve", customer.getName() );
 			// also, make sure this came from second level
 			Assert.assertEquals( 0, sessionFactory.getStatistics().getSecondLevelCacheHitCount() );
@@ -207,7 +205,7 @@ public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantC
 		sessionFactory.getStatistics().clear();
 		// then, acme
 		doInHibernateSessionBuilder( this::acme, session -> {
-			Customer customer = (Customer) session.load( Customer.class, 1L );
+			Customer customer = session.load( Customer.class, 1L );
 			Assert.assertEquals( "john", customer.getName() );
 			// also, make sure this came from second level
 			Assert.assertEquals( 0, sessionFactory.getStatistics().getSecondLevelCacheHitCount() );

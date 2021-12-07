@@ -26,7 +26,7 @@ import jakarta.persistence.criteria.CriteriaQuery;
 /**
  * @author Gavin King
  */
-@RequiresDialect(value = OracleDialect.class, version = 900)
+@RequiresDialect(value = OracleDialect.class, majorVersion = 9)
 @DomainModel(
 		xmlMappings = "org/hibernate/orm/test/rowid/Point.hbm.xml"
 )

@@ -17,6 +17,6 @@ package org.hibernate.dialect;
 public class Oracle12cDialect extends OracleDialect {
 
 	public Oracle12cDialect() {
-		super( 1200 );
+		super( DatabaseVersion.make( 12 ) );
 	}
 }

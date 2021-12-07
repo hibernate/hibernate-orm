@@ -14,11 +14,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.internal.DefaultSchemaNameResolver;
 
 import org.junit.Test;
 
+import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -36,8 +38,8 @@ public class DefaultSchemaNameResolverTest {
 				connectionSupportsGetSchemaName,
 				new Dialect() {
 					@Override
-					public int getVersion() {
-						return 0;
+					public DatabaseVersion getVersion() {
+						return ZERO_VERSION;
 					}
 				}
 		);
@@ -50,8 +52,8 @@ public class DefaultSchemaNameResolverTest {
 				new Dialect() {
 
 					@Override
-					public int getVersion() {
-						return 0;
+					public DatabaseVersion getVersion() {
+						return ZERO_VERSION;
 					}
 
 					@Override

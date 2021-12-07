@@ -63,7 +63,7 @@ public class LocalDateTimeTest extends AbstractJavaTimeTypeTest<LocalDateTime, L
 				.skippedForDialects(
 						// MySQL/Mariadb cannot store values equal to epoch exactly, or less, in a timestamp.
 						dialect -> dialect instanceof MySQLDialect || dialect instanceof MariaDBDialect
-								|| dialect instanceof H2Dialect && ( (H2Dialect) dialect ).hasDstBug(),
+								|| dialect instanceof H2Dialect && ( (H2Dialect) dialect ).hasOddDstBehavior(),
 						b -> b
 								// Affected by HHH-13266 (JDK-8061577)
 								.add( 1892, 1, 1, 0, 0, 0, 0, ZONE_OSLO )
@@ -71,7 +71,7 @@ public class LocalDateTimeTest extends AbstractJavaTimeTypeTest<LocalDateTime, L
 				.skippedForDialects(
 						// MySQL/Mariadb/Sybase cannot store dates in 1600 in a timestamp.
 						dialect -> dialect instanceof MySQLDialect || dialect instanceof MariaDBDialect || dialect instanceof SybaseDialect
-								|| dialect instanceof H2Dialect && ( (H2Dialect) dialect ).hasDstBug(),
+								|| dialect instanceof H2Dialect && ( (H2Dialect) dialect ).hasOddDstBehavior(),
 						b -> b
 								.add( 1600, 1, 1, 0, 0, 0, 0, ZONE_AMSTERDAM )
 				)
@@ -79,7 +79,7 @@ public class LocalDateTimeTest extends AbstractJavaTimeTypeTest<LocalDateTime, L
 				// It doesn't seem that any LocalDateTime can be affected by HHH-13379, but we add some tests just in case
 				.add( 2018, 10, 28, 1, 0, 0, 0, ZONE_PARIS )
 				.skippedForDialects(
-						dialect -> dialect instanceof H2Dialect && ( (H2Dialect) dialect ).hasDstBug(),
+						dialect -> dialect instanceof H2Dialect && ( (H2Dialect) dialect ).hasOddDstBehavior(),
 						b -> b
 								.add( 2018, 10, 28, 2, 0, 0, 0, ZONE_PARIS )
 				)
@@ -87,7 +87,7 @@ public class LocalDateTimeTest extends AbstractJavaTimeTypeTest<LocalDateTime, L
 				.add( 2018, 10, 28, 4, 0, 0, 0, ZONE_PARIS )
 				.add( 2018, 4, 1, 1, 0, 0, 0, ZONE_AUCKLAND )
 				.skippedForDialects(
-						dialect -> dialect instanceof H2Dialect && ( (H2Dialect) dialect ).hasDstBug(),
+						dialect -> dialect instanceof H2Dialect && ( (H2Dialect) dialect ).hasOddDstBehavior(),
 						b -> b
 								.add( 2018, 4, 1, 2, 0, 0, 0, ZONE_AUCKLAND )
 				)

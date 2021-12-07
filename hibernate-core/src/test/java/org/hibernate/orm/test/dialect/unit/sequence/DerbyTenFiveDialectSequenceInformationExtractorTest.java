@@ -6,6 +6,7 @@
  */
 package org.hibernate.orm.test.dialect.unit.sequence;
 
+import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
@@ -21,7 +22,7 @@ public class DerbyTenFiveDialectSequenceInformationExtractorTest extends Abstrac
 
 	@Override
 	public Dialect getDialect() {
-		return new DerbyDialect( 1050 );
+		return new DerbyDialect( DatabaseVersion.make( 10, 5 ) );
 	}
 
 	@Override

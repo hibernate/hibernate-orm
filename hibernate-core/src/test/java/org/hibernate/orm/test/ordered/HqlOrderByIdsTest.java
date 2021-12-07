@@ -40,7 +40,7 @@ public class HqlOrderByIdsTest {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-10502")
-	@RequiresDialect(value = MySQLDialect.class, version = 500)
+	@RequiresDialect(value = MySQLDialect.class, majorVersion = 5)
 	public void testIt(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
 			List<Person> persons = entityManager.createQuery(
@@ -55,7 +55,7 @@ public class HqlOrderByIdsTest {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-10502")
-	@RequiresDialect(value = MySQLDialect.class, version = 500)
+	@RequiresDialect(value = MySQLDialect.class, majorVersion = 5)
 	public void testLifecycle(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
 			Person person1 = new Person();

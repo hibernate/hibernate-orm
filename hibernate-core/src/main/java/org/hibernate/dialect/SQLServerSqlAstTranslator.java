@@ -80,7 +80,7 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends Abstract
 	}
 
 	private void renderLockHint(LockMode lockMode) {
-		if ( getDialect().getVersion() >= 9 ) {
+		if ( getDialect().getVersion().isSince( 9 ) ) {
 			final int effectiveLockTimeout = getEffectiveLockTimeout( lockMode );
 			switch ( lockMode ) {
 				//noinspection deprecation
@@ -150,7 +150,7 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends Abstract
 	}
 
 	protected OffsetFetchClauseMode getOffsetFetchClauseMode(QueryPart queryPart) {
-		final int version = getDialect().getVersion();
+		final DatabaseVersion version = getDialect().getVersion();
 		final boolean hasLimit;
 		final boolean hasOffset;
 		if ( queryPart.isRoot() && hasLimit() ) {
@@ -164,7 +164,7 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends Abstract
 		if ( queryPart instanceof QueryGroup ) {
 			// We can't use TOP for set operations
 			if ( hasOffset || hasLimit ) {
-				if ( version < 11 || !isRowsOnlyFetchClauseType( queryPart ) ) {
+				if ( version.isBefore( 11 ) || !isRowsOnlyFetchClauseType( queryPart ) ) {
 					return OffsetFetchClauseMode.EMULATED;
 				}
 				else {
@@ -175,10 +175,10 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends Abstract
 			return null;
 		}
 		else {
-			if ( version < 9 || !hasOffset ) {
+			if ( version.isBefore( 9 ) || !hasOffset ) {
 				return hasLimit ? OffsetFetchClauseMode.TOP_ONLY : null;
 			}
-			else if ( version < 11 || !isRowsOnlyFetchClauseType( queryPart ) ) {
+			else if ( version.isBefore( 11 ) || !isRowsOnlyFetchClauseType( queryPart ) ) {
 				return OffsetFetchClauseMode.EMULATED;
 			}
 			else {
@@ -222,7 +222,7 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends Abstract
 
 	@Override
 	protected boolean needsRowsToSkip() {
-		return getDialect().getVersion() < 9;
+		return getDialect().getVersion().isBefore( 9 );
 	}
 
 	@Override
@@ -267,7 +267,7 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends Abstract
 	@Override
 	public void visitOffsetFetchClause(QueryPart queryPart) {
 		if ( !isRowNumberingCurrentQueryPart() ) {
-			if ( getDialect().getVersion() < 9 && !queryPart.isRoot() && queryPart.getOffsetClauseExpression() != null ) {
+			if ( getDialect().getVersion().isBefore( 9 ) && !queryPart.isRoot() && queryPart.getOffsetClauseExpression() != null ) {
 				throw new IllegalArgumentException( "Can't emulate offset clause in subquery" );
 			}
 			// Note that SQL Server is very strict i.e. it requires an order by clause for TOP or OFFSET

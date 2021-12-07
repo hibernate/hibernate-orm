@@ -30,7 +30,7 @@ import static org.hamcrest.Matchers.notNullValue;
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialect(value = PostgreSQLDialect.class, version = 940)
+@RequiresDialect(value = PostgreSQLDialect.class, majorVersion = 9, minorVersion = 4)
 @DomainModel(annotatedClasses = { PostgreSQLUUIDGeneratedValueTest.Book.class })
 @SessionFactory
 public class PostgreSQLUUIDGeneratedValueTest {

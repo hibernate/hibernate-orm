@@ -8,14 +8,9 @@ package org.hibernate.dialect;
 
 import java.sql.Types;
 
-import jakarta.persistence.TemporalType;
-
-import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.query.FetchClauseType;
-import org.hibernate.query.IntervalType;
-import org.hibernate.query.NullOrdering;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
+import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.hint.IndexQueryHintHandler;
@@ -33,10 +28,14 @@ import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.query.FetchClauseType;
+import org.hibernate.query.IntervalType;
+import org.hibernate.query.NullOrdering;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.internal.idtable.AfterUseAction;
@@ -59,7 +58,7 @@ import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
-import org.jboss.logging.Logger;
+import jakarta.persistence.TemporalType;
 
 import static org.hibernate.query.TemporalUnit.SECOND;
 
@@ -69,74 +68,75 @@ import static org.hibernate.query.TemporalUnit.SECOND;
  * @author Thomas Mueller
  */
 public class H2Dialect extends Dialect {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class,
-			H2Dialect.class.getName()
-	);
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( H2Dialect.class );
 
 	private final LimitHandler limitHandler;
 
 	private final boolean cascadeConstraints;
 	private final boolean useLocalTime;
 
-	private final int version;
+	private final DatabaseVersion version;
 
 	private final boolean supportsTuplesInSubqueries;
 	private final SequenceInformationExtractor sequenceInformationExtractor;
 	private final String querySequenceString;
 
 	public H2Dialect(DialectResolutionInfo info) {
-		this(
-				info.getDatabaseMajorVersion() * 100000
-						+ info.getDatabaseMinorVersion() * 1000,
-				parseBuildId( info )
-		);
+		this( parseVersion( info ) );
 		registerKeywords( info );
 	}
 
+	private static DatabaseVersion parseVersion(DialectResolutionInfo info) {
+		return DatabaseVersion.make( info.getMajor(), info.getMinor(), parseBuildId( info ) );
+	}
+
+	private static int parseBuildId(DialectResolutionInfo info) {
+		final String databaseVersion = info.getDatabaseVersion();
+		if ( databaseVersion == null ) {
+			return 0;
+		}
+
+		final String[] bits = databaseVersion.split("[. ]");
+		return bits.length > 2 ? Integer.parseInt( bits[2] ) : 0;
+	}
+
 	public H2Dialect() {
-		this(0, 0);
+		this( SimpleDatabaseVersion.ZERO_VERSION );
 	}
 
-	public H2Dialect(int version, int buildId) {
-		this(version + buildId);
-	}
-
-	public H2Dialect(int version) {
+	public H2Dialect(DatabaseVersion version) {
 		super();
 		this.version = version;
 		// https://github.com/h2database/h2database/commit/b2cdf84e0b84eb8a482fa7dccdccc1ab95241440
-		limitHandler = version >= 104195
+		limitHandler = version.isSince( 1, 4, 195 )
 				? OffsetFetchLimitHandler.INSTANCE
 				: LimitOffsetLimitHandler.INSTANCE;
 
-		if ( version < 102139 ) {
-			final int majorVersion = version / 100000;
-			final int minorVersion = version % 100000 / 1000;
-			final int buildId = version % 1000;
-			LOG.unsupportedMultiTableBulkHqlJpaql( majorVersion, minorVersion, buildId );
+		if ( version.isBefore( 1, 2, 139 ) ) {
+			LOG.unsupportedMultiTableBulkHqlJpaql( version.getMajor(), version.getMinor(), version.getMicro() );
 		}
-		supportsTuplesInSubqueries = version >= 104198;
+
+		supportsTuplesInSubqueries = version.isSince( 1, 4, 198 );
 		// Prior to 1.4.200 the 'cascade' in 'drop table' was implicit
-		cascadeConstraints = version >= 104200;
+		cascadeConstraints = version.isSince( 1, 4, 200 );
 		// 1.4.200 introduced changes in current_time and current_timestamp
-		useLocalTime = version >= 104199;
+		useLocalTime = version.isSince( 1, 4, 200 );
 
 		getDefaultProperties().setProperty( AvailableSettings.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 		// http://code.google.com/p/h2database/issues/detail?id=235
 		getDefaultProperties().setProperty( AvailableSettings.NON_CONTEXTUAL_LOB_CREATION, "true" );
 
 		registerColumnType( SqlTypes.ARRAY, "array" );
-		if ( version >= 104032 ) {
-			this.sequenceInformationExtractor = version >= 104201
+		if ( version.isSince( 1, 4, 32 ) ) {
+			this.sequenceInformationExtractor = version.isSince( 1, 4, 201 )
 					? SequenceInformationExtractorLegacyImpl.INSTANCE
 					: SequenceInformationExtractorH2DatabaseImpl.INSTANCE;
 			this.querySequenceString = "select * from INFORMATION_SCHEMA.SEQUENCES";
 			registerColumnType( Types.DECIMAL,  "numeric($p,$s)" );
-			if ( version >= 104197 ) {
+			if ( version.isSince( 1, 4, 197 ) ) {
 				registerColumnType( SqlTypes.UUID, "uuid" );
 				registerColumnType( SqlTypes.GEOMETRY, "geometry" );
-				if ( version >= 104198 ) {
+				if ( version.isSince( 1, 4, 198 ) ) {
 					registerColumnType( SqlTypes.INTERVAL_SECOND, "interval second($p,$s)" );
 				}
 			}
@@ -144,7 +144,7 @@ public class H2Dialect extends Dialect {
 		else {
 			this.sequenceInformationExtractor = SequenceInformationExtractorNoOpImpl.INSTANCE;
 			this.querySequenceString = null;
-			if ( version < 200 ) {
+			if ( version.isBefore( 2 ) ) {
 				// prior to version 2.0, H2 reported NUMERIC columns as DECIMAL,
 				// which caused problems for schema update tool
 				registerColumnType( Types.NUMERIC, "decimal($p,$s)" );
@@ -159,31 +159,21 @@ public class H2Dialect extends Dialect {
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeDescriptorRegistry();
 
-		if ( version >= 104197 ) {
+		if ( version.isSince( 1, 4, 197 ) ) {
 			jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
-			if ( version >= 104198 ) {
+			if ( version.isSince( 1, 4, 198 ) ) {
 				jdbcTypeRegistry.addDescriptorIfAbsent( DurationIntervalSecondJdbcType.INSTANCE );
 			}
 		}
 	}
 
-	private static int parseBuildId(DialectResolutionInfo info) {
-		final String databaseVersion = info.getDatabaseVersion();
-		if ( databaseVersion == null ) {
-			return 0;
-		}
-
-		final String[] bits = databaseVersion.split("[. ]");
-		return bits.length > 2 ? Integer.parseInt( bits[2] ) : 0;
-	}
-
-	public boolean hasDstBug() {
+	public boolean hasOddDstBehavior() {
 		// H2 1.4.200 has a bug: https://github.com/h2database/h2database/issues/3184
-		return getVersion() == 104200;
+		return getVersion().isSame( 1, 4, 200 );
 	}
 
 	@Override
-	public int getVersion() {
+	public DatabaseVersion getVersion() {
 		return version;
 	}
 
@@ -238,7 +228,7 @@ public class H2Dialect extends Dialect {
 		CommonFunctionFactory.median( queryEngine );
 		CommonFunctionFactory.stddevPopSamp( queryEngine );
 		CommonFunctionFactory.varPopSamp( queryEngine );
-		if ( version == 104200 ) {
+		if ( version.isSame( 1, 4, 200 ) ) {
 			// See https://github.com/h2database/h2database/issues/2518
 			CommonFunctionFactory.format_toChar( queryEngine );
 		}
@@ -480,7 +470,7 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	public boolean supportsFetchClause(FetchClauseType type) {
-		return getVersion() >= 104198;
+		return getVersion().isSince( 1, 4, 198 );
 	}
 
 	@Override
@@ -495,7 +485,7 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	public void appendDatetimeFormat(SqlAppender appender, String format) {
-		if ( version == 104200 ) {
+		if ( version.isSame( 1, 4, 200 ) ) {
 			// See https://github.com/h2database/h2database/issues/2518
 			appender.appendSql( OracleDialect.datetimeFormat( format, true, true ).result() );
 		}

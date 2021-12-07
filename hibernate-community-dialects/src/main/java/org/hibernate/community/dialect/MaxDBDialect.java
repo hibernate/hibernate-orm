@@ -6,14 +6,19 @@
  */
 package org.hibernate.community.dialect;
 
+import java.sql.DatabaseMetaData;
+import java.sql.Types;
+
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.cfg.Environment;
+import org.hibernate.community.dialect.sequence.MaxDBSequenceSupport;
+import org.hibernate.community.dialect.sequence.SequenceInformationExtractorSAPDBDatabaseImpl;
 import org.hibernate.dialect.AbstractTransactSQLDialect;
+import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
-import org.hibernate.community.dialect.sequence.MaxDBSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -27,15 +32,13 @@ import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
-import org.hibernate.community.dialect.sequence.SequenceInformationExtractorSAPDBDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
-import java.sql.DatabaseMetaData;
-import java.sql.Types;
+import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
 
 /**
  * A SQL dialect compatible with SAP MaxDB.
@@ -94,8 +97,8 @@ public class MaxDBDialect extends Dialect {
 	}
 
 	@Override
-	public int getVersion() {
-		return 0;
+	public DatabaseVersion getVersion() {
+		return ZERO_VERSION;
 	}
 
 	@Override

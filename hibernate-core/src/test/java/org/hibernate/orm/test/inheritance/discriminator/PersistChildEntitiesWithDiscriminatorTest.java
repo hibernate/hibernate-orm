@@ -24,7 +24,7 @@ import org.junit.jupiter.api.Test;
  * @author Pawel Stawicki
  */
 @SessionFactory
-@RequiresDialect(value = PostgreSQLDialect.class, version = 800)
+@RequiresDialect(value = PostgreSQLDialect.class, majorVersion = 8)
 @DomainModel(annotatedClasses = {
 		ParentEntity.class, InheritingEntity.class
 })

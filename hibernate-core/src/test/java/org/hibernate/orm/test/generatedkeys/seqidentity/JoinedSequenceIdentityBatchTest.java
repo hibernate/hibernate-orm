@@ -53,7 +53,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 )
 @SessionFactory
 @TestForIssue( jiraKey = "HHH-13365" )
-@RequiresDialect( value = OracleDialect.class, version = 900 )
+@RequiresDialect( value = OracleDialect.class, majorVersion = 9 )
 public class JoinedSequenceIdentityBatchTest {
 
 	@Test

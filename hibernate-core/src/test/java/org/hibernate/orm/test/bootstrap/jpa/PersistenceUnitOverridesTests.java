@@ -15,7 +15,9 @@ import javax.sql.DataSource;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.SimpleDatabaseVersion;
 import org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
@@ -523,16 +525,16 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 
 	public static class PersistenceUnitDialect extends Dialect {
 		@Override
-		public int getVersion() {
-			return 0;
+		public DatabaseVersion getVersion() {
+			return SimpleDatabaseVersion.ZERO_VERSION;
 		}
 	}
 
 	@SuppressWarnings("WeakerAccess")
 	public static class IntegrationDialect extends Dialect {
 		@Override
-		public int getVersion() {
-			return 0;
+		public DatabaseVersion getVersion() {
+			return SimpleDatabaseVersion.ZERO_VERSION;
 		}
 	}
 

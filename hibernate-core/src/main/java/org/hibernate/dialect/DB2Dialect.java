@@ -73,21 +73,21 @@ public class DB2Dialect extends Dialect {
 	private static final String FOR_SHARE_SKIP_LOCKED_SQL = FOR_SHARE_SQL + SKIP_LOCKED_SQL;
 	private static final String FOR_UPDATE_SKIP_LOCKED_SQL = FOR_UPDATE_SQL + SKIP_LOCKED_SQL;
 
-	private final int version;
+	private final DatabaseVersion version;
 
 	private final LimitHandler limitHandler;
 	private final UniqueDelegate uniqueDelegate;
 
 	public DB2Dialect(DialectResolutionInfo info) {
-		this( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
+		this( info.makeCopy() );
 		registerKeywords( info );
 	}
 
 	public DB2Dialect() {
-		this( 900 );
+		this( DatabaseVersion.make( 9, 0 ) );
 	}
 
-	public DB2Dialect(int version) {
+	public DB2Dialect(DatabaseVersion version) {
 		super();
 		this.version = version;
 
@@ -98,7 +98,7 @@ public class DB2Dialect extends Dialect {
 //		registerColumnType( Types.DECIMAL, "decimal($p,$s)" );
 		registerColumnType( Types.NUMERIC, "decimal($p,$s)" );
 
-		if ( getVersion() < 1100 ) {
+		if ( getVersion().isBefore( 11 ) ) {
 			registerColumnType( Types.BINARY, "varchar($l) for bit data" ); //should use 'binary' since version 11
 			registerColumnType( Types.BINARY, 254, "char($l) for bit data" ); //should use 'binary' since version 11
 			registerColumnType( Types.VARBINARY, "varchar($l) for bit data" ); //should use 'varbinary' since version 11
@@ -132,7 +132,7 @@ public class DB2Dialect extends Dialect {
 
 		uniqueDelegate = createUniqueDelegate();
 
-		limitHandler = getVersion() < 1110
+		limitHandler = getVersion().isBefore( 11, 1 )
 				? LegacyDB2LimitHandler.INSTANCE
 				: DB2LimitHandler.INSTANCE;
 	}
@@ -142,14 +142,14 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
-	public int getDefaultDecimalPrecision() {
-		//this is the maximum allowed in DB2
-		return 31;
+	public DatabaseVersion getVersion() {
+		return version;
 	}
 
 	@Override
-	public int getVersion() {
-		return version;
+	public int getDefaultDecimalPrecision() {
+		//this is the maximum allowed in DB2
+		return 31;
 	}
 
 	@Override
@@ -324,7 +324,7 @@ public class DB2Dialect extends Dialect {
 
 	@Override
 	public String getLowercaseFunction() {
-		return getVersion() < 970 ? "lcase" : super.getLowercaseFunction();
+		return getVersion().isBefore( 9, 7 ) ? "lcase" : super.getLowercaseFunction();
 	}
 
 	@Override
@@ -334,7 +334,7 @@ public class DB2Dialect extends Dialect {
 
 	@Override
 	public SequenceSupport getSequenceSupport() {
-		return getVersion() < 970
+		return getVersion().isBefore( 9, 7 )
 				? LegacyDB2SequenceSupport.INSTANCE
 				: DB2SequenceSupport.INSTANCE;
 	}
@@ -362,7 +362,7 @@ public class DB2Dialect extends Dialect {
 	@Override
 	public boolean supportsSkipLocked() {
 		// Introduced in 11.5: https://www.ibm.com/docs/en/db2/11.5?topic=statement-concurrent-access-resolution-clause
-		return getVersion() >= 1150;
+		return getVersion().isSince( 11, 5 );
 	}
 
 	@Override
@@ -510,15 +510,13 @@ public class DB2Dialect extends Dialect {
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
 
-		final int version = getVersion();
-		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
-				.getJdbcTypeDescriptorRegistry();
+		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration().getJdbcTypeDescriptorRegistry();
 
-		if ( version < 1100 ) {
+		if ( version.isBefore( 11 ) ) {
 			jdbcTypeRegistry.addDescriptor( Types.BOOLEAN, SmallIntJdbcType.INSTANCE );
 			// Binary literals were only added in 11. See https://www.ibm.com/support/knowledgecenter/SSEPGG_11.1.0/com.ibm.db2.luw.sql.ref.doc/doc/r0000731.html#d79816e393
 			jdbcTypeRegistry.addDescriptor( Types.VARBINARY, VarbinaryJdbcType.INSTANCE_WITHOUT_LITERALS );
-			if ( version < 970 ) {
+			if ( version.isBefore( 9, 7 ) ) {
 				jdbcTypeRegistry.addDescriptor( Types.NUMERIC, DecimalJdbcType.INSTANCE );
 			}
 		}
@@ -646,7 +644,7 @@ public class DB2Dialect extends Dialect {
 
 	@Override
 	public void appendBooleanValueString(SqlAppender appender, boolean bool) {
-		if ( getVersion() < 1100 ) {
+		if ( getVersion().isBefore( 11 ) ) {
 			appender.appendSql( bool ? '1' : '0' );
 		}
 		else {

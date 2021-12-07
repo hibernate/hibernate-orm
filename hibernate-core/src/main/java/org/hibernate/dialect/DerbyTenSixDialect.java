@@ -18,7 +18,7 @@ package org.hibernate.dialect;
 public class DerbyTenSixDialect extends DerbyDialect {
 
 	public DerbyTenSixDialect() {
-		super(1060);
+		super( DatabaseVersion.make( 10, 6 ) );
 	}
 
 }

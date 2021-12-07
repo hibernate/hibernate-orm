@@ -70,7 +70,7 @@ public class InstantTest extends AbstractJavaTimeTypeTest<Instant, InstantTest.E
 						// MySQL/Mariadb/Sybase cannot store dates in 1600 in a timestamp.
 						dialect -> dialect instanceof MySQLDialect || dialect instanceof MariaDBDialect
 								|| dialect instanceof SybaseDialect
-								|| dialect instanceof H2Dialect && ( (H2Dialect) dialect ).hasDstBug(),
+								|| dialect instanceof H2Dialect && ( (H2Dialect) dialect ).hasOddDstBehavior(),
 						b -> b
 								.add( 1600, 1, 1, 0, 0, 0, 0, ZONE_AMSTERDAM )
 								// Affected by HHH-13266 (JDK-8061577)
@@ -79,7 +79,7 @@ public class InstantTest extends AbstractJavaTimeTypeTest<Instant, InstantTest.E
 				// HHH-13379: DST end (where Timestamp becomes ambiguous, see JDK-4312621)
 				// => This used to work correctly in 5.4.1.Final and earlier
 				.skippedForDialects(
-						dialect -> dialect instanceof H2Dialect && ( (H2Dialect) dialect ).hasDstBug(),
+						dialect -> dialect instanceof H2Dialect && ( (H2Dialect) dialect ).hasOddDstBehavior(),
 						b -> b.add( 2018, 10, 28, 1, 0, 0, 0, ZONE_PARIS )
 								.add( 2018, 3, 31, 14, 0, 0, 0, ZONE_AUCKLAND )
 				)

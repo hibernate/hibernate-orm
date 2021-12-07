@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Test;
 /**
  * @author Nathan Xu
  */
-@RequiresDialect(value = MariaDBDialect.class, version = 1030)
+@RequiresDialect(value = MariaDBDialect.class, majorVersion = 10, minorVersion = 3)
 public class MariaDBExtractSequenceMetadataTest {
 
 	private static String primaryDbName;

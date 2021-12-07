@@ -40,7 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author Brett Meyer
  */
-@RequiresDialect(value = OracleDialect.class, version = 800)
+@RequiresDialect(value = OracleDialect.class, majorVersion = 8)
 @DomainModel(
 		annotatedClasses = { OracleQueryHintTest.Employee.class, OracleQueryHintTest.Department.class }
 )

@@ -15,7 +15,7 @@ package org.hibernate.dialect;
 public class MariaDB53Dialect extends MariaDBDialect {
 
 	public MariaDB53Dialect() {
-		super(530);
+		super( DatabaseVersion.make( 5, 3 ) );
 	}
 
 }

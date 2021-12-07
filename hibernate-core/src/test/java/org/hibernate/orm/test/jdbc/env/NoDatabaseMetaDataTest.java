@@ -9,6 +9,7 @@ package org.hibernate.orm.test.jdbc.env;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -18,6 +19,7 @@ import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import org.junit.Test;
 
+import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -81,8 +83,8 @@ public class NoDatabaseMetaDataTest extends BaseUnitTestCase {
 		}
 
 		@Override
-		public int getVersion() {
-			return 0;
+		public DatabaseVersion getVersion() {
+			return ZERO_VERSION;
 		}
 	}
 

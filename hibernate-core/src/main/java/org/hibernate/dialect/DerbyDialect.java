@@ -88,24 +88,24 @@ public class DerbyDialect extends Dialect {
 	// * can't select a parameter unless wrapped
 	//   in a cast or function call
 
-	private final int version;
+	private final DatabaseVersion version;
 
 	private final LimitHandler limitHandler;
 
 	public DerbyDialect(DialectResolutionInfo info) {
-		this( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
+		this( info.makeCopy() );
 		registerKeywords( info );
 	}
 
 	public DerbyDialect() {
-		this(1000);
+		this( DatabaseVersion.make( 10, 0 ) );
 	}
 
-	public DerbyDialect(int version) {
+	public DerbyDialect(DatabaseVersion version) {
 		super();
 		this.version = version;
 
-		if ( getVersion() < 1070) {
+		if ( getVersion().isBefore( 10, 7 ) ) {
 			registerColumnType( Types.BOOLEAN, "smallint" ); //no boolean before 10.7
 		}
 		registerColumnType( Types.TINYINT, "smallint" ); //no tinyint
@@ -132,21 +132,20 @@ public class DerbyDialect extends Dialect {
 
 		registerDerbyKeywords();
 
-		limitHandler = getVersion() < 1050
+		limitHandler = getVersion().isBefore( 10, 5 )
 				? AbstractLimitHandler.NO_LIMIT
-				: new DerbyLimitHandler( getVersion() >= 1060 );
+				: new DerbyLimitHandler( getVersion().isSince( 10, 6 ) );
 
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, NO_BATCH );
 	}
 
 	@Override
 	public String getTypeName(int code, Size size) throws HibernateException {
-		switch ( code ) {
-			case Types.CHAR:
-				// This is the maximum size for the CHAR datatype on Derby
-				if ( size.getLength() > 254 ) {
-					return "char(254)";
-				}
+		if ( code == Types.CHAR ) {
+			// This is the maximum size for the CHAR datatype on Derby
+			if ( size.getLength() > 254 ) {
+				return "char(254)";
+			}
 		}
 		return super.getTypeName( code, size );
 	}
@@ -159,13 +158,13 @@ public class DerbyDialect extends Dialect {
 
 	@Override
 	public int getPreferredSqlTypeCodeForBoolean() {
-		return getVersion() < 1070
+		return getVersion().isBefore( 10, 7 )
 				? Types.SMALLINT
 				: Types.BOOLEAN;
 	}
 
 	@Override
-	public int getVersion() {
+	public DatabaseVersion getVersion() {
 		return version;
 	}
 
@@ -358,7 +357,7 @@ public class DerbyDialect extends Dialect {
 
 	@Override
 	public void appendBooleanValueString(SqlAppender appender, boolean bool) {
-		if ( getVersion() < 1070 ) {
+		if ( getVersion().isBefore( 10, 7 ) ) {
 			appender.appendSql( bool ? '1' : '0' );
 		}
 		else {
@@ -368,21 +367,21 @@ public class DerbyDialect extends Dialect {
 
 	@Override
 	public SequenceSupport getSequenceSupport() {
-		return getVersion() < 1060
+		return getVersion().isBefore( 10, 6 )
 				? super.getSequenceSupport()
 				: DerbySequenceSupport.INSTANCE;
 	}
 
 	@Override
 	public String getQuerySequencesString() {
-		return getVersion() < 1060
+		return getVersion().isBefore( 10, 6 )
 				? null
 				: "select sys.sysschemas.schemaname as sequence_schema,sys.syssequences.* from sys.syssequences left join sys.sysschemas on sys.syssequences.schemaid=sys.sysschemas.schemaid";
 	}
 
 	@Override
 	public SequenceInformationExtractor getSequenceInformationExtractor() {
-		return getVersion() < 1060
+		return getVersion().isBefore( 10, 6 )
 				? SequenceInformationExtractorNoOpImpl.INSTANCE
 				: SequenceInformationExtractorDerbyDatabaseImpl.INSTANCE;
 	}
@@ -505,7 +504,7 @@ public class DerbyDialect extends Dialect {
 		super.contributeTypes( typeContributions, serviceRegistry );
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeDescriptorRegistry();
-		if ( getVersion() < 1070 ) {
+		if ( getVersion().isBefore( 10, 7 ) ) {
 			jdbcTypeRegistry.addDescriptor( Types.BOOLEAN, SmallIntJdbcType.INSTANCE );
 		}
 		jdbcTypeRegistry.addDescriptor( Types.NUMERIC, DecimalJdbcType.INSTANCE );

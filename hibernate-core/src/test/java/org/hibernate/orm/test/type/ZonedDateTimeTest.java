@@ -105,7 +105,7 @@ public class ZonedDateTimeTest extends AbstractJavaTimeTypeTest<ZonedDateTime, Z
 				.skippedForDialects(
 						// MySQL/Mariadb cannot store values equal to epoch exactly, or less, in a timestamp.
 						dialect -> dialect instanceof MySQLDialect || dialect instanceof MariaDBDialect
-								|| dialect instanceof H2Dialect && ( (H2Dialect) dialect ).hasDstBug(),
+								|| dialect instanceof H2Dialect && ( (H2Dialect) dialect ).hasOddDstBehavior(),
 						b -> b
 								// Affected by HHH-13266 (JDK-8061577)
 								.add( 1892, 1, 1, 0, 0, 0, 0, "GMT+00:00", ZONE_OSLO )
@@ -114,7 +114,7 @@ public class ZonedDateTimeTest extends AbstractJavaTimeTypeTest<ZonedDateTime, Z
 				.skippedForDialects(
 						// MySQL/Mariadb/Sybase cannot store dates in 1600 in a timestamp.
 						dialect -> dialect instanceof MySQLDialect || dialect instanceof MariaDBDialect || dialect instanceof SybaseDialect
-								|| dialect instanceof H2Dialect && ( (H2Dialect) dialect ).hasDstBug(),
+								|| dialect instanceof H2Dialect && ( (H2Dialect) dialect ).hasOddDstBehavior(),
 						b -> b
 								.add( 1600, 1, 1, 0, 0, 0, 0, "GMT+00:19:32", ZONE_AMSTERDAM )
 								.add( 1600, 1, 1, 0, 0, 0, 0, "Europe/Amsterdam", ZONE_AMSTERDAM )
@@ -122,7 +122,7 @@ public class ZonedDateTimeTest extends AbstractJavaTimeTypeTest<ZonedDateTime, Z
 				// HHH-13379: DST end (where Timestamp becomes ambiguous, see JDK-4312621)
 				// => This used to work correctly in 5.4.1.Final and earlier
 				.skippedForDialects(
-						dialect -> dialect instanceof H2Dialect && ( (H2Dialect) dialect ).hasDstBug(),
+						dialect -> dialect instanceof H2Dialect && ( (H2Dialect) dialect ).hasOddDstBehavior(),
 						b -> b.add( 2018, 10, 28, 2, 0, 0, 0, "+01:00", ZONE_PARIS )
 								.add( 2018, 4, 1, 2, 0, 0, 0, "+12:00", ZONE_AUCKLAND )
 				)

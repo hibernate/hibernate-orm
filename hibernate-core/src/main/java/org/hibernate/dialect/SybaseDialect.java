@@ -60,25 +60,25 @@ import jakarta.persistence.TemporalType;
  */
 public class SybaseDialect extends AbstractTransactSQLDialect {
 
-	private final int version;
+	private final DatabaseVersion version;
 	protected final boolean jtdsDriver;
 
 	//All Sybase dialects share an IN list size limit.
 	private static final int PARAM_LIST_SIZE_LIMIT = 250000;
 
 	public SybaseDialect(){
-		this( 1100, false );
+		this( DatabaseVersion.make( 11, 0 ), false );
 	}
 
 	public SybaseDialect(DialectResolutionInfo info){
 		this(
-				info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10,
+				info.makeCopy(),
 				info.getDriverName() != null && info.getDriverName().contains( "jTDS" )
 		);
 		registerKeywords( info );
 	}
 
-	public SybaseDialect(int version, boolean jtdsDriver) {
+	public SybaseDialect(DatabaseVersion version, boolean jtdsDriver) {
 		super();
 		this.version = version;
 		this.jtdsDriver = jtdsDriver;
@@ -148,7 +148,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	public int getVersion() {
+	public DatabaseVersion getVersion() {
 		return version;
 	}
 
@@ -312,7 +312,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public NameQualifierSupport getNameQualifierSupport() {
-		if ( version >= 1500 ) {
+		if ( version.isSince( 15 ) ) {
 			return NameQualifierSupport.BOTH;
 		}
 		return NameQualifierSupport.CATALOG;

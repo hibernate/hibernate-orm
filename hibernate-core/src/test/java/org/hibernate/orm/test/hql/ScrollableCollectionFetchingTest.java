@@ -63,7 +63,7 @@ public class ScrollableCollectionFetchingTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = SybaseASEDialect.class, version = 1500, matchSubTypes = true, reason = "HHH-5229")
+	@SkipForDialect(dialectClass = SybaseASEDialect.class, majorVersion = 15, matchSubTypes = true, reason = "HHH-5229")
 	@SkipForDialect(dialectClass = AbstractHANADialect.class, matchSubTypes = true, reason = "HANA only supports forward-only cursors.")
 	public void testScrollingJoinFetchesEmptyResultSet(SessionFactoryScope scope) {
 		scope.inTransaction(

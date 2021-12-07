@@ -34,7 +34,7 @@ import org.hibernate.testing.TestForIssue;
  *
  * @author Chris Cranford
  */
-@RequiresDialect( value = MySQLDialect.class, version = 500 )
+@RequiresDialect( value = MySQLDialect.class, majorVersion = 5 )
 @TestForIssue(jiraKey = "HHH-11455")
 public class SchemaUpdateSchemaNameTest {
 

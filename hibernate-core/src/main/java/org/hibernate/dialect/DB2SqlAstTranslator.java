@@ -9,9 +9,9 @@ package org.hibernate.dialect;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.hibernate.query.FetchClauseType;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.ComparisonOperator;
+import org.hibernate.query.FetchClauseType;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -51,7 +51,7 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 
 	@Override
 	public void visitBooleanExpressionPredicate(BooleanExpressionPredicate booleanExpressionPredicate) {
-		if ( getDialect().getVersion() >= 1100 ) {
+		if ( getDialect().getVersion().isSince( 11 ) ) {
 			booleanExpressionPredicate.getExpression().accept( this );
 		}
 		else {
@@ -132,12 +132,12 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 		// Check if current query part is already row numbering to avoid infinite recursion
 		return getQueryPartForRowNumbering() != queryPart && (
 				useOffsetFetchClause( queryPart ) && !isRowsOnlyFetchClauseType( queryPart )
-						|| getDialect().getVersion() < 1110 && ( queryPart.isRoot() && hasLimit() || !( queryPart.getFetchClauseExpression() instanceof Literal ) )
+						|| getDialect().getVersion().isBefore( 11, 1 ) && ( queryPart.isRoot() && hasLimit() || !( queryPart.getFetchClauseExpression() instanceof Literal ) )
 		);
 	}
 
 	protected boolean supportsOffsetClause() {
-		return getDialect().getVersion() >= 1110;
+		return getDialect().getVersion().isSince( 11, 1 );
 	}
 
 	@Override
@@ -228,7 +228,7 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 
 	@Override
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
-		if ( getDialect().getVersion() >= 1110 ) {
+		if ( getDialect().getVersion().isSince( 11, 1 ) ) {
 			renderComparisonStandard( lhs, operator, rhs );
 		}
 		else {

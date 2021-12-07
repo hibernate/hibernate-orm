@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 		xmlMappings = "org/hibernate/orm/test/generatedkeys/select/MyEntity.hbm.xml"
 )
 @SessionFactory
-@RequiresDialect(value = OracleDialect.class, version = 900)
+@RequiresDialect(value = OracleDialect.class, majorVersion = 9)
 public class SelectGeneratorTest {
 
 	@Test

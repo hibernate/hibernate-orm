@@ -80,7 +80,7 @@ public class CorrelatedSubqueryTest extends AbstractMetamodelSpecificTest {
 
 	@Test
 	@JiraKey("HHH-3032")
-	@SkipForDialect(dialectClass= SybaseASEDialect.class, version = 1500)
+	@SkipForDialect(dialectClass= SybaseASEDialect.class, majorVersion = 15)
 	public void testCorrelationExplicitSelectionCorrelation() {
 		CriteriaBuilder builder = entityManagerFactory().getCriteriaBuilder();
 		EntityManager em = getOrCreateEntityManager();

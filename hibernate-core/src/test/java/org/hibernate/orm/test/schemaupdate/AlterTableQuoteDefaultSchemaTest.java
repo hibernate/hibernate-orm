@@ -46,8 +46,8 @@ import static org.junit.jupiter.api.Assertions.fail;
  */
 @TestForIssue(jiraKey = "HHH-12939")
 @RequiresDialect(value = H2Dialect.class)
-@RequiresDialect(value = PostgreSQLDialect.class, version = 820)
-@RequiresDialect(value = SQLServerDialect.class, version = 11)
+@RequiresDialect(value = PostgreSQLDialect.class, majorVersion = 8, minorVersion = 2)
+@RequiresDialect(value = SQLServerDialect.class, majorVersion = 11)
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportSchemaCreation.class)
 public class AlterTableQuoteDefaultSchemaTest extends AbstractAlterTableQuoteSchemaTest {
 

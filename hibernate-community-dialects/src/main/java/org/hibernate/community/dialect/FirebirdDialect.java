@@ -6,22 +6,33 @@
  */
 package org.hibernate.community.dialect;
 
+import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.time.temporal.TemporalAccessor;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.TimeZone;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.hibernate.HibernateException;
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.dialect.BooleanDecoder;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.TimeZoneSupport;
-import org.hibernate.query.IntervalType;
-import org.hibernate.query.NullOrdering;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.community.dialect.identity.FirebirdIdentityColumnSupport;
-import org.hibernate.dialect.identity.IdentityColumnSupport;
-import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.community.dialect.pagination.SkipFirstLimitHandler;
 import org.hibernate.community.dialect.sequence.FirebirdSequenceSupport;
 import org.hibernate.community.dialect.sequence.InterbaseSequenceSupport;
+import org.hibernate.community.dialect.sequence.SequenceInformationExtractorFirebirdDatabaseImpl;
+import org.hibernate.dialect.BooleanDecoder;
+import org.hibernate.dialect.DatabaseVersion;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.TimeZoneSupport;
+import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -37,6 +48,8 @@ import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.CastType;
+import org.hibernate.query.IntervalType;
+import org.hibernate.query.NullOrdering;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
@@ -51,7 +64,6 @@ import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
-import org.hibernate.community.dialect.sequence.SequenceInformationExtractorFirebirdDatabaseImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceNameExtractorImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.BasicType;
@@ -59,17 +71,6 @@ import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
-
-import java.sql.DatabaseMetaData;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.time.temporal.TemporalAccessor;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.TimeZone;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import jakarta.persistence.TemporalType;
 
@@ -90,14 +91,15 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  */
 public class FirebirdDialect extends Dialect {
 
-	private final int version;
+	private final DatabaseVersion version;
 
+	@SuppressWarnings("unused")
 	public FirebirdDialect() {
-		this( 250 );
+		this( DatabaseVersion.make( 2, 5 ) );
 	}
 
 	public FirebirdDialect(DialectResolutionInfo info) {
-		this( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
+		this( info.makeCopy() );
 		registerKeywords( info );
 	}
 
@@ -109,11 +111,11 @@ public class FirebirdDialect extends Dialect {
 	// * can't select a parameter unless wrapped in a
 	//   cast (not even when wrapped in a function call)
 
-	public FirebirdDialect(int version) {
+	public FirebirdDialect(DatabaseVersion version) {
 		super();
 		this.version = version;
 
-		if ( getVersion() < 300 ) {
+		if ( version.isBefore( 3, 0 ) ) {
 			//'boolean' type introduced in 3.0
 			registerColumnType( Types.BOOLEAN, "smallint" );
 		}
@@ -130,7 +132,7 @@ public class FirebirdDialect extends Dialect {
 
 		//no precision for 'timestamp' type
 		registerColumnType( Types.TIMESTAMP, "timestamp" );
-		if ( getVersion() < 400 ) {
+		if ( getVersion().isBefore( 4, 0 ) ) {
 			// No time zone support, map to without time zone types
 			registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp" );
 			registerColumnType( Types.TIME_WITH_TIMEZONE, "time" );
@@ -142,7 +144,7 @@ public class FirebirdDialect extends Dialect {
 		registerColumnType( Types.VARCHAR, 8_191, "varchar($l)" );
 		registerColumnType( Types.VARCHAR, "blob sub_type text" );
 
-		if ( getVersion() < 400 ) {
+		if ( getVersion().isBefore( 4, 0 ) ) {
 			registerColumnType( Types.BINARY, 32_767, "char($l) character set octets" );
 		}
 		else {
@@ -150,7 +152,7 @@ public class FirebirdDialect extends Dialect {
 		}
 		registerColumnType( Types.BINARY, "blob sub_type binary" );
 
-		if ( getVersion() < 400 ) {
+		if ( getVersion().isBefore( 4, 0 ) ) {
 			registerColumnType( Types.VARBINARY, 32_765, "varchar($l) character set octets" );
 		}
 		else {
@@ -166,13 +168,13 @@ public class FirebirdDialect extends Dialect {
 	}
 
 	@Override
-	public int getVersion() {
+	public DatabaseVersion getVersion() {
 		return version;
 	}
 
 	@Override
 	public TimeZoneSupport getTimeZoneSupport() {
-		return getVersion() >= 400 ? TimeZoneSupport.NATIVE : TimeZoneSupport.NONE;
+		return getVersion().isSince( 4, 0 ) ? TimeZoneSupport.NATIVE : TimeZoneSupport.NONE;
 	}
 
 	@Override
@@ -196,14 +198,14 @@ public class FirebirdDialect extends Dialect {
 
 	@Override
 	public int getPreferredSqlTypeCodeForBoolean() {
-		return getVersion() < 300
+		return getVersion().isBefore( 3, 0 )
 				? Types.BIT
 				: super.getPreferredSqlTypeCodeForBoolean();
 	}
 
 	@Override
 	public String getTypeName(int code, Size size) throws HibernateException {
-		if ( getVersion() < 400 ) {
+		if ( getVersion().isBefore( 4, 0 ) ) {
 			//precision of a Firebird 3 and earlier 'float(p)' represents
 			//decimal digits instead of binary digits
 			return super.getTypeName( code, binaryToDecimalPrecision( code, size ) );
@@ -216,7 +218,7 @@ public class FirebirdDialect extends Dialect {
 
 	@Override
 	public int getFloatPrecision() {
-		return getVersion() < 400
+		return getVersion().isBefore( 4, 0 )
 				? 21 // -> 7 decimal digits (actually 24, but needed for Dialect#binaryToDecimalPrecision(int,size))
 				: 24;
 	}
@@ -244,7 +246,7 @@ public class FirebirdDialect extends Dialect {
 		CommonFunctionFactory.cosh( queryEngine );
 		CommonFunctionFactory.sinh( queryEngine );
 		CommonFunctionFactory.tanh( queryEngine );
-		if ( getVersion() >= 300 ) {
+		if ( getVersion().isSince( 3, 0 ) ) {
 			CommonFunctionFactory.moreHyperbolic( queryEngine );
 			CommonFunctionFactory.stddevPopSamp( queryEngine );
 			CommonFunctionFactory.varPopSamp( queryEngine );
@@ -298,7 +300,7 @@ public class FirebirdDialect extends Dialect {
 				doubleType
 		);
 
-		if ( getVersion() >= 400 ) {
+		if ( getVersion().isSince( 4, 0 ) ) {
 			Arrays.asList( "md5", "sha1", "sha256", "sha512" )
 					.forEach( hash -> functionRegistry.registerPattern(
 							hash,
@@ -461,12 +463,12 @@ public class FirebirdDialect extends Dialect {
 
 	@Override
 	public boolean supportsTemporalLiteralOffset() {
-		return getVersion() >= 400;
+		return getVersion().isSince( 4, 0 );
 	}
 
 	@Override
 	public int getDefaultDecimalPrecision() {
-		return getVersion() < 400 ? 18 : 38;
+		return getVersion().isBefore( 4, 0 ) ? 18 : 38;
 	}
 
 	@Override
@@ -481,7 +483,7 @@ public class FirebirdDialect extends Dialect {
 
 	@Override
 	public int getMaxAliasLength() {
-		return getVersion() < 400 ? 20 : 52;
+		return getVersion().isBefore( 4, 0 ) ? 20 : 52;
 	}
 
 	public IdentifierHelper buildIdentifierHelper(
@@ -493,8 +495,7 @@ public class FirebirdDialect extends Dialect {
 		// Additional reserved words
 		// The Hibernate list of SQL:2003 reserved words doesn't contain all SQL:2003 reserved words,
 		// and Firebird is finicky when it comes to reserved words
-		int version = getVersion();
-		if ( version >= 300 ) {
+		if ( version.isSince( 3, 0 ) ) {
 			builder.applyReservedWords(
 					"AVG", "BOOLEAN", "CHARACTER_LENGTH", "CHAR_LENGTH", "CORR", "COUNT",
 					"COVAR_POP", "COVAR_SAMP", "EXTRACT", "LOWER", "MAX", "MIN", "OCTET_LENGTH", "POSITION",
@@ -534,7 +535,7 @@ public class FirebirdDialect extends Dialect {
 
 	@Override
 	public boolean supportsCommentOn() {
-		return getVersion() >= 200;
+		return getVersion().isSince( 2, 0 );
 	}
 
 	@Override
@@ -562,18 +563,18 @@ public class FirebirdDialect extends Dialect {
 
 	@Override
 	public boolean supportsExistsInSelect() {
-		return getVersion() >= 300;
+		return getVersion().isSince( 3, 0 );
 	}
 
 	@Override
 	public boolean supportsPartitionBy() {
-		return getVersion() >= 300;
+		return getVersion().isSince( 3, 0 );
 	}
 
 	@Override
 	public void appendBooleanValueString(SqlAppender appender, boolean bool) {
 		//'boolean' type introduced in 3.0
-		if ( getVersion() < 300 ) {
+		if ( getVersion().isSince( 3, 0 ) ) {
 			appender.appendSql( bool ? '1' : '0' );
 		}
 		else {
@@ -583,17 +584,17 @@ public class FirebirdDialect extends Dialect {
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
-		return getVersion() < 300
+		return getVersion().isBefore( 3, 0 )
 				? super.getIdentityColumnSupport()
 				: new FirebirdIdentityColumnSupport();
 	}
 
 	@Override
 	public SequenceSupport getSequenceSupport() {
-		if ( getVersion() < 200 ) {
+		if ( getVersion().isBefore( 2, 0 ) ) {
 			return InterbaseSequenceSupport.INSTANCE;
 		}
-		else if ( getVersion() < 300 ) {
+		else if ( getVersion().isBefore( 3, 0 ) ) {
 			return FirebirdSequenceSupport.LEGACY_INSTANCE;
 		}
 		else {
@@ -603,7 +604,7 @@ public class FirebirdDialect extends Dialect {
 
 	@Override
 	public String getQuerySequencesString() {
-		return getVersion() < 300
+		return getVersion().isBefore( 3, 0 )
 				? "select rdb$generator_name from rdb$generators"
 				// Note: Firebird 3 has an 'off by increment' bug (fixed in Firebird 4), see
 				// http://tracker.firebirdsql.org/browse/CORE-6084
@@ -612,7 +613,7 @@ public class FirebirdDialect extends Dialect {
 
 	@Override
 	public SequenceInformationExtractor getSequenceInformationExtractor() {
-		return getVersion() < 300
+		return getVersion().isBefore( 3, 0 )
 				? SequenceNameExtractorImpl.INSTANCE
 				: SequenceInformationExtractorFirebirdDatabaseImpl.INSTANCE;
 	}
@@ -626,14 +627,14 @@ public class FirebirdDialect extends Dialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		return getVersion() < 300
+		return getVersion().isBefore( 3, 0 )
 				? SkipFirstLimitHandler.INSTANCE
 				: OffsetFetchLimitHandler.INSTANCE;
 	}
 
 	@Override
 	public String getSelectGUIDString() {
-		return getVersion() < 210
+		return getVersion().isBefore( 2, 1 )
 				? super.getSelectGUIDString()
 				: "select uuid_to_char(gen_uuid()) from rdb$database";
 	}
@@ -668,12 +669,12 @@ public class FirebirdDialect extends Dialect {
 
 	@Override
 	public NullOrdering getNullOrdering() {
-		return getVersion() >= 200 ? NullOrdering.SMALLEST : NullOrdering.LAST;
+		return getVersion().isSince( 2, 0 ) ? NullOrdering.SMALLEST : NullOrdering.LAST;
 	}
 
 	@Override
 	public boolean supportsNullPrecedence() {
-		return getVersion() >= 150;
+		return getVersion().isSince( 1, 5 );
 	}
 
 	@Override
@@ -688,7 +689,7 @@ public class FirebirdDialect extends Dialect {
 
 	@Override
 	public boolean supportsWindowFunctions() {
-		return getVersion() >= 300;
+		return getVersion().isSince( 3, 0 );
 	}
 
 	@Override
@@ -867,7 +868,7 @@ public class FirebirdDialect extends Dialect {
 
 	@Override
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(EntityMappingType entityDescriptor, RuntimeModelCreationContext runtimeModelCreationContext) {
-		return getVersion() < 210
+		return getVersion().isBefore( 2,1  )
 				? super.getFallbackSqmMutationStrategy( entityDescriptor, runtimeModelCreationContext )
 				: new GlobalTemporaryTableStrategy(
 						new IdTable( entityDescriptor, name -> "HT_" + name, this, runtimeModelCreationContext ),

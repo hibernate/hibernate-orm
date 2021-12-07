@@ -51,7 +51,7 @@ public class CockroachSqlAstTranslator<T extends JdbcOperation> extends Abstract
 			ForUpdateClause forUpdateClause,
 			Boolean followOnLocking) {
 		// Support was added in 20.1: https://www.cockroachlabs.com/docs/v20.1/select-for-update.html
-		if ( getDialect().getVersion() < 2010 ) {
+		if ( getDialect().getVersion().isBefore( 20, 1 ) ) {
 			return LockStrategy.NONE;
 		}
 		return super.determineLockingStrategy( querySpec, forUpdateClause, followOnLocking );
@@ -60,7 +60,7 @@ public class CockroachSqlAstTranslator<T extends JdbcOperation> extends Abstract
 	@Override
 	protected void renderForUpdateClause(QuerySpec querySpec, ForUpdateClause forUpdateClause) {
 		// Support was added in 20.1: https://www.cockroachlabs.com/docs/v20.1/select-for-update.html
-		if ( getDialect().getVersion() < 2010 ) {
+		if ( getDialect().getVersion().isBefore( 20, 1 ) ) {
 			return;
 		}
 		super.renderForUpdateClause( querySpec, forUpdateClause );

@@ -45,7 +45,7 @@ public class PostgreSQLSqlAstTranslator<T extends JdbcOperation> extends Abstrac
 
 	@Override
 	protected void renderMaterializationHint(CteMaterialization materialization) {
-		if ( getDialect().getVersion() >= 1200 ) {
+		if ( getDialect().getVersion().isSince( 12 ) ) {
 			if ( materialization == CteMaterialization.NOT_MATERIALIZED ) {
 				appendSql( "not " );
 			}
@@ -55,7 +55,7 @@ public class PostgreSQLSqlAstTranslator<T extends JdbcOperation> extends Abstrac
 
 	@Override
 	public boolean supportsFilterClause() {
-		return getDialect().getVersion() >= 940;
+		return getDialect().getVersion().isSince( 9, 4 );
 	}
 
 	@Override
@@ -118,7 +118,7 @@ public class PostgreSQLSqlAstTranslator<T extends JdbcOperation> extends Abstrac
 		// We render an empty group instead of literals as some DBs don't support grouping by literals
 		// Note that integer literals, which refer to select item positions, are handled in #visitGroupByClause
 		if ( expression instanceof Literal ) {
-			if ( getDialect().getVersion() >= 950 ) {
+			if ( getDialect().getVersion().isSince( 9, 5 ) ) {
 				appendSql( "()" );
 			}
 			else {
@@ -129,7 +129,7 @@ public class PostgreSQLSqlAstTranslator<T extends JdbcOperation> extends Abstrac
 		}
 		else if ( expression instanceof Summarization ) {
 			Summarization summarization = (Summarization) expression;
-			if ( getDialect().getVersion() >= 950 ) {
+			if ( getDialect().getVersion().isSince( 9, 5 ) ) {
 				appendSql( summarization.getKind().sqlText() );
 				appendSql( OPEN_PARENTHESIS );
 				renderCommaSeparated( summarization.getGroupings() );

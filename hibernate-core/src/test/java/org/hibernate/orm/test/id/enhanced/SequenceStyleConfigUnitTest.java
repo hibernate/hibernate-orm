@@ -8,8 +8,6 @@ package org.hibernate.orm.test.id.enhanced;
 
 import java.util.Properties;
 
-import org.hibernate.MappingException;
-import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -17,9 +15,9 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.sequence.ANSISequenceSupport;
-import org.hibernate.dialect.sequence.NoSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
@@ -42,6 +40,7 @@ import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.Matchers.instanceOf;
+import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
 import static org.hibernate.testing.orm.junit.ExtraAssertions.assertClassAssignability;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
@@ -380,15 +379,15 @@ public class SequenceStyleConfigUnitTest {
 
 	public static class TableDialect extends Dialect {
 		@Override
-		public int getVersion() {
-			return 0;
+		public DatabaseVersion getVersion() {
+			return ZERO_VERSION;
 		}
 	}
 
 	public static class SequenceDialect extends Dialect {
 		@Override
-		public int getVersion() {
-			return 0;
+		public DatabaseVersion getVersion() {
+			return ZERO_VERSION;
 		}
 
 		@Override

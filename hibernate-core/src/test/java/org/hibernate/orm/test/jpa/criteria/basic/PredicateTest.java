@@ -241,7 +241,7 @@ public class PredicateTest extends AbstractMetamodelSpecificTest {
 	 */
 	@Test
 	@JiraKey( "HHH-10603" )
-	@SkipForDialect(dialectClass = OracleDialect.class, version = 1200,
+	@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 12,
 			reason = "Oracle12cDialect uses blob to store byte arrays and it's not possible to compare blobs with simple equality operators.")
 	public void testByteArray() {
 		EntityManager em = getOrCreateEntityManager();

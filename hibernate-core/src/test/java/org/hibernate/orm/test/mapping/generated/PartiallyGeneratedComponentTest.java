@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 		xmlMappings = "org/hibernate/orm/test/mapping/generated/ComponentOwner.hbm.xml"
 )
 @SessionFactory
-@RequiresDialect( value = OracleDialect.class, version = 900 )
+@RequiresDialect( value = OracleDialect.class, majorVersion = 9 )
 public class PartiallyGeneratedComponentTest {
 
 	@Test

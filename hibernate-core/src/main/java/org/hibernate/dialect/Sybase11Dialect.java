@@ -16,6 +16,6 @@ package org.hibernate.dialect;
 @Deprecated
 public class Sybase11Dialect extends SybaseASEDialect {
 	public Sybase11Dialect() {
-		super( 1100, false, false );
+		super( DatabaseVersion.make( 11 ), false, false );
 	}
 }

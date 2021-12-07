@@ -7,6 +7,7 @@
 package org.hibernate.community.dialect;
 
 import org.hibernate.boot.TempTableDdlTransactionHandling;
+import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.Replacer;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -66,24 +67,24 @@ import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtract
  */
 public class InformixDialect extends Dialect {
 
-	private final int version;
+	private final DatabaseVersion version;
 	private final UniqueDelegate uniqueDelegate;
 	private final LimitHandler limitHandler;
 
 	public InformixDialect(DialectResolutionInfo info) {
-		this( info.getDatabaseMajorVersion() );
+		this( info.makeCopy() );
 		registerKeywords( info );
 	}
 
 	public InformixDialect() {
-		this( 7 );
+		this( DatabaseVersion.make( 7, 0 ) );
 	}
 
 	/**
 	 * Creates new <code>InformixDialect</code> instance. Sets up the JDBC /
 	 * Informix type mappings.
 	 */
-	public InformixDialect(int version) {
+	public InformixDialect(DatabaseVersion version) {
 		super();
 		this.version = version;
 
@@ -109,16 +110,16 @@ public class InformixDialect extends Dialect {
 
 		uniqueDelegate = new InformixUniqueDelegate( this );
 
-		limitHandler = getVersion() < 10
+		limitHandler = getVersion().isBefore( 10 )
 				? FirstLimitHandler.INSTANCE
 				//according to the Informix documentation for
 				//version 11 and above, parameters are supported
 				//but I have not tested this at all!
-				: new SkipFirstLimitHandler( getVersion() >= 11 );
+				: new SkipFirstLimitHandler( getVersion().isSince( 11 ) );
 	}
 
 	@Override
-	public int getVersion() {
+	public DatabaseVersion getVersion() {
 		return version;
 	}
 

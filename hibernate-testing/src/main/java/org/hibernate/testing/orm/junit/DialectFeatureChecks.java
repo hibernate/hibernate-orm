@@ -254,7 +254,7 @@ abstract public class DialectFeatureChecks {
 		public boolean apply(Dialect dialect) {
 			return dialect instanceof DB2Dialect
 					|| dialect instanceof OracleDialect
-					|| dialect instanceof PostgreSQLDialect && dialect.getVersion() >= 950
+					|| dialect instanceof PostgreSQLDialect && dialect.getVersion().isSince( 9, 5 )
 					|| dialect instanceof SQLServerDialect
 					|| dialect instanceof DerbyDialect
 					|| dialect instanceof MySQLDialect && !(dialect instanceof TiDBDialect)
@@ -266,7 +266,7 @@ abstract public class DialectFeatureChecks {
 		public boolean apply(Dialect dialect) {
 			return dialect instanceof DB2Dialect
 					|| dialect instanceof OracleDialect
-					|| dialect instanceof PostgreSQLDialect && dialect.getVersion() >= 950
+					|| dialect instanceof PostgreSQLDialect && dialect.getVersion().isSince( 9, 5 )
 					|| dialect instanceof SQLServerDialect;
 		}
 	}

@@ -16,7 +16,6 @@ import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.MutationStatement;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
@@ -101,7 +100,7 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 	@Override
 	protected boolean renderTableReference(TableReference tableReference, LockMode lockMode) {
 		super.renderTableReference( tableReference, lockMode );
-		if ( getDialect().getVersion() < 1570 ) {
+		if ( getDialect().getVersion().isBefore( 15, 7 ) ) {
 			if ( LockMode.READ.lessThan( lockMode ) ) {
 				appendSql( " holdlock" );
 			}
@@ -122,7 +121,7 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 
 	@Override
 	protected void renderForUpdateClause(QuerySpec querySpec, ForUpdateClause forUpdateClause) {
-		if ( getDialect().getVersion() < 1570 ) {
+		if ( getDialect().getVersion().isBefore( 15, 7 ) ) {
 			return;
 		}
 		super.renderForUpdateClause( querySpec, forUpdateClause );
@@ -209,7 +208,7 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
 		// I think intersect is only supported in 16.0 SP3
 		if ( getDialect().isAnsiNullOn() ) {
-			if ( getDialect().getVersion() >= 1630 ) {
+			if ( getDialect().getVersion().isSince( 16, 3 ) ) {
 				renderComparisonEmulateIntersect( lhs, operator, rhs );
 			}
 			else {
@@ -258,7 +257,7 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 				}
 			}
 			else {
-				if ( getDialect().getVersion() >= 1630 ) {
+				if ( getDialect().getVersion().isSince( 16, 3 ) ) {
 					renderComparisonEmulateIntersect( lhs, operator, rhs );
 				}
 				else {
@@ -363,7 +362,7 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 	}
 
 	private boolean supportsTopClause() {
-		return getDialect().getVersion() >= 1250;
+		return getDialect().getVersion().isSince( 12, 5 );
 	}
 
 	private boolean supportsParameterOffsetFetchExpression() {

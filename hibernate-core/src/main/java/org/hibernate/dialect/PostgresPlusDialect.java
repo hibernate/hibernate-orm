@@ -38,7 +38,7 @@ public class PostgresPlusDialect extends PostgreSQLDialect {
 		super( info );
 	}
 
-	public PostgresPlusDialect(int version) {
+	public PostgresPlusDialect(DatabaseVersion version) {
 		super( version );
 	}
 

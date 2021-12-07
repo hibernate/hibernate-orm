@@ -50,14 +50,14 @@ public class UUIDBasedIdInterpretationTest {
 
 	@Test
 	@JiraKey( "HHH-10564" )
-	@RequiresDialect( value = MySQLDialect.class, version = 500 )
+	@RequiresDialect( value = MySQLDialect.class, majorVersion = 5 )
 	public void testMySQL(DomainModelScope scope) {
 		checkUuidTypeUsed( scope, VarbinaryJdbcType.class );
 	}
 
 	@Test
 	@JiraKey( "HHH-10564" )
-	@RequiresDialect( value = PostgreSQLDialect.class, version = 940 )
+	@RequiresDialect( value = PostgreSQLDialect.class, majorVersion = 9, minorVersion = 4 )
 	public void testPostgreSQL(DomainModelScope scope) {
 		checkUuidTypeUsed( scope, UUIDJdbcType.class );
 	}

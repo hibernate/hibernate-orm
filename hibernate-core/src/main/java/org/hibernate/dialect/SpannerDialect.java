@@ -6,6 +6,10 @@
  */
 package org.hibernate.dialect;
 
+import java.sql.Types;
+import java.util.Date;
+import java.util.Map;
+
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.StaleObjectStateException;
@@ -46,10 +50,9 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.StandardBasicTypes;
 
-import java.sql.Types;
-import java.util.Date;
-import java.util.Map;
 import jakarta.persistence.TemporalType;
+
+import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
 
 /**
  * Hibernate Dialect implementation for Cloud Spanner.
@@ -112,8 +115,8 @@ public class SpannerDialect extends Dialect {
 	}
 
 	@Override
-	public int getVersion() {
-		return 0;
+	public DatabaseVersion getVersion() {
+		return ZERO_VERSION;
 	}
 
 	@Override

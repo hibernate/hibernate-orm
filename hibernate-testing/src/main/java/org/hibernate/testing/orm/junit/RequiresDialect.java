@@ -40,10 +40,11 @@ public @interface RequiresDialect {
 	 */
 	boolean matchSubTypes() default true;
 
-	/**
-	 * the Dialect version
-	 */
-	int version() default -1;
+	int majorVersion() default -1;
+
+	int minorVersion() default -1;
+
+	int microVersion() default -1;
 
 	/**
 	 * Comment describing the reason why the dialect is required.

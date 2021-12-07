@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -36,6 +37,8 @@ import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.Statement;
 
 import org.jboss.logging.Logger;
+
+import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
 
 /**
  * The Hibernate-specific {@link org.junit.runner.Runner} implementation which layers {@link ExtendedFrameworkMethod}
@@ -232,8 +235,8 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 		catch (Exception e) {
 			return new Dialect() {
 				@Override
-				public int getVersion() {
-					return 0;
+				public DatabaseVersion getVersion() {
+					return ZERO_VERSION;
 				}
 			};
 		}

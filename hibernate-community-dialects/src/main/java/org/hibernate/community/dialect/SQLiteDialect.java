@@ -12,12 +12,11 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
 
-import jakarta.persistence.TemporalType;
-
 import org.hibernate.ScrollMode;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.community.dialect.identity.SQLiteIdentityColumnSupport;
+import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.NationalizationSupport;
 import org.hibernate.dialect.Replacer;
@@ -59,6 +58,8 @@ import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
+import jakarta.persistence.TemporalType;
+
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.query.TemporalUnit.DAY;
 import static org.hibernate.query.TemporalUnit.EPOCH;
@@ -80,22 +81,22 @@ public class SQLiteDialect extends Dialect {
 	private static final SQLiteIdentityColumnSupport IDENTITY_COLUMN_SUPPORT = new SQLiteIdentityColumnSupport();
 
 	private final UniqueDelegate uniqueDelegate;
-	private final int version;
+	private final DatabaseVersion version;
 
 	public SQLiteDialect(DialectResolutionInfo info) {
-		this( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() );
+		this( info.makeCopy() );
 		registerKeywords( info );
 	}
 
 	public SQLiteDialect() {
-		this( 200 );
+		this( DatabaseVersion.make( 2, 0 ) );
 	}
 
-	public SQLiteDialect(int version) {
+	public SQLiteDialect(DatabaseVersion version) {
 		super();
 		this.version = version;
 
-		if ( version < 300 ) {
+		if ( version.isBefore( 3 ) ) {
 			registerColumnType( Types.DECIMAL, "numeric($p,$s)" );
 			registerColumnType( Types.CHAR, "char" );
 			registerColumnType( Types.NCHAR, "nchar" );
@@ -128,7 +129,7 @@ public class SQLiteDialect extends Dialect {
 	}
 
 	@Override
-	public int getVersion() {
+	public DatabaseVersion getVersion() {
 		return version;
 	}
 
@@ -358,7 +359,7 @@ public class SQLiteDialect extends Dialect {
 
 	@Override
 	public boolean supportsNullPrecedence() {
-		return getVersion() >= 330;
+		return getVersion().isSince( 3, 3 );
 	}
 
 	@Override

@@ -119,12 +119,12 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstT
 	}
 
 	private boolean supportsOffsetFetchClause() {
-		return getDialect().getVersion() >= 104195;
+		return getDialect().getVersion().isSince( 1, 4, 195 );
 	}
 
 	private boolean supportsOffsetFetchClausePercentWithTies() {
 		// Introduction of TIES clause https://github.com/h2database/h2database/commit/876e9fbe7baf11d01675bfe871aac2cf1b6104ce
 		// Introduction of PERCENT support https://github.com/h2database/h2database/commit/f45913302e5f6ad149155a73763c0c59d8205849
-		return getDialect().getVersion() >= 104198;
+		return getDialect().getVersion().isSince( 1, 4, 198 );
 	}
 }

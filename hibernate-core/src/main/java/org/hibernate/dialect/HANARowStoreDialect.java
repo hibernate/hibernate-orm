@@ -32,12 +32,16 @@ import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 public class HANARowStoreDialect extends AbstractHANADialect {
 
 	public HANARowStoreDialect() {
-		super();
+		super( DatabaseVersion.make( 3, 0 ));
 	}
 
 	public HANARowStoreDialect(DialectResolutionInfo info) {
-		super();
+		this( info.makeCopy() );
 		registerKeywords( info );
+	}
+
+	public HANARowStoreDialect(DatabaseVersion version) {
+		super( version );
 	}
 
 	@Override
@@ -65,11 +69,6 @@ public class HANARowStoreDialect extends AbstractHANADialect {
 				AfterUseAction.CLEAN,
 				runtimeModelCreationContext.getSessionFactory()
 		);
-	}
-
-	@Override
-	public int getVersion() {
-		return 0;
 	}
 
 	@Override

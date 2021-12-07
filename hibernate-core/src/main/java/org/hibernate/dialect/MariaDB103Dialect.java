@@ -9,10 +9,6 @@ package org.hibernate.dialect;
 import java.time.Duration;
 
 import org.hibernate.LockOptions;
-import org.hibernate.dialect.function.StandardSQLFunction;
-import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorMariaDBDatabaseImpl;
-import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
-import org.hibernate.type.StandardBasicTypes;
 
 /**
  * An SQL dialect for MariaDB 10.3 and later, provides sequence support, lock-timeouts, etc.
@@ -25,7 +21,7 @@ import org.hibernate.type.StandardBasicTypes;
 public class MariaDB103Dialect extends MariaDBDialect {
 
 	public MariaDB103Dialect() {
-		super(1030);
+		super( DatabaseVersion.make( 10, 3 ) );
 	}
 
 	@Override

@@ -43,34 +43,45 @@ public class DialectFilterExtension implements ExecutionCondition {
 
 		if ( !effectiveRequiresDialects.isEmpty() ) {
 			StringBuilder requiredDialects = new StringBuilder(  );
+
 			for ( RequiresDialect requiresDialect : effectiveRequiresDialects ) {
-				requiredDialects.append(requiresDialect.value()  );
+				requiredDialects.append( requiresDialect.value()  );
 				requiredDialects.append( " " );
-				final int requiredVersion = requiresDialect.version();
-				if ( requiredVersion > -1 ) {
+
+				final boolean versionsMatch;
+				final int matchingMajorVersion = requiresDialect.majorVersion();
+
+				if ( matchingMajorVersion >= 0 ) {
+					final int matchingMinorVersion = requiresDialect.minorVersion();
+					final int matchingMicroVersion = requiresDialect.microVersion();
+
 					requiredDialects.append( ", version = " );
-					requiredDialects.append( requiredVersion );
+					requiredDialects.append( matchingVersionString( matchingMajorVersion, matchingMinorVersion, matchingMicroVersion ) );
 					requiredDialects.append( " " );
-					if ( requiresDialect.value().isInstance( dialect ) ) {
-						if ( requiredVersion == dialect.getVersion() ) {
-							return ConditionEvaluationResult.enabled( "Matched @RequiresDialect" );
-						}
-						if ( requiresDialect.matchSubTypes() && dialect.getVersion() > requiredVersion ) {
-							return ConditionEvaluationResult.enabled( "Matched @RequiresDialect" );
-						}
-					}
+
+					versionsMatch = versionsMatch(
+							matchingMajorVersion,
+							matchingMinorVersion,
+							matchingMicroVersion,
+							dialect,
+							requiresDialect.matchSubTypes()
+					);
 				}
 				else {
-					if ( requiresDialect.matchSubTypes() ) {
-						if ( requiresDialect.value().isInstance( dialect ) ) {
-							return ConditionEvaluationResult.enabled( "Matched @RequiresDialect" );
-						}
-					}
-					else {
-						if ( requiresDialect.value().equals( dialect.getClass() ) ) {
-							return ConditionEvaluationResult.enabled( "Matched @RequiresDialect" );
-						}
-					}
+					versionsMatch = true;
+				}
+
+
+				if ( ! requiresDialect.value().isInstance( dialect ) ) {
+					continue;
+				}
+
+				if ( ! versionsMatch ) {
+					continue;
+				}
+
+				if ( requiresDialect.matchSubTypes() || requiresDialect.value().equals( dialect.getClass() ) ) {
+					return ConditionEvaluationResult.enabled( "Matched @RequiresDialect" );
 				}
 			}
 
@@ -92,21 +103,35 @@ public class DialectFilterExtension implements ExecutionCondition {
 		);
 
 		for ( SkipForDialect effectiveSkipForDialect : effectiveSkips ) {
-			final int skipForVersion = effectiveSkipForDialect.version();
-			if ( skipForVersion > -1 ) {
-				if ( effectiveSkipForDialect.dialectClass().isInstance( dialect ) ) {
-					if ( skipForVersion == dialect.getVersion() ) {
-						return ConditionEvaluationResult.disabled( "Matched @SkipForDialect(group)" );
+			final boolean versionsMatch;
+			final int matchingMajorVersion = effectiveSkipForDialect.majorVersion();
+
+			if ( matchingMajorVersion >= 0 ) {
+				versionsMatch = versionsMatch(
+						matchingMajorVersion,
+						effectiveSkipForDialect.minorVersion(),
+						effectiveSkipForDialect.microVersion(),
+						dialect,
+						effectiveSkipForDialect.matchSubTypes()
+				);
+
+				if ( versionsMatch ) {
+					if ( effectiveSkipForDialect.matchSubTypes() ) {
+						if ( effectiveSkipForDialect.dialectClass().isInstance( dialect ) ) {
+							return ConditionEvaluationResult.disabled( "Matched @SkipForDialect" );
+						}
 					}
-					if ( effectiveSkipForDialect.matchSubTypes() && dialect.getVersion() > skipForVersion ) {
-						return ConditionEvaluationResult.disabled( "Matched @SkipForDialect(group)" );
+					else {
+						if ( effectiveSkipForDialect.dialectClass().equals( dialect.getClass() ) ) {
+							return ConditionEvaluationResult.disabled( "Matched @SkipForDialect" );
+						}
 					}
 				}
 			}
 			else {
 				if ( effectiveSkipForDialect.matchSubTypes() ) {
 					if ( effectiveSkipForDialect.dialectClass().isInstance( dialect ) ) {
-						return ConditionEvaluationResult.disabled( "Matched @SkipForDialect(group)" );
+						return ConditionEvaluationResult.disabled( "Matched @SkipForDialect" );
 					}
 				}
 				else {
@@ -142,6 +167,44 @@ public class DialectFilterExtension implements ExecutionCondition {
 		}
 
 		return ConditionEvaluationResult.enabled( "Passed all @SkipForDialects" );
+	}
+
+	private String matchingVersionString(int matchingMajorVersion, int matchingMinorVersion, int matchingMicroVersion) {
+		final StringBuilder buffer = new StringBuilder( matchingMajorVersion );
+		if ( matchingMajorVersion > 0 ) {
+			buffer.append( "." ).append( matchingMinorVersion );
+			if ( matchingMicroVersion > 0 ) {
+				buffer.append( "." ).append( matchingMicroVersion );
+			}
+		}
+
+		return buffer.toString();
+	}
+
+	private boolean versionsMatch(
+			int matchingMajorVersion,
+			int matchingMinorVersion,
+			int matchingMicroVersion,
+			Dialect dialect,
+			boolean matchNewerVersions) {
+		if ( matchingMajorVersion < 0 ) {
+			return false;
+		}
+
+		if ( matchingMinorVersion < 0 ) {
+			matchingMinorVersion = 0;
+		}
+
+		if ( matchingMicroVersion < 0 ) {
+			matchingMicroVersion = 0;
+		}
+
+		if ( matchNewerVersions ) {
+			return dialect.getVersion().isSince( matchingMajorVersion, matchingMinorVersion, matchingMicroVersion );
+		}
+		else {
+			return dialect.getVersion().isSame( matchingMajorVersion );
+		}
 	}
 
 	private Dialect getDialect(ExtensionContext context) {

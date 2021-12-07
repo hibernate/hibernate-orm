@@ -37,7 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialect(value = SQLServerDialect.class, version = 11)
+@RequiresDialect(value = SQLServerDialect.class, majorVersion = 11)
 @Jpa(
 		annotatedClasses = {
 				Person.class,

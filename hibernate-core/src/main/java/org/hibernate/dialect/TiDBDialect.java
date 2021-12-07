@@ -46,7 +46,7 @@ public class TiDBDialect extends MySQLDialect {
 
 	public TiDBDialect(int version, int characterSetBytesPerCharacter) {
 		// For simplicity’s sake, configure MySQL 5.7 compatibility
-		super( 570, characterSetBytesPerCharacter );
+		super( DatabaseVersion.make( 5, 7 ), characterSetBytesPerCharacter );
 		this.tidbVersion = version;
 		registerKeywords();
 	}

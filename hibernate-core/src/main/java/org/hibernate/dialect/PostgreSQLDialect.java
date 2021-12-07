@@ -19,8 +19,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
-import jakarta.persistence.TemporalType;
-
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -77,8 +75,14 @@ import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
+import jakarta.persistence.TemporalType;
+
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
-import static org.hibernate.query.TemporalUnit.*;
+import static org.hibernate.query.TemporalUnit.DAY;
+import static org.hibernate.query.TemporalUnit.EPOCH;
+import static org.hibernate.query.TemporalUnit.MONTH;
+import static org.hibernate.query.TemporalUnit.QUARTER;
+import static org.hibernate.query.TemporalUnit.YEAR;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
@@ -92,27 +96,24 @@ public class PostgreSQLDialect extends Dialect {
 
 	private static final PostgreSQLIdentityColumnSupport IDENTITY_COLUMN_SUPPORT = new PostgreSQLIdentityColumnSupport();
 
-	private final int version;
+	private final DatabaseVersion version;
 	private final PostgreSQLDriverKind driverKind;
 
 	public PostgreSQLDialect(DialectResolutionInfo info) {
-		this(
-				info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10,
-				PostgreSQLDriverKind.determineKind( info )
-		);
+		this( info.makeCopy(), PostgreSQLDriverKind.determineKind( info ) );
 		registerKeywords( info );
 	}
 
 	public PostgreSQLDialect() {
-		this( 800 );
+		this( DatabaseVersion.make( 8, 0 ) );
 	}
 
-	public PostgreSQLDialect(int version) {
+	public PostgreSQLDialect(DatabaseVersion version) {
 		// Assume PgJDBC by default
 		this( version, PostgreSQLDriverKind.PG_JDBC );
 	}
 
-	public PostgreSQLDialect(int version, PostgreSQLDriverKind driverKind) {
+	public PostgreSQLDialect(DatabaseVersion version, PostgreSQLDriverKind driverKind) {
 		super();
 		this.version = version;
 		this.driverKind = driverKind;
@@ -140,12 +141,12 @@ public class PostgreSQLDialect extends Dialect {
 		registerColumnType( SqlTypes.INET, "inet" );
 		registerColumnType( SqlTypes.INTERVAL_SECOND, "interval second($s)" );
 
-		if ( getVersion() >= 820 ) {
+		if ( getVersion().isSince( 8, 2 ) ) {
 			registerColumnType( SqlTypes.UUID, "uuid" );
 
-			if ( getVersion() >= 920 ) {
+			if ( getVersion().isSince( 9, 2 ) ) {
 				// Prefer jsonb if possible
-				if ( getVersion() >= 940 ) {
+				if ( getVersion().isSince( 9, 4 ) ) {
 					registerColumnType( SqlTypes.JSON, "jsonb" );
 				}
 				else {
@@ -202,7 +203,7 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
-	public int getVersion() {
+	public DatabaseVersion getVersion() {
 		return version;
 	}
 
@@ -409,7 +410,7 @@ public class PostgreSQLDialect extends Dialect {
 				"(position(?1 in substring(?2 from ?3))+(?3)-1)"
 		).setArgumentListSignature("(pattern, string[, start])");
 
-		if ( getVersion() >= 940 ) {
+		if ( getVersion().isSince( 9, 4 ) ) {
 			CommonFunctionFactory.makeDateTimeTimestamp( queryEngine );
 		}
 	}
@@ -428,37 +429,37 @@ public class PostgreSQLDialect extends Dialect {
 
 	@Override
 	public boolean supportsIfExistsBeforeTableName() {
-		return getVersion() >= 820;
+		return getVersion().isSince( 8, 2 );
 	}
 
 	@Override
 	public boolean supportsIfExistsBeforeConstraintName() {
-		return getVersion() >= 900;
+		return getVersion().isSince( 9 );
 	}
 
 	@Override
 	public boolean supportsIfExistsAfterAlterTable() {
-		return getVersion() >= 920;
+		return getVersion().isSince( 9, 2 );
 	}
 
 	@Override
 	public boolean supportsValuesList() {
-		return getVersion() >= 820;
+		return getVersion().isSince( 8, 2 );
 	}
 
 	@Override
 	public boolean supportsPartitionBy() {
-		return getVersion() >= 910;
+		return getVersion().isSince( 9, 1 );
 	}
 
 	@Override
 	public boolean supportsNonQueryWithCTE() {
-		return getVersion() >= 910;
+		return getVersion().isSince( 9, 1 );
 	}
 
 	@Override
 	public SequenceSupport getSequenceSupport() {
-		return getVersion() < 820
+		return getVersion().isBefore( 8, 2 )
 				? PostgreSQLSequenceSupport.LEGACY_INSTANCE
 				: PostgreSQLSequenceSupport.INSTANCE;
 	}
@@ -475,7 +476,7 @@ public class PostgreSQLDialect extends Dialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		return getVersion() < 840
+		return getVersion().isBefore( 8, 4 )
 				? LimitOffsetLimitHandler.INSTANCE
 				: OffsetFetchLimitHandler.INSTANCE;
 	}
@@ -932,7 +933,7 @@ public class PostgreSQLDialect extends Dialect {
 
 	@Override
 	public boolean supportsNoWait() {
-		return getVersion() >= 810;
+		return getVersion().isSince( 8, 1 );
 	}
 
 	@Override
@@ -942,7 +943,7 @@ public class PostgreSQLDialect extends Dialect {
 
 	@Override
 	public boolean supportsSkipLocked() {
-		return getVersion() >= 950;
+		return getVersion().isSince( 9, 5 );
 	}
 
 	@Override
@@ -959,12 +960,12 @@ public class PostgreSQLDialect extends Dialect {
 	public boolean supportsFetchClause(FetchClauseType type) {
 		switch ( type ) {
 			case ROWS_ONLY:
-				return getVersion() >= 840;
+				return getVersion().isSince( 8, 4 );
 			case PERCENT_ONLY:
 			case PERCENT_WITH_TIES:
 				return false;
 			case ROWS_WITH_TIES:
-				return getVersion() >= 1300;
+				return getVersion().isSince( 13 );
 		}
 		return false;
 	}
@@ -977,13 +978,13 @@ public class PostgreSQLDialect extends Dialect {
 	@Override
 	public void augmentRecognizedTableTypes(List<String> tableTypesList) {
 		super.augmentRecognizedTableTypes( tableTypesList );
-		if ( getVersion() >= 930 ) {
+		if ( getVersion().isSince( 9, 3 ) ) {
 			tableTypesList.add( "MATERIALIZED VIEW" );
 
 			/*
 			 	PostgreSQL 10 and later adds support for Partition table.
 			 */
-			if ( getVersion() >= 1000 ) {
+			if ( getVersion().isSince( 10 ) ) {
 				tableTypesList.add( "PARTITIONED TABLE" );
 			}
 		}
@@ -1010,10 +1011,10 @@ public class PostgreSQLDialect extends Dialect {
 			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLInetJdbcType.INSTANCE );
 			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLIntervalSecondJdbcType.INSTANCE );
 
-			if ( getVersion() >= 820 ) {
+			if ( getVersion().isSince( 8, 2 ) ) {
 				// HHH-9562
 				jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
-				if ( getVersion() >= 920 ) {
+				if ( getVersion().isSince( 9, 2 ) ) {
 					jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLJsonbJdbcType.INSTANCE );
 				}
 			}

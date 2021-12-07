@@ -6,16 +6,16 @@
  */
 package org.hibernate.dialect.identity;
 
+import org.hibernate.dialect.DatabaseVersion;
+
 /**
  * @author Andrea Boriero
  */
 public class HSQLIdentityColumnSupport extends IdentityColumnSupportImpl {
+	final private DatabaseVersion dbVersion;
 
-	final private int hsqldbVersion;
-
-	public HSQLIdentityColumnSupport(int hsqldbVersion) {
-
-		this.hsqldbVersion = hsqldbVersion;
+	public HSQLIdentityColumnSupport(DatabaseVersion dbVersion) {
+		this.dbVersion = dbVersion;
 	}
 
 	@Override
@@ -36,6 +36,6 @@ public class HSQLIdentityColumnSupport extends IdentityColumnSupportImpl {
 
 	@Override
 	public String getIdentityInsertString() {
-		return hsqldbVersion < 200 ? "null" : "default";
+		return dbVersion.isBefore( 2 ) ? "null" : "default";
 	}
 }

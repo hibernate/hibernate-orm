@@ -6,10 +6,13 @@
  */
 package org.hibernate.orm.test.dialect;
 
+import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.dialect.spi.BasicDialectResolver;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
+
+import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
 
 /**
  * @author Steve Ebersole
@@ -18,8 +21,8 @@ public class TestingDialects {
 
 	public static class MyDialect extends Dialect {
 		@Override
-		public int getVersion() {
-			return 0;
+		public DatabaseVersion getVersion() {
+			return ZERO_VERSION;
 		}
 	}
 

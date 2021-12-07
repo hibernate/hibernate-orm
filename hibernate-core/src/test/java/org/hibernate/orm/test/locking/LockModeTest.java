@@ -49,7 +49,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author Steve Ebersole
  */
 @TestForIssue( jiraKey = "HHH-5275")
-@SkipForDialect(dialectClass = SybaseASEDialect.class, version = 1500,
+@SkipForDialect(dialectClass = SybaseASEDialect.class, majorVersion = 15,
 		reason = "skip this test on Sybase ASE 15.5, but run it on 15.7, see HHH-6820")
 public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 

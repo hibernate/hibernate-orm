@@ -15,6 +15,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.TargetType;
@@ -24,6 +25,7 @@ import org.junit.Test;
 import org.hibernate.testing.TestForIssue;
 
 import static org.hamcrest.core.Is.is;
+import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
 import static org.junit.Assert.assertThat;
 
 /**
@@ -70,8 +72,8 @@ public class CommentGenerationTest {
 		}
 
 		@Override
-		public int getVersion() {
-			return 0;
+		public DatabaseVersion getVersion() {
+			return ZERO_VERSION;
 		}
 	}
 }

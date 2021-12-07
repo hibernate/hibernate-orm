@@ -15,7 +15,7 @@ package org.hibernate.dialect;
 public class Oracle8iDialect extends OracleDialect {
 
 	public Oracle8iDialect() {
-		super( 800 );
+		super( DatabaseVersion.make( 8 ) );
 	}
 
 }

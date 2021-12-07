@@ -21,6 +21,6 @@ package org.hibernate.dialect;
 public class Oracle10gDialect extends OracleDialect {
 
 	public Oracle10gDialect() {
-		super( 1000 );
+		super( DatabaseVersion.make( 10 ) );
 	}
 }

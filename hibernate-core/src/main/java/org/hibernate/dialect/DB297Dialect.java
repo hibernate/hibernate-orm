@@ -16,7 +16,7 @@ package org.hibernate.dialect;
 public class DB297Dialect extends DB2Dialect {
 
 	public DB297Dialect() {
-		super( 970 );
+		super( DatabaseVersion.make( 9, 7 ) );
 	}
 
 }

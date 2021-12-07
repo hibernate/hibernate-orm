@@ -6,21 +6,19 @@
  */
 package org.hibernate.dialect;
 
+import java.sql.CallableStatement;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+
 import org.hibernate.LockOptions;
-import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.dialect.function.FieldFunction;
-import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
-import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
-import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
-import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
-import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.query.CastType;
-import org.hibernate.query.IntervalType;
-import org.hibernate.query.NullOrdering;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
+import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.FieldFunction;
 import org.hibernate.dialect.hint.IndexQueryHintHandler;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.MySQLIdentityColumnSupport;
@@ -32,6 +30,10 @@ import org.hibernate.dialect.unique.MySQLUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
+import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
+import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.LockTimeoutException;
@@ -40,8 +42,12 @@ import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SqlExpressable;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.query.CastType;
+import org.hibernate.query.IntervalType;
+import org.hibernate.query.NullOrdering;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.internal.idtable.AfterUseAction;
@@ -65,12 +71,6 @@ import org.hibernate.type.descriptor.jdbc.JsonJdbcType;
 import org.hibernate.type.descriptor.jdbc.NullJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
-import java.sql.CallableStatement;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
@@ -84,28 +84,25 @@ public class MySQLDialect extends Dialect {
 
 	private final UniqueDelegate uniqueDelegate;
 	private final MySQLStorageEngine storageEngine;
-	private final int version;
+	private final DatabaseVersion version;
 	private final int characterSetBytesPerCharacter;
 	private final SizeStrategy sizeStrategy;
 
 	public MySQLDialect(DialectResolutionInfo info) {
-		this(
-				info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10,
-				getCharacterSetBytesPerCharacter( info.unwrap( DatabaseMetaData.class ) )
-		);
+		this( info.makeCopy(), getCharacterSetBytesPerCharacter( info.unwrap( DatabaseMetaData.class ) ) );
 		registerKeywords( info );
 	}
 
 	public MySQLDialect() {
-		this( 500 );
+		this( DatabaseVersion.make( 5, 0 ) );
 	}
 
-	public MySQLDialect(int version) {
+	public MySQLDialect(DatabaseVersion version) {
 		// Let's be conservative and assume people use a 4 byte character set
 		this( version, 4 );
 	}
 
-	public MySQLDialect(int version, int characterSetBytesPerCharacter) {
+	public MySQLDialect(DatabaseVersion version, int characterSetBytesPerCharacter) {
 		super();
 		this.version = version;
 		this.characterSetBytesPerCharacter = characterSetBytesPerCharacter;
@@ -131,7 +128,7 @@ public class MySQLDialect extends Dialect {
 
 		registerColumnType( Types.NUMERIC, "decimal($p,$s)" ); //it's just a synonym
 
-		if ( getMySQLVersion() < 570) {
+		if ( getMySQLVersion().isBefore( 5, 7 ) ) {
 			registerColumnType( Types.TIMESTAMP, "datetime" );
 			registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp" );
 		}
@@ -181,7 +178,7 @@ public class MySQLDialect extends Dialect {
 		registerColumnType( Types.NCLOB, maxLobLen, "text" );
 		registerColumnType( Types.NCLOB, maxTinyLobLen, "tinytext" );
 
-		if ( getMySQLVersion() >= 570) {
+		if ( getMySQLVersion().isBefore( 5, 7 ) ) {
 			// MySQL 5.7 brings JSON native support with a dedicated datatype
 			// https://dev.mysql.com/doc/refman/5.7/en/json.html
 			registerColumnType( SqlTypes.JSON, "json");
@@ -255,7 +252,7 @@ public class MySQLDialect extends Dialect {
 	}
 
 	protected int getMaxVarcharLen() {
-		if ( getMySQLVersion() < 500 ) {
+		if ( getMySQLVersion().isBefore( 5 ) ) {
 			return 255;
 		}
 		else {
@@ -284,11 +281,11 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
-	public int getVersion() {
+	public DatabaseVersion getVersion() {
 		return version;
 	}
 
-	public int getMySQLVersion() {
+	public DatabaseVersion getMySQLVersion() {
 		return version;
 	}
 
@@ -390,7 +387,7 @@ public class MySQLDialect extends Dialect {
 		CommonFunctionFactory.format_dateFormat( queryEngine );
 		CommonFunctionFactory.makedateMaketime( queryEngine );
 
-		if ( getMySQLVersion() < 570 ) {
+		if ( getMySQLVersion().isBefore( 5, 7 ) ) {
 			CommonFunctionFactory.sysdateParens( queryEngine );
 		}
 		else {
@@ -409,7 +406,7 @@ public class MySQLDialect extends Dialect {
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeDescriptorRegistry();
 
-		if ( getMySQLVersion() >= 570) {
+		if ( getMySQLVersion().isSince( 5, 7 ) ) {
 			jdbcTypeRegistry.addDescriptorIfAbsent( SqlTypes.JSON, JsonJdbcType.INSTANCE );
 		}
 
@@ -478,7 +475,7 @@ public class MySQLDialect extends Dialect {
 	 */
 	@Override
 	public String currentTimestamp() {
-		return getMySQLVersion() < 570 ? super.currentTimestamp() : "current_timestamp(6)";
+		return getMySQLVersion().isBefore( 5, 7 ) ? super.currentTimestamp() : "current_timestamp(6)";
 	}
 
 	/**
@@ -550,7 +547,7 @@ public class MySQLDialect extends Dialect {
 
 	@Override
 	public boolean supportsUnionAll() {
-		return getMySQLVersion() >= 500;
+		return getMySQLVersion().isSince( 5 );
 	}
 
 	@Override
@@ -565,7 +562,7 @@ public class MySQLDialect extends Dialect {
 
 	@Override
 	public String getQueryHintString(String query, String hints) {
-		return getMySQLVersion() < 500
+		return getMySQLVersion().isBefore( 5 )
 				? super.getQueryHintString( query, hints )
 				: IndexQueryHintHandler.INSTANCE.addQueryHints( query, hints );
 	}
@@ -579,7 +576,7 @@ public class MySQLDialect extends Dialect {
 	}
 
 	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
-		return getMySQLVersion() < 500 ? super.getViolatedConstraintNameExtractor() : EXTRACTOR;
+		return getMySQLVersion().isBefore( 5 ) ? super.getViolatedConstraintNameExtractor() : EXTRACTOR;
 	}
 
 	private static final ViolatedConstraintNameExtractor EXTRACTOR =
@@ -891,7 +888,7 @@ public class MySQLDialect extends Dialect {
 
 	@Override
 	public String getTableTypeString() {
-		String engineKeyword = getMySQLVersion() < 500 ? "type" : "engine";
+		String engineKeyword = getMySQLVersion().isBefore( 5 ) ? "type" : "engine";
 		return storageEngine.getTableTypeString( engineKeyword );
 	}
 
@@ -906,7 +903,7 @@ public class MySQLDialect extends Dialect {
 	}
 
 	protected MySQLStorageEngine getDefaultMySQLStorageEngine() {
-		return getMySQLVersion() < 550 ? MyISAMStorageEngine.INSTANCE : InnoDBStorageEngine.INSTANCE;
+		return getMySQLVersion().isBefore( 5, 5 ) ? MyISAMStorageEngine.INSTANCE : InnoDBStorageEngine.INSTANCE;
 	}
 
 	@Override
@@ -1086,17 +1083,17 @@ public class MySQLDialect extends Dialect {
 
 	@Override
 	public boolean supportsWindowFunctions() {
-		return getMySQLVersion() >= 802;
+		return getMySQLVersion().isSince( 8, 2 );
 	}
 
 	@Override
 	public boolean supportsSkipLocked() {
-		return getMySQLVersion() >= 800;
+		return getMySQLVersion().isSince( 8 );
 	}
 
 	@Override
 	public boolean supportsNoWait() {
-		return getMySQLVersion() >= 800;
+		return getMySQLVersion().isSince( 8 );
 	}
 
 	@Override
@@ -1111,11 +1108,11 @@ public class MySQLDialect extends Dialect {
 	}
 
 	boolean supportsForShare() {
-		return getMySQLVersion() >= 800;
+		return getMySQLVersion().isSince( 8 );
 	}
 
 	boolean supportsAliasLocks() {
-		return getMySQLVersion() >= 800;
+		return getMySQLVersion().isSince( 8 );
 	}
 
 }

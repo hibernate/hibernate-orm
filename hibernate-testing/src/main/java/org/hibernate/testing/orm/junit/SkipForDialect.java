@@ -37,5 +37,10 @@ public @interface SkipForDialect {
 	Class<? extends Dialect> dialectClass();
 	boolean matchSubTypes() default false;
 	String reason() default "<undefined>";
-	int version() default -1;
+
+	int majorVersion() default -1;
+
+	int minorVersion() default -1;
+
+	int microVersion() default -1;
 }

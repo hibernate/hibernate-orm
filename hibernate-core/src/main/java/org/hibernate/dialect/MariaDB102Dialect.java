@@ -13,7 +13,7 @@ package org.hibernate.dialect;
 public class MariaDB102Dialect extends MariaDBDialect {
 
 	public MariaDB102Dialect() {
-		super(1020);
+		super( DatabaseVersion.make( 10, 2 ) );
 	}
 
 }

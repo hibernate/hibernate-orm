@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
-@RequiresDialect(value = OracleDialect.class, version = 12)
+@RequiresDialect(value = OracleDialect.class, majorVersion = 12)
 @TestForIssue(jiraKey = "HHH-14624")
 @DomainModel(
 		annotatedClasses = OraclePaginationWithLocksTest.Person.class

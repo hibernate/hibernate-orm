@@ -46,7 +46,7 @@ public class HANAColumnStoreDialect extends AbstractHANADialect {
 
 	public HANAColumnStoreDialect(DatabaseVersion version) {
 		super( version );
-		if ( version.isSince( 4 ) ) {
+		if ( version.isSameOrAfter( 4 ) ) {
 			registerColumnType( Types.CHAR, "nvarchar(1)" );
 			registerColumnType( Types.VARCHAR, 5000, "nvarchar($l)" );
 			registerColumnType( Types.LONGVARCHAR, 5000, "nvarchar($l)" );
@@ -174,7 +174,7 @@ public class HANAColumnStoreDialect extends AbstractHANADialect {
 
 	@Override
 	protected boolean supportsAsciiStringTypes() {
-		if ( version.isSince( 4 ) ) {
+		if ( version.isSameOrAfter( 4 ) ) {
 			return false;
 		}
 		return true;
@@ -182,7 +182,7 @@ public class HANAColumnStoreDialect extends AbstractHANADialect {
 
 	@Override
 	protected Boolean useUnicodeStringTypesDefault() {
-		if ( version.isSince( 4 ) ) {
+		if ( version.isSameOrAfter( 4 ) ) {
 			return Boolean.TRUE;
 		}
 		return Boolean.FALSE;
@@ -190,7 +190,7 @@ public class HANAColumnStoreDialect extends AbstractHANADialect {
 
 	@Override
 	public boolean isUseUnicodeStringTypes() {
-		if ( version.isSince( 4 ) ) {
+		if ( version.isSameOrAfter( 4 ) ) {
 			return true;
 		}
 		return super.isUseUnicodeStringTypes();

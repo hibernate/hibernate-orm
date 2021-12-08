@@ -115,7 +115,7 @@ public class CockroachDialect extends Dialect {
 		registerColumnType( SqlTypes.INTERVAL_SECOND, "interval second($s)" );
 
 		// Prefer jsonb if possible
-		if ( getVersion().isSince( 20, 0 ) ) {
+		if ( getVersion().isSameOrAfter( 20, 0 ) ) {
 			registerColumnType( SqlTypes.INET, "inet" );
 			registerColumnType( SqlTypes.JSON, "jsonb" );
 		}
@@ -176,7 +176,7 @@ public class CockroachDialect extends Dialect {
 			jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
 			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLIntervalSecondJdbcType.INSTANCE );
 
-			if ( getVersion().isSince( 20, 0 ) ) {
+			if ( getVersion().isSameOrAfter( 20, 0 ) ) {
 				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLInetJdbcType.INSTANCE );
 				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLJsonbJdbcType.INSTANCE );
 			}
@@ -664,7 +664,7 @@ public class CockroachDialect extends Dialect {
 
 	@Override
 	public boolean supportsNoWait() {
-		return getVersion().isSince( 20, 1 );
+		return getVersion().isSameOrAfter( 20, 1 );
 	}
 
 	@Override
@@ -674,12 +674,12 @@ public class CockroachDialect extends Dialect {
 
 	@Override
 	public boolean supportsSkipLocked() {
-		return getVersion().isSince( 20, 1 );
+		return getVersion().isSameOrAfter( 20, 1 );
 	}
 
 	@Override
 	public RowLockStrategy getWriteRowLockStrategy() {
-		return getVersion().isSince( 20, 1 ) ? RowLockStrategy.TABLE : RowLockStrategy.NONE;
+		return getVersion().isSameOrAfter( 20, 1 ) ? RowLockStrategy.TABLE : RowLockStrategy.NONE;
 	}
 
 	@Override

@@ -21,8 +21,6 @@ import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.query.FetchClauseType;
 
-import org.hibernate.testing.DialectCheck;
-
 /**
  * Container class for different implementation of the {@link DialectFeatureCheck} interface.
  *
@@ -254,7 +252,7 @@ abstract public class DialectFeatureChecks {
 		public boolean apply(Dialect dialect) {
 			return dialect instanceof DB2Dialect
 					|| dialect instanceof OracleDialect
-					|| dialect instanceof PostgreSQLDialect && dialect.getVersion().isSince( 9, 5 )
+					|| dialect instanceof PostgreSQLDialect && dialect.getVersion().isSameOrAfter( 9, 5 )
 					|| dialect instanceof SQLServerDialect
 					|| dialect instanceof DerbyDialect
 					|| dialect instanceof MySQLDialect && !(dialect instanceof TiDBDialect)
@@ -266,7 +264,7 @@ abstract public class DialectFeatureChecks {
 		public boolean apply(Dialect dialect) {
 			return dialect instanceof DB2Dialect
 					|| dialect instanceof OracleDialect
-					|| dialect instanceof PostgreSQLDialect && dialect.getVersion().isSince( 9, 5 )
+					|| dialect instanceof PostgreSQLDialect && dialect.getVersion().isSameOrAfter( 9, 5 )
 					|| dialect instanceof SQLServerDialect;
 		}
 	}

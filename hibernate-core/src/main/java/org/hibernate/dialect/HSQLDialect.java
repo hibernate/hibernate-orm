@@ -128,7 +128,7 @@ public class HSQLDialect extends Dialect {
 			registerColumnType( Types.CLOB, "longvarchar" );
 		}
 
-		if ( this.version.isSince( 2, 5 ) ) {
+		if ( this.version.isSameOrAfter( 2, 5 ) ) {
 			registerKeyword( "period" );
 		}
 
@@ -208,13 +208,13 @@ public class HSQLDialect extends Dialect {
 		CommonFunctionFactory.addMonths( queryEngine );
 		CommonFunctionFactory.monthsBetween( queryEngine );
 
-		if ( version.isSince( 2 ) ) {
+		if ( version.isSameOrAfter( 2 ) ) {
 			//SYSDATE is similar to LOCALTIMESTAMP but it returns the timestamp when it is called
 			CommonFunctionFactory.sysdate( queryEngine );
 		}
 
 		// from v. 2.2.0 ROWNUM() is supported in all modes as the equivalent of Oracle ROWNUM
-		if ( version.isSince( 2, 2 ) ) {
+		if ( version.isSameOrAfter( 2, 2 ) ) {
 			CommonFunctionFactory.rownum( queryEngine );
 		}
 	}
@@ -357,7 +357,7 @@ public class HSQLDialect extends Dialect {
 
 	@Override
 	public String getForUpdateString() {
-		if ( version.isSince( 2 ) ) {
+		if ( version.isSameOrAfter( 2 ) ) {
 			return " for update";
 		}
 		else {
@@ -387,7 +387,7 @@ public class HSQLDialect extends Dialect {
 
 	@Override
 	public boolean supportsColumnCheck() {
-		return version.isSince( 2 );
+		return version.isSameOrAfter( 2 );
 	}
 
 	@Override
@@ -676,19 +676,19 @@ public class HSQLDialect extends Dialect {
 
 	@Override
 	public boolean supportsCommentOn() {
-		return version.isSince( 2 );
+		return version.isSameOrAfter( 2 );
 	}
 
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
 	public boolean doesReadCommittedCauseWritersToBlockReaders() {
-		return version.isSince( 2 );
+		return version.isSameOrAfter( 2 );
 	}
 
 	@Override
 	public boolean doesRepeatableReadCauseReadersToBlockWriters() {
-		return version.isSince( 2 );
+		return version.isSameOrAfter( 2 );
 	}
 
 	@Override
@@ -709,7 +709,7 @@ public class HSQLDialect extends Dialect {
 	@Override
 	public boolean supportsTupleDistinctCounts() {
 		// from v. 2.2.9 is added support for COUNT(DISTINCT ...) with multiple arguments
-		return version.isSince( 2, 2, 9 );
+		return version.isSameOrAfter( 2, 2, 9 );
 	}
 
 	@Override

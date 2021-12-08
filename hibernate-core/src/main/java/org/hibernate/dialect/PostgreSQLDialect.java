@@ -143,12 +143,12 @@ public class PostgreSQLDialect extends Dialect {
 		registerColumnType( SqlTypes.INET, "inet" );
 		registerColumnType( SqlTypes.INTERVAL_SECOND, "interval second($s)" );
 
-		if ( getVersion().isSince( 8, 2 ) ) {
+		if ( getVersion().isSameOrAfter( 8, 2 ) ) {
 			registerColumnType( SqlTypes.UUID, "uuid" );
 
-			if ( getVersion().isSince( 9, 2 ) ) {
+			if ( getVersion().isSameOrAfter( 9, 2 ) ) {
 				// Prefer jsonb if possible
-				if ( getVersion().isSince( 9, 4 ) ) {
+				if ( getVersion().isSameOrAfter( 9, 4 ) ) {
 					registerColumnType( SqlTypes.JSON, "jsonb" );
 				}
 				else {
@@ -412,7 +412,7 @@ public class PostgreSQLDialect extends Dialect {
 				"(position(?1 in substring(?2 from ?3))+(?3)-1)"
 		).setArgumentListSignature("(pattern, string[, start])");
 
-		if ( getVersion().isSince( 9, 4 ) ) {
+		if ( getVersion().isSameOrAfter( 9, 4 ) ) {
 			CommonFunctionFactory.makeDateTimeTimestamp( queryEngine );
 		}
 	}
@@ -431,32 +431,32 @@ public class PostgreSQLDialect extends Dialect {
 
 	@Override
 	public boolean supportsIfExistsBeforeTableName() {
-		return getVersion().isSince( 8, 2 );
+		return getVersion().isSameOrAfter( 8, 2 );
 	}
 
 	@Override
 	public boolean supportsIfExistsBeforeConstraintName() {
-		return getVersion().isSince( 9 );
+		return getVersion().isSameOrAfter( 9 );
 	}
 
 	@Override
 	public boolean supportsIfExistsAfterAlterTable() {
-		return getVersion().isSince( 9, 2 );
+		return getVersion().isSameOrAfter( 9, 2 );
 	}
 
 	@Override
 	public boolean supportsValuesList() {
-		return getVersion().isSince( 8, 2 );
+		return getVersion().isSameOrAfter( 8, 2 );
 	}
 
 	@Override
 	public boolean supportsPartitionBy() {
-		return getVersion().isSince( 9, 1 );
+		return getVersion().isSameOrAfter( 9, 1 );
 	}
 
 	@Override
 	public boolean supportsNonQueryWithCTE() {
-		return getVersion().isSince( 9, 1 );
+		return getVersion().isSameOrAfter( 9, 1 );
 	}
 
 	@Override
@@ -947,7 +947,7 @@ public class PostgreSQLDialect extends Dialect {
 
 	@Override
 	public boolean supportsNoWait() {
-		return getVersion().isSince( 8, 1 );
+		return getVersion().isSameOrAfter( 8, 1 );
 	}
 
 	@Override
@@ -957,7 +957,7 @@ public class PostgreSQLDialect extends Dialect {
 
 	@Override
 	public boolean supportsSkipLocked() {
-		return getVersion().isSince( 9, 5 );
+		return getVersion().isSameOrAfter( 9, 5 );
 	}
 
 	@Override
@@ -974,12 +974,12 @@ public class PostgreSQLDialect extends Dialect {
 	public boolean supportsFetchClause(FetchClauseType type) {
 		switch ( type ) {
 			case ROWS_ONLY:
-				return getVersion().isSince( 8, 4 );
+				return getVersion().isSameOrAfter( 8, 4 );
 			case PERCENT_ONLY:
 			case PERCENT_WITH_TIES:
 				return false;
 			case ROWS_WITH_TIES:
-				return getVersion().isSince( 13 );
+				return getVersion().isSameOrAfter( 13 );
 		}
 		return false;
 	}
@@ -992,13 +992,13 @@ public class PostgreSQLDialect extends Dialect {
 	@Override
 	public void augmentRecognizedTableTypes(List<String> tableTypesList) {
 		super.augmentRecognizedTableTypes( tableTypesList );
-		if ( getVersion().isSince( 9, 3 ) ) {
+		if ( getVersion().isSameOrAfter( 9, 3 ) ) {
 			tableTypesList.add( "MATERIALIZED VIEW" );
 
 			/*
 			 	PostgreSQL 10 and later adds support for Partition table.
 			 */
-			if ( getVersion().isSince( 10 ) ) {
+			if ( getVersion().isSameOrAfter( 10 ) ) {
 				tableTypesList.add( "PARTITIONED TABLE" );
 			}
 		}
@@ -1025,10 +1025,10 @@ public class PostgreSQLDialect extends Dialect {
 			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLInetJdbcType.INSTANCE );
 			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLIntervalSecondJdbcType.INSTANCE );
 
-			if ( getVersion().isSince( 8, 2 ) ) {
+			if ( getVersion().isSameOrAfter( 8, 2 ) ) {
 				// HHH-9562
 				jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
-				if ( getVersion().isSince( 9, 2 ) ) {
+				if ( getVersion().isSameOrAfter( 9, 2 ) ) {
 					jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLJsonbJdbcType.INSTANCE );
 				}
 			}

@@ -80,7 +80,7 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends Abstract
 	}
 
 	private void renderLockHint(LockMode lockMode) {
-		if ( getDialect().getVersion().isSince( 9 ) ) {
+		if ( getDialect().getVersion().isSameOrAfter( 9 ) ) {
 			final int effectiveLockTimeout = getEffectiveLockTimeout( lockMode );
 			switch ( lockMode ) {
 				//noinspection deprecation

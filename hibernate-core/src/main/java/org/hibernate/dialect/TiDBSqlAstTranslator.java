@@ -114,7 +114,7 @@ public class TiDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 
 	@Override
 	public boolean supportsRowValueConstructorSyntaxInInList() {
-		return getDialect().getVersion().isSince( 5, 7 );
+		return getDialect().getVersion().isSameOrAfter( 5, 7 );
 	}
 
 	@Override

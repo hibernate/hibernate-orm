@@ -399,7 +399,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 
 	@Override
 	protected boolean supportsRowValueConstructorSyntaxInInList() {
-		return getDialect().getVersion().isSince( 8, 2 );
+		return getDialect().getVersion().isSameOrAfter( 8, 2 );
 	}
 
 	@Override
@@ -409,7 +409,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 
 	@Override
 	protected boolean supportsRowValueConstructorSyntaxInInSubQuery() {
-		return getDialect().getVersion().isSince( 9 );
+		return getDialect().getVersion().isSameOrAfter( 9 );
 	}
 
 	@Override

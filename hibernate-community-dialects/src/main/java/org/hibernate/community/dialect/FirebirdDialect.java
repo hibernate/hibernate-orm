@@ -175,7 +175,7 @@ public class FirebirdDialect extends Dialect {
 
 	@Override
 	public TimeZoneSupport getTimeZoneSupport() {
-		return getVersion().isSince( 4, 0 ) ? TimeZoneSupport.NATIVE : TimeZoneSupport.NONE;
+		return getVersion().isSameOrAfter( 4, 0 ) ? TimeZoneSupport.NATIVE : TimeZoneSupport.NONE;
 	}
 
 	@Override
@@ -247,7 +247,7 @@ public class FirebirdDialect extends Dialect {
 		CommonFunctionFactory.cosh( queryEngine );
 		CommonFunctionFactory.sinh( queryEngine );
 		CommonFunctionFactory.tanh( queryEngine );
-		if ( getVersion().isSince( 3, 0 ) ) {
+		if ( getVersion().isSameOrAfter( 3, 0 ) ) {
 			CommonFunctionFactory.moreHyperbolic( queryEngine );
 			CommonFunctionFactory.stddevPopSamp( queryEngine );
 			CommonFunctionFactory.varPopSamp( queryEngine );
@@ -301,7 +301,7 @@ public class FirebirdDialect extends Dialect {
 				doubleType
 		);
 
-		if ( getVersion().isSince( 4, 0 ) ) {
+		if ( getVersion().isSameOrAfter( 4, 0 ) ) {
 			Arrays.asList( "md5", "sha1", "sha256", "sha512" )
 					.forEach( hash -> functionRegistry.registerPattern(
 							hash,
@@ -464,7 +464,7 @@ public class FirebirdDialect extends Dialect {
 
 	@Override
 	public boolean supportsTemporalLiteralOffset() {
-		return getVersion().isSince( 4, 0 );
+		return getVersion().isSameOrAfter( 4, 0 );
 	}
 
 	@Override
@@ -501,7 +501,7 @@ public class FirebirdDialect extends Dialect {
 		// Additional reserved words
 		// The Hibernate list of SQL:2003 reserved words doesn't contain all SQL:2003 reserved words,
 		// and Firebird is finicky when it comes to reserved words
-		if ( version.isSince( 3, 0 ) ) {
+		if ( version.isSameOrAfter( 3, 0 ) ) {
 			builder.applyReservedWords(
 					"AVG", "BOOLEAN", "CHARACTER_LENGTH", "CHAR_LENGTH", "CORR", "COUNT",
 					"COVAR_POP", "COVAR_SAMP", "EXTRACT", "LOWER", "MAX", "MIN", "OCTET_LENGTH", "POSITION",
@@ -541,7 +541,7 @@ public class FirebirdDialect extends Dialect {
 
 	@Override
 	public boolean supportsCommentOn() {
-		return getVersion().isSince( 2, 0 );
+		return getVersion().isSameOrAfter( 2, 0 );
 	}
 
 	@Override
@@ -569,18 +569,18 @@ public class FirebirdDialect extends Dialect {
 
 	@Override
 	public boolean supportsExistsInSelect() {
-		return getVersion().isSince( 3, 0 );
+		return getVersion().isSameOrAfter( 3, 0 );
 	}
 
 	@Override
 	public boolean supportsPartitionBy() {
-		return getVersion().isSince( 3, 0 );
+		return getVersion().isSameOrAfter( 3, 0 );
 	}
 
 	@Override
 	public void appendBooleanValueString(SqlAppender appender, boolean bool) {
 		//'boolean' type introduced in 3.0
-		if ( getVersion().isSince( 3, 0 ) ) {
+		if ( getVersion().isSameOrAfter( 3, 0 ) ) {
 			appender.appendSql( bool ? '1' : '0' );
 		}
 		else {
@@ -675,12 +675,12 @@ public class FirebirdDialect extends Dialect {
 
 	@Override
 	public NullOrdering getNullOrdering() {
-		return getVersion().isSince( 2, 0 ) ? NullOrdering.SMALLEST : NullOrdering.LAST;
+		return getVersion().isSameOrAfter( 2, 0 ) ? NullOrdering.SMALLEST : NullOrdering.LAST;
 	}
 
 	@Override
 	public boolean supportsNullPrecedence() {
-		return getVersion().isSince( 1, 5 );
+		return getVersion().isSameOrAfter( 1, 5 );
 	}
 
 	@Override
@@ -695,7 +695,7 @@ public class FirebirdDialect extends Dialect {
 
 	@Override
 	public boolean supportsWindowFunctions() {
-		return getVersion().isSince( 3, 0 );
+		return getVersion().isSameOrAfter( 3, 0 );
 	}
 
 	@Override

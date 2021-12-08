@@ -110,7 +110,7 @@ public class H2Dialect extends Dialect {
 		super();
 		this.version = version;
 		// https://github.com/h2database/h2database/commit/b2cdf84e0b84eb8a482fa7dccdccc1ab95241440
-		limitHandler = version.isSince( 1, 4, 195 )
+		limitHandler = version.isSameOrAfter( 1, 4, 195 )
 				? OffsetFetchLimitHandler.INSTANCE
 				: LimitOffsetLimitHandler.INSTANCE;
 
@@ -118,27 +118,27 @@ public class H2Dialect extends Dialect {
 			LOG.unsupportedMultiTableBulkHqlJpaql( version.getMajor(), version.getMinor(), version.getMicro() );
 		}
 
-		supportsTuplesInSubqueries = version.isSince( 1, 4, 198 );
+		supportsTuplesInSubqueries = version.isSameOrAfter( 1, 4, 198 );
 		// Prior to 1.4.200 the 'cascade' in 'drop table' was implicit
-		cascadeConstraints = version.isSince( 1, 4, 200 );
+		cascadeConstraints = version.isSameOrAfter( 1, 4, 200 );
 		// 1.4.200 introduced changes in current_time and current_timestamp
-		useLocalTime = version.isSince( 1, 4, 200 );
+		useLocalTime = version.isSameOrAfter( 1, 4, 200 );
 
 		getDefaultProperties().setProperty( AvailableSettings.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 		// http://code.google.com/p/h2database/issues/detail?id=235
 		getDefaultProperties().setProperty( AvailableSettings.NON_CONTEXTUAL_LOB_CREATION, "true" );
 
 		registerColumnType( SqlTypes.ARRAY, "array" );
-		if ( version.isSince( 1, 4, 32 ) ) {
-			this.sequenceInformationExtractor = version.isSince( 1, 4, 201 )
+		if ( version.isSameOrAfter( 1, 4, 32 ) ) {
+			this.sequenceInformationExtractor = version.isSameOrAfter( 1, 4, 201 )
 					? SequenceInformationExtractorLegacyImpl.INSTANCE
 					: SequenceInformationExtractorH2DatabaseImpl.INSTANCE;
 			this.querySequenceString = "select * from INFORMATION_SCHEMA.SEQUENCES";
 			registerColumnType( Types.DECIMAL,  "numeric($p,$s)" );
-			if ( version.isSince( 1, 4, 197 ) ) {
+			if ( version.isSameOrAfter( 1, 4, 197 ) ) {
 				registerColumnType( SqlTypes.UUID, "uuid" );
 				registerColumnType( SqlTypes.GEOMETRY, "geometry" );
-				if ( version.isSince( 1, 4, 198 ) ) {
+				if ( version.isSameOrAfter( 1, 4, 198 ) ) {
 					registerColumnType( SqlTypes.INTERVAL_SECOND, "interval second($p,$s)" );
 				}
 			}
@@ -161,9 +161,9 @@ public class H2Dialect extends Dialect {
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeDescriptorRegistry();
 
-		if ( version.isSince( 1, 4, 197 ) ) {
+		if ( version.isSameOrAfter( 1, 4, 197 ) ) {
 			jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
-			if ( version.isSince( 1, 4, 198 ) ) {
+			if ( version.isSameOrAfter( 1, 4, 198 ) ) {
 				jdbcTypeRegistry.addDescriptorIfAbsent( DurationIntervalSecondJdbcType.INSTANCE );
 			}
 		}
@@ -499,7 +499,7 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	public boolean supportsFetchClause(FetchClauseType type) {
-		return getVersion().isSince( 1, 4, 198 );
+		return getVersion().isSameOrAfter( 1, 4, 198 );
 	}
 
 	@Override

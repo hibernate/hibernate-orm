@@ -572,7 +572,7 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public TimeZoneSupport getTimeZoneSupport() {
-		return getVersion().isSince( 9 ) ? TimeZoneSupport.NATIVE : TimeZoneSupport.NONE;
+		return getVersion().isSameOrAfter( 9 ) ? TimeZoneSupport.NATIVE : TimeZoneSupport.NONE;
 	}
 
 	protected void registerBinaryTypeMappings() {
@@ -584,7 +584,7 @@ public class OracleDialect extends Dialect {
 	}
 
 	protected void registerExtendedTypeMappings() {
-		if ( getVersion().isSince( 10 ) ) {
+		if ( getVersion().isSameOrAfter( 10 ) ) {
 			registerColumnType( SqlTypes.GEOMETRY, "MDSYS.SDO_GEOMETRY" );
 		}
 	}
@@ -666,7 +666,7 @@ public class OracleDialect extends Dialect {
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
 
-		if ( getVersion().isSince( 12 ) ) {
+		if ( getVersion().isSameOrAfter( 12 ) ) {
 			// account for Oracle's deprecated support for LONGVARBINARY
 			// prefer BLOB, unless the user explicitly opts out
 			boolean preferLong = serviceRegistry.getService( ConfigurationService.class ).getSetting(
@@ -726,7 +726,7 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public String getSelectClauseNullString(int sqlType) {
-		if ( getVersion().isSince( 9 ) ) {
+		if ( getVersion().isSameOrAfter( 9 ) ) {
 			return super.getSelectClauseNullString(sqlType);
 		}
 		else {
@@ -1047,7 +1047,7 @@ public class OracleDialect extends Dialect {
 	public boolean supportsFetchClause(FetchClauseType type) {
 		// Until 12.2 there was a bug in the Oracle query rewriter causing ORA-00918
 		// when the query contains duplicate implicit aliases in the select clause
-		return getVersion().isSince( 12, 2 );
+		return getVersion().isSameOrAfter( 12, 2 );
 	}
 
 	@Override
@@ -1057,12 +1057,12 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public boolean supportsNoWait() {
-		return getVersion().isSince( 9 );
+		return getVersion().isSameOrAfter( 9 );
 	}
 
 	@Override
 	public boolean supportsSkipLocked() {
-		return getVersion().isSince( 10 );
+		return getVersion().isSameOrAfter( 10 );
 	}
 
 	@Override

@@ -258,7 +258,7 @@ public class TeradataDialect extends Dialect {
 				.setExactArgumentCount( 2 )
 				.register();
 
-		if ( getVersion().isSince( 14 ) ) {
+		if ( getVersion().isSameOrAfter( 14 ) ) {
 
 			//list actually taken from Teradata 15 docs
 			CommonFunctionFactory.lastDay( queryEngine );
@@ -515,7 +515,7 @@ public class TeradataDialect extends Dialect {
 
 	@Override
 	public boolean useFollowOnLocking(String sql, QueryOptions queryOptions) {
-		return getVersion().isSince( 14 );
+		return getVersion().isSameOrAfter( 14 );
 	}
 
 	@Override

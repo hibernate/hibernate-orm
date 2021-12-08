@@ -200,7 +200,7 @@ public class DialectFilterExtension implements ExecutionCondition {
 		}
 
 		if ( matchNewerVersions ) {
-			return dialect.getVersion().isSince( matchingMajorVersion, matchingMinorVersion, matchingMicroVersion );
+			return dialect.getVersion().isSameOrAfter( matchingMajorVersion, matchingMinorVersion, matchingMicroVersion );
 		}
 		else {
 			return dialect.getVersion().isSame( matchingMajorVersion );

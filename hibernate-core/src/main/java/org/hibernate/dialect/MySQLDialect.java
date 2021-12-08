@@ -408,7 +408,7 @@ public class MySQLDialect extends Dialect {
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeDescriptorRegistry();
 
-		if ( getMySQLVersion().isSince( 5, 7 ) ) {
+		if ( getMySQLVersion().isSameOrAfter( 5, 7 ) ) {
 			jdbcTypeRegistry.addDescriptorIfAbsent( SqlTypes.JSON, JsonJdbcType.INSTANCE );
 		}
 
@@ -549,7 +549,7 @@ public class MySQLDialect extends Dialect {
 
 	@Override
 	public boolean supportsUnionAll() {
-		return getMySQLVersion().isSince( 5 );
+		return getMySQLVersion().isSameOrAfter( 5 );
 	}
 
 	@Override
@@ -1129,17 +1129,17 @@ public class MySQLDialect extends Dialect {
 
 	@Override
 	public boolean supportsWindowFunctions() {
-		return getMySQLVersion().isSince( 8, 2 );
+		return getMySQLVersion().isSameOrAfter( 8, 2 );
 	}
 
 	@Override
 	public boolean supportsSkipLocked() {
-		return getMySQLVersion().isSince( 8 );
+		return getMySQLVersion().isSameOrAfter( 8 );
 	}
 
 	@Override
 	public boolean supportsNoWait() {
-		return getMySQLVersion().isSince( 8 );
+		return getMySQLVersion().isSameOrAfter( 8 );
 	}
 
 	@Override
@@ -1154,11 +1154,11 @@ public class MySQLDialect extends Dialect {
 	}
 
 	boolean supportsForShare() {
-		return getMySQLVersion().isSince( 8 );
+		return getMySQLVersion().isSameOrAfter( 8 );
 	}
 
 	boolean supportsAliasLocks() {
-		return getMySQLVersion().isSince( 8 );
+		return getMySQLVersion().isSameOrAfter( 8 );
 	}
 
 }

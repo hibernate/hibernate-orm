@@ -137,7 +137,7 @@ public class DerbyDialect extends Dialect {
 
 		limitHandler = getVersion().isBefore( 10, 5 )
 				? AbstractLimitHandler.NO_LIMIT
-				: new DerbyLimitHandler( getVersion().isSince( 10, 6 ) );
+				: new DerbyLimitHandler( getVersion().isSameOrAfter( 10, 6 ) );
 
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, NO_BATCH );
 	}
@@ -854,6 +854,6 @@ public class DerbyDialect extends Dialect {
 	@Override
 	public boolean supportsWindowFunctions() {
 		// It seems at least the row_number function is supported as of 10.4
-		return getVersion().isSince( 10, 4 );
+		return getVersion().isSameOrAfter( 10, 4 );
 	}
 }

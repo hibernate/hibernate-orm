@@ -359,7 +359,7 @@ public class SQLiteDialect extends Dialect {
 
 	@Override
 	public boolean supportsNullPrecedence() {
-		return getVersion().isSince( 3, 3 );
+		return getVersion().isSameOrAfter( 3, 3 );
 	}
 
 	@Override

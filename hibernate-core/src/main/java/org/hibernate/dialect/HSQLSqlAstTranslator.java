@@ -215,6 +215,6 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 	}
 
 	private boolean supportsOffsetFetchClause() {
-		return getDialect().getVersion().isSince( 2, 5 );
+		return getDialect().getVersion().isSameOrAfter( 2, 5 );
 	}
 }

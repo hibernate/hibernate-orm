@@ -208,7 +208,7 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
 		// I think intersect is only supported in 16.0 SP3
 		if ( getDialect().isAnsiNullOn() ) {
-			if ( getDialect().getVersion().isSince( 16, 3 ) ) {
+			if ( getDialect().getVersion().isSameOrAfter( 16, 3 ) ) {
 				renderComparisonEmulateIntersect( lhs, operator, rhs );
 			}
 			else {
@@ -257,7 +257,7 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 				}
 			}
 			else {
-				if ( getDialect().getVersion().isSince( 16, 3 ) ) {
+				if ( getDialect().getVersion().isSameOrAfter( 16, 3 ) ) {
 					renderComparisonEmulateIntersect( lhs, operator, rhs );
 				}
 				else {
@@ -362,7 +362,7 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 	}
 
 	private boolean supportsTopClause() {
-		return getDialect().getVersion().isSince( 12, 5 );
+		return getDialect().getVersion().isSameOrAfter( 12, 5 );
 	}
 
 	private boolean supportsParameterOffsetFetchExpression() {

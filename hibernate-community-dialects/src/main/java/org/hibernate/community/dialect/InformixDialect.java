@@ -117,7 +117,7 @@ public class InformixDialect extends Dialect {
 				//according to the Informix documentation for
 				//version 11 and above, parameters are supported
 				//but I have not tested this at all!
-				: new SkipFirstLimitHandler( getVersion().isSince( 11 ) );
+				: new SkipFirstLimitHandler( getVersion().isSameOrAfter( 11 ) );
 	}
 
 	@Override

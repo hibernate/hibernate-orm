@@ -43,7 +43,7 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 
 	@Override
 	protected String getForShare(int timeoutMillis) {
-		return getDialect().getVersion().isSince( 8 ) ? " for share" : " lock in share mode";
+		return getDialect().getVersion().isSameOrAfter( 8 ) ? " for share" : " lock in share mode";
 	}
 
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
@@ -117,7 +117,7 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 
 	@Override
 	public boolean supportsRowValueConstructorSyntaxInInList() {
-		return getDialect().getVersion().isSince( 5, 7 );
+		return getDialect().getVersion().isSameOrAfter( 5, 7 );
 	}
 
 	@Override

@@ -70,6 +70,33 @@ public interface DatabaseVersion {
 	}
 
 	/**
+	 * Simpler naming
+	 *
+	 * @see #getDatabaseMajorVersion()
+	 */
+	default int getMajor() {
+		return getDatabaseMajorVersion();
+	}
+
+	/**
+	 * Simpler naming
+	 *
+	 * @see #getDatabaseMinorVersion()
+	 */
+	default int getMinor() {
+		return getDatabaseMinorVersion();
+	}
+
+	/**
+	 * Simpler naming
+	 *
+	 * @see #getDatabaseMicroVersion()
+	 */
+	default int getMicro() {
+		return getDatabaseMicroVersion();
+	}
+
+	/**
 	 * Make a simple copy of this version object
 	 */
 	default DatabaseVersion makeCopy() {
@@ -115,15 +142,15 @@ public interface DatabaseVersion {
 	/**
 	 * {@link #isSame} or {@link #isAfter}
 	 */
-	default boolean isSince(DatabaseVersion other) {
-		return isSince( other.getDatabaseMajorVersion(), other.getDatabaseMinorVersion() );
+	default boolean isSameOrAfter(DatabaseVersion other) {
+		return isSameOrAfter( other.getDatabaseMajorVersion(), other.getDatabaseMinorVersion() );
 	}
 
 	/**
 	 * {@link #isSame} or {@link #isAfter}
 	 */
-	default boolean isSince(Integer otherMajor, Integer otherMinor) {
-		return isSince(
+	default boolean isSameOrAfter(Integer otherMajor, Integer otherMinor) {
+		return isSameOrAfter(
 				(int) otherMajor,
 				otherMinor == null ? NO_VERSION : otherMinor
 		);
@@ -132,7 +159,7 @@ public interface DatabaseVersion {
 	/**
 	 * {@link #isSame} or {@link #isAfter}
 	 */
-	default boolean isSince(int otherMajor) {
+	default boolean isSameOrAfter(int otherMajor) {
 		final int major = getDatabaseMajorVersion();
 
 		return major >= otherMajor;
@@ -141,7 +168,7 @@ public interface DatabaseVersion {
 	/**
 	 * {@link #isSame} or {@link #isAfter}
 	 */
-	default boolean isSince(int otherMajor, int otherMinor) {
+	default boolean isSameOrAfter(int otherMajor, int otherMinor) {
 		final int major = getDatabaseMajorVersion();
 		final int minor = getDatabaseMinorVersion();
 
@@ -152,7 +179,7 @@ public interface DatabaseVersion {
 	/**
 	 * {@link #isSame} or {@link #isAfter}
 	 */
-	default boolean isSince(int otherMajor, int otherMinor, int otherMicro) {
+	default boolean isSameOrAfter(int otherMajor, int otherMinor, int otherMicro) {
 		final int major = getDatabaseMajorVersion();
 		final int minor = getDatabaseMinorVersion();
 		final int micro = getDatabaseMicroVersion();
@@ -215,14 +242,14 @@ public interface DatabaseVersion {
 	 * Determine whether this version before the passed one
 	 */
 	default boolean isBefore(int major, int minor) {
-		return ! isSince( major, minor );
+		return ! isSameOrAfter( major, minor );
 	}
 
 	/**
 	 * Determine whether this version before the passed one
 	 */
 	default boolean isBefore(int major) {
-		return ! isSince( major );
+		return ! isSameOrAfter( major );
 	}
 
 	/**
@@ -236,18 +263,6 @@ public interface DatabaseVersion {
 	 * Determine whether this version before the passed one
 	 */
 	default boolean isBefore(int otherMajor, int otherMinor, int otherMicro) {
-		return ! isSince( otherMajor, otherMinor, otherMicro );
-	}
-
-	default int getMajor() {
-		return getDatabaseMajorVersion();
-	}
-
-	default int getMinor() {
-		return getDatabaseMinorVersion();
-	}
-
-	default int getMicro() {
-		return getDatabaseMicroVersion();
+		return ! isSameOrAfter( otherMajor, otherMinor, otherMicro );
 	}
 }

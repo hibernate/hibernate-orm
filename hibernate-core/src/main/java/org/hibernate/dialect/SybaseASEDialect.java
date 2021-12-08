@@ -76,15 +76,15 @@ public class SybaseASEDialect extends SybaseDialect {
 		registerColumnType( Types.BOOLEAN, "tinyint" );
 
 
-		if ( getVersion().isSince( 12 ) ) {
+		if ( getVersion().isSameOrAfter( 12 ) ) {
 			//date / date were introduced in version 12
 			registerColumnType( Types.DATE, "date" );
 			registerColumnType( Types.TIME, "time" );
-			if ( getVersion().isSince( 15 ) ) {
+			if ( getVersion().isSameOrAfter( 15 ) ) {
 				//bigint was added in version 15
 				registerColumnType( Types.BIGINT, "bigint" );
 
-				if ( getVersion().isSince( 15, 5 ) && !jtdsDriver ) {
+				if ( getVersion().isSameOrAfter( 15, 5 ) && !jtdsDriver ) {
 					//According to Wikipedia bigdatetime and bigtime were added in 15.5
 					//But with jTDS we can't use them as the driver can't handle the types
 					registerColumnType( Types.DATE, "bigdatetime" );
@@ -535,7 +535,7 @@ public class SybaseASEDialect extends SybaseDialect {
 	@Override
 	public boolean supportsExpectedLobUsagePattern() {
 		// Earlier Sybase did not support LOB locators at all
-		return getVersion().isSince( 15, 7 );
+		return getVersion().isSameOrAfter( 15, 7 );
 	}
 
 	@Override
@@ -545,7 +545,7 @@ public class SybaseASEDialect extends SybaseDialect {
 
 	@Override
 	public RowLockStrategy getWriteRowLockStrategy() {
-		return getVersion().isSince( 15, 7 ) ? RowLockStrategy.COLUMN : RowLockStrategy.TABLE;
+		return getVersion().isSameOrAfter( 15, 7 ) ? RowLockStrategy.COLUMN : RowLockStrategy.TABLE;
 	}
 
 	@Override

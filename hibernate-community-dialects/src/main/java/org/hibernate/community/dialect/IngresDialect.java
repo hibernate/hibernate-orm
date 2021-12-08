@@ -140,7 +140,7 @@ public class IngresDialect extends Dialect {
 		//note: 'long nvarchar' is a synonym for 'nclob'
 		registerColumnType( Types.NVARCHAR, "long nvarchar($l)" );
 
-		if ( getVersion().isSince( 9, 3 ) ) {
+		if ( getVersion().isSameOrAfter( 9, 3 ) ) {
 			// Not completely necessary, given that Ingres
 			// can be configured to set DATE = ANSIDATE
 			registerColumnType( Types.DATE, "ansidate" );
@@ -170,7 +170,7 @@ public class IngresDialect extends Dialect {
 		sequenceSupport = new ANSISequenceSupport() {
 			@Override
 			public boolean supportsPooledSequences() {
-				return getVersion().isSince( 9, 3 );
+				return getVersion().isSameOrAfter( 9, 3 );
 			}
 		};
 	}
@@ -375,10 +375,10 @@ public class IngresDialect extends Dialect {
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
-		if ( getVersion().isSince( 10 ) ) {
+		if ( getVersion().isSameOrAfter( 10 ) ) {
 			return new Ingres10IdentityColumnSupport();
 		}
-		else if ( getVersion().isSince( 9, 3 ) ) {
+		else if ( getVersion().isSameOrAfter( 9, 3 ) ) {
 			return new Ingres9IdentityColumnSupport();
 		}
 		else {
@@ -408,7 +408,7 @@ public class IngresDialect extends Dialect {
 
 	@Override
 	public boolean supportsCurrentTimestampSelection() {
-		return getVersion().isSince( 9, 3 );
+		return getVersion().isSameOrAfter( 9, 3 );
 	}
 
 	@Override
@@ -460,7 +460,7 @@ public class IngresDialect extends Dialect {
 
 	@Override
 	public boolean supportsUnionAll() {
-		return getVersion().isSince( 9, 3 );
+		return getVersion().isSameOrAfter( 9, 3 );
 	}
 
 	@Override
@@ -472,7 +472,7 @@ public class IngresDialect extends Dialect {
 	@Override
 	public boolean supportsSubqueryInSelect() {
 		// At least according to HHH-4961
-		return getVersion().isSince( 10 );
+		return getVersion().isSameOrAfter( 10 );
 	}
 
 	@Override
@@ -485,12 +485,12 @@ public class IngresDialect extends Dialect {
 
 	@Override
 	public boolean doesReadCommittedCauseWritersToBlockReaders() {
-		return getVersion().isSince( 9, 3 );
+		return getVersion().isSameOrAfter( 9, 3 );
 	}
 
 	@Override
 	public boolean doesRepeatableReadCauseReadersToBlockWriters() {
-		return getVersion().isSince( 9, 3 );
+		return getVersion().isSameOrAfter( 9, 3 );
 	}
 
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -528,6 +528,6 @@ public class IngresDialect extends Dialect {
 
 	@Override
 	public boolean supportsFetchClause(FetchClauseType type) {
-		return getVersion().isSince( 9, 3 );
+		return getVersion().isSameOrAfter( 9, 3 );
 	}
 }

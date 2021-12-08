@@ -78,7 +78,7 @@ public class MariaDBDialect extends MySQLDialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry(queryEngine);
 
-		if ( getVersion().isSince( 10, 2 ) ) {
+		if ( getVersion().isSameOrAfter( 10, 2 ) ) {
 			queryEngine.getSqmFunctionRegistry().registerNamed(
 					"json_valid",
 					queryEngine.getTypeConfiguration()
@@ -101,12 +101,12 @@ public class MariaDBDialect extends MySQLDialect {
 
 	@Override
 	public boolean supportsWindowFunctions() {
-		return getVersion().isSince( 10, 2 );
+		return getVersion().isSameOrAfter( 10, 2 );
 	}
 
 	@Override
 	public boolean supportsColumnCheck() {
-		return getVersion().isSince( 10, 2 );
+		return getVersion().isSameOrAfter( 10, 2 );
 	}
 
 	@Override
@@ -116,12 +116,12 @@ public class MariaDBDialect extends MySQLDialect {
 
 	@Override
 	public boolean supportsIfExistsBeforeConstraintName() {
-		return getVersion().isSince( 10 );
+		return getVersion().isSameOrAfter( 10 );
 	}
 
 	@Override
 	public boolean supportsIfExistsAfterAlterTable() {
-		return getVersion().isSince( 10, 5 );
+		return getVersion().isSameOrAfter( 10, 5 );
 	}
 
 	@Override
@@ -148,17 +148,17 @@ public class MariaDBDialect extends MySQLDialect {
 	@Override
 	public boolean supportsSkipLocked() {
 		//only supported on MySQL and as of 10.6
-		return getVersion().isSince( 10, 6 );
+		return getVersion().isSameOrAfter( 10, 6 );
 	}
 
 	@Override
 	public boolean supportsNoWait() {
-		return getVersion().isSince( 10, 3 );
+		return getVersion().isSameOrAfter( 10, 3 );
 	}
 
 	@Override
 	public boolean supportsWait() {
-		return getVersion().isSince( 10, 3 );
+		return getVersion().isSameOrAfter( 10, 3 );
 	}
 
 	@Override

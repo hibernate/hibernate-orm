@@ -51,7 +51,7 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 
 	@Override
 	public void visitBooleanExpressionPredicate(BooleanExpressionPredicate booleanExpressionPredicate) {
-		if ( getDialect().getVersion().isSince( 11 ) ) {
+		if ( getDialect().getVersion().isSameOrAfter( 11 ) ) {
 			booleanExpressionPredicate.getExpression().accept( this );
 		}
 		else {
@@ -137,7 +137,7 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 	}
 
 	protected boolean supportsOffsetClause() {
-		return getDialect().getVersion().isSince( 11, 1 );
+		return getDialect().getVersion().isSameOrAfter( 11, 1 );
 	}
 
 	@Override
@@ -228,7 +228,7 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 
 	@Override
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
-		if ( getDialect().getVersion().isSince( 11, 1 ) ) {
+		if ( getDialect().getVersion().isSameOrAfter( 11, 1 ) ) {
 			renderComparisonStandard( lhs, operator, rhs );
 		}
 		else {

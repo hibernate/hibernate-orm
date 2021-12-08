@@ -101,7 +101,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		//but 'float' is double precision by default
 		registerColumnType( Types.DOUBLE, "float" );
 
-		if ( getVersion().isSince( 10 ) ) {
+		if ( getVersion().isSameOrAfter( 10 ) ) {
 			registerColumnType( Types.DATE, "date" );
 			registerColumnType( Types.TIME, "time" );
 			registerColumnType( Types.TIMESTAMP, "datetime2($p)" );
@@ -109,7 +109,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 			registerColumnType( SqlTypes.GEOMETRY, "geometry" );
 		}
 
-		if ( getVersion().isSince( 11 ) ) {
+		if ( getVersion().isSameOrAfter( 11 ) ) {
 			exporter = new SqlServerSequenceExporter( this );
 		}
 
@@ -153,7 +153,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public TimeZoneSupport getTimeZoneSupport() {
-		return getVersion().isSince( 10 ) ? TimeZoneSupport.NATIVE : TimeZoneSupport.NONE;
+		return getVersion().isSameOrAfter( 10 ) ? TimeZoneSupport.NATIVE : TimeZoneSupport.NONE;
 	}
 
 	@Override
@@ -198,13 +198,13 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		CommonFunctionFactory.everyAny_sumIif( queryEngine );
 		CommonFunctionFactory.bitLength_pattern( queryEngine, "datalength(?1) * 8" );
 
-		if ( getVersion().isSince( 10 ) ) {
+		if ( getVersion().isSameOrAfter( 10 ) ) {
 			CommonFunctionFactory.locate_charindex( queryEngine );
 			CommonFunctionFactory.stddevPopSamp_stdevp( queryEngine );
 			CommonFunctionFactory.varPopSamp_varp( queryEngine );
 		}
 
-		if ( getVersion().isSince( 11 ) ) {
+		if ( getVersion().isSameOrAfter( 11 ) ) {
 			queryEngine.getSqmFunctionRegistry().register( "format", new SQLServerFormatEmulation( this, queryEngine.getTypeConfiguration() ) );
 
 			//actually translate() was added in 2017 but
@@ -308,10 +308,10 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		if ( getVersion().isSince( 11 ) ) {
+		if ( getVersion().isSameOrAfter( 11 ) ) {
 			return SQLServer2012LimitHandler.INSTANCE;
 		}
-		else if ( getVersion().isSince( 9 ) ) {
+		else if ( getVersion().isSameOrAfter( 9 ) ) {
 			//this is a stateful class, don't cache
 			//it in the Dialect!
 			return new SQLServer2005LimitHandler();
@@ -323,7 +323,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public boolean supportsValuesList() {
-		return getVersion().isSince( 10 );
+		return getVersion().isSameOrAfter( 10 );
 	}
 
 	@Override
@@ -338,7 +338,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public boolean supportsIfExistsBeforeTableName() {
-		if ( getVersion().isSince( 16 ) ) {
+		if ( getVersion().isSameOrAfter( 16 ) ) {
 			return true;
 		}
 		return super.supportsIfExistsBeforeTableName();
@@ -346,7 +346,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public boolean supportsIfExistsBeforeConstraintName() {
-		if ( getVersion().isSince( 16 ) ) {
+		if ( getVersion().isSameOrAfter( 16 ) ) {
 			return true;
 		}
 		return super.supportsIfExistsBeforeConstraintName();
@@ -359,7 +359,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public String appendLockHint(LockOptions lockOptions, String tableName) {
-		if ( getVersion().isSince( 9 ) ) {
+		if ( getVersion().isSameOrAfter( 9 ) ) {
 			LockMode lockMode = lockOptions.getAliasSpecificLockMode( tableName );
 			if (lockMode == null) {
 				lockMode = lockOptions.getLockMode();
@@ -462,17 +462,17 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public boolean supportsNonQueryWithCTE() {
-		return getVersion().isSince( 9 );
+		return getVersion().isSameOrAfter( 9 );
 	}
 
 	@Override
 	public boolean supportsSkipLocked() {
-		return getVersion().isSince( 9 );
+		return getVersion().isSameOrAfter( 9 );
 	}
 
 	@Override
 	public boolean supportsNoWait() {
-		return getVersion().isSince( 9 );
+		return getVersion().isSameOrAfter( 9 );
 	}
 
 	@Override
@@ -485,7 +485,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		if ( getVersion().isBefore( 11 ) ) {
 			return NoSequenceSupport.INSTANCE;
 		}
-		else if ( getVersion().isSince( 16 ) ) {
+		else if ( getVersion().isSameOrAfter( 16 ) ) {
 			return SQLServer16SequenceSupport.INSTANCE;
 		}
 		else {
@@ -544,7 +544,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public boolean supportsFetchClause(FetchClauseType type) {
-		return getVersion().isSince( 11 );
+		return getVersion().isSameOrAfter( 11 );
 	}
 
 	@Override
@@ -826,7 +826,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public String[] getDropSchemaCommand(String schemaName) {
-		if ( getVersion().isSince( 16 ) ) {
+		if ( getVersion().isSameOrAfter( 16 ) ) {
 			return new String[] { "drop schema if exists " + schemaName };
 		}
 		return super.getDropSchemaCommand( schemaName );

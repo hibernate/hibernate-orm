@@ -376,7 +376,7 @@ public class DB2Dialect extends Dialect {
 	@Override
 	public boolean supportsSkipLocked() {
 		// Introduced in 11.5: https://www.ibm.com/docs/en/db2/11.5?topic=statement-concurrent-access-resolution-clause
-		return getVersion().isSince( 11, 5 );
+		return getVersion().isSameOrAfter( 11, 5 );
 	}
 
 	@Override

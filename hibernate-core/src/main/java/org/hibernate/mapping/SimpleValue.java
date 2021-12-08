@@ -16,7 +16,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
-import jakarta.persistence.AttributeConverter;
 
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
@@ -25,6 +24,7 @@ import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
+import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
@@ -33,13 +33,13 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
+import org.hibernate.id.factory.spi.CustomIdGeneratorCreationContext;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
@@ -58,6 +58,8 @@ import org.hibernate.type.descriptor.jdbc.LobTypeMappings;
 import org.hibernate.type.descriptor.jdbc.NationalizedTypeMappings;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.DynamicParameterizedType;
+
+import jakarta.persistence.AttributeConverter;
 
 /**
  * Any value that maps to columns.
@@ -84,6 +86,7 @@ public abstract class SimpleValue implements KeyValue {
 	private Properties identifierGeneratorProperties;
 	private String identifierGeneratorStrategy = DEFAULT_ID_GEN_STRATEGY;
 	private String nullValue;
+
 	private Table table;
 	private String foreignKeyName;
 	private String foreignKeyDefinition;
@@ -288,6 +291,7 @@ public abstract class SimpleValue implements KeyValue {
 		}
 	}
 
+	private IdentifierGeneratorCreator customIdGeneratorCreator;
 	private IdentifierGenerator identifierGenerator;
 
 	/**
@@ -299,6 +303,14 @@ public abstract class SimpleValue implements KeyValue {
 	 */
 	public IdentifierGenerator getIdentifierGenerator() {
 		return identifierGenerator;
+	}
+
+	public void setCustomIdGeneratorCreator(IdentifierGeneratorCreator customIdGeneratorCreator) {
+		this.customIdGeneratorCreator = customIdGeneratorCreator;
+	}
+
+	public IdentifierGeneratorCreator getCustomIdGeneratorCreator() {
+		return customIdGeneratorCreator;
 	}
 
 	@Override
@@ -316,8 +328,44 @@ public abstract class SimpleValue implements KeyValue {
 			String defaultCatalog, 
 			String defaultSchema, 
 			RootClass rootClass) throws MappingException {
-
 		if ( identifierGenerator != null ) {
+			return identifierGenerator;
+		}
+
+		if ( customIdGeneratorCreator != null ) {
+			final CustomIdGeneratorCreationContext creationContext = new CustomIdGeneratorCreationContext() {
+				@Override
+				public IdentifierGeneratorFactory getIdentifierGeneratorFactory() {
+					return identifierGeneratorFactory;
+				}
+
+				@Override
+				public Database getDatabase() {
+					return buildingContext.getMetadataCollector().getDatabase();
+				}
+
+				@Override
+				public ServiceRegistry getServiceRegistry() {
+					return buildingContext.getBootstrapContext().getServiceRegistry();
+				}
+
+				@Override
+				public String getDefaultCatalog() {
+					return defaultCatalog;
+				}
+
+				@Override
+				public String getDefaultSchema() {
+					return defaultSchema;
+				}
+
+				@Override
+				public RootClass getRootClass() {
+					return rootClass;
+				}
+			};
+
+			identifierGenerator = customIdGeneratorCreator.createGenerator( creationContext );
 			return identifierGenerator;
 		}
 
@@ -407,14 +455,6 @@ public abstract class SimpleValue implements KeyValue {
 		return FetchMode.SELECT;
 	}
 
-	public Properties getIdentifierGeneratorProperties() {
-		return identifierGeneratorProperties;
-	}
-
-	public String getNullValue() {
-		return nullValue;
-	}
-
 	public Table getTable() {
 		return table;
 	}
@@ -426,9 +466,21 @@ public abstract class SimpleValue implements KeyValue {
 	public String getIdentifierGeneratorStrategy() {
 		return identifierGeneratorStrategy;
 	}
-	
+
+	/**
+	 * Sets the identifierGeneratorStrategy.
+	 * @param identifierGeneratorStrategy The identifierGeneratorStrategy to set
+	 */
+	public void setIdentifierGeneratorStrategy(String identifierGeneratorStrategy) {
+		this.identifierGeneratorStrategy = identifierGeneratorStrategy;
+	}
+
 	public boolean isIdentityColumn(IdentifierGeneratorFactory identifierGeneratorFactory, Dialect dialect) {
 		return IdentityGenerator.class.isAssignableFrom(identifierGeneratorFactory.getIdentifierGeneratorClass( identifierGeneratorStrategy ));
+	}
+
+	public Properties getIdentifierGeneratorProperties() {
+		return identifierGeneratorProperties;
 	}
 
 	/**
@@ -451,12 +503,8 @@ public abstract class SimpleValue implements KeyValue {
 		}
 	}
 
-	/**
-	 * Sets the identifierGeneratorStrategy.
-	 * @param identifierGeneratorStrategy The identifierGeneratorStrategy to set
-	 */
-	public void setIdentifierGeneratorStrategy(String identifierGeneratorStrategy) {
-		this.identifierGeneratorStrategy = identifierGeneratorStrategy;
+	public String getNullValue() {
+		return nullValue;
 	}
 
 	/**

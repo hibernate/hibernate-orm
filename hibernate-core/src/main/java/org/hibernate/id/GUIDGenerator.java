@@ -12,6 +12,7 @@ import java.sql.SQLException;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.id.factory.spi.StandardGenerator;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 
@@ -20,7 +21,7 @@ import org.hibernate.internal.CoreMessageLogger;
  *
  * @author Joseph Fifield
  */
-public class GUIDGenerator implements IdentifierGenerator {
+public class GUIDGenerator implements StandardGenerator {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( GUIDGenerator.class );
 
 	private static boolean WARNED;

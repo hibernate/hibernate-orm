@@ -15,6 +15,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.spi.CustomIdGeneratorCreationContext;
+import org.hibernate.id.factory.spi.StandardGenerator;
 import org.hibernate.type.descriptor.java.UUIDJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.UUIDJavaTypeDescriptor.ValueTransformer;
 
@@ -25,7 +26,7 @@ import static org.hibernate.annotations.UuidGenerator.Style.TIME;
  *
  * @see org.hibernate.annotations.UuidGenerator
  */
-public class UuidGenerator implements IdentifierGenerator {
+public class UuidGenerator implements StandardGenerator {
 	interface ValueGenerator {
 		UUID generateUuid(SharedSessionContractImplementor session);
 	}

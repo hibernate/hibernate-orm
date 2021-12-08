@@ -32,6 +32,7 @@ import org.hibernate.id.UUIDHexGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.enhanced.TableGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
+import org.hibernate.id.factory.spi.StandardGenerator;
 import org.hibernate.jpa.spi.IdentifierGeneratorStrategyProvider;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
 import org.hibernate.resource.beans.container.spi.ContainedBean;
@@ -148,7 +149,9 @@ public class StandardIdentifierGeneratorFactory
 			final Class<? extends IdentifierGenerator> clazz = getIdentifierGeneratorClass( strategy );
 			final IdentifierGenerator identifierGenerator;
 
-			if ( beanContainer == null || legacyGeneratorClassNameMap.containsKey( strategy ) ) {
+			if ( beanContainer == null
+					|| StandardGenerator.class.isAssignableFrom( clazz )
+					|| legacyGeneratorClassNameMap.containsKey( strategy ) ) {
 				identifierGenerator = clazz.newInstance();
 			}
 			else {

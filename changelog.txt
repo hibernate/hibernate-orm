@@ -3,6 +3,33 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.6.2.Final (December 08, 2021)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32001
+
+** Bug
+    * [HHH-14956] - Invalid link to MetadataBuilderContributor javadocs in Configurations docs
+    * [HHH-14937] - SybaseDialect does not support schema anymore
+    * [HHH-14936] - JdbcConnectionContext in hibernate-testing throws NPE when user/password are not provided in configuration
+    * [HHH-14935] - Type annotation is deprecated without an available replacement
+    * [HHH-14927] - "Current" documentation is 5.5 instead of 5.6
+    * [HHH-14926] - fix asciidoc error in 'test-case-guide.adoc'
+    * [HHH-14922] - Inconsistent precedence of orm.xml implicit catalog/schema over "default_catalog"/"default_schema"
+    * [HHH-14918] - Key-to-one to id-class entity with key-to-one doesn't work anymore
+    * [HHH-14916] - JPA Critera query Join on Fetch not working
+    * [HHH-14540] - Interceptor instance is shared between ORM session and Enver's temporary session resulting in multiple calls.
+    * [HHH-14211] - @Lob String mapping broken
+
+** Improvement
+    * [HHH-14921] - Definition of the default catalog/schema on session factory creation
+    * [HHH-14903] - Method getConfiguredJdbcBatchSize can be optimised for StatelessSession as well
+    * [HHH-14897] - Allow ordering with nulls first/last from JPA implementation
+
+** Task
+    * [HHH-14938] - Upgrade to MySQL Connector/J 8.0.27
+
+
 Changes in 5.6.1.Final (October 27, 2021)
 ------------------------------------------------------------------------------------------------------------------------
 

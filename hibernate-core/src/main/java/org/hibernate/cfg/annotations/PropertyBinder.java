@@ -51,6 +51,8 @@ import org.hibernate.tuple.ValueGenerator;
 
 import org.jboss.logging.Logger;
 
+import static org.hibernate.cfg.annotations.HCANNHelper.findContainingAnnotation;
+
 /**
  * @author Emmanuel Bernard
  */
@@ -201,16 +203,15 @@ public class PropertyBinder {
 
 	@SuppressWarnings({"rawtypes", "unchecked"})
 	private void callAttributeBinders(Property prop) {
-		for ( Annotation annotation: property.getAnnotations() ) {
-			if ( annotation.annotationType().isAnnotationPresent(AttributeBinderType.class) ) {
-				AttributeBinder binder;
-				try {
-					binder = annotation.annotationType().getAnnotation(AttributeBinderType.class).binder().newInstance();
-				}
-				catch (Exception e) {
-					throw new AnnotationException("error processing @AttributeBinderType annotation", e);
-				}
-				binder.bind( annotation, buildingContext, entityBinder.getPersistentClass(), prop );
+		final Annotation containingAnnotation = findContainingAnnotation( property, AttributeBinderType.class, buildingContext );
+		if ( containingAnnotation != null ) {
+			final AttributeBinderType binderAnn = containingAnnotation.annotationType().getAnnotation( AttributeBinderType.class );
+			try {
+				final AttributeBinder binder = binderAnn.binder().newInstance();
+				binder.bind( containingAnnotation, buildingContext, entityBinder.getPersistentClass(), prop );
+			}
+			catch (Exception e) {
+				throw new AnnotationException( "error processing @AttributeBinderType annotation", e );
 			}
 		}
 	}
@@ -279,7 +280,7 @@ public class PropertyBinder {
 			holder.addProperty( prop, columns, declaringClass );
 		}
 
-		callAttributeBinders(prop);
+		callAttributeBinders( prop );
 
 		return prop;
 	}

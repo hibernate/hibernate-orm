@@ -8,6 +8,7 @@ package org.hibernate.id;
 
 import java.net.InetAddress;
 
+import org.hibernate.id.factory.spi.StandardGenerator;
 import org.hibernate.internal.util.BytesHelper;
 
 /**
@@ -18,7 +19,7 @@ import org.hibernate.internal.util.BytesHelper;
  * @see UUIDHexGenerator
  * @author Gavin King
  */
-public abstract class AbstractUUIDGenerator implements IdentifierGenerator {
+public abstract class AbstractUUIDGenerator implements StandardGenerator {
 
 	private static final int IP;
 	static {

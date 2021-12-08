@@ -7,6 +7,7 @@
 package org.hibernate.id;
 
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.id.factory.spi.StandardGenerator;
 
 /**
  * Specialized contract for {@link IdentifierGenerator} implementations capable of being used in conjunction
@@ -14,7 +15,7 @@ import org.hibernate.boot.model.relational.SqlStringGenerationContext;
  *
  * @author Steve Ebersole
  */
-public interface BulkInsertionCapableIdentifierGenerator extends IdentifierGenerator {
+public interface BulkInsertionCapableIdentifierGenerator extends StandardGenerator {
 	/**
 	 * Given the configuration of this generator, is identifier generation as part of bulk insertion supported?
 	 * <p/>

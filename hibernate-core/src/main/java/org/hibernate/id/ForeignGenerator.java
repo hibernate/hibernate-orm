@@ -14,6 +14,7 @@ import org.hibernate.StatelessSession;
 import org.hibernate.TransientObjectException;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.id.factory.spi.StandardGenerator;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.persister.entity.EntityPersister;
@@ -33,7 +34,7 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
  *
  * @author Gavin King
  */
-public class ForeignGenerator implements IdentifierGenerator {
+public class ForeignGenerator implements StandardGenerator {
 	private static final CoreMessageLogger LOG = messageLogger( ForeignGenerator.class );
 
 	private String entityName;

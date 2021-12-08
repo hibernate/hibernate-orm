@@ -7,14 +7,14 @@
 package org.hibernate.id;
 
 import org.hibernate.HibernateException;
-import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.id.factory.spi.StandardGenerator;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 
 /**
  * @author Gavin King
  */
-public interface PostInsertIdentifierGenerator extends IdentifierGenerator {
+public interface PostInsertIdentifierGenerator extends StandardGenerator {
 	InsertGeneratedIdentifierDelegate getInsertGeneratedIdentifierDelegate(
 			PostInsertIdentityPersister persister,
 			Dialect dialect,

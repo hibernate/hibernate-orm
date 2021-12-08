@@ -11,6 +11,7 @@ import java.util.Properties;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.id.factory.spi.StandardGenerator;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
 
@@ -22,7 +23,7 @@ import org.hibernate.type.Type;
  *
  * @author Gavin King
  */
-public class Assigned implements IdentifierGenerator {
+public class Assigned implements StandardGenerator {
 	private String entityName;
 
 	public Object generate(SharedSessionContractImplementor session, Object obj) throws HibernateException {

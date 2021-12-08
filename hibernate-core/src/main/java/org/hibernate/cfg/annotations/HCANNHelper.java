@@ -13,6 +13,7 @@ import org.hibernate.Internal;
 import org.hibernate.annotations.common.reflection.XAnnotatedElement;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.annotations.common.reflection.java.JavaXMember;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 
 /**
  * Manage the various fun-ness of dealing with HCANN...
@@ -57,7 +58,7 @@ public final class HCANNHelper {
 	 *
 	 * @implNote Searches only one level deep
 	 */
-	static <T extends Annotation> T findAnnotation(XAnnotatedElement xAnnotatedElement, Class<T> annotationType) {
+	public static <T extends Annotation> T findAnnotation(XAnnotatedElement xAnnotatedElement, Class<T> annotationType) {
 		// first, see if we can find it directly...
 		final T direct = xAnnotatedElement.getAnnotation( annotationType );
 		if ( direct != null ) {
@@ -77,6 +78,32 @@ public final class HCANNHelper {
 			final T metaAnn = annotation.annotationType().getAnnotation( annotationType );
 			if ( metaAnn != null ) {
 				return metaAnn;
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Locate the annotation, relative to `xAnnotatedElement`, which contains
+	 * the passed type of annotation.
+	 *
+	 * @implNote Searches only one level deep
+	 */
+	public static <A extends Annotation, T extends Annotation> A findContainingAnnotation(
+			XAnnotatedElement xAnnotatedElement,
+			Class<T> annotationType,
+			MetadataBuildingContext context) {
+		// xAnnotatedElement = id-prop
+
+		for ( int i = 0; i < xAnnotatedElement.getAnnotations().length; i++ ) {
+			final Annotation annotation = xAnnotatedElement.getAnnotations()[ i ];
+			// annotation = @Sequence
+
+			final T metaAnn = annotation.annotationType().getAnnotation( annotationType );
+			if ( metaAnn != null ) {
+				//noinspection unchecked
+				return (A) annotation;
 			}
 		}
 

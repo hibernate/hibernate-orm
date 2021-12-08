@@ -6,6 +6,8 @@
  */
 package org.hibernate.cfg;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -22,6 +24,7 @@ import java.util.Set;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
+import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cache;
@@ -46,6 +49,7 @@ import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.GenericGenerators;
+import org.hibernate.annotations.IdGeneratorType;
 import org.hibernate.annotations.Index;
 import org.hibernate.annotations.JavaTypeRegistration;
 import org.hibernate.annotations.JavaTypeRegistrations;
@@ -100,6 +104,8 @@ import org.hibernate.cfg.annotations.TableBinder;
 import org.hibernate.cfg.internal.NullableDiscriminatorColumnSecondPass;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.FilterDefinition;
+import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.id.factory.spi.CustomIdGeneratorCreationContext;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jpa.event.internal.CallbackDefinitionResolverLegacyImpl;
@@ -2544,46 +2550,75 @@ public final class AnnotationBinder {
 		final boolean isComponent = entityXClass.isAnnotationPresent( Embeddable.class )
 				|| idXProperty.isAnnotationPresent( EmbeddedId.class );
 
-		GeneratedValue generatedValue = idXProperty.getAnnotation( GeneratedValue.class );
-		String generatorType = generatedValue != null
-				? generatorType( generatedValue, buildingContext, entityXClass )
-				: "assigned";
-		String generatorName = generatedValue != null
-				? generatedValue.generator()
-				: BinderHelper.ANNOTATION_STRING_DEFAULT;
-		if ( isComponent ) {
-			//a component must not have any generator
-			generatorType = "assigned";
-		}
+		final Annotation generatorAnnotation = HCANNHelper.findContainingAnnotation( idXProperty, IdGeneratorType.class, buildingContext );
+		if ( generatorAnnotation != null ) {
+			final IdGeneratorType idGeneratorType = generatorAnnotation.annotationType().getAnnotation( IdGeneratorType.class );
+			assert idGeneratorType != null;
 
-		if ( isGlobalGeneratorNameGlobal( buildingContext ) ) {
-			buildGenerators( idXProperty, buildingContext );
-			SecondPass secondPass = new IdGeneratorResolverSecondPass(
-					idValue,
-					idXProperty,
-					generatorType,
-					generatorName,
-					buildingContext
-			);
-			buildingContext.getMetadataCollector().addSecondPass( secondPass );
+			idValue.setCustomIdGeneratorCreator( (context) -> {
+				final Class<? extends IdentifierGenerator> generatorClass = idGeneratorType.value();
+				try {
+					return generatorClass
+							.getConstructor( generatorAnnotation.annotationType(), CustomIdGeneratorCreationContext.class )
+							.newInstance( generatorAnnotation, context );
+				}
+				catch (NoSuchMethodException e) {
+					throw new HibernateException(
+							"Unable to find appropriate constructor for @IdGeneratorType handling : " + generatorClass.getName(),
+							e
+					);
+				}
+				catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
+					throw new HibernateException(
+							"Unable to invoke constructor for @IdGeneratorType handling : " + generatorClass.getName(),
+							e
+					);
+				}
+			} );
 		}
 		else {
-			//clone classGenerator and override with local values
-			HashMap<String, IdentifierGeneratorDefinition> localGenerators = (HashMap<String, IdentifierGeneratorDefinition>) classGenerators
-					.clone();
-			localGenerators.putAll( buildGenerators( idXProperty, buildingContext ) );
-			BinderHelper.makeIdGenerator(
-					idValue,
-					idXProperty,
-					generatorType,
-					generatorName,
-					buildingContext,
-					localGenerators
-			);
-		}
+			GeneratedValue generatedValue = idXProperty.getAnnotation( GeneratedValue.class );
 
-		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev( "Bind {0} on {1}", ( isComponent ? "@EmbeddedId" : "@Id" ), inferredData.getPropertyName() );
+			String generatorType = generatedValue != null
+					? generatorType( generatedValue, buildingContext, entityXClass )
+					: "assigned";
+			String generatorName = generatedValue != null
+					? generatedValue.generator()
+					: BinderHelper.ANNOTATION_STRING_DEFAULT;
+			if ( isComponent ) {
+				//a component must not have any generator
+				generatorType = "assigned";
+			}
+
+			if ( isGlobalGeneratorNameGlobal( buildingContext ) ) {
+				buildGenerators( idXProperty, buildingContext );
+				SecondPass secondPass = new IdGeneratorResolverSecondPass(
+						idValue,
+						idXProperty,
+						generatorType,
+						generatorName,
+						buildingContext
+				);
+				buildingContext.getMetadataCollector().addSecondPass( secondPass );
+			}
+			else {
+				//clone classGenerator and override with local values
+				HashMap<String, IdentifierGeneratorDefinition> localGenerators = (HashMap<String, IdentifierGeneratorDefinition>) classGenerators
+						.clone();
+				localGenerators.putAll( buildGenerators( idXProperty, buildingContext ) );
+				BinderHelper.makeIdGenerator(
+						idValue,
+						idXProperty,
+						generatorType,
+						generatorName,
+						buildingContext,
+						localGenerators
+				);
+			}
+
+			if ( LOG.isTraceEnabled() ) {
+				LOG.tracev( "Bind {0} on {1}", ( isComponent ? "@EmbeddedId" : "@Id" ), inferredData.getPropertyName() );
+			}
 		}
 	}
 

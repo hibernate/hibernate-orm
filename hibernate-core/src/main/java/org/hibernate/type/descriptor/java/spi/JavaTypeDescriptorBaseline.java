@@ -69,6 +69,8 @@ import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.TimeZoneJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.UUIDJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.UrlJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.YearJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.ZoneIdJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.ZoneOffsetJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.ZonedDateTimeJavaTypeDescriptor;
 
@@ -129,6 +131,9 @@ public class JavaTypeDescriptorBaseline {
 		target.addBaselineDescriptor( OffsetDateTimeJavaTypeDescriptor.INSTANCE );
 		target.addBaselineDescriptor( OffsetTimeJavaTypeDescriptor.INSTANCE );
 		target.addBaselineDescriptor( ZonedDateTimeJavaTypeDescriptor.INSTANCE );
+		target.addBaselineDescriptor( YearJavaTypeDescriptor.INSTANCE );
+		target.addBaselineDescriptor( ZoneIdJavaTypeDescriptor.INSTANCE );
+		target.addBaselineDescriptor( ZoneOffsetJavaTypeDescriptor.INSTANCE );
 
 		target.addBaselineDescriptor( CalendarJavaTypeDescriptor.INSTANCE );
 		target.addBaselineDescriptor( DateJavaTypeDescriptor.INSTANCE );
@@ -136,7 +141,6 @@ public class JavaTypeDescriptorBaseline {
 		target.addBaselineDescriptor( java.sql.Time.class, JdbcTimeJavaTypeDescriptor.INSTANCE );
 		target.addBaselineDescriptor( java.sql.Timestamp.class, JdbcTimestampJavaTypeDescriptor.INSTANCE );
 		target.addBaselineDescriptor( TimeZoneJavaTypeDescriptor.INSTANCE );
-		target.addBaselineDescriptor( ZoneOffsetJavaTypeDescriptor.INSTANCE );
 
 		target.addBaselineDescriptor( ClassJavaTypeDescriptor.INSTANCE );
 

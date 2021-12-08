@@ -56,6 +56,9 @@ public class ZoneOffsetJavaTypeDescriptor extends AbstractClassJavaTypeDescripto
 		if ( String.class.isAssignableFrom( type ) ) {
 			return (X) toString( value );
 		}
+		if ( Integer.class.isAssignableFrom( type ) ) {
+			return (X) Integer.valueOf( value.getTotalSeconds() );
+		}
 		throw unknownUnwrap( type );
 	}
 
@@ -64,8 +67,11 @@ public class ZoneOffsetJavaTypeDescriptor extends AbstractClassJavaTypeDescripto
 		if ( value == null ) {
 			return null;
 		}
-		if ( CharSequence.class.isInstance( value ) ) {
+		if ( value instanceof CharSequence ) {
 			return fromString( (CharSequence) value );
+		}
+		if ( value instanceof Integer ) {
+			return ZoneOffset.ofTotalSeconds( (Integer) value );
 		}
 		throw unknownWrap( value.getClass() );
 	}

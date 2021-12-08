@@ -42,16 +42,16 @@ public interface DeprecationLogger extends BasicLogger {
 	)
 	public void logDeprecatedScannerSetting();
 
-	/**
-	 * Log message indicating the use of features that were only useful for DOM4J EntityMode,
-	 * which was removed a long time ago.
-	 */
-	@LogMessage( level = WARN )
-	@Message(
-			value = "Use of DOM4J entity-mode is considered deprecated",
-			id = 90000003
-	)
-	public void logDeprecationOfDomEntityModeSupport();
+//	/**
+//	 * Log message indicating the use of features that were only useful for DOM4J EntityMode,
+//	 * which was removed a long time ago.
+//	 */
+//	@LogMessage( level = WARN )
+//	@Message(
+//			value = "Use of DOM4J entity-mode is considered deprecated",
+//			id = 90000003
+//	)
+//	public void logDeprecationOfDomEntityModeSupport();
 
 	@LogMessage(level = WARN)
 	@Message(
@@ -69,21 +69,21 @@ public interface DeprecationLogger extends BasicLogger {
 	)
 	public void logDeprecationOfNonNamedIdAttribute(String entityName);
 
-	/**
-	 * Log a warning about an attempt to specify no-longer-supported NamingStrategy
-	 *
-	 * @param setting - The old setting that indicates the NamingStrategy to use
-	 * @param implicitInstead - The new setting that indicates the ImplicitNamingStrategy to use
-	 * @param physicalInstead - The new setting that indicates the PhysicalNamingStrategy to use
-	 */
-	@LogMessage(level = WARN)
-	@Message(
-			value = "Attempted to specify unsupported NamingStrategy via setting [%s]; NamingStrategy " +
-					"has been removed in favor of the split ImplicitNamingStrategy and " +
-					"PhysicalNamingStrategy; use [%s] or [%s], respectively, instead.",
-			id = 90000006
-	)
-	void logDeprecatedNamingStrategySetting(String setting, String implicitInstead, String physicalInstead);
+//	/**
+//	 * Log a warning about an attempt to specify no-longer-supported NamingStrategy
+//	 *
+//	 * @param setting - The old setting that indicates the NamingStrategy to use
+//	 * @param implicitInstead - The new setting that indicates the ImplicitNamingStrategy to use
+//	 * @param physicalInstead - The new setting that indicates the PhysicalNamingStrategy to use
+//	 */
+//	@LogMessage(level = WARN)
+//	@Message(
+//			value = "Attempted to specify unsupported NamingStrategy via setting [%s]; NamingStrategy " +
+//					"has been removed in favor of the split ImplicitNamingStrategy and " +
+//					"PhysicalNamingStrategy; use [%s] or [%s], respectively, instead.",
+//			id = 90000006
+//	)
+//	void logDeprecatedNamingStrategySetting(String setting, String implicitInstead, String physicalInstead);
 
 	/**
 	 * Log a warning about an attempt to specify unsupported NamingStrategy
@@ -129,14 +129,13 @@ public interface DeprecationLogger extends BasicLogger {
 	)
 	void deprecatedManyToManyFetch();
 
-
-	@LogMessage(level = WARN)
-	@Message(
-			value = "org.hibernate.hql.spi.TemporaryTableBulkIdStrategy (temporary) has been deprecated in favor of the" +
-					" more specific org.hibernate.hql.spi.id.local.LocalTemporaryTableBulkIdStrategy (local_temporary).",
-			id = 90000011
-	)
-	void logDeprecationOfTemporaryTableBulkIdStrategy();
+//	@LogMessage(level = WARN)
+//	@Message(
+//			value = "org.hibernate.hql.spi.TemporaryTableBulkIdStrategy (temporary) has been deprecated in favor of the" +
+//					" more specific org.hibernate.hql.spi.id.local.LocalTemporaryTableBulkIdStrategy (local_temporary).",
+//			id = 90000011
+//	)
+//	void logDeprecationOfTemporaryTableBulkIdStrategy();
 
 	@LogMessage(level = WARN)
 	@Message(value = "Recognized obsolete hibernate namespace %s. Use namespace %s instead.  Support for obsolete DTD/XSD namespaces may be removed at any time.",
@@ -172,20 +171,20 @@ public interface DeprecationLogger extends BasicLogger {
 	)
 	void deprecatedTableGenerator(String generatorImpl);
 
-	@LogMessage(level = WARN)
-	@Message(
-			id = 90000016,
-			value = "Found use of deprecated 'collection property' syntax in HQL/JPQL query [%2$s.%1$s]; " +
-					"use collection function syntax instead [%1$s(%2$s)]."
-	)
-	void logDeprecationOfCollectionPropertiesInHql(String collectionPropertyName, String alias);
+//	@LogMessage(level = WARN)
+//	@Message(
+//			id = 90000016,
+//			value = "Found use of deprecated 'collection property' syntax in HQL/JPQL query [%2$s.%1$s]; " +
+//					"use collection function syntax instead [%1$s(%2$s)]."
+//	)
+//	void logDeprecationOfCollectionPropertiesInHql(String collectionPropertyName, String alias);
 
-	@LogMessage(level = WARN)
-	@Message(
-			id = 90000017,
-			value = "Found use of deprecated entity-type selector syntax in HQL/JPQL query ['%1$s.class']; use TYPE operator instead : type(%1$s)"
-	)
-	void logDeprecationOfClassEntityTypeSelector(String path);
+//	@LogMessage(level = WARN)
+//	@Message(
+//			id = 90000017,
+//			value = "Found use of deprecated entity-type selector syntax in HQL/JPQL query ['%1$s.class']; use TYPE operator instead : type(%1$s)"
+//	)
+//	void logDeprecationOfClassEntityTypeSelector(String path);
 
 	@LogMessage(level = WARN)
 	@Message(
@@ -201,14 +200,14 @@ public interface DeprecationLogger extends BasicLogger {
 //	)
 //	void logDeprecatedBytecodeEnhancement();
 
-	@LogMessage(level = WARN)
-	@Message(
-			id = 90000020,
-			value = "You are using the deprecated legacy bytecode enhancement Ant-task.  This task is left in place for a short-time to " +
-					"aid migrations to 5.1 and the new (vastly improved) bytecode enhancement support.  This task (%s) now delegates to the" +
-					"new Ant-task (%s) leveraging that new bytecode enhancement.  You should update your build to use the new task explicitly."
-	)
-	void logDeprecatedInstrumentTask(Class taskClass, Class newTaskClass);
+//	@LogMessage(level = WARN)
+//	@Message(
+//			id = 90000020,
+//			value = "You are using the deprecated legacy bytecode enhancement Ant-task.  This task is left in place for a short-time to " +
+//					"aid migrations to 5.1 and the new (vastly improved) bytecode enhancement support.  This task (%s) now delegates to the" +
+//					"new Ant-task (%s) leveraging that new bytecode enhancement.  You should update your build to use the new task explicitly."
+//	)
+//	void logDeprecatedInstrumentTask(Class taskClass, Class newTaskClass);
 
 	@LogMessage(level = WARN)
 	@Message(
@@ -217,29 +216,29 @@ public interface DeprecationLogger extends BasicLogger {
 	)
 	void deprecatedSetting(String oldSettingName, String newSettingName);
 
-	@LogMessage(level = WARN)
-	@Message(
-			id = 90000022,
-			value = "Hibernate's legacy org.hibernate.Criteria API is deprecated; use the JPA jakarta.persistence.criteria.CriteriaQuery instead"
-	)
-	void deprecatedLegacyCriteria();
+//	@LogMessage(level = WARN)
+//	@Message(
+//			id = 90000022,
+//			value = "Hibernate's legacy org.hibernate.Criteria API is deprecated; use the JPA jakarta.persistence.criteria.CriteriaQuery instead"
+//	)
+//	void deprecatedLegacyCriteria();
 
-	@LogMessage(level = WARN)
-	@Message(
-			id = 90000024,
-			value = "Application requested zero be used as the base for JDBC-style parameters found in native-queries; " +
-					"this is a *temporary* backwards-compatibility setting to help applications  using versions prior to " +
-					"5.3 in upgrading.  It will be removed in a later version."
-	)
-	void logUseOfDeprecatedZeroBasedJdbcStyleParams();
+//	@LogMessage(level = WARN)
+//	@Message(
+//			id = 90000024,
+//			value = "Application requested zero be used as the base for JDBC-style parameters found in native-queries; " +
+//					"this is a *temporary* backwards-compatibility setting to help applications  using versions prior to " +
+//					"5.3 in upgrading.  It will be removed in a later version."
+//	)
+//	void logUseOfDeprecatedZeroBasedJdbcStyleParams();
 
-	@LogMessage(level = WARN)
-	@Message(
-			id = 90000025,
-			value = "Encountered multiple component mappings for the same java class [%s] with different property mappings. " +
-					"This is deprecated and will be removed in a future version. Every property mapping combination should have its own java class"
-	)
-	void deprecatedComponentMapping(String name);
+//	@LogMessage(level = WARN)
+//	@Message(
+//			id = 90000025,
+//			value = "Encountered multiple component mappings for the same java class [%s] with different property mappings. " +
+//					"This is deprecated and will be removed in a future version. Every property mapping combination should have its own java class"
+//	)
+//	void deprecatedComponentMapping(String name);
 
 	@LogMessage(level = WARN)
 	@Message(value = "%s has been deprecated",
@@ -250,4 +249,15 @@ public interface DeprecationLogger extends BasicLogger {
 	@Message(value = "%s has been deprecated; use %s instead",
 			id = 90000026)
 	void deprecatedDialect(String dialect, String replacement);
+
+	/**
+	 * Different from {@link #deprecatedSetting} in that sometimes there is no
+	 * direct alternative
+	 */
+	@LogMessage(level = WARN)
+	@Message(
+			id = 90000027,
+			value = "Encountered deprecated setting [%s]; instead %s"
+	)
+	void deprecatedSetting2(String settingName, String alternative);
 }

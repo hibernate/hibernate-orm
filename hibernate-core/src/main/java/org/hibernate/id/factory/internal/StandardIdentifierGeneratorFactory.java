@@ -7,11 +7,13 @@
 package org.hibernate.id.factory.internal;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.MappingException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
@@ -31,8 +33,13 @@ import org.hibernate.id.UUIDGenerator;
 import org.hibernate.id.UUIDHexGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.enhanced.TableGenerator;
+import org.hibernate.id.factory.IdGenFactoryLogging;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
+import org.hibernate.id.factory.spi.GenerationTypeStrategy;
+import org.hibernate.id.factory.spi.GenerationTypeStrategyRegistration;
+import org.hibernate.id.factory.spi.GeneratorDefinitionResolver;
 import org.hibernate.id.factory.spi.StandardGenerator;
+import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.jpa.spi.IdentifierGeneratorStrategyProvider;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
 import org.hibernate.resource.beans.container.spi.ContainedBean;
@@ -41,8 +48,11 @@ import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.JavaType;
 
-import static org.hibernate.id.factory.IdGenCreationLogging.ID_GEN_LOGGER;
+import jakarta.persistence.GenerationType;
+
+import static org.hibernate.id.factory.IdGenFactoryLogging.ID_GEN_FAC_LOGGER;
 
 /**
  * Basic <tt>templated</tt> support for {@link org.hibernate.id.factory.IdentifierGeneratorFactory} implementations.
@@ -53,6 +63,7 @@ import static org.hibernate.id.factory.IdGenCreationLogging.ID_GEN_LOGGER;
 public class StandardIdentifierGeneratorFactory
 		implements IdentifierGeneratorFactory, BeanContainer.LifecycleOptions, Serializable {
 
+	private final ConcurrentHashMap<GenerationType, GenerationTypeStrategy> generatorTypeStrategyMap = new ConcurrentHashMap<>();
 	private final ConcurrentHashMap<String, Class<? extends IdentifierGenerator>> legacyGeneratorClassNameMap = new ConcurrentHashMap<>();
 
 	private final ServiceRegistry serviceRegistry;
@@ -91,18 +102,44 @@ public class StandardIdentifierGeneratorFactory
 		this.serviceRegistry = serviceRegistry;
 
 		if ( ignoreBeanContainer ) {
-			ID_GEN_LOGGER.debug( "Ignoring CDI for resolving IdentifierGenerator instances as extended or delayed CDI support was enabled" );
+			ID_GEN_FAC_LOGGER.debug( "Ignoring CDI for resolving IdentifierGenerator instances as extended or delayed CDI support was enabled" );
 			this.beanContainer = null;
 		}
 		else {
 			this.beanContainer = serviceRegistry.getService( ManagedBeanRegistry.class ).getBeanContainer();
 			if ( beanContainer == null ) {
-				ID_GEN_LOGGER.debug( "Resolving IdentifierGenerator instances will not use CDI as it was not configured" );
+				ID_GEN_FAC_LOGGER.debug( "Resolving IdentifierGenerator instances will not use CDI as it was not configured" );
 			}
 		}
 
+		generatorTypeStrategyMap.put( GenerationType.AUTO, AutoGenerationTypeStrategy.INSTANCE );
+		generatorTypeStrategyMap.put( GenerationType.SEQUENCE, SequenceGenerationTypeStrategy.INSTANCE );
+		generatorTypeStrategyMap.put( GenerationType.TABLE, TableGenerationTypeStrategy.INSTANCE );
+		generatorTypeStrategyMap.put( GenerationType.IDENTITY, IdentityGenerationTypeStrategy.INSTANCE );
+
+		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+		final Collection<GenerationTypeStrategyRegistration> generationTypeStrategyRegistrations = classLoaderService.loadJavaServices( GenerationTypeStrategyRegistration.class );
+		generationTypeStrategyRegistrations.forEach( (registration) -> registration.registerStrategies(
+				(generationType, generationTypeStrategy) -> {
+					final GenerationTypeStrategy previous = generatorTypeStrategyMap.put(
+							generationType,
+							generationTypeStrategy
+					);
+					if ( previous != null ) {
+						IdGenFactoryLogging.ID_GEN_FAC_LOGGER.debugf(
+								"GenerationTypeStrategyRegistration [%s] overrode previous registration for GenerationType#%s : %s",
+								registration,
+								generationType.name(),
+								previous
+						);
+					}
+				},
+				serviceRegistry
+		) );
+
 		register( "uuid2", UUIDGenerator.class );
-		register( "guid", GUIDGenerator.class );			// can be done with UUIDGenerator + strategy
+		// can be done with UuidGenerator + strategy
+		register( "guid", GUIDGenerator.class );
 		register( "uuid", UUIDHexGenerator.class );			// "deprecated" for new use
 		register( "uuid.hex", UUIDHexGenerator.class ); 	// uuid.hex is deprecated
 		register( "assigned", Assigned.class );
@@ -117,6 +154,10 @@ public class StandardIdentifierGeneratorFactory
 		final ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
 		final Object providerSetting = configService.getSettings().get( AvailableSettings.IDENTIFIER_GENERATOR_STRATEGY_PROVIDER );
 		if ( providerSetting != null ) {
+			DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting2(
+					AvailableSettings.IDENTIFIER_GENERATOR_STRATEGY_PROVIDER,
+					"supply a org.hibernate.id.factory.spi.GenerationTypeStrategyRegistration Java service"
+			);
 			final IdentifierGeneratorStrategyProvider idGeneratorStrategyProvider = serviceRegistry.getService( StrategySelector.class ).resolveStrategy(
 					IdentifierGeneratorStrategyProvider.class,
 					providerSetting
@@ -128,11 +169,33 @@ public class StandardIdentifierGeneratorFactory
 	}
 
 	private void register(String strategy, Class<? extends IdentifierGenerator> generatorClass) {
-		ID_GEN_LOGGER.debugf( "Registering IdentifierGenerator strategy [%s] -> [%s]", strategy, generatorClass.getName() );
+		ID_GEN_FAC_LOGGER.debugf( "Registering IdentifierGenerator strategy [%s] -> [%s]", strategy, generatorClass.getName() );
 		final Class previous = legacyGeneratorClassNameMap.put( strategy, generatorClass );
-		if ( previous != null && ID_GEN_LOGGER.isDebugEnabled() ) {
-			ID_GEN_LOGGER.debugf( "    - overriding [%s]", previous.getName() );
+		if ( previous != null && ID_GEN_FAC_LOGGER.isDebugEnabled() ) {
+			ID_GEN_FAC_LOGGER.debugf( "    - overriding [%s]", previous.getName() );
 		}
+	}
+
+	@Override
+	public IdentifierGenerator createIdentifierGenerator(
+			GenerationType generationType,
+			String generatedValueGeneratorName,
+			String generatorName,
+			JavaType<?> javaTypeDescriptor,
+			Properties config,
+			GeneratorDefinitionResolver definitionResolver) {
+		final GenerationTypeStrategy strategy = generatorTypeStrategyMap.get( generationType );
+		if ( strategy != null ) {
+			return strategy.createIdentifierGenerator(
+					generationType,
+					generatorName,
+					javaTypeDescriptor,
+					config,
+					definitionResolver,
+					serviceRegistry
+			);
+		}
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override

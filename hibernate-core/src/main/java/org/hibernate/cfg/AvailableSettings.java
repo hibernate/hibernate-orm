@@ -15,6 +15,7 @@ import org.hibernate.boot.registry.classloading.internal.TcclLookupPrecedence;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
+import org.hibernate.id.factory.spi.GenerationTypeStrategy;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.hql.HqlTranslator;
@@ -2589,7 +2590,11 @@ public interface AvailableSettings {
 
 	/**
 	 * IdentifierGeneratorStrategyProvider class name, the class must have a no-arg constructor
+	 *
+	 * @deprecated (as of 6.0) use {@link org.hibernate.id.factory.spi.GenerationTypeStrategyRegistration}
+	 * instead
 	 */
+	@Deprecated
 	String IDENTIFIER_GENERATOR_STRATEGY_PROVIDER = "hibernate.identifier_generator_strategy_provider";
 
 	/**

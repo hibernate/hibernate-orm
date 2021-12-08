@@ -12,7 +12,11 @@ import java.util.Map;
  * Provide a set of IdentifierGenerator strategies allowing to override the Hibernate Core default ones
  *
  * @author <a href="mailto:emmanuel@hibernate.org">Emmanuel Bernard</a>
+ *
+ * @deprecated (as of 6.0) supply a {@link org.hibernate.id.factory.spi.GenerationTypeStrategyRegistration}
+ * instead
  */
+@Deprecated
 public interface IdentifierGeneratorStrategyProvider {
 	/**
 	 * set of strategy / generator class pairs to register as accepted strategies

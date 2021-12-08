@@ -20,7 +20,10 @@ import org.hibernate.internal.CoreMessageLogger;
  * Generates <tt>string</tt> values using the SQL Server NEWID() function.
  *
  * @author Joseph Fifield
+ *
+ * @deprecated (as of 6.0)
  */
+@Deprecated
 public class GUIDGenerator implements StandardGenerator {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( GUIDGenerator.class );
 

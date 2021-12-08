@@ -177,9 +177,9 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Defining %s=true ignored in HEM", id = 59)
 	void definingFlushBeforeCompletionIgnoredInHem(String flushBeforeCompletion);
 
-	@LogMessage(level = WARN)
-	@Message(value = "@ForceDiscriminator is deprecated use @DiscriminatorOptions instead.", id = 62)
-	void deprecatedForceDescriminatorAnnotation();
+//	@LogMessage(level = WARN)
+//	@Message(value = "@ForceDiscriminator is deprecated use @DiscriminatorOptions instead.", id = 62)
+//	void deprecatedForceDescriminatorAnnotation();
 
 	@LogMessage(level = WARN)
 	@Message(value = "DEPRECATED : use [%s] instead with custom [%s] implementation", id = 65)

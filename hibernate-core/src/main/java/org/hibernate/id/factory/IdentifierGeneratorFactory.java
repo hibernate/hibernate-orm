@@ -10,7 +10,11 @@ import java.util.Properties;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.id.factory.spi.GeneratorDefinitionResolver;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.JavaType;
+
+import jakarta.persistence.GenerationType;
 
 /**
  * Contract for a <tt>factory</tt> of {@link IdentifierGenerator} instances.
@@ -26,6 +30,17 @@ public interface IdentifierGeneratorFactory {
 	Dialect getDialect();
 
 	/**
+	 * Create an IdentifierGenerator based on the given details
+	 */
+	IdentifierGenerator createIdentifierGenerator(
+			GenerationType generationType,
+			String generatedValueGeneratorName,
+			String generatorName,
+			JavaType<?> javaTypeDescriptor,
+			Properties config,
+			GeneratorDefinitionResolver definitionResolver);
+
+	/**
 	 * Given a strategy, retrieve the appropriate identifier generator instance.
 	 *
 	 * @param strategy The generation strategy.
@@ -33,7 +48,11 @@ public interface IdentifierGeneratorFactory {
 	 * @param config Any configuration properties given in the generator mapping.
 	 *
 	 * @return The appropriate generator instance.
+	 *
+	 * @deprecated (since 6.0) use {@link #createIdentifierGenerator(GenerationType, String, String, JavaType, Properties, GeneratorDefinitionResolver)}
+	 * instead
 	 */
+	@Deprecated
 	IdentifierGenerator createIdentifierGenerator(String strategy, Type type, Properties config);
 
 	/**
@@ -41,6 +60,10 @@ public interface IdentifierGeneratorFactory {
 	 *
 	 * @param strategy The strategy
 	 * @return The generator class.
+	 *
+	 * @deprecated (since 6.0) with no replacement.  See
+	 * {@link #createIdentifierGenerator(GenerationType, String, String, JavaType, Properties, GeneratorDefinitionResolver)}
 	 */
+	@Deprecated
 	Class getIdentifierGeneratorClass(String strategy);
 }

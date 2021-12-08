@@ -300,7 +300,10 @@ public abstract class SimpleValue implements KeyValue {
 	 * @return IdentifierGenerator null if
 	 * {@link #createIdentifierGenerator(IdentifierGeneratorFactory, Dialect, String, String, RootClass)} was never
 	 * completed.
+	 *
+	 * @deprecated (as of 6.0) - not used and no longer supported.
 	 */
+	@Deprecated
 	public IdentifierGenerator getIdentifierGenerator() {
 		return identifierGenerator;
 	}

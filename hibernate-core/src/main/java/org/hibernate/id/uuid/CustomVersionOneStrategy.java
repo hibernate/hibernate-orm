@@ -23,7 +23,7 @@ import org.hibernate.internal.util.BytesHelper;
  *
  * @author Steve Ebersole
  */
-public class CustomVersionOneStrategy implements UUIDGenerationStrategy {
+public class CustomVersionOneStrategy implements UUIDGenerationStrategy, UuidGenerator.ValueGenerator {
 	@Override
 	public int getGeneratedVersion() {
 		return 1;
@@ -44,10 +44,16 @@ public class CustomVersionOneStrategy implements UUIDGenerationStrategy {
 
 		mostSignificantBits = BytesHelper.asLong( hiBits );
 	}
+
 	@Override
-	public UUID generateUUID(SharedSessionContractImplementor session) {
+	public UUID generateUuid(SharedSessionContractImplementor session) {
 		long leastSignificantBits = generateLeastSignificantBits( System.currentTimeMillis() );
 		return new UUID( mostSignificantBits, leastSignificantBits );
+	}
+
+	@Override
+	public UUID generateUUID(SharedSessionContractImplementor session) {
+		return generateUuid( session );
 	}
 
 	public long getMostSignificantBits() {

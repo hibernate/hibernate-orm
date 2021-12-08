@@ -16,7 +16,7 @@ import org.hibernate.id.UUIDGenerationStrategy;
  *
  * @author Steve Ebersole
  */
-public class StandardRandomStrategy implements UUIDGenerationStrategy {
+public class StandardRandomStrategy implements UUIDGenerationStrategy, UuidGenerator.ValueGenerator {
 	public static final StandardRandomStrategy INSTANCE = new StandardRandomStrategy();
 
 	/**
@@ -33,6 +33,11 @@ public class StandardRandomStrategy implements UUIDGenerationStrategy {
 	 */
 	@Override
 	public UUID generateUUID(SharedSessionContractImplementor session) {
+		return generateUuid( session );
+	}
+
+	@Override
+	public UUID generateUuid(SharedSessionContractImplementor session) {
 		return UUID.randomUUID();
 	}
 }

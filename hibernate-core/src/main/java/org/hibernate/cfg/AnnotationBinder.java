@@ -8,6 +8,7 @@ package org.hibernate.cfg;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Member;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -116,6 +117,7 @@ import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Constraint;
 import org.hibernate.mapping.DependantValue;
+import org.hibernate.mapping.IdentifierGeneratorCreator;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.JoinedSubclass;
 import org.hibernate.mapping.KeyValue;
@@ -2545,38 +2547,16 @@ public final class AnnotationBinder {
 		XClass entityXClass = inferredData.getClassOrElement();
 		XProperty idXProperty = inferredData.getProperty();
 
-		//manage composite related metadata
-		//guess if its a component and find id data access (property, field etc)
-		final boolean isComponent = entityXClass.isAnnotationPresent( Embeddable.class )
-				|| idXProperty.isAnnotationPresent( EmbeddedId.class );
-
 		final Annotation generatorAnnotation = HCANNHelper.findContainingAnnotation( idXProperty, IdGeneratorType.class, buildingContext );
 		if ( generatorAnnotation != null ) {
-			final IdGeneratorType idGeneratorType = generatorAnnotation.annotationType().getAnnotation( IdGeneratorType.class );
-			assert idGeneratorType != null;
-
-			idValue.setCustomIdGeneratorCreator( (context) -> {
-				final Class<? extends IdentifierGenerator> generatorClass = idGeneratorType.value();
-				try {
-					return generatorClass
-							.getConstructor( generatorAnnotation.annotationType(), CustomIdGeneratorCreationContext.class )
-							.newInstance( generatorAnnotation, context );
-				}
-				catch (NoSuchMethodException e) {
-					throw new HibernateException(
-							"Unable to find appropriate constructor for @IdGeneratorType handling : " + generatorClass.getName(),
-							e
-					);
-				}
-				catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
-					throw new HibernateException(
-							"Unable to invoke constructor for @IdGeneratorType handling : " + generatorClass.getName(),
-							e
-					);
-				}
-			} );
+			idValue.setCustomIdGeneratorCreator( new CustomIdGeneratorCreator( generatorAnnotation, idXProperty ) );
 		}
 		else {
+			//manage composite related metadata
+			//guess if its a component and find id data access (property, field etc)
+			final boolean isComponent = entityXClass.isAnnotationPresent( Embeddable.class )
+					|| idXProperty.isAnnotationPresent( EmbeddedId.class );
+
 			GeneratedValue generatedValue = idXProperty.getAnnotation( GeneratedValue.class );
 
 			String generatorType = generatedValue != null
@@ -3749,6 +3729,41 @@ public final class AnnotationBinder {
 			FetchType fetchType) {
 		if ( ignoreNotFound && fetchType == FetchType.LAZY ) {
 			LOG.ignoreNotFoundWithFetchTypeLazy( entity, association );
+		}
+	}
+
+	private static class CustomIdGeneratorCreator implements IdentifierGeneratorCreator {
+		private final Annotation generatorAnnotation;
+		private final Member underlyingMember;
+
+		public CustomIdGeneratorCreator(Annotation generatorAnnotation, XProperty idXProperty) {
+			this.generatorAnnotation = generatorAnnotation;
+			this.underlyingMember = HCANNHelper.getUnderlyingMember( idXProperty );
+		}
+
+		@Override
+		public IdentifierGenerator createGenerator(CustomIdGeneratorCreationContext context) {
+			final IdGeneratorType idGeneratorType = generatorAnnotation.annotationType().getAnnotation( IdGeneratorType.class );
+			assert idGeneratorType != null;
+
+			final Class<? extends IdentifierGenerator> generatorClass = idGeneratorType.value();
+			try {
+				return generatorClass
+						.getConstructor( generatorAnnotation.annotationType(), Member.class, CustomIdGeneratorCreationContext.class )
+						.newInstance( generatorAnnotation, underlyingMember, context );
+			}
+			catch (NoSuchMethodException e) {
+				throw new HibernateException(
+						"Unable to find appropriate constructor for @IdGeneratorType handling : " + generatorClass.getName(),
+						e
+				);
+			}
+			catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
+				throw new HibernateException(
+						"Unable to invoke constructor for @IdGeneratorType handling : " + generatorClass.getName(),
+						e
+				);
+			}
 		}
 	}
 }

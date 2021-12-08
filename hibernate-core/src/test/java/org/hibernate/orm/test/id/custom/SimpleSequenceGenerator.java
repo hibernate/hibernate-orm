@@ -6,6 +6,7 @@
  */
 package org.hibernate.orm.test.id.custom;
 
+import java.lang.reflect.Member;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -17,11 +18,16 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.spi.CustomIdGeneratorCreationContext;
 
+/**
+ * An example custom generator.
+ */
 public class SimpleSequenceGenerator implements IdentifierGenerator {
+	public static int generationCount = 0;
+
 	private final Identifier sequenceName;
 	private final String sqlSelectFrag;
 
-	public SimpleSequenceGenerator(Sequence config, CustomIdGeneratorCreationContext context) {
+	public SimpleSequenceGenerator(Sequence config, Member annotatedMember, CustomIdGeneratorCreationContext context) {
 		final String name = config.name();
 
 		// ignore the other config for now...
@@ -50,6 +56,7 @@ public class SimpleSequenceGenerator implements IdentifierGenerator {
 
 	@Override
 	public Object generate(SharedSessionContractImplementor session, Object object) {
+		generationCount++;
 		try {
 			final PreparedStatement st = session.getJdbcCoordinator().getStatementPreparer().prepareStatement( sqlSelectFrag );
 			try {

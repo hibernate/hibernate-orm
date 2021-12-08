@@ -14,8 +14,9 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 /**
  * A strategy for generating a variant 2 {@link UUID} value.
  *
- * @author Steve Ebersole
+ * @deprecated see {@link UUIDGenerator}
  */
+@Deprecated
 public interface UUIDGenerationStrategy extends Serializable {
 	/**
 	 * Which variant, according to IETF RFC 4122, of UUID does this strategy generate?  RFC 4122 defines

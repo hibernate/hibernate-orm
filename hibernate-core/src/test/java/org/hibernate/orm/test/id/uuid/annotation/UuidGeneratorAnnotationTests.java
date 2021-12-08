@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.orm.test.id.custom;
+package org.hibernate.orm.test.id.uuid.annotation;
 
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Property;
@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @DomainModel( annotatedClasses = TheEntity.class )
 @SessionFactory
-public class CustomGeneratorTests {
+public class UuidGeneratorAnnotationTests {
 	@Test
 	public void verifyModel(DomainModelScope scope) {
 		scope.withHierarchy( TheEntity.class, (descriptor) -> {
@@ -35,12 +35,8 @@ public class CustomGeneratorTests {
 
 	@Test
 	public void basicUseTest(SessionFactoryScope scope) {
-		assertThat( SimpleSequenceGenerator.generationCount ).isEqualTo( 0 );
-
 		scope.inTransaction( (session) -> {
 			session.persist( new TheEntity( "steve" ) );
 		} );
-
-		assertThat( SimpleSequenceGenerator.generationCount ).isEqualTo( 1 );
 	}
 }

@@ -7,9 +7,6 @@
 package org.hibernate.exception.internal;
 
 import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
 
 import org.hibernate.JDBCException;
@@ -40,8 +37,7 @@ public class SQLStateConversionDelegate extends AbstractSQLExceptionConversionDe
 
 	private static final Set<String> SQL_GRAMMAR_CATEGORIES = buildGrammarCategories();
 	private static Set<String> buildGrammarCategories() {
-		HashSet<String> categories = new HashSet<>(
-				Arrays.asList(
+		return Set.of(
 						"07", 	// "dynamic SQL error"
 						"20",
 						"2A", 	// "direct SQL syntax error or access rule violation"
@@ -49,41 +45,31 @@ public class SQLStateConversionDelegate extends AbstractSQLExceptionConversionDe
 						"42",	// "syntax error or access rule violation"
 						"65",	// Oracle specific as far as I can tell
 						"S0"	// MySQL specific as far as I can tell
-				)
 		);
-		return Collections.unmodifiableSet( categories );
 	}
 
 	private static final Set DATA_CATEGORIES = buildDataCategories();
 	private static Set<String> buildDataCategories() {
-		HashSet<String> categories = new HashSet<>(
-				Arrays.asList(
-						"21",	// "cardinality violation"
-						"22"	// "data exception"
-				)
+		return Set.of(
+				"21",	// "cardinality violation"
+				"22"	// "data exception"
 		);
-		return Collections.unmodifiableSet( categories );
 	}
 
 	private static final Set INTEGRITY_VIOLATION_CATEGORIES = buildContraintCategories();
 	private static Set<String> buildContraintCategories() {
-		HashSet<String> categories = new HashSet<>(
-				Arrays.asList(
-						"23",	// "integrity constraint violation"
-						"27",	// "triggered data change violation"
-						"44"	// "with check option violation"
-				)
+		return Set.of(
+				"23",	// "integrity constraint violation"
+				"27",	// "triggered data change violation"
+				"44"	// "with check option violation"
 		);
-		return Collections.unmodifiableSet( categories );
 	}
 
 	private static final Set CONNECTION_CATEGORIES = buildConnectionCategories();
 	private static Set<String> buildConnectionCategories() {
-		HashSet<String> categories = new HashSet<>();
-		categories.add(
+		return Set.of(
 				"08"	// "connection exception"
 		);
-		return Collections.unmodifiableSet( categories );
 	}
 
 	public SQLStateConversionDelegate(ConversionContext conversionContext) {

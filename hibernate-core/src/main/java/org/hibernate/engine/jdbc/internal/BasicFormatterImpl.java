@@ -6,7 +6,6 @@
  */
 package org.hibernate.engine.jdbc.internal;
 
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Locale;
 import java.util.Set;
@@ -22,49 +21,24 @@ import org.hibernate.internal.util.StringHelper;
  */
 public class BasicFormatterImpl implements Formatter {
 
-	private static final Set<String> BEGIN_CLAUSES = new HashSet<>();
-	private static final Set<String> END_CLAUSES = new HashSet<>();
-	private static final Set<String> LOGICAL = new HashSet<>();
-	private static final Set<String> QUANTIFIERS = new HashSet<>();
-	private static final Set<String> DML = new HashSet<>();
-	private static final Set<String> MISC = new HashSet<>();
-
-	static {
-		BEGIN_CLAUSES.add( "left" );
-		BEGIN_CLAUSES.add( "right" );
-		BEGIN_CLAUSES.add( "inner" );
-		BEGIN_CLAUSES.add( "outer" );
-		BEGIN_CLAUSES.add( "group" );
-		BEGIN_CLAUSES.add( "order" );
-
-		END_CLAUSES.add( "where" );
-		END_CLAUSES.add( "set" );
-		END_CLAUSES.add( "having" );
-		END_CLAUSES.add( "from" );
-		END_CLAUSES.add( "by" );
-		END_CLAUSES.add( "join" );
-		END_CLAUSES.add( "into" );
-		END_CLAUSES.add( "union" );
-
-		LOGICAL.add( "and" );
-		LOGICAL.add( "or" );
-		LOGICAL.add( "when" );
-		LOGICAL.add( "else" );
-		LOGICAL.add( "end" );
-
-		QUANTIFIERS.add( "in" );
-		QUANTIFIERS.add( "all" );
-		QUANTIFIERS.add( "exists" );
-		QUANTIFIERS.add( "some" );
-		QUANTIFIERS.add( "any" );
-
-		DML.add( "insert" );
-		DML.add( "update" );
-		DML.add( "delete" );
-
-		MISC.add( "select" );
-		MISC.add( "on" );
-	}
+	private static final Set<String> BEGIN_CLAUSES = Set.of(
+			"left",	"right", "inner", "outer", "group", "order"
+	);
+	private static final Set<String> END_CLAUSES = Set.of(
+			"where", "set", "having", "from", "by", "join", "into", "union"
+	);
+	private static final Set<String> LOGICAL = Set.of(
+			"and", "or", "when", "else", "end"
+	);
+	private static final Set<String> QUANTIFIERS = Set.of(
+			"in", "all", "exists", "some", "any"
+	);
+	private static final Set<String> DML = Set.of(
+			"insert", "update", "delete"
+	);
+	private static final Set<String> MISC = Set.of(
+			"select", "on"
+	);
 
 	private static final String INDENT_STRING = "    ";
 	private static final String INITIAL = System.lineSeparator() + INDENT_STRING;

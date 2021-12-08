@@ -12,7 +12,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.StringTokenizer;
 
 import org.hibernate.boot.model.source.internal.hbm.CommaSeparatedStringHelper;
@@ -542,20 +541,7 @@ public final class StringHelper {
 	}
 
 	public static boolean isBlank(String string) {
-		//TODO use Java 11's more efficient String#isBlank - currently we still require Java 8 compatibility
-		if ( string == null || string.isEmpty() ) {
-			return true;
-		}
-		else {
-			//Else: we need to check all characters, preferably without using String#trim() so to
-			//not allocate temporary strings
-			for ( int i = 0; i < string.length(); i++ ) {
-				if ( ! Character.isWhitespace( string.charAt( i ) ) ) {
-					return false;
-				}
-			}
-			return true;
-		}
+		return string == null || string.isBlank();
 	}
 
 	/**

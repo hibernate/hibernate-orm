@@ -9,8 +9,10 @@ package org.hibernate.orm.test.id.custom;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Property;
 
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
@@ -19,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @DomainModel( annotatedClasses = TheEntity.class )
 @SessionFactory
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsSequences.class )
 public class CustomGeneratorTests {
 	@Test
 	public void verifyModel(DomainModelScope scope) {

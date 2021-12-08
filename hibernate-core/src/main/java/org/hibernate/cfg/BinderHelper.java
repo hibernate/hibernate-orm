@@ -78,20 +78,16 @@ public class BinderHelper {
 	private BinderHelper() {
 	}
 
-	static {
-		Set<String> primitiveNames = new HashSet<>();
-		primitiveNames.add( byte.class.getName() );
-		primitiveNames.add( short.class.getName() );
-		primitiveNames.add( int.class.getName() );
-		primitiveNames.add( long.class.getName() );
-		primitiveNames.add( float.class.getName() );
-		primitiveNames.add( double.class.getName() );
-		primitiveNames.add( char.class.getName() );
-		primitiveNames.add( boolean.class.getName() );
-		PRIMITIVE_NAMES = Collections.unmodifiableSet( primitiveNames );
-	}
-
-	public static final Set<String> PRIMITIVE_NAMES;
+	public static final Set<String> PRIMITIVE_NAMES = Set.of(
+			byte.class.getName(),
+			short.class.getName(),
+			int.class.getName(),
+			long.class.getName(),
+			float.class.getName(),
+			double.class.getName(),
+			char.class.getName(),
+			boolean.class.getName()
+	);
 
 	/**
 	 * create a property copy reusing the same value

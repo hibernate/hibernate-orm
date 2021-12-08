@@ -6,8 +6,6 @@
  */
 package org.hibernate.cfg.annotations;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -113,7 +111,6 @@ import jakarta.persistence.MapKey;
 import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.OneToMany;
 
-import static jakarta.persistence.AccessType.FIELD;
 import static jakarta.persistence.AccessType.PROPERTY;
 import static org.hibernate.cfg.BinderHelper.toAliasEntityMap;
 import static org.hibernate.cfg.BinderHelper.toAliasTableMap;
@@ -128,13 +125,14 @@ import static org.hibernate.cfg.BinderHelper.toAliasTableMap;
 public abstract class CollectionBinder {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, CollectionBinder.class.getName());
 
-	private static final List<Class<?>> INFERRED_CLASS_PRIORITY = Collections.unmodifiableList( Arrays.asList(
+	private static final List<Class<?>> INFERRED_CLASS_PRIORITY = List.of(
 			List.class,
 			java.util.SortedSet.class,
 			java.util.Set.class,
 			java.util.SortedMap.class,
 			Map.class,
-			java.util.Collection.class) );
+			java.util.Collection.class
+	);
 
 	private MetadataBuildingContext buildingContext;
 

@@ -6,8 +6,6 @@
  */
 package org.hibernate.cache.spi;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -29,20 +27,18 @@ public abstract class AbstractRegionFactory implements RegionFactory {
 	/**
 	 * Legacy names that used to be the default for the query results region.
 	 */
-	public static final List<String> LEGACY_QUERY_RESULTS_REGION_UNQUALIFIED_NAMES =
-			Collections.unmodifiableList( Arrays.asList(
-					"org.hibernate.cache.spi.QueryResultsRegion",
-					"org.hibernate.cache.internal.StandardQueryCache"
-			) );
+	public static final List<String> LEGACY_QUERY_RESULTS_REGION_UNQUALIFIED_NAMES = List.of(
+			"org.hibernate.cache.spi.QueryResultsRegion",
+			"org.hibernate.cache.internal.StandardQueryCache"
+	);
 
 	/**
 	 * Legacy names that used to be the default for the update timestamps region.
 	 */
-	public static final List<String> LEGACY_UPDATE_TIMESTAMPS_REGION_UNQUALIFIED_NAMES =
-			Collections.unmodifiableList( Arrays.asList(
-					"org.hibernate.cache.spi.TimestampsRegion",
-					"org.hibernate.cache.spi.UpdateTimestampsCache"
-			) );
+	public static final List<String> LEGACY_UPDATE_TIMESTAMPS_REGION_UNQUALIFIED_NAMES = List.of(
+			"org.hibernate.cache.spi.TimestampsRegion",
+			"org.hibernate.cache.spi.UpdateTimestampsCache"
+	);
 
 	private Exception startingException;
 

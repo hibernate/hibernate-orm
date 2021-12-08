@@ -11,7 +11,6 @@ import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
@@ -78,24 +77,16 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 
 	// mapping from legacy connection provider name to actual
 	// connection provider that will be used
-	private static final Map<String,String> LEGACY_CONNECTION_PROVIDER_MAPPING;
+	private static final Map<String,String> LEGACY_CONNECTION_PROVIDER_MAPPING = Map.of(
+			"org.hibernate.connection.DatasourceConnectionProvider",
+			DatasourceConnectionProviderImpl.class.getName(),
 
-	static {
-		LEGACY_CONNECTION_PROVIDER_MAPPING = CollectionHelper.mapOfSize( 5 );
+			"org.hibernate.connection.DriverManagerConnectionProvider",
+			DriverManagerConnectionProviderImpl.class.getName(),
 
-		LEGACY_CONNECTION_PROVIDER_MAPPING.put(
-				"org.hibernate.connection.DatasourceConnectionProvider",
-				DatasourceConnectionProviderImpl.class.getName()
-		);
-		LEGACY_CONNECTION_PROVIDER_MAPPING.put(
-				"org.hibernate.connection.DriverManagerConnectionProvider",
-				DriverManagerConnectionProviderImpl.class.getName()
-		);
-		LEGACY_CONNECTION_PROVIDER_MAPPING.put(
-				"org.hibernate.connection.UserSuppliedConnectionProvider",
-				UserSuppliedConnectionProviderImpl.class.getName()
-		);
-	}
+			"org.hibernate.connection.UserSuppliedConnectionProvider",
+			UserSuppliedConnectionProviderImpl.class.getName()
+	);
 
 	@Override
 	public Class<ConnectionProvider> getServiceInitiated() {
@@ -448,13 +439,10 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 	// Connection properties (map value) that automatically need set if the
 	// Hibernate property (map key) is available. Makes the assumption that
 	// both settings use the same value type.
-	private static final Map<String, String> CONDITIONAL_PROPERTIES;
-
-	static {
-		CONDITIONAL_PROPERTIES = new HashMap<>();
-		// Oracle requires that includeSynonyms=true in order for getColumns to work using a table synonym name.
-		CONDITIONAL_PROPERTIES.put( AvailableSettings.ENABLE_SYNONYMS, "includeSynonyms" );
-	}
+	private static final Map<String, String> CONDITIONAL_PROPERTIES = Map.of(
+			// Oracle requires that includeSynonyms=true in order for getColumns to work using a table synonym name.
+			AvailableSettings.ENABLE_SYNONYMS, "includeSynonyms"
+	);
 
 	public static Integer extractIsolation(Map settings) {
 		return interpretIsolation( settings.get( AvailableSettings.ISOLATION ) );

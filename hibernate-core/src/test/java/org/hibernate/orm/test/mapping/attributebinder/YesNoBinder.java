@@ -11,7 +11,6 @@ import java.sql.Types;
 import org.hibernate.boot.model.convert.internal.InstanceBasedConverterDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.BasicValue;
-import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.tuple.AttributeBinder;

@@ -25,11 +25,11 @@ import org.hibernate.type.Type;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 
 /**
- * <b>foreign</b><br>
- * <br>
+ * <b>foreign</b>
+ * <p>
  * An <tt>Identifier</tt> generator that uses the value of the id property of an
- * associated object<br>
- * <br>
+ * associated object
+ * <p>
  * One mapping parameter is required: property.
  *
  * @author Gavin King

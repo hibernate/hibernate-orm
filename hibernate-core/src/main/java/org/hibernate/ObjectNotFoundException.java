@@ -12,8 +12,8 @@ package org.hibernate;
  * be thrown when <tt>load()</tt> is called, even if there was no
  * row on the database, because <tt>load()</tt> returns a proxy if
  * possible. Applications should use <tt>Session.get()</tt> to test if
- * a row exists in the database.<br>
- * <br> 
+ * a row exists in the database.
+ * <p>
  * Like all Hibernate exceptions, this exception is considered 
  * unrecoverable.
  *

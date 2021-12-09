@@ -15,8 +15,8 @@ import org.hibernate.query.Query;
  * by arbitrary increments. The <tt>Query</tt> / <tt>ScrollableResults</tt>
  * pattern is very similar to the JDBC <tt>PreparedStatement</tt>/
  * <tt>ResultSet</tt> pattern and the semantics of methods of this interface
- * are similar to the similarly named methods on <tt>ResultSet</tt>.<br>
- * <br>
+ * are similar to the similarly named methods on <tt>ResultSet</tt>.
+ * <p>
  * Contrary to JDBC, columns of results are numbered from zero.
  *
  * @see Query#scroll()

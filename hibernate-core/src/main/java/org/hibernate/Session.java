@@ -21,37 +21,37 @@ import org.hibernate.stat.SessionStatistics;
 
 /**
  * The main runtime interface between a Java application and Hibernate. This is the
- * central API class abstracting the notion of a persistence service.<br>
- * <br>
+ * central API class abstracting the notion of a persistence service.
+ * <p>
  * The lifecycle of a <tt>Session</tt> is bounded by the beginning and end of a logical
- * transaction. (Long transactions might span several database transactions.)<br>
- * <br>
+ * transaction. (Long transactions might span several database transactions.)
+ * <p>
  * The main function of the <tt>Session</tt> is to offer create, read and delete operations
- * for instances of mapped entity classes. Instances may exist in one of three states:<br>
- * <br>
- * <i>transient:</i> never persistent, not associated with any <tt>Session</tt><br>
- * <i>persistent:</i> associated with a unique <tt>Session</tt><br>
- * <i>detached:</i> previously persistent, not associated with any <tt>Session</tt><br>
- * <br>
+ * for instances of mapped entity classes. Instances may exist in one of three states:
+ * <ul>
+ * <li><i>transient:</i> never persistent, not associated with any <tt>Session</tt>
+ * <li><i>persistent:</i> associated with a unique <tt>Session</tt>
+ * <li><i>detached:</i> previously persistent, not associated with any <tt>Session</tt>
+ * </ul>
  * Transient instances may be made persistent by calling <tt>save()</tt>,
  * <tt>persist()</tt> or <tt>saveOrUpdate()</tt>. Persistent instances may be made transient
  * by calling<tt> delete()</tt>. Any instance returned by a <tt>get()</tt> or
  * <tt>load()</tt> method is persistent. Detached instances may be made persistent
  * by calling <tt>update()</tt>, <tt>saveOrUpdate()</tt>, <tt>lock()</tt> or <tt>replicate()</tt>. 
  * The state of a transient or detached instance may also be made persistent as a new
- * persistent instance by calling <tt>merge()</tt>.<br>
- * <br>
+ * persistent instance by calling <tt>merge()</tt>.
+ * <p>
  * <tt>save()</tt> and <tt>persist()</tt> result in an SQL <tt>INSERT</tt>, <tt>delete()</tt>
  * in an SQL <tt>DELETE</tt> and <tt>update()</tt> or <tt>merge()</tt> in an SQL <tt>UPDATE</tt>. 
  * Changes to <i>persistent</i> instances are detected at flush time and also result in an SQL
  * <tt>UPDATE</tt>. <tt>saveOrUpdate()</tt> and <tt>replicate()</tt> result in either an
- * <tt>INSERT</tt> or an <tt>UPDATE</tt>.<br>
- * <br>
+ * <tt>INSERT</tt> or an <tt>UPDATE</tt>.
+ * <p>
  * It is not intended that implementors be threadsafe. Instead each thread/transaction
- * should obtain its own instance from a <tt>SessionFactory</tt>.<br>
- * <br>
- * A <tt>Session</tt> instance is serializable if its persistent classes are serializable.<br>
- * <br>
+ * should obtain its own instance from a <tt>SessionFactory</tt>.
+ * <p>
+ * A <tt>Session</tt> instance is serializable if its persistent classes are serializable.
+ * <p>
  * A typical transaction should use the following idiom:
  * <pre>
  * Session sess = factory.openSession();
@@ -70,7 +70,7 @@ import org.hibernate.stat.SessionStatistics;
  *     sess.close();
  * }
  * </pre>
- * <br>
+ * <p>
  * If the <tt>Session</tt> throws an exception, the transaction must be rolled back
  * and the session discarded. The internal state of the <tt>Session</tt> might not
  * be consistent with the database after the exception occurs.
@@ -332,7 +332,7 @@ public interface Session extends SharedSessionContract, EntityManager, AutoClose
 	 * Return the persistent instance of the given entity class with the given identifier,
 	 * assuming that the instance exists. This method might return a proxied instance that
 	 * is initialized on-demand, when a non-identifier method is accessed.
-	 * <br><br>
+	 * <p>
 	 * You should not use this method to determine if an instance exists (use <tt>get()</tt>
 	 * instead). Use this only to retrieve an instance that you assume exists, where non-existence
 	 * would be an actual error.
@@ -348,7 +348,7 @@ public interface Session extends SharedSessionContract, EntityManager, AutoClose
 	 * Return the persistent instance of the given entity class with the given identifier,
 	 * assuming that the instance exists. This method might return a proxied instance that
 	 * is initialized on-demand, when a non-identifier method is accessed.
-	 * <br><br>
+	 * <p>
 	 * You should not use this method to determine if an instance exists (use <tt>get()</tt>
 	 * instead). Use this only to retrieve an instance that you assume exists, where non-existence
 	 * would be an actual error.

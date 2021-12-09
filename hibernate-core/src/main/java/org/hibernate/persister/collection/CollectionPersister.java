@@ -39,19 +39,20 @@ import org.hibernate.type.Type;
  * A strategy for persisting a collection role. Defines a contract between
  * the persistence strategy and the actual persistent collection framework
  * and session. Does not define operations that are required for querying
- * collections, or loading by outer join.<br>
- * <br>
+ * collections, or loading by outer join.
+ * <p>
  * Implements persistence of a collection instance while the instance is
- * referenced in a particular role.<br>
- * <br>
+ * referenced in a particular role.
+ * <p>
  * This class is highly coupled to the <tt>PersistentCollection</tt>
  * hierarchy, since double dispatch is used to load and update collection
- * elements.<br>
- * <br>
+ * elements.
+ * <p>
  * May be considered an immutable view of the mapping object
- * <p/>
+ * <p>
  * Unless a customer {@link org.hibernate.persister.spi.PersisterFactory} is used, it is expected
- * that implementations of CollectionDefinition define a constructor accepting the following arguments:<ol>
+ * that implementations of CollectionDefinition define a constructor accepting the following arguments:
+ * <ol>
  *     <li>
  *         {@link org.hibernate.mapping.Collection} - The metadata about the collection to be handled
  *         by the persister

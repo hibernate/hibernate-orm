@@ -16,8 +16,8 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
 
 /**
- * <b>assigned</b><br>
- * <br>
+ * <b>assigned</b>
+ * <p>
  * An <tt>IdentifierGenerator</tt> that returns the current identifier assigned
  * to an instance.
  *

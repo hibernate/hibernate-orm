@@ -24,18 +24,18 @@ import org.hibernate.type.Type;
  * automatically deleted when unreferenced and automatically become
  * persistent when held by a persistent object. Collections can be
  * passed between different objects (change "roles") and this might
- * cause their elements to move from one database table to another.<br>
- * <br>
+ * cause their elements to move from one database table to another.
+ * <p>
  * Hibernate "wraps" a java collection in an instance of
  * PersistentCollection. This mechanism is designed to support
  * tracking of changes to the collection's persistent state and
  * lazy instantiation of collection elements. The downside is that
  * only certain abstract collection types are supported and any
- * extra semantics are lost<br>
- * <br>
+ * extra semantics are lost
+ * <p>
  * Applications should <em>never</em> use classes in this package
- * directly, unless extending the "framework" here.<br>
- * <br>
+ * directly, unless extending the "framework" here.
+ * <p>
  * Changes to <em>structure</em> of the collection are recorded by the
  * collection calling back to the session. Changes to mutable
  * elements (ie. composite elements) are discovered by cloning their

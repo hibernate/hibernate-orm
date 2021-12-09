@@ -18,8 +18,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  * This interface should be implemented by user-defined "types".
  * A "type" class is <em>not</em> the actual property type - it
  * is a class that knows how to serialize instances of another
- * class to and from JDBC.<br>
- * <br>
+ * class to and from JDBC.
+ * <p>
  * This interface
  * <ul>
  * <li>abstracts user code from future changes to the <tt>Type</tt>
@@ -27,16 +27,16 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  * <li>simplifies the implementation of custom types and</li>
  * <li>hides certain "internal" interfaces from user code.</li>
  * </ul>
- * <br>
+ * <p>
  * Implementors must be immutable and must declare a public
- * default constructor.<br>
- * <br>
+ * default constructor.
+ * <p>
  * The actual class mapped by a <tt>UserType</tt> may be just
- * about anything.<br>
- * <br>
+ * about anything.
+ * <p>
  * <tt>CompositeUserType</tt> provides an extended version of
- * this interface that is useful for more complex cases.<br>
- * <br>
+ * this interface that is useful for more complex cases.
+ * <p>
  * Alternatively, custom types could implement <tt>Type</tt>
  * directly or extend one of the abstract classes in
  * <tt>org.hibernate.type</tt>. This approach risks future

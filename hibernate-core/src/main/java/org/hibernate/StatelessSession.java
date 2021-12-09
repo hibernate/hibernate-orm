@@ -8,9 +8,6 @@ package org.hibernate;
 
 import java.io.Closeable;
 
-import org.hibernate.annotations.Remove;
-import org.hibernate.query.NativeQuery;
-
 /**
  * A command-oriented API for performing bulk operations against a database.
  * <p/>
@@ -155,9 +152,4 @@ public interface StatelessSession extends SharedSessionContract, AutoCloseable, 
 	 * @param lockMode The LockMode to be applied.
 	 */
 	void refresh(String entityName, Object entity, LockMode lockMode);
-
-	@Remove
-	default <T> NativeQuery<T> createSQLQuery(String queryString) {
-		return createNativeQuery( queryString );
-	}
 }

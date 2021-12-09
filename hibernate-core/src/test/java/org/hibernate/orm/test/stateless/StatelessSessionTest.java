@@ -83,7 +83,7 @@ public class StatelessSessionTest {
 						assertEquals( "Blahs", doc2.getName() );
 						assertEquals( doc.getText(), doc2.getText() );
 
-						doc2 = (Document) statelessSession.createSQLQuery( "select * from Document" )
+						doc2 = (Document) statelessSession.createNativeQuery( "select * from Document" )
 								.addEntity( Document.class )
 								.uniqueResult();
 						assertEquals( "Blahs", doc2.getName() );

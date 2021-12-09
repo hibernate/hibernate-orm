@@ -1055,35 +1055,6 @@ public class DefaultCatalogAndSchemaTest {
 		private String basic;
 	}
 
-	@Entity(name = EntityWithDefaultQualifiersWithSequenceIdentityGenerator.NAME)
-	public static class EntityWithDefaultQualifiersWithSequenceIdentityGenerator {
-		public static final String NAME = "EntityWithDefaultQualifiersWithSequenceIdentityGenerator";
-		@Id
-		@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = NAME + "_generator")
-		@GenericGenerator(name = NAME + "_generator", strategy = "sequence-identity", parameters = {
-				@Parameter(name = "sequence", value = NAME + "_seq")
-		})
-		private Long id;
-		@Basic
-		private String basic;
-	}
-
-	@Entity(name = EntityWithExplicitQualifiersWithSequenceIdentityGenerator.NAME)
-	@Table(catalog = EXPLICIT_CATALOG, schema = EXPLICIT_SCHEMA)
-	public static class EntityWithExplicitQualifiersWithSequenceIdentityGenerator {
-		public static final String NAME = "EntityWithExplicitQualifiersWithSequenceIdentityGenerator";
-		@Id
-		@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = NAME + "_generator")
-		@GenericGenerator(name = NAME + "_generator", strategy = "sequence-identity", parameters = {
-				@Parameter(name = "sequence", value = NAME + "_seq"),
-				@Parameter(name = "catalog", value = EXPLICIT_CATALOG),
-				@Parameter(name = "schema", value = EXPLICIT_SCHEMA)
-		})
-		private Long id;
-		@Basic
-		private String basic;
-	}
-
 	@Entity(name = EntityWithDefaultQualifiersWithEnhancedSequenceGenerator.NAME)
 	public static class EntityWithDefaultQualifiersWithEnhancedSequenceGenerator {
 		public static final String NAME = "EntityWithDefaultQualifiersWithEnhancedSequenceGenerator";

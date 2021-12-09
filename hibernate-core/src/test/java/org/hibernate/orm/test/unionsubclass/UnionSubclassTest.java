@@ -14,7 +14,6 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.Query;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 
@@ -505,17 +504,16 @@ public class UnionSubclassTest extends BaseSessionFactoryFunctionalTest {
 		inTransaction( s1 -> {
 			// Transaction used by s1 is already started.
 			// Assert that the Connection is already physically connected.
-			SharedSessionContractImplementor s1Implementor = (SharedSessionContractImplementor) s1;
-			assertTrue( s1Implementor.getJdbcCoordinator().getLogicalConnection().isPhysicallyConnected() );
+			assertTrue( s1.getJdbcCoordinator().getLogicalConnection().isPhysicallyConnected() );
 
 			// Assert that the same Connection will be used for s1's entire transaction
 			assertEquals(
 					PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION,
-					s1Implementor.getJdbcCoordinator().getLogicalConnection().getConnectionHandlingMode()
+					s1.getJdbcCoordinator().getLogicalConnection().getConnectionHandlingMode()
 			);
 
 			// Get the Connection s1 will use.
-			final Connection connection1 = s1Implementor.connection();
+			final Connection connection1 = s1.getJdbcCoordinator().getLogicalConnection().getPhysicalConnection();
 
 			// Avoid a pessimistic lock exception by not doing anything with s1 until
 			// after a second Session (with a different connection) is used
@@ -523,15 +521,14 @@ public class UnionSubclassTest extends BaseSessionFactoryFunctionalTest {
 
 			inTransaction( s2 -> {
 							   // Check same assertions for s2 as was done for s1.
-							   SharedSessionContractImplementor s2Implementor = (SharedSessionContractImplementor) s2;
-							   assertTrue( s2Implementor.getJdbcCoordinator().getLogicalConnection().isPhysicallyConnected() );
+				assertTrue( s2.getJdbcCoordinator().getLogicalConnection().isPhysicallyConnected() );
 							   assertEquals(
 									   PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION,
-									   s2Implementor.getJdbcCoordinator().getLogicalConnection().getConnectionHandlingMode()
+									   s2.getJdbcCoordinator().getLogicalConnection().getConnectionHandlingMode()
 							   );
 
 							   // Get the Connection s2 will use.
-							   Connection connection2 = s2Implementor.connection();
+							   Connection connection2 = s2.getJdbcCoordinator().getLogicalConnection().getPhysicalConnection();
 
 							   // Assert that connection2 is not the same as connection1
 							   assertNotSame( connection1, connection2 );
@@ -543,12 +540,12 @@ public class UnionSubclassTest extends BaseSessionFactoryFunctionalTest {
 							   );
 
 							   // Assert the Connection has not changed
-							   assertSame( connection2, s2Implementor.connection() );
+							   assertSame( connection2, s2.getJdbcCoordinator().getLogicalConnection().getPhysicalConnection() );
 						   }
 			);
 
 			// Assert that the Connection used by s1 has hot changed.
-			assertSame( connection1, s1Implementor.connection() );
+			assertSame( connection1, s1.getJdbcCoordinator().getLogicalConnection().getPhysicalConnection() );
 
 			// Execute a bulk operation on s1 (using connection1)
 			assertEquals(
@@ -558,7 +555,7 @@ public class UnionSubclassTest extends BaseSessionFactoryFunctionalTest {
 			);
 
 			// Assert that the Connection used by s1 has hot changed.
-			assertSame( connection1, s1Implementor.connection() );
+			assertSame( connection1, s1.getJdbcCoordinator().getLogicalConnection().getPhysicalConnection() );
 
 		} );
 

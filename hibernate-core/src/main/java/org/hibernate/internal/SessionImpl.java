@@ -488,12 +488,6 @@ public class SessionImpl
 	}
 
 	@Override
-	public Connection connection() throws HibernateException {
-		checkOpenOrWaitingForAutoClose();
-		return getJdbcCoordinator().getLogicalConnection().getPhysicalConnection();
-	}
-
-	@Override
 	public Connection disconnect() throws HibernateException {
 		checkOpen();
 		log.debug( "Disconnecting session" );

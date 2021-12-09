@@ -7,7 +7,6 @@
 package org.hibernate;
 
 import java.io.Closeable;
-import java.sql.Connection;
 
 import org.hibernate.annotations.Remove;
 import org.hibernate.query.NativeQuery;
@@ -156,22 +155,6 @@ public interface StatelessSession extends SharedSessionContract, AutoCloseable, 
 	 * @param lockMode The LockMode to be applied.
 	 */
 	void refresh(String entityName, Object entity, LockMode lockMode);
-
-	/**
-	 * Returns the current JDBC connection associated with this
-	 * instance.
-	 * <p>
-	 * If the session is using aggressive connection release (as in a
-	 * CMT environment), it is the application's responsibility to
-	 * close the connection returned by this call. Otherwise, the
-	 * application should not close the connection.
-	 *
-	 * @deprecated just missed when deprecating same method from {@link Session}
-	 *
-	 * @return The connection associated with this stateless session
-	 */
-	@Deprecated
-	Connection connection();
 
 	@Remove
 	default <T> NativeQuery<T> createSQLQuery(String queryString) {

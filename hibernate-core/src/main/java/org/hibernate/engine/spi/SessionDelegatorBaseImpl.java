@@ -269,11 +269,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public Connection connection() {
-		return delegate.connection();
-	}
-
-	@Override
 	public void flush() {
 		delegate.flush();
 	}

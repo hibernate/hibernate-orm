@@ -5,6 +5,7 @@
 :attributeBinderTestDir: {coreProjectDir}/src/test/java/org/hibernate/orm/test/mapping/attributebinder
 :extrasdir: extras
 
+`AttributeBinder` is the best thing since sliced bread.  Here's why...
 
 [[domain-customizing-example]]
 .AttributeBinder example

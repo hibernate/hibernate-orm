@@ -7,7 +7,6 @@
 package org.hibernate;
 
 import java.io.Closeable;
-import java.sql.Connection;
 import java.util.List;
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManager;
@@ -961,31 +960,6 @@ public interface Session extends SharedSessionContract, EntityManager, AutoClose
 	default <T> List<EntityGraph<? super T>> getEntityGraphs(Class<T> entityClass) {
 		return (List) getSessionFactory().findEntityGraphsByType( entityClass );
 	}
-
-	/**
-	 * Disconnect the session from its underlying JDBC connection.  This is intended for use in cases where the
-	 * application has supplied the JDBC connection to the session and which require long-sessions (aka, conversations).
-	 * <p/>
-	 * It is considered an error to call this method on a session which was not opened by supplying the JDBC connection
-	 * and an exception will be thrown.
-	 * <p/>
-	 * For non-user-supplied scenarios, normal transaction management already handles disconnection and reconnection
-	 * automatically.
-	 *
-	 * @return the application-supplied connection or {@code null}
-	 *
-	 * @see #reconnect(Connection)
-	 */
-	Connection disconnect();
-
-	/**
-	 * Reconnect to the given JDBC connection.
-	 *
-	 * @param connection a JDBC connection
-	 * 
-	 * @see #disconnect()
-	 */
-	void reconnect(Connection connection);
 
 	/**
 	 * Is a particular fetch profile enabled on this session?

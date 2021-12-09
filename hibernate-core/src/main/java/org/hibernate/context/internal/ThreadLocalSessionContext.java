@@ -335,12 +335,9 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 							|| "setHibernateFlushMode".equals( methodName )
 							|| "getFactory".equals( methodName )
 							|| "getSessionFactory".equals( methodName )
+							|| "getJdbcCoordinator".equals( methodName )
 							|| "getTenantIdentifier".equals( methodName ) ) {
 						LOG.tracef( "Allowing invocation [%s] to proceed to real (non-transacted) session", methodName );
-					}
-					else if ( "reconnect".equals( methodName ) || "disconnect".equals( methodName ) ) {
-						// allow these (deprecated) methods to pass through
-						LOG.tracef( "Allowing invocation [%s] to proceed to real (non-transacted) session - deprecated methods", methodName );
 					}
 					else {
 						throw new HibernateException( "Calling method '" + methodName + "' is not valid without an active transaction (Current status: "

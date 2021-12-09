@@ -8,6 +8,7 @@ package org.hibernate.orm.test.connections;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.SerializationHelper;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
@@ -91,7 +92,7 @@ public abstract class ConnectionManagementTestCase extends BaseNonConfigCoreFunc
 	}
 
 	protected void disconnect(Session session) throws Throwable {
-		session.disconnect();
+		((SessionImplementor)session).getJdbcCoordinator().getLogicalConnection().manualDisconnect();
 	}
 
 	/**

@@ -6,6 +6,9 @@
  */
 package org.hibernate.query.spi;
 
+import jakarta.persistence.criteria.CriteriaDelete;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaUpdate;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -26,33 +29,42 @@ public interface QueryProducerImplementor extends QueryProducer {
 
 	// todo : define list/scroll/iterate methods here...
 
-	@Override
-	<R> QueryImplementor<R> getNamedQuery(String queryName);
+	@Override @SuppressWarnings("rawtypes")
+	QueryImplementor getNamedQuery(String queryName);
 
-	@Override
-	<R> QueryImplementor<R> createQuery(String queryString);
+	@Override @SuppressWarnings("rawtypes")
+	QueryImplementor createQuery(String queryString);
 
 	@Override
 	<R> QueryImplementor<R> createQuery(String queryString, Class<R> resultClass);
 
-	@Override
-	<R> QueryImplementor<R> createNamedQuery(String name);
+	@Override @SuppressWarnings("rawtypes")
+	QueryImplementor createNamedQuery(String name);
 
 	@Override
 	<R> QueryImplementor<R> createNamedQuery(String name, Class<R> resultClass);
 
-	@Override
-	<R> NativeQueryImplementor<R> createNativeQuery(String sqlString);
+	@Override @SuppressWarnings("rawtypes")
+	NativeQueryImplementor createNativeQuery(String sqlString);
 
 	@Override
 	<R> NativeQueryImplementor<R> createNativeQuery(String sqlString, Class<R> resultClass);
 
-	@Override
-	<R> NativeQueryImplementor<R> createNativeQuery(String sqlString, String resultSetMappingName);
+	@Override @SuppressWarnings("rawtypes")
+	NativeQueryImplementor createNativeQuery(String sqlString, String resultSetMappingName);
+
+	@Override @SuppressWarnings("rawtypes")
+	NativeQueryImplementor getNamedNativeQuery(String name);
+
+	@Override @SuppressWarnings("rawtypes")
+	NativeQueryImplementor getNamedNativeQuery(String name, String resultSetMapping);
 
 	@Override
-	<R> NativeQueryImplementor<R> getNamedNativeQuery(String name);
+	<R> QueryImplementor<R> createQuery(CriteriaQuery<R> criteriaQuery);
 
-	@Override
-	<R> NativeQueryImplementor<R> getNamedNativeQuery(String name, String resultSetMapping);
+	@Override @SuppressWarnings("rawtypes")
+	QueryImplementor createQuery(CriteriaUpdate<?> updateQuery);
+
+	@Override @SuppressWarnings("rawtypes")
+	QueryImplementor createQuery(CriteriaDelete<?> deleteQuery);
 }

@@ -10,9 +10,6 @@ import java.util.List;
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.FlushModeType;
-import jakarta.persistence.criteria.CriteriaDelete;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.CriteriaUpdate;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.stat.SessionStatistics;
 
@@ -1088,37 +1085,4 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @param listeners The listener(s) to add
 	 */
 	void addEventListeners(SessionEventListener... listeners);
-
-	// The following declarations just override the JPA return type with our
-	// Hibernate Query type, as required by the declaration in QueryProducer
-
-	@Override @SuppressWarnings({"rawtypes", "unchecked"})
-	org.hibernate.query.Query getNamedQuery(String queryString);
-
-	@Override @SuppressWarnings({"rawtypes", "unchecked"})
-	org.hibernate.query.Query createQuery(String queryString);
-
-	@Override
-	<R> org.hibernate.query.Query<R> createQuery(String queryString, Class<R> resultType);
-
-	@Override @SuppressWarnings({"rawtypes", "unchecked"})
-	org.hibernate.query.Query createNamedQuery(String queryString);
-
-	@Override
-	<R> org.hibernate.query.Query<R> createNamedQuery(String name, Class<R> resultType);
-
-	@Override @SuppressWarnings({"rawtypes", "unchecked"})
-	org.hibernate.query.NativeQuery createNativeQuery(String queryString);
-
-	@Override @SuppressWarnings({"rawtypes", "unchecked"})
-	org.hibernate.query.NativeQuery createNativeQuery(String queryString, String resultSetMappingName);
-
-	@Override
-	<R> org.hibernate.query.Query<R> createQuery(CriteriaQuery<R> criteriaQuery);
-
-	@Override @SuppressWarnings({"rawtypes", "unchecked"})
-	org.hibernate.query.Query createQuery(CriteriaUpdate updateQuery);
-
-	@Override @SuppressWarnings({"rawtypes", "unchecked"})
-	org.hibernate.query.Query createQuery(CriteriaDelete deleteQuery);
 }

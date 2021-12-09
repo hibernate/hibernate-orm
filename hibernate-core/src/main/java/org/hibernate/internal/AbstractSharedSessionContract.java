@@ -633,7 +633,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// dynamic HQL handling
 
-	@Override @SuppressWarnings({"rawtypes", "unchecked"})
+	@Override @SuppressWarnings("rawtypes")
 	public QueryImplementor createQuery(String queryString) {
 		return createQuery( queryString, null );
 	}
@@ -673,7 +673,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// dynamic native (SQL) query handling
 
-	@Override @SuppressWarnings({"rawtypes", "unchecked"})
+	@Override @SuppressWarnings("rawtypes")
 	public NativeQueryImplementor createNativeQuery(String sqlString) {
 		checkOpen();
 		pulseTransactionCoordinator();
@@ -715,7 +715,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 	}
 
-	@Override @SuppressWarnings({"rawtypes", "unchecked"})
+	@Override @SuppressWarnings("rawtypes")
 	public NativeQueryImplementor createNativeQuery(String sqlString, String resultSetMappingName) {
 		checkOpen();
 		pulseTransactionCoordinator();
@@ -749,12 +749,12 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// named query handling
 
-	@Override @SuppressWarnings({"rawtypes", "unchecked"})
+	@Override @SuppressWarnings("rawtypes")
 	public QueryImplementor getNamedQuery(String queryName) {
 		return buildNamedQuery( queryName, null );
 	}
 
-	@Override @SuppressWarnings({"rawtypes", "unchecked"})
+	@Override @SuppressWarnings("rawtypes")
 	public QueryImplementor createNamedQuery(String name) {
 		return buildNamedQuery( name, null );
 	}
@@ -844,7 +844,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	protected void applyQuerySettingsAndHints(Query<?> query) {
 	}
 
-	@Override @SuppressWarnings({"rawtypes", "unchecked"})
+	@Override @SuppressWarnings("rawtypes")
 	public NativeQueryImplementor getNamedNativeQuery(String queryName) {
 		final NamedNativeQueryMemento namedNativeDescriptor = getFactory().getQueryEngine()
 				.getNamedObjectRepository()
@@ -857,7 +857,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		throw getExceptionConverter().convert( new IllegalArgumentException( "No query defined for that name [" + queryName + "]" ) );
 	}
 
-	@Override @SuppressWarnings({"rawtypes", "unchecked"})
+	@Override @SuppressWarnings("rawtypes")
 	public NativeQueryImplementor getNamedNativeQuery(String queryName, String resultSetMapping) {
 		final NamedNativeQueryMemento namedNativeDescriptor = getFactory().getQueryEngine()
 				.getNamedObjectRepository()
@@ -996,7 +996,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 	}
 
-	@Override @SuppressWarnings({"rawtypes", "unchecked"})
+	@Override @SuppressWarnings("rawtypes")
 	public QueryImplementor createQuery(CriteriaUpdate criteriaUpdate) {
 		checkOpen();
 		try {
@@ -1011,7 +1011,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 	}
 
-	@Override @SuppressWarnings({"rawtypes", "unchecked"})
+	@Override @SuppressWarnings("rawtypes")
 	public QueryImplementor createQuery(CriteriaDelete criteriaDelete) {
 		checkOpen();
 		try {

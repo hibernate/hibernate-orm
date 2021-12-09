@@ -14,6 +14,7 @@ import java.io.ObjectOutputStream;
 import java.util.Date;
 
 import org.hibernate.Session;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.orm.test.jpa.Cat;
 import org.hibernate.orm.test.jpa.Distributor;
 import org.hibernate.orm.test.jpa.Item;
@@ -63,7 +64,7 @@ public class EntityManagerSerializationTest {
 			item.setDescr( "Paris-Bruxelles" );
 
 			//fake the in container work
-			em.unwrap( Session.class ).disconnect();
+			em.unwrap( SessionImplementor.class ).getJdbcCoordinator().getLogicalConnection().manualDisconnect();
 			ByteArrayOutputStream stream = new ByteArrayOutputStream();
 			ObjectOutput out = new ObjectOutputStream( stream );
 			out.writeObject( em );

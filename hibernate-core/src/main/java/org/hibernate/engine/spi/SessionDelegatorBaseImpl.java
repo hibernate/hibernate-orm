@@ -988,16 +988,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public Connection disconnect() {
-		return delegate.disconnect();
-	}
-
-	@Override
-	public void reconnect(Connection connection) {
-		delegate.reconnect( connection );
-	}
-
-	@Override
 	public boolean isFetchProfileEnabled(String name) throws UnknownProfileException {
 		return delegate.isFetchProfileEnabled( name );
 	}

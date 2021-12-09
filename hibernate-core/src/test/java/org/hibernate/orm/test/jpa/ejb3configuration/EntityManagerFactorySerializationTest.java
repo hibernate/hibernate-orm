@@ -17,6 +17,7 @@ import jakarta.persistence.EntityManagerFactory;
 
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.orm.test.jpa.Cat;
 import org.hibernate.orm.test.jpa.Distributor;
 import org.hibernate.orm.test.jpa.Item;
@@ -77,7 +78,7 @@ public class EntityManagerFactorySerializationTest {
 			//em.getTransaction().commit();
 
 			//fake the in container work
-			em.unwrap( Session.class ).disconnect();
+			em.unwrap( SessionImplementor.class ).getJdbcCoordinator().getLogicalConnection().manualDisconnect();
 			stream = new ByteArrayOutputStream();
 			out = new ObjectOutputStream( stream );
 			out.writeObject( em );

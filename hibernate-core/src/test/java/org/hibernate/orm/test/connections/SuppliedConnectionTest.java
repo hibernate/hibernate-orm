@@ -17,6 +17,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.connections.internal.UserSuppliedConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.service.spi.Stoppable;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
@@ -68,7 +69,7 @@ public class SuppliedConnectionTest extends ConnectionManagementTestCase {
 
 	@Override
 	protected void reconnect(Session session) {
-		session.reconnect( connectionUnderTest );
+		((SessionImplementor)session).getJdbcCoordinator().getLogicalConnection().manualReconnect( connectionUnderTest );
 	}
 
 	@Override

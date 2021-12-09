@@ -6,7 +6,6 @@
  */
 package org.hibernate.internal;
 
-import java.sql.Connection;
 import java.util.Set;
 
 import org.hibernate.CacheMode;

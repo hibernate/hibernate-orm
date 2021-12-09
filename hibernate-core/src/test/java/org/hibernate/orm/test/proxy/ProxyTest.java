@@ -19,6 +19,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.SessionImpl;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.proxy.HibernateProxy;
@@ -180,7 +181,7 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 		assertFalse( Hibernate.isInitialized(none) );
 
 		t.commit();
-		s.disconnect();
+		s.unwrap( SessionImplementor.class ).getJdbcCoordinator().getLogicalConnection().manualDisconnect();
 
 		Object[] holder = new Object[] { s, dp, none };
 

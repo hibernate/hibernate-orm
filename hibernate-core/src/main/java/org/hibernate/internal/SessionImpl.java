@@ -14,7 +14,6 @@ import java.io.Reader;
 import java.io.Serializable;
 import java.sql.Blob;
 import java.sql.Clob;
-import java.sql.Connection;
 import java.sql.NClob;
 import java.sql.SQLException;
 import java.util.Collections;
@@ -485,21 +484,6 @@ public class SessionImpl
 	private void managedClose() {
 		log.trace( "Automatically closing session" );
 		closeWithoutOpenChecks();
-	}
-
-	@Override
-	public Connection disconnect() throws HibernateException {
-		checkOpen();
-		log.debug( "Disconnecting session" );
-		return getJdbcCoordinator().getLogicalConnection().manualDisconnect();
-	}
-
-	@Override
-	public void reconnect(Connection conn) throws HibernateException {
-		checkOpen();
-		log.debug( "Reconnecting session" );
-		checkTransactionSynchStatus();
-		getJdbcCoordinator().getLogicalConnection().manualReconnect( conn );
 	}
 
 	@Override

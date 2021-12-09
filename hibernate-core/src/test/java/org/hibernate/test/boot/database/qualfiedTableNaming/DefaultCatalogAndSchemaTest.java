@@ -178,8 +178,6 @@ public class DefaultCatalogAndSchemaTest {
 				EntityWithExplicitQualifiersWithSequenceGenerator.class,
 				EntityWithDefaultQualifiersWithIncrementGenerator.class,
 				EntityWithExplicitQualifiersWithIncrementGenerator.class,
-				EntityWithDefaultQualifiersWithSequenceIdentityGenerator.class,
-				EntityWithExplicitQualifiersWithSequenceIdentityGenerator.class,
 				EntityWithDefaultQualifiersWithEnhancedSequenceGenerator.class,
 				EntityWithExplicitQualifiersWithEnhancedSequenceGenerator.class
 		);
@@ -339,8 +337,6 @@ public class DefaultCatalogAndSchemaTest {
 		verifyEntityPersisterQualifiers( EntityWithExplicitQualifiersWithSequenceGenerator.class, expectedExplicitQualifier() );
 		verifyEntityPersisterQualifiers( EntityWithDefaultQualifiersWithIncrementGenerator.class, expectedDefaultQualifier() );
 		verifyEntityPersisterQualifiers( EntityWithExplicitQualifiersWithIncrementGenerator.class, expectedExplicitQualifier() );
-		verifyEntityPersisterQualifiers( EntityWithDefaultQualifiersWithSequenceIdentityGenerator.class, expectedDefaultQualifier() );
-		verifyEntityPersisterQualifiers( EntityWithExplicitQualifiersWithSequenceIdentityGenerator.class, expectedExplicitQualifier() );
 		verifyEntityPersisterQualifiers( EntityWithDefaultQualifiersWithEnhancedSequenceGenerator.class, expectedDefaultQualifier() );
 		verifyEntityPersisterQualifiers( EntityWithExplicitQualifiersWithEnhancedSequenceGenerator.class, expectedExplicitQualifier() );
 	}
@@ -513,8 +509,6 @@ public class DefaultCatalogAndSchemaTest {
 		verifyOnlyQualifier( sql, SqlType.DDL, EntityWithExplicitQualifiersWithSequenceGenerator.NAME, expectedExplicitQualifier() );
 		verifyOnlyQualifier( sql, SqlType.DDL, EntityWithDefaultQualifiersWithIncrementGenerator.NAME, expectedDefaultQualifier() );
 		verifyOnlyQualifier( sql, SqlType.DDL, EntityWithExplicitQualifiersWithIncrementGenerator.NAME, expectedExplicitQualifier() );
-		verifyOnlyQualifier( sql, SqlType.DDL, EntityWithDefaultQualifiersWithSequenceIdentityGenerator.NAME, expectedDefaultQualifier() );
-		verifyOnlyQualifier( sql, SqlType.DDL, EntityWithExplicitQualifiersWithSequenceIdentityGenerator.NAME, expectedExplicitQualifier() );
 		verifyOnlyQualifier( sql, SqlType.DDL, EntityWithDefaultQualifiersWithEnhancedSequenceGenerator.NAME, expectedDefaultQualifier() );
 		verifyOnlyQualifier( sql, SqlType.DDL, EntityWithExplicitQualifiersWithEnhancedSequenceGenerator.NAME, expectedExplicitQualifier() );
 	}

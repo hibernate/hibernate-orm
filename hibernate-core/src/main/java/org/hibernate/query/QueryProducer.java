@@ -31,7 +31,8 @@ public interface QueryProducer {
 	 * defined with the given name or if the query string is
 	 * found to be invalid
 	 */
-	<R> Query<R> getNamedQuery(String queryName);
+	@SuppressWarnings("rawtypes")
+	Query getNamedQuery(String queryName);
 
 	/**
 	 * Create a {@link Query} instance for the given HQL/JPQL query string.
@@ -42,7 +43,8 @@ public interface QueryProducer {
 	 *
 	 * @see jakarta.persistence.EntityManager#createQuery(String)
 	 */
-	<R> Query<R> createQuery(String queryString);
+	@SuppressWarnings("rawtypes")
+	Query createQuery(String queryString);
 
 	/**
 	 * Create a typed {@link Query} instance for the given HQL/JPQL query string.
@@ -69,7 +71,8 @@ public interface QueryProducer {
 	 *
 	 * @see jakarta.persistence.EntityManager#createNamedQuery(String)
 	 */
-	<R> Query<R> createNamedQuery(String name);
+	@SuppressWarnings("rawtypes")
+	Query createNamedQuery(String name);
 
 	/**
 	 * The JPA-defined named, typed query creation method.  This form can only
@@ -98,7 +101,8 @@ public interface QueryProducer {
 	 *
 	 * @see jakarta.persistence.EntityManager#createNativeQuery(String)
 	 */
-	<R> NativeQuery<R> createNativeQuery(String sqlString);
+	@SuppressWarnings("rawtypes")
+	NativeQuery createNativeQuery(String sqlString);
 
 	/**
 	 * Create a NativeQuery instance for the given native (SQL) query using
@@ -125,7 +129,8 @@ public interface QueryProducer {
 	 * @see jakarta.persistence.EntityManager#createNativeQuery(String,Class)
 	 * @see jakarta.persistence.SqlResultSetMapping
 	 */
-	<R> NativeQuery<R> createNativeQuery(String sqlString, String resultSetMappingName);
+	@SuppressWarnings("rawtypes")
+	NativeQuery createNativeQuery(String sqlString, String resultSetMappingName);
 
 	/**
 	 * Get a NativeQuery instance for a named native SQL query
@@ -134,7 +139,8 @@ public interface QueryProducer {
 	 *
 	 * @return The NativeQuery instance for manipulation and execution
 	 */
-	<R> NativeQuery<R> getNamedNativeQuery(String name);
+	@SuppressWarnings("rawtypes")
+	NativeQuery getNamedNativeQuery(String name);
 
 	/**
 	 * Get a NativeQuery instance for a named native SQL query
@@ -143,7 +149,8 @@ public interface QueryProducer {
 	 *
 	 * @return The NativeQuery instance for manipulation and execution
 	 */
-	<R> NativeQuery<R> getNamedNativeQuery(String name, String resultSetMapping);
+	@SuppressWarnings("rawtypes")
+	NativeQuery getNamedNativeQuery(String name, String resultSetMapping);
 
 	/**
 	 * Create a Query for the given JPA {@link CriteriaQuery}
@@ -157,12 +164,14 @@ public interface QueryProducer {
 	 *
 	 * @see jakarta.persistence.EntityManager#createQuery(CriteriaUpdate)
 	 */
-	<R> Query<R> createQuery(CriteriaUpdate<?> updateQuery);
+	@SuppressWarnings("rawtypes")
+	Query createQuery(CriteriaUpdate<?> updateQuery);
 
 	/**
 	 * Create a Query for the given JPA {@link CriteriaDelete}
 	 *
 	 * @see jakarta.persistence.EntityManager#createQuery(CriteriaDelete)
 	 */
-	<R> Query<R> createQuery(CriteriaDelete<?> deleteQuery);
+	@SuppressWarnings("rawtypes")
+	Query createQuery(CriteriaDelete<?> deleteQuery);
 }

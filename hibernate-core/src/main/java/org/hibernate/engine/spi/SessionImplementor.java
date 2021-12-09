@@ -8,16 +8,11 @@ package org.hibernate.engine.spi;
 
 import java.util.Map;
 import java.util.Set;
-import jakarta.persistence.criteria.CriteriaDelete;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.CriteriaUpdate;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.query.spi.QueryImplementor;
-import org.hibernate.query.sql.spi.NativeQueryImplementor;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 
@@ -118,39 +113,4 @@ public interface SessionImplementor extends Session, SharedSessionContractImplem
 	 */
 	@Deprecated
 	void removeOrphanBeforeUpdates(String entityName, Object child);
-
-
-	// The following declarations just override the JPA return type with our
-	// Hibernate QueryImplementor type, as required by the declaration in
-	// QueryProducerImplementor
-
-	@Override @SuppressWarnings({"rawtypes", "unchecked"})
-	QueryImplementor getNamedQuery(String queryString);
-
-	@Override @SuppressWarnings({"rawtypes", "unchecked"})
-	QueryImplementor createQuery(String queryString);
-
-	@Override
-	<R> QueryImplementor<R> createQuery(String queryString, Class<R> resultType);
-
-	@Override @SuppressWarnings({"rawtypes", "unchecked"})
-	QueryImplementor createNamedQuery(String queryString);
-
-	@Override
-	<R> QueryImplementor<R> createNamedQuery(String name, Class<R> resultType);
-
-	@Override @SuppressWarnings({"rawtypes", "unchecked"})
-	NativeQueryImplementor createNativeQuery(String queryString);
-
-	@Override @SuppressWarnings({"rawtypes", "unchecked"})
-	NativeQueryImplementor createNativeQuery(String queryString, String resultSetMappingName);
-
-	@Override
-	<R> QueryImplementor<R> createQuery(CriteriaQuery<R> criteriaQuery);
-
-	@Override @SuppressWarnings({"rawtypes", "unchecked"})
-	QueryImplementor createQuery(CriteriaUpdate updateQuery);
-
-	@Override @SuppressWarnings({"rawtypes", "unchecked"})
-	QueryImplementor createQuery(CriteriaDelete deleteQuery);
 }

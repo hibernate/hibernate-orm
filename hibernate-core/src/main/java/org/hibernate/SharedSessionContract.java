@@ -185,21 +185,6 @@ public interface SharedSessionContract extends QueryProducer, Closeable, Seriali
 	 * @throws IllegalStateException if the StatelessSession has been closed
 	 */
 	HibernateCriteriaBuilder getCriteriaBuilder();
-//
-//	@Override
-//	<T> org.hibernate.query.Query<T> createQuery(String queryString, Class<T> resultType);
-//
-//	@Override
-//	<T> org.hibernate.query.Query<T> createQuery(CriteriaQuery<T> criteriaQuery);
-//
-//	@Override
-//	<R> org.hibernate.query.Query<R> createQuery(CriteriaUpdate<?> updateQuery);
-//
-//	@Override
-//	<R> org.hibernate.query.Query<R> createQuery(CriteriaDelete<?> deleteQuery);
-//
-//	@Override
-//	<T> org.hibernate.query.Query<T> createNamedQuery(String name, Class<T> resultType);
 
 	/**
 	 * Controller for allowing users to perform JDBC related work using the Connection managed by this Session.

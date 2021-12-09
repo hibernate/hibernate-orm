@@ -24,6 +24,7 @@ import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 public class EntitySelectFetchByUniqueKeyInitializer extends EntitySelectFetchInitializer {
 	private final ToOneAttributeMapping fetchedAttribute;
 
+
 	public EntitySelectFetchByUniqueKeyInitializer(
 			FetchParentAccess parentAccess,
 			ToOneAttributeMapping fetchedAttribute,
@@ -36,16 +37,18 @@ public class EntitySelectFetchByUniqueKeyInitializer extends EntitySelectFetchIn
 
 	@Override
 	public void initializeInstance(RowProcessingState rowProcessingState) {
-		if ( entityInstance != null ) {
+		if ( entityInstance != null || isInitialized ) {
 			return;
 		}
 
 		if ( !isAttributeAssignableToConcreteDescriptor() ) {
+			isInitialized = true;
 			return;
 		}
 
 		final Object entityIdentifier = identifierAssembler.assemble( rowProcessingState );
 		if ( entityIdentifier == null ) {
+			isInitialized = true;
 			return;
 		}
 		final String entityName = concreteDescriptor.getEntityName();
@@ -78,5 +81,6 @@ public class EntitySelectFetchByUniqueKeyInitializer extends EntitySelectFetchIn
 		if ( entityInstance != null ) {
 			entityInstance = persistenceContext.proxyFor( entityInstance );
 		}
+		isInitialized = true;
 	}
 }

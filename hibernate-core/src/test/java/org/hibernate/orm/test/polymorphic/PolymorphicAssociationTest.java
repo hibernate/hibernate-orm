@@ -6,9 +6,11 @@
  */
 package org.hibernate.orm.test.polymorphic;
 
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Basic;
 import jakarta.persistence.Entity;
@@ -18,20 +20,26 @@ import jakarta.persistence.OneToOne;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class PolymorphicAssociationTest extends BaseCoreFunctionalTestCase  {
+@DomainModel(
+		annotatedClasses = {
+				PolymorphicAssociationTest.Level1.class,
+				PolymorphicAssociationTest.Level2.class,
+				PolymorphicAssociationTest.DerivedLevel2.class,
+				PolymorphicAssociationTest.Level3.class
+		}
+)
+@SessionFactory
+public class PolymorphicAssociationTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Level1.class, Level2.class, DerivedLevel2.class, Level3.class };
-	}
-
-	@Test
-	public void test() {
-		inTransaction( session -> {
+	@BeforeEach
+	public void setUp(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			Level1 level1 = new Level1();
 			level1.setId( 1 );
+
 			DerivedLevel2 level2 = new DerivedLevel2();
 			level2.setId( 2 );
+
 			Level3 level3 = new Level3();
 			level3.setId( 3 );
 
@@ -46,15 +54,19 @@ public class PolymorphicAssociationTest extends BaseCoreFunctionalTestCase  {
 			session.save( level2 );
 			session.save( level3 );
 		} );
+	}
 
-		inTransaction( session -> {
+	@Test
+	public void testLoad(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			Level3 level3 = session.load( Level3.class, 3 );
 			Level2 level2 = level3.getLevel2Parent();
 			assertThat( level2 ).isNotNull();
-			assertThat( level2.getLevel3Child() ).extracting( "id" ).isEqualTo( 3 );
+			final Level3 level3Child = level2.getLevel3Child();
+			assertThat( level3Child ).extracting( "id" ).isEqualTo( 3 );
 		} );
 
-		inTransaction( session -> {
+		scope.inTransaction( session -> {
 			Level1 level1 = session.load( Level1.class, 1 );
 			DerivedLevel2 level2 = level1.getLevel2Child();
 			assertThat( level2 ).isNotNull();

@@ -46,6 +46,7 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 	protected final EntityPersister concreteDescriptor;
 	protected final DomainResultAssembler identifierAssembler;
 	private final ToOneAttributeMapping referencedModelPart;
+	protected boolean isInitialized;
 
 	protected Object entityInstance;
 
@@ -93,7 +94,7 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 
 	@Override
 	public void initializeInstance(RowProcessingState rowProcessingState) {
-		if ( entityInstance != null ) {
+		if ( entityInstance != null || isInitialized ) {
 			return;
 		}
 
@@ -104,6 +105,7 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 		final Object entityIdentifier = identifierAssembler.assemble( rowProcessingState );
 
 		if ( entityIdentifier == null ) {
+			isInitialized = true;
 			return;
 		}
 
@@ -123,6 +125,7 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		entityInstance = persistenceContext.getEntity( entityKey );
 		if ( entityInstance != null ) {
+			isInitialized = true;
 			return;
 		}
 
@@ -140,6 +143,7 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 			}
 			initializer.resolveInstance( rowProcessingState );
 			entityInstance = initializer.getInitializedInstance();
+			isInitialized = true;
 			return;
 		}
 
@@ -173,6 +177,7 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 				}
 
 				// EARLY EXIT!!!
+				isInitialized = true;
 				return;
 			}
 		}
@@ -205,6 +210,7 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 		if ( entityInstance instanceof HibernateProxy ) {
 			( (HibernateProxy) entityInstance ).getHibernateLazyInitializer().setUnwrap( unwrapProxy );
 		}
+		isInitialized = true;
 	}
 
 	protected boolean isAttributeAssignableToConcreteDescriptor() {
@@ -225,7 +231,7 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 	@Override
 	public void finishUpRow(RowProcessingState rowProcessingState) {
 		entityInstance = null;
-
+		isInitialized = false;
 		clearResolutionListeners();
 	}
 

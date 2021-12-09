@@ -49,6 +49,8 @@ public class BatchEntitySelectFetchInitializer extends AbstractFetchParentAccess
 
 	private Map<EntityKey, Object> toBatchLoad = new LinkedHashMap<>();
 
+	private boolean isInitialized;
+
 	public BatchEntitySelectFetchInitializer(
 			FetchParentAccess parentAccess,
 			ToOneAttributeMapping referencedModelPart,
@@ -84,6 +86,10 @@ public class BatchEntitySelectFetchInitializer extends AbstractFetchParentAccess
 
 	@Override
 	public void initializeInstance(RowProcessingState rowProcessingState) {
+		if ( isInitialized ) {
+			return;
+		}
+
 		if ( !isAttributeAssignableToConcreteDescriptor() ) {
 			return;
 		}
@@ -142,6 +148,7 @@ public class BatchEntitySelectFetchInitializer extends AbstractFetchParentAccess
 
 		persistenceContext.getBatchFetchQueue().addBatchLoadableEntityKey( entityKey );
 		toBatchLoad.put( entityKey, parentAccess.getInitializedInstance() );
+		isInitialized = true;
 	}
 
 	protected boolean isAttributeAssignableToConcreteDescriptor() {
@@ -163,6 +170,7 @@ public class BatchEntitySelectFetchInitializer extends AbstractFetchParentAccess
 	public void finishUpRow(RowProcessingState rowProcessingState) {
 		entityInstance = null;
 		clearResolutionListeners();
+		isInitialized = false;
 	}
 
 	@Override

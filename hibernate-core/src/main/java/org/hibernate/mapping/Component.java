@@ -444,7 +444,7 @@ public class Component extends SimpleValue implements MetaAttributable {
 
 	private Setter injector(Property property, Class attributeDeclarer) {
 		return property.getPropertyAccessStrategy( attributeDeclarer )
-				.buildPropertyAccess( attributeDeclarer, property.getName() )
+				.buildPropertyAccess( attributeDeclarer, property.getName(), true )
 				.getSetter();
 	}
 

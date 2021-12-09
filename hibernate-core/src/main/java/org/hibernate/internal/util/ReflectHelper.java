@@ -251,7 +251,7 @@ public final class ReflectHelper {
 	}
 
 	private static Getter getter(Class clazz, String name) throws MappingException {
-		return PropertyAccessStrategyMixedImpl.INSTANCE.buildPropertyAccess( clazz, name ).getGetter();
+		return PropertyAccessStrategyMixedImpl.INSTANCE.buildPropertyAccess( clazz, name, true ).getGetter();
 	}
 
 	public static Object getConstantValue(String name, SessionFactoryImplementor factory) {

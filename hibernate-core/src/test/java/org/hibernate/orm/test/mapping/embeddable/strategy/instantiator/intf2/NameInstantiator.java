@@ -15,8 +15,11 @@ import org.hibernate.metamodel.EmbeddableInstantiator;
  * @author Steve Ebersole
  */
 public class NameInstantiator implements EmbeddableInstantiator {
+	public static int callCount = 0;
+
 	@Override
 	public Object instantiate(Supplier<Object[]> valuesAccess, SessionFactoryImplementor sessionFactory) {
+		callCount++;
 		final Object[] values = valuesAccess.get();
 		return Name.make( (String) values[0], (String) values[1] );
 	}

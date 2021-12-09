@@ -1366,8 +1366,8 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 			try {
 				final PropertyAccess propertyAccess = BuiltInPropertyAccessStrategies.BASIC.getStrategy().buildPropertyAccess(
 						clazz,
-						paramName
-				);
+						paramName,
+						true );
 				final Getter getter = propertyAccess.getGetter();
 				final Class<?> retType = getter.getReturnTypeClass();
 				final Object object = getter.get( bean );

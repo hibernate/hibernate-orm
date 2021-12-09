@@ -23,10 +23,10 @@ public class Name {
 	}
 
 	String getFirstName() {
-		return "John";
+		return first;
 	}
 
 	String getLastName() {
-		return "Doe";
+		return last;
 	}
 }

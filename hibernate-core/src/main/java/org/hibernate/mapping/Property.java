@@ -327,12 +327,12 @@ public class Property implements Serializable, MetaAttributable {
 
 	// todo : remove
 	public Getter getGetter(Class clazz) throws PropertyNotFoundException, MappingException {
-		return getPropertyAccessStrategy( clazz ).buildPropertyAccess( clazz, name ).getGetter();
+		return getPropertyAccessStrategy( clazz ).buildPropertyAccess( clazz, name, true ).getGetter();
 	}
 
 	// todo : remove
 	public Setter getSetter(Class clazz) throws PropertyNotFoundException, MappingException {
-		return getPropertyAccessStrategy( clazz ).buildPropertyAccess( clazz, name ).getSetter();
+		return getPropertyAccessStrategy( clazz ).buildPropertyAccess( clazz, name, true ).getSetter();
 	}
 
 	// todo : remove

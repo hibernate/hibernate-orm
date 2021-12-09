@@ -22,7 +22,7 @@ public class PropertyAccessStrategyEmbeddedImpl implements PropertyAccessStrateg
 	public static final PropertyAccessStrategyEmbeddedImpl INSTANCE = new PropertyAccessStrategyEmbeddedImpl();
 
 	@Override
-	public PropertyAccess buildPropertyAccess(Class containerJavaType, String propertyName) {
+	public PropertyAccess buildPropertyAccess(Class containerJavaType, String propertyName, boolean setterRequired) {
 		return new PropertyAccessEmbeddedImpl( this, containerJavaType, propertyName );
 	}
 }

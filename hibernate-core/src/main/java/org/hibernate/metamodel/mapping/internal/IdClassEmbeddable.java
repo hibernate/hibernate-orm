@@ -97,8 +97,8 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 
 		final PropertyAccess propertyAccess = PropertyAccessStrategyMapImpl.INSTANCE.buildPropertyAccess(
 				null,
-				EntityIdentifierMapping.ROLE_LOCAL_NAME
-		);
+				EntityIdentifierMapping.ROLE_LOCAL_NAME,
+				true );
 		final StateArrayContributorMetadataAccess attributeMetadataAccess = getStateArrayContributorMetadataAccess(
 				propertyAccess
 		);

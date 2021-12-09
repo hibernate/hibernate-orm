@@ -21,7 +21,7 @@ public class PropertyAccessStrategyMixedImpl implements PropertyAccessStrategy {
 	public static final PropertyAccessStrategyMixedImpl INSTANCE = new PropertyAccessStrategyMixedImpl();
 
 	@Override
-	public PropertyAccess buildPropertyAccess(Class containerJavaType, String propertyName) {
+	public PropertyAccess buildPropertyAccess(Class containerJavaType, String propertyName, boolean setterRequired) {
 		return new PropertyAccessMixedImpl( this, containerJavaType, propertyName );
 	}
 }

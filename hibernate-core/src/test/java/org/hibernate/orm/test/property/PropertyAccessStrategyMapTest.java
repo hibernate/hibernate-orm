@@ -36,7 +36,7 @@ public class PropertyAccessStrategyMapTest extends BaseUnitTestCase {
 		final PropertyAccessStrategyMapImpl accessStrategy = PropertyAccessStrategyMapImpl.INSTANCE;
 
 		try {
-			accessStrategy.buildPropertyAccess( Date.class, "time" );
+			accessStrategy.buildPropertyAccess( Date.class, "time", true );
 
 			fail("Should throw IllegalArgumentException");
 		}
@@ -54,7 +54,7 @@ public class PropertyAccessStrategyMapTest extends BaseUnitTestCase {
 		final String value = "testValue";
 
 		final PropertyAccessStrategyMapImpl accessStrategy = PropertyAccessStrategyMapImpl.INSTANCE;
-		final PropertyAccess access = accessStrategy.buildPropertyAccess( clazz, key );
+		final PropertyAccess access = accessStrategy.buildPropertyAccess( clazz, key, true );
 
 		final HashMap<String, String> map = new HashMap<>();
 

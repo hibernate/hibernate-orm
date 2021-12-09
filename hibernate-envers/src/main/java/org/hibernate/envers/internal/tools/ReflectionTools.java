@@ -54,7 +54,7 @@ public abstract class ReflectionTools {
 		final Pair<Class, String> key = Pair.make( cls, propertyName );
 		Getter value = GETTER_CACHE.get( key );
 		if ( value == null ) {
-			value = getAccessStrategy( cls, serviceRegistry, accessorType ).buildPropertyAccess( cls, propertyName ).getGetter();
+			value = getAccessStrategy( cls, serviceRegistry, accessorType ).buildPropertyAccess( cls, propertyName, true ).getGetter();
 			// It's ok if two getters are generated concurrently
 			GETTER_CACHE.put( key, value );
 		}
@@ -70,7 +70,7 @@ public abstract class ReflectionTools {
 		final Pair<Class, String> key = Pair.make( cls, propertyName );
 		Setter value = SETTER_CACHE.get( key );
 		if ( value == null ) {
-			value = getAccessStrategy( cls, serviceRegistry, accessorType ).buildPropertyAccess( cls, propertyName ).getSetter();
+			value = getAccessStrategy( cls, serviceRegistry, accessorType ).buildPropertyAccess( cls, propertyName, true ).getSetter();
 			// It's ok if two setters are generated concurrently
 			SETTER_CACHE.put( key, value );
 		}

@@ -59,8 +59,8 @@ public class EntityRepresentationStrategyMap implements EntityRepresentationStra
 			final Property property = itr.next();
 			final PropertyAccess propertyAccess = PropertyAccessStrategyMapImpl.INSTANCE.buildPropertyAccess(
 					null,
-					property.getName()
-			);
+					property.getName(),
+					true );
 
 			propertyAccessMap.put( property.getName(), propertyAccess );
 
@@ -105,8 +105,8 @@ public class EntityRepresentationStrategyMap implements EntityRepresentationStra
 	public PropertyAccess resolvePropertyAccess(Property bootAttributeDescriptor) {
 		return PropertyAccessStrategyMapImpl.INSTANCE.buildPropertyAccess(
 				null,
-				bootAttributeDescriptor.getName()
-		);
+				bootAttributeDescriptor.getName(),
+				true );
 	}
 
 	@Override

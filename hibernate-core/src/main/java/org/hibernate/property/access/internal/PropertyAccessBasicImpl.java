@@ -34,15 +34,24 @@ public class PropertyAccessBasicImpl implements PropertyAccess {
 
 	public PropertyAccessBasicImpl(
 			PropertyAccessStrategyBasicImpl strategy,
-			Class containerJavaType,
-			final String propertyName) {
+			Class<?> containerJavaType,
+			final String propertyName,
+			boolean setterRequired) {
 		this.strategy = strategy;
 
 		final Method getterMethod = ReflectHelper.findGetterMethod( containerJavaType, propertyName );
 		this.getter = new GetterMethodImpl( containerJavaType, propertyName, getterMethod );
 
-		final Method setterMethod = ReflectHelper.findSetterMethod( containerJavaType, propertyName, getterMethod.getReturnType() );
-		this.setter = new SetterMethodImpl( containerJavaType, propertyName, setterMethod );
+		final Method setterMethod;
+		if ( setterRequired ) {
+			setterMethod = ReflectHelper.findSetterMethod( containerJavaType, propertyName, getterMethod.getReturnType() );
+		}
+		else {
+			setterMethod = ReflectHelper.setterMethodOrNull( containerJavaType, propertyName, getterMethod.getReturnType() );
+		}
+		this.setter = setterMethod != null
+				? new SetterMethodImpl( containerJavaType, propertyName, setterMethod )
+				: null;
 	}
 
 	@Override

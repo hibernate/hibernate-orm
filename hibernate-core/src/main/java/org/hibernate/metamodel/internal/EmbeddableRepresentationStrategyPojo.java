@@ -151,7 +151,8 @@ public class EmbeddableRepresentationStrategyPojo extends AbstractEmbeddableRepr
 
 		return strategy.buildPropertyAccess(
 				getEmbeddableJavaTypeDescriptor().getJavaTypeClass(),
-				bootAttributeDescriptor.getName()
+				bootAttributeDescriptor.getName(),
+				instantiator instanceof StandardEmbeddableInstantiator
 		);
 	}
 

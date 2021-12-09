@@ -8,9 +8,8 @@ package org.hibernate.property.access.spi;
 
 /**
  * Describes a strategy for persistent property access (field, JavaBean-style property, etc).
- * Acts as a factory for {@link PropertyAccess} instances.
  *
- * @author Steve Ebersole
+ * Acts as a factory for {@link PropertyAccess} instances.
  */
 public interface PropertyAccessStrategy {
 	/**
@@ -18,8 +17,9 @@ public interface PropertyAccessStrategy {
 	 *
 	 * @param containerJavaType The Java type that contains the property; may be {@code null} for non-pojo cases.
 	 * @param propertyName The property name
+	 * @param setterRequired Whether it is an error if we are unable to find a corresponding setter
 	 *
 	 * @return The appropriate PropertyAccess
 	 */
-	PropertyAccess buildPropertyAccess(Class containerJavaType, String propertyName);
+	PropertyAccess buildPropertyAccess(Class<?> containerJavaType, String propertyName, boolean setterRequired);
 }

@@ -384,7 +384,7 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 			);
 		}
 
-		return strategy.buildPropertyAccess( mappedJtd.getJavaTypeClass(), bootAttributeDescriptor.getName() );
+		return strategy.buildPropertyAccess( mappedJtd.getJavaTypeClass(), bootAttributeDescriptor.getName(), true );
 	}
 
 	@Override

@@ -6,30 +6,23 @@
  */
 package org.hibernate;
 
+import java.io.Closeable;
 import java.io.Serializable;
 
-import jakarta.persistence.StoredProcedureQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaDelete;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.CriteriaUpdate;
 
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.query.QueryProducer;
-import org.hibernate.query.UnknownSqlResultSetMappingException;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 
 /**
- * Contract methods shared between {@link Session} and {@link StatelessSession}.
- * <p/>
- * NOTE : Poorly named.  "shared" simply indicates that its a unified contract between {@link Session} and
- * {@link StatelessSession}.
- * 
+ * Declares operations that are common between {@link Session} and {@link StatelessSession}.
+ *
  * @author Steve Ebersole
  */
-public interface SharedSessionContract extends QueryProducer, Serializable {
+public interface SharedSessionContract extends QueryProducer, Closeable, Serializable {
 	/**
 	 * Obtain the tenant identifier associated with this session.
 	 *
@@ -77,12 +70,6 @@ public interface SharedSessionContract extends QueryProducer, Serializable {
 	 */
 	Transaction getTransaction();
 
-	@Override
-	org.hibernate.query.Query createQuery(String queryString);
-
-	@Override
-	org.hibernate.query.Query getNamedQuery(String queryName);
-
 	/**
 	 * Gets a ProcedureCall based on a named template
 	 *
@@ -112,7 +99,7 @@ public interface SharedSessionContract extends QueryProducer, Serializable {
 	 *
 	 * @return The representation of the procedure call.
 	 */
-	ProcedureCall createStoredProcedureCall(String procedureName, Class... resultClasses);
+	ProcedureCall createStoredProcedureCall(String procedureName, Class<?>... resultClasses);
 
 	/**
 	 * Creates a call to a stored procedure with specific result set entity mappings.
@@ -153,7 +140,7 @@ public interface SharedSessionContract extends QueryProducer, Serializable {
 	 *
 	 * @return The representation of the procedure call.
 	 */
-	ProcedureCall createStoredProcedureQuery(String procedureName, Class... resultClasses);
+	ProcedureCall createStoredProcedureQuery(String procedureName, Class<?>... resultClasses);
 
 	/**
 	 * Creates a call to a stored procedure with specific result set entity mappings.
@@ -198,17 +185,21 @@ public interface SharedSessionContract extends QueryProducer, Serializable {
 	 * @throws IllegalStateException if the StatelessSession has been closed
 	 */
 	HibernateCriteriaBuilder getCriteriaBuilder();
-
-	@Override
-	<T> org.hibernate.query.Query<T> createQuery(String queryString, Class<T> resultType);
-
-	<T> org.hibernate.query.Query<T> createQuery(CriteriaQuery<T> criteriaQuery);
-
-	org.hibernate.query.Query createQuery(CriteriaUpdate updateQuery);
-
-	org.hibernate.query.Query createQuery(CriteriaDelete deleteQuery);
-
-	<T> org.hibernate.query.Query<T> createNamedQuery(String name, Class<T> resultType);
+//
+//	@Override
+//	<T> org.hibernate.query.Query<T> createQuery(String queryString, Class<T> resultType);
+//
+//	@Override
+//	<T> org.hibernate.query.Query<T> createQuery(CriteriaQuery<T> criteriaQuery);
+//
+//	@Override
+//	<R> org.hibernate.query.Query<R> createQuery(CriteriaUpdate<?> updateQuery);
+//
+//	@Override
+//	<R> org.hibernate.query.Query<R> createQuery(CriteriaDelete<?> deleteQuery);
+//
+//	@Override
+//	<T> org.hibernate.query.Query<T> createNamedQuery(String name, Class<T> resultType);
 
 	/**
 	 * Controller for allowing users to perform JDBC related work using the Connection managed by this Session.
@@ -217,7 +208,7 @@ public interface SharedSessionContract extends QueryProducer, Serializable {
 	 * @throws HibernateException Generally indicates wrapped {@link java.sql.SQLException}
 	 */
 	default void doWork(Work work) throws HibernateException {
-		throw new UnsupportedOperationException( "The doWork method has not been implemented in this implementation of org.hibernate.engine.spi.SharedSessionContractImplemento" );
+		throw new UnsupportedOperationException( "The doWork method has not been implemented in this implementation of org.hibernate.engine.spi.SharedSessionContractImplementor" );
 	}
 
 	/**
@@ -232,7 +223,7 @@ public interface SharedSessionContract extends QueryProducer, Serializable {
 	 * @throws HibernateException Generally indicates wrapped {@link java.sql.SQLException}
 	 */
 	default <T> T doReturningWork(ReturningWork<T> work) throws HibernateException {
-		throw new UnsupportedOperationException( "The doReturningWork method has not been implemented in this implementation of org.hibernate.engine.spi.SharedSessionContractImplemento" );
+		throw new UnsupportedOperationException( "The doReturningWork method has not been implemented in this implementation of org.hibernate.engine.spi.SharedSessionContractImplementor" );
 	}
 
 }

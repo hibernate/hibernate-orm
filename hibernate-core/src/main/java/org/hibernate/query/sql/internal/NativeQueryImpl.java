@@ -11,13 +11,11 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -1459,7 +1457,7 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public NativeQueryImplementor<R> setProperties(Map map) {
+	public NativeQueryImplementor<R> setProperties(Map<?,?> map) {
 		super.setProperties( map );
 		return this;
 	}

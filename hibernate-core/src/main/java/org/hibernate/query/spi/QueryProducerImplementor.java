@@ -9,7 +9,6 @@ package org.hibernate.query.spi;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.Query;
 import org.hibernate.query.QueryProducer;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
 
@@ -27,35 +26,33 @@ public interface QueryProducerImplementor extends QueryProducer {
 
 	// todo : define list/scroll/iterate methods here...
 
-
-	// overrides...
+	@Override
+	<R> QueryImplementor<R> getNamedQuery(String queryName);
 
 	@Override
-	QueryImplementor getNamedQuery(String queryName);
-
-	@Override
-	QueryImplementor createQuery(String queryString);
+	<R> QueryImplementor<R> createQuery(String queryString);
 
 	@Override
 	<R> QueryImplementor<R> createQuery(String queryString, Class<R> resultClass);
 
 	@Override
-	Query createNamedQuery(String name);
+	<R> QueryImplementor<R> createNamedQuery(String name);
 
 	@Override
 	<R> QueryImplementor<R> createNamedQuery(String name, Class<R> resultClass);
 
 	@Override
-	NativeQueryImplementor createNativeQuery(String sqlString);
+	<R> NativeQueryImplementor<R> createNativeQuery(String sqlString);
 
 	@Override
 	<R> NativeQueryImplementor<R> createNativeQuery(String sqlString, Class<R> resultClass);
 
 	@Override
-	NativeQueryImplementor createNativeQuery(String sqlString, String resultSetMappingName);
+	<R> NativeQueryImplementor<R> createNativeQuery(String sqlString, String resultSetMappingName);
 
 	@Override
-	NativeQueryImplementor getNamedNativeQuery(String name);
+	<R> NativeQueryImplementor<R> getNamedNativeQuery(String name);
 
-	NativeQueryImplementor getNamedNativeQuery(String name, String resultSetMapping);
+	@Override
+	<R> NativeQueryImplementor<R> getNamedNativeQuery(String name, String resultSetMapping);
 }

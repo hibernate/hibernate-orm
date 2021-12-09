@@ -259,7 +259,7 @@ public interface SharedSessionContractImplementor
 	/**
 	 * Initialize the collection (if not already initialized)
 	 */
-	void initializeCollection(PersistentCollection collection, boolean writing)
+	void initializeCollection(PersistentCollection<?> collection, boolean writing)
 			throws HibernateException;
 
 	/**
@@ -301,7 +301,6 @@ public interface SharedSessionContractImplementor
 	/**
 	 * Return the identifier of the persistent object, or null if
 	 * not associated with the session
-	 * @return
 	 */
 	Object getContextEntityIdentifier(Object object);
 

@@ -387,8 +387,6 @@ public interface SharedSessionContractImplementor
 	 */
 	FlushMode getHibernateFlushMode();
 
-	Connection connection();
-
 	void flush();
 
 	boolean isEventSource();

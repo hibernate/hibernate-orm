@@ -394,12 +394,6 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		return guessEntityName( object );
 	}
 
-	@Override
-	public Connection connection() {
-		checkOpen();
-		return getJdbcCoordinator().getLogicalConnection().getPhysicalConnection();
-	}
-
 //	@Override
 //	public int executeUpdate(String query, QueryParameters queryParameters) throws HibernateException {
 //		checkOpen();

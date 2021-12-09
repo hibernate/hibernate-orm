@@ -165,11 +165,11 @@ public class IngresSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 	}
 
 	private boolean supportsParameterOffsetFetchExpression() {
-		return getDialect().getVersion() >= 930;
+		return getDialect().getVersion().isSameOrAfter( 9, 3 );
 	}
 
 	private boolean supportsOffsetFetchClause() {
-		return getDialect().getVersion() >= 930;
+		return getDialect().getVersion().isSameOrAfter( 9, 3 );
 	}
 
 }

@@ -25,7 +25,7 @@ import static org.junit.Assert.assertEquals;
  * @author Vlad Mihalcea
  */
 // On H2 1.4.199+ CURRENT_TIMESTAMP returns a timestamp with timezone
-@RequiresDialect(value = H2Dialect.class, version = 104199)
+@RequiresDialect(value = H2Dialect.class, majorVersion = 1, minorVersion = 4, microVersion = 199)
 @DomainModel(annotatedClasses = Event.class)
 @SessionFactory
 public class EmbeddedIdDatabaseGeneratedValueTest {

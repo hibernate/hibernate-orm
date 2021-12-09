@@ -95,7 +95,7 @@ public class SybaseAnywhereSqlAstTranslator<T extends JdbcOperation> extends Abs
 	@Override
 	protected boolean renderTableReference(TableReference tableReference, LockMode lockMode) {
 		super.renderTableReference( tableReference, lockMode );
-		if ( getDialect().getVersion() < 1000 ) {
+		if ( getDialect().getVersion().isBefore( 10 ) ) {
 			if ( LockMode.READ.lessThan( lockMode ) ) {
 				appendSql( " holdlock" );
 			}
@@ -106,7 +106,7 @@ public class SybaseAnywhereSqlAstTranslator<T extends JdbcOperation> extends Abs
 
 	@Override
 	protected void renderForUpdateClause(QuerySpec querySpec, ForUpdateClause forUpdateClause) {
-		if ( getDialect().getVersion() < 1000 ) {
+		if ( getDialect().getVersion().isBefore( 10 ) ) {
 			return;
 		}
 		super.renderForUpdateClause( querySpec, forUpdateClause );
@@ -114,7 +114,7 @@ public class SybaseAnywhereSqlAstTranslator<T extends JdbcOperation> extends Abs
 
 	@Override
 	protected boolean needsRowsToSkip() {
-		return getDialect().getVersion() < 900;
+		return getDialect().getVersion().isBefore( 9 );
 	}
 
 	@Override
@@ -127,7 +127,7 @@ public class SybaseAnywhereSqlAstTranslator<T extends JdbcOperation> extends Abs
 
 	@Override
 	protected void visitSqlSelections(SelectClause selectClause) {
-		if ( getDialect().getVersion() < 900 ) {
+		if ( getDialect().getVersion().isBefore( 9 ) ) {
 			renderTopClause( (QuerySpec) getQueryPartStack().getCurrent(), true, true );
 		}
 		else {
@@ -151,7 +151,7 @@ public class SybaseAnywhereSqlAstTranslator<T extends JdbcOperation> extends Abs
 	@Override
 	public void visitOffsetFetchClause(QueryPart queryPart) {
 		// Sybase Anywhere only supports the TOP clause
-		if ( getDialect().getVersion() < 900 && !queryPart.isRoot()
+		if ( getDialect().getVersion().isBefore( 9 ) && !queryPart.isRoot()
 				&& useOffsetFetchClause( queryPart ) && queryPart.getOffsetClauseExpression() != null ) {
 			throw new IllegalArgumentException( "Can't emulate offset clause in subquery" );
 		}

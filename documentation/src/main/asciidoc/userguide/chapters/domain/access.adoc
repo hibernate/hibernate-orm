@@ -1,5 +1,5 @@
 [[access]]
-==== Access strategies
+=== Access strategies
 :sourcedir: ../../../../../test/java/org/hibernate/userguide/mapping/access
 :extrasdir: extras
 
@@ -18,7 +18,7 @@ https://docs.oracle.com/javase/8/docs/api/java/beans/Introspector.html#decapital
 Embeddable types inherit the access strategy from their parent entities.
 
 [[field-based-access]]
-===== Field-based access
+==== Field-based access
 
 [[access-field-mapping-example]]
 .Field-based access
@@ -42,7 +42,7 @@ With field-based access, we can simply omit the getter and the setter for this v
 ====
 
 [[property-based-access]]
-===== Property-based access
+==== Property-based access
 
 [[access-property-mapping-example]]
 .Property-based access
@@ -56,7 +56,7 @@ include::{sourcedir}/PropertyAccessTest.java[tag=access-property-mapping-example
 When using property-based access, Hibernate uses the accessors for both reading and writing the entity state.
 Every other method that will be added to the entity (e.g. helper methods for synchronizing both ends of a bidirectional one-to-many association) will have to be marked with the `@Transient` annotation.
 
-===== Overriding the default access strategy
+==== Overriding the default access strategy
 
 The default access strategy mechanism can be overridden with the Jakarta Persistence `@Access` annotation.
 In the following example, the `@Version` attribute is accessed by its field and not by its getter, like the rest of entity attributes.
@@ -71,7 +71,7 @@ include::{sourcedir}/PropertyAccessOverrideTest.java[tag=access-property-overrid
 ====
 
 [[access-embeddable-types]]
-===== Embeddable types and access strategy
+==== Embeddable types and access strategy
 
 Because embeddables are managed by their owning entities, the access strategy is therefore inherited from the entity too.
 This applies to both simple embeddable types as well as for collection of embeddables.

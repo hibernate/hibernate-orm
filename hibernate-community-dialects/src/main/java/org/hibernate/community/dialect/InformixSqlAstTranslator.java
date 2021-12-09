@@ -154,10 +154,10 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	private boolean supportsParameterOffsetFetchExpression() {
-		return getDialect().getVersion() >= 11;
+		return getDialect().getVersion().isSameOrAfter( 11 );
 	}
 
 	private boolean supportsSkipFirstClause() {
-		return getDialect().getVersion() >= 11;
+		return getDialect().getVersion().isSameOrAfter( 11 );
 	}
 }

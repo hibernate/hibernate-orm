@@ -24,8 +24,4 @@ public class PostgisPG95Dialect extends PostgreSQLDialect {
 	public PostgisPG95Dialect() {
 		super();
 	}
-
-	public PostgisPG95Dialect(int version) {
-		super( version );
-	}
 }

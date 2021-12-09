@@ -53,7 +53,7 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 
 	@Override
 	public void visitBooleanExpressionPredicate(BooleanExpressionPredicate booleanExpressionPredicate) {
-		if ( getDialect().getVersion() >= 300 ) {
+		if ( getDialect().getVersion().isSameOrAfter( 3 ) ) {
 			booleanExpressionPredicate.getExpression().accept( this );
 		}
 		else {
@@ -71,7 +71,7 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 		// Before 3.0 there was also no support for window functions
 		// Check if current query part is already row numbering to avoid infinite recursion
 		return useOffsetFetchClause( queryPart ) && getQueryPartForRowNumbering() != queryPart
-				&& getDialect().getVersion() >= 300 && !isRowsOnlyFetchClauseType( queryPart );
+				&& getDialect().getVersion().isSameOrAfter( 3 ) && !isRowsOnlyFetchClauseType( queryPart );
 	}
 
 	@Override
@@ -201,7 +201,7 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	private boolean supportsOffsetFetchClause() {
-		return getDialect().getVersion() >= 300;
+		return getDialect().getVersion().isSameOrAfter( 3 );
 	}
 
 	@Override

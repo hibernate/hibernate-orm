@@ -6,6 +6,8 @@
  */
 package org.hibernate.community.dialect;
 
+import org.hibernate.dialect.DatabaseVersion;
+
 /**
  * Dialect for Informix 10
  *
@@ -15,7 +17,7 @@ package org.hibernate.community.dialect;
 public class Informix10Dialect extends InformixDialect {
 
 	public Informix10Dialect() {
-		super(10);
+		super( DatabaseVersion.make( 10 ) );
 	}
 
 }

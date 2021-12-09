@@ -1312,12 +1312,25 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 			basicValue.setTypeParameters( (Map) parameters );
 		}
 
-		basicValue.setJpaAttributeConverterDescriptor( converterDescriptor );
+		if ( converterDescriptor != null ) {
+			basicValue.setJpaAttributeConverterDescriptor( converterDescriptor );
+		}
 
-		basicValue.setImplicitJavaTypeAccess( implicitJavaTypeAccess );
-		basicValue.setExplicitJavaTypeAccess( explicitJavaTypeAccess );
-		basicValue.setExplicitJdbcTypeAccess( explicitJdbcTypeAccess );
-		basicValue.setExplicitMutabilityPlanAccess( explicitMutabilityAccess );
+		if ( implicitJavaTypeAccess != null ) {
+			basicValue.setImplicitJavaTypeAccess( implicitJavaTypeAccess );
+		}
+
+		if ( explicitJavaTypeAccess != null ) {
+			basicValue.setExplicitJavaTypeAccess( explicitJavaTypeAccess );
+		}
+
+		if ( explicitJdbcTypeAccess != null ) {
+			basicValue.setExplicitJdbcTypeAccess( explicitJdbcTypeAccess );
+		}
+
+		if ( explicitMutabilityAccess != null ) {
+			basicValue.setExplicitMutabilityPlanAccess( explicitMutabilityAccess );
+		}
 
 		if ( enumType != null ) {
 			basicValue.setEnumerationStyle( enumType );

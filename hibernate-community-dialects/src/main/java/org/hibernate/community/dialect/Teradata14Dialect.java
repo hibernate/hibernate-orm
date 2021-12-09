@@ -6,6 +6,8 @@
  */
 package org.hibernate.community.dialect;
 
+import org.hibernate.dialect.DatabaseVersion;
+
 /**
  * A dialect for the Teradata 14
  *
@@ -15,7 +17,7 @@ package org.hibernate.community.dialect;
 public class Teradata14Dialect extends TeradataDialect {
 
 	public Teradata14Dialect() {
-		super(14);
+		super( DatabaseVersion.make( 14 ) );
 	}
 
 }

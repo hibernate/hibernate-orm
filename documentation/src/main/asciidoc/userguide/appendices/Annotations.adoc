@@ -94,7 +94,7 @@ See the <<chapters/domain/basic_types.adoc#basic-enums-attribute-converter, `Att
 ==== `@Converter`
 
 The {jpaJavadocUrlPrefix}Converter.html[`@Converter`] annotation is used to specify that the currently annotated {jpaJavadocUrlPrefix}AttributeConverter.html[`AttributeConverter`] implementation can be used as a Jakarta Persistence basic attribute converter.
-
+specj
 If the {jpaJavadocUrlPrefix}Converter.html#autoApply--[`autoApply`] attribute is set to `true`, then the Jakarta Persistence provider will automatically convert all basic attributes with the same Java type as defined by the current converter.
 
 See the <<chapters/domain/basic_types.adoc#basic-enums-attribute-converter, `AttributeConverter`>> section for more info.
@@ -624,22 +624,68 @@ See the <<chapters/locking/Locking.adoc#locking-optimistic, Optimistic locking m
 [[annotations-hibernate-any]]
 ==== `@Any`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Any.html[`@Any`] annotation is used to define the *any-to-one* association
-which can point to one of several entity types.
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Any.html[`@Any`] annotation is
+used to define the *any-to-one* association which can point to one of several entity types.
 
 See the <<chapters/domain/associations.adoc#associations-any,`@Any` mapping>> section for more info.
 
-[[annotations-hibernate-anymetadef]]
-==== `@AnyMetaDef`
+[[annotations-hibernate-anydiscriminator]]
+==== `@AnyDiscriminator`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/AnyMetaDef.html[`@AnyMetaDef`] annotation is used to provide metadata about an `@Any` or `@ManyToAny` mapping.
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/AnyDiscriminator.html[`@AnyDiscriminator`]
+annotation is used to provide details about the discriminator portion of an `@Any` or `@ManyToAny` mapping.
 
 See the <<chapters/domain/associations.adoc#associations-any,`@Any` mapping>> section for more info.
 
-[[annotations-hibernate-anymetadefs]]
-==== `@AnyMetaDefs`
+[[annotations-hibernate-anydiscriminatorvalue]]
+==== `@AnyDiscriminatorValue`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/AnyMetaDefs.html[`@AnyMetaDefs`] annotation is used to group multiple <<annotations-hibernate-anymetadef>> annotations.
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/AnyDiscriminatorValue.html[`@AnyDiscriminatorValue`]
+annotation maps a single discriminator value to its corresponding entity
+
+See the <<chapters/domain/associations.adoc#associations-any,`@Any` mapping>> section for more info.
+
+[[annotations-hibernate-anydiscriminatorvalues]]
+==== `@AnyDiscriminatorValues`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/AnyDiscriminatorValues.html[`@AnyDiscriminatorValues`]
+annotation groups multiple <<annotations-hibernate-anydiscriminatorvalue>> annotations.
+
+See the <<chapters/domain/associations.adoc#associations-any,`@Any` mapping>> section for more info.
+
+[[annotations-hibernate-anykeyjavaclass]]
+==== `@AnyKeyJavaClass`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/AnyKeyJavaClass.html[`@AnyKeyJavaClass`]
+annotation specifies the Java Class to use for the foreign-key of an ANY mapping
+
+See the <<chapters/domain/associations.adoc#associations-any,`@Any` mapping>> section for more info.
+
+[[annotations-hibernate-anykeyjavatype]]
+==== `@AnyKeyJavaType`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/AnyKeyJavaType.html[`@AnyKeyJavaType`]
+annotation specifies a specific JavaType descriptor to use for the foreign-key of an ANY mapping
+
+See the <<chapters/domain/associations.adoc#associations-any,`@Any` mapping>> section for more info.
+
+
+[[annotations-hibernate-anykeyjdbctype]]
+==== `@AnyKeyJdbcType`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/AnyKeyJdbcType.html[`@AnyKeyJdbcType`]
+annotation specifies a specific JdbcType descriptor to use for the foreign-key of an ANY mapping
+
+See the <<chapters/domain/associations.adoc#associations-any,`@Any` mapping>> section for more info.
+
+[[annotations-hibernate-anykeyjdbctypecode]]
+==== `@AnyKeyJdbcTypeCode`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/AnyKeyJdbcTypeCode.html[`@AnyKeyJdbcTypeCode`]
+annotation specifies a "type code" indicating which JdbcType descriptor to use for the foreign-key of an ANY mapping
+
+See the <<chapters/domain/associations.adoc#associations-any,`@Any` mapping>> section for more info.
+
 
 [[annotations-hibernate-attributeaccessor]]
 ==== `@AttributeAccessor`
@@ -650,6 +696,16 @@ Should only be used to name a custom `PropertyAccessStrategy`.
 For property/field access type, the Jakarta Persistence <<annotations-jpa-access>> annotation should be preferred.
 
 However, if this annotation is used with either value="property" or value="field", it will act just as the corresponding usage of the Jakarta Persistence <<annotations-jpa-access>> annotation.
+
+
+[[annotations-hibernate-attributebindertype]]
+==== `@AttributeBinderType`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/AttributeBinderType.html[`@AttributeBinderType`]
+annotation is a meta-annotation used to annotate a custom annotation type used to drive customized model binding.
+
+See <<domain-customizing>>.
+
 
 [[annotations-hibernate-batchsize]]
 ==== `@BatchSize`
@@ -1341,11 +1397,6 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 
 See the <<chapters/pc/PersistenceContext.adoc#pc-where-join-table, `@WhereJoinTable` mapping>> section for more info.
 
-[[annotations-hibernate-attributebindertype]]
-==== `@AttributeBinderType`
-
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/AttributeBinderType.html[`@AttributeBinderType`] annotation is used to specify that the current annotation type should is used to drive
-customized model binding.
 
 [[annotations-hibernate-tenantid]]
 ==== `@TenantId`

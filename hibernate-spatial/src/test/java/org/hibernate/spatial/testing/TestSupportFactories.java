@@ -59,7 +59,7 @@ public class TestSupportFactories {
 
 
 		if ( MySQLDialect.class.isAssignableFrom( dialect.getClass() ) ) {
-			return dialect.getVersion() >= 800 ? MySQL8TestSupport.class : MySQL56TestSupport.class;
+			return dialect.getVersion().isSameOrAfter( 8 ) ? MySQL8TestSupport.class : MySQL56TestSupport.class;
 		}
 
 		if ( H2Dialect.class.isAssignableFrom( dialect.getClass() ) ) {

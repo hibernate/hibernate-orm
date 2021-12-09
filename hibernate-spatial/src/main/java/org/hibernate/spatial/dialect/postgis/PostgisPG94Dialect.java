@@ -6,6 +6,7 @@
  */
 package org.hibernate.spatial.dialect.postgis;
 
+import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 
@@ -23,10 +24,6 @@ public class PostgisPG94Dialect extends PostgreSQLDialect {
 	}
 
 	public PostgisPG94Dialect() {
-		super( 940 );
-	}
-
-	public PostgisPG94Dialect(int version) {
-		super( version );
+		super( DatabaseVersion.make( 9, 4 ) );
 	}
 }

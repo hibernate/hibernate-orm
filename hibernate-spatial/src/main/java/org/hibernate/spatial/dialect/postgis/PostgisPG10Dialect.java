@@ -10,6 +10,7 @@ package org.hibernate.spatial.dialect.postgis;
 import java.util.Map;
 
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.service.ServiceRegistry;
@@ -22,7 +23,7 @@ public class PostgisPG10Dialect  extends PostgreSQLDialect {
 	}
 
 	public PostgisPG10Dialect() {
-		super( 1000 );
+		super( DatabaseVersion.make( 10 ) );
 	}
 
 }

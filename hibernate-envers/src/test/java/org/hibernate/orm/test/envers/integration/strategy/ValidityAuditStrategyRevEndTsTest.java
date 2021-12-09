@@ -479,7 +479,9 @@ public class ValidityAuditStrategyRevEndTsTest extends BaseEnversJPAFunctionalTe
 			}
 			else {
 				final Dialect dialect = getDialect();
-				if ( dialect instanceof MySQLDialect && dialect.getVersion() < 570 && !( dialect instanceof MariaDBDialect ) ) {
+				if ( dialect instanceof MySQLDialect
+						&& dialect.getVersion().isBefore( 5, 7 )
+						&& !( dialect instanceof MariaDBDialect ) ) {
 					// MySQL5 DATETIME column type does not contain milliseconds.
 					// MySQL 5.7 supports milliseconds and when MySQL57InnoDBDialect is used, it is assumed that
 					// the column is defined as DATETIME(6).

@@ -489,7 +489,7 @@ public class FirebirdDialect extends Dialect {
 
 	@Override
 	public int getMaxIdentifierLength() {
-		return getVersion() < 400 ? 31 : 63;
+		return getVersion().isBefore( 4 ) ? 31 : 63;
 	}
 
 	public IdentifierHelper buildIdentifierHelper(
@@ -889,7 +889,7 @@ public class FirebirdDialect extends Dialect {
 
 	@Override
 	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(EntityMappingType entityDescriptor, RuntimeModelCreationContext runtimeModelCreationContext) {
-		return getVersion() < 210
+		return getVersion().isBefore( 2, 1 )
 				? super.getFallbackSqmInsertStrategy( entityDescriptor, runtimeModelCreationContext )
 				: new GlobalTemporaryTableInsertStrategy(
 				TemporaryTable.createEntityTable(

@@ -6,6 +6,8 @@
  */
 package org.hibernate.community.dialect;
 
+import org.hibernate.dialect.DatabaseVersion;
+
 /**
  * A SQL dialect for Ingres 10 and later versions.
  * <p/>
@@ -23,7 +25,7 @@ package org.hibernate.community.dialect;
 public class Ingres10Dialect extends IngresDialect {
 
 	public Ingres10Dialect() {
-		super(1000);
+		super( DatabaseVersion.make( 10 ) );
 	}
 
 }

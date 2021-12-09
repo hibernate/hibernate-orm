@@ -48,7 +48,7 @@ public class SQLiteSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 
 	@Override
 	protected void renderMaterializationHint(CteMaterialization materialization) {
-		if ( getDialect().getVersion() >= 335 ) {
+		if ( getDialect().getVersion().isSameOrAfter( 3, 3, 5 ) ) {
 			if ( materialization == CteMaterialization.NOT_MATERIALIZED ) {
 				appendSql( "not " );
 			}
@@ -58,7 +58,7 @@ public class SQLiteSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 
 	@Override
 	public boolean supportsFilterClause() {
-		return getDialect().getVersion() >= 330;
+		return getDialect().getVersion().isSameOrAfter( 3, 3 );
 	}
 
 	@Override

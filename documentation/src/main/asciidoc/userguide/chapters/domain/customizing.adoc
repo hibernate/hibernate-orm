@@ -1,0 +1,18 @@
+[[domain-customizing]]
+=== Customizing the domain model
+:rootProjectDir: ../../../../../../..
+:coreProjectDir: {rootProjectDir}/hibernate-core
+:attributeBinderTestDir: {coreProjectDir}/src/test/java/org/hibernate/orm/test/mapping/attributebinder
+:extrasdir: extras
+
+
+[[domain-customizing-example]]
+.AttributeBinder example
+====
+[source,java]
+----
+include::{attributeBinderTestDir}/YesNo.java[tag=attribute-binder-example, indent=0]
+
+include::{attributeBinderTestDir}/YesNoBinder.java[tag=attribute-binder-example, indent=0]
+----
+====

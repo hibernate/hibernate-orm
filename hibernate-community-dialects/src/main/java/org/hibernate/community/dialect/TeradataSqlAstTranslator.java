@@ -36,7 +36,7 @@ public class TeradataSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 
 	@Override
 	public void visitQuerySpec(QuerySpec querySpec) {
-		if ( querySpec.isRoot() && getDialect().getVersion() >= 14 ) {
+		if ( querySpec.isRoot() && getDialect().getVersion().isSameOrAfter( 14 ) ) {
 			final ForUpdateClause forUpdateClause = new ForUpdateClause();
 			forUpdateClause.merge( getLockOptions() );
 			super.renderForUpdateClause( querySpec, forUpdateClause );

@@ -7,12 +7,16 @@
 package org.hibernate.community.dialect;
 
 
+import java.sql.Types;
+import java.util.Map;
+
 import org.hibernate.LockOptions;
+import org.hibernate.community.dialect.identity.SybaseAnywhereIdentityColumnSupport;
+import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
-import org.hibernate.community.dialect.identity.SybaseAnywhereIdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -24,9 +28,6 @@ import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 
-import java.sql.Types;
-import java.util.Map;
-
 /**
  * SQL Dialect for Sybase Anywhere
  * (Tested on ASA 8.x)
@@ -34,18 +35,18 @@ import java.util.Map;
 public class SybaseAnywhereDialect extends SybaseDialect {
 
 	public SybaseAnywhereDialect() {
-		this( 800, false );
+		this( DatabaseVersion.make( 8 ), false );
 	}
 
 	public SybaseAnywhereDialect(DialectResolutionInfo info){
 		this(
-				info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10,
+				info,
 				info.getDriverName() != null && info.getDriverName().contains( "jTDS" )
 		);
 		registerKeywords( info );
 	}
 
-	public SybaseAnywhereDialect(int version, boolean jtdsDriver) {
+	public SybaseAnywhereDialect(DatabaseVersion version, boolean jtdsDriver) {
 		super( version, jtdsDriver );
 
 		registerColumnType( Types.BIGINT, "bigint" );
@@ -132,30 +133,30 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 
 	@Override
 	public RowLockStrategy getWriteRowLockStrategy() {
-		return getVersion() >= 1000 ? RowLockStrategy.COLUMN : RowLockStrategy.TABLE;
+		return getVersion().isSameOrAfter( 10 ) ? RowLockStrategy.COLUMN : RowLockStrategy.TABLE;
 	}
 
 	@Override
 	public String getForUpdateString() {
-		return getVersion() < 1000 ? "" : " for update";
+		return getVersion().isBefore( 10 ) ? "" : " for update";
 	}
 
 	@Override
 	public String getForUpdateString(String aliases) {
-		return getVersion() < 1000
+		return getVersion().isBefore( 10 )
 				? ""
 				: getForUpdateString() + " of " + aliases;
 	}
 
 	@Override
 	public String appendLockHint(LockOptions mode, String tableName) {
-		return getVersion() < 1000 ? super.appendLockHint( mode, tableName ) : tableName;
+		return getVersion().isBefore( 10 ) ? super.appendLockHint( mode, tableName ) : tableName;
 	}
 
 	@Override
 	@SuppressWarnings("deprecation")
 	public String applyLocksToSql(String sql, LockOptions aliasedLockOptions, Map<String, String[]> keyColumnNames) {
-		return getVersion() < 1000
+		return getVersion().isBefore( 10 )
 				? super.applyLocksToSql( sql, aliasedLockOptions, keyColumnNames )
 				: sql + new ForUpdateFragment( this, aliasedLockOptions, keyColumnNames ).toFragmentString();
 	}

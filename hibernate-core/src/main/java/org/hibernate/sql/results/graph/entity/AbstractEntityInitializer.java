@@ -91,6 +91,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	private Object entityInstance;
 	private Object entityInstanceForNotify;
 	private boolean missing;
+	boolean isInitialized;
 	private boolean isOwningInitializer;
 	private Object[] resolvedEntityState;
 
@@ -580,7 +581,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 	@Override
 	public void initializeInstance(RowProcessingState rowProcessingState) {
-		if ( missing ) {
+		if ( missing || isInitialized ) {
 			return;
 		}
 
@@ -611,6 +612,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		}
 
 		notifyResolutionListeners( entityInstanceForNotify );
+		isInitialized = true;
 	}
 
 	private void initializeEntity(
@@ -913,6 +915,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		entityInstanceForNotify = null;
 		missing = false;
 		resolvedEntityState = null;
+		isInitialized = false;
 		clearResolutionListeners();
 	}
 }

@@ -51,6 +51,8 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 	// per-row state
 	private Object collectionValueKey;
 
+	private boolean isInitialized;
+
 	public AbstractImmediateCollectionInitializer(
 			NavigablePath collectionPath,
 			PluralAttributeMapping collectionAttributeMapping,
@@ -272,7 +274,7 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 
 	@Override
 	public void initializeInstance(RowProcessingState rowProcessingState) {
-		if ( responsibility == null ) {
+		if ( responsibility == null || isInitialized ) {
 			return;
 		}
 
@@ -297,6 +299,7 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 					loadingState -> readCollectionRow( collectionKey, loadingState, rowProcessingState )
 			);
 		}
+		isInitialized = true;
 	}
 
 	protected abstract void readCollectionRow(
@@ -311,6 +314,7 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 		collectionValueKey = null;
 		collectionInstance = null;
 		responsibility = null;
+		isInitialized = false;
 	}
 
 }

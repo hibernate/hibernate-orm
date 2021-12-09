@@ -122,7 +122,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 
 							@Override
 							public boolean hasQueryExecutionToBeAddedToStatistics() {
-								return !CRITERIA_HQL_STRING.equals( hql );
+								return true;
 							}
 						},
 						rowTransformer,

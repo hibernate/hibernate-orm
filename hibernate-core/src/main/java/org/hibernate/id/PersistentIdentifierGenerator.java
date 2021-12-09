@@ -15,7 +15,7 @@ import org.hibernate.type.Type;
 
 /**
  * An <tt>IdentifierGenerator</tt> that requires creation of database objects.
- * <br><br>
+ * <p>
  * All <tt>PersistentIdentifierGenerator</tt>s have access to a special mapping parameter
  * in their {@link #configure(Type, Properties, ServiceRegistry)} method: schema
  *

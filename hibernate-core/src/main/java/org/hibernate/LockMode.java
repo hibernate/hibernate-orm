@@ -23,8 +23,8 @@ public enum LockMode {
 	 * No lock required. If an object is requested with this lock
 	 * mode, a <tt>READ</tt> lock will be obtained if it is
 	 * necessary to actually read the state from the database,
-	 * rather than pull it from a cache.<br>
-	 * <br>
+	 * rather than pull it from a cache.
+	 * <p>
 	 * This is the "default" lock mode.
 	 */
 	NONE( 0, "none" ),

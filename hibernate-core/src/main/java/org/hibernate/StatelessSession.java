@@ -159,8 +159,8 @@ public interface StatelessSession extends SharedSessionContract, AutoCloseable, 
 
 	/**
 	 * Returns the current JDBC connection associated with this
-	 * instance.<br>
-	 * <br>
+	 * instance.
+	 * <p>
 	 * If the session is using aggressive connection release (as in a
 	 * CMT environment), it is the application's responsibility to
 	 * close the connection returned by this call. Otherwise, the

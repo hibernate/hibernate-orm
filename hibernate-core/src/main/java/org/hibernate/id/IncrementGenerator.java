@@ -31,12 +31,12 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
 
 /**
- * <b>increment</b><br>
- * <br>
+ * <b>increment</b>
+ * <p>
  * An <tt>IdentifierGenerator</tt> that returns a <tt>long</tt>, constructed by
  * counting from the maximum primary key value at startup. Not safe for use in a
- * cluster!<br>
- * <br>
+ * cluster!
+ * <p>
  * Mapping parameters supported, but not usually needed: tables, column.
  * (The tables parameter specified a comma-separated list of table names.)
  *

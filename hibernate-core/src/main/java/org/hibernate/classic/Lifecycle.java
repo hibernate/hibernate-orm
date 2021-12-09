@@ -14,28 +14,29 @@ import java.io.Serializable;
 /**
  * Provides callbacks from the <tt>Session</tt> to the persistent object.
  * Persistent classes <b>may</b> implement this interface but they are not
- * required to.<br>
- * <br>
- * <b>onSave:</b> called just before the object is saved<br>
- * <b>onUpdate:</b> called just before an object is updated,
- * ie. when <tt>Session.update()</tt> is called<br>
- * <b>onDelete:</b> called just before an object is deleted<br>
- * <b>onLoad:</b> called just after an object is loaded<br>
- * <br>
+ * required to.
+ * <ul>
+ * <li><b>onSave:</b> called just before the object is saved
+ * <li><b>onUpdate:</b> called just before an object is updated,
+ * ie. when <tt>Session.update()</tt> is called
+ * <li><b>onDelete:</b> called just before an object is deleted
+ * <b>onLoad:</b> called just after an object is loaded
+ * </ul>
+ * <p>
  * <tt>onLoad()</tt> may be used to initialize transient properties of the
  * object from its persistent state. It may <b>not</b> be used to load
  * dependent objects since the <tt>Session</tt> interface may not be
- * invoked from inside this method.<br>
- * <br>
+ * invoked from inside this method.
+ * <p>
  * A further intended usage of <tt>onLoad()</tt>, <tt>onSave()</tt> and
  * <tt>onUpdate()</tt> is to store a reference to the <tt>Session</tt>
- * for later use.<br>
- * <br>
+ * for later use.
+ * <p>
  * If <tt>onSave()</tt>, <tt>onUpdate()</tt> or <tt>onDelete()</tt> return
  * <tt>VETO</tt>, the operation is silently vetoed. If a
  * <tt>CallbackException</tt> is thrown, the operation is vetoed and the
- * exception is passed back to the application.<br>
- * <br>
+ * exception is passed back to the application.
+ * <p>
  * Note that <tt>onSave()</tt> is called after an identifier is assigned
  * to the object, except when identity column key generation is used.
  *

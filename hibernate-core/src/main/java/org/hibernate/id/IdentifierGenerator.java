@@ -23,13 +23,13 @@ import org.hibernate.type.Type;
  * identifiers and the <tt>Session</tt>. It is not intended that
  * this interface ever be exposed to the application. It <b>is</b>
  * intended that users implement this interface to provide
- * custom identifier generation strategies.<br>
- * <br>
- * Implementors should provide a public default constructor.<br>
- * <br>
+ * custom identifier generation strategies.
+ * <p>
+ * Implementors should provide a public default constructor.
+ * <p>
  * Implementations that accept configuration parameters should
  * also implement <tt>Configurable</tt>.
- * <br>
+ * <p>
  * Implementors <em>must</em> be thread-safe
  *
  * @author Gavin King

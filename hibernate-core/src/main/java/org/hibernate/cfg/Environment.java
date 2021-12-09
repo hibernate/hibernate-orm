@@ -25,7 +25,7 @@ import org.jboss.logging.Logger;
 
 /**
  * Provides access to configuration info passed in <tt>Properties</tt> objects.
- * <br><br>
+ * <p>
  * Hibernate has two property scopes:
  * <ul>
  * <li><b>Factory-level</b> properties may be passed to the <tt>SessionFactory</tt> when it
@@ -41,14 +41,14 @@ import org.jboss.logging.Logger;
  * </ul>
  * <tt>Environment</tt> properties are populated by calling <tt>System.getProperties()</tt>
  * and then from a resource named <tt>/hibernate.properties</tt> if it exists. System
- * properties override properties specified in <tt>hibernate.properties</tt>.<br>
- * <br>
+ * properties override properties specified in <tt>hibernate.properties</tt>.
+ * <p>
  * The <tt>SessionFactory</tt> is controlled by the following properties.
  * Properties may be either be <tt>System</tt> properties, properties
  * defined in a resource named <tt>/hibernate.properties</tt> or an instance of
  * <tt>java.util.Properties</tt> passed to
- * <tt>Configuration.build()</tt><br>
- * <br>
+ * <tt>Configuration.build()</tt>
+ * <p>
  * <table>
  * <tr><td><b>property</b></td><td><b>meaning</b></td></tr>
  * <tr>

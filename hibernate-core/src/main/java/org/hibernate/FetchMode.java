@@ -9,8 +9,8 @@ package org.hibernate;
 /**
  * Represents an association fetching strategy. This is used
  * together with the <tt>Criteria</tt> API to specify runtime
- * fetching strategies.<br>
- * <br>
+ * fetching strategies.
+ * <p>
  * For HQL queries, use the <tt>FETCH</tt> keyword instead.
  *
  * @see Criteria#setFetchMode(String, FetchMode)

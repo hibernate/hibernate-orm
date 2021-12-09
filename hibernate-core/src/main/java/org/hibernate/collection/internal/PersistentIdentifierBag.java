@@ -28,8 +28,8 @@ import org.hibernate.type.Type;
  * a regular <tt>Bag</tt> by adding a synthetic identifier column to the
  * table. This identifier is unique for all rows in the table, allowing very
  * efficient updates and deletes. The value of the identifier is never exposed
- * to the application.<br>
- * <br>
+ * to the application.
+ * <p>
  * <tt>IdentifierBag</tt>s may not be used for a many-to-one association.
  * Furthermore, there is no reason to use <tt>inverse="true"</tt>.
  *

@@ -24,7 +24,7 @@ import org.hibernate.id.insert.InsertSelectIdentityInsert;
 /**
  * A generator for use with ANSI-SQL IDENTITY columns used as the primary key.
  * The IdentityGenerator for autoincrement/identity key generation.
- * <br><br>
+ * <p>
  * Indicates to the <tt>Session</tt> that identity (ie. identity/autoincrement
  * column) key generation should be used.
  *

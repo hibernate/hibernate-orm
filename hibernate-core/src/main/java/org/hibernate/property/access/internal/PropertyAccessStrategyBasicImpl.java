@@ -23,7 +23,7 @@ public class PropertyAccessStrategyBasicImpl implements PropertyAccessStrategy {
 	public static final PropertyAccessStrategyBasicImpl INSTANCE = new PropertyAccessStrategyBasicImpl();
 
 	@Override
-	public PropertyAccess buildPropertyAccess(Class containerJavaType, final String propertyName) {
-		return new PropertyAccessBasicImpl( this, containerJavaType, propertyName );
+	public PropertyAccess buildPropertyAccess(Class<?> containerJavaType, final String propertyName, boolean setterRequired) {
+		return new PropertyAccessBasicImpl( this, containerJavaType, propertyName, setterRequired );
 	}
 }

@@ -22,7 +22,7 @@ public class PropertyAccessStrategyFieldImpl implements PropertyAccessStrategy {
 	public static final PropertyAccessStrategyFieldImpl INSTANCE = new PropertyAccessStrategyFieldImpl();
 
 	@Override
-	public PropertyAccess buildPropertyAccess(Class containerJavaType, String propertyName) {
+	public PropertyAccess buildPropertyAccess(Class containerJavaType, String propertyName, boolean setterRequired) {
 		return new PropertyAccessFieldImpl( this, containerJavaType, propertyName );
 	}
 }

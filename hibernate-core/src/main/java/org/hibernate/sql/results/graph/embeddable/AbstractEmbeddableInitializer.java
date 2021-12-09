@@ -140,13 +140,11 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 	@Override
 	public void resolveKey(RowProcessingState processingState) {
 		// nothing to do
-		EmbeddableLoadingLogger.INSTANCE.debugf( "EmbeddableInitializer#resolveKey : %s", navigablePath.getFullPath() );
 	}
 
 	@Override
 	public void resolveInstance(RowProcessingState processingState) {
 		// nothing to do
-		EmbeddableLoadingLogger.INSTANCE.debugf( "EmbeddableInitializer#resolveInstance : %s", navigablePath.getFullPath() );
 	}
 
 	@Override

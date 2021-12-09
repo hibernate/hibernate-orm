@@ -58,8 +58,8 @@ public class EmbeddableRepresentationStrategyMap implements EmbeddableRepresenta
 	public PropertyAccess resolvePropertyAccess(Property bootAttributeDescriptor) {
 		return PropertyAccessStrategyMapImpl.INSTANCE.buildPropertyAccess(
 				null,
-				bootAttributeDescriptor.getName()
-		);
+				bootAttributeDescriptor.getName(),
+				true );
 	}
 
 	@Override

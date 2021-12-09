@@ -22,10 +22,10 @@ public class PropertyAccessStrategyChainedImpl implements PropertyAccessStrategy
 	}
 
 	@Override
-	public PropertyAccess buildPropertyAccess(Class containerJavaType, String propertyName) {
+	public PropertyAccess buildPropertyAccess(Class containerJavaType, String propertyName, boolean setterRequired) {
 		for ( PropertyAccessStrategy candidate : chain ) {
 			try {
-				return candidate.buildPropertyAccess( containerJavaType, propertyName );
+				return candidate.buildPropertyAccess( containerJavaType, propertyName, true );
 			}
 			catch (Exception ignore) {
 				// ignore

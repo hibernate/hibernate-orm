@@ -9,6 +9,13 @@ package org.hibernate.orm.test.mapping.embeddable.strategy.instantiator.intf;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
+import org.hibernate.metamodel.EmbeddableRepresentationStrategy;
+import org.hibernate.metamodel.MappingMetamodel;
+import org.hibernate.metamodel.RepresentationMode;
+import org.hibernate.metamodel.RuntimeMetamodels;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
+import org.hibernate.persister.entity.EntityPersister;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
@@ -31,7 +38,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @JiraKey( "HHH-14950" )
 public class InstantiationTests {
 	@Test
-	public void modelTest(DomainModelScope scope) {
+	public void bootModelTest(DomainModelScope scope) {
 		scope.withHierarchy( Person.class, (personMapping) -> {
 			final Property name = personMapping.getProperty( "name" );
 			final Component nameMapping = (Component) name.getValue();
@@ -44,7 +51,23 @@ public class InstantiationTests {
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-14950", reason = "Model has no setters, which is not supported" )
+	public void runtimeModelTest(SessionFactoryScope scope) {
+		final RuntimeMetamodels runtimeMetamodels = scope.getSessionFactory().getRuntimeMetamodels();
+		final MappingMetamodel mappingMetamodel = runtimeMetamodels.getMappingMetamodel();
+		final EntityPersister entityDescriptor = mappingMetamodel.findEntityDescriptor( Person.class );
+
+		final EmbeddedAttributeMapping nameEmbedded = (EmbeddedAttributeMapping) entityDescriptor.findAttributeMapping( "name" );
+		final EmbeddableMappingType nameEmbeddable = nameEmbedded.getEmbeddableTypeDescriptor();
+		final EmbeddableRepresentationStrategy nameRepStrategy = nameEmbeddable.getRepresentationStrategy();
+		assertThat( nameRepStrategy.getMode() ).isEqualTo( RepresentationMode.POJO );
+		assertThat( nameRepStrategy.getInstantiator() ).isInstanceOf( NameInstantiator.class );
+		nameEmbeddable.forEachAttributeMapping( (position, attribute) -> {
+			assertThat( attribute.getPropertyAccess().getSetter() ).isNull();
+		} );
+	}
+
+	@Test
+	@FailureExpected( jiraKey = "HHH-14964", reason = "EmbeddableInitializer is called twice, causing problems" )
 	public void basicTest(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			final Person mick = new Person( 1, new NameImpl( "Mick", "Jagger" ) );

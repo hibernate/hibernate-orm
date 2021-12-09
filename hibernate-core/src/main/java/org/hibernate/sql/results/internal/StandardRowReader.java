@@ -108,14 +108,9 @@ public class StandardRowReader<T> implements RowReader<T> {
 	private void afterRow(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {
 		LoadingLogger.LOGGER.trace( "StandardRowReader#afterRow" );
 
-		// todo (6.0) : add AfterLoadActions handling here via Callback
-		//
-		// maybe :
-		// 		initializer.finishUpRow( rowProcessingState, callback );
-
-		for ( Initializer initializer : initializers ) {
+		initializers.forEach( (initializer) -> {
 			initializer.finishUpRow( rowProcessingState );
-		}
+		} );
 	}
 
 	@SuppressWarnings("ForLoopReplaceableByForEach")

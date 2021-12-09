@@ -52,7 +52,7 @@ public class IdClassRepresentationStrategy implements EmbeddableRepresentationSt
 	public PropertyAccess resolvePropertyAccess(Property bootAttributeDescriptor) {
 		return PropertyAccessStrategyMixedImpl.INSTANCE.buildPropertyAccess(
 				idClassType.getJavaTypeClass(),
-				bootAttributeDescriptor.getName()
-		);
+				bootAttributeDescriptor.getName(),
+				true );
 	}
 }

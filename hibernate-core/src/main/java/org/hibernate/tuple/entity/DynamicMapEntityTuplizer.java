@@ -38,10 +38,10 @@ public class DynamicMapEntityTuplizer extends AbstractEntityTuplizer {
 
 	private PropertyAccess buildPropertyAccess(Property mappedProperty) {
 		if ( mappedProperty.isBackRef() ) {
-			return mappedProperty.getPropertyAccessStrategy( null ).buildPropertyAccess( null, mappedProperty.getName() );
+			return mappedProperty.getPropertyAccessStrategy( null ).buildPropertyAccess( null, mappedProperty.getName(), true );
 		}
 		else {
-			return PropertyAccessStrategyMapImpl.INSTANCE.buildPropertyAccess( null, mappedProperty.getName() );
+			return PropertyAccessStrategyMapImpl.INSTANCE.buildPropertyAccess( null, mappedProperty.getName(), true );
 		}
 	}
 

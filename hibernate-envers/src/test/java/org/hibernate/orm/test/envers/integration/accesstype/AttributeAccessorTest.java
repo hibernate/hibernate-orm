@@ -91,9 +91,9 @@ public class AttributeAccessorTest extends BaseEnversJPAFunctionalTestCase {
 	public static class BasicAttributeAccessor extends PropertyAccessStrategyBasicImpl {
 		static boolean invoked;
 		@Override
-		public PropertyAccess buildPropertyAccess(Class containerJavaType, String propertyName) {
+		public PropertyAccess buildPropertyAccess(Class containerJavaType, String propertyName, boolean setterRequired) {
 			invoked = true;
-			return super.buildPropertyAccess( containerJavaType, propertyName );
+			return super.buildPropertyAccess( containerJavaType, propertyName, setterRequired );
 		}
 	}
 }

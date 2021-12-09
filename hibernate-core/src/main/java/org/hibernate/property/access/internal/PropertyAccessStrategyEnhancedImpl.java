@@ -23,7 +23,7 @@ public class PropertyAccessStrategyEnhancedImpl implements PropertyAccessStrateg
 	public static final PropertyAccessStrategyEnhancedImpl INSTANCE = new PropertyAccessStrategyEnhancedImpl();
 
 	@Override
-	public PropertyAccess buildPropertyAccess(Class containerJavaType, final String propertyName) {
+	public PropertyAccess buildPropertyAccess(Class containerJavaType, final String propertyName, boolean setterRequired) {
 		return new PropertyAccessEnhancedImpl( this, containerJavaType, propertyName );
 	}
 }

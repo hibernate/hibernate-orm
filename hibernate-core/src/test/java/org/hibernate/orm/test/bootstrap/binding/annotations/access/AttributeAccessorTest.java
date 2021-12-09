@@ -95,8 +95,8 @@ public class AttributeAccessorTest {
 
 	public static class BasicAttributeAccessor extends PropertyAccessStrategyBasicImpl {
 		@Override
-		public PropertyAccess buildPropertyAccess(Class containerJavaType, String propertyName) {
-			return super.buildPropertyAccess( containerJavaType, propertyName );
+		public PropertyAccess buildPropertyAccess(Class containerJavaType, String propertyName, boolean setterRequired) {
+			return super.buildPropertyAccess( containerJavaType, propertyName, setterRequired );
 		}
 	}
 }

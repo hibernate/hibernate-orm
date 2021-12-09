@@ -31,7 +31,7 @@ public class PropertyAccessStrategyNoopImpl implements PropertyAccessStrategy {
 	public static final PropertyAccessStrategyNoopImpl INSTANCE = new PropertyAccessStrategyNoopImpl();
 
 	@Override
-	public PropertyAccess buildPropertyAccess(Class containerJavaType, String propertyName) {
+	public PropertyAccess buildPropertyAccess(Class containerJavaType, String propertyName, boolean setterRequired) {
 		return PropertyAccessNoopImpl.INSTANCE;
 	}
 

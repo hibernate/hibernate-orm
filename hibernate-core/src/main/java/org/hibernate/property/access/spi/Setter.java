@@ -9,8 +9,6 @@ package org.hibernate.property.access.spi;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-
 /**
  * The contract for setting a persistent property value into its container/owner
  *

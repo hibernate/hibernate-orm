@@ -73,13 +73,13 @@ public class BasicPropertyAccessorTest extends BaseUnitTestCase {
 		PropertyAccessStrategyBasicImpl accessStrategy = PropertyAccessStrategyBasicImpl.INSTANCE;
 
 		{
-			final PropertyAccess access = accessStrategy.buildPropertyAccess( Duper.class, "it" );
+			final PropertyAccess access = accessStrategy.buildPropertyAccess( Duper.class, "it", true );
 			assertEquals( String.class, access.getGetter().getReturnTypeClass() );
 			assertEquals( Object.class, access.getSetter().getMethod().getParameterTypes()[0] );
 		}
 
 		{
-			final PropertyAccess access = accessStrategy.buildPropertyAccess( Duper2.class, "it" );
+			final PropertyAccess access = accessStrategy.buildPropertyAccess( Duper2.class, "it", true );
 			assertEquals( String.class, access.getGetter().getReturnTypeClass() );
 			assertEquals( String.class, access.getSetter().getMethod().getParameterTypes()[0] );
 		}

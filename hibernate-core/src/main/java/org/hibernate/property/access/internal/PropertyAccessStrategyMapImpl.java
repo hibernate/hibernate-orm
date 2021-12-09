@@ -21,7 +21,7 @@ public class PropertyAccessStrategyMapImpl implements PropertyAccessStrategy {
 	public static final PropertyAccessStrategyMapImpl INSTANCE = new PropertyAccessStrategyMapImpl();
 
 	@Override
-	public PropertyAccess buildPropertyAccess(Class containerJavaType, String propertyName) {
+	public PropertyAccess buildPropertyAccess(Class containerJavaType, String propertyName, boolean setterRequired) {
 		
 		// Sometimes containerJavaType is null, but if it isn't, make sure it's a Map.
 		if (containerJavaType != null && !Map.class.isAssignableFrom(containerJavaType)) {

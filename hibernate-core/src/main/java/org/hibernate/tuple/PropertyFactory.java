@@ -319,8 +319,8 @@ public final class PropertyFactory {
 
 		final PropertyAccess propertyAccess = propertyAccessStrategy.buildPropertyAccess(
 				mappingProperty.getPersistentClass().getMappedClass(),
-				mappingProperty.getName()
-		);
+				mappingProperty.getName(),
+				true );
 
 		return propertyAccess.getGetter();
 	}

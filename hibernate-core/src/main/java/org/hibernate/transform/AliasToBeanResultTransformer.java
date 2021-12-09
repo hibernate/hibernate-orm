@@ -98,7 +98,7 @@ public class AliasToBeanResultTransformer extends AliasedTupleSubsetResultTransf
 			String alias = aliases[ i ];
 			if ( alias != null ) {
 				this.aliases[ i ] = alias;
-				setters[ i ] = propertyAccessStrategy.buildPropertyAccess( resultClass, alias ).getSetter();
+				setters[ i ] = propertyAccessStrategy.buildPropertyAccess( resultClass, alias, true ).getSetter();
 			}
 		}
 		isInitialized = true;

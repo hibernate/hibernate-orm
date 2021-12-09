@@ -47,7 +47,7 @@ public class PropertyAccessStrategyBackRefImpl implements PropertyAccessStrategy
 	}
 
 	@Override
-	public PropertyAccess buildPropertyAccess(Class containerJavaType, String propertyName) {
+	public PropertyAccess buildPropertyAccess(Class containerJavaType, String propertyName, boolean setterRequired) {
 		return new PropertyAccessBackRefImpl( this );
 	}
 

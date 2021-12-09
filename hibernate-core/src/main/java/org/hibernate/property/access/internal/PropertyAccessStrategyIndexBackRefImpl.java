@@ -31,7 +31,7 @@ public class PropertyAccessStrategyIndexBackRefImpl implements PropertyAccessStr
 	}
 
 	@Override
-	public PropertyAccess buildPropertyAccess(Class containerJavaType, String propertyName) {
+	public PropertyAccess buildPropertyAccess(Class containerJavaType, String propertyName, boolean setterRequired) {
 		return new PropertyAccessIndexBackRefImpl( this );
 	}
 

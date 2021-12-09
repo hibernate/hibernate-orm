@@ -15,6 +15,11 @@ import java.lang.annotation.Annotation;
 
 /**
  * Allows a user-written annotation to drive some customized model binding.
+ * <p>
+ * An implementation of this interface interacts directly with model objects
+ * like {@link PersistentClass} and {@link Property} to implement the
+ * semantics of some {@link org.hibernate.annotations.AttributeBinderType
+ * custom mapping annotation}.
  *
  * @see org.hibernate.annotations.AttributeBinderType
  *
@@ -23,8 +28,16 @@ import java.lang.annotation.Annotation;
 @Incubating
 public interface AttributeBinder<A extends Annotation> {
 	/**
-	 * Perform some custom configuration of the model relating to the given {@link Property}
-	 * of the given {@link PersistentClass}.
+	 * Perform some custom configuration of the model relating to the given annotated
+	 * {@link Property} of the given {@link PersistentClass entity class} or
+	 * {@link org.hibernate.mapping.Component embeddable class}.
+	 *
+	 * @param annotation an annotation of the property that is declared as an
+	 *                   {@link org.hibernate.annotations.AttributeBinderType}
+	 * @param persistentClass the entity class acting as the ultimate container of the
+	 *                        property (differs from {@link Property#getPersistentClass()}
+	 *                        in the case of a property of an embeddable class)
+	 * @param property a {@link Property} object representing the annotated property
 	 */
 	void bind(A annotation, MetadataBuildingContext buildingContext, PersistentClass persistentClass, Property property);
 }

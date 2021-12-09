@@ -18,7 +18,7 @@ import org.junit.Ignore;
  * @author Gavin King
  */
 @RequiresDialect( { SybaseDialect.class })
-// todo (6.0): needs a composite user type mechanism e.g. by providing a custom ComponentTuplizer/Instantiator
+// todo (6.0): needs a composite user type mechanism e.g. by providing a custom embeddable strategy or istantiator
 @Ignore( "Missing support for composite user types" )
 public class SybaseCustomSQLTest extends CustomStoredProcTestSupport {
 	public String[] getMappings() {

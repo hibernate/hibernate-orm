@@ -28,15 +28,9 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @DomainModel( annotatedClasses = { Person.class, NameImpl.class } )
 @SessionFactory
-@FailureExpected( jiraKey = "HHH-14950", reason = "Model has no setters, which is not supported" )
 @JiraKey( "HHH-14950" )
 public class InstantiationTests {
-
-	// these tests fail the build even though they are marked @FailureExpected because the
-	// failure happens while creating the test "fixtures" (here the boot model) which JUnit
-	// does not like
-
-//	@Test
+	@Test
 	public void modelTest(DomainModelScope scope) {
 		scope.withHierarchy( Person.class, (personMapping) -> {
 			final Property name = personMapping.getProperty( "name" );
@@ -49,7 +43,8 @@ public class InstantiationTests {
 		});
 	}
 
-//	@Test
+	@Test
+	@FailureExpected( jiraKey = "HHH-14950", reason = "Model has no setters, which is not supported" )
 	public void basicTest(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			final Person mick = new Person( 1, new NameImpl( "Mick", "Jagger" ) );

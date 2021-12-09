@@ -12,6 +12,7 @@ import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.hibernate.FetchMode;
@@ -19,7 +20,10 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.PropertyNotFoundException;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
+import org.hibernate.cfg.Environment;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.Mapping;
@@ -27,18 +31,19 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.mapping.Component;
+import org.hibernate.mapping.Property;
+import org.hibernate.metamodel.EmbeddableInstantiator;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
-import org.hibernate.metamodel.EmbeddableInstantiator;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.tuple.PropertyFactory;
 import org.hibernate.tuple.StandardProperty;
 import org.hibernate.tuple.ValueGeneration;
-import org.hibernate.tuple.component.ComponentMetamodel;
-import org.hibernate.tuple.component.ComponentTuplizer;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.CompositeTypeImplementor;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Handles "component" mappings
@@ -46,8 +51,8 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Gavin King
  */
 public class ComponentType extends AbstractType implements CompositeTypeImplementor, ProcedureParameterExtractionAware {
+	private final Class<?> componentClass;
 
-	private final TypeConfiguration typeConfiguration;
 	private final String[] propertyNames;
 	private final Type[] propertyTypes;
 	private final ValueGeneration[] propertyValueGenerationStrategies;
@@ -56,18 +61,20 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 	protected final int propertySpan;
 	private final CascadeStyle[] cascade;
 	private final FetchMode[] joinedFetch;
+
 	private final boolean isKey;
 	private boolean hasNotNullProperty;
 	private final boolean createEmptyCompositesEnabled;
 
-	protected final ComponentTuplizer componentTuplizer;
 	private EmbeddableValuedModelPart mappingModelPart;
 
-	public ComponentType(TypeConfiguration typeConfiguration, ComponentMetamodel metamodel, int[] originalPropertyOrder) {
-		this.typeConfiguration = typeConfiguration;
-		// for now, just "re-flatten" the metamodel since this is temporary stuff anyway (HHH-1907)
-		this.isKey = metamodel.isKey();
-		this.propertySpan = metamodel.getPropertySpan();
+	public ComponentType(Component component, int[] originalPropertyOrder, MetadataBuildingContext buildingContext) {
+		this.componentClass = component.isDynamic()
+				? Map.class
+				: component.getComponentClass();
+
+		this.isKey = component.isKey();
+		this.propertySpan = component.getPropertySpan();
 		this.originalPropertyOrder = originalPropertyOrder;
 		this.propertyNames = new String[propertySpan];
 		this.propertyTypes = new Type[propertySpan];
@@ -76,8 +83,12 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 		this.cascade = new CascadeStyle[propertySpan];
 		this.joinedFetch = new FetchMode[propertySpan];
 
-		for ( int i = 0; i < propertySpan; i++ ) {
-			StandardProperty prop = metamodel.getProperty( i );
+		final Iterator<Property> itr = component.getPropertyIterator();
+		int i = 0;
+		while ( itr.hasNext() ) {
+			final Property property = itr.next();
+			// todo (6.0) : see if we really need to create these
+			final StandardProperty prop = PropertyFactory.buildStandardProperty( property, false );
 			this.propertyNames[i] = prop.getName();
 			this.propertyTypes[i] = prop.getType();
 			this.propertyNullability[i] = prop.isNullable();
@@ -87,10 +98,14 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 				hasNotNullProperty = true;
 			}
 			this.propertyValueGenerationStrategies[i] = prop.getValueGenerationStrategy();
+			i++;
 		}
 
-		this.componentTuplizer = metamodel.getComponentTuplizer();
-		this.createEmptyCompositesEnabled = metamodel.isCreateEmptyCompositesEnabled();
+		this.createEmptyCompositesEnabled = ConfigurationHelper.getBoolean(
+				Environment.CREATE_EMPTY_COMPOSITES_ENABLED,
+				buildingContext.getBootstrapContext().getServiceRegistry().getService( ConfigurationService.class ).getSettings(),
+				false
+		);
 	}
 
 	public boolean isKey() {
@@ -152,8 +167,8 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 		return true;
 	}
 
-	public Class getReturnedClass() {
-		return componentTuplizer.getMappedClass();
+	public Class<?> getReturnedClass() {
+		return componentClass;
 	}
 
 	@Override

@@ -8,7 +8,6 @@ package org.hibernate.mapping;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -16,8 +15,8 @@ import java.util.Objects;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.Database;
-import org.hibernate.boot.model.source.internal.hbm.MappingDocument;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.boot.model.source.internal.hbm.MappingDocument;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -28,10 +27,8 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.JoinedIterator;
-import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.EmbeddableInstantiator;
 import org.hibernate.property.access.spi.Setter;
-import org.hibernate.tuple.component.ComponentMetamodel;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.Type;
@@ -56,7 +53,6 @@ public class Component extends SimpleValue implements MetaAttributable {
 	private String roleName;
 
 	private Class<? extends EmbeddableInstantiator> customInstantiator;
-	private Map<RepresentationMode,String> tuplizerImpls;
 
 	// cache the status of the type
 	private volatile Type type;
@@ -205,14 +201,9 @@ public class Component extends SimpleValue implements MetaAttributable {
 					// Other components should be sorted already
 					sortProperties( true );
 
-					// TODO : temporary initial step towards HHH-1907
-					final ComponentMetamodel metamodel = new ComponentMetamodel(
-							this,
-							getMetadata().getMetadataBuildingOptions()
-					);
 					localType = isEmbedded()
-							? new EmbeddedComponentType( getBuildingContext().getBootstrapContext().getTypeConfiguration(), metamodel, originalPropertyOrder )
-							: new ComponentType( getBuildingContext().getBootstrapContext().getTypeConfiguration(), metamodel, originalPropertyOrder );
+							? new EmbeddedComponentType( this, originalPropertyOrder, getBuildingContext() )
+							: new ComponentType( this, originalPropertyOrder, getBuildingContext() );
 
 					this.type = localType;
 				}
@@ -327,29 +318,6 @@ public class Component extends SimpleValue implements MetaAttributable {
 
 	public boolean hasPojoRepresentation() {
 		return componentClassName!=null;
-	}
-
-	public void addTuplizer(RepresentationMode representationMode, String implClassName) {
-		if ( tuplizerImpls == null ) {
-			tuplizerImpls = new HashMap<>();
-		}
-		tuplizerImpls.put( representationMode, implClassName );
-	}
-
-	public String getTuplizerImplClassName(RepresentationMode mode) {
-		// todo : remove this once ComponentMetamodel is complete and merged
-		if ( tuplizerImpls == null ) {
-			return null;
-		}
-		return tuplizerImpls.get( mode );
-	}
-
-	@SuppressWarnings("UnusedDeclaration")
-	public Map getTuplizerMap() {
-		if ( tuplizerImpls == null ) {
-			return null;
-		}
-		return java.util.Collections.unmodifiableMap( tuplizerImpls );
 	}
 
 	/**

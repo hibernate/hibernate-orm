@@ -17,7 +17,8 @@ import org.hibernate.metamodel.EmbeddableInstantiator;
 public class NameInstantiator implements EmbeddableInstantiator {
 	@Override
 	public Object instantiate(Supplier<Object[]> valuesAccess, SessionFactoryImplementor sessionFactory) {
-		return new Name();
+		final Object[] values = valuesAccess.get();
+		return Name.make( (String) values[0], (String) values[1] );
 	}
 
 	@Override

@@ -66,7 +66,6 @@ public class BasicCriteriaUsageTest extends BaseEntityManagerFunctionalTestCase 
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-8283")
-	// todo (6.0): needs a composite user type mechanism e.g. by providing a custom ComponentTuplizer/Instantiator
 	@Ignore( "Missing support for composite user types" )
 	public void testDateCompositeCustomType() {
 		Payment payment = new Payment();

@@ -30,9 +30,6 @@ import org.hibernate.property.access.spi.Getter;
  * </ul>
  * </p>
  *
- * @see org.hibernate.tuple.entity.EntityTuplizer
- * @see org.hibernate.tuple.component.ComponentTuplizer
- *
  * @author Steve Ebersole
  *
  * @deprecated See {@link ManagedTypeRepresentationStrategy}

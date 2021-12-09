@@ -20,9 +20,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 
-@Table(name = "persons")
-//tag::embeddable-instantiator-property[]
 @Entity
+@Table(name = "people")
 public class Person {
 	@Id
 	public Integer id;
@@ -37,8 +36,6 @@ public class Person {
 	@EmbeddableInstantiator( NameInstantiator.class )
 	@Access( AccessType.PROPERTY )
 	public Set<Name> aliases;
-
-	//end::embeddable-instantiator-property[]
 
 	private Person() {
 		// for Hibernate use
@@ -80,6 +77,4 @@ public class Person {
 		aliases.add( alias );
 	}
 
-//tag::embeddable-instantiator-property[]
 }
-//end::embeddable-instantiator-property[]

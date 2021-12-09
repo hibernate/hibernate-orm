@@ -75,7 +75,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 		xmlMappings = {"org/hibernate/orm/test/sql/hand/query/NativeSQLQueries.hbm.xml"}
 )
 @SessionFactory
-// todo (6.0): needs a composite user type mechanism e.g. by providing a custom ComponentTuplizer/Instantiator
+// todo (6.0): needs a composite user type mechanism e.g. by providing a custom embeddable strategy or istantiator
 public class NativeSQLQueriesTest {
 
 	protected String getOrganizationFetchJoinEmploymentSQL() {

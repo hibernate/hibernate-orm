@@ -20,7 +20,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 
-@Table(name = "persons")
+@Table(name = "people")
 //tag::embeddable-instantiator-property[]
 @Entity
 public class Person {

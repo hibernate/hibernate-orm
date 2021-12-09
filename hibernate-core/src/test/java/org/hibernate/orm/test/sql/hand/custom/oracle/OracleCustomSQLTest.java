@@ -18,7 +18,7 @@ import org.junit.Ignore;
  * @author Gavin King
  */
 @RequiresDialect( OracleDialect.class )
-// todo (6.0): needs a composite user type mechanism e.g. by providing a custom ComponentTuplizer/Instantiator
+// todo (6.0): needs a composite user type mechanism e.g. by providing a custom embeddable strategy or istantiator
 @Ignore( "Missing support for composite user types" )
 public class OracleCustomSQLTest extends CustomStoredProcTestSupport {
 	public String[] getMappings() {

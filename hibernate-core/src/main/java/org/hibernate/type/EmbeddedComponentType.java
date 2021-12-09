@@ -8,22 +8,41 @@ package org.hibernate.type;
 
 import java.lang.reflect.Method;
 
-import org.hibernate.tuple.component.ComponentMetamodel;
-import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.mapping.Component;
+import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.property.access.spi.Getter;
 
 /**
  * @author Gavin King
  */
 public class EmbeddedComponentType extends ComponentType {
-	public EmbeddedComponentType(TypeConfiguration typeScope, ComponentMetamodel metamodel, int[] propertyReordering) {
-		super( typeScope, metamodel, propertyReordering );
+	public EmbeddedComponentType(Component component, int[] originalPropertyOrder, MetadataBuildingContext buildingContext) {
+		super( component, originalPropertyOrder, buildingContext );
 	}
 
+	@Override
 	public boolean isEmbedded() {
 		return true;
 	}
 
+	@Override
 	public boolean isMethodOf(Method method) {
-		return componentTuplizer.isMethodOf( method );
+		if ( mappingModelPart() == null ) {
+			throw new IllegalStateException( "EmbeddableValuedModelPart not known yet" );
+		}
+
+		final EmbeddableMappingType embeddable = mappingModelPart().getEmbeddableTypeDescriptor();
+		for ( int i = 0; i < embeddable.getAttributeMappings().size(); i++ ) {
+			final AttributeMapping attributeMapping = embeddable.getAttributeMapping( i );
+			final Getter getter = attributeMapping.getPropertyAccess().getGetter();
+			final Method getterMethod = getter.getMethod();
+			if ( getterMethod != null && getterMethod.equals( method ) ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 }

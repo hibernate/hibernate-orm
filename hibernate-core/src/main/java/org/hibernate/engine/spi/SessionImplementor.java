@@ -26,7 +26,8 @@ import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
  * {@link org.hibernate.type.Type}, {@link EntityPersister}
  * and {@link org.hibernate.persister.collection.CollectionPersister} implementations.
  *
- * A Session, through this interface and SharedSessionContractImplementor, implements:<ul>
+ * A Session, through this interface and SharedSessionContractImplementor, implements:
+ * <ul>
  *     <li>
  *         {@link org.hibernate.resource.jdbc.spi.JdbcSessionOwner} to drive the behavior of the
  *         {@link org.hibernate.resource.jdbc.spi.JdbcSessionContext} delegate
@@ -82,46 +83,6 @@ public interface SessionImplementor extends Session, SharedSessionContractImplem
 
 	void forceFlush(EntityEntry e) throws HibernateException;
 
-	@Override
-	QueryImplementor createQuery(String queryString);
-
-	@Override
-	<T> QueryImplementor<T> createQuery(String queryString, Class<T> resultType);
-
-	@Override
-	<T> QueryImplementor<T> createNamedQuery(String name, Class<T> resultType);
-
-	@Override
-	QueryImplementor createNamedQuery(String name);
-
-	@Override
-	NativeQueryImplementor createNativeQuery(String sqlString);
-
-	@Override
-	@SuppressWarnings("unchecked")
-	NativeQueryImplementor createNativeQuery(String sqlString, Class resultClass);
-
-	@Override
-	NativeQueryImplementor createNativeQuery(String sqlString, String resultSetMappingName);
-
-	@Override
-	NativeQueryImplementor getNamedNativeQuery(String name);
-
-	@Override
-	NativeQueryImplementor getNamedNativeQuery(String name, String resultSetMapping);
-
-	@Override
-	QueryImplementor getNamedQuery(String queryName);
-
-	@Override
-	<T> QueryImplementor<T> createQuery(CriteriaQuery<T> criteriaQuery);
-
-	@Override
-	QueryImplementor createQuery(CriteriaUpdate updateQuery);
-
-	@Override
-	QueryImplementor createQuery(CriteriaDelete deleteQuery);
-
 	/**
 	 * @deprecated  OperationalContext should cover this overload I believe; Gail?
 	 */
@@ -157,4 +118,39 @@ public interface SessionImplementor extends Session, SharedSessionContractImplem
 	 */
 	@Deprecated
 	void removeOrphanBeforeUpdates(String entityName, Object child);
+
+
+	// The following declarations just override the JPA return type with our
+	// Hibernate QueryImplementor type, as required by the declaration in
+	// QueryProducerImplementor
+
+	@Override @SuppressWarnings({"rawtypes", "unchecked"})
+	QueryImplementor getNamedQuery(String queryString);
+
+	@Override @SuppressWarnings({"rawtypes", "unchecked"})
+	QueryImplementor createQuery(String queryString);
+
+	@Override
+	<R> QueryImplementor<R> createQuery(String queryString, Class<R> resultType);
+
+	@Override @SuppressWarnings({"rawtypes", "unchecked"})
+	QueryImplementor createNamedQuery(String queryString);
+
+	@Override
+	<R> QueryImplementor<R> createNamedQuery(String name, Class<R> resultType);
+
+	@Override @SuppressWarnings({"rawtypes", "unchecked"})
+	NativeQueryImplementor createNativeQuery(String queryString);
+
+	@Override @SuppressWarnings({"rawtypes", "unchecked"})
+	NativeQueryImplementor createNativeQuery(String queryString, String resultSetMappingName);
+
+	@Override
+	<R> QueryImplementor<R> createQuery(CriteriaQuery<R> criteriaQuery);
+
+	@Override @SuppressWarnings({"rawtypes", "unchecked"})
+	QueryImplementor createQuery(CriteriaUpdate updateQuery);
+
+	@Override @SuppressWarnings({"rawtypes", "unchecked"})
+	QueryImplementor createQuery(CriteriaDelete deleteQuery);
 }

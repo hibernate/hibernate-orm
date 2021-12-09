@@ -6,8 +6,6 @@
  */
 package org.hibernate;
 
-import java.io.Closeable;
-
 /**
  * A command-oriented API for performing bulk operations against a database.
  * <p/>
@@ -24,7 +22,7 @@ import java.io.Closeable;
  *
  * @author Gavin King
  */
-public interface StatelessSession extends SharedSessionContract, AutoCloseable, Closeable {
+public interface StatelessSession extends SharedSessionContract {
 	/**
 	 * Close the stateless session and release the JDBC connection.
 	 */
@@ -97,7 +95,7 @@ public interface StatelessSession extends SharedSessionContract, AutoCloseable, 
 	 *
 	 * @return a detached entity instance
 	 */
-	Object get(Class entityClass, Object id);
+	<T> T get(Class<T> entityClass, Object id);
 
 	/**
 	 * Retrieve a row, obtaining the specified lock mode.
@@ -119,7 +117,7 @@ public interface StatelessSession extends SharedSessionContract, AutoCloseable, 
 	 *
 	 * @return a detached entity instance
 	 */
-	Object get(Class entityClass, Object id, LockMode lockMode);
+	<T> T get(Class<T> entityClass, Object id, LockMode lockMode);
 
 	/**
 	 * Refresh the entity instance state from the database.

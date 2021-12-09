@@ -47,10 +47,9 @@ import org.hibernate.type.BasicTypeReference;
  * @author Gavin King
  * @author Steve Ebersole
  *
- * @param <R> The query result type (for typed queries)
+ * @param <R> The query result type, for typed queries, or {@code Object} for untyped queries
  */
 @Incubating
-@SuppressWarnings("UnusedDeclaration")
 public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	/**
 	 * Get the QueryProducer this Query originates from.  Generally speaking,
@@ -86,7 +85,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * @apiNote This method calls {@link #applyGraph(RootGraph, GraphSemantic)} using
 	 * {@link GraphSemantic#FETCH} as the semantic
 	 */
-	default Query<R> applyFetchGraph(RootGraph graph) {
+	default Query<R> applyFetchGraph(RootGraph<?> graph) {
 		return applyGraph( graph, GraphSemantic.FETCH );
 	}
 
@@ -96,7 +95,8 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * @apiNote This method calls {@link #applyGraph(RootGraph, GraphSemantic)} using
 	 * {@link GraphSemantic#LOAD} as the semantic
 	 */
-	default Query<R> applyLoadGraph(RootGraph graph) {
+	@SuppressWarnings("UnusedDeclaration")
+	default Query<R> applyLoadGraph(RootGraph<?> graph) {
 		return applyGraph( graph, GraphSemantic.LOAD );
 	}
 
@@ -640,40 +640,6 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 */
 	<P> Query<R> setParameterList(int position, Collection<? extends P> values, AllowableParameterType<P> type);
 
-//	/**
-//	 * Bind multiple values to a named query parameter. This is useful for binding
-//	 * a list of values to an expression such as <tt>foo.bar in (:value_list)</tt>.
-//	 *
-//	 * @param name the name of the parameter
-//	 * @param values a collection of values to list
-//	 * @param type the Hibernate type of the values
-//	 *
-//	 * @return {@code this}, for method chaining
-//	 *
-//	 * @deprecated Use {@link #setParameterList(String, Object[], AllowableParameterType)}
-//	 */
-//	@Deprecated
-//	default Query<R> setParameterList(String name, Object[] values, Type type){
-//		return setParameter( name, values, (AllowableParameterType)type );
-//	}
-
-//	/**
-//	 * Bind multiple values to a named query parameter. This is useful for binding
-//	 * a list of values to an expression such as <tt>foo.bar in (:value_list)</tt>.
-//	 *
-//	 * @param position the parameter positional label
-//	 * @param values a collection of values to list
-//	 * @param type the Hibernate type of the values
-//	 *
-//	 * @return {@code this}, for method chaining
-//	 *
-//	 * @deprecated Use {@link #setParameterList(String, Object[], AllowableParameterType)}
-//	 */
-//	@Deprecated
-//	default Query<R> setParameterList(int position, Object[] values, Type type){
-//		return setParameter( position, values, (AllowableParameterType)type );
-//	}
-
 	/**
 	 * Bind multiple values to a named query parameter. This is useful for binding
 	 * a list of values to an expression such as <tt>foo.bar in (:value_list)</tt>.
@@ -744,62 +710,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	Query<R> setProperties(Map bean);
-
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// deprecations
-
-
-//	/**
-//	 * Bind a named query parameter using the supplied Type
-//	 *
-//	 * @param name the name of the parameter
-//	 * @param val the possibly-null parameter value
-//	 * @param type the Hibernate type
-//	 *
-//	 * @return {@code this}, for method chaining
-//	 *
-//	 * @deprecated Use {@link #setParameter(String, Object, AllowableParameterType)}
-//	 */
-//	@Deprecated
-//	default Query<R> setParameter(String name, Object val, Type type){
-//		return setParameter( name, val, (AllowableParameterType) type );
-//	}
-
-//	/**
-//	 * Bind a value to a JDBC-style query parameter.
-//	 *
-//	 * @param position the position of the parameter in the query
-//	 * string, numbered from <tt>0</tt>.
-//	 * @param val the possibly-null parameter value
-//	 * @param type the Hibernate type
-//	 *
-//	 * @return {@code this}, for method chaining
-//	 *
-//	 * @deprecated Use {@link #setParameter(int, Object, AllowableParameterType)}
-//	 */
-//	@Deprecated
-//	default Query<R> setParameter(int position, Object val, Type type) {
-//		return setParameter( position, val, (AllowableParameterType) type );
-//	}
-
-//	/**
-//	 * Bind a query parameter using the supplied Type
-//	 *
-//	 * @param parameter The query parameter memento
-//	 * @param val the possibly-null parameter value
-//	 * @param type the Hibernate type
-//	 *
-//	 * @return {@code this}, for method chaining
-//	 *
-//	 * @deprecated Use {@link #setParameter(QueryParameter, Object, AllowableParameterType)}
-//	 */
-//	@Deprecated
-//	default <P> Query<R> setParameter(QueryParameter<P> parameter, P val, Type type){
-//		return setParameter( parameter, val, (AllowableParameterType) type );
-//	}
+	Query<R> setProperties(Map<?,?> bean);
 
 	/**
 	 * @deprecated (since 5.2) Use {@link #setTupleTransformer} or {@link #setResultListTransformer}

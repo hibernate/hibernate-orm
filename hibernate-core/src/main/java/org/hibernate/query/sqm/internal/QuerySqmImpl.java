@@ -123,6 +123,7 @@ public class QuerySqmImpl<R>
 	/**
 	 * Creates a Query instance from a named HQL memento
 	 */
+	@SuppressWarnings("unchecked")
 	public QuerySqmImpl(
 			NamedHqlQueryMemento memento,
 			Class<R> resultType,
@@ -179,7 +180,7 @@ public class QuerySqmImpl<R>
 		if ( memento.getParameterTypes() != null ) {
 			for ( Map.Entry<String, String> entry : memento.getParameterTypes().entrySet() ) {
 				final QueryParameterImplementor<?> parameter = parameterMetadata.getQueryParameter( entry.getKey() );
-				final BasicType type = getSessionFactory().getTypeConfiguration()
+				final BasicType<?> type = getSessionFactory().getTypeConfiguration()
 						.getBasicTypeRegistry()
 						.getRegisteredType( entry.getValue() );
 				parameter.applyAnticipatedType( type );
@@ -190,6 +191,7 @@ public class QuerySqmImpl<R>
 	/**
 	 * Form used for HQL queries
 	 */
+	@SuppressWarnings("unchecked")
 	public QuerySqmImpl(
 			String hqlString,
 			HqlInterpretation hqlInterpretation,
@@ -230,6 +232,7 @@ public class QuerySqmImpl<R>
 	/**
 	 * Form used for criteria queries
 	 */
+	@SuppressWarnings("unchecked")
 	public QuerySqmImpl(
 			SqmStatement<R> sqmStatement,
 			Class<R> resultType,
@@ -326,7 +329,10 @@ public class QuerySqmImpl<R>
 		}
 	}
 
-	private static <T> void checkQueryReturnType(SqmQuerySpec<T> querySpec, Class<T> resultClass, SessionFactoryImplementor sessionFactory) {
+	private static <T> void checkQueryReturnType(
+			SqmQuerySpec<T> querySpec,
+			Class<T> resultClass,
+			SessionFactoryImplementor sessionFactory) {
 		if ( resultClass == null ) {
 			// nothing to check
 			return;
@@ -352,10 +358,10 @@ public class QuerySqmImpl<R>
 				}
 			}
 
-			final SqmSelection sqmSelection = selections.get( 0 );
+			final SqmSelection<?> sqmSelection = selections.get( 0 );
 
 			if ( sqmSelection.getSelectableNode() instanceof SqmParameter ) {
-				final SqmParameter sqmParameter = (SqmParameter) sqmSelection.getSelectableNode();
+				final SqmParameter<?> sqmParameter = (SqmParameter<?>) sqmSelection.getSelectableNode();
 
 				// we may not yet know a selection type
 				if ( sqmParameter.getNodeType() == null || sqmParameter.getNodeType().getExpressableJavaTypeDescriptor() == null ) {
@@ -552,7 +558,6 @@ public class QuerySqmImpl<R>
 		return sqmStatement;
 	}
 
-	@SuppressWarnings("unchecked")
 	public Class<R> getResultType() {
 		return resultType;
 	}
@@ -785,8 +790,8 @@ public class QuerySqmImpl<R>
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	private SelectQueryPlan<R> buildAggregatedSelectQueryPlan(SqmSelectStatement<R>[] concreteSqmStatements) {
+		@SuppressWarnings("unchecked")
 		final SelectQueryPlan<R>[] aggregatedQueryPlans = new SelectQueryPlan[ concreteSqmStatements.length ];
 
 		// todo (6.0) : we want to make sure that certain thing (ResultListTransformer, etc) only get applied at the aggregator-level
@@ -799,7 +804,7 @@ public class QuerySqmImpl<R>
 			);
 		}
 
-		return new AggregatedSelectQueryPlanImpl( aggregatedQueryPlans );
+		return new AggregatedSelectQueryPlanImpl<>( aggregatedQueryPlans );
 	}
 
 	private SelectQueryPlan<R> buildConcreteSelectQueryPlan(

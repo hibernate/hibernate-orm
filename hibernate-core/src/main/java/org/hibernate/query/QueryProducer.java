@@ -31,7 +31,7 @@ public interface QueryProducer {
 	 * defined with the given name or if the query string is
 	 * found to be invalid
 	 */
-	Query getNamedQuery(String queryName);
+	<R> Query<R> getNamedQuery(String queryName);
 
 	/**
 	 * Create a {@link Query} instance for the given HQL/JPQL query string.
@@ -42,7 +42,7 @@ public interface QueryProducer {
 	 *
 	 * @see jakarta.persistence.EntityManager#createQuery(String)
 	 */
-	Query createQuery(String queryString);
+	<R> Query<R> createQuery(String queryString);
 
 	/**
 	 * Create a typed {@link Query} instance for the given HQL/JPQL query string.
@@ -69,7 +69,7 @@ public interface QueryProducer {
 	 *
 	 * @see jakarta.persistence.EntityManager#createNamedQuery(String)
 	 */
-	Query createNamedQuery(String name);
+	<R> Query<R> createNamedQuery(String name);
 
 	/**
 	 * The JPA-defined named, typed query creation method.  This form can only
@@ -98,7 +98,7 @@ public interface QueryProducer {
 	 *
 	 * @see jakarta.persistence.EntityManager#createNativeQuery(String)
 	 */
-	NativeQuery createNativeQuery(String sqlString);
+	<R> NativeQuery<R> createNativeQuery(String sqlString);
 
 	/**
 	 * Create a NativeQuery instance for the given native (SQL) query using
@@ -125,7 +125,7 @@ public interface QueryProducer {
 	 * @see jakarta.persistence.EntityManager#createNativeQuery(String,Class)
 	 * @see jakarta.persistence.SqlResultSetMapping
 	 */
-	NativeQuery createNativeQuery(String sqlString, String resultSetMappingName);
+	<R> NativeQuery<R> createNativeQuery(String sqlString, String resultSetMappingName);
 
 	/**
 	 * Get a NativeQuery instance for a named native SQL query
@@ -134,7 +134,7 @@ public interface QueryProducer {
 	 *
 	 * @return The NativeQuery instance for manipulation and execution
 	 */
-	NativeQuery getNamedNativeQuery(String name);
+	<R> NativeQuery<R> getNamedNativeQuery(String name);
 
 	/**
 	 * Get a NativeQuery instance for a named native SQL query
@@ -143,11 +143,26 @@ public interface QueryProducer {
 	 *
 	 * @return The NativeQuery instance for manipulation and execution
 	 */
-	NativeQuery getNamedNativeQuery(String name, String resultSetMapping);
+	<R> NativeQuery<R> getNamedNativeQuery(String name, String resultSetMapping);
 
-	<T> Query<T> createQuery(CriteriaQuery<T> criteriaQuery);
+	/**
+	 * Create a Query for the given JPA {@link CriteriaQuery}
+	 *
+	 * @see jakarta.persistence.EntityManager#createQuery(CriteriaQuery)
+	 */
+	<R> Query<R> createQuery(CriteriaQuery<R> criteriaQuery);
 
-	Query createQuery(CriteriaUpdate updateQuery);
+	/**
+	 * Create a Query for the given JPA {@link CriteriaUpdate}
+	 *
+	 * @see jakarta.persistence.EntityManager#createQuery(CriteriaUpdate)
+	 */
+	<R> Query<R> createQuery(CriteriaUpdate<?> updateQuery);
 
-	Query createQuery(CriteriaDelete deleteQuery);
+	/**
+	 * Create a Query for the given JPA {@link CriteriaDelete}
+	 *
+	 * @see jakarta.persistence.EntityManager#createQuery(CriteriaDelete)
+	 */
+	<R> Query<R> createQuery(CriteriaDelete<?> deleteQuery);
 }

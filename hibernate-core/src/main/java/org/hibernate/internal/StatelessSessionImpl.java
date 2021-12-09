@@ -247,7 +247,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	@Override
 	public void initializeCollection(
-			PersistentCollection collection,
+			PersistentCollection<?> collection,
 			boolean writing) throws HibernateException {
 		throw new SessionException( "collections cannot be fetched by a stateless session" );
 	}

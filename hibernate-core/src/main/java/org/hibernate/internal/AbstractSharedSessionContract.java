@@ -68,7 +68,6 @@ import org.hibernate.query.sql.internal.NativeQueryImpl;
 import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
 import org.hibernate.query.sqm.internal.QuerySqmImpl;
-import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.select.SqmQueryGroup;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
@@ -216,7 +215,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	 * Override the implementation provided on SharedSessionContractImplementor
 	 * which is not very efficient: this method is hot in Hibernate Reactive, and could
 	 * be hot in some ORM contexts as well.
-	 * @return
 	 */
 	@Override
 	public Integer getConfiguredJdbcBatchSize() {
@@ -255,7 +253,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		if ( statementInspector == null ) {
 			// If there is no StatementInspector specified, map to the call
 			//		to the (deprecated) Interceptor#onPrepareStatement method
-			return (StatementInspector) interceptor::onPrepareStatement;
+			return interceptor::onPrepareStatement;
 		}
 		return statementInspector;
 	}
@@ -635,13 +633,12 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// dynamic HQL handling
 
-	@Override
+	@Override @SuppressWarnings({"rawtypes", "unchecked"})
 	public QueryImplementor createQuery(String queryString) {
 		return createQuery( queryString, null );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <T> QueryImplementor<T> createQuery(String queryString, Class<T> resultClass) {
 		checkOpen();
 		pulseTransactionCoordinator();
@@ -676,18 +673,14 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// dynamic native (SQL) query handling
 
-	@Override
+	@Override @SuppressWarnings({"rawtypes", "unchecked"})
 	public NativeQueryImplementor createNativeQuery(String sqlString) {
-		return getNativeQueryImplementor( sqlString );
-	}
-
-	protected NativeQueryImplementor getNativeQueryImplementor(String queryString) {
 		checkOpen();
 		pulseTransactionCoordinator();
 		delayedAfterCompletion();
 
 		try {
-			NativeQueryImpl query = new NativeQueryImpl( queryString, this );
+			NativeQueryImpl query = new NativeQueryImpl<>(sqlString, this);
 			if ( StringHelper.isEmpty( query.getComment() ) ) {
 				query.setComment( "dynamic native SQL query" );
 			}
@@ -699,8 +692,9 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 	}
 
-	@Override
-	@SuppressWarnings("unchecked")
+	@Override @SuppressWarnings({"rawtypes", "unchecked"})
+	//note: we're doing something a bit funny here to work around
+	//      the classing signatures declared by the supertypes
 	public NativeQueryImplementor createNativeQuery(String sqlString, Class resultClass) {
 		checkOpen();
 		pulseTransactionCoordinator();
@@ -721,13 +715,13 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 	}
 
-	@Override
+	@Override @SuppressWarnings({"rawtypes", "unchecked"})
 	public NativeQueryImplementor createNativeQuery(String sqlString, String resultSetMappingName) {
 		checkOpen();
 		pulseTransactionCoordinator();
 		delayedAfterCompletion();
 
-		final NativeQueryImplementor query;
+		final NativeQueryImplementor<Object> query;
 		try {
 			if ( StringHelper.isNotEmpty( resultSetMappingName ) ) {
 				final NamedResultSetMappingMemento resultSetMappingMemento = getFactory().getQueryEngine()
@@ -738,10 +732,10 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 					throw new HibernateException( "Could not resolve specified result-set mapping name : " + resultSetMappingName );
 				}
 
-				query = new NativeQueryImpl( sqlString, resultSetMappingMemento, this );
+				query = new NativeQueryImpl<>( sqlString, resultSetMappingMemento, this );
 			}
 			else {
-				query = new NativeQueryImpl( sqlString, this );
+				query = new NativeQueryImpl<>( sqlString, this );
 			}
 		}
 		catch (RuntimeException he) {
@@ -755,12 +749,12 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// named query handling
 
-	@Override
+	@Override @SuppressWarnings({"rawtypes", "unchecked"})
 	public QueryImplementor getNamedQuery(String queryName) {
 		return buildNamedQuery( queryName, null );
 	}
 
-	@Override
+	@Override @SuppressWarnings({"rawtypes", "unchecked"})
 	public QueryImplementor createNamedQuery(String name) {
 		return buildNamedQuery( name, null );
 	}
@@ -847,10 +841,10 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 	}
 
-	protected void applyQuerySettingsAndHints(Query query) {
+	protected void applyQuerySettingsAndHints(Query<?> query) {
 	}
 
-	@Override
+	@Override @SuppressWarnings({"rawtypes", "unchecked"})
 	public NativeQueryImplementor getNamedNativeQuery(String queryName) {
 		final NamedNativeQueryMemento namedNativeDescriptor = getFactory().getQueryEngine()
 				.getNamedObjectRepository()
@@ -863,7 +857,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		throw getExceptionConverter().convert( new IllegalArgumentException( "No query defined for that name [" + queryName + "]" ) );
 	}
 
-	@Override
+	@Override @SuppressWarnings({"rawtypes", "unchecked"})
 	public NativeQueryImplementor getNamedNativeQuery(String queryName, String resultSetMapping) {
 		final NamedNativeQueryMemento namedNativeDescriptor = getFactory().getQueryEngine()
 				.getNamedObjectRepository()
@@ -905,16 +899,16 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@SuppressWarnings("UnnecessaryLocalVariable")
 	public ProcedureCall createStoredProcedureCall(String procedureName) {
 		checkOpen();
-		final ProcedureCall procedureCall = new ProcedureCallImpl( this, procedureName );
+		final ProcedureCall procedureCall = new ProcedureCallImpl<>( this, procedureName );
 //		call.setComment( "Dynamic stored procedure call" );
 		return procedureCall;
 	}
 
 	@Override
 	@SuppressWarnings("UnnecessaryLocalVariable")
-	public ProcedureCall createStoredProcedureCall(String procedureName, Class... resultClasses) {
+	public ProcedureCall createStoredProcedureCall(String procedureName, Class<?>... resultClasses) {
 		checkOpen();
-		final ProcedureCall procedureCall = new ProcedureCallImpl( this, procedureName, resultClasses );
+		final ProcedureCall procedureCall = new ProcedureCallImpl<>( this, procedureName, resultClasses );
 //		call.setComment( "Dynamic stored procedure call" );
 		return procedureCall;
 	}
@@ -923,7 +917,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@SuppressWarnings("UnnecessaryLocalVariable")
 	public ProcedureCall createStoredProcedureCall(String procedureName, String... resultSetMappings) {
 		checkOpen();
-		final ProcedureCall procedureCall = new ProcedureCallImpl( this, procedureName, resultSetMappings );
+		final ProcedureCall procedureCall = new ProcedureCallImpl<>( this, procedureName, resultSetMappings );
 //		call.setComment( "Dynamic stored procedure call" );
 		return procedureCall;
 	}
@@ -932,16 +926,16 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@SuppressWarnings("UnnecessaryLocalVariable")
 	public ProcedureCall createStoredProcedureQuery(String procedureName) {
 		checkOpen();
-		final ProcedureCall procedureCall = new ProcedureCallImpl( this, procedureName );
+		final ProcedureCall procedureCall = new ProcedureCallImpl<>( this, procedureName );
 //		call.setComment( "Dynamic stored procedure call" );
 		return procedureCall;
 	}
 
 	@Override
 	@SuppressWarnings("UnnecessaryLocalVariable")
-	public ProcedureCall createStoredProcedureQuery(String procedureName, Class... resultClasses) {
+	public ProcedureCall createStoredProcedureQuery(String procedureName, Class<?>... resultClasses) {
 		checkOpen();
-		final ProcedureCall procedureCall = new ProcedureCallImpl( this, procedureName, resultClasses );
+		final ProcedureCall procedureCall = new ProcedureCallImpl<>( this, procedureName, resultClasses );
 //		call.setComment( "Dynamic stored procedure call" );
 		return procedureCall;
 	}
@@ -950,7 +944,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@SuppressWarnings("UnnecessaryLocalVariable")
 	public ProcedureCall createStoredProcedureQuery(String procedureName, String... resultSetMappings) {
 		checkOpen();
-		final ProcedureCall procedureCall = new ProcedureCallImpl( this, procedureName, resultSetMappings );
+		final ProcedureCall procedureCall = new ProcedureCallImpl<>( this, procedureName, resultSetMappings );
 //		call.setComment( "Dynamic stored procedure call" );
 		return procedureCall;
 	}
@@ -1002,7 +996,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 	}
 
-	@Override
+	@Override @SuppressWarnings({"rawtypes", "unchecked"})
 	public QueryImplementor createQuery(CriteriaUpdate criteriaUpdate) {
 		checkOpen();
 		try {
@@ -1017,7 +1011,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 	}
 
-	@Override
+	@Override @SuppressWarnings({"rawtypes", "unchecked"})
 	public QueryImplementor createQuery(CriteriaDelete criteriaDelete) {
 		checkOpen();
 		try {

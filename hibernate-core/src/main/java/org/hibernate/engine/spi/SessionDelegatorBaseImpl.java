@@ -6,7 +6,6 @@
  */
 package org.hibernate.engine.spi;
 
-import java.sql.Connection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -16,7 +15,6 @@ import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
-import jakarta.persistence.StoredProcedureQuery;
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaUpdate;
@@ -54,6 +52,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.spi.QueryProducerImplementor;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
@@ -134,7 +133,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public void initializeCollection(PersistentCollection collection, boolean writing) throws HibernateException {
+	public void initializeCollection(PersistentCollection<?> collection, boolean writing) throws HibernateException {
 		delegate.initializeCollection( collection, writing );
 	}
 
@@ -448,29 +447,8 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 		return delegate.getEntityGraphs( entityClass );
 	}
 
-	@Override
-	public QueryImplementor getNamedQuery(String name) {
-		return delegate.getNamedQuery( name );
-	}
-
-	@Override
-	public NativeQueryImplementor getNamedNativeQuery(String name) {
-		return delegate.getNamedNativeQuery( name );
-	}
-
-	@Override
-	public NativeQueryImplementor getNamedNativeQuery(String name, String resultSetMapping) {
-		return delegate.getNamedNativeQuery( name, resultSetMapping );
-	}
-
-	@Override
-	public QueryImplementor createQuery(String queryString) {
-		return delegate.createQuery( queryString );
-	}
-
-	@Override
-	public <T> QueryImplementor<T> createQuery(String queryString, Class<T> resultType) {
-		return delegate.createQuery( queryString, resultType );
+	private QueryProducerImplementor queryDelegate() {
+		return delegate;
 	}
 
 	@Override
@@ -478,39 +456,64 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 		return delegate.createQuery( criteriaQuery );
 	}
 
-	@Override
+	@Override @SuppressWarnings("rawtypes")
 	public QueryImplementor createQuery(CriteriaUpdate updateQuery) {
 		return delegate.createQuery( updateQuery );
 	}
 
-	@Override
+	@Override @SuppressWarnings("rawtypes")
 	public QueryImplementor createQuery(CriteriaDelete deleteQuery) {
 		return delegate.createQuery( deleteQuery );
 	}
 
+	@Override @SuppressWarnings({"rawtypes", "unchecked"})
+	public QueryImplementor getNamedQuery(String name) {
+		return queryDelegate().getNamedQuery( name );
+	}
+
+	@Override @SuppressWarnings({"rawtypes", "unchecked"})
+	public NativeQueryImplementor getNamedNativeQuery(String name) {
+		return queryDelegate().getNamedNativeQuery( name );
+	}
+
+	@Override @SuppressWarnings({"rawtypes", "unchecked"})
+	public NativeQueryImplementor getNamedNativeQuery(String name, String resultSetMapping) {
+		return queryDelegate().getNamedNativeQuery( name, resultSetMapping );
+	}
+
+	@Override @SuppressWarnings({"rawtypes", "unchecked"})
+	public QueryImplementor createQuery(String queryString) {
+		return queryDelegate().createQuery( queryString );
+	}
+
 	@Override
+	public <T> QueryImplementor<T> createQuery(String queryString, Class<T> resultType) {
+		return queryDelegate().createQuery( queryString, resultType );
+	}
+
+	@Override @SuppressWarnings({"rawtypes", "unchecked"})
 	public QueryImplementor createNamedQuery(String name) {
-		return delegate.createNamedQuery( name );
+		return queryDelegate().createNamedQuery( name );
 	}
 
 	@Override
 	public <T> QueryImplementor<T> createNamedQuery(String name, Class<T> resultClass) {
-		return delegate.createNamedQuery( name, resultClass );
+		return queryDelegate().createNamedQuery( name, resultClass );
 	}
 
-	@Override
+	@Override @SuppressWarnings({"rawtypes", "unchecked"})
 	public NativeQueryImplementor createNativeQuery(String sqlString) {
-		return delegate.createNativeQuery( sqlString );
+		return queryDelegate().createNativeQuery( sqlString );
 	}
 
-	@Override
+	@Override @SuppressWarnings({"rawtypes", "unchecked"})
 	public NativeQueryImplementor createNativeQuery(String sqlString, Class resultClass) {
-		return delegate.createNativeQuery( sqlString, resultClass );
+		return queryDelegate().createNativeQuery( sqlString, resultClass );
 	}
 
-	@Override
+	@Override @SuppressWarnings({"rawtypes", "unchecked"})
 	public NativeQueryImplementor createNativeQuery(String sqlString, String resultSetMappingName) {
-		return delegate.createNativeQuery( sqlString, resultSetMappingName );
+		return queryDelegate().createNativeQuery( sqlString, resultSetMappingName );
 	}
 
 	@Override
@@ -578,7 +581,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public ProcedureCall createStoredProcedureCall(String procedureName, Class... resultClasses) {
+	public ProcedureCall createStoredProcedureCall(String procedureName, Class<?>... resultClasses) {
 		return delegate.createStoredProcedureCall( procedureName, resultClasses );
 	}
 
@@ -733,12 +736,12 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public Object merge(Object object) {
+	public <T> T merge(T object) {
 		return delegate.merge( object );
 	}
 
 	@Override
-	public Object merge(String entityName, Object object) {
+	public <T> T merge(String entityName, T object) {
 		return delegate.merge( entityName, object );
 	}
 

@@ -1403,8 +1403,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	@SuppressWarnings( "rawtypes" )
-	public QueryImplementor<R> setProperties(Map map) {
+	public QueryImplementor<R> setProperties(Map<?,?> map) {
 		for ( String paramName : getParameterMetadata().getNamedParameterNames() ) {
 			final Object object = map.get( paramName );
 			if ( object == null ) {
@@ -1413,7 +1412,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 				}
 			}
 			else {
-				Class retType = object.getClass();
+				Class<?> retType = object.getClass();
 				if ( Collection.class.isAssignableFrom( retType ) ) {
 					setParameterList( paramName, (Collection) object );
 				}

@@ -6,7 +6,6 @@
  */
 package org.hibernate;
 
-import java.io.Closeable;
 import java.util.List;
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManager;
@@ -14,7 +13,6 @@ import jakarta.persistence.FlushModeType;
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaUpdate;
-
 import org.hibernate.graph.RootGraph;
 import org.hibernate.stat.SessionStatistics;
 
@@ -79,7 +77,7 @@ import org.hibernate.stat.SessionStatistics;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public interface Session extends SharedSessionContract, EntityManager, AutoCloseable, Closeable {
+public interface Session extends SharedSessionContract, EntityManager {
 	/**
 	 * Obtain a {@link Session} builder with the ability to grab certain information from this session.
 	 *
@@ -956,9 +954,8 @@ public interface Session extends SharedSessionContract, EntityManager, AutoClose
 	RootGraph<?> getEntityGraph(String graphName);
 
 	@Override
-	@SuppressWarnings({"unchecked", "RedundantCast"})
 	default <T> List<EntityGraph<? super T>> getEntityGraphs(Class<T> entityClass) {
-		return (List) getSessionFactory().findEntityGraphsByType( entityClass );
+		return getSessionFactory().findEntityGraphsByType( entityClass );
 	}
 
 	/**
@@ -1092,21 +1089,36 @@ public interface Session extends SharedSessionContract, EntityManager, AutoClose
 	 */
 	void addEventListeners(SessionEventListener... listeners);
 
-	@Override
-	<T> org.hibernate.query.Query<T> createQuery(String queryString, Class<T> resultType);
+	// The following declarations just override the JPA return type with our
+	// Hibernate Query type, as required by the declaration in QueryProducer
 
-	// Override the JPA return type with the one exposed in QueryProducer
-	@Override
-	<T> org.hibernate.query.Query<T> createQuery(CriteriaQuery<T> criteriaQuery);
+	@Override @SuppressWarnings({"rawtypes", "unchecked"})
+	org.hibernate.query.Query getNamedQuery(String queryString);
 
-	// Override the JPA return type with the one exposed in QueryProducer
+	@Override @SuppressWarnings({"rawtypes", "unchecked"})
+	org.hibernate.query.Query createQuery(String queryString);
+
 	@Override
+	<R> org.hibernate.query.Query<R> createQuery(String queryString, Class<R> resultType);
+
+	@Override @SuppressWarnings({"rawtypes", "unchecked"})
+	org.hibernate.query.Query createNamedQuery(String queryString);
+
+	@Override
+	<R> org.hibernate.query.Query<R> createNamedQuery(String name, Class<R> resultType);
+
+	@Override @SuppressWarnings({"rawtypes", "unchecked"})
+	org.hibernate.query.NativeQuery createNativeQuery(String queryString);
+
+	@Override @SuppressWarnings({"rawtypes", "unchecked"})
+	org.hibernate.query.NativeQuery createNativeQuery(String queryString, String resultSetMappingName);
+
+	@Override
+	<R> org.hibernate.query.Query<R> createQuery(CriteriaQuery<R> criteriaQuery);
+
+	@Override @SuppressWarnings({"rawtypes", "unchecked"})
 	org.hibernate.query.Query createQuery(CriteriaUpdate updateQuery);
 
-	// Override the JPA return type with the one exposed in QueryProducer
-	@Override
+	@Override @SuppressWarnings({"rawtypes", "unchecked"})
 	org.hibernate.query.Query createQuery(CriteriaDelete deleteQuery);
-
-
-	<T> org.hibernate.query.Query<T> createNamedQuery(String name, Class<T> resultType);
 }

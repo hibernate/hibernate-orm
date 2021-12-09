@@ -729,5 +729,5 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	NativeQuery<T> setProperties(Object bean);
 
 	@Override
-	NativeQuery<T> setProperties(Map bean);
+	NativeQuery<T> setProperties(Map<?,?> bean);
 }

@@ -139,7 +139,6 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.PersistenceException;
-import jakarta.persistence.StoredProcedureQuery;
 import jakarta.persistence.TransactionRequiredException;
 
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_LOCK_SCOPE;
@@ -152,7 +151,7 @@ import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_RETRIEVE_MODE
 import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_STORE_MODE;
 
 /**
- * Concrete implementation of a Session.
+ * Concrete implementation of a the {@link Session} API.
  * <p/>
  * Exposes two interfaces:<ul>
  * <li>{@link Session} to the application</li>
@@ -283,7 +282,7 @@ public class SessionImpl
 		return this.lockOptions;
 	}
 
-	protected void applyQuerySettingsAndHints(Query query) {
+	protected void applyQuerySettingsAndHints(Query<?> query) {
 		final LockOptions lockOptionsForRead = getLockOptionsForRead();
 		if ( lockOptionsForRead.getLockMode() != LockMode.NONE ) {
 			query.setLockMode( getLockMode( lockOptionsForRead.getLockMode() ) );
@@ -1645,7 +1644,7 @@ public class SessionImpl
 	}
 
 	@Override
-	public ProcedureCall createStoredProcedureCall(String procedureName, Class... resultClasses) {
+	public ProcedureCall createStoredProcedureCall(String procedureName, Class<?>... resultClasses) {
 		checkOpen();
 //		checkTransactionSynchStatus();
 		return super.createStoredProcedureCall( procedureName, resultClasses );
@@ -1658,7 +1657,7 @@ public class SessionImpl
 	}
 
 	@Override
-	public void initializeCollection(PersistentCollection collection, boolean writing) {
+	public void initializeCollection(PersistentCollection<?> collection, boolean writing) {
 		checkOpenOrWaitingForAutoClose();
 		pulseTransactionCoordinator();
 		InitializeCollectionEvent event = new InitializeCollectionEvent( collection, this );

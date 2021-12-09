@@ -278,7 +278,7 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	NativeQueryImplementor<R> setProperties(Object bean);
 
 	@Override
-	NativeQueryImplementor<R> setProperties(Map bean);
+	NativeQueryImplementor<R> setProperties(Map<?,?> bean);
 
 	@Override
 	NativeQueryImplementor<R> setParameter(

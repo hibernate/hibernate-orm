@@ -150,6 +150,7 @@ public class StandardIdentifierGeneratorFactory
 		register( "foreign", ForeignGenerator.class );
 		register( "enhanced-sequence", SequenceStyleGenerator.class );
 		register( "enhanced-table", TableGenerator.class );
+		register( "sequence-identity", SequenceStyleGenerator.class );
 
 		final ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
 		final Object providerSetting = configService.getSettings().get( AvailableSettings.IDENTIFIER_GENERATOR_STRATEGY_PROVIDER );

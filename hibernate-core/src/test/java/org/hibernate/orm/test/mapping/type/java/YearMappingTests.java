@@ -121,6 +121,7 @@ public class YearMappingTests {
 			this.name = name;
 		}
 
+		@Column( name = "yr" )
 		public Year getYear() {
 			return year;
 		}
@@ -134,7 +135,7 @@ public class YearMappingTests {
 				name = "entity_year",
 				joinColumns = @JoinColumn( name = "entity_id" )
 		)
-		@Column( name = "year" )
+		@Column( name = "years" )
 		public Set<Year> getYears() {
 			return years;
 		}
@@ -145,7 +146,7 @@ public class YearMappingTests {
 
 		@ElementCollection
 		@CollectionTable( name = "count_by_year", joinColumns = @JoinColumn( name = "entity_id" ) )
-		@MapKeyColumn( name = "year" )
+		@MapKeyColumn( name = "yr" )
 		@Column( name = "cnt" )
 		public Map<Year, Integer> getCountByYear() {
 			return countByYear;

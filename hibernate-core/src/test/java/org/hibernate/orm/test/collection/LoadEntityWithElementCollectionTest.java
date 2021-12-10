@@ -17,12 +17,16 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderColumn;
+import jakarta.persistence.Table;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -170,6 +174,7 @@ public class LoadEntityWithElementCollectionTest {
 	}
 
 	@Entity(name = "IndexedEntity")
+	@Table( name = "t_entities" )
 	public static class IndexedEntity {
 		@Id
 		public Long id;
@@ -177,10 +182,12 @@ public class LoadEntityWithElementCollectionTest {
 		public boolean[] serializableArray;
 
 		@ElementCollection
+		@CollectionTable( name = "t_array_items", joinColumns = @JoinColumn( name = "entity_fk") )
 		@OrderColumn
 		public boolean[] elementCollectionArray;
 
 		@OneToMany(fetch = FetchType.EAGER)
+		@JoinTable( name = "t_referenced_entities", joinColumns = @JoinColumn( name = "entity_fk") )
 		public Set<IndexedEntity> indexedEntities;
 
 		public Long getId() {

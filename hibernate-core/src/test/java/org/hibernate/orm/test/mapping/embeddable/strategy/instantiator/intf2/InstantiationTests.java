@@ -70,7 +70,6 @@ public class InstantiationTests {
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-14964", reason = "EmbeddableInitializer is called twice, causing problems" )
 	public void basicTest(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			final Person mick = new Person( 1, Name.make( "Mick", "Jagger" ) );

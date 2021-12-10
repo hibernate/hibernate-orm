@@ -12,6 +12,7 @@ import java.util.function.Supplier;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.internal.StandardEmbeddableInstantiator;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
@@ -62,6 +63,8 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 
 	private final List<DomainResultAssembler<?>> assemblers;
 
+	private final boolean usesStandardInstatiation;
+
 	// per-row state
 	private final Object[] rowState;
 	private Boolean stateAllNull;
@@ -86,7 +89,8 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 			representationEmbeddable = embeddableTypeDescriptor;
 		}
 
-		representationStrategy = representationEmbeddable.getRepresentationStrategy();
+		this.representationStrategy = representationEmbeddable.getRepresentationStrategy();
+		this.usesStandardInstatiation = representationStrategy.getInstantiator() instanceof StandardEmbeddableInstantiator;
 
 		final int numOfAttrs = embeddableTypeDescriptor.getNumberOfAttributeMappings();
 		this.rowState = new Object[ numOfAttrs ];
@@ -150,6 +154,37 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 	@Override
 	public void initializeInstance(RowProcessingState processingState) {
 		EmbeddableLoadingLogger.INSTANCE.debugf( "Initializing composite instance [%s]", navigablePath );
+
+		if ( compositeInstance == NULL_MARKER ) {
+			// we already know it is null
+			return;
+		}
+
+		// IMPORTANT: This method might be called multiple times for the same role for a single row.
+		// 		EmbeddableAssembler calls it as part of its `#assemble` and the RowReader calls it
+		// 		as part of its normal Initializer handling
+		//
+		// 		Unfortunately, as currently structured, we need this double call mainly to handle
+		// 		the case composite keys, especially those with key-m-1 refs.
+		//
+		//		When we are processing a non-key embeddable, all initialization happens in
+		//		the first call, and we can safely ignore the second call.
+		//
+		//		When we are processing a composite key, we really need to react to both calls.
+		//
+		//		Unfortunately, atm, because we reuse `EmbeddedAttributeMapping` in a few of these
+		//		foreign-key scenarios, we cannot easily tell when one models a key or not.
+		//
+		//		While this is "important" to be able to avoid extra handling, it is really only
+		//		critical in the case we have custom constructor injection.  Luckily, custom instantiation
+		//		is only allowed for non-key usage atm, so we leverage that distinction here
+
+		if ( ! usesStandardInstatiation ) {
+			// we have a custom instantiator
+			if ( compositeInstance != null ) {
+				return;
+			}
+		}
 
 		stateInjected = false;
 

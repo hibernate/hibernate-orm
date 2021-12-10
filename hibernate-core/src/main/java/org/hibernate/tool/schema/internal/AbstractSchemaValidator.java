@@ -18,7 +18,6 @@ import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextIm
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.mapping.Column;
-import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.tool.schema.extract.spi.ColumnInformation;
@@ -48,12 +47,7 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 			HibernateSchemaManagementTool tool,
 			SchemaFilter validateFilter) {
 		this.tool = tool;
-		if ( validateFilter == null ) {
-			this.schemaFilter = DefaultSchemaFilter.INSTANCE;
-		}
-		else {
-			this.schemaFilter = validateFilter;
-		}
+		this.schemaFilter = validateFilter == null ? DefaultSchemaFilter.INSTANCE : validateFilter;
 	}
 
 	@Override
@@ -143,23 +137,20 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 			);
 		}
 
-		final Iterator selectableItr = table.getColumnIterator();
-		while ( selectableItr.hasNext() ) {
-			final Selectable selectable = (Selectable) selectableItr.next();
-			if ( Column.class.isInstance( selectable ) ) {
-				final Column column = (Column) selectable;
-				final ColumnInformation existingColumn = tableInformation.getColumn( Identifier.toIdentifier( column.getQuotedName() ) );
-				if ( existingColumn == null ) {
-					throw new SchemaManagementException(
-							String.format(
-									"Schema-validation: missing column [%s] in table [%s]",
-									column.getName(),
-									table.getQualifiedTableName()
-							)
-					);
-				}
-				validateColumnType( table, column, existingColumn, metadata, options, dialect );
+		final Iterator<Column> columnIter = table.getColumnIterator();
+		while ( columnIter.hasNext() ) {
+			final Column column = columnIter.next();
+			final ColumnInformation existingColumn = tableInformation.getColumn( Identifier.toIdentifier( column.getQuotedName() ) );
+			if ( existingColumn == null ) {
+				throw new SchemaManagementException(
+						String.format(
+								"Schema-validation: missing column [%s] in table [%s]",
+								column.getName(),
+								table.getQualifiedTableName()
+						)
+				);
 			}
+			validateColumnType( table, column, existingColumn, metadata, options, dialect );
 		}
 	}
 
@@ -171,7 +162,8 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 			ExecutionOptions options,
 			Dialect dialect) {
 		boolean typesMatch = dialect.equivalentTypes( column.getSqlTypeCode( metadata ), columnInformation.getTypeCode() )
-				|| column.getSqlType( dialect, metadata ).toLowerCase(Locale.ROOT).startsWith( columnInformation.getTypeName().toLowerCase(Locale.ROOT) );
+				|| column.getSqlType( dialect, metadata ).toLowerCase(Locale.ROOT)
+						.startsWith( columnInformation.getTypeName().toLowerCase(Locale.ROOT) );
 		if ( !typesMatch ) {
 			throw new SchemaManagementException(
 					String.format(
@@ -186,14 +178,6 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 					)
 			);
 		}
-
-		// this is the old Hibernate check...
-		//
-		// but I think a better check involves checks against type code and then the type code family, not
-		// just the type name.
-		//
-		// See org.hibernate.type.descriptor.sql.JdbcTypeFamilyInformation
-		// todo : this ^^
 	}
 
 	protected void validateSequence(Sequence sequence, SequenceInformation sequenceInformation) {

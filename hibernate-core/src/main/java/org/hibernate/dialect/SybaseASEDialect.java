@@ -99,12 +99,8 @@ public class SybaseASEDialect extends SybaseDialect {
 			}
 		}
 
-		// the maximum length of a VARCHAR or VARBINARY
-		// depends on the page size, and also on the
-		// version of Sybase ASE, and can be quite small,
-		// so use 'image' and 'text' as the "long" types
-		registerColumnType( Types.LONGVARBINARY, "image" );
-		registerColumnType( Types.LONGVARCHAR, "text" );
+		registerColumnType( Types.VARBINARY, "image" );
+		registerColumnType( Types.VARCHAR, "text" );
 
 		registerSybaseKeywords();
 		sizeStrategy = new SizeStrategyImpl() {
@@ -125,6 +121,17 @@ public class SybaseASEDialect extends SybaseDialect {
 				return super.resolveSize( jdbcType, javaType, precision, scale, length );
 			}
 		};
+	}
+
+	@Override
+	public int getMaxVarcharLength() {
+		// the maximum length of a VARCHAR or VARBINARY
+		// column depends on the page size and ASE version
+		// and is actually a limit on the whole row length,
+		// not the individual column length -- anyway, the
+		// largest possible page size is 16k, so that's a
+		// hard upper limit
+		return 16_384;
 	}
 
 	private static boolean isAnsiNull(DatabaseMetaData databaseMetaData) {

@@ -92,17 +92,20 @@ public class SpannerDialect extends Dialect {
 		//there is no time type of any kind
 		registerColumnType( Types.TIME, "timestamp" );
 
-		final int stringMaxLength = 2_621_440;
-		final int bytesMaxLength = 10_485_760;
+		registerColumnType( Types.CHAR, getMaxVarcharLength(), "string($l)" );
+		registerColumnType( Types.CHAR, "string(max)" );
+		registerColumnType( Types.VARCHAR, getMaxVarcharLength(), "string($l)" );
+		registerColumnType( Types.VARCHAR, "string(max)" );
 
-		registerColumnType( Types.CHAR, stringMaxLength, "string($l)" );
-		registerColumnType( Types.VARCHAR, stringMaxLength, "string($l)" );
+		registerColumnType( Types.NCHAR, getMaxNVarcharLength(), "string($l)" );
+		registerColumnType( Types.NCHAR, "string(max)" );
+		registerColumnType( Types.NVARCHAR, getMaxNVarcharLength(), "string($l)" );
+		registerColumnType( Types.NVARCHAR, "string(max)" );
 
-		registerColumnType( Types.NCHAR, stringMaxLength, "string($l)" );
-		registerColumnType( Types.NVARCHAR, stringMaxLength, "string($l)" );
-
-		registerColumnType( Types.BINARY, bytesMaxLength, "bytes($l)" );
-		registerColumnType( Types.VARBINARY, bytesMaxLength, "bytes($l)" );
+		registerColumnType( Types.BINARY, getMaxBytesLength(), "bytes($l)" );
+		registerColumnType( Types.BINARY, "bytes(max)" );
+		registerColumnType( Types.VARBINARY, getMaxBytesLength(), "bytes($l)" );
+		registerColumnType( Types.VARBINARY, "bytes(max)" );
 
 		registerColumnType( Types.CLOB, "string(max)" );
 		registerColumnType( Types.NCLOB, "string(max)" );
@@ -112,6 +115,17 @@ public class SpannerDialect extends Dialect {
 	public SpannerDialect(DialectResolutionInfo info) {
 		this();
 		registerKeywords( info );
+	}
+
+	@Override
+	public int getMaxVarcharLength() {
+		//max is equivalent to 2_621_440
+		return 2_621_440;
+	}
+
+	public int getMaxBytesLength() {
+		//max is equivalent to 10_485_760
+		return 10_485_760;
 	}
 
 	@Override

@@ -95,20 +95,23 @@ public class CockroachDialect extends Dialect {
 
 		registerColumnType( Types.TINYINT, "smallint" ); //no tinyint
 
+		//use 'string' instead of 'varchar'
+		registerColumnType( Types.VARCHAR, getMaxVarcharLength(), "string($l)");
+		registerColumnType( Types.VARCHAR, "string");
+
 		//no binary/varbinary
 		registerColumnType( Types.VARBINARY, "bytes" );
 		registerColumnType( Types.BINARY, "bytes" );
 
 		//no clob
-		registerColumnType( Types.LONGVARCHAR, "string" );
 		registerColumnType( Types.CLOB, "string" );
 
 		//no nchar/nvarchar
 		registerColumnType( Types.NCHAR, "string($l)" );
-		registerColumnType( Types.NVARCHAR, "string($l)" );
+		registerColumnType( Types.NVARCHAR, getMaxNVarcharLength(), "string($l)" );
+		registerColumnType( Types.NVARCHAR, "string");
 
 		//no nclob
-		registerColumnType( Types.LONGNVARCHAR, "string" );
 		registerColumnType( Types.NCLOB, "string" );
 
 		registerColumnType( SqlTypes.UUID, "uuid" );

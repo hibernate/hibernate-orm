@@ -52,10 +52,8 @@ public class NumericValidationTest implements ExecutionOptions {
 	@Parameterized.Parameters
 	public static Collection<String> parameters() {
 		return Arrays.asList(
-				new String[] {
-						JdbcMetadaAccessStrategy.GROUPED.toString(),
-						JdbcMetadaAccessStrategy.INDIVIDUALLY.toString()
-				}
+				JdbcMetadaAccessStrategy.GROUPED.toString(),
+				JdbcMetadaAccessStrategy.INDIVIDUALLY.toString()
 		);
 	}
 

@@ -221,7 +221,41 @@ public abstract class Dialect implements ConversionContext {
 	// constructors and factory methods ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	protected Dialect() {
+		this(true);
+	}
 
+	protected Dialect(boolean autoRegisterColumnTypes) {
+		uniqueDelegate = new DefaultUniqueDelegate( this );
+		sizeStrategy = new SizeStrategyImpl();
+		if (autoRegisterColumnTypes) {
+			registerDefaultColumnTypes();
+		}
+		registerHibernateTypes();
+		registerDefaultKeywords();
+	}
+
+	protected void registerDefaultColumnTypes() {
+		registerDefaultColumnTypes( getMaxVarcharLength(), getMaxNVarcharLength(), getMaxVarbinaryLength() );
+	}
+
+	/**
+	 * Register an ANSI-standard column type for each JDBC type defined
+	 * by {@link Types}. These mappings may be overridden by a concrete
+	 * {@code Dialect} by calling {@link #registerColumnType(int,String)}
+	 * from the constructor.
+	 * <p>
+	 * Note that {@link Types#LONGVARCHAR}, {@link Types#LONGNVARCHAR}
+	 * and {@link Types#LONGVARBINARY} are considered synonyms for their
+	 * non-{@code LONG} counterparts, with the only difference being that
+	 * a different default length is used: {@link org.hibernate.Length#LONG}
+	 * instead of {@link org.hibernate.Length#DEFAULT}. Concrete dialects
+	 * should usually avoid registering mappings for these JDBC types.
+	 *
+	 * @param maxVarcharLength the maximum length of the {@link Types#VARCHAR} type
+	 * @param maxNVarcharLength the maximum length of the {@link Types#NVARCHAR} type
+	 * @param maxVarBinaryLength the maximum length of the {@link Types#VARBINARY} type
+	 */
+	protected void registerDefaultColumnTypes(int maxVarcharLength, int maxNVarcharLength, int maxVarBinaryLength) {
 		registerColumnType( Types.BOOLEAN, "boolean" );
 
 		registerColumnType( Types.TINYINT, "tinyint" );
@@ -249,17 +283,19 @@ public abstract class Dialect implements ConversionContext {
 		registerColumnType( Types.TIME_WITH_TIMEZONE, "time with time zone" );
 
 		registerColumnType( Types.BINARY, "binary($l)" );
-		registerColumnType( Types.VARBINARY, "varbinary($l)" );
+		registerColumnType( Types.VARBINARY, maxVarBinaryLength, "varbinary($l)" );
 		registerColumnType( Types.BLOB, "blob" );
 
 		registerColumnType( Types.CHAR, "char($l)" );
-		registerColumnType( Types.VARCHAR, "varchar($l)" );
+		registerColumnType( Types.VARCHAR, maxVarcharLength, "varchar($l)" );
 		registerColumnType( Types.CLOB, "clob" );
 
 		registerColumnType( Types.NCHAR, "nchar($l)" );
-		registerColumnType( Types.NVARCHAR, "nvarchar($l)" );
+		registerColumnType( Types.NVARCHAR, maxNVarcharLength, "nvarchar($l)" );
 		registerColumnType( Types.NCLOB, "nclob" );
+	}
 
+	protected void registerHibernateTypes() {
 		// register hibernate types for default use in scalar sqlquery type auto detection
 		registerHibernateType( Types.BOOLEAN, StandardBasicTypes.BOOLEAN.getName() );
 
@@ -298,11 +334,6 @@ public abstract class Dialect implements ConversionContext {
 		registerHibernateType( Types.DATE, StandardBasicTypes.DATE.getName() );
 		registerHibernateType( Types.TIME, StandardBasicTypes.TIME.getName() );
 		registerHibernateType( Types.TIMESTAMP, StandardBasicTypes.TIMESTAMP.getName() );
-
-		registerDefaultKeywords();
-
-		uniqueDelegate = new DefaultUniqueDelegate( this );
-		sizeStrategy = new SizeStrategyImpl();
 	}
 
 	protected void registerDefaultKeywords() {
@@ -382,7 +413,7 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * Does the given JDBC type code represent some sort of
-	 * string type?
+	 * character string type?
 	 * @param sqlType a JDBC type code from {@link Types}
 	 */
 	private static boolean isCharacterType(int sqlType) {
@@ -393,6 +424,38 @@ public abstract class Dialect implements ConversionContext {
 			case Types.NCHAR:
 			case Types.NVARCHAR:
 			case Types.LONGNVARCHAR:
+				return true;
+			default:
+				return false;
+		}
+	}
+
+	/**
+	 * Does the given JDBC type code represent some sort of
+	 * variable-length character string type?
+	 * @param sqlType a JDBC type code from {@link Types}
+	 */
+	private static boolean isVarcharType(int sqlType) {
+		switch (sqlType) {
+			case Types.VARCHAR:
+			case Types.LONGVARCHAR:
+			case Types.NVARCHAR:
+			case Types.LONGNVARCHAR:
+				return true;
+			default:
+				return false;
+		}
+	}
+
+	/**
+	 * Does the given JDBC type code represent some sort of
+	 * variable-length binary string type?
+	 * @param sqlType a JDBC type code from {@link Types}
+	 */
+	private static boolean isVarbinaryType(int sqlType) {
+		switch (sqlType) {
+			case Types.VARBINARY:
+			case Types.LONGVARBINARY:
 				return true;
 			default:
 				return false;
@@ -1021,12 +1084,20 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * Do the given JDBC type codes, as defined in {@link Types} represent
-	 * essentially the same type in this dialect of SQL? The default
-	 * implementation treats {@link Types#NUMERIC NUMERIC} and
+	 * essentially the same type in this dialect of SQL?
+	 * <p>
+	 * The default implementation treats {@link Types#NUMERIC NUMERIC} and
 	 * {@link Types#DECIMAL DECIMAL} as the same type, and
 	 * {@link Types#FLOAT FLOAT}, {@link Types#REAL REAL}, and
 	 * {@link Types#DOUBLE DOUBLE} as essentially the same type, since the
 	 * ANSI SQL specification fails to meaningfully distinguish them.
+	 * <p>
+	 * The default implementation also treats {@link Types#VARCHAR VARCHAR},
+	 * {@link Types#NVARCHAR NVARCHAR}, {@link Types#LONGVARCHAR LONGVARCHAR},
+	 * and {@link Types#LONGNVARCHAR LONGNVARCHAR} as the same type, and
+	 * {@link Types#VARBINARY BINARY} and
+	 * {@link Types#LONGVARBINARY LONGVARBINARY} as the same type, since
+	 * Hibernate doesn't really differentiate these types.
 	 *
 	 * @param typeCode1 the first JDBC type code
 	 * @param typeCode2 the second JDBC type code
@@ -1036,7 +1107,9 @@ public abstract class Dialect implements ConversionContext {
 	public boolean equivalentTypes(int typeCode1, int typeCode2) {
 		return typeCode1==typeCode2
 			|| isNumericOrDecimal(typeCode1) && isNumericOrDecimal(typeCode2)
-			|| isFloatOrRealOrDouble(typeCode1) && isFloatOrRealOrDouble(typeCode2);
+			|| isFloatOrRealOrDouble(typeCode1) && isFloatOrRealOrDouble(typeCode2)
+			|| isVarcharType(typeCode1) && isVarcharType(typeCode2)
+			|| isVarbinaryType(typeCode1) && isVarbinaryType(typeCode2);
 	}
 
 	private static boolean isNumericOrDecimal(int typeCode) {
@@ -1152,6 +1225,10 @@ public abstract class Dialect implements ConversionContext {
 		String result = typeNames.get( code, size.getLength(), size.getPrecision(), size.getScale() );
 		if ( result == null ) {
 			switch ( code ) {
+				// these are no longer considered separate column types as such
+				// they're just used to indicate that JavaType.getLongSqlLength()
+				// should be used by default (and that's already handled by the
+				// time we get to here)
 				case Types.LONGVARCHAR:
 					return getTypeName( Types.VARCHAR, size );
 				case Types.LONGNVARCHAR:
@@ -3467,6 +3544,36 @@ public abstract class Dialect implements ConversionContext {
 		return sizeStrategy;
 	}
 
+	/**
+	 * The longest possible length of a {@link java.sql.Types#VARCHAR}-like column.
+	 * For longer column lengths, use some sort of {@code text}-like type for the
+	 * column.
+	 */
+	public int getMaxVarcharLength() {
+		//the longest possible length of a Java string
+		return Integer.MAX_VALUE;
+	}
+
+	/**
+	 * The longest possible length of a {@link java.sql.Types#NVARCHAR}-like column.
+	 * For longer column lengths, use some sort of {@code text}-like type for the
+	 * column.
+	 */
+	public int getMaxNVarcharLength() {
+		//for most databases it's the same as for VARCHAR
+		return getMaxVarcharLength();
+	}
+
+	/**
+	 * The longest possible length of a {@link java.sql.Types#VARBINARY}-like column.
+	 * For longer column lengths, use some sort of {@code image}-like type for the
+	 * column.
+	 */
+	public int getMaxVarbinaryLength() {
+		//for most databases it's the same as for VARCHAR
+		return getMaxVarcharLength();
+	}
+
 	public long getDefaultLobLength() {
 		return Size.DEFAULT_LOB_LENGTH;
 	}
@@ -3634,7 +3741,7 @@ public abstract class Dialect implements ConversionContext {
 			switch (jdbcTypeCode) {
 				case Types.BIT:
 					// Use the default length for Boolean if we encounter the JPA default 255 instead
-					if ( javaType.getJavaTypeClass() == Boolean.class && length != null && length == 255 ) {
+					if ( javaType.getJavaTypeClass() == Boolean.class && length != null && length == Size.DEFAULT_LENGTH ) {
 						length = null;
 					}
 					size.setLength( javaType.getDefaultSqlLength( Dialect.this, jdbcType ) );
@@ -3642,7 +3749,7 @@ public abstract class Dialect implements ConversionContext {
 				case Types.CHAR:
 				case Types.NCHAR:
 					// Use the default length for char and UUID if we encounter the JPA default 255 instead
-					if ( length != null && length == 255 ) {
+					if ( length != null && length == Size.DEFAULT_LENGTH ) {
 						if ( javaType.getJavaTypeClass() == Character.class || javaType.getJavaTypeClass() == UUID.class ) {
 							length = null;
 						}
@@ -3654,7 +3761,7 @@ public abstract class Dialect implements ConversionContext {
 				case Types.BINARY:
 				case Types.VARBINARY:
 					// Use the default length for UUID if we encounter the JPA default 255 instead
-					if ( javaType.getJavaTypeClass() == UUID.class && length != null && length == 255 ) {
+					if ( javaType.getJavaTypeClass() == UUID.class && length != null && length == Size.DEFAULT_LENGTH ) {
 						length = null;
 					}
 					size.setLength( javaType.getDefaultSqlLength( Dialect.this, jdbcType ) );

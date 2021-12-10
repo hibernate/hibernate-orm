@@ -16,7 +16,7 @@
 			<generator class="increment"/>
 		</id>
 
-		<property name="longByteArray" column="LONG_BYTE_ARRAY" type="image" length="15000"/>
+		<property name="longByteArray" column="LONG_BYTE_ARRAY" type="image" length="17000"/>
     </class>
 
 </hibernate-mapping>

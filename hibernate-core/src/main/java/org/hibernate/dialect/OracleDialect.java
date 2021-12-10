@@ -200,6 +200,19 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
+	public int getMaxVarcharLength() {
+		//with MAX_STRING_SIZE=EXTENDED, changes to 32_767
+		//TODO: provide a way to change this without a custom Dialect
+		return 4000;
+	}
+
+	@Override
+	public int getMaxVarbinaryLength() {
+		//with MAX_STRING_SIZE=EXTENDED, changes to 32_767
+		return 2000;
+	}
+
+	@Override
 	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
 		return new StandardSqlAstTranslatorFactory() {
 			@Override
@@ -525,16 +538,17 @@ public class OracleDialect extends Dialect {
 
 	protected void registerCharacterTypeMappings() {
 		if ( getVersion().isBefore( 9 ) ) {
-			registerColumnType( Types.VARCHAR, 4000, "varchar2($l)" );
+			registerColumnType( Types.VARCHAR, getMaxVarcharLength(), "varchar2($l)" );
 			registerColumnType( Types.VARCHAR, "clob" );
 		}
 		else {
 			registerColumnType( Types.CHAR, "char($l char)" );
-			registerColumnType( Types.VARCHAR, 4000, "varchar2($l char)" );
+			registerColumnType( Types.VARCHAR, getMaxVarcharLength(), "varchar2($l char)" );
 			registerColumnType( Types.VARCHAR, "clob" );
-			registerColumnType( Types.NVARCHAR, 4000, "nvarchar2($l)" );
+			registerColumnType( Types.NVARCHAR, getMaxNVarcharLength(), "nvarchar2($l)" );
 			registerColumnType( Types.NVARCHAR, "nclob" );
 		}
+		//note: the 'long' type is deprecated
 	}
 
 	protected void registerNumericTypeMappings() {
@@ -576,10 +590,10 @@ public class OracleDialect extends Dialect {
 	}
 
 	protected void registerBinaryTypeMappings() {
-		registerColumnType( Types.BINARY, 2000, "raw($l)" );
+		registerColumnType( Types.BINARY, getMaxVarbinaryLength(), "raw($l)" );
 		registerColumnType( Types.BINARY, "blob" );
 
-		registerColumnType( Types.VARBINARY, 2000, "raw($l)" );
+		registerColumnType( Types.VARBINARY, getMaxVarbinaryLength(), "raw($l)" );
 		registerColumnType( Types.VARBINARY, "blob" );
 	}
 

@@ -49,6 +49,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 	private String defaultValue;
 	private String customWrite;
 	private String customRead;
+	private Size columnSize;
 
 	public Column() {
 	}
@@ -258,22 +259,27 @@ public class Column implements Selectable, Serializable, Cloneable {
 		return sqlType;
 	}
 
-	private Size getColumnSize(Dialect dialect, Mapping mapping) {
-		Type type = getValue().getType();
+	public Size getColumnSize(Dialect dialect, Mapping mapping) {
+		if ( columnSize != null ) {
+			return columnSize;
+		}
 
+		Type type = getValue().getType();
 		if ( type instanceof EntityType ) {
 			type = getTypeForEntityValue( mapping, type, getTypeIndex() );
 		}
 		if ( type instanceof ComponentType ) {
 			type = getTypeForComponentValue( mapping, type, getTypeIndex() );
 		}
-		return dialect.getSizeStrategy().resolveSize(
+		columnSize = dialect.getSizeStrategy().resolveSize(
 				( (JdbcMapping) type ).getJdbcTypeDescriptor(),
 				( (JdbcMapping) type ).getJavaTypeDescriptor(),
 				precision,
 				scale,
 				length
 		);
+
+		return columnSize;
 	}
 
 	private Type getTypeForComponentValue(Mapping mapping, Type type, int typeIndex) {

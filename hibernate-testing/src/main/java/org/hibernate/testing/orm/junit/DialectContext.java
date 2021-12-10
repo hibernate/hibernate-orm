@@ -23,9 +23,9 @@ import org.hibernate.internal.util.ReflectHelper;
  */
 public final class DialectContext {
 
-	private static final Dialect dialect;
+	private static Dialect dialect;
 
-	static {
+	static void init() {
 		final Properties properties = Environment.getProperties();
 		final String dialectName = properties.getProperty( Environment.DIALECT );
 		if ( dialectName == null ) {
@@ -53,7 +53,10 @@ public final class DialectContext {
 	private DialectContext() {
 	}
 
-	public static Dialect getDialect() {
+	public static synchronized Dialect getDialect() {
+		if (dialect==null) {
+			init();
+		}
 		return dialect;
 	}
 }

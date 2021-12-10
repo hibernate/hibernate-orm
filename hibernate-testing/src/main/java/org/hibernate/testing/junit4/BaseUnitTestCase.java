@@ -16,6 +16,7 @@ import jakarta.transaction.SystemException;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 
 import org.hibernate.testing.AfterClassOnce;
+import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.cleaner.DatabaseCleaner;
 import org.hibernate.testing.jdbc.leak.ConnectionLeakUtil;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
@@ -35,8 +36,22 @@ import org.jboss.logging.Logger;
 @RunWith( CustomRunner.class )
 public abstract class BaseUnitTestCase {
 
+	private static Throwable schemaClearError;
+
 	static {
-		DatabaseCleaner.clearSchemas();
+		try {
+			DatabaseCleaner.clearSchemas();
+		}
+		catch (Throwable t) {
+			schemaClearError = t;
+		}
+	}
+
+	@BeforeClassOnce
+	public static void checkClearSchema() throws Throwable {
+		if (schemaClearError!=null) {
+			throw schemaClearError;
+		}
 	}
 
 	protected final Logger log = Logger.getLogger( getClass() );

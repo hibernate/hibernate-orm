@@ -47,12 +47,10 @@ public class HANAColumnStoreDialect extends AbstractHANADialect {
 	public HANAColumnStoreDialect(DatabaseVersion version) {
 		super( version );
 		if ( version.isSameOrAfter( 4 ) ) {
-			registerColumnType( Types.CHAR, "nvarchar(1)" );
-			registerColumnType( Types.VARCHAR, 5000, "nvarchar($l)" );
-			registerColumnType( Types.LONGVARCHAR, 5000, "nvarchar($l)" );
+			registerColumnType( Types.CHAR, "nvarchar($l)" );
+			registerColumnType( Types.VARCHAR, getMaxVarcharLength(), "nvarchar($l)" );
 
 			// for longer values map to clob/nclob
-			registerColumnType( Types.LONGVARCHAR, "nclob" );
 			registerColumnType( Types.VARCHAR, "nclob" );
 			registerColumnType( Types.CLOB, "nclob" );
 
@@ -67,6 +65,11 @@ public class HANAColumnStoreDialect extends AbstractHANADialect {
 			// register additional keywords
 			registerHanaCloudKeywords();
 		}
+	}
+
+	@Override
+	public int getMaxVarcharLength() {
+		return 5000;
 	}
 
 	@Override

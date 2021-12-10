@@ -53,7 +53,7 @@ public class GeneratedUuidTests {
 
 		// then changing
 		final GeneratedUuidEntity merged = scope.fromTransaction( (session) -> {
-			return (GeneratedUuidEntity) session.merge( created );
+			return session.merge( created );
 		} );
 
 		assertThat( merged ).isNotNull();

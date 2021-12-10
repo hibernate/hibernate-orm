@@ -109,7 +109,6 @@ public class SQLiteDialect extends Dialect {
 
 		registerColumnType( Types.BINARY, "blob" );
 		registerColumnType( Types.VARBINARY, "blob" );
-		registerColumnType( Types.LONGVARBINARY, "blob" );
 		uniqueDelegate = new SQLiteUniqueDelegate( this );
 	}
 

@@ -6,6 +6,8 @@
  */
 package org.hibernate.engine.jdbc;
 
+import org.hibernate.Length;
+
 import java.io.Serializable;
 
 /**
@@ -35,9 +37,9 @@ public class Size implements Serializable {
 		}
 	}
 
-	public static final long DEFAULT_LENGTH = 255;
-	public static final long LONG_LENGTH = 65_535;
-	public static final long DEFAULT_LOB_LENGTH = 1_048_576;
+	public static final long DEFAULT_LENGTH = Length.DEFAULT;
+	public static final long LONG_LENGTH = Length.LONG;
+	public static final long DEFAULT_LOB_LENGTH = Length.LOB_DEFAULT;
 	public static final int DEFAULT_PRECISION = 19;
 	public static final int DEFAULT_SCALE = 2;
 

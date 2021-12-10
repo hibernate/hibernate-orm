@@ -66,7 +66,6 @@ import java.util.TimeZone;
 
 import jakarta.persistence.TemporalType;
 
-import static java.util.regex.Pattern.compile;
 import static org.hibernate.query.TemporalUnit.NANOSECOND;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
@@ -113,13 +112,10 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 			exporter = new SqlServerSequenceExporter( this );
 		}
 
-		registerColumnType( Types.VARCHAR, 8000, "varchar($l)" );
-		registerColumnType( Types.NVARCHAR, 4000, "nvarchar($l)" );
-		registerColumnType( Types.VARBINARY, 8000, "varbinary($l)" );
-
 		if ( getVersion().isBefore( 9 ) ) {
 			registerColumnType( Types.VARBINARY, "image" );
 			registerColumnType( Types.VARCHAR, "text" );
+			registerColumnType( Types.NVARCHAR, "text" );
 		}
 		else {
 
@@ -144,6 +140,16 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 		registerKeyword( "top" );
 		registerKeyword( "key" );
+	}
+
+	@Override
+	public int getMaxVarcharLength() {
+		return 8000;
+	}
+
+	@Override
+	public int getMaxNVarcharLength() {
+		return 4000;
 	}
 
 	@Override

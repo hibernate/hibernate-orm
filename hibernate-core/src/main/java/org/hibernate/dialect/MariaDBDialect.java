@@ -60,10 +60,6 @@ public class MariaDBDialect extends MySQLDialect {
 		this.version = version;
 	}
 
-	protected int getMaxVarcharLen() {
-		return getMySQLVersion().isBefore( 5 ) ? 255 : 65_534;
-	}
-
 	@Override
 	public DatabaseVersion getVersion() {
 		return version;

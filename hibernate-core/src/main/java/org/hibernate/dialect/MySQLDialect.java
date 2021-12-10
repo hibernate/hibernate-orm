@@ -105,9 +105,11 @@ public class MySQLDialect extends Dialect {
 	}
 
 	public MySQLDialect(DatabaseVersion version, int characterSetBytesPerCharacter) {
-		super();
+		super(false);
 		this.version = version;
 		this.characterSetBytesPerCharacter = characterSetBytesPerCharacter;
+
+		registerDefaultColumnTypes();
 
 		String storageEngine = Environment.getProperties().getProperty( Environment.STORAGE_ENGINE );
 		if (storageEngine == null) {
@@ -141,41 +143,40 @@ public class MySQLDialect extends Dialect {
 			registerColumnType(Types.TIMESTAMP_WITH_TIMEZONE, "timestamp($p)");
 		}
 
-		// max length for VARCHAR changed in 5.0.3
-		final int maxVarcharLen = getMaxVarcharLen();
-
-		registerColumnType( Types.VARCHAR, maxVarcharLen, "varchar($l)" );
-		registerColumnType( Types.VARBINARY, maxVarcharLen, "varbinary($l)" );
-
 		final int maxTinyLobLen = 255;
 		final int maxLobLen = 65_535;
 		final int maxMediumLobLen = 16_777_215;
-		final long maxLongLobLen = 4_294_967_295L;
+		//the maximum long LOB length is 4_294_967_295, bigger than any Java string
 
-		registerColumnType( Types.VARCHAR, maxLongLobLen, "longtext" );
+		registerColumnType( Types.VARCHAR, "longtext" );
 		registerColumnType( Types.VARCHAR, maxMediumLobLen, "mediumtext" );
-		if ( maxVarcharLen < maxLobLen ) {
+		if ( getMaxVarcharLength() < maxLobLen ) {
 			registerColumnType( Types.VARCHAR, maxLobLen, "text" );
 		}
 
-		registerColumnType( Types.VARBINARY, maxLongLobLen, "longblob" );
+		registerColumnType( Types.NVARCHAR, "longtext" );
+		registerColumnType( Types.NVARCHAR, maxMediumLobLen, "mediumtext" );
+		if ( getMaxNVarcharLength() < maxLobLen ) {
+			registerColumnType( Types.NVARCHAR, maxLobLen, "text" );
+		}
+
+		registerColumnType( Types.VARBINARY, "longblob" );
 		registerColumnType( Types.VARBINARY, maxMediumLobLen, "mediumblob" );
-		if ( maxVarcharLen < maxLobLen ) {
+		if ( getMaxVarbinaryLength() < maxLobLen ) {
 			registerColumnType( Types.VARBINARY, maxLobLen, "blob" );
 		}
 
-		registerColumnType( Types.BLOB, maxLongLobLen, "longblob" );
+		registerColumnType( Types.BLOB, "longblob" );
 		registerColumnType( Types.BLOB, maxMediumLobLen, "mediumblob" );
 		registerColumnType( Types.BLOB, maxLobLen, "blob" );
 		registerColumnType( Types.BLOB, maxTinyLobLen, "tinyblob" );
 
-		registerColumnType( Types.CLOB, maxLongLobLen, "longtext" );
+		registerColumnType( Types.CLOB, "longtext" );
 		registerColumnType( Types.CLOB, maxMediumLobLen, "mediumtext" );
 		registerColumnType( Types.CLOB, maxLobLen, "text" );
 		registerColumnType( Types.CLOB, maxTinyLobLen, "tinytext" );
 
 		registerColumnType( Types.NCLOB, "longtext" );
-		registerColumnType( Types.NCLOB, maxLongLobLen, "longtext" );
 		registerColumnType( Types.NCLOB, maxMediumLobLen, "mediumtext" );
 		registerColumnType( Types.NCLOB, maxLobLen, "text" );
 		registerColumnType( Types.NCLOB, maxTinyLobLen, "tinytext" );
@@ -253,7 +254,9 @@ public class MySQLDialect extends Dialect {
 		return 4;
 	}
 
-	protected int getMaxVarcharLen() {
+	@Override
+	public int getMaxVarcharLength() {
+		// max length for VARCHAR changed in 5.0.3
 		if ( getMySQLVersion().isBefore( 5 ) ) {
 			return 255;
 		}
@@ -270,6 +273,11 @@ public class MySQLDialect extends Dialect {
 					return 16_383;
 			}
 		}
+	}
+
+	@Override
+	public int getMaxVarbinaryLength() {
+		return getMySQLVersion().isBefore( 5 ) ? 255 : 65_535;
 	}
 
 	@Override

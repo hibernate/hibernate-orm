@@ -101,14 +101,16 @@ public class DB2Dialect extends Dialect {
 		registerColumnType( Types.NUMERIC, "decimal($p,$s)" );
 
 		if ( getVersion().isBefore( 11 ) ) {
-			registerColumnType( Types.BINARY, "varchar($l) for bit data" ); //should use 'binary' since version 11
 			registerColumnType( Types.BINARY, 254, "char($l) for bit data" ); //should use 'binary' since version 11
-			registerColumnType( Types.VARBINARY, "varchar($l) for bit data" ); //should use 'varbinary' since version 11
+			registerColumnType( Types.BINARY, "varchar($l) for bit data" ); //should use 'binary' since version 11
+
+			registerColumnType( Types.VARBINARY, getMaxVarbinaryLength(), "varchar($l) for bit data" ); //should use 'varbinary' since version 11
 
 			//prior to DB2 11, the 'boolean' type existed,
 			//but was not allowed as a column type
 			registerColumnType( Types.BOOLEAN, "smallint" );
 		}
+		registerColumnType( Types.VARBINARY, "blob($l)" );
 
 		registerColumnType( Types.BLOB, "blob($l)" );
 		registerColumnType( Types.CLOB, "clob($l)" );
@@ -117,7 +119,8 @@ public class DB2Dialect extends Dialect {
 		registerColumnType( Types.TIME_WITH_TIMEZONE, "time" );
 
 		// The long varchar data type was deprecated in DB2 and shouldn't be used anymore
-		registerColumnType( Types.LONGVARCHAR, "clob($l)" );
+		registerColumnType( Types.VARCHAR, "clob($l)" );
+		registerColumnType( Types.NVARCHAR, "nclob($l)" );
 
 		//not keywords, at least not in DB2 11,
 		//but perhaps they were in older versions?
@@ -141,6 +144,11 @@ public class DB2Dialect extends Dialect {
 
 	protected UniqueDelegate createUniqueDelegate() {
 		return new DB2UniqueDelegate( this );
+	}
+
+	@Override
+	public int getMaxVarcharLength() {
+		return 32_672;
 	}
 
 	@Override

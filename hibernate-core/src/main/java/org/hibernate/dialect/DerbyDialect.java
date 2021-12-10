@@ -120,10 +120,11 @@ public class DerbyDialect extends Dialect {
 		registerColumnType( Types.NUMERIC, "decimal($p,$s)" );
 
 		registerColumnType( Types.BINARY, 254, "char($l) for bit data" );
-		registerColumnType( Types.BINARY, 32672, "varchar($l) for bit data" );
+		registerColumnType( Types.BINARY, getMaxVarbinaryLength(), "varchar($l) for bit data" );
 		registerColumnType( Types.BINARY, "long varchar for bit data" );
-		registerColumnType( Types.VARBINARY, 32672, "varchar($l) for bit data" );
-		registerColumnType( Types.VARBINARY, "long varchar for bit data" );
+		registerColumnType( Types.VARBINARY, getMaxVarbinaryLength(), "varchar($l) for bit data" );
+		registerColumnType( Types.VARBINARY, 32_700,"long varchar for bit data" );
+		registerColumnType( Types.VARBINARY, "blob($l)" );
 
 		registerColumnType( Types.BLOB, "blob($l)" );
 		registerColumnType( Types.CLOB, "clob($l)" );
@@ -131,7 +132,8 @@ public class DerbyDialect extends Dialect {
 		registerColumnType( Types.TIMESTAMP, "timestamp" );
 		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp" );
 
-		registerColumnType( Types.LONGVARCHAR, "long varchar" );
+		registerColumnType( Types.VARCHAR, 32_700, "long varchar" );
+		registerColumnType( Types.VARCHAR, "clob($l)" );
 
 		registerDerbyKeywords();
 
@@ -140,6 +142,11 @@ public class DerbyDialect extends Dialect {
 				: new DerbyLimitHandler( getVersion().isSameOrAfter( 10, 6 ) );
 
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, NO_BATCH );
+	}
+
+	@Override
+	public int getMaxVarcharLength() {
+		return 32_672;
 	}
 
 	@Override

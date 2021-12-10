@@ -132,13 +132,13 @@ public class PostgreSQLDialect extends Dialect {
 
 		//there are no nchar/nvarchar types in Postgres
 		registerColumnType( Types.NCHAR, "char($l)" );
-		registerColumnType( Types.NVARCHAR, "varchar($l)" );
+		registerColumnType( Types.NVARCHAR, getMaxNVarcharLength(), "varchar($l)" );
+		registerColumnType( Types.NVARCHAR, "text" );
 
-		//since there's no real difference between
-		//TEXT and VARCHAR, except for the length limit,
-		//we can just use 'text' for the "long" types
-		registerColumnType( Types.LONGVARCHAR, "text" );
-		registerColumnType( Types.LONGNVARCHAR, "text" );
+		// since there's no real difference between TEXT and VARCHAR,
+		// except for the length limit, we can just use 'text' for the
+		// "long" string types
+		registerColumnType( Types.VARCHAR, "text" );
 
 		registerColumnType( SqlTypes.INET, "inet" );
 		registerColumnType( SqlTypes.INTERVAL_SECOND, "interval second($s)" );
@@ -161,6 +161,17 @@ public class PostgreSQLDialect extends Dialect {
 
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 		getDefaultProperties().setProperty( Environment.NON_CONTEXTUAL_LOB_CREATION, "true" );
+	}
+
+	@Override
+	public int getMaxVarcharLength() {
+		return 10_485_760;
+	}
+
+	@Override
+	public int getMaxVarbinaryLength() {
+		//postgres has no varbinary-like type
+		return 0;
 	}
 
 	@Override

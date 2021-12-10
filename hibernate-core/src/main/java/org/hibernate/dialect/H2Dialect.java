@@ -128,7 +128,12 @@ public class H2Dialect extends Dialect {
 		// http://code.google.com/p/h2database/issues/detail?id=235
 		getDefaultProperties().setProperty( AvailableSettings.NON_CONTEXTUAL_LOB_CREATION, "true" );
 
+		registerColumnType( Types.VARCHAR, "varchar" );
+		registerColumnType( Types.NVARCHAR, "varchar" );
+		registerColumnType( Types.VARBINARY, "varbinary" );
+
 		registerColumnType( SqlTypes.ARRAY, "array" );
+
 		if ( version.isSameOrAfter( 1, 4, 32 ) ) {
 			this.sequenceInformationExtractor = version.isSameOrAfter( 1, 4, 201 )
 					? SequenceInformationExtractorLegacyImpl.INSTANCE
@@ -238,6 +243,11 @@ public class H2Dialect extends Dialect {
 			CommonFunctionFactory.format_formatdatetime( queryEngine );
 		}
 		CommonFunctionFactory.rownum( queryEngine );
+	}
+
+	@Override
+	public int getMaxVarcharLength() {
+		return 1_048_576;
 	}
 
 	@Override

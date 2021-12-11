@@ -634,8 +634,40 @@ include::{sourcedir}/basic/StringMappingTests.java[tags=basic-string-example]
 ----
 ====
 
-See <<basic-lob>> for details on mapping as database LOB.
+Optionally, you may specify the maximum length of the string using `@Column(length=...)`,
+or using the `@Size` annotation from Hibernate Validator.
+For very large strings, you can use one of the constant values defined by the class
+`org.hibernate.Length`, for example:
 
+[source, JAVA, indent=0]
+----
+@Column(length=Length.LONG)
+private String text;
+----
+
+Alternatively, you may explicitly specify the JDBC type `LONGVARCHAR`, which is treated
+as a `VARCHAR` mapping with default `length=Length.LONG` when no `length` is explicitly
+specified:
+
+[source, JAVA, indent=0]
+----
+@JdbcTypeCode(Types.LONGVARCHAR)
+private String text;
+----
+
+If you use Hibernate for schema generation, Hibernate will generate DDL with a column type
+that is large enough to accommodate the maximum length you've specified.
+
+[TIP]
+====
+If the maximum length you specify is too long to fit in the largest `VARCHAR` column supported
+by your database, Hibernate's schema exporter will automatically upgrade the column type to
+`TEXT`, `CLOB`, or whatever is the equivalent type for your database.
+Please _don't_ (ab)use JPA's `@Lob` annotation just because you want a `TEXT` column.
+The purpose of the `@Lob` annotation is not to control DDL generation!
+====
+
+See <<basic-lob>> for details on mapping to a database CLOB.
 
 For databases which support nationalized character sets, you can also store strings as
 nationalized data.
@@ -854,7 +886,25 @@ include::{sourcedir}/basic/ByteArrayMappingTests.java[tags=basic-bytearray-examp
 ----
 ====
 
-See <<basic-lob>> for details on mapping as database LOB.
+Just like with strings, you may specify the maximum length using `@Column(length=...)`
+or the `@Size` annotation from Hibernate Validator.
+For very large arrays, you can use the constants defined by `org.hibernate.Length`.
+Alternatively `@JdbcTypeCode(Types.LONGVARBINARY)` is treated as a `VARBINARY` mapping
+with default `length=Length.LONG` when no length is explicitly specified.
+
+If you use Hibernate for schema generation, Hibernate will generate DDL with a column type
+that is large enough to accommodate the maximum length you've specified.
+
+[TIP]
+====
+If the maximum length you specify is too long to fit in the largest `VARBINARY` column
+supported by your database, Hibernate's schema exporter will automatically upgrade the
+column type to `IMAGE`, `BLOB`, or whatever is the equivalent type for your database.
+Please _don't_ (ab)use JPA's `@Lob` annotation for DDL customization.
+====
+
+
+See <<basic-lob>> for details on mapping to a database BLOB.
 
 
 
@@ -1503,8 +1553,8 @@ and NCLOB, even as aliased types.
 
 Ultimately Hibernate understands this through `Dialect#getNationalizationSupport()`
 
-To ensure nationalized character data gets stored and accessed correctly, `@Nationalized` can be used
-locally or `hibernate.use_nationalized_character_data` can be set globally.
+To ensure nationalized character data gets stored and accessed correctly, `@Nationalized`
+can be used locally or `hibernate.use_nationalized_character_data` can be set globally.
 
 [NOTE]
 ====
@@ -1515,9 +1565,9 @@ work portably across databases with varying support.
 
 [IMPORTANT]
 ====
-For databases that do not support `NCLOB` data-types, it is unsupported to map
-the attribute using `java.sql.NClob`.  Use `java.sql.Clob` (which `NClob` extends)
-or use a materialized mapping (`String`, `char[]`, ...) instead.
+For databases with no `NCLOB` data type, attributes of type `java.sql.NClob` are simply
+unsupported. Use `java.sql.Clob` (which `NClob` extends) or a materialized mapping like
+`String` or `char[]` instead.
 
 See also <<basic-lob>> regarding similar limitation for databases which do not support
 explicit `CLOB` data-type.
@@ -1551,47 +1601,60 @@ include::{sourcedir}/basic/NationalizedTest.java[tags=basic-nationalized-example
 [[basic-lob]]
 ==== Handling LOB data
 
-Mapping basic values to database LOB (Large OBject) types is handled using `@Lob`.
+The `@Lob` annotation specifies that character or binary data should be written to the database
+using the special JDBC APIs for handling database LOB (Large OBject) types.
 
 [NOTE]
 ====
-How JDBC deals with `LOB` data varies from driver to driver.  Hibernate tries to handle all these
-variances on your behalf.
+How JDBC deals with `LOB` data varies from driver to driver. Hibernate tries to take care of all
+these differences, and protect you as much as possible from inconsistent driver behavior.
+Sadly, Hibernate is only partially successful at achieving this goal.
 
-However, some drivers (i.e. PostgreSQL) are trickier and, in such cases, you may have to do some
-extra steps to get LOBs working.  Such discussions are beyond the scope of this guide.
+Some database drivers (i.e. PostgreSQL) are especially problematic and in such cases you might
+have to do some extra work to get LOBs functioning. But that's beyond the scope of this guide.
 ====
 
 [IMPORTANT]
 ====
-For databases that do not support `CLOB` data-types, it is unsupported to map
-the attribute using `java.sql.Clob`.  Use a materialized mapping (`String`,
-`char[]`, ...) instead.
+For databases with no `CLOB` type, attributes of type `java.sql.Clob` are simply unsupported.
+Use a materialized type like `String` or `char[]` instead.
 ====
 
-Mapping basic values to LOB types comes in 2 forms...
+There's two ways a LOB may be represented in the Java domain model:
+
+- using a special JDBC-defined _LOB locator type_, or
+- using a regular "materialized" type like `String`, `char[]`, or `byte[]`.
 
 ===== LOB Locator
 
-The JDBC LOB locator types include:
+The JDBC LOB locator types are:
 
 * `java.sql.Blob`
 * `java.sql.Clob`
 * `java.sql.NClob`
 
-Through references of these types, JDBC drivers can support more efficient access to the LOB data.
-Some drivers stream parts of the LOB data as needed, potentially freeing up memory space.
+These types represent references to off-table LOB data.
+In principle, they allow JDBC drivers to support more efficient access to the LOB data.
+Some drivers stream parts of the LOB data as needed, potentially consuming less memory.
 
-However, they can be unnatural to deal with and have certain limitations.
-For example, a LOB locator is only portably valid during the duration of the transaction in which it was obtained.
+However, `java.sql.Blob` and `java.sql.Clob` can be unnatural to deal with and suffer
+certain limitations.
+For example, it's not portable to access a LOB locator after the end of the transaction
+in which it was obtained.
 
 ===== Materialized LOB
 
-Hibernate allows mapping LOB data using familiar Java types such as `String`, `char[]`, `byte[]`, etc.  Materialization
-handles the entire LOB contents in memory.
+Alternatively, Hibernate lets you access LOB data via the familiar Java types `String`,
+`char[]`, and `byte[]`. But of course this requires materializing the entire contents
+of the LOB in memory when the object is first retrieved. Whether this performance cost
+is acceptable depends on many factors, including the vagaries of the JDBC driver.
 
-This trade-off for more familiar is sometimes performance, though this depends on the driver.
-
+[TIP]
+====
+You don't need to use a `@Lob` mapping for every database column of type `BLOB` or `CLOB`.
+The `@Lob` annotation is a special-purpose tool that should only be used when a default
+basic mapping to `String` would result in unacceptable performance characteristics.
+====
 
 
 

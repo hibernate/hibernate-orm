@@ -106,22 +106,28 @@ public class RDMSOS2200Dialect extends Dialect {
 		registerColumnType( Types.BLOB, "blob($l)" );
 
 		//no 'binary' nor 'varbinary' so use 'blob'
-		registerColumnType( Types.BINARY, "blob($l)");
-		registerColumnType( Types.VARBINARY, "blob($l)");
+		registerColumnType( Types.BINARY, "blob($l)" );
+		registerColumnType( Types.VARBINARY, "blob($l)" );
 
 		//'varchar' is not supported in RDMS for OS 2200
 		//(but it is for other flavors of RDMS)
 		//'character' means ASCII by default, 'unicode(n)'
 		//means 'character(n) character set "UCS-2"'
-		registerColumnType( Types.CHAR, "unicode($l)");
-		registerColumnType( Types.VARCHAR, "unicode($l)");
+		registerColumnType( Types.CHAR, "unicode($l)" );
+		registerColumnType( Types.VARCHAR, getMaxVarcharLength(), "unicode($l)" );
 
-		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp($p)");
+		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp($p)" );
 	}
 
 	public RDMSOS2200Dialect(DialectResolutionInfo info) {
 		this();
 		registerKeywords( info );
+	}
+
+	@Override
+	public int getMaxVarbinaryLength() {
+		//no varbinary type
+		return -1;
 	}
 
 	@Override

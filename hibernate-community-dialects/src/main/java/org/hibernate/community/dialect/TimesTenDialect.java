@@ -73,28 +73,28 @@ public class TimesTenDialect extends Dialect {
 		//      TypeMode=0
 		registerColumnType( Types.BOOLEAN, "tt_tinyint" );
 
-		registerColumnType(Types.TINYINT, "tt_tinyint");
-		registerColumnType(Types.SMALLINT, "tt_smallint");
-		registerColumnType(Types.INTEGER, "tt_integer");
-		registerColumnType(Types.BIGINT, "tt_bigint");
+		registerColumnType( Types.TINYINT, "tt_tinyint" );
+		registerColumnType( Types.SMALLINT, "tt_smallint" );
+		registerColumnType( Types.INTEGER, "tt_integer" );
+		registerColumnType( Types.BIGINT, "tt_bigint" );
 
 		//note that 'binary_float'/'binary_double' might
 		//be better mappings for Java Float/Double
 
 		//'numeric'/'decimal' are synonyms for 'number'
-		registerColumnType(Types.NUMERIC, "number($p,$s)");
-		registerColumnType(Types.DECIMAL, "number($p,$s)" );
+		registerColumnType( Types.NUMERIC, "number($p,$s)" );
+		registerColumnType( Types.DECIMAL, "number($p,$s)" );
 
-		registerColumnType( Types.VARCHAR, "varchar2($l)" );
-		registerColumnType( Types.NVARCHAR, "nvarchar2($l)" );
+		registerColumnType( Types.VARCHAR, getMaxVarcharLength(), "varchar2($l)" );
+		registerColumnType( Types.NVARCHAR, getMaxNVarcharLength(), "nvarchar2($l)" );
 
 		//do not use 'date' because it's a datetime
-		registerColumnType(Types.DATE, "tt_date");
+		registerColumnType( Types.DATE, "tt_date" );
 		//'time' and 'tt_time' are synonyms
-		registerColumnType(Types.TIME, "tt_time");
+		registerColumnType( Types.TIME, "tt_time" );
 		//`timestamp` has more precision than `tt_timestamp`
 //		registerColumnType(Types.TIMESTAMP, "tt_timestamp");
-		registerColumnType(Types.TIMESTAMP_WITH_TIMEZONE, "timestamp($p)");
+		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp($p)" );
 
 		getDefaultProperties().setProperty( Environment.USE_STREAMS_FOR_BINARY, "true" );
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );

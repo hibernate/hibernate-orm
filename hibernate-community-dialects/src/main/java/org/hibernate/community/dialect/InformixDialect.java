@@ -107,7 +107,7 @@ public class InformixDialect extends Dialect {
 		registerColumnType( Types.VARBINARY, "byte" );
 
 		registerColumnType( Types.VARCHAR, 255, "varchar($l)" );
-		registerColumnType( Types.VARCHAR, 32_739, "lvarchar($l)" );
+		registerColumnType( Types.VARCHAR, getMaxVarcharLength(), "lvarchar($l)" );
 		registerColumnType( Types.VARCHAR, "text" );
 
 		uniqueDelegate = new InformixUniqueDelegate( this );
@@ -118,6 +118,18 @@ public class InformixDialect extends Dialect {
 				//version 11 and above, parameters are supported
 				//but I have not tested this at all!
 				: new SkipFirstLimitHandler( getVersion().isSameOrAfter( 11 ) );
+	}
+
+	@Override
+	public int getMaxVarbinaryLength() {
+		//there's no varbinary type, only byte
+		return -1;
+	}
+
+	@Override
+	public int getMaxVarcharLength() {
+		//the maximum length of an lvarchar
+		return 32_739;
 	}
 
 	@Override

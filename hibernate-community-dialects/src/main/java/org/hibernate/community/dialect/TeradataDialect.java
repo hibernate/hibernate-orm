@@ -93,7 +93,7 @@ public class TeradataDialect extends Dialect {
 		registerColumnType( Types.TINYINT, "byteint" );
 
 		registerColumnType( Types.BINARY, "byte($l)" );
-		registerColumnType( Types.VARBINARY, "varbyte($l)" );
+		registerColumnType( Types.VARBINARY, getMaxVarbinaryLength(), "varbyte($l)" );
 
 		if ( getVersion().isBefore( 13 ) ) {
 			registerColumnType( Types.BIGINT, "numeric(19,0)" );
@@ -127,6 +127,17 @@ public class TeradataDialect extends Dialect {
 			getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 		}
 
+	}
+
+	@Override
+	public int getMaxVarcharLength() {
+		//for the unicode server character set
+		return 32_000;
+	}
+
+	@Override
+	public int getMaxVarbinaryLength() {
+		return 64_000;
 	}
 
 	@Override

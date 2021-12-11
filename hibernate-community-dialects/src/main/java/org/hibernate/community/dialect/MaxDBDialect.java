@@ -69,6 +69,12 @@ public class MaxDBDialect extends Dialect {
 	}
 
 	@Override
+	public int getMaxVarbinaryLength() {
+		// there's no varbinary type
+		return -1;
+	}
+
+	@Override
 	public JdbcType resolveSqlTypeDescriptor(
 			String columnTypeName,
 			int jdbcTypeCode,

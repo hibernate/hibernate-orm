@@ -119,10 +119,8 @@ public class IngresDialect extends Dialect {
 
 		registerColumnType( Types.NUMERIC, "decimal($p, $s)" ); //Ingres has no 'numeric' type
 
-		final int maxStringLength = 32_000;
-
-		registerColumnType( Types.BINARY, maxStringLength, "byte($l)" );
-		registerColumnType( Types.VARBINARY, maxStringLength, "varbyte($l)" );
+		registerColumnType( Types.BINARY, "byte($l)" );
+		registerColumnType( Types.VARBINARY, getMaxVarbinaryLength(), "varbyte($l)" );
 		//note: 'long byte' is a  synonym for 'blob'
 		registerColumnType( Types.VARBINARY, "long byte($l)" );
 
@@ -130,13 +128,13 @@ public class IngresDialect extends Dialect {
 		//      here? I think Ingres char/varchar types don't
 		//      support Unicode. Copy what AbstractHANADialect
 		//      does with a Hibernate property to config this.
-		registerColumnType( Types.CHAR, maxStringLength, "char($l)" );
-		registerColumnType( Types.VARCHAR, maxStringLength, "varchar($l)" );
+		registerColumnType( Types.CHAR, "char($l)" );
+		registerColumnType( Types.VARCHAR, getMaxVarcharLength(), "varchar($l)" );
 		//note: 'long varchar' is a synonym for 'clob'
 		registerColumnType( Types.VARCHAR, "long varchar($l)" );
 
-		registerColumnType( Types.NCHAR, maxStringLength, "nchar($l)" );
-		registerColumnType( Types.NVARCHAR, maxStringLength, "nvarchar($l)" );
+		registerColumnType( Types.NCHAR, "nchar($l)" );
+		registerColumnType( Types.NVARCHAR, getMaxNVarcharLength(), "nvarchar($l)" );
 		//note: 'long nvarchar' is a synonym for 'nclob'
 		registerColumnType( Types.NVARCHAR, "long nvarchar($l)" );
 
@@ -178,6 +176,20 @@ public class IngresDialect extends Dialect {
 	@Override
 	public DatabaseVersion getVersion() {
 		return version;
+	}
+
+	@Override
+	public int getMaxVarcharLength() {
+		// the maximum possible (configurable) value for
+		// both varchar and varbyte
+		return 32_000;
+	}
+
+	@Override
+	public int getMaxNVarcharLength() {
+		// the maximum possible (configurable) value for
+		// nvarchar
+		return 16_000;
 	}
 
 	@Override

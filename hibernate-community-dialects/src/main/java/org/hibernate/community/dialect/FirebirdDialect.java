@@ -141,23 +141,12 @@ public class FirebirdDialect extends Dialect {
 		else {
 			registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp with time zone" );
 		}
-		// Single byte character sets can be 32_765 characters, but assume use of UTF8
-		registerColumnType( Types.VARCHAR, 8_191, "varchar($l)" );
+
 		registerColumnType( Types.VARCHAR, "blob sub_type text" );
 
 		if ( getVersion().isBefore( 4, 0 ) ) {
-			registerColumnType( Types.BINARY, 32_767, "char($l) character set octets" );
-		}
-		else {
-			registerColumnType( Types.BINARY, 32_767, "binary($l)" );
-		}
-		registerColumnType( Types.BINARY, "blob sub_type binary" );
-
-		if ( getVersion().isBefore( 4, 0 ) ) {
-			registerColumnType( Types.VARBINARY, 32_765, "varchar($l) character set octets" );
-		}
-		else {
-			registerColumnType( Types.VARBINARY, 32_765, "varbinary($l)" );
+			registerColumnType( Types.BINARY, "char($l) character set octets" );
+			registerColumnType( Types.VARBINARY, getMaxVarbinaryLength(), "varchar($l) character set octets" );
 		}
 		registerColumnType( Types.VARBINARY, "blob sub_type binary" );
 
@@ -166,6 +155,18 @@ public class FirebirdDialect extends Dialect {
 		registerColumnType( Types.NCLOB, "blob sub_type text" ); // Firebird doesn't have NCLOB, but Jaybird emulates NCLOB support
 
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, NO_BATCH );
+	}
+
+	@Override
+	public int getMaxVarcharLength() {
+		// Single byte character sets can be 32_765
+		// characters, but assume use of UTF8
+		return 8_191;
+	}
+
+	@Override
+	public int getMaxVarbinaryLength() {
+		return 32_756;
 	}
 
 	@Override

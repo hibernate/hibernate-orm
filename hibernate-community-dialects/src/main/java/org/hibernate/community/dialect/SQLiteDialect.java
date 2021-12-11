@@ -112,6 +112,12 @@ public class SQLiteDialect extends Dialect {
 		uniqueDelegate = new SQLiteUniqueDelegate( this );
 	}
 
+	@Override
+	public int getMaxVarbinaryLength() {
+		//no varbinary type
+		return -1;
+	}
+
 	private static class SQLiteUniqueDelegate extends DefaultUniqueDelegate {
 		public SQLiteUniqueDelegate(Dialect dialect) {
 			super( dialect );

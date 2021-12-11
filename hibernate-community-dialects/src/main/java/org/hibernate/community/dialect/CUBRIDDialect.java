@@ -67,13 +67,14 @@ public class CUBRIDDialect extends Dialect {
 		//'timestamp' has a very limited range
 		//'datetime' does not support explicit precision
 		//(always 3, millisecond precision)
-		registerColumnType(Types.TIMESTAMP, "datetime");
-		registerColumnType(Types.TIMESTAMP, "datetimetz");
+		registerColumnType(Types.TIMESTAMP, "datetime" );
+		registerColumnType(Types.TIMESTAMP, "datetimetz" );
 
 		//CUBRID has no 'binary' nor 'varbinary', but 'bit' is
-		//intended to be used for binary data
-		registerColumnType( Types.BINARY, "bit($l)");
-		registerColumnType( Types.VARBINARY, "bit varying($l)");
+		//intended to be used for binary data (unfortunately the
+		//length parameter is measured in bits, not bytes)
+		registerColumnType( Types.BINARY, "bit($l)" );
+		registerColumnType( Types.VARBINARY, getMaxVarbinaryLength(), "bit varying($l)" );
 
 		getDefaultProperties().setProperty( Environment.USE_STREAMS_FOR_BINARY, "true" );
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
@@ -113,6 +114,17 @@ public class CUBRIDDialect extends Dialect {
 	public CUBRIDDialect(DialectResolutionInfo info) {
 		this();
 		registerKeywords( info );
+	}
+
+	@Override
+	public int getMaxVarcharLength() {
+		return 1_073_741_823;
+	}
+
+	@Override
+	public int getMaxVarbinaryLength() {
+		//note that the length of BIT VARYING in CUBRID is actually in bits
+		return 1_073_741_823;
 	}
 
 	@Override

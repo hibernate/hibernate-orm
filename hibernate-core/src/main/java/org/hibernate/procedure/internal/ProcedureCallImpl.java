@@ -744,7 +744,7 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	public ProcedureCallImplementor<R> addSynchronizedEntityClass(Class entityClass) {
+	public ProcedureCallImplementor<R> addSynchronizedEntityClass(@SuppressWarnings("rawtypes") Class entityClass) {
 		addSynchronizedQuerySpaces( getSession().getFactory().getMetamodel().entityPersister( entityClass.getName() ) );
 		return this;
 	}
@@ -801,12 +801,12 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	protected void applyEntityGraphQueryHint(String hintName, RootGraphImplementor entityGraph) {
+	protected void applyEntityGraphQueryHint(String hintName, @SuppressWarnings("rawtypes") RootGraphImplementor entityGraph) {
 		throw new IllegalStateException( "EntityGraph hints are not supported for ProcedureCall/StoredProcedureQuery" );
 	}
 
 	@Override
-	public Query<R> applyGraph(RootGraph<?> graph, GraphSemantic semantic) {
+	public Query<R> applyGraph(@SuppressWarnings("rawtypes") RootGraph graph, GraphSemantic semantic) {
 		throw new IllegalStateException( "EntityGraph hints are not supported for ProcedureCall/StoredProcedureQuery" );
 	}
 
@@ -819,8 +819,7 @@ public class ProcedureCallImpl<R>
 	@Override
 	public boolean execute() {
 		try {
-			final Output rtn = outputs().getCurrent();
-			return ResultSetOutput.class.isInstance( rtn );
+			return outputs().getCurrent() instanceof ResultSetOutput;
 		}
 		catch (NoMoreOutputsException e) {
 			return false;
@@ -887,7 +886,7 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public boolean hasMoreResults() {
-		return outputs().goToNext() && ResultSetOutput.class.isInstance( outputs().getCurrent() );
+		return outputs().goToNext() && outputs().getCurrent() instanceof ResultSetOutput;
 	}
 
 	@Override
@@ -897,7 +896,7 @@ public class ProcedureCallImpl<R>
 			if ( rtn == null ) {
 				return -1;
 			}
-			else if ( UpdateCountOutput.class.isInstance( rtn ) ) {
+			else if ( rtn instanceof UpdateCountOutput ) {
 				return ( (UpdateCountOutput) rtn ).getUpdateCount();
 			}
 			else {
@@ -923,7 +922,7 @@ public class ProcedureCallImpl<R>
 		}
 		try {
 			final Output rtn = outputs().getCurrent();
-			if ( !ResultSetOutput.class.isInstance( rtn ) ) {
+			if ( !(rtn instanceof ResultSetOutput) ) {
 				throw new IllegalStateException( "Current CallableStatement ou was not a ResultSet, but getResultList was called" );
 			}
 

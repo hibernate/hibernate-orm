@@ -541,13 +541,13 @@ public class QuerySqmImpl<R>
 	}
 
 	@Override
-	public HqlQueryImplementor<R> applyGraph(RootGraph graph, GraphSemantic semantic) {
+	public HqlQueryImplementor<R> applyGraph(@SuppressWarnings("rawtypes") RootGraph graph, GraphSemantic semantic) {
 		queryOptions.applyGraph( (RootGraphImplementor<?>) graph, semantic );
 		return this;
 	}
 
 	@Override
-	protected void applyEntityGraphQueryHint(String hintName, RootGraphImplementor entityGraph) {
+	protected void applyEntityGraphQueryHint(String hintName, @SuppressWarnings("rawtypes") RootGraphImplementor entityGraph) {
 		final GraphSemantic graphSemantic = GraphSemantic.fromJpaHintName( hintName );
 
 		applyGraph( entityGraph, graphSemantic );

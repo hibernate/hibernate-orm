@@ -399,8 +399,9 @@ For additional details on using custom types, see <<basic-mapping-custom>> secti
 [[basic-boolean]]
 ==== Boolean
 
-Boolean values in the domain model are generally mapped to BOOLEAN/BIT on the database side depending on the
-database's capabilities.
+By default, `Boolean` attributes map to `BOOLEAN` columns, at least when the database has a
+dedicated `BOOLEAN` type. On databases which don't, Hibernate uses whatever else is available:
+`BIT`, `TINYINT`, or `SMALLINT`.
 
 [[basic-boolean-example-implicit]]
 .Implicit boolean mapping
@@ -411,9 +412,19 @@ include::{sourcedir}/basic/BooleanMappingTests.java[tags=basic-boolean-example-i
 ----
 ====
 
-However, it is certainly reasonable to map booleans to other representations in the
-database and Hibernate provides support for mapping booleans to the more well known
-representations - 'Y' / 'N', 'T' / 'F' or 1 (true) / 0 (false).
+But, especially when working with a legacy database, it's quite common to find boolean values
+encoded as a character, or as an integer, even when the platform _does_ support a built-in
+`BOOLEAN` type.
+
+The easiest way to handle this situation is to use a JPA `AttributeConverter`. You can easily
+write your own `AttributeConverter`, but for your convenience, Hibernate comes with three
+built-in converters for common cases:
+
+- `YesNoConverter` encodes a boolean value as `'Y'` or `'N'`,
+- `TrueFalseConverter` encodes a boolean value as `'T'` or `'F'`, and
+- `NumericBooleanConverter` encodes the value as an integer, `1` for true, and `0` for false.
+
+You may specify the converter to use with the `@Convert` annotation.
 
 [[basic-boolean-example-converted]]
 .Using `AttributeConverter`
@@ -428,11 +439,8 @@ include::{sourcedir}/basic/BooleanMappingTests.java[tags=basic-boolean-example-e
 ----
 ====
 
-Here the built-in `AttributeConverter` implementations provided by Hibernate are used.  A custom
-`AttributeConverter` could be used also.
-
-
-Booleans can also be mapped using `UserType` and `@CustomType`
+Of course, if you need to do something really special, a boolean value can also be mapped using
+`@CustomType` and your own `UserType`.
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

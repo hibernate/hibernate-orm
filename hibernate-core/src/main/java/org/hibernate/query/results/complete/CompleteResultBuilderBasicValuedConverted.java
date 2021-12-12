@@ -10,16 +10,20 @@ import java.util.function.BiFunction;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
+import org.hibernate.metamodel.model.convert.internal.JpaAttributeConverterImpl;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.query.results.SqlSelectionImpl;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
+import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
+import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import jakarta.persistence.AttributeConverter;
 
 import static org.hibernate.query.results.ResultsHelper.impl;
 
@@ -31,30 +35,29 @@ import static org.hibernate.query.results.ResultsHelper.impl;
  *
  * @author Steve Ebersole
  */
-public class CompleteResultBuilderBasicValuedStandard implements CompleteResultBuilderBasicValued {
-
+public class CompleteResultBuilderBasicValuedConverted<O,R> implements CompleteResultBuilderBasicValued {
 	private final String explicitColumnName;
+	private final ManagedBean<? extends AttributeConverter<O, R>> converterBean;
+	private final JavaType<? extends AttributeConverter<O, R>> converterJtd;
+	private final BasicJavaType<O> domainJavaType;
+	private final BasicValuedMapping underlyingMapping;
 
-	private final BasicValuedMapping explicitType;
-	private final JavaType<?> explicitJavaTypeDescriptor;
-
-	public CompleteResultBuilderBasicValuedStandard(
+	public CompleteResultBuilderBasicValuedConverted(
 			String explicitColumnName,
-			BasicValuedMapping explicitType,
-			JavaType<?> explicitJavaTypeDescriptor) {
-		assert explicitType == null || explicitType.getJdbcMapping()
-				.getJavaTypeDescriptor()
-				.getJavaTypeClass()
-				.isAssignableFrom( explicitJavaTypeDescriptor.getJavaTypeClass() );
-
+			ManagedBean<? extends AttributeConverter<O, R>> converterBean,
+			JavaType<? extends AttributeConverter<O, R>> converterJtd,
+			BasicJavaType<O> domainJavaType,
+			BasicValuedMapping underlyingMapping) {
 		this.explicitColumnName = explicitColumnName;
-		this.explicitType = explicitType;
-		this.explicitJavaTypeDescriptor = explicitJavaTypeDescriptor;
+		this.converterBean = converterBean;
+		this.converterJtd = converterJtd;
+		this.domainJavaType = domainJavaType;
+		this.underlyingMapping = underlyingMapping;
 	}
 
 	@Override
 	public Class<?> getJavaType() {
-		return explicitJavaTypeDescriptor.getJavaTypeClass();
+		return domainJavaType.getJavaTypeClass();
 	}
 
 	@Override
@@ -73,6 +76,7 @@ public class CompleteResultBuilderBasicValuedStandard implements CompleteResultB
 		else {
 			columnName = jdbcResultsMetadata.resolveColumnName( resultPosition + 1 );
 		}
+
 
 //		final int jdbcPosition;
 //		if ( explicitColumnName != null ) {
@@ -115,31 +119,26 @@ public class CompleteResultBuilderBasicValuedStandard implements CompleteResultB
 								jdbcPosition = resultPosition + 1;
 							}
 
-							final BasicValuedMapping basicType;
-							if ( explicitType != null ) {
-								basicType = explicitType;
-							}
-							else {
-								basicType = jdbcResultsMetadata.resolveType(
-										jdbcPosition,
-										explicitJavaTypeDescriptor,
-										sessionFactory
-								);
-							}
-
 							final int valuesArrayPosition = ResultsHelper.jdbcPositionToValuesArrayPosition( jdbcPosition );
-							return new SqlSelectionImpl( valuesArrayPosition, basicType );
+							return new SqlSelectionImpl( valuesArrayPosition, underlyingMapping );
 						}
 				),
-				explicitJavaTypeDescriptor,
+				domainJavaType,
 				sessionFactory.getTypeConfiguration()
+		);
+
+		final JpaAttributeConverterImpl<O,R> valueConverter = new JpaAttributeConverterImpl<>(
+				converterBean,
+				converterJtd,
+				domainJavaType,
+				underlyingMapping.getJdbcMapping().getJavaTypeDescriptor()
 		);
 
 		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				columnName,
-				sqlSelection.getExpressionType().getJdbcMappings().get( 0 ).getMappedJavaTypeDescriptor()
+				domainJavaType,
+				valueConverter
 		);
 	}
-
 }

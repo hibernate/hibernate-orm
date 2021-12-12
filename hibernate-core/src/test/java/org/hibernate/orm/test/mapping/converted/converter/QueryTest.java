@@ -6,18 +6,23 @@
  */
 package org.hibernate.orm.test.mapping.converted.converter;
 
+import java.util.List;
+
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Column;
+import jakarta.persistence.ColumnResult;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Converter;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.SqlResultSetMapping;
 import jakarta.persistence.Table;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
+import org.hibernate.query.sql.spi.NativeQueryImplementor;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.After;
@@ -25,6 +30,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import static junit.framework.Assert.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNull;
 
 /**
@@ -56,6 +62,20 @@ public class QueryTest extends BaseNonConfigCoreFunctionalTestCase {
 		session.close();
 	}
 
+	@Test
+	public void testNativeQueryResult() {
+		inTransaction( (session) -> {
+			final NativeQueryImplementor<Object[]> query = session.createNativeQuery( "select id, salary from EMP", "emp_id_salary" );
+
+			final List<Object[]> results = query.list();
+			assertThat( results ).hasSize( 1 );
+
+			final Object[] values = results.get( 0 );
+			assertThat( values[0] ).isEqualTo( 1 );
+			assertThat( values[1] ).isEqualTo( SALARY );
+		} );
+	}
+
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] { Employee.class, SalaryConverter.class };
@@ -81,6 +101,13 @@ public class QueryTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Entity( name = "Employee" )
 	@Table( name = "EMP" )
+	@SqlResultSetMapping(
+			name = "emp_id_salary",
+			columns = {
+					@ColumnResult( name = "id" ),
+					@ColumnResult( name = "salary", type = SalaryConverter.class )
+			}
+	)
 	public static class Employee {
 		@Id
 		public Integer id;

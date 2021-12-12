@@ -59,30 +59,39 @@ import jakarta.persistence.TemporalType;
  */
 public class SybaseDialect extends AbstractTransactSQLDialect {
 
-	private final DatabaseVersion version;
-	protected final boolean jtdsDriver;
+	protected boolean jtdsDriver;
 
 	//All Sybase dialects share an IN list size limit.
 	private static final int PARAM_LIST_SIZE_LIMIT = 250000;
 
-	public SybaseDialect(){
-		this( DatabaseVersion.make( 11, 0 ), false );
+	public SybaseDialect() {
+		this( DatabaseVersion.make( 11, 0 ) );
 	}
 
-	public SybaseDialect(DialectResolutionInfo info){
-		this(
-				info.makeCopy(),
-				info.getDriverName() != null && info.getDriverName().contains( "jTDS" )
-		);
+	public SybaseDialect(DatabaseVersion version) {
+		this(version, null);
+	}
+
+	public SybaseDialect(DialectResolutionInfo info) {
+		this( info.makeCopy(), info );
 		registerKeywords( info );
 	}
 
-	public SybaseDialect(DatabaseVersion version, boolean jtdsDriver) {
-		super();
-		this.version = version;
-		this.jtdsDriver = jtdsDriver;
-		//Sybase ASE didn't introduce bigint until version 15.0
-		registerColumnType( Types.BIGINT, "numeric(19,0)" );
+	protected SybaseDialect(DatabaseVersion version, DialectResolutionInfo info) {
+		super(version, info);
+	}
+
+	@Override
+	protected void registerDefaultColumnTypes(DialectResolutionInfo info) {
+		// we need to check init the jtdsDriver field here,
+		// because we need it in the registerDefaultColumnTypes()
+		// of the subclass, which is called from the superclass
+		// constructor, before our constructor has been called
+		jtdsDriver = info != null
+				&& info.getDriverName() != null
+				&& info.getDriverName().contains( "jTDS" );
+
+		super.registerDefaultColumnTypes(info);
 	}
 
 	@Override
@@ -144,11 +153,6 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 				return new SybaseSqlAstTranslator<>( sessionFactory, statement );
 			}
 		};
-	}
-
-	@Override
-	public DatabaseVersion getVersion() {
-		return version;
 	}
 
 	@Override
@@ -314,7 +318,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public NameQualifierSupport getNameQualifierSupport() {
-		if ( version.isSameOrAfter( 15 ) ) {
+		if ( getVersion().isSameOrAfter( 15 ) ) {
 			return NameQualifierSupport.BOTH;
 		}
 		return NameQualifierSupport.CATALOG;

@@ -29,29 +29,30 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
  */
 public class TiDBDialect extends MySQLDialect {
 
-	private final int tidbVersion;
+	private final DatabaseVersion tidbVersion;
 
 	public TiDBDialect() {
-		// Let's be conservative and assume people use a 4 byte character set
-		this( 500, 4 );
+		this( DatabaseVersion.make(5, 4) );
 	}
 
 	public TiDBDialect(DialectResolutionInfo info) {
-		this(
-				info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10,
-				getCharacterSetBytesPerCharacter( info.unwrap( DatabaseMetaData.class ) )
-		);
+		this( info.makeCopy(), info );
 		registerKeywords( info );
 	}
 
-	public TiDBDialect(int version, int characterSetBytesPerCharacter) {
+	public TiDBDialect(DatabaseVersion version) {
+		this(version, null);
+	}
+
+	protected TiDBDialect(DatabaseVersion tidbVersion, DialectResolutionInfo info) {
 		// For simplicity’s sake, configure MySQL 5.7 compatibility
-		super( DatabaseVersion.make( 5, 7 ), characterSetBytesPerCharacter );
-		this.tidbVersion = version;
+		super( DatabaseVersion.make( 5, 7 ), info );
+		this.tidbVersion = tidbVersion;
 		registerKeywords();
 	}
 
-	public int getTidbVersion() {
+	@Override
+	public DatabaseVersion getVersion() {
 		return tidbVersion;
 	}
 

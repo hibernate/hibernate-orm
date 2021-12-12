@@ -34,35 +34,34 @@ import org.hibernate.type.StandardBasicTypes;
  */
 public class MariaDBDialect extends MySQLDialect {
 
-	private final DatabaseVersion version;
+	private final DatabaseVersion mariaVersion;
 
 	public MariaDBDialect() {
 		this( DatabaseVersion.make( 5 ) );
 	}
 
 	public MariaDBDialect(DialectResolutionInfo info) {
-		this( info.makeCopy(), getCharacterSetBytesPerCharacter( info.unwrap( DatabaseMetaData.class ) ) );
+		this( info.makeCopy(), info );
 		registerKeywords( info );
 	}
 
 	public MariaDBDialect(DatabaseVersion version) {
-		// Let's be conservative and assume people use a 4 byte character set
-		this( version, 4 );
+		this(version, null);
 	}
 
-	public MariaDBDialect(DatabaseVersion version, int characterSetBytesPerCharacter) {
+	protected MariaDBDialect(DatabaseVersion mariaVersion, DialectResolutionInfo info) {
 		super(
-				version.isBefore( 5, 3 )
+				mariaVersion.isBefore( 5, 3 )
 						? DatabaseVersion.make( 5 )
 						: DatabaseVersion.make( 5, 7 ),
-				characterSetBytesPerCharacter
+				info
 		);
-		this.version = version;
+		this.mariaVersion = mariaVersion;
 	}
 
 	@Override
 	public DatabaseVersion getVersion() {
-		return version;
+		return mariaVersion;
 	}
 
 	@Override

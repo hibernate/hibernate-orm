@@ -10,6 +10,7 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.function.CastingConcatFunction;
 import org.hibernate.dialect.function.TransactSQLStrFunction;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.query.NullOrdering;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -41,37 +42,51 @@ import java.sql.Types;
 import java.util.Iterator;
 import java.util.Map;
 
+import static org.hibernate.type.SqlTypes.*;
+
 /**
  * An abstract base class for Sybase and MS SQL Server dialects.
  *
  * @author Gavin King
  */
 public abstract class AbstractTransactSQLDialect extends Dialect {
-	public AbstractTransactSQLDialect() {
-		super();
 
-		registerColumnType( Types.BOOLEAN, "bit" );
-
-		//'tinyint' is an unsigned type in Sybase and
-		//SQL Server, holding values in the range 0-255
-		//see HHH-6779
-		registerColumnType( Types.TINYINT, "smallint" );
-
-		//it's called 'int' not 'integer'
-		registerColumnType( Types.INTEGER, "int" );
-
-		//note that 'real' is double precision on SQL Server, single precision on Sybase
-		//but 'float' is single precision on Sybase, double precision on SQL Server
-
-		registerColumnType( Types.DATE, "datetime" );
-		registerColumnType( Types.TIME, "datetime" );
-		registerColumnType( Types.TIMESTAMP, "datetime" );
-		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "datetime" );
-
-		registerColumnType( Types.BLOB, "image" );
-		registerColumnType( Types.CLOB, "text" );
-
+	public AbstractTransactSQLDialect(DatabaseVersion version, DialectResolutionInfo info) {
+		super(version, info);
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, NO_BATCH );
+	}
+
+	@Override
+	protected String columnType(int jdbcTypeCode) {
+		// note that 'real' is double precision on SQL Server, single precision on Sybase
+		// but 'float' is single precision on Sybase, double precision on SQL Server
+		switch(jdbcTypeCode) {
+			case BOOLEAN:
+				return "bit";
+
+			case TINYINT:
+				//'tinyint' is an unsigned type in Sybase and
+				//SQL Server, holding values in the range 0-255
+				//see HHH-6779
+				return "smallint";
+			case INTEGER:
+				//it's called 'int' not 'integer'
+				return "int";
+
+			case DATE:
+			case TIME:
+			case TIMESTAMP:
+			case TIME_WITH_TIMEZONE:
+				return "datetime";
+
+			case BLOB:
+				return "image";
+			case CLOB:
+				return "text";
+
+			default:
+				return super.columnType(jdbcTypeCode);
+		}
 	}
 
 	@Override

@@ -53,6 +53,7 @@ import org.hibernate.type.StandardBasicTypes;
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
+import static org.hibernate.type.SqlTypes.*;
 
 /**
  * Hibernate Dialect implementation for Cloud Spanner.
@@ -73,48 +74,59 @@ public class SpannerDialect extends Dialect {
 	private static final UniqueDelegate NOOP_UNIQUE_DELEGATE = new DoNothingUniqueDelegate();
 
 	public SpannerDialect() {
-		registerColumnType( Types.BOOLEAN, "bool" );
-
-		registerColumnType( Types.TINYINT, "int64" );
-		registerColumnType( Types.SMALLINT, "int64" );
-		registerColumnType( Types.INTEGER, "int64" );
-		registerColumnType( Types.BIGINT, "int64" );
-
-		registerColumnType( Types.REAL, "float64" );
-		registerColumnType( Types.FLOAT, "float64" );
-		registerColumnType( Types.DOUBLE, "float64" );
-		registerColumnType( Types.DECIMAL, "float64" );
-		registerColumnType( Types.NUMERIC, "float64" );
-
-		//timestamp does not accept precision
-		registerColumnType( Types.TIMESTAMP, "timestamp" );
-		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp" );
-		//there is no time type of any kind
-		registerColumnType( Types.TIME, "timestamp" );
-
-		registerColumnType( Types.CHAR, getMaxVarcharLength(), "string($l)" );
-		registerColumnType( Types.CHAR, "string(max)" );
-		registerColumnType( Types.VARCHAR, getMaxVarcharLength(), "string($l)" );
-		registerColumnType( Types.VARCHAR, "string(max)" );
-
-		registerColumnType( Types.NCHAR, getMaxNVarcharLength(), "string($l)" );
-		registerColumnType( Types.NCHAR, "string(max)" );
-		registerColumnType( Types.NVARCHAR, getMaxNVarcharLength(), "string($l)" );
-		registerColumnType( Types.NVARCHAR, "string(max)" );
-
-		registerColumnType( Types.BINARY, getMaxBytesLength(), "bytes($l)" );
-		registerColumnType( Types.BINARY, "bytes(max)" );
-		registerColumnType( Types.VARBINARY, getMaxBytesLength(), "bytes($l)" );
-		registerColumnType( Types.VARBINARY, "bytes(max)" );
-
-		registerColumnType( Types.CLOB, "string(max)" );
-		registerColumnType( Types.NCLOB, "string(max)" );
-		registerColumnType( Types.BLOB, "bytes(max)" );
+		super();
 	}
 
 	public SpannerDialect(DialectResolutionInfo info) {
-		this();
+		super();
 		registerKeywords( info );
+	}
+
+	@Override
+	protected String columnType(int jdbcTypeCode) {
+		switch (jdbcTypeCode) {
+			case BOOLEAN:
+				return "bool";
+
+			case TINYINT:
+			case SMALLINT:
+			case INTEGER:
+			case BIGINT:
+				return "int64";
+
+			case REAL:
+			case FLOAT:
+			case DOUBLE:
+			case DECIMAL:
+			case NUMERIC:
+				return "float64";
+
+			//there is no time type of any kind
+			case TIME:
+			//timestamp does not accept precision
+			case TIMESTAMP:
+			case TIMESTAMP_WITH_TIMEZONE:
+				return "timestamp";
+
+			case CHAR:
+			case NCHAR:
+			case VARCHAR:
+			case NVARCHAR:
+				return "string($l)";
+
+			case BINARY:
+			case VARBINARY:
+				return "bytes($l)";
+
+			case CLOB:
+			case NCLOB:
+				return "string(max)";
+			case BLOB:
+				return "bytes(max)";
+
+			default:
+				return super.columnType(jdbcTypeCode);
+		}
 	}
 
 	@Override

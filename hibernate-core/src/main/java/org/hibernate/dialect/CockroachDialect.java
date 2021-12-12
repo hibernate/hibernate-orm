@@ -8,11 +8,12 @@ package org.hibernate.dialect;
 
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
-import java.sql.Types;
 import java.time.temporal.TemporalAccessor;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
@@ -55,6 +56,7 @@ import jakarta.persistence.TemporalType;
 
 import static org.hibernate.query.TemporalUnit.DAY;
 import static org.hibernate.query.TemporalUnit.NATIVE;
+import static org.hibernate.type.SqlTypes.*;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
@@ -70,7 +72,6 @@ public class CockroachDialect extends Dialect {
 
 	// * no support for java.sql.Clob
 
-	private final DatabaseVersion version;
 	private final PostgreSQLDriverKind driverKind;
 
 	public CockroachDialect() {
@@ -88,45 +89,56 @@ public class CockroachDialect extends Dialect {
 	}
 
 	public CockroachDialect(DatabaseVersion version, PostgreSQLDriverKind driverKind) {
-		super();
-
-		this.version = version;
+		super(version);
 		this.driverKind = driverKind;
+	}
 
-		registerColumnType( Types.TINYINT, "smallint" ); //no tinyint
-
-		//use 'string' instead of 'varchar'
-		registerColumnType( Types.VARCHAR, getMaxVarcharLength(), "string($l)");
-		registerColumnType( Types.VARCHAR, "string");
-
-		//no binary/varbinary
-		registerColumnType( Types.VARBINARY, "bytes" );
-		registerColumnType( Types.BINARY, "bytes" );
-
-		//no clob
-		registerColumnType( Types.CLOB, "string" );
-
-		//no nchar/nvarchar
-		registerColumnType( Types.NCHAR, "string($l)" );
-		registerColumnType( Types.NVARCHAR, getMaxNVarcharLength(), "string($l)" );
-		registerColumnType( Types.NVARCHAR, "string");
-
-		//no nclob
-		registerColumnType( Types.NCLOB, "string" );
-
-		registerColumnType( SqlTypes.UUID, "uuid" );
-		registerColumnType( SqlTypes.INTERVAL_SECOND, "interval second($s)" );
-
-		// Prefer jsonb if possible
-		if ( getVersion().isSameOrAfter( 20, 0 ) ) {
-			registerColumnType( SqlTypes.INET, "inet" );
-			registerColumnType( SqlTypes.JSON, "jsonb" );
+	@Override
+	protected List<Integer> getSupportedJdbcTypeCodes() {
+		List<Integer> typeCodes = new ArrayList<>( super.getSupportedJdbcTypeCodes() );
+		typeCodes.addAll( List.of(UUID, INTERVAL_SECOND, GEOMETRY, JSON) );
+		if ( getVersion().isSameOrAfter( 20 ) ) {
+			typeCodes.add(INET);
 		}
-		else {
-			registerColumnType( SqlTypes.JSON, "json" );
-		}
+		return typeCodes;
+	}
 
-		registerColumnType( SqlTypes.GEOMETRY, "geometry" );
+	@Override
+	protected String columnType(int jdbcTypeCode) {
+		switch (jdbcTypeCode) {
+			case TINYINT:
+				return "smallint"; //no tinyint
+
+			case CHAR:
+			case NCHAR:
+			case VARCHAR:
+			case NVARCHAR:
+				return "string($l)";
+
+			case NCLOB:
+			case CLOB:
+				return "string";
+
+			case BINARY:
+			case VARBINARY:
+			case BLOB:
+				return "bytes";
+
+			case INET:
+				return "inet";
+			case UUID:
+				return "uuid";
+			case GEOMETRY:
+				return "geometry";
+			case INTERVAL_SECOND:
+				return "interval second($s)";
+
+			case JSON:
+				// Prefer jsonb if possible
+				return getVersion().isSameOrAfter( 20 ) ? "jsonb" : "json";
+			default:
+				return super.columnType(jdbcTypeCode);
+		}
 	}
 
 	@Override
@@ -148,21 +160,21 @@ public class CockroachDialect extends Dialect {
 			int precision,
 			int scale,
 			JdbcTypeRegistry jdbcTypeRegistry) {
-		if ( jdbcTypeCode == SqlTypes.OTHER ) {
+		if ( jdbcTypeCode == OTHER ) {
 			switch ( columnTypeName ) {
 				case "uuid":
-					jdbcTypeCode = SqlTypes.UUID;
+					jdbcTypeCode = UUID;
 					break;
 				case "json":
 				case "jsonb":
-					jdbcTypeCode = SqlTypes.JSON;
+					jdbcTypeCode = JSON;
 					break;
 				case "inet":
-					jdbcTypeCode = SqlTypes.INET;
+					jdbcTypeCode = INET;
 					break;
 				case "geometry":
 				case "geography":
-					jdbcTypeCode = SqlTypes.GEOMETRY;
+					jdbcTypeCode = GEOMETRY;
 					break;
 			}
 		}
@@ -187,11 +199,6 @@ public class CockroachDialect extends Dialect {
 				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLJsonJdbcType.INSTANCE );
 			}
 		}
-	}
-
-	@Override
-	public DatabaseVersion getVersion() {
-		return version;
 	}
 
 	@Override

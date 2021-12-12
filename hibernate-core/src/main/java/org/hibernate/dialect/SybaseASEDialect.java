@@ -43,6 +43,7 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
+import static org.hibernate.type.SqlTypes.*;
 
 /**
  * Dialect for Sybase Adaptive Server Enterprise for
@@ -54,55 +55,25 @@ public class SybaseASEDialect extends SybaseDialect {
 	private final boolean ansiNull;
 
 	public SybaseASEDialect() {
-		this( DatabaseVersion.make( 11 ), false, false );
+		this( DatabaseVersion.make( 11 ) );
 	}
 
 	public SybaseASEDialect(DialectResolutionInfo info) {
-		this(
-				info.makeCopy(),
-				info.getDriverName() != null && info.getDriverName().contains( "jTDS" ),
-				isAnsiNull( info.unwrap( DatabaseMetaData.class ) )
-		);
+		this( info.makeCopy(), info );
 		registerKeywords( info );
 	}
 
-	public SybaseASEDialect(DatabaseVersion version, boolean jtdsDriver, boolean ansiNull) {
-		super( version, jtdsDriver );
-		this.ansiNull = ansiNull;
-		//On Sybase ASE, the 'bit' type cannot be null,
-		//and cannot have indexes (while we don't use
-		//tinyint to store signed bytes, we can use it
-		//to store boolean values)
-		registerColumnType( Types.BOOLEAN, "tinyint" );
+	public SybaseASEDialect(DatabaseVersion version) {
+		this(version, null);
+	}
 
+	protected SybaseASEDialect(DatabaseVersion version, DialectResolutionInfo info) {
+		super(version, info);
 
-		if ( getVersion().isSameOrAfter( 12 ) ) {
-			//date / date were introduced in version 12
-			registerColumnType( Types.DATE, "date" );
-			registerColumnType( Types.TIME, "time" );
-			if ( getVersion().isSameOrAfter( 15 ) ) {
-				//bigint was added in version 15
-				registerColumnType( Types.BIGINT, "bigint" );
-
-				if ( getVersion().isSameOrAfter( 15, 5 ) && !jtdsDriver ) {
-					//According to Wikipedia bigdatetime and bigtime were added in 15.5
-					//But with jTDS we can't use them as the driver can't handle the types
-					registerColumnType( Types.DATE, "bigdatetime" );
-					registerColumnType( Types.DATE, 3, "datetime" );
-					registerColumnType( Types.TIME, "bigtime" );
-					registerColumnType( Types.TIME, 3, "datetime" );
-					registerColumnType( Types.TIMESTAMP, "bigdatetime" );
-					registerColumnType( Types.TIMESTAMP, 3, "datetime" );
-					registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "bigdatetime" );
-					registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, 3, "datetime" );
-				}
-			}
-		}
-
-		registerColumnType( Types.VARBINARY, "image" );
-		registerColumnType( Types.VARCHAR, "text" );
+		ansiNull = info != null && isAnsiNull( info.unwrap( DatabaseMetaData.class ) );
 
 		registerSybaseKeywords();
+
 		sizeStrategy = new SizeStrategyImpl() {
 			@Override
 			public Size resolveSize(
@@ -121,6 +92,56 @@ public class SybaseASEDialect extends SybaseDialect {
 				return super.resolveSize( jdbcType, javaType, precision, scale, length );
 			}
 		};
+	}
+
+	@Override
+	protected String columnType(int jdbcTypeCode) {
+
+		if ( jdbcTypeCode == BIGINT && getVersion().isBefore( 15 ) ) {
+			// Sybase ASE didn't introduce 'bigint' until version 15.0
+			return "numeric(19,0)";
+		}
+
+		if ( getVersion().isSameOrAfter( 12 ) ) {
+			// 'date' and 'time' were introduced in version 12
+			// note: 'timestamp' is something weird on ASE,
+			//       not what we're looking for here!
+			switch (jdbcTypeCode) {
+				case DATE:
+					return "date";
+				case TIME:
+					return "time";
+			}
+		}
+
+		switch (jdbcTypeCode) {
+			case BOOLEAN:
+				// On Sybase ASE, the 'bit' type cannot be null,
+				// and cannot have indexes (while we don't use
+				// tinyint to store signed bytes, we can use it
+				// to store boolean values)
+				return "tinyint";
+			default:
+				return super.columnType(jdbcTypeCode);
+		}
+	}
+
+	@Override
+	protected void registerDefaultColumnTypes(DialectResolutionInfo info) {
+		super.registerDefaultColumnTypes(info);
+
+		// According to Wikipedia bigdatetime and bigtime were added in 15.5
+		// But with jTDS we can't use them as the driver can't handle the types
+		if ( getVersion().isSameOrAfter( 15, 5 ) && !jtdsDriver ) {
+			registerColumnType( DATE, "bigdatetime" );
+			registerColumnType( DATE, 3, "datetime" );
+			registerColumnType( TIME, "bigtime" );
+			registerColumnType( TIME, 3, "datetime" );
+			registerColumnType( TIMESTAMP, "bigdatetime" );
+			registerColumnType( TIMESTAMP, 3, "datetime" );
+			registerColumnType( TIMESTAMP_WITH_TIMEZONE, "bigdatetime" );
+			registerColumnType( TIMESTAMP_WITH_TIMEZONE, 3, "datetime" );
+		}
 	}
 
 	@Override

@@ -70,6 +70,7 @@ import java.sql.Types;
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers.useArgType;
+import static org.hibernate.type.SqlTypes.*;
 
 /**
  * Hibernate Dialect for Apache Derby / Cloudscape 10
@@ -91,8 +92,6 @@ public class DerbyDialect extends Dialect {
 	// * can't select a parameter unless wrapped
 	//   in a cast or function call
 
-	private final DatabaseVersion version;
-
 	private final LimitHandler limitHandler;
 
 	public DerbyDialect(DialectResolutionInfo info) {
@@ -105,35 +104,7 @@ public class DerbyDialect extends Dialect {
 	}
 
 	public DerbyDialect(DatabaseVersion version) {
-		super();
-		this.version = version;
-
-		if ( getVersion().isBefore( 10, 7 ) ) {
-			registerColumnType( Types.BOOLEAN, "smallint" ); //no boolean before 10.7
-		}
-		registerColumnType( Types.TINYINT, "smallint" ); //no tinyint
-		registerColumnType( Types.CHAR, 254, "char($l)" );
-
-		//HHH-12827: map them both to the same type to avoid problems with schema update
-		//Note that 31 is the maximum precision Derby supports
-//		registerColumnType( Types.DECIMAL, "decimal($p,$s)" );
-		registerColumnType( Types.NUMERIC, "decimal($p,$s)" );
-
-		registerColumnType( Types.BINARY, 254, "char($l) for bit data" );
-		registerColumnType( Types.BINARY, getMaxVarbinaryLength(), "varchar($l) for bit data" );
-		registerColumnType( Types.BINARY, "long varchar for bit data" );
-		registerColumnType( Types.VARBINARY, getMaxVarbinaryLength(), "varchar($l) for bit data" );
-		registerColumnType( Types.VARBINARY, 32_700,"long varchar for bit data" );
-		registerColumnType( Types.VARBINARY, "blob($l)" );
-
-		registerColumnType( Types.BLOB, "blob($l)" );
-		registerColumnType( Types.CLOB, "clob($l)" );
-
-		registerColumnType( Types.TIMESTAMP, "timestamp" );
-		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp" );
-
-		registerColumnType( Types.VARCHAR, 32_700, "long varchar" );
-		registerColumnType( Types.VARCHAR, "clob($l)" );
+		super(version);
 
 		registerDerbyKeywords();
 
@@ -142,6 +113,52 @@ public class DerbyDialect extends Dialect {
 				: new DerbyLimitHandler( getVersion().isSameOrAfter( 10, 6 ) );
 
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, NO_BATCH );
+	}
+
+	@Override
+	protected String columnType(int jdbcTypeCode) {
+		if ( jdbcTypeCode == BOOLEAN && getVersion().isBefore( 10, 7 ) ) {
+			return "smallint";
+		}
+
+		switch (jdbcTypeCode) {
+			case TINYINT:
+				//no tinyint
+				return "smallint";
+
+			case NUMERIC:
+				// HHH-12827: map them both to the same type to avoid problems with schema update
+				// Note that 31 is the maximum precision Derby supports
+				return super.columnType(DECIMAL);
+
+			case VARBINARY:
+				return "varchar($l) for bit data";
+
+			case BLOB:
+				return "blob($l)";
+			case CLOB:
+				return "clob($l)";
+
+			case TIMESTAMP:
+			case TIMESTAMP_WITH_TIMEZONE:
+				return "timestamp";
+
+			default:
+				return super.columnType(jdbcTypeCode);
+		}
+	}
+
+	@Override
+	protected void registerDefaultColumnTypes(int maxVarcharLength, int maxNVarcharLength, int maxVarBinaryLength) {
+		super.registerDefaultColumnTypes(maxVarcharLength, maxNVarcharLength, maxVarBinaryLength);
+
+		//long vachar is the right type to use for lengths between 32_672 and 32_700
+		registerColumnType( VARBINARY, 32_700,"long varchar for bit data" );
+		registerColumnType( VARCHAR, 32_700, "long varchar" );
+
+		registerColumnType( BINARY, 254, "char($l) for bit data" );
+		registerColumnType( BINARY, 32_672, "varchar($l) for bit data" );
+		registerColumnType( BINARY, 32_700, "long varchar for bit data" );
 	}
 
 	@Override
@@ -171,11 +188,6 @@ public class DerbyDialect extends Dialect {
 		return getVersion().isBefore( 10, 7 )
 				? Types.SMALLINT
 				: Types.BOOLEAN;
-	}
-
-	@Override
-	public DatabaseVersion getVersion() {
-		return version;
 	}
 
 	@Override

@@ -27,7 +27,7 @@ public @interface CustomType {
 	/**
 	 * The custom type implementor class
 	 */
-	Class<? extends UserType> value();
+	Class<? extends UserType<?>> value();
 
 	/**
 	 * Parameters to be injected into the custom type after

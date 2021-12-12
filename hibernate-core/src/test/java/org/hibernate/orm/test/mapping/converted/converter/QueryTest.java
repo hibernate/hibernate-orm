@@ -22,9 +22,13 @@ import jakarta.persistence.Table;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
+import org.hibernate.query.NativeQuery;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
 
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -63,9 +67,27 @@ public class QueryTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
+	@JiraKey( "HHH-13082" )
 	public void testNativeQueryResult() {
 		inTransaction( (session) -> {
 			final NativeQueryImplementor<Object[]> query = session.createNativeQuery( "select id, salary from EMP", "emp_id_salary" );
+
+			final List<Object[]> results = query.list();
+			assertThat( results ).hasSize( 1 );
+
+			final Object[] values = results.get( 0 );
+			assertThat( values[0] ).isEqualTo( 1 );
+			assertThat( values[1] ).isEqualTo( SALARY );
+		} );
+	}
+
+	@Test
+	@FailureExpected( jiraKey = "HHH-14975", message = "Not yet implemented" )
+	@NotImplementedYet
+	@JiraKey( "HHH-14975" )
+	public void testAutoAppliedConverterAsNativeQueryResult() {
+		inTransaction( (session) -> {
+			final NativeQueryImplementor<Object[]> query = session.createNativeQuery( "select id, salary from EMP", "emp_id_salary2" );
 
 			final List<Object[]> results = query.list();
 			assertThat( results ).hasSize( 1 );
@@ -106,6 +128,13 @@ public class QueryTest extends BaseNonConfigCoreFunctionalTestCase {
 			columns = {
 					@ColumnResult( name = "id" ),
 					@ColumnResult( name = "salary", type = SalaryConverter.class )
+			}
+	)
+	@SqlResultSetMapping(
+			name = "emp_id_salary2",
+			columns = {
+					@ColumnResult( name = "id" ),
+					@ColumnResult( name = "salary", type = Float.class )
 			}
 	)
 	public static class Employee {

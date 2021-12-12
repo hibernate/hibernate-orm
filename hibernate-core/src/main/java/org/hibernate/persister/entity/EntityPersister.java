@@ -219,6 +219,18 @@ public interface EntityPersister
 	Serializable[] getQuerySpaces();
 
 	/**
+	 * The table names this entity needs to be synchronized against.
+	 * <p>
+	 * Much like {@link #getPropertySpaces()}, except that here we include subclass
+	 * entity spaces.
+	 *
+	 * @return The synchronization spaces.
+	 */
+	default String[] getSynchronizationSpaces() {
+		return (String[]) getQuerySpaces();
+	}
+
+	/**
 	 * Returns an array of objects that identify spaces in which properties of
 	 * this entity are persisted, for instances of this class and its subclasses.
 	 * <p/>
@@ -500,7 +512,7 @@ public interface EntityPersister
 	 *
 	 * @return The loaded, matching entities
 	 */
-	List multiLoad(Object[] ids, SharedSessionContractImplementor session, MultiIdLoadOptions loadOptions);
+	List<?> multiLoad(Object[] ids, SharedSessionContractImplementor session, MultiIdLoadOptions loadOptions);
 
 	/**
 	 * Do a version check (optional operation)

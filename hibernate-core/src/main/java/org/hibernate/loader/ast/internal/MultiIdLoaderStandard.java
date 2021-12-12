@@ -31,6 +31,8 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.loader.ast.spi.MultiIdEntityLoader;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.loader.entity.CacheEntityLoaderHelper;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
@@ -59,30 +61,27 @@ public class MultiIdLoaderStandard<T> implements MultiIdEntityLoader<T> {
 	private final EntityPersister entityDescriptor;
 	private final SessionFactoryImplementor sessionFactory;
 
-	private int idJdbcTypeCount = -1;
+	private final int idJdbcTypeCount;
 
-	public MultiIdLoaderStandard(EntityPersister entityDescriptor, SessionFactoryImplementor sessionFactory) {
+	public MultiIdLoaderStandard(
+			EntityPersister entityDescriptor,
+			PersistentClass bootDescriptor,
+			SessionFactoryImplementor sessionFactory) {
 		this.entityDescriptor = entityDescriptor;
+		this.idJdbcTypeCount = bootDescriptor.getIdentifier().getColumnSpan();
 		this.sessionFactory = sessionFactory;
+
+		assert idJdbcTypeCount > 0;
 	}
 
 	@Override
-	public EntityPersister getLoadable() {
+	public EntityMappingType getLoadable() {
 		return entityDescriptor;
 	}
 
 	@Override
 	public List<T> load(Object[] ids, MultiIdLoadOptions loadOptions, SharedSessionContractImplementor session) {
-		// todo (6.0) : account for all of the `loadOptions` for now just do a simple load
-		//		^^ atm this is handled in `MultiIdentifierLoadAccess`.  Need to decide on the design we want here...
-		//		- see `SimpleNaturalIdMultiLoadAccessImpl` for example of alternative
-
 		assert ids != null;
-
-		if ( idJdbcTypeCount < 0 ) {
-			// can't do this in the ctor because of chicken-egg between this ctor and the persisters
-			idJdbcTypeCount = entityDescriptor.getIdentifierMapping().getJdbcTypeCount();
-		}
 
 		if ( loadOptions.isOrderReturnEnabled() ) {
 			return performOrderedMultiLoad( ids, session, loadOptions );
@@ -105,7 +104,7 @@ public class MultiIdLoaderStandard<T> implements MultiIdEntityLoader<T> {
 		final JdbcEnvironment jdbcEnvironment = sessionFactory.getJdbcServices().getJdbcEnvironment();
 		final Dialect dialect = jdbcEnvironment.getDialect();
 
-		final List result = CollectionHelper.arrayList( ids.length );
+		final List<Object> result = CollectionHelper.arrayList( ids.length );
 
 		final LockOptions lockOptions = (loadOptions.getLockOptions() == null)
 				? new LockOptions( LockMode.NONE )
@@ -158,10 +157,10 @@ public class MultiIdLoaderStandard<T> implements MultiIdEntityLoader<T> {
 							);
 					managedEntity = persistenceContextEntry.getEntity();
 
-					if ( managedEntity != null && !loadOptions.isReturnOfDeletedEntitiesEnabled() && !persistenceContextEntry
-							.isManaged() ) {
+					if ( managedEntity != null
+							&& !loadOptions.isReturnOfDeletedEntitiesEnabled()
+							&& !persistenceContextEntry.isManaged() ) {
 						// put a null in the result
-						//noinspection unchecked
 						result.add( i, null );
 						continue;
 					}
@@ -177,7 +176,6 @@ public class MultiIdLoaderStandard<T> implements MultiIdEntityLoader<T> {
 				}
 
 				if ( managedEntity != null ) {
-					//noinspection unchecked
 					result.add( i, managedEntity );
 					continue;
 				}
@@ -221,12 +219,11 @@ public class MultiIdLoaderStandard<T> implements MultiIdEntityLoader<T> {
 					entity = null;
 				}
 			}
-			//noinspection unchecked
 			result.set( position, entity );
 		}
 
 		//noinspection unchecked
-		return (List) result;
+		return (List<T>) result;
 	}
 
 	private List<T> loadEntitiesById(
@@ -235,8 +232,6 @@ public class MultiIdLoaderStandard<T> implements MultiIdEntityLoader<T> {
 			SharedSessionContractImplementor session) {
 		assert idsInBatch != null;
 		assert ! idsInBatch.isEmpty();
-
-		assert idJdbcTypeCount > 0;
 
 		final int numberOfIdsInBatch = idsInBatch.size();
 
@@ -279,7 +274,7 @@ public class MultiIdLoaderStandard<T> implements MultiIdEntityLoader<T> {
 			);
 		}
 
-		// we should have used all of the JdbcParameter references (created bindings for all)
+		// we should have used all the JdbcParameter references (created bindings for all)
 		assert offset == jdbcParameters.size();
 		final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory, sqlAst )
 				.translate( jdbcParameterBindings, QueryOptions.NONE );
@@ -297,7 +292,7 @@ public class MultiIdLoaderStandard<T> implements MultiIdEntityLoader<T> {
 			subSelectFetchableKeysHandler = null;
 		}
 
-		List<T> list = JdbcSelectExecutorStandardImpl.INSTANCE.list(
+		return JdbcSelectExecutorStandardImpl.INSTANCE.list(
 				jdbcSelect,
 				jdbcParameterBindings,
 				new ExecutionContext() {
@@ -336,8 +331,6 @@ public class MultiIdLoaderStandard<T> implements MultiIdEntityLoader<T> {
 				RowTransformerPassThruImpl.instance(),
 				ListResultsConsumer.UniqueSemantic.FILTER
 		);
-
-		return list;
 	}
 
 	private List<T> performUnorderedMultiLoad(
@@ -397,8 +390,9 @@ public class MultiIdLoaderStandard<T> implements MultiIdEntityLoader<T> {
 				if ( loadOptions.isSessionCheckingEnabled() ) {
 					managedEntity = persistenceContextEntry.getEntity();
 
-					if ( managedEntity != null && !loadOptions.isReturnOfDeletedEntitiesEnabled() && !persistenceContextEntry
-							.isManaged() ) {
+					if ( managedEntity != null
+							&& !loadOptions.isReturnOfDeletedEntitiesEnabled()
+							&& !persistenceContextEntry.isManaged() ) {
 						foundAnyManagedEntities = true;
 						result.add( null );
 						continue;

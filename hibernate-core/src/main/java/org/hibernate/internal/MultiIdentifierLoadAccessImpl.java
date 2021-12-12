@@ -122,7 +122,7 @@ class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, 
 	@Override
 	@SuppressWarnings( "unchecked" )
 	public <K> List<T> multiLoad(K... ids) {
-		return perform( () -> entityPersister.multiLoad( ids, session, this ) );
+		return perform( () -> (List<T>) entityPersister.multiLoad( ids, session, this ) );
 	}
 
 	public List<T> perform(Supplier<List<T>> executor) {
@@ -165,6 +165,6 @@ class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, 
 	@Override
 	@SuppressWarnings( "unchecked" )
 	public <K> List<T> multiLoad(List<K> ids) {
-		return perform( () -> entityPersister.multiLoad( ids.toArray( new Object[ 0 ] ), session, this ) );
+		return perform( () -> (List<T>) entityPersister.multiLoad( ids.toArray( new Object[ 0 ] ), session, this ) );
 	}
 }

@@ -162,7 +162,7 @@ public class MultiNaturalIdLoadingBatcher {
 		}
 
 
-		final List<E> result = JdbcSelectExecutorStandardImpl.INSTANCE.list(
+		return JdbcSelectExecutorStandardImpl.INSTANCE.list(
 				jdbcSelect,
 				jdbcParamBindings,
 				new ExecutionContext() {
@@ -201,7 +201,5 @@ public class MultiNaturalIdLoadingBatcher {
 				RowTransformerPassThruImpl.instance(),
 				ListResultsConsumer.UniqueSemantic.FILTER
 		);
-
-		return result;
 	}
 }

@@ -90,4 +90,9 @@ public class MultiNaturalIdLoaderStandard<E> implements MultiNaturalIdLoader<E> 
 
 		return results;
 	}
+
+	@Override
+	public EntityMappingType getLoadable() {
+		return entityDescriptor;
+	}
 }

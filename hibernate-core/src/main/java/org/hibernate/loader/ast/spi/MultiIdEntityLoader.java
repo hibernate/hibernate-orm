@@ -9,16 +9,13 @@ package org.hibernate.loader.ast.spi;
 import java.util.List;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * Loader subtype for loading multiple entities by multiple identifier values.
- *
- * @author Steve Ebersole
  */
-public interface MultiIdEntityLoader<T> extends Loader {
-	@Override
-	EntityPersister getLoadable();
-
-	List<T> load(Object[] ids, MultiIdLoadOptions options, SharedSessionContractImplementor session);
+public interface MultiIdEntityLoader<T> extends MultiLoader<T> {
+	/**
+	 * Load multiple entities by id.  The exact result depends on the passed options.
+	 */
+	<K> List<T> load(K[] ids, MultiIdLoadOptions options, SharedSessionContractImplementor session);
 }

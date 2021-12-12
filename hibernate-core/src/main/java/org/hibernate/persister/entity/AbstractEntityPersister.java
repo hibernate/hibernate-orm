@@ -775,11 +775,7 @@ public abstract class AbstractEntityPersister
 			singleIdEntityLoader = new SingleIdEntityLoaderStandardImpl<>( this, factory );
 		}
 
-		// todo (6.0) : allow a "max entities" to be passed (or determine based on Dialect?) indicating how many entities
-		//  		to load at once.  i.e. it limits the number of the generated IN-list JDBC-parameters in a given
-		//  		PreparedStatement, opting to split the load into multiple JDBC operations to work around database
-		//			limits on number of parameters, number of IN-list values, etc
-		multiIdEntityLoader = new MultiIdLoaderStandard<>( this, factory );
+		multiIdEntityLoader = new MultiIdLoaderStandard<>( this, bootDescriptor, factory );
 
 		Iterator<Selectable> idColumns = bootDescriptor.getIdentifier().getColumnIterator();
 		int i = 0;
@@ -4271,7 +4267,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public List multiLoad(Object[] ids, SharedSessionContractImplementor session, MultiIdLoadOptions loadOptions) {
+	public List<?> multiLoad(Object[] ids, SharedSessionContractImplementor session, MultiIdLoadOptions loadOptions) {
 		return multiIdEntityLoader.load( ids, loadOptions, session );
 	}
 

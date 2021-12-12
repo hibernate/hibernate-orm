@@ -7,18 +7,15 @@
 package org.hibernate.loader.ast.spi;
 
 import java.util.List;
-import java.util.Map;
-import java.util.function.Supplier;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.collections.CollectionHelper;
 
 /**
  * Loader for entities by multiple natural-ids
  *
  * @param <E> The entity Java type
  */
-public interface MultiNaturalIdLoader<E> {
+public interface MultiNaturalIdLoader<E> extends MultiLoader<E> {
 	/**
 	 * Load multiple entities by natural-id.  The exact result depends on the passed options.
 	 *

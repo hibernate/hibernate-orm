@@ -163,6 +163,7 @@ import jakarta.persistence.TemporalType;
 
 import static java.lang.Math.ceil;
 import static java.lang.Math.log;
+import static org.hibernate.type.SqlTypes.*;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_END;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_DATE;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_TIME;
@@ -223,23 +224,37 @@ public abstract class Dialect implements ConversionContext {
 
 	private final SizeStrategy sizeStrategy;
 
+	private final DatabaseVersion version;
+
 	// constructors and factory methods ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	/**
+	 * @deprecated provide a {@link DatabaseVersion}
+	 */
+	@Deprecated
 	protected Dialect() {
-		this(true);
+		this(null, null);
 	}
 
-	protected Dialect(boolean autoRegisterColumnTypes) {
+	protected Dialect(DatabaseVersion version) {
+		this( version, null );
+	}
+
+	protected Dialect(DatabaseVersion version, DialectResolutionInfo info) {
+		this.version = version;
 		uniqueDelegate = new DefaultUniqueDelegate( this );
 		sizeStrategy = new SizeStrategyImpl();
-		if (autoRegisterColumnTypes) {
-			registerDefaultColumnTypes();
-		}
+		registerDefaultColumnTypes(info); // pass the info back down to the subclass in case it needs it (MySQL)
 		registerHibernateTypes();
 		registerDefaultKeywords();
 	}
 
-	protected void registerDefaultColumnTypes() {
+	/**
+	 * Register ANSI-standard column types using the length limits defined
+	 * by {@link #getMaxVarcharLength()}, {@link #getMaxNVarcharLength()},
+	 * and {@link #getMaxVarbinaryLength()}.
+	 */
+	protected void registerDefaultColumnTypes(DialectResolutionInfo info) {
 		registerDefaultColumnTypes( getMaxVarcharLength(), getMaxNVarcharLength(), getMaxVarbinaryLength() );
 	}
 
@@ -249,55 +264,181 @@ public abstract class Dialect implements ConversionContext {
 	 * {@code Dialect} by calling {@link #registerColumnType(int,String)}
 	 * from the constructor.
 	 * <p>
-	 * Note that {@link Types#LONGVARCHAR}, {@link Types#LONGNVARCHAR}
+	 * This method is aware of the notion of a maximum length for each of
+	 * the types {@link Types#VARCHAR}, {@link Types#NVARCHAR}, and
+	 * {@link Types#VARBINARY}, usually the limits defined by
+	 * {@link #getMaxVarcharLength()}, {@link #getMaxNVarcharLength()},
+	 * and {@link #getMaxVarbinaryLength()}, and registers "long" types
+	 * for lengths exceeding the limits.
+	 * <p>
+	 * The "long" types {@link Types#LONGVARCHAR}, {@link Types#LONGNVARCHAR}
 	 * and {@link Types#LONGVARBINARY} are considered synonyms for their
 	 * non-{@code LONG} counterparts, with the only difference being that
 	 * a different default length is used: {@link org.hibernate.Length#LONG}
-	 * instead of {@link org.hibernate.Length#DEFAULT}. Concrete dialects
-	 * should usually avoid registering mappings for these JDBC types.
+	 * instead of {@link org.hibernate.Length#DEFAULT}.
+	 * <p>
+	 * Any registrations made by this method may be overridden by calling
+	 * {@link #registerColumnType(int, String)} explicitly. Alternatively,
+	 * the registrations may be customized by overriding
+	 * {@link #getSupportedJdbcTypeCodes()} and {@link #columnType(int)}.
 	 *
 	 * @param maxVarcharLength the maximum length of the {@link Types#VARCHAR} type
 	 * @param maxNVarcharLength the maximum length of the {@link Types#NVARCHAR} type
 	 * @param maxVarBinaryLength the maximum length of the {@link Types#VARBINARY} type
 	 */
 	protected void registerDefaultColumnTypes(int maxVarcharLength, int maxNVarcharLength, int maxVarBinaryLength) {
-		registerColumnType( Types.BOOLEAN, "boolean" );
+		for ( int typeCode : getSupportedJdbcTypeCodes() ) {
+			switch (typeCode) {
+				case VARCHAR:
+					registerColumnType( typeCode, maxVarcharLength, columnType(typeCode) );
+					registerColumnType( typeCode, columnType(LONGVARCHAR) );
+					break;
+				case NVARCHAR:
+					registerColumnType( typeCode, maxNVarcharLength, columnType(typeCode) );
+					registerColumnType( typeCode, columnType(LONGNVARCHAR) );
+					break;
+				case VARBINARY:
+					registerColumnType( typeCode, maxVarBinaryLength, columnType(typeCode) );
+					registerColumnType( typeCode, columnType(LONGVARBINARY) );
+					break;
+				default:
+					registerColumnType( typeCode, columnType(typeCode) );
+			}
+		}
+	}
 
-		registerColumnType( Types.TINYINT, "tinyint" );
-		registerColumnType( Types.SMALLINT, "smallint" );
-		registerColumnType( Types.INTEGER, "integer" );
-		registerColumnType( Types.BIGINT, "bigint" );
+	/**
+	 * A list of JDBC types that we expect to be supported on all databases.
+	 */
+	private static final List<Integer> ANSI_SQL_TYPES = List.of(
+			BOOLEAN,
+			TINYINT, SMALLINT, INTEGER, BIGINT,
+			REAL, FLOAT, DOUBLE,
+			NUMERIC, DECIMAL,
+			DATE,
+			TIME, TIME_WITH_TIMEZONE,
+			TIMESTAMP, TIMESTAMP_WITH_TIMEZONE,
+			CHAR, VARCHAR, CLOB,
+			NCHAR, NVARCHAR, NCLOB,
+			BINARY, VARBINARY, BLOB
+	);
 
-		registerColumnType( Types.REAL, "real" );
-		registerColumnType( Types.FLOAT, "float($p)" );
-		registerColumnType( Types.DOUBLE, "double precision" );
+	/**
+	 * The JDBC type codes of types supported by this SQL dialect, from the lists
+	 * defined by {@link Types} and {@link SqlTypes}.
+	 * <p>
+	 * This method may be overridden by concrete {@code Dialect}s as an alternative
+	 * to calling {@link #registerColumnType(int, String)}. In this case,
+	 * {@link #columnType(int)} should also be overridden.
+	 * <p>
+	 * Note that {@link Types#LONGVARCHAR}, {@link Types#LONGNVARCHAR} and
+	 * {@link Types#LONGVARBINARY} are considered synonyms for their
+	 * non-{@code LONG} counterparts, and should not be included in the returned
+	 * array.
+	 *
+	 * @return an array of types from {@link SqlTypes}
+	 *
+	 * @see SqlTypes
+	 * @see #columnType(int)
+	 */
+	protected List<Integer> getSupportedJdbcTypeCodes() {
+		return ANSI_SQL_TYPES;
+	}
 
-		//these are pretty much synonyms, but are considered
-		//separate types by the ANSI spec, and in some dialects
-		registerColumnType( Types.NUMERIC, "numeric($p,$s)" );
-		registerColumnType( Types.DECIMAL, "decimal($p,$s)" );
+	/**
+	 * The column type name for a given JDBC type code defined in {@link Types} or
+	 * {@link SqlTypes}. This default implementation returns the ANSI-standard type
+	 * name.
+	 * <p>
+	 * This method may be overridden by concrete {@code Dialect}s as an alternative
+	 * to calling {@link #registerColumnType(int,String)}.
+	 *
+	 * @param jdbcTypeCode a JDBC type code
+	 * @return a column type name, with $l, $p, $s placeholders for length, precision, scale
+	 *
+	 * @see SqlTypes
+	 * @see #getSupportedJdbcTypeCodes()
+	 */
+	protected String columnType(int jdbcTypeCode) {
+		switch (jdbcTypeCode) {
+			case BOOLEAN:
+				return "boolean";
 
-		registerColumnType( Types.DATE, "date" );
-		registerColumnType( Types.TIME, "time" );
-		registerColumnType( Types.TIMESTAMP, "timestamp($p)" );
-		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp($p) with time zone" );
-		// type included here for completeness but note that
-		// very few databases support it, and the general
-		// advice is to caution against its use (for reasons,
-		// check the comments in the Postgres documentation).
-		registerColumnType( Types.TIME_WITH_TIMEZONE, "time with time zone" );
+			case TINYINT:
+				return "tinyint";
+			case SMALLINT:
+				return "smallint";
+			case INTEGER:
+				return "integer";
+			case BIGINT:
+				return "bigint";
 
-		registerColumnType( Types.BINARY, "binary($l)" );
-		registerColumnType( Types.VARBINARY, maxVarBinaryLength, "varbinary($l)" );
-		registerColumnType( Types.BLOB, "blob" );
+			case FLOAT:
+				// this is the floating point type we prefer!
+				return "float($p)";
+			case REAL:
+				// this type has very unclear semantics in ANSI SQL,
+				// so we avoid it and prefer float with an explicit
+				// precision
+				return "real";
+			case DOUBLE:
+				// this is just a more verbose way to write float(19)
+				return "double precision";
 
-		registerColumnType( Types.CHAR, "char($l)" );
-		registerColumnType( Types.VARCHAR, maxVarcharLength, "varchar($l)" );
-		registerColumnType( Types.CLOB, "clob" );
+			// these are pretty much synonyms, but are considered
+			// separate types by the ANSI spec, and in some dialects
+			case NUMERIC:
+				return "numeric($p,$s)";
+			case DECIMAL:
+				return "decimal($p,$s)";
 
-		registerColumnType( Types.NCHAR, "nchar($l)" );
-		registerColumnType( Types.NVARCHAR, maxNVarcharLength, "nvarchar($l)" );
-		registerColumnType( Types.NCLOB, "nclob" );
+			case DATE:
+				return "date";
+			case TIME:
+				return "time";
+			case TIME_WITH_TIMEZONE:
+				// type included here for completeness but note that
+				// very few databases support it, and the general
+				// advice is to caution against its use (for reasons,
+				// check the comments in the Postgres documentation).
+				return "time with time zone";
+			case TIMESTAMP:
+				return "timestamp($p)";
+			case TIMESTAMP_WITH_TIMEZONE:
+				return "timestamp($p) with time zone";
+
+			case CHAR:
+				return "char($l)";
+			case VARCHAR:
+				return "varchar($l)";
+			case CLOB:
+				return "clob";
+
+			case NCHAR:
+				return "nchar($l)";
+			case NVARCHAR:
+				return "nvarchar($l)";
+			case NCLOB:
+				return "nclob";
+
+			case BINARY:
+				return "binary($l)";
+			case VARBINARY:
+				return "varbinary($l)";
+			case BLOB:
+				return "blob";
+
+			// by default use the LOB mappings for the "long" types
+			case LONGVARCHAR:
+				return columnType(CLOB);
+			case LONGNVARCHAR:
+				return columnType(NCLOB);
+			case LONGVARBINARY:
+				return columnType(BLOB);
+
+			default:
+				throw new IllegalArgumentException("unknown type: " + jdbcTypeCode);
+		}
 	}
 
 	protected void registerHibernateTypes() {
@@ -353,7 +494,9 @@ public abstract class Dialect implements ConversionContext {
 		}
 	}
 
-	public abstract DatabaseVersion getVersion();
+	public DatabaseVersion getVersion() {
+		return version;
+	}
 
 	public JdbcType resolveSqlTypeDescriptor(
 			String columnTypeName,

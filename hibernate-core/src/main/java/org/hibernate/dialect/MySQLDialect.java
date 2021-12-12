@@ -11,6 +11,8 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
@@ -76,6 +78,7 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
+import static org.hibernate.type.SqlTypes.*;
 
 /**
  * An SQL dialect for MySQL (prior to 5.x).
@@ -86,12 +89,12 @@ public class MySQLDialect extends Dialect {
 
 	private final UniqueDelegate uniqueDelegate;
 	private final MySQLStorageEngine storageEngine;
-	private final DatabaseVersion version;
-	private final int characterSetBytesPerCharacter;
 	private final SizeStrategy sizeStrategy;
+	private int maxVarcharLength;
+	private int maxVarbinaryLength;
 
 	public MySQLDialect(DialectResolutionInfo info) {
-		this( info.makeCopy(), getCharacterSetBytesPerCharacter( info.unwrap( DatabaseMetaData.class ) ) );
+		this( info.makeCopy(), info );
 		registerKeywords( info );
 	}
 
@@ -100,16 +103,11 @@ public class MySQLDialect extends Dialect {
 	}
 
 	public MySQLDialect(DatabaseVersion version) {
-		// Let's be conservative and assume people use a 4 byte character set
-		this( version, 4 );
+		this(version, null);
 	}
 
-	public MySQLDialect(DatabaseVersion version, int characterSetBytesPerCharacter) {
-		super(false);
-		this.version = version;
-		this.characterSetBytesPerCharacter = characterSetBytesPerCharacter;
-
-		registerDefaultColumnTypes();
+	protected MySQLDialect(DatabaseVersion mySQLVersion, DialectResolutionInfo info) {
+		super(mySQLVersion, info);
 
 		String storageEngine = Environment.getProperties().getProperty( Environment.STORAGE_ENGINE );
 		if (storageEngine == null) {
@@ -128,72 +126,13 @@ public class MySQLDialect extends Dialect {
 			throw new UnsupportedOperationException( "The " + storageEngine + " storage engine is not supported!" );
 		}
 
-		registerColumnType( Types.BOOLEAN, "bit" ); // HHH-6935: Don't use "boolean" i.e. tinyint(1) due to JDBC ResultSetMetaData
-
-		registerColumnType( Types.NUMERIC, "decimal($p,$s)" ); //it's just a synonym
-
-		if ( getMySQLVersion().isBefore( 5, 7 ) ) {
-			registerColumnType( Types.TIMESTAMP, "datetime" );
-			registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp" );
-		}
-		else {
-			// Since 5.7 we can explicitly specify a fractional second
-			// precision for the timestamp-like types
-			registerColumnType(Types.TIMESTAMP, "datetime($p)");
-			registerColumnType(Types.TIMESTAMP_WITH_TIMEZONE, "timestamp($p)");
-		}
-
-		final int maxTinyLobLen = 255;
-		final int maxLobLen = 65_535;
-		final int maxMediumLobLen = 16_777_215;
-		//the maximum long LOB length is 4_294_967_295, bigger than any Java string
-
-		registerColumnType( Types.VARCHAR, "longtext" );
-		registerColumnType( Types.VARCHAR, maxMediumLobLen, "mediumtext" );
-		if ( getMaxVarcharLength() < maxLobLen ) {
-			registerColumnType( Types.VARCHAR, maxLobLen, "text" );
-		}
-
-		registerColumnType( Types.NVARCHAR, "longtext" );
-		registerColumnType( Types.NVARCHAR, maxMediumLobLen, "mediumtext" );
-		if ( getMaxNVarcharLength() < maxLobLen ) {
-			registerColumnType( Types.NVARCHAR, maxLobLen, "text" );
-		}
-
-		registerColumnType( Types.VARBINARY, "longblob" );
-		registerColumnType( Types.VARBINARY, maxMediumLobLen, "mediumblob" );
-		if ( getMaxVarbinaryLength() < maxLobLen ) {
-			registerColumnType( Types.VARBINARY, maxLobLen, "blob" );
-		}
-
-		registerColumnType( Types.BLOB, "longblob" );
-		registerColumnType( Types.BLOB, maxMediumLobLen, "mediumblob" );
-		registerColumnType( Types.BLOB, maxLobLen, "blob" );
-		registerColumnType( Types.BLOB, maxTinyLobLen, "tinyblob" );
-
-		registerColumnType( Types.CLOB, "longtext" );
-		registerColumnType( Types.CLOB, maxMediumLobLen, "mediumtext" );
-		registerColumnType( Types.CLOB, maxLobLen, "text" );
-		registerColumnType( Types.CLOB, maxTinyLobLen, "tinytext" );
-
-		registerColumnType( Types.NCLOB, "longtext" );
-		registerColumnType( Types.NCLOB, maxMediumLobLen, "mediumtext" );
-		registerColumnType( Types.NCLOB, maxLobLen, "text" );
-		registerColumnType( Types.NCLOB, maxTinyLobLen, "tinytext" );
-
-		if ( getMySQLVersion().isBefore( 5, 7 ) ) {
-			// MySQL 5.7 brings JSON native support with a dedicated datatype
-			// https://dev.mysql.com/doc/refman/5.7/en/json.html
-			registerColumnType( SqlTypes.JSON, "json");
-		}
-		registerColumnType( SqlTypes.GEOMETRY, "geometry" );
-
 		registerKeyword( "key" );
 
 		getDefaultProperties().setProperty( Environment.MAX_FETCH_DEPTH, "2" );
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 
 		uniqueDelegate = new MySQLUniqueDelegate( this );
+
 		sizeStrategy = new SizeStrategyImpl() {
 			@Override
 			public Size resolveSize(
@@ -204,7 +143,7 @@ public class MySQLDialect extends Dialect {
 					Long length) {
 				switch ( jdbcType.getDefaultSqlTypeCode() ) {
 					case Types.BIT:
-						// MySQL allows BIT with a length up to 64
+						// MySQL allows BIT with a length up to 64 (less the the default length 255)
 						if ( length != null ) {
 							return Size.length( Math.min( Math.max( length, 1 ), 64 ) );
 						}
@@ -212,6 +151,101 @@ public class MySQLDialect extends Dialect {
 				return super.resolveSize( jdbcType, javaType, precision, scale, length );
 			}
 		};
+	}
+
+	@Override
+	protected List<Integer> getSupportedJdbcTypeCodes() {
+		List<Integer> typeCodes = new ArrayList<>( super.getSupportedJdbcTypeCodes() );
+		typeCodes.add(GEOMETRY);
+		if ( getMySQLVersion().isBefore( 5, 7 ) ) {
+			// MySQL 5.7 brings JSON native support with a dedicated datatype
+			// https://dev.mysql.com/doc/refman/5.7/en/json.html
+			typeCodes.add(JSON);
+		}
+		return typeCodes;
+	}
+
+	@Override
+	protected String columnType(int jdbcTypeCode) {
+		switch (jdbcTypeCode) {
+			case BOOLEAN:
+				// HHH-6935: Don't use "boolean" i.e. tinyint(1) due to JDBC ResultSetMetaData
+				return "bit";
+
+			case TIMESTAMP:
+				return getMySQLVersion().isBefore( 5, 7 )
+						? "datetime" : "datetime($p)";
+			case TIMESTAMP_WITH_TIMEZONE:
+				return getMySQLVersion().isBefore( 5, 7 )
+						? "timestamp" : "timestamp($p)";
+
+			case NUMERIC:
+				// it's just a synonym
+				return super.columnType(DECIMAL);
+
+			case JSON:
+				return "json";
+			case GEOMETRY:
+				return "geometry";
+
+			case BLOB:
+				return "longblob";
+			case NCLOB:
+			case CLOB:
+				return "longtext";
+		}
+		return super.columnType(jdbcTypeCode);
+	}
+
+	@Override
+	protected void registerDefaultColumnTypes(DialectResolutionInfo info) {
+		// we need to remember the character set before calling getMaxVarcharLength()
+		// we could not do this earlier because we get called from the constructor
+		// of the superclass, before our own constructor has run
+		int bytesPerCharacter = info == null
+				? 4 // Let's be conservative and assume people use a 4 byte character set
+				: getCharacterSetBytesPerCharacter( info.unwrap(DatabaseMetaData.class) );
+		maxVarcharLength = maxVarcharLength(bytesPerCharacter);
+		maxVarbinaryLength = maxVarbinaryLength();
+
+		super.registerDefaultColumnTypes( maxVarcharLength, maxVarcharLength, maxVarbinaryLength );
+
+		// MySQL has approximately one million text and blob types. We have
+		// already registered longtext + longblob via the regular method,
+		// but we still need to do the rest of them here.
+
+		final int maxTinyLobLen = 255;
+		final int maxLobLen = 65_535;
+		final int maxMediumLobLen = 16_777_215;
+
+		//the maximum long LOB length is 4_294_967_295, bigger than any Java string
+
+		registerColumnType( VARCHAR, maxMediumLobLen, "mediumtext" );
+		if ( getMaxVarcharLength() < maxLobLen ) {
+			registerColumnType( VARCHAR, maxLobLen, "text" );
+		}
+
+		registerColumnType( NVARCHAR, maxMediumLobLen, "mediumtext" );
+		if ( getMaxNVarcharLength() < maxLobLen ) {
+			registerColumnType( NVARCHAR, maxLobLen, "text" );
+		}
+
+		registerColumnType( VARBINARY, maxMediumLobLen, "mediumblob" );
+		if ( getMaxVarbinaryLength() < maxLobLen ) {
+			registerColumnType( VARBINARY, maxLobLen, "blob" );
+		}
+
+		registerColumnType( BLOB, maxMediumLobLen, "mediumblob" );
+		registerColumnType( BLOB, maxLobLen, "blob" );
+		registerColumnType( BLOB, maxTinyLobLen, "tinyblob" );
+
+		registerColumnType( CLOB, maxMediumLobLen, "mediumtext" );
+		registerColumnType( CLOB, maxLobLen, "text" );
+		registerColumnType( CLOB, maxTinyLobLen, "tinytext" );
+
+		registerColumnType( NCLOB, maxMediumLobLen, "mediumtext" );
+		registerColumnType( NCLOB, maxLobLen, "text" );
+		registerColumnType( NCLOB, maxTinyLobLen, "tinytext" );
 	}
 
 	protected static int getCharacterSetBytesPerCharacter(DatabaseMetaData databaseMetaData) {
@@ -254,14 +288,17 @@ public class MySQLDialect extends Dialect {
 		return 4;
 	}
 
-	@Override
-	public int getMaxVarcharLength() {
+	private int maxVarbinaryLength() {
+		return getMySQLVersion().isBefore( 5 ) ? 255 : 65_535;
+	}
+
+	private int maxVarcharLength(int bytesPerCharacter) {
 		// max length for VARCHAR changed in 5.0.3
 		if ( getMySQLVersion().isBefore( 5 ) ) {
 			return 255;
 		}
 		else {
-			switch ( characterSetBytesPerCharacter ) {
+			switch ( bytesPerCharacter ) {
 				case 1:
 					return 65_535;
 				case 2:
@@ -276,8 +313,13 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
+	public int getMaxVarcharLength() {
+		return maxVarcharLength;
+	}
+
+	@Override
 	public int getMaxVarbinaryLength() {
-		return getMySQLVersion().isBefore( 5 ) ? 255 : 65_535;
+		return maxVarbinaryLength;
 	}
 
 	@Override
@@ -290,13 +332,8 @@ public class MySQLDialect extends Dialect {
 		return super.getNullColumnString( columnType );
 	}
 
-	@Override
-	public DatabaseVersion getVersion() {
-		return version;
-	}
-
 	public DatabaseVersion getMySQLVersion() {
-		return version;
+		return super.getVersion();
 	}
 
 	@Override

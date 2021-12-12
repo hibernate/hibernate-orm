@@ -50,7 +50,6 @@ import org.hibernate.tool.schema.internal.StandardSequenceExporter;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
-import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.SmallIntJdbcType;
@@ -60,13 +59,16 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.TimeZone;
 
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.query.TemporalUnit.NANOSECOND;
+import static org.hibernate.type.SqlTypes.*;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
@@ -79,12 +81,10 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
 public class SQLServerDialect extends AbstractTransactSQLDialect {
 	private static final int PARAM_LIST_SIZE_LIMIT = 2100;
 
-	private final DatabaseVersion version;
-
 	private StandardSequenceExporter exporter;
 
 	public SQLServerDialect(DialectResolutionInfo info) {
-		this( info.makeCopy() );
+		this( info.makeCopy(), info );
 		registerKeywords( info );
 	}
 
@@ -93,53 +93,71 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	public SQLServerDialect(DatabaseVersion version) {
-		super();
-		this.version = version;
+		this(version, null);
+	}
 
-		//there is no 'double' type in SQL server
-		//but 'float' is double precision by default
-		registerColumnType( Types.DOUBLE, "float" );
-
-		if ( getVersion().isSameOrAfter( 10 ) ) {
-			registerColumnType( Types.DATE, "date" );
-			registerColumnType( Types.TIME, "time" );
-			registerColumnType( Types.TIMESTAMP, "datetime2($p)" );
-			registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "datetimeoffset($p)" );
-			registerColumnType( SqlTypes.GEOMETRY, "geometry" );
-		}
+	protected SQLServerDialect(DatabaseVersion version, DialectResolutionInfo info) {
+		super(version, info);
 
 		if ( getVersion().isSameOrAfter( 11 ) ) {
 			exporter = new SqlServerSequenceExporter( this );
 		}
 
-		if ( getVersion().isBefore( 9 ) ) {
-			registerColumnType( Types.VARBINARY, "image" );
-			registerColumnType( Types.VARCHAR, "text" );
-			registerColumnType( Types.NVARCHAR, "text" );
-		}
-		else {
+		registerKeyword( "top" );
+		registerKeyword( "key" );
+	}
 
-			// Use 'varchar(max)' and 'varbinary(max)' instead
+	@Override
+	protected List<Integer> getSupportedJdbcTypeCodes() {
+		List<Integer> list = new ArrayList<>( super.getSupportedJdbcTypeCodes() );
+		if ( getVersion().isSameOrAfter( 10 ) ) {
+			list.add(GEOMETRY);
+		}
+		return list;
+	}
+
+	@Override
+	protected String columnType(int jdbcTypeCode) {
+		if ( getVersion().isSameOrAfter( 10 ) ) {
+			switch (jdbcTypeCode) {
+				case DATE:
+					return "date";
+				case TIME:
+					return "time";
+				case TIMESTAMP:
+					return"datetime2($p)";
+				case TIMESTAMP_WITH_TIMEZONE:
+					return "datetimeoffset($p)";
+			}
+		}
+
+		if ( getVersion().isSameOrAfter(9) ) {
+			// Prefer 'varchar(max)' and 'varbinary(max)' to
 			// the deprecated TEXT and IMAGE types. Note that
 			// the length of a VARCHAR or VARBINARY column must
 			// be either between 1 and 8000 or exactly MAX, and
 			// the length of an NVARCHAR column must be either
-			// between 1 and 4000 or exactly MAX.
-
-			// See http://www.sql-server-helper.com/faq/sql-server-2005-varchar-max-p01.aspx
-			// See HHH-3965
-
-			registerColumnType( Types.BLOB, "varbinary(max)" );
-			registerColumnType( Types.VARBINARY, "varbinary(max)" );
-
-			registerColumnType( Types.CLOB, "varchar(max)" );
-			registerColumnType( Types.NCLOB, "nvarchar(max)" ); // HHH-8435 fix
-			registerColumnType( Types.VARCHAR, "varchar(max)" );
-			registerColumnType( Types.NVARCHAR, "nvarchar(max)" );
+			// between 1 and 4000 or exactly MAX. (HHH-3965)
+			switch (jdbcTypeCode) {
+				case BLOB:
+					return "varbinary(max)";
+				case CLOB:
+					return "varchar(max)";
+				case NCLOB:
+					return "nvarchar(max)";
+			}
 		}
 
-		registerKeyword( "top" );
-		registerKeyword( "key" );
+		switch (jdbcTypeCode) {
+			case DOUBLE:
+				// there is no 'double' type in SQL server
+				// but 'float' is double precision by default
+				return "float";
+			case GEOMETRY:
+				return "geometry";
+			default:
+				return super.columnType(jdbcTypeCode);
+		}
 	}
 
 	@Override
@@ -150,11 +168,6 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	@Override
 	public int getMaxNVarcharLength() {
 		return 4000;
-	}
-
-	@Override
-	public DatabaseVersion getVersion() {
-		return version;
 	}
 
 	@Override

@@ -59,6 +59,8 @@ import java.sql.Types;
 
 import jakarta.persistence.TemporalType;
 
+import static org.hibernate.type.SqlTypes.*;
+
 /**
  * An SQL dialect for DB2.
  *
@@ -75,8 +77,6 @@ public class DB2Dialect extends Dialect {
 	private static final String FOR_SHARE_SKIP_LOCKED_SQL = FOR_SHARE_SQL + SKIP_LOCKED_SQL;
 	private static final String FOR_UPDATE_SKIP_LOCKED_SQL = FOR_UPDATE_SQL + SKIP_LOCKED_SQL;
 
-	private final DatabaseVersion version;
-
 	private final LimitHandler limitHandler;
 	private final UniqueDelegate uniqueDelegate;
 
@@ -90,37 +90,7 @@ public class DB2Dialect extends Dialect {
 	}
 
 	public DB2Dialect(DatabaseVersion version) {
-		super();
-		this.version = version;
-
-		registerColumnType( Types.TINYINT, "smallint" ); //no tinyint
-
-		//HHH-12827: map them both to the same type to avoid problems with schema update
-		//Note that 31 is the maximum precision DB2 supports
-//		registerColumnType( Types.DECIMAL, "decimal($p,$s)" );
-		registerColumnType( Types.NUMERIC, "decimal($p,$s)" );
-
-		if ( getVersion().isBefore( 11 ) ) {
-			registerColumnType( Types.BINARY, 254, "char($l) for bit data" ); //should use 'binary' since version 11
-			registerColumnType( Types.BINARY, "varchar($l) for bit data" ); //should use 'binary' since version 11
-
-			registerColumnType( Types.VARBINARY, getMaxVarbinaryLength(), "varchar($l) for bit data" ); //should use 'varbinary' since version 11
-
-			//prior to DB2 11, the 'boolean' type existed,
-			//but was not allowed as a column type
-			registerColumnType( Types.BOOLEAN, "smallint" );
-		}
-		registerColumnType( Types.VARBINARY, "blob($l)" );
-
-		registerColumnType( Types.BLOB, "blob($l)" );
-		registerColumnType( Types.CLOB, "clob($l)" );
-
-		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp($p)" );
-		registerColumnType( Types.TIME_WITH_TIMEZONE, "time" );
-
-		// The long varchar data type was deprecated in DB2 and shouldn't be used anymore
-		registerColumnType( Types.VARCHAR, "clob($l)" );
-		registerColumnType( Types.NVARCHAR, "nclob($l)" );
+		super(version);
 
 		//not keywords, at least not in DB2 11,
 		//but perhaps they were in older versions?
@@ -142,6 +112,51 @@ public class DB2Dialect extends Dialect {
 				: DB2LimitHandler.INSTANCE;
 	}
 
+	@Override
+	protected String columnType(int jdbcTypeCode) {
+		if ( getVersion().isBefore( 11 ) ) {
+			switch (jdbcTypeCode) {
+				case BOOLEAN:
+					// prior to DB2 11, the 'boolean' type existed,
+					// but was not allowed as a column type
+					return "smallint";
+				case BINARY: // should use 'binary' since version 11
+				case VARBINARY: // should use 'varbinary' since version 11
+					return "varchar($l) for bit data";
+			}
+		}
+
+		switch (jdbcTypeCode) {
+			case TINYINT:
+				// no tinyint
+				return "smallint";
+			case NUMERIC:
+				// HHH-12827: map them both to the same type to avoid problems with schema update
+				// Note that 31 is the maximum precision DB2 supports
+				return super.columnType(DECIMAL);
+			case BLOB:
+				return "blob($l)";
+			case CLOB:
+				return "clob($l)";
+			case TIMESTAMP_WITH_TIMEZONE:
+				return "timestamp($p)";
+			case TIME_WITH_TIMEZONE:
+				return "time";
+			default:
+				return super.columnType(jdbcTypeCode);
+		}
+	}
+
+	@Override
+	protected void registerDefaultColumnTypes(int maxVarcharLength, int maxNVarcharLength, int maxVarBinaryLength) {
+		// Note: the 'long varchar' data type was deprecated in DB2 and shouldn't be used anymore
+		super.registerDefaultColumnTypes(maxVarcharLength, maxNVarcharLength, maxVarBinaryLength);
+		if ( getVersion().isBefore( 11 ) ) {
+			// should use 'binary' since version 11
+			registerColumnType( BINARY, 254, "char($l) for bit data" );
+		}
+	}
+
 	protected UniqueDelegate createUniqueDelegate() {
 		return new DB2UniqueDelegate( this );
 	}
@@ -149,11 +164,6 @@ public class DB2Dialect extends Dialect {
 	@Override
 	public int getMaxVarcharLength() {
 		return 32_672;
-	}
-
-	@Override
-	public DatabaseVersion getVersion() {
-		return version;
 	}
 
 	@Override
@@ -541,11 +551,11 @@ public class DB2Dialect extends Dialect {
 
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration().getJdbcTypeDescriptorRegistry();
 
-		if ( version.isBefore( 11 ) ) {
+		if ( getVersion().isBefore( 11 ) ) {
 			jdbcTypeRegistry.addDescriptor( Types.BOOLEAN, SmallIntJdbcType.INSTANCE );
 			// Binary literals were only added in 11. See https://www.ibm.com/support/knowledgecenter/SSEPGG_11.1.0/com.ibm.db2.luw.sql.ref.doc/doc/r0000731.html#d79816e393
 			jdbcTypeRegistry.addDescriptor( Types.VARBINARY, VarbinaryJdbcType.INSTANCE_WITHOUT_LITERALS );
-			if ( version.isBefore( 9, 7 ) ) {
+			if ( getVersion().isBefore( 9, 7 ) ) {
 				jdbcTypeRegistry.addDescriptor( Types.NUMERIC, DecimalJdbcType.INSTANCE );
 			}
 		}

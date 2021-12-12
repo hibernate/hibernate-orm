@@ -12,6 +12,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.time.temporal.TemporalAccessor;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Iterator;
@@ -85,6 +86,7 @@ import static org.hibernate.query.TemporalUnit.EPOCH;
 import static org.hibernate.query.TemporalUnit.MONTH;
 import static org.hibernate.query.TemporalUnit.QUARTER;
 import static org.hibernate.query.TemporalUnit.YEAR;
+import static org.hibernate.type.SqlTypes.*;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
@@ -98,7 +100,6 @@ public class PostgreSQLDialect extends Dialect {
 
 	private static final PostgreSQLIdentityColumnSupport IDENTITY_COLUMN_SUPPORT = new PostgreSQLIdentityColumnSupport();
 
-	private final DatabaseVersion version;
 	private final PostgreSQLDriverKind driverKind;
 
 	public PostgreSQLDialect(DialectResolutionInfo info) {
@@ -116,51 +117,75 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	public PostgreSQLDialect(DatabaseVersion version, PostgreSQLDriverKind driverKind) {
-		super();
-		this.version = version;
+		super(version);
 		this.driverKind = driverKind;
-
-		registerColumnType( Types.TINYINT, "smallint" ); //no tinyint, not even in Postgres 11
-
-		registerColumnType( Types.VARBINARY, "bytea" );
-		registerColumnType( Types.BINARY, "bytea" );
-
-		//use oid as the blob type on Postgres because
-		//the JDBC driver is rubbish
-		registerColumnType( Types.BLOB, "oid" );
-		registerColumnType( Types.CLOB, "oid" );
-
-		//there are no nchar/nvarchar types in Postgres
-		registerColumnType( Types.NCHAR, "char($l)" );
-		registerColumnType( Types.NVARCHAR, getMaxNVarcharLength(), "varchar($l)" );
-		registerColumnType( Types.NVARCHAR, "text" );
-
-		// since there's no real difference between TEXT and VARCHAR,
-		// except for the length limit, we can just use 'text' for the
-		// "long" string types
-		registerColumnType( Types.VARCHAR, "text" );
-
-		registerColumnType( SqlTypes.INET, "inet" );
-		registerColumnType( SqlTypes.INTERVAL_SECOND, "interval second($s)" );
-
-		if ( getVersion().isSameOrAfter( 8, 2 ) ) {
-			registerColumnType( SqlTypes.UUID, "uuid" );
-
-			if ( getVersion().isSameOrAfter( 9, 2 ) ) {
-				// Prefer jsonb if possible
-				if ( getVersion().isSameOrAfter( 9, 4 ) ) {
-					registerColumnType( SqlTypes.JSON, "jsonb" );
-				}
-				else {
-					registerColumnType( SqlTypes.JSON, "json" );
-				}
-			}
-		}
-
-		registerColumnType( SqlTypes.GEOMETRY, "geometry" );
 
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 		getDefaultProperties().setProperty( Environment.NON_CONTEXTUAL_LOB_CREATION, "true" );
+	}
+
+	@Override
+	protected String columnType(int jdbcTypeCode) {
+		switch (jdbcTypeCode) {
+			case TINYINT:
+				// no tinyint, not even in Postgres 11
+				return "smallint";
+
+			case BINARY:
+				return "bytea";
+
+			case BLOB:
+			case CLOB:
+				// use oid as the blob type on Postgres because
+				// the JDBC driver is rubbish
+				return "oid";
+
+			// there are no nchar/nvarchar types in Postgres
+			case NCHAR:
+				return super.columnType(CHAR);
+			case NVARCHAR:
+				return super.columnType(VARCHAR);
+
+			// since there's no real difference between TEXT and VARCHAR,
+			// except for the length limit, we can just use 'text' for the
+			// "long" string types
+			case LONGVARCHAR:
+			case LONGNVARCHAR:
+				return "text";
+			// use bytea as the "long" binary type (that there is no
+			// real VARBINARY type in Postgres, so we always use this)
+			case LONGVARBINARY:
+				return "bytea";
+
+			case INET:
+				return "inet";
+			case UUID:
+				return "uuid";
+			case GEOMETRY:
+				return "geometry";
+			case JSON:
+				// Prefer jsonb if possible
+				return getVersion().isSameOrAfter( 9, 4 )
+						? "jsonb" : "json";
+			case INTERVAL_SECOND:
+				return "interval second($s)";
+
+			default:
+				return super.columnType(jdbcTypeCode);
+		}
+	}
+
+	@Override
+	protected List<Integer> getSupportedJdbcTypeCodes() {
+		List<Integer> typeCodes = new ArrayList<>( super.getSupportedJdbcTypeCodes() );
+		typeCodes.addAll( List.of(INET, INTERVAL_SECOND, GEOMETRY) );
+		if ( getVersion().isSameOrAfter( 8, 2 ) ) {
+			typeCodes.add(UUID);
+		}
+		if ( getVersion().isSameOrAfter( 9, 2 ) ) {
+			typeCodes.add(JSON);
+		}
+		return typeCodes;
 	}
 
 	@Override
@@ -171,17 +196,17 @@ public class PostgreSQLDialect extends Dialect {
 	@Override
 	public int getMaxVarbinaryLength() {
 		//postgres has no varbinary-like type
-		return 0;
+		return -1;
 	}
 
 	@Override
 	public String getTypeName(int code, Size size) throws HibernateException {
 		// The maximum scale for `interval second` is 6 unfortunately so we have to use numeric by default
 		switch ( code ) {
-			case SqlTypes.INTERVAL_SECOND:
+			case INTERVAL_SECOND:
 				final Integer scale = size.getScale();
 				if ( scale == null || scale > 6 ) {
-					return getTypeName( SqlTypes.NUMERIC, size );
+					return getTypeName( NUMERIC, size );
 				}
 		}
 		return super.getTypeName( code, size );
@@ -194,30 +219,25 @@ public class PostgreSQLDialect extends Dialect {
 			int precision,
 			int scale,
 			JdbcTypeRegistry jdbcTypeRegistry) {
-		if ( jdbcTypeCode == SqlTypes.OTHER ) {
+		if ( jdbcTypeCode == OTHER ) {
 			switch ( columnTypeName ) {
 				case "uuid":
-					jdbcTypeCode = SqlTypes.UUID;
+					jdbcTypeCode = UUID;
 					break;
 				case "json":
 				case "jsonb":
-					jdbcTypeCode = SqlTypes.JSON;
+					jdbcTypeCode = JSON;
 					break;
 				case "inet":
-					jdbcTypeCode = SqlTypes.INET;
+					jdbcTypeCode = INET;
 					break;
 				case "geometry":
 				case "geography":
-					jdbcTypeCode = SqlTypes.GEOMETRY;
+					jdbcTypeCode = GEOMETRY;
 					break;
 			}
 		}
 		return jdbcTypeRegistry.getDescriptor( jdbcTypeCode );
-	}
-
-	@Override
-	public DatabaseVersion getVersion() {
-		return version;
 	}
 
 	@Override

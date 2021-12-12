@@ -7,6 +7,8 @@
 package org.hibernate.dialect;
 
 import java.sql.Types;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.hibernate.PessimisticLockException;
 import org.hibernate.boot.model.TypeContributions;
@@ -63,6 +65,7 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.query.TemporalUnit.SECOND;
+import static org.hibernate.type.SqlTypes.*;
 
 /**
  * A dialect compatible with the H2 database.
@@ -77,8 +80,6 @@ public class H2Dialect extends Dialect {
 	private final boolean cascadeConstraints;
 	private final boolean useLocalTime;
 
-	private final DatabaseVersion version;
-
 	private final boolean supportsTuplesInSubqueries;
 	private final SequenceInformationExtractor sequenceInformationExtractor;
 	private final String querySequenceString;
@@ -88,27 +89,13 @@ public class H2Dialect extends Dialect {
 		registerKeywords( info );
 	}
 
-	private static DatabaseVersion parseVersion(DialectResolutionInfo info) {
-		return DatabaseVersion.make( info.getMajor(), info.getMinor(), parseBuildId( info ) );
-	}
-
-	private static int parseBuildId(DialectResolutionInfo info) {
-		final String databaseVersion = info.getDatabaseVersion();
-		if ( databaseVersion == null ) {
-			return 0;
-		}
-
-		final String[] bits = databaseVersion.split("[. ]");
-		return bits.length > 2 ? Integer.parseInt( bits[2] ) : 0;
-	}
-
 	public H2Dialect() {
 		this( SimpleDatabaseVersion.ZERO_VERSION );
 	}
 
 	public H2Dialect(DatabaseVersion version) {
-		super();
-		this.version = version;
+		super(version);
+
 		// https://github.com/h2database/h2database/commit/b2cdf84e0b84eb8a482fa7dccdccc1ab95241440
 		limitHandler = version.isSameOrAfter( 1, 4, 195 )
 				? OffsetFetchLimitHandler.INSTANCE
@@ -128,12 +115,6 @@ public class H2Dialect extends Dialect {
 		// http://code.google.com/p/h2database/issues/detail?id=235
 		getDefaultProperties().setProperty( AvailableSettings.NON_CONTEXTUAL_LOB_CREATION, "true" );
 
-		registerColumnType( Types.VARCHAR, "varchar" );
-		registerColumnType( Types.NVARCHAR, "varchar" );
-		registerColumnType( Types.VARBINARY, "varbinary" );
-
-		registerColumnType( SqlTypes.ARRAY, "array" );
-
 		if ( version.isSameOrAfter( 1, 4, 32 ) ) {
 			this.sequenceInformationExtractor = version.isSameOrAfter( 1, 4, 201 )
 					? SequenceInformationExtractorLegacyImpl.INSTANCE
@@ -151,12 +132,49 @@ public class H2Dialect extends Dialect {
 		else {
 			this.sequenceInformationExtractor = SequenceInformationExtractorNoOpImpl.INSTANCE;
 			this.querySequenceString = null;
-			if ( version.isBefore( 2 ) ) {
-				// prior to version 2.0, H2 reported NUMERIC columns as DECIMAL,
-				// which caused problems for schema update tool
-				registerColumnType( Types.NUMERIC, "decimal($p,$s)" );
-			}
 		}
+	}
+
+	private static DatabaseVersion parseVersion(DialectResolutionInfo info) {
+		return DatabaseVersion.make( info.getMajor(), info.getMinor(), parseBuildId( info ) );
+	}
+
+	private static int parseBuildId(DialectResolutionInfo info) {
+		final String databaseVersion = info.getDatabaseVersion();
+		if ( databaseVersion == null ) {
+			return 0;
+		}
+
+		final String[] bits = databaseVersion.split("[. ]");
+		return bits.length > 2 ? Integer.parseInt( bits[2] ) : 0;
+	}
+
+	@Override
+	protected String columnType(int jdbcTypeCode) {
+		if ( jdbcTypeCode == NUMERIC && getVersion().isBefore(2) ) {
+			// prior to version 2.0, H2 reported NUMERIC columns as DECIMAL,
+			// which caused problems for schema update tool
+			return super.columnType(DECIMAL);
+		}
+
+		switch (jdbcTypeCode) {
+			case LONGVARCHAR:
+			case LONGNVARCHAR:
+				return "varchar";
+			case LONGVARBINARY:
+				return "varbinary";
+			case ARRAY:
+				return "array";
+			default:
+				return super.columnType(jdbcTypeCode);
+		}
+	}
+
+	@Override
+	protected List<Integer> getSupportedJdbcTypeCodes() {
+		List<Integer> typeCodes = new ArrayList<>( super.getSupportedJdbcTypeCodes() );
+		typeCodes.add(ARRAY);
+		return typeCodes;
 	}
 
 	@Override
@@ -166,22 +184,17 @@ public class H2Dialect extends Dialect {
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeDescriptorRegistry();
 
-		if ( version.isSameOrAfter( 1, 4, 197 ) ) {
+		if ( getVersion().isSameOrAfter( 1, 4, 197 ) ) {
 			jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
-			if ( version.isSameOrAfter( 1, 4, 198 ) ) {
-				jdbcTypeRegistry.addDescriptorIfAbsent( DurationIntervalSecondJdbcType.INSTANCE );
-			}
+		}
+		if ( getVersion().isSameOrAfter( 1, 4, 198 ) ) {
+			jdbcTypeRegistry.addDescriptorIfAbsent( DurationIntervalSecondJdbcType.INSTANCE );
 		}
 	}
 
 	public boolean hasOddDstBehavior() {
 		// H2 1.4.200 has a bug: https://github.com/h2database/h2database/issues/3184
 		return getVersion().isSame( 1, 4, 200 );
-	}
-
-	@Override
-	public DatabaseVersion getVersion() {
-		return version;
 	}
 
 	@Override
@@ -235,7 +248,7 @@ public class H2Dialect extends Dialect {
 		CommonFunctionFactory.median( queryEngine );
 		CommonFunctionFactory.stddevPopSamp( queryEngine );
 		CommonFunctionFactory.varPopSamp( queryEngine );
-		if ( version.isSame( 1, 4, 200 ) ) {
+		if ( getVersion().isSame( 1, 4, 200 ) ) {
 			// See https://github.com/h2database/h2database/issues/2518
 			CommonFunctionFactory.format_toChar( queryEngine );
 		}
@@ -524,7 +537,7 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	public void appendDatetimeFormat(SqlAppender appender, String format) {
-		if ( version.isSame( 1, 4, 200 ) ) {
+		if ( getVersion().isSame( 1, 4, 200 ) ) {
 			// See https://github.com/h2database/h2database/issues/2518
 			appender.appendSql( OracleDialect.datetimeFormat( format, true, true ).result() );
 		}

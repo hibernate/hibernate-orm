@@ -10,6 +10,8 @@ import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -68,7 +70,6 @@ import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorOr
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.NullType;
-import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
@@ -86,6 +87,7 @@ import static org.hibernate.query.TemporalUnit.MINUTE;
 import static org.hibernate.query.TemporalUnit.MONTH;
 import static org.hibernate.query.TemporalUnit.SECOND;
 import static org.hibernate.query.TemporalUnit.YEAR;
+import static org.hibernate.type.SqlTypes.*;
 
 /**
  * A dialect for Oracle 8i and above.
@@ -105,7 +107,6 @@ public class OracleDialect extends Dialect {
 	public static final String PREFER_LONG_RAW = "hibernate.dialect.oracle.prefer_long_raw";
 
 	private final LimitHandler limitHandler;
-	private final DatabaseVersion version;
 
 	public OracleDialect(DialectResolutionInfo info) {
 		this( info.makeCopy() );
@@ -117,25 +118,13 @@ public class OracleDialect extends Dialect {
 	}
 
 	public OracleDialect(DatabaseVersion version) {
-		super();
-		this.version = version;
+		super(version);
 
-		registerCharacterTypeMappings();
-		registerNumericTypeMappings();
-		registerDateTimeTypeMappings();
-		registerBinaryTypeMappings();
-		registerExtendedTypeMappings();
-		registerReverseHibernateTypeMappings();
 		registerDefaultProperties();
 
 		limitHandler = supportsFetchClause( FetchClauseType.ROWS_ONLY )
 				? Oracle12LimitHandler.INSTANCE
 				: new LegacyOracleLimitHandler( getVersion() );
-	}
-
-	@Override
-	public DatabaseVersion getVersion() {
-		return version;
 	}
 
 	@Override
@@ -536,74 +525,74 @@ public class OracleDialect extends Dialect {
 		pattern.append( unit.conversionFactor( toUnit, this ) );
 	}
 
-	protected void registerCharacterTypeMappings() {
-		if ( getVersion().isBefore( 9 ) ) {
-			registerColumnType( Types.VARCHAR, getMaxVarcharLength(), "varchar2($l)" );
-			registerColumnType( Types.VARCHAR, "clob" );
-		}
-		else {
-			registerColumnType( Types.CHAR, "char($l char)" );
-			registerColumnType( Types.VARCHAR, getMaxVarcharLength(), "varchar2($l char)" );
-			registerColumnType( Types.VARCHAR, "clob" );
-			registerColumnType( Types.NVARCHAR, getMaxNVarcharLength(), "nvarchar2($l)" );
-			registerColumnType( Types.NVARCHAR, "nclob" );
-		}
+	@Override
+	protected String columnType(int jdbcTypeCode) {
 		//note: the 'long' type is deprecated
+		switch (jdbcTypeCode) {
+			case BOOLEAN:
+				// still, after all these years...
+				return "number(1,0)";
+
+			case VARCHAR:
+				return getVersion().isBefore( 9 )
+						? "varchar2($l)": "varchar2($l char)";
+			case NVARCHAR:
+				return "nvarchar2($l)";
+
+			case BIGINT:
+				return "number(19,0)";
+			case SMALLINT:
+				return "number(5,0)";
+			case TINYINT:
+				return "number(3,0)";
+			case INTEGER:
+				return "number(10,0)";
+
+			case REAL:
+				// Oracle's 'real' type is actually double precision
+				return "float(24)";
+
+			case NUMERIC:
+			case DECIMAL:
+				// Note that 38 is the maximum precision Oracle supports
+				return "number($p,$s)";
+
+			case DATE:
+			case TIME:
+				return "date";
+			case TIMESTAMP:
+				// the only difference between date and timestamp
+				// on Oracle is that date has no fractional seconds
+				return getVersion().isBefore( 9 )
+						? "date" : "timestamp($p)";
+			case TIME_WITH_TIMEZONE:
+				return getVersion().isBefore( 9 )
+						? "date" : "timestamp($p) with time zone";
+
+			case BINARY:
+			case VARBINARY:
+				return "raw($l)";
+
+			case GEOMETRY:
+				return "MDSYS.SDO_GEOMETRY";
+
+			default:
+				return super.columnType(jdbcTypeCode);
+		}
 	}
 
-	protected void registerNumericTypeMappings() {
-		registerColumnType( Types.BOOLEAN, "number(1,0)" );
-
-		registerColumnType( Types.BIGINT, "number(19,0)" );
-		registerColumnType( Types.SMALLINT, "number(5,0)" );
-		registerColumnType( Types.TINYINT, "number(3,0)" );
-		registerColumnType( Types.INTEGER, "number(10,0)" );
-
-		// Oracle has DOUBLE semantics for the REAL type, so we map it to float(24)
-		registerColumnType( Types.REAL, "float(24)" );
-
-		// Note that 38 is the maximum precision Oracle supports
-		registerColumnType( Types.NUMERIC, "number($p,$s)" );
-		registerColumnType( Types.DECIMAL, "number($p,$s)" );
-	}
-
-	protected void registerDateTimeTypeMappings() {
-		if ( getVersion().isBefore( 9 ) ) {
-			registerColumnType( Types.DATE, "date" );
-			registerColumnType( Types.TIME, "date" );
-			registerColumnType( Types.TIMESTAMP, "date" );
-			registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "date" );
+	@Override
+	protected List<Integer> getSupportedJdbcTypeCodes() {
+		List<Integer> list = new ArrayList<>( super.getSupportedJdbcTypeCodes() );
+		if ( getVersion().isSameOrAfter( 10 ) ) {
+			list.add(GEOMETRY);
 		}
-		else {
-			//the only difference between date and timestamp
-			//on Oracle is that date has no fractional seconds
-			registerColumnType( Types.DATE, "date" );
-			registerColumnType( Types.TIME, "date" );
-			registerColumnType( Types.TIMESTAMP, "timestamp($p)" );
-			registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp($p) with time zone" );
-		}
+		return list;
 	}
 
 	@Override
 	public TimeZoneSupport getTimeZoneSupport() {
 		return getVersion().isSameOrAfter( 9 ) ? TimeZoneSupport.NATIVE : TimeZoneSupport.NONE;
-	}
-
-	protected void registerBinaryTypeMappings() {
-		registerColumnType( Types.BINARY, getMaxVarbinaryLength(), "raw($l)" );
-		registerColumnType( Types.BINARY, "blob" );
-
-		registerColumnType( Types.VARBINARY, getMaxVarbinaryLength(), "raw($l)" );
-		registerColumnType( Types.VARBINARY, "blob" );
-	}
-
-	protected void registerExtendedTypeMappings() {
-		if ( getVersion().isSameOrAfter( 10 ) ) {
-			registerColumnType( SqlTypes.GEOMETRY, "MDSYS.SDO_GEOMETRY" );
-		}
-	}
-
-	protected void registerReverseHibernateTypeMappings() {
 	}
 
 	protected void registerDefaultProperties() {

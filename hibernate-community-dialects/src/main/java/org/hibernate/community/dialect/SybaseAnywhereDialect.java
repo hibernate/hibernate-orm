@@ -28,6 +28,8 @@ import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 
+import static org.hibernate.type.SqlTypes.*;
+
 /**
  * SQL Dialect for Sybase Anywhere
  * (Tested on ASA 8.x)
@@ -35,31 +37,48 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 public class SybaseAnywhereDialect extends SybaseDialect {
 
 	public SybaseAnywhereDialect() {
-		this( DatabaseVersion.make( 8 ), false );
+		this( DatabaseVersion.make( 8 ) );
+	}
+
+	public SybaseAnywhereDialect(DatabaseVersion version) {
+		this(version, null);
 	}
 
 	public SybaseAnywhereDialect(DialectResolutionInfo info){
-		this(
-				info,
-				info.getDriverName() != null && info.getDriverName().contains( "jTDS" )
-		);
+		this( info.makeCopy(), info );
 		registerKeywords( info );
 	}
 
-	public SybaseAnywhereDialect(DatabaseVersion version, boolean jtdsDriver) {
-		super( version, jtdsDriver );
+	public SybaseAnywhereDialect(DatabaseVersion version, DialectResolutionInfo info) {
+		super( version, info );
+	}
 
-		registerColumnType( Types.BIGINT, "bigint" );
-		registerColumnType( Types.DATE, "date" );
-		registerColumnType( Types.TIME, "time" );
-		registerColumnType( Types.TIMESTAMP, "timestamp" );
-		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp with time zone" );
+	@Override
+	protected String columnType(int jdbcTypeCode) {
+		switch (jdbcTypeCode) {
+			case DATE:
+				return "date";
+			case TIME:
+				return "time";
+			case TIMESTAMP:
+				return "timestamp";
+			case TIMESTAMP_WITH_TIMEZONE:
+				return "timestamp with time zone";
 
-		registerColumnType( Types.VARCHAR, "long varchar)" );
-		registerColumnType( Types.NVARCHAR, "long nvarchar)" );
+			//these types hold up to 2 GB
+			case LONGVARCHAR:
+				return "long varchar";
+			case LONGNVARCHAR:
+				return "long nvarchar";
+			case LONGVARBINARY:
+				return "long binary";
 
-		//note: 'binary' is actually a synonym for 'varbinary'
-		registerColumnType( Types.VARBINARY, "long binary)" );
+			case NCLOB:
+				return "ntext";
+
+			default:
+				return super.columnType(jdbcTypeCode);
+		}
 	}
 
 	@Override
@@ -150,7 +169,6 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 	}
 
 	@Override
-	@SuppressWarnings("deprecation")
 	public String applyLocksToSql(String sql, LockOptions aliasedLockOptions, Map<String, String[]> keyColumnNames) {
 		return getVersion().isBefore( 10 )
 				? super.applyLocksToSql( sql, aliasedLockOptions, keyColumnNames )

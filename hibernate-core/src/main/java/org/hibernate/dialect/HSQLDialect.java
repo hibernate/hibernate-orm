@@ -71,6 +71,10 @@ import org.jboss.logging.Logger;
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
+import static org.hibernate.type.SqlTypes.BLOB;
+import static org.hibernate.type.SqlTypes.CLOB;
+import static org.hibernate.type.SqlTypes.NCLOB;
+import static org.hibernate.type.SqlTypes.NUMERIC;
 
 /**
  * An SQL dialect compatible with HyperSQL (HSQLDB) version 1.8 and above.
@@ -85,11 +89,6 @@ public class HSQLDialect extends Dialect {
 			HSQLDialect.class.getName()
 	);
 
-	/**
-	 * version is 180 for 1.8.0 or 200 for 2.0.0
-	 */
-	private final DatabaseVersion version;
-
 	public HSQLDialect(DialectResolutionInfo info) {
 		this( info.makeCopy() );
 		registerKeywords( info );
@@ -100,39 +99,46 @@ public class HSQLDialect extends Dialect {
 	}
 
 	public HSQLDialect(DatabaseVersion version) {
-		super();
+		super( version.isSame( 1, 8 ) ? reflectedVersion( version ) : version );
 
-		if ( version.isSame( 1, 8 ) ) {
-			version = reflectedVersion( version );
-		}
-
-		this.version = version;
-
-		//Note that all floating point types are synonyms for 'double'
-
-		//Note that the HSQL type 'longvarchar' and 'longvarbinary'
-		//are synonyms for 'varchar(16M)' and 'varbinary(16M)' respectively.
-		//Using these types though results in schema validation issue like described in HHH-9693
-
-		//HSQL has no 'nclob' type, but 'clob' is Unicode
-		//(See HHH-10364)
-		registerColumnType( Types.NCLOB, "clob" );
-
-		if ( this.version.isBefore( 2 ) ) {
-			//Older versions of HSQL did not accept
-			//precision for the 'numeric' type
-			registerColumnType( Types.NUMERIC, "numeric" );
-
-			//Older versions of HSQL had no lob support
-			registerColumnType( Types.BLOB, "longvarbinary" );
-			registerColumnType( Types.CLOB, "longvarchar" );
-		}
-
-		if ( this.version.isSameOrAfter( 2, 5 ) ) {
+		if ( getVersion().isSameOrAfter( 2, 5 ) ) {
 			registerKeyword( "period" );
 		}
 
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
+	}
+
+	@Override
+	protected String columnType(int jdbcTypeCode) {
+		// Note that all floating point types are synonyms for 'double'
+
+		// Note that the HSQL type 'longvarchar' and 'longvarbinary' are
+		// synonyms for 'varchar(16M)' and 'varbinary(16M)' respectively.
+		// But using these types results in schema validation issue as
+		// described in HHH-9693.
+
+		//HSQL has no 'nclob' type, but 'clob' is Unicode (See HHH-10364)
+		if ( jdbcTypeCode==NCLOB ) {
+			jdbcTypeCode = CLOB;
+		}
+
+		if ( getVersion().isBefore( 2 ) ) {
+			switch (jdbcTypeCode) {
+				case NUMERIC:
+					// Older versions of HSQL did not accept
+					// precision for the 'numeric' type
+					return "numeric";
+
+				// Older versions of HSQL had no lob support
+				case BLOB:
+					return "longvarbinary";
+				case CLOB:
+					return "longvarchar";
+
+			}
+		}
+
+		return super.columnType(jdbcTypeCode);
 	}
 
 	private static DatabaseVersion reflectedVersion(DatabaseVersion version) {
@@ -150,11 +156,6 @@ public class HSQLDialect extends Dialect {
 			// might be a very old version, or not accessible in class path
 			return version;
 		}
-	}
-
-	@Override
-	public DatabaseVersion getVersion() {
-		return version;
 	}
 
 	@Override
@@ -208,13 +209,13 @@ public class HSQLDialect extends Dialect {
 		CommonFunctionFactory.addMonths( queryEngine );
 		CommonFunctionFactory.monthsBetween( queryEngine );
 
-		if ( version.isSameOrAfter( 2 ) ) {
+		if ( getVersion().isSameOrAfter( 2 ) ) {
 			//SYSDATE is similar to LOCALTIMESTAMP but it returns the timestamp when it is called
 			CommonFunctionFactory.sysdate( queryEngine );
 		}
 
 		// from v. 2.2.0 ROWNUM() is supported in all modes as the equivalent of Oracle ROWNUM
-		if ( version.isSameOrAfter( 2, 2 ) ) {
+		if ( getVersion().isSameOrAfter( 2, 2 ) ) {
 			CommonFunctionFactory.rownum( queryEngine );
 		}
 	}
@@ -357,7 +358,7 @@ public class HSQLDialect extends Dialect {
 
 	@Override
 	public String getForUpdateString() {
-		if ( version.isSameOrAfter( 2 ) ) {
+		if ( getVersion().isSameOrAfter( 2 ) ) {
 			return " for update";
 		}
 		else {
@@ -367,8 +368,8 @@ public class HSQLDialect extends Dialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		return version.isBefore( 2 ) ? LegacyHSQLLimitHandler.INSTANCE
-			: version.isBefore( 2, 5 ) ? LimitOffsetLimitHandler.INSTANCE
+		return getVersion().isBefore( 2 ) ? LegacyHSQLLimitHandler.INSTANCE
+			: getVersion().isBefore( 2, 5 ) ? LimitOffsetLimitHandler.INSTANCE
 			: OffsetFetchLimitHandler.INSTANCE;
 	}
 
@@ -387,7 +388,7 @@ public class HSQLDialect extends Dialect {
 
 	@Override
 	public boolean supportsColumnCheck() {
-		return version.isSameOrAfter( 2 );
+		return getVersion().isSameOrAfter( 2 );
 	}
 
 	@Override
@@ -408,7 +409,7 @@ public class HSQLDialect extends Dialect {
 
 	@Override
 	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
-		return version.isBefore( 2 ) ? EXTRACTOR_18 : EXTRACTOR_20;
+		return getVersion().isBefore( 2 ) ? EXTRACTOR_18 : EXTRACTOR_20;
 	}
 
 	private static final ViolatedConstraintNameExtractor EXTRACTOR_18 =
@@ -518,7 +519,7 @@ public class HSQLDialect extends Dialect {
 		// the definition and data is private to the session and table declaration
 		// can happen in the middle of a transaction
 
-		if ( version.isBefore( 2 ) ) {
+		if ( getVersion().isBefore( 2 ) ) {
 			return new GlobalTemporaryTableMutationStrategy(
 					TemporaryTable.createIdTable(
 							rootEntityDescriptor,
@@ -558,7 +559,7 @@ public class HSQLDialect extends Dialect {
 		// the definition and data is private to the session and table declaration
 		// can happen in the middle of a transaction
 
-		if ( version.isBefore( 2 ) ) {
+		if ( getVersion().isBefore( 2 ) ) {
 			return new GlobalTemporaryTableInsertStrategy(
 					TemporaryTable.createEntityTable(
 							rootEntityDescriptor,
@@ -586,24 +587,24 @@ public class HSQLDialect extends Dialect {
 
 	@Override
 	public TemporaryTableKind getSupportedTemporaryTableKind() {
-		return version.isBefore( 2 ) ? TemporaryTableKind.GLOBAL : TemporaryTableKind.LOCAL;
+		return getVersion().isBefore( 2 ) ? TemporaryTableKind.GLOBAL : TemporaryTableKind.LOCAL;
 	}
 
 	@Override
 	public String getTemporaryTableCreateCommand() {
-		return version.isBefore( 2 ) ? super.getTemporaryTableCreateCommand() : "declare local temporary table";
+		return getVersion().isBefore( 2 ) ? super.getTemporaryTableCreateCommand() : "declare local temporary table";
 	}
 
 	@Override
 	public AfterUseAction getTemporaryTableAfterUseAction() {
 		// Version 1.8 GLOBAL TEMPORARY table definitions persist beyond the end
 		// of the session (by default, data is cleared at commit).
-		return version.isBefore( 2 ) ? AfterUseAction.CLEAN : AfterUseAction.DROP;
+		return getVersion().isBefore( 2 ) ? AfterUseAction.CLEAN : AfterUseAction.DROP;
 	}
 
 	@Override
 	public BeforeUseAction getTemporaryTableBeforeUseAction() {
-		return version.isBefore( 2 ) ? BeforeUseAction.NONE : BeforeUseAction.CREATE;
+		return getVersion().isBefore( 2 ) ? BeforeUseAction.NONE : BeforeUseAction.CREATE;
 	}
 
 	// current timestamp support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -651,7 +652,7 @@ public class HSQLDialect extends Dialect {
 			case OPTIMISTIC_FORCE_INCREMENT:
 				return new OptimisticForceIncrementLockingStrategy(lockable, lockMode);
 		}
-		if ( version.isBefore( 2 ) ) {
+		if ( getVersion().isBefore( 2 ) ) {
 			return new ReadUncommittedLockingStrategy( lockable, lockMode );
 		}
 		else {
@@ -676,19 +677,19 @@ public class HSQLDialect extends Dialect {
 
 	@Override
 	public boolean supportsCommentOn() {
-		return version.isSameOrAfter( 2 );
+		return getVersion().isSameOrAfter( 2 );
 	}
 
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
 	public boolean doesReadCommittedCauseWritersToBlockReaders() {
-		return version.isSameOrAfter( 2 );
+		return getVersion().isSameOrAfter( 2 );
 	}
 
 	@Override
 	public boolean doesRepeatableReadCauseReadersToBlockWriters() {
-		return version.isSameOrAfter( 2 );
+		return getVersion().isSameOrAfter( 2 );
 	}
 
 	@Override
@@ -709,7 +710,7 @@ public class HSQLDialect extends Dialect {
 	@Override
 	public boolean supportsTupleDistinctCounts() {
 		// from v. 2.2.9 is added support for COUNT(DISTINCT ...) with multiple arguments
-		return version.isSameOrAfter( 2, 2, 9 );
+		return getVersion().isSameOrAfter( 2, 2, 9 );
 	}
 
 	@Override
@@ -724,7 +725,7 @@ public class HSQLDialect extends Dialect {
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
-		return new HSQLIdentityColumnSupport( this.version );
+		return new HSQLIdentityColumnSupport( this.getVersion() );
 	}
 
 	@Override

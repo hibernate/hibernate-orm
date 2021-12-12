@@ -46,8 +46,8 @@ public interface SynchronizeableQuery<T> {
 	 */
 	default SynchronizeableQuery<T> addSynchronizedQuerySpace(String... querySpaces) {
 		if ( querySpaces != null ) {
-			for ( int i = 0; i < querySpaces.length; i++ ) {
-				addSynchronizedQuerySpace( querySpaces[i] );
+			for (String querySpace : querySpaces) {
+				addSynchronizedQuerySpace(querySpace);
 			}
 		}
 		return this;
@@ -84,8 +84,8 @@ public interface SynchronizeableQuery<T> {
 	 */
 	default SynchronizeableQuery<T> addSynchronizedEntityName(String... entityNames) throws MappingException {
 		if ( entityNames != null ) {
-			for ( int i = 0; i < entityNames.length; i++ ) {
-				addSynchronizedEntityName( entityNames[i] );
+			for (String entityName : entityNames) {
+				addSynchronizedEntityName(entityName);
 			}
 		}
 		return this;
@@ -101,16 +101,15 @@ public interface SynchronizeableQuery<T> {
 	 *
 	 * @throws MappingException Indicates the given class could not be resolved as an entity
 	 */
-	@SuppressWarnings( "rawtypes" )
-	SynchronizeableQuery<T> addSynchronizedEntityClass(Class entityClass) throws MappingException;
+	SynchronizeableQuery<T> addSynchronizedEntityClass(@SuppressWarnings("rawtypes") Class entityClass) throws MappingException;
 
 	/**
 	 * Adds one-or-more entities (by class) whose tables should be added as synchronized spaces
 	 */
 	default SynchronizeableQuery<T> addSynchronizedEntityClass(Class<?>... entityClasses) throws MappingException {
 		if ( entityClasses != null ) {
-			for ( int i = 0; i < entityClasses.length; i++ ) {
-				addSynchronizedEntityClass( entityClasses[i] );
+			for (Class<?> entityClass : entityClasses) {
+				addSynchronizedEntityClass(entityClass);
 			}
 		}
 		return this;

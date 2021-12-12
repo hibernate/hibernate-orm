@@ -383,6 +383,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		return hints;
 	}
 
+	@SuppressWarnings("deprecation")
 	protected void collectHints(Map<String, Object> hints) {
 		if ( getQueryOptions().getTimeout() != null ) {
 			hints.put( HINT_TIMEOUT, getQueryOptions().getTimeout() );
@@ -445,7 +446,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		}
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public QueryImplementor<R> setHint(String hintName, Object value) {
 		getSession().checkOpen( true );
 
@@ -532,7 +533,6 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 					DEPRECATION_LOGGER.deprecatedSetting( HINT_FETCHGRAPH, JAKARTA_HINT_FETCH_GRAPH );
 				}
 				else {
-					assert HINT_LOADGRAPH.equals( hintName );
 					DEPRECATION_LOGGER.deprecatedSetting( HINT_FETCHGRAPH, JAKARTA_HINT_FETCH_GRAPH );
 				}
 
@@ -712,8 +712,9 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		return true;
 	}
 
-	@SuppressWarnings( "UnusedReturnValue" )
+	@SuppressWarnings({"UnusedReturnValue", "deprecation"})
 	protected boolean applyHibernateLockModeHint(LockMode lockMode) {
+		//TODO: this method is a noop. Delete it?
 		final LockOptions lockOptions;
 		if ( lockMode == LockMode.NONE ) {
 			lockOptions = NONE;
@@ -982,6 +983,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 			locateBinding( parameter ).setBindValue( null, type );
 		}
 		else if ( value instanceof Collection ) {
+			//TODO: this looks wrong to me: how can value be both a P and a (Collection<P>)?
 			locateBinding( parameter ).setBindValues( (Collection<P>) value );
 		}
 		else {
@@ -1116,13 +1118,13 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	public QueryImplementor<R> setParameterList(String name, Collection<?> values) {
+	public QueryImplementor<R> setParameterList(String name, @SuppressWarnings("rawtypes") Collection values) {
 		locateBinding( name ).setBindValues( values );
 		return this;
 	}
 
 	@Override
-	public QueryImplementor<R> setParameterList(int position, Collection<?> values) {
+	public QueryImplementor<R> setParameterList(int position, @SuppressWarnings("rawtypes") Collection values) {
 		locateBinding( position ).setBindValues( values );
 		return this;
 	}
@@ -1151,15 +1153,15 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		return this;
 	}
 
-	@Override
-	public QueryImplementor<R> setParameterList(String name, Object[] values, AllowableParameterType<?> type) {
-		locateBinding( name ).setBindValues( Arrays.asList( values ), (AllowableParameterType<Object>) type );
+	@Override @SuppressWarnings({"rawtypes", "unchecked"})
+	public QueryImplementor<R> setParameterList(String name, Object[] values, AllowableParameterType type) {
+		locateBinding( name ).setBindValues( Arrays.asList( values ), type );
 		return this;
 	}
 
-	@Override
-	public QueryImplementor<R> setParameterList(int position, Object[] values, AllowableParameterType<?> type) {
-		locateBinding( position ).setBindValues( Arrays.asList( values ), (AllowableParameterType<Object>) type );
+	@Override @SuppressWarnings({"rawtypes", "unchecked"})
+	public QueryImplementor<R> setParameterList(int position, Object[] values, AllowableParameterType type) {
+		locateBinding( position ).setBindValues( Arrays.asList( values ), type );
 		return this;
 	}
 
@@ -1288,7 +1290,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 			return (T) binding.getBindValues();
 		}
 		else {
-			return (T) binding.getBindValue();
+			return binding.getBindValue();
 		}
 	}
 
@@ -1303,7 +1305,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 
 		final QueryParameterBinding<?> binding = getQueryParameterBindings().getBinding( parameter );
 		if ( binding == null || !binding.isBound() ) {
-			throw new IllegalStateException( "Parameter value not yet bound : " + parameter.toString() );
+			throw new IllegalStateException( "Parameter value not yet bound : " + parameter );
 		}
 
 		if ( binding.isMultiValued() ) {
@@ -1342,10 +1344,10 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	private FlushMode sessionFlushMode;
 	private CacheMode sessionCacheMode;
 
-	protected void beforeQuery(boolean requiresTxn) {
+	protected void beforeQuery() {
 		getQueryParameterBindings().validate();
 
-		getSession().prepareForQueryExecution( requiresTxn );
+		getSession().prepareForQueryExecution(false);
 
 		prepareForExecution();
 
@@ -1412,7 +1414,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	public QueryImplementor<R> setProperties(Map<?,?> map) {
+	public QueryImplementor<R> setProperties(@SuppressWarnings("rawtypes") Map map) {
 		for ( String paramName : getParameterMetadata().getNamedParameterNames() ) {
 			final Object object = map.get( paramName );
 			if ( object == null ) {
@@ -1421,15 +1423,14 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 				}
 			}
 			else {
-				Class<?> retType = object.getClass();
-				if ( Collection.class.isAssignableFrom( retType ) ) {
-					setParameterList( paramName, (Collection) object );
+				if ( object instanceof Collection<?> ) {
+					setParameterList( paramName, (Collection<?>) object );
 				}
-				else if ( retType.isArray() ) {
+				else if ( object instanceof Object[] ) {
 					setParameterList( paramName, (Object[]) object );
 				}
 				else {
-					setParameter( paramName, object, determineType( paramName, retType ) );
+					setParameter( paramName, object, determineType( paramName, object.getClass() ) );
 				}
 			}
 		}
@@ -1454,7 +1455,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 
 	@Override
 	public List<R> list() {
-		beforeQuery( false );
+		beforeQuery();
 		boolean success = false;
 		try {
 			final List<R> result = doList();
@@ -1536,7 +1537,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	@Override
 	public int executeUpdate() throws HibernateException {
 		getSession().checkTransactionNeededForUpdateOperation( "Executing an update/delete query" );
-		beforeQuery( false );
+		beforeQuery();
 		boolean success = false;
 		try {
 			final int result = doExecuteUpdate();

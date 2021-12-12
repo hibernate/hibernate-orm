@@ -92,7 +92,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	NativeQuery<T> addScalar(String columnAlias, BasicTypeReference<?> type);
+	NativeQuery<T> addScalar(String columnAlias, @SuppressWarnings("rawtypes") BasicTypeReference type);
 
 	/**
 	 * Declare a scalar query result.
@@ -106,7 +106,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	NativeQuery<T> addScalar(String columnAlias, BasicDomainType<?> type);
+	NativeQuery<T> addScalar(String columnAlias, @SuppressWarnings("rawtypes") BasicDomainType type);
 
 	/**
 	 * Declare a scalar query result using the specified result type.
@@ -118,7 +118,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 *
 	 * @since 6.0
 	 */
-	NativeQuery<T> addScalar(String columnAlias, Class<?> javaType);
+	NativeQuery<T> addScalar(String columnAlias, @SuppressWarnings("rawtypes") Class javaType);
 
 	/**
 	 * Declare a scalar query result with an explicit conversion
@@ -189,7 +189,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 *
 	 * @since 6.0
 	 */
-	NativeQuery<T> addAttributeResult(String columnAlias, Class<?> entityJavaType, String attributePath);
+	NativeQuery<T> addAttributeResult(String columnAlias, @SuppressWarnings("rawtypes") Class entityJavaType, String attributePath);
 
 	/**
 	 * Defines a result based on a specified attribute.  Differs from adding a scalar in that
@@ -213,7 +213,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 *
 	 * @since 6.0
 	 */
-	NativeQuery<T> addAttributeResult(String columnAlias, SingularAttribute<?,?> attribute);
+	NativeQuery<T> addAttributeResult(String columnAlias, @SuppressWarnings("rawtypes") SingularAttribute attribute);
 
 	/**
 	 * Add a new root return mapping, returning a {@link RootReturn} to allow
@@ -238,7 +238,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 *
 	 * @since 3.6
 	 */
-	RootReturn addRoot(String tableAlias, Class entityType);
+	RootReturn addRoot(String tableAlias, @SuppressWarnings("rawtypes") Class entityType);
 
 	/**
 	 * Declare a "root" entity, without specifying an alias.  The expectation here is that the table alias is the
@@ -281,7 +281,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	NativeQuery<T> addEntity(Class<?> entityType);
+	NativeQuery<T> addEntity(@SuppressWarnings("rawtypes") Class entityType);
 
 	/**
 	 * Declare a "root" entity.
@@ -291,7 +291,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	NativeQuery<T> addEntity(String tableAlias, Class<?> entityType);
+	NativeQuery<T> addEntity(String tableAlias, @SuppressWarnings("rawtypes") Class entityType);
 
 	/**
 	 * Declare a "root" entity, specifying a lock mode.
@@ -302,7 +302,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	NativeQuery<T> addEntity(String tableAlias, Class<?> entityClass, LockMode lockMode);
+	NativeQuery<T> addEntity(String tableAlias, @SuppressWarnings("rawtypes") Class entityClass, LockMode lockMode);
 
 	/**
 	 * Declare a join fetch result.
@@ -507,7 +507,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	NativeQuery<T> addSynchronizedEntityName(String entityName) throws MappingException;
 
 	@Override
-	NativeQuery<T> addSynchronizedEntityClass(Class<?> entityClass) throws MappingException;
+	NativeQuery<T> addSynchronizedEntityClass(@SuppressWarnings("rawtypes") Class entityClass) throws MappingException;
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -567,7 +567,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	@Override
 	NativeQuery<T> setResultListTransformer(ResultListTransformer transformer);
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	NativeQuery<T> setResultTransformer(ResultTransformer transformer);
 
 
@@ -664,7 +664,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	<P> NativeQuery<T> setParameterList(QueryParameter<P> parameter, Collection<P> values);
 
 	@Override
-	NativeQuery<T> setParameterList(String name, Collection<?> values);
+	NativeQuery<T> setParameterList(String name, @SuppressWarnings("rawtypes") Collection values);
 
 //	@Override
 //	default NativeQuery<T> setParameterList(String name, Collection values, Type type) {
@@ -678,7 +678,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 //	NativeQuery<T> setParameterList(String name, Object[] values, Type type);
 
 	@Override
-	NativeQuery<T> setParameterList(String name, Object[] values, AllowableParameterType<?> type);
+	NativeQuery<T> setParameterList(String name, Object[] values, @SuppressWarnings("rawtypes") AllowableParameterType type);
 
 	@Override
 	NativeQuery<T> setParameterList(String name, Object[] values);
@@ -702,7 +702,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	<P> NativeQuery<T> setParameter(QueryParameter<P> parameter, P val, BasicTypeReference<P> type);
 
 	@Override
-	NativeQuery<T> setParameterList(int position, Collection<?> values);
+	NativeQuery<T> setParameterList(int position, @SuppressWarnings("rawtypes") Collection values);
 
 	@Override
 	<P> NativeQuery<T> setParameterList(String name, Collection<? extends P> values, Class<P> type);
@@ -720,7 +720,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 //	NativeQuery<T> setParameterList(int position, Object[] values, Type type);
 
 	@Override
-	NativeQuery<T> setParameterList(int position, Object[] values, AllowableParameterType<?> type);
+	NativeQuery<T> setParameterList(int position, Object[] values, @SuppressWarnings("rawtypes") AllowableParameterType type);
 
 	@Override
 	NativeQuery<T> setParameterList(int position, Object[] values);
@@ -729,5 +729,5 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	NativeQuery<T> setProperties(Object bean);
 
 	@Override
-	NativeQuery<T> setProperties(Map<?,?> bean);
+	NativeQuery<T> setProperties(@SuppressWarnings("rawtypes") Map bean);
 }

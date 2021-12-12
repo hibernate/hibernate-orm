@@ -43,7 +43,9 @@ import org.hibernate.type.BasicTypeReference;
  */
 @Incubating
 public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQuery<R>, NameableQuery {
-	NativeQueryImplementor setCollectionKey(Object key);
+
+	//TODO: this method is no longer used. Can it be deleted?
+	NativeQueryImplementor<R> setCollectionKey(Object key);
 
 	@Override
 	default LockOptions getLockOptions() {
@@ -66,10 +68,10 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	NativeQueryImplementor<R> addScalar(String columnAlias);
 
 	@Override
-	NativeQueryImplementor<R> addScalar(String columnAlias, BasicDomainType<?> type);
+	NativeQueryImplementor<R> addScalar(String columnAlias, @SuppressWarnings("rawtypes") BasicDomainType type);
 
 	@Override
-	NativeQueryImplementor<R> addScalar(String columnAlias, Class<?> javaType);
+	NativeQueryImplementor<R> addScalar(String columnAlias, @SuppressWarnings("rawtypes") Class javaType);
 
 	@Override
 	<C> NativeQueryImplementor<R> addScalar(String columnAlias, Class<C> relationalJavaType, AttributeConverter<?,C> converter);
@@ -88,13 +90,13 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 			Class<? extends AttributeConverter<O, J>> converter);
 
 	@Override
-	NativeQueryImplementor<R> addAttributeResult(String columnAlias, Class<?> entityJavaType, String attributePath);
+	NativeQueryImplementor<R> addAttributeResult(String columnAlias, @SuppressWarnings("rawtypes") Class entityJavaType, String attributePath);
 
 	@Override
 	NativeQueryImplementor<R> addAttributeResult(String columnAlias, String entityName, String attributePath);
 
 	@Override
-	NativeQueryImplementor<R> addAttributeResult(String columnAlias, SingularAttribute<?, ?> attribute);
+	NativeQueryImplementor<R> addAttributeResult(String columnAlias, @SuppressWarnings("rawtypes") SingularAttribute attribute);
 
 	@Override
 	DynamicResultBuilderEntityStandard addRoot(String tableAlias, String entityName);
@@ -109,13 +111,13 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	NativeQueryImplementor<R> addEntity(String tableAlias, String entityName, LockMode lockMode);
 
 	@Override
-	NativeQueryImplementor<R> addEntity(Class<?> entityType);
+	NativeQueryImplementor<R> addEntity(@SuppressWarnings("rawtypes") Class entityType);
 
 	@Override
-	NativeQueryImplementor<R> addEntity(String tableAlias, Class<?> entityType);
+	NativeQueryImplementor<R> addEntity(String tableAlias, @SuppressWarnings("rawtypes") Class entityType);
 
 	@Override
-	NativeQueryImplementor<R> addEntity(String tableAlias, Class<?> entityClass, LockMode lockMode);
+	NativeQueryImplementor<R> addEntity(String tableAlias, @SuppressWarnings("rawtypes") Class entityClass, LockMode lockMode);
 
 	@Override
 	NativeQueryImplementor<R> addJoin(String tableAlias, String path);
@@ -136,7 +138,7 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	NativeQueryImplementor<R> addSynchronizedEntityName(String entityName) throws MappingException;
 
 	@Override
-	NativeQueryImplementor<R> addSynchronizedEntityClass(Class<?> entityClass) throws MappingException;
+	NativeQueryImplementor<R> addSynchronizedEntityClass(@SuppressWarnings("rawtypes") Class entityClass) throws MappingException;
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -253,7 +255,7 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 			Collection<P> values);
 
 	@Override
-	NativeQueryImplementor<R> setParameterList(String name, Collection<?> values);
+	NativeQueryImplementor<R> setParameterList(String name, @SuppressWarnings("rawtypes") Collection values);
 
 //	@Override
 //	default NativeQueryImplementor<R> setParameterList(String name, Collection values, Type type) {
@@ -269,7 +271,7 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 //	}
 
 	@Override
-	NativeQueryImplementor<R> setParameterList(String name, Object[] values, AllowableParameterType<?> type);
+	NativeQueryImplementor<R> setParameterList(String name, Object[] values, @SuppressWarnings("rawtypes") AllowableParameterType type);
 
 	@Override
 	NativeQueryImplementor<R> setParameterList(String name, Object[] values);
@@ -278,7 +280,7 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	NativeQueryImplementor<R> setProperties(Object bean);
 
 	@Override
-	NativeQueryImplementor<R> setProperties(Map<?,?> bean);
+	NativeQueryImplementor<R> setProperties(@SuppressWarnings("rawtypes") Map bean);
 
 	@Override
 	NativeQueryImplementor<R> setParameter(
@@ -314,7 +316,7 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	NativeQueryImplementor<R> setParameter(String name, Instant value, TemporalType temporalType);
 
 	@Override
-	NativeQueryImplementor<R> setTupleTransformer(TupleTransformer transformer);
+	NativeQueryImplementor<R> setTupleTransformer(@SuppressWarnings("rawtypes") TupleTransformer transformer);
 
 	@Override
 	NativeQueryImplementor<R> setResultListTransformer(ResultListTransformer transformer);
@@ -353,7 +355,7 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	NativeQueryImplementor<R> setParameter(Parameter<OffsetDateTime> param, OffsetDateTime value, TemporalType temporalType);
 
 	@Override
-	NativeQueryImplementor<R> setParameterList(int position, Collection<?> values);
+	NativeQueryImplementor<R> setParameterList(int position, @SuppressWarnings("rawtypes") Collection values);
 
 	@Override
 	<P> NativeQueryImplementor<R> setParameterList(String name, Collection<? extends P> values, Class<P> type);
@@ -371,7 +373,7 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 //	NativeQueryImplementor<R> setParameterList(int position, Object[] values, Type type);
 
 	@Override
-	NativeQueryImplementor<R> setParameterList(int position, Object[] values, AllowableParameterType<?> type);
+	NativeQueryImplementor<R> setParameterList(int position, Object[] values, @SuppressWarnings("rawtypes") AllowableParameterType type);
 
 	@Override
 	NativeQueryImplementor<R> setParameterList(int position, Object[] values);

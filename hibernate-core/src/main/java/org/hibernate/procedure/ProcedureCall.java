@@ -222,7 +222,7 @@ public interface ProcedureCall
 	@Override
 	ProcedureCall addSynchronizedEntityName(String entityName) throws MappingException;
 
-	@Override
+	@Override @SuppressWarnings("rawtypes")
 	ProcedureCall addSynchronizedEntityClass(Class entityClass) throws MappingException;
 
 	@Override

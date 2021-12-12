@@ -77,7 +77,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @return this - for method chaining
 	 */
-	Query<R> applyGraph(RootGraph<?> graph, GraphSemantic semantic);
+	Query<R> applyGraph(@SuppressWarnings("rawtypes") RootGraph graph, GraphSemantic semantic);
 
 	/**
 	 * Apply the given graph using {@linkplain GraphSemantic#FETCH fetch semantics}
@@ -85,7 +85,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * @apiNote This method calls {@link #applyGraph(RootGraph, GraphSemantic)} using
 	 * {@link GraphSemantic#FETCH} as the semantic
 	 */
-	default Query<R> applyFetchGraph(RootGraph<?> graph) {
+	default Query<R> applyFetchGraph(@SuppressWarnings("rawtypes") RootGraph graph) {
 		return applyGraph( graph, GraphSemantic.FETCH );
 	}
 
@@ -96,7 +96,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * {@link GraphSemantic#LOAD} as the semantic
 	 */
 	@SuppressWarnings("UnusedDeclaration")
-	default Query<R> applyLoadGraph(RootGraph<?> graph) {
+	default Query<R> applyLoadGraph(@SuppressWarnings("rawtypes") RootGraph graph) {
 		return applyGraph( graph, GraphSemantic.LOAD );
 	}
 
@@ -541,7 +541,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	Query<R> setParameterList(String name, Collection<?> values);
+	Query<R> setParameterList(String name, @SuppressWarnings("rawtypes") Collection values);
 
 	/**
 	 * Bind multiple values to a positional query parameter. The Hibernate type of the parameter is
@@ -554,7 +554,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	Query<R> setParameterList(int position, Collection<?> values);
+	Query<R> setParameterList(int position, @SuppressWarnings("rawtypes") Collection values);
 
 	/**
 	 * Bind multiple values to a named query parameter. The Hibernate type of the parameter is
@@ -650,7 +650,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	Query<R> setParameterList(String name, Object[] values, AllowableParameterType<?> type);
+	Query<R> setParameterList(String name, Object[] values, @SuppressWarnings("rawtypes") AllowableParameterType type);
 
 	/**
 	 * Bind multiple values to a named query parameter. This is useful for binding
@@ -662,7 +662,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	Query<R> setParameterList(int position, Object[] values, AllowableParameterType<?> type);
+	Query<R> setParameterList(int position, Object[] values, @SuppressWarnings("rawtypes") AllowableParameterType type);
 
 	/**
 	 * Bind multiple values to a named query parameter. The Hibernate type of the parameter is
@@ -710,7 +710,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	Query<R> setProperties(Map<?,?> bean);
+	Query<R> setProperties(@SuppressWarnings("rawtypes") Map bean);
 
 	/**
 	 * @deprecated (since 5.2) Use {@link #setTupleTransformer} or {@link #setResultListTransformer}

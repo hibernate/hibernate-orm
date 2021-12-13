@@ -330,10 +330,11 @@ public final class ExecuteWithTemporaryTableHelper {
 	public static void performAfterTemporaryTableUseActions(
 			TemporaryTable temporaryTable,
 			Function<SharedSessionContractImplementor, String> sessionUidAccess,
+			AfterUseAction afterUseAction,
 			ExecutionContext executionContext) {
 		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
 		final Dialect dialect = factory.getJdbcServices().getDialect();
-		switch ( dialect.getTemporaryTableAfterUseAction() ) {
+		switch ( afterUseAction ) {
 			case CLEAN:
 				TemporaryTableHelper.cleanTemporaryTableRows(
 						temporaryTable,

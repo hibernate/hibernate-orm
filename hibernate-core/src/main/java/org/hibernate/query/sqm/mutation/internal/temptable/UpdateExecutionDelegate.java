@@ -50,6 +50,7 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 	private final SqmUpdateStatement sqmUpdate;
 	private final MultiTableSqmMutationConverter sqmConverter;
 	private final TemporaryTable idTable;
+	private final AfterUseAction afterUseAction;
 	private final Function<SharedSessionContractImplementor, String> sessionUidAccess;
 	private final DomainParameterXref domainParameterXref;
 	private final TableGroup updatingTableGroup;
@@ -67,6 +68,7 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 			SqmUpdateStatement<?> sqmUpdate,
 			MultiTableSqmMutationConverter sqmConverter,
 			TemporaryTable idTable,
+			AfterUseAction afterUseAction,
 			Function<SharedSessionContractImplementor, String> sessionUidAccess,
 			DomainParameterXref domainParameterXref,
 			TableGroup updatingTableGroup,
@@ -80,6 +82,7 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 		this.sqmUpdate = sqmUpdate;
 		this.sqmConverter = sqmConverter;
 		this.idTable = idTable;
+		this.afterUseAction = afterUseAction;
 		this.sessionUidAccess = sessionUidAccess;
 		this.domainParameterXref = domainParameterXref;
 		this.updatingTableGroup = updatingTableGroup;
@@ -180,6 +183,7 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 			ExecuteWithTemporaryTableHelper.performAfterTemporaryTableUseActions(
 					idTable,
 					sessionUidAccess,
+					afterUseAction,
 					executionContext
 			);
 		}

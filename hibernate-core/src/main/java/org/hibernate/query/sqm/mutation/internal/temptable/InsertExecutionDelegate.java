@@ -79,6 +79,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 	private final SqmInsertStatement<?> sqmInsert;
 	private final MultiTableSqmMutationConverter sqmConverter;
 	private final TemporaryTable entityTable;
+	private final AfterUseAction afterUseAction;
 	private final Function<SharedSessionContractImplementor, String> sessionUidAccess;
 	private final DomainParameterXref domainParameterXref;
 	private final TableGroup updatingTableGroup;
@@ -96,6 +97,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 			SqmInsertStatement<?> sqmInsert,
 			MultiTableSqmMutationConverter sqmConverter,
 			TemporaryTable entityTable,
+			AfterUseAction afterUseAction,
 			Function<SharedSessionContractImplementor, String> sessionUidAccess,
 			DomainParameterXref domainParameterXref,
 			TableGroup insertingTableGroup,
@@ -108,6 +110,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 		this.sqmInsert = sqmInsert;
 		this.sqmConverter = sqmConverter;
 		this.entityTable = entityTable;
+		this.afterUseAction = afterUseAction;
 		this.sessionUidAccess = sessionUidAccess;
 		this.domainParameterXref = domainParameterXref;
 		this.updatingTableGroup = insertingTableGroup;
@@ -202,6 +205,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 			ExecuteWithTemporaryTableHelper.performAfterTemporaryTableUseActions(
 					entityTable,
 					sessionUidAccess,
+					afterUseAction,
 					executionContext
 			);
 		}

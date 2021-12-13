@@ -38,6 +38,7 @@ public class PersistentTableMutationStrategy extends PersistentTableStrategy imp
 				sqmUpdate,
 				domainParameterXref,
 				getTemporaryTable(),
+				getSessionFactory().getJdbcServices().getDialect().getTemporaryTableAfterUseAction(),
 				session -> session.getSessionIdentifier().toString(),
 				getSessionFactory()
 		).execute( context );
@@ -52,6 +53,7 @@ public class PersistentTableMutationStrategy extends PersistentTableStrategy imp
 				sqmDelete,
 				domainParameterXref,
 				getTemporaryTable(),
+				getSessionFactory().getJdbcServices().getDialect().getTemporaryTableAfterUseAction(),
 				session -> session.getSessionIdentifier().toString(),
 				getSessionFactory()
 		).execute( context );

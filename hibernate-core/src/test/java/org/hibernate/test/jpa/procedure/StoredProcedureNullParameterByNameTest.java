@@ -26,6 +26,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import org.hibernate.dialect.Oracle10gDialect;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -41,7 +42,7 @@ import static org.junit.Assert.fail;
  * @author Gail Badner
  */
 @TestForIssue(jiraKey = "HHH-10761")
-@RequiresDialect(Oracle10gDialect.class)
+@RequiresDialect(OracleDialect.class)
 public class StoredProcedureNullParameterByNameTest extends BaseEntityManagerFunctionalTestCase {
 	EntityManagerFactory entityManagerFactory;
 
@@ -49,6 +50,12 @@ public class StoredProcedureNullParameterByNameTest extends BaseEntityManagerFun
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] {User.class};
 	}
+
+//	@Override
+//	@SuppressWarnings({ "unchecked" })
+//	protected void addConfigOptions(Map options) {
+//		options.put( org.hibernate.cfg.AvailableSettings.PROCEDURE_NULL_PARAM_PASSING, "true" );
+//	}
 
 	@Before
 	public void startUp() {

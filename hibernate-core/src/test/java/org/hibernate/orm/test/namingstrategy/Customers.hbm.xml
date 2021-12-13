@@ -8,14 +8,10 @@
 <!DOCTYPE hibernate-mapping PUBLIC
         "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
         "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
-
-<hibernate-mapping package="org.hibernate.orm.test.namingstrategy.synchronizedTables">
-
-    <class name="DynamicEntity">
-        <synchronize table="table_a"/>
-        <id name="id" type="long">
-            <generator class="native" />
-        </id>
+<hibernate-mapping
+        package="org.hibernate.orm.test.namingstrategy">
+    <class name="Customers">
+        <id name="id" column="id" type="int"/>
+        <property name="specified_column" column="specified_column"/>
     </class>
-
 </hibernate-mapping>

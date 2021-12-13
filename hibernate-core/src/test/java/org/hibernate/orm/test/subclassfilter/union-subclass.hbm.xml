@@ -11,35 +11,33 @@
 
 <hibernate-mapping package="org.hibernate.orm.test.subclassfilter">
 
-	<class name="Person" table="JPerson">
+	<class name="Person" table="UPerson">
 
 		<id name="id" column="person_id">
 			<generator class="increment"/>
 		</id>
 
-		<property name="name"/>
+		<property name="name" unique="true" not-null="true"/>
 		<property name="company"/>
 		<property name="region"/>
 
-		<joined-subclass name="Employee" table="JEmployee">
-			<key column="person_id"/>
-
-			<property name="title" column="`title`"/>
+		<union-subclass name="Employee" table="UEmployee">
+			<property name="title" column="emp_title"/>
 			<property name="department" column="dept"/>
-			<many-to-one name="manager" class="Employee" column="mgr_id" cascade="none"/>
-			<set name="minions" inverse="true" cascade="all" lazy="true">
+			<many-to-one name="manager" column="mgr_id" class="Employee" cascade="none"/>
+			<set name="minions" inverse="true" lazy="true" cascade="all">
 				<key column="mgr_id"/>
 				<one-to-many class="Employee"/>
+				<filter name="region" condition="region = :userRegion"/>
 			</set>
-        </joined-subclass>
+		</union-subclass>
 
-		<joined-subclass name="Customer" table="JCustomer">
-			<key column="person_id"/>
-
+		<union-subclass name="Customer" table="UCustomer">
 			<many-to-one name="contactOwner" class="Employee"/>
-		</joined-subclass>
+		</union-subclass>
 
 		<filter name="region" condition="region = :userRegion"/>
+
 	</class>
 
 	<filter-def name="region">

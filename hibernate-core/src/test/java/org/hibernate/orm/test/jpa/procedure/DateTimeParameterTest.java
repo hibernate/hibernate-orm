@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.jpa.procedure;
+package org.hibernate.orm.test.jpa.procedure;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -14,28 +14,25 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
-import java.util.Map;
 
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.DerbyTenSevenDialect;
+import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.jpa.HibernateEntityManagerFactory;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.RequiresDialect;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Id;
 import jakarta.persistence.ParameterMode;
 import jakarta.persistence.StoredProcedureQuery;
@@ -43,75 +40,62 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 
 /**
  * @author Steve Ebersole
  */
-@RequiresDialect(DerbyTenSevenDialect.class)
-public class DateTimeParameterTest extends BaseEntityManagerFunctionalTestCase {
+@RequiresDialect(DerbyDialect.class)
+@Jpa(
+		annotatedClasses = { DateTimeParameterTest.Message.class }
+)
+public class DateTimeParameterTest {
 
 	private static GregorianCalendar nowCal = new GregorianCalendar();
 	private static Date now = new Date( nowCal.getTime().getTime() );
 
-	@Override
-	protected void addMappings(Map settings) {
-		settings.put( AvailableSettings.LOADED_CLASSES, Collections.singletonList( Message.class ) );
+	@Test
+	public void testBindingCalendarAsDate(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				em -> {
+					StoredProcedureQuery query = em.createStoredProcedureQuery( "findMessagesByDate" );
+					query.registerStoredProcedureParameter( 1, Calendar.class, ParameterMode.IN );
+					query.setParameter( 1, nowCal, TemporalType.DATE );
+					List list = query.getResultList();
+					assertEquals( 1, list.size() );
+				}
+		);
 	}
 
 	@Test
-	public void testBindingCalendarAsDate() {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-
-		try {
-			StoredProcedureQuery query = em.createStoredProcedureQuery( "findMessagesByDate" );
-			query.registerStoredProcedureParameter( 1, Calendar.class, ParameterMode.IN );
-			query.setParameter( 1, nowCal, TemporalType.DATE );
-			List list = query.getResultList();
-			assertEquals( 1, list.size() );
-		}
-		finally {
-			em.getTransaction().rollback();
-			em.close();
-		}
+	public void testBindingCalendarAsTime(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				em -> {
+					StoredProcedureQuery query = em.createStoredProcedureQuery( "findMessagesByTime" );
+					query.registerStoredProcedureParameter( 1, Calendar.class, ParameterMode.IN );
+					query.setParameter( 1, nowCal, TemporalType.TIME );
+					List list = query.getResultList();
+					assertEquals( 1, list.size() );
+				}
+		);
 	}
 
-	@Test
-	public void testBindingCalendarAsTime() {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-
-		try {
-			StoredProcedureQuery query = em.createStoredProcedureQuery( "findMessagesByTime" );
-			query.registerStoredProcedureParameter( 1, Calendar.class, ParameterMode.IN );
-			query.setParameter( 1, nowCal, TemporalType.TIME );
-			List list = query.getResultList();
-			assertEquals( 1, list.size() );
-		}
-		finally {
-			em.getTransaction().rollback();
-			em.close();
-		}
-	}
-
-	@Before
-	public void startUp() {
-		// create the EMF
-
+	@BeforeEach
+	public void startUp(EntityManagerFactoryScope scope) {
 		// create the procedures
-		createTestData( entityManagerFactory() );
-		createProcedures( entityManagerFactory() );
+		createTestData( scope );
+		createProcedures( scope.getEntityManagerFactory() );
 	}
 
 
-	@After
-	public void tearDown() {
-		deleteTestData( entityManagerFactory() );
-		dropProcedures( entityManagerFactory() );
+	@AfterEach
+	public void tearDown(EntityManagerFactoryScope scope) {
+		deleteTestData( scope );
+		dropProcedures( scope.getEntityManagerFactory() );
 	}
 
-	private void createProcedures(HibernateEntityManagerFactory emf) {
+	private void createProcedures(EntityManagerFactory emf) {
 		final SessionFactoryImplementor sf = emf.unwrap( SessionFactoryImplementor.class );
 		final JdbcConnectionAccess connectionAccess = sf.getServiceRegistry()
 				.getService( JdbcServices.class )
@@ -135,7 +119,7 @@ public class DateTimeParameterTest extends BaseEntityManagerFunctionalTestCase {
 						"CREATE PROCEDURE findMessagesByDate(IN chkDt DATE) " +
 								"language java " +
 								"dynamic result sets 1 " +
-								"external name 'org.hibernate.jpa.test.procedure.DateTimeParameterTest.findMessagesByDate' " +
+								"external name 'org.hibernate.orm.test.jpa.procedure.DateTimeParameterTest.findMessagesByDate' " +
 								"parameter style java"
 				);
 
@@ -143,7 +127,7 @@ public class DateTimeParameterTest extends BaseEntityManagerFunctionalTestCase {
 						"CREATE PROCEDURE findMessagesByTime(IN chkTime TIME) " +
 								"language java " +
 								"dynamic result sets 1 " +
-								"external name 'org.hibernate.jpa.test.procedure.DateTimeParameterTest.findMessagesByTime' " +
+								"external name 'org.hibernate.orm.test.jpa.procedure.DateTimeParameterTest.findMessagesByTime' " +
 								"parameter style java"
 				);
 
@@ -151,7 +135,7 @@ public class DateTimeParameterTest extends BaseEntityManagerFunctionalTestCase {
 						"CREATE PROCEDURE findMessagesByTimestampRange(IN startDt TIMESTAMP, IN endDt TIMESTAMP) " +
 								"language java " +
 								"dynamic result sets 1 " +
-								"external name 'org.hibernate.jpa.test.procedure.DateTimeParameterTest.findMessagesByTimestampRange' " +
+								"external name 'org.hibernate.orm.test.jpa.procedure.DateTimeParameterTest.findMessagesByTimestampRange' " +
 								"parameter style java"
 				);
 
@@ -159,7 +143,7 @@ public class DateTimeParameterTest extends BaseEntityManagerFunctionalTestCase {
 						"CREATE PROCEDURE retrieveTimestamp(IN ts1 TIMESTAMP, OUT ts2 TIMESTAMP) " +
 								"language java " +
 								"dynamic result sets 0 " +
-								"external name 'org.hibernate.jpa.test.procedure.DateTimeParameterTest.retrieveTimestamp' " +
+								"external name 'org.hibernate.orm.test.jpa.procedure.DateTimeParameterTest.retrieveTimestamp' " +
 								"parameter style java"
 				);
 
@@ -197,52 +181,51 @@ public class DateTimeParameterTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	public static void findMessagesByDate(java.sql.Date date, ResultSet[] results) throws SQLException {
-		Connection conn = DriverManager.getConnection( "jdbc:default:connection" );
-		PreparedStatement ps = conn.prepareStatement( "select * from msg where post_date=?" );
-		ps.setDate( 1, date );
-		results[0] = ps.executeQuery();
-		conn.close();
+		try (Connection conn = DriverManager.getConnection( "jdbc:default:connection" )) {
+			PreparedStatement ps = conn.prepareStatement( "select * from msg where post_date=?" );
+			ps.setDate( 1, date );
+			results[0] = ps.executeQuery();
+		}
 	}
 
 	public static void findMessagesByTime(java.sql.Time time, ResultSet[] results) throws SQLException {
-		Connection conn = DriverManager.getConnection( "jdbc:default:connection" );
-		PreparedStatement ps = conn.prepareStatement( "select * from msg where post_time=?" );
-		ps.setTime( 1, time );
-		results[0] = ps.executeQuery();
-		conn.close();
+		try (Connection conn = DriverManager.getConnection( "jdbc:default:connection" )) {
+			PreparedStatement ps = conn.prepareStatement( "select * from msg where post_time=?" );
+			ps.setTime( 1, time );
+			results[0] = ps.executeQuery();
+		}
 	}
 
 	public static void findMessagesByTimestampRange(Timestamp start, Timestamp end, ResultSet[] results)
 			throws SQLException {
-		Connection conn = DriverManager.getConnection( "jdbc:default:connection" );
-		PreparedStatement ps = conn.prepareStatement( "select * from msg where ts between ? and ?" );
-		ps.setDate( 1, new java.sql.Date( start.getTime() ) );
-		ps.setDate( 2, new java.sql.Date( end.getTime() ) );
-		results[0] = ps.executeQuery();
-		conn.close();
+		try (Connection conn = DriverManager.getConnection( "jdbc:default:connection" )) {
+			PreparedStatement ps = conn.prepareStatement( "select * from msg where ts between ? and ?" );
+			ps.setDate( 1, new java.sql.Date( start.getTime() ) );
+			ps.setDate( 2, new java.sql.Date( end.getTime() ) );
+			results[0] = ps.executeQuery();
+		}
 	}
 
 	public static void retrieveTimestamp(Timestamp in, Timestamp[] out) throws SQLException {
 		out[0] = in;
 	}
 
-	private void createTestData(HibernateEntityManagerFactory entityManagerFactory) {
-		EntityManager em = entityManagerFactory.createEntityManager();
-		em.getTransaction().begin();
-		em.persist( new Message( 1, "test", now, now, now ) );
-		em.getTransaction().commit();
-		em.close();
+	private void createTestData(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				em -> {
+					em.persist( new Message( 1, "test", now, now, now ) );
+				}
+		);
 	}
 
-	private void deleteTestData(HibernateEntityManagerFactory entityManagerFactory) {
-		EntityManager em = entityManagerFactory.createEntityManager();
-		em.getTransaction().begin();
-		em.createQuery( "delete from Message" ).executeUpdate();
-		em.getTransaction().commit();
-		em.close();
+	private void deleteTestData(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				em ->
+						em.createQuery( "delete from Message" ).executeUpdate()
+		);
 	}
 
-	private void dropProcedures(HibernateEntityManagerFactory emf) {
+	private void dropProcedures(EntityManagerFactory emf) {
 		final SessionFactoryImplementor sf = emf.unwrap( SessionFactoryImplementor.class );
 		final JdbcConnectionAccess connectionAccess = sf.getServiceRegistry()
 				.getService( JdbcServices.class )

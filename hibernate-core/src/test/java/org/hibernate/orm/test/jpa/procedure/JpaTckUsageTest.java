@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.jpa.procedure;
+package org.hibernate.orm.test.jpa.procedure;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -17,11 +17,13 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.DerbyTenSevenDialect;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.HibernateEntityManagerFactory;
+import org.hibernate.orm.test.annotations.cid.C;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.orm.test.jpa.procedure.User;
 
@@ -45,12 +47,12 @@ import static org.junit.Assert.fail;
  *
  * @author Steve Ebersole
  */
-@RequiresDialect(DerbyTenSevenDialect.class)
+@RequiresDialect(DerbyDialect.class)
 public class JpaTckUsageTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
-	protected void addMappings(Map settings) {
-		settings.put( AvailableSettings.LOADED_CLASSES, Collections.singletonList( User.class ) );
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[]{User.class};
 	}
 
 	@Test
@@ -327,7 +329,7 @@ public class JpaTckUsageTest extends BaseEntityManagerFunctionalTestCase {
 				"CREATE PROCEDURE findOneUser() " +
 						"language java " +
 						"dynamic result sets 1 " +
-						"external name 'org.hibernate.jpa.test.procedure.JpaTckUsageTest.findOneUser' " +
+						"external name 'org.hibernate.orm.test.jpa.procedure.JpaTckUsageTest.findOneUser' " +
 						"parameter style java"
 		);
 	}
@@ -336,7 +338,7 @@ public class JpaTckUsageTest extends BaseEntityManagerFunctionalTestCase {
 		statement.execute(
 				"CREATE PROCEDURE deleteAllUsers() " +
 						"language java " +
-						"external name 'org.hibernate.jpa.test.procedure.JpaTckUsageTest.deleteAllUsers' " +
+						"external name 'org.hibernate.orm.test.jpa.procedure.JpaTckUsageTest.deleteAllUsers' " +
 						"parameter style java"
 		);
 	}

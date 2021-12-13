@@ -146,8 +146,7 @@ public class ProcedureParameterMetadataImpl implements ProcedureParameterMetadat
 				return parameter;
 			}
 		}
-
-		return null;
+		throw new IllegalArgumentException( "Named parameter [" + name + "] is not registered with this procedure call" );
 	}
 
 	@Override
@@ -158,7 +157,7 @@ public class ProcedureParameterMetadataImpl implements ProcedureParameterMetadat
 			}
 		}
 
-		return null;
+		throw new IllegalArgumentException( "Positional parameter [" + positionLabel + "] is not registered with this procedure call" );
 	}
 
 	@Override

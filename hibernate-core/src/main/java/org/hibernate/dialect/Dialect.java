@@ -161,6 +161,8 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import jakarta.persistence.TemporalType;
 
+import static java.lang.Math.ceil;
+import static java.lang.Math.log;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_END;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_DATE;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_TIME;
@@ -207,6 +209,9 @@ public abstract class Dialect implements ConversionContext {
 
 	private static final Pattern ESCAPE_CLOSING_COMMENT_PATTERN = Pattern.compile( "\\*/" );
 	private static final Pattern ESCAPE_OPENING_COMMENT_PATTERN = Pattern.compile( "/\\*" );
+
+	//needed for converting precision from decimal to binary digits
+	private static final double LOG_BASE2OF10 = log(10)/log(2);
 
 	private final TypeNames typeNames = new TypeNames();
 	private final TypeNames hibernateTypeNames = new TypeNames();
@@ -384,7 +389,7 @@ public abstract class Dialect implements ConversionContext {
 		return code == Types.FLOAT
 				&& size != null
 				&& size.getPrecision() != null
-				? Size.precision( (int) Math.ceil( size.getPrecision() / 53.0 * 17.0 ) )
+				? Size.precision( (int) Math.ceil( size.getPrecision() / LOG_BASE2OF10 ) )
 				: size;
 	}
 
@@ -3774,20 +3779,24 @@ public abstract class Dialect implements ConversionContext {
 				case Types.FLOAT:
 				case Types.DOUBLE:
 				case Types.REAL:
-					// The given precision and scale are in decimal numbers as per Javadoc of jakarta.persistence.Column
-					// but the SQL type FLOAT takes the precision in binary digits,
-					// so we have to calculate the number of binary digits necessary.
-					// If the precision and a scale are given, we assume the values are given as decimal digits.
-					// If just the precision is given, we assume the value is in binary digits already.
-					if ( precision != null && scale != null ) {
-						scale = null;
-						// See https://stackoverflow.com/questions/17415847/how-does-float-map-relate-to-number-in-oracle-10g/17416421
-						// for the formula which was inverted to calculate the binary digit count
-						precision = (int) Math.ceil( precision * Math.log( 10 ) );
+					// this is almost always the thing we use:
+					size.setPrecision( javaType.getDefaultSqlPrecision( Dialect.this, jdbcType ) );
+					if (scale != null && scale!=0) {
+						throw new IllegalArgumentException("scale has no meaning for floating point numbers");
 					}
+					// but if the user explicitly specifies a precision, we need to convert it:
+					if (precision != null) {
+						// convert from base 10 (as specified in @Column) to base 2 (as specified by SQL)
+						// using the magic of high school math: log_2(10^n) = n*log_2(10) = n*ln(10)/ln(2)
+						precision = (int) ceil( precision * LOG_BASE2OF10 );
+					}
+					break;
 				case Types.TIMESTAMP:
 				case Types.TIMESTAMP_WITH_TIMEZONE:
 					size.setPrecision( javaType.getDefaultSqlPrecision( Dialect.this, jdbcType ) );
+					if (scale != null && scale!=0) {
+						throw new IllegalArgumentException("scale has no meaning for timestamps");
+					}
 					break;
 				case Types.NUMERIC:
 				case Types.DECIMAL:

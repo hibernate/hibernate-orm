@@ -155,7 +155,7 @@ public class OneToManyCompositeKeyTest extends BaseEnversJPAFunctionalTestCase {
 		@EmbeddedId
 		private DesignContractId pk = new DesignContractId();
 		@Basic
-		@Column(name = "GOAL", nullable = false, precision = 5, scale = 2)
+		@Column(name = "GOAL", nullable = false, precision = 5)
 		private Double goal;
 
 		DesignContract() {

@@ -1004,6 +1004,11 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		}
 
 		final QueryParameterImplementor<?> param = getParameterMetadata().getQueryParameter( name );
+
+		if ( param == null ) {
+			throw new IllegalArgumentException( "Named parameter [" + name + "] is not registered with this procedure call" );
+		}
+
 		if ( param.allowsMultiValuedBinding() ) {
 			final AllowableParameterType<?> hibernateType = param.getHibernateType();
 			if ( hibernateType == null || ! hibernateType.getExpressableJavaTypeDescriptor().getJavaTypeClass().isInstance( value ) ) {
@@ -1034,6 +1039,10 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		}
 
 		final QueryParameterImplementor<?> param = getParameterMetadata().getQueryParameter( position );
+
+		if ( param == null ) {
+			throw new IllegalArgumentException( "Positional parameter [" + position + "] is not registered with this procedure call" );
+		}
 
 		if ( param.allowsMultiValuedBinding() ) {
 			final AllowableParameterType<?> hibernateType = param.getHibernateType();

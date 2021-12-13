@@ -32,8 +32,8 @@ public class TableBasedDeleteHandler
 	}
 
 	private final TemporaryTable idTable;
+	private final AfterUseAction afterUseAction;
 	private final Function<SharedSessionContractImplementor,String> sessionUidAccess;
-
 	private final DomainParameterXref domainParameterXref;
 
 
@@ -41,12 +41,14 @@ public class TableBasedDeleteHandler
 			SqmDeleteStatement<?> sqmDeleteStatement,
 			DomainParameterXref domainParameterXref,
 			TemporaryTable idTable,
+			AfterUseAction afterUseAction,
 			Function<SharedSessionContractImplementor, String> sessionUidAccess,
 			SessionFactoryImplementor sessionFactory) {
 		super( sqmDeleteStatement, sessionFactory );
 		this.idTable = idTable;
 
 		this.domainParameterXref = domainParameterXref;
+		this.afterUseAction = afterUseAction;
 
 		this.sessionUidAccess = sessionUidAccess;
 	}
@@ -66,9 +68,10 @@ public class TableBasedDeleteHandler
 		return new RestrictedDeleteExecutionDelegate(
 				getEntityDescriptor(),
 				idTable,
-				getSqmDeleteOrUpdateStatement(),
+				afterUseAction, getSqmDeleteOrUpdateStatement(),
 				domainParameterXref,
 				sessionUidAccess,
+
 				executionContext.getQueryOptions(),
 				executionContext.getSession().getLoadQueryInfluencers(),
 				executionContext.getQueryParameterBindings(),

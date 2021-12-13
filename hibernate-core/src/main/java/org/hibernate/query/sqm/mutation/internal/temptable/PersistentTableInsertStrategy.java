@@ -44,6 +44,7 @@ public class PersistentTableInsertStrategy extends PersistentTableStrategy imple
 				sqmInsertStatement,
 				domainParameterXref,
 				getTemporaryTable(),
+				getSessionFactory().getJdbcServices().getDialect().getTemporaryTableAfterUseAction(),
 				session -> session.getSessionIdentifier().toString(),
 				getSessionFactory()
 		).execute( context );

@@ -68,6 +68,7 @@ public class TableBasedInsertHandler implements InsertHandler {
 	private final SessionFactoryImplementor sessionFactory;
 
 	private final TemporaryTable entityTable;
+	private final AfterUseAction afterUseAction;
 	private final Function<SharedSessionContractImplementor,String> sessionUidAccess;
 	private final DomainParameterXref domainParameterXref;
 
@@ -77,9 +78,11 @@ public class TableBasedInsertHandler implements InsertHandler {
 			SqmInsertStatement<?> sqmInsert,
 			DomainParameterXref domainParameterXref,
 			TemporaryTable entityTable,
+			AfterUseAction afterUseAction,
 			Function<SharedSessionContractImplementor, String> sessionUidAccess,
 			SessionFactoryImplementor sessionFactory) {
 		this.sqmInsertStatement = sqmInsert;
+		this.afterUseAction = afterUseAction;
 		this.sessionFactory = sessionFactory;
 		this.entityTable = entityTable;
 		this.sessionUidAccess = sessionUidAccess;
@@ -262,6 +265,7 @@ public class TableBasedInsertHandler implements InsertHandler {
 				sqmInsertStatement,
 				converterDelegate,
 				entityTable,
+				afterUseAction,
 				sessionUidAccess,
 				domainParameterXref,
 				insertingTableGroup,

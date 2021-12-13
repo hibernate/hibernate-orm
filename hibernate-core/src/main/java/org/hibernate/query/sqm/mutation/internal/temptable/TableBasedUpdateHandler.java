@@ -58,6 +58,7 @@ public class TableBasedUpdateHandler
 	}
 
 	private final TemporaryTable idTable;
+	private final AfterUseAction afterUseAction;
 	private final Function<SharedSessionContractImplementor,String> sessionUidAccess;
 	private final DomainParameterXref domainParameterXref;
 
@@ -67,10 +68,12 @@ public class TableBasedUpdateHandler
 			SqmUpdateStatement<?> sqmUpdate,
 			DomainParameterXref domainParameterXref,
 			TemporaryTable idTable,
+			AfterUseAction afterUseAction,
 			Function<SharedSessionContractImplementor, String> sessionUidAccess,
 			SessionFactoryImplementor sessionFactory) {
 		super( sqmUpdate, sessionFactory );
 		this.idTable = idTable;
+		this.afterUseAction = afterUseAction;
 		this.sessionUidAccess = sessionUidAccess;
 		this.domainParameterXref = domainParameterXref;
 
@@ -207,7 +210,7 @@ public class TableBasedUpdateHandler
 				getSqmUpdate(),
 				converterDelegate,
 				idTable,
-				sessionUidAccess,
+				afterUseAction, sessionUidAccess,
 				domainParameterXref,
 				updatingTableGroup,
 				hierarchyRootTableReference,

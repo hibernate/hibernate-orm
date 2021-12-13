@@ -35,6 +35,7 @@ public class GlobalTemporaryTableInsertStrategy extends GlobalTemporaryTableStra
 				sqmInsertStatement,
 				domainParameterXref,
 				getTemporaryTable(),
+				getSessionFactory().getJdbcServices().getDialect().getTemporaryTableAfterUseAction(),
 				// generally a global temp table should already track a Connection-specific uid,
 				// but just in case a particular env needs it...
 				session -> session.getSessionIdentifier().toString(),

@@ -35,6 +35,9 @@ public class LocalTemporaryTableInsertStrategy extends LocalTemporaryTableStrate
 				sqmInsertStatement,
 				domainParameterXref,
 				getTemporaryTable(),
+				isDropIdTables()
+						? AfterUseAction.DROP
+						: getSessionFactory().getJdbcServices().getDialect().getTemporaryTableAfterUseAction(),
 				session -> {
 					throw new UnsupportedOperationException( "Unexpected call to access Session uid" );
 				},

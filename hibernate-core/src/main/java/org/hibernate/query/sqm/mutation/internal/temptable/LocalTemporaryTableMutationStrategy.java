@@ -36,6 +36,9 @@ public class LocalTemporaryTableMutationStrategy extends LocalTemporaryTableStra
 				sqmUpdate,
 				domainParameterXref,
 				getTemporaryTable(),
+				isDropIdTables()
+						? AfterUseAction.DROP
+						: getSessionFactory().getJdbcServices().getDialect().getTemporaryTableAfterUseAction(),
 				session -> {
 					throw new UnsupportedOperationException( "Unexpected call to access Session uid" );
 				},
@@ -52,6 +55,9 @@ public class LocalTemporaryTableMutationStrategy extends LocalTemporaryTableStra
 				sqmDelete,
 				domainParameterXref,
 				getTemporaryTable(),
+				isDropIdTables()
+						? AfterUseAction.DROP
+						: getSessionFactory().getJdbcServices().getDialect().getTemporaryTableAfterUseAction(),
 				session -> {
 					throw new UnsupportedOperationException( "Unexpected call to access Session uid" );
 				},

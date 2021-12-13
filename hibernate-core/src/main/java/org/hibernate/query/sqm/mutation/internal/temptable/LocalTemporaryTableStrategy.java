@@ -55,50 +55,16 @@ public class LocalTemporaryTableStrategy {
 		);
 	}
 
-	public void release(
-			SessionFactoryImplementor sessionFactory,
-			JdbcConnectionAccess connectionAccess) {
-		if ( !dropIdTables ) {
-			return;
-		}
-
-		dropIdTables = false;
-
-		final TemporaryTable temporaryTable = getTemporaryTable();
-		log.debugf( "Dropping local-temp ID table : %s", temporaryTable.getTableExpression() );
-
-		final TemporaryTableHelper.TemporaryTableDropWork temporaryTableDropWork = new TemporaryTableHelper.TemporaryTableDropWork(
-				temporaryTable,
-				sessionFactory
-		);
-		Connection connection;
-		try {
-			connection = connectionAccess.obtainConnection();
-		}
-		catch (UnsupportedOperationException e) {
-			// assume this comes from org.hibernate.engine.jdbc.connections.internal.UserSuppliedConnectionProviderImpl
-			log.debugf( "Unable to obtain JDBC connection; unable to drop local-temp ID table : %s", temporaryTable.getTableExpression() );
-			return;
-		}
-		catch (SQLException e) {
-			log.error( "Unable obtain JDBC Connection", e );
-			return;
-		}
-
-		try {
-			temporaryTableDropWork.execute( connection );
-		}
-		finally {
-			try {
-				connectionAccess.releaseConnection( connection );
-			}
-			catch (SQLException ignore) {
-			}
-		}
+	public void release(SessionFactoryImplementor sessionFactory, JdbcConnectionAccess connectionAccess) {
+		// Nothing to do here. This happens through ExecuteWithTemporaryTableHelper.performAfterTemporaryTableUseActions
 	}
 
 	public TemporaryTable getTemporaryTable() {
 		return temporaryTable;
+	}
+
+	public boolean isDropIdTables() {
+		return dropIdTables;
 	}
 
 	public SessionFactoryImplementor getSessionFactory() {

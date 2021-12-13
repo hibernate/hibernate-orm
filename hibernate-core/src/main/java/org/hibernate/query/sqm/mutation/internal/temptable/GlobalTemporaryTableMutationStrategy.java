@@ -36,6 +36,7 @@ public class GlobalTemporaryTableMutationStrategy extends GlobalTemporaryTableSt
 				sqmUpdate,
 				domainParameterXref,
 				getTemporaryTable(),
+				getSessionFactory().getJdbcServices().getDialect().getTemporaryTableAfterUseAction(),
 				// generally a global temp table should already track a Connection-specific uid,
 				// but just in case a particular env needs it...
 				session -> session.getSessionIdentifier().toString(),
@@ -52,6 +53,7 @@ public class GlobalTemporaryTableMutationStrategy extends GlobalTemporaryTableSt
 				sqmDelete,
 				domainParameterXref,
 				getTemporaryTable(),
+				getSessionFactory().getJdbcServices().getDialect().getTemporaryTableAfterUseAction(),
 				// generally a global temp table should already track a Connection-specific uid,
 				// but just in case a particular env needs it...
 				session -> session.getSessionIdentifier().toString(),

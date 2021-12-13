@@ -31,7 +31,7 @@ public class Discount implements Serializable {
 	private Customer owner;
 
 
-	@Column(precision = 5, scale = 2)
+	@Column(precision = 5)
 	public double getDiscount() {
 		return discount;
 	}

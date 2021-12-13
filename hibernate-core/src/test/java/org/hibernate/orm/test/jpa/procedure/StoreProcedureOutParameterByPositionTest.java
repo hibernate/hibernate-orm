@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.jpa.procedure;
+package org.hibernate.orm.test.jpa.procedure;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -25,6 +25,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import org.hibernate.dialect.Oracle10gDialect;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -41,8 +42,8 @@ import static org.junit.Assert.fail;
  * @author Gail Badner
  */
 @TestForIssue(jiraKey = "HHH-10756")
-@RequiresDialect(Oracle10gDialect.class)
-public class StoreProcedureOutParameterByNameTest extends BaseEntityManagerFunctionalTestCase {
+@RequiresDialect(OracleDialect.class)
+public class StoreProcedureOutParameterByPositionTest extends BaseEntityManagerFunctionalTestCase {
 	EntityManagerFactory entityManagerFactory;
 
 	@Override
@@ -71,9 +72,9 @@ public class StoreProcedureOutParameterByNameTest extends BaseEntityManagerFunct
 
 		try {
 			StoredProcedureQuery query = em.createNamedStoredProcedureQuery( "User.findNameById" );
-			query.setParameter( "ID_PARAM", 1 );
+			query.setParameter( 1, 1 );
 
-			assertEquals( "aName", query.getOutputParameterValue( "NAME_PARAM" ) );
+			assertEquals( "aName", query.getOutputParameterValue( 2 ) );
 		}
 		finally {
 			em.close();
@@ -95,10 +96,10 @@ public class StoreProcedureOutParameterByNameTest extends BaseEntityManagerFunct
 
 		try {
 			StoredProcedureQuery query = em.createNamedStoredProcedureQuery( "User.findNameAndAgeById" );
-			query.setParameter( "ID_PARAM", 1 );
+			query.setParameter( 1, 1 );
 
-			assertEquals( "aName", query.getOutputParameterValue( "NAME_PARAM" ) );
-			assertEquals( 29, query.getOutputParameterValue( "AGE_PARAM" ) );
+			assertEquals( "aName", query.getOutputParameterValue( 2 ) );
+			assertEquals( 29, query.getOutputParameterValue( 3 ) );
 		}
 		finally {
 			em.close();
@@ -175,19 +176,20 @@ public class StoreProcedureOutParameterByNameTest extends BaseEntityManagerFunct
 			value = {
 					@NamedStoredProcedureQuery(name = "User.findNameById",
 							resultClasses = User.class,
-							procedureName = "PROC_EXAMPLE_ONE_BASIC_OUT",
+							procedureName = "PROC_EXAMPLE_ONE_BASIC_OUT"
+							,
 							parameters = {
-									@StoredProcedureParameter(mode = ParameterMode.IN, name = "ID_PARAM", type = Integer.class),
-									@StoredProcedureParameter(mode = ParameterMode.OUT, name = "NAME_PARAM", type = String.class)
+									@StoredProcedureParameter(mode = ParameterMode.IN, type = Integer.class),
+									@StoredProcedureParameter(mode = ParameterMode.OUT, type = String.class)
 							}
 					),
 					@NamedStoredProcedureQuery(name = "User.findNameAndAgeById",
-						resultClasses = User.class,
-						procedureName = "PROC_EXAMPLE_TWO_BASIC_OUT",
-						parameters = {
-								@StoredProcedureParameter(mode = ParameterMode.IN, name = "ID_PARAM", type = Integer.class),
-								@StoredProcedureParameter(mode = ParameterMode.OUT, name = "NAME_PARAM", type = String.class),
-								@StoredProcedureParameter(mode = ParameterMode.OUT, name = "AGE_PARAM", type = Integer.class)
+							resultClasses = User.class,
+							procedureName = "PROC_EXAMPLE_TWO_BASIC_OUT",
+							parameters = {
+									@StoredProcedureParameter(mode = ParameterMode.IN, type = Integer.class),
+									@StoredProcedureParameter(mode = ParameterMode.OUT, type = String.class),
+									@StoredProcedureParameter(mode = ParameterMode.OUT, type = Integer.class)
 							}
 					)
 			}

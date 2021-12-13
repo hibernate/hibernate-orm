@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.jpa.procedure;
+package org.hibernate.orm.test.jpa.procedure;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -21,6 +21,7 @@ import jakarta.persistence.StoredProcedureQuery;
 import jakarta.persistence.Table;
 
 import org.hibernate.dialect.Oracle10gDialect;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -37,7 +38,7 @@ import static org.junit.Assert.fail;
  * @author Andrea Boriero
  */
 @TestForIssue(jiraKey = "HHH-9286")
-@RequiresDialect(Oracle10gDialect.class)
+@RequiresDialect(OracleDialect.class)
 public class StoreProcedureRefCursorOutParameterByNameTest extends BaseEntityManagerFunctionalTestCase {
 	EntityManagerFactory entityManagerFactory;
 

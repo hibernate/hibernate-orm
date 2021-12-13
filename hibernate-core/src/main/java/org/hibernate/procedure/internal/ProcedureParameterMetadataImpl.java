@@ -177,7 +177,10 @@ public class ProcedureParameterMetadataImpl implements ProcedureParameterMetadat
 	@Override
 	public Set<? extends QueryParameter<?>> getRegistrations() {
 		//noinspection unchecked
-		return parameters.stream().collect( Collectors.toSet());
+		if ( parameters == null ) {
+			return Collections.emptySet();
+		}
+		return parameters.stream().collect( Collectors.toSet() );
 	}
 
 	@Override

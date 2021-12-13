@@ -190,6 +190,13 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 				}
 		);
 
+		bootMetamodel.visitNamedResultSetMappingDefinition(
+				namedResultSetMappingDefinition -> {
+					final NamedResultSetMappingMemento resolved = namedResultSetMappingDefinition.resolve( () -> sessionFactory );
+					resultSetMappingMementoMap.put( namedResultSetMappingDefinition.getRegistrationName(), resolved );
+				}
+		);
+
 		bootMetamodel.visitNamedProcedureCallDefinition(
 				namedProcedureCallDefinition -> {
 					final NamedCallableQueryMemento resolved = namedProcedureCallDefinition.resolve( sessionFactory );
@@ -197,19 +204,6 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 				}
 		);
 
-		final ResultSetMappingResolutionContext resolutionContext = new ResultSetMappingResolutionContext() {
-			@Override
-			public SessionFactoryImplementor getSessionFactory() {
-				return sessionFactory;
-			}
-		};
-
-		bootMetamodel.visitNamedResultSetMappingDefinition(
-				namedResultSetMappingDefinition -> {
-					final NamedResultSetMappingMemento resolved = namedResultSetMappingDefinition.resolve( resolutionContext );
-					resultSetMappingMementoMap.put( namedResultSetMappingDefinition.getRegistrationName(), resolved );
-				}
-		);
 	}
 
 

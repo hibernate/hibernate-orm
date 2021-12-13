@@ -4,55 +4,46 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.jpa.test.procedure;
+package org.hibernate.test.jpa.procedure;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Map;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Id;
-import jakarta.persistence.NamedStoredProcedureQueries;
 import jakarta.persistence.NamedStoredProcedureQuery;
 import jakarta.persistence.ParameterMode;
 import jakarta.persistence.StoredProcedureParameter;
 import jakarta.persistence.StoredProcedureQuery;
 import jakarta.persistence.Table;
 
-import org.junit.Before;
-import org.junit.Test;
-
 import org.hibernate.dialect.Oracle10gDialect;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
+import org.junit.Before;
+import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 /**
- * @author Gail Badner
+ * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-10761")
+@TestForIssue(jiraKey = "HHH-9286")
 @RequiresDialect(Oracle10gDialect.class)
-public class StoredProcedureNullParameterByNameTest extends BaseEntityManagerFunctionalTestCase {
+public class StoreProcedureRefCursorOutParameterByPositionTest extends BaseEntityManagerFunctionalTestCase {
 	EntityManagerFactory entityManagerFactory;
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] {User.class};
-	}
-
-	@Override
-	@SuppressWarnings({ "unchecked" })
-	protected void addConfigOptions(Map options) {
-		options.put( org.hibernate.cfg.AvailableSettings.PROCEDURE_NULL_PARAM_PASSING, "true" );
 	}
 
 	@Before
@@ -63,45 +54,20 @@ public class StoredProcedureNullParameterByNameTest extends BaseEntityManagerFun
 	}
 
 	@Test
-	public void testPassNull() {
+	public void testNamedStoredProcedureExecution() {
 		EntityManager em = entityManagerFactory.createEntityManager();
-		em.getTransaction().begin();
-		User user1 = new User();
-		user1.id = 1;
-		user1.name = "aName";
-		user1.age = 99;
-		em.persist( user1 );
-		em.getTransaction().commit();
-
-		em.clear();
-
 		try {
-			StoredProcedureQuery query = em.createNamedStoredProcedureQuery( "User.findNameById" );
-			query.setParameter( "ID_PARAM", 1 );
-			// null is passed for EXTRA_IN_PARAM
+			StoredProcedureQuery query = em.createNamedStoredProcedureQuery( "User.findByName" );
+			query.setParameter( 1, "my_name" );
 
-			assertEquals( "aName", query.getOutputParameterValue( "NAME_PARAM" ) );
-			assertEquals( null, query.getOutputParameterValue( "EXTRA_OUT_PARAM" ) );
+			query.getResultList();
 		}
 		finally {
 			em.close();
 		}
 	}
 
-
 	private void createProcedures(EntityManagerFactory emf) {
-		createProcedure(
-				emf,
-				"CREATE OR REPLACE PROCEDURE PROC_EXAMPLE_ONE_BASIC_OUT ( " +
-						"  ID_PARAM IN NUMBER, EXTRA_IN_PARAM IN NUMBER, NAME_PARAM OUT VARCHAR2, EXTRA_OUT_PARAM OUT NUMBER ) " +
-						"AS " +
-						"BEGIN " +
-						"  SELECT NAME, EXTRA_IN_PARAM INTO NAME_PARAM, EXTRA_OUT_PARAM FROM USERS WHERE id = ID_PARAM; " +
-						"END PROC_EXAMPLE_ONE_BASIC_OUT; "
-		);
-	}
-
-	private void createProcedure(EntityManagerFactory emf, String storedProc) {
 		final SessionFactoryImplementor sf = emf.unwrap( SessionFactoryImplementor.class );
 		final JdbcConnectionAccess connectionAccess = sf.getServiceRegistry()
 				.getService( JdbcServices.class )
@@ -114,7 +80,15 @@ public class StoredProcedureNullParameterByNameTest extends BaseEntityManagerFun
 			try {
 				Statement statement = conn.createStatement();
 
-				statement.execute( storedProc );
+				statement.execute(
+						"CREATE OR REPLACE PROCEDURE PROC_EXAMPLE ( " +
+								"  USER_NAME_PARAM IN VARCHAR2, CURSOR_PARAM OUT SYS_REFCURSOR ) " +
+								"AS " +
+								"BEGIN " +
+								"  OPEN CURSOR_PARAM FOR " +
+								"  SELECT * FROM USERS WHERE NAME = USER_NAME_PARAM; " +
+								"END PROC_EXAMPLE; "
+				);
 
 				try {
 					statement.close();
@@ -143,21 +117,19 @@ public class StoredProcedureNullParameterByNameTest extends BaseEntityManagerFun
 		catch (SQLException e) {
 			throw new RuntimeException( "Unable to create stored procedures", e );
 		}
+
 	}
 
-	@NamedStoredProcedureQueries(
-			@NamedStoredProcedureQuery(name = "User.findNameById",
-					resultClasses = User.class,
-					procedureName = "PROC_EXAMPLE_ONE_BASIC_OUT",
-					parameters = {
-							@StoredProcedureParameter(mode = ParameterMode.IN, name = "ID_PARAM", type = Integer.class),
-							@StoredProcedureParameter(mode = ParameterMode.IN, name = "EXTRA_IN_PARAM", type = Integer.class),
-							@StoredProcedureParameter(mode = ParameterMode.OUT, name = "NAME_PARAM", type = String.class),
-							@StoredProcedureParameter(mode = ParameterMode.OUT, name = "EXTRA_OUT_PARAM", type = Integer.class)
-					}
-			)
+	@NamedStoredProcedureQuery(name = "User.findByName",
+			resultClasses = User.class,
+			procedureName = "PROC_EXAMPLE"
+			,
+			parameters = {
+					@StoredProcedureParameter(mode = ParameterMode.IN, type = String.class),
+					@StoredProcedureParameter(mode = ParameterMode.REF_CURSOR, type = Class.class)
+			}
 	)
-	@Entity(name = "User")
+	@Entity(name = "Message")
 	@Table(name = "USERS")
 	public static class User {
 		@Id
@@ -165,8 +137,5 @@ public class StoredProcedureNullParameterByNameTest extends BaseEntityManagerFun
 
 		@Column(name = "NAME")
 		private String name;
-
-		@Column(name = "AGE")
-		private Integer age;
 	}
 }

@@ -4,11 +4,12 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.jpa.test.procedure;
+package org.hibernate.test.jpa.procedure;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Map;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityManager;
@@ -28,7 +29,8 @@ import org.hibernate.dialect.Oracle10gDialect;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 
@@ -36,12 +38,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 /**
- * @author Andrea Boriero
  * @author Gail Badner
  */
-@TestForIssue(jiraKey = "HHH-10756")
+@TestForIssue(jiraKey = "HHH-10761")
 @RequiresDialect(Oracle10gDialect.class)
-public class StoreProcedureOutParameterByNameTest extends BaseEntityManagerFunctionalTestCase {
+public class StoredProcedureNullParameterByNameTest extends BaseEntityManagerFunctionalTestCase {
 	EntityManagerFactory entityManagerFactory;
 
 	@Override
@@ -57,13 +58,14 @@ public class StoreProcedureOutParameterByNameTest extends BaseEntityManagerFunct
 	}
 
 	@Test
-	public void testOneBasicOutParameter() {
+	public void testPassNull() {
 		EntityManager em = entityManagerFactory.createEntityManager();
 		em.getTransaction().begin();
-		User user = new User();
-		user.id = 1;
-		user.name = "aName";
-		em.persist( user );
+		User user1 = new User();
+		user1.id = 1;
+		user1.name = "aName";
+		user1.age = 99;
+		em.persist( user1 );
 		em.getTransaction().commit();
 
 		em.clear();
@@ -71,58 +73,26 @@ public class StoreProcedureOutParameterByNameTest extends BaseEntityManagerFunct
 		try {
 			StoredProcedureQuery query = em.createNamedStoredProcedureQuery( "User.findNameById" );
 			query.setParameter( "ID_PARAM", 1 );
+			// null is passed for EXTRA_IN_PARAM
 
 			assertEquals( "aName", query.getOutputParameterValue( "NAME_PARAM" ) );
+			assertEquals( null, query.getOutputParameterValue( "EXTRA_OUT_PARAM" ) );
 		}
 		finally {
 			em.close();
 		}
 	}
 
-	@Test
-	public void testTwoBasicOutParameters() {
-		EntityManager em = entityManagerFactory.createEntityManager();
-		em.getTransaction().begin();
-		User user = new User();
-		user.id = 1;
-		user.name = "aName";
-		user.age = 29;
-		em.persist( user );
-		em.getTransaction().commit();
-
-		em.clear();
-
-		try {
-			StoredProcedureQuery query = em.createNamedStoredProcedureQuery( "User.findNameAndAgeById" );
-			query.setParameter( "ID_PARAM", 1 );
-
-			assertEquals( "aName", query.getOutputParameterValue( "NAME_PARAM" ) );
-			assertEquals( 29, query.getOutputParameterValue( "AGE_PARAM" ) );
-		}
-		finally {
-			em.close();
-		}
-	}
 
 	private void createProcedures(EntityManagerFactory emf) {
 		createProcedure(
 				emf,
 				"CREATE OR REPLACE PROCEDURE PROC_EXAMPLE_ONE_BASIC_OUT ( " +
-						"  ID_PARAM IN NUMBER, NAME_PARAM OUT VARCHAR2 ) " +
+						"  ID_PARAM IN NUMBER, EXTRA_IN_PARAM IN NUMBER, NAME_PARAM OUT VARCHAR2, EXTRA_OUT_PARAM OUT NUMBER ) " +
 						"AS " +
 						"BEGIN " +
-						"  SELECT NAME INTO NAME_PARAM FROM USERS WHERE id = ID_PARAM; " +
+						"  SELECT NAME, EXTRA_IN_PARAM INTO NAME_PARAM, EXTRA_OUT_PARAM FROM USERS WHERE id = ID_PARAM; " +
 						"END PROC_EXAMPLE_ONE_BASIC_OUT; "
-		);
-
-		createProcedure(
-				emf,
-				"CREATE OR REPLACE PROCEDURE PROC_EXAMPLE_TWO_BASIC_OUT ( " +
-						"  ID_PARAM IN NUMBER, NAME_PARAM OUT VARCHAR2, AGE_PARAM OUT NUMBER ) " +
-						"AS " +
-						"BEGIN " +
-						"  SELECT NAME, AGE INTO NAME_PARAM, AGE_PARAM FROM USERS WHERE id = ID_PARAM; " +
-						"END PROC_EXAMPLE_TWO_BASIC_OUT; "
 		);
 	}
 
@@ -171,27 +141,18 @@ public class StoreProcedureOutParameterByNameTest extends BaseEntityManagerFunct
 	}
 
 	@NamedStoredProcedureQueries(
-			value = {
-					@NamedStoredProcedureQuery(name = "User.findNameById",
-							resultClasses = User.class,
-							procedureName = "PROC_EXAMPLE_ONE_BASIC_OUT",
-							parameters = {
-									@StoredProcedureParameter(mode = ParameterMode.IN, name = "ID_PARAM", type = Integer.class),
-									@StoredProcedureParameter(mode = ParameterMode.OUT, name = "NAME_PARAM", type = String.class)
-							}
-					),
-					@NamedStoredProcedureQuery(name = "User.findNameAndAgeById",
-						resultClasses = User.class,
-						procedureName = "PROC_EXAMPLE_TWO_BASIC_OUT",
-						parameters = {
-								@StoredProcedureParameter(mode = ParameterMode.IN, name = "ID_PARAM", type = Integer.class),
-								@StoredProcedureParameter(mode = ParameterMode.OUT, name = "NAME_PARAM", type = String.class),
-								@StoredProcedureParameter(mode = ParameterMode.OUT, name = "AGE_PARAM", type = Integer.class)
-							}
-					)
-			}
+			@NamedStoredProcedureQuery(name = "User.findNameById",
+					resultClasses = User.class,
+					procedureName = "PROC_EXAMPLE_ONE_BASIC_OUT",
+					parameters = {
+							@StoredProcedureParameter(mode = ParameterMode.IN, name = "ID_PARAM", type = Integer.class),
+							@StoredProcedureParameter(mode = ParameterMode.IN, name = "EXTRA_IN_PARAM", type = Integer.class),
+							@StoredProcedureParameter(mode = ParameterMode.OUT, name = "NAME_PARAM", type = String.class),
+							@StoredProcedureParameter(mode = ParameterMode.OUT, name = "EXTRA_OUT_PARAM", type = Integer.class)
+					}
+			)
 	)
-	@Entity(name = "Message")
+	@Entity(name = "User")
 	@Table(name = "USERS")
 	public static class User {
 		@Id
@@ -201,6 +162,6 @@ public class StoreProcedureOutParameterByNameTest extends BaseEntityManagerFunct
 		private String name;
 
 		@Column(name = "AGE")
-		private int age;
+		private Integer age;
 	}
 }

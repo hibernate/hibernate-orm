@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.jpa.test.procedure;
+package org.hibernate.test.jpa.procedure;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -17,9 +17,22 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.GregorianCalendar;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.DerbyTenSevenDialect;
+import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.jpa.HibernateEntityManagerFactory;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+
+import org.hibernate.testing.RequiresDialect;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityManager;
@@ -30,35 +43,25 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.DerbyTenSevenDialect;
-import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.jpa.HibernateEntityManagerFactory;
-import org.hibernate.jpa.boot.spi.Bootstrap;
-import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 
 /**
  * @author Steve Ebersole
  */
-public class DateTimeParameterTest extends BaseUnitTestCase {
-	HibernateEntityManagerFactory entityManagerFactory;
+@RequiresDialect(DerbyTenSevenDialect.class)
+public class DateTimeParameterTest extends BaseEntityManagerFunctionalTestCase {
 
 	private static GregorianCalendar nowCal = new GregorianCalendar();
 	private static Date now = new Date( nowCal.getTime().getTime() );
 
+	@Override
+	protected void addMappings(Map settings) {
+		settings.put( AvailableSettings.LOADED_CLASSES, Collections.singletonList( Message.class ) );
+	}
+
 	@Test
 	public void testBindingCalendarAsDate() {
-		EntityManager em = entityManagerFactory.createEntityManager();
+		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 
 		try {
@@ -76,7 +79,7 @@ public class DateTimeParameterTest extends BaseUnitTestCase {
 
 	@Test
 	public void testBindingCalendarAsTime() {
-		EntityManager em = entityManagerFactory.createEntityManager();
+		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 
 		try {
@@ -95,50 +98,24 @@ public class DateTimeParameterTest extends BaseUnitTestCase {
 	@Before
 	public void startUp() {
 		// create the EMF
-		entityManagerFactory = Bootstrap.getEntityManagerFactoryBuilder(
-				buildPersistenceUnitDescriptor(),
-				buildSettingsMap()
-		).build().unwrap( HibernateEntityManagerFactory.class );
 
 		// create the procedures
-		createTestData( entityManagerFactory );
-		createProcedures( entityManagerFactory );
+		createTestData( entityManagerFactory() );
+		createProcedures( entityManagerFactory() );
 	}
 
-	private PersistenceUnitDescriptor buildPersistenceUnitDescriptor() {
-		return new BaseEntityManagerFunctionalTestCase.TestingPersistenceUnitDescriptorImpl( getClass().getSimpleName() );
-	}
-
-	@SuppressWarnings("unchecked")
-	private Map buildSettingsMap() {
-		Map settings = new HashMap();
-
-		settings.put( AvailableSettings.LOADED_CLASSES, Collections.singletonList( Message.class ) );
-
-		settings.put( org.hibernate.cfg.AvailableSettings.DIALECT, DerbyTenSevenDialect.class.getName() );
-		settings.put( org.hibernate.cfg.AvailableSettings.DRIVER, org.apache.derby.jdbc.EmbeddedDriver.class.getName() );
-		settings.put( org.hibernate.cfg.AvailableSettings.URL, "jdbc:derby:memory:hibernate-orm-testing;create=true" );
-		settings.put( org.hibernate.cfg.AvailableSettings.USER, "" );
-
-		settings.put( org.hibernate.cfg.AvailableSettings.HBM2DDL_AUTO, "create-drop" );
-		return settings;
-	}
 
 	@After
 	public void tearDown() {
-		if ( entityManagerFactory == null ) {
-			return;
-		}
-
-		deleteTestData( entityManagerFactory );
-		dropProcedures( entityManagerFactory );
-
-		entityManagerFactory.close();
+		deleteTestData( entityManagerFactory() );
+		dropProcedures( entityManagerFactory() );
 	}
 
 	private void createProcedures(HibernateEntityManagerFactory emf) {
 		final SessionFactoryImplementor sf = emf.unwrap( SessionFactoryImplementor.class );
-		final JdbcConnectionAccess connectionAccess = sf.getServiceRegistry().getService( JdbcServices.class ).getBootstrapJdbcConnectionAccess();
+		final JdbcConnectionAccess connectionAccess = sf.getServiceRegistry()
+				.getService( JdbcServices.class )
+				.getBootstrapJdbcConnectionAccess();
 		final Connection conn;
 		try {
 			conn = connectionAccess.obtainConnection();
@@ -197,7 +174,7 @@ public class DateTimeParameterTest extends BaseUnitTestCase {
 					conn.commit();
 				}
 				catch (SQLException e) {
-					System.out.println( "Unable to commit transaction after creating creating procedures");
+					System.out.println( "Unable to commit transaction after creating creating procedures" );
 				}
 
 				try {
@@ -235,7 +212,8 @@ public class DateTimeParameterTest extends BaseUnitTestCase {
 		conn.close();
 	}
 
-	public static void findMessagesByTimestampRange(Timestamp start, Timestamp end, ResultSet[] results) throws SQLException {
+	public static void findMessagesByTimestampRange(Timestamp start, Timestamp end, ResultSet[] results)
+			throws SQLException {
 		Connection conn = DriverManager.getConnection( "jdbc:default:connection" );
 		PreparedStatement ps = conn.prepareStatement( "select * from msg where ts between ? and ?" );
 		ps.setDate( 1, new java.sql.Date( start.getTime() ) );
@@ -244,7 +222,7 @@ public class DateTimeParameterTest extends BaseUnitTestCase {
 		conn.close();
 	}
 
-	public static void retrieveTimestamp(Timestamp in, Timestamp[] out ) throws SQLException {
+	public static void retrieveTimestamp(Timestamp in, Timestamp[] out) throws SQLException {
 		out[0] = in;
 	}
 
@@ -266,7 +244,9 @@ public class DateTimeParameterTest extends BaseUnitTestCase {
 
 	private void dropProcedures(HibernateEntityManagerFactory emf) {
 		final SessionFactoryImplementor sf = emf.unwrap( SessionFactoryImplementor.class );
-		final JdbcConnectionAccess connectionAccess = sf.getServiceRegistry().getService( JdbcServices.class ).getBootstrapJdbcConnectionAccess();
+		final JdbcConnectionAccess connectionAccess = sf.getServiceRegistry()
+				.getService( JdbcServices.class )
+				.getBootstrapJdbcConnectionAccess();
 		final Connection conn;
 		try {
 			conn = connectionAccess.obtainConnection();
@@ -286,7 +266,7 @@ public class DateTimeParameterTest extends BaseUnitTestCase {
 					conn.commit();
 				}
 				catch (SQLException e) {
-					System.out.println( "Unable to commit transaction after creating dropping procedures");
+					System.out.println( "Unable to commit transaction after creating dropping procedures" );
 				}
 
 				try {
@@ -301,20 +281,20 @@ public class DateTimeParameterTest extends BaseUnitTestCase {
 		}
 	}
 
-	@Entity( name = "Message" )
-	@Table( name = "MSG" )
+	@Entity(name = "Message")
+	@Table(name = "MSG")
 	public static class Message {
 		@Id
 		private Integer id;
 		private String body;
-		@Column( name = "POST_DATE" )
-		@Temporal( TemporalType.DATE )
+		@Column(name = "POST_DATE")
+		@Temporal(TemporalType.DATE)
 		private Date postDate;
-		@Column( name = "POST_TIME" )
-		@Temporal( TemporalType.TIME )
+		@Column(name = "POST_TIME")
+		@Temporal(TemporalType.TIME)
 		private Date postTime;
-		@Column( name = "TS" )
-		@Temporal( TemporalType.TIMESTAMP )
+		@Column(name = "TS")
+		@Temporal(TemporalType.TIMESTAMP)
 		private Date ts;
 
 		public Message() {

@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.jpa.test.procedure;
+package org.hibernate.test.jpa.procedure;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -24,7 +24,7 @@ import org.hibernate.dialect.Oracle10gDialect;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
@@ -38,7 +38,7 @@ import static org.junit.Assert.fail;
  */
 @TestForIssue(jiraKey = "HHH-9286")
 @RequiresDialect(Oracle10gDialect.class)
-public class StoreProcedureRefCursorOutParameterByPositionTest extends BaseEntityManagerFunctionalTestCase {
+public class StoreProcedureRefCursorOutParameterByNameTest extends BaseEntityManagerFunctionalTestCase {
 	EntityManagerFactory entityManagerFactory;
 
 	@Override
@@ -58,7 +58,7 @@ public class StoreProcedureRefCursorOutParameterByPositionTest extends BaseEntit
 		EntityManager em = entityManagerFactory.createEntityManager();
 		try {
 			StoredProcedureQuery query = em.createNamedStoredProcedureQuery( "User.findByName" );
-			query.setParameter( 1, "my_name" );
+			query.setParameter( "USER_NAME_PARAM", "my_name" );
 
 			query.getResultList();
 		}
@@ -117,7 +117,6 @@ public class StoreProcedureRefCursorOutParameterByPositionTest extends BaseEntit
 		catch (SQLException e) {
 			throw new RuntimeException( "Unable to create stored procedures", e );
 		}
-
 	}
 
 	@NamedStoredProcedureQuery(name = "User.findByName",
@@ -125,8 +124,8 @@ public class StoreProcedureRefCursorOutParameterByPositionTest extends BaseEntit
 			procedureName = "PROC_EXAMPLE"
 			,
 			parameters = {
-					@StoredProcedureParameter(mode = ParameterMode.IN, type = String.class),
-					@StoredProcedureParameter(mode = ParameterMode.REF_CURSOR, type = Class.class)
+					@StoredProcedureParameter(mode = ParameterMode.IN, name = "USER_NAME_PARAM", type = String.class),
+					@StoredProcedureParameter(mode = ParameterMode.REF_CURSOR, name = "CURSOR_PARAM", type = Class.class)
 			}
 	)
 	@Entity(name = "Message")

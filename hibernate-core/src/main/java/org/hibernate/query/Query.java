@@ -128,10 +128,22 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 */
 	List<R> list();
 
+	/**
+	 * Return the query results as a <tt>List</tt>. If the query contains
+	 * multiple results per row, the results are returned in an instance
+	 * of <tt>Object[]</tt>.
+	 *
+	 * @return the results as a  list
+	 */
 	default List<R> getResultList() {
 		return list();
 	}
 
+	/**
+	 * Retrieve a <tt>Stream</tt> over the query results.
+	 *
+	 * @return The results as a {@link Stream}
+	 */
 	default Stream<R> getResultStream() {
 		return stream();
 	}
@@ -146,20 +158,34 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 */
 	R uniqueResult();
 
+	/**
+	 * Convenience method to return a single instance that matches
+	 * the query, or {@code null} if the query returns no results.
+	 *
+	 * @return the single result or <tt>null</tt>
+	 *
+	 * @throws NonUniqueResultException if there is more than one matching result
+	 */
 	default R getSingleResult() {
 		return uniqueResult();
 	}
 
+	/**
+	 * Convenience method to return a single instance that matches
+	 * the query, as an {@link Optional}.
+	 *
+	 * @return the single result as an <tt>Optional</tt>
+	 *
+	 * @throws NonUniqueResultException if there is more than one matching result
+	 */
 	Optional<R> uniqueResultOptional();
 
 	/**
 	 * Retrieve a Stream over the query results.
 	 * <p/>
 	 * In the initial implementation (5.2) this returns a simple sequential Stream.  The plan
-	 * is to return a a smarter stream in 6.x leveraging the SQM model.
-	 *
+	 * is to return a smarter stream in 6.x leveraging the SQM model.
 	 * <p>
-	 *
 	 * You should call {@link Stream#close()} after processing the stream
 	 * so that the underlying resources are deallocated right away.
 	 *
@@ -167,7 +193,9 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @since 5.2
 	 */
-	Stream<R> stream();
+	default Stream<R> stream() {
+		return getResultStream();
+	}
 
 	/**
 	 * Obtain the comment currently associated with this query.  Provided SQL commenting is enabled
@@ -246,8 +274,14 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 */
 	Query<R> setLockMode(String alias, LockMode lockMode);
 
+	/**
+	 * Set a {@link TupleTransformer}
+	 */
 	Query<R> setTupleTransformer(TupleTransformer<R> transformer);
 
+	/**
+	 * Set a {@link ResultListTransformer}
+	 */
 	Query<R> setResultListTransformer(ResultListTransformer transformer);
 
 	/**
@@ -330,43 +364,6 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	<P> Query<R> setParameter(int position, P val, BasicTypeReference<P> type);
 
 	/**
-	 * Bind a named query parameter as some form of date/time using
-	 * the indicated temporal-type.
-	 *
-	 * @param name the parameter name
-	 * @param val the possibly-null parameter value
-	 * @param temporalType the temporal-type to use in binding the date/time
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	<P> Query<R> setParameter(String name, P val, TemporalType temporalType);
-
-	/**
-	 * Bind a positional query parameter as some form of date/time using
-	 * the indicated temporal-type.
-	 *
-	 * @param position the position of the parameter in the query
-	 * string, numbered from {@code 0}.
-	 * @param val the possibly-null parameter value
-	 * @param temporalType the temporal-type to use in binding the date/time
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	<P> Query<R> setParameter(int position, P val, TemporalType temporalType);
-
-	/**
-	 * Bind a query parameter as some form of date/time using the indicated
-	 * temporal-type.
-	 *
-	 * @param parameter The query parameter memento
-	 * @param val the possibly-null parameter value
-	 * @param temporalType the temporal-type to use in binding the date/time
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	<P> Query<R> setParameter(QueryParameter<P> parameter, P val, TemporalType temporalType);
-
-	/**
 	 * Bind a query parameter using the supplied Type
 	 *
 	 * @param parameter The query parameter memento
@@ -387,83 +384,6 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * @return {@code this}, for method chaining
 	 */
 	<P> Query<R> setParameter(QueryParameter<P> parameter, P val, BasicTypeReference<P> type);
-
-	Query<R> setParameter(Parameter<Instant> param, Instant value, TemporalType temporalType);
-
-	Query<R> setParameter(
-			Parameter<LocalDateTime> param,
-			LocalDateTime value,
-			TemporalType temporalType);
-
-	Query<R> setParameter(
-			Parameter<ZonedDateTime> param,
-			ZonedDateTime value,
-			TemporalType temporalType);
-
-	Query<R> setParameter(
-			Parameter<OffsetDateTime> param,
-			OffsetDateTime value,
-			TemporalType temporalType);
-
-	Query<R> setParameter(String name, Instant value, TemporalType temporalType);
-
-	Query<R> setParameter(String name, LocalDateTime value, TemporalType temporalType);
-
-	Query<R> setParameter(String name, ZonedDateTime value, TemporalType temporalType);
-
-	Query<R> setParameter(String name, OffsetDateTime value, TemporalType temporalType);
-
-	Query<R> setParameter(int position, Instant value, TemporalType temporalType);
-
-	Query<R> setParameter(int position, LocalDateTime value, TemporalType temporalType);
-
-	Query<R> setParameter(int position, ZonedDateTime value, TemporalType temporalType);
-
-	Query<R> setParameter(int position, OffsetDateTime value, TemporalType temporalType);
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// covariant overrides - CommonQueryContract
-
-	@Override
-	Query<R> setHibernateFlushMode(FlushMode flushMode);
-
-	@Override
-	Query<R> setCacheable(boolean cacheable);
-
-	@Override
-	Query<R> setCacheRegion(String cacheRegion);
-
-	@Override
-	Query<R> setCacheMode(CacheMode cacheMode);
-
-	@Override
-	Query<R> setTimeout(int timeout);
-
-	@Override
-	Query<R> setFetchSize(int fetchSize);
-
-	@Override
-	Query<R> setReadOnly(boolean readOnly);
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// covariant overrides - jakarta.persistence.Query/TypedQuery
-
-	@Override
-	Query<R> setMaxResults(int maxResult);
-
-	@Override
-	Query<R> setFirstResult(int startPosition);
-
-	@Override
-	Query<R> setHint(String hintName, Object value);
-
-	@Override
-	Query<R> setFlushMode(FlushModeType flushMode);
-
-	@Override
-	Query<R> setLockMode(LockModeType lockMode);
 
 	/**
 	 * Bind a named query parameter using its inferred Type.  If the parameter is
@@ -496,26 +416,6 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 
 	@Override
 	<T> Query<R> setParameter(Parameter<T> param, T value);
-
-	@Override
-	Query<R> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
-
-	@Override
-	Query<R> setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
-
-	@Override
-	Query<R> setParameter(String name, Calendar value, TemporalType temporalType);
-
-	@Override
-	Query<R> setParameter(String name, Date value, TemporalType temporalType);
-
-	@Override
-	Query<R> setParameter(int position, Calendar value, TemporalType temporalType);
-
-	@Override
-	Query<R> setParameter(int position, Date value, TemporalType temporalType);
-
-
 
 	/**
 	 * Bind multiple values to a query parameter using its inferred Type. The Hibernate type of the parameter values is
@@ -706,11 +606,56 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * matching key names with parameter names and mapping value types to
 	 * Hibernate types using heuristics.
 	 *
-	 * @param bean a java.util.Map
+	 * @param bean a {@link Map} of names to arguments
 	 *
 	 * @return {@code this}, for method chaining
 	 */
 	Query<R> setProperties(@SuppressWarnings("rawtypes") Map bean);
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// covariant overrides - CommonQueryContract
+
+	@Override
+	Query<R> setHibernateFlushMode(FlushMode flushMode);
+
+	@Override
+	Query<R> setCacheable(boolean cacheable);
+
+	@Override
+	Query<R> setCacheRegion(String cacheRegion);
+
+	@Override
+	Query<R> setCacheMode(CacheMode cacheMode);
+
+	@Override
+	Query<R> setTimeout(int timeout);
+
+	@Override
+	Query<R> setFetchSize(int fetchSize);
+
+	@Override
+	Query<R> setReadOnly(boolean readOnly);
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// covariant overrides - jakarta.persistence.Query/TypedQuery
+
+	@Override
+	Query<R> setMaxResults(int maxResult);
+
+	@Override
+	Query<R> setFirstResult(int startPosition);
+
+	@Override
+	Query<R> setHint(String hintName, Object value);
+
+	@Override
+	Query<R> setFlushMode(FlushModeType flushMode);
+
+	@Override
+	Query<R> setLockMode(LockModeType lockMode);
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// deprecated methods
 
 	/**
 	 * @deprecated (since 5.2) Use {@link #setTupleTransformer} or {@link #setResultListTransformer}
@@ -722,4 +667,183 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 		setResultListTransformer( transformer );
 		return this;
 	}
+
+	/**
+	 * Bind a positional query parameter as some form of date/time using
+	 * the indicated temporal-type.
+	 *
+	 * @param position the position of the parameter in the query
+	 * string, numbered from <tt>0</tt>.
+	 * @param val the possibly-null parameter value
+	 * @param temporalType the temporal-type to use in binding the date/time
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated use {@link #setParameter(int, Object)}
+	 *             passing a {@link java.time.LocalDate}, {@link java.time.LocalTime},
+	 *             or {@link java.time.LocalDateTime}
+	 */
+	@Deprecated
+	Query<R> setParameter(int position, Object val, TemporalType temporalType);
+
+	/**
+	 * Bind a named query parameter as some form of date/time using
+	 * the indicated temporal-type.
+	 *
+	 * @param name the parameter name
+	 * @param val the possibly-null parameter value
+	 * @param temporalType the temporal-type to use in binding the date/time
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated use {@link #setParameter(String, Object)}
+	 *             passing a {@link java.time.LocalDate}, {@link java.time.LocalTime},
+	 *             or {@link java.time.LocalDateTime}
+	 */
+	@Deprecated
+	Query<R> setParameter(String name, Object val, TemporalType temporalType);
+
+	/**
+	 * Bind a query parameter as some form of date/time using the indicated
+	 * temporal-type.
+	 *
+	 * @param parameter The query parameter memento
+	 * @param val the possibly-null parameter value
+	 * @param temporalType the temporal-type to use in binding the date/time
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated use {@link #setParameter(int, Object)}
+	 *             passing a {@link java.time.LocalDate}, {@link java.time.LocalTime},
+	 *             or {@link java.time.LocalDateTime}
+	 */
+	@Deprecated
+	<P> Query<R> setParameter(QueryParameter<P> parameter, P val, TemporalType temporalType);
+
+	/**
+	 * @deprecated use {@link #setParameter(Parameter, Object)}
+	 */
+	@Override @Deprecated
+	Query<R> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
+
+	/**
+	 * @deprecated use {@link #setParameter(Parameter, Object)},
+	 *             passing a {@link java.time.LocalDate}, {@link java.time.LocalTime},
+	 *             or {@link java.time.LocalDateTime}
+	 */
+	@Override @Deprecated
+	Query<R> setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
+
+	/**
+	 * @deprecated use {@link #setParameter(String, Object)},
+	 *             passing a {@link java.time.LocalDate}, {@link java.time.LocalTime},
+	 *             or {@link java.time.LocalDateTime}
+	 */
+	@Override @Deprecated
+	Query<R> setParameter(String name, Calendar value, TemporalType temporalType);
+
+	/**
+	 * @deprecated use {@link #setParameter(String, Object)}
+	 *             passing a {@link java.time.LocalDate}, {@link java.time.LocalTime},
+	 *             or {@link java.time.LocalDateTime}
+	 */
+	@Override @Deprecated
+	Query<R> setParameter(String name, Date value, TemporalType temporalType);
+
+	/**
+	 * @deprecated use {@link #setParameter(int, Object)}
+	 *             passing a {@link java.time.LocalDate}, {@link java.time.LocalTime},
+	 *             or {@link java.time.LocalDateTime}
+	 */
+	@Override @Deprecated
+	Query<R> setParameter(int position, Calendar value, TemporalType temporalType);
+
+	/**
+	 * @deprecated use {@link #setParameter(int, Object)}
+	 *             passing a {@link java.time.LocalDate}, {@link java.time.LocalTime},
+	 *             or {@link java.time.LocalDateTime}
+	 */
+	@Override @Deprecated
+	Query<R> setParameter(int position, Date value, TemporalType temporalType);
+
+	/**
+	 * @deprecated use {@link #setParameter(Parameter, Object)}
+	 */
+	@Deprecated
+	Query<R> setParameter(Parameter<Instant> param, Instant value, TemporalType temporalType);
+
+	/**
+	 * @deprecated use {@link #setParameter(Parameter, Object)}
+	 */
+	@Deprecated
+	Query<R> setParameter(
+			Parameter<LocalDateTime> param,
+			LocalDateTime value,
+			TemporalType temporalType);
+
+	/**
+	 * @deprecated use {@link #setParameter(Parameter, Object)}
+	 */
+	@Deprecated
+	Query<R> setParameter(
+			Parameter<ZonedDateTime> param,
+			ZonedDateTime value,
+			TemporalType temporalType);
+
+	/**
+	 * @deprecated use {@link #setParameter(Parameter, Object)}
+	 */
+	@Deprecated
+	Query<R> setParameter(
+			Parameter<OffsetDateTime> param,
+			OffsetDateTime value,
+			TemporalType temporalType);
+
+	/**
+	 * @deprecated use {@link #setParameter(String, Object)}
+	 */
+	@Deprecated
+	Query<R> setParameter(String name, Instant value, TemporalType temporalType);
+
+	/**
+	 * @deprecated use {@link #setParameter(String, Object)}
+	 */
+	@Deprecated
+	Query<R> setParameter(String name, LocalDateTime value, TemporalType temporalType);
+
+	/**
+	 * @deprecated use {@link #setParameter(String, Object)}
+	 */
+	@Deprecated
+	Query<R> setParameter(String name, ZonedDateTime value, TemporalType temporalType);
+
+	/**
+	 * @deprecated use {@link #setParameter(String, Object)}
+	 */
+	@Deprecated
+	Query<R> setParameter(String name, OffsetDateTime value, TemporalType temporalType);
+
+	/**
+	 * @deprecated use {@link #setParameter(int, Object)}
+	 */
+	@Deprecated
+	Query<R> setParameter(int position, Instant value, TemporalType temporalType);
+
+	/**
+	 * @deprecated use {@link #setParameter(int, Object)}
+	 */
+	@Deprecated
+	Query<R> setParameter(int position, LocalDateTime value, TemporalType temporalType);
+
+	/**
+	 * @deprecated use {@link #setParameter(int, Object)}
+	 */
+	@Deprecated
+	Query<R> setParameter(int position, ZonedDateTime value, TemporalType temporalType);
+
+	/**
+	 * @deprecated use {@link #setParameter(int, Object)}
+	 */
+	@Deprecated
+	Query<R> setParameter(int position, OffsetDateTime value, TemporalType temporalType);
 }

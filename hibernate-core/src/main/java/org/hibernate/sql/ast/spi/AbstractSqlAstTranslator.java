@@ -111,6 +111,8 @@ import org.hibernate.sql.ast.tree.expression.TrimSpecification;
 import org.hibernate.sql.ast.tree.expression.UnaryOperation;
 import org.hibernate.sql.ast.tree.from.FromClause;
 import org.hibernate.sql.ast.tree.from.LazyTableGroup;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
+import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableReference;
@@ -848,7 +850,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		final Stack<Clause> clauseStack = getClauseStack();
 		try {
 			clauseStack.push( Clause.DELETE );
-			renderTableReference( statement.getTargetTable(), LockMode.NONE );
+			renderNamedTableReference( statement.getTargetTable(), LockMode.NONE );
 		}
 		finally {
 			clauseStack.pop();
@@ -873,7 +875,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		final Stack<Clause> clauseStack = getClauseStack();
 		try {
 			clauseStack.push( Clause.UPDATE );
-			renderTableReference( statement.getTargetTable(), LockMode.NONE );
+			renderNamedTableReference( statement.getTargetTable(), LockMode.NONE );
 		}
 		finally {
 			clauseStack.pop();
@@ -3615,8 +3617,31 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		return false;
 	}
 
+	protected boolean renderTableReference(TableReference tableReference, LockMode lockMode) {
+		if ( tableReference instanceof NamedTableReference ) {
+			return renderNamedTableReference( (NamedTableReference) tableReference, lockMode );
+		}
+		tableReference.accept( this );
+		return false;
+	}
+
 	@SuppressWarnings("WeakerAccess")
-	protected void renderValuesTableReference(ValuesTableReference tableReference) {
+	protected boolean renderNamedTableReference(NamedTableReference tableReference, LockMode lockMode) {
+		appendSql( tableReference.getTableExpression() );
+		registerAffectedTable( tableReference );
+		final Clause currentClause = clauseStack.getCurrent();
+		if ( rendersTableReferenceAlias( currentClause ) ) {
+			final String identificationVariable = tableReference.getIdentificationVariable();
+			if ( identificationVariable != null ) {
+				appendSql( WHITESPACE );
+				appendSql( identificationVariable );
+			}
+		}
+		return false;
+	}
+
+	@Override
+	public void visitValuesTableReference(ValuesTableReference tableReference) {
 		append( '(' );
 		visitValuesList( tableReference.getValuesList() );
 		append( ')' );
@@ -3635,24 +3660,22 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
-	@SuppressWarnings("WeakerAccess")
-	protected boolean renderTableReference(TableReference tableReference, LockMode lockMode) {
-		if ( tableReference instanceof ValuesTableReference ) {
-			renderValuesTableReference( (ValuesTableReference) tableReference );
-		}
-		else {
-			appendSql( tableReference.getTableExpression() );
-			registerAffectedTable( tableReference );
-			final Clause currentClause = clauseStack.getCurrent();
-			if ( rendersTableReferenceAlias( currentClause ) ) {
-				final String identificationVariable = tableReference.getIdentificationVariable();
-				if ( identificationVariable != null ) {
-					appendSql( WHITESPACE );
-					appendSql( identificationVariable );
-				}
+	@Override
+	public void visitQueryPartTableReference(QueryPartTableReference tableReference) {
+		tableReference.getQueryPart().accept( this );
+		final String identificationVariable = tableReference.getIdentificationVariable();
+		if ( identificationVariable != null ) {
+			append( WHITESPACE );
+			append( tableReference.getIdentificationVariable() );
+			final List<String> columnNames = tableReference.getColumnNames();
+			append( '(' );
+			append( columnNames.get( 0 ) );
+			for ( int i = 1; i < columnNames.size(); i++ ) {
+				append( ',' );
+				append( columnNames.get( i ) );
 			}
+			append( ')' );
 		}
-		return false;
 	}
 
 	public static boolean rendersTableReferenceAlias(Clause clause) {
@@ -3666,7 +3689,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		return true;
 	}
 
-	protected void registerAffectedTable(TableReference tableReference) {
+	protected void registerAffectedTable(NamedTableReference tableReference) {
 		registerAffectedTable( tableReference.getTableExpression() );
 	}
 
@@ -3755,7 +3778,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	@Override
-	public void visitTableReference(TableReference tableReference) {
+	public void visitNamedTableReference(NamedTableReference tableReference) {
 		// nothing to do... handled via TableGroup#render
 	}
 

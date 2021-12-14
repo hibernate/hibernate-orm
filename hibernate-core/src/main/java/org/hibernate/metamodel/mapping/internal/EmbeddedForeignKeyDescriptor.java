@@ -406,14 +406,16 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 	}
 
 	protected TableReference getTableReference(TableGroup lhs, TableGroup tableGroup, String table) {
-		if ( lhs.getPrimaryTableReference().getTableExpression().equals( table ) ) {
-			return lhs.getPrimaryTableReference();
+		TableReference tableReference = lhs.getPrimaryTableReference().resolveTableReference( table );
+		if ( tableReference != null ) {
+			return tableReference;
 		}
-		else if ( tableGroup.getPrimaryTableReference().getTableExpression().equals( table ) ) {
-			return tableGroup.getPrimaryTableReference();
+		tableReference = tableGroup.getPrimaryTableReference().resolveTableReference( table );
+		if ( tableReference != null ) {
+			return tableReference;
 		}
 
-		final TableReference tableReference = lhs.resolveTableReference(
+		tableReference = lhs.resolveTableReference(
 				lhs.getNavigablePath().append( getNavigableRole().getNavigableName() ),
 				table
 		);

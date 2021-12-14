@@ -14,10 +14,9 @@ import java.util.Map;
 
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.AbstractMutationStatement;
-import org.hibernate.sql.ast.tree.MutationStatement;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 
 /**
@@ -25,19 +24,20 @@ import org.hibernate.sql.ast.tree.select.QueryPart;
  */
 public class InsertStatement extends AbstractMutationStatement {
 
+	public static final String DEFAULT_ALIAS = "to_insert_";
 	private List<ColumnReference> targetColumnReferences;
 	private QueryPart sourceSelectStatement;
 	private List<Values> valuesList = new ArrayList<>();
 
-	public InsertStatement(TableReference targetTable) {
+	public InsertStatement(NamedTableReference targetTable) {
 		super( targetTable );
 	}
 
-	public InsertStatement(TableReference targetTable, List<ColumnReference> returningColumns) {
+	public InsertStatement(NamedTableReference targetTable, List<ColumnReference> returningColumns) {
 		super( new LinkedHashMap<>(), targetTable, returningColumns );
 	}
 
-	public InsertStatement(boolean withRecursive, Map<String, CteStatement> cteStatements, TableReference targetTable, List<ColumnReference> returningColumns) {
+	public InsertStatement(boolean withRecursive, Map<String, CteStatement> cteStatements, NamedTableReference targetTable, List<ColumnReference> returningColumns) {
 		super( cteStatements, targetTable, returningColumns );
 		setWithRecursive( withRecursive );
 	}

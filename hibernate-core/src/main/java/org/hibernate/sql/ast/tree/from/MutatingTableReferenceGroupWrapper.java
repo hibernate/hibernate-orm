@@ -23,12 +23,12 @@ import org.hibernate.query.NavigablePath;
 public class MutatingTableReferenceGroupWrapper implements VirtualTableGroup {
 	private final NavigablePath navigablePath;
 	private final ModelPartContainer modelPart;
-	private final TableReference mutatingTableReference;
+	private final NamedTableReference mutatingTableReference;
 
 	public MutatingTableReferenceGroupWrapper(
 			NavigablePath navigablePath,
 			ModelPartContainer modelPart,
-			TableReference mutatingTableReference) {
+			NamedTableReference mutatingTableReference) {
 		this.navigablePath = navigablePath;
 		this.modelPart = modelPart;
 		this.mutatingTableReference = mutatingTableReference;

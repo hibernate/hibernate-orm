@@ -22,7 +22,6 @@ import org.hibernate.boot.model.relational.Database;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.DynamicFilterAliasGenerator;
@@ -52,6 +51,7 @@ import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
@@ -962,7 +962,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			return;
 		}
 		// The optimization is to simply add the discriminator filter fragment for all treated entity names
-		final TableReference tableReference = tableGroup.getPrimaryTableReference();
+		final NamedTableReference tableReference = (NamedTableReference) tableGroup.getPrimaryTableReference();
 		tableReference.setPrunedTableExpression(
 				"(select * from " + getTableName() + " t where " + discriminatorFilterFragment( "t", treatedEntityNames ) + ")"
 		);

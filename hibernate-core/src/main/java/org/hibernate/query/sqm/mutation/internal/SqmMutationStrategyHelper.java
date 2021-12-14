@@ -16,10 +16,10 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.query.spi.SqlOmittingQueryOptions;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.exec.spi.ExecutionContext;
@@ -130,7 +130,12 @@ public class SqmMutationStrategyHelper {
 		else {
 			// element-collection or many-to-many - delete the collection-table row
 
-			final TableReference tableReference = new TableReference( separateCollectionTable, DeleteStatement.DEFAULT_ALIAS, true, sessionFactory );
+			final NamedTableReference tableReference = new NamedTableReference(
+					separateCollectionTable,
+					DeleteStatement.DEFAULT_ALIAS,
+					true,
+					sessionFactory
+			);
 
 			final DeleteStatement sqlAstDelete = new DeleteStatement(
 					tableReference,

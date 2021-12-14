@@ -31,6 +31,7 @@ import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.StandardTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
@@ -65,9 +66,9 @@ public final class ExecuteWithTemporaryTableHelper {
 		assert mutatingTableGroup.getModelPart() instanceof EntityMappingType;
 		final EntityMappingType mutatingEntityDescriptor = (EntityMappingType) mutatingTableGroup.getModelPart();
 
-		final TableReference idTableReference = new TableReference(
+		final NamedTableReference idTableReference = new NamedTableReference(
 				idTable.getTableExpression(),
-				null,
+				InsertStatement.DEFAULT_ALIAS,
 				false,
 				factory
 		);
@@ -153,7 +154,7 @@ public final class ExecuteWithTemporaryTableHelper {
 		// Visit the table joins and reset the lock mode if we encounter OUTER joins that are not supported
 		if ( temporaryTableInsert.getSourceSelectStatement() != null
 				&& !jdbcEnvironment.getDialect().supportsOuterJoinForUpdate() ) {
-			temporaryTableInsert.getSourceSelectStatement().forEachQuerySpec(
+			temporaryTableInsert.getSourceSelectStatement().visitQuerySpecs(
 					querySpec -> {
 						querySpec.getFromClause().visitTableJoins(
 								tableJoin -> {
@@ -197,7 +198,7 @@ public final class ExecuteWithTemporaryTableHelper {
 			ExecutionContext executionContext) {
 		final QuerySpec querySpec = new QuerySpec( false );
 
-		final TableReference idTableReference = new TableReference(
+		final NamedTableReference idTableReference = new NamedTableReference(
 				idTable.getTableExpression(),
 				TemporaryTable.DEFAULT_ALIAS,
 				true,

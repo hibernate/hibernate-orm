@@ -9,7 +9,7 @@ package org.hibernate.sql.ast.tree;
 import java.util.List;
 
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
 
 /**
  * Specialization of Statement for mutation (DML) statements
@@ -17,6 +17,6 @@ import org.hibernate.sql.ast.tree.from.TableReference;
  * @author Steve Ebersole
  */
 public interface MutationStatement extends Statement {
-	TableReference getTargetTable();
+	NamedTableReference getTargetTable();
 	List<ColumnReference> getReturningColumns();
 }

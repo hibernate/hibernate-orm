@@ -9,6 +9,7 @@ package org.hibernate.sql.ast.tree.select;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
@@ -63,8 +64,13 @@ public class QuerySpec extends QueryPart implements SqlAstNode, PredicateContain
 	}
 
 	@Override
-	public void forEachQuerySpec(Consumer<QuerySpec> querySpecConsumer) {
+	public void visitQuerySpecs(Consumer<QuerySpec> querySpecConsumer) {
 		querySpecConsumer.accept( this );
+	}
+
+	@Override
+	public <T> T queryQuerySpecs(Function<QuerySpec, T> querySpecConsumer) {
+		return querySpecConsumer.apply( this );
 	}
 
 	public FromClause getFromClause() {

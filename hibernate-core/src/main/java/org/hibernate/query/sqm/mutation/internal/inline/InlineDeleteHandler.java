@@ -18,7 +18,6 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
@@ -27,7 +26,7 @@ import org.hibernate.query.sqm.mutation.internal.MatchingIdSelectionHelper;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
-import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.JdbcDelete;
@@ -160,7 +159,7 @@ public class InlineDeleteHandler implements DeleteHandler {
 			ModelPart valueModelPart,
 			JdbcParameterBindings jdbcParameterBindings,
 			DomainQueryExecutionContext executionContext) {
-		final TableReference targetTableReference = new TableReference(
+		final NamedTableReference targetTableReference = new NamedTableReference(
 				targetTableExpression,
 				DeleteStatement.DEFAULT_ALIAS,
 				false,

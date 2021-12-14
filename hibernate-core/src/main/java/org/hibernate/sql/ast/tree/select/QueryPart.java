@@ -9,6 +9,7 @@ package org.hibernate.sql.ast.tree.select;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import org.hibernate.query.FetchClauseType;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
@@ -37,7 +38,9 @@ public abstract class QueryPart implements SqlAstNode, Expression, DomainResultP
 
 	public abstract QuerySpec getLastQuerySpec();
 
-	public abstract void forEachQuerySpec(Consumer<QuerySpec> querySpecConsumer);
+	public abstract void visitQuerySpecs(Consumer<QuerySpec> querySpecConsumer);
+
+	public abstract <T> T queryQuerySpecs(Function<QuerySpec, T> querySpecConsumer);
 
 	/**
 	 * Does this QueryPart map to the statement's root query (as

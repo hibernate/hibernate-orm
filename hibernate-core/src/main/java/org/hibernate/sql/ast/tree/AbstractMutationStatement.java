@@ -13,30 +13,30 @@ import java.util.Map;
 
 import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
 
 /**
  * @author Christian Beikov
  */
 public abstract class AbstractMutationStatement extends AbstractStatement implements MutationStatement {
 
-	private final TableReference targetTable;
+	private final NamedTableReference targetTable;
 	private final List<ColumnReference> returningColumns;
 
-	public AbstractMutationStatement(TableReference targetTable) {
+	public AbstractMutationStatement(NamedTableReference targetTable) {
 		super( new LinkedHashMap<>() );
 		this.targetTable = targetTable;
 		this.returningColumns = Collections.emptyList();
 	}
 
-	public AbstractMutationStatement(Map<String, CteStatement> cteStatements, TableReference targetTable, List<ColumnReference> returningColumns) {
+	public AbstractMutationStatement(Map<String, CteStatement> cteStatements, NamedTableReference targetTable, List<ColumnReference> returningColumns) {
 		super( cteStatements );
 		this.targetTable = targetTable;
 		this.returningColumns = returningColumns;
 	}
 
 	@Override
-	public TableReference getTargetTable() {
+	public NamedTableReference getTargetTable() {
 		return targetTable;
 	}
 

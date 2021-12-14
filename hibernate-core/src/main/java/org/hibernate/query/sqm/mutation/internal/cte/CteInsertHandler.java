@@ -76,7 +76,7 @@ import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.Over;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SelfRenderingSqlFragmentExpression;
-import org.hibernate.sql.ast.tree.from.StandardTableGroup;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableReference;
@@ -189,7 +189,7 @@ public class CteInsertHandler implements InsertHandler {
 		final List<Map.Entry<SqmCteTableColumn, Assignment>> targetPathColumns = new ArrayList<>( size );
 		final List<SqmCteTableColumn> targetPathSqmCteColumns = new ArrayList<>( size );
 		final Map<SqmParameter, MappingModelExpressable> paramTypeResolutions = new LinkedHashMap<>();
-		final TableReference entityTableReference = new TableReference(
+		final NamedTableReference entityTableReference = new NamedTableReference(
 				cteTable.getCteName(),
 				TemporaryTable.DEFAULT_ALIAS,
 				true,
@@ -240,7 +240,7 @@ public class CteInsertHandler implements InsertHandler {
 		final Statement queryStatement;
 		if ( sqmInsertStatement instanceof SqmInsertSelectStatement ) {
 			final QueryPart queryPart = sqmConverter.visitQueryPart( ( (SqmInsertSelectStatement<?>) sqmInsertStatement ).getSelectQueryPart() );
-			queryPart.forEachQuerySpec(
+			queryPart.visitQuerySpecs(
 					querySpec -> {
 						// This returns true if the insertion target uses a sequence with an optimizer
 						// in which case we will fill the row_number column instead of the id column
@@ -407,7 +407,7 @@ public class CteInsertHandler implements InsertHandler {
 				final QuerySpec rowsWithSequenceQuery = new QuerySpec( true );
 				rowsWithSequenceQuery.getFromClause().addRoot(
 						new CteTableGroup(
-								new TableReference(
+								new NamedTableReference(
 										baseTableName,
 										"e",
 										false,
@@ -465,7 +465,7 @@ public class CteInsertHandler implements InsertHandler {
 				final TableGroup baseTableGroup = new TableGroupImpl(
 						navigablePath,
 						null,
-						new TableReference(
+						new NamedTableReference(
 								baseTableName,
 								"e",
 								false,
@@ -475,7 +475,7 @@ public class CteInsertHandler implements InsertHandler {
 						null
 				);
 				final TableGroup rowsWithSequenceTableGroup = new CteTableGroup(
-						new TableReference(
+						new NamedTableReference(
 								ROW_NUMBERS_WITH_SEQUENCE_VALUE,
 								"t",
 								false,
@@ -639,7 +639,7 @@ public class CteInsertHandler implements InsertHandler {
 		querySpec.getSelectClause().addSqlSelection( new SqlSelectionImpl( 1, 0, count ) );
 		querySpec.getFromClause().addRoot(
 				new CteTableGroup(
-						new TableReference(
+						new NamedTableReference(
 								// We want to return the insertion count of the base table
 								baseInsertCte,
 								CTE_TABLE_IDENTIFIER,
@@ -789,7 +789,7 @@ public class CteInsertHandler implements InsertHandler {
 					true
 			);
 			final List<Map.Entry<SqmCteTableColumn, Assignment>> assignmentList = assignmentsByTable.get( updatingTableReference );
-			final TableReference dmlTableReference = resolveUnionTableReference(
+			final NamedTableReference dmlTableReference = resolveUnionTableReference(
 					updatingTableReference,
 					tableExpression
 			);
@@ -806,7 +806,7 @@ public class CteInsertHandler implements InsertHandler {
 				final String baseTableName = "base_" + queryCte.getCteTable().getTableExpression();
 				insertSelectSpec.getFromClause().addRoot(
 						new CteTableGroup(
-								new TableReference(
+								new NamedTableReference(
 										baseTableName,
 										"e",
 										false,
@@ -862,7 +862,7 @@ public class CteInsertHandler implements InsertHandler {
 				final TableGroup baseTableGroup = new TableGroupImpl(
 						navigablePath,
 						null,
-						new TableReference(
+						new NamedTableReference(
 								baseTableName,
 								"e",
 								false,
@@ -872,7 +872,7 @@ public class CteInsertHandler implements InsertHandler {
 						null
 				);
 				final TableGroup rootInsertCteTableGroup = new CteTableGroup(
-						new TableReference(
+						new NamedTableReference(
 								getCteTableName( tableExpression ),
 								"t",
 								false,
@@ -950,7 +950,7 @@ public class CteInsertHandler implements InsertHandler {
 				final QuerySpec finalResultQuery = new QuerySpec( true );
 				finalResultQuery.getFromClause().addRoot(
 						new CteTableGroup(
-							new TableReference(
+							new NamedTableReference(
 									dmlResultCte.getTableExpression(),
 									"e",
 									false,
@@ -1008,7 +1008,7 @@ public class CteInsertHandler implements InsertHandler {
 			else {
 				insertSelectSpec.getFromClause().addRoot(
 						new CteTableGroup(
-								new TableReference(
+								new NamedTableReference(
 										queryCte.getCteTable().getTableExpression(),
 										"e",
 										false,
@@ -1103,11 +1103,11 @@ public class CteInsertHandler implements InsertHandler {
 		return getCteTableName( rootTableName );
 	}
 
-	protected TableReference resolveUnionTableReference(
+	protected NamedTableReference resolveUnionTableReference(
 			TableReference tableReference,
 			String tableExpression) {
 		if ( tableReference instanceof UnionTableReference ) {
-			return new TableReference(
+			return new NamedTableReference(
 					tableExpression,
 					tableReference.getIdentificationVariable(),
 					tableReference.isOptional(),
@@ -1115,7 +1115,7 @@ public class CteInsertHandler implements InsertHandler {
 			);
 		}
 		else {
-			return tableReference;
+			return (NamedTableReference) tableReference;
 		}
 	}
 

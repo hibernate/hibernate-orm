@@ -32,6 +32,7 @@ import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.cte.CteTable;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
@@ -154,7 +155,7 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 					if ( assignmentList == null ) {
 						return;
 					}
-					final TableReference dmlTableReference = resolveUnionTableReference(
+					final NamedTableReference dmlTableReference = resolveUnionTableReference(
 							updatingTableReference,
 							tableExpression
 					);

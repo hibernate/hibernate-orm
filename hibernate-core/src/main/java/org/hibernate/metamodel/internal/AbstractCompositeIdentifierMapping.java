@@ -226,7 +226,7 @@ public abstract class AbstractCompositeIdentifierMapping
 		final TableReference defaultTableReference = tableGroup.resolveTableReference( navigablePath, getContainingTableExpression() );
 		getEmbeddableTypeDescriptor().forEachSelectable(
 				(columnIndex, selection) -> {
-					final TableReference tableReference = selection.getContainingTableExpression().equals( defaultTableReference.getTableExpression() )
+					final TableReference tableReference = defaultTableReference.resolveTableReference( selection.getContainingTableExpression() ) != null
 							? defaultTableReference
 							: tableGroup.resolveTableReference( navigablePath, selection.getContainingTableExpression() );
 					final Expression columnReference = sqlAstCreationState.getSqlExpressionResolver()

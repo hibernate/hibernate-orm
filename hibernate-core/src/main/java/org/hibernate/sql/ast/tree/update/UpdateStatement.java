@@ -16,7 +16,7 @@ import org.hibernate.sql.ast.spi.SqlAstTreeHelper;
 import org.hibernate.sql.ast.tree.AbstractMutationStatement;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 
 /**
@@ -27,7 +27,7 @@ public class UpdateStatement extends AbstractMutationStatement {
 	private final Predicate restriction;
 
 	public UpdateStatement(
-			TableReference targetTable,
+			NamedTableReference targetTable,
 			List<Assignment> assignments,
 			Predicate restriction) {
 		super( targetTable );
@@ -36,7 +36,7 @@ public class UpdateStatement extends AbstractMutationStatement {
 	}
 
 	public UpdateStatement(
-			TableReference targetTable,
+			NamedTableReference targetTable,
 			List<Assignment> assignments,
 			Predicate restriction,
 			List<ColumnReference> returningColumns) {
@@ -48,7 +48,7 @@ public class UpdateStatement extends AbstractMutationStatement {
 	public UpdateStatement(
 			boolean withRecursive,
 			Map<String, CteStatement> cteStatements,
-			TableReference targetTable,
+			NamedTableReference targetTable,
 			List<Assignment> assignments,
 			Predicate restriction,
 			List<ColumnReference> returningColumns) {
@@ -67,11 +67,11 @@ public class UpdateStatement extends AbstractMutationStatement {
 	}
 
 	public static class UpdateStatementBuilder {
-		private final TableReference targetTableRef;
+		private final NamedTableReference targetTableRef;
 		private List<Assignment> assignments;
 		private Predicate restriction;
 
-		public UpdateStatementBuilder(TableReference targetTableRef) {
+		public UpdateStatementBuilder(NamedTableReference targetTableRef) {
 			this.targetTableRef = targetTableRef;
 		}
 

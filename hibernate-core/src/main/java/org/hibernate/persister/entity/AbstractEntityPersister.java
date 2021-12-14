@@ -229,6 +229,7 @@ import org.hibernate.sql.ast.tree.expression.AliasedExpression;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.StandardTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
@@ -1351,7 +1352,7 @@ public abstract class AbstractEntityPersister
 					for ( int i = 0; i < subclassTableNames.length; i++ ) {
 						if ( tableExpression.equals( subclassTableNames[i] ) ) {
 							final boolean isNullableTable = isNullableSubclassTable( i );
-							final TableReference joinedTableReference = new TableReference(
+							final NamedTableReference joinedTableReference = new NamedTableReference(
 									tableExpression,
 									sqlAliasBase.generateNewAlias(),
 									isNullableTable,
@@ -1422,7 +1423,7 @@ public abstract class AbstractEntityPersister
 			SqlAstJoinType joinType,
 			String[] targetColumns,
 			SqlExpressionResolver sqlExpressionResolver) {
-		final TableReference joinedTableReference = new TableReference(
+		final NamedTableReference joinedTableReference = new NamedTableReference(
 				joinTableExpression,
 				sqlAliasBase.generateNewAlias(),
 				joinType != SqlAstJoinType.INNER,
@@ -1442,7 +1443,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	protected TableReference resolvePrimaryTableReference(SqlAliasBase sqlAliasBase) {
-		return new TableReference(
+		return new NamedTableReference(
 				getTableName(),
 				sqlAliasBase.generateNewAlias(),
 				false,
@@ -4015,7 +4016,7 @@ public abstract class AbstractEntityPersister
 			alias = tableGroup.getPrimaryTableReference().getIdentificationVariable();
 		}
 		else {
-			alias = tableGroup.getPrimaryTableReference().getTableExpression();
+			alias = tableGroup.getPrimaryTableReference().getTableId();
 		}
 		final StringBuilder sessionFilterFragment = new StringBuilder();
 		filterHelper.render( sessionFilterFragment, !useIdentificationVariable || tableGroup == null ? null : getFilterAliasGenerator( tableGroup ), enabledFilters );
@@ -4059,7 +4060,7 @@ public abstract class AbstractEntityPersister
 			alias = tableGroup.getPrimaryTableReference().getIdentificationVariable();
 		}
 		else {
-			alias = tableGroup.getPrimaryTableReference().getTableExpression();
+			alias = tableGroup.getPrimaryTableReference().getTableId();
 		}
 		applyWhereRestriction( generateWhereConditionAlias( alias ), treatAsDeclarations, querySpec, tableGroupJoin );
 	}

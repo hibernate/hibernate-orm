@@ -52,6 +52,7 @@ import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.UnionTableGroup;
@@ -257,13 +258,13 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			SqlExpressionResolver expressionResolver,
 			FromClauseAccess fromClauseAccess,
 			SqlAstCreationContext creationContext) {
-		final TableReference tableReference = resolvePrimaryTableReference( sqlAliasBase );
+		final UnionTableReference tableReference = resolvePrimaryTableReference( sqlAliasBase );
 
 		return new UnionTableGroup( canUseInnerJoins, navigablePath, tableReference, this, explicitSourceAlias );
 	}
 
 	@Override
-	protected TableReference resolvePrimaryTableReference(SqlAliasBase sqlAliasBase) {
+	protected UnionTableReference resolvePrimaryTableReference(SqlAliasBase sqlAliasBase) {
 		return new UnionTableReference(
 				getTableName(),
 				subclassTableExpressions,
@@ -401,7 +402,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		if ( treatedEntityNames.contains( getEntityName() ) ) {
 			return;
 		}
-		final TableReference tableReference = tableGroup.resolveTableReference( getRootTableName() );
+		final NamedTableReference tableReference = (NamedTableReference) tableGroup.resolveTableReference( getRootTableName() );
 		// Replace the default union sub-query with a specially created one that only selects the tables for the treated entity names
 		tableReference.setPrunedTableExpression( generateSubquery( treatedEntityNames ) );
 	}

@@ -81,7 +81,6 @@ import org.hibernate.metamodel.mapping.SqlExpressable;
 import org.hibernate.metamodel.mapping.ValueMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedCollectionPart;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
-import org.hibernate.metamodel.mapping.internal.ExplicitColumnDiscriminatorMappingImpl;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
@@ -107,7 +106,9 @@ import org.hibernate.query.sqm.tree.domain.SqmTreatedRoot;
 import org.hibernate.sql.ast.tree.expression.Over;
 import org.hibernate.sql.ast.tree.expression.SelfRenderingSqlFragmentExpression;
 import org.hibernate.sql.ast.tree.from.CorrelatedPluralTableGroup;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.PluralTableGroup;
+import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.exec.internal.VersionTypeSeedParameterSpecification;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -302,7 +303,6 @@ import org.hibernate.sql.ast.tree.from.LazyTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
-import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.VirtualTableGroup;
 import org.hibernate.sql.ast.tree.insert.InsertStatement;
 import org.hibernate.sql.ast.tree.insert.Values;
@@ -695,7 +695,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 			return new UpdateStatement(
 					sqmStatement.isWithRecursive(), cteStatements,
-					rootTableGroup.getPrimaryTableReference(),
+					(NamedTableReference) rootTableGroup.getPrimaryTableReference(),
 					assignments,
 					SqlAstTreeHelper.combinePredicates( suppliedPredicate, additionalRestrictions ),
 					Collections.emptyList()
@@ -926,7 +926,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			return new DeleteStatement(
 					statement.isWithRecursive(),
 					cteStatements,
-					rootTableGroup.getPrimaryTableReference(),
+					(NamedTableReference) rootTableGroup.getPrimaryTableReference(),
 					SqlAstTreeHelper.combinePredicates( suppliedPredicate, additionalRestrictions ),
 					Collections.emptyList()
 			);
@@ -981,7 +981,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			insertStatement = new InsertStatement(
 					sqmStatement.isWithRecursive(),
 					cteStatements,
-					rootTableGroup.getPrimaryTableReference(),
+					(NamedTableReference) rootTableGroup.getPrimaryTableReference(),
 					Collections.emptyList()
 			);
 			additionalInsertValues = visitInsertionTargetPaths(
@@ -1005,7 +1005,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				visitQueryPart( selectQueryPart )
 		);
 
-		insertStatement.getSourceSelectStatement().forEachQuerySpec(
+		insertStatement.getSourceSelectStatement().visitQuerySpecs(
 				querySpec -> {
 					final boolean appliedRowNumber = additionalInsertValues.applySelections(
 							querySpec,
@@ -1060,7 +1060,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final InsertStatement insertStatement = new InsertStatement(
 					sqmStatement.isWithRecursive(),
 					cteStatements,
-					rootTableGroup.getPrimaryTableReference(),
+					(NamedTableReference) rootTableGroup.getPrimaryTableReference(),
 					Collections.emptyList()
 			);
 
@@ -5791,7 +5791,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		@Override
 		public SqlSelection resolveSqlSelection(
 				Expression expression,
-				JavaType javaTypeDescriptor,
+				JavaType<?> javaTypeDescriptor,
 				TypeConfiguration typeConfiguration) {
 			return delegate.resolveSqlSelection( expression, javaTypeDescriptor, typeConfiguration );
 		}
@@ -5847,7 +5847,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		@Override
 		public SqlSelection resolveSqlSelection(
 				Expression expression,
-				JavaType javaTypeDescriptor,
+				JavaType<?> javaTypeDescriptor,
 				TypeConfiguration typeConfiguration) {
 			SqlSelection selection = delegate.resolveSqlSelection( expression, javaTypeDescriptor, typeConfiguration );
 			List<SqlSelection> sqlSelectionList = sqlSelectionsForSqmSelection[index];

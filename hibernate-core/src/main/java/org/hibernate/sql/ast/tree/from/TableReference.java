@@ -6,9 +6,11 @@
  */
 package org.hibernate.sql.ast.tree.from;
 
-import java.util.Objects;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -18,87 +20,56 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
  *
  * @author Steve Ebersole
  */
-public class TableReference implements SqlAstNode, ColumnReferenceQualifier {
-	private final String tableExpression;
-	private final String identificationVariable;
+public interface TableReference extends SqlAstNode, ColumnReferenceQualifier {
 
-	private final boolean isOptional;
-	private String prunedTableExpression;
+	String getIdentificationVariable();
 
-	public TableReference(
-			String tableExpression,
-			String identificationVariable,
-			boolean isOptional,
-			SessionFactoryImplementor sessionFactory) {
-		this.tableExpression = tableExpression;
-		this.identificationVariable = identificationVariable;
-		this.isOptional = isOptional;
-	}
+	/**
+	 * An identifier for the table reference. May be null if this is not a named table reference.
+	 */
+	String getTableId();
 
-	public String getTableExpression() {
-		return prunedTableExpression == null ? tableExpression : prunedTableExpression;
-	}
-
-	public String getIdentificationVariable() {
-		return identificationVariable;
-	}
-
-	public boolean isOptional() {
-		return isOptional;
-	}
-
-	public void setPrunedTableExpression(String prunedTableExpression) {
-		this.prunedTableExpression = prunedTableExpression;
-	}
+	boolean isOptional();
 
 	@Override
-	public void accept(SqlAstWalker sqlTreeWalker) {
-		sqlTreeWalker.visitTableReference( this );
+	void accept(SqlAstWalker sqlTreeWalker);
+
+	default void applyAffectedTableNames(Consumer<String> nameCollector) {
+		visitAffectedTableNames(
+				name -> {
+					nameCollector.accept( name );
+					return null;
+				}
+		);
 	}
 
+	default List<String> getAffectedTableNames() {
+		final List<String> affectedTableNames = new ArrayList<>();
+		visitAffectedTableNames(
+				name -> {
+					affectedTableNames.add( name );
+					return null;
+				}
+		);
+		return affectedTableNames;
+	}
+
+	default boolean containsAffectedTableName(String requestedName) {
+		return visitAffectedTableNames( requestedName::equals );
+	}
+
+	Boolean visitAffectedTableNames(Function<String, Boolean> nameCollector);
+
 	@Override
-	public TableReference resolveTableReference(
+	TableReference resolveTableReference(
 			NavigablePath navigablePath,
 			String tableExpression,
-			boolean allowFkOptimization) {
-		if ( tableExpression.equals( getTableExpression() ) ) {
-			return this;
-		}
-		throw new IllegalStateException( "Could not resolve binding for table `" + tableExpression + "`" );
-	}
+			boolean allowFkOptimization);
 
 	@Override
-	public TableReference getTableReference(
+	TableReference getTableReference(
 			NavigablePath navigablePath,
 			String tableExpression,
 			boolean allowFkOptimization,
-			boolean resolve) {
-		if ( this.tableExpression.equals( tableExpression ) ) {
-			return this;
-		}
-		return null;
-	}
-
-	@Override
-	public String toString() {
-		return getTableExpression() + "(" + getIdentificationVariable() + ')';
-	}
-
-	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
-			return true;
-		}
-		if ( o == null || getClass() != o.getClass() ) {
-			return false;
-		}
-		TableReference that = (TableReference) o;
-		return Objects.equals( identificationVariable, that.identificationVariable );
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash( identificationVariable );
-	}
-
+			boolean resolve);
 }

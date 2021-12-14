@@ -51,6 +51,7 @@ import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.CollectionTableGroup;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
@@ -663,7 +664,7 @@ public class PluralAttributeMappingImpl
 		assert !getCollectionDescriptor().isOneToMany();
 
 		final String collectionTableName = ( (Joinable) collectionDescriptor ).getTableName();
-		final TableReference collectionTableReference = new TableReference(
+		final TableReference collectionTableReference = new NamedTableReference(
 				collectionTableName,
 				sqlAliasBase.generateNewAlias(),
 				true,

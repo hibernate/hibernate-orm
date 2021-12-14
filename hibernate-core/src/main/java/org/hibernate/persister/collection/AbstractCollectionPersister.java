@@ -2028,7 +2028,7 @@ public abstract class AbstractCollectionPersister
 			alias = tableReference.getIdentificationVariable();
 		}
 		else {
-			alias = tableReference.getTableExpression();
+			alias = tableReference.getTableId();
 		}
 
 		applyWhereRestriction( alias, querySpec, tableGroupJoin );
@@ -2202,7 +2202,7 @@ public abstract class AbstractCollectionPersister
 			alias = tableReference.getIdentificationVariable();
 		}
 		else {
-			alias = tableReference.getTableExpression();
+			alias = tableReference.getTableId();
 		}
 		StringBuilder sessionFilterFragment = new StringBuilder();
 

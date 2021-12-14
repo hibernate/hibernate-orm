@@ -11,7 +11,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
+import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
 import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.from.ValuesTableReference;
+import org.hibernate.sql.ast.tree.insert.Values;
 
 /**
  * A simple walker that checks for aggregate functions.
@@ -29,7 +34,17 @@ public class AliasCollector extends AbstractSqlAstWalker {
 	}
 
 	@Override
-	public void visitTableReference(TableReference tableReference) {
+	public void visitNamedTableReference(NamedTableReference tableReference) {
+		tableReferenceMap.put( tableReference.getIdentificationVariable(), tableReference );
+	}
+
+	@Override
+	public void visitValuesTableReference(ValuesTableReference tableReference) {
+		tableReferenceMap.put( tableReference.getIdentificationVariable(), tableReference );
+	}
+
+	@Override
+	public void visitQueryPartTableReference(QueryPartTableReference tableReference) {
 		tableReferenceMap.put( tableReference.getIdentificationVariable(), tableReference );
 	}
 }

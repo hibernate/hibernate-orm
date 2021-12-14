@@ -112,7 +112,7 @@ public class CorrelatedTableGroup extends AbstractTableGroup {
 
 	@Override
 	public void applyAffectedTableNames(Consumer<String> nameCollector) {
-		nameCollector.accept( getPrimaryTableReference().getTableExpression() );
+		getPrimaryTableReference().applyAffectedTableNames( nameCollector );
 	}
 
 	@Override

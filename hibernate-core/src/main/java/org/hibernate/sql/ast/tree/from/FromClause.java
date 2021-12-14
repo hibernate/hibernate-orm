@@ -44,17 +44,12 @@ public class FromClause implements SqlAstNode {
 	}
 
 	public void visitTableGroups(Consumer<TableGroup> action) {
-		for ( int i = 0; i < roots.size(); i++ ) {
-			visitTableGroups( roots.get( i ), action );
-		}
-	}
-
-	private void visitTableGroups(TableGroup tableGroup, Consumer<TableGroup> action) {
-		action.accept( tableGroup );
-		final List<TableGroupJoin> tableGroupJoins = tableGroup.getTableGroupJoins();
-		for ( int i = 0; i < tableGroupJoins.size(); i++ ) {
-			visitTableGroups( tableGroupJoins.get( i ).getJoinedGroup(), action );
-		}
+		queryTableGroups(
+				tableGroup -> {
+					action.accept( tableGroup );
+					return null;
+				}
+		);
 	}
 
 	public <T> T queryTableGroups(Function<TableGroup, T> action) {
@@ -79,28 +74,28 @@ public class FromClause implements SqlAstNode {
 				return nestedResult;
 			}
 		}
+		final List<TableGroupJoin> nestedTableGroupJoins = tableGroup.getNestedTableGroupJoins();
+		for ( int i = 0; i < nestedTableGroupJoins.size(); i++ ) {
+			final T nestedResult = queryTableGroups( nestedTableGroupJoins.get( i ).getJoinedGroup(), action );
+			if ( nestedResult != null ) {
+				return nestedResult;
+			}
+		}
 		return null;
 	}
 
 	public void visitTableJoins(Consumer<TableJoin> action) {
-		for ( int i = 0; i < roots.size(); i++ ) {
-			visitTableJoins( roots.get( i ), action );
-		}
-	}
-
-	private void visitTableJoins(TableGroup tableGroup, Consumer<TableJoin> action) {
-		tableGroup.getTableReferenceJoins().forEach( action );
-		final List<TableGroupJoin> tableGroupJoins = tableGroup.getTableGroupJoins();
-		for ( int i = 0; i < tableGroupJoins.size(); i++ ) {
-			final TableGroupJoin tableGroupJoin = tableGroupJoins.get( i );
-			action.accept( tableGroupJoin );
-			visitTableJoins( tableGroupJoin.getJoinedGroup(), action );
-		}
+		queryTableJoins(
+				tableGroupJoin -> {
+					action.accept( tableGroupJoin );
+					return null;
+				}
+		);
 	}
 
 	public <T> T queryTableJoins(Function<TableJoin, T> action) {
 		for ( int i = 0; i < roots.size(); i++ ) {
-			final T result = queryTableJoins( roots.get( i ), action );
+			T result = queryTableJoins( roots.get( i ), action );
 			if ( result != null ) {
 				return result;
 			}
@@ -116,7 +111,14 @@ public class FromClause implements SqlAstNode {
 			}
 		}
 
-		final List<TableGroupJoin> tableGroupJoins = tableGroup.getTableGroupJoins();
+		final T result = queryTableJoins( tableGroup.getTableGroupJoins(), action );
+		if ( result != null ) {
+			return result;
+		}
+		return queryTableJoins( tableGroup.getNestedTableGroupJoins(), action );
+	}
+
+	private <T> T queryTableJoins(List<TableGroupJoin> tableGroupJoins, Function<TableJoin, T> action) {
 		for ( int i = 0; i < tableGroupJoins.size(); i++ ) {
 			final TableGroupJoin tableGroupJoin = tableGroupJoins.get( i );
 			T result = action.apply( tableGroupJoin );
@@ -132,18 +134,12 @@ public class FromClause implements SqlAstNode {
 	}
 
 	public void visitTableGroupJoins(Consumer<TableGroupJoin> action) {
-		for ( int i = 0; i < roots.size(); i++ ) {
-			visitTableGroupJoins( roots.get( i ), action );
-		}
-	}
-
-	private void visitTableGroupJoins(TableGroup tableGroup, Consumer<TableGroupJoin> action) {
-		final List<TableGroupJoin> tableGroupJoins = tableGroup.getTableGroupJoins();
-		for ( int i = 0; i < tableGroupJoins.size(); i++ ) {
-			final TableGroupJoin tableGroupJoin = tableGroupJoins.get( i );
-			action.accept( tableGroupJoin );
-			visitTableGroupJoins( tableGroupJoin.getJoinedGroup(), action );
-		}
+		queryTableGroupJoins(
+				tableGroupJoin -> {
+					action.accept( tableGroupJoin );
+					return null;
+				}
+		);
 	}
 
 	public <T> T queryTableGroupJoins(Function<TableGroupJoin, T> action) {
@@ -157,7 +153,14 @@ public class FromClause implements SqlAstNode {
 	}
 
 	private <T> T queryTableGroupJoins(TableGroup tableGroup, Function<TableGroupJoin, T> action) {
-		final List<TableGroupJoin> tableGroupJoins = tableGroup.getTableGroupJoins();
+		final T result = queryTableGroupJoins( tableGroup.getTableGroupJoins(), action );
+		if ( result != null ) {
+			return result;
+		}
+		return queryTableGroupJoins( tableGroup.getNestedTableGroupJoins(), action );
+	}
+
+	private <T> T queryTableGroupJoins(List<TableGroupJoin> tableGroupJoins, Function<TableGroupJoin, T> action) {
 		for ( int i = 0; i < tableGroupJoins.size(); i++ ) {
 			final TableGroupJoin tableGroupJoin = tableGroupJoins.get( i );
 			T result = action.apply( tableGroupJoin );
@@ -165,6 +168,55 @@ public class FromClause implements SqlAstNode {
 				return result;
 			}
 			result = queryTableGroupJoins( tableGroupJoin.getJoinedGroup(), action );
+			if ( result != null ) {
+				return result;
+			}
+		}
+		return null;
+	}
+
+	public void visitTableReferences(Consumer<TableReference> action) {
+		queryTableReferences(
+				tableGroupJoin -> {
+					action.accept( tableGroupJoin );
+					return null;
+				}
+		);
+	}
+
+	public <T> T queryTableReferences(Function<TableReference, T> action) {
+		for ( int i = 0; i < roots.size(); i++ ) {
+			T result = queryTableReferences( roots.get( i ), action );
+			if ( result != null ) {
+				return result;
+			}
+		}
+		return null;
+	}
+
+	private <T> T queryTableReferences(TableGroup tableGroup, Function<TableReference, T> action) {
+		final T result = action.apply( tableGroup.getPrimaryTableReference() );
+		if ( result != null ) {
+			return result;
+		}
+		for ( TableReferenceJoin tableReferenceJoin : tableGroup.getTableReferenceJoins() ) {
+			final T nestedResult = action.apply( tableReferenceJoin.getJoinedTableReference() );
+			if ( nestedResult != null ) {
+				return nestedResult;
+			}
+		}
+
+		final T nestedResult = queryTableReferences( tableGroup.getTableGroupJoins(), action );
+		if ( nestedResult != null ) {
+			return nestedResult;
+		}
+		return queryTableReferences( tableGroup.getNestedTableGroupJoins(), action );
+	}
+
+	private <T> T queryTableReferences(List<TableGroupJoin> tableGroupJoins, Function<TableReference, T> action) {
+		for ( int i = 0; i < tableGroupJoins.size(); i++ ) {
+			final TableGroupJoin tableGroupJoin = tableGroupJoins.get( i );
+			T result = queryTableReferences( tableGroupJoin.getJoinedGroup(), action );
 			if ( result != null ) {
 				return result;
 			}

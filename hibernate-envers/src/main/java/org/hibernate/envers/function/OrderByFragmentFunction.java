@@ -29,6 +29,7 @@ import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.sql.ast.spi.SqlAstQueryPartProcessingState;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableReference;
@@ -117,7 +118,7 @@ public class OrderByFragmentFunction extends AbstractSqmFunctionDescriptor {
 
 		public AuditingTableGroup(TableGroup delegate, String normalTableExpression) {
 			this.delegate = delegate;
-			this.auditTableExpression = delegate.getPrimaryTableReference().getTableExpression();
+			this.auditTableExpression = ( (NamedTableReference) delegate.getPrimaryTableReference() ).getTableExpression();
 			this.normalTableExpression = normalTableExpression;
 		}
 

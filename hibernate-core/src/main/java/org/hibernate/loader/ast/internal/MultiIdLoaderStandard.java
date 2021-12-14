@@ -9,6 +9,7 @@ package org.hibernate.loader.ast.internal;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.LockMode;
@@ -234,6 +235,9 @@ public class MultiIdLoaderStandard<T> implements MultiIdEntityLoader<T> {
 		assert ! idsInBatch.isEmpty();
 
 		final int numberOfIdsInBatch = idsInBatch.size();
+		if ( numberOfIdsInBatch == 1 ) {
+			return performSingleMultiLoad( idsInBatch.get( 0 ), lockOptions, session );
+		}
 
 		if ( log.isTraceEnabled() ) {
 			log.tracef( "#loadEntitiesById(`%s`, `%s`, ..)", entityDescriptor.getEntityName(), numberOfIdsInBatch );
@@ -331,6 +335,11 @@ public class MultiIdLoaderStandard<T> implements MultiIdEntityLoader<T> {
 				RowTransformerPassThruImpl.instance(),
 				ListResultsConsumer.UniqueSemantic.FILTER
 		);
+	}
+
+	private List<T> performSingleMultiLoad(Object id, LockOptions lockOptions, SharedSessionContractImplementor session) {
+		T loaded = (T) entityDescriptor.load( id, null, lockOptions, session );
+		return Collections.singletonList( loaded );
 	}
 
 	private List<T> performUnorderedMultiLoad(

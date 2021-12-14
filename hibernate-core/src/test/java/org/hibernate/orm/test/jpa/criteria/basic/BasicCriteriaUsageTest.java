@@ -24,6 +24,7 @@ import jakarta.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -67,6 +68,7 @@ public class BasicCriteriaUsageTest extends BaseEntityManagerFunctionalTestCase 
 	@Test
 	@TestForIssue(jiraKey = "HHH-8283")
 	@Ignore( "Missing support for composite user types" )
+	@NotImplementedYet
 	public void testDateCompositeCustomType() {
 		Payment payment = new Payment();
 		payment.setAmount( new BigDecimal( 1000 ) );

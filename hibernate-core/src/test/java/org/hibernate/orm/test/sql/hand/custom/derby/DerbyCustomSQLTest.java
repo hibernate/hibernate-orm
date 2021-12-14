@@ -10,6 +10,7 @@ import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.orm.test.sql.hand.custom.CustomStoredProcTestSupport;
 
 import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.junit.Ignore;
 
 /**
@@ -18,6 +19,7 @@ import org.junit.Ignore;
 @RequiresDialect(DerbyDialect.class)
 // todo (6.0): needs a composite user type mechanism e.g. by providing a custom embeddable strategy or istantiator
 @Ignore( "Missing support for composite user types" )
+@NotImplementedYet
 public class DerbyCustomSQLTest extends CustomStoredProcTestSupport {
 	public String[] getMappings() {
 		return new String[] {"sql/hand/custom/derby/Mappings.hbm.xml"};

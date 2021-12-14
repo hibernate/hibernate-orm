@@ -589,10 +589,7 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected(
-			jiraKey = "",
-			message = "Support for custom composite types not implemented - org.hibernate.orm.test.annotations.entity.Ransom#getAmount"
-	)
+	@NotImplementedYet(reason = "Support for custom composite types not implemented - org.hibernate.orm.test.annotations.entity.Ransom#getAmount")
 	public void testCompositeType() throws Exception {
 		Session s;
 		Transaction tx;

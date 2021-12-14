@@ -30,6 +30,7 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.FailureExpected;
+import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -91,7 +92,7 @@ public class PluralEmbeddedOverrideTests {
 	}
 
 	@Test
-	@FailureExpected( reason = "Some problem with NavigablePath creation and/or TableGroup registration under those paths" )
+	@NotImplementedYet(strict = false,reason = "Some problem with NavigablePath creation and/or TableGroup registration under those paths")
 	public void testOperations(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

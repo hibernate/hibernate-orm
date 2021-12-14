@@ -22,6 +22,7 @@ import org.hibernate.boot.spi.MetadataImplementor;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.FailureExpected;
+import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -50,7 +51,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class TablePerClassOverrideTests {
 
 	@Test
-	@FailureExpected(reason = "@AttributeOverrides not applied for Table per class")
+	@NotImplementedYet(strict = false, reason = "@AttributeOverrides not applied for Table per class")
 	public void testSchema(SessionFactoryScope scope) {
 		MetadataImplementor metadata = scope.getMetadataImplementor();
 		assertTrue( SchemaUtil.isColumnPresent( "CUSTOMER", "STREET", metadata ) );

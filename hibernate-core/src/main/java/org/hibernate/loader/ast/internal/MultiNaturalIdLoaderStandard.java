@@ -84,6 +84,10 @@ public class MultiNaturalIdLoaderStandard<E> implements MultiNaturalIdLoader<E> 
 
 		final List<E> results = batcher.multiLoad( naturalIds, options, session );
 
+		if ( results.size() == 1 ) {
+			return results;
+		}
+
 		if ( options.isOrderReturnEnabled() ) {
 			throw new NotYetImplementedFor6Exception( getClass() );
 		}

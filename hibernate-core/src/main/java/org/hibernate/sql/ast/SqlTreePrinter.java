@@ -13,10 +13,17 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.from.FromClause;
 import org.hibernate.sql.ast.tree.from.LazyTableGroup;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
+import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
+import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
+import org.hibernate.sql.ast.tree.from.ValuesTableReference;
 import org.hibernate.sql.ast.tree.insert.InsertStatement;
+import org.hibernate.sql.ast.tree.select.QueryGroup;
+import org.hibernate.sql.ast.tree.select.QueryPart;
+import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 
@@ -50,7 +57,7 @@ public class SqlTreePrinter {
 			final SelectStatement selectStatement = (SelectStatement) sqlAstStatement;
 			logNode(
 					"SelectStatement",
-					() -> visitFromClause( selectStatement.getQuerySpec().getFromClause() )
+					() -> visitQueryPart( selectStatement.getQueryPart() )
 			);
 		}
 		else if ( sqlAstStatement instanceof DeleteStatement ) {
@@ -85,6 +92,30 @@ public class SqlTreePrinter {
 		}
 	}
 
+	private void visitQueryPart(QueryPart queryPart) {
+		if ( queryPart instanceof QueryGroup ) {
+			visitQueryGroup( (QueryGroup) queryPart );
+		}
+		else {
+			visitQuerySpec( (QuerySpec) queryPart );
+		}
+	}
+
+	private void visitQueryGroup(QueryGroup queryGroup) {
+		logNode(
+				"QueryGroup: " + queryGroup.getSetOperator(),
+				() -> {
+					for ( QueryPart queryPart : queryGroup.getQueryParts() ) {
+						visitQueryPart( queryPart );
+					}
+				}
+		);
+	}
+
+	private void visitQuerySpec(QuerySpec querySpec) {
+		visitFromClause( querySpec.getFromClause() );
+	}
+
 	private void visitFromClause(FromClause fromClause) {
 		logNode(
 				"FromClause",
@@ -114,11 +145,30 @@ public class SqlTreePrinter {
 			}
 			return;
 		}
-		logWithIndentation(
-				"primaryTableReference : %s as %s",
-				tableGroup.getPrimaryTableReference().getTableExpression(),
-				tableGroup.getPrimaryTableReference().getIdentificationVariable()
-		);
+		if ( tableGroup.getPrimaryTableReference() instanceof NamedTableReference ) {
+			logWithIndentation(
+					"primaryTableReference : %s as %s",
+					tableGroup.getPrimaryTableReference().getTableId(),
+					tableGroup.getPrimaryTableReference().getIdentificationVariable()
+			);
+		}
+		else {
+			if ( tableGroup.getPrimaryTableReference() instanceof ValuesTableReference ) {
+				logWithIndentation(
+						"primaryTableReference : values (..) as %s",
+						tableGroup.getPrimaryTableReference().getIdentificationVariable()
+				);
+			}
+			else {
+				logNode(
+						"PrimaryTableReference as " + tableGroup.getPrimaryTableReference().getIdentificationVariable(),
+						() -> {
+							QueryPart queryPart = ( (QueryPartTableReference) tableGroup.getPrimaryTableReference() ).getQueryPart();
+							visitQueryPart( queryPart );
+						}
+				);
+			}
+		}
 
 		final List<TableReferenceJoin> tableReferenceJoins = tableGroup.getTableReferenceJoins();
 		if ( ! tableReferenceJoins.isEmpty() ) {

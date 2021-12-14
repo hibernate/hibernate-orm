@@ -68,7 +68,7 @@ public class SqlAstQueryPartProcessingStateImpl
 	@Override
 	public SqlSelection resolveSqlSelection(
 			Expression expression,
-			JavaType javaTypeDescriptor,
+			JavaType<?> javaTypeDescriptor,
 			TypeConfiguration typeConfiguration) {
 		final SqlSelection existing;
 		if ( sqlSelectionMap == null ) {

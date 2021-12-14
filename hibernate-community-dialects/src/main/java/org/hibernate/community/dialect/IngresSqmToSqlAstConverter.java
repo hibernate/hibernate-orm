@@ -18,8 +18,8 @@ import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.StandardTableGroup;
-import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 
 /**
@@ -54,7 +54,7 @@ public class IngresSqmToSqlAstConverter<T extends Statement> extends BaseSqmToSq
 								null,
 								null,
 								null,
-								new TableReference(
+								new NamedTableReference(
 										"(select 1)",
 										"dummy_(x)",
 										false,

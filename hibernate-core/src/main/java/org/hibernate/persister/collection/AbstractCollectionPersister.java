@@ -1870,7 +1870,7 @@ public abstract class AbstractCollectionPersister
 			alias = tableReference.getIdentificationVariable();
 		}
 		else {
-			alias = tableReference.getTableExpression();
+			alias = tableReference.getTableId();
 		}
 
 		applyWhereFragments( predicateConsumer, alias, tableGroup, creationState );
@@ -1937,7 +1937,7 @@ public abstract class AbstractCollectionPersister
 				alias = tableReference.getIdentificationVariable();
 			}
 			else {
-				alias = tableReference.getTableExpression();
+				alias = tableReference.getTableId();
 			}
 
 			applyWhereFragments( predicateConsumer, alias, manyToManyWhereTemplate );
@@ -1983,11 +1983,6 @@ public abstract class AbstractCollectionPersister
 
 		return elementPropertyMapping.toColumns( propertyName );
 	}
-
-//	@Override
-//	public Type getType() {
-//		return elementPropertyMapping.getType(); // ==elementType ??
-//	}
 
 	@Override
 	public String getName() {
@@ -2078,7 +2073,6 @@ public abstract class AbstractCollectionPersister
 	public SessionFactoryImplementor getFactory() {
 		return factory;
 	}
-
 
 	protected boolean isInsertCallable() {
 		return insertCallable;

@@ -22,7 +22,7 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Summarization;
-import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.UnionTableReference;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
@@ -45,7 +45,7 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends Abstract
 	}
 
 	@Override
-	protected boolean renderTableReference(TableReference tableReference, LockMode lockMode) {
+	protected boolean renderNamedTableReference(NamedTableReference tableReference, LockMode lockMode) {
 		final String tableExpression = tableReference.getTableExpression();
 		if ( tableReference instanceof UnionTableReference && lockMode != LockMode.NONE && tableExpression.charAt( 0 ) == '(' ) {
 			// SQL Server requires to push down the lock hint to the actual table names
@@ -72,7 +72,7 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends Abstract
 			}
 		}
 		else {
-			super.renderTableReference( tableReference, lockMode );
+			super.renderNamedTableReference( tableReference, lockMode );
 			renderLockHint( lockMode );
 		}
 		// Just always return true because SQL Server doesn't support the FOR UPDATE clause

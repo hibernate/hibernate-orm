@@ -27,6 +27,7 @@ import org.hibernate.sql.ast.tree.cte.CteTable;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
@@ -106,7 +107,12 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 									idSelectCte.getCteTable().getCteColumns(),
 									factory
 							);
-							final TableReference dmlTableReference = new TableReference( tableExpression, null, true, factory );
+							final NamedTableReference dmlTableReference = new NamedTableReference(
+									tableExpression,
+									DeleteStatement.DEFAULT_ALIAS,
+									true,
+									factory
+							);
 							final List<ColumnReference> columnReferences = new ArrayList<>( idSelectCte.getCteTable().getCteColumns().size() );
 							pluralAttribute.getKeyDescriptor().visitKeySelectables(
 									(index, selectable) -> columnReferences.add(
@@ -147,7 +153,7 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 							true,
 							true
 					);
-					final TableReference dmlTableReference = resolveUnionTableReference(
+					final NamedTableReference dmlTableReference = resolveUnionTableReference(
 							updatingTableReference,
 							tableExpression
 					);

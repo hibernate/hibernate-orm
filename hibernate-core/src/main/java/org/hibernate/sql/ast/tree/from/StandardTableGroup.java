@@ -45,7 +45,7 @@ public class StandardTableGroup extends AbstractTableGroup {
 		this.tableReferenceJoinCreator = null;
 		this.tableReferenceJoinNameChecker = s -> {
 			for ( int i = 0; i < tableJoins.size(); i++ ) {
-				if ( tableJoins.get( i ).getJoinedTableReference().getTableExpression().equals( s ) ) {
+				if ( tableJoins.get( i ).getJoinedTableReference().containsAffectedTableName( s ) ) {
 					return true;
 				}
 			}
@@ -97,9 +97,9 @@ public class StandardTableGroup extends AbstractTableGroup {
 	@Override
 	public void applyAffectedTableNames(Consumer<String> nameCollector) {
 		// todo (6.0) : if we implement dynamic TableReference creation, this still needs to return the expressions for all mapped tables not just the ones with a TableReference at this time
-		nameCollector.accept( getPrimaryTableReference().getTableExpression() );
+		getPrimaryTableReference().applyAffectedTableNames( nameCollector );
 		for ( TableReferenceJoin tableReferenceJoin : tableJoins ) {
-			nameCollector.accept( tableReferenceJoin.getJoinedTableReference().getTableExpression() );
+			tableReferenceJoin.getJoinedTableReference().applyAffectedTableNames( nameCollector );
 		}
 	}
 

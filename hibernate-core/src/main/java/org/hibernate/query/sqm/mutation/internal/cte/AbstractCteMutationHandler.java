@@ -45,6 +45,7 @@ import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.UnionTableReference;
 import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
@@ -177,7 +178,7 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 		querySpec.getSelectClause().addSqlSelection( new SqlSelectionImpl( 1, 0, count ) );
 		querySpec.getFromClause().addRoot(
 				new CteTableGroup(
-						new TableReference(
+						new NamedTableReference(
 								idSelectCte.getCteTable().getTableExpression(),
 								CTE_TABLE_IDENTIFIER,
 								false,
@@ -241,7 +242,7 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 			CteStatement idSelectCte,
 			ModelPart fkModelPart,
 			SessionFactoryImplementor factory) {
-		final TableReference idSelectTableReference = new TableReference(
+		final NamedTableReference idSelectTableReference = new NamedTableReference(
 				idSelectCte.getCteTable().getTableExpression(),
 				CTE_TABLE_IDENTIFIER,
 				false,
@@ -313,11 +314,11 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 			SessionFactoryImplementor factory);
 
 
-	protected TableReference resolveUnionTableReference(
+	protected NamedTableReference resolveUnionTableReference(
 			TableReference tableReference,
 			String tableExpression) {
 		if ( tableReference instanceof UnionTableReference ) {
-			return new TableReference(
+			return new NamedTableReference(
 					tableExpression,
 					tableReference.getIdentificationVariable(),
 					tableReference.isOptional(),
@@ -325,7 +326,7 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 			);
 		}
 		else {
-			return tableReference;
+			return (NamedTableReference) tableReference;
 		}
 	}
 

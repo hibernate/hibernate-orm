@@ -31,6 +31,7 @@ import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.UnionTableReference;
@@ -200,18 +201,18 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 		throw new SemanticException( "Assignment referred to column of a joined association: " + columnReference );
 	}
 
-	private TableReference resolveUnionTableReference(
+	private NamedTableReference resolveUnionTableReference(
 			TableReference tableReference,
 			String tableExpression) {
 		if ( tableReference instanceof UnionTableReference ) {
-			return new TableReference(
+			return new NamedTableReference(
 					tableExpression,
 					tableReference.getIdentificationVariable(),
 					tableReference.isOptional(),
 					sessionFactory
 			);
 		}
-		return tableReference;
+		return (NamedTableReference) tableReference;
 	}
 
 	private void updateTable(

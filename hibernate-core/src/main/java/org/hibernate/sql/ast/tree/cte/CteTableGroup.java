@@ -13,23 +13,24 @@ import java.util.function.Consumer;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 
 /**
- * Wraps a {@link TableReference} representing the CTE and adapts it to
+ * Wraps a {@link NamedTableReference} representing the CTE and adapts it to
  * {@link TableGroup} for use in SQL AST
  *
  * @author Steve Ebersole
  */
 public class CteTableGroup implements TableGroup {
 	private final NavigablePath navigablePath;
-	private final TableReference cteTableReference;
+	private final NamedTableReference cteTableReference;
 
 	@SuppressWarnings("WeakerAccess")
-	public CteTableGroup(TableReference cteTableReference) {
+	public CteTableGroup(NamedTableReference cteTableReference) {
 		this.navigablePath = new NavigablePath( cteTableReference.getTableExpression() );
 		this.cteTableReference = cteTableReference;
 	}

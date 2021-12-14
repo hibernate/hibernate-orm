@@ -25,8 +25,8 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Summarization;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.UnionTableReference;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
@@ -98,8 +98,8 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 	}
 
 	@Override
-	protected boolean renderTableReference(TableReference tableReference, LockMode lockMode) {
-		super.renderTableReference( tableReference, lockMode );
+	protected boolean renderNamedTableReference(NamedTableReference tableReference, LockMode lockMode) {
+		super.renderNamedTableReference( tableReference, lockMode );
 		if ( getDialect().getVersion().isBefore( 15, 7 ) ) {
 			if ( LockMode.READ.lessThan( lockMode ) ) {
 				appendSql( " holdlock" );

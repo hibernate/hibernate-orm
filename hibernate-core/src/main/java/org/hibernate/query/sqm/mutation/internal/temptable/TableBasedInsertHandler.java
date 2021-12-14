@@ -41,6 +41,7 @@ import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.Over;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
@@ -140,7 +141,7 @@ public class TableBasedInsertHandler implements InsertHandler {
 
 		final List<Assignment> targetPathColumns = new ArrayList<>();
 		final Map<SqmParameter, MappingModelExpressable> paramTypeResolutions = new LinkedHashMap<>();
-		final TableReference entityTableReference = new TableReference(
+		final NamedTableReference entityTableReference = new NamedTableReference(
 				entityTable.getTableExpression(),
 				TemporaryTable.DEFAULT_ALIAS,
 				true,
@@ -171,7 +172,7 @@ public class TableBasedInsertHandler implements InsertHandler {
 
 		if ( sqmInsertStatement instanceof SqmInsertSelectStatement ) {
 			final QueryPart queryPart = converterDelegate.visitQueryPart( ( (SqmInsertSelectStatement<?>) sqmInsertStatement ).getSelectQueryPart() );
-			queryPart.forEachQuerySpec(
+			queryPart.visitQuerySpecs(
 					querySpec -> {
 						if ( additionalInsertValues.applySelections( querySpec, sessionFactory ) ) {
 							final TemporaryTableColumn rowNumberColumn = entityTable.getColumns()

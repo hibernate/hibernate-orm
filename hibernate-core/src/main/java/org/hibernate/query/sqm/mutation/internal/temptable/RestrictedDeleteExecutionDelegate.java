@@ -47,6 +47,7 @@ import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.UnionTableReference;
@@ -210,7 +211,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 
 		final EntityPersister rootEntityPersister = entityDescriptor.getEntityPersister();
 		final String rootTableName = ( (Joinable) rootEntityPersister ).getTableName();
-		final TableReference rootTableReference = tableGroup.resolveTableReference(
+		final NamedTableReference rootTableReference = (NamedTableReference) tableGroup.resolveTableReference(
 				tableGroup.getNavigablePath(),
 				rootTableName
 		);
@@ -279,7 +280,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 			final MutableInteger rows = new MutableInteger();
 			entityDescriptor.visitConstraintOrderedTables(
 					(tableExpression, tableKeyColumnVisitationSupplier) -> {
-						final TableReference tableReference = new TableReference(
+						final NamedTableReference tableReference = new NamedTableReference(
 								tableExpression,
 								tableGroup.getPrimaryTableReference().getIdentificationVariable(),
 								false,
@@ -312,7 +313,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 			entityDescriptor.visitConstraintOrderedTables(
 					(tableExpression, tableKeyColumnVisitationSupplier) -> {
 						if ( !tableExpression.equals( rootTableName ) ) {
-							final TableReference tableReference = tableGroup.getTableReference(
+							final NamedTableReference tableReference = (NamedTableReference) tableGroup.getTableReference(
 									tableGroup.getNavigablePath(),
 									tableExpression,
 									true,
@@ -349,7 +350,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 	}
 
 	private int deleteFromRootTableWithoutIdTable(
-			TableReference rootTableReference,
+			NamedTableReference rootTableReference,
 			Predicate predicate,
 			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext) {
@@ -361,7 +362,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 	}
 
 	private int deleteFromNonRootTableWithoutIdTable(
-			TableReference targetTableReference,
+			NamedTableReference targetTableReference,
 			Supplier<Consumer<SelectableConsumer>> tableKeyColumnVisitationSupplier,
 			SqlExpressionResolver sqlExpressionResolver,
 			TableGroup rootTableGroup,
@@ -371,7 +372,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 		assert targetTableReference != null;
 		log.tracef( "deleteFromNonRootTable - %s", targetTableReference.getTableExpression() );
 
-		final TableReference deleteTableReference = new TableReference(
+		final NamedTableReference deleteTableReference = new NamedTableReference(
 				targetTableReference.getTableExpression(),
 				DeleteStatement.DEFAULT_ALIAS,
 				true,
@@ -573,7 +574,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
 
 		final TableKeyExpressionCollector keyColumnCollector = new TableKeyExpressionCollector( entityDescriptor );
-		final TableReference targetTable = new TableReference(
+		final NamedTableReference targetTable = new NamedTableReference(
 				tableExpression,
 				DeleteStatement.DEFAULT_ALIAS,
 				true,

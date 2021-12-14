@@ -45,7 +45,6 @@ import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.internal.BasicEntityIdentifierMappingImpl;
 import org.hibernate.metamodel.mapping.internal.CaseStatementDiscriminatorMappingImpl;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
@@ -55,15 +54,10 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.InFragment;
 import org.hibernate.sql.Insert;
 import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.QueryLiteral;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
-import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.entity.internal.EntityResultJoinedSubclassImpl;
@@ -1346,7 +1340,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			final TableReferenceJoin[] oldJoins = tableReferenceJoins.toArray( new TableReferenceJoin[0] );
 			tableReferenceJoins.clear();
 			for ( TableReferenceJoin oldJoin : oldJoins ) {
-				final TableReference joinedTableReference = oldJoin.getJoinedTableReference();
+				final NamedTableReference joinedTableReference = oldJoin.getJoinedTableReference();
 				if ( retainedTableReferences.contains( joinedTableReference ) ) {
 					if ( oldJoin.getJoinType() != SqlAstJoinType.INNER
 							&& sharedSuperclassTables.contains( joinedTableReference.getTableExpression() ) ) {
@@ -1381,82 +1375,6 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 					() -> columnConsumer -> columnConsumer.accept( tableName, constraintOrderedKeyColumnNames[tablePosition] )
 			);
 		}
-	}
-
-	private static class CaseSearchedExpressionInfo{
-		CaseSearchedExpression caseSearchedExpression;
-		List<ColumnReference> columnReferences = new ArrayList<>(  );
-	}
-
-	private CaseSearchedExpressionInfo getCaseSearchedExpression(TableGroup entityTableGroup) {
-		CaseSearchedExpressionInfo info = new CaseSearchedExpressionInfo();
-
-		final TableReference primaryTableReference = entityTableGroup.getPrimaryTableReference();
-		final BasicType<?> discriminatorType = (BasicType<?>) getDiscriminatorType();
-		final CaseSearchedExpression caseSearchedExpression = new CaseSearchedExpression( discriminatorType );
-
-		boolean addPrimaryTableCaseAsLastCaseExpression = false;
-		for ( String tableName : discriminatorValuesByTableName.keySet() ) {
-			if ( !primaryTableReference.getTableExpression().equals( tableName ) ) {
-				TableReference tableReference = entityTableGroup.getTableReference( entityTableGroup.getNavigablePath(), tableName );
-				if ( tableReference == null ) {
-					// we have not yet created a TableReference for this sub-class table, but we need to because
-					// it has a discriminator value associated with it
-					tableReference = entityTableGroup.resolveTableReference( entityTableGroup.getNavigablePath(), tableName );
-				}
-
-				final ColumnReference identifierColumnReference = getIdentifierColumnReference( tableReference );
-				info.columnReferences.add( identifierColumnReference );
-				addWhen(
-						caseSearchedExpression,
-						tableReference,
-						identifierColumnReference,
-						discriminatorType
-				);
-			}
-			else {
-				addPrimaryTableCaseAsLastCaseExpression = true;
-			}
-		}
-
-		if ( addPrimaryTableCaseAsLastCaseExpression ) {
-			addWhen(
-					caseSearchedExpression,
-					primaryTableReference,
-					getIdentifierColumnReference( primaryTableReference ),
-					discriminatorType
-			);
-		}
-
-		info.caseSearchedExpression = caseSearchedExpression;
-		return info;
-	}
-
-	private void addWhen(
-			CaseSearchedExpression caseSearchedExpression,
-			TableReference table,
-			ColumnReference identifierColumnReference,
-			BasicType<?> resultType) {
-		final Predicate predicate = new NullnessPredicate( identifierColumnReference, true );
-		final Expression expression = new QueryLiteral<>(
-				discriminatorValuesByTableName.get( table.getTableExpression() ),
-				resultType
-		);
-
-		caseSearchedExpression.when( predicate, expression );
-	}
-
-	private ColumnReference getIdentifierColumnReference(TableReference tableReference) {
-		final List<JdbcMapping> jdbcMappings = getIdentifierMapping().getJdbcMappings();
-		return new ColumnReference(
-				tableReference.getIdentificationVariable(),
-				discriminatorColumnNameByTableName.get( tableReference.getTableExpression() ),
-				false,
-				null,
-				null,
-				jdbcMappings.get( 0 ),
-				getFactory()
-		);
 	}
 
 }

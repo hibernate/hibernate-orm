@@ -27,12 +27,12 @@ public class UnionTableGroup implements VirtualTableGroup {
 
 	private final UnionSubclassEntityPersister modelPart;
 	private final String sourceAlias;
-	private final TableReference tableReference;
+	private final UnionTableReference tableReference;
 
 	public UnionTableGroup(
 			boolean canUseInnerJoins,
 			NavigablePath navigablePath,
-			TableReference tableReference,
+			UnionTableReference tableReference,
 			UnionSubclassEntityPersister modelPart,
 			String sourceAlias) {
 		this.canUseInnerJoins = canUseInnerJoins;
@@ -124,7 +124,7 @@ public class UnionTableGroup implements VirtualTableGroup {
 	}
 
 	@Override
-	public TableReference getPrimaryTableReference() {
+	public UnionTableReference getPrimaryTableReference() {
 		return tableReference;
 	}
 

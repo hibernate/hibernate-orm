@@ -15,7 +15,7 @@ import org.hibernate.sql.ast.spi.SqlAstHelper;
 import org.hibernate.sql.ast.tree.AbstractMutationStatement;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.predicate.Junction;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 
@@ -27,13 +27,13 @@ public class DeleteStatement extends AbstractMutationStatement {
 	public static final String DEFAULT_ALIAS = "to_delete_";
 	private final Predicate restriction;
 
-	public DeleteStatement(TableReference targetTable, Predicate restriction) {
+	public DeleteStatement(NamedTableReference targetTable, Predicate restriction) {
 		super( targetTable );
 		this.restriction = restriction;
 	}
 
 	public DeleteStatement(
-			TableReference targetTable,
+			NamedTableReference targetTable,
 			Predicate restriction,
 			List<ColumnReference> returningColumns) {
 		super( new LinkedHashMap<>(), targetTable, returningColumns );
@@ -43,7 +43,7 @@ public class DeleteStatement extends AbstractMutationStatement {
 	public DeleteStatement(
 			boolean withRecursive,
 			Map<String, CteStatement> cteStatements,
-			TableReference targetTable,
+			NamedTableReference targetTable,
 			Predicate restriction,
 			List<ColumnReference> returningColumns) {
 		super( cteStatements, targetTable, returningColumns );
@@ -56,10 +56,10 @@ public class DeleteStatement extends AbstractMutationStatement {
 	}
 
 	public static class DeleteStatementBuilder {
-		private final TableReference targetTable;
+		private final NamedTableReference targetTable;
 		private Predicate restriction;
 
-		public DeleteStatementBuilder(TableReference targetTable) {
+		public DeleteStatementBuilder(NamedTableReference targetTable) {
 			this.targetTable = targetTable;
 		}
 

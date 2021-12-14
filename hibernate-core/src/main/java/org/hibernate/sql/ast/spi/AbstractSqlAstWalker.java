@@ -43,10 +43,12 @@ import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.expression.TrimSpecification;
 import org.hibernate.sql.ast.tree.expression.UnaryOperation;
 import org.hibernate.sql.ast.tree.from.FromClause;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
+import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
-import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
+import org.hibernate.sql.ast.tree.from.ValuesTableReference;
 import org.hibernate.sql.ast.tree.insert.InsertStatement;
 import org.hibernate.sql.ast.tree.insert.Values;
 import org.hibernate.sql.ast.tree.predicate.BetweenPredicate;
@@ -472,6 +474,20 @@ public class AbstractSqlAstWalker implements SqlAstWalker {
 	}
 
 	@Override
-	public void visitTableReference(TableReference tableReference) {
+	public void visitNamedTableReference(NamedTableReference tableReference) {
+	}
+
+	@Override
+	public void visitValuesTableReference(ValuesTableReference tableReference) {
+		for ( Values values : tableReference.getValuesList() ) {
+			for ( Expression expression : values.getExpressions() ) {
+				expression.accept( this );
+			}
+		}
+	}
+
+	@Override
+	public void visitQueryPartTableReference(QueryPartTableReference tableReference) {
+		tableReference.getQueryPart().accept( this );
 	}
 }

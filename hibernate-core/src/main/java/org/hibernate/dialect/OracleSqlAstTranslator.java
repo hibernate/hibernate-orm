@@ -247,10 +247,10 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 	}
 
 	@Override
-	protected void renderValuesTableReference(ValuesTableReference tableReference) {
+	public void visitValuesTableReference(ValuesTableReference tableReference) {
 		final List<Values> valuesList = tableReference.getValuesList();
 		if ( valuesList.size() < 2 ) {
-			super.renderValuesTableReference( tableReference );
+			super.visitValuesTableReference( tableReference );
 		}
 		else {
 			append( '(' );

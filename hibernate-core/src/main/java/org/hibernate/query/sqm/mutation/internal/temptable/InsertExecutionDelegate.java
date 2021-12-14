@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableColumn;
 import org.hibernate.engine.FetchTiming;
@@ -23,7 +22,6 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.PostInsertIdentifierGenerator;
 import org.hibernate.id.PostInsertIdentityPersister;
@@ -48,6 +46,7 @@ import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.UnionTableReference;
@@ -227,9 +226,9 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 		throw new SemanticException( "Assignment referred to column of a joined association: " + columnReference );
 	}
 
-	private TableReference resolveUnionTableReference(TableReference tableReference, String tableExpression) {
+	private NamedTableReference resolveUnionTableReference(TableReference tableReference, String tableExpression) {
 		if ( tableReference instanceof UnionTableReference ) {
-			return new TableReference(
+			return new NamedTableReference(
 					tableExpression,
 					tableReference.getIdentificationVariable(),
 					tableReference.isOptional(),
@@ -237,7 +236,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 			);
 		}
 		else {
-			return tableReference;
+			return (NamedTableReference) tableReference;
 		}
 	}
 
@@ -259,20 +258,21 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 			throw new IllegalStateException( "There must be at least a single root table assignment" );
 		}
 
-		final TableReference dmlTableReference = resolveUnionTableReference( updatingTableReference, tableExpression );
+		final NamedTableReference dmlTableReference = resolveUnionTableReference( updatingTableReference, tableExpression );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Create the SQL AST and convert it into a JdbcOperation
 		final QuerySpec querySpec = new QuerySpec( true );
+		final NamedTableReference temporaryTableReference = new NamedTableReference(
+				insertStatement.getTargetTable().getTableExpression(),
+				updatingTableReference.getIdentificationVariable(),
+				false,
+				sessionFactory
+		);
 		final TableGroupImpl temporaryTableGroup = new TableGroupImpl(
 				updatingTableGroup.getNavigablePath(),
 				null,
-				new TableReference(
-						insertStatement.getTargetTable().getTableExpression(),
-						updatingTableReference.getIdentificationVariable(),
-						false,
-						sessionFactory
-				),
+				temporaryTableReference,
 				entityDescriptor,
 				null
 		);
@@ -386,7 +386,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 							entityTable.getColumns().size() - 1
 					);
 					final UpdateStatement updateStatement = new UpdateStatement(
-							temporaryTableGroup.getPrimaryTableReference(),
+							temporaryTableReference,
 							temporaryTableAssignments,
 							new ComparisonPredicate(
 									new ColumnReference(
@@ -524,7 +524,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 					)
 			);
 			final UpdateStatement updateStatement = new UpdateStatement(
-					temporaryTableGroup.getPrimaryTableReference(),
+					temporaryTableReference,
 					temporaryTableAssignments,
 					new ComparisonPredicate(
 							new ColumnReference(
@@ -595,13 +595,13 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 			// no assignments for this table - skip it
 			return;
 		}
-		final TableReference dmlTargetTableReference = resolveUnionTableReference( updatingTableReference, tableExpression );
+		final NamedTableReference dmlTargetTableReference = resolveUnionTableReference( updatingTableReference, tableExpression );
 
 		final QuerySpec querySpec = new QuerySpec( true );
 		final TableGroupImpl temporaryTableGroup = new TableGroupImpl(
 				updatingTableGroup.getNavigablePath(),
 				null,
-				new TableReference(
+				new NamedTableReference(
 						insertStatement.getTargetTable().getTableExpression(),
 						updatingTableReference.getIdentificationVariable(),
 						false,

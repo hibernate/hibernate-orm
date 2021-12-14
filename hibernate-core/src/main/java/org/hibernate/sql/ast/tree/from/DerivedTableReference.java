@@ -6,24 +6,33 @@
  */
 package org.hibernate.sql.ast.tree.from;
 
+import java.util.List;
+
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.NavigablePath;
 
 /**
- * @author Andrea Boriero
+ * @author Christian Beikov
  */
-public class UnionTableReference extends NamedTableReference {
-	private final String[] subclassTableSpaceExpressions;
+public abstract class DerivedTableReference extends AbstractTableReference {
 
-	public UnionTableReference(
-			String unionTableExpression,
-			String[] subclassTableSpaceExpressions,
+	private final List<String> columnNames;
+
+	public DerivedTableReference(
 			String identificationVariable,
-			boolean isOptional,
+			List<String> columnNames,
 			SessionFactoryImplementor sessionFactory) {
-		super( unionTableExpression, identificationVariable, isOptional, sessionFactory );
+		super( identificationVariable, false );
+		this.columnNames = columnNames;
+	}
 
-		this.subclassTableSpaceExpressions = subclassTableSpaceExpressions;
+	@Override
+	public String getTableId() {
+		return null;
+	}
+
+	public List<String> getColumnNames() {
+		return columnNames;
 	}
 
 	@Override
@@ -31,9 +40,6 @@ public class UnionTableReference extends NamedTableReference {
 			NavigablePath navigablePath,
 			String tableExpression,
 			boolean allowFkOptimization) {
-		if ( hasTableExpression( tableExpression ) ) {
-			return this;
-		}
 		throw new IllegalStateException( "Could not resolve binding for table `" + tableExpression + "`" );
 	}
 
@@ -43,21 +49,7 @@ public class UnionTableReference extends NamedTableReference {
 			String tableExpression,
 			boolean allowFkOptimization,
 			boolean resolve) {
-		if ( hasTableExpression( tableExpression ) ) {
-			return this;
-		}
 		return null;
 	}
 
-	private boolean hasTableExpression(String tableExpression) {
-		if ( tableExpression.equals( getTableExpression() ) ) {
-			return true;
-		}
-		for ( String expression : subclassTableSpaceExpressions ) {
-			if ( tableExpression.equals( expression ) ) {
-				return true;
-			}
-		}
-		return false;
-	}
 }

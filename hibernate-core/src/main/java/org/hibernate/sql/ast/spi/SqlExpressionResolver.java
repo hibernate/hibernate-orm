@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.ast.spi;
 
+import java.util.Objects;
 import java.util.function.Function;
 
 import org.hibernate.metamodel.mapping.SelectableMapping;
@@ -50,10 +51,8 @@ public interface SqlExpressionResolver {
 	static String createColumnReferenceKey(TableReference tableReference, String columnExpression) {
 		assert tableReference != null : "tableReference expected to be non-null";
 		assert columnExpression != null : "columnExpression expected to be non-null";
-
-		final String qualifier = tableReference.getIdentificationVariable() == null
-				? tableReference.getTableExpression()
-				: tableReference.getIdentificationVariable();
+		assert tableReference.getIdentificationVariable() != null : "tableReference#identificationVariable expected to be non-null";
+		final String qualifier = tableReference.getIdentificationVariable();
 		return qualifier + columnExpression;
 	}
 
@@ -61,8 +60,8 @@ public interface SqlExpressionResolver {
 	 * Convenience form for creating a key from TableReference and SelectableMapping
 	 */
 	static String createColumnReferenceKey(TableReference tableReference, SelectableMapping selectable) {
-		assert selectable.getContainingTableExpression().equals( tableReference.getTableExpression() )
-				: String.format( ROOT, "Expecting tables to match between TableReference (%s) and SelectableMapping (%s)", tableReference.getTableExpression(), selectable.getContainingTableExpression() );
+		assert Objects.equals( selectable.getContainingTableExpression(), tableReference.getTableId() )
+				: String.format( ROOT, "Expecting tables to match between TableReference (%s) and SelectableMapping (%s)", tableReference.getTableId(), selectable.getContainingTableExpression() );
 		return createColumnReferenceKey( tableReference, selectable.getSelectionExpression() );
 	}
 
@@ -77,6 +76,6 @@ public interface SqlExpressionResolver {
 	 */
 	SqlSelection resolveSqlSelection(
 			Expression expression,
-			JavaType javaTypeDescriptor,
+			JavaType<?> javaTypeDescriptor,
 			TypeConfiguration typeConfiguration);
 }

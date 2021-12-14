@@ -96,7 +96,7 @@ public class SmokeTests {
 
 					final TableGroup rootTableGroup = fromClause.getRoots().get( 0 );
 					assertThat( rootTableGroup.getPrimaryTableReference(), notNullValue() );
-					assertThat( rootTableGroup.getPrimaryTableReference().getTableExpression(), is( "mapping_simple_entity" ) );
+					assertThat( rootTableGroup.getPrimaryTableReference().getTableId(), is( "mapping_simple_entity" ) );
 
 					assertThat( rootTableGroup.getTableReferenceJoins().size(), is( 0 ) );
 
@@ -155,7 +155,7 @@ public class SmokeTests {
 
 					final TableGroup rootTableGroup = fromClause.getRoots().get( 0 );
 					assertThat( rootTableGroup.getPrimaryTableReference(), notNullValue() );
-					assertThat( rootTableGroup.getPrimaryTableReference().getTableExpression(), is( "mapping_simple_entity" ) );
+					assertThat( rootTableGroup.getPrimaryTableReference().getTableId(), is( "mapping_simple_entity" ) );
 
 					assertThat( rootTableGroup.getTableReferenceJoins().size(), is( 0 ) );
 

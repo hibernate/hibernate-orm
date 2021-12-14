@@ -20,10 +20,10 @@ import org.hibernate.sql.ast.tree.predicate.PredicateContainer;
  */
 public class TableReferenceJoin implements TableJoin, PredicateContainer {
 	private final SqlAstJoinType sqlAstJoinType;
-	private final TableReference joinedTableBinding;
+	private final NamedTableReference joinedTableBinding;
 	private Predicate predicate;
 
-	public TableReferenceJoin(SqlAstJoinType sqlAstJoinType, TableReference joinedTableBinding, Predicate predicate) {
+	public TableReferenceJoin(SqlAstJoinType sqlAstJoinType, NamedTableReference joinedTableBinding, Predicate predicate) {
 		this.sqlAstJoinType = sqlAstJoinType == null ? SqlAstJoinType.LEFT : sqlAstJoinType;
 		this.joinedTableBinding = joinedTableBinding;
 		this.predicate = predicate;
@@ -40,7 +40,7 @@ public class TableReferenceJoin implements TableJoin, PredicateContainer {
 		return sqlAstJoinType;
 	}
 
-	public TableReference getJoinedTableReference() {
+	public NamedTableReference getJoinedTableReference() {
 		return joinedTableBinding;
 	}
 

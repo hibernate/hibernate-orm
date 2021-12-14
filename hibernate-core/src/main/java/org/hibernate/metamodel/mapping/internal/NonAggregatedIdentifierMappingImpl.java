@@ -20,7 +20,6 @@ import org.hibernate.metamodel.internal.AbstractCompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
-import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
@@ -175,13 +174,9 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 				offset += attributeMapping.forEachSelectable(
 						offset,
 						(columnIndex, selection) -> {
-							final TableReference tableReference = selection.getContainingTableExpression().equals(
-									defaultTableReference.getTableExpression() )
+							final TableReference tableReference = defaultTableReference.resolveTableReference( selection.getContainingTableExpression() ) != null
 									? defaultTableReference
-									: tableGroup.resolveTableReference(
-									navigablePath,
-									selection.getContainingTableExpression()
-							);
+									: tableGroup.resolveTableReference( navigablePath, selection.getContainingTableExpression() );
 							final Expression columnReference = sqlAstCreationState.getSqlExpressionResolver()
 									.resolveSqlExpression(
 											SqlExpressionResolver.createColumnReferenceKey(

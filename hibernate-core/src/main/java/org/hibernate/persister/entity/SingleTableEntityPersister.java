@@ -52,6 +52,7 @@ import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
@@ -846,6 +847,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 		if ( additionalPredicateCollectorAccess != null && needsDiscriminator() ) {
 			final Predicate discriminatorPredicate = createDiscriminatorPredicate(
+					tableGroup.getPrimaryTableReference().getIdentificationVariable(),
 					tableGroup,
 					expressionResolver,
 					creationContext
@@ -865,6 +867,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		if ( needsDiscriminator() ) {
 			predicateConsumer.accept(
 					createDiscriminatorPredicate(
+							alias,
 							tableGroup,
 							creationState.getSqlExpressionResolver(),
 							creationState.getCreationContext()
@@ -875,6 +878,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	}
 
 	private Predicate createDiscriminatorPredicate(
+			String alias,
 			TableGroup tableGroup,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
@@ -899,15 +903,16 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		final Expression sqlExpression = sqlExpressionResolver.resolveSqlExpression(
 				columnReferenceKey,
 				sqlAstProcessingState -> new ColumnReference(
-						tableGroup.getPrimaryTableReference().getIdentificationVariable(),
+						alias,
 						discriminatorExpression,
 						isDiscriminatorFormula(),
 						null,
 						null,
-						(discriminatorType).getJdbcMapping(),
+						discriminatorType.getJdbcMapping(),
 						getFactory()
 				)
 		);
+
 		if ( hasSubclasses() ) {
 			final Object[] discriminatorValues = fullDiscriminatorValues();
 			final List<Expression> values = new ArrayList<>( discriminatorValues.length );
@@ -941,6 +946,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			}
 			return p;
 		}
+
 		final Object value = getDiscriminatorValue();
 		final boolean hasNotNullDiscriminator = value == NOT_NULL_DISCRIMINATOR;
 		final boolean hasNullDiscriminator = value == NULL_DISCRIMINATOR;
@@ -967,7 +973,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			return;
 		}
 		// The optimization is to simply add the discriminator filter fragment for all treated entity names
-		final TableReference tableReference = tableGroup.getPrimaryTableReference();
+		final NamedTableReference tableReference = (NamedTableReference) tableGroup.getPrimaryTableReference();
 		tableReference.setPrunedTableExpression(
 				"(select * from " + getTableName() + " t where " + discriminatorFilterFragment( "t", treatedEntityNames ) + ")"
 		);

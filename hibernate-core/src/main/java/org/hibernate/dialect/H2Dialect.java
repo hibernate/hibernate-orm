@@ -84,6 +84,12 @@ public class H2Dialect extends Dialect {
 	private final SequenceInformationExtractor sequenceInformationExtractor;
 	private final String querySequenceString;
 
+	{
+		getDefaultProperties().setProperty( AvailableSettings.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
+		// http://code.google.com/p/h2database/issues/detail?id=235
+		getDefaultProperties().setProperty( AvailableSettings.NON_CONTEXTUAL_LOB_CREATION, "true" );
+	}
+
 	public H2Dialect(DialectResolutionInfo info) {
 		this( parseVersion( info ) );
 		registerKeywords( info );
@@ -110,10 +116,6 @@ public class H2Dialect extends Dialect {
 		cascadeConstraints = version.isSameOrAfter( 1, 4, 200 );
 		// 1.4.200 introduced changes in current_time and current_timestamp
 		useLocalTime = version.isSameOrAfter( 1, 4, 200 );
-
-		getDefaultProperties().setProperty( AvailableSettings.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
-		// http://code.google.com/p/h2database/issues/detail?id=235
-		getDefaultProperties().setProperty( AvailableSettings.NON_CONTEXTUAL_LOB_CREATION, "true" );
 
 		if ( version.isSameOrAfter( 1, 4, 32 ) ) {
 			this.sequenceInformationExtractor = version.isSameOrAfter( 1, 4, 201 )

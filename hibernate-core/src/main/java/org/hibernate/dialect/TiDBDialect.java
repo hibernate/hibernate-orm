@@ -6,7 +6,6 @@
  */
 package org.hibernate.dialect;
 
-import java.sql.DatabaseMetaData;
 import java.time.Duration;
 
 import org.hibernate.LockOptions;
@@ -29,31 +28,24 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
  */
 public class TiDBDialect extends MySQLDialect {
 
-	private final DatabaseVersion tidbVersion;
-
 	public TiDBDialect() {
 		this( DatabaseVersion.make(5, 4) );
 	}
 
-	public TiDBDialect(DialectResolutionInfo info) {
-		this( info.makeCopy(), info );
-		registerKeywords( info );
-	}
-
 	public TiDBDialect(DatabaseVersion version) {
-		this(version, null);
+		super(version);
+		registerKeywords();
 	}
 
-	protected TiDBDialect(DatabaseVersion tidbVersion, DialectResolutionInfo info) {
-		// For simplicity’s sake, configure MySQL 5.7 compatibility
-		super( DatabaseVersion.make( 5, 7 ), info );
-		this.tidbVersion = tidbVersion;
+	public TiDBDialect(DialectResolutionInfo info) {
+		super(info);
 		registerKeywords();
 	}
 
 	@Override
-	public DatabaseVersion getVersion() {
-		return tidbVersion;
+	public DatabaseVersion getMySQLVersion() {
+		// For simplicity’s sake, configure MySQL 5.7 compatibility
+		return DatabaseVersion.make( 5, 7 );
 	}
 
 	private void registerKeywords() {

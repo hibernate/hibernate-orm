@@ -77,21 +77,30 @@ public class DB2Dialect extends Dialect {
 	private static final String FOR_SHARE_SKIP_LOCKED_SQL = FOR_SHARE_SQL + SKIP_LOCKED_SQL;
 	private static final String FOR_UPDATE_SKIP_LOCKED_SQL = FOR_UPDATE_SQL + SKIP_LOCKED_SQL;
 
-	private final LimitHandler limitHandler;
-	private final UniqueDelegate uniqueDelegate;
+	private final LimitHandler limitHandler = getVersion().isBefore( 11, 1 )
+			? LegacyDB2LimitHandler.INSTANCE
+			: DB2LimitHandler.INSTANCE;
+	private final UniqueDelegate uniqueDelegate = createUniqueDelegate();
 
-	public DB2Dialect(DialectResolutionInfo info) {
-		this( info.makeCopy() );
-		registerKeywords( info );
+	{
+		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, NO_BATCH );
 	}
 
 	public DB2Dialect() {
 		this( DatabaseVersion.make( 9, 0 ) );
 	}
 
+	public DB2Dialect(DialectResolutionInfo info) {
+		super(info);
+		registerDB2Keywords();
+	}
+
 	public DB2Dialect(DatabaseVersion version) {
 		super(version);
+		registerDB2Keywords();
+	}
 
+	private void registerDB2Keywords() {
 		//not keywords, at least not in DB2 11,
 		//but perhaps they were in older versions?
 		registerKeyword( "current" );
@@ -102,14 +111,6 @@ public class DB2Dialect extends Dialect {
 		registerKeyword( "first" );
 		registerKeyword( "rows" );
 		registerKeyword( "only" );
-
-		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, NO_BATCH );
-
-		uniqueDelegate = createUniqueDelegate();
-
-		limitHandler = getVersion().isBefore( 11, 1 )
-				? LegacyDB2LimitHandler.INSTANCE
-				: DB2LimitHandler.INSTANCE;
 	}
 
 	@Override
@@ -148,9 +149,9 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
-	protected void registerDefaultColumnTypes(int maxVarcharLength, int maxNVarcharLength, int maxVarBinaryLength) {
+	protected void registerDefaultColumnTypes() {
 		// Note: the 'long varchar' data type was deprecated in DB2 and shouldn't be used anymore
-		super.registerDefaultColumnTypes(maxVarcharLength, maxNVarcharLength, maxVarBinaryLength);
+		super.registerDefaultColumnTypes();
 		if ( getVersion().isBefore( 11 ) ) {
 			// should use 'binary' since version 11
 			registerColumnType( BINARY, 254, "char($l) for bit data" );

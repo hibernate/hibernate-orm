@@ -34,34 +34,23 @@ import org.hibernate.type.StandardBasicTypes;
  */
 public class MariaDBDialect extends MySQLDialect {
 
-	private final DatabaseVersion mariaVersion;
-
 	public MariaDBDialect() {
 		this( DatabaseVersion.make( 5 ) );
 	}
 
-	public MariaDBDialect(DialectResolutionInfo info) {
-		this( info.makeCopy(), info );
-		registerKeywords( info );
-	}
-
 	public MariaDBDialect(DatabaseVersion version) {
-		this(version, null);
+		super(version);
 	}
 
-	protected MariaDBDialect(DatabaseVersion mariaVersion, DialectResolutionInfo info) {
-		super(
-				mariaVersion.isBefore( 5, 3 )
-						? DatabaseVersion.make( 5 )
-						: DatabaseVersion.make( 5, 7 ),
-				info
-		);
-		this.mariaVersion = mariaVersion;
+	public MariaDBDialect(DialectResolutionInfo info) {
+		super(info);
 	}
 
 	@Override
-	public DatabaseVersion getVersion() {
-		return mariaVersion;
+	public DatabaseVersion getMySQLVersion() {
+		return getVersion().isBefore( 5, 3 )
+				? DatabaseVersion.make( 5 )
+				: DatabaseVersion.make( 5, 7 );
 	}
 
 	@Override

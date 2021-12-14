@@ -89,6 +89,10 @@ public class HSQLDialect extends Dialect {
 			HSQLDialect.class.getName()
 	);
 
+	{
+		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
+	}
+
 	public HSQLDialect(DialectResolutionInfo info) {
 		this( info.makeCopy() );
 		registerKeywords( info );
@@ -104,8 +108,6 @@ public class HSQLDialect extends Dialect {
 		if ( getVersion().isSameOrAfter( 2, 5 ) ) {
 			registerKeyword( "period" );
 		}
-
-		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 	}
 
 	@Override

@@ -95,8 +95,6 @@ import jakarta.persistence.TemporalType;
 public abstract class AbstractHANADialect extends Dialect {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractHANADialect.class );
 
-	protected final DatabaseVersion version;
-
 	// Set the LOB prefetch size. LOBs larger than this value will be read into memory as the HANA JDBC driver closes
 	// the LOB when the result set is closed.
 	private static final String MAX_LOB_PREFETCH_SIZE_PARAMETER_NAME = "hibernate.dialect.hana.max_lob_prefetch_size";
@@ -166,9 +164,7 @@ public abstract class AbstractHANADialect extends Dialect {
 	};
 
 	public AbstractHANADialect(DatabaseVersion version) {
-		super();
-
-		this.version = version;
+		super(version);
 
 		this.useUnicodeStringTypes = useUnicodeStringTypesDefault().booleanValue();
 		this.clobTypeDescriptor = new HANAClobJdbcType(
@@ -225,11 +221,6 @@ public abstract class AbstractHANADialect extends Dialect {
 
 		// getGeneratedKeys() is not supported by the HANA JDBC driver
 		getDefaultProperties().setProperty( AvailableSettings.USE_GET_GENERATED_KEYS, "false" );
-	}
-
-	@Override
-	public DatabaseVersion getVersion() {
-		return version;
 	}
 
 	@Override
@@ -1091,7 +1082,6 @@ public abstract class AbstractHANADialect extends Dialect {
 	protected abstract boolean supportsAsciiStringTypes();
 
 	protected abstract Boolean useUnicodeStringTypesDefault();
-
 
 	private static class CloseSuppressingReader extends FilterReader {
 

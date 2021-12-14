@@ -24,6 +24,7 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.FailureExpected;
+import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -206,7 +207,7 @@ public class MultiLoadTest {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-12944")
-	@FailureExpected( reason = "Caching/CacheMode supported not yet implemented" )
+	@NotImplementedYet(strict = false, reason = "Caching/CacheMode supported not yet implemented")
 	public void testMultiLoadFrom2ndLevelCache(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
@@ -261,7 +262,7 @@ public class MultiLoadTest {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-12944")
-	@FailureExpected( reason = "Caching/CacheMode supported not yet implemented" )
+	@NotImplementedYet(strict = false, reason = "Caching/CacheMode supported not yet implemented")
 	public void testUnorderedMultiLoadFrom2ndLevelCache(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
@@ -450,7 +451,7 @@ public class MultiLoadTest {
 	}
 
 	@Test
-	@FailureExpected( reason = "CacheMode not yet implemented" )
+	@NotImplementedYet(strict = false, reason = "CacheMode not yet implemented")
 	public void testMultiLoadWithCacheModeIgnore(SessionFactoryScope scope) {
 		// do the multi-load, telling Hibernate to IGNORE the L2 cache -
 		//		the end result should be that the cache is (still) empty afterwards

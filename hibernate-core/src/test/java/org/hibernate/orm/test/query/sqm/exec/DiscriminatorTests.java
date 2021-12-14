@@ -17,6 +17,7 @@ import org.hibernate.testing.orm.domain.retail.ForeignVendor;
 import org.hibernate.testing.orm.domain.retail.Vendor;
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.hibernate.testing.orm.junit.FailureExpected;
+import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -58,7 +59,7 @@ public class DiscriminatorTests extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	@FailureExpected( reason = "selection of discriminator not yet implemented" )
+	@NotImplementedYet(strict = false, reason = "selection of discriminator not yet implemented")
 	public void testSelection() {
 		inTransaction(
 				session -> {

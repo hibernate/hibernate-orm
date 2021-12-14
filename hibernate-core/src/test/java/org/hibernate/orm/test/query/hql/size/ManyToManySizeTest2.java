@@ -206,7 +206,6 @@ public class ManyToManySizeTest2 {
 	}
 
 	@Test
-//	@FailureExpected( reason = "org.hibernate.PropertyAccessException : Student#teacher (I think its a stack-overflow)" )
 	public void testSizeWithNestedPathAndImplicitJoin(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
@@ -288,7 +287,6 @@ public class ManyToManySizeTest2 {
 	}
 
 	@Test
-	@FailureExpected( reason = "org.hibernate.PropertyAccessException : Student#teacher (I think its a stack-overflow)" )
 	public void testSizeWithNestedPath(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
@@ -300,12 +298,14 @@ public class ManyToManySizeTest2 {
 
 					}
 
+					final SQLStatementInspector sqlStatementInspector = extractFromSession( session );
+					sqlStatementInspector.clear();
 					List<Student> students = session.createQuery(
 							"select student from Student student join student.teacher t where size(student.teacher.skills) > -1",
 							Student.class
 					).getResultList();
 					assertEquals( 3L, students.size() );
-					extractFromSession( session ).assertNumberOfJoins( 0, 1 );
+					sqlStatementInspector.assertNumberOfJoins( 0, 1 );
 
 					students = session.createQuery(
 							"select student from Student student join student.teacher t where size(student.teacher.skills) > 0",
@@ -329,17 +329,16 @@ public class ManyToManySizeTest2 {
 	}
 
 	@Test
-	@FailureExpected( reason = "org.hibernate.PropertyAccessException : Student#teacher (I think its a stack-overflow)" )
 	public void testSizeWithNestedPathAddFetchDistinct(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
+					final SQLStatementInspector sqlStatementInspector = extractFromSession( session );
+					sqlStatementInspector.clear();
 					List<Student> students = session.createQuery(
 							"select distinct student from Student student join student.teacher t join fetch student.teacher tjoin left join fetch tjoin.skills where size(student.teacher.skills) > -1",
 							Student.class
 					).getResultList();
-					// NOTE: An INNER JOIN is done on Teacher twice, which results in 4 joins.
-					//       A possible optimization would be to reuse this INNER JOIN.
-					extractFromSession( session ).assertNumberOfJoins( 0, 4 );
+					sqlStatementInspector.assertNumberOfJoins( 0, 3 );
 					assertEquals( 3L, students.size() );
 					assertTrue( Hibernate.isInitialized( students.get( 0 ).getTeacher().getSkills() ) );
 					assertTrue( Hibernate.isInitialized( students.get( 1 ).getTeacher().getSkills() ) );
@@ -370,16 +369,18 @@ public class ManyToManySizeTest2 {
 	}
 
 	@Test
-//	@FailureExpected( reason = "org.hibernate.PropertyAccessException : Student#teacher (I think its a stack-overflow)" )
 	public void testSizeWithNestedPath2(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
+					final SQLStatementInspector sqlStatementInspector = extractFromSession( session );
+					sqlStatementInspector.clear();
+
 					List<Student> students = session.createQuery(
 							"select student from Student student join student.teacher t where size(t.skills) > -1",
 							Student.class
 					).getResultList();
 					assertEquals( 3, students.size() );
-					extractFromSession( session ).assertNumberOfJoins( 0, 1 );
+					sqlStatementInspector.assertNumberOfJoins( 0, 1 );
 
 					students = session.createQuery(
 							"select student from Student student join student.teacher t where size(t.skills) > 0",
@@ -403,17 +404,19 @@ public class ManyToManySizeTest2 {
 	}
 
 	@Test
-	@FailureExpected( reason = "org.hibernate.PropertyAccessException : Student#teacher (I think its a stack-overflow)" )
 	public void testSizeWithNestedPath2AddFetchDistinct(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
+					final SQLStatementInspector sqlStatementInspector = extractFromSession( session );
+					sqlStatementInspector.clear();
+
 					List<Student> students = session.createQuery(
 							"select distinct student from Student student join student.teacher t join fetch student.teacher tfetch left join fetch tfetch.skills where size(t.skills) > -1",
 							Student.class
 					).getResultList();
 					// NOTE: An INNER JOIN is done on Teacher twice, which results in 4 joins.
 					//       A possible optimization would be to reuse this INNER JOIN.
-					extractFromSession( session ).assertNumberOfJoins( 0, 4 );
+					sqlStatementInspector.assertNumberOfJoins( 0, 4 );
 					assertEquals( 3L, students.size() );
 					assertTrue( Hibernate.isInitialized( students.get( 0 ).getTeacher().getSkills() ) );
 					assertTrue( Hibernate.isInitialized( students.get( 1 ).getTeacher().getSkills() ) );

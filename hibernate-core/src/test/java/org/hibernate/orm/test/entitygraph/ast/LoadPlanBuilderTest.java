@@ -31,6 +31,7 @@ import org.hibernate.sql.results.graph.entity.EntityResult;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.FailureExpected;
+import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
@@ -86,7 +87,7 @@ public class LoadPlanBuilderTest {
 	}
 
 	@Test
-	@FailureExpected( reason = "Cascade-driven DomainResult graph building not yet implemented" )
+	@NotImplementedYet(reason = "Cascade-driven DomainResult graph building not yet implemented")
 	public void testCascadeBasedBuild() {
 		throw new NotYetImplementedFor6Exception( "Cascade-driven DomainResult graph building not yet implemented" );
 //		EntityPersister ep = (EntityPersister) sessionFactory().getClassMetadata(Message.class);

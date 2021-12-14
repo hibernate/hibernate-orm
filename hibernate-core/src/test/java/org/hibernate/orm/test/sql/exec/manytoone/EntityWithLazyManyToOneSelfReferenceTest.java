@@ -15,6 +15,7 @@ import org.hibernate.testing.orm.domain.gambit.EntityWithLazyManyToOneSelfRefere
 import org.hibernate.testing.orm.domain.gambit.EntityWithManyToOneSelfReference;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.FailureExpected;
+import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -194,7 +195,7 @@ public class EntityWithLazyManyToOneSelfReferenceTest {
 	}
 
 	@Test
-	@FailureExpected
+	@NotImplementedYet(strict = false)
 	public void testGetByMultipleIds(SessionFactoryScope scope) {
 
 		scope.inTransaction(

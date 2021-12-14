@@ -75,7 +75,7 @@ public class FormulaNativeQueryTest {
 	public void testNativeQueryWithAllFields(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					Query query = session.createNativeQuery(
+					Query<Foo> query = session.createNativeQuery(
 							"SELECT ft.*, abs(locationEnd - locationStart) as distance FROM foo_table ft",
 							Foo.class
 					);

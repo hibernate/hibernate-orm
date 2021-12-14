@@ -692,59 +692,69 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 	}
 
-	@Override @SuppressWarnings({"rawtypes", "unchecked"})
-	//note: we're doing something a bit funny here to work around
-	//      the classing signatures declared by the supertypes
-	public NativeQueryImplementor createNativeQuery(String sqlString, Class resultClass) {
-		checkOpen();
-		pulseTransactionCoordinator();
-		delayedAfterCompletion();
-
-		try {
-			NativeQueryImplementor query = createNativeQuery( sqlString );
-			if ( Tuple.class.equals( resultClass ) ) {
-				query.setTupleTransformer( new NativeQueryTupleTransformer() );
-			}
-			else {
-				query.addEntity( "alias1", resultClass.getName(), LockMode.READ );
-			}
-			return query;
-		}
-		catch (RuntimeException he) {
-			throw getExceptionConverter().convert( he );
-		}
-	}
-
 	@Override @SuppressWarnings("rawtypes")
 	public NativeQueryImplementor createNativeQuery(String sqlString, String resultSetMappingName) {
 		checkOpen();
 		pulseTransactionCoordinator();
 		delayedAfterCompletion();
 
-		final NativeQueryImplementor<Object> query;
 		try {
-			if ( StringHelper.isNotEmpty( resultSetMappingName ) ) {
+			if ( StringHelper.isNotEmpty(resultSetMappingName) ) {
 				final NamedResultSetMappingMemento resultSetMappingMemento = getFactory().getQueryEngine()
 						.getNamedObjectRepository()
-						.getResultSetMappingMemento( resultSetMappingName );
+						.getResultSetMappingMemento(resultSetMappingName);
 
 				if ( resultSetMappingMemento == null ) {
-					throw new HibernateException( "Could not resolve specified result-set mapping name : " + resultSetMappingName );
+					throw new HibernateException( "Could not resolve specified result-set mapping name : "
+							+ resultSetMappingName);
 				}
 
-				query = new NativeQueryImpl<>( sqlString, resultSetMappingMemento, this );
+				return new NativeQueryImpl<>(sqlString, resultSetMappingMemento, this);
 			}
 			else {
-				query = new NativeQueryImpl<>( sqlString, this );
+				return new NativeQueryImpl<>(sqlString, this);
 			}
+			//TODO: why no applyQuerySettingsAndHints( query ); ???
 		}
 		catch (RuntimeException he) {
 			throw getExceptionConverter().convert( he );
 		}
+	}
 
+	@Override @SuppressWarnings({"rawtypes", "unchecked"})
+	//note: we're doing something a bit funny here to work around
+	//      the clashing signatures declared by the supertypes
+	public NativeQueryImplementor createNativeQuery(String sqlString, Class resultClass) {
+		NativeQueryImplementor query = createNativeQuery( sqlString );
+		if ( Tuple.class.equals(resultClass) ) {
+			query.setTupleTransformer( new NativeQueryTupleTransformer() );
+		}
+		else if ( getFactory().getMetamodel().findEntityDescriptor(resultClass)!=null ) {
+			query.addEntity( "alias1", resultClass.getName(), LockMode.READ );
+		}
 		return query;
 	}
 
+	@Override @SuppressWarnings({"rawtypes", "unchecked"})
+	public NativeQueryImplementor createNativeQuery(String sqlString, Class resultClass, String tableAlias) {
+		NativeQueryImplementor query = createNativeQuery( sqlString );
+		if ( Tuple.class.equals(resultClass) ) {
+			query.setTupleTransformer( new NativeQueryTupleTransformer() );
+		}
+		else if ( getFactory().getMetamodel().findEntityDescriptor(resultClass)!=null ) {
+			query.addEntity( tableAlias, resultClass.getName(), LockMode.READ );
+		}
+		return query;
+	}
+
+	@Override @SuppressWarnings({"rawtypes", "unchecked"})
+	public NativeQueryImplementor  createNativeQuery(String sqlString, String resultSetMappingName, Class resultClass) {
+		final NativeQueryImplementor query = createNativeQuery( sqlString, resultSetMappingName );
+		if ( Tuple.class.equals( resultClass ) ) {
+			query.setTupleTransformer( new NativeQueryTupleTransformer() );
+		}
+		return query;
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// named query handling

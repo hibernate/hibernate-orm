@@ -511,9 +511,19 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 		return queryDelegate().createNativeQuery( sqlString, resultClass );
 	}
 
+	@Override @SuppressWarnings({"rawtypes", "unchecked"})
+	public NativeQueryImplementor createNativeQuery(String sqlString, Class resultClass, String tableAlias) {
+		return queryDelegate().createNativeQuery( sqlString, resultClass, tableAlias );
+	}
+
 	@Override @SuppressWarnings("rawtypes")
 	public NativeQueryImplementor createNativeQuery(String sqlString, String resultSetMappingName) {
 		return queryDelegate().createNativeQuery( sqlString, resultSetMappingName );
+	}
+
+	@Override @SuppressWarnings({"rawtypes", "unchecked"})
+	public NativeQueryImplementor createNativeQuery(String sqlString, String resultSetMappingName, Class resultClass) {
+		return queryDelegate().createNativeQuery( sqlString, resultSetMappingName, resultClass );
 	}
 
 	@Override

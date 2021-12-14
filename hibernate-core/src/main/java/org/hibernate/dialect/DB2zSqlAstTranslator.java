@@ -21,9 +21,9 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
  */
 public class DB2zSqlAstTranslator<T extends JdbcOperation> extends DB2SqlAstTranslator<T> {
 
-	private final int version;
+	private final DatabaseVersion version;
 
-	public DB2zSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, int version) {
+	public DB2zSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, DatabaseVersion version) {
 		super( sessionFactory, statement );
 		this.version = version;
 	}
@@ -34,14 +34,14 @@ public class DB2zSqlAstTranslator<T extends JdbcOperation> extends DB2SqlAstTran
 		// Also, variable limit isn't supported before 12.0
 		return getQueryPartForRowNumbering() != queryPart && (
 				useOffsetFetchClause( queryPart ) && !isRowsOnlyFetchClauseType( queryPart )
-						|| version < 1200 && queryPart.isRoot() && hasLimit()
-						|| version < 1200 && queryPart.getFetchClauseExpression() != null && !( queryPart.getFetchClauseExpression() instanceof Literal )
+						|| version.isBefore(12) && queryPart.isRoot() && hasLimit()
+						|| version.isBefore(12) && queryPart.getFetchClauseExpression() != null && !( queryPart.getFetchClauseExpression() instanceof Literal )
 		);
 	}
 
 	@Override
 	protected boolean supportsOffsetClause() {
-		return version >= 1200;
+		return version.isSameOrAfter(12);
 	}
 
 	@Override

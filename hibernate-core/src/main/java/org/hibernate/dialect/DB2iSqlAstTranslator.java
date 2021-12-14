@@ -21,9 +21,9 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
  */
 public class DB2iSqlAstTranslator<T extends JdbcOperation> extends DB2SqlAstTranslator<T> {
 
-	private final int version;
+	private final DatabaseVersion version;
 
-	public DB2iSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, int version) {
+	public DB2iSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, DatabaseVersion version) {
 		super( sessionFactory, statement );
 		this.version = version;
 	}
@@ -34,13 +34,13 @@ public class DB2iSqlAstTranslator<T extends JdbcOperation> extends DB2SqlAstTran
 		// According to LegacyDB2LimitHandler, variable limit also isn't supported before 7.1
 		return getQueryPartForRowNumbering() != queryPart && (
 				useOffsetFetchClause( queryPart ) && !isRowsOnlyFetchClauseType( queryPart )
-						|| version < 710 && ( queryPart.isRoot() && hasLimit() || !( queryPart.getFetchClauseExpression() instanceof Literal ) )
+						|| version.isBefore(7, 10) && ( queryPart.isRoot() && hasLimit() || !( queryPart.getFetchClauseExpression() instanceof Literal ) )
 		);
 	}
 
 	@Override
 	protected boolean supportsOffsetClause() {
-		return version >= 710;
+		return version.isSameOrAfter(7, 10);
 	}
 
 	@Override

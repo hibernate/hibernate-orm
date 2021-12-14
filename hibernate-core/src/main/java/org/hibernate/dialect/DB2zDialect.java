@@ -6,8 +6,6 @@
  */
 package org.hibernate.dialect;
 
-import java.sql.Types;
-
 import jakarta.persistence.TemporalType;
 
 import org.hibernate.dialect.identity.DB2390IdentityColumnSupport;
@@ -27,6 +25,8 @@ import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 
+import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
+
 /**
  * An SQL dialect for DB2 for z/OS, previously known as known as Db2 UDB for z/OS and Db2 UDB for z/OS and OS/390.
  *
@@ -34,46 +34,50 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
  */
 public class DB2zDialect extends DB2Dialect {
 
-	private final int version;
+	private final DatabaseVersion version;
 
 	public DB2zDialect(DialectResolutionInfo info) {
-		this( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
+		this( info.makeCopy() );
 		registerKeywords( info );
 	}
 
 	public DB2zDialect() {
-		this( 700 );
+		this( DatabaseVersion.make(7) );
 	}
 
-	public DB2zDialect(int version) {
+	public DB2zDialect(DatabaseVersion version) {
 		super();
 		this.version = version;
+	}
 
-		if ( version > 1000 ) {
-			// See https://www.ibm.com/support/knowledgecenter/SSEPEK_10.0.0/wnew/src/tpc/db2z_10_timestamptimezone.html
-			registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp with time zone" );
+	@Override
+	protected String columnType(int jdbcTypeCode) {
+		// See https://www.ibm.com/support/knowledgecenter/SSEPEK_10.0.0/wnew/src/tpc/db2z_10_timestamptimezone.html
+		if ( jdbcTypeCode==TIMESTAMP_WITH_TIMEZONE &&  version.isAfter(10) ) {
+			return "timestamp with time zone";
 		}
+		return super.columnType(jdbcTypeCode);
 	}
 
 	@Override
 	public TimeZoneSupport getTimeZoneSupport() {
-		return getZVersion() > 1000 ? TimeZoneSupport.NATIVE : TimeZoneSupport.NONE;
+		return getZVersion().isAfter(10) ? TimeZoneSupport.NATIVE : TimeZoneSupport.NONE;
 	}
 
-	int getZVersion() {
+	DatabaseVersion getZVersion() {
 		return version;
 	}
 
 	@Override
 	public SequenceSupport getSequenceSupport() {
-		return getZVersion() < 800
+		return getZVersion().isBefore(8)
 				? NoSequenceSupport.INSTANCE
 				: DB2zSequenceSupport.INSTANCE;
 	}
 
 	@Override
 	public String getQuerySequencesString() {
-		return getZVersion() < 800 ? null : "select * from sysibm.syssequences";
+		return getZVersion().isBefore(8) ? null : "select * from sysibm.syssequences";
 	}
 
 	@Override

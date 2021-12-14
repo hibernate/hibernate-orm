@@ -68,7 +68,6 @@ import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.JavaObjectType;
-import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
@@ -149,12 +148,12 @@ public class PostgreSQLDialect extends Dialect {
 			// since there's no real difference between TEXT and VARCHAR,
 			// except for the length limit, we can just use 'text' for the
 			// "long" string types
-			case LONGVARCHAR:
-			case LONGNVARCHAR:
+			case LONG32VARCHAR:
+			case LONG32NVARCHAR:
 				return "text";
 			// use bytea as the "long" binary type (that there is no
 			// real VARBINARY type in Postgres, so we always use this)
-			case LONGVARBINARY:
+			case LONG32VARBINARY:
 				return "bytea";
 
 			case INET:

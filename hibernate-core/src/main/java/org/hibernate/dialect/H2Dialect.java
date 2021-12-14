@@ -158,10 +158,10 @@ public class H2Dialect extends Dialect {
 		}
 
 		switch (jdbcTypeCode) {
-			case LONGVARCHAR:
-			case LONGNVARCHAR:
+			case LONG32VARCHAR:
+			case LONG32NVARCHAR:
 				return "varchar";
-			case LONGVARBINARY:
+			case LONG32VARBINARY:
 				return "varbinary";
 			case ARRAY:
 				return "array";

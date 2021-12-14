@@ -66,11 +66,11 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 				return "timestamp with time zone";
 
 			//these types hold up to 2 GB
-			case LONGVARCHAR:
+			case LONG32VARCHAR:
 				return "long varchar";
-			case LONGNVARCHAR:
+			case LONG32NVARCHAR:
 				return "long nvarchar";
-			case LONGVARBINARY:
+			case LONG32VARBINARY:
 				return "long binary";
 
 			case NCLOB:

@@ -264,18 +264,19 @@ public abstract class Dialect implements ConversionContext {
 	 * {@code Dialect} by calling {@link #registerColumnType(int,String)}
 	 * from the constructor.
 	 * <p>
-	 * This method is aware of the notion of a maximum length for each of
-	 * the types {@link Types#VARCHAR}, {@link Types#NVARCHAR}, and
-	 * {@link Types#VARBINARY}, usually the limits defined by
-	 * {@link #getMaxVarcharLength()}, {@link #getMaxNVarcharLength()},
-	 * and {@link #getMaxVarbinaryLength()}, and registers "long" types
-	 * for lengths exceeding the limits.
-	 * <p>
 	 * The "long" types {@link Types#LONGVARCHAR}, {@link Types#LONGNVARCHAR}
 	 * and {@link Types#LONGVARBINARY} are considered synonyms for their
 	 * non-{@code LONG} counterparts, with the only difference being that
 	 * a different default length is used: {@link org.hibernate.Length#LONG}
 	 * instead of {@link org.hibernate.Length#DEFAULT}.
+	 * <p>
+	 * This method is aware of the notion of a maximum length for each of
+	 * the types {@link Types#VARCHAR}, {@link Types#NVARCHAR}, and
+	 * {@link Types#VARBINARY}, usually the limits defined by
+	 * {@link #getMaxVarcharLength()}, {@link #getMaxNVarcharLength()},
+	 * and {@link #getMaxVarbinaryLength()}, and registers "long32" types,
+	 * that is, {@link org.hibernate.Length#LONG32} types, for lengths
+	 * exceeding the limits.
 	 * <p>
 	 * Any registrations made by this method may be overridden by calling
 	 * {@link #registerColumnType(int, String)} explicitly. Alternatively,
@@ -291,15 +292,21 @@ public abstract class Dialect implements ConversionContext {
 			switch (typeCode) {
 				case VARCHAR:
 					registerColumnType( typeCode, maxVarcharLength, columnType(typeCode) );
-					registerColumnType( typeCode, columnType(LONGVARCHAR) );
+					// we look up the "long" type under the code LONG32VARCHAR
+					// which by default returns the CLOB type
+					registerColumnType( typeCode, columnType(LONG32VARCHAR) );
 					break;
 				case NVARCHAR:
 					registerColumnType( typeCode, maxNVarcharLength, columnType(typeCode) );
-					registerColumnType( typeCode, columnType(LONGNVARCHAR) );
+					// we look up the "long" type under the code LONG32NVARCHAR
+					// which by default returns the NCLOB type
+					registerColumnType( typeCode, columnType(LONG32NVARCHAR) );
 					break;
 				case VARBINARY:
 					registerColumnType( typeCode, maxVarBinaryLength, columnType(typeCode) );
-					registerColumnType( typeCode, columnType(LONGVARBINARY) );
+					// we look up the "long" type under the code LONG32VARBINARY
+					// which by default returns the BLOB type
+					registerColumnType( typeCode, columnType(LONG32VARBINARY) );
 					break;
 				default:
 					registerColumnType( typeCode, columnType(typeCode) );
@@ -429,11 +436,11 @@ public abstract class Dialect implements ConversionContext {
 				return "blob";
 
 			// by default use the LOB mappings for the "long" types
-			case LONGVARCHAR:
+			case LONG32VARCHAR:
 				return columnType(CLOB);
-			case LONGNVARCHAR:
+			case LONG32NVARCHAR:
 				return columnType(NCLOB);
-			case LONGVARBINARY:
+			case LONG32VARBINARY:
 				return columnType(BLOB);
 
 			default:

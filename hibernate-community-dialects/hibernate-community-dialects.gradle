@@ -15,3 +15,7 @@ dependencies {
     testImplementation project( ':hibernate-testing' )
     testImplementation project( path: ':hibernate-core', configuration: 'tests' )
 }
+
+test {
+    include '**/**'
+}

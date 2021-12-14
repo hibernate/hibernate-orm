@@ -8,6 +8,8 @@ package org.hibernate.orm.test.loading.multiLoad;
 
 import java.util.List;
 
+import org.hibernate.annotations.NaturalId;
+
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -20,15 +22,15 @@ public class MultiLoadSingleEventTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Event.class };
+		return new Class[] { IdEvent.class, NaturalIdEvent.class };
 	}
 
 	@Test
-	public void test() {
-		inTransaction( session -> session.persist( new Event( 1 ) ) );
+	public void byId() {
+		inTransaction( session -> session.persist( new IdEvent( 1 ) ) );
 
 		inTransaction( session -> {
-			List<Event> events = session.byMultipleIds( Event.class )
+			List<IdEvent> events = session.byMultipleIds( IdEvent.class )
 					.multiLoad( 1 );
 
 			assertThat( events ).hasSize( 1 );
@@ -37,18 +39,32 @@ public class MultiLoadSingleEventTest extends BaseCoreFunctionalTestCase {
 		} );
 	}
 
-	@Entity(name = "Event")
-	public static class Event {
+	@Test
+	public void byNaturalId() {
+		inTransaction( session -> session.persist( new NaturalIdEvent( 1 ) ) );
+
+		inTransaction( session -> {
+			List<NaturalIdEvent> events = session.byMultipleNaturalId( NaturalIdEvent.class )
+					.multiLoad( "code1" );
+
+			assertThat( events ).hasSize( 1 );
+			assertThat( events.get( 0 ) ).isNotNull();
+			assertThat( events ).extracting( "id" ).containsExactly( 1 );
+		} );
+	}
+
+	@Entity(name = "IdEvent")
+	public static class IdEvent {
 
 		@Id
 		private Integer id;
 
 		private String text;
 
-		public Event() {
+		public IdEvent() {
 		}
 
-		public Event(Integer id) {
+		public IdEvent(Integer id) {
 			this.id = id;
 			this.text = "text" + id;
 		}
@@ -67,6 +83,40 @@ public class MultiLoadSingleEventTest extends BaseCoreFunctionalTestCase {
 
 		public void setText(String text) {
 			this.text = text;
+		}
+	}
+
+	@Entity(name = "NaturalIdEvent")
+	public static class NaturalIdEvent {
+
+		@Id
+		private Integer id;
+
+		@NaturalId
+		private String code;
+
+		public NaturalIdEvent() {
+		}
+
+		public NaturalIdEvent(Integer id) {
+			this.id = id;
+			this.code = "code" + id;
+		}
+
+		public Integer getId() {
+			return id;
+		}
+
+		public void setId(Integer id) {
+			this.id = id;
+		}
+
+		public String getCode() {
+			return code;
+		}
+
+		public void setCode(String code) {
+			this.code = code;
 		}
 	}
 }

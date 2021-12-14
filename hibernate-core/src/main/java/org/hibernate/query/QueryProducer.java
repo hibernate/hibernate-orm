@@ -98,6 +98,9 @@ public interface QueryProducer {
 	/**
 	 * Create a NativeQuery instance for the given native (SQL) query using
 	 * implicit mapping to the specified Java type.
+	 * <p>
+	 * If the given class is an entity class, this method is equivalent to
+	 * {@code createNativeQuery(sqlString).addEntity("alias1", resultClass)}.
 	 *
 	 * @param sqlString Native (SQL) query string
 	 * @param resultClass The Java entity type to map results to
@@ -107,6 +110,23 @@ public interface QueryProducer {
 	 * @see jakarta.persistence.EntityManager#createNativeQuery(String,Class)
 	 */
 	<R> NativeQuery<R> createNativeQuery(String sqlString, Class<R> resultClass);
+
+	/**
+	 * Create a NativeQuery instance for the given native (SQL) query using
+	 * implicit mapping to the specified Java type.
+	 * <p>
+	 * If the given class is an entity class, this method is equivalent to
+	 * {@code createNativeQuery(sqlString).addEntity(tableAlias, resultClass)}.
+	 *
+	 * @param sqlString Native (SQL) query string
+	 * @param resultClass The Java entity type to map results to
+	 * @param tableAlias The table alias for columns in the result set
+	 *
+	 * @return The NativeQuery instance for manipulation and execution
+	 *
+	 * @see jakarta.persistence.EntityManager#createNativeQuery(String,Class)
+	 */
+	<R> NativeQuery<R> createNativeQuery(String sqlString, Class<R> resultClass, String tableAlias);
 
 	/**
 	 * Create a NativeQuery instance for the given native (SQL) query using

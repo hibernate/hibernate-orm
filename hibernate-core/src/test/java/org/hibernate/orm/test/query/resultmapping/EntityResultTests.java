@@ -172,6 +172,28 @@ public class EntityResultTests extends AbstractUsageTest {
 	}
 
 	@Test
+	public void testExplicitDiscriminatedMappingWithResultClass(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final String qryString =
+							"select id as id_alias,"
+									+ "   type_code as type_code_alias,"
+									+ "   root_name as root_name_alias,"
+									+ "   subtype1_name as sub_type1_name_alias,"
+									+ "   subtype2_name as sub_type2_name_alias"
+									+ " from discriminated_entity";
+
+					final List<DiscriminatedRoot> results = session.createNativeQuery( qryString, "root-explicit", DiscriminatedRoot.class ).list();
+					assertThat( results.size(), is( 4 ) );
+
+					final Set<Integer> idsFound = new HashSet<>();
+					results.forEach( result -> idsFound.add( result.getId() ) );
+					assertThat( idsFound, containsInAnyOrder( 1, 2, 3, 4 ) );
+				}
+		);
+	}
+
+	@Test
 	public void testConvertedAttributes(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

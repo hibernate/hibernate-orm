@@ -81,6 +81,19 @@ public class QueryTest extends BaseNonConfigCoreFunctionalTestCase {
 		} );
 	}
 
+	public void testNativeQueryResultWithResultClass() {
+		inTransaction( (session) -> {
+			final NativeQueryImplementor<Object[]> query = session.createNativeQuery( "select id, salary from EMP", "emp_id_salary", Object[].class );
+
+			final List<Object[]> results = query.list();
+			assertThat( results ).hasSize( 1 );
+
+			final Object[] values = results.get( 0 );
+			assertThat( values[0] ).isEqualTo( 1 );
+			assertThat( values[1] ).isEqualTo( SALARY );
+		} );
+	}
+
 	@Test
 	@FailureExpected( jiraKey = "HHH-14975", message = "Not yet implemented" )
 	@NotImplementedYet

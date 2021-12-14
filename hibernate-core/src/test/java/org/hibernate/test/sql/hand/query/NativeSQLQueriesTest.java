@@ -49,7 +49,6 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.PersistenceException;
@@ -250,6 +249,34 @@ public class NativeSQLQueriesTest {
 					assertEquals( l.size(), 2 );
 
 					l = session.createNativeQuery( getOrgEmpPersonSQL(), "org-emp-person" ).list();
+					assertEquals( l.size(), 1 );
+
+					session.delete(emp);
+					session.delete(gavin);
+					session.delete(ifa);
+					session.delete(jboss);
+				}
+		);
+	}
+
+	@Test
+	public void testResultSetMappingDefinitionWithResultClass(SessionFactoryScope scope) {
+		Organization ifa = new Organization("IFA");
+		Organization jboss = new Organization("JBoss");
+		Person gavin = new Person("Gavin");
+		Employment emp = new Employment(gavin, jboss, "AU");
+
+		scope.inTransaction(
+				session -> {
+					session.persist(ifa);
+					session.persist(jboss);
+					session.persist(gavin);
+					session.persist(emp);
+
+					List<Object[]> l = session.createNativeQuery( getOrgEmpRegionSQL(), "org-emp-regionCode", Object[].class ).list();
+					assertEquals( l.size(), 2 );
+
+					l = session.createNativeQuery( getOrgEmpPersonSQL(), "org-emp-person", Object[].class ).list();
 					assertEquals( l.size(), 1 );
 
 					session.delete(emp);

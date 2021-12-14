@@ -16,6 +16,7 @@ import java.util.regex.Pattern;
 
 import org.hibernate.Filter;
 import org.hibernate.MappingException;
+import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
@@ -67,8 +68,9 @@ public class FilterHelper {
 			filterNames[filterCount] = safeInterning( filter.getName() );
 			filterConditions[filterCount] = safeInterning( filter.getCondition() );
 			filterAliasTableMaps[filterCount] = filter.getAliasTableMap( factory );
-			if ( ( filterAliasTableMaps[filterCount].isEmpty() || isTableFromPersistentClass( filterAliasTableMaps[filterCount] ) ) && filter
-					.useAutoAliasInjection() ) {
+			if ( ( filterAliasTableMaps[filterCount].isEmpty()
+					|| isTableFromPersistentClass( filterAliasTableMaps[filterCount] ) )
+					&& filter.useAutoAliasInjection() ) {
 				filterConditions[filterCount] = safeInterning(
 							Template.renderWhereStringTemplate(
 							filter.getCondition(),
@@ -79,6 +81,7 @@ public class FilterHelper {
 				);
 				filterAutoAliasFlags[filterCount] = true;
 			}
+
 			filterConditions[filterCount] = safeInterning(
 					StringHelper.replace(
 						filterConditions[filterCount],

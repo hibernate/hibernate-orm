@@ -19,6 +19,7 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.FilterAliasGenerator;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.Expectations;
@@ -497,7 +498,13 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	protected String filterFragment(String alias, Set<String> treatAsDeclarations) throws MappingException {
 		String result = super.filterFragment( alias );
 		if ( getElementPersister() instanceof Joinable ) {
-			result += ( (Joinable) getElementPersister() ).oneToManyFilterFragment( alias, treatAsDeclarations );
+			final String associationFilter = ( (Joinable) getElementPersister() ).oneToManyFilterFragment( alias, treatAsDeclarations );
+			if ( StringHelper.isEmpty( result ) ) {
+				result = associationFilter;
+			}
+			else if ( StringHelper.isNotEmpty( associationFilter ) ) {
+				result += " and " + associationFilter;
+			}
 		}
 		return result;
 	}

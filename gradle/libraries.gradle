@@ -145,7 +145,7 @@ ext {
             junit:          "junit:junit:${junitVersion}",
             junit5_vintage: "org.junit.vintage:junit-vintage-engine:${junitVintageVersion}",
 
-            log4j2:          "org.apache.logging.log4j:log4j-core:2.15.0",
+            log4j2:          "org.apache.logging.log4j:log4j-core:2.16.0",
 
             byteman:         "org.jboss.byteman:byteman:${bytemanVersion}",
             byteman_install: "org.jboss.byteman:byteman-install:${bytemanVersion}",

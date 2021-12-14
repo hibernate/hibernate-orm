@@ -33,34 +33,31 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
  */
 public class DB2iDialect extends DB2Dialect {
 
-	private final int version;
+	private final DatabaseVersion version;
 
 	public DB2iDialect(DialectResolutionInfo info) {
-		this( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
+		this( info.makeCopy() );
 		registerKeywords( info );
 	}
 
 	public DB2iDialect() {
-		this( 700 );
+		this( DatabaseVersion.make(7) );
 	}
 
-	public DB2iDialect(int version) {
+	public DB2iDialect(DatabaseVersion version) {
 		super();
 		this.version = version;
 	}
 
-	public int getIVersion() {
+	public DatabaseVersion getIVersion() {
 		return version;
 	}
 
 	@Override
 	protected UniqueDelegate createUniqueDelegate() {
-		if ( getIVersion() >= 730 ) {
-			return new DefaultUniqueDelegate( this );
-		}
-		else {
-			return super.createUniqueDelegate();
-		}
+		return getIVersion().isSameOrAfter(7, 3)
+				? new DefaultUniqueDelegate(this)
+				: super.createUniqueDelegate();
 	}
 
 	/**
@@ -68,17 +65,13 @@ public class DB2iDialect extends DB2Dialect {
 	 */
 	@Override
 	public SequenceSupport getSequenceSupport() {
-		if ( getIVersion() >= 730 ) {
-			return DB2iSequenceSupport.INSTANCE;
-		}
-		else {
-			return NoSequenceSupport.INSTANCE;
-		}
+		return getIVersion().isSameOrAfter(7, 3)
+				? DB2iSequenceSupport.INSTANCE : NoSequenceSupport.INSTANCE;
 	}
 
 	@Override
 	public String getQuerySequencesString() {
-		if ( getIVersion() >= 730 ) {
+		if ( getIVersion().isSameOrAfter(7,3) ) {
 			return "select distinct sequence_name from qsys2.syssequences " +
 					"where current_schema='*LIBL' and sequence_schema in (select schema_name from qsys2.library_list_info) " +
 					"or sequence_schema=current_schema";
@@ -90,22 +83,15 @@ public class DB2iDialect extends DB2Dialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		if ( getIVersion() >= 730) {
-			return FetchLimitHandler.INSTANCE;
-		}
-		else {
-			return LegacyDB2LimitHandler.INSTANCE;
-		}
+		return getIVersion().isSameOrAfter(7, 3)
+				? FetchLimitHandler.INSTANCE : LegacyDB2LimitHandler.INSTANCE;
 	}
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
-		if ( getIVersion() >= 730) {
-			return new DB2IdentityColumnSupport();
-		}
-		else {
-			return new DB2390IdentityColumnSupport();
-		}
+		return getIVersion().isSameOrAfter(7, 3)
+				? new DB2IdentityColumnSupport()
+				: new DB2390IdentityColumnSupport();
 	}
 
 	@Override

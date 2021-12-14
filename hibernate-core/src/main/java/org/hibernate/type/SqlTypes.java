@@ -129,10 +129,24 @@ public class SqlTypes {
 	 * <P>The constant in the Java programming language, sometimes referred
 	 * to as a type code, that identifies the generic SQL type
 	 * {@code LONGVARCHAR}.
+	 * <p>
+	 * Interpreted by Hibernate as a {@link #VARCHAR}-like type large enough
+	 * to hold a string of maximum length {@link org.hibernate.Length#LONG}.
+	 *
+	 * @see org.hibernate.Length#LONG
 	 *
 	 * @see Types#LONGVARCHAR
 	 */
 	public final static int LONGVARCHAR = Types.LONGVARCHAR;
+
+	/**
+	 * A type code used internally by the Hibernate
+	 * {@link org.hibernate.dialect.Dialect} to identify a
+	 * {@link #VARCHAR}-like type large enough to hold any Java string.
+	 *
+	 * @see org.hibernate.Length#LONG32
+	 */
+	public final static int LONG32VARCHAR = 4001;
 
 	/**
 	 * <P>The constant in the Java programming language, sometimes referred
@@ -183,10 +197,24 @@ public class SqlTypes {
 	 * <P>The constant in the Java programming language, sometimes referred
 	 * to as a type code, that identifies the generic SQL type
 	 * {@code LONGVARBINARY}.
+	 * <p>
+	 * Interpreted by Hibernate as a {@link #VARBINARY}-like type large enough
+	 * to hold a byte array of maximum length {@link org.hibernate.Length#LONG}.
+	 *
+	 * @see org.hibernate.Length#LONG
 	 *
 	 * @see Types#LONGVARBINARY
 	 */
 	public final static int LONGVARBINARY = Types.LONGVARBINARY;
+
+	/**
+	 * A type code used internally by the Hibernate
+	 * {@link org.hibernate.dialect.Dialect} to identify a
+	 * {@link #VARBINARY}-like type large enough to hold any Java byte array.
+	 *
+	 * @see org.hibernate.Length#LONG32
+	 */
+	public final static int LONG32VARBINARY = 4003;
 
 	/**
 	 * <P>The constant in the Java programming language
@@ -313,10 +341,24 @@ public class SqlTypes {
 	/**
 	 * The constant in the Java programming language, sometimes referred to
 	 * as a type code, that identifies the generic SQL type {@code LONGNVARCHAR}.
+	 * <p>
+	 * Interpreted by Hibernate as an {@link #NVARCHAR}-like type large enough
+	 * to hold a string of maximum length {@link org.hibernate.Length#LONG}.
+	 *
+	 * @see org.hibernate.Length#LONG
 	 *
 	 * @see Types#LONGNVARCHAR
 	 */
 	public static final int LONGNVARCHAR = Types.LONGNVARCHAR;
+
+	/**
+	 * A type code used internally by the Hibernate
+	 * {@link org.hibernate.dialect.Dialect} to identify an
+	 * {@link #NVARCHAR}-like type large enough to hold any Java string.
+	 *
+	 * @see org.hibernate.Length#LONG32
+	 */
+	public final static int LONG32NVARCHAR = 4002;
 
 	/**
 	 * The constant in the Java programming language, sometimes referred to

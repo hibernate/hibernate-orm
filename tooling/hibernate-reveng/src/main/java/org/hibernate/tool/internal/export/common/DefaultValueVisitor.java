@@ -3,6 +3,7 @@ package org.hibernate.tool.internal.export.common;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Array;
 import org.hibernate.mapping.Bag;
+import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.IdentifierBag;
@@ -92,6 +93,12 @@ public class DefaultValueVisitor implements ValueVisitor {
 	public Object accept(SimpleValue o){
 
 		return handle(o);
+	}
+	
+	public Object accept(BasicValue o) {
+		
+		return handle(o);
+		
 	}
 
 	public Object accept(DependantValue o){

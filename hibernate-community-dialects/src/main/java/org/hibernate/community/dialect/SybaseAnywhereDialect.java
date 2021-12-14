@@ -40,17 +40,12 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 		this( DatabaseVersion.make( 8 ) );
 	}
 
+	public SybaseAnywhereDialect(DialectResolutionInfo info) {
+		super(info);
+	}
+
 	public SybaseAnywhereDialect(DatabaseVersion version) {
-		this(version, null);
-	}
-
-	public SybaseAnywhereDialect(DialectResolutionInfo info){
-		this( info.makeCopy(), info );
-		registerKeywords( info );
-	}
-
-	public SybaseAnywhereDialect(DatabaseVersion version, DialectResolutionInfo info) {
-		super( version, info );
+		super(version);
 	}
 
 	@Override

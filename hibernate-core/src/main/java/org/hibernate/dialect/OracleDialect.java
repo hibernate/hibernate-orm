@@ -106,12 +106,9 @@ public class OracleDialect extends Dialect {
 
 	public static final String PREFER_LONG_RAW = "hibernate.dialect.oracle.prefer_long_raw";
 
-	private final LimitHandler limitHandler;
-
-	public OracleDialect(DialectResolutionInfo info) {
-		this( info.makeCopy() );
-		registerKeywords( info );
-	}
+	private final LimitHandler limitHandler = supportsFetchClause( FetchClauseType.ROWS_ONLY )
+			? Oracle12LimitHandler.INSTANCE
+			: new LegacyOracleLimitHandler( getVersion() );
 
 	public OracleDialect() {
 		this( DatabaseVersion.make( 8, 0 ) );
@@ -119,12 +116,12 @@ public class OracleDialect extends Dialect {
 
 	public OracleDialect(DatabaseVersion version) {
 		super(version);
-
 		registerDefaultProperties();
+	}
 
-		limitHandler = supportsFetchClause( FetchClauseType.ROWS_ONLY )
-				? Oracle12LimitHandler.INSTANCE
-				: new LegacyOracleLimitHandler( getVersion() );
+	public OracleDialect(DialectResolutionInfo info) {
+		super(info);
+		registerDefaultProperties();
 	}
 
 	@Override

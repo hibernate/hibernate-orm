@@ -6,7 +6,6 @@
  */
 package org.hibernate.dialect;
 
-import java.sql.Types;
 import java.util.Date;
 import java.util.Map;
 
@@ -78,8 +77,7 @@ public class SpannerDialect extends Dialect {
 	}
 
 	public SpannerDialect(DialectResolutionInfo info) {
-		super();
-		registerKeywords( info );
+		super(info);
 	}
 
 	@Override

@@ -92,11 +92,12 @@ public class DerbyDialect extends Dialect {
 	// * can't select a parameter unless wrapped
 	//   in a cast or function call
 
-	private final LimitHandler limitHandler;
+	private final LimitHandler limitHandler = getVersion().isBefore( 10, 5 )
+			? AbstractLimitHandler.NO_LIMIT
+			: new DerbyLimitHandler( getVersion().isSameOrAfter( 10, 6 ) );
 
-	public DerbyDialect(DialectResolutionInfo info) {
-		this( info.makeCopy() );
-		registerKeywords( info );
+	{
+		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, NO_BATCH );
 	}
 
 	public DerbyDialect() {
@@ -105,14 +106,12 @@ public class DerbyDialect extends Dialect {
 
 	public DerbyDialect(DatabaseVersion version) {
 		super(version);
-
 		registerDerbyKeywords();
+	}
 
-		limitHandler = getVersion().isBefore( 10, 5 )
-				? AbstractLimitHandler.NO_LIMIT
-				: new DerbyLimitHandler( getVersion().isSameOrAfter( 10, 6 ) );
-
-		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, NO_BATCH );
+	public DerbyDialect(DialectResolutionInfo info) {
+		super(info);
+		registerDerbyKeywords();
 	}
 
 	@Override
@@ -149,16 +148,18 @@ public class DerbyDialect extends Dialect {
 	}
 
 	@Override
-	protected void registerDefaultColumnTypes(int maxVarcharLength, int maxNVarcharLength, int maxVarBinaryLength) {
-		super.registerDefaultColumnTypes(maxVarcharLength, maxNVarcharLength, maxVarBinaryLength);
+	protected void registerDefaultColumnTypes() {
+		super.registerDefaultColumnTypes();
 
 		//long vachar is the right type to use for lengths between 32_672 and 32_700
-		registerColumnType( VARBINARY, 32_700,"long varchar for bit data" );
-		registerColumnType( VARCHAR, 32_700, "long varchar" );
+		int maxLongVarcharLength = 32_700;
+
+		registerColumnType( VARBINARY, maxLongVarcharLength,"long varchar for bit data" );
+		registerColumnType( VARCHAR, maxLongVarcharLength, "long varchar" );
 
 		registerColumnType( BINARY, 254, "char($l) for bit data" );
-		registerColumnType( BINARY, 32_672, "varchar($l) for bit data" );
-		registerColumnType( BINARY, 32_700, "long varchar for bit data" );
+		registerColumnType( BINARY, getMaxVarcharLength(), "varchar($l) for bit data" );
+		registerColumnType( BINARY, maxLongVarcharLength, "long varchar for bit data" );
 	}
 
 	@Override

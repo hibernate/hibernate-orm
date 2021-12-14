@@ -101,26 +101,28 @@ public class PostgreSQLDialect extends Dialect {
 
 	private final PostgreSQLDriverKind driverKind;
 
-	public PostgreSQLDialect(DialectResolutionInfo info) {
-		this( info.makeCopy(), PostgreSQLDriverKind.determineKind( info ) );
-		registerKeywords( info );
+	{
+		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
+		getDefaultProperties().setProperty( Environment.NON_CONTEXTUAL_LOB_CREATION, "true" );
 	}
 
 	public PostgreSQLDialect() {
 		this( DatabaseVersion.make( 8, 0 ) );
 	}
 
+	public PostgreSQLDialect(DialectResolutionInfo info) {
+		super(info);
+		driverKind = PostgreSQLDriverKind.determineKind( info );
+	}
+
 	public PostgreSQLDialect(DatabaseVersion version) {
-		// Assume PgJDBC by default
-		this( version, PostgreSQLDriverKind.PG_JDBC );
+		super(version);
+		driverKind = PostgreSQLDriverKind.PG_JDBC;
 	}
 
 	public PostgreSQLDialect(DatabaseVersion version, PostgreSQLDriverKind driverKind) {
 		super(version);
 		this.driverKind = driverKind;
-
-		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
-		getDefaultProperties().setProperty( Environment.NON_CONTEXTUAL_LOB_CREATION, "true" );
 	}
 
 	@Override

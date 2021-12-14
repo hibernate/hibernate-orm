@@ -72,11 +72,6 @@ public class HANAColumnStoreDialect extends AbstractHANADialect {
 		return 5000;
 	}
 
-	@Override
-	public DatabaseVersion getVersion(){
-		return version;
-	}
-
 	private void registerHanaCloudKeywords() {
 		registerKeyword( "array" );
 		registerKeyword( "at" );
@@ -177,25 +172,17 @@ public class HANAColumnStoreDialect extends AbstractHANADialect {
 
 	@Override
 	protected boolean supportsAsciiStringTypes() {
-		if ( version.isSameOrAfter( 4 ) ) {
-			return false;
-		}
-		return true;
+		return getVersion().isBefore( 4 );
 	}
 
 	@Override
 	protected Boolean useUnicodeStringTypesDefault() {
-		if ( version.isSameOrAfter( 4 ) ) {
-			return Boolean.TRUE;
-		}
-		return Boolean.FALSE;
+		return getVersion().isSameOrAfter( 4 );
 	}
 
 	@Override
 	public boolean isUseUnicodeStringTypes() {
-		if ( version.isSameOrAfter( 4 ) ) {
-			return true;
-		}
-		return super.isUseUnicodeStringTypes();
+		return getVersion().isSameOrAfter( 4 )
+				|| super.isUseUnicodeStringTypes();
 	}
 }

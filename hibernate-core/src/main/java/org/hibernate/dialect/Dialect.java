@@ -163,6 +163,7 @@ import jakarta.persistence.TemporalType;
 
 import static java.lang.Math.ceil;
 import static java.lang.Math.log;
+import static org.hibernate.internal.util.StringHelper.parseCommaSeparatedString;
 import static org.hibernate.type.SqlTypes.*;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_END;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_DATE;
@@ -220,9 +221,9 @@ public abstract class Dialect implements ConversionContext {
 	private final Properties properties = new Properties();
 	private final Set<String> sqlKeywords = new HashSet<>();
 
-	private final UniqueDelegate uniqueDelegate;
+	private final UniqueDelegate uniqueDelegate = new DefaultUniqueDelegate( this );
 
-	private final SizeStrategy sizeStrategy;
+	private final SizeStrategy sizeStrategy = new SizeStrategyImpl();
 
 	private final DatabaseVersion version;
 
@@ -233,28 +234,51 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	@Deprecated
 	protected Dialect() {
-		this(null, null);
+		this( (DatabaseVersion) null );
 	}
 
 	protected Dialect(DatabaseVersion version) {
-		this( version, null );
-	}
-
-	protected Dialect(DatabaseVersion version, DialectResolutionInfo info) {
 		this.version = version;
-		uniqueDelegate = new DefaultUniqueDelegate( this );
-		sizeStrategy = new SizeStrategyImpl();
-		registerDefaultColumnTypes(info); // pass the info back down to the subclass in case it needs it (MySQL)
+		beforeRegisteringColumnTypes(version);
+		registerDefaultColumnTypes();
 		registerHibernateTypes();
 		registerDefaultKeywords();
 	}
+
+	protected Dialect(DialectResolutionInfo info) {
+		this.version = info.makeCopy();
+		beforeRegisteringColumnTypes(info);
+		registerDefaultColumnTypes();
+		registerHibernateTypes();
+		registerDefaultKeywords();
+		registerKeywords(info);
+	}
+
+	/**
+	 * Called right before {@link #registerDefaultColumnTypes()}, allowing
+	 * the subclass to do something with the {@link DialectResolutionInfo}.
+	 * <p>
+	 * Take care when overriding this method: it's only called when the
+	 * {@code Dialect} is constructed using {@code Dialect(DialectResolutionInfo)}.
+	 */
+	protected void beforeRegisteringColumnTypes(DialectResolutionInfo info) {}
+
+	/**
+	 * Called right before {@link #registerDefaultColumnTypes()}.
+	 * <p>
+	 * Take care when overriding this method: it's only called when the
+	 * {@code Dialect} is constructed using {@code Dialect(DatabaseVersion)}.
+	 */
+	protected void beforeRegisteringColumnTypes(DatabaseVersion version) {}
 
 	/**
 	 * Register ANSI-standard column types using the length limits defined
 	 * by {@link #getMaxVarcharLength()}, {@link #getMaxNVarcharLength()},
 	 * and {@link #getMaxVarbinaryLength()}.
+	 * <p>
+	 * This method is always called when a {@code Dialect} is instantiated.
 	 */
-	protected void registerDefaultColumnTypes(DialectResolutionInfo info) {
+	protected void registerDefaultColumnTypes() {
 		registerDefaultColumnTypes( getMaxVarcharLength(), getMaxNVarcharLength(), getMaxVarbinaryLength() );
 	}
 
@@ -496,7 +520,7 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	protected void registerKeywords(DialectResolutionInfo info) {
-		for ( String keyword : StringHelper.parseCommaSeparatedString( info.getSQLKeywords() ) ) {
+		for ( String keyword : parseCommaSeparatedString( info.getSQLKeywords() ) ) {
 			registerKeyword( keyword );
 		}
 	}

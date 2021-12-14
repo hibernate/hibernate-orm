@@ -79,13 +79,13 @@ public class CockroachDialect extends Dialect {
 	}
 
 	public CockroachDialect(DialectResolutionInfo info) {
-		this( info.makeCopy(), PostgreSQLDriverKind.determineKind( info ) );
-		registerKeywords( info );
+		super(info);
+		driverKind = PostgreSQLDriverKind.determineKind( info );
 	}
 
 	public CockroachDialect(DatabaseVersion version) {
-		// Assume PgJDBC by default
-		this( version, PostgreSQLDriverKind.PG_JDBC );
+		super(version);
+		driverKind = PostgreSQLDriverKind.PG_JDBC;
 	}
 
 	public CockroachDialect(DatabaseVersion version, PostgreSQLDriverKind driverKind) {

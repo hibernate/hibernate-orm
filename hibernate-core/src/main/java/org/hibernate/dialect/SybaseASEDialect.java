@@ -51,47 +51,41 @@ import static org.hibernate.type.SqlTypes.*;
  */
 public class SybaseASEDialect extends SybaseDialect {
 
-	private final SizeStrategy sizeStrategy;
+	private final SizeStrategy sizeStrategy = new SizeStrategyImpl() {
+		@Override
+		public Size resolveSize(
+				JdbcType jdbcType,
+				JavaType<?> javaType,
+				Integer precision,
+				Integer scale,
+				Long length) {
+			switch ( jdbcType.getDefaultSqlTypeCode() ) {
+				case Types.FLOAT:
+					// Sybase ASE allows FLOAT with a precision up to 48
+					if ( precision != null ) {
+						return Size.precision( Math.min( Math.max( precision, 1 ), 48 ) );
+					}
+			}
+			return super.resolveSize( jdbcType, javaType, precision, scale, length );
+		}
+	};
+
 	private final boolean ansiNull;
 
 	public SybaseASEDialect() {
 		this( DatabaseVersion.make( 11 ) );
 	}
 
-	public SybaseASEDialect(DialectResolutionInfo info) {
-		this( info.makeCopy(), info );
-		registerKeywords( info );
-	}
-
 	public SybaseASEDialect(DatabaseVersion version) {
-		this(version, null);
+		super(version);
+		ansiNull = false;
+		registerSybaseKeywords();
 	}
 
-	protected SybaseASEDialect(DatabaseVersion version, DialectResolutionInfo info) {
-		super(version, info);
-
-		ansiNull = info != null && isAnsiNull( info.unwrap( DatabaseMetaData.class ) );
-
+	public SybaseASEDialect(DialectResolutionInfo info) {
+		super(info);
+		ansiNull = isAnsiNull( info.unwrap( DatabaseMetaData.class ) );
 		registerSybaseKeywords();
-
-		sizeStrategy = new SizeStrategyImpl() {
-			@Override
-			public Size resolveSize(
-					JdbcType jdbcType,
-					JavaType<?> javaType,
-					Integer precision,
-					Integer scale,
-					Long length) {
-				switch ( jdbcType.getDefaultSqlTypeCode() ) {
-					case Types.FLOAT:
-						// Sybase ASE allows FLOAT with a precision up to 48
-						if ( precision != null ) {
-							return Size.precision( Math.min( Math.max( precision, 1 ), 48 ) );
-						}
-				}
-				return super.resolveSize( jdbcType, javaType, precision, scale, length );
-			}
-		};
 	}
 
 	@Override
@@ -127,8 +121,8 @@ public class SybaseASEDialect extends SybaseDialect {
 	}
 
 	@Override
-	protected void registerDefaultColumnTypes(DialectResolutionInfo info) {
-		super.registerDefaultColumnTypes(info);
+	protected void registerDefaultColumnTypes() {
+		super.registerDefaultColumnTypes();
 
 		// According to Wikipedia bigdatetime and bigtime were added in 15.5
 		// But with jTDS we can't use them as the driver can't handle the types

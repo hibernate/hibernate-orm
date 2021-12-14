@@ -81,28 +81,29 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
 public class SQLServerDialect extends AbstractTransactSQLDialect {
 	private static final int PARAM_LIST_SIZE_LIMIT = 2100;
 
-	private StandardSequenceExporter exporter;
-
-	public SQLServerDialect(DialectResolutionInfo info) {
-		this( info.makeCopy(), info );
-		registerKeywords( info );
-	}
+	private final StandardSequenceExporter exporter;
 
 	public SQLServerDialect() {
 		this( DatabaseVersion.make( 8, 0 ) );
 	}
 
 	public SQLServerDialect(DatabaseVersion version) {
-		this(version, null);
+		super(version);
+		exporter = createSequenceExporter(version);
+		registerSqlServerKeywords();
 	}
 
-	protected SQLServerDialect(DatabaseVersion version, DialectResolutionInfo info) {
-		super(version, info);
+	public SQLServerDialect(DialectResolutionInfo info) {
+		super(info);
+		exporter = createSequenceExporter(info);
+		registerSqlServerKeywords();
+	}
 
-		if ( getVersion().isSameOrAfter( 11 ) ) {
-			exporter = new SqlServerSequenceExporter( this );
-		}
+	private StandardSequenceExporter createSequenceExporter(DatabaseVersion version) {
+		return version.isSameOrAfter(11) ? new SqlServerSequenceExporter(this) : null;
+	}
 
+	private void registerSqlServerKeywords() {
 		registerKeyword( "top" );
 		registerKeyword( "key" );
 	}

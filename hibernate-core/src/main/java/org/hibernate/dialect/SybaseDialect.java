@@ -69,29 +69,21 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	}
 
 	public SybaseDialect(DatabaseVersion version) {
-		this(version, null);
+		super(version);
 	}
 
 	public SybaseDialect(DialectResolutionInfo info) {
-		this( info.makeCopy(), info );
-		registerKeywords( info );
-	}
-
-	protected SybaseDialect(DatabaseVersion version, DialectResolutionInfo info) {
-		super(version, info);
+		super(info);
 	}
 
 	@Override
-	protected void registerDefaultColumnTypes(DialectResolutionInfo info) {
+	protected void beforeRegisteringColumnTypes(DialectResolutionInfo info) {
 		// we need to check init the jtdsDriver field here,
 		// because we need it in the registerDefaultColumnTypes()
 		// of the subclass, which is called from the superclass
 		// constructor, before our constructor has been called
-		jtdsDriver = info != null
-				&& info.getDriverName() != null
+		jtdsDriver = info.getDriverName() != null
 				&& info.getDriverName().contains( "jTDS" );
-
-		super.registerDefaultColumnTypes(info);
 	}
 
 	@Override

@@ -87,70 +87,66 @@ import static org.hibernate.type.SqlTypes.*;
  */
 public class MySQLDialect extends Dialect {
 
-	private final UniqueDelegate uniqueDelegate;
-	private final MySQLStorageEngine storageEngine;
-	private final SizeStrategy sizeStrategy;
+	private final UniqueDelegate uniqueDelegate = new MySQLUniqueDelegate( this );
+	private final MySQLStorageEngine storageEngine = createStorageEngine();
+	private final SizeStrategy sizeStrategy = new SizeStrategyImpl() {
+		@Override
+		public Size resolveSize(
+				JdbcType jdbcType,
+				JavaType<?> javaType,
+				Integer precision,
+				Integer scale,
+				Long length) {
+			switch ( jdbcType.getDefaultSqlTypeCode() ) {
+				case Types.BIT:
+					// MySQL allows BIT with a length up to 64 (less the the default length 255)
+					if ( length != null ) {
+						return Size.length( Math.min( Math.max( length, 1 ), 64 ) );
+					}
+			}
+			return super.resolveSize( jdbcType, javaType, precision, scale, length );
+		}
+	};
+
+	{
+		getDefaultProperties().setProperty( Environment.MAX_FETCH_DEPTH, "2" );
+		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
+	}
+
 	private int maxVarcharLength;
 	private int maxVarbinaryLength;
-
-	public MySQLDialect(DialectResolutionInfo info) {
-		this( info.makeCopy(), info );
-		registerKeywords( info );
-	}
 
 	public MySQLDialect() {
 		this( DatabaseVersion.make( 5, 0 ) );
 	}
 
 	public MySQLDialect(DatabaseVersion version) {
-		this(version, null);
+		super(version);
+		registerKeyword( "key" );
+
 	}
 
-	protected MySQLDialect(DatabaseVersion mySQLVersion, DialectResolutionInfo info) {
-		super(mySQLVersion, info);
+	public MySQLDialect(DialectResolutionInfo info) {
+		super(info);
+	}
 
+	private MySQLStorageEngine createStorageEngine() {
 		String storageEngine = Environment.getProperties().getProperty( Environment.STORAGE_ENGINE );
 		if (storageEngine == null) {
 			storageEngine = System.getProperty( Environment.STORAGE_ENGINE );
 		}
 		if (storageEngine == null) {
-			this.storageEngine = getDefaultMySQLStorageEngine();
+			return getDefaultMySQLStorageEngine();
 		}
 		else if( "innodb".equalsIgnoreCase( storageEngine ) ) {
-			this.storageEngine = InnoDBStorageEngine.INSTANCE;
+			return InnoDBStorageEngine.INSTANCE;
 		}
 		else if( "myisam".equalsIgnoreCase( storageEngine ) ) {
-			this.storageEngine = MyISAMStorageEngine.INSTANCE;
+			return MyISAMStorageEngine.INSTANCE;
 		}
 		else {
 			throw new UnsupportedOperationException( "The " + storageEngine + " storage engine is not supported!" );
 		}
-
-		registerKeyword( "key" );
-
-		getDefaultProperties().setProperty( Environment.MAX_FETCH_DEPTH, "2" );
-		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
-
-		uniqueDelegate = new MySQLUniqueDelegate( this );
-
-		sizeStrategy = new SizeStrategyImpl() {
-			@Override
-			public Size resolveSize(
-					JdbcType jdbcType,
-					JavaType<?> javaType,
-					Integer precision,
-					Integer scale,
-					Long length) {
-				switch ( jdbcType.getDefaultSqlTypeCode() ) {
-					case Types.BIT:
-						// MySQL allows BIT with a length up to 64 (less the the default length 255)
-						if ( length != null ) {
-							return Size.length( Math.min( Math.max( length, 1 ), 64 ) );
-						}
-				}
-				return super.resolveSize( jdbcType, javaType, precision, scale, length );
-			}
-		};
 	}
 
 	@Override
@@ -188,6 +184,7 @@ public class MySQLDialect extends Dialect {
 			case GEOMETRY:
 				return "geometry";
 
+			// the maximum long LOB length is 4_294_967_295, bigger than any Java string
 			case BLOB:
 				return "longblob";
 			case NCLOB:
@@ -198,17 +195,24 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
-	protected void registerDefaultColumnTypes(DialectResolutionInfo info) {
+	protected void beforeRegisteringColumnTypes(DialectResolutionInfo info) {
 		// we need to remember the character set before calling getMaxVarcharLength()
 		// we could not do this earlier because we get called from the constructor
 		// of the superclass, before our own constructor has run
-		int bytesPerCharacter = info == null
-				? 4 // Let's be conservative and assume people use a 4 byte character set
-				: getCharacterSetBytesPerCharacter( info.unwrap(DatabaseMetaData.class) );
-		maxVarcharLength = maxVarcharLength(bytesPerCharacter);
-		maxVarbinaryLength = maxVarbinaryLength();
+		int bytesPerCharacter = getCharacterSetBytesPerCharacter( info.unwrap(DatabaseMetaData.class) );
+		maxVarcharLength = maxVarcharLength( getMySQLVersion(), bytesPerCharacter );
+		maxVarbinaryLength = maxVarbinaryLength( getMySQLVersion() );
+	}
 
-		super.registerDefaultColumnTypes( maxVarcharLength, maxVarcharLength, maxVarbinaryLength );
+	@Override
+	protected void beforeRegisteringColumnTypes(DatabaseVersion version) {
+		maxVarcharLength = maxVarcharLength( getMySQLVersion(), 4 ); //conservative assumption
+		maxVarbinaryLength = maxVarbinaryLength( getMySQLVersion() );
+	}
+
+	@Override
+	protected void registerDefaultColumnTypes() {
+		super.registerDefaultColumnTypes();
 
 		// MySQL has approximately one million text and blob types. We have
 		// already registered longtext + longblob via the regular method,
@@ -217,8 +221,6 @@ public class MySQLDialect extends Dialect {
 		final int maxTinyLobLen = 255;
 		final int maxLobLen = 65_535;
 		final int maxMediumLobLen = 16_777_215;
-
-		//the maximum long LOB length is 4_294_967_295, bigger than any Java string
 
 		registerColumnType( VARCHAR, maxMediumLobLen, "mediumtext" );
 		if ( getMaxVarcharLength() < maxLobLen ) {
@@ -288,13 +290,13 @@ public class MySQLDialect extends Dialect {
 		return 4;
 	}
 
-	private int maxVarbinaryLength() {
-		return getMySQLVersion().isBefore( 5 ) ? 255 : 65_535;
+	private static int maxVarbinaryLength(DatabaseVersion version) {
+		return version.isBefore( 5 ) ? 255 : 65_535;
 	}
 
-	private int maxVarcharLength(int bytesPerCharacter) {
+	private static int maxVarcharLength(DatabaseVersion version, int bytesPerCharacter) {
 		// max length for VARCHAR changed in 5.0.3
-		if ( getMySQLVersion().isBefore( 5 ) ) {
+		if ( version.isBefore( 5 ) ) {
 			return 255;
 		}
 		else {

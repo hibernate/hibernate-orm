@@ -51,9 +51,16 @@ import static org.hibernate.type.SqlTypes.*;
  */
 public abstract class AbstractTransactSQLDialect extends Dialect {
 
-	public AbstractTransactSQLDialect(DatabaseVersion version, DialectResolutionInfo info) {
-		super(version, info);
+	{
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, NO_BATCH );
+	}
+
+	public AbstractTransactSQLDialect(DatabaseVersion version) {
+		super(version);
+	}
+
+	public AbstractTransactSQLDialect(DialectResolutionInfo info) {
+		super(info);
 	}
 
 	@Override

@@ -3,6 +3,20 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.6.3.Final (December 15, 2021)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32006
+
+** Bug
+    * [HHH-14972] - log4j2 <= 2.14.1 has an RCE (CVE-2021-44228)
+    * [HHH-14948] - Metamodel imports cache increases indefinitely for dynamically generated HQL aliases eventually leading to an OOM
+    * [HHH-14935] - Type annotation is deprecated without an available replacement
+
+** Task
+    * [HHH-14979] - Upgrade to Log4J 2 2.16.0
+
+
 Changes in 5.6.2.Final (December 08, 2021)
 ------------------------------------------------------------------------------------------------------------------------
 

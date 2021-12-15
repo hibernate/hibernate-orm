@@ -3,6 +3,20 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.3.25.Final (December 15, 2021)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32002
+
+** Bug
+    * [HHH-14972] - log4j2 <= 2.14.1 has an RCE (CVE-2021-44228)
+    * [HHH-14229] - Foreign key is created even ConstraintMode.NO_CONSTRAINT specified
+
+** Task
+    * [HHH-14979] - Upgrade to Log4J 2 2.16.0
+    * [HHH-14635] - Upgrade to latest JUnit and to Log4j 2
+
+
 Changes in 5.3.24.Final (November 16, 2021)
 ------------------------------------------------------------------------------------------------------------------------
 

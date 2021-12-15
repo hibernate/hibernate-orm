@@ -19,25 +19,19 @@ import org.hibernate.sql.ast.tree.predicate.PredicateContainer;
  * @author Steve Ebersole
  */
 public class TableReferenceJoin implements TableJoin, PredicateContainer {
-	private final SqlAstJoinType sqlAstJoinType;
+	private final boolean innerJoin;
 	private final NamedTableReference joinedTableBinding;
 	private Predicate predicate;
 
-	public TableReferenceJoin(SqlAstJoinType sqlAstJoinType, NamedTableReference joinedTableBinding, Predicate predicate) {
-		this.sqlAstJoinType = sqlAstJoinType == null ? SqlAstJoinType.LEFT : sqlAstJoinType;
+	public TableReferenceJoin(boolean innerJoin, NamedTableReference joinedTableBinding, Predicate predicate) {
+		this.innerJoin = innerJoin;
 		this.joinedTableBinding = joinedTableBinding;
 		this.predicate = predicate;
-
-//		if ( joinType == JoinType.CROSS ) {
-//			if ( predicate != null ) {
-//				throw new IllegalJoinSpecificationException( "Cross join cannot include join predicate" );
-//			}
-//		}
 	}
 
 	@Override
 	public SqlAstJoinType getJoinType() {
-		return sqlAstJoinType;
+		return innerJoin ? SqlAstJoinType.INNER : SqlAstJoinType.LEFT;
 	}
 
 	public NamedTableReference getJoinedTableReference() {

@@ -1360,7 +1360,7 @@ public abstract class AbstractEntityPersister
 							);
 
 							return new TableReferenceJoin(
-									determineSubclassTableJoinType(
+									shouldInnerJoinSubclassTable(
 											i,
 											Collections.emptySet()
 									),
@@ -1406,7 +1406,7 @@ public abstract class AbstractEntityPersister
 						lhs,
 						joinTableExpression,
 						sqlAliasBase,
-						determineSubclassTableJoinType( i, Collections.emptySet() ),
+						shouldInnerJoinSubclassTable( i, Collections.emptySet() ),
 						getSubclassTableKeyColumns( i ),
 						sqlExpressionResolver
 				);
@@ -1420,18 +1420,18 @@ public abstract class AbstractEntityPersister
 			TableReference lhs,
 			String joinTableExpression,
 			SqlAliasBase sqlAliasBase,
-			SqlAstJoinType joinType,
+			boolean innerJoin,
 			String[] targetColumns,
 			SqlExpressionResolver sqlExpressionResolver) {
 		final NamedTableReference joinedTableReference = new NamedTableReference(
 				joinTableExpression,
 				sqlAliasBase.generateNewAlias(),
-				joinType != SqlAstJoinType.INNER,
+				!innerJoin,
 				getFactory()
 		);
 
 		return new TableReferenceJoin(
-				joinType,
+				innerJoin,
 				joinedTableReference,
 				generateJoinPredicate(
 						lhs,
@@ -4134,7 +4134,7 @@ public abstract class AbstractEntityPersister
 		return false;
 	}
 
-	protected SqlAstJoinType determineSubclassTableJoinType(
+	protected boolean shouldInnerJoinSubclassTable(
 			int subclassTableNumber,
 			Set<String> treatAsDeclarations) {
 		if ( isClassOrSuperclassJoin( subclassTableNumber ) ) {
@@ -4142,7 +4142,7 @@ public abstract class AbstractEntityPersister
 					&& !isNullableTable( subclassTableNumber );
 			// the table is either this persister's driving table or (one of) its super class persister's driving
 			// tables which can be inner joined as long as the `shouldInnerJoin` condition resolves to true
-			return shouldInnerJoin ? SqlAstJoinType.INNER : SqlAstJoinType.LEFT;
+			return shouldInnerJoin;
 		}
 
 		// otherwise we have a subclass table and need to look a little deeper...
@@ -4152,10 +4152,10 @@ public abstract class AbstractEntityPersister
 		// so we give TREAT-AS higher precedence...
 
 		if ( isSubclassTableIndicatedByTreatAsDeclarations( subclassTableNumber, treatAsDeclarations ) ) {
-			return SqlAstJoinType.INNER;
+			return true;
 		}
 
-		return SqlAstJoinType.LEFT;
+		return false;
 	}
 
 	protected boolean isSubclassTableIndicatedByTreatAsDeclarations(

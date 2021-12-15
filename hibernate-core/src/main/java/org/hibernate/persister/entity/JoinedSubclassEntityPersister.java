@@ -1346,7 +1346,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 							&& sharedSuperclassTables.contains( joinedTableReference.getTableExpression() ) ) {
 						tableReferenceJoins.add(
 								new TableReferenceJoin(
-										SqlAstJoinType.INNER,
+										true,
 										joinedTableReference,
 										oldJoin.getPredicate()
 								)

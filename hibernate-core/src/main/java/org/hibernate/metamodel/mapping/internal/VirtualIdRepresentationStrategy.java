@@ -8,16 +8,20 @@ package org.hibernate.metamodel.mapping.internal;
 
 import java.util.function.Supplier;
 
+import org.hibernate.bytecode.spi.ProxyFactoryFactory;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.RepresentationMode;
+import org.hibernate.metamodel.internal.EmbeddableInstantiatorProxied;
 import org.hibernate.metamodel.internal.StandardEmbeddableInstantiator;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.EmbeddableInstantiator;
 import org.hibernate.metamodel.EmbeddableRepresentationStrategy;
 import org.hibernate.metamodel.spi.EntityInstantiator;
-import org.hibernate.property.access.internal.PropertyAccessStrategyMixedImpl;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -28,9 +32,26 @@ public class VirtualIdRepresentationStrategy implements EmbeddableRepresentation
 	private final EntityMappingType entityMappingType;
 	private final EmbeddableInstantiator instantiator;
 
-	public VirtualIdRepresentationStrategy(VirtualIdEmbeddable virtualIdEmbeddable, EntityMappingType entityMappingType) {
+	public VirtualIdRepresentationStrategy(
+			VirtualIdEmbeddable virtualIdEmbeddable,
+			EntityMappingType entityMappingType,
+			Component bootDescriptor,
+			RuntimeModelCreationContext creationContext) {
 		this.entityMappingType = entityMappingType;
-		this.instantiator = new InstantiatorAdapter( virtualIdEmbeddable, entityMappingType );
+		if ( bootDescriptor.getComponentClassName() != null && ReflectHelper.isAbstractClass( bootDescriptor.getComponentClass() ) ) {
+			final ProxyFactoryFactory proxyFactoryFactory = creationContext.getSessionFactory()
+					.getServiceRegistry()
+					.getService( ProxyFactoryFactory.class );
+			this.instantiator = new EmbeddableInstantiatorProxied(
+					bootDescriptor.getComponentClass(),
+					() -> virtualIdEmbeddable,
+					proxyFactoryFactory.buildBasicProxyFactory( bootDescriptor.getComponentClass() )
+
+			);
+		}
+		else {
+			this.instantiator = new InstantiatorAdapter( virtualIdEmbeddable, entityMappingType );
+		}
 	}
 
 	@Override

@@ -2649,7 +2649,7 @@ public class ModelBinder {
 				explicitComponentClassName,
 				containingClassName,
 				propertyName,
-				false,
+				isVirtual,
 				isVirtual,
 				embeddableSource.isDynamic(),
 				xmlNodeName

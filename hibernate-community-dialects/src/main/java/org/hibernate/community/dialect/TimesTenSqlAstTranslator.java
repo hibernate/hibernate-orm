@@ -11,7 +11,6 @@ import java.util.List;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.IllegalQueryOperationException;
-import org.hibernate.query.SemanticException;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -19,10 +18,11 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
+import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
-import org.hibernate.sql.ast.tree.predicate.Junction;
+import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
@@ -70,13 +70,12 @@ public class TimesTenSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 		}
 
 		final Predicate predicate;
-		if ( tableGroupJoin.isLateral() ) {
-			append( "lateral " );
-			if ( tableGroupJoin.getPredicate() == null ) {
-				predicate = new Junction( Junction.Nature.CONJUNCTION );
+		if ( tableGroupJoin.getPredicate() == null ) {
+			if ( tableGroupJoin.getJoinType() == SqlAstJoinType.CROSS ) {
+				predicate = null;
 			}
 			else {
-				predicate = tableGroupJoin.getPredicate();
+				predicate = new BooleanExpressionPredicate( new QueryLiteral<>( true, getBooleanType() ) );
 			}
 		}
 		else {
@@ -86,7 +85,7 @@ public class TimesTenSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 			renderTableGroup( tableGroupJoin.getJoinedGroup(), predicate, tableGroupJoinCollector );
 		}
 		else {
-			renderTableGroup( tableGroupJoin.getJoinedGroup(), tableGroupJoinCollector );
+			renderTableGroup( tableGroupJoin.getJoinedGroup(), null, tableGroupJoinCollector );
 		}
 	}
 

@@ -12,23 +12,24 @@ import java.util.function.Consumer;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.ast.tree.insert.Values;
+import org.hibernate.sql.ast.tree.expression.FunctionExpression;
 
 /**
- * A special table group for a VALUES clause.
+ * A special table group for a table valued functions.
  *
  * @author Christian Beikov
  */
-public class ValuesTableGroup extends AbstractTableGroup {
+public class FunctionTableGroup extends AbstractTableGroup {
 
-	private final ValuesTableReference valuesTableReference;
+	private final FunctionTableReference functionTableReference;
 
-	public ValuesTableGroup(
+	public FunctionTableGroup(
 			NavigablePath navigablePath,
 			TableGroupProducer tableGroupProducer,
-			List<Values> valuesList,
+			FunctionExpression functionExpression,
 			String sourceAlias,
 			List<String> columnNames,
+			boolean lateral,
 			boolean canUseInnerJoins,
 			SessionFactoryImplementor sessionFactory) {
 		super(
@@ -39,7 +40,18 @@ public class ValuesTableGroup extends AbstractTableGroup {
 				null,
 				sessionFactory
 		);
-		this.valuesTableReference = new ValuesTableReference( valuesList, sourceAlias, columnNames, sessionFactory );
+		this.functionTableReference = new FunctionTableReference(
+				functionExpression,
+				sourceAlias,
+				columnNames,
+				lateral,
+				sessionFactory
+		);
+	}
+
+	@Override
+	public boolean isLateral() {
+		return getPrimaryTableReference().isLateral();
 	}
 
 	@Override
@@ -48,7 +60,7 @@ public class ValuesTableGroup extends AbstractTableGroup {
 			String tableExpression,
 			boolean allowFkOptimization,
 			boolean resolve) {
-		if ( ( (TableGroupProducer) getModelPart() ).containsTableReference( tableExpression ) ) {
+		if ( tableExpression == null ) {
 			return getPrimaryTableReference();
 		}
 		for ( TableGroupJoin tableGroupJoin : getNestedTableGroupJoins() ) {
@@ -72,11 +84,12 @@ public class ValuesTableGroup extends AbstractTableGroup {
 
 	@Override
 	public void applyAffectedTableNames(Consumer<String> nameCollector) {
+		functionTableReference.applyAffectedTableNames( nameCollector );
 	}
 
 	@Override
-	public ValuesTableReference getPrimaryTableReference() {
-		return valuesTableReference;
+	public FunctionTableReference getPrimaryTableReference() {
+		return functionTableReference;
 	}
 
 	@Override

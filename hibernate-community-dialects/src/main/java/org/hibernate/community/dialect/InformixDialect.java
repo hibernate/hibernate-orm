@@ -342,6 +342,16 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsWindowFunctions() {
+		return getVersion().isSameOrAfter( 12, 10 );
+	}
+
+	@Override
+	public boolean supportsLateral() {
+		return getVersion().isSameOrAfter( 12, 10 );
+	}
+
+	@Override
 	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
 		return EXTRACTOR;
 	}

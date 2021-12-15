@@ -8,8 +8,8 @@ package org.hibernate.sql.ast.tree.from;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Consumer;
 import java.util.function.BiPredicate;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -25,7 +25,7 @@ import org.hibernate.sql.ast.spi.SqlAliasBase;
  *
  * @author Christian Beikov
  */
-public class LazyTableGroup extends AbstractColumnReferenceQualifier implements TableGroup {
+public class LazyTableGroup extends DelegatingTableGroup {
 
 	private final boolean canUseInnerJoins;
 	private final NavigablePath navigablePath;
@@ -33,7 +33,6 @@ public class LazyTableGroup extends AbstractColumnReferenceQualifier implements 
 	private final TableGroupProducer producer;
 	private final String sourceAlias;
 	private final SqlAliasBase sqlAliasBase;
-	private final SessionFactoryImplementor sessionFactory;
 	private final Supplier<TableGroup> tableGroupSupplier;
 	private final TableGroup parentTableGroup;
 	private final BiPredicate<NavigablePath, String> navigablePathChecker;
@@ -60,14 +59,13 @@ public class LazyTableGroup extends AbstractColumnReferenceQualifier implements 
 		this.tableGroupSupplier = tableGroupSupplier;
 		this.navigablePathChecker = navigablePathChecker;
 		this.parentTableGroup = parentTableGroup;
-		this.sessionFactory = sessionFactory;
-
 	}
 
 	public TableGroup getUnderlyingTableGroup() {
 		return tableGroup;
 	}
 
+	@Override
 	public TableGroup getTableGroup() {
 		if ( tableGroup != null ) {
 			return tableGroup;
@@ -98,11 +96,6 @@ public class LazyTableGroup extends AbstractColumnReferenceQualifier implements 
 	}
 
 	@Override
-	public TableReference getPrimaryTableReference() {
-		return getTableGroup().getPrimaryTableReference();
-	}
-
-	@Override
 	public List<TableReferenceJoin> getTableReferenceJoins() {
 		return tableGroup == null ? Collections.emptyList() : tableGroup.getTableReferenceJoins();
 	}
@@ -115,16 +108,6 @@ public class LazyTableGroup extends AbstractColumnReferenceQualifier implements 
 	@Override
 	public List<TableGroupJoin> getNestedTableGroupJoins() {
 		return tableGroup == null ? Collections.emptyList() : tableGroup.getNestedTableGroupJoins();
-	}
-
-	@Override
-	public void addTableGroupJoin(TableGroupJoin join) {
-		getTableGroup().addTableGroupJoin( join );
-	}
-
-	@Override
-	public void addNestedTableGroupJoin(TableGroupJoin join) {
-		getTableGroup().addNestedTableGroupJoin( join );
 	}
 
 	@Override
@@ -144,11 +127,6 @@ public class LazyTableGroup extends AbstractColumnReferenceQualifier implements 
 	@Override
 	public boolean canUseInnerJoins() {
 		return canUseInnerJoins;
-	}
-
-	@Override
-	public boolean isLateral() {
-		return false;
 	}
 
 	@Override
@@ -177,11 +155,6 @@ public class LazyTableGroup extends AbstractColumnReferenceQualifier implements 
 	}
 
 	@Override
-	protected SessionFactoryImplementor getSessionFactory() {
-		return sessionFactory;
-	}
-
-	@Override
 	public boolean isRealTableGroup() {
 		return tableGroup != null && tableGroup.isRealTableGroup();
 	}
@@ -192,6 +165,39 @@ public class LazyTableGroup extends AbstractColumnReferenceQualifier implements 
 	}
 
 	@Override
+	public boolean isLateral() {
+		return false;
+	}
+
+	@Override
+	public TableReference resolveTableReference(
+			NavigablePath navigablePath,
+			String tableExpression,
+			boolean allowFkOptimization) {
+		assert tableExpression != null;
+
+		final TableReference tableReference = getTableReferenceInternal(
+				navigablePath,
+				tableExpression,
+				allowFkOptimization,
+				true
+		);
+		if ( tableReference == null ) {
+			throw new IllegalStateException( "Could not resolve binding for table `" + tableExpression + "`" );
+		}
+
+		return tableReference;
+	}
+
+	@Override
+	public TableReference getTableReference(
+			NavigablePath navigablePath,
+			String tableExpression,
+			boolean allowFkOptimization,
+			boolean resolve) {
+		return getTableReferenceInternal( navigablePath, tableExpression, allowFkOptimization, resolve );
+	}
+
 	protected TableReference getTableReferenceInternal(
 			NavigablePath navigablePath,
 			String tableExpression,

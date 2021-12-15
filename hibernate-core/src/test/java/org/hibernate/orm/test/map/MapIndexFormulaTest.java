@@ -48,6 +48,9 @@ public class MapIndexFormulaTest {
 					session.createQuery(
 									"from Group g join g.users u where g.name = 'something' and maxindex(u) = 'nada'" )
 							.list();
+					session.createQuery(
+									"from Group g join g.users u where g.name = 'something' and maxindex(u) = 'nada' and maxindex(u) = 'nada'" )
+							.list();
 				}
 		);
 	}

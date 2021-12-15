@@ -47,11 +47,15 @@ public interface TableGroup extends SqlAstNode, ColumnReferenceQualifier, SqmPat
 	boolean canUseInnerJoins();
 
 	default boolean isLateral() {
-		return getPrimaryTableReference() instanceof DerivedTableReference
-				&& ( (DerivedTableReference) getPrimaryTableReference() ).isLateral();
+		return false;
 	}
 
 	void addTableGroupJoin(TableGroupJoin join);
+
+	/**
+	 * Adds the given table group join before a join as found via the given navigable path.
+	 */
+	void prependTableGroupJoin(NavigablePath navigablePath, TableGroupJoin join);
 
 	/**
 	 * A nested table group join is a join against a table group,
@@ -133,12 +137,6 @@ public interface TableGroup extends SqlAstNode, ColumnReferenceQualifier, SqmPat
 				getNavigablePath(),
 				creationState.getSqlAstCreationState().getFromClauseAccess().findTableGroup( getNavigablePath() ),
 				creationState
-		);
-	}
-
-	default ColumnReference locateColumnReferenceByName(String name) {
-		throw new UnsupportedOperationException(
-				"Cannot call #locateColumnReferenceByName on this type of TableGroup"
 		);
 	}
 

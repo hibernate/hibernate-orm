@@ -380,6 +380,11 @@ public class TeradataDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsWindowFunctions() {
+		return getVersion().isSameOrAfter( 16, 10 );
+	}
+
+	@Override
 	public String getSelectClauseNullString(int sqlType) {
 		String v = "null";
 

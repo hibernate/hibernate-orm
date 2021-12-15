@@ -8,6 +8,7 @@ package org.hibernate.dialect;
 
 import java.util.List;
 
+import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.sql.ast.Clause;
@@ -19,9 +20,10 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Summarization;
-import org.hibernate.sql.ast.tree.from.TableGroupJoin;
-import org.hibernate.sql.ast.tree.predicate.Junction;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.ast.tree.from.DerivedTableReference;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
+import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
@@ -118,40 +120,24 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 	}
 
 	@Override
-	protected void renderTableGroupJoin(TableGroupJoin tableGroupJoin, List<TableGroupJoin> tableGroupJoinCollector) {
-		appendSql( WHITESPACE );
-		appendSql( tableGroupJoin.getJoinType().getText() );
-		appendSql( "join " );
-
-		boolean correlated = false;
-		final Predicate predicate;
-		if ( tableGroupJoin.isLateral() ) {
-			correlated = true;
-			if ( tableGroupJoin.getPredicate() == null ) {
-				predicate = new Junction( Junction.Nature.CONJUNCTION );
-			}
-			else {
-				predicate = tableGroupJoin.getPredicate();
-			}
+	protected boolean renderPrimaryTableReference(TableGroup tableGroup, LockMode lockMode) {
+		final TableReference tableReference = tableGroup.getPrimaryTableReference();
+		if ( tableReference instanceof NamedTableReference ) {
+			return renderNamedTableReference( (NamedTableReference) tableReference, lockMode );
 		}
-		else {
-			predicate = tableGroupJoin.getPredicate();
-		}
+		final DerivedTableReference derivedTableReference = (DerivedTableReference) tableReference;
+		final boolean correlated = derivedTableReference.isLateral();
 		final boolean oldCorrelated = this.correlated;
 		if ( correlated ) {
 			this.correlated = true;
 			appendSql( "unnest(array" );
 		}
-		if ( predicate != null && !predicate.isEmpty() ) {
-			renderTableGroup( tableGroupJoin.getJoinedGroup(), predicate, tableGroupJoinCollector );
-		}
-		else {
-			renderTableGroup( tableGroupJoin.getJoinedGroup(), tableGroupJoinCollector );
-		}
+		tableReference.accept( this );
 		if ( correlated ) {
 			this.correlated = oldCorrelated;
 			appendSql( CLOSE_PARENTHESIS );
 		}
+		return false;
 	}
 
 	@Override

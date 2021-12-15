@@ -17,7 +17,7 @@ import org.hibernate.query.NavigablePath;
 /**
  * @author Christian Beikov
  */
-public class MappedByTableGroup implements VirtualTableGroup {
+public class MappedByTableGroup extends DelegatingTableGroup implements VirtualTableGroup {
 
 	private final NavigablePath navigablePath;
 	private final ModelPartContainer modelPart;
@@ -39,6 +39,11 @@ public class MappedByTableGroup implements VirtualTableGroup {
 		this.fetched = fetched;
 		this.parentTableGroup = parentTableGroup;
 		this.navigablePathChecker = navigablePathChecker;
+	}
+
+	@Override
+	protected TableGroup getTableGroup() {
+		return underlyingTableGroup;
 	}
 
 	@Override
@@ -67,9 +72,17 @@ public class MappedByTableGroup implements VirtualTableGroup {
 		return modelPart;
 	}
 
+	// Don't provide access to table group joins as this is table group is just a "named reference"
+	// The underlying table group contains the joins and will render them
+
 	@Override
-	public String getSourceAlias() {
-		return underlyingTableGroup.getSourceAlias();
+	public boolean isRealTableGroup() {
+		return false;
+	}
+
+	@Override
+	public boolean isLateral() {
+		return false;
 	}
 
 	@Override
@@ -83,26 +96,6 @@ public class MappedByTableGroup implements VirtualTableGroup {
 	}
 
 	@Override
-	public boolean isRealTableGroup() {
-		return false;
-	}
-
-	@Override
-	public boolean canUseInnerJoins() {
-		return underlyingTableGroup.canUseInnerJoins();
-	}
-
-	@Override
-	public void addTableGroupJoin(TableGroupJoin join) {
-		underlyingTableGroup.addTableGroupJoin( join );
-	}
-
-	@Override
-	public void addNestedTableGroupJoin(TableGroupJoin join) {
-		underlyingTableGroup.addNestedTableGroupJoin( join );
-	}
-
-	@Override
 	public void visitTableGroupJoins(Consumer<TableGroupJoin> consumer) {
 		// No-op
 	}
@@ -113,18 +106,8 @@ public class MappedByTableGroup implements VirtualTableGroup {
 	}
 
 	@Override
-	public void applyAffectedTableNames(Consumer<String> nameCollector) {
-		underlyingTableGroup.applyAffectedTableNames( nameCollector );
-	}
-
-	@Override
-	public TableReference getPrimaryTableReference() {
-		return underlyingTableGroup.getPrimaryTableReference();
-	}
-
-	@Override
 	public List<TableReferenceJoin> getTableReferenceJoins() {
-		return underlyingTableGroup.getTableReferenceJoins();
+		return Collections.emptyList();
 	}
 
 	@Override

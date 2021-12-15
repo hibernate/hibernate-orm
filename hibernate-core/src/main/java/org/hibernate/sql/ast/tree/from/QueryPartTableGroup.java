@@ -12,23 +12,24 @@ import java.util.function.Consumer;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.ast.tree.insert.Values;
+import org.hibernate.sql.ast.tree.select.QueryPart;
 
 /**
- * A special table group for a VALUES clause.
+ * A special table group for a sub-queries.
  *
  * @author Christian Beikov
  */
-public class ValuesTableGroup extends AbstractTableGroup {
+public class QueryPartTableGroup extends AbstractTableGroup {
 
-	private final ValuesTableReference valuesTableReference;
+	private final QueryPartTableReference queryPartTableReference;
 
-	public ValuesTableGroup(
+	public QueryPartTableGroup(
 			NavigablePath navigablePath,
 			TableGroupProducer tableGroupProducer,
-			List<Values> valuesList,
+			QueryPart queryPart,
 			String sourceAlias,
 			List<String> columnNames,
+			boolean lateral,
 			boolean canUseInnerJoins,
 			SessionFactoryImplementor sessionFactory) {
 		super(
@@ -39,7 +40,18 @@ public class ValuesTableGroup extends AbstractTableGroup {
 				null,
 				sessionFactory
 		);
-		this.valuesTableReference = new ValuesTableReference( valuesList, sourceAlias, columnNames, sessionFactory );
+		this.queryPartTableReference = new QueryPartTableReference(
+				queryPart,
+				sourceAlias,
+				columnNames,
+				lateral,
+				sessionFactory
+		);
+	}
+
+	@Override
+	public boolean isLateral() {
+		return getPrimaryTableReference().isLateral();
 	}
 
 	@Override
@@ -48,7 +60,7 @@ public class ValuesTableGroup extends AbstractTableGroup {
 			String tableExpression,
 			boolean allowFkOptimization,
 			boolean resolve) {
-		if ( ( (TableGroupProducer) getModelPart() ).containsTableReference( tableExpression ) ) {
+		if ( tableExpression == null ) {
 			return getPrimaryTableReference();
 		}
 		for ( TableGroupJoin tableGroupJoin : getNestedTableGroupJoins() ) {
@@ -72,11 +84,12 @@ public class ValuesTableGroup extends AbstractTableGroup {
 
 	@Override
 	public void applyAffectedTableNames(Consumer<String> nameCollector) {
+		queryPartTableReference.applyAffectedTableNames( nameCollector );
 	}
 
 	@Override
-	public ValuesTableReference getPrimaryTableReference() {
-		return valuesTableReference;
+	public QueryPartTableReference getPrimaryTableReference() {
+		return queryPartTableReference;
 	}
 
 	@Override

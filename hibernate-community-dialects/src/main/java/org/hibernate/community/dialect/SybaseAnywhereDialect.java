@@ -30,7 +30,7 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import static org.hibernate.type.SqlTypes.*;
 
 /**
- * SQL Dialect for Sybase Anywhere
+ * SQL Dialect for Sybase/SQL Anywhere
  * (Tested on ASA 8.x)
  */
 public class SybaseAnywhereDialect extends SybaseDialect {
@@ -133,6 +133,16 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 	@Override
 	public boolean dropConstraints() {
 		return false;
+	}
+
+	@Override
+	public boolean supportsWindowFunctions() {
+		return getVersion().isSameOrAfter( 12 );
+	}
+
+	@Override
+	public boolean supportsLateral() {
+		return getVersion().isSameOrAfter( 10 );
 	}
 
 	@Override

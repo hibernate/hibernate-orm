@@ -673,6 +673,11 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsLateral() {
+		return getVersion().isSameOrAfter( 20, 1 );
+	}
+
+	@Override
 	public boolean supportsNoWait() {
 		return getVersion().isSameOrAfter( 20, 1 );
 	}

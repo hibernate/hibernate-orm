@@ -721,6 +721,11 @@ public class HSQLDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsLateral() {
+		return getVersion().isSameOrAfter( 2, 6, 1 );
+	}
+
+	@Override
 	public boolean requiresFloatCastingOfIntegerDivision() {
 		return true;
 	}

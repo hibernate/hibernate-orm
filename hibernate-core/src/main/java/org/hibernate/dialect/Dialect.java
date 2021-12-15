@@ -3495,6 +3495,16 @@ public abstract class Dialect implements ConversionContext {
 		return false;
 	}
 
+	/**
+	 * Does this dialect support the SQL lateral keyword or a proprietary alternative=
+	 *
+	 * @return {@code true} if the underlying database supports lateral,
+	 * {@code false} otherwise.  The default is {@code false}.
+	 */
+	public boolean supportsLateral() {
+		return false;
+	}
+
 	public CallableStatementSupport getCallableStatementSupport() {
 		// most databases do not support returning cursors (ref_cursor)...
 		return StandardCallableStatementSupport.NO_REF_CURSOR_INSTANCE;

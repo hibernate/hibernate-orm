@@ -8,10 +8,7 @@
 package org.hibernate.envers.function;
 
 import java.util.List;
-import java.util.function.Consumer;
 
-import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
@@ -29,11 +26,10 @@ import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.sql.ast.spi.SqlAstQueryPartProcessingState;
+import org.hibernate.sql.ast.tree.from.DelegatingTableGroup;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -110,7 +106,7 @@ public class OrderByFragmentFunction extends AbstractSqmFunctionDescriptor {
 		};
 	}
 
-	private static class AuditingTableGroup implements TableGroup {
+	private static class AuditingTableGroup extends DelegatingTableGroup {
 
 		private final TableGroup delegate;
 		private final String auditTableExpression;
@@ -123,8 +119,8 @@ public class OrderByFragmentFunction extends AbstractSqmFunctionDescriptor {
 		}
 
 		@Override
-		public ModelPart getExpressionType() {
-			return delegate.getExpressionType();
+		protected TableGroup getTableGroup() {
+			return delegate;
 		}
 
 		@Override
@@ -135,7 +131,7 @@ public class OrderByFragmentFunction extends AbstractSqmFunctionDescriptor {
 			if ( tableExpression.equals( normalTableExpression ) ) {
 				tableExpression = auditTableExpression;
 			}
-			return delegate.resolveTableReference( navigablePath, tableExpression, allowFkOptimization );
+			return super.resolveTableReference( navigablePath, tableExpression, allowFkOptimization );
 		}
 
 		@Override
@@ -147,77 +143,7 @@ public class OrderByFragmentFunction extends AbstractSqmFunctionDescriptor {
 			if ( tableExpression.equals( normalTableExpression ) ) {
 				tableExpression = auditTableExpression;
 			}
-			return delegate.getTableReference( navigablePath, tableExpression, allowFkOptimization, resolve );
-		}
-
-		@Override
-		public NavigablePath getNavigablePath() {
-			return delegate.getNavigablePath();
-		}
-
-		@Override
-		public String getGroupAlias() {
-			return delegate.getGroupAlias();
-		}
-
-		@Override
-		public ModelPartContainer getModelPart() {
-			return delegate.getModelPart();
-		}
-
-		@Override
-		public String getSourceAlias() {
-			return delegate.getSourceAlias();
-		}
-
-		@Override
-		public List<TableGroupJoin> getTableGroupJoins() {
-			return delegate.getTableGroupJoins();
-		}
-
-		@Override
-		public List<TableGroupJoin> getNestedTableGroupJoins() {
-			return delegate.getNestedTableGroupJoins();
-		}
-
-		@Override
-		public boolean canUseInnerJoins() {
-			return delegate.canUseInnerJoins();
-		}
-
-		@Override
-		public void addTableGroupJoin(TableGroupJoin join) {
-			delegate.addTableGroupJoin( join );
-		}
-
-		@Override
-		public void addNestedTableGroupJoin(TableGroupJoin join) {
-			delegate.addNestedTableGroupJoin( join );
-		}
-
-		@Override
-		public void visitTableGroupJoins(Consumer<TableGroupJoin> consumer) {
-			delegate.visitTableGroupJoins( consumer );
-		}
-
-		@Override
-		public void visitNestedTableGroupJoins(Consumer<TableGroupJoin> consumer) {
-			delegate.visitNestedTableGroupJoins( consumer );
-		}
-
-		@Override
-		public void applyAffectedTableNames(Consumer<String> nameCollector) {
-			delegate.applyAffectedTableNames( nameCollector );
-		}
-
-		@Override
-		public TableReference getPrimaryTableReference() {
-			return delegate.getPrimaryTableReference();
-		}
-
-		@Override
-		public List<TableReferenceJoin> getTableReferenceJoins() {
-			return delegate.getTableReferenceJoins();
+			return super.getTableReference( navigablePath, tableExpression, allowFkOptimization, resolve );
 		}
 	}
 }

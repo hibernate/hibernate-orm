@@ -471,7 +471,6 @@ public class CteInsertHandler implements InsertHandler {
 								false,
 								factory
 						),
-						null,
 						null
 				);
 				final TableGroup rowsWithSequenceTableGroup = new CteTableGroup(
@@ -868,7 +867,6 @@ public class CteInsertHandler implements InsertHandler {
 								false,
 								factory
 						),
-						null,
 						null
 				);
 				final TableGroup rootInsertCteTableGroup = new CteTableGroup(

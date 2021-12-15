@@ -33,6 +33,8 @@ import org.hibernate.type.StandardBasicTypes;
  * @author Gavin King
  */
 public class MariaDBDialect extends MySQLDialect {
+	private static final DatabaseVersion VERSION5 = DatabaseVersion.make( 5 );
+	private static final DatabaseVersion VERSION57 = DatabaseVersion.make( 5, 7 );
 
 	public MariaDBDialect() {
 		this( DatabaseVersion.make( 5 ) );
@@ -49,8 +51,8 @@ public class MariaDBDialect extends MySQLDialect {
 	@Override
 	public DatabaseVersion getMySQLVersion() {
 		return getVersion().isBefore( 5, 3 )
-				? DatabaseVersion.make( 5 )
-				: DatabaseVersion.make( 5, 7 );
+				? VERSION5
+				: VERSION57;
 	}
 
 	@Override

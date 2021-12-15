@@ -24,9 +24,10 @@ import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
+import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
+import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.UnionTableReference;
-import org.hibernate.sql.ast.tree.predicate.Junction;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
@@ -44,6 +45,8 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends Abstract
 
 	private static final String UNION_ALL = " union all ";
 
+	private Predicate lateralPredicate;
+
 	public SQLServerSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
 	}
@@ -51,7 +54,7 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends Abstract
 	@Override
 	protected void renderTableGroupJoin(TableGroupJoin tableGroupJoin, List<TableGroupJoin> tableGroupJoinCollector) {
 		appendSql( WHITESPACE );
-		if ( tableGroupJoin.isLateral() ) {
+		if ( tableGroupJoin.getJoinedGroup().isLateral() ) {
 			if ( tableGroupJoin.getJoinType() == SqlAstJoinType.LEFT ) {
 				appendSql( "outer apply " );
 			}
@@ -66,17 +69,29 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends Abstract
 
 		final Predicate predicate = tableGroupJoin.getPredicate();
 		if ( predicate != null && !predicate.isEmpty() ) {
-			if ( tableGroupJoin.isLateral() ) {
-				renderTableGroup( tableGroupJoin.getJoinedGroup(), tableGroupJoinCollector );
-				addAdditionalWherePredicate( predicate );
+			if ( tableGroupJoin.getJoinedGroup().isLateral() ) {
+				// We have to inject the lateral predicate into the sub-query
+				final Predicate lateralPredicate = this.lateralPredicate;
+				this.lateralPredicate = predicate;
+				renderTableGroup( tableGroupJoin.getJoinedGroup(), null, tableGroupJoinCollector );
+				this.lateralPredicate = lateralPredicate;
 			}
 			else {
 				renderTableGroup( tableGroupJoin.getJoinedGroup(), predicate, tableGroupJoinCollector );
 			}
 		}
 		else {
-			renderTableGroup( tableGroupJoin.getJoinedGroup(), tableGroupJoinCollector );
+			renderTableGroup( tableGroupJoin.getJoinedGroup(), null, tableGroupJoinCollector );
 		}
+	}
+
+	protected boolean renderPrimaryTableReference(TableGroup tableGroup, LockMode lockMode) {
+		final TableReference tableReference = tableGroup.getPrimaryTableReference();
+		if ( tableReference instanceof NamedTableReference ) {
+			return renderNamedTableReference( (NamedTableReference) tableReference, lockMode );
+		}
+		tableReference.accept( this );
+		return false;
 	}
 
 	@Override
@@ -237,6 +252,11 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends Abstract
 
 	@Override
 	public void visitQueryGroup(QueryGroup queryGroup) {
+		final Predicate lateralPredicate = this.lateralPredicate;
+		if ( lateralPredicate != null ) {
+			this.lateralPredicate = null;
+			addAdditionalWherePredicate( lateralPredicate );
+		}
 		if ( shouldEmulateFetchClause( queryGroup ) ) {
 			emulateFetchOffsetWithWindowFunctions( queryGroup, !isRowsOnlyFetchClauseType( queryGroup ) );
 		}
@@ -253,6 +273,15 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends Abstract
 		else {
 			super.visitQuerySpec( querySpec );
 		}
+	}
+
+	@Override
+	public void visitSelectClause(SelectClause selectClause) {
+		if ( lateralPredicate != null ) {
+			addAdditionalWherePredicate( lateralPredicate );
+			lateralPredicate = null;
+		}
+		super.visitSelectClause( selectClause );
 	}
 
 	@Override

@@ -166,7 +166,7 @@ public class DynamicResultBuilderEntityStandard
 					if ( lockMode != null ) {
 						domainResultCreationState.getSqlAstCreationState().registerLockMode( tableAlias, lockMode );
 					}
-					return new TableGroupImpl( navigablePath, tableAlias, tableReference, entityMapping, tableAlias );
+					return new TableGroupImpl( navigablePath, tableAlias, tableReference, entityMapping );
 				}
 		);
 		final TableReference tableReference = tableGroup.getPrimaryTableReference();

@@ -16,6 +16,11 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 public class BooleanExpressionPredicate extends AbstractPredicate {
 	private final Expression expression;
 
+	public BooleanExpressionPredicate(Expression expression) {
+		super( expression.getExpressionType(), false );
+		this.expression = expression;
+	}
+
 	public BooleanExpressionPredicate(Expression expression, boolean negated, JdbcMappingContainer expressionType) {
 		super( expressionType, negated );
 		this.expression = expression;

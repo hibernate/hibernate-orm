@@ -702,6 +702,11 @@ public class FirebirdDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsLateral() {
+		return getVersion().isSameOrAfter( 4, 0 );
+	}
+
+	@Override
 	public String translateExtractField(TemporalUnit unit) {
 		switch ( unit ) {
 			case DAY_OF_MONTH: return "day";

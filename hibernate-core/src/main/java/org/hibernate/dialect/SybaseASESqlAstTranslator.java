@@ -23,13 +23,14 @@ import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
+import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.UnionTableReference;
-import org.hibernate.sql.ast.tree.predicate.Junction;
+import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
@@ -124,13 +125,12 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 		}
 
 		final Predicate predicate;
-		if ( tableGroupJoin.isLateral() ) {
-			append( "lateral " );
-			if ( tableGroupJoin.getPredicate() == null ) {
-				predicate = new Junction( Junction.Nature.CONJUNCTION );
+		if ( tableGroupJoin.getPredicate() == null ) {
+			if ( tableGroupJoin.getJoinType() == SqlAstJoinType.CROSS ) {
+				predicate = null;
 			}
 			else {
-				predicate = tableGroupJoin.getPredicate();
+				predicate = new BooleanExpressionPredicate( new QueryLiteral<>( true, getBooleanType() ) );
 			}
 		}
 		else {
@@ -140,7 +140,7 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 			renderTableGroup( tableGroupJoin.getJoinedGroup(), predicate, tableGroupJoinCollector );
 		}
 		else {
-			renderTableGroup( tableGroupJoin.getJoinedGroup(), tableGroupJoinCollector );
+			renderTableGroup( tableGroupJoin.getJoinedGroup(), null, tableGroupJoinCollector );
 		}
 	}
 
@@ -230,10 +230,15 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 	}
 
 	@Override
+	protected boolean supportsDistinctFromPredicate() {
+		return getDialect().getVersion().isSameOrAfter( 16, 3 );
+	}
+
+	@Override
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
 		// I think intersect is only supported in 16.0 SP3
 		if ( getDialect().isAnsiNullOn() ) {
-			if ( getDialect().getVersion().isSameOrAfter( 16, 3 ) ) {
+			if ( supportsDistinctFromPredicate() ) {
 				renderComparisonEmulateIntersect( lhs, operator, rhs );
 			}
 			else {
@@ -282,7 +287,7 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 				}
 			}
 			else {
-				if ( getDialect().getVersion().isSameOrAfter( 16, 3 ) ) {
+				if ( supportsDistinctFromPredicate() ) {
 					renderComparisonEmulateIntersect( lhs, operator, rhs );
 				}
 				else {

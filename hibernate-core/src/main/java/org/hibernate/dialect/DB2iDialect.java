@@ -100,6 +100,11 @@ public class DB2iDialect extends DB2Dialect {
 	}
 
 	@Override
+	public boolean supportsLateral() {
+		return getIVersion().isSameOrAfter( 7, 1 );
+	}
+
+	@Override
 	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
 		return new StandardSqlAstTranslatorFactory() {
 			@Override

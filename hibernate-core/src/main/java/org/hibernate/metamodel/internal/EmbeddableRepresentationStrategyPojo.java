@@ -89,9 +89,12 @@ public class EmbeddableRepresentationStrategyPojo extends AbstractEmbeddableRepr
 		}
 
 		if ( bootDescriptor.isEmbedded() && ReflectHelper.isAbstractClass( bootDescriptor.getComponentClass() ) ) {
-			final ProxyFactoryFactory proxyFactoryFactory = creationContext.getSessionFactory().getServiceRegistry().getService( ProxyFactoryFactory.class );
+			final ProxyFactoryFactory proxyFactoryFactory = creationContext.getSessionFactory()
+					.getServiceRegistry()
+					.getService( ProxyFactoryFactory.class );
 			return new EmbeddableInstantiatorProxied(
 					bootDescriptor.getComponentClass(),
+					runtimeDescriptorAccess,
 					proxyFactoryFactory.buildBasicProxyFactory( bootDescriptor.getComponentClass() )
 			);
 		}

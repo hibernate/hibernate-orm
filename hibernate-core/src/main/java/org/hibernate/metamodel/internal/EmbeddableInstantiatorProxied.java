@@ -10,22 +10,32 @@ import java.util.function.Supplier;
 
 import org.hibernate.bytecode.spi.BasicProxyFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 
 /**
  * EmbeddableInstantiator used for instantiating "proxies" of an embeddable.
  */
 public class EmbeddableInstantiatorProxied implements StandardEmbeddableInstantiator {
+	private final Supplier<EmbeddableMappingType> embeddableMappingAccess;
 	private final Class<?> proxiedClass;
 	private final BasicProxyFactory factory;
 
-	public EmbeddableInstantiatorProxied(Class proxiedClass, BasicProxyFactory factory) {
+	public EmbeddableInstantiatorProxied(
+			Class proxiedClass,
+			Supplier<EmbeddableMappingType> embeddableMappingAccess, BasicProxyFactory factory) {
 		this.proxiedClass = proxiedClass;
+		this.embeddableMappingAccess = embeddableMappingAccess;
 		this.factory = factory;
 	}
 
 	@Override
 	public Object instantiate(Supplier<Object[]> valuesAccess, SessionFactoryImplementor sessionFactory) {
-		return factory.getProxy();
+		final Object proxy = factory.getProxy();
+		if ( valuesAccess != null ) {
+			final EmbeddableMappingType embeddableMapping = embeddableMappingAccess.get();
+			embeddableMapping.setValues( proxy, valuesAccess.get() );
+		}
+		return proxy;
 	}
 
 	@Override

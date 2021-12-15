@@ -67,7 +67,12 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 
 		this.navigableRole = idMapping.getNavigableRole();
 		this.idMapping = idMapping;
-		this.representationStrategy = new VirtualIdRepresentationStrategy( this, identifiedEntityMapping );
+		this.representationStrategy = new VirtualIdRepresentationStrategy(
+				this,
+				identifiedEntityMapping,
+				virtualIdSource,
+				creationProcess.getCreationContext()
+		);
 
 		final CompositeType compositeType = (CompositeType) virtualIdSource.getType();
 		this.attributeMappings = arrayList( (compositeType).getPropertyNames().length );

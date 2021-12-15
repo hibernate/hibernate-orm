@@ -18,12 +18,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @author Emmanuel Bernard
  * @author Steve Ebersole
- *
- * @deprecated 6.0 will introduce a new series of type-safe annotations to serve the same purpose
  */
 @Target({TYPE, PACKAGE})
 @Retention(RUNTIME)
-@Deprecated
 public @interface TypeDefs {
 	/**
 	 * The grouping of type definitions.

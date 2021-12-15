@@ -24,12 +24,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @author Emmanuel Bernard
  * @author Steve Ebersole
- *
- * @deprecated 6.0 will introduce a new type-safe {@code CustomType} annotation
  */
 @Target({FIELD, METHOD})
 @Retention(RUNTIME)
-@Deprecated
 public @interface Type {
 	/**
 	 * The Hibernate type name.  Usually the fully qualified name of an implementation class for

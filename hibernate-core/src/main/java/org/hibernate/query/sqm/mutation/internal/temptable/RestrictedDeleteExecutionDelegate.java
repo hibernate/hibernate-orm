@@ -156,10 +156,11 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 				}
 		);
 
-		final FilterPredicate filterPredicate = FilterHelper.createFilterPredicate(
-				executionContext.getSession().getLoadQueryInfluencers(),
-				(Joinable) entityDescriptor,
-				deletingTableGroup
+		final FilterPredicate filterPredicate = entityDescriptor.generateFilterPredicate(
+				deletingTableGroup,
+				true,
+				Collections.emptySet(),
+				executionContext.getSession().getLoadQueryInfluencers().getEnabledFilters()
 		);
 		if ( filterPredicate != null ) {
 			needsIdTableWrapper.setValue( true );

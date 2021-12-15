@@ -186,10 +186,11 @@ public class TableBasedUpdateHandler
 			assert predicate != null;
 		}
 
-		final FilterPredicate filterPredicate = FilterHelper.createFilterPredicate(
-				executionContext.getSession().getLoadQueryInfluencers(),
-				(Joinable) rootEntityDescriptor,
-				updatingTableGroup
+		final FilterPredicate filterPredicate = entityDescriptor.generateFilterPredicate(
+				updatingTableGroup,
+				true,
+				Collections.emptySet(),
+				executionContext.getSession().getLoadQueryInfluencers().getEnabledFilters()
 		);
 		if ( filterPredicate != null ) {
 			predicate = SqlAstTreeHelper.combinePredicates( predicate, filterPredicate );

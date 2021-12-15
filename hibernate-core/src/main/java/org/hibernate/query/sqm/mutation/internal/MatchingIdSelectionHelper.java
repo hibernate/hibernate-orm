@@ -116,15 +116,13 @@ public class MatchingIdSelectionHelper {
 		);
 		sqmConverter.getProcessingStateStack().pop();
 
-		final FilterPredicate filterPredicate = FilterHelper.createFilterPredicate(
-				executionContext.getSession().getLoadQueryInfluencers(),
-				(Joinable) targetEntityDescriptor.getEntityPersister(),
-				mutatingTableGroup
+		final FilterPredicate filterPredicate = targetEntityDescriptor.getEntityPersister().generateFilterPredicate(
+				mutatingTableGroup,
+				true,
+				Collections.emptySet(),
+				executionContext.getSession().getLoadQueryInfluencers().getEnabledFilters()
 		);
-		if ( filterPredicate != null ) {
-			restriction = SqlAstTreeHelper.combinePredicates( restriction, filterPredicate );
-		}
-		idSelectionQuery.applyPredicate( restriction );
+		idSelectionQuery.applyPredicate( SqlAstTreeHelper.combinePredicates( restriction, filterPredicate ) );
 
 		return new SelectStatement( idSelectionQuery, domainResults );
 	}

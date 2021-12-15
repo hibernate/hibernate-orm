@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import org.hibernate.Filter;
@@ -58,6 +59,7 @@ import org.hibernate.persister.walking.spi.CollectionElementDefinition;
 import org.hibernate.persister.walking.spi.CollectionIndexDefinition;
 import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.predicate.FilterPredicate;
 import org.hibernate.tuple.entity.BytecodeEnhancementMetadataNonPojoImpl;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
@@ -701,6 +703,11 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 
 		@Override
 		public JavaType getMappedJavaTypeDescriptor() {
+			return null;
+		}
+
+		@Override
+		public FilterPredicate generateFilterPredicate(TableGroup tableGroup, boolean useQualifier, Set<String> treatAsDeclarations, Map<String, Filter> enabledFilters) {
 			return null;
 		}
 	}

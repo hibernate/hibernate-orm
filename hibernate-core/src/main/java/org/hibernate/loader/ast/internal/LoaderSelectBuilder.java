@@ -40,6 +40,8 @@ import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.Restrictable;
+import org.hibernate.metamodel.mapping.Restrictable.RestrictionPredicatePartType;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.NonAggregatedIdentifierMappingImpl;
 import org.hibernate.metamodel.mapping.internal.SimpleForeignKeyDescriptor;
@@ -363,12 +365,18 @@ public class LoaderSelectBuilder {
 	}
 
 	private SelectStatement generateSelect() {
+		final Restrictable restrictable;
 		if ( loadable instanceof PluralAttributeMapping ) {
 			final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) loadable;
+			restrictable = (Restrictable) pluralAttributeMapping.getCollectionDescriptor();
 			if ( pluralAttributeMapping.getMappedType().getCollectionSemantics() instanceof BagSemantics ) {
 				currentBagRole = pluralAttributeMapping.getNavigableRole().getNavigableName();
 			}
 		}
+		else {
+			restrictable = (Restrictable) loadable;
+		}
+
 		final NavigablePath rootNavigablePath = new NavigablePath( loadable.getRootPathName() );
 
 		final QuerySpec rootQuerySpec = new QuerySpec( true );
@@ -391,6 +399,15 @@ public class LoaderSelectBuilder {
 				() -> rootQuerySpec::applyPredicate,
 				sqlAstCreationState,
 				creationContext
+		);
+
+		restrictable.applyRestrictions(
+				(predicate, partType, sourceType) -> rootQuerySpec.applyPredicate( predicate ),
+				rootTableGroup,
+				true,
+				loadQueryInfluencers.getEnabledFilters(),
+				Collections.emptySet(),
+				sqlAstCreationState.getFromClauseAccess()
 		);
 
 		rootQuerySpec.getFromClause().addRoot( rootTableGroup );
@@ -473,11 +490,7 @@ public class LoaderSelectBuilder {
 
 		if ( loadable instanceof PluralAttributeMapping ) {
 			final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) loadable;
-			applyFiltering( rootQuerySpec, rootTableGroup, pluralAttributeMapping, sqlAstCreationState.getFromClauseAccess() );
 			applyOrdering( rootTableGroup, pluralAttributeMapping );
-		}
-		else if ( loadable instanceof Joinable ) {
-			applyFiltering( rootQuerySpec, rootTableGroup, (Joinable) loadable, sqlAstCreationState.getFromClauseAccess() );
 		}
 
 		if ( orderByFragments != null ) {
@@ -588,7 +601,30 @@ public class LoaderSelectBuilder {
 		final CollectionPersister collectionPersister = pluralAttributeMapping.getCollectionDescriptor();
 		final Joinable joinable = collectionPersister.getCollectionType().getAssociatedJoinable( creationContext.getSessionFactory() );
 		joinable.applyRestrictions(
-				querySpec,
+				(predicate,partType,sourceType) -> {
+					if ( partType == RestrictionPredicatePartType.COLLECTION ) {
+						querySpec.applyPredicate( predicate );
+					}
+					else if ( partType == RestrictionPredicatePartType.MANY_TO_MANY ) {
+						final NavigablePath parentNavigablePath = tableGroup.getNavigablePath().getParent();
+						if ( parentNavigablePath == null ) {
+							querySpec.applyPredicate( predicate );
+						}
+						else {
+							final TableGroup parentTableGroup = fromClauseAccess.getTableGroup( parentNavigablePath );
+							TableGroupJoin pluralTableGroupJoin = null;
+							for ( TableGroupJoin nestedTableGroupJoin : parentTableGroup.getTableGroupJoins() ) {
+								if ( nestedTableGroupJoin.getNavigablePath() == tableGroup.getNavigablePath() ) {
+									pluralTableGroupJoin = nestedTableGroupJoin;
+									break;
+								}
+							}
+
+							assert pluralTableGroupJoin != null;
+							pluralTableGroupJoin.applyPredicate( predicate );
+						}
+					}
+				},
 				tableGroup,
 				true,
 				loadQueryInfluencers.getEnabledFilters(),

@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.ast.tree.predicate;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.internal.FilterJdbcParameter;
@@ -21,17 +22,30 @@ import org.hibernate.sql.ast.SqlAstWalker;
  * @author Nathan Xu
  */
 public class FilterPredicate implements Predicate {
-	private final String filterFragment;
-	private final List<FilterJdbcParameter> filterJdbcParameters;
+	private Junction fragments = new Junction();
+	private List<FilterJdbcParameter> parameters;
 
-	public FilterPredicate(String filterFragment, List<FilterJdbcParameter> filterJdbcParameters) {
-		this.filterFragment = filterFragment;
-		this.filterJdbcParameters = filterJdbcParameters;
+	public FilterPredicate() {
+	}
+
+	public void applyFragment(FilterFragmentPredicate predicate) {
+		fragments.add( predicate );
+	}
+
+	public void applyFragment(String sqlFragment) {
+		fragments.add( new FilterFragmentPredicate( sqlFragment ) );
+	}
+
+	public void applyParameter(FilterJdbcParameter parameter) {
+		if ( parameters == null ) {
+			parameters = new ArrayList<>();
+		}
+		parameters.add( parameter );
 	}
 
 	@Override
 	public boolean isEmpty() {
-		return false;
+		return fragments.isEmpty();
 	}
 
 	@Override
@@ -39,16 +53,43 @@ public class FilterPredicate implements Predicate {
 		sqlTreeWalker.visitFilterPredicate( this );
 	}
 
-	public String getFilterFragment() {
-		return filterFragment;
+	public Junction getFragments() {
+		return fragments;
 	}
 
-	public List<FilterJdbcParameter> getFilterJdbcParameters() {
-		return filterJdbcParameters;
+	public List<FilterJdbcParameter> getParameters() {
+		return parameters;
 	}
 
 	@Override
 	public JdbcMappingContainer getExpressionType() {
 		return null;
+	}
+
+	public static class FilterFragmentPredicate implements Predicate {
+		private final String sqlFragment;
+
+		public FilterFragmentPredicate(String sqlFragment) {
+			this.sqlFragment = sqlFragment;
+		}
+
+		public String getSqlFragment() {
+			return sqlFragment;
+		}
+
+		@Override
+		public void accept(SqlAstWalker sqlTreeWalker) {
+			sqlTreeWalker.visitFilterFragmentPredicate( this );
+		}
+
+		@Override
+		public JdbcMappingContainer getExpressionType() {
+			return null;
+		}
+
+		@Override
+		public boolean isEmpty() {
+			return false;
+		}
 	}
 }

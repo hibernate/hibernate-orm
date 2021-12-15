@@ -5,15 +5,15 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.persister.entity;
+
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.Filter;
 import org.hibernate.MappingException;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
+import org.hibernate.metamodel.mapping.Restrictable;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
 
 /**
  * Anything that can be loaded by outer join - namely
@@ -21,7 +21,7 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
  *
  * @author Gavin King
  */
-public interface Joinable {
+public interface Joinable extends Restrictable {
 	//should this interface extend PropertyMapping?
 
 	/**
@@ -37,18 +37,6 @@ public interface Joinable {
 	 * The columns to join on
 	 */
 	public String[] getKeyColumnNames();
-
-	/**
-	 * Apply {@link org.hibernate.annotations.Filter} and
-	 * {@link org.hibernate.annotations.Where} restrictions
-	 */
-	void applyRestrictions(
-			QuerySpec querySpec,
-			TableGroup tableGroup,
-			boolean useQualifier,
-			Map<String, Filter> enabledFilters,
-			Set<String> treatAsDeclarations,
-			FromClauseAccess fromClauseAccess);
 
 	/**
 	 * Get the where clause filter, given a query alias and considering enabled session filters

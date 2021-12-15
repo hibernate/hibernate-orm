@@ -26,7 +26,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import jakarta.persistence.TemporalType;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
@@ -47,7 +46,6 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.PostInsertIdentifierGenerator;
 import org.hibernate.id.enhanced.Optimizer;
-import org.hibernate.internal.FilterHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
@@ -62,6 +60,7 @@ import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.Bindable;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.ConvertibleModelPart;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
@@ -70,18 +69,18 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
-import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.Restrictable;
+import org.hibernate.metamodel.mapping.Restrictable.RestrictionPredicatePartType;
 import org.hibernate.metamodel.mapping.SqlExpressable;
 import org.hibernate.metamodel.mapping.ValueMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedCollectionPart;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
-import org.hibernate.metamodel.mapping.internal.ExplicitColumnDiscriminatorMappingImpl;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
@@ -121,6 +120,8 @@ import org.hibernate.query.QueryLogging;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.UnaryArithmeticOperator;
+import org.hibernate.query.criteria.JpaPath;
+import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
@@ -131,8 +132,10 @@ import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.SelfRenderingAggregateFunctionSqlAstExpression;
+import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmMappingModelHelper;
+import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
 import org.hibernate.query.sqm.spi.BaseSemanticQueryWalker;
 import org.hibernate.query.sqm.sql.internal.BasicValuedPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.DiscriminatedAssociationPathInterpretation;
@@ -148,6 +151,7 @@ import org.hibernate.query.sqm.sql.internal.SqmMapEntryResult;
 import org.hibernate.query.sqm.sql.internal.SqmParameterInterpretation;
 import org.hibernate.query.sqm.sql.internal.SqmPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.TypeHelper;
+import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.cte.SqmCteContainer;
@@ -160,6 +164,8 @@ import org.hibernate.query.sqm.tree.domain.AbstractSqmSpecificPluralPartPath;
 import org.hibernate.query.sqm.tree.domain.NonAggregatedCompositeSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmAnyValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelatedRootJoin;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelation;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmIndexedCollectionAccessPath;
@@ -171,6 +177,7 @@ import org.hibernate.query.sqm.tree.domain.SqmMinIndexPath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
+import org.hibernate.query.sqm.tree.domain.SqmTreatedRoot;
 import org.hibernate.query.sqm.tree.expression.Conversion;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmAliasedNodeRef;
@@ -195,6 +202,7 @@ import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
+import org.hibernate.query.sqm.tree.expression.SqmModifiedSubQueryExpression;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameterizedEntityType;
@@ -213,6 +221,7 @@ import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
+import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertValuesStatement;
 import org.hibernate.query.sqm.tree.insert.SqmValues;
 import org.hibernate.query.sqm.tree.predicate.SqmAndPredicate;
@@ -289,16 +298,21 @@ import org.hibernate.sql.ast.tree.expression.ExtractUnit;
 import org.hibernate.sql.ast.tree.expression.Format;
 import org.hibernate.sql.ast.tree.expression.JdbcLiteral;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.ast.tree.expression.ModifiedSubQueryExpression;
+import org.hibernate.sql.ast.tree.expression.Over;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
+import org.hibernate.sql.ast.tree.expression.SelfRenderingSqlFragmentExpression;
 import org.hibernate.sql.ast.tree.expression.SqlSelectionExpression;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Star;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.expression.TrimSpecification;
 import org.hibernate.sql.ast.tree.expression.UnaryOperation;
+import org.hibernate.sql.ast.tree.from.CorrelatedPluralTableGroup;
 import org.hibernate.sql.ast.tree.from.CorrelatedTableGroup;
 import org.hibernate.sql.ast.tree.from.LazyTableGroup;
+import org.hibernate.sql.ast.tree.from.PluralTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
@@ -331,6 +345,7 @@ import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.internal.JdbcParametersImpl;
+import org.hibernate.sql.exec.internal.VersionTypeSeedParameterSpecification;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParameters;
@@ -351,6 +366,8 @@ import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.UserVersionType;
 
 import org.jboss.logging.Logger;
+
+import jakarta.persistence.TemporalType;
 
 import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
 import static org.hibernate.query.BinaryArithmeticOperator.ADD;
@@ -391,7 +408,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private ForeignKeyDescriptor.Nature currentlyResolvingForeignKeySide;
 	private SqmQueryPart<?> currentSqmQueryPart;
 
-	private Map<String, FilterPredicate> collectionFilterPredicates;
+	private final Map<String, List<Predicate>> collectionFilterPredicates = new HashMap<>();
 	private List<Map.Entry<OrderByFragment, TableGroup>> orderByFragments;
 
 	private final SqlAliasBaseManager sqlAliasBaseManager = new SqlAliasBaseManager();
@@ -670,12 +687,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final List<Assignment> assignments = visitSetClause( sqmStatement.getSetClause() );
 			addVersionedAssignment( assignments::add, sqmStatement );
 
-			final FilterPredicate filterPredicate = FilterHelper.createFilterPredicate(
-					getLoadQueryInfluencers(),
-					(Joinable) entityDescriptor,
+			final FilterPredicate filterPredicate = entityDescriptor.generateFilterPredicate(
 					rootTableGroup,
-					// todo (6.0): this is temporary until we implement proper alias support
-					AbstractSqlAstTranslator.rendersTableReferenceAlias( Clause.UPDATE )
+					AbstractSqlAstTranslator.rendersTableReferenceAlias( Clause.UPDATE ),
+					Collections.emptySet(),
+					loadQueryInfluencers.getEnabledFilters()
 			);
 			if ( filterPredicate != null ) {
 				additionalRestrictions = SqlAstTreeHelper.combinePredicates( additionalRestrictions, filterPredicate );
@@ -900,12 +916,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				throw new HibernateException( "Not expecting multiple table references for an SQM DELETE" );
 			}
 
-			final FilterPredicate filterPredicate = FilterHelper.createFilterPredicate(
-					getLoadQueryInfluencers(),
-					(Joinable) entityDescriptor,
+			final FilterPredicate filterPredicate = entityDescriptor.generateFilterPredicate(
 					rootTableGroup,
-					// todo (6.0): this is temporary until we implement proper alias support
-					AbstractSqlAstTranslator.rendersTableReferenceAlias( Clause.DELETE )
+					AbstractSqlAstTranslator.rendersTableReferenceAlias( Clause.DELETE ),
+					Collections.emptySet(),
+					loadQueryInfluencers.getEnabledFilters()
 			);
 			if ( filterPredicate != null ) {
 				additionalRestrictions = SqlAstTreeHelper.combinePredicates( additionalRestrictions, filterPredicate );
@@ -1747,22 +1762,17 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final ModelPartContainer modelPartContainer = root.getModelPart();
 			final EntityPersister entityPersister = modelPartContainer.findContainingEntityMapping().getEntityPersister();
 			assert entityPersister instanceof Joinable;
-			final FilterPredicate filterPredicate = FilterHelper.createFilterPredicate(
-					getLoadQueryInfluencers(), (Joinable) entityPersister, root
-			);
-			if ( filterPredicate != null ) {
-				sqlQuerySpec.applyPredicate( filterPredicate );
-			}
+
 			if ( CollectionHelper.isNotEmpty( collectionFilterPredicates ) ) {
-				root.getTableGroupJoins().forEach(
-						tableGroupJoin -> {
-							collectionFilterPredicates.forEach( (alias, predicate) -> {
-								if ( tableGroupJoin.getJoinedGroup().getGroupAlias().equals( alias ) ) {
-									tableGroupJoin.applyPredicate( predicate );
-								}
-							} );
+				root.getTableGroupJoins().forEach( (tableGroupJoin) -> {
+					collectionFilterPredicates.forEach( (alias, predicates) -> {
+						if ( tableGroupJoin.getJoinedGroup().getGroupAlias().equals( alias ) ) {
+							if ( CollectionHelper.isNotEmpty( predicates ) ) {
+								predicates.forEach( tableGroupJoin::applyPredicate );
+							}
 						}
-				);
+					} );
+				} );
 			}
 		}
 	}
@@ -2319,14 +2329,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					this,
 					creationContext
 			);
-			final FilterPredicate filterPredicate = FilterHelper.createFilterPredicate(
-					getLoadQueryInfluencers(),
-					(Joinable) entityDescriptor,
-					tableGroup
+
+			( (Restrictable) entityDescriptor ).applyRestrictions(
+					currentQuerySpec,
+					tableGroup,
+					true,
+					loadQueryInfluencers.getEnabledFilters(),
+					Collections.emptySet(),
+					getFromClauseAccess()
 			);
-			if ( filterPredicate != null ) {
-				currentQuerySpec.applyPredicate( filterPredicate );
-			}
 		}
 
 		log.tracef( "Resolved SqmRoot [%s] to new TableGroup [%s]", sqmRoot, tableGroup );
@@ -3242,14 +3253,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					this,
 					creationContext
 			);
-			final FilterPredicate filterPredicate = FilterHelper.createFilterPredicate(
-					getLoadQueryInfluencers(),
-					(Joinable) pluralAttributeMapping.getCollectionDescriptor(),
-					tableGroup
+
+			( (Joinable) pluralAttributeMapping.getCollectionDescriptor() ).applyRestrictions(
+					subQuerySpec,
+					tableGroup,
+					true,
+					getLoadQueryInfluencers().getEnabledFilters(),
+					Collections.emptySet(),
+					getFromClauseAccess()
 			);
-			if ( filterPredicate != null ) {
-				subQuerySpec.applyPredicate( filterPredicate );
-			}
 
 			getFromClauseAccess().registerTableGroup( pluralPath.getNavigablePath(), tableGroup );
 			registerPluralTableGroupParts( tableGroup );
@@ -3385,14 +3397,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					this,
 					creationContext
 			);
-			final FilterPredicate filterPredicate = FilterHelper.createFilterPredicate(
-					getLoadQueryInfluencers(),
-					(Joinable) pluralAttributeMapping.getCollectionDescriptor(),
-					tableGroup
+
+			( (Joinable) pluralAttributeMapping.getCollectionDescriptor() ).applyRestrictions(
+					subQuerySpec,
+					tableGroup,
+					true,
+					getLoadQueryInfluencers().getEnabledFilters(),
+					Collections.emptySet(),
+					getFromClauseAccess()
 			);
-			if ( filterPredicate != null ) {
-				subQuerySpec.applyPredicate( filterPredicate );
-			}
 
 			getFromClauseAccess().registerTableGroup( pluralPartPath.getNavigablePath(), tableGroup );
 			registerPluralTableGroupParts( tableGroup );
@@ -5023,14 +5036,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					this,
 					creationContext
 			);
-			final FilterPredicate filterPredicate = FilterHelper.createFilterPredicate(
-					getLoadQueryInfluencers(),
-					(Joinable) pluralAttributeMapping.getCollectionDescriptor(),
-					tableGroup
+
+			( (Joinable) pluralAttributeMapping.getCollectionDescriptor() ).applyRestrictions(
+					subQuerySpec,
+					tableGroup,
+					true,
+					getLoadQueryInfluencers().getEnabledFilters(),
+					Collections.emptySet(),
+					getFromClauseAccess()
 			);
-			if ( filterPredicate != null ) {
-				subQuerySpec.applyPredicate( filterPredicate );
-			}
 
 			getFromClauseAccess().registerTableGroup( pluralPath.getNavigablePath(), tableGroup );
 			registerPluralTableGroupParts( tableGroup );
@@ -5661,44 +5675,36 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 			if ( fetchable instanceof PluralAttributeMapping && fetch.getTiming() == FetchTiming.IMMEDIATE && joined ) {
 				final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) fetchable;
-
-				final Joinable joinable = pluralAttributeMapping
-						.getCollectionDescriptor()
-						.getCollectionType()
-						.getAssociatedJoinable( getCreationContext().getSessionFactory() );
 				final TableGroup tableGroup = getFromClauseIndex().getTableGroup( fetchablePath );
-				final FilterPredicate collectionFieldFilterPredicate = FilterHelper.createFilterPredicate(
-						getLoadQueryInfluencers(),
-						joinable,
-						tableGroup
-				);
-				if ( collectionFieldFilterPredicate != null ) {
-					if ( collectionFilterPredicates == null ) {
-						collectionFilterPredicates = new HashMap<>();
-					}
-					collectionFilterPredicates.put( tableGroup.getGroupAlias(), collectionFieldFilterPredicate );
-				}
-				if ( pluralAttributeMapping.getCollectionDescriptor().isManyToMany() ) {
-					assert joinable instanceof CollectionPersister;
-					final Predicate manyToManyFilterPredicate = FilterHelper.createManyToManyFilterPredicate(
-							getLoadQueryInfluencers(),
-							( CollectionPersister) joinable,
-							tableGroup
-					);
-					if ( manyToManyFilterPredicate != null ) {
-						final TableGroup parentTableGroup = getFromClauseIndex().getTableGroup( fetchParent.getNavigablePath() );
-						TableGroupJoin pluralTableGroupJoin = null;
-						for ( TableGroupJoin nestedTableGroupJoin : parentTableGroup.getTableGroupJoins() ) {
-							if ( nestedTableGroupJoin.getNavigablePath() == fetchablePath ) {
-								pluralTableGroupJoin = nestedTableGroupJoin;
-								break;
-							}
-						}
 
-						assert pluralTableGroupJoin != null;
-						pluralTableGroupJoin.applyPredicate( manyToManyFilterPredicate );
-					}
-				}
+				( (Restrictable) pluralAttributeMapping.getCollectionDescriptor() ).applyRestrictions(
+						(predicate, partType, sourceType) -> {
+							if ( partType == RestrictionPredicatePartType.COLLECTION ) {
+								addCollectionFilterPredicate( tableGroup.getGroupAlias(), predicate );
+							}
+							else if ( partType == RestrictionPredicatePartType.MANY_TO_MANY ) {
+								final TableGroup parentTableGroup = getFromClauseIndex().getTableGroup( fetchParent.getNavigablePath() );
+								TableGroupJoin pluralTableGroupJoin = null;
+								for ( TableGroupJoin nestedTableGroupJoin : parentTableGroup.getTableGroupJoins() ) {
+									if ( nestedTableGroupJoin.getNavigablePath() == fetchablePath ) {
+										pluralTableGroupJoin = nestedTableGroupJoin;
+										break;
+									}
+								}
+
+								assert pluralTableGroupJoin != null;
+								pluralTableGroupJoin.applyPredicate( predicate );
+							}
+							else if ( partType == RestrictionPredicatePartType.ONE_TO_MANY ) {
+								addCollectionFilterPredicate( tableGroup.getGroupAlias(), predicate );
+							}
+						},
+						tableGroup,
+						true,
+						getLoadQueryInfluencers().getEnabledFilters(),
+						Collections.emptySet(),
+						getFromClauseAccess()
+				);
 
 				if ( currentQuerySpec().isRoot() ) {
 					assert tableGroup.getModelPart() == pluralAttributeMapping;
@@ -5718,6 +5724,18 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					),
 					e
 			);
+		}
+	}
+
+	private void addCollectionFilterPredicate(String groupAlias, Predicate predicate) {
+		final List<Predicate> existing = collectionFilterPredicates.get( groupAlias );
+		if ( existing != null ) {
+			existing.add( predicate );
+		}
+		else {
+			final ArrayList<Predicate> list = new ArrayList<>();
+			list.add( predicate );
+			collectionFilterPredicates.put( groupAlias, list );
 		}
 	}
 

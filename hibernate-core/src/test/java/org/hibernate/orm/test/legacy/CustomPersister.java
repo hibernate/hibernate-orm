@@ -13,8 +13,10 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Consumer;
 
+import org.hibernate.Filter;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -54,6 +56,8 @@ import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
+import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.predicate.FilterPredicate;
 import org.hibernate.tuple.entity.BytecodeEnhancementMetadataNonPojoImpl;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
@@ -816,6 +820,11 @@ public class CustomPersister implements EntityPersister {
 
 	@Override
 	public JavaType getMappedJavaTypeDescriptor() {
+		return null;
+	}
+
+	@Override
+	public FilterPredicate generateFilterPredicate(TableGroup tableGroup, boolean useQualifier, Set<String> treatAsDeclarations, Map<String, Filter> enabledFilters) {
 		return null;
 	}
 }

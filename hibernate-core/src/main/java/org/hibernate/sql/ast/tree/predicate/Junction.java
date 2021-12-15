@@ -31,6 +31,10 @@ public class Junction implements Predicate {
 	private final JdbcMappingContainer expressionType;
 	private final List<Predicate> predicates = new ArrayList<>();
 
+	public Junction() {
+		this( Nature.CONJUNCTION );
+	}
+
 	public Junction(Nature nature) {
 		this( nature, null );
 	}

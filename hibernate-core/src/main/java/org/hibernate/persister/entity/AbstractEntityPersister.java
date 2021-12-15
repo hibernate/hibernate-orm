@@ -268,8 +268,6 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import static org.hibernate.internal.FilterHelper.doCreateFilterPredicate;
-
 /**
  * Basic functionality for persisting an entity via JDBC
  * through either generated or custom SQL
@@ -1052,7 +1050,12 @@ public abstract class AbstractEntityPersister
 		propertyDefinedOnSubclass = ArrayHelper.toBooleanArray( definedBySubclass );
 
 		// Handle any filters applied to the class level
-		filterHelper = new FilterHelper( bootDescriptor.getFilters(), factory );
+		if ( CollectionHelper.isEmpty( bootDescriptor.getFilters() ) ) {
+			filterHelper = null;
+		}
+		else {
+			filterHelper = new FilterHelper( bootDescriptor.getFilters(), factory );
+		}
 
 		// Check if we can use Reference Cached entities in 2lc
 		// todo : should really validate that the cache access type is read-only
@@ -1337,7 +1340,7 @@ public abstract class AbstractEntityPersister
 				creationContext
 		);
 
-		return new StandardTableGroup(
+		final StandardTableGroup tableGroup = new StandardTableGroup(
 				canUseInnerJoins,
 				navigablePath,
 				this,
@@ -1346,10 +1349,10 @@ public abstract class AbstractEntityPersister
 				true,
 				sqlAliasBase,
 				(tableExpression) -> ArrayHelper.contains( getSubclassTableNames(), tableExpression ),
-				(tableExpression, tableGroup) -> {
+				(tableExpression, tg) -> {
 					final String[] subclassTableNames = getSubclassTableNames();
 					for ( int i = 0; i < subclassTableNames.length; i++ ) {
-						if ( tableExpression.equals( subclassTableNames[i] ) ) {
+						if ( tableExpression.equals( subclassTableNames[ i ] ) ) {
 							final boolean isNullableTable = isNullableSubclassTable( i );
 							final TableReference joinedTableReference = new TableReference(
 									tableExpression,
@@ -1367,11 +1370,11 @@ public abstract class AbstractEntityPersister
 									additionalPredicateCollectorAccess == null
 											? null
 											: generateJoinPredicate(
-											primaryTableReference,
-											joinedTableReference,
-											getSubclassTableKeyColumns( i ),
-											sqlExpressionResolver
-									)
+													primaryTableReference,
+													joinedTableReference,
+													getSubclassTableKeyColumns( i ),
+													sqlExpressionResolver
+											)
 							);
 						}
 					}
@@ -1380,6 +1383,8 @@ public abstract class AbstractEntityPersister
 				},
 				getFactory()
 		);
+
+		return tableGroup;
 	}
 
 	@Override
@@ -3992,6 +3997,10 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public String filterFragment(String alias, Map<String, Filter> enabledFilters, Set<String> treatAsDeclarations) {
+		if ( filterHelper == null ) {
+			return "";
+		}
+
 		final StringBuilder sessionFilterFragment = new StringBuilder();
 		filterHelper.render( sessionFilterFragment, alias == null ? null : getFilterAliasGenerator( alias ), enabledFilters );
 		final String filterFragment = filterFragment( alias, treatAsDeclarations );
@@ -4007,6 +4016,10 @@ public abstract class AbstractEntityPersister
 			Map<String, Filter> enabledFilters,
 			Set<String> treatAsDeclarations,
 			boolean useIdentificationVariable) {
+		if ( filterHelper == null ) {
+			return null;
+		}
+
 		final String alias;
 		if ( tableGroup == null ) {
 			alias = null;
@@ -4017,6 +4030,7 @@ public abstract class AbstractEntityPersister
 		else {
 			alias = tableGroup.getPrimaryTableReference().getTableExpression();
 		}
+
 		final StringBuilder sessionFilterFragment = new StringBuilder();
 		filterHelper.render( sessionFilterFragment, !useIdentificationVariable || tableGroup == null ? null : getFilterAliasGenerator( tableGroup ), enabledFilters );
 		final String filterFragment = filterFragment( alias, treatAsDeclarations );
@@ -4028,6 +4042,42 @@ public abstract class AbstractEntityPersister
 
 	public String generateWhereConditionAlias(String alias) {
 		return alias;
+	}
+
+	@Override
+	public void applyRestrictions(
+			RestrictionPredicateConsumer predicateConsumer,
+			TableGroup tableGroup,
+			boolean useQualifier,
+			Map<String, Filter> enabledFilters,
+			Set<String> treatAsDeclarations,
+			FromClauseAccess fromClauseAccess) {
+		// handle `@Filter`
+		final FilterAliasGenerator aliasGenerator = useQualifier && tableGroup != null
+				? getFilterAliasGenerator( tableGroup )
+				: null;
+		applyFilterRestrictions(
+				enabledFilters,
+				aliasGenerator,
+				(predicate) -> predicateConsumer.consume( predicate, RestrictionPredicatePartType.ENTITY, RestrictionSourceType.FILTER )
+		);
+
+		// handle `@Where`
+		final String alias;
+		if ( tableGroup == null ) {
+			alias = null;
+		}
+		else if ( useQualifier && tableGroup.getPrimaryTableReference().getIdentificationVariable() != null ) {
+			alias = tableGroup.getPrimaryTableReference().getIdentificationVariable();
+		}
+		else {
+			alias = tableGroup.getPrimaryTableReference().getTableExpression();
+		}
+		applyWhereRestriction(
+				generateWhereConditionAlias( alias ),
+				treatAsDeclarations,
+				(predicate) -> predicateConsumer.consume( predicate, RestrictionPredicatePartType.ENTITY, RestrictionSourceType.WHERE )
+		);
 	}
 
 	/**
@@ -4048,7 +4098,7 @@ public abstract class AbstractEntityPersister
 		final FilterAliasGenerator aliasGenerator = useQualifier && tableGroup != null
 				? getFilterAliasGenerator( tableGroup )
 				: null;
-		applyFilterRestrictions( querySpec, tableGroup, enabledFilters, aliasGenerator, tableGroupJoin );
+		applyFilterRestrictions( querySpec, enabledFilters, aliasGenerator, tableGroupJoin );
 
 		// handle `@Where`
 		final String alias;
@@ -4064,22 +4114,31 @@ public abstract class AbstractEntityPersister
 		applyWhereRestriction( generateWhereConditionAlias( alias ), treatAsDeclarations, querySpec, tableGroupJoin );
 	}
 
+	@Override
+	public FilterPredicate generateFilterPredicate(TableGroup tableGroup, boolean useQualifier, Set<String> treatAsDeclarations, Map<String, Filter> enabledFilters) {
+		if ( filterHelper == null ) {
+			return null;
+		}
+
+		final FilterAliasGenerator aliasGenerator = useQualifier && tableGroup != null
+				? getFilterAliasGenerator( tableGroup )
+				: null;
+		return filterHelper.generateFilterPredicate( aliasGenerator, enabledFilters );
+	}
+
 	protected void applyFilterRestrictions(
 			QuerySpec querySpec,
-			TableGroup tableGroup,
 			Map<String, Filter> enabledFilters,
-			FilterAliasGenerator aliasGenerator,
-			TableGroupJoin tableGroupJoin) {
-		final StringBuilder fragment = new StringBuilder();
-		filterHelper.render( fragment, aliasGenerator, enabledFilters );
-		if ( fragment.length() > 1 ) {
-			final FilterPredicate filterPredicate = doCreateFilterPredicate( fragment.toString(), enabledFilters );
-			if ( tableGroupJoin == null ) {
-				querySpec.applyPredicate( filterPredicate );
-			}
-			else {
-				tableGroupJoin.applyPredicate( filterPredicate );
-			}
+			FilterAliasGenerator aliasGenerator) {
+		if ( filterHelper != null ) {
+			filterHelper.applyFilters( querySpec, aliasGenerator, enabledFilters );
+		}
+	}
+
+	protected void applyFilterRestrictions(
+			Map<String, Filter> enabledFilters, FilterAliasGenerator aliasGenerator, Consumer<Predicate> predicateConsumer) {
+		if ( filterHelper != null ) {
+			filterHelper.applyFilters( aliasGenerator, enabledFilters, (Consumer) predicateConsumer );
 		}
 	}
 
@@ -4113,6 +4172,13 @@ public abstract class AbstractEntityPersister
 
 			assert tableGroupJoin != null;
 			return tableGroupJoin;
+		}
+	}
+
+	protected void applyWhereRestriction(String alias, Set<String> treatAsDeclarations, Consumer<Predicate> predicateConsumer) {
+		if ( hasWhere() ) {
+			final String whereCondition = getSQLWhereString( alias );
+			predicateConsumer.accept( new WhereFilterPredicate( whereCondition ) );
 		}
 	}
 
@@ -4398,7 +4464,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public boolean isAffectedByEnabledFilters(LoadQueryInfluencers loadQueryInfluencers) {
-		if ( loadQueryInfluencers.hasEnabledFilters() ) {
+		if ( loadQueryInfluencers.hasEnabledFilters() && filterHelper != null ) {
 			if ( filterHelper.isAffectedBy( loadQueryInfluencers.getEnabledFilters() ) ) {
 				return true;
 			}

@@ -157,6 +157,7 @@ public interface SqlAstWalker {
 	void visitBetweenPredicate(BetweenPredicate betweenPredicate);
 
 	void visitFilterPredicate(FilterPredicate filterPredicate);
+	void visitFilterFragmentPredicate(FilterPredicate.FilterFragmentPredicate fragmentPredicate);
 
 	void visitWhereFilterPredicate(WhereFilterPredicate whereFilterPredicate);
 

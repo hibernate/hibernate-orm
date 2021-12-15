@@ -448,6 +448,10 @@ public class AbstractSqlAstWalker implements SqlAstWalker {
 	}
 
 	@Override
+	public void visitFilterFragmentPredicate(FilterPredicate.FilterFragmentPredicate fragmentPredicate) {
+	}
+
+	@Override
 	public void visitWhereFilterPredicate(WhereFilterPredicate whereFilterPredicate) {
 	}
 

@@ -4279,13 +4279,21 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitFilterPredicate(FilterPredicate filterPredicate) {
-		assert StringHelper.isNotEmpty( filterPredicate.getFilterFragment() );
-		appendSql( filterPredicate.getFilterFragment() );
-		for ( FilterJdbcParameter filterJdbcParameter : filterPredicate.getFilterJdbcParameters() ) {
-			parameterBinders.add( filterJdbcParameter.getBinder() );
-			jdbcParameters.addParameter( filterJdbcParameter.getParameter() );
-			filterJdbcParameters.add( filterJdbcParameter );
+		visitJunction( filterPredicate.getFragments() );
+
+		final List<FilterJdbcParameter> parameters = filterPredicate.getParameters();
+		if ( parameters != null ) {
+			for ( FilterJdbcParameter filterJdbcParameter : parameters ) {
+				parameterBinders.add( filterJdbcParameter.getBinder() );
+				jdbcParameters.addParameter( filterJdbcParameter.getParameter() );
+				filterJdbcParameters.add( filterJdbcParameter );
+			}
 		}
+	}
+
+	@Override
+	public void visitFilterFragmentPredicate(FilterPredicate.FilterFragmentPredicate fragmentPredicate) {
+		appendSql( fragmentPredicate.getSqlFragment() );
 	}
 
 	@Override

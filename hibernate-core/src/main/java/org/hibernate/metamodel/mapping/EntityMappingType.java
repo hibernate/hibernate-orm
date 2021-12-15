@@ -14,9 +14,11 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import org.hibernate.Filter;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
@@ -37,6 +39,7 @@ import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
+import org.hibernate.sql.ast.tree.predicate.FilterPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
@@ -493,4 +496,10 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 	default int getNumberOfFetchables() {
 		return getEntityPersister().getNumberOfFetchables();
 	}
+
+	FilterPredicate generateFilterPredicate(
+			TableGroup tableGroup,
+			boolean useQualifier,
+			Set<String> treatAsDeclarations,
+			Map<String, Filter> enabledFilters);
 }

@@ -7,7 +7,7 @@
 
 //$Id$
 
-package org.hibernate.test.subquery;
+package org.hibernate.orm.test.subquery;
 
 import jakarta.persistence.*;
 

@@ -11,42 +11,38 @@ import java.util.function.Function;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.ast.SqlAstWalker;
-import org.hibernate.sql.ast.tree.select.QueryPart;
+import org.hibernate.sql.ast.tree.expression.FunctionExpression;
 
 /**
- * A table reference for a query part.
+ * A table reference for a table valued function.
  *
  * @author Christian Beikov
  */
-public class QueryPartTableReference extends DerivedTableReference {
+public class FunctionTableReference extends DerivedTableReference {
 
-	private final QueryPart queryPart;
+	private final FunctionExpression functionExpression;
 
-	public QueryPartTableReference(
-			QueryPart queryPart,
+	public FunctionTableReference(
+			FunctionExpression functionExpression,
 			String identificationVariable,
 			List<String> columnNames,
 			boolean lateral,
 			SessionFactoryImplementor sessionFactory) {
 		super( identificationVariable, columnNames, lateral, sessionFactory );
-		this.queryPart = queryPart;
+		this.functionExpression = functionExpression;
 	}
 
-	public QueryPart getQueryPart() {
-		return queryPart;
+	public FunctionExpression getFunctionExpression() {
+		return functionExpression;
 	}
 
 	@Override
 	public void accept(SqlAstWalker sqlTreeWalker) {
-		sqlTreeWalker.visitQueryPartTableReference( this );
+		functionExpression.accept( sqlTreeWalker );
 	}
 
 	@Override
 	public Boolean visitAffectedTableNames(Function<String, Boolean> nameCollector) {
-		final Function<TableReference, Boolean> tableReferenceBooleanFunction =
-				tableReference -> tableReference.visitAffectedTableNames( nameCollector );
-		return queryPart.queryQuerySpecs(
-			querySpec -> querySpec.getFromClause().queryTableReferences( tableReferenceBooleanFunction )
-		);
+		return null;
 	}
 }

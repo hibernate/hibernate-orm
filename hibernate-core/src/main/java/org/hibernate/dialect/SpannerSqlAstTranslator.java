@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.ComparisonOperator;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
@@ -18,8 +19,12 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Summarization;
+import org.hibernate.sql.ast.tree.from.TableGroupJoin;
+import org.hibernate.sql.ast.tree.predicate.Junction;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
+import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 
 /**
@@ -28,6 +33,9 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
  * @author Christian Beikov
  */
 public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
+
+	// Spanner lacks the lateral keyword and instead has an unnest/array mechanism
+	private boolean correlated;
 
 	public SpannerSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
@@ -87,6 +95,62 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 		}
 		else {
 			expression.accept( this );
+		}
+	}
+
+	@Override
+	public void visitSelectClause(SelectClause selectClause) {
+		getClauseStack().push( Clause.SELECT );
+
+		try {
+			appendSql( "select " );
+			if ( correlated ) {
+				appendSql( "as struct " );
+			}
+			if ( selectClause.isDistinct() ) {
+				appendSql( "distinct " );
+			}
+			visitSqlSelections( selectClause );
+		}
+		finally {
+			getClauseStack().pop();
+		}
+	}
+
+	@Override
+	protected void renderTableGroupJoin(TableGroupJoin tableGroupJoin, List<TableGroupJoin> tableGroupJoinCollector) {
+		appendSql( WHITESPACE );
+		appendSql( tableGroupJoin.getJoinType().getText() );
+		appendSql( "join " );
+
+		boolean correlated = false;
+		final Predicate predicate;
+		if ( tableGroupJoin.isLateral() ) {
+			correlated = true;
+			if ( tableGroupJoin.getPredicate() == null ) {
+				predicate = new Junction( Junction.Nature.CONJUNCTION );
+			}
+			else {
+				predicate = tableGroupJoin.getPredicate();
+			}
+		}
+		else {
+			predicate = tableGroupJoin.getPredicate();
+		}
+		final boolean oldCorrelated = this.correlated;
+		if ( correlated ) {
+			this.correlated = true;
+			appendSql( "unnest(array" );
+		}
+		if ( predicate != null && !predicate.isEmpty() ) {
+			renderTableGroup( tableGroupJoin.getJoinedGroup(), predicate, tableGroupJoinCollector );
+		}
+		else {
+			renderTableGroup( tableGroupJoin.getJoinedGroup(), tableGroupJoinCollector );
+		}
+		if ( correlated ) {
+			this.correlated = oldCorrelated;
+			appendSql( CLOSE_PARENTHESIS );
 		}
 	}
 

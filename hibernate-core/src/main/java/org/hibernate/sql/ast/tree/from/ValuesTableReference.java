@@ -25,7 +25,7 @@ public class ValuesTableReference extends DerivedTableReference {
 			String identificationVariable,
 			List<String> columnNames,
 			SessionFactoryImplementor sessionFactory) {
-		super( identificationVariable, columnNames, sessionFactory );
+		super( identificationVariable, columnNames, false, sessionFactory );
 		this.valuesList = valuesList;
 	}
 

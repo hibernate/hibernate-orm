@@ -12,6 +12,7 @@ import org.hibernate.sql.ast.tree.SqlAstTreeLogger;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.from.FromClause;
+import org.hibernate.sql.ast.tree.from.FunctionTableReference;
 import org.hibernate.sql.ast.tree.from.LazyTableGroup;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
@@ -156,6 +157,13 @@ public class SqlTreePrinter {
 			if ( tableGroup.getPrimaryTableReference() instanceof ValuesTableReference ) {
 				logWithIndentation(
 						"primaryTableReference : values (..) as %s",
+						tableGroup.getPrimaryTableReference().getIdentificationVariable()
+				);
+			}
+			else if ( tableGroup.getPrimaryTableReference() instanceof FunctionTableReference ) {
+				logWithIndentation(
+						"primaryTableReference : %s(...) as %s",
+						( (FunctionTableReference) tableGroup.getPrimaryTableReference() ).getFunctionExpression().getFunctionName(),
 						tableGroup.getPrimaryTableReference().getIdentificationVariable()
 				);
 			}

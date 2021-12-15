@@ -38,6 +38,7 @@ import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.expression.TrimSpecification;
 import org.hibernate.sql.ast.tree.expression.UnaryOperation;
 import org.hibernate.sql.ast.tree.from.FromClause;
+import org.hibernate.sql.ast.tree.from.FunctionTableReference;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -107,6 +108,8 @@ public interface SqlAstWalker {
 	void visitValuesTableReference(ValuesTableReference tableReference);
 
 	void visitQueryPartTableReference(QueryPartTableReference tableReference);
+
+	void visitFunctionTableReference(FunctionTableReference tableReference);
 
 	void visitTableReferenceJoin(TableReferenceJoin tableReferenceJoin);
 

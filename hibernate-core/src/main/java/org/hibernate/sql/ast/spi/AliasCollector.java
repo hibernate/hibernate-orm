@@ -12,6 +12,7 @@ import java.util.Map;
 
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.from.FunctionTableReference;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
 import org.hibernate.sql.ast.tree.from.TableReference;
@@ -45,6 +46,11 @@ public class AliasCollector extends AbstractSqlAstWalker {
 
 	@Override
 	public void visitQueryPartTableReference(QueryPartTableReference tableReference) {
+		tableReferenceMap.put( tableReference.getIdentificationVariable(), tableReference );
+	}
+
+	@Override
+	public void visitFunctionTableReference(FunctionTableReference tableReference) {
 		tableReferenceMap.put( tableReference.getIdentificationVariable(), tableReference );
 	}
 }

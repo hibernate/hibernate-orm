@@ -109,7 +109,9 @@ import org.hibernate.sql.ast.tree.expression.Star;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.expression.TrimSpecification;
 import org.hibernate.sql.ast.tree.expression.UnaryOperation;
+import org.hibernate.sql.ast.tree.from.DerivedTableReference;
 import org.hibernate.sql.ast.tree.from.FromClause;
+import org.hibernate.sql.ast.tree.from.FunctionTableReference;
 import org.hibernate.sql.ast.tree.from.LazyTableGroup;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
@@ -192,6 +194,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	private final Set<String> affectedTableNames = new HashSet<>();
 	private MutationStatement dmlStatement;
 	private boolean needsSelectAliases;
+	private Predicate additionalWherePredicate;
 	// We must reset the queryPartForRowNumbering fields to null if a query part is visited that does not
 	// contribute to the row numbering i.e. if the query part is a sub-query in the where clause.
 	// To determine whether a query part contributes to row numbering, we remember the clause depth
@@ -362,6 +365,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	protected SqlAstNodeRenderingMode getParameterRenderingMode() {
 		return parameterRenderingMode;
+	}
+
+	protected void addAdditionalWherePredicate(Predicate predicate) {
+		additionalWherePredicate = Predicate.combinePredicates( additionalWherePredicate, predicate );
 	}
 
 	@Override
@@ -856,16 +863,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			clauseStack.pop();
 		}
 
-		if ( statement.getRestriction() != null ) {
-			try {
-				clauseStack.push( Clause.WHERE );
-				appendSql( " where " );
-				statement.getRestriction().accept( this );
-			}
-			finally {
-				clauseStack.pop();
-			}
-		}
+		visitWhereClause( statement.getRestriction() );
 		visitReturningColumns( statement );
 	}
 
@@ -923,16 +921,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			clauseStack.pop();
 		}
 
-		if ( statement.getRestriction() != null ) {
-			appendSql( " where " );
-			try {
-				clauseStack.push( Clause.WHERE );
-				statement.getRestriction().accept( this );
-			}
-			finally {
-				clauseStack.pop();
-			}
-		}
+		visitWhereClause( statement.getRestriction() );
 		visitReturningColumns( statement );
 	}
 
@@ -1496,8 +1485,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		final QueryPart queryPartForRowNumbering = this.queryPartForRowNumbering;
 		final int queryPartForRowNumberingClauseDepth = this.queryPartForRowNumberingClauseDepth;
 		final boolean needsSelectAliases = this.needsSelectAliases;
+		final Predicate additionalWherePredicate = this.additionalWherePredicate;
 		final ForUpdateClause forUpdate = this.forUpdate;
 		try {
+			this.additionalWherePredicate = null;
 			this.forUpdate = null;
 			// See the field documentation of queryPartForRowNumbering etc. for an explanation about this
 			// In addition, we also reset the row numbering if the currently row numbered query part is a query group
@@ -1534,7 +1525,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			}
 			visitSelectClause( querySpec.getSelectClause() );
 			visitFromClause( querySpec.getFromClause() );
-			visitWhereClause( querySpec );
+			visitWhereClause( querySpec.getWhereClauseRestrictions() );
 			visitGroupByClause( querySpec, getDialect().getGroupBySelectItemReferenceStrategy() );
 			visitHavingClause( querySpec );
 			visitOrderBy( querySpec.getSortSpecifications() );
@@ -1554,6 +1545,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			this.queryPartForRowNumbering = queryPartForRowNumbering;
 			this.queryPartForRowNumberingClauseDepth = queryPartForRowNumberingClauseDepth;
 			this.needsSelectAliases = needsSelectAliases;
+			this.additionalWherePredicate = additionalWherePredicate;
 			if ( queryPartForRowNumbering == null ) {
 				this.forUpdate = forUpdate;
 			}
@@ -1564,14 +1556,24 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		return true;
 	}
 
-	protected final void visitWhereClause(QuerySpec querySpec) {
-		final Predicate whereClauseRestrictions = querySpec.getWhereClauseRestrictions();
-		if ( whereClauseRestrictions != null && !whereClauseRestrictions.isEmpty() ) {
+	protected final void visitWhereClause(Predicate whereClauseRestrictions) {
+		if ( whereClauseRestrictions != null && !whereClauseRestrictions.isEmpty() || additionalWherePredicate != null ) {
 			appendSql( " where " );
 
 			clauseStack.push( Clause.WHERE );
 			try {
-				whereClauseRestrictions.accept( this );
+				if ( whereClauseRestrictions != null && !whereClauseRestrictions.isEmpty() ) {
+					whereClauseRestrictions.accept( this );
+					if ( additionalWherePredicate != null ) {
+						appendSql( " and " );
+						additionalWherePredicate.accept( this );
+						additionalWherePredicate = null;
+					}
+				}
+				else if ( additionalWherePredicate != null ) {
+					additionalWherePredicate.accept( this );
+					additionalWherePredicate = null;
+				}
 			}
 			finally {
 				clauseStack.pop();
@@ -3645,24 +3647,22 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		append( '(' );
 		visitValuesList( tableReference.getValuesList() );
 		append( ')' );
-		final String identificationVariable = tableReference.getIdentificationVariable();
-		if ( identificationVariable != null ) {
-			append( WHITESPACE );
-			append( tableReference.getIdentificationVariable() );
-			final List<String> columnNames = tableReference.getColumnNames();
-			append( '(' );
-			append( columnNames.get( 0 ) );
-			for ( int i = 1; i < columnNames.size(); i++ ) {
-				append( ',' );
-				append( columnNames.get( i ) );
-			}
-			append( ')' );
-		}
+		renderDerivedTableReference( tableReference );
 	}
 
 	@Override
 	public void visitQueryPartTableReference(QueryPartTableReference tableReference) {
 		tableReference.getQueryPart().accept( this );
+		renderDerivedTableReference( tableReference );
+	}
+
+	@Override
+	public void visitFunctionTableReference(FunctionTableReference tableReference) {
+		tableReference.getFunctionExpression().accept( this );
+		renderDerivedTableReference( tableReference );
+	}
+
+	protected void renderDerivedTableReference(DerivedTableReference tableReference) {
 		final String identificationVariable = tableReference.getIdentificationVariable();
 		if ( identificationVariable != null ) {
 			append( WHITESPACE );
@@ -3706,9 +3706,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 		for ( TableReferenceJoin tableJoin : joins ) {
 			appendSql( WHITESPACE );
-			renderJoinType( tableJoin.getJoinType() );
+			appendSql( tableJoin.getJoinType().getText() );
+			appendSql( "join " );
 
-			renderTableReference( tableJoin.getJoinedTableReference(), LockMode.NONE );
+			renderNamedTableReference( tableJoin.getJoinedTableReference(), LockMode.NONE );
 
 			if ( tableJoin.getPredicate() != null && !tableJoin.getPredicate().isEmpty() ) {
 				appendSql( " on " );
@@ -3748,21 +3749,37 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			}
 		}
 		else if ( realTableGroup != null ) {
-			appendSql( WHITESPACE );
-			renderJoinType( tableGroupJoin.getJoinType() );
-
-			if ( tableGroupJoin.getPredicate() != null && !tableGroupJoin.getPredicate().isEmpty() ) {
-				renderTableGroup( realTableGroup, tableGroupJoin.getPredicate(), tableGroupJoinCollector );
-			}
-			else {
-				renderTableGroup( realTableGroup, tableGroupJoinCollector );
-			}
+			renderTableGroupJoin(
+					tableGroupJoin,
+					tableGroupJoinCollector
+			);
 		}
 	}
 
-	protected void renderJoinType(SqlAstJoinType joinType) {
-		appendSql( joinType.getText() );
+	protected void renderTableGroupJoin(TableGroupJoin tableGroupJoin, List<TableGroupJoin> tableGroupJoinCollector) {
+		appendSql( WHITESPACE );
+		appendSql( tableGroupJoin.getJoinType().getText() );
 		appendSql( "join " );
+
+		final Predicate predicate;
+		if ( tableGroupJoin.isLateral() ) {
+			append( "lateral " );
+			if ( tableGroupJoin.getPredicate() == null ) {
+				predicate = new Junction( Junction.Nature.CONJUNCTION );
+			}
+			else {
+				predicate = tableGroupJoin.getPredicate();
+			}
+		}
+		else {
+			predicate = tableGroupJoin.getPredicate();
+		}
+		if ( predicate != null && !predicate.isEmpty() ) {
+			renderTableGroup( tableGroupJoin.getJoinedGroup(), predicate, tableGroupJoinCollector );
+		}
+		else {
+			renderTableGroup( tableGroupJoin.getJoinedGroup(), tableGroupJoinCollector );
+		}
 	}
 
 	@Override
@@ -4559,7 +4576,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				if ( !subQuery.getGroupByClauseExpressions()
 						.isEmpty() || subQuery.getHavingClauseRestrictions() != null ) {
 					// If we have a group by or having clause, we have to move the tuple comparison emulation to the HAVING clause
-					visitWhereClause( subQuery );
+					visitWhereClause( subQuery.getWhereClauseRestrictions() );
 					visitGroupByClause( subQuery, SelectItemReferenceStrategy.EXPRESSION );
 
 					appendSql( " having " );
@@ -4649,7 +4666,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				appendSql( OPEN_PARENTHESIS );
 				visitSelectClause( subQuery.getSelectClause() );
 				visitFromClause( subQuery.getFromClause() );
-				visitWhereClause( subQuery );
+				visitWhereClause( subQuery.getWhereClauseRestrictions() );
 				visitGroupByClause( subQuery, getDialect().getGroupBySelectItemReferenceStrategy() );
 				visitHavingClause( subQuery );
 

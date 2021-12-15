@@ -21,6 +21,9 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Summarization;
+import org.hibernate.sql.ast.tree.from.TableGroupJoin;
+import org.hibernate.sql.ast.tree.predicate.Junction;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -56,12 +59,34 @@ public class TimesTenSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
-	protected void renderJoinType(SqlAstJoinType joinType) {
-		if ( joinType == SqlAstJoinType.CROSS ) {
+	protected void renderTableGroupJoin(TableGroupJoin tableGroupJoin, List<TableGroupJoin> tableGroupJoinCollector) {
+		if ( tableGroupJoin.getJoinType() == SqlAstJoinType.CROSS ) {
 			appendSql( ", " );
 		}
 		else {
-			super.renderJoinType( joinType );
+			appendSql( WHITESPACE );
+			appendSql( tableGroupJoin.getJoinType().getText() );
+			appendSql( "join " );
+		}
+
+		final Predicate predicate;
+		if ( tableGroupJoin.isLateral() ) {
+			append( "lateral " );
+			if ( tableGroupJoin.getPredicate() == null ) {
+				predicate = new Junction( Junction.Nature.CONJUNCTION );
+			}
+			else {
+				predicate = tableGroupJoin.getPredicate();
+			}
+		}
+		else {
+			predicate = tableGroupJoin.getPredicate();
+		}
+		if ( predicate != null && !predicate.isEmpty() ) {
+			renderTableGroup( tableGroupJoin.getJoinedGroup(), predicate, tableGroupJoinCollector );
+		}
+		else {
+			renderTableGroup( tableGroupJoin.getJoinedGroup(), tableGroupJoinCollector );
 		}
 	}
 

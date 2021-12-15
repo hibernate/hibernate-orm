@@ -17,13 +17,16 @@ import org.hibernate.query.NavigablePath;
 public abstract class DerivedTableReference extends AbstractTableReference {
 
 	private final List<String> columnNames;
+	private final boolean lateral;
 
 	public DerivedTableReference(
 			String identificationVariable,
 			List<String> columnNames,
+			boolean lateral,
 			SessionFactoryImplementor sessionFactory) {
 		super( identificationVariable, false );
 		this.columnNames = columnNames;
+		this.lateral = lateral;
 	}
 
 	@Override
@@ -33,6 +36,10 @@ public abstract class DerivedTableReference extends AbstractTableReference {
 
 	public List<String> getColumnNames() {
 		return columnNames;
+	}
+
+	public boolean isLateral() {
+		return lateral;
 	}
 
 	@Override

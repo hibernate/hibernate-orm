@@ -29,19 +29,23 @@ public class TableGroupJoin implements TableJoin, DomainResultProducer {
 	public TableGroupJoin(
 			NavigablePath navigablePath,
 			SqlAstJoinType sqlAstJoinType,
-			TableGroup joinedGroup,
-			Predicate predicate) {
-		this.navigablePath = navigablePath;
-		this.sqlAstJoinType = sqlAstJoinType;
-		this.joinedGroup = joinedGroup;
-		this.predicate = predicate;
+			TableGroup joinedGroup) {
+		this( navigablePath, sqlAstJoinType, joinedGroup, null );
 	}
 
 	public TableGroupJoin(
 			NavigablePath navigablePath,
 			SqlAstJoinType sqlAstJoinType,
-			TableGroup joinedGroup) {
-		this( navigablePath, sqlAstJoinType, joinedGroup, null );
+			TableGroup joinedGroup,
+			Predicate predicate) {
+		assert !joinedGroup.isLateral() || ( sqlAstJoinType == SqlAstJoinType.INNER
+				|| sqlAstJoinType == SqlAstJoinType.LEFT
+				|| sqlAstJoinType == SqlAstJoinType.CROSS )
+				: "Lateral is only allowed with inner, left or cross joins";
+		this.navigablePath = navigablePath;
+		this.sqlAstJoinType = sqlAstJoinType;
+		this.joinedGroup = joinedGroup;
+		this.predicate = predicate;
 	}
 
 	@Override

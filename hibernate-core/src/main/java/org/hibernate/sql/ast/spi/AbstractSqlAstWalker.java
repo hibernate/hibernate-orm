@@ -43,6 +43,7 @@ import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.expression.TrimSpecification;
 import org.hibernate.sql.ast.tree.expression.UnaryOperation;
 import org.hibernate.sql.ast.tree.from.FromClause;
+import org.hibernate.sql.ast.tree.from.FunctionTableReference;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -485,5 +486,12 @@ public class AbstractSqlAstWalker implements SqlAstWalker {
 	@Override
 	public void visitQueryPartTableReference(QueryPartTableReference tableReference) {
 		tableReference.getQueryPart().accept( this );
+	}
+
+	@Override
+	public void visitFunctionTableReference(FunctionTableReference tableReference) {
+		for ( SqlAstNode argument : tableReference.getFunctionExpression().getArguments() ) {
+			argument.accept( this );
+		}
 	}
 }

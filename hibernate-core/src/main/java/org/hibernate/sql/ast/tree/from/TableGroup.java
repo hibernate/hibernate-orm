@@ -46,6 +46,11 @@ public interface TableGroup extends SqlAstNode, ColumnReferenceQualifier, SqmPat
 	
 	boolean canUseInnerJoins();
 
+	default boolean isLateral() {
+		return getPrimaryTableReference() instanceof DerivedTableReference
+				&& ( (DerivedTableReference) getPrimaryTableReference() ).isLateral();
+	}
+
 	void addTableGroupJoin(TableGroupJoin join);
 
 	/**

@@ -14,6 +14,7 @@ import org.hibernate.query.FetchClauseType;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.sql.ast.Clause;
+import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
@@ -23,7 +24,10 @@ import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
+import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.UnionTableReference;
+import org.hibernate.sql.ast.tree.predicate.Junction;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -42,6 +46,37 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends Abstract
 
 	public SQLServerSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
+	}
+
+	@Override
+	protected void renderTableGroupJoin(TableGroupJoin tableGroupJoin, List<TableGroupJoin> tableGroupJoinCollector) {
+		appendSql( WHITESPACE );
+		if ( tableGroupJoin.isLateral() ) {
+			if ( tableGroupJoin.getJoinType() == SqlAstJoinType.LEFT ) {
+				appendSql( "outer apply " );
+			}
+			else {
+				appendSql( "cross apply " );
+			}
+		}
+		else {
+			appendSql( tableGroupJoin.getJoinType().getText() );
+			appendSql( "join " );
+		}
+
+		final Predicate predicate = tableGroupJoin.getPredicate();
+		if ( predicate != null && !predicate.isEmpty() ) {
+			if ( tableGroupJoin.isLateral() ) {
+				renderTableGroup( tableGroupJoin.getJoinedGroup(), tableGroupJoinCollector );
+				addAdditionalWherePredicate( predicate );
+			}
+			else {
+				renderTableGroup( tableGroupJoin.getJoinedGroup(), predicate, tableGroupJoinCollector );
+			}
+		}
+		else {
+			renderTableGroup( tableGroupJoin.getJoinedGroup(), tableGroupJoinCollector );
+		}
 	}
 
 	@Override

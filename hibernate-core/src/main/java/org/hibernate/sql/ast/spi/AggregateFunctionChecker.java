@@ -35,6 +35,7 @@ import org.hibernate.sql.ast.tree.expression.Star;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.expression.TrimSpecification;
 import org.hibernate.sql.ast.tree.from.FromClause;
+import org.hibernate.sql.ast.tree.from.FunctionTableReference;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -248,6 +249,10 @@ public class AggregateFunctionChecker extends AbstractSqlAstWalker {
 
 	@Override
 	public void visitQueryPartTableReference(QueryPartTableReference tableReference) {
+	}
+
+	@Override
+	public void visitFunctionTableReference(FunctionTableReference tableReference) {
 	}
 
 	@Override

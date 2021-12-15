@@ -52,10 +52,8 @@ public class StandardJdbcMutationExecutor implements JdbcMutationExecutor {
 			finalSql = jdbcMutation.getSql();
 		}
 		else {
-			final Dialect dialect = jdbcServices.getDialect();
-			final String sql = jdbcMutation.getSql();
-			finalSql = dialect.addSqlHintOrComment(
-					sql,
+			finalSql = jdbcServices.getDialect().addSqlHintOrComment(
+					jdbcMutation.getSql(),
 					queryOptions,
 					executionContext.getSession().getFactory().getSessionFactoryOptions().isCommentsEnabled()
 			);

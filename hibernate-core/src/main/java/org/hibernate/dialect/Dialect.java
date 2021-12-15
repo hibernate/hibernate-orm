@@ -49,6 +49,7 @@ import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CastFunction;
 import org.hibernate.dialect.function.CastStrEmulation;
 import org.hibernate.dialect.function.CoalesceIfnullEmulation;
@@ -190,16 +191,6 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
 public abstract class Dialect implements ConversionContext {
 
 	/**
-	 * Defines a default batch size constant
-	 */
-	public static final String DEFAULT_BATCH_SIZE = "15";
-
-	/**
-	 * Defines a "no batching" batch size constant
-	 */
-	protected static final String NO_BATCH = "0";
-
-	/**
 	 * Characters used as opening for quoting SQL identifiers
 	 */
 	public static final String QUOTE = "`\"[";
@@ -243,6 +234,7 @@ public abstract class Dialect implements ConversionContext {
 		registerDefaultColumnTypes();
 		registerHibernateTypes();
 		registerDefaultKeywords();
+		initDefaultProperties();
 	}
 
 	protected Dialect(DialectResolutionInfo info) {
@@ -252,6 +244,21 @@ public abstract class Dialect implements ConversionContext {
 		registerHibernateTypes();
 		registerDefaultKeywords();
 		registerKeywords(info);
+		initDefaultProperties();
+	}
+
+	/**
+	 * Set appropriate default values for configuration properties.
+	 */
+	protected void initDefaultProperties() {
+		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE,
+				Integer.toString( getDefaultStatementBatchSize() ) );
+		getDefaultProperties().setProperty( Environment.USE_STREAMS_FOR_BINARY,
+				Boolean.toString( getDefaultUseStreamsForBinary() ) );
+		getDefaultProperties().setProperty( Environment.NON_CONTEXTUAL_LOB_CREATION,
+				Boolean.toString( getDefaultNonContextualLobCreation() ) );
+		getDefaultProperties().setProperty( Environment.USE_GET_GENERATED_KEYS,
+				Boolean.toString( getDefaultUseGetGeneratedKeys() )  );
 	}
 
 	/**
@@ -1309,6 +1316,38 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public final Properties getDefaultProperties() {
 		return properties;
+	}
+
+	/**
+	 * The default value to use for the configuration property
+	 * {@link Environment#STATEMENT_BATCH_SIZE}.
+	 */
+	public int getDefaultStatementBatchSize() {
+		return 1;
+	}
+
+	/**
+	 * The default value to use for the configuration property
+	 * {@link Environment#USE_STREAMS_FOR_BINARY}.
+	 */
+	public boolean getDefaultUseStreamsForBinary() {
+		return false;
+	}
+
+	/**
+	 * The default value to use for the configuration property
+	 * {@link Environment#NON_CONTEXTUAL_LOB_CREATION}.
+	 */
+	public boolean getDefaultNonContextualLobCreation() {
+		return false;
+	}
+
+	/**
+	 * The default value to use for the configuration property
+	 * {@link Environment#USE_GET_GENERATED_KEYS}.
+	 */
+	public boolean getDefaultUseGetGeneratedKeys() {
+		return true;
 	}
 
 	@Override

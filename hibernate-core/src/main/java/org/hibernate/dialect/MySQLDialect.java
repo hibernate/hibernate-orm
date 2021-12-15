@@ -108,11 +108,6 @@ public class MySQLDialect extends Dialect {
 		}
 	};
 
-	{
-		getDefaultProperties().setProperty( Environment.MAX_FETCH_DEPTH, "2" );
-		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
-	}
-
 	private int maxVarcharLength;
 	private int maxVarbinaryLength;
 
@@ -123,11 +118,16 @@ public class MySQLDialect extends Dialect {
 	public MySQLDialect(DatabaseVersion version) {
 		super(version);
 		registerKeyword( "key" );
-
 	}
 
 	public MySQLDialect(DialectResolutionInfo info) {
 		super(info);
+	}
+
+	@Override
+	protected void initDefaultProperties() {
+		super.initDefaultProperties();
+		getDefaultProperties().setProperty( Environment.MAX_FETCH_DEPTH, "2" );
 	}
 
 	private MySQLStorageEngine createStorageEngine() {

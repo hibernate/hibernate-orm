@@ -10,7 +10,6 @@ import java.sql.Types;
 
 import org.hibernate.HibernateException;
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.cfg.Environment;
 import org.hibernate.community.dialect.identity.MimerSQLIdentityColumnSupport;
 import org.hibernate.community.dialect.sequence.MimerSequenceSupport;
 import org.hibernate.community.dialect.sequence.SequenceInformationExtractorMimerSQLDatabaseImpl;
@@ -78,9 +77,6 @@ public class MimerSQLDialect extends Dialect {
 		registerColumnType( Types.NCLOB, "nclob($l)" );
 
 		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp($p)" );
-
-		getDefaultProperties().setProperty( Environment.USE_STREAMS_FOR_BINARY, "true" );
-		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, "50" );
 	}
 
 	public MimerSQLDialect(DialectResolutionInfo info) {
@@ -104,6 +100,16 @@ public class MimerSQLDialect extends Dialect {
 	@Override
 	public DatabaseVersion getVersion() {
 		return ZERO_VERSION;
+	}
+
+	@Override
+	public int getDefaultStatementBatchSize() {
+		return 50;
+	}
+
+	@Override
+	public boolean getDefaultUseStreamsForBinary() {
+		return true;
 	}
 
 	@Override

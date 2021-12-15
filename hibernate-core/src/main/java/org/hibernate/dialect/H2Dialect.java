@@ -12,7 +12,6 @@ import java.util.List;
 
 import org.hibernate.PessimisticLockException;
 import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.hint.IndexQueryHintHandler;
 import org.hibernate.dialect.identity.H2IdentityColumnSupport;
@@ -84,12 +83,6 @@ public class H2Dialect extends Dialect {
 	private final SequenceInformationExtractor sequenceInformationExtractor;
 	private final String querySequenceString;
 
-	{
-		getDefaultProperties().setProperty( AvailableSettings.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
-		// http://code.google.com/p/h2database/issues/detail?id=235
-		getDefaultProperties().setProperty( AvailableSettings.NON_CONTEXTUAL_LOB_CREATION, "true" );
-	}
-
 	public H2Dialect(DialectResolutionInfo info) {
 		this( parseVersion( info ) );
 		registerKeywords( info );
@@ -152,6 +145,12 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
+	public boolean getDefaultNonContextualLobCreation() {
+		// http://code.google.com/p/h2database/issues/detail?id=235
+		return true;
+	}
+
+	@Override
 	protected String columnType(int jdbcTypeCode) {
 		if ( jdbcTypeCode == NUMERIC && getVersion().isBefore(2) ) {
 			// prior to version 2.0, H2 reported NUMERIC columns as DECIMAL,
@@ -192,6 +191,11 @@ public class H2Dialect extends Dialect {
 		if ( getVersion().isSameOrAfter( 1, 4, 198 ) ) {
 			jdbcTypeRegistry.addDescriptorIfAbsent( DurationIntervalSecondJdbcType.INSTANCE );
 		}
+	}
+
+	@Override
+	public int getDefaultStatementBatchSize() {
+		return 15;
 	}
 
 	public boolean hasOddDstBehavior() {

@@ -9,7 +9,6 @@ package org.hibernate.community.dialect;
 import java.sql.Types;
 
 import org.hibernate.HibernateException;
-import org.hibernate.cfg.Environment;
 import org.hibernate.community.dialect.identity.CUBRIDIdentityColumnSupport;
 import org.hibernate.community.dialect.sequence.CUBRIDSequenceSupport;
 import org.hibernate.community.dialect.sequence.SequenceInformationExtractorCUBRIDDatabaseImpl;
@@ -76,9 +75,10 @@ public class CUBRIDDialect extends Dialect {
 		registerColumnType( Types.BINARY, "bit($l)" );
 		registerColumnType( Types.VARBINARY, getMaxVarbinaryLength(), "bit varying($l)" );
 
-		getDefaultProperties().setProperty( Environment.USE_STREAMS_FOR_BINARY, "true" );
-		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
+		registerCubridKeywords();
+	}
 
+	private void registerCubridKeywords() {
 		registerKeyword( "TYPE" );
 		registerKeyword( "YEAR" );
 		registerKeyword( "MONTH" );
@@ -114,6 +114,16 @@ public class CUBRIDDialect extends Dialect {
 	public CUBRIDDialect(DialectResolutionInfo info) {
 		this();
 		registerKeywords( info );
+	}
+
+	@Override
+	public int getDefaultStatementBatchSize() {
+		return 15;
+	}
+
+	@Override
+	public boolean getDefaultUseStreamsForBinary() {
+		return true;
 	}
 
 	@Override

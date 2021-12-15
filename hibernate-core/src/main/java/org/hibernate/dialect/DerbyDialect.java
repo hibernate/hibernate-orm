@@ -9,7 +9,6 @@ package org.hibernate.dialect;
 import org.hibernate.HibernateException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.CastingConcatFunction;
 import org.hibernate.dialect.function.DerbyLpadEmulation;
@@ -95,10 +94,6 @@ public class DerbyDialect extends Dialect {
 	private final LimitHandler limitHandler = getVersion().isBefore( 10, 5 )
 			? AbstractLimitHandler.NO_LIMIT
 			: new DerbyLimitHandler( getVersion().isSameOrAfter( 10, 6 ) );
-
-	{
-		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, NO_BATCH );
-	}
 
 	public DerbyDialect() {
 		this( DatabaseVersion.make( 10, 0 ) );
@@ -194,6 +189,11 @@ public class DerbyDialect extends Dialect {
 	@Override
 	public NationalizationSupport getNationalizationSupport() {
 		return NationalizationSupport.IMPLICIT;
+	}
+
+	@Override
+	public int getDefaultStatementBatchSize() {
+		return 15;
 	}
 
 	@Override

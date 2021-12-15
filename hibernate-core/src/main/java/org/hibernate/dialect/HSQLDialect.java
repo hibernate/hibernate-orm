@@ -12,7 +12,6 @@ import java.sql.Types;
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
 import org.hibernate.StaleObjectStateException;
-import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.HSQLIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -89,10 +88,6 @@ public class HSQLDialect extends Dialect {
 			HSQLDialect.class.getName()
 	);
 
-	{
-		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
-	}
-
 	public HSQLDialect(DialectResolutionInfo info) {
 		this( info.makeCopy() );
 		registerKeywords( info );
@@ -141,6 +136,11 @@ public class HSQLDialect extends Dialect {
 		}
 
 		return super.columnType(jdbcTypeCode);
+	}
+
+	@Override
+	public int getDefaultStatementBatchSize() {
+		return 15;
 	}
 
 	private static DatabaseVersion reflectedVersion(DatabaseVersion version) {

@@ -8,7 +8,6 @@ package org.hibernate.community.dialect;
 
 import java.sql.Types;
 
-import org.hibernate.cfg.Environment;
 import org.hibernate.community.dialect.identity.Ingres10IdentityColumnSupport;
 import org.hibernate.community.dialect.identity.Ingres9IdentityColumnSupport;
 import org.hibernate.community.dialect.pagination.FirstLimitHandler;
@@ -144,6 +143,30 @@ public class IngresDialect extends Dialect {
 			registerColumnType( Types.DATE, "ansidate" );
 		}
 
+		limitHandler = getVersion().isBefore( 9, 3 ) ? FirstLimitHandler.INSTANCE : IngresLimitHandler.INSTANCE;
+
+		sequenceSupport = new ANSISequenceSupport() {
+			@Override
+			public boolean supportsPooledSequences() {
+				return getVersion().isSameOrAfter( 9, 3 );
+			}
+		};
+	}
+
+//	@Override
+//	protected void initDefaultProperties() {
+//		super.initDefaultProperties();
+//
+//		if ( getVersion().isBefore( 10 ) ) {
+//			// There is no support for a native boolean type that accepts values
+//			// of true, false or unknown. Using the tinyint type requires
+//			// substitutions of true and false.
+//			getDefaultProperties().setProperty( Environment.QUERY_SUBSTITUTIONS, "true=1,false=0" );
+//		}
+//	}
+
+	@Override
+	public boolean getDefaultUseGetGeneratedKeys() {
 		// Ingres driver supports getGeneratedKeys but only in the following
 		// form:
 		// The Ingres DBMS returns only a single table key or a single object
@@ -154,23 +177,7 @@ public class IngresDialect extends Dialect {
 		// ignored and getGeneratedKeys() returns a result-set containing no
 		// rows, a single row with one column, or a single row with two columns.
 		// Ingres JDBC Driver returns table and object keys as BINARY values.
-		getDefaultProperties().setProperty( Environment.USE_GET_GENERATED_KEYS, "false" );
-
-		if ( getVersion().isBefore( 10 ) ) {
-			// There is no support for a native boolean type that accepts values
-			// of true, false or unknown. Using the tinyint type requires
-			// substitutions of true and false.
-			getDefaultProperties().setProperty( Environment.QUERY_SUBSTITUTIONS, "true=1,false=0" );
-		}
-
-		limitHandler = getVersion().isBefore( 9, 3 ) ? FirstLimitHandler.INSTANCE : IngresLimitHandler.INSTANCE;
-
-		sequenceSupport = new ANSISequenceSupport() {
-			@Override
-			public boolean supportsPooledSequences() {
-				return getVersion().isSameOrAfter( 9, 3 );
-			}
-		};
+		return false;
 	}
 
 	@Override

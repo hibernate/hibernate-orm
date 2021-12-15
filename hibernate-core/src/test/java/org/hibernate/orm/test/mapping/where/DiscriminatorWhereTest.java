@@ -71,7 +71,7 @@ public class DiscriminatorWhereTest {
 
 		@OneToMany
 		@JoinColumn(name = "allC")
-		@Where(clause = "TYPE = 'C'")
+		@Where(clause = "type = 'C'")
 		private Set<EntityC> allMyC;
 
 		public Integer getId() {

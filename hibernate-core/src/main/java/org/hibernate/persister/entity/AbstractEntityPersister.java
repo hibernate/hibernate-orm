@@ -109,6 +109,7 @@ import org.hibernate.id.insert.Binder;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.FilterHelper;
 import org.hibernate.internal.util.LazyValue;
 import org.hibernate.internal.util.StringHelper;
@@ -191,6 +192,7 @@ import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.QueryableCollection;
+import org.hibernate.persister.internal.WhereFilterPredicate;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.persister.walking.internal.EntityIdentifierDefinitionHelper;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
@@ -232,6 +234,7 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
+import org.hibernate.sql.ast.tree.predicate.FilterPredicate;
 import org.hibernate.sql.ast.tree.predicate.Junction;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -263,6 +266,8 @@ import org.hibernate.type.TypeHelper;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.internal.FilterHelper.doCreateFilterPredicate;
 
 /**
  * Basic functionality for persisting an entity via JDBC
@@ -4018,6 +4023,62 @@ public abstract class AbstractEntityPersister
 			sessionFilterFragment.append( " and " );
 		}
 		return sessionFilterFragment.append( filterFragment ).toString();
+	}
+
+	public String generateWhereConditionAlias(String alias) {
+		return alias;
+	}
+
+	/**
+	 * Apply both {@link org.hibernate.annotations.Filter} and
+	 * {@link org.hibernate.annotations.Where} restrictions
+	 */
+	@Override
+	public void applyRestrictions(
+			QuerySpec querySpec,
+			TableGroup tableGroup,
+			boolean useQualifier,
+			Map<String, Filter> enabledFilters,
+			Set<String> treatAsDeclarations,
+			FromClauseAccess fromClauseAccess) {
+		// handle `@Filter`
+		final FilterAliasGenerator aliasGenerator = useQualifier && tableGroup != null
+				? getFilterAliasGenerator( tableGroup )
+				: null;
+		applyFilterRestrictions( querySpec, tableGroup, enabledFilters, aliasGenerator );
+
+		// handle `@Where`
+		final String alias;
+		if ( tableGroup == null ) {
+			alias = null;
+		}
+		else if ( useQualifier && tableGroup.getPrimaryTableReference().getIdentificationVariable() != null ) {
+			alias = tableGroup.getPrimaryTableReference().getIdentificationVariable();
+		}
+		else {
+			alias = tableGroup.getPrimaryTableReference().getTableExpression();
+		}
+		applyWhereRestriction( generateWhereConditionAlias( alias ), treatAsDeclarations, querySpec );
+	}
+
+	protected void applyFilterRestrictions(
+			QuerySpec querySpec,
+			TableGroup tableGroup,
+			Map<String, Filter> enabledFilters,
+			FilterAliasGenerator aliasGenerator) {
+		final StringBuilder fragment = new StringBuilder();
+		filterHelper.render( fragment, aliasGenerator, enabledFilters );
+		if ( fragment.length() > 1 ) {
+			final FilterPredicate filterPredicate = doCreateFilterPredicate( fragment.toString(), enabledFilters );
+			querySpec.applyPredicate( filterPredicate );
+		}
+	}
+
+	protected void applyWhereRestriction(String alias, Set<String> treatAsDeclarations, QuerySpec querySpec) {
+		if ( hasWhere() ) {
+			final String whereCondition = getSQLWhereString( alias );
+			querySpec.applyPredicate( new WhereFilterPredicate( whereCondition ) );
+		}
 	}
 
 	public String generateFilterConditionAlias(String rootAlias) {

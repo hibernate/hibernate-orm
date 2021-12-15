@@ -7,6 +7,7 @@
 package org.hibernate.sql.ast;
 
 import org.hibernate.Incubating;
+import org.hibernate.persister.internal.WhereFilterPredicate;
 import org.hibernate.query.sqm.tree.expression.Conversion;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
@@ -156,6 +157,8 @@ public interface SqlAstWalker {
 	void visitBetweenPredicate(BetweenPredicate betweenPredicate);
 
 	void visitFilterPredicate(FilterPredicate filterPredicate);
+
+	void visitWhereFilterPredicate(WhereFilterPredicate whereFilterPredicate);
 
 	void visitGroupedPredicate(GroupedPredicate groupedPredicate);
 

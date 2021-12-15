@@ -10,7 +10,6 @@ import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -21,16 +20,15 @@ import org.hibernate.LockOptions;
 import org.hibernate.collection.spi.BagSemantics;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.EffectiveEntityGraph;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.internal.FilterHelper;
 import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.loader.ast.spi.Loader;
 import org.hibernate.metamodel.mapping.AttributeMapping;
@@ -70,7 +68,6 @@ import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.InListPredicate;
 import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
@@ -480,7 +477,7 @@ public class LoaderSelectBuilder {
 			applyOrdering( rootTableGroup, pluralAttributeMapping );
 		}
 		else if ( loadable instanceof Joinable ) {
-			applyFiltering( rootQuerySpec, rootTableGroup, (Joinable) loadable );
+			applyFiltering( rootQuerySpec, rootTableGroup, (Joinable) loadable, sqlAstCreationState.getFromClauseAccess() );
 		}
 
 		if ( orderByFragments != null ) {
@@ -589,57 +586,30 @@ public class LoaderSelectBuilder {
 			PluralAttributeMapping pluralAttributeMapping,
 			FromClauseAccess fromClauseAccess) {
 		final CollectionPersister collectionPersister = pluralAttributeMapping.getCollectionDescriptor();
-		final Joinable joinable = collectionPersister.getCollectionType()
-					.getAssociatedJoinable( creationContext.getSessionFactory() );
-		final Predicate filterPredicate = FilterHelper.createFilterPredicate(
-				loadQueryInfluencers,
-				joinable,
-				tableGroup
+		final Joinable joinable = collectionPersister.getCollectionType().getAssociatedJoinable( creationContext.getSessionFactory() );
+		joinable.applyRestrictions(
+				querySpec,
+				tableGroup,
+				true,
+				loadQueryInfluencers.getEnabledFilters(),
+				null,
+				fromClauseAccess
 		);
-		if ( filterPredicate != null ) {
-			querySpec.applyPredicate( filterPredicate );
-		}
-		if ( collectionPersister.isManyToMany() ) {
-			assert joinable instanceof CollectionPersister;
-			final Predicate manyToManyFilterPredicate = FilterHelper.createManyToManyFilterPredicate(
-					loadQueryInfluencers,
-					(CollectionPersister) joinable,
-					tableGroup
-			);
-			if ( manyToManyFilterPredicate != null ) {
-				final NavigablePath parentNavigablePath = tableGroup.getNavigablePath().getParent();
-				if ( parentNavigablePath == null ) {
-					querySpec.applyPredicate( manyToManyFilterPredicate );
-				}
-				else {
-					final TableGroup parentTableGroup = fromClauseAccess.getTableGroup( parentNavigablePath );
-					TableGroupJoin pluralTableGroupJoin = null;
-					for ( TableGroupJoin nestedTableGroupJoin : parentTableGroup.getTableGroupJoins() ) {
-						if ( nestedTableGroupJoin.getNavigablePath() == tableGroup.getNavigablePath() ) {
-							pluralTableGroupJoin = nestedTableGroupJoin;
-							break;
-						}
-					}
-
-					assert pluralTableGroupJoin != null;
-					pluralTableGroupJoin.applyPredicate( manyToManyFilterPredicate );
-				}
-			}
-		}
 	}
 
 	private void applyFiltering(
 			QuerySpec querySpec,
 			TableGroup tableGroup,
-			Joinable joinable) {
-		final Predicate filterPredicate = FilterHelper.createFilterPredicate(
-				loadQueryInfluencers,
-				joinable,
-				tableGroup
+			Joinable joinable,
+			FromClauseAccess fromClauseAccess) {
+		joinable.applyRestrictions(
+				querySpec,
+				tableGroup,
+				true,
+				loadQueryInfluencers.getEnabledFilters(),
+				null,
+				fromClauseAccess
 		);
-		if ( filterPredicate != null ) {
-			querySpec.applyPredicate( filterPredicate );
-		}
 	}
 
 	private void applyOrdering(TableGroup tableGroup, PluralAttributeMapping pluralAttributeMapping) {

@@ -16,13 +16,11 @@ import java.util.regex.Pattern;
 
 import org.hibernate.Filter;
 import org.hibernate.MappingException;
-import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.sql.Template;
@@ -164,6 +162,33 @@ public class FilterHelper {
 	}
 
 	public static FilterPredicate createFilterPredicate(
+			Map<String,Filter> enabledFilters,
+			Joinable joinable,
+			TableGroup rootTableGroup) {
+		return createFilterPredicate( enabledFilters, joinable, rootTableGroup, true );
+	}
+
+	public static FilterPredicate createFilterPredicate(
+			Map<String,Filter> enabledFilters,
+			Joinable joinable,
+			TableGroup rootTableGroup,
+			boolean useIdentificationVariable) {
+		final String filterFragment = joinable.filterFragment(
+				rootTableGroup,
+				enabledFilters,
+				Collections.emptySet(),
+				useIdentificationVariable
+		);
+		if ( StringHelper.isNotEmpty( filterFragment ) ) {
+			return doCreateFilterPredicate( filterFragment, enabledFilters );
+		}
+		else {
+			return null;
+		}
+
+	}
+
+	public static FilterPredicate createFilterPredicate(
 			LoadQueryInfluencers loadQueryInfluencers,
 			Joinable joinable,
 			TableGroup rootTableGroup,
@@ -193,7 +218,7 @@ public class FilterHelper {
 		}
 	}
 
-	private static FilterPredicate doCreateFilterPredicate(String filterFragment, Map<String, Filter> enabledFilters) {
+	public static FilterPredicate doCreateFilterPredicate(String filterFragment, Map<String, Filter> enabledFilters) {
 		final Matcher matcher = FILTER_PARAMETER_PATTERN.matcher( filterFragment );
 		final StringBuilder sb = new StringBuilder();
 		int pos = 0;

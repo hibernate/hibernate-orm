@@ -974,6 +974,10 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		return generateTableAlias( rootAlias, tableSpan - 1 );
 	}
 
+	public String generateWhereConditionAlias(String rootAlias) {
+		return generateTableAlias( rootAlias, tableSpan - 1 );
+	}
+
 	public String[] getIdentifierColumnNames() {
 		return tableKeyColumns[0];
 	}

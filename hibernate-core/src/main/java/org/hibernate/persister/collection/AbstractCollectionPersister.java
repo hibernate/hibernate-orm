@@ -37,9 +37,7 @@ import org.hibernate.cache.spi.entry.UnstructuredCacheEntry;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.profile.Fetch;
@@ -50,6 +48,7 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.CoreMessageLogger;
@@ -88,6 +87,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.persister.entity.Queryable;
+import org.hibernate.persister.internal.WhereFilterPredicate;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.persister.walking.internal.CompositionSingularSubAttributesHelper;
 import org.hibernate.persister.walking.internal.StandardAnyTypeDefinition;
@@ -110,13 +110,16 @@ import org.hibernate.sql.Insert;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.sql.Template;
 import org.hibernate.sql.Update;
+import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SimpleFromClauseAccessImpl;
 import org.hibernate.sql.ast.spi.SqlAliasBaseConstant;
 import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.AliasedExpression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.predicate.FilterPredicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
@@ -130,6 +133,8 @@ import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
+
+import static org.hibernate.internal.FilterHelper.doCreateFilterPredicate;
 
 /**
  * Base implementation of the <tt>QueryableCollection</tt> interface.
@@ -617,14 +622,12 @@ public abstract class AbstractCollectionPersister
 					);
 		}
 		else {
-			if ( elementPersister instanceof PropertyMapping ) { // not all classpersisters implement PropertyMapping!
+			// not all entity-persisters implement PropertyMapping!
+			if ( elementPersister instanceof PropertyMapping ) {
 				elementPropertyMapping = (PropertyMapping) elementPersister;
 			}
 			else {
-				elementPropertyMapping = new ElementPropertyMapping(
-						elementColumnNames,
-						elementType
-						);
+				elementPropertyMapping = new ElementPropertyMapping( elementColumnNames, elementType );
 			}
 		}
 
@@ -632,16 +635,33 @@ public abstract class AbstractCollectionPersister
 		hasManyToManyOrder = collectionBootDescriptor.getManyToManyOrdering() != null;
 
 		// Handle any filters applied to this collectionBinding
-		filterHelper = new FilterHelper( collectionBootDescriptor.getFilters(), factory);
+		if ( collectionBootDescriptor.getFilters().isEmpty() ) {
+			filterHelper = null;
+		}
+		else {
+			filterHelper = new FilterHelper( collectionBootDescriptor.getFilters(), factory);
+		}
 
 		// Handle any filters applied to this collectionBinding for many-to-many
-		manyToManyFilterHelper = new FilterHelper( collectionBootDescriptor.getManyToManyFilters(), factory);
-		manyToManyWhereString = StringHelper.isNotEmpty( collectionBootDescriptor.getManyToManyWhere() ) ?
-				"( " + collectionBootDescriptor.getManyToManyWhere() + ")" :
-				null;
-		manyToManyWhereTemplate = manyToManyWhereString == null ?
-				null :
-				Template.renderWhereStringTemplate( manyToManyWhereString, factory.getDialect(), factory.getQueryEngine().getSqmFunctionRegistry() );
+		if ( collectionBootDescriptor.getManyToManyFilters().isEmpty() ) {
+			manyToManyFilterHelper = null;
+		}
+		else {
+			manyToManyFilterHelper = new FilterHelper( collectionBootDescriptor.getManyToManyFilters(), factory);
+		}
+
+		if ( StringHelper.isEmpty( collectionBootDescriptor.getManyToManyWhere() ) ) {
+			manyToManyWhereString = null;
+			manyToManyWhereTemplate = null;
+		}
+		else {
+			manyToManyWhereString = "( " + collectionBootDescriptor.getManyToManyWhere() + ")";
+			manyToManyWhereTemplate = Template.renderWhereStringTemplate(
+					manyToManyWhereString,
+					factory.getJdbcServices().getDialect(),
+					factory.getQueryEngine().getSqmFunctionRegistry()
+			);
+		}
 
 		comparator = collectionBootDescriptor.getComparator();
 
@@ -1825,19 +1845,24 @@ public abstract class AbstractCollectionPersister
 
 	@Override
 	public String getManyToManyFilterFragment(TableGroup tableGroup, Map<String, Filter> enabledFilters) {
-		StringBuilder buffer = new StringBuilder();
-		manyToManyFilterHelper.render( buffer, elementPersister.getFilterAliasGenerator( tableGroup ), enabledFilters );
+		assert elementPersister instanceof Joinable;
 
-		if ( manyToManyWhereString != null ) {
-			if ( buffer.length() > 0 ) {
-				buffer.append( " and " );
-			}
-			assert elementPersister instanceof Joinable;
-			final TableReference tableReference = tableGroup.resolveTableReference( ( (Joinable) elementPersister ).getTableName() );
-			buffer.append( StringHelper.replace( manyToManyWhereTemplate, Template.TEMPLATE, tableReference.getIdentificationVariable() ) );
+		final StringBuilder fragment = new StringBuilder();
+
+		if ( manyToManyFilterHelper != null ) {
+			assert isManyToMany();
+			manyToManyFilterHelper.render( fragment, elementPersister.getFilterAliasGenerator( tableGroup ), enabledFilters );
 		}
 
-		return buffer.toString();
+		if ( manyToManyWhereString != null ) {
+			if ( fragment.length() > 0 ) {
+				fragment.append( " and " );
+			}
+			final TableReference tableReference = tableGroup.resolveTableReference( ( (Joinable) elementPersister ).getTableName() );
+			fragment.append( StringHelper.replace( manyToManyWhereTemplate, Template.TEMPLATE, tableReference.getIdentificationVariable() ) );
+		}
+
+		return fragment.toString();
 	}
 
 	private String[] indexFragments;
@@ -1963,14 +1988,146 @@ public abstract class AbstractCollectionPersister
 		return hasWhere() ? getSQLWhereString( alias ) : "";
 	}
 
+	/**
+	 * Apply both {@link org.hibernate.annotations.Filter} and
+	 * {@link org.hibernate.annotations.Where} restrictions
+	 */
+	@Override
+	public void applyRestrictions(
+			QuerySpec querySpec,
+			TableGroup tableGroup,
+			boolean useQualifier,
+			Map<String, Filter> enabledFilters,
+			Set<String> treatAsDeclarations,
+			FromClauseAccess fromClauseAccess) {
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// handle `@Filter`
+		applyFilterRestrictions( querySpec, tableGroup, enabledFilters, fromClauseAccess );
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// handle `@Where`
+		TableReference tableReference;
+		if ( isManyToMany() ) {
+			// if filtering on many-to-many element were intended, getManyToManyFilterFragmentgetManyToManyFilterFragment() should have been chosen
+			tableReference = tableGroup.getPrimaryTableReference();
+		}
+		else if ( elementPersister instanceof Joinable ) {
+			tableReference = tableGroup.getTableReference( tableGroup.getNavigablePath(), ( (Joinable) elementPersister ).getTableName() );
+		}
+		else {
+			tableReference = tableGroup.getTableReference( tableGroup.getNavigablePath(), qualifiedTableName );
+		}
+
+		final String alias;
+		if ( tableReference == null ) {
+			alias = null;
+		}
+		else if ( useQualifier && tableReference.getIdentificationVariable() != null ) {
+			alias = tableReference.getIdentificationVariable();
+		}
+		else {
+			alias = tableReference.getTableExpression();
+		}
+
+		applyWhereRestriction( alias, querySpec );
+		applyManyToManyWhereRestriction( tableGroup, querySpec );
+		applyOneToManyWhereRestriction( alias, tableGroup, querySpec );
+	}
+
+	protected void applyFilterRestrictions(
+			QuerySpec querySpec,
+			TableGroup tableGroup,
+			Map<String, Filter> enabledFilters,
+			FromClauseAccess fromClauseAccess) {
+		if ( filterHelper != null ) {
+			final StringBuilder fragment = new StringBuilder();
+			filterHelper.render( fragment, getFilterAliasGenerator( tableGroup ), enabledFilters );
+			if ( fragment.length() > 1 ) {
+				final FilterPredicate filterPredicate = doCreateFilterPredicate( fragment.toString(), enabledFilters );
+				querySpec.applyPredicate( filterPredicate );
+			}
+		}
+
+		if ( manyToManyFilterHelper != null ) {
+			assert elementPersister instanceof Joinable;
+			assert isManyToMany();
+
+			final StringBuilder fragment = new StringBuilder();
+			manyToManyFilterHelper.render( fragment, elementPersister.getFilterAliasGenerator( tableGroup ), enabledFilters );
+			if ( fragment.length() > 1 ) {
+				final FilterPredicate filterPredicate = doCreateFilterPredicate( fragment.toString(), enabledFilters );
+
+				final NavigablePath parentNavigablePath = tableGroup.getNavigablePath().getParent();
+				if ( parentNavigablePath == null ) {
+					querySpec.applyPredicate( filterPredicate );
+				}
+				else {
+					final TableGroup parentTableGroup = fromClauseAccess.getTableGroup( parentNavigablePath );
+					TableGroupJoin pluralTableGroupJoin = null;
+					for ( TableGroupJoin nestedTableGroupJoin : parentTableGroup.getTableGroupJoins() ) {
+						if ( nestedTableGroupJoin.getNavigablePath() == tableGroup.getNavigablePath() ) {
+							pluralTableGroupJoin = nestedTableGroupJoin;
+							break;
+						}
+					}
+
+					assert pluralTableGroupJoin != null;
+					pluralTableGroupJoin.applyPredicate( filterPredicate );
+				}
+
+			}
+		}
+	}
+
+	protected void applyWhereRestriction(String alias, QuerySpec querySpec) {
+		if ( sqlWhereString != null ) {
+			final String whereCondition = getSQLWhereString( alias );
+			assert whereCondition != null;
+			querySpec.applyPredicate( new WhereFilterPredicate( whereCondition ) );
+		}
+	}
+
+	public void applyManyToManyWhereRestriction(TableGroup tableGroup, QuerySpec querySpec) {
+		if ( manyToManyWhereString == null ) {
+			return;
+		}
+
+		final TableReference tableReference = tableGroup.resolveTableReference( ( (Joinable) elementPersister ).getTableName() );
+		final String condition = StringHelper.replace( manyToManyWhereTemplate, Template.TEMPLATE, tableReference.getIdentificationVariable() );
+		assert StringHelper.isNotEmpty( condition );
+		querySpec.applyPredicate( new WhereFilterPredicate( condition ) );
+	}
+
+	private void applyOneToManyWhereRestriction(String alias, TableGroup tableGroup, QuerySpec querySpec) {
+		if ( ! isOneToMany() ) {
+			return;
+		}
+
+		if ( ! ( getElementPersister() instanceof Joinable ) ) {
+			return;
+		}
+
+		final String associationWhereCondition = ( (Joinable) getElementPersister() ).oneToManyFilterFragment( alias, null );
+		if ( StringHelper.isNotEmpty( associationWhereCondition ) ) {
+			querySpec.applyPredicate( new WhereFilterPredicate( associationWhereCondition ) );
+		}
+	}
+
 	@Override
 	public String filterFragment(
 			String alias,
 			Map<String, Filter> enabledFilters,
 			Set<String> treatAsDeclarations) {
 		StringBuilder sessionFilterFragment = new StringBuilder();
-		filterHelper.render( sessionFilterFragment, getFilterAliasGenerator(alias), enabledFilters );
+
+		// actual `@Filter`
+		if ( filterHelper != null ) {
+			filterHelper.render( sessionFilterFragment, getFilterAliasGenerator(alias), enabledFilters );
+		}
+
+		// `@Where` - poorly named
 		final String filterFragment = filterFragment( alias, treatAsDeclarations );
+
 		if ( sessionFilterFragment.length() != 0 && !filterFragment.isEmpty() ) {
 			sessionFilterFragment.append( " and " );
 		}
@@ -2006,8 +2163,15 @@ public abstract class AbstractCollectionPersister
 			alias = tableReference.getTableExpression();
 		}
 		StringBuilder sessionFilterFragment = new StringBuilder();
-		filterHelper.render( sessionFilterFragment, getFilterAliasGenerator( tableGroup ), enabledFilters );
+
+		// `@Filter
+		if ( filterHelper != null ) {
+			filterHelper.render( sessionFilterFragment, getFilterAliasGenerator( tableGroup ), enabledFilters );
+		}
+
+		// `@Where`
 		final String filterFragment = filterFragment( alias, treatAsDeclarations );
+
 		if ( sessionFilterFragment.length() != 0 && !filterFragment.isEmpty() ) {
 			sessionFilterFragment.append( " and " );
 		}
@@ -2446,8 +2610,8 @@ public abstract class AbstractCollectionPersister
 	public boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers) {
 		if ( influencers.hasEnabledFilters() ) {
 			final Map<String, Filter> enabledFilters = influencers.getEnabledFilters();
-			return filterHelper.isAffectedBy( enabledFilters ) ||
-					( isManyToMany() && manyToManyFilterHelper.isAffectedBy( enabledFilters ) );
+			return ( filterHelper != null && filterHelper.isAffectedBy( enabledFilters ) )
+					|| ( manyToManyFilterHelper != null && manyToManyFilterHelper.isAffectedBy( enabledFilters ) );
 		}
 
 		return false;

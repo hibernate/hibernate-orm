@@ -7,6 +7,7 @@
 
 package org.hibernate.sql.ast.spi;
 
+import org.hibernate.persister.internal.WhereFilterPredicate;
 import org.hibernate.query.sqm.tree.expression.Conversion;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
@@ -203,6 +204,10 @@ public class AggregateFunctionChecker extends AbstractSqlAstWalker {
 
 	@Override
 	public void visitFilterPredicate(FilterPredicate filterPredicate) {
+	}
+
+	@Override
+	public void visitWhereFilterPredicate(WhereFilterPredicate whereFilterPredicate) {
 	}
 
 	@Override

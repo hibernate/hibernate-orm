@@ -11,7 +11,9 @@ import java.util.Set;
 
 import org.hibernate.Filter;
 import org.hibernate.MappingException;
+import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.select.QuerySpec;
 
 /**
  * Anything that can be loaded by outer join - namely
@@ -35,6 +37,18 @@ public interface Joinable {
 	 * The columns to join on
 	 */
 	public String[] getKeyColumnNames();
+
+	/**
+	 * Apply {@link org.hibernate.annotations.Filter} and
+	 * {@link org.hibernate.annotations.Where} restrictions
+	 */
+	void applyRestrictions(
+			QuerySpec querySpec,
+			TableGroup tableGroup,
+			boolean useQualifier,
+			Map<String, Filter> enabledFilters,
+			Set<String> treatAsDeclarations,
+			FromClauseAccess fromClauseAccess);
 
 	/**
 	 * Get the where clause filter, given a query alias and considering enabled session filters

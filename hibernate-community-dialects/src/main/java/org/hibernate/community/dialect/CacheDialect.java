@@ -71,16 +71,22 @@ public class CacheDialect extends Dialect {
 
 		registerColumnType( Types.BLOB, "image" );
 		registerColumnType( Types.CLOB, "text" );
-
-		getDefaultProperties().setProperty( Environment.USE_STREAMS_FOR_BINARY, "false" );
-		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
-
-		getDefaultProperties().setProperty( Environment.USE_SQL_COMMENTS, "false" );
 	}
 
 	public CacheDialect(DialectResolutionInfo info) {
 		this();
 		registerKeywords( info );
+	}
+
+	@Override
+	protected void initDefaultProperties() {
+		super.initDefaultProperties();
+		getDefaultProperties().setProperty( Environment.USE_SQL_COMMENTS, "false" );
+	}
+
+	@Override
+	public int getDefaultStatementBatchSize() {
+		return 15;
 	}
 
 	private static void useJdbcEscape(QueryEngine queryEngine, String name) {

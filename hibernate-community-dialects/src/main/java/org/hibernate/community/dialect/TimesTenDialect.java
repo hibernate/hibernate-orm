@@ -8,7 +8,6 @@ package org.hibernate.community.dialect;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.RowLockStrategy;
@@ -95,9 +94,6 @@ public class TimesTenDialect extends Dialect {
 		//`timestamp` has more precision than `tt_timestamp`
 //		registerColumnType(Types.TIMESTAMP, "tt_timestamp");
 		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp($p)" );
-
-		getDefaultProperties().setProperty( Environment.USE_STREAMS_FOR_BINARY, "true" );
-		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 	}
 
 	public TimesTenDialect(DialectResolutionInfo info) {
@@ -108,6 +104,16 @@ public class TimesTenDialect extends Dialect {
 	@Override
 	public DatabaseVersion getVersion() {
 		return ZERO_VERSION;
+	}
+
+	@Override
+	public int getDefaultStatementBatchSize() {
+		return 15;
+	}
+
+	@Override
+	public boolean getDefaultUseStreamsForBinary() {
+		return true;
 	}
 
 	@Override

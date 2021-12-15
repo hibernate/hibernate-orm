@@ -7,7 +7,6 @@
 package org.hibernate.community.dialect;
 
 
-import java.sql.Types;
 import java.util.Map;
 
 import org.hibernate.LockOptions;

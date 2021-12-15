@@ -10,7 +10,6 @@ import java.sql.DatabaseMetaData;
 import java.sql.Types;
 
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.cfg.Environment;
 import org.hibernate.community.dialect.sequence.MaxDBSequenceSupport;
 import org.hibernate.community.dialect.sequence.SequenceInformationExtractorSAPDBDatabaseImpl;
 import org.hibernate.dialect.AbstractTransactSQLDialect;
@@ -64,8 +63,6 @@ public class MaxDBDialect extends Dialect {
 
 		registerColumnType( Types.CLOB, "long varchar" );
 		registerColumnType( Types.BLOB, "long byte" );
-
-		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 	}
 
 	@Override
@@ -105,6 +102,11 @@ public class MaxDBDialect extends Dialect {
 	@Override
 	public DatabaseVersion getVersion() {
 		return ZERO_VERSION;
+	}
+
+	@Override
+	public int getDefaultStatementBatchSize() {
+		return 15;
 	}
 
 	@Override

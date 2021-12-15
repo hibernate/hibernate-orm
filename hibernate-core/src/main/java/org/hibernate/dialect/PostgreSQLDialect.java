@@ -26,7 +26,6 @@ import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.PostgreSQLIdentityColumnSupport;
@@ -101,11 +100,6 @@ public class PostgreSQLDialect extends Dialect {
 
 	private final PostgreSQLDriverKind driverKind;
 
-	{
-		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
-		getDefaultProperties().setProperty( Environment.NON_CONTEXTUAL_LOB_CREATION, "true" );
-	}
-
 	public PostgreSQLDialect() {
 		this( DatabaseVersion.make( 8, 0 ) );
 	}
@@ -123,6 +117,11 @@ public class PostgreSQLDialect extends Dialect {
 	public PostgreSQLDialect(DatabaseVersion version, PostgreSQLDriverKind driverKind) {
 		super(version);
 		this.driverKind = driverKind;
+	}
+
+	@Override
+	public boolean getDefaultNonContextualLobCreation() {
+		return true;
 	}
 
 	@Override
@@ -211,6 +210,11 @@ public class PostgreSQLDialect extends Dialect {
 				}
 		}
 		return super.getTypeName( code, size );
+	}
+
+	@Override
+	public int getDefaultStatementBatchSize() {
+		return 15;
 	}
 
 	@Override

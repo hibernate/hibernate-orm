@@ -51,10 +51,6 @@ import static org.hibernate.type.SqlTypes.*;
  */
 public abstract class AbstractTransactSQLDialect extends Dialect {
 
-	{
-		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, NO_BATCH );
-	}
-
 	public AbstractTransactSQLDialect(DatabaseVersion version) {
 		super(version);
 	}
@@ -94,6 +90,11 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 			default:
 				return super.columnType(jdbcTypeCode);
 		}
+	}
+
+	@Override
+	public int getDefaultStatementBatchSize() {
+		return 0;
 	}
 
 	@Override

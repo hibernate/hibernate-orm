@@ -115,18 +115,17 @@ public class TeradataDialect extends Dialect {
 		registerKeyword( "role" );
 		registerKeyword( "account" );
 		registerKeyword( "class" );
+	}
 
-		if ( getVersion().isBefore( 14 ) ) {
-			// use getBytes instead of getBinaryStream
-			getDefaultProperties().setProperty( Environment.USE_STREAMS_FOR_BINARY, "false" );
-			// no batch statements
-			getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, NO_BATCH );
-		}
-		else {
-			getDefaultProperties().setProperty( Environment.USE_STREAMS_FOR_BINARY, "true" );
-			getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
-		}
+	@Override
+	public int getDefaultStatementBatchSize() {
+		return getVersion().isBefore( 14 )
+				? 0 : 15;
+	}
 
+	@Override
+	public boolean getDefaultUseStreamsForBinary() {
+		return getVersion().isSameOrAfter( 14 );
 	}
 
 	@Override

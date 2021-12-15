@@ -116,12 +116,10 @@ public class OracleDialect extends Dialect {
 
 	public OracleDialect(DatabaseVersion version) {
 		super(version);
-		registerDefaultProperties();
 	}
 
 	public OracleDialect(DialectResolutionInfo info) {
 		super(info);
-		registerDefaultProperties();
 	}
 
 	@Override
@@ -592,22 +590,30 @@ public class OracleDialect extends Dialect {
 		return getVersion().isSameOrAfter( 9 ) ? TimeZoneSupport.NATIVE : TimeZoneSupport.NONE;
 	}
 
-	protected void registerDefaultProperties() {
-		getDefaultProperties().setProperty( Environment.USE_STREAMS_FOR_BINARY, "true" );
-		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
+	@Override
+	protected void initDefaultProperties() {
+		super.initDefaultProperties();
+		String newerVersion = Boolean.toString( getVersion().isSameOrAfter( 12 ) );
+		getDefaultProperties().setProperty( Environment.BATCH_VERSIONED_DATA, newerVersion );
+	}
 
-		if ( getVersion().isBefore( 12 ) ) {
-			// Oracle driver reports to support getGeneratedKeys(), but they only
-			// support the version taking an array of the names of the columns to
-			// be returned (via its RETURNING clause).  No other driver seems to
-			// support this overloaded version.
-			getDefaultProperties().setProperty( Environment.USE_GET_GENERATED_KEYS, "false" );
-			getDefaultProperties().setProperty( Environment.BATCH_VERSIONED_DATA, "false" );
-		}
-		else {
-			getDefaultProperties().setProperty( Environment.USE_GET_GENERATED_KEYS, "true" );
-			getDefaultProperties().setProperty( Environment.BATCH_VERSIONED_DATA, "true" );
-		}
+	@Override
+	public int getDefaultStatementBatchSize() {
+		return 15;
+	}
+
+	@Override
+	public boolean getDefaultUseStreamsForBinary() {
+		return true;
+	}
+
+	@Override
+	public boolean getDefaultUseGetGeneratedKeys() {
+		// Oracle driver reports to support getGeneratedKeys(), but they only
+		// support the version taking an array of the names of the columns to
+		// be returned (via its RETURNING clause).  No other driver seems to
+		// support this overloaded version.
+		return getVersion().isSameOrAfter( 12 );
 	}
 
 	@Override

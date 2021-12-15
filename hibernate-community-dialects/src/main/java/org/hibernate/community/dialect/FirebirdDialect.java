@@ -19,7 +19,6 @@ import java.util.regex.Pattern;
 
 import org.hibernate.HibernateException;
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.cfg.Environment;
 import org.hibernate.community.dialect.identity.FirebirdIdentityColumnSupport;
 import org.hibernate.community.dialect.pagination.SkipFirstLimitHandler;
 import org.hibernate.community.dialect.sequence.FirebirdSequenceSupport;
@@ -153,8 +152,6 @@ public class FirebirdDialect extends Dialect {
 		registerColumnType( Types.BLOB, "blob sub_type binary" );
 		registerColumnType( Types.CLOB, "blob sub_type text" );
 		registerColumnType( Types.NCLOB, "blob sub_type text" ); // Firebird doesn't have NCLOB, but Jaybird emulates NCLOB support
-
-		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, NO_BATCH );
 	}
 
 	@Override
@@ -172,6 +169,11 @@ public class FirebirdDialect extends Dialect {
 	@Override
 	public DatabaseVersion getVersion() {
 		return version;
+	}
+
+	@Override
+	public int getDefaultStatementBatchSize() {
+		return 0;
 	}
 
 	@Override

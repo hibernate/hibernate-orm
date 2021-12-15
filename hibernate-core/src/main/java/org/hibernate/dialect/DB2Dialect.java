@@ -82,10 +82,6 @@ public class DB2Dialect extends Dialect {
 			: DB2LimitHandler.INSTANCE;
 	private final UniqueDelegate uniqueDelegate = createUniqueDelegate();
 
-	{
-		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, NO_BATCH );
-	}
-
 	public DB2Dialect() {
 		this( DatabaseVersion.make( 9, 0 ) );
 	}
@@ -111,6 +107,11 @@ public class DB2Dialect extends Dialect {
 		registerKeyword( "first" );
 		registerKeyword( "rows" );
 		registerKeyword( "only" );
+	}
+
+	@Override
+	public int getDefaultStatementBatchSize() {
+		return 0;
 	}
 
 	@Override

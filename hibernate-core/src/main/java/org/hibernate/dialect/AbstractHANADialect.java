@@ -13,7 +13,6 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.HANAIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -215,12 +214,18 @@ public abstract class AbstractHANADialect extends Dialect {
 		registerColumnType( SqlTypes.POINT, "st_point" );
 
 		registerHanaKeywords();
+	}
 
+	@Override
+	public boolean getDefaultNonContextualLobCreation() {
 		// createBlob() and createClob() are not supported by the HANA JDBC driver
-		getDefaultProperties().setProperty( AvailableSettings.NON_CONTEXTUAL_LOB_CREATION, "true" );
+		return true;
+	}
 
+	@Override
+	public boolean getDefaultUseGetGeneratedKeys() {
 		// getGeneratedKeys() is not supported by the HANA JDBC driver
-		getDefaultProperties().setProperty( AvailableSettings.USE_GET_GENERATED_KEYS, "false" );
+		return false;
 	}
 
 	@Override

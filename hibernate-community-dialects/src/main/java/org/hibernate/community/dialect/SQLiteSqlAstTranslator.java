@@ -16,6 +16,7 @@ import org.hibernate.sql.ast.tree.expression.Any;
 import org.hibernate.sql.ast.tree.expression.Every;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Summarization;
+import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -90,6 +91,11 @@ public class SQLiteSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 		else {
 			super.visitQuerySpec( querySpec );
 		}
+	}
+
+	@Override
+	public void visitQueryPartTableReference(QueryPartTableReference tableReference) {
+		emulateQueryPartTableReferenceColumnAliasing( tableReference );
 	}
 
 	@Override

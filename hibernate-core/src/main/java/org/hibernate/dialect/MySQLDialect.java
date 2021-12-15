@@ -1180,6 +1180,11 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsLateral() {
+		return getMySQLVersion().isSameOrAfter( 8, 14 );
+	}
+
+	@Override
 	public boolean supportsSkipLocked() {
 		return getMySQLVersion().isSameOrAfter( 8 );
 	}

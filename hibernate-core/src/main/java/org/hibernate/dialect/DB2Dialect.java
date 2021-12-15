@@ -672,6 +672,11 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsLateral() {
+		return getVersion().isSameOrAfter( 9, 1 );
+	}
+
+	@Override
 	public void appendDatetimeFormat(SqlAppender appender, String format) {
 		//DB2 does not need nor support FM
 		appender.appendSql( OracleDialect.datetimeFormat( format, false, false ).result() );

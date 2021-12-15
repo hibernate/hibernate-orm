@@ -25,6 +25,7 @@ import org.hibernate.engine.config.spi.ConfigurationService.Converter;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.*;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.*;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.ConstraintViolationException;
@@ -226,6 +227,26 @@ public abstract class AbstractHANADialect extends Dialect {
 	public boolean getDefaultUseGetGeneratedKeys() {
 		// getGeneratedKeys() is not supported by the HANA JDBC driver
 		return false;
+	}
+
+	protected static DatabaseVersion createVersion(DialectResolutionInfo info) {
+		// Parse the version according to https://answers.sap.com/questions/9760991/hana-sps-version-check.html
+		final String versionString = info.getDatabaseVersion();
+		int majorVersion = 1;
+		int minorVersion = 0;
+		int patchLevel = 0;
+		final String[] components = versionString.split( "\\." );
+		if ( components.length >= 3 ) {
+			try {
+				majorVersion = Integer.parseInt( components[0] );
+				minorVersion = Integer.parseInt( components[1] );
+				patchLevel = Integer.parseInt( components[2] );
+			}
+			catch (NumberFormatException ex) {
+				// Ignore
+			}
+		}
+		return DatabaseVersion.make( majorVersion, minorVersion, patchLevel );
 	}
 
 	@Override
@@ -989,6 +1010,11 @@ public abstract class AbstractHANADialect extends Dialect {
 	@Override
 	public boolean supportsWindowFunctions() {
 		return true;
+	}
+
+	@Override
+	public boolean supportsLateral() {
+		return getVersion().isSameOrAfter( 2, 0, 40 );
 	}
 
 	@Override

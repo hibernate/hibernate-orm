@@ -500,7 +500,11 @@ public class IngresDialect extends Dialect {
 		return false;
 	}
 
-	// Informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	@Override
+	public boolean supportsWindowFunctions() {
+		return getVersion().isSameOrAfter( 10, 2 );
+	}
+// Informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
 	public boolean doesReadCommittedCauseWritersToBlockReaders() {

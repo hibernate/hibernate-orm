@@ -42,7 +42,7 @@ public class DB2zDialect extends DB2Dialect {
 	}
 
 	public DB2zDialect() {
-		this( DatabaseVersion.make(7) );
+		this( DatabaseVersion.make( 7 ) );
 	}
 
 	public DB2zDialect(DatabaseVersion version) {
@@ -53,7 +53,7 @@ public class DB2zDialect extends DB2Dialect {
 	@Override
 	protected String columnType(int jdbcTypeCode) {
 		// See https://www.ibm.com/support/knowledgecenter/SSEPEK_10.0.0/wnew/src/tpc/db2z_10_timestamptimezone.html
-		if ( jdbcTypeCode==TIMESTAMP_WITH_TIMEZONE &&  version.isAfter(10) ) {
+		if ( jdbcTypeCode==TIMESTAMP_WITH_TIMEZONE && version.isAfter(10) ) {
 			return "timestamp with time zone";
 		}
 		return super.columnType(jdbcTypeCode);
@@ -92,6 +92,11 @@ public class DB2zDialect extends DB2Dialect {
 
 	@Override
 	public boolean supportsSkipLocked() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsLateral() {
 		return true;
 	}
 

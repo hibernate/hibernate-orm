@@ -273,8 +273,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 				updatingTableGroup.getNavigablePath(),
 				null,
 				temporaryTableReference,
-				entityDescriptor,
-				null
+				entityDescriptor
 		);
 		querySpec.getFromClause().addRoot( temporaryTableGroup );
 		final InsertStatement insertStatement = new InsertStatement( dmlTableReference );
@@ -607,8 +606,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 						false,
 						sessionFactory
 				),
-				entityDescriptor,
-				null
+				entityDescriptor
 		);
 		querySpec.getFromClause().addRoot( temporaryTableGroup );
 		final InsertStatement insertStatement = new InsertStatement( dmlTargetTableReference );

@@ -121,6 +121,13 @@ public class OneToManyTableGroup extends AbstractColumnReferenceQualifier implem
 	}
 
 	@Override
+	public void prependTableGroupJoin(NavigablePath navigablePath, TableGroupJoin join) {
+		if ( join.getJoinedGroup() != elementTableGroup ) {
+			elementTableGroup.prependTableGroupJoin( navigablePath, join );
+		}
+	}
+
+	@Override
 	public void addNestedTableGroupJoin(TableGroupJoin join) {
 		if ( join.getJoinedGroup() != elementTableGroup ) {
 			elementTableGroup.addNestedTableGroupJoin( join );

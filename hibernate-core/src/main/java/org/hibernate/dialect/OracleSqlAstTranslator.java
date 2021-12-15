@@ -24,6 +24,8 @@ import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.Over;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Summarization;
+import org.hibernate.sql.ast.tree.from.FunctionTableReference;
+import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
 import org.hibernate.sql.ast.tree.from.UnionTableGroup;
 import org.hibernate.sql.ast.tree.from.ValuesTableReference;
 import org.hibernate.sql.ast.tree.insert.Values;
@@ -248,48 +250,20 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 
 	@Override
 	public void visitValuesTableReference(ValuesTableReference tableReference) {
-		final List<Values> valuesList = tableReference.getValuesList();
-		if ( valuesList.size() < 2 ) {
-			super.visitValuesTableReference( tableReference );
-		}
-		else {
-			append( '(' );
-			// Oracle doesn't support a multi-values insert
-			// So we render a select union emulation instead
-			final Stack<Clause> clauseStack = getClauseStack();
-			clauseStack.push( Clause.VALUES );
-			try {
-				// We render the first select statement with aliases
-				clauseStack.push( Clause.SELECT );
+		emulateValuesTableReferenceColumnAliasing( tableReference );
+	}
 
-				try {
-					appendSql( "select " );
+	@Override
+	public void visitQueryPartTableReference(QueryPartTableReference tableReference) {
+		emulateQueryPartTableReferenceColumnAliasing( tableReference );
+	}
 
-					renderCommaSeparatedSelectExpression(
-							valuesList.get( 0 ).getExpressions(),
-							tableReference.getColumnNames()
-					);
-					appendSql( getFromDualForSelectOnly() );
-				}
-				finally {
-					clauseStack.pop();
-				}
-				// The others, without the aliases
-				for ( int i = 1; i < valuesList.size(); i++ ) {
-					appendSql( " union all " );
-					renderExpressionsAsSubquery( valuesList.get( i ).getExpressions() );
-				}
-			}
-			finally {
-				clauseStack.pop();
-			}
-			append( ')' );
-			final String identificationVariable = tableReference.getIdentificationVariable();
-			if ( identificationVariable != null ) {
-				append( WHITESPACE );
-				append( tableReference.getIdentificationVariable() );
-			}
-		}
+	@Override
+	public void visitFunctionTableReference(FunctionTableReference tableReference) {
+		append( "table(" );
+		tableReference.getFunctionExpression().accept( this );
+		append( CLOSE_PARENTHESIS );
+		renderTableReferenceIdentificationVariable( tableReference );
 	}
 
 	@Override

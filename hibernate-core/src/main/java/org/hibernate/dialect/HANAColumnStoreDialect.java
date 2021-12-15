@@ -35,13 +35,15 @@ import org.hibernate.type.StandardBasicTypes;
  * @author <a href="mailto:jonathan.bregler@sap.com">Jonathan Bregler</a>
  */
 public class HANAColumnStoreDialect extends AbstractHANADialect {
+
 	public HANAColumnStoreDialect(DialectResolutionInfo info) {
-		this( info.makeCopy() );
+		this( AbstractHANADialect.createVersion( info ) );
 		registerKeywords( info );
 	}
 	
 	public HANAColumnStoreDialect() {
-		this( DatabaseVersion.make( 3, 0 ) );
+		// SAP HANA 1.0 SP12 is the default
+		this( DatabaseVersion.make( 1, 0, 120 ) );
 	}
 
 	public HANAColumnStoreDialect(DatabaseVersion version) {
@@ -172,17 +174,11 @@ public class HANAColumnStoreDialect extends AbstractHANADialect {
 
 	@Override
 	protected boolean supportsAsciiStringTypes() {
-		return getVersion().isBefore( 4 );
+		return true;
 	}
 
 	@Override
 	protected Boolean useUnicodeStringTypesDefault() {
-		return getVersion().isSameOrAfter( 4 );
-	}
-
-	@Override
-	public boolean isUseUnicodeStringTypes() {
-		return getVersion().isSameOrAfter( 4 )
-				|| super.isUseUnicodeStringTypes();
+		return true;
 	}
 }

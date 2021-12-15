@@ -65,6 +65,16 @@ public class AggregateFunctionChecker extends AbstractSqlAstWalker {
 
 	private static class AggregateFunctionException extends RuntimeException {}
 
+	public static boolean hasAggregateFunctions(Expression expression) {
+		try {
+			expression.accept( INSTANCE );
+			return false;
+		}
+		catch (AggregateFunctionException ex) {
+			return true;
+		}
+	}
+
 	public static boolean hasAggregateFunctions(QuerySpec querySpec) {
 		try {
 			querySpec.getSelectClause().accept( INSTANCE );

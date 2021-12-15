@@ -9,10 +9,12 @@ package org.hibernate.sql.ast.tree.from;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.function.Consumer;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 
@@ -22,7 +24,7 @@ import org.hibernate.sql.ast.spi.SqlAliasBase;
 public abstract class AbstractTableGroup extends AbstractColumnReferenceQualifier implements TableGroup {
 	private final boolean canUseInnerJoins;
 	private final NavigablePath navigablePath;
-	private final TableGroupProducer producer;
+	private final ModelPartContainer modelPartContainer;
 	private final String sourceAlias;
 	private final SqlAliasBase sqlAliasBase;
 
@@ -35,14 +37,14 @@ public abstract class AbstractTableGroup extends AbstractColumnReferenceQualifie
 	public AbstractTableGroup(
 			boolean canUseInnerJoins,
 			NavigablePath navigablePath,
-			TableGroupProducer producer,
+			ModelPartContainer modelPartContainer,
 			String sourceAlias,
 			SqlAliasBase sqlAliasBase,
 			SessionFactoryImplementor sessionFactory) {
 		super();
 		this.canUseInnerJoins = canUseInnerJoins;
 		this.navigablePath = navigablePath;
-		this.producer = producer;
+		this.modelPartContainer = modelPartContainer;
 		this.sourceAlias = sourceAlias;
 		this.sqlAliasBase = sqlAliasBase;
 		this.sessionFactory = sessionFactory;
@@ -59,12 +61,12 @@ public abstract class AbstractTableGroup extends AbstractColumnReferenceQualifie
 
 	@Override
 	public String getGroupAlias() {
-		return sqlAliasBase.getAliasStem();
+		return sqlAliasBase == null ? null : sqlAliasBase.getAliasStem();
 	}
 
 	@Override
-	public TableGroupProducer getModelPart() {
-		return producer;
+	public ModelPartContainer getModelPart() {
+		return modelPartContainer;
 	}
 
 	@Override
@@ -109,6 +111,29 @@ public abstract class AbstractTableGroup extends AbstractColumnReferenceQualifie
 		}
 		assert !tableGroupJoins.contains( join );
 		tableGroupJoins.add( join );
+	}
+
+	@Override
+	public void prependTableGroupJoin(NavigablePath navigablePath, TableGroupJoin join) {
+		int i = 0;
+		if ( tableGroupJoins != null ) {
+			for ( ; i < tableGroupJoins.size(); i++ ) {
+				if ( tableGroupJoins.get( i ).getNavigablePath() == navigablePath ) {
+					tableGroupJoins.add( i, join );
+					return;
+				}
+			}
+		}
+		i = 0;
+		if ( nestedTableGroupJoins != null ) {
+			for ( ; i < nestedTableGroupJoins.size(); i++ ) {
+				if ( nestedTableGroupJoins.get( i ).getNavigablePath() == navigablePath ) {
+					nestedTableGroupJoins.add( i, join );
+					return;
+				}
+			}
+		}
+		throw new NoSuchElementException("Table group for navigable path not found: " + navigablePath);
 	}
 
 	@Override

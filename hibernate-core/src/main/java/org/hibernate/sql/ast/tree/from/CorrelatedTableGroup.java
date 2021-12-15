@@ -57,6 +57,11 @@ public class CorrelatedTableGroup extends AbstractTableGroup {
 	}
 
 	@Override
+	public void prependTableGroupJoin(NavigablePath navigablePath, TableGroupJoin join) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public void addNestedTableGroupJoin(TableGroupJoin join) {
 		assert !getTableGroupJoins().contains( join );
 		assert join.getJoinType() == SqlAstJoinType.INNER;

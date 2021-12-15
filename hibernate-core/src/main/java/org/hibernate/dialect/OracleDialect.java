@@ -1062,6 +1062,11 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsLateral() {
+		return getVersion().isSameOrAfter( 12, 1 );
+	}
+
+	@Override
 	public boolean supportsNoWait() {
 		return getVersion().isSameOrAfter( 9 );
 	}

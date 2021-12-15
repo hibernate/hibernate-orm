@@ -28,6 +28,8 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
  */
 public class TiDBDialect extends MySQLDialect {
 
+	private static final DatabaseVersion VERSION57 = DatabaseVersion.make( 5, 7 );
+
 	public TiDBDialect() {
 		this( DatabaseVersion.make(5, 4) );
 	}
@@ -45,7 +47,7 @@ public class TiDBDialect extends MySQLDialect {
 	@Override
 	public DatabaseVersion getMySQLVersion() {
 		// For simplicity’s sake, configure MySQL 5.7 compatibility
-		return DatabaseVersion.make( 5, 7 );
+		return VERSION57;
 	}
 
 	private void registerKeywords() {

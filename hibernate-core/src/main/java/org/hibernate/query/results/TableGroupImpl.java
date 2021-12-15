@@ -6,15 +6,13 @@
  */
 package org.hibernate.query.results;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroupJoin;
+import org.hibernate.sql.ast.tree.from.AbstractTableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 
@@ -23,97 +21,26 @@ import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
  *
  * @author Steve Ebersole
  */
-public class TableGroupImpl implements TableGroup {
-	private final NavigablePath navigablePath;
-	private final String alias;
+public class TableGroupImpl extends AbstractTableGroup {
 
 	private final TableReference primaryTableReference;
-	private List<TableGroupJoin> tableGroupJoins;
-
-	private final ModelPartContainer container;
-	private final String sourceAlias;
 
 	public TableGroupImpl(
 			NavigablePath navigablePath,
 			String alias,
 			TableReference primaryTableReference,
-			ModelPartContainer container,
-			String sourceAlias) {
-		this.navigablePath = navigablePath;
-		this.alias = alias;
+			ModelPartContainer container) {
+		super( false, navigablePath, container, alias, null, null );
 		this.primaryTableReference = primaryTableReference;
-		this.container = container;
-		this.sourceAlias = sourceAlias;
-	}
-
-	@Override
-	public NavigablePath getNavigablePath() {
-		return navigablePath;
 	}
 
 	@Override
 	public String getGroupAlias() {
-		return alias;
-	}
-
-	@Override
-	public ModelPartContainer getModelPart() {
-		return container;
-	}
-
-	@Override
-	public ModelPartContainer getExpressionType() {
-		return getModelPart();
-	}
-
-	@Override
-	public String getSourceAlias() {
-		return sourceAlias;
-	}
-
-	@Override
-	public List<TableGroupJoin> getTableGroupJoins() {
-		return tableGroupJoins == null ? Collections.emptyList() : Collections.unmodifiableList( tableGroupJoins );
-	}
-
-	@Override
-	public List<TableGroupJoin> getNestedTableGroupJoins() {
-		return Collections.emptyList();
-	}
-
-	@Override
-	public boolean canUseInnerJoins() {
-		return false;
-	}
-
-	@Override
-	public void addTableGroupJoin(TableGroupJoin join) {
-		if ( tableGroupJoins == null ) {
-			tableGroupJoins = new ArrayList<>();
-		}
-		assert !tableGroupJoins.contains( join );
-		tableGroupJoins.add( join );
-	}
-
-	@Override
-	public void addNestedTableGroupJoin(TableGroupJoin join) {
-		addTableGroupJoin( join );
-	}
-
-	@Override
-	public void visitTableGroupJoins(Consumer<TableGroupJoin> consumer) {
-		if ( tableGroupJoins != null ) {
-			tableGroupJoins.forEach( consumer );
-		}
-	}
-
-	@Override
-	public void visitNestedTableGroupJoins(Consumer<TableGroupJoin> consumer) {
+		return getSourceAlias();
 	}
 
 	@Override
 	public void applyAffectedTableNames(Consumer<String> nameCollector) {
-
 	}
 
 	@Override
@@ -127,20 +54,7 @@ public class TableGroupImpl implements TableGroup {
 	}
 
 	@Override
-	public TableReference resolveTableReference(
-			NavigablePath navigablePath,
-			String tableExpression,
-			boolean allowFkOptimization) {
-		final TableReference tableReference = getTableReference( navigablePath, tableExpression, allowFkOptimization, true );
-		if ( tableReference == null ) {
-			throw new IllegalStateException( "Could not resolve binding for table `" + tableExpression + "`" );
-		}
-
-		return tableReference;
-	}
-
-	@Override
-	public TableReference getTableReference(
+	public TableReference getTableReferenceInternal(
 			NavigablePath navigablePath,
 			String tableExpression,
 			boolean allowFkOptimization,
@@ -148,15 +62,7 @@ public class TableGroupImpl implements TableGroup {
 		if ( primaryTableReference.getTableReference( navigablePath , tableExpression, allowFkOptimization, resolve ) != null ) {
 			return primaryTableReference;
 		}
-
-		for ( TableGroupJoin tableGroupJoin : getTableGroupJoins() ) {
-			final TableReference primaryTableReference = tableGroupJoin.getJoinedGroup().getPrimaryTableReference();
-			if ( primaryTableReference.getTableReference( navigablePath, tableExpression, allowFkOptimization, resolve ) != null ) {
-				return primaryTableReference;
-			}
-		}
-
-		return null;
+		return super.getTableReferenceInternal( navigablePath, tableExpression, allowFkOptimization, resolve );
 	}
 
 }

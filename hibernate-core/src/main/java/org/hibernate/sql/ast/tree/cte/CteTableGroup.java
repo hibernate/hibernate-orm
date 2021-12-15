@@ -10,12 +10,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.tree.from.AbstractTableGroup;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 
@@ -25,92 +23,29 @@ import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
  *
  * @author Steve Ebersole
  */
-public class CteTableGroup implements TableGroup {
-	private final NavigablePath navigablePath;
+public class CteTableGroup extends AbstractTableGroup {
 	private final NamedTableReference cteTableReference;
 
-	@SuppressWarnings("WeakerAccess")
 	public CteTableGroup(NamedTableReference cteTableReference) {
-		this.navigablePath = new NavigablePath( cteTableReference.getTableExpression() );
+		this( false, cteTableReference );
+	}
+
+	@SuppressWarnings("WeakerAccess")
+	public CteTableGroup(boolean canUseInnerJoins, NamedTableReference cteTableReference) {
+		super(
+				canUseInnerJoins,
+				new NavigablePath( cteTableReference.getTableExpression() ),
+				null,
+				cteTableReference.getIdentificationVariable(),
+				null,
+				null
+		);
 		this.cteTableReference = cteTableReference;
 	}
 
 	@Override
-	public NavigablePath getNavigablePath() {
-		return navigablePath;
-	}
-
-	@Override
-	public String getSourceAlias() {
-		return null;
-	}
-
-	@Override
-	public ModelPartContainer getModelPart() {
-		return null;
-	}
-
-	@Override
-	public ModelPart getExpressionType() {
-		return getModelPart();
-	}
-
-	@Override
-	public List<TableGroupJoin> getTableGroupJoins() {
-		return Collections.emptyList();
-	}
-
-	@Override
-	public List<TableGroupJoin> getNestedTableGroupJoins() {
-		return Collections.emptyList();
-	}
-
-	@Override
-	public boolean canUseInnerJoins() {
-		return false;
-	}
-
-	@Override
-	public TableReference getTableReference(
-			NavigablePath navigablePath,
-			String tableExpression,
-			boolean allowFkOptimization,
-			boolean resolve) {
-		if ( cteTableReference.getTableExpression().equals( tableExpression ) ) {
-			return cteTableReference;
-		}
-		return null;
-	}
-
-	@Override
-	public TableReference resolveTableReference(
-			NavigablePath navigablePath,
-			String tableExpression,
-			boolean allowFkOptimization) {
-		return cteTableReference;
-	}
-
-	@Override
-	public void visitTableGroupJoins(Consumer<TableGroupJoin> consumer) {
-	}
-
-	@Override
-	public void visitNestedTableGroupJoins(Consumer<TableGroupJoin> consumer) {
-	}
-
-	@Override
 	public String getGroupAlias() {
-		return null;
-	}
-
-	@Override
-	public void addTableGroupJoin(TableGroupJoin join) {
-		throw new UnsupportedOperationException(  );
-	}
-
-	@Override
-	public void addNestedTableGroupJoin(TableGroupJoin join) {
-		throw new UnsupportedOperationException(  );
+		return cteTableReference.getIdentificationVariable();
 	}
 
 	@Override

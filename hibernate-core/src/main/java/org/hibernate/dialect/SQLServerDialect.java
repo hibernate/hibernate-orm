@@ -563,6 +563,11 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	public boolean supportsLateral() {
+		return getVersion().isSameOrAfter( 9 );
+	}
+
+	@Override
 	public boolean supportsFetchClause(FetchClauseType type) {
 		return getVersion().isSameOrAfter( 11 );
 	}

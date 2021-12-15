@@ -92,6 +92,8 @@ import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.CompositeSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.DiscriminatorSqmPath;
 import org.hibernate.persister.entity.AbstractEntityPersister;
+import org.hibernate.query.FetchClauseType;
+import org.hibernate.query.SortOrder;
 import org.hibernate.query.criteria.JpaPath;
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
@@ -108,6 +110,8 @@ import org.hibernate.sql.ast.tree.expression.SelfRenderingSqlFragmentExpression;
 import org.hibernate.sql.ast.tree.from.CorrelatedPluralTableGroup;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.PluralTableGroup;
+import org.hibernate.sql.ast.tree.from.QueryPartTableGroup;
+import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.exec.internal.VersionTypeSeedParameterSpecification;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -3221,22 +3225,22 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public Expression visitMaxElementPath(SqmMaxElementPath<?> path) {
-		return createCorrelatedAggregateSubQuery( path, false, true );
+		return createMinOrMaxIndexOrElement( path, false, true );
 	}
 
 	@Override
 	public Expression visitMinElementPath(SqmMinElementPath<?> path) {
-		return createCorrelatedAggregateSubQuery( path, false, false );
+		return createMinOrMaxIndexOrElement( path, false, false );
 	}
 
 	@Override
 	public Expression visitMaxIndexPath(SqmMaxIndexPath<?> path) {
-		return createCorrelatedAggregateSubQuery( path, true, true );
+		return createMinOrMaxIndexOrElement( path, true, true );
 	}
 
 	@Override
 	public Expression visitMinIndexPath(SqmMinIndexPath<?> path) {
-		return createCorrelatedAggregateSubQuery( path, true, false );
+		return createMinOrMaxIndexOrElement( path, true, false );
 	}
 
 	@Override
@@ -3388,6 +3392,19 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		};
 	}
 
+	protected Expression createMinOrMaxIndexOrElement(
+			AbstractSqmSpecificPluralPartPath<?> pluralPartPath,
+			boolean index,
+			boolean max) {
+		// Try to create a lateral sub-query join if possible which allows the re-use of the expression
+		if ( creationContext.getSessionFactory().getJdbcServices().getDialect().supportsLateral() ) {
+			return createLateralJoinExpression( pluralPartPath, index, max );
+		}
+		else {
+			return createCorrelatedAggregateSubQuery( pluralPartPath, index, max );
+		}
+	}
+
 	protected Expression createCorrelatedAggregateSubQuery(
 			AbstractSqmSpecificPluralPartPath<?> pluralPartPath,
 			boolean index,
@@ -3495,6 +3512,219 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			popProcessingStateStack();
 		}
 		return subQuerySpec;
+	}
+
+	protected Expression createLateralJoinExpression(
+			AbstractSqmSpecificPluralPartPath<?> pluralPartPath,
+			boolean index,
+			boolean max) {
+		prepareReusablePath( pluralPartPath.getLhs(), () -> null );
+
+		final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) determineValueMapping(
+				pluralPartPath.getPluralDomainPath() );
+		final FromClauseAccess parentFromClauseAccess = getFromClauseAccess();
+		final TableGroup parentTableGroup = parentFromClauseAccess.findTableGroup(
+				pluralPartPath.getNavigablePath().getParent()
+		);
+		final CollectionPart collectionPart = index
+				? pluralAttributeMapping.getIndexDescriptor()
+				: pluralAttributeMapping.getElementDescriptor();
+		final ModelPart modelPart;
+		if ( collectionPart instanceof EntityAssociationMapping ) {
+			modelPart = ( (EntityAssociationMapping) collectionPart ).getKeyTargetMatchPart();
+		}
+		else {
+			modelPart = collectionPart;
+		}
+		final int jdbcTypeCount = modelPart.getJdbcTypeCount();
+		final String pathName = ( max ? "max" : "min" ) + ( index ? "_index" : "_element" );
+		final String identifierVariable = parentTableGroup.getPrimaryTableReference().getIdentificationVariable()
+				+ "_" + pathName;
+		final NavigablePath queryPath = new NavigablePath( parentTableGroup.getNavigablePath(), pathName, identifierVariable );
+		TableGroup lateralTableGroup = parentFromClauseAccess.findTableGroup( queryPath );
+		if ( lateralTableGroup == null ) {
+			final QuerySpec subQuerySpec = new QuerySpec( false );
+			pushProcessingState(
+					new SqlAstQueryPartProcessingStateImpl(
+							subQuerySpec,
+							getCurrentProcessingState(),
+							this,
+							currentClauseStack::getCurrent
+					)
+			);
+			try {
+				final TableGroup tableGroup = pluralAttributeMapping.createRootTableGroup(
+						true,
+						pluralPartPath.getNavigablePath(),
+						null,
+						() -> subQuerySpec::applyPredicate,
+						this,
+						creationContext
+				);
+				final FilterPredicate filterPredicate = FilterHelper.createFilterPredicate(
+						getLoadQueryInfluencers(),
+						(Joinable) pluralAttributeMapping.getCollectionDescriptor(),
+						tableGroup
+				);
+				if ( filterPredicate != null ) {
+					subQuerySpec.applyPredicate( filterPredicate );
+				}
+
+				getFromClauseAccess().registerTableGroup( pluralPartPath.getNavigablePath(), tableGroup );
+				registerPluralTableGroupParts( tableGroup );
+				subQuerySpec.getFromClause().addRoot( tableGroup );
+
+				final List<String> columnNames = new ArrayList<>( jdbcTypeCount );
+				final List<ColumnReference> resultColumnReferences = new ArrayList<>( jdbcTypeCount );
+				final NavigablePath navigablePath = pluralPartPath.getNavigablePath();
+				modelPart.forEachSelectable(
+						(selectionIndex, selectionMapping) -> {
+							final ColumnReference columnReference = new ColumnReference(
+									tableGroup.resolveTableReference(
+											navigablePath,
+											selectionMapping.getContainingTableExpression()
+									),
+									selectionMapping,
+									creationContext.getSessionFactory()
+							);
+							final String columnName;
+							if ( selectionMapping.isFormula() ) {
+								columnName = "col" + columnNames.size();
+							}
+							else {
+								columnName = selectionMapping.getSelectionExpression();
+							}
+							columnNames.add( columnName );
+							subQuerySpec.getSelectClause().addSqlSelection(
+									new SqlSelectionImpl(
+											selectionIndex - 1,
+											selectionIndex,
+											columnReference
+									)
+							);
+							subQuerySpec.addSortSpecification(
+									new SortSpecification(
+											columnReference,
+											null,
+											max ? SortOrder.DESCENDING : SortOrder.ASCENDING
+									)
+							);
+							resultColumnReferences.add(
+									new ColumnReference(
+											identifierVariable,
+											columnName,
+											false,
+											null,
+											null,
+											selectionMapping.getJdbcMapping(),
+											creationContext.getSessionFactory()
+									)
+							);
+						}
+				);
+
+				subQuerySpec.setFetchClauseExpression(
+						new QueryLiteral<>( 1, basicType( Integer.class ) ),
+						FetchClauseType.ROWS_ONLY
+				);
+				subQuerySpec.applyPredicate(
+						pluralAttributeMapping.getKeyDescriptor().generateJoinPredicate(
+								parentFromClauseAccess.findTableGroup(
+										pluralPartPath.getPluralDomainPath().getNavigablePath().getParent()
+								),
+								tableGroup,
+								SqlAstJoinType.INNER,
+								getSqlExpressionResolver(),
+								creationContext
+						)
+				);
+				lateralTableGroup = new QueryPartTableGroup(
+						queryPath,
+						null,
+						subQuerySpec,
+						identifierVariable,
+						columnNames,
+						true,
+						false,
+						creationContext.getSessionFactory()
+				);
+				if ( currentlyProcessingJoin == null ) {
+					parentTableGroup.addTableGroupJoin(
+							new TableGroupJoin(
+									lateralTableGroup.getNavigablePath(),
+									SqlAstJoinType.LEFT,
+									lateralTableGroup
+							)
+					);
+				}
+				else {
+					// In case this is used in the ON condition, we must prepend this lateral join
+					final TableGroup targetTableGroup;
+					if ( currentlyProcessingJoin.getLhs() == null ) {
+						targetTableGroup = parentFromClauseAccess.getTableGroup(
+								currentlyProcessingJoin.findRoot().getNavigablePath()
+						);
+					}
+					else {
+						targetTableGroup = parentFromClauseAccess.getTableGroup(
+								currentlyProcessingJoin.getLhs().getNavigablePath()
+						);
+					}
+					// Many databases would support modelling this as nested table group join,
+					// but at least SQL Server doesn't like that, saying that the correlated columns can't be "bound"
+					// Since there is no dependency on the currentlyProcessingJoin, we can safely prepend this join
+					targetTableGroup.prependTableGroupJoin(
+							currentlyProcessingJoin.getNavigablePath(),
+							new TableGroupJoin(
+									lateralTableGroup.getNavigablePath(),
+									SqlAstJoinType.LEFT,
+									lateralTableGroup
+							)
+					);
+				}
+				parentFromClauseAccess.registerTableGroup( lateralTableGroup.getNavigablePath(), lateralTableGroup );
+				if ( jdbcTypeCount == 1 ) {
+					return resultColumnReferences.get( 0 );
+				}
+				else {
+					return new SqlTuple( resultColumnReferences, modelPart );
+				}
+			}
+			finally {
+				popProcessingStateStack();
+			}
+		}
+		final QueryPartTableReference tableReference = (QueryPartTableReference) lateralTableGroup.getPrimaryTableReference();
+		if ( jdbcTypeCount == 1 ) {
+			return new ColumnReference(
+					identifierVariable,
+					tableReference.getColumnNames().get( 0 ),
+					false,
+					null,
+					null,
+					modelPart.getJdbcMappings().get( 0 ),
+					creationContext.getSessionFactory()
+			);
+		}
+		else {
+			final List<ColumnReference> resultColumnReferences = new ArrayList<>( jdbcTypeCount );
+			modelPart.forEachSelectable(
+					(selectionIndex, selectionMapping) -> {
+						resultColumnReferences.add(
+								new ColumnReference(
+										identifierVariable,
+										tableReference.getColumnNames().get( selectionIndex ),
+										false,
+										null,
+										null,
+										selectionMapping.getJdbcMapping(),
+										creationContext.getSessionFactory()
+								)
+						);
+					}
+			);
+			return new SqlTuple( resultColumnReferences, modelPart );
+		}
 	}
 
 	private Expression withTreatRestriction(Expression expression, SqmPath<?> path) {

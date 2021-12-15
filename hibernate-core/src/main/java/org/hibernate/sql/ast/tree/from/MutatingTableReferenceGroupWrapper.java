@@ -109,6 +109,11 @@ public class MutatingTableReferenceGroupWrapper implements VirtualTableGroup {
 	}
 
 	@Override
+	public void prependTableGroupJoin(NavigablePath navigablePath, TableGroupJoin join) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public void addNestedTableGroupJoin(TableGroupJoin join) {
 		throw new UnsupportedOperationException();
 	}

@@ -14,6 +14,8 @@ import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.Summarization;
+import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
+import org.hibernate.sql.ast.tree.from.ValuesTableReference;
 import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
@@ -69,6 +71,21 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 		}
 		else {
 			super.visitQuerySpec( querySpec );
+		}
+	}
+
+	@Override
+	public void visitValuesTableReference(ValuesTableReference tableReference) {
+		emulateValuesTableReferenceColumnAliasing( tableReference );
+	}
+
+	@Override
+	public void visitQueryPartTableReference(QueryPartTableReference tableReference) {
+		if ( getDialect().getVersion().isSameOrAfter( 8 ) ) {
+			super.visitQueryPartTableReference( tableReference );
+		}
+		else {
+			emulateQueryPartTableReferenceColumnAliasing( tableReference );
 		}
 	}
 

@@ -32,13 +32,14 @@ import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
  */
 public class HANARowStoreDialect extends AbstractHANADialect {
 
-	public HANARowStoreDialect() {
-		super( DatabaseVersion.make( 3, 0 ));
+	public HANARowStoreDialect(DialectResolutionInfo info) {
+		this( AbstractHANADialect.createVersion( info ) );
+		registerKeywords( info );
 	}
 
-	public HANARowStoreDialect(DialectResolutionInfo info) {
-		this( info.makeCopy() );
-		registerKeywords( info );
+	public HANARowStoreDialect() {
+		// SAP HANA 1.0 SPS12 R0 is the default
+		this( DatabaseVersion.make( 1, 0, 120 ) );
 	}
 
 	public HANARowStoreDialect(DatabaseVersion version) {

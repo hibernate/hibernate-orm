@@ -12,6 +12,7 @@ import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 
@@ -36,7 +37,14 @@ public class DiscriminatorSqmPathSource<D> extends AbstractSqmPathSource<D>
 
 	@Override
 	public SqmPath<D> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource) {
-		return new DiscriminatorSqmPath( this, lhs, entityDomainType, entityMapping, lhs.nodeBuilder() );
+		final NavigablePath navigablePath;
+		if ( intermediatePathSource == null ) {
+			navigablePath = lhs.getNavigablePath().append( getPathName() );
+		}
+		else {
+			navigablePath = lhs.getNavigablePath().append( intermediatePathSource.getPathName() ).append( getPathName() );
+		}
+		return new DiscriminatorSqmPath( navigablePath, this, lhs, entityDomainType, entityMapping, lhs.nodeBuilder() );
 	}
 
 	@Override

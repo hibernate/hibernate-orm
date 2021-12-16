@@ -2000,9 +2000,11 @@ public abstract class AbstractCollectionPersister
 			Map<String, Filter> enabledFilters,
 			Set<String> treatAsDeclarations,
 			FromClauseAccess fromClauseAccess) {
+		final TableGroupJoin tableGroupJoin = findTableGroupJoin( tableGroup, fromClauseAccess );
+
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// handle `@Filter`
-		applyFilterRestrictions( querySpec, tableGroup, enabledFilters, fromClauseAccess );
+		applyFilterRestrictions( querySpec, tableGroup, enabledFilters, tableGroupJoin );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// handle `@Where`
@@ -2029,22 +2031,27 @@ public abstract class AbstractCollectionPersister
 			alias = tableReference.getTableExpression();
 		}
 
-		applyWhereRestriction( alias, querySpec );
-		applyManyToManyWhereRestriction( tableGroup, querySpec );
-		applyOneToManyWhereRestriction( alias, tableGroup, querySpec );
+		applyWhereRestriction( alias, querySpec, tableGroupJoin );
+		applyManyToManyWhereRestriction( tableGroup, querySpec, tableGroupJoin );
+		applyOneToManyWhereRestriction( alias, tableGroup, querySpec, tableGroupJoin );
 	}
 
 	protected void applyFilterRestrictions(
 			QuerySpec querySpec,
 			TableGroup tableGroup,
 			Map<String, Filter> enabledFilters,
-			FromClauseAccess fromClauseAccess) {
+			TableGroupJoin pluralTableGroupJoin) {
 		if ( filterHelper != null ) {
 			final StringBuilder fragment = new StringBuilder();
 			filterHelper.render( fragment, getFilterAliasGenerator( tableGroup ), enabledFilters );
 			if ( fragment.length() > 1 ) {
 				final FilterPredicate filterPredicate = doCreateFilterPredicate( fragment.toString(), enabledFilters );
-				querySpec.applyPredicate( filterPredicate );
+				if ( pluralTableGroupJoin == null ) {
+					querySpec.applyPredicate( filterPredicate );
+				}
+				else {
+					pluralTableGroupJoin.applyPredicate( filterPredicate );
+				}
 			}
 		}
 
@@ -2056,38 +2063,57 @@ public abstract class AbstractCollectionPersister
 			manyToManyFilterHelper.render( fragment, elementPersister.getFilterAliasGenerator( tableGroup ), enabledFilters );
 			if ( fragment.length() > 1 ) {
 				final FilterPredicate filterPredicate = doCreateFilterPredicate( fragment.toString(), enabledFilters );
-
-				final NavigablePath parentNavigablePath = tableGroup.getNavigablePath().getParent();
-				if ( parentNavigablePath == null ) {
+				if ( pluralTableGroupJoin == null ) {
 					querySpec.applyPredicate( filterPredicate );
 				}
 				else {
-					final TableGroup parentTableGroup = fromClauseAccess.getTableGroup( parentNavigablePath );
-					TableGroupJoin pluralTableGroupJoin = null;
-					for ( TableGroupJoin nestedTableGroupJoin : parentTableGroup.getTableGroupJoins() ) {
-						if ( nestedTableGroupJoin.getNavigablePath() == tableGroup.getNavigablePath() ) {
-							pluralTableGroupJoin = nestedTableGroupJoin;
-							break;
-						}
-					}
-
-					assert pluralTableGroupJoin != null;
 					pluralTableGroupJoin.applyPredicate( filterPredicate );
 				}
-
 			}
 		}
 	}
 
-	protected void applyWhereRestriction(String alias, QuerySpec querySpec) {
-		if ( sqlWhereString != null ) {
-			final String whereCondition = getSQLWhereString( alias );
-			assert whereCondition != null;
-			querySpec.applyPredicate( new WhereFilterPredicate( whereCondition ) );
+	private static TableGroupJoin findTableGroupJoin(TableGroup tableGroup, FromClauseAccess fromClauseAccess) {
+		final NavigablePath parentNavigablePath;
+		if ( tableGroup == null || ( parentNavigablePath = tableGroup.getNavigablePath().getParent() ) == null ) {
+			return null;
+		}
+		else {
+			final TableGroup parentTableGroup = fromClauseAccess.getTableGroup( parentNavigablePath );
+			TableGroupJoin pluralTableGroupJoin = null;
+			for ( TableGroupJoin nestedTableGroupJoin : parentTableGroup.getTableGroupJoins() ) {
+				if ( nestedTableGroupJoin.getNavigablePath() == tableGroup.getNavigablePath() ) {
+					pluralTableGroupJoin = nestedTableGroupJoin;
+					break;
+				}
+			}
+
+			assert pluralTableGroupJoin != null;
+			return pluralTableGroupJoin;
 		}
 	}
 
-	public void applyManyToManyWhereRestriction(TableGroup tableGroup, QuerySpec querySpec) {
+	protected void applyWhereRestriction(
+			String alias,
+			QuerySpec querySpec,
+			TableGroupJoin pluralTableGroupJoin) {
+		if ( sqlWhereString != null ) {
+			final String whereCondition = getSQLWhereString( alias );
+			assert whereCondition != null;
+			final WhereFilterPredicate filterPredicate = new WhereFilterPredicate( whereCondition );
+			if ( pluralTableGroupJoin == null ) {
+				querySpec.applyPredicate( filterPredicate );
+			}
+			else {
+				pluralTableGroupJoin.applyPredicate( filterPredicate );
+			}
+		}
+	}
+
+	public void applyManyToManyWhereRestriction(
+			TableGroup tableGroup,
+			QuerySpec querySpec,
+			TableGroupJoin pluralTableGroupJoin) {
 		if ( manyToManyWhereString == null ) {
 			return;
 		}
@@ -2095,10 +2121,20 @@ public abstract class AbstractCollectionPersister
 		final TableReference tableReference = tableGroup.resolveTableReference( ( (Joinable) elementPersister ).getTableName() );
 		final String condition = StringHelper.replace( manyToManyWhereTemplate, Template.TEMPLATE, tableReference.getIdentificationVariable() );
 		assert StringHelper.isNotEmpty( condition );
-		querySpec.applyPredicate( new WhereFilterPredicate( condition ) );
+		final WhereFilterPredicate filterPredicate = new WhereFilterPredicate( condition );
+		if ( pluralTableGroupJoin == null ) {
+			querySpec.applyPredicate( filterPredicate );
+		}
+		else {
+			pluralTableGroupJoin.applyPredicate( filterPredicate );
+		}
 	}
 
-	private void applyOneToManyWhereRestriction(String alias, TableGroup tableGroup, QuerySpec querySpec) {
+	private void applyOneToManyWhereRestriction(
+			String alias,
+			TableGroup tableGroup,
+			QuerySpec querySpec,
+			TableGroupJoin pluralTableGroupJoin) {
 		if ( ! isOneToMany() ) {
 			return;
 		}
@@ -2109,7 +2145,13 @@ public abstract class AbstractCollectionPersister
 
 		final String associationWhereCondition = ( (Joinable) getElementPersister() ).oneToManyFilterFragment( alias, null );
 		if ( StringHelper.isNotEmpty( associationWhereCondition ) ) {
-			querySpec.applyPredicate( new WhereFilterPredicate( associationWhereCondition ) );
+			final WhereFilterPredicate filterPredicate = new WhereFilterPredicate( associationWhereCondition );
+			if ( pluralTableGroupJoin == null ) {
+				querySpec.applyPredicate( filterPredicate );
+			}
+			else {
+				pluralTableGroupJoin.applyPredicate( filterPredicate );
+			}
 		}
 	}
 

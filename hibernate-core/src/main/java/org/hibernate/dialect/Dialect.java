@@ -1293,6 +1293,7 @@ public abstract class Dialect implements ConversionContext {
 	public boolean equivalentTypes(int typeCode1, int typeCode2) {
 		return typeCode1==typeCode2
 			|| isNumericOrDecimal(typeCode1) && isNumericOrDecimal(typeCode2)
+			|| isIntegral(typeCode1) && isIntegral(typeCode2)
 			|| isFloatOrRealOrDouble(typeCode1) && isFloatOrRealOrDouble(typeCode2)
 			|| isVarcharType(typeCode1) && isVarcharType(typeCode2)
 			|| isVarbinaryType(typeCode1) && isVarbinaryType(typeCode2);
@@ -1307,6 +1308,13 @@ public abstract class Dialect implements ConversionContext {
 		return typeCode == Types.FLOAT
 			|| typeCode == Types.REAL
 			|| typeCode == Types.DOUBLE;
+	}
+
+	private static boolean isIntegral(int typeCode) {
+		return typeCode == Types.INTEGER
+			|| typeCode == Types.BIGINT
+			|| typeCode == Types.SMALLINT
+			|| typeCode == Types.TINYINT;
 	}
 
 	/**

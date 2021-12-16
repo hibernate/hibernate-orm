@@ -24,7 +24,7 @@ import org.junit.Test;
  */
 public class AuditFunctionQueryTest extends BaseEnversJPAFunctionalTestCase {
 
-	@Entity
+	@Entity(name = "TestEntity")
 	@Audited
 	public static class TestEntity {
 
@@ -32,7 +32,7 @@ public class AuditFunctionQueryTest extends BaseEnversJPAFunctionalTestCase {
 		private Long id;
 		private String string1;
 		private String string2;
-		private Integer int1;
+		private Integer integer1;
 
 		public Long getId() {
 			return id;
@@ -54,12 +54,12 @@ public class AuditFunctionQueryTest extends BaseEnversJPAFunctionalTestCase {
 			return string2;
 		}
 
-		public Integer getInt1() {
-			return int1;
+		public Integer getInteger1() {
+			return integer1;
 		}
 
-		public void setInt1(Integer int1) {
-			this.int1 = int1;
+		public void setInteger1(Integer integer1) {
+			this.integer1 = integer1;
 		}
 
 		public void setString2(String string2) {
@@ -84,7 +84,7 @@ public class AuditFunctionQueryTest extends BaseEnversJPAFunctionalTestCase {
 		testEntity1.setId( 1L );
 		testEntity1.setString1( "abcdef" );
 		testEntity1.setString2( "42 - the truth" );
-		testEntity1.setInt1( 42 );
+		testEntity1.setInteger1(42 );
 		em.persist( testEntity1 );
 		em.getTransaction().commit();
 	}
@@ -130,7 +130,7 @@ public class AuditFunctionQueryTest extends BaseEnversJPAFunctionalTestCase {
 	@Test
 	public void testComparionFunctionWithProperty() {
 		TestEntity entity = (TestEntity) getAuditReader().createQuery().forEntitiesAtRevision( TestEntity.class, 1 )
-				.add( AuditEntity.function( "length", AuditEntity.property( "string2" ) ).ltProperty( "int1" ) ).getSingleResult();
+				.add( AuditEntity.function( "length", AuditEntity.property( "string2" ) ).ltProperty( "integer1" ) ).getSingleResult();
 		assertNotNull( "Expected the entity to be returned", entity );
 		assertEquals( "Expected the entity to be returned", testEntity1.getId(), entity.getId() );
 	}
@@ -139,7 +139,7 @@ public class AuditFunctionQueryTest extends BaseEnversJPAFunctionalTestCase {
 	public void testComparisonFunctionWithFunction() {
 		TestEntity entity = (TestEntity) getAuditReader().createQuery().forEntitiesAtRevision( TestEntity.class, 1 )
 				.add( AuditEntity.function( "substring", AuditEntity.property( "string2" ), 1, 2 )
-						.eqFunction( AuditEntity.function( "str", AuditEntity.property( "int1" ) ) ) )
+						.eqFunction( AuditEntity.function( "str", AuditEntity.property( "integer1" ) ) ) )
 				.getSingleResult();
 		assertNotNull( "Expected the entity to be returned", entity );
 		assertEquals( "Expected the entity to be returned", testEntity1.getId(), entity.getId() );
@@ -148,7 +148,7 @@ public class AuditFunctionQueryTest extends BaseEnversJPAFunctionalTestCase {
 	@Test
 	public void testComparisonPropertyWithFunction() {
 		TestEntity entity = (TestEntity) getAuditReader().createQuery().forEntitiesAtRevision( TestEntity.class, 1 )
-				.add( AuditEntity.property( "int1" ).gtFunction( AuditEntity.function( "length", AuditEntity.property( "string2" ) ) ) ).getSingleResult();
+				.add( AuditEntity.property( "integer1" ).gtFunction( AuditEntity.function( "length", AuditEntity.property( "string2" ) ) ) ).getSingleResult();
 		assertNotNull( "Expected the entity to be returned", entity );
 		assertEquals( "Expected the entity to be returned", testEntity1.getId(), entity.getId() );
 	}

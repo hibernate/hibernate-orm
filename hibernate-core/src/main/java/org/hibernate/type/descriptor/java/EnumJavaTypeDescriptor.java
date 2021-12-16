@@ -13,6 +13,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 /**
  * Describes a Java Enum type.
@@ -27,19 +28,20 @@ public class EnumJavaTypeDescriptor<T extends Enum<T>> extends AbstractClassJava
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeDescriptorIndicators context) {
+		JdbcTypeRegistry registry = context.getTypeConfiguration().getJdbcTypeDescriptorRegistry();
 		if ( context.getEnumeratedType() != null && context.getEnumeratedType() == EnumType.STRING ) {
 			if ( context.getColumnLength() == 1 ) {
 				return context.isNationalized()
-						? context.getTypeConfiguration().getJdbcTypeDescriptorRegistry().getDescriptor( Types.NCHAR )
-						: context.getTypeConfiguration().getJdbcTypeDescriptorRegistry().getDescriptor( Types.CHAR );
+						? registry.getDescriptor( Types.NCHAR )
+						: registry.getDescriptor( Types.CHAR );
 			}
 
 			return context.isNationalized()
-					? context.getTypeConfiguration().getJdbcTypeDescriptorRegistry().getDescriptor( Types.NVARCHAR )
-					: context.getTypeConfiguration().getJdbcTypeDescriptorRegistry().getDescriptor( Types.VARCHAR );
+					? registry.getDescriptor( Types.NVARCHAR )
+					: registry.getDescriptor( Types.VARCHAR );
 		}
 		else {
-			return context.getTypeConfiguration().getJdbcTypeDescriptorRegistry().getDescriptor( Types.TINYINT );
+			return registry.getDescriptor( Types.TINYINT );
 		}
 	}
 

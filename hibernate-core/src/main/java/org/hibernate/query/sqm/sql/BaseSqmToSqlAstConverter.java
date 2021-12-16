@@ -91,6 +91,8 @@ import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.CompositeSqmPathSource;
+import org.hibernate.metamodel.model.domain.internal.DiscriminatorSqmPath;
+import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.query.criteria.JpaPath;
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
@@ -2385,6 +2387,27 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		treatedEntityNames.add( treatedType.getHibernateEntityName() );
 	}
 
+	protected void registerTypeUsage(DiscriminatorSqmPath path) {
+		// When we encounter a discriminator path i.e. a use of `type( alias )`
+		// we have to resolve all subclass tables, otherwise we might get wrong results
+		// It might be worth deferring this process to the pruning phase when we start to prune subclass joins in more cases
+		// The biggest optimization that we currently don't do yet is capturing how this discriminator path is restricted
+		// If we could infer a list of treated entity names from the restrictions,
+		// we could intersect that with the tableGroupTreatUsages and thus eliminate subclass joins.
+		// The hard part about this is inferring the list though, because we must respect the predicate transitivity
+		// i.e. for `a = 1 or type(..) = ...` means nothing can be inferred,
+		// but for `a = 1 and type(..) = A or type(..) = B` we can infer `A, B`
+		// The OR junction allows to create a union of entity name lists of all sub-predicates
+		// The AND junction allows to create an intersection of entity name lists of all sub-predicates
+		final TableGroup tableGroup = getFromClauseAccess().getTableGroup( path.getNavigablePath().getParent() );
+		final EntityMappingType mappingType = (EntityMappingType) tableGroup.getModelPart().getPartMappingType();
+		final AbstractEntityPersister persister = (AbstractEntityPersister) mappingType.getEntityPersister();
+		final int subclassTableSpan = persister.getSubclassTableSpan();
+		for ( int i = 0; i < subclassTableSpan; i++ ) {
+			tableGroup.resolveTableReference( persister.getSubclassTableName( i ) );
+		}
+	}
+
 	protected void pruneTableGroupJoins() {
 		for ( Map.Entry<TableGroup, Set<String>> entry : tableGroupTreatUsages.entrySet() ) {
 			final TableGroup tableGroup = entry.getKey();
@@ -3156,7 +3179,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public Object visitSelfInterpretingSqmPath(SelfInterpretingSqmPath<?> sqmPath) {
-		return prepareReusablePath( sqmPath, () -> sqmPath.interpret( this, this, jpaQueryComplianceEnabled ) );
+		return prepareReusablePath(
+				sqmPath,
+				() -> {
+					if ( sqmPath instanceof DiscriminatorSqmPath ) {
+						registerTypeUsage( (DiscriminatorSqmPath) sqmPath );
+					}
+					return sqmPath.interpret( this, this, jpaQueryComplianceEnabled );
+				}
+		);
 	}
 
 	@Override

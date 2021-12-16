@@ -231,6 +231,7 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.from.StandardTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
@@ -4041,11 +4042,13 @@ public abstract class AbstractEntityPersister
 			Map<String, Filter> enabledFilters,
 			Set<String> treatAsDeclarations,
 			FromClauseAccess fromClauseAccess) {
+		final TableGroupJoin tableGroupJoin = findTableGroupJoin( tableGroup, fromClauseAccess );
+
 		// handle `@Filter`
 		final FilterAliasGenerator aliasGenerator = useQualifier && tableGroup != null
 				? getFilterAliasGenerator( tableGroup )
 				: null;
-		applyFilterRestrictions( querySpec, tableGroup, enabledFilters, aliasGenerator );
+		applyFilterRestrictions( querySpec, tableGroup, enabledFilters, aliasGenerator, tableGroupJoin );
 
 		// handle `@Where`
 		final String alias;
@@ -4058,26 +4061,58 @@ public abstract class AbstractEntityPersister
 		else {
 			alias = tableGroup.getPrimaryTableReference().getTableExpression();
 		}
-		applyWhereRestriction( generateWhereConditionAlias( alias ), treatAsDeclarations, querySpec );
+		applyWhereRestriction( generateWhereConditionAlias( alias ), treatAsDeclarations, querySpec, tableGroupJoin );
 	}
 
 	protected void applyFilterRestrictions(
 			QuerySpec querySpec,
 			TableGroup tableGroup,
 			Map<String, Filter> enabledFilters,
-			FilterAliasGenerator aliasGenerator) {
+			FilterAliasGenerator aliasGenerator,
+			TableGroupJoin tableGroupJoin) {
 		final StringBuilder fragment = new StringBuilder();
 		filterHelper.render( fragment, aliasGenerator, enabledFilters );
 		if ( fragment.length() > 1 ) {
 			final FilterPredicate filterPredicate = doCreateFilterPredicate( fragment.toString(), enabledFilters );
-			querySpec.applyPredicate( filterPredicate );
+			if ( tableGroupJoin == null ) {
+				querySpec.applyPredicate( filterPredicate );
+			}
+			else {
+				tableGroupJoin.applyPredicate( filterPredicate );
+			}
 		}
 	}
 
-	protected void applyWhereRestriction(String alias, Set<String> treatAsDeclarations, QuerySpec querySpec) {
+	protected void applyWhereRestriction(String alias, Set<String> treatAsDeclarations, QuerySpec querySpec, TableGroupJoin tableGroupJoin) {
 		if ( hasWhere() ) {
 			final String whereCondition = getSQLWhereString( alias );
-			querySpec.applyPredicate( new WhereFilterPredicate( whereCondition ) );
+			final WhereFilterPredicate filterPredicate = new WhereFilterPredicate( whereCondition );
+			if ( tableGroupJoin == null ) {
+				querySpec.applyPredicate( filterPredicate );
+			}
+			else {
+				tableGroupJoin.applyPredicate( filterPredicate );
+			}
+		}
+	}
+
+	private static TableGroupJoin findTableGroupJoin(TableGroup tableGroup, FromClauseAccess fromClauseAccess) {
+		final NavigablePath parentNavigablePath;
+		if ( tableGroup == null || ( parentNavigablePath = tableGroup.getNavigablePath().getParent() ) == null ) {
+			return null;
+		}
+		else {
+			final TableGroup parentTableGroup = fromClauseAccess.getTableGroup( parentNavigablePath );
+			TableGroupJoin tableGroupJoin = null;
+			for ( TableGroupJoin nestedTableGroupJoin : parentTableGroup.getTableGroupJoins() ) {
+				if ( nestedTableGroupJoin.getNavigablePath() == tableGroup.getNavigablePath() ) {
+					tableGroupJoin = nestedTableGroupJoin;
+					break;
+				}
+			}
+
+			assert tableGroupJoin != null;
+			return tableGroupJoin;
 		}
 	}
 

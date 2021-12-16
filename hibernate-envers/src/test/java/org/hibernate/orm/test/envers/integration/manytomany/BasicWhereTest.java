@@ -116,7 +116,7 @@ public class BasicWhereTest extends BaseEnversJPAFunctionalTestCase {
 
 		@ManyToMany
 		@JoinColumn(name = "allC")
-		@Where(clause = "TYPE = 'C'")
+		@Where(clause = "type = 'C'")
 		@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 		@AuditJoinTable(name = "A_C_AUD")
 		private Set<EntityC> allMyC;
@@ -190,7 +190,7 @@ public class BasicWhereTest extends BaseEnversJPAFunctionalTestCase {
 		private String name;
 
 		@ManyToMany
-		@Where(clause = "TYPE = 'Z'")
+		@Where(clause = "type = 'Z'")
 		@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 		private Set<EntityZ> allMyZ;
 

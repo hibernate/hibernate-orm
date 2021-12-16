@@ -223,8 +223,6 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch, Assoc
 					final EntityPersister entityPersister = (EntityPersister) ( (AttributeMapping) fetchable ).getMappedType();
 					final CollectionKey collectionKey = circ.resolveCollectionKey( rowProcessingState );
 					final Object key = collectionKey.getKey();
-
-
 					final SharedSessionContractImplementor session = rowProcessingState.getJdbcValuesSourceProcessingState()
 							.getSession();
 					final PersistenceContext persistenceContext = session.getPersistenceContext();
@@ -237,7 +235,7 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch, Assoc
 						final Object proxy = persistenceContext.getProxy( entityKey );
 						// it is conceivable there is a proxy, so check that first
 						if ( proxy == null || !( proxy.getClass()
-								.isAssignableFrom( javaTypeDescriptor.getJavaTypeClass().getClass() ) ) ) {
+								.isAssignableFrom( javaTypeDescriptor.getJavaTypeClass() ) ) ) {
 							// otherwise look for an initialized version
 							return persistenceContext.getEntity( entityKey );
 						}
@@ -251,8 +249,7 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch, Assoc
 			}
 			final Object initializedInstance = initializer.getInitializedInstance();
 			if ( initializedInstance instanceof HibernateProxy ) {
-				if ( initializedInstance.getClass()
-						.isAssignableFrom( javaTypeDescriptor.getJavaTypeClass().getClass() ) ) {
+				if ( initializedInstance.getClass().isAssignableFrom( javaTypeDescriptor.getJavaTypeClass() ) ) {
 					return initializedInstance;
 				}
 				initializer.initializeInstance( rowProcessingState );
@@ -266,8 +263,8 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch, Assoc
 				Object key,
 				SharedSessionContractImplementor session,
 				PersistenceContext persistenceContext) {
-			String uniqueKeyPropertyName = fetchable.getReferencedPropertyName();
-			EntityUniqueKey euk = new EntityUniqueKey(
+			final String uniqueKeyPropertyName = fetchable.getReferencedPropertyName();
+			final EntityUniqueKey euk = new EntityUniqueKey(
 					entityPersister.getEntityName(),
 					uniqueKeyPropertyName,
 					key,

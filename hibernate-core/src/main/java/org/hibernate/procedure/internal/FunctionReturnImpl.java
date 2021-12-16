@@ -62,10 +62,10 @@ public class FunctionReturnImpl implements FunctionReturnImplementor {
 			final TypeConfiguration typeConfiguration = persistenceContext.getFactory().getMetamodel().getTypeConfiguration();
 			final JdbcType sqlTypeDescriptor = typeConfiguration.getJdbcTypeDescriptorRegistry()
 					.getDescriptor( getJdbcTypeCode() );
-			final BasicJavaType javaTypeMapping = sqlTypeDescriptor
+			final BasicJavaType<?> javaTypeMapping = sqlTypeDescriptor
 					.getJdbcRecommendedJavaTypeMapping( null, null, typeConfiguration );
-			ormType = typeConfiguration.standardBasicTypeForJavaType( javaTypeMapping.getJavaType().getClass() );
-			parameterExtractor = new JdbcCallParameterExtractorImpl( procedureCall.getProcedureName(), null, 0, ormType );
+			ormType = typeConfiguration.standardBasicTypeForJavaType( javaTypeMapping.getJavaTypeClass() );
+			parameterExtractor = new JdbcCallParameterExtractorImpl<>( procedureCall.getProcedureName(), null, 0, ormType );
 			refCursorExtractor = null;
 		}
 

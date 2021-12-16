@@ -162,7 +162,7 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 				orderEntityName,
 				orderData.getPropertyName()
 		);
-		qb.addOrder( orderEntityAlias, propertyName, orderData.isAscending() );
+		qb.addOrder( orderEntityAlias, propertyName, orderData.isAscending(), orderData.getNullPrecedence() );
 		return this;
 	}
 

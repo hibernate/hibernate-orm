@@ -120,7 +120,7 @@ public class RevisionsOfEntityQuery extends AbstractAuditQuery {
 
 		if ( !hasProjection() && !hasOrder ) {
 			String revisionPropertyPath = configuration.getRevisionNumberPath();
-			qb.addOrder( QueryConstants.REFERENCED_ENTITY_ALIAS, revisionPropertyPath, true );
+			qb.addOrder( QueryConstants.REFERENCED_ENTITY_ALIAS, revisionPropertyPath, true, null );
 		}
 
 		if ( !selectEntitiesOnly ) {

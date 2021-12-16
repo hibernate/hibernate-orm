@@ -30,6 +30,7 @@ import org.hibernate.envers.internal.tools.Triple;
 import org.hibernate.envers.query.criteria.AuditFunction;
 import org.hibernate.envers.query.criteria.AuditId;
 import org.hibernate.envers.query.criteria.AuditProperty;
+import org.hibernate.envers.query.order.NullPrecedence;
 import org.hibernate.envers.tools.Pair;
 import org.hibernate.query.Query;
 import org.hibernate.query.internal.QueryLiteralHelper;
@@ -63,9 +64,9 @@ public class QueryBuilder {
 	 */
 	private final List<JoinParameter> froms;
 	/**
-	 * A list of triples (alias, property name, order ascending?).
+	 * A list of order by clauses.
 	 */
-	private final List<Triple<String, String, Boolean>> orders;
+	private final List<OrderByClause> orders;
 	/**
 	 * A list of complete projection definitions: either a sole property name, or a function(property name).
 	 */
@@ -198,8 +199,8 @@ public class QueryBuilder {
 		return result;
 	}
 
-	public void addOrder(String alias, String propertyName, boolean ascending) {
-		orders.add( Triple.make( alias, propertyName, ascending ) );
+	public void addOrder(String alias, String propertyName, boolean ascending, NullPrecedence nullPrecedence) {
+		orders.add( new OrderByClause( alias, propertyName, ascending, nullPrecedence ) );
 	}
 
 	public void addOrderFragment(String alias, String orderByCollectionRole) {
@@ -382,10 +383,9 @@ public class QueryBuilder {
 
 	private List<String> getOrderList() {
 		final List<String> orderList = new ArrayList<>();
-		for ( Triple<String, String, Boolean> order : orders ) {
-			orderList.add( order.getFirst() + "." + order.getSecond() + " " + (order.getThird() ? "asc" : "desc") );
+		for ( OrderByClause orderByClause : orders ) {
+			orderList.add( orderByClause.renderToHql() );
 		}
-
 		return orderList;
 	}
 
@@ -481,4 +481,32 @@ public class QueryBuilder {
 
 	}
 
+	private static class OrderByClause {
+		private String alias;
+		private String propertyName;
+		private boolean ascending;
+		private NullPrecedence nullPrecedence;
+
+		public OrderByClause(String alias, String propertyName, boolean ascending, NullPrecedence nullPrecedence) {
+			this.alias = alias;
+			this.propertyName = propertyName;
+			this.ascending = ascending;
+			this.nullPrecedence = nullPrecedence;
+		}
+
+		public String renderToHql() {
+			StringBuilder hql = new StringBuilder();
+			hql.append( alias ).append( "." ).append( propertyName ).append( " " );
+			hql.append( ascending ? "asc" : "desc" );
+			if ( nullPrecedence != null ) {
+				if ( NullPrecedence.FIRST.equals( nullPrecedence ) ) {
+					hql.append( " nulls first" );
+				}
+				else {
+					hql.append( " nulls last" );
+				}
+			}
+			return hql.toString();
+		}
+	}
 }

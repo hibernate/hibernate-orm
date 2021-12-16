@@ -177,7 +177,7 @@ public class AuditAssociationQueryImpl<Q extends AuditQueryImplementor>
 				orderEntityName,
 				orderData.getPropertyName()
 		);
-		queryBuilder.addOrder( orderEntityAlias, propertyName, orderData.isAscending() );
+		queryBuilder.addOrder( orderEntityAlias, propertyName, orderData.isAscending(), orderData.getNullPrecedence() );
 		return this;
 	}
 

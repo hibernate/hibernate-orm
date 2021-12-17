@@ -55,7 +55,7 @@ public class ManyToOneNotAuditedMulIdTest extends BaseEnversJPAFunctionalTestCas
 		assertEquals( str2, entity.str );
 	}
 
-	@Entity
+	@Entity(name = "ManyToOneNotAudited")
 	@IdClass(MulId.class)
 	public static class ManyToOneNotAuditedMulIdTestEntity {
 		@Id

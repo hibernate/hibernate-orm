@@ -13,10 +13,15 @@ import java.util.Map;
 import org.hibernate.Session;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
+import org.hibernate.envers.boot.internal.EnversService;
+import org.hibernate.envers.configuration.Configuration;
 import org.hibernate.envers.configuration.EnversSettings;
+import org.hibernate.internal.SessionImpl;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+
+import org.hibernate.service.ServiceRegistry;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
@@ -59,6 +64,11 @@ public abstract class BaseEnversFunctionalTestCase extends BaseNonConfigCoreFunc
 		}
 
 		return AuditReaderFactory.get( getSession() );
+	}
+
+	protected Configuration getConfiguration() {
+		ServiceRegistry registry = getSession().unwrap(SessionImpl.class ).getSessionFactory().getServiceRegistry();
+		return registry.getService( EnversService.class ).getConfig();
 	}
 
 	@Override

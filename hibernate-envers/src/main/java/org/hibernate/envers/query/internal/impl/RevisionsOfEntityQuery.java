@@ -6,6 +6,8 @@
  */
 package org.hibernate.envers.query.internal.impl;
 
+import static org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants.REFERENCED_ENTITY_ALIAS;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -72,6 +74,40 @@ public class RevisionsOfEntityQuery extends AbstractAuditQuery {
 		this.includePropertyChanges = includePropertyChanges;
 	}
 
+	@Override
+	public AuditAssociationQuery<? extends AuditQuery> traverseRelation(
+			String associationName,
+			JoinType joinType,
+			String alias,
+			AuditCriterion onClauseCriterion) {
+		if ( !selectEntitiesOnly ) {
+			throw new IllegalStateException(
+					"Audit association queries are only permitted when the query is created with selectEntitiesOnly=true"
+			);
+		}
+
+		AbstractAuditAssociationQuery<AuditQueryImplementor> query = associationQueryMap.get( associationName );
+		if ( query == null ) {
+			query = new RevisionsOfEntityAssociationQuery<>(
+					enversService,
+					versionsReader,
+					this,
+					qb,
+					associationName,
+					joinType,
+					aliasToEntityNameMap,
+					aliasToComponentPropertyNameMap,
+					REFERENCED_ENTITY_ALIAS,
+					alias,
+					null
+			);
+
+			addAssociationQuery( associationName, query );
+		}
+
+		return query;
+	}
+
 	private Number getRevisionNumber(Map versionsEntity) {
 		Configuration configuration = enversService.getConfig();
 
@@ -89,7 +125,8 @@ public class RevisionsOfEntityQuery extends AbstractAuditQuery {
 		}
 	}
 
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings({"unchecked", "rawtypes"})
+	@Override
 	public List list() throws AuditException {
 		Configuration configuration = enversService.getConfig();
 
@@ -119,6 +156,10 @@ public class RevisionsOfEntityQuery extends AbstractAuditQuery {
 			);
 		}
 
+		for ( AbstractAuditAssociationQuery<?> associationQuery : associationQueries ) {
+			associationQuery.addCriterionToQuery( versionsReader );
+		}
+
 		if ( !hasProjection() && !hasOrder ) {
 			String revisionPropertyPath = configuration.getRevisionNumberPath();
 			qb.addOrder( QueryConstants.REFERENCED_ENTITY_ALIAS, revisionPropertyPath, true, null );
@@ -136,11 +177,6 @@ public class RevisionsOfEntityQuery extends AbstractAuditQuery {
 		}
 
 		return getQueryResults();
-	}
-
-	@Override
-	public AuditAssociationQuery<? extends AuditQuery> traverseRelation(String associationName, JoinType joinType) {
-		throw new UnsupportedOperationException( "Not yet implemented for revisions of entity queries" );
 	}
 
 	private boolean isEntityUsingModifiedFlags() {

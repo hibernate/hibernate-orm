@@ -3278,7 +3278,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	private SqmFunctionDescriptor getFunctionDescriptor(String name) {
-		return creationContext.getQueryEngine().getSqmFunctionRegistry().findFunctionDescriptor(name);
+		return creationContext.getQueryEngine().getSqmFunctionRegistry().findFunctionDescriptor( name );
 	}
 
 	@Override

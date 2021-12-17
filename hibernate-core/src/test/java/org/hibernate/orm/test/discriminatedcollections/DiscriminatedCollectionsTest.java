@@ -15,8 +15,11 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 /**
@@ -28,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 		}
 )
 @SessionFactory
-public class TempTest {
+public class DiscriminatedCollectionsTest {
 
 	@Test
 	public void test(SessionFactoryScope scope) {
@@ -92,6 +95,20 @@ public class TempTest {
 							client.getDebitAccounts().iterator().next().getId(),
 							client.getCreditAccounts().iterator().next().getId()
 					);
+				}
+		);
+
+		scope.inSession(
+				session -> {
+					List<Object[]> clients = session.createQuery( "select c, da from Client c inner join c.debitAccounts da", Object[].class)
+							.getResultList();
+					assertEquals( 1, clients.size() );
+					assertTrue( clients.get(0)[1] instanceof DebitAccount );
+					List<Object[]> accounts = session.createQuery( "select ca, da from Client c inner join c.creditAccounts ca inner join c.debitAccounts da", Object[].class)
+							.getResultList();
+					assertEquals( 1, accounts.size() );
+					assertTrue( accounts.get(0)[0] instanceof CreditAccount );
+					assertTrue( accounts.get(0)[1] instanceof DebitAccount );
 				}
 		);
 

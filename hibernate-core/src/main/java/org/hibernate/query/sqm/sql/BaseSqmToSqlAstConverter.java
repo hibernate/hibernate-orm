@@ -2494,6 +2494,22 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					sqmJoin.getJoinPredicate() != null,
 					this
 			);
+			final Joinable joinable = pluralAttributeMapping
+					.getCollectionDescriptor()
+					.getCollectionType()
+					.getAssociatedJoinable( getCreationContext().getSessionFactory() );
+			final TableGroup tableGroup = joinedTableGroupJoin.getJoinedGroup();
+			final FilterPredicate collectionFieldFilterPredicate = FilterHelper.createFilterPredicate(
+					getLoadQueryInfluencers(),
+					joinable,
+					tableGroup
+			);
+			if ( collectionFieldFilterPredicate != null ) {
+				if ( collectionFilterPredicates == null ) {
+					collectionFilterPredicates = new HashMap<>();
+				}
+				collectionFilterPredicates.put( tableGroup.getGroupAlias(), collectionFieldFilterPredicate );
+			}
 		}
 		else {
 			assert modelPart instanceof TableGroupJoinProducer;

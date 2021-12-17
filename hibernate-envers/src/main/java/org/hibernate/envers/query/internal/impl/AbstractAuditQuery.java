@@ -58,7 +58,9 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 	protected final EnversService enversService;
 	protected final AuditReaderImplementor versionsReader;
 
-	protected final List<AuditAssociationQueryImpl<?>> associationQueries = new ArrayList<>();
+	// todo: can these association query collections be merged?
+	protected final List<AbstractAuditAssociationQuery<?>> associationQueries = new ArrayList<>();
+	protected final Map<String, AbstractAuditAssociationQuery<AuditQueryImplementor>> associationQueryMap = new HashMap<>();
 	protected final List<Pair<String, AuditProjection>> projections = new ArrayList<>();
 
 	protected AbstractAuditQuery(
@@ -200,29 +202,6 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 				joinType,
 				alias,
 				null );
-	}
-
-	@Override
-	public AuditAssociationQuery<? extends AuditQuery> traverseRelation(
-			String associationName,
-			JoinType joinType,
-			String alias,
-			AuditCriterion onClause) {
-		AuditAssociationQueryImpl<AbstractAuditQuery> result = new AuditAssociationQueryImpl<>(
-				enversService,
-				versionsReader,
-				this,
-				qb,
-				associationName,
-				joinType,
-				aliasToEntityNameMap,
-				aliasToComponentPropertyNameMap,
-				REFERENCED_ENTITY_ALIAS,
-				alias,
-				onClause
-		);
-		associationQueries.add( result );
-		return result;
 	}
 
 	// Query properties
@@ -383,4 +362,9 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 		// todo: can this be replaced by a call to getEntittyConfiguration#getEntityClassName()?
 		return entityName;
 	}
+	
+	protected void addAssociationQuery(String associationName, AbstractAuditAssociationQuery<AuditQueryImplementor> query) {
+		associationQueries.add( query );
+		associationQueryMap.put( associationName, query );
+	}	
 }

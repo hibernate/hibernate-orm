@@ -9,12 +9,17 @@ package org.hibernate.envers.query.internal.impl;
 import java.util.Collection;
 import java.util.List;
 
+import jakarta.persistence.criteria.JoinType;
+
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
+import org.hibernate.envers.query.AuditAssociationQuery;
+import org.hibernate.envers.query.AuditQuery;
 import org.hibernate.envers.query.criteria.AuditCriterion;
 import org.hibernate.query.Query;
 
+import static org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants.REFERENCED_ENTITY_ALIAS;
 import static org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants.REVISION_PARAMETER;
 
 /**
@@ -73,8 +78,8 @@ public class EntitiesModifiedAtRevisionQuery extends AbstractAuditQuery {
 			);
 		}
 
-		for (final AuditAssociationQueryImpl<?> associationQuery : associationQueries) {
-			associationQuery.addCriterionsToQuery( versionsReader );
+		for ( AbstractAuditAssociationQuery<?> associationQuery : associationQueries ) {
+			associationQuery.addCriterionToQuery( versionsReader );
 		}
 
 		Query query = buildQuery();
@@ -85,5 +90,31 @@ public class EntitiesModifiedAtRevisionQuery extends AbstractAuditQuery {
 		}
 		List queryResult = query.list();
 		return applyProjections( queryResult, revision );
+	}
+
+	@Override
+	public AuditAssociationQuery<? extends AuditQuery> traverseRelation(
+			String associationName,
+			JoinType joinType,
+			String alias,
+			AuditCriterion onClauseCriterion) {
+		AbstractAuditAssociationQuery<AuditQueryImplementor> query = associationQueryMap.get( associationName );
+		if ( query == null ) {
+			query = new EntitiesAtRevisionAssociationQuery<>(
+					enversService,
+					versionsReader,
+					this,
+					qb,
+					associationName,
+					joinType,
+					aliasToEntityNameMap,
+					aliasToComponentPropertyNameMap,
+					REFERENCED_ENTITY_ALIAS,
+					alias,
+					null
+			);
+			addAssociationQuery( associationName, query );
+		}
+		return query;
 	}
 }

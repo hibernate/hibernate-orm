@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Id;
@@ -101,6 +102,7 @@ public class AssociationQueryWithOnClauseTest extends BaseEnversJPAFunctionalTes
 
 		private String type;
 
+		@Column(name = "num")
 		private int number;
 
 		public Long getId() {

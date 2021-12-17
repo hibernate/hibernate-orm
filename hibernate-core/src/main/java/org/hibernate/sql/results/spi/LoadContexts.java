@@ -8,11 +8,13 @@ package org.hibernate.sql.results.spi;
 
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.EntityUniqueKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.StandardStack;
+import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.collection.LoadingCollectionEntry;
 import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
@@ -55,6 +57,18 @@ public class LoadContexts {
 	public LoadingCollectionEntry findLoadingCollectionEntry(CollectionKey collectionKey) {
 		return jdbcValuesSourceProcessingStateStack.findCurrentFirst(
 				state -> state.findLoadingCollectionLocally( collectionKey )
+		);
+	}
+
+	public Initializer findInitializer(EntityKey key){
+		return jdbcValuesSourceProcessingStateStack.findCurrentFirst(
+				state -> state.findInitializer( key )
+		);
+	}
+
+	public Initializer findInitializer(EntityUniqueKey key){
+		return jdbcValuesSourceProcessingStateStack.findCurrentFirst(
+				state -> state.findInitializer( key )
 		);
 	}
 

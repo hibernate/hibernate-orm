@@ -9,16 +9,12 @@ package org.hibernate.orm.test.caching.mocked;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
-import jakarta.persistence.Cacheable;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
 
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.cfg.Configuration;
-
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.SybaseASEDialect;
@@ -28,6 +24,10 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Before;
 import org.junit.Test;
+
+import jakarta.persistence.Cacheable;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
@@ -43,25 +43,18 @@ public class ReadWriteCacheTest extends BaseCoreFunctionalTestCase {
 
 	private static final String ORIGINAL_TITLE = "Original Title";
 	private static final String UPDATED_TITLE = "Updated Title";
+	private static final Long BOOK_ID = 1L;
 
-	private long bookId;
 	private CountDownLatch endLatch;
-	private AtomicBoolean interceptTransaction;
 
-	@Override
-	public void buildSessionFactory() {
-		buildSessionFactory( getCacheConfig() );
-	}
+	private AtomicBoolean interceptTransaction;
 
 	@Before
 	public void init() {
 		endLatch = new CountDownLatch( 1 );
 		interceptTransaction = new AtomicBoolean();
-	}
 
-	@Override
-	public void rebuildSessionFactory() {
-		rebuildSessionFactory( getCacheConfig() );
+		doInHibernate( this::sessionFactory, this::saveBook );
 	}
 
 	@Test
@@ -69,15 +62,10 @@ public class ReadWriteCacheTest extends BaseCoreFunctionalTestCase {
 	@SkipForDialect(value = HSQLDialect.class, comment = "HSQLDB seems to block on acquiring a SHARE lock when a different TX upgraded a SHARE to EXCLUSIVE lock, maybe the upgrade caused a table lock?")
 	@SkipForDialect(value = SybaseASEDialect.class, comment = "Sybase seems to block on acquiring a SHARE lock when a different TX upgraded a SHARE to EXCLUSIVE lock, maybe the upgrade caused a table lock?")
 	public void testDelete() throws InterruptedException {
-		bookId = 1L;
-
-		doInHibernate( this::sessionFactory, session -> {
-			createBook( bookId, session );
-		} );
 
 		doInHibernate( this::sessionFactory, session -> {
 			log.info( "Delete Book" );
-			Book book = session.get( Book.class, bookId );
+			Book book = session.get( Book.class, BOOK_ID );
 			session.delete( book );
 			interceptTransaction.set( true );
 		} );
@@ -85,24 +73,17 @@ public class ReadWriteCacheTest extends BaseCoreFunctionalTestCase {
 		endLatch.await();
 		interceptTransaction.set( false );
 
-		doInHibernate( this::sessionFactory, session -> {
-			assertBookNotFound( bookId, session );
-		} );
+		doInHibernate( this::sessionFactory, this::assertBookNotFound );
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-13792")
 	public void testDeleteHQL() throws InterruptedException {
-		bookId = 2L;
-
-		doInHibernate( this::sessionFactory, session -> {
-			createBook( bookId, session );
-		} );
 
 		doInHibernate( this::sessionFactory, session -> {
 			log.info( "Delete Book using HQL" );
 			int numRows = session.createQuery( "delete from Book where id = :id" )
-					.setParameter( "id", bookId )
+					.setParameter( "id", BOOK_ID )
 					.executeUpdate();
 			assertEquals( 1, numRows );
 			interceptTransaction.set( true );
@@ -111,24 +92,17 @@ public class ReadWriteCacheTest extends BaseCoreFunctionalTestCase {
 		endLatch.await();
 		interceptTransaction.set( false );
 
-		doInHibernate( this::sessionFactory, session -> {
-			assertBookNotFound( bookId, session );
-		} );
+		doInHibernate( this::sessionFactory, this::assertBookNotFound );
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-13792")
 	public void testDeleteNativeQuery() throws InterruptedException {
-		bookId = 3L;
-
-		doInHibernate( this::sessionFactory, session -> {
-			createBook( bookId, session );
-		} );
 
 		doInHibernate( this::sessionFactory, session -> {
 			log.info( "Delete Book using NativeQuery" );
 			int numRows = session.createNativeQuery( "delete from Book where id = :id" )
-					.setParameter( "id", bookId )
+					.setParameter( "id", BOOK_ID )
 					.addSynchronizedEntityClass( Book.class )
 					.executeUpdate();
 			assertEquals( 1, numRows );
@@ -138,9 +112,7 @@ public class ReadWriteCacheTest extends BaseCoreFunctionalTestCase {
 		endLatch.await();
 		interceptTransaction.set( false );
 
-		doInHibernate( this::sessionFactory, session -> {
-			assertBookNotFound( bookId, session );
-		} );
+		doInHibernate( this::sessionFactory, this::assertBookNotFound );
 	}
 
 	@Test
@@ -148,15 +120,10 @@ public class ReadWriteCacheTest extends BaseCoreFunctionalTestCase {
 	@SkipForDialect(value = HSQLDialect.class, comment = "HSQLDB seems to block on acquiring a SHARE lock when a different TX upgraded a SHARE to EXCLUSIVE lock, maybe the upgrade caused a table lock?")
 	@SkipForDialect(value = SybaseASEDialect.class, comment = "Sybase seems to block on acquiring a SHARE lock when a different TX upgraded a SHARE to EXCLUSIVE lock, maybe the upgrade caused a table lock?")
 	public void testUpdate() throws InterruptedException {
-		bookId = 4L;
-
-		doInHibernate( this::sessionFactory, session -> {
-			createBook( bookId, session );
-		} );
 
 		doInHibernate( this::sessionFactory, session -> {
 			log.info( "Update Book" );
-			Book book = session.get( Book.class, bookId );
+			Book book = session.get( Book.class, BOOK_ID );
 			book.setTitle( UPDATED_TITLE );
 			session.save( book );
 			interceptTransaction.set( true );
@@ -165,25 +132,18 @@ public class ReadWriteCacheTest extends BaseCoreFunctionalTestCase {
 		endLatch.await();
 		interceptTransaction.set( false );
 
-		doInHibernate( this::sessionFactory, session -> {
-			loadBook( bookId, session );
-		} );
+		doInHibernate( this::sessionFactory, this::assertBookUpdated );
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-13792")
 	public void testUpdateHQL() throws InterruptedException {
-		bookId = 5L;
-
-		doInHibernate( this::sessionFactory, session -> {
-			createBook( bookId, session );
-		} );
 
 		doInHibernate( this::sessionFactory, session -> {
 			log.info( "Update Book using HQL" );
 			int numRows = session.createQuery( "update Book set title = :title where id = :id" )
 					.setParameter( "title", UPDATED_TITLE )
-					.setParameter( "id", bookId )
+					.setParameter( "id", BOOK_ID )
 					.executeUpdate();
 			assertEquals( 1, numRows );
 			interceptTransaction.set( true );
@@ -192,25 +152,18 @@ public class ReadWriteCacheTest extends BaseCoreFunctionalTestCase {
 		endLatch.await();
 		interceptTransaction.set( false );
 
-		doInHibernate( this::sessionFactory, session -> {
-			loadBook( bookId, session );
-		} );
+		doInHibernate( this::sessionFactory, this::assertBookUpdated );
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-13792")
 	public void testUpdateNativeQuery() throws InterruptedException {
-		bookId = 6L;
-
-		doInHibernate( this::sessionFactory, session -> {
-			createBook( bookId, session );
-		} );
 
 		doInHibernate( this::sessionFactory, session -> {
 			log.info( "Update Book using NativeQuery" );
 			int numRows = session.createNativeQuery( "update Book set title = :title where id = :id" )
 					.setParameter( "title", UPDATED_TITLE )
-					.setParameter( "id", bookId )
+					.setParameter( "id", BOOK_ID )
 					.addSynchronizedEntityClass( Book.class )
 					.executeUpdate();
 			assertEquals( 1, numRows );
@@ -220,9 +173,38 @@ public class ReadWriteCacheTest extends BaseCoreFunctionalTestCase {
 		endLatch.await();
 		interceptTransaction.set( false );
 
+		doInHibernate( this::sessionFactory, this::assertBookUpdated );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-14983")
+	public void testLoadUponHQLUpdate() {
+		assertTrue(
+				"The second-level cache should contain a book before running the test",
+				sessionFactory().getCache().containsEntity( Book.class, BOOK_ID )
+		);
+
 		doInHibernate( this::sessionFactory, session -> {
-			loadBook( bookId, session );
+			log.info( "Updating book using HQL..." );
+
+			boolean isBookUpdated = session.createQuery( "update Book set title = :title where id = :id" )
+					.setParameter( "title", UPDATED_TITLE )
+					.setParameter( "id", BOOK_ID )
+					.executeUpdate() == 1;
+			assertTrue( isBookUpdated );
+
+			assertBookUpdated( session );
 		} );
+	}
+
+	@Override
+	public void buildSessionFactory() {
+		buildSessionFactory( getCacheConfig() );
+	}
+
+	@Override
+	public void rebuildSessionFactory() {
+		rebuildSessionFactory( getCacheConfig() );
 	}
 
 	@Override
@@ -233,31 +215,34 @@ public class ReadWriteCacheTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
+	protected boolean isCleanupTestDataRequired() {
+		return true;
+	}
+
+	@Override
 	protected String getCacheConcurrencyStrategy() {
 		return "read-write";
-	}
-
-	private void assertBookNotFound(long bookId, Session session) {
-		log.info( "Load Book" );
-		Book book = session.get( Book.class, bookId );
-		assertNull( book );
-	}
-
-	private void createBook(long bookId, Session session) {
-		log.info( "Create Book" );
-		Book book = new Book();
-		book.setId( bookId );
-		book.setTitle( ORIGINAL_TITLE );
-		session.save( book );
 	}
 
 	private Consumer<Configuration> getCacheConfig() {
 		return configuration -> configuration.setInterceptor( new TransactionInterceptor() );
 	}
 
-	private void loadBook(long bookId, Session session) {
-		log.info( "Load Book" );
-		Book book = session.get( Book.class, bookId );
+	private void saveBook(Session session) {
+		Book book = new Book();
+		book.setId( BOOK_ID );
+		book.setTitle( ORIGINAL_TITLE );
+		log.infof( "Saving %s before running tests", book );
+		session.save( book );
+	}
+
+	private void assertBookNotFound(Session session) {
+		Book book = session.get( Book.class, BOOK_ID );
+		assertNull( book );
+	}
+
+	private void assertBookUpdated(Session session) {
+		Book book = session.get( Book.class, BOOK_ID );
 		assertNotNull( book );
 		assertEquals( "Found old value", UPDATED_TITLE, book.getTitle() );
 	}
@@ -303,14 +288,14 @@ public class ReadWriteCacheTest extends BaseCoreFunctionalTestCase {
 					executeSync( () -> {
 						Session session = sessionFactory()
 								.openSession();
-						Book book = session.get( Book.class, bookId );
+						Book book = session.get( Book.class, BOOK_ID );
 						assertNotNull( book );
 						log.infof( "Fetched %s", book );
 						session.close();
 					} );
 
 					assertTrue( sessionFactory().getCache()
-										.containsEntity( Book.class, bookId ) );
+										.containsEntity( Book.class, BOOK_ID ) );
 				}
 				finally {
 					endLatch.countDown();

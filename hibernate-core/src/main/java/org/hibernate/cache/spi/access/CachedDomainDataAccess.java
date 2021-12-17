@@ -143,7 +143,7 @@ public interface CachedDomainDataAccess {
 	 * Remove all data for this accessed type
 	 *
 	 * @throws CacheException Propagated from underlying cache provider
-	 * @param session
+	 * @param session Current session.
 	 */
 	void removeAll(SharedSessionContractImplementor session);
 

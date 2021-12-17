@@ -205,11 +205,6 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 		}
 	}
 
-	@Override
-	public void removeAll(SharedSessionContractImplementor session) {
-		// A no-op
-	}
-
 	/**
 	 * Interface type implemented by all wrapper objects in the cache.
 	 */

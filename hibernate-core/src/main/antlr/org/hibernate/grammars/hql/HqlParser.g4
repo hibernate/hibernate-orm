@@ -917,29 +917,17 @@ rollup
 identifier
 	: IDENTIFIER
 	| QUOTED_IDENTIFIER
-	| (ABS
-	| ACOS
-	| ALL
+	| (ALL
 	| AND
 	| ANY
 	| AS
 	| ASC
-	| ASIN
-	| ATAN
-	| ATAN2
-	| AVG
 	| BETWEEN
 	| BOTH
 	| BY
 	| CASE
 	| CAST
-	| CEILING
-	| CLASS
-	| COALESCE
 	| COLLATE
-	| CONCAT
-	| COS
-	| COUNT
 	| CROSS
 	| CUBE
 	| CURRENT
@@ -962,23 +950,19 @@ identifier
 	| EVERY
 	| EXCEPT
 	| EXISTS
-	| EXP
 	| EXTRACT
 	| FETCH
 	| FILTER
 	| FIRST
-	| FLOOR
 	| FOR
 	| FORMAT
 	| FROM
 	| FULL
 	| FUNCTION
-	| GREATEST
 	| GROUP
 	| HAVING
 	| HOUR
 	| ID
-	| IFNULL
 	| ILIKE
 	| IN
 	| INDEX
@@ -993,38 +977,29 @@ identifier
 	| KEY
 	| LAST
 	| LEADING
-	| LEAST
 	| LEFT
-	| LENGTH
 	| LIKE
 	| LIMIT
 	| LIST
-	| LN
 	| LOCAL
     | LOCAL_DATE
     | LOCAL_DATETIME
     | LOCAL_TIME
-	| LOCATE
-	| LOWER
 	| MAP
-	| MAX
 	| MAXELEMENT
 	| MAXINDEX
 	| MEMBER
 	| MICROSECOND
 	| MILLISECOND
-	| MIN
 	| MINELEMENT
 	| MININDEX
 	| MINUTE
-	| MOD
 	| MONTH
 	| NANOSECOND
 	| NATURALID
 	| NEW
 	| NEXT
 	| NOT
-	| NULLIF
 	| NULLS
 	| OBJECT
 	| OF
@@ -1040,26 +1015,17 @@ identifier
 	| PERCENT
 	| PLACING
 	| POSITION
-	| POWER
 	| QUARTER
-	| REPLACE
 	| RIGHT
 	| ROLLUP
-	| ROUND
 	| ROW
 	| ROWS
 	| SECOND
 	| SELECT
 	| SET
-	| SIGN
-	| SIN
 	| SIZE
 	| SOME
-	| SQRT
-	| STR
 	| SUBSTRING
-	| SUM
-	| TAN
 	| THEN
 	| TIES
 	| TIME
@@ -1072,7 +1038,6 @@ identifier
 	| TYPE
 	| UNION
 	| UPDATE
-	| UPPER
 	| VALUE
 	| VALUES
 	| VERSION

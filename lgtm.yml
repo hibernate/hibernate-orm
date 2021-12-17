@@ -1,0 +1,9 @@
+# LGTM Settings (https://lgtm.com/)
+# For reference, see https://lgtm.com/help/lgtm/lgtm.yml-configuration-file
+# or template at https://lgtm.com/static/downloads/lgtm.template.yml
+
+extraction:
+  java:
+    index:
+      # Specify the Java version required to build the project
+      java_version: 11

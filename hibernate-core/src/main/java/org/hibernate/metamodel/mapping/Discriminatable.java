@@ -7,7 +7,6 @@
 package org.hibernate.metamodel.mapping;
 
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Consumer;
 
 import org.hibernate.Filter;
@@ -16,19 +15,16 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 
 /**
- * Things that can have {@link org.hibernate.annotations.Where},
- * and/or {@link org.hibernate.annotations.Filter} applied to them
+ * Things that have a discriminator associated with it.
+ *
+ * @apiNote Plural-attributes are considered discriminatable, which only
+ * has an effect for to-many collections and applies the discriminator from
+ * the associated entity
  */
-public interface Restrictable extends FilterRestrictable, WhereRestrictable {
-	/**
-	 * Applies the base set of restrictions.  The impact varies based on
-	 * Restrictable type - some apply restrictions for filter, where and/or discriminator
-	 */
-	void applyBaseRestrictions(
+public interface Discriminatable {
+	void applyDiscriminator(
 			Consumer<Predicate> predicateConsumer,
+			String alias,
 			TableGroup tableGroup,
-			boolean useQualifier,
-			Map<String, Filter> enabledFilters,
-			Set<String> treatAsDeclarations,
 			SqlAstCreationState creationState);
-	}
+}

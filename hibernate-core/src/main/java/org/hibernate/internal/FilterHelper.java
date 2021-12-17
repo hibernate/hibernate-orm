@@ -16,15 +16,17 @@ import java.util.regex.Pattern;
 
 import org.hibernate.Filter;
 import org.hibernate.MappingException;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.persister.entity.Joinable;
+import org.hibernate.metamodel.mapping.Restrictable;
 import org.hibernate.sql.Template;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
+import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.predicate.FilterPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.type.Type;
 
 import static org.hibernate.internal.util.StringHelper.safeInterning;
@@ -37,7 +39,6 @@ import static org.hibernate.internal.util.StringHelper.safeInterning;
  * @author Nathan Xu
  */
 public class FilterHelper {
-
 	private static final Pattern FILTER_PARAMETER_PATTERN = Pattern.compile( ":(\\S+)(\\w+)" );
 
 	private final String[] filterNames;
@@ -65,34 +66,50 @@ public class FilterHelper {
 
 		filterCount = 0;
 		for ( final FilterConfiguration filter : filters ) {
-			filterAutoAliasFlags[filterCount] = false;
-			filterNames[filterCount] = safeInterning( filter.getName() );
+			final String filterName = safeInterning( filter.getName() );
+			filterNames[filterCount] = filterName;
 			filterConditions[filterCount] = safeInterning( filter.getCondition() );
+
 			filterAliasTableMaps[filterCount] = filter.getAliasTableMap( factory );
+			filterAutoAliasFlags[filterCount] = false;
+
 			if ( ( filterAliasTableMaps[filterCount].isEmpty()
 					|| isTableFromPersistentClass( filterAliasTableMaps[filterCount] ) )
 					&& filter.useAutoAliasInjection() ) {
-				filterConditions[filterCount] = safeInterning(
-							Template.renderWhereStringTemplate(
-							filter.getCondition(),
-							FilterImpl.MARKER,
-							factory.getDialect(),
-							factory.getQueryEngine().getSqmFunctionRegistry()
-					)
+				final String autoAliasedCondition = Template.renderWhereStringTemplate(
+						filter.getCondition(),
+						FilterImpl.MARKER,
+						factory.getJdbcServices().getDialect(),
+						factory.getQueryEngine().getSqmFunctionRegistry()
 				);
+				filterConditions[filterCount] = safeInterning( autoAliasedCondition );
 				filterAutoAliasFlags[filterCount] = true;
 			}
 
+			// look for parameters in the condition.  for each parameter, we:
+			//		1) keep track of the name for later
+			//		2) // we replace `:{param-name} ` with `:{filter-name}.{param-name} ` in the condition
 			final Matcher matcher = FILTER_PARAMETER_PATTERN.matcher( filterConditions[filterCount] );
+
 			String copy = filterConditions[filterCount];
 			final List<String> filterParamNames = new ArrayList<>();
 			parameterNames[filterCount] = filterParamNames;
+			boolean foundAny = false;
+
+			// handle any subsequent matched parameters
 			while( matcher.find() ) {
 				final String parameterLabel = filterConditions[filterCount].substring( matcher.start() + 1, matcher.end() );
 				filterParamNames.add( parameterLabel );
-				copy = copy.replaceAll( ":" + parameterLabel, ":" + filterNames[filterCount] + "." + parameterLabel );
+				copy = copy.replace(
+						":" + parameterLabel,
+						":" + filterName + "." + parameterLabel
+				);
+				foundAny = true;
 			}
-			filterConditions[filterCount] = safeInterning( copy );
+
+			if ( foundAny ) {
+				filterConditions[filterCount] = safeInterning( copy );
+			}
 
 			filterCount++;
 		}
@@ -109,6 +126,95 @@ public class FilterHelper {
 			}
 		}
 		return false;
+	}
+
+	public static void applyBaseRestrictions(
+			Consumer<Predicate> predicateConsumer,
+			Restrictable restrictable,
+			TableGroup rootTableGroup,
+			boolean useIdentificationVariable,
+			LoadQueryInfluencers loadQueryInfluencers,
+			SqlAstCreationState astCreationState) {
+		restrictable.applyBaseRestrictions(
+				predicateConsumer,
+				rootTableGroup,
+				useIdentificationVariable,
+				loadQueryInfluencers.getEnabledFilters(),
+				null,
+				astCreationState
+		);
+	}
+
+	public void applyEnabledFilters(
+			Consumer<Predicate> predicateConsumer,
+			FilterAliasGenerator aliasGenerator,
+			Map<String, Filter> enabledFilters) {
+		final FilterPredicate predicate = generateFilterPredicate( aliasGenerator, enabledFilters );
+		if ( predicate != null ) {
+			predicateConsumer.accept( predicate );
+		}
+	}
+
+	private FilterPredicate generateFilterPredicate(FilterAliasGenerator aliasGenerator, Map<String, Filter> enabledFilters) {
+		final FilterPredicate filterPredicate = new FilterPredicate();
+
+		for ( int i = 0, max = filterNames.length; i < max; i++ ) {
+			final String filterName = filterNames[i];
+			final FilterImpl enabledFilter = (FilterImpl) enabledFilters.get( filterName );
+			if ( enabledFilter != null ) {
+				String condition = render( aliasGenerator, i );
+				final List<String> filterParameterNames = parameterNames[i];
+				if ( CollectionHelper.isNotEmpty( filterParameterNames ) ) {
+					for ( int paramPos = 0; paramPos < filterParameterNames.size(); paramPos++ ) {
+						final String parameterName = filterParameterNames.get( paramPos );
+						final Type parameterType = enabledFilter.getFilterDefinition().getParameterType( parameterName );
+						if ( ! (parameterType instanceof JdbcMapping) ) {
+							throw new MappingException( String.format( "parameter [%s] for filter [%s] is not of JdbcMapping type", parameterName, filterName ) );
+						}
+
+						final JdbcMapping jdbcMapping = (JdbcMapping) parameterType;
+						final Object parameterValue = enabledFilter.getParameter( parameterName );
+						if ( parameterValue == null ) {
+							throw new MappingException( String.format( "unknown parameter [%s] for filter [%s]", parameterName, filterName ) );
+						}
+
+						final StringBuilder paramMarkers = new StringBuilder( "?" );
+						if ( parameterValue instanceof Iterable
+								&& !jdbcMapping.getJavaTypeDescriptor().isInstance( parameterValue ) ) {
+							final Iterator<?> iterator = ( (Iterable<?>) parameterValue ).iterator();
+							if ( iterator.hasNext() ) {
+								final Object value = iterator.next();
+								final FilterJdbcParameter jdbcParameter = new FilterJdbcParameter( jdbcMapping, value );
+								filterPredicate.applyParameter( jdbcParameter );
+
+								while ( iterator.hasNext() ) {
+									paramMarkers.append( ",?" );
+									filterPredicate.applyParameter( new FilterJdbcParameter( jdbcMapping, iterator.next() ) );
+								}
+							}
+							else {
+								// We need a dummy value if the list is empty
+								filterPredicate.applyParameter( new FilterJdbcParameter( jdbcMapping, null ) );
+							}
+						}
+						else {
+							filterPredicate.applyParameter( new FilterJdbcParameter( jdbcMapping, parameterValue ) );
+						}
+
+						final String marker = ":" + filterNames[ i ] + "." + parameterName;
+						condition = condition.replaceAll( marker, paramMarkers.toString() );
+					}
+				}
+
+				filterPredicate.applyFragment( condition );
+			}
+		}
+
+		if ( filterPredicate.isEmpty() ) {
+			return null;
+		}
+
+		return filterPredicate;
 	}
 
 	public String render(FilterAliasGenerator aliasGenerator, Map<String, Filter> enabledFilters) {
@@ -161,85 +267,4 @@ public class FilterHelper {
 		}
 	}
 
-	public void applyFilters(
-			FilterAliasGenerator aliasGenerator,
-			Map<String, Filter> enabledFilters,
-			Consumer<Predicate> predicateConsumer) {
-		final FilterPredicate predicate = generateFilterPredicate( aliasGenerator, enabledFilters );
-		if ( predicate != null ) {
-			predicateConsumer.accept( predicate );
-		}
-	}
-
-	public void applyFilters(
-			QuerySpec querySpec,
-			FilterAliasGenerator aliasGenerator,
-			Map<String, Filter> enabledFilters) {
-		final FilterPredicate predicate = generateFilterPredicate( aliasGenerator, enabledFilters );
-		if ( predicate != null ) {
-			querySpec.applyPredicate( predicate );
-		}
-	}
-
-	public FilterPredicate generateFilterPredicate(FilterAliasGenerator aliasGenerator, Map<String, Filter> enabledFilters) {
-		final FilterPredicate filterPredicate = new FilterPredicate();
-
-		for ( int i = 0, max = filterNames.length; i < max; i++ ) {
-			final String filterName = filterNames[i];
-			final FilterImpl enabledFilter = (FilterImpl) enabledFilters.get( filterName );
-			if ( enabledFilter != null ) {
-				String condition = render( aliasGenerator, i );
-
-				final List<String> filterParameterNames = parameterNames[i];
-				for ( int paramPos = 0; paramPos < filterParameterNames.size(); paramPos++ ) {
-					final String parameterName = filterParameterNames.get( paramPos );
-
-					final Type parameterType = enabledFilter.getFilterDefinition().getParameterType( parameterName );
-					if ( ! (parameterType instanceof JdbcMapping) ) {
-						throw new MappingException( String.format( "parameter [%s] for filter [%s] is not of JdbcMapping type", parameterName, filterName ) );
-					}
-
-					final JdbcMapping jdbcMapping = (JdbcMapping) parameterType;
-					final Object parameterValue = enabledFilter.getParameter( parameterName );
-					if ( parameterValue == null ) {
-						throw new MappingException( String.format( "unknown parameter [%s] for filter [%s]", parameterName, filterName ) );
-					}
-
-					final StringBuilder paramMarkers = new StringBuilder( "?" );
-					if ( parameterValue instanceof Iterable
-							&& !jdbcMapping.getJavaTypeDescriptor().isInstance( parameterValue ) ) {
-						final Iterator<?> iterator = ( (Iterable<?>) parameterValue ).iterator();
-						if ( iterator.hasNext() ) {
-							final Object value = iterator.next();
-							final FilterJdbcParameter jdbcParameter = new FilterJdbcParameter( jdbcMapping, value );
-							filterPredicate.applyParameter( jdbcParameter );
-
-							while ( iterator.hasNext() ) {
-								paramMarkers.append( ",?" );
-								filterPredicate.applyParameter( new FilterJdbcParameter( jdbcMapping, iterator.next() ) );
-							}
-						}
-						else {
-							// We need a dummy value if the list is empty
-							filterPredicate.applyParameter( new FilterJdbcParameter( jdbcMapping, null ) );
-						}
-					}
-					else {
-						filterPredicate.applyParameter( new FilterJdbcParameter( jdbcMapping, parameterValue ) );
-					}
-
-					final String marker = ":" + filterNames[ i ] + "." + parameterName;
-					condition = condition.replaceAll( marker, paramMarkers.toString() );
-				}
-
-				filterPredicate.applyFragment( condition );
-			}
-		}
-
-		if ( filterPredicate.isEmpty() ) {
-			return null;
-		}
-
-		return filterPredicate;
-	}
 }

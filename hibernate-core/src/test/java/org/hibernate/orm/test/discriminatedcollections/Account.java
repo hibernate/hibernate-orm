@@ -12,29 +12,35 @@ import jakarta.persistence.ManyToOne;
 @DiscriminatorColumn(name = "account_type")
 abstract class Account {
 
-    Account() {}
-
-    Account(Client client) {
-        this.client = client;
-        amount = 0.0;
-        rate = 12.0;
-    }
-
-    @Id @GeneratedValue
-    private Long id;
-
-    public Long getId() {
-        return id;
-    }
+    @Id
+    private Integer id;
+    private double amount;
+    private Double rate;
 
     @ManyToOne(fetch = FetchType.LAZY)
     private Client client;
+
+    Account() {}
+
+    public Account(Integer id, double amount, Double rate, Client client) {
+        this.id = id;
+        this.amount = amount;
+        this.rate = rate;
+        this.client = client;
+    }
+
+    public Account(Integer id, Client client) {
+        this( id, 0.0, 12.0, client );
+    }
+
+    public Integer getId() {
+        return id;
+    }
 
     public Client getClient() {
         return client;
     }
 
-    private double amount;
 
     public double getAmount() {
         return amount;
@@ -44,7 +50,6 @@ abstract class Account {
         this.amount = amount;
     }
 
-    private Double rate;
 
     public Double getRate() {
         return rate;
@@ -61,11 +66,15 @@ abstract class Account {
 @DiscriminatorValue("D")
 class DebitAccount extends Account {
 
-    public DebitAccount() {
+    DebitAccount() {
     }
 
-    public DebitAccount(Client client) {
-        super(client);
+    public DebitAccount(Integer id, double amount, Double rate, Client client) {
+        super( id, amount, rate, client );
+    }
+
+    public DebitAccount(Integer id, Client client) {
+        super( id, client );
     }
 
     @Override
@@ -78,11 +87,15 @@ class DebitAccount extends Account {
 @DiscriminatorValue("C")
 class CreditAccount extends Account {
 
-    public CreditAccount() {
+    CreditAccount() {
     }
 
-    public CreditAccount(Client client) {
-        super(client);
+    public CreditAccount(Integer id, double amount, Double rate, Client client) {
+        super( id, amount, rate, client );
+    }
+
+    public CreditAccount(Integer id, Client client) {
+        super( id, client );
     }
 
     @Override

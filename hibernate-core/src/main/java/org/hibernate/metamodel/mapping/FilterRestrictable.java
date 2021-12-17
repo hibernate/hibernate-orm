@@ -7,7 +7,6 @@
 package org.hibernate.metamodel.mapping;
 
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Consumer;
 
 import org.hibernate.Filter;
@@ -16,19 +15,20 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 
 /**
- * Things that can have {@link org.hibernate.annotations.Where},
- * and/or {@link org.hibernate.annotations.Filter} applied to them
+ * Things that can have associated {@link org.hibernate.annotations.Filter} declarations.
+ *
+ * @see WhereRestrictable
  */
-public interface Restrictable extends FilterRestrictable, WhereRestrictable {
+public interface FilterRestrictable {
+
 	/**
-	 * Applies the base set of restrictions.  The impact varies based on
-	 * Restrictable type - some apply restrictions for filter, where and/or discriminator
+	 * Applies just the {@link org.hibernate.annotations.Filter}
+	 * values enabled for the associated entity
 	 */
-	void applyBaseRestrictions(
+	void applyFilterRestrictions(
 			Consumer<Predicate> predicateConsumer,
 			TableGroup tableGroup,
 			boolean useQualifier,
 			Map<String, Filter> enabledFilters,
-			Set<String> treatAsDeclarations,
 			SqlAstCreationState creationState);
-	}
+}

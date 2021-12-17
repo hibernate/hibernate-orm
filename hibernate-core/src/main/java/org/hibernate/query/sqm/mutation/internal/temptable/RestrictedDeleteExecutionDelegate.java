@@ -21,7 +21,6 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.FilterHelper;
 import org.hibernate.internal.util.MutableBoolean;
 import org.hibernate.internal.util.MutableInteger;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
@@ -42,7 +41,6 @@ import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
 import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
-import org.hibernate.sql.ast.spi.SqlAstTreeHelper;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
@@ -52,9 +50,9 @@ import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.UnionTableReference;
-import org.hibernate.sql.ast.tree.predicate.FilterPredicate;
 import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.ast.tree.predicate.PredicateCollector;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcDelete;
@@ -140,7 +138,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 		//			table it comes from.  if all of the referenced columns (if any at all) are from the root table
 		//			we can perform all of the deletes without using an id-table
 		final MutableBoolean needsIdTableWrapper = new MutableBoolean( false );
-		Predicate predicate = converter.visitWhereClause(
+		final Predicate specifiedRestriction = converter.visitWhereClause(
 				sqmDelete.getWhereClause(),
 				columnReference -> {
 					if ( ! hierarchyRootTableReference.getIdentificationVariable().equals( columnReference.getQualifier() ) ) {
@@ -156,16 +154,19 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 				}
 		);
 
-		final FilterPredicate filterPredicate = entityDescriptor.generateFilterPredicate(
+		final PredicateCollector predicateCollector = new PredicateCollector( specifiedRestriction );
+		entityDescriptor.applyBaseRestrictions(
+				(filterPredicate) -> {
+					needsIdTableWrapper.setValue( true );
+					predicateCollector.applyPredicate( filterPredicate );
+				},
 				deletingTableGroup,
 				true,
-				Collections.emptySet(),
-				executionContext.getSession().getLoadQueryInfluencers().getEnabledFilters()
+				executionContext.getSession().getLoadQueryInfluencers().getEnabledFilters(),
+				null,
+				converter
 		);
-		if ( filterPredicate != null ) {
-			needsIdTableWrapper.setValue( true );
-			predicate = SqlAstTreeHelper.combinePredicates( predicate, filterPredicate );
-		}
+
 		converter.pruneTableGroupJoins();
 
 		// We need an id table if we want to delete from an intermediate table to avoid FK violations
@@ -179,7 +180,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 
 		if ( needsIdTable ) {
 			return executeWithIdTable(
-					predicate,
+					predicateCollector.getPredicate(),
 					deletingTableGroup,
 					parameterResolutions,
 					paramTypeResolutions,
@@ -188,7 +189,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 		}
 		else {
 			return executeWithoutIdTable(
-					predicate,
+					predicateCollector.getPredicate(),
 					deletingTableGroup,
 					parameterResolutions,
 					paramTypeResolutions,

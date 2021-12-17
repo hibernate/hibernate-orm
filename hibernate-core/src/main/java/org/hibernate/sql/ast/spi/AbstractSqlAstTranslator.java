@@ -33,7 +33,7 @@ import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Queryable;
-import org.hibernate.persister.internal.WhereFilterPredicate;
+import org.hibernate.persister.internal.SqlFragmentPredicate;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.sqm.sql.internal.SqmPathInterpretation;
 import org.hibernate.sql.ast.tree.cte.CteMaterialization;
@@ -4297,9 +4297,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	@Override
-	public void visitWhereFilterPredicate(WhereFilterPredicate whereFilterPredicate) {
-		assert StringHelper.isNotEmpty( whereFilterPredicate.getWhereCondition() );
-		appendSql( whereFilterPredicate.getWhereCondition() );
+	public void visitSqlFragmentPredicate(SqlFragmentPredicate predicate) {
+		assert StringHelper.isNotEmpty( predicate.getSqlFragment() );
+		appendSql( predicate.getSqlFragment() );
 	}
 
 	@Override

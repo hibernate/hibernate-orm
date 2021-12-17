@@ -7,10 +7,10 @@
 package org.hibernate.persister.collection;
 
 import java.io.Serializable;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.Comparator;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.Consumer;
 
 import org.hibernate.Filter;
 import org.hibernate.HibernateException;
@@ -27,11 +27,14 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.Restrictable;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.walking.spi.CollectionDefinition;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.Type;
 
@@ -70,7 +73,7 @@ import org.hibernate.type.Type;
  * @see PersistentCollection
  * @author Gavin King
  */
-public interface CollectionPersister extends CollectionDefinition {
+public interface CollectionPersister extends CollectionDefinition, Restrictable {
 	NavigableRole getNavigableRole();
 
 	/**
@@ -360,4 +363,12 @@ public interface CollectionPersister extends CollectionDefinition {
 						+ CollectionSemantics.class.getName() + "`"
 		);
 	}
+
+	void applyBaseManyToManyRestrictions(
+			Consumer<Predicate> predicateConsumer,
+			TableGroup tableGroup,
+			boolean useQualifier,
+			Map<String, Filter> enabledFilters,
+			Set<String> treatAsDeclarations,
+			SqlAstCreationState creationState);
 }

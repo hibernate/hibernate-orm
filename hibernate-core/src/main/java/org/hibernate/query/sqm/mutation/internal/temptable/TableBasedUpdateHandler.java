@@ -18,7 +18,6 @@ import java.util.function.Function;
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.FilterHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
@@ -33,13 +32,12 @@ import org.hibernate.query.sqm.mutation.spi.AbstractMutationHandler;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
-import org.hibernate.sql.ast.spi.SqlAstTreeHelper;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
-import org.hibernate.sql.ast.tree.predicate.FilterPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.ast.tree.predicate.PredicateCollector;
 import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 
@@ -165,13 +163,13 @@ public class TableBasedUpdateHandler
 		// visit the where-clause using our special converter, collecting information
 		// about the restrictions
 
-		Predicate predicate;
+		final Predicate providedPredicate;
 		final SqmWhereClause whereClause = getSqmUpdate().getWhereClause();
 		if ( whereClause == null || whereClause.getPredicate() == null ) {
-			predicate = null;
+			providedPredicate = null;
 		}
 		else {
-			predicate = converterDelegate.visitWhereClause(
+			providedPredicate = converterDelegate.visitWhereClause(
 					whereClause,
 					columnReference -> {},
 					(sqmParameter, mappingType, jdbcParameters) -> {
@@ -183,18 +181,20 @@ public class TableBasedUpdateHandler
 					}
 
 			);
-			assert predicate != null;
+			assert providedPredicate != null;
 		}
 
-		final FilterPredicate filterPredicate = entityDescriptor.generateFilterPredicate(
+		final PredicateCollector predicateCollector = new PredicateCollector( providedPredicate );
+
+		entityDescriptor.applyBaseRestrictions(
+				predicateCollector::applyPredicate,
 				updatingTableGroup,
 				true,
-				Collections.emptySet(),
-				executionContext.getSession().getLoadQueryInfluencers().getEnabledFilters()
+				executionContext.getSession().getLoadQueryInfluencers().getEnabledFilters(),
+				null,
+				converterDelegate
 		);
-		if ( filterPredicate != null ) {
-			predicate = SqlAstTreeHelper.combinePredicates( predicate, filterPredicate );
-		}
+
 		converterDelegate.pruneTableGroupJoins();
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -211,13 +211,14 @@ public class TableBasedUpdateHandler
 				getSqmUpdate(),
 				converterDelegate,
 				idTable,
-				afterUseAction, sessionUidAccess,
+				afterUseAction,
+				sessionUidAccess,
 				domainParameterXref,
 				updatingTableGroup,
 				hierarchyRootTableReference,
 				tableReferenceByAlias,
 				assignments,
-				predicate,
+				predicateCollector.getPredicate(),
 				parameterResolutions,
 				paramTypeResolutions,
 				executionContext

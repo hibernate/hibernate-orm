@@ -48,6 +48,7 @@ import org.hibernate.sql.Insert;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -867,6 +868,24 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		}
 
 		return tableGroup;
+	}
+
+	@Override
+	public void applyDiscriminator(
+			Consumer<Predicate> predicateConsumer,
+			String alias,
+			TableGroup tableGroup,
+			SqlAstCreationState creationState) {
+		if ( needsDiscriminator() ) {
+			predicateConsumer.accept(
+					createDiscriminatorPredicate(
+							tableGroup,
+							creationState.getSqlExpressionResolver(),
+							creationState.getCreationContext()
+					)
+			);
+		}
+		super.applyDiscriminator( predicateConsumer, alias, tableGroup, creationState );
 	}
 
 	private Predicate createDiscriminatorPredicate(

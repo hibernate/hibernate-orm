@@ -11,22 +11,22 @@ import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 
 /**
- * Models a Predicate for {@link org.hibernate.annotations.Where}
+ * Predicate based on a SQL fragment
  */
-public class WhereFilterPredicate implements Predicate {
-	private final String whereCondition;
+public class SqlFragmentPredicate implements Predicate {
+	private final String fragment;
 
-	public WhereFilterPredicate(String whereCondition) {
-		this.whereCondition = whereCondition;
+	public SqlFragmentPredicate(String fragment) {
+		this.fragment = fragment;
 	}
 
-	public String getWhereCondition() {
-		return whereCondition;
+	public String getSqlFragment() {
+		return fragment;
 	}
 
 	@Override
 	public void accept(SqlAstWalker sqlTreeWalker) {
-		sqlTreeWalker.visitWhereFilterPredicate( this );
+		sqlTreeWalker.visitSqlFragmentPredicate( this );
 	}
 
 	@Override
@@ -39,4 +39,3 @@ public class WhereFilterPredicate implements Predicate {
 		return false;
 	}
 }
-

@@ -10,6 +10,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -25,11 +26,12 @@ import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.Expectations;
 import org.hibernate.mapping.Collection;
 import org.hibernate.persister.entity.Joinable;
-import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.sql.Update;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
 
 /**
  * Collection persister for one-to-many associations.
@@ -482,6 +484,21 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	@Override
 	public String getTableName() {
 		return ( (Joinable) getElementPersister() ).getTableName();
+	}
+
+	protected void applyLegacyNamedFilterFragment(
+			Consumer<Predicate> predicateConsumer,
+			String alias,
+			TableGroup tableGroup,
+			SqlAstCreationState astCreationState) {
+		super.applyLegacyNamedFilterFragment( predicateConsumer, alias, tableGroup, astCreationState );
+
+		getElementPersisterInternal().applyDiscriminator(
+				predicateConsumer,
+				alias,
+				tableGroup,
+				astCreationState
+		);
 	}
 
 	@Override

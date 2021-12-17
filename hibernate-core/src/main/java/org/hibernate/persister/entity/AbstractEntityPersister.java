@@ -192,7 +192,7 @@ import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.QueryableCollection;
-import org.hibernate.persister.internal.WhereFilterPredicate;
+import org.hibernate.persister.internal.SqlFragmentPredicate;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.persister.walking.internal.EntityIdentifierDefinitionHelper;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
@@ -223,6 +223,7 @@ import org.hibernate.sql.ast.spi.SqlAliasBaseConstant;
 import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.AliasedExpression;
@@ -477,12 +478,6 @@ public abstract class AbstractEntityPersister
 	protected abstract int[] getPropertyTableNumbers();
 
 	protected abstract int getSubclassPropertyTableNumber(int i);
-
-	protected String filterFragment(String alias) throws MappingException {
-		return filterFragment( alias, Collections.emptySet() );
-	}
-
-	protected abstract String filterFragment(String alias, Set<String> treatAsDeclarations);
 
 	private static final String DISCRIMINATOR_ALIAS = "clazz_";
 
@@ -1050,11 +1045,11 @@ public abstract class AbstractEntityPersister
 		propertyDefinedOnSubclass = ArrayHelper.toBooleanArray( definedBySubclass );
 
 		// Handle any filters applied to the class level
-		if ( CollectionHelper.isEmpty( bootDescriptor.getFilters() ) ) {
-			filterHelper = null;
+		if ( CollectionHelper.isNotEmpty( bootDescriptor.getFilters() ) ) {
+			filterHelper = new FilterHelper( bootDescriptor.getFilters(), factory );
 		}
 		else {
-			filterHelper = new FilterHelper( bootDescriptor.getFilters(), factory );
+			filterHelper = null;
 		}
 
 		// Check if we can use Reference Cached entities in 2lc
@@ -3996,13 +3991,69 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
+	public void applyDiscriminator(
+			Consumer<Predicate> predicateConsumer,
+			String alias,
+			TableGroup tableGroup,
+			SqlAstCreationState creationState) {
+		// by default, nothing to do
+	}
+
+	@Override
+	public void applyFilterRestrictions(
+			Consumer<Predicate> predicateConsumer,
+			TableGroup tableGroup,
+			boolean useQualifier,
+			Map<String, Filter> enabledFilters,
+			SqlAstCreationState creationState) {
+		if ( filterHelper == null ) {
+			return;
+		}
+
+		final FilterAliasGenerator filterAliasGenerator = useQualifier && tableGroup != null
+				? getFilterAliasGenerator( tableGroup )
+				: null;
+
+		filterHelper.applyEnabledFilters( predicateConsumer, filterAliasGenerator, enabledFilters );
+	}
+
+	@Override
+	public void applyBaseRestrictions(Consumer<Predicate> predicateConsumer, TableGroup tableGroup, boolean useQualifier, Map<String, Filter> enabledFilters, Set<String> treatAsDeclarations, SqlAstCreationState creationState) {
+		applyFilterRestrictions( predicateConsumer, tableGroup, useQualifier, enabledFilters, creationState );
+		applyWhereRestrictions( predicateConsumer, tableGroup, useQualifier, creationState );
+	}
+
+	@Override
+	public void applyWhereRestrictions(Consumer<Predicate> predicateConsumer, TableGroup tableGroup, boolean useQualifier, SqlAstCreationState creationState) {
+		if ( sqlWhereStringTemplate == null ) {
+			return;
+		}
+
+		final FilterAliasGenerator aliasGenerator = useQualifier && tableGroup != null
+				? getFilterAliasGenerator( tableGroup )
+				: null;
+
+		final String fragment = StringHelper.replace( sqlWhereStringTemplate, Template.TEMPLATE, aliasGenerator.getAlias( getTableName() ) );
+		predicateConsumer.accept( new SqlFragmentPredicate( fragment ) );
+	}
+
+	protected String filterFragment(String alias) throws MappingException {
+		return filterFragment( alias, Collections.emptySet() );
+	}
+
+	protected abstract String filterFragment(String alias, Set<String> treatAsDeclarations);
+
+
+	@Override
 	public String filterFragment(String alias, Map<String, Filter> enabledFilters, Set<String> treatAsDeclarations) {
 		if ( filterHelper == null ) {
 			return "";
 		}
 
 		final StringBuilder sessionFilterFragment = new StringBuilder();
-		filterHelper.render( sessionFilterFragment, alias == null ? null : getFilterAliasGenerator( alias ), enabledFilters );
+		if ( filterHelper != null ) {
+			filterHelper.render( sessionFilterFragment, alias == null ? null : getFilterAliasGenerator( alias ), enabledFilters );
+		}
 		final String filterFragment = filterFragment( alias, treatAsDeclarations );
 		if ( sessionFilterFragment.length() != 0 && !filterFragment.isEmpty() ) {
 			sessionFilterFragment.append( " and " );
@@ -4032,7 +4083,9 @@ public abstract class AbstractEntityPersister
 		}
 
 		final StringBuilder sessionFilterFragment = new StringBuilder();
-		filterHelper.render( sessionFilterFragment, !useIdentificationVariable || tableGroup == null ? null : getFilterAliasGenerator( tableGroup ), enabledFilters );
+		if ( filterHelper != null ) {
+			filterHelper.render( sessionFilterFragment, !useIdentificationVariable || tableGroup == null ? null : getFilterAliasGenerator( tableGroup ), enabledFilters );
+		}
 		final String filterFragment = filterFragment( alias, treatAsDeclarations );
 		if ( sessionFilterFragment.length() != 0 && !filterFragment.isEmpty() ) {
 			sessionFilterFragment.append( " and " );
@@ -4042,144 +4095,6 @@ public abstract class AbstractEntityPersister
 
 	public String generateWhereConditionAlias(String alias) {
 		return alias;
-	}
-
-	@Override
-	public void applyRestrictions(
-			RestrictionPredicateConsumer predicateConsumer,
-			TableGroup tableGroup,
-			boolean useQualifier,
-			Map<String, Filter> enabledFilters,
-			Set<String> treatAsDeclarations,
-			FromClauseAccess fromClauseAccess) {
-		// handle `@Filter`
-		final FilterAliasGenerator aliasGenerator = useQualifier && tableGroup != null
-				? getFilterAliasGenerator( tableGroup )
-				: null;
-		applyFilterRestrictions(
-				enabledFilters,
-				aliasGenerator,
-				(predicate) -> predicateConsumer.consume( predicate, RestrictionPredicatePartType.ENTITY, RestrictionSourceType.FILTER )
-		);
-
-		// handle `@Where`
-		final String alias;
-		if ( tableGroup == null ) {
-			alias = null;
-		}
-		else if ( useQualifier && tableGroup.getPrimaryTableReference().getIdentificationVariable() != null ) {
-			alias = tableGroup.getPrimaryTableReference().getIdentificationVariable();
-		}
-		else {
-			alias = tableGroup.getPrimaryTableReference().getTableExpression();
-		}
-		applyWhereRestriction(
-				generateWhereConditionAlias( alias ),
-				treatAsDeclarations,
-				(predicate) -> predicateConsumer.consume( predicate, RestrictionPredicatePartType.ENTITY, RestrictionSourceType.WHERE )
-		);
-	}
-
-	/**
-	 * Apply both {@link org.hibernate.annotations.Filter} and
-	 * {@link org.hibernate.annotations.Where} restrictions
-	 */
-	@Override
-	public void applyRestrictions(
-			QuerySpec querySpec,
-			TableGroup tableGroup,
-			boolean useQualifier,
-			Map<String, Filter> enabledFilters,
-			Set<String> treatAsDeclarations,
-			FromClauseAccess fromClauseAccess) {
-		final TableGroupJoin tableGroupJoin = findTableGroupJoin( tableGroup, fromClauseAccess );
-
-		// handle `@Filter`
-		final FilterAliasGenerator aliasGenerator = useQualifier && tableGroup != null
-				? getFilterAliasGenerator( tableGroup )
-				: null;
-		applyFilterRestrictions( querySpec, enabledFilters, aliasGenerator, tableGroupJoin );
-
-		// handle `@Where`
-		final String alias;
-		if ( tableGroup == null ) {
-			alias = null;
-		}
-		else if ( useQualifier && tableGroup.getPrimaryTableReference().getIdentificationVariable() != null ) {
-			alias = tableGroup.getPrimaryTableReference().getIdentificationVariable();
-		}
-		else {
-			alias = tableGroup.getPrimaryTableReference().getTableExpression();
-		}
-		applyWhereRestriction( generateWhereConditionAlias( alias ), treatAsDeclarations, querySpec, tableGroupJoin );
-	}
-
-	@Override
-	public FilterPredicate generateFilterPredicate(TableGroup tableGroup, boolean useQualifier, Set<String> treatAsDeclarations, Map<String, Filter> enabledFilters) {
-		if ( filterHelper == null ) {
-			return null;
-		}
-
-		final FilterAliasGenerator aliasGenerator = useQualifier && tableGroup != null
-				? getFilterAliasGenerator( tableGroup )
-				: null;
-		return filterHelper.generateFilterPredicate( aliasGenerator, enabledFilters );
-	}
-
-	protected void applyFilterRestrictions(
-			QuerySpec querySpec,
-			Map<String, Filter> enabledFilters,
-			FilterAliasGenerator aliasGenerator) {
-		if ( filterHelper != null ) {
-			filterHelper.applyFilters( querySpec, aliasGenerator, enabledFilters );
-		}
-	}
-
-	protected void applyFilterRestrictions(
-			Map<String, Filter> enabledFilters, FilterAliasGenerator aliasGenerator, Consumer<Predicate> predicateConsumer) {
-		if ( filterHelper != null ) {
-			filterHelper.applyFilters( aliasGenerator, enabledFilters, (Consumer) predicateConsumer );
-		}
-	}
-
-	protected void applyWhereRestriction(String alias, Set<String> treatAsDeclarations, QuerySpec querySpec, TableGroupJoin tableGroupJoin) {
-		if ( hasWhere() ) {
-			final String whereCondition = getSQLWhereString( alias );
-			final WhereFilterPredicate filterPredicate = new WhereFilterPredicate( whereCondition );
-			if ( tableGroupJoin == null ) {
-				querySpec.applyPredicate( filterPredicate );
-			}
-			else {
-				tableGroupJoin.applyPredicate( filterPredicate );
-			}
-		}
-	}
-
-	private static TableGroupJoin findTableGroupJoin(TableGroup tableGroup, FromClauseAccess fromClauseAccess) {
-		final NavigablePath parentNavigablePath;
-		if ( tableGroup == null || ( parentNavigablePath = tableGroup.getNavigablePath().getParent() ) == null ) {
-			return null;
-		}
-		else {
-			final TableGroup parentTableGroup = fromClauseAccess.getTableGroup( parentNavigablePath );
-			TableGroupJoin tableGroupJoin = null;
-			for ( TableGroupJoin nestedTableGroupJoin : parentTableGroup.getTableGroupJoins() ) {
-				if ( nestedTableGroupJoin.getNavigablePath() == tableGroup.getNavigablePath() ) {
-					tableGroupJoin = nestedTableGroupJoin;
-					break;
-				}
-			}
-
-			assert tableGroupJoin != null;
-			return tableGroupJoin;
-		}
-	}
-
-	protected void applyWhereRestriction(String alias, Set<String> treatAsDeclarations, Consumer<Predicate> predicateConsumer) {
-		if ( hasWhere() ) {
-			final String whereCondition = getSQLWhereString( alias );
-			predicateConsumer.accept( new WhereFilterPredicate( whereCondition ) );
-		}
 	}
 
 	public String generateFilterConditionAlias(String rootAlias) {
@@ -4465,7 +4380,7 @@ public abstract class AbstractEntityPersister
 	@Override
 	public boolean isAffectedByEnabledFilters(LoadQueryInfluencers loadQueryInfluencers) {
 		if ( loadQueryInfluencers.hasEnabledFilters() && filterHelper != null ) {
-			if ( filterHelper.isAffectedBy( loadQueryInfluencers.getEnabledFilters() ) ) {
+			if ( filterHelper != null && filterHelper.isAffectedBy( loadQueryInfluencers.getEnabledFilters() ) ) {
 				return true;
 			}
 			// we still need to verify collection fields to be eagerly loaded by 'join'

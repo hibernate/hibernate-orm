@@ -17,12 +17,10 @@ import org.hibernate.LockOptions;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.FilterHelper;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.persister.entity.Joinable;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
@@ -32,14 +30,12 @@ import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAstTreeHelper;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.ast.tree.predicate.FilterPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
@@ -87,6 +83,7 @@ public class MatchingIdSelectionHelper {
 		}
 
 		final QuerySpec idSelectionQuery = new QuerySpec( queryRoot, 1 );
+		idSelectionQuery.applyPredicate( restriction );
 
 		final TableGroup mutatingTableGroup = sqmConverter.getMutatingTableGroup();
 		idSelectionQuery.getFromClause().addRoot( mutatingTableGroup );
@@ -116,13 +113,14 @@ public class MatchingIdSelectionHelper {
 		);
 		sqmConverter.getProcessingStateStack().pop();
 
-		final FilterPredicate filterPredicate = targetEntityDescriptor.getEntityPersister().generateFilterPredicate(
+		targetEntityDescriptor.getEntityPersister().applyBaseRestrictions(
+				idSelectionQuery::applyPredicate,
 				mutatingTableGroup,
 				true,
-				Collections.emptySet(),
-				executionContext.getSession().getLoadQueryInfluencers().getEnabledFilters()
+				executionContext.getSession().getLoadQueryInfluencers().getEnabledFilters(),
+				null,
+				sqmConverter
 		);
-		idSelectionQuery.applyPredicate( SqlAstTreeHelper.combinePredicates( restriction, filterPredicate ) );
 
 		return new SelectStatement( idSelectionQuery, domainResults );
 	}

@@ -43,6 +43,14 @@ public class FilterPredicate implements Predicate {
 		parameters.add( parameter );
 	}
 
+	public Junction getFragments() {
+		return fragments;
+	}
+
+	public List<FilterJdbcParameter> getParameters() {
+		return parameters;
+	}
+
 	@Override
 	public boolean isEmpty() {
 		return fragments.isEmpty();
@@ -53,19 +61,10 @@ public class FilterPredicate implements Predicate {
 		sqlTreeWalker.visitFilterPredicate( this );
 	}
 
-	public Junction getFragments() {
-		return fragments;
-	}
-
-	public List<FilterJdbcParameter> getParameters() {
-		return parameters;
-	}
-
 	@Override
 	public JdbcMappingContainer getExpressionType() {
 		return null;
 	}
-
 	public static class FilterFragmentPredicate implements Predicate {
 		private final String sqlFragment;
 

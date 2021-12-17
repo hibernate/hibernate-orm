@@ -6,14 +6,20 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 
+import org.hibernate.Filter;
 import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
+import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
 
@@ -21,7 +27,7 @@ import org.hibernate.sql.results.graph.FetchableContainer;
  * @author Steve Ebersole
  */
 public interface PluralAttributeMapping
-		extends AttributeMapping, StateArrayContributorMapping, TableGroupJoinProducer, FetchableContainer, Loadable {
+		extends AttributeMapping, StateArrayContributorMapping, TableGroupJoinProducer, FetchableContainer, Loadable, Restrictable {
 
 	CollectionPersister getCollectionDescriptor();
 
@@ -30,7 +36,7 @@ public interface PluralAttributeMapping
 	CollectionPart getIndexDescriptor();
 
 	@Override
-	CollectionMappingType getMappedType();
+	CollectionMappingType<?> getMappedType();
 
 	interface IndexMetadata {
 		CollectionPart getIndexDescriptor();
@@ -67,5 +73,45 @@ public interface PluralAttributeMapping
 	@Override
 	default boolean incrementFetchDepth(){
 		return true;
+	}
+
+	@Override
+	default void applyFilterRestrictions(
+			Consumer<Predicate> predicateConsumer,
+			TableGroup tableGroup,
+			boolean useQualifier,
+			Map<String, Filter> enabledFilters,
+			SqlAstCreationState creationState) {
+		getCollectionDescriptor().applyFilterRestrictions( predicateConsumer, tableGroup, useQualifier, enabledFilters, creationState );
+	}
+
+	@Override
+	default void applyBaseRestrictions(
+			Consumer<Predicate> predicateConsumer,
+			TableGroup tableGroup,
+			boolean useQualifier,
+			Map<String, Filter> enabledFilters,
+			Set<String> treatAsDeclarations,
+			SqlAstCreationState creationState) {
+		getCollectionDescriptor().applyBaseRestrictions( predicateConsumer, tableGroup, useQualifier, enabledFilters, treatAsDeclarations, creationState );
+	}
+
+	default void applyBaseManyToManyRestrictions(
+			Consumer<Predicate> predicateConsumer,
+			TableGroup tableGroup,
+			boolean useQualifier,
+			Map<String, Filter> enabledFilters,
+			Set<String> treatAsDeclarations,
+			SqlAstCreationState creationState) {
+		getCollectionDescriptor().applyBaseManyToManyRestrictions( predicateConsumer, tableGroup, useQualifier, enabledFilters, treatAsDeclarations, creationState );
+	}
+
+	@Override
+	default void applyWhereRestrictions(
+			Consumer<Predicate> predicateConsumer,
+			TableGroup tableGroup,
+			boolean useQualifier,
+			SqlAstCreationState creationState) {
+		getCollectionDescriptor().applyWhereRestrictions( predicateConsumer, tableGroup, useQualifier, creationState );
 	}
 }

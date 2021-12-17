@@ -18,7 +18,6 @@ import org.hibernate.Filter;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
@@ -39,7 +38,6 @@ import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
-import org.hibernate.sql.ast.tree.predicate.FilterPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
@@ -56,7 +54,7 @@ import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCH
  *
  * @author Steve Ebersole
  */
-public interface EntityMappingType extends ManagedMappingType, EntityValuedModelPart, Loadable {
+public interface EntityMappingType extends ManagedMappingType, EntityValuedModelPart, Loadable, Restrictable, Discriminatable {
 	/**
 	 * Safety-net.
 	 *
@@ -497,9 +495,42 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 		return getEntityPersister().getNumberOfFetchables();
 	}
 
-	FilterPredicate generateFilterPredicate(
+	@Override
+	default void applyDiscriminator(
+			Consumer<Predicate> predicateConsumer,
+			String alias,
+			TableGroup tableGroup,
+			SqlAstCreationState creationState) {
+		getEntityPersister().applyDiscriminator( predicateConsumer, alias, tableGroup, creationState );
+	}
+
+	@Override
+	default void applyFilterRestrictions(
+			Consumer<Predicate> predicateConsumer,
 			TableGroup tableGroup,
 			boolean useQualifier,
+			Map<String, Filter> enabledFilters,
+			SqlAstCreationState creationState) {
+		getEntityPersister().applyFilterRestrictions( predicateConsumer, tableGroup, useQualifier, enabledFilters, creationState );
+	}
+
+	@Override
+	default void applyBaseRestrictions(
+			Consumer<Predicate> predicateConsumer,
+			TableGroup tableGroup,
+			boolean useQualifier,
+			Map<String, Filter> enabledFilters,
 			Set<String> treatAsDeclarations,
-			Map<String, Filter> enabledFilters);
+			SqlAstCreationState creationState) {
+		getEntityPersister().applyBaseRestrictions( predicateConsumer, tableGroup, useQualifier, enabledFilters, treatAsDeclarations, creationState );
+	}
+
+	@Override
+	default void applyWhereRestrictions(
+			Consumer<Predicate> predicateConsumer,
+			TableGroup tableGroup,
+			boolean useQualifier,
+			SqlAstCreationState creationState) {
+		getEntityPersister().applyWhereRestrictions( predicateConsumer, tableGroup, useQualifier, creationState );
+	}
 }

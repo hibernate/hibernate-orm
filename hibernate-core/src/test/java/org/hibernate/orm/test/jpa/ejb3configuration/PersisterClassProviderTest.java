@@ -12,12 +12,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Consumer;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.PersistenceException;
 
-import org.hibernate.Filter;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -38,8 +34,7 @@ import org.hibernate.engine.spi.ValueInclusion;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.jpa.boot.spi.Bootstrap;
-import org.hibernate.testing.orm.jpa.PersistenceUnitDescriptorAdapter;
-import org.hibernate.orm.test.jpa.SettingsGenerator;
+import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metadata.ClassMetadata;
@@ -52,16 +47,14 @@ import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
+import org.hibernate.orm.test.jpa.SettingsGenerator;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.persister.internal.PersisterClassResolverInitiator;
 import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.predicate.FilterPredicate;
 import org.hibernate.tuple.entity.BytecodeEnhancementMetadataNonPojoImpl;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
@@ -69,8 +62,12 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import org.hibernate.testing.orm.jpa.PersistenceUnitDescriptorAdapter;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.PersistenceException;
 
 /**
  * @author <a href="mailto:emmanuel@hibernate.org">Emmanuel Bernard</a>
@@ -719,11 +716,6 @@ public class PersisterClassProviderTest {
 
 		@Override
 		public JavaType getMappedJavaTypeDescriptor() {
-			return null;
-		}
-
-		@Override
-		public FilterPredicate generateFilterPredicate(TableGroup tableGroup, boolean useQualifier, Set<String> treatAsDeclarations, Map<String, Filter> enabledFilters) {
 			return null;
 		}
 	}

@@ -46,6 +46,7 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.PostInsertIdentifierGenerator;
 import org.hibernate.id.enhanced.Optimizer;
+import org.hibernate.internal.FilterHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
@@ -76,7 +77,6 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.Restrictable;
-import org.hibernate.metamodel.mapping.Restrictable.RestrictionPredicatePartType;
 import org.hibernate.metamodel.mapping.SqlExpressable;
 import org.hibernate.metamodel.mapping.ValueMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedCollectionPart;
@@ -333,6 +333,7 @@ import org.hibernate.sql.ast.tree.predicate.LikePredicate;
 import org.hibernate.sql.ast.tree.predicate.NegatedPredicate;
 import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.ast.tree.predicate.PredicateCollector;
 import org.hibernate.sql.ast.tree.predicate.SelfRenderingPredicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
@@ -408,7 +409,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private ForeignKeyDescriptor.Nature currentlyResolvingForeignKeySide;
 	private SqmQueryPart<?> currentSqmQueryPart;
 
-	private final Map<String, List<Predicate>> collectionFilterPredicates = new HashMap<>();
+	private final Map<String, PredicateCollector> collectionFilterPredicates = new HashMap<>();
 	private List<Map.Entry<OrderByFragment, TableGroup>> orderByFragments;
 
 	private final SqlAliasBaseManager sqlAliasBaseManager = new SqlAliasBaseManager();
@@ -687,15 +688,14 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final List<Assignment> assignments = visitSetClause( sqmStatement.getSetClause() );
 			addVersionedAssignment( assignments::add, sqmStatement );
 
-			final FilterPredicate filterPredicate = entityDescriptor.generateFilterPredicate(
+			FilterHelper.applyBaseRestrictions(
+					(filterPredicate) -> additionalRestrictions = filterPredicate,
+					entityDescriptor,
 					rootTableGroup,
 					AbstractSqlAstTranslator.rendersTableReferenceAlias( Clause.UPDATE ),
-					Collections.emptySet(),
-					loadQueryInfluencers.getEnabledFilters()
+					getLoadQueryInfluencers(),
+					this
 			);
-			if ( filterPredicate != null ) {
-				additionalRestrictions = SqlAstTreeHelper.combinePredicates( additionalRestrictions, filterPredicate );
-			}
 
 			Predicate suppliedPredicate = null;
 			final SqmWhereClause whereClause = sqmStatement.getWhereClause();
@@ -916,15 +916,14 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				throw new HibernateException( "Not expecting multiple table references for an SQM DELETE" );
 			}
 
-			final FilterPredicate filterPredicate = entityDescriptor.generateFilterPredicate(
+			FilterHelper.applyBaseRestrictions(
+					(filterPredicate) -> additionalRestrictions = filterPredicate,
+					entityDescriptor,
 					rootTableGroup,
 					AbstractSqlAstTranslator.rendersTableReferenceAlias( Clause.DELETE ),
-					Collections.emptySet(),
-					loadQueryInfluencers.getEnabledFilters()
+					getLoadQueryInfluencers(),
+					this
 			);
-			if ( filterPredicate != null ) {
-				additionalRestrictions = SqlAstTreeHelper.combinePredicates( additionalRestrictions, filterPredicate );
-			}
 
 			Predicate suppliedPredicate = null;
 			final SqmWhereClause whereClause = statement.getWhereClause();
@@ -1759,17 +1758,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final List<TableGroup> roots = sqlQuerySpec.getFromClause().getRoots();
 		if ( roots != null && roots.size() == 1 ) {
 			final TableGroup root = roots.get( 0 );
-			final ModelPartContainer modelPartContainer = root.getModelPart();
-			final EntityPersister entityPersister = modelPartContainer.findContainingEntityMapping().getEntityPersister();
-			assert entityPersister instanceof Joinable;
 
 			if ( CollectionHelper.isNotEmpty( collectionFilterPredicates ) ) {
 				root.getTableGroupJoins().forEach( (tableGroupJoin) -> {
 					collectionFilterPredicates.forEach( (alias, predicates) -> {
 						if ( tableGroupJoin.getJoinedGroup().getGroupAlias().equals( alias ) ) {
-							if ( CollectionHelper.isNotEmpty( predicates ) ) {
-								predicates.forEach( tableGroupJoin::applyPredicate );
-							}
+							tableGroupJoin.applyPredicate( predicates.getPredicate() );
 						}
 					} );
 				} );
@@ -2330,13 +2324,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					creationContext
 			);
 
-			( (Restrictable) entityDescriptor ).applyRestrictions(
-					currentQuerySpec,
+			entityDescriptor.applyBaseRestrictions(
+					currentQuerySpec::applyPredicate,
 					tableGroup,
 					true,
-					loadQueryInfluencers.getEnabledFilters(),
-					Collections.emptySet(),
-					getFromClauseAccess()
+					getLoadQueryInfluencers().getEnabledFilters(),
+					null,
+					this
 			);
 		}
 
@@ -2528,6 +2522,28 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					sqmJoin.getJoinPredicate() != null,
 					this
 			);
+
+			joinedTableGroup = joinedTableGroupJoin.getJoinedGroup();
+
+			pluralAttributeMapping.applyBaseRestrictions(
+					(predicate) -> {
+						final PredicateCollector existing = collectionFilterPredicates.get( joinedTableGroup.getGroupAlias() );
+						final PredicateCollector collector;
+						if ( existing == null ) {
+							collector = new PredicateCollector( predicate );
+							collectionFilterPredicates.put( joinedTableGroup.getGroupAlias(), collector );
+						}
+						else {
+							collector = existing;
+							collector.applyPredicate( predicate );
+						}
+					},
+					joinedTableGroup,
+					true,
+					getLoadQueryInfluencers().getEnabledFilters(),
+					null,
+					this
+			);
 		}
 		else {
 			assert modelPart instanceof TableGroupJoinProducer;
@@ -2542,15 +2558,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					this
 			);
 
+			joinedTableGroup = joinedTableGroupJoin.getJoinedGroup();
+
 			// Since this is an explicit join, we force the initialization of a possible lazy table group
 			// to retain the cardinality, but only if this is a non-trivial attribute join.
 			// Left or inner singular attribute joins without a predicate can be safely optimized away
 			if ( sqmJoin.getJoinPredicate() != null || sqmJoinType != SqmJoinType.INNER && sqmJoinType != SqmJoinType.LEFT ) {
-				joinedTableGroupJoin.getJoinedGroup().getPrimaryTableReference();
+				joinedTableGroup.getPrimaryTableReference();
 			}
 		}
 
-		joinedTableGroup = joinedTableGroupJoin.getJoinedGroup();
 		lhsTableGroup.addTableGroupJoin( joinedTableGroupJoin );
 
 		getFromClauseIndex().register( sqmJoin, joinedTableGroup );
@@ -3254,13 +3271,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					creationContext
 			);
 
-			( (Joinable) pluralAttributeMapping.getCollectionDescriptor() ).applyRestrictions(
-					subQuerySpec,
+			pluralAttributeMapping.applyBaseRestrictions(
+					subQuerySpec::applyPredicate,
 					tableGroup,
 					true,
 					getLoadQueryInfluencers().getEnabledFilters(),
-					Collections.emptySet(),
-					getFromClauseAccess()
+					null,
+					this
 			);
 
 			getFromClauseAccess().registerTableGroup( pluralPath.getNavigablePath(), tableGroup );
@@ -3398,13 +3415,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					creationContext
 			);
 
-			( (Joinable) pluralAttributeMapping.getCollectionDescriptor() ).applyRestrictions(
-					subQuerySpec,
+			pluralAttributeMapping.applyBaseRestrictions(
+					subQuerySpec::applyPredicate,
 					tableGroup,
 					true,
 					getLoadQueryInfluencers().getEnabledFilters(),
-					Collections.emptySet(),
-					getFromClauseAccess()
+					null,
+					this
 			);
 
 			getFromClauseAccess().registerTableGroup( pluralPartPath.getNavigablePath(), tableGroup );
@@ -5037,13 +5054,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					creationContext
 			);
 
-			( (Joinable) pluralAttributeMapping.getCollectionDescriptor() ).applyRestrictions(
-					subQuerySpec,
+			pluralAttributeMapping.applyBaseRestrictions(
+					subQuerySpec::applyPredicate,
 					tableGroup,
 					true,
 					getLoadQueryInfluencers().getEnabledFilters(),
-					Collections.emptySet(),
-					getFromClauseAccess()
+					null,
+					this
 			);
 
 			getFromClauseAccess().registerTableGroup( pluralPath.getNavigablePath(), tableGroup );
@@ -5673,37 +5690,46 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					this
 			);
 
-			if ( fetchable instanceof PluralAttributeMapping && fetch.getTiming() == FetchTiming.IMMEDIATE && joined ) {
-				final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) fetchable;
+			if ( fetchable instanceof PluralAttributeMapping
+					&& fetch.getTiming() == FetchTiming.IMMEDIATE
+					&& joined ) {
 				final TableGroup tableGroup = getFromClauseIndex().getTableGroup( fetchablePath );
+				final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) fetchable;
 
-				( (Restrictable) pluralAttributeMapping.getCollectionDescriptor() ).applyRestrictions(
-						(predicate, partType, sourceType) -> {
-							if ( partType == RestrictionPredicatePartType.COLLECTION ) {
-								addCollectionFilterPredicate( tableGroup.getGroupAlias(), predicate );
-							}
-							else if ( partType == RestrictionPredicatePartType.MANY_TO_MANY ) {
-								final TableGroup parentTableGroup = getFromClauseIndex().getTableGroup( fetchParent.getNavigablePath() );
-								TableGroupJoin pluralTableGroupJoin = null;
-								for ( TableGroupJoin nestedTableGroupJoin : parentTableGroup.getTableGroupJoins() ) {
-									if ( nestedTableGroupJoin.getNavigablePath() == fetchablePath ) {
-										pluralTableGroupJoin = nestedTableGroupJoin;
-										break;
-									}
+				final Joinable joinable = pluralAttributeMapping
+						.getCollectionDescriptor()
+						.getCollectionType()
+						.getAssociatedJoinable( getCreationContext().getSessionFactory() );
+				if ( joinable instanceof Restrictable ) {
+					( (Restrictable) joinable ).applyBaseRestrictions(
+							(predicate) -> addCollectionFilterPredicate( tableGroup.getGroupAlias(), predicate ),
+							tableGroup,
+							true,
+							getLoadQueryInfluencers().getEnabledFilters(),
+							null,
+							this
+					);
+				}
+
+				pluralAttributeMapping.applyBaseManyToManyRestrictions(
+						(predicate) -> {
+							final TableGroup parentTableGroup = getFromClauseIndex().getTableGroup( fetchParent.getNavigablePath() );
+							TableGroupJoin pluralTableGroupJoin = null;
+							for ( TableGroupJoin nestedTableGroupJoin : parentTableGroup.getTableGroupJoins() ) {
+								if ( nestedTableGroupJoin.getNavigablePath() == fetchablePath ) {
+									pluralTableGroupJoin = nestedTableGroupJoin;
+									break;
 								}
+							}
 
-								assert pluralTableGroupJoin != null;
-								pluralTableGroupJoin.applyPredicate( predicate );
-							}
-							else if ( partType == RestrictionPredicatePartType.ONE_TO_MANY ) {
-								addCollectionFilterPredicate( tableGroup.getGroupAlias(), predicate );
-							}
+							assert pluralTableGroupJoin != null;
+							pluralTableGroupJoin.applyPredicate( predicate );
 						},
 						tableGroup,
 						true,
 						getLoadQueryInfluencers().getEnabledFilters(),
-						Collections.emptySet(),
-						getFromClauseAccess()
+						null,
+						this
 				);
 
 				if ( currentQuerySpec().isRoot() ) {
@@ -5728,14 +5754,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private void addCollectionFilterPredicate(String groupAlias, Predicate predicate) {
-		final List<Predicate> existing = collectionFilterPredicates.get( groupAlias );
+		final PredicateCollector existing = collectionFilterPredicates.get( groupAlias );
 		if ( existing != null ) {
-			existing.add( predicate );
+			existing.applyPredicate( predicate );
 		}
 		else {
-			final ArrayList<Predicate> list = new ArrayList<>();
-			list.add( predicate );
-			collectionFilterPredicates.put( groupAlias, list );
+			collectionFilterPredicates.put( groupAlias, new PredicateCollector( predicate ) );
 		}
 	}
 

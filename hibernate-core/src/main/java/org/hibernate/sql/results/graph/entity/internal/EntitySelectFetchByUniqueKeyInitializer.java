@@ -15,7 +15,7 @@ import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParentAccess;
-import org.hibernate.sql.results.graph.entity.EntityInitializer;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 /**
@@ -66,16 +66,27 @@ public class EntitySelectFetchByUniqueKeyInitializer extends EntitySelectFetchIn
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		entityInstance = persistenceContext.getEntity( euk );
 		if ( entityInstance == null ) {
-			entityInstance = ( (UniqueKeyLoadable) concreteDescriptor ).loadByUniqueKey(
-					uniqueKeyPropertyName,
-					entityIdentifier,
-					session
-			);
+			final EntitySelectFetchByUniqueKeyInitializer initializer = (EntitySelectFetchByUniqueKeyInitializer) persistenceContext.getLoadContexts()
+					.findInitializer( euk );
+			if ( initializer == null ) {
+				final JdbcValuesSourceProcessingState jdbcValuesSourceProcessingState = rowProcessingState.getJdbcValuesSourceProcessingState();
+				jdbcValuesSourceProcessingState.registerInitilaizer( euk, this );
 
-			// If the entity was not in the Persistence Context, but was found now,
-			// add it to the Persistence Context
-			if ( entityInstance != null ) {
-				persistenceContext.addEntity( euk, entityInstance );
+				entityInstance = ( (UniqueKeyLoadable) concreteDescriptor ).loadByUniqueKey(
+						uniqueKeyPropertyName,
+						entityIdentifier,
+						session
+				);
+
+				// If the entity was not in the Persistence Context, but was found now,
+				// add it to the Persistence Context
+				if ( entityInstance != null ) {
+					persistenceContext.addEntity( euk, entityInstance );
+				}
+				notifyResolutionListeners(entityInstance);
+			}
+			else {
+				registerResolutionListener( instance -> entityInstance = instance );
 			}
 		}
 		if ( entityInstance != null ) {
@@ -83,4 +94,5 @@ public class EntitySelectFetchByUniqueKeyInitializer extends EntitySelectFetchIn
 		}
 		isInitialized = true;
 	}
+
 }

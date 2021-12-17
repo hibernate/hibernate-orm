@@ -14,12 +14,14 @@ import java.util.function.BiConsumer;
 
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.EntityUniqueKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostLoadEvent;
 import org.hibernate.event.spi.PostLoadEventListener;
 import org.hibernate.event.spi.PreLoadEvent;
+import org.hibernate.mapping.UniqueKey;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.results.graph.Initializer;
@@ -47,6 +49,7 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 
 	private Map<EntityKey, LoadingEntityEntry> loadingEntityMap;
 	private Map<EntityKey, Initializer> initializerMap;
+	private Map<EntityUniqueKey, Initializer> initializerByUniquKeyMap;
 	private Map<CollectionKey, LoadingCollectionEntry> loadingCollectionMap;
 	private List<CollectionInitializer> arrayInitializers;
 
@@ -120,6 +123,19 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 		}
 		initializerMap.put( entityKey, initializer );
 
+	}
+
+	@Override
+	public void registerInitilaizer(EntityUniqueKey entityKey, Initializer initializer) {
+		if ( initializerByUniquKeyMap == null ) {
+			initializerByUniquKeyMap = new HashMap<>();
+		}
+		initializerByUniquKeyMap.put( entityKey, initializer );
+	}
+
+	@Override
+	public Initializer findInitializer(EntityUniqueKey entityKey) {
+		return initializerByUniquKeyMap == null ? null : initializerByUniquKeyMap.get( entityKey );
 	}
 
 	@Override

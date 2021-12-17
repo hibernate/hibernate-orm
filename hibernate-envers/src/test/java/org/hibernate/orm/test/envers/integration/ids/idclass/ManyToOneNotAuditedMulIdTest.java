@@ -1,18 +1,18 @@
-package org.hibernate.envers.test.integration.ids.idclass;
+package org.hibernate.orm.test.envers.integration.ids.idclass;
 
 import java.util.List;
-import javax.persistence.Entity;
-import javax.persistence.EntityManager;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.IdClass;
-import javax.persistence.ManyToOne;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
+import jakarta.persistence.ManyToOne;
 
 import org.hibernate.envers.Audited;
-import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.envers.test.Priority;
-import org.hibernate.envers.test.entities.UnversionedStrTestEntity;
-import org.hibernate.envers.test.entities.ids.MulId;
+import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
+import org.hibernate.orm.test.envers.Priority;
+import org.hibernate.orm.test.envers.entities.UnversionedStrTestEntity;
+import org.hibernate.orm.test.envers.entities.ids.MulId;
 
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;

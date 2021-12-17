@@ -26,6 +26,7 @@ import jakarta.persistence.criteria.JoinType;
 
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.query.AuditEntity;
+import org.hibernate.envers.query.order.NullPrecedence;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.testing.TestForIssue;
@@ -267,7 +268,7 @@ public class ComponentQueryTest extends BaseEnversJPAFunctionalTestCase {
 				.forEntitiesAtRevision( Asset.class, 1 )
 				.addProjection( AuditEntity.id() )
 				.traverseRelation( "singleSymbol", JoinType.LEFT, "s" )
-				.addOrder( AuditEntity.property( "s", "identifier" ).asc() )
+				.addOrder( AuditEntity.property( "s", "identifier" ).asc().nulls( NullPrecedence.FIRST ) )
 				.getResultList();
 		List<Integer> expected = new ArrayList<>();
 		Collections.addAll( expected, asset1.getId(), asset2.getId(), asset3.getId() );
@@ -281,8 +282,8 @@ public class ComponentQueryTest extends BaseEnversJPAFunctionalTestCase {
 				.addProjection( AuditEntity.id() )
 				.traverseRelation( "multiSymbols", JoinType.LEFT, "s" )
 				.traverseRelation( "type", JoinType.LEFT, "t" )
-				.addOrder( AuditEntity.property( "t", "name" ).asc() )
-				.addOrder( AuditEntity.property( "s", "identifier" ).asc() )
+				.addOrder( AuditEntity.property( "t", "name" ).asc().nulls( NullPrecedence.FIRST ) )
+				.addOrder( AuditEntity.property( "s", "identifier" ).asc().nulls( NullPrecedence.FIRST ) )
 				.getResultList();
 		List<Integer> expected = new ArrayList<>();
 		Collections.addAll( expected, asset1.getId(), asset2.getId(), asset3.getId(), asset3.getId() );

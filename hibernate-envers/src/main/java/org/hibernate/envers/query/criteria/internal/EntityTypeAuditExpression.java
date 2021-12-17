@@ -34,6 +34,7 @@ public class EntityTypeAuditExpression implements AuditCriterion {
 			EnversService enversService,
 			AuditReaderImplementor auditReader,
 			Map<String, String> aliasToEntityNameMap,
+			Map<String, String> aliasToComponentPropertyNameMap,
 			String baseAlias,
 			QueryBuilder qb,
 			Parameters parameters) {

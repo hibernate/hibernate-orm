@@ -341,7 +341,7 @@ public class ComponentQueryTest extends BaseEnversJPAFunctionalTestCase {
 				.forEntitiesAtRevision( Asset.class, 1 )
 				.addProjection( AuditEntity.id() )
 				.traverseRelation( "singleSymbol", JoinType.LEFT, "s", AuditEntity.property( "s", "type" ).eq( type1 ) )
-				.addOrder( AuditEntity.property( "s", "identifier" ).asc() )
+				.addOrder( AuditEntity.property( "s", "identifier" ).asc().nulls( NullPrecedence.FIRST ) )
 				.up()
 				.addOrder( AuditEntity.id().asc() )
 				.getResultList();
@@ -357,7 +357,7 @@ public class ComponentQueryTest extends BaseEnversJPAFunctionalTestCase {
 				.forEntitiesAtRevision( Asset.class, 1 )
 				.addProjection( AuditEntity.id() )
 				.traverseRelation( "multiSymbols", JoinType.LEFT, "s", AuditEntity.property( "s", "type" ).eq( type1 ) )
-				.addOrder( AuditEntity.property( "s", "identifier" ).asc() )
+				.addOrder( AuditEntity.property( "s", "identifier" ).asc().nulls( NullPrecedence.FIRST ) )
 				.up()
 				.addOrder( AuditEntity.id().asc() )
 				.getResultList();

@@ -22,6 +22,7 @@ import jakarta.persistence.criteria.JoinType;
 import org.hibernate.envers.AuditJoinTable;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.query.AuditEntity;
+import org.hibernate.envers.query.order.NullPrecedence;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.testing.TestForIssue;
@@ -182,7 +183,7 @@ public class AssociationQueryWithOnClauseTest extends BaseEnversJPAFunctionalTes
 		List list = getAuditReader().createQuery()
 				.forEntitiesAtRevision( EntityA.class, 1 )
 				.traverseRelation( "bManyToOne", JoinType.LEFT, "b", AuditEntity.property( "b", "type" ).eq( "T1" ) )
-				.addOrder( AuditEntity.property( "b", "number" ).asc() )
+				.addOrder( AuditEntity.property( "b", "number" ).asc().nulls( NullPrecedence.FIRST ) )
 				.up()
 				.addProjection( AuditEntity.id() )
 				.addProjection( AuditEntity.property( "b", "number" ) )
@@ -194,7 +195,7 @@ public class AssociationQueryWithOnClauseTest extends BaseEnversJPAFunctionalTes
 	public void testOneToMany() {
 		List list = getAuditReader().createQuery().forEntitiesAtRevision( EntityA.class, 1 )
 				.traverseRelation( "bOneToMany", JoinType.LEFT, "b", AuditEntity.property( "b", "type" ).eq( "T1" ) )
-				.addOrder( AuditEntity.property( "b", "number" ).asc() )
+				.addOrder( AuditEntity.property( "b", "number" ).asc().nulls( NullPrecedence.FIRST ) )
 				.up()
 				.addOrder( AuditEntity.id().asc() )
 				.addProjection( AuditEntity.id() )
@@ -208,9 +209,10 @@ public class AssociationQueryWithOnClauseTest extends BaseEnversJPAFunctionalTes
 		List list = getAuditReader().createQuery()
 				.forEntitiesAtRevision( EntityA.class, 1 )
 				.traverseRelation( "bManyToMany", JoinType.LEFT, "b", AuditEntity.property( "b", "type" ).eq( "T1" ) )
-				.addOrder( AuditEntity.property( "b", "number" ).asc() )
+				.addOrder( AuditEntity.property( "b", "number" ).asc().nulls( NullPrecedence.FIRST ) )
 				.up()
-				.addOrder( AuditEntity.id().asc() ).addProjection( AuditEntity.id() )
+				.addOrder( AuditEntity.id().asc().nulls( NullPrecedence.FIRST ) )
+				.addProjection(AuditEntity.id() )
 				.addProjection( AuditEntity.property( "b", "number" ) )
 				.getResultList();
 		assertArrayListEquals( list, tuple( a1.getId(), null ), tuple( a1.getId(), 1 ), tuple( a2.getId(), 3 ), tuple( a3.getId(), 3 ) );

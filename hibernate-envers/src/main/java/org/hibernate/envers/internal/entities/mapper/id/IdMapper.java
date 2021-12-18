@@ -14,6 +14,8 @@ import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.service.ServiceRegistry;
 
 /**
+ * Base contract for all identifier mappers.
+ *
  * @author Adam Warski (adam at warski dot org)
  * @author Chris Cranford
  */

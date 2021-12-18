@@ -21,7 +21,10 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.service.ServiceRegistry;
 
 /**
+ * An implementation of an identifier mapper for a single basic attribute property.
+ *
  * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
  */
 public class SingleIdMapper extends AbstractIdMapper implements SimpleIdMapperBuilder {
 	private PropertyData propertyData;
@@ -42,6 +45,11 @@ public class SingleIdMapper extends AbstractIdMapper implements SimpleIdMapperBu
 		}
 
 		this.propertyData = propertyData;
+	}
+
+	@Override
+	public void add(PropertyData propertyData, AbstractIdMapper idMapper) {
+		throw new AuditException( "This method is not allowed for a single identifier mapper" );
 	}
 
 	@Override
@@ -143,6 +151,7 @@ public class SingleIdMapper extends AbstractIdMapper implements SimpleIdMapperBu
 		}
 	}
 
+	@Override
 	public void mapToEntityFromEntity(final Object objTo, final Object objFrom) {
 		if ( objTo == null || objFrom == null ) {
 			return;

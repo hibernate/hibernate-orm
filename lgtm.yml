@@ -7,4 +7,4 @@ extraction:
     index:
       # Specify the Java version required to build the project
       java_version: 11
-      build_command: ./gradlew -S -Dorg.gradle.java.home=/usr/lib/jvm/java-11-openjdk-amd64 --max-workers=1 --no-scan testClasses
+#      build_command: ./gradlew -S -Dorg.gradle.java.home=/usr/lib/jvm/java-11-openjdk-amd64 --max-workers=1 --no-scan testClasses

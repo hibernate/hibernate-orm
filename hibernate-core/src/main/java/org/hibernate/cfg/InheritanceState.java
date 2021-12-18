@@ -8,6 +8,8 @@ package org.hibernate.cfg;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.ServiceLoader;
+
 import jakarta.persistence.Access;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
@@ -23,6 +25,7 @@ import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.annotations.EntityBinder;
+import org.hibernate.cfg.spi.PropertyDataSorter;
 import org.hibernate.mapping.PersistentClass;
 
 /**
@@ -231,6 +234,7 @@ public class InheritanceState {
 				throw new AnnotationException( "No identifier specified for entity: " + clazz.getName() );
 			}
 			elements.trimToSize();
+			elements=sort(elements,clazz);
 			elementsToProcess = new ElementsToProcess( elements, idPropertyCount );
 		}
 		return elementsToProcess;
@@ -331,5 +335,12 @@ public class InheritanceState {
 			this.properties = properties;
 			this.idPropertyCount = idPropertyCount;
 		}
+	}
+	public ArrayList<PropertyData> sort(ArrayList<PropertyData> elements,XClass xclass){
+		PropertyDataSorter sorter=	PropertyDataSorter.findByXClass(xclass);
+		if(sorter!=null){
+			sorter.sort(elements);
+		}
+		return elements;
 	}
 }

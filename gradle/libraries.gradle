@@ -109,7 +109,7 @@ ext {
 
             // ~~~~~~~~~~~~~~~~~~~~~~~~~~ testing
 
-            log4j2:          "org.apache.logging.log4j:log4j-core:2.16.0",
+            log4j2:          "org.apache.logging.log4j:log4j-core:2.17.0",
             junit:           "junit:junit:${junitVersion}",
             byteman:         "org.jboss.byteman:byteman:${bytemanVersion}",
             byteman_install: "org.jboss.byteman:byteman-install:${bytemanVersion}",

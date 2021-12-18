@@ -7,8 +7,6 @@
 package org.hibernate.envers.internal.entities.mapper.relation;
 
 import java.io.Serializable;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.List;
 import java.util.Map;
 
@@ -21,7 +19,6 @@ import org.hibernate.envers.internal.entities.mapper.AbstractPropertyMapper;
 import org.hibernate.envers.internal.entities.mapper.PersistentCollectionChangeData;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.ReflectionTools;
-import org.hibernate.property.access.spi.Setter;
 import org.hibernate.service.ServiceRegistry;
 
 /**
@@ -96,21 +93,7 @@ public abstract class AbstractToOneMapper extends AbstractPropertyMapper {
 			map.put( propertyData.getBeanName(), value );
 		}
 		else {
-			AccessController.doPrivileged(
-					new PrivilegedAction<Object>() {
-						@Override
-						public Object run() {
-							final Setter setter = ReflectionTools.getSetter(
-									targetObject.getClass(),
-									propertyData,
-									serviceRegistry
-							);
-							setter.set( targetObject, value );
-
-							return null;
-						}
-					}
-			);
+			setValueOnObject( propertyData, targetObject, value, serviceRegistry );
 		}
 	}
 

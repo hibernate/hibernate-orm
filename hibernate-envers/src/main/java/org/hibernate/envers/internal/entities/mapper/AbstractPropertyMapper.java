@@ -11,7 +11,7 @@ package org.hibernate.envers.internal.entities.mapper;
  *
  * @author Chris Cranford
  */
-public abstract class AbstractPropertyMapper implements PropertyMapper {
+public abstract class AbstractPropertyMapper extends AbstractMapper implements PropertyMapper {
 	private boolean map;
 
 	@Override

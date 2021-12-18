@@ -7,8 +7,6 @@
 package org.hibernate.envers.internal.entities.mapper;
 
 import java.io.Serializable;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.List;
 import java.util.Map;
 
@@ -101,49 +99,44 @@ public class MultiPropertyMapper extends AbstractPropertyMapper implements Exten
 			final Map<String, Object> data,
 			final Object newObj,
 			final Object oldObj) {
-		return AccessController.doPrivileged(
-				new PrivilegedAction<Boolean>() {
-					@Override
-					public Boolean run() {
-						boolean ret = false;
-						for ( Map.Entry<PropertyData, PropertyMapper> entry : properties.entrySet() ) {
-							final PropertyData propertyData = entry.getKey();
-							final PropertyMapper propertyMapper = entry.getValue();
+		return doPrivileged( () -> {
+			boolean ret = false;
+			for ( Map.Entry<PropertyData, PropertyMapper> entry : properties.entrySet() ) {
+				final PropertyData propertyData = entry.getKey();
+				final PropertyMapper propertyMapper = entry.getValue();
 
-							// synthetic properties are not part of the entity model; therefore they should be ignored.
-							if ( propertyData.isSynthetic() ) {
-								continue;
-							}
-
-							Getter getter;
-							if ( newObj != null ) {
-								getter = ReflectionTools.getGetter(
-										newObj.getClass(),
-										propertyData,
-										session.getFactory().getServiceRegistry()
-								);
-							}
-							else if ( oldObj != null ) {
-								getter = ReflectionTools.getGetter(
-										oldObj.getClass(),
-										propertyData,
-										session.getFactory().getServiceRegistry()
-								);
-							}
-							else {
-								return false;
-							}
-
-							ret |= propertyMapper.mapToMapFromEntity(
-									session, data,
-									newObj == null ? null : getter.get( newObj ),
-									oldObj == null ? null : getter.get( oldObj )
-							);
-						}
-						return ret;
-					}
+				// synthetic properties are not part of the entity model; therefore they should be ignored.
+				if ( propertyData.isSynthetic() ) {
+					continue;
 				}
-		);
+
+				Getter getter;
+				if ( newObj != null ) {
+					getter = ReflectionTools.getGetter(
+							newObj.getClass(),
+							propertyData,
+							session.getFactory().getServiceRegistry()
+					);
+				}
+				else if ( oldObj != null ) {
+					getter = ReflectionTools.getGetter(
+							oldObj.getClass(),
+							propertyData,
+							session.getFactory().getServiceRegistry()
+					);
+				}
+				else {
+					return false;
+				}
+
+				ret |= propertyMapper.mapToMapFromEntity(
+						session, data,
+						newObj == null ? null : getter.get( newObj ),
+						oldObj == null ? null : getter.get( oldObj )
+				);
+			}
+			return ret;
+		} );
 	}
 
 	@Override
@@ -152,49 +145,44 @@ public class MultiPropertyMapper extends AbstractPropertyMapper implements Exten
 			final Map<String, Object> data,
 			final Object newObj,
 			final Object oldObj) {
-		AccessController.doPrivileged(
-				new PrivilegedAction<Object>() {
-					@Override
-					public Object run() {
-						for ( Map.Entry<PropertyData, PropertyMapper> entry : properties.entrySet() ) {
-							final PropertyData propertyData = entry.getKey();
-							final PropertyMapper propertyMapper = entry.getValue();
+		doPrivileged( () -> {
+			for ( Map.Entry<PropertyData, PropertyMapper> entry : properties.entrySet() ) {
+				final PropertyData propertyData = entry.getKey();
+				final PropertyMapper propertyMapper = entry.getValue();
 
-							// synthetic properties are not part of the entity model; therefore they should be ignored.
-							if ( propertyData.isSynthetic() ) {
-								continue;
-							}
-
-							Getter getter;
-							if ( newObj != null ) {
-								getter = ReflectionTools.getGetter(
-										newObj.getClass(),
-										propertyData,
-										session.getFactory().getServiceRegistry()
-								);
-							}
-							else if ( oldObj != null ) {
-								getter = ReflectionTools.getGetter(
-										oldObj.getClass(),
-										propertyData,
-										session.getFactory().getServiceRegistry()
-								);
-							}
-							else {
-								break;
-							}
-
-							propertyMapper.mapModifiedFlagsToMapFromEntity(
-									session, data,
-									newObj == null ? null : getter.get( newObj ),
-									oldObj == null ? null : getter.get( oldObj )
-							);
-						}
-
-						return null;
-					}
+				// synthetic properties are not part of the entity model; therefore they should be ignored.
+				if ( propertyData.isSynthetic() ) {
+					continue;
 				}
-		);
+
+				Getter getter;
+				if ( newObj != null ) {
+					getter = ReflectionTools.getGetter(
+							newObj.getClass(),
+							propertyData,
+							session.getFactory().getServiceRegistry()
+					);
+				}
+				else if ( oldObj != null ) {
+					getter = ReflectionTools.getGetter(
+							oldObj.getClass(),
+							propertyData,
+							session.getFactory().getServiceRegistry()
+					);
+				}
+				else {
+					break;
+				}
+
+				propertyMapper.mapModifiedFlagsToMapFromEntity(
+						session, data,
+						newObj == null ? null : getter.get( newObj ),
+						oldObj == null ? null : getter.get( oldObj )
+				);
+			}
+
+			return null;
+		} );
 	}
 
 	@Override

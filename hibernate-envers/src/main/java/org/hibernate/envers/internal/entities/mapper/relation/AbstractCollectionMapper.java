@@ -8,8 +8,6 @@ package org.hibernate.envers.internal.entities.mapper.relation;
 
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -30,9 +28,7 @@ import org.hibernate.envers.internal.entities.mapper.AbstractPropertyMapper;
 import org.hibernate.envers.internal.entities.mapper.PersistentCollectionChangeData;
 import org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor.Initializor;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
-import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.property.access.spi.Setter;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -306,22 +302,7 @@ public abstract class AbstractCollectionMapper<T> extends AbstractPropertyMapper
 			map.put( collectionPropertyData.getBeanName(), collectionProxy );
 		}
 		else {
-			AccessController.doPrivileged(
-					new PrivilegedAction<Object>() {
-						@Override
-						public Object run() {
-							final Setter setter = ReflectionTools.getSetter(
-									obj.getClass(),
-									collectionPropertyData,
-									enversService.getServiceRegistry()
-							);
-
-							setter.set( obj, collectionProxy );
-
-							return null;
-						}
-					}
-			);
+			setValueOnObject( collectionPropertyData, obj, collectionProxy, enversService.getServiceRegistry() );
 		}
 	}
 

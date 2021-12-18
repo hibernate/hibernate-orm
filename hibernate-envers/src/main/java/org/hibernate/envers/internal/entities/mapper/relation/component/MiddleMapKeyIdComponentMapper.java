@@ -22,7 +22,7 @@ import org.hibernate.envers.internal.tools.query.Parameters;
  * @author Adam Warski (adam at warski dot org)
  * @author Chris Cranford
  */
-public final class MiddleMapKeyIdComponentMapper implements MiddleComponentMapper {
+public final class MiddleMapKeyIdComponentMapper extends AbstractMiddleComponentMapper {
 	private final Configuration configuration;
 	private final IdMapper relatedIdMapper;
 

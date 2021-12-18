@@ -3,6 +3,49 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.0.0.Beta3 (December 18, 2021)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32004
+
+** Bug
+    * [HHH-14972] - log4j2 <= 2.14.1 has an RCE (CVE-2021-44228)
+    * [HHH-14948] - Metamodel imports cache increases indefinitely for dynamically generated HQL aliases eventually leading to an OOM
+    * [HHH-14934] - java.lang.IllegalStateException: SqmJpaCriteriaParameterWrapper references for JpaCriteriaParameter already exhausted
+    * [HHH-14933] - Unable to set the original Selection back in CriteriaQuery
+    * [HHH-14922] - Inconsistent precedence of orm.xml implicit catalog/schema over "default_catalog"/"default_schema"
+    * [HHH-14280] - VirtualEntitySingleIdMapper throws a NullPointerException when the composite identifier contains a not audited entity (using @IdClass)
+    * [HHH-14211] - @Lob String mapping broken
+    * [HHH-11435] - Alias available in WITH clause although not defined yet and generates invalid SQL
+    * [HHH-9432] - SQL syntax failure when collection uses @Where annotation on audit join table.
+
+** Improvement
+    * [HHH-14977] - @Where is broken in 6.0
+    * [HHH-14949] - Support @Access on @ElementCollection (for embeddable elements)
+    * [HHH-14921] - Definition of the default catalog/schema on session factory creation
+    * [HHH-13393] - Add support for ZoneId and ZoneOffset
+    * [HHH-13082] - Support specifying an AttributeConverter class as a @ColumnResult#type
+    * [HHH-11896] - Support specification of 'on-clause' criterias when traversing relations in audit query API
+    * [HHH-11895] - Support traversal of components in audit queries
+    * [HHH-11735] - Support traversal of to-many associations in audit queries
+    * [HHH-11573] - No entity type expressions can be used in the Envers Query API
+    * [HHH-11452] - No scalar functions can be used in the Envers Query API
+    * [HHH-10558] - Add support for java.time.Year
+
+** New Feature
+    * [HHH-14981] - Support null precedence with Envers Query API
+    * [HHH-13817] - Envers: Please support nested criteria in revisionsOfEntity queries
+    * [HHH-8051] - targetAuditMode=RelationTargetAuditMode.NOT_AUDITED should allow for missing entity targets
+
+** Sub-task
+    * [HHH-14960] - Add @IdGeneratorType for better custom generator config
+    * [HHH-14718] - Drop deprecated generator implementations
+
+** Task
+    * [HHH-14988] - Upgrade to ByteBuddy 1.12.5
+    * [HHH-14979] - Upgrade to Log4J 2 2.16.0
+
+
 Changes in 6.0.0.Beta2 (December 02, 2021)
 ------------------------------------------------------------------------------------------------------------------------
 

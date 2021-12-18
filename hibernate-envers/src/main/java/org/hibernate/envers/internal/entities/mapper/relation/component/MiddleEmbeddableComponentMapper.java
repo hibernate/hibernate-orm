@@ -6,9 +6,6 @@
  */
 package org.hibernate.envers.internal.entities.mapper.relation.component;
 
-import java.lang.reflect.InvocationTargetException;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.Map;
 
 import org.hibernate.engine.spi.SessionImplementor;
@@ -20,16 +17,16 @@ import org.hibernate.envers.internal.entities.mapper.MultiPropertyMapper;
 import org.hibernate.envers.internal.entities.mapper.PropertyMapper;
 import org.hibernate.envers.internal.entities.mapper.relation.ToOneIdMapper;
 import org.hibernate.envers.internal.tools.query.Parameters;
-import org.hibernate.internal.util.ReflectHelper;
 
 /**
  * @author Kristoffer Lundberg (kristoffer at cambio dot se)
  */
-public class MiddleEmbeddableComponentMapper implements MiddleComponentMapper, CompositeMapperBuilder {
-	private final MultiPropertyMapper delegate;
-	private final Class componentClass;
+public class MiddleEmbeddableComponentMapper extends AbstractMiddleComponentMapper implements CompositeMapperBuilder {
 
-	public MiddleEmbeddableComponentMapper(MultiPropertyMapper delegate, Class componentClass) {
+	private final MultiPropertyMapper delegate;
+	private final Class<?> componentClass;
+
+	public MiddleEmbeddableComponentMapper(MultiPropertyMapper delegate, Class<?> componentClass) {
 		this.delegate = delegate;
 		this.componentClass = componentClass;
 	}
@@ -65,26 +62,7 @@ public class MiddleEmbeddableComponentMapper implements MiddleComponentMapper, C
 		if ( dataObject != null ) {
 			return dataObject;
 		}
-
-		return AccessController.doPrivileged(
-				new PrivilegedAction<Object>() {
-					@Override
-					public Object run() {
-						try {
-							return ReflectHelper.getDefaultConstructor( componentClass ).newInstance();
-						}
-						catch ( InstantiationException e ) {
-							throw new AuditException( e );
-						}
-						catch ( IllegalAccessException e ) {
-							throw new AuditException( e );
-						}
-						catch ( InvocationTargetException e ) {
-							throw new AuditException( e );
-						}
-					}
-				}
-		);
+		return newObjectInstance( componentClass );
 	}
 
 	@Override

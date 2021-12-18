@@ -6,13 +6,20 @@
  */
 package org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.List;
+import java.util.function.Supplier;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.boot.internal.EnversService;
+import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.EntityInstantiator;
 import org.hibernate.envers.internal.entities.mapper.relation.query.RelationQueryGenerator;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
+import org.hibernate.internal.util.ReflectHelper;
 
 /**
  * Initializes a persistent collection.
@@ -57,5 +64,44 @@ public abstract class AbstractCollectionInitializor<T> implements Initializor<T>
 		}
 
 		return collection;
+	}
+	
+	/**
+	 * Perform an action in a privileged block.
+	 *
+	 * @param block the lambda to executed in privileged.
+	 * @param <R> the return type
+	 * @return the result of the privileged call, may be {@literal null}
+	 */
+	protected <R> R doPrivileged(Supplier<R> block) {
+		if ( System.getSecurityManager() != null ) {
+			return AccessController.doPrivileged( (PrivilegedAction<R>) block::get );
+		}
+		else {
+			return block.get();
+		}
+	}
+	
+	/**
+	 * Creates a new object based on the specified class with the given constructor arguments.
+	 *
+	 * @param clazz the class, must not be {@literal null}
+	 * @param args the variadic constructor arguments, may be omitted.
+	 * @param <R> the return class type
+	 * @return a new instance of the class
+	 */
+	protected <R> R newObjectInstance(Class<R> clazz, Object... args) {
+		return doPrivileged( () -> {
+			try {
+				final Constructor<R> constructor = ReflectHelper.getDefaultConstructor( clazz );
+				if ( constructor == null ) {
+					throw new AuditException( "Failed to locate default constructor for class: " + clazz.getName() );
+				}
+				return constructor.newInstance( args );
+			}
+			catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+				throw new AuditException( e );
+			}
+		} );
 	}
 }

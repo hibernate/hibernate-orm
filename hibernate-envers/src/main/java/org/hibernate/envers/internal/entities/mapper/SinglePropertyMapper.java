@@ -7,8 +7,6 @@
 package org.hibernate.envers.internal.entities.mapper;
 
 import java.io.Serializable;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -105,25 +103,20 @@ public class SinglePropertyMapper extends AbstractPropertyMapper implements Simp
 			map.put( propertyData.getBeanName(), value );
 		}
 		else {
-			AccessController.doPrivileged(
-					new PrivilegedAction<Object>() {
-						@Override
-						public Object run() {
-							final Setter setter = ReflectionTools.getSetter(
-									obj.getClass(),
-									propertyData,
-									enversService.getServiceRegistry()
-							);
+			doPrivileged( () -> {
+				final Setter setter = ReflectionTools.getSetter(
+						obj.getClass(),
+						propertyData,
+						enversService.getServiceRegistry()
+				);
 
-							// We only set a null value if the field is not primitive. Otherwise, we leave it intact.
-							if ( value != null || !isPrimitive( setter, propertyData, obj.getClass() ) ) {
-								setter.set( obj, value );
-							}
+				// We only set a null value if the field is not primitive. Otherwise, we leave it intact.
+				if ( value != null || !isPrimitive( setter, propertyData, obj.getClass() ) ) {
+					setter.set( obj, value );
+				}
 
-							return null;
-						}
-					}
-			);
+				return null;
+			} );
 		}
 	}
 

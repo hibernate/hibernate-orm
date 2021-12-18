@@ -17,7 +17,7 @@ import org.hibernate.envers.internal.tools.query.Parameters;
  * @author Adam Warski (adam at warski dot org)
  * @author Chris Cranford
  */
-public final class MiddleSimpleComponentMapper implements MiddleComponentMapper {
+public final class MiddleSimpleComponentMapper extends AbstractMiddleComponentMapper {
 	private final Configuration configuration;
 	private final String propertyName;
 

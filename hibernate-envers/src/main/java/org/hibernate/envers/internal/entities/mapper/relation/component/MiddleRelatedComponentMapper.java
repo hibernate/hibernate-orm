@@ -16,7 +16,7 @@ import org.hibernate.envers.internal.tools.query.Parameters;
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public final class MiddleRelatedComponentMapper implements MiddleComponentMapper {
+public final class MiddleRelatedComponentMapper extends AbstractMiddleComponentMapper {
 	private final MiddleIdData relatedIdData;
 
 	public MiddleRelatedComponentMapper(MiddleIdData relatedIdData) {

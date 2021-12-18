@@ -6,15 +6,11 @@
  */
 package org.hibernate.envers.internal.entities.mapper.relation.component;
 
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.Map;
 
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.internal.entities.EntityInstantiator;
-import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.envers.internal.tools.query.Parameters;
-import org.hibernate.property.access.spi.Getter;
 
 /**
  * A component mapper for the @MapKey mapping with the name parameter specified: the value of the map's key
@@ -23,7 +19,7 @@ import org.hibernate.property.access.spi.Getter;
  *
  * @author Adam Warski (adam at warski dot org)
  */
-public class MiddleMapKeyPropertyComponentMapper implements MiddleComponentMapper {
+public class MiddleMapKeyPropertyComponentMapper extends AbstractMiddleComponentMapper {
 	private final String propertyName;
 	private final String accessType;
 
@@ -39,19 +35,11 @@ public class MiddleMapKeyPropertyComponentMapper implements MiddleComponentMappe
 			final Object dataObject,
 			Number revision) {
 		// dataObject is not null, as this mapper can only be used in an index.
-		return AccessController.doPrivileged(
-				new PrivilegedAction<Object>() {
-					@Override
-					public Object run() {
-						final Getter getter = ReflectionTools.getGetter(
-								dataObject.getClass(),
-								propertyName,
-								accessType,
-								entityInstantiator.getEnversService().getServiceRegistry()
-						);
-						return getter.get( dataObject );
-					}
-				}
+		return getValueFromObject(
+				propertyName,
+				accessType,
+				dataObject,
+				entityInstantiator.getEnversService().getServiceRegistry()
 		);
 	}
 

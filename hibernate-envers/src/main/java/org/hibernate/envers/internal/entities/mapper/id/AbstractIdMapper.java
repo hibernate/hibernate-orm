@@ -9,6 +9,8 @@ package org.hibernate.envers.internal.entities.mapper.id;
 import java.util.Iterator;
 import java.util.List;
 
+import org.hibernate.envers.internal.entities.PropertyData;
+import org.hibernate.envers.internal.entities.mapper.AbstractMapper;
 import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.service.ServiceRegistry;
 
@@ -18,7 +20,7 @@ import org.hibernate.service.ServiceRegistry;
  * @author Adam Warski (adam at warski dot org)
  * @author Chris Cranford
  */
-public abstract class AbstractIdMapper implements IdMapper {
+public abstract class AbstractIdMapper extends AbstractMapper implements IdMapper {
 	private final ServiceRegistry serviceRegistry;
 
 	public AbstractIdMapper(ServiceRegistry serviceRegistry) {
@@ -142,6 +144,18 @@ public abstract class AbstractIdMapper implements IdMapper {
 	}
 
 	public abstract void mapToEntityFromEntity(Object objectTo, Object objectFrom);
+
+	protected <T> T getValueFromObject(PropertyData propertyData, Object object) {
+		return getValueFromObject( propertyData, object, getServiceRegistry() );
+	}
+
+	protected void setValueOnObject(PropertyData propertyData, Object object, Object value) {
+		setValueOnObject( propertyData, object, value, getServiceRegistry() );
+	}
+
+	protected void getAndSetValue(PropertyData propertyData, Object source, Object destination) {
+		getAndSetValue( propertyData, source, destination, getServiceRegistry() );
+	}
 
 	private void handleNullValue(Parameters parameters, String alias, String propertyName, boolean equals) {
 		if ( equals ) {

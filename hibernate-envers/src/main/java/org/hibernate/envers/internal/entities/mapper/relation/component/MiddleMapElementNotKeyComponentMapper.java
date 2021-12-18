@@ -28,7 +28,7 @@ import org.hibernate.envers.internal.tools.query.Parameters;
  *
  * @author Chris Cranford
  */
-public class MiddleMapElementNotKeyComponentMapper implements MiddleComponentMapper {
+public class MiddleMapElementNotKeyComponentMapper extends AbstractMiddleComponentMapper {
 	private final String propertyName;
 
 	public MiddleMapElementNotKeyComponentMapper(String propertyName) {

@@ -232,11 +232,9 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.from.StandardTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
-import org.hibernate.sql.ast.tree.predicate.FilterPredicate;
 import org.hibernate.sql.ast.tree.predicate.Junction;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -4044,70 +4042,12 @@ public abstract class AbstractEntityPersister
 	protected abstract String filterFragment(String alias, Set<String> treatAsDeclarations);
 
 
-	@Override
-	public String filterFragment(String alias, Map<String, Filter> enabledFilters, Set<String> treatAsDeclarations) {
-		if ( filterHelper == null ) {
-			return "";
-		}
-
-		final StringBuilder sessionFilterFragment = new StringBuilder();
-		if ( filterHelper != null ) {
-			filterHelper.render( sessionFilterFragment, alias == null ? null : getFilterAliasGenerator( alias ), enabledFilters );
-		}
-		final String filterFragment = filterFragment( alias, treatAsDeclarations );
-		if ( sessionFilterFragment.length() != 0 && !filterFragment.isEmpty() ) {
-			sessionFilterFragment.append( " and " );
-		}
-		return sessionFilterFragment.append( filterFragment ).toString();
-	}
-
-	@Override
-	public String filterFragment(
-			TableGroup tableGroup,
-			Map<String, Filter> enabledFilters,
-			Set<String> treatAsDeclarations,
-			boolean useIdentificationVariable) {
-		if ( filterHelper == null ) {
-			return null;
-		}
-
-		final String alias;
-		if ( tableGroup == null ) {
-			alias = null;
-		}
-		else if ( useIdentificationVariable && tableGroup.getPrimaryTableReference().getIdentificationVariable() != null ) {
-			alias = tableGroup.getPrimaryTableReference().getIdentificationVariable();
-		}
-		else {
-			alias = tableGroup.getPrimaryTableReference().getTableExpression();
-		}
-
-		final StringBuilder sessionFilterFragment = new StringBuilder();
-		if ( filterHelper != null ) {
-			filterHelper.render( sessionFilterFragment, !useIdentificationVariable || tableGroup == null ? null : getFilterAliasGenerator( tableGroup ), enabledFilters );
-		}
-		final String filterFragment = filterFragment( alias, treatAsDeclarations );
-		if ( sessionFilterFragment.length() != 0 && !filterFragment.isEmpty() ) {
-			sessionFilterFragment.append( " and " );
-		}
-		return sessionFilterFragment.append( filterFragment ).toString();
-	}
-
 	public String generateWhereConditionAlias(String alias) {
 		return alias;
 	}
 
 	public String generateFilterConditionAlias(String rootAlias) {
 		return rootAlias;
-	}
-
-	public String oneToManyFilterFragment(String alias) throws MappingException {
-		return "";
-	}
-
-	@Override
-	public String oneToManyFilterFragment(String alias, Set<String> treatAsDeclarations) {
-		return oneToManyFilterFragment( alias );
 	}
 
 	protected boolean isSubclassTableLazy(int j) {

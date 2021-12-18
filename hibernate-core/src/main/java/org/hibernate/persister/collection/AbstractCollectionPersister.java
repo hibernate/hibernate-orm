@@ -916,10 +916,6 @@ public abstract class AbstractCollectionPersister
 		return collectionType;
 	}
 
-	protected String getSQLWhereString(String alias) {
-		return StringHelper.replace( sqlWhereStringTemplate, Template.TEMPLATE, alias );
-	}
-
 	@Override
 	public String getSQLOrderByString(String alias) {
 //		return hasOrdering()
@@ -1877,23 +1873,21 @@ public abstract class AbstractCollectionPersister
 			alias = tableReference.getTableExpression();
 		}
 
-		applyLegacyNamedFilterFragment( predicateConsumer, alias, tableGroup, creationState );
+		applyWhereFragments( predicateConsumer, alias, tableGroup, creationState );
 	}
 
-	/**
-	 * Replaces {@link #filterFragment(String)} and {@link #filterFragment(String, Set)}
-	 *
-	 * @todo (6.0) - drop these 2 ^^
-	 */
-	protected void applyLegacyNamedFilterFragment(
+	protected void applyWhereFragments(
 			Consumer<Predicate> predicateConsumer,
 			String alias,
 			TableGroup tableGroup,
 			SqlAstCreationState astCreationState) {
-		applyWhereRestriction( sqlWhereStringTemplate, alias, predicateConsumer );
+		applyWhereFragments( predicateConsumer, alias, sqlWhereStringTemplate );
 	}
 
-	private static void applyWhereRestriction(String template, String alias, Consumer<Predicate> predicateConsumer) {
+	/**
+	 * Applies all defined {@link org.hibernate.annotations.Where}
+	 */
+	private static void applyWhereFragments(Consumer<Predicate> predicateConsumer, String alias, String template) {
 		if ( template == null ) {
 			return;
 		}
@@ -1904,14 +1898,6 @@ public abstract class AbstractCollectionPersister
 		}
 
 		predicateConsumer.accept( new SqlFragmentPredicate( fragment ) );
-	}
-
-	protected String filterFragment(String alias) throws MappingException {
-		return hasWhere() ? getSQLWhereString( alias ) : "";
-	}
-
-	protected String filterFragment(String alias, Set<String> treatAsDeclarations) throws MappingException {
-		return hasWhere() ? getSQLWhereString( alias ) : "";
 	}
 
 	@Override
@@ -1954,7 +1940,7 @@ public abstract class AbstractCollectionPersister
 				alias = tableReference.getTableExpression();
 			}
 
-			applyWhereRestriction( manyToManyWhereTemplate, alias, predicateConsumer );
+			applyWhereFragments( predicateConsumer, alias, manyToManyWhereTemplate );
 		}
 	}
 
@@ -2093,77 +2079,6 @@ public abstract class AbstractCollectionPersister
 		return factory;
 	}
 
-
-	@Override
-	public String filterFragment(
-			String alias,
-			Map<String, Filter> enabledFilters,
-			Set<String> treatAsDeclarations) {
-		final StringBuilder sessionFilterFragment = new StringBuilder();
-
-		if ( filterHelper != null ) {
-			filterHelper.render( sessionFilterFragment, getFilterAliasGenerator(alias), enabledFilters );
-		}
-
-		final String filterFragment = filterFragment( alias, treatAsDeclarations );
-		if ( sessionFilterFragment.length() != 0
-				&& !filterFragment.isEmpty() ) {
-			sessionFilterFragment.append( " and " );
-		}
-
-		return sessionFilterFragment.append( filterFragment ).toString();
-	}
-
-	@Override
-	public String filterFragment(
-			TableGroup tableGroup,
-			Map<String, Filter> enabledFilters,
-			Set<String> treatAsDeclarations,
-			boolean useIdentificationVariable) {
-		TableReference tableReference;
-		if ( isManyToMany() ) {
-			// if filtering on many-to-many element were intended, getManyToManyFilterFragment() should have been chosen
-			tableReference = tableGroup.getPrimaryTableReference();
-		}
-		else if ( elementPersister instanceof Joinable ) {
-			tableReference = tableGroup.getTableReference( tableGroup.getNavigablePath(), ( (Joinable) elementPersister ).getTableName() );
-		}
-		else {
-			tableReference = tableGroup.getTableReference( tableGroup.getNavigablePath(), qualifiedTableName );
-		}
-
-		final String alias;
-		if ( tableReference == null ) {
-			alias = null;
-		}
-		else if ( useIdentificationVariable && tableReference.getIdentificationVariable() != null ) {
-			alias = tableReference.getIdentificationVariable();
-		}
-		else {
-			alias = tableReference.getTableExpression();
-		}
-
-		final StringBuilder sessionFilterFragment = new StringBuilder();
-		if ( filterHelper != null ) {
-			filterHelper.render( sessionFilterFragment, getFilterAliasGenerator( tableGroup ), enabledFilters );
-		}
-		final String filterFragment = filterFragment( alias, treatAsDeclarations );
-		if ( sessionFilterFragment.length() != 0 && !filterFragment.isEmpty() ) {
-			sessionFilterFragment.append( " and " );
-		}
-
-		return sessionFilterFragment.append( filterFragment ).toString();
-	}
-
-	@Override
-	public String oneToManyFilterFragment(String alias) throws MappingException {
-		return "";
-	}
-
-	@Override
-	public String oneToManyFilterFragment(String alias, Set<String> treatAsDeclarations) {
-		return oneToManyFilterFragment( alias );
-	}
 
 	protected boolean isInsertCallable() {
 		return insertCallable;

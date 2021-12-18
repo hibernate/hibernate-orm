@@ -9,7 +9,6 @@ package org.hibernate.persister.collection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Iterator;
-import java.util.Set;
 import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
@@ -20,7 +19,6 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.FilterAliasGenerator;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.Expectations;
@@ -199,8 +197,8 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	}
 
 	private void writeIndex(
-			PersistentCollection collection,
-			Iterator entries,
+			PersistentCollection<?> collection,
+			Iterator<?> entries,
 			Object id,
 			boolean resetIndex,
 			SharedSessionContractImplementor session) {
@@ -342,7 +340,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 				// update removed rows fks to null
 				try {
 					int i = 0;
-					Iterator entries = collection.entries( this );
+					Iterator<?> entries = collection.entries( this );
 					int offset = 1;
 					while ( entries.hasNext() ) {
 						Object entry = entries.next();
@@ -413,7 +411,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 				// now update all changed or added rows fks
 				try {
 					int i = 0;
-					Iterator entries = collection.entries( this );
+					Iterator<?> entries = collection.entries( this );
 					while ( entries.hasNext() ) {
 						Object entry = entries.next();
 						int offset = 1;
@@ -486,12 +484,21 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		return ( (Joinable) getElementPersister() ).getTableName();
 	}
 
-	protected void applyLegacyNamedFilterFragment(
+	@Override
+	public void applyWhereRestrictions(
+			Consumer<Predicate> predicateConsumer,
+			TableGroup tableGroup,
+			boolean useQualifier,
+			SqlAstCreationState creationState) {
+		super.applyWhereRestrictions( predicateConsumer, tableGroup, useQualifier, creationState );
+	}
+
+	protected void applyWhereFragments(
 			Consumer<Predicate> predicateConsumer,
 			String alias,
 			TableGroup tableGroup,
 			SqlAstCreationState astCreationState) {
-		super.applyLegacyNamedFilterFragment( predicateConsumer, alias, tableGroup, astCreationState );
+		super.applyWhereFragments( predicateConsumer, alias, tableGroup, astCreationState );
 
 		getElementPersisterInternal().applyDiscriminator(
 				predicateConsumer,
@@ -499,31 +506,6 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 				tableGroup,
 				astCreationState
 		);
-	}
-
-	@Override
-	public String filterFragment(String alias) throws MappingException {
-		String result = super.filterFragment( alias );
-		if ( getElementPersister() instanceof Joinable ) {
-			result += ( (Joinable) getElementPersister() ).oneToManyFilterFragment( alias );
-		}
-		return result;
-
-	}
-
-	@Override
-	protected String filterFragment(String alias, Set<String> treatAsDeclarations) throws MappingException {
-		String result = super.filterFragment( alias );
-		if ( getElementPersister() instanceof Joinable ) {
-			final String associationFilter = ( (Joinable) getElementPersister() ).oneToManyFilterFragment( alias, treatAsDeclarations );
-			if ( StringHelper.isEmpty( result ) ) {
-				result = associationFilter;
-			}
-			else if ( StringHelper.isNotEmpty( associationFilter ) ) {
-				result += " and " + associationFilter;
-			}
-		}
-		return result;
 	}
 
 	@Override

@@ -14,7 +14,6 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 import org.hibernate.EntityNameResolver;
 import org.hibernate.FetchMode;
@@ -452,20 +451,6 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 	@Override
 	public String getAssociatedEntityName(SessionFactoryImplementor factory) {
 		throw new UnsupportedOperationException("any types do not have a unique referenced persister");
-	}
-
-	@Override
-	public String getOnCondition(String alias, SessionFactoryImplementor factory, Map enabledFilters) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public String getOnCondition(
-			String alias,
-			SessionFactoryImplementor factory,
-			Map enabledFilters,
-			Set<String> treatAsDeclarations) {
-		throw new UnsupportedOperationException();
 	}
 
 	/**

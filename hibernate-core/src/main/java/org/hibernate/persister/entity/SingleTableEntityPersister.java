@@ -22,7 +22,6 @@ import org.hibernate.boot.model.relational.Database;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.DynamicFilterAliasGenerator;
@@ -590,19 +589,6 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 	private String discriminatorFilterFragment(String alias) throws MappingException {
 		return discriminatorFilterFragment( alias, null );
-	}
-
-	public String oneToManyFilterFragment(String alias) throws MappingException {
-		return forceDiscriminator
-				? discriminatorFilterFragment( alias, null )
-				: "";
-	}
-
-	@Override
-	public String oneToManyFilterFragment(String alias, Set<String> treatAsDeclarations) {
-		return needsDiscriminator()
-				? discriminatorFilterFragment( alias, treatAsDeclarations )
-				: "";
 	}
 
 	@Override

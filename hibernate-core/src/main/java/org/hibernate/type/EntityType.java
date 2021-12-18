@@ -9,7 +9,6 @@ package org.hibernate.type;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Map;
-import java.util.Set;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
@@ -378,25 +377,6 @@ public abstract class EntityType extends AbstractType implements AssociationType
 
 		return persister.getIdentifierType()
 				.isEqual( xid, yid, factory );
-	}
-
-	@Override
-	public String getOnCondition(String alias, SessionFactoryImplementor factory, Map enabledFilters) {
-		return getOnCondition( alias, factory, enabledFilters, null );
-	}
-
-	@Override
-	public String getOnCondition(
-			String alias,
-			SessionFactoryImplementor factory,
-			Map enabledFilters,
-			Set<String> treatAsDeclarations) {
-		if ( isReferenceToPrimaryKey() && ( treatAsDeclarations == null || treatAsDeclarations.isEmpty() ) ) {
-			return "";
-		}
-		else {
-			return getAssociatedJoinable( factory ).filterFragment( alias, enabledFilters, treatAsDeclarations );
-		}
 	}
 
 	/**

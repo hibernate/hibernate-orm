@@ -6,14 +6,7 @@
  */
 package org.hibernate.persister.entity;
 
-import java.util.Collections;
-import java.util.Map;
-import java.util.Set;
-
-import org.hibernate.Filter;
-import org.hibernate.MappingException;
 import org.hibernate.metamodel.mapping.Restrictable;
-import org.hibernate.sql.ast.tree.from.TableGroup;
 
 /**
  * Anything that can be loaded by outer join - namely
@@ -37,28 +30,6 @@ public interface Joinable extends Restrictable {
 	 * The columns to join on
 	 */
 	public String[] getKeyColumnNames();
-
-	/**
-	 * Get the where clause filter, given a query alias and considering enabled session filters
-	 */
-	public default String filterFragment(String alias, Map<String, Filter> enabledFilters) throws MappingException {
-		return filterFragment( alias, enabledFilters, Collections.emptySet() );
-	}
-
-	/**
-	 * Get the where clause filter, given a query alias and considering enabled session filters
-	 */
-	public String filterFragment(String alias, Map<String, Filter> enabledFilters, Set<String> treatAsDeclarations) throws MappingException;
-
-	public String filterFragment(
-			TableGroup tableGroup,
-			Map<String, Filter> enabledFilters,
-			Set<String> treatAsDeclarations,
-			boolean useIdentificationVariable) throws MappingException;
-
-	public String oneToManyFilterFragment(String alias) throws MappingException;
-
-	public String oneToManyFilterFragment(String alias, Set<String> treatAsDeclarations);
 
 	/**
 	 * Is this instance actually a CollectionPersister?

@@ -58,19 +58,6 @@ public interface AssociationType extends Type {
 	String getAssociatedEntityName(SessionFactoryImplementor factory) throws MappingException;
 
 	/**
-	 * Get the "filtering" SQL fragment that is applied in the 
-	 * SQL on clause, in addition to the usual join condition
-	 */	
-	String getOnCondition(String alias, SessionFactoryImplementor factory, Map enabledFilters)
-	throws MappingException;
-
-	/**
-	 * Get the "filtering" SQL fragment that is applied in the
-	 * SQL on clause, in addition to the usual join condition
-	 */
-	String getOnCondition(String alias, SessionFactoryImplementor factory, Map enabledFilters, Set<String> treatAsDeclarations);
-	
-	/**
 	 * Do we dirty check this association, even when there are
 	 * no columns to be updated?
 	 */

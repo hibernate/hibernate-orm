@@ -3561,14 +3561,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						this,
 						creationContext
 				);
-				final FilterPredicate filterPredicate = FilterHelper.createFilterPredicate(
-						getLoadQueryInfluencers(),
-						(Joinable) pluralAttributeMapping.getCollectionDescriptor(),
-						tableGroup
+
+				pluralAttributeMapping.applyBaseRestrictions(
+						subQuerySpec::applyPredicate,
+						tableGroup,
+						true,
+						getLoadQueryInfluencers().getEnabledFilters(),
+						null,
+						this
 				);
-				if ( filterPredicate != null ) {
-					subQuerySpec.applyPredicate( filterPredicate );
-				}
 
 				getFromClauseAccess().registerTableGroup( pluralPartPath.getNavigablePath(), tableGroup );
 				registerPluralTableGroupParts( tableGroup );

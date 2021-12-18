@@ -6,8 +6,9 @@
  */
 package org.hibernate.cfg;
 
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
@@ -26,6 +27,8 @@ import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.annotations.Nullability;
+import org.hibernate.cfg.spi.ColumnCommentParser;
+import org.hibernate.cfg.spi.DefPropertyDataSorter;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
@@ -597,6 +600,7 @@ public class Ejb3Column {
 
 					if ( length == 1 ) {
 						applyColumnDefault( column, inferredData );
+						applyColumnComment(column,inferredData);
 					}
 
 					column.setImplicit( false );
@@ -650,7 +654,54 @@ public class Ejb3Column {
 			);
 		}
 	}
+	private static List<ColumnCommentParser>  list=null;
 
+	/**
+	 *
+	 * @param column
+	 * @param inferredData
+	 */
+ 	protected 	static void applyColumnComment(Ejb3Column column, PropertyData inferredData){
+		final XProperty xProperty = inferredData.getProperty();
+		if(xProperty==null){
+			return;
+		}
+		if(column.comment!=null && !"".equals(column.comment)){
+			return;
+		}
+		if(list == null){
+			synchronized (ColumnCommentParser.class) {
+				if(list == null) {
+					list = listBySpi(ColumnCommentParser.class);
+					list.sort(ColumnCommentParser::compareTo);
+				}
+			}
+		}
+		if(list.isEmpty() ){
+			return;
+		}
+		for (ColumnCommentParser columnCommentParser : list) {
+			String comment = columnCommentParser.parsingColumnComment(xProperty);
+			if(comment != null && !comment.isEmpty()) {
+				column.comment= comment;
+				return ;
+			}
+		}
+	}
+	public static <T> List<T> listBySpi(Class<T> clazz) {
+		Iterator<T> it = ServiceLoader.load(clazz, clazz.getClassLoader()).iterator();
+		List<T> rlist=new ArrayList<>();
+		if(it!=null) {
+			while(it.hasNext()){
+				try {
+					T t = it.next();
+					rlist.add(t);
+				} catch (ServiceConfigurationError e) {
+				}
+			}
+		}
+		return rlist;
+	}
 	//must only be called after all setters are defined and before binding
 	private void extractDataFromPropertyData(PropertyData inferredData) {
 		if ( inferredData != null ) {
@@ -723,6 +774,7 @@ public class Ejb3Column {
 			column.setImplicit( true );
 		}
 		applyColumnDefault( column, inferredData );
+		applyColumnComment(column, inferredData);
 		column.extractDataFromPropertyData( inferredData );
 		column.bind();
 		return columns;

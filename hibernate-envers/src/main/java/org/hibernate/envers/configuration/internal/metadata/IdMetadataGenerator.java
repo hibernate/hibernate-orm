@@ -24,6 +24,7 @@ import org.hibernate.envers.internal.entities.mapper.SimpleMapperBuilder;
 import org.hibernate.envers.internal.entities.mapper.id.EmbeddedIdMapper;
 import org.hibernate.envers.internal.entities.mapper.id.IdMapper;
 import org.hibernate.envers.internal.entities.mapper.id.MultipleIdMapper;
+import org.hibernate.envers.internal.entities.mapper.id.NestedEmbeddedIdMapper;
 import org.hibernate.envers.internal.entities.mapper.id.SimpleIdMapperBuilder;
 import org.hibernate.envers.internal.entities.mapper.id.SingleIdMapper;
 import org.hibernate.loader.PropertyPath;
@@ -32,6 +33,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
+import org.hibernate.type.ComponentType;
 import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.Type;
 
@@ -63,7 +65,8 @@ public final class IdMetadataGenerator extends AbstractMetadataGenerator {
 			boolean key,
 			SimpleIdMapperBuilder mapper,
 			Property mappedProperty,
-			Property virtualProperty) {
+			Property virtualProperty,
+			boolean audited) {
 
 		if ( PropertyPath.IDENTIFIER_MAPPER_PROPERTY.equals( mappedProperty.getName() ) ) {
 			return false;
@@ -93,6 +96,19 @@ public final class IdMetadataGenerator extends AbstractMetadataGenerator {
 
 			return added;
 		}
+		else if ( ComponentType.class.isInstance( mappedProperty.getType() ) ) {
+			final Component component = (Component) mappedProperty.getValue();
+			final NestedEmbeddedIdMapper nestedMapper;
+			if ( mapper != null ) {
+				final PropertyData propertyData = propertyAuditingData.resolvePropertyData();
+				nestedMapper = new NestedEmbeddedIdMapper( propertyData, component );
+				mapper.add( propertyData, nestedMapper );
+			}
+			else {
+				nestedMapper = null;
+			}
+			return addIdProperties( attributeContainer, component, null, nestedMapper, key, audited );
+		}
 
 		return addBasic( attributeContainer, propertyAuditingData, mappedProperty.getValue(), mapper, key );
 	}
@@ -116,7 +132,7 @@ public final class IdMetadataGenerator extends AbstractMetadataGenerator {
 				virtualProperty = null;
 			}
 
-			if ( !addIdProperty( attributeContainer, key, mapper, property, virtualProperty ) ) {
+			if ( !addIdProperty( attributeContainer, key, mapper, property, virtualProperty, audited ) ) {
 				// If the entity is audited, and a non-supported id component is used, throw exception.
 				if ( audited ) {
 					throw new EnversMappingException(
@@ -196,7 +212,7 @@ public final class IdMetadataGenerator extends AbstractMetadataGenerator {
 		if ( idMapper != null ) {
 			// Multiple id
 			final Component virtualComponent = (Component) persistentClass.getIdentifier();
-			mapper = new MultipleIdMapper( loadClass( virtualComponent ), persistentClass.getServiceRegistry() );
+			mapper = new MultipleIdMapper( virtualComponent );
 
 			if ( !addIdProperties( relation, idMapper, virtualComponent, mapper, false, audited ) ) {
 				return null;
@@ -210,8 +226,7 @@ public final class IdMetadataGenerator extends AbstractMetadataGenerator {
 		else if ( idProp.isComposite() ) {
 			// Embedded id
 			final Component idComponent = (Component) idProp.getValue();
-			final Class<?> embeddableClass = loadClass( idComponent );
-			mapper = new EmbeddedIdMapper( getIdPropertyData( idProp ), embeddableClass, persistentClass.getServiceRegistry() );
+			mapper = new EmbeddedIdMapper( getIdPropertyData( idProp ), idComponent );
 
 			if ( !addIdProperties( relation, idComponent, null, mapper, false, audited ) ) {
 				return null;

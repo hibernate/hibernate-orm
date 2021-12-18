@@ -16,19 +16,27 @@ import java.util.Map;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.tools.ReflectionTools;
+import org.hibernate.mapping.Component;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.service.ServiceRegistry;
 
 /**
+ * An identifier mapper implementation for {@link jakarta.persistence.EmbeddedId} mappings.
+ *
  * @author Adam Warski (adam at warski dot org)
+ * @author Chris Cranford
  */
 public class EmbeddedIdMapper extends AbstractCompositeIdMapper implements SimpleIdMapperBuilder {
 	private PropertyData idPropertyData;
 
-	public EmbeddedIdMapper(PropertyData idPropertyData, Class compositeIdClass, ServiceRegistry serviceRegistry) {
-		super( compositeIdClass, serviceRegistry );
+	public EmbeddedIdMapper(PropertyData propertyData, Component component) {
+		super( component.getComponentClass(), component.getServiceRegistry() );
+		this.idPropertyData = propertyData;
+	}
 
+	private EmbeddedIdMapper(PropertyData idPropertyData, Class<?> compositeIdClass, ServiceRegistry serviceRegistry) {
+		super( compositeIdClass, serviceRegistry );
 		this.idPropertyData = idPropertyData;
 	}
 

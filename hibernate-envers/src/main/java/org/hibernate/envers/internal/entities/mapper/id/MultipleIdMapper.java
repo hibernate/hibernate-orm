@@ -13,14 +13,23 @@ import java.util.Map;
 
 import org.hibernate.Session;
 import org.hibernate.envers.internal.entities.PropertyData;
+import org.hibernate.mapping.Component;
 import org.hibernate.service.ServiceRegistry;
 
 /**
+ * An implementation of an identifier mapper for {@link jakarta.persistence.IdClass} or multiple
+ * {@link jakarta.persistence.Id} identifier mappings.
+ *
  * @author Adam Warski (adam at warski dot org)
  * @author Chris Cranford
  */
 public class MultipleIdMapper extends AbstractCompositeIdMapper implements SimpleIdMapperBuilder {
-	public MultipleIdMapper(Class compositeIdClass, ServiceRegistry serviceRegistry) {
+
+	public MultipleIdMapper(Component component) {
+		super( component.getComponentClass(), component.getServiceRegistry() );
+	}
+
+	private MultipleIdMapper(Class<?> compositeIdClass, ServiceRegistry serviceRegistry) {
 		super( compositeIdClass, serviceRegistry );
 	}
 
@@ -32,9 +41,9 @@ public class MultipleIdMapper extends AbstractCompositeIdMapper implements Simpl
 	@Override
 	public void mapToMapFromId(Session session, Map<String, Object> data, Object obj) {
 		if ( compositeIdClass.isInstance( obj ) ) {
-			for ( Map.Entry<PropertyData, SingleIdMapper> entry : ids.entrySet() ) {
+			for ( Map.Entry<PropertyData, AbstractIdMapper> entry : ids.entrySet() ) {
 				final PropertyData propertyData = entry.getKey();
-				final SingleIdMapper idMapper = entry.getValue();
+				final AbstractIdMapper idMapper = entry.getValue();
 
 				if ( propertyData.getVirtualReturnClass() == null ) {
 					idMapper.mapToMapFromEntity( data, obj );
@@ -92,7 +101,7 @@ public class MultipleIdMapper extends AbstractCompositeIdMapper implements Simpl
 		}
 
 		final Object compositeId = instantiateCompositeId();
-		for ( SingleIdMapper mapper : ids.values() ) {
+		for ( AbstractIdMapper mapper : ids.values() ) {
 			mapper.mapToEntityFromEntity( compositeId, data );
 		}
 

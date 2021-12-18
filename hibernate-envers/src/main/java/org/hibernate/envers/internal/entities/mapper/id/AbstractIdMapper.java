@@ -13,6 +13,8 @@ import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.service.ServiceRegistry;
 
 /**
+ * The base abstract class implementation for identifier mappers.
+ *
  * @author Adam Warski (adam at warski dot org)
  * @author Chris Cranford
  */
@@ -138,6 +140,8 @@ public abstract class AbstractIdMapper implements IdMapper {
 			);
 		}
 	}
+
+	public abstract void mapToEntityFromEntity(Object objectTo, Object objectFrom);
 
 	private void handleNullValue(Parameters parameters, String alias, String propertyName, boolean equals) {
 		if ( equals ) {

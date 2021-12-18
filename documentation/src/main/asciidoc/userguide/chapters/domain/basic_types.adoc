@@ -412,19 +412,13 @@ include::{sourcedir}/basic/BooleanMappingTests.java[tags=basic-boolean-example-i
 ----
 ====
 
-But, especially when working with a legacy database, it's quite common to find boolean values
-encoded as a character, or as an integer, even when the platform _does_ support a built-in
-`BOOLEAN` type.
-
-The easiest way to handle this situation is to use a JPA `AttributeConverter`. You can easily
-write your own `AttributeConverter`, but for your convenience, Hibernate comes with three
-built-in converters for common cases:
+However, it is quite common to find boolean values encoded as a character or as an integer.
+Such cases are exactly the intention of `AttributeConverter`.  For convenience, Hibernate
+provides 3 built-in converters for the common boolean mapping cases:
 
 - `YesNoConverter` encodes a boolean value as `'Y'` or `'N'`,
 - `TrueFalseConverter` encodes a boolean value as `'T'` or `'F'`, and
 - `NumericBooleanConverter` encodes the value as an integer, `1` for true, and `0` for false.
-
-You may specify the converter to use with the `@Convert` annotation.
 
 [[basic-boolean-example-converted]]
 .Using `AttributeConverter`
@@ -439,8 +433,10 @@ include::{sourcedir}/basic/BooleanMappingTests.java[tags=basic-boolean-example-e
 ----
 ====
 
-Of course, if you need to do something really special, a boolean value can also be mapped using
-`@CustomType` and your own `UserType`.
+If the boolean value is defined in the database as something other than `BOOLEAN`, character or integer,
+the value can also be mapped using a custom `AttributeConverter` - see <<basic-jpa-convert>>.
+
+A `UserType` may also be used - see <<basic-mapping-custom>>
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1546,6 +1542,8 @@ There are also corresponding, specialized forms of `@CustomType` for specific mo
 * For other collection mappings, `@CustomType` describes the elements
 * For discriminated association mappings (`@Any` and `@ManyToAny`), `@CustomType` describes the discriminator value
 
+`@UserType` allows for more complex mapping concerns; but, <<basic-jpa-convert,AttributeConverter> and
+<<basic-mapping-composition>> should generally be preferred as simpler solutions
 
 [[basic-nationalized]]
 ==== Handling nationalized character data

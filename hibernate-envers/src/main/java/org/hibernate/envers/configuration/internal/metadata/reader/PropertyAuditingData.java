@@ -14,6 +14,7 @@ import jakarta.persistence.EnumType;
 
 import org.hibernate.envers.AuditOverride;
 import org.hibernate.envers.AuditOverrides;
+import org.hibernate.envers.CollectionAuditTable;
 import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.envers.RelationTargetNotFoundAction;
 import org.hibernate.envers.internal.entities.PropertyData;
@@ -33,6 +34,7 @@ public class PropertyAuditingData {
 	private String beanName;
 	private String mapKey;
 	private EnumType mapKeyEnumType;
+	private CollectionAuditTable collectionAuditTable;
 	private AuditJoinTableData joinTable;
 	private String accessType;
 	private final List<AuditOverrideData> auditJoinTableOverrides = new ArrayList<>( 0 );
@@ -327,6 +329,14 @@ public class PropertyAuditingData {
 
 	public void setVirtualPropertyType(Type virtualPropertyType) {
 		this.virtualPropertyType = virtualPropertyType;
+	}
+
+	public CollectionAuditTable getCollectionAuditTable() {
+		return collectionAuditTable;
+	}
+
+	public void setCollectionAuditTable(CollectionAuditTable collectionAuditTable) {
+		this.collectionAuditTable = collectionAuditTable;
 	}
 
 	public PropertyData resolvePropertyData() {

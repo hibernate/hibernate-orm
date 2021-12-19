@@ -32,6 +32,7 @@ import org.hibernate.envers.AuditMappedBy;
 import org.hibernate.envers.AuditOverride;
 import org.hibernate.envers.AuditOverrides;
 import org.hibernate.envers.Audited;
+import org.hibernate.envers.CollectionAuditTable;
 import org.hibernate.envers.NotAudited;
 import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.envers.RelationTargetNotFoundAction;
@@ -540,6 +541,7 @@ public class AuditedPropertiesReader {
 		propertyData.setAccessType( accessType );
 
 		addPropertyJoinTables( property, propertyData );
+		addPropertyCollectionAuditTable( property, propertyData );
 		addPropertyAuditingOverrides( property, propertyData );
 		if ( !processPropertyAuditingOverrides( property, propertyData ) ) {
 			// not audited due to AuditOverride annotation
@@ -674,6 +676,13 @@ public class AuditedPropertiesReader {
 			else {
 				propertyData.setJoinTable( DEFAULT_AUDIT_JOIN_TABLE );
 			}
+		}
+	}
+
+	private void addPropertyCollectionAuditTable(XProperty property, PropertyAuditingData propertyAuditingData) {
+		final CollectionAuditTable collectionAuditTableAnn = property.getAnnotation( CollectionAuditTable.class );
+		if ( collectionAuditTableAnn != null ) {
+			propertyAuditingData.setCollectionAuditTable( collectionAuditTableAnn );
 		}
 	}
 

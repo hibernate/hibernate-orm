@@ -31,6 +31,8 @@ import org.hibernate.type.descriptor.java.DataHelper;
 public final class BlobProxy implements Blob, BlobImplementer {
 
 	private final BinaryStream binaryStream;
+	private final int markBytes;
+	private boolean resetAllowed;
 	private boolean needsReset;
 
 	/**
@@ -41,6 +43,8 @@ public final class BlobProxy implements Blob, BlobImplementer {
 	 */
 	private BlobProxy(byte[] bytes) {
 		binaryStream = new BinaryStreamImpl( bytes );
+		markBytes = bytes.length + 1;
+		setStreamMark();
 	}
 
 	/**
@@ -52,6 +56,18 @@ public final class BlobProxy implements Blob, BlobImplementer {
 	 */
 	private BlobProxy(InputStream stream, long length) {
 		this.binaryStream = new StreamBackedBinaryStream( stream, length );
+		this.markBytes = (int) length + 1;
+		setStreamMark();
+	}
+
+	private void setStreamMark() {
+		if ( binaryStream.getInputStream().markSupported() ) {
+			binaryStream.getInputStream().mark( markBytes );
+			resetAllowed = true;
+		}
+		else {
+			resetAllowed = false;
+		}
 	}
 
 
@@ -67,7 +83,12 @@ public final class BlobProxy implements Blob, BlobImplementer {
 	private void resetIfNeeded() throws SQLException {
 		try {
 			if ( needsReset ) {
+				if ( !resetAllowed ) {
+					throw new SQLException( "Underlying stream does not allow reset" );
+				}
+
 				binaryStream.getInputStream().reset();
+				setStreamMark();
 			}
 		}
 		catch ( IOException ioe) {

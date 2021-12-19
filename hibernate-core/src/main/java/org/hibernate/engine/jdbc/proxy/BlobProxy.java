@@ -120,6 +120,11 @@ public final class BlobProxy implements Blob, BlobImplementer {
 	/**
 	 * Generates a BlobImpl proxy using a given number of bytes from an InputStream.
 	 *
+	 * Be aware that certain database drivers will automatically close the provided InputStream after the
+	 * contents have been written to the database.  This may cause unintended side effects if the entity
+	 * is also audited by Envers.  In this case, it's recommended to use {@link #generateProxy(byte[])}
+	 * instead as it isn't affected by this non-standard behavior.
+	 *
 	 * @param stream The input stream of bytes to be created as a Blob.
 	 * @param length The number of bytes from stream to be written to the Blob.
 	 *

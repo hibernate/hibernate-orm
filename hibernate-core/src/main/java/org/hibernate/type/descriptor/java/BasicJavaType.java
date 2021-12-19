@@ -11,12 +11,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeJavaClassMappings;
 
 /**
- * @apiNote Currently this is the only high-level categorization of
- * JavaTypeDescriptor, but 6.0 will have specific JavaTypeDescriptor
- * categorizations for managed-type, mapped-superclass, identifiable-type, entity, embeddable,
- * collections.
- *
- * @author Steve Ebersole
+ * JavaType specialization for basic values
  */
 public interface BasicJavaType<T> extends JavaType<T> {
 	/**

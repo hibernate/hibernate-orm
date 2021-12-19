@@ -47,7 +47,20 @@ public class BasicBlobTest extends BaseEnversJPAFunctionalTestCase {
 				final InputStream stream = new BufferedInputStream( Files.newInputStream( path ) );
 				assertThat( stream.markSupported(), Matchers.is( true ) );
 
-				Blob blob = BlobProxy.generateProxy( stream, Files.size( path ) );
+				// We use the method readAllBytes instead of passing the raw stream to the proxy
+				// since this is the only guaranteed way that will work across all dialects in a
+				// deterministic way.  Postgres and Sybase will automatically close the stream
+				// after the blob has been written by the driver, which prevents Envers from
+				// then writing the contents of the stream to the audit table.
+				//
+				// If the driver and dialect are known not to close the input stream after the
+				// contents have been written by the driver, then it's safe to pass the stream
+				// here instead and the stream will be automatically marked and reset so that
+				// Envers can serialize the data after Hibernate has done so.  Dialects like
+				// H2, MySQL, Oracle, SQL Server work this way.
+				//
+				//
+				Blob blob = BlobProxy.generateProxy( stream.readAllBytes() );
 
 				asset.setData( blob );
 				entityManager.persist( asset );

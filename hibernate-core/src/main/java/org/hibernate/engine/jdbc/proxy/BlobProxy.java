@@ -40,6 +40,8 @@ public final class BlobProxy implements Blob, BlobImplementer {
 	// no longer necessary. The class name could be updated to reflect this but that would break APIs.
 
 	private final BinaryStream binaryStream;
+	private final int markBytes;
+	private boolean resetAllowed;
 	private boolean needsReset;
 
 	/**
@@ -50,6 +52,8 @@ public final class BlobProxy implements Blob, BlobImplementer {
 	 */
 	private BlobProxy(byte[] bytes) {
 		binaryStream = new ArrayBackedBinaryStream( bytes );
+		markBytes = bytes.length + 1;
+		setStreamMark();
 	}
 
 	/**
@@ -61,6 +65,18 @@ public final class BlobProxy implements Blob, BlobImplementer {
 	 */
 	private BlobProxy(InputStream stream, long length) {
 		this.binaryStream = new StreamBackedBinaryStream( stream, length );
+		this.markBytes = (int) length + 1;
+		setStreamMark();
+	}
+
+	private void setStreamMark() {
+		if ( binaryStream.getInputStream().markSupported() ) {
+			binaryStream.getInputStream().mark( markBytes );
+			resetAllowed = true;
+		}
+		else {
+			resetAllowed = false;
+		}
 	}
 
 	private InputStream getStream() throws SQLException {
@@ -76,7 +92,12 @@ public final class BlobProxy implements Blob, BlobImplementer {
 	private void resetIfNeeded() throws SQLException {
 		try {
 			if ( needsReset ) {
+				if ( !resetAllowed ) {
+					throw new SQLException( "Underlying stream does not allow reset" );
+				}
+
 				binaryStream.getInputStream().reset();
+				setStreamMark();
 			}
 		}
 		catch ( IOException ioe) {

@@ -6,6 +6,7 @@
  */
 package org.hibernate.envers.configuration.internal.metadata;
 
+import org.hibernate.envers.CollectionAuditTable;
 import org.hibernate.envers.boot.model.CompositeIdentifier;
 import org.hibernate.envers.boot.model.RootPersistentEntity;
 import org.hibernate.envers.boot.spi.EnversMetadataBuildingContext;
@@ -23,7 +24,6 @@ import org.hibernate.envers.internal.tools.StringTools;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Table;
 
 import org.jboss.logging.Logger;
 
@@ -194,17 +194,19 @@ public class MiddleTableCollectionMetadataGenerator extends AbstractCollectionMe
 			);
 		}
 		// Hibernate uses a middle table for mapping this relation, so we get its name directly.
+		CollectionAuditTable collectionAuditTable = context.getPropertyAuditingData().getCollectionAuditTable();
+		if ( collectionAuditTable != null ) {
+			return collectionAuditTable.name();
+		}
 		return collection.getCollectionTable().getName();
 	}
 
 	private RootPersistentEntity createMiddleEntity(CollectionMetadataContext context, String tableName, String entityName) {
-		final AuditJoinTableData joinTable = context.getPropertyAuditingData().getJoinTable();
-		final Table collectionTable = context.getCollection().getCollectionTable();
 		final AuditTableData auditTableData = new AuditTableData(
 				entityName,
 				tableName,
-				getSchemaName( joinTable.getSchema(), collectionTable ),
-				getCatalogName( joinTable.getCatalog(), collectionTable )
+				resolveSchema( context ),
+				resolveCatalog( context )
 		);
 
 		final RootPersistentEntity entity = new RootPersistentEntity( auditTableData, null );
@@ -227,6 +229,25 @@ public class MiddleTableCollectionMetadataGenerator extends AbstractCollectionMe
 
 		context.getEntityMappingData().addAdditionalMapping( entity );
 		return entity;
+	}
+
+	private String resolveSchema(CollectionMetadataContext context) {
+		final CollectionAuditTable collectionAuditTable = context.getPropertyAuditingData().getCollectionAuditTable();
+		if ( collectionAuditTable != null && !StringTools.isEmpty( collectionAuditTable.schema() ) ) {
+			return collectionAuditTable.schema();
+		}
+
+		final AuditJoinTableData joinTable = context.getPropertyAuditingData().getJoinTable();
+		return getSchemaName( joinTable.getSchema(), context.getCollection().getCollectionTable() );
+	}
+
+	private String resolveCatalog(CollectionMetadataContext context) {
+		final CollectionAuditTable collectionAuditTable = context.getPropertyAuditingData().getCollectionAuditTable();
+		if ( collectionAuditTable != null && !StringTools.isEmpty( collectionAuditTable.catalog() ) ) {
+			return collectionAuditTable.catalog();
+		}
+		final AuditJoinTableData joinTable = context.getPropertyAuditingData().getJoinTable();
+		return getCatalogName( joinTable.getCatalog(), context.getCollection().getCollectionTable() );
 	}
 
 	private boolean isRevisionTypeInId(CollectionMetadataContext context) {

@@ -350,6 +350,9 @@ It may be tedious to add this annotation to every audited entity, so if possible
 If you have a mapping with secondary tables, audit tables for them will be generated in the same way (by adding the prefix and suffix).
 If you wish to overwrite this behavior, you can use the `@SecondaryAuditTable` and `@SecondaryAuditTables` annotations.
 
+If you have a mapping with collection tables, the audit table for them will be generated in the same way (by using the prefix and suffix).
+If you wish to overwrite this behavior, you can use the `@CollectionAuditTable` annotations.
+
 If you'd like to override auditing behavior of some fields/properties inherited from `@MappedSuperclass` or in an embedded component,
 you can apply the `@AuditOverride` annotation on the subtype or usage site of the component.
 

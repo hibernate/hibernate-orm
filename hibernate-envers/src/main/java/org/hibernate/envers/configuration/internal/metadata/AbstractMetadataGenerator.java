@@ -80,7 +80,7 @@ public abstract class AbstractMetadataGenerator {
 
 	protected String getSchemaName(String schemaFromAnnotation, Table table) {
 		String schemaName = schemaFromAnnotation;
-		if ( StringTools.isEmpty(schemaName ) ) {
+		if ( StringTools.isEmpty( schemaName ) ) {
 			schemaName = metadataBuildingContext.getConfiguration().getDefaultSchemaName();
 			if ( StringTools.isEmpty( schemaName ) ) {
 				schemaName = table.getSchema();
@@ -91,7 +91,7 @@ public abstract class AbstractMetadataGenerator {
 
 	protected String getCatalogName(String catalogFromAnnotation, Table table) {
 		String catalogName = catalogFromAnnotation;
-		if ( StringTools.isEmpty(catalogName ) ) {
+		if ( StringTools.isEmpty( catalogName ) ) {
 			catalogName = metadataBuildingContext.getConfiguration().getDefaultCatalogName();
 			if ( StringTools.isEmpty( catalogName ) ) {
 				catalogName = table.getCatalog();

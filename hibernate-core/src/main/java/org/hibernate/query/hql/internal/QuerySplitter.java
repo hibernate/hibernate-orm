@@ -33,6 +33,7 @@ import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.domain.SqmPluralPartJoin;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPolymorphicRootDescriptor;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
@@ -407,6 +408,27 @@ public class QuerySplitter {
 			sqmFromCopyMap.put( join, copy );
 			sqmPathCopyMap.put( join.getNavigablePath(), copy );
 			sqmRoot.addSqmJoin( copy );
+			return copy;
+		}
+
+		@Override
+		public SqmPluralPartJoin<?, ?> visitPluralPartJoin(SqmPluralPartJoin<?, ?> join) {
+			final SqmFrom<?, ?> sqmFrom = sqmFromCopyMap.get( join );
+			if ( sqmFrom != null ) {
+				return (SqmPluralPartJoin<?, ?>) sqmFrom;
+			}
+			final SqmFrom<?, ?> newLhs = (SqmFrom<?, ?>) sqmFromCopyMap.get( join.getLhs() );
+			final SqmPluralPartJoin copy = new SqmPluralPartJoin<>(
+					newLhs,
+					join.getReferencedPathSource(),
+					join.getExplicitAlias(),
+					join.getSqmJoinType(),
+					join.nodeBuilder()
+			);
+			getProcessingStateStack().getCurrent().getPathRegistry().register( copy );
+			sqmFromCopyMap.put( join, copy );
+			sqmPathCopyMap.put( join.getNavigablePath(), copy );
+			newLhs.addSqmJoin( copy );
 			return copy;
 		}
 

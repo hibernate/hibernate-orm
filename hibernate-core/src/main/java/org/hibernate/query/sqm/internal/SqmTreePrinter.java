@@ -29,6 +29,7 @@ import org.hibernate.query.sqm.tree.domain.SqmMaxElementPath;
 import org.hibernate.query.sqm.tree.domain.SqmMaxIndexPath;
 import org.hibernate.query.sqm.tree.domain.SqmMinElementPath;
 import org.hibernate.query.sqm.tree.domain.SqmMinIndexPath;
+import org.hibernate.query.sqm.tree.domain.SqmPluralPartJoin;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
@@ -498,6 +499,17 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 	public Object visitCrossJoin(SqmCrossJoin joinedFromElement) {
 		processStanza(
 				"cross",
+				'`' + joinedFromElement.getNavigablePath().getFullPath() + '`',
+				() -> processJoins( joinedFromElement )
+		);
+
+		return null;
+	}
+
+	@Override
+	public Object visitPluralPartJoin(SqmPluralPartJoin<?, ?> joinedFromElement) {
+		processStanza(
+				"plural-part",
 				'`' + joinedFromElement.getNavigablePath().getFullPath() + '`',
 				() -> processJoins( joinedFromElement )
 		);

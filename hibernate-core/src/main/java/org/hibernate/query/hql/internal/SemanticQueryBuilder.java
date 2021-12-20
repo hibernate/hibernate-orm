@@ -1660,7 +1660,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			if ( join instanceof SqmEntityJoin<?> ) {
 				sqmRoot.addSqmJoin( join );
 			}
-			else {
+			else if ( join instanceof SqmAttributeJoin<?, ?> ) {
 				final SqmAttributeJoin<?, ?> attributeJoin = (SqmAttributeJoin<?, ?>) join;
 				if ( getCreationOptions().useStrictJpaCompliance() ) {
 					if ( join.getExplicitAlias() != null ) {
@@ -4106,7 +4106,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	public SqmPath<?> visitTreatedNavigablePath(HqlParser.TreatedNavigablePathContext ctx) {
 		final DotIdentifierConsumer consumer = dotIdentifierConsumerStack.getCurrent();
 		if ( consumer instanceof QualifiedJoinPathConsumer ) {
-			( (QualifiedJoinPathConsumer) consumer ).setTreated( true );
+			( (QualifiedJoinPathConsumer) consumer ).setNested( true );
 		}
 		consumeManagedTypeReference( (HqlParser.PathContext) ctx.getChild( 2 ) );
 
@@ -4189,21 +4189,67 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	@Override
 	@SuppressWarnings({ "rawtypes" })
 	public SqmPath visitMapKeyNavigablePath(HqlParser.MapKeyNavigablePathContext ctx) {
+		final DotIdentifierConsumer consumer = dotIdentifierConsumerStack.getCurrent();
+		final boolean madeNested;
+		if ( consumer instanceof QualifiedJoinPathConsumer ) {
+			final QualifiedJoinPathConsumer qualifiedJoinPathConsumer = (QualifiedJoinPathConsumer) consumer;
+			madeNested = !qualifiedJoinPathConsumer.isNested();
+			if ( madeNested ) {
+				qualifiedJoinPathConsumer.setNested( true );
+			}
+		}
+		else {
+			madeNested = false;
+		}
 		final SqmPath<?> sqmPath = consumeDomainPath( (HqlParser.PathContext) ctx.getChild( 2 ) );
+		final boolean hasContinuation = ctx.getChildCount() == 5;
 
 		SqmPath<?> result;
 		if ( sqmPath instanceof SqmMapJoin ) {
 			final SqmMapJoin<?, ?, ?> sqmMapJoin = (SqmMapJoin<?, ?, ?>) sqmPath;
-			result = sqmMapJoin.key();
+			if ( consumer instanceof QualifiedJoinPathConsumer ) {
+				if ( madeNested && !hasContinuation ) {
+					// Reset the nested state before consuming the terminal identifier
+					( (QualifiedJoinPathConsumer) consumer ).setNested( false );
+				}
+				consumer.consumeIdentifier( CollectionPart.Nature.INDEX.getName(), false, !hasContinuation );
+				result = (SqmPath<?>) consumer.getConsumedPart();
+			}
+			else {
+				result = sqmMapJoin.key();
+			}
 		}
 		else {
 			assert sqmPath instanceof SqmPluralValuedSimplePath;
 			final SqmPluralValuedSimplePath<?> mapPath = (SqmPluralValuedSimplePath<?>) sqmPath;
-			result = mapPath.resolvePathPart( CollectionPart.Nature.INDEX.getName(), true, this );
+			result = mapPath.resolvePathPart( CollectionPart.Nature.INDEX.getName(), !hasContinuation, this );
 		}
 
-		if ( ctx.getChildCount() == 5 ) {
-			result = consumeDomainPath( (HqlParser.DotIdentifierSequenceContext) ctx.getChild( 4 ).getChild( 1 ) );
+		if ( hasContinuation ) {
+			if ( madeNested ) {
+				// Reset the nested state before consuming the terminal identifier
+				( (QualifiedJoinPathConsumer) consumer ).setNested( false );
+			}
+			final HqlParser.DotIdentifierSequenceContext identCtx = (HqlParser.DotIdentifierSequenceContext) ctx.getChild( 4 )
+					.getChild( 1 );
+			if ( consumer instanceof QualifiedJoinPathConsumer ) {
+				result = consumeDomainPath( identCtx );
+			}
+			else {
+				dotIdentifierConsumerStack.push(
+						new BasicDotIdentifierConsumer( result, this ) {
+							@Override
+							protected void reset() {
+							}
+						}
+				);
+				try {
+					result = consumeDomainPath( identCtx );
+				}
+				finally {
+					dotIdentifierConsumerStack.pop();
+				}
+			}
 		}
 
 		return result;

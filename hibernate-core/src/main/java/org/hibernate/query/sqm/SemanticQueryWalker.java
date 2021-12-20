@@ -25,6 +25,7 @@ import org.hibernate.query.sqm.tree.domain.SqmMaxElementPath;
 import org.hibernate.query.sqm.tree.domain.SqmMaxIndexPath;
 import org.hibernate.query.sqm.tree.domain.SqmMinElementPath;
 import org.hibernate.query.sqm.tree.domain.SqmMinIndexPath;
+import org.hibernate.query.sqm.tree.domain.SqmPluralPartJoin;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 import org.hibernate.query.sqm.tree.expression.SqmAny;
@@ -129,6 +130,8 @@ public interface SemanticQueryWalker<T> {
 	T visitRootPath(SqmRoot<?> sqmRoot);
 
 	T visitCrossJoin(SqmCrossJoin<?> joinedFromElement);
+
+	T visitPluralPartJoin(SqmPluralPartJoin<?, ?> joinedFromElement);
 
 	T visitQualifiedEntityJoin(SqmEntityJoin<?> joinedFromElement);
 

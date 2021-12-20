@@ -4,13 +4,15 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.hql;
+package org.hibernate.orm.test.hql;
 
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.util.Arrays;
@@ -55,6 +57,7 @@ public class CollectionMapWithComponentValueTest extends BaseCoreFunctionalTestC
 	@Override
 	protected void prepareTest() throws Exception {
 		doInHibernate( this::sessionFactory, s -> {
+			keyValue.base = null;
 			s.save( keyValue );
 
 			BaseTestEntity baseTestEntity1 = new BaseTestEntity();
@@ -66,6 +69,8 @@ public class CollectionMapWithComponentValueTest extends BaseCoreFunctionalTestC
 			baseTestEntity1.entities = new HashSet<TestEntity>();
 			baseTestEntity1.entities.add( testEntity );
 			s.save( baseTestEntity1 );
+
+			keyValue.base = baseTestEntity1;
 
 			KeyValue keyValue2 = new KeyValue( "key2" );
 			s.save( keyValue2 );
@@ -197,6 +202,37 @@ public class CollectionMapWithComponentValueTest extends BaseCoreFunctionalTestC
 		} );
 	}
 
+	@Test
+	@TestForIssue(jiraKey = "HHH-11433")
+	public void testJoinMapKey() {
+		doInHibernate( this::sessionFactory, s -> {
+			// Assert that a left join is used for joining the map key entity table
+			List keyValues= s.createQuery( "select k from BaseTestEntity bte left join bte.entities te left join te.values v left join key(v) k" ).list();
+			System.out.println( keyValues );
+			assertEquals( 2, keyValues.size() );
+		} );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-11433")
+	public void testJoinMapKeyAssociation() {
+		doInHibernate( this::sessionFactory, s -> {
+			List keyValues= s.createQuery( "select b from BaseTestEntity bte left join bte.entities te left join te.values v left join key(v) k join k.base b" ).list();
+			System.out.println( keyValues );
+			assertEquals( 1, keyValues.size() );
+		} );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-11433")
+	public void testJoinMapKeyAssociationImplicit() {
+		doInHibernate( this::sessionFactory, s -> {
+			List keyValues= s.createQuery( "select b from BaseTestEntity bte left join bte.entities te left join te.values v join key(v).base b" ).list();
+			System.out.println( keyValues );
+			assertEquals( 1, keyValues.size() );
+		} );
+	}
+
 	@Override
 	protected boolean isCleanupTestDataRequired() {
 		return true;
@@ -232,6 +268,9 @@ public class CollectionMapWithComponentValueTest extends BaseCoreFunctionalTestC
 		Long id;
 
 		String name;
+
+		@ManyToOne(fetch = FetchType.LAZY)
+		BaseTestEntity base;
 
 		public KeyValue() {
 		}

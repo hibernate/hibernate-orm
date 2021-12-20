@@ -34,6 +34,16 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> implemen
 		super( lhs, joinedNavigable, alias, joinType, fetched, nodeBuilder );
 	}
 
+	public SqmSingularJoin(
+			SqmFrom<?,O> lhs,
+			SqmJoinable joinedNavigable,
+			String alias,
+			SqmJoinType joinType,
+			boolean fetched,
+			NodeBuilder nodeBuilder) {
+		super( lhs, joinedNavigable, alias, joinType, fetched, nodeBuilder );
+	}
+
 	protected SqmSingularJoin(
 			SqmFrom<?, O> lhs,
 			NavigablePath navigablePath,

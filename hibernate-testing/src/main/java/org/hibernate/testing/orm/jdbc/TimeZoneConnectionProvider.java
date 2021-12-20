@@ -11,6 +11,7 @@ import java.util.TimeZone;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 
 import org.hibernate.testing.jdbc.ConnectionProviderDelegate;
+import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 
 /**
  * This {@link ConnectionProvider} extends any other ConnectionProvider that would be used by default taken the current configuration properties, and it
@@ -28,6 +29,8 @@ public class TimeZoneConnectionProvider
 		this.customTimeZone = customTimeZone;
 		this.defaultTimeZone =  System.setProperty( "user.timezone", customTimeZone);
 		TimeZone.setDefault(TimeZone.getTimeZone( customTimeZone ));
+		// Clear the connection pool to avoid issues with drivers that initialize the session TZ to the system TZ
+		SharedDriverManagerConnectionProviderImpl.getInstance().reset();
 	}
 
 	@Override
@@ -35,5 +38,7 @@ public class TimeZoneConnectionProvider
 		super.stop();
 		System.setProperty( "user.timezone", defaultTimeZone);
 		TimeZone.setDefault(TimeZone.getTimeZone( defaultTimeZone ));
+		// Clear the connection pool to avoid issues with drivers that initialize the session TZ to the system TZ
+		SharedDriverManagerConnectionProviderImpl.getInstance().reset();
 	}
 }

@@ -85,6 +85,19 @@ public interface IdMapper {
 
 	/**
 	 * Adds query statements, which contains restrictions, which express the property that the id of the entity
+	 * with alias prefix1, is equal to the id of the entity with alias prefix2 mapped by the second mapper
+	 * (the second mapper must be for the same entity, but it can have, for example, prefixed properties).
+	 *
+	 * @param parameters Parameters, to which to add the statements.
+	 * @param prefix1 First alias of the entity + prefix to add to the properties.
+	 * @param mapper2 Second mapper for the same entity, which will be used to get properties for the right side
+	 * of the equation.
+	 * @param prefix2 Second alias of the entity + prefix to add to the properties.
+	 */
+	void addNullableIdsEqualToQuery(Parameters parameters, String prefix1, IdMapper mapper2, String prefix2);
+
+	/**
+	 * Adds query statements, which contains restrictions, which express the property that the id of the entity
 	 * with alias prefix, is equal to the given object.
 	 *
 	 * @param parameters Parameters, to which to add the statements.

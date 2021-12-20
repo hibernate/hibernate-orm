@@ -12,6 +12,7 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 
 /**
@@ -28,7 +29,9 @@ public class EntityResultJoinedSubclassImpl extends EntityResultImpl {
 	}
 
 	@Override
-	public DomainResultAssembler createResultAssembler(AssemblerCreationState creationState) {
+	public DomainResultAssembler createResultAssembler(
+			FetchParentAccess parentAccess,
+			AssemblerCreationState creationState) {
 		final EntityInitializer initializer = (EntityInitializer) creationState.resolveInitializer(
 				getNavigablePath(),
 				getReferencedModePart(),

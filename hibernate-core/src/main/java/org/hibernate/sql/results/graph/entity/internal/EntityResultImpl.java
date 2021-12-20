@@ -16,6 +16,7 @@ import org.hibernate.sql.ast.tree.from.TableGroupProducer;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.graph.entity.AbstractEntityResultGraphNode;
@@ -86,7 +87,9 @@ public class EntityResultImpl extends AbstractEntityResultGraphNode implements E
 	}
 
 	@Override
-	public DomainResultAssembler createResultAssembler(AssemblerCreationState creationState) {
+	public DomainResultAssembler createResultAssembler(
+			FetchParentAccess parentAccess,
+			AssemblerCreationState creationState) {
 		final EntityInitializer initializer = (EntityInitializer) creationState.resolveInitializer(
 				getNavigablePath(),
 				getReferencedModePart(),

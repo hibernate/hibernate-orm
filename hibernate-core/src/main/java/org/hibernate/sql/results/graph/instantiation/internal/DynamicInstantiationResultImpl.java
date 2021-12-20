@@ -19,6 +19,7 @@ import org.hibernate.query.DynamicInstantiationNature;
 import org.hibernate.query.sqm.tree.expression.Compatibility;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
+import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.instantiation.DynamicInstantiationResult;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -71,7 +72,9 @@ public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationRe
 	}
 
 	@Override
-	public DomainResultAssembler<R> createResultAssembler(AssemblerCreationState creationState) {
+	public DomainResultAssembler<R> createResultAssembler(
+			FetchParentAccess parentAccess,
+			AssemblerCreationState creationState) {
 		boolean areAllArgumentsAliased = true;
 		boolean areAnyArgumentsAliased = false;
 		final Set<String> aliases = new HashSet<>();
@@ -95,7 +98,7 @@ public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationRe
 				}
 
 				argumentReaders.add(
-						argumentResult.createResultAssembler( creationState )
+						argumentResult.createResultAssembler( parentAccess, creationState )
 				);
 			}
 		}

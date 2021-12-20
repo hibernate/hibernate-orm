@@ -13,6 +13,7 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.collection.CollectionInitializer;
+import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableForeignKeyResultImpl;
 
 /**
  * @author Steve Ebersole
@@ -30,7 +31,10 @@ public class DelayedCollectionAssembler extends AbstractCollectionAssembler {
 						fetchPath,
 						fetchedMapping,
 						() -> {
-							final DomainResultAssembler<?> collectionKeyAssembler = collectionKeyResult.createResultAssembler( creationState );
+							final DomainResultAssembler<?> collectionKeyAssembler = collectionKeyResult.createResultAssembler(
+									parentAccess,
+									creationState
+							);
 							return new DelayedCollectionInitializer(
 									fetchPath,
 									fetchedMapping,

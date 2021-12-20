@@ -11,6 +11,7 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
+import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.basic.BasicResultGraphNode;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -69,7 +70,9 @@ public class TupleResult<T> implements DomainResult<T>, BasicResultGraphNode<T> 
 	}
 
 	@Override
-	public DomainResultAssembler<T> createResultAssembler(AssemblerCreationState creationState) {
+	public DomainResultAssembler<T> createResultAssembler(
+			FetchParentAccess parentAccess,
+			AssemblerCreationState creationState) {
 		return assembler;
 	}
 }

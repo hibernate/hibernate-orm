@@ -471,7 +471,9 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		}
 
 		@Override
-		public DomainResultAssembler<Object[]> createResultAssembler(AssemblerCreationState creationState) {
+		public DomainResultAssembler<Object[]> createResultAssembler(
+				FetchParentAccess parentAccess,
+				AssemblerCreationState creationState) {
 			return new AssemblerImpl(
 					fetches,
 					navigablePath,

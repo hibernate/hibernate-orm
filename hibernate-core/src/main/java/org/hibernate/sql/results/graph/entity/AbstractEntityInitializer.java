@@ -153,6 +153,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 		if ( rowIdResult != null ) {
 			this.rowIdAssembler = rowIdResult.createResultAssembler(
+					this,
 					creationState
 			);
 		}

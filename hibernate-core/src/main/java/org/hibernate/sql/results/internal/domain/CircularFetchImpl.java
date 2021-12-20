@@ -102,7 +102,7 @@ public class CircularFetchImpl implements BiDirectionalFetch, Association {
 	public DomainResultAssembler createAssembler(
 			FetchParentAccess parentAccess,
 			AssemblerCreationState creationState) {
-		final DomainResultAssembler resultAssembler = keyResult.createResultAssembler( creationState );
+		final DomainResultAssembler resultAssembler = keyResult.createResultAssembler( parentAccess, creationState );
 
 		final EntityInitializer initializer = (EntityInitializer) creationState.resolveInitializer(
 				getNavigablePath(),

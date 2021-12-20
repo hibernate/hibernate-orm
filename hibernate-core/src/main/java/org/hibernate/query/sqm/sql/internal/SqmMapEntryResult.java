@@ -11,6 +11,7 @@ import java.util.Map;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
+import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -42,9 +43,11 @@ public class SqmMapEntryResult<K, V, R extends Map.Entry<K, V>> implements Domai
 	}
 
 	@Override
-	public DomainResultAssembler<R> createResultAssembler(AssemblerCreationState creationState) {
-		final DomainResultAssembler<K> keyAssembler = keyResult.createResultAssembler( creationState );
-		final DomainResultAssembler<V> valueAssembler = valueResult.createResultAssembler( creationState );
+	public DomainResultAssembler<R> createResultAssembler(
+			FetchParentAccess parentAccess,
+			AssemblerCreationState creationState) {
+		final DomainResultAssembler<K> keyAssembler = keyResult.createResultAssembler( null, creationState );
+		final DomainResultAssembler<V> valueAssembler = valueResult.createResultAssembler( null, creationState );
 
 		return new DomainResultAssembler<R>() {
 			@Override

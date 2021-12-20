@@ -65,7 +65,7 @@ public class EntityFetchSelectImpl extends AbstractNonJoinedEntityFetch {
 								fetchedAttribute,
 								getNavigablePath(),
 								entityPersister,
-								result.createResultAssembler( creationState )
+								result.createResultAssembler( parentAccess, creationState )
 						);
 					}
 					if ( entityPersister.isBatchLoadable() ) {
@@ -74,7 +74,7 @@ public class EntityFetchSelectImpl extends AbstractNonJoinedEntityFetch {
 								fetchedAttribute,
 								getNavigablePath(),
 								entityPersister,
-								result.createResultAssembler( creationState )
+								result.createResultAssembler( parentAccess, creationState )
 						);
 					}
 					else {
@@ -83,7 +83,7 @@ public class EntityFetchSelectImpl extends AbstractNonJoinedEntityFetch {
 								fetchedAttribute,
 								getNavigablePath(),
 								entityPersister,
-								result.createResultAssembler( creationState )
+								result.createResultAssembler( parentAccess, creationState )
 						);
 					}
 				}

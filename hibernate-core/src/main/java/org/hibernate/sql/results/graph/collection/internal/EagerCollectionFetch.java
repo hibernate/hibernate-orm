@@ -130,8 +130,8 @@ public class EagerCollectionFetch extends CollectionFetch implements FetchParent
 				getNavigablePath(),
 				getReferencedModePart(),
 				() -> {
-					final DomainResultAssembler<?> collectionKeyAssembler = collectionKeyResult.createResultAssembler( creationState );
-					final DomainResultAssembler<?> collectionValueKeyAssembler = collectionValueKeyResult.createResultAssembler( creationState );
+					final DomainResultAssembler<?> collectionKeyAssembler = collectionKeyResult.createResultAssembler( null, creationState );
+					final DomainResultAssembler<?> collectionValueKeyAssembler = collectionValueKeyResult.createResultAssembler( null, creationState );
 
 					return initializerProducer.produceInitializer(
 							getNavigablePath(),

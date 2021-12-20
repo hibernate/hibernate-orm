@@ -138,7 +138,9 @@ public class BasicFetch<T> implements Fetch, BasicResultGraphNode<T> {
 	}
 
 	@Override
-	public DomainResultAssembler<T> createResultAssembler(AssemblerCreationState creationState) {
+	public DomainResultAssembler<T> createResultAssembler(
+			FetchParentAccess parentAccess,
+			AssemblerCreationState creationState) {
 		return assembler;
 	}
 

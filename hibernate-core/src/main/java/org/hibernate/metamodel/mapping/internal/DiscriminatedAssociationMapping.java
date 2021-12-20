@@ -442,7 +442,9 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 		}
 
 		@Override
-		public DomainResultAssembler<T> createResultAssembler(AssemblerCreationState creationState) {
+		public DomainResultAssembler<T> createResultAssembler(
+				FetchParentAccess parentAccess,
+				AssemblerCreationState creationState) {
 			return new AnyResultAssembler<>(
 					getNavigablePath(),
 					getReferencedMappingContainer(),

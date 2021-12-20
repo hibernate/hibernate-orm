@@ -50,7 +50,7 @@ public class StandardJdbcValuesMapping implements JdbcValuesMapping {
 
 		//noinspection ForLoopReplaceableByForEach
 		for ( int i = 0; i < domainResults.size(); i++ ) {
-			final DomainResultAssembler<?> resultAssembler = domainResults.get( i ).createResultAssembler( creationState );
+			final DomainResultAssembler<?> resultAssembler = domainResults.get( i ).createResultAssembler( null, creationState );
 
 			assemblers.add( resultAssembler );
 		}

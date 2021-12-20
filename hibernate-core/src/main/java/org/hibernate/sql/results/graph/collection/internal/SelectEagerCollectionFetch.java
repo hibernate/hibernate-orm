@@ -49,7 +49,7 @@ public class SelectEagerCollectionFetch extends CollectionFetch {
 				getNavigablePath(),
 				getFetchedMapping(),
 				parentAccess,
-				collectionKeyDomainResult == null ? null : collectionKeyDomainResult.createResultAssembler( creationState ),
+				collectionKeyDomainResult == null ? null : collectionKeyDomainResult.createResultAssembler( null, creationState ),
 				creationState
 		);
 	}

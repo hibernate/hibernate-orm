@@ -23,7 +23,7 @@
 
 -->
 
-<hibernate-mapping package="org.hibernate.test.cuk">
+<hibernate-mapping package="org.hibernate.orm.test.cuk">
 
 	<class name="Person">
 		<id name="id">

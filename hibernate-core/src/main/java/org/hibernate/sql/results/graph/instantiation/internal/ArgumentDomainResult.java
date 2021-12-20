@@ -8,6 +8,7 @@ package org.hibernate.sql.results.graph.instantiation.internal;
 
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -37,9 +38,11 @@ public class ArgumentDomainResult<A> implements DomainResult<A> {
 	}
 
 	@Override
-	public ArgumentReader<A> createResultAssembler(AssemblerCreationState creationState) {
+	public ArgumentReader<A> createResultAssembler(
+			FetchParentAccess parentAccess,
+			AssemblerCreationState creationState) {
 		return new ArgumentReader<>(
-				realDomainResult.createResultAssembler( creationState ),
+				realDomainResult.createResultAssembler( parentAccess, creationState ),
 				getResultVariable()
 		);
 	}

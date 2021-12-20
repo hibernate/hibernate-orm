@@ -105,7 +105,7 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch, Assoc
 				fetchable,
 				getReferencedPath(),
 				fetchable.getJavaTypeDescriptor(),
-				keyDomainResult == null ? null : keyDomainResult.createResultAssembler( creationState )
+				keyDomainResult == null ? null : keyDomainResult.createResultAssembler( parentAccess, creationState )
 		);
 	}
 

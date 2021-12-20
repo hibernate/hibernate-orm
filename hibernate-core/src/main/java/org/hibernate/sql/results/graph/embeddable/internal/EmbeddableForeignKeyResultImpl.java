@@ -18,6 +18,7 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
@@ -81,11 +82,13 @@ public class EmbeddableForeignKeyResultImpl<T>
 	}
 
 	@Override
-	public DomainResultAssembler<T> createResultAssembler(AssemblerCreationState creationState) {
+	public DomainResultAssembler<T> createResultAssembler(
+			FetchParentAccess parentAccess,
+			AssemblerCreationState creationState) {
 		final EmbeddableInitializer initializer = (EmbeddableInitializer) creationState.resolveInitializer(
 				getNavigablePath(),
 				getReferencedModePart(),
-				() -> new EmbeddableResultInitializer(this, creationState )
+				() -> new EmbeddableResultInitializer( this, parentAccess, creationState )
 		);
 
 		//noinspection unchecked

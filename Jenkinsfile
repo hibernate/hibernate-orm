@@ -121,7 +121,7 @@ stage('Build') {
 									break;
 								case "db2":
 									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('ibmcom/db2:11.5.5.0').pull()
+										docker.image('ibmcom/db2:11.5.7.0').pull()
 									}
 									sh "./docker_db.sh db2"
 									containerName = "db2"

@@ -193,7 +193,7 @@ public class ToOneIdMapper extends AbstractToOneMapper {
 			String prefix1,
 			String idPrefix2,
 			String prefix2) {
-		delegate.addIdsEqualToQuery( parameters, prefix1, delegate, prefix2 );
+		delegate.addNullableIdsEqualToQuery( parameters, prefix1, delegate, prefix2 );
 	}
 
 	// todo: is referenced entity needed any longer?

@@ -10,6 +10,7 @@ import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.query.sqm.tree.from.SqmJoin;
 
 /**
  * Specialization for attributes that that can be used in creating SQM joins
@@ -19,9 +20,9 @@ import org.hibernate.query.sqm.tree.from.SqmFrom;
  *
  * @author Steve Ebersole
  */
-public interface SqmJoinable {
-	SqmAttributeJoin createSqmJoin(
-			SqmFrom lhs,
+public interface SqmJoinable<O, E> {
+	SqmJoin<O, E> createSqmJoin(
+			SqmFrom<?, O> lhs,
 			SqmJoinType joinType,
 			String alias,
 			boolean fetched,

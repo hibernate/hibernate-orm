@@ -21,7 +21,6 @@ import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.SqmPolymorphicRootDescriptor;
-import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
@@ -45,7 +44,7 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 	private final String alias;
 
 	private ConsumerDelegate delegate;
-	private boolean treated;
+	private boolean nested;
 
 	public QualifiedJoinPathConsumer(
 			SqmRoot<?> sqmRoot,
@@ -80,8 +79,12 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 		);
 	}
 
-	public void setTreated(boolean treated) {
-		this.treated = treated;
+	public boolean isNested() {
+		return nested;
+	}
+
+	public void setNested(boolean nested) {
+		this.nested = nested;
 	}
 
 	@Override
@@ -91,13 +94,12 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 
 	@Override
 	public void consumeIdentifier(String identifier, boolean isBase, boolean isTerminal) {
-		if ( isBase ) {
-			assert delegate == null;
-			delegate = resolveBase( identifier, !treated && isTerminal );
+		if ( isBase && delegate == null ) {
+			delegate = resolveBase( identifier, !nested && isTerminal );
 		}
 		else {
 			assert delegate != null;
-			delegate.consumeIdentifier( identifier, !treated && isTerminal );
+			delegate.consumeIdentifier( identifier, !nested && isTerminal );
 		}
 	}
 
@@ -194,7 +196,7 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 			}
 		}
 		@SuppressWarnings("unchecked")
-		final SqmAttributeJoin<Object, Object> join = ( (SqmJoinable) subPathSource ).createSqmJoin(
+		final SqmJoin<Object, Object> join = ( (SqmJoinable<Object, Object>) subPathSource ).createSqmJoin(
 				lhs,
 				joinType,
 				isTerminal ? alias : SqmCreationHelper.IMPLICIT_ALIAS,

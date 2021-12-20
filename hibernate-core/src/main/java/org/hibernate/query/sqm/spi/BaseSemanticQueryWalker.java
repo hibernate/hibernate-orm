@@ -28,6 +28,7 @@ import org.hibernate.query.sqm.tree.domain.SqmMaxIndexPath;
 import org.hibernate.query.sqm.tree.domain.SqmMinElementPath;
 import org.hibernate.query.sqm.tree.domain.SqmMinIndexPath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.domain.SqmPluralPartJoin;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
@@ -244,6 +245,13 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 
 	@Override
 	public Object visitCrossJoin(SqmCrossJoin<?> joinedFromElement) {
+		joinedFromElement.visitReusablePaths( path -> path.accept( this ) );
+		joinedFromElement.visitSqmJoins( sqmJoin -> sqmJoin.accept( this ) );
+		return joinedFromElement;
+	}
+
+	@Override
+	public Object visitPluralPartJoin(SqmPluralPartJoin<?, ?> joinedFromElement) {
 		joinedFromElement.visitReusablePaths( path -> path.accept( this ) );
 		joinedFromElement.visitSqmJoins( sqmJoin -> sqmJoin.accept( this ) );
 		return joinedFromElement;

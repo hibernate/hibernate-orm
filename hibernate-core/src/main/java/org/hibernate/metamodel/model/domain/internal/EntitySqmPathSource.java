@@ -8,14 +8,21 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.hql.spi.SqmCreationState;
+import org.hibernate.query.sqm.SqmJoinable;
 import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.domain.SqmPluralPartJoin;
+import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
+import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 
 /**
  * @author Steve Ebersole
  */
-public class EntitySqmPathSource<J> extends AbstractSqmPathSource<J> {
+public class EntitySqmPathSource<J> extends AbstractSqmPathSource<J> implements SqmJoinable<Object, J> {
 	public EntitySqmPathSource(
 			String localPathName,
 			EntityDomainType<J> domainType,
@@ -50,5 +57,26 @@ public class EntitySqmPathSource<J> extends AbstractSqmPathSource<J> {
 				lhs,
 				lhs.nodeBuilder()
 		);
+	}
+
+	@Override
+	public SqmPluralPartJoin<Object, J> createSqmJoin(
+			SqmFrom<?, Object> lhs,
+			SqmJoinType joinType,
+			String alias,
+			boolean fetched,
+			SqmCreationState creationState) {
+		return new SqmPluralPartJoin<>(
+				lhs,
+				this,
+				alias,
+				joinType,
+				creationState.getCreationContext().getNodeBuilder()
+		);
+	}
+
+	@Override
+	public String getName() {
+		return getPathName();
 	}
 }

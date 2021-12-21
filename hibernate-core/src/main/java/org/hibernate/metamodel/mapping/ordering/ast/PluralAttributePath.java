@@ -74,11 +74,7 @@ public class PluralAttributePath extends AbstractDomainPath {
 					pluralAttributeMapping.getElementDescriptor()
 			);
 
-			return new DomainPathContinuation(
-					elementPath.getNavigablePath().append( name ),
-					this,
-					pluralAttributeMapping.getElementDescriptor()
-			);
+			return (DomainPath) elementPath.resolvePathPart( name, identifier, isTerminal, translationContext);
 		}
 
 		// the above checks for explicit element or index descriptor references

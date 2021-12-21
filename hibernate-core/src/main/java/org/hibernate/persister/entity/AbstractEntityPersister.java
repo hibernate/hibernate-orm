@@ -167,6 +167,7 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
+import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.Queryable;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
@@ -184,7 +185,6 @@ import org.hibernate.metamodel.mapping.internal.GeneratedValuesProcessor;
 import org.hibernate.metamodel.mapping.internal.InFlightEntityMappingType;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
-import org.hibernate.metamodel.mapping.internal.NonAggregatedIdentifierMappingImpl;
 import org.hibernate.metamodel.mapping.internal.SimpleNaturalIdMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EntityInstantiator;
@@ -5023,7 +5023,7 @@ public abstract class AbstractEntityPersister
 				baseValueType = (ManagedMappingType) attributeMapping.getMappedType();
 			}
 		}
-		else if ( identifierMapping instanceof NonAggregatedIdentifierMappingImpl ) {
+		else if ( identifierMapping instanceof NonAggregatedIdentifierMapping ) {
 			final EmbeddedAttributeMapping embeddedAttributeMapping = (EmbeddedAttributeMapping) findAttributeMapping( NavigableRole.IDENTIFIER_MAPPER_PROPERTY );
 			final AttributeMapping mapping = embeddedAttributeMapping.getMappedType()
 					.findAttributeMapping( basePropertyName );
@@ -6386,8 +6386,8 @@ public abstract class AbstractEntityPersister
 	}
 
 	private ModelPart getIdentifierModelPart(String name, EntityMappingType treatTargetType) {
-		if ( identifierMapping instanceof NonAggregatedIdentifierMappingImpl ) {
-			final ModelPart subPart = ( (NonAggregatedIdentifierMappingImpl) identifierMapping ).findSubPart(
+		if ( identifierMapping instanceof NonAggregatedIdentifierMapping ) {
+			final ModelPart subPart = ( (NonAggregatedIdentifierMapping) identifierMapping ).findSubPart(
 					name,
 					treatTargetType
 			);

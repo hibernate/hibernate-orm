@@ -15,7 +15,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
-import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -30,7 +29,6 @@ import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
-import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.AssociationKey;
@@ -47,6 +45,7 @@ import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
+import org.hibernate.metamodel.mapping.VirtualModelPart;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.AbstractEntityPersister;
@@ -96,6 +95,7 @@ import org.hibernate.tuple.IdentifierProperty;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
+import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
@@ -440,8 +440,15 @@ public class ToOneAttributeMapping
 			final CompositeType compositeType;
 			if ( propertyType.isComponentType() && ( compositeType = (CompositeType) propertyType ).isEmbedded()
 					&& compositeType.getPropertyNames().length == 1 ) {
+				final Set<String> targetKeyPropertyNames = new HashSet<>( 2 );
 				this.targetKeyPropertyName = compositeType.getPropertyNames()[0];
-				this.targetKeyPropertyNames = Collections.singleton( targetKeyPropertyName );
+				addPrefixedPropertyNames(
+						targetKeyPropertyNames,
+						targetKeyPropertyName,
+						compositeType.getSubtypes()[0],
+						declaringEntityPersister.getFactory()
+				);
+				this.targetKeyPropertyNames = targetKeyPropertyNames;
 			}
 			else {
 				this.targetKeyPropertyName = referencedPropertyName;
@@ -551,6 +558,9 @@ public class ToOneAttributeMapping
 			if ( entityType.isReferenceToPrimaryKey() ) {
 				propertyName = entityType.getAssociatedEntityPersister( factory ).getIdentifierPropertyName();
 			}
+			else if ( identifierOrUniqueKeyType instanceof EmbeddedComponentType ) {
+				propertyName = null;
+			}
 			else {
 				propertyName = entityType.getRHSUniqueKeyPropertyName();
 			}
@@ -651,20 +661,17 @@ public class ToOneAttributeMapping
 		// Prefer resolving the key part of the foreign key rather than the target part if possible
 		// This way, we don't have to register table groups the target entity type
 		if ( canUseParentTableGroup && targetKeyPropertyNames.contains( name ) ) {
-			final ModelPart fkSideModelPart;
-			final ModelPart fkTargetModelPart;
+			final ModelPart fkPart;
 			if ( sideNature == ForeignKeyDescriptor.Nature.KEY ) {
-				fkTargetModelPart = foreignKeyDescriptor.getTargetPart();
-				fkSideModelPart = foreignKeyDescriptor.getKeyPart();
+				fkPart = foreignKeyDescriptor.getKeyPart();
 			}
 			else {
-				fkTargetModelPart = foreignKeyDescriptor.getKeyPart();
-				fkSideModelPart = foreignKeyDescriptor.getTargetPart();
+				fkPart = foreignKeyDescriptor.getTargetPart();
 			}
-			if ( fkTargetModelPart instanceof NonAggregatedIdentifierMappingImpl ) {
-				return ( (ModelPartContainer) fkSideModelPart ).findSubPart( name, targetType );
+			if ( fkPart instanceof EmbeddableValuedModelPart && fkPart instanceof VirtualModelPart ) {
+				return ( (ModelPartContainer) fkPart ).findSubPart( name, targetType );
 			}
-			return fkSideModelPart;
+			return fkPart;
 		}
 		return EntityValuedFetchable.super.findSubPart( name, targetType );
 	}
@@ -1221,6 +1228,11 @@ public class ToOneAttributeMapping
 			}
 			return SqlAstJoinType.LEFT;
 		}
+	}
+
+	@Override
+	public boolean isSimpleJoinPredicate(Predicate predicate) {
+		return foreignKeyDescriptor.isSimpleJoinPredicate( predicate );
 	}
 
 	@Override

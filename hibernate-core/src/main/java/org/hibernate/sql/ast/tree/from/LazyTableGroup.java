@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.ast.tree.from;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.BiPredicate;
@@ -36,6 +37,8 @@ public class LazyTableGroup extends DelegatingTableGroup {
 	private final Supplier<TableGroup> tableGroupSupplier;
 	private final TableGroup parentTableGroup;
 	private final BiPredicate<NavigablePath, String> navigablePathChecker;
+	private List<TableGroupJoin> tableGroupJoins;
+	private List<TableGroupJoin> nestedTableGroupJoins;
 	private Consumer<TableGroup> tableGroupConsumer;
 	private TableGroup tableGroup;
 
@@ -72,6 +75,18 @@ public class LazyTableGroup extends DelegatingTableGroup {
 		}
 
 		tableGroup = tableGroupSupplier.get();
+		if ( tableGroupJoins != null ) {
+			for ( TableGroupJoin tableGroupJoin : tableGroupJoins ) {
+				tableGroup.addTableGroupJoin( tableGroupJoin );
+			}
+			tableGroupJoins = null;
+		}
+		if ( nestedTableGroupJoins != null ) {
+			for ( TableGroupJoin tableGroupJoin : nestedTableGroupJoins ) {
+				tableGroup.addNestedTableGroupJoin( tableGroupJoin );
+			}
+			nestedTableGroupJoins = null;
+		}
 		if ( tableGroupConsumer != null ) {
 			tableGroupConsumer.accept( tableGroup );
 			tableGroupConsumer = null;
@@ -102,24 +117,70 @@ public class LazyTableGroup extends DelegatingTableGroup {
 
 	@Override
 	public List<TableGroupJoin> getTableGroupJoins() {
-		return tableGroup == null ? Collections.emptyList() : tableGroup.getTableGroupJoins();
+		if ( tableGroup == null ) {
+			return nestedTableGroupJoins == null ? Collections.emptyList() : nestedTableGroupJoins;
+		}
+		else {
+			return tableGroup.getTableGroupJoins();
+		}
 	}
 
 	@Override
 	public List<TableGroupJoin> getNestedTableGroupJoins() {
-		return tableGroup == null ? Collections.emptyList() : tableGroup.getNestedTableGroupJoins();
+		if ( tableGroup == null ) {
+			return tableGroupJoins == null ? Collections.emptyList() : tableGroupJoins;
+		}
+		else {
+			return tableGroup.getNestedTableGroupJoins();
+		}
+	}
+
+	@Override
+	public void addTableGroupJoin(TableGroupJoin join) {
+		if ( tableGroup == null ) {
+			if ( tableGroupJoins == null ) {
+				tableGroupJoins = new ArrayList<>();
+			}
+			tableGroupJoins.add( join );
+		}
+		else {
+			getTableGroup().addTableGroupJoin( join );
+		}
+	}
+
+	@Override
+	public void addNestedTableGroupJoin(TableGroupJoin join) {
+		if ( tableGroup == null ) {
+			if ( nestedTableGroupJoins == null ) {
+				nestedTableGroupJoins = new ArrayList<>();
+			}
+			nestedTableGroupJoins.add( join );
+		}
+		else {
+			getTableGroup().addNestedTableGroupJoin( join );
+		}
 	}
 
 	@Override
 	public void visitTableGroupJoins(Consumer<TableGroupJoin> consumer) {
-		if ( tableGroup != null ) {
+		if ( tableGroup == null ) {
+			if ( tableGroupJoins != null ) {
+				tableGroupJoins.forEach( consumer );
+			}
+		}
+		else {
 			tableGroup.visitTableGroupJoins( consumer );
 		}
 	}
 
 	@Override
 	public void visitNestedTableGroupJoins(Consumer<TableGroupJoin> consumer) {
-		if ( tableGroup != null ) {
+		if ( tableGroup == null ) {
+			if ( nestedTableGroupJoins != null ) {
+				nestedTableGroupJoins.forEach( consumer );
+			}
+		}
+		else {
 			tableGroup.visitNestedTableGroupJoins( consumer );
 		}
 	}

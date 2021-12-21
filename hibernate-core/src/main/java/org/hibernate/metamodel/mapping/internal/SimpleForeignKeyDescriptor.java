@@ -37,6 +37,7 @@ import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupProducer;
 import org.hibernate.sql.ast.tree.from.TableReference;
@@ -287,6 +288,28 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 				sqlExpressionResolver,
 				creationContext
 		);
+	}
+
+	@Override
+	public boolean isSimpleJoinPredicate(Predicate predicate) {
+		if ( !( predicate instanceof ComparisonPredicate ) ) {
+			return false;
+		}
+		final ComparisonPredicate comparisonPredicate = (ComparisonPredicate) predicate;
+		if ( comparisonPredicate.getOperator() != ComparisonOperator.EQUAL ) {
+			return false;
+		}
+		final Expression lhsExpr = comparisonPredicate.getLeftHandExpression();
+		final Expression rhsExpr = comparisonPredicate.getRightHandExpression();
+		if ( !( lhsExpr instanceof ColumnReference ) || !( rhsExpr instanceof ColumnReference ) ) {
+			return false;
+		}
+		final String lhs = ( (ColumnReference) lhsExpr ).getColumnExpression();
+		final String rhs = ( (ColumnReference) rhsExpr ).getColumnExpression();
+		final String keyExpression = keySide.getModelPart().getSelectionExpression();
+		final String targetExpression = targetSide.getModelPart().getSelectionExpression();
+		return ( lhs.equals( keyExpression ) && rhs.equals( targetExpression ) )
+				|| ( lhs.equals( targetExpression ) && rhs.equals( keyExpression ) );
 	}
 
 	protected TableReference getTableReference(TableGroup lhs, TableGroup tableGroup, String table) {

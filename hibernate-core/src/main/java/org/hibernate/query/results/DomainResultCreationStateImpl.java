@@ -28,8 +28,8 @@ import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.internal.BasicValuedCollectionPart;
-import org.hibernate.metamodel.mapping.internal.NonAggregatedIdentifierMappingImpl;
 import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
 import org.hibernate.query.EntityIdentifierNavigablePath;
 import org.hibernate.query.NavigablePath;
@@ -428,7 +428,7 @@ public class DomainResultCreationStateImpl
 		if ( fetchableContainer instanceof EntityValuedModelPart ) {
 			final EntityValuedModelPart entityValuedFetchable = (EntityValuedModelPart) fetchableContainer;
 			final EntityIdentifierMapping identifierMapping = entityValuedFetchable.getEntityMappingType().getIdentifierMapping();
-			final boolean idClass = identifierMapping instanceof NonAggregatedIdentifierMappingImpl;
+			final boolean idClass = identifierMapping instanceof NonAggregatedIdentifierMapping;
 			final String identifierAttributeName = attributeName( identifierMapping );
 			if ( idClass ) {
 				final Map.Entry<String, NavigablePath> oldEntry = relativePathStack.getCurrent();

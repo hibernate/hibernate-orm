@@ -7,6 +7,7 @@
 package org.hibernate.metamodel.mapping;
 
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
 
@@ -26,4 +27,9 @@ public interface DiscriminatedAssociationModelPart extends Fetchable, FetchableC
 
 	EntityMappingType resolveDiscriminatorValue(Object discriminatorValue);
 	Object resolveDiscriminatorForEntityType(EntityMappingType entityMappingType);
+
+	@Override
+	default boolean isSimpleJoinPredicate(Predicate predicate) {
+		return predicate == null;
+	}
 }

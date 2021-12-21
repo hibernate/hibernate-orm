@@ -3912,6 +3912,16 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					tableGroupJoinCollector
 			);
 		}
+		// A lazy table group, even if uninitialized, might contain table group joins
+		else if ( joinedGroup instanceof LazyTableGroup ) {
+			processNestedTableGroupJoins( joinedGroup, tableGroupJoinCollector );
+			if ( tableGroupJoinCollector != null ) {
+				tableGroupJoinCollector.addAll( joinedGroup.getTableGroupJoins() );
+			}
+			else {
+				processTableGroupJoins( joinedGroup );
+			}
+		}
 	}
 
 	protected void renderTableGroupJoin(TableGroupJoin tableGroupJoin, List<TableGroupJoin> tableGroupJoinCollector) {

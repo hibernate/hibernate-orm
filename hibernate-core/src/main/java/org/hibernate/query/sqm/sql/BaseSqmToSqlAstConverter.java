@@ -2842,28 +2842,39 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				querySpec.getFromClause().addRoot( tableGroup );
 			}
 			else {
-				final TableGroupJoin tableGroupJoin = joinProducer.createTableGroupJoin(
-						joinedPath.getNavigablePath(),
+				// Check if we can reuse a table group join of the parent
+				final TableGroup compatibleTableGroup = findCompatibleJoinedGroup(
 						actualParentTableGroup,
-						null,
-						defaultSqlAstJoinType,
-						false,
-						false,
-						this
+						joinProducer,
+						defaultSqlAstJoinType
 				);
-				// Implicit joins in the ON clause of attribute joins need to be added as nested table group joins
-				// We don't have to do that for entity joins etc. as these do not have an inherent dependency on the lhs.
-				// We can just add the implicit join before the currently processing join
-				// See consumeEntityJoin for details
-				final boolean nested = currentClauseStack.getCurrent() == Clause.FROM
-						&& currentlyProcessingJoin instanceof SqmAttributeJoin<?, ?>;
-				if ( nested ) {
-					actualParentTableGroup.addNestedTableGroupJoin( tableGroupJoin );
+				if ( compatibleTableGroup == null ) {
+					final TableGroupJoin tableGroupJoin = joinProducer.createTableGroupJoin(
+							joinedPath.getNavigablePath(),
+							actualParentTableGroup,
+							null,
+							defaultSqlAstJoinType,
+							false,
+							false,
+							this
+					);
+					// Implicit joins in the ON clause of attribute joins need to be added as nested table group joins
+					// We don't have to do that for entity joins etc. as these do not have an inherent dependency on the lhs.
+					// We can just add the implicit join before the currently processing join
+					// See consumeEntityJoin for details
+					final boolean nested = currentClauseStack.getCurrent() == Clause.FROM
+							&& currentlyProcessingJoin instanceof SqmAttributeJoin<?, ?>;
+					if ( nested ) {
+						actualParentTableGroup.addNestedTableGroupJoin( tableGroupJoin );
+					}
+					else {
+						actualParentTableGroup.addTableGroupJoin( tableGroupJoin );
+					}
+					tableGroup = tableGroupJoin.getJoinedGroup();
 				}
 				else {
-					actualParentTableGroup.addTableGroupJoin( tableGroupJoin );
+					tableGroup = compatibleTableGroup;
 				}
-				tableGroup = tableGroupJoin.getJoinedGroup();
 			}
 
 			fromClauseIndex.register( joinedPath, tableGroup );
@@ -2873,6 +2884,31 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			tableGroup = null;
 		}
 		return tableGroup;
+	}
+
+	private TableGroup findCompatibleJoinedGroup(
+			TableGroup parentTableGroup,
+			TableGroupJoinProducer joinProducer,
+			SqlAstJoinType requestedJoinType) {
+		// We don't look into nested table group joins as that wouldn't be "compatible"
+		for ( TableGroupJoin join : parentTableGroup.getTableGroupJoins() ) {
+			// Compatibility obviously requires the same model part but also join type compatibility
+			// Note that if the requested join type is left, we can also use an existing inner join
+			// The other case, when the requested join type is inner and there is an existing left join,
+			// is not compatible though because the cardinality is different.
+			// We could reuse the join though if we alter the join type to INNER, but that's an optimization for later
+			final SqlAstJoinType joinType = join.getJoinType();
+			if ( join.getJoinedGroup().getModelPart() == joinProducer
+					&& ( requestedJoinType == joinType || requestedJoinType == SqlAstJoinType.LEFT && joinType == SqlAstJoinType.INNER ) ) {
+				// If there is an existing inner join, we can always use that as a new join can never produce results
+				// regardless of the join type or predicate since the LHS is the same table group
+				// If this is a left join though, we have to check if the predicate is simply the association predicate
+				if ( joinType == SqlAstJoinType.INNER || joinProducer.isSimpleJoinPredicate( join.getPredicate() ) ) {
+					return join.getJoinedGroup();
+				}
+			}
+		}
+		return null;
 	}
 
 	private void registerPluralTableGroupParts(TableGroup tableGroup) {

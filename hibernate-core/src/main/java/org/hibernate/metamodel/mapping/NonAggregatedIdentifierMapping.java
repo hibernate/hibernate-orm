@@ -27,7 +27,7 @@ import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
  * @see jakarta.persistence.IdClass
  * @see jakarta.persistence.MapsId
  */
-public interface NonAggregatedIdentifierMapping extends CompositeIdentifierMapping, EmbeddableValuedFetchable, FetchOptions {
+public interface NonAggregatedIdentifierMapping extends CompositeIdentifierMapping, EmbeddableValuedFetchable, FetchOptions, VirtualModelPart {
 	/**
 	 * The virtual-id representation of this id mapping
 	 */

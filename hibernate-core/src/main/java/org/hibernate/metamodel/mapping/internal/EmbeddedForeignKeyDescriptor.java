@@ -36,6 +36,7 @@ import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupProducer;
@@ -115,7 +116,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 		this.targetSide = original.targetSide;
 		this.keySide = new EmbeddedForeignKeyDescriptorSide(
 				Nature.KEY,
-				EmbeddedAttributeMapping.createInverseModelPart(
+				MappingModelCreationHelper.createInverseModelPart(
 						original.targetSide.getModelPart(),
 						keyDeclaringType,
 						keyDeclaringTableGroupProducer,
@@ -375,6 +376,84 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
 		return getPredicate( targetSideReference, keySideReference, creationContext, targetSelectableMappings, keySelectableMappings );
+	}
+
+	@Override
+	public boolean isSimpleJoinPredicate(Predicate predicate) {
+		if ( !( predicate instanceof Junction ) ) {
+			return false;
+		}
+		final Junction junction = (Junction) predicate;
+		if ( junction.getNature() != Junction.Nature.CONJUNCTION ) {
+			return false;
+		}
+		final List<Predicate> predicates = junction.getPredicates();
+		if ( predicates.size() != keySelectableMappings.getJdbcTypeCount() ) {
+			return false;
+		}
+		Boolean lhsIsKey = null;
+		for ( int i = 0; i < predicates.size(); i++ ) {
+			final Predicate p = predicates.get( i );
+			if ( !( p instanceof ComparisonPredicate ) ) {
+				return false;
+			}
+			final ComparisonPredicate comparisonPredicate = (ComparisonPredicate) p;
+			if ( comparisonPredicate.getOperator() != ComparisonOperator.EQUAL ) {
+				return false;
+			}
+			final Expression lhsExpr = comparisonPredicate.getLeftHandExpression();
+			final Expression rhsExpr = comparisonPredicate.getRightHandExpression();
+			if ( !( lhsExpr instanceof ColumnReference ) || !( rhsExpr instanceof ColumnReference ) ) {
+				return false;
+			}
+			final ColumnReference lhs = (ColumnReference) lhsExpr;
+			final ColumnReference rhs = (ColumnReference) rhsExpr;
+			if ( lhsIsKey == null ) {
+				final String keyExpression = keySelectableMappings.getSelectable( i ).getSelectionExpression();
+				final String targetExpression = targetSelectableMappings.getSelectable( i ).getSelectionExpression();
+				if ( keyExpression.equals( targetExpression ) ) {
+					if ( !lhs.getColumnExpression().equals( keyExpression )
+							|| !rhs.getColumnExpression().equals( keyExpression ) ) {
+						return false;
+					}
+				}
+				else {
+					if ( keyExpression.equals( lhs.getColumnExpression() ) ) {
+						if ( !targetExpression.equals( rhs.getColumnExpression() ) ) {
+							return false;
+						}
+						lhsIsKey = true;
+					}
+					else if ( keyExpression.equals( rhs.getColumnExpression() ) ) {
+						if ( !targetExpression.equals( lhs.getColumnExpression() ) ) {
+							return false;
+						}
+						lhsIsKey = false;
+					}
+					else {
+						return false;
+					}
+				}
+			}
+			else {
+				final String lhsSelectionExpression;
+				final String rhsSelectionExpression;
+				if ( lhsIsKey ) {
+					lhsSelectionExpression = keySelectableMappings.getSelectable( i ).getSelectionExpression();
+					rhsSelectionExpression = targetSelectableMappings.getSelectable( i ).getSelectionExpression();
+				}
+				else {
+					lhsSelectionExpression = targetSelectableMappings.getSelectable( i ).getSelectionExpression();
+					rhsSelectionExpression = keySelectableMappings.getSelectable( i ).getSelectionExpression();
+				}
+				if ( !lhs.getColumnExpression().equals( lhsSelectionExpression )
+						|| !rhs.getColumnExpression().equals( rhsSelectionExpression ) ) {
+					return false;
+				}
+			}
+		}
+
+		return true;
 	}
 
 	private Predicate getPredicate(

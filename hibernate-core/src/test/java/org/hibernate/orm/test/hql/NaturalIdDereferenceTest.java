@@ -5,7 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
-package org.hibernate.test.hql;
+package org.hibernate.orm.test.hql;
 
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.query.Query;
@@ -15,6 +15,7 @@ import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -66,9 +67,21 @@ public class NaturalIdDereferenceTest {
 		);
 	}
 
+	@AfterEach
+	public void deleteData(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery( "delete from BookRefRef" ).executeUpdate();
+					session.createQuery( "delete from BookRef" ).executeUpdate();
+					session.createQuery( "delete from Book" ).executeUpdate();
+				}
+		);
+	}
+
 	@Test
 	public void naturalIdDereferenceTest(SessionFactoryScope scope) {
 		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {
 					Query query = session.createQuery( "SELECT r.normalBook.isbn FROM BookRef r" );
@@ -83,6 +96,7 @@ public class NaturalIdDereferenceTest {
 	@Test
 	public void normalIdDereferenceFromAlias(SessionFactoryScope scope) {
 		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {
 					Query query = session.createQuery( "SELECT r.normalBook.id FROM BookRef r" );
@@ -97,6 +111,7 @@ public class NaturalIdDereferenceTest {
 	@Test
 	public void naturalIdDereferenceFromAlias(SessionFactoryScope scope) {
 		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {
 					Query query = session.createQuery( "SELECT r.naturalBook.isbn FROM BookRef r" );
@@ -111,6 +126,7 @@ public class NaturalIdDereferenceTest {
 	@Test
 	public void normalIdDereferenceFromImplicitJoin(SessionFactoryScope scope) {
 		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {
 					Query query = session.createQuery( "SELECT r2.normalBookRef.normalBook.id FROM BookRefRef r2" );
@@ -124,6 +140,7 @@ public class NaturalIdDereferenceTest {
 	@Test
 	public void naturalIdDereferenceFromImplicitJoin(SessionFactoryScope scope) {
 		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {
 					Query query = session.createQuery( "SELECT r2.normalBookRef.naturalBook.isbn FROM BookRefRef r2" );
@@ -142,6 +159,7 @@ public class NaturalIdDereferenceTest {
 	@Test
 	public void nestedNaturalIdDereferenceFromImplicitJoin(SessionFactoryScope scope) {
 		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {
 					Query query = session.createQuery( "SELECT r2.naturalBookRef.naturalBook.isbn FROM BookRefRef r2" );
@@ -159,6 +177,7 @@ public class NaturalIdDereferenceTest {
 	@Test
 	public void nestedNaturalIdDereferenceFromImplicitJoin2(SessionFactoryScope scope) {
 		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {
 					Query query = session.createQuery( "SELECT r2.naturalBookRef.naturalBook.id FROM BookRefRef r2" );
@@ -172,6 +191,7 @@ public class NaturalIdDereferenceTest {
 	@Test
 	public void doNotDereferenceNaturalIdIfIsReferenceToPrimaryKey(SessionFactoryScope scope) {
 		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {
 					Query query = session.createQuery( "SELECT r2.normalBookRef.normalBook.isbn FROM BookRefRef r2" );
@@ -185,6 +205,7 @@ public class NaturalIdDereferenceTest {
 	@Test
 	public void selectedEntityIsNotDereferencedForPrimaryKey(SessionFactoryScope scope) {
 		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {
 					Query query = session.createQuery( "SELECT r2.normalBookRef.normalBook FROM BookRefRef r2" );
@@ -209,6 +230,7 @@ public class NaturalIdDereferenceTest {
 	@Test
 	public void selectedEntityIsNotDereferencedForNaturalId(SessionFactoryScope scope) {
 		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {
 					Query query = session.createQuery( "SELECT r2.naturalBookRef.naturalBook FROM BookRefRef r2" );
@@ -228,6 +250,7 @@ public class NaturalIdDereferenceTest {
 	@Test
 	public void dereferenceNaturalIdInJoin(SessionFactoryScope scope) {
 		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {
 					Query query = session.createQuery(
@@ -251,6 +274,7 @@ public class NaturalIdDereferenceTest {
 	@Test
 	public void dereferenceNaturalIdInJoin2(SessionFactoryScope scope) {
 		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {
 					Query query = session.createQuery( "SELECT b.normalBook FROM BookRefRef a " +
@@ -271,6 +295,7 @@ public class NaturalIdDereferenceTest {
 	@Test
 	public void dereferenceNaturalIdInJoin3(SessionFactoryScope scope) {
 		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {
 					Query query = session.createQuery(
@@ -292,6 +317,7 @@ public class NaturalIdDereferenceTest {
 	@Test
 	public void dereferenceNaturalIdInJoin4(SessionFactoryScope scope) {
 		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {
 					Query query = session.createQuery(

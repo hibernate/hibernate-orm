@@ -37,6 +37,7 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.VirtualModelPart;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -168,7 +169,14 @@ public class EntityCollectionPart
 			final CompositeType compositeType;
 			if ( propertyType.isComponentType() && ( compositeType = (CompositeType) propertyType ).isEmbedded()
 					&& compositeType.getPropertyNames().length == 1 ) {
-				this.targetKeyPropertyNames = Collections.singleton( compositeType.getPropertyNames()[0] );
+				final Set<String> targetKeyPropertyNames = new HashSet<>( 2 );
+				ToOneAttributeMapping.addPrefixedPropertyNames(
+						targetKeyPropertyNames,
+						compositeType.getPropertyNames()[0],
+						compositeType.getSubtypes()[0],
+						creationProcess.getCreationContext().getSessionFactory()
+				);
+				this.targetKeyPropertyNames = targetKeyPropertyNames;
 			}
 			else {
 				final String mapsIdAttributeName;
@@ -328,6 +336,11 @@ public class EntityCollectionPart
 	}
 
 	@Override
+	public boolean isSimpleJoinPredicate(Predicate predicate) {
+		return fkDescriptor.isSimpleJoinPredicate( predicate );
+	}
+
+	@Override
 	public Nature getNature() {
 		return nature;
 	}
@@ -391,13 +404,14 @@ public class EntityCollectionPart
 		// This is not possible for one-to-many associations because we need to create the target table group eagerly,
 		// to preserve the cardinality. Also, the OneToManyTableGroup has no reference to the parent table group
 		if ( !collectionDescriptor.isOneToMany() && targetKeyPropertyNames.contains( name ) ) {
-			if ( fkDescriptor.getTargetPart() instanceof NonAggregatedIdentifierMappingImpl ) {
-				return ( (ModelPartContainer) fkDescriptor.getKeyPart() ).findSubPart( name, targetType );
-			}
 			if ( fkTargetModelPart instanceof ToOneAttributeMapping ) {
 				return fkTargetModelPart;
 			}
-			return fkDescriptor.getKeyPart();
+			final ModelPart keyPart = fkDescriptor.getKeyPart();
+			if ( keyPart instanceof EmbeddableValuedModelPart && keyPart instanceof VirtualModelPart ) {
+				return ( (ModelPartContainer) keyPart ).findSubPart( name, targetType );
+			}
+			return keyPart;
 		}
 		return EntityValuedFetchable.super.findSubPart( name, targetType );
 	}

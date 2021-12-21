@@ -61,7 +61,6 @@ import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.GeneratedValueResolver;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
-import org.hibernate.metamodel.mapping.MappingModelCreationLogger;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.NonTransientException;
@@ -71,6 +70,7 @@ import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadata;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
+import org.hibernate.metamodel.mapping.VirtualModelPart;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -341,20 +341,40 @@ public class MappingModelCreationHelper {
 				attrType,
 				tableExpression,
 				rootTableKeyColumnNames,
-				attributeMappingType -> new EmbeddedAttributeMapping(
-						attrName,
-						declaringType.getNavigableRole().append( attrName ),
-						stateArrayPosition,
-						tableExpression,
-						attributeMetadataAccess,
-						component.getParentProperty(),
-						FetchTiming.IMMEDIATE,
-						FetchStyle.JOIN,
-						attributeMappingType,
-						declaringType,
-						propertyAccess,
-						bootProperty.getValueGenerationStrategy()
-				),
+				attributeMappingType -> {
+					if ( component.isEmbedded() ) {
+						return new VirtualEmbeddedAttributeMapping(
+								attrName,
+								declaringType.getNavigableRole().append( attrName ),
+								stateArrayPosition,
+								tableExpression,
+								attributeMetadataAccess,
+								component.getParentProperty(),
+								FetchTiming.IMMEDIATE,
+								FetchStyle.JOIN,
+								attributeMappingType,
+								declaringType,
+								propertyAccess,
+								bootProperty.getValueGenerationStrategy()
+						);
+					}
+					else {
+						return new EmbeddedAttributeMapping(
+								attrName,
+								declaringType.getNavigableRole().append( attrName ),
+								stateArrayPosition,
+								tableExpression,
+								attributeMetadataAccess,
+								component.getParentProperty(),
+								FetchTiming.IMMEDIATE,
+								FetchStyle.JOIN,
+								attributeMappingType,
+								declaringType,
+								propertyAccess,
+								bootProperty.getValueGenerationStrategy()
+						);
+					}
+				},
 				creationProcess
 		);
 
@@ -1172,7 +1192,7 @@ public class MappingModelCreationHelper {
 		if ( inverse ) {
 			return new EmbeddedForeignKeyDescriptor(
 					embeddableValuedModelPart,
-					EmbeddedAttributeMapping.createInverseModelPart(
+					createInverseModelPart(
 							embeddableValuedModelPart,
 							keyDeclaringType,
 							keyDeclaringTableGroupProducer,
@@ -1189,7 +1209,7 @@ public class MappingModelCreationHelper {
 		}
 		else {
 			return new EmbeddedForeignKeyDescriptor(
-					EmbeddedAttributeMapping.createInverseModelPart(
+					createInverseModelPart(
 							embeddableValuedModelPart,
 							keyDeclaringType,
 							keyDeclaringTableGroupProducer,
@@ -1492,6 +1512,41 @@ public class MappingModelCreationHelper {
 		throw new NotYetImplementedFor6Exception(
 				"Support for plural attributes with element type [" + element + "] not yet implemented"
 		);
+	}
+
+	public static EmbeddableValuedModelPart createInverseModelPart(
+			EmbeddableValuedModelPart modelPart,
+			ManagedMappingType keyDeclaringType,
+			TableGroupProducer declaringTableGroupProducer,
+			SelectableMappings selectableMappings,
+			MappingModelCreationProcess creationProcess) {
+		final EmbeddableMappingType embeddableTypeDescriptor;
+		if ( modelPart instanceof CompositeIdentifierMapping ) {
+			embeddableTypeDescriptor = ( (CompositeIdentifierMapping) modelPart ).getMappedIdEmbeddableTypeDescriptor();
+		}
+		else {
+			embeddableTypeDescriptor = modelPart.getEmbeddableTypeDescriptor();
+		}
+		if ( modelPart instanceof VirtualModelPart ) {
+			return new VirtualEmbeddedAttributeMapping(
+					keyDeclaringType,
+					declaringTableGroupProducer,
+					selectableMappings,
+					modelPart,
+					embeddableTypeDescriptor,
+					creationProcess
+			);
+		}
+		else {
+			return new EmbeddedAttributeMapping(
+					keyDeclaringType,
+					declaringTableGroupProducer,
+					selectableMappings,
+					modelPart,
+					embeddableTypeDescriptor,
+					creationProcess
+			);
+		}
 	}
 
 	@SuppressWarnings("rawtypes")

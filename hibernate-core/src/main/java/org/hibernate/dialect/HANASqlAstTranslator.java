@@ -14,6 +14,8 @@ import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.Summarization;
+import org.hibernate.sql.ast.tree.from.FunctionTableReference;
+import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -55,6 +57,17 @@ public class HANASqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 		else {
 			super.visitQuerySpec( querySpec );
 		}
+	}
+
+	@Override
+	public void visitQueryPartTableReference(QueryPartTableReference tableReference) {
+		emulateQueryPartTableReferenceColumnAliasing( tableReference );
+	}
+
+	@Override
+	public void visitFunctionTableReference(FunctionTableReference tableReference) {
+		tableReference.getFunctionExpression().accept( this );
+		renderTableReferenceIdentificationVariable( tableReference );
 	}
 
 	@Override

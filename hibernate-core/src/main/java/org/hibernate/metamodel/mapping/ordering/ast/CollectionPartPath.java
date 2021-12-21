@@ -8,9 +8,9 @@ package org.hibernate.metamodel.mapping.ordering.ast;
 
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.AbstractDomainPath;
-import org.hibernate.metamodel.mapping.internal.EmbeddedCollectionPart;
 import org.hibernate.metamodel.mapping.ordering.TranslationContext;
 import org.hibernate.query.NavigablePath;
 
@@ -59,8 +59,8 @@ public class CollectionPartPath extends AbstractDomainPath {
 			String identifier,
 			boolean isTerminal,
 			TranslationContext translationContext) {
-		if ( referencedPart instanceof EmbeddedCollectionPart ) {
-			final ModelPart subPart = ( (EmbeddedCollectionPart) referencedPart ).findSubPart( name, null );
+		if ( referencedPart instanceof ModelPartContainer ) {
+			final ModelPart subPart = ( (ModelPartContainer) referencedPart ).findSubPart( name, null );
 
 			return new DomainPathContinuation( navigablePath.append( name ), this, subPart );
 		}

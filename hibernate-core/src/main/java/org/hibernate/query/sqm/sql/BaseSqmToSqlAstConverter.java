@@ -35,6 +35,7 @@ import org.hibernate.QueryException;
 import org.hibernate.boot.model.process.internal.InferredBasicValueResolver;
 import org.hibernate.dialect.function.TimestampaddFunction;
 import org.hibernate.dialect.function.TimestampdiffFunction;
+import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -76,7 +77,6 @@ import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.metamodel.mapping.Restrictable;
 import org.hibernate.metamodel.mapping.SqlExpressable;
 import org.hibernate.metamodel.mapping.ValueMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedCollectionPart;
@@ -6015,16 +6015,14 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						.getCollectionDescriptor()
 						.getCollectionType()
 						.getAssociatedJoinable( getCreationContext().getSessionFactory() );
-				if ( joinable instanceof Restrictable ) {
-					( (Restrictable) joinable ).applyBaseRestrictions(
-							(predicate) -> addCollectionFilterPredicate( tableGroup.getGroupAlias(), predicate ),
-							tableGroup,
-							true,
-							getLoadQueryInfluencers().getEnabledFilters(),
-							null,
-							this
-					);
-				}
+				joinable.applyBaseRestrictions(
+						(predicate) -> addCollectionFilterPredicate( tableGroup.getGroupAlias(), predicate ),
+						tableGroup,
+						true,
+						getLoadQueryInfluencers().getEnabledFilters(),
+						null,
+						this
+				);
 
 				pluralAttributeMapping.applyBaseManyToManyRestrictions(
 						(predicate) -> {

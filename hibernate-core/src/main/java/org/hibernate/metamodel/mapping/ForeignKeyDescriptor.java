@@ -116,6 +116,8 @@ public interface ForeignKeyDescriptor extends VirtualModelPart, ValueMapping {
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext);
 
+	boolean isSimpleJoinPredicate(Predicate predicate);
+
 	@Override
 	default String getPartName() {
 		return PART_NAME;

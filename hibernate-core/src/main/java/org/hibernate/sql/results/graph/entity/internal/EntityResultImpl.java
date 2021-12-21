@@ -59,8 +59,11 @@ public class EntityResultImpl extends AbstractEntityResultGraphNode implements E
 		if ( fetchable instanceof TableGroupProducer &&
 			!getNavigablePath().getUnaliasedLocalName().equals( getNavigablePath().getLocalName() ) ) {
 			for ( TableGroupJoin tableGroupJoin : tableGroup.getTableGroupJoins() ) {
-				if ( tableGroupJoin.getJoinedGroup().isFetched() && tableGroupJoin.getJoinedGroup().getModelPart() == fetchable ) {
-					return tableGroupJoin.getNavigablePath();
+				final NavigablePath navigablePath = tableGroupJoin.getNavigablePath();
+				if ( tableGroupJoin.getJoinedGroup().isFetched()
+						&& fetchable.getFetchableName().equals( navigablePath.getUnaliasedLocalName() )
+						&& tableGroupJoin.getJoinedGroup().getModelPart() == fetchable ) {
+					return navigablePath;
 				}
 			}
 		}

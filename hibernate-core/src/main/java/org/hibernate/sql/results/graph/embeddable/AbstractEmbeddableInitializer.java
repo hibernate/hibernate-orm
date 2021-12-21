@@ -19,6 +19,7 @@ import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
+import org.hibernate.metamodel.mapping.VirtualModelPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.EmbeddableRepresentationStrategy;
 import org.hibernate.property.access.spi.PropertyAccess;
@@ -34,8 +35,6 @@ import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.internal.NullValueAssembler;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
-import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.spi.EntityJavaTypeDescriptor;
 
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
@@ -231,17 +230,12 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 			return;
 		}
 
-		// Special handling for non-aggregated attributes which use the actual entity instance as container,
-		// which we access through the fetch parent access.
-		// If this model part is an identifier, we must construct the instance as this is called during resolveKey
-		final EmbeddableMappingType embeddableTypeDescriptor = embedded.getEmbeddableTypeDescriptor();
-		final JavaType<?> embeddableJtd = embeddableTypeDescriptor.getMappedJavaTypeDescriptor();
-
-		if ( fetchParentAccess != null &&
-				embeddableJtd.getJavaTypeClass().isAssignableFrom( fetchParentAccess.getInitializedPart().getJavaTypeDescriptor().getJavaTypeClass() )
-				&& embeddableJtd instanceof EntityJavaTypeDescriptor<?>
-				&& !( embedded instanceof CompositeIdentifierMapping )
-				&& !EntityIdentifierMapping.ROLE_LOCAL_NAME.equals( embedded.getFetchableName() ) ) {
+		// Virtual model parts use the owning entity as container which the fetch parent access provides.
+		// For an identifier or foreign key this is called during the resolveKey phase of the fetch parent,
+		// so we can't use the fetch parent access in that case.
+		if ( fetchParentAccess != null && embedded instanceof VirtualModelPart
+				&& !EntityIdentifierMapping.ROLE_LOCAL_NAME.equals( embedded.getFetchableName() )
+				&& !ForeignKeyDescriptor.PART_NAME.equals( navigablePath.getUnaliasedLocalName() ) ) {
 			fetchParentAccess.resolveInstance( processingState );
 			compositeInstance = fetchParentAccess.getInitializedInstance();
 		}

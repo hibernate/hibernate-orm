@@ -518,6 +518,11 @@ public class PluralAttributeMappingImpl
 	}
 
 	@Override
+	public boolean isSimpleJoinPredicate(Predicate predicate) {
+		return fkDescriptor.isSimpleJoinPredicate( predicate );
+	}
+
+	@Override
 	public TableGroupJoin createTableGroupJoin(
 			NavigablePath navigablePath,
 			TableGroup lhs,

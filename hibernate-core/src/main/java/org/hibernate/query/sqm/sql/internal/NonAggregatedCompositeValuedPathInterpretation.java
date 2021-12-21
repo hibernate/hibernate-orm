@@ -7,11 +7,10 @@
 package org.hibernate.query.sqm.sql.internal;
 
 import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.metamodel.mapping.internal.NonAggregatedIdentifierMappingImpl;
+import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.domain.NonAggregatedCompositeSimplePath;
-import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.SqlTupleContainer;
@@ -31,7 +30,7 @@ public class NonAggregatedCompositeValuedPathInterpretation<T>
 		final TableGroup tableGroup = sqlAstCreationState
 				.getFromClauseAccess()
 				.findTableGroup( sqmPath.getLhs().getNavigablePath() );
-		final NonAggregatedIdentifierMappingImpl mapping = (NonAggregatedIdentifierMappingImpl) tableGroup.getModelPart()
+		final NonAggregatedIdentifierMapping mapping = (NonAggregatedIdentifierMapping) tableGroup.getModelPart()
 				.findSubPart( sqmPath.getReferencedPathSource().getPathName(), null );
 
 		return new NonAggregatedCompositeValuedPathInterpretation<>(

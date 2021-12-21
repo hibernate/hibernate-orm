@@ -89,7 +89,7 @@ public class EmbeddedAttributeMapping
 			stateArrayPosition,
 			tableExpression,
 			attributeMetadataAccess,
-			getPropertyAccess(parentInjectionAttributeName,	embeddableMappingType),
+			getPropertyAccess( parentInjectionAttributeName, embeddableMappingType ),
 			mappedFetchTiming,
 			mappedFetchStyle,
 			embeddableMappingType,
@@ -132,7 +132,7 @@ public class EmbeddedAttributeMapping
 	}
 
 	// Constructor is only used for creating the inverse attribute mapping
-	private EmbeddedAttributeMapping(
+	EmbeddedAttributeMapping(
 			ManagedMappingType keyDeclaringType,
 			TableGroupProducer declaringTableGroupProducer,
 			SelectableMappings selectableMappings,
@@ -159,29 +159,6 @@ public class EmbeddedAttributeMapping
 				creationProcess
 		);
 		this.parentInjectionAttributePropertyAccess = null;
-	}
-
-	public static EmbeddableValuedModelPart createInverseModelPart(
-			EmbeddableValuedModelPart modelPart,
-			ManagedMappingType keyDeclaringType,
-			TableGroupProducer declaringTableGroupProducer,
-			SelectableMappings selectableMappings,
-			MappingModelCreationProcess creationProcess) {
-		final EmbeddableMappingType embeddableTypeDescriptor;
-		if ( modelPart instanceof CompositeIdentifierMapping ) {
-			embeddableTypeDescriptor = ( (CompositeIdentifierMapping) modelPart ).getMappedIdEmbeddableTypeDescriptor();
-		}
-		else {
-			embeddableTypeDescriptor = modelPart.getEmbeddableTypeDescriptor();
-		}
-		return new EmbeddedAttributeMapping(
-				keyDeclaringType,
-				declaringTableGroupProducer,
-				selectableMappings,
-				modelPart,
-				embeddableTypeDescriptor,
-				creationProcess
-		);
 	}
 
 	@Override

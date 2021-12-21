@@ -24,6 +24,8 @@ public interface TableGroupJoinProducer extends TableGroupProducer {
 
 	SqlAstJoinType getDefaultSqlAstJoinType(TableGroup parentTableGroup);
 
+	boolean isSimpleJoinPredicate(Predicate predicate);
+
 	/**
 	 * Create a TableGroupJoin as defined for this producer
 	 */

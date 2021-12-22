@@ -7,6 +7,7 @@
 package org.hibernate.orm.test.query;
 
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.Map;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -18,6 +19,8 @@ import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.jpa.QueryHints;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
+import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
@@ -44,6 +47,8 @@ public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 	);
 	private static final String QUERY = "update AnEntity set name='abc'";
 
+	private String expectedSqlQuery;
+
 	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] { AnEntity.class };
@@ -58,6 +63,15 @@ public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Before
 	public void before() {
 		CONNECTION_PROVIDER.clear();
+		final JdbcType jdbcType = sessionFactory().getTypeConfiguration().getJdbcTypeDescriptorRegistry().getDescriptor(
+				Types.VARCHAR
+		);
+		expectedSqlQuery = "update AnEntity set name=" + jdbcType.getJdbcLiteralFormatter( StringJavaTypeDescriptor.INSTANCE )
+				.toJdbcLiteral(
+						"abc",
+						sessionFactory().getJdbcServices().getDialect(),
+						sessionFactory().getWrapperOptions()
+				);
 	}
 
 	@Test
@@ -79,7 +93,7 @@ public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 						}
 						else {
 							verify(
-									CONNECTION_PROVIDER.getPreparedStatement( QUERY ),
+									CONNECTION_PROVIDER.getPreparedStatement( expectedSqlQuery ),
 									times( 1 )
 							).setQueryTimeout( 123 );
 						}
@@ -110,7 +124,7 @@ public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 						}
 						else {
 							verify(
-									CONNECTION_PROVIDER.getPreparedStatement( QUERY ),
+									CONNECTION_PROVIDER.getPreparedStatement( expectedSqlQuery ),
 									times( 1 )
 							).setQueryTimeout( 123 );
 						}

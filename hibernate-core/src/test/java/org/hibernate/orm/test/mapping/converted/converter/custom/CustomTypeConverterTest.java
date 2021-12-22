@@ -6,18 +6,27 @@
  */
 package org.hibernate.orm.test.mapping.converted.converter.custom;
 
+import java.util.List;
+
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.BootstrapServiceRegistry;
+import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuilderImplementor;
+import org.hibernate.boot.spi.MetadataContributor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.tool.schema.Action;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import org.hibernate.testing.boot.ExtraJavaServicesClassLoaderService;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
+
+import org.jboss.jandex.IndexView;
 
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -28,8 +37,16 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class CustomTypeConverterTest extends BaseUnitTestCase {
 	@Test
 	public void testConverterAppliedScopedRegistration() {
-
-		try ( final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+		final List<ExtraJavaServicesClassLoaderService.JavaServiceDescriptor<?>> services = List.of(
+				new ExtraJavaServicesClassLoaderService.JavaServiceDescriptor<>(
+						MetadataContributor.class,
+						PayloadWrapperMetadataContributor.class
+				)
+		);
+		final BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder().enableAutoClose()
+				.applyClassLoaderService( new ExtraJavaServicesClassLoaderService( services ) )
+				.build();
+		try ( final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder( bsr )
 				.applySetting( AvailableSettings.HBM2DDL_AUTO, Action.CREATE_DROP )
 				.build() ) {
 			final MetadataSources metadataSources = new MetadataSources( ssr )
@@ -39,10 +56,6 @@ public class CustomTypeConverterTest extends BaseUnitTestCase {
 
 			// now the new scoped way
 			final TypeConfiguration bootTypeConfiguration = metadataBuilder.getBootstrapContext().getTypeConfiguration();
-			bootTypeConfiguration.getJavaTypeDescriptorRegistry()
-					.addDescriptor( PayloadWrapperJavaType.INSTANCE );
-			bootTypeConfiguration.getJdbcTypeDescriptorRegistry()
-					.addDescriptor( PayloadWrapperJdbcType.INSTANCE );
 
 			performAssertions( metadataBuilder, bootTypeConfiguration );
 		}
@@ -69,6 +82,17 @@ public class CustomTypeConverterTest extends BaseUnitTestCase {
 
 			final EntityPersister entityPersister = sessionFactory.getMetamodel().entityPersister( MyEntity.class );
 			entityPersister.getPropertyType( "customType" );
+		}
+	}
+
+	public static class PayloadWrapperMetadataContributor implements MetadataContributor {
+		@Override
+		public void contribute(InFlightMetadataCollector metadataCollector, IndexView jandexIndex) {
+			final TypeConfiguration typeConfiguration = metadataCollector.getTypeConfiguration();
+			typeConfiguration.getJavaTypeDescriptorRegistry()
+					.addDescriptor( PayloadWrapperJavaType.INSTANCE );
+			typeConfiguration.getJdbcTypeDescriptorRegistry()
+					.addDescriptor( PayloadWrapperJdbcType.INSTANCE );
 		}
 	}
 }

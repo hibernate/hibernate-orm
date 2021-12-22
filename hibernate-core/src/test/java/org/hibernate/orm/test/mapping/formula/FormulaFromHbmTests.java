@@ -14,6 +14,7 @@ import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
@@ -37,11 +38,14 @@ public class FormulaFromHbmTests {
 		scope.withHierarchy(
 				EntityOfFormulas.class,
 				(rootClass) -> {
+					final JdbcTypeRegistry jdbcTypeRegistry = scope.getDomainModel()
+							.getTypeConfiguration()
+							.getJdbcTypeDescriptorRegistry();
 					final Property stringFormula = rootClass.getProperty( "stringFormula" );
 					{
 						final int[] sqlTypes = stringFormula.getType().getSqlTypeCodes( scope.getDomainModel() );
 						assertThat( sqlTypes.length, is( 1 ) );
-						assertThat( sqlTypes[ 0 ], is( Types.VARCHAR ) );
+						assertThat( sqlTypes[ 0 ], is( jdbcTypeRegistry.getDescriptor( Types.VARCHAR ).getJdbcTypeCode() ) );
 
 						final Selectable selectable = ( (BasicValue) stringFormula.getValue() ).getColumn();
 						assertThat( selectable, instanceOf( Formula.class ) );
@@ -51,7 +55,7 @@ public class FormulaFromHbmTests {
 					{
 						final int[] sqlTypes = integerFormula.getType().getSqlTypeCodes( scope.getDomainModel() );
 						assertThat( sqlTypes.length, is( 1 ) );
-						assertThat( sqlTypes[ 0 ], is( Types.INTEGER ) );
+						assertThat( sqlTypes[ 0 ], is( jdbcTypeRegistry.getDescriptor( Types.INTEGER ).getJdbcTypeCode() ) );
 
 						final Selectable selectable = ( (BasicValue) integerFormula.getValue() ).getColumn();
 						assertThat( selectable, instanceOf( Formula.class ) );

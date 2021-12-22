@@ -6,6 +6,8 @@
  */
 package org.hibernate.orm.test.mapping.converted.converter;
 
+import java.sql.Types;
+
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -20,6 +22,7 @@ import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.After;
@@ -74,11 +77,13 @@ public class SimpleXmlOverriddenTest extends BaseUnitTestCase {
 				.addAnnotatedClass( TheEntity.class )
 				.addResource( "org/hibernate/test/converter/simple-override.xml" )
 				.buildMetadata();
+		final JdbcTypeRegistry jdbcTypeRegistry = metadata.getDatabase().getTypeConfiguration()
+				.getJdbcTypeDescriptorRegistry();
 
 		PersistentClass pc = metadata.getEntityBinding( TheEntity.class.getName() );
 		BasicType<?> type = (BasicType<?>) pc.getProperty( "it" ).getType();
 		assertTyping( StringJavaTypeDescriptor.class, type.getJavaTypeDescriptor() );
-		assertTyping( VarcharJdbcType.class, type.getJdbcTypeDescriptor() );
+		assertTyping( jdbcTypeRegistry.getDescriptor( Types.VARCHAR ).getClass(), type.getJdbcTypeDescriptor() );
 	}
 
 	/**
@@ -91,11 +96,13 @@ public class SimpleXmlOverriddenTest extends BaseUnitTestCase {
 				.addAnnotatedClass( TheEntity2.class )
 				.addResource( "org/hibernate/test/converter/simple-override2.xml" )
 				.buildMetadata();
+		final JdbcTypeRegistry jdbcTypeRegistry = metadata.getDatabase().getTypeConfiguration()
+				.getJdbcTypeDescriptorRegistry();
 
 		PersistentClass pc = metadata.getEntityBinding( TheEntity2.class.getName() );
 		BasicType<?> type = (BasicType<?>) pc.getProperty( "it" ).getType();
 		assertTyping( StringJavaTypeDescriptor.class, type.getJavaTypeDescriptor() );
-		assertTyping( VarcharJdbcType.class, type.getJdbcTypeDescriptor() );
+		assertTyping( jdbcTypeRegistry.getDescriptor( Types.VARCHAR ).getClass(), type.getJdbcTypeDescriptor() );
 	}
 
 	@Entity(name="TheEntity")

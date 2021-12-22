@@ -16,6 +16,7 @@ import java.util.Set;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -43,16 +44,17 @@ public class ZoneMappingTests {
 	public void basicAssertions(SessionFactoryScope scope) {
 		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
 		final EntityPersister entityDescriptor = sessionFactory.getMetamodel().entityPersister( ZoneMappingTestEntity.class );
+		final JdbcTypeRegistry jdbcTypeRegistry = sessionFactory.getTypeConfiguration().getJdbcTypeDescriptorRegistry();
 
 		{
 			final BasicAttributeMapping zoneIdAttribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "zoneId" );
-			assertThat( zoneIdAttribute.getJdbcMapping().getJdbcTypeDescriptor().getJdbcTypeCode() ).isEqualTo( Types.VARCHAR );
+			assertThat( zoneIdAttribute.getJdbcMapping().getJdbcTypeDescriptor() ).isEqualTo( jdbcTypeRegistry.getDescriptor( Types.VARCHAR ) );
 			assertThat( zoneIdAttribute.getJdbcMapping().getJavaTypeDescriptor().getJavaTypeClass() ).isEqualTo( ZoneId.class );
 		}
 
 		{
 			final BasicAttributeMapping zoneOffsetAttribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "zoneOffset" );
-			assertThat( zoneOffsetAttribute.getJdbcMapping().getJdbcTypeDescriptor().getJdbcTypeCode() ).isEqualTo( Types.VARCHAR );
+			assertThat( zoneOffsetAttribute.getJdbcMapping().getJdbcTypeDescriptor() ).isEqualTo( jdbcTypeRegistry.getDescriptor( Types.VARCHAR ) );
 			assertThat( zoneOffsetAttribute.getJdbcMapping().getJavaTypeDescriptor().getJavaTypeClass() ).isEqualTo( ZoneOffset.class );
 		}
 	}

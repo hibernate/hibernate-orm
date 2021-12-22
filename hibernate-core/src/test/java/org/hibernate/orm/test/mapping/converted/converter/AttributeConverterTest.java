@@ -19,6 +19,7 @@ import org.hibernate.boot.internal.ClassmateContext;
 import org.hibernate.boot.model.convert.internal.InstanceBasedConverterDescriptor;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
@@ -37,6 +38,8 @@ import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
@@ -110,7 +113,11 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 	@Test
 	public void testBasicOperation() {
 		try ( StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().build()) {
-			final BasicValue basicValue = new BasicValue( new MetadataBuildingContextTestingImpl( serviceRegistry ) );
+			final MetadataBuildingContext buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
+			final JdbcTypeRegistry jdbcTypeRegistry = buildingContext.getBootstrapContext()
+					.getTypeConfiguration()
+					.getJdbcTypeDescriptorRegistry();
+			final BasicValue basicValue = new BasicValue( buildingContext );
 			basicValue.setJpaAttributeConverterDescriptor(
 					new InstanceBasedConverterDescriptor(
 							new StringClobConverter(),
@@ -128,7 +135,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			assertThat( typeAdapter.getDomainJtd().getJavaTypeClass(), equalTo( String.class ) );
 
 			final JdbcType jdbcType = typeAdapter.getJdbcTypeDescriptor();
-			assertThat( jdbcType.getJdbcTypeCode(), is( Types.CLOB ) );
+			assertThat( jdbcType, is( jdbcTypeRegistry.getDescriptor( Types.CLOB ) ) );
 		}
 	}
 
@@ -168,6 +175,8 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 					.getMetadataBuilder()
 					.applyAttributeConverter( StringClobConverter.class, true )
 					.build();
+			final JdbcTypeRegistry jdbcTypeRegistry = metadata.getTypeConfiguration()
+					.getJdbcTypeDescriptorRegistry();
 
 			final PersistentClass tester = metadata.getEntityBinding( Tester.class.getName() );
 			final Property nameProp = tester.getProperty( "name" );
@@ -180,7 +189,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			final AttributeConverterTypeAdapter typeAdapter = (AttributeConverterTypeAdapter) type;
 			assertThat( typeAdapter.getDomainJtd().getJavaTypeClass(), Matchers.equalTo( String.class ) );
 			final JdbcType jdbcType = typeAdapter.getJdbcTypeDescriptor();
-			assertThat( jdbcType.getJdbcTypeCode(), is( Types.CLOB ) );
+			assertThat( jdbcType, is( jdbcTypeRegistry.getDescriptor( Types.CLOB ) ) );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );
@@ -198,6 +207,8 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 					.addURL( ConfigHelper.findAsResource( "org/hibernate/test/converter/orm.xml" ) )
 					.getMetadataBuilder()
 					.build();
+			final JdbcTypeRegistry jdbcTypeRegistry = metadata.getTypeConfiguration()
+					.getJdbcTypeDescriptorRegistry();
 
 			PersistentClass tester = metadata.getEntityBinding( Tester.class.getName() );
 			Property nameProp = tester.getProperty( "name" );
@@ -212,7 +223,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			assertThat( typeAdapter.getRelationalJtd().getJavaTypeClass(), equalTo( Clob.class ) );
 
 			final JdbcType jdbcType = typeAdapter.getJdbcTypeDescriptor();
-			assertThat( jdbcType.getJdbcTypeCode(), is( Types.CLOB ) );
+			assertThat( jdbcType, is( jdbcTypeRegistry.getDescriptor( Types.CLOB ) ) );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );
@@ -230,6 +241,8 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 					.addURL( ConfigHelper.findAsResource( "org/hibernate/test/converter/package.xml" ) )
 					.getMetadataBuilder()
 					.build();
+			final JdbcTypeRegistry jdbcTypeRegistry = metadata.getTypeConfiguration()
+					.getJdbcTypeDescriptorRegistry();
 
 			PersistentClass tester = metadata.getEntityBinding( Tester.class.getName() );
 			Property nameProp = tester.getProperty( "name" );
@@ -246,7 +259,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			assertThat( typeAdapter.getRelationalJtd().getJavaTypeClass(), equalTo( Clob.class ) );
 
 			final JdbcType sqlTypeDescriptor = typeAdapter.getJdbcTypeDescriptor();
-			assertThat( sqlTypeDescriptor.getJdbcTypeCode(), is( Types.CLOB ) );
+			assertThat( sqlTypeDescriptor, is( jdbcTypeRegistry.getDescriptor( Types.CLOB ) ) );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );
@@ -264,6 +277,8 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 					.getMetadataBuilder()
 					.applyAttributeConverter( StringClobConverter.class, true )
 					.build();
+			final JdbcTypeRegistry jdbcTypeRegistry = metadata.getTypeConfiguration()
+					.getJdbcTypeDescriptorRegistry();
 
 			PersistentClass tester = metadata.getEntityBinding( Tester2.class.getName() );
 			Property nameProp = tester.getProperty( "name" );
@@ -275,7 +290,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			}
 			AbstractStandardBasicType basicType = assertTyping( AbstractStandardBasicType.class, type );
 			assertSame( StringJavaTypeDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
-			assertEquals( Types.VARCHAR, basicType.getJdbcTypeDescriptor().getJdbcTypeCode() );
+			assertEquals( jdbcTypeRegistry.getDescriptor( Types.VARCHAR ), basicType.getJdbcTypeDescriptor() );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );
@@ -333,6 +348,8 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 					.getMetadataBuilder()
 					.applyAttributeConverter( IntegerToVarcharConverter.class, true )
 					.build();
+			final JdbcTypeRegistry jdbcTypeRegistry = metadata.getTypeConfiguration()
+					.getJdbcTypeDescriptorRegistry();
 
 			final PersistentClass tester = metadata.getEntityBinding( Tester5.class.getName() );
 			final Property codeProp = tester.getProperty( "code" );
@@ -345,7 +362,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 
 			assertThat( typeAdapter.getDomainJtd().getJavaTypeClass(), equalTo( Integer.class ) );
 			assertThat( typeAdapter.getRelationalJtd().getJavaTypeClass(), equalTo( String.class ) );
-			assertThat( typeAdapter.getJdbcTypeDescriptor().getJdbcTypeCode(), is( Types.VARCHAR ) );
+			assertThat( typeAdapter.getJdbcTypeDescriptor(), is( jdbcTypeRegistry.getDescriptor( Types.VARCHAR ) ) );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );
@@ -437,6 +454,8 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 					.getMetadataBuilder()
 					.applyAttributeConverter( ConvertibleEnumConverter.class, true )
 					.build();
+			final JdbcTypeRegistry jdbcTypeRegistry = metadata.getTypeConfiguration()
+					.getJdbcTypeDescriptorRegistry();
 
 			// first lets validate that the converter was applied...
 			final PersistentClass tester = metadata.getEntityBinding( EntityWithConvertibleField.class.getName() );
@@ -459,7 +478,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			else {
 				expectedJdbcTypeCode = Types.VARCHAR;
 			}
-			assertThat( typeAdapter.getJdbcTypeDescriptor().getJdbcTypeCode(), is( expectedJdbcTypeCode ) );
+			assertThat( typeAdapter.getJdbcTypeDescriptor(), is( jdbcTypeRegistry.getDescriptor( expectedJdbcTypeCode ) ) );
 
 			// then lets build the SF and verify its use...
 			final SessionFactory sf = metadata.buildSessionFactory();

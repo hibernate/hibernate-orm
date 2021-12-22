@@ -12,6 +12,7 @@ import java.util.function.BiFunction;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
+import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.SqlSelectionImpl;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
@@ -44,6 +45,15 @@ public class CompleteFetchBuilderEntityValuedModelPart
 		this.navigablePath = navigablePath;
 		this.modelPart = modelPart;
 		this.columnAliases = columnAliases;
+	}
+
+	@Override
+	public FetchBuilder cacheKeyInstance() {
+		return new CompleteFetchBuilderEntityValuedModelPart(
+				navigablePath,
+				modelPart,
+				List.copyOf( columnAliases )
+		);
 	}
 
 	@Override
@@ -97,4 +107,26 @@ public class CompleteFetchBuilderEntityValuedModelPart
 		);
 	}
 
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+
+		final CompleteFetchBuilderEntityValuedModelPart that = (CompleteFetchBuilderEntityValuedModelPart) o;
+		return navigablePath.equals( that.navigablePath )
+				&& modelPart.equals( that.modelPart )
+				&& columnAliases.equals( that.columnAliases );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = navigablePath.hashCode();
+		result = 31 * result + modelPart.hashCode();
+		result = 31 * result + columnAliases.hashCode();
+		return result;
+	}
 }

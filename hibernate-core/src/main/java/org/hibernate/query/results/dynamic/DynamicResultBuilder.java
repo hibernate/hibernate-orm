@@ -22,4 +22,5 @@ import org.hibernate.query.results.ResultBuilder;
  * @author Steve Ebersole
  */
 public interface DynamicResultBuilder extends ResultBuilder, NativeQuery.ReturnableResultNode {
+	DynamicResultBuilder cacheKeyInstance();
 }

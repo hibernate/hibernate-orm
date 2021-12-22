@@ -14,6 +14,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
+import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.sql.ast.spi.SqlAliasBaseConstant;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -100,6 +101,11 @@ public class DynamicResultBuilderEntityCalculated implements DynamicResultBuilde
 	}
 
 	@Override
+	public DynamicResultBuilderEntityCalculated cacheKeyInstance() {
+		return this;
+	}
+
+	@Override
 	public EntityResult buildResult(
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
@@ -129,5 +135,37 @@ public class DynamicResultBuilderEntityCalculated implements DynamicResultBuilde
 				tableAlias,
 				domainResultCreationState
 		);
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+
+		DynamicResultBuilderEntityCalculated that = (DynamicResultBuilderEntityCalculated) o;
+
+		if ( !navigablePath.equals( that.navigablePath ) ) {
+			return false;
+		}
+		if ( !entityMapping.equals( that.entityMapping ) ) {
+			return false;
+		}
+		if ( !tableAlias.equals( that.tableAlias ) ) {
+			return false;
+		}
+		return explicitLockMode == that.explicitLockMode;
+	}
+
+	@Override
+	public int hashCode() {
+		int result = navigablePath.hashCode();
+		result = 31 * result + entityMapping.hashCode();
+		result = 31 * result + tableAlias.hashCode();
+		result = 31 * result + ( explicitLockMode != null ? explicitLockMode.hashCode() : 0 );
+		return result;
 	}
 }

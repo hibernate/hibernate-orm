@@ -18,6 +18,7 @@ import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
+import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.query.results.SqlSelectionImpl;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
@@ -41,13 +42,40 @@ public class DynamicFetchBuilderStandard
 	private final DynamicFetchBuilderContainer container;
 	private final String fetchableName;
 
-	private final List<String> columnNames = new ArrayList<>();
+	private final List<String> columnNames;
 
 	public DynamicFetchBuilderStandard(
 			DynamicFetchBuilderContainer container,
 			String fetchableName) {
 		this.container = container;
 		this.fetchableName = fetchableName;
+		this.columnNames = new ArrayList<>();
+	}
+
+	private DynamicFetchBuilderStandard(
+			DynamicFetchBuilderContainer container,
+			String fetchableName,
+			List<String> columnNames) {
+		this.container = container;
+		this.fetchableName = fetchableName;
+		this.columnNames = columnNames;
+	}
+
+	@Override
+	public DynamicFetchBuilderStandard cacheKeyInstance() {
+		return new DynamicFetchBuilderStandard(
+				container,
+				fetchableName,
+				List.copyOf( columnNames )
+		);
+	}
+
+	public DynamicFetchBuilderStandard cacheKeyInstance(DynamicFetchBuilderContainer container) {
+		return new DynamicFetchBuilderStandard(
+				container,
+				fetchableName,
+				List.copyOf( columnNames )
+		);
 	}
 
 	@Override
@@ -133,5 +161,26 @@ public class DynamicFetchBuilderStandard
 	@Override
 	public List<String> getColumnAliases() {
 		return columnNames;
+	}
+
+	@Override
+	public int hashCode() {
+		int result = fetchableName.hashCode();
+		result = 31 * result + columnNames.hashCode();
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+
+		final DynamicFetchBuilderStandard that = (DynamicFetchBuilderStandard) o;
+		return fetchableName.equals( that.fetchableName )
+				&& columnNames.equals( that.columnNames );
 	}
 }

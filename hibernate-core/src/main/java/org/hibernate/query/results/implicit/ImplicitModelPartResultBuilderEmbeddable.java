@@ -11,6 +11,7 @@ import java.util.function.BiFunction;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
+import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.ResultBuilderEmbeddable;
 import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
@@ -40,6 +41,11 @@ public class ImplicitModelPartResultBuilderEmbeddable
 	@Override
 	public Class<?> getJavaType() {
 		return modelPart.getJavaTypeDescriptor().getJavaTypeClass();
+	}
+
+	@Override
+	public ResultBuilder cacheKeyInstance() {
+		return this;
 	}
 
 	@Override
@@ -87,5 +93,26 @@ public class ImplicitModelPartResultBuilderEmbeddable
 				domainResultCreationState
 		);
 
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+
+		final ImplicitModelPartResultBuilderEmbeddable that = (ImplicitModelPartResultBuilderEmbeddable) o;
+		return navigablePath.equals( that.navigablePath )
+				&& modelPart.equals( that.modelPart );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = navigablePath.hashCode();
+		result = 31 * result + modelPart.hashCode();
+		return result;
 	}
 }

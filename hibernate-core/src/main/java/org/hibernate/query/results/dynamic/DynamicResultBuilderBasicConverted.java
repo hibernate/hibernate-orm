@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.results.dynamic;
 
+import java.util.Objects;
 import java.util.function.BiFunction;
 import jakarta.persistence.AttributeConverter;
 
@@ -13,6 +14,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.model.convert.internal.JpaAttributeConverterImpl;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
+import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.query.results.SqlSelectionImpl;
 import org.hibernate.resource.beans.spi.ManagedBean;
@@ -35,10 +37,6 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public class DynamicResultBuilderBasicConverted<O,R> implements DynamicResultBuilderBasic {
 	private final String columnAlias;
-
-	private final JavaType<O> domainJtd;
-	private final JavaType<R> jdbcJtd;
-
 	private final BasicValueConverter<O,R> basicValueConverter;
 
 	public DynamicResultBuilderBasicConverted(
@@ -49,20 +47,15 @@ public class DynamicResultBuilderBasicConverted<O,R> implements DynamicResultBui
 			SessionFactoryImplementor sessionFactory) {
 		final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();
 		final JavaTypeRegistry jtdRegistry = typeConfiguration.getJavaTypeDescriptorRegistry();
-
-		this.columnAlias = columnAlias;
-		this.domainJtd = jtdRegistry.getDescriptor( domainJavaType );
-		this.jdbcJtd = jtdRegistry.getDescriptor( jdbcJavaType );
-
-
-		final JavaType<? extends AttributeConverter> converterJtd = jtdRegistry.getDescriptor( converter.getClass() );
+		final JavaType<? extends AttributeConverter<O, R>> converterJtd = jtdRegistry.getDescriptor( converter.getClass() );
 		final ManagedBean<? extends AttributeConverter<O,R>> bean = new ProvidedInstanceManagedBeanImpl<>( converter );
 
-		this.basicValueConverter = new JpaAttributeConverterImpl(
+		this.columnAlias = columnAlias;
+		this.basicValueConverter = new JpaAttributeConverterImpl<>(
 				bean,
 				converterJtd,
-				domainJtd,
-				jdbcJtd
+				jtdRegistry.getDescriptor( domainJavaType ),
+				jtdRegistry.getDescriptor( jdbcJavaType )
 		);
 	}
 
@@ -70,31 +63,31 @@ public class DynamicResultBuilderBasicConverted<O,R> implements DynamicResultBui
 			String columnAlias,
 			Class<O> domainJavaType,
 			Class<R> jdbcJavaType,
-			Class<? extends AttributeConverter<O,R>> converterJavaType,
+			Class<? extends AttributeConverter<O, R>> converterJavaType,
 			SessionFactoryImplementor sessionFactory) {
 		final ManagedBeanRegistry beans = sessionFactory.getServiceRegistry().getService( ManagedBeanRegistry.class );
 		final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();
 		final JavaTypeRegistry jtdRegistry = typeConfiguration.getJavaTypeDescriptorRegistry();
+		final JavaType<? extends AttributeConverter<O, R>> converterJtd = jtdRegistry.getDescriptor( converterJavaType );
+		final ManagedBean<? extends AttributeConverter<O, R>> bean = beans.getBean( converterJavaType );
 
 		this.columnAlias = columnAlias;
-		this.domainJtd = jtdRegistry.getDescriptor( domainJavaType );
-		this.jdbcJtd = jtdRegistry.getDescriptor( jdbcJavaType );
-
-
-		final JavaType<? extends AttributeConverter<O,R>> converterJtd = jtdRegistry.getDescriptor( converterJavaType );
-		final ManagedBean<? extends AttributeConverter<O,R>> bean = beans.getBean( converterJavaType );
-
-		this.basicValueConverter = new JpaAttributeConverterImpl(
+		this.basicValueConverter = new JpaAttributeConverterImpl<>(
 				bean,
 				converterJtd,
-				domainJtd,
-				jdbcJtd
+				jtdRegistry.getDescriptor( domainJavaType ),
+				jtdRegistry.getDescriptor( jdbcJavaType )
 		);
 	}
 
 	@Override
 	public Class<?> getJavaType() {
-		return domainJtd.getJavaTypeClass();
+		return basicValueConverter.getDomainJavaDescriptor().getJavaTypeClass();
+	}
+
+	@Override
+	public DynamicResultBuilderBasicConverted cacheKeyInstance() {
+		return this;
 	}
 
 	@Override
@@ -134,10 +127,39 @@ public class DynamicResultBuilderBasicConverted<O,R> implements DynamicResultBui
 							return new SqlSelectionImpl( valuesArrayPosition, (BasicValuedMapping) basicType );
 						}
 				),
-				domainJtd,
+				basicValueConverter.getDomainJavaDescriptor(),
 				typeConfiguration
 		);
 
-		return new BasicResult<>( sqlSelection.getValuesArrayPosition(), columnAlias, domainJtd, basicValueConverter );
+		return new BasicResult<>(
+				sqlSelection.getValuesArrayPosition(),
+				columnAlias,
+				basicValueConverter.getDomainJavaDescriptor(),
+				basicValueConverter
+		);
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+
+		DynamicResultBuilderBasicConverted<?, ?> that = (DynamicResultBuilderBasicConverted<?, ?>) o;
+
+		if ( !Objects.equals( columnAlias, that.columnAlias ) ) {
+			return false;
+		}
+		return basicValueConverter.equals( that.basicValueConverter );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = columnAlias != null ? columnAlias.hashCode() : 0;
+		result = 31 * result + basicValueConverter.hashCode();
+		return result;
 	}
 }

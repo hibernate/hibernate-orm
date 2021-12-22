@@ -17,6 +17,9 @@ import jakarta.persistence.Tuple;
 import jakarta.persistence.TypedQuery;
 
 import org.hibernate.cfg.Environment;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.Query;
+import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.stat.QueryStatistics;
 import org.hibernate.stat.Statistics;
 
@@ -51,8 +54,6 @@ public class QueryPlanCacheStatisticsTest {
 
 	@BeforeAll
 	protected void afterEntityManagerFactoryBuilt(SessionFactoryScope scope) {
-		statistics = scope.getSessionFactory().getStatistics();
-
 		scope.inTransaction( entityManager -> {
 			for ( long i = 1; i <= 5; i++ ) {
 				Employee employee = new Employee();
@@ -64,8 +65,10 @@ public class QueryPlanCacheStatisticsTest {
 
 	@BeforeEach
 	protected void cleanup(SessionFactoryScope scope) {
-		scope.getSessionFactory().getQueryEngine().getInterpretationCache().close();
+		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
+		statistics = sessionFactory.getStatistics();
 		statistics.clear();
+		sessionFactory.getQueryEngine().getInterpretationCache().close();
 	}
 
 	@Test
@@ -127,8 +130,60 @@ public class QueryPlanCacheStatisticsTest {
 	public void testCreateQueryHitCount(SessionFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
 
+			QueryImplementor<Employee> query = entityManager.createQuery(
+					"select e from Employee e", Employee.class );
+
+			//First time, we get a cache miss, so the query is compiled
+			assertEquals( 1, statistics.getQueryPlanCacheMissCount() );
+			//The hit count should be 0 as we don't need to go to the cache after we already compiled the query
+			assertEquals( 0, statistics.getQueryPlanCacheHitCount() );
+
+			List<Employee> employees = query.getResultList();
+			assertEquals( 5, employees.size() );
+
+			//The miss count is 2 because the previous cache miss was for the HqlInterpretation and this is for the plan
+			assertEquals( 2, statistics.getQueryPlanCacheMissCount() );
+			assertEquals( 0, statistics.getQueryPlanCacheHitCount() );
+		} );
+
+		scope.inTransaction( entityManager -> {
+
 			List<Employee> employees = entityManager.createQuery(
 				"select e from Employee e", Employee.class )
+			.getResultList();
+
+			assertEquals( 5, employees.size() );
+
+			//The miss count is still 2, as now we got the query plan from the cache
+			assertEquals( 2, statistics.getQueryPlanCacheMissCount() );
+			//And the cache hit count increases.
+			assertEquals( 2, statistics.getQueryPlanCacheHitCount() );
+		} );
+
+		scope.inTransaction( entityManager -> {
+
+			List<Employee> employees = entityManager.createQuery(
+				"select e from Employee e", Employee.class )
+			.getResultList();
+
+			assertEquals( 5, employees.size() );
+
+			//The miss count is still 2, as now we got the query plan from the cache
+			assertEquals( 2, statistics.getQueryPlanCacheMissCount() );
+			//And the cache hit count increases.
+			assertEquals( 4, statistics.getQueryPlanCacheHitCount() );
+		} );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-14632" )
+	public void testCreateNativeQueryHitCount(SessionFactoryScope scope) {
+		statistics.clear();
+
+		scope.inTransaction( entityManager -> {
+
+			List<Employee> employees = entityManager.createNativeQuery(
+				"select * from employee e", Employee.class )
 			.getResultList();
 
 			assertEquals( 5, employees.size() );
@@ -141,8 +196,8 @@ public class QueryPlanCacheStatisticsTest {
 
 		scope.inTransaction( entityManager -> {
 
-			List<Employee> employees = entityManager.createQuery(
-				"select e from Employee e", Employee.class )
+			List<Employee> employees = entityManager.createNativeQuery(
+				"select * from employee e", Employee.class )
 			.getResultList();
 
 			assertEquals( 5, employees.size() );
@@ -155,8 +210,8 @@ public class QueryPlanCacheStatisticsTest {
 
 		scope.inTransaction( entityManager -> {
 
-			List<Employee> employees = entityManager.createQuery(
-				"select e from Employee e", Employee.class )
+			List<Employee> employees = entityManager.createNativeQuery(
+				"select * from employee e", Employee.class )
 			.getResultList();
 
 			assertEquals( 5, employees.size() );
@@ -176,14 +231,19 @@ public class QueryPlanCacheStatisticsTest {
 		statistics.clear();
 		scope.inTransaction( entityManager -> {
 
-			Employee employees = entityManager.createNamedQuery(
-				"find_employee_by_name", Employee.class )
-			.setParameter( "name", "Employee: 1" )
-			.getSingleResult();
+			Query<Employee> query = entityManager.createNamedQuery(
+							"find_employee_by_name", Employee.class )
+					.setParameter( "name", "Employee: 1" );
 
 			//The miss count is 0 because the plan was compiled when the EMF was built, and we cleared the Statistics
 			assertEquals( 0, statistics.getQueryPlanCacheMissCount() );
 			//The hit count is 1 since we got the plan from the cache
+			assertEquals( 1, statistics.getQueryPlanCacheHitCount() );
+
+			Employee employees = query.getSingleResult();
+
+			//The miss count is 1 because the previous cache hit was for the HqlInterpretation and this is for the plan
+			assertEquals( 1, statistics.getQueryPlanCacheMissCount() );
 			assertEquals( 1, statistics.getQueryPlanCacheHitCount() );
 		} );
 
@@ -194,10 +254,11 @@ public class QueryPlanCacheStatisticsTest {
 			.setParameter( "name", "Employee: 1" )
 			.getSingleResult();
 
-			//The miss count is still 0 because the plan was compiled when the EMF was built, and we cleared the Statistics
-			assertEquals( 0, statistics.getQueryPlanCacheMissCount() );
-			//The hit count is 2 since we got the plan from the cache twice
-			assertEquals( 2, statistics.getQueryPlanCacheHitCount() );
+			//The miss count is still 1 because the plan was compiled when the EMF was built, and we cleared the Statistics
+			assertEquals( 1, statistics.getQueryPlanCacheMissCount() );
+			//The hit count is 3 since we got the plan from the cache twice,
+			//but the second time we have a hit for the HqlInterpretation and one for the plan
+			assertEquals( 3, statistics.getQueryPlanCacheHitCount() );
 		} );
 	}
 
@@ -206,15 +267,20 @@ public class QueryPlanCacheStatisticsTest {
 	public void testCreateQueryTupleHitCount(SessionFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
 
-			List<Tuple> employees = entityManager.createQuery(
-				"select e.id, e.name from Employee e", Tuple.class )
-			.getResultList();
-
-			assertEquals( 5, employees.size() );
+			QueryImplementor<Tuple> query = entityManager.createQuery(
+					"select e.id, e.name from Employee e", Tuple.class );
 
 			//First time, we get a cache miss, so the query is compiled
 			assertEquals( 1, statistics.getQueryPlanCacheMissCount() );
 			//The hit count should be 0 as we don't need to go to the cache after we already compiled the query
+			assertEquals( 0, statistics.getQueryPlanCacheHitCount() );
+
+			List<Tuple> employees = query.getResultList();
+
+			assertEquals( 5, employees.size() );
+
+			//The miss count is 2 because the previous cache miss was for the HqlInterpretation and this is for the plan
+			assertEquals( 2, statistics.getQueryPlanCacheMissCount() );
 			assertEquals( 0, statistics.getQueryPlanCacheHitCount() );
 		} );
 
@@ -226,10 +292,10 @@ public class QueryPlanCacheStatisticsTest {
 
 			assertEquals( 5, employees.size() );
 
-			//The miss count is still 1, as now we got the query plan from the cache
-			assertEquals( 1, statistics.getQueryPlanCacheMissCount() );
+			//The miss count is still 2, as now we got the query plan from the cache
+			assertEquals( 2, statistics.getQueryPlanCacheMissCount() );
 			//And the cache hit count increases.
-			assertEquals( 1, statistics.getQueryPlanCacheHitCount() );
+			assertEquals( 2, statistics.getQueryPlanCacheHitCount() );
 		} );
 
 		scope.inTransaction( entityManager -> {
@@ -240,10 +306,10 @@ public class QueryPlanCacheStatisticsTest {
 
 			assertEquals( 5, employees.size() );
 
-			//The miss count is still 1, as now we got the query plan from the cache
-			assertEquals( 1, statistics.getQueryPlanCacheMissCount() );
+			//The miss count is still 2, as now we got the query plan from the cache
+			assertEquals( 2, statistics.getQueryPlanCacheMissCount() );
 			//And the cache hit count increases.
-			assertEquals( 2, statistics.getQueryPlanCacheHitCount() );
+			assertEquals( 4, statistics.getQueryPlanCacheHitCount() );
 		} );
 	}
 
@@ -253,13 +319,17 @@ public class QueryPlanCacheStatisticsTest {
 		scope.inTransaction( entityManager -> {
 			TypedQuery<Employee> typedQuery = entityManager.createQuery( "select e from Employee e", Employee.class );
 
+			//First time, we get a cache miss, so the query is compiled
+			assertEquals( 1, statistics.getQueryPlanCacheMissCount() );
+			//The hit count should be 0 as we don't need to go to the cache after we already compiled the query
+			assertEquals( 0, statistics.getQueryPlanCacheHitCount() );
+
 			List<Employee> employees = typedQuery.getResultList();
 
 			assertEquals( 5, employees.size() );
 
-			//First time, we get a cache miss, so the query is compiled
-			assertEquals( 1, statistics.getQueryPlanCacheMissCount() );
-			//The hit count should be 0 as we don't need to go to the cache after we already compiled the query
+			//The miss count is 2 because the previous cache miss was for the HqlInterpretation and this is for the plan
+			assertEquals( 2, statistics.getQueryPlanCacheMissCount() );
 			assertEquals( 0, statistics.getQueryPlanCacheHitCount() );
 
 			typedQuery.setLockMode( LockModeType.READ );

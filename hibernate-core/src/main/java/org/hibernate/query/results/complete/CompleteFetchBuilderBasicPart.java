@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.results.complete;
 
+import java.util.Objects;
 import java.util.function.BiFunction;
 
 import org.hibernate.engine.FetchTiming;
@@ -13,6 +14,7 @@ import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.results.BasicValuedFetchBuilder;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
+import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.MissingSqlSelectionException;
 import org.hibernate.query.results.PositionalSelectionsNotAllowedException;
 import org.hibernate.query.results.SqlSelectionImpl;
@@ -43,6 +45,11 @@ public class CompleteFetchBuilderBasicPart implements CompleteFetchBuilder, Basi
 		this.navigablePath = navigablePath;
 		this.referencedModelPart = referencedModelPart;
 		this.selectionAlias = selectionAlias;
+	}
+
+	@Override
+	public FetchBuilder cacheKeyInstance() {
+		return this;
 	}
 
 	@Override
@@ -112,5 +119,28 @@ public class CompleteFetchBuilderBasicPart implements CompleteFetchBuilder, Basi
 				selectedAlias,
 				domainResultCreationState
 		);
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+
+		final CompleteFetchBuilderBasicPart that = (CompleteFetchBuilderBasicPart) o;
+		return navigablePath.equals( that.navigablePath )
+				&& referencedModelPart.equals( that.referencedModelPart )
+				&& Objects.equals( selectionAlias, that.selectionAlias );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = navigablePath.hashCode();
+		result = 31 * result + referencedModelPart.hashCode();
+		result = 31 * result + ( selectionAlias != null ? selectionAlias.hashCode() : 0 );
+		return result;
 	}
 }

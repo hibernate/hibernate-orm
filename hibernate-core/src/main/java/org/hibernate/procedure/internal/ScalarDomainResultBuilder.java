@@ -39,4 +39,28 @@ public class ScalarDomainResultBuilder<T> implements ResultBuilder {
 			DomainResultCreationState domainResultCreationState) {
 		return new BasicResult<>( resultPosition, null, typeDescriptor );
 	}
+
+	@Override
+	public ResultBuilder cacheKeyInstance() {
+		return this;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+
+		ScalarDomainResultBuilder<?> that = (ScalarDomainResultBuilder<?>) o;
+
+		return typeDescriptor.equals( that.typeDescriptor );
+	}
+
+	@Override
+	public int hashCode() {
+		return typeDescriptor.hashCode();
+	}
 }

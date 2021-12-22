@@ -9,6 +9,7 @@ package org.hibernate.query.results.dynamic;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.query.results.FetchBuilder;
@@ -19,6 +20,26 @@ import org.hibernate.query.results.FetchBuilder;
 public abstract class AbstractFetchBuilderContainer<T extends AbstractFetchBuilderContainer<T>>
 		implements DynamicFetchBuilderContainer {
 	private Map<String, DynamicFetchBuilder> fetchBuilderMap;
+
+	protected AbstractFetchBuilderContainer() {
+	}
+
+	protected AbstractFetchBuilderContainer(AbstractFetchBuilderContainer<T> original) {
+		if ( original.fetchBuilderMap != null ) {
+			final Map<String, DynamicFetchBuilder> fetchBuilderMap = new HashMap<>( original.fetchBuilderMap.size() );
+			for ( Map.Entry<String, DynamicFetchBuilder> entry : original.fetchBuilderMap.entrySet() ) {
+				final DynamicFetchBuilder fetchBuilder;
+				if ( entry.getValue() instanceof DynamicFetchBuilderStandard ) {
+					fetchBuilder = ( (DynamicFetchBuilderStandard) entry.getValue() ).cacheKeyInstance( this );
+				}
+				else {
+					fetchBuilder = entry.getValue().cacheKeyInstance();
+				}
+				fetchBuilderMap.put( entry.getKey(), fetchBuilder );
+			}
+			this.fetchBuilderMap = fetchBuilderMap;
+		}
+	}
 
 	protected abstract String getPropertyBase();
 
@@ -78,5 +99,23 @@ public abstract class AbstractFetchBuilderContainer<T extends AbstractFetchBuild
 			fetchBuilderMap = new HashMap<>();
 		}
 		fetchBuilderMap.put( propertyName, fetchBuilder );
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+
+		final AbstractFetchBuilderContainer<?> that = (AbstractFetchBuilderContainer<?>) o;
+		return Objects.equals( fetchBuilderMap, that.fetchBuilderMap );
+	}
+
+	@Override
+	public int hashCode() {
+		return fetchBuilderMap != null ? fetchBuilderMap.hashCode() : 0;
 	}
 }

@@ -45,6 +45,11 @@ public class CompleteResultBuilderInstantiation
 	}
 
 	@Override
+	public ResultBuilder cacheKeyInstance() {
+		return this;
+	}
+
+	@Override
 	public DomainResult<?> buildResult(
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
@@ -73,5 +78,26 @@ public class CompleteResultBuilderInstantiation
 				javaTypeDescriptor,
 				argumentDomainResults
 		);
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+
+		final CompleteResultBuilderInstantiation that = (CompleteResultBuilderInstantiation) o;
+		return javaTypeDescriptor.equals( that.javaTypeDescriptor )
+				&& argumentResultBuilders.equals( that.argumentResultBuilders );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = javaTypeDescriptor.hashCode();
+		result = 31 * result + argumentResultBuilders.hashCode();
+		return result;
 	}
 }

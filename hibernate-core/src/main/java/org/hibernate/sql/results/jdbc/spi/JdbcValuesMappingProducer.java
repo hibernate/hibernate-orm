@@ -39,4 +39,7 @@ public interface JdbcValuesMappingProducer {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
+	default JdbcValuesMappingProducer cacheKeyInstance() {
+		return this;
+	}
 }

@@ -6,12 +6,14 @@
  */
 package org.hibernate.query.results.complete;
 
+import java.util.Objects;
 import java.util.function.BiFunction;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.model.convert.internal.JpaAttributeConverterImpl;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
+import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.query.results.SqlSelectionImpl;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
@@ -37,10 +39,8 @@ import static org.hibernate.query.results.ResultsHelper.impl;
  */
 public class CompleteResultBuilderBasicValuedConverted<O,R> implements CompleteResultBuilderBasicValued {
 	private final String explicitColumnName;
-	private final ManagedBean<? extends AttributeConverter<O, R>> converterBean;
-	private final JavaType<? extends AttributeConverter<O, R>> converterJtd;
-	private final BasicJavaType<O> domainJavaType;
 	private final BasicValuedMapping underlyingMapping;
+	private final JpaAttributeConverterImpl<O, R> valueConverter;
 
 	public CompleteResultBuilderBasicValuedConverted(
 			String explicitColumnName,
@@ -49,15 +49,23 @@ public class CompleteResultBuilderBasicValuedConverted<O,R> implements CompleteR
 			BasicJavaType<O> domainJavaType,
 			BasicValuedMapping underlyingMapping) {
 		this.explicitColumnName = explicitColumnName;
-		this.converterBean = converterBean;
-		this.converterJtd = converterJtd;
-		this.domainJavaType = domainJavaType;
 		this.underlyingMapping = underlyingMapping;
+		this.valueConverter = new JpaAttributeConverterImpl<>(
+				converterBean,
+				converterJtd,
+				domainJavaType,
+				underlyingMapping.getJdbcMapping().getJavaTypeDescriptor()
+		);
 	}
 
 	@Override
 	public Class<?> getJavaType() {
-		return domainJavaType.getJavaTypeClass();
+		return valueConverter.getDomainJavaDescriptor().getJavaTypeClass();
+	}
+
+	@Override
+	public ResultBuilder cacheKeyInstance() {
+		return this;
 	}
 
 	@Override
@@ -123,22 +131,43 @@ public class CompleteResultBuilderBasicValuedConverted<O,R> implements CompleteR
 							return new SqlSelectionImpl( valuesArrayPosition, underlyingMapping );
 						}
 				),
-				domainJavaType,
+				valueConverter.getDomainJavaDescriptor(),
 				sessionFactory.getTypeConfiguration()
-		);
-
-		final JpaAttributeConverterImpl<O,R> valueConverter = new JpaAttributeConverterImpl<>(
-				converterBean,
-				converterJtd,
-				domainJavaType,
-				underlyingMapping.getJdbcMapping().getJavaTypeDescriptor()
 		);
 
 		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				columnName,
-				domainJavaType,
+				valueConverter.getDomainJavaDescriptor(),
 				valueConverter
 		);
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+
+		CompleteResultBuilderBasicValuedConverted<?, ?> that = (CompleteResultBuilderBasicValuedConverted<?, ?>) o;
+
+		if ( !Objects.equals( explicitColumnName, that.explicitColumnName ) ) {
+			return false;
+		}
+		if ( !underlyingMapping.equals( that.underlyingMapping ) ) {
+			return false;
+		}
+		return valueConverter.equals( that.valueConverter );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = explicitColumnName != null ? explicitColumnName.hashCode() : 0;
+		result = 31 * result + underlyingMapping.hashCode();
+		result = 31 * result + valueConverter.hashCode();
+		return result;
 	}
 }

@@ -12,6 +12,7 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
+import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
@@ -36,6 +37,11 @@ public class ImplicitFetchBuilderPlural implements ImplicitFetchBuilder {
 	}
 
 	@Override
+	public FetchBuilder cacheKeyInstance() {
+		return this;
+	}
+
+	@Override
 	public Fetch buildFetch(
 			FetchParent parent,
 			NavigablePath fetchPath,
@@ -54,6 +60,27 @@ public class ImplicitFetchBuilderPlural implements ImplicitFetchBuilder {
 		);
 
 		return fetch;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+
+		final ImplicitFetchBuilderPlural that = (ImplicitFetchBuilderPlural) o;
+		return fetchPath.equals( that.fetchPath )
+				&& fetchable.equals( that.fetchable );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = fetchPath.hashCode();
+		result = 31 * result + fetchable.hashCode();
+		return result;
 	}
 
 	@Override

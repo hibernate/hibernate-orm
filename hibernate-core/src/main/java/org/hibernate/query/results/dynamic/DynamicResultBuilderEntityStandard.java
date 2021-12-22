@@ -9,6 +9,7 @@ package org.hibernate.query.results.dynamic;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -22,6 +23,7 @@ import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
+import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.SqlSelectionImpl;
 import org.hibernate.query.results.TableGroupImpl;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
@@ -72,6 +74,16 @@ public class DynamicResultBuilderEntityStandard
 		this.tableAlias = tableAlias;
 	}
 
+	private DynamicResultBuilderEntityStandard(DynamicResultBuilderEntityStandard original) {
+		super( original );
+		this.navigablePath = original.navigablePath;
+		this.entityMapping = original.entityMapping;
+		this.tableAlias = original.tableAlias;
+		this.lockMode = original.lockMode;
+		this.idColumnNames = original.idColumnNames == null ? null : List.copyOf( original.idColumnNames );
+		this.discriminatorColumnName = original.discriminatorColumnName;
+	}
+
 	@Override
 	public Class<?> getJavaType() {
 		return entityMapping.getJavaTypeDescriptor().getJavaTypeClass();
@@ -109,6 +121,11 @@ public class DynamicResultBuilderEntityStandard
 	@Override
 	protected String getPropertyBase() {
 		return entityMapping.getEntityName();
+	}
+
+	@Override
+	public DynamicResultBuilderEntityStandard cacheKeyInstance() {
+		return new DynamicResultBuilderEntityStandard( this );
 	}
 
 	@Override
@@ -279,5 +296,36 @@ public class DynamicResultBuilderEntityStandard
 	public DynamicResultBuilderEntityStandard setDiscriminatorAlias(String columnName) {
 		this.discriminatorColumnName = columnName;
 		return this;
+	}
+
+	@Override
+	public int hashCode() {
+		int result = super.hashCode();
+		result = 31 * result + navigablePath.hashCode();
+		result = 31 * result + entityMapping.hashCode();
+		result = 31 * result + tableAlias.hashCode();
+		result = 31 * result + ( lockMode != null ? lockMode.hashCode() : 0 );
+		result = 31 * result + ( idColumnNames != null ? idColumnNames.hashCode() : 0 );
+		result = 31 * result + ( discriminatorColumnName != null ? discriminatorColumnName.hashCode() : 0 );
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+
+		final DynamicResultBuilderEntityStandard that = (DynamicResultBuilderEntityStandard) o;
+		return navigablePath.equals( that.navigablePath )
+				&& entityMapping.equals( that.entityMapping )
+				&& tableAlias.equals( that.tableAlias )
+				&& lockMode == that.lockMode
+				&& Objects.equals( idColumnNames, that.idColumnNames )
+				&& Objects.equals( discriminatorColumnName, that.discriminatorColumnName )
+				&& super.equals( o );
 	}
 }

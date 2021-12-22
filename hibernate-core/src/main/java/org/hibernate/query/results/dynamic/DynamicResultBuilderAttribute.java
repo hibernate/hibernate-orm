@@ -12,6 +12,7 @@ import java.util.function.BiFunction;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.query.NativeQuery;
+import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.SqlSelectionImpl;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -66,6 +67,11 @@ public class DynamicResultBuilderAttribute implements DynamicResultBuilder, Nati
 	}
 
 	@Override
+	public DynamicResultBuilderAttribute cacheKeyInstance() {
+		return this;
+	}
+
+	@Override
 	public DomainResult<?> buildResult(
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
@@ -96,5 +102,30 @@ public class DynamicResultBuilderAttribute implements DynamicResultBuilder, Nati
 				attributeMapping.getJavaTypeDescriptor(),
 				attributeMapping.getValueConverter()
 		);
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+
+		final DynamicResultBuilderAttribute that = (DynamicResultBuilderAttribute) o;
+		return attributeMapping.equals( that.attributeMapping )
+				&& columnAlias.equals( that.columnAlias )
+				&& entityName.equals( that.entityName )
+				&& attributePath.equals( that.attributePath );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = attributeMapping.hashCode();
+		result = 31 * result + columnAlias.hashCode();
+		result = 31 * result + entityName.hashCode();
+		result = 31 * result + attributePath.hashCode();
+		return result;
 	}
 }

@@ -6,6 +6,8 @@
  */
 package org.hibernate.query.results.implicit;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
@@ -67,6 +69,27 @@ public class ImplicitFetchBuilderEmbeddable implements ImplicitFetchBuilder {
 		this.fetchBuilders = fetchBuilders;
 	}
 
+	private ImplicitFetchBuilderEmbeddable(ImplicitFetchBuilderEmbeddable original) {
+		this.fetchPath = original.fetchPath;
+		this.fetchable = original.fetchable;
+		final Map<NavigablePath, FetchBuilder> fetchBuilders;
+		if ( original.fetchBuilders.isEmpty() ) {
+			fetchBuilders = Collections.emptyMap();
+		}
+		else {
+			fetchBuilders = new HashMap<>( original.fetchBuilders.size() );
+			for ( Map.Entry<NavigablePath, FetchBuilder> entry : original.fetchBuilders.entrySet() ) {
+				fetchBuilders.put( entry.getKey(), entry.getValue().cacheKeyInstance() );
+			}
+		}
+		this.fetchBuilders = fetchBuilders;
+	}
+
+	@Override
+	public FetchBuilder cacheKeyInstance() {
+		return new ImplicitFetchBuilderEmbeddable( this );
+	}
+
 	@Override
 	public Fetch buildFetch(
 			FetchParent parent,
@@ -116,6 +139,29 @@ public class ImplicitFetchBuilderEmbeddable implements ImplicitFetchBuilder {
 //		);
 
 		return fetch;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+
+		final ImplicitFetchBuilderEmbeddable that = (ImplicitFetchBuilderEmbeddable) o;
+		return fetchPath.equals( that.fetchPath )
+				&& fetchable.equals( that.fetchable )
+				&& fetchBuilders.equals( that.fetchBuilders );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = fetchPath.hashCode();
+		result = 31 * result + fetchable.hashCode();
+		result = 31 * result + fetchBuilders.hashCode();
+		return result;
 	}
 
 	@Override

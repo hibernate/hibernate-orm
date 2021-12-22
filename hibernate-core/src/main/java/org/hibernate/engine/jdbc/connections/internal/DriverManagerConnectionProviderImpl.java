@@ -551,7 +551,7 @@ public class DriverManagerConnectionProviderImpl
 		}
 	}
 
-	private static class PoolState {
+	private static class PoolState implements Runnable {
 
 		//Protecting any lifecycle state change:
 		private final ReadWriteLock statelock = new ReentrantReadWriteLock();
@@ -577,7 +577,7 @@ public class DriverManagerConnectionProviderImpl
 				}
 				executorService = Executors.newSingleThreadScheduledExecutor( new ValidationThreadFactory() );
 				executorService.scheduleWithFixedDelay(
-						pool::validate,
+						this,
 						validationInterval,
 						validationInterval,
 						TimeUnit.SECONDS
@@ -586,6 +586,13 @@ public class DriverManagerConnectionProviderImpl
 			}
 			finally {
 				statelock.writeLock().unlock();
+			}
+		}
+
+		@Override
+		public void run() {
+			if ( active ) {
+				pool.validate();
 			}
 		}
 

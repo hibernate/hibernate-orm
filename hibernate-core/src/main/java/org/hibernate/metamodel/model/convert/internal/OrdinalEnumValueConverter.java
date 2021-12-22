@@ -60,10 +60,7 @@ public class OrdinalEnumValueConverter<E extends Enum<E>> implements EnumValueCo
 
 	@Override
 	public int getJdbcTypeCode() {
-		// note, even though we convert the enum to
-		// an Integer here, we actually map it to a
-		// database column of type TINYINT by default
-		return Types.TINYINT;
+		return jdbcType.getJdbcTypeCode();
 	}
 
 	@Override

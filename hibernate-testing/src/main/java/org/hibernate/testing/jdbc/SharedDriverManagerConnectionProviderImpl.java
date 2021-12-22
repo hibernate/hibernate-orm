@@ -74,7 +74,6 @@ public class SharedDriverManagerConnectionProviderImpl extends DriverManagerConn
 
 	public void reset() {
 		super.stop();
-		config = null;
 	}
 
 	private static class Config {

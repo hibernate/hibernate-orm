@@ -29,7 +29,7 @@ ext {
 
     byteBuddyVersion = '1.12.5'
 
-    agroalVersion = '1.9'
+    agroalVersion = '1.14'
 
     assertjVersion = '3.14.0'
 

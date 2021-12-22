@@ -389,7 +389,7 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	public NullOrdering getNullOrdering() {
-		return NullOrdering.FIRST;
+		return NullOrdering.SMALLEST;
 	}
 
 	@Override

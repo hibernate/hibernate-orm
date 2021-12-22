@@ -1481,9 +1481,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					);
 					return correlation.getCorrelatedRoot();
 				}
-				throw new IllegalArgumentException( "Could not resolve entity reference or correlation path: " + name );
+				throw new SemanticException( "Could not resolve entity reference or correlation path: " + name );
 			}
-			throw new IllegalArgumentException( "Could not resolve entity reference: " + name );
+			throw new SemanticException( "Could not resolve entity reference: " + name );
 		}
 		checkFQNEntityNameJpaComplianceViolationIfNeeded( name, entityDescriptor );
 

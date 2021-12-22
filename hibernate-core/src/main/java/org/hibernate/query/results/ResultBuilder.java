@@ -31,6 +31,8 @@ public interface ResultBuilder {
 
 	Class<?> getJavaType();
 
+	ResultBuilder cacheKeyInstance();
+
 	default void visitFetchBuilders(BiConsumer<String, FetchBuilder> consumer) {
 	}
 }

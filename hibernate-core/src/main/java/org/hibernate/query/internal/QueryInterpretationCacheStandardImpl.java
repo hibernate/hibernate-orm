@@ -80,15 +80,23 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 			Key key,
 			Supplier<SelectQueryPlan<R>> creator) {
 		log.tracef( "QueryPlan#getSelectQueryPlan(%s)", key );
+		final StatisticsImplementor statistics = statisticsSupplier.get();
+		final boolean stats = statistics.isStatisticsEnabled();
 
 		@SuppressWarnings("unchecked")
 		final SelectQueryPlan<R> cached = (SelectQueryPlan<R>) queryPlanCache.get( key );
 		if ( cached != null ) {
+			if ( stats ) {
+				statistics.queryPlanCacheHit( key.getQueryString() );
+			}
 			return cached;
 		}
 
 		final SelectQueryPlan<R> plan = creator.get();
 		queryPlanCache.put( key.prepareForStore(), plan );
+		if ( stats ) {
+			statistics.queryPlanCacheMiss( key.getQueryString() );
+		}
 		return plan;
 	}
 

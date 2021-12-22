@@ -13,6 +13,7 @@ import java.util.function.BiFunction;
 import org.hibernate.query.DynamicInstantiationNature;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.results.Builders;
+import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.ResultBuilderInstantiationValued;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
@@ -35,13 +36,53 @@ public class DynamicResultBuilderInstantiation<J>
 			this.argumentBuilder = argumentBuilder;
 			this.resultAlias = resultAlias;
 		}
+
+		@Override
+		public boolean equals(Object o) {
+			if ( this == o ) {
+				return true;
+			}
+			if ( o == null || getClass() != o.getClass() ) {
+				return false;
+			}
+
+			InstantiationArgument that = (InstantiationArgument) o;
+
+			if ( !argumentBuilder.equals( that.argumentBuilder ) ) {
+				return false;
+			}
+			return resultAlias.equals( that.resultAlias );
+		}
+
+		@Override
+		public int hashCode() {
+			int result = argumentBuilder.hashCode();
+			result = 31 * result + resultAlias.hashCode();
+			return result;
+		}
 	}
 
 	private final JavaType<J> javaTypeDescriptor;
-	private final List<InstantiationArgument> argumentResultBuilders = new ArrayList<>();
+	private final List<InstantiationArgument> argumentResultBuilders;
 
 	public DynamicResultBuilderInstantiation(JavaType<J> javaTypeDescriptor) {
 		this.javaTypeDescriptor = javaTypeDescriptor;
+		this.argumentResultBuilders = new ArrayList<>();
+	}
+
+	private DynamicResultBuilderInstantiation(DynamicResultBuilderInstantiation<J> original) {
+		this.javaTypeDescriptor = original.javaTypeDescriptor;
+		final List<InstantiationArgument> arguments = new ArrayList<>( original.argumentResultBuilders.size() );
+		for ( InstantiationArgument argument : original.argumentResultBuilders ) {
+			arguments.add(
+					new InstantiationArgument(
+							argument.argumentBuilder.cacheKeyInstance(),
+							argument.resultAlias
+					)
+			);
+		}
+
+		this.argumentResultBuilders = arguments;
 	}
 
 	@Override
@@ -55,6 +96,11 @@ public class DynamicResultBuilderInstantiation<J>
 				new InstantiationArgument( Builders.scalar( columnAlias ), argumentAlias )
 		);
 		return this;
+	}
+
+	@Override
+	public DynamicResultBuilderInstantiation cacheKeyInstance() {
+		return new DynamicResultBuilderInstantiation( this );
 	}
 
 	@Override
@@ -72,7 +118,7 @@ public class DynamicResultBuilderInstantiation<J>
 		for ( int i = 0; i < argumentResultBuilders.size(); i++ ) {
 			final InstantiationArgument argument = argumentResultBuilders.get( i );
 
-			final ArgumentDomainResult<?> argumentDomainResult = new ArgumentDomainResult(
+			final ArgumentDomainResult<?> argumentDomainResult = new ArgumentDomainResult<>(
 					argument.argumentBuilder.buildResult(
 							jdbcResultsMetadata,
 							i,
@@ -84,11 +130,35 @@ public class DynamicResultBuilderInstantiation<J>
 			argumentDomainResults.add( argumentDomainResult );
 		}
 
-		return new DynamicInstantiationResultImpl(
+		return new DynamicInstantiationResultImpl<>(
 				null,
 				DynamicInstantiationNature.CLASS,
 				javaTypeDescriptor,
 				argumentDomainResults
 		);
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+
+		DynamicResultBuilderInstantiation<?> that = (DynamicResultBuilderInstantiation<?>) o;
+
+		if ( !javaTypeDescriptor.equals( that.javaTypeDescriptor ) ) {
+			return false;
+		}
+		return argumentResultBuilders.equals( that.argumentResultBuilders );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = javaTypeDescriptor.hashCode();
+		result = 31 * result + argumentResultBuilders.hashCode();
+		return result;
 	}
 }

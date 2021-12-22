@@ -11,6 +11,7 @@ import java.util.function.BiFunction;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
+import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.SqlSelectionImpl;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
@@ -60,6 +61,11 @@ public class CompleteResultBuilderBasicModelPart
 	}
 
 	@Override
+	public ResultBuilder cacheKeyInstance() {
+		return this;
+	}
+
+	@Override
 	public BasicResult<?> buildResult(
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
@@ -90,5 +96,33 @@ public class CompleteResultBuilderBasicModelPart
 				columnAlias,
 				modelPart.getJavaTypeDescriptor()
 		);
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+
+		CompleteResultBuilderBasicModelPart that = (CompleteResultBuilderBasicModelPart) o;
+
+		if ( !navigablePath.equals( that.navigablePath ) ) {
+			return false;
+		}
+		if ( !modelPart.equals( that.modelPart ) ) {
+			return false;
+		}
+		return columnAlias.equals( that.columnAlias );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = navigablePath.hashCode();
+		result = 31 * result + modelPart.hashCode();
+		result = 31 * result + columnAlias.hashCode();
+		return result;
 	}
 }

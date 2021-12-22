@@ -7,6 +7,7 @@
 package org.hibernate.query.results.complete;
 
 import java.util.HashMap;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
@@ -17,6 +18,7 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.query.results.BasicValuedFetchBuilder;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.FetchBuilder;
+import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
@@ -78,6 +80,11 @@ public class CompleteResultBuilderEntityJpa implements CompleteResultBuilderEnti
 	}
 
 	@Override
+	public ResultBuilder cacheKeyInstance() {
+		return this;
+	}
+
+	@Override
 	public EntityResult buildResult(
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
@@ -132,5 +139,32 @@ public class CompleteResultBuilderEntityJpa implements CompleteResultBuilderEnti
 	@Override
 	public void visitFetchBuilders(BiConsumer<String, FetchBuilder> consumer) {
 		explicitFetchBuilderMap.forEach( consumer );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = navigablePath.hashCode();
+		result = 31 * result + entityDescriptor.hashCode();
+		result = 31 * result + lockMode.hashCode();
+		result = 31 * result + ( discriminatorFetchBuilder != null ? discriminatorFetchBuilder.hashCode() : 0 );
+		result = 31 * result + explicitFetchBuilderMap.hashCode();
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+
+		final CompleteResultBuilderEntityJpa that = (CompleteResultBuilderEntityJpa) o;
+		return navigablePath.equals( that.navigablePath )
+				&& entityDescriptor.equals( that.entityDescriptor )
+				&& lockMode == that.lockMode
+				&& Objects.equals( discriminatorFetchBuilder, that.discriminatorFetchBuilder )
+				&& explicitFetchBuilderMap.equals( that.explicitFetchBuilderMap );
 	}
 }

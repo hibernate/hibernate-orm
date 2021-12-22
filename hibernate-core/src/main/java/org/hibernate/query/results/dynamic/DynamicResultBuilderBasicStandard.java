@@ -6,10 +6,12 @@
  */
 package org.hibernate.query.results.dynamic;
 
+import java.util.Objects;
 import java.util.function.BiFunction;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.query.results.SqlSelectionImpl;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
@@ -108,6 +110,11 @@ public class DynamicResultBuilderBasicStandard implements DynamicResultBuilderBa
 	}
 
 	@Override
+	public DynamicResultBuilderBasicStandard cacheKeyInstance() {
+		return this;
+	}
+
+	@Override
 	public BasicResult<?> buildResult(
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
@@ -166,4 +173,39 @@ public class DynamicResultBuilderBasicStandard implements DynamicResultBuilderBa
 		return new BasicResult<>( sqlSelection.getValuesArrayPosition(), resultAlias, javaTypeDescriptor );
 	}
 
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+
+		DynamicResultBuilderBasicStandard that = (DynamicResultBuilderBasicStandard) o;
+
+		if ( columnPosition != that.columnPosition ) {
+			return false;
+		}
+		if ( !columnName.equals( that.columnName ) ) {
+			return false;
+		}
+		if ( !resultAlias.equals( that.resultAlias ) ) {
+			return false;
+		}
+		if ( !Objects.equals( explicitType, that.explicitType ) ) {
+			return false;
+		}
+		return Objects.equals( explicitJavaTypeDescriptor, that.explicitJavaTypeDescriptor );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = columnName.hashCode();
+		result = 31 * result + columnPosition;
+		result = 31 * result + resultAlias.hashCode();
+		result = 31 * result + ( explicitType != null ? explicitType.hashCode() : 0 );
+		result = 31 * result + ( explicitJavaTypeDescriptor != null ? explicitJavaTypeDescriptor.hashCode() : 0 );
+		return result;
+	}
 }

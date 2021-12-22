@@ -12,6 +12,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
+import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.ResultBuilderEntityValued;
 import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
@@ -43,6 +44,11 @@ public class ImplicitModelPartResultBuilderEntity
 	@Override
 	public Class<?> getJavaType() {
 		return modelPart.getJavaTypeDescriptor().getJavaTypeClass();
+	}
+
+	@Override
+	public ResultBuilder cacheKeyInstance() {
+		return this;
 	}
 
 	@Override
@@ -79,5 +85,29 @@ public class ImplicitModelPartResultBuilderEntity
 				null,
 				domainResultCreationState
 		);
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+
+		ImplicitModelPartResultBuilderEntity that = (ImplicitModelPartResultBuilderEntity) o;
+
+		if ( !navigablePath.equals( that.navigablePath ) ) {
+			return false;
+		}
+		return modelPart.equals( that.modelPart );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = navigablePath.hashCode();
+		result = 31 * result + modelPart.hashCode();
+		return result;
 	}
 }

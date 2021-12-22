@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.BiConsumer;
@@ -37,6 +38,7 @@ import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMapping;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.type.BasicType;
 
@@ -47,12 +49,46 @@ import org.hibernate.type.BasicType;
 @Internal
 public class ResultSetMappingImpl implements ResultSetMapping {
 	private final String mappingIdentifier;
-
+	private final boolean isDynamic;
 	private List<ResultBuilder> resultBuilders;
 	private Map<String, Map<String, DynamicFetchBuilderLegacy>> legacyFetchBuilders;
 
 	public ResultSetMappingImpl(String mappingIdentifier) {
+		this( mappingIdentifier, false );
+	}
+
+	public ResultSetMappingImpl(String mappingIdentifier, boolean isDynamic) {
 		this.mappingIdentifier = mappingIdentifier;
+		this.isDynamic = isDynamic;
+	}
+
+	private ResultSetMappingImpl(ResultSetMappingImpl original) {
+		this.mappingIdentifier = original.mappingIdentifier;
+		this.isDynamic = original.isDynamic;
+		if ( !original.isDynamic || original.resultBuilders == null ) {
+			this.resultBuilders = null;
+		}
+		else {
+			final List<ResultBuilder> resultBuilders = new ArrayList<>( original.resultBuilders.size() );
+			for ( ResultBuilder resultBuilder : original.resultBuilders ) {
+				resultBuilders.add( resultBuilder.cacheKeyInstance() );
+			}
+			this.resultBuilders = resultBuilders;
+		}
+		if ( !original.isDynamic || original.legacyFetchBuilders == null ) {
+			this.legacyFetchBuilders = null;
+		}
+		else {
+			final Map<String, Map<String, DynamicFetchBuilderLegacy>> legacyFetchBuilders = new HashMap<>( original.legacyFetchBuilders.size() );
+			for ( Map.Entry<String, Map<String, DynamicFetchBuilderLegacy>> entry : original.legacyFetchBuilders.entrySet() ) {
+				final Map<String, DynamicFetchBuilderLegacy> newValue = new HashMap<>( entry.getValue().size() );
+				for ( Map.Entry<String, DynamicFetchBuilderLegacy> builderEntry : entry.getValue().entrySet() ) {
+					newValue.put( builderEntry.getKey(), builderEntry.getValue().cacheKeyInstance() );
+				}
+				legacyFetchBuilders.put( entry.getKey(), newValue );
+			}
+			this.legacyFetchBuilders = legacyFetchBuilders;
+		}
 	}
 
 	@Override
@@ -305,5 +341,44 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 	@Override
 	public NamedResultSetMappingMemento toMemento(String name) {
 		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
+	public JdbcValuesMappingProducer cacheKeyInstance() {
+		return new ResultSetMappingImpl( this );
+	}
+
+	@Override
+	public int hashCode() {
+		if ( isDynamic ) {
+			int result = mappingIdentifier != null ? mappingIdentifier.hashCode() : 0;
+			result = 31 * result + ( resultBuilders != null ? resultBuilders.hashCode() : 0 );
+			result = 31 * result + ( legacyFetchBuilders != null ? legacyFetchBuilders.hashCode() : 0 );
+			return result;
+		}
+		else {
+			return mappingIdentifier.hashCode();
+		}
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+
+		final ResultSetMappingImpl that = (ResultSetMappingImpl) o;
+		if ( isDynamic ) {
+			return that.isDynamic
+					&& Objects.equals( mappingIdentifier, that.mappingIdentifier )
+					&& Objects.equals( resultBuilders, that.resultBuilders )
+					&& Objects.equals( legacyFetchBuilders, that.legacyFetchBuilders );
+		}
+		else {
+			return !that.isDynamic && mappingIdentifier.equals( that.mappingIdentifier );
+		}
 	}
 }

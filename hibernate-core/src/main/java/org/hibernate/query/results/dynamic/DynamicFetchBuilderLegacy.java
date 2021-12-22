@@ -6,8 +6,10 @@
  */
 package org.hibernate.query.results.dynamic;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
@@ -59,12 +61,7 @@ public class DynamicFetchBuilderLegacy implements DynamicFetchBuilder, NativeQue
 			String fetchableName,
 			List<String> columnNames,
 			Map<String, FetchBuilder> fetchBuilderMap) {
-		this.tableAlias = tableAlias;
-		this.ownerTableAlias = ownerTableAlias;
-		this.fetchableName = fetchableName;
-		this.columnNames = columnNames;
-		this.fetchBuilderMap = fetchBuilderMap;
-		this.resultBuilderEntity = null;
+		this( tableAlias, ownerTableAlias, fetchableName, columnNames, fetchBuilderMap, null );
 	}
 
 	public DynamicFetchBuilderLegacy(
@@ -95,6 +92,28 @@ public class DynamicFetchBuilderLegacy implements DynamicFetchBuilder, NativeQue
 	@Override
 	public String getFetchableName() {
 		return fetchableName;
+	}
+
+	@Override
+	public DynamicFetchBuilderLegacy cacheKeyInstance() {
+		final Map<String, FetchBuilder> fetchBuilderMap;
+		if ( this.fetchBuilderMap == null ) {
+			fetchBuilderMap = null;
+		}
+		else {
+			fetchBuilderMap = new HashMap<>( this.fetchBuilderMap.size() );
+			for ( Map.Entry<String, FetchBuilder> entry : this.fetchBuilderMap.entrySet() ) {
+				fetchBuilderMap.put( entry.getKey(), entry.getValue().cacheKeyInstance() );
+			}
+		}
+		return new DynamicFetchBuilderLegacy(
+				tableAlias,
+				ownerTableAlias,
+				fetchableName,
+				List.copyOf( columnNames ),
+				fetchBuilderMap,
+				resultBuilderEntity == null ? null : resultBuilderEntity.cacheKeyInstance()
+		);
 	}
 
 	@Override
@@ -232,5 +251,34 @@ public class DynamicFetchBuilderLegacy implements DynamicFetchBuilder, NativeQue
 	@Override
 	public void visitFetchBuilders(BiConsumer<String, FetchBuilder> consumer) {
 		fetchBuilderMap.forEach( consumer );
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+
+		final DynamicFetchBuilderLegacy that = (DynamicFetchBuilderLegacy) o;
+		return tableAlias.equals( that.tableAlias )
+				&& ownerTableAlias.equals( that.ownerTableAlias )
+				&& fetchableName.equals( that.fetchableName )
+				&& Objects.equals( columnNames, that.columnNames )
+				&& Objects.equals( fetchBuilderMap, that.fetchBuilderMap )
+				&& Objects.equals( resultBuilderEntity, that.resultBuilderEntity );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = tableAlias.hashCode();
+		result = 31 * result + ownerTableAlias.hashCode();
+		result = 31 * result + fetchableName.hashCode();
+		result = 31 * result + ( columnNames != null ? columnNames.hashCode() : 0 );
+		result = 31 * result + ( fetchBuilderMap != null ? fetchBuilderMap.hashCode() : 0 );
+		result = 31 * result + ( resultBuilderEntity != null ? resultBuilderEntity.hashCode() : 0 );
+		return result;
 	}
 }

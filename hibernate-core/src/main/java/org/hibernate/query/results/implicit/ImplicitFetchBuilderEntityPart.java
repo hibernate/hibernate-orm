@@ -4,32 +4,30 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.query.results;
+package org.hibernate.query.results.implicit;
 
 import java.util.function.BiFunction;
 
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
-import org.hibernate.query.results.implicit.ImplicitFetchBuilder;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 
 /**
- * FetchBuilder used when an explicit mapping was not given
- *
  * @author Steve Ebersole
  */
-public class ImplicitAttributeFetchBuilder implements FetchBuilder, ImplicitFetchBuilder {
-	private final NavigablePath navigablePath;
-	private final AttributeMapping attributeMapping;
+public class ImplicitFetchBuilderEntityPart implements ImplicitFetchBuilder {
+	private final NavigablePath fetchPath;
+	private final EntityCollectionPart fetchable;
 
-	public ImplicitAttributeFetchBuilder(NavigablePath navigablePath, AttributeMapping attributeMapping) {
-		this.navigablePath = navigablePath;
-		this.attributeMapping = attributeMapping;
+	public ImplicitFetchBuilderEntityPart(NavigablePath fetchPath, EntityCollectionPart fetchable) {
+		this.fetchPath = fetchPath;
+		this.fetchable = fetchable;
 	}
 
 	@Override
@@ -43,16 +41,14 @@ public class ImplicitAttributeFetchBuilder implements FetchBuilder, ImplicitFetc
 			NavigablePath fetchPath,
 			JdbcValuesMetadata jdbcResultsMetadata,
 			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
-			DomainResultCreationState domainResultCreationState) {
-		assert fetchPath.equals( navigablePath );
-
+			DomainResultCreationState creationState) {
 		return parent.generateFetchableFetch(
-				attributeMapping,
+				fetchable,
 				fetchPath,
 				FetchTiming.IMMEDIATE,
 				true,
 				null,
-				domainResultCreationState
+				creationState
 		);
 	}
 
@@ -65,15 +61,20 @@ public class ImplicitAttributeFetchBuilder implements FetchBuilder, ImplicitFetc
 			return false;
 		}
 
-		final ImplicitAttributeFetchBuilder that = (ImplicitAttributeFetchBuilder) o;
-		return navigablePath.equals( that.navigablePath )
-				&& attributeMapping.equals( that.attributeMapping );
+		final ImplicitFetchBuilderEntityPart that = (ImplicitFetchBuilderEntityPart) o;
+		return fetchPath.equals( that.fetchPath )
+				&& fetchable.equals( that.fetchable );
 	}
 
 	@Override
 	public int hashCode() {
-		int result = navigablePath.hashCode();
-		result = 31 * result + attributeMapping.hashCode();
+		int result = fetchPath.hashCode();
+		result = 31 * result + fetchable.hashCode();
 		return result;
+	}
+
+	@Override
+	public String toString() {
+		return "ImplicitFetchBuilderEntityPart(" + fetchPath + ")";
 	}
 }

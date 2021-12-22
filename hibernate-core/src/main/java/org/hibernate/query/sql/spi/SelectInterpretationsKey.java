@@ -6,6 +6,8 @@
  */
 package org.hibernate.query.sql.spi;
 
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Objects;
 
 import org.hibernate.query.ResultListTransformer;
@@ -19,23 +21,69 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 public class SelectInterpretationsKey implements QueryInterpretationCache.Key {
 	private final String sql;
 	private final JdbcValuesMappingProducer jdbcValuesMappingProducer;
+	private final Collection<String> querySpaces;
 	private final TupleTransformer tupleTransformer;
 	private final ResultListTransformer resultListTransformer;
+	private final int hash;
 
 	public SelectInterpretationsKey(
 			String sql,
 			JdbcValuesMappingProducer jdbcValuesMappingProducer,
+			Collection<String> querySpaces,
 			TupleTransformer tupleTransformer,
 			ResultListTransformer resultListTransformer) {
 		this.sql = sql;
 		this.jdbcValuesMappingProducer = jdbcValuesMappingProducer;
+		this.querySpaces = querySpaces;
 		this.tupleTransformer = tupleTransformer;
 		this.resultListTransformer = resultListTransformer;
+		this.hash = generateHashCode();
+	}
+
+	private SelectInterpretationsKey(
+			String sql,
+			JdbcValuesMappingProducer jdbcValuesMappingProducer,
+			Collection<String> querySpaces,
+			TupleTransformer tupleTransformer,
+			ResultListTransformer resultListTransformer,
+			int hash) {
+		this.sql = sql;
+		this.jdbcValuesMappingProducer = jdbcValuesMappingProducer;
+		this.querySpaces = querySpaces;
+		this.tupleTransformer = tupleTransformer;
+		this.resultListTransformer = resultListTransformer;
+		this.hash = hash;
 	}
 
 	@Override
 	public String getQueryString() {
 		return sql;
+	}
+
+	@Override
+	public QueryInterpretationCache.Key prepareForStore() {
+		return new SelectInterpretationsKey(
+				sql,
+				jdbcValuesMappingProducer.cacheKeyInstance(),
+				new HashSet<>( querySpaces ),
+				tupleTransformer,
+				resultListTransformer,
+				hash
+		);
+	}
+
+	private int generateHashCode() {
+		int result = sql.hashCode();
+		result = 31 * result + jdbcValuesMappingProducer.hashCode();
+		result = 31 * result + ( querySpaces != null ? querySpaces.hashCode() : 0 );
+		result = 31 * result + ( tupleTransformer != null ? tupleTransformer.hashCode() : 0 );
+		result = 31 * result + ( resultListTransformer != null ? resultListTransformer.hashCode() : 0 );
+		return result;
+	}
+
+	@Override
+	public int hashCode() {
+		return hash;
 	}
 
 	@Override
@@ -47,21 +95,11 @@ public class SelectInterpretationsKey implements QueryInterpretationCache.Key {
 			return false;
 		}
 
-		SelectInterpretationsKey that = (SelectInterpretationsKey) o;
-
+		final SelectInterpretationsKey that = (SelectInterpretationsKey) o;
 		return sql.equals( that.sql )
 				&& Objects.equals( jdbcValuesMappingProducer, that.jdbcValuesMappingProducer )
+				&& Objects.equals( querySpaces, that.querySpaces )
 				&& Objects.equals( tupleTransformer, that.tupleTransformer )
 				&& Objects.equals( resultListTransformer, that.resultListTransformer );
-
-	}
-
-	@Override
-	public int hashCode() {
-		int result = sql.hashCode();
-		result = 31 * result + jdbcValuesMappingProducer.hashCode();
-		result = 31 * result + ( tupleTransformer != null ? tupleTransformer.hashCode() : 0 );
-		result = 31 * result + ( resultListTransformer != null ? resultListTransformer.hashCode() : 0 );
-		return result;
 	}
 }

@@ -51,6 +51,11 @@ public class EntityDomainResultBuilder implements ResultBuilder {
 	}
 
 	@Override
+	public ResultBuilder cacheKeyInstance() {
+		return this;
+	}
+
+	@Override
 	public EntityResult buildResult(
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
@@ -76,5 +81,23 @@ public class EntityDomainResultBuilder implements ResultBuilder {
 				},
 				domainResultCreationState
 		);
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+
+		final EntityDomainResultBuilder that = (EntityDomainResultBuilder) o;
+		return entityDescriptor.equals( that.entityDescriptor );
+	}
+
+	@Override
+	public int hashCode() {
+		return entityDescriptor.hashCode();
 	}
 }

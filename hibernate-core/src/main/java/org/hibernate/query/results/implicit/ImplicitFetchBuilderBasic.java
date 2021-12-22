@@ -15,6 +15,7 @@ import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.results.BasicValuedFetchBuilder;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
+import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.query.results.SqlSelectionImpl;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
@@ -39,6 +40,11 @@ public class ImplicitFetchBuilderBasic implements ImplicitFetchBuilder, BasicVal
 	public ImplicitFetchBuilderBasic(NavigablePath fetchPath, BasicValuedModelPart fetchable) {
 		this.fetchPath = fetchPath;
 		this.fetchable = fetchable;
+	}
+
+	@Override
+	public FetchBuilder cacheKeyInstance() {
+		return this;
 	}
 
 	@Override
@@ -108,5 +114,26 @@ public class ImplicitFetchBuilderBasic implements ImplicitFetchBuilder, BasicVal
 	@Override
 	public String toString() {
 		return "ImplicitFetchBuilderBasic(" + fetchPath + ")";
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+
+		final ImplicitFetchBuilderBasic that = (ImplicitFetchBuilderBasic) o;
+		return fetchPath.equals( that.fetchPath )
+				&& fetchable.equals( that.fetchable );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = fetchPath.hashCode();
+		result = 31 * result + fetchable.hashCode();
+		return result;
 	}
 }

@@ -113,4 +113,36 @@ public class JpaAttributeConverterImpl<O,R> implements JpaAttributeConverter<O,R
 	public JavaType<R> getRelationalJavaTypeDescriptor() {
 		return jdbcJtd;
 	}
+
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+
+		JpaAttributeConverterImpl<?, ?> that = (JpaAttributeConverterImpl<?, ?>) o;
+
+		if ( !attributeConverterBean.equals( that.attributeConverterBean ) ) {
+			return false;
+		}
+		if ( !converterJtd.equals( that.converterJtd ) ) {
+			return false;
+		}
+		if ( !domainJtd.equals( that.domainJtd ) ) {
+			return false;
+		}
+		return jdbcJtd.equals( that.jdbcJtd );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = attributeConverterBean.hashCode();
+		result = 31 * result + converterJtd.hashCode();
+		result = 31 * result + domainJtd.hashCode();
+		result = 31 * result + jdbcJtd.hashCode();
+		return result;
+	}
 }

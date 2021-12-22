@@ -16,5 +16,7 @@ import org.hibernate.sql.results.graph.Fetchable;
  * @author Steve Ebersole
  */
 public interface DynamicFetchBuilder extends FetchBuilder, NativeQuery.ReturnProperty {
+	DynamicFetchBuilder cacheKeyInstance();
+
 	List<String> getColumnAliases();
 }

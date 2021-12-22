@@ -398,7 +398,7 @@ public class NativeQueryImpl<R>
 				session.isQueryParametersValidationEnabled()
 		);
 
-		this.resultSetMapping = new ResultSetMappingImpl( sqlString );
+		this.resultSetMapping = new ResultSetMappingImpl( sqlString, true );
 		this.resultMappingSuppliedToCtor = false;
 	}
 
@@ -770,6 +770,7 @@ public class NativeQueryImpl<R>
 		return new SelectInterpretationsKey(
 				getQueryString(),
 				resultSetMapping,
+				getSynchronizedQuerySpaces(),
 				getQueryOptions().getTupleTransformer(),
 				getQueryOptions().getResultListTransformer()
 		);

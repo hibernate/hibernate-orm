@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.results.complete;
 
+import java.util.Arrays;
 import java.util.function.BiFunction;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -19,6 +20,7 @@ import org.hibernate.query.NativeQuery;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.FromClauseAccessImpl;
+import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.query.results.SqlSelectionImpl;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
@@ -82,6 +84,11 @@ public class CompleteResultBuilderCollectionStandard implements CompleteResultBu
 	@Override
 	public NavigablePath getNavigablePath() {
 		return navigablePath;
+	}
+
+	@Override
+	public ResultBuilder cacheKeyInstance() {
+		return this;
 	}
 
 	@Override
@@ -174,4 +181,32 @@ public class CompleteResultBuilderCollectionStandard implements CompleteResultBu
 		}
 	}
 
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+
+		final CompleteResultBuilderCollectionStandard that = (CompleteResultBuilderCollectionStandard) o;
+		return tableAlias.equals( that.tableAlias )
+				&& navigablePath.equals( that.navigablePath )
+				&& pluralAttributeDescriptor.equals( that.pluralAttributeDescriptor )
+				&& Arrays.equals( keyColumnNames, that.keyColumnNames )
+				&& Arrays.equals( indexColumnNames, that.indexColumnNames )
+				&& Arrays.equals( elementColumnNames, that.elementColumnNames );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = tableAlias.hashCode();
+		result = 31 * result + navigablePath.hashCode();
+		result = 31 * result + pluralAttributeDescriptor.hashCode();
+		result = 31 * result + Arrays.hashCode( keyColumnNames );
+		result = 31 * result + Arrays.hashCode( indexColumnNames );
+		result = 31 * result + Arrays.hashCode( elementColumnNames );
+		return result;
+	}
 }

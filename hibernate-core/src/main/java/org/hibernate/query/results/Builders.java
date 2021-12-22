@@ -6,6 +6,8 @@
  */
 package org.hibernate.query.results;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Locale;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.metamodel.EntityType;
@@ -13,7 +15,6 @@ import jakarta.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.RuntimeMetamodels;
 import org.hibernate.metamodel.mapping.AttributeMapping;
@@ -38,6 +39,7 @@ import org.hibernate.query.results.implicit.ImplicitFetchBuilder;
 import org.hibernate.query.results.implicit.ImplicitFetchBuilderBasic;
 import org.hibernate.query.results.implicit.ImplicitFetchBuilderEmbeddable;
 import org.hibernate.query.results.implicit.ImplicitFetchBuilderEntity;
+import org.hibernate.query.results.implicit.ImplicitFetchBuilderEntityPart;
 import org.hibernate.query.results.implicit.ImplicitFetchBuilderPlural;
 import org.hibernate.query.results.implicit.ImplicitModelPartResultBuilderEntity;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
@@ -236,7 +238,7 @@ public class Builders {
 	}
 
 	public static DynamicFetchBuilderLegacy fetch(String tableAlias, String ownerTableAlias, String joinPropertyName) {
-		return new DynamicFetchBuilderLegacy( tableAlias, ownerTableAlias, joinPropertyName, null, null );
+		return new DynamicFetchBuilderLegacy( tableAlias, ownerTableAlias, joinPropertyName, new ArrayList<>(), new HashMap<>() );
 	}
 
 	public static ResultBuilder implicitEntityResultBuilder(
@@ -273,15 +275,7 @@ public class Builders {
 		}
 
 		if ( fetchable instanceof EntityCollectionPart ) {
-			final EntityCollectionPart entityCollectionPart = (EntityCollectionPart) fetchable;
-			return (parent, fetchablePath, jdbcResultsMetadata, legacyFetchResolver, domainResultCreationState) -> parent.generateFetchableFetch(
-					entityCollectionPart,
-					fetchablePath,
-					FetchTiming.IMMEDIATE,
-					true,
-					null,
-					domainResultCreationState
-			);
+			return new ImplicitFetchBuilderEntityPart( fetchPath, (EntityCollectionPart) fetchable );
 		}
 
 		throw new UnsupportedOperationException();

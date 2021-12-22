@@ -11,6 +11,7 @@ import java.util.function.BiFunction;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
+import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.ResultBuilderBasicValued;
 import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
@@ -38,6 +39,11 @@ public class ImplicitModelPartResultBuilderBasic
 	}
 
 	@Override
+	public ResultBuilder cacheKeyInstance() {
+		return this;
+	}
+
+	@Override
 	public BasicResult<?> buildResult(
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
@@ -49,5 +55,29 @@ public class ImplicitModelPartResultBuilderBasic
 				.getFromClauseAccess()
 				.getTableGroup( navigablePath.getParent() );
 		return (BasicResult<?>) modelPart.createDomainResult( navigablePath, tableGroup, null, domainResultCreationState );
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+
+		ImplicitModelPartResultBuilderBasic that = (ImplicitModelPartResultBuilderBasic) o;
+
+		if ( !navigablePath.equals( that.navigablePath ) ) {
+			return false;
+		}
+		return modelPart.equals( that.modelPart );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = navigablePath.hashCode();
+		result = 31 * result + modelPart.hashCode();
+		return result;
 	}
 }

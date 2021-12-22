@@ -60,6 +60,7 @@ import org.hibernate.persister.entity.Queryable;
 import org.hibernate.query.sqm.tree.domain.SqmPolymorphicRootDescriptor;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.DynamicModelJtd;
+import org.hibernate.type.descriptor.java.spi.EntityJavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -195,7 +196,7 @@ public class JpaMetamodelImpl implements JpaMetamodel, Serializable {
 	@Override
 	public <X> EmbeddableDomainType<X> embeddable(Class<X> cls) {
 		final ManagedType<?> type = jpaManagedTypeMap.get( cls );
-		if ( !( type instanceof EntityDomainType<?> ) ) {
+		if ( !( type instanceof EmbeddableDomainType<?> ) ) {
 			throw new IllegalArgumentException( "Not an embeddable: " + cls.getName() );
 		}
 		//noinspection unchecked
@@ -503,13 +504,16 @@ public class JpaMetamodelImpl implements JpaMetamodel, Serializable {
 					if ( embeddable.getJavaType() != null && embeddable.getJavaType() != Map.class ) {
 						this.jpaEmbeddables.add( embeddable );
 						this.jpaManagedTypes.add( embeddable );
-						this.jpaManagedTypeMap.put( embeddable.getJavaType(), embeddable );
+						if ( !( embeddable.getExpressableJavaTypeDescriptor() instanceof EntityJavaTypeDescriptor<?> ) ) {
+							this.jpaManagedTypeMap.put( embeddable.getJavaType(), embeddable );
+						}
 					}
 					break;
 				case ENABLED:
 					this.jpaEmbeddables.add( embeddable );
 					this.jpaManagedTypes.add( embeddable );
-					if ( embeddable.getJavaType() != null ) {
+					if ( embeddable.getJavaType() != null
+							&& !( embeddable.getExpressableJavaTypeDescriptor() instanceof EntityJavaTypeDescriptor<?> ) ) {
 						this.jpaManagedTypeMap.put( embeddable.getJavaType(), embeddable );
 					}
 					break;
@@ -517,7 +521,9 @@ public class JpaMetamodelImpl implements JpaMetamodel, Serializable {
 					if ( embeddable.getJavaType() == null ) {
 						throw new UnsupportedOperationException( "ANY not supported" );
 					}
-					this.jpaManagedTypeMap.put( embeddable.getJavaType(), embeddable );
+					if ( !( embeddable.getExpressableJavaTypeDescriptor() instanceof EntityJavaTypeDescriptor<?> ) ) {
+						this.jpaManagedTypeMap.put( embeddable.getJavaType(), embeddable );
+					}
 					break;
 			}
 		}

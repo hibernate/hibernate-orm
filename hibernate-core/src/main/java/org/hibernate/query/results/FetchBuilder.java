@@ -35,4 +35,6 @@ public interface FetchBuilder {
 
 	default void visitFetchBuilders(BiConsumer<String, FetchBuilder> consumer) {
 	}
+
+	FetchBuilder cacheKeyInstance();
 }

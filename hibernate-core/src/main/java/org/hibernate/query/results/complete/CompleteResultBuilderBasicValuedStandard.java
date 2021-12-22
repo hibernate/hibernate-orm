@@ -6,12 +6,14 @@
  */
 package org.hibernate.query.results.complete;
 
+import java.util.Objects;
 import java.util.function.BiFunction;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
+import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.query.results.SqlSelectionImpl;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
@@ -50,6 +52,11 @@ public class CompleteResultBuilderBasicValuedStandard implements CompleteResultB
 		this.explicitColumnName = explicitColumnName;
 		this.explicitType = explicitType;
 		this.explicitJavaTypeDescriptor = explicitJavaTypeDescriptor;
+	}
+
+	@Override
+	public ResultBuilder cacheKeyInstance() {
+		return this;
 	}
 
 	@Override
@@ -142,4 +149,31 @@ public class CompleteResultBuilderBasicValuedStandard implements CompleteResultB
 		);
 	}
 
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+
+		CompleteResultBuilderBasicValuedStandard that = (CompleteResultBuilderBasicValuedStandard) o;
+
+		if ( !Objects.equals( explicitColumnName, that.explicitColumnName ) ) {
+			return false;
+		}
+		if ( !Objects.equals( explicitType, that.explicitType ) ) {
+			return false;
+		}
+		return explicitJavaTypeDescriptor.equals( that.explicitJavaTypeDescriptor );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = explicitColumnName != null ? explicitColumnName.hashCode() : 0;
+		result = 31 * result + ( explicitType != null ? explicitType.hashCode() : 0 );
+		result = 31 * result + explicitJavaTypeDescriptor.hashCode();
+		return result;
+	}
 }

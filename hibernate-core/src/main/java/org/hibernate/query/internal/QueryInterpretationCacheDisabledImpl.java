@@ -47,7 +47,11 @@ public class QueryInterpretationCacheDisabledImpl implements QueryInterpretation
 
 	@Override
 	public <R> SelectQueryPlan<R> resolveSelectQueryPlan(Key key, Supplier<SelectQueryPlan<R>> creator) {
-		return null;
+		final StatisticsImplementor statistics = statisticsSupplier.get();
+		if ( statistics.isStatisticsEnabled() ) {
+			statistics.queryPlanCacheMiss( key.getQueryString() );
+		}
+		return creator.get();
 	}
 
 	@Override
@@ -61,7 +65,7 @@ public class QueryInterpretationCacheDisabledImpl implements QueryInterpretation
 
 	@Override
 	public HqlInterpretation resolveHqlInterpretation(String queryString, Function<String, SqmStatement<?>> creator) {
-		StatisticsImplementor statistics = statisticsSupplier.get();
+		final StatisticsImplementor statistics = statisticsSupplier.get();
 		final boolean stats = statistics.isStatisticsEnabled();
 		final long startTime = ( stats ) ? System.nanoTime() : 0L;
 		final SqmStatement<?> sqmStatement = creator.apply( queryString );
@@ -76,7 +80,6 @@ public class QueryInterpretationCacheDisabledImpl implements QueryInterpretation
 		else {
 			domainParameterXref = DomainParameterXref.from( sqmStatement );
 			parameterMetadata = new ParameterMetadataImpl( domainParameterXref.getQueryParameters() );
-
 		}
 
 		if ( stats ) {

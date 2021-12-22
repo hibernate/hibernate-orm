@@ -8,25 +8,21 @@ package org.hibernate.userguide.hql;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-import jakarta.persistence.Index;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
-import org.hibernate.jpa.QueryHints;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -78,68 +74,6 @@ public class SelectDistinctTest extends BaseEntityManagerFunctionalTestCase {
 				lastNames.contains( "King" ) &&
 				lastNames.contains( "Mihalcea" )
 			);
-		});
-	}
-
-	@Test
-	public void testAllAuthors() {
-
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			List<Person> authors = entityManager.createQuery(
-				"select p " +
-				"from Person p " +
-				"left join fetch p.books", Person.class)
-			.getResultList();
-
-			authors.forEach( author -> {
-				log.infof( "Author %s wrote %d books",
-				   author.getFirstName() + " " + author.getLastName(),
-				   author.getBooks().size()
-				);
-			} );
-		});
-	}
-
-	@Test
-	public void testDistinctAuthors() {
-
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			//tag::hql-distinct-entity-query-example[]
-			List<Person> authors = entityManager.createQuery(
-				"select distinct p " +
-				"from Person p " +
-				"left join fetch p.books", Person.class)
-			.getResultList();
-			//end::hql-distinct-entity-query-example[]
-
-			authors.forEach( author -> {
-				log.infof( "Author %s wrote %d books",
-				   author.getFirstName() + " " + author.getLastName(),
-				   author.getBooks().size()
-				);
-			} );
-		});
-	}
-
-	@Test
-	public void testDistinctAuthorsWithoutPassThrough() {
-
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			//tag::hql-distinct-entity-query-hint-example[]
-			List<Person> authors = entityManager.createQuery(
-				"select distinct p " +
-				"from Person p " +
-				"left join fetch p.books", Person.class)
-			.setHint( QueryHints.HINT_PASS_DISTINCT_THROUGH, false )
-			.getResultList();
-			//end::hql-distinct-entity-query-hint-example[]
-
-			authors.forEach( author -> {
-				log.infof( "Author %s wrote %d books",
-				   author.getFirstName() + " " + author.getLastName(),
-				   author.getBooks().size()
-				);
-			} );
 		});
 	}
 

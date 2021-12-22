@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.inheritance;
+package org.hibernate.orm.test.inheritance;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -76,7 +76,7 @@ public class MappedSuperclassInheritanceTest extends BaseEntityManagerFunctional
 				fail();
 			} catch (Exception expected) {
 				SemanticException rootException = (SemanticException) ExceptionUtil.rootCause( expected);
-				assertEquals("Employee is not mapped", rootException.getMessage());
+				assertEquals("Could not resolve entity reference: Employee", rootException.getMessage());
 			}
 		} );
 	}

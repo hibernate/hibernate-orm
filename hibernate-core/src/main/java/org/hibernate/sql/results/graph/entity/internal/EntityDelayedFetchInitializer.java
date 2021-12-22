@@ -29,6 +29,7 @@ import org.hibernate.sql.results.graph.entity.AbstractEntityInitializer;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
+import org.hibernate.type.Type;
 
 /**
  * @author Andrea Boriero
@@ -113,11 +114,19 @@ public class EntityDelayedFetchInitializer extends AbstractFetchParentAccess imp
 				else {
 					if ( selectByUniqueKey ) {
 						final String uniqueKeyPropertyName = referencedModelPart.getBidirectionalAttributeName();
+						final Type uniqueKeyPropertyType = ( referencedModelPart.getReferencedPropertyName() == null ) ?
+								concreteDescriptor.getIdentifierType() :
+								session.getFactory()
+										.getReferencedPropertyType(
+												concreteDescriptor.getEntityName(),
+												uniqueKeyPropertyName
+										);
+
 						final EntityUniqueKey euk = new EntityUniqueKey(
 								concreteDescriptor.getEntityName(),
 								uniqueKeyPropertyName,
 								identifier,
-								concreteDescriptor.getIdentifierType(),
+								uniqueKeyPropertyType,
 								session.getFactory()
 						);
 						final PersistenceContext persistenceContext = session.getPersistenceContextInternal();

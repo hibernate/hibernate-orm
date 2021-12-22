@@ -118,15 +118,6 @@ public class QueryHints {
 	public static final String FOLLOW_ON_LOCKING = "hibernate.query.followOnLocking";
 
 	/**
-	 * Hint to enable/disable the pass-distinct-through mechanism.
-	 * A value of {@code true} enables pass-distinct-through, whereas a value of {@code false} disables it.
-	 * When the pass-distinct-through is disabled, the HQL and JPQL distinct clause is no longer passed to the SQL statement.
-	 *
-	 * @since 5.2
-	 */
-	public static final String PASS_DISTINCT_THROUGH = "hibernate.query.passDistinctThrough";
-
-	/**
 	 * Hint for specifying query spaces to be applied to a native (SQL) query.
 	 *
 	 * Passed value can be any of:<ul>

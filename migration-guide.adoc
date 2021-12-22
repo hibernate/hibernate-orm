@@ -60,7 +60,7 @@ Passing null or not is now triggered by whether setting the parameter was called
 
 === Query
 
-=== Ordinal Parameters binding
+==== Ordinal Parameters binding
 
 HQL ordinal parameter binding is 1-based, this means that queries like
 
@@ -115,6 +115,18 @@ List<Object[]> results = session.createQuery("select p, a from Person p join p.a
 ==== Iterate
 
 The `Query#iterate()` method has been removed. The alternative is to use `Query#stream()` or `Query#getResultStream()`.
+
+==== Using DISTINCT with entity queries
+
+Starting with Hibernate ORM 6 it is no longer necessary to use *distinct* in JPQL and HQL
+to filter out the same parent entity references when join fetching a child collection.
+The returning duplicates of entities are always filtered by Hibernate.
+
+Which means that for instance it is no longer necessary to set `QueryHints#HINT_PASS_DISTINCT_THROUGH` to `false`
+in order to skip the entity duplicates without producing a `distinct` in the SQL query.
+
+From Hibernate ORM 6 a `distinct` is always passed to the SQL query and the flag `QueryHints#HINT_PASS_DISTINCT_THROUGH`
+has been removed.
 
 === Native Query
 

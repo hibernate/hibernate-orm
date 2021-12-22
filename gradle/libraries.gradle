@@ -47,7 +47,7 @@ ext {
     jakartaJaxbRuntimeVersion = '3.0.2'
 
     //GraalVM
-    graalvmVersion = '21.2.0'
+    graalvmVersion = '21.3.0'
 
     antlrVersion = '4.9.1'
 

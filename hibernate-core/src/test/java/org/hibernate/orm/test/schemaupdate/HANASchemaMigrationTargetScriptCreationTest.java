@@ -22,6 +22,7 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
@@ -68,8 +69,14 @@ public class HANASchemaMigrationTargetScriptCreationTest extends BaseCoreFunctio
 		this.output.deleteOnExit();
 		configuration.setProperty( Environment.HBM2DDL_SCRIPTS_ACTION, "create" );
 		configuration.setProperty( Environment.HBM2DDL_SCRIPTS_CREATE_TARGET, this.output.getAbsolutePath() );
-		this.varcharType = ( (AbstractHANADialect) getDialect() ).isUseUnicodeStringTypes() ? "nvarchar" : "varchar";
-		this.clobType = ( (AbstractHANADialect) getDialect() ).isUseUnicodeStringTypes() ? "nclob" : "clob";
+	}
+
+	@Override
+	protected void afterSessionFactoryBuilt() {
+		super.afterSessionFactoryBuilt();
+		final Dialect dialect = sessionFactory().getJdbcServices().getDialect();
+		this.varcharType = ( (AbstractHANADialect) dialect ).isUseUnicodeStringTypes() ? "nvarchar" : "varchar";
+		this.clobType = ( (AbstractHANADialect) dialect ).isUseUnicodeStringTypes() ? "nclob" : "clob";
 	}
 
 	@After

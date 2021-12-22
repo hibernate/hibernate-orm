@@ -395,6 +395,7 @@ public abstract class AbstractStandardBasicType<T>
 				}
 				break;
 			case Types.CHAR:
+			case Types.NCHAR:
 				if ( getJavaType() == Boolean.class ) {
 					return (Boolean) getJavaTypeDescriptor().wrap( 'Y', null )
 							? CastType.YN_BOOLEAN

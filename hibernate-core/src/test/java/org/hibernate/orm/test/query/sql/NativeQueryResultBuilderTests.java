@@ -23,6 +23,7 @@ import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
@@ -283,7 +284,9 @@ public class NativeQueryResultBuilderTests {
 		final EntityMappingType entityDescriptor = scope.getSessionFactory()
 				.getRuntimeMetamodels()
 				.getEntityMappingType( EntityOfBasics.class );
-
+		final JdbcTypeRegistry jdbcTypeRegistry = scope.getSessionFactory()
+				.getTypeConfiguration()
+				.getJdbcTypeDescriptorRegistry();
 		final ModelPart part = entityDescriptor.findSubPart( "convertedGender", null );
 		assertThat( part, instanceOf( BasicAttributeMapping.class ) );
 		final BasicAttributeMapping attrMapping = (BasicAttributeMapping) part;
@@ -295,7 +298,7 @@ public class NativeQueryResultBuilderTests {
 		assertThat( valueConverter.getDomainJavaDescriptor(), is( attrMapping.getJavaTypeDescriptor() ) );
 		assertThat( valueConverter.getRelationalJavaDescriptor().getJavaTypeClass(), equalTo( Character.class ) );
 
-		assertThat( attrMapping.getJdbcMapping().getJdbcTypeDescriptor().getJdbcTypeCode(), is( Types.CHAR ) );
+		assertThat( attrMapping.getJdbcMapping().getJdbcTypeDescriptor(), is( jdbcTypeRegistry.getDescriptor( Types.CHAR ) ) );
 	}
 
 	@BeforeEach

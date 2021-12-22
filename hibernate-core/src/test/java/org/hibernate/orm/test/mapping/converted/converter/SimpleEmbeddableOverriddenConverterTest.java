@@ -6,6 +6,8 @@
  */
 package org.hibernate.orm.test.mapping.converted.converter;
 
+import java.sql.Types;
+
 import jakarta.persistence.Convert;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
@@ -18,6 +20,7 @@ import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
@@ -46,10 +49,12 @@ public class SimpleEmbeddableOverriddenConverterTest extends BaseNonConfigCoreFu
 	@Test
 	public void testSimpleConvertOverrides() {
 		final EntityPersister ep = sessionFactory().getEntityPersister( Person.class.getName() );
+		final JdbcTypeRegistry jdbcTypeRegistry = sessionFactory().getTypeConfiguration()
+				.getJdbcTypeDescriptorRegistry();
 		CompositeType homeAddressType = assertTyping( CompositeType.class, ep.getPropertyType( "homeAddress" ) );
 		BasicType<?> homeAddressCityType = (BasicType<?>) findCompositeAttributeType( homeAddressType, "city" );
 		assertTyping( StringJavaTypeDescriptor.class, homeAddressCityType.getJavaTypeDescriptor() );
-		assertTyping( VarcharJdbcType.class, homeAddressCityType.getJdbcTypeDescriptor() );
+		assertTyping( jdbcTypeRegistry.getDescriptor( Types.VARCHAR ).getClass(), homeAddressCityType.getJdbcTypeDescriptor() );
 	}
 
 	public Type findCompositeAttributeType(CompositeType compositeType, String attributeName) {

@@ -19,6 +19,8 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.type.CustomType;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -60,22 +62,31 @@ public class EnumeratedSmokeTest extends BaseUnitTestCase {
 				.buildMetadata();
 		mappings.validate();
 
+		final JdbcTypeRegistry jdbcTypeRegistry = mappings.getTypeConfiguration().getJdbcTypeDescriptorRegistry();
 		final PersistentClass entityBinding = mappings.getEntityBinding( EntityWithEnumeratedAttributes.class.getName() );
 
-		validateEnumMapping( entityBinding.getProperty( "notAnnotated" ), EnumType.ORDINAL );
-		validateEnumMapping( entityBinding.getProperty( "noEnumType" ), EnumType.ORDINAL );
-		validateEnumMapping( entityBinding.getProperty( "ordinalEnumType" ), EnumType.ORDINAL );
-		validateEnumMapping( entityBinding.getProperty( "stringEnumType" ), EnumType.STRING );
+		validateEnumMapping( jdbcTypeRegistry, entityBinding.getProperty( "notAnnotated" ), EnumType.ORDINAL );
+		validateEnumMapping( jdbcTypeRegistry, entityBinding.getProperty( "noEnumType" ), EnumType.ORDINAL );
+		validateEnumMapping( jdbcTypeRegistry, entityBinding.getProperty( "ordinalEnumType" ), EnumType.ORDINAL );
+		validateEnumMapping( jdbcTypeRegistry, entityBinding.getProperty( "stringEnumType" ), EnumType.STRING );
 	}
 
-	private void validateEnumMapping(Property property, EnumType expectedJpaEnumType) {
+	private void validateEnumMapping(JdbcTypeRegistry jdbcRegistry, Property property, EnumType expectedJpaEnumType) {
 		assertThat( property.getType(), instanceOf( CustomType.class ) );
 		final CustomType<Object> customType = (CustomType<Object>) property.getType();
 		assertThat( customType.getUserType(), instanceOf( org.hibernate.type.EnumType.class ) );
 		final org.hibernate.type.EnumType hibernateMappingEnumType = (org.hibernate.type.EnumType) customType.getUserType();
 		assertThat( hibernateMappingEnumType.isOrdinal(), is(expectedJpaEnumType==EnumType.ORDINAL) );
 		assertThat( hibernateMappingEnumType.sqlTypes().length, is(1) );
-		assertThat( hibernateMappingEnumType.sqlTypes()[0], is(expectedJpaEnumType==EnumType.ORDINAL? Types.TINYINT:Types.VARCHAR) );
+		final int expectedJdbcTypeCode = jdbcRegistry.getDescriptor(
+				expectedJpaEnumType == EnumType.ORDINAL ?
+						Types.TINYINT :
+						Types.VARCHAR
+		).getJdbcTypeCode();
+		assertThat(
+				hibernateMappingEnumType.sqlTypes()[0],
+				is( expectedJdbcTypeCode )
+		);
 	}
 
 	@Entity

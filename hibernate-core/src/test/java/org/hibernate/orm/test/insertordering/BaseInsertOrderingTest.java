@@ -2,11 +2,15 @@ package org.hibernate.orm.test.insertordering;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Types;
 
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+
 import org.hibernate.testing.orm.jdbc.PreparedStatementSpyConnectionProvider;
 
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
@@ -57,6 +61,18 @@ abstract class BaseInsertOrderingTest extends BaseSessionFactoryFunctionalTest {
 	@AfterAll
 	public void releaseResources() {
 		connectionProvider.stop();
+	}
+
+	protected String literal(String value) {
+		final JdbcType jdbcType = sessionFactory().getTypeConfiguration().getJdbcTypeDescriptorRegistry().getDescriptor(
+				Types.VARCHAR
+		);
+		return jdbcType.getJdbcLiteralFormatter( StringJavaTypeDescriptor.INSTANCE )
+				.toJdbcLiteral(
+						value,
+						sessionFactory().getJdbcServices().getDialect(),
+						sessionFactory().getWrapperOptions()
+				);
 	}
 
 	void verifyContainsBatches(Batch... expectedBatches) {

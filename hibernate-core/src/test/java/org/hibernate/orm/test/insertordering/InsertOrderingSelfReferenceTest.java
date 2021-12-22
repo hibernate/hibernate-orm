@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.insertordering;
 
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 import jakarta.persistence.CascadeType;
@@ -21,6 +22,8 @@ import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.SortNatural;
 import org.hibernate.annotations.Where;
+import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import org.hibernate.testing.TestForIssue;
 import org.junit.jupiter.api.Test;
@@ -70,8 +73,8 @@ public class InsertOrderingSelfReferenceTest extends BaseInsertOrderingTest {
 
 		verifyContainsBatches(
 				new Batch( "insert into Placeholder (name, id) values (?, ?)", 2 ),
-				new Batch( "insert into Parameter (name, parent_id, TYPE, id) values (?, ?, 'INPUT', ?)" ),
-				new Batch( "insert into Parameter (name, parent_id, TYPE, id) values (?, ?, 'OUTPUT', ?)", 3 )
+				new Batch( "insert into Parameter (name, parent_id, TYPE, id) values (?, ?, " + literal( "INPUT" ) + ", ?)" ),
+				new Batch( "insert into Parameter (name, parent_id, TYPE, id) values (?, ?, " + literal( "OUTPUT" ) + ", ?)", 3 )
 		);
 	}
 

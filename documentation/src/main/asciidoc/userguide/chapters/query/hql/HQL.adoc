@@ -852,10 +852,7 @@ Unlike explicit joins, however, implicit joins may also reference basic state fi
 [[hql-distinct]]
 === Distinct
 
-For JPQL and HQL, `DISTINCT` has two meanings:
-
-. It can be passed to the database so that duplicates are removed from a result set
-. It can be used to filter out the same parent entity references when join fetching a child collection
+For JPQL and HQL, `DISTINCT` can be passed to the database so that duplicates are removed from a result set.
 
 [[hql-distinct-projection-query]]
 ==== Using DISTINCT with SQL projections
@@ -885,52 +882,15 @@ For this particular use case, passing the `DISTINCT` keyword from JPQL/HQL to th
 [[hql-distinct-entity-query]]
 ==== Using DISTINCT with entity queries
 
-`DISTINCT` can also be used to filter out entity object references when fetching a child association along with the parent entities.
+Starting with Hibernate ORM 6 it is no longer necessary to use *distinct* in JPQL and HQL
+to filter out the same parent entity references when join fetching a child collection.
+The returning duplicates of entities are always filtered by Hibernate.
 
-[[hql-distinct-entity-query-example]]
-.Using DISTINCT with entity queries example
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/SelectDistinctTest.java[tags=hql-distinct-entity-query-example]
-----
-====
+Which means that for instance it is no longer necessary to set `QueryHints#HINT_PASS_DISTINCT_THROUGH` to `false`
+in order to skip the entity duplicates without producing a `distinct` in the SQL query.
 
-In this case, `DISTINCT` is used because there can be multiple `Books` entities associated with a given `Person`.
-If in the database there are 3 ``Person``s in the database and each person has 2 ``Book``s, without `DISTINCT` this query will return 6 ``Person``s since
-the SQL-level result-set size is given by the number of joined `Book` records.
-
-However, the `DISTINCT` keyword is passed to the database as well:
-
-====
-[source, SQL, indent=0]
-----
-include::{extrasdir}/hql-distinct-entity-query-example.sql[]
-----
-====
-
-In this case, the `DISTINCT` SQL keyword is undesirable since it does a redundant result set sorting, as explained https://in.relation.to/2016/08/04/introducing-distinct-pass-through-query-hint/[in this blog post].
-To fix this issue, Hibernate 5.2.2 added support for the `HINT_PASS_DISTINCT_THROUGH` entity query hint:
-
-[[hql-distinct-entity-query-hint-example]]
-.Using DISTINCT with entity queries example
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/SelectDistinctTest.java[tags=hql-distinct-entity-query-hint-example]
-----
-====
-
-With this entity query hint, Hibernate will not pass the `DISTINCT` keyword to the SQL query:
-
-====
-[source, SQL, indent=0]
-----
-include::{extrasdir}/hql-distinct-entity-query-hint-example.sql[]
-----
-====
-
-When using the `HINT_PASS_DISTINCT_THROUGH` entity query hint, Hibernate can still remove the duplicated parent-side entities from the query result.
+From Hibernate ORM 6 a `distinct` is always passed to the SQL query and the flag `QueryHints#HINT_PASS_DISTINCT_THROUGH`
+has been removed.
 
 [[hql-collection-valued-associations]]
 === Collection member references

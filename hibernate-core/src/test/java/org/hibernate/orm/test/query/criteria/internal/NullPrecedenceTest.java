@@ -1,4 +1,4 @@
-package org.hibernate.query.criteria.internal;
+package org.hibernate.orm.test.query.criteria.internal;
 
 import java.util.List;
 

@@ -76,14 +76,14 @@ public class CorrelatedTableGroup extends AbstractTableGroup {
 			String tableExpression,
 			boolean allowFkOptimization,
 			boolean resolve) {
-		final TableReference primaryTableReference = correlatedTableGroup.getPrimaryTableReference().getTableReference(
+		final TableReference tableReference = correlatedTableGroup.getTableReference(
 				navigablePath,
 				tableExpression,
 				allowFkOptimization,
 				resolve
 		);
-		if ( primaryTableReference != null ) {
-			return primaryTableReference;
+		if ( tableReference != null ) {
+			return tableReference;
 		}
 		for ( TableGroupJoin tableGroupJoin : getNestedTableGroupJoins() ) {
 			final TableReference groupTableReference = tableGroupJoin.getJoinedGroup()
@@ -99,17 +99,6 @@ public class CorrelatedTableGroup extends AbstractTableGroup {
 					.getTableReference( navigablePath, tableExpression, allowFkOptimization, resolve );
 			if ( groupTableReference != null ) {
 				return groupTableReference;
-			}
-		}
-		for ( TableReferenceJoin tableReferenceJoin : correlatedTableGroup.getTableReferenceJoins() ) {
-			final TableReference tableReference = tableReferenceJoin.getJoinedTableReference().getTableReference(
-					navigablePath,
-					tableExpression,
-					allowFkOptimization,
-					resolve
-			);
-			if ( tableReference != null ) {
-				return tableReference;
 			}
 		}
 		return null;

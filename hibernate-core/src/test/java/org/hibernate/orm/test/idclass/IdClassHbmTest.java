@@ -28,7 +28,7 @@ public class IdClassHbmTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected void configure(Configuration configuration) {
 		// the Customer entity has a composite id that is not embeddable ( not supported by JPA ).
-		configuration.setProperty( AvailableSettings.STATIC_METAMODEL_POPULATION, "disabled" );
+		configuration.setProperty( AvailableSettings.JPA_METAMODEL_POPULATION, "disabled" );
 	}
 
 	@Test

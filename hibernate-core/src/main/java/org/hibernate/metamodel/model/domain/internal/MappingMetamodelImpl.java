@@ -47,6 +47,7 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.MappingMetamodel;
+import org.hibernate.metamodel.internal.JpaMetaModelPopulationSetting;
 import org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
@@ -75,7 +76,8 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import static org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting.determineJpaMetaModelPopulationSetting;
+import static org.hibernate.metamodel.internal.JpaMetaModelPopulationSetting.determineJpaMetaModelPopulationSetting;
+import static org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting.determineJpaStaticMetaModelPopulationSetting;
 
 /**
  * Hibernate implementation of the JPA {@link jakarta.persistence.metamodel.Metamodel} contract.
@@ -103,7 +105,7 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 
 	private final JpaMetamodel jpaMetamodel;
 
-	private final Map<Class, String> entityProxyInterfaceMap = new ConcurrentHashMap<>();
+	private final Map<Class<?>, String> entityProxyInterfaceMap = new ConcurrentHashMap<>();
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -195,7 +197,8 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 
 		final PersisterFactory persisterFactory = sessionFactory.getServiceRegistry().getService( PersisterFactory.class );
 
-		final JpaStaticMetaModelPopulationSetting jpaStaticMetaModelPopulationSetting = determineJpaMetaModelPopulationSetting( sessionFactory.getProperties() );
+		final JpaStaticMetaModelPopulationSetting jpaStaticMetaModelPopulationSetting = determineJpaStaticMetaModelPopulationSetting( sessionFactory.getProperties() );
+		final JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting = determineJpaMetaModelPopulationSetting( sessionFactory.getProperties() );
 
 		bootModel.visitRegisteredComponents( Component::prepareForMappingModel );
 		bootModel.getMappedSuperclassMappingsCopy().forEach( MappedSuperclass::prepareForMappingModel );
@@ -238,6 +241,7 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 				this,
 				entityProxyInterfaceMap,
 				jpaStaticMetaModelPopulationSetting,
+				jpaMetaModelPopulationSetting,
 				bootModel.getNamedEntityGraphs().values(),
 				runtimeModelCreationContext
 		);
@@ -486,33 +490,13 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 	}
 
 	@Override
-	public void visitManagedTypes(Consumer<ManagedDomainType<?>> action) {
-		jpaMetamodel.visitManagedTypes( action );
-	}
-
-	@Override
 	public <X> ManagedDomainType<X> findManagedType(Class<X> cls) {
 		return jpaMetamodel.findManagedType( cls );
 	}
 
 	@Override
-	public void visitEntityTypes(Consumer<EntityDomainType<?>> action) {
-		jpaMetamodel.visitEntityTypes( action );
-	}
-
-	@Override
 	public <X> EntityDomainType<X> findEntityType(Class<X> cls) {
 		return jpaMetamodel.findEntityType( cls );
-	}
-
-	@Override
-	public void visitRootEntityTypes(Consumer<EntityDomainType<?>> action) {
-		jpaMetamodel.visitRootEntityTypes( action );
-	}
-
-	@Override
-	public void visitEmbeddables(Consumer<EmbeddableDomainType<?>> action) {
-		jpaMetamodel.visitEmbeddables( action );
 	}
 
 	@Override

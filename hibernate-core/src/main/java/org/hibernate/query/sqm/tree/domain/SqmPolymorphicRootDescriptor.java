@@ -169,12 +169,12 @@ public class SqmPolymorphicRootDescriptor<T> implements EntityDomainType<T> {
 	}
 
 	@Override
-	public void visitAttributes(Consumer<PersistentAttribute<T, ?>> action) {
+	public void visitAttributes(Consumer<? super PersistentAttribute<T, ?>> action) {
 		commonAttributes.values().forEach( (Consumer) action );
 	}
 
 	@Override
-	public void visitDeclaredAttributes(Consumer<PersistentAttribute<T, ?>> action) {
+	public void visitDeclaredAttributes(Consumer<? super PersistentAttribute<T, ?>> action) {
 	}
 
 	@Override

@@ -92,7 +92,7 @@ public abstract class AbstractManagedType<J>
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public void visitAttributes(Consumer<PersistentAttribute<J, ?>> action) {
+	public void visitAttributes(Consumer<? super PersistentAttribute<J, ?>> action) {
 		visitDeclaredAttributes( action );
 		if ( getSuperType() != null ) {
 			getSuperType().visitAttributes( (Consumer) action );
@@ -100,7 +100,7 @@ public abstract class AbstractManagedType<J>
 	}
 
 	@Override
-	public void visitDeclaredAttributes(Consumer<PersistentAttribute<J, ?>> action) {
+	public void visitDeclaredAttributes(Consumer<? super PersistentAttribute<J, ?>> action) {
 		declaredSingularAttributes.values().forEach( action );
 		if ( declaredPluralAttributes != null ) {
 			declaredPluralAttributes.values().forEach( action );

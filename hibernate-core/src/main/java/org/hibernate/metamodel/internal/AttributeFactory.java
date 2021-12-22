@@ -239,7 +239,7 @@ public class AttributeFactory {
 				final EmbeddableTypeImpl<Y> embeddableType;
 
 				if ( component.isDynamic() ) {
-					final JavaType javaTypeDescriptor = context.getJavaTypeDescriptorRegistry().getDescriptor( Map.class );
+					final JavaType javaTypeDescriptor = context.getJavaTypeDescriptorRegistry().getDescriptor( java.util.Map.class );
 
 					embeddableType = new EmbeddableTypeImpl<>(
 							javaTypeDescriptor,

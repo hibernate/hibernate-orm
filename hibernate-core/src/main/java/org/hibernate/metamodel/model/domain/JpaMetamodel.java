@@ -64,30 +64,16 @@ public interface JpaMetamodel extends jakarta.persistence.metamodel.Metamodel {
 	<X> EntityDomainType<X> resolveHqlEntityReference(String entityName);
 
 	/**
-	 * Visitation over all managed types via Consumer
-	 */
-	void visitManagedTypes(Consumer<ManagedDomainType<?>> action);
-
-	/**
 	 * Same as {@link #managedType} except {@code null} is returned rather
 	 * than throwing an exception
 	 */
 	<X> ManagedDomainType<X> findManagedType(Class<X> cls);
 
 	/**
-	 * Visitation over all entity types via Consumer
-	 */
-	void visitEntityTypes(Consumer<EntityDomainType<?>> action);
-
-	/**
 	 * Same as {@link #entity} except {@code null} is returned rather
 	 * than throwing an exception
 	 */
 	<X> EntityDomainType<X> findEntityType(Class<X> cls);
-
-	void visitRootEntityTypes(Consumer<EntityDomainType<?>> action);
-
-	void visitEmbeddables(Consumer<EmbeddableDomainType<?>> action);
 
 	String qualifyImportableName(String queryName);
 

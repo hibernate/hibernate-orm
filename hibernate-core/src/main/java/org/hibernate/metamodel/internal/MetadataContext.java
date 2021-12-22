@@ -75,30 +75,30 @@ public class MetadataContext {
 	private final JpaMetamodel jpaMetamodel;
 	private final RuntimeModelCreationContext runtimeModelCreationContext;
 
-	private Set<MappedSuperclass> knownMappedSuperclasses;
-	private TypeConfiguration typeConfiguration;
+	private final Set<MappedSuperclass> knownMappedSuperclasses;
+	private final TypeConfiguration typeConfiguration;
 	private final JpaStaticMetaModelPopulationSetting jpaStaticMetaModelPopulationSetting;
 	private final AttributeFactory attributeFactory = new AttributeFactory( this );
 
-	private Map<Class<?>, EntityDomainType<?>> entityTypes = new HashMap<>();
-	private Map<String, EntityDomainType<?>> entityTypesByEntityName = new HashMap<>();
-	private Map<PersistentClass, EntityDomainType<?>> entityTypesByPersistentClass = new HashMap<>();
+	private final Map<Class<?>, EntityDomainType<?>> entityTypes = new HashMap<>();
+	private final Map<String, EntityDomainType<?>> entityTypesByEntityName = new HashMap<>();
+	private final Map<PersistentClass, EntityDomainType<?>> entityTypesByPersistentClass = new HashMap<>();
 
-	private Map<Class, EmbeddableDomainType<?>> embeddables = new HashMap<>();
-	private Map<Class, List<EmbeddableDomainType<?>>> embeddablesToProcess = new HashMap<>();
-	private Map<EmbeddableDomainType<?>, Component> componentByEmbeddable = new HashMap<>();
+	private final Map<Class<?>, EmbeddableDomainType<?>> embeddables = new HashMap<>();
+	private final Map<Class<?>, List<EmbeddableDomainType<?>>> embeddablesToProcess = new HashMap<>();
+	private final Map<EmbeddableDomainType<?>, Component> componentByEmbeddable = new HashMap<>();
 
-	private Map<MappedSuperclass, MappedSuperclassDomainType<?>> mappedSuperclassByMappedSuperclassMapping = new HashMap<>();
-	private Map<MappedSuperclassDomainType<?>, PersistentClass> mappedSuperClassTypeToPersistentClass = new HashMap<>();
+	private final Map<MappedSuperclass, MappedSuperclassDomainType<?>> mappedSuperclassByMappedSuperclassMapping = new HashMap<>();
+	private final Map<MappedSuperclassDomainType<?>, PersistentClass> mappedSuperClassTypeToPersistentClass = new HashMap<>();
 
 	//this list contains MappedSuperclass and EntityTypes ordered by superclass first
-	private List<Object> orderedMappings = new ArrayList<>();
+	private final List<Object> orderedMappings = new ArrayList<>();
 
 	/**
 	 * Stack of PersistentClass being processed. Last in the list is the highest in the stack.
 	 */
-	private List<PersistentClass> stackOfPersistentClassesBeingProcessed = new ArrayList<>();
-	private MappingMetamodel metamodel;
+	private final List<PersistentClass> stackOfPersistentClassesBeingProcessed = new ArrayList<>();
+	private final MappingMetamodel metamodel;
 
 	public MetadataContext(
 			JpaMetamodel jpaMetamodel,
@@ -144,7 +144,7 @@ public class MetadataContext {
 	}
 
 	public Set<EmbeddableDomainType<?>> getEmbeddableTypeSet() {
-		return new HashSet<>( embeddables.values() );
+		return componentByEmbeddable.keySet();
 	}
 
 	public Map<Class<?>, MappedSuperclassDomainType<?>> getMappedSuperclassTypeMap() {
@@ -153,7 +153,7 @@ public class MetadataContext {
 				mappedSuperclassByMappedSuperclassMapping.size()
 		);
 
-		for ( MappedSuperclassDomainType mappedSuperclassType : mappedSuperclassByMappedSuperclassMapping.values() ) {
+		for ( MappedSuperclassDomainType<?> mappedSuperclassType : mappedSuperclassByMappedSuperclassMapping.values() ) {
 			mappedSuperClassTypeMap.put(
 					mappedSuperclassType.getJavaType(),
 					mappedSuperclassType
@@ -164,7 +164,7 @@ public class MetadataContext {
 	}
 
 	public  void registerEntityType(PersistentClass persistentClass, EntityTypeImpl<?> entityType) {
-		if ( entityType.getBindableJavaType() != null ) {
+		if ( entityType.getBindableJavaType() != null && entityType.getBindableJavaType() != Map.class ) {
 			entityTypes.put( entityType.getBindableJavaType(), entityType );
 		}
 
@@ -240,7 +240,7 @@ public class MetadataContext {
 	 */
 	@SuppressWarnings({"unchecked", "WeakerAccess"})
 	public <E> EntityDomainType<E> locateEntityType(String entityName) {
-		return (EntityDomainType) entityTypesByEntityName.get( entityName );
+		return (EntityDomainType<E>) entityTypesByEntityName.get( entityName );
 	}
 
 	@SuppressWarnings("WeakerAccess")
@@ -264,7 +264,7 @@ public class MetadataContext {
 					LOG.trace( "Starting entity [" + safeMapping.getEntityName() + ']' );
 				}
 				try {
-					final EntityDomainType<?> jpaMapping = entityTypesByPersistentClass.get( safeMapping );
+					final EntityDomainType<Object> jpaMapping = (EntityDomainType<Object>) entityTypesByPersistentClass.get( safeMapping );
 
 					applyIdMetadata( safeMapping, jpaMapping );
 					applyVersionAttribute( safeMapping, jpaMapping );
@@ -282,16 +282,16 @@ public class MetadataContext {
 							// skip the version property, it was already handled previously.
 							continue;
 						}
-						final PersistentAttribute attribute = attributeFactory.buildAttribute(
+						final PersistentAttribute<Object, ?> attribute = attributeFactory.buildAttribute(
 								jpaMapping,
 								property
 						);
 						if ( attribute != null ) {
-							( (AttributeContainer) jpaMapping ).getInFlightAccess().addAttribute( attribute );
+							( (AttributeContainer<Object>) jpaMapping ).getInFlightAccess().addAttribute( attribute );
 						}
 					}
 
-					( (AttributeContainer) jpaMapping ).getInFlightAccess().finishUp();
+					( (AttributeContainer<?>) jpaMapping ).getInFlightAccess().finishUp();
 
 					if ( staticMetamodelScanEnabled ) {
 						populateStaticMetamodel( jpaMapping );
@@ -309,7 +309,7 @@ public class MetadataContext {
 					LOG.trace( "Starting mapped superclass [" + safeMapping.getMappedClass().getName() + ']' );
 				}
 				try {
-					final MappedSuperclassDomainType<?> jpaType = mappedSuperclassByMappedSuperclassMapping.get( safeMapping );
+					final MappedSuperclassDomainType<Object> jpaType = (MappedSuperclassDomainType<Object>) mappedSuperclassByMappedSuperclassMapping.get( safeMapping );
 
 					applyIdMetadata( safeMapping, jpaType );
 					applyVersionAttribute( safeMapping, jpaType );
@@ -321,13 +321,13 @@ public class MetadataContext {
 							// skip the version property, it was already handled previously.
 							continue;
 						}
-						final PersistentAttribute attribute = attributeFactory.buildAttribute( jpaType, property );
+						final PersistentAttribute<Object, ?> attribute = attributeFactory.buildAttribute( jpaType, property );
 						if ( attribute != null ) {
-							( (AttributeContainer) jpaType ).getInFlightAccess().addAttribute( attribute );
+							( (AttributeContainer<Object>) jpaType ).getInFlightAccess().addAttribute( attribute );
 						}
 					}
 
-					( (AttributeContainer) jpaType ).getInFlightAccess().finishUp();
+					( (AttributeContainer<?>) jpaType ).getInFlightAccess().finishUp();
 
 					if ( staticMetamodelScanEnabled ) {
 						populateStaticMetamodel( jpaType );
@@ -358,13 +358,13 @@ public class MetadataContext {
 				final Iterator<Property> propertyItr = component.getPropertyIterator();
 				while ( propertyItr.hasNext() ) {
 					final Property property = propertyItr.next();
-					final PersistentAttribute attribute = attributeFactory.buildAttribute( embeddable, property );
+					final PersistentAttribute<Object, ?> attribute = attributeFactory.buildAttribute( (ManagedDomainType<Object>) embeddable, property );
 					if ( attribute != null ) {
-						( ( AttributeContainer) embeddable ).getInFlightAccess().addAttribute( attribute );
+						( ( AttributeContainer<Object>) embeddable ).getInFlightAccess().addAttribute( attribute );
 					}
 				}
 
-				( ( AttributeContainer) embeddable ).getInFlightAccess().finishUp();
+				( ( AttributeContainer<?>) embeddable ).getInFlightAccess().finishUp();
 				embeddables.put( embeddable.getJavaType(), embeddable );
 
 				if ( staticMetamodelScanEnabled ) {
@@ -516,7 +516,7 @@ public class MetadataContext {
 		}
 		final String metamodelClassName = managedTypeClass.getName() + '_';
 		try {
-			final Class metamodelClass = Class.forName( metamodelClassName, true, managedTypeClass.getClassLoader() );
+			final Class<?> metamodelClass = Class.forName( metamodelClassName, true, managedTypeClass.getClassLoader() );
 			// we found the class; so populate it...
 			registerAttributes( metamodelClass, managedType );
 		}
@@ -532,9 +532,9 @@ public class MetadataContext {
 		}
 	}
 
-	private final Set<Class> processedMetamodelClasses = new HashSet<>();
+	private final Set<Class<?>> processedMetamodelClasses = new HashSet<>();
 
-	private <X> void registerAttributes(Class metamodelClass, ManagedDomainType<X> managedType) {
+	private <X> void registerAttributes(Class<?> metamodelClass, ManagedDomainType<X> managedType) {
 		if ( !processedMetamodelClasses.add( metamodelClass ) ) {
 			return;
 		}
@@ -564,7 +564,7 @@ public class MetadataContext {
 		}
 	}
 
-	private <X> void registerAttribute(Class metamodelClass, Attribute<X, ?> attribute) {
+	private <X> void registerAttribute(Class<?> metamodelClass, Attribute<X, ?> attribute) {
 		final String name = attribute.getName();
 		try {
 			// there is a shortcoming in the existing Hibernate code in terms of the way MappedSuperclass
@@ -667,7 +667,7 @@ public class MetadataContext {
 
 	public <J> BasicDomainType<J> resolveBasicType(Class<J> javaType) {
 		//noinspection unchecked
-		return (BasicDomainType) basicDomainTypeMap.computeIfAbsent(
+		return (BasicDomainType<J>) basicDomainTypeMap.computeIfAbsent(
 				javaType,
 				jt -> {
 					final JavaTypeRegistry registry =

@@ -6,7 +6,7 @@
  */
 
 
-package org.hibernate.test.annotations.manytoonewithformula;
+package org.hibernate.orm.test.annotations.manytoonewithformula;
 
 import java.io.Serializable;
 import jakarta.persistence.Column;

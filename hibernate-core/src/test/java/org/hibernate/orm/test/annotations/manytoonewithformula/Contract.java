@@ -5,7 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
-package org.hibernate.test.annotations.manytoonewithformula;
+package org.hibernate.orm.test.annotations.manytoonewithformula;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

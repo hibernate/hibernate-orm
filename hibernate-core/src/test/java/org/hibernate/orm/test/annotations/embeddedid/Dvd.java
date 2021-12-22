@@ -6,8 +6,9 @@
  */
 
 //$Id$
-package org.hibernate.test.annotations.type;
+package org.hibernate.orm.test.annotations.embeddedid;
 import jakarta.persistence.Column;
+import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
@@ -27,6 +28,7 @@ public class Dvd {
 	@GeneratedValue(generator = "custom-id")
 	@GenericGenerator(name = "custom-id", strategy = "org.hibernate.test.annotations.type.MyOidGenerator")
 //	@Type(type = "org.hibernate.test.annotations.type.MyOidType")
+	@EmbeddedId
 	@Columns(
 			columns = {
 			@Column(name = "high"),

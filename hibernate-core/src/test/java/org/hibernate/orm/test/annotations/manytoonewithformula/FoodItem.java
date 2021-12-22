@@ -5,9 +5,8 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
-package org.hibernate.test.annotations.manytoonewithformula;
+package org.hibernate.orm.test.annotations.manytoonewithformula;
 
-import java.io.Serializable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
@@ -21,28 +20,36 @@ import org.hibernate.annotations.JoinFormula;
  * @author Sharath Reddy
  */
 @Entity
-public class Company implements Serializable {
-	
-	private static final long serialVersionUID = 1L;
-	private int id;
-	private Person person;
+public class FoodItem {
+	private Integer id;
+	private String item;
+	private Menu order;
 	
 	@Id @GeneratedValue
-	public int getId() {
+	public Integer getId() {
 		return id;
 	}
-	public void setId(int id) {
+
+	public void setId(Integer id) {
 		this.id = id;
 	}
-	
+
+	public String getItem() {
+		return item;
+	}
+
+	public void setItem(String item) {
+		this.item = item;
+	}
+
 	@ManyToOne
-	@JoinColumnOrFormula(column=@JoinColumn(name="id", referencedColumnName="company_id", updatable=false, insertable=false))
-	@JoinColumnOrFormula(formula=@JoinFormula(value="'T'", referencedColumnName="is_default"))
-	public Person getDefaultContactPerson() {
-		return person;
+	@JoinColumnOrFormula(column=@JoinColumn(name="order_nbr", referencedColumnName="order_nbr"))
+	@JoinColumnOrFormula(formula=@JoinFormula(value="'F'", referencedColumnName="is_default"))
+	public Menu getOrder() {
+		return order;
 	}
-	public void setDefaultContactPerson(Person person) {
-		this.person = person;
+
+	public void setOrder(Menu order) {
+		this.order = order;
 	}
-	
 }

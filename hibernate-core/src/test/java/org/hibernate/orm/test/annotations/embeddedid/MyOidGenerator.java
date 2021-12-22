@@ -6,7 +6,7 @@
  */
 
 //$Id$
-package org.hibernate.test.annotations.type;
+package org.hibernate.orm.test.annotations.embeddedid;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;

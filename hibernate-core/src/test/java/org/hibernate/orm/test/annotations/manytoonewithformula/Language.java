@@ -5,49 +5,40 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
-package org.hibernate.test.annotations.manytoonewithformula;
+package org.hibernate.orm.test.annotations.manytoonewithformula;
+import java.io.Serializable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+/**
+ * @author Sharath Reddy
+ */
 @Entity
-@Table(name = "MANUFACTURER")
-public class Manufacturer {
+@Table(name="`Language`")
+public class Language implements Serializable {
 
-	private ManufacturerId id;
-
+	private static final long serialVersionUID = 1L;
+	
 	private String name;
+	private String code;
 
-	public Manufacturer(ManufacturerId id, String name) {
-		this.id = id;
-		this.name = name;
+	@Id
+	@Column(name="code")
+	public String getCode() {
+		return code;
 	}
-
-	public Manufacturer() {
+	public void setCode(String code) {
+		this.code = code;
 	}
-
-	@Column(name = "MFG_NAME")
+	
+	@Column(name="name")
 	public String getName() {
 		return name;
 	}
-
 	public void setName(String name) {
 		this.name = name;
 	}
-
-	@Id
-	public ManufacturerId getId() {
-		return id;
-	}
-
-	public void setId(ManufacturerId id) {
-		this.id = id;
-	}
-
-	@Override
-	public String toString() {
-		return name;
-	}
+	
 }
-

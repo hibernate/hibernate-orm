@@ -1118,6 +1118,15 @@ XML configuration file to use to configure Hibernate.
 If true, the persistence context will be discarded (think `clear()` when the method is called).
 Otherwise, the persistence context will stay alive till the transaction completion: all objects will remain managed, and any change will be synchronized with the database (default to false, ie wait for transaction completion).
 
+`*hibernate.ejb.metamodel.population*` (e.g. `enabled` or `disabled`, or `ignoreUnsupported` (default value))::
+Setting that indicates whether to build the Jakarta Persistence types.
++
+Accepts three values:
++
+enabled::: Do the build.
+disabled::: Do not do the build.
+ignoreUnsupported::: Do the build, but ignore any non-Jakarta Persistence features that would otherwise result in a failure (e.g. `@Any` annotation).
+
 `*hibernate.jpa.static_metamodel.population*` (e.g. `enabled` or `disabled`, or `skipUnsupported` (default value))::
 Setting that controls whether we seek out Jakarta Persistence _static metamodel_ classes and populate them.
 +

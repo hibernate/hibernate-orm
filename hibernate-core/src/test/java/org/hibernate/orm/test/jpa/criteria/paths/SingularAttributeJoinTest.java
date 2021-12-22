@@ -24,7 +24,7 @@ import org.junit.jupiter.api.Test;
  * @author Brad Koehn
  */
 @Jpa(
-        integrationSettings = { @Setting(name = AvailableSettings.STATIC_METAMODEL_POPULATION, value = "enabled") },
+        integrationSettings = { @Setting(name = AvailableSettings.JPA_METAMODEL_POPULATION, value = "enabled") },
         xmlMappings = { "org/hibernate/orm/test/jpa/criteria/paths/PolicyAndDistribution.hbm.xml" }
 )
 public class SingularAttributeJoinTest {

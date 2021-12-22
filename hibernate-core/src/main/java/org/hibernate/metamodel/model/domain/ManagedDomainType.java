@@ -41,8 +41,8 @@ public interface ManagedDomainType<J> extends AllowableParameterType<J>, Managed
 
 	void addSubType(ManagedDomainType subType);
 
-	void visitAttributes(Consumer<PersistentAttribute<J,?>> action);
-	void visitDeclaredAttributes(Consumer<PersistentAttribute<J,?>> action);
+	void visitAttributes(Consumer<? super PersistentAttribute<J, ?>> action);
+	void visitDeclaredAttributes(Consumer<? super PersistentAttribute<J, ?>> action);
 
 	@Override
 	PersistentAttribute<? super J,?> getAttribute(String name);

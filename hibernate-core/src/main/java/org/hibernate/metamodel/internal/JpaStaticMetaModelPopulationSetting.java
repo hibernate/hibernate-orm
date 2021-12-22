@@ -46,7 +46,7 @@ public enum JpaStaticMetaModelPopulationSetting {
 		}
 	}
 
-	public static JpaStaticMetaModelPopulationSetting determineJpaMetaModelPopulationSetting(Map configurationValues) {
+	public static JpaStaticMetaModelPopulationSetting determineJpaStaticMetaModelPopulationSetting(Map configurationValues) {
 		return parse( determineSetting( configurationValues ) );
 	}
 

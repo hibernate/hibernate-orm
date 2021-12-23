@@ -17,7 +17,7 @@ import org.hibernate.query.results.BasicValuedFetchBuilder;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.ResultsHelper;
-import org.hibernate.query.results.SqlSelectionImpl;
+import org.hibernate.query.results.ResultSetMappingSqlSelection;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -79,7 +79,7 @@ public class ImplicitFetchBuilderBasic implements ImplicitFetchBuilder, BasicVal
 				processingState -> {
 					final int jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( column );
 					final int valuesArrayPosition = jdbcPositionToValuesArrayPosition( jdbcPosition );
-					return new SqlSelectionImpl( valuesArrayPosition, fetchable );
+					return new ResultSetMappingSqlSelection( valuesArrayPosition, fetchable );
 				}
 		);
 

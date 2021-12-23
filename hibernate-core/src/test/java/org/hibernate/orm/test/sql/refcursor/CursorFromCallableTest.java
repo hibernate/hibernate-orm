@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.sql.refcursor;
+package org.hibernate.orm.test.sql.refcursor;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -68,7 +68,7 @@ public class CursorFromCallableTest extends BaseCoreFunctionalTestCase {
 
 		Assert.assertEquals(
 				Arrays.asList( new NumValue( 1, "Line 1" ), new NumValue( 2, "Line 2" ) ),
-				session.getNamedQuery( "NumValue.getSomeValues" ).list()
+				session.createNamedStoredProcedureQuery( "NumValue.getSomeValues" ).getResultList()
 		);
 
 		session.getTransaction().commit();
@@ -86,12 +86,12 @@ public class CursorFromCallableTest extends BaseCoreFunctionalTestCase {
 		// for ( int i = 0; i < maxCursors + 10; ++i ) { named_query_execution }
 		Assert.assertEquals(
 				Arrays.asList( new NumValue( 1, "Line 1" ), new NumValue( 2, "Line 2" ) ),
-				session.getNamedQuery( "NumValue.getSomeValues" ).list()
+				session.createNamedStoredProcedureQuery( "NumValue.getSomeValues" ).getResultList()
 		);
 		JdbcCoordinator jdbcCoordinator = ( (SessionImplementor) session ).getJdbcCoordinator();
 		Assert.assertFalse(
 				"Prepared statement and result set should be released after query execution.",
-				jdbcCoordinator.getResourceRegistry().hasRegisteredResources()
+				jdbcCoordinator.getLogicalConnection().getResourceRegistry().hasRegisteredResources()
 		);
 		session.getTransaction().commit();
 		session.close();
@@ -115,7 +115,7 @@ public class CursorFromCallableTest extends BaseCoreFunctionalTestCase {
 				finally {
 					if ( preparedStatement != null ) {
 						try {
-							jdbcCoordinator.getResourceRegistry().release( preparedStatement );
+							jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( preparedStatement );
 						}
 						catch ( Throwable ignore ) {
 							// ignore...

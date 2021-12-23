@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.results;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
@@ -13,6 +14,7 @@ import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlExpressionAccess;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -23,21 +25,20 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @author Steve Ebersole
  */
-public class SqlSelectionImpl implements SqlSelection, Expression, SqlExpressionAccess {
+public class ResultSetMappingSqlSelection implements SqlSelection, Expression, SqlExpressionAccess {
 	private final int valuesArrayPosition;
 	private final BasicValuedMapping valueMapping;
 	private final JdbcMapping jdbcMapping;
 
-	public SqlSelectionImpl(int valuesArrayPosition, BasicValuedMapping valueMapping) {
+	public ResultSetMappingSqlSelection(int valuesArrayPosition, BasicValuedMapping valueMapping) {
 		this.valuesArrayPosition = valuesArrayPosition;
 		this.valueMapping = valueMapping;
 		this.jdbcMapping = valueMapping.getJdbcMapping();
 	}
 
-	public SqlSelectionImpl(int valuesArrayPosition, JdbcMapping jdbcMapping) {
+	public ResultSetMappingSqlSelection(int valuesArrayPosition, JdbcMapping jdbcMapping) {
 		this.valuesArrayPosition = valuesArrayPosition;
 		this.jdbcMapping = jdbcMapping;
-
 		this.valueMapping = null;
 	}
 
@@ -56,8 +57,18 @@ public class SqlSelectionImpl implements SqlSelection, Expression, SqlExpression
 	}
 
 	@Override
+	public SqlSelection resolve(JdbcValuesMetadata jdbcResultsMetadata, SessionFactoryImplementor sessionFactory) {
+		return this;
+	}
+
+	@Override
 	public int getValuesArrayPosition() {
 		return valuesArrayPosition;
+	}
+
+	@Override
+	public int getJdbcResultSetIndex() {
+		return valuesArrayPosition + 1;
 	}
 
 	@Override

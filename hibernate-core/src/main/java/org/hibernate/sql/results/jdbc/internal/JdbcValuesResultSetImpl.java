@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.results.jdbc.internal;
 
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
 
@@ -13,6 +14,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.cache.spi.QueryResultsCache;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.exec.ExecutionException;
@@ -274,13 +276,8 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 			return false;
 		}
 
-		try {
-			readCurrentRowValues();
-			return true;
-		}
-		catch (SQLException e) {
-			throw makeExecutionException( "Error reading ResultSet row values", e );
-		}
+		readCurrentRowValues();
+		return true;
 	}
 
 	private ExecutionException makeExecutionException(String message, SQLException cause) {
@@ -293,13 +290,15 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 		);
 	}
 
-	private void readCurrentRowValues() throws SQLException {
+	private void readCurrentRowValues() {
+		final ResultSet resultSet = resultSetAccess.getResultSet();
+		final SharedSessionContractImplementor session = executionContext.getSession();
 		for ( final SqlSelection sqlSelection : sqlSelections ) {
 			try {
 				currentRowJdbcValues[ sqlSelection.getValuesArrayPosition() ] = sqlSelection.getJdbcValueExtractor().extract(
-						resultSetAccess.getResultSet(),
+						resultSet,
 						sqlSelection.getJdbcResultSetIndex(),
-						executionContext.getSession()
+						session
 				);
 			}
 			catch (Exception e) {

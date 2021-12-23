@@ -23,8 +23,7 @@ import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
-import org.hibernate.query.results.ResultBuilder;
-import org.hibernate.query.results.SqlSelectionImpl;
+import org.hibernate.query.results.ResultSetMappingSqlSelection;
 import org.hibernate.query.results.TableGroupImpl;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBaseConstant;
@@ -278,7 +277,7 @@ public class DynamicResultBuilderEntityStandard
 						state -> {
 							final int jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( columnAlias );
 							final int valuesArrayPosition = jdbcPosition - 1;
-							return new SqlSelectionImpl( valuesArrayPosition, jdbcMapping );
+							return new ResultSetMappingSqlSelection( valuesArrayPosition, jdbcMapping );
 						}
 				),
 				jdbcMapping.getMappedJavaTypeDescriptor(),

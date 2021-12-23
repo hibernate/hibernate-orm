@@ -8,12 +8,17 @@ package org.hibernate.sql.results.internal;
 
 import java.util.Objects;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.SqlExpressable;
+import org.hibernate.query.results.ResultSetMappingSqlSelection;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlExpressionAccess;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
+import org.hibernate.type.BasicType;
+import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.descriptor.ValueExtractor;
 
 /**
@@ -54,8 +59,6 @@ public class SqlSelectionImpl implements SqlSelection, SqlExpressionAccess {
 	@Override
 	public ValueExtractor getJdbcValueExtractor() {
 		return ( (SqlExpressable) sqlExpression.getExpressionType() ).getJdbcMapping().getJdbcValueExtractor();
-//		return jdbcValueExtractor;
-//		return jdbcMapping.getJdbcValueExtractor();
 	}
 
 	@Override
@@ -74,8 +77,31 @@ public class SqlSelectionImpl implements SqlSelection, SqlExpressionAccess {
 	}
 
 	@Override
+	public Expression getSqlExpression() {
+		return sqlExpression;
+	}
+
+	@Override
 	public void accept(SqlAstWalker interpreter) {
 		sqlExpression.accept( interpreter );
+	}
+
+	@Override
+	public SqlSelection resolve(JdbcValuesMetadata jdbcResultsMetadata, SessionFactoryImplementor sessionFactory) {
+		if ( sqlExpression.getExpressionType() instanceof JavaObjectType ) {
+			final BasicType<Object> resolvedType = jdbcResultsMetadata.resolveType(
+					jdbcPosition,
+					null,
+					sessionFactory
+			);
+			return new ResolvedSqlSelection(
+					jdbcPosition,
+					valuesArrayPosition,
+					sqlExpression,
+					resolvedType
+			);
+		}
+		return this;
 	}
 
 	@Override
@@ -86,19 +112,14 @@ public class SqlSelectionImpl implements SqlSelection, SqlExpressionAccess {
 		if ( o == null || getClass() != o.getClass() ) {
 			return false;
 		}
-		SqlSelectionImpl that = (SqlSelectionImpl) o;
-		return jdbcPosition == that.jdbcPosition &&
-				valuesArrayPosition == that.valuesArrayPosition &&
-				Objects.equals( sqlExpression, that.sqlExpression );
+		final SqlSelection that = (SqlSelection) o;
+		return jdbcPosition == that.getJdbcResultSetIndex() &&
+				valuesArrayPosition == that.getValuesArrayPosition() &&
+				Objects.equals( sqlExpression, that.getExpression() );
 	}
 
 	@Override
 	public int hashCode() {
 		return Objects.hash( jdbcPosition, valuesArrayPosition, sqlExpression );
-	}
-
-	@Override
-	public Expression getSqlExpression() {
-		return sqlExpression;
 	}
 }

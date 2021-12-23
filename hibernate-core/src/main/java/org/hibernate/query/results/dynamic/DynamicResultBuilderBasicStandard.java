@@ -11,9 +11,8 @@ import java.util.function.BiFunction;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
-import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.ResultsHelper;
-import org.hibernate.query.results.SqlSelectionImpl;
+import org.hibernate.query.results.ResultSetMappingSqlSelection;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -149,7 +148,7 @@ public class DynamicResultBuilderBasicStandard implements DynamicResultBuilderBa
 								sessionFactory
 						);
 					}
-					return new SqlSelectionImpl( valuesArrayPosition, (BasicValuedMapping) basicType );
+					return new ResultSetMappingSqlSelection( valuesArrayPosition, (BasicValuedMapping) basicType );
 				}
 		);
 

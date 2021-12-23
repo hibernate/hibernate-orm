@@ -22,7 +22,7 @@ import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.FromClauseAccessImpl;
 import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.ResultsHelper;
-import org.hibernate.query.results.SqlSelectionImpl;
+import org.hibernate.query.results.ResultSetMappingSqlSelection;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -161,7 +161,7 @@ public class CompleteResultBuilderCollectionStandard implements CompleteResultBu
 								final BasicValuedMapping basicType = (BasicValuedMapping) selectableMapping.getJdbcMapping();
 								final int valuesArrayPosition = ResultsHelper.jdbcPositionToValuesArrayPosition(
 										jdbcPosition );
-								return new SqlSelectionImpl( valuesArrayPosition, basicType );
+								return new ResultSetMappingSqlSelection( valuesArrayPosition, basicType );
 							}
 					),
 					selectableMapping.getJdbcMapping().getMappedJavaTypeDescriptor(),

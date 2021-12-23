@@ -76,6 +76,9 @@ public class SelfRenderingFunctionSqlAstExpression
 
 	@Override
 	public JdbcMappingContainer getExpressionType() {
+		if ( type instanceof SqlExpressable ) {
+			return (JdbcMappingContainer) type;
+		}
 		return expressable;
 	}
 
@@ -93,35 +96,13 @@ public class SelfRenderingFunctionSqlAstExpression
 				jdbcPosition,
 				valuesArrayPosition,
 				this
-		) {
-			@Override
-			public ValueExtractor getJdbcValueExtractor() {
-				// the superclass implementation calls
-				// getExpressionType() on us to get the
-				// MappingModelExpressable, which we
-				// might not have, due to the code in
-				// SelfRenderingFunctionSqlAstExpression
-				if ( type instanceof SqlExpressable ) {
-					return ( (SqlExpressable) type ).getJdbcMapping().getJdbcValueExtractor();
-				}
-				else if ( expressable != null ) {
-					return super.getJdbcValueExtractor();
-				}
-				else {
-					throw new SemanticException("function return type is unknown, so function cannot occur in select");
-				}
-			}
-		};
+		);
 	}
-
 
 	@Override
 	public DomainResult createDomainResult(
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		if ( type==null ) {
-			throw new SemanticException("function return type is unknown, so function cannot occur in select");
-		}
 		return new BasicResult(
 				creationState.getSqlAstCreationState().getSqlExpressionResolver()
 						.resolveSqlSelection(
@@ -190,8 +171,7 @@ public class SelfRenderingFunctionSqlAstExpression
 			return ( (SqlExpressable) type ).getJdbcMapping();
 		}
 		else {
-			//TODO: do something else if we have a MappingModelExpressable?
-			throw new SemanticException("function return type is unknown, so function cannot occur in select");
+			return ( (SqlExpressable) expressable ).getJdbcMapping();
 		}
 	}
 

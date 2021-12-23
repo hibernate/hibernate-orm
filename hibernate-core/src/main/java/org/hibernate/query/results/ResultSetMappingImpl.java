@@ -19,7 +19,6 @@ import java.util.function.Consumer;
 
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
-import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -332,7 +331,7 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 
 		final String name = jdbcResultsMetadata.resolveColumnName( jdbcPosition );
 
-		final SqlSelectionImpl sqlSelection = new SqlSelectionImpl( valuesArrayPosition, (BasicValuedMapping) jdbcMapping );
+		final ResultSetMappingSqlSelection sqlSelection = new ResultSetMappingSqlSelection( valuesArrayPosition, (BasicValuedMapping) jdbcMapping );
 		sqlSelectionConsumer.accept( sqlSelection );
 
 		return new BasicResult( valuesArrayPosition, name, jdbcMapping.getJavaTypeDescriptor() );

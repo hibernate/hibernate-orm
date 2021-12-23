@@ -12,8 +12,7 @@ import java.util.function.BiFunction;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.query.NativeQuery;
-import org.hibernate.query.results.ResultBuilder;
-import org.hibernate.query.results.SqlSelectionImpl;
+import org.hibernate.query.results.ResultSetMappingSqlSelection;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -86,7 +85,7 @@ public class DynamicResultBuilderAttribute implements DynamicResultBuilder, Nati
 						state -> {
 							final int resultSetPosition = jdbcResultsMetadata.resolveColumnPosition( columnAlias );
 							final int valuesArrayPosition = resultSetPosition - 1;
-							return new SqlSelectionImpl( valuesArrayPosition, attributeMapping );
+							return new ResultSetMappingSqlSelection( valuesArrayPosition, attributeMapping );
 						}
 				),
 				attributeMapping.getJavaTypeDescriptor(),

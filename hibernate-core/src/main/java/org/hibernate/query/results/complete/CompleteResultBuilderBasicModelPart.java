@@ -12,7 +12,7 @@ import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.ResultBuilder;
-import org.hibernate.query.results.SqlSelectionImpl;
+import org.hibernate.query.results.ResultSetMappingSqlSelection;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -83,7 +83,7 @@ public class CompleteResultBuilderBasicModelPart
 						processingState -> {
 							final int jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( columnAlias );
 							final int valuesArrayPosition = jdbcPositionToValuesArrayPosition( jdbcPosition );
-							return new SqlSelectionImpl( valuesArrayPosition, modelPart );
+							return new ResultSetMappingSqlSelection( valuesArrayPosition, modelPart );
 						}
 				),
 				modelPart.getJavaTypeDescriptor(),

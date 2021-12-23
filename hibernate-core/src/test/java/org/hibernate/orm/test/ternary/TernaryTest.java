@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.ternary;
+package org.hibernate.orm.test.ternary;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -91,7 +91,8 @@ public class TernaryTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		t = s.beginTransaction();
 		l = s.createQuery("from Employee e left join fetch e.managerBySite").list();
-		assertEquals( l.size(), 5 );
+		// starting from ORM 6.0 we don't have duplicates from entity join
+		assertEquals( l.size(), 4 );
 		Set set = new HashSet(l);
 		assertEquals( set.size(), 4 );
 		Iterator iter = set.iterator();

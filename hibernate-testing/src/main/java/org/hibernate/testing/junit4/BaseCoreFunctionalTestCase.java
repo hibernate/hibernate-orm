@@ -253,7 +253,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	}
 
 	protected String getBaseForMappings() {
-		return "org/hibernate/test/";
+		return "org/hibernate/orm/test/";
 	}
 
 	protected static final Class<?>[] NO_CLASSES = new Class[0];

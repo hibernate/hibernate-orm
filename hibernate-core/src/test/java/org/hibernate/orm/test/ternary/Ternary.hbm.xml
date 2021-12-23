@@ -10,7 +10,7 @@
 	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping
-	package="org.hibernate.test.ternary">
+	package="org.hibernate.orm.test.ternary">
 
 	<class name="Employee">
 		<id name="name"/>

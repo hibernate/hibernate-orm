@@ -25,7 +25,7 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.ResultsHelper;
-import org.hibernate.query.results.SqlSelectionImpl;
+import org.hibernate.query.results.ResultSetMappingSqlSelection;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAliasBaseConstant;
@@ -214,7 +214,7 @@ public class DynamicFetchBuilderLegacy implements DynamicFetchBuilder, NativeQue
 						state -> {
 							final int jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( columnAlias );
 							final int valuesArrayPosition = jdbcPosition - 1;
-							return new SqlSelectionImpl( valuesArrayPosition, jdbcMapping );
+							return new ResultSetMappingSqlSelection( valuesArrayPosition, jdbcMapping );
 						}
 				),
 				jdbcMapping.getMappedJavaTypeDescriptor(),

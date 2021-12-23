@@ -44,11 +44,6 @@ public class QueryHints {
 	public static final String CACHEABLE = "org.hibernate.cacheable";
 
 	/**
-	 * Is the query callable?  Note: only valid for named native sql queries.
-	 */
-	public static final String CALLABLE = "org.hibernate.callable";
-
-	/**
 	 * Defines a comment to be applied to the SQL sent to the database.
 	 *
 	 * @see org.hibernate.query.Query#setComment

@@ -61,7 +61,5 @@ public interface SqlSelection extends SqlAstNode {
 
 	void accept(SqlAstWalker sqlAstWalker);
 
-	default void prepare(JdbcValuesMetadata jdbcResultsMetadata, SessionFactoryImplementor sessionFactory) {
-		// By default we have nothing to do.  Here as a hook for NativeQuery mapping resolutions
-	}
+	SqlSelection resolve(JdbcValuesMetadata jdbcResultsMetadata, SessionFactoryImplementor sessionFactory);
 }

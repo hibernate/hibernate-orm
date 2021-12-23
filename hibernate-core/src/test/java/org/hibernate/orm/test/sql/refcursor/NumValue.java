@@ -4,24 +4,29 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.sql.refcursor;
+package org.hibernate.orm.test.sql.refcursor;
 
 import java.io.Serializable;
+import java.sql.ResultSet;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.NamedNativeQueries;
-import jakarta.persistence.NamedNativeQuery;
-import jakarta.persistence.QueryHint;
+import jakarta.persistence.NamedStoredProcedureQuery;
+import jakarta.persistence.ParameterMode;
+import jakarta.persistence.StoredProcedureParameter;
 import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "BOT_NUMVALUE")
-@NamedNativeQueries({
-		@NamedNativeQuery(name = "NumValue.getSomeValues",
-				query = "{ ? = call f_test_return_cursor() }",
-				resultClass = NumValue.class, hints = { @QueryHint(name = "org.hibernate.callable", value = "true") })
-})
+@NamedStoredProcedureQuery(
+		name = "NumValue.getSomeValues",
+		procedureName = "f_test_return_cursor",
+		resultClasses = NumValue.class,
+		parameters = {
+				@StoredProcedureParameter(mode = ParameterMode.REF_CURSOR, type = ResultSet.class)
+		}
+)
 public class NumValue implements Serializable {
 	@Id
 	@Column(name = "BOT_NUM", nullable = false)

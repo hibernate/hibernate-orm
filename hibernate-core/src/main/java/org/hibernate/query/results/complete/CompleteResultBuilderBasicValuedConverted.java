@@ -15,7 +15,7 @@ import org.hibernate.metamodel.model.convert.internal.JpaAttributeConverterImpl;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.ResultsHelper;
-import org.hibernate.query.results.SqlSelectionImpl;
+import org.hibernate.query.results.ResultSetMappingSqlSelection;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -128,7 +128,7 @@ public class CompleteResultBuilderBasicValuedConverted<O,R> implements CompleteR
 							}
 
 							final int valuesArrayPosition = ResultsHelper.jdbcPositionToValuesArrayPosition( jdbcPosition );
-							return new SqlSelectionImpl( valuesArrayPosition, underlyingMapping );
+							return new ResultSetMappingSqlSelection( valuesArrayPosition, underlyingMapping );
 						}
 				),
 				valueConverter.getDomainJavaDescriptor(),

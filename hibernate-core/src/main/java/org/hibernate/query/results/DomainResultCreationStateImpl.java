@@ -69,7 +69,7 @@ public class DomainResultCreationStateImpl
 
 	private final JdbcValuesMetadata jdbcResultsMetadata;
 	private final Consumer<SqlSelection> sqlSelectionConsumer;
-	private final Map<String, SqlSelectionImpl> sqlSelectionMap = new HashMap<>();
+	private final Map<String, ResultSetMappingSqlSelection> sqlSelectionMap = new HashMap<>();
 	private boolean allowPositionalSelections = true;
 
 	private final SqlAliasBaseManager sqlAliasBaseManager;
@@ -258,16 +258,16 @@ public class DomainResultCreationStateImpl
 	public Expression resolveSqlExpression(
 			String key,
 			Function<SqlAstProcessingState, Expression> creator) {
-		final SqlSelectionImpl existing = sqlSelectionMap.get( key );
+		final ResultSetMappingSqlSelection existing = sqlSelectionMap.get( key );
 		if ( existing != null ) {
 			return existing;
 		}
 
 		final Expression created = creator.apply( this );
 
-		if ( created instanceof SqlSelectionImpl ) {
-			sqlSelectionMap.put( key, (SqlSelectionImpl) created );
-			sqlSelectionConsumer.accept( (SqlSelectionImpl) created );
+		if ( created instanceof ResultSetMappingSqlSelection ) {
+			sqlSelectionMap.put( key, (ResultSetMappingSqlSelection) created );
+			sqlSelectionConsumer.accept( (ResultSetMappingSqlSelection) created );
 		}
 		else if ( created instanceof ColumnReference ) {
 			final ColumnReference columnReference = (ColumnReference) created;
@@ -275,7 +275,7 @@ public class DomainResultCreationStateImpl
 			final int jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( columnExpression );
 			final int valuesArrayPosition = ResultsHelper.jdbcPositionToValuesArrayPosition( jdbcPosition );
 
-			final SqlSelectionImpl sqlSelection = new SqlSelectionImpl(
+			final ResultSetMappingSqlSelection sqlSelection = new ResultSetMappingSqlSelection(
 					valuesArrayPosition,
 					columnReference.getJdbcMapping()
 			);
@@ -297,7 +297,7 @@ public class DomainResultCreationStateImpl
 		if ( expression == null ) {
 			throw new IllegalArgumentException( "Expression cannot be null" );
 		}
-		assert expression instanceof SqlSelectionImpl;
+		assert expression instanceof ResultSetMappingSqlSelection;
 		return (SqlSelection) expression;
 	}
 

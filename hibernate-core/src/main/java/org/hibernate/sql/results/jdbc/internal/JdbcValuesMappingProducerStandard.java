@@ -6,8 +6,8 @@
  */
 package org.hibernate.sql.results.jdbc.internal;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -26,11 +26,11 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
  * @author Steve Ebersole
  */
 public class JdbcValuesMappingProducerStandard implements JdbcValuesMappingProducer {
+
 	private final JdbcValuesMapping resolvedMapping;
 
-
 	public JdbcValuesMappingProducerStandard(List<SqlSelection> sqlSelections, List<DomainResult<?>> domainResults) {
-		resolvedMapping = new StandardJdbcValuesMapping( sqlSelections, domainResults );
+		this.resolvedMapping = new StandardJdbcValuesMapping( sqlSelections, domainResults );
 	}
 
 	@Override
@@ -42,10 +42,21 @@ public class JdbcValuesMappingProducerStandard implements JdbcValuesMappingProdu
 	public JdbcValuesMapping resolve(
 			JdbcValuesMetadata jdbcResultsMetadata,
 			SessionFactoryImplementor sessionFactory) {
-		for ( SqlSelection sqlSelection : resolvedMapping.getSqlSelections() ) {
-			sqlSelection.prepare( jdbcResultsMetadata, sessionFactory );
+		final List<SqlSelection> sqlSelections = resolvedMapping.getSqlSelections();
+		List<SqlSelection> resolvedSelections = null;
+		for ( int i = 0; i < sqlSelections.size(); i++ ) {
+			final SqlSelection sqlSelection = sqlSelections.get( i );
+			final SqlSelection resolvedSelection = sqlSelection.resolve( jdbcResultsMetadata, sessionFactory );
+			if ( resolvedSelection != sqlSelection ) {
+				if ( resolvedSelections == null ) {
+					resolvedSelections = new ArrayList<>( sqlSelections );
+				}
+				resolvedSelections.set( i, resolvedSelection );
+			}
 		}
-
-		return resolvedMapping;
+		if ( resolvedSelections == null ) {
+			return resolvedMapping;
+		}
+		return new StandardJdbcValuesMapping( resolvedSelections, resolvedMapping.getDomainResults() );
 	}
 }

@@ -18,9 +18,8 @@ import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
-import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.ResultsHelper;
-import org.hibernate.query.results.SqlSelectionImpl;
+import org.hibernate.query.results.ResultSetMappingSqlSelection;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
@@ -104,7 +103,7 @@ public class DynamicFetchBuilderStandard
 							state -> {
 								final int resultSetPosition = jdbcResultsMetadata.resolveColumnPosition( columnAlias );
 								final int valuesArrayPosition = resultSetPosition - 1;
-								return new SqlSelectionImpl( valuesArrayPosition, selectableMapping.getJdbcMapping() );
+								return new ResultSetMappingSqlSelection( valuesArrayPosition, selectableMapping.getJdbcMapping() );
 							}
 					),
 					selectableMapping.getJdbcMapping().getMappedJavaTypeDescriptor(),

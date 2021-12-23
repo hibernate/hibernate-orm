@@ -13,7 +13,7 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.FetchBuilder;
-import org.hibernate.query.results.SqlSelectionImpl;
+import org.hibernate.query.results.ResultSetMappingSqlSelection;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -88,7 +88,7 @@ public class CompleteFetchBuilderEntityValuedModelPart
 									processingState -> {
 										final int jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( columnAlias );
 										final int valuesArrayPosition = jdbcPositionToValuesArrayPosition( jdbcPosition );
-										return new SqlSelectionImpl( valuesArrayPosition, selectableMapping.getJdbcMapping() );
+										return new ResultSetMappingSqlSelection( valuesArrayPosition, selectableMapping.getJdbcMapping() );
 									}
 							),
 							modelPart.getJavaTypeDescriptor(),

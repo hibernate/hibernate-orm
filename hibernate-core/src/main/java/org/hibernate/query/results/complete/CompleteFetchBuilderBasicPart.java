@@ -17,7 +17,7 @@ import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.MissingSqlSelectionException;
 import org.hibernate.query.results.PositionalSelectionsNotAllowedException;
-import org.hibernate.query.results.SqlSelectionImpl;
+import org.hibernate.query.results.ResultSetMappingSqlSelection;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
@@ -108,7 +108,7 @@ public class CompleteFetchBuilderBasicPart implements CompleteFetchBuilder, Basi
 		// we just care about the registration here.  The ModelPart will find it later
 		creationState.resolveSqlExpression(
 				createColumnReferenceKey( tableReference, mappedColumn ),
-				processingState -> new SqlSelectionImpl( valuesArrayPosition, referencedModelPart )
+				processingState -> new ResultSetMappingSqlSelection( valuesArrayPosition, referencedModelPart )
 		);
 
 		return (BasicFetch<?>) parent.generateFetchableFetch(

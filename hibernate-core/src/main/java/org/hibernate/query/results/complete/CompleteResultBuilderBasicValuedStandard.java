@@ -11,11 +11,10 @@ import java.util.function.BiFunction;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.ResultsHelper;
-import org.hibernate.query.results.SqlSelectionImpl;
+import org.hibernate.query.results.ResultSetMappingSqlSelection;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
@@ -135,7 +134,7 @@ public class CompleteResultBuilderBasicValuedStandard implements CompleteResultB
 							}
 
 							final int valuesArrayPosition = ResultsHelper.jdbcPositionToValuesArrayPosition( jdbcPosition );
-							return new SqlSelectionImpl( valuesArrayPosition, basicType );
+							return new ResultSetMappingSqlSelection( valuesArrayPosition, basicType );
 						}
 				),
 				explicitJavaTypeDescriptor,

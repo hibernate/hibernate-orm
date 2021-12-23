@@ -10,26 +10,22 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.PathException;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmFrom;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedRoot;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedRoot;
-import org.hibernate.sql.results.graph.DomainResult;
-import org.hibernate.sql.results.graph.DomainResultCreationState;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E>, DomainResultProducer<E> {
+public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 
 	private final boolean allowJoins;
 	private List<SqmJoin<?, ?>> orderedJoins;
@@ -180,35 +176,4 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E>, Doma
 		throw new UnsupportedOperationException( "Root treats can not be aliased" );
 	}
 
-	@Override
-	public DomainResult<E> createDomainResult(
-			String resultVariable,
-			DomainResultCreationState creationState) {
-		final String entityName = getReferencedPathSource().getHibernateEntityName();
-		final EntityPersister entityDescriptor = creationState.getSqlAstCreationState()
-				.getCreationContext()
-				.getDomainModel()
-				.getEntityDescriptor( entityName );
-		return entityDescriptor.createDomainResult(
-				getNavigablePath(),
-				creationState.getSqlAstCreationState().getFromClauseAccess().findTableGroup( getNavigablePath() ),
-				resultVariable,
-				creationState
-		);
-	}
-
-	@Override
-	public void applySqlSelections(DomainResultCreationState creationState) {
-		final String entityName = getReferencedPathSource().getHibernateEntityName();
-		final EntityPersister entityDescriptor = creationState.getSqlAstCreationState()
-				.getCreationContext()
-				.getDomainModel()
-				.getEntityDescriptor( entityName );
-		entityDescriptor.applySqlSelections(
-				getNavigablePath(),
-				creationState.getSqlAstCreationState().getFromClauseAccess().findTableGroup( getNavigablePath() ),
-				creationState
-		);
-
-	}
 }

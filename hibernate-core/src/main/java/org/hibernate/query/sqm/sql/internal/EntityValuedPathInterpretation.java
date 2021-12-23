@@ -56,13 +56,21 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 				.findTableGroup( sqmPath.getLhs().getNavigablePath() )
 				.getModelPart()
 				.findSubPart( sqmPath.getReferencedPathSource().getPathName(), null );
-		return from( sqmPath.getNavigablePath(), tableGroup, mapping, false, sqlAstCreationState );
+		return from(
+				sqmPath.getNavigablePath(),
+				tableGroup,
+				mapping,
+				mapping,
+				false,
+				sqlAstCreationState
+		);
 	}
 
 	public static <T> EntityValuedPathInterpretation<T> from(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			EntityValuedModelPart mapping,
+			EntityValuedModelPart treatedMapping,
 			boolean expandToAllColumns,
 			SqmToSqlAstConverter sqlAstCreationState) {
 		final SqlExpressionResolver sqlExprResolver = sqlAstCreationState.getSqlExpressionResolver();
@@ -211,7 +219,7 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 				sqlExpression,
 				navigablePath,
 				tableGroup,
-				mapping
+				treatedMapping
 		);
 	}
 

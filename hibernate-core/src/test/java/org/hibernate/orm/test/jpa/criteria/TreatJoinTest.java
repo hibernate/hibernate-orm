@@ -29,7 +29,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsInstanceOf.instanceOf;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 /**
@@ -48,6 +50,7 @@ public class TreatJoinTest extends BaseEntityManagerFunctionalTestCase {
 			Price price = new Price( 10, "EUR" );
 			Author author = new Author( "Andrea Camilleri" );
 			Book book = new Book( author, "Il nipote del Negus", price );
+			book.setDescription( "is a book" );
 			Bid bid = new Bid( book );
 			entityManager.persist( bid );
 
@@ -130,7 +133,7 @@ public class TreatJoinTest extends BaseEntityManagerFunctionalTestCase {
 			assertThat(resultList.size(),is(1));
 		} );
 	}
-	
+
 	@Test
 	@TestForIssue(jiraKey = "HHH-10561")
 	public void testJoinOnTreatedRoot() {
@@ -143,7 +146,10 @@ public class TreatJoinTest extends BaseEntityManagerFunctionalTestCase {
 					cb.equal(
 							treatedRoot.<Book, Author>join("author").<String>get("name"),
 							"Andrea Camilleri"));
-			entityManager.createQuery(criteria.select(treatedRoot)).getResultList();
+			final List<Item> resultList = entityManager.createQuery( criteria.select( treatedRoot ) ).getResultList();
+			final Item item = resultList.get( 0 );
+			assertThat( item, instanceOf(Book.class) );
+			assertEquals( "is a book", item.getDescription() );
 		} );
 	}
 
@@ -163,7 +169,7 @@ public class TreatJoinTest extends BaseEntityManagerFunctionalTestCase {
 			entityManager.createQuery(criteria.select(treatedRoot)).getResultList();
 		} );
 	}
-	
+
 	@Test
 	@TestForIssue(jiraKey = "HHH-10767")
 	public void testJoinOnTreatedJoin() {
@@ -186,6 +192,8 @@ public class TreatJoinTest extends BaseEntityManagerFunctionalTestCase {
 		@GeneratedValue
 		private Long id;
 
+		private String description;
+
 		@ManyToOne(cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
 		private Price price;
 
@@ -194,6 +202,14 @@ public class TreatJoinTest extends BaseEntityManagerFunctionalTestCase {
 
 		public Item(Price price) {
 			this.price = price;
+		}
+
+		public String getDescription() {
+			return description;
+		}
+
+		public void setDescription(String description) {
+			this.description = description;
 		}
 	}
 

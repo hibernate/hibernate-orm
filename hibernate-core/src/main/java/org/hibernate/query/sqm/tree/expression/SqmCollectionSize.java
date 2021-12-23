@@ -6,15 +6,10 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressable;
-import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.sql.results.graph.DomainResult;
-import org.hibernate.sql.results.graph.DomainResultCreationState;
-import org.hibernate.type.StandardBasicTypes;
 
 /**
  * Represents the {@code SIZE()} function.
@@ -22,7 +17,7 @@ import org.hibernate.type.StandardBasicTypes;
  * @author Steve Ebersole
  * @author Gunnar Morling
  */
-public class SqmCollectionSize extends AbstractSqmExpression<Integer> implements DomainResultProducer<Integer> {
+public class SqmCollectionSize extends AbstractSqmExpression<Integer> {
 	private final SqmPath<?> pluralPath;
 
 	public SqmCollectionSize(SqmPath<?> pluralPath, NodeBuilder nodeBuilder) {
@@ -55,15 +50,4 @@ public class SqmCollectionSize extends AbstractSqmExpression<Integer> implements
 		sb.append( ')' );
 	}
 
-	@Override
-	public DomainResult<Integer> createDomainResult(
-			String resultVariable,
-			DomainResultCreationState creationState) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
-
-	@Override
-	public void applySqlSelections(DomainResultCreationState creationState) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
 }

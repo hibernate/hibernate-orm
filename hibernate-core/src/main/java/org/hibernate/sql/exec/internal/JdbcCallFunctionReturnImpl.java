@@ -6,25 +6,23 @@
  */
 package org.hibernate.sql.exec.internal;
 
-import jakarta.persistence.ParameterMode;
-
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.sql.exec.spi.JdbcCallFunctionReturn;
+
+import jakarta.persistence.ParameterMode;
 
 /**
  * @author Steve Ebersole
  */
 public class JdbcCallFunctionReturnImpl extends JdbcCallParameterRegistrationImpl implements JdbcCallFunctionReturn {
 	public JdbcCallFunctionReturnImpl(
-			int jdbcTypeCode,
 			AllowableParameterType ormType,
 			JdbcCallParameterExtractorImpl parameterExtractor,
 			JdbcCallRefCursorExtractorImpl refCursorExtractor) {
 		super(
 				null,
-				0,
-				ParameterMode.OUT,
-				jdbcTypeCode,
+				1,
+				ParameterMode.REF_CURSOR,
 				ormType,
 				null,
 				parameterExtractor,

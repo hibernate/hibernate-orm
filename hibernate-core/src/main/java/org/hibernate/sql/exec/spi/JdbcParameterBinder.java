@@ -16,6 +16,9 @@ import java.sql.SQLException;
  * @author John O'Hara
  */
 public interface JdbcParameterBinder {
+
+	JdbcParameterBinder NOOP = (statement, startPosition, jdbcParameterBindings, executionContext) -> {};
+
 	/**
 	 * Bind the appropriate value in the JDBC statement
 	 */

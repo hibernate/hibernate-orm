@@ -11,7 +11,9 @@ import java.util.List;
 import org.hibernate.QueryException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.procedure.spi.FunctionReturnImplementor;
 import org.hibernate.procedure.spi.ParameterStrategy;
+import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
 import org.hibernate.query.spi.ProcedureParameterMetadataImplementor;
 import org.hibernate.sql.exec.internal.JdbcCallImpl;
@@ -42,39 +44,46 @@ public class StandardCallableStatementSupport extends AbstractStandardCallableSt
 	}
 
 	@Override
-	public JdbcCall interpretCall(
-			String procedureName,
-			FunctionReturnImpl functionReturn,
-			ProcedureParameterMetadataImplementor parameterMetadata,
-			ProcedureParamBindings paramBindings,
-			SharedSessionContractImplementor session) {
+	public JdbcCall interpretCall(ProcedureCallImplementor<?> procedureCall) {
+		final String procedureName = procedureCall.getProcedureName();
+		final FunctionReturnImplementor functionReturn = procedureCall.getFunctionReturn();
+		final ProcedureParameterMetadataImplementor parameterMetadata = procedureCall.getParameterMetadata();
+		final SharedSessionContractImplementor session = procedureCall.getSession();
 		final List<? extends ProcedureParameterImplementor<?>> registrations = parameterMetadata.getRegistrationsAsList();
-		final StringBuilder buffer = new StringBuilder(9 + procedureName.length() + registrations.size() * 2).append( "{call " )
-				.append( procedureName )
-				.append( "(" );
+		final JdbcCallImpl.Builder builder = new JdbcCallImpl.Builder(
+				parameterMetadata.hasNamedParameters() ?
+						ParameterStrategy.NAMED :
+						ParameterStrategy.POSITIONAL
+		);
+		final StringBuilder buffer;
+		final int offset;
+		if ( functionReturn != null ) {
+			offset = 2;
+			buffer = new StringBuilder( 11 + procedureName.length() + registrations.size() * 2 ).append( "{?=call " );
+			builder.setFunctionReturn( functionReturn.toJdbcFunctionReturn( session ) );
+		}
+		else {
+			offset = 1;
+			buffer = new StringBuilder( 9 + procedureName.length() + registrations.size() * 2 ).append( "{call " );
+		}
+
+		buffer.append( procedureName ).append( "(" );
 
 		String sep = "";
 		for ( int i = 0; i < registrations.size(); i++ ) {
-			if ( registrations.get( i ).getMode() == ParameterMode.REF_CURSOR ) {
+			final ProcedureParameterImplementor<?> parameter = registrations.get( i );
+			if ( parameter.getMode() == ParameterMode.REF_CURSOR ) {
 				verifyRefCursorSupport( session.getJdbcServices().getJdbcEnvironment().getDialect() );
-				buffer.append( sep ).append( "?" );
-				sep = ",";
 			}
-			else {
-				buffer.append( sep ).append( "?" );
-				sep = ",";
-			}
+			buffer.append( sep ).append( "?" );
+			sep = ",";
+			builder.addParameterRegistration( parameter.toJdbcParameterRegistration( i + offset, procedureCall ) );
 		}
 
 		buffer.append( ")}" );
 
-		return new JdbcCallImpl.Builder(
-				buffer.toString(),
-				parameterMetadata.hasNamedParameters() ?
-						ParameterStrategy.NAMED :
-						ParameterStrategy.POSITIONAL
-		).buildJdbcCall();
-
+		builder.setCallableName( buffer.toString() );
+		return builder.buildJdbcCall();
 	}
 
 	private void verifyRefCursorSupport(Dialect dialect) {

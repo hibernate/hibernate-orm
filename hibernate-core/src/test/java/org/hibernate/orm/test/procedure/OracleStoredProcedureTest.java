@@ -406,6 +406,23 @@ public class OracleStoredProcedureTest {
 	}
 
 	@Test
+	public void testNamedProcedureCallStoredProcedureRefCursor(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					List<Object[]> postAndComments = entityManager
+							.createNamedStoredProcedureQuery(
+									"fn_person_and_phones_sq" )
+							.setParameter( 1, 1L )
+							.getResultList();
+					Object[] postAndComment = postAndComments.get( 0 );
+					Person person = (Person) postAndComment[0];
+					Phone phone = (Phone) postAndComment[1];
+					assertEquals( 2, postAndComments.size() );
+				}
+		);
+	}
+
+	@Test
 	public void testNamedNativeQueryStoredProcedureRefCursorWithJDBC(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {

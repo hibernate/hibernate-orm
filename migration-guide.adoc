@@ -140,7 +140,26 @@ List<Object[]> postAndComments = entityManager.createNamedQuery("fn_person_and_p
 
 is going to throw an `IllegalArgumentException`.
 
-The migration code is
+If you want to retain the named version, you can change the definition to
+
+```
+@NamedStoredProcedureQuery(
+    name = "fn_person_and_phones",
+    procedureName = "fn_person_and_phones",
+    resultSetMapping = "person_with_phones",
+    hints = @QueryHint(name = "org.hibernate.callableFunction", value = "true"),
+    parameters = {
+            @StoredProcedureParameter(type = Long.class)
+    }
+)
+```
+
+and call this like
+```
+List<Object[]> postAndComments = entityManager.createNamedStoredProcedureQuery( "fn_person_and_phones" ).setParameter( 1, 1L ).getResultList();
+```
+
+or not define the stored procedure and use this code
 ```
 List<Object[]> postAndComments = entityManager.createStoredProcedureQuery( "fn_person_and_phones", "person_with_phones" ).setParameter( 1, 1L ).getResultList();
 ```

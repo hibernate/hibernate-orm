@@ -31,7 +31,6 @@ public class JdbcCallRefCursorExtractorImpl implements JdbcCallRefCursorExtracto
 		this.jdbcParameterPosition = jdbcParameterPosition;
 	}
 
-
 	@Override
 	public ResultSet extractResultSet(
 			CallableStatement callableStatement,

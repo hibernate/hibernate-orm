@@ -9,14 +9,16 @@ package org.hibernate.procedure.spi;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+
+import org.hibernate.procedure.ProcedureCall;
+import org.hibernate.query.spi.ProcedureParameterMetadataImplementor;
+import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.type.BasicTypeReference;
+
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.ParameterMode;
 import jakarta.persistence.TemporalType;
-
-import org.hibernate.procedure.ProcedureCall;
-import org.hibernate.query.spi.QueryImplementor;
-import org.hibernate.type.BasicTypeReference;
 
 /**
  * @author Steve Ebersole
@@ -28,6 +30,11 @@ public interface ProcedureCallImplementor<R> extends ProcedureCall, QueryImpleme
 	}
 
 	ParameterStrategy getParameterStrategy();
+
+	FunctionReturnImplementor getFunctionReturn();
+
+	@Override
+	ProcedureParameterMetadataImplementor getParameterMetadata();
 
 	@Override
 	default R getSingleResult() {

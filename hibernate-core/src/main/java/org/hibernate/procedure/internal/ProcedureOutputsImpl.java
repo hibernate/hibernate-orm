@@ -8,19 +8,16 @@ package org.hibernate.procedure.internal;
 
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.util.Map;
 
-import org.hibernate.engine.jdbc.cursor.spi.RefCursorSupport;
-import org.hibernate.metamodel.model.domain.AllowableOutputParameterType;
-import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.procedure.ParameterMisuseException;
 import org.hibernate.procedure.ProcedureOutputs;
-import org.hibernate.procedure.spi.ParameterStrategy;
-import org.hibernate.procedure.spi.ProcedureParameterImplementor;
 import org.hibernate.query.procedure.ProcedureParameter;
 import org.hibernate.result.Output;
 import org.hibernate.result.internal.OutputsImpl;
 import org.hibernate.sql.exec.ExecutionException;
+import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;
+import org.hibernate.sql.exec.spi.JdbcCallRefCursorExtractor;
 
 import jakarta.persistence.ParameterMode;
 
@@ -33,60 +30,51 @@ public class ProcedureOutputsImpl extends OutputsImpl implements ProcedureOutput
 	private final ProcedureCallImpl procedureCall;
 	private final CallableStatement callableStatement;
 
-	private final ProcedureParameterImplementor[] refCursorParameters;
+	private final Map<ProcedureParameter<?>, JdbcCallParameterRegistration> parameterRegistrations;
+	private final JdbcCallRefCursorExtractor[] refCursorParameters;
 	private int refCursorParamIndex;
 
-	ProcedureOutputsImpl(ProcedureCallImpl procedureCall, CallableStatement callableStatement) {
+	ProcedureOutputsImpl(
+			ProcedureCallImpl procedureCall,
+			Map<ProcedureParameter<?>, JdbcCallParameterRegistration> parameterRegistrations,
+			JdbcCallRefCursorExtractor[] refCursorParameters,
+			CallableStatement callableStatement) {
 		super( procedureCall, callableStatement );
 		this.procedureCall = procedureCall;
 		this.callableStatement = callableStatement;
-
-		this.refCursorParameters = procedureCall.collectRefCursorParameters();
+		this.parameterRegistrations = parameterRegistrations;
+		this.refCursorParameters = refCursorParameters;
 	}
 
 	@Override
 	public <T> T getOutputParameterValue(ProcedureParameter<T> parameter) {
-		final AllowableParameterType<T> hibernateType = parameter.getHibernateType();
 		if ( parameter.getMode() == ParameterMode.IN ) {
 			throw new ParameterMisuseException( "IN parameter not valid for output extraction" );
 		}
+		final JdbcCallParameterRegistration registration = parameterRegistrations.get( parameter );
+		if ( registration == null ) {
+			throw new IllegalArgumentException( "Parameter [" + parameter + "] is not registered with this procedure call" );
+		}
 		try {
-			if ( parameter.getMode() == ParameterMode.REF_CURSOR ) {
-				if ( parameter.getPosition() != null ) {
-					return (T) callableStatement.getObject( parameter.getPosition() );
-				}
-				else {
-					return (T) callableStatement.getObject( parameter.getName() );
-				}
-			}
-			else if ( hibernateType instanceof AllowableOutputParameterType<?> ) {
-
+			if ( registration.getParameterMode() == ParameterMode.REF_CURSOR ) {
 				//noinspection unchecked
-				if ( parameter.getPosition() != null ) {
-					return (T) ( (AllowableOutputParameterType<?>) hibernateType ).extract(
-							callableStatement,
-							parameter.getPosition(),
-							procedureCall.getSession()
-					);
-				}
-				else {
-					return (T) ( (AllowableOutputParameterType<?>) hibernateType ).extract(
-							callableStatement,
-							parameter.getName(),
-							procedureCall.getSession()
-					);
-				}
+				return (T) registration.getRefCursorExtractor().extractResultSet(
+						callableStatement,
+						procedureCall.getSession()
+				);
 			}
 			else {
-				throw new ParameterMisuseException( "Parameter type cannot extract procedure output parameters" );
+				//noinspection unchecked
+				return (T) registration.getParameterExtractor().extractValue(
+						callableStatement,
+						parameter.getPosition() == null,
+						procedureCall.getSession()
+				);
 			}
 		}
-		catch (SQLException e) {
+		catch (Exception e) {
 			throw new ExecutionException(
-					"Error extracting procedure output parameter value ["
-							+ parameter.getPosition() != null ?
-							String.valueOf( parameter.getPosition() ) :
-							parameter.getName() + "]",
+					"Error extracting procedure output parameter value [" + parameter + "]",
 					e
 			);
 		}
@@ -118,7 +106,7 @@ public class ProcedureOutputsImpl extends OutputsImpl implements ProcedureOutput
 		@Override
 		public boolean indicatesMoreOutputs() {
 			return super.indicatesMoreOutputs()
-					|| ProcedureOutputsImpl.this.refCursorParamIndex < ProcedureOutputsImpl.this.refCursorParameters.length;
+					|| ProcedureOutputsImpl.this.refCursorParamIndex < refCursorParameters.length;
 		}
 
 		@Override
@@ -128,19 +116,8 @@ public class ProcedureOutputsImpl extends OutputsImpl implements ProcedureOutput
 
 		@Override
 		protected Output buildExtendedReturn() {
-			ProcedureOutputsImpl.this.refCursorParamIndex++;
-			final ProcedureParameterImplementor refCursorParam = ProcedureOutputsImpl.this.refCursorParameters[refCursorParamIndex];
-			ResultSet resultSet;
-			if ( refCursorParam.getName() != null ) {
-				resultSet = ProcedureOutputsImpl.this.procedureCall.getSession().getFactory().getServiceRegistry()
-						.getService( RefCursorSupport.class )
-						.getResultSet( ProcedureOutputsImpl.this.callableStatement, refCursorParam.getName() );
-			}
-			else {
-				resultSet = ProcedureOutputsImpl.this.procedureCall.getSession().getFactory().getServiceRegistry()
-						.getService( RefCursorSupport.class )
-						.getResultSet( ProcedureOutputsImpl.this.callableStatement, refCursorParam.getPosition() );
-			}
+			final JdbcCallRefCursorExtractor refCursorParam = refCursorParameters[ProcedureOutputsImpl.this.refCursorParamIndex++];
+			final ResultSet resultSet = refCursorParam.extractResultSet( callableStatement, procedureCall.getSession() );
 			return buildResultSetOutput( () -> extractResults( resultSet ) );
 		}
 	}

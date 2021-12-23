@@ -14,6 +14,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.NamedStoredProcedureQuery;
 import jakarta.persistence.ParameterMode;
+import jakarta.persistence.QueryHint;
 import jakarta.persistence.StoredProcedureParameter;
 import jakarta.persistence.Table;
 
@@ -23,9 +24,7 @@ import jakarta.persistence.Table;
 		name = "NumValue.getSomeValues",
 		procedureName = "f_test_return_cursor",
 		resultClasses = NumValue.class,
-		parameters = {
-				@StoredProcedureParameter(mode = ParameterMode.REF_CURSOR, type = ResultSet.class)
-		}
+		hints = @QueryHint(name = "org.hibernate.callableFunction", value = "true")
 )
 public class NumValue implements Serializable {
 	@Id

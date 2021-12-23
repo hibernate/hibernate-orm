@@ -97,7 +97,7 @@ public class RDMSOS2200SqlAstTranslator<T extends JdbcOperation> extends Abstrac
 			List<SqlSelection> lhsExpressions,
 			SqlTuple tuple,
 			ComparisonOperator operator) {
-		emulateTupleComparison( lhsExpressions, tuple.getExpressions(), operator, true );
+		emulateSelectTupleComparison( lhsExpressions, tuple.getExpressions(), operator, true );
 	}
 
 	@Override

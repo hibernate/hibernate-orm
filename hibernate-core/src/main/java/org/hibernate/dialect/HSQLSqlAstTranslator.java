@@ -155,7 +155,7 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 			List<SqlSelection> lhsExpressions,
 			SqlTuple tuple,
 			ComparisonOperator operator) {
-		emulateTupleComparison( lhsExpressions, tuple.getExpressions(), operator, true );
+		emulateSelectTupleComparison( lhsExpressions, tuple.getExpressions(), operator, true );
 	}
 
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {

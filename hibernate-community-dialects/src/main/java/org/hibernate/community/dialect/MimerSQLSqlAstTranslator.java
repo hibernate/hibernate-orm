@@ -58,7 +58,7 @@ public class MimerSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 			List<SqlSelection> lhsExpressions,
 			SqlTuple tuple,
 			ComparisonOperator operator) {
-		emulateTupleComparison( lhsExpressions, tuple.getExpressions(), operator, true );
+		emulateSelectTupleComparison( lhsExpressions, tuple.getExpressions(), operator, true );
 	}
 
 	@Override

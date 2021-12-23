@@ -308,7 +308,7 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 			List<SqlSelection> lhsExpressions,
 			SqlTuple tuple,
 			ComparisonOperator operator) {
-		emulateTupleComparison( lhsExpressions, tuple.getExpressions(), operator, true );
+		emulateSelectTupleComparison( lhsExpressions, tuple.getExpressions(), operator, true );
 	}
 
 	@Override

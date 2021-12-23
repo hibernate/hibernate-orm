@@ -1,4 +1,4 @@
-package org.hibernate.query.hhh14116;
+package org.hibernate.orm.test.query.hhh14116;
 
 import java.util.Set;
 import jakarta.persistence.ElementCollection;

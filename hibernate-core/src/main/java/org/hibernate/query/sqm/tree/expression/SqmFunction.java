@@ -14,7 +14,6 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
-import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
@@ -28,7 +27,7 @@ import java.util.List;
  * @author Steve Ebersole
  */
 public abstract class SqmFunction<T> extends AbstractSqmExpression<T>
-		implements JpaFunction<T>, DomainResultProducer<T>, SemanticPathPart {
+		implements JpaFunction<T>, SemanticPathPart {
 	// this function-name is the one used to resolve the descriptor from
 	// the function registry (which may or may not be a db function name)
 	private final String functionName;

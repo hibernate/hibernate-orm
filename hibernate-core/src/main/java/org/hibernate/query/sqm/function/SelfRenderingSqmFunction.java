@@ -9,7 +9,6 @@ package org.hibernate.query.sqm.function;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
@@ -22,8 +21,6 @@ import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 import org.hibernate.query.sqm.tree.expression.SqmFunction;
 import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.results.graph.DomainResult;
-import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static java.util.Collections.emptyList;
@@ -135,15 +132,4 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 		return mapping;
 	}
 
-	@Override
-	public DomainResult<T> createDomainResult(
-			String resultVariable,
-			DomainResultCreationState creationState) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
-
-	@Override
-	public void applySqlSelections(DomainResultCreationState creationState) {
-		//implemented on SelfRenderingFunctionSqlAstExpression
-	}
 }

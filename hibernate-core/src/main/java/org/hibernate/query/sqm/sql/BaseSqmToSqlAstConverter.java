@@ -35,7 +35,6 @@ import org.hibernate.QueryException;
 import org.hibernate.boot.model.process.internal.InferredBasicValueResolver;
 import org.hibernate.dialect.function.TimestampaddFunction;
 import org.hibernate.dialect.function.TimestampdiffFunction;
-import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -3043,7 +3042,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		final Expression result;
 		if ( resultPart instanceof EntityValuedModelPart ) {
-			final EntityValuedModelPart mapping = (EntityValuedModelPart) resultPart;
 			final boolean expandToAllColumns;
 			if ( currentClauseStack.getCurrent() == Clause.GROUP ) {
 				// When the table group is known to be fetched i.e. a fetch join
@@ -3054,11 +3052,23 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			else {
 				expandToAllColumns = false;
 			}
+
+			final EntityValuedModelPart mapping = (EntityValuedModelPart) resultPart;
+			EntityMappingType mappingType;
+			if ( path instanceof SqmTreatedPath ) {
+				mappingType = creationContext.getDomainModel()
+						.findEntityDescriptor( ( (SqmTreatedPath) path ).getTreatTarget().getHibernateEntityName() );
+			}
+			else {
+				mappingType = mapping.getEntityMappingType();
+			}
+
 			final TableGroup parentGroupToUse = findTableGroup( navigablePath.getParent() );
 			result = EntityValuedPathInterpretation.from(
 					navigablePath,
 					parentGroupToUse == null ? tableGroup : parentGroupToUse,
-					mapping,
+					(EntityValuedModelPart) resultPart,
+					mappingType,
 					expandToAllColumns,
 					this
 			);
@@ -3308,6 +3318,28 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	@Override
+	public Expression visitCorrelation(SqmCorrelation<?, ?> correlation) {
+		final TableGroup resolved = getFromClauseAccess().findTableGroup( correlation.getNavigablePath() );
+		if ( resolved != null ) {
+			log.tracef( "SqmCorrelation [%s] resolved to existing TableGroup [%s]", correlation, resolved );
+			return visitTableGroup( resolved, correlation );
+		}
+		throw new InterpretationException( "SqmCorrelation not yet resolved to TableGroup" );
+	}
+
+	@Override
+	public Expression visitTreatedPath(SqmTreatedPath<?, ?> sqmTreatedPath) {
+		final TableGroup resolved = getFromClauseAccess().findTableGroup( sqmTreatedPath.getNavigablePath() );
+		if ( resolved != null ) {
+			log.tracef( "SqmTreatedPath [%s] resolved to existing TableGroup [%s]", sqmTreatedPath, resolved );
+			return visitTableGroup( resolved, (SqmFrom<?, ?>) sqmTreatedPath );
+		}
+
+		throw new InterpretationException( "SqmTreatedPath not yet resolved to TableGroup" );
+	}
+
+
+	@Override
 	public Expression visitPluralAttributeSizeFunction(SqmCollectionSize function) {
 		final SqmPath<?> pluralPath = function.getPluralPath();
 
@@ -3456,7 +3488,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 			@Override
 			public void applySqlSelections(DomainResultCreationState creationState) {
-				throw new NotYetImplementedFor6Exception( getClass() );
+				throw new UnsupportedOperationException();
 			}
 		};
 	}

@@ -1,4 +1,4 @@
-package org.hibernate.test.pagination;
+package org.hibernate.orm.test.pagination;
 
 import java.util.List;
 import jakarta.persistence.Entity;

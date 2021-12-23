@@ -407,7 +407,7 @@ public class StoredProcedureParameterTypeTest {
 		scope.inTransaction(
 				session -> {
 					ProcedureCall procedureCall = session.createStoredProcedureCall( "test" );
-					procedureCall.registerParameter( 1, StandardBasicTypes.STRING, ParameterMode.IN ).enablePassingNulls( true );
+					procedureCall.registerParameter( 1, StandardBasicTypes.STRING, ParameterMode.IN );
 					procedureCall.setParameter( 1, null );
 				}
 		);

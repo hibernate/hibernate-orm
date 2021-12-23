@@ -6,12 +6,10 @@
  */
 package org.hibernate.procedure.spi;
 
-import java.sql.CallableStatement;
-import java.sql.SQLException;
-
 import org.hibernate.Incubating;
 import org.hibernate.query.procedure.ProcedureParameter;
 import org.hibernate.query.spi.QueryParameterImplementor;
+import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;
 
 /**
  * SPI extension for ProcedureParameter
@@ -20,14 +18,7 @@ import org.hibernate.query.spi.QueryParameterImplementor;
  */
 @Incubating
 public interface ProcedureParameterImplementor<T> extends ProcedureParameter<T>, QueryParameterImplementor<T> {
-	/**
-	 * Allow the parameter to register itself with the JDBC CallableStatement,
-	 * if necessary, as well as perform any other needed preparation for exeuction
-	 *
-	 * @throws SQLException Indicates a problem with any underlying JDBC calls
-	 */
-	void prepare(
-			CallableStatement statement,
-			int startIndex,
-			ProcedureCallImplementor<?> callImplementor) throws SQLException;
+
+	JdbcCallParameterRegistration toJdbcParameterRegistration(int startIndex, ProcedureCallImplementor<?> procedureCall);
+
 }

@@ -16,15 +16,19 @@ import jakarta.persistence.FieldResult;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.NamedStoredProcedureQueries;
+import jakarta.persistence.NamedStoredProcedureQuery;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderColumn;
+import jakarta.persistence.QueryHint;
 import jakarta.persistence.SqlResultSetMapping;
 import jakarta.persistence.SqlResultSetMappings;
+import jakarta.persistence.StoredProcedureParameter;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Version;
 
 import org.hibernate.annotations.NamedNativeQuery;
+import org.hibernate.annotations.QueryHints;
 
 /**
  * @author Vlad Mihalcea
@@ -41,6 +45,15 @@ import org.hibernate.annotations.NamedNativeQuery;
 	    callable = false,
 	    resultSetMapping = "person_with_phones_hana"
 	)
+@NamedStoredProcedureQuery(
+        name = "fn_person_and_phones_sq",
+        procedureName = "fn_person_and_phones",
+        resultSetMappings = "person_with_phones",
+        parameters = {
+                @StoredProcedureParameter(type = Long.class)
+        },
+        hints = @QueryHint(name = QueryHints.CALLABLE_FUNCTION, value = "true")
+)
 @SqlResultSetMappings({
      @SqlResultSetMapping(
          name = "person_with_phones",

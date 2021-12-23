@@ -44,6 +44,11 @@ public class QueryHints {
 	public static final String CACHEABLE = "org.hibernate.cacheable";
 
 	/**
+	 * Is the procedure a function? Note: only valid for named stored procedures.
+	 */
+	public static final String CALLABLE_FUNCTION = "org.hibernate.callableFunction";
+
+	/**
 	 * Defines a comment to be applied to the SQL sent to the database.
 	 *
 	 * @see org.hibernate.query.Query#setComment

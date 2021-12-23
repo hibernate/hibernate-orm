@@ -7,13 +7,14 @@
 package org.hibernate.procedure.internal;
 
 import java.sql.CallableStatement;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Objects;
-import jakarta.persistence.ParameterMode;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.procedure.spi.ParameterStrategy;
@@ -22,27 +23,29 @@ import org.hibernate.procedure.spi.ProcedureParameterImplementor;
 import org.hibernate.query.AbstractQueryParameter;
 import org.hibernate.query.internal.BindingTypeHelper;
 import org.hibernate.query.spi.QueryParameterBinding;
+import org.hibernate.sql.exec.internal.JdbcCallParameterExtractorImpl;
+import org.hibernate.sql.exec.internal.JdbcCallParameterRegistrationImpl;
+import org.hibernate.sql.exec.internal.JdbcCallRefCursorExtractorImpl;
+import org.hibernate.sql.exec.internal.JdbcParameterImpl;
+import org.hibernate.sql.exec.spi.ExecutionContext;
+import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;
+import org.hibernate.sql.exec.spi.JdbcParameterBinder;
+import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.ProcedureParameterNamedBinder;
-import org.hibernate.type.descriptor.ValueBinder;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import org.jboss.logging.Logger;
+import jakarta.persistence.ParameterMode;
 
 /**
  * @author Steve Ebersole
  */
 public class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> implements ProcedureParameterImplementor<T> {
-	private static final Logger log = Logger.getLogger( ProcedureParameterImpl.class );
 
 	private final String name;
-	private Integer position;
-
+	private final Integer position;
 	private final ParameterMode mode;
-
 	private final Class<T> javaType;
-
 
 	public ProcedureParameterImpl(
 			String name,
@@ -111,29 +114,9 @@ public class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> impleme
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
-			return true;
-		}
-		if ( o == null || getClass() != o.getClass() ) {
-			return false;
-		}
-		ProcedureParameterImpl<?> that = (ProcedureParameterImpl<?>) o;
-		return Objects.equals( name, that.name ) &&
-				Objects.equals( position, that.position ) &&
-				mode == that.mode;
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash( name, position, mode );
-	}
-
-	@Override
-	public void prepare(
-			CallableStatement statement,
+	public JdbcCallParameterRegistration toJdbcParameterRegistration(
 			int startIndex,
-			ProcedureCallImplementor<?> procedureCall) throws SQLException {
+			ProcedureCallImplementor<?> procedureCall) {
 		final QueryParameterBinding<T> binding = procedureCall.getParameterBindings().getBinding( this );
 		final TypeConfiguration typeConfiguration = procedureCall.getSession().getFactory().getTypeConfiguration();
 		final AllowableParameterType<T> typeToUse = BindingTypeHelper.INSTANCE.resolveTemporalPrecision(
@@ -144,114 +127,71 @@ public class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> impleme
 				typeConfiguration
 		);
 
-		if ( mode == ParameterMode.INOUT || mode == ParameterMode.OUT ) {
-
-//				if ( sqlTypesToUse.length > 1 ) {
-//					// there is more than one column involved; see if the Hibernate Type can handle
-//					// multi-param extraction...
-//					final boolean canHandleMultiParamExtraction =
-//							ProcedureParameterExtractionAware.class.isInstance( typeToUse )
-//									&& ( (ProcedureParameterExtractionAware) typeToUse ).canDoExtraction();
-//					if ( ! canHandleMultiParamExtraction ) {
-//						// it cannot...
-//						throw new UnsupportedOperationException(
-//								"Type [" + typeToUse + "] does support multi-parameter value extraction"
-//						);
-//					}
-//				}
-			// TODO: sqlTypesToUse.length > 1 does not seem to have a working use case (HHH-10769).
-			// The idea is that an embeddable/custom type can have more than one column values
-			// that correspond with embeddable/custom attribute value. This does not seem to
-			// be working yet. For now, if sqlTypesToUse.length > 1, then register
-			// the out parameters by position (since we only have one name).
-			// This will cause a failure if there are other parameters bound by
-			// name and the dialect does not support "mixed" named/positional parameters;
-			// e.g., Oracle.
-			final JdbcType recommendedJdbcType = typeToUse.getExpressableJavaTypeDescriptor()
-					.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() );
-
-			if ( procedureCall.getParameterStrategy() == ParameterStrategy.NAMED &&
-					canDoNameParameterBinding( typeToUse, procedureCall ) ) {
-				statement.registerOutParameter( getName(), recommendedJdbcType.getJdbcTypeCode() );
-			}
-			else {
-//					for ( int i = 0; i < sqlTypesToUse.length; i++ ) {
-				if ( position == null ) {
-					position = startIndex;
-				}
-				statement.registerOutParameter( startIndex, recommendedJdbcType.getJdbcTypeCode() );
-//					}
-			}
+		final String name;
+		if ( procedureCall.getParameterStrategy() == ParameterStrategy.NAMED
+				&& canDoNameParameterBinding( typeToUse, procedureCall ) ) {
+			name = this.name;
+		}
+		else {
+			name = null;
 		}
 
-		if ( mode == ParameterMode.INOUT || mode == ParameterMode.IN ) {
-			final ValueBinder<T> binder;
-			final BasicType<T> basicType;
-			if ( typeToUse instanceof BasicType ) {
-				basicType = ( (BasicType<T>) typeToUse );
-				binder = basicType.getJdbcValueBinder();
+		final JdbcParameterBinder parameterBinder;
+		final JdbcCallRefCursorExtractorImpl refCursorExtractor;
+		final JdbcCallParameterExtractorImpl<T> parameterExtractor;
+
+		switch ( mode ) {
+			case REF_CURSOR:
+				refCursorExtractor = new JdbcCallRefCursorExtractorImpl( name, startIndex );
+				parameterBinder = null;
+				parameterExtractor = null;
+				break;
+			case IN:
+				parameterBinder = getParameterBinder( typeToUse, name );
+				parameterExtractor = null;
+				refCursorExtractor = null;
+				break;
+			case INOUT:
+				parameterBinder = getParameterBinder( typeToUse, name );
+				parameterExtractor = new JdbcCallParameterExtractorImpl<>( procedureCall.getProcedureName(), name, startIndex, typeToUse );
+				refCursorExtractor = null;
+				break;
+			default:
+				parameterBinder = null;
+				parameterExtractor = new JdbcCallParameterExtractorImpl<>( procedureCall.getProcedureName(), name, startIndex, typeToUse );
+				refCursorExtractor = null;
+				break;
+		}
+
+		return new JdbcCallParameterRegistrationImpl( name, startIndex, mode, typeToUse, parameterBinder, parameterExtractor, refCursorExtractor );
+	}
+
+	private JdbcParameterBinder getParameterBinder(AllowableParameterType<T> typeToUse, String name) {
+		if ( typeToUse instanceof BasicType<?> ) {
+			if ( name == null ) {
+				return new JdbcParameterImpl( (BasicType<T>) typeToUse );
 			}
 			else {
-				throw new NotYetImplementedFor6Exception( getClass() );
-			}
-			if ( binding == null || binding.getBindValue() == null ) {
-				// the user did not binding a value to the parameter being processed.  This is the condition
-				// defined by `passNulls` and that value controls what happens here.  If `passNulls` is
-				// {@code true} we will binding the NULL value into the statement; if `passNulls` is
-				// {@code false} we will not.
-				//
-				// Unfortunately there is not a way to reliably know through JDBC metadata whether a procedure
-				// parameter defines a default value.  Deferring to that information would be the best option
-				if ( ( binding != null && binding.isBound() ) || isPassNullsEnabled() ) {
-					log.debugf(
-							"Stored procedure [%s] IN/INOUT parameter [%s] not bound and `passNulls` was set to true; binding NULL",
-							procedureCall.getProcedureName(),
-							this
-					);
-					if ( procedureCall.getParameterStrategy() == ParameterStrategy.NAMED
-							&& canDoNameParameterBinding( typeToUse, procedureCall ) ) {
-						//noinspection unchecked
-						( (ProcedureParameterNamedBinder<T>) typeToUse ).nullSafeSet(
-								statement,
-								null,
-								this.getName(),
-								procedureCall.getSession()
+				return new JdbcParameterImpl( (BasicType<T>) typeToUse ) {
+					@Override
+					protected void bindParameterValue(
+							JdbcMapping jdbcMapping,
+							PreparedStatement statement,
+							Object bindValue,
+							int startPosition,
+							ExecutionContext executionContext) throws SQLException {
+						jdbcMapping.getJdbcValueBinder().bind(
+								(CallableStatement) statement,
+								bindValue,
+								name,
+								executionContext.getSession()
 						);
 					}
-					else {
-						if ( position == null ) {
-							position = startIndex;
-						}
-						binder.bind( statement, null, position, procedureCall.getSession() );
-					}
-				}
-				else {
-					throw new IllegalArgumentException(
-							"The parameter " +
-									( name != null
-											? "named [" + name + "]"
-											: "at position [" + position + "]" )
-									+ " was not set! You need to call the setParameter method." );
-				}
+				};
 			}
-			else {
-				if ( procedureCall.getParameterStrategy() == ParameterStrategy.NAMED
-						&& canDoNameParameterBinding( typeToUse, procedureCall ) ) {
-					//noinspection unchecked
-					( (ProcedureParameterNamedBinder<T>) typeToUse ).nullSafeSet(
-							statement,
-							binding.getBindValue(),
-							this.getName(),
-							procedureCall.getSession()
-					);
-				}
-				else {
-					if ( position == null ) {
-						position = startIndex;
-					}
-					binder.bind( statement, binding.getBindValue(), position, procedureCall.getSession() );
-				}
-			}
+		}
+		else {
+			throw new NotYetImplementedFor6Exception( getClass() );
 		}
 	}
 
@@ -268,5 +208,34 @@ public class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> impleme
 				databaseMetaData.supportsNamedParameters()
 						&& hibernateType instanceof ProcedureParameterNamedBinder
 						&& ( (ProcedureParameterNamedBinder<?>) hibernateType ).canDoSetting();
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( name, position, mode );
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+		ProcedureParameterImpl<?> that = (ProcedureParameterImpl<?>) o;
+		return Objects.equals( name, that.name ) &&
+				Objects.equals( position, that.position ) &&
+				mode == that.mode;
+	}
+
+	@Override
+	public String toString() {
+		if ( position == null ) {
+			return name;
+		}
+		else {
+			return position.toString();
+		}
 	}
 }

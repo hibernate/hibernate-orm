@@ -10,7 +10,9 @@ import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.procedure.spi.FunctionReturnImplementor;
 import org.hibernate.procedure.spi.ParameterStrategy;
+import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
 import org.hibernate.query.spi.ProcedureParameterMetadataImplementor;
 import org.hibernate.sql.exec.internal.JdbcCallImpl;
@@ -28,12 +30,11 @@ public class PostgresCallableStatementSupport extends AbstractStandardCallableSt
 	public static final PostgresCallableStatementSupport INSTANCE = new PostgresCallableStatementSupport();
 
 	@Override
-	public JdbcCall interpretCall(
-			String procedureName,
-			FunctionReturnImpl functionReturn,
-			ProcedureParameterMetadataImplementor parameterMetadata,
-			ProcedureParamBindings paramBindings,
-			SharedSessionContractImplementor session) {
+	public JdbcCall interpretCall(ProcedureCallImplementor<?> procedureCall) {
+		final String procedureName = procedureCall.getProcedureName();
+		final FunctionReturnImplementor functionReturn = procedureCall.getFunctionReturn();
+		final ProcedureParameterMetadataImplementor parameterMetadata = procedureCall.getParameterMetadata();
+		final SharedSessionContractImplementor session = procedureCall.getSession();
 		final boolean firstParamIsRefCursor = parameterMetadata.getParameterCount() != 0
 				&& isFirstParameterModeRefCursor( parameterMetadata );
 
@@ -45,42 +46,50 @@ public class PostgresCallableStatementSupport extends AbstractStandardCallableSt
 		}
 
 		final List<? extends ProcedureParameterImplementor<?>> registrations = parameterMetadata.getRegistrationsAsList();
+		final JdbcCallImpl.Builder builder = new JdbcCallImpl.Builder(
+				parameterMetadata.hasNamedParameters() ?
+						ParameterStrategy.NAMED :
+						ParameterStrategy.POSITIONAL
+		);
 
 		final StringBuilder buffer;
-		if ( firstParamIsRefCursor ) {
-			buffer = new StringBuilder(11 + procedureName.length() + registrations.size() * 2).append( "{?=call " );
+		final int offset;
+		final int startIndex;
+		if ( functionReturn != null ) {
+			offset = 2;
+			startIndex = 0;
+			buffer = new StringBuilder( 11 + procedureName.length() + registrations.size() * 2 ).append( "{?=call " );
+			builder.setFunctionReturn( functionReturn.toJdbcFunctionReturn( session ) );
+		}
+		else if ( firstParamIsRefCursor ) {
+			offset = 1;
+			startIndex = 1;
+			buffer = new StringBuilder( 11 + procedureName.length() + registrations.size() * 2 ).append( "{?=call " );
+			builder.addParameterRegistration( registrations.get( 0 ).toJdbcParameterRegistration( 1, procedureCall ) );
 		}
 		else {
-			buffer = new StringBuilder(9 + procedureName.length() + registrations.size() * 2).append( "{call " );
+			offset = 1;
+			startIndex = 0;
+			buffer = new StringBuilder( 9 + procedureName.length() + registrations.size() * 2 ).append( "{call " );
 		}
 
 		buffer.append( procedureName ).append( "(" );
 
-		// skip the first registration if it was a REF_CURSOR
-		final int startIndex;
-		if ( firstParamIsRefCursor ) {
-			startIndex = 1;
-		}
-		else {
-			startIndex = 0;
-		}
 		String sep = "";
 		for ( int i = startIndex; i < registrations.size(); i++ ) {
-			if ( registrations.get( i ).getMode() == ParameterMode.REF_CURSOR ) {
+			final ProcedureParameterImplementor<?> parameter = registrations.get( i );
+			if ( parameter.getMode() == ParameterMode.REF_CURSOR ) {
 				throw new HibernateException(
 						"PostgreSQL supports only one REF_CURSOR parameter, but multiple were registered" );
 			}
 			buffer.append( sep ).append( "?" );
 			sep = ",";
+			builder.addParameterRegistration( parameter.toJdbcParameterRegistration( i + offset, procedureCall ) );
 		}
 
 		buffer.append( ")}" );
-		return new JdbcCallImpl.Builder(
-				buffer.toString(),
-				parameterMetadata.hasNamedParameters() ?
-						ParameterStrategy.NAMED :
-						ParameterStrategy.POSITIONAL
-		).buildJdbcCall();
+		builder.setCallableName( buffer.toString() );
+		return builder.buildJdbcCall();
 	}
 
 	private static boolean isFirstParameterModeRefCursor(ProcedureParameterMetadataImplementor parameterMetadata) {

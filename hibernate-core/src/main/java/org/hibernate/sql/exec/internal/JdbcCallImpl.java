@@ -115,9 +115,9 @@ public class JdbcCallImpl implements JdbcCall {
 	}
 
 	public static class Builder {
-		private final String callableName;
 		private final ParameterStrategy parameterStrategy;
 
+		private String callableName;
 		private JdbcCallFunctionReturn functionReturn;
 
 		private List<JdbcCallParameterRegistration> parameterRegistrations;
@@ -125,13 +125,16 @@ public class JdbcCallImpl implements JdbcCall {
 		private List<JdbcCallParameterExtractor> parameterExtractors;
 		private List<JdbcCallRefCursorExtractor> refCursorExtractors;
 
-		public Builder(String callableName, ParameterStrategy parameterStrategy) {
-			this.callableName = callableName;
+		public Builder(ParameterStrategy parameterStrategy) {
 			this.parameterStrategy = parameterStrategy;
 		}
 
 		public JdbcCall buildJdbcCall() {
 			return new JdbcCallImpl( this );
+		}
+
+		public void setCallableName(String callableName) {
+			this.callableName = callableName;
 		}
 
 		public void setFunctionReturn(JdbcCallFunctionReturn functionReturn) {
@@ -149,6 +152,7 @@ public class JdbcCallImpl implements JdbcCall {
 
 			switch ( registration.getParameterMode() ) {
 				case REF_CURSOR: {
+					addParameterBinder( JdbcParameterBinder.NOOP );
 					addRefCursorExtractor( registration.getRefCursorExtractor() );
 					break;
 				}
@@ -162,6 +166,7 @@ public class JdbcCallImpl implements JdbcCall {
 					break;
 				}
 				case OUT: {
+					addParameterBinder( JdbcParameterBinder.NOOP );
 					addParameterExtractor( registration.getParameterExtractor() );
 					break;
 				}

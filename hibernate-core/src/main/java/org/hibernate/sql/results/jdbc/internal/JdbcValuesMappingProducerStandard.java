@@ -8,6 +8,7 @@ package org.hibernate.sql.results.jdbc.internal;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.ast.spi.SqlSelection;

@@ -9,8 +9,6 @@ package org.hibernate.procedure.spi;
 import java.sql.CallableStatement;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.procedure.internal.FunctionReturnImpl;
-import org.hibernate.procedure.internal.ProcedureParamBindings;
 import org.hibernate.query.spi.ProcedureParameterMetadataImplementor;
 import org.hibernate.sql.exec.spi.JdbcCall;
 
@@ -18,16 +16,11 @@ import org.hibernate.sql.exec.spi.JdbcCall;
  * @author Steve Ebersole
  */
 public interface CallableStatementSupport {
-	JdbcCall interpretCall(
-			String procedureName,
-			FunctionReturnImpl functionReturn,
-			ProcedureParameterMetadataImplementor parameterMetadata,
-			ProcedureParamBindings paramBindings,
-			SharedSessionContractImplementor session);
+	JdbcCall interpretCall(ProcedureCallImplementor<?> procedureCall);
 
 	void registerParameters(
 			String procedureName,
-			ProcedureCallImplementor procedureCall,
+			JdbcCall procedureCall,
 			CallableStatement statement,
 			ParameterStrategy parameterStrategy,
 			ProcedureParameterMetadataImplementor parameterMetadata,

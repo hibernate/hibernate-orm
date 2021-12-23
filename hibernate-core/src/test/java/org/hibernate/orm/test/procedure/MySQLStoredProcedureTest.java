@@ -357,7 +357,7 @@ public class MySQLStoredProcedureTest {
 		scope.inTransaction( entityManager -> {
 			ProcedureCall procedureCall = entityManager.unwrap( Session.class )
 					.createStoredProcedureCall( "sp_is_null" );
-			procedureCall.registerParameter( 1, StandardBasicTypes.STRING, ParameterMode.IN ).enablePassingNulls( true );
+			procedureCall.registerParameter( 1, StandardBasicTypes.STRING, ParameterMode.IN );
 			procedureCall.registerParameter( 2, Boolean.class, ParameterMode.OUT );
 			procedureCall.setParameter( 1, null );
 
@@ -369,7 +369,7 @@ public class MySQLStoredProcedureTest {
 		scope.inTransaction( entityManager -> {
 			ProcedureCall procedureCall = entityManager.unwrap( Session.class )
 					.createStoredProcedureCall( "sp_is_null" );
-			procedureCall.registerParameter( 1, StandardBasicTypes.STRING, ParameterMode.IN ).enablePassingNulls( true );
+			procedureCall.registerParameter( 1, StandardBasicTypes.STRING, ParameterMode.IN );
 			procedureCall.registerParameter( 2, Boolean.class, ParameterMode.OUT );
 			procedureCall.setParameter( 1, "test" );
 

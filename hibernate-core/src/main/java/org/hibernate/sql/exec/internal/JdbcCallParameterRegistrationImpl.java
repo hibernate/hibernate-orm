@@ -8,7 +8,6 @@ package org.hibernate.sql.exec.internal;
 
 import java.sql.CallableStatement;
 import java.sql.SQLException;
-import jakarta.persistence.ParameterMode;
 
 import org.hibernate.engine.jdbc.cursor.spi.RefCursorSupport;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -19,6 +18,8 @@ import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
+import jakarta.persistence.ParameterMode;
+
 /**
  * @author Steve Ebersole
  */
@@ -26,7 +27,6 @@ public class JdbcCallParameterRegistrationImpl implements JdbcCallParameterRegis
 	private final String name;
 	private final int jdbcParameterPositionStart;
 	private final ParameterMode parameterMode;
-	private final int jdbcTypeCode;
 	private final AllowableParameterType ormType;
 	private final JdbcParameterBinder parameterBinder;
 	private final JdbcCallParameterExtractorImpl parameterExtractor;
@@ -36,7 +36,6 @@ public class JdbcCallParameterRegistrationImpl implements JdbcCallParameterRegis
 			String name,
 			int jdbcParameterPositionStart,
 			ParameterMode parameterMode,
-			int jdbcTypeCode,
 			AllowableParameterType ormType,
 			JdbcParameterBinder parameterBinder,
 			JdbcCallParameterExtractorImpl parameterExtractor,
@@ -44,7 +43,6 @@ public class JdbcCallParameterRegistrationImpl implements JdbcCallParameterRegis
 		this.name = name;
 		this.jdbcParameterPositionStart = jdbcParameterPositionStart;
 		this.parameterMode = parameterMode;
-		this.jdbcTypeCode = jdbcTypeCode;
 		this.ormType = ormType;
 		this.parameterBinder = parameterBinder;
 		this.parameterExtractor = parameterExtractor;

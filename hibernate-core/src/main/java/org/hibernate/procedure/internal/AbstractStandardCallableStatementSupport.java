@@ -7,57 +7,29 @@
 package org.hibernate.procedure.internal;
 
 import java.sql.CallableStatement;
-import java.sql.SQLException;
-import java.util.List;
 
-import org.hibernate.engine.jdbc.cursor.spi.RefCursorSupport;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.procedure.spi.ParameterStrategy;
-import org.hibernate.procedure.spi.ProcedureCallImplementor;
-import org.hibernate.procedure.spi.ProcedureParameterImplementor;
 import org.hibernate.query.spi.ProcedureParameterMetadataImplementor;
-
-import jakarta.persistence.ParameterMode;
+import org.hibernate.sql.exec.spi.JdbcCall;
+import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;
 
 public abstract class AbstractStandardCallableStatementSupport implements CallableStatementSupport {
 
 	@Override
 	public void registerParameters(
 			String procedureName,
-			ProcedureCallImplementor procedureCall,
+			JdbcCall procedureCall,
 			CallableStatement statement,
 			ParameterStrategy parameterStrategy,
 			ProcedureParameterMetadataImplementor parameterMetadata,
 			SharedSessionContractImplementor session) {
-
-		final List<? extends ProcedureParameterImplementor<?>> registrations = parameterMetadata.getRegistrationsAsList();
-		final RefCursorSupport refCursorSupport = procedureCall.getSession().getFactory().getServiceRegistry()
-				.getService( RefCursorSupport.class );
-		try {
-			for ( int i = 0; i < registrations.size(); i++ ) {
-				final ProcedureParameterImplementor<?> parameter = registrations.get( i );
-				if ( parameter.getMode() == ParameterMode.REF_CURSOR ) {
-					if ( procedureCall.getParameterStrategy() == ParameterStrategy.NAMED ) {
-						refCursorSupport
-								.registerRefCursorParameter( statement, parameter.getName() );
-					}
-					else {
-						refCursorSupport
-								.registerRefCursorParameter( statement, parameter.getPosition() );
-					}
-				}
-				else {
-					parameter.prepare( statement, i + 1, procedureCall );
-				}
-			}
+		if ( procedureCall.getFunctionReturn() != null ) {
+			procedureCall.getFunctionReturn().registerParameter( statement, session );
 		}
-		catch (SQLException e) {
-			throw session.getJdbcServices().getSqlExceptionHelper().convert(
-					e,
-					"Error registering CallableStatement parameters",
-					procedureName
-			);
+		for ( JdbcCallParameterRegistration parameterRegistration : procedureCall.getParameterRegistrations() ) {
+			parameterRegistration.registerParameter( statement, session );
 		}
 	}
 }

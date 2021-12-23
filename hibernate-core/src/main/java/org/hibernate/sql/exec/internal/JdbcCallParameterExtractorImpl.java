@@ -10,9 +10,9 @@ import java.sql.CallableStatement;
 import java.sql.SQLException;
 
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
-import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcCallParameterExtractor;
 
 /**
@@ -20,7 +20,7 @@ import org.hibernate.sql.exec.spi.JdbcCallParameterExtractor;
  *
  * @author Steve Ebersole
  */
-public class JdbcCallParameterExtractorImpl<T> implements JdbcCallParameterExtractor {
+public class JdbcCallParameterExtractorImpl<T> implements JdbcCallParameterExtractor<T> {
 	private final String callableName;
 	private final String parameterName;
 	private final int parameterPosition;
@@ -58,7 +58,7 @@ public class JdbcCallParameterExtractorImpl<T> implements JdbcCallParameterExtra
 	public T extractValue(
 			CallableStatement callableStatement,
 			boolean shouldUseJdbcNamedParameters,
-			ExecutionContext executionContext) {
+			SharedSessionContractImplementor session) {
 
 		final boolean useNamed = shouldUseJdbcNamedParameters
 				&& parameterName != null;
@@ -68,14 +68,14 @@ public class JdbcCallParameterExtractorImpl<T> implements JdbcCallParameterExtra
 
 		try {
 			if ( useNamed ) {
-				return (T) ormType.extract( callableStatement, parameterName, executionContext.getSession() );
+				return (T) ormType.extract( callableStatement, parameterName, session );
 			}
 			else {
-				return (T) ormType.extract( callableStatement, parameterPosition, executionContext.getSession() );
+				return (T) ormType.extract( callableStatement, parameterPosition, session );
 			}
 		}
 		catch (SQLException e) {
-			throw executionContext.getSession().getJdbcServices().getSqlExceptionHelper().convert(
+			throw session.getJdbcServices().getSqlExceptionHelper().convert(
 					e,
 					"Unable to extract OUT/INOUT parameter value"
 			);

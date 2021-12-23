@@ -18,15 +18,12 @@ import org.hibernate.query.results.ResultSetMapping;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 
-import org.jboss.logging.Logger;
-
 /**
  * Utilities used to implement procedure call support.
  *
  * @author Steve Ebersole
  */
 public class Util {
-	private static final Logger log = Logger.getLogger( Util.class );
 
 	private Util() {
 	}
@@ -85,8 +82,7 @@ public class Util {
 				}
 			}
 			else {
-				final JavaType<?> basicType = javaTypeRegistry.getDescriptor(
-						resultSetMappingClass );
+				final JavaType<?> basicType = javaTypeRegistry.getDescriptor( resultSetMappingClass );
 				if ( basicType != null ) {
 					resultSetMapping.addResultBuilder( new ScalarDomainResultBuilder<>( basicType ) );
 				}

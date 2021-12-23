@@ -7,15 +7,83 @@
 package org.hibernate.procedure.internal;
 
 import java.sql.CallableStatement;
+import java.sql.SQLException;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
+
+import org.hibernate.HibernateException;
+import org.hibernate.LockMode;
+import org.hibernate.ScrollMode;
+import org.hibernate.annotations.QueryHints;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.graph.GraphSemantic;
+import org.hibernate.graph.RootGraph;
+import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.model.domain.AllowableParameterType;
+import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.procedure.NoSuchParameterException;
+import org.hibernate.procedure.ParameterStrategyException;
+import org.hibernate.procedure.ProcedureCall;
+import org.hibernate.procedure.ProcedureOutputs;
+import org.hibernate.procedure.spi.CallableStatementSupport;
+import org.hibernate.procedure.spi.FunctionReturnImplementor;
+import org.hibernate.procedure.spi.NamedCallableQueryMemento;
+import org.hibernate.procedure.spi.ParameterStrategy;
+import org.hibernate.procedure.spi.ProcedureCallImplementor;
+import org.hibernate.procedure.spi.ProcedureParameterImplementor;
+import org.hibernate.query.Query;
+import org.hibernate.query.QueryParameter;
+import org.hibernate.query.internal.QueryOptionsImpl;
+import org.hibernate.query.named.NamedQueryMemento;
+import org.hibernate.query.procedure.ProcedureParameter;
+import org.hibernate.query.results.ResultSetMapping;
+import org.hibernate.query.results.ResultSetMappingImpl;
+import org.hibernate.query.spi.AbstractQuery;
+import org.hibernate.query.spi.MutableQueryOptions;
+import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.query.spi.QueryOptionsAdapter;
+import org.hibernate.query.spi.QueryParameterBinding;
+import org.hibernate.query.spi.QueryParameterBindings;
+import org.hibernate.query.spi.ScrollableResultsImplementor;
+import org.hibernate.result.NoMoreReturnsException;
+import org.hibernate.result.Output;
+import org.hibernate.result.ResultSetOutput;
+import org.hibernate.result.UpdateCountOutput;
+import org.hibernate.result.spi.ResultContext;
+import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.exec.internal.CallbackImpl;
+import org.hibernate.sql.exec.internal.JdbcCallRefCursorExtractorImpl;
+import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
+import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
+import org.hibernate.sql.exec.spi.Callback;
+import org.hibernate.sql.exec.spi.ExecutionContext;
+import org.hibernate.sql.exec.spi.JdbcCall;
+import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;
+import org.hibernate.sql.exec.spi.JdbcCallRefCursorExtractor;
+import org.hibernate.sql.exec.spi.JdbcParameterBinder;
+import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.results.NoMoreOutputsException;
+import org.hibernate.type.BasicType;
+import org.hibernate.type.BasicTypeReference;
+import org.hibernate.type.spi.TypeConfiguration;
+
+import org.jboss.logging.Logger;
+
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.NoResultException;
@@ -25,50 +93,6 @@ import jakarta.persistence.ParameterMode;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.TransactionRequiredException;
-
-import org.hibernate.HibernateException;
-import org.hibernate.LockMode;
-import org.hibernate.ScrollMode;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.graph.GraphSemantic;
-import org.hibernate.graph.RootGraph;
-import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.metamodel.model.domain.AllowableParameterType;
-import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.procedure.NoSuchParameterException;
-import org.hibernate.procedure.ParameterStrategyException;
-import org.hibernate.procedure.ProcedureCall;
-import org.hibernate.procedure.ProcedureOutputs;
-import org.hibernate.procedure.spi.CallableStatementSupport;
-import org.hibernate.procedure.spi.NamedCallableQueryMemento;
-import org.hibernate.procedure.spi.ParameterStrategy;
-import org.hibernate.procedure.spi.ProcedureCallImplementor;
-import org.hibernate.procedure.spi.ProcedureParameterImplementor;
-import org.hibernate.query.Query;
-import org.hibernate.query.QueryParameter;
-import org.hibernate.query.internal.QueryOptionsImpl;
-import org.hibernate.query.procedure.ProcedureParameter;
-import org.hibernate.query.results.ResultSetMapping;
-import org.hibernate.query.results.ResultSetMappingImpl;
-import org.hibernate.query.spi.AbstractQuery;
-import org.hibernate.query.spi.MutableQueryOptions;
-import org.hibernate.query.spi.QueryImplementor;
-import org.hibernate.query.spi.QueryParameterBindings;
-import org.hibernate.query.spi.ScrollableResultsImplementor;
-import org.hibernate.result.NoMoreReturnsException;
-import org.hibernate.result.Output;
-import org.hibernate.result.ResultSetOutput;
-import org.hibernate.result.UpdateCountOutput;
-import org.hibernate.result.spi.ResultContext;
-import org.hibernate.sql.exec.spi.JdbcCall;
-import org.hibernate.sql.results.NoMoreOutputsException;
-import org.hibernate.type.BasicType;
-import org.hibernate.type.BasicTypeReference;
-
-import org.jboss.logging.Logger;
 
 /**
  * Standard implementation of {@link ProcedureCall}
@@ -82,7 +106,7 @@ public class ProcedureCallImpl<R>
 
 	private final String procedureName;
 
-	private FunctionReturnImpl functionReturn;
+	private FunctionReturnImpl<R> functionReturn;
 
 	private final ProcedureParameterMetadataImpl parameterMetadata;
 	private final ProcedureParamBindings paramBindings;
@@ -93,6 +117,7 @@ public class ProcedureCallImpl<R>
 
 	private final QueryOptionsImpl queryOptions = new QueryOptionsImpl();
 
+	private JdbcCall call;
 	private ProcedureOutputsImpl outputs;
 
 
@@ -263,6 +288,30 @@ public class ProcedureCallImpl<R>
 				synchronizedQuerySpaces::add,
 				() -> getSession().getFactory()
 		);
+
+		applyOptions( memento );
+	}
+
+	protected void applyOptions(NamedCallableQueryMemento memento) {
+		applyOptions( (NamedQueryMemento) memento );
+
+		if ( memento.getHints() != null ) {
+			final Object callableFunction = memento.getHints().get( QueryHints.CALLABLE_FUNCTION );
+			if ( callableFunction != null && Boolean.parseBoolean( callableFunction.toString() ) ) {
+				final List<Class<?>> resultTypes = new ArrayList<>();
+				resultSetMapping.visitResultBuilders(
+						(index, resultBuilder) -> resultTypes.add( resultBuilder.getJavaType() )
+				);
+				final TypeConfiguration typeConfiguration = getSessionFactory().getTypeConfiguration();
+				final BasicType<?> type;
+				if ( resultTypes.size() != 1 || ( type = typeConfiguration.getBasicTypeForJavaType( resultTypes.get( 0 ) ) ) == null ) {
+					markAsFunctionCall( Types.REF_CURSOR );
+				}
+				else {
+					markAsFunctionCall( type.getJdbcTypeDescriptor().getJdbcTypeCode() );
+				}
+			}
+		}
 	}
 
 	@Override
@@ -300,8 +349,13 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
+	public FunctionReturnImplementor<R> getFunctionReturn() {
+		return functionReturn;
+	}
+
+	@Override
 	public ProcedureCall markAsFunctionCall(int sqlType) {
-		functionReturn = new FunctionReturnImpl( this, sqlType );
+		functionReturn = new FunctionReturnImpl<>( this, sqlType );
 		return this;
 	}
 
@@ -519,15 +573,27 @@ public class ProcedureCallImpl<R>
 				.getJdbcEnvironment()
 				.getDialect()
 				.getCallableStatementSupport();
-		final ProcedureParameterMetadataImpl parameterMetadata = getParameterMetadata();
-		final JdbcCall call = callableStatementSupport.interpretCall(
-				procedureName,
-				functionReturn,
-				parameterMetadata,
-				paramBindings,
-				getSession()
-		);
+		this.call = callableStatementSupport.interpretCall( this );
 
+		final Map<ProcedureParameter<?>, JdbcCallParameterRegistration> parameterRegistrations = new IdentityHashMap<>();
+		final List<JdbcCallRefCursorExtractor> refCursorExtractors = new ArrayList<>();
+		if ( functionReturn != null ) {
+			parameterRegistrations.put( functionReturn, call.getFunctionReturn() );
+			final JdbcCallRefCursorExtractorImpl refCursorExtractor = call.getFunctionReturn().getRefCursorExtractor();
+			if ( refCursorExtractor != null ) {
+				refCursorExtractors.add( refCursorExtractor );
+			}
+		}
+		final List<? extends ProcedureParameterImplementor<?>> registrations = getParameterMetadata().getRegistrationsAsList();
+		final List<JdbcCallParameterRegistration> jdbcParameters = call.getParameterRegistrations();
+		for ( int i = 0; i < registrations.size(); i++ ) {
+			final JdbcCallParameterRegistration jdbcCallParameterRegistration = jdbcParameters.get( i );
+			parameterRegistrations.put( registrations.get( i ), jdbcCallParameterRegistration );
+			final JdbcCallRefCursorExtractorImpl refCursorExtractor = jdbcCallParameterRegistration.getRefCursorExtractor();
+			if ( refCursorExtractor != null ) {
+				refCursorExtractors.add( refCursorExtractor );
+			}
+		}
 
 		LOG.debugf( "Preparing procedure call : %s", call );
 		final CallableStatement statement = (CallableStatement) getSession()
@@ -535,35 +601,100 @@ public class ProcedureCallImpl<R>
 				.getStatementPreparer()
 				.prepareStatement( call.getSql(), true );
 
-		callableStatementSupport.registerParameters( procedureName, this,statement, parameterMetadata.getParameterStrategy(), parameterMetadata, getSession() );
-//		getParameterMetadata().visitRegistrations(
-//				new Consumer<QueryParameter<?>>() {
-//					int i = 1;
-//
-//					@Override
-//					public void accept(QueryParameter queryParameter) {
-//						try {
-//							final ProcedureParameterImplementor registration = (ProcedureParameterImplementor) queryParameter;
-//							registration.prepare( statement, i, ProcedureCallImpl.this );
-////							if ( registration.getMode() == ParameterMode.REF_CURSOR ) {
-//							i++;
-////							}
-////							else {
-////								i += registration.getHibernateType().getSqlTypes().length;
-////							}
-//						}
-//						catch (SQLException e) {
-//							throw getSession().getJdbcServices().getSqlExceptionHelper().convert(
-//									e,
-//									"Error preparing registered callable parameter",
-//									getProcedureName()
-//							);
-//						}
-//					}
-//				}
-//		);
+		// Register the parameter mode and type
+		callableStatementSupport.registerParameters(
+				procedureName,
+				call,
+				statement,
+				parameterMetadata.getParameterStrategy(),
+				parameterMetadata,
+				getSession()
+		);
 
-		return new ProcedureOutputsImpl( this, statement );
+		// Apply the parameter bindings
+		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( parameterRegistrations.size() );
+		for ( Map.Entry<ProcedureParameter<?>, JdbcCallParameterRegistration> entry : parameterRegistrations.entrySet() ) {
+			final JdbcCallParameterRegistration registration = entry.getValue();
+			if ( registration.getParameterBinder() != null ) {
+				final ProcedureParameter<?> parameter = entry.getKey();
+				final QueryParameterBinding<?> binding = getParameterBindings().getBinding( parameter );
+				if ( !binding.isBound() ) {
+					if ( parameter.getPosition() == null ) {
+						throw new IllegalArgumentException( "The parameter named [" + parameter + "] was not set! You need to call the setParameter method." );
+					}
+					else {
+						throw new IllegalArgumentException( "The parameter at position [" + parameter + "] was not set! You need to call the setParameter method." );
+					}
+				}
+				jdbcParameterBindings.addBinding(
+						(JdbcParameter) registration.getParameterBinder(),
+						new JdbcParameterBindingImpl(
+								(JdbcMapping) registration.getParameterType(),
+								binding.getBindValue()
+						)
+				);
+			}
+		}
+
+		final JdbcCallRefCursorExtractor[] extractors = refCursorExtractors.toArray( new JdbcCallRefCursorExtractor[0] );
+
+		final ExecutionContext executionContext = new ExecutionContext() {
+			private final Callback callback = new CallbackImpl();
+
+			@Override
+			public SharedSessionContractImplementor getSession() {
+				return ProcedureCallImpl.this.getSession();
+			}
+
+			@Override
+			public QueryOptions getQueryOptions() {
+				return new QueryOptionsAdapter() {
+					@Override
+					public Boolean isReadOnly() {
+						return false;
+					}
+				};
+			}
+
+			@Override
+			public String getQueryIdentifier(String sql) {
+				return sql;
+			}
+
+			@Override
+			public QueryParameterBindings getQueryParameterBindings() {
+				return QueryParameterBindings.NO_PARAM_BINDINGS;
+			}
+
+			@Override
+			public Callback getCallback() {
+				return callback;
+			}
+
+		};
+
+		// Note that this should actually happen in an executor
+
+		try {
+			int paramBindingPosition = functionReturn == null ? 1 : 2;
+			for ( JdbcParameterBinder parameterBinder : call.getParameterBinders() ) {
+				parameterBinder.bindParameterValue(
+						statement,
+						paramBindingPosition,
+						jdbcParameterBindings,
+						executionContext
+				);
+				paramBindingPosition++;
+			}
+		}
+		catch (SQLException e) {
+			throw getSession().getJdbcServices().getSqlExceptionHelper().convert(
+					e,
+					"Error registering CallableStatement parameters",
+					procedureName
+			);
+		}
+		return new ProcedureOutputsImpl( this, parameterRegistrations, extractors, statement );
 	}
 
 	@Override
@@ -616,25 +747,6 @@ public class ProcedureCallImpl<R>
 	public ProcedureCallImplementor<R> addSynchronizedEntityClass(Class entityClass) {
 		addSynchronizedQuerySpaces( getSession().getFactory().getMetamodel().entityPersister( entityClass.getName() ) );
 		return this;
-	}
-
-	/**
-	 * Collects any parameter registrations which indicate a REF_CURSOR parameter type/mode.
-	 *
-	 * @return The collected REF_CURSOR type parameters.
-	 */
-	public ProcedureParameterImplementor[] collectRefCursorParameters() {
-		final List<ProcedureParameterImplementor> refCursorParams = new ArrayList<>();
-
-		getParameterMetadata().visitRegistrations(
-				queryParameter -> {
-					final ProcedureParameterImplementor registration = (ProcedureParameterImplementor) queryParameter;
-					if ( registration.getMode() == ParameterMode.REF_CURSOR ) {
-						refCursorParams.add( registration );
-					}
-				}
-		);
-		return refCursorParams.toArray( new ProcedureParameterImplementor[0] );
 	}
 
 	@Override

@@ -7,10 +7,7 @@
 
 package org.hibernate.procedure.internal;
 
-import java.sql.CallableStatement;
-import java.sql.SQLException;
 import java.sql.Types;
-import jakarta.persistence.ParameterMode;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -27,51 +24,52 @@ import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import jakarta.persistence.ParameterMode;
+
 /**
  * @author Steve Ebersole
  */
-public class FunctionReturnImpl implements FunctionReturnImplementor {
-	private final ProcedureCallImplementor procedureCall;
-	private int jdbcTypeCode;
+public class FunctionReturnImpl<T> implements FunctionReturnImplementor<T> {
+	private final ProcedureCallImplementor<T> procedureCall;
+	private final int jdbcTypeCode;
 
-	private AllowableOutputParameterType<?> ormType;
+	private AllowableOutputParameterType<T> ormType;
 
-	public FunctionReturnImpl(ProcedureCallImplementor procedureCall, int jdbcTypeCode) {
+	public FunctionReturnImpl(ProcedureCallImplementor<T> procedureCall, int jdbcTypeCode) {
 		this.procedureCall = procedureCall;
 		this.jdbcTypeCode = jdbcTypeCode;
 	}
 
-	public FunctionReturnImpl(ProcedureCallImplementor procedureCall, AllowableOutputParameterType ormType) {
+	public FunctionReturnImpl(ProcedureCallImplementor<T> procedureCall, AllowableOutputParameterType<T> ormType) {
 		this.procedureCall = procedureCall;
 		this.jdbcTypeCode = ormType.getJdbcTypeDescriptor().getJdbcTypeCode();
-
 		this.ormType = ormType;
 	}
 
-
+	@Override
 	public JdbcCallFunctionReturn toJdbcFunctionReturn(SharedSessionContractImplementor persistenceContext) {
-		final AllowableParameterType ormType;
+		final AllowableParameterType<T> ormType;
 		final JdbcCallRefCursorExtractorImpl refCursorExtractor;
-		final JdbcCallParameterExtractorImpl parameterExtractor;
+		final JdbcCallParameterExtractorImpl<T> parameterExtractor;
 
 		if ( getJdbcTypeCode() == Types.REF_CURSOR ) {
-			refCursorExtractor = new JdbcCallRefCursorExtractorImpl( null, 0 );
+			refCursorExtractor = new JdbcCallRefCursorExtractorImpl( null, 1 );
 			ormType = null;
 			parameterExtractor = null;
 		}
 		else {
-
 			final TypeConfiguration typeConfiguration = persistenceContext.getFactory().getMetamodel().getTypeConfiguration();
 			final JdbcType sqlTypeDescriptor = typeConfiguration.getJdbcTypeDescriptorRegistry()
 					.getDescriptor( getJdbcTypeCode() );
 			final BasicJavaType<?> javaTypeMapping = sqlTypeDescriptor
 					.getJdbcRecommendedJavaTypeMapping( null, null, typeConfiguration );
-			ormType = typeConfiguration.standardBasicTypeForJavaType( javaTypeMapping.getJavaTypeClass() );
-			parameterExtractor = new JdbcCallParameterExtractorImpl<>( procedureCall.getProcedureName(), null, 0, ormType );
+			//noinspection unchecked
+			ormType = (AllowableParameterType<T>) typeConfiguration.standardBasicTypeForJavaType( javaTypeMapping.getJavaTypeClass() );
+			parameterExtractor = new JdbcCallParameterExtractorImpl<>( procedureCall.getProcedureName(), null, 1, ormType );
 			refCursorExtractor = null;
 		}
 
-		return new JdbcCallFunctionReturnImpl( getJdbcTypeCode(), ormType, parameterExtractor, refCursorExtractor );
+		return new JdbcCallFunctionReturnImpl( ormType, parameterExtractor, refCursorExtractor );
 	}
 
 	@Override
@@ -80,7 +78,7 @@ public class FunctionReturnImpl implements FunctionReturnImplementor {
 	}
 
 	@Override
-	public AllowableParameterType getHibernateType() {
+	public AllowableParameterType<T> getHibernateType() {
 		return ormType;
 	}
 
@@ -91,7 +89,7 @@ public class FunctionReturnImpl implements FunctionReturnImplementor {
 
 	@Override
 	public Integer getPosition() {
-		return 0;
+		return 1;
 	}
 
 	@Override
@@ -125,17 +123,11 @@ public class FunctionReturnImpl implements FunctionReturnImplementor {
 	public NamedCallableQueryMemento.ParameterMemento toMemento() {
 		return session -> {
 			if ( ormType != null ) {
-				return new FunctionReturnImpl( procedureCall, ormType );
+				return new FunctionReturnImpl<>( procedureCall, ormType );
 			}
 			else {
-				return new FunctionReturnImpl( procedureCall, jdbcTypeCode );
+				return new FunctionReturnImpl<>( procedureCall, jdbcTypeCode );
 			}
 		};
-	}
-
-	@Override
-	public void prepare(CallableStatement statement, int startIndex, ProcedureCallImplementor callImplementor)
-			throws SQLException {
-		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 }

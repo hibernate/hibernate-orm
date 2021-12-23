@@ -9,7 +9,6 @@ package org.hibernate.sql.exec.internal;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -25,9 +24,7 @@ import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
-import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -80,6 +77,7 @@ public abstract class AbstractJdbcParameter
 			throw new ExecutionException( "JDBC parameter value not bound - " + this );
 		}
 
+		final Object bindValue = binding.getBindValue();
 		JdbcMapping jdbcMapping = binding.getBindType();
 
 		if ( jdbcMapping == null ) {
@@ -88,11 +86,18 @@ public abstract class AbstractJdbcParameter
 
 		// If the parameter type is not known from the context i.e. null or Object, infer it from the bind value
 		if ( jdbcMapping == null || jdbcMapping.getMappedJavaTypeDescriptor().getJavaTypeClass() == Object.class ) {
-			jdbcMapping = guessBindType( executionContext, binding, jdbcMapping );
+			jdbcMapping = guessBindType( executionContext, bindValue, jdbcMapping );
 		}
 
-		final Object bindValue = binding.getBindValue();
+		bindParameterValue( jdbcMapping, statement, bindValue, startPosition, executionContext );
+	}
 
+	protected void bindParameterValue(
+			JdbcMapping jdbcMapping,
+			PreparedStatement statement,
+			Object bindValue,
+			int startPosition,
+			ExecutionContext executionContext) throws SQLException {
 		//noinspection unchecked
 		jdbcMapping.getJdbcValueBinder().bind(
 				statement,
@@ -102,13 +107,14 @@ public abstract class AbstractJdbcParameter
 		);
 	}
 
-	private JdbcMapping guessBindType(ExecutionContext executionContext, JdbcParameterBinding binding, JdbcMapping jdbcMapping) {
-		if ( binding.getBindValue() == null &&  jdbcMapping != null ) {
+	private JdbcMapping guessBindType(ExecutionContext executionContext, Object bindValue, JdbcMapping jdbcMapping) {
+		if ( bindValue == null && jdbcMapping != null ) {
 			return jdbcMapping;
 		}
 
-		final AllowableParameterType<?> parameterType = executionContext.getSession().getFactory()
-				.resolveParameterBindType( binding.getBindValue() );
+		final AllowableParameterType<?> parameterType = executionContext.getSession()
+				.getFactory()
+				.resolveParameterBindType( bindValue );
 		if ( parameterType instanceof JdbcMapping ) {
 			return (JdbcMapping) parameterType;
 		}

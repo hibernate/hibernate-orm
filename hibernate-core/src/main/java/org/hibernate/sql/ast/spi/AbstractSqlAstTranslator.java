@@ -1815,6 +1815,27 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
+	protected void emulateSelectTupleComparison(
+			List<SqlSelection> lhsSelections,
+			List<? extends SqlAstNode> rhsExpressions,
+			ComparisonOperator operator,
+			boolean indexOptimized) {
+		final List<? extends SqlAstNode> lhsExpressions;
+		if ( lhsSelections.size() == rhsExpressions.size() ) {
+			lhsExpressions = lhsSelections;
+		}
+		else if ( lhsSelections.size() == 1 ) {
+			lhsExpressions = SqlTupleContainer.getSqlTuple( lhsSelections.get( 0 ).getExpression() ).getExpressions();
+		}
+		else {
+			final List<Expression> list = new ArrayList<>( rhsExpressions.size() );
+			for ( SqlSelection lhsSelection : lhsSelections ) {
+				list.addAll( SqlTupleContainer.getSqlTuple( lhsSelection.getExpression() ).getExpressions() );
+			}
+			lhsExpressions = list;
+		}
+		emulateTupleComparison( lhsExpressions, rhsExpressions, operator, indexOptimized );
+	}
 
 	/**
 	 * A tuple comparison like <code>(a, b) &gt; (1, 2)</code> can be emulated through it logical definition: <code>a &gt; 1 or a = 1 and b &gt; 2</code>.

@@ -335,7 +335,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 			List<SqlSelection> lhsExpressions,
 			SqlTuple tuple,
 			ComparisonOperator operator) {
-		emulateTupleComparison( lhsExpressions, tuple.getExpressions(), operator, true );
+		emulateSelectTupleComparison( lhsExpressions, tuple.getExpressions(), operator, true );
 	}
 
 	@Override

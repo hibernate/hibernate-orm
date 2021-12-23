@@ -14,6 +14,7 @@ import java.util.Set;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
 
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.query.FetchClauseType;
 import org.hibernate.query.SemanticException;
@@ -26,6 +27,7 @@ import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmNode;
+import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.expression.SqmAliasedNodeRef;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
@@ -400,6 +402,13 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		}
 		else if ( selectableNode instanceof SqmFrom<?, ?> ) {
 			collectSelectedFromSet( selectedFromSet, (SqmFrom<?, ?>) selectableNode );
+		}
+		else if ( selectableNode instanceof SqmEntityValuedSimplePath<?> ) {
+			final SqmEntityValuedSimplePath<?> path = (SqmEntityValuedSimplePath<?>) selectableNode;
+			if ( CollectionPart.Nature.fromNameExact( path.getReferencedPathSource().getPathName() ) != null
+					&& path.getLhs() instanceof SqmFrom<?, ?> ) {
+				collectSelectedFromSet( selectedFromSet, (SqmFrom<?, ?>) path.getLhs() );
+			}
 		}
 	}
 

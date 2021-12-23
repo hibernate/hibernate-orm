@@ -17,9 +17,12 @@ import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
+import org.hibernate.sql.ast.tree.expression.SqlTupleContainer;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
+import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
 import org.hibernate.sql.ast.tree.select.QueryPart;
+import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 
 /**
@@ -28,6 +31,8 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
  * @author Christian Beikov
  */
 public class H2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
+
+	private boolean renderAsArray;
 
 	public H2SqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
@@ -79,7 +84,40 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstT
 			List<SqlSelection> lhsExpressions,
 			SqlTuple tuple,
 			ComparisonOperator operator) {
-		emulateTupleComparison( lhsExpressions, tuple.getExpressions(), operator, true );
+		emulateSelectTupleComparison( lhsExpressions, tuple.getExpressions(), operator, true );
+	}
+
+	@Override
+	public void visitInSubQueryPredicate(InSubQueryPredicate inSubQueryPredicate) {
+		final SqlTuple lhsTuple;
+		if ( ( lhsTuple = SqlTupleContainer.getSqlTuple( inSubQueryPredicate.getTestExpression() ) ) != null
+				&& lhsTuple.getExpressions().size() != 1 ) {
+			inSubQueryPredicate.getTestExpression().accept( this );
+			if ( inSubQueryPredicate.isNegated() ) {
+				appendSql( " not" );
+			}
+			appendSql( " in" );
+			final boolean renderAsArray = this.renderAsArray;
+			this.renderAsArray = true;
+			inSubQueryPredicate.getSubQuery().accept( this );
+			this.renderAsArray = renderAsArray;
+		}
+		else {
+			super.visitInSubQueryPredicate( inSubQueryPredicate );
+		}
+	}
+
+	@Override
+	protected void visitSqlSelections(SelectClause selectClause) {
+		final boolean renderAsArray = this.renderAsArray;
+		this.renderAsArray = false;
+		if ( renderAsArray ) {
+			append( OPEN_PARENTHESIS );
+		}
+		super.visitSqlSelections( selectClause );
+		if ( renderAsArray ) {
+			append( CLOSE_PARENTHESIS );
+		}
 	}
 
 	@Override
@@ -100,17 +138,20 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstT
 
 	@Override
 	protected boolean supportsRowValueConstructorSyntax() {
-		return false;
+		// Just a guess
+		return getDialect().getVersion().isSameOrAfter( 1, 4, 197 );
 	}
 
 	@Override
 	protected boolean supportsRowValueConstructorSyntaxInInList() {
-		return false;
+		// Just a guess
+		return getDialect().getVersion().isSameOrAfter( 1, 4, 197 );
 	}
 
 	@Override
 	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
+		// Just a guess
+		return getDialect().getVersion().isSameOrAfter( 1, 4, 197 );
 	}
 
 	@Override

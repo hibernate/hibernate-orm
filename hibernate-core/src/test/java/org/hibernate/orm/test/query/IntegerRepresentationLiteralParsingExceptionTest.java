@@ -1,4 +1,4 @@
-package org.hibernate.query;
+package org.hibernate.orm.test.query;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -27,8 +27,8 @@ public class IntegerRepresentationLiteralParsingExceptionTest extends BaseEntity
 	public void testAppropriateExceptionMessageGenerated() {
 		try {
 			doInJPA( this::entityManagerFactory, entityManager -> {
-				// -9223372036854775808 is beyond Long range, so an Exception will be thrown
-				entityManager.createQuery( "select count(*) from ExampleEntity where counter = -9223372036854775808L" )
+				// 9223372036854775808 is beyond Long range, so an Exception will be thrown
+				entityManager.createQuery( "select count(*) from ExampleEntity where counter = 9223372036854775808L" )
 						.getSingleResult();
 			} );
 			Assert.fail( "Exception should be thrown" );
@@ -37,7 +37,7 @@ public class IntegerRepresentationLiteralParsingExceptionTest extends BaseEntity
 			// without fixing HHH-14213, the following exception would be thrown:
 			// "Could not parse literal [9223372036854775808L] as integer"
 			// which is confusing and misleading
-			Assert.assertTrue( e.getMessage().endsWith( " as java.lang.Long" ) );
+			Assert.assertTrue( e.getMessage().endsWith( " to Long" ) );
 		}
 	}
 

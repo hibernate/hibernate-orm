@@ -58,7 +58,7 @@ public class MaxDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 			List<SqlSelection> lhsExpressions,
 			SqlTuple tuple,
 			ComparisonOperator operator) {
-		emulateTupleComparison( lhsExpressions, tuple.getExpressions(), operator, true );
+		emulateSelectTupleComparison( lhsExpressions, tuple.getExpressions(), operator, true );
 	}
 
 	@Override

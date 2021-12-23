@@ -1,4 +1,4 @@
-package org.hibernate.query.hhh14112;
+package org.hibernate.orm.test.query.hhh14112;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -36,7 +36,7 @@ public class HHH14112Test extends BaseCoreFunctionalTestCase {
 
 	@Entity(name = "Super")
 	@Inheritance(strategy = InheritanceType.JOINED)
-	@Where(clause = "DELETED = false")
+	@Where(clause = "deleted = false")
 	public static class Super {
 		@Id
 		@GeneratedValue(strategy = GenerationType.AUTO)

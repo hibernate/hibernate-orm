@@ -1,4 +1,4 @@
-package org.hibernate.query.hhh14154;
+package org.hibernate.orm.test.query.hhh14154;
 
 import java.util.Date;
 import jakarta.persistence.Entity;

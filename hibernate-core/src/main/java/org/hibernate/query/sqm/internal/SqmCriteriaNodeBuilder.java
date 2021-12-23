@@ -71,7 +71,9 @@ import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.SqmQuerySource;
+import org.hibernate.query.sqm.function.NamedSqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
@@ -1350,14 +1352,20 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <T> SqmFunction<T> function(String name, Class<T> type, Expression<?>[] args) {
-		final SqmFunctionDescriptor functionTemplate = getFunctionDescriptor( name );
+		SqmFunctionDescriptor functionTemplate = getFunctionDescriptor( name );
+		final BasicType<T> resultType = getTypeConfiguration().getBasicTypeForJavaType( type );
 		if ( functionTemplate == null ) {
-			throw new SemanticException( "Could not resolve function named `" + name + "`" );
+			functionTemplate = new NamedSqmFunctionDescriptor(
+					name,
+					true,
+					null,
+					StandardFunctionReturnTypeResolvers.invariant( resultType )
+			);
 		}
 
 		return functionTemplate.generateSqmExpression(
 				expressionList( args ),
-				getTypeConfiguration().getBasicTypeForJavaType( type ),
+				resultType,
 				getQueryEngine(),
 				getJpaMetamodel().getTypeConfiguration()
 		);

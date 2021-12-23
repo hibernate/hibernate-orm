@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
@@ -322,7 +323,7 @@ public abstract class AbstractEntityPersister
 	protected final String rowIdName;
 
 	// The optional SQL string defined in the where attribute
-	private final String sqlWhereString;
+	private final String sqlWhereStringTableExpression;
 	private final String sqlWhereStringTemplate;
 
 	//information about properties of this class,
@@ -800,17 +801,26 @@ public abstract class AbstractEntityPersister
 
 		//WHERE STRING
 
-		sqlWhereString = StringHelper.isNotEmpty( bootDescriptor.getWhere() ) ?
-				"(" + bootDescriptor.getWhere() + ")" :
-				null;
-		sqlWhereStringTemplate = sqlWhereString == null ?
-				null :
-				Template.renderWhereStringTemplate(
-						sqlWhereString,
-						dialect,
-						factory.getQueryEngine().getSqmFunctionRegistry()
-				);
-
+		if ( StringHelper.isEmpty( bootDescriptor.getWhere() ) ) {
+			sqlWhereStringTableExpression = null;
+			sqlWhereStringTemplate = null;
+		}
+		else {
+			PersistentClass containingClass = bootDescriptor;
+			while ( containingClass.getSuperclass() != null ) {
+				final PersistentClass superclass = containingClass.getSuperclass();
+				if ( !Objects.equals( bootDescriptor.getWhere(), superclass.getWhere() ) ) {
+					break;
+				}
+				containingClass = superclass;
+			}
+			this.sqlWhereStringTableExpression = containingClass.getTable().getName();
+			sqlWhereStringTemplate = Template.renderWhereStringTemplate(
+					"(" + bootDescriptor.getWhere() + ")",
+					dialect,
+					factory.getQueryEngine().getSqmFunctionRegistry()
+			);
+		}
 		// PROPERTIES
 
 		int hydrateSpan = entityMetamodel.getPropertySpan();
@@ -2731,7 +2741,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	protected boolean hasWhere() {
-		return sqlWhereString != null;
+		return sqlWhereStringTemplate != null;
 	}
 
 	private void initOrdinaryPropertyPaths(Mapping mapping) throws MappingException {
@@ -4029,14 +4039,17 @@ public abstract class AbstractEntityPersister
 		}
 
 		final String alias;
-		if ( tableGroup == null ) {
+		final TableReference tableReference;
+		if ( tableGroup == null || ( tableReference = tableGroup.resolveTableReference( sqlWhereStringTableExpression ) ) == null ) {
 			alias = null;
 		}
-		else if ( useQualifier && tableGroup.getPrimaryTableReference().getIdentificationVariable() != null ) {
-			alias = tableGroup.getPrimaryTableReference().getIdentificationVariable();
-		}
 		else {
-			alias = tableGroup.getPrimaryTableReference().getTableId();
+			if ( useQualifier && tableReference.getIdentificationVariable() != null ) {
+				alias = tableReference.getIdentificationVariable();
+			}
+			else {
+				alias = tableReference.getTableId();
+			}
 		}
 
 		final String fragment = StringHelper.replace( sqlWhereStringTemplate, Template.TEMPLATE, alias );

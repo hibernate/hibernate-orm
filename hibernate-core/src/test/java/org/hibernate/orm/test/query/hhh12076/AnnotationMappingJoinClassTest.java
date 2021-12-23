@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.query.hhh12076;
+package org.hibernate.orm.test.query.hhh12076;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -1078,9 +1078,9 @@ public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 
 		@OneToMany(mappedBy = "parent")
 		private Set<Task<?>> children = new HashSet<>();
-
-		@OneToMany(mappedBy = "status")
-		private Set<Task<?>> linkedTasks = new HashSet<>();
+//
+//		@OneToMany(mappedBy = "status")
+//		private Set<Task<?>> linkedTasks = new HashSet<>();
 
 		public abstract T getLinked();
 		public abstract void setLinked(T linked);
@@ -1183,13 +1183,13 @@ public class AnnotationMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 			parent = parentTask;
 		}
 
-		public Set<Task<?>> getLinkedTasks() {
-			return linkedTasks;
-		}
-
-		public void setLinkedTasks(Set<Task<?>> linkedTasks) {
-			this.linkedTasks = linkedTasks;
-		}
+//		public Set<Task<?>> getLinkedTasks() {
+//			return linkedTasks;
+//		}
+//
+//		public void setLinkedTasks(Set<Task<?>> linkedTasks) {
+//			this.linkedTasks = linkedTasks;
+//		}
 
 		public Date getStateTransitionDate() {
 			return  stateTransitionDate;

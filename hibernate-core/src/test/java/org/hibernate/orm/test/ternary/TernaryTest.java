@@ -91,7 +91,6 @@ public class TernaryTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		t = s.beginTransaction();
 		l = s.createQuery("from Employee e left join fetch e.managerBySite").list();
-		// starting from ORM 6.0 we don't have duplicates from entity join
 		assertEquals( l.size(), 4 );
 		Set set = new HashSet(l);
 		assertEquals( set.size(), 4 );

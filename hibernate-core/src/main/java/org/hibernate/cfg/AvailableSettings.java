@@ -15,7 +15,6 @@ import org.hibernate.boot.registry.classloading.internal.TcclLookupPrecedence;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
-import org.hibernate.id.factory.spi.GenerationTypeStrategy;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.hql.HqlTranslator;

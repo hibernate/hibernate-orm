@@ -1006,12 +1006,12 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 	}
 
-	@Override @SuppressWarnings("rawtypes")
-	public QueryImplementor createQuery(CriteriaUpdate criteriaUpdate) {
+	@Override @SuppressWarnings("unchecked")
+	public QueryImplementor<Void> createQuery(@SuppressWarnings("rawtypes") CriteriaUpdate criteriaUpdate) {
 		checkOpen();
 		try {
 			return new QuerySqmImpl<>(
-					(SqmUpdateStatement<?>) criteriaUpdate,
+					(SqmUpdateStatement<Void>) criteriaUpdate,
 					null,
 					this
 			);
@@ -1021,12 +1021,12 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 	}
 
-	@Override @SuppressWarnings("rawtypes")
-	public QueryImplementor createQuery(CriteriaDelete criteriaDelete) {
+	@Override @SuppressWarnings("unchecked")
+	public QueryImplementor<Void> createQuery(@SuppressWarnings("rawtypes") CriteriaDelete criteriaDelete) {
 		checkOpen();
 		try {
 			return new QuerySqmImpl<>(
-					(SqmDeleteStatement<?>) criteriaDelete,
+					(SqmDeleteStatement<Void>) criteriaDelete,
 					null,
 					this
 			);

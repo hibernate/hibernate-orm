@@ -171,16 +171,14 @@ public interface QueryProducer {
 	 *
 	 * @see jakarta.persistence.EntityManager#createQuery(CriteriaUpdate)
 	 */
-	@SuppressWarnings("rawtypes")
-	Query createQuery(CriteriaUpdate<?> updateQuery);
+	Query<Void> createQuery(@SuppressWarnings("rawtypes") CriteriaUpdate updateQuery);
 
 	/**
 	 * Create a Query for the given JPA {@link CriteriaDelete}
 	 *
 	 * @see jakarta.persistence.EntityManager#createQuery(CriteriaDelete)
 	 */
-	@SuppressWarnings("rawtypes")
-	Query createQuery(CriteriaDelete<?> deleteQuery);
+	Query<Void> createQuery(@SuppressWarnings("rawtypes") CriteriaDelete deleteQuery);
 
 	/**
 	 * Create a {@link Query} instance for the named query.

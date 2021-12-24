@@ -20,7 +20,6 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.SqmExpressable;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -90,7 +89,7 @@ public interface MappingMetamodel {
 	 *
 	 * @see #findEntityDescriptor
 	 */
-	EntityPersister getEntityDescriptor(Class entityJavaType);
+	EntityPersister getEntityDescriptor(Class<?> entityJavaType);
 
 	/**
 	 * Find an entity mapping descriptor based on its Hibernate entity-name.
@@ -104,7 +103,9 @@ public interface MappingMetamodel {
 	 *
 	 * @apiNote Returns {@code null} rather than throwing exception
 	 */
-	EntityPersister findEntityDescriptor(Class entityJavaType);
+	EntityPersister findEntityDescriptor(Class<?> entityJavaType);
+	
+	boolean isEntityClass(Class<?> entityJavaType);
 
 	/**
 	 * Locate an entity mapping descriptor by Class.  The passed Class might
@@ -114,7 +115,7 @@ public interface MappingMetamodel {
 	 *
 	 * @throws org.hibernate.UnknownEntityTypeException If a matching EntityPersister cannot be located
 	 */
-	EntityPersister locateEntityDescriptor(Class byClass);
+	EntityPersister locateEntityDescriptor(Class<?> byClass);
 
 	/**
 	 * @see #locateEntityDescriptor
@@ -122,7 +123,7 @@ public interface MappingMetamodel {
 	 * @deprecated (since 6.0) use {@link #locateEntityDescriptor(Class)} instead
 	 */
 	@Deprecated
-	default EntityPersister locateEntityPersister(Class byClass) {
+	default EntityPersister locateEntityPersister(Class<?> byClass) {
 		return locateEntityDescriptor( byClass );
 	}
 

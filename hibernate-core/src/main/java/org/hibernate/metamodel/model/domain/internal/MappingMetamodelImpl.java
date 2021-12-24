@@ -401,8 +401,13 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 	}
 
 	@Override
-	public EntityPersister findEntityDescriptor(Class entityJavaType) {
+	public EntityPersister findEntityDescriptor(Class<?> entityJavaType) {
 		return findEntityDescriptor( entityJavaType.getName() );
+	}
+
+	@Override
+	public boolean isEntityClass(Class<?> entityJavaType) {
+		return entityPersisterMap.containsKey( entityJavaType.getName() );
 	}
 
 	@Override
@@ -411,7 +416,7 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 	}
 
 	@Override
-	public EntityPersister getEntityDescriptor(Class entityJavaType) {
+	public EntityPersister getEntityDescriptor(Class<?> entityJavaType) {
 		EntityPersister entityPersister = entityPersisterMap.get( entityJavaType.getName() );
 		if ( entityPersister == null ) {
 			String mappedEntityName = entityProxyInterfaceMap.get( entityJavaType );
@@ -428,7 +433,7 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 	}
 
 	@Override
-	public EntityPersister locateEntityDescriptor(Class byClass) {
+	public EntityPersister locateEntityDescriptor(Class<?> byClass) {
 		EntityPersister entityPersister = entityPersisterMap.get( byClass.getName() );
 		if ( entityPersister == null ) {
 			String mappedEntityName = entityProxyInterfaceMap.get( byClass );
@@ -562,7 +567,7 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 	}
 
 	@Override
-	public EntityPersister entityPersister(Class entityClass) {
+	public EntityPersister entityPersister(Class<?> entityClass) {
 		return entityPersister( entityClass.getName() );
 	}
 

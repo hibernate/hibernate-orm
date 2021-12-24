@@ -29,7 +29,7 @@ import org.hibernate.stat.SessionStatistics;
  * </ul>
  * Transient instances may be made persistent by calling {@code save()},
  * {@code persist()} or {@code saveOrUpdate()}. Persistent instances may be made transient
- * by calling{@code  delete()}. Any instance returned by a {@code get()} or
+ * by calling {@code  delete()}. Any instance returned by a {@code get()} or
  * {@code load()} method is persistent. Detached instances may be made persistent
  * by calling {@code update()}, {@code saveOrUpdate()}, {@code lock()} or {@code replicate()}. 
  * The state of a transient or detached instance may also be made persistent as a new
@@ -189,7 +189,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * the database?  In other words, would any DML operations be executed if
 	 * we flushed this session?
 	 *
-	 * @return True if the session contains pending changes; false otherwise.
+	 * @return {@code true} if the session contains pending changes; false otherwise.
 	 * @throws HibernateException could not perform dirtying checking
 	 */
 	boolean isDirty() throws HibernateException;
@@ -197,45 +197,49 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/**
 	 * Will entities and proxies that are loaded into this session be made 
 	 * read-only by default?
-	 *
+	 * <p>
 	 * To determine the read-only/modifiable setting for a particular entity 
-	 * or proxy:
-	 * @see Session#isReadOnly(Object)
+	 * or proxy use {@link #isReadOnly(Object)}.
 	 *
-	 * @return true, loaded entities/proxies will be made read-only by default; 
-	 *         false, loaded entities/proxies will be made modifiable by default. 
+	 * @see #isReadOnly(Object)
+	 *
+	 * @return {@code true}, loaded entities/proxies will be made read-only by default;
+	 *         {@code false}, loaded entities/proxies will be made modifiable by default.
 	 */
 	boolean isDefaultReadOnly();
 
 	/**
 	 * Change the default for entities and proxies loaded into this session
 	 * from modifiable to read-only mode, or from modifiable to read-only mode.
-	 *
+	 * <p>
 	 * Read-only entities are not dirty-checked and snapshots of persistent
 	 * state are not maintained. Read-only entities can be modified, but
 	 * changes are not persisted.
-	 *
+	 * <p>
 	 * When a proxy is initialized, the loaded entity will have the same
 	 * read-only/modifiable setting as the uninitialized
 	 * proxy has, regardless of the session's current setting.
-	 *
+	 * <p>
 	 * To change the read-only/modifiable setting for a particular entity
-	 * or proxy that is already in this session:
-	 * @see Session#setReadOnly(Object,boolean)
+	 * or proxy that already belongs to this session use
+	 * {@link #setReadOnly(Object, boolean)}.
+	 * <p>
+	 * To override this session's read-only/modifiable setting for all
+	 * entities and proxies loaded by a certain {@code Query} use
+	 * {@link org.hibernate.query.Query#setReadOnly(boolean)}.
 	 *
-	 * To override this session's read-only/modifiable setting for entities
-	 * and proxies loaded by a Query:
+	 * @see #setReadOnly(Object,boolean)
 	 * @see org.hibernate.query.Query#setReadOnly(boolean)
 	 *
-	 * @param readOnly true, the default for loaded entities/proxies is read-only;
-	 *                 false, the default for loaded entities/proxies is modifiable
+	 * @param readOnly {@code true}, the default for loaded entities/proxies is read-only;
+	 *                 {@code false}, the default for loaded entities/proxies is modifiable
 	 */
 	void setDefaultReadOnly(boolean readOnly);
 
 	/**
-	 * Return the identifier value of the given entity as associated with this
-	 * session.  An exception is thrown if the given entity instance is transient
-	 * or detached in relation to this session.
+	 * Return the identifier value of the given entity associated with this session.
+	 * An exception is thrown if the given entity instance is transient or detached
+	 * in relation to this session.
 	 *
 	 * @param object a persistent instance
 	 * @return the identifier
@@ -245,13 +249,13 @@ public interface Session extends SharedSessionContract, EntityManager {
 	Object getIdentifier(Object object);
 
 	/**
-	 * Check if this entity is associated with this Session.  This form caters to
+	 * Check if this entity is associated with this session.  This form caters to
 	 * non-POJO entities, by allowing the entity-name to be passed in
 	 *
 	 * @param entityName The entity name
 	 * @param object an instance of a persistent class
 	 *
-	 * @return true if the given instance is associated with this {@code Session}
+	 * @return {@code true} if the given instance is associated with this {@code Session}
 	 */
 	boolean contains(String entityName, Object object);
 
@@ -259,6 +263,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * Remove this instance from the session cache. Changes to the instance will
 	 * not be synchronized with the database. This operation cascades to associated
 	 * instances if the association is mapped with {@code cascade="evict"}.
+	 * <p>
+	 * This operation is a synonym for {@link #detach(Object)}.
 	 *
 	 * @param object The entity to evict
 	 *
@@ -271,7 +277,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * Return the persistent instance of the given entity class with the given identifier,
 	 * obtaining the specified lock mode, assuming the instance exists.
 	 * <p/>
-	 * Convenient form of {@link #load(Class, Object, LockOptions)}
+	 * Convenient form of {@link #load(Class, Object, LockOptions)}.
 	 *
 	 * @param theClass a persistent class
 	 * @param id a valid identifier of an existing persistent instance of the class
@@ -298,7 +304,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * Return the persistent instance of the given entity class with the given identifier,
 	 * obtaining the specified lock mode, assuming the instance exists.
 	 * <p/>
-	 * Convenient form of {@link #load(String, Object, LockOptions)}
+	 * Convenient form of {@link #load(String, Object, LockOptions)}.
 	 *
 	 * @param entityName a persistent class
 	 * @param id a valid identifier of an existing persistent instance of the class
@@ -328,8 +334,10 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * is initialized on-demand, when a non-identifier method is accessed.
 	 * <p>
 	 * You should not use this method to determine if an instance exists (use {@code get()}
-	 * instead). Use this only to retrieve an instance that you assume exists, where non-existence
-	 * would be an actual error.
+	 * instead). Use this only to retrieve an instance that you assume exists, where
+	 * non-existence would be an actual error.
+	 * <p>
+	 * This operation is very similar to {@link #getReference(Class, Object)}.
 	 *
 	 * @param theClass a persistent class
 	 * @param id a valid identifier of an existing persistent instance of the class
@@ -344,8 +352,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * is initialized on-demand, when a non-identifier method is accessed.
 	 * <p>
 	 * You should not use this method to determine if an instance exists (use {@code get()}
-	 * instead). Use this only to retrieve an instance that you assume exists, where non-existence
-	 * would be an actual error.
+	 * instead). Use this only to retrieve an instance that you assume exists, where
+	 * non-existence would be an actual error.
 	 *
 	 * @param entityName a persistent class
 	 * @param id a valid identifier of an existing persistent instance of the class
@@ -355,15 +363,15 @@ public interface Session extends SharedSessionContract, EntityManager {
 	Object load(String entityName, Object id);
 
 	/**
-	 * Read the persistent state associated with the given identifier into the given transient
-	 * instance.
+	 * Read the persistent state associated with the given identifier into the given
+	 * transient instance.
 	 */
 	void load(Object object, Object id);
 
 	/**
 	 * Persist the state of the given detached instance, reusing the current
 	 * identifier value.  This operation cascades to associated instances if
-	 * the association is mapped with {@code cascade="replicate"}
+	 * the association is mapped with {@code cascade="replicate"}.
 	 *
 	 * @param object a detached instance of a persistent class
 	 * @param replicationMode The replication mode to use
@@ -373,7 +381,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/**
 	 * Persist the state of the given detached instance, reusing the current
 	 * identifier value.  This operation cascades to associated instances if
-	 * the association is mapped with {@code cascade="replicate"}
+	 * the association is mapped with {@code cascade="replicate"}.
 	 *
 	 * @param entityName The entity name
 	 * @param object a detached instance of a persistent class
@@ -385,7 +393,9 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * Persist the given transient instance, first assigning a generated identifier. (Or
 	 * using the current value of the identifier property if the {@code assigned}
 	 * generator is used.) This operation cascades to associated instances if the
-	 * association is mapped with {@code cascade="save-update"}
+	 * association is mapped with {@code cascade="save-update"}.
+	 * <p>
+	 * This operation is very similar to {@link #persist(Object)}.
 	 *
 	 * @param object a transient instance of a persistent class
 	 *
@@ -397,7 +407,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * Persist the given transient instance, first assigning a generated identifier. (Or
 	 * using the current value of the identifier property if the {@code assigned}
 	 * generator is used.)  This operation cascades to associated instances if the
-	 * association is mapped with {@code cascade="save-update"}
+	 * association is mapped with {@code cascade="save-update"}.
 	 *
 	 * @param entityName The entity name
 	 * @param object a transient instance of a persistent class
@@ -412,7 +422,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * manual for discussion of unsaved-value checking).
 	 * <p/>
 	 * This operation cascades to associated instances if the association is mapped
-	 * with {@code cascade="save-update"}
+	 * with {@code cascade="save-update"}.
 	 *
 	 * @param object a transient or detached instance containing new or updated state
 	 *
@@ -427,7 +437,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * (see the manual for discussion of unsaved-value checking).
 	 * <p/>
 	 * This operation cascades to associated instances if the association is mapped
-	 * with {@code cascade="save-update"}
+	 * with {@code cascade="save-update"}.
 	 *
 	 * @param entityName The entity name
 	 * @param object a transient or detached instance containing new or updated state
@@ -441,7 +451,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * Update the persistent instance with the identifier of the given detached
 	 * instance. If there is a persistent instance with the same identifier,
 	 * an exception is thrown. This operation cascades to associated instances
-	 * if the association is mapped with {@code cascade="save-update"}
+	 * if the association is mapped with {@code cascade="save-update"}.
 	 *
 	 * @param object a detached instance containing updated state
 	 */
@@ -451,7 +461,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * Update the persistent instance with the identifier of the given detached
 	 * instance. If there is a persistent instance with the same identifier,
 	 * an exception is thrown. This operation cascades to associated instances
-	 * if the association is mapped with {@code cascade="save-update"}
+	 * if the association is mapped with {@code cascade="save-update"}.
 	 *
 	 * @param entityName The entity name
 	 * @param object a detached instance containing updated state
@@ -465,7 +475,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * given instance is unsaved, save a copy of and return it as a newly persistent
 	 * instance. The given instance does not become associated with the session.
 	 * This operation cascades to associated instances if the association is mapped
-	 * with {@code cascade="merge"}
+	 * with {@code cascade="merge"}.
 	 * <p/>
 	 * The semantics of this method are defined by JSR-220.
 	 *
@@ -672,8 +682,10 @@ public interface Session extends SharedSessionContract, EntityManager {
 
 	/**
 	 * Return the persistent instance of the given entity class with the given identifier,
-	 * or null if there is no such persistent instance. (If the instance is already associated
-	 * with the session, return that instance. This method never returns an uninitialized instance.)
+	 * or null if there is no such persistent instance. If the instance is already associated
+	 * with the session, return that instance. This method never returns an uninitialized instance.
+	 * <p>
+	 * This operation is very similar to {@link #find(Class, Object)}.
 	 *
 	 * @param entityType The entity type
 	 * @param id an identifier
@@ -684,11 +696,13 @@ public interface Session extends SharedSessionContract, EntityManager {
 
 	/**
 	 * Return the persistent instance of the given entity class with the given identifier,
-	 * or null if there is no such persistent instance. (If the instance is already associated
-	 * with the session, return that instance. This method never returns an uninitialized instance.)
+	 * or null if there is no such persistent instance. If the instance is already associated
+	 * with the session, return that instance. This method never returns an uninitialized instance.
 	 * Obtain the specified lock mode if the instance exists.
-	 * <p/>
-	 * Convenient form of {@link #get(Class, Object, LockOptions)}
+	 * <p>
+	 * Convenient form of {@link #get(Class, Object, LockOptions)}.
+	 * <p>
+	 * This operation is very similar to {@link #find(Class, Object, jakarta.persistence.LockModeType)}.
 	 *
 	 * @param entityType The entity type
 	 * @param id an identifier
@@ -702,8 +716,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 
 	/**
 	 * Return the persistent instance of the given entity class with the given identifier,
-	 * or null if there is no such persistent instance. (If the instance is already associated
-	 * with the session, return that instance. This method never returns an uninitialized instance.)
+	 * or null if there is no such persistent instance. If the instance is already associated
+	 * with the session, return that instance. This method never returns an uninitialized instance.
 	 * Obtain the specified lock mode if the instance exists.
 	 *
 	 * @param entityType The entity type
@@ -716,8 +730,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 
 	/**
 	 * Return the persistent instance of the given named entity with the given identifier,
-	 * or null if there is no such persistent instance. (If the instance is already associated
-	 * with the session, return that instance. This method never returns an uninitialized instance.)
+	 * or null if there is no such persistent instance. If the instance is already associated
+	 * with the session, return that instance. This method never returns an uninitialized instance.
 	 *
 	 * @param entityName the entity name
 	 * @param id an identifier
@@ -746,8 +760,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 
 	/**
 	 * Return the persistent instance of the given entity class with the given identifier,
-	 * or null if there is no such persistent instance. (If the instance is already associated
-	 * with the session, return that instance. This method never returns an uninitialized instance.)
+	 * or null if there is no such persistent instance. If the instance is already associated
+	 * with the session, return that instance. This method never returns an uninitialized instance.
 	 * Obtain the specified lock mode if the instance exists.
 	 *
 	 * @param entityName the entity name
@@ -909,10 +923,12 @@ public interface Session extends SharedSessionContract, EntityManager {
 
 	/**
 	 * Is the specified entity or proxy read-only?
-	 *
+	 * <p>
 	 * To get the default read-only/modifiable setting used for
-	 * entities and proxies that are loaded into the session:
-	 * @see Session#isDefaultReadOnly()
+	 * entities and proxies that are loaded into the session use
+	 * {@link #isDefaultReadOnly()}
+	 *
+	 * @see #isDefaultReadOnly()
 	 *
 	 * @param entityOrProxy an entity or HibernateProxy
 	 * @return {@code true} if the entity or proxy is read-only, {@code false} if the entity or proxy is modifiable.
@@ -928,16 +944,19 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * setting, then this method does nothing.
 	 * 
 	 * To set the default read-only/modifiable setting used for
-	 * entities and proxies that are loaded into the session:
-	 * @see Session#setDefaultReadOnly(boolean)
+	 * entities and proxies that are loaded into the session use
+	 * {@link #setDefaultReadOnly(boolean)}.
 	 *
 	 * To override this session's read-only/modifiable setting for entities
-	 * and proxies loaded by a Query:
+	 * and proxies loaded by a {@code Query} use
+	 * {@link org.hibernate.query.Query#setReadOnly(boolean)}
+	 *
+	 * @see #setDefaultReadOnly(boolean)
 	 * @see org.hibernate.query.Query#setReadOnly(boolean)
-	 * 
+	 *
 	 * @param entityOrProxy an entity or HibernateProxy
-	 * @param readOnly {@code true} if the entity or proxy should be made read-only; {@code false} if the entity or
-	 * proxy should be made modifiable
+	 * @param readOnly {@code true} if the entity or proxy should be made read-only;
+	 *                 {@code false} if the entity or proxy should be made modifiable
 	 */
 	void setReadOnly(Object entityOrProxy, boolean readOnly);
 

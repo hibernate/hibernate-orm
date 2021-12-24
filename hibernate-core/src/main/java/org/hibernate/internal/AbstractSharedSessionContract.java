@@ -31,6 +31,7 @@ import org.hibernate.LockMode;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionException;
 import org.hibernate.Transaction;
+import org.hibernate.UnknownEntityTypeException;
 import org.hibernate.cache.spi.CacheTransactionSynchronization;
 import org.hibernate.engine.internal.SessionEventListenerManagerImpl;
 import org.hibernate.engine.jdbc.LobCreator;
@@ -729,7 +730,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		if ( Tuple.class.equals(resultClass) ) {
 			query.setTupleTransformer( new NativeQueryTupleTransformer() );
 		}
-		else if ( getFactory().getMetamodel().findEntityDescriptor(resultClass)!=null ) {
+		else if ( getFactory().getMetamodel().isEntityClass(resultClass) ) {
 			query.addEntity( "alias1", resultClass.getName(), LockMode.READ );
 		}
 		return query;
@@ -738,11 +739,11 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@Override @SuppressWarnings({"rawtypes", "unchecked"})
 	public NativeQueryImplementor createNativeQuery(String sqlString, Class resultClass, String tableAlias) {
 		NativeQueryImplementor query = createNativeQuery( sqlString );
-		if ( Tuple.class.equals(resultClass) ) {
-			query.setTupleTransformer( new NativeQueryTupleTransformer() );
-		}
-		else if ( getFactory().getMetamodel().findEntityDescriptor(resultClass)!=null ) {
+		if ( getFactory().getMetamodel().isEntityClass(resultClass) ) {
 			query.addEntity( tableAlias, resultClass.getName(), LockMode.READ );
+		}
+		else {
+			throw new UnknownEntityTypeException( "unable to locate persister: " + resultClass.getName() );
 		}
 		return query;
 	}

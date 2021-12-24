@@ -46,7 +46,7 @@ public interface MetamodelImplementor extends MappingMetamodel, Metamodel {
 	 *
 	 * @throws MappingException Indicates persister for that class could not be found.
 	 */
-	EntityPersister entityPersister(Class entityClass);
+	EntityPersister entityPersister(Class<?> entityClass);
 
 	/**
 	 * Locate the persister for an entity by the entity-name

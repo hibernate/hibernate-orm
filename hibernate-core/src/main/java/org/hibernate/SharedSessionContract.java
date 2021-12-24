@@ -63,8 +63,7 @@ public interface SharedSessionContract extends QueryProducer, Closeable, Seriali
 	Transaction beginTransaction();
 
 	/**
-	 * Get the {@link Transaction} instance associated with this session.  The concrete type of the returned
-	 * {@link Transaction} object is determined by the {@code hibernate.transaction_factory} property.
+	 * Get the {@link Transaction} instance associated with this session.
 	 *
 	 * @return a Transaction instance
 	 */

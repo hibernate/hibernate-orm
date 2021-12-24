@@ -68,9 +68,9 @@ public interface QueryProducerImplementor extends QueryProducer {
 	@Override
 	<R> QueryImplementor<R> createQuery(CriteriaQuery<R> criteriaQuery);
 
-	@Override @SuppressWarnings("rawtypes")
-	QueryImplementor createQuery(CriteriaUpdate<?> updateQuery);
+	@Override
+	QueryImplementor<Void> createQuery(@SuppressWarnings("rawtypes") CriteriaUpdate updateQuery);
 
-	@Override @SuppressWarnings("rawtypes")
-	QueryImplementor createQuery(CriteriaDelete<?> deleteQuery);
+	@Override
+	QueryImplementor<Void> createQuery(@SuppressWarnings("rawtypes") CriteriaDelete deleteQuery);
 }

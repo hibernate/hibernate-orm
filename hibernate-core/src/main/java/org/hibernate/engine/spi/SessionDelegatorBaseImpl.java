@@ -901,6 +901,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public <T> T getReference(T object) {
+		return delegate.getReference( object );
+	}
+
+	@Override
 	public <T> IdentifierLoadAccess<T> byId(String entityName) {
 		return delegate.byId( entityName );
 	}

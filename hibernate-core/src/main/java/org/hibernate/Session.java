@@ -780,6 +780,18 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @return the entity name
 	 */
 	String getEntityName(Object object);
+
+	/**
+	 * Return the persistent instance with the same identity as the given instance, which
+	 * might be detached, assuming that the instance is still persistent in the database.
+	 * This method never results in access to the underlying data store, and thus might
+	 * return a proxy that must be initialized explicitly.
+	 *
+	 * @param object a detached persistent instance
+	 *
+	 * @return the persistent instance or proxy
+	 */
+	<T> T getReference(T object);
 	
 	/**
 	 * Create an {@link IdentifierLoadAccess} instance to retrieve the specified entity type by

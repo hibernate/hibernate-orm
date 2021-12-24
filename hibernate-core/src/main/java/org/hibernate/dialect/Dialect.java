@@ -1439,9 +1439,9 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * Get the name of the database type associated with the given
-	 * <tt>java.sql.Types</tt> typecode.
+	 * {@code java.sql.Types} typecode.
 	 *
-	 * @param code <tt>java.sql.Types</tt> typecode
+	 * @param code {@code java.sql.Types} typecode
 	 * @param size the length, precision, scale of the column
 	 *
 	 * @return the database type name
@@ -1475,7 +1475,7 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * Get the name of the database type associated with the given
-	 * <tt>SqlTypeDescriptor</tt>.
+	 * {@code SqlTypeDescriptor}.
 	 *
 	 * @param jdbcType the SQL type
 	 * @param size the length, precision, scale of the column
@@ -1526,7 +1526,7 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * Subclasses register a type name for the given type code and maximum
-	 * column length. <tt>$l</tt> in the type name with be replaced by the
+	 * column length. {@code $l} in the type name with be replaced by the
 	 * column length (if appropriate).
 	 *
 	 * @param code The {@link Types} typecode
@@ -1538,7 +1538,7 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Subclasses register a type name for the given type code. <tt>$l</tt> in
+	 * Subclasses register a type name for the given type code. {@code $l} in
 	 * the type name with be replaced by the column length (if appropriate).
 	 *
 	 * @param code The {@link Types} typecode
@@ -1876,15 +1876,15 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * If this dialect supports specifying lock timeouts, are those timeouts
-	 * rendered into the <tt>SQL</tt> string as parameters.  The implication
+	 * rendered into the {@code SQL} string as parameters.  The implication
 	 * is that Hibernate will need to bind the timeout value as a parameter
 	 * in the {@link PreparedStatement}.  If true, the param position
 	 * is always handled as the last parameter; if the dialect specifies the
-	 * lock timeout elsewhere in the <tt>SQL</tt> statement then the timeout
+	 * lock timeout elsewhere in the {@code SQL} statement then the timeout
 	 * value should be directly rendered into the statement and this method
 	 * should return false.
 	 *
-	 * @return True if the lock timeout is rendered into the <tt>SQL</tt>
+	 * @return True if the lock timeout is rendered into the {@code SQL}
 	 * string as a parameter; false otherwise.
 	 */
 	public boolean isLockTimeoutParameterized() {
@@ -1961,7 +1961,7 @@ public abstract class Dialect implements ConversionContext {
 	 * Get the string to append to SELECT statements to acquire locks
 	 * for this dialect.
 	 *
-	 * @return The appropriate <tt>FOR UPDATE</tt> clause string.
+	 * @return The appropriate {@code FOR UPDATE} clause string.
 	 */
 	public String getForUpdateString() {
 		return " for update";
@@ -1973,7 +1973,7 @@ public abstract class Dialect implements ConversionContext {
 	 * the same as getForUpdateString.
 	 *
 	 * @param timeout in milliseconds, -1 for indefinite wait and 0 for no wait.
-	 * @return The appropriate <tt>LOCK</tt> clause string.
+	 * @return The appropriate {@code LOCK} clause string.
 	 */
 	public String getWriteLockString(int timeout) {
 		return getForUpdateString();
@@ -1987,7 +1987,7 @@ public abstract class Dialect implements ConversionContext {
 	 *
 	 * @param aliases The columns to be read locked.
 	 * @param timeout in milliseconds, -1 for indefinite wait and 0 for no wait.
-	 * @return The appropriate <tt>LOCK</tt> clause string.
+	 * @return The appropriate {@code LOCK} clause string.
 	 */
 	public String getWriteLockString(String aliases, int timeout) {
 		// by default we simply return the getWriteLockString(timeout) result since
@@ -2001,7 +2001,7 @@ public abstract class Dialect implements ConversionContext {
 	 * the same as getForUpdateString.
 	 *
 	 * @param timeout in milliseconds, -1 for indefinite wait and 0 for no wait.
-	 * @return The appropriate <tt>LOCK</tt> clause string.
+	 * @return The appropriate {@code LOCK} clause string.
 	 */
 	public String getReadLockString(int timeout) {
 		return getForUpdateString();
@@ -2015,7 +2015,7 @@ public abstract class Dialect implements ConversionContext {
 	 *
 	 * @param aliases The columns to be read locked.
 	 * @param timeout in milliseconds, -1 for indefinite wait and 0 for no wait.
-	 * @return The appropriate <tt>LOCK</tt> clause string.
+	 * @return The appropriate {@code LOCK} clause string.
 	 */
 	public String getReadLockString(String aliases, int timeout) {
 		// by default we simply return the getReadLockString(timeout) result since
@@ -2039,21 +2039,21 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Does this dialect support <tt>FOR UPDATE</tt> in conjunction with
+	 * Does this dialect support {@code FOR UPDATE} in conjunction with
 	 * outer joined rows?
 	 *
-	 * @return True if outer joined rows can be locked via <tt>FOR UPDATE</tt>.
+	 * @return True if outer joined rows can be locked via {@code FOR UPDATE}.
 	 */
 	public boolean supportsOuterJoinForUpdate() {
 		return true;
 	}
 
 	/**
-	 * Get the <tt>FOR UPDATE OF column_list</tt> fragment appropriate for this
+	 * Get the {@code FOR UPDATE OF column_list} fragment appropriate for this
 	 * dialect given the aliases of the columns to be write locked.
 	 *
 	 * @param aliases The columns to be write locked.
-	 * @return The appropriate <tt>FOR UPDATE OF column_list</tt> clause string.
+	 * @return The appropriate {@code FOR UPDATE OF column_list} clause string.
 	 */
 	public String getForUpdateString(String aliases) {
 		// by default we simply return the getForUpdateString() result since
@@ -2062,12 +2062,12 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Get the <tt>FOR UPDATE OF column_list</tt> fragment appropriate for this
+	 * Get the {@code FOR UPDATE OF column_list} fragment appropriate for this
 	 * dialect given the aliases of the columns to be write locked.
 	 *
 	 * @param aliases The columns to be write locked.
 	 * @param lockOptions the lock options to apply
-	 * @return The appropriate <tt>FOR UPDATE OF column_list</tt> clause string.
+	 * @return The appropriate {@code FOR UPDATE OF column_list} clause string.
 	 */
 	public String getForUpdateString(String aliases, LockOptions lockOptions) {
 		LockMode lockMode = lockOptions.getLockMode();
@@ -2085,9 +2085,9 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Retrieves the <tt>FOR UPDATE NOWAIT</tt> syntax specific to this dialect.
+	 * Retrieves the {@code FOR UPDATE NOWAIT} syntax specific to this dialect.
 	 *
-	 * @return The appropriate <tt>FOR UPDATE NOWAIT</tt> clause string.
+	 * @return The appropriate {@code FOR UPDATE NOWAIT} clause string.
 	 */
 	public String getForUpdateNowaitString() {
 		// by default we report no support for NOWAIT lock semantics
@@ -2095,9 +2095,9 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Retrieves the <tt>FOR UPDATE SKIP LOCKED</tt> syntax specific to this dialect.
+	 * Retrieves the {@code FOR UPDATE SKIP LOCKED} syntax specific to this dialect.
 	 *
-	 * @return The appropriate <tt>FOR UPDATE SKIP LOCKED</tt> clause string.
+	 * @return The appropriate {@code FOR UPDATE SKIP LOCKED} clause string.
 	 */
 	public String getForUpdateSkipLockedString() {
 		// by default we report no support for SKIP_LOCKED lock semantics
@@ -2105,29 +2105,29 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Get the <tt>FOR UPDATE OF column_list NOWAIT</tt> fragment appropriate
+	 * Get the {@code FOR UPDATE OF column_list NOWAIT} fragment appropriate
 	 * for this dialect given the aliases of the columns to be write locked.
 	 *
 	 * @param aliases The columns to be write locked.
-	 * @return The appropriate <tt>FOR UPDATE OF colunm_list NOWAIT</tt> clause string.
+	 * @return The appropriate {@code FOR UPDATE OF colunm_list NOWAIT} clause string.
 	 */
 	public String getForUpdateNowaitString(String aliases) {
 		return getForUpdateString( aliases );
 	}
 
 	/**
-	 * Get the <tt>FOR UPDATE OF column_list SKIP LOCKED</tt> fragment appropriate
+	 * Get the {@code FOR UPDATE OF column_list SKIP LOCKED} fragment appropriate
 	 * for this dialect given the aliases of the columns to be write locked.
 	 *
 	 * @param aliases The columns to be write locked.
-	 * @return The appropriate <tt>FOR UPDATE colunm_list SKIP LOCKED</tt> clause string.
+	 * @return The appropriate {@code FOR UPDATE colunm_list SKIP LOCKED} clause string.
 	 */
 	public String getForUpdateSkipLockedString(String aliases) {
 		return getForUpdateString( aliases );
 	}
 
 	/**
-	 * Some dialects support an alternative means to <tt>SELECT FOR UPDATE</tt>,
+	 * Some dialects support an alternative means to {@code SELECT FOR UPDATE},
 	 * whereby a "lock hint" is appended to the table name in the from clause.
 	 * <p/>
 	 * contributed by <a href="http://sourceforge.net/users/heschulz">Helge Schulz</a>
@@ -2144,9 +2144,9 @@ public abstract class Dialect implements ConversionContext {
 	 * Modifies the given SQL by applying the appropriate updates for the specified
 	 * lock modes and key columns.
 	 * <p/>
-	 * The behavior here is that of an ANSI SQL <tt>SELECT FOR UPDATE</tt>.  This
+	 * The behavior here is that of an ANSI SQL {@code SELECT FOR UPDATE}.  This
 	 * method is really intended to allow dialects which do not support
-	 * <tt>SELECT FOR UPDATE</tt> to achieve this in their own fashion.
+	 * {@code SELECT FOR UPDATE} to achieve this in their own fashion.
 	 *
 	 * @param sql the SQL string to modify
 	 * @param aliasedLockOptions lock options indexed by aliased table names.
@@ -2809,7 +2809,7 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Does this dialect support the <tt>ALTER TABLE</tt> syntax?
+	 * Does this dialect support the {@code ALTER TABLE} syntax?
 	 *
 	 * @return True if we support altering of tables; false otherwise.
 	 */
@@ -3107,8 +3107,8 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Does this dialect support parameters within the <tt>SELECT</tt> clause of
-	 * <tt>INSERT ... SELECT ...</tt> statements?
+	 * Does this dialect support parameters within the {@code SELECT} clause of
+	 * {@code INSERT ... SELECT ...} statements?
 	 *
 	 * @return True if this is supported; false otherwise.
 	 * @since 3.2
@@ -3148,7 +3148,7 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Does this dialect require that integer divisions be wrapped in <tt>cast()</tt>
+	 * Does this dialect require that integer divisions be wrapped in {@code cast()}
 	 * calls to tell the db parser the expected type.
 	 *
 	 * @return True if integer divisions must be cast()ed to float

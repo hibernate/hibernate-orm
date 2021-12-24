@@ -11,7 +11,7 @@ package org.hibernate.dialect.identity;
  */
 public class SQLServerIdentityColumnSupport extends AbstractTransactSQLIdentityColumnSupport {
 	/**
-	 * Use <tt>insert table(...) values(...) select SCOPE_IDENTITY()</tt>
+	 * Use {@code insert table(...) values(...) select SCOPE_IDENTITY()}
 	 * <p/>
 	 * {@inheritDoc}
 	 */

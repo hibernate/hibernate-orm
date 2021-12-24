@@ -37,8 +37,8 @@ import org.hibernate.sql.ast.tree.insert.InsertStatement;
  * An {@link org.hibernate.engine.spi.ActionQueue} {@link Executable} for ensuring
  * shared cache cleanup in relation to performed bulk HQL queries.
  * <p/>
- * NOTE: currently this executes for <tt>INSERT</tt> queries as well as
- * <tt>UPDATE</tt> and <tt>DELETE</tt> queries.  For <tt>INSERT</tt> it is
+ * NOTE: currently this executes for {@code INSERT} queries as well as
+ * {@code UPDATE} and {@code DELETE} queries.  For {@code INSERT} it is
  * really not needed as we'd have no invalid entity/collection data to
  * cleanup (we'd still nee to invalidate the appropriate update-timestamps
  * regions) as a result of this query.

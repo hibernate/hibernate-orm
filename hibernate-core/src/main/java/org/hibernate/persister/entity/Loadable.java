@@ -14,8 +14,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.Type;
 
 /**
- * Implemented by a <tt>EntityPersister</tt> that may be loaded
- * using <tt>Loader</tt>.
+ * Implemented by a {@code EntityPersister} that may be loaded
+ * using {@code Loader}.
  *
  * @author Gavin King
  */

@@ -18,7 +18,7 @@ import org.hibernate.type.Type;
 /**
  * <b>assigned</b>
  * <p>
- * An <tt>IdentifierGenerator</tt> that returns the current identifier assigned
+ * An {@code IdentifierGenerator} that returns the current identifier assigned
  * to an instance.
  *
  * @author Gavin King

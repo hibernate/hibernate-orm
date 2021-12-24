@@ -32,7 +32,7 @@ import org.jboss.logging.Logger;
 
 /**
  * A connection provider that uses a C3P0 connection pool. Hibernate will use this by
- * default if the <tt>hibernate.c3p0.*</tt> properties are set.
+ * default if the {@code hibernate.c3p0.*} properties are set.
  *
  * @author various people
  * @see ConnectionProvider

@@ -11,8 +11,8 @@ import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
 /**
- * A <tt>EntityPersister</tt> that may be loaded by outer join using
- * the <tt>OuterJoinLoader</tt> hierarchy and may be an element
+ * A {@code EntityPersister} that may be loaded by outer join using
+ * the {@code OuterJoinLoader} hierarchy and may be an element
  * of a one-to-many association.
  *
  * @see org.hibernate.loader.OuterJoinLoader

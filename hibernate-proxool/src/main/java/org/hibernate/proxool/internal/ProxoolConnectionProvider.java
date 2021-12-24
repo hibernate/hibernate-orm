@@ -37,7 +37,7 @@ import org.logicalcobwebs.proxool.configuration.PropertyConfigurator;
 
 /**
  * A connection provider that uses a Proxool connection pool. Hibernate will use this by
- * default if the <tt>hibernate.proxool.*</tt> properties are set.
+ * default if the {@code hibernate.proxool.*} properties are set.
  *
  * @see ConnectionProvider
  */

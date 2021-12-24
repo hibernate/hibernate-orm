@@ -67,7 +67,7 @@ import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
- * The default implementation of the <tt>EntityPersister</tt> interface.
+ * The default implementation of the {@code EntityPersister} interface.
  * Implements the "table-per-class-hierarchy" or "roll-up" mapping strategy
  * for an entity class and its inheritance hierarchy.  This is implemented
  * as a single table holding all classes in the hierarchy with a discriminator

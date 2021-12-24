@@ -15,7 +15,7 @@ import org.jboss.logging.Logger;
 /**
  * A strategy for determining if a version value is a version of
  * a new transient instance or a previously persistent transient instance.
- * The strategy is determined by the <tt>unsaved-value</tt> attribute in
+ * The strategy is determined by the {@code unsaved-value} attribute in
  * the mapping file.
  *
  * @author Gavin King
@@ -105,7 +105,7 @@ public class VersionValue implements UnsavedValueStrategy {
 
 	/**
 	 * Assume the transient instance is newly instantiated if
-	 * its version is null or equal to <tt>value</tt>
+	 * its version is null or equal to {@code value}
 	 *
 	 * @param value value to compare to
 	 */

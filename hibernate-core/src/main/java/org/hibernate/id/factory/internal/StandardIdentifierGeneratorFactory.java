@@ -55,7 +55,7 @@ import jakarta.persistence.GenerationType;
 import static org.hibernate.id.factory.IdGenFactoryLogging.ID_GEN_FAC_LOGGER;
 
 /**
- * Basic <tt>templated</tt> support for {@link org.hibernate.id.factory.IdentifierGeneratorFactory} implementations.
+ * Basic {@code templated} support for {@link org.hibernate.id.factory.IdentifierGeneratorFactory} implementations.
  *
  * @author Steve Ebersole
  */

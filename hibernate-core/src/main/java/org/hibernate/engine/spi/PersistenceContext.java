@@ -331,14 +331,14 @@ public interface PersistenceContext {
 	Object narrowProxy(Object proxy, EntityPersister persister, EntityKey key, Object object);
 
 	/**
-	 * Return the existing proxy associated with the given <tt>EntityKey</tt>, or the
+	 * Return the existing proxy associated with the given {@code EntityKey}, or the
 	 * third argument (the entity associated with the key) if no proxy exists. Init
 	 * the proxy to the target implementation, if necessary.
 	 */
 	Object proxyFor(EntityPersister persister, EntityKey key, Object impl);
 
 	/**
-	 * Return the existing proxy associated with the given <tt>EntityKey</tt>, or the
+	 * Return the existing proxy associated with the given {@code EntityKey}, or the
 	 * argument (the entity associated with the key) if no proxy exists.
 	 * (slower than the form above)
 	 */
@@ -406,7 +406,7 @@ public interface PersistenceContext {
 			Object id);
 
 	/**
-	 * Get the collection instance associated with the <tt>CollectionKey</tt>
+	 * Get the collection instance associated with the {@code CollectionKey}
 	 */
 	PersistentCollection getCollection(CollectionKey collectionKey);
 
@@ -424,12 +424,12 @@ public interface PersistenceContext {
 	void initializeNonLazyCollections() throws HibernateException;
 
 	/**
-	 * Get the <tt>PersistentCollection</tt> object for an array
+	 * Get the {@code PersistentCollection} object for an array
 	 */
 	PersistentCollection getCollectionHolder(Object array);
 
 	/**
-	 * Register a <tt>PersistentCollection</tt> object for an array.
+	 * Register a {@code PersistentCollection} object for an array.
 	 * Associates a holder with an array - MUST be called after loading
 	 * array, since the array instance is not created until endLoad().
 	 */
@@ -583,8 +583,8 @@ public interface PersistenceContext {
 	String toString();
 
 	/**
-	 * Search <tt>this</tt> persistence context for an associated entity instance which is considered the "owner" of
-	 * the given <tt>childEntity</tt>, and return that owner's id value.  This is performed in the scenario of a
+	 * Search {@code this} persistence context for an associated entity instance which is considered the "owner" of
+	 * the given {@code childEntity}, and return that owner's id value.  This is performed in the scenario of a
 	 * uni-directional, non-inverse one-to-many collection (which means that the collection elements do not maintain
 	 * a direct reference to the owner).
 	 * <p/>
@@ -592,7 +592,7 @@ public interface PersistenceContext {
 	 * context and for those of the correct entity (sub) type to extract its collection role property value and see
 	 * if the child is contained within that collection.  If so, we have found the owner; if not, we go on.
 	 * <p/>
-	 * Also need to account for <tt>mergeMap</tt> which acts as a local copy cache managed for the duration of a merge
+	 * Also need to account for {@code mergeMap} which acts as a local copy cache managed for the duration of a merge
 	 * operation.  It represents a map of the detached entity instances pointing to the corresponding managed instance.
 	 *
 	 * @param entityName The entity name for the entity type which would own the child

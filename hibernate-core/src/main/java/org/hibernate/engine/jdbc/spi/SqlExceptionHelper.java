@@ -71,7 +71,7 @@ public class SqlExceptionHelper {
 	/**
 	 * Inject the exception converter to use.
 	 * <p/>
-	 * NOTE : <tt>null</tt> is allowed and signifies to use the default.
+	 * NOTE : {@code null} is allowed and signifies to use the default.
 	 *
 	 * @param sqlExceptionConverter The converter to use.
 	 */

@@ -26,8 +26,8 @@ import org.hibernate.type.Type;
 
 /**
  * An unordered, unkeyed collection that can contain the same element
- * multiple times. The Java collections API, curiously, has no <tt>Bag</tt>.
- * Most developers seem to use <tt>List</tt>s to represent bag semantics,
+ * multiple times. The Java collections API, curiously, has no {@code Bag}.
+ * Most developers seem to use {@code List}s to represent bag semantics,
  * so Hibernate follows this practice.
  *
  * @author Gavin King

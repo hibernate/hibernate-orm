@@ -288,9 +288,9 @@ public class TeradataDialect extends Dialect {
 	}
 
 	/**
-	 * Does this dialect support the <tt>FOR UPDATE</tt> syntax?
+	 * Does this dialect support the {@code FOR UPDATE} syntax?
 	 *
-	 * @return empty string ... Teradata does not support <tt>FOR UPDATE</tt> syntax
+	 * @return empty string ... Teradata does not support {@code FOR UPDATE} syntax
 	 */
 	@Override
 	public String getForUpdateString() {

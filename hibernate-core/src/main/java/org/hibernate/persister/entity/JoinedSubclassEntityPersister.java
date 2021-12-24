@@ -72,7 +72,7 @@ import org.jboss.logging.Logger;
 import static java.util.Collections.emptyMap;
 
 /**
- * An <tt>EntityPersister</tt> implementing the normalized "table-per-subclass"
+ * An {@code EntityPersister} implementing the normalized "table-per-subclass"
  * mapping strategy
  *
  * @author Gavin King

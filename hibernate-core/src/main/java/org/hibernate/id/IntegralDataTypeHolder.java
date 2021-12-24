@@ -21,7 +21,7 @@ public interface IntegralDataTypeHolder extends Serializable {
 	 *
 	 * @param value The primitive integral value.
 	 *
-	 * @return <tt>this</tt>, for method chaining
+	 * @return {@code this}, for method chaining
 	 */
 	public IntegralDataTypeHolder initialize(long value);
 
@@ -32,7 +32,7 @@ public interface IntegralDataTypeHolder extends Serializable {
 	 * @param resultSet The JDBC result set
 	 * @param defaultValue The default value to use if we did not get a result set value.
 	 *
-	 * @return <tt>this</tt>, for method chaining
+	 * @return {@code this}, for method chaining
 	 *
 	 * @throws SQLException Any exception from accessing the result set
 	 */
@@ -51,7 +51,7 @@ public interface IntegralDataTypeHolder extends Serializable {
 	/**
 	 * Equivalent to a ++ operation
 	 *
-	 * @return <tt>this</tt>, for method chaining
+	 * @return {@code this}, for method chaining
 	 */
 	public IntegralDataTypeHolder increment();
 
@@ -60,14 +60,14 @@ public interface IntegralDataTypeHolder extends Serializable {
 	 *
 	 * @param addend The value to add to this integral.
 	 *
-	 * @return <tt>this</tt>, for method chaining
+	 * @return {@code this}, for method chaining
 	 */
 	public IntegralDataTypeHolder add(long addend);
 
 	/**
 	 * Equivalent to a -- operation
 	 *
-	 * @return <tt>this</tt>, for method chaining
+	 * @return {@code this}, for method chaining
 	 */
 	public IntegralDataTypeHolder decrement();
 
@@ -76,7 +76,7 @@ public interface IntegralDataTypeHolder extends Serializable {
 	 *
 	 * @param subtrahend The value to subtract from this integral.
 	 *
-	 * @return <tt>this</tt>, for method chaining
+	 * @return {@code this}, for method chaining
 	 */
 	public IntegralDataTypeHolder subtract(long subtrahend);
 
@@ -85,7 +85,7 @@ public interface IntegralDataTypeHolder extends Serializable {
 	 *
 	 * @param factor The factor by which to multiple this integral
 	 *
-	 * @return <tt>this</tt>, for method chaining
+	 * @return {@code this}, for method chaining
 	 */
 	public IntegralDataTypeHolder multiplyBy(IntegralDataTypeHolder factor);
 
@@ -94,7 +94,7 @@ public interface IntegralDataTypeHolder extends Serializable {
 	 *
 	 * @param factor The factor by which to multiple this integral
 	 *
-	 * @return <tt>this</tt>, for method chaining
+	 * @return {@code this}, for method chaining
 	 */
 	public IntegralDataTypeHolder multiplyBy(long factor);
 

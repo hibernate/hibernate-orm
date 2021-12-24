@@ -33,7 +33,7 @@ import org.hibernate.type.Type;
 /**
  * <b>increment</b>
  * <p>
- * An <tt>IdentifierGenerator</tt> that returns a <tt>long</tt>, constructed by
+ * An {@code IdentifierGenerator} that returns a {@code long}, constructed by
  * counting from the maximum primary key value at startup. Not safe for use in a
  * cluster!
  * <p>

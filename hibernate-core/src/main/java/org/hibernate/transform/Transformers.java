@@ -12,13 +12,13 @@ final public class Transformers {
 	private Transformers() {}
 
 	/**
-	 * Each row of results is a <tt>Map</tt> from alias to values/entities
+	 * Each row of results is a {@code Map} from alias to values/entities
 	 */
 	public static final AliasToEntityMapResultTransformer ALIAS_TO_ENTITY_MAP =
 			AliasToEntityMapResultTransformer.INSTANCE;
 
 	/**
-	 * Each row of results is a <tt>List</tt>
+	 * Each row of results is a {@code List}
 	 */
 	public static final ToListResultTransformer TO_LIST = ToListResultTransformer.INSTANCE;
 

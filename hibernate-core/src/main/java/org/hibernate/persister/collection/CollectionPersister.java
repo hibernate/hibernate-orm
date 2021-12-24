@@ -46,7 +46,7 @@ import org.hibernate.type.Type;
  * Implements persistence of a collection instance while the instance is
  * referenced in a particular role.
  * <p>
- * This class is highly coupled to the <tt>PersistentCollection</tt>
+ * This class is highly coupled to the {@code PersistentCollection}
  * hierarchy, since double dispatch is used to load and update collection
  * elements.
  * <p>
@@ -95,7 +95,7 @@ public interface CollectionPersister extends CollectionDefinition, Restrictable 
 	 */
 	CacheEntryStructure getCacheEntryStructure();
 	/**
-	 * Get the associated <tt>Type</tt>
+	 * Get the associated {@code Type}
 	 */
 	CollectionType getCollectionType();
 	/**

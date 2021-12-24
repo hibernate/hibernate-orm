@@ -8,10 +8,10 @@ package org.hibernate;
 
 /**
  * Represents an association fetching strategy. This is used
- * together with the <tt>Criteria</tt> API to specify runtime
+ * together with the {@code Criteria} API to specify runtime
  * fetching strategies.
  * <p>
- * For HQL queries, use the <tt>FETCH</tt> keyword instead.
+ * For HQL queries, use the {@code FETCH} keyword instead.
  *
  * @see Criteria#setFetchMode(String, FetchMode)
  *
@@ -24,26 +24,26 @@ public enum FetchMode  {
 	DEFAULT,
 
 	/**
-	 * Fetch using an outer join. Equivalent to <tt>fetch="join"</tt>.
+	 * Fetch using an outer join. Equivalent to {@code fetch="join"}.
 	 */
 	JOIN,
 	/**
 	 * Fetch eagerly, using a separate select. Equivalent to
-	 * <tt>fetch="select"</tt>.
+	 * {@code fetch="select"}.
 	 */
 	SELECT;
 
 	/**
-	 * Fetch lazily. Equivalent to <tt>outer-join="false"</tt>.
+	 * Fetch lazily. Equivalent to {@code outer-join="false"}.
 	 *
-	 * @deprecated use <tt>FetchMode.SELECT</tt>
+	 * @deprecated use {@code FetchMode.SELECT}
 	 */
 	@Deprecated
 	public static final FetchMode LAZY = SELECT;
 	/**
-	 * Fetch eagerly, using an outer join. Equivalent to <tt>outer-join="true"</tt>.
+	 * Fetch eagerly, using an outer join. Equivalent to {@code outer-join="true"}.
 	 *
-	 * @deprecated use <tt>FetchMode.JOIN</tt>
+	 * @deprecated use {@code FetchMode.JOIN}
 	 */
 	@Deprecated
 	public static final FetchMode EAGER = JOIN;

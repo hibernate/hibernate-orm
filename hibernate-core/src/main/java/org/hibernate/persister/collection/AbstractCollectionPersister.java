@@ -135,7 +135,7 @@ import org.hibernate.type.Type;
 import org.jboss.logging.Logger;
 
 /**
- * Base implementation of the <tt>QueryableCollection</tt> interface.
+ * Base implementation of the {@code QueryableCollection} interface.
  *
  * @author Gavin King
  * @see BasicCollectionPersister
@@ -1017,7 +1017,7 @@ public abstract class AbstractCollectionPersister
 	}
 
 	/**
-	 * Write the key to a JDBC <tt>PreparedStatement</tt>
+	 * Write the key to a JDBC {@code PreparedStatement}
 	 */
 	protected int writeKey(PreparedStatement st, Object key, int i, SharedSessionContractImplementor session)
 			throws HibernateException, SQLException {
@@ -1030,7 +1030,7 @@ public abstract class AbstractCollectionPersister
 	}
 
 	/**
-	 * Write the element to a JDBC <tt>PreparedStatement</tt>
+	 * Write the element to a JDBC {@code PreparedStatement}
 	 */
 	protected int writeElement(PreparedStatement st, Object elt, int i, SharedSessionContractImplementor session)
 			throws HibernateException, SQLException {
@@ -1049,7 +1049,7 @@ public abstract class AbstractCollectionPersister
 	}
 
 	/**
-	 * Write the index to a JDBC <tt>PreparedStatement</tt>
+	 * Write the index to a JDBC {@code PreparedStatement}
 	 */
 	protected int writeIndex(PreparedStatement st, Object index, int i, SharedSessionContractImplementor session)
 			throws HibernateException, SQLException {
@@ -1074,7 +1074,7 @@ public abstract class AbstractCollectionPersister
 	}
 
 	/**
-	 * Write the element to a JDBC <tt>PreparedStatement</tt>
+	 * Write the element to a JDBC {@code PreparedStatement}
 	 */
 	protected int writeElementToWhere(PreparedStatement st, Object elt, int i, SharedSessionContractImplementor session)
 			throws HibernateException, SQLException {
@@ -1093,7 +1093,7 @@ public abstract class AbstractCollectionPersister
 	}
 
 	/**
-	 * Write the index to a JDBC <tt>PreparedStatement</tt>
+	 * Write the index to a JDBC {@code PreparedStatement}
 	 */
 	protected int writeIndexToWhere(PreparedStatement st, Object index, int i, SharedSessionContractImplementor session)
 			throws HibernateException, SQLException {
@@ -1111,7 +1111,7 @@ public abstract class AbstractCollectionPersister
 	}
 
 	/**
-	 * Write the identifier to a JDBC <tt>PreparedStatement</tt>
+	 * Write the identifier to a JDBC {@code PreparedStatement}
 	 */
 	public int writeIdentifier(PreparedStatement st, Object id, int i, SharedSessionContractImplementor session)
 			throws HibernateException, SQLException {

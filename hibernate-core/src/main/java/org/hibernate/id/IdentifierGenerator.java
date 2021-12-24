@@ -20,7 +20,7 @@ import org.hibernate.type.Type;
 
 /**
  * The general contract between a class that generates unique
- * identifiers and the <tt>Session</tt>. It is not intended that
+ * identifiers and the {@code Session}. It is not intended that
  * this interface ever be exposed to the application. It <b>is</b>
  * intended that users implement this interface to provide
  * custom identifier generation strategies.
@@ -28,7 +28,7 @@ import org.hibernate.type.Type;
  * Implementors should provide a public default constructor.
  * <p>
  * Implementations that accept configuration parameters should
- * also implement <tt>Configurable</tt>.
+ * also implement {@code Configurable}.
  * <p>
  * Implementors <em>must</em> be thread-safe
  *
@@ -60,7 +60,7 @@ public interface IdentifierGenerator extends Configurable, ExportableProducer {
 
 	/**
 	 * Configure this instance, given the value of parameters
-	 * specified by the user as <tt>&lt;param&gt;</tt> elements.
+	 * specified by the user as {@code &lt;param&gt;} elements.
 	 * <p>
 	 * This method is called just once, following instantiation, and before {@link #registerExportables(Database)}.
 	 *

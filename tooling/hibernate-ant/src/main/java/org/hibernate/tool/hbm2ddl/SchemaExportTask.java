@@ -37,7 +37,7 @@ import org.apache.tools.ant.taskdefs.MatchingTask;
 import org.apache.tools.ant.types.FileSet;
 
 /**
- * An Ant task for <tt>SchemaExport</tt>.
+ * An Ant task for {@code SchemaExport}.
  *
  * <pre>
  * &lt;taskdef name="schemaexport"

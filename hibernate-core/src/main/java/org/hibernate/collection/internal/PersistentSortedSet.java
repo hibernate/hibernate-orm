@@ -17,8 +17,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.BasicCollectionPersister;
 
 /**
- * A persistent wrapper for a <tt>java.util.SortedSet</tt>. Underlying
- * collection is a <tt>TreeSet</tt>.
+ * A persistent wrapper for a {@code java.util.SortedSet}. Underlying
+ * collection is a {@code TreeSet}.
  *
  * @see java.util.TreeSet
  * @author <a href="mailto:doug.currie@alum.mit.edu">e</a>

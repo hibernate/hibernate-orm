@@ -215,7 +215,7 @@ public interface SessionFactory extends EntityManagerFactory, HibernateEntityMan
 	Statistics getStatistics();
 
 	/**
-	 * Destroy this <tt>SessionFactory</tt> and release all resources (caches,
+	 * Destroy this {@code SessionFactory} and release all resources (caches,
 	 * connection pools, etc).
 	 * <p/>
 	 * It is the responsibility of the application to ensure that there are no
@@ -336,7 +336,7 @@ public interface SessionFactory extends EntityManagerFactory, HibernateEntityMan
 	/**
 	 * Get the {@link CollectionMetadata} for all mapped collections.
 	 *
-	 * @return a map from <tt>String</tt> to <tt>CollectionMetadata</tt>
+	 * @return a map from {@code String} to {@code CollectionMetadata}
 	 *
 	 * @throws HibernateException Generally empty map is returned instead of throwing.
 	 *

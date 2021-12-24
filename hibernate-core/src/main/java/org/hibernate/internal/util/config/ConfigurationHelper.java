@@ -303,7 +303,7 @@ public final class ConfigurationHelper {
 	/**
 	 * Extract a property value by name from the given properties object.
 	 * <p/>
-	 * Both <tt>null</tt> and <tt>empty string</tt> are viewed as the same, and return null.
+	 * Both {@code null} and {@code empty string} are viewed as the same, and return null.
 	 *
 	 * @param propertyName The name of the property for which to extract value
 	 * @param properties The properties object
@@ -323,7 +323,7 @@ public final class ConfigurationHelper {
 	/**
 	 * Extract a property value by name from the given properties object.
 	 * <p/>
-	 * Both <tt>null</tt> and <tt>empty string</tt> are viewed as the same, and return null.
+	 * Both {@code null} and {@code empty string} are viewed as the same, and return null.
 	 *
 	 * @param propertyName The name of the property for which to extract value
 	 * @param properties The properties object

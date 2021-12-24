@@ -339,7 +339,7 @@ public interface Statistics {
 	long getCloseStatementCount();
 
 	/**
-	 * The number of Hibernate <tt>StaleObjectStateException</tt>s or JPA <tt>OptimisticLockException</tt>s
+	 * The number of Hibernate {@code StaleObjectStateException}s or JPA {@code OptimisticLockException}s
 	 * that occurred.
 	 */
 	long getOptimisticFailureCount();

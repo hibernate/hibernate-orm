@@ -20,7 +20,7 @@ import org.hibernate.type.descriptor.jdbc.TimestampJdbcType;
 import org.jboss.logging.Logger;
 
 /**
- * <tt>dbtimestamp</tt>: A type that maps between {@link java.sql.Types#TIMESTAMP TIMESTAMP} and {@link Timestamp}.
+ * {@code dbtimestamp}: A type that maps between {@link java.sql.Types#TIMESTAMP TIMESTAMP} and {@link Timestamp}.
  * It maps to the database's current timestamp, rather than the jvm's
  * current timestamp.
  * <p/>

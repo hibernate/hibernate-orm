@@ -12,7 +12,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.internal.util.StringHelper;
 
 /**
- * The default <tt>NamingStrategy</tt>
+ * The default {@code NamingStrategy}
  * @see ImprovedNamingStrategy a better alternative
  * @author Gavin King
  */

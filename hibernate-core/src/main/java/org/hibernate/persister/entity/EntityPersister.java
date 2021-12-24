@@ -893,12 +893,12 @@ public interface EntityPersister
 	 * However, we still need to account for possible subclassing and potentially re-route to the more appropriate
 	 * persister.
 	 * <p/>
-	 * For example, a request names <tt>Animal</tt> as the entity-name which gets resolved to this persister.  But the
-	 * actual instance is really an instance of <tt>Cat</tt> which is a subclass of <tt>Animal</tt>.  So, here the
-	 * <tt>Animal</tt> persister is being asked to return the persister specific to <tt>Cat</tt>.
+	 * For example, a request names {@code Animal} as the entity-name which gets resolved to this persister.  But the
+	 * actual instance is really an instance of {@code Cat} which is a subclass of {@code Animal}.  So, here the
+	 * {@code Animal} persister is being asked to return the persister specific to {@code Cat}.
 	 * <p/>
-	 * It is also possible that the instance is actually an <tt>Animal</tt> instance in the above example in which
-	 * case we would return <tt>this</tt> from this method.
+	 * It is also possible that the instance is actually an {@code Animal} instance in the above example in which
+	 * case we would return {@code this} from this method.
 	 *
 	 * @param instance The entity instance
 	 * @param factory Reference to the SessionFactory

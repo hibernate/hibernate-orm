@@ -17,8 +17,8 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
- * A <tt>Map</tt> where keys are compared by object identity,
- * rather than <tt>equals()</tt>.
+ * A {@code Map} where keys are compared by object identity,
+ * rather than {@code equals()}.
  */
 public final class IdentityMap<K,V> implements Map<K,V> {
 
@@ -47,9 +47,9 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 	}
 
 	/**
-	 * Return the map entries (as instances of <tt>Map.Entry</tt> in a collection that
+	 * Return the map entries (as instances of {@code Map.Entry} in a collection that
 	 * is safe from concurrent modification). ie. we may safely add new instances to
-	 * the underlying <tt>Map</tt> during iteration of the <tt>entries()</tt>.
+	 * the underlying {@code Map} during iteration of the {@code entries()}.
 	 *
 	 * @param map The map of entries
 	 * @return Collection

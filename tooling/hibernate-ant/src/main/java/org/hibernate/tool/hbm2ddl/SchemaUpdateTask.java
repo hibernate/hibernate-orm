@@ -33,7 +33,7 @@ import org.apache.tools.ant.taskdefs.MatchingTask;
 import org.apache.tools.ant.types.FileSet;
 
 /**
- * An Ant task for <tt>SchemaUpdate</tt>.
+ * An Ant task for {@code SchemaUpdate}.
  * <p/>
  * <pre>
  * &lt;taskdef name="schemaupdate"

@@ -24,125 +24,125 @@ import org.jboss.logging.Logger;
 
 
 /**
- * Provides access to configuration info passed in <tt>Properties</tt> objects.
+ * Provides access to configuration info passed in {@code Properties} objects.
  * <p>
  * Hibernate has two property scopes:
  * <ul>
- * <li><b>Factory-level</b> properties may be passed to the <tt>SessionFactory</tt> when it
+ * <li><b>Factory-level</b> properties may be passed to the {@code SessionFactory} when it
  * is instantiated. Each instance might have different property values. If no
- * properties are specified, the factory calls <tt>Environment.getProperties()</tt>.
+ * properties are specified, the factory calls {@code Environment.getProperties()}.
  * <li><b>System-level</b> properties are shared by all factory instances and are always
- * determined by the <tt>Environment</tt> properties.
+ * determined by the {@code Environment} properties.
  * </ul>
  * The only system-level properties are
  * <ul>
- * <li><tt>hibernate.jdbc.use_streams_for_binary</tt>
- * <li><tt>hibernate.cglib.use_reflection_optimizer</tt>
+ * <li>{@code hibernate.jdbc.use_streams_for_binary}
+ * <li>{@code hibernate.cglib.use_reflection_optimizer}
  * </ul>
- * <tt>Environment</tt> properties are populated by calling <tt>System.getProperties()</tt>
- * and then from a resource named <tt>/hibernate.properties</tt> if it exists. System
- * properties override properties specified in <tt>hibernate.properties</tt>.
+ * {@code Environment} properties are populated by calling {@code System.getProperties()}
+ * and then from a resource named {@code /hibernate.properties} if it exists. System
+ * properties override properties specified in {@code hibernate.properties}.
  * <p>
- * The <tt>SessionFactory</tt> is controlled by the following properties.
- * Properties may be either be <tt>System</tt> properties, properties
- * defined in a resource named <tt>/hibernate.properties</tt> or an instance of
- * <tt>java.util.Properties</tt> passed to
- * <tt>Configuration.build()</tt>
+ * The {@code SessionFactory} is controlled by the following properties.
+ * Properties may be either be {@code System} properties, properties
+ * defined in a resource named {@code /hibernate.properties} or an instance of
+ * {@code java.util.Properties} passed to
+ * {@code Configuration.build()}
  * <p>
  * <table>
  * <tr><td><b>property</b></td><td><b>meaning</b></td></tr>
  * <tr>
- *   <td><tt>hibernate.dialect</tt></td>
- *   <td>classname of <tt>org.hibernate.dialect.Dialect</tt> subclass</td>
+ *   <td>{@code hibernate.dialect}</td>
+ *   <td>classname of {@code org.hibernate.dialect.Dialect} subclass</td>
  * </tr>
  * <tr>
- *   <td><tt>hibernate.connection.provider_class</tt></td>
- *   <td>classname of <tt>ConnectionProvider</tt>
+ *   <td>{@code hibernate.connection.provider_class}</td>
+ *   <td>classname of {@code ConnectionProvider}
  *   subclass (if not specified heuristics are used)</td>
  * </tr>
- * <tr><td><tt>hibernate.connection.username</tt></td><td>database username</td></tr>
- * <tr><td><tt>hibernate.connection.password</tt></td><td>database password</td></tr>
+ * <tr><td>{@code hibernate.connection.username}</td><td>database username</td></tr>
+ * <tr><td>{@code hibernate.connection.password}</td><td>database password</td></tr>
  * <tr>
- *   <td><tt>hibernate.connection.url</tt></td>
- *   <td>JDBC URL (when using <tt>java.sql.DriverManager</tt>)</td>
+ *   <td>{@code hibernate.connection.url}</td>
+ *   <td>JDBC URL (when using {@code java.sql.DriverManager})</td>
  * </tr>
  * <tr>
- *   <td><tt>hibernate.connection.driver_class</tt></td>
+ *   <td>{@code hibernate.connection.driver_class}</td>
  *   <td>classname of JDBC driver</td>
  * </tr>
  * <tr>
- *   <td><tt>hibernate.connection.isolation</tt></td>
+ *   <td>{@code hibernate.connection.isolation}</td>
  *   <td>JDBC transaction isolation level (only when using
- *     <tt>java.sql.DriverManager</tt>)
+ *     {@code java.sql.DriverManager})
  *   </td>
  * </tr>
- *   <td><tt>hibernate.connection.pool_size</tt></td>
+ *   <td>{@code hibernate.connection.pool_size}</td>
  *   <td>the maximum size of the connection pool (only when using
- *     <tt>java.sql.DriverManager</tt>)
+ *     {@code java.sql.DriverManager})
  *   </td>
  * </tr>
  * <tr>
- *   <td><tt>hibernate.connection.datasource</tt></td>
- *   <td>datasource JNDI name (when using <tt>javax.sql.Datasource</tt>)</td>
+ *   <td>{@code hibernate.connection.datasource}</td>
+ *   <td>datasource JNDI name (when using {@code javax.sql.Datasource})</td>
  * </tr>
  * <tr>
- *   <td><tt>hibernate.jndi.url</tt></td><td>JNDI <tt>InitialContext</tt> URL</td>
+ *   <td>{@code hibernate.jndi.url}</td><td>JNDI {@code InitialContext} URL</td>
  * </tr>
  * <tr>
- *   <td><tt>hibernate.jndi.class</tt></td><td>JNDI <tt>InitialContext</tt> classname</td>
+ *   <td>{@code hibernate.jndi.class}</td><td>JNDI {@code InitialContext} classname</td>
  * </tr>
  * <tr>
- *   <td><tt>hibernate.max_fetch_depth</tt></td>
+ *   <td>{@code hibernate.max_fetch_depth}</td>
  *   <td>maximum depth of outer join fetching</td>
  * </tr>
  * <tr>
- *   <td><tt>hibernate.jdbc.batch_size</tt></td>
+ *   <td>{@code hibernate.jdbc.batch_size}</td>
  *   <td>enable use of JDBC2 batch API for drivers which support it</td>
  * </tr>
  * <tr>
- *   <td><tt>hibernate.jdbc.fetch_size</tt></td>
+ *   <td>{@code hibernate.jdbc.fetch_size}</td>
  *   <td>set the JDBC fetch size</td>
  * </tr>
  * <tr>
- *   <td><tt>hibernate.jdbc.use_scrollable_resultset</tt></td>
+ *   <td>{@code hibernate.jdbc.use_scrollable_resultset}</td>
  *   <td>enable use of JDBC2 scrollable resultsets (you only need to specify
  *   this property when using user supplied connections)</td>
  * </tr>
  * <tr>
- *   <td><tt>hibernate.jdbc.use_getGeneratedKeys</tt></td>
+ *   <td>{@code hibernate.jdbc.use_getGeneratedKeys}</td>
  *   <td>enable use of JDBC3 PreparedStatement.getGeneratedKeys() to retrieve
  *   natively generated keys after insert. Requires JDBC3+ driver and JRE1.4+</td>
  * </tr>
  * <tr>
- *   <td><tt>hibernate.hbm2ddl.auto</tt></td>
+ *   <td>{@code hibernate.hbm2ddl.auto}</td>
  *   <td>enable auto DDL export</td>
  * </tr>
  * <tr>
- *   <td><tt>hibernate.default_schema</tt></td>
+ *   <td>{@code hibernate.default_schema}</td>
  *   <td>use given schema name for unqualified tables (always optional)</td>
  * </tr>
  * <tr>
- *   <td><tt>hibernate.default_catalog</tt></td>
+ *   <td>{@code hibernate.default_catalog}</td>
  *   <td>use given catalog name for unqualified tables (always optional)</td>
  * </tr>
  * <tr>
- *   <td><tt>hibernate.session_factory_name</tt></td>
+ *   <td>{@code hibernate.session_factory_name}</td>
  *   <td>If set, the factory attempts to bind this name to itself in the
- *   JNDI context. This name is also used to support cross JVM <tt>
- *   Session</tt> (de)serialization.</td>
+ *   JNDI context. This name is also used to support cross JVM {@code 
+ *   Session} (de)serialization.</td>
  * </tr>
  * <tr>
- *   <td><tt>hibernate.transaction.jta.platform</tt></td>
- *   <td>classname of <tt>org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform</tt>
+ *   <td>{@code hibernate.transaction.jta.platform}</td>
+ *   <td>classname of {@code org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform}
  *   implementor</td>
  * </tr>
  * <tr>
- *   <td><tt>hibernate.transaction.factory_class</tt></td>
- *   <td>the factory to use for instantiating <tt>Transaction</tt>s.
- *   (Defaults to <tt>JdbcTransactionFactory</tt>.)</td>
+ *   <td>{@code hibernate.transaction.factory_class}</td>
+ *   <td>the factory to use for instantiating {@code Transaction}s.
+ *   (Defaults to {@code JdbcTransactionFactory}.)</td>
  * </tr>
  * <tr>
- *   <td><tt>hibernate.query.substitutions</tt></td><td>query language token substitutions</td>
+ *   <td>{@code hibernate.query.substitutions}</td><td>query language token substitutions</td>
  * </tr>
  * </table>
  *
@@ -308,8 +308,8 @@ public final class Environment implements AvailableSettings {
 	}
 
 	/**
-	 * Return <tt>System</tt> properties, extended by any properties specified
-	 * in <tt>hibernate.properties</tt>.
+	 * Return {@code System} properties, extended by any properties specified
+	 * in {@code hibernate.properties}.
 	 * @return Properties
 	 */
 	public static Properties getProperties() {

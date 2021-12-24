@@ -69,13 +69,13 @@ public interface EntityTuplizer extends Tuplizer {
 	 * asked to determine if there is a more appropriate entity-name to use, specifically within an inheritance
 	 * hierarchy.
 	 * <p/>
-	 * For example, consider a case where a user calls <tt>session.update( "Animal", cat );</tt>.  Here, the
-	 * user has explicitly provided <tt>Animal</tt> as the entity-name.  However, they have passed in an instance
-	 * of <tt>Cat</tt> which is a subclass of <tt>Animal</tt>.  In this case, we would return <tt>Cat</tt> as the
+	 * For example, consider a case where a user calls {@code session.update( "Animal", cat );}.  Here, the
+	 * user has explicitly provided {@code Animal} as the entity-name.  However, they have passed in an instance
+	 * of {@code Cat} which is a subclass of {@code Animal}.  In this case, we would return {@code Cat} as the
 	 * entity-name.
 	 * <p/>
-	 * <tt>null</tt> may be returned from calls to this method.  The meaning of <tt>null</tt> in that case is assumed
-	 * to be that we should use whatever explicit entity-name the user provided (<tt>Animal</tt> rather than <tt>Cat</tt>
+	 * {@code null} may be returned from calls to this method.  The meaning of {@code null} in that case is assumed
+	 * to be that we should use whatever explicit entity-name the user provided ({@code Animal} rather than {@code Cat}
 	 * in the example above).
 	 *
 	 * @param entityInstance The entity instance.

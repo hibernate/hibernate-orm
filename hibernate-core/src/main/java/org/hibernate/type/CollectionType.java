@@ -50,7 +50,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 import org.jboss.logging.Logger;
 
 /**
- * A type that handles Hibernate <tt>PersistentCollection</tt>s (including arrays).
+ * A type that handles Hibernate {@code PersistentCollection}s (including arrays).
  *
  * @author Gavin King
  */
@@ -365,7 +365,7 @@ public abstract class CollectionType extends AbstractType implements Association
 	public abstract PersistentCollection wrap(SharedSessionContractImplementor session, Object collection);
 
 	/**
-	 * Note: return true because this type is castable to <tt>AssociationType</tt>. Not because
+	 * Note: return true because this type is castable to {@code AssociationType}. Not because
 	 * all collections are associations.
 	 */
 	@Override

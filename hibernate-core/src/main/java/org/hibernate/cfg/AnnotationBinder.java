@@ -192,7 +192,7 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
 /**
  * JSR 175 annotation binder which reads the annotations from classes, applies the
  * principles of the EJB3 spec and produces the Hibernate configuration-time metamodel
- * (the classes in the {@code org.hibernate.mapping} package)
+ * (the classes in the {@link org.hibernate.mapping} package)
  * <p/>
  * Some design description
  * I tried to remove any link to annotation except from the 2 first level of

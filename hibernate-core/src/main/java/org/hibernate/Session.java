@@ -538,9 +538,9 @@ public interface Session extends SharedSessionContract, EntityManager {
 
 	/**
 	 * Obtain the specified lock level upon the given object. This may be used to
-	 * perform a version check ({@code LockMode.READ}), to upgrade to a pessimistic
-	 * lock ({@code LockMode.PESSIMISTIC_WRITE}), or to simply reassociate a transient instance
-	 * with a session ({@code LockMode.NONE}). This operation cascades to associated
+	 * perform a version check ({@link LockMode#READ}), to upgrade to a pessimistic
+	 * lock ({@link LockMode#PESSIMISTIC_WRITE}), or to simply reassociate a transient instance
+	 * with a session ({@link LockMode#NONE}). This operation cascades to associated
 	 * instances if the association is mapped with {@code cascade="lock"}.
 	 * <p/>
 	 * Convenient form of {@link LockRequest#lock(Object)} via {@link #buildLockRequest(LockOptions)}
@@ -555,9 +555,9 @@ public interface Session extends SharedSessionContract, EntityManager {
 
 	/**
 	 * Obtain the specified lock level upon the given object. This may be used to
-	 * perform a version check ({@code LockMode.OPTIMISTIC}), to upgrade to a pessimistic
-	 * lock ({@code LockMode.PESSIMISTIC_WRITE}), or to simply reassociate a transient instance
-	 * with a session ({@code LockMode.NONE}). This operation cascades to associated
+	 * perform a version check ({@link LockMode#OPTIMISTIC}), to upgrade to a pessimistic
+	 * lock ({@link LockMode#PESSIMISTIC_WRITE}), or to simply reassociate a transient instance
+	 * with a session ({@link LockMode#NONE}). This operation cascades to associated
 	 * instances if the association is mapped with {@code cascade="lock"}.
 	 * <p/>
 	 * Convenient form of {@link LockRequest#lock(String, Object)} via {@link #buildLockRequest(LockOptions)}
@@ -593,7 +593,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * <ul>
 	 * <li>where a database trigger alters the object state upon insert or update
 	 * <li>after executing direct SQL (eg. a mass update) in the same session
-	 * <li>after inserting a {@code Blob} or {@code Clob}
+	 * <li>after inserting a {@link java.sql.Blob} or {@link java.sql.Clob}
 	 * </ul>
 	 *
 	 * @param object a persistent or detached instance
@@ -608,7 +608,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * <ul>
 	 * <li>where a database trigger alters the object state upon insert or update
 	 * <li>after executing direct SQL (eg. a mass update) in the same session
-	 * <li>after inserting a {@code Blob} or {@code Clob}
+	 * <li>after inserting a {@link java.sql.Blob} or {@link java.sql.Clob}
 	 * </ul>
 	 *
 	 * @param entityName a persistent class
@@ -618,7 +618,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 
 	/**
 	 * Re-read the state of the given instance from the underlying database, with
-	 * the given {@code LockMode}. It is inadvisable to use this to implement
+	 * the given {@link LockMode}. It is inadvisable to use this to implement
 	 * long-running sessions that span many business tasks. This method is, however,
 	 * useful in certain special circumstances.
 	 * <p/>
@@ -633,7 +633,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 
 	/**
 	 * Re-read the state of the given instance from the underlying database, with
-	 * the given {@code LockMode}. It is inadvisable to use this to implement
+	 * the given {@link LockMode}. It is inadvisable to use this to implement
 	 * long-running sessions that span many business tasks. This method is, however,
 	 * useful in certain special circumstances.
 	 *
@@ -644,7 +644,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 
 	/**
 	 * Re-read the state of the given instance from the underlying database, with
-	 * the given {@code LockMode}. It is inadvisable to use this to implement
+	 * the given {@link LockMode}. It is inadvisable to use this to implement
 	 * long-running sessions that span many business tasks. This method is, however,
 	 * useful in certain special circumstances.
 	 *
@@ -666,7 +666,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/**
 	 * Completely clear the session. Evict all loaded instances and cancel all pending
 	 * saves, updates and deletions. Do not close open iterators or instances of
-	 * {@code ScrollableResults}.
+	 * {@link ScrollableResults}.
 	 */
 	void clear();
 

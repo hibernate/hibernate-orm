@@ -1721,7 +1721,7 @@ public interface AvailableSettings {
 	 * valid value is {@code CONSTRAINT} and {@code NO_CONSTRAINT}.
 	 * </p>
 	 * <p>
-	 * The default value is CONSTRAINT.
+	 * The default value is {@code CONSTRAINT}.
 	 * </p>
 	 *
 	 * @since 5.4

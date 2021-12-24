@@ -36,14 +36,14 @@ public enum FetchMode  {
 	/**
 	 * Fetch lazily. Equivalent to {@code outer-join="false"}.
 	 *
-	 * @deprecated use {@code FetchMode.SELECT}
+	 * @deprecated use {@link #SELECT}
 	 */
 	@Deprecated
 	public static final FetchMode LAZY = SELECT;
 	/**
 	 * Fetch eagerly, using an outer join. Equivalent to {@code outer-join="true"}.
 	 *
-	 * @deprecated use {@code FetchMode.JOIN}
+	 * @deprecated use {@link #JOIN}
 	 */
 	@Deprecated
 	public static final FetchMode EAGER = JOIN;

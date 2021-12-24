@@ -39,7 +39,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  * <p>
  * Alternatively, custom types could implement {@code Type}
  * directly or extend one of the abstract classes in
- * {@code org.hibernate.type}. This approach risks future
+ * {@link org.hibernate.type}. This approach risks future
  * incompatible changes to classes or interfaces in that
  * package.
  *

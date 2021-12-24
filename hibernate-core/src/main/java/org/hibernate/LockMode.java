@@ -21,7 +21,7 @@ package org.hibernate;
 public enum LockMode {
 	/**
 	 * No lock required. If an object is requested with this lock
-	 * mode, a {@code READ} lock will be obtained if it is
+	 * mode, a {@link #READ} lock will be obtained if it is
 	 * necessary to actually read the state from the database,
 	 * rather than pull it from a cache.
 	 * <p>
@@ -46,7 +46,7 @@ public enum LockMode {
 	 * Attempt to obtain an upgrade lock, using an Oracle-style
 	 * {@code select for update nowait}. The semantics of
 	 * this lock mode, once obtained, are the same as
-	 * {@code UPGRADE}.
+	 * {@link #UPGRADE}.
 	 */
 	UPGRADE_NOWAIT( 10, "upgrade-nowait" ),
 
@@ -54,7 +54,7 @@ public enum LockMode {
 	 * Attempt to obtain an upgrade lock, using an Oracle-style
 	 * {@code select for update skip locked}. The semantics of
 	 * this lock mode, once obtained, are the same as
-	 * {@code UPGRADE}.
+	 * {@link #UPGRADE}.
 	 */
 	UPGRADE_SKIPLOCKED( 10, "upgrade-skiplocked" ),
 
@@ -62,7 +62,7 @@ public enum LockMode {
 	 * A {@code WRITE} lock is obtained when an object is updated
 	 * or inserted.   This lock mode is for internal use only and is
 	 * not a valid mode for {@code load()} or {@code lock()} (both
-	 * of which throw exceptions if WRITE is specified).
+	 * of which throw exceptions if {@code WRITE} is specified).
 	 */
 	WRITE( 10, "write" ),
 

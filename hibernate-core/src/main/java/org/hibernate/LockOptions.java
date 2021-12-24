@@ -173,9 +173,9 @@ public class LockOptions implements Serializable {
 	}
 
 	/**
-	 * Does this LockOptions object define alias-specific lock modes?
+	 * Does this {@code LockOptions} instance define alias-specific lock modes?
 	 *
-	 * @return {@code true} if this LockOptions object define alias-specific lock modes; {@code false} otherwise.
+	 * @return {@code true} if this object defines alias-specific lock modes; {@code false} otherwise.
 	 */
 	public boolean hasAliasSpecificLockModes() {
 		return aliasSpecificLockModes != null

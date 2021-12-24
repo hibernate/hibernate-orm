@@ -28,10 +28,10 @@ import org.jboss.logging.Logger;
  * <p>
  * Hibernate has two property scopes:
  * <ul>
- * <li><b>Factory-level</b> properties may be passed to the {@code SessionFactory} when it
+ * <li><em>Factory-level</em> properties may be passed to the {@code SessionFactory} when it
  * is instantiated. Each instance might have different property values. If no
  * properties are specified, the factory calls {@code Environment.getProperties()}.
- * <li><b>System-level</b> properties are shared by all factory instances and are always
+ * <li><em>System-level</em> properties are shared by all factory instances and are always
  * determined by the {@code Environment} properties.
  * </ul>
  * The only system-level properties are
@@ -39,32 +39,31 @@ import org.jboss.logging.Logger;
  * <li>{@code hibernate.jdbc.use_streams_for_binary}
  * <li>{@code hibernate.cglib.use_reflection_optimizer}
  * </ul>
- * {@code Environment} properties are populated by calling {@code System.getProperties()}
+ * {@code Environment} properties are populated by calling {@link System#getProperties()}
  * and then from a resource named {@code /hibernate.properties} if it exists. System
  * properties override properties specified in {@code hibernate.properties}.
  * <p>
- * The {@code SessionFactory} is controlled by the following properties.
- * Properties may be either be {@code System} properties, properties
- * defined in a resource named {@code /hibernate.properties} or an instance of
- * {@code java.util.Properties} passed to
- * {@code Configuration.build()}
+ * The {@link org.hibernate.SessionFactory} is controlled by the following properties.
+ * Properties may be either be {@link System} properties, properties defined in a
+ * resource named {@code /hibernate.properties} or an instance of
+ * {@link java.util.Properties} passed to {@link Configuration#addProperties(Properties)}.
  * <p>
  * <table>
  * <tr><td><b>property</b></td><td><b>meaning</b></td></tr>
  * <tr>
  *   <td>{@code hibernate.dialect}</td>
- *   <td>classname of {@code org.hibernate.dialect.Dialect} subclass</td>
+ *   <td>classname of {@link org.hibernate.dialect.Dialect} subclass</td>
  * </tr>
  * <tr>
  *   <td>{@code hibernate.connection.provider_class}</td>
- *   <td>classname of {@code ConnectionProvider}
+ *   <td>name of a {@link org.hibernate.engine.jdbc.connections.spi.ConnectionProvider}
  *   subclass (if not specified heuristics are used)</td>
  * </tr>
  * <tr><td>{@code hibernate.connection.username}</td><td>database username</td></tr>
  * <tr><td>{@code hibernate.connection.password}</td><td>database password</td></tr>
  * <tr>
  *   <td>{@code hibernate.connection.url}</td>
- *   <td>JDBC URL (when using {@code java.sql.DriverManager})</td>
+ *   <td>JDBC URL (when using {@link java.sql.DriverManager})</td>
  * </tr>
  * <tr>
  *   <td>{@code hibernate.connection.driver_class}</td>
@@ -73,23 +72,23 @@ import org.jboss.logging.Logger;
  * <tr>
  *   <td>{@code hibernate.connection.isolation}</td>
  *   <td>JDBC transaction isolation level (only when using
- *     {@code java.sql.DriverManager})
+ *     {@link java.sql.DriverManager})
  *   </td>
  * </tr>
  *   <td>{@code hibernate.connection.pool_size}</td>
  *   <td>the maximum size of the connection pool (only when using
- *     {@code java.sql.DriverManager})
+ *     {@link java.sql.DriverManager})
  *   </td>
  * </tr>
  * <tr>
  *   <td>{@code hibernate.connection.datasource}</td>
- *   <td>datasource JNDI name (when using {@code javax.sql.Datasource})</td>
+ *   <td>datasource JNDI name (when using {@link javax.sql.DataSource})</td>
  * </tr>
  * <tr>
- *   <td>{@code hibernate.jndi.url}</td><td>JNDI {@code InitialContext} URL</td>
+ *   <td>{@code hibernate.jndi.url}</td><td>JNDI {@link javax.naming.InitialContext} URL</td>
  * </tr>
  * <tr>
- *   <td>{@code hibernate.jndi.class}</td><td>JNDI {@code InitialContext} classname</td>
+ *   <td>{@code hibernate.jndi.class}</td><td>JNDI {@link javax.naming.InitialContext} classname</td>
  * </tr>
  * <tr>
  *   <td>{@code hibernate.max_fetch_depth}</td>
@@ -133,16 +132,8 @@ import org.jboss.logging.Logger;
  * </tr>
  * <tr>
  *   <td>{@code hibernate.transaction.jta.platform}</td>
- *   <td>classname of {@code org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform}
+ *   <td>classname of {@link org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform}
  *   implementor</td>
- * </tr>
- * <tr>
- *   <td>{@code hibernate.transaction.factory_class}</td>
- *   <td>the factory to use for instantiating {@code Transaction}s.
- *   (Defaults to {@code JdbcTransactionFactory}.)</td>
- * </tr>
- * <tr>
- *   <td>{@code hibernate.query.substitutions}</td><td>query language token substitutions</td>
  * </tr>
  * </table>
  *

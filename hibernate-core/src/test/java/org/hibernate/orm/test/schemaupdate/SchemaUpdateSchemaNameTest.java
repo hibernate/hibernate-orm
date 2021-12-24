@@ -28,7 +28,7 @@ import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 
 /**
- * Test to illustrate that the {@code org.hibernate.mapping.Table#sqlAlterStrings} method
+ * Test to illustrate that the {@link org.hibernate.mapping.Table#sqlAlterStrings} method
  * uses legacy logic for building table names and doesn't adequately specify the catalog
  * or schema name properly.
  *

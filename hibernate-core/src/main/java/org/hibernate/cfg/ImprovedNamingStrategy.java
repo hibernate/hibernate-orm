@@ -15,6 +15,7 @@ import org.hibernate.internal.util.StringHelper;
 /**
  * An improved naming strategy that prefers embedded
  * underscores to mixed case names
+ *
  * @see DefaultNamingStrategy the default strategy
  * @author Gavin King
  */

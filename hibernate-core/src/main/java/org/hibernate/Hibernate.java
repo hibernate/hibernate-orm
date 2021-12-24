@@ -45,7 +45,7 @@ import org.hibernate.proxy.LazyInitializer;
  * <ul>
  * <li>Provides access to the full range of Hibernate built-in types. {@code Type}
  * instances may be used to bind values to query parameters.
- * <li>A factory for new {@code Blob}s and {@code Clob}s.
+ * <li>A factory for new {@link java.sql.Blob}s and {@link java.sql.Clob}s.
  * <li>Defines static methods for manipulation of proxies.
  * </ul>
  *

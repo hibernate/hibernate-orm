@@ -7,11 +7,11 @@
 package org.hibernate;
 
 /**
- * Thrown when <tt>Session.load()</tt> fails to select a row with
+ * Thrown when {@code Session.load()} fails to select a row with
  * the given primary key (identifier value). This exception might not
- * be thrown when <tt>load()</tt> is called, even if there was no
- * row on the database, because <tt>load()</tt> returns a proxy if
- * possible. Applications should use <tt>Session.get()</tt> to test if
+ * be thrown when {@code load()} is called, even if there was no
+ * row on the database, because {@code load()} returns a proxy if
+ * possible. Applications should use {@code Session.get()} to test if
  * a row exists in the database.
  * <p>
  * Like all Hibernate exceptions, this exception is considered 

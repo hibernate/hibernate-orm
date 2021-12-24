@@ -43,9 +43,9 @@ import org.hibernate.proxy.LazyInitializer;
 
 /**
  * <ul>
- * <li>Provides access to the full range of Hibernate built-in types. <tt>Type</tt>
+ * <li>Provides access to the full range of Hibernate built-in types. {@code Type}
  * instances may be used to bind values to query parameters.
- * <li>A factory for new <tt>Blob</tt>s and <tt>Clob</tt>s.
+ * <li>A factory for new {@code Blob}s and {@code Clob}s.
  * <li>Defines static methods for manipulation of proxies.
  * </ul>
  *
@@ -70,8 +70,8 @@ public final class Hibernate {
 	 * Note: This only ensures initialization of a proxy object or collection;
 	 * it is not guaranteed that the elements INSIDE the collection will be initialized/materialized.
 	 *
-	 * @param proxy a persistable object, proxy, persistent collection or <tt>null</tt>
-	 * @throws HibernateException if we can't initialize the proxy at this time, eg. the <tt>Session</tt> was closed
+	 * @param proxy a persistable object, proxy, persistent collection or {@code null}
+	 * @throws HibernateException if we can't initialize the proxy at this time, eg. the {@code Session} was closed
 	 */
 	public static void initialize(Object proxy) throws HibernateException {
 		if ( proxy == null ) {
@@ -96,7 +96,7 @@ public final class Hibernate {
 	/**
 	 * Check if the proxy or persistent collection is initialized.
 	 *
-	 * @param proxy a persistable object, proxy, persistent collection or <tt>null</tt>
+	 * @param proxy a persistable object, proxy, persistent collection or {@code null}
 	 * @return true if the argument is already initialized, or is not a proxy or collection
 	 */
 	@SuppressWarnings("SimplifiableIfStatement")
@@ -199,7 +199,7 @@ public final class Hibernate {
 
 	/**
 	 * Check if the property is initialized. If the named property does not exist
-	 * or is not persistent, this method always returns <tt>true</tt>.
+	 * or is not persistent, this method always returns {@code true}.
 	 *
 	 * @param proxy The potential proxy
 	 * @param propertyName the name of a persistent attribute of the object
@@ -286,7 +286,7 @@ public final class Hibernate {
 	/**
 	 * Operations for obtaining references to persistent collections of a certain type.
 	 *
-	 * @param <C> the type of collection, for example, <tt>List&lt;User&gt;</tt>
+	 * @param <C> the type of collection, for example, {@code List&lt;User&gt;}
 	 */
 	public static final class CollectionInterface<C> {
 		private final Supplier<C> detached;

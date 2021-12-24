@@ -24,12 +24,12 @@ public interface SessionStatistics {
 	int getCollectionCount();
 
 	/**
-	 * Get the set of all <tt>EntityKey</tt>s
+	 * Get the set of all {@code EntityKey}s
 	 * @see org.hibernate.engine.spi.EntityKey
 	 */
 	Set getEntityKeys();
 	/**
-	 * Get the set of all <tt>CollectionKey</tt>s
+	 * Get the set of all {@code CollectionKey}s
 	 * @see org.hibernate.engine.spi.CollectionKey
 	 */
 	Set getCollectionKeys();

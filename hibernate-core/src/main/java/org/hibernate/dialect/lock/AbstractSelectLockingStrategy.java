@@ -12,7 +12,7 @@ import org.hibernate.persister.entity.Lockable;
 
 /**
  * Base {@link LockingStrategy} implementation to support implementations
- * based on issuing <tt>SQL</tt> <tt>SELECT</tt> statements
+ * based on issuing {@code SQL} {@code SELECT} statements
  *
  * @author Steve Ebersole
  */

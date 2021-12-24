@@ -24,8 +24,8 @@ import org.hibernate.type.Type;
 
 
 /**
- * A persistent wrapper for a <tt>java.util.Set</tt>. The underlying
- * collection is a <tt>HashSet</tt>.
+ * A persistent wrapper for a {@code java.util.Set}. The underlying
+ * collection is a {@code HashSet}.
  *
  * @see java.util.HashSet
  * @author Gavin King

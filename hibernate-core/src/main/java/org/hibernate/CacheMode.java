@@ -40,7 +40,7 @@ public enum CacheMode {
 	/**
 	 * The session will never read items from the cache, but will add items
 	 * to the cache as it reads them from the database.  In this mode, the
-	 * effect of <tt>hibernate.cache.use_minimal_puts</tt> is bypassed, in
+	 * effect of {@code hibernate.cache.use_minimal_puts} is bypassed, in
 	 * order to <em>force</em> a cache refresh.
 	 */
 	REFRESH( CacheStoreMode.REFRESH, CacheRetrieveMode.BYPASS );

@@ -27,7 +27,7 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
 /**
  * <b>foreign</b>
  * <p>
- * An <tt>Identifier</tt> generator that uses the value of the id property of an
+ * An {@code Identifier} generator that uses the value of the id property of an
  * associated object
  * <p>
  * One mapping parameter is required: property.

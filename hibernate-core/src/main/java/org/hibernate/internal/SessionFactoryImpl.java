@@ -138,16 +138,16 @@ import org.jboss.logging.Logger;
 
 
 /**
- * Concrete implementation of the <tt>SessionFactory</tt> interface. Has the following
+ * Concrete implementation of the {@code SessionFactory} interface. Has the following
  * responsibilities
  * <ul>
  * <li>caches configuration settings (immutably)
- * <li>caches "compiled" mappings ie. <tt>EntityPersister</tt>s and
- *     <tt>CollectionPersister</tt>s (immutable)
+ * <li>caches "compiled" mappings ie. {@code EntityPersister}s and
+ *     {@code CollectionPersister}s (immutable)
  * <li>caches "compiled" queries (memory sensitive cache)
- * <li>manages <tt>PreparedStatement</tt>s
- * <li> delegates JDBC <tt>Connection</tt> management to the <tt>ConnectionProvider</tt>
- * <li>factory for instances of <tt>SessionImpl</tt>
+ * <li>manages {@code PreparedStatement}s
+ * <li> delegates JDBC {@code Connection} management to the {@code ConnectionProvider}
+ * <li>factory for instances of {@code SessionImpl}
  * </ul>
  * This class must appear immutable to clients, even if it does all kinds of caching
  * and pooling under the covers. It is crucial that the class is not only thread

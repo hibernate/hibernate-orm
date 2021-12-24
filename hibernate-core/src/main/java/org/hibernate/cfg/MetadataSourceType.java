@@ -15,11 +15,11 @@ import org.hibernate.HibernateException;
  */
 public enum MetadataSourceType {
 	/**
-	 * Indicates metadata coming from <tt>hbm.xml</tt> files
+	 * Indicates metadata coming from {@code hbm.xml} files
 	 */
 	HBM( "hbm" ),
 	/**
-	 * Indicates metadata coming from either annotations, <tt>orx.xml</tt> or a combination of the two.
+	 * Indicates metadata coming from either annotations, {@code orx.xml} or a combination of the two.
 	 */
 	CLASS( "class" );
 

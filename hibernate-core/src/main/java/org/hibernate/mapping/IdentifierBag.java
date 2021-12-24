@@ -13,7 +13,7 @@ import org.hibernate.type.CollectionType;
 import org.hibernate.type.IdentifierBagType;
 
 /**
- * An <tt>IdentifierBag</tt> has a primary key consisting of
+ * An {@code IdentifierBag} has a primary key consisting of
  * just the identifier column
  */
 public class IdentifierBag extends IdentifierCollection {

@@ -12,7 +12,7 @@ import org.hibernate.internal.util.StringHelper;
  * Thrown when the (illegal) value of a property can not be persisted.
  * There are two main causes:
  * <ul>
- * <li>a property declared <tt>not-null="true"</tt> is null
+ * <li>a property declared {@code not-null="true"} is null
  * <li>an association references an unsaved transient instance
  * </ul>
  * @author Gavin King

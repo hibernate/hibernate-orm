@@ -20,8 +20,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.BasicCollectionPersister;
 
 /**
- * A persistent wrapper for a <tt>java.util.SortedMap</tt>. Underlying
- * collection is a <tt>TreeMap</tt>.
+ * A persistent wrapper for a {@code java.util.SortedMap}. Underlying
+ * collection is a {@code TreeMap}.
  *
  * @see TreeMap
  * @author <a href="mailto:doug.currie@alum.mit.edu">e</a>

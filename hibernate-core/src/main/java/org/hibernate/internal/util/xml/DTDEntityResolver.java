@@ -20,11 +20,11 @@ import org.xml.sax.InputSource;
 /**
  * An {@link EntityResolver} implementation which attempts to resolve
  * various systemId URLs to local classpath look ups<ol>
- * <li>Any systemId URL beginning with <tt>http://www.hibernate.org/dtd/</tt> is
+ * <li>Any systemId URL beginning with {@code http://www.hibernate.org/dtd/} is
  * searched for as a classpath resource in the classloader which loaded the
  * Hibernate classes.</li>
- * <li>Any systemId URL using <tt>classpath</tt> as the scheme (i.e. starting
- * with <tt>classpath://</tt> is searched for as a classpath resource using first
+ * <li>Any systemId URL using {@code classpath} as the scheme (i.e. starting
+ * with {@code classpath://} is searched for as a classpath resource using first
  * the current thread context classloader and then the classloader which loaded
  * the Hibernate classes.
  * </ol>

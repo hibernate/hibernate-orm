@@ -15,7 +15,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 
 /**
- * A custom type for mapping user-written classes that implement <tt>PersistentCollection</tt>
+ * A custom type for mapping user-written classes that implement {@code PersistentCollection}
  *
  * @author Gavin King
  * @see PersistentCollection

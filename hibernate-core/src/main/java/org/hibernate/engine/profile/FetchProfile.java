@@ -114,7 +114,7 @@ public class FetchProfile {
 	}
 
 	/**
-	 * Getter for property 'fetches'.  Map of {@link Fetch} instances, keyed by association <tt>role</tt>
+	 * Getter for property 'fetches'.  Map of {@link Fetch} instances, keyed by association {@code role}
 	 *
 	 * @return Value for property 'fetches'.
 	 */

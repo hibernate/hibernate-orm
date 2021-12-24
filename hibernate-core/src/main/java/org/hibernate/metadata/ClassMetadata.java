@@ -257,7 +257,7 @@ public interface ClassMetadata {
 
 
 	/**
-	 * Does the class implement the <tt>Lifecycle</tt> interface?
+	 * Does the class implement the {@code Lifecycle} interface?
 	 */
 	@SuppressWarnings( {"UnusedDeclaration"})
 	boolean implementsLifecycle();

@@ -13,7 +13,7 @@ import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
 
 /**
- * An SQL <tt>INSERT</tt> statement
+ * An SQL {@code INSERT} statement
  *
  * @author Gavin King
  */

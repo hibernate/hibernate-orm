@@ -1748,7 +1748,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	 * Checking all dependencies recursively seems quite expensive, but the original code just relied
 	 * on some sort of table name sorting which failed in certain circumstances.
 	 * <p/>
-	 * See <tt>ANN-722</tt> and <tt>ANN-730</tt>
+	 * See {@code ANN-722} and {@code ANN-730}
 	 *
 	 * @param orderedFkSecondPasses The list containing the <code>FkSecondPass</code> instances ready
 	 * for processing.

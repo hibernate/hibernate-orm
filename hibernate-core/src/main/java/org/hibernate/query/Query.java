@@ -120,9 +120,9 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	ScrollableResults<R> scroll(ScrollMode scrollMode);
 
 	/**
-	 * Return the query results as a <tt>List</tt>. If the query contains
+	 * Return the query results as a {@code List}. If the query contains
 	 * multiple results per row, the results are returned in an instance
-	 * of <tt>Object[]</tt>.
+	 * of {@code Object[]}.
 	 *
 	 * @return the result list
 	 */
@@ -140,7 +140,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * Convenience method to return a single instance that matches
 	 * the query, or {@code null} if the query returns no results.
 	 *
-	 * @return the single result or <tt>null</tt>
+	 * @return the single result or {@code null}
 	 *
 	 * @throws NonUniqueResultException if there is more than one matching result
 	 */
@@ -228,7 +228,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	Query<R> setLockOptions(LockOptions lockOptions);
 
 	/**
-	 * Set the LockMode to use for specific alias (as defined in the query's <tt>FROM</tt> clause).
+	 * Set the LockMode to use for specific alias (as defined in the query's {@code FROM} clause).
 	 * <p>
 	 * The alias-specific lock modes specified here are added to the query's internal
 	 * {@link #getLockOptions() LockOptions}.
@@ -298,7 +298,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * Bind a value to a JDBC-style query parameter.
 	 *
 	 * @param position the position of the parameter in the query
-	 * string, numbered from <tt>0</tt>.
+	 * string, numbered from {@code 0}.
 	 * @param val the possibly-null parameter value
 	 * @param type the Hibernate allowable parameter type
 	 *
@@ -321,7 +321,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * Bind a value to a JDBC-style query parameter.
 	 *
 	 * @param position the position of the parameter in the query
-	 * string, numbered from <tt>0</tt>.
+	 * string, numbered from {@code 0}.
 	 * @param val the possibly-null parameter value
 	 * @param type the Hibernate allowable parameter type
 	 *
@@ -346,7 +346,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * the indicated temporal-type.
 	 *
 	 * @param position the position of the parameter in the query
-	 * string, numbered from <tt>0</tt>.
+	 * string, numbered from {@code 0}.
 	 * @param val the possibly-null parameter value
 	 * @param temporalType the temporal-type to use in binding the date/time
 	 *
@@ -486,7 +486,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * should be used instead
 	 *
 	 * @param position the position of the parameter in the query
-	 * string, numbered from <tt>0</tt>.
+	 * string, numbered from {@code 0}.
 	 * @param value the possibly-null parameter value
 	 *
 	 * @return {@code this}, for method chaining
@@ -521,7 +521,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * Bind multiple values to a query parameter using its inferred Type. The Hibernate type of the parameter values is
 	 * first detected via the usage/position in the query and if not sufficient secondly
 	 * guessed from the class of the first object in the collection. This is useful for binding a list of values
-	 * to an expression such as <tt>foo.bar in (:value_list)</tt>.
+	 * to an expression such as {@code foo.bar in (:value_list)}.
 	 *
 	 * @param parameter the parameter memento
 	 * @param values a collection of values to list
@@ -534,7 +534,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * Bind multiple values to a named query parameter. The Hibernate type of the parameter is
 	 * first detected via the usage/position in the query and if not sufficient secondly
 	 * guessed from the class of the first object in the collection. This is useful for binding a list of values
-	 * to an expression such as <tt>foo.bar in (:value_list)</tt>.
+	 * to an expression such as {@code foo.bar in (:value_list)}.
 	 *
 	 * @param name the name of the parameter
 	 * @param values a collection of values to list
@@ -547,7 +547,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * Bind multiple values to a positional query parameter. The Hibernate type of the parameter is
 	 * first detected via the usage/position in the query and if not sufficient secondly
 	 * guessed from the class of the first object in the collection. This is useful for binding a list of values
-	 * to an expression such as <tt>foo.bar in (:value_list)</tt>.
+	 * to an expression such as {@code foo.bar in (:value_list)}.
 	 *
 	 * @param position the parameter positional label
 	 * @param values a collection of values to list
@@ -560,7 +560,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * Bind multiple values to a named query parameter. The Hibernate type of the parameter is
 	 * first detected via the usage/position in the query and if not sufficient secondly
 	 * guessed from the class of the first object in the collection. This is useful for binding a list of values
-	 * to an expression such as <tt>foo.bar in (:value_list)</tt>.
+	 * to an expression such as {@code foo.bar in (:value_list)}.
 	 *
 	 * @param name the name of the parameter
 	 * @param values a collection of values to list
@@ -573,7 +573,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * Bind multiple values to a positional query parameter. The Hibernate type of the parameter is
 	 * first detected via the usage/position in the query and if not sufficient secondly
 	 * guessed from the class of the first object in the collection. This is useful for binding a list of values
-	 * to an expression such as <tt>foo.bar in (:value_list)</tt>.
+	 * to an expression such as {@code foo.bar in (:value_list)}.
 	 *
 	 * @param position the parameter positional label
 	 * @param values a collection of values to list
@@ -584,7 +584,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 
 //	/**
 //	 * Bind multiple values to a named query parameter. This is useful for binding
-//	 * a list of values to an expression such as <tt>foo.bar in (:value_list)</tt>.
+//	 * a list of values to an expression such as {@code foo.bar in (:value_list)}.
 //	 *
 //	 * @param name the name of the parameter
 //	 * @param values a collection of values to list
@@ -601,7 +601,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 
 //	/**
 //	 * Bind multiple values to a named query parameter. This is useful for binding
-//	 * a list of values to an expression such as <tt>foo.bar in (:value_list)</tt>.
+//	 * a list of values to an expression such as {@code foo.bar in (:value_list)}.
 //	 *
 //	 * @param position the parameter positional label
 //	 * @param values a collection of values to list
@@ -618,7 +618,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 
 	/**
 	 * Bind multiple values to a named query parameter. This is useful for binding
-	 * a list of values to an expression such as <tt>foo.bar in (:value_list)</tt>.
+	 * a list of values to an expression such as {@code foo.bar in (:value_list)}.
 	 *
 	 * @param name the name of the parameter
 	 * @param values a collection of values to list
@@ -630,7 +630,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 
 	/**
 	 * Bind multiple values to a positional query parameter. This is useful for binding
-	 * a list of values to an expression such as <tt>foo.bar in (?1)</tt>.
+	 * a list of values to an expression such as {@code foo.bar in (?1)}.
 	 *
 	 * @param position the parameter positional label
 	 * @param values a collection of values to list
@@ -642,7 +642,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 
 	/**
 	 * Bind multiple values to a named query parameter. This is useful for binding
-	 * a list of values to an expression such as <tt>foo.bar in (:value_list)</tt>.
+	 * a list of values to an expression such as {@code foo.bar in (:value_list)}.
 	 *
 	 * @param name the name of the parameter
 	 * @param values a collection of values to list
@@ -654,7 +654,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 
 	/**
 	 * Bind multiple values to a named query parameter. This is useful for binding
-	 * a list of values to an expression such as <tt>foo.bar in (:value_list)</tt>.
+	 * a list of values to an expression such as {@code foo.bar in (:value_list)}.
 	 *
 	 * @param position the parameter positional label
 	 * @param values a collection of values to list
@@ -668,7 +668,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * Bind multiple values to a named query parameter. The Hibernate type of the parameter is
 	 * first detected via the usage/position in the query and if not sufficient secondly
 	 * guessed from the class of the first object in the array. This is useful for binding a list of values
-	 * to an expression such as <tt>foo.bar in (:value_list)</tt>.
+	 * to an expression such as {@code foo.bar in (:value_list)}.
 	 *
 	 * @param name the name of the parameter
 	 * @param values a collection of values to list
@@ -681,7 +681,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * Bind multiple values to a named query parameter. The Hibernate type of the parameter is
 	 * first detected via the usage/position in the query and if not sufficient secondly
 	 * guessed from the class of the first object in the array. This is useful for binding a list of values
-	 * to an expression such as <tt>foo.bar in (:value_list)</tt>.
+	 * to an expression such as {@code foo.bar in (:value_list)}.
 	 *
 	 * @param position the parameter positional label
 	 * @param values a collection of values to list

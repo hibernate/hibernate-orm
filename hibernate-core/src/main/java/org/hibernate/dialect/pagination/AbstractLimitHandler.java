@@ -76,7 +76,7 @@ public abstract class AbstractLimitHandler implements LimitHandler {
 
 	/**
 	 * Does the offset/limit clause come at the start of the
-	 * <tt>SELECT</tt> statement, or at the end of the query?
+	 * {@code SELECT} statement, or at the end of the query?
 	 *
 	 * @return true if limit parameters come before other parameters
 	 */

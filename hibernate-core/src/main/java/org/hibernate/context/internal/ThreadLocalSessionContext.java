@@ -42,7 +42,7 @@ import org.jboss.logging.Logger;
  * a session upon first request and then clean it up after the {@link Transaction}
  * associated with that session is committed/rolled-back.  In order for ensuring that happens, the
  * sessions generated here are unusable until after {@link Session#beginTransaction()} has been
- * called. If <tt>close()</tt> is called on a session managed by this class, it will be automatically
+ * called. If {@code close()} is called on a session managed by this class, it will be automatically
  * unbound.
  *
  * Additionally, the static {@link #bind} and {@link #unbind} methods are provided to allow application

@@ -771,13 +771,13 @@ public interface AvailableSettings {
 	String DEFAULT_BATCH_FETCH_SIZE = "hibernate.default_batch_fetch_size";
 
 	/**
-	 * Use <tt>java.io</tt> streams to read / write binary data from / to JDBC
+	 * Use {@code java.io} streams to read / write binary data from / to JDBC
 	 */
 	String USE_STREAMS_FOR_BINARY = "hibernate.jdbc.use_streams_for_binary";
 
 	/**
-	 * Use JDBC scrollable <tt>ResultSet</tt>s. This property is only necessary when there is
-	 * no <tt>ConnectionProvider</tt>, ie. the user is supplying JDBC connections.
+	 * Use JDBC scrollable {@code ResultSet}s. This property is only necessary when there is
+	 * no {@code ConnectionProvider}, ie. the user is supplying JDBC connections.
 	 */
 	String USE_SCROLLABLE_RESULTSET = "hibernate.jdbc.use_scrollable_resultset";
 
@@ -790,7 +790,7 @@ public interface AvailableSettings {
 
 	/**
 	 * Gives the JDBC driver a hint as to the number of rows that should be fetched from the database
-	 * when more rows are needed. If <tt>0</tt>, JDBC driver default settings will be used.
+	 * when more rows are needed. If {@code 0}, JDBC driver default settings will be used.
 	 */
 	String STATEMENT_FETCH_SIZE = "hibernate.jdbc.fetch_size";
 
@@ -821,7 +821,7 @@ public interface AvailableSettings {
 	String AUTO_CLOSE_SESSION = "hibernate.transaction.auto_close_session";
 
 	/**
-	 * Enable automatic flush during the JTA <tt>beforeCompletion()</tt> callback
+	 * Enable automatic flush during the JTA {@code beforeCompletion()} callback
 	 */
 	String FLUSH_BEFORE_COMPLETION = "hibernate.transaction.flush_before_completion";
 
@@ -1137,24 +1137,24 @@ public interface AvailableSettings {
 	String PROXOOL_CONFIG_PREFIX = "hibernate.proxool";
 
 	/**
-	 * Proxool property to configure the Proxool Provider using an XML (<tt>/path/to/file.xml</tt>)
+	 * Proxool property to configure the Proxool Provider using an XML ({@code /path/to/file.xml})
 	 */
 	String PROXOOL_XML = "hibernate.proxool.xml";
 
 	/**
-	 * Proxool property to configure the Proxool Provider  using a properties file (<tt>/path/to/proxool.properties</tt>)
+	 * Proxool property to configure the Proxool Provider  using a properties file ({@code /path/to/proxool.properties})
 	 */
 	String PROXOOL_PROPERTIES = "hibernate.proxool.properties";
 
 	/**
-	 * Proxool property to configure the Proxool Provider from an already existing pool (<tt>true</tt> / <tt>false</tt>)
+	 * Proxool property to configure the Proxool Provider from an already existing pool ({@code true} / {@code false})
 	 */
 	String PROXOOL_EXISTING_POOL = "hibernate.proxool.existing_pool";
 
 	/**
 	 * Proxool property with the Proxool pool alias to use
-	 * (Required for <tt>PROXOOL_EXISTING_POOL</tt>, <tt>PROXOOL_PROPERTIES</tt>, or
-	 * <tt>PROXOOL_XML</tt>)
+	 * (Required for {@code PROXOOL_EXISTING_POOL}, {@code PROXOOL_PROPERTIES}, or
+	 * {@code PROXOOL_XML})
 	 */
 	String PROXOOL_POOL_ALIAS = "hibernate.proxool.pool_alias";
 
@@ -1187,7 +1187,7 @@ public interface AvailableSettings {
 	String CACHE_KEYS_FACTORY = "hibernate.cache.keys_factory";
 
 	/**
-	 * The <tt>CacheProvider</tt> implementation class
+	 * The {@code CacheProvider} implementation class
 	 */
 	String CACHE_PROVIDER_CONFIG = "hibernate.cache.provider_configuration_file_resource_path";
 
@@ -1210,7 +1210,7 @@ public interface AvailableSettings {
 	String QUERY_CACHE_FACTORY = "hibernate.cache.query_cache_factory";
 
 	/**
-	 * The <tt>CacheProvider</tt> region name prefix
+	 * The {@code CacheProvider} region name prefix
 	 */
 	String CACHE_REGION_PREFIX = "hibernate.cache.region_prefix";
 
@@ -1434,10 +1434,10 @@ public interface AvailableSettings {
 	 * File order matters, the statements of a give file are executed before the statements of the
 	 * following files.
 	 * <p/>
-	 * These statements are only executed if the schema is created ie if <tt>hibernate.hbm2ddl.auto</tt>
-	 * is set to <tt>create</tt> or <tt>create-drop</tt>.
+	 * These statements are only executed if the schema is created ie if {@code hibernate.hbm2ddl.auto}
+	 * is set to {@code create} or {@code create-drop}.
 	 * <p/>
-	 * The default value is <tt>/import.sql</tt>
+	 * The default value is {@code /import.sql}
 	 * <p/>
 	 * {@link #HBM2DDL_CREATE_SCRIPT_SOURCE} / {@link #HBM2DDL_DROP_SCRIPT_SOURCE} should be preferred
 	 * moving forward

@@ -24,14 +24,14 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.Type;
 
 /**
- * An <tt>IdentifierBag</tt> implements "bag" semantics more efficiently than
- * a regular <tt>Bag</tt> by adding a synthetic identifier column to the
+ * An {@code IdentifierBag} implements "bag" semantics more efficiently than
+ * a regular {@code Bag} by adding a synthetic identifier column to the
  * table. This identifier is unique for all rows in the table, allowing very
  * efficient updates and deletes. The value of the identifier is never exposed
  * to the application.
  * <p>
- * <tt>IdentifierBag</tt>s may not be used for a many-to-one association.
- * Furthermore, there is no reason to use <tt>inverse="true"</tt>.
+ * {@code IdentifierBag}s may not be used for a many-to-one association.
+ * Furthermore, there is no reason to use {@code inverse="true"}.
  *
  * @author Gavin King
  */

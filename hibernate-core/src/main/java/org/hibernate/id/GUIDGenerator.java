@@ -17,7 +17,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 
 /**
- * Generates <tt>string</tt> values using the SQL Server NEWID() function.
+ * Generates {@code string} values using the SQL Server NEWID() function.
  *
  * @author Joseph Fifield
  *

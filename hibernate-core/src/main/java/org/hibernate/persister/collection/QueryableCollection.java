@@ -68,7 +68,7 @@ public interface QueryableCollection extends PropertyMapping, Joinable, Collecti
 	 * Get the persister of the element class, if this is a
 	 * collection of entities (optional operation).  Note that
 	 * for a one-to-many association, the returned persister
-	 * must be <tt>OuterJoinLoadable</tt>.
+	 * must be {@code OuterJoinLoadable}.
 	 */
 	public abstract EntityPersister getElementPersister();
 	/**

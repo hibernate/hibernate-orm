@@ -453,7 +453,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	}
 
 	/**
-	 * Check the version of the object in the <tt>RowProcessingState</tt> against
+	 * Check the version of the object in the {@code RowProcessingState} against
 	 * the object version in the session cache, throwing an exception
 	 * if the version numbers are different
 	 */

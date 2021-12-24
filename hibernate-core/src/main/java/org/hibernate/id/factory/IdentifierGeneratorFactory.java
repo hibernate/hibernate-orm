@@ -17,7 +17,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 import jakarta.persistence.GenerationType;
 
 /**
- * Contract for a <tt>factory</tt> of {@link IdentifierGenerator} instances.
+ * Contract for a {@code factory} of {@link IdentifierGenerator} instances.
  *
  * @author Steve Ebersole
  */

@@ -15,7 +15,7 @@ import org.jboss.logging.Logger;
 /**
  * A strategy for determining if an identifier value is an identifier of
  * a new transient instance or a previously persistent transient instance.
- * The strategy is determined by the <tt>unsaved-value</tt> attribute in
+ * The strategy is determined by the {@code unsaved-value} attribute in
  * the mapping file.
  *
  * @author Gavin King
@@ -116,7 +116,7 @@ public class IdentifierValue implements UnsavedValueStrategy {
 
 	/**
 	 * Assume the transient instance is newly instantiated if
-	 * its identifier is null or equal to <tt>value</tt>
+	 * its identifier is null or equal to {@code value}
 	 */
 	public IdentifierValue(Object value) {
 		this.value = value;

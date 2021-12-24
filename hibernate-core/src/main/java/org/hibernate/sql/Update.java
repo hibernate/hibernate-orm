@@ -12,7 +12,7 @@ import java.util.Map;
 import org.hibernate.dialect.Dialect;
 
 /**
- * An SQL <tt>UPDATE</tt> statement
+ * An SQL {@code UPDATE} statement
  *
  * @author Gavin King
  */

@@ -286,7 +286,7 @@ public interface Type extends Serializable {
 	/**
 	 * Bind a value represented by an instance of the {@link #getReturnedClass() mapped class} to the JDBC prepared
 	 * statement, ignoring some columns as dictated by the 'settable' parameter.  Implementors should handle the
-	 * possibility of null values.  A multi-column type should bind parameters starting from <tt>index</tt>.
+	 * possibility of null values.  A multi-column type should bind parameters starting from {@code index}.
 	 *
 	 * @param st The JDBC prepared statement to which to bind
 	 * @param value the object to write
@@ -308,7 +308,7 @@ public interface Type extends Serializable {
 	/**
 	 * Bind a value represented by an instance of the {@link #getReturnedClass() mapped class} to the JDBC prepared
 	 * statement.  Implementors should handle possibility of null values.  A multi-column type should bind parameters
-	 * starting from <tt>index</tt>.
+	 * starting from {@code index}.
 	 *
 	 * @param st The JDBC prepared statement to which to bind
 	 * @param value the object to write

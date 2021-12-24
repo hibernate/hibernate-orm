@@ -26,7 +26,7 @@ import org.hibernate.type.Type;
 public interface Configurable {
 	/**
 	 * Configure this instance, given the value of parameters
-	 * specified by the user as <tt>&lt;param&gt;</tt> elements.
+	 * specified by the user as {@code &lt;param&gt;} elements.
 	 * This method is called just once, following instantiation.
 	 *
 	 * @param type The id property type descriptor

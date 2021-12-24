@@ -12,7 +12,7 @@ import java.util.Map;
 import org.hibernate.dialect.Dialect;
 
 /**
- * An SQL <tt>DELETE</tt> statement
+ * An SQL {@code DELETE} statement
  *
  * @author Gavin King
  */

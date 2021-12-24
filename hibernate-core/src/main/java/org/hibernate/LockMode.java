@@ -21,7 +21,7 @@ package org.hibernate;
 public enum LockMode {
 	/**
 	 * No lock required. If an object is requested with this lock
-	 * mode, a <tt>READ</tt> lock will be obtained if it is
+	 * mode, a {@code READ} lock will be obtained if it is
 	 * necessary to actually read the state from the database,
 	 * rather than pull it from a cache.
 	 * <p>
@@ -36,7 +36,7 @@ public enum LockMode {
 	READ( 5, "read" ),
 	/**
 	 * An upgrade lock. Objects loaded in this lock mode are
-	 * materialized using an SQL <tt>select ... for update</tt>.
+	 * materialized using an SQL {@code select ... for update}.
 	 *
 	 * @deprecated instead use PESSIMISTIC_WRITE
 	 */
@@ -44,24 +44,24 @@ public enum LockMode {
 	UPGRADE( 10, "upgrade" ),
 	/**
 	 * Attempt to obtain an upgrade lock, using an Oracle-style
-	 * <tt>select for update nowait</tt>. The semantics of
+	 * {@code select for update nowait}. The semantics of
 	 * this lock mode, once obtained, are the same as
-	 * <tt>UPGRADE</tt>.
+	 * {@code UPGRADE}.
 	 */
 	UPGRADE_NOWAIT( 10, "upgrade-nowait" ),
 
 	/**
 	 * Attempt to obtain an upgrade lock, using an Oracle-style
-	 * <tt>select for update skip locked</tt>. The semantics of
+	 * {@code select for update skip locked}. The semantics of
 	 * this lock mode, once obtained, are the same as
-	 * <tt>UPGRADE</tt>.
+	 * {@code UPGRADE}.
 	 */
 	UPGRADE_SKIPLOCKED( 10, "upgrade-skiplocked" ),
 
 	/**
-	 * A <tt>WRITE</tt> lock is obtained when an object is updated
+	 * A {@code WRITE} lock is obtained when an object is updated
 	 * or inserted.   This lock mode is for internal use only and is
-	 * not a valid mode for <tt>load()</tt> or <tt>lock()</tt> (both
+	 * not a valid mode for {@code load()} or {@code lock()} (both
 	 * of which throw exceptions if WRITE is specified).
 	 */
 	WRITE( 10, "write" ),

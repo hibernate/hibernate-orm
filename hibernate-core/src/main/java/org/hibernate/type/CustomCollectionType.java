@@ -20,7 +20,7 @@ import org.hibernate.usertype.LoggableUserType;
 import org.hibernate.usertype.UserCollectionType;
 
 /**
- * A custom type for mapping user-written classes that implement <tt>PersistentCollection</tt>
+ * A custom type for mapping user-written classes that implement {@code PersistentCollection}
  *
  * @see PersistentCollection
  * @see UserCollectionType

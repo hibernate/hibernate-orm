@@ -50,8 +50,8 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * Defines the internal contract between the <tt>SessionFactory</tt> and other parts of
- * Hibernate such as implementors of <tt>Type</tt>.
+ * Defines the internal contract between the {@code SessionFactory} and other parts of
+ * Hibernate such as implementors of {@code Type}.
  *
  * @see SessionFactory
  * @see org.hibernate.internal.SessionFactoryImpl

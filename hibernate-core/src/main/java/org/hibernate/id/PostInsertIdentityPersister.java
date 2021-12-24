@@ -9,7 +9,7 @@ import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * A persister that may have an identity assigned by execution of 
- * a SQL <tt>INSERT</tt>.
+ * a SQL {@code INSERT}.
  *
  * @author Gavin King
  */

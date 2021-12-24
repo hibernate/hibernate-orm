@@ -4200,16 +4200,16 @@ public abstract class AbstractEntityPersister
 	}
 
 	/**
-	 * Load an instance using either the <tt>forUpdateLoader</tt> or the outer joining <tt>loader</tt>,
-	 * depending upon the value of the <tt>lock</tt> parameter
+	 * Load an instance using either the {@code forUpdateLoader} or the outer joining {@code loader},
+	 * depending upon the value of the {@code lock} parameter
 	 */
 	public Object load(Object id, Object optionalObject, LockMode lockMode, SharedSessionContractImplementor session) {
 		return load( id, optionalObject, new LockOptions().setLockMode( lockMode ), session );
 	}
 
 	/**
-	 * Load an instance using either the <tt>forUpdateLoader</tt> or the outer joining <tt>loader</tt>,
-	 * depending upon the value of the <tt>lock</tt> parameter
+	 * Load an instance using either the {@code forUpdateLoader} or the outer joining {@code loader},
+	 * depending upon the value of the {@code lock} parameter
 	 */
 	public Object load(Object id, Object optionalObject, LockOptions lockOptions, SharedSessionContractImplementor session)
 			throws HibernateException {
@@ -4423,7 +4423,7 @@ public abstract class AbstractEntityPersister
 	 * @param entity The entity for which we are checking state dirtiness.
 	 * @param session The session in which the check is occurring.
 	 *
-	 * @return <tt>null</tt> or the indices of the dirty properties
+	 * @return {@code null} or the indices of the dirty properties
 	 *
 	 * @throws HibernateException
 	 */
@@ -4453,7 +4453,7 @@ public abstract class AbstractEntityPersister
 	 * @param entity The entity for which we are checking state modification.
 	 * @param session The session in which the check is occurring.
 	 *
-	 * @return <tt>null</tt> or the indices of the modified properties
+	 * @return {@code null} or the indices of the modified properties
 	 *
 	 * @throws HibernateException
 	 */

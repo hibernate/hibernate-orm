@@ -25,8 +25,8 @@ import org.hibernate.type.Type;
 
 
 /**
- * A persistent wrapper for a <tt>java.util.Map</tt>. Underlying collection
- * is a <tt>HashMap</tt>.
+ * A persistent wrapper for a {@code java.util.Map}. Underlying collection
+ * is a {@code HashMap}.
  *
  * @see HashMap
  * @author Gavin King

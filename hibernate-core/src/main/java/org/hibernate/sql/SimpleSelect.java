@@ -19,7 +19,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.dialect.Dialect;
 
 /**
- * An SQL <tt>SELECT</tt> statement with no table joins
+ * An SQL {@code SELECT} statement with no table joins
  *
  * @author Gavin King
  */

@@ -314,31 +314,4 @@ public interface SessionFactory extends EntityManagerFactory, HibernateEntityMan
 	 */
 	@Deprecated
 	CollectionMetadata getCollectionMetadata(String roleName);
-
-	/**
-	 * Retrieve the {@link ClassMetadata} for all mapped entities.
-	 *
-	 * @return A map containing all {@link ClassMetadata} keyed by the
-	 * corresponding {@link String} entity-name.
-	 *
-	 * @throws HibernateException Generally empty map is returned instead of throwing.
-	 *
-	 * @since 3.0 changed key from {@link Class} to {@link String}.
-	 *
-	 * @deprecated Use the descriptors from {@link #getMetamodel()} instead
-	 */
-	@Deprecated
-	Map<String,ClassMetadata> getAllClassMetadata();
-
-	/**
-	 * Get the {@link CollectionMetadata} for all mapped collections.
-	 *
-	 * @return a map from {@code String} to {@code CollectionMetadata}
-	 *
-	 * @throws HibernateException Generally empty map is returned instead of throwing.
-	 *
-	 * @deprecated Use the descriptors from {@link #getMetamodel()} instead
-	 */
-	@Deprecated
-	Map getAllCollectionMetadata();
 }

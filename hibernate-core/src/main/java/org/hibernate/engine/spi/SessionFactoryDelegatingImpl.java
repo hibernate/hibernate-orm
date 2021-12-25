@@ -128,16 +128,6 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
-	public Map<String, ClassMetadata> getAllClassMetadata() {
-		return delegate.getAllClassMetadata();
-	}
-
-	@Override
-	public Map getAllCollectionMetadata() {
-		return delegate.getAllCollectionMetadata();
-	}
-
-	@Override
 	public StatisticsImplementor getStatistics() {
 		return delegate.getStatistics();
 	}

@@ -767,17 +767,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		return (ClassMetadata) getMetamodel().entityPersister( entityName );
 	}
 
-	@Override
-	public Map<String,ClassMetadata> getAllClassMetadata() throws HibernateException {
-		throw new UnsupportedOperationException( "org.hibernate.SessionFactory.getAllClassMetadata is no longer supported" );
-	}
-
-	public Map getAllCollectionMetadata() throws HibernateException {
-		throw new UnsupportedOperationException( "org.hibernate.SessionFactory.getAllCollectionMetadata is no longer supported" );
-	}
-
-	public Type getReferencedPropertyType(String className, String propertyName)
-		throws MappingException {
+	public Type getReferencedPropertyType(String className, String propertyName) throws MappingException {
 		return getMetamodel().entityPersister( className ).getPropertyType( propertyName );
 	}
 
@@ -794,7 +784,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	 * be a "heavy" object memory wise after close() has been called.  Thus
 	 * it is important to not keep referencing the instance to let the garbage
 	 * collector release the memory.
-	 * @throws HibernateException
 	 */
 	@Override
 	public void close() throws HibernateException {

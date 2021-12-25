@@ -188,7 +188,7 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
-	public Set getDefinedFilterNames() {
+	public Set<String> getDefinedFilterNames() {
 		return delegate.getDefinedFilterNames();
 	}
 

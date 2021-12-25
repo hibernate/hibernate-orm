@@ -1010,7 +1010,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		return fetchProfiles.containsKey( name );
 	}
 
-	public Set getDefinedFilterNames() {
+	public Set<String> getDefinedFilterNames() {
 		return filters.keySet();
 	}
 

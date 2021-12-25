@@ -172,16 +172,21 @@ public interface SessionFactory extends EntityManagerFactory, HibernateEntityMan
 	default <R> R fromTransaction(Function<Session,R> action) {
 		return fromSession(
 				session -> {
-					R result = null;
-
 					final Transaction txn = session.beginTransaction();
-
 					try {
-						result = action.apply( session );
+						R result = action.apply( session );
 
 						if ( !txn.isActive() ) {
 							throw new TransactionManagementException( "Execution of action caused managed transaction to be completed" );
 						}
+
+						// action completed with no errors - attempt to commit the transaction allowing
+						// 		any RollbackException to propagate.  Note that when we get here we know the
+						//		txn is active
+
+						txn.commit();
+
+						return result;
 					}
 					catch (RuntimeException e) {
 						// an error happened in the action
@@ -195,14 +200,6 @@ public interface SessionFactory extends EntityManagerFactory, HibernateEntityMan
 
 						throw e;
 					}
-
-					// action completed with no errors - attempt to commit the transaction allowing
-					// 		any RollbackException to propagate.  Note that when we get here we know the
-					//		txn is active
-
-					txn.commit();
-
-					return result;
 				}
 		);
 	}
@@ -248,7 +245,7 @@ public interface SessionFactory extends EntityManagerFactory, HibernateEntityMan
 	 *
 	 * @return The set of filter names.
 	 */
-	Set getDefinedFilterNames();
+	Set<String> getDefinedFilterNames();
 
 	/**
 	 * Obtain the definition of a filter by name.
@@ -285,7 +282,7 @@ public interface SessionFactory extends EntityManagerFactory, HibernateEntityMan
 	 * @deprecated Use the descriptors from {@link #getMetamodel()} instead
 	 */
 	@Deprecated
-	ClassMetadata getClassMetadata(Class entityClass);
+	ClassMetadata getClassMetadata(@SuppressWarnings("rawtypes") Class entityClass);
 
 	/**
 	 * Retrieve the {@link ClassMetadata} associated with the given entity class.

@@ -22,6 +22,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.StatelessSession;
 import org.hibernate.StatelessSessionBuilder;
+import org.hibernate.UnsharedSessionBuilder;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.CacheImplementor;
@@ -83,7 +84,7 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
-	public SessionBuilderImplementor<?> withOptions() {
+	public UnsharedSessionBuilder withOptions() {
 		return delegate.withOptions();
 	}
 
@@ -98,7 +99,7 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
-	public StatelessSessionBuilder<?> withStatelessOptions() {
+	public StatelessSessionBuilder withStatelessOptions() {
 		return delegate.withStatelessOptions();
 	}
 

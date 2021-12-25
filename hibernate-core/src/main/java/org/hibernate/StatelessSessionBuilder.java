@@ -13,7 +13,7 @@ import java.sql.Connection;
  *
  * @author Steve Ebersole
  */
-public interface StatelessSessionBuilder<T extends StatelessSessionBuilder> {
+public interface StatelessSessionBuilder {
 	/**
 	 * Opens a session with the specified options.
 	 *
@@ -28,7 +28,7 @@ public interface StatelessSessionBuilder<T extends StatelessSessionBuilder> {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	T connection(Connection connection);
+	StatelessSessionBuilder connection(Connection connection);
 
 	/**
 	 * Define the tenant identifier to be associated with the opened session.
@@ -37,7 +37,7 @@ public interface StatelessSessionBuilder<T extends StatelessSessionBuilder> {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	T tenantIdentifier(String tenantIdentifier);
+	StatelessSessionBuilder tenantIdentifier(String tenantIdentifier);
 
 	/**
 	 * Should {@link org.hibernate.query.Query#setParameter} perform parameter validation
@@ -49,7 +49,7 @@ public interface StatelessSessionBuilder<T extends StatelessSessionBuilder> {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	default T setQueryParameterValidation(boolean enabled) {
-		return (T) this;
+	default StatelessSessionBuilder setQueryParameterValidation(boolean enabled) {
+		return this;
 	}
 }

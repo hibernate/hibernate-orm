@@ -26,11 +26,11 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
  * @author Guillaume Smet
  */
 @SuppressWarnings("unused")
-public abstract class AbstractDelegatingSharedSessionBuilder<T extends SharedSessionBuilder<?>> implements SharedSessionBuilder<T> {
+public abstract class AbstractDelegatingSharedSessionBuilder<T extends SharedSessionBuilder> implements SharedSessionBuilder {
 
-	private final SharedSessionBuilder<?> delegate;
+	private final SharedSessionBuilder delegate;
 
-	public AbstractDelegatingSharedSessionBuilder(SharedSessionBuilder<?> delegate) {
+	public AbstractDelegatingSharedSessionBuilder(SharedSessionBuilder delegate) {
 		this.delegate = delegate;
 	}
 
@@ -39,7 +39,7 @@ public abstract class AbstractDelegatingSharedSessionBuilder<T extends SharedSes
 		return (T) this;
 	}
 
-	public SharedSessionBuilder<?> delegate() {
+	public SharedSessionBuilder delegate() {
 		return delegate;
 	}
 
@@ -137,14 +137,8 @@ public abstract class AbstractDelegatingSharedSessionBuilder<T extends SharedSes
 
 	@SuppressWarnings("deprecation")
 	@Override
-	public T flushBeforeCompletion(boolean flushBeforeCompletion) {
+	public SharedSessionBuilder flushBeforeCompletion(boolean flushBeforeCompletion) {
 		delegate.flushBeforeCompletion( flushBeforeCompletion );
-		return getThis();
-	}
-
-	@Override
-	public T tenantIdentifier(String tenantIdentifier) {
-		delegate.tenantIdentifier( tenantIdentifier );
 		return getThis();
 	}
 

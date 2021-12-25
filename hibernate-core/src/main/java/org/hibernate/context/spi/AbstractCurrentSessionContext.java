@@ -9,7 +9,7 @@ package org.hibernate.context.spi;
 import java.util.Objects;
 
 import org.hibernate.Session;
-import org.hibernate.SessionBuilder;
+import org.hibernate.UnsharedSessionBuilder;
 import org.hibernate.context.TenantIdentifierMismatchException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
@@ -34,8 +34,8 @@ public abstract class AbstractCurrentSessionContext implements CurrentSessionCon
 		return factory;
 	}
 
-	protected SessionBuilder baseSessionBuilder() {
-		final SessionBuilder builder = factory.withOptions();
+	protected UnsharedSessionBuilder baseSessionBuilder() {
+		final UnsharedSessionBuilder builder = factory.withOptions();
 		final CurrentTenantIdentifierResolver resolver = factory.getCurrentTenantIdentifierResolver();
 		if ( resolver != null ) {
 			builder.tenantIdentifier( resolver.resolveCurrentTenantIdentifier() );

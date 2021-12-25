@@ -327,8 +327,8 @@ public class SessionImpl
 	}
 
 	@Override
-	public SharedSessionBuilder<?> sessionWithOptions() {
-		return new SharedSessionBuilderImpl<>( this );
+	public SharedSessionBuilder sessionWithOptions() {
+		return new SharedSessionBuilderImpl( this );
 	}
 
 	@Override
@@ -359,7 +359,6 @@ public class SessionImpl
 	}
 
 	@Override
-	@SuppressWarnings("StatementWithEmptyBody")
 	public void close() throws HibernateException {
 		if ( isClosed() ) {
 			if ( getFactory().getSessionFactoryOptions().getJpaCompliance().isJpaClosedComplianceEnabled() ) {
@@ -1966,9 +1965,10 @@ public class SessionImpl
 		}
 	}
 
-	private static class SharedSessionBuilderImpl<T extends SharedSessionBuilder<?>>
-			extends SessionFactoryImpl.SessionBuilderImpl<T>
-			implements SharedSessionBuilder<T>, SharedSessionCreationOptions {
+	private static class SharedSessionBuilderImpl
+			extends SessionFactoryImpl.SessionBuilderImpl<SharedSessionBuilder>
+			implements SharedSessionBuilder, SharedSessionCreationOptions {
+
 		private final SessionImpl session;
 		private boolean shareTransactionContext;
 
@@ -1981,47 +1981,39 @@ public class SessionImpl
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// SharedSessionBuilder
 
-
 		@Override
-		public T tenantIdentifier(String tenantIdentifier) {
-			// todo : is this always true?  Or just in the case of sharing JDBC resources?
-			throw new SessionException( "Cannot redefine tenant identifier on child session" );
-		}
-
-		@Override
-		public T interceptor() {
+		public SharedSessionBuilder interceptor() {
 			return interceptor( session.getInterceptor() );
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
-		public T connection() {
+		public SharedSessionBuilder connection() {
 			this.shareTransactionContext = true;
-			return (T) this;
+			return this;
 		}
 
 		@Override
-		public T connectionReleaseMode() {
+		public SharedSessionBuilder connectionReleaseMode() {
 			return connectionReleaseMode( session.getJdbcCoordinator().getLogicalConnection().getConnectionHandlingMode().getReleaseMode() );
 		}
 
 		@Override
-		public T connectionHandlingMode() {
+		public SharedSessionBuilder connectionHandlingMode() {
 			return connectionHandlingMode( session.getJdbcCoordinator().getLogicalConnection().getConnectionHandlingMode() );
 		}
 
 		@Override
-		public T autoJoinTransactions() {
+		public SharedSessionBuilder autoJoinTransactions() {
 			return autoJoinTransactions( session.isAutoCloseSessionEnabled() );
 		}
 
 		@Override
-		public T flushMode() {
+		public SharedSessionBuilder flushMode() {
 			return flushMode( session.getHibernateFlushMode() );
 		}
 
 		@Override
-		public T autoClose() {
+		public SharedSessionBuilder autoClose() {
 			return autoClose( session.autoClose );
 		}
 

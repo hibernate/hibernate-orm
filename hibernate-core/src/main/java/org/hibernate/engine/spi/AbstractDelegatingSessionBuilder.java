@@ -25,11 +25,11 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
  * @author Gunnar Morling
  * @author Guillaume Smet
  */
-public abstract class AbstractDelegatingSessionBuilder<T extends SessionBuilder> implements SessionBuilder<T> {
+public abstract class AbstractDelegatingSessionBuilder<T extends SessionBuilder<T>> implements SessionBuilder<T> {
 
-	private final SessionBuilder delegate;
+	private final SessionBuilder<T> delegate;
 
-	public AbstractDelegatingSessionBuilder(SessionBuilder delegate) {
+	public AbstractDelegatingSessionBuilder(SessionBuilder<T> delegate) {
 		this.delegate = delegate;
 	}
 
@@ -38,7 +38,7 @@ public abstract class AbstractDelegatingSessionBuilder<T extends SessionBuilder>
 		return (T) this;
 	}
 
-	protected SessionBuilder delegate() {
+	protected SessionBuilder<T> delegate() {
 		return delegate;
 	}
 
@@ -94,12 +94,6 @@ public abstract class AbstractDelegatingSessionBuilder<T extends SessionBuilder>
 	@Override
 	public T flushBeforeCompletion(boolean flushBeforeCompletion) {
 		delegate.flushBeforeCompletion( flushBeforeCompletion );
-		return getThis();
-	}
-
-	@Override
-	public T tenantIdentifier(String tenantIdentifier) {
-		delegate.tenantIdentifier( tenantIdentifier );
 		return getThis();
 	}
 

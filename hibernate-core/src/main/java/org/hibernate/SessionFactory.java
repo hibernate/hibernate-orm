@@ -51,7 +51,7 @@ public interface SessionFactory extends EntityManagerFactory, HibernateEntityMan
 	 *
 	 * @return The session builder
 	 */
-	SessionBuilder<?> withOptions();
+	UnsharedSessionBuilder withOptions();
 
 	/**
 	 * Open a {@link Session}.
@@ -86,7 +86,7 @@ public interface SessionFactory extends EntityManagerFactory, HibernateEntityMan
 	 *
 	 * @return The stateless session builder
 	 */
-	StatelessSessionBuilder<?> withStatelessOptions();
+	StatelessSessionBuilder withStatelessOptions();
 
 	/**
 	 * Open a new stateless session.

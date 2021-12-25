@@ -94,9 +94,6 @@ public interface SessionFactoryImplementor
 	@Override
 	HibernateCriteriaBuilder getCriteriaBuilder();
 
-	@Override
-	SessionBuilderImplementor withOptions();
-
 	/**
 	 * Get a non-transactional "current" session (used by hibernate-envers)
 	 */

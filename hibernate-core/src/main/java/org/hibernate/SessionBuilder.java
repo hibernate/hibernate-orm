@@ -18,7 +18,7 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
  * 
  * @author Steve Ebersole
  */
-public interface SessionBuilder<T extends SessionBuilder<?>> {
+public interface SessionBuilder<T extends SessionBuilder<T>> {
 	/**
 	 * Opens a session with the specified options.
 	 *
@@ -109,15 +109,6 @@ public interface SessionBuilder<T extends SessionBuilder<?>> {
 	T flushMode(FlushMode flushMode);
 
 	/**
-	 * Define the tenant identifier to be associated with the opened session.
-	 *
-	 * @param tenantIdentifier The tenant identifier.
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	T tenantIdentifier(String tenantIdentifier);
-
-	/**
 	 * Apply one or more {@link SessionEventListener} instances to the listeners
 	 * for the {@code Session} to be built.
 	 *
@@ -148,7 +139,6 @@ public interface SessionBuilder<T extends SessionBuilder<?>> {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	@SuppressWarnings("unchecked")
 	default T setQueryParameterValidation(boolean enabled) {
 		return (T) this;
 	}
@@ -190,8 +180,7 @@ public interface SessionBuilder<T extends SessionBuilder<?>> {
 	 *
 	 * @deprecated (since 5.2) use {@link #flushMode(FlushMode)} instead.
 	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
+	@Deprecated @SuppressWarnings("unchecked")
 	default T flushBeforeCompletion(boolean flushBeforeCompletion) {
 		flushMode( flushBeforeCompletion? FlushMode.ALWAYS : FlushMode.MANUAL );
 		return (T) this;

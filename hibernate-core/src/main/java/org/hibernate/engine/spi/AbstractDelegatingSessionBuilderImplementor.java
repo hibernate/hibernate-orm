@@ -6,28 +6,19 @@
  */
 package org.hibernate.engine.spi;
 
+import org.hibernate.SessionBuilder;
+
 /**
- * Base class for {@link SessionBuilderImplementor} implementations that wish to implement only parts of that contract
+ * Base class for {@link SessionBuilder} implementations that wish to implement only parts of that contract
  * themselves while forwarding other method invocations to a delegate instance.
  *
  * @author Gunnar Morling
  */
-public abstract class AbstractDelegatingSessionBuilderImplementor<T extends SessionBuilderImplementor>
+public abstract class AbstractDelegatingSessionBuilderImplementor<T extends SessionBuilder<T>>
 		extends AbstractDelegatingSessionBuilder<T>
-		implements SessionBuilderImplementor<T> {
+		implements SessionBuilder<T> {
 
-	public AbstractDelegatingSessionBuilderImplementor(SessionBuilderImplementor delegate) {
+	public AbstractDelegatingSessionBuilderImplementor(SessionBuilder<T> delegate) {
 		super( delegate );
-	}
-
-	protected SessionBuilderImplementor delegate() {
-		return (SessionBuilderImplementor) super.delegate();
-	}
-
-	@SuppressWarnings({ "unchecked", "deprecation" })
-	@Override
-	public T owner(SessionOwner sessionOwner) {
-		delegate().owner( sessionOwner );
-		return (T) this;
 	}
 }

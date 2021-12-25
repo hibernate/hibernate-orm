@@ -6,8 +6,8 @@
  */
 package org.hibernate.orm.test.delegation;
 
+import org.hibernate.SessionBuilder;
 import org.hibernate.engine.spi.AbstractDelegatingSessionBuilderImplementor;
-import org.hibernate.engine.spi.SessionBuilderImplementor;
 
 /**
  * If this class does not compile anymore due to unimplemented methods, you should probably add the corresponding
@@ -21,7 +21,7 @@ import org.hibernate.engine.spi.SessionBuilderImplementor;
 @SuppressWarnings("unused")
 public class TestDelegatingSessionBuilderImplementor extends AbstractDelegatingSessionBuilderImplementor<TestDelegatingSessionBuilderImplementor> {
 
-	public TestDelegatingSessionBuilderImplementor(SessionBuilderImplementor<TestDelegatingSessionBuilderImplementor> delegate) {
+	public TestDelegatingSessionBuilderImplementor(SessionBuilder<TestDelegatingSessionBuilderImplementor> delegate) {
 		super( delegate );
 	}
 

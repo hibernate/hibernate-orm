@@ -49,6 +49,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.StatelessSession;
 import org.hibernate.StatelessSessionBuilder;
+import org.hibernate.UnsharedSessionBuilder;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
@@ -77,7 +78,6 @@ import org.hibernate.engine.profile.Association;
 import org.hibernate.engine.profile.Fetch;
 import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.spi.FilterDefinition;
-import org.hibernate.engine.spi.SessionBuilderImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionOwner;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
@@ -522,12 +522,12 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
-	public SessionBuilderImplementor<?> withOptions() {
-		return new SessionBuilderImpl<>( this );
+	public UnsharedSessionBuilder withOptions() {
+		return new UnsharedSessionBuilderImpl( this );
 	}
 
 	@Override
-	public StatelessSessionBuilder<?> withStatelessOptions() {
+	public StatelessSessionBuilder withStatelessOptions() {
 		return new StatelessSessionBuilderImpl( this );
 	}
 
@@ -638,7 +638,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	private <K,V> Session buildEntityManager(final SynchronizationType synchronizationType, final Map<K,V> map) {
 		assert status != Status.CLOSED;
 
-		SessionBuilderImplementor builder = withOptions();
+		UnsharedSessionBuilder builder = withOptions();
 		if ( synchronizationType == SynchronizationType.SYNCHRONIZED ) {
 			builder.autoJoinTransactions( true );
 		}
@@ -1167,8 +1167,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		return null;
 	}
 
-	public static class SessionBuilderImpl<T extends SessionBuilder<?>>
-			implements SessionBuilderImplementor<T>, SessionCreationOptions {
+	public static class SessionBuilderImpl<T extends SessionBuilder<T>>
+			implements SessionBuilder<T>, SessionCreationOptions {
 		private static final Logger log = CoreLogging.logger( SessionBuilderImpl.class );
 
 		private final SessionFactoryImpl sessionFactory;
@@ -1210,9 +1210,13 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			this.queryParametersValidationEnabled = sessionFactoryOptions.isQueryParametersValidationEnabled();
 		}
 
-
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// SessionCreationOptions
+
+		public SessionBuilder<?> tenantIdentifier(String tenantIdentifier) {
+			this.tenantIdentifier = tenantIdentifier;
+			return this;
+		}
 
 		@Override
 		public SessionOwner getSessionOwner() {
@@ -1309,43 +1313,33 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			return new SessionImpl( sessionFactory, this );
 		}
 
-		@Override
-		public T owner(SessionOwner sessionOwner) {
-			throw new UnsupportedOperationException( "SessionOwner was long deprecated and this method should no longer be invoked" );
-		}
-
-		@Override
-		@SuppressWarnings("unchecked")
+		@Override @SuppressWarnings("unchecked")
 		public T interceptor(Interceptor interceptor) {
 			this.interceptor = interceptor;
 			this.explicitNoInterceptor = false;
 			return (T) this;
 		}
 
-		@Override
-		@SuppressWarnings("unchecked")
+		@Override @SuppressWarnings("unchecked")
 		public T noInterceptor() {
 			this.interceptor = EmptyInterceptor.INSTANCE;
 			this.explicitNoInterceptor = true;
 			return (T) this;
 		}
 
-		@Override
-		@SuppressWarnings("unchecked")
+		@Override @SuppressWarnings("unchecked")
 		public T statementInspector(StatementInspector statementInspector) {
 			this.statementInspector = statementInspector;
 			return (T) this;
 		}
 
-		@Override
-		@SuppressWarnings("unchecked")
+		@Override @SuppressWarnings("unchecked")
 		public T connection(Connection connection) {
 			this.connection = connection;
 			return (T) this;
 		}
 
-		@Override
-		@SuppressWarnings("unchecked")
+		@Override @SuppressWarnings("unchecked")
 		public T connectionReleaseMode(ConnectionReleaseMode connectionReleaseMode) {
 			// NOTE : Legacy behavior (when only ConnectionReleaseMode was exposed) was to always acquire a
 			// Connection using ConnectionAcquisitionMode.AS_NEEDED.
@@ -1358,50 +1352,37 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			return (T) this;
 		}
 
-		@Override
-		@SuppressWarnings("unchecked")
+		@Override @SuppressWarnings("unchecked")
 		public T connectionHandlingMode(PhysicalConnectionHandlingMode connectionHandlingMode) {
 			this.connectionHandlingMode = connectionHandlingMode;
 			return (T) this;
 		}
 
-		@Override
-		@SuppressWarnings("unchecked")
+		@Override @SuppressWarnings("unchecked")
 		public T autoJoinTransactions(boolean autoJoinTransactions) {
 			this.autoJoinTransactions = autoJoinTransactions;
 			return (T) this;
 		}
 
-		@Override
-		@SuppressWarnings("unchecked")
+		@Override @SuppressWarnings("unchecked")
 		public T autoClose(boolean autoClose) {
 			this.autoClose = autoClose;
 			return (T) this;
 		}
 
-		@Override
-		@SuppressWarnings("unchecked")
+		@Override @SuppressWarnings("unchecked")
 		public T autoClear(boolean autoClear) {
 			this.autoClear = autoClear;
 			return (T) this;
 		}
 
-		@Override
-		@SuppressWarnings("unchecked")
+		@Override @SuppressWarnings("unchecked")
 		public T flushMode(FlushMode flushMode) {
 			this.flushMode = flushMode;
 			return (T) this;
 		}
 
-		@Override
-		@SuppressWarnings("unchecked")
-		public T tenantIdentifier(String tenantIdentifier) {
-			this.tenantIdentifier = tenantIdentifier;
-			return (T) this;
-		}
-
-		@Override
-		@SuppressWarnings("unchecked")
+		@Override @SuppressWarnings("unchecked")
 		public T eventListeners(SessionEventListener... listeners) {
 			if ( this.listeners == null ) {
 				this.listeners = sessionFactory.getSessionFactoryOptions()
@@ -1412,8 +1393,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			return (T) this;
 		}
 
-		@Override
-		@SuppressWarnings("unchecked")
+		@Override @SuppressWarnings("unchecked")
 		public T clearEventListeners() {
 			if ( listeners == null ) {
 				//Needs to initialize explicitly to an empty list as otherwise "null" implies the default listeners will be applied
@@ -1425,16 +1405,28 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			return (T) this;
 		}
 
-		@Override
+		@Override @SuppressWarnings("unchecked")
 		public T jdbcTimeZone(TimeZone timeZone) {
 			jdbcTimeZone = timeZone;
 			return (T) this;
 		}
 
-		@Override
+		@Override @SuppressWarnings("unchecked")
 		public T setQueryParameterValidation(boolean enabled) {
 			queryParametersValidationEnabled = enabled;
 			return (T) this;
+		}
+	}
+
+	public static class UnsharedSessionBuilderImpl extends SessionBuilderImpl<UnsharedSessionBuilder> implements UnsharedSessionBuilder {
+		public UnsharedSessionBuilderImpl(SessionFactoryImpl sessionFactory) {
+			super(sessionFactory);
+		}
+
+		@Override
+		public UnsharedSessionBuilder tenantIdentifier(String tenantIdentifier) {
+			super.tenantIdentifier(tenantIdentifier);
+			return this;
 		}
 	}
 

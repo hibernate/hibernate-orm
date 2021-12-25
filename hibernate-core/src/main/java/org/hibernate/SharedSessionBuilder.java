@@ -13,7 +13,7 @@ import java.sql.Connection;
  *
  * @author Steve Ebersole
  */
-public interface SharedSessionBuilder<T extends SharedSessionBuilder> extends SessionBuilder<T> {
+public interface SharedSessionBuilder<T extends SharedSessionBuilder<?>> extends SessionBuilder<T> {
 
 	/**
 	 * Signifies that the transaction context from the original session should be used to create the new session.
@@ -115,14 +115,9 @@ public interface SharedSessionBuilder<T extends SharedSessionBuilder> extends Se
 	@Override
 	T autoClose(boolean autoClose);
 
-	@Override
+	@Override @SuppressWarnings("unchecked")
 	default T flushBeforeCompletion(boolean flushBeforeCompletion) {
-		if ( flushBeforeCompletion ) {
-			flushMode( FlushMode.ALWAYS );
-		}
-		else {
-			flushMode( FlushMode.MANUAL );
-		}
+		flushMode( flushBeforeCompletion ? FlushMode.ALWAYS : FlushMode.MANUAL );
 		return (T) this;
 	}
 }

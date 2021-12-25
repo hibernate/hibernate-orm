@@ -10,13 +10,13 @@ import org.hibernate.SessionBuilder;
 
 /**
  * Defines the internal contract between the <tt>SessionBuilder</tt> and other parts of
- * Hibernate..
+ * Hibernate.
  *
  * @see SessionBuilder
  *
  * @author Gail Badner
  */
-public interface SessionBuilderImplementor<T extends SessionBuilder> extends SessionBuilder<T> {
+public interface SessionBuilderImplementor<T extends SessionBuilder<?>> extends SessionBuilder<T> {
 	/**
 	 * Adds the session owner to the session options
 	 *

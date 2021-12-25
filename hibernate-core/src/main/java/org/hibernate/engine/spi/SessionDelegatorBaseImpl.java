@@ -591,7 +591,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public SharedSessionBuilder sessionWithOptions() {
+	public SharedSessionBuilder<?> sessionWithOptions() {
 		return delegate.sessionWithOptions();
 	}
 

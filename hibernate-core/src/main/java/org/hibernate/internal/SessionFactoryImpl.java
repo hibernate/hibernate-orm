@@ -522,12 +522,12 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
-	public SessionBuilderImplementor withOptions() {
-		return new SessionBuilderImpl( this );
+	public SessionBuilderImplementor<?> withOptions() {
+		return new SessionBuilderImpl<>( this );
 	}
 
 	@Override
-	public StatelessSessionBuilder withStatelessOptions() {
+	public StatelessSessionBuilder<?> withStatelessOptions() {
 		return new StatelessSessionBuilderImpl( this );
 	}
 
@@ -1167,7 +1167,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		return null;
 	}
 
-	public static class SessionBuilderImpl<T extends SessionBuilder> implements SessionBuilderImplementor<T>, SessionCreationOptions {
+	public static class SessionBuilderImpl<T extends SessionBuilder<?>>
+			implements SessionBuilderImplementor<T>, SessionCreationOptions {
 		private static final Logger log = CoreLogging.logger( SessionBuilderImpl.class );
 
 		private final SessionFactoryImpl sessionFactory;
@@ -1309,7 +1310,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public T owner(SessionOwner sessionOwner) {
 			throw new UnsupportedOperationException( "SessionOwner was long deprecated and this method should no longer be invoked" );
 		}

@@ -13,12 +13,12 @@ import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 
 /**
- * Represents a consolidation of all session creation options into a builder style delegate.
+ * Represents a consolidation of all session creation options into a builder style
+ * delegate.
  * 
  * @author Steve Ebersole
  */
-@SuppressWarnings("UnusedReturnValue")
-public interface SessionBuilder<T extends SessionBuilder> {
+public interface SessionBuilder<T extends SessionBuilder<?>> {
 	/**
 	 * Opens a session with the specified options.
 	 *
@@ -38,8 +38,9 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	/**
 	 * Signifies that no {@link Interceptor} should be used.
 	 * <p/>
-	 * By default the {@link Interceptor} associated with the {@link SessionFactory} is passed to the
-	 * {@link Session} whenever we open one without the user having specified a specific interceptor to
+	 * By default the {@link Interceptor} associated with the {@link SessionFactory}
+	 * is passed to the {@link Session} whenever we open one without the user having
+	 * specified a specific interceptor to
 	 * use.
 	 * <p/>
 	 * Calling {@link #interceptor(Interceptor)} with null has the same net effect.
@@ -67,7 +68,8 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	T connection(Connection connection);
 
 	/**
-	 * Signifies that the connection release mode from the original session should be used to create the new session.
+	 * Signifies that the connection release mode from the original session should
+	 * be used to create the new session.
 	 *
 	 * @param mode The connection handling mode to use.
 	 *
@@ -116,7 +118,8 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	T tenantIdentifier(String tenantIdentifier);
 
 	/**
-	 * Apply one or more SessionEventListener instances to the listeners for the Session to be built.
+	 * Apply one or more {@link SessionEventListener} instances to the listeners
+	 * for the {@code Session} to be built.
 	 *
 	 * @param listeners The listeners to incorporate into the built Session
 	 *
@@ -125,8 +128,8 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	T eventListeners(SessionEventListener... listeners);
 
 	/**
-	 * Remove all listeners intended for the built Session currently held here, including any auto-apply ones; in other
-	 * words, start with a clean slate.
+	 * Remove all listeners intended for the built Session currently held here,
+	 * including any auto-apply ones; in other words, start with a clean slate.
 	 *
 	 * {@code this}, for method chaining
 	 */
@@ -135,20 +138,20 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	T jdbcTimeZone(TimeZone timeZone);
 
 	/**
-	 * Should {@link org.hibernate.query.Query#setParameter} perform parameter validation
-	 * when the Session is bootstrapped via JPA {@link jakarta.persistence.EntityManagerFactory}
+	 * Should {@link org.hibernate.query.Query#setParameter} perform parameter
+	 * validation when the Session is bootstrapped via JPA
+	 * {@link jakarta.persistence.EntityManagerFactory}
 	 *
-	 * @param enabled {@code true} indicates the validation should be performed, {@code false} otherwise
-	 * <p>
-	 * The default value is {@code true}
+	 * @param enabled {@code true} indicates the validation should be performed,
+	 *                {@code false} otherwise
+	 *                <p> The default value is {@code true}
 	 *
 	 * @return {@code this}, for method chaining
 	 */
+	@SuppressWarnings("unchecked")
 	default T setQueryParameterValidation(boolean enabled) {
 		return (T) this;
 	}
-
-
 
 	/**
 	 * Should the session be automatically closed after transaction completion?
@@ -159,8 +162,8 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 *
 	 * @see jakarta.persistence.PersistenceContextType
 	 *
-	 * @deprecated Only integrations can specify autoClosing behavior of individual sessions.  See
-	 * {@link org.hibernate.engine.spi.SessionOwner}
+	 * @deprecated Only integrations can specify autoClosing behavior of individual sessions.
+	 * See {@link org.hibernate.engine.spi.SessionOwner}
 	 */
 	@Deprecated
 	T autoClose(boolean autoClose);
@@ -178,7 +181,8 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	T connectionReleaseMode(ConnectionReleaseMode connectionReleaseMode);
 
 	/**
-	 * Should the session be automatically flushed during the "before completion" phase of transaction handling.
+	 * Should the session be automatically flushed during the "before completion"
+	 * phase of transaction handling.
 	 *
 	 * @param flushBeforeCompletion Should the session be automatically flushed
 	 *
@@ -189,12 +193,7 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	@Deprecated
 	@SuppressWarnings("unchecked")
 	default T flushBeforeCompletion(boolean flushBeforeCompletion) {
-		if ( flushBeforeCompletion ) {
-			flushMode( FlushMode.ALWAYS );
-		}
-		else {
-			flushMode( FlushMode.MANUAL );
-		}
+		flushMode( flushBeforeCompletion? FlushMode.ALWAYS : FlushMode.MANUAL );
 		return (T) this;
 	}
 }

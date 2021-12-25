@@ -83,7 +83,7 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
-	public SessionBuilderImplementor withOptions() {
+	public SessionBuilderImplementor<?> withOptions() {
 		return delegate.withOptions();
 	}
 
@@ -98,7 +98,7 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
-	public StatelessSessionBuilder withStatelessOptions() {
+	public StatelessSessionBuilder<?> withStatelessOptions() {
 		return delegate.withStatelessOptions();
 	}
 

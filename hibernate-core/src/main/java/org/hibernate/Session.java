@@ -80,7 +80,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 *
 	 * @return The session builder
 	 */
-	SharedSessionBuilder sessionWithOptions();
+	SharedSessionBuilder<?> sessionWithOptions();
 
 	/**
 	 * Force this session to flush. Must be called at the end of a

@@ -327,8 +327,8 @@ public class SessionImpl
 	}
 
 	@Override
-	public SharedSessionBuilder sessionWithOptions() {
-		return new SharedSessionBuilderImpl( this );
+	public SharedSessionBuilder<?> sessionWithOptions() {
+		return new SharedSessionBuilderImpl<>( this );
 	}
 
 	@Override
@@ -1966,7 +1966,7 @@ public class SessionImpl
 		}
 	}
 
-	private static class SharedSessionBuilderImpl<T extends SharedSessionBuilder>
+	private static class SharedSessionBuilderImpl<T extends SharedSessionBuilder<?>>
 			extends SessionFactoryImpl.SessionBuilderImpl<T>
 			implements SharedSessionBuilder<T>, SharedSessionCreationOptions {
 		private final SessionImpl session;

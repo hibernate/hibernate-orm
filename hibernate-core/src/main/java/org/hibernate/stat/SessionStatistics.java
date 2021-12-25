@@ -27,11 +27,11 @@ public interface SessionStatistics {
 	 * Get the set of all {@code EntityKey}s
 	 * @see org.hibernate.engine.spi.EntityKey
 	 */
-	Set getEntityKeys();
+	Set<?> getEntityKeys();
 	/**
 	 * Get the set of all {@code CollectionKey}s
 	 * @see org.hibernate.engine.spi.CollectionKey
 	 */
-	Set getCollectionKeys();
+	Set<?> getCollectionKeys();
 	
 }

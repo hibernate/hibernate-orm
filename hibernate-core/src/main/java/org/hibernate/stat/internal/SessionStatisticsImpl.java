@@ -31,11 +31,11 @@ public class SessionStatisticsImpl implements SessionStatistics {
 		return session.getPersistenceContextInternal().getCollectionEntriesSize();
 	}
 	
-	public Set getEntityKeys() {
+	public Set<?> getEntityKeys() {
 		return Collections.unmodifiableSet( session.getPersistenceContextInternal().getEntitiesByKey().keySet() );
 	}
 	
-	public Set getCollectionKeys() {
+	public Set<?> getCollectionKeys() {
 		return Collections.unmodifiableSet( session.getPersistenceContextInternal().getCollectionsByKey().keySet() );
 	}
 	

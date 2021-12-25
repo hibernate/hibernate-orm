@@ -368,6 +368,11 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsCommentOn() {
+		return true;
+	}
+
+	@Override
 	public boolean dropConstraints() {
 		return false;
 	}

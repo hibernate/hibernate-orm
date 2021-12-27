@@ -330,12 +330,13 @@ public interface Session extends SharedSessionContract, EntityManager {
 
 	/**
 	 * Return the persistent instance of the given entity class with the given identifier,
-	 * assuming that the instance exists. This method might return a proxied instance that
-	 * is initialized on-demand, when a non-identifier method is accessed.
+	 * making the assumption that the instance exists in the database. This method might
+	 * return a proxied instance that is initialized on-demand, when a non-identifier method
+	 * is accessed.
 	 * <p>
-	 * You should not use this method to determine if an instance exists (use {@code get()}
-	 * instead). Use this only to retrieve an instance that you assume exists, where
-	 * non-existence would be an actual error.
+	 * You should not use this method to determine if an instance exists in the database
+	 * (use {@code get()} instead). Use this only to retrieve an instance that you assume
+	 * exists, where non-existence would be an actual error.
 	 * <p>
 	 * This operation is very similar to {@link #getReference(Class, Object)}.
 	 *
@@ -348,12 +349,13 @@ public interface Session extends SharedSessionContract, EntityManager {
 
 	/**
 	 * Return the persistent instance of the given entity class with the given identifier,
-	 * assuming that the instance exists. This method might return a proxied instance that
-	 * is initialized on-demand, when a non-identifier method is accessed.
+	 * making the assumption that the instance exists in the database. This method might
+	 * return a proxied instance that is initialized on-demand, when a non-identifier
+	 * method is accessed.
 	 * <p>
-	 * You should not use this method to determine if an instance exists (use {@code get()}
-	 * instead). Use this only to retrieve an instance that you assume exists, where
-	 * non-existence would be an actual error.
+	 * You should not use this method to determine if an instance exists in the database
+	 * (use {@code get()} instead). Use this only to retrieve an instance that you assume
+	 * exists, where non-existence would be an actual error.
 	 *
 	 * @param entityName a persistent class
 	 * @param id a valid identifier of an existing persistent instance of the class
@@ -783,9 +785,10 @@ public interface Session extends SharedSessionContract, EntityManager {
 
 	/**
 	 * Return the persistent instance with the same identity as the given instance, which
-	 * might be detached, assuming that the instance is still persistent in the database.
-	 * This method never results in access to the underlying data store, and thus might
-	 * return a proxy that must be initialized explicitly.
+	 * might be detached, making the assumption that the instance is still persistent in
+	 * the database. This method never results in access to the underlying data store, and
+	 * thus might return a proxy that is initialized on-demand, when a non-identifier
+	 * method is accessed.
 	 *
 	 * @param object a detached persistent instance
 	 *

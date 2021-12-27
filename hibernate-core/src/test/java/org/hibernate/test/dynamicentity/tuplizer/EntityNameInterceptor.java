@@ -27,4 +27,6 @@ public class EntityNameInterceptor extends EmptyInterceptor {
 		}
 		return entityName;
 	}
+
+
 }

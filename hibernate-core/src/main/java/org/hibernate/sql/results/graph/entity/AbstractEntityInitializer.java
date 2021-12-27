@@ -48,6 +48,7 @@ import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.entity.internal.EntityResultInitializer;
 import org.hibernate.sql.results.internal.NullValueAssembler;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
@@ -417,20 +418,31 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				.findLoadingEntityEntry( entityKey );
 		setIsOwningInitializer(entityKey.getIdentifier(), existingLoadingEntry  );
 
+		final Object entityInstanceFromExecutionContext = rowProcessingState.getJdbcValuesSourceProcessingState()
+				.getExecutionContext()
+				.getEntityInstance();
 		if ( proxy != null && ( proxy instanceof MapProxy
 				|| entityDescriptor.getJavaTypeDescriptor().getJavaTypeClass().isInstance( proxy ) ) ) {
-			entityInstance = proxy;
+			if ( this instanceof EntityResultInitializer && entityInstanceFromExecutionContext != null ) {
+				this.entityInstance = entityInstanceFromExecutionContext;
+			}
+			else {
+				this.entityInstance = proxy;
+			}
 		}
 		else {
 			final Object existingEntity = persistenceContext.getEntity( entityKey );
 
 			if ( existingEntity != null ) {
-				entityInstance = existingEntity;
+				this.entityInstance = existingEntity;
+			}
+			else if ( this instanceof EntityResultInitializer && entityInstanceFromExecutionContext != null ) {
+				this.entityInstance = entityInstanceFromExecutionContext;
 			}
 			else {
 				// look to see if another initializer from a parent load context or an earlier
 				// initializer is already loading the entity
-				entityInstance = resolveInstance(
+				this.entityInstance = resolveInstance(
 						entityIdentifier,
 						existingLoadingEntry,
 						rowProcessingState,
@@ -439,7 +451,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			}
 
 			if ( LockMode.NONE != lockMode ) {
-				final EntityEntry entry = session.getPersistenceContextInternal().getEntry( entityInstance );
+				final EntityEntry entry = session.getPersistenceContextInternal().getEntry( this.entityInstance );
 				if ( entry != null && entry.getLockMode().lessThan( lockMode ) ) {
 					//we only check the version when _upgrading_ lock modes
 					if ( versionAssembler != null ) {
@@ -642,9 +654,8 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		}
 
 		// todo (6.0): do we really need this check ?
-		if ( persistenceContext.containsEntity( entityKey ) ) {
-			Status status = persistenceContext.getEntry( entity )
-					.getStatus();
+		if ( entry != null ) {
+			Status status = entry.getStatus();
 			if ( status == Status.DELETED || status == Status.GONE ) {
 				return;
 			}

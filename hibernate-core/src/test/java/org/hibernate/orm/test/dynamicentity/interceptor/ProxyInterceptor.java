@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.dynamicentity.interceptor;
+package org.hibernate.orm.test.dynamicentity.interceptor;
 
 import java.io.Serializable;
 import java.lang.reflect.Proxy;
@@ -29,6 +29,7 @@ public class ProxyInterceptor extends EmptyInterceptor {
 	 * a presumed entity instance.
 	 *
 	 * @param object The presumed entity instance.
+	 *
 	 * @return The entity name (pointing to the proper entity mapping).
 	 */
 	@Override
@@ -50,9 +51,14 @@ public class ProxyInterceptor extends EmptyInterceptor {
 	 * @param entityMode The entity mode in which to create an instance.  Here, we are only
 	 * interestes in custom behavior for the POJO entity mode.
 	 * @param id The identifier value for the given entity.
+	 *
 	 * @return The instantiated instance.
 	 */
-	public Object instantiate(String entityName, RepresentationMode entityMode, Serializable id) {
+	@Override
+	public Object instantiate(
+			String entityName,
+			RepresentationMode entityMode,
+			Object id) {
 		if ( entityMode == RepresentationMode.POJO ) {
 			if ( Customer.class.getName().equals( entityName ) ) {
 				return ProxyHelper.newCustomerProxy( id );

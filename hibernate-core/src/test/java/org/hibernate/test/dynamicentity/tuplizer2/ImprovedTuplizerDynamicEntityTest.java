@@ -41,6 +41,11 @@ public class ImprovedTuplizerDynamicEntityTest extends BaseCoreFunctionalTestCas
 		return new String[] { "dynamicentity/tuplizer2/Customer.hbm.xml" };
 	}
 
+	@Override
+	protected String getBaseForMappings() {
+		return "org/hibernate/test/";
+	}
+
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.getEntityTuplizerFactory().registerDefaultTuplizerClass( RepresentationMode.POJO, MyEntityTuplizer.class );

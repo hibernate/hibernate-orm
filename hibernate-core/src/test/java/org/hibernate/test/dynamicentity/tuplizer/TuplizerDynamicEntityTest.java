@@ -43,6 +43,11 @@ public class TuplizerDynamicEntityTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
+	protected String getBaseForMappings() {
+		return "org/hibernate/test/";
+	}
+
+	@Override
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setInterceptor( new EntityNameInterceptor() );

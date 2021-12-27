@@ -6,7 +6,9 @@
  */
 package org.hibernate.userguide.mapping.generated;
 
+import org.hibernate.annotations.ColumnGeneratedAlways;
 import org.hibernate.annotations.Generated;
+import org.hibernate.annotations.GenerationTime;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
@@ -85,7 +87,8 @@ public class GeneratedTest2 extends BaseEntityManagerFunctionalTestCase {
 
 		private String middleName5;
 
-		@Generated(as = "CONCAT(" +
+		@Generated(GenerationTime.ALWAYS)
+		@ColumnGeneratedAlways("CONCAT(" +
 				"	COALESCE(firstName, ''), " +
 				"	COALESCE(CONCAT(' ',middleName1), ''), " +
 				"	COALESCE(CONCAT(' ',middleName2), ''), " +

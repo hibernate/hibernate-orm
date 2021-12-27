@@ -11,6 +11,7 @@ import java.util.Map;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.ColumnGeneratedAlways;
 import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.ColumnTransformers;
 import org.hibernate.annotations.Comment;
@@ -667,14 +668,14 @@ public class Ejb3Column {
 	private static void applyGeneratedAs(Ejb3Column column, PropertyData inferredData) {
 		final XProperty xProperty = inferredData.getProperty();
 		if ( xProperty != null ) {
-			Generated generatedAnn = xProperty.getAnnotation( Generated.class );
-			if ( generatedAnn != null && !generatedAnn.as().isEmpty() ) {
-				column.setGeneratedAs( generatedAnn.as() );
+			ColumnGeneratedAlways generatedAnn = xProperty.getAnnotation( ColumnGeneratedAlways.class );
+			if ( generatedAnn != null && !generatedAnn.value().isEmpty() ) {
+				column.setGeneratedAs( generatedAnn.value() );
 			}
 		}
 		else {
 			LOG.trace(
-					"Could not perform @Generated lookup as 'PropertyData' did not give access to XProperty"
+					"Could not perform @ColumnGeneratedAlways lookup as 'PropertyData' did not give access to XProperty"
 			);
 		}
 	}

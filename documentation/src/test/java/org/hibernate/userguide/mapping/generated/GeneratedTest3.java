@@ -6,7 +6,9 @@
  */
 package org.hibernate.userguide.mapping.generated;
 
+import org.hibernate.annotations.ColumnGeneratedAlways;
 import org.hibernate.annotations.Generated;
+import org.hibernate.annotations.GenerationTime;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.testing.RequiresDialect;
@@ -83,7 +85,8 @@ public class GeneratedTest3 extends BaseEntityManagerFunctionalTestCase {
 
 		private String middleName5;
 
-		@Generated(as =
+		@Generated(GenerationTime.ALWAYS)
+		@ColumnGeneratedAlways(
 				"COALESCE(firstName, '') || " +
 				"COALESCE(' ' || middleName1, '') || " +
 				"COALESCE(' ' || middleName2, '') || " +

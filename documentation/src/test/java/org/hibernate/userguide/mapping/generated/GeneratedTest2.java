@@ -6,18 +6,17 @@
  */
 package org.hibernate.userguide.mapping.generated;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 import org.hibernate.annotations.ColumnGeneratedAlways;
 import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.GenerationTime;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.testing.RequiresDialect;
 import org.junit.Test;
-
-import javax.persistence.Entity;
-import javax.persistence.Id;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;

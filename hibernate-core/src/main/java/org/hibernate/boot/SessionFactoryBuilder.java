@@ -694,6 +694,15 @@ public interface SessionFactoryBuilder {
 	 */
 	SessionFactoryBuilder applySqlFunction(String registrationName, SqmFunctionDescriptor functionDescriptor);
 
+	/**
+	 * Should collections be included in the default fetch group when bytecode enhancement is used?
+	 *
+	 * @param enabled {@code true} collections should be included
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	SessionFactoryBuilder applyCollectionsInDefaultFetchGroup(boolean enabled);
+
 	SessionFactoryBuilder allowOutOfTransactionUpdateOperations(boolean allow);
 
 	/**

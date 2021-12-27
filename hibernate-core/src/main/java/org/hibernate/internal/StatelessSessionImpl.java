@@ -15,6 +15,7 @@ import org.hibernate.LockMode;
 import org.hibernate.SessionException;
 import org.hibernate.StatelessSession;
 import org.hibernate.UnresolvableObjectException;
+import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -23,6 +24,8 @@ import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.PersistentAttributeInterceptable;
+import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.id.IdentifierGeneratorHelper;
@@ -382,6 +385,24 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 				finally {
 					initializer.unsetSession();
 					persistenceContext.afterLoad();
+					if ( persistenceContext.isLoadFinished() ) {
+						persistenceContext.clear();
+					}
+				}
+			}
+		}
+		else if ( association instanceof PersistentAttributeInterceptable) {
+			final PersistentAttributeInterceptor interceptor =
+					( (PersistentAttributeInterceptable) association ).$$_hibernate_getInterceptor();
+			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor) {
+				EnhancementAsProxyLazinessInterceptor proxyInterceptor =
+						(EnhancementAsProxyLazinessInterceptor) interceptor;
+				proxyInterceptor.setSession( this );
+				try {
+					proxyInterceptor.forceInitialize( association, null );
+				}
+				finally {
+					proxyInterceptor.unsetSession();
 					if ( persistenceContext.isLoadFinished() ) {
 						persistenceContext.clear();
 					}

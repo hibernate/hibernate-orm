@@ -369,6 +369,12 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	}
 
 	@Override
+	public SessionFactoryBuilder applyCollectionsInDefaultFetchGroup(boolean enabled) {
+		delegate.applyCollectionsInDefaultFetchGroup( enabled );
+		return getThis();
+	}
+
+	@Override
 	public T allowOutOfTransactionUpdateOperations(boolean allow) {
 		delegate.allowOutOfTransactionUpdateOperations( allow );
 		return getThis();

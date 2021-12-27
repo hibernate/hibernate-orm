@@ -110,7 +110,6 @@ import static org.hibernate.cfg.AvailableSettings.JPA_CALLBACKS_ENABLED;
 import static org.hibernate.cfg.AvailableSettings.JTA_TRACK_BY_THREAD;
 import static org.hibernate.cfg.AvailableSettings.LOG_SESSION_METRICS;
 import static org.hibernate.cfg.AvailableSettings.MAX_FETCH_DEPTH;
-import static org.hibernate.cfg.AvailableSettings.MULTI_TENANT_CONNECTION_PROVIDER;
 import static org.hibernate.cfg.AvailableSettings.MULTI_TENANT_IDENTIFIER_RESOLVER;
 import static org.hibernate.cfg.AvailableSettings.NATIVE_EXCEPTION_HANDLING_51_COMPLIANCE;
 import static org.hibernate.cfg.AvailableSettings.OMIT_JOIN_OF_SUPERCLASS_TABLES;
@@ -146,9 +145,9 @@ import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
  * In-flight state of {@link SessionFactoryOptions}
  * during {@link org.hibernate.boot.SessionFactoryBuilder} processing.
  *
- * The intention is that SessionFactoryBuilder internally creates and populates
- * this builder, which is then used to construct the SessionFactoryOptions
- * as part of building the SessionFactory ({@link org.hibernate.boot.SessionFactoryBuilder#build})
+ * The intention is that {@code SessionFactoryBuilder} internally creates and populates
+ * this builder, which is then used to construct the {@code SessionFactoryOptions}
+ * as part of building the {@code SessionFactory} ({@link org.hibernate.boot.SessionFactoryBuilder#build})
  *
  * @author Steve Ebersole
  */

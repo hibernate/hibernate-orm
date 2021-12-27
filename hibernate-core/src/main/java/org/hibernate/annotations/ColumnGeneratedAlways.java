@@ -6,6 +6,8 @@
  */
 package org.hibernate.annotations;
 
+import org.hibernate.tuple.GeneratedAlwaysValueGeneration;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -14,13 +16,14 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Specifes that the mapped column is defined using a DDL
+ * Specifies that the mapped column is defined using a DDL
  * {@code generated always as} clause, or equivalent.
  *
  * @author Gavin King
  */
 @Target( {FIELD, METHOD} )
 @Retention( RUNTIME )
+@ValueGenerationType(generatedBy = GeneratedAlwaysValueGeneration.class)
 public @interface ColumnGeneratedAlways {
 	/**
 	 * The SQL expression used to generate the column value.

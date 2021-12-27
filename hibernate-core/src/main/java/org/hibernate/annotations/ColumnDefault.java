@@ -6,6 +6,8 @@
  */
 package org.hibernate.annotations;
 
+import org.hibernate.tuple.DefaultValueGeneration;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -20,6 +22,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  */
 @Target( {FIELD, METHOD} )
 @Retention( RUNTIME )
+@ValueGenerationType(generatedBy = DefaultValueGeneration.class)
 public @interface ColumnDefault {
 	/**
 	 * The DEFAULT definition to apply to the DDL.

@@ -15,7 +15,6 @@ import org.hibernate.annotations.ColumnGeneratedAlways;
 import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.ColumnTransformers;
 import org.hibernate.annotations.Comment;
-import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.Index;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.model.naming.Identifier;

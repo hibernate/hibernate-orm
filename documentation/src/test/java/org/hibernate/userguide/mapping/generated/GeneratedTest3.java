@@ -9,8 +9,6 @@ package org.hibernate.userguide.mapping.generated;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import org.hibernate.annotations.ColumnGeneratedAlways;
-import org.hibernate.annotations.Generated;
-import org.hibernate.annotations.GenerationTime;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.testing.RequiresDialect;
@@ -84,7 +82,6 @@ public class GeneratedTest3 extends BaseEntityManagerFunctionalTestCase {
 
 		private String middleName5;
 
-		@Generated(GenerationTime.ALWAYS)
 		@ColumnGeneratedAlways(
 				"COALESCE(firstName, '') || " +
 				"COALESCE(' ' || middleName1, '') || " +
@@ -92,7 +89,7 @@ public class GeneratedTest3 extends BaseEntityManagerFunctionalTestCase {
 				"COALESCE(' ' || middleName3, '') || " +
 				"COALESCE(' ' || middleName4, '') || " +
 				"COALESCE(' ' || middleName5, '') || " +
-				"COALESCE(' ' || lastName, '') ")
+				"COALESCE(' ' || lastName, '')")
 		private String fullName;
 
 	//end::mapping-generated-provided-generated[]

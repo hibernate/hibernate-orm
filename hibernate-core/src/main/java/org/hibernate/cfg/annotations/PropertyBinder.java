@@ -6,13 +6,10 @@
  */
 package org.hibernate.cfg.annotations;
 
-import java.lang.annotation.Annotation;
-import java.util.Map;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 import jakarta.persistence.Version;
-
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
@@ -45,11 +42,15 @@ import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.EmbeddableInstantiator;
 import org.hibernate.tuple.AnnotationValueGeneration;
 import org.hibernate.tuple.AttributeBinder;
+import org.hibernate.tuple.DefaultValueGeneration;
+import org.hibernate.tuple.GeneratedAlwaysValueGeneration;
 import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.tuple.ValueGeneration;
 import org.hibernate.tuple.ValueGenerator;
-
 import org.jboss.logging.Logger;
+
+import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import static org.hibernate.cfg.annotations.HCANNHelper.findContainingAnnotation;
 
@@ -412,12 +413,20 @@ public class PropertyBinder {
 
 			if ( candidate != null ) {
 				if ( valueGeneration != null ) {
-					throw new AnnotationException(
-							"Only one generator annotation is allowed: " + StringHelper.qualify(
-									holder.getPath(),
-									name
-							)
-					);
+					if ( isIgnorableValueGeneration(candidate) ) {
+						//nothing to do
+					}
+					else if ( isIgnorableValueGeneration(valueGeneration) ) {
+						valueGeneration = candidate;
+					}
+					else {
+						throw new AnnotationException(
+								"Only one generator annotation is allowed: " + StringHelper.qualify(
+										holder.getPath(),
+										name
+								)
+						);
+					}
 				}
 				else {
 					valueGeneration = candidate;
@@ -426,6 +435,11 @@ public class PropertyBinder {
 		}
 
 		return valueGeneration;
+	}
+
+	private static boolean isIgnorableValueGeneration(AnnotationValueGeneration<?> candidate) {
+		return candidate instanceof DefaultValueGeneration
+			|| candidate instanceof GeneratedAlwaysValueGeneration;
 	}
 
 	/**

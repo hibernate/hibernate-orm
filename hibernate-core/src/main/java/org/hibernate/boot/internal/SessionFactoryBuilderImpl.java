@@ -388,6 +388,12 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
+	public SessionFactoryBuilder applyCollectionsInDefaultFetchGroup(boolean enabled) {
+		this.optionsBuilder.enableCollectionInDefaultFetchGroup( enabled );
+		return this;
+	}
+
+	@Override
 	public SessionFactoryBuilder allowOutOfTransactionUpdateOperations(boolean allow) {
 		this.optionsBuilder.allowOutOfTransactionUpdateOperations( allow );
 		return this;

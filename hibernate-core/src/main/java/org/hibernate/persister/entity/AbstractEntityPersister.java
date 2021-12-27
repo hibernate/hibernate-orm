@@ -216,7 +216,6 @@ import org.hibernate.sql.SimpleSelect;
 import org.hibernate.sql.Template;
 import org.hibernate.sql.Update;
 import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SimpleFromClauseAccessImpl;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
@@ -4252,10 +4251,9 @@ public abstract class AbstractEntityPersister
 			final EntityKey entityKey = proxyInterceptor.getEntityKey();
 			final Object identifier = entityKey.getIdentifier();
 
-
-			LoadEvent loadEvent = new LoadEvent( identifier, entity, (EventSource)session, false );
 			Object loaded = null;
-			if ( canReadFromCache ) {
+			if ( canReadFromCache && session instanceof EventSource ) {
+				LoadEvent loadEvent = new LoadEvent( identifier, entity, (EventSource) session, false );
 				loaded = CacheEntityLoaderHelper.INSTANCE.loadFromSecondLevelCache( loadEvent, this, entityKey );
 			}
 			if ( loaded == null ) {

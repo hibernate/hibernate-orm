@@ -6,6 +6,7 @@
  */
 package org.hibernate.userguide.model;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -30,7 +31,7 @@ public class Call {
     private Phone phone;
 
     @Column(name = "call_timestamp")
-    private Date timestamp;
+    private LocalDateTime timestamp;
 
     private int duration;
 
@@ -55,11 +56,11 @@ public class Call {
         this.phone = phone;
     }
 
-    public Date getTimestamp() {
+    public LocalDateTime getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(Date timestamp) {
+    public void setTimestamp(LocalDateTime timestamp) {
         this.timestamp = timestamp;
     }
 

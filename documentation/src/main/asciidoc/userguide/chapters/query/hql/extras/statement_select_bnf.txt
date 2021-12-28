@@ -1,6 +1,6 @@
 select_statement :: =
     [select_clause]
-    from_clause
+    [from_clause]
     [where_clause]
     [groupby_clause]
     [having_clause]

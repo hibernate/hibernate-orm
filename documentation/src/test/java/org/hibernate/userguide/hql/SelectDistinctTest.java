@@ -22,11 +22,12 @@ import jakarta.persistence.Table;
 import org.hibernate.jpa.QueryHints;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
+import org.hibernate.transform.DistinctResultTransformer;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -65,9 +66,9 @@ public class SelectDistinctTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void testDistinctProjection() {
 
-        doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA( this::entityManagerFactory, entityManager -> {
 			//tag::hql-distinct-projection-query-example[]
-            List<String> lastNames = entityManager.createQuery(
+			List<String> lastNames = entityManager.createQuery(
 				"select distinct p.lastName " +
 				"from Person p", String.class)
 			.getResultList();
@@ -138,6 +139,28 @@ public class SelectDistinctTest extends BaseEntityManagerFunctionalTestCase {
 				log.infof( "Author %s wrote %d books",
 				   author.getFirstName() + " " + author.getLastName(),
 				   author.getBooks().size()
+				);
+			} );
+		});
+	}
+
+	@Test
+	public void testDistinctAuthorsWithResultTransformer() {
+
+		doInHibernate( this::entityManagerFactory, session -> {
+			//tag::hql-distinct-entity-resulttransformer-example[]
+			List<Person> authors = session.createQuery(
+					"select p " +
+					"from Person p " +
+					"left join fetch p.books", Person.class)
+			.setResultListTransformer( DistinctResultTransformer.INSTANCE )
+			.getResultList();
+			//end::hql-distinct-entity-resulttransformer-example[]
+
+			authors.forEach( author -> {
+				log.infof( "Author %s wrote %d books",
+						author.getFirstName() + " " + author.getLastName(),
+						author.getBooks().size()
 				);
 			} );
 		});

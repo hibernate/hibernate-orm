@@ -3,11 +3,14 @@ package org.hibernate.orm.test.mapping.generated.always;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import org.hibernate.annotations.ColumnGeneratedAlways;
+import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -20,6 +23,8 @@ import static org.junit.Assert.assertEquals;
 @DomainModel(annotatedClasses = GeneratedAlwaysTest.OrderLine.class)
 @SessionFactory
 @SkipForDialect(dialectClass = H2Dialect.class) // 'generated always' not supported until H2 2.0
+@SkipForDialect(dialectClass = HSQLDialect.class)
+@SkipForDialect(dialectClass = DerbyDialect.class)
 public class GeneratedAlwaysTest {
 
     @Test
@@ -31,6 +36,11 @@ public class GeneratedAlwaysTest {
             session.flush();
             assertEquals( unitPrice.multiply( new BigDecimal("5") ), entity.total );
         } );
+    }
+
+    @AfterEach
+    public void dropTestData(SessionFactoryScope scope) {
+        scope.inTransaction( session -> session.createQuery( "delete WithGeneratedAlways" ).executeUpdate() );
     }
 
     @Entity(name="WithGeneratedAlways")

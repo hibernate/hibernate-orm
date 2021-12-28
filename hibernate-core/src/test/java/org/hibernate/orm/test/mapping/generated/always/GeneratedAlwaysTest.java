@@ -7,6 +7,7 @@ import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -27,7 +28,7 @@ import static org.junit.Assert.assertEquals;
 @SkipForDialect(dialectClass = H2Dialect.class) // 'generated always' not supported until H2 2.0
 @SkipForDialect(dialectClass = HSQLDialect.class)
 @SkipForDialect(dialectClass = DerbyDialect.class)
-@SkipForDialect(dialectClass = SybaseDialect.class)
+@SkipForDialect(dialectClass = SybaseASEDialect.class)
 @SkipForDialect(dialectClass = PostgreSQLDialect.class, majorVersion = 9)
 public class GeneratedAlwaysTest {
 

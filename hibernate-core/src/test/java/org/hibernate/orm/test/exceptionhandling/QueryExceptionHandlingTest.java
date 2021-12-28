@@ -64,6 +64,19 @@ public class QueryExceptionHandlingTest extends BaseExceptionHandlingTest {
 	}
 
 	@Test
+	public void testUniqueResultWithMultipleResults() {
+		try {
+			TransactionUtil2.inSession( sessionFactory(), s -> {
+				s.createQuery( "from A where id in (1, 2)" ).uniqueResult();
+			} );
+			fail( "should have thrown an exception" );
+		}
+		catch (RuntimeException expected) {
+			exceptionExpectations.onUniqueResultWithMultipleResults( expected );
+		}
+	}
+
+	@Test
 	@TestForIssue(jiraKey = "HHH-13300")
 	public void testGetSingleResultWithMultipleResults() {
 		try {

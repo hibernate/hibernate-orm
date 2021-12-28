@@ -1487,7 +1487,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	public R getSingleResult() {
 		try {
 			final List<R> list = list();
-			if ( list.size() == 0 ) {
+			if ( list.isEmpty() ) {
 				throw new NoResultException( "No entity found for query" );
 			}
 			return uniqueElement( list );

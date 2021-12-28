@@ -160,15 +160,14 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 
 	/**
 	 * Convenience method to return a single instance that matches
-	 * the query, or {@code null} if the query returns no results.
+	 * the query, throwing an exception if the query returns no results.
 	 *
-	 * @return the single result or <tt>null</tt>
+	 * @return the single result
 	 *
-	 * @throws NonUniqueResultException if there is more than one matching result
+	 * @throws jakarta.persistence.NonUniqueResultException if there is more than one matching result
+	 * @throws jakarta.persistence.NoResultException if there is no result to return
 	 */
-	default R getSingleResult() {
-		return uniqueResult();
-	}
+	R getSingleResult();
 
 	/**
 	 * Convenience method to return a single instance that matches

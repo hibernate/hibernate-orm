@@ -56,6 +56,11 @@ interface ExceptionExpectations {
 			}
 
 			@Override
+			public void onUniqueResultWithMultipleResults(RuntimeException e) {
+				assertThat( e, instanceOf( org.hibernate.NonUniqueResultException.class ) );
+			}
+
+			@Override
 			public void onGetSingleResultWithMultipleResults(RuntimeException e) {
 				assertThat( e, instanceOf( jakarta.persistence.NonUniqueResultException.class ) );
 			}
@@ -134,6 +139,11 @@ interface ExceptionExpectations {
 			}
 
 			@Override
+			public void onUniqueResultWithMultipleResults(RuntimeException e) {
+				assertThat( e, instanceOf( org.hibernate.NonUniqueResultException.class ) );
+			}
+
+			@Override
 			public void onGetSingleResultWithMultipleResults(RuntimeException e) {
 				assertThat( e, instanceOf( org.hibernate.NonUniqueResultException.class ) );
 			}
@@ -209,6 +219,11 @@ interface ExceptionExpectations {
 			}
 
 			@Override
+			public void onUniqueResultWithMultipleResults(RuntimeException e) {
+				assertThat( e, instanceOf( org.hibernate.NonUniqueResultException.class ) );
+			}
+
+			@Override
 			public void onGetSingleResultWithMultipleResults(RuntimeException e) {
 				assertThat( e, instanceOf( jakarta.persistence.NonUniqueResultException.class ) );
 			}
@@ -265,6 +280,8 @@ interface ExceptionExpectations {
 	void onTransientObjectOnPersistAndMergeAndFlush(RuntimeException e);
 
 	void onInvalidQueryExecuted(RuntimeException e);
+
+	void onUniqueResultWithMultipleResults(RuntimeException e);
 
 	void onGetSingleResultWithMultipleResults(RuntimeException e);
 

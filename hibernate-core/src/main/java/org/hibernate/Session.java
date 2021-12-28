@@ -10,7 +10,11 @@ import java.util.List;
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.FlushModeType;
+import jakarta.persistence.criteria.CriteriaDelete;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaUpdate;
 import org.hibernate.graph.RootGraph;
+import org.hibernate.query.Query;
 import org.hibernate.stat.SessionStatistics;
 
 /**
@@ -975,20 +979,6 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 */
 	void setReadOnly(Object entityOrProxy, boolean readOnly);
 
-	@Override
-	<T> RootGraph<T> createEntityGraph(Class<T> rootType);
-
-	@Override
-	RootGraph<?> createEntityGraph(String graphName);
-
-	@Override
-	RootGraph<?> getEntityGraph(String graphName);
-
-	@Override
-	default <T> List<EntityGraph<? super T>> getEntityGraphs(Class<T> entityClass) {
-		return getSessionFactory().findEntityGraphsByType( entityClass );
-	}
-
 	/**
 	 * Is a particular fetch profile enabled on this session?
 	 *
@@ -1119,4 +1109,42 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @param listeners The listener(s) to add
 	 */
 	void addEventListeners(SessionEventListener... listeners);
+
+	@Override
+	<T> RootGraph<T> createEntityGraph(Class<T> rootType);
+
+	@Override
+	RootGraph<?> createEntityGraph(String graphName);
+
+	@Override
+	RootGraph<?> getEntityGraph(String graphName);
+
+	@Override
+	default <T> List<EntityGraph<? super T>> getEntityGraphs(Class<T> entityClass) {
+		return getSessionFactory().findEntityGraphsByType( entityClass );
+	}
+
+	// The following overrides should not be necessary,
+	// and are only needed to work around a bug in IntelliJ
+
+	@Override
+	<R> Query<R> createQuery(String queryString, Class<R> resultClass);
+
+	@Override @Deprecated @SuppressWarnings("rawtypes")
+	Query createQuery(String queryString);
+
+	@Override
+	<R> Query<R> createNamedQuery(String name, Class<R> resultClass);
+
+	@Override @Deprecated @SuppressWarnings("rawtypes")
+	Query createNamedQuery(String name);
+
+	@Override
+	<R> Query<R> createQuery(CriteriaQuery<R> criteriaQuery);
+
+	@Override
+	Query<Void> createQuery(CriteriaDelete deleteQuery);
+
+	@Override
+	Query<Void> createQuery(CriteriaUpdate updateQuery);
 }

@@ -572,4 +572,8 @@ public class H2Dialect extends Dialect {
 		}
 	}
 
+	@Override
+	public String generatedAs(String generatedAs) {
+		return " generated always as (" + generatedAs + ")";
+	}
 }

@@ -15,14 +15,18 @@ import org.hibernate.annotations.ColumnGeneratedAlways;
  */
 public class GeneratedAlwaysValueGeneration implements AnnotationValueGeneration<ColumnGeneratedAlways> {
 
+	private boolean select;
+
 	public GeneratedAlwaysValueGeneration() {}
 
 	@Override
-	public void initialize(ColumnGeneratedAlways annotation, Class<?> propertyType) {}
+	public void initialize(ColumnGeneratedAlways annotation, Class<?> propertyType) {
+		select = annotation.selectGenerated();
+	}
 
 	@Override
 	public GenerationTiming getGenerationTiming() {
-		return GenerationTiming.ALWAYS;
+		return select ? GenerationTiming.ALWAYS : GenerationTiming.NEVER;
 	}
 
 	@Override

@@ -16,16 +16,27 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Identifies the DEFAULT value to apply to the associated column via DDL.
+ * Specifies that a column has a {@code DEFAULT} value specified in DDL.
  *
  * @author Steve Ebersole
+ *
+ * @see ColumnGeneratedAlways
  */
 @Target( {FIELD, METHOD} )
 @Retention( RUNTIME )
 @ValueGenerationType(generatedBy = DefaultValueGeneration.class)
 public @interface ColumnDefault {
 	/**
-	 * The DEFAULT definition to apply to the DDL.
+	 * The {@code DEFAULT} value to use in generated DDL.
+	 *
+	 * @return a SQL expression that evaluates to the default column value
 	 */
 	String value();
+
+	/**
+	 * Determines if the defaulted value is selected after every SQL {@code INSERT}.
+	 *
+	 * @return {@code true} if a {@code SELECT} should be executed to read the defaulted value
+	 */
+	boolean selectDefaulted() default true;
 }

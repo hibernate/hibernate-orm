@@ -15,14 +15,18 @@ import org.hibernate.annotations.ColumnDefault;
  */
 public class DefaultValueGeneration implements AnnotationValueGeneration<ColumnDefault> {
 
+	private boolean select;
+
 	public DefaultValueGeneration() {}
 
 	@Override
-	public void initialize(ColumnDefault annotation, Class<?> propertyType) {}
+	public void initialize(ColumnDefault annotation, Class<?> propertyType) {
+		select = annotation.selectDefaulted();
+	}
 
 	@Override
 	public GenerationTiming getGenerationTiming() {
-		return GenerationTiming.INSERT;
+		return select ? GenerationTiming.INSERT : GenerationTiming.NEVER;
 	}
 
 	@Override

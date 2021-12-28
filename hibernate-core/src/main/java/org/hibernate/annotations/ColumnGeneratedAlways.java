@@ -16,17 +16,28 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Specifies that the mapped column is defined using a DDL
- * {@code generated always as} clause, or equivalent.
+ * Specifies that a is defined using a DDL {@code generated always as} clause,
+ * or equivalent.
  *
  * @author Gavin King
+ *
+ * @see ColumnDefault
  */
 @Target( {FIELD, METHOD} )
 @Retention( RUNTIME )
 @ValueGenerationType(generatedBy = GeneratedAlwaysValueGeneration.class)
 public @interface ColumnGeneratedAlways {
 	/**
-	 * The SQL expression used to generate the column value.
+	 * The expression to include in the generated DDL.
+	 *
+	 * @return the SQL expression that is evaluated to generate the column value.
 	 */
 	String value();
+
+	/**
+	 * Determines if the generated value is selected after every SQL {@code INSERT} or {@code UPDATE}.
+	 *
+	 * @return {@code true} if a {@code SELECT} should be executed to read the generated value
+	 */
+	boolean selectGenerated() default true;
 }

@@ -9,9 +9,12 @@ package org.hibernate.annotations;
 import org.hibernate.tuple.GenerationTiming;
 
 /**
- * At what time(s) will the generation occur?
+ * Represents the timing of value generation that occurs in the database.
+ * Intended for use with the {@link Generated} annotation.
  *
  * @author Emmanuel Bernard
+ *
+ * @see Generated
  */
 public enum GenerationTime {
 	/**

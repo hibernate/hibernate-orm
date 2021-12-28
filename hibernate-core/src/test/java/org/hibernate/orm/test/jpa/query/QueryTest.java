@@ -16,6 +16,7 @@ import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
+import jakarta.persistence.NonUniqueResultException;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.Query;
@@ -1509,6 +1510,25 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			assertTyping( NoResultException.class, e );
 		}
 		finally {
+			entityManager.close();
+		}
+	}
+
+	@Test
+	public void testGetSingleResultWithManyResultsException() {
+		final EntityManager entityManager  = getOrCreateEntityManager();
+		try {
+			entityManager.getTransaction().begin();
+			entityManager.persist( new Item( "1", "1" ) );
+			entityManager.persist( new Item( "2", "2" ) );
+			entityManager.createQuery( "FROM Item" ).getSingleResult();
+			fail( "Expected NoResultException" );
+		}
+		catch ( Exception e ) {
+			assertTyping( NonUniqueResultException.class, e );
+		}
+		finally {
+			entityManager.getTransaction().rollback();
 			entityManager.close();
 		}
 	}

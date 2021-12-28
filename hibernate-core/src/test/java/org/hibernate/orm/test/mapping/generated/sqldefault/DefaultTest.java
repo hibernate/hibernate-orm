@@ -28,6 +28,8 @@ public class DefaultTest {
             session.persist(entity);
             session.flush();
             assertEquals( "new", entity.status );
+            assertEquals( unitPrice, entity.unitPrice );
+            assertEquals( 5, entity.quantity );
         } );
     }
 
@@ -40,9 +42,9 @@ public class DefaultTest {
     public static class OrderLine {
         @Id
         private BigDecimal unitPrice;
-        @Id
+        @Id @ColumnDefault(value = "1")
         private int quantity;
-        @ColumnDefault(value = "'new'")
+        @ColumnDefault(value = "'new'", fetch = true)
         private String status;
 
         public OrderLine() {}

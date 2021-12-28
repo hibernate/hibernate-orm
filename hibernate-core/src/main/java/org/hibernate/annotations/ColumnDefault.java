@@ -16,7 +16,8 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Specifies that a column has a {@code DEFAULT} value specified in DDL.
+ * Specifies that a column has a {@code DEFAULT} value specified in DDL,
+ * and whether Hibernate should fetch the defaulted value from the database.
  *
  * @author Steve Ebersole
  *
@@ -34,9 +35,17 @@ public @interface ColumnDefault {
 	String value();
 
 	/**
-	 * Determines if the defaulted value is selected after every SQL {@code INSERT}.
+	 * Determines if the defaulted value is fetched from the database after
+	 * every SQL {@code INSERT}.
+	 * <p>
+	 * Fetching is disabled by default, and so it is the responsibility of
+	 * the Java program to maintain the value of the mapped attribute when
+	 * its value is first defaulted by the database.
+	 * <p>
+	 * Note that {@code fetch=true} is a synonym for {@code @Generated(INSERT)}.
 	 *
-	 * @return {@code true} if a {@code SELECT} should be executed to read the defaulted value
+	 * @return {@code true} if a {@code SELECT} should be executed to read
+	 *                      the defaulted value
 	 */
-	boolean selectDefaulted() default true;
+	boolean fetch() default false;
 }

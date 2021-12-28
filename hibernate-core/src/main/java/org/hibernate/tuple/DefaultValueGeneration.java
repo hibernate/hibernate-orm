@@ -21,7 +21,7 @@ public class DefaultValueGeneration implements AnnotationValueGeneration<ColumnD
 
 	@Override
 	public void initialize(ColumnDefault annotation, Class<?> propertyType) {
-		select = annotation.selectDefaulted();
+		select = annotation.fetch();
 	}
 
 	@Override

@@ -38,6 +38,8 @@ public class GeneratedAlwaysTest {
             OrderLine entity = new OrderLine( unitPrice, 5 );
             session.persist(entity);
             session.flush();
+            assertEquals( 5, entity.quantity );
+            assertEquals( unitPrice, entity.unitPrice );
             assertEquals( unitPrice.multiply( new BigDecimal("5") ), entity.total );
         } );
     }
@@ -53,7 +55,7 @@ public class GeneratedAlwaysTest {
         private BigDecimal unitPrice;
         @Id
         private int quantity;
-        @ColumnGeneratedAlways(value = "unitPrice*quantity")
+        @ColumnGeneratedAlways(value = "unitPrice*quantity", fetch = true)
         private BigDecimal total;
 
         public OrderLine() {}

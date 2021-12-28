@@ -24,9 +24,9 @@ import org.hibernate.tuple.GeneratedValueGeneration;
  *     <li>For identity/autoincrement columns mapped to an identifier property,
  *     use {@link jakarta.persistence.GeneratedValue}.
  *     <li>For columns with a {@code default} value, prefer the {@link ColumnDefault}
- *     annotation.
+ *     annotation with {@code fetch=true}.
  *     <li>For columns with a {@code generated always as} clause, prefer the
- *     {@link ColumnGeneratedAlways} annotation.
+ *     {@link ColumnGeneratedAlways} annotation with {@code fetch=true}.
  * </ul>
  *
  * @author Emmanuel Bernard

@@ -21,7 +21,7 @@ public class GeneratedAlwaysValueGeneration implements AnnotationValueGeneration
 
 	@Override
 	public void initialize(ColumnGeneratedAlways annotation, Class<?> propertyType) {
-		select = annotation.selectGenerated();
+		select = annotation.fetch();
 	}
 
 	@Override

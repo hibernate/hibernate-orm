@@ -432,10 +432,12 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 				// the column doesnt exist at all.
 				StringBuilder alter = new StringBuilder( root.toString() )
 						.append( ' ' )
-						.append( column.getQuotedName( dialect ) )
-						.append( ' ' );
-				final String columnType = column.getSqlType( dialect, metadata );
-				alter.append( columnType );
+						.append( column.getQuotedName( dialect ) );
+
+				String columnType = column.getSqlType(dialect, metadata);
+				if ( column.getGeneratedAs()==null || dialect.hasDataTypeBeforeGeneratedAs() ) {
+					alter.append( ' ' ).append(columnType);
+				}
 
 				String defaultValue = column.getDefaultValue();
 				if ( defaultValue != null ) {

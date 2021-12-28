@@ -80,22 +80,24 @@ public class StandardTableExporter implements Exporter<Table> {
 				else {
 					buf.append( ", " );
 				}
-				String colName = col.getQuotedName( dialect );
 
-				buf.append( colName ).append( ' ' );
+				String colName = col.getQuotedName( dialect );
+				buf.append( colName );
 
 				if ( isPrimaryKeyIdentity && colName.equals( pkColName ) ) {
 					// to support dialects that have their own identity data type
 					if ( dialect.getIdentityColumnSupport().hasDataTypeInIdentityColumn() ) {
-						buf.append( col.getSqlType( dialect, metadata ) );
+						buf.append( ' ' ).append( col.getSqlType( dialect, metadata ) );
 					}
-					buf.append( ' ' )
-							.append( dialect.getIdentityColumnSupport()
-									.getIdentityColumnString( col.getSqlTypeCode( metadata ) ) );
+					String identityColumnString = dialect.getIdentityColumnSupport()
+							.getIdentityColumnString( col.getSqlTypeCode(metadata) );
+					buf.append( ' ' ).append( identityColumnString );
 				}
 				else {
 					final String columnType = col.getSqlType( dialect, metadata );
-					buf.append( columnType );
+					if ( col.getGeneratedAs()==null || dialect.hasDataTypeBeforeGeneratedAs() ) {
+						buf.append( ' ' ).append( columnType );
+					}
 
 					String defaultValue = col.getDefaultValue();
 					if ( defaultValue != null ) {

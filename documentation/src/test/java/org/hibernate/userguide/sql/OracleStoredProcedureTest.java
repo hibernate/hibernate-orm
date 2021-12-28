@@ -100,7 +100,7 @@ public class OracleStoredProcedureTest extends BaseEntityManagerFunctionalTestCa
             Person person1 = new Person("John Doe" );
             person1.setNickName( "JD" );
             person1.setAddress( "Earth" );
-            person1.setCreatedOn( Timestamp.from( LocalDateTime.of( 2000, 1, 1, 0, 0, 0 ).toInstant( ZoneOffset.UTC ) )) ;
+            person1.setCreatedOn( LocalDateTime.of( 2000, 1, 1, 0, 0, 0 ) ) ;
             person1.getAddresses().put( AddressType.HOME, "Home address" );
             person1.getAddresses().put( AddressType.OFFICE, "Office address" );
 

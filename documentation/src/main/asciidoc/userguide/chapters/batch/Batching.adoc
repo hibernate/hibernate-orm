@@ -293,7 +293,7 @@ include::{sourcedir}/BatchTest.java[tags=batch-bulk-hql-insert-example]
 ----
 ====
 
-This section is only a brief overview of HQL. For more information, see <<chapters/query/hql/HQL.adoc#hql,HQL>>.
+This section is only a brief overview of HQL. For more information, see <<chapters/query/hql/QueryLanguage.adoc#query-language,Hibernate Query Language>>.
 
 [[batch-bulk-hql-strategies]]
 ==== Bulk-id strategies

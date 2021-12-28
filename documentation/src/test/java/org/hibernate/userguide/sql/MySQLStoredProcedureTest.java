@@ -3,10 +3,8 @@ package org.hibernate.userguide.sql;
 import java.sql.CallableStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
@@ -104,7 +102,7 @@ public class MySQLStoredProcedureTest extends BaseEntityManagerFunctionalTestCas
             Person person1 = new Person("John Doe" );
             person1.setNickName( "JD" );
             person1.setAddress( "Earth" );
-            person1.setCreatedOn( Timestamp.from( LocalDateTime.of( 2000, 1, 1, 0, 0, 0 ).toInstant( ZoneOffset.UTC ) )) ;
+            person1.setCreatedOn( LocalDateTime.of( 2000, 1, 1, 0, 0, 0 ) ) ;
             person1.getAddresses().put( AddressType.HOME, "Home address" );
             person1.getAddresses().put( AddressType.OFFICE, "Office address" );
 

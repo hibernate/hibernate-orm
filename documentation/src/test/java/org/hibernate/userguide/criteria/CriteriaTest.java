@@ -7,9 +7,7 @@
 package org.hibernate.userguide.criteria;
 
 import java.math.BigDecimal;
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.List;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -67,14 +65,14 @@ public class CriteriaTest extends BaseEntityManagerFunctionalTestCase {
 			Person person1 = new Person("John Doe" );
 			person1.setNickName( "JD" );
 			person1.setAddress( "Earth" );
-			person1.setCreatedOn( Timestamp.from( LocalDateTime.of( 2000, 1, 1, 0, 0, 0 ).toInstant( ZoneOffset.UTC ) )) ;
+			person1.setCreatedOn( LocalDateTime.of( 2000, 1, 1, 0, 0, 0 ) ) ;
 			person1.getAddresses().put( AddressType.HOME, "Home address" );
 			person1.getAddresses().put( AddressType.OFFICE, "Office address" );
 			entityManager.persist(person1);
 
 			Person person2 = new Person("Mrs. John Doe" );
 			person2.setAddress( "Earth" );
-			person2.setCreatedOn( Timestamp.from( LocalDateTime.of( 2000, 1, 2, 12, 0, 0 ).toInstant( ZoneOffset.UTC ) )) ;
+			person2.setCreatedOn( LocalDateTime.of( 2000, 1, 2, 12, 0, 0 ) ) ;
 			entityManager.persist(person2);
 
 			Person person3 = new Person("Dr_ John Doe" );
@@ -84,16 +82,16 @@ public class CriteriaTest extends BaseEntityManagerFunctionalTestCase {
 			phone1.setId( 1L );
 			phone1.setType( PhoneType.MOBILE );
 			person1.addPhone( phone1 );
-			phone1.getRepairTimestamps().add( Timestamp.from( LocalDateTime.of( 2005, 1, 1, 12, 0, 0 ).toInstant( ZoneOffset.UTC ) ) );
-			phone1.getRepairTimestamps().add( Timestamp.from( LocalDateTime.of( 2006, 1, 1, 12, 0, 0 ).toInstant( ZoneOffset.UTC ) ) );
+			phone1.getRepairTimestamps().add( LocalDateTime.of( 2005, 1, 1, 12, 0, 0 ) );
+			phone1.getRepairTimestamps().add( LocalDateTime.of( 2006, 1, 1, 12, 0, 0 ) );
 
 			Call call11 = new Call();
 			call11.setDuration( 12 );
-			call11.setTimestamp( Timestamp.from( LocalDateTime.of( 2000, 1, 1, 0, 0, 0 ).toInstant( ZoneOffset.UTC ) ) );
+			call11.setTimestamp( LocalDateTime.of( 2000, 1, 1, 0, 0, 0 ) );
 
 			Call call12 = new Call();
 			call12.setDuration( 33 );
-			call12.setTimestamp( Timestamp.from( LocalDateTime.of( 2000, 1, 1, 1, 0, 0 ).toInstant( ZoneOffset.UTC ) ) );
+			call12.setTimestamp( LocalDateTime.of( 2000, 1, 1, 1, 0, 0 ) );
 
 			phone1.addCall(call11);
 			phone1.addCall(call12);

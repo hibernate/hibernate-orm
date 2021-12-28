@@ -389,7 +389,7 @@ The {jpaJavadocUrlPrefix}NamedQueries.html[`@NamedQueries`] annotation is used t
 
 The {jpaJavadocUrlPrefix}NamedQuery.html[`@NamedQuery`] annotation is used to specify a JPQL query that can be retrieved later by its name.
 
-See the <<chapters/query/hql/HQL.adoc#jpql-api-named-query-example, `@NamedQuery`>> section for more info.
+See the <<chapters/query/hql/Query.adoc#jpql-api-named-query-example, `@NamedQuery`>> section for more info.
 
 [[annotations-jpa-namedstoredprocedurequeries]]
 ==== `@NamedStoredProcedureQueries`
@@ -536,7 +536,7 @@ The {jpaJavadocUrlPrefix}PrimaryKeyJoinColumns.html[`@PrimaryKeyJoinColumns`] an
 
 The {jpaJavadocUrlPrefix}QueryHint.html[`@QueryHint`] annotation is used to specify a Jakarta Persistence provider hint used by a `@NamedQuery` or a `@NamedNativeQuery` annotation.
 
-See the <<chapters/query/hql/HQL.adoc#jpa-read-only-entities-native-example, `@QueryHint`>> section for more info.
+See the <<chapters/query/hql/Query.adoc#jpa-read-only-entities-native-example, `@QueryHint`>> section for more info.
 
 [[annotations-jpa-secondarytable]]
 ==== `@SecondaryTable`
@@ -1088,7 +1088,7 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 - what SQL-level comment should be sent to the database
 - if the query is read-only, hence it does not store the resulted entities into the currently running Persistence Context
 
-See the <<chapters/query/hql/HQL.adoc#jpql-api-hibernate-named-query-example, `@NamedQuery`>> section for more info.
+See the <<chapters/query/hql/Query.adoc#jpql-api-hibernate-named-query-example, `@NamedQuery`>> section for more info.
 
 [[annotations-hibernate-nationalized]]
 ==== `@Nationalized`

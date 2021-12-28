@@ -6,6 +6,7 @@
  */
 package org.hibernate.userguide.model;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -17,18 +18,14 @@ import jakarta.persistence.ColumnResult;
 import jakarta.persistence.ConstructorResult;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityResult;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.FieldResult;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapKey;
-import jakarta.persistence.MapKeyTemporal;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.SqlResultSetMapping;
-import jakarta.persistence.TemporalType;
 
 import org.hibernate.annotations.NamedNativeQueries;
 import org.hibernate.annotations.NamedNativeQuery;
@@ -39,30 +36,26 @@ import org.hibernate.annotations.NamedQuery;
  * @author Vlad Mihalcea
  */
 //tag::jpql-api-hibernate-named-query-example[]
-@NamedQueries({
-    @NamedQuery(
-        name = "get_phone_by_number",
-        query = "select p " +
-                "from Phone p " +
-                "where p.number = :number",
-        timeout = 1,
-        readOnly = true
-    )
-})
+@NamedQuery(
+    name = "get_phone_by_number",
+    query = "select p " +
+            "from Phone p " +
+            "where p.number = :number",
+    timeout = 1,
+    readOnly = true
+)
 //end::jpql-api-hibernate-named-query-example[]
 //tag::sql-multiple-scalar-values-dto-NamedNativeQuery-hibernate-example[]
-@NamedNativeQueries({
-    @NamedNativeQuery(
-        name = "get_person_phone_count",
-        query = "SELECT pr.name AS name, count(*) AS phoneCount " +
-                "FROM Phone p " +
-                "JOIN Person pr ON pr.id = p.person_id " +
-                "GROUP BY pr.name",
-        resultSetMapping = "person_phone_count",
-        timeout = 1,
-        readOnly = true
-    ),
-})
+@NamedNativeQuery(
+    name = "get_person_phone_count",
+    query = "select pr.name AS name, count(*) AS phoneCount " +
+            "from Phone p " +
+            "join Person pr ON pr.id = p.person_id " +
+            "group BY pr.name",
+    resultSetMapping = "person_phone_count",
+    timeout = 1,
+    readOnly = true
+)
 @SqlResultSetMapping(
     name = "person_phone_count",
     classes = @ConstructorResult(
@@ -97,12 +90,11 @@ public class Phone {
     //tag::hql-collection-qualification-example[]
     @OneToMany(mappedBy = "phone")
     @MapKey(name = "timestamp")
-    @MapKeyTemporal(TemporalType.TIMESTAMP )
-    private Map<Date, Call> callHistory = new HashMap<>();
+    private Map<LocalDateTime, Call> callHistory = new HashMap<>();
     //end::hql-collection-qualification-example[]
 
     @ElementCollection
-    private List<Date> repairTimestamps = new ArrayList<>(  );
+    private List<LocalDateTime> repairTimestamps = new ArrayList<>(  );
 
     //Getters and setters are omitted for brevity
 
@@ -145,11 +137,11 @@ public class Phone {
         return calls;
     }
 
-    public Map<Date, Call> getCallHistory() {
+    public Map<LocalDateTime, Call> getCallHistory() {
         return callHistory;
     }
 
-    public List<Date> getRepairTimestamps() {
+    public List<LocalDateTime> getRepairTimestamps() {
         return repairTimestamps;
     }
 

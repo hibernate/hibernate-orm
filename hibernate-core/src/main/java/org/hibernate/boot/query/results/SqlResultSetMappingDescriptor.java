@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.boot.query;
+package org.hibernate.boot.query.results;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,6 +20,7 @@ import jakarta.persistence.SqlResultSetMapping;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.boot.query.BootQueryLogging;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -38,7 +39,7 @@ import org.hibernate.query.internal.NamedResultSetMappingMementoImpl;
 import org.hibernate.query.internal.ResultMementoBasicStandard;
 import org.hibernate.query.internal.ResultMementoEntityJpa;
 import org.hibernate.query.internal.ResultMementoInstantiationStandard;
-import org.hibernate.query.internal.ResultSetMappingResolutionContext;
+import org.hibernate.query.results.ResultSetMappingResolutionContext;
 import org.hibernate.query.named.FetchMemento;
 import org.hibernate.query.named.FetchMementoBasic;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
@@ -48,23 +49,12 @@ import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
+ * NamedResultSetMappingDescriptor implementation for describing a
+ * {@link SqlResultSetMapping}
+ *
  * @author Steve Ebersole
  */
 public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescriptor {
-
-	// todo (6.0) : we can probably reuse the NamedResultSetMappingDefinition
-	//  		implementation between HBM and annotation handling.  We'd
-	// 			just need different "builders" for each source and handle the
-	//			variances in those builders.  But once we have a
-	//			NamedResultSetMappingDefinition and all of its sub-parts,
-	//			resolving to a memento is the same
-	// 			-
-	//			additionally, consider having the sub-parts (the return
-	//			representations) be what is used and handed to the
-	//			NamedResultSetMappingMemento directly.  They simply need
-	//			to be capable of resolving themselves into ResultBuilders
-	//			(`org.hibernate.query.results.ResultBuilder`) as part of the
-	//			memento for its resolution
 
 	@SuppressWarnings("ForLoopReplaceableByForEach")
 	public static SqlResultSetMappingDescriptor from(

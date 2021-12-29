@@ -17,7 +17,7 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryReturnType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryScalarReturnType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmQueryParamType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSynchronizeType;
-import org.hibernate.boot.query.ImplicitHbmResultSetMappingDescriptorBuilder;
+import org.hibernate.boot.query.results.internal.HbmImplicitResultCollector;
 import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinitionBuilder;
 import org.hibernate.internal.log.DeprecationLogger;
@@ -114,8 +114,7 @@ public class NamedQueryBinder {
 				.setFetchSize( namedQueryBinding.getFetchSize() )
 				.setResultSetMappingName( namedQueryBinding.getResultsetRef() );
 
-		final ImplicitHbmResultSetMappingDescriptorBuilder
-				implicitResultSetMappingBuilder = new ImplicitHbmResultSetMappingDescriptorBuilder(
+		final HbmImplicitResultCollector resultMappingBuilder = new HbmImplicitResultCollector(
 				registrationName,
 				context
 		);
@@ -126,7 +125,7 @@ public class NamedQueryBinder {
 			final boolean wasQuery = processNamedQueryContentItem(
 					content,
 					builder,
-					implicitResultSetMappingBuilder,
+					resultMappingBuilder,
 					namedQueryBinding,
 					context
 			);
@@ -145,7 +144,7 @@ public class NamedQueryBinder {
 			);
 		}
 
-		if ( implicitResultSetMappingBuilder.hasAnyReturns() ) {
+		if ( resultMappingBuilder.hasAnyReturns() ) {
 			if ( StringHelper.isNotEmpty( namedQueryBinding.getResultsetRef() ) ) {
 				throw new org.hibernate.boot.MappingException(
 						String.format(
@@ -156,9 +155,9 @@ public class NamedQueryBinder {
 				);
 			}
 
-			context.getMetadataCollector().addResultSetMapping( implicitResultSetMappingBuilder.build( context ) );
+			context.getMetadataCollector().addResultSetMapping( resultMappingBuilder.build( context ) );
 
-			builder.setResultSetMappingName( implicitResultSetMappingBuilder.getRegistrationName() );
+			builder.setResultSetMappingName( resultMappingBuilder.getRegistrationName() );
 		}
 
 		context.getMetadataCollector().addNamedNativeQuery( builder.build() );
@@ -167,7 +166,7 @@ public class NamedQueryBinder {
 	private static boolean processNamedQueryContentItem(
 			Object content,
 			NamedNativeQueryDefinitionBuilder queryBuilder,
-			ImplicitHbmResultSetMappingDescriptorBuilder implicitResultSetMappingBuilder,
+			HbmImplicitResultCollector implicitResultCollector,
 			JaxbHbmNamedNativeQueryType namedQueryBinding,
 			HbmLocalMetadataBuildingContext context) {
 		if ( content instanceof String ) {
@@ -187,7 +186,7 @@ public class NamedQueryBinder {
 			return processNamedQueryContentItem(
 					( (JAXBElement) content ).getValue(),
 					queryBuilder,
-					implicitResultSetMappingBuilder,
+					implicitResultCollector,
 					namedQueryBinding,
 					context
 			);
@@ -202,16 +201,16 @@ public class NamedQueryBinder {
 			queryBuilder.addSynchronizedQuerySpace( synchronizedSpace.getTable() );
 		}
 		else if ( content instanceof JaxbHbmNativeQueryScalarReturnType ) {
-			implicitResultSetMappingBuilder.addReturn( (JaxbHbmNativeQueryScalarReturnType) content );
+			implicitResultCollector.addReturn( (JaxbHbmNativeQueryScalarReturnType) content );
 		}
 		else if ( content instanceof JaxbHbmNativeQueryReturnType ) {
-			implicitResultSetMappingBuilder.addReturn( (JaxbHbmNativeQueryReturnType) content );
+			implicitResultCollector.addReturn( (JaxbHbmNativeQueryReturnType) content );
 		}
 		else if ( content instanceof JaxbHbmNativeQueryJoinReturnType ) {
-			implicitResultSetMappingBuilder.addReturn( (JaxbHbmNativeQueryJoinReturnType) content );
+			implicitResultCollector.addReturn( (JaxbHbmNativeQueryJoinReturnType) content );
 		}
 		else if ( content instanceof JaxbHbmNativeQueryCollectionLoadReturnType ) {
-			implicitResultSetMappingBuilder.addReturn( (JaxbHbmNativeQueryCollectionLoadReturnType) content );
+			implicitResultCollector.addReturn( (JaxbHbmNativeQueryCollectionLoadReturnType) content );
 		}
 		else {
 			throw new org.hibernate.boot.MappingException(

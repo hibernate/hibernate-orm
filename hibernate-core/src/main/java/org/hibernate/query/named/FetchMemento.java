@@ -8,7 +8,7 @@ package org.hibernate.query.named;
 
 import java.util.function.Consumer;
 
-import org.hibernate.query.internal.ResultSetMappingResolutionContext;
+import org.hibernate.query.results.ResultSetMappingResolutionContext;
 import org.hibernate.query.results.FetchBuilder;
 
 /**
@@ -17,6 +17,8 @@ import org.hibernate.query.results.FetchBuilder;
 public interface FetchMemento extends ModelPartReferenceMemento {
 	/**
 	 * The parent node for the fetch
+	 *
+	 * @todo (6.0) - how does this differ from {@link org.hibernate.query.results.FetchParentMemento}?
 	 */
 	interface Parent extends ModelPartReferenceMemento {
 	}

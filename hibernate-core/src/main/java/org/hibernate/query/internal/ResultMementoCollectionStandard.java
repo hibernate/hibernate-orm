@@ -12,6 +12,7 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.named.ModelPartResultMementoCollection;
 import org.hibernate.query.results.ResultBuilder;
+import org.hibernate.query.results.ResultSetMappingResolutionContext;
 import org.hibernate.query.results.complete.CompleteResultBuilderCollectionStandard;
 
 /**

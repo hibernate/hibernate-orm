@@ -15,18 +15,15 @@ import org.hibernate.LockMode;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.named.FetchMemento;
 import org.hibernate.query.results.FetchBuilder;
+import org.hibernate.query.results.FetchParentMemento;
+import org.hibernate.query.results.ResultSetMappingResolutionContext;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.sql.results.graph.Fetchable;
-import org.hibernate.sql.results.graph.FetchableContainer;
 
 /**
  * @author Steve Ebersole
  */
 public class FetchMementoHbmStandard implements FetchMemento, FetchMemento.Parent {
-	public interface FetchParentMemento {
-		NavigablePath getNavigablePath();
-		FetchableContainer getFetchableContainer();
-	}
 
 	private final NavigablePath navigablePath;
 	private final String ownerTableAlias;

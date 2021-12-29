@@ -12,6 +12,7 @@ import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.named.FetchMementoBasic;
 import org.hibernate.query.results.FetchBuilder;
+import org.hibernate.query.results.ResultSetMappingResolutionContext;
 import org.hibernate.query.results.complete.CompleteFetchBuilderBasicPart;
 
 /**

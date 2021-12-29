@@ -58,10 +58,10 @@
 		<property name="startDate" column="STARTDATE" not-null="false"/>
 		<property name="endDate" column="ENDDATE" insert="false"/>
 		<property name="regionCode" column="REGIONCODE" update="false"/>
-	    <property name="salary" type="org.hibernate.orm.test.sql.hand.MonetaryAmountUserType">
-			<column name="AMOUNT" sql-type="float"/>
-			<column name="CURRENCY"/>			
-		</property>
+		<component name="salary" class="org.hibernate.orm.test.sql.hand.MonetaryAmount" access="field">
+			<property name="value"/>
+			<property name="currency"/>
+		</component>
 	</class>
 	
 	<class name="Order" table="TBL_ORDER">
@@ -251,10 +251,8 @@
 			<return-property name="element.endDate" column="ENDDATE"/>			
 			<return-property name="element.regionCode" column="REGIONCODE"/>			
 			<return-property name="element.employmentId" column="EMPID"/>						
-			<return-property name="element.salary">
-                <return-column name="AMOUNT"/>
-                <return-column name="CURRENCY"/>
-			</return-property>
+			<return-property name="element.salary.value" column="AMOUNT"/>
+			<return-property name="element.salary.currency" column="CURRENCY"/>
 		</return-join>
 		SELECT org.ORGID as orgid,
             org.NAME as name,

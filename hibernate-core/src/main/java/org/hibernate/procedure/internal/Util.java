@@ -11,7 +11,7 @@ import java.util.function.Consumer;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.query.internal.ResultSetMappingResolutionContext;
+import org.hibernate.query.results.ResultSetMappingResolutionContext;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.results.ResultSetMapping;

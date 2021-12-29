@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.boot.query;
+package org.hibernate.boot.query.results.internal;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -18,32 +18,34 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryJoinReturnType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryReturnType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryScalarReturnType;
 import org.hibernate.boot.model.source.internal.hbm.HbmLocalMetadataBuildingContext;
-import org.hibernate.boot.query.HbmResultSetMappingDescriptor.HbmFetchParent;
-import org.hibernate.boot.query.HbmResultSetMappingDescriptor.JoinDescriptor;
+import org.hibernate.boot.query.BootQueryLogging;
+import org.hibernate.boot.query.results.HbmResultSetMappingDescriptor;
+import org.hibernate.boot.query.results.HbmFetchParent;
+import org.hibernate.boot.query.results.ResultDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 
-import static org.hibernate.boot.query.HbmResultSetMappingDescriptor.*;
+import static org.hibernate.boot.query.results.HbmResultSetMappingDescriptor.*;
 
 /**
  * Builder for implicit ResultSet mapping defined inline as part of a named native query
  *
  * @author Steve Ebersole
  */
-public class ImplicitHbmResultSetMappingDescriptorBuilder {
+public class HbmImplicitResultCollector {
 
 	private final String registrationName;
 	private final MetadataBuildingContext metadataBuildingContext;
 
 	private final List<ResultDescriptor> resultDescriptors;
 
-	private Map<String, Map<String, JoinDescriptor>> joinDescriptors;
+	private Map<String, Map<String, HbmJoinDescriptor>> joinDescriptors;
 	private Map<String, HbmFetchParent> fetchParentByAlias;
 
 	private boolean foundEntityReturn;
 	private boolean foundCollectionReturn;
 
 
-	public ImplicitHbmResultSetMappingDescriptorBuilder(String queryRegistrationName, MetadataBuildingContext metadataBuildingContext) {
+	public HbmImplicitResultCollector(String queryRegistrationName, MetadataBuildingContext metadataBuildingContext) {
 		this.registrationName = queryRegistrationName;
 
 		BootQueryLogging.LOGGER.debugf(
@@ -56,13 +58,6 @@ public class ImplicitHbmResultSetMappingDescriptorBuilder {
 		this.resultDescriptors = new ArrayList<>();
 	}
 
-	public ImplicitHbmResultSetMappingDescriptorBuilder(String queryRegistrationName, int numberOfReturns, MetadataBuildingContext metadataBuildingContext) {
-		this.registrationName = queryRegistrationName;
-		this.metadataBuildingContext = metadataBuildingContext;
-
-		this.resultDescriptors = new ArrayList<>( numberOfReturns );
-	}
-
 	public String getRegistrationName() {
 		return registrationName;
 	}
@@ -71,20 +66,15 @@ public class ImplicitHbmResultSetMappingDescriptorBuilder {
 		return ! resultDescriptors.isEmpty();
 	}
 
-	public ImplicitHbmResultSetMappingDescriptorBuilder addReturn(JaxbHbmNativeQueryScalarReturnType returnMapping) {
-		resultDescriptors.add(
-				new ScalarDescriptor(
-						returnMapping.getColumn(),
-						returnMapping.getType()
-				)
-		);
+	public HbmImplicitResultCollector addReturn(JaxbHbmNativeQueryScalarReturnType rtn) {
+		resultDescriptors.add( new HbmScalarDescriptor( rtn.getColumn(), rtn.getType() ) );
 		return this;
 	}
 
-	public ImplicitHbmResultSetMappingDescriptorBuilder addReturn(JaxbHbmNativeQueryReturnType returnMapping) {
+	public HbmImplicitResultCollector addReturn(JaxbHbmNativeQueryReturnType rtn) {
 		foundEntityReturn = true;
-		final EntityResultDescriptor resultDescriptor = new EntityResultDescriptor(
-				returnMapping,
+		final HbmEntityResultDescriptor resultDescriptor = new HbmEntityResultDescriptor(
+				rtn,
 				() -> joinDescriptors,
 				registrationName,
 				metadataBuildingContext
@@ -95,12 +85,12 @@ public class ImplicitHbmResultSetMappingDescriptorBuilder {
 		if ( fetchParentByAlias == null ) {
 			fetchParentByAlias = new HashMap<>();
 		}
-		fetchParentByAlias.put( returnMapping.getAlias(), resultDescriptor );
+		fetchParentByAlias.put( rtn.getAlias(), resultDescriptor );
 
 		return this;
 	}
 
-	public ImplicitHbmResultSetMappingDescriptorBuilder addReturn(JaxbHbmNativeQueryJoinReturnType returnMapping) {
+	public HbmImplicitResultCollector addReturn(JaxbHbmNativeQueryJoinReturnType returnMapping) {
 		if ( joinDescriptors == null ) {
 			joinDescriptors = new HashMap<>();
 		}
@@ -109,7 +99,7 @@ public class ImplicitHbmResultSetMappingDescriptorBuilder {
 			fetchParentByAlias = new HashMap<>();
 		}
 
-		collectJoinFetch(
+		applyJoinFetch(
 				returnMapping,
 				joinDescriptors,
 				fetchParentByAlias,
@@ -119,9 +109,9 @@ public class ImplicitHbmResultSetMappingDescriptorBuilder {
 		return this;
 	}
 
-	public ImplicitHbmResultSetMappingDescriptorBuilder addReturn(JaxbHbmNativeQueryCollectionLoadReturnType returnMapping) {
+	public HbmImplicitResultCollector addReturn(JaxbHbmNativeQueryCollectionLoadReturnType returnMapping) {
 		foundCollectionReturn = true;
-		final CollectionResultDescriptor resultDescriptor = new CollectionResultDescriptor(
+		final HbmCollectionResultDescriptor resultDescriptor = new HbmCollectionResultDescriptor(
 				returnMapping,
 				() -> joinDescriptors,
 				registrationName,

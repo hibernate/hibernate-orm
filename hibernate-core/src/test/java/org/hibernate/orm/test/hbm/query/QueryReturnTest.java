@@ -5,7 +5,7 @@ import java.io.StringReader;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.jdbc.ReaderInputStream;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.internal.ResultSetMappingResolutionContext;
+import org.hibernate.query.results.ResultSetMappingResolutionContext;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.results.ResultSetMapping;
 import org.hibernate.query.results.ResultSetMappingImpl;

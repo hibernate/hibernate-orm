@@ -12,6 +12,7 @@ import java.util.function.Consumer;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.named.FetchMemento;
 import org.hibernate.query.results.FetchBuilder;
+import org.hibernate.query.results.ResultSetMappingResolutionContext;
 import org.hibernate.query.results.complete.CompleteFetchBuilderEntityValuedModelPart;
 import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 

@@ -9,15 +9,15 @@ package org.hibernate.query.named;
 import org.hibernate.Incubating;
 
 /**
- * Contract for Query impls that can be converted to a named query memento to be
- * stored in the {@link NamedObjectRepository}
+ * Contract for Query objects that can be converted to a named query
+ * memento to be stored in the {@link NamedObjectRepository}
  *
  * @author Steve Ebersole
  */
 @Incubating
 public interface NameableQuery {
 	/**
-	 * Convert the query into the memento
+	 * Convert the query into a memento
 	 */
 	NamedQueryMemento toMemento(String name);
 }

@@ -25,22 +25,41 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
  * Descriptor for foreign-keys
  */
 public interface ForeignKeyDescriptor extends VirtualModelPart, ValueMapping {
-
+	/**
+	 * A foreign-key has both a key/referring and target side.
+	 */
 	enum Nature {
-		KEY,
-		TARGET;
+		KEY( "{key}" ),
+		TARGET( "{target}" );
+
+		private final String name;
+
+		Nature(String name) {
+			this.name = name;
+		}
+
+		public String getName() {
+			return name;
+		}
 
 		public Nature inverse() {
 			return this == KEY ? TARGET : KEY;
 		}
 	}
 
+	/**
+	 * Describes one side (key/referring or target) of the fk
+	 */
 	interface Side {
-
+		/**
+		 * Which side is this?
+		 */
 		Nature getNature();
 
+		/**
+		 * How this side can be represented
+		 */
 		ModelPart getModelPart();
-
 	}
 
 	String PART_NAME = "{fk}";

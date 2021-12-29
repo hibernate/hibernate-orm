@@ -9,7 +9,7 @@ package org.hibernate.query.named;
 import java.util.function.Consumer;
 
 import org.hibernate.Incubating;
-import org.hibernate.query.internal.ResultSetMappingResolutionContext;
+import org.hibernate.query.results.ResultSetMappingResolutionContext;
 import org.hibernate.query.results.ResultSetMapping;
 
 /**

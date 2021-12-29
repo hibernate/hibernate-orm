@@ -12,6 +12,7 @@ import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.named.ModelPartResultMementoBasic;
 import org.hibernate.query.results.ResultBuilderBasicValued;
+import org.hibernate.query.results.ResultSetMappingResolutionContext;
 import org.hibernate.query.results.complete.CompleteResultBuilderBasicModelPart;
 
 /**

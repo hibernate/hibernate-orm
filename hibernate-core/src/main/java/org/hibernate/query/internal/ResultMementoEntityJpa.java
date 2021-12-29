@@ -22,6 +22,7 @@ import org.hibernate.query.named.ResultMementoEntity;
 import org.hibernate.query.results.BasicValuedFetchBuilder;
 import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.ResultBuilderEntityValued;
+import org.hibernate.query.results.ResultSetMappingResolutionContext;
 import org.hibernate.query.results.complete.CompleteResultBuilderEntityJpa;
 import org.hibernate.query.results.complete.DelayedFetchBuilderBasicPart;
 import org.hibernate.query.results.implicit.ImplicitFetchBuilderBasic;

@@ -15,6 +15,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.query.named.ResultMementoBasic;
 import org.hibernate.query.results.ResultBuilderBasicValued;
+import org.hibernate.query.results.ResultSetMappingResolutionContext;
 import org.hibernate.query.results.complete.CompleteResultBuilderBasicValuedConverted;
 import org.hibernate.query.results.complete.CompleteResultBuilderBasicValuedStandard;
 import org.hibernate.resource.beans.spi.ManagedBean;

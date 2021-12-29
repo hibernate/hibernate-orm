@@ -131,7 +131,7 @@ public class CompleteResultBuilderEntityStandard implements CompleteResultBuilde
 							// since this is only used for result set mappings, the canUseInnerJoins value is irrelevant.
 							true,
 							navigablePath,
-							null,
+							tableAlias,
 							null,
 							impl,
 							impl.getCreationContext()

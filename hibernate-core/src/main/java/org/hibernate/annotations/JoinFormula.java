@@ -31,4 +31,11 @@ public @interface JoinFormula {
 	 * The column this formula references.
 	 */
 	String referencedColumnName() default "";
+
+	/**
+	 * A list of SQL formulas that should be used in the specified dialects.
+	 *
+	 * Overrides the default {@link #value()}.
+	 */
+	DialectOverride[] overrides() default {};
 }

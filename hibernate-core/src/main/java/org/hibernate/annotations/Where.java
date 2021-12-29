@@ -27,4 +27,10 @@ public @interface Where {
 	 * The where-clause predicate.
 	 */
 	String clause();
+	/**
+	 * A list of SQL predicates that should be used in the specified dialects.
+	 *
+	 * Overrides the default {@link #clause()}.
+	 */
+	DialectOverride[] overrides() default {};
 }

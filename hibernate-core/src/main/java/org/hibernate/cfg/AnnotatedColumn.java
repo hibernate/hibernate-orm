@@ -536,7 +536,7 @@ public class AnnotatedColumn {
 		AnnotatedColumn[] columns;
 		if ( formulaAnn != null ) {
 			AnnotatedColumn formulaColumn = new AnnotatedColumn();
-			formulaColumn.setFormula( formulaAnn.value() );
+			formulaColumn.setFormula( getFormulaValue(formulaAnn, context) );
 			formulaColumn.setImplicit( false );
 			formulaColumn.setBuildingContext( context );
 			formulaColumn.setPropertyHolder( propertyHolder );
@@ -614,7 +614,6 @@ public class AnnotatedColumn {
 					}
 
 					AnnotatedColumn column = new AnnotatedColumn();
-
 					column.setImplicit( false );
 					column.setSqlType( sqlType );
 					column.setLength( (long) col.length() );
@@ -654,6 +653,18 @@ public class AnnotatedColumn {
 		return columns;
 	}
 
+	private static String getFormulaValue(org.hibernate.annotations.Formula annotation, MetadataBuildingContext context) {
+		return annotation == null ? null : AnnotationBinder.dialectValue( annotation.value(), annotation.overrides(), context );
+	}
+
+	private static String getColumnDefaultValue(ColumnDefault annotation, MetadataBuildingContext context) {
+		return annotation == null ? null : AnnotationBinder.dialectValue( annotation.value(), annotation.overrides(), context );
+	}
+
+	private static String getGeneratedAsValue(GeneratedColumn annotation, MetadataBuildingContext context) {
+		return annotation == null ? null : AnnotationBinder.dialectValue( annotation.value(), annotation.overrides(), context );
+	}
+
 	private void applyColumnDefault(PropertyData inferredData, int length) {
 		final XProperty xProperty = inferredData.getProperty();
 		if ( xProperty != null ) {
@@ -662,13 +673,8 @@ public class AnnotatedColumn {
 				if (length!=1) {
 					throw new MappingException("@ColumnDefault may only be applied to single-column mappings");
 				}
-				setDefaultValue( columnDefaultAnn.value() );
+				setDefaultValue( getColumnDefaultValue( columnDefaultAnn, context ) );
 			}
-		}
-		else {
-			LOG.trace(
-					"Could not perform @ColumnDefault lookup as 'PropertyData' did not give access to XProperty"
-			);
 		}
 	}
 
@@ -680,7 +686,7 @@ public class AnnotatedColumn {
 				if (length!=1) {
 					throw new MappingException("@GeneratedColumn may only be applied to single-column mappings");
 				}
-				setGeneratedAs( generatedAnn.value() );
+				setGeneratedAs( getGeneratedAsValue( generatedAnn, context ) );
 			}
 		}
 		else {

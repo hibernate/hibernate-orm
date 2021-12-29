@@ -14,6 +14,8 @@ import jakarta.persistence.criteria.Root;
 
 import org.hibernate.annotations.Formula;
 
+import org.hibernate.annotations.DialectOverride;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -94,7 +96,8 @@ public class FormulaTests {
 
 		private Double rate;
 
-		@Formula(value = "credit * rate")
+		@Formula(value = "credit * rate",
+				overrides = @DialectOverride(dialect = H2Dialect.class, value ="rate * credit") )
 		private Double interest;
 
 		public Long getId() {

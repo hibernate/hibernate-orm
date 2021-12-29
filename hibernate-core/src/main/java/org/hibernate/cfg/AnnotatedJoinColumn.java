@@ -171,14 +171,18 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 			String propertyName,
 			MetadataBuildingContext buildingContext) {
 		AnnotatedJoinColumn formulaColumn = new AnnotatedJoinColumn();
-		formulaColumn.setFormula( ann.value() );
-		formulaColumn.setReferencedColumn(ann.referencedColumnName());
+		formulaColumn.setFormula( getJoinFormulaValue( ann, buildingContext ) );
+		formulaColumn.setReferencedColumn( ann.referencedColumnName() );
 		formulaColumn.setBuildingContext( buildingContext );
 		formulaColumn.setPropertyHolder( propertyHolder );
 		formulaColumn.setJoins( joins );
 		formulaColumn.setPropertyName( BinderHelper.getRelativePath( propertyHolder, propertyName ) );
 		formulaColumn.bind();
 		return formulaColumn;
+	}
+
+	private static String getJoinFormulaValue(JoinFormula annotation, MetadataBuildingContext context) {
+		return annotation == null ? null : AnnotationBinder.dialectValue( annotation.value(), annotation.overrides(), context );
 	}
 
 	public static AnnotatedJoinColumn[] buildJoinColumns(

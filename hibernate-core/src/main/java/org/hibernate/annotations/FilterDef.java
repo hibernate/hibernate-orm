@@ -37,4 +37,11 @@ public @interface FilterDef {
 	 * The filter parameter definitions.
 	 */
 	ParamDef[] parameters() default {};
+
+	/**
+	 * A list of SQL conditions that should be used in the specified dialects.
+	 *
+	 * Overrides the default {@link #defaultCondition()}.
+	 */
+	DialectOverride[] overrides() default {};
 }

@@ -44,4 +44,10 @@ public @interface OrderBy {
 	 * The native SQL expression used to sort the collection elements.
 	 */
 	String clause();
+	/**
+	 * A list of SQL ordering expressions that should be used in the specified dialects.
+	 *
+	 * Overrides the default {@link #clause()}.
+	 */
+	DialectOverride[] overrides() default {};
 }

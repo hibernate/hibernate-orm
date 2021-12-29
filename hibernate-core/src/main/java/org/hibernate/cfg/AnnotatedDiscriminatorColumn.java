@@ -41,6 +41,10 @@ public class AnnotatedDiscriminatorColumn extends AnnotatedColumn {
 		this.discriminatorTypeName = discriminatorTypeName;
 	}
 
+	private static String getFormulaValue(DiscriminatorFormula annotation, MetadataBuildingContext context) {
+		return annotation == null ? null : AnnotationBinder.dialectValue( annotation.value(), annotation.overrides(), context );
+	}
+
 	public static AnnotatedDiscriminatorColumn buildDiscriminatorColumn(
 			DiscriminatorType type, DiscriminatorColumn discAnn,
 			DiscriminatorFormula discFormulaAnn,
@@ -50,7 +54,7 @@ public class AnnotatedDiscriminatorColumn extends AnnotatedColumn {
 		discriminatorColumn.setImplicit( true );
 		if ( discFormulaAnn != null ) {
 			discriminatorColumn.setImplicit( false );
-			discriminatorColumn.setFormula( discFormulaAnn.value() );
+			discriminatorColumn.setFormula( getFormulaValue( discFormulaAnn, context ) );
 		}
 		else if ( discAnn != null ) {
 			discriminatorColumn.setImplicit( false );

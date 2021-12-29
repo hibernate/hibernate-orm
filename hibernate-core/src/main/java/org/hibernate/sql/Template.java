@@ -129,19 +129,14 @@ public final class Template {
 	 * @param functionRegistry The registry of all sql functions
 	 * @return The rendered sql fragment
 	 */
-	public static String renderWhereStringTemplate(String sqlWhereString, String placeholder, Dialect dialect, SqmFunctionRegistry functionRegistry ) {
+	public static String renderWhereStringTemplate(String sqlWhereString, String placeholder, Dialect dialect, SqmFunctionRegistry functionRegistry) {
 
 		// IMPL NOTE : The basic process here is to tokenize the incoming string and to iterate over each token
 		//		in turn.  As we process each token, we set a series of flags used to indicate the type of context in
 		// 		which the tokens occur.  Depending on the state of those flags we decide whether we need to qualify
 		//		identifier references.
 
-		String symbols = new StringBuilder()
-				.append( "=><!+-*/()',|&`" )
-				.append( StringHelper.WHITESPACE )
-				.append( dialect.openQuote() )
-				.append( dialect.closeQuote() )
-				.toString();
+		String symbols = "=><!+-*/()',|&`" + StringHelper.WHITESPACE + dialect.openQuote() + dialect.closeQuote();
 		StringTokenizer tokens = new StringTokenizer( sqlWhereString, symbols, true );
 		StringBuilder result = new StringBuilder();
 
@@ -336,7 +331,7 @@ public final class Template {
 				result.append(token);
 			}
 			else if ( isIdentifier(token)
-					&& !isFunctionOrKeyword(lcToken, nextToken, dialect , functionRegistry) ) {
+					&& !isFunctionOrKeyword(lcToken, nextToken, dialect, functionRegistry) ) {
 				result.append(placeholder)
 						.append('.')
 						.append( dialect.quote(token) );

@@ -365,17 +365,17 @@ public class EntityBinder {
 
 		for ( Filter filter : filters ) {
 			String filterName = filter.name();
-			String cond = filter.condition();
-			if ( BinderHelper.isEmptyAnnotationValue( cond ) ) {
+			String condition = getFilterCondition( filter, context );
+			if ( BinderHelper.isEmptyAnnotationValue( condition ) ) {
 				FilterDefinition definition = context.getMetadataCollector().getFilterDefinition( filterName );
-				cond = definition == null ? null : definition.getDefaultFilterCondition();
-				if ( StringHelper.isEmpty( cond ) ) {
+				condition = definition == null ? null : definition.getDefaultFilterCondition();
+				if ( StringHelper.isEmpty( condition ) ) {
 					throw new AnnotationException(
 							"no filter condition found for filter " + filterName + " in " + this.name
 					);
 				}
 			}
-			persistentClass.addFilter(filterName, cond, filter.deduceAliasInjectionPoints(),
+			persistentClass.addFilter(filterName, condition, filter.deduceAliasInjectionPoints(),
 					toAliasTableMap(filter.aliases()), toAliasEntityMap(filter.aliases()));
 		}
 		LOG.debugf( "Import with entity name %s", name );
@@ -391,6 +391,14 @@ public class EntityBinder {
 		}
 
 		processNamedEntityGraphs();
+	}
+
+	static String getWhereClause(Where annotation, MetadataBuildingContext context) {
+		return annotation == null ? null : AnnotationBinder.dialectValue( annotation.clause(), annotation.overrides(), context );
+	}
+
+	static String getFilterCondition(Filter annotation, MetadataBuildingContext context) {
+		return annotation == null ? null : AnnotationBinder.dialectValue( annotation.condition(), annotation.overrides(), context );
 	}
 
 	public PersistentClass getPersistentClass() {
@@ -475,7 +483,6 @@ public class EntityBinder {
 		}
 	}
 
-	@SuppressWarnings({ "unchecked" })
 	public void setProxy(Proxy proxy) {
 		if ( proxy != null ) {
 			lazy = proxy.lazy();
@@ -499,9 +506,7 @@ public class EntityBinder {
 	}
 
 	public void setWhere(Where whereAnn) {
-		if ( whereAnn != null ) {
-			where = whereAnn.clause();
-		}
+		where = getWhereClause( whereAnn, context );
 	}
 
 	public void setWrapIdsInEmbeddedComponents(boolean wrapIdsInEmbeddedComponents) {

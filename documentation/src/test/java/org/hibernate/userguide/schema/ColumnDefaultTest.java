@@ -10,7 +10,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.DialectOverride;
 import org.hibernate.annotations.DynamicInsert;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Test;
@@ -57,7 +60,12 @@ public class ColumnDefaultTest extends BaseEntityManagerFunctionalTestCase {
         @ColumnDefault("'N/A'")
         private String name;
 
-        @ColumnDefault("-1")
+        @ColumnDefault(value = "-1",
+            overrides = {
+                @DialectOverride(dialect = HSQLDialect.class, value = "-1"),
+                @DialectOverride(dialect = H2Dialect.class, value = "-1*1")
+            }
+        )
         private Long clientId;
 
         //Getter and setters omitted for brevity

@@ -30,4 +30,10 @@ public @interface DiscriminatorFormula {
 	 * The formula string.
 	 */
 	String value();
+	/**
+	 * A list of SQL formulas that should be used in the specified dialects.
+	 *
+	 * Overrides the default {@link #value()}.
+	 */
+	DialectOverride[] overrides() default {};
 }

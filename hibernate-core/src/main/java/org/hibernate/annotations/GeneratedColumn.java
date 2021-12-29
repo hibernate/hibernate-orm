@@ -34,4 +34,10 @@ public @interface GeneratedColumn {
 	 * @return the SQL expression that is evaluated to generate the column value.
 	 */
 	String value();
+	/**
+	 * A list of SQL expressions that should be used in the specified dialects.
+	 *
+	 * Overrides the default {@link #value()}.
+	 */
+	DialectOverride[] overrides() default {};
 }

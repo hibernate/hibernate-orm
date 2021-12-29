@@ -37,4 +37,10 @@ public @interface ColumnDefault {
 	 * @return a SQL expression that evaluates to the default column value
 	 */
 	String value();
+	/**
+	 * A list of SQL expressions that should be used in the specified dialects.
+	 *
+	 * Overrides the default {@link #value()}.
+	 */
+	DialectOverride[] overrides() default {};
 }

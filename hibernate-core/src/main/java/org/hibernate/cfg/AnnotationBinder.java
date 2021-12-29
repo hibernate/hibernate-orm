@@ -36,6 +36,7 @@ import org.hibernate.annotations.CollectionTypeRegistration;
 import org.hibernate.annotations.CollectionTypeRegistrations;
 import org.hibernate.annotations.Columns;
 import org.hibernate.annotations.Comment;
+import org.hibernate.annotations.DialectOverride;
 import org.hibernate.annotations.DiscriminatorFormula;
 import org.hibernate.annotations.DiscriminatorOptions;
 import org.hibernate.annotations.EmbeddableInstantiatorRegistration;
@@ -104,6 +105,7 @@ import org.hibernate.cfg.annotations.PropertyBinder;
 import org.hibernate.cfg.annotations.QueryBinder;
 import org.hibernate.cfg.annotations.TableBinder;
 import org.hibernate.cfg.internal.NullableDiscriminatorColumnSecondPass;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.id.IdentifierGenerator;
@@ -641,9 +643,7 @@ public final class AnnotationBinder {
 
 		if ( inheritanceState.hasTable() ) {
 			Check checkAnn = clazzToProcess.getAnnotation( Check.class );
-			String constraints = checkAnn == null
-					? null
-					: checkAnn.constraints();
+			String constraints = getCheckConstraints( checkAnn, context );
 
 			EntityTableXref denormalizedTableXref = inheritanceState.hasDenormalizedTable()
 					? context.getMetadataCollector().getEntityTableXref( superEntity.getEntityName() )
@@ -1463,9 +1463,27 @@ public final class AnnotationBinder {
 			);
 		}
 
-		final FilterDefinition def = new FilterDefinition( defAnn.name(), defAnn.defaultCondition(), params );
+		final FilterDefinition def = new FilterDefinition( defAnn.name(), getFilterCondition( defAnn, context ), params );
 		LOG.debugf( "Binding filter definition: %s", def.getFilterName() );
 		context.getMetadataCollector().addFilterDefinition( def );
+	}
+
+	static String getFilterCondition(FilterDef annotation, MetadataBuildingContext context) {
+		return annotation == null ? null : dialectValue( annotation.defaultCondition(), annotation.overrides(), context );
+	}
+
+	private static String getCheckConstraints(Check annotation, MetadataBuildingContext context) {
+		return annotation == null ? null : dialectValue( annotation.constraints(), annotation.overrides(), context );
+	}
+
+	public static String dialectValue(String defaultValue, DialectOverride[] dialectOverrides, MetadataBuildingContext context) {
+		Dialect dialect = context.getMetadataCollector().getDatabase().getDialect();
+		for ( DialectOverride df: dialectOverrides ) {
+			if ( df.dialect().isInstance(dialect) ) {
+				return df.value();
+			}
+		}
+		return defaultValue;
 	}
 
 	private static void bindCallbacks(XClass entityClass, PersistentClass persistentClass,

@@ -48,4 +48,11 @@ public @interface Filter {
 	 * The alias descriptors for injection.
 	 */
 	SqlFragmentAlias[] aliases() default {};
+
+	/**
+	 * A list of SQL conditions that should be used in the specified dialects.
+	 *
+	 * Overrides the default {@link #condition()}.
+	 */
+	DialectOverride[] overrides() default {};
 }

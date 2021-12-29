@@ -839,7 +839,7 @@ public abstract class CollectionBinder {
 
 			// we can only apply the sql-based order by up front.  The jpa order by has to wait for second pass
 			if ( sqlOrderBy != null ) {
-				collection.setOrderBy( sqlOrderBy.clause() );
+				collection.setOrderBy( getOrderByClause( sqlOrderBy, buildingContext ) );
 			}
 		}
 
@@ -891,6 +891,10 @@ public abstract class CollectionBinder {
 						SortNatural.class.getName()
 				)
 		);
+	}
+
+	static String getOrderByClause(OrderBy annotation, MetadataBuildingContext context) {
+		return annotation == null ? null : AnnotationBinder.dialectValue( annotation.clause(), annotation.overrides(), context );
 	}
 
 	private AnnotationException buildIllegalSortCombination() {
@@ -1137,7 +1141,7 @@ public abstract class CollectionBinder {
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf( "Mapping collection: %s -> %s", collection.getRole(), collection.getCollectionTable().getName() );
 		}
-		bindFilters( false );
+		bindFilters( false, buildingContext );
 		bindCollectionSecondPass( collection, null, fkJoinColumns, cascadeDeleteEnabled, property, propertyHolder, buildingContext );
 		if ( !collection.isInverse()
 				&& !collection.getKey().isNullable() ) {
@@ -1156,18 +1160,18 @@ public abstract class CollectionBinder {
 	}
 
 
-	private void bindFilters(boolean hasAssociationTable) {
+	private void bindFilters(boolean hasAssociationTable, MetadataBuildingContext context) {
 		Filter simpleFilter = property.getAnnotation( Filter.class );
 		//set filtering
 		//test incompatible choices
 		//if ( StringHelper.isNotEmpty( where ) ) collection.setWhere( where );
 		if ( simpleFilter != null ) {
 			if ( hasAssociationTable ) {
-				collection.addManyToManyFilter(simpleFilter.name(), getCondition(simpleFilter), simpleFilter.deduceAliasInjectionPoints(),
+				collection.addManyToManyFilter(simpleFilter.name(), getCondition(simpleFilter, context), simpleFilter.deduceAliasInjectionPoints(),
 						toAliasTableMap(simpleFilter.aliases()), toAliasEntityMap(simpleFilter.aliases()));
 			}
 			else {
-				collection.addFilter(simpleFilter.name(), getCondition(simpleFilter), simpleFilter.deduceAliasInjectionPoints(),
+				collection.addFilter(simpleFilter.name(), getCondition(simpleFilter, context), simpleFilter.deduceAliasInjectionPoints(),
 						toAliasTableMap(simpleFilter.aliases()), toAliasEntityMap(simpleFilter.aliases()));
 			}
 		}
@@ -1175,11 +1179,11 @@ public abstract class CollectionBinder {
 		if ( filters != null ) {
 			for (Filter filter : filters.value()) {
 				if ( hasAssociationTable ) {
-					collection.addManyToManyFilter( filter.name(), getCondition(filter), filter.deduceAliasInjectionPoints(),
+					collection.addManyToManyFilter( filter.name(), getCondition(filter, context), filter.deduceAliasInjectionPoints(),
 							toAliasTableMap(filter.aliases()), toAliasEntityMap(filter.aliases()));
 				}
 				else {
-					collection.addFilter(filter.name(), getCondition(filter), filter.deduceAliasInjectionPoints(),
+					collection.addFilter(filter.name(), getCondition(filter, context), filter.deduceAliasInjectionPoints(),
 							toAliasTableMap(filter.aliases()), toAliasEntityMap(filter.aliases()));
 				}
 			}
@@ -1234,15 +1238,10 @@ public abstract class CollectionBinder {
 		String whereOnClassClause = null;
 		if ( useEntityWhereClauseForCollections && property.getElementClass() != null ) {
 			Where whereOnClass = property.getElementClass().getAnnotation( Where.class );
-			if ( whereOnClass != null ) {
-				whereOnClassClause = whereOnClass.clause();
-			}
+			whereOnClassClause = EntityBinder.getWhereClause( whereOnClass, context );
 		}
 		Where whereOnCollection = property.getAnnotation( Where.class );
-		String whereOnCollectionClause = null;
-		if ( whereOnCollection != null ) {
-			whereOnCollectionClause = whereOnCollection.clause();
-		}
+		String whereOnCollectionClause = EntityBinder.getWhereClause( whereOnCollection, context );
 		final String whereClause = StringHelper.getNonEmptyOrConjunctionIfBothNonEmpty(
 				whereOnClassClause,
 				whereOnCollectionClause
@@ -1287,11 +1286,11 @@ public abstract class CollectionBinder {
 //		}
 	}
 
-	private String getCondition(Filter filter) {
+	private String getCondition(Filter filter, MetadataBuildingContext context) {
 		//set filtering
 		String name = filter.name();
-		String cond = filter.condition();
-		return getCondition( cond, name );
+		String condition = EntityBinder.getFilterCondition( filter, context );
+		return getCondition( condition, name );
 	}
 
 	private String getCondition(String cond, String name) {
@@ -1654,7 +1653,7 @@ public abstract class CollectionBinder {
 			associationTableBinder.setJPA2ElementCollection( !isCollectionOfEntities && property.isAnnotationPresent( ElementCollection.class ));
 			collValue.setCollectionTable( associationTableBinder.bind() );
 		}
-		bindFilters( isCollectionOfEntities );
+		bindFilters( isCollectionOfEntities, buildingContext );
 		bindCollectionSecondPass( collValue, collectionEntity, joinColumns, cascadeDeleteEnabled, property, propertyHolder, buildingContext );
 
 		ManyToOne element = null;

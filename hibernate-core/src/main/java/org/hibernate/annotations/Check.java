@@ -26,4 +26,10 @@ public @interface Check {
 	 * The check constraints string.
 	 */
 	String constraints();
+	/**
+	 * A list of SQL constraints that should be used in the specified dialects.
+	 *
+	 * Overrides the default {@link #constraints()}.
+	 */
+	DialectOverride[] overrides() default {};
 }

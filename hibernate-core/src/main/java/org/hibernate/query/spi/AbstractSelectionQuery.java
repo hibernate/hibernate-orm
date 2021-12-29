@@ -17,6 +17,11 @@ import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -38,12 +43,6 @@ import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.sql.exec.internal.CallbackImpl;
 import org.hibernate.sql.exec.spi.Callback;
-
-import jakarta.persistence.FlushModeType;
-import jakarta.persistence.LockModeType;
-import jakarta.persistence.NoResultException;
-import jakarta.persistence.Parameter;
-import jakarta.persistence.TemporalType;
 
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_SHARED_CACHE_RETRIEVE_MODE;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_SHARED_CACHE_STORE_MODE;
@@ -152,7 +151,7 @@ public abstract class AbstractSelectionQuery<R>
 			getSession().setHibernateFlushMode( effectiveFlushMode );
 		}
 
-		final CacheMode effectiveCacheMode = ( (SelectionQuery) this ).getCacheMode();
+		final CacheMode effectiveCacheMode = getCacheMode();
 		if ( effectiveCacheMode != null ) {
 			sessionCacheMode = getSession().getCacheMode();
 			getSession().setCacheMode( effectiveCacheMode );
@@ -242,6 +241,16 @@ public abstract class AbstractSelectionQuery<R>
 	@Override
 	public Optional<R> uniqueResultOptional() {
 		return Optional.ofNullable( uniqueResult() );
+	}
+
+	@Override
+	public R getSingleResultOrNull() {
+		try {
+			return uniqueElement( list() );
+		}
+		catch ( HibernateException e ) {
+			throw getSession().getExceptionConverter().convert( e, getLockOptions() );
+		}
 	}
 
 	protected static boolean hasLimit(SqmSelectStatement<?> sqm, MutableQueryOptions queryOptions) {

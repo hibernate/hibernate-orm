@@ -653,7 +653,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		return (Set) getParameterMetadata().getRegistrations();
 	}
 
-	public QueryParameter<?> getParameter(String name) {
+	public QueryParameterImplementor<?> getParameter(String name) {
 		getSession().checkOpen( false );
 
 		try {
@@ -665,12 +665,12 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	@SuppressWarnings("unchecked")
-	public <T> QueryParameter<T> getParameter(String name, Class<T> type) {
+	public <T> QueryParameterImplementor<T> getParameter(String name, Class<T> type) {
 		getSession().checkOpen( false );
 
 		try {
 			//noinspection rawtypes
-			final QueryParameter parameter = getParameterMetadata().getQueryParameter( name );
+			final QueryParameterImplementor parameter = getParameterMetadata().getQueryParameter( name );
 			if ( !parameter.getParameterType().isAssignableFrom( type ) ) {
 				throw new IllegalArgumentException(
 						"The type [" + parameter.getParameterType().getName() +
@@ -685,7 +685,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		}
 	}
 
-	public QueryParameter<?> getParameter(int position) {
+	public QueryParameterImplementor<?> getParameter(int position) {
 		getSession().checkOpen( false );
 
 		try {
@@ -697,11 +697,11 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	@SuppressWarnings( {"unchecked", "rawtypes"} )
-	public <T> QueryParameter<T> getParameter(int position, Class<T> type) {
+	public <T> QueryParameterImplementor<T> getParameter(int position, Class<T> type) {
 		getSession().checkOpen( false );
 
 		try {
-			final QueryParameter parameter = getParameterMetadata().getQueryParameter( position );
+			final QueryParameterImplementor parameter = getParameterMetadata().getQueryParameter( position );
 			if ( !parameter.getParameterType().isAssignableFrom( type ) ) {
 				throw new IllegalArgumentException(
 						"The type [" + parameter.getParameterType().getName() +

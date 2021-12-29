@@ -136,6 +136,16 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 
 	/**
 	 * Execute the query and return the single result of the query,
+	 * or {@code null} if the query returns no results.
+	 *
+	 * @return the single result or {@code null} if there is no result to return
+	 *
+	 * @throws jakarta.persistence.NonUniqueResultException if there is more than one matching result
+	 */
+	R getSingleResultOrNull();
+
+	/**
+	 * Execute the query and return the single result of the query,
 	 * as an {@link Optional}.
 	 *
 	 * @return the single result as an {@code Optional}

@@ -26,14 +26,14 @@ import org.hibernate.tuple.GeneratedValueGeneration;
  *     <li>For columns with a {@code default} value, prefer the {@link ColumnDefault}
  *     annotation with {@code fetch=true}.
  *     <li>For columns with a {@code generated always as} clause, prefer the
- *     {@link ColumnGeneratedAlways} annotation with {@code fetch=true}.
+ *     {@link GeneratedColumn} annotation with {@code fetch=true}.
  * </ul>
  *
  * @author Emmanuel Bernard
  *
  * @see jakarta.persistence.GeneratedValue
  * @see ColumnDefault
- * @see ColumnGeneratedAlways
+ * @see GeneratedColumn
  */
 @ValueGenerationType( generatedBy = GeneratedValueGeneration.class )
 @Target({ElementType.FIELD, ElementType.METHOD})

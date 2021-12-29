@@ -27,7 +27,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target( {FIELD, METHOD} )
 @Retention( RUNTIME )
 @ValueGenerationType(generatedBy = GeneratedAlwaysValueGeneration.class)
-public @interface ColumnGeneratedAlways {
+public @interface GeneratedColumn {
 	/**
 	 * The expression to include in the generated DDL.
 	 *

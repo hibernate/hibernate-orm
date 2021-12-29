@@ -6,21 +6,21 @@
  */
 package org.hibernate.tuple;
 
-import org.hibernate.annotations.ColumnGeneratedAlways;
+import org.hibernate.annotations.GeneratedColumn;
 
 /**
- * For {@link ColumnGeneratedAlways}
+ * For {@link GeneratedColumn}
  *
  * @author Gavin King
  */
-public class GeneratedAlwaysValueGeneration implements AnnotationValueGeneration<ColumnGeneratedAlways> {
+public class GeneratedAlwaysValueGeneration implements AnnotationValueGeneration<GeneratedColumn> {
 
 	private boolean select;
 
 	public GeneratedAlwaysValueGeneration() {}
 
 	@Override
-	public void initialize(ColumnGeneratedAlways annotation, Class<?> propertyType) {
+	public void initialize(GeneratedColumn annotation, Class<?> propertyType) {
 		select = annotation.fetch();
 	}
 

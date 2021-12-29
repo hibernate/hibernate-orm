@@ -11,7 +11,7 @@ import java.util.Map;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.ColumnDefault;
-import org.hibernate.annotations.ColumnGeneratedAlways;
+import org.hibernate.annotations.GeneratedColumn;
 import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.ColumnTransformers;
 import org.hibernate.annotations.Comment;
@@ -667,7 +667,7 @@ public class Ejb3Column {
 	private static void applyGeneratedAs(Ejb3Column column, PropertyData inferredData) {
 		final XProperty xProperty = inferredData.getProperty();
 		if ( xProperty != null ) {
-			ColumnGeneratedAlways generatedAnn = xProperty.getAnnotation( ColumnGeneratedAlways.class );
+			GeneratedColumn generatedAnn = xProperty.getAnnotation( GeneratedColumn.class );
 			if ( generatedAnn != null && !generatedAnn.value().isEmpty() ) {
 				column.setGeneratedAs( generatedAnn.value() );
 			}

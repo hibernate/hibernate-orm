@@ -2,13 +2,12 @@ package org.hibernate.orm.test.mapping.generated.always;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import org.hibernate.annotations.ColumnGeneratedAlways;
+import org.hibernate.annotations.GeneratedColumn;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SybaseASEDialect;
-import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -56,7 +55,7 @@ public class GeneratedAlwaysTest {
         private BigDecimal unitPrice;
         @Id
         private int quantity;
-        @ColumnGeneratedAlways(value = "unitPrice*quantity", fetch = true)
+        @GeneratedColumn(value = "unitPrice*quantity", fetch = true)
         private BigDecimal total;
 
         public OrderLine() {}

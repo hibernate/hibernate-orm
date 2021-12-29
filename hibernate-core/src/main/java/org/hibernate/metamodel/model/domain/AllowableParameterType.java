@@ -11,7 +11,7 @@ import org.hibernate.query.Query;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
- * Specialization of DomainType for types that can be used as {@link Query} parameter bind values.
+ * Specialization of {@link DomainType} for types that can be used as {@link Query} parameter bind values.
  *
  * @author Steve Ebersole
  */

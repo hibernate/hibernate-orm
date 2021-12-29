@@ -1002,6 +1002,24 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
+	public R getSingleResultOrNull() {
+		final List<R> resultList = getResultList();
+		if ( resultList == null || resultList.isEmpty() ) {
+			return null;
+		}
+		else if ( resultList.size() > 1 ) {
+			throw new NonUniqueResultException(
+					String.format(
+							"Call to stored procedure [%s] returned multiple results",
+							getProcedureName()
+					)
+			);
+		}
+
+		return resultList.get( 0 );
+	}
+
+	@Override
 	@SuppressWarnings("unchecked")
 	public <T> T unwrap(Class<T> cls) {
 		if ( cls.isInstance( this ) ) {

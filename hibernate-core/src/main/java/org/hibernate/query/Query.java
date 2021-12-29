@@ -183,7 +183,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * Execute the query and return the single result of the query,
 	 * or {@code null} if the query returns no results.
 	 *
-	 * @return the single result or {@code null}
+	 * @return the single result or {@code null} if there is no result to return
 	 *
 	 * @throws NonUniqueResultException if there is more than one matching result
 	 */
@@ -199,6 +199,16 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * @throws jakarta.persistence.NoResultException if there is no result to return
 	 */
 	R getSingleResult();
+
+	/**
+	 * Execute the query and return the single result of the query,
+	 * or {@code null} if the query returns no results.
+	 *
+	 * @return the single result or {@code null} if there is no result to return
+	 *
+	 * @throws jakarta.persistence.NonUniqueResultException if there is more than one matching result
+	 */
+	R getSingleResultOrNull();
 
 	/**
 	 * Execute the query and return the single result of the query,

@@ -1497,6 +1497,16 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		}
 	}
 
+	@Override
+	public R getSingleResultOrNull() {
+		try {
+			return uniqueElement( list() );
+		}
+		catch ( HibernateException e ) {
+			throw getSession().getExceptionConverter().convert( e, getLockOptions() );
+		}
+	}
+
 	@SuppressWarnings("WeakerAccess")
 	public static <R> R uniqueElement(List<R> list) throws NonUniqueResultException {
 		int size = list.size();

@@ -108,7 +108,7 @@ public interface QueryParameterBinding<T> {
 	 *
 	 * @return The currently bound values
 	 */
-	Collection<T> getBindValues();
+	Collection<? extends T> getBindValues();
 
 	/**
 	 * Returns the inferred mapping model expressable i.e. the model reference against which this parameter is compared.

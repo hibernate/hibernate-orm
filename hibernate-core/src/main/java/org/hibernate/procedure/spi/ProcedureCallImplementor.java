@@ -37,9 +37,7 @@ public interface ProcedureCallImplementor<R> extends ProcedureCall, QueryImpleme
 	ProcedureParameterMetadataImplementor getParameterMetadata();
 
 	@Override
-	default R getSingleResult() {
-		return uniqueResult();
-	}
+	R getSingleResult();
 
 	@Override
 	ProcedureCallImplementor<R> registerStoredProcedureParameter(int position, BasicTypeReference<?> type, ParameterMode mode);

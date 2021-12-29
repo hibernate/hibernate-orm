@@ -41,7 +41,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 	private TemporalType explicitTemporalPrecision;
 
 	private T bindValue;
-	private Collection<T> bindValues;
+	private Collection<? extends T> bindValues;
 
 	// todo (6.0) : add TemporalType to QueryParameter and use to default precision here
 
@@ -164,8 +164,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 
 		if ( bindType == null ) {
 			if ( value != null ) {
-				//noinspection unchecked
-				this.bindType = (AllowableParameterType<T>) typeResolver.resolveParameterBindType( value );
+				this.bindType = typeResolver.resolveParameterBindType( value );
 			}
 		}
 	}
@@ -239,7 +238,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 	// multi-valued binding support
 
 	@Override
-	public Collection<T> getBindValues() {
+	public Collection<? extends T> getBindValues() {
 		if ( !isMultiValued ) {
 			throw new IllegalStateException( "Binding is not multi-valued; illegal call to #getBindValues" );
 		}
@@ -253,8 +252,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 		this.isMultiValued = true;
 
 		this.bindValue = null;
-		//noinspection unchecked
-		this.bindValues = (Collection<T>) values;
+		this.bindValues = values;
 
 		final Iterator<? extends T> iterator = values.iterator();
 		T value = null;
@@ -263,8 +261,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 		}
 
 		if ( bindType == null && value != null ) {
-			//noinspection unchecked
-			this.bindType = (AllowableParameterType<T>) typeResolver.resolveParameterBindType( value );
+			this.bindType = typeResolver.resolveParameterBindType( value );
 		}
 
 	}
@@ -300,12 +297,12 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 	}
 
 	@Override
-	public MappingModelExpressable getType() {
+	public MappingModelExpressable<T> getType() {
 		return type;
 	}
 
-	@Override
-	public boolean setType(MappingModelExpressable type) {
+	@Override @SuppressWarnings("unchecked")
+	public boolean setType(MappingModelExpressable<T> type) {
 		this.type = type;
 		if ( bindType == null || bindType.getJavaType() == Object.class ) {
 			if ( type instanceof AllowableParameterType<?> ) {
@@ -329,7 +326,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 		QueryParameterBindingValidator.INSTANCE.validate( getBindType(), value );
 	}
 
-	private void validate(T value, AllowableParameterType clarifiedType) {
+	private void validate(T value, AllowableParameterType<?> clarifiedType) {
 		QueryParameterBindingValidator.INSTANCE.validate( clarifiedType, value );
 	}
 

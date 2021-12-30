@@ -8,6 +8,7 @@ package org.hibernate.cfg;
 import java.util.Map;
 import jakarta.persistence.OrderColumn;
 
+import org.hibernate.annotations.ListIndexBase;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.Join;
 
@@ -51,6 +52,60 @@ public class IndexColumn extends Ejb3Column {
 		setJoins( joins );
 		setBuildingContext( buildingContext );
 		bind();
+	}
+
+	public static IndexColumn fromAnnotations(
+			OrderColumn jpaAnnotation,
+			org.hibernate.annotations.IndexColumn hibAnnotation,
+			ListIndexBase indexBaseAnnotation,
+			PropertyHolder propertyHolder,
+			PropertyData inferredData,
+			Map<String, Join> secondaryTables,
+			MetadataBuildingContext context) {
+		final IndexColumn indexColumn;
+		if ( jpaAnnotation != null ) {
+			indexColumn = buildColumnFromAnnotation(
+					jpaAnnotation,
+					propertyHolder,
+					inferredData,
+					secondaryTables,
+					context
+			);
+		}
+		else if ( hibAnnotation != null ) {
+			indexColumn = buildColumnFromAnnotation(
+					hibAnnotation,
+					propertyHolder,
+					inferredData,
+					context
+			);
+			indexColumn.setBase( hibAnnotation.base() );
+		}
+		else {
+			indexColumn = new IndexColumn(
+					true,
+					null,
+					0,
+					0,
+					0,
+					// Use the JPA default name...
+					inferredData.getPropertyName() + "_ORDER",
+					true,
+					false,
+					true,
+					true,
+					null,
+					null,
+					propertyHolder,
+					context
+			);
+		}
+
+		if ( indexBaseAnnotation != null ) {
+			indexColumn.setBase( indexBaseAnnotation.value() );
+		}
+
+		return indexColumn;
 	}
 
 	public int getBase() {
@@ -99,7 +154,8 @@ public class IndexColumn extends Ejb3Column {
 					false,
 					ann.insertable(),
 					ann.updatable(),
-					/*ann.table()*/null,
+					//ann.table()
+					null,
 					secondaryTables,
 					propertyHolder,
 					buildingContext

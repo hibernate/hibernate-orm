@@ -20,7 +20,11 @@ import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CollectionClassificationType;
 import org.hibernate.annotations.CollectionId;
+import org.hibernate.annotations.CollectionIdJavaType;
+import org.hibernate.annotations.CollectionIdJdbcType;
+import org.hibernate.annotations.CollectionIdJdbcTypeCode;
 import org.hibernate.annotations.CollectionType;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.Filter;
@@ -33,6 +37,10 @@ import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 import org.hibernate.annotations.LazyGroup;
+import org.hibernate.annotations.ListIndexBase;
+import org.hibernate.annotations.ListIndexJavaType;
+import org.hibernate.annotations.ListIndexJdbcType;
+import org.hibernate.annotations.ListIndexJdbcTypeCode;
 import org.hibernate.annotations.Loader;
 import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.OnDelete;
@@ -78,7 +86,6 @@ import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.jpa.spi.MutableJpaCompliance;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Backref;
 import org.hibernate.mapping.Collection;
@@ -114,6 +121,7 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.MapKey;
 import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderColumn;
 
 import static jakarta.persistence.AccessType.PROPERTY;
 import static org.hibernate.cfg.BinderHelper.toAliasEntityMap;
@@ -268,17 +276,16 @@ public abstract class CollectionBinder {
 	 */
 	public static CollectionBinder getCollectionBinder(
 			XProperty property,
-			boolean isIndexed,
 			boolean isHibernateExtensionMapping,
 			MetadataBuildingContext buildingContext) {
 		final CollectionType typeAnnotation = property.getAnnotation( CollectionType.class );
 
 		final CollectionBinder binder;
 		if ( typeAnnotation != null ) {
-			binder = createBinderFromCustomTypeAnnotation( property, isIndexed, typeAnnotation, buildingContext );
+			binder = createBinderFromCustomTypeAnnotation( property, typeAnnotation, buildingContext );
 		}
 		else {
-			binder = createBinderFromProperty( property, isIndexed, buildingContext );
+			binder = createBinderFromProperty( property, buildingContext );
 		}
 
 		binder.setIsHibernateExtensionMapping( isHibernateExtensionMapping );
@@ -295,18 +302,16 @@ public abstract class CollectionBinder {
 
 	private static CollectionBinder createBinderFromProperty(
 			XProperty property,
-			boolean isIndexed,
 			MetadataBuildingContext buildingContext) {
-		final CollectionClassification classification = determineCollectionClassification( property, null, isIndexed, buildingContext );
+		final CollectionClassification classification = determineCollectionClassification( property, null, buildingContext );
 		return createBinder( property, classification, null, buildingContext );
 	}
 
 	private static CollectionBinder createBinderFromCustomTypeAnnotation(
 			XProperty property,
-			boolean isIndexed,
 			CollectionType typeAnnotation,
 			MetadataBuildingContext buildingContext) {
-		final CollectionClassification classification = determineCollectionClassification( property, typeAnnotation, isIndexed, buildingContext );
+		final CollectionClassification classification = determineCollectionClassification( property, typeAnnotation, buildingContext );
 		final SemanticsResolver semanticsResolver = (collectionType) -> new CustomCollectionTypeSemantics<>( collectionType, classification );
 		return createBinder( property, classification, semanticsResolver, buildingContext );
 	}
@@ -327,7 +332,7 @@ public abstract class CollectionBinder {
 			case BAG: {
 				return new BagBinder( semanticsResolver, buildingContext );
 			}
-			case IDBAG: {
+			case ID_BAG: {
 				return new IdBagBinder( semanticsResolver, buildingContext );
 			}
 			case LIST: {
@@ -365,24 +370,53 @@ public abstract class CollectionBinder {
 	private static CollectionClassification determineCollectionClassification(
 			XProperty property,
 			CollectionType typeAnnotation,
-			boolean isIndexed,
 			MetadataBuildingContext buildingContext) {
+		final CollectionClassificationType classificationTypeAnnotation = property.getAnnotation( CollectionClassificationType.class );
+
 		if ( property.isArray() ) {
+			if ( classificationTypeAnnotation != null ) {
+				throw new AnnotationException( "Arrays should not be annotated with `@" + CollectionClassificationType.class.getName() + "`" );
+			}
 			return CollectionClassification.ARRAY;
+		}
+
+		if ( classificationTypeAnnotation != null ) {
+			return classificationTypeAnnotation.value();
 		}
 
 		return determineCollectionClassification(
-				determineSemanticJavaType( property, typeAnnotation, isIndexed, buildingContext ),
-				property
+				determineSemanticJavaType( property, typeAnnotation ),
+				property,
+				buildingContext
 		);
 	}
 
-	private static CollectionClassification determineCollectionClassification(Class<?> semanticJavaType, XProperty property) {
+	private static CollectionClassification determineCollectionClassification(
+			Class<?> semanticJavaType,
+			XProperty property,
+			MetadataBuildingContext buildingContext) {
 		if ( semanticJavaType.isArray() ) {
 			return CollectionClassification.ARRAY;
 		}
+		else if ( property.isAnnotationPresent( CollectionId.class )
+				|| property.isAnnotationPresent( CollectionIdJdbcType.class )
+				|| property.isAnnotationPresent( CollectionIdJdbcTypeCode.class )
+				|| property.isAnnotationPresent( CollectionIdJavaType.class ) ) {
+			// explicitly an ID_BAG
+			return CollectionClassification.ID_BAG;
+		}
 		else if ( java.util.List.class.isAssignableFrom( semanticJavaType ) ) {
-			return CollectionClassification.LIST;
+			if ( property.isAnnotationPresent( OrderColumn.class )
+					|| property.isAnnotationPresent( org.hibernate.annotations.IndexColumn.class )
+					|| property.isAnnotationPresent( ListIndexBase.class )
+					|| property.isAnnotationPresent( ListIndexJdbcType.class )
+					|| property.isAnnotationPresent( ListIndexJdbcTypeCode.class )
+					|| property.isAnnotationPresent( ListIndexJavaType.class ) ) {
+				// it is implicitly a LIST because of presence of explicit List index config
+				return CollectionClassification.LIST;
+			}
+			// otherwise, return the implicit classification for List attributes
+			return buildingContext.getBuildingOptions().getMappingDefaults().getImplicitListClassification();
 		}
 		else if ( java.util.SortedSet.class.isAssignableFrom( semanticJavaType ) ) {
 			return CollectionClassification.SORTED_SET;
@@ -398,7 +432,7 @@ public abstract class CollectionBinder {
 		}
 		else if ( java.util.Collection.class.isAssignableFrom( semanticJavaType ) ) {
 			if ( property.isAnnotationPresent( CollectionId.class ) ) {
-				return CollectionClassification.IDBAG;
+				return CollectionClassification.ID_BAG;
 			}
 			else {
 				return CollectionClassification.BAG;
@@ -409,15 +443,15 @@ public abstract class CollectionBinder {
 		}
 	}
 
-	private static Class<?> determineSemanticJavaType(XProperty property, CollectionType typeAnnotation, boolean isIndexed, MetadataBuildingContext buildingContext) {
-		final Class<?> returnedJavaType = property.getCollectionClass();
+	private static Class<?> determineSemanticJavaType(XProperty property, CollectionType typeAnnotation) {
 		if ( typeAnnotation != null ) {
 			final Class<?> requestedSemanticsJavaType = typeAnnotation.semantics();
 			if ( requestedSemanticsJavaType != null && requestedSemanticsJavaType != void.class ) {
-				return inferCollectionClassFromSubclass( requestedSemanticsJavaType, isIndexed, buildingContext );
+				return inferCollectionClassFromSubclass( requestedSemanticsJavaType );
 			}
 		}
 
+		final Class<?> returnedJavaType = property.getCollectionClass();
 		if ( returnedJavaType == null ) {
 			throw new AnnotationException(
 					String.format(
@@ -429,17 +463,10 @@ public abstract class CollectionBinder {
 			);
 		}
 
-		return inferCollectionClassFromSubclass( returnedJavaType, isIndexed, buildingContext );
+		return inferCollectionClassFromSubclass( returnedJavaType );
 	}
 
-	private static Class<?> inferCollectionClassFromSubclass(Class<?> clazz, boolean isIndexed, MetadataBuildingContext buildingContext) {
-		if ( java.util.List.class.isAssignableFrom( clazz ) && !isIndexed ) {
-			final MutableJpaCompliance jpaCompliance = buildingContext.getBootstrapContext().getJpaCompliance();
-			return jpaCompliance.isJpaListComplianceEnabled()
-					? java.util.List.class
-					: java.util.Collection.class;
-		}
-
+	private static Class<?> inferCollectionClassFromSubclass(Class<?> clazz) {
 		for ( Class<?> priorityClass : INFERRED_CLASS_PRIORITY ) {
 			if ( priorityClass.isAssignableFrom( clazz ) ) {
 				return priorityClass;

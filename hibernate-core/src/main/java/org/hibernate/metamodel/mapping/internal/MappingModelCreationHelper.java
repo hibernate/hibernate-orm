@@ -63,7 +63,6 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
-import org.hibernate.metamodel.mapping.NonTransientException;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.PropertyBasedMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
@@ -606,7 +605,7 @@ public class MappingModelCreationHelper {
 
 				break;
 			}
-			case IDBAG: {
+			case ID_BAG: {
 				collectionMappingType = new CollectionMappingTypeImpl(
 						jtdRegistry.getDescriptor( java.util.Collection.class ),
 						StandardIdentifierBagSemantics.INSTANCE

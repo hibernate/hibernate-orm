@@ -18,6 +18,7 @@ import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.MetadataSourceType;
+import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.type.BasicType;
 import org.hibernate.usertype.UserType;
@@ -185,6 +186,8 @@ public interface MetadataBuilder {
 	 * @see org.hibernate.cfg.AvailableSettings#SCANNER_ARCHIVE_INTERPRETER
 	 */
 	MetadataBuilder applyArchiveDescriptorFactory(ArchiveDescriptorFactory factory);
+
+	MetadataBuilder applyImplicitListSemantics(CollectionClassification classification);
 
 	/**
 	 * Should we process or ignore explicitly defined discriminators in the case

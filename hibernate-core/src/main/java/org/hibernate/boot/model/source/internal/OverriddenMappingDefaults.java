@@ -9,6 +9,7 @@ package org.hibernate.boot.model.source.internal;
 import org.hibernate.boot.spi.MappingDefaults;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.CollectionClassification;
 
 /**
  * Represents a "nested level" in the mapping defaults stack.
@@ -26,9 +27,10 @@ public class OverriddenMappingDefaults implements MappingDefaults {
 	private final boolean autoImportEnabled;
 	private final String implicitCascadeStyleName;
 	private final String implicitPropertyAccessorName;
-	private boolean entitiesImplicitlyLazy;
-	private boolean pluralAttributesImplicitlyLazy;
+	private final boolean entitiesImplicitlyLazy;
+	private final boolean pluralAttributesImplicitlyLazy;
 	private final AccessType implicitCacheAccessType;
+	private final CollectionClassification implicitListClassification;
 
 	public OverriddenMappingDefaults(
 			String implicitSchemaName,
@@ -43,7 +45,8 @@ public class OverriddenMappingDefaults implements MappingDefaults {
 			String implicitPropertyAccessorName,
 			boolean entitiesImplicitlyLazy,
 			boolean pluralAttributesImplicitlyLazy,
-			AccessType implicitCacheAccessType) {
+			AccessType implicitCacheAccessType,
+			CollectionClassification implicitListClassification) {
 		this.implicitSchemaName = implicitSchemaName;
 		this.implicitCatalogName = implicitCatalogName;
 		this.implicitlyQuoteIdentifiers = implicitlyQuoteIdentifiers;
@@ -57,6 +60,7 @@ public class OverriddenMappingDefaults implements MappingDefaults {
 		this.entitiesImplicitlyLazy = entitiesImplicitlyLazy;
 		this.pluralAttributesImplicitlyLazy = pluralAttributesImplicitlyLazy;
 		this.implicitCacheAccessType = implicitCacheAccessType;
+		this.implicitListClassification = implicitListClassification;
 	}
 
 	@Override
@@ -124,6 +128,11 @@ public class OverriddenMappingDefaults implements MappingDefaults {
 		return implicitCacheAccessType;
 	}
 
+	@Override
+	public CollectionClassification getImplicitListClassification() {
+		return implicitListClassification;
+	}
+
 	public static class Builder {
 		private String implicitSchemaName;
 		private String implicitCatalogName;
@@ -138,6 +147,7 @@ public class OverriddenMappingDefaults implements MappingDefaults {
 		private boolean entitiesImplicitlyLazy;
 		private boolean pluralAttributesImplicitlyLazy;
 		private AccessType implicitCacheAccessType;
+		private CollectionClassification implicitListClassification;
 
 		public Builder(MappingDefaults parentDefaults) {
 			this.implicitSchemaName = parentDefaults.getImplicitSchemaName();
@@ -153,6 +163,7 @@ public class OverriddenMappingDefaults implements MappingDefaults {
 			this.entitiesImplicitlyLazy = parentDefaults.areEntitiesImplicitlyLazy();
 			this.pluralAttributesImplicitlyLazy = parentDefaults.areCollectionsImplicitlyLazy();
 			this.implicitCacheAccessType = parentDefaults.getImplicitCacheAccessType();
+			this.implicitListClassification = parentDefaults.getImplicitListClassification();
 		}
 
 		public Builder setImplicitSchemaName(String implicitSchemaName) {
@@ -238,6 +249,17 @@ public class OverriddenMappingDefaults implements MappingDefaults {
 			return this;
 		}
 
+		public CollectionClassification getImplicitListClassification() {
+			return implicitListClassification;
+		}
+
+		public Builder setImplicitListClassification(CollectionClassification implicitListClassification) {
+			if ( implicitListClassification != null ) {
+				this.implicitListClassification = implicitListClassification;
+			}
+			return this;
+		}
+
 		public OverriddenMappingDefaults build() {
 			return new OverriddenMappingDefaults(
 					implicitSchemaName,
@@ -252,7 +274,8 @@ public class OverriddenMappingDefaults implements MappingDefaults {
 					implicitPropertyAccessorName,
 					entitiesImplicitlyLazy,
 					pluralAttributesImplicitlyLazy,
-					implicitCacheAccessType
+					implicitCacheAccessType,
+					implicitListClassification
 			);
 		}
 	}

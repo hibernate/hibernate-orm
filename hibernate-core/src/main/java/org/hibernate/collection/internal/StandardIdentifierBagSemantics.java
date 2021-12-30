@@ -29,7 +29,7 @@ public class StandardIdentifierBagSemantics<E> extends AbstractBagSemantics<E> {
 
 	@Override
 	public CollectionClassification getCollectionClassification() {
-		return CollectionClassification.IDBAG;
+		return CollectionClassification.ID_BAG;
 	}
 
 	@Override

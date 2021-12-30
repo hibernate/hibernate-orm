@@ -198,7 +198,7 @@ class PluralAttributeMetadataImpl<X, Y, E>
 		}
 		else if ( java.util.Collection.class.isAssignableFrom( javaType ) ) {
 			if ( collection.isIdentified() ) {
-				return CollectionClassification.IDBAG;
+				return CollectionClassification.ID_BAG;
 			}
 
 			return CollectionClassification.BAG;

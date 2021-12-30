@@ -2003,33 +2003,22 @@ public final class AnnotationBinder {
 					);
 				}
 
-				final IndexColumn indexColumn;
+				final OrderColumn orderColumnAnnotation = property.getAnnotation( OrderColumn.class );
+				final org.hibernate.annotations.IndexColumn indexColumnAnnotation = property.getAnnotation( org.hibernate.annotations.IndexColumn.class );
+				final ListIndexBase indexBaseAnnotation = property.getAnnotation( ListIndexBase.class );
 
-				if ( property.isAnnotationPresent( OrderColumn.class ) ) {
-					indexColumn = IndexColumn.buildColumnFromAnnotation(
-							property.getAnnotation( OrderColumn.class ),
-							propertyHolder,
-							inferredData,
-							entityBinder.getSecondaryTables(),
-							context
-					);
-					if ( property.isAnnotationPresent( ListIndexBase.class ) ) {
-						indexColumn.setBase( ( property.getAnnotation( ListIndexBase.class ) ).value() );
-					}
-				}
-				else {
-					//if @IndexColumn is not there, the generated IndexColumn is an implicit column and not used.
-					//so we can leave the legacy processing as the default
-					indexColumn = IndexColumn.buildColumnFromAnnotation(
-							property.getAnnotation( org.hibernate.annotations.IndexColumn.class ),
-							propertyHolder,
-							inferredData,
-							context
-					);
-				}
+				final IndexColumn indexColumn = IndexColumn.fromAnnotations(
+						orderColumnAnnotation,
+						indexColumnAnnotation,
+						indexBaseAnnotation,
+						propertyHolder,
+						inferredData,
+						entityBinder.getSecondaryTables(),
+						context
+				);
+
 				CollectionBinder collectionBinder = CollectionBinder.getCollectionBinder(
 						property,
-						!indexColumn.isImplicit(),
 						// ugh
 						property.isAnnotationPresent( MapKeyJavaType.class )
 							|| property.isAnnotationPresent( MapKeyJdbcType.class )

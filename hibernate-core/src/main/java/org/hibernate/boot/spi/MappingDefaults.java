@@ -7,6 +7,7 @@
 package org.hibernate.boot.spi;
 
 import org.hibernate.cache.spi.access.AccessType;
+import org.hibernate.metamodel.CollectionClassification;
 
 /**
  * Defines a (contextual) set of values to use as defaults in the absence of related mapping information.  The
@@ -122,7 +123,15 @@ public interface MappingDefaults {
 	/**
 	 * The cache access type to use if none is specified
 	 *
-	 * @return The implicit cache access type.
+	 * @see org.hibernate.cfg.AvailableSettings#DEFAULT_CACHE_CONCURRENCY_STRATEGY
 	 */
 	AccessType getImplicitCacheAccessType();
+
+	/**
+	 * Collection semantics to be applied to {@link java.util.List} attributes
+	 * with no explicit configuration
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#DEFAULT_LIST_SEMANTICS
+	 */
+	CollectionClassification getImplicitListClassification();
 }

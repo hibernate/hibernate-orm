@@ -6,6 +6,7 @@
  */
 package org.hibernate.cfg;
 
+import java.util.List;
 import java.util.function.Supplier;
 
 import org.hibernate.HibernateException;
@@ -597,6 +598,7 @@ public interface AvailableSettings {
 	 * @see MetadataBuilder#enableGlobalNationalizedCharacterDataSupport(boolean)
 	 */
 	String USE_NATIONALIZED_CHARACTER_DATA = "hibernate.use_nationalized_character_data";
+
 	/**
 	 * The deprecated name.  Use {@link #SCANNER} or {@link #SCANNER_ARCHIVE_INTERPRETER} instead.
 	 */
@@ -698,6 +700,28 @@ public interface AvailableSettings {
 	 * @since 5.4.1
 	 */
 	String XML_MAPPING_ENABLED = "hibernate.xml_mapping_enabled";
+
+	/**
+	 * Specifies the {@link org.hibernate.metamodel.CollectionClassification} to use
+	 * when Hibernate detects a plural attribute typed as {@link java.util.List}
+	 * with no explicit List index configuration.
+	 * <p/>
+	 * Historically Hibernate interpreted this using {@link org.hibernate.metamodel.CollectionClassification#BAG}
+	 * semantics.  JPA-compliant default is to consider this as
+	 * {@link org.hibernate.metamodel.CollectionClassification#LIST}
+	 * <p/>
+	 * Accepts any of:<ul>
+	 *     <li>{@link org.hibernate.metamodel.CollectionClassification} instance</li>
+	 *     <li>{@link org.hibernate.metamodel.CollectionClassification} name (case insensitive)</li>
+	 *     <li>{@link Class} reference for either {@link java.util.List} or {@link java.util.Collection}</li>
+	 * </ul>
+	 *
+	 * @see JpaCompliance#isJpaListComplianceEnabled()
+	 *
+	 * @since 6.0
+	 */
+	String DEFAULT_LIST_SEMANTICS = "hibernate.mapping.default_list_semantics";
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// SessionFactoryBuilder level settings

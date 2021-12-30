@@ -466,7 +466,7 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		}
 		else if ( Collection.class.isAssignableFrom( semanticJavaType ) ) {
 			if ( isIdentified() ) {
-				classification = CollectionClassification.IDBAG;
+				classification = CollectionClassification.ID_BAG;
 			}
 			else {
 				classification = CollectionClassification.BAG;

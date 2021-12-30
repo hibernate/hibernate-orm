@@ -9,8 +9,10 @@ package org.hibernate.boot.internal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.Callable;
 
+import org.hibernate.AnnotationException;
 import org.hibernate.HibernateException;
 import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
@@ -68,6 +70,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicType;
@@ -219,6 +222,14 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	@Override
 	public MetadataBuilder applyArchiveDescriptorFactory(ArchiveDescriptorFactory factory) {
 		this.bootstrapContext.injectArchiveDescriptorFactory( factory );
+		return this;
+	}
+
+	@Override
+	public MetadataBuilder applyImplicitListSemantics(CollectionClassification classification) {
+		if ( classification != null ) {
+			options.mappingDefaults.implicitListClassification = classification;
+		}
 		return this;
 	}
 
@@ -424,6 +435,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		private boolean implicitlyQuoteIdentifiers;
 
 		private AccessType implicitCacheAccessType;
+		private CollectionClassification implicitListClassification;
 
 		public MappingDefaultsImpl(StandardServiceRegistry serviceRegistry) {
 			final ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
@@ -443,12 +455,29 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 			this.implicitCacheAccessType = configService.getSetting(
 					AvailableSettings.DEFAULT_CACHE_CONCURRENCY_STRATEGY,
-					new ConfigurationService.Converter<AccessType>() {
-						@Override
-						public AccessType convert(Object value) {
-							return AccessType.fromExternalName( value.toString() );
+					value -> AccessType.fromExternalName( value.toString() )
+			);
+
+			this.implicitListClassification = configService.getSetting(
+					AvailableSettings.DEFAULT_LIST_SEMANTICS,
+					value -> {
+						final CollectionClassification classification = CollectionClassification.interpretSetting( value );
+						if ( classification != CollectionClassification.LIST && classification != CollectionClassification.BAG ) {
+							throw new AnnotationException(
+									String.format(
+											Locale.ROOT,
+											"`%s` should specify either `%s` or `%s` - %s",
+											AvailableSettings.DEFAULT_LIST_SEMANTICS,
+											java.util.List.class.getName(),
+											java.util.Collection.class.getName(),
+											classification.name()
+									)
+							);
 						}
-					}
+						return classification;
+					},
+					// for now, to follow legacy behavior
+					CollectionClassification.BAG
 			);
 		}
 
@@ -517,6 +546,11 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		@Override
 		public AccessType getImplicitCacheAccessType() {
 			return implicitCacheAccessType;
+		}
+
+		@Override
+		public CollectionClassification getImplicitListClassification() {
+			return implicitListClassification;
 		}
 	}
 

@@ -97,46 +97,46 @@ public class ListBinder extends CollectionBinder {
 	}
 
 	private void bindIndex(XProperty property, XClass collType, final MetadataBuildingContext buildingContext) {
-		if ( !indexColumn.isImplicit() ) {
-			PropertyHolder valueHolder = PropertyHolderBuilder.buildPropertyHolder(
-					this.collection,
-					StringHelper.qualify( this.collection.getRole(), "key" ),
-					null,
-					null,
-					propertyHolder,
-					getBuildingContext()
-			);
-			List list = (List) this.collection;
-			if ( !list.isOneToMany() ) indexColumn.forceNotNull();
-			indexColumn.setPropertyHolder( valueHolder );
-			final BasicValueBinder valueBinder = new BasicValueBinder( BasicValueBinder.Kind.LIST_INDEX, buildingContext );
-			valueBinder.setColumns( new Ejb3Column[] { indexColumn } );
-			valueBinder.setReturnedClassName( Integer.class.getName() );
-			valueBinder.setType( property, collType, null, null );
-//			valueBinder.setExplicitType( "integer" );
-			SimpleValue indexValue = valueBinder.make();
-			indexColumn.linkWithValue( indexValue );
-			list.setIndex( indexValue );
-			list.setBaseIndex( indexColumn.getBase() );
-			if ( list.isOneToMany() && !list.getKey().isNullable() && !list.isInverse() ) {
-				String entityName = ( (OneToMany) list.getElement() ).getReferencedEntityName();
-				PersistentClass referenced = buildingContext.getMetadataCollector().getEntityBinding( entityName );
-				IndexBackref ib = new IndexBackref();
-				ib.setName( '_' + propertyName + "IndexBackref" );
-				ib.setUpdateable( false );
-				ib.setSelectable( false );
-				ib.setCollectionRole( list.getRole() );
-				ib.setEntityName( list.getOwner().getEntityName() );
-				ib.setValue( list.getIndex() );
-				referenced.addProperty( ib );
-			}
+		final PropertyHolder valueHolder = PropertyHolderBuilder.buildPropertyHolder(
+				this.collection,
+				StringHelper.qualify( this.collection.getRole(), "key" ),
+				null,
+				null,
+				propertyHolder,
+				getBuildingContext()
+		);
+
+		final List listValueMapping = (List) this.collection;
+
+		if ( indexColumn.isImplicit() ) {
+			// create it
+			assert true;
 		}
-		else {
-			Collection coll = this.collection;
-			throw new AnnotationException(
-					"List/array has to be annotated with an @OrderColumn (or @IndexColumn): "
-							+ coll.getRole()
-			);
+
+		if ( !listValueMapping.isOneToMany() ) {
+			indexColumn.forceNotNull();
+		}
+		indexColumn.setPropertyHolder( valueHolder );
+		final BasicValueBinder valueBinder = new BasicValueBinder( BasicValueBinder.Kind.LIST_INDEX, buildingContext );
+		valueBinder.setColumns( new Ejb3Column[] { indexColumn } );
+		valueBinder.setReturnedClassName( Integer.class.getName() );
+		valueBinder.setType( property, collType, null, null );
+//			valueBinder.setExplicitType( "integer" );
+		SimpleValue indexValue = valueBinder.make();
+		indexColumn.linkWithValue( indexValue );
+		listValueMapping.setIndex( indexValue );
+		listValueMapping.setBaseIndex( indexColumn.getBase() );
+		if ( listValueMapping.isOneToMany() && !listValueMapping.getKey().isNullable() && !listValueMapping.isInverse() ) {
+			String entityName = ( (OneToMany) listValueMapping.getElement() ).getReferencedEntityName();
+			PersistentClass referenced = buildingContext.getMetadataCollector().getEntityBinding( entityName );
+			IndexBackref ib = new IndexBackref();
+			ib.setName( '_' + propertyName + "IndexBackref" );
+			ib.setUpdateable( false );
+			ib.setSelectable( false );
+			ib.setCollectionRole( listValueMapping.getRole() );
+			ib.setEntityName( listValueMapping.getOwner().getEntityName() );
+			ib.setValue( listValueMapping.getIndex() );
+			referenced.addProperty( ib );
 		}
 	}
 }

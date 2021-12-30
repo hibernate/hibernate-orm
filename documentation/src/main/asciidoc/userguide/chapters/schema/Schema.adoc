@@ -136,14 +136,14 @@ include::{extrasdir}/schema-generation-column-default-value-mapping-example.sql[
 ----
 ====
 
-In the mapping above, both the `name` and `clientId` table columns are going to use a `DEFAULT` value.
+In the mapping above, both the `name` and `clientId` table columns have a `DEFAULT` value.
 
 [NOTE]
 ====
-The `Person` entity above is annotated with the `@DynamicInsert` annotation so that the `INSERT` statement does not include any entity attribute that does not contain a value.
+The `Person` entity above is annotated with the `@DynamicInsert` annotation so that the `INSERT` statement does not include any entity attribute which is null.
 ====
 
-This way, when omitting the `name` and the `clientId` attribute, the database is going to set them according to their default values.
+This way, when the `name` and or `clientId` attribute is null, the database will set them according to their declared default values.
 
 [[schema-generation-column-default-value-persist-example]]
 .`@ColumnDefault` mapping example
@@ -157,6 +157,11 @@ include::{sourcedir}/ColumnDefaultTest.java[tag=schema-generation-column-default
 ----
 include::{extrasdir}/schema-generation-column-default-value-persist-example.sql[]
 ----
+====
+
+[TIP]
+====
+If the column value should be generated not only when a row is inserted, but also when it's updated, the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/GeneratedColumn.html[`@GeneratedColumn`] annotation should be used.
 ====
 
 [[schema-generation-columns-unique-constraint]]

@@ -42,7 +42,7 @@ public class GeneratedAlwaysTest {
             assertEquals( 5, entity.quantity );
             assertEquals( unitPrice, entity.unitPrice );
             assertEquals( unitPrice.multiply( new BigDecimal("5") ), entity.total );
-            assertEquals( new BigDecimal("58.46"), entity.discounted );
+            assertEquals( 58, entity.discounted.intValue() );
         } );
     }
 

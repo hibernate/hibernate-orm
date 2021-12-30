@@ -1,13 +1,14 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.orm.test.sql.hand.quotedidentifiers;
+package org.hibernate.orm.test.query.sql.named.hbm;
 
 import org.hibernate.Session;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.orm.test.query.sql.named.QuotedPerson;
 import org.hibernate.query.NativeQuery;
 
 import org.hibernate.testing.DialectCheck;
@@ -20,17 +21,17 @@ import org.junit.Test;
  *
  * @author Steve Ebersole
  */
-@RequiresDialectFeature( value = NativeSqlAndQuotedIdentifiersTest.LocalDialectCheck.class )
-public class NativeSqlAndQuotedIdentifiersTest extends BaseCoreFunctionalTestCase {
+@RequiresDialectFeature( value = QuotedIdentifiersTest.LocalDialectCheck.class )
+public class QuotedIdentifiersTest extends BaseCoreFunctionalTestCase {
 
 	@Override
-	protected String getBaseForMappings() {
-		return "org/hibernate/orm/test/";
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class<?>[] { QuotedPerson.class };
 	}
 
 	@Override
 	public String[] getMappings() {
-		return new String[] { "sql/hand/quotedidentifiers/Mappings.hbm.xml" };
+		return new String[] { "/mappings/query/named/sql/hbm/QuotedIdentifiers.hbm.xml" };
 	}
 
 	public static class LocalDialectCheck implements DialectCheck {
@@ -45,7 +46,7 @@ public class NativeSqlAndQuotedIdentifiersTest extends BaseCoreFunctionalTestCas
 		if( sessionFactory()==null)return;
 		Session session = sessionFactory().openSession();
 		session.beginTransaction();
-		session.save( new Person( "me" ) );
+		session.save( new QuotedPerson( 1, "me" ) );
 		session.getTransaction().commit();
 		session.close();
 	}
@@ -55,7 +56,7 @@ public class NativeSqlAndQuotedIdentifiersTest extends BaseCoreFunctionalTestCas
 		if( sessionFactory()==null)return;
 		Session session = sessionFactory().openSession();
 		session.beginTransaction();
-		session.createQuery( "delete Person" ).executeUpdate();
+		session.createQuery( "delete QuotedPerson" ).executeUpdate();
 		session.getTransaction().commit();
 		session.close();
 	}

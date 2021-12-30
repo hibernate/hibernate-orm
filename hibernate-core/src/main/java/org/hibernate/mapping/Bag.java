@@ -6,6 +6,8 @@
  */
 package org.hibernate.mapping;
 
+import java.util.function.Function;
+
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.collection.internal.StandardBagSemantics;
 import org.hibernate.collection.spi.CollectionSemantics;
@@ -18,8 +20,18 @@ import org.hibernate.type.CollectionType;
  * @author Gavin King
  */
 public class Bag extends Collection {
+	/**
+	 * hbm.xml binding
+	 */
 	public Bag(MetadataBuildingContext buildingContext, PersistentClass owner) {
 		super( buildingContext, owner );
+	}
+
+	/**
+	 * Annotation binding
+	 */
+	public Bag(SemanticsResolver semanticsResolver, PersistentClass owner, MetadataBuildingContext buildingContext) {
+		super( semanticsResolver, owner, buildingContext );
 	}
 
 	public CollectionType getDefaultCollectionType() {

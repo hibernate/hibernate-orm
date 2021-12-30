@@ -13,14 +13,12 @@ import java.util.function.Consumer;
 
 import org.hibernate.collection.spi.BagSemantics;
 import org.hibernate.collection.spi.CollectionInitializerProducer;
-import org.hibernate.engine.FetchTiming;
+import org.hibernate.collection.spi.InitializerProducerBuilder;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.Fetch;
-import org.hibernate.sql.results.graph.collection.internal.BagInitializerProducer;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParent;
 
@@ -67,62 +65,16 @@ public abstract class AbstractBagSemantics<E> implements BagSemantics<Collection
 			FetchParent fetchParent,
 			boolean selected,
 			String resultVariable,
-			DomainResultCreationState creationState) {
-		return new BagInitializerProducer(
-				attributeMapping,
-				attributeMapping.getIdentifierDescriptor() == null ? null : fetchParent.generateFetchableFetch(
-						attributeMapping.getIdentifierDescriptor(),
-						navigablePath.append( CollectionPart.Nature.ID.getName() ),
-						FetchTiming.IMMEDIATE,
-						selected,
-						null,
-						creationState
-				),
-				fetchParent.generateFetchableFetch(
-						attributeMapping.getElementDescriptor(),
-						navigablePath.append( CollectionPart.Nature.ELEMENT.getName() ),
-						FetchTiming.IMMEDIATE,
-						selected,
-						null,
-						creationState
-				)
-		);
-	}
-
-	@Override
-	public CollectionInitializerProducer createInitializerProducer(
-			NavigablePath navigablePath,
-			PluralAttributeMapping attributeMapping,
-			FetchParent fetchParent,
-			boolean selected,
-			String resultVariable,
 			Fetch indexFetch,
 			Fetch elementFetch,
-			DomainResultCreationState creationState){
-		if ( indexFetch == null ) {
-			indexFetch = attributeMapping.getIdentifierDescriptor() == null ? null : fetchParent.generateFetchableFetch(
-					attributeMapping.getIdentifierDescriptor(),
-					navigablePath.append( CollectionPart.Nature.ID.getName() ),
-					FetchTiming.IMMEDIATE,
-					selected,
-					null,
-					creationState
-			);
-		}
-		if ( elementFetch == null ) {
-			elementFetch = fetchParent.generateFetchableFetch(
-					attributeMapping.getElementDescriptor(),
-					navigablePath.append( CollectionPart.Nature.ELEMENT.getName() ),
-					FetchTiming.IMMEDIATE,
-					selected,
-					null,
-					creationState
-			);
-		}
-		return new BagInitializerProducer(
+			DomainResultCreationState creationState) {
+		return InitializerProducerBuilder.createBagInitializerProducer(
+				navigablePath,
 				attributeMapping,
-				indexFetch,
-				elementFetch
+				fetchParent,
+				selected,
+				elementFetch,
+				creationState
 		);
 	}
 

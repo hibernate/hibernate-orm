@@ -13,13 +13,11 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.hibernate.collection.spi.CollectionInitializerProducer;
+import org.hibernate.collection.spi.InitializerProducerBuilder;
 import org.hibernate.collection.spi.MapSemantics;
-import org.hibernate.engine.FetchTiming;
-import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.Fetch;
-import org.hibernate.sql.results.graph.collection.internal.MapInitializerProducer;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParent;
 
@@ -79,62 +77,17 @@ public abstract class AbstractMapSemantics<MKV extends Map<K,V>, K, V> implement
 			FetchParent fetchParent,
 			boolean selected,
 			String resultVariable,
-			DomainResultCreationState creationState) {
-		return new MapInitializerProducer(
-				attributeMapping,
-				fetchParent.generateFetchableFetch(
-						attributeMapping.getIndexDescriptor(),
-						navigablePath.append( CollectionPart.Nature.INDEX.getName() ),
-						FetchTiming.IMMEDIATE,
-						selected,
-						null,
-						creationState
-				),
-				fetchParent.generateFetchableFetch(
-						attributeMapping.getElementDescriptor(),
-						navigablePath.append( CollectionPart.Nature.ELEMENT.getName() ),
-						FetchTiming.IMMEDIATE,
-						selected,
-						null,
-						creationState
-				)
-		);
-	}
-
-	@Override
-	public CollectionInitializerProducer createInitializerProducer(
-			NavigablePath navigablePath,
-			PluralAttributeMapping attributeMapping,
-			FetchParent fetchParent,
-			boolean selected,
-			String resultVariable,
 			Fetch indexFetch,
 			Fetch elementFetch,
-			DomainResultCreationState creationState){
-		if ( indexFetch == null ) {
-			indexFetch = fetchParent.generateFetchableFetch(
-					attributeMapping.getIndexDescriptor(),
-					navigablePath.append( CollectionPart.Nature.INDEX.getName() ),
-					FetchTiming.IMMEDIATE,
-					selected,
-					null,
-					creationState
-			);
-		}
-		if ( elementFetch == null ) {
-			elementFetch = fetchParent.generateFetchableFetch(
-					attributeMapping.getElementDescriptor(),
-					navigablePath.append( CollectionPart.Nature.ELEMENT.getName() ),
-					FetchTiming.IMMEDIATE,
-					selected,
-					null,
-					creationState
-			);
-		}
-		return new MapInitializerProducer(
+			DomainResultCreationState creationState) {
+		return InitializerProducerBuilder.createMapInitializerProducer(
+				navigablePath,
 				attributeMapping,
+				fetchParent,
+				selected,
 				indexFetch,
-				elementFetch
+				elementFetch,
+				creationState
 		);
 	}
 

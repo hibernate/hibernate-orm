@@ -27,6 +27,7 @@ import org.hibernate.mapping.IndexBackref;
 import org.hibernate.mapping.List;
 import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.SemanticsResolver;
 import org.hibernate.mapping.SimpleValue;
 
 import org.jboss.logging.Logger;
@@ -41,13 +42,13 @@ import org.jboss.logging.Logger;
 public class ListBinder extends CollectionBinder {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, ListBinder.class.getName() );
 
-	public ListBinder() {
-		super( false );
+	public ListBinder(SemanticsResolver semanticsResolver, MetadataBuildingContext buildingContext) {
+		super( semanticsResolver, false, buildingContext );
 	}
 
 	@Override
-	protected Collection createCollection(PersistentClass persistentClass) {
-		return new List( getBuildingContext(), persistentClass );
+	protected Collection createCollection(PersistentClass owner) {
+		return new List( getSemanticsResolver(), owner, getBuildingContext() );
 	}
 
 	@Override

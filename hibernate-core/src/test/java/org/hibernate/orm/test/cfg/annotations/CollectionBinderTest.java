@@ -22,6 +22,7 @@ import org.hibernate.cfg.Ejb3JoinColumn;
 import org.hibernate.cfg.InheritanceState;
 import org.hibernate.cfg.PropertyHolder;
 import org.hibernate.cfg.annotations.CollectionBinder;
+import org.hibernate.collection.internal.StandardBagSemantics;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
@@ -55,7 +56,7 @@ public class CollectionBinderTest extends BaseUnitTestCase {
 
 		String expectMessage = "Association [abc] for entity [CollectionBinderTest] references unmapped class [List]";
 		try {
-			new CollectionBinder( false) {
+			new CollectionBinder( (t) -> StandardBagSemantics.INSTANCE, false, buildingContext ) {
 
 				{
 					final PropertyHolder propertyHolder = Mockito.mock(PropertyHolder.class);

@@ -14,6 +14,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.SortedMap;
+import java.util.SortedSet;
 
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
@@ -27,6 +29,8 @@ import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.metamodel.CollectionClassification;
+import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.Type;
@@ -63,18 +67,21 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	private String referencedPropertyName;
 	private String mappedByProperty;
 	private boolean sorted;
-	private Comparator comparator;
+	private Comparator<?> comparator;
 	private String comparatorClassName;
 	private boolean orphanDelete;
 	private int batchSize = -1;
 	private FetchMode fetchMode;
 	private boolean embedded = true;
 	private boolean optimisticLocked = true;
-	private Class collectionPersisterClass;
+
 	private String typeName;
 	private Properties typeParameters;
-	private final List filters = new ArrayList();
-	private final List manyToManyFilters = new ArrayList();
+	private SemanticsResolver customSemanticsResolver;
+	private Class<? extends CollectionPersister> collectionPersisterClass;
+
+	private final List<FilterConfiguration> filters = new ArrayList<>();
+	private final List<FilterConfiguration> manyToManyFilters = new ArrayList<>();
 	private final java.util.Set<String> synchronizedTables = new HashSet<>();
 
 	private String customSQLInsert;
@@ -92,9 +99,21 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 
 	private String loaderName;
 
+	/**
+	 * hbm.xml binding
+	 */
 	protected Collection(MetadataBuildingContext buildingContext, PersistentClass owner) {
 		this.buildingContext = buildingContext;
 		this.owner = owner;
+	}
+
+	/**
+	 * Annotation binding
+	 */
+	protected Collection(SemanticsResolver customSemanticsResolver, PersistentClass owner, MetadataBuildingContext buildingContext) {
+		this.customSemanticsResolver = customSemanticsResolver;
+		this.owner = owner;
+		this.buildingContext = buildingContext;
 	}
 
 	public MetadataBuildingContext getBuildingContext() {
@@ -142,13 +161,13 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		return sorted;
 	}
 
-	public Comparator getComparator() {
+	public Comparator<?> getComparator() {
 		if ( comparator == null && comparatorClassName != null ) {
 			try {
 				final ClassLoaderService classLoaderService = getMetadata().getMetadataBuildingOptions()
 						.getServiceRegistry()
 						.getService( ClassLoaderService.class );
-				setComparator( (Comparator) classLoaderService.classForName( comparatorClassName ).newInstance() );
+				setComparator( (Comparator<?>) classLoaderService.classForName( comparatorClassName ).getConstructor().newInstance() );
 			}
 			catch (Exception e) {
 				throw new MappingException(
@@ -202,7 +221,7 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		return orderBy;
 	}
 
-	public void setComparator(Comparator comparator) {
+	public void setComparator(@SuppressWarnings("rawtypes") Comparator comparator) {
 		this.comparator = comparator;
 	}
 
@@ -296,11 +315,11 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		this.fetchMode = fetchMode;
 	}
 
-	public void setCollectionPersisterClass(Class persister) {
+	public void setCollectionPersisterClass(Class<? extends CollectionPersister> persister) {
 		this.collectionPersisterClass = persister;
 	}
 
-	public Class getCollectionPersisterClass() {
+	public Class<? extends CollectionPersister> getCollectionPersisterClass() {
 		return collectionPersisterClass;
 	}
 
@@ -328,7 +347,7 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		checkColumnDuplication();
 	}
 
-	private void checkColumnDuplication(java.util.Set distinctColumns, Value value)
+	private void checkColumnDuplication(java.util.Set<String> distinctColumns, Value value)
 			throws MappingException {
 		final boolean[] insertability = value.getColumnInsertability();
 		final boolean[] updatability = value.getColumnUpdateability();
@@ -354,7 +373,7 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	}
 
 	private void checkColumnDuplication() throws MappingException {
-		HashSet cols = new HashSet();
+		HashSet<String> cols = new HashSet<>();
 		checkColumnDuplication( cols, getKey() );
 		if ( isIndexed() ) {
 			checkColumnDuplication(
@@ -374,7 +393,7 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	}
 
 	public Iterator<Selectable> getColumnIterator() {
-		return Collections.<Selectable>emptyList().iterator();
+		return Collections.emptyIterator();
 	}
 
 	@Override
@@ -390,23 +409,78 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		return getCollectionType();
 	}
 
+	private CollectionSemantics<?,?> cachedCollectionSemantics;
+
+	@SuppressWarnings("rawtypes")
 	public CollectionSemantics getCollectionSemantics() {
+		if ( cachedCollectionSemantics == null ) {
+			cachedCollectionSemantics = resolveCollectionSemantics();
+		}
+
+		return cachedCollectionSemantics;
+	}
+
+	private CollectionSemantics<?, ?> resolveCollectionSemantics() {
+		final CollectionType collectionType;
 		if ( typeName == null ) {
-			return getDefaultCollectionSemantics();
+			collectionType = null;
 		}
 		else {
-			final CollectionType collectionType = MappingHelper.customCollection(
+			collectionType = MappingHelper.customCollection(
 					typeName,
 					typeParameters,
 					role,
 					referencedPropertyName,
 					getMetadata()
 			);
-			return new CustomCollectionTypeSemantics( collectionType );
 		}
+
+		if ( customSemanticsResolver != null ) {
+			return customSemanticsResolver.resolve( collectionType );
+		}
+
+		if ( collectionType == null ) {
+			return getDefaultCollectionSemantics();
+		}
+
+		final Class<?> semanticJavaType = collectionType.getReturnedClass();
+		final CollectionClassification classification;
+
+		if ( semanticJavaType.isArray() ) {
+			classification = CollectionClassification.ARRAY;
+		}
+		else if ( List.class.isAssignableFrom( semanticJavaType ) ) {
+			classification = CollectionClassification.LIST;
+		}
+		else if ( SortedSet.class.isAssignableFrom( semanticJavaType ) ) {
+			classification = CollectionClassification.SORTED_SET;
+		}
+		else if ( Set.class.isAssignableFrom( semanticJavaType ) ) {
+			classification = CollectionClassification.SET;
+		}
+		else if ( SortedMap.class.isAssignableFrom( semanticJavaType ) ) {
+			classification = CollectionClassification.SORTED_MAP;
+		}
+		else if ( Map.class.isAssignableFrom( semanticJavaType ) ) {
+			classification = CollectionClassification.MAP;
+		}
+		else if ( Collection.class.isAssignableFrom( semanticJavaType ) ) {
+			if ( isIdentified() ) {
+				classification = CollectionClassification.IDBAG;
+			}
+			else {
+				classification = CollectionClassification.BAG;
+			}
+		}
+		else {
+			throw new IllegalArgumentException( "Unexpected collection-semantics Java type : " + semanticJavaType );
+		}
+
+		return new CustomCollectionTypeSemantics<>( collectionType, classification );
+
 	}
 
-	public CollectionSemantics getDefaultCollectionSemantics() {
+	public CollectionSemantics<?,?> getDefaultCollectionSemantics() {
 		throw new MappingException(
 				"Unexpected org.hibernate.mapping.Collection impl ["
 						+  this + "]; unknown CollectionSemantics"
@@ -598,7 +672,7 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		);
 	}
 
-	public List getFilters() {
+	public List<FilterConfiguration> getFilters() {
 		return filters;
 	}
 
@@ -620,7 +694,7 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		);
 	}
 
-	public List getManyToManyFilters() {
+	public List<FilterConfiguration> getManyToManyFilters() {
 		return manyToManyFilters;
 	}
 
@@ -677,6 +751,7 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		this.typeParameters = parameterMap;
 	}
 
+	@SuppressWarnings("rawtypes")
 	public void setTypeParameters(java.util.Map parameterMap) {
 		if ( parameterMap instanceof Properties ) {
 			this.typeParameters = (Properties) parameterMap;

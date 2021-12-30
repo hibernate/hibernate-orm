@@ -28,7 +28,11 @@ public class Map extends IndexedCollection {
 	public Map(MetadataBuildingContext buildingContext, PersistentClass owner) {
 		super( buildingContext, owner );
 	}
-	
+
+	public Map(SemanticsResolver semanticsResolver, PersistentClass owner, MetadataBuildingContext buildingContext) {
+		super( semanticsResolver, owner, buildingContext );
+	}
+
 	public boolean isMap() {
 		return true;
 	}

@@ -7,10 +7,13 @@
 package org.hibernate.mapping;
 
 import java.util.Iterator;
+import java.util.function.Function;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.engine.spi.Mapping;
+import org.hibernate.type.CollectionType;
 
 /**
  * Indexed collections include Lists, Maps, arrays and
@@ -25,6 +28,10 @@ public abstract class IndexedCollection extends Collection {
 
 	public IndexedCollection(MetadataBuildingContext buildingContext, PersistentClass owner) {
 		super( buildingContext, owner );
+	}
+
+	public IndexedCollection(SemanticsResolver semanticsResolver, PersistentClass owner, MetadataBuildingContext buildingContext) {
+		super( semanticsResolver, owner, buildingContext );
 	}
 
 	public Value getIndex() {

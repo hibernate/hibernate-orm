@@ -2028,7 +2028,6 @@ public final class AnnotationBinder {
 					);
 				}
 				CollectionBinder collectionBinder = CollectionBinder.getCollectionBinder(
-						propertyHolder.getEntityName(),
 						property,
 						!indexColumn.isImplicit(),
 						// ugh
@@ -2060,7 +2059,6 @@ public final class AnnotationBinder {
 				boolean ignoreNotFound = notFound != null && notFound.action().equals( NotFoundAction.IGNORE );
 				collectionBinder.setIgnoreNotFound( ignoreNotFound );
 				collectionBinder.setCollectionType( inferredData.getProperty().getElementClass() );
-				collectionBinder.setBuildingContext( context );
 				collectionBinder.setAccessType( inferredData.getDefaultAccess() );
 
 				Ejb3Column[] elementColumns;

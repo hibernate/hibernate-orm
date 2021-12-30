@@ -6,9 +6,11 @@
  */
 package org.hibernate.cfg.annotations;
 
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.Array;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.SemanticsResolver;
 
 /**
  * Bind an Array
@@ -16,11 +18,11 @@ import org.hibernate.mapping.PersistentClass;
  * @author Anthony Patricio
  */
 public class ArrayBinder extends ListBinder {
-
-	public ArrayBinder() {
+	public ArrayBinder(SemanticsResolver semanticsResolver, MetadataBuildingContext buildingContext) {
+		super( semanticsResolver, buildingContext );
 	}
 
-	protected Collection createCollection(PersistentClass persistentClass) {
-		return new Array( getBuildingContext(), persistentClass );
+	protected Collection createCollection(PersistentClass owner) {
+		return new Array( getSemanticsResolver(), owner, getBuildingContext() );
 	}
 }

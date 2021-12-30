@@ -8,6 +8,7 @@ package org.hibernate.mapping;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.engine.spi.Mapping;
 
 /**
@@ -21,6 +22,10 @@ public abstract class IdentifierCollection extends Collection {
 
 	public IdentifierCollection(MetadataBuildingContext buildingContext, PersistentClass owner) {
 		super( buildingContext, owner );
+	}
+
+	public IdentifierCollection(SemanticsResolver semanticsResolver, PersistentClass owner, MetadataBuildingContext buildingContext) {
+		super( semanticsResolver, owner, buildingContext );
 	}
 
 	public KeyValue getIdentifier() {

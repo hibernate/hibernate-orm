@@ -9,15 +9,6 @@ package org.hibernate.cfg.annotations;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Random;
-import jakarta.persistence.AttributeOverride;
-import jakarta.persistence.AttributeOverrides;
-import jakarta.persistence.ConstraintMode;
-import jakarta.persistence.InheritanceType;
-import jakarta.persistence.MapKeyClass;
-import jakarta.persistence.MapKeyColumn;
-import jakarta.persistence.MapKeyJoinColumn;
-import jakarta.persistence.MapKeyJoinColumns;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
@@ -40,27 +31,32 @@ import org.hibernate.cfg.PropertyData;
 import org.hibernate.cfg.PropertyHolderBuilder;
 import org.hibernate.cfg.PropertyPreloadedData;
 import org.hibernate.cfg.SecondPass;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.DependantBasicValue;
-import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
+import org.hibernate.mapping.SemanticsResolver;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
-import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
-import org.hibernate.sql.Template;
+
+import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.AttributeOverrides;
+import jakarta.persistence.ConstraintMode;
+import jakarta.persistence.InheritanceType;
+import jakarta.persistence.MapKeyClass;
+import jakarta.persistence.MapKeyColumn;
+import jakarta.persistence.MapKeyJoinColumn;
+import jakarta.persistence.MapKeyJoinColumns;
 
 /**
  * Implementation to bind a Map
@@ -68,16 +64,16 @@ import org.hibernate.sql.Template;
  * @author Emmanuel Bernard
  */
 public class MapBinder extends CollectionBinder {
-	public MapBinder(boolean sorted) {
-		super( sorted );
+	public MapBinder(SemanticsResolver semanticsResolver, boolean sorted, MetadataBuildingContext buildingContext) {
+		super( semanticsResolver, sorted, buildingContext );
 	}
 
 	public boolean isMap() {
 		return true;
 	}
 
-	protected Collection createCollection(PersistentClass persistentClass) {
-		return new org.hibernate.mapping.Map( getBuildingContext(), persistentClass );
+	protected Collection createCollection(PersistentClass owner) {
+		return new org.hibernate.mapping.Map( getSemanticsResolver(), owner, getBuildingContext() );
 	}
 
 	@Override

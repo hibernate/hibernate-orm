@@ -26,8 +26,18 @@ import org.hibernate.type.SortedSetType;
  * @author Gavin King
  */
 public class Set extends Collection {
+	/**
+	 * Used by hbm.xml binding
+	 */
 	public Set(MetadataBuildingContext buildingContext, PersistentClass owner) {
 		super( buildingContext, owner );
+	}
+
+	/**
+	 * Used by annotation binding
+	 */
+	public Set(SemanticsResolver semanticsResolver, PersistentClass persistentClass, MetadataBuildingContext buildingContext) {
+		super( semanticsResolver, persistentClass, buildingContext );
 	}
 
 	public void validate(Mapping mapping) throws MappingException {

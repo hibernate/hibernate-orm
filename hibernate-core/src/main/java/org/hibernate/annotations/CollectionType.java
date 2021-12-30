@@ -31,8 +31,7 @@ public @interface CollectionType {
 	 * Names the type.
 	 *
 	 * Could name the implementation class (an implementation of {@link org.hibernate.type.CollectionType} or
-	 * {@link org.hibernate.usertype.UserCollectionType}).  Could also name a custom type defined via a
-	 * {@link TypeDef @TypeDef}
+	 * {@link org.hibernate.usertype.UserCollectionType}).
 	 */
 	String type();
 

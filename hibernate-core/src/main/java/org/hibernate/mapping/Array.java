@@ -6,6 +6,8 @@
  */
 package org.hibernate.mapping;
 
+import java.util.function.Function;
+
 import org.hibernate.MappingException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
@@ -29,7 +31,11 @@ public class Array extends List {
 		super( buildingContext, owner );
 	}
 
-	public Class getElementClass() throws MappingException {
+	public Array(SemanticsResolver semanticsResolver, PersistentClass owner, MetadataBuildingContext buildingContext) {
+		super( semanticsResolver, owner, buildingContext );
+	}
+
+	public Class<?> getElementClass() throws MappingException {
 		if ( elementClassName == null ) {
 			final org.hibernate.type.Type elementType = getElement().getType();
 			if ( isPrimitiveArray() ) {
@@ -51,7 +57,7 @@ public class Array extends List {
 	}
 
 	@Override
-	public CollectionSemantics getDefaultCollectionSemantics() {
+	public CollectionSemantics<?,?> getDefaultCollectionSemantics() {
 		return StandardArraySemantics.INSTANCE;
 	}
 

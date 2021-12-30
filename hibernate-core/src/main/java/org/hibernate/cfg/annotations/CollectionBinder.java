@@ -72,11 +72,13 @@ import org.hibernate.cfg.PropertyHolderBuilder;
 import org.hibernate.cfg.PropertyInferredData;
 import org.hibernate.cfg.PropertyPreloadedData;
 import org.hibernate.cfg.SecondPass;
+import org.hibernate.collection.internal.CustomCollectionTypeSemantics;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.jpa.spi.MutableJpaCompliance;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Backref;
 import org.hibernate.mapping.Collection;
@@ -89,8 +91,10 @@ import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
+import org.hibernate.mapping.SemanticsResolver;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
+import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.EmbeddableInstantiator;
 
 import org.jboss.logging.Logger;
@@ -134,7 +138,9 @@ public abstract class CollectionBinder {
 			java.util.Collection.class
 	);
 
-	private MetadataBuildingContext buildingContext;
+	private final MetadataBuildingContext buildingContext;
+	private final SemanticsResolver semanticsResolver;
+	private final boolean isSortedCollection;
 
 	protected Collection collection;
 	protected String propertyName;
@@ -169,7 +175,6 @@ public abstract class CollectionBinder {
 	private AccessType accessType;
 	private boolean hibernateExtensionMapping;
 
-	private boolean isSortedCollection;
 	private jakarta.persistence.OrderBy jpaOrderBy;
 	private OrderBy sqlOrderBy;
 	private SortNatural naturalSort;
@@ -178,16 +183,18 @@ public abstract class CollectionBinder {
 	private String explicitType;
 	private final Properties explicitTypeParameters = new Properties();
 
-	protected CollectionBinder(boolean isSortedCollection) {
+	protected CollectionBinder(SemanticsResolver semanticsResolver, boolean isSortedCollection, MetadataBuildingContext buildingContext) {
+		this.semanticsResolver = semanticsResolver;
 		this.isSortedCollection = isSortedCollection;
+		this.buildingContext = buildingContext;
 	}
 
 	protected MetadataBuildingContext getBuildingContext() {
 		return buildingContext;
 	}
 
-	public void setBuildingContext(MetadataBuildingContext buildingContext) {
-		this.buildingContext = buildingContext;
+	protected SemanticsResolver getSemanticsResolver() {
+		return semanticsResolver;
 	}
 
 	public boolean isMap() {
@@ -260,151 +267,185 @@ public abstract class CollectionBinder {
 	 * collection binder factory
 	 */
 	public static CollectionBinder getCollectionBinder(
-			String entityName,
 			XProperty property,
 			boolean isIndexed,
 			boolean isHibernateExtensionMapping,
 			MetadataBuildingContext buildingContext) {
-		final CollectionBinder result;
+		final CollectionType typeAnnotation = property.getAnnotation( CollectionType.class );
 
-		if ( property.isArray() ) {
-			if ( property.getElementClass().isPrimitive() ) {
-				result = new PrimitiveArrayBinder();
-			}
-			else {
-				result = new ArrayBinder();
+		final CollectionBinder binder;
+		if ( typeAnnotation != null ) {
+			binder = createBinderFromCustomTypeAnnotation( property, isIndexed, typeAnnotation, buildingContext );
+		}
+		else {
+			binder = createBinderFromProperty( property, isIndexed, buildingContext );
+		}
+
+		binder.setIsHibernateExtensionMapping( isHibernateExtensionMapping );
+
+		if ( typeAnnotation != null ) {
+			binder.explicitType = typeAnnotation.type();
+			for ( Parameter param : typeAnnotation.parameters() ) {
+				binder.explicitTypeParameters.setProperty( param.name(), param.value() );
 			}
 		}
-		else if ( property.isCollection() ) {
-			//TODO consider using an XClass
-			final Class<?> returnedClass = property.getCollectionClass();
 
-			final CollectionBinder basicBinder = getBinderFromBasicCollectionType(
-					returnedClass,
-					property,
-					entityName,
-					isIndexed
-			);
-			if ( basicBinder != null ) {
-				result = basicBinder;
+		return binder;
+	}
+
+	private static CollectionBinder createBinderFromProperty(
+			XProperty property,
+			boolean isIndexed,
+			MetadataBuildingContext buildingContext) {
+		final CollectionClassification classification = determineCollectionClassification( property, null, isIndexed, buildingContext );
+		return createBinder( property, classification, null, buildingContext );
+	}
+
+	private static CollectionBinder createBinderFromCustomTypeAnnotation(
+			XProperty property,
+			boolean isIndexed,
+			CollectionType typeAnnotation,
+			MetadataBuildingContext buildingContext) {
+		final CollectionClassification classification = determineCollectionClassification( property, typeAnnotation, isIndexed, buildingContext );
+		final SemanticsResolver semanticsResolver = (collectionType) -> new CustomCollectionTypeSemantics<>( collectionType, classification );
+		return createBinder( property, classification, semanticsResolver, buildingContext );
+	}
+
+	private static CollectionBinder createBinder(
+			XProperty property,
+			CollectionClassification classification,
+			SemanticsResolver semanticsResolver,
+			MetadataBuildingContext buildingContext) {
+
+		switch ( classification ) {
+			case ARRAY: {
+				if ( property.getElementClass().isPrimitive() ) {
+					return new PrimitiveArrayBinder( semanticsResolver, buildingContext );
+				}
+				return new ArrayBinder( semanticsResolver, buildingContext );
 			}
-			else if ( property.isAnnotationPresent( CollectionType.class ) ) {
-				Class<?> semanticsClass = property.getAnnotation( CollectionType.class ).semantics();
+			case BAG: {
+				return new BagBinder( semanticsResolver, buildingContext );
+			}
+			case IDBAG: {
+				return new IdBagBinder( semanticsResolver, buildingContext );
+			}
+			case LIST: {
+				return new ListBinder( semanticsResolver, buildingContext );
+			}
+			case MAP:
+			case ORDERED_MAP: {
+				return new MapBinder( semanticsResolver, false, buildingContext );
+			}
+			case SORTED_MAP: {
+				return new MapBinder( semanticsResolver, true, buildingContext );
+			}
+			case SET:
+			case ORDERED_SET: {
+				return new SetBinder( semanticsResolver, false, buildingContext );
+			}
+			case SORTED_SET: {
+				return new SetBinder( semanticsResolver, true, buildingContext );
+			}
+		}
 
-				if ( semanticsClass != void.class ) {
-					result = getBinderFromBasicCollectionType( semanticsClass, property, entityName, isIndexed );
-				}
-				else {
-					final Class<?> inferredClass = inferCollectionClassFromSubclass( returnedClass );
-					result = inferredClass != null ? getBinderFromBasicCollectionType(
-							inferredClass,
-							property,
-							entityName,
-							isIndexed
-					) : null;
-				}
+		final XClass declaringClass = property.getDeclaringClass();
+
+		throw new AnnotationException(
+				String.format(
+						Locale.ROOT,
+						"Unable to determine proper CollectionBinder (`%s) : %s.%s",
+						classification,
+						declaringClass.getName(),
+						property.getName()
+				)
+		);
+	}
+
+	private static CollectionClassification determineCollectionClassification(
+			XProperty property,
+			CollectionType typeAnnotation,
+			boolean isIndexed,
+			MetadataBuildingContext buildingContext) {
+		if ( property.isArray() ) {
+			return CollectionClassification.ARRAY;
+		}
+
+		return determineCollectionClassification(
+				determineSemanticJavaType( property, typeAnnotation, isIndexed, buildingContext ),
+				property
+		);
+	}
+
+	private static CollectionClassification determineCollectionClassification(Class<?> semanticJavaType, XProperty property) {
+		if ( semanticJavaType.isArray() ) {
+			return CollectionClassification.ARRAY;
+		}
+		else if ( java.util.List.class.isAssignableFrom( semanticJavaType ) ) {
+			return CollectionClassification.LIST;
+		}
+		else if ( java.util.SortedSet.class.isAssignableFrom( semanticJavaType ) ) {
+			return CollectionClassification.SORTED_SET;
+		}
+		else if ( java.util.Set.class.isAssignableFrom( semanticJavaType ) ) {
+			return CollectionClassification.SET;
+		}
+		else if ( java.util.SortedMap.class.isAssignableFrom( semanticJavaType ) ) {
+			return CollectionClassification.SORTED_MAP;
+		}
+		else if ( java.util.Map.class.isAssignableFrom( semanticJavaType ) ) {
+			return CollectionClassification.MAP;
+		}
+		else if ( java.util.Collection.class.isAssignableFrom( semanticJavaType ) ) {
+			if ( property.isAnnotationPresent( CollectionId.class ) ) {
+				return CollectionClassification.IDBAG;
 			}
 			else {
-				result = null;
-			}
-			if ( result == null ) {
-				throw new AnnotationException(
-						returnedClass.getName() + " collection type not supported for property: "
-								+ StringHelper.qualify( entityName, property.getName() )
-				);
+				return CollectionClassification.BAG;
 			}
 		}
 		else {
+			return null;
+		}
+	}
+
+	private static Class<?> determineSemanticJavaType(XProperty property, CollectionType typeAnnotation, boolean isIndexed, MetadataBuildingContext buildingContext) {
+		final Class<?> returnedJavaType = property.getCollectionClass();
+		if ( typeAnnotation != null ) {
+			final Class<?> requestedSemanticsJavaType = typeAnnotation.semantics();
+			if ( requestedSemanticsJavaType != null && requestedSemanticsJavaType != void.class ) {
+				return inferCollectionClassFromSubclass( requestedSemanticsJavaType, isIndexed, buildingContext );
+			}
+		}
+
+		if ( returnedJavaType == null ) {
 			throw new AnnotationException(
-					"Illegal attempt to map a non collection as a @OneToMany, @ManyToMany or @ElementCollection: "
-							+ StringHelper.qualify( entityName, property.getName() )
+					String.format(
+							Locale.ROOT,
+							"Illegal attempt to map a non collection as a @OneToMany, @ManyToMany or @CollectionOfElements: %s.%s",
+							property.getDeclaringClass().getName(),
+							property.getName()
+					)
 			);
 		}
-		result.setIsHibernateExtensionMapping( isHibernateExtensionMapping );
 
-		final CollectionType typeAnnotation = property.getAnnotation( CollectionType.class );
-		if ( typeAnnotation != null ) {
-			final String typeName = typeAnnotation.type();
-			// see if it names a type-def
-			final TypeDefinition typeDef = buildingContext.getMetadataCollector().getTypeDefinition( typeName );
-			if ( typeDef != null ) {
-				result.explicitType = typeDef.getTypeImplementorClass().getName();
-				result.explicitTypeParameters.putAll( typeDef.getParameters() );
-			}
-			else {
-				result.explicitType = typeName;
-				for ( Parameter param : typeAnnotation.parameters() ) {
-					result.explicitTypeParameters.setProperty( param.name(), param.value() );
-				}
-			}
-		}
-
-		return result;
+		return inferCollectionClassFromSubclass( returnedJavaType, isIndexed, buildingContext );
 	}
 
-	private static CollectionBinder getBinderFromBasicCollectionType(Class<?> clazz, XProperty property,
-			String entityName, boolean isIndexed) {
-		if ( java.util.Set.class.equals( clazz) ) {
-			if ( property.isAnnotationPresent( CollectionId.class) ) {
-				throw new AnnotationException("Set does not support @CollectionId: "
-						+ StringHelper.qualify( entityName, property.getName() ) );
-			}
-			return new SetBinder( false );
+	private static Class<?> inferCollectionClassFromSubclass(Class<?> clazz, boolean isIndexed, MetadataBuildingContext buildingContext) {
+		if ( java.util.List.class.isAssignableFrom( clazz ) && !isIndexed ) {
+			final MutableJpaCompliance jpaCompliance = buildingContext.getBootstrapContext().getJpaCompliance();
+			return jpaCompliance.isJpaListComplianceEnabled()
+					? java.util.List.class
+					: java.util.Collection.class;
 		}
-		else if ( java.util.SortedSet.class.equals( clazz ) ) {
-			if ( property.isAnnotationPresent( CollectionId.class ) ) {
-				throw new AnnotationException( "SortedSet does not support @CollectionId: "
-						+ StringHelper.qualify( entityName, property.getName() ) );
-			}
-			return new SetBinder( true );
-		}
-		else if ( Map.class.equals( clazz ) ) {
-			if ( property.isAnnotationPresent( CollectionId.class ) ) {
-				throw new AnnotationException( "Map does not support @CollectionId: "
-						+ StringHelper.qualify( entityName, property.getName() ) );
-			}
-			return new MapBinder( false );
-		}
-		else if ( java.util.SortedMap.class.equals( clazz ) ) {
-			if ( property.isAnnotationPresent( CollectionId.class ) ) {
-				throw new AnnotationException( "SortedMap does not support @CollectionId: "
-						+ StringHelper.qualify( entityName, property.getName() ) );
-			}
-			return new MapBinder( true );
-		}
-		else if ( java.util.Collection.class.equals( clazz ) ) {
-			if ( property.isAnnotationPresent( CollectionId.class ) ) {
-				return new IdBagBinder();
-			}
-			else {
-				return new BagBinder();
-			}
-		}
-		else if ( List.class.equals( clazz ) ) {
-			if ( isIndexed ) {
-				if ( property.isAnnotationPresent( CollectionId.class ) ) {
-					throw new AnnotationException(
-							"List does not support @CollectionId and @OrderColumn (or @IndexColumn) at the same time: "
-									+ StringHelper.qualify( entityName, property.getName() ) );
-				}
-				return new ListBinder();
-			}
-			else if ( property.isAnnotationPresent( CollectionId.class ) ) {
-				return new IdBagBinder();
-			}
-			else {
-				return new BagBinder();
-			}
-		}
-		return null;
-	}
 
-	private static Class<?> inferCollectionClassFromSubclass(Class<?> clazz) {
 		for ( Class<?> priorityClass : INFERRED_CLASS_PRIORITY ) {
 			if ( priorityClass.isAssignableFrom( clazz ) ) {
 				return priorityClass;
 			}
 		}
+
 		return null;
 	}
 
@@ -488,7 +529,8 @@ public abstract class CollectionBinder {
 
 		Persister persisterAnn = property.getAnnotation( Persister.class );
 		if ( persisterAnn != null ) {
-			collection.setCollectionPersisterClass( persisterAnn.impl() );
+			//noinspection rawtypes
+			collection.setCollectionPersisterClass( (Class) persisterAnn.impl() );
 		}
 
 		applySortingAndOrdering( collection );
@@ -614,37 +656,32 @@ public abstract class CollectionBinder {
 	}
 
 	private void applySortingAndOrdering(Collection collection) {
-		boolean hadOrderBy = false;
-		boolean hadExplicitSort = false;
+		final boolean hadExplicitSort;
+		final Class<? extends Comparator<?>> comparatorClass;
 
-		Class<? extends Comparator<?>> comparatorClass = null;
-
-		if ( jpaOrderBy == null && sqlOrderBy == null ) {
-			if ( naturalSort != null ) {
-				if ( comparatorSort != null ) {
-					throw buildIllegalSortCombination();
-				}
-				hadExplicitSort = true;
+		if ( naturalSort != null ) {
+			if ( comparatorSort != null ) {
+				throw buildIllegalSortCombination();
 			}
-			else if ( comparatorSort != null ) {
-				hadExplicitSort = true;
-				comparatorClass = comparatorSort.value();
-			}
+			hadExplicitSort = true;
+			comparatorClass = null;
+		}
+		else if ( comparatorSort != null ) {
+			hadExplicitSort = true;
+			comparatorClass = comparatorSort.value();
 		}
 		else {
+			hadExplicitSort = false;
+			comparatorClass = null;
+		}
+
+		boolean hadOrderBy = false;
+		if ( jpaOrderBy != null || sqlOrderBy != null ) {
 			if ( jpaOrderBy != null && sqlOrderBy != null ) {
-				throw new AnnotationException(
-						String.format(
-								"Illegal combination of @%s and @%s on %s",
-								jakarta.persistence.OrderBy.class.getName(),
-								OrderBy.class.getName(),
-								safeCollectionRole()
-						)
-				);
+				throw buildIllegalOrderCombination();
 			}
 
 			hadOrderBy = true;
-			hadExplicitSort = false;
 
 			// we can only apply the sql-based order by up front.  The jpa order by has to wait for second pass
 			if ( sqlOrderBy != null ) {
@@ -652,7 +689,13 @@ public abstract class CollectionBinder {
 			}
 		}
 
-		collection.setSorted( isSortedCollection || hadExplicitSort );
+		final boolean isSorted = isSortedCollection || hadExplicitSort;
+
+		if ( isSorted && hadOrderBy ) {
+			throw buildIllegalOrderAndSortCombination();
+		}
+
+		collection.setSorted( isSorted );
 
 		if ( comparatorClass != null ) {
 			try {
@@ -670,10 +713,36 @@ public abstract class CollectionBinder {
 		}
 	}
 
+	private AnnotationException buildIllegalOrderCombination() {
+		return new AnnotationException(
+				String.format(
+						Locale.ROOT,
+						"Illegal combination of ordering and sorting annotations (`%s`) - only one of `@%s` and `@%s` may be used",
+						jakarta.persistence.OrderBy.class.getName(),
+						OrderBy.class.getName(),
+						safeCollectionRole()
+				)
+		);
+	}
+
+	private AnnotationException buildIllegalOrderAndSortCombination() {
+		throw new AnnotationException(
+				String.format(
+						Locale.ROOT,
+						"Illegal combination of ordering and sorting annotations (`%s`) - only one of `@%s`, `@%s`, `@%s` and `@%s` can be used",
+						safeCollectionRole(),
+						jakarta.persistence.OrderBy.class.getName(),
+						OrderBy.class.getName(),
+						SortComparator.class.getName(),
+						SortNatural.class.getName()
+				)
+		);
+	}
+
 	private AnnotationException buildIllegalSortCombination() {
 		return new AnnotationException(
 				String.format(
-						"Illegal combination of annotations on %s.  Only one of @%s and @%s can be used",
+						"Illegal combination of sorting annotations (`%s`) - only one of `@%s` and `@%s` can be used",
 						safeCollectionRole(),
 						SortNatural.class.getName(),
 						SortComparator.class.getName()

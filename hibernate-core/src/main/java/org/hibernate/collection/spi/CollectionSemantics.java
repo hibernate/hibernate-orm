@@ -10,7 +10,6 @@ import java.util.Iterator;
 import java.util.function.Consumer;
 
 import org.hibernate.Incubating;
-import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -36,38 +35,69 @@ public interface CollectionSemantics<CE, E> {
 	 */
 	CollectionClassification getCollectionClassification();
 
+	/**
+	 * The collection's Java type
+	 */
 	Class<?> getCollectionJavaType();
 
+	/**
+	 * Create a raw (unwrapped) version of the collection
+	 */
 	CE instantiateRaw(
 			int anticipatedSize,
 			CollectionPersister collectionDescriptor);
 
+	/**
+	 * Create a wrapper for the collection
+	 */
 	PersistentCollection<E> instantiateWrapper(
 			Object key,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session);
 
+	/**
+	 * Wrap a raw collection in wrapper
+	 */
 	PersistentCollection<E> wrap(
 			CE rawCollection,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session);
 
+	/**
+	 * Obtain an iterator over the collection elements
+	 */
 	Iterator<E> getElementIterator(CE rawCollection);
 
+	/**
+	 * Visit the elements of the collection
+	 */
 	void visitElements(CE rawCollection, Consumer<? super E> action);
 
 	/**
-	 * todo (6.0) : clean this contract up!
+	 * Create a producer for {@link org.hibernate.sql.results.graph.collection.CollectionInitializer}
+	 * instances for the given collection semantics
+	 *
+	 * @see InitializerProducerBuilder
 	 */
-	CollectionInitializerProducer createInitializerProducer(
+	default CollectionInitializerProducer createInitializerProducer(
 			NavigablePath navigablePath,
 			PluralAttributeMapping attributeMapping,
 			FetchParent fetchParent,
 			boolean selected,
 			String resultVariable,
-			DomainResultCreationState creationState);
+			DomainResultCreationState creationState) {
+		return createInitializerProducer(
+				navigablePath, attributeMapping, fetchParent, selected, resultVariable, null, null, creationState
+		);
+	}
 
-	CollectionInitializerProducer createInitializerProducer(
+	/**
+	 * Create a producer for {@link org.hibernate.sql.results.graph.collection.CollectionInitializer}
+	 * instances for the given collection semantics
+	 *
+	 * @see InitializerProducerBuilder
+	 */
+	default CollectionInitializerProducer createInitializerProducer(
 			NavigablePath navigablePath,
 			PluralAttributeMapping attributeMapping,
 			FetchParent fetchParent,
@@ -75,5 +105,16 @@ public interface CollectionSemantics<CE, E> {
 			String resultVariable,
 			Fetch indexFetch,
 			Fetch elementFetch,
-			DomainResultCreationState creationState);
+			DomainResultCreationState creationState) {
+		return InitializerProducerBuilder.createInitializerProducer(
+				navigablePath,
+				attributeMapping,
+				getCollectionClassification(),
+				fetchParent,
+				selected,
+				indexFetch,
+				elementFetch,
+				creationState
+		);
+	}
 }

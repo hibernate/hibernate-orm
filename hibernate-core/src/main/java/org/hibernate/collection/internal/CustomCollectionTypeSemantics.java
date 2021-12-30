@@ -11,20 +11,16 @@ import java.util.function.Consumer;
 
 import org.hibernate.collection.spi.CollectionInitializerProducer;
 import org.hibernate.collection.spi.CollectionSemantics;
+import org.hibernate.collection.spi.InitializerProducerBuilder;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.CollectionClassification;
-import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
-import org.hibernate.sql.results.graph.collection.internal.BagInitializerProducer;
-import org.hibernate.sql.results.graph.collection.internal.ListInitializerProducer;
-import org.hibernate.sql.results.graph.collection.internal.MapInitializerProducer;
 import org.hibernate.type.CollectionType;
 
 /**
@@ -33,16 +29,17 @@ import org.hibernate.type.CollectionType;
  * @author Christian Beikov
  */
 public class CustomCollectionTypeSemantics<CE, E> implements CollectionSemantics<CE, E> {
-
 	private final CollectionType collectionType;
+	private final CollectionClassification classification;
 
-	public CustomCollectionTypeSemantics(CollectionType collectionType) {
+	public CustomCollectionTypeSemantics(CollectionType collectionType, CollectionClassification classification) {
 		this.collectionType = collectionType;
+		this.classification = classification;
 	}
 
 	@Override
 	public CollectionClassification getCollectionClassification() {
-		return CollectionClassification.BAG;
+		return classification;
 	}
 
 	@Override
@@ -52,11 +49,13 @@ public class CustomCollectionTypeSemantics<CE, E> implements CollectionSemantics
 
 	@Override
 	public CE instantiateRaw(int anticipatedSize, CollectionPersister collectionDescriptor) {
+		//noinspection unchecked
 		return (CE) collectionType.instantiate( anticipatedSize );
 	}
 
 	@Override
 	public Iterator<E> getElementIterator(CE rawCollection) {
+		//noinspection unchecked
 		return collectionType.getElementsIterator( rawCollection, null );
 	}
 
@@ -72,79 +71,19 @@ public class CustomCollectionTypeSemantics<CE, E> implements CollectionSemantics
 			FetchParent fetchParent,
 			boolean selected,
 			String resultVariable,
-			DomainResultCreationState creationState) {
-		final Fetch indexFetch;
-		if ( attributeMapping.getIndexDescriptor() == null ) {
-			indexFetch = null;
-		}
-		else {
-			indexFetch = fetchParent.generateFetchableFetch(
-					attributeMapping.getIndexDescriptor(),
-					navigablePath.append( CollectionPart.Nature.INDEX.getName() ),
-					FetchTiming.IMMEDIATE,
-					selected,
-					null,
-					creationState
-			);
-		}
-		final Fetch elementFetch = fetchParent.generateFetchableFetch(
-				attributeMapping.getElementDescriptor(),
-				navigablePath.append( CollectionPart.Nature.ELEMENT.getName() ),
-				FetchTiming.IMMEDIATE,
-				selected,
-				null,
-				creationState
-		);
-		if ( indexFetch == null ) {
-			return new BagInitializerProducer( attributeMapping, null, elementFetch );
-		}
-		else if ( indexFetch.getResultJavaTypeDescriptor().getJavaTypeClass() == Integer.class ) {
-			return new ListInitializerProducer( attributeMapping, indexFetch, elementFetch );
-		}
-		else {
-			return new MapInitializerProducer( attributeMapping, indexFetch, elementFetch );
-		}
-	}
-
-	@Override
-	public CollectionInitializerProducer createInitializerProducer(
-			NavigablePath navigablePath,
-			PluralAttributeMapping attributeMapping,
-			FetchParent fetchParent,
-			boolean selected,
-			String resultVariable,
 			Fetch indexFetch,
 			Fetch elementFetch,
 			DomainResultCreationState creationState) {
-		if ( indexFetch == null ) {
-			indexFetch = fetchParent.generateFetchableFetch(
-					attributeMapping.getIndexDescriptor(),
-					navigablePath.append( CollectionPart.Nature.INDEX.getName() ),
-					FetchTiming.IMMEDIATE,
-					selected,
-					null,
-					creationState
-			);
-		}
-		if ( elementFetch == null ) {
-			elementFetch = fetchParent.generateFetchableFetch(
-					attributeMapping.getElementDescriptor(),
-					navigablePath.append( CollectionPart.Nature.ELEMENT.getName() ),
-					FetchTiming.IMMEDIATE,
-					selected,
-					null,
-					creationState
-			);
-		}
-		if ( indexFetch == null ) {
-			return new BagInitializerProducer( attributeMapping, null, elementFetch );
-		}
-		else if ( indexFetch.getResultJavaTypeDescriptor().getJavaTypeClass() == Integer.class ) {
-			return new ListInitializerProducer( attributeMapping, indexFetch, elementFetch );
-		}
-		else {
-			return new MapInitializerProducer( attributeMapping, indexFetch, elementFetch );
-		}
+		return InitializerProducerBuilder.createCollectionTypeWrapperInitializerProducer(
+				navigablePath,
+				attributeMapping,
+				classification,
+				fetchParent,
+				selected,
+				indexFetch,
+				elementFetch,
+				creationState
+		);
 	}
 
 	@Override
@@ -152,6 +91,7 @@ public class CustomCollectionTypeSemantics<CE, E> implements CollectionSemantics
 			Object key,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
+		//noinspection unchecked
 		return collectionType.instantiate( session, collectionDescriptor, key );
 	}
 
@@ -160,6 +100,7 @@ public class CustomCollectionTypeSemantics<CE, E> implements CollectionSemantics
 			CE rawCollection,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
+		//noinspection unchecked
 		return collectionType.wrap( session, rawCollection );
 	}
 }

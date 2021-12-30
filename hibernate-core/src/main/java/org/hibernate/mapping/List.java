@@ -6,6 +6,8 @@
  */
 package org.hibernate.mapping;
 
+import java.util.function.Function;
+
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.collection.internal.StandardListSemantics;
@@ -22,12 +24,22 @@ public class List extends IndexedCollection {
 	
 	private int baseIndex;
 
-	public boolean isList() {
-		return true;
-	}
-
+	/**
+	 * hbm.xml binding
+	 */
 	public List(MetadataBuildingContext buildingContext, PersistentClass owner) {
 		super( buildingContext, owner );
+	}
+
+	/**
+	 * annotation binding
+	 */
+	public List(SemanticsResolver semanticsResolver, PersistentClass owner, MetadataBuildingContext buildingContext) {
+		super( semanticsResolver, owner, buildingContext );
+	}
+
+	public boolean isList() {
+		return true;
 	}
 
 	@Override

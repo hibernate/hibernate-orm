@@ -17,8 +17,19 @@ import org.hibernate.type.IdentifierBagType;
  * just the identifier column
  */
 public class IdentifierBag extends IdentifierCollection {
+
+	/**
+	 * hbm.xml binding
+	 */
 	public IdentifierBag(MetadataBuildingContext buildingContext, PersistentClass owner) {
 		super( buildingContext, owner );
+	}
+
+	/**
+	 * annotation binding
+	 */
+	public IdentifierBag(SemanticsResolver semanticsResolver, PersistentClass owner, MetadataBuildingContext buildingContext) {
+		super( semanticsResolver, owner, buildingContext );
 	}
 
 	public CollectionType getDefaultCollectionType() {

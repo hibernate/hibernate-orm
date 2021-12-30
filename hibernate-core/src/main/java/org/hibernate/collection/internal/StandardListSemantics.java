@@ -12,18 +12,16 @@ import java.util.function.Consumer;
 
 import org.hibernate.collection.spi.CollectionInitializerProducer;
 import org.hibernate.collection.spi.CollectionSemantics;
+import org.hibernate.collection.spi.InitializerProducerBuilder;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.CollectionClassification;
-import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.results.graph.Fetch;
-import org.hibernate.sql.results.graph.collection.internal.ListInitializerProducer;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 
 /**
@@ -45,6 +43,7 @@ public class StandardListSemantics<E> implements CollectionSemantics<List<E>, E>
 		return CollectionClassification.LIST;
 	}
 
+	@SuppressWarnings("rawtypes")
 	@Override
 	public Class<List> getCollectionJavaType() {
 		return List.class;
@@ -68,72 +67,6 @@ public class StandardListSemantics<E> implements CollectionSemantics<List<E>, E>
 	}
 
 	@Override
-	public CollectionInitializerProducer createInitializerProducer(
-			NavigablePath navigablePath,
-			PluralAttributeMapping attributeMapping,
-			FetchParent fetchParent,
-			boolean selected,
-			String resultVariable,
-			DomainResultCreationState creationState) {
-		return new ListInitializerProducer(
-				attributeMapping,
-				fetchParent.generateFetchableFetch(
-						attributeMapping.getIndexDescriptor(),
-						navigablePath.append( CollectionPart.Nature.INDEX.getName() ),
-						FetchTiming.IMMEDIATE,
-						selected,
-						null,
-						creationState
-				),
-				fetchParent.generateFetchableFetch(
-						attributeMapping.getElementDescriptor(),
-						navigablePath.append( CollectionPart.Nature.ELEMENT.getName() ),
-						FetchTiming.IMMEDIATE,
-						selected,
-						null,
-						creationState
-				)
-		);
-	}
-
-	@Override
-	public CollectionInitializerProducer createInitializerProducer(
-			NavigablePath navigablePath,
-			PluralAttributeMapping attributeMapping,
-			FetchParent fetchParent,
-			boolean selected,
-			String resultVariable,
-			Fetch indexFetch,
-			Fetch elementFetch,
-			DomainResultCreationState creationState) {
-		if ( indexFetch == null ) {
-			indexFetch = fetchParent.generateFetchableFetch(
-					attributeMapping.getIndexDescriptor(),
-					navigablePath.append( CollectionPart.Nature.INDEX.getName() ),
-					FetchTiming.IMMEDIATE,
-					selected,
-					null,
-					creationState
-			);
-		}
-		if ( elementFetch == null ) {
-			elementFetch = fetchParent.generateFetchableFetch(
-					attributeMapping.getElementDescriptor(),
-					navigablePath.append( CollectionPart.Nature.ELEMENT.getName() ),
-					FetchTiming.IMMEDIATE,
-					selected,
-					null,
-					creationState
-			);
-		}
-		return new ListInitializerProducer(
-				attributeMapping,
-				indexFetch,
-				elementFetch
-		);
-	}
-
-	@Override
 	public PersistentCollection<E> instantiateWrapper(
 			Object key,
 			CollectionPersister collectionDescriptor,
@@ -147,5 +80,18 @@ public class StandardListSemantics<E> implements CollectionSemantics<List<E>, E>
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
 		return new PersistentList<>( session, rawCollection );
+	}
+
+	@Override
+	public CollectionInitializerProducer createInitializerProducer(
+			NavigablePath navigablePath,
+			PluralAttributeMapping attributeMapping,
+			FetchParent fetchParent,
+			boolean selected,
+			String resultVariable,
+			Fetch indexFetch,
+			Fetch elementFetch,
+			DomainResultCreationState creationState) {
+		return InitializerProducerBuilder.createListInitializerProducer( navigablePath, attributeMapping, fetchParent, selected, indexFetch, elementFetch, creationState );
 	}
 }

@@ -26,6 +26,7 @@ import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IdentifierCollection;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.SemanticsResolver;
 import org.hibernate.mapping.Table;
 
 import jakarta.persistence.Column;
@@ -34,11 +35,12 @@ import jakarta.persistence.Column;
  * @author Emmanuel Bernard
  */
 public class IdBagBinder extends BagBinder {
-	public IdBagBinder() {
+	public IdBagBinder(SemanticsResolver semanticsResolver, MetadataBuildingContext buildingContext) {
+		super( semanticsResolver, buildingContext );
 	}
 
-	protected Collection createCollection(PersistentClass persistentClass) {
-		return new org.hibernate.mapping.IdentifierBag( getBuildingContext(), persistentClass );
+	protected Collection createCollection(PersistentClass owner) {
+		return new org.hibernate.mapping.IdentifierBag( getSemanticsResolver(), owner, getBuildingContext() );
 	}
 
 	@Override

@@ -18,6 +18,10 @@ public class PrimitiveArray extends Array {
 		super( buildingContext, owner );
 	}
 
+	public PrimitiveArray(SemanticsResolver semanticsResolver, PersistentClass owner, MetadataBuildingContext buildingContext) {
+		super( semanticsResolver, owner, buildingContext );
+	}
+
 	public boolean isPrimitiveArray() {
 		return true;
 	}

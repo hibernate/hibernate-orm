@@ -15,7 +15,7 @@ import org.hibernate.internal.FilterConfiguration;
  * @author Steve Ebersole
  */
 public interface Filterable {
-	public void addFilter(String name, String condition, boolean autoAliasInjection, java.util.Map<String,String> aliasTableMap, java.util.Map<String,String> aliasEntityMap);
+	void addFilter(String name, String condition, boolean autoAliasInjection, java.util.Map<String,String> aliasTableMap, java.util.Map<String,String> aliasEntityMap);
 
-	public java.util.List<FilterConfiguration> getFilters();
+	java.util.List<FilterConfiguration> getFilters();
 }

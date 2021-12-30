@@ -12,13 +12,11 @@ import java.util.function.Consumer;
 
 import org.hibernate.collection.spi.CollectionInitializerProducer;
 import org.hibernate.collection.spi.CollectionSemantics;
-import org.hibernate.engine.FetchTiming;
-import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.collection.spi.InitializerProducerBuilder;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.results.graph.Fetch;
-import org.hibernate.sql.results.graph.collection.internal.SetInitializerProducer;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 
 /**
@@ -46,27 +44,6 @@ public abstract class AbstractSetSemantics<SE extends Set<E>,E> implements Colle
 	}
 
 	@Override
-	public CollectionInitializerProducer createInitializerProducer(
-			NavigablePath navigablePath,
-			PluralAttributeMapping attributeMapping,
-			FetchParent fetchParent,
-			boolean selected,
-			String resultVariable,
-			DomainResultCreationState creationState) {
-		return new SetInitializerProducer(
-				attributeMapping,
-				fetchParent.generateFetchableFetch(
-						attributeMapping.getElementDescriptor(),
-						navigablePath.append( CollectionPart.Nature.ELEMENT.getName() ),
-						FetchTiming.IMMEDIATE,
-						selected,
-						null,
-						creationState
-				)
-		);
-	}
-
-	@Override
 	public  CollectionInitializerProducer createInitializerProducer(
 			NavigablePath navigablePath,
 			PluralAttributeMapping attributeMapping,
@@ -75,17 +52,15 @@ public abstract class AbstractSetSemantics<SE extends Set<E>,E> implements Colle
 			String resultVariable,
 			Fetch indexFetch,
 			Fetch elementFetch,
-			DomainResultCreationState creationState){
-		if ( elementFetch == null ) {
-			return createInitializerProducer(
-					navigablePath,
-					attributeMapping,
-					fetchParent,
-					selected,
-					resultVariable,
-					creationState
-			);
-		}
-		return new SetInitializerProducer( attributeMapping, elementFetch );
+			DomainResultCreationState creationState) {
+		assert indexFetch == null;
+		return InitializerProducerBuilder.createSetInitializerProducer(
+				navigablePath,
+				attributeMapping,
+				fetchParent,
+				selected,
+				elementFetch,
+				creationState
+		);
 	}
 }

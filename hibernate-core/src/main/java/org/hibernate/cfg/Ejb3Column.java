@@ -21,7 +21,6 @@ import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitBasicColumnNameSource;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
-import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -287,62 +286,70 @@ public class Ejb3Column {
 	}
 
 	public void redefineColumnName(String columnName, String propertyName, boolean applyNamingStrategy) {
-		final ObjectNameNormalizer normalizer = context.getObjectNameNormalizer();
-		final Database database = context.getMetadataCollector().getDatabase();
-		final ImplicitNamingStrategy implicitNamingStrategy = context.getBuildingOptions().getImplicitNamingStrategy();
-		final PhysicalNamingStrategy physicalNamingStrategy = context.getBuildingOptions().getPhysicalNamingStrategy();
-
-		if ( applyNamingStrategy ) {
-			if ( StringHelper.isEmpty( columnName ) ) {
-				if ( propertyName != null ) {
-					final AttributePath attributePath = AttributePath.parse( propertyName );
-
-					Identifier implicitName = normalizer.normalizeIdentifierQuoting(
-							implicitNamingStrategy.determineBasicColumnName(
-									new ImplicitBasicColumnNameSource() {
-										@Override
-										public AttributePath getAttributePath() {
-											return attributePath;
-										}
-
-										@Override
-										public boolean isCollectionElement() {
-											// if the propertyHolder is a collection, assume the
-											// @Column refers to the element column
-											return !propertyHolder.isComponent()
-													&& !propertyHolder.isEntity();
-										}
-
-										@Override
-										public MetadataBuildingContext getBuildingContext() {
-											return context;
-										}
-									}
-							)
-					);
-
-					// HHH-6005 magic
-					if ( implicitName.getText().contains( "_collection&&element_" ) ) {
-						implicitName = Identifier.toIdentifier( implicitName.getText().replace( "_collection&&element_", "_" ),
-								implicitName.isQuoted() );
-					}
-
-					final Identifier physicalName = physicalNamingStrategy.toPhysicalColumnName( implicitName, database.getJdbcEnvironment() );
-					mappingColumn.setName( physicalName.render( database.getDialect() ) );
-				}
-				//Do nothing otherwise
-			}
-			else {
-				final Identifier explicitName = database.toIdentifier( columnName );
-				final Identifier physicalName =  physicalNamingStrategy.toPhysicalColumnName( explicitName, database.getJdbcEnvironment() );
-				mappingColumn.setName( physicalName.render( database.getDialect() ) );
-			}
+		if ( StringHelper.isNotEmpty( columnName ) ) {
+			mappingColumn.setName( processColumnName( columnName, applyNamingStrategy ) );
 		}
 		else {
-			if ( StringHelper.isNotEmpty( columnName ) ) {
-				mappingColumn.setName( normalizer.toDatabaseIdentifierText( columnName ) );
+			if ( propertyName != null && applyNamingStrategy ) {
+				mappingColumn.setName( inferColumnName( propertyName ) );
 			}
+			//Do nothing otherwise
 		}
+	}
+
+	private String processColumnName(String columnName, boolean applyNamingStrategy) {
+		if (applyNamingStrategy) {
+			Database database = context.getMetadataCollector().getDatabase();
+			return context.getBuildingOptions().getPhysicalNamingStrategy()
+					.toPhysicalColumnName( database.toIdentifier( columnName ), database.getJdbcEnvironment() )
+					.render( database.getDialect() );
+		}
+		else {
+			return context.getObjectNameNormalizer().toDatabaseIdentifierText( columnName );
+		}
+
+	}
+
+	private String inferColumnName(String propertyName) {
+		final Database database = context.getMetadataCollector().getDatabase();
+		final ObjectNameNormalizer normalizer = context.getObjectNameNormalizer();
+		final ImplicitNamingStrategy implicitNamingStrategy = context.getBuildingOptions().getImplicitNamingStrategy();
+
+		Identifier implicitName = normalizer.normalizeIdentifierQuoting(
+				implicitNamingStrategy.determineBasicColumnName(
+						new ImplicitBasicColumnNameSource() {
+							final AttributePath attributePath = AttributePath.parse(propertyName);
+
+							@Override
+							public AttributePath getAttributePath() {
+								return attributePath;
+							}
+
+							@Override
+							public boolean isCollectionElement() {
+								// if the propertyHolder is a collection, assume the
+								// @Column refers to the element column
+								return !propertyHolder.isComponent()
+									&& !propertyHolder.isEntity();
+							}
+
+							@Override
+							public MetadataBuildingContext getBuildingContext() {
+								return context;
+							}
+						}
+				)
+		);
+
+		// HHH-6005 magic
+		if ( implicitName.getText().contains( "_collection&&element_" ) ) {
+			implicitName = Identifier.toIdentifier( implicitName.getText().replace( "_collection&&element_", "_" ),
+					implicitName.isQuoted() );
+		}
+
+		return context.getBuildingOptions().getPhysicalNamingStrategy()
+				.toPhysicalColumnName( implicitName, database.getJdbcEnvironment() )
+				.render( database.getDialect() );
 	}
 
 	public String getName() {
@@ -607,11 +614,6 @@ public class Ejb3Column {
 
 					Ejb3Column column = new Ejb3Column();
 
-					if ( length == 1 ) {
-						applyColumnDefault( column, inferredData );
-						applyGeneratedAs( column, inferredData );
-					}
-
 					column.setImplicit( false );
 					column.setSqlType( sqlType );
 					column.setLength( (long) col.length() );
@@ -640,6 +642,8 @@ public class Ejb3Column {
 					column.setPropertyHolder( propertyHolder );
 					column.setJoins( secondaryTables );
 					column.setBuildingContext( context );
+					column.applyColumnDefault( inferredData, length==1 );
+					column.applyGeneratedAs( inferredData, length==1 );
 					column.extractDataFromPropertyData(inferredData);
 					column.bind();
 					columns[index] = column;
@@ -649,12 +653,12 @@ public class Ejb3Column {
 		return columns;
 	}
 
-	private static void applyColumnDefault(Ejb3Column column, PropertyData inferredData) {
+	private void applyColumnDefault(PropertyData inferredData, boolean implicit) {
 		final XProperty xProperty = inferredData.getProperty();
 		if ( xProperty != null ) {
 			ColumnDefault columnDefaultAnn = xProperty.getAnnotation( ColumnDefault.class );
-			if ( columnDefaultAnn != null ) {
-				column.setDefaultValue( columnDefaultAnn.value() );
+			if ( columnDefaultAnn != null && isReferencedColumn( columnDefaultAnn.name(), implicit ) ) {
+				setDefaultValue( columnDefaultAnn.value() );
 			}
 		}
 		else {
@@ -664,18 +668,37 @@ public class Ejb3Column {
 		}
 	}
 
-	private static void applyGeneratedAs(Ejb3Column column, PropertyData inferredData) {
+	private void applyGeneratedAs(PropertyData inferredData, boolean implicit) {
 		final XProperty xProperty = inferredData.getProperty();
 		if ( xProperty != null ) {
 			GeneratedColumn generatedAnn = xProperty.getAnnotation( GeneratedColumn.class );
-			if ( generatedAnn != null && !generatedAnn.value().isEmpty() ) {
-				column.setGeneratedAs( generatedAnn.value() );
+			if ( generatedAnn != null && isReferencedColumn( generatedAnn.name(), implicit ) ) {
+				setGeneratedAs( generatedAnn.value() );
 			}
 		}
 		else {
 			LOG.trace(
 					"Could not perform @ColumnGeneratedAlways lookup as 'PropertyData' did not give access to XProperty"
 			);
+		}
+	}
+
+	private boolean isReferencedColumn(String name, boolean implicit) {
+		if ( name.isEmpty() && implicit ) {
+			return true;
+		}
+		else {
+			String columnName;
+			if ( StringHelper.isNotEmpty( logicalColumnName ) ) {
+				columnName = processColumnName( logicalColumnName, true );
+			}
+			else if ( propertyName != null ) {
+				columnName = inferColumnName( propertyName );
+			}
+			else {
+				return false;
+			}
+			return name.equals(columnName);
 		}
 	}
 
@@ -743,17 +766,16 @@ public class Ejb3Column {
 		column.setBuildingContext( context );
 
 		// property name + suffix is an "explicit" column name
-		if ( !StringHelper.isEmpty( suffixForDefaultColumnName ) ) {
+		boolean implicit = StringHelper.isEmpty( suffixForDefaultColumnName );
+		if ( !implicit ) {
 			column.setLogicalColumnName( propertyName + suffixForDefaultColumnName );
-			column.setImplicit( false );
 		}
-		else {
-			column.setImplicit( true );
-		}
-		applyColumnDefault( column, inferredData );
-		applyGeneratedAs( column, inferredData );
+		column.setImplicit( implicit );
+		column.applyColumnDefault( inferredData, implicit );
+		column.applyGeneratedAs( inferredData, implicit );
 		column.extractDataFromPropertyData( inferredData );
 		column.bind();
+
 		return columns;
 	}
 

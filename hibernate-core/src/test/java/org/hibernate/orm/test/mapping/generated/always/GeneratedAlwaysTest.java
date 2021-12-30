@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.mapping.generated.always;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import org.hibernate.annotations.GeneratedColumn;
@@ -35,12 +36,13 @@ public class GeneratedAlwaysTest {
     public void test(SessionFactoryScope scope) {
         scope.inTransaction( session -> {
             BigDecimal unitPrice = new BigDecimal("12.99");
-            OrderLine entity = new OrderLine( unitPrice, 5 );
+            OrderLine entity = new OrderLine( unitPrice, 5, 10 );
             session.persist(entity);
             session.flush();
             assertEquals( 5, entity.quantity );
             assertEquals( unitPrice, entity.unitPrice );
             assertEquals( unitPrice.multiply( new BigDecimal("5") ), entity.total );
+            assertEquals( new BigDecimal("58.46"), entity.discounted );
         } );
     }
 
@@ -55,13 +57,18 @@ public class GeneratedAlwaysTest {
         private BigDecimal unitPrice;
         @Id
         private int quantity;
+        private int discount;
         @GeneratedColumn(value = "unitPrice*quantity", fetch = true)
         private BigDecimal total;
+        @Column(name = "discountedTotal")
+        @GeneratedColumn(name = "discountedTotal", value = "unitPrice*quantity*(1.0-discount/100.0)", fetch = true)
+        private BigDecimal discounted;
 
         public OrderLine() {}
-        public OrderLine(BigDecimal unitPrice, int quantity) {
+        public OrderLine(BigDecimal unitPrice, int quantity, int discount) {
             this.unitPrice = unitPrice;
             this.quantity = quantity;
+            this.discount = discount;
         }
     }
 }

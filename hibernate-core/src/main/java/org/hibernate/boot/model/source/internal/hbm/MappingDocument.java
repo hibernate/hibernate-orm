@@ -253,7 +253,7 @@ public class MappingDocument implements HbmLocalMetadataBuildingContext, Metadat
 		documentRoot.getResultset().forEach(
 				(hbmResultSetMapping) -> {
 					getMetadataCollector().addResultSetMapping(
-							new HbmResultSetMappingDescriptor( hbmResultSetMapping, rootBuildingContext ) );
+							new HbmResultSetMappingDescriptor( hbmResultSetMapping, this ) );
 				}
 		);
 	}

@@ -21,6 +21,10 @@ import org.hibernate.boot.query.results.HbmFetchParent;
 import org.hibernate.boot.query.results.HbmResultSetMappingDescriptor;
 import org.hibernate.boot.query.results.ResultDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.metamodel.RuntimeMetamodels;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.NavigablePath;
@@ -58,19 +62,31 @@ public class HbmEntityResultDescriptor implements ResultDescriptor, HbmFetchPare
 		assert joinDescriptorsAccess != null;
 
 		if ( hbmEntityReturn.getEntityName() == null ) {
-			this.entityName = context.getMetadataCollector().getImports().get( hbmEntityReturn.getClazz() );
+			final String namedClass = hbmEntityReturn.getClazz();
+			if ( namedClass == null ) {
+				throw new MappingException( "Entity <return/> mapping did not specify entity name nor class - `" + registrationName + "`" );
+			}
+
+			String className = namedClass;
+
+			final String implicitPackageName = context.getMappingDefaults().getImplicitPackageName();
+			if ( implicitPackageName != null ) {
+				final PersistentClass entityBinding = context.getMetadataCollector().getEntityBinding( namedClass );
+				if ( entityBinding == null ) {
+					final String packageQualified = implicitPackageName + "." + namedClass;
+					final PersistentClass entityBinding2 = context.getMetadataCollector().getEntityBinding( packageQualified );
+					if ( entityBinding2 != null ) {
+						className = packageQualified;
+					}
+				}
+			}
+			this.entityName = className;
 		}
 		else {
 			this.entityName = hbmEntityReturn.getEntityName();
 		}
-		if ( entityName == null ) {
-			throw new MappingException( "Entity <return/> mapping did not specify entity name" );
-		}
 
 		this.tableAlias = hbmEntityReturn.getAlias();
-		if ( tableAlias == null ) {
-			throw new MappingException( "Entity <return/> mapping did not specify alias" );
-		}
 
 		BootResultMappingLogging.LOGGER.debugf(
 				"Creating EntityResultDescriptor (%s : %s) for ResultSet mapping - %s",
@@ -125,11 +141,18 @@ public class HbmEntityResultDescriptor implements ResultDescriptor, HbmFetchPare
 				registrationName
 		);
 
-		final EntityMappingType entityDescriptor = resolutionContext
+		final RuntimeMetamodels runtimeMetamodels = resolutionContext
 				.getSessionFactory()
-				.getRuntimeMetamodels()
-				.getEntityMappingType( entityName );
-		HbmResultSetMappingDescriptor.applyFetchJoins( joinDescriptorsAccess, tableAlias, propertyFetchDescriptors );
+				.getRuntimeMetamodels();
+
+		final EntityMappingType entityDescriptor = runtimeMetamodels.getEntityMappingType( runtimeMetamodels.getImportedName( entityName ) );
+		final Map<String, Map<String, HbmJoinDescriptor>> joinDescriptors = joinDescriptorsAccess.get();
+		if ( CollectionHelper.isNotEmpty( propertyFetchDescriptors ) || CollectionHelper.isNotEmpty( joinDescriptors ) ) {
+			if ( tableAlias == null ) {
+				throw new MappingException( "Entity <return/> mapping did not specify alias - `" + registrationName + "`" );
+			}
+		}
+		HbmResultSetMappingDescriptor.applyFetchJoins( joinDescriptors, tableAlias, propertyFetchDescriptors );
 
 		final NavigablePath entityPath = new NavigablePath( entityName );
 

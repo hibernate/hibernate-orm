@@ -4,27 +4,24 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.orm.test.sql.hand.hbm;
+package org.hibernate.orm.test.query.sql.named.hbm;
 
-import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.orm.test.query.sql.named.Employee;
+import org.hibernate.orm.test.query.sql.named.Group;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
 
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
-import static org.assertj.core.api.Assertions.anyOf;
-import static org.assertj.core.api.Assertions.assertThat;
-
 @DomainModel(
 		annotatedClasses = { Group.class, Employee.class },
-		xmlMappings = "mappings/sql/hbm/resultset/PersonResults.hbm.xml"
+		xmlMappings = "mappings/query/named/sql/hbm/GroupsAndEmployees.hbm.xml"
 )
 @SessionFactory
-public class HbmResultSetMappingTests {
+public class GroupsAndEmployeesTests {
 
 	@Test
 	@NotImplementedYet( strict = false )

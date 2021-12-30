@@ -110,7 +110,7 @@ public class HbmJoinDescriptor implements HbmFetchDescriptor, HbmFetchParent {
 		if ( memento == null ) {
 			final HbmFetchParentMemento thisAsParentMemento = resolveParentMemento( resolutionContext );
 
-			HbmResultSetMappingDescriptor.applyFetchJoins( joinDescriptorsAccess, tableAlias, propertyFetchDescriptors );
+			HbmResultSetMappingDescriptor.applyFetchJoins( joinDescriptorsAccess.get(), tableAlias, propertyFetchDescriptors );
 
 			final Map<String, FetchMemento> fetchDescriptorMap = new HashMap<>();
 			propertyFetchDescriptors.forEach(

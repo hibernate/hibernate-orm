@@ -108,7 +108,7 @@ public class HbmCollectionResultDescriptor implements ResultDescriptor, HbmFetch
 		);
 
 		if ( memento == null ) {
-			HbmResultSetMappingDescriptor.applyFetchJoins( joinDescriptorsAccess, tableAlias, propertyFetchDescriptors );
+			HbmResultSetMappingDescriptor.applyFetchJoins( joinDescriptorsAccess.get(), tableAlias, propertyFetchDescriptors );
 
 			final FetchParentMemento thisAsParentMemento = resolveParentMemento( resolutionContext );
 

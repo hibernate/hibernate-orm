@@ -9,10 +9,10 @@
         "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
         "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
-<hibernate-mapping package="org.hibernate.orm.test.sql.hand.hbm" default-access="field">
+<hibernate-mapping package="org.hibernate.orm.test.query.sql.named" default-access="field">
 
     <resultset name="explicit-results-mapping">
-        <return alias="groupp" class="org.hibernate.orm.test.sql.hand.hbm.Group">
+        <return alias="groupp" class="org.hibernate.orm.test.query.sql.named.Group">
             <return-property name="id" column="group_id" />
             <return-property name="name" column="group_name" />
             <return-property name="admin" column="admin_fk" />
@@ -43,7 +43,7 @@
 					and members.employee_fk = emp.id
        ]]>
 
-        <return alias="groupp" class="org.hibernate.orm.test.sql.hand.hbm.Group">
+        <return alias="groupp" class="org.hibernate.orm.test.query.sql.named.Group">
             <return-property name="id" column="group_id" />
             <return-property name="name" column="group_name" />
             <return-property name="admin" column="admin_fk" />
@@ -55,7 +55,12 @@
             <return-property name="element.name" column="emp_name" />
             <return-property name="element.manager" column="manager_fk" />
         </return-join>
-
     </sql-query>
+
+    <sql-query name="all-groups">
+        <return class="org.hibernate.orm.test.query.sql.named.Group"/>
+        select * from groups
+    </sql-query>
+
 
 </hibernate-mapping>

@@ -6,7 +6,8 @@
  */
 
 /**
+ *
  * Tests for handling `hbm.xml` `<resultset/>` mapping as well as
  * "inline" `<sql-query/>` result mappings
  */
-package org.hibernate.orm.test.sql.hand.hbm;
+package org.hibernate.orm.test.query.sql.named;

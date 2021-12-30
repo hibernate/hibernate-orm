@@ -268,11 +268,9 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 	}
 
 	public static void applyFetchJoins(
-			Supplier<Map<String, Map<String, HbmJoinDescriptor>>> joinDescriptorsAccess,
+			Map<String, Map<String, HbmJoinDescriptor>> joinDescriptors,
 			String tableAlias,
 			List<HbmFetchDescriptor> propertyFetchDescriptors) {
-		final Map<String, Map<String, HbmJoinDescriptor>> joinDescriptors = joinDescriptorsAccess.get();
-
 		if ( joinDescriptors == null ) {
 			return;
 		}

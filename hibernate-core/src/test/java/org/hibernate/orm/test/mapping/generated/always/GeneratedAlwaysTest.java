@@ -61,7 +61,7 @@ public class GeneratedAlwaysTest {
         @GeneratedColumn(value = "unitPrice*quantity")
         private BigDecimal total;
         @Column(name = "discountedTotal")
-        @GeneratedColumn(name = "discountedTotal", value = "unitPrice*quantity*(1.0-discount/100.0)")
+        @GeneratedColumn(value = "unitPrice*quantity*(1.0-discount/100.0)")
         private BigDecimal discounted;
 
         public OrderLine() {}

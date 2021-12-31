@@ -8,7 +8,11 @@
 [[hql-case-sensitivity]]
 === Case Sensitivity
 
-With the exception of names of Java classes and properties, queries are case-insensitive.
+Case sensitivity depends on the language element:
+
+- keywords and function names are case-insensitive, but
+- Java class names, and the names of attributes of Java classes, are case-sensitive.
+
 So `SeLeCT` is the same as `sELEct` is the same as `SELECT`, but `org.hibernate.eg.FOO` and `org.hibernate.eg.Foo` are different, as are `foo.barSet` and `foo.BARSET`.
 
 [NOTE]
@@ -642,17 +646,36 @@ It's really very easy to remove duplicate results from a Java list:
 
 * using `new HashSet(query.getResultList())`,
 * using `query.getResultList().stream().distinct()`, or
-* using `query.setResultListTransformer(DistinctResultTransformer.INSTANCE).getResultList()`.
+* with `query.setResultListTransformer(DistinctResultTransformer.INSTANCE).getResultList()`.
 =====
+
+==== Aggregate functions and `FILTER`
+
+It's common to have aggregate functions like `count()`, `sum()`, and `max()` in a select list.
+The aggregate functions are listed <<hql-aggregate-functions,below>>.
+
+An aggregate function may even have a filter, a sort of mini-`WHERE`-clause applying to just one item of the select list:
+
+[[hql-aggregate-functions-simple-filter-example]]
+.Using FILTER with
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-aggregate-functions-simple-filter-example]
+----
+====
+
 [[hql-literals]]
 === Literals
 
 The most important literal value in the language is `null`.
 
+[[hql-boolean-literals]]
 ==== Boolean literals
 
 The boolean literal values are the (case-insensitive) keywords `true` and `false`.
 
+[[hql-string-literals]]
 ==== String literals
 
 String literals are enclosed in single quotes.
@@ -741,6 +764,22 @@ Of these, only `current_date`, `current_time`, and `current_timestamp` are defin
 However, the use of date and time types from the `java.sql` package is strongly discouraged, so we encourage the use of the HQL extensions.
 ====
 
+[[hql-duration-literals]]
+==== Duration literals
+
+There are two sorts of duration in HQL:
+
+* year/quarter/month/week/day durations, and
+* week/day/hour/minute/second/nanosecond durations.
+
+Literal duration expressions are of form `n unit`, for example `1 day` or `10 year` or `100 nanosecond`.
+
+[NOTE]
+====
+A HQL duration is considered to map to a Java `java.time.Duration`, but semantically they're perhaps more similar to an ANSI SQL `INTERVAL` type.
+====
+
+[[hql-binary-literals]]
 ==== Binary string literals
 
 HQL also provides a choice of formats for binary strings:
@@ -748,33 +787,48 @@ HQL also provides a choice of formats for binary strings:
 * the braced syntax `{0xDE, 0xAD, 0xBE, 0xEF}`, a list of Java-style hexadecimal byte literals, or
 * the quoted syntax `X'DEADBEEF'` or `x'deadbeef'`, similar to SQL.
 
-==== Enum and entity name literals
+[[hql-enum-literals]]
+==== Enum literals
 
-Enums literals must be written with the fully-qualified enum class name.
+Literal values of a Java enum must be written with the fully-qualified enum class name, for example, `com.mycompany.Status.OPEN`.
 
-HQL allows Java `static` constants to be used in the same manner, as an extension to JPQL.
+HQL allows Java `static` constants to be used in the same way, for example, `java.lang.Integer.MAX_VALUE`.
 
-Entity names may also occur as a literal value. See <<hql-entity-type-exp>>.
+[[hql-entity-name-literals]]
+==== Literal entity names
+
+Entity names may also occur as a literal value. They do not need to be qualified. See <<hql-entity-type-exp>>.
 
 [[hql-expressions]]
 === Expressions
 
 Essentially, expressions are references that resolve to basic or tuple values.
 
-[[hql-identification-variable]]
-==== Identification variable
+[[hql-concatenation]]
+==== String concatenation
 
-See <<hql-from-clause>>.
+HQL defines two ways to concatenate strings:
 
-[[hql-path-expressions]]
-==== Path expressions
+* the SQL-style concatenation operator, `||`, and
+* the JPQL-standard `concat()` function.
 
-Again, see <<hql-from-clause>>.
+See <<jpql-standardized-functions,below>> for details of the `concat()` function.
+
+[[hql-concatenation-example]]
+.Concatenation operation example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-concatenation-example]
+----
+====
+
+Many more operations on strings are defined below, in <<hql-exp-functions>>.
 
 [[hql-numeric-arithmetic]]
-==== Arithmetic
+==== Numeric arithmetic
 
-Arithmetic operations also represent valid expressions.
+The basic SQL arithmetic operators, `+`,`-`,`*`, and `/` are joined by the remainder operator `%`.
 
 [[hql-numeric-arithmetic-example]]
 .Numeric arithmetic examples
@@ -794,35 +848,51 @@ The following rules apply to the result of arithmetic operations:
 * else, if either operand is `Long`/`long`, the result is `Long` (except for division, in which case the result type is not further defined)
 * else, (the assumption being that both operands are of integral type) the result is `Integer` (except for division, in which case the result type is not further defined)
 
-Date arithmetic is also supported, albeit in a more limited fashion.
-This is due  to differences in database support and partly to the lack of support for `INTERVAL` definition in the query language itself.
+Many more numeric operations are defined below, in <<hql-exp-functions>>.
 
-[[hql-concatenation]]
-==== Concatenation (operation)
+[[hql-Datetime-arithmetic]]
+==== Datetime arithmetic
 
-HQL defines a concatenation operator in addition to supporting the concatenation (`CONCAT`) function.
-This is not defined by JPQL, so portable applications should avoid its use.
-The concatenation operator is taken from the SQL concatenation operator (e.g `||`).
+Arithmetic involving dates, datetimes, and durations is quite subtle.
+Here we list the basic operations.
 
-[[hql-concatenation-example]]
-.Concatenation operation example
+|===
+| Operator | Expression type | Example | Resulting type
+
+| `-` | Difference between two dates | `your.birthday - local date` | year/quarter/month/week/day duration
+| `-` | Difference between two datetimes | `local datetime - record.lastUpdated` | week/day/hour/minute/second/nanosecond duration
+| `+` | Sum of a date and a year/quarter/month/week/day duration | `local date + 1 week` | date
+| `+` | Sum of a datetime and a week/day/hour/minute/second/nanosecond duration | `record.lastUpdated + 1 second` | datetime
+| `*` | Product of an integer and a duration | `billing.cycles * 30 day` | duration
+| `by unit` | Convert a duration to an integer | `(1 year) by day` | integer
+|===
+
+The `by unit` operator converts a duration to an integer, for example: `(local date - your.birthday) by day` evaluates to the number of days you still have to wait.
+
+The function `extract(unit from ...)` extracts a field from a date, time, or datetime type, for example, `extract(year from your.birthday)` produces the year in which you were born, and throws away important information about your birthday.
+
+[IMPORTANT]
 ====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/HQLTest.java[tags=hql-concatenation-example]
-----
+Please carefully note the difference between these two operations: `by` and `extract()` both evaluate to an integer, but they have very different uses.
 ====
 
-See <<hql-exp-functions>> for details on the `concat()` function.
+Additional datetime operations, including the useful `format()` function, are defined below, in <<hql-exp-functions>>.
+
+[[hql-identification-variable]]
+==== Identification variable
+
+See <<hql-from-clause>>.
+
+[[hql-path-expressions]]
+==== Path expressions
+
+Again, see <<hql-from-clause>>.
 
 [[hql-entity-type-exp]]
 ==== Entity type
 
-We can also refer to the type of an entity as an expression.
+The special function `type()`, applied to an identification variable, evaluates to the entity name of the referenced entity.
 This is mainly useful when dealing with entity inheritance hierarchies.
-The type can be expressed using a `TYPE` function used to refer to the type of an identification variable representing an entity.
-The name of the entity also serves as a way to refer to an entity type.
-Additionally, the entity type can be parameterized, in which case the entity's Java Class reference would be bound as the parameter value.
 
 [[hql-entity-type-exp-example]]
 .Entity type expression examples
@@ -833,27 +903,31 @@ include::{sourcedir}/HQLTest.java[tags=hql-entity-type-exp-example]
 ----
 ====
 
-[NOTE]
-====
-HQL also has a legacy form of referring to an entity type using the `class` keyword, though that legacy form is considered deprecated in favor of `TYPE`.
-
-The legacy form would have used `p.class` in the examples rather than `type(p)`. It is mentioned only for completeness.
-====
-
 [[hql-case-expressions]]
 ==== CASE expressions
 
-Both the simple and searched forms are supported, as well as the two SQL defined abbreviated forms (`NULLIF` and `COALESCE`)
+Just like in standard SQL, there are two forms of the case expression:
+
+* the _simple_ case expression, and
+* the so-called _searched_ case expression.
+
+[TIP]
+====
+Case expressions are verbose.
+It's often simpler to use the `coalesce()`, `nullif()`, or `ifnull()` functions.
+====
 
 [[hql-simple-case-expressions]]
 ===== Simple CASE expressions
 
-The simple form has the following syntax:
+The syntax of the simple form is defined by:
 
 [source, JAVA, indent=0]
 ----
 include::{extrasdir}/simple_case_bnf.txt[]
 ----
+
+For example:
 
 [[hql-simple-case-expressions-example]]
 .Simple case expression example
@@ -874,6 +948,8 @@ The searched form has the following syntax:
 ----
 include::{extrasdir}/searched_case_bnf.txt[]
 ----
+
+For example:
 
 [[hql-searched-case-expressions-example]]
 .Searched case expression example
@@ -904,25 +980,6 @@ include::{sourcedir}/HQLTest.java[tags=hql-case-arithmetic-expressions-example]
 Without wrapping the arithmetic expression in `(` and `)`, the entity query parser will not be able to
 parse the arithmetic operators.
 ====
-
-[[hql-nullif]]
-==== NULLIF expressions
-
-NULLIF is an abbreviated CASE expression that returns NULL if its operands are considered equal.
-
-[[hql-nullif-example]]
-.NULLIF example
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/HQLTest.java[tags=hql-nullif-example]
-----
-====
-
-==== COALESCE expressions
-
-`COALESCE` is an abbreviated CASE expression that returns the first non-null operand.
-We have seen a number of `COALESCE` examples above.
 
 [[hql-where-clause]]
 === The `WHERE` clause
@@ -1185,23 +1242,28 @@ include::{sourcedir}/HQLTest.java[tags=hql-group-by-having-example]
 The `HAVING` clause follows the same rules as the `WHERE` clause and is also made up of predicates.
 `HAVING` is applied after the groupings and aggregations have been done, while the `WHERE` clause is applied before.
 
+[[hql-group-by-rollup-cube]]
+==== `ROLLUP` and `CUBE`
+
+The special functions `rollup()` and `cube()` may be used in the `GROUP BY` clause, when supported by the database.
+The semantics are identical to SQL.
+
 [[hql-order-by]]
 === The `ORDER BY` clause
 
-The results of the query can also be ordered.
-The `ORDER BY` clause is used to specify the selected values to be used to order the result.
+By default, the results of the query are returned in an arbitrary order.
+The `ORDER BY` clause specifies a list of selected items used to order the results.
 The types of expressions considered valid as part of the `ORDER BY` clause include:
 
-* state fields
-* component/embeddable attributes
-* scalar expressions such as arithmetic operations, functions, etc.
-* identification variable declared in the select clause for any of the previous expression types
+* attributes of an entity or embeddable class,
+* scalar expressions such as arithmetic operations, functions, etc, and
+* identification variables declared in the select clause.
 
-Additionally, JPQL says that all values referenced in the `ORDER BY` clause must be named in the `SELECT` clause.
-HQL does not mandate that restriction, but applications desiring database portability should be aware that not all databases support referencing values in the `ORDER BY` clause that are not referenced in the select clause.
-
-Individual expressions in the order-by can be qualified with either `ASC` (ascending) or `DESC` (descending) to indicate the desired ordering direction.
-Null values can be placed in front or at the end of the sorted set using `NULLS FIRST` or `NULLS LAST` clause respectively.
+[NOTE]
+====
+The JPQL specification requires that all expressions occurring the `ORDER BY` clause must also occur in the `SELECT` clause.
+HQL does not enforce this restriction, but applications desiring database portability should be aware that some databases _do_.
+====
 
 [[hql-order-by-example]]
 .Order by example
@@ -1212,30 +1274,50 @@ include::{sourcedir}/HQLTest.java[tags=hql-order-by-example]
 ----
 ====
 
+Each item listed in the `ORDER BY` clause may explicitly specify a direction, either:
+
+* `ASC` for ascending order, or
+* `DESC` for descending order.
+
+If no direction is explicitly specified, the results are returned in ascending order.
+
+Of course, there is an ambiguity with respect to null values.
+Therefore, the order of null values may also be explicitly specified:
+
+* `NULLS FIRST` puts null values at the beginning of the result set, and
+* `NULLS LAST` puts them last.
+
+[[hql-exp-functions]]
 === Functions
+
+Both HQL and JPQL define some standard functions that are portable between databases.
+
+In addition, there are several ways to use a database function that's not known to Hibernate.
 
 [[hql-aggregate-functions]]
 ==== Aggregate functions
 
-Aggregate functions are also valid expressions in HQL and JPQL.
-The semantics is the same as their SQL counterpart.
-The supported aggregate functions are:
+Aggregate functions are special functions that reduce the size of the result set.
 
 |===
-| `count()` (including distinct/all qualifiers) | The result type is always `Long`.
-| `avg()` | The result type is always `Double`.
-| `min()` | The result type is the same as the argument type.
-| `max()` | The result type is the same as the argument type.
-| `sum()` | The result type of the `sum()` function depends on the type of the values being summed.
+| Aggregate function | Result type
+
+| `count()`, including `count(distinct)`, `count(all)`, and `count(*)` | `Long`
+| `avg()` | `Double`
+| `min()` | Same as the argument type
+| `max()` | Same as the argument type
+| `sum()` | Depends on the type of the values being summed.
 |===
 
 In the case of `sum()`:
 
 * For integral values (other than `BigInteger`), the result type is `Long`.
 * For floating point values (other than `BigDecimal`) the result type is `Double`.
-* For `BigInteger` values, the result type is `BigInteger`. For `BigDecimal` values, the result type is `BigDecimal`.
+* For `BigInteger` values, the result type is `BigInteger`.
+* For `BigDecimal` values, the result type is `BigDecimal`.
 
-Aggregations often appear with grouping. For information on grouping see <<hql-group-by>>.
+Aggregate functions often appear in queries with a `GROUP BY` clause.
+For information on grouping see <<hql-group-by,above>>.
 
 [[hql-aggregate-functions-example]]
 .Aggregate function examples
@@ -1246,7 +1328,7 @@ include::{sourcedir}/HQLTest.java[tags=hql-aggregate-functions-example]
 ----
 ====
 
-All of these aggregate functions also support the inclusion of a specific *filter clause*
+All aggregate functions support the inclusion of a _filter clause_.
 
 [[hql-aggregate-functions-filter-example]]
 .Filter clause example
@@ -1257,17 +1339,35 @@ include::{sourcedir}/HQLTest.java[tags=hql-aggregate-functions-filter-example]
 ----
 ====
 
-[[hql-exp-functions]]
-==== Scalar functions
-
-Both HQL and JPQL define some standard functions that are available regardless of the underlying database in use.
-HQL can also understand additional functions defined by the Dialect as well as the application.
-
 [[jpql-standardized-functions]]
-==== JPQL standardized functions
+==== JPQL standard functions
 
-Here is the list of functions defined as supported by JPQL.
-Applications interested in remaining portable between Jakarta Persistence providers should stick to these functions.
+Here we present the list of functions defined by JPQL.
+
+[TIP]
+====
+A program that wishes to remain portable between Jakarta Persistence providers should in principle limit itself to the use of these functions.
+
+On the other hand, this is an extremely short list. Any nontrivial program will probably need to look beyond it .
+====
+
+NULLIF::
+
+`NULLIF` is an abbreviated `CASE` expression that evaluates to null if its operands are equal.
+
+[[hql-nullif-example]]
+.NULLIF example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-nullif-example]
+----
+====
+
+COALESCE::
+
+`COALESCE` is an abbreviated `CASE` expression that returns the first non-null operand.
+We have seen a number of `COALESCE` examples above.
 
 CONCAT::
 String concatenation function. Variable argument length of 2 or more string values to be concatenated together.

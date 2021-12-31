@@ -1264,6 +1264,21 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	public void test_hql_aggregate_functions_simple_filter_example() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			//tag::hql-aggregate-functions-simple-filter-example[]
+
+			List<Long> callCount = entityManager.createQuery(
+				"select count(c) filter(where c.duration < 30) " +
+				"from Call c ",
+				Long.class )
+			.getResultList();
+			//end::hql-aggregate-functions-simple-filter-example[]
+			assertNotNull(callCount.get( 0 ));
+		});
+	}
+
+	@Test
 	public void test_hql_aggregate_functions_filter_example() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			//tag::hql-aggregate-functions-filter-example[]

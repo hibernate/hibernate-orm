@@ -103,11 +103,16 @@ todo (6.0) - finish
 
 
 [[collection-wrapper-custom-semantics]]
-==== Custom CollectionSemantic
+==== Custom semantics
 
-`@CollectionClassificationType` / `@CollectionSemantics`
+Hibernate provides 3 ways to influence the semantics used for a collection mapping
+
+* `@CollectionClassificationType`
+* `@CollectionSemantics`
+* `@CollectionType`
 
 
+todo (6.0) - finish
 
 
 [[NOTE]]

@@ -36,34 +36,70 @@ the capabilities of the mapping such as
 * how to access elements of the collection
 * how to create instances of the collection - both "raw" and "wrapper" forms.  See <<collection-wrapper>>
 
-ARRAY:: Hibernate is able to map Object and primitive arrays as collections.  The major
-    limitation to such a mapping is that the collection cannot be lazy in its wrapped form.  However,
-    it can be lazy via bytecode enhancement of its owner.  Note that Jakarta Persistence does not
-    define support for arrays as plural attributes; in strict JPA mode these would be mapped as binary
-    data.
-BAG:: A collection that may contain duplicate entries and has no defined ordering.  Conceptually
-    it is a `java.util.Collection` that is not a further subtype.  Jakarta Persistence does not define
-    support for this semantic.
-ID_BAG:: A bag that defines a per-element identifier to uniquely identify elements in the collection.
-    The identifier is configured via `org.hibernate.annotations.CollectionId`.
-LIST:: Follows the semantics defined by `java.util.List`.  It is a collection that is ordered based
-    on a column in the database which contains the element's position in the list.  The "position" column
-    is specified using either `jakarta.persistence.OrderColumn` or `org.hibernate.annotations.IndexColumn`;
-    `jakarta.persistence.OrderColumn` should be preferred.  By default, Hibernate stores the position of the
-    elements in the list starting from `0`; for pre-existing schemas that use a different "base", Hibernate
-    provides the `org.hibernate.annotations.ListIndexBase` annotation.  A  list may contain duplicate entries.
-SET::
-ORDERED_SET::
-SORTED_SET::
-MAP::
-ORDERED_MAP::
-SORTED_MAP::
+
+[[collection-semantics-array]]
+===== ARRAY
+
+Hibernate is able to map Object and primitive arrays as collections.  The major
+limitation to such a mapping is that the collection cannot be lazy in its wrapped form.  However,
+it can be lazy via bytecode enhancement of its owner.  Note that Jakarta Persistence does not
+define support for arrays as plural attributes; in strict JPA mode these would be mapped as binary
+data.
+
+
+[[collection-semantics-bag]]
+===== BAG
+
+A collection that may contain duplicate entries and has no defined ordering.  Conceptually
+it is a `java.util.Collection` that is not a further subtype.  Jakarta Persistence does not define
+support for this semantic.
+
+
+[[collection-semantics-idbag]]
+===== ID_BAG
+
+A bag that defines a per-element identifier to uniquely identify elements in the collection.
+The identifier is configured via `org.hibernate.annotations.CollectionId`.
+
+
+[[collection-semantics-list]]
+===== LIST
+
+Follows the semantics defined by `java.util.List`.  It is a collection that is ordered based
+on a column in the database which contains the element's position in the list.  The "position" column
+is specified using either `jakarta.persistence.OrderColumn` or `org.hibernate.annotations.IndexColumn`;
+`jakarta.persistence.OrderColumn` should be preferred.  By default, Hibernate stores the position of the
+elements in the list starting from `0`; for pre-existing schemas that use a different "base", Hibernate
+provides the `org.hibernate.annotations.ListIndexBase` annotation.  A  list may contain duplicate entries.
+
 
 NOTE:: Historically, Hibernate interpreted a `List` attribute without `@OrderColumn` or `@IndexColumn`
-    as BAG.  This is not the most natural choice, but exists for backwards compatibility.  For those
-    wanting the more natural choice to use LIST semantics here, set `hibernate.mapping.default_list_semantics=list`
+as BAG.  This is not the most natural choice, but exists for backwards compatibility.  For those
+wanting the more natural choice to use LIST semantics here, set `hibernate.mapping.default_list_semantics=list`
 
-See
+[[collection-semantics-set]]
+===== SET
+
+
+[[collection-semantics-ordered_set]]
+ORDERED_SET::
+
+
+[[collection-semantics-sorted-set]]
+SORTED_SET::
+
+
+[[collection-semantics-map]]
+MAP::
+
+
+[[collection-semantics-ordered-map]]
+ORDERED_MAP::
+
+
+[[collection-semantics-sorted-map]]
+SORTED_MAP::
+
 
 
 [[collection-nature]]
@@ -115,10 +151,15 @@ Hibernate provides 3 ways to influence the semantics used for a collection mappi
 todo (6.0) - finish
 
 
+
+
+
 [[NOTE]]
 ----
 Original content below
 ----
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Naturally Hibernate also allows persisting collections.
 These persistent collections can contain almost any other Hibernate type, including basic types, custom types, embeddables, and references to other entities.

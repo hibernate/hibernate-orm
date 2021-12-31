@@ -6,6 +6,7 @@
 :coreTestSrcDir: {rootProjectDir}/hibernate-core/src/test/java
 :instantiatorTestDir: {coreTestSrcDir}/org/hibernate/orm/test/mapping/embeddable/strategy/instantiator
 :extrasdir: extras
+:fn-cdi-availability: footnote:disclaimer[With delayed or extended CDI availability, IdentifierGenerators cannot be resolved from CDI due to timing.  See <<beans-cdi>>]
 
 Hibernate supports consuming many of its extension points as "managed beans".  A bean being
 managed simply means that its creation and lifecycle are managed by a container of some sort.
@@ -20,17 +21,33 @@ if one is specified.
 By default, Hibernate creates references to the beans and links their lifecycle to
 the SessionFactory.  It supports a number of ways to influence how this process works.
 
+
+[[beans-manageable]]
+=== Manageable Beans
+
+Hibernate supports using the following integrations as managed beans:
+
+* `jakarta.persistence.AttributeConverter`
+* Jakarta Persistence "entity listener" classes
+* `org.hibernate.type.descriptor.jdbc.JdbcType`
+* `org.hibernate.type.descriptor.java.BasicJavaType`
+* `org.hibernate.type.descriptor.java.MutabilityPlan`
+* `org.hibernate.metamodel.EmbeddableInstantiator`
+* `org.hibernate.envers.RevisionListener`
+* `org.hibernate.id.IdentifierGenerator`{fn-cdi-availability}
+
+
 [[beans-cdi]]
-=== CDI Beans
+=== CDI BeanContainer
 
-Hibernate provides built-in support for CDI as the `BeanContainer`.  Jakarta Persistence
-indicates that the setting `jakarta.persistence.bean.manager` be used to pass along a
-CDI `BeanManager` to use.
+Hibernate provides built-in support for using a CDI `BeanManager` as the `BeanContainer`.
 
-Hibernate can use this `BeanManager` in a number of ways
+Jakarta Persistence indicates that the setting `jakarta.persistence.bean.manager` be used to pass along a
+CDI `BeanManager` to use, so Hibernate follows that approach.
+
 
 [[beans-cdi-default]]
-==== CDI Beans - default
+==== CDI BeanManager - default
 
 By default, Hibernate follows the Jakarta Persistence requirements for using
 CDI `BeanManager`.  Most importantly, this means accessing beans from the `BeanManager`
@@ -42,20 +59,22 @@ or <<beans-cdi-extended,extended>> access should be used
 
 
 [[beans-cdi-delayed]]
-==== CDI Beans - delayed
+==== CDI BeanManager - delayed
 
 Rather than accessing the CDI managed beans immediately, Hibernate can be configured
 to delay accessing the beans until first needed using `hibernate.delay_cdi_access`.
 
+Note however that this has some limitations{fn-cdi-availability}
+
 
 [[beans-cdi-extended]]
-==== CDI Beans - extended
+==== CDI BeanManager - extended
 
 Sometimes the actual `BeanManager` instance is not known until after Hibernate
 has been bootstrapped.
 
 For such cases, Hibernate provides the `org.hibernate.resource.beans.container.spi.ExtendedBeanManager`
-contract, which is basically a "promise" for a `BeanManager` reference.
+contract, which is basically a promise or future for a `BeanManager` reference.
 
 An instance of `ExtendedBeanManager` passed as `jakarta.persistence.bean.manager` triggers this behavior.
 
@@ -74,17 +93,3 @@ NOTE: When used in WildFly, this is all automatically set up by the server
 
 Other containers (Spring, e.g.) can also be used and integrated by implementing `BeanContainer` and
 declaring it using `hibernate.resource.beans.container`.
-
-
-[[beans-manageable]]
-=== Manageable Beans
-
-Hibernate supports using the following integrations as managed beans:
-
-* `jakarta.persistence.AttributeConverter`
-* Jakarta Persistence "entity listener" classes
-* `org.hibernate.type.descriptor.jdbc.JdbcType`
-* `org.hibernate.type.descriptor.java.BasicJavaType`
-* `org.hibernate.type.descriptor.java.MutabilityPlan`
-* `org.hibernate.metamodel.EmbeddableInstantiator`
-* `org.hibernate.envers.RevisionListener`

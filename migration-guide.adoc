@@ -1,10 +1,12 @@
 = 6.0 Migration Guide
 :toc:
+:user-guide-base: https://docs.jboss.org/hibernate/orm/6.0/userguide/html_single/Hibernate_User_Guide.html
+:javadoc-base: https://link.to/hibernate/javadoc
+:java-javadoc-base: https://docs.oracle.com/en/java/javase/11/docs/api/java.base
+:fn-converter:Think `AttributeConverter`
 
 This guide discusses migration from Hibernate ORM version 6.0.  For migration from
 earlier versions, see any other pertinent migration guides as well.
-
-== Background
 
 
 == Known changes
@@ -25,112 +27,214 @@ Jakarta provides a https://github.com/eclipse/transformer[transformer]
 tool which, along with appropriate "rules", will transform a project from Java Persistence to
 Jakarta Persistence.  This can update package names in source, settings, xsd references and more.
 
-// todo (6.0) : reference to `${root}/rules ?
-
 NOTE: As far as the XSD and setting changes, Hibernate does support both sets as a temporary aid
-in migration.  It logs a deprecation warning when the Java EE variants are used.
+in migration.  It logs a deprecation warning when the Java EE variants are used.  See the `rules/`
+directory in the project root for the configuration used to migrate Hibernate itself.
 
+
+=== Java 11
+
+With 6.0, Hibernate ORM has moved to expect Java 11 as its baseline version
+
+
+[[read-jdbc]]
 === Reading from JDBC
 
+Throughput testing of Hibernate was showing that its use of reading JDBC values by name, rather than
+by position was its limiting factor in any further scaling in terms of throughput.
+
+This is the main reason for most of the changes in Hibernate 6.
+
+This seemingly simple change, however, ripples through quite a few contracts - including some
+APIs and some SPIs
+
+
+==== Replace read-by-name with read-by-position
+
+Various contracts in `org.hibernate.type` and `org.hibernate.usertype` were changed to now offer a read-by-position
+method. The read-by-name methods were removed.
 Read-by-position rather than read-by-name
 
 
+[[type]]
 === Type system / custom types
 
-==== Type changes
+Another change is to generally modernize Hibernate's mapping annotations and make them
+more type-safe.
 
-* The default type for `Duration` was changed to `NUMERIC` which could lead to schema validation errors
+We decided this is the right time since 6.0 is a major release and most of the type-related
+contracts were already changing to implement the <<read-jdbc,read-by-position>> changes.
 
-==== Influencing JdbcTypeDescriptor to use
+One part of this work was the removal of various String-based approaches for specifying Types to use from annotations, including
+the removal of `@Type`, `@AnyMetaDef`, `@AnyMetaDefs`, `@MapKeyType`, @TypeDef` and `@TypeDefs`, as well as
+removing annotation attributes accepting the type to use as a String (e.g. `org.hibernate.annotations.CollectionType#type`)
 
-Discuss `JdbcTypeCode`, `JdbcType`, `JdbcTypeRegistration`
-
-==== Influencing JavaTypeDescriptor to use
-
-Discuss `@JavaType`, `@JavaTypeRegistration`
+The Hibernate {user-guide-base}?type[User Guide] covers the details of mapping your domain model.
+// todo (6.0) - find proper id syntax for "domain model" type ^^
 
 
-==== Component Mapping
+[[rename-java-type]]
+==== Renaming of JavaTypeDescriptor contract
 
-Multiple component mappings for the same java class with different property mappings is not supported anymore. Every property mapping combination should have its own java class"
+The interface `org.hibernate.type.descriptor.java.JavaTypeDescriptor` has been renamed to
+`org.hibernate.type.descriptor.java.JavaType`
 
-=== Procedure Parameters, enable passing nulls
 
-Passing null or not is now triggered by whether setting the parameter was called at all.  In other ords a distinction is made between calling `setParameter` passing null versus not calling `setParameter` at all.  In the first case, we pass along the null value; in the second we do not.
+[[rename-jdbc-type]]
+==== Renaming of SqlTypeDescriptor contract
 
+The interface `org.hibernate.type.descriptor.sql.SqlTypeDescriptor` has been renamed to
+`org.hibernate.type.descriptor.jdbc.JdbcType`
+
+
+[[basic-type]]
+==== Basic types
+
+Basic types are no longer exposed as customizable.  Instead, users configure
+the different aspects of mapping the basic value to the database -
+
+    * `JavaType`
+    * `JdbcType`
+    * `BasicValueConverter`{fn-converter}
+    * `MutabilityPlan`
+
+See the Hibernate {user-guide-base}?basic-type[User Guide] for details of mapping
+// todo (6.0) - find proper id syntax for "domain model" basic-type ^^
+basic values in your domain model, including how to influence these 4 aspects.
+
+This also made the various implementations of `BasicType` obsolete, thus they have been removed.
+`NamedBasicTypeImpl` takes the role of all the previous specific implementations by wrapping a
+`JdbcType` and `JavaType`.
+
+The `StandardBasicTypes` class previously exposed `BasicType` instance fields, which now have been replaced with fields
+of the type `BasicTypeReference`. APIs that previously accepted just a `BasicType` have been adapted to also accept a
+`BasicTypeReference` which allows for uses of `StandardBasicType` fields to stay mostly source compatible.
+
+
+==== Embeddables / components
+
+Addition of `EmbeddableInstantiator`
+
+Constructor injection.  Embeddables used as identifiers cannot use constructor injection.
+See the Hibernate {user-guide-base}?embeddable-type[User Guide] for details.
+// todo (6.0) - find proper id syntax for "domain model" embeddable-type ^^
+
+Multiple component mappings for the same java class with different property mappings is no
+longer supported. Every property mapping combination should have its own java class
+
+
+==== Plural attributes
+
+`@CollectionClassification`
+`@CollectionSemantics`
+`@CollectionType`
+
+
+
+
+
+[[query]]
 === Query
 
-==== Ordinal Parameters binding
 
-HQL ordinal parameter binding is 1-based, this means that queries like
+[[query-sqm]]
+==== SQM
+
+todo (6.0) - cover functions
+todo (6.0) - cover new temporal capabilities
+todo (6.0) - cover new syntaxes
+todo (6.0) - cover bulk manipulation query handling
+
+
+[[query-sqm-rows]]
+==== Result "rows"
+
+Queries that use joins without specifying a select clause (e.g. `from Person p join p.address`)
+used to return a `List<Object[]>`.  Starting with 6.0, such a query instead returns
+`List<Person>`
+
+The HQL query `select p, a from Person p join p.address a` returns instead a `List<Object[]>`.
 
 ```
-s.createQuery( "select p from Parent p where id in ?0", Parent.class );
-query.setParameter( 0, Arrays.asList( 0, 1, 2, 3 ) );
-```
-
-that uses a 0-based positional binding are not supported, and they should be changed to the following
-
-```
-s.createQuery( "select p from Parent p where id in ?`", Parent.class );
-query.setParameter( 1, Arrays.asList( 0, 1, 2, 3 ) );
-```
-
-
-==== HQL results
-
-HQL queries that use joins without specifying a select clause e.g. `from Person p join p.address` do not return a `List<Object[]>` with an entry per join anymore, but a list of `Person`.
-
-The HQL query `select p,a from Person p join p.address a` returns instead a `List<Object[]>`.
-
-e.g.
-```
-@Entity
-class Person {
-    ...
-
-    @ManyToOne
-    Address address
-
-    ...
-}
-
-@Entity
-class Address {
-
-    ...
-
-}
-
 List<Person> result = session.createQuery("from Person p join p.address").list();
-
 List<Object[]> results = session.createQuery("select p, a from Person p join p.address a").list();
-
 ```
 
-==== Stream
 
-`jakarta.persistence.Query#getResultStream()` and `org.hibernate.query.Query#stream()` do not return a `Stream` decorator anymore, so in order to close the underlying IO resources is now necessary to explicitly call the `Stream#close()` method. The JDK `Stream` documentation is quite explicit about the need for an explicit call to `close` by the user to avoid resource leakages, so we build upon this requirement.
+[[query-sqm-pass-thru]]
+===== Pass-through tokens
 
-==== Iterate
+The use of plain HQL identifiers in e.g. functions which couldn't be interpreted as an attribute of a `FROM` root
+were passed through as-is to SQL in Hibernate 5.x which was dropped in 6.0 because we believe this is unsafe
+and might lead to surprising results. HQL queries that relied on this, need to be changed and use the newly introduced
+`sql` function, which allows passing through the content of a string literal to SQL.
 
-The `Query#iterate()` method has been removed. The alternative is to use `Query#stream()` or `Query#getResultStream()`.
+An HQL query like `select substring( e.description, 21, 11, octets ) from AnEntity e`, which relies on this for passing through `octets`
+can be migrated to `select substring( e.description, 21, 11, sql('octets') ) from AnEntity e`.
 
-==== Using DISTINCT with entity queries
+
+[[query-sqm-distinct]]
+===== DISTINCT
 
 Starting with Hibernate ORM 6 it is no longer necessary to use *distinct* in JPQL and HQL
 to filter out the same parent entity references when join fetching a child collection.
-The returning duplicates of entities are always filtered by Hibernate.
+The returning duplicates of entities are now always filtered by Hibernate.
 
 Which means that for instance it is no longer necessary to set `QueryHints#HINT_PASS_DISTINCT_THROUGH` to `false`
 in order to skip the entity duplicates without producing a `distinct` in the SQL query.
 
-From Hibernate ORM 6 a `distinct` is always passed to the SQL query and the flag `QueryHints#HINT_PASS_DISTINCT_THROUGH`
+From Hibernate ORM 6, `distinct` is always passed to the SQL query and the flag `QueryHints#HINT_PASS_DISTINCT_THROUGH`
 has been removed.
 
-=== Native Query
 
-==== Native query as a function call is no longer supported.
+===== Association Comparisons
+
+Previously Hibernate did allow comparing an association with an FK value like `... where alias.association = 1`
+or `... where alias.association = alias.association.id` or even `... where alias.association = :param` where `param`
+is bound to an integer `1`. This was supported prior to Hibernate 6.0 if the foreign key for the association is an integer.
+
+The right way to do this is de-referencing the association by the FK attribute `... where alias.association.id = 1`
+which is guaranteed to not produce a join, or use an entity reference for `... where alias.association = :param`
+where `param` is bound to `entityManager.getReference(EntityClass.class, 1)`.
+
+
+
+[[query-sqm-psuedo-attr]]
+===== Collection psuedo-attributes
+
+Prior to 6.0, it was possible to de-reference special properties on plural attributes like `size` which was dropped.
+The special properties lead to confusion and were sometimes ambiguous. The replacement is the function syntax.
+
+size::
+The collection size can be determined by using the `size( pluralAttribute )` function instead
+
+elements::
+The collection elements can be referred to by using the `value( pluralAttribute )` function instead
+
+indices::
+The collection indices can be referred to by using the `index( pluralAttribute )` or `key( pluralAttribute )` function instead
+
+index::
+The collection index can be referred to by using the `index( pluralAttribute )` or `key( pluralAttribute )` function instead
+
+maxindex::
+The collection maximum index can be determined by using the `maxindex( pluralAttribute )` function instead
+
+minindex::
+The collection minimum index can be determined by using the `minindex( pluralAttribute )` function instead
+
+maxelement::
+The collection maximum element can be determined by using the `maxelement( pluralAttribute )` function instead
+
+minelement::
+The collection minimum element can be determined by using the `minelement( pluralAttribute )` function instead
+
+
+
+[[query-native]]
+==== Native
+
+Using NativeQuery to call a SQL function is no longer supported.
 
 Given the `NamedNativeQuery`
 ```
@@ -176,49 +280,55 @@ or not define the stored procedure and use this code
 List<Object[]> postAndComments = entityManager.createStoredProcedureQuery( "fn_person_and_phones", "person_with_phones" ).setParameter( 1, 1L ).getResultList();
 ```
 
-=== SQM
+[[query-stream]]
+==== Stream
 
-* Functions
-* Multi-table bulk manipulation HQL/Criteria query handling
+`jakarta.persistence.Query#getResultStream()` and `org.hibernate.query.Query#stream()` no longer
+return a `Stream` decorator.  In order to close the underlying IO resources, it is now necessary to
+explicitly call the `Stream#close()` method.
 
-=== Remove support for special plural attribute properties
+This change makes the Streams returned by Hibernate behave as defined in the JDK
+link:{java-javadoc-base}/java/util/stream/Stream.html[Stream] documentation, which is quite
+explicit about the need for an explicit call to `close` by the user to avoid resource leakages.
 
-Prior to 6.0, it was possible to de-reference special properties on plural attributes like `size` which was dropped.
-The special properties lead to confusion and were sometimes ambiguous. The replacement is the function syntax.
 
-size::
-The collection size can be determined by using the `size( pluralAttribute )` function instead
+[[query-iterate]]
+==== Iterate
 
-elements::
-The collection elements can be referred to by using the `value( pluralAttribute )` function instead
+The `Query#iterate()` method has been removed. The alternative is to use `Query#stream()` or `Query#getResultStream()`.
 
-indices::
-The collection indices can be referred to by using the `index( pluralAttribute )` or `key( pluralAttribute )` function instead
 
-index::
-The collection index can be referred to by using the `index( pluralAttribute )` or `key( pluralAttribute )` function instead
+[[query-ordinal-param]]
+==== Ordinal Parameters binding
 
-maxindex::
-The collection maximum index can be determined by using the `maxindex( pluralAttribute )` function instead
+HQL ordinal parameter binding is 1-based, this means that queries like
 
-minindex::
-The collection minimum index can be determined by using the `minindex( pluralAttribute )` function instead
+```
+s.createQuery( "select p from Parent p where id in ?0", Parent.class );
+query.setParameter( 0, Arrays.asList( 0, 1, 2, 3 ) );
+```
 
-maxelement::
-The collection maximum element can be determined by using the `maxelement( pluralAttribute )` function instead
+that uses a 0-based positional binding are not supported, and they should be changed to the following
 
-minelement::
-The collection minimum element can be determined by using the `minelement( pluralAttribute )` function instead
+```
+s.createQuery( "select p from Parent p where id in ?`", Parent.class );
+query.setParameter( 1, Arrays.asList( 0, 1, 2, 3 ) );
+```
 
-=== Remove support for comparing association against FK value
 
-Previously Hibernate did allow comparing an association with an FK value like `... where alias.association = 1`
-or `... where alias.association = alias.association.id` or even `... where alias.association = :param` where `param`
-is bound to an integer `1`. This was supported prior to Hibernate 6.0 if the foreign key for the association is an integer.
+[[proc-call]]
+=== ProcedureCall
 
-The right way to do this is de-referencing the association by the FK attribute `... where alias.association.id = 1`
-which is guaranteed to not produce a join, or use an entity reference for `... where alias.association = :param`
-where `param` is bound to `entityManager.getReference(EntityClass.class, 1)`.
+
+[[proc-call-param]]
+==== Procedure Parameters
+
+For parameters defined on a ProcedureCall as accepting binding (IN and INOUT), a distinction is now
+made between whether `setParameter` is called or not.  If `setParameter` was called, whatever value
+was set by the user is passed to the database.  If it was not called, Hibernate will not
+set any value which triggers the default value defined on the database procedure argument be used
+
+
 
 === Removals
 
@@ -328,24 +438,23 @@ as you can see, this leads to a lot of joins very quickly, but the behavior of 5
 To avoid creating so many joins, and also in general, we recommend that you use lazy fetching i.e. `@ManyToOne(fetch = FetchType.LAZY)`
 or `@OneToOne(fetch = FetchType.LAZY)` for most associations, but this is especially important if you have multiple self-referencing associations as you can see in the example.
 
+
 === Removal of legacy Hibernate Criteria API
 
 The legacy Hibernate Criteria API which was deprecated back in Hibernate 5.x was removed in 6.0.
 Usually, all queries using the legacy API can be modeled with the JPA Criteria API.
 In some cases it is necessary to use the Hibernate JPA Criteria extensions.
 
-=== Removal of loader walkers
 
-The special walkers/visitors in the loader package were removed. This is now all controlled through `LoaderSelectBuilder`.
-
-=== Restructuring of the loader package
+=== Restructuring of `org.hibernate.loader`
 
 The contents of the `loader.collection` package were restructured into `loader.ast.spi` and `loader.ast.internal`
 as well as adapted to the SQM API.
 
 The contents of `loader.custom` were adapted and moved to `query.sql`.
 
-The contents of `loader.entity` and `loader.plan` were removed as that is now handled through `LoaderSelectBuilder`.
+The contents of `loader.entity` and `loader.plan` were removed
+
 
 === Restructuring of the sql package
 
@@ -354,51 +463,9 @@ The contents of `sql.ordering` were adapted and moved to `metamodel.mapping.orde
 Classes of the `sql` package that were previously used for building SQL, but aren't needed anymore, were removed.
 The SQL generation is now fully handled through the `SqlAstTranslator` which a `Dialect` exposes a factory for.
 
-=== Changes in the type package
 
-One of the main changes in Hibernate 6 which ripples through quite a few contracts is the change for reading by position
-rather than by name from JDBC. We took this as a chance to fix-up some contracts which were named badly and cleanup
-basic types in general.
 
-==== Replace read-by-name with read-by-position
 
-Various contracts in `org.hibernate.type` and `org.hibernate.usertype` were changed to now offer a read-by-position
-method. The read-by-name methods were removed.
+==== Misc
 
-==== Removal of various BasicType implementations
-
-Almost all `BasicType` implementations in `org.hibernate.type` were removed because the responsibilities these classes
-had were moved to the `JdbcType` and `JavaType` contracts as well as sub-contracts like `AdjustableJdbcType`,
-`VersionJavaType` and `TemporalJavaTypeDescriptor`.
-
-The new implementation for almost all basic types is `NamedBasicTypeImpl` which just wraps a `JdbcType` and `JavaType`
-along with a name.
-
-The `StandardBasicTypes` class previously exposed `BasicType` instance fields, which now have been replaced with fields
-of the type `BasicTypeReference`. APIs that previously accepted just a `BasicType` have been adapted to also accept a
-`BasicTypeReference` which allows for uses of `StandardBasicType` fields to stay mostly source compatible.
-
-==== Renaming of JavaTypeDescriptor contract
-
-Previously the package `org.hibernate.type.descriptor.java` contained `JavaTypeDescriptor` implementations
-for various basic types named with a suffix of `Type`, `JavaType` or `JavaTypeDescriptor`.
-
-The `JavaTypeDescriptor` interface was renamed to `JavaType` and implementations were renamed to have the suffix `JavaType`.
-
-==== Renaming of SqlTypeDescriptor contract
-
-Previously the package `org.hibernate.type.descriptor.sql` contained `SqlTypeDescriptor` implementations
-for various basic types named with a suffix of `TypeDescriptor`.
-
-The `SqlTypeDescriptor` interface was renamed to `JdbcType` and implementations were renamed to have the suffix `JdbcType`.
-The package was also changed from `org.hibernate.type.descriptor.sql` to `org.hibernate.type.descriptor.jdbc`.
-
-=== Dropped support for pass-through HQL tokens
-
-The use of plain HQL identifiers in e.g. functions which couldn't be interpreted as an attribute of a `FROM` root
-were passed through as-is to SQL in Hibernate 5.x which was dropped in 6.0 because we believe this is unsafe
-and might lead to surprising results. HQL queries that relied on this, need to be changed and use the newly introduced
-`sql` function, which allows passing through the content of a string literal to SQL.
-
-An HQL query like `select substring( e.description, 21, 11, octets ) from AnEntity e`, which relies on this for passing through `octets`
-can be migrated to `select substring( e.description, 21, 11, sql('octets') ) from AnEntity e`.
+* The default type for `Duration` was changed to `NUMERIC` which could lead to schema validation errors

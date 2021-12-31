@@ -3,6 +3,118 @@
 :sourcedir: ../../../../../test/java/org/hibernate/userguide/collections
 :extrasdir: extras/collections
 
+Hibernate supports mapping collections (`java.util.Collection` and `java.util.Map` subtypes) to
+be mapped in a variety of ways.
+
+TIP:: Even though, technically, Hibernate allows mapping a collection as `@Basic`, that is considered
+poor practice.  See <<todo (6.0) - find/create link to comma-delimited list example>> for details
+of such a mapping.
+
+This section is limited to discussing `@ElementCollection`, `@OneToMany` and `@ManyToMany`.
+
+Hibernate understands various aspects of collection mappings:
+
+Parts:: the parts that map to the database.  See <<collection-parts>>
+Semantics:: what type of collection and how Hibernate deals with it as a whole.  See <<collection-semantics>>
+Nature:: whether the collection parts are considered elemental (`@ElementCollection`)
+    or associative (`@OneToMany` and `@ManyToMany`).  See <<collection-nature>>.
+
+Hibernate provides its own implementation of the collection types (plus array mappings) for various
+purposes.  See <<collection-wrapper>> for details.
+
+
+[[collection-semantics]]
+==== Semantics
+
+The semantics of a collection include the specific collection subtype to use as well
+as how to handle the collection as a whole.  This breaks down based on the classification
+as represented by `org.hibernate.metamodel.CollectionClassification`, which indicates the
+`org.hibernate.collection.spi.CollectionSemantics` to use.  `CollectionSemantics` exposes
+the capabilities of the mapping such as
+
+* the collection subtype to use - `java.util.List`, `java.util.Set`, `java.util.SortedSet`, etc.
+* how to access elements of the collection
+* how to create instances of the collection - both "raw" and "wrapper" forms.  See <<collection-wrapper>>
+
+ARRAY:: Hibernate is able to map Object and primitive arrays as collections.  The major
+    limitation to such a mapping is that the collection cannot be lazy in its wrapped form.  However,
+    it can be lazy via bytecode enhancement of its owner.  Note that Jakarta Persistence does not
+    define support for arrays as plural attributes; in strict JPA mode these would be mapped as binary
+    data.
+BAG:: A collection that may contain duplicate entries and has no defined ordering.  Conceptually
+    it is a `java.util.Collection` that is not a further subtype.  Jakarta Persistence does not define
+    support for this semantic.
+ID_BAG:: A bag that defines a per-element identifier to uniquely identify elements in the collection.
+    The identifier is configured via `org.hibernate.annotations.CollectionId`.
+LIST:: Follows the semantics defined by `java.util.List`.  It is a collection that is ordered based
+    on a column in the database which contains the element's position in the list.  The "position" column
+    is specified using either `jakarta.persistence.OrderColumn` or `org.hibernate.annotations.IndexColumn`;
+    `jakarta.persistence.OrderColumn` should be preferred.  By default, Hibernate stores the position of the
+    elements in the list starting from `0`; for pre-existing schemas that use a different "base", Hibernate
+    provides the `org.hibernate.annotations.ListIndexBase` annotation.  A  list may contain duplicate entries.
+SET::
+ORDERED_SET::
+SORTED_SET::
+MAP::
+ORDERED_MAP::
+SORTED_MAP::
+
+NOTE:: Historically, Hibernate interpreted a `List` attribute without `@OrderColumn` or `@IndexColumn`
+    as BAG.  This is not the most natural choice, but exists for backwards compatibility.  For those
+    wanting the more natural choice to use LIST semantics here, set `hibernate.mapping.default_list_semantics=list`
+
+See
+
+
+[[collection-nature]]
+==== Nature
+
+The elements of a collection may either be value types (basic or embedded) or associations to
+entities.  This is considered the nature of the collection.
+
+todo (6.0) - finish
+
+
+[[collection-parts]]
+==== Parts
+
+A collection mapping encompasses mutliple "parts".
+
+Key:: The foreign-key that associates the collection with it owner
+Element:: The element of the collection (or value of a Map)
+Index:: the index of the collection/array (or key of a Map)
+Id:: the identifier for an ID_BAG
+
+todo (6.0) - finish
+
+
+[[collection-wrapper]]
+==== Wrappers
+
+As mentioned in <<collection-semantics>>, Hibernate provides its own implementations
+of the Java collection types.  These are called wrappers as they wrap an underlying
+collection and provide support for things like lazy loading, queueing add/remove
+operations while detached, etc.
+
+The collections they wrap are called "raw" collections, which are generally the standard
+Java implementations (`java.util.ArrayList`, etc)
+
+todo (6.0) - finish
+
+
+[[collection-wrapper-custom-semantics]]
+==== Custom CollectionSemantic
+
+`@CollectionClassificationType` / `@CollectionSemantics`
+
+
+
+
+[[NOTE]]
+----
+Original content below
+----
+
 Naturally Hibernate also allows persisting collections.
 These persistent collections can contain almost any other Hibernate type, including basic types, custom types, embeddables, and references to other entities.
 In this context, the distinction between value and reference semantics is very important. 

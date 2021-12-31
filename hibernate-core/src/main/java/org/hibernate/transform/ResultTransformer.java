@@ -15,8 +15,7 @@ import org.hibernate.query.TupleTransformer;
  * Implementors define a strategy for transforming query results into the
  * actual application-visible query result list.
  *
- * @see org.hibernate.Criteria#setResultTransformer(ResultTransformer)
- * @see org.hibernate.Query#setResultTransformer(ResultTransformer)
+ * @see org.hibernate.query.Query#setResultTransformer(ResultTransformer)
  *
  * @author Gavin King
  *

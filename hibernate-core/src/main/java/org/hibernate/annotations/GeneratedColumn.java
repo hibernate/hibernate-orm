@@ -17,8 +17,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Specifies that a column is defined using a DDL {@code generated always as} clause
- * or equivalent, and whether Hibernate should fetch the generated value from the
- * database.
+ * or equivalent, and that Hibernate should fetch the generated value from the
+ * database after each SQL {@code INSERT} or {@code UPDATE}.
  *
  * @author Gavin King
  *
@@ -34,18 +34,4 @@ public @interface GeneratedColumn {
 	 * @return the SQL expression that is evaluated to generate the column value.
 	 */
 	String value();
-
-	/**
-	 * The name of the generated column. Optional for a field or property mapped
-	 * to a single column.
-	 * <ul>
-	 * <li>If the column name is explicitly specified using the
-	 * {@link jakarta.persistence.Column @Column} annotation, the name given
-	 * here must match the name specified by
-	 * {@link jakarta.persistence.Column#name}.
-	 * <li>Or, if the column name is inferred implicitly by Hibernate, the
-	 * name given here must match the inferred name.
-	 * </ul>
-	 */
-	String name() default "";
 }

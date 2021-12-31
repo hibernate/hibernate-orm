@@ -10,6 +10,7 @@ import java.util.Map;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
+import org.hibernate.MappingException;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.GeneratedColumn;
 import org.hibernate.annotations.ColumnTransformer;
@@ -642,8 +643,8 @@ public class Ejb3Column {
 					column.setPropertyHolder( propertyHolder );
 					column.setJoins( secondaryTables );
 					column.setBuildingContext( context );
-					column.applyColumnDefault( inferredData, length==1 );
-					column.applyGeneratedAs( inferredData, length==1 );
+					column.applyColumnDefault( inferredData, length );
+					column.applyGeneratedAs( inferredData, length );
 					column.extractDataFromPropertyData(inferredData);
 					column.bind();
 					columns[index] = column;
@@ -653,11 +654,14 @@ public class Ejb3Column {
 		return columns;
 	}
 
-	private void applyColumnDefault(PropertyData inferredData, boolean implicit) {
+	private void applyColumnDefault(PropertyData inferredData, int length) {
 		final XProperty xProperty = inferredData.getProperty();
 		if ( xProperty != null ) {
 			ColumnDefault columnDefaultAnn = xProperty.getAnnotation( ColumnDefault.class );
-			if ( columnDefaultAnn != null && isReferencedColumn( columnDefaultAnn.name(), implicit ) ) {
+			if ( columnDefaultAnn != null ) {
+				if (length!=1) {
+					throw new MappingException("@ColumnDefault may only be applied to single-column mappings");
+				}
 				setDefaultValue( columnDefaultAnn.value() );
 			}
 		}
@@ -668,11 +672,14 @@ public class Ejb3Column {
 		}
 	}
 
-	private void applyGeneratedAs(PropertyData inferredData, boolean implicit) {
+	private void applyGeneratedAs(PropertyData inferredData, int length) {
 		final XProperty xProperty = inferredData.getProperty();
 		if ( xProperty != null ) {
 			GeneratedColumn generatedAnn = xProperty.getAnnotation( GeneratedColumn.class );
-			if ( generatedAnn != null && isReferencedColumn( generatedAnn.name(), implicit ) ) {
+			if ( generatedAnn != null ) {
+				if (length!=1) {
+					throw new MappingException("@GeneratedColumn may only be applied to single-column mappings");
+				}
 				setGeneratedAs( generatedAnn.value() );
 			}
 		}
@@ -680,25 +687,6 @@ public class Ejb3Column {
 			LOG.trace(
 					"Could not perform @ColumnGeneratedAlways lookup as 'PropertyData' did not give access to XProperty"
 			);
-		}
-	}
-
-	private boolean isReferencedColumn(String name, boolean implicit) {
-		if ( name.isEmpty() && implicit ) {
-			return true;
-		}
-		else {
-			String columnName;
-			if ( StringHelper.isNotEmpty( logicalColumnName ) ) {
-				columnName = processColumnName( logicalColumnName, true );
-			}
-			else if ( propertyName != null ) {
-				columnName = inferColumnName( propertyName );
-			}
-			else {
-				return false;
-			}
-			return name.equals(columnName);
 		}
 	}
 
@@ -771,8 +759,8 @@ public class Ejb3Column {
 			column.setLogicalColumnName( propertyName + suffixForDefaultColumnName );
 		}
 		column.setImplicit( implicit );
-		column.applyColumnDefault( inferredData, implicit );
-		column.applyGeneratedAs( inferredData, implicit );
+		column.applyColumnDefault( inferredData, 1 );
+		column.applyGeneratedAs( inferredData, 1 );
 		column.extractDataFromPropertyData( inferredData );
 		column.bind();
 

@@ -60,6 +60,11 @@ public interface AttributeContainer<J> {
 			);
 		}
 
+		default void applyNaturalIdAttribute(PersistentAttribute<J, ?> versionAttribute) {
+			throw new UnsupportedMappingException(
+					"AttributeContainer [" + getClass().getName() + "] does not support natural ids"
+			);
+		}
 
 		/**
 		 * Called when configuration of the type is complete

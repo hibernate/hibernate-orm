@@ -7,8 +7,10 @@
 package org.hibernate.metamodel.model.domain;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 import jakarta.persistence.metamodel.Bindable;
@@ -53,6 +55,7 @@ public abstract class AbstractIdentifiableType<J>
 
 	private final boolean isVersioned;
 	private SingularPersistentAttribute<J, ?> versionAttribute;
+	private List<PersistentAttribute<J,?>> naturalIdAttributes;
 
 	public AbstractIdentifiableType(
 			String typeName,
@@ -250,7 +253,7 @@ public abstract class AbstractIdentifiableType<J>
 			return null;
 		}
 
-		SingularPersistentAttribute<J, ?> version = findVersionAttribute();
+		SingularPersistentAttribute<? super J, ?> version = findVersionAttribute();
 		if ( version != null ) {
 			checkType( version, javaType );
 		}
@@ -258,14 +261,26 @@ public abstract class AbstractIdentifiableType<J>
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public SingularPersistentAttribute<J, ?> findVersionAttribute() {
+	public SingularPersistentAttribute<? super J, ?> findVersionAttribute() {
 		if ( versionAttribute != null ) {
 			return versionAttribute;
 		}
 
 		if ( getSuperType() != null ) {
-			return (SingularPersistentAttribute<J, ?>) getSuperType().findVersionAttribute();
+			return getSuperType().findVersionAttribute();
+		}
+
+		return null;
+	}
+
+	@Override
+	public List<? extends PersistentAttribute<? super J, ?>> findNaturalIdAttributes() {
+		if ( naturalIdAttributes != null ) {
+			return naturalIdAttributes;
+		}
+
+		if ( getSuperType() != null ) {
+			return getSuperType().findNaturalIdAttributes();
 		}
 
 		return null;
@@ -360,6 +375,14 @@ public abstract class AbstractIdentifiableType<J>
 		public void applyVersionAttribute(SingularPersistentAttribute<J, ?> versionAttribute) {
 			AbstractIdentifiableType.this.versionAttribute = versionAttribute;
 			managedTypeAccess.addAttribute( versionAttribute );
+		}
+
+		@Override
+		public void applyNaturalIdAttribute(PersistentAttribute<J, ?> naturalIdAttribute) {
+			if ( AbstractIdentifiableType.this.naturalIdAttributes == null ) {
+				AbstractIdentifiableType.this.naturalIdAttributes = new ArrayList<>();
+			}
+			AbstractIdentifiableType.this.naturalIdAttributes.add( naturalIdAttribute );
 		}
 
 		@Override

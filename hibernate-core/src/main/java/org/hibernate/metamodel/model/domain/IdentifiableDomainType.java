@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.model.domain;
 
+import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 import jakarta.persistence.metamodel.IdentifiableType;
@@ -49,4 +50,6 @@ public interface IdentifiableDomainType<J> extends ManagedDomainType<J>, Identif
 	void visitIdClassAttributes(Consumer<SingularPersistentAttribute<? super J,?>> action);
 
 	SingularPersistentAttribute<? super J, ?> findVersionAttribute();
+
+	List<? extends PersistentAttribute<? super J, ?>> findNaturalIdAttributes();
 }

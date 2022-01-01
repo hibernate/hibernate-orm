@@ -288,7 +288,12 @@ public class MetadataContext {
 						);
 						if ( attribute != null ) {
 							( (AttributeContainer<Object>) jpaMapping ).getInFlightAccess().addAttribute( attribute );
+							if ( property.isNaturalIdentifier() ) {
+								( ( AttributeContainer<Object>) jpaMapping ).getInFlightAccess()
+										.applyNaturalIdAttribute( attribute );
+							}
 						}
+
 					}
 
 					( (AttributeContainer<?>) jpaMapping ).getInFlightAccess().finishUp();
@@ -313,6 +318,7 @@ public class MetadataContext {
 
 					applyIdMetadata( safeMapping, jpaType );
 					applyVersionAttribute( safeMapping, jpaType );
+//					applyNaturalIdAttribute( safeMapping, jpaType );
 
 					Iterator<Property> properties = safeMapping.getDeclaredPropertyIterator();
 					while ( properties.hasNext() ) {
@@ -324,6 +330,10 @@ public class MetadataContext {
 						final PersistentAttribute<Object, ?> attribute = attributeFactory.buildAttribute( jpaType, property );
 						if ( attribute != null ) {
 							( (AttributeContainer<Object>) jpaType ).getInFlightAccess().addAttribute( attribute );
+							if ( property.isNaturalIdentifier() ) {
+								( ( AttributeContainer<Object>) jpaType ).getInFlightAccess()
+										.applyNaturalIdAttribute( attribute );
+							}
 						}
 					}
 

@@ -933,7 +933,7 @@ public class QuerySqmImpl<R>
 		final EntityPersister entityDescriptor = getSessionFactory().getDomainModel().findEntityDescriptor( entityNameToInsert );
 
 		final SqmMultiTableInsertStrategy multiTableStrategy = entityDescriptor.getSqmMultiTableInsertStrategy();
-		if ( multiTableStrategy == null ) {
+		if ( multiTableStrategy == null || sqmInsert instanceof SqmInsertValuesStatement ) {
 			return new SimpleInsertQueryPlan( sqmInsert, domainParameterXref );
 		}
 		else {

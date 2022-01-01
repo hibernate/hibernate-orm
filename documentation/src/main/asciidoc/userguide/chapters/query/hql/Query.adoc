@@ -1,5 +1,5 @@
 [[hql]]
-== HQL and JPQL
+== Java API for HQL and JPQL
 :modeldir: ../../../../../../main/java/org/hibernate/userguide/model
 :sourcedir: ../../../../../../test/java/org/hibernate/userguide/hql
 :extrasdir: extras
@@ -21,20 +21,47 @@ However, HQL is the most convenient option for most people most of the time.
 The actual query language itself is discussed the <<chapters/query/criteria/QueryLanguage.adoc#query-language,next chapter>>.
 This chapter describes the Java APIs for executing HQL and JPQL queries.
 
+[[hql-examples-domain-model]]
+=== Example domain model
+
+The code examples featured in this chapter, and the next, make use of the following annotated domain model.
+
+[[hql-examples-domain-model-example]]
+.Examples domain model
+====
+[source, JAVA, indent=0]
+----
+include::{modeldir}/Person.java[tags=hql-examples-domain-model-example]
+
+include::{modeldir}/AddressType.java[tags=hql-examples-domain-model-example]
+
+include::{modeldir}/Partner.java[tags=hql-examples-domain-model-example]
+
+include::{modeldir}/Phone.java[tags=hql-examples-domain-model-example]
+
+include::{modeldir}/PhoneType.java[tags=hql-examples-domain-model-example]
+
+include::{modeldir}/Call.java[tags=hql-examples-domain-model-example]
+
+include::{modeldir}/Payment.java[tags=hql-examples-domain-model-example]
+
+include::{modeldir}/CreditCardPayment.java[tags=hql-examples-domain-model-example]
+
+include::{modeldir}/WireTransferPayment.java[tags=hql-examples-domain-model-example]
+----
+====
+
 [[hql-getting-started]]
-=== HQL query basics
+=== Obtaining a `Query` object
 
 A query may be provided to Hibernate as either:
 
 * an _inline query_: the text of the query is passed as a string to the session at runtime, or
 * a _named query_: the query is specified in an annotation or XML file, and identified by name at runtime.
 
-The API for actually executing the query is the same in both cases.
+A `Query` object is obtained from the `EntityManager` or Hibernate `Session` by calling `createQuery()` or `createNamedQuery()`.
 
-[TIP]
-====
-One big advantage to named queries is that they are parsed by Hibernate at startup time, and so some sorts of errors are reported much earlier.
-====
+The API for actually executing the query is the same in both cases, as we're about to see <<query-execution,below>>.
 
 [[named-queries]]
 ==== Declaring named queries
@@ -64,34 +91,9 @@ include::{modeldir}/Phone.java[tags=jpql-api-hibernate-named-query-example, inde
 //include::{sourcedir}/HQLTest.java[tags=jpql-api-hibernate-named-query-example, indent=0]
 ====
 
-[[hql-examples-domain-model]]
-==== Example domain model
-
-The code examples featured in this chapter, and the next, make use of the following annotated domain model.
-
-[[hql-examples-domain-model-example]]
-.Examples domain model
+[TIP]
 ====
-[source, JAVA, indent=0]
-----
-include::{modeldir}/Person.java[tags=hql-examples-domain-model-example]
-
-include::{modeldir}/AddressType.java[tags=hql-examples-domain-model-example]
-
-include::{modeldir}/Partner.java[tags=hql-examples-domain-model-example]
-
-include::{modeldir}/Phone.java[tags=hql-examples-domain-model-example]
-
-include::{modeldir}/PhoneType.java[tags=hql-examples-domain-model-example]
-
-include::{modeldir}/Call.java[tags=hql-examples-domain-model-example]
-
-include::{modeldir}/Payment.java[tags=hql-examples-domain-model-example]
-
-include::{modeldir}/CreditCardPayment.java[tags=hql-examples-domain-model-example]
-
-include::{modeldir}/WireTransferPayment.java[tags=hql-examples-domain-model-example]
-----
+One big advantage to named queries is that they are parsed by Hibernate at startup time, and so some sorts of errors are reported much earlier.
 ====
 
 [[query-api]]
@@ -174,10 +176,10 @@ Since `org.hibernate.query.Query` inherits `TypedQuery`, which in turn inherits 
 [[jpql-query-parameters]]
 ==== Binding arguments to query parameters
 
-A query may have named parameters or positional parameters:
+A query may have named parameters or ordinal parameters:
 
 * named parameters are specified using the syntax `:name`, and
-* positional parameters are specified using the syntax `?1`, `?2`, etc.
+* ordinal parameters are specified using the syntax `?1`, `?2`, etc.
 
 If the query has parameters, arguments must be bound to each parameter before the query is executed.
 
@@ -190,10 +192,10 @@ include::{sourcedir}/HQLTest.java[tags=jpql-api-parameter-example]
 ----
 ====
 
-JPQL-style positional parameters are numbered from `1`.
-Just like with named parameters, a positional parameter may appear multiple times in a query.
+JPQL-style ordinal parameters are numbered from `1`.
+Just like with named parameters, a ordinal parameter may appear multiple times in a query.
 
-[[jpql-api-positional-parameter-example]]
+[[jpql-api-ordinal-parameter-example]]
 .Positional parameter binding
 ====
 [source, JAVA, indent=0]
@@ -204,7 +206,7 @@ include::{sourcedir}/HQLTest.java[tags=jpql-api-positional-parameter-example]
 
 [NOTE]
 ====
-It's not a good idea to mix named and positional parameters in a single query.
+It's not a good idea to mix named and ordinal parameters in a single query.
 ====
 
 [[jpql-query-execution]]
@@ -283,28 +285,30 @@ Jakarta Persistence defines some standard hints with the prefix `jakarta.persist
 Using provider-specific hints limits your program's portability to only a small degree.
 
 |===
-| `jakarta.persistence.query.timeout` | Defines the query timeout, in milliseconds.
-| `jakarta.persistence.fetchgraph` | Defines a _fetchgraph_ EntityGraph.
-Attributes explicitly specified as `AttributeNodes` are treated as `FetchType.EAGER` (via join fetch or subsequent select).
-For details, see the EntityGraph discussions in <<chapters/fetching/Fetching.adoc#fetching,Fetching>>.
-| `jakarta.persistence.loadgraph` | Defines a _loadgraph_ EntityGraph.
-Attributes explicitly specified as AttributeNodes are treated as `FetchType.EAGER` (via join fetch or subsequent select).
-Attributes that are not specified are treated as `FetchType.LAZY` or `FetchType.EAGER` depending on the attribute's definition in metadata.
-For details, see the EntityGraph discussions in <<chapters/fetching/Fetching.adoc#fetching,Fetching>>.
-| `org.hibernate.cacheMode` | Defines the `CacheMode` to use. See `org.hibernate.query.Query#setCacheMode`.
-| `org.hibernate.cacheable` | Defines whether the query is cacheable. true/false. See `org.hibernate.query.Query#setCacheable`.
-| `org.hibernate.cacheRegion` | For queries that are cacheable, defines a specific cache region to use. See `org.hibernate.query.Query#setCacheRegion`.
-| `org.hibernate.comment` | Defines the comment to apply to the generated SQL. See `org.hibernate.query.Query#setComment`.
-| `org.hibernate.fetchSize` | Defines the JDBC fetch-size to use. See `org.hibernate.query.Query#setFetchSize`.
-| `org.hibernate.flushMode` | Defines the Hibernate-specific `FlushMode` to use. See `org.hibernate.query.Query#setFlushMode.` If possible, prefer using `jakarta.persistence.Query#setFlushMode` instead.
-| `org.hibernate.readOnly` | Defines that entities and collections loaded by this query should be marked as read-only. See `org.hibernate.query.Query#setReadOnly`.
-|===
+| Hint name | Interpretation | Equivalent Hibernate API
 
-For complete details, see the `Query` {jpaJavadocUrlPrefix}Query.html[Javadocs].
+| `jakarta.persistence.query.timeout` | The query timeout, in milliseconds. | `Query#setTimeout()`
+| `jakarta.persistence.fetchgraph` | An `EntityGraph` to be interpreted as a _fetchgraph_, as defined by the Jakarta Persistence specification.
+| See <<chapters/fetching/Fetching.adoc#fetching,Fetching>>.
+| `jakarta.persistence.loadgraph` | An `EntityGraph` to be interpreted as a _loadgraph_, as defined by the Jakarta Persistence specification.
+| See <<chapters/fetching/Fetching.adoc#fetching,Fetching>>.
+| `org.hibernate.cacheMode` | The `CacheMode` to use. | `Query#setCacheMode()`
+| `org.hibernate.cacheable` | `true` if the query is cacheable. | `Query#setCacheable()`
+| `org.hibernate.cacheRegion` | For a cacheable query, the name of a cache region to use. | `Query#setCacheRegion()`
+| `org.hibernate.comment` | A comment to apply to the generated SQL. | `Query#setComment()`
+| `org.hibernate.fetchSize` | The JDBC fetch size to use. | `Query#setFetchSize()`
+| `org.hibernate.flushMode` | The Hibernate-specific `FlushMode` to use.
+
+(Where possible, prefer `jakarta.persistence.Query#setFlushMode()`.)
+
+| `Query#setFlushMode()`
+| `org.hibernate.readOnly` | `true` if entities and collections loaded by this query should be marked as read-only.
+| `Query#setReadOnly()`
+|===
 
 [TIP]
 ====
-For named queries, query hints may be specified using the Jakarta Persistence {jpaJavadocUrlPrefix}QueryHint.html[`@QueryHint`] annotation.
+For named queries, query hints may be specified using the `@QueryHint` annotation.
 ====
 
 [[hql-api-execution]]
@@ -323,7 +327,17 @@ Whereas we needed to specify some information using query hints when working wit
 | `Query#setLockMode()` | Overrides the session-level flush mode. Locking is covered in detail in <<chapters/locking/Locking.adoc#locking,Locking>>.
 | `Query#setReadOnly()` | Overrides the session-level default for read-only state. The concept of read-only state is covered in <<chapters/pc/PersistenceContext.adoc#pc,Persistence Contexts>>.
 | `Query#setComment()` | Adds a comment to the generated SQL.
+| `Query#addQueryHint()` | Add a hint to the generated SQL.
 |===
+
+[IMPORTANT]
+====
+`addQueryHint()` allows specification of a hint intended for the database query planner.
+A hint is added directly to the generated SQL according to `Dialect#getQueryHintString()`.
+
+On the other hand, `setHint()` refers to the Jakarta Persistence notion of a query hint, a hint that targets the provider (Hibernate).
+This is a completely different concept.
+====
 
 For complete details, see the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/Query.html[Query] Javadocs.
 
@@ -334,15 +348,6 @@ For complete details, see the https://docs.jboss.org/hibernate/orm/{majorMinorVe
 ----
 include::{sourcedir}/HQLTest.java[tags=hql-api-basic-usage-example]
 ----
-====
-
-[IMPORTANT]
-====
-`addQueryHint()` allows specification of a database query hint.
-A hint is added directly to the generated SQL according to `Dialect#getQueryHintString`.
-
-On the other hand, `setHint()` refers to the Jakarta Persistence notion of a query hint, a hint that targets the provider (Hibernate).
-This is a completely different concept.
 ====
 
 [[hql-api-result-transformers]]
@@ -404,9 +409,9 @@ See the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hi
 //
 //[IMPORTANT]
 //====
-//Traditionally, Hibernate used to support a JDBC positional parameter syntax form via a `?` symbol without a following ordinal.
+//Traditionally, Hibernate used to support a JDBC ordinal parameter syntax form via a `?` symbol without a following ordinal.
 //
-//There was no way to relate two such positional parameters as being "the same" aside from binding the same value to each and, for this reason, this form is no longer supported.
+//There was no way to relate two such ordinal parameters as being "the same" aside from binding the same value to each and, for this reason, this form is no longer supported.
 //
 //[source, JAVA, indent=0]
 //----

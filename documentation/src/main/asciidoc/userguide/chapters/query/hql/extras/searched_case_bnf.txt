@@ -1,1 +1,1 @@
-CASE [ WHEN {test_conditional} THEN {match_result} ]* ELSE {miss_result} END
+CASE (WHEN predicate THEN expression)+ (ELSE expression)? END

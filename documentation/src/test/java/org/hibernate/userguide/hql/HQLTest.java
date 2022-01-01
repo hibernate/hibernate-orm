@@ -153,8 +153,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 
 			//tag::hql-select-simplest-example-alt[]
 			LocalDateTime datetime = session.createQuery(
-					"select local datetime",
-					LocalDateTime.class )
+				"select local datetime",
+				LocalDateTime.class )
 			.getSingleResult();
 			//end::hql-select-simplest-example-alt[]
 		});
@@ -166,9 +166,41 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 			//tag::hql-select-simplest-jpql-example[]
 			List<Person> persons = entityManager.createQuery(
 				"select p " +
-				"from Person p", Person.class )
+				"from Person p",
+				Person.class )
 			.getResultList();
 			//end::hql-select-simplest-jpql-example[]
+
+			Session session = entityManager.unwrap( Session.class );
+			//tag::hql-select-last-example[]
+			List<String> datetimes = session.createQuery(
+				"from Person p select p.name",
+				String.class )
+			.getResultList();
+			//end::hql-select-last-example[]
+		});
+	}
+
+	@Test
+	public void hql_update_example() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			//tag::hql-update-example[]
+			entityManager.createQuery(
+				"update Person set nickName = 'Nacho' " +
+				"where name = 'Ignacio'" )
+			.executeUpdate();
+			//end::hql-update-example[]
+		});
+	}
+
+	@Test
+	public void hql_insert_example() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			//tag::hql-insert-example[]
+			entityManager.createQuery(
+				"insert Person (id, name) values (100L, 'Jane Doe')" )
+			.executeUpdate();
+			//end::hql-insert-example[]
 		});
 	}
 
@@ -196,6 +228,21 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 				Object[].class)
 			.getResultList();
 			//end::hql-multiple-root-reference-jpql-example[]
+			assertEquals(3, persons.size());
+		});
+	}
+
+	@Test
+	public void test_hql_cross_join_jpql_example() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			//tag::hql-cross-join-jpql-example[]
+			List<Object[]> persons = entityManager.createQuery(
+				"select distinct pr, ph " +
+				"from Person pr cross join Phone ph " +
+				"where ph.person = pr and ph is not null",
+				Object[].class)
+			.getResultList();
+			//end::hql-cross-join-jpql-example[]
 			assertEquals(3, persons.size());
 		});
 	}
@@ -1676,7 +1723,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Call call = entityManager.createQuery( "select c from Call c", Call.class).getResultList().get( 0 );
 			Phone phone = call.getPhone();
-			//tag::hql-collection-expressions-example[]
+			//tag::hql-collection-expressions-some-example[]
 
 			List<Person> persons = entityManager.createQuery(
 				"select p " +
@@ -1685,7 +1732,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 				Person.class )
 			.setParameter( "phone", phone )
 			.getResultList();
-			//end::hql-collection-expressions-example[]
+			//end::hql-collection-expressions-some-example[]
 			assertEquals(1, persons.size());
 		});
 	}
@@ -1693,7 +1740,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void test_hql_collection_expressions_example_6() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			//tag::hql-collection-expressions-example[]
+			//tag::hql-collection-expressions-exists-example[]
 
 			List<Person> persons = entityManager.createQuery(
 				"select p " +
@@ -1701,7 +1748,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 				"where exists elements ( p.phones )",
 				Person.class )
 			.getResultList();
-			//end::hql-collection-expressions-example[]
+			//end::hql-collection-expressions-exists-example[]
 			assertEquals(2, persons.size());
 		});
 	}
@@ -1727,7 +1774,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	@SkipForDialect(value = DerbyDialect.class, comment = "Comparisons between 'DATE' and 'TIMESTAMP' are not supported")
 	public void test_hql_collection_expressions_example_8() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			//tag::hql-collection-expressions-example[]
+			//tag::hql-collection-expressions-all-example[]
 
 			List<Phone> phones = entityManager.createQuery(
 				"select p " +
@@ -1735,7 +1782,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 				"where current_date() > all elements( p.repairTimestamps )",
 				Phone.class )
 			.getResultList();
-			//end::hql-collection-expressions-example[]
+			//end::hql-collection-expressions-all-example[]
 			assertEquals(3, phones.size());
 		});
 	}
@@ -1743,7 +1790,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void test_hql_collection_expressions_example_9() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			//tag::hql-collection-expressions-example[]
+			//tag::hql-collection-expressions-in-example[]
 
 			List<Person> persons = entityManager.createQuery(
 				"select p " +
@@ -1751,7 +1798,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 				"where 1 in indices( p.phones )",
 				Person.class )
 			.getResultList();
-			//end::hql-collection-expressions-example[]
+			//end::hql-collection-expressions-in-example[]
 			assertEquals(1, persons.size());
 		});
 	}
@@ -1892,15 +1939,13 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void test_simple_case_expressions_example_2() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			//tag::hql-simple-case-expressions-example[]
-
-			// same as above
+			//tag::hql-coalesce-example[]
 			List<String> nickNames = entityManager.createQuery(
 				"select coalesce(p.nickName, '<no nick name>') " +
 				"from Person p",
 				String.class )
 			.getResultList();
-			//end::hql-simple-case-expressions-example[]
+			//end::hql-coalesce-example[]
 			assertEquals(3, nickNames.size());
 		});
 	}
@@ -1932,15 +1977,14 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void test_searched_case_expressions_example_2() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			//tag::hql-searched-case-expressions-example[]
+			//tag::hql-coalesce-example[]
 
-			// coalesce can handle this more succinctly
 			List<String> nickNames = entityManager.createQuery(
 				"select coalesce( p.nickName, p.name, '<no nick name>' ) " +
 				"from Person p",
 				String.class )
 			.getResultList();
-			//end::hql-searched-case-expressions-example[]
+			//end::hql-coalesce-example[]
 			assertEquals(3, nickNames.size());
 		});
 	}

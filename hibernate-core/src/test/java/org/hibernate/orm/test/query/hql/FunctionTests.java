@@ -61,6 +61,20 @@ public class FunctionTests {
 	}
 
 	@Test
+	public void testIdVersionFunctions(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery("select id(w) from VersionedEntity w")
+							.list();
+					session.createQuery("select version(w) from VersionedEntity w")
+							.list();
+					session.createQuery("select naturalid(w) from VersionedEntity w")
+							.list();
+				}
+		);
+	}
+
+	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsCharCodeConversion.class)
 	public void testAsciiChrFunctions(SessionFactoryScope scope) {
 		scope.inTransaction(

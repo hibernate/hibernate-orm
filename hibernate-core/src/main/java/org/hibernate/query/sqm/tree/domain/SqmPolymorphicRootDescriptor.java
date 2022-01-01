@@ -468,6 +468,11 @@ public class SqmPolymorphicRootDescriptor<T> implements EntityDomainType<T> {
 	}
 
 	@Override
+	public List<? extends SingularPersistentAttribute<? super T, ?>> findNaturalIdAttributes() {
+		throw new UnsupportedOperationException(  );
+	}
+
+	@Override
 	public boolean hasSingleIdAttribute() {
 		throw new UnsupportedOperationException(  );
 	}

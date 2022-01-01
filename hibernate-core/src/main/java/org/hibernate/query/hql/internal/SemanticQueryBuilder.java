@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.QueryException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -52,6 +53,7 @@ import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
+import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.query.BinaryArithmeticOperator;
@@ -2175,7 +2177,33 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmPath<?> visitEntityNaturalIdReference(HqlParser.EntityNaturalIdReferenceContext ctx) {
-		throw new NotYetImplementedFor6Exception( "Support for HQL natural-id references not yet implemented" );
+		final SqmPath<Object> sqmPath = consumeDomainPath( (HqlParser.PathContext) ctx.getChild( 2 ) );
+		final DomainType<?> sqmPathType = sqmPath.getReferencedPathSource().getSqmPathType();
+
+		if ( sqmPathType instanceof IdentifiableDomainType<?> ) {
+			@SuppressWarnings("unchecked")
+			final IdentifiableDomainType<Object> identifiableType = (IdentifiableDomainType<? super Object>) sqmPathType;
+			final List<? extends PersistentAttribute<Object, ?>> attributes = identifiableType.findNaturalIdAttributes();
+			if ( attributes == null ) {
+				throw new SemanticException(
+						"`" + sqmPath.getNavigablePath().getFullPath() + "` resolved to an identifiable-type (`" +
+								identifiableType.getTypeName() + "`) which does not define a natural id"
+				);
+			}
+			else if ( attributes.size() >1 ) {
+				throw new SemanticException(
+						"`" + sqmPath.getNavigablePath().getFullPath() + "` resolved to an identifiable-type (`" +
+								identifiableType.getTypeName() + "`) which defines multiple natural ids"
+				);
+			}
+
+			@SuppressWarnings("unchecked")
+			SingularAttribute<Object, ?> naturalIdAttribute
+					= (SingularAttribute<Object, ?>) attributes.get(0);
+			return sqmPath.get( naturalIdAttribute );
+		}
+
+		throw new SemanticException( "Path does not reference an identifiable-type : " + sqmPath.getNavigablePath().getFullPath() );
 	}
 
 	@Override

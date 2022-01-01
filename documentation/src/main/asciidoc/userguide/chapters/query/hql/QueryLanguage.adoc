@@ -357,8 +357,10 @@ Since this syntax is rather unpleasant to look at, HQL provides not one, but two
 | Date | `LocalDate` | `{d 'yyyy-mm-dd'}` | `{yyyy-mm-dd}` | `date yyyy-mm-dd`
 | Time | `LocalTime` | `{t 'hh:mm'}` | `{hh:mm}` | `time hh:mm`
 | Time with seconds | `LocalTime` | `{t 'hh:mm:ss'}` | `{hh:mm:ss}` | `time hh:mm:ss`
-| Datetime | `LocalDateTime` | `{ts 'yyyy-mm-dd hh:mm:ss'}` | `{yyyy-mm-dd hh:mm:ss}` | `datetime yyyy-mm-dd hh:mm:ss`
-| Datetime with milliseconds | `LocalDateTime` | `{ts 'yyyy-mm-dd hh:mm:ss.millis'}`| `{yyyy-mm-dd hh:mm:ss.millis}` | `datetime yyyy-mm-dd hh:mm:ss.millis`
+| Datetime | `LocalDateTime` | `{ts 'yyyy-mm-ddThh:mm:ss'}` | `{yyyy-mm-dd hh:mm:ss}` | `datetime yyyy-mm-dd hh:mm:ss`
+| Datetime with milliseconds | `LocalDateTime` | `{ts 'yyyy-mm-ddThh:mm:ss.millis'}` | `{yyyy-mm-dd hh:mm:ss.millis}` | `datetime yyyy-mm-dd hh:mm:ss.millis`
+| Datetime with an offset | `OffsetDateTime` | `{ts 'yyyy-mm-ddThh:mm:ss+hh:mm'}` | `{yyyy-mm-dd hh:mm:ss +hh:mm}` | `datetime yyyy-mm-dd hh:mm:ss +hh:mm`
+| Datetime with a time zone | `OffsetDateTime` | `{ts 'yyyy-mm-ddThh:mm:ss GMT'}` | `{yyyy-mm-dd hh:mm:ss GMT}` | `datetime yyyy-mm-dd hh:mm:ss GMT`
 |===
 
 Literals referring to the current date and time are also provided.

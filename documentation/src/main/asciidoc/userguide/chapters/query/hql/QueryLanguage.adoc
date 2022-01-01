@@ -178,7 +178,7 @@ Adding the keyword `versioned`&mdash;writing `update versioned`&mdash;specifies 
 ====
 
 [[hql-update-examples]]
-.Example update queries
+//.Example update queries
 ====
 [source, SQL, indent=0]
 ----
@@ -303,7 +303,7 @@ String literals are enclosed in single quotes.
 To escape a single quote within a string literal, use a doubled single quote: `''`.
 
 [[hql-string-literals-example]]
-.String literals examples
+//.String literals examples
 ====
 [source, JAVA, indent=0]
 ----
@@ -316,7 +316,7 @@ include::{sourcedir}/HQLTest.java[tags=hql-string-literals-example]
 Numeric literals come in several different forms.
 
 [[hql-numeric-literals-example]]
-.Numeric literal examples
+//.Numeric literal examples
 ====
 [source, JAVA, indent=0]
 ----
@@ -435,7 +435,7 @@ HQL defines two ways to concatenate strings:
 See <<jpql-standardized-functions,below>> for details of the `concat()` function.
 
 [[hql-concatenation-example]]
-.Concatenation operation example
+//.Concatenation operation example
 ====
 [source, JAVA, indent=0]
 ----
@@ -451,7 +451,7 @@ Many more operations on strings are defined below, in <<hql-exp-functions>>.
 The basic SQL arithmetic operators, `+`,`-`,`*`, and `/` are joined by the remainder operator `%`.
 
 [[hql-numeric-arithmetic-example]]
-.Numeric arithmetic examples
+//.Numeric arithmetic examples
 ====
 [source, JAVA, indent=0]
 ----
@@ -515,7 +515,7 @@ The special function `type()`, applied to an identification variable, evaluates 
 This is mainly useful when dealing with entity inheritance hierarchies.
 
 [[hql-entity-type-exp-example]]
-.Entity type expression examples
+//.Entity type expression examples
 ====
 [source, JAVA, indent=0]
 ----
@@ -550,7 +550,7 @@ include::{extrasdir}/simple_case_bnf.txt[]
 For example:
 
 [[hql-simple-case-expressions-example]]
-.Simple case expression example
+//.Simple case expression example
 ====
 [source, JAVA, indent=0]
 ----
@@ -572,7 +572,7 @@ include::{extrasdir}/searched_case_bnf.txt[]
 For example:
 
 [[hql-searched-case-expressions-example]]
-.Searched case expression example
+//.Searched case expression example
 ====
 [source, JAVA, indent=0]
 ----
@@ -586,7 +586,7 @@ include::{sourcedir}/HQLTest.java[tags=hql-searched-case-expressions-example]
 Any arithmetic operation in the `case` expression must be enclosed in parentheses, as illustrated by the following example:
 
 [[hql-case-arithmetic-expressions-example]]
-.Case expression with arithmetic operation example
+//.Case expression with arithmetic operation example
 ====
 [source, JAVA, indent=0]
 ----
@@ -901,7 +901,7 @@ Finally, specialized functions for working with collection-valued attributes and
 We've intentionally left two functions off this list, so we can come back to them <<hql-elements-indices,later>>.
 
 [[hql-collection-expressions-example]]
-.Collection-related expressions examples
+//.Collection-related expressions examples
 ====
 [source, JAVA, indent=0]
 ----
@@ -946,7 +946,7 @@ TIP: If you prefer, HQL treats `!=` as a synonym for `<>`.
 The operands should be of the same type.
 
 [[hql-relational-comparisons-example]]
-.Relational comparison examples
+//.Relational comparison examples
 ====
 [source, JAVA, indent=0]
 ----
@@ -962,7 +962,7 @@ The ternary `between` operator, and its negation, `not between`, determine if a 
 Of course, all three operands must be of compatible type.
 
 [[hql-between-predicate-example]]
-.Between examples
+//.Between examples
 ====
 [source, JAVA, indent=0]
 ----
@@ -983,7 +983,7 @@ The following operators make it easier to deal with null values.
 |===
 
 [[hql-null-predicate-example]]
-.Nullness checking examples
+//.Nullness checking examples
 ====
 [source, JAVA, indent=0]
 ----
@@ -1012,7 +1012,7 @@ The expression on the right is a pattern, where:
 * if an escape character is specified, it may be used to escape either of these wildcards.
 
 [[hql-like-predicate-example]]
-.Like predicate examples
+//.Like predicate examples
 ====
 [source, JAVA, indent=0]
 ----
@@ -1025,7 +1025,7 @@ The optional `escape` character allows a pattern to include a literal `_` or `%`
 For example, to match all stored procedures prefixed with `Dr_`, the like criteria could be `'Dr|_%' escape '|'`:
 
 [[hql-like-predicate-escape-example]]
-.Like with escape symbol
+//.Like with escape symbol
 ====
 [source, JAVA, indent=0]
 ----
@@ -1093,7 +1093,7 @@ Even embedded attributes are allowed, although that feature depends on the level
 ====
 
 [[hql-in-predicate-example]]
-.In predicate examples
+//.In predicate examples
 ====
 [source, JAVA, indent=0]
 ----
@@ -1102,7 +1102,7 @@ include::{sourcedir}/HQLTest.java[tags=hql-in-predicate-example]
 ====
 
 [[hql-collection-expressions-in-example]]
-.In indices example
+//.In indices example
 ====
 [source, JAVA, indent=0]
 ----
@@ -1128,7 +1128,7 @@ The qualifiers are unary prefix operators: `all`, `every`, `any`, and `some`.
 |===
 
 [[hql-all-subquery-comparison-qualifier-example]]
-.Subquery comparison example
+//.Subquery comparison example
 ====
 [source, JAVA, indent=0]
 ----
@@ -1137,7 +1137,7 @@ include::{sourcedir}/HQLTest.java[tags=hql-all-subquery-comparison-qualifier-exa
 ====
 
 [[hql-collection-expressions-all-some-example]]
-.All elements and some elements
+//.All elements and some elements
 ====
 [source, JAVA, indent=0]
 ----
@@ -1163,7 +1163,7 @@ The thing to its right might be:
 As you can surely guess, `not exists` evaluates to true if the thing to the right _is_ empty.
 
 [[hql-collection-expressions-exists-example]]
-.Exists elements example
+//.Exists elements example
 ====
 [source, JAVA, indent=0]
 ----
@@ -1184,7 +1184,7 @@ The following operators apply to collection-valued attributes and to-many associ
 |===
 
 [[hql-empty-collection-predicate-example]]
-.Empty collection expression examples
+//.Empty collection expression examples
 ====
 [source, JAVA, indent=0]
 ----
@@ -1193,7 +1193,7 @@ include::{sourcedir}/HQLTest.java[tags=hql-empty-collection-predicate-example]
 ====
 
 [[hql-member-of-collection-predicate-example]]
-.Member-of collection expression examples
+//.Member-of collection expression examples
 ====
 [source, JAVA, indent=0]
 ----
@@ -1238,7 +1238,7 @@ Remember, the _entity name_ is the value of the `name` member of the `@Entity` a
 ====
 
 [[hql-root-reference-jpql-example]]
-.Entity name for root entity reference
+//.Entity name for root entity reference
 ====
 [source, JAVA, indent=0]
 ----
@@ -1252,7 +1252,7 @@ Alternatively, a fully-qualified Java class name may be specified.
 Then Hibernate will query every entity which inherits the named type.
 
 [[hql-root-reference-jpql-fqn-example]]
-.Class name for root entity reference
+//.Class name for root entity reference
 ====
 [source, JAVA, indent=0]
 ----
@@ -1263,7 +1263,7 @@ include::{sourcedir}/HQLTest.java[tags=hql-select-simplest-jpql-fqn-example]
 Of course, there may be multiple root entities.
 
 [[hql-multiple-root-reference-jpql-example]]
-.Simple query using multiple root entity references
+//.Simple query using multiple root entity references
 ====
 [source, SQL, indent=0]
 ----
@@ -1279,7 +1279,7 @@ include::{sourcedir}/HQLTest.java[tags=hql-multiple-same-root-reference-jpql-exa
 The previous queries may even be written using the syntax `cross join` in place of the comma:
 
 [[hql-cross-join-jpql-example]]
-.Simple query using cross join
+//.Simple query using cross join
 ====
 [source, SQL, indent=0]
 ----
@@ -1344,7 +1344,7 @@ In the case of an embedded attribute, the join is purely logical and does not re
 An explicit join may assign an identification variable to the joined entity.
 
 [[hql-explicit-inner-join-example]]
-.Explicit inner join examples
+//.Explicit inner join examples
 ====
 [source, SQL, indent=0]
 ----
@@ -1353,7 +1353,7 @@ include::{sourcedir}/HQLTest.java[tags=hql-explicit-inner-join-example]
 ====
 
 [[hql-explicit-outer-join-example]]
-.Explicit left (outer) join examples
+//.Explicit left (outer) join examples
 ====
 [source, JAVA, indent=0]
 ----
@@ -1376,7 +1376,7 @@ The `with` keyword is specific to Hibernate. JPQL uses `on`.
 Join conditions occurring in the `with` or `on` clause result in an `on` clause in the generated SQL.
 
 [[hql-explicit-join-with-example]]
-.HQL `with` clause join example
+//.HQL `with` clause join example
 ====
 [source, JAVA, indent=0]
 ----
@@ -1385,7 +1385,7 @@ include::{sourcedir}/HQLTest.java[tags=hql-explicit-join-with-example]
 ====
 
 [[hql-explicit-join-jpql-on-example]]
-.JPQL `on` clause join example
+//.JPQL `on` clause join example
 ====
 [source, JAVA, indent=0]
 ----
@@ -1406,7 +1406,7 @@ Fetch joins are disallowed in subqueries.
 For example, if `Person` has a one-to-many association named `phones`, the use of `join fetch` in the following query specifies that the collection elements should be fetched in the same SQL query:
 
 [[hql-explicit-fetch-join-example]]
-.Fetch join example
+//.Fetch join example
 ====
 [source, JAVA, indent=0]
 ----
@@ -1447,7 +1447,7 @@ It's clear that:
 In the second case, Hibernate with automatically add a join to the generated SQL if necessary.
 
 [[hql-implicit-join-example]]
-.Simple implicit join example
+//.Simple implicit join example
 ====
 [source, JAVA, indent=0]
 ----
@@ -1464,7 +1464,7 @@ Note that:
 * Multiple occurrences of the same implicit join always refer to the same SQL join.
 
 [[hql-implicit-join-alias-example]]
-.Reused implicit join
+//.Reused implicit join
 ====
 [source, JAVA, indent=0]
 ----
@@ -1478,7 +1478,7 @@ include::{sourcedir}/HQLTest.java[tags=hql-implicit-join-alias-example]
 References to collection-valued associations actually refer to the _elements_ of that collection.
 
 [[hql-collection-valued-associations-example]]
-.Collection references example
+//.Collection references example
 ====
 [source, JAVA, indent=0]
 ----
@@ -1514,7 +1514,7 @@ Refers to the map's logical `java.util.Map.Entry` pair (the combination of its k
 |===
 
 [[hql-collection-qualification-example]]
-.Qualified collection references example
+//.Qualified collection references example
 ====
 [source, JAVA, indent=0]
 ----
@@ -1527,7 +1527,7 @@ include::{sourcedir}/HQLTest.java[tags=hql-collection-qualification-example, ind
 An element of and indexed collections (array, list, or map) may even be identified using the index operator:
 
 [[hql-collection-index-operator-example]]
-.Index operator examples
+//.Index operator examples
 ====
 [source, JAVA, indent=0]
 ----
@@ -1552,7 +1552,7 @@ There's one particular expression type that's only legal in the select clause.
 `select new` packages the query results into a user-written Java class instead of an array.
 
 [[hql-select-clause-dynamic-instantiation-example]]
-.Query results via `select new`
+//.Query results via `select new`
 ====
 [source, JAVA, indent=0]
 ----
@@ -1575,7 +1575,7 @@ Alternatively, the query may specify that each result should be packaged as a li
 Then the query results are returned as a `List<List<Object>>` or `List<Map<String,Object>>` instead of as a `List<Object[]>`.
 
 [[hql-select-clause-dynamic-list-instantiation-example]]
-.Query results as lists
+//.Query results as lists
 ====
 [source, JAVA, indent=0]
 ----
@@ -1584,7 +1584,7 @@ include::{sourcedir}/HQLTest.java[tags=hql-select-clause-dynamic-list-instantiat
 ====
 
 [[hql-select-clause-dynamic-map-instantiation-example]]
-.Query results as maps
+//.Query results as maps
 ====
 [source, JAVA, indent=0]
 ----
@@ -1602,7 +1602,7 @@ The `distinct` keyword helps remove duplicate results from the query result list
 It's only effect is to add `distinct` the generated SQL.
 
 [[hql-distinct-projection-query-example]]
-.Using `distinct` to remove duplicate rows
+//.Using `distinct` to remove duplicate rows
 ====
 [source, JAVA, indent=0]
 ----
@@ -1644,7 +1644,7 @@ In the case of `sum()`:
 Aggregate functions often appear in queries with a `group by` clause, as described <<hql-group-by,below>>.
 
 [[hql-aggregate-functions-example]]
-.Aggregate function examples
+//.Aggregate function examples
 ====
 [source, JAVA, indent=0]
 ----
@@ -1658,7 +1658,7 @@ include::{sourcedir}/HQLTest.java[tags=hql-aggregate-functions-example]
 All aggregate functions support the inclusion of a _filter clause_, a sort of mini-`where`-clause applying to just one item of the select list:
 
 [[hql-aggregate-functions-filter-example]]
-.Using filter with aggregate functions
+//.Using filter with aggregate functions
 ====
 [source, JAVA, indent=0]
 ----
@@ -1687,7 +1687,7 @@ The result set is grouped by the values of expressions that occur in the `group 
 As an example, consider the following queries:
 
 [[hql-group-by-example]]
-.Group by example
+//.Group by example
 ====
 [source, JAVA, indent=0]
 ----
@@ -1719,7 +1719,7 @@ In the <<hql-group-by-example>>, we retrieved `Call` duration totals for all per
 If that ended up being too much data to deal with, we might want to restrict the results to focus only on customers with a summed total of more than 1000:
 
 [[hql-group-by-having-example]]
-.Having example
+//.Having example
 ====
 [source, JAVA, indent=0]
 ----
@@ -1759,7 +1759,7 @@ HQL does not enforce this restriction, but applications desiring database portab
 ====
 
 [[hql-order-by-example]]
-.Order by example
+//.Order by example
 ====
 [source, JAVA, indent=0]
 ----

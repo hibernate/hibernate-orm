@@ -1624,26 +1624,27 @@ It's no longer necessary to remove duplicate results explicitly, and `distinct` 
 It's common to have aggregate functions like `count()`, `sum()`, and `max()` in a select list.
 Aggregate functions are special functions that reduce the size of the result set.
 
+The standard aggregate functions defined in both ANSI SQL and JPQL are:
+
 |===
-| Aggregate function | Result type
+| Aggregate function | Argument type | Result type
 
-| `count()`, including `count(distinct)`, `count(all)`, and `count(*)` | `Long`
-| `avg()` | `Double`
-| `min()` | Same as the argument type
-| `max()` | Same as the argument type
-| `sum()` | Depends on the type of the values being summed
-| `any()` | `Boolean`
-| `every()` | `Boolean`
+| `count()`, including `count(distinct)`, `count(all)`, and `count(*)` | Any | `Long`
+| `avg()` | Any numeric type | `Double`
+| `min()` | Any numeric type, or string | Same as the argument type
+| `max()` | Any numeric type, or string | Same as the argument type
+| `sum()` | Any numeric type | See table below
 |===
 
-In the case of `sum()`:
+In the case of `sum()`, the rules for assigning a result type are:
+|===
+| Argument type | Result type
 
-* For integral values (other than `BigInteger`), the result type is `Long`.
-* For floating point values (other than `BigDecimal`) the result type is `Double`.
-* For `BigInteger` values, the result type is `BigInteger`.
-* For `BigDecimal` values, the result type is `BigDecimal`.
-
-Aggregate functions often appear in queries with a `group by` clause, as described <<hql-group-by,below>>.
+| Any integral numeric type except `BigInteger` | `Long`
+| Any floating point numeric type | `Double`
+| `BigInteger` | `BigInteger`
+| `BigDecimal` |  `BigDecimal`
+|===
 
 [[hql-aggregate-functions-example]]
 //.Aggregate function examples
@@ -1653,6 +1654,17 @@ Aggregate functions often appear in queries with a `group by` clause, as describ
 include::{sourcedir}/HQLTest.java[tags=hql-aggregate-functions-example]
 ----
 ====
+
+HQL defines the two additional aggregate functions which accept a logical predicate as an argument, for example, `every(p.amount < 1000.0)`.
+
+|===
+| Aggregate function | Argument type | Result type
+
+| `any()` | Logical predicate | `Boolean`
+| `every()` | Logical predicate | `Boolean`
+|===
+
+Aggregate functions often appear in queries with a `group by` clause, as described <<hql-group-by,below>>.
 
 [[hql-aggregate-functions-filter]]
 ==== `filter`

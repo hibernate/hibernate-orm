@@ -974,6 +974,16 @@ Next, functions for working with numeric values:
 | `greatest()` | Return the largest of the given arguments | `greatest(x, y, z)` | Very common in SQL dialects
 |===
 
+Functions that evaluate to id, version, or natural id of an entity:
+
+|===
+| HQL Function | Purpose
+
+| `id()` | The value of the entity `@Id` attribute.
+| `version()` | The value of the entity `@Version` attribute.
+| `naturalid()` | The value of the entity `@NaturalId` attribute.
+|===
+
 Finally, specialized functions for working with collection-valued attributes and to-many associations:
 
 |===

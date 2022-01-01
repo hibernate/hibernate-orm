@@ -137,7 +137,7 @@ The BNF for an `update` statement is much easier to understand:
 
 [[hql-update-bnf-example]]
 ====
-[source, indent=0]
+[source, antlrv4, indent=0]
 ----
 include::{extrasdir}/statement_update_bnf.txt[]
 ----
@@ -197,7 +197,7 @@ The BNF for a `delete` statement is also quite simple:
 
 [[hql-delete-bnf-example]]
 ====
-[source, indent=0]
+[source, antlrv4, indent=0]
 ----
 include::{extrasdir}/statement_delete_bnf.txt[]
 ----
@@ -226,7 +226,7 @@ The BNF for an `insert` statement is:
 
 [[hql-insert-bnf-example]]
 ====
-[source, indent=0]
+[source, antlrv4, indent=0]
 ----
 include::{extrasdir}/statement_insert_bnf.txt[]
 ----
@@ -526,9 +526,9 @@ include::{sourcedir}/HQLTest.java[tags=hql-entity-type-exp-example]
 ====
 
 [[hql-case-expressions]]
-==== `case` expressions
+==== Case expressions
 
-Just like in standard SQL, there are two forms of the case expression:
+Just like in standard SQL, there are two forms of case expression:
 
 * the _simple_ case expression, and
 * the so-called _searched_ case expression.
@@ -544,7 +544,8 @@ It's often simpler to use the `coalesce()`, `nullif()`, or `ifnull()` functions.
 
 The syntax of the simple form is defined by:
 
-[source, JAVA, indent=0]
+[[hql-simple-case-expressions-bnf]]
+[source, antlrv4, indent=0]
 ----
 include::{extrasdir}/simple_case_bnf.txt[]
 ----
@@ -566,7 +567,7 @@ include::{sourcedir}/HQLTest.java[tags=hql-simple-case-expressions-example]
 The searched form has the following syntax:
 
 [[hql-searched-case-expressions-bnf]]
-[source, JAVA, indent=0]
+[source, antlrv4, indent=0]
 ----
 include::{extrasdir}/searched_case_bnf.txt[]
 ----
@@ -1002,7 +1003,7 @@ Its friend `ilike` performs case-insensitive matching.
 Their syntax is defined by:
 
 [[hql-like-predicate-bnf]]
-[source, JAVA, indent=0]
+[source, antlrv4, indent=0]
 ----
 include::{extrasdir}/predicate_like_bnf.txt[]
 ----
@@ -1069,7 +1070,7 @@ The `in` predicates evaluates to true if the value to its left is in ... well, w
 Its syntax is unexpectedly complicated:
 
 [[hql-in-predicate-bnf]]
-[source, JAVA, indent=0]
+[source, antlrv4, indent=0]
 ----
 include::{extrasdir}/predicate_in_bnf.txt[]
 ----

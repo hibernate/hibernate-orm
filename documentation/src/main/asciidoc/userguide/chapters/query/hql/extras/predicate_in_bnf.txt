@@ -2,6 +2,6 @@ expression NOT? IN inList
 
 inList
 	: (ELEMENTS|INDICES) LEFT_PAREN dotIdentifierSequence RIGHT_PAREN
-	| LEFT_PAREN (expressionOrPredicate (COMMA expressionOrPredicate)*)? RIGHT_PAREN
+	| LEFT_PAREN (expression (COMMA expression)*)? RIGHT_PAREN
 	| LEFT_PAREN subquery RIGHT_PAREN
 	| parameter

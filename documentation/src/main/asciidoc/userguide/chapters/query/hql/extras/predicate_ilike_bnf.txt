@@ -1,4 +1,0 @@
-ilike_expression ::=
-    string_expression
-    [NOT] ILIKE pattern_value
-    [ESCAPE escape_character]

@@ -31,20 +31,20 @@ selectStatement
 	: queryExpression
 	;
 
-subQuery
+subquery
 	: queryExpression
 	;
 
-dmlTarget
+targetEntity
 	: entityName identificationVariableDef?
 	;
 
 deleteStatement
-	: DELETE FROM? dmlTarget whereClause?
+	: DELETE FROM? targetEntity whereClause?
 	;
 
 updateStatement
-	: UPDATE VERSIONED? dmlTarget setClause whereClause?
+	: UPDATE VERSIONED? targetEntity setClause whereClause?
 	;
 
 setClause
@@ -56,10 +56,10 @@ assignment
 	;
 
 insertStatement
-	: INSERT INTO? dmlTarget targetFieldsSpec (queryExpression | valuesList)
+	: INSERT INTO? targetEntity targetFields (queryExpression | valuesList)
 	;
 
-targetFieldsSpec
+targetFields
 	: LEFT_PAREN dotIdentifierSequence (COMMA dotIdentifierSequence)* RIGHT_PAREN
 	;
 
@@ -75,12 +75,12 @@ values
 // QUERY SPEC - general structure of root sqm or sub sqm
 
 queryExpression
-	: simpleQueryExpression										# SimpleQueryGroup
-	| queryExpression (setOperator simpleQueryExpression)+		# SetQueryGroup
+	: orderedQuery								# SimpleQueryGroup
+	| orderedQuery (setOperator orderedQuery)+	# SetQueryGroup
 	;
 
-simpleQueryExpression
-	: querySpec queryOrder?									# QuerySpecExpression
+orderedQuery
+	: query queryOrder?										# QuerySpecExpression
 	| LEFT_PAREN queryExpression RIGHT_PAREN queryOrder?	# NestedQueryExpression
 	;
 
@@ -91,10 +91,10 @@ setOperator
 	;
 
 queryOrder
-	:  orderByClause limitClause? offsetClause? fetchClause?
+	: orderByClause limitClause? offsetClause? fetchClause?
 	;
 
-querySpec
+query
 // TODO: add with clause
 	: selectClause fromClause? whereClause? ( groupByClause havingClause? )?
 	| fromClause whereClause? ( groupByClause havingClause? )? selectClause?
@@ -230,7 +230,7 @@ dotIdentifierSequenceContinuation
  * path; see `syntacticNavigablePath` rule
  */
 path
-	: syntacticDomainPath (pathContinuation)?
+	: syntacticDomainPath pathContinuation?
 	| generalPathFragment
 	;
 
@@ -390,15 +390,15 @@ whereClause
 predicate
 	//highest to lowest precedence
 	: LEFT_PAREN predicate RIGHT_PAREN											# GroupedPredicate
-	| expression IS (NOT)? NULL													# IsNullPredicate
-	| expression IS (NOT)? EMPTY												# IsEmptyPredicate
-	| expression (NOT)? IN inList												# InPredicate
-	| expression (NOT)? BETWEEN expression AND expression						# BetweenPredicate
-	| expression (NOT)? (LIKE | ILIKE) expression (likeEscape)?					# LikePredicate
+	| expression IS NOT? NULL													# IsNullPredicate
+	| expression IS NOT? EMPTY													# IsEmptyPredicate
+	| expression NOT? IN inList													# InPredicate
+	| expression NOT? BETWEEN expression AND expression							# BetweenPredicate
+	| expression NOT? (LIKE | ILIKE) expression likeEscape?						# LikePredicate
 	| expression comparisonOperator expression									# ComparisonPredicate
 	| EXISTS (ELEMENTS|INDICES) LEFT_PAREN dotIdentifierSequence RIGHT_PAREN	# ExistsCollectionPartPredicate
 	| EXISTS expression															# ExistsPredicate
-	| expression (NOT)? MEMBER OF path											# MemberOfPredicate
+	| expression NOT? MEMBER OF? path											# MemberOfPredicate
 	| NOT predicate																# NegatedPredicate
 	| predicate AND predicate													# AndPredicate
 	| predicate OR predicate													# OrPredicate
@@ -419,12 +419,12 @@ comparisonOperator
 inList
 	: (ELEMENTS|INDICES) LEFT_PAREN dotIdentifierSequence RIGHT_PAREN				# PersistentCollectionReferenceInList
 	| LEFT_PAREN (expressionOrPredicate (COMMA expressionOrPredicate)*)? RIGHT_PAREN# ExplicitTupleInList
-	| LEFT_PAREN subQuery RIGHT_PAREN												# SubQueryInList
+	| LEFT_PAREN subquery RIGHT_PAREN												# SubqueryInList
 	| parameter 																	# ParamInList
 	;
 
 likeEscape
-	: ESCAPE expression
+	: ESCAPE STRING_LITERAL
 	;
 
 
@@ -435,7 +435,7 @@ expression
 	//highest to lowest precedence
 	: LEFT_PAREN expression RIGHT_PAREN												# GroupedExpression
 	| LEFT_PAREN expressionOrPredicate (COMMA expressionOrPredicate)+ RIGHT_PAREN	# TupleExpression
-	| LEFT_PAREN subQuery RIGHT_PAREN												# SubQueryExpression
+	| LEFT_PAREN subquery RIGHT_PAREN												# SubqueryExpression
 	| primaryExpression collationSpecification?										# CollateExpression
 	| signOperator numericLiteral													# UnaryNumericLiteralExpression
 	| signOperator expression														# UnaryExpression
@@ -454,7 +454,7 @@ primaryExpression
 	| entityIdReference									# EntityIdExpression
 	| entityVersionReference							# EntityVersionExpression
 	| entityNaturalIdReference							# EntityNaturalIdExpression
-	| syntacticDomainPath (pathContinuation)?			# SyntacticPathExpression
+	| syntacticDomainPath pathContinuation?			# SyntacticPathExpression
 	| function											# FunctionExpression
 	| generalPathFragment								# GeneralPathExpression
 	;
@@ -502,7 +502,7 @@ caseList
 	;
 
 simpleCaseList
-	: CASE expressionOrPredicate (simpleCaseWhen)+ (caseOtherwise)? END
+	: CASE expressionOrPredicate simpleCaseWhen+ caseOtherwise? END
 	;
 
 simpleCaseWhen
@@ -514,7 +514,7 @@ caseOtherwise
 	;
 
 searchedCaseList
-	: CASE (searchedCaseWhen)+ (caseOtherwise)? END
+	: CASE searchedCaseWhen+ caseOtherwise? END
 	;
 
 searchedCaseWhen
@@ -553,7 +553,7 @@ temporalLiteral
 	| timeLiteral
 	| jdbcTimestampLiteral
 	| jdbcDateLiteral
-    | jdbcTimeLiteral
+	| jdbcTimeLiteral
 	;
 
 dateTimeLiteral
@@ -674,13 +674,13 @@ aggregateFunction
 
 everyFunction
 	: (EVERY|ALL) LEFT_PAREN predicate RIGHT_PAREN filterClause?
-	| (EVERY|ALL) LEFT_PAREN subQuery RIGHT_PAREN
+	| (EVERY|ALL) LEFT_PAREN subquery RIGHT_PAREN
 	| (EVERY|ALL) (ELEMENTS|INDICES) LEFT_PAREN dotIdentifierSequence RIGHT_PAREN
 	;
 
 anyFunction
 	: (ANY|SOME) LEFT_PAREN predicate RIGHT_PAREN filterClause?
-	| (ANY|SOME) LEFT_PAREN subQuery RIGHT_PAREN
+	| (ANY|SOME) LEFT_PAREN subquery RIGHT_PAREN
 	| (ANY|SOME) (ELEMENTS|INDICES) LEFT_PAREN dotIdentifierSequence RIGHT_PAREN
 	;
 
@@ -982,9 +982,9 @@ identifier
 	| LIMIT
 	| LIST
 	| LOCAL
-    | LOCAL_DATE
-    | LOCAL_DATETIME
-    | LOCAL_TIME
+	| LOCAL_DATE
+	| LOCAL_DATETIME
+	| LOCAL_TIME
 	| MAP
 	| MAXELEMENT
 	| MAXINDEX

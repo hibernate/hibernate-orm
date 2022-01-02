@@ -2030,7 +2030,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 		});
 	}
 
-	@Test @Skip(condition = Skip.AlwaysSkip.class, message = "broken in H6")
+	@Test
 	public void test_hql_join_many_treat_example() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-join-treat-example[]

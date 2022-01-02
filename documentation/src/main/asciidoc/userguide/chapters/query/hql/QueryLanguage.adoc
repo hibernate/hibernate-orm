@@ -850,6 +850,15 @@ include::{sourcedir}/HQLTest.java[tags=hql-year-function-example]
 ----
 ====
 
+===== `collate()`
+
+Selects a collation to be used for its string-valued argument.
+Collations are useful for <<hql-relational-comparisons,binary comparisons>> with `<` or `>`, and in the <<hql-order-by,order by clause>>.
+
+For example, `collate(p.name as ucs_basic)` specifies the SQL standard collation `ucs_basic`.
+
+IMPORTANT: Collations aren't very portable between databases.
+
 [[hql-function-format]]
 ===== `format()`
 

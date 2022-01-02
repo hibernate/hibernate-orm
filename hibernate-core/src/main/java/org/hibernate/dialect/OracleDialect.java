@@ -136,6 +136,7 @@ public class OracleDialect extends Dialect {
 		CommonFunctionFactory.tanh( queryEngine );
 		CommonFunctionFactory.trunc( queryEngine );
 		CommonFunctionFactory.log( queryEngine );
+		CommonFunctionFactory.log10_log( queryEngine );
 		CommonFunctionFactory.soundex( queryEngine );
 		CommonFunctionFactory.trim2( queryEngine );
 		CommonFunctionFactory.initcap( queryEngine );

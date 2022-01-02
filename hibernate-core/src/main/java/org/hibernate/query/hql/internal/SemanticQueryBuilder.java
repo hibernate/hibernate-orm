@@ -114,7 +114,7 @@ import org.hibernate.query.sqm.tree.expression.SqmByUnit;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
 import org.hibernate.query.sqm.tree.expression.SqmCastTarget;
-import org.hibernate.query.sqm.tree.expression.SqmCollate;
+import org.hibernate.query.sqm.tree.expression.SqmCollation;
 import org.hibernate.query.sqm.tree.expression.SqmCollectionSize;
 import org.hibernate.query.sqm.tree.expression.SqmDistinct;
 import org.hibernate.query.sqm.tree.expression.SqmDurationUnit;
@@ -2327,13 +2327,29 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public Object visitCollationExpression(HqlParser.CollationExpressionContext ctx) {
-		SqmExpression<?> expression = (SqmExpression<?>) ctx.getChild( 2 ).accept( this );
 		if ( creationOptions.useStrictJpaCompliance() ) {
 			throw new StrictJpaComplianceViolation(
 					StrictJpaComplianceViolation.Type.COLLATIONS
 			);
 		}
-		return new SqmCollate<>( expression, ctx.getChild( 4 ).getText() );
+
+		final SqmExpression<?> expressionToCollate = (SqmExpression<?>) ctx.getChild( 2 ).accept( this );
+		final SqmCollation castTargetExpression = (SqmCollation) ctx.getChild( 4 ).accept( this );
+
+		return getFunctionDescriptor("collate").generateSqmExpression(
+				asList( expressionToCollate, castTargetExpression ),
+				null, //why not string?
+				creationContext.getQueryEngine(),
+				creationContext.getJpaMetamodel().getTypeConfiguration()
+		);
+	}
+
+	@Override
+	public Object visitCollation(HqlParser.CollationContext ctx) {
+		return new SqmCollation(
+				ctx.getChild( 0 ).getText(),
+				null,
+				creationContext.getNodeBuilder() );
 	}
 
 	@Override
@@ -3463,7 +3479,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 		return getFunctionDescriptor("format").generateSqmExpression(
 				asList( expressionToCast, format ),
-				null,
+				null, //why not string?
 				creationContext.getQueryEngine(),
 				creationContext.getJpaMetamodel().getTypeConfiguration()
 		);

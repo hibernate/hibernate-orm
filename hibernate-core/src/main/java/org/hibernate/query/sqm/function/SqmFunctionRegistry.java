@@ -107,7 +107,7 @@ public class SqmFunctionRegistry {
 	 * Get a builder for creating and registering a pattern-based function descriptor.
 	 *
 	 * @param registrationKey The name under which the descriptor will get registered
-	 * @param pattern The pattern defining the the underlying function call
+	 * @param pattern The pattern defining the underlying function call
 	 *
 	 * @return The builder
 	 */
@@ -119,7 +119,7 @@ public class SqmFunctionRegistry {
 	 * Get a builder for creating and registering a pattern-based aggregate function descriptor.
 	 *
 	 * @param registrationKey The name under which the descriptor will get registered
-	 * @param pattern The pattern defining the the underlying function call
+	 * @param pattern The pattern defining the underlying function call
 	 *
 	 * @return The builder
 	 */

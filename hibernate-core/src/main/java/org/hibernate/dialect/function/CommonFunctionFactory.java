@@ -2185,6 +2185,19 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	/**
+	 * Use the 'collate' operator which exists on at least Postgres, MySQL, Oracle, and SQL Server
+	 */
+	public static void collate(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder("collate", "(?1 collate ?2)")
+				.setInvariantType(
+						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
+				)
+				.setExactArgumentCount( 2 )
+				.setArgumentListSignature("(string as collation)")
+				.register();
+	}
+
 	public static void dateTrunc(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "date_trunc", "date_trunc('?1',?2)" )
 				.setInvariantType(

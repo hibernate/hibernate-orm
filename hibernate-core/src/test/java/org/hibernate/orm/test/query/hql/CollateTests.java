@@ -7,6 +7,7 @@
 package org.hibernate.orm.test.query.hql;
 
 import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -30,8 +31,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 @ServiceRegistry
 @DomainModel( standardModels = StandardDomainModel.GAMBIT )
 @SessionFactory
-@RequiresDialect(MySQLDialect.class)
-public class MySQLCollateTests {
+public class CollateTests {
 
 	@BeforeAll
 	public void prepareData(SessionFactoryScope scope) {
@@ -48,7 +48,17 @@ public class MySQLCollateTests {
 		);
 	}
 
-	@Test
+	@Test @RequiresDialect(PostgreSQLDialect.class)
+	public void testCollatePostgreSQL(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery("from EntityOfBasics e where e.theString is not null order by collate(e.theString as ucs_basic)").getResultList();
+					assertThat( session.createQuery("select collate('bar' as ucs_basic) < 'foo'").getSingleResult(), is(true) );
+				}
+		);
+	}
+
+	@Test @RequiresDialect(MySQLDialect.class)
 	public void testCollateMySQL(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

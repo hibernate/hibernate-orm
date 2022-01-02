@@ -829,7 +829,6 @@ public class CteInsertHandler implements InsertHandler {
 				insertSelectSpec.addSortSpecification(
 						new SortSpecification(
 								rowNumberColumnReference,
-								null,
 								SortOrder.ASCENDING
 						)
 				);
@@ -996,7 +995,6 @@ public class CteInsertHandler implements InsertHandler {
 				finalResultQuery.addSortSpecification(
 						new SortSpecification(
 								idColumnReference,
-								null,
 								SortOrder.ASCENDING
 						)
 				);

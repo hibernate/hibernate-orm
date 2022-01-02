@@ -364,7 +364,7 @@ There's no such equivalent in Jakarta Persistence because the `jakarta.persisten
 [[sql-query-parameters]]
 === Parameters
 
-Native SQL queries support positional as well as named parameters:
+Native SQL queries support ordinal as well as named parameters:
 
 [[sql-jpa-query-parameters-example]]
 .Jakarta Persistence native query with parameters

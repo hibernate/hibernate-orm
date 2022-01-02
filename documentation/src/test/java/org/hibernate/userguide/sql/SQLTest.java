@@ -20,6 +20,7 @@ import org.hibernate.loader.NonUniqueDiscoveredSqlAliasException;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.transform.Transformers;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.userguide.model.Account;
 import org.hibernate.userguide.model.AddressType;
 import org.hibernate.userguide.model.Call;
 import org.hibernate.userguide.model.CreditCardPayment;
@@ -55,6 +56,7 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 			Partner.class,
             Phone.class,
 			Call.class,
+			Account.class,
 			CreditCardPayment.class,
 			WireTransferPayment.class,
 			SpaceShip.class,

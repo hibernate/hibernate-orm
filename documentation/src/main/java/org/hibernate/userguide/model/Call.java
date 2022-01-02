@@ -35,6 +35,9 @@ public class Call {
 
     private int duration;
 
+    @ManyToOne
+    private Payment payment;
+
     //Getters and setters are omitted for brevity
 
 //end::hql-examples-domain-model-example[]
@@ -71,6 +74,14 @@ public class Call {
     public void setDuration(int duration) {
         this.duration = duration;
     }
-//tag::hql-examples-domain-model-example[]
+
+    public Payment getPayment() {
+        return payment;
+    }
+
+    public void setPayment(Payment payment) {
+        this.payment = payment;
+    }
+    //tag::hql-examples-domain-model-example[]
 }
 //end::hql-examples-domain-model-example[]

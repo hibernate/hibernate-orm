@@ -33,7 +33,9 @@ import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.QueryProducer;
+import org.hibernate.testing.Skip;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.userguide.model.Account;
 import org.hibernate.userguide.model.AddressType;
 import org.hibernate.userguide.model.Call;
 import org.hibernate.userguide.model.CreditCardPayment;
@@ -67,6 +69,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 			Person.class,
             Phone.class,
 			Call.class,
+			Account.class,
 			CreditCardPayment.class,
 			WireTransferPayment.class
 		};
@@ -120,15 +123,28 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 			person2.addPhone( phone2 );
 			person2.addPhone( phone3 );
 
+			Account account1 = new Account();
+			account1.setOwner( person1 );
+			entityManager.persist( account1 );
+
+			Account account2 = new Account();
+			account1.setOwner( person2 );
+			entityManager.persist( account2 );
+
 			CreditCardPayment creditCardPayment = new CreditCardPayment();
 			creditCardPayment.setCompleted( true );
 			creditCardPayment.setAmount( BigDecimal.ZERO );
 			creditCardPayment.setPerson( person1 );
+			creditCardPayment.setCardNumber("1234-1234-1234-1234");
+			creditCardPayment.setAccount( account1 );
+			call11.setPayment( creditCardPayment );
 
 			WireTransferPayment wireTransferPayment = new WireTransferPayment();
 			wireTransferPayment.setCompleted( true );
 			wireTransferPayment.setAmount( BigDecimal.valueOf( 100 ) );
 			wireTransferPayment.setPerson( person2 );
+			wireTransferPayment.setAccount( account2 );
+			call12.setPayment( wireTransferPayment );
 
 			entityManager.persist( creditCardPayment );
 			entityManager.persist( wireTransferPayment );
@@ -1887,6 +1903,56 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	public void test_hql_treat_example() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			//tag::hql-treat-example[]
+			List<Payment> payments = entityManager.createQuery(
+				"select p " +
+				"from Payment p " +
+				"where length(treat(p as CreditCardPayment).cardNumber) between 16 and 20",
+				Payment.class )
+			.getResultList();
+			//end::hql-treat-example[]
+			assertEquals(1, payments.size());
+		});
+	}
+
+	@Test @Skip(condition = Skip.AlwaysSkip.class, message = "broken in H6")
+	public void test_hql_join_many_treat_example() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			//tag::hql-join-treat-example[]
+			// a to-many association
+			List<Object[]> payments = entityManager.createQuery(
+				"select a, ccp " +
+				"from Account a " +
+				"join treat(a.payments as CreditCardPayment) ccp " +
+				"where length(ccp.cardNumber) between 16 and 20",
+				Object[].class )
+			.getResultList();
+			//end::hql-join-treat-example[]
+			assertEquals(1, payments.size());
+		});
+	}
+
+	@Test
+	public void test_hql_join_one_treat_example() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			//tag::hql-join-treat-example[]
+
+			// a to-one association
+			List<Object[]> payments = entityManager.createQuery(
+				"select c, ccp " +
+				"from Call c " +
+				"join treat(c.payment as CreditCardPayment) ccp " +
+				"where length(ccp.cardNumber) between 16 and 20",
+				Object[].class )
+			.getResultList();
+			//end::hql-join-treat-example[]
+			assertEquals(1, payments.size());
+		});
+	}
+
+	@Test
 	public void test_hql_entity_type_exp_example_1() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			//tag::hql-entity-type-exp-example[]
@@ -1905,6 +1971,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	public void test_hql_entity_type_exp_example_2() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			//tag::hql-entity-type-exp-example[]
+
+			// using a parameter instead of a literal entity type
 			List<Payment> payments = entityManager.createQuery(
 				"select p " +
 				"from Payment p " +

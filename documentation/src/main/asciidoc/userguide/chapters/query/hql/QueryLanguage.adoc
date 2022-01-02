@@ -1431,14 +1431,18 @@ For further information about collection-valued association references, see <<hq
 [[hql-explicit-join-conditions]]
 ==== Explicit joins with join conditions
 
-The `with` or `on` clause to allows explicit qualification of the join conditions.
+The `with` or `on` clause allows explicit qualification of the join conditions.
 
 [NOTE]
 ====
+The specified join conditions are _added_ to the join conditions specified by the foreign key association.
+That's why, historically, HQL uses the keword `with` here:
+"with" emphasizes that the new condition doesn't _replace_ the original join conditions.
+
 The `with` keyword is specific to Hibernate. JPQL uses `on`.
 ====
 
-Join conditions occurring in the `with` or `on` clause result in an `on` clause in the generated SQL.
+Join conditions occurring in the `with` or `on` clause are added to the `on` clause in the generated SQL.
 
 [[hql-explicit-join-with-example]]
 //.HQL `with` clause join example
@@ -1448,6 +1452,8 @@ Join conditions occurring in the `with` or `on` clause result in an `on` clause 
 include::{sourcedir}/HQLTest.java[tags=hql-explicit-join-with-example]
 ----
 ====
+
+The following query is arguably less clear, but semantically equivalent:
 
 [[hql-explicit-join-jpql-on-example]]
 //.JPQL `on` clause join example
@@ -1461,7 +1467,14 @@ include::{sourcedir}/HQLTest.java[tags=hql-explicit-join-jpql-on-example]
 [[hql-explicit-fetch-join]]
 ==== `fetch join` for association fetching
 
-A ``fetch join``  overrides the laziness of a given association.
+A ``fetch join``  overrides the laziness of a given association, specifying that the association should be fetched with a SQL join.
+
+[IMPORTANT]
+====
+This is one of the most important features of Hibernate.
+To achieve acceptable performance with HQL, you'll need to use `fetch join` quite often.
+Without it, you'll quickly run into the dreaded "n+1 selects" problem.
+====
 
 [NOTE]
 ====
@@ -1579,19 +1592,18 @@ But there _is_ a way to refer to the keys or indexes of a collection.
 The following functions may be applied to a collection valued path expression to obtain a reference to a list index or map key.
 
 |===
-| `value()` | Refers to the collection element (or map entry value).
-Same as not specifying a qualifier.
-Useful to explicitly show intent.
-Valid for any type of collection-valued reference.
-| `index()` | Applies to any ``List``s with an index column. Refers to the list index.
+| Function | Applies to | Interpretation | Notes
 
-(For backward compatibility, Hibernate also allows it as an alternative to ``key()``, to refer to the key of a map entry.)
-| `key()` | Applies only to ``Map``s.
-Refers to the map's key. If the key is itself an entity, it may be further navigated.
-| `entry()` | Applies only to ``Map``s.
-Refers to the map's logical `java.util.Map.Entry` pair (the combination of its key and value).
-`entry()` is only valid as a terminal path and is allowed in the `select` clause only.
+| `value()` | Any collection | The collection element or map entry value
+| Always optional, and useful only to explicitly indicate intent.
+| `index()` | Any `List` with an index column | The index of the element in the list
+| For backward compatibility, it's also an alternative to ``key()``, when applied to a map.
+| `key()` | Any `Map` | The key of the entry in the list | If the key is of entity type, it may be further navigated.
+| `entry()` | Any `Map` | The map entry, that is, the `Map.Entry` of key and value.
+| Only legal as a terminal path, and only allowed in the `select` clause.
 |===
+
+NOTE: Of these, only `index()` is defined by the JPQL specification.
 
 [[hql-collection-qualification-example]]
 //.Qualified collection references example
@@ -1623,13 +1635,27 @@ See <<hql-more-functions>> for additional collection-related functions.
 The `select` list identifies which objects and values to return as the query results.
 If there are multiple expressions in the select list, then, by default, each query result is packaged as an array of type `Object[]`.
 
+Simplifying slightly, the BNF for a select item is:
+
+[[hql-select-item-bnf]]
+====
+[source, antlrv4, indent=0]
+----
+include::{extrasdir}/select_item_bnf.txt[]
+----
+====
+
+where `instantiatiationArgs` is essentially a nested select list.
+
 Any of the expression types discussed in <<hql-expressions>> may occur in the select list, unless otherwise noted.
+
+But there's one particular expression type that's only legal in the select clause: the `instantiation` rule in the BNF above.
+Let's see what it does.
 
 [[hql-select-new]]
 ==== `select new`
 
-There's one particular expression type that's only legal in the select clause.
-`select new` packages the query results into a user-written Java class instead of an array.
+The `select new` construct packages the query results into a user-written Java class instead of an array.
 
 [[hql-select-clause-dynamic-instantiation-example]]
 //.Query results via `select new`
@@ -1642,11 +1668,11 @@ include::{sourcedir}/HQLTest.java[tags=hql-select-clause-dynamic-instantiation-e
 ----
 ====
 
-The projection class must be specified by its fully qualified in the query, and it must have a matching constructor.
+The class must be specified by its fully qualified name in the query, and it must have a matching constructor.
 
 [IMPORTANT]
 ====
-The class does not need to be mapped or annotated in any way.
+This class does not need to be mapped or annotated in any way.
 
 Even if the class _is_ an entity class, the resulting instances are _not_ managed entities associated with the session.
 ====
@@ -1679,7 +1705,7 @@ If no aliases are specified, the keys will be column indexes: 0, 1, 2, etc.
 ==== `distinct`
 
 The `distinct` keyword helps remove duplicate results from the query result list.
-It's only effect is to add `distinct` the generated SQL.
+It's only effect is to add `distinct` to the generated SQL.
 
 [[hql-distinct-projection-query-example]]
 //.Using `distinct` to remove duplicate rows
@@ -1807,7 +1833,7 @@ These functions are especially useful for reporting:
 In a grouped query, the `where` clause applies to the non-aggregated values (essentially it determines whether rows will make it into the aggregation).
 The `having` clause also restricts results, but it operates on the aggregated values.
 
-In the <<hql-group-by-example>>, we retrieved `Call` duration totals for all persons.
+In an <<hql-group-by-example,example above>>, we retrieved `Call` duration totals for all persons.
 If that ended up being too much data to deal with, we might want to restrict the results to focus only on customers with a summed total of more than 1000:
 
 [[hql-group-by-having-example]]
@@ -1843,7 +1869,7 @@ Each item may be:
 * an attribute of an entity or embeddable class,
 * a scalar expression involving arithmetic operators, function application, etc,
 * an alias declared in the select list, or
-* an integers indicating the ordinal position of an item in the select list.
+* a literal integer indicating the ordinal position of an item in the select list.
 
 [NOTE]
 ====
@@ -1851,12 +1877,13 @@ The JPQL specification requires that every expression in the `order by` clause m
 HQL does not enforce this restriction, but applications desiring database portability should be aware that some databases _do_.
 ====
 
-[[hql-order-by-example]]
-//.Order by example
+The BNF for an `order by` item is:
+
+[[hql-order-by-item-bnf]]
 ====
-[source, JAVA, indent=0]
+[source, antlrv4, indent=0]
 ----
-include::{sourcedir}/HQLTest.java[tags=hql-order-by-example]
+include::{extrasdir}/order_by_item_bnf.txt[]
 ----
 ====
 
@@ -1873,7 +1900,14 @@ Therefore, the order of null values may also be explicitly specified:
 * `nulls first` puts null values at the beginning of the result set, and
 * `nulls last` puts them last.
 
-In the next chapter we'll see a completely different way to write queries in Hibernate.
+[[hql-order-by-example]]
+//.Order by example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-order-by-example]
+----
+====
 
 [[hql-limit-offset]]
 === The `limit` and `offset` clauses
@@ -1887,3 +1921,14 @@ If the `limit` or `offset` is parameterized, it's much easier to use `setMaxResu
 
 The SQL syntax `fetch first ... rows only` and `fetch next ... rows only` is also allowed.
 
+The BNF is a bit complicated:
+
+[[hql-limit-offset-bnf]]
+====
+[source, antlrv4, indent=0]
+----
+include::{extrasdir}/limit_offset_bnf.txt[]
+----
+====
+
+In the next chapter we'll see a completely different way to write queries in Hibernate.

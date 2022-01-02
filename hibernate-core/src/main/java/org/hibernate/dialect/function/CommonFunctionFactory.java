@@ -98,6 +98,18 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	/**
+	 * For Oracle
+	 */
+	public static void log10_log(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "log10", "log(10,?1)" )
+				.setExactArgumentCount( 1 )
+				.setInvariantType(
+						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE )
+				)
+				.register();
+	}
+
 	public static void log2(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "log2" )
 				.setInvariantType(

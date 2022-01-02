@@ -407,6 +407,12 @@ public class PostgreSQLDialect extends Dialect {
 		CommonFunctionFactory.degrees( queryEngine );
 		CommonFunctionFactory.trunc( queryEngine );
 		CommonFunctionFactory.log( queryEngine );
+		if ( getVersion().isSameOrAfter(12) ) {
+			CommonFunctionFactory.log10( queryEngine );
+		}
+		else {
+			queryEngine.getSqmFunctionRegistry().registerAlternateKey( "log10", "log" );
+		}
 		CommonFunctionFactory.cbrt( queryEngine );
 		CommonFunctionFactory.trim2( queryEngine );
 		CommonFunctionFactory.octetLength( queryEngine );

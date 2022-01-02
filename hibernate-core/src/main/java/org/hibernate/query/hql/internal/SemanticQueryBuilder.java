@@ -1912,7 +1912,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	private Map<Class<?>, Enum<?>> getPossibleEnumValues(HqlParser.ExpressionContext expressionContext) {
 		ParseTree ctx;
 		// Traverse the expression structure according to the grammar
-		if ( expressionContext instanceof HqlParser.CollateExpressionContext && expressionContext.getChildCount() == 1 ) {
+		if ( expressionContext instanceof HqlParser.BarePrimaryExpressionContext && expressionContext.getChildCount() == 1 ) {
 			ctx = expressionContext.getChild( 0 );
 
 			while ( ctx instanceof HqlParser.PrimaryExpressionContext && ctx.getChildCount() == 1 ) {
@@ -2326,17 +2326,14 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	@Override
-	public Object visitCollateExpression(HqlParser.CollateExpressionContext ctx) {
-		SqmExpression<?> expression = (SqmExpression<?>) ctx.getChild( 0 ).accept( this );
-		if ( ctx.getChildCount() == 1 ) {
-			return expression;
-		}
+	public Object visitCollationExpression(HqlParser.CollationExpressionContext ctx) {
+		SqmExpression<?> expression = (SqmExpression<?>) ctx.getChild( 2 ).accept( this );
 		if ( creationOptions.useStrictJpaCompliance() ) {
 			throw new StrictJpaComplianceViolation(
 					StrictJpaComplianceViolation.Type.COLLATIONS
 			);
 		}
-		return new SqmCollate<>( expression, ctx.getChild( 1 ).getChild( 1 ).getText() );
+		return new SqmCollate<>( expression, ctx.getChild( 4 ).getText() );
 	}
 
 	@Override

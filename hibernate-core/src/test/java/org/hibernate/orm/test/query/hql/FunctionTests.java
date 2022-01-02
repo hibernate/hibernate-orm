@@ -8,9 +8,6 @@ package org.hibernate.orm.test.query.hql;
 
 import org.hibernate.dialect.DerbyDialect;
 
-import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -106,28 +103,6 @@ public class FunctionTests {
 					assertThat( session.createQuery("select cast(:hello as String)||cast(:world as String)").setParameter("hello","hello").setParameter("world","world").getSingleResult(), is("helloworld") );
 					assertThat( session.createQuery("select cast(?1 as String)||cast(?2 as String)").setParameter(1,"hello").setParameter(2,"world").getSingleResult(), is("helloworld") );
 					assertThat( session.createQuery("select cast(?1 as String)||cast(?1 as String)").setParameter(1,"hello").getSingleResult(), is("hellohello") );
-				}
-		);
-	}
-
-	@Test @RequiresDialect(PostgreSQLDialect.class)
-	public void testCollatePostgreSQL(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery("from EntityOfBasics e where e.theString is not null order by e.theString collate ucs_basic").getResultList();
-					assertThat( session.createQuery("select 'bar' collate ucs_basic < 'foo' collate ucs_basic").getSingleResult(), is(true) );
-					assertThat( session.createQuery("select ('bar' collate ucs_basic) < ('foo' collate ucs_basic)").getSingleResult(), is(true) );
-				}
-		);
-	}
-
-	@Test @RequiresDialect(MySQLDialect.class)
-	public void testCollateMySQL(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery("from EntityOfBasics e order by e.theString collate utf8mb4_bin").getResultList();
-					assertThat( session.createQuery("select 'bar' collate utf8mb4_bin < 'foo' collate utf8mb4_bin").getSingleResult(), is(true) );
-					assertThat( session.createQuery("select ('bar' collate utf8mb4_bin) < ('foo' collate utf8mb4_bin)").getSingleResult(), is(true) );
 				}
 		);
 	}

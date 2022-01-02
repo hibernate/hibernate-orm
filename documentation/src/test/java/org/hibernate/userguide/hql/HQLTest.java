@@ -1192,6 +1192,35 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	public void test_hql_java_constant_example() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			//tag::hql-java-constant-example[]
+			// select clause date/time arithmetic operations
+			Double pi = entityManager.createQuery(
+				"select java.lang.Math.PI",
+				Double.class )
+			.getSingleResult();
+			//end::hql-java-constant-example[]
+			assertEquals( java.lang.Math.PI, pi, 1e-9 );
+		});
+	}
+
+	@Test
+	public void test_hql_enum_example() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			//tag::hql-enum-example[]
+			// select clause date/time arithmetic operations
+			List<Phone> phones1 = entityManager.createQuery(
+				"from Phone ph " +
+				"where ph.type = LAND_LINE",
+				Phone.class )
+				.getResultList();
+			//end::hql-enum-example[]
+		});
+	}
+
+
+	@Test
 	public void test_hql_numeric_arithmetic_example_1() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			//tag::hql-numeric-arithmetic-example[]

@@ -412,9 +412,30 @@ HQL also provides a choice of formats for binary strings:
 [[hql-enum-literals]]
 ==== Enum literals
 
-Literal values of a Java enum must be written with the fully-qualified enum class name, for example, `com.mycompany.Status.OPEN`.
+Literal values of a Java enumerated type may be written without needing to specify the enum class name:
 
-HQL allows Java `static` constants to be used in the same way, for example, `java.lang.Integer.MAX_VALUE`.
+[[hql-enum-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-enum-example]
+----
+====
+
+Here, the enum class is inferred from the type of the expression on the left of the relational operator.
+
+[[hql-java-constants]]
+==== Java constants
+
+HQL allows any Java `static` constant to be used in HQL, but it must be referenced by its fully-qualified name:
+
+[[hql-java-constant-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-java-constant-example]
+----
+====
 
 [[hql-entity-name-literals]]
 ==== Literal entity names
@@ -1157,7 +1178,7 @@ include::{sourcedir}/HQLTest.java[tags=hql-collection-expressions-in-example]
 [[hql-relational-comparisons-subqueries]]
 ==== Relational operators and subqueries
 
-Binary comparisons may involve a qualifier:
+The binary comparisons we met above in <<hql-relational-comparisons>> may involve a qualifier:
 
 * a qualified subquery, or
 * a qualifier applied to one of the functions `elements()` or `indices()`  defined <<hql-elements-indices,above>>.
@@ -1502,7 +1523,7 @@ Instead, entity associations may be _navigated_, just like in Java:
 
 It's clear that:
 
-* A path expression like `p.name` with two elements just refers to state held directly be an entity with an alias defined in `from` or `join`.
+* A path expression like `p.name` with only two elements just refers to state held directly by an entity with an alias `p` defined in `from` or `join`.
 * But a longer path expression, for example, `ph.person.name`, might refer to state held by an associated entity.
   (Alternatively, it might refer to state held by an embedded class.)
 
@@ -1550,14 +1571,11 @@ include::{sourcedir}/HQLTest.java[tags=hql-collection-valued-associations]
 
 In the example, the identification variable `ph` actually refers to the object model type `Phone`, which is the type of the elements of the `Person#phones` association.
 
-//The example also shows the alternate syntax for specifying collection association joins using the `IN` syntax.
-//Both forms are equivalent.
-//Which form an application chooses to use is simply a matter of taste.
+But there _is_ a way to refer to the keys or indexes of a collection.
 
 [[hql-collection-qualification]]
 ==== Collection elements, map keys, and list indexes
 
-We said earlier that collection-valued path expressions refer to the _elements_ of that collection.
 The following functions may be applied to a collection valued path expression to obtain a reference to a list index or map key.
 
 |===
@@ -1586,7 +1604,7 @@ include::{sourcedir}/HQLTest.java[tags=hql-collection-qualification-example, ind
 ----
 ====
 
-An element of and indexed collections (array, list, or map) may even be identified using the index operator:
+An element of an indexed collections (an array, list, or map) may even be identified using the index operator:
 
 [[hql-collection-index-operator-example]]
 //.Index operator examples

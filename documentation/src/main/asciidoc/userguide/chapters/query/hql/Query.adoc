@@ -196,11 +196,11 @@ JPQL-style ordinal parameters are numbered from `1`.
 Just like with named parameters, a ordinal parameter may appear multiple times in a query.
 
 [[jpql-api-ordinal-parameter-example]]
-.Positional parameter binding
+.Ordinal parameter binding
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/HQLTest.java[tags=jpql-api-positional-parameter-example]
+include::{sourcedir}/HQLTest.java[tags=jpql-api-ordinal-parameter-example]
 ----
 ====
 
@@ -415,7 +415,7 @@ See the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hi
 //
 //[source, JAVA, indent=0]
 //----
-//include::{sourcedir}/HQLTest.java[tags=hql-api-positional-parameter-example]
+//include::{sourcedir}/HQLTest.java[tags=hql-api-ordinal-parameter-example]
 //----
 //====
 //

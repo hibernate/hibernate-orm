@@ -753,14 +753,14 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void test_jpql_api_positional_parameter_example() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			//tag::jpql-api-positional-parameter-example[]
+			//tag::jpql-api-ordinal-parameter-example[]
 			TypedQuery<Person> query = entityManager.createQuery(
 				"select p " +
 				"from Person p " +
 				"where p.name like ?1",
 				Person.class )
 			.setParameter( 1, "J%" );
-			//end::jpql-api-positional-parameter-example[]
+			//end::jpql-api-ordinal-parameter-example[]
 		});
 	}
 
@@ -928,14 +928,14 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Date timestamp = new Date(  );
 			QueryProducer session = entityManager.unwrap( Session.class );
-			//tag::hql-api-positional-parameter-example[]
+			//tag::hql-api-ordinal-parameter-example[]
 			org.hibernate.query.Query<Person> query = session.createQuery(
 				"select p " +
 				"from Person p " +
 				"where p.name like ?",
 				Person.class )
 			.setParameter( 1, "J%" );
-			//end::hql-api-positional-parameter-example[]
+			//end::hql-api-ordinal-parameter-example[]
 		});
 	}
 

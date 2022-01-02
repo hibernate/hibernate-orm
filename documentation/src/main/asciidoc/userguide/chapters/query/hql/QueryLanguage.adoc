@@ -1761,15 +1761,16 @@ Just like in SQL, `all` suppresses the elimination of duplicate results.
 
 By default, the results of the query are returned in an arbitrary order.
 The `order by` clause specifies a list of selected items used to order the results.
-The types of expressions considered valid as part of the `order by` clause include:
+Each item may be:
 
-* attributes of an entity or embeddable class,
-* scalar expressions such as arithmetic operations, functions, etc, and
-* identification variables declared in the select clause.
+* an attribute of an entity or embeddable class,
+* a scalar expression involving arithmetic operators, function application, etc,
+* an alias declared in the select list, or
+* an integers indicating the ordinal position of an item in the select list.
 
 [NOTE]
 ====
-The JPQL specification requires that all expressions occurring the `order by` clause must also occur in the `select` clause.
+The JPQL specification requires that every expression in the `order by` clause must also occur in the `select` clause.
 HQL does not enforce this restriction, but applications desiring database portability should be aware that some databases _do_.
 ====
 
@@ -1804,7 +1805,7 @@ The `limit` and `offset` clauses are an alternative to the use of `setMaxResults
 
 [TIP]
 ====
-If the `limit` or `offset` is parameterized, its much easier to use `setMaxResults()` or `setFirstResult()`.
+If the `limit` or `offset` is parameterized, it's much easier to use `setMaxResults()` or `setFirstResult()`.
 ====
 
 The SQL syntax `fetch first ... rows only` and `fetch next ... rows only` is also allowed.

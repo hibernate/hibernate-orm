@@ -157,7 +157,7 @@ public class FunctionTests {
 							.list();
 					session.createQuery("select abs(e.theDouble), sign(e.theDouble), sqrt(e.theDouble) from EntityOfBasics e")
 							.list();
-					session.createQuery("select exp(e.theDouble), ln(e.theDouble + 1), log10(e.theDouble) from EntityOfBasics e")
+					session.createQuery("select exp(e.theDouble), ln(e.theDouble + 1), log10(e.theDouble + 2) from EntityOfBasics e")
 							.list();
 					session.createQuery("select power(e.theDouble + 1, 2.5) from EntityOfBasics e")
 							.list();

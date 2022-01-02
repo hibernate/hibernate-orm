@@ -611,6 +611,17 @@ The `treat` operator may be used to downcast the type of an identification varia
 
 Both HQL and JPQL define some standard functions that are portable between databases.
 
+In some cases, the syntax of these functions looks a bit funny at first, for example, `cast(number as String)`, or `extract(year from date)`, or even `trim(leading '.' from string)`.
+This syntax is inspired by standard ANSI SQL, and we promise you'll get used to it.
+
+
+[IMPORTANT]
+====
+HQL abstracts away from the actual database-native SQL functions, letting you write queries which are portable between databases.
+
+For some functions, and always depending on the database, a HQL function invocation translates to a quite complicated SQL expression!
+====
+
 In addition, there are several ways to use a database function that's not known to Hibernate.
 
 [[jpql-standardized-functions]]
@@ -878,28 +889,35 @@ First, functions for working with strings:
 |===
 | HQL Function | Purpose | Syntax | Notes on syntax
 
-| `position()` | Similar to `locate()`. | `position(pattern in string)` | Standard ANSI SQL
-| `substring()` | An alternative syntax for JPQL's `substring()`.
+| `position()` | Similar to `locate()` | `position(pattern in string)` | Standard ANSI SQL
+| `substring()` | An alternative syntax for JPQL's `substring()`
 | `substring(string from start)`, `substring(string from start for length)` | Standard ANSI SQL
-| `overlay()` | For replacing a substring.
+| `overlay()` | For replacing a substring
 | `overlay(string placing replacement from start)`, `overlay(string placing replacement from start for length)` | Standard ANSI SQL
-| `pad()` | Pads a string with whitespace, or with a specified character.
+| `pad()` | Pads a string with whitespace, or with a specified character
 | `pad(string with length)`, `pad(string with length leading)`, `pad(string with length trailing)`, or `pad(string with length leading character)`
 | Designed to look like `trim()`
-| `left()` | The leftmost characters of a string. | `left(string, length)` | Common in SQL dialects
-| `right()` | The rightmost characters of a string. | `right(string, length)`  | Common in SQL dialects
-| `replace()` | Replace every occurrence of a pattern in a string. | `replace(string, pattern, replacement)` | Common in SQL dialects
+| `left()` | The leftmost characters of a string | `left(string, length)` | Common in SQL dialects
+| `right()` | The rightmost characters of a string | `right(string, length)`  | Common in SQL dialects
+| `replace()` | Replace every occurrence of a pattern in a string | `replace(string, pattern, replacement)` | Common in SQL dialects
 |===
 
 Next, functions for working with numeric values:
 
 |===
-| HQL Function | Purpose | Syntax | Notes on syntax
+| HQL Function | Purpose | Signature | Notes on naming
 
-| `sin()`, `cos()`, `tan()`, `asin()`, `acos()`, `atan()`, `atan2()` | Basic trigonometric functions. | `sin(theta)`, `cos(theta)`, `atan2(opposite, adjacent)` | Very common in SQL dialects
-| `round()` | Numeric rounding. | As usual: `round(number, places)` | Very common in SQL dialects
-| `least()` | Return the smallest of the given arguments. | `least(x, y, z)` |
-| `greatest()` | Return the largest of the given arguments. | `greatest(x, y, z)` |
+| `sign()` | The sign of a number | `sign(x)` | Universal in SQL dialects
+| `exp()` | Exponential function | `exp(x)` | Universal in SQL dialects
+| `power()` | Exponentiation | `power(x,y)` | Universal in SQL dialects
+| `ln()` | Natural logarithm | `ln(x)` | Very common in SQL dialects
+| `log10()` | Base-10 logarithm | `log10(x)` | Very common in SQL dialects
+| `sin()`, `cos()`, `tan()`, `asin()`, `acos()`, `atan()`, `atan2()` | Basic trigonometric functions | `sin(theta)`, `cos(theta)`, `atan2(opposite, adjacent)` | Very common in SQL dialects
+| `round()` | Numeric rounding | As usual: `round(number, places)` | Very common in SQL dialects
+| `floor()` | Floor function | `floor(x)` | Universal in SQL dialects
+| `ceiling()` | Ceiling function | `ceiling(x)` | Very common in SQL dialects
+| `least()` | Return the smallest of the given arguments | `least(x, y, z)` | Very common in SQL dialects
+| `greatest()` | Return the largest of the given arguments | `greatest(x, y, z)` | Very common in SQL dialects
 |===
 
 Finally, specialized functions for working with collection-valued attributes and to-many associations:

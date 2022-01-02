@@ -778,7 +778,6 @@ public abstract class Dialect implements ConversionContext {
 	 *
 	 * <ul>
 	 * <li> log10(arg)
-	 * <li> sqrt(arg)
 	 * <li> sign(arg)
 	 * <li> sin(arg)
 	 * <li> cos(arg)

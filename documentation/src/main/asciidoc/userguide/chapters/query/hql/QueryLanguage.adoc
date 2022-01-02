@@ -602,6 +602,10 @@ include::{sourcedir}/HQLTest.java[tags=hql-case-arithmetic-expressions-example]
 If the arithmetic expression was not enclosed in parentheses, the parser would be unable to parse the expression.
 ====
 
+==== Typecasts
+
+The `treat` operator may be used to downcast the type of an identification variable, for example, `treat(payment as CreditCardPayment)`.
+
 [[hql-exp-functions]]
 === Functions
 
@@ -1431,6 +1435,11 @@ Fetch joins should not be used in paged queries (`setFirstResult()` or `setMaxRe
 
 Nor should they be used with the `scroll()` or `stream()` methods.
 ====
+
+[[hql-treat-as]]
+==== Joins with `treat`
+
+A join may narrow the type of the joined entity using `treat()`, for example, `join treat(a.payments as CreditCardPayment)`.
 
 [[hql-implicit-join]]
 ==== Implicit joins (path expressions)

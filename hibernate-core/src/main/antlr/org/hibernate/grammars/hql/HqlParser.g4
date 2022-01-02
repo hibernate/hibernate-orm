@@ -293,12 +293,12 @@ mapKeyNavigablePath
 // GROUP BY clause
 
 groupByClause
-	:	GROUP BY groupByExpression ( COMMA groupByExpression )*
+	: GROUP BY groupByExpression ( COMMA groupByExpression )*
 	;
 
 groupByExpression
-	: identifier collationSpecification?
-	| INTEGER_LITERAL collationSpecification?
+	: identifier
+	| INTEGER_LITERAL
 	| expression
 	;
 
@@ -306,7 +306,7 @@ groupByExpression
 //HAVING clause
 
 havingClause
-	:	HAVING predicate
+	: HAVING predicate
 	;
 
 
@@ -333,22 +333,22 @@ nullsPrecedence
 	;
 
 sortExpression
-	: identifier collationSpecification?
-	| INTEGER_LITERAL collationSpecification?
+	: identifier
+	| INTEGER_LITERAL
 	| expression
 	;
 
-collationSpecification
-	:	COLLATE collateName
+collationExpression
+	: COLLATE LEFT_PAREN expression AS collation RIGHT_PAREN
 	;
 
-collateName
-	:	dotIdentifierSequence
+collation
+	: dotIdentifierSequence
 	;
 
 orderingSpecification
-	:	ASC
-	|	DESC
+	: ASC
+	| DESC
 	;
 
 
@@ -384,7 +384,7 @@ parameterOrNumberLiteral
 // WHERE clause & Predicates
 
 whereClause
-	:	WHERE predicate
+	: WHERE predicate
 	;
 
 predicate
@@ -436,7 +436,7 @@ expression
 	: LEFT_PAREN expression RIGHT_PAREN												# GroupedExpression
 	| LEFT_PAREN expressionOrPredicate (COMMA expressionOrPredicate)+ RIGHT_PAREN	# TupleExpression
 	| LEFT_PAREN subquery RIGHT_PAREN												# SubqueryExpression
-	| primaryExpression collationSpecification?										# CollateExpression
+	| primaryExpression 															# BarePrimaryExpression
 	| signOperator numericLiteral													# UnaryNumericLiteralExpression
 	| signOperator expression														# UnaryExpression
 	| expression datetimeField  													# ToDurationExpression
@@ -707,6 +707,7 @@ standardFunction
 	|	offsetDateTimeFunction
 	|	cube
 	|	rollup
+	|	collationExpression
 	;
 
 

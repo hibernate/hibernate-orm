@@ -19,7 +19,7 @@ import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.CastTarget;
-import org.hibernate.sql.ast.tree.expression.Collate;
+import org.hibernate.sql.ast.tree.expression.Collation;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Distinct;
 import org.hibernate.sql.ast.tree.expression.Duration;
@@ -162,8 +162,7 @@ public class AbstractSqlAstWalker implements SqlAstWalker {
 	}
 
 	@Override
-	public void visitCollate(Collate collate) {
-		collate.getExpression().accept( this );
+	public void visitCollation(Collation collation) {
 	}
 
 	@Override

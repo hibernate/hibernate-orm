@@ -792,6 +792,7 @@ public abstract class Dialect implements ConversionContext {
 	 *
 	 * <ul>
 	 * <li> format(datetime as pattern)
+	 * <li> collate(string as collation)
 	 * <li> str(arg)					- synonym of cast(a as String)
 	 * <li> ifnull(arg0, arg1)			- synonym of coalesce(a, b)
 	 * </ul>
@@ -896,6 +897,10 @@ public abstract class Dialect implements ConversionContext {
 						queryEngine.getPreferredSqlTypeCodeForBoolean()
 				)
 		);
+
+		//There is a 'collate' operator in a number of major databases
+
+		CommonFunctionFactory.collate( queryEngine );
 
 		//ANSI SQL extract() function is supported on the databases we care most
 		//about (though it is called datepart() in some of them) but HQL defines

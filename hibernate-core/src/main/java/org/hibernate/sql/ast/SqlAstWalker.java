@@ -16,7 +16,7 @@ import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.CastTarget;
-import org.hibernate.sql.ast.tree.expression.Collate;
+import org.hibernate.sql.ast.tree.expression.Collation;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Distinct;
 import org.hibernate.sql.ast.tree.expression.Duration;
@@ -149,7 +149,7 @@ public interface SqlAstWalker {
 
 	void visitTuple(SqlTuple tuple);
 
-	void visitCollate(Collate collate);
+	void visitCollation(Collation collation);
 
 	void visitParameter(JdbcParameter jdbcParameter);
 

@@ -114,7 +114,7 @@ import org.hibernate.query.sqm.tree.expression.SqmByUnit;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
 import org.hibernate.query.sqm.tree.expression.SqmCastTarget;
-import org.hibernate.query.sqm.tree.expression.SqmCollate;
+import org.hibernate.query.sqm.tree.expression.SqmCollation;
 import org.hibernate.query.sqm.tree.expression.SqmCollectionSize;
 import org.hibernate.query.sqm.tree.expression.SqmDistinct;
 import org.hibernate.query.sqm.tree.expression.SqmDurationUnit;
@@ -1912,7 +1912,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	private Map<Class<?>, Enum<?>> getPossibleEnumValues(HqlParser.ExpressionContext expressionContext) {
 		ParseTree ctx;
 		// Traverse the expression structure according to the grammar
-		if ( expressionContext instanceof HqlParser.CollateExpressionContext && expressionContext.getChildCount() == 1 ) {
+		if ( expressionContext instanceof HqlParser.BarePrimaryExpressionContext && expressionContext.getChildCount() == 1 ) {
 			ctx = expressionContext.getChild( 0 );
 
 			while ( ctx instanceof HqlParser.PrimaryExpressionContext && ctx.getChildCount() == 1 ) {
@@ -2326,17 +2326,30 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	@Override
-	public Object visitCollateExpression(HqlParser.CollateExpressionContext ctx) {
-		SqmExpression<?> expression = (SqmExpression<?>) ctx.getChild( 0 ).accept( this );
-		if ( ctx.getChildCount() == 1 ) {
-			return expression;
-		}
+	public Object visitCollationExpression(HqlParser.CollationExpressionContext ctx) {
 		if ( creationOptions.useStrictJpaCompliance() ) {
 			throw new StrictJpaComplianceViolation(
 					StrictJpaComplianceViolation.Type.COLLATIONS
 			);
 		}
-		return new SqmCollate<>( expression, ctx.getChild( 1 ).getChild( 1 ).getText() );
+
+		final SqmExpression<?> expressionToCollate = (SqmExpression<?>) ctx.getChild( 2 ).accept( this );
+		final SqmCollation castTargetExpression = (SqmCollation) ctx.getChild( 4 ).accept( this );
+
+		return getFunctionDescriptor("collate").generateSqmExpression(
+				asList( expressionToCollate, castTargetExpression ),
+				null, //why not string?
+				creationContext.getQueryEngine(),
+				creationContext.getJpaMetamodel().getTypeConfiguration()
+		);
+	}
+
+	@Override
+	public Object visitCollation(HqlParser.CollationContext ctx) {
+		return new SqmCollation(
+				ctx.getChild( 0 ).getText(),
+				null,
+				creationContext.getNodeBuilder() );
 	}
 
 	@Override
@@ -3466,7 +3479,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 		return getFunctionDescriptor("format").generateSqmExpression(
 				asList( expressionToCast, format ),
-				null,
+				null, //why not string?
 				creationContext.getQueryEngine(),
 				creationContext.getJpaMetamodel().getTypeConfiguration()
 		);

@@ -13,33 +13,32 @@ import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 
 /**
- * Represents the format pattern for a date/time format expression
- *
- * @author Gavin King
+ * @author Christian Beikov
  */
-public class Format implements SqlExpressable, SqlAstNode {
-	private String format;
+public class Collation implements SqlExpressable, SqlAstNode {
 
-	public Format(String format) {
-		this.format = format;
+	private final String collation;
+
+	public Collation(String collation) {
+		this.collation = collation;
 	}
 
-	public String getFormat() {
-		return format;
-	}
-
-	@Override
-	public JdbcMapping getJdbcMapping() {
-		return null;
+	public String getCollation() {
+		return collation;
 	}
 
 	@Override
 	public void accept(SqlAstWalker walker) {
-		walker.visitFormat( this );
+		walker.visitCollation( this );
 	}
 
 	@Override
 	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
 		return getJdbcTypeCount();
+	}
+
+	@Override
+	public JdbcMapping getJdbcMapping() {
+		return null;
 	}
 }

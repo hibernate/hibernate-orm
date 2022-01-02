@@ -317,7 +317,6 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 			idSelectQuerySpec.addSortSpecification(
 					new SortSpecification(
 							columnReference,
-							null,
 							SortOrder.ASCENDING
 					)
 			);

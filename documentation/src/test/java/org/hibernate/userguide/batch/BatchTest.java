@@ -18,8 +18,10 @@ import org.hibernate.StatelessSession;
 import org.hibernate.Transaction;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
+import org.hibernate.userguide.model.Account;
 import org.hibernate.userguide.model.Call;
 import org.hibernate.userguide.model.Partner;
+import org.hibernate.userguide.model.Payment;
 import org.hibernate.userguide.model.Person;
 import org.hibernate.userguide.model.Phone;
 
@@ -39,6 +41,8 @@ public class BatchTest extends BaseEntityManagerFunctionalTestCase {
 			Person.class,
 			Phone.class,
 			Call.class,
+			Account.class,
+			Payment.class,
 			Partner.class
 		};
 	}

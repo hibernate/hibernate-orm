@@ -23,6 +23,7 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.userguide.model.Account;
 import org.hibernate.userguide.model.AddressType;
 import org.hibernate.userguide.model.Call;
 import org.hibernate.userguide.model.CreditCardPayment;
@@ -55,6 +56,7 @@ public class CriteriaTest extends BaseEntityManagerFunctionalTestCase {
 			Call.class,
 			CreditCardPayment.class,
 			WireTransferPayment.class,
+			Account.class,
 			Event.class
 		};
 	}

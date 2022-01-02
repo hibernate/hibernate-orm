@@ -31,6 +31,9 @@ public class Payment {
     private boolean completed;
 
     @ManyToOne
+    private Account account;
+
+    @ManyToOne
     private Person person;
 
     //Getters and setters are omitted for brevity
@@ -68,6 +71,14 @@ public class Payment {
     public void setPerson(Person person) {
         this.person = person;
     }
-//tag::hql-examples-domain-model-example[]
+
+    public Account getAccount() {
+        return account;
+    }
+
+    public void setAccount(Account account) {
+        this.account = account;
+    }
+    //tag::hql-examples-domain-model-example[]
 }
 //end::hql-examples-domain-model-example[]

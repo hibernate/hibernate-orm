@@ -419,7 +419,7 @@ HQL allows Java `static` constants to be used in the same way, for example, `jav
 [[hql-entity-name-literals]]
 ==== Literal entity names
 
-Entity names may also occur as a literal value. They do not need to be qualified. See <<hql-entity-type-exp>>.
+Entity names may also occur as a literal value. They do not need to be qualified. See <<hql-treat-type>>.
 
 [[hql-expressions]]
 === Expressions
@@ -500,30 +500,12 @@ Please carefully note the difference between these two operations: `by` and `ext
 
 Additional datetime operations, including the useful `format()` function, are defined below, in <<hql-exp-functions>>.
 
-[[hql-identification-variable]]
-==== Identification variable
+[[hql-path-expressions]]
+==== Identification variables and path expressions
+
+Identification variables, and path expressions beginning with an identification variable are legal expression in almost every context.
 
 See <<hql-from-clause>>.
-
-[[hql-path-expressions]]
-==== Path expressions
-
-Again, see <<hql-from-clause>>.
-
-[[hql-entity-type-exp]]
-==== Entity type
-
-The special function `type()`, applied to an identification variable, evaluates to the entity name of the referenced entity.
-This is mainly useful when dealing with entity inheritance hierarchies.
-
-[[hql-entity-type-exp-example]]
-//.Entity type expression examples
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/HQLTest.java[tags=hql-entity-type-exp-example]
-----
-====
 
 [[hql-case-expressions]]
 ==== Case expressions
@@ -602,9 +584,6 @@ include::{sourcedir}/HQLTest.java[tags=hql-case-arithmetic-expressions-example]
 If the arithmetic expression was not enclosed in parentheses, the parser would be unable to parse the expression.
 ====
 
-==== Typecasts
-
-The `treat` operator may be used to downcast the type of an identification variable, for example, `treat(payment as CreditCardPayment)`.
 
 [[hql-exp-functions]]
 === Functions
@@ -612,6 +591,37 @@ The `treat` operator may be used to downcast the type of an identification varia
 Both HQL and JPQL define some standard functions that are portable between databases.
 
 In addition, there are several ways to use a database function that's not known to Hibernate.
+
+[[hql-treat-type]]
+==== Types and typecasts
+
+The special function `type()`, applied to an identification variable, evaluates to the entity name of the referenced entity.
+This is mainly useful when dealing with entity inheritance hierarchies.
+
+[[hql-entity-type-exp-example]]
+//.Entity type expression examples
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-entity-type-exp-example]
+----
+====
+
+The special function `treat()` may be used to narrow the type of an identification variable.
+This is useful when dealing with entity inheritance hierarchies.
+
+[[hql-treat-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-treat-example]
+----
+====
+
+The type of the expression `treat(p as CreditCardPayment)` is the narrowed type, `CreditCardPayment`, instead of the declared type `Payment` of `p`.
+This allows the attribute `cardNumber` declared by the subtype `CreditCardPayment` to be referenced.
+
+The `treat()` function may even occur in a <<hql-join-treat,join>>.
 
 [[jpql-standardized-functions]]
 ==== JPQL standard functions
@@ -1102,7 +1112,7 @@ The type of the expression on the left, and the types of all the values on the r
 JPQL limits the legal types to string, numeric, date/time, and enum types, and in JPQL the left expression must be either:
 
 * a "state field", which means a simple attribute, excluding associations and embedded attributes, or
-* an entity type expression (see <<hql-entity-type-exp>>).
+* an entity type expression (see <<hql-treat-type>>).
 
 HQL is far more permissive. HQL itself does not restrict the type any way, though the database itself might.
 Even embedded attributes are allowed, although that feature depends on the level of support for tuple or "row value constructors" in the underlying database.
@@ -1445,10 +1455,23 @@ Fetch joins should not be used in paged queries (`setFirstResult()` or `setMaxRe
 Nor should they be used with the `scroll()` or `stream()` methods.
 ====
 
-[[hql-treat-as]]
-==== Joins with `treat`
+[[hql-join-treat]]
+==== Joins with typecasts
 
-A join may narrow the type of the joined entity using `treat()`, for example, `join treat(a.payments as CreditCardPayment)`.
+An explicit join may narrow the type of the joined entity using `treat()`.
+
+[[hql-join-treat-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-join-treat-example]
+----
+====
+
+Here, the identification variable `ccp` declared to the right of `treat()` has the narrowed type `CreditCardPayment`, instead of the declared type `Payment`.
+This allows the attribute `cardNumber` declared by the subtype `CreditCardPayment` to be referenced in the rest of the query.
+
+See <<hql-treat-type>> for more information about `treat()`.
 
 [[hql-implicit-join]]
 ==== Implicit joins (path expressions)

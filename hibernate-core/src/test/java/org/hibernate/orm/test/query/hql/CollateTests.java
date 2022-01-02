@@ -6,6 +6,7 @@
  */
 package org.hibernate.orm.test.query.hql;
 
+import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
@@ -64,6 +65,17 @@ public class CollateTests {
 				session -> {
 					session.createQuery("from EntityOfBasics e order by collate(e.theString as utf8mb4_bin)").getResultList();
 					assertThat( session.createQuery("select collate('bar' as utf8mb4_bin) < 'foo'").getSingleResult(), is(true) );
+				}
+		);
+	}
+
+	@Test @RequiresDialect(HSQLDialect.class)
+	public void testCollateHSQL(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery("from EntityOfBasics e order by collate(e.theString as SQL_TEXT_UCC)").getResultList();
+					session.createQuery("from EntityOfBasics e order by collate(e.theString as English)").getResultList();
+					assertThat( session.createQuery("select collate('bar' as English) < 'foo'").getSingleResult(), is(true) );
 				}
 		);
 	}

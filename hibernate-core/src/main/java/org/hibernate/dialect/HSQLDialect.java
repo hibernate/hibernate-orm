@@ -210,6 +210,7 @@ public class HSQLDialect extends Dialect {
 		CommonFunctionFactory.varPopSamp( queryEngine );
 		CommonFunctionFactory.addMonths( queryEngine );
 		CommonFunctionFactory.monthsBetween( queryEngine );
+		CommonFunctionFactory.collate_quoted( queryEngine );
 
 		if ( getVersion().isSameOrAfter( 2 ) ) {
 			//SYSDATE is similar to LOCALTIMESTAMP but it returns the timestamp when it is called

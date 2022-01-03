@@ -2135,7 +2135,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 			List<Long> values = entityManager.createQuery(
 				"select " +
 				"	case when p.nickName is null " +
-				"		 then (p.id * 1000) " +
+				"		 then p.id * 1000 " +
 				"		 else p.id " +
 				"	end " +
 				"from Person p " +

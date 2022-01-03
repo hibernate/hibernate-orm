@@ -330,6 +330,7 @@ include::{sourcedir}/HQLTest.java[tags=hql-string-literals-example]
 ----
 ====
 
+[[hql-numeric-literals]]
 ==== Numeric literals
 
 Numeric literals come in several different forms.
@@ -605,10 +606,7 @@ include::{sourcedir}/HQLTest.java[tags=hql-searched-case-expressions-example]
 ----
 ====
 
-[[hql-case-arithmetic-expressions]]
-===== Case expressions with arithmetic operations
-
-Any arithmetic operation in the `case` expression must be enclosed in parentheses, as illustrated by the following example:
+A `case` expression may contain complex expression, including operator expressions:
 
 [[hql-case-arithmetic-expressions-example]]
 //.Case expression with arithmetic operation example
@@ -618,12 +616,6 @@ Any arithmetic operation in the `case` expression must be enclosed in parenthese
 include::{sourcedir}/HQLTest.java[tags=hql-case-arithmetic-expressions-example]
 ----
 ====
-
-[IMPORTANT]
-====
-If the arithmetic expression was not enclosed in parentheses, the parser would be unable to parse the expression.
-====
-
 
 [[hql-exp-functions]]
 === Functions

@@ -266,6 +266,9 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		if ( whereClause == null ) {
 			setWhereClause( whereClause = new SqmWhereClause( nodeBuilder() ) );
 		}
+		else {
+			whereClause.setPredicate( null );
+		}
 		for ( Predicate restriction : restrictions ) {
 			whereClause.applyPredicate( (SqmPredicate) restriction );
 		}

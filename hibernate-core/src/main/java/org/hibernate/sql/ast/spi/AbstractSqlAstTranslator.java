@@ -3403,7 +3403,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					sortSpecificationsRowNumbering.add(
 							new SortSpecification(
 									new SqlSelectionExpression( sqlSelections.get( i ) ),
-									null,
 									SortOrder.ASCENDING,
 									NullPrecedence.NONE
 							)
@@ -3437,7 +3436,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 								new SqlSelectionExpression(
 										sqlSelections.get( position )
 								),
-								null,
 								sortSpecification.getSortOrder(),
 								sortSpecification.getNullPrecedence()
 						)

@@ -34,7 +34,7 @@ public class Collation implements SqlExpressable, SqlAstNode {
 
 	@Override
 	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
-		return getJdbcTypeCount();
+		return 0;
 	}
 
 	@Override

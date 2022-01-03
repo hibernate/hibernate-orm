@@ -20,6 +20,7 @@ import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
@@ -98,7 +99,12 @@ public class FunctionExpression implements OrderingExpression, FunctionRendering
 			NullPrecedence nullPrecedence,
 			SqlAstCreationState creationState) {
 		final SelfRenderingFunctionSqlAstExpression expression = resolve( ast, tableGroup, modelPartName, creationState );
-		ast.addSortSpecification( new SortSpecification( expression, collation, sortOrder, nullPrecedence ) );
+		final Expression sortExpression = OrderingExpression.applyCollation(
+				expression,
+				collation,
+				creationState
+		);
+		ast.addSortSpecification( new SortSpecification( sortExpression, sortOrder, nullPrecedence ) );
 	}
 
 	@Override

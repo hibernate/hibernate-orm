@@ -8,8 +8,13 @@ package org.hibernate.metamodel.mapping.ordering.ast;
 
 import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.SortOrder;
+import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.sql.FakeSqmToSqlAstConverter;
+import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
+import org.hibernate.query.sqm.tree.expression.SqmSelfRenderingExpression;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 
@@ -33,4 +38,38 @@ public interface OrderingExpression extends Node {
 			SortOrder sortOrder,
 			NullPrecedence nullPrecedence,
 			SqlAstCreationState creationState);
+
+
+	public static Expression applyCollation(
+			Expression expression,
+			String collation,
+			SqlAstCreationState creationState) {
+		final Expression sortExpression;
+		if ( collation == null ) {
+			sortExpression = expression;
+		}
+		else {
+			final QueryEngine queryEngine = creationState.getCreationContext()
+					.getSessionFactory()
+					.getQueryEngine();
+			final SqmToSqlAstConverter converter;
+			if ( creationState instanceof SqmToSqlAstConverter ) {
+				converter = (SqmToSqlAstConverter) creationState;
+			}
+			else {
+				converter = new FakeSqmToSqlAstConverter( creationState );
+			}
+			sortExpression = queryEngine
+					.getSqmFunctionRegistry()
+					.findFunctionDescriptor( "collate" )
+					.generateSqmExpression(
+							new SqmSelfRenderingExpression<>( walker -> expression, null, null ),
+							null,
+							queryEngine,
+							queryEngine.getTypeConfiguration()
+					)
+					.convertToSqlAst( converter );
+		}
+		return sortExpression;
+	}
 }

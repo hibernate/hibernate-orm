@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.metamodel.mapping.ordering.ast.OrderingExpression;
 import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.SortOrder;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
@@ -265,6 +266,11 @@ public abstract class AbstractDomainPath implements DomainPath {
 				}
 			}
 		}
-		ast.addSortSpecification( new SortSpecification( expression, collation, sortOrder, nullPrecedence ) );
+		final Expression sortExpression = OrderingExpression.applyCollation(
+				expression,
+				collation,
+				creationState
+		);
+		ast.addSortSpecification( new SortSpecification( sortExpression, sortOrder, nullPrecedence ) );
 	}
 }

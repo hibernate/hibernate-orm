@@ -57,8 +57,13 @@ public class SelfRenderingOrderingExpression extends SelfRenderingSqlFragmentExp
 				}
 			}
 		}
+		final Expression sortExpression = OrderingExpression.applyCollation(
+				expression,
+				collation,
+				creationState
+		);
 
-		ast.addSortSpecification( new SortSpecification( expression, collation, sortOrder, nullPrecedence ) );
+		ast.addSortSpecification( new SortSpecification( sortExpression, sortOrder, nullPrecedence ) );
 	}
 
 }

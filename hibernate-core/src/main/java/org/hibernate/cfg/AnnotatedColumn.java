@@ -42,9 +42,9 @@ import org.jboss.logging.Logger;
  *
  * @author Emmanuel Bernard
  */
-public class Ejb3Column {
+public class AnnotatedColumn {
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, Ejb3Column.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, AnnotatedColumn.class.getName());
 
 	private MetadataBuildingContext context;
 
@@ -213,7 +213,7 @@ public class Ejb3Column {
 		this.generatedAs = as;
 	}
 
-	public Ejb3Column() {
+	public AnnotatedColumn() {
 	}
 
 	public void bind() {
@@ -502,7 +502,7 @@ public class Ejb3Column {
 		mappingColumn.setNullable( false );
 	}
 
-	public static Ejb3Column[] buildColumnFromAnnotation(
+	public static AnnotatedColumn[] buildColumnFromAnnotation(
 			jakarta.persistence.Column[] anns,
 			org.hibernate.annotations.Formula formulaAnn,
 			Comment commentAnn,
@@ -523,7 +523,7 @@ public class Ejb3Column {
 				context
 		);
 	}
-	public static Ejb3Column[] buildColumnFromAnnotation(
+	public static AnnotatedColumn[] buildColumnFromAnnotation(
 			jakarta.persistence.Column[] anns,
 			org.hibernate.annotations.Formula formulaAnn,
 			Comment commentAnn,
@@ -533,15 +533,15 @@ public class Ejb3Column {
 			String suffixForDefaultColumnName,
 			Map<String, Join> secondaryTables,
 			MetadataBuildingContext context) {
-		Ejb3Column[] columns;
+		AnnotatedColumn[] columns;
 		if ( formulaAnn != null ) {
-			Ejb3Column formulaColumn = new Ejb3Column();
+			AnnotatedColumn formulaColumn = new AnnotatedColumn();
 			formulaColumn.setFormula( formulaAnn.value() );
 			formulaColumn.setImplicit( false );
 			formulaColumn.setBuildingContext( context );
 			formulaColumn.setPropertyHolder( propertyHolder );
 			formulaColumn.bind();
-			columns = new Ejb3Column[] { formulaColumn };
+			columns = new AnnotatedColumn[] { formulaColumn };
 		}
 		else {
 			jakarta.persistence.Column[] actualCols = anns;
@@ -569,7 +569,7 @@ public class Ejb3Column {
 			}
 			else {
 				final int length = actualCols.length;
-				columns = new Ejb3Column[length];
+				columns = new AnnotatedColumn[length];
 				for (int index = 0; index < length; index++) {
 
 					final ObjectNameNormalizer normalizer = context.getObjectNameNormalizer();
@@ -613,7 +613,7 @@ public class Ejb3Column {
 								.render();
 					}
 
-					Ejb3Column column = new Ejb3Column();
+					AnnotatedColumn column = new AnnotatedColumn();
 
 					column.setImplicit( false );
 					column.setSqlType( sqlType );
@@ -723,7 +723,7 @@ public class Ejb3Column {
 		}
 	}
 
-	private static Ejb3Column[] buildImplicitColumn(
+	private static AnnotatedColumn[] buildImplicitColumn(
 			PropertyData inferredData,
 			String suffixForDefaultColumnName,
 			Map<String, Join> secondaryTables,
@@ -731,8 +731,8 @@ public class Ejb3Column {
 			Comment comment,
 			Nullability nullability,
 			MetadataBuildingContext context) {
-		Ejb3Column column = new Ejb3Column();
-		Ejb3Column[] columns = new Ejb3Column[1];
+		AnnotatedColumn column = new AnnotatedColumn();
+		AnnotatedColumn[] columns = new AnnotatedColumn[1];
 		columns[0] = column;
 
 		if ( comment != null ) {
@@ -767,7 +767,7 @@ public class Ejb3Column {
 		return columns;
 	}
 
-	public static void checkPropertyConsistency(Ejb3Column[] columns, String propertyName) {
+	public static void checkPropertyConsistency(AnnotatedColumn[] columns, String propertyName) {
 		int nbrOfColumns = columns.length;
 
 		if ( nbrOfColumns > 1 ) {

@@ -70,8 +70,8 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.BinderHelper;
 import org.hibernate.cfg.CollectionPropertyHolder;
 import org.hibernate.cfg.CollectionSecondPass;
-import org.hibernate.cfg.Ejb3Column;
-import org.hibernate.cfg.Ejb3JoinColumn;
+import org.hibernate.cfg.AnnotatedColumn;
+import org.hibernate.cfg.AnnotatedJoinColumn;
 import org.hibernate.cfg.IndexColumn;
 import org.hibernate.cfg.InheritanceState;
 import org.hibernate.cfg.PropertyData;
@@ -157,7 +157,7 @@ public abstract class CollectionBinder {
 	private String mappedBy;
 	private XClass collectionType;
 	private XClass targetEntity;
-	private Ejb3JoinColumn[] inverseJoinColumns;
+	private AnnotatedJoinColumn[] inverseJoinColumns;
 	private String cascadeStrategy;
 	private String cacheConcurrencyStrategy;
 	private String cacheRegionName;
@@ -167,15 +167,15 @@ public abstract class CollectionBinder {
 	protected String mapKeyPropertyName;
 	private boolean insertable = true;
 	private boolean updatable = true;
-	private Ejb3JoinColumn[] fkJoinColumns;
+	private AnnotatedJoinColumn[] fkJoinColumns;
 	private boolean isExplicitAssociationTable;
-	private Ejb3Column[] elementColumns;
+	private AnnotatedColumn[] elementColumns;
 	private boolean isEmbedded;
 	private XProperty property;
 	private boolean ignoreNotFound;
 	private TableBinder tableBinder;
-	private Ejb3Column[] mapKeyColumns;
-	private Ejb3JoinColumn[] mapKeyManyToManyColumns;
+	private AnnotatedColumn[] mapKeyColumns;
+	private AnnotatedJoinColumn[] mapKeyManyToManyColumns;
 	protected HashMap<String, IdentifierGeneratorDefinition> localGenerators;
 	protected Map<XClass, InheritanceState> inheritanceStatePerClass;
 	private XClass declaringClass;
@@ -237,15 +237,15 @@ public abstract class CollectionBinder {
 		this.accessType = accessType;
 	}
 
-	public void setInverseJoinColumns(Ejb3JoinColumn[] inverseJoinColumns) {
+	public void setInverseJoinColumns(AnnotatedJoinColumn[] inverseJoinColumns) {
 		this.inverseJoinColumns = inverseJoinColumns;
 	}
 
-	public void setJoinColumns(Ejb3JoinColumn[] joinColumns) {
+	public void setJoinColumns(AnnotatedJoinColumn[] joinColumns) {
 		this.joinColumns = joinColumns;
 	}
 
-	private Ejb3JoinColumn[] joinColumns;
+	private AnnotatedJoinColumn[] joinColumns;
 
 	public void setPropertyHolder(PropertyHolder propertyHolder) {
 		this.propertyHolder = propertyHolder;
@@ -849,12 +849,12 @@ public abstract class CollectionBinder {
 	}
 
 	public SecondPass getSecondPass(
-			final Ejb3JoinColumn[] fkJoinColumns,
-			final Ejb3JoinColumn[] keyColumns,
-			final Ejb3JoinColumn[] inverseColumns,
-			final Ejb3Column[] elementColumns,
-			final Ejb3Column[] mapKeyColumns,
-			final Ejb3JoinColumn[] mapKeyManyToManyColumns,
+			final AnnotatedJoinColumn[] fkJoinColumns,
+			final AnnotatedJoinColumn[] keyColumns,
+			final AnnotatedJoinColumn[] inverseColumns,
+			final AnnotatedColumn[] elementColumns,
+			final AnnotatedColumn[] mapKeyColumns,
+			final AnnotatedJoinColumn[] mapKeyManyToManyColumns,
 			final boolean isEmbedded,
 			final XProperty property,
 			final XClass collType,
@@ -890,10 +890,10 @@ public abstract class CollectionBinder {
 	protected boolean bindStarToManySecondPass(
 			Map<String, PersistentClass> persistentClasses,
 			XClass collType,
-			Ejb3JoinColumn[] fkJoinColumns,
-			Ejb3JoinColumn[] keyColumns,
-			Ejb3JoinColumn[] inverseColumns,
-			Ejb3Column[] elementColumns,
+			AnnotatedJoinColumn[] fkJoinColumns,
+			AnnotatedJoinColumn[] keyColumns,
+			AnnotatedJoinColumn[] inverseColumns,
+			AnnotatedColumn[] elementColumns,
 			boolean isEmbedded,
 			XProperty property,
 			boolean unique,
@@ -962,7 +962,7 @@ public abstract class CollectionBinder {
 	protected void bindOneToManySecondPass(
 			Collection collection,
 			Map<String, PersistentClass> persistentClasses,
-			Ejb3JoinColumn[] fkJoinColumns,
+			AnnotatedJoinColumn[] fkJoinColumns,
 			XClass collectionType,
 			boolean cascadeDeleteEnabled,
 			boolean ignoreNotFound,
@@ -1002,7 +1002,7 @@ public abstract class CollectionBinder {
 			);
 		}
 		oneToMany.setAssociatedClass( associatedClass );
-		for (Ejb3JoinColumn column : fkJoinColumns) {
+		for (AnnotatedJoinColumn column : fkJoinColumns) {
 			column.setPersistentClass( associatedClass, joins, inheritanceStatePerClass );
 			column.setJoins( joins );
 			collection.setCollectionTable( column.getTable() );
@@ -1258,7 +1258,7 @@ public abstract class CollectionBinder {
 
 	private static SimpleValue buildCollectionKey(
 			Collection collValue,
-			Ejb3JoinColumn[] joinColumns,
+			AnnotatedJoinColumn[] joinColumns,
 			boolean cascadeDeleteEnabled,
 			boolean noConstraintByDefault,
 			XProperty property,
@@ -1292,7 +1292,7 @@ public abstract class CollectionBinder {
 		}
 		DependantValue key = new DependantValue( buildingContext, collValue.getCollectionTable(), keyVal );
 		key.setTypeName( null );
-		Ejb3Column.checkPropertyConsistency( joinColumns, collValue.getOwnerEntityName() );
+		AnnotatedColumn.checkPropertyConsistency( joinColumns, collValue.getOwnerEntityName() );
 		key.setNullable( joinColumns.length == 0 || joinColumns[0].isNullable() );
 		key.setUpdateable( joinColumns.length == 0 || joinColumns[0].isUpdatable() );
 		key.setCascadeDeleteEnabled( cascadeDeleteEnabled );
@@ -1392,9 +1392,9 @@ public abstract class CollectionBinder {
 	private void bindManyToManySecondPass(
 			Collection collValue,
 			Map<String, PersistentClass> persistentClasses,
-			Ejb3JoinColumn[] joinColumns,
-			Ejb3JoinColumn[] inverseJoinColumns,
-			Ejb3Column[] elementColumns,
+			AnnotatedJoinColumn[] joinColumns,
+			AnnotatedJoinColumn[] inverseJoinColumns,
+			AnnotatedColumn[] elementColumns,
 			boolean isEmbedded,
 			XClass collType,
 			boolean ignoreNotFound, boolean unique,
@@ -1486,7 +1486,7 @@ public abstract class CollectionBinder {
 			}
 			collValue.setCollectionTable( table );
 			String entityName = collectionEntity.getEntityName();
-			for (Ejb3JoinColumn column : joinColumns) {
+			for (AnnotatedJoinColumn column : joinColumns) {
 				//column.setDefaultColumnHeader( joinColumns[0].getMappedBy() ); //seems not to be used, make sense
 				column.setManyToManyOwnerSideEntityName( entityName );
 			}
@@ -1494,7 +1494,7 @@ public abstract class CollectionBinder {
 		else {
 			//TODO: only for implicit columns?
 			//FIXME NamingStrategy
-			for (Ejb3JoinColumn column : joinColumns) {
+			for (AnnotatedJoinColumn column : joinColumns) {
 				String mappedByProperty = buildingContext.getMetadataCollector().getFromMappedBy(
 						collValue.getOwnerEntityName(), column.getPropertyName()
 				);
@@ -1593,7 +1593,7 @@ public abstract class CollectionBinder {
 			final Formula discriminatorFormulaAnn = inferredData.getProperty().getAnnotation( Formula.class );
 
 			//override the table
-			for (Ejb3Column column : inverseJoinColumns) {
+			for (AnnotatedColumn column : inverseJoinColumns) {
 				column.setTable( collValue.getCollectionTable() );
 			}
 
@@ -1740,8 +1740,8 @@ public abstract class CollectionBinder {
 				final BasicValueBinder elementBinder = new BasicValueBinder( BasicValueBinder.Kind.COLLECTION_ELEMENT, buildingContext );
 				elementBinder.setReturnedClassName( collType.getName() );
 				if ( elementColumns == null || elementColumns.length == 0 ) {
-					elementColumns = new Ejb3Column[1];
-					Ejb3Column column = new Ejb3Column();
+					elementColumns = new AnnotatedColumn[1];
+					AnnotatedColumn column = new AnnotatedColumn();
 					column.setImplicit( false );
 					//not following the spec but more clean
 					column.setNullable( true );
@@ -1753,7 +1753,7 @@ public abstract class CollectionBinder {
 					elementColumns[0] = column;
 				}
 				//override the table
-				for (Ejb3Column column : elementColumns) {
+				for (AnnotatedColumn column : elementColumns) {
 					column.setTable( collValue.getCollectionTable() );
 				}
 				elementBinder.setColumns( elementColumns );
@@ -1827,7 +1827,7 @@ public abstract class CollectionBinder {
 	private static void bindCollectionSecondPass(
 			Collection collValue,
 			PersistentClass collectionEntity,
-			Ejb3JoinColumn[] joinColumns,
+			AnnotatedJoinColumn[] joinColumns,
 			boolean cascadeDeleteEnabled,
 			XProperty property,
 			PropertyHolder propertyHolder,
@@ -1875,7 +1875,7 @@ public abstract class CollectionBinder {
 	 */
 	public static void bindManytoManyInverseFk(
 			PersistentClass referencedEntity,
-			Ejb3JoinColumn[] columns,
+			AnnotatedJoinColumn[] columns,
 			SimpleValue value,
 			boolean unique,
 			MetadataBuildingContext buildingContext) {
@@ -1927,15 +1927,15 @@ public abstract class CollectionBinder {
 		}
 	}
 
-	public void setFkJoinColumns(Ejb3JoinColumn[] ejb3JoinColumns) {
-		this.fkJoinColumns = ejb3JoinColumns;
+	public void setFkJoinColumns(AnnotatedJoinColumn[] annotatedJoinColumns) {
+		this.fkJoinColumns = annotatedJoinColumns;
 	}
 
 	public void setExplicitAssociationTable(boolean explicitAssocTable) {
 		this.isExplicitAssociationTable = explicitAssocTable;
 	}
 
-	public void setElementColumns(Ejb3Column[] elementColumns) {
+	public void setElementColumns(AnnotatedColumn[] elementColumns) {
 		this.elementColumns = elementColumns;
 	}
 
@@ -1951,11 +1951,11 @@ public abstract class CollectionBinder {
 		this.ignoreNotFound = ignoreNotFound;
 	}
 
-	public void setMapKeyColumns(Ejb3Column[] mapKeyColumns) {
+	public void setMapKeyColumns(AnnotatedColumn[] mapKeyColumns) {
 		this.mapKeyColumns = mapKeyColumns;
 	}
 
-	public void setMapKeyManyToManyColumns(Ejb3JoinColumn[] mapJoinColumns) {
+	public void setMapKeyManyToManyColumns(AnnotatedJoinColumn[] mapJoinColumns) {
 		this.mapKeyManyToManyColumns = mapJoinColumns;
 	}
 

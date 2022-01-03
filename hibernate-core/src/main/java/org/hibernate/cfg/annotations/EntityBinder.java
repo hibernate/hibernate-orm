@@ -67,7 +67,7 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AccessType;
 import org.hibernate.cfg.AnnotationBinder;
 import org.hibernate.cfg.BinderHelper;
-import org.hibernate.cfg.Ejb3JoinColumn;
+import org.hibernate.cfg.AnnotatedJoinColumn;
 import org.hibernate.cfg.InheritanceState;
 import org.hibernate.cfg.ObjectNameSource;
 import org.hibernate.cfg.PropertyHolder;
@@ -849,7 +849,7 @@ public class EntityBinder {
 	}
 
 	private void createPrimaryColumnsToSecondaryTable(Object uncastedColumn, PropertyHolder propertyHolder, Join join) {
-		Ejb3JoinColumn[] ejb3JoinColumns;
+		AnnotatedJoinColumn[] annotatedJoinColumns;
 		PrimaryKeyJoinColumn[] pkColumnsAnn = null;
 		JoinColumn[] joinColumnsAnn = null;
 		if ( uncastedColumn instanceof PrimaryKeyJoinColumn[] ) {
@@ -859,8 +859,8 @@ public class EntityBinder {
 			joinColumnsAnn = (JoinColumn[]) uncastedColumn;
 		}
 		if ( pkColumnsAnn == null && joinColumnsAnn == null ) {
-			ejb3JoinColumns = new Ejb3JoinColumn[1];
-			ejb3JoinColumns[0] = Ejb3JoinColumn.buildJoinColumn(
+			annotatedJoinColumns = new AnnotatedJoinColumn[1];
+			annotatedJoinColumns[0] = AnnotatedJoinColumn.buildJoinColumn(
 					null,
 					null,
 					persistentClass.getIdentifier(),
@@ -874,8 +874,8 @@ public class EntityBinder {
 					pkColumnsAnn.length :
 					joinColumnsAnn.length;
 			if ( nbrOfJoinColumns == 0 ) {
-				ejb3JoinColumns = new Ejb3JoinColumn[1];
-				ejb3JoinColumns[0] = Ejb3JoinColumn.buildJoinColumn(
+				annotatedJoinColumns = new AnnotatedJoinColumn[1];
+				annotatedJoinColumns[0] = AnnotatedJoinColumn.buildJoinColumn(
 						null,
 						null,
 						persistentClass.getIdentifier(),
@@ -885,10 +885,10 @@ public class EntityBinder {
 				);
 			}
 			else {
-				ejb3JoinColumns = new Ejb3JoinColumn[nbrOfJoinColumns];
+				annotatedJoinColumns = new AnnotatedJoinColumn[nbrOfJoinColumns];
 				if ( pkColumnsAnn != null ) {
 					for (int colIndex = 0; colIndex < nbrOfJoinColumns; colIndex++) {
-						ejb3JoinColumns[colIndex] = Ejb3JoinColumn.buildJoinColumn(
+						annotatedJoinColumns[colIndex] = AnnotatedJoinColumn.buildJoinColumn(
 								pkColumnsAnn[colIndex],
 								null,
 								persistentClass.getIdentifier(),
@@ -900,7 +900,7 @@ public class EntityBinder {
 				}
 				else {
 					for (int colIndex = 0; colIndex < nbrOfJoinColumns; colIndex++) {
-						ejb3JoinColumns[colIndex] = Ejb3JoinColumn.buildJoinColumn(
+						annotatedJoinColumns[colIndex] = AnnotatedJoinColumn.buildJoinColumn(
 								null,
 								joinColumnsAnn[colIndex],
 								persistentClass.getIdentifier(),
@@ -913,18 +913,18 @@ public class EntityBinder {
 			}
 		}
 
-		for (Ejb3JoinColumn joinColumn : ejb3JoinColumns) {
+		for (AnnotatedJoinColumn joinColumn : annotatedJoinColumns) {
 			joinColumn.forceNotNull();
 		}
-		bindJoinToPersistentClass( join, ejb3JoinColumns, context );
+		bindJoinToPersistentClass( join, annotatedJoinColumns, context );
 	}
 
-	private void bindJoinToPersistentClass(Join join, Ejb3JoinColumn[] ejb3JoinColumns, MetadataBuildingContext buildingContext) {
+	private void bindJoinToPersistentClass(Join join, AnnotatedJoinColumn[] annotatedJoinColumns, MetadataBuildingContext buildingContext) {
 		SimpleValue key = new DependantValue( buildingContext, join.getTable(), persistentClass.getIdentifier() );
 		join.setKey( key );
 		setFKNameIfDefined( join );
 		key.setCascadeDeleteEnabled( false );
-		TableBinder.bindFk( persistentClass, null, ejb3JoinColumns, key, false, buildingContext );
+		TableBinder.bindFk( persistentClass, null, annotatedJoinColumns, key, false, buildingContext );
 		join.createPrimaryKey();
 		join.createForeignKey();
 		persistentClass.addJoin( join );

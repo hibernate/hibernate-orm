@@ -22,10 +22,10 @@ import org.xml.sax.InputSource;
  *
  * @author Emmanuel Bernard
  */
-public class EJB3DTDEntityResolver extends DTDEntityResolver {
-	public static final EntityResolver INSTANCE = new EJB3DTDEntityResolver();
+public class PersistenceStandardEntityResolver extends DTDEntityResolver {
+	public static final EntityResolver INSTANCE = new PersistenceStandardEntityResolver();
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, EJB3DTDEntityResolver.class.getName() );
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, PersistenceStandardEntityResolver.class.getName() );
 
 	boolean resolved = false;
 

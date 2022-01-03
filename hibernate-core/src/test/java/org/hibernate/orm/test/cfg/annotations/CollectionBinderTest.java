@@ -18,7 +18,7 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.cfg.Ejb3JoinColumn;
+import org.hibernate.cfg.AnnotatedJoinColumn;
 import org.hibernate.cfg.InheritanceState;
 import org.hibernate.cfg.PropertyHolder;
 import org.hibernate.cfg.annotations.CollectionBinder;
@@ -74,7 +74,7 @@ public class CollectionBinderTest extends BaseUnitTestCase {
 				public void bindOneToManySecondPass(
 						Collection collection,
 						Map<String, PersistentClass> persistentClasses,
-						Ejb3JoinColumn[] fkJoinColumns,
+						AnnotatedJoinColumn[] fkJoinColumns,
 						XClass collectionType,
 						boolean cascadeDeleteEnabled,
 						boolean ignoreNotFound,

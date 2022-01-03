@@ -601,14 +601,14 @@ public final class AnnotationBinder {
 			uniqueConstraints = TableBinder.buildUniqueConstraintHolders( tabAnn.uniqueConstraints() );
 		}
 
-		Ejb3JoinColumn[] inheritanceJoinedColumns = makeInheritanceJoinColumns(
+		AnnotatedJoinColumn[] inheritanceJoinedColumns = makeInheritanceJoinColumns(
 				clazzToProcess,
 				context,
 				inheritanceState,
 				superEntity
 		);
 
-		final Ejb3DiscriminatorColumn discriminatorColumn;
+		final AnnotatedDiscriminatorColumn discriminatorColumn;
 		if ( InheritanceType.SINGLE_TABLE.equals( inheritanceState.getType() ) ) {
 			discriminatorColumn = processSingleTableDiscriminatorProperties(
 					clazzToProcess,
@@ -940,14 +940,14 @@ public final class AnnotationBinder {
 	/**
 	 * Process all discriminator-related metadata per rules for "single table" inheritance
 	 */
-	private static Ejb3DiscriminatorColumn processSingleTableDiscriminatorProperties(
+	private static AnnotatedDiscriminatorColumn processSingleTableDiscriminatorProperties(
 			XClass clazzToProcess,
 			MetadataBuildingContext context,
 			InheritanceState inheritanceState,
 			EntityBinder entityBinder) {
 		final boolean isRoot = !inheritanceState.hasParents();
 
-		Ejb3DiscriminatorColumn discriminatorColumn = null;
+		AnnotatedDiscriminatorColumn discriminatorColumn = null;
 		jakarta.persistence.DiscriminatorColumn discAnn = clazzToProcess.getAnnotation(
 				jakarta.persistence.DiscriminatorColumn.class
 		);
@@ -959,7 +959,7 @@ public final class AnnotationBinder {
 				DiscriminatorFormula.class
 		);
 		if ( isRoot ) {
-			discriminatorColumn = Ejb3DiscriminatorColumn.buildDiscriminatorColumn(
+			discriminatorColumn = AnnotatedDiscriminatorColumn.buildDiscriminatorColumn(
 					discriminatorType,
 					discAnn,
 					discFormulaAnn,
@@ -987,7 +987,7 @@ public final class AnnotationBinder {
 	/**
 	 * Process all discriminator-related metadata per rules for "joined" inheritance
 	 */
-	private static Ejb3DiscriminatorColumn processJoinedDiscriminatorProperties(
+	private static AnnotatedDiscriminatorColumn processJoinedDiscriminatorProperties(
 			XClass clazzToProcess,
 			MetadataBuildingContext context,
 			InheritanceState inheritanceState,
@@ -1042,7 +1042,7 @@ public final class AnnotationBinder {
 				final DiscriminatorType discriminatorType = discriminatorColumnAnnotation != null
 						? discriminatorColumnAnnotation.discriminatorType()
 						: DiscriminatorType.STRING;
-				return Ejb3DiscriminatorColumn.buildDiscriminatorColumn(
+				return AnnotatedDiscriminatorColumn.buildDiscriminatorColumn(
 						discriminatorType,
 						discriminatorColumnAnnotation,
 						null,
@@ -1302,12 +1302,12 @@ public final class AnnotationBinder {
 		}
 	}
 
-	private static Ejb3JoinColumn[] makeInheritanceJoinColumns(
+	private static AnnotatedJoinColumn[] makeInheritanceJoinColumns(
 			XClass clazzToProcess,
 			MetadataBuildingContext context,
 			InheritanceState inheritanceState,
 			PersistentClass superEntity) {
-		Ejb3JoinColumn[] inheritanceJoinedColumns = null;
+		AnnotatedJoinColumn[] inheritanceJoinedColumns = null;
 		final boolean hasJoinedColumns = inheritanceState.hasParents()
 				&& InheritanceType.JOINED.equals( inheritanceState.getType() );
 		if ( hasJoinedColumns ) {
@@ -1317,10 +1317,10 @@ public final class AnnotationBinder {
 			if ( explicitInheritanceJoinedColumns ) {
 				int nbrOfInhJoinedColumns = jcsAnn.value().length;
 				PrimaryKeyJoinColumn jcAnn;
-				inheritanceJoinedColumns = new Ejb3JoinColumn[nbrOfInhJoinedColumns];
+				inheritanceJoinedColumns = new AnnotatedJoinColumn[nbrOfInhJoinedColumns];
 				for ( int colIndex = 0; colIndex < nbrOfInhJoinedColumns; colIndex++ ) {
 					jcAnn = jcsAnn.value()[colIndex];
-					inheritanceJoinedColumns[colIndex] = Ejb3JoinColumn.buildJoinColumn(
+					inheritanceJoinedColumns[colIndex] = AnnotatedJoinColumn.buildJoinColumn(
 							jcAnn,
 							null,
 							superEntity.getIdentifier(),
@@ -1332,8 +1332,8 @@ public final class AnnotationBinder {
 			}
 			else {
 				PrimaryKeyJoinColumn jcAnn = clazzToProcess.getAnnotation( PrimaryKeyJoinColumn.class );
-				inheritanceJoinedColumns = new Ejb3JoinColumn[1];
-				inheritanceJoinedColumns[0] = Ejb3JoinColumn.buildJoinColumn(
+				inheritanceJoinedColumns = new AnnotatedJoinColumn[1];
+				inheritanceJoinedColumns[0] = AnnotatedJoinColumn.buildJoinColumn(
 						jcAnn,
 						null,
 						superEntity.getIdentifier(),
@@ -1537,7 +1537,7 @@ public final class AnnotationBinder {
 
 	private static void bindDiscriminatorColumnToRootPersistentClass(
 			RootClass rootClass,
-			Ejb3DiscriminatorColumn discriminatorColumn,
+			AnnotatedDiscriminatorColumn discriminatorColumn,
 			Map<String, Join> secondaryTables,
 			PropertyHolder propertyHolder,
 			MetadataBuildingContext context) {
@@ -1754,8 +1754,8 @@ public final class AnnotationBinder {
 				entityBinder,
 				context
 		).extractMetadata();
-		Ejb3Column[] columns = columnsBuilder.getColumns();
-		Ejb3JoinColumn[] joinColumns = columnsBuilder.getJoinColumns();
+		AnnotatedColumn[] columns = columnsBuilder.getColumns();
+		AnnotatedJoinColumn[] joinColumns = columnsBuilder.getJoinColumns();
 
 		final XClass returnedClass = inferredData.getClassOrElement();
 
@@ -1859,7 +1859,7 @@ public final class AnnotationBinder {
 				JoinTable assocTable = propertyHolder.getJoinTable( property );
 				if ( assocTable != null ) {
 					Join join = propertyHolder.addJoin( assocTable, false );
-					for ( Ejb3JoinColumn joinColumn : joinColumns ) {
+					for ( AnnotatedJoinColumn joinColumn : joinColumns ) {
 						joinColumn.setExplicitTableName( join.getTable().getName() );
 					}
 				}
@@ -1925,7 +1925,7 @@ public final class AnnotationBinder {
 				JoinTable assocTable = propertyHolder.getJoinTable( property );
 				if ( assocTable != null ) {
 					Join join = propertyHolder.addJoin( assocTable, false );
-					for ( Ejb3JoinColumn joinColumn : joinColumns ) {
+					for ( AnnotatedJoinColumn joinColumn : joinColumns ) {
 						joinColumn.setExplicitTableName( join.getTable().getName() );
 					}
 				}
@@ -1966,7 +1966,7 @@ public final class AnnotationBinder {
 				JoinTable assocTable = propertyHolder.getJoinTable( property );
 				if ( assocTable != null ) {
 					Join join = propertyHolder.addJoin( assocTable, false );
-					for ( Ejb3JoinColumn joinColumn : joinColumns ) {
+					for ( AnnotatedJoinColumn joinColumn : joinColumns ) {
 						joinColumn.setExplicitTableName( join.getTable().getName() );
 					}
 				}
@@ -2050,7 +2050,7 @@ public final class AnnotationBinder {
 				collectionBinder.setCollectionType( inferredData.getProperty().getElementClass() );
 				collectionBinder.setAccessType( inferredData.getDefaultAccess() );
 
-				Ejb3Column[] elementColumns;
+				AnnotatedColumn[] elementColumns;
 				//do not use "element" if you are a JPA 2 @ElementCollection only for legacy Hibernate mappings
 				boolean isJPA2ForValueMapping = property.isAnnotationPresent( ElementCollection.class );
 				PropertyData virtualProperty = isJPA2ForValueMapping ? inferredData : new WrappedInferredData(
@@ -2061,7 +2061,7 @@ public final class AnnotationBinder {
 				) ) {
 					Column ann = property.getAnnotation( Column.class );
 					Formula formulaAnn = property.getAnnotation( Formula.class );
-					elementColumns = Ejb3Column.buildColumnFromAnnotation(
+					elementColumns = AnnotatedColumn.buildColumnFromAnnotation(
 							new Column[] { ann },
 							formulaAnn,
 							property.getAnnotation( Comment.class ),
@@ -2074,7 +2074,7 @@ public final class AnnotationBinder {
 				}
 				else if ( property.isAnnotationPresent( Columns.class ) ) {
 					Columns anns = property.getAnnotation( Columns.class );
-					elementColumns = Ejb3Column.buildColumnFromAnnotation(
+					elementColumns = AnnotatedColumn.buildColumnFromAnnotation(
 							anns.columns(),
 							null,
 							property.getAnnotation( Comment.class ),
@@ -2086,7 +2086,7 @@ public final class AnnotationBinder {
 					);
 				}
 				else {
-					elementColumns = Ejb3Column.buildColumnFromAnnotation(
+					elementColumns = AnnotatedColumn.buildColumnFromAnnotation(
 							null,
 							null,
 							property.getAnnotation( Comment.class ),
@@ -2106,7 +2106,7 @@ public final class AnnotationBinder {
 						keyColumns = null;
 					}
 
-					Ejb3Column[] mapColumns = Ejb3Column.buildColumnFromAnnotation(
+					AnnotatedColumn[] mapColumns = AnnotatedColumn.buildColumnFromAnnotation(
 							keyColumns,
 							null,
 							property.getAnnotation( Comment.class ),
@@ -2147,7 +2147,7 @@ public final class AnnotationBinder {
 						};
 					}
 
-					Ejb3JoinColumn[] mapJoinColumns = Ejb3JoinColumn.buildJoinColumnsWithDefaultColumnSuffix(
+					AnnotatedJoinColumn[] mapJoinColumns = AnnotatedJoinColumn.buildJoinColumnsWithDefaultColumnSuffix(
 							joinKeyColumns,
 							property.getAnnotation( Comment.class ),
 							null,
@@ -2174,7 +2174,7 @@ public final class AnnotationBinder {
 				}
 				String mappedBy = null;
 				if ( oneToManyAnn != null ) {
-					for ( Ejb3JoinColumn column : joinColumns ) {
+					for ( AnnotatedJoinColumn column : joinColumns ) {
 						if ( column.isSecondary() ) {
 							throw new NotYetImplementedException( "Collections having FK in secondary table" );
 						}
@@ -2192,7 +2192,7 @@ public final class AnnotationBinder {
 					collectionBinder.setOneToMany( true );
 				}
 				else if ( elementCollectionAnn != null ) {
-					for ( Ejb3JoinColumn column : joinColumns ) {
+					for ( AnnotatedJoinColumn column : joinColumns ) {
 						if ( column.isSecondary() ) {
 							throw new NotYetImplementedException( "Collections having FK in secondary table" );
 						}
@@ -2318,7 +2318,7 @@ public final class AnnotationBinder {
 							inheritanceStatePerClass,
 							referencedEntityName,
 							customInstantiatorImpl,
-							isOverridden ? ( Ejb3JoinColumn[] ) columns : null
+							isOverridden ? ( AnnotatedJoinColumn[] ) columns : null
 					);
 				}
 				else {
@@ -2333,7 +2333,7 @@ public final class AnnotationBinder {
 					//implicit type will check basic types and Serializable classes
 					if ( isId || ( !optional && nullability != Nullability.FORCED_NULL ) ) {
 						//force columns to not null
-						for ( Ejb3Column col : columns ) {
+						for ( AnnotatedColumn col : columns ) {
 							if ( isId && col.isFormula() ) {
 								throw new CannotForceNonNullableException(
 										String.format(
@@ -2418,13 +2418,13 @@ public final class AnnotationBinder {
 		if ( index != null ) {
 			if ( joinColumns != null ) {
 
-				for ( Ejb3Column column : joinColumns ) {
+				for ( AnnotatedColumn column : joinColumns ) {
 					column.addIndex( index, inSecondPass );
 				}
 			}
 			else {
 				if ( columns != null ) {
-					for ( Ejb3Column column : columns ) {
+					for ( AnnotatedColumn column : columns ) {
 						column.addIndex( index, inSecondPass );
 					}
 				}
@@ -2438,13 +2438,13 @@ public final class AnnotationBinder {
 		NaturalId naturalIdAnn = property.getAnnotation( NaturalId.class );
 		if ( naturalIdAnn != null ) {
 			if ( joinColumns != null ) {
-				for ( Ejb3Column column : joinColumns ) {
+				for ( AnnotatedColumn column : joinColumns ) {
 					String keyName = "UK_" + Constraint.hashedName( column.getTable().getName() + "_NaturalID" );
 					column.addUniqueKey( keyName, inSecondPass );
 				}
 			}
 			else {
-				for ( Ejb3Column column : columns ) {
+				for ( AnnotatedColumn column : columns ) {
 					String keyName = "UK_" + Constraint.hashedName( column.getTable().getName() + "_NaturalID" );
 					column.addUniqueKey( keyName, inSecondPass );
 				}
@@ -2666,7 +2666,7 @@ public final class AnnotationBinder {
 			annJoins = null;
 			annInverseJoins = null;
 		}
-		Ejb3JoinColumn[] joinColumns = Ejb3JoinColumn.buildJoinTableJoinColumns(
+		AnnotatedJoinColumn[] joinColumns = AnnotatedJoinColumn.buildJoinTableJoinColumns(
 				annJoins,
 				entityBinder.getSecondaryTables(),
 				propertyHolder,
@@ -2674,7 +2674,7 @@ public final class AnnotationBinder {
 				mappedBy,
 				buildingContext
 		);
-		Ejb3JoinColumn[] inverseJoinColumns = Ejb3JoinColumn.buildJoinTableJoinColumns(
+		AnnotatedJoinColumn[] inverseJoinColumns = AnnotatedJoinColumn.buildJoinTableJoinColumns(
 				annInverseJoins,
 				entityBinder.getSecondaryTables(),
 				propertyHolder,
@@ -2700,7 +2700,7 @@ public final class AnnotationBinder {
 			Map<XClass, InheritanceState> inheritanceStatePerClass,
 			String referencedEntityName, //is a component who is overridden by a @MapsId
 			Class<? extends EmbeddableInstantiator> customInstantiatorImpl,
-			Ejb3JoinColumn[] columns) {
+			AnnotatedJoinColumn[] columns) {
 		Component comp;
 		if ( referencedEntityName != null ) {
 			comp = createComponent( propertyHolder, inferredData, isComponentEmbedded, isIdentifierMapper, customInstantiatorImpl, buildingContext );
@@ -2967,7 +2967,7 @@ public final class AnnotationBinder {
 			String generatorName,
 			PropertyData inferredData,
 			PropertyData baseInferredData,
-			Ejb3Column[] columns,
+			AnnotatedColumn[] columns,
 			PropertyHolder propertyHolder,
 			boolean isComposite,
 			AccessType propertyAccessor,
@@ -3020,7 +3020,7 @@ public final class AnnotationBinder {
 		else {
 			//TODO I think this branch is never used. Remove.
 
-			for ( Ejb3Column column : columns ) {
+			for ( AnnotatedColumn column : columns ) {
 				column.forceNotNull(); //this is an id
 			}
 			final BasicValueBinder value = new BasicValueBinder( BasicValueBinder.Kind.ATTRIBUTE, buildingContext );
@@ -3100,7 +3100,7 @@ public final class AnnotationBinder {
 
 	private static void bindManyToOne(
 			String cascadeStrategy,
-			Ejb3JoinColumn[] columns,
+			AnnotatedJoinColumn[] columns,
 			boolean optional,
 			boolean ignoreNotFound,
 			boolean cascadeOnDelete,
@@ -3126,13 +3126,13 @@ public final class AnnotationBinder {
 		value.setCascadeDeleteEnabled( cascadeOnDelete );
 		//value.setLazy( fetchMode != FetchMode.JOIN );
 		if ( !optional ) {
-			for ( Ejb3JoinColumn column : columns ) {
+			for ( AnnotatedJoinColumn column : columns ) {
 				column.setNullable( false );
 			}
 		}
 		if ( property.isAnnotationPresent( MapsId.class ) ) {
 			//read only
-			for ( Ejb3JoinColumn column : columns ) {
+			for ( AnnotatedJoinColumn column : columns ) {
 				column.setInsertable( false );
 				column.setUpdatable( false );
 			}
@@ -3156,7 +3156,7 @@ public final class AnnotationBinder {
 						&& joinColumn.name().equals( columnName )
 						&& !property.isAnnotationPresent( MapsId.class ) ) {
 					hasSpecjManyToOne = true;
-					for ( Ejb3JoinColumn column : columns ) {
+					for ( AnnotatedJoinColumn column : columns ) {
 						column.setInsertable( false );
 						column.setUpdatable( false );
 					}
@@ -3191,7 +3191,7 @@ public final class AnnotationBinder {
 		else {
 			context.getMetadataCollector().addSecondPass( secondPass );
 		}
-		Ejb3Column.checkPropertyConsistency( columns, propertyHolder.getEntityName() + "." + propertyName );
+		AnnotatedColumn.checkPropertyConsistency( columns, propertyHolder.getEntityName() + "." + propertyName );
 		//PropertyBinder binder = new PropertyBinder();
 		propertyBinder.setName( propertyName );
 		propertyBinder.setValue( value );
@@ -3272,7 +3272,7 @@ public final class AnnotationBinder {
 
 	private static void bindOneToOne(
 			String cascadeStrategy,
-			Ejb3JoinColumn[] joinColumns,
+			AnnotatedJoinColumn[] joinColumns,
 			boolean optional,
 			FetchMode fetchMode,
 			boolean ignoreNotFound,
@@ -3310,7 +3310,7 @@ public final class AnnotationBinder {
 						currentColumn = ( org.hibernate.mapping.Column ) idColumns.next();
 						idColumnNames.add( currentColumn.getName() );
 					}
-					for ( Ejb3JoinColumn col : joinColumns ) {
+					for ( AnnotatedJoinColumn col : joinColumns ) {
 						if ( !idColumnNames.contains( col.getMappingColumn().getName() ) ) {
 							mapToPK = false;
 							break;
@@ -3359,7 +3359,7 @@ public final class AnnotationBinder {
 
 	private static void bindAny(
 			String cascadeStrategy,
-			Ejb3JoinColumn[] columns,
+			AnnotatedJoinColumn[] columns,
 			boolean cascadeOnDelete,
 			Nullability nullability,
 			PropertyHolder propertyHolder,

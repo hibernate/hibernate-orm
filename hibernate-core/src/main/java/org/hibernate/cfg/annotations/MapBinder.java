@@ -24,8 +24,8 @@ import org.hibernate.cfg.AnnotationBinder;
 import org.hibernate.cfg.BinderHelper;
 import org.hibernate.cfg.CollectionPropertyHolder;
 import org.hibernate.cfg.CollectionSecondPass;
-import org.hibernate.cfg.Ejb3Column;
-import org.hibernate.cfg.Ejb3JoinColumn;
+import org.hibernate.cfg.AnnotatedColumn;
+import org.hibernate.cfg.AnnotatedJoinColumn;
 import org.hibernate.cfg.InheritanceState;
 import org.hibernate.cfg.PropertyData;
 import org.hibernate.cfg.PropertyHolderBuilder;
@@ -78,12 +78,12 @@ public class MapBinder extends CollectionBinder {
 
 	@Override
 	public SecondPass getSecondPass(
-			final Ejb3JoinColumn[] fkJoinColumns,
-			final Ejb3JoinColumn[] keyColumns,
-			final Ejb3JoinColumn[] inverseColumns,
-			final Ejb3Column[] elementColumns,
-			final Ejb3Column[] mapKeyColumns,
-			final Ejb3JoinColumn[] mapKeyManyToManyColumns,
+			final AnnotatedJoinColumn[] fkJoinColumns,
+			final AnnotatedJoinColumn[] keyColumns,
+			final AnnotatedJoinColumn[] inverseColumns,
+			final AnnotatedColumn[] elementColumns,
+			final AnnotatedColumn[] mapKeyColumns,
+			final AnnotatedJoinColumn[] mapKeyManyToManyColumns,
 			final boolean isEmbedded,
 			final XProperty property,
 			final XClass collType,
@@ -159,8 +159,8 @@ public class MapBinder extends CollectionBinder {
 			XProperty property,
 			boolean isEmbedded,
 			MetadataBuildingContext buildingContext,
-			Ejb3Column[] mapKeyColumns,
-			Ejb3JoinColumn[] mapKeyManyToManyColumns,
+			AnnotatedColumn[] mapKeyColumns,
+			AnnotatedJoinColumn[] mapKeyManyToManyColumns,
 			String targetPropertyName) {
 		if ( mapKeyPropertyName != null ) {
 			//this is an EJB3 @MapKey
@@ -302,10 +302,10 @@ public class MapBinder extends CollectionBinder {
 					final BasicValueBinder elementBinder = new BasicValueBinder( BasicValueBinder.Kind.MAP_KEY, buildingContext );
 					elementBinder.setReturnedClassName( mapKeyType );
 
-					Ejb3Column[] elementColumns = mapKeyColumns;
+					AnnotatedColumn[] elementColumns = mapKeyColumns;
 					if ( elementColumns == null || elementColumns.length == 0 ) {
-						elementColumns = new Ejb3Column[1];
-						Ejb3Column column = new Ejb3Column();
+						elementColumns = new AnnotatedColumn[1];
+						AnnotatedColumn column = new AnnotatedColumn();
 						column.setImplicit( false );
 						column.setNullable( true );
 						column.setLength( Size.DEFAULT_LENGTH );
@@ -317,7 +317,7 @@ public class MapBinder extends CollectionBinder {
 						elementColumns[0] = column;
 					}
 					//override the table
-					for (Ejb3Column column : elementColumns) {
+					for (AnnotatedColumn column : elementColumns) {
 						column.setTable( mapValue.getCollectionTable() );
 					}
 					elementBinder.setColumns( elementColumns );
@@ -337,7 +337,7 @@ public class MapBinder extends CollectionBinder {
 			//FIXME pass the Index Entity JoinColumns
 			if ( !collection.isOneToMany() ) {
 				//index column should not be null
-				for (Ejb3JoinColumn col : mapKeyManyToManyColumns) {
+				for (AnnotatedJoinColumn col : mapKeyManyToManyColumns) {
 					col.forceNotNull();
 				}
 			}

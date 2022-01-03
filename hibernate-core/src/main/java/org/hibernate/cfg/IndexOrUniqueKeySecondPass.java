@@ -29,7 +29,7 @@ public class IndexOrUniqueKeySecondPass implements SecondPass {
 	private final String indexName;
 	private final String[] columns;
 	private final MetadataBuildingContext buildingContext;
-	private final Ejb3Column column;
+	private final AnnotatedColumn column;
 	private final boolean unique;
 
 	/**
@@ -48,14 +48,14 @@ public class IndexOrUniqueKeySecondPass implements SecondPass {
 	/**
 	 * Build an index
 	 */
-	public IndexOrUniqueKeySecondPass(String indexName, Ejb3Column column, MetadataBuildingContext buildingContext) {
+	public IndexOrUniqueKeySecondPass(String indexName, AnnotatedColumn column, MetadataBuildingContext buildingContext) {
 		this( indexName, column, buildingContext, false );
 	}
 
 	/**
 	 * Build an index if unique is false or a Unique Key if unique is true
 	 */
-	public IndexOrUniqueKeySecondPass(String indexName, Ejb3Column column, MetadataBuildingContext buildingContext, boolean unique) {
+	public IndexOrUniqueKeySecondPass(String indexName, AnnotatedColumn column, MetadataBuildingContext buildingContext, boolean unique) {
 		this.indexName = indexName;
 		this.column = column;
 		this.columns = null;

@@ -25,7 +25,7 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AccessType;
 import org.hibernate.cfg.AnnotationBinder;
 import org.hibernate.cfg.BinderHelper;
-import org.hibernate.cfg.Ejb3Column;
+import org.hibernate.cfg.AnnotatedColumn;
 import org.hibernate.cfg.InheritanceState;
 import org.hibernate.cfg.PropertyHolder;
 import org.hibernate.cfg.PropertyPreloadedData;
@@ -65,7 +65,7 @@ public class PropertyBinder {
 	private boolean lazy;
 	private String lazyGroup;
 	private AccessType accessType;
-	private Ejb3Column[] columns;
+	private AnnotatedColumn[] columns;
 	private PropertyHolder holder;
 	private Value value;
 	private boolean insertable = true;
@@ -129,7 +129,7 @@ public class PropertyBinder {
 		this.accessType = accessType;
 	}
 
-	public void setColumns(Ejb3Column[] columns) {
+	public void setColumns(AnnotatedColumn[] columns) {
 		insertable = columns[0].isInsertable();
 		updatable = columns[0].isUpdatable();
 		//consistency is checked later when we know the property name

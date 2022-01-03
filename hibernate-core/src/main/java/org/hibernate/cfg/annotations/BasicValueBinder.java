@@ -58,8 +58,8 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AccessType;
-import org.hibernate.cfg.Ejb3Column;
-import org.hibernate.cfg.Ejb3JoinColumn;
+import org.hibernate.cfg.AnnotatedColumn;
+import org.hibernate.cfg.AnnotatedJoinColumn;
 import org.hibernate.cfg.PkDrivenByDefaultMapsIdSecondPass;
 import org.hibernate.cfg.SetBasicValueTypeSecondPass;
 import org.hibernate.dialect.Dialect;
@@ -162,7 +162,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 	private TimeZoneStorageType timeZoneStorageType;
 
 	private Table table;
-	private Ejb3Column[] columns;
+	private AnnotatedColumn[] columns;
 
 	private BasicValue basicValue;
 
@@ -269,7 +269,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 		this.table = table;
 	}
 
-	public void setColumns(Ejb3Column[] columns) {
+	public void setColumns(AnnotatedColumn[] columns) {
 		this.columns = columns;
 	}
 
@@ -1193,7 +1193,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 	}
 
 	private void validate() {
-		Ejb3Column.checkPropertyConsistency( columns, propertyName );
+		AnnotatedColumn.checkPropertyConsistency( columns, propertyName );
 	}
 
 	public BasicValue make() {
@@ -1250,12 +1250,12 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 		if ( columns[0].isNameDeferred() && !buildingContext.getMetadataCollector().isInSecondPass() && referencedEntityName != null ) {
 			buildingContext.getMetadataCollector().addSecondPass(
 					new PkDrivenByDefaultMapsIdSecondPass(
-							referencedEntityName, (Ejb3JoinColumn[]) columns, basicValue
+							referencedEntityName, (AnnotatedJoinColumn[]) columns, basicValue
 					)
 			);
 		}
 		else {
-			for ( Ejb3Column column : columns ) {
+			for ( AnnotatedColumn column : columns ) {
 				column.linkWithValue( basicValue );
 			}
 		}

@@ -309,7 +309,7 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 		return collection.getOwner().getEntityName();
 	}
 
-	public void addProperty(Property prop, Ejb3Column[] columns, XClass declaringClass) {
+	public void addProperty(Property prop, AnnotatedColumn[] columns, XClass declaringClass) {
 		//Ejb3Column.checkPropertyConsistency( ); //already called earlier
 		throw new AssertionFailure( "addProperty to a join table of a collection: does it make sense?" );
 	}

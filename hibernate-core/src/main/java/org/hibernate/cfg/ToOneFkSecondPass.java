@@ -37,7 +37,7 @@ public class ToOneFkSecondPass extends FkSecondPass {
 
 	public ToOneFkSecondPass(
 			ToOne value,
-			Ejb3JoinColumn[] columns,
+			AnnotatedJoinColumn[] columns,
 			boolean unique,
 			String entityClassName,
 			String path,

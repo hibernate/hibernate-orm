@@ -1,14 +1,6 @@
 html
 {font-family:sans-serif;-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%}
 body{
-    background-image: url(../images/org/hibernate/bkg_gradient_header.png) !important;
-    background-repeat: repeat-x !important;
-    background-size: 300px 300px;
-    color:#333 !important;
-    font-family:"Noto Serif","DejaVu Serif",serif !important;
-    font-weight:400 !important;
-    font-style:normal !important;
-    line-height:1 !important;
     position:relative !important;
     cursor:auto !important;
 }
@@ -92,27 +84,27 @@ h4,h5,h6{
     font-family:'Lucida Grande', Geneva, Verdana, Arial, sans-serif !important
 }
 .admonitionblock{
-    color: white !important;
-    font-family:'Lucida Grande', Geneva, Verdana, Arial, sans-serif !important;
-    cursor:default !important;
-    background-color:gainsboro !important;
-    border-radius: 1em !important;
+    background-color: antiquewhite !important;
+    border: none !important;
+    border-radius: 0.3em !important;
     width: 100% !important;
-    padding: 1em 0em 1em 0em !important;
-    margin: 1em 0em 1em 0em !important;
 }
 td.icon {
-    display:block !important;
+    /* display:block !important; */
 }
 td.content {
     text-align:left !important;
     font-size:1em !important;
     display:block !important;
 }
+.admonitionblock>table td.content {
+    border-left: none !important;
+    padding: 1em;
+}
 .admonitionblock .icon [class^="fa icon-tip"]{
     background-image: url(../images/org/hibernate/docbook/tip.png) !important;
     background-repeat: no-repeat !important;
-    margin: 0.5em !important;
+    margin: 10px !important;
     background-position: center !important;
     width: 50px !important;
     height: 50px !important;
@@ -121,7 +113,7 @@ td.content {
 .admonitionblock td.icon [class^="fa icon-note"]{
     background-image: url(../images/org/hibernate/docbook/note.png)!important;
     background-repeat: no-repeat !important;
-    margin: 0.5em !important;
+    margin: 10px !important;
     background-position: center !important;
     width: 50px;
     height: 50px;
@@ -130,7 +122,7 @@ td.content {
 .admonitionblock td.icon [class^="fa icon-warning"]{
     background-image: url(../images/org/hibernate/docbook/warning.png) !important;
     background-repeat: no-repeat !important;
-    margin: 0.5em !important;
+    margin: 10px !important;
     background-position: center !important;
     width: 50px !important;
     height: 50px !important;
@@ -139,7 +131,7 @@ td.content {
 .admonitionblock td.icon [class^="fa icon-caution"]{
     background-image: url(../images/org/hibernate/docbook/caution.png);
     background-repeat: no-repeat;
-    margin: 1em 2em 1em 1em;
+    margin: 10px !important;
     background-position: center !important;
     width: 50px;
     height: 50px;
@@ -148,7 +140,7 @@ td.content {
 .admonitionblock td.icon [class^="fa icon-important"]{
     background-image: url(../images/org/hibernate/docbook/important.png) !important;
     background-repeat: no-repeat !important;
-    margin: 0.5em !important;
+    margin: 10px !important;
     background-position: center !important;
     width: 50px !important;
     height: 50px !important;
@@ -223,4 +215,20 @@ code{
     display: block;
     margin-left: auto;
     margin-right: auto;
+}
+.exampleblock>.content {
+    padding: 0 !important;
+    box-shadow: none !important;
+    -webkit-box-shadow: none !important;
+    border: none !important;
+}
+code[data-lang='antlrv4']>.pln,.kwd {
+    color: firebrick !important;
+}
+code[data-lang='antlrv4']>.pun {
+    color: black !important;
+}
+pre {
+    background-color: aliceblue !important;
+    border-radius: 0.3em !important;
 }

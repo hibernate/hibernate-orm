@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.Query;
+import jakarta.persistence.Tuple;
 import jakarta.persistence.TypedQuery;
 
 import org.hibernate.CacheMode;
@@ -67,7 +68,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
 			Person.class,
-            Phone.class,
+			Phone.class,
 			Call.class,
 			Account.class,
 			CreditCardPayment.class,
@@ -154,8 +155,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void test_hql_select_simplest_example() {
 
-        doInJPA( this::entityManagerFactory, entityManager -> {
-            Session session = entityManager.unwrap( Session.class );
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			Session session = entityManager.unwrap( Session.class );
 			List<Object> objects = session.createQuery(
 				"from java.lang.Object",
 				Object.class )
@@ -648,6 +649,47 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 		});
 	}
 
+	@Test
+	public void test_projection_example() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			//tag::jpql-projection-example[]
+			List<Object[]> results = entityManager.createQuery(
+				"select p.name, p.nickName " +
+				"from Person p ",
+				Object[].class
+			).getResultList();
+			for (Object[] result : results) {
+				String name = (String) result[0];
+				String nickName = (String) result[1];
+			}
+
+			List<Tuple> tuples = entityManager.createQuery(
+				"select p.name as name, p.nickName as nickName " +
+				"from Person p ",
+				Tuple.class
+			).getResultList();
+			for (Tuple tuple : tuples) {
+				String name = tuple.get("name", String.class);
+				String nickName = tuple.get("nickName", String.class);
+			}
+			//end::jpql-projection-example[]
+		});
+	}
+
+	@Test
+	public void test_union_example() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			//tag::hql-union-example[]
+			List<String> results = entityManager.createQuery(
+				"select p.name from Person p " +
+				"union " +
+				"select p.nickName from Person p where p.nickName is not null",
+				String.class
+			).getResultList();
+			//end::hql-union-example[]
+			assertEquals( 4, results.size() );
+	});
+}
 	@Test
 	public void test_jpql_api_example() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
@@ -1361,7 +1403,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 			//tag::hql-aggregate-functions-simple-filter-example[]
 
 			List<Long> callCount = entityManager.createQuery(
-				"select count(c) filter(where c.duration < 30) " +
+				"select count(c) filter (where c.duration < 30) " +
 				"from Call c ",
 				Long.class )
 			.getResultList();
@@ -1376,7 +1418,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 			//tag::hql-aggregate-functions-filter-example[]
 
 			List<Object[]> callCount = entityManager.createQuery(
-				"select p.number, count(c) filter(where c.duration < 30) " +
+				"select p.number, count(c) filter (where c.duration < 30) " +
 				"from Call c " +
 				"join c.phone p " +
 				"group by p.number",

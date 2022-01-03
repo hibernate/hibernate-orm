@@ -246,6 +246,11 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
+	public String toBooleanValueString(boolean bool) {
+		return String.valueOf( bool );
+	}
+
+	@Override
 	public LimitHandler getLimitHandler() {
 		return LIMIT_HANDLER;
 	}

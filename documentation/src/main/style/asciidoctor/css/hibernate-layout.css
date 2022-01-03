@@ -207,7 +207,7 @@ small{
     line-height:inherit !important
 }
 code{
-    font-family:"Droid Sans Mono","DejaVu Sans Mono",monospace !important;
+    font-family:"Inconsolata","Droid Sans Mono","DejaVu Sans Mono",monospace !important;
     font-weight:400 !important;
     color:rgba(0,0,0,.9) !important
 }
@@ -231,4 +231,5 @@ code[data-lang='antlrv4']>.pun {
 pre {
     background-color: aliceblue !important;
     border-radius: 0.3em !important;
+    font-size:1.05em !important;
 }

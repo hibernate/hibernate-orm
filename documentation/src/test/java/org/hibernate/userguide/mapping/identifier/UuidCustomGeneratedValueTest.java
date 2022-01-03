@@ -36,14 +36,14 @@ public class UuidCustomGeneratedValueTest extends BaseEntityManagerFunctionalTes
 	public void test() {
 		Book book = new Book();
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			book.setTitle( "High-Performance Java Persistence" );
-			book.setAuthor( "Vlad Mihalcea" );
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			book.setTitle("High-Performance Java Persistence");
+			book.setAuthor("Vlad Mihalcea");
 
-			entityManager.persist( book );
-		} );
+			entityManager.persist(book);
+		});
 
-		assertNotNull( book.getId() );
+		assertNotNull(book.getId());
 	}
 
 	//tag::identifiers-generators-custom-uuid-mapping-example[]
@@ -51,7 +51,7 @@ public class UuidCustomGeneratedValueTest extends BaseEntityManagerFunctionalTes
 	public static class Book {
 
 		@Id
-		@GeneratedValue( generator = "custom-uuid" )
+		@GeneratedValue(generator = "custom-uuid")
 		@GenericGenerator(
 			name = "custom-uuid",
 			strategy = "org.hibernate.id.UUIDGenerator",

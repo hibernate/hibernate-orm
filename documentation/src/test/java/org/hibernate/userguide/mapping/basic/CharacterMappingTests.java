@@ -34,7 +34,7 @@ import static org.hamcrest.Matchers.isOneOf;
  *
  * @author Steve Ebersole
  */
-@DomainModel( annotatedClasses = CharacterMappingTests.EntityOfCharacters.class )
+@DomainModel(annotatedClasses = CharacterMappingTests.EntityOfCharacters.class)
 @SessionFactory
 public class CharacterMappingTests {
 
@@ -43,45 +43,45 @@ public class CharacterMappingTests {
 		// first, verify the type selections...
 		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
 		final JdbcTypeRegistry jdbcRegistry = domainModel.getTypeConfiguration().getJdbcTypeDescriptorRegistry();
-		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( EntityOfCharacters.class );
+		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor(EntityOfCharacters.class);
 
 		{
-			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "wrapper" );
-			assertThat( attribute.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( Character.class ) );
+			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("wrapper");
+			assertThat(attribute.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Character.class));
 
 			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
-			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( Character.class ) );
-			assertThat( jdbcMapping.getJdbcTypeDescriptor(), equalTo( jdbcRegistry.getDescriptor( Types.CHAR ) ) );
+			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Character.class));
+			assertThat(jdbcMapping.getJdbcTypeDescriptor(), equalTo(jdbcRegistry.getDescriptor(Types.CHAR)));
 		}
 
 		{
-			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "primitive" );
-			assertThat( attribute.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( Character.class ) );
+			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("primitive");
+			assertThat(attribute.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Character.class));
 
 			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
-			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( Character.class ) );
-			assertThat( jdbcMapping.getJdbcTypeDescriptor(), equalTo( jdbcRegistry.getDescriptor( Types.CHAR ) ) );
+			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Character.class));
+			assertThat(jdbcMapping.getJdbcTypeDescriptor(), equalTo(jdbcRegistry.getDescriptor(Types.CHAR)));
 		}
 
 
 		// and try to use the mapping
 		scope.inTransaction(
-				(session) -> session.persist( new EntityOfCharacters( 1, 'A', 'b' ) )
+				(session) -> session.persist(new EntityOfCharacters(1, 'A', 'b'))
 		);
 		scope.inTransaction(
-				(session) -> session.get( EntityOfCharacters.class, 1 )
+				(session) -> session.get(EntityOfCharacters.class, 1)
 		);
 	}
 
 	@AfterEach
 	public void dropData(SessionFactoryScope scope) {
 		scope.inTransaction(
-				(session) -> session.createQuery( "delete EntityOfCharacters" ).executeUpdate()
+				(session) -> session.createQuery("delete EntityOfCharacters").executeUpdate()
 		);
 	}
 
-	@Entity( name = "EntityOfCharacters" )
-	@Table( name = "EntityOfCharacters" )
+	@Entity(name = "EntityOfCharacters")
+	@Table(name = "EntityOfCharacters")
 	public static class EntityOfCharacters {
 		@Id
 		Integer id;

@@ -41,13 +41,13 @@ public class NaturalIdEqualsHashCodeEntityTest extends BaseEntityManagerFunction
 
 	@Before
 	public void init() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			Library library = new Library();
-			library.setId( 1L );
-			library.setName( "Amazon" );
+			library.setId(1L);
+			library.setName("Amazon");
 
-			entityManager.persist( library );
-		} );
+			entityManager.persist(library);
+		});
 	}
 
 	@Test
@@ -55,18 +55,18 @@ public class NaturalIdEqualsHashCodeEntityTest extends BaseEntityManagerFunction
 
 		//tag::entity-pojo-natural-id-equals-hashcode-persist-example[]
 		Book book1 = new Book();
-		book1.setTitle( "High-Performance Java Persistence" );
-		book1.setIsbn( "978-9730228236" );
+		book1.setTitle("High-Performance Java Persistence");
+		book1.setIsbn("978-9730228236");
 
-		Library library = doInJPA( this::entityManagerFactory, entityManager -> {
-			Library _library = entityManager.find( Library.class, 1L );
+		Library library = doInJPA(this::entityManagerFactory, entityManager -> {
+			Library _library = entityManager.find(Library.class, 1L);
 
-			_library.getBooks().add( book1 );
+			_library.getBooks().add(book1);
 
 			return _library;
-		} );
+		});
 
-		assertTrue( library.getBooks().contains( book1 ) );
+		assertTrue(library.getBooks().contains(book1));
 		//end::entity-pojo-natural-id-equals-hashcode-persist-example[]
 	}
 
@@ -161,19 +161,19 @@ public class NaturalIdEqualsHashCodeEntityTest extends BaseEntityManagerFunction
 
 		@Override
 		public boolean equals(Object o) {
-			if ( this == o ) {
+			if (this == o) {
 				return true;
 			}
-			if ( o == null || getClass() != o.getClass() ) {
+			if (o == null || getClass() != o.getClass()) {
 				return false;
 			}
 			Book book = (Book) o;
-			return Objects.equals( isbn, book.isbn );
+			return Objects.equals(isbn, book.isbn);
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash( isbn );
+			return Objects.hash(isbn);
 		}
 	}
 	//end::entity-pojo-natural-id-equals-hashcode-example[]

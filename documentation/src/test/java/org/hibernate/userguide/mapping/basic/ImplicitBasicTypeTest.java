@@ -29,11 +29,11 @@ public class ImplicitBasicTypeTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	public void test() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Product product = new Product( );
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			Product product = new Product();
 			product.id = 1;
-			entityManager.persist( product );
-		} );
+			entityManager.persist(product);
+		});
 	}
 
 	//tag::basic-annotation-implicit-example[]

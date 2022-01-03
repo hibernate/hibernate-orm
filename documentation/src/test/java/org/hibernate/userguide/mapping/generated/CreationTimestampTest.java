@@ -33,12 +33,12 @@ public class CreationTimestampTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	public void test() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::mapping-generated-CreationTimestamp-persist-example[]
-			Event dateEvent = new Event( );
-			entityManager.persist( dateEvent );
+			Event dateEvent = new Event();
+			entityManager.persist(dateEvent);
 			//end::mapping-generated-CreationTimestamp-persist-example[]
-		} );
+		});
 	}
 
 	//tag::mapping-generated-provided-creation-ex1[]

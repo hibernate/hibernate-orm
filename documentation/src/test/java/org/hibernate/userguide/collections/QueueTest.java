@@ -41,25 +41,25 @@ public class QueueTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	public void test() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Person person = new Person( 1L );
-			person.getPhones().add( new Phone( 1L, "landline", "028-234-9876" ) );
-			person.getPhones().add( new Phone( 2L, "mobile", "072-122-9876" ) );
-			entityManager.persist( person );
-		} );
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			Person person = new Person(1L);
+			person.getPhones().add(new Phone(1L, "landline", "028-234-9876"));
+			person.getPhones().add(new Phone(2L, "mobile", "072-122-9876"));
+			entityManager.persist(person);
+		});
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::collections-custom-collection-example[]
-			Person person = entityManager.find( Person.class, 1L );
+			Person person = entityManager.find(Person.class, 1L);
 			Queue<Phone> phones = person.getPhones();
 			Phone head = phones.peek();
 			assertSame(head, phones.poll());
-			assertEquals( 1, phones.size() );
+			assertEquals(1, phones.size());
 			//end::collections-custom-collection-example[]
-		} );
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Person person = entityManager.find( Person.class, 1L );
+		});
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			Person person = entityManager.find(Person.class, 1L);
 			person.getPhones().clear();
-		} );
+		});
 	}
 
 	//tag::collections-custom-collection-mapping-example[]
@@ -70,7 +70,7 @@ public class QueueTest extends BaseEntityManagerFunctionalTestCase {
 		private Long id;
 
 		@OneToMany(cascade = CascadeType.ALL)
-		@CollectionType( type = "org.hibernate.userguide.collections.type.QueueType")
+		@CollectionType(type = "org.hibernate.userguide.collections.type.QueueType")
 		private Collection<Phone> phones = new LinkedList<>();
 
 		//Constructors are omitted for brevity
@@ -130,24 +130,24 @@ public class QueueTest extends BaseEntityManagerFunctionalTestCase {
 	//tag::collections-custom-collection-mapping-example[]
 		@Override
 		public int compareTo(Phone o) {
-			return number.compareTo( o.getNumber() );
+			return number.compareTo(o.getNumber());
 		}
 
 		@Override
 		public boolean equals(Object o) {
-			if ( this == o ) {
+			if (this == o) {
 				return true;
 			}
-			if ( o == null || getClass() != o.getClass() ) {
+			if (o == null || getClass() != o.getClass()) {
 				return false;
 			}
 			Phone phone = (Phone) o;
-			return Objects.equals( number, phone.number );
+			return Objects.equals(number, phone.number);
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash( number );
+			return Objects.hash(number);
 		}
 	}
 	//end::collections-custom-collection-mapping-example[]

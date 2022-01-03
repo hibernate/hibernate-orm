@@ -29,7 +29,7 @@ import static org.hamcrest.Matchers.instanceOf;
  *
  * @author Steve Ebersole
  */
-@DomainModel( annotatedClasses = BitSetJavaTypeTests.Product.class )
+@DomainModel(annotatedClasses = BitSetJavaTypeTests.Product.class)
 @SessionFactory
 public class BitSetJavaTypeTests {
 
@@ -38,10 +38,10 @@ public class BitSetJavaTypeTests {
 		final EntityPersister productType = scope.getSessionFactory()
 				.getRuntimeMetamodels()
 				.getMappingMetamodel()
-				.findEntityDescriptor( Product.class );
-		final SingularAttributeMapping bitSetAttribute = (SingularAttributeMapping) productType.findAttributeMapping( "bitSet" );
+				.findEntityDescriptor(Product.class);
+		final SingularAttributeMapping bitSetAttribute = (SingularAttributeMapping) productType.findAttributeMapping("bitSet");
 		// make sure BitSetTypeDescriptor was selected
-		assertThat( bitSetAttribute.getJavaTypeDescriptor(), instanceOf( BitSetJavaType.class ) );
+		assertThat(bitSetAttribute.getJavaTypeDescriptor(), instanceOf(BitSetJavaType.class));
 	}
 
 
@@ -52,7 +52,7 @@ public class BitSetJavaTypeTests {
 		@Id
 		private Integer id;
 
-		@JavaType( BitSetJavaType.class )
+		@JavaType(BitSetJavaType.class)
 		private BitSet bitSet;
 
 		//Constructors, getters, and setters are omitted for brevity

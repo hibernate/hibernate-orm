@@ -30,7 +30,7 @@ import static org.hamcrest.Matchers.equalTo;
 /**
  * @author Steve Ebersole
  */
-@DomainModel( annotatedClasses = LocaleMappingTests.EntityWithLocale.class )
+@DomainModel(annotatedClasses = LocaleMappingTests.EntityWithLocale.class)
 @SessionFactory
 public class LocaleMappingTests {
 
@@ -38,26 +38,26 @@ public class LocaleMappingTests {
 	public void verifyMappings(SessionFactoryScope scope) {
 		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
 		final JdbcTypeRegistry jdbcRegistry = domainModel.getTypeConfiguration().getJdbcTypeDescriptorRegistry();
-		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( EntityWithLocale.class );
+		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor(EntityWithLocale.class);
 
-		final BasicAttributeMapping duration = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "locale" );
+		final BasicAttributeMapping duration = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("locale");
 		final JdbcMapping jdbcMapping = duration.getJdbcMapping();
-		assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( Locale.class ) );
-		assertThat( jdbcMapping.getJdbcTypeDescriptor(), equalTo( jdbcRegistry.getDescriptor( Types.VARCHAR ) ) );
+		assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Locale.class));
+		assertThat(jdbcMapping.getJdbcTypeDescriptor(), equalTo(jdbcRegistry.getDescriptor(Types.VARCHAR)));
 
 		scope.inTransaction(
 				(session) -> {
-					session.persist( new EntityWithLocale( 1, Locale.US ) );
+					session.persist(new EntityWithLocale(1, Locale.US));
 				}
 		);
 
 		scope.inTransaction(
-				(session) -> session.find( EntityWithLocale.class, 1 )
+				(session) -> session.find(EntityWithLocale.class, 1)
 		);
 	}
 
-	@Entity( name = "EntityWithLocale" )
-	@Table( name = "EntityWithLocale" )
+	@Entity(name = "EntityWithLocale")
+	@Table(name = "EntityWithLocale")
 	public static class EntityWithLocale {
 		@Id
 		private Integer id;

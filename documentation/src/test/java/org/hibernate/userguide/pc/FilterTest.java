@@ -49,145 +49,145 @@ public class FilterTest extends BaseEntityManagerFunctionalTestCase {
 
     @Test
     public void testLifecycle() {
-        doInJPA( this::entityManagerFactory, entityManager -> {
+        doInJPA(this::entityManagerFactory, entityManager -> {
 
             //tag::pc-filter-persistence-example[]
             Client client = new Client()
-            .setId( 1L )
-            .setName( "John Doe" )
-            .setType( AccountType.DEBIT );
+            .setId(1L)
+            .setName("John Doe")
+            .setType(AccountType.DEBIT);
 
             client.addAccount(
                 new Account()
-                .setId( 1L )
-                .setType( AccountType.CREDIT )
-                .setAmount( 5000d )
-                .setRate( 1.25 / 100 )
-                .setActive( true )
-            );
+                .setId(1L)
+                .setType(AccountType.CREDIT)
+                .setAmount(5000d)
+                .setRate(1.25 / 100)
+                .setActive(true)
+           );
 
             client.addAccount(
                 new Account()
-                .setId( 2L )
-                .setType( AccountType.DEBIT )
-                .setAmount( 0d )
-                .setRate( 1.05 / 100 )
-                .setActive( false )
-            );
+                .setId(2L)
+                .setType(AccountType.DEBIT)
+                .setAmount(0d)
+                .setRate(1.05 / 100)
+                .setActive(false)
+           );
 
             client.addAccount(
                 new Account()
-                .setType( AccountType.DEBIT )
-                .setId( 3L )
-                .setAmount( 250d )
-                .setRate( 1.05 / 100 )
-                .setActive( true )
-            );
+                .setType(AccountType.DEBIT)
+                .setId(3L)
+                .setAmount(250d)
+                .setRate(1.05 / 100)
+                .setActive(true)
+           );
 
-            entityManager.persist( client );
+            entityManager.persist(client);
             //end::pc-filter-persistence-example[]
-        } );
+        });
 
-        doInJPA( this::entityManagerFactory, entityManager -> {
-            log.infof( "Activate filter [%s]", "activeAccount");
-
-            entityManager
-                    .unwrap( Session.class )
-                    .enableFilter( "activeAccount" )
-                    .setParameter( "active", true);
-
-            Account account1 = entityManager.find( Account.class, 1L );
-            Account account2 = entityManager.find( Account.class, 2L );
-
-            assertNotNull( account1 );
-            assertNull( account2 );
-        } );
-
-        doInJPA( this::entityManagerFactory, entityManager -> {
-            log.infof( "Activate filter [%s]", "activeAccount");
+        doInJPA(this::entityManagerFactory, entityManager -> {
+            log.infof("Activate filter [%s]", "activeAccount");
 
             entityManager
-                    .unwrap( Session.class )
-                    .enableFilter( "activeAccount" )
-                    .setParameter( "active", true);
+                    .unwrap(Session.class)
+                    .enableFilter("activeAccount")
+                    .setParameter("active", true);
+
+            Account account1 = entityManager.find(Account.class, 1L);
+            Account account2 = entityManager.find(Account.class, 2L);
+
+            assertNotNull(account1);
+            assertNull(account2);
+        });
+
+        doInJPA(this::entityManagerFactory, entityManager -> {
+            log.infof("Activate filter [%s]", "activeAccount");
+
+            entityManager
+                    .unwrap(Session.class)
+                    .enableFilter("activeAccount")
+                    .setParameter("active", true);
 
             Account account1 = entityManager.createQuery(
                     "select a from Account a where a.id = :id", Account.class)
-                    .setParameter( "id", 1L )
+                    .setParameter("id", 1L)
                     .getSingleResult();
-            assertNotNull( account1 );
+            assertNotNull(account1);
             try {
                 Account account2 = entityManager.createQuery(
                         "select a from Account a where a.id = :id", Account.class)
-                        .setParameter( "id", 2L )
+                        .setParameter("id", 2L)
                         .getSingleResult();
             }
             catch (NoResultException expected) {
             }
-        } );
+        });
 
-        doInJPA( this::entityManagerFactory, entityManager -> {
-            log.infof( "Activate filter [%s]", "activeAccount");
+        doInJPA(this::entityManagerFactory, entityManager -> {
+            log.infof("Activate filter [%s]", "activeAccount");
             //tag::pc-filter-entity-example[]
             entityManager
-                .unwrap( Session.class )
-                .enableFilter( "activeAccount" )
-                .setParameter( "active", true);
+                .unwrap(Session.class)
+                .enableFilter("activeAccount")
+                .setParameter("active", true);
 
-            Account account = entityManager.find( Account.class, 2L );
+            Account account = entityManager.find(Account.class, 2L);
 
-            assertNull( account );
+            assertNull(account);
             //end::pc-filter-entity-example[]
-        } );
+        });
 
-        doInJPA( this::entityManagerFactory, entityManager -> {
+        doInJPA(this::entityManagerFactory, entityManager -> {
             //tag::pc-no-filter-entity-query-example[]
             List<Account> accounts = entityManager.createQuery(
                 "select a from Account a", Account.class)
             .getResultList();
 
-            assertEquals( 3, accounts.size());
+            assertEquals(3, accounts.size());
             //end::pc-no-filter-entity-query-example[]
-        } );
+        });
 
-        doInJPA( this::entityManagerFactory, entityManager -> {
-            log.infof( "Activate filter [%s]", "activeAccount");
+        doInJPA(this::entityManagerFactory, entityManager -> {
+            log.infof("Activate filter [%s]", "activeAccount");
             //tag::pc-filter-entity-query-example[]
             entityManager
-                .unwrap( Session.class )
-                .enableFilter( "activeAccount" )
-                .setParameter( "active", true);
+                .unwrap(Session.class)
+                .enableFilter("activeAccount")
+                .setParameter("active", true);
 
             List<Account> accounts = entityManager.createQuery(
                 "select a from Account a", Account.class)
             .getResultList();
 
-            assertEquals( 2, accounts.size());
+            assertEquals(2, accounts.size());
             //end::pc-filter-entity-query-example[]
-        } );
+        });
 
-        doInJPA( this::entityManagerFactory, entityManager -> {
+        doInJPA(this::entityManagerFactory, entityManager -> {
             //tag::pc-no-filter-collection-query-example[]
-            Client client = entityManager.find( Client.class, 1L );
+            Client client = entityManager.find(Client.class, 1L);
 
-            assertEquals( 3, client.getAccounts().size() );
+            assertEquals(3, client.getAccounts().size());
             //end::pc-no-filter-collection-query-example[]
-        } );
+        });
 
-        doInJPA( this::entityManagerFactory, entityManager -> {
-            log.infof( "Activate filter [%s]", "activeAccount");
+        doInJPA(this::entityManagerFactory, entityManager -> {
+            log.infof("Activate filter [%s]", "activeAccount");
 
             //tag::pc-filter-collection-query-example[]
             entityManager
-                .unwrap( Session.class )
-                .enableFilter( "activeAccount" )
-                .setParameter( "active", true);
+                .unwrap(Session.class)
+                .enableFilter("activeAccount")
+                .setParameter("active", true);
 
-            Client client = entityManager.find( Client.class, 1L );
+            Client client = entityManager.find(Client.class, 1L);
 
-            assertEquals( 2, client.getAccounts().size() );
+            assertEquals(2, client.getAccounts().size());
             //end::pc-filter-collection-query-example[]
-        } );
+        });
     }
 
     public enum AccountType {
@@ -210,12 +210,12 @@ public class FilterTest extends BaseEntityManagerFunctionalTestCase {
         @OneToMany(
             mappedBy = "client",
             cascade = CascadeType.ALL
-        )
+       )
         @Filter(
             name="activeAccount",
             condition="active_status = :active"
-        )
-        private List<Account> accounts = new ArrayList<>( );
+       )
+        private List<Account> accounts = new ArrayList<>();
 
         //Getters and setters omitted for brevity
     //end::pc-filter-Client-example[]
@@ -252,8 +252,8 @@ public class FilterTest extends BaseEntityManagerFunctionalTestCase {
     //tag::pc-filter-Client-example[]
 
         public void addAccount(Account account) {
-            account.setClient( this );
-            this.accounts.add( account );
+            account.setClient(this);
+            this.accounts.add(account);
         }
     }
     //end::pc-filter-Client-example[]
@@ -266,12 +266,12 @@ public class FilterTest extends BaseEntityManagerFunctionalTestCase {
         parameters = @ParamDef(
             name="active",
             type="boolean"
-        )
-    )
+       )
+   )
     @Filter(
         name="activeAccount",
         condition="active_status = :active"
-    )
+   )
     public static class Account {
 
         @Id

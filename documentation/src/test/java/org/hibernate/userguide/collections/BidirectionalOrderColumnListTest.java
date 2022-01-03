@@ -39,17 +39,17 @@ public class BidirectionalOrderColumnListTest extends BaseEntityManagerFunctiona
 
 	@Test
 	public void testLifecycle() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Person person = new Person( 1L );
-			entityManager.persist( person );
-			person.addPhone( new Phone( 1L, "landline", "028-234-9876" ) );
-			person.addPhone( new Phone( 2L, "mobile", "072-122-9876" ) );
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			Person person = new Person(1L);
+			entityManager.persist(person);
+			person.addPhone(new Phone(1L, "landline", "028-234-9876"));
+			person.addPhone(new Phone(2L, "mobile", "072-122-9876"));
 			entityManager.flush();
-			person.removePhone( person.getPhones().get( 0 ) );
-		} );
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			entityManager.find( Person.class, 1L ).getPhones().size();
-		} );
+			person.removePhone(person.getPhones().get(0));
+		});
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			entityManager.find(Person.class, 1L).getPhones().size();
+		});
 	}
 
 	@Entity(name = "Person")
@@ -76,13 +76,13 @@ public class BidirectionalOrderColumnListTest extends BaseEntityManagerFunctiona
 		}
 
 		public void addPhone(Phone phone) {
-			phones.add( phone );
-			phone.setPerson( this );
+			phones.add(phone);
+			phone.setPerson(this);
 		}
 
 		public void removePhone(Phone phone) {
-			phones.remove( phone );
-			phone.setPerson( null );
+			phones.remove(phone);
+			phone.setPerson(null);
 		}
 	}
 
@@ -132,19 +132,19 @@ public class BidirectionalOrderColumnListTest extends BaseEntityManagerFunctiona
 
 		@Override
 		public boolean equals(Object o) {
-			if ( this == o ) {
+			if (this == o) {
 				return true;
 			}
-			if ( o == null || getClass() != o.getClass() ) {
+			if (o == null || getClass() != o.getClass()) {
 				return false;
 			}
 			Phone phone = (Phone) o;
-			return Objects.equals( number, phone.number );
+			return Objects.equals(number, phone.number);
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash( number );
+			return Objects.hash(number);
 		}
 	}
 }

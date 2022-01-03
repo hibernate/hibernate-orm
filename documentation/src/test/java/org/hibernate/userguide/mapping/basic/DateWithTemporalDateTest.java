@@ -34,12 +34,12 @@ public class DateWithTemporalDateTest extends BaseEntityManagerFunctionalTestCas
 
 	@Test
 	public void testLifecycle() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::basic-datetime-temporal-date-persist-example[]
-			DateEvent dateEvent = new DateEvent( new Date() );
-			entityManager.persist( dateEvent );
+			DateEvent dateEvent = new DateEvent(new Date());
+			entityManager.persist(dateEvent);
 			//end::basic-datetime-temporal-date-persist-example[]
-		} );
+		});
 	}
 
 	//tag::basic-datetime-temporal-date-example[]

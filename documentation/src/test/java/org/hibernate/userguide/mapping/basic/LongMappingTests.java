@@ -31,7 +31,7 @@ import static org.hamcrest.Matchers.is;
  *
  * @author Steve Ebersole
  */
-@DomainModel( annotatedClasses = LongMappingTests.EntityOfLongs.class )
+@DomainModel(annotatedClasses = LongMappingTests.EntityOfLongs.class)
 @SessionFactory
 public class LongMappingTests {
 
@@ -39,45 +39,45 @@ public class LongMappingTests {
 	public void testMappings(SessionFactoryScope scope) {
 		// first, verify the type selections...
 		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
-		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( EntityOfLongs.class );
+		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor(EntityOfLongs.class);
 
 		{
-			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "wrapper" );
-			assertThat( attribute.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( Long.class ) );
+			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("wrapper");
+			assertThat(attribute.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Long.class));
 
 			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
-			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( Long.class ) );
-			assertThat( jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), is( Types.BIGINT ) );
+			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Long.class));
+			assertThat(jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), is(Types.BIGINT));
 		}
 
 		{
-			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "primitive" );
-			assertThat( attribute.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( Long.class ) );
+			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("primitive");
+			assertThat(attribute.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Long.class));
 
 			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
-			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( Long.class ) );
-			assertThat( jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), is( Types.BIGINT ) );
+			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Long.class));
+			assertThat(jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), is(Types.BIGINT));
 		}
 
 
 		// and try to use the mapping
 		scope.inTransaction(
-				(session) -> session.persist( new EntityOfLongs( 1, 3L, 5L ) )
+				(session) -> session.persist(new EntityOfLongs(1, 3L, 5L))
 		);
 		scope.inTransaction(
-				(session) -> session.get( EntityOfLongs.class, 1 )
+				(session) -> session.get(EntityOfLongs.class, 1)
 		);
 	}
 
 	@AfterEach
 	public void dropData(SessionFactoryScope scope) {
 		scope.inTransaction(
-				(session) -> session.createQuery( "delete EntityOfLongs" ).executeUpdate()
+				(session) -> session.createQuery("delete EntityOfLongs").executeUpdate()
 		);
 	}
 
-	@Entity( name = "EntityOfLongs" )
-	@Table( name = "EntityOfLongs" )
+	@Entity(name = "EntityOfLongs")
+	@Table(name = "EntityOfLongs")
 	public static class EntityOfLongs {
 		@Id
 		Integer id;

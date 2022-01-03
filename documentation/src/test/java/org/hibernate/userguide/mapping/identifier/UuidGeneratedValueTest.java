@@ -35,14 +35,14 @@ public class UuidGeneratedValueTest extends BaseEntityManagerFunctionalTestCase 
 	public void test() {
 		Book book = new Book();
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			book.setTitle( "High-Performance Java Persistence" );
-			book.setAuthor( "Vlad Mihalcea" );
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			book.setTitle("High-Performance Java Persistence");
+			book.setAuthor("Vlad Mihalcea");
 
-			entityManager.persist( book );
-		} );
+			entityManager.persist(book);
+		});
 
-		assertNotNull( book.getId() );
+		assertNotNull(book.getId());
 	}
 
 	//tag::identifiers-generators-uuid-mapping-example[]

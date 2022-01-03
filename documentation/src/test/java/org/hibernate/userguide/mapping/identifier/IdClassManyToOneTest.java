@@ -39,27 +39,27 @@ public class IdClassManyToOneTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Before
 	public void init() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			Subsystem subsystem = new Subsystem();
-			subsystem.setId( "Hibernate Forum" );
-			subsystem.setDescription( "Hibernate projects forum" );
-			entityManager.persist( subsystem );
+			subsystem.setId("Hibernate Forum");
+			subsystem.setDescription("Hibernate projects forum");
+			entityManager.persist(subsystem);
 
 			SystemUser systemUser = new SystemUser();
-			systemUser.setId( new PK(
+			systemUser.setId(new PK(
 				subsystem,
 				"vlad"
-			) );
-			systemUser.setName( "Vlad Mihalcea" );
+			));
+			systemUser.setName("Vlad Mihalcea");
 
-			entityManager.persist( systemUser );
-		} );
+			entityManager.persist(systemUser);
+		});
 	}
 
 
 	@Test
 	public void test() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			Subsystem subsystem = entityManager.find(
 				Subsystem.class,
 				"Hibernate Forum"
@@ -72,14 +72,14 @@ public class IdClassManyToOneTest extends BaseEntityManagerFunctionalTestCase {
 				)
 			);
 
-			assertEquals( "Vlad Mihalcea", systemUser.getName() );
-		} );
+			assertEquals("Vlad Mihalcea", systemUser.getName());
+		});
 
 	}
 
 	//tag::identifiers-basic-idclass-manytoone-mapping-example[]
 	@Entity(name = "SystemUser")
-	@IdClass( PK.class )
+	@IdClass(PK.class)
 	public static class SystemUser {
 
 		@Id
@@ -180,20 +180,20 @@ public class IdClassManyToOneTest extends BaseEntityManagerFunctionalTestCase {
 
 		@Override
 		public boolean equals(Object o) {
-			if ( this == o ) {
+			if (this == o) {
 				return true;
 			}
-			if ( o == null || getClass() != o.getClass() ) {
+			if (o == null || getClass() != o.getClass()) {
 				return false;
 			}
 			PK pk = (PK) o;
-			return Objects.equals( subsystem, pk.subsystem ) &&
-					Objects.equals( username, pk.username );
+			return Objects.equals(subsystem, pk.subsystem) &&
+					Objects.equals(username, pk.username);
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash( subsystem, username );
+			return Objects.hash(subsystem, username);
 		}
 	//tag::identifiers-basic-idclass-manytoone-mapping-example[]
 	}

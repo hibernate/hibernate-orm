@@ -38,7 +38,7 @@ public class EmbeddableImplicitOverrideTest
 
 	@Override
 	protected void initialize(MetadataBuilder metadataBuilder) {
-		super.initialize( metadataBuilder );
+		super.initialize(metadataBuilder);
 		//tag::embeddable-multiple-ImplicitNamingStrategyComponentPathImpl[]
 		metadataBuilder.applyImplicitNamingStrategy(
 			ImplicitNamingStrategyComponentPathImpl.INSTANCE
@@ -48,28 +48,28 @@ public class EmbeddableImplicitOverrideTest
 
 	@Test
 	public void testLifecycle() {
-		doInHibernate( this::sessionFactory, session -> {
+		doInHibernate(this::sessionFactory, session -> {
 			Country canada = new Country();
-			canada.setName( "Canada" );
-			session.persist( canada );
+			canada.setName("Canada");
+			session.persist(canada);
 
 			Country usa = new Country();
-			usa.setName( "USA" );
-			session.persist( usa );
-		} );
+			usa.setName("USA");
+			session.persist(usa);
+		});
 
-		doInHibernate( this::sessionFactory, session -> {
-			Country canada = session.byNaturalId( Country.class ).using( "name", "Canada" ).load();
-			Country usa = session.byNaturalId( Country.class ).using( "name", "USA" ).load();
+		doInHibernate(this::sessionFactory, session -> {
+			Country canada = session.byNaturalId(Country.class).using("name", "Canada").load();
+			Country usa = session.byNaturalId(Country.class).using("name", "USA").load();
 
 			Book book = new Book();
-			book.setTitle( "High-Performance Java Persistence" );
-			book.setAuthor( "Vlad Mihalcea" );
-			book.setEbookPublisher( new Publisher( "Leanpub", canada ) );
-			book.setPaperBackPublisher( new Publisher( "Amazon", usa ) );
+			book.setTitle("High-Performance Java Persistence");
+			book.setAuthor("Vlad Mihalcea");
+			book.setEbookPublisher(new Publisher("Leanpub", canada));
+			book.setPaperBackPublisher(new Publisher("Amazon", usa));
 
-			session.persist( book );
-		} );
+			session.persist(book);
+		});
 	}
 
 	//tag::embeddable-multiple-namingstrategy-entity-mapping[]

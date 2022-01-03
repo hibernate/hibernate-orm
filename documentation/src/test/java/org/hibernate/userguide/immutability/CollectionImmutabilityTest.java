@@ -37,43 +37,43 @@ public class CollectionImmutabilityTest extends BaseEntityManagerFunctionalTestC
 	@Test
 	public void test() {
 		//tag::collection-immutability-persist-example[]
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			Batch batch = new Batch();
-			batch.setId( 1L );
-			batch.setName( "Change request" );
+			batch.setId(1L);
+			batch.setName("Change request");
 
 			Event event1 = new Event();
-			event1.setId( 1L );
-			event1.setCreatedOn( new Date( ) );
-			event1.setMessage( "Update Hibernate User Guide" );
+			event1.setId(1L);
+			event1.setCreatedOn(new Date());
+			event1.setMessage("Update Hibernate User Guide");
 
 			Event event2 = new Event();
-			event2.setId( 2L );
-			event2.setCreatedOn( new Date( ) );
-			event2.setMessage( "Update Hibernate Getting Started Guide" );
+			event2.setId(2L);
+			event2.setCreatedOn(new Date());
+			event2.setMessage("Update Hibernate Getting Started Guide");
 
-			batch.getEvents().add( event1 );
-			batch.getEvents().add( event2 );
+			batch.getEvents().add(event1);
+			batch.getEvents().add(event2);
 
-			entityManager.persist( batch );
-		} );
+			entityManager.persist(batch);
+		});
 		//end::collection-immutability-persist-example[]
 		//tag::collection-entity-update-example[]
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Batch batch = entityManager.find( Batch.class, 1L );
-			log.info( "Change batch name" );
-			batch.setName( "Proposed change request" );
-		} );
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			Batch batch = entityManager.find(Batch.class, 1L);
+			log.info("Change batch name");
+			batch.setName("Proposed change request");
+		});
 		//end::collection-entity-update-example[]
 		//tag::collection-immutability-update-example[]
 		try {
-			doInJPA( this::entityManagerFactory, entityManager -> {
-				Batch batch = entityManager.find( Batch.class, 1L );
+			doInJPA(this::entityManagerFactory, entityManager -> {
+				Batch batch = entityManager.find(Batch.class, 1L);
 				batch.getEvents().clear();
-			} );
+			});
 		}
-		catch ( Exception e ) {
-			log.error( "Immutable collections cannot be modified" );
+		catch (Exception e) {
+			log.error("Immutable collections cannot be modified");
 		}
 		//end::collection-immutability-update-example[]
 	}
@@ -89,7 +89,7 @@ public class CollectionImmutabilityTest extends BaseEntityManagerFunctionalTestC
 
 		@OneToMany(cascade = CascadeType.ALL)
 		@Immutable
-		private List<Event> events = new ArrayList<>( );
+		private List<Event> events = new ArrayList<>();
 
 		//Getters and setters are omitted for brevity
 

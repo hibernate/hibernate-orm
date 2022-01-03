@@ -32,7 +32,7 @@ import static org.hamcrest.Matchers.isOneOf;
  *
  * @author Steve Ebersole
  */
-@DomainModel( annotatedClasses = DoubleMappingTests.EntityOfDoubles.class )
+@DomainModel(annotatedClasses = DoubleMappingTests.EntityOfDoubles.class)
 @SessionFactory
 public class DoubleMappingTests {
 
@@ -40,51 +40,51 @@ public class DoubleMappingTests {
 	public void testMappings(SessionFactoryScope scope) {
 		// first, verify the type selections...
 		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
-		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( EntityOfDoubles.class );
+		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor(EntityOfDoubles.class);
 
 		{
-			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "wrapper" );
-			assertThat( attribute.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( Double.class ) );
+			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("wrapper");
+			assertThat(attribute.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Double.class));
 
 			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
-			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( Double.class ) );
+			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Double.class));
 			assertThat(
 					jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(),
-					isOneOf( Types.DOUBLE, Types.FLOAT, Types.REAL, Types.NUMERIC )
+					isOneOf(Types.DOUBLE, Types.FLOAT, Types.REAL, Types.NUMERIC)
 			);
 		}
 
 		{
-			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "primitive" );
-			assertThat( attribute.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( Double.class ) );
+			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("primitive");
+			assertThat(attribute.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Double.class));
 
 			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
-			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( Double.class ) );
+			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Double.class));
 			assertThat(
 					jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(),
-					isOneOf( Types.DOUBLE, Types.FLOAT, Types.REAL, Types.NUMERIC )
+					isOneOf(Types.DOUBLE, Types.FLOAT, Types.REAL, Types.NUMERIC)
 			);
 		}
 
 
 		// and try to use the mapping
 		scope.inTransaction(
-				(session) -> session.persist( new EntityOfDoubles( 1, 3.0, 5.0 ) )
+				(session) -> session.persist(new EntityOfDoubles(1, 3.0, 5.0))
 		);
 		scope.inTransaction(
-				(session) -> session.get( EntityOfDoubles.class, 1 )
+				(session) -> session.get(EntityOfDoubles.class, 1)
 		);
 	}
 
 	@AfterEach
 	public void dropData(SessionFactoryScope scope) {
 		scope.inTransaction(
-				(session) -> session.createQuery( "delete EntityOfDoubles" ).executeUpdate()
+				(session) -> session.createQuery("delete EntityOfDoubles").executeUpdate()
 		);
 	}
 
-	@Entity( name = "EntityOfDoubles" )
-	@Table( name = "EntityOfDoubles" )
+	@Entity(name = "EntityOfDoubles")
+	@Table(name = "EntityOfDoubles")
 	public static class EntityOfDoubles {
 		@Id
 		Integer id;

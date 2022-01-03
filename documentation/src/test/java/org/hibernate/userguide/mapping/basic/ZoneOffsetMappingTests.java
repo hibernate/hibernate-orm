@@ -30,7 +30,7 @@ import static org.hamcrest.Matchers.equalTo;
 /**
  * @author Steve Ebersole
  */
-@DomainModel( annotatedClasses = ZoneOffsetMappingTests.EntityWithZoneOffset.class )
+@DomainModel(annotatedClasses = ZoneOffsetMappingTests.EntityWithZoneOffset.class)
 @SessionFactory
 public class ZoneOffsetMappingTests {
 
@@ -38,26 +38,26 @@ public class ZoneOffsetMappingTests {
 	public void verifyMappings(SessionFactoryScope scope) {
 		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
 		final JdbcTypeRegistry jdbcRegistry = domainModel.getTypeConfiguration().getJdbcTypeDescriptorRegistry();
-		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( EntityWithZoneOffset.class );
+		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor(EntityWithZoneOffset.class);
 
-		final BasicAttributeMapping duration = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "zoneOffset" );
+		final BasicAttributeMapping duration = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("zoneOffset");
 		final JdbcMapping jdbcMapping = duration.getJdbcMapping();
-		assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( ZoneOffset.class ) );
-		assertThat( jdbcMapping.getJdbcTypeDescriptor(), equalTo( jdbcRegistry.getDescriptor( Types.VARCHAR ) ) );
+		assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(ZoneOffset.class));
+		assertThat(jdbcMapping.getJdbcTypeDescriptor(), equalTo(jdbcRegistry.getDescriptor(Types.VARCHAR)));
 
 		scope.inTransaction(
 				(session) -> {
-					session.persist( new EntityWithZoneOffset( 1, ZoneOffset.from( ZoneOffset.MIN ) ) );
+					session.persist(new EntityWithZoneOffset(1, ZoneOffset.from(ZoneOffset.MIN)));
 				}
 		);
 
 		scope.inTransaction(
-				(session) -> session.find( EntityWithZoneOffset.class, 1 )
+				(session) -> session.find(EntityWithZoneOffset.class, 1)
 		);
 	}
 
-	@Entity( name = "EntityWithZoneOffset" )
-	@Table( name = "EntityWithZoneOffset" )
+	@Entity(name = "EntityWithZoneOffset")
+	@Table(name = "EntityWithZoneOffset")
 	public static class EntityWithZoneOffset {
 		@Id
 		private Integer id;

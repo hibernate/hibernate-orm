@@ -61,14 +61,14 @@ public class EntityTypeChangeAuditTrackingRevisionListenerTest extends BaseEntit
 	@Test
 	public void testLifecycle() {
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			Customer customer = new Customer();
-			customer.setId( 1L );
-			customer.setFirstName( "John" );
-			customer.setLastName( "Doe" );
+			customer.setId(1L);
+			customer.setFirstName("John");
+			customer.setLastName("Doe");
 
-			entityManager.persist( customer );
-		} );
+			entityManager.persist(customer);
+		});
 
 		EntityManagerFactory entityManagerFactory = null;
 		try {
@@ -86,24 +86,24 @@ public class EntityTypeChangeAuditTrackingRevisionListenerTest extends BaseEntit
 					"update"
 			);
 			entityManagerFactory =  Bootstrap.getEntityManagerFactoryBuilder(
-					new TestingPersistenceUnitDescriptorImpl( getClass().getSimpleName() ),
+					new TestingPersistenceUnitDescriptorImpl(getClass().getSimpleName()),
 					settings
-			).build().unwrap( SessionFactoryImplementor.class );
+			).build().unwrap(SessionFactoryImplementor.class);
 
 			final EntityManagerFactory emf = entityManagerFactory;
 
-			doInJPA( () -> emf, entityManager -> {
+			doInJPA(() -> emf, entityManager -> {
 				ApplicationCustomer customer = new ApplicationCustomer();
-				customer.setId( 2L );
-				customer.setFirstName( "John" );
-				customer.setLastName( "Doe Jr." );
+				customer.setId(2L);
+				customer.setFirstName("John");
+				customer.setLastName("Doe Jr.");
 
-				entityManager.persist( customer );
-			} );
+				entityManager.persist(customer);
+			});
 
-			doInJPA( () -> emf, entityManager -> {
+			doInJPA(() -> emf, entityManager -> {
 				//tag::envers-tracking-modified-entities-revchanges-query-example[]
-				AuditReader auditReader = AuditReaderFactory.get( entityManager );
+				AuditReader auditReader = AuditReaderFactory.get(entityManager);
 
 				List<Number> revisions = auditReader.getRevisions(
 					ApplicationCustomer.class,
@@ -112,11 +112,11 @@ public class EntityTypeChangeAuditTrackingRevisionListenerTest extends BaseEntit
 
 				CustomTrackingRevisionEntity revEntity = auditReader.findRevision(
 					CustomTrackingRevisionEntity.class,
-					revisions.get( 0 )
+					revisions.get(0)
 				);
 
 				Set<EntityType> modifiedEntityTypes = revEntity.getModifiedEntityTypes();
-				assertEquals( 1, modifiedEntityTypes.size() );
+				assertEquals(1, modifiedEntityTypes.size());
 
 				EntityType entityType = modifiedEntityTypes.iterator().next();
 				assertEquals(
@@ -124,10 +124,10 @@ public class EntityTypeChangeAuditTrackingRevisionListenerTest extends BaseEntit
 					entityType.getEntityClassName()
 				);
 				//end::envers-tracking-modified-entities-revchanges-query-example[]
-			} );
+			});
 		}
 		finally {
-			if ( entityManagerFactory != null ) {
+			if (entityManagerFactory != null) {
 				entityManagerFactory.close();
 			}
 		}
@@ -144,7 +144,7 @@ public class EntityTypeChangeAuditTrackingRevisionListenerTest extends BaseEntit
 
 		private String lastName;
 
-		@Temporal( TemporalType.TIMESTAMP )
+		@Temporal(TemporalType.TIMESTAMP)
 		@Column(name = "created_on")
 		@CreationTimestamp
 		private Date createdOn;
@@ -193,7 +193,7 @@ public class EntityTypeChangeAuditTrackingRevisionListenerTest extends BaseEntit
 
 		private String lastName;
 
-		@Temporal( TemporalType.TIMESTAMP )
+		@Temporal(TemporalType.TIMESTAMP)
 		@Column(name = "created_on")
 		@CreationTimestamp
 		private Date createdOn;
@@ -239,13 +239,13 @@ public class EntityTypeChangeAuditTrackingRevisionListenerTest extends BaseEntit
 								  String entityName,
 								  Object entityId,
 								  RevisionType revisionType,
-								  Object revisionEntity ) {
+								  Object revisionEntity) {
 			String type = entityClass.getName();
-			( (CustomTrackingRevisionEntity) revisionEntity ).addModifiedEntityType( type );
+			((CustomTrackingRevisionEntity) revisionEntity).addModifiedEntityType(type);
 		}
 
 		@Override
-		public void newRevision( Object revisionEntity ) {
+		public void newRevision(Object revisionEntity) {
 		}
 	}
 	//end::envers-tracking-modified-entities-revchanges-EntityTrackingRevisionListener-example[]
@@ -253,7 +253,7 @@ public class EntityTypeChangeAuditTrackingRevisionListenerTest extends BaseEntit
 	//tag::envers-tracking-modified-entities-revchanges-RevisionEntity-example[]
 	@Entity(name = "CustomTrackingRevisionEntity")
 	@Table(name = "TRACKING_REV_INFO")
-	@RevisionEntity( CustomTrackingRevisionListener.class )
+	@RevisionEntity(CustomTrackingRevisionListener.class)
 	public static class CustomTrackingRevisionEntity {
 
 		@Id
@@ -277,8 +277,8 @@ public class EntityTypeChangeAuditTrackingRevisionListenerTest extends BaseEntit
 			return modifiedEntityTypes;
 		}
 
-		public void addModifiedEntityType(String entityClassName ) {
-			modifiedEntityTypes.add( new EntityType( this, entityClassName ) );
+		public void addModifiedEntityType(String entityClassName) {
+			modifiedEntityTypes.add(new EntityType(this, entityClassName));
 		}
 	}
 	//end::envers-tracking-modified-entities-revchanges-RevisionEntity-example[]

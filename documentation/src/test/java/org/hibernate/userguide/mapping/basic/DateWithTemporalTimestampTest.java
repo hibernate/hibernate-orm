@@ -34,10 +34,10 @@ public class DateWithTemporalTimestampTest extends BaseEntityManagerFunctionalTe
 
 	@Test
 	public void testLifecycle() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			DateEvent dateEvent = new DateEvent( new Date() );
-			entityManager.persist( dateEvent );
-		} );
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			DateEvent dateEvent = new DateEvent(new Date());
+			entityManager.persist(dateEvent);
+		});
 	}
 
 	@Entity(name = "DateEvent")

@@ -36,38 +36,38 @@ public class AnyTest extends BaseCoreFunctionalTestCase {
     @Test
     public void test() {
 
-        doInHibernate( this::sessionFactory, session -> {
+        doInHibernate(this::sessionFactory, session -> {
             //tag::associations-any-persist-example[]
             IntegerProperty ageProperty = new IntegerProperty();
-            ageProperty.setId( 1L );
-            ageProperty.setName( "age" );
-            ageProperty.setValue( 23 );
+            ageProperty.setId(1L);
+            ageProperty.setName("age");
+            ageProperty.setValue(23);
 
-            session.persist( ageProperty );
+            session.persist(ageProperty);
 
             StringProperty nameProperty = new StringProperty();
-            nameProperty.setId( 1L );
-            nameProperty.setName( "name" );
-            nameProperty.setValue( "John Doe" );
+            nameProperty.setId(1L);
+            nameProperty.setName("name");
+            nameProperty.setValue("John Doe");
 
-            session.persist( nameProperty );
+            session.persist(nameProperty);
 
             PropertyHolder namePropertyHolder = new PropertyHolder();
-            namePropertyHolder.setId( 1L );
-            namePropertyHolder.setProperty( nameProperty );
+            namePropertyHolder.setId(1L);
+            namePropertyHolder.setProperty(nameProperty);
 
-            session.persist( namePropertyHolder );
+            session.persist(namePropertyHolder);
             //end::associations-any-persist-example[]
-        } );
+        });
 
-        doInHibernate( this::sessionFactory, session -> {
+        doInHibernate(this::sessionFactory, session -> {
             //tag::associations-any-query-example[]
-            PropertyHolder propertyHolder = session.get( PropertyHolder.class, 1L );
+            PropertyHolder propertyHolder = session.get(PropertyHolder.class, 1L);
 
             assertEquals("name", propertyHolder.getProperty().getName());
             assertEquals("John Doe", propertyHolder.getProperty().getValue());
             //end::associations-any-query-example[]
-        } );
+        });
     }
 
 

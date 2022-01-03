@@ -38,17 +38,17 @@ public class ElementCollectionAccessTest extends BaseEntityManagerFunctionalTest
 
 	@Test
 	public void test() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			Book book = new Book();
-			book.setId( 1L );
-			book.setTitle( "High-Performance Java Persistence" );
-			book.getAuthors().add( new Author(
+			book.setId(1L);
+			book.setTitle("High-Performance Java Persistence");
+			book.getAuthors().add(new Author(
 				"Vlad",
 				"Mihalcea"
-			) );
+			));
 
-			entityManager.persist( book );
-		} );
+			entityManager.persist(book);
+		});
 	}
 
 	//tag::access-element-collection-mapping-example[]
@@ -95,7 +95,7 @@ public class ElementCollectionAccessTest extends BaseEntityManagerFunctionalTest
 
 	//tag::access-embeddable-mapping-example[]
 	@Embeddable
-	@Access( AccessType.PROPERTY )
+	@Access(AccessType.PROPERTY)
 	public static class Author {
 
 		private String firstName;

@@ -32,23 +32,23 @@ import static org.hamcrest.Matchers.is;
 /**
  * @author Steve Ebersole
  */
-@DomainModel( annotatedClasses = DurationMappingTests.EntityWithDuration.class )
+@DomainModel(annotatedClasses = DurationMappingTests.EntityWithDuration.class)
 @SessionFactory
 public class DurationMappingTests {
 
 	@Test
 	public void verifyMappings(SessionFactoryScope scope) {
 		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
-		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( EntityWithDuration.class );
+		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor(EntityWithDuration.class);
 		final JdbcTypeRegistry jdbcTypeRegistry = domainModel.getTypeConfiguration()
 				.getJdbcTypeDescriptorRegistry();
 
-		final BasicAttributeMapping duration = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "duration" );
+		final BasicAttributeMapping duration = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("duration");
 		final JdbcMapping jdbcMapping = duration.getJdbcMapping();
-		assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( Duration.class ) );
-		final JdbcType intervalType = jdbcTypeRegistry.getDescriptor( SqlTypes.INTERVAL_SECOND );
+		assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Duration.class));
+		final JdbcType intervalType = jdbcTypeRegistry.getDescriptor(SqlTypes.INTERVAL_SECOND);
 		final JdbcType realType;
-		if ( intervalType instanceof AdjustableJdbcType ) {
+		if (intervalType instanceof AdjustableJdbcType) {
 			realType = ((AdjustableJdbcType) intervalType).resolveIndicatedType(
 					() -> domainModel.getTypeConfiguration(),
 					jdbcMapping.getJavaTypeDescriptor()
@@ -57,21 +57,21 @@ public class DurationMappingTests {
 		else {
 			realType = intervalType;
 		}
-		assertThat( jdbcMapping.getJdbcTypeDescriptor(), is( realType ) );
+		assertThat(jdbcMapping.getJdbcTypeDescriptor(), is(realType));
 
 		scope.inTransaction(
 				(session) -> {
-					session.persist( new EntityWithDuration( 1, Duration.ofHours( 3 ) ) );
+					session.persist(new EntityWithDuration(1, Duration.ofHours(3)));
 				}
 		);
 
 		scope.inTransaction(
-				(session) -> session.find( EntityWithDuration.class, 1 )
+				(session) -> session.find(EntityWithDuration.class, 1)
 		);
 	}
 
-	@Entity( name = "EntityWithDuration" )
-	@Table( name = "EntityWithDuration" )
+	@Entity(name = "EntityWithDuration")
+	@Table(name = "EntityWithDuration")
 	public static class EntityWithDuration {
 		@Id
 		private Integer id;

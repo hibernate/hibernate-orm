@@ -29,38 +29,38 @@ import static org.hamcrest.Matchers.equalTo;
 /**
  * @author Steve Ebersole
  */
-@DomainModel( annotatedClasses = LocalTimeMappingTests.EntityWithLocalTime.class )
+@DomainModel(annotatedClasses = LocalTimeMappingTests.EntityWithLocalTime.class)
 @SessionFactory
 public class LocalTimeMappingTests {
 
 	@Test
 	public void verifyMappings(SessionFactoryScope scope) {
 		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
-		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( EntityWithLocalTime.class );
+		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor(EntityWithLocalTime.class);
 
-		final BasicAttributeMapping duration = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "localTime" );
+		final BasicAttributeMapping duration = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("localTime");
 		final JdbcMapping jdbcMapping = duration.getJdbcMapping();
-		assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( LocalTime.class ) );
-		assertThat( jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo( Types.TIME ) );
+		assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(LocalTime.class));
+		assertThat(jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo(Types.TIME));
 
 		scope.inTransaction(
 				(session) -> {
-					session.persist( new EntityWithLocalTime( 1, LocalTime.now() ) );
+					session.persist(new EntityWithLocalTime(1, LocalTime.now()));
 				}
 		);
 
 		scope.inTransaction(
-				(session) -> session.find( EntityWithLocalTime.class, 1 )
+				(session) -> session.find(EntityWithLocalTime.class, 1)
 		);
 	}
 
-	@Entity( name = "EntityWithLocalTime" )
-	@Table( name = "EntityWithLocalTime" )
+	@Entity(name = "EntityWithLocalTime")
+	@Table(name = "EntityWithLocalTime")
 	public static class EntityWithLocalTime {
 		@Id
 		private Integer id;
 
-		@Column( name = "`localTime`")
+		@Column(name = "`localTime`")
 		//tag::basic-localTime-example[]
 		// mapped as TIME
 		private LocalTime localTime;

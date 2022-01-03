@@ -42,33 +42,33 @@ public class MapKeyClassTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void testLifecycle() {
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::collections-map-key-class-persist-example[]
 			Person person = new Person();
-			person.setId( 1L );
-			person.getCallRegister().put( new MobilePhone( "01", "234", "567" ), 101 );
-			person.getCallRegister().put( new MobilePhone( "01", "234", "789" ), 102 );
+			person.setId(1L);
+			person.getCallRegister().put(new MobilePhone("01", "234", "567"), 101);
+			person.getCallRegister().put(new MobilePhone("01", "234", "789"), 102);
 
-			entityManager.persist( person );
+			entityManager.persist(person);
 			//end::collections-map-key-class-persist-example[]
-		} );
+		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::collections-map-key-class-fetch-example[]
-			Person person = entityManager.find( Person.class, 1L );
-			assertEquals( 2, person.getCallRegister().size() );
+			Person person = entityManager.find(Person.class, 1L);
+			assertEquals(2, person.getCallRegister().size());
 
 			assertEquals(
-				Integer.valueOf( 101 ),
-				person.getCallRegister().get( MobilePhone.fromString( "01-234-567" ) )
+				Integer.valueOf(101),
+				person.getCallRegister().get(MobilePhone.fromString("01-234-567"))
 			);
 
 			assertEquals(
-				Integer.valueOf( 102 ),
-				person.getCallRegister().get( MobilePhone.fromString( "01-234-789" ) )
+				Integer.valueOf(102),
+				person.getCallRegister().get(MobilePhone.fromString("01-234-789"))
 			);
 			//end::collections-map-key-class-fetch-example[]
-		} );
+		});
 	}
 
 	//tag::collections-map-key-class-mapping-example[]
@@ -84,8 +84,8 @@ public class MapKeyClassTest extends BaseEntityManagerFunctionalTestCase {
 			name = "call_register",
 			joinColumns = @JoinColumn(name = "person_id")
 		)
-		@MapKeyColumn( name = "call_timestamp_epoch" )
-		@MapKeyClass( MobilePhone.class )
+		@MapKeyColumn(name = "call_timestamp_epoch")
+		@MapKeyClass(MobilePhone.class)
 		@Column(name = "call_register")
 		private Map<PhoneNumber, Integer> callRegister = new HashMap<>();
 
@@ -114,9 +114,9 @@ public class MapKeyClassTest extends BaseEntityManagerFunctionalTestCase {
 			implements PhoneNumber {
 
 		static PhoneNumber fromString(String phoneNumber) {
-			String[] tokens = phoneNumber.split( "-" );
-			if ( tokens.length != 3 ) {
-				throw new IllegalArgumentException( "invalid phone number: " + phoneNumber );
+			String[] tokens = phoneNumber.split("-");
+			if (tokens.length != 3) {
+				throw new IllegalArgumentException("invalid phone number: " + phoneNumber);
 			}
 			int i = 0;
 			return new MobilePhone(
@@ -159,21 +159,21 @@ public class MapKeyClassTest extends BaseEntityManagerFunctionalTestCase {
 
 		@Override
 		public boolean equals(Object o) {
-			if ( this == o ) {
+			if (this == o) {
 				return true;
 			}
-			if ( o == null || getClass() != o.getClass() ) {
+			if (o == null || getClass() != o.getClass()) {
 				return false;
 			}
 			MobilePhone that = (MobilePhone) o;
-			return Objects.equals( countryCode, that.countryCode ) &&
-					Objects.equals( operatorCode, that.operatorCode ) &&
-					Objects.equals( subscriberCode, that.subscriberCode );
+			return Objects.equals(countryCode, that.countryCode) &&
+					Objects.equals(operatorCode, that.operatorCode) &&
+					Objects.equals(subscriberCode, that.subscriberCode);
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash( countryCode, operatorCode, subscriberCode );
+			return Objects.hash(countryCode, operatorCode, subscriberCode);
 		}
 	}
 	//end::collections-map-key-class-type-mapping-example[]

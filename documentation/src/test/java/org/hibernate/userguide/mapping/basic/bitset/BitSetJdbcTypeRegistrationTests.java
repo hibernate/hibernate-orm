@@ -34,7 +34,7 @@ import static org.hamcrest.Matchers.nullValue;
 /**
  * @author Steve Ebersole
  */
-@DomainModel( annotatedClasses = BitSetJdbcTypeRegistrationTests.Product.class )
+@DomainModel(annotatedClasses = BitSetJdbcTypeRegistrationTests.Product.class)
 @SessionFactory
 public class BitSetJdbcTypeRegistrationTests {
 
@@ -43,30 +43,30 @@ public class BitSetJdbcTypeRegistrationTests {
 		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
 		final MappingMetamodel domainModel = sessionFactory.getDomainModel();
 
-		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( Product.class );
-		final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "bitSet" );
+		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor(Product.class);
+		final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("bitSet");
 
-		assertThat( attributeMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( BitSet.class ) );
+		assertThat(attributeMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(BitSet.class));
 
-		assertThat( attributeMapping.getValueConverter(), nullValue() );
+		assertThat(attributeMapping.getValueConverter(), nullValue());
 
 		assertThat(
 				attributeMapping.getJdbcMapping().getJdbcTypeDescriptor().getJdbcTypeCode(),
-				is( Types.VARBINARY )
+				is(Types.VARBINARY)
 		);
 
-		assertThat( attributeMapping.getJdbcMapping().getJavaTypeDescriptor().getJavaTypeClass(), equalTo( BitSet.class ) );
+		assertThat(attributeMapping.getJdbcMapping().getJavaTypeDescriptor().getJavaTypeClass(), equalTo(BitSet.class));
 
 		scope.inTransaction(
 				(session) -> {
-					session.persist( new Product( 1, BitSet.valueOf( BitSetHelper.BYTES ) ) );
+					session.persist(new Product(1, BitSet.valueOf(BitSetHelper.BYTES)));
 				}
 		);
 
 		scope.inSession(
 				(session) -> {
-					final Product product = session.get( Product.class, 1 );
-					assertThat( product.getBitSet(), equalTo( BitSet.valueOf( BitSetHelper.BYTES ) ) );
+					final Product product = session.get(Product.class, 1);
+					assertThat(product.getBitSet(), equalTo(BitSet.valueOf(BitSetHelper.BYTES)));
 				}
 		);
 	}
@@ -74,7 +74,7 @@ public class BitSetJdbcTypeRegistrationTests {
 	@AfterEach
 	public void dropData(SessionFactoryScope scope) {
 		scope.inTransaction(
-				(session) -> session.createQuery( "delete Product" ).executeUpdate()
+				(session) -> session.createQuery("delete Product").executeUpdate()
 		);
 	}
 
@@ -82,7 +82,7 @@ public class BitSetJdbcTypeRegistrationTests {
 	@Table(name = "Product")
 	//tag::basic-bitset-example-jdbc-type-global[]
 	@Entity(name = "Product")
-	@JdbcTypeRegistration( CustomBinaryJdbcType.class )
+	@JdbcTypeRegistration(CustomBinaryJdbcType.class)
 	public static class Product {
 		@Id
 		private Integer id;

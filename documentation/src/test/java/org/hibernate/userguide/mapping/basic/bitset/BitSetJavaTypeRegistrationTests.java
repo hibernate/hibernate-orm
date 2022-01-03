@@ -27,7 +27,7 @@ import static org.hamcrest.Matchers.instanceOf;
 /**
  * @author Steve Ebersole
  */
-@DomainModel( annotatedClasses = BitSetJavaTypeRegistrationTests.Product.class )
+@DomainModel(annotatedClasses = BitSetJavaTypeRegistrationTests.Product.class)
 @SessionFactory
 public class BitSetJavaTypeRegistrationTests {
 
@@ -36,17 +36,17 @@ public class BitSetJavaTypeRegistrationTests {
 		final EntityPersister productType = scope.getSessionFactory()
 				.getRuntimeMetamodels()
 				.getMappingMetamodel()
-				.findEntityDescriptor( Product.class );
-		final SingularAttributeMapping bitSetAttribute = (SingularAttributeMapping) productType.findAttributeMapping( "bitSet" );
+				.findEntityDescriptor(Product.class);
+		final SingularAttributeMapping bitSetAttribute = (SingularAttributeMapping) productType.findAttributeMapping("bitSet");
 		// make sure BitSetTypeDescriptor was selected
-		assertThat( bitSetAttribute.getJavaTypeDescriptor(), instanceOf( BitSetJavaType.class ) );
+		assertThat(bitSetAttribute.getJavaTypeDescriptor(), instanceOf(BitSetJavaType.class));
 	}
 
 
 	@Table(name = "Product")
 	//tag::basic-bitset-example-java-type-global[]
 	@Entity(name = "Product")
-	@JavaTypeRegistration( javaType = BitSet.class, descriptorClass = BitSetJavaType.class )
+	@JavaTypeRegistration(javaType = BitSet.class, descriptorClass = BitSetJavaType.class)
 	public static class Product {
 		@Id
 		private Integer id;

@@ -6,8 +6,8 @@ package org.hibernate.userguide.mapping.basic;
 //tag::basic-enums-converter-example[]
 public enum Gender {
 
-    MALE( 'M' ),
-    FEMALE( 'F' );
+    MALE('M'),
+    FEMALE('F');
 
     private final char code;
 
@@ -16,15 +16,15 @@ public enum Gender {
     }
 
     public static Gender fromCode(char code) {
-        if ( code == 'M' || code == 'm' ) {
+        if (code == 'M' || code == 'm') {
             return MALE;
         }
-        if ( code == 'F' || code == 'f' ) {
+        if (code == 'F' || code == 'f') {
             return FEMALE;
         }
         throw new UnsupportedOperationException(
             "The code " + code + " is not supported!"
-        );
+       );
     }
 
     public char getCode() {

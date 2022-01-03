@@ -30,13 +30,13 @@ public class EnumerationCustomTypeTest extends BaseEntityManagerFunctionalTestCa
 
 	@Test
 	public void test() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Person person = new Person( );
-			person.setId( 1L );
-			person.setName( "John Doe" );
-			person.setGender( Gender.MALE );
-			entityManager.persist( person );
-		} );
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			Person person = new Person();
+			person.setId(1L);
+			person.setName("John Doe");
+			person.setGender(Gender.MALE);
+			entityManager.persist(person);
+		});
 	}
 
 	//tag::basic-enums-custom-type-example[]
@@ -48,7 +48,7 @@ public class EnumerationCustomTypeTest extends BaseEntityManagerFunctionalTestCa
 
 		private String name;
 
-		@CustomType( org.hibernate.userguide.mapping.basic.GenderType.class )
+		@CustomType(org.hibernate.userguide.mapping.basic.GenderType.class)
 		public Gender gender;
 
 		//Getters and setters are omitted for brevity

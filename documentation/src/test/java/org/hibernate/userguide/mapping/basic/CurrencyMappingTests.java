@@ -29,7 +29,7 @@ import static org.hamcrest.Matchers.equalTo;
 /**
  * @author Steve Ebersole
  */
-@DomainModel( annotatedClasses = CurrencyMappingTests.EntityWithCurrency.class )
+@DomainModel(annotatedClasses = CurrencyMappingTests.EntityWithCurrency.class)
 @SessionFactory
 public class CurrencyMappingTests {
 
@@ -37,26 +37,26 @@ public class CurrencyMappingTests {
 	public void verifyMappings(SessionFactoryScope scope) {
 		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
 		final JdbcTypeRegistry jdbcRegistry = domainModel.getTypeConfiguration().getJdbcTypeDescriptorRegistry();
-		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( EntityWithCurrency.class );
+		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor(EntityWithCurrency.class);
 
-		final BasicAttributeMapping duration = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "currency" );
+		final BasicAttributeMapping duration = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("currency");
 		final JdbcMapping jdbcMapping = duration.getJdbcMapping();
-		assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( Currency.class ) );
-		assertThat( jdbcMapping.getJdbcTypeDescriptor(), equalTo( jdbcRegistry.getDescriptor( Types.VARCHAR ) ) );
+		assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Currency.class));
+		assertThat(jdbcMapping.getJdbcTypeDescriptor(), equalTo(jdbcRegistry.getDescriptor(Types.VARCHAR)));
 
 		scope.inTransaction(
 				(session) -> {
-					session.persist( new EntityWithCurrency( 1, Currency.getInstance( "USD" ) ) );
+					session.persist(new EntityWithCurrency(1, Currency.getInstance("USD")));
 				}
 		);
 
 		scope.inTransaction(
-				(session) -> session.find( EntityWithCurrency.class, 1 )
+				(session) -> session.find(EntityWithCurrency.class, 1)
 		);
 	}
 
-	@Entity( name = "EntityWithCurrency" )
-	@Table( name = "EntityWithCurrency" )
+	@Entity(name = "EntityWithCurrency")
+	@Table(name = "EntityWithCurrency")
 	public static class EntityWithCurrency {
 		@Id
 		private Integer id;

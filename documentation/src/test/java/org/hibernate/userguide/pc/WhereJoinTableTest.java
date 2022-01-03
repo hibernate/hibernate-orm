@@ -43,37 +43,37 @@ public class WhereJoinTableTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void testLifecycle() {
 		//tag::pc-where-persistence-example[]
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 
-			entityManager.unwrap( Session.class ).doWork( connection -> {
+			entityManager.unwrap(Session.class).doWork(connection -> {
 				try(Statement statement = connection.createStatement()) {
 					statement.executeUpdate(
 						"ALTER TABLE Book_Reader ADD created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
 					);
 				}
-			} );
+			});
 
 			//tag::pc-where-join-table-persist-example[]
 			Book book = new Book();
-			book.setId( 1L );
-			book.setTitle( "High-Performance Java Persistence" );
-			book.setAuthor( "Vad Mihalcea" );
-			entityManager.persist( book );
+			book.setId(1L);
+			book.setTitle("High-Performance Java Persistence");
+			book.setAuthor("Vad Mihalcea");
+			entityManager.persist(book);
 
 			Reader reader1 = new Reader();
-			reader1.setId( 1L );
-			reader1.setName( "John Doe" );
-			entityManager.persist( reader1 );
+			reader1.setId(1L);
+			reader1.setName("John Doe");
+			entityManager.persist(reader1);
 
 			Reader reader2 = new Reader();
-			reader2.setId( 2L );
-			reader2.setName( "John Doe Jr." );
-			entityManager.persist( reader2 );
+			reader2.setId(2L);
+			reader2.setName("John Doe Jr.");
+			entityManager.persist(reader2);
 			//end::pc-where-join-table-persist-example[]
-		} );
+		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			entityManager.unwrap( Session.class ).doWork( connection -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			entityManager.unwrap(Session.class).doWork(connection -> {
 				try(Statement statement = connection.createStatement()) {
 			//tag::pc-where-join-table-persist-example[]
 
@@ -87,17 +87,17 @@ public class WhereJoinTableTest extends BaseEntityManagerFunctionalTestCase {
 				"INSERT INTO Book_Reader " +
 				"	(book_id, reader_id, created_on) " +
 				"VALUES " +
-				"	(1, 2, DATEADD( 'DAY', -10, CURRENT_TIMESTAMP() )) "
+				"	(1, 2, DATEADD('DAY', -10, CURRENT_TIMESTAMP())) "
 			);
 				//end::pc-where-join-table-persist-example[]
 				}}
 			);
 
 			//tag::pc-where-join-table-fetch-example[]
-			Book book = entityManager.find( Book.class, 1L );
-			assertEquals( 1, book.getCurrentWeekReaders().size() );
+			Book book = entityManager.find(Book.class, 1L);
+			assertEquals(1, book.getCurrentWeekReaders().size());
 			//end::pc-where-join-table-fetch-example[]
-		} );
+		});
 	}
 
 	//tag::pc-where-join-table-example[]
@@ -117,8 +117,8 @@ public class WhereJoinTableTest extends BaseEntityManagerFunctionalTestCase {
 			joinColumns = @JoinColumn(name = "book_id"),
 			inverseJoinColumns = @JoinColumn(name = "reader_id")
 		)
-		@WhereJoinTable( clause = "created_on > DATEADD( 'DAY', -7, CURRENT_TIMESTAMP() )")
-		private List<Reader> currentWeekReaders = new ArrayList<>( );
+		@WhereJoinTable(clause = "created_on > DATEADD('DAY', -7, CURRENT_TIMESTAMP())")
+		private List<Reader> currentWeekReaders = new ArrayList<>();
 
 		//Getters and setters omitted for brevity
 

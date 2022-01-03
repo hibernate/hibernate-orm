@@ -40,115 +40,115 @@ public class SimpleEntityTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Before
 	public void init() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			Library library = new Library();
-			library.setId( 1L );
-			library.setName( "Amazon" );
+			library.setId(1L);
+			library.setName("Amazon");
 
-			entityManager.persist( library );
+			entityManager.persist(library);
 
 			Book book = new Book();
-			book.setId( 1L );
-			book.setTitle( "High-Performance Java Persistence" );
-			book.setAuthor( "Vlad Mihalcea" );
+			book.setId(1L);
+			book.setTitle("High-Performance Java Persistence");
+			book.setAuthor("Vlad Mihalcea");
 
-			entityManager.persist( book );
-		} );
+			entityManager.persist(book);
+		});
 	}
 
 
 	@Test
 	public void testIdentityScope() {
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::entity-pojo-identity-scope-example[]
-			Book book1 = entityManager.find( Book.class, 1L );
-			Book book2 = entityManager.find( Book.class, 1L );
+			Book book1 = entityManager.find(Book.class, 1L);
+			Book book2 = entityManager.find(Book.class, 1L);
 
-			assertTrue( book1 == book2 );
+			assertTrue(book1 == book2);
 			//end::entity-pojo-identity-scope-example[]
-		} );
+		});
 
 	}
 
 	@Test
 	public void testSetIdentityScope() {
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::entity-pojo-set-identity-scope-example[]
-			Library library = entityManager.find( Library.class, 1L );
+			Library library = entityManager.find(Library.class, 1L);
 
-			Book book1 = entityManager.find( Book.class, 1L );
-			Book book2 = entityManager.find( Book.class, 1L );
+			Book book1 = entityManager.find(Book.class, 1L);
+			Book book2 = entityManager.find(Book.class, 1L);
 
-			library.getBooks().add( book1 );
-			library.getBooks().add( book2 );
+			library.getBooks().add(book1);
+			library.getBooks().add(book2);
 
-			assertEquals( 1, library.getBooks().size() );
+			assertEquals(1, library.getBooks().size());
 			//end::entity-pojo-set-identity-scope-example[]
-		} );
+		});
 	}
 
 	@Test
 	public void testMultiSessionIdentityScope() {
 
 		//tag::entity-pojo-multi-session-identity-scope-example[]
-		Book book1 = doInJPA( this::entityManagerFactory, entityManager -> {
-			return entityManager.find( Book.class, 1L );
-		} );
+		Book book1 = doInJPA(this::entityManagerFactory, entityManager -> {
+			return entityManager.find(Book.class, 1L);
+		});
 
-		Book book2 = doInJPA( this::entityManagerFactory, entityManager -> {
-			return entityManager.find( Book.class, 1L );
-		} );
+		Book book2 = doInJPA(this::entityManagerFactory, entityManager -> {
+			return entityManager.find(Book.class, 1L);
+		});
 
-		assertFalse( book1 == book2 );
+		assertFalse(book1 == book2);
 		//end::entity-pojo-multi-session-identity-scope-example[]
 	}
 
 	@Test
 	public void testMultiSessionSetIdentityScope() {
 
-		Book book1 = doInJPA( this::entityManagerFactory, entityManager -> {
-			return entityManager.find( Book.class, 1L );
-		} );
+		Book book1 = doInJPA(this::entityManagerFactory, entityManager -> {
+			return entityManager.find(Book.class, 1L);
+		});
 
-		Book book2 = doInJPA( this::entityManagerFactory, entityManager -> {
-			return entityManager.find( Book.class, 1L );
-		} );
+		Book book2 = doInJPA(this::entityManagerFactory, entityManager -> {
+			return entityManager.find(Book.class, 1L);
+		});
 		//tag::entity-pojo-multi-session-set-identity-scope-example[]
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			Set<Book> books = new HashSet<>();
 
-			books.add( book1 );
-			books.add( book2 );
+			books.add(book1);
+			books.add(book2);
 
-			assertEquals( 2, books.size() );
-		} );
+			assertEquals(2, books.size());
+		});
 		//end::entity-pojo-multi-session-set-identity-scope-example[]
 	}
 
 	@Test
 	public void testTransientSetIdentityScope() {
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::entity-pojo-transient-set-identity-scope-example[]
-			Library library = entityManager.find( Library.class, 1L );
+			Library library = entityManager.find(Library.class, 1L);
 
 			Book book1 = new Book();
-			book1.setId( 100L );
-			book1.setTitle( "High-Performance Java Persistence" );
+			book1.setId(100L);
+			book1.setTitle("High-Performance Java Persistence");
 
 			Book book2 = new Book();
-			book2.setId( 101L );
-			book2.setTitle( "Java Persistence with Hibernate" );
+			book2.setId(101L);
+			book2.setTitle("Java Persistence with Hibernate");
 
-			library.getBooks().add( book1 );
-			library.getBooks().add( book2 );
+			library.getBooks().add(book1);
+			library.getBooks().add(book2);
 
-			assertEquals( 2, library.getBooks().size() );
+			assertEquals(2, library.getBooks().size());
 			//end::entity-pojo-transient-set-identity-scope-example[]
-		} );
+		});
 	}
 
 	//tag::entity-pojo-set-mapping-example[]

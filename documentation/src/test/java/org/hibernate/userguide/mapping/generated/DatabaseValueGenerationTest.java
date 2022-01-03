@@ -29,7 +29,7 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 /**
  * @author Vlad Mihalcea
  */
-@SkipForDialect( value = SybaseDialect.class, comment = "Sybase doesn't seem to support current_timestamp")
+@SkipForDialect(value = SybaseDialect.class, comment = "Sybase doesn't seem to support current_timestamp")
 public class DatabaseValueGenerationTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
@@ -41,10 +41,10 @@ public class DatabaseValueGenerationTest extends BaseEntityManagerFunctionalTest
 
 	@Test
 	public void test() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Event dateEvent = new Event( );
-			entityManager.persist( dateEvent );
-		} );
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			Event dateEvent = new Event();
+			entityManager.persist(dateEvent);
+		});
 	}
 
 	//tag::mapping-database-generated-value-example[]

@@ -39,7 +39,7 @@ import static org.junit.Assert.assertNotNull;
  * @author Vlad Mihalcea
  */
 @Ignore
-//@FailureExpected( jiraKey = "HHH-12146", message = "No idea why those changes cause this to fail, especially in the way it does" )
+//@FailureExpected(jiraKey = "HHH-12146", message = "No idea why those changes cause this to fail, especially in the way it does")
 public class SecondLevelCacheTest extends BaseEntityManagerFunctionalTestCase {
 
     @Override
@@ -50,202 +50,202 @@ public class SecondLevelCacheTest extends BaseEntityManagerFunctionalTestCase {
     }
 
     @Override
-    @SuppressWarnings( "unchecked" )
+    @SuppressWarnings("unchecked")
     protected void addConfigOptions(Map options) {
-        options.put( AvailableSettings.USE_SECOND_LEVEL_CACHE, Boolean.TRUE.toString() );
-        options.put( AvailableSettings.CACHE_REGION_FACTORY, "jcache" );
-        options.put( AvailableSettings.USE_QUERY_CACHE, Boolean.TRUE.toString() );
-        options.put( AvailableSettings.GENERATE_STATISTICS, Boolean.TRUE.toString() );
+        options.put(AvailableSettings.USE_SECOND_LEVEL_CACHE, Boolean.TRUE.toString());
+        options.put(AvailableSettings.CACHE_REGION_FACTORY, "jcache");
+        options.put(AvailableSettings.USE_QUERY_CACHE, Boolean.TRUE.toString());
+        options.put(AvailableSettings.GENERATE_STATISTICS, Boolean.TRUE.toString());
     }
 
     @Test
     public void testCache() {
-        doInJPA( this::entityManagerFactory, entityManager -> {
-            entityManager.persist( new Person() );
+        doInJPA(this::entityManagerFactory, entityManager -> {
+            entityManager.persist(new Person());
 			Person aPerson= new Person();
-			aPerson.setName( "John Doe" );
-			aPerson.setCode( "unique-code" );
-            entityManager.persist( aPerson );
+			aPerson.setName("John Doe");
+			aPerson.setCode("unique-code");
+            entityManager.persist(aPerson);
 			return aPerson;
         });
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			log.info( "Jpa load by id" );
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			log.info("Jpa load by id");
 			//tag::caching-entity-jpa-example[]
-			Person person = entityManager.find( Person.class, 1L );
+			Person person = entityManager.find(Person.class, 1L);
 			//end::caching-entity-jpa-example[]
 		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			log.info( "Native load by id" );
-			Session session = entityManager.unwrap( Session.class );
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			log.info("Native load by id");
+			Session session = entityManager.unwrap(Session.class);
 			//tag::caching-entity-native-example[]
-			Person person = session.get( Person.class, 1L );
+			Person person = session.get(Person.class, 1L);
 			//end::caching-entity-native-example[]
 		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			log.info( "Native load by natural-id" );
-			Session session = entityManager.unwrap( Session.class );
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			log.info("Native load by natural-id");
+			Session session = entityManager.unwrap(Session.class);
 			//tag::caching-entity-natural-id-example[]
 			Person person = session
-				.byNaturalId( Person.class )
-				.using( "code", "unique-code")
+				.byNaturalId(Person.class)
+				.using("code", "unique-code")
 				.load();
 			//end::caching-entity-natural-id-example[]
 			assertNotNull(person);
 		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			log.info( "Jpa query cache" );
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			log.info("Jpa query cache");
 			//tag::caching-query-jpa-example[]
 			List<Person> persons = entityManager.createQuery(
 				"select p " +
 				"from Person p " +
 				"where p.name = :name", Person.class)
-			.setParameter( "name", "John Doe")
-			.setHint( "org.hibernate.cacheable", "true")
+			.setParameter("name", "John Doe")
+			.setHint("org.hibernate.cacheable", "true")
 			.getResultList();
 			//end::caching-query-jpa-example[]
 		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			log.info( "Native query cache" );
-			Session session = entityManager.unwrap( Session.class );
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			log.info("Native query cache");
+			Session session = entityManager.unwrap(Session.class);
 			//tag::caching-query-native-example[]
 			List<Person> persons = session.createQuery(
 				"select p " +
 				"from Person p " +
 				"where p.name = :name")
-			.setParameter( "name", "John Doe")
+			.setParameter("name", "John Doe")
 			.setCacheable(true)
 			.list();
 			//end::caching-query-native-example[]
 		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			log.info( "Jpa query cache region" );
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			log.info("Jpa query cache region");
 			//tag::caching-query-region-jpa-example[]
 			List<Person> persons = entityManager.createQuery(
 					"select p " +
 					"from Person p " +
 					"where p.id > :id", Person.class)
-					.setParameter( "id", 0L)
-					.setHint( QueryHints.HINT_CACHEABLE, "true")
-					.setHint( QueryHints.HINT_CACHE_REGION, "query.cache.person" )
+					.setParameter("id", 0L)
+					.setHint(QueryHints.HINT_CACHEABLE, "true")
+					.setHint(QueryHints.HINT_CACHE_REGION, "query.cache.person")
 					.getResultList();
 			//end::caching-query-region-jpa-example[]
 		});
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			log.info( "Native query cache" );
-			Session session = entityManager.unwrap( Session.class );
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			log.info("Native query cache");
+			Session session = entityManager.unwrap(Session.class);
 			//tag::caching-query-region-native-example[]
 			List<Person> persons = session.createQuery(
 				"select p " +
 				"from Person p " +
 				"where p.id > :id")
-			.setParameter( "id", 0L)
+			.setParameter("id", 0L)
 			.setCacheable(true)
-			.setCacheRegion( "query.cache.person" )
+			.setCacheRegion("query.cache.person")
 			.list();
 			//end::caching-query-region-native-example[]
 		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			log.info( "Jpa query cache store mode " );
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			log.info("Jpa query cache store mode ");
 			//tag::caching-query-region-store-mode-jpa-example[]
 			List<Person> persons = entityManager.createQuery(
 				"select p " +
 				"from Person p " +
 				"where p.id > :id", Person.class)
-			.setParameter( "id", 0L)
-			.setHint( QueryHints.HINT_CACHEABLE, "true")
-			.setHint( QueryHints.HINT_CACHE_REGION, "query.cache.person" )
-			.setHint( "jakarta.persistence.cache.storeMode", CacheStoreMode.REFRESH )
+			.setParameter("id", 0L)
+			.setHint(QueryHints.HINT_CACHEABLE, "true")
+			.setHint(QueryHints.HINT_CACHE_REGION, "query.cache.person")
+			.setHint("jakarta.persistence.cache.storeMode", CacheStoreMode.REFRESH)
 			.getResultList();
 			//end::caching-query-region-store-mode-jpa-example[]
 		});
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			log.info( "Native query cache store mode" );
-			Session session = entityManager.unwrap( Session.class );
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			log.info("Native query cache store mode");
+			Session session = entityManager.unwrap(Session.class);
 			//tag::caching-query-region-store-mode-native-example[]
 			List<Person> persons = session.createQuery(
 				"select p " +
 				"from Person p " +
 				"where p.id > :id")
-			.setParameter( "id", 0L)
+			.setParameter("id", 0L)
 			.setCacheable(true)
-			.setCacheRegion( "query.cache.person" )
-			.setCacheMode( CacheMode.REFRESH )
+			.setCacheRegion("query.cache.person")
+			.setCacheMode(CacheMode.REFRESH)
 			.list();
 			//end::caching-query-region-store-mode-native-example[]
 		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Session session = entityManager.unwrap( Session.class );
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			Session session = entityManager.unwrap(Session.class);
 			//tag::caching-statistics-example[]
 			Statistics statistics = session.getSessionFactory().getStatistics();
 			CacheRegionStatistics secondLevelCacheStatistics =
-					statistics.getDomainDataRegionStatistics( "query.cache.person" );
+					statistics.getDomainDataRegionStatistics("query.cache.person");
 			long hitCount = secondLevelCacheStatistics.getHitCount();
 			long missCount = secondLevelCacheStatistics.getMissCount();
-			double hitRatio = (double) hitCount / ( hitCount + missCount );
+			double hitRatio = (double) hitCount / (hitCount + missCount);
 			//end::caching-statistics-example[]
 			return hitRatio;
-		} );
+		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			log.info( "Native query cache store mode" );
-			Session session = entityManager.unwrap( Session.class );
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			log.info("Native query cache store mode");
+			Session session = entityManager.unwrap(Session.class);
 			//tag::caching-query-region-native-evict-example[]
-			session.getSessionFactory().getCache().evictQueryRegion( "query.cache.person" );
+			session.getSessionFactory().getCache().evictQueryRegion("query.cache.person");
 			//end::caching-query-region-native-evict-example[]
 		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::caching-management-cache-mode-entity-jpa-example[]
-			Map<String, Object> hints = new HashMap<>(  );
-			hints.put( "jakarta.persistence.cache.retrieveMode" , CacheRetrieveMode.USE );
-			hints.put( "jakarta.persistence.cache.storeMode" , CacheStoreMode.REFRESH );
-			Person person = entityManager.find( Person.class, 1L , hints);
+			Map<String, Object> hints = new HashMap<>();
+			hints.put("jakarta.persistence.cache.retrieveMode" , CacheRetrieveMode.USE);
+			hints.put("jakarta.persistence.cache.storeMode" , CacheStoreMode.REFRESH);
+			Person person = entityManager.find(Person.class, 1L , hints);
 			//end::caching-management-cache-mode-entity-jpa-example[]
 		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Session session = entityManager.unwrap( Session.class );
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			Session session = entityManager.unwrap(Session.class);
 			//tag::caching-management-cache-mode-entity-native-example[]
-			session.setCacheMode( CacheMode.REFRESH );
-			Person person = session.get( Person.class, 1L );
+			session.setCacheMode(CacheMode.REFRESH);
+			Person person = session.get(Person.class, 1L);
 			//end::caching-management-cache-mode-entity-native-example[]
 		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::caching-management-cache-mode-query-jpa-example[]
 			List<Person> persons = entityManager.createQuery(
 				"select p from Person p", Person.class)
-			.setHint( QueryHints.HINT_CACHEABLE, "true")
-			.setHint( "jakarta.persistence.cache.retrieveMode" , CacheRetrieveMode.USE )
-			.setHint( "jakarta.persistence.cache.storeMode" , CacheStoreMode.REFRESH )
+			.setHint(QueryHints.HINT_CACHEABLE, "true")
+			.setHint("jakarta.persistence.cache.retrieveMode" , CacheRetrieveMode.USE)
+			.setHint("jakarta.persistence.cache.storeMode" , CacheStoreMode.REFRESH)
 			.getResultList();
 			//end::caching-management-cache-mode-query-jpa-example[]
 
 			//tag::caching-management-evict-jpa-example[]
-			entityManager.getEntityManagerFactory().getCache().evict( Person.class );
+			entityManager.getEntityManagerFactory().getCache().evict(Person.class);
 			//end::caching-management-evict-jpa-example[]
 		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Session session = entityManager.unwrap( Session.class );
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			Session session = entityManager.unwrap(Session.class);
 			//tag::caching-management-cache-mode-query-native-example[]
 			List<Person> persons = session.createQuery(
-				"select p from Person p" )
-			.setCacheable( true )
-			.setCacheMode( CacheMode.REFRESH )
+				"select p from Person p")
+			.setCacheable(true)
+			.setCacheMode(CacheMode.REFRESH)
 			.list();
 			//end::caching-management-cache-mode-query-native-example[]
 
 			//tag::caching-management-evict-native-example[]
-			session.getSessionFactory().getCache().evictQueryRegion( "query.cache.person" );
+			session.getSessionFactory().getCache().evictQueryRegion("query.cache.person");
 			//end::caching-management-evict-native-example[]
 		});
 	}

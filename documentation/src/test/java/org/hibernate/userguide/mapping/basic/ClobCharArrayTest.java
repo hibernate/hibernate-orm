@@ -21,27 +21,27 @@ import static org.junit.Assert.assertArrayEquals;
 /**
  * @author Vlad Mihalcea
  */
-@Jpa( annotatedClasses = ClobCharArrayTest.Product.class )
+@Jpa(annotatedClasses = ClobCharArrayTest.Product.class)
 public class ClobCharArrayTest {
 
 	@Test
 	public void test(EntityManagerFactoryScope scope) {
 		Integer productId = scope.fromTransaction(
 				(em) -> {
-					final Product product = new Product( );
-					product.setId( 1 );
-					product.setName( "Mobile phone" );
-					product.setWarranty( "My product warranty".toCharArray() );
+					final Product product = new Product();
+					product.setId(1);
+					product.setName("Mobile phone");
+					product.setWarranty("My product warranty".toCharArray());
 
-					em.persist( product );
+					em.persist(product);
 					return product.getId();
 				}
 		);
 
 		scope.inTransaction(
 				(em) -> {
-					final Product product = em.find( Product.class, productId );
-					assertArrayEquals( "My product warranty".toCharArray(), product.getWarranty() );
+					final Product product = em.find(Product.class, productId);
+					assertArrayEquals("My product warranty".toCharArray(), product.getWarranty());
 				}
 		);
 	}
@@ -49,7 +49,7 @@ public class ClobCharArrayTest {
 	@AfterEach
 	public void dropData(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
-				(session) -> session.createQuery( "delete Product" ).executeUpdate()
+				(session) -> session.createQuery("delete Product").executeUpdate()
 		);
 	}
 

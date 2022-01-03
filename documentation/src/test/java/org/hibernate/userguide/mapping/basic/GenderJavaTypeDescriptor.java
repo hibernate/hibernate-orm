@@ -14,7 +14,7 @@ public class GenderJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<Ge
         new GenderJavaTypeDescriptor();
 
     protected GenderJavaTypeDescriptor() {
-        super( Gender.class );
+        super(Gender.class);
     }
 
     public String toString(Gender value) {
@@ -22,7 +22,7 @@ public class GenderJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<Ge
     }
 
     public Gender fromString(CharSequence string) {
-        return string == null ? null : Gender.valueOf( string.toString() );
+        return string == null ? null : Gender.valueOf(string.toString());
     }
 
     public <X> X unwrap(Gender value, Class<X> type, WrapperOptions options) {
@@ -30,13 +30,13 @@ public class GenderJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<Ge
             value == null ? null : value.getCode(),
             type,
             options
-        );
+       );
     }
 
     public <X> Gender wrap(X value, WrapperOptions options) {
         return Gender.fromCode(
-				CharacterJavaTypeDescriptor.INSTANCE.wrap( value, options )
-        );
+				CharacterJavaTypeDescriptor.INSTANCE.wrap(value, options)
+       );
     }
 }
 //end::basic-enums-custom-type-example[]

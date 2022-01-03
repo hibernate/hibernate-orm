@@ -31,7 +31,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialect( H2Dialect.class )
+@RequiresDialect(H2Dialect.class)
 public class DiscriminatorOptionsNotNullSingleTableTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
@@ -45,62 +45,62 @@ public class DiscriminatorOptionsNotNullSingleTableTest extends BaseEntityManage
 
 	@Test
 	public void test() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			entityManager.unwrap( Session.class ).doWork( connection -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			entityManager.unwrap(Session.class).doWork(connection -> {
 				try(Statement statement = connection.createStatement()) {
-					//statement.executeUpdate( "ALTER TABLE Account ALTER COLUMN DTYPE SET NULL" );
+					//statement.executeUpdate("ALTER TABLE Account ALTER COLUMN DTYPE SET NULL");
 				}
-			} );
+			});
 
 
 			DebitAccount debitAccount = new DebitAccount();
-			debitAccount.setId( 1L );
-			debitAccount.setOwner( "John Doe" );
-			debitAccount.setBalance( BigDecimal.valueOf( 100 ) );
-			debitAccount.setInterestRate( BigDecimal.valueOf( 1.5d ) );
-			debitAccount.setOverdraftFee( BigDecimal.valueOf( 25 ) );
+			debitAccount.setId(1L);
+			debitAccount.setOwner("John Doe");
+			debitAccount.setBalance(BigDecimal.valueOf(100));
+			debitAccount.setInterestRate(BigDecimal.valueOf(1.5d));
+			debitAccount.setOverdraftFee(BigDecimal.valueOf(25));
 
 			CreditAccount creditAccount = new CreditAccount();
-			creditAccount.setId( 2L );
-			creditAccount.setOwner( "John Doe" );
-			creditAccount.setBalance( BigDecimal.valueOf( 1000 ) );
-			creditAccount.setInterestRate( BigDecimal.valueOf( 1.9d ) );
-			creditAccount.setCreditLimit( BigDecimal.valueOf( 5000 ) );
+			creditAccount.setId(2L);
+			creditAccount.setOwner("John Doe");
+			creditAccount.setBalance(BigDecimal.valueOf(1000));
+			creditAccount.setInterestRate(BigDecimal.valueOf(1.9d));
+			creditAccount.setCreditLimit(BigDecimal.valueOf(5000));
 
 			Account account = new Account();
-			account.setId( 3L );
-			account.setOwner( "John Doe" );
-			account.setBalance( BigDecimal.valueOf( 1000 ) );
-			account.setInterestRate( BigDecimal.valueOf( 1.9d ) );
+			account.setId(3L);
+			account.setOwner("John Doe");
+			account.setBalance(BigDecimal.valueOf(1000));
+			account.setInterestRate(BigDecimal.valueOf(1.9d));
 
-			entityManager.persist( debitAccount );
-			entityManager.persist( creditAccount );
-			entityManager.persist( account );
+			entityManager.persist(debitAccount);
+			entityManager.persist(creditAccount);
+			entityManager.persist(account);
 
-			entityManager.unwrap( Session.class ).doWork( connection -> {
+			entityManager.unwrap(Session.class).doWork(connection -> {
 				try(Statement statement = connection.createStatement()) {
 					statement.executeUpdate(
 						"insert into Account (DTYPE, active, balance, interestRate, owner, id) " +
 						"values ('Other', true, 25, 0.5, 'Vlad', 4)"
 					);
 				}
-			} );
-		} );
+			});
+		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			Map<Long, Account> accounts = entityManager.createQuery(
-				"select a from Account a", Account.class )
+				"select a from Account a", Account.class)
 			.getResultList()
 			.stream()
-			.collect( Collectors.toMap( Account::getId, Function.identity()));
+			.collect(Collectors.toMap(Account::getId, Function.identity()));
 
 			assertEquals(4, accounts.size());
-			assertEquals( DebitAccount.class, accounts.get( 1L ).getClass() );
-			assertEquals( CreditAccount.class, accounts.get( 2L ).getClass() );
-			assertEquals( Account.class, accounts.get( 3L ).getClass() );
-			assertEquals( OtherAccount.class, accounts.get( 4L ).getClass() );
+			assertEquals(DebitAccount.class, accounts.get(1L).getClass());
+			assertEquals(CreditAccount.class, accounts.get(2L).getClass());
+			assertEquals(Account.class, accounts.get(3L).getClass());
+			assertEquals(OtherAccount.class, accounts.get(4L).getClass());
 
-		} );
+		});
 	}
 
 	@Entity(name = "Account")
@@ -151,7 +151,7 @@ public class DiscriminatorOptionsNotNullSingleTableTest extends BaseEntityManage
 	}
 
 	@Entity(name = "DebitAccount")
-	@DiscriminatorValue( "Debit" )
+	@DiscriminatorValue("Debit")
 	public static class DebitAccount extends Account {
 
 		private BigDecimal overdraftFee;
@@ -166,7 +166,7 @@ public class DiscriminatorOptionsNotNullSingleTableTest extends BaseEntityManage
 	}
 
 	@Entity(name = "CreditAccount")
-	@DiscriminatorValue( "Credit" )
+	@DiscriminatorValue("Credit")
 	public static class CreditAccount extends Account {
 
 		private BigDecimal creditLimit;
@@ -181,7 +181,7 @@ public class DiscriminatorOptionsNotNullSingleTableTest extends BaseEntityManage
 	}
 
 	@Entity(name = "OtherAccount")
-	@DiscriminatorValue( "Other" )
+	@DiscriminatorValue("Other")
 	public static class OtherAccount extends Account {
 
 		private boolean active;

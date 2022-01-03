@@ -27,7 +27,7 @@ public class EntityPersister
             NaturalIdDataAccess naturalIdRegionAccessStrategy,
             PersisterCreationContext creationContext)
             throws HibernateException {
-        super( persistentClass, cache, naturalIdRegionAccessStrategy, creationContext );
+        super(persistentClass, cache, naturalIdRegionAccessStrategy, creationContext);
     }
 }
 //end::entity-persister-mapping[]

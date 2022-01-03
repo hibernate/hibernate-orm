@@ -19,7 +19,7 @@ public class MoneyConverter
 
     @Override
     public Money convertToEntityAttribute(Long dbData) {
-        return dbData == null ? null : new Money( dbData );
+        return dbData == null ? null : new Money(dbData);
     }
 }
 //end::basic-hbm-attribute-converter-mapping-moneyconverter-example[]

@@ -31,7 +31,7 @@ import static org.hamcrest.Matchers.is;
  *
  * @author Steve Ebersole
  */
-@DomainModel( annotatedClasses = IntegerMappingTests.EntityOfIntegers.class )
+@DomainModel(annotatedClasses = IntegerMappingTests.EntityOfIntegers.class)
 @SessionFactory
 public class IntegerMappingTests {
 
@@ -39,45 +39,45 @@ public class IntegerMappingTests {
 	public void testMappings(SessionFactoryScope scope) {
 		// first, verify the type selections...
 		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
-		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( EntityOfIntegers.class );
+		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor(EntityOfIntegers.class);
 
 		{
-			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "wrapper" );
-			assertThat( attribute.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( Integer.class ) );
+			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("wrapper");
+			assertThat(attribute.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Integer.class));
 
 			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
-			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( Integer.class ) );
-			assertThat( jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), is( Types.INTEGER ) );
+			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Integer.class));
+			assertThat(jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), is(Types.INTEGER));
 		}
 
 		{
-			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "primitive" );
-			assertThat( attribute.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( Integer.class ) );
+			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("primitive");
+			assertThat(attribute.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Integer.class));
 
 			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
-			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( Integer.class ) );
-			assertThat( jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), is( Types.INTEGER ) );
+			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Integer.class));
+			assertThat(jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), is(Types.INTEGER));
 		}
 
 
 		// and try to use the mapping
 		scope.inTransaction(
-				(session) -> session.persist( new EntityOfIntegers( 1, 3, 5 ) )
+				(session) -> session.persist(new EntityOfIntegers(1, 3, 5))
 		);
 		scope.inTransaction(
-				(session) -> session.get( EntityOfIntegers.class, 1 )
+				(session) -> session.get(EntityOfIntegers.class, 1)
 		);
 	}
 
 	@AfterEach
 	public void dropData(SessionFactoryScope scope) {
 		scope.inTransaction(
-				(session) -> session.createQuery( "delete EntityOfIntegers" ).executeUpdate()
+				(session) -> session.createQuery("delete EntityOfIntegers").executeUpdate()
 		);
 	}
 
-	@Entity( name = "EntityOfIntegers" )
-	@Table( name = "EntityOfIntegers" )
+	@Entity(name = "EntityOfIntegers")
+	@Table(name = "EntityOfIntegers")
 	public static class EntityOfIntegers {
 		@Id
 		Integer id;

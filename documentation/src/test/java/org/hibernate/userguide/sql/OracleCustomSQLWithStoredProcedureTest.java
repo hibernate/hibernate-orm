@@ -44,47 +44,47 @@ public class OracleCustomSQLWithStoredProcedureTest extends BaseEntityManagerFun
 
 	@Before
 	public void init() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Session session = entityManager.unwrap( Session.class );
-			session.doWork( connection -> {
-				try(Statement statement = connection.createStatement(); ) {
-					statement.executeUpdate( "ALTER TABLE person ADD valid NUMBER(1) DEFAULT 0 NOT NULL" );
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			Session session = entityManager.unwrap(Session.class);
+			session.doWork(connection -> {
+				try(Statement statement = connection.createStatement();) {
+					statement.executeUpdate("ALTER TABLE person ADD valid NUMBER(1) DEFAULT 0 NOT NULL");
 					//tag::sql-sp-soft-delete-example[]
 					statement.executeUpdate(
-						"CREATE OR REPLACE PROCEDURE sp_delete_person ( " +
-						"   personId IN NUMBER ) " +
+						"CREATE OR REPLACE PROCEDURE sp_delete_person (" +
+						"   personId IN NUMBER) " +
 						"AS  " +
 						"BEGIN " +
 						"    UPDATE person SET valid = 0 WHERE id = personId; " +
 						"END;"
 					);}
 				//end::sql-sp-soft-delete-example[]
-			} );
+			});
 		});
 	}
 
 	@Test
 	public void test_sql_custom_crud() {
 
-		Person _person = doInJPA( this::entityManagerFactory, entityManager -> {
+		Person _person = doInJPA(this::entityManagerFactory, entityManager -> {
 			Person person = new Person();
-			person.setName( "John Doe" );
-			entityManager.persist( person );
+			person.setName("John Doe");
+			entityManager.persist(person);
 			return person;
-		} );
+		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			Long postId = _person.getId();
-			Person person = entityManager.find( Person.class, postId );
+			Person person = entityManager.find(Person.class, postId);
 			assertNotNull(person);
-			entityManager.remove( person );
-		} );
+			entityManager.remove(person);
+		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			Long postId = _person.getId();
-			Person person = entityManager.find( Person.class, postId );
+			Person person = entityManager.find(Person.class, postId);
 			assertNull(person);
-		} );
+		});
 	}
 
 
@@ -95,7 +95,7 @@ public class OracleCustomSQLWithStoredProcedureTest extends BaseEntityManagerFun
 	)
 	//tag::sql-sp-custom-crud-example[]
 	@SQLDelete(
-		sql =   "{ call sp_delete_person( ? ) } ",
+		sql =   "{ call sp_delete_person(?) } ",
 		callable = true
 	)
 	//end::sql-sp-custom-crud-example[]

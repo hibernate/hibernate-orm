@@ -33,31 +33,31 @@ public class CascadeOnDeleteCollectionTest extends BaseEntityManagerFunctionalTe
 
 	@Test
 	public void test() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			Person person = new Person();
-			person.setId( 1L );
-			person.setName( "John Doe" );
-			entityManager.persist( person );
+			person.setId(1L);
+			person.setName("John Doe");
+			entityManager.persist(person);
 
 			Phone phone1 = new Phone();
-			phone1.setId( 1L );
-			phone1.setNumber( "123-456-7890" );
-			phone1.setOwner( person );
-			person.addPhone( phone1 );
+			phone1.setId(1L);
+			phone1.setNumber("123-456-7890");
+			phone1.setOwner(person);
+			person.addPhone(phone1);
 
 			Phone phone2 = new Phone();
-			phone2.setId( 2L );
-			phone2.setNumber( "101-010-1234" );
-			phone2.setOwner( person );
-			person.addPhone( phone2 );
-		} );
+			phone2.setId(2L);
+			phone2.setNumber("101-010-1234");
+			phone2.setOwner(person);
+			person.addPhone(phone2);
+		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::pc-cascade-on-delete-collection-example[]
-			Person person = entityManager.find( Person.class, 1L );
-			entityManager.remove( person );
+			Person person = entityManager.find(Person.class, 1L);
+			entityManager.remove(person);
 			//end::pc-cascade-on-delete-collection-example[]
-		} );
+		});
 
 	}
 
@@ -95,8 +95,8 @@ public class CascadeOnDeleteCollectionTest extends BaseEntityManagerFunctionalTe
 		}
 
 		public void addPhone(Phone phone) {
-			phone.setOwner( this );
-			phones.add( phone );
+			phone.setOwner(this);
+			phones.add(phone);
 		}
 
 		//tag::pc-cascade-on-delete-collection-mapping-Person-example[]

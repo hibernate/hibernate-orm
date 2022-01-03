@@ -77,9 +77,9 @@ public class BootstrapTest {
         BootstrapServiceRegistryBuilder bootstrapRegistryBuilder =
             new BootstrapServiceRegistryBuilder();
         // add a custom ClassLoader
-        bootstrapRegistryBuilder.applyClassLoader( customClassLoader );
+        bootstrapRegistryBuilder.applyClassLoader(customClassLoader);
         // manually add an Integrator
-        bootstrapRegistryBuilder.applyIntegrator( customIntegrator );
+        bootstrapRegistryBuilder.applyIntegrator(customIntegrator);
 
         BootstrapServiceRegistry bootstrapRegistry = bootstrapRegistryBuilder.build();
         //end::bootstrap-bootstrap-native-registry-BootstrapServiceRegistry-example[]
@@ -103,7 +103,7 @@ public class BootstrapTest {
             new BootstrapServiceRegistryBuilder().build();
 
         StandardServiceRegistryBuilder standardRegistryBuilder =
-            new StandardServiceRegistryBuilder( bootstrapRegistry );
+            new StandardServiceRegistryBuilder(bootstrapRegistry);
         //end::bootstrap-bootstrap-native-registry-StandardServiceRegistryBuilder-example[]
     }
 
@@ -115,7 +115,7 @@ public class BootstrapTest {
             ServiceRegistry standardRegistry =
                     new StandardServiceRegistryBuilder().build();
 
-            MetadataSources sources = new MetadataSources( standardRegistry );
+            MetadataSources sources = new MetadataSources(standardRegistry);
 
             // alternatively, we can build the MetadataSources without passing
             // a service registry, in which case it will build a default
@@ -124,41 +124,41 @@ public class BootstrapTest {
             // MetadataSources sources = new MetadataSources();
 
             // add a class using JPA/Hibernate annotations for mapping
-            sources.addAnnotatedClass( MyEntity.class );
+            sources.addAnnotatedClass(MyEntity.class);
 
             // add the name of a class using JPA/Hibernate annotations for mapping.
             // differs from above in that accessing the Class is deferred which is
             // important if using runtime bytecode-enhancement
-            sources.addAnnotatedClassName( "org.hibernate.example.Customer" );
+            sources.addAnnotatedClassName("org.hibernate.example.Customer");
 
             // Read package-level metadata.
-            sources.addPackage( "hibernate.example" );
+            sources.addPackage("hibernate.example");
 
             // Read package-level metadata.
-            sources.addPackage( MyEntity.class.getPackage() );
+            sources.addPackage(MyEntity.class.getPackage());
 
             // Adds the named hbm.xml resource as a source: which performs the
             // classpath lookup and parses the XML
-            sources.addResource( "org/hibernate/example/Order.hbm.xml" );
+            sources.addResource("org/hibernate/example/Order.hbm.xml");
 
             // Adds the named JPA orm.xml resource as a source: which performs the
             // classpath lookup and parses the XML
-            sources.addResource( "org/hibernate/example/Product.orm.xml" );
+            sources.addResource("org/hibernate/example/Product.orm.xml");
 
             // Read all mapping documents from a directory tree.
             // Assumes that any file named *.hbm.xml is a mapping document.
-            sources.addDirectory( new File( ".") );
+            sources.addDirectory(new File("."));
 
             // Read mappings from a particular XML file
-            sources.addFile( new File( "./mapping.xml") );
+            sources.addFile(new File("./mapping.xml"));
 
             // Read all mappings from a jar file.
             // Assumes that any file named *.hbm.xml is a mapping document.
-            sources.addJar( new File( "./entities.jar") );
+            sources.addJar(new File("./entities.jar"));
 
             // Read a mapping as an application resource using the convention that a class named foo.bar.MyEntity is
             // mapped by a file named foo/bar/MyEntity.hbm.xml which can be resolved as a classpath resource.
-            sources.addClass( MyEntity.class );
+            sources.addClass(MyEntity.class);
             //end::bootstrap-bootstrap-native-registry-MetadataSources-example[]
         }
         catch (Exception ignore) {
@@ -175,11 +175,11 @@ public class BootstrapTest {
                 ServiceRegistry standardRegistry =
                         new StandardServiceRegistryBuilder().build();
 
-                MetadataSources sources = new MetadataSources( standardRegistry )
-                    .addAnnotatedClass( MyEntity.class )
-                    .addAnnotatedClassName( "org.hibernate.example.Customer" )
-                    .addResource( "org/hibernate/example/Order.hbm.xml" )
-                    .addResource( "org/hibernate/example/Product.orm.xml" );
+                MetadataSources sources = new MetadataSources(standardRegistry)
+                    .addAnnotatedClass(MyEntity.class)
+                    .addAnnotatedClassName("org.hibernate.example.Customer")
+                    .addResource("org/hibernate/example/Order.hbm.xml")
+                    .addResource("org/hibernate/example/Product.orm.xml");
                 //end::bootstrap-native-metadata-source-example[]
             }
 
@@ -199,19 +199,19 @@ public class BootstrapTest {
                 ServiceRegistry standardRegistry =
                     new StandardServiceRegistryBuilder().build();
 
-                MetadataSources sources = new MetadataSources( standardRegistry );
+                MetadataSources sources = new MetadataSources(standardRegistry);
 
                 MetadataBuilder metadataBuilder = sources.getMetadataBuilder();
 
                 // Use the JPA-compliant implicit naming strategy
                 metadataBuilder.applyImplicitNamingStrategy(
-                    ImplicitNamingStrategyJpaCompliantImpl.INSTANCE );
+                    ImplicitNamingStrategyJpaCompliantImpl.INSTANCE);
 
                 // specify the schema name to use for tables, etc when none is explicitly specified
-                metadataBuilder.applyImplicitSchemaName( "my_default_schema" );
+                metadataBuilder.applyImplicitSchemaName("my_default_schema");
 
                 // specify a custom Attribute Converter
-                metadataBuilder.applyAttributeConverter( myAttributeConverter );
+                metadataBuilder.applyAttributeConverter(myAttributeConverter);
 
                 Metadata metadata = metadataBuilder.build();
                 //end::bootstrap-native-metadata-builder-example[]
@@ -228,48 +228,48 @@ public class BootstrapTest {
             {
                 //tag::bootstrap-native-SessionFactory-example[]
                 StandardServiceRegistry standardRegistry = new StandardServiceRegistryBuilder()
-                    .configure( "org/hibernate/example/hibernate.cfg.xml" )
+                    .configure("org/hibernate/example/hibernate.cfg.xml")
                     .build();
 
-                Metadata metadata = new MetadataSources( standardRegistry )
-                    .addAnnotatedClass( MyEntity.class )
-                    .addAnnotatedClassName( "org.hibernate.example.Customer" )
-                    .addResource( "org/hibernate/example/Order.hbm.xml" )
-                    .addResource( "org/hibernate/example/Product.orm.xml" )
+                Metadata metadata = new MetadataSources(standardRegistry)
+                    .addAnnotatedClass(MyEntity.class)
+                    .addAnnotatedClassName("org.hibernate.example.Customer")
+                    .addResource("org/hibernate/example/Order.hbm.xml")
+                    .addResource("org/hibernate/example/Product.orm.xml")
                     .getMetadataBuilder()
-                    .applyImplicitNamingStrategy( ImplicitNamingStrategyJpaCompliantImpl.INSTANCE )
+                    .applyImplicitNamingStrategy(ImplicitNamingStrategyJpaCompliantImpl.INSTANCE)
                     .build();
 
                 SessionFactory sessionFactory = metadata.getSessionFactoryBuilder()
-                    .applyBeanManager( getBeanManager() )
+                    .applyBeanManager(getBeanManager())
                     .build();
                 //end::bootstrap-native-SessionFactory-example[]
             }
             {
                 //tag::bootstrap-native-SessionFactoryBuilder-example[]
                 StandardServiceRegistry standardRegistry = new StandardServiceRegistryBuilder()
-                        .configure( "org/hibernate/example/hibernate.cfg.xml" )
+                        .configure("org/hibernate/example/hibernate.cfg.xml")
                         .build();
 
-                Metadata metadata = new MetadataSources( standardRegistry )
-                    .addAnnotatedClass( MyEntity.class )
-                    .addAnnotatedClassName( "org.hibernate.example.Customer" )
-                    .addResource( "org/hibernate/example/Order.hbm.xml" )
-                    .addResource( "org/hibernate/example/Product.orm.xml" )
+                Metadata metadata = new MetadataSources(standardRegistry)
+                    .addAnnotatedClass(MyEntity.class)
+                    .addAnnotatedClassName("org.hibernate.example.Customer")
+                    .addResource("org/hibernate/example/Order.hbm.xml")
+                    .addResource("org/hibernate/example/Product.orm.xml")
                     .getMetadataBuilder()
-                    .applyImplicitNamingStrategy( ImplicitNamingStrategyJpaCompliantImpl.INSTANCE )
+                    .applyImplicitNamingStrategy(ImplicitNamingStrategyJpaCompliantImpl.INSTANCE)
                     .build();
 
                 SessionFactoryBuilder sessionFactoryBuilder = metadata.getSessionFactoryBuilder();
 
                 // Supply a SessionFactory-level Interceptor
-                sessionFactoryBuilder.applyInterceptor( new CustomSessionFactoryInterceptor() );
+                sessionFactoryBuilder.applyInterceptor(new CustomSessionFactoryInterceptor());
 
                 // Add a custom observer
-                sessionFactoryBuilder.addSessionFactoryObservers( new CustomSessionFactoryObserver() );
+                sessionFactoryBuilder.addSessionFactoryObservers(new CustomSessionFactoryObserver());
 
-                // Apply a CDI BeanManager ( for JPA event listeners )
-                sessionFactoryBuilder.applyBeanManager( getBeanManager() );
+                // Apply a CDI BeanManager (for JPA event listeners)
+                sessionFactoryBuilder.applyBeanManager(getBeanManager());
 
                 SessionFactory sessionFactory = sessionFactoryBuilder.build();
                 //end::bootstrap-native-SessionFactoryBuilder-example[]
@@ -285,7 +285,7 @@ public class BootstrapTest {
         try {
             //tag::bootstrap-jpa-compliant-EntityManagerFactory-example[]
             // Create an EMF for our CRM persistence-unit.
-            EntityManagerFactory emf = Persistence.createEntityManagerFactory( "CRM" );
+            EntityManagerFactory emf = Persistence.createEntityManagerFactory("CRM");
             //end::bootstrap-jpa-compliant-EntityManagerFactory-example[]
         } catch (Exception ignore) {}
     }
@@ -296,26 +296,26 @@ public class BootstrapTest {
         try {
             //tag::bootstrap-native-EntityManagerFactory-example[]
             String persistenceUnitName = "CRM";
-            List<String> entityClassNames = new ArrayList<>(  );
-            Properties properties = new Properties(  );
+            List<String> entityClassNames = new ArrayList<>();
+            Properties properties = new Properties();
 
             PersistenceUnitInfoImpl persistenceUnitInfo = new PersistenceUnitInfoImpl(
                 persistenceUnitName,
                 entityClassNames,
                 properties
-            );
+           );
 
             Map<String, Object> integrationSettings = new HashMap<>();
             integrationSettings.put(
                 AvailableSettings.INTERCEPTOR,
                 new CustomSessionFactoryInterceptor()
-            );
+           );
 
             EntityManagerFactoryBuilderImpl entityManagerFactoryBuilder =
                 new EntityManagerFactoryBuilderImpl(
-                    new PersistenceUnitInfoDescriptor( persistenceUnitInfo ),
+                    new PersistenceUnitInfoDescriptor(persistenceUnitInfo),
                     integrationSettings
-                );
+               );
 
             EntityManagerFactory emf = entityManagerFactoryBuilder.build();
             //end::bootstrap-native-EntityManagerFactory-example[]
@@ -347,26 +347,26 @@ public class BootstrapTest {
             // listeners are registered
             // It is a service so we look it up using the service registry
             final EventListenerRegistry eventListenerRegistry =
-                serviceRegistry.getService( EventListenerRegistry.class );
+                serviceRegistry.getService(EventListenerRegistry.class);
 
             // If you wish to have custom determination and handling of "duplicate" listeners,
             // you would have to add an implementation of the
             // org.hibernate.event.service.spi.DuplicationStrategy contract like this
-            eventListenerRegistry.addDuplicationStrategy( new CustomDuplicationStrategy() );
+            eventListenerRegistry.addDuplicationStrategy(new CustomDuplicationStrategy());
 
             // EventListenerRegistry defines 3 ways to register listeners:
 
             // 1) This form overrides any existing registrations with
-            eventListenerRegistry.setListeners( EventType.AUTO_FLUSH,
-                                                DefaultAutoFlushEventListener.class );
+            eventListenerRegistry.setListeners(EventType.AUTO_FLUSH,
+                                                DefaultAutoFlushEventListener.class);
 
             // 2) This form adds the specified listener(s) to the beginning of the listener chain
-            eventListenerRegistry.prependListeners( EventType.PERSIST,
-                                                    DefaultPersistEventListener.class );
+            eventListenerRegistry.prependListeners(EventType.PERSIST,
+                                                    DefaultPersistEventListener.class);
 
             // 3) This form adds the specified listener(s) to the end of the listener chain
-            eventListenerRegistry.appendListeners( EventType.MERGE,
-                                                   DefaultMergeEventListener.class );
+            eventListenerRegistry.appendListeners(EventType.MERGE,
+                                                   DefaultMergeEventListener.class);
         }
 
         @Override
@@ -414,7 +414,7 @@ public class BootstrapTest {
     //tag::bootstrap-jpa-compliant-PersistenceUnit-configurable-example[]
     @PersistenceUnit(
         unitName = "CRM"
-    )
+   )
     private EntityManagerFactory entityManagerFactory;
     //end::bootstrap-jpa-compliant-PersistenceUnit-configurable-example[]
 
@@ -430,9 +430,9 @@ public class BootstrapTest {
             @PersistenceProperty(
                 name="org.hibernate.flushMode",
                 value= "MANUAL"
-            )
+           )
         }
-    )
+   )
     private EntityManager entityManager;
     //end::bootstrap-jpa-compliant-PersistenceContext-configurable-example[]
 
@@ -568,11 +568,11 @@ public class BootstrapTest {
             ServiceRegistry standardRegistry =
                 new StandardServiceRegistryBuilder().build();
 
-            MetadataSources sources = new MetadataSources( standardRegistry );
+            MetadataSources sources = new MetadataSources(standardRegistry);
 
             MetadataBuilder metadataBuilder = sources.getMetadataBuilder();
 
-            metadataBuilder.applyBasicType( BitSetUserType.INSTANCE, "bitset" );
+            metadataBuilder.applyBasicType(BitSetUserType.INSTANCE, "bitset");
             //end::basic-custom-type-register-UserType-example[]
         }
         catch (Exception ignore) {

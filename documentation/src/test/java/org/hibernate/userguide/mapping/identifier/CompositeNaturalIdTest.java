@@ -36,24 +36,24 @@ public class CompositeNaturalIdTest extends BaseEntityManagerFunctionalTestCase 
 
 	@Test
 	public void test() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			Book book = new Book();
-			book.setId( 1L );
-			book.setTitle( "High-Performance Java Persistence" );
-			book.setAuthor( "Vlad Mihalcea" );
-			book.setIsbn( new Isbn(
+			book.setId(1L);
+			book.setTitle("High-Performance Java Persistence");
+			book.setAuthor("Vlad Mihalcea");
+			book.setIsbn(new Isbn(
 				"973022823X",
 				"978-9730228236"
-			) );
+			));
 
-			entityManager.persist( book );
-		} );
-		doInJPA( this::entityManagerFactory, entityManager -> {
+			entityManager.persist(book);
+		});
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::naturalid-simple-load-access-example[]
 
 			Book book = entityManager
 				.unwrap(Session.class)
-				.bySimpleNaturalId( Book.class )
+				.bySimpleNaturalId(Book.class)
 				.load(
 					new Isbn(
 						"973022823X",
@@ -63,24 +63,24 @@ public class CompositeNaturalIdTest extends BaseEntityManagerFunctionalTestCase 
 			//end::naturalid-simple-load-access-example[]
 
 			assertEquals("High-Performance Java Persistence", book.getTitle());
-		} );
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		});
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::naturalid-load-access-example[]
 
 			Book book = entityManager
 				.unwrap(Session.class)
-				.byNaturalId( Book.class )
+				.byNaturalId(Book.class)
 				.using(
 					"isbn",
 					new Isbn(
 						"973022823X",
 						"978-9730228236"
-					) )
+					))
 				.load();
 			//end::naturalid-load-access-example[]
 
 			assertEquals("High-Performance Java Persistence", book.getTitle());
-		} );
+		});
 	}
 
 	//tag::naturalid-single-embedded-attribute-mapping-example[]
@@ -173,20 +173,20 @@ public class CompositeNaturalIdTest extends BaseEntityManagerFunctionalTestCase 
 
 		@Override
 		public boolean equals(Object o) {
-			if ( this == o ) {
+			if (this == o) {
 				return true;
 			}
-			if ( o == null || getClass() != o.getClass() ) {
+			if (o == null || getClass() != o.getClass()) {
 				return false;
 			}
 			Isbn isbn = (Isbn) o;
-			return Objects.equals( isbn10, isbn.isbn10 ) &&
-					Objects.equals( isbn13, isbn.isbn13 );
+			return Objects.equals(isbn10, isbn.isbn10) &&
+					Objects.equals(isbn13, isbn.isbn13);
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash( isbn10, isbn13 );
+			return Objects.hash(isbn10, isbn13);
 		}
 	}
 	//end::naturalid-single-embedded-attribute-mapping-example[]

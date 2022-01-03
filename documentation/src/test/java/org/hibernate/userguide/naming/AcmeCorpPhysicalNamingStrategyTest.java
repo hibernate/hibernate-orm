@@ -32,17 +32,17 @@ public class AcmeCorpPhysicalNamingStrategyTest {
 
 	@After
 	public void releaseServiceRegistry() {
-		if ( serviceRegistry != null ) {
-			StandardServiceRegistryBuilder.destroy( serviceRegistry );
+		if (serviceRegistry != null) {
+			StandardServiceRegistryBuilder.destroy(serviceRegistry);
 		}
 	}
 
 	@Test
 	public void testTableNaming() {
 		{
-			Identifier in = Identifier.toIdentifier( "accountNumber" );
-			Identifier out = strategy.toPhysicalTableName( in, serviceRegistry.getService( JdbcEnvironment.class ) );
-			assertThat( out.getText(), equalTo( "acct_num" ) );
+			Identifier in = Identifier.toIdentifier("accountNumber");
+			Identifier out = strategy.toPhysicalTableName(in, serviceRegistry.getService(JdbcEnvironment.class));
+			assertThat(out.getText(), equalTo("acct_num"));
 
 		}
 	}

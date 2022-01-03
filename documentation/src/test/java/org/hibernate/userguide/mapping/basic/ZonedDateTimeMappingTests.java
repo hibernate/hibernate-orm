@@ -30,33 +30,33 @@ import static org.hamcrest.Matchers.isOneOf;
 /**
  * @author Steve Ebersole
  */
-@DomainModel( annotatedClasses = ZonedDateTimeMappingTests.EntityWithZonedDateTime.class )
+@DomainModel(annotatedClasses = ZonedDateTimeMappingTests.EntityWithZonedDateTime.class)
 @SessionFactory
 public class ZonedDateTimeMappingTests {
 
 	@Test
 	public void verifyMappings(SessionFactoryScope scope) {
 		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
-		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( EntityWithZonedDateTime.class );
+		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor(EntityWithZonedDateTime.class);
 
-		final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "zonedDateTime" );
+		final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("zonedDateTime");
 		final JdbcMapping jdbcMapping = attributeMapping.getJdbcMapping();
-		assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( ZonedDateTime.class ) );
-		assertThat( jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), isOneOf( Types.TIMESTAMP, Types.TIMESTAMP_WITH_TIMEZONE ) );
+		assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(ZonedDateTime.class));
+		assertThat(jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), isOneOf(Types.TIMESTAMP, Types.TIMESTAMP_WITH_TIMEZONE));
 
 		scope.inTransaction(
 				(session) -> {
-					session.persist( new EntityWithZonedDateTime( 1, ZonedDateTime.now() ) );
+					session.persist(new EntityWithZonedDateTime(1, ZonedDateTime.now()));
 				}
 		);
 
 		scope.inTransaction(
-				(session) -> session.find( EntityWithZonedDateTime.class, 1 )
+				(session) -> session.find(EntityWithZonedDateTime.class, 1)
 		);
 	}
 
-	@Entity( name = "EntityWithZonedDateTime" )
-	@Table( name = "EntityWithZonedDateTime" )
+	@Entity(name = "EntityWithZonedDateTime")
+	@Table(name = "EntityWithZonedDateTime")
 	public static class EntityWithZonedDateTime {
 		@Id
 		private Integer id;

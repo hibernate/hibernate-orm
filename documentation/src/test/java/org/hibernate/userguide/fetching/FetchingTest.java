@@ -49,10 +49,10 @@ public class FetchingTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	public void test() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			Department department = new Department();
 			department.id = 1L;
-			entityManager.persist( department );
+			entityManager.persist(department);
 
 			Employee employee1 = new Employee();
 			employee1.id = 1L;
@@ -60,7 +60,7 @@ public class FetchingTest extends BaseEntityManagerFunctionalTestCase {
 			employee1.password = "3fabb4de8f1ee2e97d7793bab2db1116";
 			employee1.accessLevel = 0;
 			employee1.department = department;
-			entityManager.persist( employee1 );
+			entityManager.persist(employee1);
 
 			Employee employee2 = new Employee();
 			employee2.id = 2L;
@@ -68,11 +68,11 @@ public class FetchingTest extends BaseEntityManagerFunctionalTestCase {
 			employee2.password = "3fabb4de8f1ee2e97d7793bab2db1116";
 			employee2.accessLevel = 1;
 			employee2.department = department;
-			entityManager.persist( employee2 );
+			entityManager.persist(employee2);
 
-		} );
+		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			String username = "user1";
 			String password = "3fabb4de8f1ee2e97d7793bab2db1116";
 			//tag::fetching-strategies-no-fetching-example[]
@@ -83,14 +83,14 @@ public class FetchingTest extends BaseEntityManagerFunctionalTestCase {
 				"	e.username = :username and " +
 				"	e.password = :password",
 				Employee.class)
-			.setParameter( "username", username)
-			.setParameter( "password", password)
+			.setParameter("username", username)
+			.setParameter("password", password)
 			.getSingleResult();
 			//end::fetching-strategies-no-fetching-example[]
 			assertNotNull(employee);
-		} );
+		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			String username = "user1";
 			String password = "3fabb4de8f1ee2e97d7793bab2db1116";
 			//tag::fetching-strategies-no-fetching-scalar-example[]
@@ -101,14 +101,14 @@ public class FetchingTest extends BaseEntityManagerFunctionalTestCase {
 				"	e.username = :username and " +
 				"	e.password = :password",
 				Integer.class)
-			.setParameter( "username", username)
-			.setParameter( "password", password)
+			.setParameter("username", username)
+			.setParameter("password", password)
 			.getSingleResult();
 			//end::fetching-strategies-no-fetching-scalar-example[]
-			assertEquals( Integer.valueOf(0), accessLevel);
-		} );
+			assertEquals(Integer.valueOf(0), accessLevel);
+		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			String username = "user1";
 			String password = "3fabb4de8f1ee2e97d7793bab2db1116";
 			//tag::fetching-strategies-dynamic-fetching-jpql-example[]
@@ -120,32 +120,32 @@ public class FetchingTest extends BaseEntityManagerFunctionalTestCase {
 				"	e.username = :username and " +
 				"	e.password = :password",
 				Employee.class)
-			.setParameter( "username", username)
-			.setParameter( "password", password)
+			.setParameter("username", username)
+			.setParameter("password", password)
 			.getSingleResult();
 			//end::fetching-strategies-dynamic-fetching-jpql-example[]
 			assertNotNull(employee);
-		} );
+		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			String username = "user1";
 			String password = "3fabb4de8f1ee2e97d7793bab2db1116";
 			//tag::fetching-strategies-dynamic-fetching-criteria-example[]
 
 			CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-			CriteriaQuery<Employee> query = builder.createQuery( Employee.class );
-			Root<Employee> root = query.from( Employee.class );
-			root.fetch( "projects", JoinType.LEFT);
+			CriteriaQuery<Employee> query = builder.createQuery(Employee.class);
+			Root<Employee> root = query.from(Employee.class);
+			root.fetch("projects", JoinType.LEFT);
 			query.select(root).where(
 				builder.and(
 					builder.equal(root.get("username"), username),
 					builder.equal(root.get("password"), password)
 				)
 			);
-			Employee employee = entityManager.createQuery( query ).getSingleResult();
+			Employee employee = entityManager.createQuery(query).getSingleResult();
 			//end::fetching-strategies-dynamic-fetching-criteria-example[]
 			assertNotNull(employee);
-		} );
+		});
 	}
 
 	//tag::fetching-strategies-domain-model-example[]
@@ -173,7 +173,7 @@ public class FetchingTest extends BaseEntityManagerFunctionalTestCase {
 
 		@Column(name = "pswd")
 		@ColumnTransformer(
-			read = "decrypt( 'AES', '00', pswd  )",
+			read = "decrypt('AES', '00', pswd )",
 			write = "encrypt('AES', '00', ?)"
 		)
 		private String password;

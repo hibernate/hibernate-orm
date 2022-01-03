@@ -30,33 +30,33 @@ import static org.hamcrest.Matchers.isOneOf;
 /**
  * @author Steve Ebersole
  */
-@DomainModel( annotatedClasses = OffsetTimeMappingTests.EntityWithOffsetTime.class )
+@DomainModel(annotatedClasses = OffsetTimeMappingTests.EntityWithOffsetTime.class)
 @SessionFactory
 public class OffsetTimeMappingTests {
 
 	@Test
 	public void verifyMappings(SessionFactoryScope scope) {
 		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
-		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( EntityWithOffsetTime.class );
+		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor(EntityWithOffsetTime.class);
 
-		final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "offsetTime" );
+		final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("offsetTime");
 		final JdbcMapping jdbcMapping = attributeMapping.getJdbcMapping();
-		assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( OffsetTime.class ) );
-		assertThat( jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), isOneOf( Types.TIME, Types.TIME_WITH_TIMEZONE ) );
+		assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(OffsetTime.class));
+		assertThat(jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), isOneOf(Types.TIME, Types.TIME_WITH_TIMEZONE));
 
 		scope.inTransaction(
 				(session) -> {
-					session.persist( new EntityWithOffsetTime( 1, OffsetTime.now() ) );
+					session.persist(new EntityWithOffsetTime(1, OffsetTime.now()));
 				}
 		);
 
 		scope.inTransaction(
-				(session) -> session.find( EntityWithOffsetTime.class, 1 )
+				(session) -> session.find(EntityWithOffsetTime.class, 1)
 		);
 	}
 
-	@Entity( name = "EntityWithOffsetTime" )
-	@Table( name = "EntityWithOffsetTime" )
+	@Entity(name = "EntityWithOffsetTime")
+	@Table(name = "EntityWithOffsetTime")
 	public static class EntityWithOffsetTime {
 		@Id
 		private Integer id;

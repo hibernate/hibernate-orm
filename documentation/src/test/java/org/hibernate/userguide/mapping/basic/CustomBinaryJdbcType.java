@@ -27,11 +27,11 @@ public class CustomBinaryJdbcType implements JdbcType {
 
 	@Override
 	public <X> ValueBinder<X> getBinder(JavaType<X> javaTypeDescriptor) {
-		return VarbinaryJdbcType.INSTANCE.getBinder( javaTypeDescriptor );
+		return VarbinaryJdbcType.INSTANCE.getBinder(javaTypeDescriptor);
 	}
 
 	@Override
 	public <X> ValueExtractor<X> getExtractor(JavaType<X> javaTypeDescriptor) {
-		return VarbinaryJdbcType.INSTANCE.getExtractor( javaTypeDescriptor );
+		return VarbinaryJdbcType.INSTANCE.getExtractor(javaTypeDescriptor);
 	}
 }

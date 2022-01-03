@@ -21,20 +21,20 @@ public class CascadePersistTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	public void persistTest() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::pc-cascade-persist-example[]
 			Person person = new Person();
-			person.setId( 1L );
-			person.setName( "John Doe" );
+			person.setId(1L);
+			person.setName("John Doe");
 
 			Phone phone = new Phone();
-			phone.setId( 1L );
-			phone.setNumber( "123-456-7890" );
+			phone.setId(1L);
+			phone.setNumber("123-456-7890");
 
-			person.addPhone( phone );
+			person.addPhone(phone);
 
-			entityManager.persist( person );
+			entityManager.persist(person);
 			//end::pc-cascade-persist-example[]
-		} );
+		});
 	}
 }

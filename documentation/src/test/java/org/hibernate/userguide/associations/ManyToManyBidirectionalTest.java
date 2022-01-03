@@ -38,27 +38,27 @@ public class ManyToManyBidirectionalTest extends BaseEntityManagerFunctionalTest
 
 	@Test
 	public void testLifecycle() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::associations-many-to-many-bidirectional-lifecycle-example[]
-			Person person1 = new Person( "ABC-123" );
-			Person person2 = new Person( "DEF-456" );
+			Person person1 = new Person("ABC-123");
+			Person person2 = new Person("DEF-456");
 
-			Address address1 = new Address( "12th Avenue", "12A", "4005A" );
-			Address address2 = new Address( "18th Avenue", "18B", "4007B" );
+			Address address1 = new Address("12th Avenue", "12A", "4005A");
+			Address address2 = new Address("18th Avenue", "18B", "4007B");
 
-			person1.addAddress( address1 );
-			person1.addAddress( address2 );
+			person1.addAddress(address1);
+			person1.addAddress(address2);
 
-			person2.addAddress( address1 );
+			person2.addAddress(address1);
 
-			entityManager.persist( person1 );
-			entityManager.persist( person2 );
+			entityManager.persist(person1);
+			entityManager.persist(person2);
 
 			entityManager.flush();
 
-			person1.removeAddress( address1 );
+			person1.removeAddress(address1);
 			//end::associations-many-to-many-bidirectional-lifecycle-example[]
-		} );
+		});
 	}
 
 	//tag::associations-many-to-many-bidirectional-example[]
@@ -92,30 +92,30 @@ public class ManyToManyBidirectionalTest extends BaseEntityManagerFunctionalTest
 
 	//tag::associations-many-to-many-bidirectional-example[]
 		public void addAddress(Address address) {
-			addresses.add( address );
-			address.getOwners().add( this );
+			addresses.add(address);
+			address.getOwners().add(this);
 		}
 
 		public void removeAddress(Address address) {
-			addresses.remove( address );
-			address.getOwners().remove( this );
+			addresses.remove(address);
+			address.getOwners().remove(this);
 		}
 
 		@Override
 		public boolean equals(Object o) {
-			if ( this == o ) {
+			if (this == o) {
 				return true;
 			}
-			if ( o == null || getClass() != o.getClass() ) {
+			if (o == null || getClass() != o.getClass()) {
 				return false;
 			}
 			Person person = (Person) o;
-			return Objects.equals( registrationNumber, person.registrationNumber );
+			return Objects.equals(registrationNumber, person.registrationNumber);
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash( registrationNumber );
+			return Objects.hash(registrationNumber);
 		}
 	}
 
@@ -172,21 +172,21 @@ public class ManyToManyBidirectionalTest extends BaseEntityManagerFunctionalTest
 	//tag::associations-many-to-many-bidirectional-example[]
 		@Override
 		public boolean equals(Object o) {
-			if ( this == o ) {
+			if (this == o) {
 				return true;
 			}
-			if ( o == null || getClass() != o.getClass() ) {
+			if (o == null || getClass() != o.getClass()) {
 				return false;
 			}
 			Address address = (Address) o;
-			return Objects.equals( street, address.street ) &&
-					Objects.equals( number, address.number ) &&
-					Objects.equals( postalCode, address.postalCode );
+			return Objects.equals(street, address.street) &&
+					Objects.equals(number, address.number) &&
+					Objects.equals(postalCode, address.postalCode);
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash( street, number, postalCode );
+			return Objects.hash(street, number, postalCode);
 		}
 	}
 	//end::associations-many-to-many-bidirectional-example[]

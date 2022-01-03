@@ -33,7 +33,7 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
  */
 public class InterceptorTest extends BaseEntityManagerFunctionalTestCase {
 
-	private static final Logger LOGGER = Logger.getLogger( InterceptorTest.class );
+	private static final Logger LOGGER = Logger.getLogger(InterceptorTest.class);
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -44,11 +44,11 @@ public class InterceptorTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Before
 	public void init() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			entityManager.persist( new Customer( "John Doe" ) );
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			entityManager.persist(new Customer("John Doe"));
 			Customer customer = new Customer();
-			entityManager.persist( customer );
-		} );
+			entityManager.persist(customer);
+		});
 	}
 
 	@Test
@@ -56,15 +56,15 @@ public class InterceptorTest extends BaseEntityManagerFunctionalTestCase {
 		EntityManagerFactory entityManagerFactory = entityManagerFactory();
 		Serializable customerId = 1L;
 		//tag::events-interceptors-session-scope-example[]
-		SessionFactory sessionFactory = entityManagerFactory.unwrap( SessionFactory.class );
+		SessionFactory sessionFactory = entityManagerFactory.unwrap(SessionFactory.class);
 		Session session = sessionFactory
 			.withOptions()
-			.interceptor(new LoggingInterceptor() )
+			.interceptor(new LoggingInterceptor())
 			.openSession();
 		session.getTransaction().begin();
 
-		Customer customer = session.get( Customer.class, customerId );
-		customer.setName( "Mr. John Doe" );
+		Customer customer = session.get(Customer.class, customerId);
+		customer.setName("Mr. John Doe");
 		//Entity Customer#1 changed from [John Doe, 0] to [Mr. John Doe, 0]
 
 		session.getTransaction().commit();
@@ -77,19 +77,19 @@ public class InterceptorTest extends BaseEntityManagerFunctionalTestCase {
 
 		Serializable customerId = 1L;
 		//tag::events-interceptors-session-factory-scope-example[]
-		SessionFactory sessionFactory = new MetadataSources( new StandardServiceRegistryBuilder().build() )
-			.addAnnotatedClass( Customer.class )
+		SessionFactory sessionFactory = new MetadataSources(new StandardServiceRegistryBuilder().build())
+			.addAnnotatedClass(Customer.class)
 			.getMetadataBuilder()
 			.build()
 			.getSessionFactoryBuilder()
-			.applyInterceptor( new LoggingInterceptor() )
+			.applyInterceptor(new LoggingInterceptor())
 			.build();
 		//end::events-interceptors-session-factory-scope-example[]
 		Session session = sessionFactory.openSession();
 		session.getTransaction().begin();
 
-		Customer customer = session.get( Customer.class, customerId );
-		customer.setName( "Mr. John Doe" );
+		Customer customer = session.get(Customer.class, customerId);
+		customer.setName("Mr. John Doe");
 		//Entity Customer#1 changed from [John Doe, 0] to [Mr. John Doe, 0]
 		session.getTransaction().commit();
 		session.close();
@@ -135,13 +135,13 @@ public class InterceptorTest extends BaseEntityManagerFunctionalTestCase {
 			Object[] previousState,
 			String[] propertyNames,
 			Type[] types) {
-				LOGGER.debugv( "Entity {0}#{1} changed from {2} to {3}",
+				LOGGER.debugv("Entity {0}#{1} changed from {2} to {3}",
 					entity.getClass().getSimpleName(),
 					id,
-					Arrays.toString( previousState ),
-					Arrays.toString( currentState )
+					Arrays.toString(previousState),
+					Arrays.toString(currentState)
 				);
-				return super.onFlushDirty( entity, id, currentState,
+				return super.onFlushDirty(entity, id, currentState,
 					previousState, propertyNames, types
 			);
 		}

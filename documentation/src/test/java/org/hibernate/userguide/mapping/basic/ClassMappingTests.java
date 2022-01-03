@@ -29,7 +29,7 @@ import static org.hamcrest.Matchers.equalTo;
 /**
  * @author Steve Ebersole
  */
-@DomainModel( annotatedClasses = ClassMappingTests.EntityWithClass.class )
+@DomainModel(annotatedClasses = ClassMappingTests.EntityWithClass.class)
 @SessionFactory
 public class ClassMappingTests {
 
@@ -37,26 +37,26 @@ public class ClassMappingTests {
 	public void verifyMappings(SessionFactoryScope scope) {
 		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
 		final JdbcTypeRegistry jdbcRegistry = domainModel.getTypeConfiguration().getJdbcTypeDescriptorRegistry();
-		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( EntityWithClass.class );
+		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor(EntityWithClass.class);
 
-		final BasicAttributeMapping duration = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "clazz" );
+		final BasicAttributeMapping duration = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("clazz");
 		final JdbcMapping jdbcMapping = duration.getJdbcMapping();
-		assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( Class.class ) );
-		assertThat( jdbcMapping.getJdbcTypeDescriptor(), equalTo( jdbcRegistry.getDescriptor( Types.VARCHAR ) ) );
+		assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Class.class));
+		assertThat(jdbcMapping.getJdbcTypeDescriptor(), equalTo(jdbcRegistry.getDescriptor(Types.VARCHAR)));
 
 		scope.inTransaction(
 				(session) -> {
-					session.persist( new EntityWithClass( 1, String.class ) );
+					session.persist(new EntityWithClass(1, String.class));
 				}
 		);
 
 		scope.inTransaction(
-				(session) -> session.find( EntityWithClass.class, 1 )
+				(session) -> session.find(EntityWithClass.class, 1)
 		);
 	}
 
-	@Entity( name = "EntityWithClass" )
-	@Table( name = "EntityWithClass" )
+	@Entity(name = "EntityWithClass")
+	@Table(name = "EntityWithClass")
 	public static class EntityWithClass {
 		@Id
 		private Integer id;

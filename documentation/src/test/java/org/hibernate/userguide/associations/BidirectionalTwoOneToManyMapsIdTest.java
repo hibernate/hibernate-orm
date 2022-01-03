@@ -45,28 +45,28 @@ public class BidirectionalTwoOneToManyMapsIdTest extends BaseEntityManagerFuncti
 
 	@Test
 	public void testLifecycle() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Person person1 = new Person( "ABC-123" );
-			Person person2 = new Person( "DEF-456" );
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			Person person1 = new Person("ABC-123");
+			Person person2 = new Person("DEF-456");
 
-			Address address1 = new Address( "12th Avenue", "12A", "4005A" );
-			Address address2 = new Address( "18th Avenue", "18B", "4007B" );
+			Address address1 = new Address("12th Avenue", "12A", "4005A");
+			Address address2 = new Address("18th Avenue", "18B", "4007B");
 
-			entityManager.persist( person1 );
-			entityManager.persist( person2 );
+			entityManager.persist(person1);
+			entityManager.persist(person2);
 
-			entityManager.persist( address1 );
-			entityManager.persist( address2 );
+			entityManager.persist(address1);
+			entityManager.persist(address2);
 
-			person1.addAddress( address1 );
-			person1.addAddress( address2 );
+			person1.addAddress(address1);
+			person1.addAddress(address2);
 
-			person2.addAddress( address1 );
+			person2.addAddress(address1);
 
 			entityManager.flush();
 
-			person1.removeAddress( address1 );
-		} );
+			person1.removeAddress(address1);
+		});
 	}
 
 	@Entity(name = "Person")
@@ -98,13 +98,13 @@ public class BidirectionalTwoOneToManyMapsIdTest extends BaseEntityManagerFuncti
 		}
 
 		public void addAddress(Address address) {
-			PersonAddress personAddress = new PersonAddress( this, address );
-			addresses.add( personAddress );
-			address.getOwners().add( personAddress );
+			PersonAddress personAddress = new PersonAddress(this, address);
+			addresses.add(personAddress);
+			address.getOwners().add(personAddress);
 		}
 
 		public void removeAddress(Address address) {
-			for ( Iterator<PersonAddress> iterator = addresses.iterator(); iterator.hasNext(); ) {
+			for (Iterator<PersonAddress> iterator = addresses.iterator(); iterator.hasNext();) {
 				PersonAddress personAddress = iterator.next();
 				if(personAddress.getPerson().equals(this) &&
 						personAddress.getAddress().equals(address)) {
@@ -118,19 +118,19 @@ public class BidirectionalTwoOneToManyMapsIdTest extends BaseEntityManagerFuncti
 
 		@Override
 		public boolean equals(Object o) {
-			if ( this == o ) {
+			if (this == o) {
 				return true;
 			}
-			if ( o == null || getClass() != o.getClass() ) {
+			if (o == null || getClass() != o.getClass()) {
 				return false;
 			}
 			Person person = (Person) o;
-			return Objects.equals( registrationNumber, person.registrationNumber );
+			return Objects.equals(registrationNumber, person.registrationNumber);
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash( registrationNumber );
+			return Objects.hash(registrationNumber);
 		}
 	}
 
@@ -159,20 +159,20 @@ public class BidirectionalTwoOneToManyMapsIdTest extends BaseEntityManagerFuncti
 
 		@Override
 		public boolean equals(Object o) {
-			if ( this == o ) {
+			if (this == o) {
 				return true;
 			}
-			if ( o == null || getClass() != o.getClass() ) {
+			if (o == null || getClass() != o.getClass()) {
 				return false;
 			}
 			PersonAddressId that = (PersonAddressId) o;
-			return Objects.equals( personId, that.personId ) &&
-					Objects.equals( addressId, that.addressId );
+			return Objects.equals(personId, that.personId) &&
+					Objects.equals(addressId, that.addressId);
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash( personId, addressId );
+			return Objects.hash(personId, addressId);
 		}
 	}
 
@@ -196,7 +196,7 @@ public class BidirectionalTwoOneToManyMapsIdTest extends BaseEntityManagerFuncti
 		public PersonAddress(Person person, Address address) {
 			this.person = person;
 			this.address = address;
-			this.id = new PersonAddressId( person.getId(), address.getId() );
+			this.id = new PersonAddressId(person.getId(), address.getId());
 		}
 
 		public PersonAddressId getId() {
@@ -221,20 +221,20 @@ public class BidirectionalTwoOneToManyMapsIdTest extends BaseEntityManagerFuncti
 
 		@Override
 		public boolean equals(Object o) {
-			if ( this == o ) {
+			if (this == o) {
 				return true;
 			}
-			if ( o == null || getClass() != o.getClass() ) {
+			if (o == null || getClass() != o.getClass()) {
 				return false;
 			}
 			PersonAddress that = (PersonAddress) o;
-			return Objects.equals( person, that.person ) &&
-					Objects.equals( address, that.address );
+			return Objects.equals(person, that.person) &&
+					Objects.equals(address, that.address);
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash( person, address );
+			return Objects.hash(person, address);
 		}
 	}
 
@@ -286,21 +286,21 @@ public class BidirectionalTwoOneToManyMapsIdTest extends BaseEntityManagerFuncti
 
 		@Override
 		public boolean equals(Object o) {
-			if ( this == o ) {
+			if (this == o) {
 				return true;
 			}
-			if ( o == null || getClass() != o.getClass() ) {
+			if (o == null || getClass() != o.getClass()) {
 				return false;
 			}
 			Address address = (Address) o;
-			return Objects.equals( street, address.street ) &&
-					Objects.equals( number, address.number ) &&
-					Objects.equals( postalCode, address.postalCode );
+			return Objects.equals(street, address.street) &&
+					Objects.equals(number, address.number) &&
+					Objects.equals(postalCode, address.postalCode);
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash( street, number, postalCode );
+			return Objects.hash(street, number, postalCode);
 		}
 	}
 

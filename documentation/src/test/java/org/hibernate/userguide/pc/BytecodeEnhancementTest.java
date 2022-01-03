@@ -42,33 +42,33 @@ public class BytecodeEnhancementTest extends BaseEntityManagerFunctionalTestCase
 
 	@Test
 	public void test() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::BytecodeEnhancement-dirty-tracking-bidirectional-incorrect-usage-example[]
 			Person person = new Person();
-			person.setName( "John Doe" );
+			person.setName("John Doe");
 
 			Book book = new Book();
-			person.getBooks().add( book );
+			person.getBooks().add(book);
 			try {
 				book.getAuthor().getName();
 			}
 			catch (NullPointerException expected) {
-				// This blows up ( NPE ) in normal Java usage
+				// This blows up (NPE) in normal Java usage
 			}
 			//end::BytecodeEnhancement-dirty-tracking-bidirectional-incorrect-usage-example[]
-		} );
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		});
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::BytecodeEnhancement-dirty-tracking-bidirectional-correct-usage-example[]
 			Person person = new Person();
-			person.setName( "John Doe" );
+			person.setName("John Doe");
 
 			Book book = new Book();
-			person.getBooks().add( book );
-			book.setAuthor( person );
+			person.getBooks().add(book);
+			book.setAuthor(person);
 
 			book.getAuthor().getName();
 			//end::BytecodeEnhancement-dirty-tracking-bidirectional-correct-usage-example[]
-		} );
+		});
 	}
 
 	//tag::BytecodeEnhancement-lazy-loading-example[]
@@ -80,12 +80,12 @@ public class BytecodeEnhancementTest extends BaseEntityManagerFunctionalTestCase
 
 		private String name;
 
-		@Basic( fetch = FetchType.LAZY )
+		@Basic(fetch = FetchType.LAZY)
 		private UUID accountsPayableXrefId;
 
 		@Lob
-		@Basic( fetch = FetchType.LAZY )
-		@LazyGroup( "lobs" )
+		@Basic(fetch = FetchType.LAZY)
+		@LazyGroup("lobs")
 		private Blob image;
 
 		//Getters and setters are omitted for brevity

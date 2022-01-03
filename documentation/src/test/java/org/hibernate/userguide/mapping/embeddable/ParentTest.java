@@ -36,24 +36,24 @@ public class ParentTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void testLifecycle() {
 		//tag::embeddable-Parent-persist-example[]
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 
 			City cluj = new City();
-			cluj.setName( "Cluj" );
-			cluj.setCoordinates( new GPS( 46.77120, 23.62360 ) );
+			cluj.setName("Cluj");
+			cluj.setCoordinates(new GPS(46.77120, 23.62360));
 
-			entityManager.persist( cluj );
-		} );
+			entityManager.persist(cluj);
+		});
 		//end::embeddable-Parent-persist-example[]
 
 
 		//tag::embeddable-Parent-fetching-example[]
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 
-			City cluj = entityManager.find( City.class, 1L );
+			City cluj = entityManager.find(City.class, 1L);
 
-			assertSame( cluj, cluj.getCoordinates().getCity() );
-		} );
+			assertSame(cluj, cluj.getCoordinates().getCity());
+		});
 		//end::embeddable-Parent-fetching-example[]
 	}
 
@@ -112,7 +112,7 @@ public class ParentTest extends BaseEntityManagerFunctionalTestCase {
 		private String name;
 
 		@Embedded
-		@Target( GPS.class )
+		@Target(GPS.class)
 		private GPS coordinates;
 
 		//Getters and setters omitted for brevity

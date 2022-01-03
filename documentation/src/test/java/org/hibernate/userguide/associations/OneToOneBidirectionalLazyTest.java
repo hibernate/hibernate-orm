@@ -58,7 +58,7 @@ public class OneToOneBidirectionalLazyTest extends BaseEntityManagerFunctionalTe
 			orphanRemoval = true,
 			fetch = FetchType.LAZY
 		)
-		@LazyToOne( LazyToOneOption.NO_PROXY )
+		@LazyToOne(LazyToOneOption.NO_PROXY)
 		private PhoneDetails details;
 
 		//Getters and setters are omitted for brevity
@@ -86,13 +86,13 @@ public class OneToOneBidirectionalLazyTest extends BaseEntityManagerFunctionalTe
 
 	//tag::associations-one-to-one-bidirectional-lazy-example[]
 		public void addDetails(PhoneDetails details) {
-			details.setPhone( this );
+			details.setPhone(this);
 			this.details = details;
 		}
 
 		public void removeDetails() {
-			if ( details != null ) {
-				details.setPhone( null );
+			if (details != null) {
+				details.setPhone(null);
 				this.details = null;
 			}
 		}

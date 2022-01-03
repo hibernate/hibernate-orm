@@ -39,20 +39,20 @@ public class OneToManyBidirectionalTest extends BaseEntityManagerFunctionalTestC
 
 	@Test
 	public void testLifecycle() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::associations-one-to-many-bidirectional-lifecycle-example[]
 			Person person = new Person();
-			Phone phone1 = new Phone( "123-456-7890" );
-			Phone phone2 = new Phone( "321-654-0987" );
+			Phone phone1 = new Phone("123-456-7890");
+			Phone phone2 = new Phone("321-654-0987");
 
-			person.addPhone( phone1 );
-			person.addPhone( phone2 );
-			entityManager.persist( person );
+			person.addPhone(phone1);
+			person.addPhone(phone2);
+			entityManager.persist(person);
 			entityManager.flush();
 
-			person.removePhone( phone1 );
+			person.removePhone(phone1);
 			//end::associations-one-to-many-bidirectional-lifecycle-example[]
-		} );
+		});
 	}
 
 	//tag::associations-one-to-many-bidirectional-example[]
@@ -83,13 +83,13 @@ public class OneToManyBidirectionalTest extends BaseEntityManagerFunctionalTestC
 
 	//tag::associations-one-to-many-bidirectional-example[]
 		public void addPhone(Phone phone) {
-			phones.add( phone );
-			phone.setPerson( this );
+			phones.add(phone);
+			phone.setPerson(this);
 		}
 
 		public void removePhone(Phone phone) {
-			phones.remove( phone );
-			phone.setPerson( null );
+			phones.remove(phone);
+			phone.setPerson(null);
 		}
 	}
 
@@ -137,19 +137,19 @@ public class OneToManyBidirectionalTest extends BaseEntityManagerFunctionalTestC
 	//tag::associations-one-to-many-bidirectional-example[]
 		@Override
 		public boolean equals(Object o) {
-			if ( this == o ) {
+			if (this == o) {
 				return true;
 			}
-			if ( o == null || getClass() != o.getClass() ) {
+			if (o == null || getClass() != o.getClass()) {
 				return false;
 			}
 			Phone phone = (Phone) o;
-			return Objects.equals( number, phone.number );
+			return Objects.equals(number, phone.number);
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash( number );
+			return Objects.hash(number);
 		}
 	}
 	//end::associations-one-to-many-bidirectional-example[]

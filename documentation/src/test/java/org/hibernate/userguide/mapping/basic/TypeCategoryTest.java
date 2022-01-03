@@ -31,11 +31,11 @@ public class TypeCategoryTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	public void test() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Contact contact = new Contact( );
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			Contact contact = new Contact();
 			contact.id = 1;
-			entityManager.persist( contact );
-		} );
+			entityManager.persist(contact);
+		});
 	}
 
 	//tag::mapping-types-basic-example[]

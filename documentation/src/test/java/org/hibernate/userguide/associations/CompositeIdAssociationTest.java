@@ -37,32 +37,32 @@ public class CompositeIdAssociationTest extends BaseEntityManagerFunctionalTestC
 
 	@Test
 	public void testLifecycle() {
-		PersonAddress _personAddress = doInJPA( this::entityManagerFactory, entityManager -> {
-			Person person1 = new Person( "ABC-123" );
-			Person person2 = new Person( "DEF-456" );
+		PersonAddress _personAddress = doInJPA(this::entityManagerFactory, entityManager -> {
+			Person person1 = new Person("ABC-123");
+			Person person2 = new Person("DEF-456");
 
-			Address address1 = new Address( "12th Avenue", "12A", "4005A" );
-			Address address2 = new Address( "18th Avenue", "18B", "4007B" );
+			Address address1 = new Address("12th Avenue", "12A", "4005A");
+			Address address2 = new Address("18th Avenue", "18B", "4007B");
 
-			entityManager.persist( person1 );
-			entityManager.persist( person2 );
+			entityManager.persist(person1);
+			entityManager.persist(person2);
 
-			entityManager.persist( address1 );
-			entityManager.persist( address2 );
+			entityManager.persist(address1);
+			entityManager.persist(address2);
 
-			PersonAddress personAddress = new PersonAddress( person1, address1 );
-			entityManager.persist( personAddress );
+			PersonAddress personAddress = new PersonAddress(person1, address1);
+			entityManager.persist(personAddress);
 			return personAddress;
-		} );
+		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Address address = entityManager.createQuery( "from Address", Address.class ).getResultList().get( 0 );
-			Person person = entityManager.createQuery( "from Person", Person.class ).getResultList().get( 0 );
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			Address address = entityManager.createQuery("from Address", Address.class).getResultList().get(0);
+			Person person = entityManager.createQuery("from Person", Person.class).getResultList().get(0);
 			PersonAddress personAddress = entityManager.find(
 					PersonAddress.class,
-					new PersonAddress( person, address )
+					new PersonAddress(person, address)
 			);
-		} );
+		});
 	}
 
 	@Entity(name = "PersonAddress")
@@ -102,20 +102,20 @@ public class CompositeIdAssociationTest extends BaseEntityManagerFunctionalTestC
 
 		@Override
 		public boolean equals(Object o) {
-			if ( this == o ) {
+			if (this == o) {
 				return true;
 			}
-			if ( o == null || getClass() != o.getClass() ) {
+			if (o == null || getClass() != o.getClass()) {
 				return false;
 			}
 			PersonAddress that = (PersonAddress) o;
-			return Objects.equals( person, that.person ) &&
-					Objects.equals( address, that.address );
+			return Objects.equals(person, that.person) &&
+					Objects.equals(address, that.address);
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash( person, address );
+			return Objects.hash(person, address);
 		}
 	}
 
@@ -142,19 +142,19 @@ public class CompositeIdAssociationTest extends BaseEntityManagerFunctionalTestC
 
 		@Override
 		public boolean equals(Object o) {
-			if ( this == o ) {
+			if (this == o) {
 				return true;
 			}
-			if ( o == null || getClass() != o.getClass() ) {
+			if (o == null || getClass() != o.getClass()) {
 				return false;
 			}
 			Person person = (Person) o;
-			return Objects.equals( registrationNumber, person.registrationNumber );
+			return Objects.equals(registrationNumber, person.registrationNumber);
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash( registrationNumber );
+			return Objects.hash(registrationNumber);
 		}
 	}
 
@@ -199,21 +199,21 @@ public class CompositeIdAssociationTest extends BaseEntityManagerFunctionalTestC
 
 		@Override
 		public boolean equals(Object o) {
-			if ( this == o ) {
+			if (this == o) {
 				return true;
 			}
-			if ( o == null || getClass() != o.getClass() ) {
+			if (o == null || getClass() != o.getClass()) {
 				return false;
 			}
 			Address address = (Address) o;
-			return Objects.equals( street, address.street ) &&
-					Objects.equals( number, address.number ) &&
-					Objects.equals( postalCode, address.postalCode );
+			return Objects.equals(street, address.street) &&
+					Objects.equals(number, address.number) &&
+					Objects.equals(postalCode, address.postalCode);
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash( street, number, postalCode );
+			return Objects.hash(street, number, postalCode);
 		}
 	}
 }

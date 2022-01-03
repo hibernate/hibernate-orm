@@ -21,10 +21,10 @@ import jakarta.persistence.DiscriminatorType;
 @Target({ElementType.TYPE, ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 
-@AnyDiscriminator( DiscriminatorType.STRING )
-@AnyKeyJavaClass( Long.class )
+@AnyDiscriminator(DiscriminatorType.STRING)
+@AnyKeyJavaClass(Long.class)
 
-@AnyDiscriminatorValue( discriminator = "S", entity = StringProperty.class )
-@AnyDiscriminatorValue( discriminator = "I", entity = IntegerProperty.class )
+@AnyDiscriminatorValue(discriminator = "S", entity = StringProperty.class)
+@AnyDiscriminatorValue(discriminator = "I", entity = IntegerProperty.class)
 public @interface PropertyDiscriminationDef {
 }

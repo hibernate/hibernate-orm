@@ -39,7 +39,7 @@ import static org.hamcrest.Matchers.isOneOf;
 /**
  * Test using a converter to map the BitSet
  */
-@DomainModel( annotatedClasses = BitSetConverterImmutableTests.Product.class )
+@DomainModel(annotatedClasses = BitSetConverterImmutableTests.Product.class)
 @SessionFactory
 public class BitSetConverterImmutableTests {
 
@@ -48,28 +48,28 @@ public class BitSetConverterImmutableTests {
 		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
 		final MappingMetamodel domainModel = sessionFactory.getDomainModel();
 
-		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( Product.class );
-		final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "bitSet" );
+		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor(Product.class);
+		final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("bitSet");
 
-		assertThat( attributeMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( BitSet.class ) );
+		assertThat(attributeMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(BitSet.class));
 
-		assertThat( attributeMapping.getValueConverter(), instanceOf( JpaAttributeConverter.class ) );
+		assertThat(attributeMapping.getValueConverter(), instanceOf(JpaAttributeConverter.class));
 		final JpaAttributeConverter converter = (JpaAttributeConverter) attributeMapping.getValueConverter();
-		assertThat( converter.getConverterBean().getBeanClass(), equalTo( BitSetConverter.class ) );
+		assertThat(converter.getConverterBean().getBeanClass(), equalTo(BitSetConverter.class));
 
-		Assertions.assertThat( attributeMapping.getExposedMutabilityPlan() ).isNotInstanceOf( BitSetMutabilityPlan.class );
-		Assertions.assertThat( attributeMapping.getExposedMutabilityPlan() ).isInstanceOf( ImmutableMutabilityPlan.class );
-		Assertions.assertThat( attributeMapping.getExposedMutabilityPlan().isMutable() ).isFalse();
+		Assertions.assertThat(attributeMapping.getExposedMutabilityPlan()).isNotInstanceOf(BitSetMutabilityPlan.class);
+		Assertions.assertThat(attributeMapping.getExposedMutabilityPlan()).isInstanceOf(ImmutableMutabilityPlan.class);
+		Assertions.assertThat(attributeMapping.getExposedMutabilityPlan().isMutable()).isFalse();
 
 		final BitSet sample = new BitSet();
-		Assertions.assertThat( ( (MutabilityPlan) attributeMapping.getExposedMutabilityPlan() ).deepCopy( sample ) ).isSameAs( sample );
+		Assertions.assertThat(((MutabilityPlan) attributeMapping.getExposedMutabilityPlan()).deepCopy(sample)).isSameAs(sample);
 
 		assertThat(
 				attributeMapping.getJdbcMapping().getJdbcTypeDescriptor().getJdbcTypeCode(),
-				isOneOf( Types.VARCHAR, Types.NVARCHAR )
+				isOneOf(Types.VARCHAR, Types.NVARCHAR)
 		);
 
-		assertThat( attributeMapping.getJdbcMapping().getJavaTypeDescriptor().getJavaTypeClass(), equalTo( String.class ) );
+		assertThat(attributeMapping.getJdbcMapping().getJavaTypeDescriptor().getJavaTypeClass(), equalTo(String.class));
 	}
 
 	@Table(name = "products")
@@ -79,7 +79,7 @@ public class BitSetConverterImmutableTests {
 		@Id
 		private Integer id;
 
-		@Convert( converter = BitSetConverter.class )
+		@Convert(converter = BitSetConverter.class)
 		private BitSet bitSet;
 
 		//Getters and setters are omitted for brevity
@@ -107,16 +107,16 @@ public class BitSetConverterImmutableTests {
 
 	//tag::basic-bitset-example-converter[]
 	@Immutable
-	@Converter( autoApply = true )
+	@Converter(autoApply = true)
 	public static class BitSetConverter implements AttributeConverter<BitSet,String> {
 		@Override
 		public String convertToDatabaseColumn(BitSet attribute) {
-			return BitSetHelper.bitSetToString( attribute );
+			return BitSetHelper.bitSetToString(attribute);
 		}
 
 		@Override
 		public BitSet convertToEntityAttribute(String dbData) {
-			return BitSetHelper.stringToBitSet( dbData );
+			return BitSetHelper.stringToBitSet(dbData);
 		}
 	}
 	//end::basic-bitset-example-converter[]

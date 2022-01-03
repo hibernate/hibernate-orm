@@ -44,20 +44,20 @@ class EventId implements Serializable {
 //tag::identifiers-composite-generated-mapping-example[]
 	@Override
 	public boolean equals(Object o) {
-		if ( this == o ) {
+		if (this == o) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
+		if (o == null || getClass() != o.getClass()) {
 			return false;
 		}
 		EventId that = (EventId) o;
-		return Objects.equals( category, that.category ) &&
-				Objects.equals( createdOn, that.createdOn );
+		return Objects.equals(category, that.category) &&
+				Objects.equals(createdOn, that.createdOn);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( category, createdOn );
+		return Objects.hash(category, createdOn);
 	}
 }
 //end::identifiers-composite-generated-mapping-example[]

@@ -41,10 +41,10 @@ public class OrderedBySQLTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	public void testLifecycle() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			Person person = new Person();
-			person.setId( 1L );
-			person.setName( "Vlad Mihalcea" );
+			person.setId(1L);
+			person.setName("Vlad Mihalcea");
 
 			person.addArticle(
 				new Article(
@@ -58,17 +58,17 @@ public class OrderedBySQLTest extends BaseEntityManagerFunctionalTestCase {
 					"Associations, Lazy fetching, Concurrency Control, Second-level Caching"
 				)
 			);
-			entityManager.persist( person );
-		} );
-		doInJPA( this::entityManagerFactory, entityManager -> {
+			entityManager.persist(person);
+		});
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::collections-customizing-ordered-by-sql-clause-fetching-example[]
-			Person person = entityManager.find( Person.class, 1L );
+			Person person = entityManager.find(Person.class, 1L);
 			assertEquals(
 				"High-Performance Hibernate",
-				person.getArticles().get( 0 ).getName()
+				person.getArticles().get(0).getName()
 			);
 			//end::collections-customizing-ordered-by-sql-clause-fetching-example[]
-		} );
+		});
 	}
 
 	//tag::collections-customizing-ordered-by-sql-clause-mapping-example[]
@@ -113,8 +113,8 @@ public class OrderedBySQLTest extends BaseEntityManagerFunctionalTestCase {
 		}
 
 		public void addArticle(Article article) {
-			article.setPerson( this );
-			articles.add( article );
+			article.setPerson(this);
+			articles.add(article);
 		}
 	//tag::collections-customizing-ordered-by-sql-clause-mapping-example[]
 	}

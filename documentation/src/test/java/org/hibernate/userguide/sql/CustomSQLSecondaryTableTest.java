@@ -50,40 +50,40 @@ public class CustomSQLSecondaryTableTest extends BaseEntityManagerFunctionalTest
 
     @Before
     public void init() {
-        doInJPA( this::entityManagerFactory, entityManager -> {
-            Session session = entityManager.unwrap( Session.class );
-            session.doWork( connection -> {
-                try(Statement statement = connection.createStatement(); ) {
-                    statement.executeUpdate( "ALTER TABLE person ADD COLUMN valid boolean" );
-                    statement.executeUpdate( "ALTER TABLE person_details ADD COLUMN valid boolean" );
+        doInJPA(this::entityManagerFactory, entityManager -> {
+            Session session = entityManager.unwrap(Session.class);
+            session.doWork(connection -> {
+                try(Statement statement = connection.createStatement();) {
+                    statement.executeUpdate("ALTER TABLE person ADD COLUMN valid boolean");
+                    statement.executeUpdate("ALTER TABLE person_details ADD COLUMN valid boolean");
                 }
-            } );
+            });
         });
     }
 
     @Test
     public void test_sql_custom_crud() {
 
-        Person _person = doInJPA( this::entityManagerFactory, entityManager -> {
+        Person _person = doInJPA(this::entityManagerFactory, entityManager -> {
             Person person = new Person();
-            person.setName( "John Doe" );
-            entityManager.persist( person );
-            person.setImage( new byte[] {1, 2, 3} );
+            person.setName("John Doe");
+            entityManager.persist(person);
+            person.setImage(new byte[] {1, 2, 3});
             return person;
-        } );
+        });
 
-        doInJPA( this::entityManagerFactory, entityManager -> {
+        doInJPA(this::entityManagerFactory, entityManager -> {
             Long postId = _person.getId();
-            Person person = entityManager.find( Person.class, postId );
+            Person person = entityManager.find(Person.class, postId);
             assertArrayEquals(new byte[] {1, 2, 3}, person.getImage());
-            entityManager.remove( person );
-        } );
+            entityManager.remove(person);
+        });
 
-        doInJPA( this::entityManagerFactory, entityManager -> {
+        doInJPA(this::entityManagerFactory, entityManager -> {
             Long postId = _person.getId();
-            Person person = entityManager.find( Person.class, postId );
+            Person person = entityManager.find(Person.class, postId);
             assertNull(person);
-        } );
+        });
     }
 
 
@@ -92,10 +92,10 @@ public class CustomSQLSecondaryTableTest extends BaseEntityManagerFunctionalTest
     @Table(name = "person")
     @SQLInsert(
         sql = "INSERT INTO person (name, id, valid) VALUES (?, ?, true) "
-    )
+   )
     @SQLDelete(
         sql = "UPDATE person SET valid = false WHERE id = ? "
-    )
+   )
     @SecondaryTable(name = "person_details",
         pkJoinColumns = @PrimaryKeyJoinColumn(name = "person_id"))
     @org.hibernate.annotations.Table(
@@ -103,11 +103,11 @@ public class CustomSQLSecondaryTableTest extends BaseEntityManagerFunctionalTest
         sqlInsert = @SQLInsert(
             sql = "INSERT INTO person_details (image, person_id, valid) VALUES (?, ?, true) ",
             check = ResultCheckStyle.COUNT
-        ),
+       ),
         sqlDelete = @SQLDelete(
             sql = "UPDATE person_details SET valid = false WHERE person_id = ? "
-        )
-    )
+       )
+   )
     @Loader(namedQuery = "find_valid_person")
     @NamedNativeQueries({
         @NamedNativeQuery(
@@ -120,7 +120,7 @@ public class CustomSQLSecondaryTableTest extends BaseEntityManagerFunctionalTest
                     "LEFT OUTER JOIN person_details pd ON p.id = pd.person_id  " +
                     "WHERE p.id = ? AND p.valid = true AND pd.valid = true",
             resultClass = Person.class
-        )
+       )
     })
     public static class Person {
 

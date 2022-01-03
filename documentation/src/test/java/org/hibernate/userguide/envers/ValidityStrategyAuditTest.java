@@ -55,82 +55,82 @@ public class ValidityStrategyAuditTest extends BaseEntityManagerFunctionalTestCa
 
 	@Test
 	public void test() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			Customer customer = new Customer();
-			customer.setId( 1L );
-			customer.setFirstName( "John" );
-			customer.setLastName( "Doe" );
+			customer.setId(1L);
+			customer.setFirstName("John");
+			customer.setLastName("Doe");
 
-			entityManager.persist( customer );
-		} );
+			entityManager.persist(customer);
+		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Customer customer = entityManager.find( Customer.class, 1L );
-			customer.setLastName( "Doe Jr." );
-		} );
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			Customer customer = entityManager.find(Customer.class, 1L);
+			customer.setLastName("Doe Jr.");
+		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Customer customer = entityManager.getReference( Customer.class, 1L );
-			entityManager.remove( customer );
-		} );
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			Customer customer = entityManager.getReference(Customer.class, 1L);
+			entityManager.remove(customer);
+		});
 
-		List<Number> revisions = doInJPA( this::entityManagerFactory, entityManager -> {
-			 return AuditReaderFactory.get( entityManager ).getRevisions(
+		List<Number> revisions = doInJPA(this::entityManagerFactory, entityManager -> {
+			 return AuditReaderFactory.get(entityManager).getRevisions(
 				Customer.class,
 				1L
 			);
-		} );
+		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			Customer customer = (Customer) AuditReaderFactory
-			.get( entityManager )
+			.get(entityManager)
 			.createQuery()
-			.forEntitiesAtRevision( Customer.class, revisions.get( 0 ) )
+			.forEntitiesAtRevision(Customer.class, revisions.get(0))
 			.getSingleResult();
 
 			assertEquals("Doe", customer.getLastName());
-		} );
+		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			Customer customer = (Customer) AuditReaderFactory
-			.get( entityManager )
+			.get(entityManager)
 			.createQuery()
-			.forEntitiesAtRevision( Customer.class, revisions.get( 1 ) )
+			.forEntitiesAtRevision(Customer.class, revisions.get(1))
 			.getSingleResult();
 
 			assertEquals("Doe Jr.", customer.getLastName());
-		} );
+		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			try {
 				Customer customer = (Customer) AuditReaderFactory
-				.get( entityManager )
+				.get(entityManager)
 				.createQuery()
-				.forEntitiesAtRevision( Customer.class, revisions.get( 2 ) )
+				.forEntitiesAtRevision(Customer.class, revisions.get(2))
 				.getSingleResult();
 
-				fail("The Customer was deleted at this revision: " + revisions.get( 2 ));
+				fail("The Customer was deleted at this revision: " + revisions.get(2));
 			}
 			catch (NoResultException expected) {
 			}
-		} );
+		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			Customer customer = (Customer) AuditReaderFactory
-			.get( entityManager )
+			.get(entityManager)
 			.createQuery()
 			.forEntitiesAtRevision(
 				Customer.class,
 				Customer.class.getName(),
-				revisions.get( 2 ),
-				true )
+				revisions.get(2),
+				true)
 			.getSingleResult();
 
-			assertEquals( Long.valueOf( 1L ), customer.getId() );
-			assertNull( customer.getFirstName() );
-			assertNull( customer.getLastName() );
-			assertNull( customer.getCreatedOn() );
-		} );
+			assertEquals(Long.valueOf(1L), customer.getId());
+			assertNull(customer.getFirstName());
+			assertNull(customer.getLastName());
+			assertNull(customer.getCreatedOn());
+		});
 	}
 
 	@Audited
@@ -144,7 +144,7 @@ public class ValidityStrategyAuditTest extends BaseEntityManagerFunctionalTestCa
 
 		private String lastName;
 
-		@Temporal( TemporalType.TIMESTAMP )
+		@Temporal(TemporalType.TIMESTAMP)
 		@Column(name = "created_on")
 		@CreationTimestamp
 		private Date createdOn;

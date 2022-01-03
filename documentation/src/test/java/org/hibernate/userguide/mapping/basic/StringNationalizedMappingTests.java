@@ -35,7 +35,7 @@ import static org.hamcrest.Matchers.is;
  *
  * @author Steve Ebersole
  */
-@DomainModel( annotatedClasses = StringNationalizedMappingTests.EntityOfStrings.class )
+@DomainModel(annotatedClasses = StringNationalizedMappingTests.EntityOfStrings.class)
 @SessionFactory
 public class StringNationalizedMappingTests {
 
@@ -43,7 +43,7 @@ public class StringNationalizedMappingTests {
 	public void testMappings(SessionFactoryScope scope) {
 		// first, verify the type selections...
 		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
-		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( EntityOfStrings.class );
+		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor(EntityOfStrings.class);
 		final JdbcTypeRegistry jdbcTypeRegistry = domainModel.getTypeConfiguration()
 				.getJdbcTypeDescriptorRegistry();
 
@@ -51,38 +51,38 @@ public class StringNationalizedMappingTests {
 		final NationalizationSupport nationalizationSupport = dialect.getNationalizationSupport();
 
 		{
-			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "nstring" );
+			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("nstring");
 			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
-			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( String.class ) );
-			assertThat( jdbcMapping.getJdbcTypeDescriptor(), is( jdbcTypeRegistry.getDescriptor( nationalizationSupport.getVarcharVariantCode() ) ) );
+			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(String.class));
+			assertThat(jdbcMapping.getJdbcTypeDescriptor(), is(jdbcTypeRegistry.getDescriptor(nationalizationSupport.getVarcharVariantCode())));
 		}
 
 		{
-			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "nclobString" );
+			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("nclobString");
 			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
-			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( String.class ) );
-			assertThat( jdbcMapping.getJdbcTypeDescriptor(), is( jdbcTypeRegistry.getDescriptor( nationalizationSupport.getClobVariantCode() ) ) );
+			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(String.class));
+			assertThat(jdbcMapping.getJdbcTypeDescriptor(), is(jdbcTypeRegistry.getDescriptor(nationalizationSupport.getClobVariantCode())));
 		}
 
 
 		// and try to use the mapping
 		scope.inTransaction(
-				(session) -> session.persist( new EntityOfStrings( 1, "nstring", "nclob" ) )
+				(session) -> session.persist(new EntityOfStrings(1, "nstring", "nclob"))
 		);
 		scope.inTransaction(
-				(session) -> session.get( EntityOfStrings.class, 1 )
+				(session) -> session.get(EntityOfStrings.class, 1)
 		);
 	}
 
 	@AfterEach
 	public void dropData(SessionFactoryScope scope) {
 		scope.inTransaction(
-				(session) -> session.createQuery( "delete EntityOfStrings" ).executeUpdate()
+				(session) -> session.createQuery("delete EntityOfStrings").executeUpdate()
 		);
 	}
 
-	@Entity( name = "EntityOfStrings" )
-	@Table( name = "EntityOfStrings" )
+	@Entity(name = "EntityOfStrings")
+	@Table(name = "EntityOfStrings")
 	public static class EntityOfStrings {
 		@Id
 		Integer id;

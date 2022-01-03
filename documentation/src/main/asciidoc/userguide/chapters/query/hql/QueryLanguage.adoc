@@ -49,7 +49,7 @@ HQL features four different kinds of statement:
 ====
 The effect of an `update` and `delete` statement is not reflected in the persistence context, nor in the state of entity objects held in memory at the time the statement is executed.
 
-It is the responsibility of the application maintain synchronization of state held in memory with the database after execution of an `update` or `delete` statement.
+It is the responsibility of the application to maintain synchronization of state held in memory with the database after execution of an `update` or `delete` statement.
 ====
 
 [[hql-select]]
@@ -65,7 +65,7 @@ include::{extrasdir}/statement_select_bnf.txt[]
 ----
 ====
 
-Most of the complexity here arises from the interplay of set operators (`union`, `intersect`, and `except`) with ordering.
+Most of the complexity here arises from the interplay of set operators (`union`, `intersect`, and `except`) with sorting.
 
 We'll describe the various clauses of a query later in this chapter, but to summarize, a query might have:
 
@@ -143,6 +143,8 @@ include::{extrasdir}/statement_update_bnf.txt[]
 ----
 ====
 
+The `set` clause has a list of assignments to attributes of the given entity.
+
 For example:
 
 [[hql-update-example]]
@@ -153,17 +155,24 @@ include::{sourcedir}/HQLTest.java[tags=hql-update-example]
 ----
 ====
 
-[IMPORTANT]
-====
-No `update` or `delete` statement may have an implicit (or explicit) join.
-====
-
 An `update` statement must be executed using `Query#executeUpdate()`.
 A single HQL `update` statement might result in multiple SQL update statements executed against the database.
 
+[[hql-update-examples]]
+//.Example update queries
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/../batch/BatchTest.java[tags=batch-bulk-jpql-update-example]
+
+include::{sourcedir}/../batch/BatchTest.java[tags=batch-bulk-hql-update-example]
+----
+====
+
+The integer value returned by `executeUpdate()` indicates the number of entity instances affected by the operation.
+
 [NOTE]
 ====
-The integer value returned by `executeUpdate()` indicates the number of entity instances affected by the operation.
 In a `JOINED` inheritance hierarchy, multiple rows are required to store a single entity instance.
 In this case, the update count returned by Hibernate might not be exactly the same as the number of rows affected in the database.
 ====
@@ -177,17 +186,20 @@ Adding the keyword `versioned`&mdash;writing `update versioned`&mdash;specifies 
 `update versioned` does not work with custom version types defined by implementing `UserVersionType`, and is not available in JPQL.
 ====
 
-[[hql-update-examples]]
+[[hql-update-versioned-example]]
 //.Example update queries
 ====
-[source, SQL, indent=0]
+[source, JAVA, indent=0]
 ----
-include::{sourcedir}/../batch/BatchTest.java[tags=batch-bulk-jpql-update-example]
-
-include::{sourcedir}/../batch/BatchTest.java[tags=batch-bulk-hql-update-example]
-
 include::{sourcedir}/../batch/BatchTest.java[tags=batch-bulk-hql-update-version-example]
 ----
+====
+
+Update statements are polymorphic, and affect mapped subclasses of the given entity class.
+
+[IMPORTANT]
+====
+No `update` or `delete` statement may have an implicit (or explicit) join.
 ====
 
 [[hql-delete]]
@@ -204,6 +216,11 @@ include::{extrasdir}/statement_delete_bnf.txt[]
 ====
 
 A `delete` statement is executed by calling `Query#executeUpdate()`.
+A single HQL `delete` statement might result in multiple SQL delete statements executed against the database.
+
+The integer value returned by `executeUpdate()` indicates the number of entity instances affected by the operation.
+
+Delete statements are polymorphic, and affect mapped subclasses of the given entity class.
 
 [[hql-insert]]
 ==== Insert statements
@@ -218,8 +235,10 @@ The second form may insert many new rows, or none at all.
 
 [TIP]
 ====
-The first sort of `insert` statement is not very useful.
-It's better to just use `persist()`.
+The first sort of `insert` statement is not as useful.
+It's usually better to just use `persist()`.
+
+On the other hand, you might consider using it to set up test data.
 ====
 
 The BNF for an `insert` statement is:
@@ -251,8 +270,8 @@ An `insert` statement must be executed by calling `Query#executeUpdate()`.
 
 [IMPORTANT]
 ====
-`insert` statements are inherently _not_ polymorphic!
-The `targetFields` list is of fixed length, whereas each subclass of an entity class might declare additional fields.
+An `insert` statement is inherently _not_ polymorphic!
+Its list of target fields is of fixed length, whereas each subclass of an entity class might declare additional fields.
 If the entity is involved in a mapped inheritance hierarchy, only attributes declared directly by the named entity and its superclasses may occur in the list of target fields.
 Attributes declared by subclasses may not occur.
 ====

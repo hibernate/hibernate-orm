@@ -424,7 +424,7 @@ inList
 	;
 
 likeEscape
-	: ESCAPE STRING_LITERAL
+	: ESCAPE (STRING_LITERAL | parameter)
 	;
 
 

@@ -10,7 +10,6 @@ import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.SortOrder;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.Collation;
 import org.hibernate.sql.ast.tree.expression.Expression;
 
 /**
@@ -20,25 +19,19 @@ public class SortSpecification implements SqlAstNode {
 	private final Expression sortExpression;
 	private final SortOrder sortOrder;
 	private final NullPrecedence nullPrecedence;
-	private final Collation collation;
 
 	public SortSpecification(Expression sortExpression, SortOrder sortOrder) {
-		this( sortExpression, null, sortOrder, NullPrecedence.NONE );
+		this( sortExpression, sortOrder, NullPrecedence.NONE );
 	}
 
-	public SortSpecification(Expression sortExpression, String collation, SortOrder sortOrder, NullPrecedence nullPrecedence) {
+	public SortSpecification(Expression sortExpression, SortOrder sortOrder, NullPrecedence nullPrecedence) {
 		this.sortExpression = sortExpression;
-		this.collation = collation == null ? null : new Collation(collation);
 		this.sortOrder = sortOrder;
 		this.nullPrecedence = nullPrecedence;
 	}
 
 	public Expression getSortExpression() {
 		return sortExpression;
-	}
-
-	public Collation getCollation() {
-		return collation;
 	}
 
 	public SortOrder getSortOrder() {

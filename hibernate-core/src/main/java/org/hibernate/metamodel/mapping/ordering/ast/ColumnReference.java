@@ -104,7 +104,12 @@ public class ColumnReference implements OrderingExpression, SequencePart {
 			}
 		}
 
-		ast.addSortSpecification( new SortSpecification( expression, collation, sortOrder, nullPrecedence ) );
+		final Expression sortExpression = OrderingExpression.applyCollation(
+				expression,
+				collation,
+				creationState
+		);
+		ast.addSortSpecification( new SortSpecification( sortExpression, sortOrder, nullPrecedence ) );
 	}
 
 	TableReference getTableReference(TableGroup tableGroup) {

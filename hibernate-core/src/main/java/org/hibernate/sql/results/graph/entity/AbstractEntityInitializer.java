@@ -390,6 +390,18 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			return;
 		}
 
+		final SharedSessionContractImplementor session = rowProcessingState
+				.getJdbcValuesSourceProcessingState()
+				.getSession();
+
+		final PersistenceContext persistenceContext = session.getPersistenceContext();
+		// Special case map proxy to avoid stack overflows
+		// We know that a map proxy will always be of "the right type" so just use that object
+		final LoadingEntityEntry existingLoadingEntry = persistenceContext
+				.getLoadContexts()
+				.findLoadingEntityEntry( entityKey );
+		setIsOwningInitializer( entityKey.getIdentifier(), existingLoadingEntry );
+
 		if ( entityInstance != null ) {
 			return;
 		}
@@ -405,19 +417,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			);
 		}
 
-		final SharedSessionContractImplementor session = rowProcessingState
-				.getJdbcValuesSourceProcessingState()
-				.getSession();
-
-		final PersistenceContext persistenceContext = session.getPersistenceContext();
 		final Object proxy = getProxy( persistenceContext );
-		// Special case map proxy to avoid stack overflows
-		// We know that a map proxy will always be of "the right type" so just use that object
-		final LoadingEntityEntry existingLoadingEntry = persistenceContext
-				.getLoadContexts()
-				.findLoadingEntityEntry( entityKey );
-		setIsOwningInitializer(entityKey.getIdentifier(), existingLoadingEntry  );
-
 		final Object entityInstanceFromExecutionContext = rowProcessingState.getJdbcValuesSourceProcessingState()
 				.getExecutionContext()
 				.getEntityInstance();

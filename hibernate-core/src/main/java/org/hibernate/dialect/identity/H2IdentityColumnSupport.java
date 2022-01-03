@@ -23,11 +23,22 @@ public class H2IdentityColumnSupport extends IdentityColumnSupportImpl {
 
 	@Override
 	public String getIdentitySelectString(String table, String column, int type) {
+		//not supported since H2 1.4.200
 		return "call identity()";
 	}
 
 	@Override
 	public String getIdentityInsertString() {
-		return "null";
+		return "default";
+	}
+
+	@Override
+	public boolean supportsInsertSelectIdentity() {
+		return true;
+	}
+
+	@Override
+	public String appendIdentitySelectToInsert(String insertString) {
+		return "select id from final table (" + insertString + ")";
 	}
 }

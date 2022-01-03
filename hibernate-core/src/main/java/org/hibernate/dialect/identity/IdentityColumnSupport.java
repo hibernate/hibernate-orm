@@ -36,7 +36,7 @@ public interface IdentityColumnSupport {
 	boolean supportsInsertSelectIdentity();
 
 	/**
-	 * Whether this dialect have an Identity clause added to the data type or a
+	 * Whether this dialect has an Identity clause added to the data type or a
 	 * completely separate identity data type
 	 *
 	 * @return boolean

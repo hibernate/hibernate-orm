@@ -10,7 +10,7 @@ import org.hibernate.usertype.UserTypeSupport;
 //tag::basic-enums-custom-type-example[]
 public class GenderType extends UserTypeSupport<Gender> {
     public GenderType() {
-        super( Gender.class, Types.CHAR );
+        super(Gender.class, Types.CHAR);
     }
 }
 //end::basic-enums-custom-type-example[]

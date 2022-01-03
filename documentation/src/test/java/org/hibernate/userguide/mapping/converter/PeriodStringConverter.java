@@ -25,7 +25,7 @@ public class PeriodStringConverter
 
     @Override
     public Period convertToEntityAttribute(String dbData) {
-        return Period.parse( dbData );
+        return Period.parse(dbData);
     }
 }
 //end::basic-jpa-convert-period-string-converter-example[]

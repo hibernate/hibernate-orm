@@ -32,13 +32,13 @@ public class EnumerationConverterTest extends BaseEntityManagerFunctionalTestCas
 
 	@Test
 	public void test() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Person person = new Person( );
-			person.setId( 1L );
-			person.setName( "John Doe" );
-			person.setGender( Gender.MALE );
-			entityManager.persist( person );
-		} );
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			Person person = new Person();
+			person.setId(1L);
+			person.setName("John Doe");
+			person.setGender(Gender.MALE);
+			entityManager.persist(person);
+		});
 	}
 
 	//tag::basic-enums-attribute-converter-example[]
@@ -50,7 +50,7 @@ public class EnumerationConverterTest extends BaseEntityManagerFunctionalTestCas
 
 		private String name;
 
-		@Convert( converter = GenderConverter.class )
+		@Convert(converter = GenderConverter.class)
 		public Gender gender;
 
 		//Getters and setters are omitted for brevity
@@ -86,20 +86,20 @@ public class EnumerationConverterTest extends BaseEntityManagerFunctionalTestCas
 	public static class GenderConverter
 			implements AttributeConverter<Gender, Character> {
 
-		public Character convertToDatabaseColumn( Gender value ) {
-			if ( value == null ) {
+		public Character convertToDatabaseColumn(Gender value) {
+			if (value == null) {
 				return null;
 			}
 
 			return value.getCode();
 		}
 
-		public Gender convertToEntityAttribute( Character value ) {
-			if ( value == null ) {
+		public Gender convertToEntityAttribute(Character value) {
+			if (value == null) {
 				return null;
 			}
 
-			return Gender.fromCode( value );
+			return Gender.fromCode(value);
 		}
 	}
 	//end::basic-enums-attribute-converter-example[]

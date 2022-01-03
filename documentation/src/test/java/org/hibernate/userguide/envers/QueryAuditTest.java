@@ -59,165 +59,165 @@ public class QueryAuditTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	public void test() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			Address address = new Address();
-			address.setId( 1L );
-			address.setCountry( "România" );
-			address.setCity( "Cluj-Napoca" );
-			address.setStreet( "Bulevardul Eroilor" );
-			address.setStreetNumber( "1 A" );
-			entityManager.persist( address );
+			address.setId(1L);
+			address.setCountry("România");
+			address.setCity("Cluj-Napoca");
+			address.setStreet("Bulevardul Eroilor");
+			address.setStreetNumber("1 A");
+			entityManager.persist(address);
 
 			Customer customer = new Customer();
-			customer.setId( 1L );
-			customer.setFirstName( "John" );
-			customer.setLastName( "Doe" );
-			customer.setAddress( address );
+			customer.setId(1L);
+			customer.setFirstName("John");
+			customer.setLastName("Doe");
+			customer.setAddress(address);
 
-			entityManager.persist( customer );
-		} );
+			entityManager.persist(customer);
+		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Customer customer = entityManager.find( Customer.class, 1L );
-			customer.setLastName( "Doe Jr." );
-		} );
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			Customer customer = entityManager.find(Customer.class, 1L);
+			customer.setLastName("Doe Jr.");
+		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Customer customer = entityManager.getReference( Customer.class, 1L );
-			entityManager.remove( customer );
-		} );
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			Customer customer = entityManager.getReference(Customer.class, 1L);
+			entityManager.remove(customer);
+		});
 
-		List<Number> revisions = doInJPA( this::entityManagerFactory, entityManager -> {
-			 return AuditReaderFactory.get( entityManager ).getRevisions(
+		List<Number> revisions = doInJPA(this::entityManagerFactory, entityManager -> {
+			 return AuditReaderFactory.get(entityManager).getRevisions(
 				Customer.class,
 				1L
 			);
-		} );
+		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::entities-at-revision-example[]
 			Customer customer = (Customer) AuditReaderFactory
-			.get( entityManager )
+			.get(entityManager)
 			.createQuery()
-			.forEntitiesAtRevision( Customer.class, revisions.get( 0 ) )
+			.forEntitiesAtRevision(Customer.class, revisions.get(0))
 			.getSingleResult();
 
 			assertEquals("Doe", customer.getLastName());
 			//end::entities-at-revision-example[]
-		} );
+		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::entities-filtering-example[]
 			List<Customer> customers = AuditReaderFactory
-			.get( entityManager )
+			.get(entityManager)
 			.createQuery()
-			.forRevisionsOfEntity( Customer.class, true, true )
-			.add( AuditEntity.property( "firstName" ).eq( "John" ) )
+			.forRevisionsOfEntity(Customer.class, true, true)
+			.add(AuditEntity.property("firstName").eq("John"))
 			.getResultList();
 
 			assertEquals(2, customers.size());
-			assertEquals( "Doe", customers.get( 0 ).getLastName() );
-			assertEquals( "Doe Jr.", customers.get( 1 ).getLastName() );
+			assertEquals("Doe", customers.get(0).getLastName());
+			assertEquals("Doe Jr.", customers.get(1).getLastName());
 			//end::entities-filtering-example[]
-		} );
+		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::entities-filtering-by-entity-example[]
-			Address address = entityManager.getReference( Address.class, 1L );
+			Address address = entityManager.getReference(Address.class, 1L);
 
 			List<Customer> customers = AuditReaderFactory
-			.get( entityManager )
+			.get(entityManager)
 			.createQuery()
-			.forRevisionsOfEntity( Customer.class, true, true )
-			.add( AuditEntity.property( "address" ).eq( address ) )
+			.forRevisionsOfEntity(Customer.class, true, true)
+			.add(AuditEntity.property("address").eq(address))
 			.getResultList();
 
 			assertEquals(2, customers.size());
 			//end::entities-filtering-by-entity-example[]
-		} );
+		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::entities-filtering-by-entity-identifier-example[]
 			List<Customer> customers = AuditReaderFactory
-			.get( entityManager )
+			.get(entityManager)
 			.createQuery()
-			.forRevisionsOfEntity( Customer.class, true, true )
-			.add( AuditEntity.relatedId( "address" ).eq( 1L ) )
+			.forRevisionsOfEntity(Customer.class, true, true)
+			.add(AuditEntity.relatedId("address").eq(1L))
 			.getResultList();
 
 			assertEquals(2, customers.size());
 			//end::entities-filtering-by-entity-identifier-example[]
-		} );
+		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::entities-in-clause-filtering-by-entity-identifier-example[]
 			List<Customer> customers = AuditReaderFactory
-			.get( entityManager )
+			.get(entityManager)
 			.createQuery()
-			.forRevisionsOfEntity( Customer.class, true, true )
-			.add( AuditEntity.relatedId( "address" ).in( new Object[] { 1L, 2L } ) )
+			.forRevisionsOfEntity(Customer.class, true, true)
+			.add(AuditEntity.relatedId("address").in(new Object[] { 1L, 2L }))
 			.getResultList();
 
 			assertEquals(2, customers.size());
 			//end::entities-in-clause-filtering-by-entity-identifier-example[]
-		} );
+		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::entities-filtering-and-pagination[]
 			List<Customer> customers = AuditReaderFactory
-			.get( entityManager )
+			.get(entityManager)
 			.createQuery()
-			.forRevisionsOfEntity( Customer.class, true, true )
-			.addOrder( AuditEntity.property( "lastName" ).desc() )
-			.add( AuditEntity.relatedId( "address" ).eq( 1L ) )
-			.setFirstResult( 1 )
-			.setMaxResults( 2 )
+			.forRevisionsOfEntity(Customer.class, true, true)
+			.addOrder(AuditEntity.property("lastName").desc())
+			.add(AuditEntity.relatedId("address").eq(1L))
+			.setFirstResult(1)
+			.setMaxResults(2)
 			.getResultList();
 
 			assertEquals(1, customers.size());
 			//end::entities-filtering-and-pagination[]
-		} );
+		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::revisions-of-entity-query-example[]
-			AuditQuery query = AuditReaderFactory.get( entityManager )
+			AuditQuery query = AuditReaderFactory.get(entityManager)
 				.createQuery()
-				.forRevisionsOfEntity( Customer.class, false, true );
+				.forRevisionsOfEntity(Customer.class, false, true);
 			//end::revisions-of-entity-query-example[]
-		} );
+		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::revisions-of-entity-query-by-revision-number-example[]
 			Number revision = (Number) AuditReaderFactory
-			.get( entityManager )
+			.get(entityManager)
 			.createQuery()
-			.forRevisionsOfEntity( Customer.class, false, true )
-			.addProjection( AuditEntity.revisionNumber().min() )
-			.add( AuditEntity.id().eq( 1L ) )
-			.add( AuditEntity.revisionNumber().gt( 2 ) )
+			.forRevisionsOfEntity(Customer.class, false, true)
+			.addProjection(AuditEntity.revisionNumber().min())
+			.add(AuditEntity.id().eq(1L))
+			.add(AuditEntity.revisionNumber().gt(2))
 			.getSingleResult();
 			//end::revisions-of-entity-query-by-revision-number-example[]
 
-			assertEquals( 3, revision );
-		} );
+			assertEquals(3, revision);
+		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::revisions-of-entity-query-minimize-example[]
 			Number revision = (Number) AuditReaderFactory
-			.get( entityManager )
+			.get(entityManager)
 			.createQuery()
-			.forRevisionsOfEntity( Customer.class, false, true )
-			.addProjection( AuditEntity.revisionNumber().min() )
-			.add( AuditEntity.id().eq( 1L ) )
+			.forRevisionsOfEntity(Customer.class, false, true)
+			.addProjection(AuditEntity.revisionNumber().min())
+			.add(AuditEntity.id().eq(1L))
 			.add(
-				AuditEntity.property( "createdOn" )
+				AuditEntity.property("createdOn")
 				.minimize()
-				.add( AuditEntity.property( "createdOn" )
+				.add(AuditEntity.property("createdOn")
 					.ge(
 						Timestamp.from(
 							LocalDateTime.now()
-								.minusDays( 1 )
-								.toInstant( ZoneOffset.UTC )
+								.minusDays(1)
+								.toInstant(ZoneOffset.UTC)
 							)
 					)
 				)
@@ -225,54 +225,54 @@ public class QueryAuditTest extends BaseEntityManagerFunctionalTestCase {
 			.getSingleResult();
 			//end::revisions-of-entity-query-minimize-example[]
 
-			assertEquals( 1, revision );
-		} );
+			assertEquals(1, revision);
+		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			{
 				//tag::envers-querying-entity-relation-inner-join[]
 				AuditQuery innerJoinAuditQuery = AuditReaderFactory
-				.get( entityManager )
+				.get(entityManager)
 				.createQuery()
-				.forEntitiesAtRevision( Customer.class, 1 )
-				.traverseRelation( "address", JoinType.INNER );
+				.forEntitiesAtRevision(Customer.class, 1)
+				.traverseRelation("address", JoinType.INNER);
 				//end::envers-querying-entity-relation-inner-join[]
 			}
 			{
 				//tag::envers-querying-entity-relation-left-join[]
 				AuditQuery innerJoinAuditQuery = AuditReaderFactory
-				.get( entityManager )
+				.get(entityManager)
 				.createQuery()
-				.forEntitiesAtRevision( Customer.class, 1 )
-				.traverseRelation( "address", JoinType.LEFT );
+				.forEntitiesAtRevision(Customer.class, 1)
+				.traverseRelation("address", JoinType.LEFT);
 				//end::envers-querying-entity-relation-left-join[]
 			}
-		} );
+		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::envers-querying-entity-relation-join-restriction[]
 			List<Customer> customers = AuditReaderFactory
-			.get( entityManager )
+			.get(entityManager)
 			.createQuery()
-			.forEntitiesAtRevision( Customer.class, 1 )
-			.traverseRelation( "address", JoinType.INNER )
-			.add( AuditEntity.property( "country" ).eq( "România" ) )
+			.forEntitiesAtRevision(Customer.class, 1)
+			.traverseRelation("address", JoinType.INNER)
+			.add(AuditEntity.property("country").eq("România"))
 			.getResultList();
 			//end::envers-querying-entity-relation-join-restriction[]
 
-			assertEquals( 1, customers.size() );
-		} );
+			assertEquals(1, customers.size());
+		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::aggregate-max-revision-with-entity-example[]
 			List<Customer> results = AuditReaderFactory
-				.get( entityManager )
+				.get(entityManager)
 				.createQuery()
-				.forRevisionsOfEntity( Customer.class, true, false )
-				.add( AuditEntity.revisionNumber().maximize().computeAggregationInInstanceContext() )
+				.forRevisionsOfEntity(Customer.class, true, false)
+				.add(AuditEntity.revisionNumber().maximize().computeAggregationInInstanceContext())
 				.getResultList();
 			//end::aggregate-max-revision-with-entity-example[]
-		} );
+		});
 	}
 
 	@Audited
@@ -286,7 +286,7 @@ public class QueryAuditTest extends BaseEntityManagerFunctionalTestCase {
 
 		private String lastName;
 
-		@Temporal( TemporalType.TIMESTAMP )
+		@Temporal(TemporalType.TIMESTAMP)
 		@Column(name = "created_on")
 		@CreationTimestamp
 		private Date createdOn;

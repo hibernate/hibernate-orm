@@ -16,7 +16,7 @@ import jakarta.persistence.Table;
 
 //tag::associations-any-def-example[]
 @Entity
-@Table( name = "property_holder" )
+@Table(name = "property_holder")
 public class PropertyHolder2 {
 
     @Id
@@ -24,8 +24,8 @@ public class PropertyHolder2 {
 
     @Any
     @PropertyDiscriminationDef
-    @Column( name = "property_type" )
-    @JoinColumn( name = "property_id" )
+    @Column(name = "property_type")
+    @JoinColumn(name = "property_id")
     private Property property;
 
     //Getters and setters are omitted for brevity

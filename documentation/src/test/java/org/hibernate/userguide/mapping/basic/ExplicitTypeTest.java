@@ -32,9 +32,9 @@ public class ExplicitTypeTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	public void test() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 
-		} );
+		});
 	}
 
 	//tag::basic-type-annotation-example[]
@@ -48,13 +48,13 @@ public class ExplicitTypeTest extends BaseEntityManagerFunctionalTestCase {
 
 		@CustomType(
 				value = UserTypeLegacyBridge.class,
-				parameters = @Parameter( name = UserTypeLegacyBridge.TYPE_NAME_PARAM_KEY, value = "nstring" )
+				parameters = @Parameter(name = UserTypeLegacyBridge.TYPE_NAME_PARAM_KEY, value = "nstring")
 		)
 		private String name;
 
 		@CustomType(
 				value = UserTypeLegacyBridge.class,
-				parameters = @Parameter( name = UserTypeLegacyBridge.TYPE_NAME_PARAM_KEY, value = "materialized_nclob" )
+				parameters = @Parameter(name = UserTypeLegacyBridge.TYPE_NAME_PARAM_KEY, value = "materialized_nclob")
 		)
 		private String description;
 	}

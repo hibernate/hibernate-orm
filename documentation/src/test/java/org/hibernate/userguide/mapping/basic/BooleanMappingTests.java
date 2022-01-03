@@ -33,22 +33,22 @@ import static org.hamcrest.Matchers.isOneOf;
  *
  * @author Steve Ebersole
  */
-@DomainModel( annotatedClasses = BooleanMappingTests.EntityOfBooleans.class )
+@DomainModel(annotatedClasses = BooleanMappingTests.EntityOfBooleans.class)
 @SessionFactory
 public class BooleanMappingTests {
 	@Test
 	public void verifyMappings(SessionFactoryScope scope) {
 		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
-		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( EntityOfBooleans.class );
+		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor(EntityOfBooleans.class);
 
 		{
-			final BasicAttributeMapping implicit = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "implicit" );
+			final BasicAttributeMapping implicit = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("implicit");
 			final JdbcMapping jdbcMapping = implicit.getJdbcMapping();
-			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaType(), equalTo( Boolean.class ) );
+			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaType(), equalTo(Boolean.class));
 			assertThat(
 					jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(),
 					// the implicit mapping will depend on the Dialect
-					isOneOf( Types.BOOLEAN, Types.BIT, Types.TINYINT )
+					isOneOf(Types.BOOLEAN, Types.BIT, Types.TINYINT)
 			);
 		}
 
@@ -57,42 +57,42 @@ public class BooleanMappingTests {
 		// Converters
 
 		{
-			final BasicAttributeMapping convertedYesNo = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "convertedYesNo" );
+			final BasicAttributeMapping convertedYesNo = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("convertedYesNo");
 			final JdbcMapping jdbcMapping = convertedYesNo.getJdbcMapping();
-			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaType(), equalTo( Character.class ) );
+			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaType(), equalTo(Character.class));
 			assertThat(
 					jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(),
 					// could be NCHAR if nationalization is globally enabled
-					isOneOf( Types.CHAR, Types.NCHAR )
+					isOneOf(Types.CHAR, Types.NCHAR)
 			);
 		}
 
 		{
-			final BasicAttributeMapping convertedTrueFalse = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "convertedTrueFalse" );
+			final BasicAttributeMapping convertedTrueFalse = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("convertedTrueFalse");
 			final JdbcMapping jdbcMapping = convertedTrueFalse.getJdbcMapping();
-			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaType(), equalTo( Character.class ) );
+			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaType(), equalTo(Character.class));
 			assertThat(
 					jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(),
 					// could be NCHAR if nationalization is globally enabled
-					isOneOf( Types.CHAR, Types.NCHAR )
+					isOneOf(Types.CHAR, Types.NCHAR)
 			);
 		}
 
 		{
-			final BasicAttributeMapping convertedNumeric = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "convertedNumeric" );
+			final BasicAttributeMapping convertedNumeric = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("convertedNumeric");
 			final JdbcMapping jdbcMapping = convertedNumeric.getJdbcMapping();
-			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaType(), equalTo( Integer.class ) );
+			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaType(), equalTo(Integer.class));
 			assertThat(
 					jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(),
-					equalTo( Types.INTEGER )
+					equalTo(Types.INTEGER)
 			);
 		}
 
 
 	}
 
-	@Entity( name = "EntityOfBooleans" )
-	@Table( name = "EntityOfBooleans" )
+	@Entity(name = "EntityOfBooleans")
+	@Table(name = "EntityOfBooleans")
 	public static class EntityOfBooleans {
 		@Id
 		Integer id;
@@ -110,21 +110,21 @@ public class BooleanMappingTests {
 		//tag::basic-boolean-example-explicit-yes-no[]
 		// this will get mapped to CHAR or NCHAR with a conversion
 		@Basic
-		@Convert( converter = org.hibernate.type.YesNoConverter.class )
+		@Convert(converter = org.hibernate.type.YesNoConverter.class)
 		boolean convertedYesNo;
 		//end::basic-boolean-example-explicit-yes-no[]
 
 		//tag::basic-boolean-example-explicit-t-f[]
 		// this will get mapped to CHAR or NCHAR with a conversion
 		@Basic
-		@Convert( converter = org.hibernate.type.TrueFalseConverter.class )
+		@Convert(converter = org.hibernate.type.TrueFalseConverter.class)
 		boolean convertedTrueFalse;
 		//end::basic-boolean-example-explicit-t-f[]
 
 		//tag::basic-boolean-example-explicit-numeric[]
 		// this will get mapped to TINYINT with a conversion
 		@Basic
-		@Convert( converter = org.hibernate.type.NumericBooleanConverter.class )
+		@Convert(converter = org.hibernate.type.NumericBooleanConverter.class)
 		boolean convertedNumeric;
 		//end::basic-boolean-example-explicit-numeric[]
 	}

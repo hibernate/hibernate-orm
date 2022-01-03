@@ -43,62 +43,62 @@ public class FilterJoinTableTest extends BaseEntityManagerFunctionalTestCase {
 
     @Test
     public void testLifecycle() {
-        doInJPA( this::entityManagerFactory, entityManager -> {
+        doInJPA(this::entityManagerFactory, entityManager -> {
             //tag::pc-filter-join-table-persistence-example[]
             Client client = new Client()
-            .setId( 1L )
-            .setName( "John Doe" );
+            .setId(1L)
+            .setName("John Doe");
 
             client.addAccount(
                 new Account()
-                .setId( 1L )
-                .setType( AccountType.CREDIT )
-                .setAmount( 5000d )
-                .setRate( 1.25 / 100 )
-            );
+                .setId(1L)
+                .setType(AccountType.CREDIT)
+                .setAmount(5000d)
+                .setRate(1.25 / 100)
+           );
 
             client.addAccount(
                 new Account()
-                .setId( 2L )
-                .setType( AccountType.DEBIT )
-                .setAmount( 0d )
-                .setRate( 1.05 / 100 )
-            );
+                .setId(2L)
+                .setType(AccountType.DEBIT)
+                .setAmount(0d)
+                .setRate(1.05 / 100)
+           );
 
             client.addAccount(
                 new Account()
-                .setType( AccountType.DEBIT )
-                .setId( 3L )
-                .setAmount( 250d )
-                .setRate( 1.05 / 100 )
-            );
+                .setType(AccountType.DEBIT)
+                .setId(3L)
+                .setAmount(250d)
+                .setRate(1.05 / 100)
+           );
 
-            entityManager.persist( client );
+            entityManager.persist(client);
             //end::pc-filter-join-table-persistence-example[]
-        } );
+        });
 
-        doInJPA( this::entityManagerFactory, entityManager -> {
+        doInJPA(this::entityManagerFactory, entityManager -> {
             //tag::pc-no-filter-join-table-collection-query-example[]
-            Client client = entityManager.find( Client.class, 1L );
+            Client client = entityManager.find(Client.class, 1L);
 
-            assertEquals( 3, client.getAccounts().size());
+            assertEquals(3, client.getAccounts().size());
             //end::pc-no-filter-join-table-collection-query-example[]
-        } );
+        });
 
-        doInJPA( this::entityManagerFactory, entityManager -> {
-            log.infof( "Activate filter [%s]", "firstAccounts");
+        doInJPA(this::entityManagerFactory, entityManager -> {
+            log.infof("Activate filter [%s]", "firstAccounts");
 
             //tag::pc-filter-join-table-collection-query-example[]
-            Client client = entityManager.find( Client.class, 1L );
+            Client client = entityManager.find(Client.class, 1L);
 
             entityManager
-                .unwrap( Session.class )
-                .enableFilter( "firstAccounts" )
-                .setParameter( "maxOrderId", 1);
+                .unwrap(Session.class)
+                .enableFilter("firstAccounts")
+                .setParameter("maxOrderId", 1);
 
-            assertEquals( 2, client.getAccounts().size());
+            assertEquals(2, client.getAccounts().size());
             //end::pc-filter-join-table-collection-query-example[]
-        } );
+        });
     }
 
     public enum AccountType {
@@ -113,8 +113,8 @@ public class FilterJoinTableTest extends BaseEntityManagerFunctionalTestCase {
         parameters=@ParamDef(
             name="maxOrderId",
             type="int"
-        )
-    )
+       )
+   )
     public static class Client {
 
         @Id
@@ -127,8 +127,8 @@ public class FilterJoinTableTest extends BaseEntityManagerFunctionalTestCase {
         @FilterJoinTable(
             name="firstAccounts",
             condition="order_id <= :maxOrderId"
-        )
-        private List<Account> accounts = new ArrayList<>( );
+       )
+        private List<Account> accounts = new ArrayList<>();
 
         //Getters and setters omitted for brevity
         //end::pc-filter-join-table-example[]
@@ -156,7 +156,7 @@ public class FilterJoinTableTest extends BaseEntityManagerFunctionalTestCase {
         //tag::pc-filter-join-table-example[]
 
         public void addAccount(Account account) {
-            this.accounts.add( account );
+            this.accounts.add(account);
         }
     }
 

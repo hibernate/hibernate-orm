@@ -33,36 +33,36 @@ public class EmbeddedIdDatabaseGeneratedValueTest {
 	@Test
 	@TestForIssue(jiraKey = "HHH-13096")
 	public void test(SessionFactoryScope scope) {
-		final EventId eventId = scope.fromTransaction( entityManager -> {
+		final EventId eventId = scope.fromTransaction(entityManager -> {
 			//tag::identifiers-composite-generated-database-example[]
 			OffsetDateTime currentTimestamp = (OffsetDateTime) entityManager
 			.createNativeQuery(
-				"SELECT CURRENT_TIMESTAMP" )
+				"SELECT CURRENT_TIMESTAMP")
 			.getSingleResult();
 
 			EventId id = new EventId();
-			id.setCategory( 1 );
-			id.setCreatedOn( Timestamp.from( currentTimestamp.toInstant() ) );
+			id.setCategory(1);
+			id.setCreatedOn(Timestamp.from(currentTimestamp.toInstant()));
 
 			Event event = new Event();
-			event.setId( id );
-			event.setKey( "Temperature" );
-			event.setValue( "9" );
+			event.setId(id);
+			event.setKey("Temperature");
+			event.setValue("9");
 
-			entityManager.persist( event );
+			entityManager.persist(event);
 			//end::identifiers-composite-generated-database-example[]
 			return event.getId();
-		} );
+		});
 
-		scope.fromSession( entityManager -> {
+		scope.fromSession(entityManager -> {
 
-			Event event = entityManager.find( Event.class, eventId );
+			Event event = entityManager.find(Event.class, eventId);
 
-			assertEquals( "Temperature", event.getKey() );
-			assertEquals( "9", event.getValue() );
+			assertEquals("Temperature", event.getKey());
+			assertEquals("9", event.getValue());
 
 			return event.getId();
-		} );
+		});
 	}
 
 }

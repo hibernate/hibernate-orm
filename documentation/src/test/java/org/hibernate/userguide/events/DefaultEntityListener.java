@@ -11,23 +11,23 @@ import java.time.ZoneOffset;
 public class DefaultEntityListener {
 
     public void onPersist(Object entity) {
-        if ( entity instanceof BaseEntity ) {
+        if (entity instanceof BaseEntity) {
             BaseEntity baseEntity = (BaseEntity) entity;
-            baseEntity.setCreatedOn( now() );
+            baseEntity.setCreatedOn(now());
         }
     }
 
     public void onUpdate(Object entity) {
-        if ( entity instanceof BaseEntity ) {
+        if (entity instanceof BaseEntity) {
             BaseEntity baseEntity = (BaseEntity) entity;
-            baseEntity.setUpdatedOn( now() );
+            baseEntity.setUpdatedOn(now());
         }
     }
 
     private Timestamp now() {
         return Timestamp.from(
-            LocalDateTime.now().toInstant( ZoneOffset.UTC )
-        );
+            LocalDateTime.now().toInstant(ZoneOffset.UTC)
+       );
     }
 }
 //end::events-default-listener-mapping-example[]

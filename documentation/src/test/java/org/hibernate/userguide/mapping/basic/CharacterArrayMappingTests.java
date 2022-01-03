@@ -30,43 +30,43 @@ import static org.hamcrest.Matchers.equalTo;
 /**
  * @author Steve Ebersole
  */
-@DomainModel( annotatedClasses = CharacterArrayMappingTests.EntityWithCharArrays.class )
+@DomainModel(annotatedClasses = CharacterArrayMappingTests.EntityWithCharArrays.class)
 @SessionFactory
 public class CharacterArrayMappingTests {
 	@Test
 	public void verifyMappings(SessionFactoryScope scope) {
 		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
 		final JdbcTypeRegistry jdbcRegistry = domainModel.getTypeConfiguration().getJdbcTypeDescriptorRegistry();
-		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( EntityWithCharArrays.class );
+		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor(EntityWithCharArrays.class);
 
 		{
-			final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "primitive" );
+			final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("primitive");
 			final JdbcMapping jdbcMapping = attributeMapping.getJdbcMapping();
-			assertThat( jdbcMapping.getJdbcTypeDescriptor(), equalTo( jdbcRegistry.getDescriptor( Types.VARCHAR ) ) );
+			assertThat(jdbcMapping.getJdbcTypeDescriptor(), equalTo(jdbcRegistry.getDescriptor(Types.VARCHAR)));
 		}
 
 		{
-			final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "wrapper" );
+			final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("wrapper");
 			final JdbcMapping jdbcMapping = attributeMapping.getJdbcMapping();
-			assertThat( jdbcMapping.getJdbcTypeDescriptor(), equalTo( jdbcRegistry.getDescriptor( Types.VARCHAR ) ) );
+			assertThat(jdbcMapping.getJdbcTypeDescriptor(), equalTo(jdbcRegistry.getDescriptor(Types.VARCHAR)));
 		}
 
 
 		{
-			final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "primitiveClob" );
+			final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("primitiveClob");
 			final JdbcMapping jdbcMapping = attributeMapping.getJdbcMapping();
-			assertThat( jdbcMapping.getJdbcTypeDescriptor(), equalTo( jdbcRegistry.getDescriptor( Types.CLOB ) ) );
+			assertThat(jdbcMapping.getJdbcTypeDescriptor(), equalTo(jdbcRegistry.getDescriptor(Types.CLOB)));
 		}
 
 		{
-			final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "wrapperClob" );
+			final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("wrapperClob");
 			final JdbcMapping jdbcMapping = attributeMapping.getJdbcMapping();
-			assertThat( jdbcMapping.getJdbcTypeDescriptor(), equalTo( jdbcRegistry.getDescriptor( Types.CLOB ) ) );
+			assertThat(jdbcMapping.getJdbcTypeDescriptor(), equalTo(jdbcRegistry.getDescriptor(Types.CLOB)));
 		}
 	}
 
-	@Entity( name = "EntityWithCharArrays" )
-	@Table( name = "EntityWithCharArrays" )
+	@Entity(name = "EntityWithCharArrays")
+	@Table(name = "EntityWithCharArrays")
 	public static class EntityWithCharArrays {
 		@Id
 		public Integer id;

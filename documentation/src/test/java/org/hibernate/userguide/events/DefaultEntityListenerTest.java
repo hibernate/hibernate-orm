@@ -40,49 +40,49 @@ public class DefaultEntityListenerTest extends BaseEntityManagerFunctionalTestCa
 
 	@Test
 	public void test() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::events-default-listener-persist-example[]
 			Person author = new Person();
-			author.setId( 1L );
-			author.setName( "Vlad Mihalcea" );
+			author.setId(1L);
+			author.setName("Vlad Mihalcea");
 
-			entityManager.persist( author );
+			entityManager.persist(author);
 
 			Book book = new Book();
-			book.setId( 1L );
-			book.setTitle( "High-Performance Java Persistence" );
-			book.setAuthor( author );
+			book.setId(1L);
+			book.setTitle("High-Performance Java Persistence");
+			book.setAuthor(author);
 
-			entityManager.persist( book );
+			entityManager.persist(book);
 			//end::events-default-listener-persist-example[]
-		} );
+		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::events-default-listener-update-example[]
-			Person author = entityManager.find( Person.class, 1L );
-			author.setName( "Vlad-Alexandru Mihalcea" );
+			Person author = entityManager.find(Person.class, 1L);
+			author.setName("Vlad-Alexandru Mihalcea");
 
-			Book book = entityManager.find( Book.class, 1L );
-			book.setTitle( "High-Performance Java Persistence 2nd Edition" );
+			Book book = entityManager.find(Book.class, 1L);
+			book.setTitle("High-Performance Java Persistence 2nd Edition");
 			//end::events-default-listener-update-example[]
-		} );
+		});
 	}
 
 	@Test
 	public void testExclude() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::events-exclude-default-listener-persist-example[]
 			Publisher publisher = new Publisher();
-			publisher.setId( 1L );
-			publisher.setName( "Amazon" );
+			publisher.setId(1L);
+			publisher.setName("Amazon");
 
-			entityManager.persist( publisher );
+			entityManager.persist(publisher);
 			//end::events-exclude-default-listener-persist-example[]
-		} );
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Publisher publisher = entityManager.find( Publisher.class, 1L );
+		});
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			Publisher publisher = entityManager.find(Publisher.class, 1L);
 			assertNull(publisher.getCreatedOn());
-		} );
+		});
 	}
 
 	//tag::events-default-listener-mapping-example[]

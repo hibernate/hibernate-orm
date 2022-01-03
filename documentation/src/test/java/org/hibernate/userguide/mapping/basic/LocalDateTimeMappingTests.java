@@ -28,33 +28,33 @@ import static org.hamcrest.Matchers.equalTo;
 /**
  * @author Steve Ebersole
  */
-@DomainModel( annotatedClasses = LocalDateTimeMappingTests.EntityWithLocalDateTime.class )
+@DomainModel(annotatedClasses = LocalDateTimeMappingTests.EntityWithLocalDateTime.class)
 @SessionFactory
 public class LocalDateTimeMappingTests {
 
 	@Test
 	public void verifyMappings(SessionFactoryScope scope) {
 		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
-		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( EntityWithLocalDateTime.class );
+		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor(EntityWithLocalDateTime.class);
 
-		final BasicAttributeMapping duration = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "localDateTime" );
+		final BasicAttributeMapping duration = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("localDateTime");
 		final JdbcMapping jdbcMapping = duration.getJdbcMapping();
-		assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( LocalDateTime.class ) );
-		assertThat( jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo( Types.TIMESTAMP ) );
+		assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(LocalDateTime.class));
+		assertThat(jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo(Types.TIMESTAMP));
 
 		scope.inTransaction(
 				(session) -> {
-					session.persist( new EntityWithLocalDateTime( 1, LocalDateTime.now() ) );
+					session.persist(new EntityWithLocalDateTime(1, LocalDateTime.now()));
 				}
 		);
 
 		scope.inTransaction(
-				(session) -> session.find( EntityWithLocalDateTime.class, 1 )
+				(session) -> session.find(EntityWithLocalDateTime.class, 1)
 		);
 	}
 
-	@Entity( name = "EntityWithLocalDateTime" )
-	@Table( name = "EntityWithLocalDateTime" )
+	@Entity(name = "EntityWithLocalDateTime")
+	@Table(name = "EntityWithLocalDateTime")
 	public static class EntityWithLocalDateTime {
 		@Id
 		private Integer id;

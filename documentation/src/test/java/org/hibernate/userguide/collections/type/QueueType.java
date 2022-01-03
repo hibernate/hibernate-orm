@@ -25,30 +25,30 @@ public class QueueType implements UserCollectionType {
     public PersistentCollection instantiate(
             SharedSessionContractImplementor session,
             CollectionPersister persister) throws HibernateException {
-        return new PersistentQueue( session );
+        return new PersistentQueue(session);
     }
 
     @Override
     public PersistentCollection wrap(
             SharedSessionContractImplementor session,
             Object collection) {
-        return new PersistentQueue( session, (List) collection );
+        return new PersistentQueue(session, (List) collection);
     }
 
     @Override
     public Iterator getElementsIterator(Object collection) {
-        return ( (Queue) collection ).iterator();
+        return ((Queue) collection).iterator();
     }
 
     @Override
     public boolean contains(Object collection, Object entity) {
-        return ( (Queue) collection ).contains( entity );
+        return ((Queue) collection).contains(entity);
     }
 
     @Override
     public Object indexOf(Object collection, Object entity) {
-        int i = ( (List) collection ).indexOf( entity );
-        return ( i < 0 ) ? null : i;
+        int i = ((List) collection).indexOf(entity);
+        return (i < 0) ? null : i;
     }
 
     @Override
@@ -62,7 +62,7 @@ public class QueueType implements UserCollectionType {
             throws HibernateException {
         Queue result = (Queue) target;
         result.clear();
-        result.addAll( (Queue) original );
+        result.addAll((Queue) original);
         return result;
     }
 

@@ -38,8 +38,8 @@ public class PostgreSQLFunctionWhereClauseTest extends BaseEntityManagerFunction
 
 	@Override
 	protected void afterEntityManagerFactoryBuilt() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			entityManager.unwrap( Session.class ).doWork(
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			entityManager.unwrap(Session.class).doWork(
 				connection -> {
 					try(Statement statement = connection.createStatement()) {
 						//tag::hql-user-defined-function-postgresql-example[]
@@ -56,24 +56,24 @@ public class PostgreSQLFunctionWhereClauseTest extends BaseEntityManagerFunction
 			);
 		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-user-defined-function-postgresql-entity-example[]
 			Book book = new Book();
 
-			book.setIsbn( "978-9730228236" );
-			book.setTitle( "High-Performance Java Persistence" );
-			book.setAuthor( "Vlad Mihalcea" );
-			book.setPriceCents( 4500 );
+			book.setIsbn("978-9730228236");
+			book.setTitle("High-Performance Java Persistence");
+			book.setAuthor("Vlad Mihalcea");
+			book.setPriceCents(4500);
 
-			entityManager.persist( book );
+			entityManager.persist(book);
 			//end::hql-user-defined-function-postgresql-entity-example[]
 		});
 	}
 
 	@After
 	public void destroy() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			entityManager.unwrap( Session.class ).doWork(
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			entityManager.unwrap(Session.class).doWork(
 				connection -> {
 					try(Statement statement = connection.createStatement()) {
 						statement.executeUpdate(
@@ -87,18 +87,18 @@ public class PostgreSQLFunctionWhereClauseTest extends BaseEntityManagerFunction
 
 	@Test
 	public void testHibernatePassThroughFunction() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-user-defined-function-postgresql-where-clause-example[]
 			List<Book> books = entityManager.createQuery(
 				"select b " +
 				"from Book b " +
-				"where apply_vat(b.priceCents) = :price ", Book.class )
-			.setParameter( "price", 5400 )
+				"where apply_vat(b.priceCents) = :price ", Book.class)
+			.setParameter("price", 5400)
 			.getResultList();
 
-			assertTrue( books
+			assertTrue(books
 				.stream()
-				.filter( book -> "High-Performance Java Persistence".equals( book.getTitle() ) )
+				.filter(book -> "High-Performance Java Persistence".equals(book.getTitle()))
 				.findAny()
 				.isPresent()
 			);
@@ -108,18 +108,18 @@ public class PostgreSQLFunctionWhereClauseTest extends BaseEntityManagerFunction
 
 	@Test
 	public void testCustomFunction() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-user-defined-function-postgresql-jpql-example[]
 			List<Book> books = entityManager.createQuery(
 				"select b " +
 				"from Book b " +
-				"where function('apply_vat', b.priceCents) = :price ", Book.class )
-			.setParameter( "price", 5400 )
+				"where function('apply_vat', b.priceCents) = :price ", Book.class)
+			.setParameter("price", 5400)
 			.getResultList();
 
-			assertTrue( books
+			assertTrue(books
 				.stream()
-				.filter( book -> "High-Performance Java Persistence".equals( book.getTitle() ) )
+				.filter(book -> "High-Performance Java Persistence".equals(book.getTitle()))
 				.findAny()
 				.isPresent()
 			);

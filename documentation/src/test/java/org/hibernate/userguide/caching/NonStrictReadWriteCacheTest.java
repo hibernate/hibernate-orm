@@ -64,36 +64,36 @@ public class NonStrictReadWriteCacheTest extends BaseEntityManagerFunctionalTest
     }
 
     @Override
-    @SuppressWarnings( "unchecked" )
+    @SuppressWarnings("unchecked")
     protected void addConfigOptions(Map options) {
-        options.put( AvailableSettings.USE_SECOND_LEVEL_CACHE, Boolean.TRUE.toString() );
-        options.put( AvailableSettings.CACHE_REGION_FACTORY, "jcache" );
+        options.put(AvailableSettings.USE_SECOND_LEVEL_CACHE, Boolean.TRUE.toString());
+        options.put(AvailableSettings.CACHE_REGION_FACTORY, "jcache");
     }
 
     @Test
     public void testCache() {
-        doInJPA( this::entityManagerFactory, entityManager -> {
+        doInJPA(this::entityManagerFactory, entityManager -> {
 			Person person = new Person();
-            entityManager.persist( person );
-			Phone home = new Phone( "123-456-7890" );
-			Phone office = new Phone( "098-765-4321" );
-			person.addPhone( home );
-			person.addPhone( office );
+            entityManager.persist(person);
+			Phone home = new Phone("123-456-7890");
+			Phone office = new Phone("098-765-4321");
+			person.addPhone(home);
+			person.addPhone(office);
         });
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Person person = entityManager.find( Person.class, 1L );
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			Person person = entityManager.find(Person.class, 1L);
 			person.getPhones().size();
 		});
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			log.info( "Log collection from cache" );
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			log.info("Log collection from cache");
 			//tag::caching-collection-example[]
-			Person person = entityManager.find( Person.class, 1L );
+			Person person = entityManager.find(Person.class, 1L);
 			person.getPhones().size();
 			//end::caching-collection-example[]
 		});
-        doInJPA( this::entityManagerFactory, entityManager -> {
-			log.info( "Load from cache" );
-            entityManager.find( Person.class, 1L ).getPhones().size();
+        doInJPA(this::entityManagerFactory, entityManager -> {
+			log.info("Load from cache");
+            entityManager.find(Person.class, 1L).getPhones().size();
         });
     }
 
@@ -112,7 +112,7 @@ public class NonStrictReadWriteCacheTest extends BaseEntityManagerFunctionalTest
 		//tag::caching-collection-mapping-example[]
 		@OneToMany(mappedBy = "person", cascade = CascadeType.ALL)
 		@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
-		private List<Phone> phones = new ArrayList<>(  );
+		private List<Phone> phones = new ArrayList<>();
 		//end::caching-collection-mapping-example[]
 
         @Version
@@ -141,8 +141,8 @@ public class NonStrictReadWriteCacheTest extends BaseEntityManagerFunctionalTest
 		}
 
 		public void addPhone(Phone phone) {
-			phones.add( phone );
-			phone.setPerson( this );
+			phones.add(phone);
+			phone.setPerson(this);
 		}
 	}
 

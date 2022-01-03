@@ -35,24 +35,24 @@ public class HibernateAutoFlushTest extends BaseNonConfigCoreFunctionalTestCase 
 
 	@Test
 	public void testFlushAutoSQLNativeSession() {
-		doInHibernate( this::sessionFactory, session -> {
-			session.createNativeQuery( "delete from Person" ).executeUpdate();
-		} );
-		doInHibernate( this::sessionFactory, session -> {
-			log.info( "testFlushAutoSQLNativeSession" );
+		doInHibernate(this::sessionFactory, session -> {
+			session.createNativeQuery("delete from Person").executeUpdate();
+		});
+		doInHibernate(this::sessionFactory, session -> {
+			log.info("testFlushAutoSQLNativeSession");
 			//tag::flushing-auto-flush-sql-native-example[]
 			assertTrue(((Number) session
-					.createNativeQuery( "select count(*) from Person")
-					.getSingleResult()).intValue() == 0 );
+					.createNativeQuery("select count(*) from Person")
+					.getSingleResult()).intValue() == 0);
 
-			Person person = new Person( "John Doe" );
-			session.persist( person );
+			Person person = new Person("John Doe");
+			session.persist(person);
 
 			assertTrue(((Number) session
-					.createNativeQuery( "select count(*) from Person")
-					.uniqueResult()).intValue() == 0 );
+					.createNativeQuery("select count(*) from Person")
+					.uniqueResult()).intValue() == 0);
 			//end::flushing-auto-flush-sql-native-example[]
-		} );
+		});
 	}
 
 	//tag::flushing-auto-flush-jpql-entity-example[]

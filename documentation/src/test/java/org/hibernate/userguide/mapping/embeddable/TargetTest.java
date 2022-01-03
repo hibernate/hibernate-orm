@@ -35,25 +35,25 @@ public class TargetTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void testLifecycle() {
 		//tag::embeddable-Target-persist-example[]
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 
 			City cluj = new City();
-			cluj.setName( "Cluj" );
-			cluj.setCoordinates( new GPS( 46.77120, 23.62360 ) );
+			cluj.setName("Cluj");
+			cluj.setCoordinates(new GPS(46.77120, 23.62360));
 
-			entityManager.persist( cluj );
-		} );
+			entityManager.persist(cluj);
+		});
 		//end::embeddable-Target-persist-example[]
 
 
 		//tag::embeddable-Target-fetching-example[]
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 
-			City cluj = entityManager.find( City.class, 1L );
+			City cluj = entityManager.find(City.class, 1L);
 
-			assertEquals( 46.77120, cluj.getCoordinates().x(), 0.00001 );
-			assertEquals( 23.62360, cluj.getCoordinates().y(), 0.00001 );
-		} );
+			assertEquals(46.77120, cluj.getCoordinates().x(), 0.00001);
+			assertEquals(23.62360, cluj.getCoordinates().y(), 0.00001);
+		});
 		//end::embeddable-Target-fetching-example[]
 	}
 
@@ -99,7 +99,7 @@ public class TargetTest extends BaseEntityManagerFunctionalTestCase {
 		private String name;
 
 		@Embedded
-		@Target( GPS.class )
+		@Target(GPS.class)
 		private Coordinates coordinates;
 
 		//Getters and setters omitted for brevity

@@ -54,28 +54,28 @@ public class EntityTypeChangeAuditTest extends BaseEntityManagerFunctionalTestCa
     @Test
     public void test() {
 
-        doInJPA( this::entityManagerFactory, entityManager -> {
+        doInJPA(this::entityManagerFactory, entityManager -> {
             Customer customer = new Customer();
-            customer.setId( 1L );
-            customer.setFirstName( "John" );
-            customer.setLastName( "Doe" );
+            customer.setId(1L);
+            customer.setFirstName("John");
+            customer.setLastName("Doe");
 
-            entityManager.persist( customer );
-        } );
+            entityManager.persist(customer);
+        });
 
-        doInJPA( this::entityManagerFactory, entityManager -> {
+        doInJPA(this::entityManagerFactory, entityManager -> {
             //tag::envers-tracking-modified-entities-queries-example1[]
                 assertEquals(
                     "org.hibernate.userguide.envers.EntityTypeChangeAuditTest$Customer",
                     AuditReaderFactory
-                        .get( entityManager )
+                        .get(entityManager)
                         .getCrossTypeRevisionChangesReader()
-                        .findEntityTypes( 1 )
+                        .findEntityTypes(1)
                         .iterator().next()
                         .getFirst()
-                    );
+                   );
             //end::envers-tracking-modified-entities-queries-example1[]
-        } );
+        });
 
         EntityManagerFactory entityManagerFactory = null;
         try {
@@ -85,41 +85,41 @@ public class EntityTypeChangeAuditTest extends BaseEntityManagerFunctionalTestCa
                 Arrays.asList(
                     ApplicationCustomer.class,
                     CustomTrackingRevisionEntity.class
-                )
-            );
+               )
+           );
             settings.put(
                     AvailableSettings.HBM2DDL_AUTO,
                     "update"
-            );
+           );
             entityManagerFactory =  Bootstrap.getEntityManagerFactoryBuilder(
-                new TestingPersistenceUnitDescriptorImpl( getClass().getSimpleName() ),
+                new TestingPersistenceUnitDescriptorImpl(getClass().getSimpleName()),
                 settings
-            ).build().unwrap( SessionFactoryImplementor.class );
+           ).build().unwrap(SessionFactoryImplementor.class);
 
             final EntityManagerFactory emf = entityManagerFactory;
 
-            doInJPA( () -> emf, entityManager -> {
-                ApplicationCustomer customer = entityManager.find( ApplicationCustomer.class, 1L );
-                customer.setLastName( "Doe Jr." );
-            } );
+            doInJPA(() -> emf, entityManager -> {
+                ApplicationCustomer customer = entityManager.find(ApplicationCustomer.class, 1L);
+                customer.setLastName("Doe Jr.");
+            });
 
-            doInJPA( () -> emf, entityManager -> {
+            doInJPA(() -> emf, entityManager -> {
                 //tag::envers-tracking-modified-entities-queries-example2[]
                 assertEquals(
                     "org.hibernate.userguide.envers.EntityTypeChangeAuditTest$ApplicationCustomer",
                     AuditReaderFactory
-                    .get( entityManager )
+                    .get(entityManager)
                     .getCrossTypeRevisionChangesReader()
                     // 52 is the next id on the DB due to allocationSize defaulting to 50
-                    .findEntityTypes( 52 )
+                    .findEntityTypes(52)
                     .iterator().next()
                     .getFirst()
-                );
+               );
                 //end::envers-tracking-modified-entities-queries-example2[]
-            } );
+            });
         }
         finally {
-            if ( entityManagerFactory != null ) {
+            if (entityManagerFactory != null) {
                 entityManagerFactory.close();
             }
         }
@@ -137,7 +137,7 @@ public class EntityTypeChangeAuditTest extends BaseEntityManagerFunctionalTestCa
 
         private String lastName;
 
-        @Temporal( TemporalType.TIMESTAMP )
+        @Temporal(TemporalType.TIMESTAMP)
         @Column(name = "created_on")
         @CreationTimestamp
         private Date createdOn;
@@ -192,7 +192,7 @@ public class EntityTypeChangeAuditTest extends BaseEntityManagerFunctionalTestCa
 
         private String lastName;
 
-        @Temporal( TemporalType.TIMESTAMP )
+        @Temporal(TemporalType.TIMESTAMP)
         @Column(name = "created_on")
         @CreationTimestamp
         private Date createdOn;
@@ -244,9 +244,9 @@ public class EntityTypeChangeAuditTest extends BaseEntityManagerFunctionalTestCa
         @ElementCollection
         @JoinTable(
             name = "REVCHANGES",
-            joinColumns = @JoinColumn( name = "REV" )
-        )
-        @Column( name = "ENTITYNAME" )
+            joinColumns = @JoinColumn(name = "REV")
+       )
+        @Column(name = "ENTITYNAME")
         @ModifiedEntityNames
         private Set<String> modifiedEntityNames = new HashSet<>();
 

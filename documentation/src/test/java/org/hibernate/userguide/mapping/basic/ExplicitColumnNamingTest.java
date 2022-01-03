@@ -30,11 +30,11 @@ public class ExplicitColumnNamingTest extends BaseEntityManagerFunctionalTestCas
 
 	@Test
 	public void test() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Product product = new Product( );
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			Product product = new Product();
 			product.id = 1;
-			entityManager.persist( product );
-		} );
+			entityManager.persist(product);
+		});
 	}
 
 	//tag::basic-annotation-explicit-column-example[]
@@ -48,7 +48,7 @@ public class ExplicitColumnNamingTest extends BaseEntityManagerFunctionalTestCas
 
 		private String name;
 
-		@Column( name = "NOTES" )
+		@Column(name = "NOTES")
 		private String description;
 	}
 	//end::basic-annotation-explicit-column-example[]

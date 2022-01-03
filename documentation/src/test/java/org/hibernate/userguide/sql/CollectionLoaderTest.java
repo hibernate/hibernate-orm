@@ -54,50 +54,50 @@ public class CollectionLoaderTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Before
 	public void init() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Session session = entityManager.unwrap( Session.class );
-			session.doWork( connection -> {
-				try(Statement statement = connection.createStatement(); ) {
-					statement.executeUpdate( String.format( "ALTER TABLE person %s valid %s",
-						getDialect().getAddColumnString(), getDialect().getTypeName( Types.BOOLEAN )));
-					statement.executeUpdate( String.format( "ALTER TABLE Person_phones %s valid %s",
-						getDialect().getAddColumnString(), getDialect().getTypeName( Types.BOOLEAN )));
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			Session session = entityManager.unwrap(Session.class);
+			session.doWork(connection -> {
+				try(Statement statement = connection.createStatement();) {
+					statement.executeUpdate(String.format("ALTER TABLE person %s valid %s",
+						getDialect().getAddColumnString(), getDialect().getTypeName(Types.BOOLEAN)));
+					statement.executeUpdate(String.format("ALTER TABLE Person_phones %s valid %s",
+						getDialect().getAddColumnString(), getDialect().getTypeName(Types.BOOLEAN)));
 				}
-			} );
+			});
 		});
 	}
 
-	@Test @TestForIssue( jiraKey = "HHH-10557")
+	@Test @TestForIssue(jiraKey = "HHH-10557")
 	public void test_HHH10557() {
 
-		Person _person = doInJPA( this::entityManagerFactory, entityManager -> {
+		Person _person = doInJPA(this::entityManagerFactory, entityManager -> {
 			Person person = new Person();
-			person.setName( "John Doe" );
-			entityManager.persist( person );
-			person.getPhones().add( "123-456-7890" );
-			person.getPhones().add( "123-456-0987" );
+			person.setName("John Doe");
+			entityManager.persist(person);
+			person.getPhones().add("123-456-7890");
+			person.getPhones().add("123-456-0987");
 			return person;
-		} );
+		});
 
 		try {
 
-			doInJPA( this::entityManagerFactory, entityManager -> {
+			doInJPA(this::entityManagerFactory, entityManager -> {
 				Long postId = _person.getId();
-				Person person = entityManager.find( Person.class, postId );
-				assertEquals( 2, person.getPhones().size() );
-				person.getPhones().remove( 0 );
-				person.setName( "Mr. John Doe" );
-			} );
+				Person person = entityManager.find(Person.class, postId);
+				assertEquals(2, person.getPhones().size());
+				person.getPhones().remove(0);
+				person.setName("Mr. John Doe");
+			});
 
 
-			doInJPA( this::entityManagerFactory, entityManager -> {
+			doInJPA(this::entityManagerFactory, entityManager -> {
 				Long postId = _person.getId();
-				Person person = entityManager.find( Person.class, postId );
-				assertEquals( 1, person.getPhones().size() );
-			} );
+				Person person = entityManager.find(Person.class, postId);
+				assertEquals(1, person.getPhones().size());
+			});
 		}
 		catch (Exception e) {
-			log.error( "Throws NullPointerException because the bag is not initialized by the @Loader" );
+			log.error("Throws NullPointerException because the bag is not initialized by the @Loader");
 		}
 	}
 

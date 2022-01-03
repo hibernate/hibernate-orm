@@ -29,33 +29,33 @@ import static org.hamcrest.Matchers.equalTo;
 /**
  * @author Steve Ebersole
  */
-@DomainModel( annotatedClasses = InstantMappingTests.EntityWithInstant.class )
+@DomainModel(annotatedClasses = InstantMappingTests.EntityWithInstant.class)
 @SessionFactory
 public class InstantMappingTests {
 
 	@Test
 	public void verifyMappings(SessionFactoryScope scope) {
 		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
-		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( EntityWithInstant.class );
+		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor(EntityWithInstant.class);
 
-		final BasicAttributeMapping duration = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "instant" );
+		final BasicAttributeMapping duration = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("instant");
 		final JdbcMapping jdbcMapping = duration.getJdbcMapping();
-		assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( Instant.class ) );
-		assertThat( jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo( Types.TIMESTAMP ) );
+		assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Instant.class));
+		assertThat(jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo(Types.TIMESTAMP));
 
 		scope.inTransaction(
 				(session) -> {
-					session.persist( new EntityWithInstant( 1, Instant.now() ) );
+					session.persist(new EntityWithInstant(1, Instant.now()));
 				}
 		);
 
 		scope.inTransaction(
-				(session) -> session.find( EntityWithInstant.class, 1 )
+				(session) -> session.find(EntityWithInstant.class, 1)
 		);
 	}
 
-	@Entity( name = "EntityWithInstant" )
-	@Table( name = "EntityWithInstant" )
+	@Entity(name = "EntityWithInstant")
+	@Table(name = "EntityWithInstant")
 	public static class EntityWithInstant {
 		@Id
 		private Integer id;

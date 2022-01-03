@@ -54,81 +54,81 @@ public class QueryAuditWithModifiedFlagTest extends BaseEntityManagerFunctionalT
 
 	@Test
 	public void test() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			Address address = new Address();
-			address.setId( 1L );
-			address.setCountry( "România" );
-			address.setCity( "Cluj-Napoca" );
-			address.setStreet( "Bulevardul Eroilor" );
-			address.setStreetNumber( "1 A" );
-			entityManager.persist( address );
+			address.setId(1L);
+			address.setCountry("România");
+			address.setCity("Cluj-Napoca");
+			address.setStreet("Bulevardul Eroilor");
+			address.setStreetNumber("1 A");
+			entityManager.persist(address);
 
 			Customer customer = new Customer();
-			customer.setId( 1L );
-			customer.setFirstName( "John" );
-			customer.setLastName( "Doe" );
-			customer.setAddress( address );
+			customer.setId(1L);
+			customer.setFirstName("John");
+			customer.setLastName("Doe");
+			customer.setAddress(address);
 
-			entityManager.persist( customer );
-		} );
+			entityManager.persist(customer);
+		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Customer customer = entityManager.find( Customer.class, 1L );
-			customer.setLastName( "Doe Jr." );
-		} );
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			Customer customer = entityManager.find(Customer.class, 1L);
+			customer.setLastName("Doe Jr.");
+		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Customer customer = entityManager.getReference( Customer.class, 1L );
-			entityManager.remove( customer );
-		} );
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			Customer customer = entityManager.getReference(Customer.class, 1L);
+			entityManager.remove(customer);
+		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::envers-tracking-properties-changes-queries-hasChanged-example[]
 			List<Customer> customers = AuditReaderFactory
-			.get( entityManager )
+			.get(entityManager)
 			.createQuery()
-			.forRevisionsOfEntity( Customer.class, false, true )
-			.add( AuditEntity.id().eq( 1L ) )
-			.add( AuditEntity.property( "lastName" ).hasChanged() )
+			.forRevisionsOfEntity(Customer.class, false, true)
+			.add(AuditEntity.id().eq(1L))
+			.add(AuditEntity.property("lastName").hasChanged())
 			.getResultList();
 			//end::envers-tracking-properties-changes-queries-hasChanged-example[]
 
-			assertEquals( 3, customers.size() );
-		} );
+			assertEquals(3, customers.size());
+		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::envers-tracking-properties-changes-queries-hasChanged-and-hasNotChanged-example[]
 			List<Customer> customers = AuditReaderFactory
-			.get( entityManager )
+			.get(entityManager)
 			.createQuery()
-			.forRevisionsOfEntity( Customer.class, false, true )
-			.add( AuditEntity.id().eq( 1L ) )
-			.add( AuditEntity.property( "lastName" ).hasChanged() )
-			.add( AuditEntity.property( "firstName" ).hasNotChanged() )
+			.forRevisionsOfEntity(Customer.class, false, true)
+			.add(AuditEntity.id().eq(1L))
+			.add(AuditEntity.property("lastName").hasChanged())
+			.add(AuditEntity.property("firstName").hasNotChanged())
 			.getResultList();
 			//end::envers-tracking-properties-changes-queries-hasChanged-and-hasNotChanged-example[]
 
-			assertEquals( 1, customers.size() );
-		} );
+			assertEquals(1, customers.size());
+		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::envers-tracking-properties-changes-queries-at-revision-example[]
 			Customer customer = (Customer) AuditReaderFactory
-			.get( entityManager )
+			.get(entityManager)
 			.createQuery()
-			.forEntitiesModifiedAtRevision( Customer.class, 2 )
-			.add( AuditEntity.id().eq( 1L ) )
-			.add( AuditEntity.property( "lastName" ).hasChanged() )
-			.add( AuditEntity.property( "firstName" ).hasNotChanged() )
+			.forEntitiesModifiedAtRevision(Customer.class, 2)
+			.add(AuditEntity.id().eq(1L))
+			.add(AuditEntity.property("lastName").hasChanged())
+			.add(AuditEntity.property("firstName").hasNotChanged())
 			.getSingleResult();
 			//end::envers-tracking-properties-changes-queries-at-revision-example[]
 
-			assertNotNull( customer );
-		} );
+			assertNotNull(customer);
+		});
 	}
 
 	//tag::envers-tracking-properties-changes-queries-entity-example[]
-	@Audited( withModifiedFlag = true )
+	@Audited(withModifiedFlag = true)
 	//end::envers-tracking-properties-changes-queries-entity-example[]
 	@Entity(name = "Customer")
 	public static class Customer {
@@ -140,7 +140,7 @@ public class QueryAuditWithModifiedFlagTest extends BaseEntityManagerFunctionalT
 
 		private String lastName;
 
-		@Temporal( TemporalType.TIMESTAMP )
+		@Temporal(TemporalType.TIMESTAMP)
 		@Column(name = "created_on")
 		@CreationTimestamp
 		private Date createdOn;

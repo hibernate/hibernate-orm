@@ -38,10 +38,10 @@ public class InMemoryValueGenerationTest extends BaseEntityManagerFunctionalTest
 
 	@Test
 	public void test() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Event dateEvent = new Event( );
-			entityManager.persist( dateEvent );
-		} );
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			Event dateEvent = new Event();
+			entityManager.persist(dateEvent);
+		});
 	}
 
 	//tag::mapping-in-memory-generated-value-example[]
@@ -97,7 +97,7 @@ public class InMemoryValueGenerationTest extends BaseEntityManagerFunctionalTest
 		 * @return {@code true}
 		 */
 		public ValueGenerator<?> getValueGenerator() {
-			return (session, owner) -> new Date( );
+			return (session, owner) -> new Date();
 		}
 
 		/**

@@ -43,98 +43,98 @@ public class MultiLoadIdTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
 	protected void addMappings(Map settings) {
-		settings.put( AvailableSettings.USE_SECOND_LEVEL_CACHE, true );
-		settings.put( AvailableSettings.CACHE_REGION_FACTORY, "jcache" );
-		settings.put( AvailableSettings.GENERATE_STATISTICS, Boolean.TRUE.toString() );
-		sqlStatementInterceptor = new SQLStatementInterceptor( settings );
+		settings.put(AvailableSettings.USE_SECOND_LEVEL_CACHE, true);
+		settings.put(AvailableSettings.CACHE_REGION_FACTORY, "jcache");
+		settings.put(AvailableSettings.GENERATE_STATISTICS, Boolean.TRUE.toString());
+		sqlStatementInterceptor = new SQLStatementInterceptor(settings);
 	}
 
 	@Override
 	protected void afterEntityManagerFactoryBuilt() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 
 			Person person1 = new Person();
-			person1.setId( 1L );
+			person1.setId(1L);
 			person1.setName("John Doe Sr.");
 
-			entityManager.persist( person1 );
+			entityManager.persist(person1);
 
 			Person person2 = new Person();
-			person2.setId( 2L );
+			person2.setId(2L);
 			person2.setName("John Doe");
 
-			entityManager.persist( person2 );
+			entityManager.persist(person2);
 
 			Person person3 = new Person();
-			person3.setId( 3L );
+			person3.setId(3L);
 			person3.setName("John Doe Jr.");
 
-			entityManager.persist( person3 );
-		} );
+			entityManager.persist(person3);
+		});
 	}
 
 	@Test
 	public void testSessionCheck() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::pc-by-multiple-ids-example[]
-			Session session = entityManager.unwrap( Session.class );
+			Session session = entityManager.unwrap(Session.class);
 
 			List<Person> persons = session
-					.byMultipleIds( Person.class )
-					.multiLoad( 1L, 2L, 3L );
+					.byMultipleIds(Person.class)
+					.multiLoad(1L, 2L, 3L);
 
-			assertEquals( 3, persons.size() );
+			assertEquals(3, persons.size());
 
 			List<Person> samePersons = session
-					.byMultipleIds( Person.class )
-					.enableSessionCheck( true )
-					.multiLoad( 1L, 2L, 3L );
+					.byMultipleIds(Person.class)
+					.enableSessionCheck(true)
+					.multiLoad(1L, 2L, 3L);
 
-			assertEquals( persons, samePersons );
+			assertEquals(persons, samePersons);
 			//end::pc-by-multiple-ids-example[]
-		} );
+		});
 	}
 
 	@Test
 	public void testSecondLevelCacheCheck() {
 		//tag::pc-by-multiple-ids-second-level-cache-example[]
-		SessionFactory sessionFactory = entityManagerFactory().unwrap( SessionFactory.class );
+		SessionFactory sessionFactory = entityManagerFactory().unwrap(SessionFactory.class);
 		Statistics statistics = sessionFactory.getStatistics();
 
 		sessionFactory.getCache().evictAll();
 		statistics.clear();
 		sqlStatementInterceptor.clear();
 
-		assertEquals( 0, statistics.getQueryExecutionCount() );
+		assertEquals(0, statistics.getQueryExecutionCount());
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Session session = entityManager.unwrap( Session.class );
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			Session session = entityManager.unwrap(Session.class);
 
 			List<Person> persons = session
-				.byMultipleIds( Person.class )
-				.multiLoad( 1L, 2L, 3L );
+				.byMultipleIds(Person.class)
+				.multiLoad(1L, 2L, 3L);
 
-			assertEquals( 3, persons.size() );
-		} );
+			assertEquals(3, persons.size());
+		});
 
-		assertEquals( 0, statistics.getSecondLevelCacheHitCount() );
-		assertEquals( 3, statistics.getSecondLevelCachePutCount() );
-		assertEquals( 1, sqlStatementInterceptor.getSqlQueries().size() );
+		assertEquals(0, statistics.getSecondLevelCacheHitCount());
+		assertEquals(3, statistics.getSecondLevelCachePutCount());
+		assertEquals(1, sqlStatementInterceptor.getSqlQueries().size());
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Session session = entityManager.unwrap( Session.class );
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			Session session = entityManager.unwrap(Session.class);
 			sqlStatementInterceptor.clear();
 
-			List<Person> persons = session.byMultipleIds( Person.class )
-				.with( CacheMode.NORMAL )
-				.multiLoad( 1L, 2L, 3L );
+			List<Person> persons = session.byMultipleIds(Person.class)
+				.with(CacheMode.NORMAL)
+				.multiLoad(1L, 2L, 3L);
 
-			assertEquals( 3, persons.size() );
+			assertEquals(3, persons.size());
 
-		} );
+		});
 
-		assertEquals( 3, statistics.getSecondLevelCacheHitCount() );
-		assertEquals( 0, sqlStatementInterceptor.getSqlQueries().size() );
+		assertEquals(3, statistics.getSecondLevelCacheHitCount());
+		assertEquals(0, sqlStatementInterceptor.getSqlQueries().size());
 		//end::pc-by-multiple-ids-second-level-cache-example[]
 	}
 

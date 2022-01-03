@@ -40,35 +40,35 @@ public class MultipleNaturalIdTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	public void test() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			Publisher publisher = new Publisher();
-			publisher.setId( 1L );
-			publisher.setName( "Amazon" );
-			entityManager.persist( publisher );
+			publisher.setId(1L);
+			publisher.setName("Amazon");
+			entityManager.persist(publisher);
 
 			Book book = new Book();
-			book.setId( 1L );
-			book.setTitle( "High-Performance Java Persistence" );
-			book.setAuthor( "Vlad Mihalcea" );
-			book.setProductNumber( "973022823X" );
-			book.setPublisher( publisher );
+			book.setId(1L);
+			book.setTitle("High-Performance Java Persistence");
+			book.setAuthor("Vlad Mihalcea");
+			book.setProductNumber("973022823X");
+			book.setPublisher(publisher);
 
-			entityManager.persist( book );
-		} );
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Publisher publisher = entityManager.getReference( Publisher.class, 1L );
+			entityManager.persist(book);
+		});
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			Publisher publisher = entityManager.getReference(Publisher.class, 1L);
 			//tag::naturalid-load-access-example[]
 
 			Book book = entityManager
 				.unwrap(Session.class)
-				.byNaturalId( Book.class )
+				.byNaturalId(Book.class)
 				.using("productNumber", "973022823X")
 				.using("publisher", publisher)
 				.load();
 			//end::naturalid-load-access-example[]
 
 			assertEquals("High-Performance Java Persistence", book.getTitle());
-		} );
+		});
 	}
 
 	//tag::naturalid-multiple-attribute-mapping-example[]
@@ -165,20 +165,20 @@ public class MultipleNaturalIdTest extends BaseEntityManagerFunctionalTestCase {
 
 		@Override
 		public boolean equals(Object o) {
-			if ( this == o ) {
+			if (this == o) {
 				return true;
 			}
-			if ( o == null || getClass() != o.getClass() ) {
+			if (o == null || getClass() != o.getClass()) {
 				return false;
 			}
 			Publisher publisher = (Publisher) o;
-			return Objects.equals( id, publisher.id ) &&
-					Objects.equals( name, publisher.name );
+			return Objects.equals(id, publisher.id) &&
+					Objects.equals(name, publisher.name);
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash( id, name );
+			return Objects.hash(id, name);
 		}
 	}
 	//end::naturalid-multiple-attribute-mapping-example[]

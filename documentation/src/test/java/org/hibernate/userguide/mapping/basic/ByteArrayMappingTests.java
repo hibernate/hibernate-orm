@@ -29,66 +29,66 @@ import static org.hamcrest.Matchers.equalTo;
 /**
  * @author Steve Ebersole
  */
-@DomainModel( annotatedClasses = ByteArrayMappingTests.EntityOfByteArrays.class )
+@DomainModel(annotatedClasses = ByteArrayMappingTests.EntityOfByteArrays.class)
 @SessionFactory
 public class ByteArrayMappingTests {
 
 	@Test
 	public void verifyMappings(SessionFactoryScope scope) {
 		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
-		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( EntityOfByteArrays.class );
+		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor(EntityOfByteArrays.class);
 
 		{
-			final BasicAttributeMapping primitive = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "primitive" );
+			final BasicAttributeMapping primitive = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("primitive");
 			final JdbcMapping jdbcMapping = primitive.getJdbcMapping();
-			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( byte[].class ) );
-			assertThat( jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo( Types.VARBINARY ) );
+			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(byte[].class));
+			assertThat(jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo(Types.VARBINARY));
 		}
 
 		{
-			final BasicAttributeMapping primitive = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "wrapper" );
+			final BasicAttributeMapping primitive = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("wrapper");
 			final JdbcMapping jdbcMapping = primitive.getJdbcMapping();
-			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( Byte[].class ) );
-			assertThat( jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo( Types.VARBINARY ) );
+			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Byte[].class));
+			assertThat(jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo(Types.VARBINARY));
 		}
 
 		{
-			final BasicAttributeMapping primitive = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "primitiveLob" );
+			final BasicAttributeMapping primitive = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("primitiveLob");
 			final JdbcMapping jdbcMapping = primitive.getJdbcMapping();
-			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( byte[].class ) );
-			assertThat( jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo( Types.BLOB ) );
+			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(byte[].class));
+			assertThat(jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo(Types.BLOB));
 		}
 
 		{
-			final BasicAttributeMapping primitive = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "wrapperLob" );
+			final BasicAttributeMapping primitive = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("wrapperLob");
 			final JdbcMapping jdbcMapping = primitive.getJdbcMapping();
-			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( Byte[].class ) );
-			assertThat( jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo( Types.BLOB ) );
+			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Byte[].class));
+			assertThat(jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo(Types.BLOB));
 		}
 
 		scope.inTransaction(
 				(session) -> {
 					session.persist(
-							new EntityOfByteArrays( 1, "abc".getBytes(), new Byte[] { (byte) 1 } )
+							new EntityOfByteArrays(1, "abc".getBytes(), new Byte[] { (byte) 1 })
 					);
 				}
 		);
 
 		scope.inTransaction(
-				(session) -> session.get( EntityOfByteArrays.class, 1 )
+				(session) -> session.get(EntityOfByteArrays.class, 1)
 		);
 	}
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
 		scope.inTransaction(
-				(session) -> session.createQuery( "delete EntityOfByteArrays" ).executeUpdate()
+				(session) -> session.createQuery("delete EntityOfByteArrays").executeUpdate()
 		);
 	}
 
 
-	@Entity( name = "EntityOfByteArrays" )
-	@Table( name = "EntityOfByteArrays" )
+	@Entity(name = "EntityOfByteArrays")
+	@Table(name = "EntityOfByteArrays")
 	public static class EntityOfByteArrays {
 		@Id
 		public Integer id;

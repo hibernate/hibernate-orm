@@ -35,7 +35,7 @@ public class FirstLevelCacheTest extends BaseEntityManagerFunctionalTestCase {
     }
 
 	@Override
-	@SuppressWarnings( "unchecked" )
+	@SuppressWarnings("unchecked")
 	protected void addConfigOptions(Map options) {
 		options.put(AvailableSettings.USE_SECOND_LEVEL_CACHE, Boolean.TRUE.toString());
 		options.put(AvailableSettings.CACHE_REGION_FACTORY, "jcache");
@@ -43,20 +43,20 @@ public class FirstLevelCacheTest extends BaseEntityManagerFunctionalTestCase {
 
     @Test
     public void testCache() {
-        Person aPerson = doInJPA( this::entityManagerFactory, entityManager -> {
-            entityManager.persist( new Person() );
-            entityManager.persist( new Person() );
+        Person aPerson = doInJPA(this::entityManagerFactory, entityManager -> {
+            entityManager.persist(new Person());
+            entityManager.persist(new Person());
 			Person person = new Person();
-            entityManager.persist( person );
+            entityManager.persist(person);
 			return person;
         });
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			List<Object> dtos = new ArrayList<>(  );
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			List<Object> dtos = new ArrayList<>();
 			//tag::caching-management-jpa-detach-example[]
 			for(Person person : entityManager.createQuery("select p from Person p", Person.class)
 					.getResultList()) {
 				dtos.add(toDTO(person));
-				entityManager.detach( person );
+				entityManager.detach(person);
 			}
 			//end::caching-management-jpa-detach-example[]
 			//tag::caching-management-clear-example[]
@@ -67,17 +67,17 @@ public class FirstLevelCacheTest extends BaseEntityManagerFunctionalTestCase {
 			Person person = aPerson;
 
 			//tag::caching-management-contains-example[]
-			entityManager.contains( person );
+			entityManager.contains(person);
 
 			//end::caching-management-contains-example[]
 		});
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			List<Object> dtos = new ArrayList<>(  );
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			List<Object> dtos = new ArrayList<>();
 			//tag::caching-management-native-evict-example[]
-			Session session = entityManager.unwrap( Session.class );
+			Session session = entityManager.unwrap(Session.class);
 			for(Person person : (List<Person>) session.createQuery("select p from Person p").list()) {
 				dtos.add(toDTO(person));
-				session.evict( person );
+				session.evict(person);
 			}
 			//end::caching-management-native-evict-example[]
 			//tag::caching-management-clear-example[]
@@ -87,7 +87,7 @@ public class FirstLevelCacheTest extends BaseEntityManagerFunctionalTestCase {
 			Person person = aPerson;
 
 			//tag::caching-management-contains-example[]
-			session.contains( person );
+			session.contains(person);
 			//end::caching-management-contains-example[]
 		});
     }

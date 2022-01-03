@@ -20,11 +20,11 @@ public class ConfigurableMultiTenantConnectionProvider
         extends AbstractMultiTenantConnectionProvider {
 
     private final Map<String, ConnectionProvider> connectionProviderMap =
-        new HashMap<>(  );
+        new HashMap<>();
 
     public ConfigurableMultiTenantConnectionProvider(
             Map<String, ConnectionProvider> connectionProviderMap) {
-        this.connectionProviderMap.putAll( connectionProviderMap );
+        this.connectionProviderMap.putAll(connectionProviderMap);
     }
 
     @Override
@@ -34,7 +34,7 @@ public class ConfigurableMultiTenantConnectionProvider
 
     @Override
     protected ConnectionProvider selectConnectionProvider(String tenantIdentifier) {
-        return connectionProviderMap.get( tenantIdentifier );
+        return connectionProviderMap.get(tenantIdentifier);
     }
 }
 //end::multitenacy-hibernate-ConfigurableMultiTenantConnectionProvider-example[]

@@ -28,7 +28,7 @@ public class BitSetMutabilityPlan implements MutabilityPlan<BitSet> {
 
 	@Override
 	public BitSet deepCopy(BitSet value) {
-		return BitSet.valueOf( value.toByteArray() );
+		return BitSet.valueOf(value.toByteArray());
 	}
 
 	@Override
@@ -38,6 +38,6 @@ public class BitSetMutabilityPlan implements MutabilityPlan<BitSet> {
 
 	@Override
 	public BitSet assemble(Serializable cached, SharedSessionContract session) {
-		return BitSet.valueOf( (byte[]) cached );
+		return BitSet.valueOf((byte[]) cached);
 	}
 }

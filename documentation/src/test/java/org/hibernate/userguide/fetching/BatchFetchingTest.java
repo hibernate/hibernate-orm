@@ -36,25 +36,25 @@ public class BatchFetchingTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	public void test() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			for ( long i = 0; i < 10; i++ ) {
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			for (long i = 0; i < 10; i++) {
 				Department department = new Department();
 				department.id = i;
-				entityManager.persist( department );
+				entityManager.persist(department);
 
-				for ( int j = 0; j < Math.random() * 5; j++ ) {
+				for (int j = 0; j < Math.random() * 5; j++) {
 					Employee employee = new Employee();
 					employee.id = (i * 5) + j;
-					employee.name = String.format( "John %d", employee.getId() );
+					employee.name = String.format("John %d", employee.getId());
 					employee.department = department;
-					entityManager.persist( employee );
-					department.employees.add( employee );
+					entityManager.persist(employee);
+					department.employees.add(employee);
 				}
 				entityManager.flush();
 			}
-		} );
+		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::fetching-batch-fetching-example[]
 			List<Department> departments = entityManager.createQuery(
 				"select d " +
@@ -63,7 +63,7 @@ public class BatchFetchingTest extends BaseEntityManagerFunctionalTestCase {
 				"where e.name like 'John%'", Department.class)
 			.getResultList();
 
-			for ( Department department : departments ) {
+			for (Department department : departments) {
 				log.infof(
 					"Department %d has {} employees",
 					department.getId(),
@@ -71,7 +71,7 @@ public class BatchFetchingTest extends BaseEntityManagerFunctionalTestCase {
 				);
 			}
 			//end::fetching-batch-fetching-example[]
-		} );
+		});
 	}
 
 	//tag::fetching-batch-mapping-example[]

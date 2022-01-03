@@ -17,11 +17,11 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 public class PersistentQueue extends PersistentBag implements Queue {
 
     public PersistentQueue(SharedSessionContractImplementor session) {
-        super( session );
+        super(session);
     }
 
     public PersistentQueue(SharedSessionContractImplementor session, List list) {
-        super( session, list );
+        super(session, list);
     }
 
     @Override
@@ -39,7 +39,7 @@ public class PersistentQueue extends PersistentBag implements Queue {
         int size = size();
         if(size > 0) {
             Object first = get(0);
-            remove( 0 );
+            remove(0);
             return first;
         }
         throw new NoSuchElementException();
@@ -52,7 +52,7 @@ public class PersistentQueue extends PersistentBag implements Queue {
 
     @Override
     public Object peek() {
-        return size() > 0 ? get( 0 ) : null;
+        return size() > 0 ? get(0) : null;
     }
 }
 //end::collections-custom-collection-mapping-example[]

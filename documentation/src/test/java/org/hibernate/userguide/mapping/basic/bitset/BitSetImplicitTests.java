@@ -32,7 +32,7 @@ import static org.hamcrest.Matchers.nullValue;
  *
  * @author Steve Ebersole
  */
-@DomainModel( annotatedClasses = BitSetImplicitTests.Product.class )
+@DomainModel(annotatedClasses = BitSetImplicitTests.Product.class)
 @SessionFactory
 public class BitSetImplicitTests {
 
@@ -41,20 +41,20 @@ public class BitSetImplicitTests {
 		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
 		final MappingMetamodel domainModel = sessionFactory.getDomainModel();
 
-		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( Product.class );
-		final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "bitSet" );
+		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor(Product.class);
+		final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("bitSet");
 
-		assertThat( attributeMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( BitSet.class ) );
+		assertThat(attributeMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(BitSet.class));
 
-		assertThat( attributeMapping.getValueConverter(), nullValue() );
+		assertThat(attributeMapping.getValueConverter(), nullValue());
 
 		assertThat(
 				attributeMapping.getJdbcMapping().getJdbcTypeDescriptor().getJdbcTypeCode(),
-				is( Types.VARBINARY )
+				is(Types.VARBINARY)
 		);
 
 		// it will just be serialized
-		assertThat( attributeMapping.getJdbcMapping().getJavaTypeDescriptor().getJavaTypeClass(), equalTo( BitSet.class ) );
+		assertThat(attributeMapping.getJdbcMapping().getJavaTypeDescriptor().getJavaTypeClass(), equalTo(BitSet.class));
 	}
 
 

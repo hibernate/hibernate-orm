@@ -39,10 +39,10 @@ public class BitSetJavaTypeContributionTests {
 		final EntityPersister productType = scope.getSessionFactory()
 				.getRuntimeMetamodels()
 				.getMappingMetamodel()
-				.findEntityDescriptor( Product.class );
-		final SingularAttributeMapping bitSetAttribute = (SingularAttributeMapping) productType.findAttributeMapping( "bitSet" );
+				.findEntityDescriptor(Product.class);
+		final SingularAttributeMapping bitSetAttribute = (SingularAttributeMapping) productType.findAttributeMapping("bitSet");
 		// make sure BitSetTypeDescriptor was selected
-		assertThat( bitSetAttribute.getJavaTypeDescriptor(), instanceOf( BitSetJavaType.class ) );
+		assertThat(bitSetAttribute.getJavaTypeDescriptor(), instanceOf(BitSetJavaType.class));
 	}
 
 

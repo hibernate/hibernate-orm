@@ -37,8 +37,8 @@ import static org.junit.Assert.assertEquals;
 				SubselectTest.AccountSummary.class
 		}
 )
-@SkipForDialect( dialectClass = DerbyDialect.class, reason = "Derby doesn't support a CONCAT function" )
-@SkipForDialect( dialectClass = SybaseASEDialect.class, reason = "Sybase doesn't support a CONCAT function" )
+@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby doesn't support a CONCAT function")
+@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "Sybase doesn't support a CONCAT function")
 public class SubselectTest {
 
 	@Test
@@ -51,22 +51,22 @@ public class SubselectTest {
 		scope.inTransaction(
 				(entityManager) -> {
 					Client client = new Client();
-					client.setId( 1L );
-					client.setFirstName( "John" );
-					client.setLastName( "Doe" );
-					entityManager.persist( client );
+					client.setId(1L);
+					client.setFirstName("John");
+					client.setLastName("Doe");
+					entityManager.persist(client);
 
 					Account account = new Account();
-					account.setId( 1L );
-					account.setClient( client );
-					account.setDescription( "Checking account" );
-					entityManager.persist( account );
+					account.setId(1L);
+					account.setClient(client);
+					account.setDescription("Checking account");
+					entityManager.persist(account);
 
 					AccountTransaction transaction = new AccountTransaction();
-					transaction.setAccount( account );
-					transaction.setDescription( "Salary" );
-					transaction.setCents( 100 * 7000 );
-					entityManager.persist( transaction );
+					transaction.setAccount(account);
+					transaction.setDescription("Salary");
+					transaction.setCents(100 * 7000);
+					entityManager.persist(transaction);
 				}
 		);
 
@@ -77,27 +77,27 @@ public class SubselectTest {
 							"select s " +
 									"from AccountSummary s " +
 									"where s.id = :id", AccountSummary.class)
-							.setParameter( "id", 1L )
+							.setParameter("id", 1L)
 							.getSingleResult();
 
-					assertEquals( "John Doe", summary.getClientName() );
-					assertEquals( 100 * 7000, summary.getBalance() );
+					assertEquals("John Doe", summary.getClientName());
+					assertEquals(100 * 7000, summary.getBalance());
 
 					AccountTransaction transaction = new AccountTransaction();
-					transaction.setAccount( entityManager.getReference( Account.class, 1L ) );
-					transaction.setDescription( "Shopping" );
-					transaction.setCents( -100 * 2200 );
-					entityManager.persist( transaction );
+					transaction.setAccount(entityManager.getReference(Account.class, 1L));
+					transaction.setDescription("Shopping");
+					transaction.setCents(-100 * 2200);
+					entityManager.persist(transaction);
 				}
 		);
 
 		// load the AccountSummary and verify the updated balance
 		scope.inTransaction(
 				(entityManager) -> {
-					AccountSummary summary = entityManager.find( AccountSummary.class, 1L );
+					AccountSummary summary = entityManager.find(AccountSummary.class, 1L);
 
-					assertEquals( "John Doe", summary.getClientName() );
-					assertEquals( 100 * 4800, summary.getBalance() );
+					assertEquals("John Doe", summary.getClientName());
+					assertEquals(100 * 4800, summary.getBalance());
 				}
 		);
 	}
@@ -108,32 +108,32 @@ public class SubselectTest {
 		scope.inTransaction(
 				(entityManager) -> {
 					Client client = new Client();
-					client.setId( 1L );
-					client.setFirstName( "John" );
-					client.setLastName( "Doe" );
-					entityManager.persist( client );
+					client.setId(1L);
+					client.setFirstName("John");
+					client.setLastName("Doe");
+					entityManager.persist(client);
 
 					Account account = new Account();
-					account.setId( 1L );
-					account.setClient( client );
-					account.setDescription( "Checking account" );
-					entityManager.persist( account );
+					account.setId(1L);
+					account.setClient(client);
+					account.setDescription("Checking account");
+					entityManager.persist(account);
 
 					AccountTransaction transaction = new AccountTransaction();
-					transaction.setAccount( account );
-					transaction.setDescription( "Salary" );
-					transaction.setCents( 100 * 7000 );
-					entityManager.persist( transaction );
+					transaction.setAccount(account);
+					transaction.setDescription("Salary");
+					transaction.setCents(100 * 7000);
+					entityManager.persist(transaction);
 
 					AccountSummary summary = entityManager.createQuery(
 						"select s " +
 						"from AccountSummary s " +
 						"where s.id = :id", AccountSummary.class)
-					.setParameter( "id", account.getId() )
+					.setParameter("id", account.getId())
 					.getSingleResult();
 
-					assertEquals( "John Doe", summary.getClientName() );
-					assertEquals( 100 * 7000, summary.getBalance() );
+					assertEquals("John Doe", summary.getClientName());
+					assertEquals(100 * 7000, summary.getBalance());
 				}
 		);
 		//end::mapping-Subselect-entity-find-example[]
@@ -141,19 +141,19 @@ public class SubselectTest {
 		//tag::mapping-Subselect-entity-refresh-example[]
 		scope.inTransaction(
 				(entityManager) -> {
-					AccountSummary summary = entityManager.find( AccountSummary.class, 1L );
-					assertEquals( "John Doe", summary.getClientName() );
-					assertEquals( 100 * 7000, summary.getBalance() );
+					AccountSummary summary = entityManager.find(AccountSummary.class, 1L);
+					assertEquals("John Doe", summary.getClientName());
+					assertEquals(100 * 7000, summary.getBalance());
 
 					AccountTransaction transaction = new AccountTransaction();
-					transaction.setAccount( entityManager.getReference( Account.class, 1L ) );
-					transaction.setDescription( "Shopping" );
-					transaction.setCents( -100 * 2200 );
-					entityManager.persist( transaction );
+					transaction.setAccount(entityManager.getReference(Account.class, 1L));
+					transaction.setDescription("Shopping");
+					transaction.setCents(-100 * 2200);
+					entityManager.persist(transaction);
 					entityManager.flush();
 
-					entityManager.refresh( summary );
-					assertEquals( 100 * 4800, summary.getBalance() );
+					entityManager.refresh(summary);
+					assertEquals(100 * 4800, summary.getBalance());
 				}
 		);
 		//end::mapping-Subselect-entity-refresh-example[]
@@ -163,9 +163,9 @@ public class SubselectTest {
 	public void dropTestData(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				(entityManager) -> {
-					entityManager.createQuery( "delete AccountTransaction" ).executeUpdate();
-					entityManager.createQuery( "delete Account" ).executeUpdate();
-					entityManager.createQuery( "delete Client" ).executeUpdate();
+					entityManager.createQuery("delete AccountTransaction").executeUpdate();
+					entityManager.createQuery("delete Account").executeUpdate();
+					entityManager.createQuery("delete Client").executeUpdate();
 				}
 		);
 	}
@@ -321,7 +321,7 @@ public class SubselectTest {
 		"join account_transaction atr on a.id = atr.account_id " +
 		"group by a.id, concat(concat(c.first_name, ' '), c.last_name)"
 	)
-	@Synchronize( {"client", "account", "account_transaction"} )
+	@Synchronize({"client", "account", "account_transaction"})
 	public static class AccountSummary {
 
 		@Id

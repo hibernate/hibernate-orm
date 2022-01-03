@@ -47,16 +47,16 @@ public class CustomRevisionEntityTest extends BaseEntityManagerFunctionalTestCas
 	@Test
 	public void test() {
 		//tag::envers-revisionlog-RevisionEntity-persist-example[]
-		CurrentUser.INSTANCE.logIn( "Vlad Mihalcea" );
+		CurrentUser.INSTANCE.logIn("Vlad Mihalcea");
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			Customer customer = new Customer();
-			customer.setId( 1L );
-			customer.setFirstName( "John" );
-			customer.setLastName( "Doe" );
+			customer.setId(1L);
+			customer.setFirstName("John");
+			customer.setLastName("Doe");
 
-			entityManager.persist( customer );
-		} );
+			entityManager.persist(customer);
+		});
 
 		CurrentUser.INSTANCE.logOut();
 		//end::envers-revisionlog-RevisionEntity-persist-example[]
@@ -73,7 +73,7 @@ public class CustomRevisionEntityTest extends BaseEntityManagerFunctionalTestCas
 
 		private String lastName;
 
-		@Temporal( TemporalType.TIMESTAMP )
+		@Temporal(TemporalType.TIMESTAMP)
 		@Column(name = "created_on")
 		@CreationTimestamp
 		private Date createdOn;
@@ -119,7 +119,7 @@ public class CustomRevisionEntityTest extends BaseEntityManagerFunctionalTestCas
 		private static final ThreadLocal<String> storage = new ThreadLocal<>();
 
 		public void logIn(String user) {
-			storage.set( user );
+			storage.set(user);
 		}
 
 		public void logOut() {
@@ -135,7 +135,7 @@ public class CustomRevisionEntityTest extends BaseEntityManagerFunctionalTestCas
 	//tag::envers-revisionlog-RevisionEntity-example[]
 	@Entity(name = "CustomRevisionEntity")
 	@Table(name = "CUSTOM_REV_INFO")
-	@RevisionEntity( CustomRevisionEntityListener.class )
+	@RevisionEntity(CustomRevisionEntityListener.class)
 	public static class CustomRevisionEntity extends DefaultRevisionEntity {
 
 		private String username;
@@ -144,7 +144,7 @@ public class CustomRevisionEntityTest extends BaseEntityManagerFunctionalTestCas
 			return username;
 		}
 
-		public void setUsername( String username ) {
+		public void setUsername(String username) {
 			this.username = username;
 		}
 	}
@@ -153,9 +153,9 @@ public class CustomRevisionEntityTest extends BaseEntityManagerFunctionalTestCas
 	//tag::envers-revisionlog-RevisionListener-example[]
 	public static class CustomRevisionEntityListener implements RevisionListener {
 
-		public void newRevision( Object revisionEntity ) {
+		public void newRevision(Object revisionEntity) {
 			CustomRevisionEntity customRevisionEntity =
-				( CustomRevisionEntity ) revisionEntity;
+				(CustomRevisionEntity) revisionEntity;
 
 			customRevisionEntity.setUsername(
 				CurrentUser.INSTANCE.get()

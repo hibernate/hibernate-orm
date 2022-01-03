@@ -32,7 +32,7 @@ import static org.hamcrest.Matchers.is;
  *
  * @author Steve Ebersole
  */
-@DomainModel( annotatedClasses = ByteMappingTests.EntityOfBytes.class )
+@DomainModel(annotatedClasses = ByteMappingTests.EntityOfBytes.class)
 @SessionFactory
 public class ByteMappingTests {
 
@@ -40,47 +40,47 @@ public class ByteMappingTests {
 	public void testMappings(SessionFactoryScope scope) {
 		// first, verify the type selections...
 		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
-		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( EntityOfBytes.class );
+		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor(EntityOfBytes.class);
 		final JdbcTypeRegistry jdbcTypeRegistry = domainModel.getTypeConfiguration()
 				.getJdbcTypeDescriptorRegistry();
 
 		{
-			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "wrapper" );
-			assertThat( attribute.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( Byte.class ) );
+			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("wrapper");
+			assertThat(attribute.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Byte.class));
 
 			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
-			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( Byte.class ) );
-			assertThat( jdbcMapping.getJdbcTypeDescriptor(), is( jdbcTypeRegistry.getDescriptor( Types.TINYINT ) ) );
+			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Byte.class));
+			assertThat(jdbcMapping.getJdbcTypeDescriptor(), is(jdbcTypeRegistry.getDescriptor(Types.TINYINT)));
 		}
 
 		{
-			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "primitive" );
-			assertThat( attribute.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( Byte.class ) );
+			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("primitive");
+			assertThat(attribute.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Byte.class));
 
 			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
-			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( Byte.class ) );
-			assertThat( jdbcMapping.getJdbcTypeDescriptor(), is( jdbcTypeRegistry.getDescriptor( Types.TINYINT ) ) );
+			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Byte.class));
+			assertThat(jdbcMapping.getJdbcTypeDescriptor(), is(jdbcTypeRegistry.getDescriptor(Types.TINYINT)));
 		}
 
 
 		// and try to use the mapping
 		scope.inTransaction(
-				(session) -> session.persist( new EntityOfBytes( 1, (byte) 3, (byte) 5 ) )
+				(session) -> session.persist(new EntityOfBytes(1, (byte) 3, (byte) 5))
 		);
 		scope.inTransaction(
-				(session) -> session.get( EntityOfBytes.class, 1 )
+				(session) -> session.get(EntityOfBytes.class, 1)
 		);
 	}
 
 	@AfterEach
 	public void dropData(SessionFactoryScope scope) {
 		scope.inTransaction(
-				(session) -> session.createQuery( "delete EntityOfBytes" ).executeUpdate()
+				(session) -> session.createQuery("delete EntityOfBytes").executeUpdate()
 		);
 	}
 
-	@Entity( name = "EntityOfBytes" )
-	@Table( name = "EntityOfBytes" )
+	@Entity(name = "EntityOfBytes")
+	@Table(name = "EntityOfBytes")
 	public static class EntityOfBytes {
 		@Id
 		Integer id;

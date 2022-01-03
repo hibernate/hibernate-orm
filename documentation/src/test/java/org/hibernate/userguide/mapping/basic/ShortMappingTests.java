@@ -31,7 +31,7 @@ import static org.hamcrest.Matchers.is;
  *
  * @author Steve Ebersole
  */
-@DomainModel( annotatedClasses = ShortMappingTests.EntityOfShorts.class )
+@DomainModel(annotatedClasses = ShortMappingTests.EntityOfShorts.class)
 @SessionFactory
 public class ShortMappingTests {
 
@@ -39,45 +39,45 @@ public class ShortMappingTests {
 	public void testMappings(SessionFactoryScope scope) {
 		// first, verify the type selections...
 		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
-		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( EntityOfShorts.class );
+		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor(EntityOfShorts.class);
 
 		{
-			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "wrapper" );
-			assertThat( attribute.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( Short.class ) );
+			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("wrapper");
+			assertThat(attribute.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Short.class));
 
 			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
-			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( Short.class ) );
-			assertThat( jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), is( Types.SMALLINT ) );
+			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Short.class));
+			assertThat(jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), is(Types.SMALLINT));
 		}
 
 		{
-			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "primitive" );
-			assertThat( attribute.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( Short.class ) );
+			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("primitive");
+			assertThat(attribute.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Short.class));
 
 			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
-			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( Short.class ) );
-			assertThat( jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), is( Types.SMALLINT ) );
+			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Short.class));
+			assertThat(jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), is(Types.SMALLINT));
 		}
 
 
 		// and try to use the mapping
 		scope.inTransaction(
-				(session) -> session.persist( new EntityOfShorts( 1, (short) 3, (short) 5 ) )
+				(session) -> session.persist(new EntityOfShorts(1, (short) 3, (short) 5))
 		);
 		scope.inTransaction(
-				(session) -> session.get( EntityOfShorts.class, 1 )
+				(session) -> session.get(EntityOfShorts.class, 1)
 		);
 	}
 
 	@AfterEach
 	public void dropData(SessionFactoryScope scope) {
 		scope.inTransaction(
-				(session) -> session.createQuery( "delete EntityOfShorts" ).executeUpdate()
+				(session) -> session.createQuery("delete EntityOfShorts").executeUpdate()
 		);
 	}
 
-	@Entity( name = "EntityOfShorts" )
-	@Table( name = "EntityOfShorts" )
+	@Entity(name = "EntityOfShorts")
+	@Table(name = "EntityOfShorts")
 	public static class EntityOfShorts {
 		@Id
 		Integer id;

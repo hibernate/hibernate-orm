@@ -34,7 +34,7 @@ public class IdClassTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Before
 	public void init() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			SystemUser systemUser = new SystemUser();
 			systemUser.setId(
 				new PK(
@@ -42,16 +42,16 @@ public class IdClassTest extends BaseEntityManagerFunctionalTestCase {
 					"vlad"
 				)
 			);
-			systemUser.setName( "Vlad Mihalcea" );
+			systemUser.setName("Vlad Mihalcea");
 
-			entityManager.persist( systemUser );
-		} );
+			entityManager.persist(systemUser);
+		});
 	}
 
 
 	@Test
 	public void test() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			SystemUser systemUser = entityManager.find(
 				SystemUser.class,
 				new PK(
@@ -60,14 +60,14 @@ public class IdClassTest extends BaseEntityManagerFunctionalTestCase {
 				)
 			);
 
-			assertEquals( "Vlad Mihalcea", systemUser.getName() );
-		} );
+			assertEquals("Vlad Mihalcea", systemUser.getName());
+		});
 
 	}
 
 	//tag::identifiers-basic-idclass-mapping-example[]
 	@Entity(name = "SystemUser")
-	@IdClass( PK.class )
+	@IdClass(PK.class)
 	public static class SystemUser {
 
 		@Id
@@ -148,20 +148,20 @@ public class IdClassTest extends BaseEntityManagerFunctionalTestCase {
 
 		@Override
 		public boolean equals(Object o) {
-			if ( this == o ) {
+			if (this == o) {
 				return true;
 			}
-			if ( o == null || getClass() != o.getClass() ) {
+			if (o == null || getClass() != o.getClass()) {
 				return false;
 			}
 			PK pk = (PK) o;
-			return Objects.equals( subsystem, pk.subsystem ) &&
-					Objects.equals( username, pk.username );
+			return Objects.equals(subsystem, pk.subsystem) &&
+					Objects.equals(username, pk.username);
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash( subsystem, username );
+			return Objects.hash(subsystem, username);
 		}
 	}
 	//end::identifiers-basic-idclass-mapping-example[]

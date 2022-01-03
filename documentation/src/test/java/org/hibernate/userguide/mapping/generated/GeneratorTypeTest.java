@@ -34,28 +34,28 @@ public class GeneratorTypeTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void test() {
 		//tag::mapping-generated-GeneratorType-persist-example[]
-		CurrentUser.INSTANCE.logIn( "Alice" );
+		CurrentUser.INSTANCE.logIn("Alice");
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 
 			Person person = new Person();
-			person.setId( 1L );
-			person.setFirstName( "John" );
-			person.setLastName( "Doe" );
+			person.setId(1L);
+			person.setFirstName("John");
+			person.setLastName("Doe");
 
-			entityManager.persist( person );
-		} );
+			entityManager.persist(person);
+		});
 
 		CurrentUser.INSTANCE.logOut();
 		//end::mapping-generated-GeneratorType-persist-example[]
 
 		//tag::mapping-generated-GeneratorType-update-example[]
-		CurrentUser.INSTANCE.logIn( "Bob" );
+		CurrentUser.INSTANCE.logIn("Bob");
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Person person = entityManager.find( Person.class, 1L );
-			person.setFirstName( "Mr. John" );
-		} );
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			Person person = entityManager.find(Person.class, 1L);
+			person.setFirstName("Mr. John");
+		});
 
 		CurrentUser.INSTANCE.logOut();
 		//end::mapping-generated-GeneratorType-update-example[]
@@ -69,7 +69,7 @@ public class GeneratorTypeTest extends BaseEntityManagerFunctionalTestCase {
 		private static final ThreadLocal<String> storage = new ThreadLocal<>();
 
 		public void logIn(String user) {
-			storage.set( user );
+			storage.set(user);
 		}
 
 		public void logOut() {
@@ -100,10 +100,10 @@ public class GeneratorTypeTest extends BaseEntityManagerFunctionalTestCase {
 
 		private String lastName;
 
-		@GeneratorType( type = LoggedUserGenerator.class, when = GenerationTime.INSERT)
+		@GeneratorType(type = LoggedUserGenerator.class, when = GenerationTime.INSERT)
 		private String createdBy;
 
-		@GeneratorType( type = LoggedUserGenerator.class, when = GenerationTime.ALWAYS)
+		@GeneratorType(type = LoggedUserGenerator.class, when = GenerationTime.ALWAYS)
 		private String updatedBy;
 
 	//end::mapping-generated-GeneratorType-example[]

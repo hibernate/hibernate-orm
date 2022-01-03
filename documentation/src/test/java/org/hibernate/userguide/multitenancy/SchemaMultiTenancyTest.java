@@ -20,7 +20,7 @@ public class SchemaMultiTenancyTest extends AbstractMultiTenancyTest {
 
 	@Override
 	protected String tenantUrl(String originalUrl, String tenantIdentifier) {
-		return originalUrl + String.format( SCHEMA_TOKEN, tenantIdentifier );
+		return originalUrl + String.format(SCHEMA_TOKEN, tenantIdentifier);
 	}
 
 }

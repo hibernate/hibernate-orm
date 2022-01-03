@@ -32,21 +32,21 @@ public class AutoQuotingTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	protected Map buildSettings() {
 		Map settings = super.buildSettings();
-		settings.put( AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS, true );
+		settings.put(AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS, true);
 		return settings;
 	}
 
 	@Test
 	public void test() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::basic-auto-quoting-persistence-example[]
 			Product product = new Product();
-			product.setId( 1L );
-			product.setName( "Mobile phone" );
-			product.setNumber( "123-456-7890" );
-			entityManager.persist( product );
+			product.setId(1L);
+			product.setName("Mobile phone");
+			product.setNumber("123-456-7890");
+			entityManager.persist(product);
 			//end::basic-auto-quoting-persistence-example[]
-		} );
+		});
 	}
 
 	//tag::basic-auto-quoting-example[]

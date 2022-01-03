@@ -26,7 +26,7 @@ public class CollectionPersister
             CollectionDataAccess cacheAccessStrategy,
             PersisterCreationContext creationContext)
             throws MappingException, CacheException {
-        super( collectionBinding, cacheAccessStrategy, creationContext );
+        super(collectionBinding, cacheAccessStrategy, creationContext);
     }
 }
 //end::entity-persister-mapping[]

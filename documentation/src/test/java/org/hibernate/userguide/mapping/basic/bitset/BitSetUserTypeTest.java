@@ -39,40 +39,40 @@ public class BitSetUserTypeTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void test() {
 
-		BitSet bitSet = BitSet.valueOf( new long[] {1, 2, 3} );
+		BitSet bitSet = BitSet.valueOf(new long[] {1, 2, 3});
 
-		doInHibernate( this::sessionFactory, session -> {
-			Product product = new Product( );
-			product.setId( 1 );
-			product.setBitSet( bitSet );
-			session.persist( product );
-		} );
+		doInHibernate(this::sessionFactory, session -> {
+			Product product = new Product();
+			product.setId(1);
+			product.setBitSet(bitSet);
+			session.persist(product);
+		});
 
-		doInHibernate( this::sessionFactory, session -> {
-			Product product = session.get( Product.class, 1 );
+		doInHibernate(this::sessionFactory, session -> {
+			Product product = session.get(Product.class, 1);
 			assertEquals(bitSet, product.getBitSet());
-		} );
+		});
 	}
 
 	@Test
 	public void testNativeQuery() {
-		BitSet bitSet = BitSet.valueOf( new long[] {1, 2, 3} );
+		BitSet bitSet = BitSet.valueOf(new long[] {1, 2, 3});
 
-		doInHibernate( this::sessionFactory, session -> {
-			Product product = new Product( );
-			product.setId( 1 );
-			product.setBitSet( bitSet );
-			session.persist( product );
-		} );
+		doInHibernate(this::sessionFactory, session -> {
+			Product product = new Product();
+			product.setId(1);
+			product.setBitSet(bitSet);
+			session.persist(product);
+		});
 
-		doInHibernate( this::sessionFactory, session -> {
+		doInHibernate(this::sessionFactory, session -> {
 			Product product = (Product) session.getNamedNativeQuery(
 					"find_person_by_bitset")
-					.setParameter( "id", 1L)
+					.setParameter("id", 1L)
 					.getSingleResult();
 
 			assertEquals(bitSet, product.getBitSet());
-		} );
+		});
 	}
 
 	@Override
@@ -107,7 +107,7 @@ public class BitSetUserTypeTest extends BaseCoreFunctionalTestCase {
 		@Id
 		private Integer id;
 
-		@CustomType( BitSetUserType.class )
+		@CustomType(BitSetUserType.class)
 		@Column(name = "bitset_col")
 		private BitSet bitSet;
 

@@ -40,7 +40,7 @@ public class SimpleEntityTableTest extends BaseEntityManagerFunctionalTestCase {
             catalog = "public",
             schema = "store",
             name = "book"
-    )
+   )
     public static class Book {
 
         @Id

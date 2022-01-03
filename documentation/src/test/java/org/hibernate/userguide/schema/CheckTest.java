@@ -26,7 +26,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialect( PostgreSQL81Dialect.class )
+@RequiresDialect(PostgreSQL81Dialect.class)
 public class CheckTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
@@ -39,49 +39,49 @@ public class CheckTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	public void test() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			Book book = new Book();
-			book.setId( 0L );
-			book.setTitle( "Hibernate in Action" );
-			book.setPrice( 49.99d );
+			book.setId(0L);
+			book.setTitle("Hibernate in Action");
+			book.setPrice(49.99d);
 
-			entityManager.persist( book );
-		} );
+			entityManager.persist(book);
+		});
 		try {
-			doInJPA( this::entityManagerFactory, entityManager -> {
+			doInJPA(this::entityManagerFactory, entityManager -> {
 				//tag::schema-generation-database-checks-persist-example[]
 				Book book = new Book();
-				book.setId( 1L );
-				book.setPrice( 49.99d );
-				book.setTitle( "High-Performance Java Persistence" );
-				book.setIsbn( "11-11-2016" );
+				book.setId(1L);
+				book.setPrice(49.99d);
+				book.setTitle("High-Performance Java Persistence");
+				book.setIsbn("11-11-2016");
 
-				entityManager.persist( book );
+				entityManager.persist(book);
 				//end::schema-generation-database-checks-persist-example[]
-			} );
+			});
 			fail("Should fail because the ISBN is not of the right length!");
 		}
-		catch ( PersistenceException e ) {
-			assertEquals( ConstraintViolationException.class, e.getCause().getCause().getClass() );
+		catch (PersistenceException e) {
+			assertEquals(ConstraintViolationException.class, e.getCause().getCause().getClass());
 		}
 		try {
-			doInJPA( this::entityManagerFactory, entityManager -> {
+			doInJPA(this::entityManagerFactory, entityManager -> {
 				Person person = new Person();
-				person.setId( 1L );
-				person.setName( "John Doe" );
-				person.setCode( 0L );
+				person.setId(1L);
+				person.setName("John Doe");
+				person.setCode(0L);
 
-				entityManager.persist( person );
-			} );
+				entityManager.persist(person);
+			});
 			fail("Should fail because the code is 0!");
 		}
-		catch ( PersistenceException e ) {
-			assertEquals( ConstraintViolationException.class, e.getCause().getCause().getClass() );
+		catch (PersistenceException e) {
+			assertEquals(ConstraintViolationException.class, e.getCause().getCause().getClass());
 		}
 	}
 
 	@Entity(name = "Person")
-	@Check( constraints = "code > 0" )
+	@Check(constraints = "code > 0")
 	public static class Person {
 
 		@Id
@@ -90,7 +90,7 @@ public class CheckTest extends BaseEntityManagerFunctionalTestCase {
 		private String name;
 
 		// This one does not work! Only the entity-level annotation works.
-		// @Check( constraints = "code > 0" )
+		// @Check(constraints = "code > 0")
 		private Long code;
 
 		public Long getId() {
@@ -120,7 +120,7 @@ public class CheckTest extends BaseEntityManagerFunctionalTestCase {
 
 	//tag::schema-generation-database-checks-example[]
 	@Entity(name = "Book")
-	@Check( constraints = "CASE WHEN isbn IS NOT NULL THEN LENGTH(isbn) = 13 ELSE true END")
+	@Check(constraints = "CASE WHEN isbn IS NOT NULL THEN LENGTH(isbn) = 13 ELSE true END")
 	public static class Book {
 
 		@Id

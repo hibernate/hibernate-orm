@@ -40,12 +40,12 @@ public class IndexTest extends BaseEntityManagerFunctionalTestCase {
 
     @Test
     public void test() {
-        doInJPA( this::entityManagerFactory, entityManager -> {
+        doInJPA(this::entityManagerFactory, entityManager -> {
             Author author = new Author();
-            author.setFirstName( "Vlad" );
-            author.setLastName( "Mihalcea" );
-            entityManager.persist( author );
-        } );
+            author.setFirstName("Vlad");
+            author.setLastName("Mihalcea");
+            entityManager.persist(author);
+        });
     }
 
     //tag::schema-generation-columns-index-mapping-example[]
@@ -56,8 +56,8 @@ public class IndexTest extends BaseEntityManagerFunctionalTestCase {
             name = "idx_author_first_last_name",
             columnList = "first_name, last_name",
             unique = false
-        )
-    )
+       )
+   )
     public static class Author {
 
         @Id

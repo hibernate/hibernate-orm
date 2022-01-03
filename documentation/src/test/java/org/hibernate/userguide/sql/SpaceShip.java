@@ -42,7 +42,7 @@ import jakarta.persistence.SqlResultSetMapping;
             "   length * width * 10 as volume " +
             "FROM SpaceShip",
         resultSetMapping = "spaceship"
-    )
+   )
 })
 @SqlResultSetMapping(
     name = "spaceship",
@@ -57,7 +57,7 @@ import jakarta.persistence.SqlResultSetMapping;
             @FieldResult(name = "dimensions.length", column = "length"),
             @FieldResult(name = "dimensions.width", column = "width"),
         }
-    ),
+   ),
     columns = {
         @ColumnResult(name = "surface"),
         @ColumnResult(name = "volume")

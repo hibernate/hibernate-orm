@@ -34,45 +34,45 @@ public class NotFoundTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	public void test() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::associations-not-found-persist-example[]
 			City _NewYork = new City();
-			_NewYork.setName( "New York" );
-			entityManager.persist( _NewYork );
+			_NewYork.setName("New York");
+			entityManager.persist(_NewYork);
 
 			Person person = new Person();
-			person.setId( 1L );
-			person.setName( "John Doe" );
-			person.setCityName( "New York" );
-			entityManager.persist( person );
+			person.setId(1L);
+			person.setName("John Doe");
+			person.setCityName("New York");
+			entityManager.persist(person);
 			//end::associations-not-found-persist-example[]
-		} );
+		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::associations-not-found-find-example[]
-			Person person = entityManager.find( Person.class, 1L );
-			assertEquals( "New York", person.getCity().getName() );
+			Person person = entityManager.find(Person.class, 1L);
+			assertEquals("New York", person.getCity().getName());
 			//end::associations-not-found-find-example[]
 
 			//tag::associations-not-found-non-existing-persist-example[]
-			person.setCityName( "Atlantis" );
+			person.setCityName("Atlantis");
 			//end::associations-not-found-non-existing-persist-example[]
 
-		} );
+		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::associations-not-found-non-existing-find-example[]
-			Person person = entityManager.find( Person.class, 1L );
+			Person person = entityManager.find(Person.class, 1L);
 
-			assertEquals( "Atlantis", person.getCityName() );
-			assertNull( null, person.getCity() );
+			assertEquals("Atlantis", person.getCityName());
+			assertNull(null, person.getCity());
 			//end::associations-not-found-non-existing-find-example[]
-		} );
+		});
 	}
 
 	//tag::associations-not-found-domain-model-example[]
 	@Entity
-	@Table( name = "Person" )
+	@Table(name = "Person")
 	public static class Person {
 
 		@Id
@@ -83,7 +83,7 @@ public class NotFoundTest extends BaseEntityManagerFunctionalTestCase {
 		private String cityName;
 
 		@ManyToOne
-		@NotFound ( action = NotFoundAction.IGNORE )
+		@NotFound (action = NotFoundAction.IGNORE)
 		@JoinColumn(
 			name = "cityName",
 			referencedColumnName = "name",
@@ -128,7 +128,7 @@ public class NotFoundTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Entity
-	@Table( name = "City" )
+	@Table(name = "City")
 	public static class City implements Serializable {
 
 		@Id

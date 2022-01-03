@@ -46,31 +46,31 @@ public class SchemaGenerationTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	protected Map buildSettings() {
 		Map settings = super.buildSettings();
-		if ( getDialect().getClass().equals( H2Dialect.class ) ) {
+		if (getDialect().getClass().equals(H2Dialect.class)) {
 			settings.put(
 					AvailableSettings.HBM2DDL_IMPORT_FILES,
 					"schema-generation.sql"
 			);
-			settings.put( AvailableSettings.HBM2DDL_AUTO, "update" );
+			settings.put(AvailableSettings.HBM2DDL_AUTO, "update");
 		}
 		return settings;
 	}
 
 	@Override
 	protected String[] getMappings() {
-		if ( PostgreSQL81Dialect.class.isAssignableFrom( getDialect().getClass() ) ) {
+		if (PostgreSQL81Dialect.class.isAssignableFrom(getDialect().getClass())) {
 			return new String[] { "org/hibernate/userguide/schema/SchemaGenerationTest.hbm.xml" };
 		}
 		return super.getMappings();
 	}
 
 	@Test
-	@RequiresDialect( H2Dialect.class )
+	@RequiresDialect(H2Dialect.class)
 	public void testH2() {
 	}
 
 	@Test
-	@RequiresDialect( PostgreSQL81Dialect.class )
+	@RequiresDialect(PostgreSQL81Dialect.class)
 	public void testPostgres() {
 	}
 
@@ -83,12 +83,12 @@ public class SchemaGenerationTest extends BaseEntityManagerFunctionalTestCase {
 
 		private String name;
 
-		@Basic( fetch = FetchType.LAZY )
+		@Basic(fetch = FetchType.LAZY)
 		private UUID accountsPayableXrefId;
 
 		@Lob
-		@Basic( fetch = FetchType.LAZY )
-		@LazyGroup( "lobs" )
+		@Basic(fetch = FetchType.LAZY)
+		@LazyGroup("lobs")
 		private Blob image;
 
 		//Getters and setters are omitted for brevity

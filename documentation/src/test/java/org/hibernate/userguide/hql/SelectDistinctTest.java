@@ -41,28 +41,28 @@ public class SelectDistinctTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Before
 	public void init() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Person gavinKing = new Person("Gavin", "King" );
-			Person stephanKing = new Person("Stephen", "King" );
-			Person vladMihalcea = new Person("Vlad", "Mihalcea" );
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			Person gavinKing = new Person("Gavin", "King");
+			Person stephanKing = new Person("Stephen", "King");
+			Person vladMihalcea = new Person("Vlad", "Mihalcea");
 
-			gavinKing.addBook( new Book( "Hibernate in Action" ) );
-			gavinKing.addBook( new Book( "Java Persistence with Hibernate" ) );
+			gavinKing.addBook(new Book("Hibernate in Action"));
+			gavinKing.addBook(new Book("Java Persistence with Hibernate"));
 
-			stephanKing.addBook( new Book( "The Green Mile" ) );
+			stephanKing.addBook(new Book("The Green Mile"));
 
-			vladMihalcea.addBook( new Book( "High-Performance Java Persistence" ) );
+			vladMihalcea.addBook(new Book("High-Performance Java Persistence"));
 
-			entityManager.persist( gavinKing );
-			entityManager.persist( stephanKing );
-			entityManager.persist( vladMihalcea );
+			entityManager.persist(gavinKing);
+			entityManager.persist(stephanKing);
+			entityManager.persist(vladMihalcea);
 		});
 	}
 
 	@Test
 	public void testDistinctProjection() {
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-distinct-projection-query-example[]
 			List<String> lastNames = entityManager.createQuery(
 				"select distinct p.lastName " +
@@ -72,13 +72,13 @@ public class SelectDistinctTest extends BaseEntityManagerFunctionalTestCase {
 
 			assertTrue(
 				lastNames.size() == 2 &&
-				lastNames.contains( "King" ) &&
-				lastNames.contains( "Mihalcea" )
+				lastNames.contains("King") &&
+				lastNames.contains("Mihalcea")
 			);
 		});
 	}
 
-	@Entity(name = "Person") @Table( name = "person")
+	@Entity(name = "Person") @Table(name = "person")
 	public static class Person {
 
 		@Id
@@ -92,7 +92,7 @@ public class SelectDistinctTest extends BaseEntityManagerFunctionalTestCase {
 		private String lastName;
 
 		@OneToMany(mappedBy = "author", cascade = CascadeType.ALL)
-		private List<Book> books = new ArrayList<>(  );
+		private List<Book> books = new ArrayList<>();
 
 		public Person() {
 		}
@@ -131,12 +131,12 @@ public class SelectDistinctTest extends BaseEntityManagerFunctionalTestCase {
 		}
 
 		public void addBook(Book book) {
-			books.add( book );
-			book.setAuthor( this );
+			books.add(book);
+			book.setAuthor(this);
 		}
 	}
 
-	@Entity(name = "Book") @Table( name = "book")
+	@Entity(name = "Book") @Table(name = "book")
 	public static class Book {
 
 		@Id

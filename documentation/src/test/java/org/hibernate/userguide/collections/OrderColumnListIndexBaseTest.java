@@ -40,14 +40,14 @@ public class OrderColumnListIndexBaseTest extends BaseEntityManagerFunctionalTes
 
 	@Test
 	public void testLifecycle() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::collections-customizing-ordered-list-ordinal-persist-example[]
-			Person person = new Person( 1L );
-			entityManager.persist( person );
-			person.addPhone( new Phone( 1L, "landline", "028-234-9876" ) );
-			person.addPhone( new Phone( 2L, "mobile", "072-122-9876" ) );
+			Person person = new Person(1L);
+			entityManager.persist(person);
+			person.addPhone(new Phone(1L, "landline", "028-234-9876"));
+			person.addPhone(new Phone(2L, "mobile", "072-122-9876"));
 			//end::collections-customizing-ordered-list-ordinal-persist-example[]
-		} );
+		});
 	}
 
 	@Entity(name = "Person")
@@ -75,13 +75,13 @@ public class OrderColumnListIndexBaseTest extends BaseEntityManagerFunctionalTes
 		}
 
 		public void addPhone(Phone phone) {
-			phones.add( phone );
-			phone.setPerson( this );
+			phones.add(phone);
+			phone.setPerson(this);
 		}
 
 		public void removePhone(Phone phone) {
-			phones.remove( phone );
-			phone.setPerson( null );
+			phones.remove(phone);
+			phone.setPerson(null);
 		}
 	}
 
@@ -131,19 +131,19 @@ public class OrderColumnListIndexBaseTest extends BaseEntityManagerFunctionalTes
 
 		@Override
 		public boolean equals(Object o) {
-			if ( this == o ) {
+			if (this == o) {
 				return true;
 			}
-			if ( o == null || getClass() != o.getClass() ) {
+			if (o == null || getClass() != o.getClass()) {
 				return false;
 			}
 			Phone phone = (Phone) o;
-			return Objects.equals( number, phone.number );
+			return Objects.equals(number, phone.number);
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash( number );
+			return Objects.hash(number);
 		}
 	}
 }

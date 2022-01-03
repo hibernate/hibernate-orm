@@ -20,14 +20,14 @@ import org.hibernate.annotations.Persister;
  */
 //tag::entity-persister-mapping[]
 @Entity
-@Persister( impl = EntityPersister.class )
+@Persister(impl = EntityPersister.class)
 public class Author {
 
     @Id
     public Integer id;
 
-    @OneToMany( mappedBy = "author" )
-    @Persister( impl = CollectionPersister.class )
+    @OneToMany(mappedBy = "author")
+    @Persister(impl = CollectionPersister.class)
     public Set<Book> books = new HashSet<>();
 
     //Getters and setters omitted for brevity
@@ -48,8 +48,8 @@ public class Author {
 
     //tag::entity-persister-mapping[]
     public void addBook(Book book) {
-        this.books.add( book );
-        book.setAuthor( this );
+        this.books.add(book);
+        book.setAuthor(this);
     }
 }
 //end::entity-persister-mapping[]

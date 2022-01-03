@@ -72,26 +72,26 @@ public class DatabaseTimeZoneMultiTenancyTest extends BaseUnitTestCase {
 
     private void init() {
         //tag::multitenacy-hibernate-timezone-configuration-registerConnectionProvider-call-example[]
-        registerConnectionProvider( FRONT_END_TENANT, TimeZone.getTimeZone( "UTC" ) );
-        registerConnectionProvider( BACK_END_TENANT, TimeZone.getTimeZone( "CST" ) );
+        registerConnectionProvider(FRONT_END_TENANT, TimeZone.getTimeZone("UTC"));
+        registerConnectionProvider(BACK_END_TENANT, TimeZone.getTimeZone("CST"));
         //end::multitenacy-hibernate-timezone-configuration-registerConnectionProvider-call-example[]
 
         Map<String, Object> settings = new HashMap<>();
 
         settings.put(
                 AvailableSettings.MULTI_TENANT_CONNECTION_PROVIDER,
-                new ConfigurableMultiTenantConnectionProvider( connectionProviderMap )
-        );
+                new ConfigurableMultiTenantConnectionProvider(connectionProviderMap)
+       );
 
-        sessionFactory = sessionFactory( settings );
+        sessionFactory = sessionFactory(settings);
     }
 
     @AfterClassOnce
     public void destroy() {
         sessionFactory.close();
-        for ( ConnectionProvider connectionProvider : connectionProviderMap.values() ) {
-            if ( connectionProvider instanceof Stoppable ) {
-                ( (Stoppable) connectionProvider ).stop();
+        for (ConnectionProvider connectionProvider : connectionProviderMap.values()) {
+            if (connectionProvider instanceof Stoppable) {
+                ((Stoppable) connectionProvider).stop();
             }
         }
     }
@@ -101,16 +101,16 @@ public class DatabaseTimeZoneMultiTenancyTest extends BaseUnitTestCase {
         Properties properties = properties();
         properties.put(
             Environment.URL,
-            tenantUrl( properties.getProperty( Environment.URL ), tenantIdentifier )
-        );
+            tenantUrl(properties.getProperty(Environment.URL), tenantIdentifier)
+       );
 
         DriverManagerConnectionProviderImpl connectionProvider =
                 new DriverManagerConnectionProviderImpl();
-        connectionProvider.configure( properties );
+        connectionProvider.configure(properties);
 
-        connectionProviderMap.put( tenantIdentifier, connectionProvider );
+        connectionProviderMap.put(tenantIdentifier, connectionProvider);
 
-        timeZoneTenantMap.put( tenantIdentifier, timeZone );
+        timeZoneTenantMap.put(tenantIdentifier, timeZone);
     }
     //end::multitenacy-hibernate-timezone-configuration-registerConnectionProvider-example[]
 
@@ -118,149 +118,149 @@ public class DatabaseTimeZoneMultiTenancyTest extends BaseUnitTestCase {
     public void testBasicExpectedBehavior() {
 
         //tag::multitenacy-hibernate-applying-timezone-configuration-example[]
-        doInSession( FRONT_END_TENANT, session -> {
+        doInSession(FRONT_END_TENANT, session -> {
             Person person = new Person();
-            person.setId( 1L );
-            person.setName( "John Doe" );
-            person.setCreatedOn( LocalDateTime.of( 2018, 11, 23, 12, 0, 0 ) );
+            person.setId(1L);
+            person.setName("John Doe");
+            person.setCreatedOn(LocalDateTime.of(2018, 11, 23, 12, 0, 0));
 
-            session.persist( person );
-        }, true );
+            session.persist(person);
+        }, true);
 
-        doInSession( BACK_END_TENANT, session -> {
+        doInSession(BACK_END_TENANT, session -> {
             Person person = new Person();
-            person.setId( 1L );
-            person.setName( "John Doe" );
-            person.setCreatedOn( LocalDateTime.of( 2018, 11, 23, 12, 0, 0 ) );
+            person.setId(1L);
+            person.setName("John Doe");
+            person.setCreatedOn(LocalDateTime.of(2018, 11, 23, 12, 0, 0));
 
-            session.persist( person );
-        }, true );
+            session.persist(person);
+        }, true);
 
-        doInSession( FRONT_END_TENANT, session -> {
+        doInSession(FRONT_END_TENANT, session -> {
             Timestamp personCreationTimestamp = (Timestamp) session
             .createNativeQuery(
                 "select p.created_on " +
                 "from Person p " +
-                "where p.id = :personId" )
-            .setParameter( "personId", 1L )
+                "where p.id = :personId")
+            .setParameter("personId", 1L)
             .getSingleResult();
 
             assertEquals(
-                Timestamp.valueOf( LocalDateTime.of( 2018, 11, 23, 12, 0, 0 ) ),
+                Timestamp.valueOf(LocalDateTime.of(2018, 11, 23, 12, 0, 0)),
                 personCreationTimestamp
-            );
-        }, true );
+           );
+        }, true);
 
-        doInSession( BACK_END_TENANT, session -> {
+        doInSession(BACK_END_TENANT, session -> {
             Timestamp personCreationTimestamp = (Timestamp) session
             .createNativeQuery(
                 "select p.created_on " +
                 "from Person p " +
-                "where p.id = :personId" )
-            .setParameter( "personId", 1L )
+                "where p.id = :personId")
+            .setParameter("personId", 1L)
             .getSingleResult();
 
             assertEquals(
-                Timestamp.valueOf( LocalDateTime.of( 2018, 11, 23, 12, 0, 0 ) ),
+                Timestamp.valueOf(LocalDateTime.of(2018, 11, 23, 12, 0, 0)),
                 personCreationTimestamp
-            );
-        }, true );
+           );
+        }, true);
         //end::multitenacy-hibernate-applying-timezone-configuration-example[]
 
         //tag::multitenacy-hibernate-not-applying-timezone-configuration-example[]
-        doInSession( FRONT_END_TENANT, session -> {
+        doInSession(FRONT_END_TENANT, session -> {
             Timestamp personCreationTimestamp = (Timestamp) session
             .createNativeQuery(
                 "select p.created_on " +
                 "from Person p " +
-                "where p.id = :personId" )
-            .setParameter( "personId", 1L )
+                "where p.id = :personId")
+            .setParameter("personId", 1L)
             .getSingleResult();
 
             log.infof(
                 "The created_on timestamp value is: [%s]",
                 personCreationTimestamp
-            );
+           );
 
             long timeZoneOffsetMillis =
-                    Timestamp.valueOf( LocalDateTime.of( 2018, 11, 23, 12, 0, 0 ) ).getTime() -
+                    Timestamp.valueOf(LocalDateTime.of(2018, 11, 23, 12, 0, 0)).getTime() -
                     personCreationTimestamp.getTime();
 
             assertEquals(
                 TimeZone.getTimeZone(ZoneId.systemDefault()).getRawOffset(),
                 timeZoneOffsetMillis
-            );
+           );
 
             log.infof(
                 "For the current time zone: [%s], the UTC time zone offset is: [%d]",
                 TimeZone.getDefault().getDisplayName(), timeZoneOffsetMillis
-            );
-        }, false );
+           );
+        }, false);
         //end::multitenacy-hibernate-not-applying-timezone-configuration-example[]
     }
 
     protected Properties properties() {
         Properties properties = new Properties();
-        URL propertiesURL = Thread.currentThread().getContextClassLoader().getResource( "hibernate.properties" );
-        try (FileInputStream inputStream = new FileInputStream( propertiesURL.getFile() )) {
-            properties.load( inputStream );
+        URL propertiesURL = Thread.currentThread().getContextClassLoader().getResource("hibernate.properties");
+        try (FileInputStream inputStream = new FileInputStream(propertiesURL.getFile())) {
+            properties.load(inputStream);
         }
         catch (IOException e) {
-            throw new IllegalArgumentException( e );
+            throw new IllegalArgumentException(e);
         }
         return properties;
     }
 
     protected String tenantUrl(String originalUrl, String tenantIdentifier) {
-        return originalUrl.replace( "db1", tenantIdentifier );
+        return originalUrl.replace("db1", tenantIdentifier);
     }
 
     protected SessionFactory sessionFactory(Map<String, Object> settings) {
 
         ServiceRegistryImplementor serviceRegistry = (ServiceRegistryImplementor) new StandardServiceRegistryBuilder()
-                .applySettings( settings )
+                .applySettings(settings)
                 .build();
 
-        MetadataSources metadataSources = new MetadataSources( serviceRegistry );
-        for ( Class annotatedClasses : getAnnotatedClasses() ) {
-            metadataSources.addAnnotatedClass( annotatedClasses );
+        MetadataSources metadataSources = new MetadataSources(serviceRegistry);
+        for (Class annotatedClasses : getAnnotatedClasses()) {
+            metadataSources.addAnnotatedClass(annotatedClasses);
         }
 
         Metadata metadata = metadataSources.buildMetadata();
 
         HibernateSchemaManagementTool tool = new HibernateSchemaManagementTool();
-        tool.injectServices( serviceRegistry );
+        tool.injectServices(serviceRegistry);
 
         final GenerationTargetToDatabase frontEndSchemaGenerator = new GenerationTargetToDatabase(
                 new DdlTransactionIsolatorTestingImpl(
                         serviceRegistry,
-                        connectionProviderMap.get( FRONT_END_TENANT )
-                )
-        );
+                        connectionProviderMap.get(FRONT_END_TENANT)
+               )
+       );
         final GenerationTargetToDatabase backEndSchemaGenerator = new GenerationTargetToDatabase(
                 new DdlTransactionIsolatorTestingImpl(
                         serviceRegistry,
-                        connectionProviderMap.get( BACK_END_TENANT )
-                )
-        );
+                        connectionProviderMap.get(BACK_END_TENANT)
+               )
+       );
 
-        new SchemaDropperImpl( serviceRegistry ).doDrop(
+        new SchemaDropperImpl(serviceRegistry).doDrop(
                 metadata,
                 serviceRegistry,
                 settings,
                 true,
                 frontEndSchemaGenerator,
                 backEndSchemaGenerator
-        );
+       );
 
-        new SchemaCreatorImpl( serviceRegistry ).doCreation(
+        new SchemaCreatorImpl(serviceRegistry).doCreation(
                 metadata,
                 serviceRegistry,
                 settings,
                 true,
                 frontEndSchemaGenerator,
                 backEndSchemaGenerator
-        );
+       );
 
         final SessionFactoryBuilder sessionFactoryBuilder = metadata.getSessionFactoryBuilder();
         return sessionFactoryBuilder.build();
@@ -280,10 +280,10 @@ public class DatabaseTimeZoneMultiTenancyTest extends BaseUnitTestCase {
         try {
             SessionBuilder sessionBuilder = sessionFactory
                     .withOptions()
-                    .tenantIdentifier( tenant );
+                    .tenantIdentifier(tenant);
 
-            if ( useTenantTimeZone ) {
-                sessionBuilder.jdbcTimeZone( timeZoneTenantMap.get( tenant ) );
+            if (useTenantTimeZone) {
+                sessionBuilder.jdbcTimeZone(timeZoneTenantMap.get(tenant));
             }
 
             session = sessionBuilder.openSession();
@@ -291,18 +291,18 @@ public class DatabaseTimeZoneMultiTenancyTest extends BaseUnitTestCase {
             txn = session.getTransaction();
             txn.begin();
 
-            function.accept( session );
+            function.accept(session);
 
             txn.commit();
         }
         catch (Throwable e) {
-            if ( txn != null ) {
+            if (txn != null) {
                 txn.rollback();
             }
             throw e;
         }
         finally {
-            if ( session != null ) {
+            if (session != null) {
                 session.close();
             }
         }

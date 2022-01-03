@@ -31,33 +31,33 @@ import static org.hamcrest.Matchers.isOneOf;
 /**
  * @author Steve Ebersole
  */
-@DomainModel( annotatedClasses = OffsetDateTimeMappingTests.EntityWithOffsetDateTime.class )
+@DomainModel(annotatedClasses = OffsetDateTimeMappingTests.EntityWithOffsetDateTime.class)
 @SessionFactory
 public class OffsetDateTimeMappingTests {
 
 	@Test
 	public void verifyMappings(SessionFactoryScope scope) {
 		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
-		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( EntityWithOffsetDateTime.class );
+		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor(EntityWithOffsetDateTime.class);
 
-		final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "offsetDateTime" );
+		final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("offsetDateTime");
 		final JdbcMapping jdbcMapping = attributeMapping.getJdbcMapping();
-		assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( OffsetDateTime.class ) );
-		assertThat( jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), isOneOf( Types.TIMESTAMP, Types.TIMESTAMP_WITH_TIMEZONE ) );
+		assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(OffsetDateTime.class));
+		assertThat(jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), isOneOf(Types.TIMESTAMP, Types.TIMESTAMP_WITH_TIMEZONE));
 
 		scope.inTransaction(
 				(session) -> {
-					session.persist( new EntityWithOffsetDateTime( 1, OffsetDateTime.now() ) );
+					session.persist(new EntityWithOffsetDateTime(1, OffsetDateTime.now()));
 				}
 		);
 
 		scope.inTransaction(
-				(session) -> session.find( EntityWithOffsetDateTime.class, 1 )
+				(session) -> session.find(EntityWithOffsetDateTime.class, 1)
 		);
 	}
 
-	@Entity( name = "EntityWithOffsetDateTime" )
-	@Table( name = "EntityWithOffsetDateTime" )
+	@Entity(name = "EntityWithOffsetDateTime")
+	@Table(name = "EntityWithOffsetDateTime")
 	public static class EntityWithOffsetDateTime {
 		@Id
 		private Integer id;

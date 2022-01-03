@@ -51,10 +51,10 @@ public class GraphFetchingTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	public void test() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			Department department = new Department();
 			department.id = 1L;
-			entityManager.persist( department );
+			entityManager.persist(department);
 
 			Employee employee1 = new Employee();
 			employee1.id = 1L;
@@ -62,7 +62,7 @@ public class GraphFetchingTest extends BaseEntityManagerFunctionalTestCase {
 			employee1.password = "3fabb4de8f1ee2e97d7793bab2db1116";
 			employee1.accessLevel = 0;
 			employee1.department = department;
-			entityManager.persist( employee1 );
+			entityManager.persist(employee1);
 
 			Employee employee2 = new Employee();
 			employee2.id = 2L;
@@ -70,15 +70,15 @@ public class GraphFetchingTest extends BaseEntityManagerFunctionalTestCase {
 			employee2.password = "3fabb4de8f1ee2e97d7793bab2db1116";
 			employee2.accessLevel = 1;
 			employee2.department = department;
-			entityManager.persist( employee2 );
+			entityManager.persist(employee2);
 
 			Project project = new Project();
 			project.id = 1L;
-			project.employees.add( employee1 );
-			entityManager.persist( project );
-		} );
+			project.employees.add(employee1);
+			entityManager.persist(project);
+		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			Long userId = 1L;
 
 			//tag::fetching-strategies-dynamic-fetching-entity-graph-example[]
@@ -87,27 +87,27 @@ public class GraphFetchingTest extends BaseEntityManagerFunctionalTestCase {
 				userId,
 				Collections.singletonMap(
 					"jakarta.persistence.fetchgraph",
-					entityManager.getEntityGraph( "employee.projects" )
+					entityManager.getEntityGraph("employee.projects")
 				)
 			);
 			//end::fetching-strategies-dynamic-fetching-entity-graph-example[]
 			assertNotNull(employee);
-		} );
+		});
 
 		//tag::fetching-strategies-dynamic-fetching-entity-subgraph-example[]
-		Project project = doInJPA( this::entityManagerFactory, entityManager -> {
+		Project project = doInJPA(this::entityManagerFactory, entityManager -> {
 			return entityManager.find(
 				Project.class,
 				1L,
 				Collections.singletonMap(
 					"jakarta.persistence.fetchgraph",
-					entityManager.getEntityGraph( "project.employees" )
+					entityManager.getEntityGraph("project.employees")
 				)
 			);
-		} );
+		});
 		//end::fetching-strategies-dynamic-fetching-entity-subgraph-example[]
 		assertEquals(1, project.getEmployees().size());
-		assertEquals( Long.valueOf( 1L ), project.getEmployees().get( 0 ).getDepartment().getId() );
+		assertEquals(Long.valueOf(1L), project.getEmployees().get(0).getDepartment().getId());
 	}
 
 	@Entity(name = "Department")
@@ -154,7 +154,7 @@ public class GraphFetchingTest extends BaseEntityManagerFunctionalTestCase {
 
 		@Column(name = "pswd")
 		@ColumnTransformer(
-			read = "decrypt( 'AES', '00', pswd  )",
+			read = "decrypt('AES', '00', pswd )",
 			write = "encrypt('AES', '00', ?)"
 		)
 		private String password;
@@ -227,7 +227,7 @@ public class GraphFetchingTest extends BaseEntityManagerFunctionalTestCase {
 		),
 		subgraphs = @NamedSubgraph(
 			name = "project.employees.department",
-			attributeNodes = @NamedAttributeNode( "department" )
+			attributeNodes = @NamedAttributeNode("department")
 		)
 	)
 	public static class Project {

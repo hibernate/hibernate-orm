@@ -43,7 +43,7 @@ public class PostgreSQLFunctionSelectClauseTest extends BaseEntityManagerFunctio
 	@Override
 	protected void addMappings(Map settings) {
 		//tag::hql-user-defined-functions-register-metadata-builder-example[]
-		settings.put( "hibernate.metadata_builder_contributor",
+		settings.put("hibernate.metadata_builder_contributor",
 			(MetadataBuilderContributor) metadataBuilder ->
 				metadataBuilder.applySqlFunction(
 					"apply_vat",
@@ -58,8 +58,8 @@ public class PostgreSQLFunctionSelectClauseTest extends BaseEntityManagerFunctio
 
 	@Override
 	protected void afterEntityManagerFactoryBuilt() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			entityManager.unwrap( Session.class ).doWork(
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			entityManager.unwrap(Session.class).doWork(
 				connection -> {
 					try(Statement statement = connection.createStatement()) {
 						statement.executeUpdate(
@@ -74,22 +74,22 @@ public class PostgreSQLFunctionSelectClauseTest extends BaseEntityManagerFunctio
 			);
 		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			Book book = new Book();
 
-			book.setIsbn( "978-9730228236" );
-			book.setTitle( "High-Performance Java Persistence" );
-			book.setAuthor( "Vlad Mihalcea" );
-			book.setPriceCents( 4500 );
+			book.setIsbn("978-9730228236");
+			book.setTitle("High-Performance Java Persistence");
+			book.setAuthor("Vlad Mihalcea");
+			book.setPriceCents(4500);
 
-			entityManager.persist( book );
+			entityManager.persist(book);
 		});
 	}
 
 	@After
 	public void destroy() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			entityManager.unwrap( Session.class ).doWork(
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			entityManager.unwrap(Session.class).doWork(
 				connection -> {
 					try(Statement statement = connection.createStatement()) {
 						statement.executeUpdate(
@@ -103,20 +103,20 @@ public class PostgreSQLFunctionSelectClauseTest extends BaseEntityManagerFunctio
 
 	@Test
 	public void testHibernateSelectClauseFunction() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-user-defined-function-postgresql-select-clause-example[]
 			List<Tuple> books = entityManager.createQuery(
 				"select b.title as title, apply_vat(b.priceCents) as price " +
 				"from Book b " +
-				"where b.author = :author ", Tuple.class )
-			.setParameter( "author", "Vlad Mihalcea" )
+				"where b.author = :author ", Tuple.class)
+			.setParameter("author", "Vlad Mihalcea")
 			.getResultList();
 
-			assertEquals( 1, books.size() );
+			assertEquals(1, books.size());
 
-			Tuple book = books.get( 0 );
-			assertEquals( "High-Performance Java Persistence", book.get( "title" ) );
-			assertEquals( 5400, ((Number) book.get( "price" )).intValue() );
+			Tuple book = books.get(0);
+			assertEquals("High-Performance Java Persistence", book.get("title"));
+			assertEquals(5400, ((Number) book.get("price")).intValue());
 
 			//end::hql-user-defined-function-postgresql-select-clause-example[]
 		});

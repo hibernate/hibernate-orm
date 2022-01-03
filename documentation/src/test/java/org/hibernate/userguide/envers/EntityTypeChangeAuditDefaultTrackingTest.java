@@ -46,14 +46,14 @@ public class EntityTypeChangeAuditDefaultTrackingTest extends BaseEntityManagerF
 	@Test
 	public void testLifecycle() {
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			Customer customer = new Customer();
-			customer.setId( 1L );
-			customer.setFirstName( "John" );
-			customer.setLastName( "Doe" );
+			customer.setId(1L);
+			customer.setFirstName("John");
+			customer.setLastName("Doe");
 
-			entityManager.persist( customer );
-		} );
+			entityManager.persist(customer);
+		});
 
 		EntityManagerFactory entityManagerFactory = null;
 		try {
@@ -71,24 +71,24 @@ public class EntityTypeChangeAuditDefaultTrackingTest extends BaseEntityManagerF
 			);
 			entityManagerFactory =  Bootstrap
 			.getEntityManagerFactoryBuilder(
-				new TestingPersistenceUnitDescriptorImpl( getClass().getSimpleName() ),
-				settings )
+				new TestingPersistenceUnitDescriptorImpl(getClass().getSimpleName()),
+				settings)
 			.build()
-			.unwrap( SessionFactoryImplementor.class );
+			.unwrap(SessionFactoryImplementor.class);
 
 			final EntityManagerFactory emf = entityManagerFactory;
 
-			doInJPA( () -> emf, entityManager -> {
+			doInJPA(() -> emf, entityManager -> {
 				ApplicationCustomer customer = new ApplicationCustomer();
-				customer.setId( 2L );
-				customer.setFirstName( "John" );
-				customer.setLastName( "Doe Jr." );
+				customer.setId(2L);
+				customer.setFirstName("John");
+				customer.setLastName("Doe Jr.");
 
-				entityManager.persist( customer );
-			} );
+				entityManager.persist(customer);
+			});
 		}
 		finally {
-			if ( entityManagerFactory != null ) {
+			if (entityManagerFactory != null) {
 				entityManagerFactory.close();
 			}
 		}
@@ -105,7 +105,7 @@ public class EntityTypeChangeAuditDefaultTrackingTest extends BaseEntityManagerF
 
 		private String lastName;
 
-		@Temporal( TemporalType.TIMESTAMP )
+		@Temporal(TemporalType.TIMESTAMP)
 		@Column(name = "created_on")
 		@CreationTimestamp
 		private Date createdOn;
@@ -154,7 +154,7 @@ public class EntityTypeChangeAuditDefaultTrackingTest extends BaseEntityManagerF
 
 		private String lastName;
 
-		@Temporal( TemporalType.TIMESTAMP )
+		@Temporal(TemporalType.TIMESTAMP)
 		@Column(name = "created_on")
 		@CreationTimestamp
 		private Date createdOn;

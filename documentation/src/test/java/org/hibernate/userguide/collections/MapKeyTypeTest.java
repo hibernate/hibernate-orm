@@ -58,13 +58,13 @@ public class MapKeyTypeTest extends BaseEntityManagerFunctionalTestCase {
 			2017, 5, 23, 18, 22, 19
 		);
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			PersonDummy person = new PersonDummy();
-			person.setId( 1L );
-			person.getPhoneRegister().put( Timestamp.valueOf( firstCall ).getTime(), 101 );
-			person.getPhoneRegister().put( Timestamp.valueOf( secondCall ).getTime(), 102 );
-			entityManager.persist( person );
-		} );
+			person.setId(1L);
+			person.getPhoneRegister().put(Timestamp.valueOf(firstCall).getTime(), 101);
+			person.getPhoneRegister().put(Timestamp.valueOf(secondCall).getTime(), 102);
+			entityManager.persist(person);
+		});
 
 		EntityManagerFactory entityManagerFactory = null;
 		try {
@@ -80,22 +80,22 @@ public class MapKeyTypeTest extends BaseEntityManagerFunctionalTestCase {
 					"none"
 			);
 			entityManagerFactory =  Bootstrap.getEntityManagerFactoryBuilder(
-					new TestingPersistenceUnitDescriptorImpl( getClass().getSimpleName() ),
+					new TestingPersistenceUnitDescriptorImpl(getClass().getSimpleName()),
 					settings
-			).build().unwrap( SessionFactoryImplementor.class );
+			).build().unwrap(SessionFactoryImplementor.class);
 
 			final EntityManagerFactory emf = entityManagerFactory;
 
-			doInJPA( () -> emf, entityManager -> {
-				Person person = entityManager.find( Person.class, 1L );
+			doInJPA(() -> emf, entityManager -> {
+				Person person = entityManager.find(Person.class, 1L);
 				assertEquals(
-					Integer.valueOf( 101 ),
-					person.getCallRegister().get( Timestamp.valueOf( firstCall ) )
+					Integer.valueOf(101),
+					person.getCallRegister().get(Timestamp.valueOf(firstCall))
 				);
-			} );
+			});
 		}
 		finally {
-			if ( entityManagerFactory != null ) {
+			if (entityManagerFactory != null) {
 				entityManagerFactory.close();
 			}
 		}
@@ -113,7 +113,7 @@ public class MapKeyTypeTest extends BaseEntityManagerFunctionalTestCase {
 			name = "call_register",
 			joinColumns = @JoinColumn(name = "person_id")
 		)
-		@MapKeyColumn( name = "call_timestamp_epoch" )
+		@MapKeyColumn(name = "call_timestamp_epoch")
 		@Column(name = "phone_number")
 		private Map<Long, Integer> callRegister = new HashMap<>();
 
@@ -139,11 +139,11 @@ public class MapKeyTypeTest extends BaseEntityManagerFunctionalTestCase {
 			name = "call_register",
 			joinColumns = @JoinColumn(name = "person_id")
 		)
-		@MapKeyJdbcTypeCode( Types.BIGINT )
+		@MapKeyJdbcTypeCode(Types.BIGINT)
 // todo (6.0) : figure out why `@MapKeyTemporal` did not work.  imo it should
-//		@MapKeyTemporal( TemporalType.TIMESTAMP )
-		@MapKeyJavaType( JdbcTimestampJavaTypeDescriptor.class )
-		@MapKeyColumn( name = "call_timestamp_epoch" )
+//		@MapKeyTemporal(TemporalType.TIMESTAMP)
+		@MapKeyJavaType(JdbcTimestampJavaTypeDescriptor.class)
+		@MapKeyColumn(name = "call_timestamp_epoch")
 		@Column(name = "phone_number")
 		private Map<Date, Integer> callRegister = new HashMap<>();
 

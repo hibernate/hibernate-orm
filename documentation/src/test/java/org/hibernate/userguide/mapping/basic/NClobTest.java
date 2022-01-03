@@ -46,42 +46,42 @@ public class NClobTest {
                     String warranty = "My product warranty";
 
                     final Product product = new Product();
-                    product.setId( 1 );
-                    product.setName( "Mobile phone" );
+                    product.setId(1);
+                    product.setName("Mobile phone");
 
-                    product.setWarranty( NClobProxy.generateProxy( warranty ) );
+                    product.setWarranty(NClobProxy.generateProxy(warranty));
 
-                    entityManager.persist( product );
+                    entityManager.persist(product);
                     //end::basic-nclob-persist-example[]
                 }
-        );
+       );
 
         scope.inTransaction(
                 (entityManager) -> {
                     try {
                         //tag::basic-nclob-find-example[]
-                        Product product = entityManager.find( Product.class, 1 );
+                        Product product = entityManager.find(Product.class, 1);
 
-                        try ( Reader reader = product.getWarranty().getCharacterStream() ) {
-                            assertEquals( "My product warranty", toString( reader ) );
+                        try (Reader reader = product.getWarranty().getCharacterStream()) {
+                            assertEquals("My product warranty", toString(reader));
                         }
                         //end::basic-nclob-find-example[]
                     }
                     catch (Exception e) {
-                        fail( e.getMessage() );
+                        fail(e.getMessage());
                     }
                 }
-        );
+       );
     }
 
     private String toString(Reader reader) throws IOException {
-        BufferedReader bufferedReader = new BufferedReader( reader );
+        BufferedReader bufferedReader = new BufferedReader(reader);
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
         int result = bufferedReader.read();
 
-        while ( result != -1 ) {
-            byteArrayOutputStream.write( (byte) result );
+        while (result != -1) {
+            byteArrayOutputStream.write((byte) result);
             result = bufferedReader.read();
         }
 

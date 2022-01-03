@@ -39,42 +39,42 @@ public class ClobTest extends BaseEntityManagerFunctionalTestCase {
 
     @Test
     public void test() {
-        Integer productId = doInJPA( this::entityManagerFactory, entityManager -> {
-            Session session = entityManager.unwrap( Session.class );
+        Integer productId = doInJPA(this::entityManagerFactory, entityManager -> {
+            Session session = entityManager.unwrap(Session.class);
 
             //tag::basic-clob-persist-example[]
             String warranty = "My product warranty";
 
             final Product product = new Product();
-            product.setId( 1 );
-            product.setName( "Mobile phone" );
+            product.setId(1);
+            product.setName("Mobile phone");
 
-            product.setWarranty( ClobProxy.generateProxy( warranty ) );
+            product.setWarranty(ClobProxy.generateProxy(warranty));
 
-            entityManager.persist( product );
+            entityManager.persist(product);
             //end::basic-clob-persist-example[]
 
             return product.getId();
-        } );
-        doInJPA( this::entityManagerFactory, entityManager -> {
+        });
+        doInJPA(this::entityManagerFactory, entityManager -> {
             try {
                 //tag::basic-clob-find-example[]
 
-                Product product = entityManager.find( Product.class, productId );
+                Product product = entityManager.find(Product.class, productId);
 
                 try (Reader reader = product.getWarranty().getCharacterStream()) {
-                    assertEquals( "My product warranty", toString( reader ) );
+                    assertEquals("My product warranty", toString(reader));
                 }
                 //end::basic-clob-find-example[]
             }
             catch (Exception e) {
-                fail( e.getMessage() );
+                fail(e.getMessage());
             }
-        } );
+        });
     }
 
     private String toString(Reader reader) throws IOException {
-        BufferedReader bufferedReader = new BufferedReader( reader);
+        BufferedReader bufferedReader = new BufferedReader(reader);
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
         int result = bufferedReader.read();

@@ -32,11 +32,11 @@ public class NestedEmbeddableTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void testLifecycle() {
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 
 			Book book = new Book();
-			book.setTitle( "High-Performance Java Persistence" );
-			book.setAuthor( "Vlad Mihalcea" );
+			book.setTitle("High-Performance Java Persistence");
+			book.setAuthor("Vlad Mihalcea");
 			book.setPublisher(
 				new Publisher(
 					"Amazon",
@@ -47,8 +47,8 @@ public class NestedEmbeddableTest extends BaseEntityManagerFunctionalTestCase {
 				)
 			);
 
-			entityManager.persist( book );
-		} );
+			entityManager.persist(book);
+		});
 	}
 
 	@Entity(name = "Book")

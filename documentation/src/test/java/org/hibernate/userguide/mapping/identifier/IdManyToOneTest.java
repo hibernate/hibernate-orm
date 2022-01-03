@@ -40,31 +40,31 @@ public class IdManyToOneTest extends BaseEntityManagerFunctionalTestCase {
 		Author author = new Author();
 		Publisher publisher = new Publisher();
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			author.setName( "Vlad Mihalcea" );
-			entityManager.persist( author );
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			author.setName("Vlad Mihalcea");
+			entityManager.persist(author);
 
-			publisher.setName( "Amazon" );
-			entityManager.persist( publisher );
+			publisher.setName("Amazon");
+			entityManager.persist(publisher);
 
 			Book book = new Book();
-			book.setAuthor( author );
-			book.setPublisher( publisher );
-			book.setTitle( "High-Performance Java Persistence" );
-			entityManager.persist( book );
-		} );
+			book.setAuthor(author);
+			book.setPublisher(publisher);
+			book.setTitle("High-Performance Java Persistence");
+			entityManager.persist(book);
+		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::identifiers-composite-id-fetching-example[]
-			Book book = entityManager.find( Book.class, new Book(
+			Book book = entityManager.find(Book.class, new Book(
 				author,
 				publisher,
 				"High-Performance Java Persistence"
-			) );
+			));
 
-			assertEquals( "Vlad Mihalcea", book.getAuthor().getName() );
+			assertEquals("Vlad Mihalcea", book.getAuthor().getName());
 			//end::identifiers-composite-id-fetching-example[]
-		} );
+		});
 
 	}
 
@@ -123,21 +123,21 @@ public class IdManyToOneTest extends BaseEntityManagerFunctionalTestCase {
 
 		@Override
 		public boolean equals(Object o) {
-			if ( this == o ) {
+			if (this == o) {
 				return true;
 			}
-			if ( o == null || getClass() != o.getClass() ) {
+			if (o == null || getClass() != o.getClass()) {
 				return false;
 			}
 			Book book = (Book) o;
-			return Objects.equals( author, book.author ) &&
-					Objects.equals( publisher, book.publisher ) &&
-					Objects.equals( title, book.title );
+			return Objects.equals(author, book.author) &&
+					Objects.equals(publisher, book.publisher) &&
+					Objects.equals(title, book.title);
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash( author, publisher, title );
+			return Objects.hash(author, publisher, title);
 		}
 	}
 
@@ -162,19 +162,19 @@ public class IdManyToOneTest extends BaseEntityManagerFunctionalTestCase {
 
 		@Override
 		public boolean equals(Object o) {
-			if ( this == o ) {
+			if (this == o) {
 				return true;
 			}
-			if ( o == null || getClass() != o.getClass() ) {
+			if (o == null || getClass() != o.getClass()) {
 				return false;
 			}
 			Author author = (Author) o;
-			return Objects.equals( name, author.name );
+			return Objects.equals(name, author.name);
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash( name );
+			return Objects.hash(name);
 		}
 	}
 
@@ -199,19 +199,19 @@ public class IdManyToOneTest extends BaseEntityManagerFunctionalTestCase {
 
 		@Override
 		public boolean equals(Object o) {
-			if ( this == o ) {
+			if (this == o) {
 				return true;
 			}
-			if ( o == null || getClass() != o.getClass() ) {
+			if (o == null || getClass() != o.getClass()) {
 				return false;
 			}
 			Publisher publisher = (Publisher) o;
-			return Objects.equals( name, publisher.name );
+			return Objects.equals(name, publisher.name);
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash( name );
+			return Objects.hash(name);
 		}
 	}
 	//end::identifiers-composite-id-mapping-example[]

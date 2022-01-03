@@ -33,7 +33,7 @@ import static org.hamcrest.Matchers.is;
  *
  * @author Steve Ebersole
  */
-@DomainModel( annotatedClasses = BigDecimalMappingTests.EntityOfBigDecimals.class )
+@DomainModel(annotatedClasses = BigDecimalMappingTests.EntityOfBigDecimals.class)
 @SessionFactory
 public class BigDecimalMappingTests {
 
@@ -41,38 +41,38 @@ public class BigDecimalMappingTests {
 	public void testMappings(SessionFactoryScope scope) {
 		// first, verify the type selections...
 		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
-		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( EntityOfBigDecimals.class );
+		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor(EntityOfBigDecimals.class);
 		final JdbcTypeRegistry jdbcTypeRegistry = domainModel.getTypeConfiguration()
 				.getJdbcTypeDescriptorRegistry();
 
 		{
-			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "wrapper" );
-			assertThat( attribute.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( BigDecimal.class ) );
+			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("wrapper");
+			assertThat(attribute.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(BigDecimal.class));
 
 			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
-			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( BigDecimal.class ) );
-			assertThat( jdbcMapping.getJdbcTypeDescriptor(), is( jdbcTypeRegistry.getDescriptor( Types.NUMERIC ) ) );
+			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(BigDecimal.class));
+			assertThat(jdbcMapping.getJdbcTypeDescriptor(), is(jdbcTypeRegistry.getDescriptor(Types.NUMERIC)));
 		}
 
 
 		// and try to use the mapping
 		scope.inTransaction(
-				(session) -> session.persist( new EntityOfBigDecimals( 1, BigDecimal.TEN ) )
+				(session) -> session.persist(new EntityOfBigDecimals(1, BigDecimal.TEN))
 		);
 		scope.inTransaction(
-				(session) -> session.get( EntityOfBigDecimals.class, 1 )
+				(session) -> session.get(EntityOfBigDecimals.class, 1)
 		);
 	}
 
 	@AfterEach
 	public void dropData(SessionFactoryScope scope) {
 		scope.inTransaction(
-				(session) -> session.createQuery( "delete EntityOfBigDecimals" ).executeUpdate()
+				(session) -> session.createQuery("delete EntityOfBigDecimals").executeUpdate()
 		);
 	}
 
-	@Entity( name = "EntityOfBigDecimals" )
-	@Table( name = "EntityOfBigDecimals" )
+	@Entity(name = "EntityOfBigDecimals")
+	@Table(name = "EntityOfBigDecimals")
 	public static class EntityOfBigDecimals {
 		@Id
 		Integer id;

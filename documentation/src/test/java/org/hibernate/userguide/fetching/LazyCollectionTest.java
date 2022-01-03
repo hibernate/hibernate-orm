@@ -41,32 +41,32 @@ public class LazyCollectionTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void test() {
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::fetching-LazyCollection-persist-example[]
 			Department department = new Department();
-			department.setId( 1L );
-			entityManager.persist( department );
+			department.setId(1L);
+			entityManager.persist(department);
 
-			for (long i = 1; i <= 3; i++ ) {
+			for (long i = 1; i <= 3; i++) {
 				Employee employee = new Employee();
-				employee.setId( i );
-				employee.setUsername( String.format( "user_%d", i ) );
+				employee.setId(i);
+				employee.setUsername(String.format("user_%d", i));
 				department.addEmployee(employee);
 			}
 			//end::fetching-LazyCollection-persist-example[]
-		} );
+		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::fetching-LazyCollection-select-example[]
 			Department department = entityManager.find(Department.class, 1L);
 
 			int employeeCount = department.getEmployees().size();
 
-			for(int i = 0; i < employeeCount; i++ ) {
-				log.infof( "Fetched employee: %s", department.getEmployees().get( i ).getUsername());
+			for(int i = 0; i < employeeCount; i++) {
+				log.infof("Fetched employee: %s", department.getEmployees().get(i).getUsername());
 			}
 			//end::fetching-LazyCollection-select-example[]
-		} );
+		});
 	}
 
 	//tag::fetching-LazyCollection-domain-model-example[]
@@ -78,7 +78,7 @@ public class LazyCollectionTest extends BaseEntityManagerFunctionalTestCase {
 
 		@OneToMany(mappedBy = "department", cascade = CascadeType.ALL)
 		@OrderColumn(name = "order_id")
-		@LazyCollection( LazyCollectionOption.EXTRA )
+		@LazyCollection(LazyCollectionOption.EXTRA)
 		private List<Employee> employees = new ArrayList<>();
 
 		//Getters and setters omitted for brevity
@@ -102,8 +102,8 @@ public class LazyCollectionTest extends BaseEntityManagerFunctionalTestCase {
 		}
 
 		public void addEmployee(Employee employee) {
-			this.employees.add( employee );
-			employee.setDepartment( this );
+			this.employees.add(employee);
+			employee.setDepartment(this);
 		}
 	//tag::fetching-LazyCollection-domain-model-example[]
 	}

@@ -29,33 +29,33 @@ import static org.hamcrest.Matchers.equalTo;
 /**
  * @author Steve Ebersole
  */
-@DomainModel( annotatedClasses = LocalDateMappingTests.EntityWithLocalDate.class )
+@DomainModel(annotatedClasses = LocalDateMappingTests.EntityWithLocalDate.class)
 @SessionFactory
 public class LocalDateMappingTests {
 
 	@Test
 	public void verifyMappings(SessionFactoryScope scope) {
 		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
-		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( EntityWithLocalDate.class );
+		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor(EntityWithLocalDate.class);
 
-		final BasicAttributeMapping duration = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "localDate" );
+		final BasicAttributeMapping duration = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("localDate");
 		final JdbcMapping jdbcMapping = duration.getJdbcMapping();
-		assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( LocalDate.class ) );
-		assertThat( jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo( Types.DATE ) );
+		assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(LocalDate.class));
+		assertThat(jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo(Types.DATE));
 
 		scope.inTransaction(
 				(session) -> {
-					session.persist( new EntityWithLocalDate( 1, LocalDate.now() ) );
+					session.persist(new EntityWithLocalDate(1, LocalDate.now()));
 				}
 		);
 
 		scope.inTransaction(
-				(session) -> session.find( EntityWithLocalDate.class, 1 )
+				(session) -> session.find(EntityWithLocalDate.class, 1)
 		);
 	}
 
-	@Entity( name = "EntityWithLocalDate" )
-	@Table( name = "EntityWithLocalDate" )
+	@Entity(name = "EntityWithLocalDate")
+	@Table(name = "EntityWithLocalDate")
 	public static class EntityWithLocalDate {
 		@Id
 		private Integer id;

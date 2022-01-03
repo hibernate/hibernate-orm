@@ -43,20 +43,20 @@ public class ColumnTransformerTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void testLifecycle() {
 		//tag::mapping-column-read-and-write-composite-type-persistence-example[]
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::basic-datetime-temporal-date-persist-example[]
-			Savings savings = new Savings( );
-			savings.setId( 1L );
-			savings.setCurrency( Currency.getInstance( Locale.US ) );
-			savings.setAmount( BigDecimal.TEN );
-			entityManager.persist( savings );
-		} );
+			Savings savings = new Savings();
+			savings.setId(1L);
+			savings.setCurrency(Currency.getInstance(Locale.US));
+			savings.setAmount(BigDecimal.TEN);
+			entityManager.persist(savings);
+		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Savings savings = entityManager.find( Savings.class, 1L );
-			assertEquals( 10, savings.getAmount().intValue());
-			assertEquals( Currency.getInstance( Locale.US ), savings.getCurrency() );
-		} );
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			Savings savings = entityManager.find(Savings.class, 1L);
+			assertEquals(10, savings.getAmount().intValue());
+			assertEquals(Currency.getInstance(Locale.US), savings.getCurrency());
+		});
 		//end::mapping-column-read-and-write-composite-type-persistence-example[]
 	}
 

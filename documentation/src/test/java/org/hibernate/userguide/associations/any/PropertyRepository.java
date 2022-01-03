@@ -24,24 +24,24 @@ import org.hibernate.annotations.ManyToAny;
 
 //tag::associations-many-to-any-example[]
 @Entity
-@Table( name = "property_repository" )
+@Table(name = "property_repository")
 public class PropertyRepository {
 
     @Id
     private Long id;
 
     @ManyToAny
-    @AnyDiscriminator( DiscriminatorType.STRING )
-    @Column( name = "property_type" )
-    @AnyKeyJavaClass( Long.class )
-    @AnyDiscriminatorValue( discriminator = "S", entity = StringProperty.class )
-    @AnyDiscriminatorValue( discriminator = "I", entity = IntegerProperty.class )
-    @Cascade( { org.hibernate.annotations.CascadeType.ALL })
+    @AnyDiscriminator(DiscriminatorType.STRING)
+    @Column(name = "property_type")
+    @AnyKeyJavaClass(Long.class)
+    @AnyDiscriminatorValue(discriminator = "S", entity = StringProperty.class)
+    @AnyDiscriminatorValue(discriminator = "I", entity = IntegerProperty.class)
+    @Cascade({ org.hibernate.annotations.CascadeType.ALL })
     @JoinTable(name = "repository_properties",
             joinColumns = @JoinColumn(name = "repository_id"),
             inverseJoinColumns = @JoinColumn(name = "property_id")
-    )
-    private List<Property<?>> properties = new ArrayList<>(  );
+   )
+    private List<Property<?>> properties = new ArrayList<>();
 
     //Getters and setters are omitted for brevity
 

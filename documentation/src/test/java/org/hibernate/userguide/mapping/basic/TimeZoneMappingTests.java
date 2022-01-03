@@ -31,7 +31,7 @@ import static org.hamcrest.Matchers.equalTo;
 /**
  * @author Steve Ebersole
  */
-@DomainModel( annotatedClasses = TimeZoneMappingTests.EntityWithTimeZone.class )
+@DomainModel(annotatedClasses = TimeZoneMappingTests.EntityWithTimeZone.class)
 @SessionFactory
 public class TimeZoneMappingTests {
 
@@ -39,26 +39,26 @@ public class TimeZoneMappingTests {
 	public void verifyMappings(SessionFactoryScope scope) {
 		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
 		final JdbcTypeRegistry jdbcRegistry = domainModel.getTypeConfiguration().getJdbcTypeDescriptorRegistry();
-		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( EntityWithTimeZone.class );
+		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor(EntityWithTimeZone.class);
 
-		final BasicAttributeMapping duration = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "timeZone" );
+		final BasicAttributeMapping duration = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("timeZone");
 		final JdbcMapping jdbcMapping = duration.getJdbcMapping();
-		assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( TimeZone.class ) );
-		assertThat( jdbcMapping.getJdbcTypeDescriptor(), equalTo( jdbcRegistry.getDescriptor( Types.VARCHAR ) ) );
+		assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(TimeZone.class));
+		assertThat(jdbcMapping.getJdbcTypeDescriptor(), equalTo(jdbcRegistry.getDescriptor(Types.VARCHAR)));
 
 		scope.inTransaction(
 				(session) -> {
-					session.persist( new EntityWithTimeZone( 1, TimeZone.getDefault() ) );
+					session.persist(new EntityWithTimeZone(1, TimeZone.getDefault()));
 				}
 		);
 
 		scope.inTransaction(
-				(session) -> session.find( EntityWithTimeZone.class, 1 )
+				(session) -> session.find(EntityWithTimeZone.class, 1)
 		);
 	}
 
-	@Entity( name = "EntityWithTimeZone" )
-	@Table( name = "EntityWithTimeZone" )
+	@Entity(name = "EntityWithTimeZone")
+	@Table(name = "EntityWithTimeZone")
 	public static class EntityWithTimeZone {
 		@Id
 		private Integer id;

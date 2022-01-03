@@ -39,11 +39,11 @@ public class TransactionsTest extends BaseEntityManagerFunctionalTestCase {
 		//tag::transactions-api-jdbc-example[]
 		StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
 				// "jdbc" is the default, but for explicitness
-				.applySetting( AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY, "jdbc" )
+				.applySetting(AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY, "jdbc")
 				.build();
 
-		Metadata metadata = new MetadataSources( serviceRegistry )
-				.addAnnotatedClass( Customer.class )
+		Metadata metadata = new MetadataSources(serviceRegistry)
+				.addAnnotatedClass(Customer.class)
 				.getMetadataBuilder()
 				.build();
 
@@ -52,22 +52,22 @@ public class TransactionsTest extends BaseEntityManagerFunctionalTestCase {
 
 		Session session = sessionFactory.openSession();
 		try {
-			// calls Connection#setAutoCommit( false ) to
+			// calls Connection#setAutoCommit(false) to
 			// signal start of transaction
 			session.getTransaction().begin();
 
-			session.createQuery( "UPDATE customer set NAME = 'Sir. '||NAME" )
+			session.createQuery("UPDATE customer set NAME = 'Sir. '||NAME")
 					.executeUpdate();
 
 			// calls Connection#commit(), if an error
 			// happens we attempt a rollback
 			session.getTransaction().commit();
 		}
-		catch ( Exception e ) {
+		catch (Exception e) {
 			// we may need to rollback depending on
 			// where the exception happened
-			if ( session.getTransaction().getStatus() == TransactionStatus.ACTIVE
-					|| session.getTransaction().getStatus() == TransactionStatus.MARKED_ROLLBACK ) {
+			if (session.getTransaction().getStatus() == TransactionStatus.ACTIVE
+					|| session.getTransaction().getStatus() == TransactionStatus.MARKED_ROLLBACK) {
 				session.getTransaction().rollback();
 			}
 			// handle the underlying error
@@ -84,11 +84,11 @@ public class TransactionsTest extends BaseEntityManagerFunctionalTestCase {
 		//tag::transactions-api-cmt-example[]
 		StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
 				// "jdbc" is the default, but for explicitness
-				.applySetting( AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY, "jta" )
+				.applySetting(AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY, "jta")
 				.build();
 
-		Metadata metadata = new MetadataSources( serviceRegistry )
-				.addAnnotatedClass( Customer.class )
+		Metadata metadata = new MetadataSources(serviceRegistry)
+				.addAnnotatedClass(Customer.class)
 				.getMetadataBuilder()
 				.build();
 
@@ -106,18 +106,18 @@ public class TransactionsTest extends BaseEntityManagerFunctionalTestCase {
 			// no-ops
 			session.getTransaction().begin();
 
-			Number customerCount = (Number) session.createQuery( "select count(c) from Customer c" ).uniqueResult();
+			Number customerCount = (Number) session.createQuery("select count(c) from Customer c").uniqueResult();
 
-			// Since we did not start the transaction ( CMT ),
+			// Since we did not start the transaction (CMT),
 			// we also will not end it.  This call essentially
 			// no-ops in terms of transaction handling.
 			session.getTransaction().commit();
 		}
-		catch ( Exception e ) {
+		catch (Exception e) {
 			// again, the rollback call here would no-op (aside from
 			// marking the underlying CMT transaction for rollback only).
-			if ( session.getTransaction().getStatus() == TransactionStatus.ACTIVE
-					|| session.getTransaction().getStatus() == TransactionStatus.MARKED_ROLLBACK ) {
+			if (session.getTransaction().getStatus() == TransactionStatus.ACTIVE
+					|| session.getTransaction().getStatus() == TransactionStatus.MARKED_ROLLBACK) {
 				session.getTransaction().rollback();
 			}
 			// handle the underlying error
@@ -134,11 +134,11 @@ public class TransactionsTest extends BaseEntityManagerFunctionalTestCase {
 		//tag::transactions-api-bmt-example[]
 		StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
 				// "jdbc" is the default, but for explicitness
-				.applySetting( AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY, "jta" )
+				.applySetting(AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY, "jta")
 				.build();
 
-		Metadata metadata = new MetadataSources( serviceRegistry )
-				.addAnnotatedClass( Customer.class )
+		Metadata metadata = new MetadataSources(serviceRegistry)
+				.addAnnotatedClass(Customer.class)
 				.getMetadataBuilder()
 				.build();
 
@@ -159,17 +159,17 @@ public class TransactionsTest extends BaseEntityManagerFunctionalTestCase {
 			// nop-op the commit and rollback calls...
 			session.getTransaction().begin();
 
-			session.persist( new Customer(  ) );
-			Customer customer = (Customer) session.createQuery( "select c from Customer c" ).uniqueResult();
+			session.persist(new Customer());
+			Customer customer = (Customer) session.createQuery("select c from Customer c").uniqueResult();
 
 			// calls TM/UT commit method, assuming we are initiator.
 			session.getTransaction().commit();
 		}
-		catch ( Exception e ) {
+		catch (Exception e) {
 			// we may need to rollback depending on
 			// where the exception happened
-			if ( session.getTransaction().getStatus() == TransactionStatus.ACTIVE
-					|| session.getTransaction().getStatus() == TransactionStatus.MARKED_ROLLBACK ) {
+			if (session.getTransaction().getStatus() == TransactionStatus.ACTIVE
+					|| session.getTransaction().getStatus() == TransactionStatus.MARKED_ROLLBACK) {
 				// calls TM/UT commit method, assuming we are initiator;
 				// otherwise marks the JTA transaction for rollback only
 				session.getTransaction().rollback();

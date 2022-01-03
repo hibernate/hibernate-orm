@@ -48,8 +48,8 @@ public class Person {
 //tag::pc-cascade-domain-model-example[]
 
     public void addPhone(Phone phone) {
-        this.phones.add( phone );
-        phone.setOwner( this );
+        this.phones.add(phone);
+        phone.setOwner(this);
     }
 }
 

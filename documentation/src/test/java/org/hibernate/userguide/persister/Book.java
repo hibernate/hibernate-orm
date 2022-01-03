@@ -19,7 +19,7 @@ import org.hibernate.annotations.Persister;
 //tag::entity-persister-mapping[]
 
 @Entity
-@Persister( impl = EntityPersister.class )
+@Persister(impl = EntityPersister.class)
 public class Book {
 
     @Id

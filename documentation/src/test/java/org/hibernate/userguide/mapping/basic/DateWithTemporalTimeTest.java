@@ -37,10 +37,10 @@ public class DateWithTemporalTimeTest extends BaseEntityManagerFunctionalTestCas
 	@Test
 	@SkipForDialect(value = SybaseDialect.class, comment = "The jTDS driver doesn't allow setting a timestamp through setTime")
 	public void testLifecycle() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			DateEvent dateEvent = new DateEvent( new Date() );
-			entityManager.persist( dateEvent );
-		} );
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			DateEvent dateEvent = new DateEvent(new Date());
+			entityManager.persist(dateEvent);
+		});
 	}
 
 	@Entity(name = "DateEvent")

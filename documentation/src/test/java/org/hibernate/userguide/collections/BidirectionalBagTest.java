@@ -38,16 +38,16 @@ public class BidirectionalBagTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	public void testLifecycle() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Person person = new Person( 1L );
-			entityManager.persist( person );
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			Person person = new Person(1L);
+			entityManager.persist(person);
 			//tag::collections-bidirectional-bag-lifecycle-example[]
-			person.addPhone( new Phone( 1L, "landline", "028-234-9876" ) );
-			person.addPhone( new Phone( 2L, "mobile", "072-122-9876" ) );
+			person.addPhone(new Phone(1L, "landline", "028-234-9876"));
+			person.addPhone(new Phone(2L, "mobile", "072-122-9876"));
 			entityManager.flush();
-			person.removePhone( person.getPhones().get( 0 ) );
+			person.removePhone(person.getPhones().get(0));
 			//end::collections-bidirectional-bag-lifecycle-example[]
-		} );
+		});
 	}
 
 	//tag::collections-bidirectional-bag-example[]
@@ -77,13 +77,13 @@ public class BidirectionalBagTest extends BaseEntityManagerFunctionalTestCase {
 
 	//tag::collections-bidirectional-bag-example[]
 		public void addPhone(Phone phone) {
-			phones.add( phone );
-			phone.setPerson( this );
+			phones.add(phone);
+			phone.setPerson(this);
 		}
 
 		public void removePhone(Phone phone) {
-			phones.remove( phone );
-			phone.setPerson( null );
+			phones.remove(phone);
+			phone.setPerson(null);
 		}
 	}
 
@@ -138,19 +138,19 @@ public class BidirectionalBagTest extends BaseEntityManagerFunctionalTestCase {
 	//tag::collections-bidirectional-bag-example[]
 		@Override
 		public boolean equals(Object o) {
-			if ( this == o ) {
+			if (this == o) {
 				return true;
 			}
-			if ( o == null || getClass() != o.getClass() ) {
+			if (o == null || getClass() != o.getClass()) {
 				return false;
 			}
 			Phone phone = (Phone) o;
-			return Objects.equals( number, phone.number );
+			return Objects.equals(number, phone.number);
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash( number );
+			return Objects.hash(number);
 		}
 	}
 	//end::collections-bidirectional-bag-example[]

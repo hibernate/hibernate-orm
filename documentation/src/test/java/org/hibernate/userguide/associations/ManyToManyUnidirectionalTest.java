@@ -36,55 +36,55 @@ public class ManyToManyUnidirectionalTest extends BaseEntityManagerFunctionalTes
 
 	@Test
 	public void testLifecycle() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::associations-many-to-many-unidirectional-lifecycle-example[]
 			Person person1 = new Person();
 			Person person2 = new Person();
 
-			Address address1 = new Address( "12th Avenue", "12A" );
-			Address address2 = new Address( "18th Avenue", "18B" );
+			Address address1 = new Address("12th Avenue", "12A");
+			Address address2 = new Address("18th Avenue", "18B");
 
-			person1.getAddresses().add( address1 );
-			person1.getAddresses().add( address2 );
+			person1.getAddresses().add(address1);
+			person1.getAddresses().add(address2);
 
-			person2.getAddresses().add( address1 );
+			person2.getAddresses().add(address1);
 
-			entityManager.persist( person1 );
-			entityManager.persist( person2 );
+			entityManager.persist(person1);
+			entityManager.persist(person2);
 
 			entityManager.flush();
 
-			person1.getAddresses().remove( address1 );
+			person1.getAddresses().remove(address1);
 			//end::associations-many-to-many-unidirectional-lifecycle-example[]
-		} );
+		});
 	}
 
 	@Test
 	public void testRemove() {
-		final Long personId = doInJPA( this::entityManagerFactory, entityManager -> {
+		final Long personId = doInJPA(this::entityManagerFactory, entityManager -> {
 			Person person1 = new Person();
 			Person person2 = new Person();
 
-			Address address1 = new Address( "12th Avenue", "12A" );
-			Address address2 = new Address( "18th Avenue", "18B" );
+			Address address1 = new Address("12th Avenue", "12A");
+			Address address2 = new Address("18th Avenue", "18B");
 
-			person1.getAddresses().add( address1 );
-			person1.getAddresses().add( address2 );
+			person1.getAddresses().add(address1);
+			person1.getAddresses().add(address2);
 
-			person2.getAddresses().add( address1 );
+			person2.getAddresses().add(address1);
 
-			entityManager.persist( person1 );
-			entityManager.persist( person2 );
+			entityManager.persist(person1);
+			entityManager.persist(person2);
 
 			return person1.id;
-		} );
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			log.info( "Remove" );
+		});
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			log.info("Remove");
 			//tag::associations-many-to-many-unidirectional-remove-example[]
-			Person person1 = entityManager.find( Person.class, personId );
-			entityManager.remove( person1 );
+			Person person1 = entityManager.find(Person.class, personId);
+			entityManager.remove(person1);
 			//end::associations-many-to-many-unidirectional-remove-example[]
-		} );
+		});
 	}
 
 	//tag::associations-many-to-many-unidirectional-example[]

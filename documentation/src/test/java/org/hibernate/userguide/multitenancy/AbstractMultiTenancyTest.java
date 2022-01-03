@@ -47,7 +47,7 @@ public abstract class AbstractMultiTenancyTest extends BaseUnitTestCase {
     protected static final String FRONT_END_TENANT = "front_end";
     protected static final String BACK_END_TENANT = "back_end";
 
-    private Map<String, ConnectionProvider> connectionProviderMap = new HashMap<>(  );
+    private Map<String, ConnectionProvider> connectionProviderMap = new HashMap<>();
 
     private SessionFactory sessionFactory;
 
@@ -57,13 +57,13 @@ public abstract class AbstractMultiTenancyTest extends BaseUnitTestCase {
 
     //tag::multitenacy-hibernate-MultiTenantConnectionProvider-example[]
     private void init() {
-        registerConnectionProvider( FRONT_END_TENANT );
-        registerConnectionProvider( BACK_END_TENANT );
+        registerConnectionProvider(FRONT_END_TENANT);
+        registerConnectionProvider(BACK_END_TENANT);
 
-        Map<String, Object> settings = new HashMap<>(  );
+        Map<String, Object> settings = new HashMap<>();
 
-        settings.put( AvailableSettings.MULTI_TENANT_CONNECTION_PROVIDER,
-            new ConfigurableMultiTenantConnectionProvider( connectionProviderMap ) );
+        settings.put(AvailableSettings.MULTI_TENANT_CONNECTION_PROVIDER,
+            new ConfigurableMultiTenantConnectionProvider(connectionProviderMap));
 
         sessionFactory = sessionFactory(settings);
     }
@@ -72,9 +72,9 @@ public abstract class AbstractMultiTenancyTest extends BaseUnitTestCase {
     @AfterClassOnce
     public void destroy() {
         sessionFactory.close();
-        for ( ConnectionProvider connectionProvider : connectionProviderMap.values() ) {
-            if ( connectionProvider instanceof Stoppable ) {
-                ( (Stoppable) connectionProvider ).stop();
+        for (ConnectionProvider connectionProvider : connectionProviderMap.values()) {
+            if (connectionProvider instanceof Stoppable) {
+                ((Stoppable) connectionProvider).stop();
             }
         }
     }
@@ -83,13 +83,13 @@ public abstract class AbstractMultiTenancyTest extends BaseUnitTestCase {
 
     protected void registerConnectionProvider(String tenantIdentifier) {
         Properties properties = properties();
-        properties.put( Environment.URL,
-            tenantUrl(properties.getProperty( Environment.URL ), tenantIdentifier) );
+        properties.put(Environment.URL,
+            tenantUrl(properties.getProperty(Environment.URL), tenantIdentifier));
 
         DriverManagerConnectionProviderImpl connectionProvider =
             new DriverManagerConnectionProviderImpl();
-        connectionProvider.configure( properties );
-        connectionProviderMap.put( tenantIdentifier, connectionProvider );
+        connectionProvider.configure(properties);
+        connectionProviderMap.put(tenantIdentifier, connectionProvider);
     }
     //end::multitenacy-hibernate-MultiTenantConnectionProvider-example[]
 
@@ -97,30 +97,30 @@ public abstract class AbstractMultiTenancyTest extends BaseUnitTestCase {
     public void testBasicExpectedBehavior() {
 
 		//tag::multitenacy-multitenacy-hibernate-same-entity-example[]
-        doInSession( FRONT_END_TENANT, session -> {
-            Person person = new Person(  );
-            person.setId( 1L );
-            person.setName( "John Doe" );
-            session.persist( person );
-        } );
+        doInSession(FRONT_END_TENANT, session -> {
+            Person person = new Person();
+            person.setId(1L);
+            person.setName("John Doe");
+            session.persist(person);
+        });
 
-        doInSession( BACK_END_TENANT, session -> {
-            Person person = new Person(  );
-            person.setId( 1L );
-            person.setName( "John Doe" );
-            session.persist( person );
-        } );
+        doInSession(BACK_END_TENANT, session -> {
+            Person person = new Person();
+            person.setId(1L);
+            person.setName("John Doe");
+            session.persist(person);
+        });
 		//end::multitenacy-multitenacy-hibernate-same-entity-example[]
     }
 
     protected Properties properties() {
-        Properties properties = new Properties( );
-        URL propertiesURL = Thread.currentThread().getContextClassLoader().getResource( "hibernate.properties" );
-        try(FileInputStream inputStream = new FileInputStream( propertiesURL.getFile() )) {
-            properties.load( inputStream );
+        Properties properties = new Properties();
+        URL propertiesURL = Thread.currentThread().getContextClassLoader().getResource("hibernate.properties");
+        try(FileInputStream inputStream = new FileInputStream(propertiesURL.getFile())) {
+            properties.load(inputStream);
         }
         catch (IOException e) {
-            throw new IllegalArgumentException( e );
+            throw new IllegalArgumentException(e);
         }
         return properties;
     }
@@ -130,49 +130,49 @@ public abstract class AbstractMultiTenancyTest extends BaseUnitTestCase {
     protected SessionFactory sessionFactory(Map<String, Object> settings) {
 
         ServiceRegistryImplementor serviceRegistry = (ServiceRegistryImplementor) new StandardServiceRegistryBuilder()
-            .applySettings( settings )
+            .applySettings(settings)
             .build();
 
-        MetadataSources metadataSources = new MetadataSources( serviceRegistry );
+        MetadataSources metadataSources = new MetadataSources(serviceRegistry);
         for(Class annotatedClasses : getAnnotatedClasses()) {
-            metadataSources.addAnnotatedClass( annotatedClasses );
+            metadataSources.addAnnotatedClass(annotatedClasses);
         }
 
         Metadata metadata = metadataSources.buildMetadata();
 
         HibernateSchemaManagementTool tool = new HibernateSchemaManagementTool();
-        tool.injectServices( serviceRegistry );
+        tool.injectServices(serviceRegistry);
 
         final GenerationTargetToDatabase frontEndSchemaGenerator =  new GenerationTargetToDatabase(
                 new DdlTransactionIsolatorTestingImpl(
                         serviceRegistry,
-                        connectionProviderMap.get( FRONT_END_TENANT )
-                )
-        );
+                        connectionProviderMap.get(FRONT_END_TENANT)
+               )
+       );
         final GenerationTargetToDatabase backEndSchemaGenerator = new GenerationTargetToDatabase(
                 new DdlTransactionIsolatorTestingImpl(
                         serviceRegistry,
-                        connectionProviderMap.get( BACK_END_TENANT )
-                )
-        );
+                        connectionProviderMap.get(BACK_END_TENANT)
+               )
+       );
 
-        new SchemaDropperImpl( serviceRegistry ).doDrop(
+        new SchemaDropperImpl(serviceRegistry).doDrop(
                 metadata,
                 serviceRegistry,
                 settings,
                 true,
                 frontEndSchemaGenerator,
                 backEndSchemaGenerator
-        );
+       );
 
-        new SchemaCreatorImpl( serviceRegistry ).doCreation(
+        new SchemaCreatorImpl(serviceRegistry).doCreation(
                 metadata,
                 serviceRegistry,
                 settings,
                 true,
                 frontEndSchemaGenerator,
                 backEndSchemaGenerator
-        );
+       );
 
         final SessionFactoryBuilder sessionFactoryBuilder = metadata.getSessionFactoryBuilder();
         return sessionFactoryBuilder.build();
@@ -191,14 +191,14 @@ public abstract class AbstractMultiTenancyTest extends BaseUnitTestCase {
         try {
             session = sessionFactory
                 .withOptions()
-                .tenantIdentifier( tenant )
+                .tenantIdentifier(tenant)
                 .openSession();
             txn = session.getTransaction();
             txn.begin();
             function.accept(session);
             txn.commit();
         } catch (Throwable e) {
-            if ( txn != null ) txn.rollback();
+            if (txn != null) txn.rollback();
             throw e;
         } finally {
             if (session != null) {

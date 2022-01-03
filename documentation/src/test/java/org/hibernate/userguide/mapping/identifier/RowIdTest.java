@@ -34,20 +34,20 @@ public class RowIdTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	public void test() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			Product product = new Product();
-			product.setId( 1L );
-			product.setName( "Mobile phone" );
-			product.setNumber( "123-456-7890" );
-			entityManager.persist( product );
-		} );
-		doInJPA( this::entityManagerFactory, entityManager -> {
+			product.setId(1L);
+			product.setName("Mobile phone");
+			product.setNumber("123-456-7890");
+			entityManager.persist(product);
+		});
+		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::identifiers-rowid-example[]
-			Product product = entityManager.find( Product.class, 1L );
+			Product product = entityManager.find(Product.class, 1L);
 
-			product.setName( "Smart phone" );
+			product.setName("Smart phone");
 			//end::identifiers-rowid-example[]
-		} );
+		});
 	}
 
 	//tag::identifiers-rowid-mapping[]

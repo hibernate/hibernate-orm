@@ -29,30 +29,30 @@ public class EmbeddedIdInMemoryGeneratedValueTest extends BaseEntityManagerFunct
 	@Test
 	@TestForIssue(jiraKey = "HHH-13096")
 	public void test() {
-		final EventId eventId = doInJPA( this::entityManagerFactory, entityManager -> {
+		final EventId eventId = doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::identifiers-composite-generated-in-memory-example[]
 			EventId id = new EventId();
-			id.setCategory( 1 );
-			id.setCreatedOn( new Timestamp( System.currentTimeMillis() ) );
+			id.setCategory(1);
+			id.setCreatedOn(new Timestamp(System.currentTimeMillis()));
 
 			Event event = new Event();
-			event.setId( id );
-			event.setKey( "Temperature" );
-			event.setValue( "9" );
+			event.setId(id);
+			event.setKey("Temperature");
+			event.setValue("9");
 
-			entityManager.persist( event );
+			entityManager.persist(event);
 			//end::identifiers-composite-generated-in-memory-example[]
 			return event.getId();
-		} );
+		});
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		doInJPA(this::entityManagerFactory, entityManager -> {
 
-			Event event = entityManager.find( Event.class, eventId );
+			Event event = entityManager.find(Event.class, eventId);
 
-			assertEquals( "Temperature", event.getKey() );
-			assertEquals( "9", event.getValue() );
+			assertEquals("Temperature", event.getKey());
+			assertEquals("9", event.getValue());
 
 			return event.getId();
-		} );
+		});
 	}
 }

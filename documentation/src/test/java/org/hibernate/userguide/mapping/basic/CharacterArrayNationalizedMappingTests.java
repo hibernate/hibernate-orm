@@ -35,14 +35,14 @@ import static org.hamcrest.Matchers.is;
  *
  * @author Steve Ebersole
  */
-@DomainModel( annotatedClasses = CharacterArrayNationalizedMappingTests.EntityWithCharArrays.class )
+@DomainModel(annotatedClasses = CharacterArrayNationalizedMappingTests.EntityWithCharArrays.class)
 @SessionFactory
-@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsNationalizedData.class )
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNationalizedData.class)
 public class CharacterArrayNationalizedMappingTests {
 	@Test
 	public void verifyMappings(SessionFactoryScope scope) {
 		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
-		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( EntityWithCharArrays.class );
+		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor(EntityWithCharArrays.class);
 		final JdbcTypeRegistry jdbcTypeRegistry = domainModel.getTypeConfiguration()
 				.getJdbcTypeDescriptorRegistry();
 
@@ -50,33 +50,33 @@ public class CharacterArrayNationalizedMappingTests {
 		final NationalizationSupport nationalizationSupport = dialect.getNationalizationSupport();
 
 		{
-			final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "primitiveNVarchar" );
+			final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("primitiveNVarchar");
 			final JdbcMapping jdbcMapping = attributeMapping.getJdbcMapping();
-			assertThat( jdbcMapping.getJdbcTypeDescriptor(), is( jdbcTypeRegistry.getDescriptor( nationalizationSupport.getVarcharVariantCode() ) ) );
+			assertThat(jdbcMapping.getJdbcTypeDescriptor(), is(jdbcTypeRegistry.getDescriptor(nationalizationSupport.getVarcharVariantCode())));
 		}
 
 		{
-			final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "wrapperNVarchar" );
+			final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("wrapperNVarchar");
 			final JdbcMapping jdbcMapping = attributeMapping.getJdbcMapping();
-			assertThat( jdbcMapping.getJdbcTypeDescriptor(), is( jdbcTypeRegistry.getDescriptor( nationalizationSupport.getVarcharVariantCode() ) ) );
+			assertThat(jdbcMapping.getJdbcTypeDescriptor(), is(jdbcTypeRegistry.getDescriptor(nationalizationSupport.getVarcharVariantCode())));
 		}
 
 
 		{
-			final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "primitiveNClob" );
+			final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("primitiveNClob");
 			final JdbcMapping jdbcMapping = attributeMapping.getJdbcMapping();
-			assertThat( jdbcMapping.getJdbcTypeDescriptor(), is( jdbcTypeRegistry.getDescriptor( nationalizationSupport.getClobVariantCode() ) ) );
+			assertThat(jdbcMapping.getJdbcTypeDescriptor(), is(jdbcTypeRegistry.getDescriptor(nationalizationSupport.getClobVariantCode())));
 		}
 
 		{
-			final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "wrapperNClob" );
+			final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("wrapperNClob");
 			final JdbcMapping jdbcMapping = attributeMapping.getJdbcMapping();
-			assertThat( jdbcMapping.getJdbcTypeDescriptor(), is( jdbcTypeRegistry.getDescriptor( nationalizationSupport.getClobVariantCode() ) ) );
+			assertThat(jdbcMapping.getJdbcTypeDescriptor(), is(jdbcTypeRegistry.getDescriptor(nationalizationSupport.getClobVariantCode())));
 		}
 	}
 
-	@Entity( name = "EntityWithCharArrays" )
-	@Table( name = "EntityWithCharArrays" )
+	@Entity(name = "EntityWithCharArrays")
+	@Table(name = "EntityWithCharArrays")
 	public static class EntityWithCharArrays {
 		@Id
 		public Integer id;

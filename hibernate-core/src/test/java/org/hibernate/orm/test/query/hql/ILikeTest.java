@@ -100,6 +100,18 @@ public class ILikeTest {
 	}
 
 	@Test
+	public void testLikeEscapeParam(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					Query q = session.createQuery( "from BasicEntity be where be.data like 'Pr%$_%' escape :esc" )
+							.setParameter("esc", "$");
+					List l = q.getResultList();
+					assertEquals( 2, l.size() );
+				}
+		);
+	}
+
+	@Test
 	public void testNotLikeEscape(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

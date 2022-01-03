@@ -24,12 +24,10 @@ import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.BinderHelper;
-import org.hibernate.cfg.Ejb3JoinColumn;
+import org.hibernate.cfg.AnnotatedJoinColumn;
 import org.hibernate.cfg.IndexOrUniqueKeySecondPass;
 import org.hibernate.cfg.JPAIndexHolder;
 import org.hibernate.cfg.ObjectNameSource;
-import org.hibernate.cfg.SimpleToOneFkSecondPass;
-import org.hibernate.cfg.ToOneFkSecondPass;
 import org.hibernate.cfg.UniqueConstraintHolder;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
@@ -536,7 +534,7 @@ public class TableBinder {
 	public static void bindFk(
 			PersistentClass referencedEntity,
 			PersistentClass destinationEntity,
-			Ejb3JoinColumn[] columns,
+			AnnotatedJoinColumn[] columns,
 			SimpleValue value,
 			boolean unique,
 			MetadataBuildingContext buildingContext) {
@@ -599,9 +597,9 @@ public class TableBinder {
 			}
 		}
 		else {
-			int fkEnum = Ejb3JoinColumn.checkReferencedColumnsType( columns, referencedEntity, buildingContext );
+			int fkEnum = AnnotatedJoinColumn.checkReferencedColumnsType( columns, referencedEntity, buildingContext );
 
-			if ( Ejb3JoinColumn.NON_PK_REFERENCE == fkEnum ) {
+			if ( AnnotatedJoinColumn.NON_PK_REFERENCE == fkEnum ) {
 				String referencedPropertyName;
 				if ( value instanceof ToOne ) {
 					referencedPropertyName = ( (ToOne) value ).getReferencedPropertyName();
@@ -641,7 +639,7 @@ public class TableBinder {
 
 			}
 			else {
-				if ( Ejb3JoinColumn.NO_REFERENCE == fkEnum ) {
+				if ( AnnotatedJoinColumn.NO_REFERENCE == fkEnum ) {
 					//implicit case, we hope PK and FK columns are in the same order
 					if ( columns.length != referencedEntity.getIdentifier().getColumnSpan() ) {
 						throw new AnnotationException(
@@ -676,7 +674,7 @@ public class TableBinder {
 						//for each PK column, find the associated FK column.
 						col = (Column) idColItr.next();
 						final String colName = col.getQuotedName( buildingContext.getMetadataCollector().getDatabase().getJdbcEnvironment().getDialect() );
-						for (Ejb3JoinColumn joinCol : columns) {
+						for (AnnotatedJoinColumn joinCol : columns) {
 							String referencedColumn = joinCol.getReferencedColumn();
 							referencedColumn = buildingContext.getMetadataCollector().getPhysicalColumnName(
 									table,
@@ -721,9 +719,9 @@ public class TableBinder {
 	public static void linkJoinColumnWithValueOverridingNameIfImplicit(
 			PersistentClass referencedEntity,
 			Iterator columnIterator,
-			Ejb3JoinColumn[] columns,
+			AnnotatedJoinColumn[] columns,
 			SimpleValue value) {
-		for (Ejb3JoinColumn joinCol : columns) {
+		for (AnnotatedJoinColumn joinCol : columns) {
 			Column synthCol = (Column) columnIterator.next();
 			if ( joinCol.isNameDeferred() ) {
 				//this has to be the default value

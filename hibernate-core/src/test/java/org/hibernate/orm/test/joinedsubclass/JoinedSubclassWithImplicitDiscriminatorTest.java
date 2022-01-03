@@ -13,7 +13,7 @@ import jakarta.persistence.InheritanceType;
 import jakarta.persistence.Table;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Ejb3DiscriminatorColumn;
+import org.hibernate.cfg.AnnotatedDiscriminatorColumn;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
 
@@ -54,11 +54,11 @@ public class JoinedSubclassWithImplicitDiscriminatorTest {
 		assertNotNull( p );
 		final JoinedSubclassEntityPersister dogPersister = assertTyping( JoinedSubclassEntityPersister.class, p );
 		assertEquals(
-				Ejb3DiscriminatorColumn.DEFAULT_DISCRIMINATOR_TYPE,
+				AnnotatedDiscriminatorColumn.DEFAULT_DISCRIMINATOR_TYPE,
 				dogPersister.getDiscriminatorType().getName()
 		);
 		assertEquals(
-				Ejb3DiscriminatorColumn.DEFAULT_DISCRIMINATOR_COLUMN_NAME,
+				AnnotatedDiscriminatorColumn.DEFAULT_DISCRIMINATOR_COLUMN_NAME,
 				dogPersister.getDiscriminatorColumnName()
 		);
 		assertEquals( "Dog", dogPersister.getDiscriminatorValue() );
@@ -67,11 +67,11 @@ public class JoinedSubclassWithImplicitDiscriminatorTest {
 		assertNotNull( p );
 		final JoinedSubclassEntityPersister catPersister = assertTyping( JoinedSubclassEntityPersister.class, p );
 		assertEquals(
-				Ejb3DiscriminatorColumn.DEFAULT_DISCRIMINATOR_TYPE,
+				AnnotatedDiscriminatorColumn.DEFAULT_DISCRIMINATOR_TYPE,
 				catPersister.getDiscriminatorType().getName()
 		);
 		assertEquals(
-				Ejb3DiscriminatorColumn.DEFAULT_DISCRIMINATOR_COLUMN_NAME,
+				AnnotatedDiscriminatorColumn.DEFAULT_DISCRIMINATOR_COLUMN_NAME,
 				catPersister.getDiscriminatorColumnName()
 		);
 		assertEquals( "Cat", catPersister.getDiscriminatorValue() );

@@ -16,6 +16,7 @@ import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.cfg.AnnotatedJoinColumn;
 import org.hibernate.cfg.Environment;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
@@ -30,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Tests {@link org.hibernate.cfg.Ejb3JoinColumn} and {@link org.hibernate.boot.model.naming.PhysicalNamingStrategy}
+ * Tests {@link AnnotatedJoinColumn} and {@link org.hibernate.boot.model.naming.PhysicalNamingStrategy}
  * interaction
  *
  * @author Anton Wimmer

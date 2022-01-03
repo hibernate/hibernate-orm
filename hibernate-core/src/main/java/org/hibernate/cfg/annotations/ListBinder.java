@@ -8,15 +8,14 @@ package org.hibernate.cfg.annotations;
 
 import java.util.Map;
 
-import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.OrderBy;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.CollectionSecondPass;
-import org.hibernate.cfg.Ejb3Column;
-import org.hibernate.cfg.Ejb3JoinColumn;
+import org.hibernate.cfg.AnnotatedColumn;
+import org.hibernate.cfg.AnnotatedJoinColumn;
 import org.hibernate.cfg.PropertyHolder;
 import org.hibernate.cfg.PropertyHolderBuilder;
 import org.hibernate.cfg.SecondPass;
@@ -60,12 +59,12 @@ public class ListBinder extends CollectionBinder {
 
 	@Override
 	public SecondPass getSecondPass(
-			final Ejb3JoinColumn[] fkJoinColumns,
-			final Ejb3JoinColumn[] keyColumns,
-			final Ejb3JoinColumn[] inverseColumns,
-			final Ejb3Column[] elementColumns,
-			Ejb3Column[] mapKeyColumns,
-			final Ejb3JoinColumn[] mapKeyManyToManyColumns,
+			final AnnotatedJoinColumn[] fkJoinColumns,
+			final AnnotatedJoinColumn[] keyColumns,
+			final AnnotatedJoinColumn[] inverseColumns,
+			final AnnotatedColumn[] elementColumns,
+			AnnotatedColumn[] mapKeyColumns,
+			final AnnotatedJoinColumn[] mapKeyManyToManyColumns,
 			final boolean isEmbedded,
 			final XProperty property,
 			final XClass collType,
@@ -118,7 +117,7 @@ public class ListBinder extends CollectionBinder {
 		}
 		indexColumn.setPropertyHolder( valueHolder );
 		final BasicValueBinder valueBinder = new BasicValueBinder( BasicValueBinder.Kind.LIST_INDEX, buildingContext );
-		valueBinder.setColumns( new Ejb3Column[] { indexColumn } );
+		valueBinder.setColumns( new AnnotatedColumn[] { indexColumn } );
 		valueBinder.setReturnedClassName( Integer.class.getName() );
 		valueBinder.setType( property, collType, null, null );
 //			valueBinder.setExplicitType( "integer" );

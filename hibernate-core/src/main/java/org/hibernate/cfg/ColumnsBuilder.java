@@ -42,8 +42,8 @@ class ColumnsBuilder {
 	private PropertyData inferredData;
 	private EntityBinder entityBinder;
 	private MetadataBuildingContext buildingContext;
-	private Ejb3Column[] columns;
-	private Ejb3JoinColumn[] joinColumns;
+	private AnnotatedColumn[] columns;
+	private AnnotatedJoinColumn[] joinColumns;
 
 	public ColumnsBuilder(
 			PropertyHolder propertyHolder,
@@ -60,11 +60,11 @@ class ColumnsBuilder {
 		this.buildingContext = buildingContext;
 	}
 
-	public Ejb3Column[] getColumns() {
+	public AnnotatedColumn[] getColumns() {
 		return columns;
 	}
 
-	public Ejb3JoinColumn[] getJoinColumns() {
+	public AnnotatedJoinColumn[] getJoinColumns() {
 		return joinColumns;
 	}
 
@@ -76,7 +76,7 @@ class ColumnsBuilder {
 		if ( property.isAnnotationPresent( Column.class ) || property.isAnnotationPresent( Formula.class ) ) {
 			Column ann = property.getAnnotation( Column.class );
 			Formula formulaAnn = property.getAnnotation( Formula.class );
-			columns = Ejb3Column.buildColumnFromAnnotation(
+			columns = AnnotatedColumn.buildColumnFromAnnotation(
 					new Column[] { ann },
 					formulaAnn,
 					property.getAnnotation( Comment.class ),
@@ -89,7 +89,7 @@ class ColumnsBuilder {
 		}
 		else if ( property.isAnnotationPresent( Columns.class ) ) {
 			Columns anns = property.getAnnotation( Columns.class );
-			columns = Ejb3Column.buildColumnFromAnnotation(
+			columns = AnnotatedColumn.buildColumnFromAnnotation(
 					anns.columns(),
 					null,
 					property.getAnnotation( Comment.class ),
@@ -116,7 +116,7 @@ class ColumnsBuilder {
 			String mappedBy = oneToMany != null ?
 					oneToMany.mappedBy() :
 					"";
-			joinColumns = Ejb3JoinColumn.buildJoinColumns(
+			joinColumns = AnnotatedJoinColumn.buildJoinColumns(
 					null,
 					property.getAnnotation( Comment.class ),
 					mappedBy,
@@ -132,7 +132,7 @@ class ColumnsBuilder {
 		}
 		if ( columns == null && !property.isAnnotationPresent( ManyToMany.class ) ) {
 			//useful for collection of embedded elements
-			columns = Ejb3Column.buildColumnFromAnnotation(
+			columns = AnnotatedColumn.buildColumnFromAnnotation(
 					null,
 					null,
 					property.getAnnotation( Comment.class ),
@@ -146,18 +146,18 @@ class ColumnsBuilder {
 
 		if ( nullability == Nullability.FORCED_NOT_NULL ) {
 			//force columns to not null
-			for (Ejb3Column col : columns ) {
+			for (AnnotatedColumn col : columns ) {
 				col.forceNotNull();
 			}
 		}
 		return this;
 	}
 
-	Ejb3JoinColumn[] buildDefaultJoinColumnsForXToOne(XProperty property, PropertyData inferredData) {
-		Ejb3JoinColumn[] joinColumns;
+	AnnotatedJoinColumn[] buildDefaultJoinColumnsForXToOne(XProperty property, PropertyData inferredData) {
+		AnnotatedJoinColumn[] joinColumns;
 		JoinTable joinTableAnn = propertyHolder.getJoinTable( property );
 		if ( joinTableAnn != null ) {
-			joinColumns = Ejb3JoinColumn.buildJoinColumns(
+			joinColumns = AnnotatedJoinColumn.buildJoinColumns(
 					joinTableAnn.inverseJoinColumns(),
 					property.getAnnotation( Comment.class ),
 					null,
@@ -178,7 +178,7 @@ class ColumnsBuilder {
 			String mappedBy = oneToOneAnn != null
 					? oneToOneAnn.mappedBy()
 					: null;
-			joinColumns = Ejb3JoinColumn.buildJoinColumns(
+			joinColumns = AnnotatedJoinColumn.buildJoinColumns(
 					null,
 					property.getAnnotation( Comment.class ),
 					mappedBy,
@@ -191,7 +191,7 @@ class ColumnsBuilder {
 		return joinColumns;
 	}
 
-	Ejb3JoinColumn[] buildExplicitJoinColumns(XProperty property, PropertyData inferredData) {
+	AnnotatedJoinColumn[] buildExplicitJoinColumns(XProperty property, PropertyData inferredData) {
 		//process @JoinColumn(s) before @Column(s) to handle collection of entities properly
 		JoinColumn[] joinColumnAnnotations = null;
 
@@ -208,7 +208,7 @@ class ColumnsBuilder {
 		}
 
 		if ( joinColumnAnnotations != null ) {
-			return Ejb3JoinColumn.buildJoinColumns(
+			return AnnotatedJoinColumn.buildJoinColumns(
 					joinColumnAnnotations,
 					property.getAnnotation( Comment.class ),
 					null,
@@ -236,7 +236,7 @@ class ColumnsBuilder {
 		}
 
 		if (joinColumnOrFormulaAnnotations != null) {
-			return Ejb3JoinColumn.buildJoinColumnsOrFormulas(
+			return AnnotatedJoinColumn.buildJoinColumnsOrFormulas(
 					joinColumnOrFormulaAnnotations,
 					null,
 					entityBinder.getSecondaryTables(),
@@ -248,8 +248,8 @@ class ColumnsBuilder {
 
 		if (property.isAnnotationPresent( JoinFormula.class)) {
 			JoinFormula ann = property.getAnnotation( JoinFormula.class );
-			Ejb3JoinColumn[] ejb3JoinColumns = new Ejb3JoinColumn[1];
-			ejb3JoinColumns[0] = Ejb3JoinColumn.buildJoinFormula(
+			AnnotatedJoinColumn[] annotatedJoinColumns = new AnnotatedJoinColumn[1];
+			annotatedJoinColumns[0] = AnnotatedJoinColumn.buildJoinFormula(
 					ann,
 					null,
 					entityBinder.getSecondaryTables(),
@@ -257,14 +257,14 @@ class ColumnsBuilder {
 					inferredData.getPropertyName(),
 					buildingContext
 			);
-			return ejb3JoinColumns;
+			return annotatedJoinColumns;
 		}
 
 		return null;
 	}
 
-	Ejb3Column[] overrideColumnFromMapperOrMapsIdProperty(boolean isId) {
-		Ejb3Column[] result = columns;
+	AnnotatedColumn[] overrideColumnFromMapperOrMapsIdProperty(boolean isId) {
+		AnnotatedColumn[] result = columns;
 		final PropertyData overridingProperty = BinderHelper.getPropertyOverriddenByMapperOrMapsId(
 				isId,
 				propertyHolder,
@@ -280,8 +280,8 @@ class ColumnsBuilder {
 	/**
 	 * useful to override a column either by @MapsId or by @IdClass
 	 */
-	Ejb3Column[] buildExcplicitOrDefaultJoinColumn(PropertyData overridingProperty) {
-		Ejb3Column[] result;
+	AnnotatedColumn[] buildExcplicitOrDefaultJoinColumn(PropertyData overridingProperty) {
+		AnnotatedColumn[] result;
 		result = buildExplicitJoinColumns( overridingProperty.getProperty(), overridingProperty );
 		if (result == null) {
 			result = buildDefaultJoinColumnsForXToOne( overridingProperty.getProperty(), overridingProperty);

@@ -275,7 +275,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 		return component.getComponentClassName();
 	}
 
-	public void addProperty(Property prop, Ejb3Column[] columns, XClass declaringClass) {
+	public void addProperty(Property prop, AnnotatedColumn[] columns, XClass declaringClass) {
 		//Ejb3Column.checkPropertyConsistency( ); //already called earlier
 		/*
 		 * Check table matches between the component and the columns

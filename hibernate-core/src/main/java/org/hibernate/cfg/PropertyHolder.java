@@ -34,7 +34,7 @@ public interface PropertyHolder {
 
 	void addProperty(Property prop, XClass declaringClass);
 
-	void addProperty(Property prop, Ejb3Column[] columns, XClass declaringClass);
+	void addProperty(Property prop, AnnotatedColumn[] columns, XClass declaringClass);
 
 	KeyValue getIdentifier();
 

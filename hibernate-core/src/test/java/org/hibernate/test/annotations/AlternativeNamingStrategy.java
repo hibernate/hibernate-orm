@@ -7,14 +7,14 @@
 
 //$Id$
 package org.hibernate.test.annotations;
-import org.hibernate.cfg.EJB3NamingStrategy;
+import org.hibernate.cfg.PersistenceStandardNamingStrategy;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.internal.util.StringHelper;
 
 /**
  * @author Emmanuel Bernard
  */
-public class AlternativeNamingStrategy extends EJB3NamingStrategy {
+public class AlternativeNamingStrategy extends PersistenceStandardNamingStrategy {
 	public static NamingStrategy INSTANCE = new AlternativeNamingStrategy();
 
 	public String classToTableName(String className) {

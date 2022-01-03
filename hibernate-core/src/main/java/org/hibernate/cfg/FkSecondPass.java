@@ -15,7 +15,7 @@ import org.hibernate.mapping.Value;
  */
 public abstract class FkSecondPass implements SecondPass {
 	protected SimpleValue value;
-	protected Ejb3JoinColumn[] columns;
+	protected AnnotatedJoinColumn[] columns;
 	/**
 	 * unique counter is needed to differentiate 2 instances of FKSecondPass
 	 * as they are compared.
@@ -25,7 +25,7 @@ public abstract class FkSecondPass implements SecondPass {
 	private int uniqueCounter;
 	private static AtomicInteger globalCounter = new AtomicInteger();
 
-	public FkSecondPass(SimpleValue value, Ejb3JoinColumn[] columns) {
+	public FkSecondPass(SimpleValue value, AnnotatedJoinColumn[] columns) {
 		this.value = value;
 		this.columns = columns;
 		this.uniqueCounter = globalCounter.getAndIncrement();

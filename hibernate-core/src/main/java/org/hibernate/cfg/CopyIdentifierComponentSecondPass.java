@@ -38,12 +38,12 @@ public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 	private final String referencedEntityName;
 	private final Component component;
 	private final MetadataBuildingContext buildingContext;
-	private final Ejb3JoinColumn[] joinColumns;
+	private final AnnotatedJoinColumn[] joinColumns;
 
 	public CopyIdentifierComponentSecondPass(
 			Component comp,
 			String referencedEntityName,
-			Ejb3JoinColumn[] joinColumns,
+			AnnotatedJoinColumn[] joinColumns,
 			MetadataBuildingContext buildingContext) {
 		super( comp, joinColumns );
 		this.component = comp;
@@ -83,8 +83,8 @@ public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 
 		//prepare column name structure
 		boolean isExplicitReference = true;
-		Map<String, Ejb3JoinColumn> columnByReferencedName = CollectionHelper.mapOfSize( joinColumns.length);
-		for (Ejb3JoinColumn joinColumn : joinColumns) {
+		Map<String, AnnotatedJoinColumn> columnByReferencedName = CollectionHelper.mapOfSize( joinColumns.length);
+		for (AnnotatedJoinColumn joinColumn : joinColumns) {
 			final String referencedColumnName = joinColumn.getReferencedColumn();
 			if ( referencedColumnName == null || BinderHelper.isEmptyAnnotationValue( referencedColumnName ) ) {
 				break;
@@ -117,7 +117,7 @@ public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 	private Property createComponentProperty(
 			PersistentClass referencedPersistentClass,
 			boolean isExplicitReference,
-			Map<String, Ejb3JoinColumn> columnByReferencedName,
+			Map<String, AnnotatedJoinColumn> columnByReferencedName,
 			MutableInteger index,
 			Property referencedProperty ) {
 		Property property = new Property();
@@ -156,7 +156,7 @@ public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 	private Property createSimpleProperty(
 			PersistentClass referencedPersistentClass,
 			boolean isExplicitReference,
-			Map<String, Ejb3JoinColumn> columnByReferencedName,
+			Map<String, AnnotatedJoinColumn> columnByReferencedName,
 			MutableInteger index,
 			Property referencedProperty ) {
 		Property property = new Property();
@@ -186,7 +186,7 @@ public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 					continue;
 				}
 				final Column column = (Column) selectable;
-				final Ejb3JoinColumn joinColumn;
+				final AnnotatedJoinColumn joinColumn;
 				String logicalColumnName = null;
 				if ( isExplicitReference ) {
 					logicalColumnName = column.getName();
@@ -222,7 +222,7 @@ public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 		return property;
 	}
 
-	private void applyComponentColumnSizeValueToJoinColumn(Column column, Ejb3JoinColumn joinColumn) {
+	private void applyComponentColumnSizeValueToJoinColumn(Column column, AnnotatedJoinColumn joinColumn) {
 		Column mappingColumn = joinColumn.getMappingColumn();
 		mappingColumn.setLength( column.getLength() );
 		mappingColumn.setPrecision( column.getPrecision() );

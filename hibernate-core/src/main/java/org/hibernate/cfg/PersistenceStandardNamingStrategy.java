@@ -15,8 +15,8 @@ import org.hibernate.internal.util.StringHelper;
  *
  * @author Emmanuel Bernard
  */
-public class EJB3NamingStrategy implements NamingStrategy, Serializable {
-	public static final NamingStrategy INSTANCE = new EJB3NamingStrategy();
+public class PersistenceStandardNamingStrategy implements NamingStrategy, Serializable {
+	public static final NamingStrategy INSTANCE = new PersistenceStandardNamingStrategy();
 
 	public String classToTableName(String className) {
 		return StringHelper.unqualify( className );

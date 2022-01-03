@@ -13,7 +13,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinColumns;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.LazyGroup;
 import org.hibernate.annotations.common.reflection.XClass;
@@ -47,7 +46,7 @@ public class OneToOneSecondPass implements SecondPass {
 	private boolean cascadeOnDelete;
 	private boolean optional;
 	private String cascadeStrategy;
-	private Ejb3JoinColumn[] joinColumns;
+	private AnnotatedJoinColumn[] joinColumns;
 
 	//that sucks, we should read that from the property mainly
 	public OneToOneSecondPass(
@@ -61,7 +60,7 @@ public class OneToOneSecondPass implements SecondPass {
 			boolean cascadeOnDelete,
 			boolean optional,
 			String cascadeStrategy,
-			Ejb3JoinColumn[] columns,
+			AnnotatedJoinColumn[] columns,
 			MetadataBuildingContext buildingContext) {
 		this.ownerEntity = ownerEntity;
 		this.ownerProperty = ownerProperty;

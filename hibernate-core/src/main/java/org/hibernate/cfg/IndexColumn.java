@@ -17,7 +17,7 @@ import org.hibernate.mapping.Join;
  *
  * @author inger
  */
-public class IndexColumn extends Ejb3Column {
+public class IndexColumn extends AnnotatedColumn {
 	private int base;
 
 	// TODO move to a getter setter strategy for readability

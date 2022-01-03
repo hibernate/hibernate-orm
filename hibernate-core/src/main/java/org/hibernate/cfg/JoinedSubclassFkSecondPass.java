@@ -23,7 +23,7 @@ public class JoinedSubclassFkSecondPass extends FkSecondPass {
 
 	public JoinedSubclassFkSecondPass(
 			JoinedSubclass entity,
-			Ejb3JoinColumn[] inheritanceJoinedColumns,
+			AnnotatedJoinColumn[] inheritanceJoinedColumns,
 			SimpleValue key,
 			MetadataBuildingContext buildingContext) {
 		super( key, inheritanceJoinedColumns );

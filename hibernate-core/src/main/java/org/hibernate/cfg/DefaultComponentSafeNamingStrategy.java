@@ -12,7 +12,7 @@ import org.hibernate.internal.util.StringHelper;
 /**
  * @author Emmanuel Bernard
  */
-public class DefaultComponentSafeNamingStrategy extends EJB3NamingStrategy {
+public class DefaultComponentSafeNamingStrategy extends PersistenceStandardNamingStrategy {
 	public static final NamingStrategy INSTANCE = new DefaultComponentSafeNamingStrategy();
 
 	protected static String addUnderscores(String name) {

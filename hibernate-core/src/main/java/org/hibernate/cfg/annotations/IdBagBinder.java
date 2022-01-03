@@ -15,8 +15,8 @@ import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.BinderHelper;
-import org.hibernate.cfg.Ejb3Column;
-import org.hibernate.cfg.Ejb3JoinColumn;
+import org.hibernate.cfg.AnnotatedColumn;
+import org.hibernate.cfg.AnnotatedJoinColumn;
 import org.hibernate.cfg.IdGeneratorResolverSecondPass;
 import org.hibernate.cfg.PropertyData;
 import org.hibernate.cfg.PropertyInferredData;
@@ -47,10 +47,10 @@ public class IdBagBinder extends BagBinder {
 	protected boolean bindStarToManySecondPass(
 			Map persistentClasses,
 			XClass collType,
-			Ejb3JoinColumn[] fkJoinColumns,
-			Ejb3JoinColumn[] keyColumns,
-			Ejb3JoinColumn[] inverseColumns,
-			Ejb3Column[] elementColumns,
+			AnnotatedJoinColumn[] fkJoinColumns,
+			AnnotatedJoinColumn[] keyColumns,
+			AnnotatedJoinColumn[] inverseColumns,
+			AnnotatedColumn[] elementColumns,
 			boolean isEmbedded,
 			XProperty property,
 			boolean unique,
@@ -78,7 +78,7 @@ public class IdBagBinder extends BagBinder {
 				"id"
 		);
 
-		final Ejb3Column[] idColumns = Ejb3Column.buildColumnFromAnnotation(
+		final AnnotatedColumn[] idColumns = AnnotatedColumn.buildColumnFromAnnotation(
 				new Column[] { collectionIdAnn.column() },
 				null,
 				null,
@@ -90,7 +90,7 @@ public class IdBagBinder extends BagBinder {
 		);
 
 		//we need to make sure all id columns must be not-null.
-		for ( Ejb3Column idColumn:idColumns ) {
+		for ( AnnotatedColumn idColumn:idColumns ) {
 			idColumn.setNullable( false );
 		}
 

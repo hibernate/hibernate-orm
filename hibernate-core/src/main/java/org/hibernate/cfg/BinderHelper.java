@@ -111,7 +111,7 @@ public class BinderHelper {
 
 
 	public static void createSyntheticPropertyReference(
-			Ejb3JoinColumn[] columns,
+			AnnotatedJoinColumn[] columns,
 			PersistentClass ownerEntity,
 			PersistentClass associatedEntity,
 			Value value,
@@ -121,11 +121,11 @@ public class BinderHelper {
 		if ( columns[0].isImplicit() || StringHelper.isNotEmpty( columns[0].getMappedBy() ) ) {
 			return;
 		}
-		int fkEnum = Ejb3JoinColumn.checkReferencedColumnsType( columns, ownerEntity, context );
+		int fkEnum = AnnotatedJoinColumn.checkReferencedColumnsType( columns, ownerEntity, context );
 		PersistentClass associatedClass = columns[0].getPropertyHolder() != null ?
 				columns[0].getPropertyHolder().getPersistentClass() :
 				null;
-		if ( Ejb3JoinColumn.NON_PK_REFERENCE == fkEnum ) {
+		if ( AnnotatedJoinColumn.NON_PK_REFERENCE == fkEnum ) {
 			/**
 			 * Create a synthetic property to refer to including an
 			 * embedded component value containing all the properties
@@ -172,7 +172,7 @@ public class BinderHelper {
 				//TODO use a ToOne type doing a second select
 				StringBuilder columnsList = new StringBuilder();
 				columnsList.append( "referencedColumnNames(" );
-				for (Ejb3JoinColumn column : columns) {
+				for (AnnotatedJoinColumn column : columns) {
 					columnsList.append( column.getReferencedColumn() ).append( ", " );
 				}
 				columnsList.setLength( columnsList.length() - 2 );
@@ -237,7 +237,7 @@ public class BinderHelper {
 
 	private static List<Property> findPropertiesByColumns(
 			Object columnOwner,
-			Ejb3JoinColumn[] columns,
+			AnnotatedJoinColumn[] columns,
 			MetadataBuildingContext context) {
 		Map<Column, Set<Property>> columnsToProperty = new HashMap<>();
 		List<Column> orderedColumns = new ArrayList<>( columns.length );
@@ -256,7 +256,7 @@ public class BinderHelper {
 			);
 		}
 		//build the list of column names
-		for (Ejb3JoinColumn column1 : columns) {
+		for (AnnotatedJoinColumn column1 : columns) {
 			Column column = new Column(
 					context.getMetadataCollector().getPhysicalColumnName(
 							referencedTable,
@@ -801,7 +801,7 @@ public class BinderHelper {
 	public static Any buildAnyValue(
 			jakarta.persistence.Column discriminatorColumn,
 			Formula discriminatorFormula,
-			Ejb3JoinColumn[] keyColumns,
+			AnnotatedJoinColumn[] keyColumns,
 			PropertyData inferredData,
 			boolean cascadeOnDelete,
 			boolean lazy,
@@ -818,7 +818,7 @@ public class BinderHelper {
 
 		final BasicValueBinder discriminatorValueBinder = new BasicValueBinder( BasicValueBinder.Kind.ANY_DISCRIMINATOR, context );
 
-		final Ejb3Column[] discriminatorColumns = Ejb3Column.buildColumnFromAnnotation(
+		final AnnotatedColumn[] discriminatorColumns = AnnotatedColumn.buildColumnFromAnnotation(
 				new jakarta.persistence.Column[] { discriminatorColumn },
 				discriminatorFormula,
 				null,
@@ -860,7 +860,7 @@ public class BinderHelper {
 		keyValueBinder.setColumns( keyColumns );
 
 		if ( !optional ) {
-			for (Ejb3JoinColumn column : keyColumns) {
+			for (AnnotatedJoinColumn column : keyColumns) {
 				column.setNullable( false );
 			}
 		}
@@ -868,7 +868,7 @@ public class BinderHelper {
 		final BasicValue keyDescriptor = keyValueBinder.make();
 		value.setKey( keyDescriptor );
 		keyValueBinder.fillSimpleValue();
-		Ejb3Column.checkPropertyConsistency( keyColumns, propertyHolder.getEntityName() + "." + inferredData.getPropertyName() );
+		AnnotatedColumn.checkPropertyConsistency( keyColumns, propertyHolder.getEntityName() + "." + inferredData.getPropertyName() );
 		keyColumns[0].linkWithValue( keyDescriptor );
 
 		return value;

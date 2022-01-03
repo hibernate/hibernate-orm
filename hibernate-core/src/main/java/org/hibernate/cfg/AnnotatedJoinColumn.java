@@ -47,7 +47,7 @@ import org.hibernate.mapping.Value;
  *
  * @author Emmanuel Bernard
  */
-public class Ejb3JoinColumn extends Ejb3Column {
+public class AnnotatedJoinColumn extends AnnotatedColumn {
 	/**
 	 * property name related to this column
 	 */
@@ -89,13 +89,13 @@ public class Ejb3JoinColumn extends Ejb3Column {
 	}
 
 	//Due to @AnnotationOverride overriding rules, I don't want the constructor to be public
-	private Ejb3JoinColumn() {
+	private AnnotatedJoinColumn() {
 		setMappedBy( BinderHelper.ANNOTATION_STRING_DEFAULT );
 	}
 
 	//Due to @AnnotationOverride overriding rules, I don't want the constructor to be public
 	//TODO get rid of it and use setters
-	private Ejb3JoinColumn(
+	private AnnotatedJoinColumn(
 			String sqlType,
 			String name,
 			String comment,
@@ -134,14 +134,14 @@ public class Ejb3JoinColumn extends Ejb3Column {
 		return referencedColumn;
 	}
 
-	public static Ejb3JoinColumn[] buildJoinColumnsOrFormulas(
+	public static AnnotatedJoinColumn[] buildJoinColumnsOrFormulas(
 			JoinColumnOrFormula[] anns,
 			String mappedBy,
 			Map<String, Join> joins,
 			PropertyHolder propertyHolder,
 			String propertyName,
 			MetadataBuildingContext buildingContext) {
-		Ejb3JoinColumn [] joinColumns = new Ejb3JoinColumn[anns.length];
+		AnnotatedJoinColumn[] joinColumns = new AnnotatedJoinColumn[anns.length];
 		for (int i = 0; i < anns.length; i++) {
 			JoinColumnOrFormula join = anns[i];
 			JoinFormula formula = join.formula();
@@ -163,14 +163,14 @@ public class Ejb3JoinColumn extends Ejb3Column {
 	/**
 	 * build join formula
 	 */
-	public static Ejb3JoinColumn buildJoinFormula(
+	public static AnnotatedJoinColumn buildJoinFormula(
 			JoinFormula ann,
 			String mappedBy,
 			Map<String, Join> joins,
 			PropertyHolder propertyHolder,
 			String propertyName,
 			MetadataBuildingContext buildingContext) {
-		Ejb3JoinColumn formulaColumn = new Ejb3JoinColumn();
+		AnnotatedJoinColumn formulaColumn = new AnnotatedJoinColumn();
 		formulaColumn.setFormula( ann.value() );
 		formulaColumn.setReferencedColumn(ann.referencedColumnName());
 		formulaColumn.setBuildingContext( buildingContext );
@@ -181,7 +181,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 		return formulaColumn;
 	}
 
-	public static Ejb3JoinColumn[] buildJoinColumns(
+	public static AnnotatedJoinColumn[] buildJoinColumns(
 			JoinColumn[] anns,
 			Comment comment,
 			String mappedBy,
@@ -194,7 +194,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 		);
 	}
 
-	public static Ejb3JoinColumn[] buildJoinColumnsWithDefaultColumnSuffix(
+	public static AnnotatedJoinColumn[] buildJoinColumnsWithDefaultColumnSuffix(
 			JoinColumn[] anns,
 			Comment comment,
 			String mappedBy,
@@ -208,7 +208,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 		);
 		if ( actualColumns == null ) actualColumns = anns;
 		if ( actualColumns == null || actualColumns.length == 0 ) {
-			return new Ejb3JoinColumn[] {
+			return new AnnotatedJoinColumn[] {
 					buildJoinColumn(
 							null,
 							comment,
@@ -223,7 +223,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 		}
 		else {
 			int size = actualColumns.length;
-			Ejb3JoinColumn[] result = new Ejb3JoinColumn[size];
+			AnnotatedJoinColumn[] result = new AnnotatedJoinColumn[size];
 			for (int index = 0; index < size; index++) {
 				result[index] = buildJoinColumn(
 						actualColumns[index],
@@ -243,7 +243,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 	/**
 	 * build join column for SecondaryTables
 	 */
-	private static Ejb3JoinColumn buildJoinColumn(
+	private static AnnotatedJoinColumn buildJoinColumn(
 			JoinColumn ann,
 			Comment comment,
 			String mappedBy, Map<String, Join> joins,
@@ -258,7 +258,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 								+ BinderHelper.getRelativePath( propertyHolder, propertyName )
 				);
 			}
-			Ejb3JoinColumn joinColumn = new Ejb3JoinColumn();
+			AnnotatedJoinColumn joinColumn = new AnnotatedJoinColumn();
 			joinColumn.setComment( comment != null ? comment.value() : null );
 			joinColumn.setBuildingContext( buildingContext );
 			joinColumn.setJoinAnnotation( ann, null );
@@ -274,7 +274,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			return joinColumn;
 		}
 		else {
-			Ejb3JoinColumn joinColumn = new Ejb3JoinColumn();
+			AnnotatedJoinColumn joinColumn = new AnnotatedJoinColumn();
 			joinColumn.setMappedBy( mappedBy );
 			joinColumn.setJoins( joins );
 			joinColumn.setPropertyHolder( propertyHolder );
@@ -335,7 +335,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 	/**
 	 * Build JoinColumn for a JOINED hierarchy
 	 */
-	public static Ejb3JoinColumn buildJoinColumn(
+	public static AnnotatedJoinColumn buildJoinColumn(
 			PrimaryKeyJoinColumn pkJoinAnn,
 			JoinColumn joinAnn,
 			Value identifier,
@@ -381,7 +381,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			else {
 				name = context.getObjectNameNormalizer().normalizeIdentifierQuotingAsString( colName );
 			}
-			return new Ejb3JoinColumn(
+			return new AnnotatedJoinColumn(
 					sqlType,
 					name,
 					null,
@@ -401,7 +401,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 		}
 		else {
 			defaultName = context.getObjectNameNormalizer().normalizeIdentifierQuotingAsString( defaultName );
-			return new Ejb3JoinColumn(
+			return new AnnotatedJoinColumn(
 					null,
 					defaultName,
 					null,
@@ -439,7 +439,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 	}
 
 	public static void checkIfJoinColumn(Object columns, PropertyHolder holder, PropertyData property) {
-		if ( !( columns instanceof Ejb3JoinColumn[] ) ) {
+		if ( !( columns instanceof AnnotatedJoinColumn[] ) ) {
 			throw new AnnotationException(
 					"@Column cannot be used on an association property: "
 							+ holder.getEntityName()
@@ -625,7 +625,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 
 						@Override
 						public MetadataBuildingContext getBuildingContext() {
-							return Ejb3JoinColumn.this.getBuildingContext();
+							return AnnotatedJoinColumn.this.getBuildingContext();
 						}
 					}
 			);
@@ -705,7 +705,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 
 						@Override
 						public MetadataBuildingContext getBuildingContext() {
-							return Ejb3JoinColumn.this.getBuildingContext();
+							return AnnotatedJoinColumn.this.getBuildingContext();
 						}
 					}
 			);
@@ -731,7 +731,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 					new ImplicitPrimaryKeyJoinColumnNameSource() {
 						@Override
 						public MetadataBuildingContext getBuildingContext() {
-							return Ejb3JoinColumn.this.getBuildingContext();
+							return AnnotatedJoinColumn.this.getBuildingContext();
 						}
 
 						@Override
@@ -812,7 +812,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 	public static final int NON_PK_REFERENCE = 2;
 
 	public static int checkReferencedColumnsType(
-			Ejb3JoinColumn[] columns,
+			AnnotatedJoinColumn[] columns,
 			PersistentClass referencedEntity,
 			MetadataBuildingContext context) {
 		//convenient container to find whether a column is an id one or not
@@ -847,7 +847,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 				( (PersistentClass) columnOwner ).getTable() :
 				( (Join) columnOwner ).getTable();
 		//check each referenced column
-		for (Ejb3JoinColumn ejb3Column : columns) {
+		for (AnnotatedJoinColumn ejb3Column : columns) {
 			String logicalReferencedColumnName = ejb3Column.getReferencedColumn();
 			if ( StringHelper.isNotEmpty( logicalReferencedColumnName ) ) {
 				String referencedColumnName;
@@ -914,16 +914,16 @@ public class Ejb3JoinColumn extends Ejb3Column {
 		super.redefineColumnName( columnName, null, applyNamingStrategy );
 	}
 
-	public static Ejb3JoinColumn[] buildJoinTableJoinColumns(
+	public static AnnotatedJoinColumn[] buildJoinTableJoinColumns(
 			JoinColumn[] annJoins,
 			Map<String, Join> secondaryTables,
 			PropertyHolder propertyHolder,
 			String propertyName,
 			String mappedBy,
 			MetadataBuildingContext buildingContext) {
-		Ejb3JoinColumn[] joinColumns;
+		AnnotatedJoinColumn[] joinColumns;
 		if ( annJoins == null ) {
-			Ejb3JoinColumn currentJoinColumn = new Ejb3JoinColumn();
+			AnnotatedJoinColumn currentJoinColumn = new AnnotatedJoinColumn();
 			currentJoinColumn.setImplicit( true );
 			currentJoinColumn.setNullable( false ); //I break the spec, but it's for good
 			currentJoinColumn.setPropertyHolder( propertyHolder );
@@ -935,18 +935,18 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			currentJoinColumn.setMappedBy( mappedBy );
 			currentJoinColumn.bind();
 
-			joinColumns = new Ejb3JoinColumn[] {
+			joinColumns = new AnnotatedJoinColumn[] {
 					currentJoinColumn
 
 			};
 		}
 		else {
-			joinColumns = new Ejb3JoinColumn[annJoins.length];
+			joinColumns = new AnnotatedJoinColumn[annJoins.length];
 			JoinColumn annJoin;
 			int length = annJoins.length;
 			for (int index = 0; index < length; index++) {
 				annJoin = annJoins[index];
-				Ejb3JoinColumn currentJoinColumn = new Ejb3JoinColumn();
+				AnnotatedJoinColumn currentJoinColumn = new AnnotatedJoinColumn();
 				currentJoinColumn.setImplicit( true );
 				currentJoinColumn.setPropertyHolder( propertyHolder );
 				currentJoinColumn.setJoins( secondaryTables );

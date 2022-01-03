@@ -17,14 +17,14 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
  *
  * @author Emmanuel Bernard
  */
-public class Ejb3DiscriminatorColumn extends Ejb3Column {
+public class AnnotatedDiscriminatorColumn extends AnnotatedColumn {
 	public static final String DEFAULT_DISCRIMINATOR_COLUMN_NAME = "DTYPE";
 	public static final String DEFAULT_DISCRIMINATOR_TYPE = "string";
 	private static final long DEFAULT_DISCRIMINATOR_LENGTH = 31;
 
 	private String discriminatorTypeName;
 
-	public Ejb3DiscriminatorColumn() {
+	public AnnotatedDiscriminatorColumn() {
 		//discriminator default value
 		super();
 		setLogicalColumnName( DEFAULT_DISCRIMINATOR_COLUMN_NAME );
@@ -41,11 +41,11 @@ public class Ejb3DiscriminatorColumn extends Ejb3Column {
 		this.discriminatorTypeName = discriminatorTypeName;
 	}
 
-	public static Ejb3DiscriminatorColumn buildDiscriminatorColumn(
+	public static AnnotatedDiscriminatorColumn buildDiscriminatorColumn(
 			DiscriminatorType type, DiscriminatorColumn discAnn,
 			DiscriminatorFormula discFormulaAnn,
 			MetadataBuildingContext context) {
-		Ejb3DiscriminatorColumn discriminatorColumn = new Ejb3DiscriminatorColumn();
+		AnnotatedDiscriminatorColumn discriminatorColumn = new AnnotatedDiscriminatorColumn();
 		discriminatorColumn.setBuildingContext( context );
 		discriminatorColumn.setImplicit( true );
 		if ( discFormulaAnn != null ) {

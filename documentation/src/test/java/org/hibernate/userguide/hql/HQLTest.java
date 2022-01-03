@@ -2868,6 +2868,54 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	public void test_hql_limit_example() {
+
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			//tag::hql-limit-example[]
+			List<Call> calls1 = entityManager.createQuery(
+				"select c " +
+				"from Call c " +
+				"join c.phone p " +
+				"order by p.number " +
+				"limit 50",
+				Call.class)
+			.getResultList();
+
+			// same thing
+			List<Call> calls2 = entityManager.createQuery(
+				"select c " +
+				"from Call c " +
+				"join c.phone p " +
+				"order by p.number " +
+				"fetch first 50 rows only",
+				Call.class)
+			.getResultList();
+			//end::hql-limit-example[]
+		});
+	}
+
+	@Test
+	public void test_hql_bad_limit_example() {
+
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			//tag::hql-bad-limit-example[]
+			// don't do this!
+			List<Phone> wrongCalls = entityManager.createQuery(
+				"select p " +
+				"from Phone p " +
+				// join fetch should not be used with limit
+				"join fetch p.calls " +
+				// but if you insist, at least sort by the collection owner
+				"order by p " +
+				// this won't be the final number of results!
+				"limit 50",
+				Phone.class)
+			.getResultList();
+			//end::hql-bad-limit-example[]
+		});
+	}
+
+	@Test
 	public void test_hql_read_only_entities_example() {
 
 		doInJPA(this::entityManagerFactory, entityManager -> {

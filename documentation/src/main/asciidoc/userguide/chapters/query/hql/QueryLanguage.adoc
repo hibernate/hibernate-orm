@@ -2007,19 +2007,14 @@ include::{sourcedir}/HQLTest.java[tags=hql-order-by-example]
 ----
 ====
 
+Queries with an ordered result list may have limits or pagination.
+
 [[hql-limit-offset]]
-=== Limits and offsets
+==== Limits and offsets
 
 It's often useful to place a hard upper limit on the number of results that may be returned by a query.
-
-[NOTE]
-====
-_Limiting_ certainly _isn't_ a well-defined relational operation, and must be used with care.
-
-A limit can easily break the semantics of certain other features of HQL, including <<hql-explicit-fetch-join,fetch joins>>.
-====
-
-The `limit` and `offset` clauses are an alternative to the use of `setMaxResults()` and `setFirstResult()` respectively.
+The `limit` and `offset` clauses are an alternative to the use of `setMaxResults()` and `setFirstResult()` respectively,
+and also may be used for <<jpql-pagination>>.
 
 [TIP]
 ====
@@ -2037,5 +2032,40 @@ The BNF is a bit complicated:
 include::{extrasdir}/limit_offset_bnf.txt[]
 ----
 ====
+
+These two queries are identical:
+
+[[hql-limit-example]]
+//.Order by example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-limit-example]
+----
+====
+
+These are well-defined limits: the number of results returned by `getMaxResults()` will be limited to 50, as promised.
+But not every query is quite so well-behaved.
+
+[NOTE]
+====
+_Limiting_ certainly _isn't_ a well-defined relational operation, and must be used with care.
+
+A limit can easily break the semantics of certain other features of HQL, including <<hql-explicit-fetch-join,fetch joins>>.
+====
+
+This next query is accepted by HQL, but the last `Phone` in the result list might have an incomplete collection of phones:
+
+[[hql-bad-limit-example]]
+//.Order by example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-bad-limit-example]
+----
+====
+
+The `limit 50` here refers to the total number of rows returned from the database.
+The final number of ``Phone``s returned by `getResultList()` will be fewer, after Hibernate eliminates duplicate ``Phone``s from the result list.
 
 In the next chapter we'll see a completely different way to write queries in Hibernate.

@@ -253,8 +253,8 @@ An `insert` statement must be executed by calling `Query#executeUpdate()`.
 ====
 `insert` statements are inherently _not_ polymorphic!
 The `targetFields` list is of fixed length, whereas each subclass of an entity class might declare additional fields.
-For an entity involved in a mapped inheritance hierarchy, only attributes declared directly by the named entity may be used in the list of target fields.
-Superclass attributes are not allowed, and subclass attributes do not make sense.
+If the entity is involved in a mapped inheritance hierarchy, only attributes declared directly by the named entity and its superclasses may occur in the list of target fields.
+Attributes declared by subclasses may not occur.
 ====
 
 The `queryExpression` may be any valid `select` query, with the caveat that the types of the values in the `select` list must match the types of the target fields.

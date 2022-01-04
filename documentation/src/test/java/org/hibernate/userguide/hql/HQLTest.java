@@ -215,7 +215,15 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-insert-example[]
 			entityManager.createQuery(
-				"insert Person (id, name) values (100L, 'Jane Doe')")
+				"insert Person (id, name) " +
+				"values (100L, 'Jane Doe')")
+			.executeUpdate();
+
+			entityManager.createQuery(
+				"insert Person (id, name) " +
+				"values (101L, 'J A Doe III'), " +
+					"(102L, 'J X Doe'), " +
+					"(103L, 'John Doe, Jr')")
 			.executeUpdate();
 			//end::hql-insert-example[]
 		});

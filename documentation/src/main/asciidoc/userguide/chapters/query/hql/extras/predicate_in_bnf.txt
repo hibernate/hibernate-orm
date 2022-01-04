@@ -1,7 +1,7 @@
-expression NOT? IN inList
+expression "NOT"? "IN" inList
 
 inList
-	: (ELEMENTS|INDICES) LEFT_PAREN dotIdentifierSequence RIGHT_PAREN
-	| LEFT_PAREN (expression (COMMA expression)*)? RIGHT_PAREN
-	| LEFT_PAREN subquery RIGHT_PAREN
+	: ("ELEMENTS"|"INDICES") "(" simplePath ")"
+	| "(" (expression ("," expression)*)? ")"
+	| "(" subquery ")"
 	| parameter

@@ -1882,6 +1882,16 @@ The `group by` clause looks quite similar to the `select` clause&mdash;it has a 
 - if there's just one item, then the query will have a single result for each unique value of that item, or
 - if there are multiple items, the query will have a result for each unique _combination_ or their values.
 
+The BNF for a grouped item is just:
+
+[[hql-group-by-item-bnf]]
+====
+[source, antlrv4, indent=0]
+----
+include::{extrasdir}/group_by_item_bnf.txt[]
+----
+====
+
 Consider the following queries:
 
 [[hql-group-by-example]]

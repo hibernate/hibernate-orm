@@ -1,10 +1,10 @@
-sortExpression orderingSpecification? nullsPrecedence?
+sortExpression sortDirection? nullsPrecedence?
 
 sortExpression
     : identifier | INTEGER_LITERAL | expression
 
-orderingSpecification
-    : ASC | DESC
+sortDirection
+    : "ASC" | "DESC"
 
 nullsPrecedence
-    : NULLS (FIRST | LAST)
+    : "NULLS" ("FIRST" | "LAST")

@@ -26,7 +26,12 @@ Case sensitivity depends on the language element:
 - keywords, identification variable names, and function names are case-insensitive, but
 - Java class names, and the names of attributes of Java classes, are case-sensitive.
 
-So `SeLeCT` is the same as `sELEct` is the same as `select`, but `org.hibernate.eg.FOO` and `org.hibernate.eg.Foo` are different, as are `foo.barSet` and `foo.BARSET`.
+Just to reiterate these rules:
+
+* `select`, `SeLeCT`, `sELEct`, and `SELECT` are all the same, but
+* `from BackPack` and `from Backpack` are different, referring to different Java classes, and similarly,
+* `person.nickName` and `person.nickname` are different, since the path expression element `nickName` refers to an attribute of an entity defined in Java, and finally,
+* a bit confusingly perhaps, `person.nickName`, `Person.nickName`, and `PERSON.nickName` are all the _same_, since the first element of a path expression is an <<hql-identification-variables,identification variable>>.
 
 [NOTE]
 ====

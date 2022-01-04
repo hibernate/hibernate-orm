@@ -985,7 +985,9 @@ genericFunction
 	;
 
 /**
- * The name of a generic function
+ * The name of a generic function, which may contain periods and quoted identifiers
+ *
+ * Names of generic functions are resolved against the SqmFunctionRegistry
  */
 genericFunctionName
 	: simplePath

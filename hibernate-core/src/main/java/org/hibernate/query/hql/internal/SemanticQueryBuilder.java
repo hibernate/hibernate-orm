@@ -3156,8 +3156,18 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	@Override
+	public String visitGenericFunctionName(HqlParser.GenericFunctionNameContext ctx) {
+		StringBuilder functionName = new StringBuilder( visitIdentifier( ctx.simplePath().identifier() ) );
+		for ( HqlParser.SimplePathElementContext sp: ctx.simplePath().simplePathElement() ) {
+			// allow function names of form foo.bar to be located in the registry
+			functionName.append('.').append( visitIdentifier( sp.identifier() ) );
+		}
+		return functionName.toString();
+	}
+
+	@Override
 	public Object visitGenericFunction(HqlParser.GenericFunctionContext ctx) {
-		final String originalFunctionName = ctx.getChild( 0 ).getText();
+		final String originalFunctionName = visitGenericFunctionName( ctx.genericFunctionName() );
 		final String functionName = originalFunctionName.toLowerCase();
 		if ( creationOptions.useStrictJpaCompliance() && !JPA_STANDARD_FUNCTIONS.contains( functionName ) ) {
 			throw new StrictJpaComplianceViolation(

@@ -99,7 +99,7 @@ public class CommonFunctionFactory {
 	}
 
 	/**
-	 * For Oracle
+	 * For Oracle and HANA
 	 */
 	public static void log10_log(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "log10", "log(10,?1)" )

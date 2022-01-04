@@ -289,6 +289,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		CommonFunctionFactory.cosh( queryEngine );
 		CommonFunctionFactory.sinh( queryEngine );
 		CommonFunctionFactory.tanh( queryEngine );
+		CommonFunctionFactory.log10_log( queryEngine );
 		CommonFunctionFactory.bitand( queryEngine );
 		CommonFunctionFactory.hourMinuteSecond( queryEngine );
 		CommonFunctionFactory.yearMonthDay( queryEngine );
@@ -1104,6 +1105,11 @@ public abstract class AbstractHANADialect extends Dialect {
 			default:
 				return "?1s_between(?2,?3)";
 		}
+	}
+
+	@Override
+	public String generatedAs(String generatedAs) {
+		return " generated always as (" + generatedAs + ")";
 	}
 
 	public boolean isUseUnicodeStringTypes() {

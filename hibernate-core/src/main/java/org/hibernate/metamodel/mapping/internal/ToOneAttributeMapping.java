@@ -1408,7 +1408,7 @@ public class ToOneAttributeMapping
 						creationContext
 				),
 				(np, tableExpression) -> {
-					if ( !canUseParentTableGroup ) {
+					if ( !canUseParentTableGroup || tableGroupProducer != ToOneAttributeMapping.this ) {
 						return false;
 					}
 					NavigablePath path = np.getParent();

@@ -232,10 +232,10 @@ Delete statements are polymorphic, and affect mapped subclasses of the given ent
 
 There are two kinds of `insert` statement:
 
-- `insert ... values`, where the attribute values to insert are given directly, and
+- `insert ... values`, where the attribute values to insert are given directly as tuples, and
 - `insert ... select`, where the inserted attribute values are sourced from a subquery.
 
-The first form inserts a single row in the database.
+The first form inserts a single row in the database, or multiple rows if you provide multiple tuples in the `values` clause.
 The second form may insert many new rows, or none at all.
 
 [TIP]

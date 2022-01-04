@@ -1,1 +1,11 @@
-updateStatement : UPDATE VERSIONED? targetEntity setClause whereClause?
+updateStatement
+    : "UPDATE" "VERSIONED"? targetEntity setClause whereClause?
+
+targetEntity
+	: entityName variable?
+
+setClause
+	: "SET" assignment ("," assignment)*
+
+assignment
+    : simplePath "=" expression

@@ -5,7 +5,7 @@ queryExpression
 	: orderedQuery (setOperator orderedQuery)*
 
 orderedQuery
-	: (query | LEFT_PAREN queryExpression RIGHT_PAREN) queryOrder?
+	: (query | "(" queryExpression ")") queryOrder?
 
 query
 	: selectClause fromClause? whereClause? (groupByClause havingClause?)?

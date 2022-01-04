@@ -1,7 +1,7 @@
 (expression | instantiation) alias?
 
 instantiation
-    : NEW instantiationTarget LEFT_PAREN instantiationArgs RIGHT_PAREN
+    : "NEW" instantiationTarget "(" instantiationArguments ")"
 
 alias
-    : AS? IDENTIFIER
+    : "AS"? IDENTIFIER

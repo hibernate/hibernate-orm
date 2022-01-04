@@ -933,6 +933,75 @@ The syntax is `format(datetime as pattern)`, and the pattern must be written in 
 
 For a full list of `format()` pattern elements, see the Javadoc for https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/dialect/Dialect.html#appendDatetimeFormat[`Dialect#appendDatetimeFormat`].
 
+[[hql-collection-qualification]]
+==== Collection elements, map keys, and list indexes
+
+The following functions may be applied to a collection-valued path expression to obtain a reference to a list index or map key.
+
+|===
+| Function | Applies to | Interpretation | Notes
+
+| `value()` | Any collection | The collection element or map entry value
+| Always optional, and useful only to explicitly indicate intent.
+| `index()` | Any `List` with an index column | The index of the element in the list
+| For backward compatibility, it's also an alternative to ``key()``, when applied to a map.
+| `key()` | Any `Map` | The key of the entry in the list | If the key is of entity type, it may be further navigated.
+| `entry()` | Any `Map` | The map entry, that is, the `Map.Entry` of key and value.
+| Only legal as a terminal path, and only allowed in the `select` clause.
+|===
+
+NOTE: Of these, only `index()` is defined by the JPQL specification.
+
+[[hql-collection-qualification-example]]
+//.Qualified collection references example
+====
+[source, JAVA, indent=0]
+----
+include::{modeldir}/Phone.java[tags=hql-collection-qualification-example, indent=0]
+
+include::{sourcedir}/HQLTest.java[tags=hql-collection-qualification-example, indent=0]
+----
+====
+
+An element of an indexed collection (an array, list, or map) may even be identified using the index operator:
+
+[[hql-collection-index-operator-example]]
+//.Index operator examples
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-collection-index-operator-example]
+----
+====
+
+There are even more functions which accept a collection-valued attribute or to-many association:
+
+|===
+| HQL Function | Applies to | Purpose
+
+| `size()` | Any collection | The size of the collection.
+| `maxelement()` | Collections of basic type | The maximum element as determined by applying the `max()` SQL aggregation.
+| `minelement()` | Collections of basic type | The minimum element as determined by applying the `min()` SQL aggregation.
+| `maxindex()` | Indexed collections (lists and maps) | The maximum index (key/position) as determined by applying the `max()` SQL aggregation.
+| `minindex()` | Indexed collections (lists and maps) | The minimum index (key/position) as determined by applying the `min()` SQL aggregation.
+|===
+
+We've intentionally left two functions off this list, so we can come back to them <<hql-elements-indices,later>>.
+
+[[hql-collection-expressions-example]]
+//.Collection-related expressions examples
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-collection-expressions-example]
+----
+====
+
+[TIP]
+====
+These operations can almost always be written in another way, without the use of these convenience functions.
+====
+
 [[hql-more-functions]]
 ==== More HQL functions
 
@@ -974,7 +1043,7 @@ Next, functions for working with numeric values:
 | `greatest()` | Return the largest of the given arguments | `greatest(x, y, z)` | Very common in SQL dialects
 |===
 
-Functions that evaluate to id, version, or natural id of an entity:
+Finally, functions that evaluate the id, version, or natural id of an entity:
 
 |===
 | HQL Function | Purpose
@@ -983,36 +1052,6 @@ Functions that evaluate to id, version, or natural id of an entity:
 | `version()` | The value of the entity `@Version` attribute.
 | `naturalid()` | The value of the entity `@NaturalId` attribute.
 |===
-
-Finally, specialized functions for working with collection-valued attributes and to-many associations:
-
-|===
-| HQL Function | Applies to | Purpose
-
-| `size()` | Any collection | The size of the collection.
-| `maxelement()` | Collections of basic type | The maximum element as determined by applying the `max()` SQL aggregation.
-| `minelement()` | Collections of basic type | The minimum element as determined by applying the `min()` SQL aggregation.
-| `maxindex()` | Indexed collections (lists and maps) | The maximum index (key/position) as determined by applying the `max()` SQL aggregation.
-| `minindex()` | Indexed collections (lists and maps) | The minimum index (key/position) as determined by applying the `min()` SQL aggregation.
-|===
-
-We've intentionally left two functions off this list, so we can come back to them <<hql-elements-indices,later>>.
-
-[[hql-collection-expressions-example]]
-//.Collection-related expressions examples
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/HQLTest.java[tags=hql-collection-expressions-example]
-----
-====
-
-[TIP]
-====
-These operations can almost always be written in another way, without the use of these convenience functions.
-====
-
-See also <<hql-collection-qualification>>.
 
 [[hql-user-defined-functions]]
 ==== Native and user-defined functions
@@ -1630,50 +1669,7 @@ include::{sourcedir}/HQLTest.java[tags=hql-collection-valued-associations]
 
 In the example, the identification variable `ph` actually refers to the object model type `Phone`, which is the type of the elements of the `Person#phones` association.
 
-But there _is_ a way to refer to the keys or indexes of a collection.
-
-[[hql-collection-qualification]]
-==== Collection elements, map keys, and list indexes
-
-The following functions may be applied to a collection valued path expression to obtain a reference to a list index or map key.
-
-|===
-| Function | Applies to | Interpretation | Notes
-
-| `value()` | Any collection | The collection element or map entry value
-| Always optional, and useful only to explicitly indicate intent.
-| `index()` | Any `List` with an index column | The index of the element in the list
-| For backward compatibility, it's also an alternative to ``key()``, when applied to a map.
-| `key()` | Any `Map` | The key of the entry in the list | If the key is of entity type, it may be further navigated.
-| `entry()` | Any `Map` | The map entry, that is, the `Map.Entry` of key and value.
-| Only legal as a terminal path, and only allowed in the `select` clause.
-|===
-
-NOTE: Of these, only `index()` is defined by the JPQL specification.
-
-[[hql-collection-qualification-example]]
-//.Qualified collection references example
-====
-[source, JAVA, indent=0]
-----
-include::{modeldir}/Phone.java[tags=hql-collection-qualification-example, indent=0]
-
-include::{sourcedir}/HQLTest.java[tags=hql-collection-qualification-example, indent=0]
-----
-====
-
-An element of an indexed collections (an array, list, or map) may even be identified using the index operator:
-
-[[hql-collection-index-operator-example]]
-//.Index operator examples
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/HQLTest.java[tags=hql-collection-index-operator-example]
-----
-====
-
-See <<hql-more-functions>> for additional collection-related functions.
+But there _is_ a way to refer to the keys or indexes of a collection, as we've already seen in <<hql-collection-qualification>>.
 
 [[hql-select-clause]]
 === Projection: `select`

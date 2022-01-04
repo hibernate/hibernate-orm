@@ -8,9 +8,18 @@
 package org.hibernate.spatial.testing.dialects.oracle;
 
 
-import org.hibernate.spatial.testing.AbstractExpectationsFactory;
+import java.util.Map;
+
+import org.hibernate.spatial.CommonSpatialFunction;
+import org.hibernate.spatial.GeomCodec;
 import org.hibernate.spatial.testing.datareader.TestData;
 import org.hibernate.spatial.testing.datareader.TestSupport;
+import org.hibernate.spatial.testing.dialects.NativeSQLTemplates;
+import org.hibernate.spatial.testing.dialects.PredicateRegexes;
+
+import org.geolatte.geom.Geometry;
+import org.geolatte.geom.codec.db.oracle.Decoders;
+import org.geolatte.geom.codec.db.oracle.SDOGeometry;
 
 /**
  * @author Karel Maesen, Geovise BVBA
@@ -19,8 +28,27 @@ import org.hibernate.spatial.testing.datareader.TestSupport;
 public class OracleSDOTestSupport extends TestSupport {
 
 	@Override
+	public NativeSQLTemplates templates() {
+		return new OracleSDONativeSqlTemplates();
+	}
+
+	@Override
+	public PredicateRegexes predicateRegexes() {
+		return new PredicateRegexes( "st_" );
+	}
+
+	@Override
 	public TestData createTestData(TestDataPurpose purpose) {
 		return TestData.fromFile( "oracle10g/test-sdo-geometry-data-set-2D.xml", new SDOTestDataReader() );
+	}
+
+	public GeomCodec codec() {
+		return new GeomCodec() {
+			@Override
+			public Geometry<?> toGeometry(Object in) {
+				return Decoders.decode( (SDOGeometry) in );
+			}
+		};
 	}
 
 }

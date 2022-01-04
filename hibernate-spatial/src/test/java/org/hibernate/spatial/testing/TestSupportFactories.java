@@ -12,6 +12,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.spatial.testing.datareader.TestSupport;
 import org.hibernate.spatial.testing.dialects.cockroachdb.CockroachDBTestSupport;
@@ -66,6 +67,10 @@ public class TestSupportFactories {
 			return H2GisTestSupport.class;
 		}
 
+		if ( OracleDialect.class.isAssignableFrom( dialect.getClass() ) ) {
+			return OracleSDOTestSupport.class;
+		}
+
 		if ( "org.hibernate.spatial.dialect.sqlserver.SqlServer2008SpatialDialect".equals( canonicalName ) ) {
 			return SQLServerTestSupport.class;
 		}
@@ -73,10 +78,7 @@ public class TestSupportFactories {
 			return SQLServerTestSupport.class;
 		}
 
-		if ( "org.hibernate.spatial.dialect.oracle.OracleSpatial10gDialect".equals( canonicalName ) ||
-				"org.hibernate.spatial.dialect.oracle.OracleSpatialSDO10gDialect".equals( canonicalName ) ) {
-			return OracleSDOTestSupport.class;
-		}
+
 		if ( "org.hibernate.spatial.dialect.hana.HANASpatialDialect".equals( canonicalName ) ) {
 			return HANATestSupport.class;
 		}

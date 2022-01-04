@@ -9,12 +9,15 @@ package org.hibernate.spatial.dialect.oracle;
 
 import java.sql.Types;
 
+import org.hibernate.spatial.GeometryLiteralFormatter;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
+import org.geolatte.geom.codec.Wkt;
 import org.geolatte.geom.codec.db.oracle.OracleJDBCTypeFactory;
 
 /**
@@ -46,8 +49,13 @@ public class SDOGeometryType implements JdbcType {
 	}
 
 	@Override
-	public <X> ValueBinder<X> getBinder(final JavaType<X> javaType) {
-		return (ValueBinder<X>) new SDOGeometryValueBinder( javaType, this, typeFactory );
+	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaTypeDescriptor) {
+		return new GeometryLiteralFormatter<T>( javaTypeDescriptor, Wkt.Dialect.SFA_1_1_0, "ST_GeomFromText" );
+	}
+
+	@Override
+	public <X> ValueBinder<X> getBinder(final JavaType<X> javaTypeDescriptor) {
+		return (ValueBinder<X>) new SDOGeometryValueBinder( javaTypeDescriptor, this, typeFactory );
 	}
 
 	@Override

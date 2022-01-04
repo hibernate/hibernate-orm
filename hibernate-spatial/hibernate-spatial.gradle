@@ -46,7 +46,10 @@ tasks.test {
 			   'cockroachdb',
 			   'mariadb',
 			   'mysql_ci',
-			   'mysql_docker'
+			   'mysql_docker',
+				'oracle_docker',
+				'oracle_ci',
+				'oracle_rds'
 	].contains( project.db )
 }
 

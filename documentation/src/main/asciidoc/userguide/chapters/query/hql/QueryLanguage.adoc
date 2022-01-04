@@ -19,9 +19,14 @@ We don't recommend the use of this setting.
 HQL (and JPQL) are loosely based on SQL and are easy to learn for anyone familiar with SQL.
 
 [[hql-case-sensitivity]]
-=== Case Sensitivity
+=== Identifiers and case sensitivity
 
-Case sensitivity depends on the language element:
+An identifier is a name used to refer to an entity, an attribute of a Java class, an <<hql-identification-variables,identification variable>>, or a function.
+
+For example, `Person`, `name`, `p`, and `upper` are all identifiers, but they refer to different kinds of things.
+In HQL and JPQL, the case sensitivity of an identifier depends on the kind of thing the identifier refers to.
+
+The rules for case sensitivity are:
 
 - keywords, identification variable names, and function names are case-insensitive, but
 - Java class names, and the names of attributes of Java classes, are case-sensitive.
@@ -39,6 +44,8 @@ It is standard practice to use lowercase keywords in HQL and JPQL.
 
 The use of uppercase keywords indicates an endearing but unhealthy attachment to the culture of the 1970's.
 ====
+
+A _quoted identifier_ is written in backticks. Quoting lets you use a keyword as an identifier, for example `` thing.\`select` ``.
 
 [[hql-statement-types]]
 === Statement types

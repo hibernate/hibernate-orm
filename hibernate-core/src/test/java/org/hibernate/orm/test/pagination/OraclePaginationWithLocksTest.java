@@ -142,7 +142,7 @@ public class OraclePaginationWithLocksTest {
 							.setMaxResults( 10 )
 							.getResultList();
 					assertEquals( 10, people.size() );
-					assertTrue( mostRecentStatementInspector.sqlContains( "fetch" ) );
+					assertTrue( mostRecentStatementInspector.sqlContains( "rownum" ) );
 				}
 		);
 
@@ -183,7 +183,7 @@ public class OraclePaginationWithLocksTest {
 							.setMaxResults( 10 )
 							.getResultList();
 					assertEquals( 10, people.size() );
-					assertTrue( mostRecentStatementInspector.sqlContains( "fetch" ) );
+					assertTrue( mostRecentStatementInspector.sqlContains( "rownum" ) );
 				}
 		);
 
@@ -219,7 +219,7 @@ public class OraclePaginationWithLocksTest {
 							.setMaxResults( 10 )
 							.getResultList();
 					assertEquals( 1, people.size() );
-					assertTrue( mostRecentStatementInspector.sqlContains( "fetch" ) );
+					assertTrue( mostRecentStatementInspector.sqlContains( "rownum" ) );
 				}
 		);
 

@@ -179,10 +179,10 @@ public abstract class SqmQueryPart<T> implements SqmVisitableNode, JpaQueryPart<
 					sb.append( " rows with ties" );
 					break;
 				case PERCENT_ONLY:
-					sb.append( " percent only" );
+					sb.append( " percent rows only" );
 					break;
 				case PERCENT_WITH_TIES:
-					sb.append( " percent with ties" );
+					sb.append( " percent rows with ties" );
 					break;
 			}
 		}

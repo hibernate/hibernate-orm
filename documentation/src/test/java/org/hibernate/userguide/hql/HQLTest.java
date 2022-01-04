@@ -1931,7 +1931,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 			List<Person> persons = entityManager.createQuery(
 				"select p " +
 				"from Person p " +
-				"where p.phones[0].type = 'LAND_LINE'",
+				"where p.phones[0].type = LAND_LINE",
 				Person.class)
 			.getResultList();
 			//end::hql-collection-index-operator-example[]

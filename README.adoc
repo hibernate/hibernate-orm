@@ -142,3 +142,73 @@ The command for running tests could look like the following:
 ----
 gradlew test -Pdb=pgsql_ci "-DdbHost=192.168.99.100"
 ----
+
+The following table illustrates a list of commands for various databases that can be tested locally.
+
+|===
+|Database |`docker_db.sh` |Gradle command
+
+|H2
+|-
+|`gradlew test -Pdb=h2`
+
+|HSQLDB
+|-
+|`gradlew test -Pdb=hsqldb`
+
+|Apache Derby
+|-
+|`gradlew test -Pdb=derby`
+
+|MySQL 5.7
+|`./docker_db.sh mysql_5_7`
+|`gradlew test -Pdb=mysql_ci`
+
+|MySQL 8.0
+|`./docker_db.sh mysql_8_0`
+|`gradlew test -Pdb=mysql_ci`
+
+|MariaDB
+|`./docker_db.sh mariadb`
+|`gradlew test -Pdb=mariadb_ci`
+
+|PostgreSQL 9.5
+|`./docker_db.sh postgresql_9_5`
+|`gradlew test -Pdb=pgsql_ci`
+
+|PostgreSQL 13
+|`./docker_db.sh postgresql_13`
+|`gradlew test -Pdb=pgsql_ci`
+
+|EnterpriseDB
+|`./docker_db.sh edb`
+|`gradlew test -Pdb=edb_ci`
+
+|Oracle XE
+|`./docker_db.sh oracle`
+|`gradlew test -Pdb=oracle_ci`
+
+|Oracle EE
+|`./docker_db.sh oracle_ee`
+|`gradlew test -Pdb=oracle_docker`
+
+|DB2
+|`./docker_db.sh db2`
+|`gradlew test -Pdb=db2_ci`
+
+|SQL Server
+|`./docker_db.sh mssql`
+|`gradlew test -Pdb=mssql_ci`
+
+|Sybase ASE
+|`./docker_db.sh sybase`
+|`gradlew test -Pdb=sybase_ci`
+
+|SAP HANA
+|`./docker_db.sh hana`
+|`gradlew test -Pdb=hana_ci`
+
+|CockroachDB
+|`./docker_db.sh cockroachdb`
+|`gradlew test -Pdb=cockroachdb`
+|===

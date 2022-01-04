@@ -31,6 +31,7 @@ import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.QueryProducer;
@@ -218,13 +219,21 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 				"insert Person (id, name) " +
 				"values (100L, 'Jane Doe')")
 			.executeUpdate();
+			//end::hql-insert-example[]
+		});
+	}
+
+	@Test @SkipForDialect(SybaseDialect.class)
+	public void hql_multi_insert_example() {
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			//tag::hql-insert-example[]
 
 			entityManager.createQuery(
-				"insert Person (id, name) " +
-				"values (101L, 'J A Doe III'), " +
-					"(102L, 'J X Doe'), " +
-					"(103L, 'John Doe, Jr')")
-			.executeUpdate();
+							"insert Person (id, name) " +
+									"values (101L, 'J A Doe III'), " +
+									"(102L, 'J X Doe'), " +
+									"(103L, 'John Doe, Jr')")
+					.executeUpdate();
 			//end::hql-insert-example[]
 		});
 	}

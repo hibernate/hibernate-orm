@@ -19,6 +19,7 @@ import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableColumn;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.enhanced.Optimizer;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -41,6 +42,7 @@ import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.Over;
+import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
@@ -241,11 +243,47 @@ public class TableBasedInsertHandler implements InsertHandler {
 			insertStatement.setSourceSelectStatement( queryPart );
 		}
 		else {
+			// Add the row number column if there is one
+			final IdentifierGenerator generator = entityDescriptor.getIdentifierGenerator();
+			final BasicType<?> rowNumberType;
+			if ( generator instanceof OptimizableGenerator ) {
+				final Optimizer optimizer = ( (OptimizableGenerator) generator ).getOptimizer();
+				if ( optimizer != null && optimizer.getIncrementSize() > 1 ) {
+					final TemporaryTableColumn rowNumberColumn = entityTable.getColumns()
+							.get( entityTable.getColumns().size() - 1 );
+					rowNumberType = (BasicType<?>) rowNumberColumn.getJdbcMapping();
+					final ColumnReference columnReference = new ColumnReference(
+							(String) null,
+							rowNumberColumn.getColumnName(),
+							false,
+							null,
+							null,
+							rowNumberColumn.getJdbcMapping(),
+							sessionFactory
+					);
+					insertStatement.getTargetColumnReferences().add( columnReference );
+					targetPathColumns.add( new Assignment( columnReference, columnReference ) );
+				}
+				else {
+					rowNumberType = null;
+				}
+			}
+			else {
+				rowNumberType = null;
+			}
 			final List<SqmValues> sqmValuesList = ( (SqmInsertValuesStatement<?>) sqmInsertStatement ).getValuesList();
 			final List<Values> valuesList = new ArrayList<>( sqmValuesList.size() );
-			for ( SqmValues sqmValues : sqmValuesList ) {
-				final Values values = converterDelegate.visitValues( sqmValues );
+			for ( int i = 0; i < sqmValuesList.size(); i++ ) {
+				final Values values = converterDelegate.visitValues( sqmValuesList.get( i ) );
 				additionalInsertValues.applyValues( values );
+				if ( rowNumberType != null ) {
+					values.getExpressions().add(
+							new QueryLiteral<>(
+									i + 1,
+									rowNumberType
+							)
+					);
+				}
 				valuesList.add( values );
 			}
 			insertStatement.setValuesList( valuesList );

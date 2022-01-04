@@ -933,12 +933,21 @@ public class QuerySqmImpl<R>
 		final EntityPersister entityDescriptor = getSessionFactory().getDomainModel().findEntityDescriptor( entityNameToInsert );
 
 		final SqmMultiTableInsertStrategy multiTableStrategy = entityDescriptor.getSqmMultiTableInsertStrategy();
-		if ( multiTableStrategy == null ) {
+		if ( multiTableStrategy == null || isSimpleValuesInsert( sqmInsert, entityDescriptor ) ) {
 			return new SimpleInsertQueryPlan( sqmInsert, domainParameterXref );
 		}
 		else {
 			return new MultiTableInsertQueryPlan( sqmInsert, domainParameterXref, multiTableStrategy );
 		}
+	}
+
+	private boolean isSimpleValuesInsert(SqmInsertStatement<R> sqmInsert, EntityPersister entityDescriptor) {
+		// Simple means that we can translate the statement to a single plain insert
+		return sqmInsert instanceof SqmInsertValuesStatement
+				// An insert is only simple if no SqmMultiTableMutation strategy is available,
+				// as the presence of it means the entity has multiple tables involved,
+				// in which case we currently need to use the MultiTableInsertQueryPlan
+				&& entityDescriptor.getSqmMultiTableMutationStrategy() == null;
 	}
 
 	@Override

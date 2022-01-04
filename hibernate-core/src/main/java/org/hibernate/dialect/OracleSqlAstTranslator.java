@@ -127,6 +127,25 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 	}
 
 	@Override
+	protected FetchClauseType getFetchClauseTypeForRowNumbering(QueryPart queryPart) {
+		final FetchClauseType fetchClauseType = super.getFetchClauseTypeForRowNumbering( queryPart );
+		final boolean hasOffset;
+		if ( queryPart.isRoot() && hasLimit() ) {
+			hasOffset = getLimit().getFirstRow() != null;
+		}
+		else {
+			hasOffset = queryPart.getOffsetClauseExpression() != null;
+		}
+		if ( queryPart instanceof QuerySpec && !hasOffset && fetchClauseType == FetchClauseType.ROWS_ONLY ) {
+			// We return null here, because in this particular case, we render a special rownum query
+			// which can be seen in #emulateFetchOffsetWithWindowFunctions
+			// Note that we also build upon this in #visitOrderBy
+			return null;
+		}
+		return fetchClauseType;
+	}
+
+	@Override
 	protected void emulateFetchOffsetWithWindowFunctions(
 			QueryPart queryPart,
 			Expression offsetExpression,
@@ -138,7 +157,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 			final QuerySpec querySpec = (QuerySpec) queryPart;
 			withRowNumbering(
 					querySpec,
-					false,
+					true, // we need select aliases to avoid ORA-00918: column ambiguously defined
 					() -> {
 						final QueryPart currentQueryPart = getQueryPartStack().getCurrent();
 						final boolean needsParenthesis;
@@ -210,10 +229,9 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 			renderOrderBy( true, sortSpecifications );
 		}
 		else {
-			// This logic is tightly coupled to emulateFetchOffsetWithWindowFunctions
+			// This logic is tightly coupled to #emulateFetchOffsetWithWindowFunctions and #getFetchClauseTypeForRowNumbering
 			// so that this is rendered when we end up in the special case for Oracle that renders a rownum filter
-			final FetchClauseType fetchClauseType = getFetchClauseTypeForRowNumbering( queryPartForRowNumbering );
-			if ( fetchClauseType == FetchClauseType.ROWS_ONLY && queryPartForRowNumbering instanceof QuerySpec ) {
+			if ( getFetchClauseTypeForRowNumbering( queryPartForRowNumbering ) == null ) {
 				final QuerySpec querySpec = (QuerySpec) queryPartForRowNumbering;
 				if ( querySpec.getOffsetClauseExpression() == null
 						&& ( !querySpec.isRoot() || getOffsetParameter() == null ) ) {

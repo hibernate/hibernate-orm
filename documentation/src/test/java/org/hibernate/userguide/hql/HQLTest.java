@@ -2955,6 +2955,21 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	public void test_hql_bad_fetch_first_example() {
+
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			List<Phone> wrongCalls = entityManager.createQuery(
+							"select p " +
+									"from Phone p " +
+									"join fetch p.calls " +
+									"order by p " +
+									"fetch first 50 percent rows only",
+							Phone.class)
+					.getResultList();
+		});
+	}
+
+	@Test
 	public void test_hql_read_only_entities_example() {
 
 		doInJPA(this::entityManagerFactory, entityManager -> {

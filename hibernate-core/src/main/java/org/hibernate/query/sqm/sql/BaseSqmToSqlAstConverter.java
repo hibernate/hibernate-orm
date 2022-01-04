@@ -361,6 +361,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private boolean resolvingCircularFetch;
 	private ForeignKeyDescriptor.Nature currentlyResolvingForeignKeySide;
 	private SqmQueryPart<?> currentSqmQueryPart;
+	private boolean containsCollectionFetches;
 
 	private final Map<String, PredicateCollector> collectionFilterPredicates = new HashMap<>();
 	private List<Map.Entry<OrderByFragment, TableGroup>> orderByFragments;
@@ -1692,11 +1693,18 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 		}
 
-		sqlQueryPart.setOffsetClauseExpression( visitOffsetExpression( sqmQueryPart.getOffsetExpression() ) );
-		sqlQueryPart.setFetchClauseExpression(
-				visitFetchExpression( sqmQueryPart.getFetchExpression() ),
-				sqmQueryPart.getFetchClauseType()
-		);
+		if ( !containsCollectionFetches || !currentClauseStack.isEmpty() ) {
+			// Strip off the root offset and limit expressions in case the query contains collection fetches to retain
+			// the proper cardinality. We could implement pagination for single select statements differently in this
+			// case by using a subquery e.g. `... where alias in (select subAlias from ... limit ...)`
+			// or use window functions e.g. `select ... from (select ..., dense_rank() over(order by ..., id) rn from ...) tmp where tmp.rn between ...`
+			// but these transformations/translations are non-trivial and can be done later
+			sqlQueryPart.setOffsetClauseExpression( visitOffsetExpression( sqmQueryPart.getOffsetExpression() ) );
+			sqlQueryPart.setFetchClauseExpression(
+					visitFetchExpression( sqmQueryPart.getFetchExpression() ),
+					sqmQueryPart.getFetchClauseType()
+			);
+		}
 	}
 
 	private TableGroup findTableGroupByPath(NavigablePath navigablePath) {
@@ -2463,6 +2471,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			assert modelPart instanceof PluralAttributeMapping;
 
 			final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) modelPart;
+
+			if ( sqmJoin.isFetched() ) {
+				containsCollectionFetches = true;
+			}
 
 			joinedTableGroupJoin = pluralAttributeMapping.createTableGroupJoin(
 					sqmJoinNavigablePath,

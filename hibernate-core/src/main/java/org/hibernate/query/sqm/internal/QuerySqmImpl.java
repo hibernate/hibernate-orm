@@ -37,6 +37,7 @@ import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryTypeMismatchException;
 import org.hibernate.query.SemanticException;
+import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
 import org.hibernate.query.hql.internal.QuerySplitter;
 import org.hibernate.query.hql.spi.HqlQueryImplementor;
@@ -69,6 +70,7 @@ import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
+import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
@@ -678,7 +680,7 @@ public class QuerySqmImpl<R>
 
 		getSession().prepareForQueryExecution( requiresTxn( getLockOptions().findGreatestLockMode() ) );
 		final boolean containsCollectionFetches = selectStatement.containsCollectionFetches();
-		final boolean hasLimit = queryOptions.hasLimit();
+		final boolean hasLimit = queryOptions.hasLimit() || selectStatement.getFetch() != null || selectStatement.getOffset() != null;
 		final boolean needsDistincting = containsCollectionFetches && (
 				selectStatement.usesDistinct() ||
 						queryOptions.getGraph() != null ||
@@ -723,10 +725,10 @@ public class QuerySqmImpl<R>
 			int includedCount = -1;
 			// NOTE : firstRow is zero-based
 			final int first = !hasLimit || queryOptions.getLimit().getFirstRow() == null
-					? 0
+					? getIntegerLiteral( selectStatement.getOffset(), 0 )
 					: queryOptions.getLimit().getFirstRow();
 			final int max = !hasLimit || queryOptions.getLimit().getMaxRows() == null
-					? -1
+					? getMaxRows( selectStatement, list.size() )
 					: queryOptions.getLimit().getMaxRows();
 			final List<R> tmp = new ArrayList<>( list.size() );
 			final IdentitySet<R> distinction = new IdentitySet<>( list.size() );
@@ -747,6 +749,52 @@ public class QuerySqmImpl<R>
 			return tmp;
 		}
 		return list;
+	}
+
+	private int getMaxRows(SqmSelectStatement<?> selectStatement, int size) {
+		final JpaExpression<Number> expression = selectStatement.getFetch();
+		if ( expression == null ) {
+			return -1;
+		}
+
+		final Number fetchValue;
+		if ( expression instanceof SqmLiteral<?> ) {
+			fetchValue = ( (SqmLiteral<Number>) expression ).getLiteralValue();
+		}
+		else if ( expression instanceof SqmParameter<?> ) {
+			fetchValue = getParameterValue( (Parameter<Number>) expression );
+			if ( fetchValue == null ) {
+				return -1;
+			}
+		}
+		else {
+			throw new IllegalArgumentException( "Can't get max rows value from: " + expression );
+		}
+		// Note that we can never have ties because this is only used when we de-duplicate results
+		switch ( selectStatement.getFetchClauseType() ) {
+			case ROWS_ONLY:
+			case ROWS_WITH_TIES:
+				return fetchValue.intValue();
+			case PERCENT_ONLY:
+			case PERCENT_WITH_TIES:
+				return (int) Math.ceil( ( ( (double) size ) * fetchValue.doubleValue() ) / 100d );
+		}
+		throw new UnsupportedOperationException( "Unsupported fetch clause type: " + selectStatement.getFetchClauseType() );
+	}
+
+	private int getIntegerLiteral(JpaExpression<Number> expression, int defaultValue) {
+		if ( expression == null ) {
+			return defaultValue;
+		}
+
+		if ( expression instanceof SqmLiteral<?> ) {
+			return ( (SqmLiteral<Number>) expression ).getLiteralValue().intValue();
+		}
+		else if ( expression instanceof SqmParameter<?> ) {
+			final Number parameterValue = getParameterValue( (Parameter<Number>) expression );
+			return parameterValue == null ? defaultValue : parameterValue.intValue();
+		}
+		throw new IllegalArgumentException( "Can't get integer literal value from: " + expression );
 	}
 
 	private boolean requiresTxn(LockMode lockMode) {

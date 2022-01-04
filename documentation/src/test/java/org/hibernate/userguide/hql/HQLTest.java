@@ -239,6 +239,15 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	public void hql_insert_with_sequence_example() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			entityManager.createQuery(
+							"insert Person (name) values ('Jane Doe2')" )
+					.executeUpdate();
+		});
+	}
+
+	@Test
 	public void hql_select_simplest_jpql_fqn_example() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-select-simplest-jpql-fqn-example[]

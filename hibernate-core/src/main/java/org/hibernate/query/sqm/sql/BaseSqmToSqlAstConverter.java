@@ -1067,57 +1067,53 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		Expression versionExpression = null;
 		Expression discriminatorExpression = null;
 		BasicEntityIdentifierMapping identifierMapping = null;
-		if ( entityDescriptor.isVersioned() ) {
-			final String identifierPropertyName = entityDescriptor.getIdentifierPropertyName();
-			final String versionAttributeName = entityDescriptor.getVersionMapping().getVersionAttribute().getAttributeName();
-			boolean needsVersionInsert = true;
-			for ( int i = 0; i < targetPaths.size(); i++ ) {
-				final SqmPath<?> path = targetPaths.get( i );
-				if ( identifierPropertyName.equals( path.getNavigablePath().getLocalName() ) ) {
-					identifierGenerator = null;
-				}
-				else if ( versionAttributeName.equals( path.getNavigablePath().getLocalName() ) ) {
-					needsVersionInsert = false;
-				}
-				final Assignable assignable = (Assignable) path.accept( this );
-				targetColumnReferenceConsumer.accept( assignable, assignable.getColumnReferences() );
-			}
-			if ( needsVersionInsert ) {
-				final BasicValuedPathInterpretation<?> versionPath = BasicValuedPathInterpretation.from(
-						(SqmBasicValuedSimplePath<?>) sqmStatement.getTarget()
-								.get( versionAttributeName ),
-						this,
-						this,
-						jpaQueryComplianceEnabled
-				);
-				final List<ColumnReference> targetColumnReferences = versionPath.getColumnReferences();
-				assert targetColumnReferences.size() == 1;
-
-				targetColumnReferenceConsumer.accept( versionPath, targetColumnReferences );
-				versionExpression = new VersionTypeSeedParameterSpecification(
-						entityDescriptor.getVersionMapping().getJdbcMapping(),
-						entityDescriptor.getVersionJavaTypeDescriptor()
-				);
-			}
-		}
-		else if ( identifierGenerator != null
-				&& !( identifierGenerator instanceof PostInsertIdentifierGenerator )
-				&& !( identifierGenerator instanceof CompositeNestedGeneratedValueGenerator ) ) {
-			final String identifierPropertyName = entityDescriptor.getIdentifierPropertyName();
-			for ( int i = 0; i < targetPaths.size(); i++ ) {
-				final SqmPath<?> path = targetPaths.get( i );
-				if ( identifierPropertyName.equals( path.getNavigablePath().getLocalName() ) ) {
-					identifierGenerator = null;
-				}
-				final Assignable assignable = (Assignable) path.accept( this );
-				targetColumnReferenceConsumer.accept( assignable, assignable.getColumnReferences() );
-			}
+		// We use the id property name to null the identifier generator variable if the target paths contain the id
+		final String identifierPropertyName;
+		if ( identifierGenerator != null ) {
+			identifierPropertyName = entityDescriptor.getIdentifierPropertyName();
 		}
 		else {
-			for ( int i = 0; i < targetPaths.size(); i++ ) {
-				final Assignable assignable = (Assignable) targetPaths.get( i ).accept( this );
-				targetColumnReferenceConsumer.accept( assignable, assignable.getColumnReferences() );
+			identifierPropertyName = null;
+		}
+		final String versionAttributeName;
+		boolean needsVersionInsert;
+		if ( entityDescriptor.isVersioned() ) {
+			versionAttributeName = entityDescriptor.getVersionMapping().getVersionAttribute().getAttributeName();
+			needsVersionInsert = true;
+		}
+		else {
+			versionAttributeName = null;
+			needsVersionInsert = false;
+		}
+		// Go through all target paths and remember if the target paths contain the version or id attributes
+		for ( int i = 0; i < targetPaths.size(); i++ ) {
+			final SqmPath<?> path = targetPaths.get( i );
+			final String localName = path.getNavigablePath().getLocalName();
+			if ( localName.equals( identifierPropertyName ) ) {
+				identifierGenerator = null;
 			}
+			else if ( localName.equals( versionAttributeName ) ) {
+				needsVersionInsert = false;
+			}
+			final Assignable assignable = (Assignable) path.accept( this );
+			targetColumnReferenceConsumer.accept( assignable, assignable.getColumnReferences() );
+		}
+		if ( needsVersionInsert ) {
+			final BasicValuedPathInterpretation<?> versionPath = BasicValuedPathInterpretation.from(
+					(SqmBasicValuedSimplePath<?>) sqmStatement.getTarget()
+							.get( versionAttributeName ),
+					this,
+					this,
+					jpaQueryComplianceEnabled
+			);
+			final List<ColumnReference> targetColumnReferences = versionPath.getColumnReferences();
+			assert targetColumnReferences.size() == 1;
+
+			targetColumnReferenceConsumer.accept( versionPath, targetColumnReferences );
+			versionExpression = new VersionTypeSeedParameterSpecification(
+					entityDescriptor.getVersionMapping().getJdbcMapping(),
+					entityDescriptor.getVersionJavaTypeDescriptor()
+			);
 		}
 		if ( discriminatorMapping != null && discriminatorMapping.isPhysical() ) {
 			final BasicValuedPathInterpretation<?> discriminatorPath = new BasicValuedPathInterpretation<>(

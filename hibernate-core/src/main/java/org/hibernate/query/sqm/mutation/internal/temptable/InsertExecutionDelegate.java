@@ -171,6 +171,9 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 
 	@Override
 	public int execute(ExecutionContext executionContext) {
+		// NOTE: we could get rid of using a temporary table if the expressions in Values are "stable".
+		// But that is a non-trivial optimization that requires more effort
+		// as we need to split out individual inserts if we have a non-bulk capable optimizer
 		ExecuteWithTemporaryTableHelper.performBeforeTemporaryTableUseActions(
 				entityTable,
 				executionContext
@@ -363,7 +366,10 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 			if ( identifierGenerator instanceof OptimizableGenerator ) {
 				final Optimizer optimizer = ( (OptimizableGenerator) identifierGenerator ).getOptimizer();
 				// If the generator uses an optimizer, we have to generate the identifiers for the new rows
-				if ( optimizer != null && optimizer.getIncrementSize() > 1 ) {
+				// but only if the target paths don't already contain the id
+				if ( optimizer != null && optimizer.getIncrementSize() > 1 && insertStatement.getTargetColumnReferences()
+						.stream()
+						.noneMatch( c -> keyColumns[0].equals( c.getColumnExpression() ) ) ) {
 					final BasicEntityIdentifierMapping identifierMapping = (BasicEntityIdentifierMapping) entityDescriptor.getIdentifierMapping();
 
 					final JdbcParameter rowNumber = new JdbcParameterImpl( identifierMapping.getJdbcMapping() );
@@ -438,37 +444,32 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 						);
 					}
 
-					// Finally, we also have to add the id to the insertion targets if it's not already there
-					if ( insertStatement.getTargetColumnReferences()
-							.stream()
-							.noneMatch( c -> keyColumns[0].equals( c.getColumnExpression() ) ) ) {
-						insertStatement.addTargetColumnReferences(
-								new ColumnReference(
-										(String) null,
-										keyColumns[0],
-										false,
-										null,
-										null,
-										identifierMapping.getJdbcMapping(),
-										sessionFactory
-								)
-						);
-						querySpec.getSelectClause().addSqlSelection(
-								new SqlSelectionImpl(
-										1,
-										0,
-										new ColumnReference(
-												updatingTableReference.getIdentificationVariable(),
-												idColumnReference.getColumnExpression(),
-												false,
-												null,
-												null,
-												idColumnReference.getJdbcMapping(),
-												sessionFactory
-										)
-								)
-						);
-					}
+					insertStatement.addTargetColumnReferences(
+							new ColumnReference(
+									(String) null,
+									keyColumns[0],
+									false,
+									null,
+									null,
+									identifierMapping.getJdbcMapping(),
+									sessionFactory
+							)
+					);
+					querySpec.getSelectClause().addSqlSelection(
+							new SqlSelectionImpl(
+									1,
+									0,
+									new ColumnReference(
+											updatingTableReference.getIdentificationVariable(),
+											idColumnReference.getColumnExpression(),
+											false,
+											null,
+											null,
+											idColumnReference.getJdbcMapping(),
+											sessionFactory
+									)
+							)
+					);
 				}
 			}
 		}

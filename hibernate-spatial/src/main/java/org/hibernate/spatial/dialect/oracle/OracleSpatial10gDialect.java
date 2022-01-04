@@ -15,6 +15,7 @@ import org.hibernate.spatial.SpatialDialect;
  *
  * @author Karel Maesen
  */
+@Deprecated
 public class OracleSpatial10gDialect extends Oracle10gDialect implements SpatialDialect {
 
 }

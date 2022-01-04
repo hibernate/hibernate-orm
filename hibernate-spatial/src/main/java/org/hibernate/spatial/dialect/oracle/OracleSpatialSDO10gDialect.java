@@ -14,6 +14,7 @@ import org.hibernate.spatial.SpatialDialect;
  * <p>
  * Created by Karel Maesen, Geovise BVBA on 11/02/17.
  */
+@Deprecated
 public class OracleSpatialSDO10gDialect extends Oracle10gDialect
 		implements SpatialDialect {
 }

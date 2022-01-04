@@ -72,10 +72,10 @@ public class SDOGeometryValueExtractor<X> extends BasicExtractor<X> {
 			return null;
 		}
 		final SDOGeometry sdogeom = SDOGeometry.load( (Struct) struct );
-		return toGeomerty( sdogeom );
+		return toGeometry( sdogeom );
 	}
 
-	private Geometry toGeomerty(SDOGeometry sdoGeom) {
+	private Geometry toGeometry(SDOGeometry sdoGeom) {
 		return Decoders.decode( sdoGeom );
 	}
 

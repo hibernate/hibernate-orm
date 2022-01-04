@@ -9,6 +9,7 @@ package org.hibernate.orm.test.hql;
 import java.util.List;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -46,6 +47,13 @@ public class QuotedIdentifierTest extends BaseCoreFunctionalTestCase {
 		} );
 	}
 
+	@After
+	public void tearDown() {
+		doInHibernate( this::sessionFactory, session -> {
+			session.createQuery("delete `The Person`").executeUpdate();
+		} );
+	}
+
 	@Test
 	public void testQuotedIdentifier() {
 		doInHibernate( this::sessionFactory, session -> {
@@ -57,6 +65,20 @@ public class QuotedIdentifierTest extends BaseCoreFunctionalTestCase {
 			List<Tuple> resultList = query.getResultList();
 			assertEquals( 1, resultList.size() );
 			assertEquals( "Chuck", resultList.get( 0 ).get( "The person name" ) );
+		} );
+	}
+
+	@Test
+	public void testQuotedFunctionName() {
+		doInHibernate( this::sessionFactory, session -> {
+			TypedQuery<Tuple> query = session.createQuery(
+					"select `upper`(`the person`.`name`) as `The person name` " +
+							"from `The Person` `the person`",
+					Tuple.class
+			);
+			List<Tuple> resultList = query.getResultList();
+			assertEquals( 1, resultList.size() );
+			assertEquals( "CHUCK", resultList.get( 0 ).get( "The person name" ) );
 		} );
 	}
 

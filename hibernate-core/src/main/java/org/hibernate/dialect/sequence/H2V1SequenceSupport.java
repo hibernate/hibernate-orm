@@ -13,9 +13,9 @@ import org.hibernate.MappingException;
  *
  * @author Gavin King
  */
-public final class H2SequenceSupport implements SequenceSupport {
+public final class H2V1SequenceSupport implements SequenceSupport {
 
-	public static final SequenceSupport INSTANCE = new H2SequenceSupport();
+	public static final SequenceSupport INSTANCE = new H2V1SequenceSupport();
 
 	@Override
 	public String getDropSequenceString(String sequenceName) {

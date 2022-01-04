@@ -19,7 +19,8 @@ import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
-import org.hibernate.dialect.sequence.H2SequenceSupport;
+import org.hibernate.dialect.sequence.H2V1SequenceSupport;
+import org.hibernate.dialect.sequence.H2V2SequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
@@ -76,6 +77,7 @@ public class H2Dialect extends Dialect {
 
 	private final LimitHandler limitHandler;
 
+	private final boolean ansiSequence;
 	private final boolean cascadeConstraints;
 	private final boolean useLocalTime;
 
@@ -105,6 +107,11 @@ public class H2Dialect extends Dialect {
 		}
 
 		supportsTuplesInSubqueries = version.isSameOrAfter( 1, 4, 198 );
+
+		// Prior to 1.4.200 there was no support for 'current value for sequence_name'
+		// After 2.0.202 there is no support for 'sequence_name.nextval' and 'sequence_name.currval'
+		ansiSequence = version.isSameOrAfter( 1, 4, 200 );
+
 		// Prior to 1.4.200 the 'cascade' in 'drop table' was implicit
 		cascadeConstraints = version.isSameOrAfter( 1, 4, 200 );
 		// 1.4.200 introduced changes in current_time and current_timestamp
@@ -379,7 +386,7 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	public SequenceSupport getSequenceSupport() {
-		return H2SequenceSupport.INSTANCE;
+		return ansiSequence ? H2V2SequenceSupport.INSTANCE: H2V1SequenceSupport.INSTANCE;
 	}
 
 	@Override

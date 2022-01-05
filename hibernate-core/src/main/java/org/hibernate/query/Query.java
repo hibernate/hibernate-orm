@@ -120,27 +120,35 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	ScrollableResults<R> scroll(ScrollMode scrollMode);
 
 	/**
-	 * Return the query results as a {@code List}. If the query contains
-	 * multiple results per row, the results are returned in an instance
-	 * of {@code Object[]}.
+	 * Execute the query and return the query results as a {@link List}.
+	 * If the query contains multiple items in the selection list, then
+	 * by default each result in the list is packaged in an array of type
+	 * {@code Object[]}.
 	 *
 	 * @return the result list
 	 */
 	List<R> list();
 
 	/**
-	 * Return the query results as a {@link List}. If the query contains
-	 * multiple results per row, the results are returned in an instance
-	 * of {@code Object[]}.
+	 * Execute the query and return the query results as a {@link List}.
+	 * If the query contains multiple items in the selection list, then
+	 * by default each result in the list is packaged in an array of type
+	 * {@code Object[]}.
 	 *
-	 * @return the results as a  list
+	 * @return the results as a list
 	 */
 	default List<R> getResultList() {
 		return list();
 	}
 
 	/**
-	 * Retrieve a {@link Stream} over the query results.
+	 * Execute the query and return the query results as a {@link Stream}.
+	 * If the query contains multiple items in the selection list, then
+	 * by default each result in the stream is packaged in an array of type
+	 * {@code Object[]}.
+	 * <p>
+	 * The client should call {@link Stream#close()} after processing the
+	 * stream so that resources are freed as soon as possible.
 	 *
 	 * @return The results as a {@link Stream}
 	 */
@@ -149,8 +157,31 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	}
 
 	/**
-	 * Convenience method to return a single instance that matches
-	 * the query, or {@code null} if the query returns no results.
+	 * Execute an insert, update, or delete statement, and return the
+	 * number of affected entities.
+	 * <p>
+	 * For use with instances of {@code Query<Void>} created using
+	 * {@link QueryProducer#createStatement(String)},
+	 * {@link QueryProducer#createNamedStatement(String)},
+	 * {@link QueryProducer#createNativeStatement(String)},
+	 * {@link QueryProducer#createQuery(jakarta.persistence.criteria.CriteriaUpdate)}, or
+	 * {@link QueryProducer#createQuery(jakarta.persistence.criteria.CriteriaDelete)}.
+	 *
+	 * @return the number of affected entity instances
+	 *         (may differ from the number of affected rows)
+	 *
+	 * @see QueryProducer#createStatement(String)
+	 * @see QueryProducer#createNamedStatement(String)
+	 * @see QueryProducer#createNativeStatement(String)
+	 *
+	 * @see jakarta.persistence.Query#executeUpdate()
+	 */
+	@Override
+	int executeUpdate();
+
+	/**
+	 * Execute the query and return the single result of the query,
+	 * or {@code null} if the query returns no results.
 	 *
 	 * @return the single result or {@code null}
 	 *
@@ -159,8 +190,8 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	R uniqueResult();
 
 	/**
-	 * Convenience method to return a single instance that matches
-	 * the query, throwing an exception if the query returns no results.
+	 * Execute the query and return the single result of the query,
+	 * throwing an exception if the query returns no results.
 	 *
 	 * @return the single result, only if there is exactly one
 	 *
@@ -170,8 +201,8 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	R getSingleResult();
 
 	/**
-	 * Convenience method to return a single instance that matches
-	 * the query, as an {@link Optional}.
+	 * Execute the query and return the single result of the query,
+	 * as an {@link Optional}.
 	 *
 	 * @return the single result as an {@code Optional}
 	 *
@@ -180,15 +211,15 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	Optional<R> uniqueResultOptional();
 
 	/**
-	 * Retrieve a Stream over the query results.
-	 * <p/>
-	 * In the initial implementation (5.2) this returns a simple sequential Stream.  The plan
-	 * is to return a smarter stream in 6.x leveraging the SQM model.
+	 * Execute the query and return the query results as a {@link Stream}.
+	 * If the query contains multiple items in the selection list, then
+	 * by default each result in the stream is packaged in an array of type
+	 * {@code Object[]}.
 	 * <p>
-	 * You should call {@link Stream#close()} after processing the stream
-	 * so that the underlying resources are deallocated right away.
+	 * The client should call {@link Stream#close()} after processing the
+	 * stream so that resources are freed as soon as possible.
 	 *
-	 * @return The results Stream
+	 * @return The results as a {@link Stream}
 	 *
 	 * @since 5.2
 	 */

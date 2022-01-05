@@ -50,6 +50,8 @@ import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.procedure.ProcedureCall;
+import org.hibernate.query.NativeQuery;
+import org.hibernate.query.Query;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryProducerImplementor;
@@ -524,6 +526,21 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override @SuppressWarnings({"rawtypes", "unchecked"})
 	public NativeQueryImplementor createNativeQuery(String sqlString, String resultSetMappingName, Class resultClass) {
 		return queryDelegate().createNativeQuery( sqlString, resultSetMappingName, resultClass );
+	}
+
+	@Override
+	public QueryImplementor<Void> createStatement(String statementString) {
+		return delegate.createStatement( statementString );
+	}
+
+	@Override
+	public QueryImplementor<Void> createNamedStatement(String name) {
+		return delegate.createNamedStatement( name );
+	}
+
+	@Override
+	public NativeQueryImplementor<Void> createNativeStatement(String sqlString) {
+		return delegate.createNativeStatement( sqlString );
 	}
 
 	@Override

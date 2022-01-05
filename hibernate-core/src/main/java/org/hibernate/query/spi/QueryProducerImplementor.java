@@ -12,6 +12,8 @@ import jakarta.persistence.criteria.CriteriaUpdate;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.NativeQuery;
+import org.hibernate.query.Query;
 import org.hibernate.query.QueryProducer;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
 
@@ -32,19 +34,19 @@ public interface QueryProducerImplementor extends QueryProducer {
 	@Override @SuppressWarnings("rawtypes")
 	QueryImplementor getNamedQuery(String queryName);
 
-	@Override @SuppressWarnings("rawtypes")
+	@Override @Deprecated @SuppressWarnings("rawtypes")
 	QueryImplementor createQuery(String queryString);
 
 	@Override
 	<R> QueryImplementor<R> createQuery(String queryString, Class<R> resultClass);
 
-	@Override @SuppressWarnings("rawtypes")
+	@Override @Deprecated @SuppressWarnings("rawtypes")
 	QueryImplementor createNamedQuery(String name);
 
 	@Override
 	<R> QueryImplementor<R> createNamedQuery(String name, Class<R> resultClass);
 
-	@Override @SuppressWarnings("rawtypes")
+	@Override @Deprecated @SuppressWarnings("rawtypes")
 	NativeQueryImplementor createNativeQuery(String sqlString);
 
 	@Override
@@ -64,6 +66,15 @@ public interface QueryProducerImplementor extends QueryProducer {
 
 	@Override @SuppressWarnings("rawtypes")
 	NativeQueryImplementor getNamedNativeQuery(String name, String resultSetMapping);
+
+	@Override
+	QueryImplementor<Void> createStatement(String statementString);
+
+	@Override
+	QueryImplementor<Void> createNamedStatement(String name);
+
+	@Override
+	NativeQueryImplementor<Void> createNativeStatement(String sqlString);
 
 	@Override
 	<R> QueryImplementor<R> createQuery(CriteriaQuery<R> criteriaQuery);

@@ -960,6 +960,7 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 					CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
 					CriteriaQuery<Product> criteria = criteriaBuilder.createQuery( Product.class );
 					Root<Product> root = criteria.from( Product.class );
+					root.fetch( "categories" );
 					criteria.where( criteriaBuilder.equal( root.get( "id" ), testData.prod1Id ) );
 
 					List<Product> result = session.createQuery( criteria ).list();

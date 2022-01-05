@@ -14,9 +14,7 @@
      
 -->
 
-<hibernate-mapping 
-	package="org.hibernate.orm.test.query.joinfetch"
-	default-access="field">
+<hibernate-mapping package="org.hibernate.orm.test.query.joinfetch" default-access="field">
 	
 	<class name="Category" table="AuctionCategories">
 		<id name="name"/>

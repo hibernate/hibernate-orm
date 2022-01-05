@@ -8,6 +8,7 @@ package org.hibernate.orm.test.collection.original;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
 
 import org.hibernate.Hibernate;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -141,7 +142,12 @@ public class CollectionTest {
 
 		scope.inTransaction(
 				s -> {
-					User u2 = findUser( s );
+					CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+					CriteriaQuery<User> criteria = criteriaBuilder.createQuery( User.class );
+					final Root<User> from = criteria.from( User.class );
+					from.fetch( "emailAddresses" );
+
+					User u2 = s.createQuery( criteria ).uniqueResult();
 					assertTrue( Hibernate.isInitialized( u2.getEmailAddresses() ) );
 					assertFalse( Hibernate.isInitialized( u2.getPermissions() ) );
 					assertEquals( 2, u2.getEmailAddresses().size() );

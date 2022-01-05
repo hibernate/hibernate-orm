@@ -584,7 +584,6 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-//	@NotImplementedYet(reason = "Support for custom composite types not implemented - org.hibernate.orm.test.annotations.entity.Ransom#getAmount")
 	public void testCompositeType() throws Exception {
 		Session s;
 		Transaction tx;

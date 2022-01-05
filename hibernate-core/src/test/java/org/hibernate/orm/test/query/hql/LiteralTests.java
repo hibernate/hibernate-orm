@@ -24,7 +24,7 @@ import static org.hamcrest.Matchers.is;
 /**
  * @author Steve Ebersole
  */
-@SuppressWarnings("WeakerAccess")
+@SuppressWarnings({"deprecation","WeakerAccess"})
 @ServiceRegistry
 @DomainModel( standardModels = StandardDomainModel.GAMBIT )
 @SessionFactory

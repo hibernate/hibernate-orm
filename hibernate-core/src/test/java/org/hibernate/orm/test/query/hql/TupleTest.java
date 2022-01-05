@@ -32,11 +32,11 @@ public class TupleTest {
 	public void testSelectTuple(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					List results = session.createQuery(
-							"select o.id, (o.someString, o.someInteger), o.someLong from SimpleEntity o" )
+					List<Object[]> results = session.createQuery(
+							"select o.id, (o.someString, o.someInteger), o.someLong from SimpleEntity o", Object[].class )
 							.list();
 					assertThat( results.size(), is( 1 ) );
-					Object[] result = (Object[]) results.get( 0 );
+					Object[] result = results.get( 0 );
 					assertThat( result[0], is( 1 ) );
 					assertThat( result[1], instanceOf( Object[].class ) );
 					Object[] tuple = (Object[]) result[1];
@@ -67,9 +67,7 @@ public class TupleTest {
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
 		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete SimpleEntity" ).executeUpdate();
-				}
+				session -> session.createStatement( "delete SimpleEntity" ).executeUpdate()
 		);
 	}
 }

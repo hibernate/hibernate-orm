@@ -34,8 +34,8 @@ public class SubqueryOperatorsTest {
 	public void testEvery(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					List results = session.createQuery(
-							"from SimpleEntity o where o.someString >= every (select someString from SimpleEntity)" )
+					List<SimpleEntity> results = session.createQuery(
+							"from SimpleEntity o where o.someString >= every (select someString from SimpleEntity)", SimpleEntity.class )
 							.list();
 					assertThat( results.size(), is( 1 ) );
 				}
@@ -46,15 +46,15 @@ public class SubqueryOperatorsTest {
 	public void testAny(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					List results = session.createQuery(
-							"from SimpleEntity o where o.someString >= any (select someString from SimpleEntity)" )
+					List<SimpleEntity> results = session.createQuery(
+							"from SimpleEntity o where o.someString >= any (select someString from SimpleEntity)", SimpleEntity.class )
 							.list();
 					assertThat( results.size(), is( 2 ) );
 				}
 		);
 	}
 
-	@Test
+	@Test @SuppressWarnings("deprecation")
 	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "Sybase ASE does not allow a subquery in the order by clause, but we could move it to the select clause and refer to it by position", matchSubTypes = true)
 	public void testSubqueryInVariousClauses(SessionFactoryScope scope) {
 		scope.inTransaction(
@@ -87,12 +87,12 @@ public class SubqueryOperatorsTest {
 	public void testExists(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					List results = session.createQuery(
-							"from SimpleEntity o where exists (select someString from SimpleEntity where someString>o.someString)" )
+					List<SimpleEntity> results = session.createQuery(
+							"from SimpleEntity o where exists (select someString from SimpleEntity where someString>o.someString)", SimpleEntity.class )
 							.list();
 					assertThat( results.size(), is( 1 ) );
 					results = session.createQuery(
-							"from SimpleEntity o where not exists (select someString from SimpleEntity where someString>o.someString)" )
+							"from SimpleEntity o where not exists (select someString from SimpleEntity where someString>o.someString)", SimpleEntity.class )
 							.list();
 					assertThat( results.size(), is( 1 ) );
 				}

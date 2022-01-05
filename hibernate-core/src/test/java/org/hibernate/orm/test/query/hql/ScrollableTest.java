@@ -7,7 +7,6 @@
 package org.hibernate.orm.test.query.hql;
 
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.util.ArrayList;
@@ -59,7 +58,7 @@ public class ScrollableTest extends BaseCoreFunctionalTestCase {
 		try (Session session = openSession()) {
 			session.getTransaction().begin();
 			try {
-				session.createQuery( "delete from MyEntity" ).executeUpdate();
+				session.createStatement( "delete from MyEntity" ).executeUpdate();
 				session.getTransaction().commit();
 			}
 			catch (Exception e) {
@@ -74,22 +73,22 @@ public class ScrollableTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-10860")
 	public void testScrollableResults() {
-		final List params = new ArrayList();
+		final List<Long> params = new ArrayList<>();
 		params.add( 1L );
 		params.add( 2L );
 
 		try (Session s = openSession()) {
-			final Query query = s.createQuery( "from MyEntity e where e.id in (:ids)" )
+			final Query<MyEntity> query = s.createQuery( "from MyEntity e where e.id in (:ids)", MyEntity.class )
 					.setParameter( "ids", params )
 					.setFetchSize( 10 );
-			try (ScrollableResults scroll = query.scroll( ScrollMode.FORWARD_ONLY )) {
+			try (ScrollableResults<MyEntity> scroll = query.scroll( ScrollMode.FORWARD_ONLY )) {
 				int i = 0;
 				while ( scroll.next() ) {
 					if ( i == 0 ) {
-						assertThat( ((MyEntity) scroll.get()).getDescription(), is( "entity_1" ) );
+						assertThat( scroll.get().getDescription(), is( "entity_1" ) );
 					}
 					else {
-						assertThat( ((MyEntity) scroll.get()).getDescription(), is( "entity_2" ) );
+						assertThat( scroll.get().getDescription(), is( "entity_2" ) );
 					}
 					i++;
 				}
@@ -100,22 +99,22 @@ public class ScrollableTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-10860")
 	public void testScrollableResults2() {
-		final List params = new ArrayList();
+		final List<Long> params = new ArrayList<>();
 		params.add( 1L );
 		params.add( 2L );
 
 		try (Session s = openSession()) {
-			final Query query = s.createQuery( "from MyEntity e where e.id in (:ids)" )
+			final Query<MyEntity> query = s.createQuery( "from MyEntity e where e.id in (:ids)", MyEntity.class )
 					.setParameter( "ids", params )
 					.setFetchSize( 10 );
-			try (ScrollableResults scroll = query.scroll( )) {
+			try (ScrollableResults<MyEntity> scroll = query.scroll( )) {
 				int i = 0;
 				while ( scroll.next() ) {
 					if ( i == 0 ) {
-						assertThat( ((MyEntity) scroll.get()).getDescription(), is( "entity_1" ) );
+						assertThat( scroll.get().getDescription(), is( "entity_1" ) );
 					}
 					else {
-						assertThat( ((MyEntity) scroll.get()).getDescription(), is( "entity_2" ) );
+						assertThat( scroll.get().getDescription(), is( "entity_2" ) );
 					}
 					i++;
 				}

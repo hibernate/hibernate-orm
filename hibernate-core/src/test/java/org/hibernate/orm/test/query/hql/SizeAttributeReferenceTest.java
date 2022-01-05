@@ -33,7 +33,7 @@ public class SizeAttributeReferenceTest extends BaseNonConfigCoreFunctionalTestC
 	public void controlGroup() {
 		Session session = openSession();
 		session.getTransaction().begin();
-		session.createQuery( "from EntityWithAttributeNamedSize e join e.children c where size(c) > 1" ).list();
+		session.createQuery( "from EntityWithAttributeNamedSize e join e.children c where size(c) > 1", EntityWithAttributeNamedSize.class ).list();
 		session.getTransaction().commit();
 		session.close();
 	}
@@ -42,13 +42,13 @@ public class SizeAttributeReferenceTest extends BaseNonConfigCoreFunctionalTestC
 	public void testSizeAttributeReference() {
 		Session session = openSession();
 		session.getTransaction().begin();
-		session.createQuery( "from EntityWithAttributeNamedSize e join e.children c where c.size = 'abc'" ).list();
+		session.createQuery( "from EntityWithAttributeNamedSize e join e.children c where c.size = 'abc'", EntityWithAttributeNamedSize.class ).list();
 		session.getTransaction().commit();
 		session.close();
 	}
 
 	@Override
-	protected Class[] getAnnotatedClasses() {
+	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] { EntityWithAttributeNamedSize.class };
 	}
 

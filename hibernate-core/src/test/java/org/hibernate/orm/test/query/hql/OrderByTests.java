@@ -17,9 +17,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.query.hql.HqlTranslator;
 
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import org.hibernate.orm.test.hql.Address;
@@ -215,38 +213,44 @@ public class OrderByTests extends BaseCoreFunctionalTestCase {
 		//   zoo1  Zoo         1313 Mockingbird Lane, Anywhere, IL USA
 		checkTestOrderByResults(
 				s.createQuery(
-						"select name, address from Zoo order by name, address"
+						"select name, address from Zoo order by name, address",
+						Object[].class
 				).list(),
 				zoo2, zoo4, zoo3, zoo1, null
 		);
 		checkTestOrderByResults(
 				s.createQuery(
-						"select z.name, z.address from Zoo z order by z.name, z.address"
+						"select z.name, z.address from Zoo z order by z.name, z.address",
+						Object[].class
 				).list(),
 				zoo2, zoo4, zoo3, zoo1, null
 		);
 		checkTestOrderByResults(
 				s.createQuery(
-						"select z2.name, z2.address from Zoo z2 where z2.name in ( select name from Zoo ) order by z2.name, z2.address"
+						"select z2.name, z2.address from Zoo z2 where z2.name in ( select name from Zoo ) order by z2.name, z2.address",
+						Object[].class
 				).list(),
 				zoo2, zoo4, zoo3, zoo1, null
 		);
 		// using ASC
 		checkTestOrderByResults(
 				s.createQuery(
-						"select name, address from Zoo order by name ASC, address ASC"
+						"select name, address from Zoo order by name ASC, address ASC",
+						Object[].class
 				).list(),
 				zoo2, zoo4, zoo3, zoo1, null
 		);
 		checkTestOrderByResults(
 				s.createQuery(
-						"select z.name, z.address from Zoo z order by z.name ASC, z.address ASC"
+						"select z.name, z.address from Zoo z order by z.name ASC, z.address ASC",
+						Object[].class
 				).list(),
 				zoo2, zoo4, zoo3, zoo1, null
 		);
 		checkTestOrderByResults(
 				s.createQuery(
-						"select z2.name, z2.address from Zoo z2 where z2.name in ( select name from Zoo ) order by z2.name ASC, z2.address ASC"
+						"select z2.name, z2.address from Zoo z2 where z2.name in ( select name from Zoo ) order by z2.name ASC, z2.address ASC",
+						Object[].class
 				).list(),
 				zoo2, zoo4, zoo3, zoo1, null
 		);
@@ -277,7 +281,8 @@ public class OrderByTests extends BaseCoreFunctionalTestCase {
 								"    z.address.city," +
 								"    z.address.postalCode, " +
 								"    z.address.country," +
-								"    z.name"
+								"    z.name",
+						Object[].class
 				).list(),
 				zoo3, zoo4, zoo2, zoo1, null
 		);
@@ -290,7 +295,8 @@ public class OrderByTests extends BaseCoreFunctionalTestCase {
 		//   zoo4  Duh Zoo     1312 Mockingbird Lane, Nowhere, IL USA
 		checkTestOrderByResults(
 				s.createQuery(
-						"select z.name, z.address from Zoo z order by z.address, z.name"
+						"select z.name, z.address from Zoo z order by z.address, z.name",
+						Object[].class
 				).list(),
 				zoo3, zoo2, zoo1, zoo4, null
 		);
@@ -298,14 +304,16 @@ public class OrderByTests extends BaseCoreFunctionalTestCase {
 		// NOTE (6.0) - continued 3 : and the functionally equiv "full ordering"
 		checkTestOrderByResults(
 				s.createQuery(
-						"select z.name, z.address from Zoo z order by z.address.city, z.address.country, z.address.stateProvince, z.address.street, z.name"
+						"select z.name, z.address from Zoo z order by z.address.city, z.address.country, z.address.stateProvince, z.address.street, z.name",
+						Object[].class
 				).list(),
 				zoo3, zoo2, zoo1, zoo4, null
 		);
 
 		checkTestOrderByResults(
 				s.createQuery(
-						"select name, address from Zoo order by address, name"
+						"select name, address from Zoo order by address, name",
+						Object[].class
 				).list(),
 				zoo3, zoo2, zoo1, zoo4, null
 		);
@@ -327,13 +335,15 @@ public class OrderByTests extends BaseCoreFunctionalTestCase {
 		//		is the order used by 5.x
 		checkTestOrderByResults(
 				s.createQuery(
-						"select z.name, z.address from Zoo z order by z.address.street, z.address.city"
+						"select z.name, z.address from Zoo z order by z.address.street, z.address.city",
+						Object[].class
 				).list(),
 				zoo3, zoo4, null, null, zoosWithSameAddress
 		);
 		checkTestOrderByResults(
 				s.createQuery(
-						"select name, address from Zoo order by address.street, address.city"
+						"select name, address from Zoo order by address.street, address.city",
+						Object[].class
 				).list(),
 				zoo3, zoo4, null, null, zoosWithSameAddress
 		);
@@ -346,13 +356,15 @@ public class OrderByTests extends BaseCoreFunctionalTestCase {
 		//   zoo3  Zoo         1312 Mockingbird Lane, Anywhere, IL USA
 		checkTestOrderByResults(
 				s.createQuery(
-						"select z.name, z.address from Zoo z order by z.name"
+						"select z.name, z.address from Zoo z order by z.name",
+						Object[].class
 				).list(),
 				zoo2, zoo4, null, null, zoosWithSameName
 		);
 		checkTestOrderByResults(
 				s.createQuery(
-						"select name, address from Zoo order by name"
+						"select name, address from Zoo order by name",
+						Object[].class
 				).list(),
 				zoo2, zoo4, null, null, zoosWithSameName
 		);
@@ -376,13 +388,15 @@ public class OrderByTests extends BaseCoreFunctionalTestCase {
 		//   zoo3  Zoo         1312 Mockingbird Lane, Anywhere, IL USA
 		checkTestOrderByResults(
 				s.createQuery(
-						"select z.name, z.address from Zoo z order by z.address DESC, z.name DESC"
+						"select z.name, z.address from Zoo z order by z.address DESC, z.name DESC",
+						Object[].class
 				).list(),
 				zoo4, zoo1, zoo2, zoo3, null
 		);
 		checkTestOrderByResults(
 				s.createQuery(
-						"select name, address from Zoo order by address DESC, name DESC"
+						"select name, address from Zoo order by address DESC, name DESC",
+						Object[].class
 				).list(),
 				zoo4, zoo1, zoo2, zoo3, null
 		);
@@ -405,62 +419,72 @@ public class OrderByTests extends BaseCoreFunctionalTestCase {
 		//   zoo1  Zoo         1313 Mockingbird Lane, Anywhere, IL USA
 		checkTestOrderByResults(
 				s.createQuery(
-						"select z2.name as zname, z2.address as zooAddress from Zoo z2 where z2.name in ( select name from Zoo ) order by zname, zooAddress"
+						"select z2.name as zname, z2.address as zooAddress from Zoo z2 where z2.name in ( select name from Zoo ) order by zname, zooAddress",
+						Object[].class
 				).list(),
 				zoo2, zoo4, zoo3, zoo1, null
 		);
 		checkTestOrderByResults(
 				s.createQuery(
-						"select z.name as name, z.address as address from Zoo z order by name, address"
+						"select z.name as name, z.address as address from Zoo z order by name, address",
+						Object[].class
 				).list(),
 				zoo2, zoo4, zoo3, zoo1, null
 		);
 		checkTestOrderByResults(
 				s.createQuery(
-						"select z.name as zooName, z.address as zooAddress from Zoo z order by zooName, zooAddress"
+						"select z.name as zooName, z.address as zooAddress from Zoo z order by zooName, zooAddress",
+						Object[].class
 				).list(),
 				zoo2, zoo4, zoo3, zoo1, null
 		);
 		checkTestOrderByResults(
 				s.createQuery(
-						"select z.name, z.address as name from Zoo z order by z.name, name"
+						"select z.name, z.address as name from Zoo z order by z.name, name",
+						Object[].class
 				).list(),
 				zoo2, zoo4, zoo3, zoo1, null
 		);
 		checkTestOrderByResults(
 				s.createQuery(
-						"select z.name, z.address as name from Zoo z order by z.name, name"
+						"select z.name, z.address as name from Zoo z order by z.name, name",
+						Object[].class
 				).list(),
 				zoo2, zoo4, zoo3, zoo1, null
 		);
 		// using ASC
 		checkTestOrderByResults(
 				s.createQuery(
-						"select z2.name as zname, z2.address as zooAddress from Zoo z2 where z2.name in ( select name from Zoo ) order by zname ASC, zooAddress ASC"
+						"select z2.name as zname, z2.address as zooAddress from Zoo z2 where z2.name in ( select name from Zoo ) order by zname ASC, zooAddress ASC",
+						Object[].class
 				).list(),
 				zoo2, zoo4, zoo3, zoo1, null
 		);
 		checkTestOrderByResults(
 				s.createQuery(
-						"select z.name as name, z.address as address from Zoo z order by name ASC, address ASC"
+						"select z.name as name, z.address as address from Zoo z order by name ASC, address ASC",
+						Object[].class
 				).list(),
 				zoo2, zoo4, zoo3, zoo1, null
 		);
 		checkTestOrderByResults(
 				s.createQuery(
-						"select z.name as zooName, z.address as zooAddress from Zoo z order by zooName ASC, zooAddress ASC"
+						"select z.name as zooName, z.address as zooAddress from Zoo z order by zooName ASC, zooAddress ASC",
+						Object[].class
 				).list(),
 				zoo2, zoo4, zoo3, zoo1, null
 		);
 		checkTestOrderByResults(
 				s.createQuery(
-						"select z.name, z.address as name from Zoo z order by z.name ASC, name ASC"
+						"select z.name, z.address as name from Zoo z order by z.name ASC, name ASC",
+						Object[].class
 				).list(),
 				zoo2, zoo4, zoo3, zoo1, null
 		);
 		checkTestOrderByResults(
 				s.createQuery(
-						"select z.name, z.address as name from Zoo z order by z.name ASC, name ASC"
+						"select z.name, z.address as name from Zoo z order by z.name ASC, name ASC",
+						Object[].class
 				).list(),
 				zoo2, zoo4, zoo3, zoo1, null
 		);
@@ -479,26 +503,30 @@ public class OrderByTests extends BaseCoreFunctionalTestCase {
 		//   zoo4  Duh Zoo     1312 Mockingbird Lane, Nowhere, IL USA
 		checkTestOrderByResults(
 				s.createQuery(
-						"select z.name as address, z.address as name from Zoo z order by name, address"
+						"select z.name as address, z.address as name from Zoo z order by name, address",
+						Object[].class
 				).list(),
 				zoo3, zoo2, zoo1, zoo4, null
 		);
 		checkTestOrderByResults(
 				s.createQuery(
-						"select z.name, z.address as name from Zoo z order by name, z.name"
+						"select z.name, z.address as name from Zoo z order by name, z.name",
+						Object[].class
 				).list(),
 				zoo3, zoo2, zoo1, zoo4, null
 		);
 		// using ASC
 		checkTestOrderByResults(
 				s.createQuery(
-						"select z.name as address, z.address as name from Zoo z order by name ASC, address ASC"
+						"select z.name as address, z.address as name from Zoo z order by name ASC, address ASC",
+						Object[].class
 				).list(),
 				zoo3, zoo2, zoo1, zoo4, null
 		);
 		checkTestOrderByResults(
 				s.createQuery(
-						"select z.name, z.address as name from Zoo z order by name ASC, z.name ASC"
+						"select z.name, z.address as name from Zoo z order by name ASC, z.name ASC",
+						Object[].class
 				).list(),
 				zoo3, zoo2, zoo1, zoo4, null
 		);
@@ -534,14 +562,16 @@ public class OrderByTests extends BaseCoreFunctionalTestCase {
 		//   zoo3  Zoo         1312 Mockingbird Lane, Anywhere, IL USA
 		checkTestOrderByResults(
 				s.createQuery(
-						"select z.name as zooName, z.address as zooAddress from Zoo z order by zooName"
+						"select z.name as zooName, z.address as zooAddress from Zoo z order by zooName",
+						Object[].class
 				).list(),
 				zoo2, zoo4, null, null, zoosWithSameName
 		);
 
 		checkTestOrderByResults(
 				s.createQuery(
-						"select z.name as address, z.address as name from Zoo z order by address"
+						"select z.name as address, z.address as name from Zoo z order by address",
+						Object[].class
 				).list(),
 				zoo2, zoo4, null, null, zoosWithSameName
 		);
@@ -566,7 +596,8 @@ public class OrderByTests extends BaseCoreFunctionalTestCase {
 		// using DESC
 		checkTestOrderByResults(
 				s.createQuery(
-						"select z.name as zooName, z.address as zooAddress from Zoo z order by zooAddress DESC, zooName DESC"
+						"select z.name as zooName, z.address as zooAddress from Zoo z order by zooAddress DESC, zooName DESC",
+						Object[].class
 				).list(),
 				zoo4, zoo1, zoo2, zoo3, null
 		);
@@ -590,7 +621,7 @@ public class OrderByTests extends BaseCoreFunctionalTestCase {
 		//   zoo2  A Zoo       1313 Mockingbird Lane, Anywhere, IL USA
 		//   zoo1  Zoo         1313 Mockingbird Lane, Anywhere, IL USA
 		// using DESC
-		List list = s.createQuery( "from Zoo z join fetch z.mammals" ).list();
+		List<Zoo> list = s.createQuery( "from Zoo z join fetch z.mammals", Zoo.class ).list();
 
 		t.commit();
 		s.close();
@@ -610,9 +641,10 @@ public class OrderByTests extends BaseCoreFunctionalTestCase {
 		//   zoo4  Duh Zoo     1312 Mockingbird Lane, Nowhere, IL USA
 		//   zoo3  Zoo         1312 Mockingbird Lane, Anywhere, IL USA
 		//   zoo1  Zoo         1313 Mockingbird Lane, Anywhere, IL USA
-		List list =
+		List<Zoo> list =
 				s.createQuery(
-						"select new Zoo( z.name as zname, z.address as zaddress) from Zoo z order by zname, zaddress"
+						"select new Zoo( z.name as zname, z.address as zaddress) from Zoo z order by zname, zaddress",
+						Zoo.class
 				).list();
 		assertEquals( 4, list.size() );
 		assertEquals( zoo2, list.get( 0 ) );
@@ -627,7 +659,8 @@ public class OrderByTests extends BaseCoreFunctionalTestCase {
 		//   zoo4  Duh Zoo     1312 Mockingbird Lane, Nowhere, IL USA
 		list =
 				s.createQuery(
-						"select new Zoo( z.name as zname, z.address as zaddress) from Zoo z order by zaddress, zname"
+						"select new Zoo( z.name as zname, z.address as zaddress) from Zoo z order by zaddress, zname",
+						Zoo.class
 				).list();
 		assertEquals( 4, list.size() );
 		assertEquals( zoo3, list.get( 0 ) );
@@ -654,19 +687,20 @@ public class OrderByTests extends BaseCoreFunctionalTestCase {
 		//   zoo4  Duh Zoo     1312 Mockingbird Lane, Nowhere, IL USA
 		//   zoo3  Zoo         1312 Mockingbird Lane, Anywhere, IL USA
 		//   zoo1  Zoo         1313 Mockingbird Lane, Anywhere, IL USA
-		List list =
+		List<Map> list =
 				s.createQuery(
-						"select new map( z.name as zname, z.address as zaddress ) from Zoo z left join z.mammals m order by zname, zaddress"
+						"select new map( z.name as zname, z.address as zaddress ) from Zoo z left join z.mammals m order by zname, zaddress",
+						Map.class
 				).list();
 		assertEquals( 4, list.size() );
-		assertEquals( zoo2.getName(), ( ( Map ) list.get( 0 ) ).get( "zname" ) );
-		assertEquals( zoo2.getAddress(), ( ( Map ) list.get( 0 ) ).get( "zaddress" ) );
-		assertEquals( zoo4.getName(), ( ( Map ) list.get( 1 ) ).get( "zname" ) );
-		assertEquals( zoo4.getAddress(), ( ( Map ) list.get( 1 ) ).get( "zaddress" ) );
-		assertEquals( zoo3.getName(), ( ( Map ) list.get( 2 ) ).get( "zname" ) );
-		assertEquals( zoo3.getAddress(), ( ( Map ) list.get( 2 ) ).get( "zaddress" ) );
-		assertEquals( zoo1.getName(), ( ( Map ) list.get( 3 ) ).get( "zname" ) );
-		assertEquals( zoo1.getAddress(), ( ( Map ) list.get( 3 ) ).get( "zaddress" ) );
+		assertEquals( zoo2.getName(), list.get( 0 ).get( "zname" ) );
+		assertEquals( zoo2.getAddress(), list.get( 0 ).get( "zaddress" ) );
+		assertEquals( zoo4.getName(), list.get( 1 ).get( "zname" ) );
+		assertEquals( zoo4.getAddress(), list.get( 1 ).get( "zaddress" ) );
+		assertEquals( zoo3.getName(), list.get( 2 ).get( "zname" ) );
+		assertEquals( zoo3.getAddress(), list.get( 2 ).get( "zaddress" ) );
+		assertEquals( zoo1.getName(), list.get( 3 ).get( "zname" ) );
+		assertEquals( zoo1.getAddress(), list.get( 3 ).get( "zaddress" ) );
 
 		// ordered by address, name:
 		//   zoo3  Zoo         1312 Mockingbird Lane, Anywhere, IL USA
@@ -675,21 +709,22 @@ public class OrderByTests extends BaseCoreFunctionalTestCase {
 		//   zoo4  Duh Zoo     1312 Mockingbird Lane, Nowhere, IL USA
 		list =
 				s.createQuery(
-						"select new map( z.name as zname, z.address as zaddress ) from Zoo z left join z.mammals m order by zaddress, zname"
+						"select new map( z.name as zname, z.address as zaddress ) from Zoo z left join z.mammals m order by zaddress, zname",
+						Map.class
 				).list();
 		assertEquals( 4, list.size() );
 
-		assertEquals( zoo3.getName(), ( ( Map ) list.get( 0 ) ).get( "zname" ) );
-		assertEquals( zoo3.getAddress(), ( ( Map ) list.get( 0 ) ).get( "zaddress" ) );
+		assertEquals( zoo3.getName(), list.get( 0 ).get( "zname" ) );
+		assertEquals( zoo3.getAddress(), list.get( 0 ).get( "zaddress" ) );
 
-		assertEquals( zoo2.getName(), ( ( Map ) list.get( 1 ) ).get( "zname" ) );
-		assertEquals( zoo2.getAddress(), ( ( Map ) list.get( 1 ) ).get( "zaddress" ) );
+		assertEquals( zoo2.getName(), list.get( 1 ).get( "zname" ) );
+		assertEquals( zoo2.getAddress(), list.get( 1 ).get( "zaddress" ) );
 
-		assertEquals( zoo1.getName(), ( ( Map ) list.get( 2 ) ).get( "zname" ) );
-		assertEquals( zoo1.getAddress(), ( ( Map ) list.get( 2 ) ).get( "zaddress" ) );
+		assertEquals( zoo1.getName(), list.get( 2 ).get( "zname" ) );
+		assertEquals( zoo1.getAddress(), list.get( 2 ).get( "zaddress" ) );
 
-		assertEquals( zoo4.getName(), ( ( Map ) list.get( 3 ) ).get( "zname" ) );
-		assertEquals( zoo4.getAddress(), ( ( Map ) list.get( 3 ) ).get( "zaddress" ) );
+		assertEquals( zoo4.getName(), list.get( 3 ).get( "zname" ) );
+		assertEquals( zoo4.getAddress(), list.get( 3 ).get( "zaddress" ) );
 		t.commit();
 		s.close();
 
@@ -708,17 +743,18 @@ public class OrderByTests extends BaseCoreFunctionalTestCase {
 		//   zoo4  Duh Zoo     1312 Mockingbird Lane, Nowhere, IL USA
 		//   zoo3  Zoo         1312 Mockingbird Lane, Anywhere, IL USA
 		//   zoo1  Zoo         1313 Mockingbird Lane, Anywhere, IL USA
-		List list =
+		List<Object[]> list =
 				s.createQuery(
-						"select z.name as zname, count(*) as cnt from Zoo z group by z.name order by cnt desc, zname"
+						"select z.name as zname, count(*) as cnt from Zoo z group by z.name order by cnt desc, zname",
+						Object[].class
 				).list();
 		assertEquals( 3, list.size() );
-		assertEquals( zoo3.getName(), ( ( Object[] ) list.get( 0 ) )[ 0 ] );
-		assertEquals( Long.valueOf( 2 ), ( ( Object[] ) list.get( 0 ) )[ 1 ] );
-		assertEquals( zoo2.getName(), ( ( Object[] ) list.get( 1 ) )[ 0 ] );
-		assertEquals( Long.valueOf( 1 ), ( ( Object[] ) list.get( 1 ) )[ 1 ] );
-		assertEquals( zoo4.getName(), ( ( Object[] ) list.get( 2 ) )[ 0 ] );
-		assertEquals( Long.valueOf( 1 ), ( ( Object[] ) list.get( 2 ) )[ 1 ] );
+		assertEquals( zoo3.getName(), list.get( 0 )[ 0 ] );
+		assertEquals(2L, list.get( 0 )[ 1 ] );
+		assertEquals( zoo2.getName(), list.get( 1 )[ 0 ] );
+		assertEquals(1L, list.get( 1 )[ 1 ] );
+		assertEquals( zoo4.getName(), list.get( 2 )[ 0 ] );
+		assertEquals(1L, list.get( 2 )[ 1 ] );
 		t.commit();
 		s.close();
 		cleanupData();

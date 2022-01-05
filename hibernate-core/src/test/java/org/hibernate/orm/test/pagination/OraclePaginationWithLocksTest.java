@@ -10,6 +10,8 @@ import jakarta.persistence.criteria.Root;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.OracleDialect;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.query.FetchClauseType;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 
 import org.hibernate.testing.TestForIssue;
@@ -68,6 +70,7 @@ public class OraclePaginationWithLocksTest {
 							.list();
 					assertEquals( 10, people.size() );
 					assertFalse( mostRecentStatementInspector.sqlContains( "fetch" ) );
+					assertTrue( mostRecentStatementInspector.sqlContains( "rownum" ) );
 				}
 		);
 
@@ -77,7 +80,7 @@ public class OraclePaginationWithLocksTest {
 							.setMaxResults( 10 )
 							.list();
 					assertEquals( 10, people.size() );
-					assertTrue( mostRecentStatementInspector.sqlContains( "fetch" ) );
+					assertSqlContainsFetch( session );
 				}
 		);
 
@@ -88,7 +91,7 @@ public class OraclePaginationWithLocksTest {
 							.setMaxResults( 10 )
 							.list();
 					assertEquals( 10, people.size() );
-					assertTrue( mostRecentStatementInspector.sqlContains( "fetch" ) );
+					assertSqlContainsFetch( session );
 				}
 		);
 	}
@@ -130,6 +133,7 @@ public class OraclePaginationWithLocksTest {
 							.getResultList();
 					assertEquals( 10, people.size() );
 					assertFalse( mostRecentStatementInspector.sqlContains( "fetch" ) );
+					assertTrue( mostRecentStatementInspector.sqlContains( "rownum" ) );
 				}
 		);
 
@@ -156,7 +160,7 @@ public class OraclePaginationWithLocksTest {
 							.setFirstResult( 2 )
 							.getResultList();
 					assertEquals( 10, people.size() );
-					assertTrue( mostRecentStatementInspector.sqlContains( "fetch" ) );
+					assertSqlContainsFetch( session );
 				}
 		);
 
@@ -173,6 +177,7 @@ public class OraclePaginationWithLocksTest {
 							.getResultList();
 					assertEquals( 10, people.size() );
 					assertFalse( mostRecentStatementInspector.sqlContains( "fetch" ) );
+					assertTrue( mostRecentStatementInspector.sqlContains( "rownum" ) );
 				}
 		);
 
@@ -196,7 +201,7 @@ public class OraclePaginationWithLocksTest {
 							.getResultList();
 					assertEquals( 10, people.size() );
 					assertEquals( 10, people.size() );
-					assertTrue( mostRecentStatementInspector.sqlContains( "fetch" ) );
+					assertSqlContainsFetch( session );
 				}
 		);
 
@@ -209,6 +214,7 @@ public class OraclePaginationWithLocksTest {
 							.getResultList();
 					assertEquals( 1, people.size() );
 					assertFalse( mostRecentStatementInspector.sqlContains( "fetch" ) );
+					assertTrue( mostRecentStatementInspector.sqlContains( "rownum" ) );
 				}
 		);
 
@@ -224,6 +230,16 @@ public class OraclePaginationWithLocksTest {
 		);
 
 
+	}
+
+	private void assertSqlContainsFetch(SessionImplementor session) {
+		// We can only assert for fetch if the database actually supports it
+		if ( session.getFactory().getJdbcServices().getDialect().supportsFetchClause( FetchClauseType.ROWS_ONLY ) ) {
+			assertTrue( mostRecentStatementInspector.sqlContains( "fetch" ) );
+		}
+		else {
+			assertTrue( mostRecentStatementInspector.sqlContains( "rownum" ) );
+		}
 	}
 
 	public static class MostRecentStatementInspector implements StatementInspector {

@@ -8,9 +8,8 @@
 package org.hibernate.spatial.testing.dialects.oracle;
 
 
-import java.util.Map;
+import java.sql.Struct;
 
-import org.hibernate.spatial.CommonSpatialFunction;
 import org.hibernate.spatial.GeomCodec;
 import org.hibernate.spatial.testing.datareader.TestData;
 import org.hibernate.spatial.testing.datareader.TestSupport;
@@ -46,7 +45,8 @@ public class OracleSDOTestSupport extends TestSupport {
 		return new GeomCodec() {
 			@Override
 			public Geometry<?> toGeometry(Object in) {
-				return Decoders.decode( (SDOGeometry) in );
+				SDOGeometry geom = SDOGeometry.load( (Struct) in );
+				return Decoders.decode( geom );
 			}
 		};
 	}

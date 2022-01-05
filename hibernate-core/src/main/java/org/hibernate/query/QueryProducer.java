@@ -21,20 +21,24 @@ import jakarta.persistence.criteria.CriteriaUpdate;
  */
 public interface QueryProducer {
 	/**
-	 * Create a {@link Query} instance for the given HQL/JPQL query string.
+	 * Create a {@link Query} instance for the given HQL/JPQL query, or
+	 * HQL/JPQL insert, update, or delete statement.
 	 *
 	 * @param queryString The HQL/JPQL query
 	 *
 	 * @return The Query instance for manipulation and execution
 	 *
 	 * @see jakarta.persistence.EntityManager#createQuery(String)
-	 * @deprecated use {@link #createQuery(String, Class)}
+	 * @deprecated use {@link #createQuery(String, Class)} or {@link #createStatement(String)}
 	 */
 	@Deprecated @SuppressWarnings("rawtypes")
 	Query createQuery(String queryString);
 
 	/**
 	 * Create a typed {@link Query} instance for the given HQL/JPQL query string.
+	 * <p>
+	 * The returned {@code Query} may be executed by calling
+	 * {@link Query#getResultList()} or {@link Query#getSingleResult()}.
 	 *
 	 * @param queryString The HQL/JPQL query
 	 * @param resultClass The type of the query result
@@ -45,8 +49,20 @@ public interface QueryProducer {
 	<R> Query<R> createQuery(String queryString, Class<R> resultClass);
 
 	/**
-	 * The JPA-defined named query creation method.  This form can represent an
-	 * HQL/JPQL query or a native query.
+	 * Create a typed {@link Query} instance for the given HQL/JPQL insert,
+	 * update, or delete statement.
+	 * <p>
+	 * The returned {@code Query} must be executed by calling
+	 * {@link Query#executeUpdate()}.
+	 *
+	 * @param statementString The HQL/JPQL insert, update, or delete statement
+	 * @return The Query instance for manipulation and execution
+	 */
+	Query<Void> createStatement(String statementString);
+
+	/**
+	 * Create a typed {@link Query} instance for the given named query.
+	 * The named query might be defined in HQL or in native SQL.
 	 *
 	 * @param name the name of a pre-defined, named query
 	 *
@@ -58,14 +74,14 @@ public interface QueryProducer {
 	 *
 	 * @see jakarta.persistence.EntityManager#createNamedQuery(String)
 	 * 
-	 * @deprecated use {@link #createNamedQuery(String, Class)}
+	 * @deprecated use {@link #createNamedQuery(String, Class)} or {@link #createNamedStatement(String)}
 	 */
 	@Deprecated @SuppressWarnings("rawtypes")
 	Query createNamedQuery(String name);
 
 	/**
-	 * The JPA-defined named, typed query creation method.  This form can only
-	 * represent an HQL/JPQL query (not a native query).
+	 * Create a typed {@link Query} instance for the given named query.
+	 * The named query might be defined in HQL or in native SQL.
 	 *
 	 * @param name the name of a query defined in metadata
 	 * @param resultClass the type of the query result
@@ -82,7 +98,22 @@ public interface QueryProducer {
 	<R> Query<R> createNamedQuery(String name, Class<R> resultClass);
 
 	/**
-	 * Create a NativeQuery instance for the given native (SQL) query
+	 * Create a typed {@link Query} instance for the given named insert,
+	 * update, or delete statement. The named query might be defined in
+	 * HQL or in native SQL.
+	 *
+	 * @param name the name of a pre-defined, named query
+	 *
+	 * @return The Query instance for manipulation and execution
+	 *
+	 * @throws IllegalArgumentException if a query has not been
+	 * defined with the given name or if the query string is
+	 * found to be invalid
+	 */
+	Query<Void> createNamedStatement(String name);
+
+	/**
+	 * Create a {@link NativeQuery} instance for the given native (SQL) query
 	 *
 	 * @param sqlString a native SQL query string
 	 *
@@ -96,7 +127,7 @@ public interface QueryProducer {
 	NativeQuery createNativeQuery(String sqlString);
 
 	/**
-	 * Create a NativeQuery instance for the given native (SQL) query using
+	 * Create a {@link NativeQuery} instance for the given native (SQL) query using
 	 * implicit mapping to the specified Java type.
 	 * <p>
 	 * If the given class is an entity class, this method is equivalent to
@@ -112,7 +143,7 @@ public interface QueryProducer {
 	<R> NativeQuery<R> createNativeQuery(String sqlString, Class<R> resultClass);
 
 	/**
-	 * Create a NativeQuery instance for the given native (SQL) query using
+	 * Create a {@link NativeQuery} instance for the given native (SQL) query using
 	 * implicit mapping to the specified Java type.
 	 * <p>
 	 * If the given class is an entity class, this method is equivalent to
@@ -129,7 +160,7 @@ public interface QueryProducer {
 	<R> NativeQuery<R> createNativeQuery(String sqlString, Class<R> resultClass, String tableAlias);
 
 	/**
-	 * Create a NativeQuery instance for the given native (SQL) query using
+	 * Create a {@link NativeQuery} instance for the given native (SQL) query using
 	 * implicit mapping to the specified Java type.
 	 *
 	 * @param sqlString Native (SQL) query string
@@ -146,7 +177,7 @@ public interface QueryProducer {
 	NativeQuery createNativeQuery(String sqlString, String resultSetMappingName);
 
 	/**
-	 * Create a NativeQuery instance for the given native (SQL) query using
+	 * Create a {@link NativeQuery} instance for the given native (SQL) query using
 	 * implicit mapping to the specified Java type.
 	 *
 	 * @param sqlString Native (SQL) query string
@@ -160,21 +191,30 @@ public interface QueryProducer {
 	<R> NativeQuery<R> createNativeQuery(String sqlString, String resultSetMappingName, Class<R> resultClass);
 
 	/**
-	 * Create a Query for the given JPA {@link CriteriaQuery}
+	 * Create a {@link NativeQuery} instance for the given native (SQL) statement
+	 *
+	 * @param sqlString a native SQL statement string
+	 *
+	 * @return The NativeQuery instance for manipulation and execution
+	 */
+	NativeQuery<Void> createNativeStatement(String sqlString);
+
+	/**
+	 * Create a {@link Query} for the given JPA {@link CriteriaQuery}
 	 *
 	 * @see jakarta.persistence.EntityManager#createQuery(CriteriaQuery)
 	 */
 	<R> Query<R> createQuery(CriteriaQuery<R> criteriaQuery);
 
 	/**
-	 * Create a Query for the given JPA {@link CriteriaUpdate}
+	 * Create a {@link Query} for the given JPA {@link CriteriaUpdate}
 	 *
 	 * @see jakarta.persistence.EntityManager#createQuery(CriteriaUpdate)
 	 */
 	Query<Void> createQuery(@SuppressWarnings("rawtypes") CriteriaUpdate updateQuery);
 
 	/**
-	 * Create a Query for the given JPA {@link CriteriaDelete}
+	 * Create a {@link Query} for the given JPA {@link CriteriaDelete}
 	 *
 	 * @see jakarta.persistence.EntityManager#createQuery(CriteriaDelete)
 	 */

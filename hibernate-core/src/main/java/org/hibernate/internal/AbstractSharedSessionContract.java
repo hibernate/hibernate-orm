@@ -57,6 +57,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.internal.ProcedureCallImpl;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
+import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.hql.spi.HqlQueryImplementor;
@@ -879,6 +880,21 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 
 		throw getExceptionConverter().convert( new IllegalArgumentException( "No query defined for that name [" + queryName + "]" ) );
+	}
+
+	@Override @SuppressWarnings("unchecked")
+	public QueryImplementor<Void> createStatement(String statementString) {
+		return createQuery(statementString);
+	}
+
+	@Override @SuppressWarnings("unchecked")
+	public QueryImplementor<Void> createNamedStatement(String name) {
+		return createNamedQuery(name);
+	}
+
+	@Override @SuppressWarnings("unchecked")
+	public NativeQueryImplementor<Void> createNativeStatement(String sqlString) {
+		return createNativeQuery(sqlString);
 	}
 
 	@Override

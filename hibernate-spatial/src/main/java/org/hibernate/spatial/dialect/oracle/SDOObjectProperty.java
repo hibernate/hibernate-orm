@@ -16,6 +16,7 @@ import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.type.BasicTypeReference;
@@ -51,6 +52,11 @@ class SDOObjectProperty implements SqmFunctionDescriptor {
 
 	public boolean hasArguments() {
 		return true;
+	}
+
+	@Override
+	public ArgumentsValidator getArgumentsValidator() {
+		return null;
 	}
 
 	/*

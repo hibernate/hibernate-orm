@@ -46,7 +46,12 @@ public class TransactSQLStrFunction extends CastStrEmulation implements Function
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
 		if ( arguments.size() == 1 ) {
-			return super.generateSqmFunctionExpression( arguments, impliedResultType, queryEngine, typeConfiguration );
+			return super.generateSqmFunctionExpression(
+					arguments,
+					impliedResultType,
+					queryEngine,
+					typeConfiguration
+			);
 		}
 
 		return new SelfRenderingSqmFunction<>(
@@ -54,6 +59,7 @@ public class TransactSQLStrFunction extends CastStrEmulation implements Function
 				this,
 				arguments,
 				impliedResultType,
+				getArgumentsValidator(),
 				getReturnTypeResolver(),
 				queryEngine.getCriteriaBuilder(),
 				getName()

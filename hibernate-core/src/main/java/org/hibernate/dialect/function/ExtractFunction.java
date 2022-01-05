@@ -14,6 +14,8 @@ import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.function.AbstractSqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
+import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
+import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
@@ -27,6 +29,8 @@ import java.util.List;
 import static java.util.Arrays.asList;
 import static org.hibernate.query.BinaryArithmeticOperator.*;
 import static org.hibernate.query.TemporalUnit.*;
+import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType.ANY;
+import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType.TEMPORAL;
 import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers.useArgType;
 
 /**
@@ -40,7 +44,10 @@ public class ExtractFunction
 	public ExtractFunction(Dialect dialect) {
 		super(
 				"extract",
-				StandardArgumentsValidators.exactly( 2 ),
+				new ArgumentTypesValidator(
+						StandardArgumentsValidators.exactly( 2 ),
+						ANY, TEMPORAL
+				),
 				StandardFunctionReturnTypeResolvers.useArgType( 1 )
 		);
 		this.dialect = dialect;

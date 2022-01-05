@@ -87,6 +87,7 @@ import static org.hibernate.query.TemporalUnit.MINUTE;
 import static org.hibernate.query.TemporalUnit.MONTH;
 import static org.hibernate.query.TemporalUnit.SECOND;
 import static org.hibernate.query.TemporalUnit.YEAR;
+import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType;
 import static org.hibernate.type.SqlTypes.*;
 
 /**
@@ -180,7 +181,8 @@ public class OracleDialect extends Dialect {
 				"locate",
 				queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER ),
 				"instr(?2,?1)",
-				"instr(?2,?1,?3)"
+				"instr(?2,?1,?3)",
+				ParameterType.STRING, ParameterType.STRING, ParameterType.INTEGER
 		).setArgumentListSignature("(pattern, string[, start])");
 	}
 

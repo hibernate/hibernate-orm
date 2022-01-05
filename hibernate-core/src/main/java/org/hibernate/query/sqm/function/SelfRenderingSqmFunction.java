@@ -11,16 +11,19 @@ import java.util.List;
 
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 import org.hibernate.query.sqm.tree.expression.SqmFunction;
 import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static java.util.Collections.emptyList;
@@ -30,6 +33,7 @@ import static java.util.Collections.emptyList;
  */
 public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 	private final AllowableFunctionReturnType<T> impliedResultType;
+	private final ArgumentsValidator argumentsValidator;
 	private final FunctionReturnTypeResolver returnTypeResolver;
 	private final FunctionRenderingSupport renderingSupport;
 	private AllowableFunctionReturnType<?> resultType;
@@ -39,12 +43,14 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 			FunctionRenderingSupport renderingSupport,
 			List<? extends SqmTypedNode<?>> arguments,
 			AllowableFunctionReturnType<T> impliedResultType,
+			ArgumentsValidator argumentsValidator,
 			FunctionReturnTypeResolver returnTypeResolver,
 			NodeBuilder nodeBuilder,
 			String name) {
 		super( name, descriptor, impliedResultType, arguments, nodeBuilder );
 		this.renderingSupport = renderingSupport;
 		this.impliedResultType = impliedResultType;
+		this.argumentsValidator = argumentsValidator;
 		this.returnTypeResolver = returnTypeResolver;
 	}
 
@@ -70,10 +76,14 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 				walker.getCreationContext().getDomainModel().getTypeConfiguration()
 		);
 
+		List<SqlAstNode> arguments = resolveSqlAstArguments( getArguments(), walker );
+		if ( argumentsValidator != null ) {
+			argumentsValidator.validateSqlTypes( arguments, getFunctionName() );
+		}
 		return new SelfRenderingFunctionSqlAstExpression(
 				getFunctionName(),
 				getRenderingSupport(),
-				resolveSqlAstArguments( getArguments(), walker ),
+				arguments,
 				resultType,
 				resultType == null ? null : getMappingModelExpressable( walker, resultType )
 		);

@@ -14,6 +14,7 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.CastType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.FunctionKind;
+import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
@@ -26,6 +27,8 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType.NUMERIC;
 
 /**
  * @author Christian Beikov
@@ -45,7 +48,7 @@ public class AvgFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 		super(
 				FUNCTION_NAME,
 				FunctionKind.AGGREGATE,
-				StandardArgumentsValidators.exactly( 1 ),
+				new ArgumentTypesValidator( StandardArgumentsValidators.exactly( 1 ), NUMERIC ),
 				StandardFunctionReturnTypeResolvers.invariant(
 						typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE )
 				)

@@ -38,6 +38,8 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
+import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType.INTEGER;
+import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType.STRING;
 
 /**
  * A SQL dialect compatible with SAP MaxDB.
@@ -164,7 +166,8 @@ public class MaxDBDialect extends Dialect {
 
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
 				"locate",
-				integerType, "index(?2,?1)", "index(?2,?1,?3)"
+				integerType, "index(?2,?1)", "index(?2,?1,?3)",
+				STRING, STRING, INTEGER
 		).setArgumentListSignature("(pattern, string[, start])");
 	}
 

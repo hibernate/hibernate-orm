@@ -8,6 +8,7 @@ package org.hibernate.query.sqm.function;
 
 import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -122,4 +123,6 @@ public interface SqmFunctionDescriptor {
 	default FunctionKind getFunctionKind() {
 		return FunctionKind.NORMAL;
 	}
+
+	ArgumentsValidator getArgumentsValidator();
 }

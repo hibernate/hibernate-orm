@@ -66,6 +66,10 @@ import static org.hibernate.query.TemporalUnit.EPOCH;
 import static org.hibernate.query.TemporalUnit.MONTH;
 import static org.hibernate.query.TemporalUnit.QUARTER;
 import static org.hibernate.query.TemporalUnit.YEAR;
+import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType.INTEGER;
+import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType.NUMERIC;
+import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType.STRING;
+import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType.TEMPORAL;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
@@ -271,24 +275,28 @@ public class SQLiteDialect extends Dialect {
 				"locate",
 				integerType,
 				"instr(?2,?1)",
-				"instr(?2,?1,?3)"
+				"instr(?2,?1,?3)",
+				STRING, STRING, INTEGER
 		).setArgumentListSignature("(pattern, string[, start])");
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
 				"lpad",
 				stringType,
 				"(substr(replace(hex(zeroblob(?2)),'00',' '),1,?2-length(?1))||?1)",
-				"(substr(replace(hex(zeroblob(?2)),'00',?3),1,?2-length(?1))||?1)"
+				"(substr(replace(hex(zeroblob(?2)),'00',?3),1,?2-length(?1))||?1)",
+				STRING, INTEGER, STRING
 		).setArgumentListSignature("(string, length[, padding])");
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
 				"rpad",
 				stringType,
 				"(?1||substr(replace(hex(zeroblob(?2)),'00',' '),1,?2-length(?1)))",
-				"(?1||substr(replace(hex(zeroblob(?2)),'00',?3),1,?2-length(?1)))"
+				"(?1||substr(replace(hex(zeroblob(?2)),'00',?3),1,?2-length(?1)))",
+				STRING, INTEGER, STRING
 		).setArgumentListSignature("(string, length[, padding])");
 
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder("format", "strftime")
 				.setInvariantType( stringType )
 				.setExactArgumentCount( 2 )
+				.setParameterTypes(TEMPORAL, STRING)
 				.setArgumentListSignature("(datetime as pattern)")
 				.register();
 
@@ -298,12 +306,14 @@ public class SQLiteDialect extends Dialect {
 					"(cast(?1 as int)-(?1<cast(?1 as int)))"
 			).setReturnTypeResolver( StandardFunctionReturnTypeResolvers.useArgType( 1 ) )
 					.setExactArgumentCount( 1 )
+					.setParameterTypes(NUMERIC)
 					.register();
 			queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder(
 					"ceiling",
 					"(cast(?1 as int)+(?1>cast(?1 as int)))"
 			).setReturnTypeResolver( StandardFunctionReturnTypeResolvers.useArgType( 1 ) )
 					.setExactArgumentCount( 1 )
+					.setParameterTypes(NUMERIC)
 					.register();
 		}
 	}

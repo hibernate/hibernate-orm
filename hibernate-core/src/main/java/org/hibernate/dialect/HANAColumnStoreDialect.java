@@ -20,6 +20,8 @@ import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.type.StandardBasicTypes;
 
+import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType.ANY;
+
 /**
  * An SQL dialect for the SAP HANA column store.
  * <p>
@@ -112,7 +114,8 @@ public class HANAColumnStoreDialect extends AbstractHANADialect {
 				"contains",
 				queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.BOOLEAN ),
 				"contains(?1,?2)",
-				"contains(?1,?2,?3)"
+				"contains(?1,?2,?3)",
+				ANY, ANY, ANY
 		);
 	}
 

@@ -10,6 +10,8 @@ import java.util.List;
 
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
+import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
+import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
@@ -18,6 +20,9 @@ import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType.INTEGER;
+import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType.STRING;
 
 /**
  * A derby implementation for lpad.
@@ -30,7 +35,7 @@ public class DerbyLpadEmulation
 	public DerbyLpadEmulation(TypeConfiguration typeConfiguration) {
 		super(
 				"lpad",
-				StandardArgumentsValidators.exactly( 2 ),
+				new ArgumentTypesValidator( StandardArgumentsValidators.exactly( 2 ), STRING, INTEGER ),
 				StandardFunctionReturnTypeResolvers.invariant(
 						typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
 				)

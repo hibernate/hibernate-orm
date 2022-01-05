@@ -24,7 +24,7 @@ public class CurrentFunction
 
 	private final String sql;
 
-	public CurrentFunction(String name, String sql, BasicType type) {
+	public CurrentFunction(String name, String sql, BasicType<?> type) {
 		super(
 				name,
 				StandardArgumentsValidators.NO_ARGS,

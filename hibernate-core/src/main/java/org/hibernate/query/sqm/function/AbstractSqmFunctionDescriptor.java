@@ -65,6 +65,11 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 		return getReturnSignature() + name + getArgumentListSignature();
 	}
 
+	@Override
+	public ArgumentsValidator getArgumentsValidator() {
+		return argumentsValidator;
+	}
+
 	public String getReturnSignature() {
 		String result = returnTypeResolver.getReturnType();
 		return result.isEmpty() ? "" : result + " ";
@@ -98,7 +103,7 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 			AllowableFunctionReturnType<T> impliedResultType,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
-		argumentsValidator.validate( arguments );
+		argumentsValidator.validate( arguments, getName() );
 
 		return generateSqmFunctionExpression(
 				arguments,
@@ -115,7 +120,7 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 			AllowableFunctionReturnType<T> impliedResultType,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
-		argumentsValidator.validate( arguments );
+		argumentsValidator.validate( arguments, getName() );
 
 		return generateSqmAggregateFunctionExpression(
 				arguments,
@@ -130,8 +135,7 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 	 * Return an SQM node or subtree representing an invocation of this function
 	 * with the given arguments. This method may be overridden in the case of
 	 * function descriptors that wish to customize creation of the node.
-	 *
-	 * @param arguments the arguments of the function invocation
+	 *  @param arguments the arguments of the function invocation
 	 * @param impliedResultType the function return type as inferred from its usage
 	 */
 	protected abstract <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(

@@ -46,6 +46,8 @@ import java.sql.Types;
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
+import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType.INTEGER;
+import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType.STRING;
 
 /**
  * A SQL dialect for TimesTen 5.1.
@@ -169,7 +171,8 @@ public class TimesTenDialect extends Dialect {
 				"locate",
 				queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER ),
 				"instr(?2,?1)",
-				"instr(?2,?1,?3)"
+				"instr(?2,?1,?3)",
+				STRING, STRING, INTEGER
 		).setArgumentListSignature("(pattern, string[, start])");
 	}
 

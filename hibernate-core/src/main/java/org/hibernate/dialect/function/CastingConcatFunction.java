@@ -14,6 +14,8 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.CastType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
+import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
+import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
@@ -25,6 +27,8 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType.STRING;
 
 public class CastingConcatFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 
@@ -40,7 +44,7 @@ public class CastingConcatFunction extends AbstractSqmSelfRenderingFunctionDescr
 			TypeConfiguration typeConfiguration) {
 		super(
 				"concat",
-				StandardArgumentsValidators.min( 1 ),
+				new ArgumentTypesValidator( StandardArgumentsValidators.min( 1 ), STRING ),
 				StandardFunctionReturnTypeResolvers.invariant(
 						typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
 				)

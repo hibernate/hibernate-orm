@@ -68,6 +68,7 @@ import java.util.TimeZone;
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.query.TemporalUnit.NANOSECOND;
+import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType.INTEGER;
 import static org.hibernate.type.SqlTypes.*;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
@@ -236,26 +237,32 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 			queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "datefromparts" )
 					.setInvariantType( dateType )
 					.setExactArgumentCount( 3 )
+					.setParameterTypes(INTEGER)
 					.register();
 			queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "timefromparts" )
 					.setInvariantType( timeType )
 					.setExactArgumentCount( 5 )
+					.setParameterTypes(INTEGER)
 					.register();
 			queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "smalldatetimefromparts" )
 					.setInvariantType( timestampType )
 					.setExactArgumentCount( 5 )
+					.setParameterTypes(INTEGER)
 					.register();
 			queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "datetimefromparts" )
 					.setInvariantType( timestampType )
 					.setExactArgumentCount( 7 )
+					.setParameterTypes(INTEGER)
 					.register();
 			queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "datetime2fromparts" )
 					.setInvariantType( timestampType )
 					.setExactArgumentCount( 8 )
+					.setParameterTypes(INTEGER)
 					.register();
 			queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "datetimeoffsetfromparts" )
 					.setInvariantType( timestampType )
 					.setExactArgumentCount( 10 )
+					.setParameterTypes(INTEGER)
 					.register();
 		}
 	}

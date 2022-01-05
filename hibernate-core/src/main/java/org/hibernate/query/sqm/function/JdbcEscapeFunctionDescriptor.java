@@ -55,6 +55,7 @@ public class JdbcEscapeFunctionDescriptor
 				},
 				arguments,
 				impliedResultType,
+				getArgumentsValidator(),
 				getReturnTypeResolver(),
 				queryEngine.getCriteriaBuilder(),
 				getName());

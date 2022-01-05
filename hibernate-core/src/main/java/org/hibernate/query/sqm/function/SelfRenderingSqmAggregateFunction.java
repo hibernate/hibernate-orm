@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
@@ -34,10 +35,11 @@ public class SelfRenderingSqmAggregateFunction<T> extends SelfRenderingSqmFuncti
 			List<? extends SqmTypedNode<?>> arguments,
 			SqmPredicate filter,
 			AllowableFunctionReturnType<T> impliedResultType,
+			ArgumentsValidator argumentsValidator,
 			FunctionReturnTypeResolver returnTypeResolver,
 			NodeBuilder nodeBuilder,
 			String name) {
-		super( descriptor, renderingSupport, arguments, impliedResultType, returnTypeResolver, nodeBuilder, name );
+		super( descriptor, renderingSupport, arguments, impliedResultType, argumentsValidator, returnTypeResolver, nodeBuilder, name );
 		this.filter = filter;
 	}
 

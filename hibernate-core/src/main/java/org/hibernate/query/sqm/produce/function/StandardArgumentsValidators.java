@@ -28,7 +28,7 @@ public final class StandardArgumentsValidators {
 	 */
 	public static final ArgumentsValidator NONE = new ArgumentsValidator() {
 		@Override
-		public void validate(List<? extends SqmTypedNode<?>> arguments) {}
+		public void validate(List<? extends SqmTypedNode<?>> arguments, String functionName) {}
 
 		@Override
 		public String getSignature() {
@@ -41,9 +41,16 @@ public final class StandardArgumentsValidators {
 	 */
 	public static final ArgumentsValidator NO_ARGS = new ArgumentsValidator() {
 		@Override
-		public void validate(List<? extends SqmTypedNode<?>> arguments) {
+		public void validate(List<? extends SqmTypedNode<?>> arguments, String functionName) {
 			if (!arguments.isEmpty()) {
-				throw new QueryException("Expecting no arguments, but found " + arguments.size());
+				throw new QueryException(
+						String.format(
+								Locale.ROOT,
+								"Function %s has no parameters, but %d arguments given",
+								functionName,
+								arguments.size()
+						)
+				);
 			}
 		}
 
@@ -59,12 +66,13 @@ public final class StandardArgumentsValidators {
 		}
 		return new ArgumentsValidator() {
 			@Override
-			public void validate(List<? extends SqmTypedNode<?>> arguments) {
+			public void validate(List<? extends SqmTypedNode<?>> arguments, String functionName) {
 				if (arguments.size() < minNumOfArgs) {
 					throw new QueryException(
 							String.format(
 									Locale.ROOT,
-									"Function requires %d or more arguments, but only %d found",
+									"Function %s() requires at least %d arguments, but only %d arguments given",
+									functionName,
 									minNumOfArgs,
 									arguments.size()
 							)
@@ -92,12 +100,13 @@ public final class StandardArgumentsValidators {
 	public static ArgumentsValidator exactly(int number) {
 		return new ArgumentsValidator() {
 			@Override
-			public void validate(List<? extends SqmTypedNode<?>> arguments) {
+			public void validate(List<? extends SqmTypedNode<?>> arguments, String functionName) {
 				if (arguments.size() != number) {
 					throw new QueryException(
 							String.format(
 									Locale.ROOT,
-									"Function requires %d arguments, but %d found",
+									"Function %s() has %d parameters, but %d arguments given",
+									functionName,
 									number,
 									arguments.size()
 							)
@@ -127,12 +136,13 @@ public final class StandardArgumentsValidators {
 	public static ArgumentsValidator max(int maxNumOfArgs) {
 		return new ArgumentsValidator() {
 			@Override
-			public void validate(List<? extends SqmTypedNode<?>> arguments) {
+			public void validate(List<? extends SqmTypedNode<?>> arguments, String functionName) {
 				if (arguments.size() > maxNumOfArgs) {
 					throw new QueryException(
 							String.format(
 									Locale.ROOT,
-									"Function requires %d or fewer arguments, but %d found",
+									"Function %s() allows at most %d arguments, but %d arguments given",
+									functionName,
 									maxNumOfArgs,
 									arguments.size()
 							)
@@ -158,12 +168,13 @@ public final class StandardArgumentsValidators {
 	public static ArgumentsValidator between(int minNumOfArgs, int maxNumOfArgs) {
 		return new ArgumentsValidator() {
 			@Override
-			public void validate(List<? extends SqmTypedNode<?>> arguments) {
+			public void validate(List<? extends SqmTypedNode<?>> arguments, String functionName) {
 				if (arguments.size() < minNumOfArgs || arguments.size() > maxNumOfArgs) {
 					throw new QueryException(
 							String.format(
 									Locale.ROOT,
-									"Function requires between %d and %d arguments, but %d found",
+									"Function %s() requires between %d and %d arguments, but %d arguments given",
+									functionName,
 									minNumOfArgs,
 									maxNumOfArgs,
 									arguments.size()
@@ -191,14 +202,15 @@ public final class StandardArgumentsValidators {
 	}
 
 	public static ArgumentsValidator of(Class<?> javaType) {
-		return arguments -> arguments.forEach(
+		return (arguments, functionName) -> arguments.forEach(
 				arg -> {
 					Class<?> argType = arg.getNodeJavaTypeDescriptor().getJavaTypeClass();
 					if ( !javaType.isAssignableFrom( argType ) ) {
 						throw new QueryException(
 								String.format(
 										Locale.ROOT,
-										"Function expects arguments to be of type %s, but %s found",
+										"Function %s() has parameters of type %s, but argument of type %s given",
+										functionName,
 										javaType.getName(),
 										argType.getName()
 								)
@@ -213,8 +225,8 @@ public final class StandardArgumentsValidators {
 	}
 
 	public static ArgumentsValidator composite(List<ArgumentsValidator> validators) {
-		return arguments -> validators.forEach(
-				individualValidator -> individualValidator.validate( arguments )
+		return (arguments, functionName) -> validators.forEach(
+				individualValidator -> individualValidator.validate( arguments, functionName)
 		);
 	}
 }

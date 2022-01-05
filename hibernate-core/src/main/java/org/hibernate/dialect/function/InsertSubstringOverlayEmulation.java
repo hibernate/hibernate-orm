@@ -10,10 +10,10 @@ import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.query.BinaryArithmeticOperator;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.function.AbstractSqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
@@ -31,6 +31,8 @@ import java.util.List;
 import jakarta.persistence.criteria.Expression;
 
 import static java.util.Arrays.asList;
+import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType.INTEGER;
+import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType.STRING;
 
 /**
  * @author Gavin King
@@ -43,7 +45,10 @@ public class InsertSubstringOverlayEmulation
 	public InsertSubstringOverlayEmulation(TypeConfiguration typeConfiguration, boolean strictSubstring) {
 		super(
 				"overlay",
-				StandardArgumentsValidators.between( 3, 4 ),
+				new ArgumentTypesValidator(
+						StandardArgumentsValidators.between( 3, 4 ),
+						STRING, INTEGER, INTEGER, STRING
+				),
 				StandardFunctionReturnTypeResolvers.invariant(
 						typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
 				)

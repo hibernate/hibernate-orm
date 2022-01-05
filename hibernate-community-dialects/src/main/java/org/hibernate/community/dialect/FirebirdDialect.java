@@ -74,6 +74,8 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import jakarta.persistence.TemporalType;
 
+import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType.INTEGER;
+import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType.STRING;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_END;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_DATE;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_TIME;
@@ -280,7 +282,8 @@ public class FirebirdDialect extends Dialect {
 				"locate",
 				integerType,
 				"position(?1 in ?2)",
-				"position(?1,?2,?3)"
+				"position(?1,?2,?3)",
+				STRING, STRING, INTEGER
 		).setArgumentListSignature( "(pattern, string[, start])" );
 		functionRegistry.namedDescriptorBuilder( "ascii_val" )
 				.setExactArgumentCount( 1 )

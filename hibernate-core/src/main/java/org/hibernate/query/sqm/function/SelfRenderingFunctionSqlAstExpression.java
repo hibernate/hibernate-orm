@@ -21,6 +21,7 @@ import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
@@ -188,8 +189,7 @@ public class SelfRenderingFunctionSqlAstExpression
 	}
 
 	@Override
-	public int forEachJdbcType(
-			int offset, IndexedConsumer<JdbcMapping> action) {
+	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 }

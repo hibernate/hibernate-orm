@@ -452,4 +452,139 @@ public class SqlTypes {
 
 	private SqlTypes() {
 	}
+
+	/**
+	 * Does the given JDBC type code represent some sort of
+	 * numeric type?
+	 * @param sqlType a JDBC type code from {@link Types}
+	 */
+	public static boolean isNumericType(int sqlType) {
+		switch (sqlType) {
+			case Types.BIT:
+			case Types.SMALLINT:
+			case Types.TINYINT:
+			case Types.INTEGER:
+			case Types.BIGINT:
+			case Types.DOUBLE:
+			case Types.REAL:
+			case Types.FLOAT:
+			case Types.NUMERIC:
+			case Types.DECIMAL:
+				return true;
+			default:
+				return false;
+		}
+	}
+
+	/**
+	 * Does the given JDBC type code represent some sort of
+	 * character string type?
+	 * @param sqlType a JDBC type code from {@link Types}
+	 */
+	public static boolean isCharacterType(int sqlType) {
+		switch (sqlType) {
+			case Types.CHAR:
+			case Types.VARCHAR:
+			case Types.LONGVARCHAR:
+			case Types.NCHAR:
+			case Types.NVARCHAR:
+			case Types.LONGNVARCHAR:
+				return true;
+			default:
+				return false;
+		}
+	}
+
+	/**
+	 * Does the given JDBC type code represent some sort of
+	 * variable-length character string type?
+	 * @param sqlType a JDBC type code from {@link Types}
+	 */
+	public static boolean isVarcharType(int sqlType) {
+		switch (sqlType) {
+			case Types.VARCHAR:
+			case Types.LONGVARCHAR:
+			case Types.NVARCHAR:
+			case Types.LONGNVARCHAR:
+				return true;
+			default:
+				return false;
+		}
+	}
+
+	/**
+	 * Does the given JDBC type code represent some sort of
+	 * variable-length binary string type?
+	 * @param sqlType a JDBC type code from {@link Types}
+	 */
+	public static boolean isVarbinaryType(int sqlType) {
+		switch (sqlType) {
+			case Types.VARBINARY:
+			case Types.LONGVARBINARY:
+				return true;
+			default:
+				return false;
+		}
+	}
+
+	/**
+	 * Does the given typecode represent one of the two SQL decimal types?
+	 * @param typeCode a JDBC type code from {@link Types}
+	 */
+	public static boolean isNumericOrDecimal(int typeCode) {
+		return typeCode == NUMERIC
+			|| typeCode == DECIMAL;
+	}
+
+	/**
+	 * Does the given typecode represent a SQL floating point type?
+	 * @param typeCode a JDBC type code from {@link Types}
+	 */
+	public static boolean isFloatOrRealOrDouble(int typeCode) {
+		return typeCode == FLOAT
+			|| typeCode == REAL
+			|| typeCode == DOUBLE;
+	}
+
+	/**
+	 * Does the given typecode represent a SQL integer type?
+	 * @param typeCode a JDBC type code from {@link Types}
+	 */
+	public static boolean isIntegral(int typeCode) {
+		return typeCode == INTEGER
+			|| typeCode == BIGINT
+			|| typeCode == SMALLINT
+			|| typeCode == TINYINT;
+	}
+
+	/**
+	 * Does the given typecode represent a SQL date, time, or timestamp type?
+	 * @param typeCode a JDBC type code from {@link Types}
+	 */
+	public static boolean isTemporalType(int typeCode) {
+		return typeCode == DATE
+			|| typeCode == TIME
+			|| typeCode == TIMESTAMP
+			|| typeCode == TIMESTAMP_WITH_TIMEZONE;
+	}
+
+	/**
+	 * Does the given typecode represent a SQL date or timestamp type?
+	 * @param typeCode a JDBC type code from {@link Types}
+	 */
+	public static boolean hasDatePart(int typeCode) {
+		return typeCode == DATE
+			|| typeCode == TIMESTAMP
+			|| typeCode == TIMESTAMP_WITH_TIMEZONE;
+	}
+
+	/**
+	 * Does the given typecode represent a SQL time or timestamp type?
+	 * @param typeCode a JDBC type code from {@link Types}
+	 */
+	public static boolean hasTimePart(int typeCode) {
+		return typeCode == TIME
+			|| typeCode == TIMESTAMP
+			|| typeCode == TIMESTAMP_WITH_TIMEZONE;
+	}
 }

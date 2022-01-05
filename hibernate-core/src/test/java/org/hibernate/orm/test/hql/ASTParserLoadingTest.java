@@ -35,10 +35,7 @@ import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.MultipleBagFetchException;
@@ -300,8 +297,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 		inTransaction(
 				(session) -> {
-					final String qry = "select new Constructor( c.id, c.id is not null, c.id = c.id, c.id + 1, concat( c.id, 'foo' ) ) from Constructor c where c.id = :id";
-					final Constructor result = (Constructor) session.createQuery(qry ).setParameter( "id", created.getId() ).uniqueResult();
+					final String qry = "select new Constructor( c.id, c.id is not null, c.id = c.id, c.id + 1, concat( str(c.id), 'foo' ) ) from Constructor c where c.id = :id";
+					final Constructor result = session.createQuery(qry, Constructor.class).setParameter( "id", created.getId() ).uniqueResult();
 					assertEquals( 1, Constructor.getConstructorExecutionCount() );
 					Constructor expected = new Constructor(
 							created.getId(),
@@ -3697,29 +3694,11 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 		hql = "from Animal a where mod(16, 4) = 4";
 		session.createQuery(hql).list();
-		/**
-		 * PostgreSQL >= 8.3.7 typecasts are no longer automatically allowed
-		 * <link>http://www.postgresql.org/docs/current/static/release-8-3.html</link>
-		 */
-		if ( getDialect() instanceof PostgreSQLDialect
-				|| getDialect() instanceof HSQLDialect
-				|| getDialect() instanceof CockroachDialect ) {
-			hql = "from Animal a where bit_length(str(a.bodyWeight)) = 24";
-		}
-		else {
-			hql = "from Animal a where bit_length(a.bodyWeight) = 24";
-		}
 
+		hql = "from Animal a where bit_length(str(a.bodyWeight)) = 24";
 		session.createQuery(hql).list();
-		if ( getDialect() instanceof PostgreSQLDialect
-				|| getDialect() instanceof HSQLDialect
-				|| getDialect() instanceof CockroachDialect ) {
-			hql = "select bit_length(str(a.bodyWeight)) from Animal a";
-		}
-		else {
-			hql = "select bit_length(a.bodyWeight) from Animal a";
-		}
 
+		hql = "select bit_length(str(a.bodyWeight)) from Animal a";
 		session.createQuery(hql).list();
 
 		/*hql = "select object(a) from Animal a where CURRENT_DATE = :p1 or CURRENT_TIME = :p2 or CURRENT_TIMESTAMP = :p3";

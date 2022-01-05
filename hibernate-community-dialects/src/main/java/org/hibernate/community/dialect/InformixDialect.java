@@ -60,6 +60,8 @@ import org.hibernate.type.StandardBasicTypes;
 import java.sql.Types;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
+import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType.INTEGER;
+import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType.STRING;
 
 /**
  * Dialect for Informix 7.31.UD3 with Informix
@@ -184,7 +186,8 @@ public class InformixDialect extends Dialect {
 				"locate",
 				queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER ),
 				"instr(?2,?1)",
-				"instr(?2,?1,?3)"
+				"instr(?2,?1,?3)",
+				STRING, STRING, INTEGER
 		).setArgumentListSignature("(pattern, string[, start])");
 
 		//coalesce() and nullif() both supported since Informix 12

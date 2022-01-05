@@ -575,80 +575,6 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Does the given JDBC type code represent some sort of
-	 * numeric type?
-	 * @param sqlType a JDBC type code from {@link Types}
-	 */
-	private static boolean isNumericType(int sqlType) {
-		switch (sqlType) {
-			case Types.BIT:
-			case Types.SMALLINT:
-			case Types.TINYINT:
-			case Types.INTEGER:
-			case Types.BIGINT:
-			case Types.DOUBLE:
-			case Types.REAL:
-			case Types.FLOAT:
-			case Types.NUMERIC:
-			case Types.DECIMAL:
-				return true;
-			default:
-				return false;
-		}
-	}
-
-	/**
-	 * Does the given JDBC type code represent some sort of
-	 * character string type?
-	 * @param sqlType a JDBC type code from {@link Types}
-	 */
-	private static boolean isCharacterType(int sqlType) {
-		switch (sqlType) {
-			case Types.CHAR:
-			case Types.VARCHAR:
-			case Types.LONGVARCHAR:
-			case Types.NCHAR:
-			case Types.NVARCHAR:
-			case Types.LONGNVARCHAR:
-				return true;
-			default:
-				return false;
-		}
-	}
-
-	/**
-	 * Does the given JDBC type code represent some sort of
-	 * variable-length character string type?
-	 * @param sqlType a JDBC type code from {@link Types}
-	 */
-	private static boolean isVarcharType(int sqlType) {
-		switch (sqlType) {
-			case Types.VARCHAR:
-			case Types.LONGVARCHAR:
-			case Types.NVARCHAR:
-			case Types.LONGNVARCHAR:
-				return true;
-			default:
-				return false;
-		}
-	}
-
-	/**
-	 * Does the given JDBC type code represent some sort of
-	 * variable-length binary string type?
-	 * @param sqlType a JDBC type code from {@link Types}
-	 */
-	private static boolean isVarbinaryType(int sqlType) {
-		switch (sqlType) {
-			case Types.VARBINARY:
-			case Types.LONGVARBINARY:
-				return true;
-			default:
-				return false;
-		}
-	}
-
-	/**
 	 * Render a SQL check condition for a column that represents a boolean value.
 	 */
 	public String getBooleanCheckCondition(String columnName, int sqlType, char falseChar, char trueChar) {
@@ -1303,24 +1229,6 @@ public abstract class Dialect implements ConversionContext {
 			|| isFloatOrRealOrDouble(typeCode1) && isFloatOrRealOrDouble(typeCode2)
 			|| isVarcharType(typeCode1) && isVarcharType(typeCode2)
 			|| isVarbinaryType(typeCode1) && isVarbinaryType(typeCode2);
-	}
-
-	private static boolean isNumericOrDecimal(int typeCode) {
-		return typeCode == Types.NUMERIC
-			|| typeCode == Types.DECIMAL;
-	}
-
-	private static boolean isFloatOrRealOrDouble(int typeCode) {
-		return typeCode == Types.FLOAT
-			|| typeCode == Types.REAL
-			|| typeCode == Types.DOUBLE;
-	}
-
-	private static boolean isIntegral(int typeCode) {
-		return typeCode == Types.INTEGER
-			|| typeCode == Types.BIGINT
-			|| typeCode == Types.SMALLINT
-			|| typeCode == Types.TINYINT;
 	}
 
 	/**

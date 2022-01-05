@@ -49,6 +49,8 @@ import java.sql.Types;
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
+import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType.INTEGER;
+import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType.STRING;
 
 /**
  * Dialect for Intersystems Cach&eacute; SQL 2007.1 and above.
@@ -169,7 +171,8 @@ public class CacheDialect extends Dialect {
 				"locate",
 				queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER ),
 				"$find(?2,?1)",
-				"$find(?2,?1,?3)"
+				"$find(?2,?1,?3)",
+				STRING, STRING, INTEGER
 		).setArgumentListSignature("(pattern, string[, start])");
 		CommonFunctionFactory.bitLength_pattern( queryEngine, "($length(?1)*8)" );
 

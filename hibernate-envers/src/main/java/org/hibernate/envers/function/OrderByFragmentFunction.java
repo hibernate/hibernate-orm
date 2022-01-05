@@ -61,6 +61,7 @@ public class OrderByFragmentFunction extends AbstractSqmFunctionDescriptor {
 				null,
 				arguments,
 				impliedResultType,
+				getArgumentsValidator(),
 				getReturnTypeResolver(),
 				queryEngine.getCriteriaBuilder(),
 				getName()

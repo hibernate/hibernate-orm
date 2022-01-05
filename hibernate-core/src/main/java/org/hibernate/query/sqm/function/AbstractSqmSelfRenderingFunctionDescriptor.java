@@ -64,6 +64,7 @@ public abstract class AbstractSqmSelfRenderingFunctionDescriptor
 				this::render,
 				arguments,
 				impliedResultType,
+				getArgumentsValidator(),
 				getReturnTypeResolver(),
 				queryEngine.getCriteriaBuilder(),
 				getName()
@@ -86,6 +87,7 @@ public abstract class AbstractSqmSelfRenderingFunctionDescriptor
 				arguments,
 				filter,
 				impliedResultType,
+				getArgumentsValidator(),
 				getReturnTypeResolver(),
 				queryEngine.getCriteriaBuilder(),
 				getName()

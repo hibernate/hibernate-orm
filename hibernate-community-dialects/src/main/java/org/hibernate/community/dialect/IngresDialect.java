@@ -61,6 +61,9 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import jakarta.persistence.TemporalType;
 
+import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType.INTEGER;
+import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType.STRING;
+
 /**
  * An SQL dialect for Ingres 9.2.
  * <p/>
@@ -283,7 +286,8 @@ public class IngresDialect extends Dialect {
 				"locate",
 				integerType,
 				"position(?1 in ?2)",
-				"(position(?1 in substring(?2 from ?3))+(?3)-1)"
+				"(position(?1 in substring(?2 from ?3))+(?3)-1)",
+				STRING, STRING, INTEGER
 		).setArgumentListSignature("(pattern, string[, start])");
 
 		queryEngine.getSqmFunctionRegistry().registerPattern( "extract", "date_part('?1',?2)", integerType );

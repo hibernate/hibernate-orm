@@ -8,9 +8,12 @@ package org.hibernate.query.sqm.function;
 
 import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
+import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
+import org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
+import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.List;
@@ -48,21 +51,25 @@ public class MultipatternSqmFunctionDescriptor extends AbstractSqmFunctionDescri
 	 * template. The array must be padded with leading nulls
 	 * where there is no overloaded form corresponding to
 	 * lower arities.
-	 *
-	 * @param name
+	 *  @param name
 	 * @param functions the function templates to delegate to,
-	 *                  where array position corresponds to
+	 * @param type
 	 */
 	public MultipatternSqmFunctionDescriptor(
-			String name, SqmFunctionDescriptor[] functions,
-			FunctionReturnTypeResolver type) {
+			String name,
+			SqmFunctionDescriptor[] functions,
+			BasicType<?> type,
+			ParameterType... parameterTypes) {
 		super(
 				name,
-				StandardArgumentsValidators.between(
-					first(functions),
-					last(functions)
+				new ArgumentTypesValidator(
+						StandardArgumentsValidators.between(
+							first(functions),
+							last(functions)
+						),
+						parameterTypes
 				),
-				type
+				StandardFunctionReturnTypeResolvers.invariant( type )
 		);
 		this.functions = functions;
 	}

@@ -64,8 +64,13 @@ public class NamedFunctionDescriptorBuilder {
 		return this;
 	}
 
-	public NamedFunctionDescriptorBuilder setInvariantType(BasicType invariantType) {
+	public NamedFunctionDescriptorBuilder setInvariantType(BasicType<?> invariantType) {
 		setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant( invariantType ) );
+		return this;
+	}
+
+	public NamedFunctionDescriptorBuilder setParameterTypes(ArgumentsValidator.ParameterType... types) {
+		setArgumentsValidator( new ArgumentTypesValidator(argumentsValidator, types) );
 		return this;
 	}
 
@@ -100,4 +105,5 @@ public class NamedFunctionDescriptorBuilder {
 				argumentRenderingMode
 		);
 	}
+
 }

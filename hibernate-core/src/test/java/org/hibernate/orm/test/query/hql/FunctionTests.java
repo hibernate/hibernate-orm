@@ -6,6 +6,7 @@
  */
 package org.hibernate.orm.test.query.hql;
 
+import org.hibernate.QueryException;
 import org.hibernate.dialect.DerbyDialect;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
@@ -29,12 +30,9 @@ import java.time.LocalTime;
 
 import org.hamcrest.Matchers;
 
-import static org.hamcrest.CoreMatchers.anyOf;
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.CoreMatchers.startsWith;
+import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.fail;
 
 /**
  * @author Gavin King
@@ -206,6 +204,19 @@ public class FunctionTests {
 					assertThat( session.createQuery("select upper('hello')").getSingleResult(), is("HELLO") );
 				}
 		);
+
+		try {
+			scope.inTransaction(
+					session -> {
+						session.createQuery("select upper(3)")
+								.list();
+					}
+			);
+			fail();
+		}
+		catch (IllegalArgumentException e) {
+			assertThat( e.getCause(), is(instanceOf(QueryException.class)) );
+		}
 	}
 
 	@Test
@@ -217,6 +228,19 @@ public class FunctionTests {
 					assertThat( session.createQuery("select length('hello')").getSingleResult(), is(5) );
 				}
 		);
+
+		try {
+			scope.inTransaction(
+					session -> {
+						session.createQuery("select length(3)")
+								.list();
+					}
+			);
+			fail();
+		}
+		catch (IllegalArgumentException e) {
+			assertThat( e.getCause(), is(instanceOf(QueryException.class)) );
+		}
 	}
 
 	@Test
@@ -234,6 +258,19 @@ public class FunctionTests {
 					assertThat( session.createQuery("select substring('hello world',4, 5)").getSingleResult(), is("lo wo") );
 				}
 		);
+
+		try {
+			scope.inTransaction(
+					session -> {
+						session.createQuery("select substring('hello world', 'world', 5)")
+								.list();
+					}
+			);
+			fail();
+		}
+		catch (IllegalArgumentException e) {
+			assertThat( e.getCause(), is(instanceOf(QueryException.class)) );
+		}
 	}
 
 	@Test
@@ -324,6 +361,19 @@ public class FunctionTests {
 					assertThat( session.createQuery("select replace('hello world', 'o', 'ooo')").getSingleResult(), is("hellooo wooorld") );
 				}
 		);
+
+		try {
+			scope.inTransaction(
+					session -> {
+						session.createQuery("select replace(e.theString, 1, 'goodbye') from EntityOfBasics e")
+								.list();
+					}
+			);
+			fail();
+		}
+		catch (IllegalArgumentException e) {
+			assertThat( e.getCause(), is(instanceOf(QueryException.class)) );
+		}
 	}
 
 	@Test
@@ -342,6 +392,19 @@ public class FunctionTests {
 					assertThat( session.createQuery("select trim(both '-' from '---hello---')").getSingleResult(), is("hello") );
 				}
 		);
+
+		try {
+			scope.inTransaction(
+					session -> {
+						session.createQuery("select trim(leading ' ' from 3)")
+								.list();
+					}
+			);
+			fail();
+		}
+		catch (IllegalArgumentException e) {
+			assertThat( e.getCause(), is(instanceOf(QueryException.class)) );
+		}
 	}
 
 	@Test
@@ -359,6 +422,31 @@ public class FunctionTests {
 							is("hello....."));
 				}
 		);
+
+		try {
+			scope.inTransaction(
+					session -> {
+						session.createQuery("select pad('hello' with ' ' leading)")
+								.list();
+					}
+			);
+			fail();
+		}
+		catch (IllegalArgumentException e) {
+			assertThat( e.getCause(), is(instanceOf(QueryException.class)) );
+		}
+		try {
+			scope.inTransaction(
+					session -> {
+						session.createQuery("select pad(3 with 4 leading)")
+								.list();
+					}
+			);
+			fail();
+		}
+		catch (IllegalArgumentException e) {
+			assertThat( e.getCause(), is(instanceOf(QueryException.class)) );
+		}
 	}
 
 	@Test

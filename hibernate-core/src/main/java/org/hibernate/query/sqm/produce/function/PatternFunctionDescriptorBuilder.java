@@ -44,6 +44,15 @@ public class PatternFunctionDescriptorBuilder {
 		return this;
 	}
 
+	public PatternFunctionDescriptorBuilder setParameterTypes(ArgumentsValidator.ParameterType... types) {
+		setArgumentsValidator( new ArgumentTypesValidator(argumentsValidator, types) );
+		return this;
+	}
+
+	public PatternFunctionDescriptorBuilder setMinArgumentCount(int min) {
+		return setArgumentsValidator( StandardArgumentsValidators.min( min ) );
+	}
+
 	public PatternFunctionDescriptorBuilder setExactArgumentCount(int exactArgumentCount) {
 		return setArgumentsValidator( StandardArgumentsValidators.exactly( exactArgumentCount ) );
 	}

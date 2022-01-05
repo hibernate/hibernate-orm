@@ -78,6 +78,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import jakarta.persistence.TemporalType;
 
+import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType;
+
 /**
  * An abstract base class for SAP HANA dialects.
  * <p>
@@ -279,7 +281,8 @@ public abstract class AbstractHANADialect extends Dialect {
 				"locate",
 				queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER ),
 				"locate(?2,?1)",
-				"locate(?2,?1,?3)"
+				"locate(?2,?1,?3)",
+				ParameterType.STRING, ParameterType.STRING, ParameterType.INTEGER
 		).setArgumentListSignature("(pattern, string[, start])");
 
 		CommonFunctionFactory.ceiling_ceil( queryEngine );

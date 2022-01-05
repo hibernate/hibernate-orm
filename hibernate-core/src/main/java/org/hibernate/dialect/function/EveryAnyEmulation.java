@@ -8,22 +8,19 @@ package org.hibernate.dialect.function;
 
 import java.util.List;
 
-import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
-import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.FunctionKind;
-import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
-import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
-import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
+import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
-import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType.BOOLEAN;
 
 /**
  * @author Jan Schatteman
@@ -36,7 +33,7 @@ public class EveryAnyEmulation extends AbstractSqmSelfRenderingFunctionDescripto
 		super(
 				every ? "every" : "any",
 				FunctionKind.AGGREGATE,
-				StandardArgumentsValidators.exactly( 1 ),
+				new ArgumentTypesValidator( StandardArgumentsValidators.exactly( 1 ), BOOLEAN ),
 				StandardFunctionReturnTypeResolvers.invariant(
 						typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.BOOLEAN )
 				)

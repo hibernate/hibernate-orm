@@ -3,6 +3,7 @@ package org.hibernate.tool.internal.export.hbm;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Array;
 import org.hibernate.mapping.Bag;
+import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.IdentifierBag;
@@ -53,6 +54,10 @@ public class HBMTagForValueVisitor extends DefaultValueVisitor {
 	}
 
 	public Object accept(SimpleValue value) {		
+		return "property";
+	}
+
+	public Object accept(BasicValue value) {		
 		return "property";
 	}
 

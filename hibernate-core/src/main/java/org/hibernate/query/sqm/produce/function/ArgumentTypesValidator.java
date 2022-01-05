@@ -29,9 +29,6 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 
 	public ArgumentTypesValidator(ArgumentsValidator delegate, ParameterType... types) {
 		this.types = types;
-		if (types.length==0) {
-			System.out.println();
-		}
 		if (delegate == null ) {
 			delegate = StandardArgumentsValidators.exactly(types.length);
 		}

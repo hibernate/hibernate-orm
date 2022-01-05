@@ -21,7 +21,6 @@ import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
 import org.hibernate.dialect.sequence.HANASequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.config.spi.ConfigurationService.Converter;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.*;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
@@ -118,10 +117,8 @@ public abstract class AbstractHANADialect extends Dialect {
 
 	private HANAClobJdbcType clobTypeDescriptor;
 
-	private boolean useLegacyBooleanType = USE_LEGACY_BOOLEAN_TYPE_DEFAULT_VALUE.booleanValue();
+	private boolean useLegacyBooleanType = USE_LEGACY_BOOLEAN_TYPE_DEFAULT_VALUE;
 	private boolean useUnicodeStringTypes;
-
-	private boolean treatDoubleTypedFieldsAsDecimal = TREAT_DOUBLE_TYPED_FIELDS_AS_DECIMAL_DEFAULT_VALUE.booleanValue();
 
 	/*
 	 * Tables named "TYPE" need to be quoted
@@ -144,7 +141,7 @@ public abstract class AbstractHANADialect extends Dialect {
 
 		private String[] quoteTypeIfNecessary(Table table, String[] strings, String prefix) {
 			if ( table.getNameIdentifier() == null || table.getNameIdentifier().isQuoted()
-					|| !"type".equals( table.getNameIdentifier().getText().toLowerCase() ) ) {
+					|| !"type".equalsIgnoreCase( table.getNameIdentifier().getText() ) ) {
 				return strings;
 			}
 
@@ -168,10 +165,10 @@ public abstract class AbstractHANADialect extends Dialect {
 	public AbstractHANADialect(DatabaseVersion version) {
 		super(version);
 
-		this.useUnicodeStringTypes = useUnicodeStringTypesDefault().booleanValue();
+		this.useUnicodeStringTypes = useUnicodeStringTypesDefault();
 		this.clobTypeDescriptor = new HANAClobJdbcType(
 				MAX_LOB_PREFETCH_SIZE_DEFAULT_VALUE,
-				useUnicodeStringTypesDefault().booleanValue()
+				useUnicodeStringTypesDefault()
 		);
 
 		// Note that 38 is the maximum precision HANA supports
@@ -657,7 +654,6 @@ public abstract class AbstractHANADialect extends Dialect {
 		return NameQualifierSupport.SCHEMA;
 	}
 
-	@SuppressWarnings("deprecation")
 	@Override
 	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)
 			throws SQLException {
@@ -850,15 +846,9 @@ public abstract class AbstractHANADialect extends Dialect {
 		final ConfigurationService configurationService = serviceRegistry.getService( ConfigurationService.class );
 		int maxLobPrefetchSize = configurationService.getSetting(
 				MAX_LOB_PREFETCH_SIZE_PARAMETER_NAME,
-				new Converter<Integer>() {
-
-					@Override
-					public Integer convert(Object value) {
-						return Integer.valueOf( value.toString() );
-					}
-
-				},
-				Integer.valueOf( maxLobPrefetchSizeDefault ) ).intValue();
+				value -> Integer.valueOf( value.toString() ),
+				maxLobPrefetchSizeDefault
+		);
 
 		if ( this.nClobTypeDescriptor.getMaxLobPrefetchSize() != maxLobPrefetchSize ) {
 			this.nClobTypeDescriptor = new HANANClobJdbcType( maxLobPrefetchSize );
@@ -873,7 +863,7 @@ public abstract class AbstractHANADialect extends Dialect {
 					USE_UNICODE_STRING_TYPES_PARAMETER_NAME,
 					StandardConverters.BOOLEAN,
 					useUnicodeStringTypesDefault()
-			).booleanValue();
+			);
 
 			if ( this.isUseUnicodeStringTypes() ) {
 				registerColumnType( Types.CHAR, "nvarchar($l)" );
@@ -890,19 +880,19 @@ public abstract class AbstractHANADialect extends Dialect {
 			}
 		}
 
-		this.useLegacyBooleanType = configurationService.getSetting( USE_LEGACY_BOOLEAN_TYPE_PARAMETER_NAME, StandardConverters.BOOLEAN,
-				USE_LEGACY_BOOLEAN_TYPE_DEFAULT_VALUE ).booleanValue();
+		this.useLegacyBooleanType = configurationService.getSetting(USE_LEGACY_BOOLEAN_TYPE_PARAMETER_NAME, StandardConverters.BOOLEAN,
+				USE_LEGACY_BOOLEAN_TYPE_DEFAULT_VALUE);
 
 		if ( this.useLegacyBooleanType ) {
 			registerColumnType( Types.BOOLEAN, "tinyint" );
 		}
 
-		this.treatDoubleTypedFieldsAsDecimal = configurationService.getSetting( TREAT_DOUBLE_TYPED_FIELDS_AS_DECIMAL_PARAMETER_NAME, StandardConverters.BOOLEAN,
-				TREAT_DOUBLE_TYPED_FIELDS_AS_DECIMAL_DEFAULT_VALUE ).booleanValue();
+		boolean treatDoubleTypedFieldsAsDecimal = configurationService.getSetting(TREAT_DOUBLE_TYPED_FIELDS_AS_DECIMAL_PARAMETER_NAME, StandardConverters.BOOLEAN,
+				TREAT_DOUBLE_TYPED_FIELDS_AS_DECIMAL_DEFAULT_VALUE);
 
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeDescriptorRegistry();
-		if ( this.treatDoubleTypedFieldsAsDecimal ) {
+		if (treatDoubleTypedFieldsAsDecimal) {
 			registerHibernateType( Types.FLOAT, StandardBasicTypes.BIG_DECIMAL.getName() );
 			registerHibernateType( Types.REAL, StandardBasicTypes.BIG_DECIMAL.getName() );
 			registerHibernateType( Types.DOUBLE, StandardBasicTypes.BIG_DECIMAL.getName() );
@@ -955,7 +945,7 @@ public abstract class AbstractHANADialect extends Dialect {
 			jdbcTypeRegistry.addDescriptor( Types.VARCHAR, NVarcharJdbcType.INSTANCE );
 			jdbcTypeRegistry.addDescriptor( Types.CHAR, NCharJdbcType.INSTANCE );
 		}
-		if ( this.treatDoubleTypedFieldsAsDecimal ) {
+		if (treatDoubleTypedFieldsAsDecimal) {
 			jdbcTypeRegistry.addDescriptor( Types.DOUBLE, DecimalJdbcType.INSTANCE );
 		}
 	}
@@ -1205,7 +1195,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		}
 
 		@Override
-		public OutputStream setBinaryStream(long pos) throws SQLException {
+		public OutputStream setBinaryStream(long pos) {
 			return new ByteArrayOutputStream() {
 
 				{
@@ -1241,7 +1231,7 @@ public abstract class AbstractHANADialect extends Dialect {
 
 	private static class MaterializedNClob implements NClob {
 
-		private String data = null;
+		private String data;
 
 		public MaterializedNClob(String data) {
 			this.data = data;
@@ -1306,7 +1296,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		}
 
 		@Override
-		public InputStream getAsciiStream() throws SQLException {
+		public InputStream getAsciiStream() {
 			return new ByteArrayInputStream( this.data.getBytes( StandardCharsets.ISO_8859_1 ) );
 		}
 
@@ -1343,7 +1333,7 @@ public abstract class AbstractHANADialect extends Dialect {
 
 		@Override
 		public <X> ValueBinder<X> getBinder(JavaType<X> javaTypeDescriptor) {
-			return new BasicBinder<X>( javaTypeDescriptor, this ) {
+			return new BasicBinder<>( javaTypeDescriptor, this ) {
 
 				@Override
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
@@ -1381,7 +1371,7 @@ public abstract class AbstractHANADialect extends Dialect {
 
 		@Override
 		public <X> ValueExtractor<X> getExtractor(JavaType<X> javaTypeDescriptor) {
-			return new BasicExtractor<X>( javaTypeDescriptor, this ) {
+			return new BasicExtractor<>( javaTypeDescriptor, this ) {
 
 				@Override
 				protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
@@ -1434,7 +1424,7 @@ public abstract class AbstractHANADialect extends Dialect {
 
 		@Override
 		public <X> BasicBinder<X> getClobBinder(final JavaType<X> javaTypeDescriptor) {
-			return new BasicBinder<X>( javaTypeDescriptor, this ) {
+			return new BasicBinder<>( javaTypeDescriptor, this ) {
 
 				@Override
 				protected void doBind(final PreparedStatement st, final X value, final int index, final WrapperOptions options) throws SQLException {
@@ -1475,7 +1465,7 @@ public abstract class AbstractHANADialect extends Dialect {
 
 		@Override
 		public <X> ValueExtractor<X> getExtractor(JavaType<X> javaTypeDescriptor) {
-			return new BasicExtractor<X>( javaTypeDescriptor, this ) {
+			return new BasicExtractor<>( javaTypeDescriptor, this ) {
 
 				@Override
 				protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
@@ -1533,7 +1523,7 @@ public abstract class AbstractHANADialect extends Dialect {
 
 		@Override
 		public <X> BasicBinder<X> getNClobBinder(final JavaType<X> javaTypeDescriptor) {
-			return new BasicBinder<X>( javaTypeDescriptor, this ) {
+			return new BasicBinder<>( javaTypeDescriptor, this ) {
 
 				@Override
 				protected void doBind(final PreparedStatement st, final X value, final int index, final WrapperOptions options) throws SQLException {
@@ -1574,7 +1564,7 @@ public abstract class AbstractHANADialect extends Dialect {
 
 		@Override
 		public <X> ValueExtractor<X> getExtractor(JavaType<X> javaTypeDescriptor) {
-			return new BasicExtractor<X>( javaTypeDescriptor, this ) {
+			return new BasicExtractor<>( javaTypeDescriptor, this ) {
 
 				@Override
 				protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
@@ -1633,7 +1623,7 @@ public abstract class AbstractHANADialect extends Dialect {
 
 		@Override
 		public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaTypeDescriptor) {
-			return new BasicExtractor<X>( javaTypeDescriptor, this ) {
+			return new BasicExtractor<>( javaTypeDescriptor, this ) {
 
 				@Override
 				protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
@@ -1659,7 +1649,7 @@ public abstract class AbstractHANADialect extends Dialect {
 
 		@Override
 		public <X> BasicBinder<X> getBinder(final JavaType<X> javaTypeDescriptor) {
-			return new BasicBinder<X>( javaTypeDescriptor, this ) {
+			return new BasicBinder<>( javaTypeDescriptor, this ) {
 
 				@Override
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {

@@ -1660,24 +1660,38 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@RequiresDialect(H2Dialect.class)
-	@RequiresDialect(OracleDialect.class)
-	@RequiresDialect(MySQLDialect.class)
+	@RequiresDialect({MySQLDialect.class, PostgreSQLDialect.class, H2Dialect.class, DerbyDialect.class, OracleDialect.class})
+	public void test_var_function_example() {
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			//tag::hql-native-function-example[]
+			// careful: these functions are not supported on all databases!
+
+			List<Tuple> variances = entityManager.createQuery(
+				"select var_samp(c.duration) as sampvar, var_pop(c.duration) as popvar " +
+				"from Call c ",
+				Tuple.class)
+			.getResultList();
+			//end::hql-native-function-example[]
+		});
+	}
+
+	@Test
+	@RequiresDialect({H2Dialect.class, MySQLDialect.class, PostgreSQLDialect.class, OracleDialect.class})
 	public void test_hql_bit_length_function_example() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
-			//tag::hql-bit-length-function-example[]
+			//tag::hql-native-function-example[]
+
 			List<Number> bits = entityManager.createQuery(
-				"select bit_length(c.duration) " +
+				"select bit_length(c.phone.number) " +
 				"from Call c ",
 				Number.class)
 			.getResultList();
-			//end::hql-bit-length-function-example[]
+			//end::hql-native-function-example[]
 			assertEquals(2, bits.size());
 		});
 	}
 
 	@Test
-	@SkipForDialect(value = DerbyDialect.class, comment = "See https://issues.apache.org/jira/browse/DERBY-2072")
 	public void test_hql_cast_function_example() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-cast-function-example[]
@@ -1692,7 +1706,6 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(value = DerbyDialect.class, comment = "Derby doesn't support extract function")
 	public void test_hql_extract_function_example() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-extract-function-example[]

@@ -15,6 +15,7 @@ import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -45,7 +46,7 @@ public abstract class UserCollectionTypeTest extends BaseNonConfigCoreFunctional
 					criteria.from( User.class );
 					User u2 = s.createQuery( criteria ).uniqueResult();
 //					User u2 = (User) s.createCriteria(User.class).uniqueResult();
-					assertTrue( Hibernate.isInitialized( u2.getEmailAddresses() ) );
+					checkEmailAddressInitialization( u2 );
 					assertEquals( u2.getEmailAddresses().size(), 2 );
 
 				}
@@ -64,6 +65,8 @@ public abstract class UserCollectionTypeTest extends BaseNonConfigCoreFunctional
 				s -> s.delete( u )
 		);
 	}
+
+	protected abstract void checkEmailAddressInitialization(User user);
 
 }
 

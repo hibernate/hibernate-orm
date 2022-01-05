@@ -20,7 +20,7 @@
 	<class name="User" table="UC_BSC_USER">
 		<id name="id"/>
 		<property name="userName"/>
-		<list name="emailAddresses" fetch="join" lazy="false" cascade="all, delete-orphan" collection-type="HeadListType">
+		<list name="emailAddresses" fetch="join" cascade="all, delete-orphan" collection-type="HeadListType">
 			<key column="userName"/>
 			<list-index column="displayOrder" base="1"/>
 			<one-to-many class="Email"/>

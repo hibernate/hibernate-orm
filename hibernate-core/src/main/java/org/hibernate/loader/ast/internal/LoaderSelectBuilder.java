@@ -80,7 +80,9 @@ import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.graph.collection.internal.CollectionDomainResult;
+import org.hibernate.sql.results.graph.collection.internal.CollectionFetch;
 import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
+import org.hibernate.sql.results.graph.entity.internal.EntityResultImpl;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.internal.StandardEntityGraphTraversalStateImpl;
 
@@ -363,16 +365,11 @@ public class LoaderSelectBuilder {
 	}
 
 	private SelectStatement generateSelect() {
-		final Restrictable restrictable;
 		if ( loadable instanceof PluralAttributeMapping ) {
 			final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) loadable;
-			restrictable = (Restrictable) pluralAttributeMapping.getCollectionDescriptor();
 			if ( pluralAttributeMapping.getMappedType().getCollectionSemantics() instanceof BagSemantics ) {
 				currentBagRole = pluralAttributeMapping.getNavigableRole().getNavigableName();
 			}
-		}
-		else {
-			restrictable = (Restrictable) loadable;
 		}
 
 		final NavigablePath rootNavigablePath = new NavigablePath( loadable.getRootPathName() );
@@ -738,6 +735,7 @@ public class LoaderSelectBuilder {
 			boolean explicitFetch = false;
 			EntityGraphTraversalState.TraversalResult traversalResult = null;
 
+			final boolean isFetchablePluralAttributeMapping = fetchable instanceof PluralAttributeMapping;
 			if ( !( fetchable instanceof CollectionPart ) ) {
 				// 'entity graph' takes precedence over 'fetch profile'
 				if ( entityGraphTraversalState != null ) {
@@ -774,7 +772,7 @@ public class LoaderSelectBuilder {
 					if ( cascadeStyle == null || cascadeStyle.doCascade( cascadingAction ) ) {
 						fetchTiming = FetchTiming.IMMEDIATE;
 						// In 5.x the CascadeEntityJoinWalker only join fetched the first collection fetch
-						if ( fetchable instanceof PluralAttributeMapping ) {
+						if ( isFetchablePluralAttributeMapping ) {
 							joined = !hasCollectionJoinFetches;
 						}
 						else {
@@ -786,7 +784,7 @@ public class LoaderSelectBuilder {
 
 			final String previousBagRole = currentBagRole;
 			final String bagRole;
-			if ( fetchable instanceof PluralAttributeMapping
+			if ( isFetchablePluralAttributeMapping
 					&& ( (PluralAttributeMapping) fetchable ).getMappedType()
 					.getCollectionSemantics() instanceof BagSemantics ) {
 				bagRole = fetchable.getNavigableRole().getNavigableName();
@@ -855,7 +853,7 @@ public class LoaderSelectBuilder {
 						creationState
 				);
 
-				if ( fetch.getTiming() == FetchTiming.IMMEDIATE && fetchable instanceof PluralAttributeMapping ) {
+				if ( fetch.getTiming() == FetchTiming.IMMEDIATE && isFetchablePluralAttributeMapping ) {
 					final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) fetchable;
 					if ( joined ) {
 						hasCollectionJoinFetches = true;

@@ -23,7 +23,6 @@ import org.hibernate.query.Query;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -49,8 +48,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 )
 @SessionFactory( useCollectingStatementInspector = true )
 @RequiresDialect(AbstractHANADialect.class)
-// afaik this does not work
-//@NotImplementedYet( strict = false )
 public class QueryHintHANATest {
 
 	@BeforeEach

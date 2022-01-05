@@ -7,6 +7,7 @@
 
 //$Id: Bid.java 6793 2005-05-16 05:46:47Z oneovthafew $
 package org.hibernate.orm.test.query.joinfetch;
+
 import java.util.Calendar;
 
 /**

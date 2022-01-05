@@ -45,7 +45,6 @@ import static org.junit.Assert.assertTrue;
 		xmlMappings = "/mappings/subselectfetch/ParentChild.hbm.xml"
 )
 @SessionFactory( useCollectingStatementInspector = true )
-//@NotImplementedYet( strict = false, reason = "Need to check why these fail" )
 public class SubselectFetchTest {
 	@BeforeEach
 	public void prepareTestData(SessionFactoryScope scope) {

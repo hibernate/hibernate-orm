@@ -7,6 +7,7 @@
 
 //$Id: User.java 7175 2005-06-17 05:23:15Z oneovthafew $
 package org.hibernate.orm.test.query.joinfetch;
+
 import java.util.HashMap;
 import java.util.Map;
 

@@ -7,20 +7,20 @@
 package org.hibernate.orm.test.query.joinfetch;
 
 import java.util.List;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.JoinType;
-import jakarta.persistence.criteria.Root;
 
 import org.hibernate.Hibernate;
 
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Root;
 
 import static org.hibernate.cfg.AvailableSettings.MAX_FETCH_DEPTH;
 import static org.hibernate.cfg.AvailableSettings.USE_SECOND_LEVEL_CACHE;
@@ -34,8 +34,8 @@ import static org.junit.Assert.assertTrue;
  */
 @ServiceRegistry(
 		settings = {
-				@Setting( name = MAX_FETCH_DEPTH, value = "10" ),
-				@Setting( name = USE_SECOND_LEVEL_CACHE, value = "false" )
+				@Setting(name = MAX_FETCH_DEPTH, value = "10"),
+				@Setting(name = USE_SECOND_LEVEL_CACHE, value = "false")
 		}
 )
 @DomainModel(
@@ -47,27 +47,7 @@ import static org.junit.Assert.assertTrue;
 @SessionFactory
 public class JoinFetchTest {
 
-//	@Test
-//	public void testProjection() {
-//		inTransaction(
-//				s -> {
-//					CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
-//					CriteriaQuery<Long> criteria = criteriaBuilder.createQuery( Long.class );
-//					criteria.select( criteriaBuilder.count( criteria.from( Item.class ) ) );
-//					s.createQuery( criteria ).uniqueResult();
-//
-//					CriteriaQuery<Item> itemCriteria = criteriaBuilder.createQuery( Item.class );
-//					itemCriteria.from( Item.class );
-//					s.createQuery( itemCriteria ).uniqueResult();
-//
-////					s.createCriteria(Item.class).setProjection( Projections.rowCount() ).uniqueResult();
-////					s.createCriteria(Item.class).uniqueResult();
-//				}
-//		);
-//	}
-
 	@Test
-	@NotImplementedYet( strict = false )
 	public void testJoinFetch(SessionFactoryScope scope) {
 		scope.inTransaction( (s) -> {
 			s.createQuery( "delete from Bid" ).executeUpdate();
@@ -93,10 +73,10 @@ public class JoinFetchTest {
 
 		scope.inTransaction( (s) -> {
 			Item i1 = s.get( Item.class, i.getId() );
-			assertTrue( Hibernate.isInitialized( i1.getBids() ) );
+			assertFalse( Hibernate.isInitialized( i1.getBids() ) );
 			assertEquals( i1.getBids().size(), 2 );
-			assertTrue( Hibernate.isInitialized( i1.getComments() ) );
-			assertEquals( i1.getComments().size(), 3 );
+			assertFalse( Hibernate.isInitialized( i1.getComments() ) );
+			assertEquals( 3, i1.getComments().size() );
 		} );
 
 
@@ -104,9 +84,9 @@ public class JoinFetchTest {
 
 		scope.inTransaction( (s) -> {
 			Bid b1 = s.get( Bid.class, b.getId() );
-			assertTrue( Hibernate.isInitialized( b1.getItem() ) );
-			assertTrue( Hibernate.isInitialized( b1.getItem().getComments() ) );
-			assertEquals( b1.getItem().getComments().size(), 3 );
+			assertFalse( Hibernate.isInitialized( b1.getItem() ) );
+			assertFalse( Hibernate.isInitialized( b1.getItem().getComments() ) );
+			assertEquals( 3, b1.getItem().getComments().size() );
 		} );
 
 		scope.getSessionFactory().getCache().evictCollectionData( Item.class.getName() + ".bids" );
@@ -131,20 +111,21 @@ public class JoinFetchTest {
 
 
 		scope.inTransaction( (s) -> {
-			Item i1 = (Item) s.createQuery( "from Item i left join fetch i.bids left join fetch i.comments" ).uniqueResult();
+			Item i1 = (Item) s.createQuery( "from Item i left join fetch i.bids left join fetch i.comments" )
+					.uniqueResult();
 			assertTrue( Hibernate.isInitialized( i1.getBids() ) );
 			assertTrue( Hibernate.isInitialized( i1.getComments() ) );
-			assertEquals( i1.getComments().size(), 3 );
-			assertEquals( i1.getBids().size(), 2 );
+			assertEquals( 3, i1.getComments().size() );
+			assertEquals( 2, i1.getBids().size() );
 		} );
 
 
 		scope.inTransaction( (s) -> {
-			Item i1 = (Item) ((Object[])s.getNamedQuery( Item.class.getName() + ".all" ).list().get( 0 ))[0];
+			Item i1 = (Item) s.getNamedQuery( Item.class.getName() + ".all" ).list().get( 0 );
 			assertTrue( Hibernate.isInitialized( i1.getBids() ) );
 			assertTrue( Hibernate.isInitialized( i1.getComments() ) );
-				assertEquals( i1.getComments().size(), 3 );
-				assertEquals( i1.getBids().size(), 2 );
+			assertEquals( 3, i1.getComments().size() );
+			assertEquals( 2, i1.getBids().size() );
 		} );
 
 		scope.inTransaction( (s) -> {
@@ -154,12 +135,13 @@ public class JoinFetchTest {
 			Item i1 = s.createQuery( criteria ).uniqueResult();
 			assertFalse( Hibernate.isInitialized( i1.getBids() ) );
 			assertFalse( Hibernate.isInitialized( i1.getComments() ) );
-			assertEquals( i1.getComments().size(), 3 );
-			assertEquals( i1.getBids().size(), 2 );
+			assertEquals( 3, i1.getComments().size() );
+			assertEquals( 2, i1.getBids().size() );
 		} );
 
 		scope.inTransaction( (s) -> {
-			List bids = s.createQuery( "select b from Bid b left join fetch b.item i left join fetch i.category" ).list();
+			List bids = s.createQuery( "select b from Bid b left join fetch b.item i left join fetch i.category" )
+					.list();
 			Bid bid = (Bid) bids.get( 0 );
 			assertTrue( Hibernate.isInitialized( bid.getItem() ) );
 			assertTrue( Hibernate.isInitialized( bid.getItem().getCategory() ) );
@@ -172,7 +154,7 @@ public class JoinFetchTest {
 			assertTrue( Hibernate.isInitialized( item.getCategory() ) );
 			s.clear();
 			pairs = s.createQuery( "select i, b from Item i left join i.bids b left join i.category" ).list();
-			item = (Item) ((Object[])pairs.get( 0 ))[0];
+			item = (Item) ( (Object[]) pairs.get( 0 ) )[0];
 			assertFalse( Hibernate.isInitialized( item.getBids() ) );
 			assertFalse( Hibernate.isInitialized( item.getCategory() ) );
 			s.clear();
@@ -191,7 +173,7 @@ public class JoinFetchTest {
 			assertTrue( Hibernate.isInitialized( bid.getItem() ) );
 			assertFalse( Hibernate.isInitialized( bid.getItem().getCategory() ) );
 			pairs = s.createQuery( "select b from Bid b left join b.item i left join i.category" ).list();
-			bid = (Bid)  pairs.get( 0 ) ;
+			bid = (Bid) pairs.get( 0 );
 			assertTrue( Hibernate.isInitialized( bid.getItem() ) );
 			assertFalse( Hibernate.isInitialized( bid.getItem().getCategory() ) );
 		} );
@@ -204,45 +186,7 @@ public class JoinFetchTest {
 		} );
 	}
 
-//	@Test
-//	public void testCollectionFilter() {
-//		inTransaction(
-//				s -> {
-//					Group hb = new Group( "hibernate" );
-//					User gavin = new User( "gavin" );
-//					User max = new User( "max" );
-//					hb.getUsers().put( "gavin", gavin );
-//					hb.getUsers().put( "max", max );
-//					gavin.getGroups().put( "hibernate", hb );
-//					max.getGroups().put( "hibernate", hb );
-//					s.persist( hb );
-//				}
-//		);
-//
-//		inTransaction(
-//				s -> {
-//					CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
-//					CriteriaQuery<Group> criteria = criteriaBuilder.createQuery( Group.class );
-//					Root<Group> from = criteria.from( Group.class );
-////					from.join( "users", JoinType.LEFT );
-//					criteria.where( criteriaBuilder.equal( from.get( "name" ), "hibernate" ) );
-//					Group hb = s.createQuery( criteria ).uniqueResult();
-////		hb = (Group) s.createCriteria( Group.class )
-////				.setFetchMode( "users", FetchMode.SELECT )
-////				.add( Restrictions.idEq( "hibernate" ) )
-////				.uniqueResult();
-////					assertFalse( Hibernate.isInitialized( hb.getUsers() ) );
-////					gavin = (User) s.createFilter( hb.getUsers(), "where index(this) = 'gavin'" ).uniqueResult();
-////		Long size = (Long) s.createFilter( hb.getUsers(), "select count(*)" ).uniqueResult();
-////		assertEquals( new Long( 2 ), size );
-////		assertFalse( Hibernate.isInitialized( hb.getUsers() ) );
-//					s.delete( hb );
-//				}
-//		);
-//	}
-
 	@Test
-	@NotImplementedYet( strict = false )
 	public void testJoinFetchManyToMany(SessionFactoryScope scope) {
 		Group group = new Group( "hibernate" );
 
@@ -258,7 +202,7 @@ public class JoinFetchTest {
 
 		scope.inTransaction( (s) -> {
 			Group hb = s.get( Group.class, "hibernate" );
-			assertTrue( Hibernate.isInitialized( hb.getUsers() ) );
+			assertFalse( Hibernate.isInitialized( hb.getUsers() ) );
 			User gavin = (User) hb.getUsers().get( "gavin" );
 			assertFalse( Hibernate.isInitialized( gavin.getGroups() ) );
 			User max = s.get( User.class, "max" );

@@ -7,6 +7,7 @@
 
 //$Id: Item.java 6957 2005-05-31 04:21:58Z oneovthafew $
 package org.hibernate.orm.test.query.joinfetch;
+
 import java.util.HashSet;
 import java.util.Set;
 

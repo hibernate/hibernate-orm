@@ -71,12 +71,15 @@ public abstract class UserCollectionTypeTest extends BaseCoreFunctionalTestCase 
 					criteria.from( User.class );
 					User u2 = s.createQuery( criteria ).uniqueResult();
 //		User u2 = (User) s.createCriteria(User.class).uniqueResult();
-					assertTrue( Hibernate.isInitialized( u2.getEmailAddresses() ) );
+					checkEmailAddressInitialization(u2);
 					assertEquals( u2.getEmailAddresses().size(), 2 );
 					assertNotNull( u2.getEmailAddresses().head());
 				}
 		);
 	}
+
+	protected abstract void checkEmailAddressInitialization(User user);
+
 
 }
 

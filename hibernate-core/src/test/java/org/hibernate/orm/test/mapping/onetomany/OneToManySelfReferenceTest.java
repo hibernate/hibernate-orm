@@ -15,7 +15,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.TypedQuery;
 
 import org.hibernate.Hibernate;
-import org.hibernate.collection.internal.PersistentSet;
+import org.hibernate.collection.spi.PersistentSet;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;

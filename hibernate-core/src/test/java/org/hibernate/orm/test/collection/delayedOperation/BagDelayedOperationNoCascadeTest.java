@@ -18,7 +18,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
 import org.hibernate.Hibernate;
-import org.hibernate.collection.internal.AbstractPersistentCollection;
+import org.hibernate.collection.spi.AbstractPersistentCollection;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;

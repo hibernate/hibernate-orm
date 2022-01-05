@@ -11,6 +11,7 @@ import java.util.List;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.OrderColumn;
 
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
@@ -63,11 +64,11 @@ public class BasicTypeElementCollectionTest extends BaseEntityManagerFunctionalT
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			Person person = entityManager.find(Person.class, 1L);
 			log.info("Clear element collection and add element");
-			//tag::collections-value-type-collection-lifecycle-example[]
+			//tag::ex-collection-elemental-lifecycle[]
 			person.getPhones().clear();
 			person.getPhones().add("123-456-7890");
 			person.getPhones().add("456-000-1234");
-			//end::collections-value-type-collection-lifecycle-example[]
+			//end::ex-collection-elemental-lifecycle[]
 		});
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			Person person = entityManager.find(Person.class, 1L);
@@ -78,7 +79,7 @@ public class BasicTypeElementCollectionTest extends BaseEntityManagerFunctionalT
 		});
 	}
 
-	//tag::collections-collection-proxy-entity-example[]
+	//tag::ex-collection-elemental-basic-model[]
 	@Entity(name = "Person")
 	public static class Person {
 
@@ -86,16 +87,17 @@ public class BasicTypeElementCollectionTest extends BaseEntityManagerFunctionalT
 		private Long id;
 
 		@ElementCollection
+		@OrderColumn( name = "_position")
 		private List<String> phones = new ArrayList<>();
 
 		//Getters and setters are omitted for brevity
 
-	//end::collections-collection-proxy-entity-example[]
+	//end::ex-collection-elemental-basic-model[]
 
 		public List<String> getPhones() {
 			return phones;
 		}
-	//tag::collections-collection-proxy-entity-example[]
+	//tag::ex-collection-elemental-basic-model[]
 	}
-	//end::collections-collection-proxy-entity-example[]
+	//end::ex-collection-elemental-basic-model[]
 }

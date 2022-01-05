@@ -22,12 +22,12 @@ import java.util.function.Supplier;
 
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
-import org.hibernate.collection.internal.PersistentBag;
-import org.hibernate.collection.internal.PersistentList;
-import org.hibernate.collection.internal.PersistentMap;
-import org.hibernate.collection.internal.PersistentSet;
-import org.hibernate.collection.internal.PersistentSortedMap;
-import org.hibernate.collection.internal.PersistentSortedSet;
+import org.hibernate.collection.spi.PersistentBag;
+import org.hibernate.collection.spi.PersistentList;
+import org.hibernate.collection.spi.PersistentMap;
+import org.hibernate.collection.spi.PersistentSet;
+import org.hibernate.collection.spi.PersistentSortedMap;
+import org.hibernate.collection.spi.PersistentSortedSet;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.HibernateIterator;
 import org.hibernate.engine.jdbc.LobCreator;

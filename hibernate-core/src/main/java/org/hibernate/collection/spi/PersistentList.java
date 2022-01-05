@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.collection.internal;
+package org.hibernate.collection.spi;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.ListIterator;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -24,9 +25,12 @@ import org.hibernate.type.Type;
  * A persistent wrapper for a {@code java.util.List}. Underlying
  * collection is an {@code ArrayList}.
  *
- * @see ArrayList
+ * @apiNote Incubating in terms of making this non-internal.  These contracts
+ * will be getting cleaned up in following releases.
+ *
  * @author Gavin King
  */
+@Incubating
 public class PersistentList<E> extends AbstractPersistentCollection<E> implements List<E> {
 	protected List<E> list;
 
@@ -79,6 +83,10 @@ public class PersistentList<E> extends AbstractPersistentCollection<E> implement
 	@Deprecated
 	public PersistentList(SessionImplementor session, List<E> list) {
 		this( (SharedSessionContractImplementor) session, list );
+	}
+
+	protected List<E> getRawList() {
+		return list;
 	}
 
 	@Override
@@ -511,7 +519,7 @@ public class PersistentList<E> extends AbstractPersistentCollection<E> implement
 		}
 	}
 
-	final class SimpleAdd extends AbstractValueDelayedOperation {
+	protected final class SimpleAdd extends AbstractValueDelayedOperation {
 
 		public SimpleAdd(E addedValue) {
 			super( addedValue, null );

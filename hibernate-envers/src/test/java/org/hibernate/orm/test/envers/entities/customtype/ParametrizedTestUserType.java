@@ -23,7 +23,7 @@ import org.hibernate.usertype.UserType;
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class ParametrizedTestUserType implements UserType, ParameterizedType {
+public class ParametrizedTestUserType implements UserType<String>, ParameterizedType {
 	private static final int[] TYPES = new int[] {Types.VARCHAR};
 
 	private String param1;
@@ -34,30 +34,28 @@ public class ParametrizedTestUserType implements UserType, ParameterizedType {
 		param2 = parameters.getProperty( "param2" );
 	}
 
-	public Class returnedClass() {
+	public Class<String> returnedClass() {
 		return String.class;
 	}
 
 	@Override
-	public Object nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+	public String nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
 		final String string = rs.getString( position );
 		return rs.wasNull() ? null : string;
 	}
 
-	public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session)
+	public void nullSafeSet(PreparedStatement st, String value, int index, SharedSessionContractImplementor session)
 			throws HibernateException, SQLException {
 		if ( value != null ) {
-			String v = (String) value;
-			if ( !v.startsWith( param1 ) ) {
-				v = param1 + v;
+			if ( !value.startsWith( param1 ) ) {
+				value = param1 + value;
 			}
-			if ( !v.endsWith( param2 ) ) {
-				v = v + param2;
+			if ( !value.endsWith( param2 ) ) {
+				value = value + param2;
 			}
-			value = v;
 		}
 		VarcharJdbcType.INSTANCE.getBinder( StringJavaTypeDescriptor.INSTANCE )
-				.bind( st, (String) value, index, session );
+				.bind( st, value, index, session );
 	}
 
 	public int[] sqlTypes() {

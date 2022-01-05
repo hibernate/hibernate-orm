@@ -35,7 +35,7 @@ import jakarta.persistence.OneToMany;
 
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
-import org.hibernate.collection.internal.AbstractPersistentCollection;
+import org.hibernate.collection.spi.AbstractPersistentCollection;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionEntry;
 

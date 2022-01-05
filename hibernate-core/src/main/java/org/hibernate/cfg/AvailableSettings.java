@@ -6,7 +6,6 @@
  */
 package org.hibernate.cfg;
 
-import java.util.List;
 import java.util.function.Supplier;
 
 import org.hibernate.HibernateException;
@@ -15,6 +14,8 @@ import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.registry.classloading.internal.TcclLookupPrecedence;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
+import org.hibernate.collection.spi.PersistentBag;
+import org.hibernate.collection.spi.PersistentList;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
@@ -2116,8 +2117,8 @@ public interface AvailableSettings {
 
 	/**
 	 * Controls whether Hibernate should recognize what it considers a "bag"
-	 * ({@link org.hibernate.collection.internal.PersistentBag}) as a List
-	 * ({@link org.hibernate.collection.internal.PersistentList}) or as a bag.
+	 * ({@link PersistentBag}) as a List
+	 * ({@link PersistentList}) or as a bag.
 	 *
 	 * If enabled, we will recognize it as a List where {@link jakarta.persistence.OrderColumn}
 	 * is just missing (and its defaults will apply).
@@ -2129,8 +2130,8 @@ public interface AvailableSettings {
 
 	/**
 	 * Controls whether Hibernate should recognize what it considers a "bag"
-	 * ({@link org.hibernate.collection.internal.PersistentBag}) as a List
-	 * ({@link org.hibernate.collection.internal.PersistentList}) or as a bag.
+	 * ({@link PersistentBag}) as a List
+	 * ({@link PersistentList}) or as a bag.
 	 *
 	 * If enabled, we will recognize it as a List where {@link jakarta.persistence.OrderColumn}
 	 * is just missing (and its defaults will apply).

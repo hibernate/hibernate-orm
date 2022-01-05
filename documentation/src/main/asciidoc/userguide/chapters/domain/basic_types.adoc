@@ -1,5 +1,5 @@
 [[basic]]
-=== Basic types
+=== Basic values
 :rootProjectDir: ../../../../../../..
 :documentationProjectDir: {rootProjectDir}/documentation
 :coreProjectDir: {rootProjectDir}/hibernate-core

@@ -8,7 +8,7 @@ package org.hibernate.sql.results.graph.collection.internal;
 
 import java.util.function.Supplier;
 
-import org.hibernate.collection.internal.PersistentArrayHolder;
+import org.hibernate.collection.spi.PersistentArrayHolder;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.sql.results.graph.DomainResultAssembler;

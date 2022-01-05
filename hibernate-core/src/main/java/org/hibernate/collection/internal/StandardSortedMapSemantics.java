@@ -10,7 +10,9 @@ import java.util.Comparator;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import org.hibernate.collection.spi.AbstractMapSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.collection.spi.PersistentSortedMap;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;

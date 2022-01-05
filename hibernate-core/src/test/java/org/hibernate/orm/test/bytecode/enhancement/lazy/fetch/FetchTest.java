@@ -16,7 +16,7 @@ import jakarta.persistence.OneToMany;
 import org.hibernate.Hibernate;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.collection.internal.PersistentSet;
+import org.hibernate.collection.spi.PersistentSet;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.stat.Statistics;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;

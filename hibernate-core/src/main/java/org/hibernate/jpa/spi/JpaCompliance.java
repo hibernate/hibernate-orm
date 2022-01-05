@@ -43,8 +43,8 @@ public interface JpaCompliance {
 	 * JPA does not have.
 	 *
 	 * If enabled, Hibernate will recognize this condition as defining
-	 * a {@link org.hibernate.collection.internal.PersistentList}, otherwise
-	 * Hibernate will treat is as a {@link org.hibernate.collection.internal.PersistentBag}
+	 * a {@link org.hibernate.collection.spi.PersistentList}, otherwise
+	 * Hibernate will treat is as a {@link org.hibernate.collection.spi.PersistentBag}
 	 *
 	 * @return {@code true} indicates to behave in the spec-defined way, interpreting the
 	 * mapping as a "list", rather than a "bag"

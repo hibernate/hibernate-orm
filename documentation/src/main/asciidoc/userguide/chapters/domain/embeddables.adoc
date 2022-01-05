@@ -1,5 +1,5 @@
 [[embeddables]]
-=== Embeddable types
+=== Embeddable values
 :rootProjectDir: ../../../../../../..
 :sourcedir: ../../../../../test/java/org/hibernate/userguide/mapping/embeddable
 :coreProjectDir: {rootProjectDir}/hibernate-core

@@ -16,7 +16,7 @@ import java.util.Map;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
-import org.hibernate.collection.internal.PersistentArrayHolder;
+import org.hibernate.collection.spi.PersistentArrayHolder;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;

@@ -126,7 +126,7 @@ public class QueryParametersValidationTest extends BaseEntityManagerFunctionalTe
 		private boolean active;
 	}
 
-	public static class BooleanUserType implements UserType {
+	public static class BooleanUserType implements UserType<Boolean> {
 
 		@Override
 		public int[] sqlTypes() {
@@ -149,15 +149,17 @@ public class QueryParametersValidationTest extends BaseEntityManagerFunctionalTe
 		}
 
 		@Override
-		public Object nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+		public Boolean nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
 			return "Y".equals( rs.getString( position ) );
 		}
 
 		@Override
 		public void nullSafeSet(
-				PreparedStatement st, Object value, int index, SharedSessionContractImplementor session)
-				throws HibernateException, SQLException {
-			st.setString(index, ((Boolean) value).booleanValue() ? "Y" : "N");
+				PreparedStatement st,
+				Boolean value,
+				int index,
+				SharedSessionContractImplementor session) throws SQLException {
+			st.setString(index, value ? "Y" : "N");
 		}
 
 		@Override

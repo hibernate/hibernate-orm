@@ -14,6 +14,7 @@ import org.hibernate.collection.spi.CollectionInitializerProducer;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.InitializerProducerBuilder;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.collection.spi.PersistentList;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.CollectionClassification;

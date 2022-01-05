@@ -8,9 +8,10 @@ package org.hibernate.collection.internal;
 
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.Map;
 
+import org.hibernate.collection.spi.AbstractMapSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.collection.spi.PersistentMap;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.CollectionClassification;

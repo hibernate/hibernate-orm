@@ -16,7 +16,7 @@ import jakarta.persistence.criteria.CriteriaQuery;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.collection.internal.PersistentSet;
+import org.hibernate.collection.spi.PersistentSet;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.event.spi.AbstractCollectionEvent;

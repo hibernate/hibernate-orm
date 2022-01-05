@@ -92,7 +92,7 @@ public class CustomType<J>
 		}
 
 		// create a JdbcType adapter that uses the UserType binder/extract handling
-		this.jdbcType = new UserTypeSqlTypeAdapter<>( userType, mappedJavaTypeDescriptor );
+		this.jdbcType = new UserTypeSqlTypeAdapter<>( userType, mappedJavaTypeDescriptor , typeConfiguration);
 
 		this.valueExtractor = jdbcType.getExtractor( mappedJavaTypeDescriptor );
 		this.valueBinder = jdbcType.getBinder( mappedJavaTypeDescriptor );

@@ -53,7 +53,7 @@ public class User {
 	}
 
 	@OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
-	@CollectionType(type = "org.hibernate.orm.test.mapping.type.collection.custom.declaredtype.explicitsemantics.HeadSetListType", semantics = Set.class)
+	@CollectionType(type = HeadSetListType.class, semantics = Set.class)
 	@JoinColumn(name = "userName")
 	@OrderColumn(name = "displayOrder")
 	public IHeadSetList<Email> getEmailAddresses() { // can declare a custom interface type

@@ -9,7 +9,7 @@ package org.hibernate.sql.results.graph.collection.internal;
 import java.util.List;
 
 import org.hibernate.LockMode;
-import org.hibernate.collection.internal.PersistentList;
+import org.hibernate.collection.spi.PersistentList;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;

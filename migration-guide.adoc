@@ -1,17 +1,20 @@
 = 6.0 Migration Guide
 :toc:
-:user-guide-base: https://docs.jboss.org/hibernate/orm/6.0/userguide/html_single/Hibernate_User_Guide.html
-:javadoc-base: https://link.to/hibernate/javadoc
-:java-javadoc-base: https://docs.oracle.com/en/java/javase/11/docs/api/java.base
-:fn-converter:Think `AttributeConverter`
+:toclevels: 4
+:docsBase: https://docs.jboss.org/hibernate/orm/6.0
+:userGuideBase: {docsBase}/userguide/html_single/Hibernate_User_Guide.html
+:javadocsBase: {docsBase}/javadocs
+:fn-converter: footnote:converter[Think `AttributeConverter`]
+
+
+
 
 This guide discusses migration from Hibernate ORM version 6.0.  For migration from
 earlier versions, see any other pertinent migration guides as well.
 
 
-== Known changes
 
-=== Jakarta Persistence
+== Jakarta Persistence
 
 6.0 moves from Java Persistence as defined by the Java EE specs to
 Jakarta Persistence as defined by the Jakarta EE spec.  The most immediate
@@ -32,32 +35,62 @@ in migration.  It logs a deprecation warning when the Java EE variants are used.
 directory in the project root for the configuration used to migrate Hibernate itself.
 
 
-=== Java 11
+== Java 11
 
 With 6.0, Hibernate ORM has moved to expect Java 11 as its baseline version
 
 
 [[read-jdbc]]
-=== Reading from JDBC
+== Reading from JDBC
 
-Throughput testing of Hibernate was showing that its use of reading JDBC values by name, rather than
-by position was its limiting factor in any further scaling in terms of throughput.
+One of the main reasons for 6.0 development was the move from reading results
+from the JDBC `ResultSet` by name (read-by-name) as done in previous versions
+of Hibernate, to reading the results by position (read-by-position).
 
-This is the main reason for most of the changes in Hibernate 6.
+Throughput testing of Hibernate showed that its use of read-by-name was its limiting factor
+in any further scaling in terms of throughput - much of the issue was actually the call into
+the `ResultSet`.  We like to improve performance all the time :)
 
-This seemingly simple change, however, ripples through quite a few contracts - including some
-APIs and some SPIs
+This change, along with <<sql>>, helped achieve this goal.
+
+As discussed in <<type>> though, this change has a very big impact on Hibernate's mapping type system
 
 
-==== Replace read-by-name with read-by-position
+[[sql]]
+== Generated SQL
 
-Various contracts in `org.hibernate.type` and `org.hibernate.usertype` were changed to now offer a read-by-position
-method. The read-by-name methods were removed.
-Read-by-position rather than read-by-name
+1. Column aliases are no longer generated.
+2. Column references are "unique-d".
+3. Better definition of joins
+4. Better determination of unnecessary joins (secondary tables, inheritance tables)
+
+
+== Bulk SQM against entities mapped to multiple tables
+
+// todo (6.0) - @Christian - can you add some info here?
+
+
+
+[[identifier]]
+== Identifier as Object
+
+Previous versions of Hibernate required that all identifier types implement `Serializable`.  6.0
+removes this restriction - identifiers can be any `Object`.
+
+This change affects many api and spi methods previously defined using `Serializable`.
+
+
+[[id-gen-type]]
+== @IdGeneratorType
+
+6.0 adds a new `@IdGeneratorType` annotation that allows better, type-safe way
+to define custom generators to use for identifier generation.
+
+// todo (6.0 - @Steve - need to add content about this to the User Guide
 
 
 [[type]]
-=== Type system / custom types
+== Type system
 
 Another change is to generally modernize Hibernate's mapping annotations and make them
 more type-safe.
@@ -69,76 +102,189 @@ One part of this work was the removal of various String-based approaches for spe
 the removal of `@Type`, `@AnyMetaDef`, `@AnyMetaDefs`, `@MapKeyType`, @TypeDef` and `@TypeDefs`, as well as
 removing annotation attributes accepting the type to use as a String (e.g. `org.hibernate.annotations.CollectionType#type`)
 
-The Hibernate {user-guide-base}?type[User Guide] covers the details of mapping your domain model.
-// todo (6.0) - find proper id syntax for "domain model" type ^^
+The https://docs.jboss.org/hibernate/orm/6.0/userguide/html_single/Hibernate_User_Guide.html#domain-model[User Guide]
+covers the details of mapping your domain model.
 
 
 [[rename-java-type]]
-==== Renaming of JavaTypeDescriptor contract
+=== Renaming of JavaTypeDescriptor contract
 
 The interface `org.hibernate.type.descriptor.java.JavaTypeDescriptor` has been renamed to
 `org.hibernate.type.descriptor.java.JavaType`
 
 
 [[rename-jdbc-type]]
-==== Renaming of SqlTypeDescriptor contract
+=== Renaming of SqlTypeDescriptor contract
 
 The interface `org.hibernate.type.descriptor.sql.SqlTypeDescriptor` has been renamed to
-`org.hibernate.type.descriptor.jdbc.JdbcType`
+`org.hibernate.type.descriptor.jdbc.JdbcType`.
 
 
 [[basic-type]]
-==== Basic types
+=== Basic types
 
-Basic types are no longer exposed as customizable.  Instead, users configure
-the different aspects of mapping the basic value to the database -
+Basic mappings are no longer configurable through the `BasicType` contract.  Instead,
+users configure the different aspects of mapping the basic value to the database -
 
     * `JavaType`
     * `JdbcType`
-    * `BasicValueConverter`{fn-converter}
+    * `BasicValueConverter` {fn-converter}
     * `MutabilityPlan`
-
-See the Hibernate {user-guide-base}?basic-type[User Guide] for details of mapping
-// todo (6.0) - find proper id syntax for "domain model" basic-type ^^
-basic values in your domain model, including how to influence these 4 aspects.
 
 This also made the various implementations of `BasicType` obsolete, thus they have been removed.
 `NamedBasicTypeImpl` takes the role of all the previous specific implementations by wrapping a
 `JdbcType` and `JavaType`.
 
-The `StandardBasicTypes` class previously exposed `BasicType` instance fields, which now have been replaced with fields
-of the type `BasicTypeReference`. APIs that previously accepted just a `BasicType` have been adapted to also accept a
-`BasicTypeReference` which allows for uses of `StandardBasicType` fields to stay mostly source compatible.
+The `StandardBasicTypes` class previously exposed `BasicType` instance fields, which now have been
+replaced with fields of the type `BasicTypeReference`. APIs that previously accepted just a `BasicType`
+have been adapted to also accept a `BasicTypeReference` which allows for uses of `StandardBasicType`
+fields to stay mostly source compatible.
+
+See https://docs.jboss.org/hibernate/orm/6.0/userguide/html_single/Hibernate_User_Guide.html#basic for details.
+
+==== UserType
+
+`UserType` is still supported, and is specified using the new `@CustomType` annotation.
+
+See https://docs.jboss.org/hibernate/orm/6.0/userguide/html_single/Hibernate_User_Guide.html#basic-mapping-custom for details.
 
 
-==== Embeddables / components
+==== Boolean converters
 
-Addition of `EmbeddableInstantiator`
+Hibernate now provides standard `AttributeConverter` implementations for handling different database representations
+as boolean values in the domain model:
 
-Constructor injection.  Embeddables used as identifiers cannot use constructor injection.
-See the Hibernate {user-guide-base}?embeddable-type[User Guide] for details.
-// todo (6.0) - find proper id syntax for "domain model" embeddable-type ^^
+`YesNoConverter`:: Handles values stored in the database as either `Y` or `N`.  Replaces the removed `YesNoBooleanType` (`yes_no`)
+`TrueFalseConverter`:: Handles values stored in the database as either `T` or `F`.  Replaces the removed `TrueFalseBooleanType` (`true_false`)
+`NumericBooleanConverter`:: Handles values stored in the database as either `1` or `0`.  Replaces the removed `NumericBooleanType` (`numeric_boolean`)
 
-Multiple component mappings for the same java class with different property mappings is no
-longer supported. Every property mapping combination should have its own java class
+E.g.
+
+```
+@Type(type="yes_no")
+boolean isActive;
+```
+
+becomes
+
+```
+@Convert(converter=YesNoConverter.class)
+boolean isActive;
+```
+
+In fact, if your application consistently maps booleans to the same database representation you can
+even register one as an auto-apply converter.
+
+See https://docs.jboss.org/hibernate/orm/6.0/userguide/html_single/Hibernate_User_Guide.html#basic-boolean for details.
 
 
-==== Plural attributes
+=== Embeddables / components
 
-`@CollectionClassification`
-`@CollectionSemantics`
-`@CollectionType`
+Mapping of embeddables had a few changes as well.
 
 
+==== Different embeddable mappings
 
+Multiple component mappings for the same Java class with different property mappings is no
+longer supported. Every property mapping combination should have its own Java class
+
+
+==== EmbeddableInstantiator
+
+6.0 introduces the new `EmbeddableInstantiator` contract.
+
+`EmbeddableInstantiator` supports constructor-injection!  Note, however, that embeddables used as
+identifiers cannot use constructor injection.
+
+See https://docs.jboss.org/hibernate/orm/6.0/userguide/html_single/Hibernate_User_Guide.html#embeddable-instantiator for details.
+
+
+=== Plural attributes
+
+6.0 adds some new ways to influence collection mapping and makes some changes
+to an existing way.
+
+==== `@CollectionType`
+
+The `@CollectionType` annotation is kept from 5.x.  However, where it used to define
+
+```
+String type();
+```
+
+it now defines
+
+```
+Class<? extends UserCollectionType> type();
+```
+
+The type to use must be a `UserCollectionType` (can no longer be a `CollectionType`) and
+it no longer works with type-definitions.  See <<type>> for further discussion of general type changes.
+
+See https://docs.jboss.org/hibernate/orm/6.0/userguide/html_single/Hibernate_User_Guide.html#collection-type-ann
+for details of using `@CollectionType`
+
+
+==== `@CollectionClassificationType`
+
+6.0 adds the `@CollectionClassificationType` annotation to allow specifying the semantics to apply to a
+plural attribute mapping based on discrete (enum) set of classifications.
+
+See https://docs.jboss.org/hibernate/orm/6.0/userguide/html_single/Hibernate_User_Guide.html#collection-classification-ann
+for details of using `@CollectionClassificationType`
+
+
+==== `@CollectionSemantics`
+
+6.0 adds the `@CollectionSemantics` annotation to allow specifying a custom `CollectionSemantics` implementation
+to use for a plural attribute mapping.
+
+It also adds `@CollectionSemanticsRegistration` annotation to auto-apply a custom semantic to all collections
+determined to use the specified classification.
+
+See https://docs.jboss.org/hibernate/orm/6.0/userguide/html_single/Hibernate_User_Guide.html#collection-semantics-ann
+for details of using `@CollectionSemantics`
+
+=== Misc
+
+* The default type for `Duration` was changed to `NUMERIC` which could lead to schema validation errors
 
 
 [[query]]
-=== Query
+== Query
+
+// todo (6.0) - Query parameter binding overloads accepting `Type`, `AllowableParameterType`
+// todo (6.0) - addition of parameter binding overloads accepting Class - AttributeConverter, UserType, Java Type (resolved from JavaTypeRegistry), ...
+
+[[query-stream]]
+=== Stream
+
+`jakarta.persistence.Query#getResultStream()` and `org.hibernate.query.Query#stream()` no longer
+return a `Stream` decorator.  In order to close the underlying IO resources, it is now necessary to
+explicitly call the `Stream#close()` method.
+
+This change makes the Streams returned by Hibernate behave as defined in the JDK
+https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/stream/Stream.html[Stream]
+documentation, which is quite explicit about the need for an explicit call to `close` by the user
+to avoid resource leakages.
+
+
+[[query-iterate]]
+=== Iterate
+
+The `Query#iterate()` method has been removed. The alternative is to use one of
+
+* `Query#stream()`
+* `Query#getResultStream()`
+* Get the `Iterator` from `List` returned by `Query#list()` / `Query#getResultList()`
 
 
 [[query-sqm]]
-==== SQM
+== SQM (HQL/Criteria)
+
+Another major change in 6.0 is the move to a dedicated tree structure to model
+HQL and Criteria queries.  This tree structure is called the Semantic Query Model, or
+SQM for short.
 
 todo (6.0) - cover functions
 todo (6.0) - cover new temporal capabilities
@@ -162,7 +308,7 @@ List<Object[]> results = session.createQuery("select p, a from Person p join p.a
 
 
 [[query-sqm-pass-thru]]
-===== Pass-through tokens
+==== Pass-through tokens
 
 The use of plain HQL identifiers in e.g. functions which couldn't be interpreted as an attribute of a `FROM` root
 were passed through as-is to SQL in Hibernate 5.x which was dropped in 6.0 because we believe this is unsafe
@@ -174,7 +320,7 @@ can be migrated to `select substring( e.description, 21, 11, sql('octets') ) fro
 
 
 [[query-sqm-distinct]]
-===== DISTINCT
+==== DISTINCT
 
 Starting with Hibernate ORM 6 it is no longer necessary to use *distinct* in JPQL and HQL
 to filter out the same parent entity references when join fetching a child collection.
@@ -187,7 +333,7 @@ From Hibernate ORM 6, `distinct` is always passed to the SQL query and the flag 
 has been removed.
 
 
-===== Association Comparisons
+==== Association Comparisons
 
 Previously Hibernate did allow comparing an association with an FK value like `... where alias.association = 1`
 or `... where alias.association = alias.association.id` or even `... where alias.association = :param` where `param`
@@ -200,7 +346,7 @@ where `param` is bound to `entityManager.getReference(EntityClass.class, 1)`.
 
 
 [[query-sqm-psuedo-attr]]
-===== Collection psuedo-attributes
+==== Collection psuedo-attributes
 
 Prior to 6.0, it was possible to de-reference special properties on plural attributes like `size` which was dropped.
 The special properties lead to confusion and were sometimes ambiguous. The replacement is the function syntax.
@@ -232,11 +378,38 @@ The collection minimum element can be determined by using the `minelement( plura
 
 
 [[query-native]]
-==== Native
+== NativeQuery
 
-Using NativeQuery to call a SQL function is no longer supported.
+As `NativeQuery` extends from `Query`, all the changes listed in <<query>> also apply
+to `NativeQuery`.
 
-Given the `NamedNativeQuery`
+Some additional changes apply specifically to `NativeQuery`
+
+
+[[query-ordinal-param]]
+=== Ordinal Parameters binding
+
+HQL ordinal parameter binding is 1-based, this means that queries like
+
+```
+s.createQuery( "select p from Parent p where id in ?0", Parent.class );
+query.setParameter( 0, Arrays.asList( 0, 1, 2, 3 ) );
+```
+
+that uses a 0-based positional binding are not supported, and they should be changed to the following
+
+```
+s.createQuery( "select p from Parent p where id in ?`", Parent.class );
+query.setParameter( 1, Arrays.asList( 0, 1, 2, 3 ) );
+```
+
+[[proc-call-nativequery]]
+=== Callable via NativeQuery
+
+Using `NativeQuery` to call SQL functions or procedures is no longer supported.
+
+Given the `NamedNativeQuery`-
+
 ```
 @NamedNativeQuery(
     name = "fn_person_and_phones",
@@ -280,48 +453,8 @@ or not define the stored procedure and use this code
 List<Object[]> postAndComments = entityManager.createStoredProcedureQuery( "fn_person_and_phones", "person_with_phones" ).setParameter( 1, 1L ).getResultList();
 ```
 
-[[query-stream]]
-==== Stream
-
-`jakarta.persistence.Query#getResultStream()` and `org.hibernate.query.Query#stream()` no longer
-return a `Stream` decorator.  In order to close the underlying IO resources, it is now necessary to
-explicitly call the `Stream#close()` method.
-
-This change makes the Streams returned by Hibernate behave as defined in the JDK
-link:{java-javadoc-base}/java/util/stream/Stream.html[Stream] documentation, which is quite
-explicit about the need for an explicit call to `close` by the user to avoid resource leakages.
-
-
-[[query-iterate]]
-==== Iterate
-
-The `Query#iterate()` method has been removed. The alternative is to use `Query#stream()` or `Query#getResultStream()`.
-
-
-[[query-ordinal-param]]
-==== Ordinal Parameters binding
-
-HQL ordinal parameter binding is 1-based, this means that queries like
-
-```
-s.createQuery( "select p from Parent p where id in ?0", Parent.class );
-query.setParameter( 0, Arrays.asList( 0, 1, 2, 3 ) );
-```
-
-that uses a 0-based positional binding are not supported, and they should be changed to the following
-
-```
-s.createQuery( "select p from Parent p where id in ?`", Parent.class );
-query.setParameter( 1, Arrays.asList( 0, 1, 2, 3 ) );
-```
-
-
-[[proc-call]]
-=== ProcedureCall
-
-
 [[proc-call-param]]
-==== Procedure Parameters
+== ProcedureCall Parameters
 
 For parameters defined on a ProcedureCall as accepting binding (IN and INOUT), a distinction is now
 made between whether `setParameter` is called or not.  If `setParameter` was called, whatever value
@@ -329,38 +462,66 @@ was set by the user is passed to the database.  If it was not called, Hibernate 
 set any value which triggers the default value defined on the database procedure argument be used
 
 
+== Interceptor
 
-=== Removals
 
-* JMX integration
-* JACC integration
-* @Deprecated features:
-    ** 'hibernate.classLoader.application', 'hibernate.classLoader.resources', 'hibernate.classLoader.hibernate' and 'hibernate.classLoader.environment': use 'hibernate.classLoaders' instead.
-    ** 'hibernate.hbm2dll.create_namespaces': use 'jakarta.persistence.create-database-schemas' or 'hibernate.hbm2ddl.create_namespaces'
-
-=== org.hibernate.Interceptors
-
-The method
+The signature of the `#onSave` method has been changed from
 ```
 boolean onSave(Object entity, Serializable id, Object[] state, String[] propertyNames, Type[] types)
 ```
 
-has been removed in favour of
+to
+
 ```
 boolean onSave(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types)
 ```
 
+to account
+
+== Removals
 
 
-=== Fetch behaviour change
+=== Legacy Hibernate Criteria API
 
-We changed the way we detect circularity, we do not follow anymore a deep first detection, so what happens is that in a model like
+The legacy Hibernate Criteria API which was deprecated back in Hibernate 5.x and removed in 6.0.
+Usually, all queries using the legacy API can be modeled with the JPA Criteria API.
+In some cases it is necessary to use the Hibernate JPA Criteria extensions.
+
+=== JMX integration
+
+Hibernate no longer provides built-in support for integrating itself with JMX environments.
+
+=== JACC integration
+
+Hibernate no longer provides built-in support for integrating itself with JACC environments.
+
+
+=== Previously Deprecated features:
+
+* 'hibernate.classLoader.application', 'hibernate.classLoader.resources', 'hibernate.classLoader.hibernate' and 'hibernate.classLoader.environment': use 'hibernate.classLoaders' instead.
+* 'hibernate.hbm2dll.create_namespaces': use 'jakarta.persistence.create-database-schemas' or 'hibernate.hbm2ddl.create_namespaces'
+
+// todo (6.0) - surely there are more than this...
+
+
+== Width-first fetch determination
+
+Previous versions of Hibernate determined fetches using a depth-first approach, which occasionally led
+to odd "circularity" determination.  Starting with 6.0, we now perform fetch determination using a width
+first approach.
+
+As back-ground, Hibernate does not always know that a fetch is truly
+circular.  So it uses the approach that seeing the same table and column(s) as keys might be a circularity
+and stops processing fetches using that table/column(s) combination.
+
+Given a model such as
 
 ```
 @Entity
 class Node {
 
     @ManyToOne
+
     Node node1;
 
     @ManyToOne
@@ -368,6 +529,10 @@ class Node {
 
 }
 ```
+
+Hibernate previously walked the graph for the `Node#node1` sub-tree prior to walking the `Node#node2` sub-tree
+
+// todo (6.0) : clarify this some more?
 
 being all eager we are executing a query with 4 joins
 
@@ -439,14 +604,7 @@ To avoid creating so many joins, and also in general, we recommend that you use 
 or `@OneToOne(fetch = FetchType.LAZY)` for most associations, but this is especially important if you have multiple self-referencing associations as you can see in the example.
 
 
-=== Removal of legacy Hibernate Criteria API
-
-The legacy Hibernate Criteria API which was deprecated back in Hibernate 5.x was removed in 6.0.
-Usually, all queries using the legacy API can be modeled with the JPA Criteria API.
-In some cases it is necessary to use the Hibernate JPA Criteria extensions.
-
-
-=== Restructuring of `org.hibernate.loader`
+== Restructuring of `org.hibernate.loader`
 
 The contents of the `loader.collection` package were restructured into `loader.ast.spi` and `loader.ast.internal`
 as well as adapted to the SQM API.
@@ -456,7 +614,7 @@ The contents of `loader.custom` were adapted and moved to `query.sql`.
 The contents of `loader.entity` and `loader.plan` were removed
 
 
-=== Restructuring of the sql package
+== Restructuring of the sql package
 
 The contents of `sql.ordering` were adapted and moved to `metamodel.mapping.ordering.ast`.
 
@@ -464,8 +622,8 @@ Classes of the `sql` package that were previously used for building SQL, but are
 The SQL generation is now fully handled through the `SqlAstTranslator` which a `Dialect` exposes a factory for.
 
 
+== Deprecation of hbm.xml mappings
+
+Legacy `hbm.xml` mapping format is considered deprecated and will no longer supported beyond 6.x.
 
 
-==== Misc
-
-* The default type for `Duration` was changed to `NUMERIC` which could lead to schema validation errors

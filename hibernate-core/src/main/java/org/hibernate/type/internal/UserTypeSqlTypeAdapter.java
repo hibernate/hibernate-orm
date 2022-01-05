@@ -13,6 +13,8 @@ import java.sql.SQLException;
 
 import org.hibernate.HibernateException;
 import org.hibernate.type.ProcedureParameterExtractionAware;
+import org.hibernate.type.descriptor.JdbcBindingLogging;
+import org.hibernate.type.descriptor.JdbcExtractingLogging;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -36,12 +38,12 @@ public class UserTypeSqlTypeAdapter<J> implements JdbcType {
 	private final ValueExtractor<J> valueExtractor;
 	private final ValueBinder<J> valueBinder;
 
-	public UserTypeSqlTypeAdapter(UserType<J> userType, BasicJavaType<J> jtd) {
+	public UserTypeSqlTypeAdapter(UserType<J> userType, BasicJavaType<J> jtd, TypeConfiguration typeConfiguration) {
 		this.userType = userType;
 		this.jtd = jtd;
 
-		this.valueExtractor = new ValueExtractorImpl<>( userType );
-		this.valueBinder = new ValueBinderImpl<>( userType );
+		this.valueExtractor = new ValueExtractorImpl<>( userType, jtd );
+		this.valueBinder = new ValueBinderImpl<>( userType, typeConfiguration );
 	}
 
 	@Override
@@ -94,21 +96,27 @@ public class UserTypeSqlTypeAdapter<J> implements JdbcType {
 
 	private static class ValueExtractorImpl<J> implements ValueExtractor<J> {
 		private final UserType<J> userType;
+		private final JavaType<J> javaType;
 
-		public ValueExtractorImpl(UserType<J> userType) {
+		public ValueExtractorImpl(UserType<J> userType, BasicJavaType<J> javaType) {
 			this.userType = userType;
+			this.javaType = javaType;
 		}
 
 		@Override
 		public J extract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-			return userType.nullSafeGet( rs, paramIndex, options.getSession(), null );
+			final J extracted = userType.nullSafeGet( rs, paramIndex, options.getSession(), null );
+			logExtracted( paramIndex, extracted );
+			return extracted;
 		}
 
 		@Override
 		public J extract(CallableStatement statement, int paramIndex, WrapperOptions options) throws SQLException {
 			if ( userType instanceof ProcedureParameterExtractionAware ) {
 				//noinspection unchecked
-				return ( (ProcedureParameterExtractionAware<J>) userType ).extract( statement, paramIndex, options.getSession() );
+				final J extracted = ( (ProcedureParameterExtractionAware<J>) userType ).extract( statement, paramIndex, options.getSession() );
+				logExtracted( paramIndex, extracted );
+				return extracted;
 			}
 
 			throw new UnsupportedOperationException( "UserType does not support reading CallableStatement parameter values: " + userType );
@@ -118,22 +126,58 @@ public class UserTypeSqlTypeAdapter<J> implements JdbcType {
 		public J extract(CallableStatement statement, String paramName, WrapperOptions options) throws SQLException {
 			if ( userType instanceof ProcedureParameterExtractionAware ) {
 				//noinspection unchecked
-				return ( (ProcedureParameterExtractionAware<J>) userType ).extract( statement, paramName, options.getSession() );
+				final J extracted = ( (ProcedureParameterExtractionAware<J>) userType ).extract( statement, paramName, options.getSession() );
+				logExtracted( paramName, extracted );
+				return extracted;
 			}
 
 			throw new UnsupportedOperationException( "UserType does not support reading CallableStatement parameter values: " + userType );
+		}
+
+		private void logExtracted(int paramIndex, J extracted) {
+			if ( ! JdbcExtractingLogging.TRACE_ENABLED ) {
+				return;
+			}
+
+			if ( extracted == null ) {
+				JdbcExtractingLogging.logNullExtracted( paramIndex, userType.sqlTypes()[0] );
+			}
+			else {
+				JdbcExtractingLogging.logExtracted( paramIndex, userType.sqlTypes()[0], extracted );
+			}
+		}
+
+		private void logExtracted(String paramName, J extracted) {
+			if ( ! JdbcExtractingLogging.TRACE_ENABLED ) {
+				return;
+			}
+
+			if ( extracted == null ) {
+				JdbcExtractingLogging.logNullExtracted( paramName, userType.sqlTypes()[0] );
+			}
+			else {
+				JdbcExtractingLogging.logExtracted( paramName, userType.sqlTypes()[0], extracted );
+			}
 		}
 	}
 
 	private static class ValueBinderImpl<J> implements ValueBinder<J> {
 		private final UserType<J> userType;
 
-		public ValueBinderImpl(UserType<J> userType) {
+		public ValueBinderImpl(UserType<J> userType, TypeConfiguration typeConfiguration) {
 			this.userType = userType;
 		}
 
 		@Override
 		public void bind(PreparedStatement st, J value, int index, WrapperOptions options) throws SQLException {
+			if ( JdbcBindingLogging.TRACE_ENABLED ) {
+				if ( value == null ) {
+					JdbcBindingLogging.logNullBinding( index, userType.sqlTypes()[ 0 ] );
+				}
+				else {
+					JdbcBindingLogging.logBinding( index, userType.sqlTypes()[ 0 ], value );
+				}
+			}
 			userType.nullSafeSet( st, value, index, options.getSession() );
 		}
 

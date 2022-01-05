@@ -13,6 +13,7 @@ import java.util.function.Consumer;
 import org.hibernate.collection.spi.CollectionInitializerProducer;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.InitializerProducerBuilder;
+import org.hibernate.collection.spi.PersistentArrayHolder;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.CollectionClassification;

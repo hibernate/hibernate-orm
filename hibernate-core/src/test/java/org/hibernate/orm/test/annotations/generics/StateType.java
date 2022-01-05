@@ -21,7 +21,7 @@ import org.hibernate.usertype.UserType;
 /**
  * @author Emmanuel Bernard
  */
-public class StateType implements UserType {
+public class StateType implements UserType<State> {
 	public int[] sqlTypes() {
 		return new int[] {
 			Types.INTEGER
@@ -41,19 +41,19 @@ public class StateType implements UserType {
 	}
 
 	@Override
-	public Object nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+	public State nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
 		int result = rs.getInt( position );
 		if ( rs.wasNull() ) return null;
 		return State.values()[result];
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session) throws HibernateException, SQLException {
+	public void nullSafeSet(PreparedStatement st, State value, int index, SharedSessionContractImplementor session) throws HibernateException, SQLException {
 		if (value == null) {
 			st.setNull( index, Types.INTEGER );
 		}
 		else {
-			st.setInt( index, ( (State) value ).ordinal() );
+			st.setInt( index, value.ordinal() );
 		}
 	}
 

@@ -57,7 +57,7 @@ public class UserWithUnimplementedCollection {
 	}
 
 	@OneToMany( fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true )
-	@CollectionType( type = "org.hibernate.test.collection.custom.declaredtype.UserCollectionTypeTest.HeadListType" )
+	@CollectionType(type = HeadListType.class )
 	@JoinColumn( name = "userName" )
 	@OrderColumn( name = "displayOrder" )
 	public AtomicReference<Email> getEmailAddresses() {  //can declare a custom interface type

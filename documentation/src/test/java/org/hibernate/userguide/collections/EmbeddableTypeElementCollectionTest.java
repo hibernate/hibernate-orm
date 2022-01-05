@@ -13,6 +13,7 @@ import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
@@ -45,7 +46,8 @@ public class EmbeddableTypeElementCollectionTest extends BaseEntityManagerFuncti
 		});
 	}
 
-	//tag::collections-embeddable-type-collection-lifecycle-entity-example[]
+	@Table( name = "persons" )
+	//tag::ex-collection-elemental-basic-model[]
 	@Entity(name = "Person")
 	public static class Person {
 
@@ -57,12 +59,12 @@ public class EmbeddableTypeElementCollectionTest extends BaseEntityManagerFuncti
 
 		//Getters and setters are omitted for brevity
 
-	//end::collections-embeddable-type-collection-lifecycle-entity-example[]
+	//end::ex-collection-elemental-basic-model[]
 
 		public List<Phone> getPhones() {
 			return phones;
 		}
-	//tag::collections-embeddable-type-collection-lifecycle-entity-example[]
+	//tag::ex-collection-elemental-basic-model[]
 	}
 
 	@Embeddable
@@ -75,7 +77,7 @@ public class EmbeddableTypeElementCollectionTest extends BaseEntityManagerFuncti
 
 		//Getters and setters are omitted for brevity
 
-	//end::collections-embeddable-type-collection-lifecycle-entity-example[]
+	//end::ex-collection-elemental-basic-model[]
 
 		public Phone() {
 		}
@@ -92,7 +94,7 @@ public class EmbeddableTypeElementCollectionTest extends BaseEntityManagerFuncti
 		public String getNumber() {
 			return number;
 		}
-	//tag::collections-embeddable-type-collection-lifecycle-entity-example[]
+	//tag::ex-collection-elemental-basic-model[]
 	}
-	//end::collections-embeddable-type-collection-lifecycle-entity-example[]
+	//end::ex-collection-elemental-basic-model[]
 }

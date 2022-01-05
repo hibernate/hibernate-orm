@@ -8,32 +8,26 @@ package org.hibernate.annotations;
 
 import java.lang.annotation.Retention;
 
+import org.hibernate.usertype.UserCollectionType;
+
+import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Names a custom collection type for a persistent collection.  The collection can also name a @Type, which defines
- * the Hibernate Type of the collection elements.
- *
- * @see org.hibernate.type.CollectionType
- * @see org.hibernate.usertype.UserCollectionType
+ * Names a custom collection type for a persistent collection.
  *
  * @author Steve Ebersole
- *
- * @deprecated Custom handling for "collection types" will be handled differently in 6.0
  */
-@java.lang.annotation.Target({FIELD, METHOD})
+@java.lang.annotation.Target({FIELD, METHOD, ANNOTATION_TYPE})
 @Retention(RUNTIME)
-@Deprecated
 public @interface CollectionType {
 	/**
-	 * Names the type.
-	 *
-	 * Could name the implementation class (an implementation of {@link org.hibernate.type.CollectionType} or
-	 * {@link org.hibernate.usertype.UserCollectionType}).
+	 * Specifies the UserCollectionType to use when mapping the attribute
+	 * to which this annotation is attached.
 	 */
-	String type();
+	Class<? extends UserCollectionType> type();
 
 	/**
 	 * Specifies the class to use the semantics of.

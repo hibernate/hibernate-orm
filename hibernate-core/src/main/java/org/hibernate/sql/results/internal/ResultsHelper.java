@@ -14,11 +14,10 @@ import java.util.function.Supplier;
 
 import org.hibernate.CacheMode;
 import org.hibernate.HibernateException;
-import org.hibernate.cache.spi.access.CollectionDataAccess;
-import org.hibernate.cache.spi.entry.CollectionCacheEntry;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.collection.internal.PersistentArrayHolder;
+import org.hibernate.cache.spi.access.CollectionDataAccess;
+import org.hibernate.cache.spi.entry.CollectionCacheEntry;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.BatchFetchQueue;
 import org.hibernate.engine.spi.CollectionEntry;

@@ -16,7 +16,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
-import org.hibernate.collection.internal.PersistentBag;
+import org.hibernate.collection.spi.PersistentBag;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 import org.hibernate.testing.orm.junit.DomainModel;

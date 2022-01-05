@@ -9,6 +9,7 @@ package org.hibernate.jpamodelgen.test.collectionbasictype;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Map;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
@@ -17,7 +18,7 @@ import org.hibernate.usertype.StaticUserTypeSupport;
 /**
  * @author Vlad Mihalcea
  */
-public class CommaDelimitedStringsMapType extends StaticUserTypeSupport {
+public class CommaDelimitedStringsMapType extends StaticUserTypeSupport<Map<String,String>> {
     public CommaDelimitedStringsMapType() {
         super(
                 new CommaDelimitedStringMapJavaTypeDescriptor(),
@@ -26,7 +27,12 @@ public class CommaDelimitedStringsMapType extends StaticUserTypeSupport {
     }
 
     @Override
-    public Object nullSafeGet(
+    public CommaDelimitedStringMapJavaTypeDescriptor getJavaType() {
+        return (CommaDelimitedStringMapJavaTypeDescriptor) super.getJavaType();
+    }
+
+    @Override
+    public Map<String,String> nullSafeGet(
             ResultSet rs,
             int position,
             SharedSessionContractImplementor session,
@@ -40,7 +46,7 @@ public class CommaDelimitedStringsMapType extends StaticUserTypeSupport {
     }
 
     @Override
-    public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session) throws SQLException {
+    public void nullSafeSet(PreparedStatement st, Map<String,String> value, int index, SharedSessionContractImplementor session) throws SQLException {
         final String stringValue = getJavaType().toString( value );
         getJdbcValueBinder().bind( st, stringValue, index, session );
     }

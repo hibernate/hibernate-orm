@@ -47,7 +47,7 @@ public class Entity {
 
 	@ElementCollection( targetClass = String.class, fetch = FetchType.EAGER )
 	@CollectionType(
-			type = "org.hibernate.orm.test.mapping.type.collection.custom.parameterized.DefaultableListType",
+			type = DefaultableListType.class,
 			parameters = @Parameter(name = "default", value = "Hello" )
 	)
 	@JoinColumn( name = "ENT_ID" )

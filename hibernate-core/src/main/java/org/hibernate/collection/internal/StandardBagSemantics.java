@@ -8,6 +8,8 @@ package org.hibernate.collection.internal;
 
 import java.util.Collection;
 
+import org.hibernate.collection.spi.AbstractBagSemantics;
+import org.hibernate.collection.spi.PersistentBag;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.CollectionClassification;

@@ -6,7 +6,7 @@
  */
 package org.hibernate.type;
 
-import org.hibernate.collection.internal.PersistentSet;
+import org.hibernate.collection.spi.PersistentSet;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;

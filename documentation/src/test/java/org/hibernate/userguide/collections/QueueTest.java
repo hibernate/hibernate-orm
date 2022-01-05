@@ -19,6 +19,7 @@ import jakarta.persistence.OneToMany;
 import org.hibernate.annotations.CollectionType;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.userguide.collections.type.QueueType;
 
 import org.junit.Test;
 
@@ -70,7 +71,7 @@ public class QueueTest extends BaseEntityManagerFunctionalTestCase {
 		private Long id;
 
 		@OneToMany(cascade = CascadeType.ALL)
-		@CollectionType(type = "org.hibernate.userguide.collections.type.QueueType")
+		@CollectionType(type = QueueType.class )
 		private Collection<Phone> phones = new LinkedList<>();
 
 		//Constructors are omitted for brevity

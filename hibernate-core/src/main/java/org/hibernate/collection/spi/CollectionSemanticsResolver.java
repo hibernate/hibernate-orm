@@ -23,5 +23,5 @@ import org.hibernate.mapping.Collection;
 @Incubating
 public interface CollectionSemanticsResolver {
 	// really need some form of access to the attribute site
-	CollectionSemantics resolveRepresentation(Collection bootDescriptor);
+	<CE,E> CollectionSemantics<CE,E> resolveRepresentation(Collection bootDescriptor);
 }

@@ -11,7 +11,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
@@ -52,9 +51,10 @@ public interface UserType<J> {
 
 	/**
 	 * Return the SQL type codes for the columns mapped by this type. The
-	 * codes are defined on {@code java.sql.Types}.
+	 * codes are generally defined on {@code java.sql.Types}, but could
+	 * be database-specific codes
+	 *
 	 * @see java.sql.Types
-	 * @return int[] the typecodes
 	 */
 	int[] sqlTypes();
 
@@ -68,17 +68,13 @@ public interface UserType<J> {
 	/**
 	 * Compare two instances of the class mapped by this type for persistence "equality".
 	 * Equality of the persistent state.
-	 *
-	 * @param x
-	 * @param y
-	 * @return boolean
 	 */
-	boolean equals(Object x, Object y) throws HibernateException;
+	boolean equals(Object x, Object y);
 
 	/**
 	 * Get a hashcode for the instance, consistent with persistence "equality"
 	 */
-	int hashCode(Object x) throws HibernateException;
+	int hashCode(Object x);
 
 	/**
 	 * Retrieve an instance of the mapped class from a JDBC resultset. Implementors
@@ -101,7 +97,7 @@ public interface UserType<J> {
 	 * @param value the object to be cloned, which may be null
 	 * @return Object a copy
 	 */
-	Object deepCopy(Object value) throws HibernateException;
+	Object deepCopy(Object value);
 
 	/**
 	 * Are objects of this type mutable?
@@ -118,9 +114,8 @@ public interface UserType<J> {
 	 *
 	 * @param value the object to be cached
 	 * @return a cacheable representation of the object
-	 * @throws HibernateException
 	 */
-	Serializable disassemble(Object value) throws HibernateException;
+	Serializable disassemble(Object value);
 
 	/**
 	 * Reconstruct an object from the cacheable representation. At the very least this
@@ -129,9 +124,8 @@ public interface UserType<J> {
 	 * @param cached the object to be cached
 	 * @param owner the owner of the cached object
 	 * @return a reconstructed object from the cacheable representation
-	 * @throws HibernateException
 	 */
-	Object assemble(Serializable cached, Object owner) throws HibernateException;
+	Object assemble(Serializable cached, Object owner);
 
 	/**
 	 * During merge, replace the existing (target) value in the entity we are merging to
@@ -140,9 +134,10 @@ public interface UserType<J> {
 	 * mutable objects, it is safe to return a copy of the first parameter. For objects
 	 * with component values, it might make sense to recursively replace component values.
 	 *
-	 * @param original the value from the detached entity being merged
-	 * @param target the value in the managed entity
+	 * @param detached the value from the detached entity being merged
+	 * @param managed the value in the managed entity
+	 *
 	 * @return the value to be merged
 	 */
-	Object replace(Object original, Object target, Object owner) throws HibernateException;
+	Object replace(Object detached, Object managed, Object owner);
 }

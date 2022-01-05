@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.collection.internal;
+package org.hibernate.collection.spi;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -16,6 +16,7 @@ import java.util.ListIterator;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -33,8 +34,12 @@ import org.hibernate.type.Type;
  * {@code IdentifierBag}s may not be used for a many-to-one association.
  * Furthermore, there is no reason to use {@code inverse="true"}.
  *
+ * @apiNote Incubating in terms of making this non-internal.  These contracts
+ * will be getting cleaned up in following releases.
+ *
  * @author Gavin King
  */
+@Incubating
 public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> implements List<E> {
 	protected List<E> values;
 	protected Map<Integer, Object> identifiers;

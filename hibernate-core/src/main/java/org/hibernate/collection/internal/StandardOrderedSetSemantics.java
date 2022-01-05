@@ -6,7 +6,9 @@
  */
 package org.hibernate.collection.internal;
 
+import org.hibernate.collection.spi.AbstractSetSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.collection.spi.PersistentSet;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.CollectionClassification;

@@ -9,7 +9,7 @@ package org.hibernate.type;
 import java.util.ArrayList;
 
 import org.hibernate.HibernateException;
-import org.hibernate.collection.internal.PersistentIdentifierBag;
+import org.hibernate.collection.spi.PersistentIdentifierBag;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.CollectionPersister;

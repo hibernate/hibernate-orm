@@ -1,4 +1,4 @@
-DELETE FROM Person_phones WHERE   Person_id = 1
+delete from Person_phones where Person_id=1
 
 INSERT INTO Person_phones ( Person_id, phones )
 VALUES ( 1, '123-456-7890' )

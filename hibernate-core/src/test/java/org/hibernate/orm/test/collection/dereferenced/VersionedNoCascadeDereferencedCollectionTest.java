@@ -25,7 +25,7 @@ package org.hibernate.orm.test.collection.dereferenced;
 
 import java.util.HashSet;
 
-import org.hibernate.collection.internal.AbstractPersistentCollection;
+import org.hibernate.collection.spi.AbstractPersistentCollection;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.EntityEntry;

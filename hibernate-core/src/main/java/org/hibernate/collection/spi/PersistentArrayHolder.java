@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.collection.internal;
+package org.hibernate.collection.spi;
 
 import java.io.Serializable;
 import java.lang.reflect.Array;
@@ -15,27 +15,29 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Incubating;
+import org.hibernate.collection.spi.AbstractPersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.Type;
-
-import org.jboss.logging.Logger;
 
 /**
  * A persistent wrapper for an array. Lazy initialization
  * is NOT supported. Use of Hibernate arrays is not really
  * recommended.
  *
+ * @apiNote Incubating in terms of making this non-internal.  These contracts
+ * will be getting cleaned up in following releases.
+ *
  * @author Gavin King
  */
+@Incubating
 public class PersistentArrayHolder<E> extends AbstractPersistentCollection<E> {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class,
-			PersistentArrayHolder.class.getName()
-	);
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( PersistentArrayHolder.class );
 
 	protected Object array;
 

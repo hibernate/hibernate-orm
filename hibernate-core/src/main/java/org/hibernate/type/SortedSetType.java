@@ -9,7 +9,7 @@ package org.hibernate.type;
 import java.util.Comparator;
 import java.util.TreeSet;
 
-import org.hibernate.collection.internal.PersistentSortedSet;
+import org.hibernate.collection.spi.PersistentSortedSet;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.CollectionPersister;

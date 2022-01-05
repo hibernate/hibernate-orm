@@ -6,6 +6,7 @@
  */
 package org.hibernate.collection.spi;
 
+import org.hibernate.Incubating;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.CollectionPart;
@@ -23,6 +24,7 @@ import org.hibernate.sql.results.graph.collection.internal.SetInitializerProduce
 /**
  * @author Steve Ebersole
  */
+@Incubating
 public class InitializerProducerBuilder {
 	public static CollectionInitializerProducer createInitializerProducer(
 			NavigablePath navigablePath,

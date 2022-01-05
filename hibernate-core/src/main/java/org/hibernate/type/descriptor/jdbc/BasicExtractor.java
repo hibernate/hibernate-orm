@@ -44,20 +44,18 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J>, Serializab
 		final J value = doExtract( rs, paramIndex, options );
 		if ( value == null || rs.wasNull() ) {
 			if ( JdbcExtractingLogging.TRACE_ENABLED ) {
-				JdbcExtractingLogging.LOGGER.tracef(
-						"extracted value ([%s] : [%s]) - [null]",
+				JdbcExtractingLogging.logNullExtracted(
 						paramIndex,
-						JdbcTypeNameMapper.getTypeName( getJdbcTypeDescriptor().getDefaultSqlTypeCode() )
+						getJdbcTypeDescriptor().getDefaultSqlTypeCode()
 				);
 			}
 			return null;
 		}
 		else {
 			if ( JdbcExtractingLogging.TRACE_ENABLED ) {
-				JdbcExtractingLogging.LOGGER.tracef(
-						"extracted value ([%s] : [%s]) - [%s]",
+				JdbcExtractingLogging.logExtracted(
 						paramIndex,
-						JdbcTypeNameMapper.getTypeName( getJdbcTypeDescriptor().getDefaultSqlTypeCode() ),
+						getJdbcTypeDescriptor().getDefaultSqlTypeCode(),
 						getJavaTypeDescriptor().extractLoggableRepresentation( value )
 				);
 			}

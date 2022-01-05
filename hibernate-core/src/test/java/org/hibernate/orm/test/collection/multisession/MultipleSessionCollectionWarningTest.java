@@ -33,8 +33,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
-import org.hibernate.collection.internal.AbstractPersistentCollection;
-import org.hibernate.collection.internal.PersistentSet;
+import org.hibernate.collection.spi.AbstractPersistentCollection;
+import org.hibernate.collection.spi.PersistentSet;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.internal.CoreLogging;

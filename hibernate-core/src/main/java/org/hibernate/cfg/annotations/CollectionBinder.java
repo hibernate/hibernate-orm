@@ -25,6 +25,7 @@ import org.hibernate.annotations.CollectionId;
 import org.hibernate.annotations.CollectionIdJavaType;
 import org.hibernate.annotations.CollectionIdJdbcType;
 import org.hibernate.annotations.CollectionIdJdbcTypeCode;
+import org.hibernate.annotations.CollectionSemantics;
 import org.hibernate.annotations.CollectionType;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.Filter;
@@ -103,6 +104,8 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.EmbeddableInstantiator;
+import org.hibernate.resource.beans.spi.ManagedBean;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 
 import org.jboss.logging.Logger;
 
@@ -278,26 +281,46 @@ public abstract class CollectionBinder {
 			XProperty property,
 			boolean isHibernateExtensionMapping,
 			MetadataBuildingContext buildingContext) {
-		final CollectionType typeAnnotation = property.getAnnotation( CollectionType.class );
+		final CollectionType typeAnnotation = HCANNHelper.findAnnotation( property, CollectionType.class );
 
 		final CollectionBinder binder;
 		if ( typeAnnotation != null ) {
 			binder = createBinderFromCustomTypeAnnotation( property, typeAnnotation, buildingContext );
-		}
-		else {
-			binder = createBinderFromProperty( property, buildingContext );
-		}
-
-		binder.setIsHibernateExtensionMapping( isHibernateExtensionMapping );
-
-		if ( typeAnnotation != null ) {
-			binder.explicitType = typeAnnotation.type();
+			binder.explicitType = typeAnnotation.type().getName();
 			for ( Parameter param : typeAnnotation.parameters() ) {
 				binder.explicitTypeParameters.setProperty( param.name(), param.value() );
 			}
 		}
+		else {
+			final CollectionSemantics customSemantics = property.getAnnotation( CollectionSemantics.class );
+			if ( customSemantics != null ) {
+				binder = createBinderFromCustomSemantics( customSemantics, property, buildingContext );
+			}
+			else {
+				binder = createBinderFromProperty( property, buildingContext );
+			}
+		}
+
+		binder.setIsHibernateExtensionMapping( isHibernateExtensionMapping );
 
 		return binder;
+	}
+
+	private static CollectionBinder createBinderFromCustomSemantics(
+			CollectionSemantics customSemantics,
+			XProperty property,
+			MetadataBuildingContext buildingContext) {
+		final ManagedBeanRegistry beanRegistry = buildingContext.getBootstrapContext()
+				.getServiceRegistry()
+				.getService( ManagedBeanRegistry.class );
+		final ManagedBean<? extends org.hibernate.collection.spi.CollectionSemantics> semanticsBean = beanRegistry.getBean( customSemantics.value() );
+		final org.hibernate.collection.spi.CollectionSemantics semantics = semanticsBean.getBeanInstance();
+		return createBinder(
+				property,
+				semantics.getCollectionClassification(),
+				(type) -> semantics,
+				buildingContext
+		);
 	}
 
 	private static CollectionBinder createBinderFromProperty(

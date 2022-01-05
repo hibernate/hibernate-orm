@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Queue;
 
-import org.hibernate.collection.internal.PersistentBag;
+import org.hibernate.collection.spi.PersistentBag;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 //tag::collections-custom-collection-mapping-example[]

@@ -32,7 +32,7 @@ public class User {
 	@NaturalId
 	private String userName;
 	@OneToMany( fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true )
-	@CollectionType( type = "org.hibernate.orm.test.mapping.type.collection.custom.basic.MyListType" )
+	@CollectionType( type = MyListType.class )
 	@JoinColumn( name = "userName" )
 	@OrderColumn( name = "displayOrder" )
 	private IMyList<Email> emailAddresses = new MyList<>();

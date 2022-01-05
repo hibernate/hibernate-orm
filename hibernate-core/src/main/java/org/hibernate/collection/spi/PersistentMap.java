@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.collection.internal;
+package org.hibernate.collection.spi;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -28,9 +29,12 @@ import org.hibernate.type.Type;
  * A persistent wrapper for a {@code java.util.Map}. Underlying collection
  * is a {@code HashMap}.
  *
- * @see HashMap
+ * @apiNote Incubating in terms of making this non-internal.  These contracts
+ * will be getting cleaned up in following releases.
+ *
  * @author Gavin King
  */
+@Incubating
 public class PersistentMap<K,E> extends AbstractPersistentCollection<E> implements Map<K,E> {
 
 	protected Map<K,E> map;

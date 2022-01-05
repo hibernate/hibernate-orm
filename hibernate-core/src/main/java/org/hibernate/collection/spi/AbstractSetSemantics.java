@@ -4,47 +4,32 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.collection.internal;
+package org.hibernate.collection.spi;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.function.Consumer;
 
-import org.hibernate.collection.spi.BagSemantics;
 import org.hibernate.collection.spi.CollectionInitializerProducer;
+import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.InitializerProducerBuilder;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractBagSemantics<E> implements BagSemantics<Collection<E>,E> {
+public abstract class AbstractSetSemantics<SE extends Set<E>,E> implements CollectionSemantics<SE,E> {
 	@Override
-	public Class<Collection> getCollectionJavaType() {
-		return Collection.class;
+	public Class<? extends Set> getCollectionJavaType() {
+		return Set.class;
 	}
 
 	@Override
-	public Collection<E> instantiateRaw(
-			int anticipatedSize,
-			CollectionPersister collectionDescriptor) {
-		if ( anticipatedSize < 1 ) {
-			return new ArrayList<>();
-		}
-		else {
-			return CollectionHelper.arrayList( anticipatedSize );
-		}
-	}
-
-	@Override
-	public Iterator<E> getElementIterator(Collection<E> rawCollection) {
+	public Iterator<E> getElementIterator(SE rawCollection) {
 		if ( rawCollection == null ) {
 			return null;
 		}
@@ -52,14 +37,14 @@ public abstract class AbstractBagSemantics<E> implements BagSemantics<Collection
 	}
 
 	@Override
-	public void visitElements(Collection<E> rawCollection, Consumer<? super E> action) {
+	public void visitElements(SE rawCollection, Consumer<? super E> action) {
 		if ( rawCollection != null ) {
 			rawCollection.forEach( action );
 		}
 	}
 
 	@Override
-	public CollectionInitializerProducer createInitializerProducer(
+	public  CollectionInitializerProducer createInitializerProducer(
 			NavigablePath navigablePath,
 			PluralAttributeMapping attributeMapping,
 			FetchParent fetchParent,
@@ -68,7 +53,8 @@ public abstract class AbstractBagSemantics<E> implements BagSemantics<Collection
 			Fetch indexFetch,
 			Fetch elementFetch,
 			DomainResultCreationState creationState) {
-		return InitializerProducerBuilder.createBagInitializerProducer(
+		assert indexFetch == null;
+		return InitializerProducerBuilder.createSetInitializerProducer(
 				navigablePath,
 				attributeMapping,
 				fetchParent,
@@ -77,5 +63,4 @@ public abstract class AbstractBagSemantics<E> implements BagSemantics<Collection
 				creationState
 		);
 	}
-
 }

@@ -19,7 +19,7 @@ import org.hibernate.usertype.UserType;
 /**
  * @author Slawek Garwol (slawekgarwol at gmail dot com)
  */
-public class CustomEnumUserType implements UserType {
+public class CustomEnumUserType implements UserType<CustomEnum> {
 	private static final int[] SQL_TYPES = {Types.VARCHAR};
 
 	public int[] sqlTypes() {
@@ -45,7 +45,7 @@ public class CustomEnumUserType implements UserType {
 	}
 
 	@Override
-	public Object nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+	public CustomEnum nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
 		String name = rs.getString( position );
 		if ( rs.wasNull() ) {
 			return null;
@@ -53,14 +53,13 @@ public class CustomEnumUserType implements UserType {
 		return CustomEnum.fromYesNo( name );
 	}
 
-	public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session)
+	public void nullSafeSet(PreparedStatement st, CustomEnum value, int index, SharedSessionContractImplementor session)
 			throws HibernateException, SQLException {
-		CustomEnum val = (CustomEnum) value;
-		if ( val == null ) {
+		if ( value == null ) {
 			st.setNull( index, Types.VARCHAR );
 		}
 		else {
-			st.setString( index, val.toYesNo() );
+			st.setString( index, value.toYesNo() );
 		}
 	}
 

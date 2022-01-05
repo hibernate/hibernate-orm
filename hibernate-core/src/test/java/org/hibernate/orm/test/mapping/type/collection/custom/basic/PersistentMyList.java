@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.mapping.type.collection.custom.basic;
 
-import org.hibernate.collection.internal.PersistentList;
+import org.hibernate.collection.spi.PersistentList;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 public class PersistentMyList extends PersistentList implements IMyList {

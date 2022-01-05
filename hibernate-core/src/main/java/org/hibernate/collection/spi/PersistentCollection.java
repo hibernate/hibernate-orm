@@ -12,6 +12,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -44,6 +45,7 @@ import org.hibernate.type.Type;
  *
  * @author Gavin King
  */
+@Incubating
 public interface PersistentCollection<E> {
 	/**
 	 * Get the owning entity. Note that the owner is only

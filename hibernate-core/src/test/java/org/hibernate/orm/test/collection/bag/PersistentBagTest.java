@@ -8,7 +8,7 @@ package org.hibernate.orm.test.collection.bag;
 
 import java.util.ArrayList;
 
-import org.hibernate.collection.internal.PersistentBag;
+import org.hibernate.collection.spi.PersistentBag;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;

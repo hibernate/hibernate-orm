@@ -11,7 +11,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
-import org.hibernate.collection.internal.PersistentMap;
+import org.hibernate.collection.spi.PersistentMap;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.CollectionPersister;

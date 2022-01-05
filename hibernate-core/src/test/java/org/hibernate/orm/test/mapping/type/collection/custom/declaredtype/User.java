@@ -29,7 +29,7 @@ public class User {
 	private String userName;
 
 	@OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
-	@CollectionType(type = "org.hibernate.orm.test.mapping.type.collection.custom.declaredtype.HeadListType")
+	@CollectionType(type = HeadListType.class )
 	@JoinColumn(name = "userName")
 	@OrderColumn(name = "displayOrder")
 	private IHeadList<Email> emailAddresses = new HeadList<Email>();

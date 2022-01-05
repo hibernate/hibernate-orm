@@ -12,7 +12,6 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 import org.hibernate.type.descriptor.JdbcBindingLogging;
-import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -46,25 +45,19 @@ public abstract class BasicBinder<J> implements ValueBinder<J>, Serializable {
 	public final void bind(PreparedStatement st, J value, int index, WrapperOptions options) throws SQLException {
 		if ( value == null ) {
 			if ( JdbcBindingLogging.TRACE_ENABLED ) {
-				JdbcBindingLogging.LOGGER.trace(
-						String.format(
-								NULL_BIND_MSG_TEMPLATE,
-								index,
-								JdbcTypeNameMapper.getTypeName( getJdbcTypeDescriptor().getDefaultSqlTypeCode() )
-						)
+				JdbcBindingLogging.logNullBinding(
+						index,
+						jdbcType.getDefaultSqlTypeCode()
 				);
 			}
 			doBindNull( st, index, options );
 		}
 		else {
 			if ( JdbcBindingLogging.TRACE_ENABLED ) {
-				JdbcBindingLogging.LOGGER.trace(
-						String.format(
-								BIND_MSG_TEMPLATE,
-								index,
-								JdbcTypeNameMapper.getTypeName( jdbcType.getDefaultSqlTypeCode() ),
-								getJavaTypeDescriptor().extractLoggableRepresentation( value )
-						)
+				JdbcBindingLogging.logBinding(
+						index,
+						jdbcType.getDefaultSqlTypeCode(),
+						getJavaTypeDescriptor().extractLoggableRepresentation( value )
 				);
 			}
 			doBind( st, value, index, options );
@@ -75,25 +68,19 @@ public abstract class BasicBinder<J> implements ValueBinder<J>, Serializable {
 	public final void bind(CallableStatement st, J value, String name, WrapperOptions options) throws SQLException {
 		if ( value == null ) {
 			if ( JdbcBindingLogging.TRACE_ENABLED ) {
-				JdbcBindingLogging.LOGGER.trace(
-						String.format(
-								NULL_BIND_MSG_TEMPLATE,
-								name,
-								JdbcTypeNameMapper.getTypeName( getJdbcTypeDescriptor().getDefaultSqlTypeCode() )
-						)
+				JdbcBindingLogging.logNullBinding(
+						name,
+						jdbcType.getDefaultSqlTypeCode()
 				);
 			}
 			doBindNull( st, name, options );
 		}
 		else {
 			if ( JdbcBindingLogging.TRACE_ENABLED ) {
-				JdbcBindingLogging.LOGGER.trace(
-						String.format(
-								BIND_MSG_TEMPLATE,
-								name,
-								JdbcTypeNameMapper.getTypeName( jdbcType.getDefaultSqlTypeCode() ),
-								getJavaTypeDescriptor().extractLoggableRepresentation( value )
-						)
+				JdbcBindingLogging.logBinding(
+						name,
+						jdbcType.getDefaultSqlTypeCode(),
+						getJavaTypeDescriptor().extractLoggableRepresentation( value )
 				);
 			}
 			doBind( st, value, name, options );

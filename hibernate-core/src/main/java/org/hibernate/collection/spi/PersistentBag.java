@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.collection.internal;
+package org.hibernate.collection.spi;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -17,7 +17,7 @@ import java.util.ListIterator;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
-import org.hibernate.collection.spi.CollectionSemantics;
+import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -30,8 +30,12 @@ import org.hibernate.type.Type;
  * Most developers seem to use {@code List}s to represent bag semantics,
  * so Hibernate follows this practice.
  *
+ * @apiNote Incubating in terms of making this non-internal.  These contracts
+ * will be getting cleaned up in following releases.
+ *
  * @author Gavin King
  */
+@Incubating
 public class PersistentBag<E> extends AbstractPersistentCollection<E> implements List<E> {
 
 	protected List<E> bag;

@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.collection.internal;
+package org.hibernate.collection.spi;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -15,6 +15,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.BasicCollectionPersister;
@@ -23,9 +24,12 @@ import org.hibernate.persister.collection.BasicCollectionPersister;
  * A persistent wrapper for a {@code java.util.SortedMap}. Underlying
  * collection is a {@code TreeMap}.
  *
- * @see TreeMap
+ * @apiNote Incubating in terms of making this non-internal.  These contracts
+ * will be getting cleaned up in following releases.
+ *
  * @author <a href="mailto:doug.currie@alum.mit.edu">e</a>
  */
+@Incubating
 public class PersistentSortedMap<K,E> extends PersistentMap<K,E> implements SortedMap<K,E> {
 	protected Comparator<? super K> comparator;
 

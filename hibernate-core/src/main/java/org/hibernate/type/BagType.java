@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import org.hibernate.HibernateException;
-import org.hibernate.collection.internal.PersistentBag;
+import org.hibernate.collection.spi.PersistentBag;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.CollectionPersister;

@@ -9,6 +9,8 @@ package org.hibernate.collection.internal;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.hibernate.collection.spi.AbstractSetSemantics;
+import org.hibernate.collection.spi.PersistentSet;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.CollectionClassification;

@@ -22,7 +22,7 @@ import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
-import org.hibernate.collection.internal.PersistentMap;
+import org.hibernate.collection.spi.PersistentMap;
 import org.hibernate.query.Query;
 
 import org.hibernate.testing.TestForIssue;

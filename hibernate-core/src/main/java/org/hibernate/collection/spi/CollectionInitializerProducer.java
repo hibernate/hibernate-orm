@@ -8,6 +8,7 @@ package org.hibernate.collection.spi;
 
 import java.util.function.Consumer;
 
+import org.hibernate.Incubating;
 import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.NavigablePath;
@@ -23,6 +24,7 @@ import org.hibernate.sql.results.graph.Initializer;
  *
  * @author Steve Ebersole
  */
+@Incubating
 @FunctionalInterface
 public interface CollectionInitializerProducer {
 	/**

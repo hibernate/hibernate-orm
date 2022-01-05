@@ -11,7 +11,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
-import org.hibernate.collection.internal.PersistentSet;
+import org.hibernate.collection.spi.PersistentSet;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**

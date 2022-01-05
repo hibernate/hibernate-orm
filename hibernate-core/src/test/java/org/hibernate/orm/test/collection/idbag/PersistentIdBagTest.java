@@ -8,7 +8,7 @@ package org.hibernate.orm.test.collection.idbag;
 
 import java.util.ArrayList;
 
-import org.hibernate.collection.internal.PersistentIdentifierBag;
+import org.hibernate.collection.spi.PersistentIdentifierBag;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;

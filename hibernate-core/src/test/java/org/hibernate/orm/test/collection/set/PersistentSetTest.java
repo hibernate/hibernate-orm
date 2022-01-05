@@ -13,7 +13,7 @@ import jakarta.persistence.criteria.Root;
 
 import org.hibernate.CacheMode;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.collection.internal.PersistentSet;
+import org.hibernate.collection.spi.PersistentSet;
 import org.hibernate.query.Query;
 import org.hibernate.stat.CollectionStatistics;
 

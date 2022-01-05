@@ -7,19 +7,17 @@
 
 package org.hibernate.spatial.dialect.oracle;
 
-import java.util.Map;
-
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
-import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.HSMessageLogger;
 import org.hibernate.spatial.HibernateSpatialConfigurationSettings;
+import org.hibernate.spatial.KeyedSqmFunctionDescriptors;
 import org.hibernate.spatial.contributor.ContributorImplementor;
-import org.hibernate.spatial.dialect.SpatialFunctionsRegistry;
 
 import org.geolatte.geom.codec.db.oracle.ConnectionFinder;
 import org.geolatte.geom.codec.db.oracle.OracleJDBCTypeFactory;
@@ -67,11 +65,19 @@ public class OracleDialectContributor implements ContributorImplementor {
 				StandardConverters.BOOLEAN,
 				false
 		);
-		OracleSDOSupport sdoSupport = new OracleSDOSupport( isOgcStrict );
-		SpatialFunctionsRegistry entries = sdoSupport.functionsToRegister();
-		for( Map.Entry<String, SqmFunctionDescriptor> funcToRegister : entries ) {
-			functionContributions.getFunctionRegistry().register( funcToRegister.getKey(), funcToRegister.getValue() );
+
+		KeyedSqmFunctionDescriptors functionDescriptors;
+		if (isOgcStrict)
+			functionDescriptors = new OracleSQLMMFunctionDescriptors( functionContributions);
+		else {
+			functionDescriptors = new OracleSDOFunctionDescriptors( functionContributions );
 		}
+		SqmFunctionRegistry functionRegistry = functionContributions.getFunctionRegistry();
+		functionDescriptors.asMap().forEach( (key, funcDescr) -> {
+			functionRegistry.register( key.getName(), funcDescr );
+			key.getAltName().ifPresent( altName -> functionRegistry.register( altName, funcDescr ) );
+		} );
+
 	}
 
 	@Override

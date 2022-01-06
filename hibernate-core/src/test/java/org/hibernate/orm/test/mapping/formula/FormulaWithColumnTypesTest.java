@@ -19,7 +19,9 @@ import jakarta.persistence.criteria.Root;
 import org.hibernate.annotations.Formula;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
@@ -200,6 +202,19 @@ public class FormulaWithColumnTypesTest extends BaseCoreFunctionalTestCase {
 
 		public ExtendedDialect() {
 			super();
+		}
+
+		public ExtendedDialect(DatabaseVersion version) {
+			super( version );
+		}
+
+		public ExtendedDialect(DialectResolutionInfo info) {
+			super( info );
+		}
+
+		@Override
+		protected void registerDefaultKeywords() {
+			super.registerDefaultKeywords();
 			registerKeyword( "FLOAT" );
 			registerKeyword( "INTEGER" );
 		}

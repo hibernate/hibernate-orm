@@ -9,7 +9,9 @@ import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -56,7 +58,19 @@ public class MultiLoadSubSelectCollectionDialectWithLimitTest {
 		}
 	}
 
-	public static class TestDialect extends H2Dialect{
+	public static class TestDialect extends H2Dialect {
+
+		public TestDialect(DialectResolutionInfo info) {
+			super( info );
+		}
+
+		public TestDialect() {
+		}
+
+		public TestDialect(DatabaseVersion version) {
+			super( version );
+		}
+
 		@Override
 		public int getInExpressionCountLimit() {
 			return 50;

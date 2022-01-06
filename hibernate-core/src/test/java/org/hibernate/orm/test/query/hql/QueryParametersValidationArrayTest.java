@@ -35,6 +35,7 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -42,6 +43,7 @@ import org.junit.jupiter.api.Test;
  */
 @TestForIssue( jiraKey = "HHH-12292")
 @RequiresDialect(H2Dialect.class)
+@SkipForDialect(dialectClass = H2Dialect.class, majorVersion = 2, reason = "Array support was changed to now be typed")
 @Jpa(
 		annotatedClasses = QueryParametersValidationArrayTest.Event.class
 )

@@ -31,7 +31,7 @@ import org.hibernate.sql.results.graph.FetchParent;
 @Incubating
 public interface CollectionSemantics<CE, E> {
 	/**
-	 * Get the classification of collections described by this semantic
+	 * The classification handled by this semantic
 	 */
 	CollectionClassification getCollectionClassification();
 

@@ -17,20 +17,75 @@ import jakarta.persistence.metamodel.PluralAttribute;
 /**
  * Classifications of the plurality.
  *
+ * @see org.hibernate.collection.spi.CollectionSemantics
+ *
  * @since 6.0
  */
 @Incubating
 public enum CollectionClassification {
-	SET( PluralAttribute.CollectionType.SET ),
-	LIST( PluralAttribute.CollectionType.LIST ),
-	MAP( PluralAttribute.CollectionType.MAP ),
+	/**
+	 * An Object or primitive array.  Roughly follows the semantics
+	 * of {@link #LIST}
+	 */
+	ARRAY( PluralAttribute.CollectionType.COLLECTION ),
+
+	/**
+	 * A non-unique, unordered collection.  Represented
+	 * as {@link java.util.Collection} or {@link java.util.List}
+	 */
 	BAG( PluralAttribute.CollectionType.COLLECTION ),
-	SORTED_SET( PluralAttribute.CollectionType.SET ),
-	ORDERED_SET( PluralAttribute.CollectionType.SET ),
-	SORTED_MAP( PluralAttribute.CollectionType.MAP ),
-	ORDERED_MAP( PluralAttribute.CollectionType.MAP ),
+
+	/**
+	 * A {@link #BAG} with a generated id for each element
+	 */
 	ID_BAG( PluralAttribute.CollectionType.COLLECTION ),
-	ARRAY( PluralAttribute.CollectionType.COLLECTION );
+
+	/**
+	 * A non-unique, ordered collection following the requirements of {@link java.util.List}
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#DEFAULT_LIST_SEMANTICS
+	 */
+	LIST( PluralAttribute.CollectionType.LIST ),
+
+	/**
+	 * A unique, unordered collection following the requirements of {@link java.util.Set}
+	 */
+	SET( PluralAttribute.CollectionType.SET ),
+
+	/**
+	 * A sorted {@link #SET} using either natural sorting of the elements or a
+	 * specified {@link java.util.Comparator}.  Represented
+	 * as {@link java.util.SortedSet} or {@link java.util.Set}
+	 */
+	SORTED_SET( PluralAttribute.CollectionType.SET ),
+
+	/**
+	 * A {@link #SET} that is ordered using an order-by fragment
+	 * as the collection is loaded.  Does not maintain ordering
+	 * while in memory if the contents change.  Represented
+	 * as {@link java.util.Set}.
+	 */
+	ORDERED_SET( PluralAttribute.CollectionType.SET ),
+
+	/**
+	 * A collection following the semantics of {@link java.util.Map}
+	 */
+	MAP( PluralAttribute.CollectionType.MAP ),
+
+	/**
+	 * A sorted {@link #MAP} using either natural sorting of the keys or a
+	 * specified {@link java.util.Comparator}.  Represented
+	 * as {@link java.util.SortedMap} or {@link java.util.Map}
+	 */
+	SORTED_MAP( PluralAttribute.CollectionType.MAP ),
+
+	/**
+	 * A {@link #MAP} that is ordered using an order-by fragment
+	 * as the collection is loaded.  Does not maintain ordering
+	 * while in memory if the contents change.  Represented
+	 * as {@link java.util.Map}.
+	 */
+	ORDERED_MAP( PluralAttribute.CollectionType.MAP );
 
 	private final PluralAttribute.CollectionType jpaClassification;
 

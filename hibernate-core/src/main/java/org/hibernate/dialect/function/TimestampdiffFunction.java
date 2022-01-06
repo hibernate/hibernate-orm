@@ -12,6 +12,8 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
+import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
+import org.hibernate.query.sqm.produce.function.FunctionParameterType;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
@@ -24,6 +26,8 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static java.util.Arrays.asList;
+import static org.hibernate.query.sqm.produce.function.FunctionParameterType.TEMPORAL;
+import static org.hibernate.query.sqm.produce.function.FunctionParameterType.TEMPORAL_UNIT;
 
 /**
  * @author Gavin King
@@ -36,7 +40,10 @@ public class TimestampdiffFunction
 	public TimestampdiffFunction(Dialect dialect, TypeConfiguration typeConfiguration) {
 		super(
 				"timestampdiff",
-				StandardArgumentsValidators.exactly( 3 ),
+				new ArgumentTypesValidator(
+						StandardArgumentsValidators.exactly( 3 ),
+						TEMPORAL_UNIT, TEMPORAL, TEMPORAL
+				),
 				StandardFunctionReturnTypeResolvers.invariant(
 						typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.LONG )
 				)
@@ -108,7 +115,7 @@ public class TimestampdiffFunction
 
 	@Override
 	public String getArgumentListSignature() {
-		return "(field, start, end)";
+		return "(TEMPORAL_UNIT field, TEMPORAL start, TEMPORAL end)";
 	}
 
 }

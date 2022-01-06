@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.produce.function;
 
 import org.hibernate.QueryException;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 
 import java.util.Arrays;
@@ -28,7 +29,7 @@ public final class StandardArgumentsValidators {
 	 */
 	public static final ArgumentsValidator NONE = new ArgumentsValidator() {
 		@Override
-		public void validate(List<? extends SqmTypedNode<?>> arguments, String functionName) {}
+		public void validate(List<? extends SqmTypedNode<?>> arguments, String functionName, QueryEngine queryEngine) {}
 
 		@Override
 		public String getSignature() {
@@ -41,7 +42,7 @@ public final class StandardArgumentsValidators {
 	 */
 	public static final ArgumentsValidator NO_ARGS = new ArgumentsValidator() {
 		@Override
-		public void validate(List<? extends SqmTypedNode<?>> arguments, String functionName) {
+		public void validate(List<? extends SqmTypedNode<?>> arguments, String functionName, QueryEngine queryEngine) {
 			if (!arguments.isEmpty()) {
 				throw new QueryException(
 						String.format(
@@ -66,7 +67,7 @@ public final class StandardArgumentsValidators {
 		}
 		return new ArgumentsValidator() {
 			@Override
-			public void validate(List<? extends SqmTypedNode<?>> arguments, String functionName) {
+			public void validate(List<? extends SqmTypedNode<?>> arguments, String functionName, QueryEngine queryEngine) {
 				if (arguments.size() < minNumOfArgs) {
 					throw new QueryException(
 							String.format(
@@ -100,7 +101,7 @@ public final class StandardArgumentsValidators {
 	public static ArgumentsValidator exactly(int number) {
 		return new ArgumentsValidator() {
 			@Override
-			public void validate(List<? extends SqmTypedNode<?>> arguments, String functionName) {
+			public void validate(List<? extends SqmTypedNode<?>> arguments, String functionName, QueryEngine queryEngine) {
 				if (arguments.size() != number) {
 					throw new QueryException(
 							String.format(
@@ -136,7 +137,7 @@ public final class StandardArgumentsValidators {
 	public static ArgumentsValidator max(int maxNumOfArgs) {
 		return new ArgumentsValidator() {
 			@Override
-			public void validate(List<? extends SqmTypedNode<?>> arguments, String functionName) {
+			public void validate(List<? extends SqmTypedNode<?>> arguments, String functionName, QueryEngine queryEngine) {
 				if (arguments.size() > maxNumOfArgs) {
 					throw new QueryException(
 							String.format(
@@ -168,7 +169,7 @@ public final class StandardArgumentsValidators {
 	public static ArgumentsValidator between(int minNumOfArgs, int maxNumOfArgs) {
 		return new ArgumentsValidator() {
 			@Override
-			public void validate(List<? extends SqmTypedNode<?>> arguments, String functionName) {
+			public void validate(List<? extends SqmTypedNode<?>> arguments, String functionName, QueryEngine queryEngine) {
 				if (arguments.size() < minNumOfArgs || arguments.size() > maxNumOfArgs) {
 					throw new QueryException(
 							String.format(
@@ -202,7 +203,7 @@ public final class StandardArgumentsValidators {
 	}
 
 	public static ArgumentsValidator of(Class<?> javaType) {
-		return (arguments, functionName) -> arguments.forEach(
+		return (arguments, functionName, queryEngine) -> arguments.forEach(
 				arg -> {
 					Class<?> argType = arg.getNodeJavaTypeDescriptor().getJavaTypeClass();
 					if ( !javaType.isAssignableFrom( argType ) ) {
@@ -225,8 +226,8 @@ public final class StandardArgumentsValidators {
 	}
 
 	public static ArgumentsValidator composite(List<ArgumentsValidator> validators) {
-		return (arguments, functionName) -> validators.forEach(
-				individualValidator -> individualValidator.validate( arguments, functionName)
+		return (arguments, functionName, queryEngine) -> validators.forEach(
+				individualValidator -> individualValidator.validate( arguments, functionName, queryEngine)
 		);
 	}
 }

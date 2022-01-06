@@ -84,7 +84,8 @@ import static org.hibernate.query.TemporalUnit.EPOCH;
 import static org.hibernate.query.TemporalUnit.MONTH;
 import static org.hibernate.query.TemporalUnit.QUARTER;
 import static org.hibernate.query.TemporalUnit.YEAR;
-import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType;
+
+import org.hibernate.query.sqm.produce.function.FunctionParameterType;
 import static org.hibernate.type.SqlTypes.*;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
@@ -453,7 +454,7 @@ public class PostgreSQLDialect extends Dialect {
 				queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER ),
 				"position(?1 in ?2)",
 				"(position(?1 in substring(?2 from ?3))+(?3)-1)",
-				ParameterType.STRING, ParameterType.STRING, ParameterType.INTEGER
+				FunctionParameterType.STRING, FunctionParameterType.STRING, FunctionParameterType.INTEGER
 		).setArgumentListSignature("(pattern, string[, start])");
 
 		if ( getVersion().isSameOrAfter( 9, 4 ) ) {

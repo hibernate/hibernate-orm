@@ -25,8 +25,8 @@ import org.hibernate.type.spi.TypeConfiguration;
 import java.util.Collections;
 import java.util.List;
 
-import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType.ANY;
-import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType.STRING;
+import static org.hibernate.query.sqm.produce.function.FunctionParameterType.TRIM_SPEC;
+import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
 
 /**
  * @author Gavin King
@@ -40,7 +40,7 @@ public class TrimFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 				"trim",
 				new ArgumentTypesValidator(
 						StandardArgumentsValidators.exactly( 3 ),
-						ANY, STRING, STRING
+						TRIM_SPEC, STRING, STRING
 				),
 				StandardFunctionReturnTypeResolvers.invariant(
 						typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
@@ -87,6 +87,6 @@ public class TrimFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 
 	@Override
 	public String getArgumentListSignature() {
-		return "([[{leading|trailing|both} ][arg0 ]from] arg1)";
+		return "([[{leading|trailing|both} ][STRING arg0 ]from] STRING arg1)";
 	}
 }

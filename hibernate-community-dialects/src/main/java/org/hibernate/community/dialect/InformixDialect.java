@@ -60,8 +60,8 @@ import org.hibernate.type.StandardBasicTypes;
 import java.sql.Types;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
-import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType.INTEGER;
-import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType.STRING;
+import static org.hibernate.query.sqm.produce.function.FunctionParameterType.INTEGER;
+import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
 
 /**
  * Dialect for Informix 7.31.UD3 with Informix

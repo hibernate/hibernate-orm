@@ -12,6 +12,8 @@ import jakarta.persistence.TemporalType;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
+import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
+import org.hibernate.query.sqm.produce.function.FunctionParameterType;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -21,6 +23,9 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Format;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
+import static org.hibernate.query.sqm.produce.function.FunctionParameterType.TEMPORAL;
 
 /**
  * SQL Server behaves strangely when the first argument to format is of the type time, so we cast to datetime.
@@ -34,7 +39,7 @@ public class SQLServerFormatEmulation extends AbstractSqmSelfRenderingFunctionDe
 	public SQLServerFormatEmulation(SQLServerDialect dialect, TypeConfiguration typeConfiguration) {
 		super(
 				"format",
-				StandardArgumentsValidators.exactly( 2 ),
+				new ArgumentTypesValidator( StandardArgumentsValidators.exactly( 2 ), TEMPORAL, STRING ),
 				StandardFunctionReturnTypeResolvers.invariant(
 						typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
 				)
@@ -67,6 +72,6 @@ public class SQLServerFormatEmulation extends AbstractSqmSelfRenderingFunctionDe
 
 	@Override
 	public String getArgumentListSignature() {
-		return "(datetime as pattern)";
+		return "(TEMPORAL datetime as STRING pattern)";
 	}
 }

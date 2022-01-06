@@ -34,8 +34,7 @@ import org.hibernate.query.sqm.mutation.internal.cte.CteInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.cte.CteMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
-import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
-import org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType;
+import org.hibernate.query.sqm.produce.function.FunctionParameterType;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -197,16 +196,16 @@ public class DB2Dialect extends Dialect {
 						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
 				)
 				.setArgumentCountBetween( 2, 4 )
-				.setParameterTypes(ParameterType.STRING, ParameterType.INTEGER, ParameterType.INTEGER, ParameterType.ANY)
-				.setArgumentListSignature( "(string, start[, length[, units]])" )
+				.setParameterTypes(FunctionParameterType.STRING, FunctionParameterType.INTEGER, FunctionParameterType.INTEGER, FunctionParameterType.ANY)
+				.setArgumentListSignature( "(STRING string, INTEGER start[, INTEGER length[, units]])" )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "substring" )
 				.setInvariantType(
 						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
 				)
 				.setArgumentCountBetween( 2, 4 )
-				.setParameterTypes(ParameterType.STRING, ParameterType.INTEGER, ParameterType.INTEGER, ParameterType.ANY)
-				.setArgumentListSignature( "(string{ from|,} start[{ for|,} length[, units]])" )
+				.setParameterTypes(FunctionParameterType.STRING, FunctionParameterType.INTEGER, FunctionParameterType.INTEGER, FunctionParameterType.ANY)
+				.setArgumentListSignature( "(STRING string{ INTEGER from|,} start[{ INTEGER for|,} length[, units]])" )
 				.register();
 		CommonFunctionFactory.translate( queryEngine );
 		CommonFunctionFactory.bitand( queryEngine );
@@ -249,8 +248,8 @@ public class DB2Dialect extends Dialect {
 						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER )
 				)
 				.setExactArgumentCount( 2 )
-				.setParameterTypes(ParameterType.STRING, ParameterType.STRING)
-				.setArgumentListSignature("(string, pattern)")
+				.setParameterTypes(FunctionParameterType.STRING, FunctionParameterType.STRING)
+				.setArgumentListSignature("(STRING string, STRING pattern)")
 				.register();
 	}
 

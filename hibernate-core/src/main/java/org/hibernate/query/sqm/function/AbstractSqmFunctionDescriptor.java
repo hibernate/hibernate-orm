@@ -103,7 +103,7 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 			AllowableFunctionReturnType<T> impliedResultType,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
-		argumentsValidator.validate( arguments, getName() );
+		argumentsValidator.validate( arguments, getName(), queryEngine);
 
 		return generateSqmFunctionExpression(
 				arguments,
@@ -120,7 +120,7 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 			AllowableFunctionReturnType<T> impliedResultType,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
-		argumentsValidator.validate( arguments, getName() );
+		argumentsValidator.validate( arguments, getName(), queryEngine );
 
 		return generateSqmAggregateFunctionExpression(
 				arguments,

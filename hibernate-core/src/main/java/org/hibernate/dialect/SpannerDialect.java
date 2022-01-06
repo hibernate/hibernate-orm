@@ -424,7 +424,7 @@ public class SpannerDialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder("format", "format_timestamp(?2,?1)")
 				.setInvariantType( stringType )
 				.setExactArgumentCount( 2 )
-				.setArgumentListSignature("(datetime as pattern)")
+				.setArgumentListSignature("(TIMESTAMP datetime as STRING pattern)")
 				.register();
 	}
 

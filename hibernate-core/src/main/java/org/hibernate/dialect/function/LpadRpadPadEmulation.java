@@ -22,9 +22,9 @@ import org.hibernate.type.spi.TypeConfiguration;
 import java.util.List;
 
 import static java.util.Arrays.asList;
-import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType.ANY;
-import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType.INTEGER;
-import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType.STRING;
+import static org.hibernate.query.sqm.produce.function.FunctionParameterType.INTEGER;
+import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
+import static org.hibernate.query.sqm.produce.function.FunctionParameterType.TRIM_SPEC;
 
 /**
  * @author Gavin King
@@ -37,7 +37,7 @@ public class LpadRpadPadEmulation
 				"pad",
 				new ArgumentTypesValidator(
 						StandardArgumentsValidators.between( 3, 4 ),
-						STRING, INTEGER, ANY, STRING
+						STRING, INTEGER, TRIM_SPEC, STRING
 				),
 				StandardFunctionReturnTypeResolvers.invariant(
 						typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
@@ -73,6 +73,6 @@ public class LpadRpadPadEmulation
 
 	@Override
 	public String getArgumentListSignature() {
-		return "(string with length {leading|trailing}[ character])";
+		return "(STRING string with INTEGER length {leading|trailing}[ STRING character])";
 	}
 }

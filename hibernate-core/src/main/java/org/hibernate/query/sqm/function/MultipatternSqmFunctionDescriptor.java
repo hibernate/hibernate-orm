@@ -9,7 +9,7 @@ package org.hibernate.query.sqm.function;
 import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
-import org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType;
+import org.hibernate.query.sqm.produce.function.FunctionParameterType;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
@@ -59,7 +59,7 @@ public class MultipatternSqmFunctionDescriptor extends AbstractSqmFunctionDescri
 			String name,
 			SqmFunctionDescriptor[] functions,
 			BasicType<?> type,
-			ParameterType... parameterTypes) {
+			FunctionParameterType... parameterTypes) {
 		super(
 				name,
 				new ArgumentTypesValidator(

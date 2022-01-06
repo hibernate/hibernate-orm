@@ -31,8 +31,8 @@ import java.util.List;
 import jakarta.persistence.criteria.Expression;
 
 import static java.util.Arrays.asList;
-import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType.INTEGER;
-import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType.STRING;
+import static org.hibernate.query.sqm.produce.function.FunctionParameterType.INTEGER;
+import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
 
 /**
  * @author Gavin King
@@ -47,7 +47,7 @@ public class InsertSubstringOverlayEmulation
 				"overlay",
 				new ArgumentTypesValidator(
 						StandardArgumentsValidators.between( 3, 4 ),
-						STRING, INTEGER, INTEGER, STRING
+						STRING, STRING, INTEGER, INTEGER
 				),
 				StandardFunctionReturnTypeResolvers.invariant(
 						typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
@@ -144,6 +144,6 @@ public class InsertSubstringOverlayEmulation
 
 	@Override
 	public String getArgumentListSignature() {
-		return "(string placing replacement from start[ for length])";
+		return "(STRING string placing STRING replacement from INTEGER start[ for INTEGER length])";
 	}
 }

@@ -9,11 +9,15 @@ package org.hibernate.dialect.function;
 import java.util.List;
 
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
+import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
+import org.hibernate.query.sqm.produce.function.FunctionParameterType;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
+
+import static org.hibernate.query.sqm.produce.function.FunctionParameterType.COMPARABLE;
 
 /**
  *
@@ -27,7 +31,7 @@ public class CaseLeastGreatestEmulation
 	public CaseLeastGreatestEmulation(boolean least) {
 		super(
 				least ? "least" : "greatest",
-				StandardArgumentsValidators.min( 2 ),
+				new ArgumentTypesValidator( StandardArgumentsValidators.min( 2 ), COMPARABLE, COMPARABLE ),
 				StandardFunctionReturnTypeResolvers.useFirstNonNull()
 		);
 		this.operator = least ? "<=" : ">=";
@@ -66,6 +70,6 @@ public class CaseLeastGreatestEmulation
 
 	@Override
 	public String getArgumentListSignature() {
-		return "(arg0[, arg1[, ...]])";
+		return "(COMPARABLE arg0[, COMPARABLE arg1[, ...]])";
 	}
 }

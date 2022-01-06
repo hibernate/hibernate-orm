@@ -16,7 +16,7 @@
   
 -->
 
-<hibernate-mapping package="org.hibernate.test.formulajoin">
+<hibernate-mapping package="org.hibernate.orm.test.formulajoin">
 
 	<class name="Root" table="t_roots">
 	

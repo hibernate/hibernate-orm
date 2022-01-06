@@ -1870,24 +1870,16 @@ public class ModelBinder {
 
 		componentBinding.createForeignKey();
 
-		final Property attribute;
-		if ( embeddedSource.isVirtualAttribute() ) {
-			attribute = new SyntheticProperty() {
-				@Override
-				public String getPropertyAccessorName() {
-					return "embedded";
-				}
-			};
-		}
-		else {
-			attribute = new Property();
-		}
+		final Property attribute = new Property();
 		attribute.setValue( componentBinding );
 		bindProperty(
 				sourceDocument,
 				embeddedSource,
 				attribute
 		);
+		if ( embeddedSource.isVirtualAttribute() ) {
+			attribute.setPropertyAccessorName( "embedded" );
+		}
 
 		return attribute;
 	}

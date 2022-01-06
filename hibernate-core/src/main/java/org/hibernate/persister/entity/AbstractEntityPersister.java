@@ -158,6 +158,7 @@ import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.AttributeMetadataAccess;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
+import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -175,6 +176,7 @@ import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadata;
+import org.hibernate.metamodel.mapping.VirtualModelPart;
 import org.hibernate.metamodel.mapping.internal.BasicEntityIdentifierMappingImpl;
 import org.hibernate.metamodel.mapping.internal.CompoundNaturalIdMapping;
 import org.hibernate.metamodel.mapping.internal.DiscriminatedAssociationAttributeMapping;
@@ -6362,7 +6364,21 @@ public abstract class AbstractEntityPersister
 			}
 		}
 
-		return getIdentifierModelPart( name, treatTargetType );
+		final ModelPart identifierModelPart = getIdentifierModelPart( name, treatTargetType );
+		if ( identifierModelPart != null ) {
+			return identifierModelPart;
+		}
+
+		for ( AttributeMapping attribute : declaredAttributeMappings.values() ) {
+			if ( attribute instanceof EmbeddableValuedModelPart && attribute instanceof VirtualModelPart ) {
+				final ModelPart subPart = ( (EmbeddableValuedModelPart) attribute ).findSubPart( name, null );
+				if ( subPart != null ) {
+					return subPart;
+				}
+			}
+		}
+
+		return null;
 	}
 
 	@Override

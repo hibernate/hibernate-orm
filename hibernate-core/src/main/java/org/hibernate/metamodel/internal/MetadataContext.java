@@ -47,6 +47,7 @@ import org.hibernate.metamodel.model.domain.internal.MappedSuperclassTypeImpl;
 import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.spi.EntityJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -78,6 +79,7 @@ public class MetadataContext {
 	private final Set<MappedSuperclass> knownMappedSuperclasses;
 	private final TypeConfiguration typeConfiguration;
 	private final JpaStaticMetaModelPopulationSetting jpaStaticMetaModelPopulationSetting;
+	private final JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting;
 	private final AttributeFactory attributeFactory = new AttributeFactory( this );
 
 	private final Map<Class<?>, EntityDomainType<?>> entityTypes = new HashMap<>();
@@ -105,12 +107,14 @@ public class MetadataContext {
 			MappingMetamodel mappingMetamodel,
 			MetadataImplementor bootMetamodel,
 			JpaStaticMetaModelPopulationSetting jpaStaticMetaModelPopulationSetting,
+			JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
 		this.jpaMetamodel = jpaMetamodel;
 		this.metamodel = mappingMetamodel;
 		this.knownMappedSuperclasses = bootMetamodel.getMappedSuperclassMappingsCopy();
 		this.typeConfiguration = runtimeModelCreationContext.getTypeConfiguration();
 		this.jpaStaticMetaModelPopulationSetting = jpaStaticMetaModelPopulationSetting;
+		this.jpaMetaModelPopulationSetting = jpaMetaModelPopulationSetting;
 		this.runtimeModelCreationContext = runtimeModelCreationContext;
 	}
 
@@ -287,13 +291,12 @@ public class MetadataContext {
 								property
 						);
 						if ( attribute != null ) {
-							( (AttributeContainer<Object>) jpaMapping ).getInFlightAccess().addAttribute( attribute );
+							addAttribute( jpaMapping, attribute );
 							if ( property.isNaturalIdentifier() ) {
 								( ( AttributeContainer<Object>) jpaMapping ).getInFlightAccess()
 										.applyNaturalIdAttribute( attribute );
 							}
 						}
-
 					}
 
 					( (AttributeContainer<?>) jpaMapping ).getInFlightAccess().finishUp();
@@ -329,7 +332,7 @@ public class MetadataContext {
 						}
 						final PersistentAttribute<Object, ?> attribute = attributeFactory.buildAttribute( jpaType, property );
 						if ( attribute != null ) {
-							( (AttributeContainer<Object>) jpaType ).getInFlightAccess().addAttribute( attribute );
+							addAttribute( jpaType, attribute );
 							if ( property.isNaturalIdentifier() ) {
 								( ( AttributeContainer<Object>) jpaType ).getInFlightAccess()
 										.applyNaturalIdAttribute( attribute );
@@ -370,7 +373,7 @@ public class MetadataContext {
 					final Property property = propertyItr.next();
 					final PersistentAttribute<Object, ?> attribute = attributeFactory.buildAttribute( (ManagedDomainType<Object>) embeddable, property );
 					if ( attribute != null ) {
-						( ( AttributeContainer<Object>) embeddable ).getInFlightAccess().addAttribute( attribute );
+						addAttribute( embeddable, attribute );
 					}
 				}
 
@@ -384,6 +387,27 @@ public class MetadataContext {
 		}
 	}
 
+	private void addAttribute(ManagedDomainType<?> type, PersistentAttribute<Object, ?> attribute) {
+		final AttributeContainer.InFlightAccess<Object> inFlightAccess = ( (AttributeContainer<Object>) type ).getInFlightAccess();
+		final boolean virtual = attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED
+				&& attribute.getAttributeJavaTypeDescriptor() instanceof EntityJavaTypeDescriptor<?>;
+		if ( virtual ) {
+			final EmbeddableDomainType<?> embeddableDomainType = (EmbeddableDomainType<?>) attribute.getValueGraphType();
+			final Component component = componentByEmbeddable.get( embeddableDomainType );
+			final Iterator<Property> propertyItr = component.getPropertyIterator();
+			while ( propertyItr.hasNext() ) {
+				final Property property = propertyItr.next();
+				final PersistentAttribute<Object, ?> subAttribute = attributeFactory.buildAttribute( (ManagedDomainType<Object>) embeddableDomainType, property );
+				if ( subAttribute != null ) {
+					inFlightAccess.addAttribute( subAttribute );
+				}
+			}
+			if ( jpaMetaModelPopulationSetting != JpaMetaModelPopulationSetting.ENABLED ) {
+				return;
+			}
+		}
+		inFlightAccess.addAttribute( attribute );
+	}
 
 	// 1) create the part
 	// 2) register the part (mapping role)

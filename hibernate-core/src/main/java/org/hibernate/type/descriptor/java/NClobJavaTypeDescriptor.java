@@ -92,7 +92,7 @@ public class NClobJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<NCl
 
 		try {
 			if ( CharacterStream.class.isAssignableFrom( type ) ) {
-				if ( NClobImplementer.class.isInstance( value ) ) {
+				if (value instanceof NClobImplementer) {
 					// if the incoming NClob is a wrapper, just pass along its BinaryStream
 					return (X) ( (NClobImplementer) value ).getUnderlyingStream();
 				}
@@ -102,7 +102,7 @@ public class NClobJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<NCl
 				}
 			}
 			else if (NClob.class.isAssignableFrom( type )) {
-				final NClob nclob =  WrappedNClob.class.isInstance( value )
+				final NClob nclob =  value instanceof WrappedNClob
 						? ( (WrappedNClob) value ).getWrappedNClob()
 						: value;
 				return (X) nclob;

@@ -120,7 +120,7 @@ public class OffsetTimeJavaTypeDescriptor extends AbstractTemporalJavaTypeDescri
 			return null;
 		}
 
-		if ( OffsetTime.class.isInstance( value ) ) {
+		if (value instanceof OffsetTime) {
 			return (OffsetTime) value;
 		}
 
@@ -140,11 +140,11 @@ public class OffsetTimeJavaTypeDescriptor extends AbstractTemporalJavaTypeDescri
 		 */
 		ZoneOffset offset = OffsetDateTime.now().getOffset();
 
-		if ( Time.class.isInstance( value ) ) {
+		if (value instanceof Time) {
 			return ( (Time) value ).toLocalTime().atOffset( offset );
 		}
 
-		if ( Timestamp.class.isInstance( value ) ) {
+		if (value instanceof Timestamp) {
 			final Timestamp ts = (Timestamp) value;
 			/*
 			 * Workaround for HHH-13266 (JDK-8061577).
@@ -155,16 +155,16 @@ public class OffsetTimeJavaTypeDescriptor extends AbstractTemporalJavaTypeDescri
 			return ts.toLocalDateTime().toLocalTime().atOffset( offset );
 		}
 
-		if ( Date.class.isInstance( value ) ) {
+		if (value instanceof Date) {
 			final Date date = (Date) value;
 			return OffsetTime.ofInstant( date.toInstant(), offset );
 		}
 
-		if ( Long.class.isInstance( value ) ) {
+		if (value instanceof Long) {
 			return OffsetTime.ofInstant( Instant.ofEpochMilli( (Long) value ), offset );
 		}
 
-		if ( Calendar.class.isInstance( value ) ) {
+		if (value instanceof Calendar) {
 			final Calendar calendar = (Calendar) value;
 			return OffsetTime.ofInstant( calendar.toInstant(), calendar.getTimeZone().toZoneId() );
 		}

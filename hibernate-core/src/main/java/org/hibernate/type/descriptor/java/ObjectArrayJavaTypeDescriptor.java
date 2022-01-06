@@ -81,7 +81,7 @@ public class ObjectArrayJavaTypeDescriptor extends AbstractClassJavaTypeDescript
 		if ( value == null ) {
 			return null;
 		}
-		if ( Object[].class.isInstance( value ) ) {
+		if (value instanceof Object[]) {
 			return (Object[]) value;
 		}
 		throw unknownWrap( value.getClass() );

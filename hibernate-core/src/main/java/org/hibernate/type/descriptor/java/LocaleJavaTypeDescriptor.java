@@ -101,7 +101,7 @@ public class LocaleJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<Lo
 		if ( value == null ) {
 			return null;
 		}
-		if ( CharSequence.class.isInstance( value ) ) {
+		if (value instanceof CharSequence) {
 			return fromString( (CharSequence) value );
 		}
 		throw unknownWrap( value.getClass() );

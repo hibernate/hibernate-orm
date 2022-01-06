@@ -106,13 +106,13 @@ public class RowVersionJavaTypeDescriptor extends AbstractClassJavaTypeDescripto
 		if ( value == null ) {
 			return null;
 		}
-		if ( byte[].class.isInstance( value ) ) {
+		if (value instanceof byte[]) {
 			return (byte[]) value;
 		}
-		if ( InputStream.class.isInstance( value ) ) {
+		if (value instanceof InputStream) {
 			return DataHelper.extractBytes( (InputStream) value );
 		}
-		if ( Blob.class.isInstance( value ) || DataHelper.isNClob( value.getClass() ) ) {
+		if ( value instanceof Blob || DataHelper.isNClob( value.getClass() ) ) {
 			try {
 				return DataHelper.extractBytes( ( (Blob) value ).getBinaryStream() );
 			}

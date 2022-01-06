@@ -97,7 +97,7 @@ public class ClobJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<Clob
 				}
 			}
 			else if ( String.class.isAssignableFrom( type ) ) {
-				if ( ClobImplementer.class.isInstance( value ) ) {
+				if (value instanceof ClobImplementer) {
 					// if the incoming Clob is a wrapper, just grab the bytes from its BinaryStream
 					return (X) ( (ClobImplementer) value ).getUnderlyingStream().asString();
 				}

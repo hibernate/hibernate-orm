@@ -106,11 +106,11 @@ public class DurationJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<
 			return null;
 		}
 
-		if ( Duration.class.isInstance( value ) ) {
+		if (value instanceof Duration) {
 			return (Duration) value;
 		}
 
-		if ( BigDecimal.class.isInstance( value ) ) {
+		if (value instanceof BigDecimal) {
 			BigDecimal[] secondsAndNanos =
 					((BigDecimal) value).divideAndRemainder( BigDecimal.ONE );
 			return Duration.ofSeconds(
@@ -123,11 +123,11 @@ public class DurationJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<
 			);
 		}
 
-		if ( Long.class.isInstance( value ) ) {
+		if (value instanceof Long) {
 			return Duration.ofNanos( (Long) value );
 		}
 
-		if ( String.class.isInstance( value ) ) {
+		if (value instanceof String) {
 			return Duration.parse( (String) value );
 		}
 

@@ -59,14 +59,14 @@ public class CharacterJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor
 		if ( value == null ) {
 			return null;
 		}
-		if ( Character.class.isInstance( value ) ) {
+		if (value instanceof Character) {
 			return (Character) value;
 		}
-		if ( String.class.isInstance( value ) ) {
+		if (value instanceof String) {
 			final String str = (String) value;
 			return str.charAt( 0 );
 		}
-		if ( Number.class.isInstance( value ) ) {
+		if (value instanceof Number) {
 			final Number nbr = (Number) value;
 			return (char) nbr.shortValue();
 		}

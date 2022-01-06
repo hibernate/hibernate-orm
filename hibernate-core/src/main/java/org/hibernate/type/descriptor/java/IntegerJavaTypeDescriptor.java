@@ -80,13 +80,13 @@ public class IntegerJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<I
 		if ( value == null ) {
 			return null;
 		}
-		if ( Integer.class.isInstance( value ) ) {
+		if (value instanceof Integer) {
 			return (Integer) value;
 		}
-		if ( Number.class.isInstance( value ) ) {
+		if (value instanceof Number) {
 			return ( (Number) value ).intValue();
 		}
-		if ( String.class.isInstance( value ) ) {
+		if (value instanceof String) {
 			return Integer.valueOf( ( (String) value ) );
 		}
 		throw unknownWrap( value.getClass() );

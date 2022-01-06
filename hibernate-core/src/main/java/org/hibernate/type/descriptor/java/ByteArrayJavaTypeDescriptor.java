@@ -100,16 +100,16 @@ public class ByteArrayJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor
 		if ( value == null ) {
 			return null;
 		}
-		if ( Byte[].class.isInstance( value ) ) {
+		if (value instanceof Byte[]) {
 			return (Byte[]) value;
 		}
-		if ( byte[].class.isInstance( value ) ) {
+		if (value instanceof byte[]) {
 			return wrapBytes( (byte[]) value );
 		}
-		if ( InputStream.class.isInstance( value ) ) {
+		if (value instanceof InputStream) {
 			return wrapBytes( DataHelper.extractBytes( (InputStream) value ) );
 		}
-		if ( Blob.class.isInstance( value ) || DataHelper.isNClob( value.getClass() ) ) {
+		if ( value instanceof Blob || DataHelper.isNClob( value.getClass() ) ) {
 			try {
 				return wrapBytes( DataHelper.extractBytes( ( (Blob) value ).getBinaryStream() ) );
 			}

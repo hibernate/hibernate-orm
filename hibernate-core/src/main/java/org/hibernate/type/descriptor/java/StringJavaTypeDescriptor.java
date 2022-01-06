@@ -87,13 +87,13 @@ public class StringJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<St
 		if ( value == null ) {
 			return null;
 		}
-		if ( String.class.isInstance( value ) ) {
+		if (value instanceof String) {
 			return (String) value;
 		}
-		if ( Reader.class.isInstance( value ) ) {
+		if (value instanceof Reader) {
 			return DataHelper.extractString( (Reader) value );
 		}
-		if ( Clob.class.isInstance( value ) ) {
+		if (value instanceof Clob) {
 			return DataHelper.extractString( (Clob) value );
 		}
 

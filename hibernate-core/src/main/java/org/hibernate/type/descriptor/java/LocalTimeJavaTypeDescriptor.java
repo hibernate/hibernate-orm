@@ -119,26 +119,26 @@ public class LocalTimeJavaTypeDescriptor extends AbstractTemporalJavaTypeDescrip
 			return null;
 		}
 
-		if ( LocalTime.class.isInstance( value ) ) {
+		if (value instanceof LocalTime) {
 			return (LocalTime) value;
 		}
 
-		if ( Timestamp.class.isInstance( value ) ) {
+		if (value instanceof Timestamp) {
 			final Timestamp ts = (Timestamp) value;
 			return LocalDateTime.ofInstant( ts.toInstant(), ZoneId.systemDefault() ).toLocalTime();
 		}
 
-		if ( Long.class.isInstance( value ) ) {
+		if (value instanceof Long) {
 			final Instant instant = Instant.ofEpochMilli( (Long) value );
 			return LocalDateTime.ofInstant( instant, ZoneId.systemDefault() ).toLocalTime();
 		}
 
-		if ( Calendar.class.isInstance( value ) ) {
+		if (value instanceof Calendar) {
 			final Calendar calendar = (Calendar) value;
 			return LocalDateTime.ofInstant( calendar.toInstant(), calendar.getTimeZone().toZoneId() ).toLocalTime();
 		}
 
-		if ( Date.class.isInstance( value ) ) {
+		if (value instanceof Date) {
 			final Date ts = (Date) value;
 			final Instant instant = Instant.ofEpochMilli( ts.getTime() );
 			return LocalDateTime.ofInstant( instant, ZoneId.systemDefault() ).toLocalTime();

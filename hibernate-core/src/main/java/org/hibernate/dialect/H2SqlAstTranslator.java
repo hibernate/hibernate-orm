@@ -90,7 +90,9 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstT
 	@Override
 	public void visitInSubQueryPredicate(InSubQueryPredicate inSubQueryPredicate) {
 		final SqlTuple lhsTuple;
-		if ( ( lhsTuple = SqlTupleContainer.getSqlTuple( inSubQueryPredicate.getTestExpression() ) ) != null
+		// As of 1.4.200 this is supported
+		if ( getDialect().getVersion().isBefore( 1, 4, 200 )
+				&& ( lhsTuple = SqlTupleContainer.getSqlTuple( inSubQueryPredicate.getTestExpression() ) ) != null
 				&& lhsTuple.getExpressions().size() != 1 ) {
 			inSubQueryPredicate.getTestExpression().accept( this );
 			if ( inSubQueryPredicate.isNegated() ) {

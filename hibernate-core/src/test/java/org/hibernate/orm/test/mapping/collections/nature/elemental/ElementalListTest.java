@@ -76,7 +76,7 @@ public class ElementalListTest {
 		private Integer id;
 
 		@ElementCollection
-		@OrderColumn( name = "_position")
+		@OrderColumn( name = "phone_position")
 		private List<String> phones = new ArrayList<>();
 
 		//Getters and setters are omitted for brevity

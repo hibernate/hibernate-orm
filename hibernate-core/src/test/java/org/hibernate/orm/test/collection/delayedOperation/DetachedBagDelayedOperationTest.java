@@ -24,6 +24,7 @@ import jakarta.persistence.OneToMany;
 
 import org.hibernate.Hibernate;
 import org.hibernate.collection.spi.AbstractPersistentCollection;
+import org.hibernate.testing.orm.junit.ImplicitListAsBagProvider;
 import org.hibernate.type.CollectionType;
 
 import org.hibernate.testing.TestForIssue;
@@ -31,12 +32,15 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.LoggingInspections;
 import org.hibernate.testing.orm.junit.LoggingInspectionsScope;
 import org.hibernate.testing.orm.junit.MessageKeyWatcher;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SettingProvider;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -47,6 +51,11 @@ import static org.junit.jupiter.api.Assertions.fail;
  *
  * @author Gail Badner
  */
+@ServiceRegistry(
+		settingProviders = @SettingProvider(
+				settingName = DEFAULT_LIST_SEMANTICS,
+				provider = ImplicitListAsBagProvider.class )
+)
 @DomainModel(
 		annotatedClasses = {
 				DetachedBagDelayedOperationTest.Parent.class,

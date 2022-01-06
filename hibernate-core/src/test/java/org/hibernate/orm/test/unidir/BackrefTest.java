@@ -9,10 +9,13 @@ package org.hibernate.orm.test.unidir;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.metamodel.CollectionClassification;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
+import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
@@ -36,6 +39,12 @@ public class BackrefTest extends BaseCoreFunctionalTestCase {
 		// No test needed at this time.  This was purely to test a
 		// validation issue from HHH-5836.
 		return new Class<?>[] { Parent1.class, Child1.class, Child2.class };
+	}
+
+	@Override
+	protected void configure(Configuration configuration) {
+		super.configure( configuration );
+		configuration.setProperty( DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG.name() );
 	}
 
 	@Test

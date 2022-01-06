@@ -9,6 +9,7 @@ package org.hibernate.orm.test.jpa.graphs.queryhint;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManager;
@@ -18,6 +19,7 @@ import jakarta.persistence.Subgraph;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.jpa.QueryHints;
+import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.orm.test.jpa.graphs.Company;
 import org.hibernate.orm.test.jpa.graphs.CompanyFetchProfile;
@@ -32,6 +34,7 @@ import org.hibernate.testing.TestForIssue;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -533,5 +536,11 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] { Company.class, CompanyFetchProfile.class, Employee.class, Manager.class, Location.class, Course.class, Student.class };
+	}
+
+	@Override
+	protected void addConfigOptions(Map options) {
+		super.addConfigOptions( options );
+		options.put( DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG );
 	}
 }

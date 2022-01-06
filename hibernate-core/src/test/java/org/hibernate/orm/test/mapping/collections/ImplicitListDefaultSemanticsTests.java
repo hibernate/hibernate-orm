@@ -17,9 +17,6 @@ import org.hibernate.metamodel.CollectionClassification;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
-import org.hibernate.testing.orm.junit.ImplicitListAsBagProvider;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
-import org.hibernate.testing.orm.junit.SettingProvider;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Basic;
@@ -29,32 +26,22 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
 
 /**
- * Explicitly sets {@link AvailableSettings#DEFAULT_LIST_SEMANTICS} to BAG
- * and verifies the outcome.
- *
- * Basically verifies that the legacy behavior can be achieved via the setting
- * for users migrating who wish to retain that legacy behavior
+ * Uses the default {@link AvailableSettings#DEFAULT_LIST_SEMANTICS} value of LIST
+ * and verifies the outcome
  *
  * @author Steve Ebersole
  */
-@ServiceRegistry(
-		settingProviders = @SettingProvider(
-				settingName = DEFAULT_LIST_SEMANTICS,
-				provider = ImplicitListAsBagProvider.class
-		)
-)
-@DomainModel( annotatedClasses = ImplicitListAsBagSemanticsTests.AnEntity.class )
-public class ImplicitListAsBagSemanticsTests {
+@DomainModel( annotatedClasses = ImplicitListDefaultSemanticsTests.AnEntity.class )
+public class ImplicitListDefaultSemanticsTests {
 	@Test
 	void verifyModel(DomainModelScope scope) {
 		scope.withHierarchy( AnEntity.class, (descriptor) -> {
 			final Property implicitList = descriptor.getProperty( "implicitList" );
-			// this is the purpose of the new AvailableSettings#DEFAULT_LIST_SEMANTICS
-			// setting to allow legacy behavior.
-			assertThat( implicitList.getValue() ).isInstanceOf( Bag.class );
+			// this is the change related to AvailableSettings#DEFAULT_LIST_SEMANTICS
+			// previous versions interpreted these as BAG
+			assertThat( implicitList.getValue() ).isInstanceOf( org.hibernate.mapping.List.class );
 
 			final Property implicitBag = descriptor.getProperty( "implicitBag" );
 			assertThat( implicitBag.getValue() ).isInstanceOf( Bag.class );
@@ -110,5 +97,4 @@ public class ImplicitListAsBagSemanticsTests {
 			this.name = name;
 		}
 	}
-
 }

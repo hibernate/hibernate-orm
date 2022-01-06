@@ -14,6 +14,8 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.metamodel.CollectionClassification;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
@@ -42,7 +44,9 @@ public class ComponentNamingStrategyForJoinColumnTest {
 
 	@Test
 	public void testNamingComponentPath() {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+				.applySetting( AvailableSettings.DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG )
+				.build();
 
 		try {
 			final MetadataSources ms = new MetadataSources( ssr )

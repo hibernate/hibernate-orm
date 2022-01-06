@@ -8,6 +8,9 @@ package org.hibernate.orm.test.collection.bag;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import org.hibernate.testing.orm.junit.ImplicitListAsBagProvider;
+
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -20,16 +23,24 @@ import jakarta.persistence.Table;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SettingProvider;
 import org.junit.jupiter.api.Test;
 
+import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
 /**
  * @author Gail Badner
  */
+@ServiceRegistry(
+		settingProviders = @SettingProvider(
+				settingName = DEFAULT_LIST_SEMANTICS,
+				provider = ImplicitListAsBagProvider.class )
+)
 @DomainModel(annotatedClasses = {
 		BagElementNullBasicTest.AnEntity.class,
 		BagElementNullBasicTest.NullableElementsEntity.class

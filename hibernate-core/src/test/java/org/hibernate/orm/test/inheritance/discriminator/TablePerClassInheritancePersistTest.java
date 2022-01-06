@@ -23,19 +23,29 @@ import jakarta.persistence.OneToOne;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ImplicitListAsBagProvider;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SettingProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Davide D'Alto
  */
 @TestForIssue(jiraKey = "HHH-12332")
+@ServiceRegistry(
+		settingProviders = @SettingProvider(
+				settingName = DEFAULT_LIST_SEMANTICS,
+				provider = ImplicitListAsBagProvider.class
+		)
+)
 @DomainModel(
 		annotatedClasses = {
 				TablePerClassInheritancePersistTest.Family.class,

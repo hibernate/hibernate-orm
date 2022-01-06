@@ -12,11 +12,13 @@ import org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.mapping.Bag;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
+import org.hibernate.metamodel.CollectionClassification;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
@@ -34,7 +36,9 @@ public class ComponentNamingStrategyTest {
 
 	@Test
 	public void testDefaultNamingStrategy() {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+				.applySetting( AvailableSettings.DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG )
+				.build();
 
 		try {
 			final MetadataSources ms = new MetadataSources( ssr );
@@ -60,7 +64,9 @@ public class ComponentNamingStrategyTest {
 	@Test
 	@TestForIssue( jiraKey = "HHH-6005" )
 	public void testComponentSafeNamingStrategy() {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+				.applySetting( AvailableSettings.DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG )
+				.build();
 
 		try {
 			final MetadataSources ms = new MetadataSources( ssr );

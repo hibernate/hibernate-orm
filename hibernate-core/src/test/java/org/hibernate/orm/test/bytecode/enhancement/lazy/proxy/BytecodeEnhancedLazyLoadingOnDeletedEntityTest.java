@@ -7,10 +7,13 @@
 package org.hibernate.orm.test.bytecode.enhancement.lazy.proxy;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
@@ -18,6 +21,7 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 
 import org.hibernate.LazyInitializationException;
+import org.hibernate.metamodel.CollectionClassification;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
@@ -36,6 +40,12 @@ public class BytecodeEnhancedLazyLoadingOnDeletedEntityTest
 	@Override
 	public Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] { AssociationOwner.class, AssociationNonOwner.class };
+	}
+
+	@Override
+	protected void addSettings(Map settings) {
+		super.addSettings( settings );
+		settings.put( DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG.name() );
 	}
 
 	@After

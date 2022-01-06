@@ -24,6 +24,8 @@ import org.hibernate.Hibernate;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.Where;
 import org.hibernate.annotations.WhereJoinTable;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.metamodel.CollectionClassification;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -31,6 +33,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -46,6 +49,12 @@ public class LazyManyToManyNonUniqueIdWhereTest extends BaseCoreFunctionalTestCa
 
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] { Material.class, Building.class, Rating.class, Size.class };
+	}
+
+	@Override
+	protected void configure(Configuration configuration) {
+		super.configure( configuration );
+		configuration.setProperty( DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG.name() );
 	}
 
 	@Before

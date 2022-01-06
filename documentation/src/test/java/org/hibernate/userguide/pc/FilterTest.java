@@ -8,6 +8,8 @@ package org.hibernate.userguide.pc;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -24,10 +26,12 @@ import org.hibernate.Session;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
+import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Test;
 
+import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -45,6 +49,12 @@ public class FilterTest extends BaseEntityManagerFunctionalTestCase {
             Client.class,
             Account.class
         };
+    }
+
+    @Override
+    protected void addConfigOptions(Map options) {
+        super.addConfigOptions( options );
+        options.put( DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG.name() );
     }
 
     @Test

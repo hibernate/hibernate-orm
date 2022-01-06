@@ -8,6 +8,7 @@ package org.hibernate.userguide.associations;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -17,10 +18,12 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
 
 import org.hibernate.annotations.NaturalId;
+import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Test;
 
+import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
 /**
@@ -34,6 +37,12 @@ public class ManyToManyBidirectionalTest extends BaseEntityManagerFunctionalTest
 				Person.class,
 				Address.class,
 		};
+	}
+
+	@Override
+	protected void addConfigOptions(Map options) {
+		super.addConfigOptions( options );
+		options.put( DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG.name() );
 	}
 
 	@Test

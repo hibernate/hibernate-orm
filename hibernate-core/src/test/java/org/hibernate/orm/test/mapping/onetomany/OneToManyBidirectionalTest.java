@@ -589,7 +589,6 @@ public class OneToManyBidirectionalTest {
 	}
 
 	@Test
-	@FailureExpected(jiraKey = "no jira", reason = "order.getLineItems().size() is 4 and not 2 as it should be")
 	public void testItemFetchJoin(SessionFactoryScope scope) {
 		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
 		scope.inTransaction( session -> {

@@ -10,6 +10,8 @@ import java.util.Iterator;
 
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Bag;
 import org.hibernate.mapping.Column;
@@ -20,6 +22,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Set;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
+import org.hibernate.metamodel.CollectionClassification;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
@@ -37,6 +40,12 @@ public abstract class AbstractJPAIndexTest extends BaseNonConfigCoreFunctionalTe
 	protected void configureMetadataBuilder(MetadataBuilder metadataBuilder) {
 		super.configureMetadataBuilder( metadataBuilder );
 		metadataBuilder.applyImplicitNamingStrategy( ImplicitNamingStrategyJpaCompliantImpl.INSTANCE );
+	}
+
+	@Override
+	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
+		super.configureStandardServiceRegistryBuilder( ssrb );
+		ssrb.applySetting( AvailableSettings.DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG );
 	}
 
 	@Test

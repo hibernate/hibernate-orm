@@ -17,18 +17,27 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OrderBy;
 
 import org.hibernate.Session;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.query.Query;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
 
 public class OrderByEmbeddableToOneTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] { Containing.class, Embed.class, Contained.class };
+	}
+
+	@Override
+	protected void configure(Configuration configuration) {
+		super.configure( configuration );
+		configuration.setProperty( DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG.name() );
 	}
 
 	@Test

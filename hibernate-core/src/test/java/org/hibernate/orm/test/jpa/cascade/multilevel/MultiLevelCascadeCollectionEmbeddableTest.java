@@ -29,21 +29,30 @@ import jakarta.persistence.Table;
 
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.ImplicitListAsBagProvider;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.SettingProvider;
 
 import org.junit.jupiter.api.Test;
 
+import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@Jpa(annotatedClasses = {
-		MultiLevelCascadeCollectionEmbeddableTest.MainEntity.class,
-		MultiLevelCascadeCollectionEmbeddableTest.SubEntity.class,
-		MultiLevelCascadeCollectionEmbeddableTest.AnotherSubSubEntity.class,
-		MultiLevelCascadeCollectionEmbeddableTest.SubSubEntity.class
-})
+@Jpa(
+		annotatedClasses = {
+				MultiLevelCascadeCollectionEmbeddableTest.MainEntity.class,
+				MultiLevelCascadeCollectionEmbeddableTest.SubEntity.class,
+				MultiLevelCascadeCollectionEmbeddableTest.AnotherSubSubEntity.class,
+				MultiLevelCascadeCollectionEmbeddableTest.SubSubEntity.class
+		},
+		settingProviders = @SettingProvider(
+				settingName = DEFAULT_LIST_SEMANTICS,
+				provider = ImplicitListAsBagProvider.class
+		)
+)
 public class MultiLevelCascadeCollectionEmbeddableTest {
 
 	private boolean initialized = false;

@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -36,6 +37,7 @@ import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
+import org.hibernate.metamodel.CollectionClassification;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
@@ -49,6 +51,7 @@ import org.hibernate.test.annotations.TicketComparator;
 import org.junit.Assert;
 import org.junit.Test;
 
+import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
@@ -568,6 +571,13 @@ public class OneToManyTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Override
 	protected String[] getXmlFiles() {
 		return new String[] { "org/hibernate/orm/test/annotations/onetomany/orm.xml" };
+	}
+
+	@Override
+	protected void addSettings(Map settings) {
+		super.addSettings( settings );
+		// needed for `#testListWithBagSemanticAndOrderBy`
+		settings.put( DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG.name() );
 	}
 
 	@Entity(name = "OnDeleteUnidirectionalOneToManyParent")

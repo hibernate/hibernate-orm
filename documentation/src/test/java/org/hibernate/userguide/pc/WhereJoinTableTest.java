@@ -9,6 +9,8 @@ package org.hibernate.userguide.pc;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
@@ -18,11 +20,13 @@ import jakarta.persistence.ManyToMany;
 import org.hibernate.Session;
 import org.hibernate.annotations.WhereJoinTable;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.RequiresDialect;
 import org.junit.Test;
 
+import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 
@@ -38,6 +42,12 @@ public class WhereJoinTableTest extends BaseEntityManagerFunctionalTestCase {
 			Book.class,
 			Reader.class
 		};
+	}
+
+	@Override
+	protected void addConfigOptions(Map options) {
+		super.addConfigOptions( options );
+		options.put( DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG.name() );
 	}
 
 	@Test

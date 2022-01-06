@@ -15,12 +15,14 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.cache.internal.CollectionCacheInvalidator;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.metamodel.CollectionClassification;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -49,6 +51,7 @@ public class ManyToManyCollectionCacheEvictionTest extends BaseCoreFunctionalTes
 		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, "true" );
 		cfg.setProperty( Environment.USE_QUERY_CACHE, "true" );
 		cfg.setProperty( Environment.CACHE_PROVIDER_CONFIG, "true" );
+		cfg.setProperty( DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG.name() );
 	}
 
 	@Test

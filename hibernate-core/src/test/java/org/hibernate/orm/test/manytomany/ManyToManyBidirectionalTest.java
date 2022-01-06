@@ -20,10 +20,14 @@ import org.hibernate.annotations.NaturalId;
 import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.FailureExpected;
+import org.hibernate.testing.orm.junit.ImplicitListAsBagProvider;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.SettingProvider;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+
+import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
 
 /**
  * @author Vlad Mihalcea
@@ -32,7 +36,11 @@ import org.junit.jupiter.api.Test;
 		annotatedClasses = {
 				ManyToManyBidirectionalTest.Person.class,
 				ManyToManyBidirectionalTest.Address.class,
-		}
+		},
+		settingProviders = @SettingProvider(
+				settingName = DEFAULT_LIST_SEMANTICS,
+				provider = ImplicitListAsBagProvider.class
+		)
 )
 public class ManyToManyBidirectionalTest {
 

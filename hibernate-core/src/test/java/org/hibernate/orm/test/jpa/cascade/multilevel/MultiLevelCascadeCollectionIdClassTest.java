@@ -28,23 +28,33 @@ import jakarta.persistence.Table;
 
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.ImplicitListAsBagProvider;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SettingProvider;
 
 import org.jboss.logging.Logger;
 
 import org.junit.jupiter.api.Test;
 
+import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@Jpa(annotatedClasses = {
-		MultiLevelCascadeCollectionIdClassTest.MainEntity.class,
-		MultiLevelCascadeCollectionIdClassTest.SubEntity.class,
-		MultiLevelCascadeCollectionIdClassTest.AnotherSubSubEntity.class,
-		MultiLevelCascadeCollectionIdClassTest.SubSubEntity.class
-})
+@Jpa(
+		annotatedClasses = {
+				MultiLevelCascadeCollectionIdClassTest.MainEntity.class,
+				MultiLevelCascadeCollectionIdClassTest.SubEntity.class,
+				MultiLevelCascadeCollectionIdClassTest.AnotherSubSubEntity.class,
+				MultiLevelCascadeCollectionIdClassTest.SubSubEntity.class
+		},
+		settingProviders = @SettingProvider(
+				settingName = DEFAULT_LIST_SEMANTICS,
+				provider = ImplicitListAsBagProvider.class
+		)
+)
 public class MultiLevelCascadeCollectionIdClassTest {
 
 	private static final Logger log = Logger.getLogger( MultiLevelCascadeCollectionIdClassTest.class );

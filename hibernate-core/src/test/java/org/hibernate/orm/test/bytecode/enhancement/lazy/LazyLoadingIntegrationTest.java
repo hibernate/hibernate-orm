@@ -10,6 +10,7 @@ import org.hibernate.annotations.LazyToOne;
 import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.metamodel.CollectionClassification;
 
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -30,6 +31,7 @@ import jakarta.persistence.Table;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
 import static org.hibernate.testing.bytecode.enhancement.EnhancerTestUtils.checkDirtyTracking;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 
@@ -51,6 +53,7 @@ public class LazyLoadingIntegrationTest extends BaseCoreFunctionalTestCase {
     protected void configure(Configuration configuration) {
         configuration.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, "false" );
         configuration.setProperty( AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, "true" );
+        configuration.setProperty( DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG.name() );
     }
 
     @Before

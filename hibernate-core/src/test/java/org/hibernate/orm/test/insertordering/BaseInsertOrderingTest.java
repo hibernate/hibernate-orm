@@ -8,6 +8,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
@@ -55,6 +56,7 @@ abstract class BaseInsertOrderingTest extends BaseSessionFactoryFunctionalTest {
 				.get( AvailableSettings.CONNECTION_PROVIDER );
 		this.connectionProvider.setConnectionProvider( connectionProvider );
 		builer.applySetting( AvailableSettings.CONNECTION_PROVIDER, this.connectionProvider );
+		builer.applySetting( AvailableSettings.DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG );
 	}
 
 

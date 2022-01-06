@@ -54,7 +54,7 @@ public class IdGeneratorNamesLocalScopeTest extends BaseCoreFunctionalTestCase {
 			name = "table-generator",
 			table = "table_identifier_2",
 			pkColumnName = "identifier",
-			valueColumnName = "value",
+			valueColumnName = "val",
 			allocationSize = 5,
 			initialValue = 1
 	)
@@ -73,7 +73,7 @@ public class IdGeneratorNamesLocalScopeTest extends BaseCoreFunctionalTestCase {
 			name = "table-generator",
 			table = "table_identifier",
 			pkColumnName = "identifier",
-			valueColumnName = "value",
+			valueColumnName = "val",
 			allocationSize = 5,
 			initialValue = 10
 	)

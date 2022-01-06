@@ -24,6 +24,7 @@
 package org.hibernate.jpa.test.criteria.selectcase;
 
 import java.util.List;
+import javax.persistence.Column;
 import javax.persistence.EntityManager;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -131,6 +132,7 @@ public class SelectCaseTest extends BaseEntityManagerFunctionalTestCase {
 		private Long id;
 
 		@Enumerated(EnumType.STRING)
+		@Column(name = "val")
 		private EnumValue value;
 	}
 

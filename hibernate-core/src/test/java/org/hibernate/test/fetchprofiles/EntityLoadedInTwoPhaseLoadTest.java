@@ -90,7 +90,7 @@ public class EntityLoadedInTwoPhaseLoadTest extends BaseCoreFunctionalTestCase {
 		@GeneratedValue
 		private long id;
 
-		@Column(name = "value", nullable = false)
+		@Column(name = "val", nullable = false)
 		private String value;
 
 		public Finish() {

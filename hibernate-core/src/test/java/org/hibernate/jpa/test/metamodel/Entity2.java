@@ -23,6 +23,7 @@
  */
 package org.hibernate.jpa.test.metamodel;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -39,5 +40,6 @@ public class Entity2 {
 	@JoinColumn(name="entity3_id")
 	private Entity3 entity3;
 
+	@Column(name = "val")
 	private String value;
 }

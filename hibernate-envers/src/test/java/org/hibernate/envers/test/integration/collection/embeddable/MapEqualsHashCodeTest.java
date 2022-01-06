@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
@@ -174,6 +175,7 @@ public class MapEqualsHashCodeTest extends BaseEnversJPAFunctionalTestCase {
 
 	@Embeddable
 	public static class Emb implements Serializable {
+		@Column(name = "val")
 		private String value;
 
 		public Emb() {

@@ -146,7 +146,7 @@ public class ElementCollectionTests extends BaseNonConfigCoreFunctionalTestCase 
 		@Convert( converter = ValueTypeConverter.class )
 		@ElementCollection(fetch = FetchType.LAZY)
 		@CollectionTable(name = "entity_set", joinColumns = @JoinColumn(name = "entity_id", nullable = false))
-		@Column(name = "value", nullable = false)
+		@Column(name = "val", nullable = false)
 		public Set<ValueType> set = new HashSet<ValueType>();
 
 		/**
@@ -159,7 +159,7 @@ public class ElementCollectionTests extends BaseNonConfigCoreFunctionalTestCase 
 		@ElementCollection(fetch = FetchType.LAZY)
 		@CollectionTable(name = "entity_map", joinColumns = @JoinColumn(name = "entity_id", nullable = false))
 		@MapKeyColumn(name = "map_key", nullable = false)
-		@Column(name = "value", nullable = false)
+		@Column(name = "val", nullable = false)
 		public Map<ValueType, ValueType> map = new HashMap<ValueType, ValueType>();
 
 		public TheEntity() {

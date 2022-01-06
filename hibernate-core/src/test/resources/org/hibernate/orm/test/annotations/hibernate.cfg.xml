@@ -10,8 +10,8 @@
 
 <hibernate-configuration>
     <session-factory>
-        <mapping resource="org/hibernate/test/annotations/Boat.hbm.xml"/>
-        <mapping package="org.hibernate.test.annotations"/>
-        <mapping class="org.hibernate.test.annotations.Plane"/>
+        <mapping resource="org/hibernate/orm/test/annotations/Boat.hbm.xml"/>
+        <mapping package="org.hibernate.orm.test.annotations"/>
+        <mapping class="org.hibernate.orm.test.annotations.Plane"/>
     </session-factory>
 </hibernate-configuration>

@@ -23,10 +23,10 @@ import org.hibernate.mapping.Table;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.testing.transaction.TransactionUtil;
-import org.hibernate.test.annotations.Customer;
-import org.hibernate.test.annotations.Discount;
-import org.hibernate.test.annotations.Passport;
-import org.hibernate.test.annotations.Ticket;
+import org.hibernate.orm.test.annotations.Customer;
+import org.hibernate.orm.test.annotations.Discount;
+import org.hibernate.orm.test.annotations.Passport;
+import org.hibernate.orm.test.annotations.Ticket;
 import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.is;

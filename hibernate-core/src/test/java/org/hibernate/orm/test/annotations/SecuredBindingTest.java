@@ -17,7 +17,6 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.test.annotations.Plane;
 import org.junit.Assert;
 import org.junit.Test;
 

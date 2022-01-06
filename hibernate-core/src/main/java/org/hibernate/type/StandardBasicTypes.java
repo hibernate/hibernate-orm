@@ -1193,7 +1193,7 @@ public final class StandardBasicTypes {
 				DbTimestampType.INSTANCE,
 				null,
 				basicTypeRegistry,
-				DbTimestampType.INSTANCE.getName()
+				DbTimestampType.INSTANCE.getName(), "dbtimestamp"
 		);
 
 		handle(

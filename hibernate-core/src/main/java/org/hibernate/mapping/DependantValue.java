@@ -17,10 +17,11 @@ import org.hibernate.type.Type;
  *
  * @author Gavin King
  */
-public class DependantValue extends SimpleValue implements Resolvable {
+public class DependantValue extends SimpleValue implements Resolvable, SortableValue {
 	private KeyValue wrappedValue;
 	private boolean nullable;
 	private boolean updateable;
+	private boolean sorted;
 
 	public DependantValue(MetadataBuildingContext buildingContext, Table table, KeyValue prototype) {
 		super( buildingContext, table );
@@ -87,4 +88,26 @@ public class DependantValue extends SimpleValue implements Resolvable {
 		throw new UnsupportedOperationException("Trying to resolve the wrapped value but it is non a BasicValue");
 	}
 
+	@Override
+	public boolean isSorted() {
+		return sorted;
+	}
+
+	public void setSorted(boolean sorted) {
+		this.sorted = sorted;
+	}
+
+	@Override
+	public int[] sortProperties() {
+		if ( !sorted ) {
+			sorted = true;
+			if ( wrappedValue instanceof SortableValue ) {
+				final int[] originalOrder = ( (SortableValue) wrappedValue ).sortProperties();
+				if ( originalOrder != null ) {
+					sortColumns( originalOrder );
+				}
+			}
+		}
+		return null;
+	}
 }

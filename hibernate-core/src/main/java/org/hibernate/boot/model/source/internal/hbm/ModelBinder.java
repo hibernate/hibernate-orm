@@ -140,6 +140,7 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Set;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.SingleTableSubclass;
+import org.hibernate.mapping.SortableValue;
 import org.hibernate.mapping.SyntheticProperty;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UnionSubclass;
@@ -275,6 +276,9 @@ public class ModelBinder {
 
 		applyCaching( mappingDocument, hierarchySource.getCaching(), rootEntityDescriptor );
 
+		if ( rootEntityDescriptor.getIdentifier() instanceof SortableValue ) {
+			( (SortableValue) rootEntityDescriptor.getIdentifier() ).sortProperties();
+		}
 		// Primary key constraint
 		rootEntityDescriptor.createPrimaryKey();
 
@@ -606,7 +610,7 @@ public class ModelBinder {
 		}
 
 		// KEY
-		final SimpleValue keyBinding = new DependantValue(
+		final DependantValue keyBinding = new DependantValue(
 				mappingDocument,
 				primaryTable,
 				entityDescriptor.getIdentifier()
@@ -618,7 +622,7 @@ public class ModelBinder {
 		keyBinding.setCascadeDeleteEnabled( entitySource.isCascadeDeleteEnabled() );
 		relationalObjectBinder.bindColumns(
 				mappingDocument,
-				sortColumns( entitySource.getPrimaryKeyColumnSources(), entityDescriptor.getIdentifier() ),
+				entitySource.getPrimaryKeyColumnSources(),
 				keyBinding,
 				false,
 				new RelationalObjectBinder.ColumnNamingDelegate() {
@@ -630,6 +634,7 @@ public class ModelBinder {
 					}
 				}
 		);
+		keyBinding.sortProperties();
 		keyBinding.setForeignKeyName( entitySource.getExplicitForeignKeyName() );
 		// model.getKey().setType( new Type( model.getIdentifier() ) );
 		entityDescriptor.createPrimaryKey();
@@ -1786,7 +1791,7 @@ public class ModelBinder {
 			);
 		}
 
-		final SimpleValue keyBinding = new DependantValue(
+		final DependantValue keyBinding = new DependantValue(
 				mappingDocument,
 				secondaryTable,
 				persistentClass.getIdentifier()
@@ -1802,7 +1807,7 @@ public class ModelBinder {
 
 		relationalObjectBinder.bindColumns(
 				mappingDocument,
-				sortColumns( secondaryTableSource.getPrimaryKeyColumnSources(), persistentClass.getIdentifier() ),
+				secondaryTableSource.getPrimaryKeyColumnSources(),
 				keyBinding,
 				secondaryTableSource.isOptional(),
 				new RelationalObjectBinder.ColumnNamingDelegate() {
@@ -1815,6 +1820,7 @@ public class ModelBinder {
 				}
 		);
 
+		keyBinding.sortProperties();
 		keyBinding.setForeignKeyName( secondaryTableSource.getExplicitForeignKeyName() );
 
 		// skip creating primary and foreign keys for a subselect.
@@ -3432,6 +3438,7 @@ public class ModelBinder {
 					}
 			);
 
+			key.sortProperties();
 			key.createForeignKey();
 			getCollectionBinding().setKey( key );
 

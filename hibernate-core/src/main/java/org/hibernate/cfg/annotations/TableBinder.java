@@ -40,6 +40,7 @@ import org.hibernate.mapping.JoinedSubclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
+import org.hibernate.mapping.SortableValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
@@ -636,7 +637,9 @@ public class TableBinder {
 				linkJoinColumnWithValueOverridingNameIfImplicit(
 						referencedEntity, synthProp.getColumnIterator(), columns, value
 				);
-
+				if ( value instanceof SortableValue ) {
+					( (SortableValue) value ).sortProperties();
+				}
 			}
 			else {
 				if ( AnnotatedJoinColumn.NO_REFERENCE == fkEnum ) {
@@ -655,6 +658,9 @@ public class TableBinder {
 							columns,
 							value
 					);
+					if ( value instanceof SortableValue ) {
+						( (SortableValue) value ).sortProperties();
+					}
 				}
 				else {
 					// Ensure the component is sorted so that we can simply set sorted to true on the to-one

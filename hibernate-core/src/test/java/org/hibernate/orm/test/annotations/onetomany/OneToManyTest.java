@@ -43,11 +43,11 @@ import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.test.annotations.Customer;
-import org.hibernate.test.annotations.Discount;
-import org.hibernate.test.annotations.Passport;
-import org.hibernate.test.annotations.Ticket;
-import org.hibernate.test.annotations.TicketComparator;
+import org.hibernate.orm.test.annotations.Customer;
+import org.hibernate.orm.test.annotations.Discount;
+import org.hibernate.orm.test.annotations.Passport;
+import org.hibernate.orm.test.annotations.Ticket;
+import org.hibernate.orm.test.annotations.TicketComparator;
 import org.junit.Assert;
 import org.junit.Test;
 

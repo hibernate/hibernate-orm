@@ -1264,6 +1264,13 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 	public void fillSimpleValue() {
 		LOG.debugf( "Starting `BasicValueBinder#fillSimpleValue` for %s", propertyName );
 
+		final String explicitBasicTypeName;
+		if ( this.explicitBasicTypeName != null ) {
+			explicitBasicTypeName = this.explicitBasicTypeName;
+		}
+		else {
+			explicitBasicTypeName = this.timeStampVersionType;
+		}
 		basicValue.setExplicitTypeName( explicitBasicTypeName );
 		basicValue.setExplicitTypeParams( explicitLocalTypeParams );
 

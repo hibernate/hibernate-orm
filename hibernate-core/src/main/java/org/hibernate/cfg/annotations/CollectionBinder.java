@@ -1387,7 +1387,7 @@ public abstract class CollectionBinder {
 		return orderByFragment;
 	}
 
-	private static SimpleValue buildCollectionKey(
+	private static DependantValue buildCollectionKey(
 			Collection collValue,
 			AnnotatedJoinColumn[] joinColumns,
 			boolean cascadeDeleteEnabled,
@@ -1976,12 +1976,13 @@ public abstract class CollectionBinder {
 		catch (AnnotationException ex) {
 			throw new AnnotationException( "Unable to map collection " + collValue.getOwner().getClassName() + "." + property.getName(), ex );
 		}
-		SimpleValue key = buildCollectionKey( collValue, joinColumns, cascadeDeleteEnabled,
+		DependantValue key = buildCollectionKey( collValue, joinColumns, cascadeDeleteEnabled,
 				buildingContext.getBuildingOptions().isNoConstraintByDefault(), property, propertyHolder, buildingContext );
 		if ( property.isAnnotationPresent( ElementCollection.class ) && joinColumns.length > 0 ) {
 			joinColumns[0].setJPA2ElementCollection( true );
 		}
 		TableBinder.bindFk( collValue.getOwner(), collectionEntity, joinColumns, key, false, buildingContext );
+		key.sortProperties();
 	}
 
 	public void setCascadeDeleteEnabled(boolean onDeleteCascade) {

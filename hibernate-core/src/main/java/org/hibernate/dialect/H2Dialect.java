@@ -207,7 +207,7 @@ public class H2Dialect extends Dialect {
 
 	public boolean hasOddDstBehavior() {
 		// H2 1.4.200 has a bug: https://github.com/h2database/h2database/issues/3184
-		return getVersion().isSame( 1, 4, 200 );
+		return getVersion().isSameOrAfter( 1, 4, 200 );
 	}
 
 	@Override
@@ -269,6 +269,13 @@ public class H2Dialect extends Dialect {
 			CommonFunctionFactory.format_formatdatetime( queryEngine );
 		}
 		CommonFunctionFactory.rownum( queryEngine );
+	}
+
+	@Override
+	public void augmentPhysicalTableTypes(List<String> tableTypesList) {
+		if ( getVersion().isSameOrAfter( 2 ) ) {
+			tableTypesList.add( "BASE TABLE" );
+		}
 	}
 
 	@Override

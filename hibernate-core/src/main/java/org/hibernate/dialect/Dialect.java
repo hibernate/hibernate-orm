@@ -3487,6 +3487,10 @@ public abstract class Dialect implements ConversionContext {
 		return true;
 	}
 
+	public void augmentPhysicalTableTypes(List<String> tableTypesList) {
+		// nothing to do
+	}
+
 	public void augmentRecognizedTableTypes(List<String> tableTypesList) {
 		// nothing to do
 	}

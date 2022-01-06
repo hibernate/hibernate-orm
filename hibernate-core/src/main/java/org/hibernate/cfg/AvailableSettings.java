@@ -778,13 +778,6 @@ public interface AvailableSettings {
 	String USE_SQL_COMMENTS ="hibernate.use_sql_comments";
 
 	/**
-	 * Enable logging of functions registered by the
-	 * {@linkplain AvailableSettings#DIALECT configured}
-	 * SQL {@link org.hibernate.dialect.Dialect}.
-	 */
-	String SHOW_HQL_FUNCTIONS = "hibernate.dialect.show_hql_functions";
-
-	/**
 	 * Maximum depth of outer join fetching
 	 */
 	String MAX_FETCH_DEPTH = "hibernate.max_fetch_depth";

@@ -90,10 +90,10 @@ public class BeanValidationTest {
 	public void testTitleColumnHasExpectedLength(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
-					int len = (Integer) entityManager.createNativeQuery(
+					Number len = (Number) entityManager.createNativeQuery(
 							"select CHARACTER_MAXIMUM_LENGTH from INFORMATION_SCHEMA.COLUMNS c where c.TABLE_NAME = 'CUPHOLDER' and c.COLUMN_NAME = 'TITLE'"
 					).getSingleResult();
-					assertEquals(64, len);
+					assertEquals(64, len.intValue());
 				}
 		);
 	}

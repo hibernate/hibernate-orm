@@ -6,6 +6,7 @@
  */
 package org.hibernate.orm.test.comments;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
@@ -17,6 +18,7 @@ public class TestEntity2 {
 	@Id
 	private String id;
 
+	@Column(name = "val")
 	private String value;
 
 	public String getId() {

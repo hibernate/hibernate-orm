@@ -11,6 +11,7 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
@@ -175,6 +176,7 @@ public class SetEqualsHashCodeTest extends BaseEnversJPAFunctionalTestCase {
 
 	@Embeddable
 	public static class Emb implements Serializable {
+		@Column(name = "val")
 		private String value;
 
 		public Emb() {

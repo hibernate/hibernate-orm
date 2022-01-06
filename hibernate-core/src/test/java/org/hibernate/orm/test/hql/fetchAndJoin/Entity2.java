@@ -23,6 +23,7 @@
  */
 package org.hibernate.orm.test.hql.fetchAndJoin;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -42,6 +43,7 @@ public class Entity2 {
 	@JoinColumn(name="entity3_id")
 	private Entity3 entity3;
 
+	@Column(name = "val")
 	private String value;
 
 	public long getId() {

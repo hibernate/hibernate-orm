@@ -474,6 +474,7 @@ public class JpaMetamodelImpl implements JpaMetamodel, Serializable {
 				mappingMetamodel,
 				bootMetamodel,
 				jpaStaticMetaModelPopulationSetting,
+				jpaMetaModelPopulationSetting,
 				runtimeModelCreationContext
 		);
 

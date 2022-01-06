@@ -52,17 +52,16 @@ import org.junit.jupiter.api.Test;
 )
 @SessionFactory
 @RequiresDialect(value = SybaseASEDialect.class, majorVersion = 11)
+@SuppressWarnings("rawtypes")
 public class SybaseASEFunctionTest {
-
-	private Calendar calendar = Calendar.getInstance();
 
 	@BeforeAll
 	protected void prepareTest(SessionFactoryScope scope) throws Exception {
 		scope.inTransaction(
 				session -> {
 					Product product = new Product();
-					product.setPrice(new BigDecimal(0.5));
-					product.setDate( calendar.getTime() );
+					product.setPrice(new BigDecimal("0.5"));
+					product.setDate( Calendar.getInstance().getTime() );
 					session.save( product );
 				}
 		);
@@ -91,7 +90,7 @@ public class SybaseASEFunctionTest {
 		scope.inTransaction(
 				session -> {
 					Query query = session.createQuery( "select dateadd(day, 1, p.date) from Product p" );
-					assertTrue(calendar.getTime().before((Date) query.uniqueResult()));
+					assertTrue(Calendar.getInstance().getTime().before((Date) query.uniqueResult()));
 				}
 		);
 	}
@@ -102,7 +101,7 @@ public class SybaseASEFunctionTest {
 		scope.inTransaction(
 				session -> {
 					Query query = session.createQuery( "select datepart(month, p.date) from Product p" );
-					assertEquals(calendar.get(MONTH) + 1, ((Number) query.uniqueResult()).intValue());
+					assertEquals(Calendar.getInstance().get(MONTH) + 1, ((Number) query.uniqueResult()).intValue());
 				}
 		);
 	}
@@ -112,7 +111,7 @@ public class SybaseASEFunctionTest {
 	public void testDatediffFunction(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					Query query = session.createQuery( "SELECT DATEDIFF( DAY, '1999/07/19 00:00', '1999/07/23 23:59' ) from Product" );
+					Query query = session.createQuery( "select datediff(day, datetime 1999-07-19 00:00, datetime 1999-07-23 23:59) from Product" );
 					assertEquals(4, ((Number) query.uniqueResult()).intValue());
 				}
 		);

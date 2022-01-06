@@ -911,11 +911,13 @@ public class CommonFunctionFactory {
 
 	/**
 	 * These are aggregate functions taking one argument,
-	 * for Oracle.
+	 * for Oracle and Sybase.
 	 */
 	public static void everyAny_sumCaseCase(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().register( "every", new CaseWhenEveryAnyEmulation( queryEngine.getTypeConfiguration(), true ) );
-		queryEngine.getSqmFunctionRegistry().register( "any", new CaseWhenEveryAnyEmulation( queryEngine.getTypeConfiguration(), false ) );
+		queryEngine.getSqmFunctionRegistry().register( "every",
+				new CaseWhenEveryAnyEmulation( queryEngine.getTypeConfiguration(), true ) );
+		queryEngine.getSqmFunctionRegistry().register( "any",
+				new CaseWhenEveryAnyEmulation( queryEngine.getTypeConfiguration(), false ) );
 	}
 
 	public static void yearMonthDay(QueryEngine queryEngine) {

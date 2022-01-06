@@ -87,7 +87,7 @@ public class BasicTypeElementCollectionTest extends BaseEntityManagerFunctionalT
 		private Long id;
 
 		@ElementCollection
-		@OrderColumn( name = "_position")
+		@OrderColumn( name = "phone_position")
 		private List<String> phones = new ArrayList<>();
 
 		//Getters and setters are omitted for brevity

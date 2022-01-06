@@ -49,8 +49,8 @@ import java.sql.Types;
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
-import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType.INTEGER;
-import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType.STRING;
+import static org.hibernate.query.sqm.produce.function.FunctionParameterType.INTEGER;
+import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
 
 /**
  * Dialect for Intersystems Cach&eacute; SQL 2007.1 and above.

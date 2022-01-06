@@ -69,7 +69,7 @@ public class NamedFunctionDescriptorBuilder {
 		return this;
 	}
 
-	public NamedFunctionDescriptorBuilder setParameterTypes(ArgumentsValidator.ParameterType... types) {
+	public NamedFunctionDescriptorBuilder setParameterTypes(FunctionParameterType... types) {
 		setArgumentsValidator( new ArgumentTypesValidator(argumentsValidator, types) );
 		return this;
 	}

@@ -6,21 +6,30 @@
  */
 package org.hibernate.query.sqm.produce.function;
 
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 
 import java.util.List;
 
 /**
+ * Validates the arguments provided to a HQL function invocation.
+ *
  * @author Steve Ebersole
+ *
+ * @see StandardArgumentsValidators
+ * @see ArgumentTypesValidator
  */
 public interface ArgumentsValidator {
 	/**
 	 * Perform validation that may be done using the {@link SqmTypedNode}
 	 * tree and assigned Java types.
 	 */
-	void validate(List<? extends SqmTypedNode<?>> arguments, String functionName);
+	void validate(List<? extends SqmTypedNode<?>> arguments, String functionName, QueryEngine queryEngine);
 
+	/**
+	 * Pretty-print the signature of the argument list.
+	 */
 	default String getSignature() {
 		return "( ... )";
 	}
@@ -31,47 +40,4 @@ public interface ArgumentsValidator {
 	 */
 	default void validateSqlTypes(List<? extends SqlAstNode> arguments, String functionName) {}
 
-	/**
-	 * A mini-"type system" for HQL function parameters.
-	 * <p>
-	 * Note that typical database type systems have relatively few types,
-	 * and lots of implicit type conversion between them. So we can be
-	 * pretty forgiving here.
-	 */
-	enum ParameterType {
-		/**
-		 * @see org.hibernate.type.SqlTypes#isCharacterType(int)
-		 */
-		STRING,
-		/**
-		 * @see org.hibernate.type.SqlTypes#isNumericType(int)
-		 */
-		NUMERIC,
-		/**
-		 * @see org.hibernate.type.SqlTypes#isIntegral(int)
-		 */
-		INTEGER,
-		/**
-		 * @see org.hibernate.type.SqlTypes#isTemporalType(int)
-		 */
-		TEMPORAL,
-		/**
-		 * @see org.hibernate.type.SqlTypes#hasDatePart(int)
-		 */
-		DATE,
-		/**
-		 * @see org.hibernate.type.SqlTypes#hasTimePart(int)
-		 */
-		TIME,
-		/**
-		 * Indicates that the argument should be of type
-		 * {@link org.hibernate.type.SqlTypes#BOOLEAN} or
-		 * a logical expression (predicate)
-		 */
-		BOOLEAN,
-		/**
-		 * Indicates a parameter that accepts any type
-		 */
-		ANY
-	}
 }

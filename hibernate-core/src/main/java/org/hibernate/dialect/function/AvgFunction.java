@@ -28,7 +28,7 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType.NUMERIC;
+import static org.hibernate.query.sqm.produce.function.FunctionParameterType.NUMERIC;
 
 /**
  * @author Christian Beikov
@@ -112,7 +112,7 @@ public class AvgFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 
 	@Override
 	public String getArgumentListSignature() {
-		return "(arg)";
+		return "(NUMERIC arg)";
 	}
 
 }

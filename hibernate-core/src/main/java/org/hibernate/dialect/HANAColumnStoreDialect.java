@@ -20,7 +20,7 @@ import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.type.StandardBasicTypes;
 
-import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType.ANY;
+import static org.hibernate.query.sqm.produce.function.FunctionParameterType.ANY;
 
 /**
  * An SQL dialect for the SAP HANA column store.

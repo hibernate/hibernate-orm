@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.Stream;
 
-import org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType;
+import org.hibernate.query.sqm.produce.function.FunctionParameterType;
 import org.hibernate.query.sqm.produce.function.NamedFunctionDescriptorBuilder;
 import org.hibernate.query.sqm.produce.function.PatternFunctionDescriptorBuilder;
 import org.hibernate.type.BasicType;
@@ -255,8 +255,8 @@ public class SqmFunctionRegistry {
 			BasicType type,
 			String pattern0,
 			String pattern1,
-			ParameterType parameterType) {
-		return registerPatterns( name, type, new ParameterType[]{parameterType}, pattern0, pattern1 );
+			FunctionParameterType parameterType) {
+		return registerPatterns( name, type, new FunctionParameterType[]{parameterType}, pattern0, pattern1 );
 	}
 
 	/**
@@ -269,10 +269,10 @@ public class SqmFunctionRegistry {
 			BasicType<?> type,
 			String pattern1,
 			String pattern2,
-			ParameterType parameterType1,
-			ParameterType parameterType2) {
+			FunctionParameterType parameterType1,
+			FunctionParameterType parameterType2) {
 		return registerPatterns( name, type,
-				new ParameterType[]{parameterType1,parameterType2},
+				new FunctionParameterType[]{parameterType1,parameterType2},
 				null, pattern1, pattern2 );
 	}
 
@@ -286,11 +286,11 @@ public class SqmFunctionRegistry {
 			BasicType<?> type,
 			String pattern2,
 			String pattern3,
-			ParameterType parameterType1,
-			ParameterType parameterType2,
-			ParameterType parameterType3) {
+			FunctionParameterType parameterType1,
+			FunctionParameterType parameterType2,
+			FunctionParameterType parameterType3) {
 		return registerPatterns( name, type,
-				new ParameterType[]{parameterType1,parameterType2,parameterType3},
+				new FunctionParameterType[]{parameterType1,parameterType2,parameterType3},
 				null, null, pattern2, pattern3 );
 	}
 
@@ -304,19 +304,19 @@ public class SqmFunctionRegistry {
 			BasicType<?> type,
 			String pattern3,
 			String pattern4,
-			ParameterType parameterType1,
-			ParameterType parameterType2,
-			ParameterType parameterType3,
-			ParameterType parameterType4) {
+			FunctionParameterType parameterType1,
+			FunctionParameterType parameterType2,
+			FunctionParameterType parameterType3,
+			FunctionParameterType parameterType4) {
 		return registerPatterns( name, type,
-				new ParameterType[]{parameterType1,parameterType2,parameterType3, parameterType4},
+				new FunctionParameterType[]{parameterType1,parameterType2,parameterType3, parameterType4},
 				null, null, null, pattern3, pattern4 );
 	}
 
 	private MultipatternSqmFunctionDescriptor registerPatterns(
 			String name,
 			BasicType<?> type,
-			ParameterType[] parameterTypes,
+			FunctionParameterType[] parameterTypes,
 			String... patterns) {
 		SqmFunctionDescriptor[] descriptors =
 				new SqmFunctionDescriptor[patterns.length];

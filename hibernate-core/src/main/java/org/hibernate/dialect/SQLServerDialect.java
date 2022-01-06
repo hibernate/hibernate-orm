@@ -68,7 +68,7 @@ import java.util.TimeZone;
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.query.TemporalUnit.NANOSECOND;
-import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType.INTEGER;
+import static org.hibernate.query.sqm.produce.function.FunctionParameterType.INTEGER;
 import static org.hibernate.type.SqlTypes.*;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;

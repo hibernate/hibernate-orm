@@ -20,7 +20,7 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType.BOOLEAN;
+import static org.hibernate.query.sqm.produce.function.FunctionParameterType.BOOLEAN;
 
 /**
  * @author Jan Schatteman

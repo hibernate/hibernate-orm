@@ -66,10 +66,10 @@ import static org.hibernate.query.TemporalUnit.EPOCH;
 import static org.hibernate.query.TemporalUnit.MONTH;
 import static org.hibernate.query.TemporalUnit.QUARTER;
 import static org.hibernate.query.TemporalUnit.YEAR;
-import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType.INTEGER;
-import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType.NUMERIC;
-import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType.STRING;
-import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType.TEMPORAL;
+import static org.hibernate.query.sqm.produce.function.FunctionParameterType.INTEGER;
+import static org.hibernate.query.sqm.produce.function.FunctionParameterType.NUMERIC;
+import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
+import static org.hibernate.query.sqm.produce.function.FunctionParameterType.TEMPORAL;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
@@ -297,7 +297,7 @@ public class SQLiteDialect extends Dialect {
 				.setInvariantType( stringType )
 				.setExactArgumentCount( 2 )
 				.setParameterTypes(TEMPORAL, STRING)
-				.setArgumentListSignature("(datetime as pattern)")
+				.setArgumentListSignature("(TEMPORAL datetime as STRING pattern)")
 				.register();
 
 		if (!supportsMathFunctions() ) {

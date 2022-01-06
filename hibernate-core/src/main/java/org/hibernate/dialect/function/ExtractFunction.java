@@ -15,7 +15,6 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.function.AbstractSqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
-import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
@@ -29,8 +28,8 @@ import java.util.List;
 import static java.util.Arrays.asList;
 import static org.hibernate.query.BinaryArithmeticOperator.*;
 import static org.hibernate.query.TemporalUnit.*;
-import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType.ANY;
-import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType.TEMPORAL;
+import static org.hibernate.query.sqm.produce.function.FunctionParameterType.TEMPORAL;
+import static org.hibernate.query.sqm.produce.function.FunctionParameterType.TEMPORAL_UNIT;
 import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers.useArgType;
 
 /**
@@ -46,7 +45,7 @@ public class ExtractFunction
 				"extract",
 				new ArgumentTypesValidator(
 						StandardArgumentsValidators.exactly( 2 ),
-						ANY, TEMPORAL
+						TEMPORAL_UNIT, TEMPORAL
 				),
 				StandardFunctionReturnTypeResolvers.useArgType( 1 )
 		);
@@ -277,7 +276,7 @@ public class ExtractFunction
 
 	@Override
 	public String getArgumentListSignature() {
-		return "(field from arg)";
+		return "(TEMPORAL_UNIT field from TEMPORAL arg)";
 	}
 
 }

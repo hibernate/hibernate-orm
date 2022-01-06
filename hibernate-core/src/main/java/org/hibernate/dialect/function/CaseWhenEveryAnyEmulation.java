@@ -10,6 +10,8 @@ import java.util.List;
 
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.FunctionKind;
+import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
+import org.hibernate.query.sqm.produce.function.FunctionParameterType;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -30,7 +32,7 @@ public class CaseWhenEveryAnyEmulation extends AbstractSqmSelfRenderingFunctionD
 		super(
 				every ? "every" : "any",
 				FunctionKind.AGGREGATE,
-				StandardArgumentsValidators.exactly( 1 ),
+				new ArgumentTypesValidator( StandardArgumentsValidators.exactly( 1 ), FunctionParameterType.BOOLEAN ),
 				StandardFunctionReturnTypeResolvers.invariant(
 						typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.BOOLEAN )
 				)

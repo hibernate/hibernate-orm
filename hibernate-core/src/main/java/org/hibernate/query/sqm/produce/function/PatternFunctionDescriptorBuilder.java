@@ -44,7 +44,7 @@ public class PatternFunctionDescriptorBuilder {
 		return this;
 	}
 
-	public PatternFunctionDescriptorBuilder setParameterTypes(ArgumentsValidator.ParameterType... types) {
+	public PatternFunctionDescriptorBuilder setParameterTypes(FunctionParameterType... types) {
 		setArgumentsValidator( new ArgumentTypesValidator(argumentsValidator, types) );
 		return this;
 	}

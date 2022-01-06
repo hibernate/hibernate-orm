@@ -11,7 +11,6 @@ import java.util.List;
 
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -23,7 +22,6 @@ import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 import org.hibernate.query.sqm.tree.expression.SqmFunction;
 import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static java.util.Collections.emptyList;
@@ -56,6 +54,10 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 
 	public FunctionRenderingSupport getRenderingSupport() {
 		return renderingSupport;
+	}
+
+	protected ArgumentsValidator getArgumentsValidator() {
+		return argumentsValidator;
 	}
 
 	protected static List<SqlAstNode> resolveSqlAstArguments(List<? extends SqmTypedNode<?>> sqmArguments, SqmToSqlAstConverter walker) {

@@ -12,13 +12,13 @@ import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
-import org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.SqmAggregateFunction;
 import org.hibernate.query.sqm.tree.expression.SqmDistinct;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
+import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 
 /**
@@ -49,6 +49,11 @@ public class SelfRenderingSqmAggregateFunction<T> extends SelfRenderingSqmFuncti
 				walker.getCreationContext().getDomainModel().getTypeConfiguration()
 		);
 
+		List<SqlAstNode> arguments = resolveSqlAstArguments( getArguments(), walker );
+		ArgumentsValidator argumentsValidator = getArgumentsValidator();
+		if ( argumentsValidator != null ) {
+			argumentsValidator.validateSqlTypes( arguments, getFunctionName() );
+		}
 		return new SelfRenderingAggregateFunctionSqlAstExpression(
 				getFunctionName(),
 				getRenderingSupport(),

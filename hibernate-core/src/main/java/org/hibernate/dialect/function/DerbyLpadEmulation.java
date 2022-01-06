@@ -8,10 +8,8 @@ package org.hibernate.dialect.function;
 
 import java.util.List;
 
-import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
-import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
@@ -21,8 +19,8 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType.INTEGER;
-import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType.STRING;
+import static org.hibernate.query.sqm.produce.function.FunctionParameterType.INTEGER;
+import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
 
 /**
  * A derby implementation for lpad.
@@ -67,6 +65,6 @@ public class DerbyLpadEmulation
 
 	@Override
 	public String getArgumentListSignature() {
-		return "(string, length)";
+		return "(STRNG string, INTEGER length)";
 	}
 }

@@ -61,8 +61,8 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import jakarta.persistence.TemporalType;
 
-import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType.INTEGER;
-import static org.hibernate.query.sqm.produce.function.ArgumentsValidator.ParameterType.STRING;
+import static org.hibernate.query.sqm.produce.function.FunctionParameterType.INTEGER;
+import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
 
 /**
  * An SQL dialect for Ingres 9.2.

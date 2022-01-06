@@ -44,7 +44,7 @@ public class FunctionTests {
 
 	public static final double ERROR = 0.00001d;
 
-	@BeforeAll
+	@BeforeAll @SuppressWarnings("deprecation")
 	public void prepareData(SessionFactoryScope scope) {
 		scope.inTransaction(
 				em -> {

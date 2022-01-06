@@ -14,6 +14,7 @@ import org.hibernate.query.BinaryArithmeticOperator;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
+import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
@@ -35,6 +36,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static java.util.Arrays.asList;
+import static org.hibernate.query.sqm.produce.function.FunctionParameterType.INTEGER;
+import static org.hibernate.query.sqm.produce.function.FunctionParameterType.TEMPORAL;
+import static org.hibernate.query.sqm.produce.function.FunctionParameterType.TEMPORAL_UNIT;
 
 /**
  * @author Gavin King
@@ -49,7 +53,10 @@ public class TimestampaddFunction
 	public TimestampaddFunction(Dialect dialect, TypeConfiguration typeConfiguration) {
 		super(
 				"timestampadd",
-				StandardArgumentsValidators.exactly( 3 ),
+				new ArgumentTypesValidator(
+						StandardArgumentsValidators.exactly( 3 ),
+						TEMPORAL_UNIT, INTEGER, TEMPORAL
+				),
 				StandardFunctionReturnTypeResolvers.useArgType( 3 )
 		);
 		this.dialect = dialect;
@@ -194,7 +201,7 @@ public class TimestampaddFunction
 
 	@Override
 	public String getArgumentListSignature() {
-		return "(field, magnitude, datetime)";
+		return "(TEMPORAL_UNIT field, INTEGER magnitude, TEMPORAL datetime)";
 	}
 
 }

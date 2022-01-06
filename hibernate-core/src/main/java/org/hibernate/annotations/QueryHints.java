@@ -9,8 +9,12 @@ package org.hibernate.annotations;
 import org.hibernate.FlushMode;
 
 /**
- * Consolidation of hints available to Hibernate JPA queries.  Mainly used to define features available on
- * Hibernate queries that have no corollary in JPA queries.
+ * List of hints that may be passed to {@link jakarta.persistence.Query#setHint(String, Object)}
+ * to control execution of a query. Each of these hints corresponds to a typesafe operation of
+ * the {@link org.hibernate.query.Query} interface, and so hints are only necessary for programs
+ * working with the JPA APIs.
+ *
+ * @see org.hibernate.jpa.QueryHints
  */
 public class QueryHints {
 	/**
@@ -44,7 +48,7 @@ public class QueryHints {
 	public static final String CACHEABLE = "org.hibernate.cacheable";
 
 	/**
-	 * Is the procedure a function? Note: only valid for named stored procedures.
+	 * Is the named stored procedure a function?
 	 */
 	public static final String CALLABLE_FUNCTION = "org.hibernate.callableFunction";
 
@@ -101,17 +105,20 @@ public class QueryHints {
 	public static final String TIMEOUT_JAKARTA_JPA = "jakarta.persistence.query.timeout";
 
 	/**
-	 * Available to apply lock mode to a native SQL query since JPA requires that
-	 * {@link jakarta.persistence.Query#setLockMode} throw an IllegalStateException if called for a native query.
+	 * Apply lock mode to a native SQL query since JPA requires that
+	 * {@link jakarta.persistence.Query#setLockMode} throw an {@code IllegalStateException}
+	 * if called for a native query.
 	 * <p/>
 	 * Accepts a {@link jakarta.persistence.LockModeType} or a {@link org.hibernate.LockMode}
 	 */
 	public static final String NATIVE_LOCKMODE = "org.hibernate.lockMode";
 
 	/**
-	 * Hint to enable/disable the follow-on-locking mechanism provided by {@link org.hibernate.dialect.Dialect#useFollowOnLocking(QueryParameters)}.
-	 * A value of {@code true} enables follow-on-locking, whereas a value of {@code false} disables it.
-	 * If the value is {@code null}, the {@code Dialect} strategy is going to be used instead.
+	 * Hint to enable/disable the follow-on-locking mechanism provided by
+	 * {@link org.hibernate.dialect.Dialect#useFollowOnLocking(String, org.hibernate.query.spi.QueryOptions)}.
+	 * A value of {@code true} enables follow-on-locking, whereas a value of
+	 * {@code false} disables it. If the value is {@code null}, the
+	 * {@code Dialect}'s default strategy is used.
 	 *
 	 * @since 5.2
 	 */
@@ -126,11 +133,11 @@ public class QueryHints {
 	 *     <li>String as "whitespace"-separated list of the spaces</li>
 	 * </ul>
 	 *
-	 * Note that the passed space need not match to any real spaces/tables in
+	 * Note that the passed space need not match any real spaces/tables in
 	 * the underlying query.  This can be used to completely circumvent
 	 * the auto-flush checks as well as any cache invalidation that might
-	 * occur as part of a flush.  See the documentation on SynchronizeableQuery
-	 * for details.  See also {@link FlushMode#MANUAL}
+	 * occur as part of a flush.  See {@link org.hibernate.query.SynchronizeableQuery}
+	 * and {@link FlushMode#MANUAL} for more information.
 	 *
 	 * @see org.hibernate.SynchronizeableQuery
 	 * @see #FLUSH_MODE

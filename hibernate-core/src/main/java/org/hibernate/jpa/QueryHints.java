@@ -26,7 +26,11 @@ import static org.hibernate.annotations.QueryHints.TIMEOUT_JAKARTA_JPA;
 import static org.hibernate.annotations.QueryHints.TIMEOUT_JPA;
 
 /**
- * Defines the supported JPA query hints
+ * List of all supported hints that may be passed to {@link jakarta.persistence.Query#setHint(String, Object)},
+ * including those defined by {@link org.hibernate.annotations.QueryHints}, and those defined by the enumerated
+ * instances of {@link GraphSemantic}.
+ *
+ * @see org.hibernate.annotations.QueryHints
  */
 public class QueryHints {
 	/**
@@ -58,8 +62,8 @@ public class QueryHints {
 	public static final String HINT_FETCH_SIZE = FETCH_SIZE;
 
 	/**
-	 * The hint key for specifying whether the query results should be cached for the next (cached) execution of the
-	 * "same query".
+	 * The hint key for specifying whether the query results should be cached for the next (cached) execution
+	 * of the "same query".
 	 */
 	public static final String HINT_CACHEABLE = CACHEABLE;
 
@@ -70,8 +74,8 @@ public class QueryHints {
 	public static final String HINT_CACHE_REGION = CACHE_REGION;
 
 	/**
-	 * The hint key for specifying that objects loaded into the persistence context as a result of this query execution
-	 * should be associated with the persistence context as read-only.
+	 * The hint key for specifying that objects loaded into the persistence context as a result of this query
+	 * execution should be associated with the persistence context as read-only.
 	 */
 	public static final String HINT_READONLY = READ_ONLY;
 
@@ -87,6 +91,10 @@ public class QueryHints {
 	 */
 	public static final String HINT_FLUSH_MODE = FLUSH_MODE;
 
+	/**
+	 * The hint key for specifying the lock mode ({@link jakarta.persistence.LockModeType} or
+	 * {@link org.hibernate.LockMode}) to use for execution of a native query.
+	 */
 	public static final String HINT_NATIVE_LOCKMODE = NATIVE_LOCKMODE;
 	
 	/**
@@ -96,11 +104,9 @@ public class QueryHints {
 	public static final String HINT_FETCHGRAPH = GraphSemantic.FETCH.getJpaHintName();
 
 	/**
-	 * Hint providing a "fetchgraph" EntityGraph.  Attributes explicitly specified as AttributeNodes are treated as
-	 * FetchType.EAGER (via join fetch or subsequent select).
+	 * Hint providing a {@link jakarta.persistence.EntityGraph} that should be interpreted as a "fetch graph".
 	 *
-	 * Note: Currently, attributes that are not specified are treated as FetchType.LAZY or FetchType.EAGER depending
-	 * on the attribute's definition in metadata, rather than forcing FetchType.LAZY.
+	 * @see GraphSemantic#FETCH
 	 */
 	public static final String JAKARTA_HINT_FETCH_GRAPH = GraphSemantic.FETCH.getJakartaJpaHintName();
 
@@ -111,9 +117,9 @@ public class QueryHints {
 	public static final String HINT_LOADGRAPH = GraphSemantic.LOAD.getJpaHintName();
 
 	/**
-	 * Hint providing a "loadgraph" EntityGraph.  Attributes explicitly specified as AttributeNodes are treated as
-	 * FetchType.EAGER (via join fetch or subsequent select).  Attributes that are not specified are treated as
-	 * FetchType.LAZY or FetchType.EAGER depending on the attribute's definition in metadata
+	 * Hint providing a {@link jakarta.persistence.EntityGraph} that should be interpreted as a "load graph".
+	 *
+	 * @see GraphSemantic#LOAD
 	 */
 	public static final String JAKARTA_HINT_LOAD_GRAPH = GraphSemantic.LOAD.getJakartaJpaHintName();
 
@@ -133,10 +139,16 @@ public class QueryHints {
 	 */
 	public static final String JAKARTA_HINT_LOADGRAPH = GraphSemantic.LOAD.getJakartaJpaHintName();
 
+	/**
+	 * The hint key to enable or disable the default follow-on-locking mechanism provided by
+	 * {@link org.hibernate.dialect.Dialect#useFollowOnLocking(String, org.hibernate.query.spi.QueryOptions)}.
+	 */
 	public static final String HINT_FOLLOW_ON_LOCKING = FOLLOW_ON_LOCKING;
 
 	/**
-	 * See {@link org.hibernate.annotations.QueryHints#NATIVE_SPACES}
+	 * Hint key for specifying query spaces to be applied to a native (SQL) query.
+	 *
+	 * @see org.hibernate.annotations.QueryHints#NATIVE_SPACES
 	 */
 	public static final String HINT_NATIVE_SPACES = NATIVE_SPACES;
 

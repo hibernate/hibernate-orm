@@ -177,13 +177,13 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
 /**
  * Represents a dialect of SQL implemented by a particular RDBMS. Subclasses
  * implement Hibernate compatibility with different database platforms.
- *
+ * <p>
  * Subclasses must provide a public constructor that registers a set of type
  * mappings from JDBC type codes to database native type names, along with
  * default Hibernate properties. This constructor may have no parameters, or
  * it may have a single parameter of type
  * {@link org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo}.
- *
+ * <p>
  * Subclasses should be immutable.
  *
  * @author Gavin King, David Channon

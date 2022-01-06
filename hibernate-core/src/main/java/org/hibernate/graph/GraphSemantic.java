@@ -7,26 +7,31 @@
 package org.hibernate.graph;
 
 /**
- * JPA defines 2 distinct semantics for applying an EntityGraph.  This
- * enumeration captures those 2 semantics.
+ * JPA specifies two distinct ways to apply an {@link jakarta.persistence.EntityGraph},
+ * as a {@link #FETCH "fetch graph"}, or as a {@link #LOAD "load graph"}.
  *
  * @author Steve Ebersole
  */
 public enum GraphSemantic {
 	/**
-	 * Indicates a "fetch graph" EntityGraph.  Attributes explicitly specified
-	 * as AttributeNodes are treated as FetchType.EAGER (via join fetch or
-	 * subsequent select). Attributes that are not specified are treated as
-	 * FetchType.LAZY invariably.
+	 * Indicates that an {@link jakarta.persistence.EntityGraph} should be interpreted as a JPA "fetch graph".
+	 * <ul>
+	 * <li>Attributes explicitly specified using an {@link org.hibernate.graph.AttributeNode}s are treated as
+	 * {@link jakarta.persistence.FetchType#EAGER} and fetched via a join or subsequent select.
+	 * <li>Attributes not explicitly specified are treated as {@link jakarta.persistence.FetchType#LAZY} and
+	 * are not fetched.
+	 * </ul>
 	 */
 	FETCH( "javax.persistence.fetchgraph", "jakarta.persistence.fetchgraph" ),
 
 	/**
-	 * Indicates a "load graph" EntityGraph.  Attributes explicitly specified
-	 * as AttributeNodes are treated as FetchType.EAGER (via join fetch or
-	 * subsequent select).  Attributes that are not specified are treated as
-	 * FetchType.LAZY or FetchType.EAGER depending on the attribute's definition
-	 * in metadata.
+	 * Indicates that an {@link jakarta.persistence.EntityGraph} should be interpreted as a JPA "load graph".
+	 * <ul>
+	 * <li>Attributes explicitly specified using an {@link org.hibernate.graph.AttributeNode}s are treated as
+	 * {@link jakarta.persistence.FetchType#EAGER} and fetched via a join or subsequent select.
+	 * <li>Attributes not explicitly specified are treated as {@code FetchType.LAZY} or {@code FetchType.EAGER}
+	 * depending on the mapping of the attribute, instead of forcing {@code FetchType.LAZY}.
+	 * </ul>
 	 */
 	LOAD( "javax.persistence.loadgraph", "jakarta.persistence.loadgraph" );
 
@@ -38,10 +43,20 @@ public enum GraphSemantic {
 		this.jakartaJpaHintName = jakartaJpaHintName;
 	}
 
+	/**
+	 * The hint name that should be used with JPA.
+	 *
+	 * @see jakarta.persistence.Query#setHint(String, Object)
+	 */
 	public String getJpaHintName() {
 		return jpaHintName;
 	}
 
+	/**
+	 * The hint name that should be used with Jakarta Persistence.
+	 *
+	 * @see jakarta.persistence.Query#setHint(String, Object)
+	 */
 	public String getJakartaJpaHintName() {
 		return jakartaJpaHintName;
 	}

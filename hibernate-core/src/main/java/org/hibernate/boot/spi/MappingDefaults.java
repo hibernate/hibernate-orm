@@ -43,7 +43,7 @@ public interface MappingDefaults {
 	 *
 	 * {@code true} indicates that all identifier encountered within this context should be
 	 * quoted.  {@code false} indicates indicates that identifiers within this context are
-	 * onl;y quoted if explicitly quoted.
+	 * only quoted if explicitly quoted.
 	 *
 	 * @return {@code true}/{@code false}
 	 */

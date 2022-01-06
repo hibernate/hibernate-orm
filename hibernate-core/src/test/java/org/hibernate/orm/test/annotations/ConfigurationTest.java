@@ -17,9 +17,6 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 import org.hibernate.query.sqm.UnknownEntityException;
-import org.hibernate.test.annotations.Boat;
-import org.hibernate.test.annotations.Ferry;
-import org.hibernate.test.annotations.Port;
 import org.junit.jupiter.api.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil2.inTransaction;

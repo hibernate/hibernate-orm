@@ -183,7 +183,7 @@ public class InferredBasicValueResolver {
 							);
 							legacyType = jdbcMapping;
 						}
-						else if ( reflectedJtd instanceof SerializableJavaTypeDescriptor || reflectedJtd.getJavaType() instanceof Serializable ) {
+						else if ( reflectedJtd instanceof SerializableJavaTypeDescriptor || Serializable.class.isAssignableFrom( reflectedJtd.getJavaTypeClass() ) ) {
 							legacyType = new SerializableType<>( reflectedJtd );
 							jdbcMapping = legacyType;
 						}

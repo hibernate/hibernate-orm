@@ -156,6 +156,7 @@ public class BinderHelper {
 					clone.setValueGenerationStrategy( property.getValueGenerationStrategy() );
 					embeddedComp.addProperty( clone );
 				}
+				embeddedComp.sortProperties();
 				synthProp = new SyntheticProperty();
 				synthProp.setName( syntheticPropertyName );
 				synthProp.setPersistentClass( ownerEntity );

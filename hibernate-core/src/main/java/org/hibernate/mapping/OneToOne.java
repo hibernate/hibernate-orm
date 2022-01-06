@@ -84,6 +84,7 @@ public class OneToOne extends ToOne {
 		}
 	}
 
+	@Override
 	public void createForeignKey() throws MappingException {
 		// Ensure properties are sorted before we create a foreign key
 		sortProperties();

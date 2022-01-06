@@ -11,7 +11,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.ManyToOne;
 
-import org.hibernate.test.annotations.Country;
+import org.hibernate.orm.test.annotations.Country;
 
 /**
  * @author Emmanuel Bernard

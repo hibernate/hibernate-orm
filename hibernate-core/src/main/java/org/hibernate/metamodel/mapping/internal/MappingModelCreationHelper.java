@@ -43,6 +43,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Resolvable;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
+import org.hibernate.mapping.SortableValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
@@ -1011,7 +1012,11 @@ public class MappingModelCreationHelper {
 				}
 				else {
 					declaringKeyPart = simpleFkTarget;
-					declaringKeyPropertyAccess = ( (PropertyBasedMapping) declaringKeyPart ).getPropertyAccess();
+//					declaringKeyPropertyAccess = ( (PropertyBasedMapping) declaringKeyPart ).getPropertyAccess();
+					declaringKeyPropertyAccess = new ChainedPropertyAccessImpl(
+							attributeMapping.getPropertyAccess(),
+							( (PropertyBasedMapping) declaringKeyPart ).getPropertyAccess()
+					);
 				}
 			}
 			else {
@@ -1220,7 +1225,8 @@ public class MappingModelCreationHelper {
 		if ( bootValueMapping instanceof Collection ) {
 			final Collection collectionBootValueMapping = (Collection) bootValueMapping;
 			componentType = (ComponentType) collectionBootValueMapping.getKey().getType();
-			sorted = false;
+			assert ( (SortableValue) collectionBootValueMapping.getKey() ).isSorted();
+			sorted = ( (SortableValue) collectionBootValueMapping.getKey() ).isSorted();
 		}
 		else {
 			final EntityType entityType = (EntityType) bootValueMapping.getType();
@@ -1230,6 +1236,7 @@ public class MappingModelCreationHelper {
 			if ( identifierOrUniqueKeyType instanceof ComponentType ) {
 				componentType = (ComponentType) identifierOrUniqueKeyType;
 				if ( bootValueMapping instanceof ToOne ) {
+					assert ( (ToOne) bootValueMapping ).isSorted();
 					sorted = ( (ToOne) bootValueMapping ).isSorted();
 				}
 				else {

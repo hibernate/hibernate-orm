@@ -40,7 +40,7 @@ import org.hibernate.type.Type;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class Component extends SimpleValue implements MetaAttributable {
+public class Component extends SimpleValue implements MetaAttributable, SortableValue {
 	private ArrayList<Property> properties = new ArrayList<>();
 	private int[] originalPropertyOrder = ArrayHelper.EMPTY_INT_ARRAY;
 	private String componentClassName;
@@ -504,6 +504,12 @@ public class Component extends SimpleValue implements MetaAttributable {
 		getType();
 	}
 
+	@Override
+	public boolean isSorted() {
+		return originalPropertyOrder != ArrayHelper.EMPTY_INT_ARRAY;
+	}
+
+	@Override
 	public int[] sortProperties() {
 		return sortProperties( false );
 	}

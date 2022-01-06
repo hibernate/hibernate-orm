@@ -169,7 +169,7 @@ public abstract class SimpleValue implements KeyValue {
 		updatability.add( false );
 	}
 
-	protected void sortColumns(int[] originalOrder) {
+	public void sortColumns(int[] originalOrder) {
 		final Selectable[] originalColumns = columns.toArray(new Selectable[0]);
 		final boolean[] originalInsertability = ArrayHelper.toBooleanArray( insertability );
 		final boolean[] originalUpdatability = ArrayHelper.toBooleanArray( updatability );

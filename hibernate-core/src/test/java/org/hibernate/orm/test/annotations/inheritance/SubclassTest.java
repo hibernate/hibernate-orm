@@ -20,9 +20,9 @@ import org.hibernate.query.Query;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.test.annotations.A320;
-import org.hibernate.test.annotations.A320b;
-import org.hibernate.test.annotations.Plane;
+import org.hibernate.orm.test.annotations.A320;
+import org.hibernate.orm.test.annotations.A320b;
+import org.hibernate.orm.test.annotations.Plane;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 

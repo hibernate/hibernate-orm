@@ -12,6 +12,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -75,6 +76,7 @@ public class OrderByThreeEntityTest extends BaseEnversJPAFunctionalTestCase {
 	public static class Key {
 		@Id
 		private Integer id;
+		@Column(name = "val")
 		private String value;
 
 		public Key() {
@@ -134,6 +136,7 @@ public class OrderByThreeEntityTest extends BaseEnversJPAFunctionalTestCase {
 	public static class Item {
 		@Id
 		private Integer id;
+		@Column(name = "val")
 		private String value;
 
 		public Item() {

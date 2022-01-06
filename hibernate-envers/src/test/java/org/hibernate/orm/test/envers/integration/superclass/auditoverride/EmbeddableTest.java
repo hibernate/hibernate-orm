@@ -6,6 +6,7 @@
  */
 package org.hibernate.orm.test.envers.integration.superclass.auditoverride;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
@@ -246,6 +247,7 @@ public class EmbeddableTest extends BaseEnversJPAFunctionalTestCase {
     @Embeddable
     @Audited
     public static class AuditedEmbeddable extends SimpleAbstractMappedSuperclass {
+        @Column(name = "val")
         private Integer value;
 
         public Integer getValue() {

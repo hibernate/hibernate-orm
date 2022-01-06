@@ -13,6 +13,7 @@ import static org.junit.Assert.assertNull;
 import java.util.List;
 
 import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityManager;
@@ -311,6 +312,7 @@ public class BasicSimpleCaseTest extends BaseEntityManagerFunctionalTestCase {
 		@Convert(converter = TestEnumConverter.class)
 		private TestEnum enumField;
 
+		@Column(name = "val")
 		private Long value;
 
 		public long getId() {

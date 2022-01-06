@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
@@ -168,6 +169,7 @@ public abstract class AbstractEntityWithChangesQueryTest extends BaseEnversJPAFu
 		@GeneratedValue
 		private Integer id;
 		private String name;
+		@Column(name = "val")
 		private Integer value;
 
 		Simple() {

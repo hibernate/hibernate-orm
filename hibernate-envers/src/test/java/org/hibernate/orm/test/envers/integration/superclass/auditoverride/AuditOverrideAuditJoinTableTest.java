@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -228,6 +229,7 @@ public class AuditOverrideAuditJoinTableTest extends BaseEnversJPAFunctionalTest
 	@Entity(name = "OOE")
 	@Audited
 	public static class OtherAuditedEntity extends SuperClass {
+		@Column(name = "val")
 		private String value;
 		@NotAudited
 		private String notAuditedValue;
@@ -302,6 +304,7 @@ public class AuditOverrideAuditJoinTableTest extends BaseEnversJPAFunctionalTest
 			)
 	})
 	public static class OtherOverrideAuditedEntity extends NonAuditedSuperClass {
+		@Column(name = "val")
 		private String value;
 		@NotAudited
 		private String notAuditedValue;
@@ -333,6 +336,7 @@ public class AuditOverrideAuditJoinTableTest extends BaseEnversJPAFunctionalTest
 			)
 	})
 	public static class OtherAuditParentsAuditEntity extends NonAuditedSuperClass {
+		@Column(name = "val")
 		private String value;
 		@NotAudited
 		private String notAuditedValue;

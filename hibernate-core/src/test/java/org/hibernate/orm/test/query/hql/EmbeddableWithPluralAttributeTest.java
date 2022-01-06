@@ -3,6 +3,7 @@ package org.hibernate.orm.test.query.hql;
 import java.util.ArrayList;
 import java.util.List;
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -81,6 +82,7 @@ public class EmbeddableWithPluralAttributeTest {
 
 	@Embeddable
 	public static class B {
+		@Column(name = "val")
 		private String value;
 
 		@OneToMany(cascade = CascadeType.ALL)

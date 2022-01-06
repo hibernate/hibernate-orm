@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
@@ -183,6 +184,7 @@ public class ValidityAuditStrategyComponentCollectionRevEndTest extends BaseEnve
 	@Audited
 	public static class Item {
 		private String name;
+		@Column(name = "val")
 		private Integer value;
 
 		Item() {

@@ -881,7 +881,7 @@ public class StandardFunctionTests {
 	public void testFormat(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "select format(e.theTime as 'hh:mm:ss aa') from EntityOfBasics e" )
+					session.createQuery( "select format(e.theTime as 'hh:mm:ss a') from EntityOfBasics e" )
 							.list();
 					session.createQuery(
 							"select format(e.theDate as 'dd/MM/yy'), format(e.theDate as 'EEEE, MMMM dd, yyyy') from EntityOfBasics e" )
@@ -899,7 +899,7 @@ public class StandardFunctionTests {
 					);
 					assertThat(
 							session.createQuery(
-									"select format(e.theTime as '''Hello'', hh:mm:ss aa') from EntityOfBasics e" )
+									"select format(e.theTime as '''Hello'', hh:mm:ss a') from EntityOfBasics e" )
 									.getResultList()
 									.get( 0 ),
 							is( "Hello, 08:10:08 PM" )

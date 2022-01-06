@@ -231,7 +231,7 @@ public class CockroachDialect extends Dialect {
 
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder("format", "experimental_strftime")
 				.setInvariantType( stringType )
-				.setExactArgumentCount( 2 )
+				.setArgumentsValidator( CommonFunctionFactory.formatValidator() )
 				.setArgumentListSignature("(TEMPORAL datetime as STRING pattern)")
 				.register();
 	}

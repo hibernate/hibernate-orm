@@ -6,6 +6,10 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
+
+import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressable;
@@ -21,6 +25,19 @@ public class SqmFormat extends SqmLiteral<String> {
 			SqmExpressable<String> inherentType,
 			NodeBuilder nodeBuilder) {
 		super(value, inherentType, nodeBuilder);
+		try {
+			DateTimeFormatter.ofPattern( value );
+		}
+		catch (IllegalArgumentException ex) {
+			throw new SemanticException(
+					String.format(
+							Locale.ROOT,
+							"Format [%s] does not conform to the expected format of java.time.DateTimeFormatter!",
+							value
+					),
+					ex
+			);
+		}
 	}
 
 	@Override

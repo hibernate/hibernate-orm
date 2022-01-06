@@ -11,13 +11,16 @@ import java.util.List;
 import org.hibernate.annotations.CollectionSemantics;
 
 import jakarta.persistence.Basic;
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 /**
  * @author Steve Ebersole
  */
+@Table(name = "unique_list_owners")
 //tag::collections-custom-semantics-ex[]
 @Entity
 public class TheEntityWithUniqueList {
@@ -27,6 +30,7 @@ public class TheEntityWithUniqueList {
 	@Basic
 	private String name;
 
+	@CollectionTable(name = "unique_list_contents")
 	//tag::collections-custom-semantics-ex[]
 	@ElementCollection
 	@CollectionSemantics(UniqueListSemantic.class)

@@ -731,7 +731,6 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 				//D no equivalent
 
 				//am pm
-				.replace("aa", "tt")
 				.replace("a", "tt")
 
 				//h nothing to do

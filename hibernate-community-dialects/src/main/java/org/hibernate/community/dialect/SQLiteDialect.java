@@ -593,7 +593,6 @@ public class SQLiteDialect extends Dialect {
 				.replace("d", "%d") //?????
 
 				//am pm
-				.replace("aa", "%p") //?????
 				.replace("a", "%p") //?????
 
 				//hour

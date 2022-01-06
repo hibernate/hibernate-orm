@@ -1066,7 +1066,6 @@ public class MySQLDialect extends Dialect {
 				.replace("D", "%j")
 
 				//am pm
-				.replace("aa", "%p")
 				.replace("a", "%p")
 
 				//hour

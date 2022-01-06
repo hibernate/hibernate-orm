@@ -9,20 +9,28 @@ package org.hibernate.dialect.function;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Types;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.function.Supplier;
 
+import org.hibernate.QueryException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.query.ReturnableType;
 
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
+import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
+import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.query.sqm.tree.expression.SqmFormat;
+import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.type.BasicType;
@@ -2342,8 +2350,7 @@ public class CommonFunctionFactory {
 				.setInvariantType(
 						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
 				)
-				.setExactArgumentCount( 2 )
-				.setParameterTypes(TEMPORAL, STRING)
+				.setArgumentsValidator( formatValidator() )
 				.setArgumentListSignature( "(TEMPORAL datetime as STRING pattern)" )
 				.register();
 	}
@@ -2358,8 +2365,7 @@ public class CommonFunctionFactory {
 				.setInvariantType(
 						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
 				)
-				.setExactArgumentCount( 2 )
-				.setParameterTypes(TEMPORAL, STRING)
+				.setArgumentsValidator( formatValidator() )
 				.setArgumentListSignature( "(TEMPORAL datetime as STRING pattern)" )
 				.register();
 	}
@@ -2374,8 +2380,7 @@ public class CommonFunctionFactory {
 				.setInvariantType(
 						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
 				)
-				.setExactArgumentCount( 2 )
-				.setParameterTypes(TEMPORAL, STRING)
+				.setArgumentsValidator( formatValidator() )
 				.setArgumentListSignature( "(TEMPORAL datetime as STRING pattern)" )
 				.register();
 	}
@@ -2390,10 +2395,13 @@ public class CommonFunctionFactory {
 				.setInvariantType(
 						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
 				)
-				.setExactArgumentCount( 2 )
-				.setParameterTypes(TEMPORAL, STRING)
+				.setArgumentsValidator( formatValidator() )
 				.setArgumentListSignature( "(TEMPORAL datetime as STRING pattern)" )
 				.register();
+	}
+
+	public static ArgumentsValidator formatValidator() {
+		return new ArgumentTypesValidator( StandardArgumentsValidators.exactly( 2 ), TEMPORAL, STRING );
 	}
 
 	/**

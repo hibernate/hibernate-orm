@@ -1201,7 +1201,6 @@ public class OracleDialect extends Dialect {
 				.replace("D", fm + "DDD" + fmReset)
 
 				//am pm
-				.replace("aa", "AM")
 				.replace("a", "AM")
 
 				//hour

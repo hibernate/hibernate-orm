@@ -524,7 +524,6 @@ public class InformixDialect extends Dialect {
 				.replace("d", "%e")
 
 				//am pm
-				.replace("aa", "%p") //?????
 				.replace("a", "%p") //?????
 
 				//hour

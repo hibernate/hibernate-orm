@@ -351,7 +351,7 @@ include::{sourcedir}/HQLTest.java[tags=hql-api-basic-usage-example]
 ====
 
 [[hql-api-result-transformers]]
-=== Query result transformers
+==== Query result transformers
 
 A program may hook into the process of building the query results by providing a `org.hibernate.transform.ResultListTransformer` or `org.hibernate.transform.TupleTransformer`.
 

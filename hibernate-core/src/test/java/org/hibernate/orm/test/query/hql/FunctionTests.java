@@ -9,10 +9,13 @@ package org.hibernate.orm.test.query.hql;
 import org.hibernate.QueryException;
 import org.hibernate.dialect.DerbyDialect;
 
+import org.hibernate.dialect.MariaDBDialect;
+import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -711,6 +714,45 @@ public class FunctionTests {
 							.list();
 					session.createQuery("select timestampdiff(hour,e.theTimestamp,current timestamp) from EntityOfBasics e")
 							.list();
+
+					assertThat(
+							session.createQuery("select timestampadd(day, 5, local datetime)").getSingleResult(),
+							is( instanceOf(LocalDateTime.class) )
+					);
+					assertThat(
+							session.createQuery("select timestampdiff(day, local datetime, local datetime)").getSingleResult(),
+							is( instanceOf(Long.class) )
+					);
+				}
+		);
+	}
+
+	@Test @SkipForDialect(dialectClass = MySQLDialect.class) @SkipForDialect(dialectClass = MariaDBDialect.class)
+	public void testDateAddDiffFunctions(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					//we treat dateadd + datediff as synonyms for timestampadd + timestampdiff on most dbs
+					assertThat(
+							session.createQuery("select dateadd(day, 5, local datetime)").getSingleResult(),
+							is( instanceOf(LocalDateTime.class) )
+					);
+					assertThat(
+							session.createQuery("select datediff(day, local date, local datetime)").getSingleResult(),
+							is( instanceOf(Long.class) )
+					);
+				}
+		);
+	}
+
+	@Test @RequiresDialect(MySQLDialect.class)
+	public void testDatediffFunctionMySQL(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					//on MySQL we make room for the native datediff function
+					assertThat(
+							session.createQuery("select datediff(datetime 1999-07-19 00:00, datetime 1999-07-23 23:59)").getSingleResult(),
+							is( instanceOf(Integer.class) )
+					);
 				}
 		);
 	}

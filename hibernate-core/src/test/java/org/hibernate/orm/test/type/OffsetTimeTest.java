@@ -25,6 +25,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
 import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
@@ -234,6 +235,7 @@ public class OffsetTimeTest extends AbstractJavaTimeTypeTest<OffsetTime, OffsetT
 					+ " Since java.sql.Time holds the whole timestamp, not just the time,"
 					+ " its equals() method ends up returning false in this test.")
 	@SkipForDialect(value = HSQLDialect.class, comment = "Timezone issue?")
+	@SkipForDialect(value = H2Dialect.class, comment = "As of version 2.0.202 this seems to be a problem")
 	public void writeThenNativeRead() {
 		super.writeThenNativeRead();
 	}

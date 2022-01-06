@@ -17,6 +17,8 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -30,6 +32,7 @@ import org.hibernate.tool.schema.internal.exec.JdbcContext;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Test;
 
 import org.hibernate.testing.TestForIssue;
@@ -88,6 +91,9 @@ public class TestExtraPhysicalTableTypes {
 	@Test
 	public void testExtraPhysicalTableTypesPropertyEmptyStringValue() throws Exception {
 		buildMetadata( "  " );
+		Dialect dialect = metadata.getDatabase().getDialect();
+		// As of 2.0.202 H2 reports tables as BASE TABLE so we add the type through the dialect
+		Assume.assumeFalse( dialect instanceof H2Dialect && dialect.getVersion().isSameOrAfter( 2 ) );
 		DdlTransactionIsolator ddlTransactionIsolator = buildDdlTransactionIsolator();
 		try {
 			InformationExtractorJdbcDatabaseMetaDataImplTest informationExtractor = buildInformationExtractorJdbcDatabaseMetaDataImplTest(
@@ -102,8 +108,11 @@ public class TestExtraPhysicalTableTypes {
 	}
 
 	@Test
-	public void testNoExtraPhysicalTabeTypesProperty() throws Exception {
+	public void testNoExtraPhysicalTableTypesProperty() throws Exception {
 		buildMetadata( null );
+		Dialect dialect = metadata.getDatabase().getDialect();
+		// As of 2.0.202 H2 reports tables as BASE TABLE so we add the type through the dialect
+		Assume.assumeFalse( dialect instanceof H2Dialect && dialect.getVersion().isSameOrAfter( 2 ) );
 		DdlTransactionIsolator ddlTransactionIsolator = buildDdlTransactionIsolator();
 		try {
 			InformationExtractorJdbcDatabaseMetaDataImplTest informationExtractor = buildInformationExtractorJdbcDatabaseMetaDataImplTest(

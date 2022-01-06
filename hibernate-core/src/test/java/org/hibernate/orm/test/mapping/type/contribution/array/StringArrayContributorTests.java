@@ -19,6 +19,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -41,6 +42,7 @@ import org.assertj.core.util.Arrays;
 @DomainModel(annotatedClasses = Post.class)
 @SessionFactory
 @RequiresDialect(H2Dialect.class)
+@SkipForDialect(dialectClass = H2Dialect.class, majorVersion = 2, reason = "Array support was changed to now be typed")
 public class StringArrayContributorTests {
 	@Test
 	public void simpleTest(SessionFactoryScope scope) {

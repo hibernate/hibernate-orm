@@ -102,7 +102,7 @@ public class Identifier implements Comparable<Identifier> {
 		else if ( quoteOnNonIdentifierChar && !quote ) {
 			// Check the letters to determine if we must quote the text
 			char c = text.charAt( start );
-			if ( !Character.isLetter( c ) && c != '_' ) {
+			if ( !Character.isLetter( c ) && (c != '_' || start == 0) ) {
 				// SQL identifiers must begin with a letter or underscore
 				quote = true;
 			}

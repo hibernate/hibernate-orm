@@ -1075,6 +1075,12 @@ Registering a function isn't hard, but is beyond the scope of this chapter.
 
 Fortunately, every built-in `Dialect` already registers many native functions for the database it supports.
 
+[TIP]
+====
+Try setting the log category `org.hibernate.HQL_FUNCTIONS` to debug.
+Then at startup Hibernate will log a list of type signatures of all registered functions.
+====
+
 [[hql-var-function-example]]
 ====
 [source, JAVA, indent=0]

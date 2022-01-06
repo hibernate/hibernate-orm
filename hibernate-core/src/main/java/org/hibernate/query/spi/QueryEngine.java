@@ -56,7 +56,7 @@ import org.jboss.logging.Logger;
  */
 @Incubating
 public class QueryEngine {
-	private static final Logger LOG_HQL_FUNCTIONS = CoreLogging.logger( "org.hibernate.LOG_HQL_FUNCTIONS" );
+	private static final Logger LOG_HQL_FUNCTIONS = CoreLogging.logger( "org.hibernate.HQL_FUNCTIONS" );
 
 	public static QueryEngine from(SessionFactoryImplementor sessionFactory, MetadataImplementor metadata) {
 		final QueryEngineOptions queryEngineOptions = sessionFactory.getSessionFactoryOptions();
@@ -175,14 +175,9 @@ public class QueryEngine {
 			contributor.contributeFunctions( functionContributions );
 		}
 
-		final boolean showSQLFunctions = ConfigurationHelper.getBoolean(
-				AvailableSettings.SHOW_HQL_FUNCTIONS,
-				serviceRegistry.getService( ConfigurationService.class ).getSettings(),
-				false
-		);
-		if ( showSQLFunctions && LOG_HQL_FUNCTIONS.isInfoEnabled() ) {
+		if ( LOG_HQL_FUNCTIONS.isDebugEnabled() ) {
 			sqmFunctionRegistry.getFunctionsByName().forEach(
-					entry -> LOG_HQL_FUNCTIONS.info( entry.getValue().getSignature( entry.getKey() ) )
+					entry -> LOG_HQL_FUNCTIONS.debug( entry.getValue().getSignature( entry.getKey() ) )
 			);
 		}
 	}

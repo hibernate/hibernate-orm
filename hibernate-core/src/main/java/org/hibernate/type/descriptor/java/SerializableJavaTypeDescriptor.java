@@ -124,13 +124,13 @@ public class SerializableJavaTypeDescriptor<T extends Serializable> extends Abst
 		if ( value == null ) {
 			return null;
 		}
-		else if ( byte[].class.isInstance( value ) ) {
+		else if (value instanceof byte[]) {
 			return fromBytes( (byte[]) value );
 		}
-		else if ( InputStream.class.isInstance( value ) ) {
+		else if (value instanceof InputStream) {
 			return fromBytes( DataHelper.extractBytes( (InputStream) value ) );
 		}
-		else if ( Blob.class.isInstance( value ) ) {
+		else if (value instanceof Blob) {
 			try {
 				return fromBytes( DataHelper.extractBytes( ((Blob) value).getBinaryStream() ) );
 			}

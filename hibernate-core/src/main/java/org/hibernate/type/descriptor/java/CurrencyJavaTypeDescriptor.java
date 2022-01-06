@@ -48,7 +48,7 @@ public class CurrencyJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<
 		if ( value == null ) {
 			return null;
 		}
-		if ( String.class.isInstance( value ) ) {
+		if (value instanceof String) {
 			return Currency.getInstance( (String) value );
 		}
 		throw unknownWrap( value.getClass() );

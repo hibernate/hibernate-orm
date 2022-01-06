@@ -136,11 +136,11 @@ public class CalendarJavaTypeDescriptor extends AbstractTemporalJavaTypeDescript
 		if ( value == null ) {
 			return null;
 		}
-		if ( Calendar.class.isInstance( value ) ) {
+		if (value instanceof Calendar) {
 			return (Calendar) value;
 		}
 
-		if ( ! java.util.Date.class.isInstance( value ) ) {
+		if ( !(value instanceof java.util.Date)) {
 			throw unknownWrap( value.getClass() );
 		}
 

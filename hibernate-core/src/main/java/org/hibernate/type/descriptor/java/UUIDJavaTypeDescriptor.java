@@ -73,13 +73,13 @@ public class UUIDJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<UUID
 		if ( value == null ) {
 			return null;
 		}
-		if ( UUID.class.isInstance( value ) ) {
+		if (value instanceof UUID) {
 			return PassThroughTransformer.INSTANCE.parse( value );
 		}
-		if ( String.class.isInstance( value ) ) {
+		if (value instanceof String) {
 			return ToStringTransformer.INSTANCE.parse( value );
 		}
-		if ( byte[].class.isInstance( value ) ) {
+		if (value instanceof byte[]) {
 			return ToBytesTransformer.INSTANCE.parse( value );
 		}
 		throw unknownWrap( value.getClass() );

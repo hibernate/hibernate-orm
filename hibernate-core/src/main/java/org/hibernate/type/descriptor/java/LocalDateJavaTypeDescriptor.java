@@ -120,11 +120,11 @@ public class LocalDateJavaTypeDescriptor extends AbstractTemporalJavaTypeDescrip
 			return null;
 		}
 
-		if ( LocalDate.class.isInstance( value ) ) {
+		if (value instanceof LocalDate) {
 			return (LocalDate) value;
 		}
 
-		if ( Timestamp.class.isInstance( value ) ) {
+		if (value instanceof Timestamp) {
 			final Timestamp ts = (Timestamp) value;
 			/*
 			 * Workaround for HHH-13266 (JDK-8061577).
@@ -136,18 +136,18 @@ public class LocalDateJavaTypeDescriptor extends AbstractTemporalJavaTypeDescrip
 			return ts.toLocalDateTime().toLocalDate();
 		}
 
-		if ( Long.class.isInstance( value ) ) {
+		if (value instanceof Long) {
 			final Instant instant = Instant.ofEpochMilli( (Long) value );
 			return LocalDateTime.ofInstant( instant, ZoneId.systemDefault() ).toLocalDate();
 		}
 
-		if ( Calendar.class.isInstance( value ) ) {
+		if (value instanceof Calendar) {
 			final Calendar calendar = (Calendar) value;
 			return LocalDateTime.ofInstant( calendar.toInstant(), calendar.getTimeZone().toZoneId() ).toLocalDate();
 		}
 
-		if ( Date.class.isInstance( value ) ) {
-			if ( java.sql.Date.class.isInstance( value ) ) {
+		if (value instanceof Date) {
+			if (value instanceof java.sql.Date) {
 				return ((java.sql.Date) value).toLocalDate();
 			}
 			else {

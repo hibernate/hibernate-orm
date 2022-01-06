@@ -52,6 +52,9 @@ public class FloatTypeDescriptor extends AbstractClassJavaTypeDescriptor<Float> 
 		if ( Float.class.isAssignableFrom( type ) ) {
 			return (X) value;
 		}
+		if ( Double.class.isAssignableFrom( type ) ) {
+			return (X) Double.valueOf( value.doubleValue() );
+		}
 		if ( Byte.class.isAssignableFrom( type ) ) {
 			return (X) Byte.valueOf( value.byteValue() );
 		}
@@ -63,9 +66,6 @@ public class FloatTypeDescriptor extends AbstractClassJavaTypeDescriptor<Float> 
 		}
 		if ( Long.class.isAssignableFrom( type ) ) {
 			return (X) Long.valueOf( value.longValue() );
-		}
-		if ( Double.class.isAssignableFrom( type ) ) {
-			return (X) Double.valueOf( value.doubleValue() );
 		}
 		if ( BigInteger.class.isAssignableFrom( type ) ) {
 			return (X) BigInteger.valueOf( value.longValue() );
@@ -83,13 +83,13 @@ public class FloatTypeDescriptor extends AbstractClassJavaTypeDescriptor<Float> 
 		if ( value == null ) {
 			return null;
 		}
-		if ( Float.class.isInstance( value ) ) {
+		if (value instanceof Float) {
 			return (Float) value;
 		}
-		if ( Number.class.isInstance( value ) ) {
+		if (value instanceof Number) {
 			return ( (Number) value ).floatValue();
 		}
-		else if ( String.class.isInstance( value ) ) {
+		else if (value instanceof String) {
 			return Float.valueOf( ( (String) value ) );
 		}
 		throw unknownWrap( value.getClass() );

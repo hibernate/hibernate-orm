@@ -115,19 +115,19 @@ public class DateJavaTypeDescriptor extends AbstractTemporalJavaTypeDescriptor<D
 			return null;
 		}
 		if ( java.sql.Date.class.isAssignableFrom( type ) ) {
-			final java.sql.Date rtn = java.sql.Date.class.isInstance( value )
+			final java.sql.Date rtn = value instanceof java.sql.Date
 					? ( java.sql.Date ) value
 					: new java.sql.Date( value.getTime() );
 			return (X) rtn;
 		}
 		if ( java.sql.Time.class.isAssignableFrom( type ) ) {
-			final java.sql.Time rtn = java.sql.Time.class.isInstance( value )
+			final java.sql.Time rtn = value instanceof java.sql.Time
 					? ( java.sql.Time ) value
 					: new java.sql.Time( value.getTime() );
 			return (X) rtn;
 		}
 		if ( java.sql.Timestamp.class.isAssignableFrom( type ) ) {
-			final java.sql.Timestamp rtn = java.sql.Timestamp.class.isInstance( value )
+			final java.sql.Timestamp rtn = value instanceof Timestamp
 					? ( java.sql.Timestamp ) value
 					: new java.sql.Timestamp( value.getTime() );
 			return (X) rtn;
@@ -150,15 +150,15 @@ public class DateJavaTypeDescriptor extends AbstractTemporalJavaTypeDescriptor<D
 		if ( value == null ) {
 			return null;
 		}
-		if ( Date.class.isInstance( value ) ) {
+		if (value instanceof Date) {
 			return (Date) value;
 		}
 
-		if ( Long.class.isInstance( value ) ) {
+		if (value instanceof Long) {
 			return new Date( (Long) value );
 		}
 
-		if ( Calendar.class.isInstance( value ) ) {
+		if (value instanceof Calendar) {
 			return new Date( ( (Calendar) value ).getTimeInMillis() );
 		}
 

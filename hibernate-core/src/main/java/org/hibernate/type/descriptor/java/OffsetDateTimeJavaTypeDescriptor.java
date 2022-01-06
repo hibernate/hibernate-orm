@@ -155,16 +155,16 @@ public class OffsetDateTimeJavaTypeDescriptor extends AbstractTemporalJavaTypeDe
 			return null;
 		}
 
-		if ( OffsetDateTime.class.isInstance( value ) ) {
+		if (value instanceof OffsetDateTime) {
 			return (OffsetDateTime) value;
 		}
 
-		if ( ZonedDateTime.class.isInstance( value ) ) {
+		if (value instanceof ZonedDateTime) {
 			ZonedDateTime zonedDateTime = (ZonedDateTime) value;
 			return OffsetDateTime.of( zonedDateTime.toLocalDateTime(), zonedDateTime.getOffset() );
 		}
 
-		if ( Timestamp.class.isInstance( value ) ) {
+		if (value instanceof Timestamp) {
 			final Timestamp ts = (Timestamp) value;
 			/*
 			 * This works around two bugs:
@@ -184,16 +184,16 @@ public class OffsetDateTimeJavaTypeDescriptor extends AbstractTemporalJavaTypeDe
 			}
 		}
 
-		if ( Date.class.isInstance( value ) ) {
+		if (value instanceof Date) {
 			final Date date = (Date) value;
 			return OffsetDateTime.ofInstant( date.toInstant(), ZoneId.systemDefault() );
 		}
 
-		if ( Long.class.isInstance( value ) ) {
+		if (value instanceof Long) {
 			return OffsetDateTime.ofInstant( Instant.ofEpochMilli( (Long) value ), ZoneId.systemDefault() );
 		}
 
-		if ( Calendar.class.isInstance( value ) ) {
+		if (value instanceof Calendar) {
 			final Calendar calendar = (Calendar) value;
 			return OffsetDateTime.ofInstant( calendar.toInstant(), calendar.getTimeZone().toZoneId() );
 		}

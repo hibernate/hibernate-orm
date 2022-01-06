@@ -53,6 +53,9 @@ public class DoubleJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<Do
 		if ( Double.class.isAssignableFrom( type ) ) {
 			return (X) value;
 		}
+		if ( Float.class.isAssignableFrom( type ) ) {
+			return (X) Float.valueOf( value.floatValue() );
+		}
 		if ( Byte.class.isAssignableFrom( type ) ) {
 			return (X) Byte.valueOf( value.byteValue() );
 		}
@@ -64,9 +67,6 @@ public class DoubleJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<Do
 		}
 		if ( Long.class.isAssignableFrom( type ) ) {
 			return (X) Long.valueOf( value.longValue() );
-		}
-		if ( Float.class.isAssignableFrom( type ) ) {
-			return (X) Float.valueOf( value.floatValue() );
 		}
 		if ( BigInteger.class.isAssignableFrom( type ) ) {
 			return (X) BigInteger.valueOf( value.longValue() );

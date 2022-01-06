@@ -60,7 +60,7 @@ public class UrlJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<URL> 
 		if ( value == null ) {
 			return null;
 		}
-		if ( CharSequence.class.isInstance( value ) ) {
+		if (value instanceof CharSequence) {
 			return fromString( (CharSequence) value );
 		}
 		throw unknownWrap( value.getClass() );

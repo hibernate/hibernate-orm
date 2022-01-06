@@ -83,13 +83,13 @@ public class ShortJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<Sho
 		if ( value == null ) {
 			return null;
 		}
-		if ( Short.class.isInstance( value ) ) {
+		if (value instanceof Short) {
 			return (Short) value;
 		}
-		if ( Number.class.isInstance( value ) ) {
+		if (value instanceof Number) {
 			return ( (Number) value ).shortValue();
 		}
-		if ( String.class.isInstance( value ) ) {
+		if (value instanceof String) {
 			return Short.valueOf( ( (String) value ) );
 		}
 		throw unknownWrap( value.getClass() );

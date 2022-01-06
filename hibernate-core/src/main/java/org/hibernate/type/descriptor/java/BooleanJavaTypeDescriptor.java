@@ -85,18 +85,18 @@ public class BooleanJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<B
 		if ( value == null ) {
 			return null;
 		}
-		if ( Boolean.class.isInstance( value ) ) {
+		if (value instanceof Boolean) {
 			return (Boolean) value;
 		}
-		if ( Number.class.isInstance( value ) ) {
+		if (value instanceof Number) {
 			final int intValue = ( (Number) value ).intValue();
 			return intValue != 0;
 		}
-		if ( Character.class.isInstance( value ) ) {
+		if (value instanceof Character) {
 			return isTrue( (Character) value );
 		}
-		if ( String.class.isInstance( value ) ) {
-			return isTrue((String) value);
+		if (value instanceof String) {
+			return isTrue( (String) value );
 		}
 		throw unknownWrap( value.getClass() );
 	}

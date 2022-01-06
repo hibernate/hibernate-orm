@@ -81,16 +81,16 @@ public class CharacterArrayJavaTypeDescriptor extends AbstractClassJavaTypeDescr
 		if ( value == null ) {
 			return null;
 		}
-		if ( Character[].class.isInstance( value ) ) {
+		if (value instanceof Character[]) {
 			return (Character[]) value;
 		}
-		if ( String.class.isInstance( value ) ) {
+		if (value instanceof String) {
 			return wrapChars( ( (String) value ).toCharArray() );
 		}
-		if ( Clob.class.isInstance( value ) ) {
+		if (value instanceof Clob) {
 			return wrapChars( DataHelper.extractString( ( (Clob) value ) ).toCharArray() );
 		}
-		if ( Reader.class.isInstance( value ) ) {
+		if (value instanceof Reader) {
 			return wrapChars( DataHelper.extractString( (Reader) value ).toCharArray() );
 		}
 		throw unknownWrap( value.getClass() );

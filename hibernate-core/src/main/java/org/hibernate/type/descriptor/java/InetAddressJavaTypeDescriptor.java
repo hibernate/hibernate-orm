@@ -71,10 +71,10 @@ public class InetAddressJavaTypeDescriptor extends AbstractClassJavaTypeDescript
 		if ( value == null ) {
 			return null;
 		}
-		if ( InetAddress.class.isInstance( value ) ) {
+		if (value instanceof InetAddress) {
 			return (InetAddress) value;
 		}
-		if ( byte[].class.isInstance( value ) ) {
+		if (value instanceof byte[]) {
 			try {
 				return InetAddress.getByAddress( (byte[]) value );
 			}
@@ -82,7 +82,7 @@ public class InetAddressJavaTypeDescriptor extends AbstractClassJavaTypeDescript
 				throw new IllegalArgumentException( e );
 			}
 		}
-		if ( String.class.isInstance( value ) ) {
+		if (value instanceof String) {
 			try {
 				return InetAddress.getByName( (String) value );
 			}

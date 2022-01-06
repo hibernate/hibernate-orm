@@ -56,10 +56,10 @@ public class ClassJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<Cla
 		if ( value == null ) {
 			return null;
 		}
-		if ( Class.class.isInstance( value ) ) {
+		if (value instanceof Class) {
 			return (Class) value;
 		}
-		if ( CharSequence.class.isInstance( value ) ) {
+		if (value instanceof CharSequence) {
 			return fromString( (CharSequence) value );
 		}
 		throw unknownWrap( value.getClass() );

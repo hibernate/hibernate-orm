@@ -110,7 +110,7 @@ public class BlobJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<Blob
 
 		try {
 			if ( BinaryStream.class.isAssignableFrom( type ) ) {
-				if ( BlobImplementer.class.isInstance( value ) ) {
+				if (value instanceof BlobImplementer) {
 					// if the incoming Blob is a wrapper, just pass along its BinaryStream
 					return (X) ( (BlobImplementer) value ).getUnderlyingStream();
 				}
@@ -120,7 +120,7 @@ public class BlobJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<Blob
 				}
 			}
 			else if ( byte[].class.isAssignableFrom( type )) {
-				if ( BlobImplementer.class.isInstance( value ) ) {
+				if (value instanceof BlobImplementer) {
 					// if the incoming Blob is a wrapper, just grab the bytes from its BinaryStream
 					return (X) ( (BlobImplementer) value ).getUnderlyingStream().getBytes();
 				}
@@ -130,7 +130,7 @@ public class BlobJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<Blob
 				}
 			}
 			else if (Blob.class.isAssignableFrom( type )) {
-				final Blob blob =  WrappedBlob.class.isInstance( value )
+				final Blob blob =  value instanceof WrappedBlob
 						? ( (WrappedBlob) value ).getWrappedBlob()
 						: value;
 				return (X) blob;

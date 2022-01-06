@@ -15,10 +15,18 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.sql.Date;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaTypeDescriptor;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 
 /**
@@ -187,6 +195,37 @@ public class LiteralTests {
 					session.createQuery( "from EntityOfBasics e1 where e1.theTime = time 12:30" ).list();
 					session.createQuery( "from EntityOfBasics e1 where e1.theTime = time 12:30:00" ).list();
 					session.createQuery( "from EntityOfBasics e1 where e1.theTime = time 12:30:00.123" ).list();
+				}
+		);
+	}
+
+	@Test
+	public void testSelectDatetimeLiterals(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertThat( session.createQuery( "select datetime 1999-07-23 23:59" ).getSingleResult(),
+							is( instanceOf(LocalDateTime.class) ) );
+					assertThat( session.createQuery( "select date 1999-07-23" ).getSingleResult(),
+							is( instanceOf(LocalDate.class) ) );
+					assertThat( session.createQuery( "select time 23:59" ).getSingleResult(),
+							is( instanceOf(LocalTime.class) ) );
+
+					assertThat( session.createQuery( "select local datetime" ).getSingleResult(),
+							is( instanceOf(LocalDateTime.class) ) );
+					assertThat( session.createQuery( "select local date" ).getSingleResult(),
+							is( instanceOf(LocalDate.class) ) );
+					assertThat( session.createQuery( "select local time" ).getSingleResult(),
+							is( instanceOf(LocalTime.class) ) );
+
+					assertThat( session.createQuery( "select instant" ).getSingleResult(),
+							is( instanceOf(Instant.class) ) );
+
+					assertThat( session.createQuery( "select current timestamp" ).getSingleResult(),
+							is( instanceOf(Timestamp.class) ) );
+					assertThat( session.createQuery( "select current date" ).getSingleResult(),
+							is( instanceOf(Date.class) ) );
+					assertThat( session.createQuery( "select current time" ).getSingleResult(),
+							is( instanceOf(Time.class) ) );
 				}
 		);
 	}

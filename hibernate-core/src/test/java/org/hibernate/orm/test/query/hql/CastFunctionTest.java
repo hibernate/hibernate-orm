@@ -23,31 +23,18 @@ import org.junit.jupiter.api.Test;
 @DomainModel( annotatedClasses = CastFunctionTest.MyEntity.class )
 @SessionFactory
 public class CastFunctionTest {
+
 	@Test
 	public void testStringCasting(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
-					final Dialect dialect = session.getFactory().getJdbcServices().getDialect();
-					if ( DerbyDialect.class.isInstance( dialect ) ) {
-
-						// the conversion from DOUBLE to VARCHAR is not supported by Derby,
-						// using the short name
-						session.createQuery( "select cast(char(e.theLostNumber) as string) from MyEntity e" ).list();
-						// using the java class name
-						session.createQuery( "select cast(char(e.theLostNumber) as java.lang.String) from MyEntity e" ).list();
-						// using the fqn Hibernate Type name
-						session.createQuery( "select cast(char(e.theLostNumber) as org.hibernate.type.StringType) from MyEntity e" )
-								.list();
-					}
-					else {
-						// using the short name
-						session.createQuery( "select cast(e.theLostNumber as string) from MyEntity e" ).list();
-						// using the java class name
-						session.createQuery( "select cast(e.theLostNumber as java.lang.String) from MyEntity e" ).list();
-						// using the fqn Hibernate Type name
-						session.createQuery( "select cast(e.theLostNumber as org.hibernate.type.StringType) from MyEntity e" )
-								.list();
-					}
+					// using the short name
+					session.createQuery( "select cast(e.theLostNumber as string) from MyEntity e" ).list();
+					// using the java class name
+					session.createQuery( "select cast(e.theLostNumber as java.lang.String) from MyEntity e" ).list();
+					// using the fqn Hibernate Type name
+					session.createQuery( "select cast(e.theLostNumber as org.hibernate.type.StringType) from MyEntity e" )
+							.list();
 				}
 		);
 	}

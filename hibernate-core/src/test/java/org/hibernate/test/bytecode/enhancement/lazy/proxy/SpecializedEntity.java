@@ -45,7 +45,7 @@ public class SpecializedEntity implements Serializable {
 		this.id = id;
 	}
 
-	@Column(name="Value")
+	@Column(name="TheValue")
 	String value;
 
 	@ManyToOne(fetch=FetchType.LAZY)

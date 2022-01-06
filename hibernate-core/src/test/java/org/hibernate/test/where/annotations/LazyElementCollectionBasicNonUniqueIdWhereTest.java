@@ -78,35 +78,35 @@ public class LazyElementCollectionBasicNonUniqueIdWhereTest extends BaseCoreFunc
 					session.createSQLQuery(
 							"create table COLLECTION_TABLE( " +
 									"MAIN_ID integer not null, MAIN_CODE varchar(10) not null, " +
-									"VALUE varchar(10) not null, VALUE_CODE varchar(10) not null, " +
-									"primary key (MAIN_ID, MAIN_CODE, VALUE, VALUE_CODE))"
+									"VAL varchar(10) not null, VALUE_CODE varchar(10) not null, " +
+									"primary key (MAIN_ID, MAIN_CODE, VAL, VALUE_CODE))"
 					).executeUpdate();
 
 					session.createSQLQuery(
-							"insert into COLLECTION_TABLE(MAIN_ID, MAIN_CODE, VALUE, VALUE_CODE) " +
+							"insert into COLLECTION_TABLE(MAIN_ID, MAIN_CODE, VAL, VALUE_CODE) " +
 									"VALUES( 1, 'MATERIAL', 'high', 'RATING' )"
 					).executeUpdate();
 					session.createSQLQuery(
-							"insert into COLLECTION_TABLE(MAIN_ID, MAIN_CODE, VALUE, VALUE_CODE) " +
+							"insert into COLLECTION_TABLE(MAIN_ID, MAIN_CODE, VAL, VALUE_CODE) " +
 									"VALUES( 1, 'MATERIAL', 'medium', 'RATING' )"
 					).executeUpdate();
 					session.createSQLQuery(
-							"insert into COLLECTION_TABLE(MAIN_ID, MAIN_CODE, VALUE, VALUE_CODE) " +
+							"insert into COLLECTION_TABLE(MAIN_ID, MAIN_CODE, VAL, VALUE_CODE) " +
 									"VALUES( 1, 'MATERIAL', 'low', 'RATING' )"
 					).executeUpdate();
 
 					session.createSQLQuery(
-							"insert into COLLECTION_TABLE(MAIN_ID, MAIN_CODE, VALUE, VALUE_CODE) " +
+							"insert into COLLECTION_TABLE(MAIN_ID, MAIN_CODE, VAL, VALUE_CODE) " +
 									"VALUES( 1, 'MATERIAL', 'medium', 'SIZE' )"
 					).executeUpdate();
 
 					session.createSQLQuery(
-							"insert into COLLECTION_TABLE(MAIN_ID, MAIN_CODE, VALUE, VALUE_CODE) " +
+							"insert into COLLECTION_TABLE(MAIN_ID, MAIN_CODE, VAL, VALUE_CODE) " +
 									"VALUES( 1, 'BUILDING', 'high', 'RATING' )"
 					).executeUpdate();
 
 					session.createSQLQuery(
-							"insert into COLLECTION_TABLE(MAIN_ID, MAIN_CODE, VALUE, VALUE_CODE) " +
+							"insert into COLLECTION_TABLE(MAIN_ID, MAIN_CODE, VAL, VALUE_CODE) " +
 									"VALUES( 1, 'BUILDING', 'small', 'SIZE' )"
 					).executeUpdate();
 
@@ -226,7 +226,7 @@ public class LazyElementCollectionBasicNonUniqueIdWhereTest extends BaseCoreFunc
 				name = "COLLECTION_TABLE",
 				joinColumns = { @JoinColumn( name = "MAIN_ID" ) }
 		)
-		@Column( name="VALUE")
+		@Column( name="VAL")
 		@Where( clause = "MAIN_CODE='MATERIAL' AND VALUE_CODE='SIZE'")
 		@Immutable
 		public Set<String> getSizesFromCombined() {
@@ -283,7 +283,7 @@ public class LazyElementCollectionBasicNonUniqueIdWhereTest extends BaseCoreFunc
 				name = "COLLECTION_TABLE",
 				joinColumns = { @JoinColumn( name = "MAIN_ID" ) }
 		)
-		@Column( name="VALUE")
+		@Column( name="VAL")
 		@Where( clause = "MAIN_CODE='BUILDING' AND VALUE_CODE='SIZE'")
 		@Immutable
 		public Set<String> getSizesFromCombined() {
@@ -298,7 +298,7 @@ public class LazyElementCollectionBasicNonUniqueIdWhereTest extends BaseCoreFunc
 				name = "COLLECTION_TABLE",
 				joinColumns = { @JoinColumn( name = "MAIN_ID" ) }
 		)
-		@Column( name="VALUE")
+		@Column( name="VAL")
 		@Where( clause = "MAIN_CODE='BUILDING' AND VALUE_CODE='RATING'" )
 		@Immutable
 		public Set<String> getRatingsFromCombined() {

@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.schemaupdate;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
@@ -144,6 +145,7 @@ public class SchemaUpdateSchemaNameTest extends BaseUnitTestCase {
 	public static abstract class AbstractSimple {
 		@Id
 		private Integer id;
+		@Column(name = "val")
 		private Integer value;
 
 		public Integer getId() {

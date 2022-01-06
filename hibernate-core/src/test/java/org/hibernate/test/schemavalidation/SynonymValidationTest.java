@@ -138,6 +138,7 @@ public class SynonymValidationTest extends BaseNonConfigCoreFunctionalTestCase {
 		@Column(nullable = false)
 		private String key;
 
+		@Column(name = "val")
 		private String value;
 
 		public Long getId() {
@@ -175,6 +176,7 @@ public class SynonymValidationTest extends BaseNonConfigCoreFunctionalTestCase {
 		@Column(nullable = false)
 		private String key;
 
+		@Column(name = "val")
 		private String value;
 
 		public Long getId() {

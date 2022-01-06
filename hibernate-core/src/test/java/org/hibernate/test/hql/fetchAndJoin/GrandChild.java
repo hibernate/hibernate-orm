@@ -23,6 +23,7 @@
  */
 package org.hibernate.test.hql.fetchAndJoin;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -35,6 +36,7 @@ public class GrandChild {
 	@GeneratedValue
 	private long id;
 
+	@Column(name = "val")
 	private String value;
 
 	public GrandChild() {

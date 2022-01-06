@@ -110,9 +110,10 @@ public class ViewValidationTest extends BaseCoreFunctionalTestCase {
 		@GeneratedValue
 		private Long id;
 
-		@Column(nullable = false)
+		@Column(name = "the_key", nullable = false)
 		private String key;
 
+		@Column(name = "val")
 		private String value;
 
 		public Long getId() {
@@ -147,9 +148,10 @@ public class ViewValidationTest extends BaseCoreFunctionalTestCase {
 		@GeneratedValue
 		private Long id;
 
-		@Column(nullable = false)
+		@Column(name = "the_key", nullable = false)
 		private String key;
 
+		@Column(name = "val")
 		private String value;
 
 		public Long getId() {

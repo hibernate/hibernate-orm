@@ -18,6 +18,7 @@ import javax.persistence.Id;
 @Entity
 public class SerialNumber {
 	private SerialNumberPk id;
+	@Column(name = "val")
 	private String value;
 
 	public boolean equals(Object o) {

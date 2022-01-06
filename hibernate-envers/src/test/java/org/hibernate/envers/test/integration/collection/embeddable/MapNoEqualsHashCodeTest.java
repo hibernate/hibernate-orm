@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
@@ -171,6 +172,7 @@ public class MapNoEqualsHashCodeTest extends BaseEnversJPAFunctionalTestCase {
 
 	@Embeddable
 	public static class Emb implements Serializable {
+		@Column(name = "val")
 		private String value;
 
 		public Emb() {

@@ -49,13 +49,13 @@ public class SqmMapEntryResult<K, V, R extends Map.Entry<K, V>> implements Domai
 		final DomainResultAssembler<K> keyAssembler = keyResult.createResultAssembler( null, creationState );
 		final DomainResultAssembler<V> valueAssembler = valueResult.createResultAssembler( null, creationState );
 
-		return new DomainResultAssembler<R>() {
+		return new DomainResultAssembler<>() {
 			@Override
 			public R assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {
 				final K key = keyAssembler.assemble( rowProcessingState, options );
 				final V value = valueAssembler.assemble( rowProcessingState, options );
 				//noinspection unchecked
-				return (R) new MapEntryImpl<>( key, value );
+				return (R) Map.entry( key, value );
 			}
 
 			@Override
@@ -70,28 +70,4 @@ public class SqmMapEntryResult<K, V, R extends Map.Entry<K, V>> implements Domai
 		return javaTypeDescriptor;
 	}
 
-	public static class MapEntryImpl<K,V> implements Map.Entry<K,V> {
-		private final K key;
-		private final V value;
-
-		public MapEntryImpl(K key, V value) {
-			this.key = key;
-			this.value = value;
-		}
-
-		@Override
-		public K getKey() {
-			return key;
-		}
-
-		@Override
-		public V getValue() {
-			return value;
-		}
-
-		@Override
-		public V setValue(V value) {
-			throw new UnsupportedOperationException();
-		}
-	}
 }

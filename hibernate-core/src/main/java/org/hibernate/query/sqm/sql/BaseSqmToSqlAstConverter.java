@@ -830,6 +830,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				if ( assignmentValueParameter != null ) {
 					consumeSqmParameter(
 							assignmentValueParameter,
+							assignedPathInterpretation.getExpressionType(),
 							(index, jdbcParameter) -> assignments.add(
 									new Assignment(
 											targetColumnReferences.get( index ),
@@ -4102,15 +4103,20 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	protected Expression consumeSqmParameter(
 			SqmParameter<?> sqmParameter,
-			BiConsumer<Integer,JdbcParameter> jdbcParameterConsumer) {
-		final MappingModelExpressable<?> valueMapping = determineValueMapping( sqmParameter );
+			BiConsumer<Integer, JdbcParameter> jdbcParameterConsumer) {
+		return consumeSqmParameter( sqmParameter, determineValueMapping( sqmParameter ), jdbcParameterConsumer );
+	}
 
+	protected Expression consumeSqmParameter(
+			SqmParameter<?> sqmParameter,
+			MappingModelExpressable<?> valueMapping,
+			BiConsumer<Integer, JdbcParameter> jdbcParameterConsumer) {
 		final List<JdbcParameter> jdbcParametersForSqm = new ArrayList<>();
 
 		resolveSqmParameter(
 				sqmParameter,
 				valueMapping,
-				(index,jdbcParameter) -> {
+				(index, jdbcParameter) -> {
 					jdbcParameterConsumer.accept( index, jdbcParameter );
 					jdbcParametersForSqm.add( jdbcParameter );
 				}

@@ -1419,10 +1419,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	 */
 	@Override
 	public <T> SqmExpression<T> value(T value, SqmExpression<? extends T> typeInferenceSource) {
-		if ( typeInferenceSource == null ) {
-			return value( value );
-		}
-
 		if ( criteriaValueHandlingMode == ValueHandlingMode.INLINE ) {
 			return literal( value, typeInferenceSource );
 		}

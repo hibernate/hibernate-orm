@@ -6,38 +6,45 @@
  */
 package org.hibernate.orm.test.mapping.converted.converter;
 
-import jakarta.persistence.AttributeConverter;
-import jakarta.persistence.Convert;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-
 import org.hibernate.SessionFactory;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.BindableType;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.query.Query;
 import org.hibernate.type.Type;
 
 import org.hibernate.testing.TestForIssue;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaUpdate;
+import jakarta.persistence.criteria.Root;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue( jiraKey = "HHH-12662")
-public class ConverterTest extends BaseEntityManagerFunctionalTestCase {
+@Jpa(
+		annotatedClasses = {
+				ConverterTest.Photo.class,
+				Employee.class
+		}
+)
+@TestForIssue(jiraKey = "HHH-12662")
+public class ConverterTest {
 
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] { Photo.class };
-	}
-
-	@Override
-	protected void afterEntityManagerFactoryBuilt() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	@BeforeEach
+	public void setUp(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Photo photo = new Photo();
 			photo.setId( 1 );
 			photo.setName( "Dorobantul" );
@@ -47,16 +54,93 @@ public class ConverterTest extends BaseEntityManagerFunctionalTestCase {
 		} );
 	}
 
+	@AfterEach
+	public void tearDown(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					entityManager.createQuery( "delete from Photo" ).executeUpdate();
+					entityManager.createQuery( "delete from Employee" ).executeUpdate();
+				}
+		);
+	}
+
 	@Test
-	public void testJPQLUpperDbValueBindParameter() throws Exception {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testConverterCorrectlyApplied(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					Employee expected = new Employee( 1, "1.2" );
+					entityManager.persist( expected );
+				}
+		);
+
+		scope.inTransaction(
+				entityManager -> {
+					entityManager
+							.createQuery(
+									"update Employee e set e.age='1.8.0' WHERE e.id = 1" )
+							.executeUpdate();
+					entityManager.flush();
+				}
+		);
+
+		scope.inTransaction(
+				entityManager -> {
+					Employee emp = entityManager.find( Employee.class, 1 );
+					assertNotNull( emp );
+					assertEquals( "180", emp.getAge(), "The converter was not properly applied" );
+				}
+		);
+
+		scope.inTransaction(
+				entityManager -> {
+					entityManager
+							.createQuery(
+									"update Employee e set e.age=:age  WHERE e.id = 1" )
+							.setParameter( "age", "1.8.1" )
+							.executeUpdate();
+					entityManager.flush();
+				}
+		);
+
+		scope.inTransaction(
+				entityManager -> {
+					Employee emp = entityManager.find( Employee.class, 1 );
+					assertNotNull( emp );
+					assertEquals( "181", emp.getAge(), "The converter was not properly applied" );
+				}
+		);
+
+		scope.inTransaction(
+				entityManager -> {
+					CriteriaBuilder cbuilder = entityManager.getCriteriaBuilder();
+					CriteriaUpdate<Employee> cd = cbuilder
+							.createCriteriaUpdate( Employee.class );
+					Root<Employee> employee = cd.from( Employee.class );
+					cd.set( "age", "1.1.3" );
+					cd.where( cbuilder.equal( employee.get( "id" ), 1 ) );
+					entityManager.createQuery( cd ).executeUpdate();
+				}
+		);
+
+		scope.inTransaction(
+				entityManager -> {
+					Employee emp = entityManager.find( Employee.class, 1 );
+					assertNotNull( emp );
+					assertEquals( "113", emp.getAge(), "The converter was not properly applied" );
+				}
+		);
+	}
+
+	@Test
+	public void testJPQLUpperDbValueBindParameter(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			//tag::basic-attribute-converter-query-parameter-converter-dbdata-example[]
 			Photo photo = entityManager.createQuery(
-				"select p " +
-				"from Photo p " +
-				"where upper(caption) = upper(:caption) ", Photo.class )
-			.setParameter( "caption", "Nicolae Grigorescu" )
-			.getSingleResult();
+							"select p " +
+									"from Photo p " +
+									"where upper(caption) = upper(:caption) ", Photo.class )
+					.setParameter( "caption", "Nicolae Grigorescu" )
+					.getSingleResult();
 			//end::basic-attribute-converter-query-parameter-converter-dbdata-example[]
 
 			assertEquals( "Dorobantul", photo.getName() );
@@ -64,8 +148,8 @@ public class ConverterTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void testJPQLUpperAttributeValueBindParameterType() throws Exception {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testJPQLUpperAttributeValueBindParameterType(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			//tag::basic-attribute-converter-query-parameter-converter-object-example[]
 			SessionFactory sessionFactory = entityManager.getEntityManagerFactory()
 					.unwrap( SessionFactory.class );
@@ -77,12 +161,16 @@ public class ConverterTest extends BaseEntityManagerFunctionalTestCase {
 					.getPropertyType( "caption" );
 
 			Photo photo = (Photo) entityManager.createQuery(
-				"select p " +
-				"from Photo p " +
-				"where upper(caption) = upper(:caption) ", Photo.class )
-			.unwrap( Query.class )
-			.setParameter( "caption", new Caption("Nicolae Grigorescu"), (BindableType) captionType )
-			.getSingleResult();
+							"select p " +
+									"from Photo p " +
+									"where upper(caption) = upper(:caption) ", Photo.class )
+					.unwrap( Query.class )
+					.setParameter(
+							"caption",
+							new Caption( "Nicolae Grigorescu" ),
+							(BindableType) captionType
+					)
+					.getSingleResult();
 			//end::basic-attribute-converter-query-parameter-converter-object-example[]
 
 			assertEquals( "Dorobantul", photo.getName() );
@@ -155,7 +243,7 @@ public class ConverterTest extends BaseEntityManagerFunctionalTestCase {
 		private Caption caption;
 
 		//Getters and setters are omitted for brevity
-	//end::basic-attribute-converter-query-parameter-entity-example[]
+		//end::basic-attribute-converter-query-parameter-entity-example[]
 
 		public Integer getId() {
 			return id;
@@ -180,7 +268,7 @@ public class ConverterTest extends BaseEntityManagerFunctionalTestCase {
 		public void setCaption(Caption caption) {
 			this.caption = caption;
 		}
-	//tag::basic-attribute-converter-query-parameter-entity-example[]
+		//tag::basic-attribute-converter-query-parameter-entity-example[]
 	}
 	//end::basic-attribute-converter-query-parameter-entity-example[]
 }

@@ -11,6 +11,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.PersistenceException;
 
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -98,14 +99,14 @@ public class AttributeConverterTypeAdapter<T> extends AbstractSingleColumnStanda
 			String name,
 			SharedSessionContractImplementor session) throws SQLException {
 		final AttributeConverter<T, Object> converter = attributeConverter.getConverterBean().getBeanInstance();
-		final Object converted = converter.convertToDatabaseColumn( value );
+		final Object converted = getConvertedValue( converter, value );
 		valueBinder.bind( st, converted, name, session );
 	}
 
 	@Override
 	protected void nullSafeSet(PreparedStatement st, T value, int index, WrapperOptions options) throws SQLException {
 		final AttributeConverter<T, Object> converter = attributeConverter.getConverterBean().getBeanInstance();
-		final Object converted = converter.convertToDatabaseColumn( value );
+		final Object converted = getConvertedValue( converter, value );
 		valueBinder.bind( st, converted, index, options );
 	}
 
@@ -123,5 +124,17 @@ public class AttributeConverterTypeAdapter<T> extends AbstractSingleColumnStanda
 	@Override
 	public String toString() {
 		return description;
+	}
+
+	private Object getConvertedValue(AttributeConverter<T, Object> converter, T value) {
+		try {
+			return converter.convertToDatabaseColumn( value );
+		}
+		catch (PersistenceException pe) {
+			throw pe;
+		}
+		catch (RuntimeException re) {
+			throw new PersistenceException( "Error attempting to apply AttributeConverter", re );
+		}
 	}
 }

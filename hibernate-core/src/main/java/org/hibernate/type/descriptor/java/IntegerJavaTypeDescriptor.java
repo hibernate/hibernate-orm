@@ -187,7 +187,7 @@ public class IntegerJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<I
 		throw new CoercionException(
 				String.format(
 						Locale.ROOT,
-						"Cannot coerce vale `%s` [%s] as Integer",
+						"Cannot coerce value `%s` [%s] as Integer",
 						value,
 						value.getClass().getName()
 				)

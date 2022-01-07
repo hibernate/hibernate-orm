@@ -141,6 +141,9 @@ public class QuoteTest extends BaseNonConfigCoreFunctionalTestCase {
 		@Id @GeneratedValue
 		@Column(name = "`ID`")
 		protected long id;
+
+		@Column(name = "_id")
+		protected long _id;
 		
 		@ManyToOne(fetch = FetchType.LAZY)
 		@JoinColumn(name = "`ParentID`")

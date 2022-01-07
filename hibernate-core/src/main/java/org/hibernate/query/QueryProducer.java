@@ -11,11 +11,15 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaUpdate;
 
 /**
- * Contract for things that can produce Query instances.  Expected implementors include
- * Session and StatelessSession.
- * <p/>
- * It defines these query creation methods in the signature defined by EntityManager.  In a way
- * it defines a subset of the EntityManager contract to be reused by both Session and StatelessSession.
+ * Contract for things that can produce instances of {@link Query} and {@link NativeQuery}.
+ * Implementors include {@link org.hibernate.Session} and {@link org.hibernate.StatelessSession}.
+ * Many operations of the interface have the same or very similar signatures to operations of
+ * {@link jakarta.persistence.EntityManager}. They are declared here to allow reuse by
+ * {@code StatelessSession}.
+ * <p>
+ * Unlike the corresponding operations of {@code EntityManager}, operations for creating untyped
+ * instances of {@code Query} are all marked as deprecated. Clients must migrate to the use of
+ * the equivalent operations which accept a {@link Class} and return a typed {@code Query}.
  *
  * @author Steve Ebersole
  */
@@ -26,12 +30,12 @@ public interface QueryProducer {
 	 *
 	 * @param queryString The HQL/JPQL query
 	 *
-	 * @return The Query instance for manipulation and execution
+	 * @return The {@link Query} instance for manipulation and execution
 	 *
 	 * @see jakarta.persistence.EntityManager#createQuery(String)
 	 * @deprecated use {@link #createQuery(String, Class)} or {@link #createStatement(String)}
 	 */
-	@Deprecated @SuppressWarnings("rawtypes")
+	@Deprecated(since = "6.0") @SuppressWarnings("rawtypes")
 	Query createQuery(String queryString);
 
 	/**
@@ -66,7 +70,7 @@ public interface QueryProducer {
 	 *
 	 * @param name the name of a pre-defined, named query
 	 *
-	 * @return The Query instance for manipulation and execution
+	 * @return The {@link Query} instance for manipulation and execution
 	 *
 	 * @throws IllegalArgumentException if a query has not been
 	 * defined with the given name or if the query string is
@@ -76,7 +80,7 @@ public interface QueryProducer {
 	 * 
 	 * @deprecated use {@link #createNamedQuery(String, Class)} or {@link #createNamedStatement(String)}
 	 */
-	@Deprecated @SuppressWarnings("rawtypes")
+	@Deprecated(since = "6.0") @SuppressWarnings("rawtypes")
 	Query createNamedQuery(String name);
 
 	/**
@@ -86,7 +90,7 @@ public interface QueryProducer {
 	 * @param name the name of a query defined in metadata
 	 * @param resultClass the type of the query result
 	 *
-	 * @return The Query instance for manipulation and execution
+	 * @return The {@link Query} instance for manipulation and execution
 	 *
 	 * @throws IllegalArgumentException if a query has not been
 	 * defined with the given name or if the query string is
@@ -104,7 +108,7 @@ public interface QueryProducer {
 	 *
 	 * @param name the name of a pre-defined, named query
 	 *
-	 * @return The Query instance for manipulation and execution
+	 * @return The {@link Query} instance for manipulation and execution
 	 *
 	 * @throws IllegalArgumentException if a query has not been
 	 * defined with the given name or if the query string is
@@ -117,13 +121,13 @@ public interface QueryProducer {
 	 *
 	 * @param sqlString a native SQL query string
 	 *
-	 * @return The NativeQuery instance for manipulation and execution
+	 * @return The {@link NativeQuery} instance for manipulation and execution
 	 *
 	 * @see jakarta.persistence.EntityManager#createNativeQuery(String)
 	 *
 	 * @deprecated use {@link #createNativeQuery(String, Class)}
 	 */
-	@Deprecated @SuppressWarnings("rawtypes")
+	@Deprecated(since = "6.0") @SuppressWarnings("rawtypes")
 	NativeQuery createNativeQuery(String sqlString);
 
 	/**
@@ -133,7 +137,7 @@ public interface QueryProducer {
 	 * If the given class is an entity class, this method is equivalent to
 	 * {@code createNativeQuery(sqlString).addEntity("alias1", resultClass)}.
 	 *
-	 * @param sqlString Native (SQL) query string
+	 * @param sqlString The native (SQL) query string
 	 * @param resultClass The Java entity type to map results to
 	 *
 	 * @return The NativeQuery instance for manipulation and execution
@@ -153,7 +157,7 @@ public interface QueryProducer {
 	 * @param resultClass The Java entity type to map results to
 	 * @param tableAlias The table alias for columns in the result set
 	 *
-	 * @return The NativeQuery instance for manipulation and execution
+	 * @return The {@link NativeQuery} instance for manipulation and execution
 	 *
 	 * @see jakarta.persistence.EntityManager#createNativeQuery(String,Class)
 	 */
@@ -163,7 +167,7 @@ public interface QueryProducer {
 	 * Create a {@link NativeQuery} instance for the given native (SQL) query using
 	 * implicit mapping to the specified Java type.
 	 *
-	 * @param sqlString Native (SQL) query string
+	 * @param sqlString The native (SQL) query string
 	 * @param resultSetMappingName The explicit result mapping name
 	 *
 	 * @return The NativeQuery instance for manipulation and execution
@@ -173,17 +177,17 @@ public interface QueryProducer {
 	 * 
 	 * @deprecated use {@link #createNativeQuery(String, String, Class)}
 	 */
-	@Deprecated @SuppressWarnings("rawtypes")
+	@Deprecated(since = "6.0") @SuppressWarnings("rawtypes")
 	NativeQuery createNativeQuery(String sqlString, String resultSetMappingName);
 
 	/**
 	 * Create a {@link NativeQuery} instance for the given native (SQL) query using
 	 * implicit mapping to the specified Java type.
 	 *
-	 * @param sqlString Native (SQL) query string
+	 * @param sqlString The native (SQL) query string
 	 * @param resultSetMappingName The explicit result mapping name
 	 *
-	 * @return The NativeQuery instance for manipulation and execution
+	 * @return The {@link NativeQuery} instance for manipulation and execution
 	 *
 	 * @see jakarta.persistence.EntityManager#createNativeQuery(String,Class)
 	 * @see jakarta.persistence.SqlResultSetMapping
@@ -225,7 +229,7 @@ public interface QueryProducer {
 	 *
 	 * @param queryName the name of a pre-defined, named query
 	 *
-	 * @return The Query instance for manipulation and execution
+	 * @return The {@link Query} instance for manipulation and execution
 	 *
 	 * @throws IllegalArgumentException if a query has not been
 	 * defined with the given name or if the query string is
@@ -233,30 +237,30 @@ public interface QueryProducer {
 	 *
 	 * @deprecated use {@link #createNamedQuery(String, Class)}
 	c	 */
-	@Deprecated @SuppressWarnings("rawtypes")
+	@Deprecated(since = "6.0") @SuppressWarnings("rawtypes")
 	Query getNamedQuery(String queryName);
 
 	/**
-	 * Get a NativeQuery instance for a named native SQL query
+	 * Get a {@link NativeQuery} instance for a named native SQL query
 	 *
 	 * @param name The name of the pre-defined query
 	 *
-	 * @return The NativeQuery instance for manipulation and execution
+	 * @return The {@link NativeQuery} instance for manipulation and execution
 	 *
 	 * @deprecated use {@link #createNamedQuery(String, Class)}
 	 */
-	@Deprecated @SuppressWarnings("rawtypes")
+	@Deprecated(since = "6.0") @SuppressWarnings("rawtypes")
 	NativeQuery getNamedNativeQuery(String name);
 
 	/**
-	 * Get a NativeQuery instance for a named native SQL query
+	 * Get a {@link NativeQuery} instance for a named native SQL query
 	 *
 	 * @param name The name of the pre-defined query
 	 *
-	 * @return The NativeQuery instance for manipulation and execution
+	 * @return The {@link NativeQuery} instance for manipulation and execution
 	 *
 	 * @deprecated use {@link #createNamedQuery(String, Class)}
 	 */
-	@Deprecated @SuppressWarnings("rawtypes")
+	@Deprecated(since = "6.0") @SuppressWarnings("rawtypes")
 	NativeQuery getNamedNativeQuery(String name, String resultSetMapping);
 }

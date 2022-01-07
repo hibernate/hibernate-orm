@@ -2388,11 +2388,26 @@ public class SessionImpl
 	}
 
 	@Override
-	public <T> T getReference(Class<T> entityClass, Object primaryKey) {
+	public <T> T getReference(Class<T> entityClass, Object id) {
 		checkOpen();
 
 		try {
-			return byId( entityClass ).getReference( primaryKey );
+			return byId( entityClass ).getReference( id );
+		}
+		catch ( MappingException | TypeMismatchException | ClassCastException e ) {
+			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage(), e ) );
+		}
+		catch ( RuntimeException e ) {
+			throw getExceptionConverter().convert( e );
+		}
+	}
+
+	@Override
+	public Object getReference(String entityName, Object id) {
+		checkOpen();
+
+		try {
+			return byId( entityName ).getReference( id );
 		}
 		catch ( MappingException | TypeMismatchException | ClassCastException e ) {
 			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage(), e ) );

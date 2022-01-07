@@ -7,6 +7,7 @@
 package org.hibernate.metamodel.model.convert.internal;
 
 import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.PersistenceException;
 
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
 import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
@@ -81,12 +82,28 @@ public class JpaAttributeConverterImpl<O,R> implements JpaAttributeConverter<O,R
 
 	@Override
 	public O toDomainValue(R relationalForm) {
-		return attributeConverterBean.getBeanInstance().convertToEntityAttribute( relationalForm );
+		try {
+			return attributeConverterBean.getBeanInstance().convertToEntityAttribute( relationalForm );
+		}
+		catch (PersistenceException pe) {
+			throw pe;
+		}
+		catch (RuntimeException re) {
+			throw new PersistenceException( "Error attempting to apply AttributeConverter", re );
+		}
 	}
 
 	@Override
 	public R toRelationalValue(O domainForm) {
-		return attributeConverterBean.getBeanInstance().convertToDatabaseColumn( domainForm );
+		try {
+			return attributeConverterBean.getBeanInstance().convertToDatabaseColumn( domainForm );
+		}
+		catch (PersistenceException pe) {
+			throw pe;
+		}
+		catch (RuntimeException re) {
+			throw new PersistenceException( "Error attempting to apply AttributeConverter", re );
+		}
 	}
 
 	@Override

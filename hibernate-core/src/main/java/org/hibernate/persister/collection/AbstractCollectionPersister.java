@@ -1089,7 +1089,6 @@ public abstract class AbstractCollectionPersister
 			getElementType().nullSafeSet( st, elt, i, elementColumnIsInPrimaryKey, session );
 		}
 		return i + elementColumnAliases.length;
-
 	}
 
 	/**

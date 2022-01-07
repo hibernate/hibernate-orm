@@ -52,13 +52,13 @@ public interface SharedSessionContract extends QueryProducer, Closeable, Seriali
 	boolean isConnected();
 
 	/**
-	 * Begin a unit of work and return the associated {@link Transaction} object.  If a new underlying transaction is
-	 * required, begin the transaction.  Otherwise continue the new work in the context of the existing underlying
-	 * transaction.
+	 * Begin a unit of work and return the associated {@link Transaction} object.
+	 * If a new underlying transaction is required, begin the transaction. Otherwise,
+	 * continue the new work in the context of the existing underlying transaction.
 	 *
-	 * @return a Transaction instance
+	 * @return a {@link Transaction} instance
 	 *
-	 * @see #getTransaction
+	 * @see #getTransaction()
 	 */
 	Transaction beginTransaction();
 
@@ -70,7 +70,7 @@ public interface SharedSessionContract extends QueryProducer, Closeable, Seriali
 	Transaction getTransaction();
 
 	/**
-	 * Gets a ProcedureCall based on a named template
+	 * Obtain a {@link ProcedureCall} based on a named template
 	 *
 	 * @param name The name given to the template
 	 *
@@ -81,7 +81,7 @@ public interface SharedSessionContract extends QueryProducer, Closeable, Seriali
 	ProcedureCall getNamedProcedureCall(String name);
 
 	/**
-	 * Creates a call to a stored procedure.
+	 * Create a {@link ProcedureCall} to a stored procedure.
 	 *
 	 * @param procedureName The name of the procedure.
 	 *
@@ -90,8 +90,8 @@ public interface SharedSessionContract extends QueryProducer, Closeable, Seriali
 	ProcedureCall createStoredProcedureCall(String procedureName);
 
 	/**
-	 * Creates a call to a stored procedure with specific result set entity mappings.  Each class named
-	 * is considered a "root return".
+	 * Create a {@link ProcedureCall} to a stored procedure with the given result
+	 * set entity mappings. Each given class is considered a "root return".
 	 *
 	 * @param procedureName The name of the procedure.
 	 * @param resultClasses The entity(s) to map the result on to.
@@ -101,7 +101,8 @@ public interface SharedSessionContract extends QueryProducer, Closeable, Seriali
 	ProcedureCall createStoredProcedureCall(String procedureName, Class<?>... resultClasses);
 
 	/**
-	 * Creates a call to a stored procedure with specific result set entity mappings.
+	 * Create a {@link ProcedureCall} to a stored procedure with the given result
+	 * set entity mappings.
 	 *
 	 * @param procedureName The name of the procedure.
 	 * @param resultSetMappings The explicit result set mapping(s) to use for mapping the results
@@ -111,7 +112,7 @@ public interface SharedSessionContract extends QueryProducer, Closeable, Seriali
 	ProcedureCall createStoredProcedureCall(String procedureName, String... resultSetMappings);
 
 	/**
-	 * Gets a ProcedureCall based on a named template
+	 * Obtain a {@link ProcedureCall} based on a named template
 	 *
 	 * @param name The name given to the template
 	 *
@@ -122,7 +123,7 @@ public interface SharedSessionContract extends QueryProducer, Closeable, Seriali
 	ProcedureCall createNamedStoredProcedureQuery(String name);
 
 	/**
-	 * Creates a call to a stored procedure.
+	 * Create a {@link ProcedureCall} to a stored procedure.
 	 *
 	 * @param procedureName The name of the procedure.
 	 *
@@ -131,8 +132,8 @@ public interface SharedSessionContract extends QueryProducer, Closeable, Seriali
 	ProcedureCall createStoredProcedureQuery(String procedureName);
 
 	/**
-	 * Creates a call to a stored procedure with specific result set entity mappings.  Each class named
-	 * is considered a "root return".
+	 * Create a {@link ProcedureCall} to a stored procedure with the given result
+	 * set entity mappings. Each given class is considered a "root return".
 	 *
 	 * @param procedureName The name of the procedure.
 	 * @param resultClasses The entity(s) to map the result on to.
@@ -142,7 +143,8 @@ public interface SharedSessionContract extends QueryProducer, Closeable, Seriali
 	ProcedureCall createStoredProcedureQuery(String procedureName, Class<?>... resultClasses);
 
 	/**
-	 * Creates a call to a stored procedure with specific result set entity mappings.
+	 * Create a {@link ProcedureCall} to a stored procedure with the given result set
+	 * entity mappings.
 	 *
 	 * @param procedureName The name of the procedure.
 	 * @param resultSetMappings The explicit result set mapping(s) to use for mapping the results
@@ -152,10 +154,9 @@ public interface SharedSessionContract extends QueryProducer, Closeable, Seriali
 	ProcedureCall createStoredProcedureQuery(String procedureName, String... resultSetMappings);
 
 	/**
-	 * Get the Session-level JDBC batch size for the current Session.
-	 * Overrides the SessionFactory JDBC batch size defined by the {@code hibernate.default_batch_fetch_size} configuration property for the scope of the current {@code Session}.
+	 * Get the session-level JDBC batch size for the current session.
 	 *
-	 * @return Session-level JDBC batch size
+	 * @return the current session-level JDBC batch size
 	 *
 	 * @since 5.2
 	 *
@@ -165,10 +166,12 @@ public interface SharedSessionContract extends QueryProducer, Closeable, Seriali
 	Integer getJdbcBatchSize();
 
 	/**
-	 * Set the Session-level JDBC batch size.
-	 * Overrides the SessionFactory JDBC batch size defined by the {@code hibernate.default_batch_fetch_size} configuration property for the scope of the current {@code Session}.
+	 * Set the session-level JDBC batch size. Overrides the
+	 * {@link org.hibernate.boot.spi.SessionFactoryOptions#getJdbcBatchSize() factory-level}
+	 * JDBC batch size defined by the configuration property
+	 * {@link org.hibernate.cfg.AvailableSettings#STATEMENT_BATCH_SIZE}.
 	 *
-	 * @param jdbcBatchSize Session-level JDBC batch size
+	 * @param jdbcBatchSize the new session-level JDBC batch size
 	 *
 	 * @since 5.2
 	 *
@@ -178,36 +181,38 @@ public interface SharedSessionContract extends QueryProducer, Closeable, Seriali
 	void setJdbcBatchSize(Integer jdbcBatchSize);
 
 	/**
-	 * Return an instance of {@link CriteriaBuilder}
+	 * Return an instance of {@link CriteriaBuilder}.
 	 *
 	 * @return an instance of CriteriaBuilder
-	 * @throws IllegalStateException if the StatelessSession has been closed
+	 *
+	 * @throws IllegalStateException if the session has been closed
 	 */
 	HibernateCriteriaBuilder getCriteriaBuilder();
 
 	/**
-	 * Controller for allowing users to perform JDBC related work using the Connection managed by this Session.
+	 * Perform work using the {@link java.sql.Connection} underlying by this session.
 	 *
 	 * @param work The work to be performed.
+	 *
 	 * @throws HibernateException Generally indicates wrapped {@link java.sql.SQLException}
 	 */
 	default void doWork(Work work) throws HibernateException {
-		throw new UnsupportedOperationException( "The doWork method has not been implemented in this implementation of org.hibernate.engine.spi.SharedSessionContractImplementor" );
+		throw new UnsupportedOperationException();
 	}
 
 	/**
-	 * Controller for allowing users to perform JDBC related work using the Connection managed by this Session.  After
-	 * execution returns the result of the {@link ReturningWork#execute} call.
+	 * Perform work using the {@link java.sql.Connection} underlying by this session,
+	 * and return a result.
 	 *
 	 * @param work The work to be performed.
 	 * @param <T> The type of the result returned from the work
 	 *
-	 * @return the result from calling {@link ReturningWork#execute}.
+	 * @return the result of calling {@link ReturningWork#execute}.
 	 *
 	 * @throws HibernateException Generally indicates wrapped {@link java.sql.SQLException}
 	 */
 	default <T> T doReturningWork(ReturningWork<T> work) throws HibernateException {
-		throw new UnsupportedOperationException( "The doReturningWork method has not been implemented in this implementation of org.hibernate.engine.spi.SharedSessionContractImplementor" );
+		throw new UnsupportedOperationException();
 	}
 
 }

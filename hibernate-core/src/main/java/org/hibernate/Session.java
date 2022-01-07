@@ -120,7 +120,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 *
 	 * @throws HibernateException if changes could not be synchronized with the database
 	 */
-	void flush() throws HibernateException;
+	void flush();
 
 	/**
 	 * Set the current {@link FlushMode flush mode} for this session.
@@ -222,7 +222,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 *
 	 * @throws HibernateException if there was a problem cancelling the query
 	 */
-	void cancelQuery() throws HibernateException;
+	void cancelQuery();
 
 	/**
 	 * Does this session contain any changes which must be synchronized with
@@ -232,7 +232,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @return {@code true} if the session contains pending changes; {@code false} otherwise.
 	 * @throws HibernateException could not perform dirtying checking
 	 */
-	boolean isDirty() throws HibernateException;
+	boolean isDirty();
 
 	/**
 	 * Will entities and proxies that are loaded into this session be made 

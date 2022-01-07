@@ -803,8 +803,13 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public <T> T getReference(Class<T> entityClass, Object primaryKey) {
-		return delegate.getReference( entityClass, primaryKey );
+	public <T> T getReference(Class<T> entityClass, Object id) {
+		return delegate.getReference( entityClass, id );
+	}
+
+	@Override
+	public Object getReference(String entityName, Object id) {
+		return delegate.getReference( entityName, id );
 	}
 
 	@Override

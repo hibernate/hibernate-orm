@@ -9,7 +9,7 @@ package org.hibernate.annotations;
 import org.hibernate.usertype.UserType;
 
 /**
- * Form of {@link CustomType} for use with map-keys
+ * Form of {@link Type} for use with map-keys
  *
  * @since 6.0
  */
@@ -17,14 +17,14 @@ public @interface MapKeyCustomType {
 	/**
 	 * The custom type implementor class
 	 *
-	 * @see CustomType#value
+	 * @see Type#value
 	 */
 	Class<? extends UserType<?>> value();
 
 	/**
 	 * Parameters for the custom type
 	 *
-	 * @see CustomType#parameters
+	 * @see Type#parameters
 	 */
 	Parameter[] parameters() default {};
 }

@@ -10,11 +10,13 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Properties;
 import java.util.function.Function;
 
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.annotations.CollectionTypeRegistration;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.boot.internal.ClassmateContext;
 import org.hibernate.boot.internal.NamedProcedureCallDefinitionImpl;
@@ -49,9 +51,11 @@ import org.hibernate.mapping.Join;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
+import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.EmbeddableInstantiator;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.usertype.UserCollectionType;
 
 import jakarta.persistence.AttributeConverter;
 
@@ -323,6 +327,10 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	void registerEmbeddableInstantiator(Class<?> embeddableType, Class<? extends EmbeddableInstantiator> instantiator);
 	Class<? extends EmbeddableInstantiator> findRegisteredEmbeddableInstantiator(Class<?> embeddableType);
 
+	void addCollectionTypeRegistration(CollectionTypeRegistration registrationAnnotation);
+	void addCollectionTypeRegistration(CollectionClassification classification, CollectionTypeRegistrationDescriptor descriptor);
+	CollectionTypeRegistrationDescriptor findCollectionTypeRegistration(CollectionClassification classification);
+
 	interface DelayedPropertyReferenceHandler extends Serializable {
 		void process(InFlightMetadataCollector metadataCollector);
 	}
@@ -371,4 +379,23 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 			Table primaryTable,
 			EntityTableXref superEntityTableXref);
 	Map<String,Join> getJoins(String entityName);
+
+
+	class CollectionTypeRegistrationDescriptor {
+		private final Class<? extends UserCollectionType> implementation;
+		private final Properties parameters;
+
+		public CollectionTypeRegistrationDescriptor(Class<? extends UserCollectionType> implementation, Properties parameters) {
+			this.implementation = implementation;
+			this.parameters = parameters;
+		}
+
+		public Class<? extends UserCollectionType> getImplementation() {
+			return implementation;
+		}
+
+		public Properties getParameters() {
+			return parameters;
+		}
+	}
 }

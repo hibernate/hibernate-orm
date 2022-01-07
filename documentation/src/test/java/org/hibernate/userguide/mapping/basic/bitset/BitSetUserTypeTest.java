@@ -8,7 +8,7 @@ package org.hibernate.userguide.mapping.basic.bitset;
 
 import java.util.BitSet;
 
-import org.hibernate.annotations.CustomType;
+import org.hibernate.annotations.Type;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -107,7 +107,7 @@ public class BitSetUserTypeTest extends BaseCoreFunctionalTestCase {
 		@Id
 		private Integer id;
 
-		@CustomType(BitSetUserType.class)
+		@Type(BitSetUserType.class)
 		@Column(name = "bitset_col")
 		private BitSet bitSet;
 

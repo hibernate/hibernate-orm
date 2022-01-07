@@ -19,7 +19,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.annotations.CustomType;
+import org.hibernate.annotations.Type;
 import org.hibernate.annotations.JavaType;
 import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.Target;
@@ -385,7 +385,7 @@ class PropertyContainer {
 		else if ( p.isAnnotationPresent( Basic.class ) ) {
 			return true;
 		}
-		else if ( p.isAnnotationPresent( CustomType.class ) ) {
+		else if ( p.isAnnotationPresent( Type.class ) ) {
 			return true;
 		}
 		else if ( p.isAnnotationPresent( JavaType.class ) ) {

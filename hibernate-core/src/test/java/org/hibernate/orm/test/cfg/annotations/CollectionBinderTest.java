@@ -6,10 +6,6 @@
  */
 package org.hibernate.orm.test.cfg.annotations;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
@@ -22,14 +18,19 @@ import org.hibernate.cfg.AnnotatedJoinColumn;
 import org.hibernate.cfg.InheritanceState;
 import org.hibernate.cfg.PropertyHolder;
 import org.hibernate.cfg.annotations.CollectionBinder;
-import org.hibernate.collection.internal.StandardBagSemantics;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
+
 import org.mockito.Mockito;
+
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Test for HHH-10106
@@ -56,7 +57,7 @@ public class CollectionBinderTest extends BaseUnitTestCase {
 
 		String expectMessage = "Association [abc] for entity [CollectionBinderTest] references unmapped class [List]";
 		try {
-			new CollectionBinder( (t) -> StandardBagSemantics.INSTANCE, false, buildingContext ) {
+			new CollectionBinder( null, false, buildingContext ) {
 
 				{
 					final PropertyHolder propertyHolder = Mockito.mock(PropertyHolder.class);

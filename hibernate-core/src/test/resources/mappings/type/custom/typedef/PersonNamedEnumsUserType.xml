@@ -10,10 +10,10 @@
 "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping>
-  <typedef name="gender" class="org.hibernate.orm.test.mapping.type.custom.typedef.NamedEnumUserType">
+  <typedef name="gender" class="org.hibernate.orm.test.mapping.type.typedef.NamedEnumUserType">
   	<param name="enumClass">org.hibernate.orm.test.mapping.converted.enums.Gender</param>
   </typedef>
-  <typedef name="hairColor" class="org.hibernate.orm.test.mapping.type.custom.typedef.NamedEnumUserType">
+  <typedef name="hairColor" class="org.hibernate.orm.test.mapping.type.typedef.NamedEnumUserType">
   	<param name="enumClass">org.hibernate.orm.test.mapping.converted.enums.HairColor</param>
   </typedef>
   

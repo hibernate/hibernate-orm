@@ -6,11 +6,15 @@
  */
 package org.hibernate.cfg.annotations;
 
+import java.util.function.Supplier;
+
 import org.hibernate.annotations.OrderBy;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.SemanticsResolver;
+import org.hibernate.resource.beans.spi.ManagedBean;
+import org.hibernate.usertype.UserCollectionType;
 
 /**
  * Bind a set.
@@ -18,13 +22,13 @@ import org.hibernate.mapping.SemanticsResolver;
  * @author Matthew Inger
  */
 public class SetBinder extends CollectionBinder {
-	public SetBinder(SemanticsResolver semanticsResolver, boolean sorted, MetadataBuildingContext buildingContext) {
-		super( semanticsResolver, sorted, buildingContext );
+	public SetBinder(Supplier<ManagedBean<? extends UserCollectionType>> customTypeBeanResolver, boolean sorted, MetadataBuildingContext buildingContext) {
+		super( customTypeBeanResolver, sorted, buildingContext );
 	}
 
 	@Override
 	protected Collection createCollection(PersistentClass persistentClass) {
-		return new org.hibernate.mapping.Set( getSemanticsResolver(), persistentClass, getBuildingContext() );
+		return new org.hibernate.mapping.Set( getCustomTypeBeanResolver(), persistentClass, getBuildingContext() );
 	}
 
 	@Override

@@ -13,6 +13,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentBag;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -23,14 +24,19 @@ public class BagType extends CollectionType {
 	}
 
 	@Override
-	public PersistentCollection instantiate(SharedSessionContractImplementor session, CollectionPersister persister, Object key)
-	throws HibernateException {
-		return new PersistentBag( session );
+	public CollectionClassification getCollectionClassification() {
+		return CollectionClassification.BAG;
 	}
 
 	@Override
 	public Class getReturnedClass() {
 		return Collection.class;
+	}
+
+	@Override
+	public PersistentCollection instantiate(SharedSessionContractImplementor session, CollectionPersister persister, Object key)
+	throws HibernateException {
+		return new PersistentBag( session );
 	}
 
 	@Override

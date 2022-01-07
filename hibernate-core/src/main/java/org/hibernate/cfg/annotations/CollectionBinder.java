@@ -13,19 +13,19 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
+import java.util.function.Supplier;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
+import org.hibernate.annotations.Bag;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cache;
-import org.hibernate.annotations.CollectionClassificationType;
 import org.hibernate.annotations.CollectionId;
 import org.hibernate.annotations.CollectionIdJavaType;
 import org.hibernate.annotations.CollectionIdJdbcType;
 import org.hibernate.annotations.CollectionIdJdbcTypeCode;
-import org.hibernate.annotations.CollectionSemantics;
 import org.hibernate.annotations.CollectionType;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.Filter;
@@ -60,19 +60,22 @@ import org.hibernate.annotations.Where;
 import org.hibernate.annotations.WhereJoinTable;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.boot.BootLogging;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.TypeDefinition;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
+import org.hibernate.boot.spi.InFlightMetadataCollector.CollectionTypeRegistrationDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AccessType;
 import org.hibernate.cfg.AnnotatedClassType;
+import org.hibernate.cfg.AnnotatedColumn;
+import org.hibernate.cfg.AnnotatedJoinColumn;
 import org.hibernate.cfg.AnnotationBinder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.BinderHelper;
 import org.hibernate.cfg.CollectionPropertyHolder;
 import org.hibernate.cfg.CollectionSecondPass;
-import org.hibernate.cfg.AnnotatedColumn;
-import org.hibernate.cfg.AnnotatedJoinColumn;
 import org.hibernate.cfg.IndexColumn;
 import org.hibernate.cfg.InheritanceState;
 import org.hibernate.cfg.PropertyData;
@@ -81,11 +84,11 @@ import org.hibernate.cfg.PropertyHolderBuilder;
 import org.hibernate.cfg.PropertyInferredData;
 import org.hibernate.cfg.PropertyPreloadedData;
 import org.hibernate.cfg.SecondPass;
-import org.hibernate.collection.internal.CustomCollectionTypeSemantics;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Backref;
@@ -99,13 +102,14 @@ import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
-import org.hibernate.mapping.SemanticsResolver;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.EmbeddableInstantiator;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
+import org.hibernate.usertype.ParameterizedType;
+import org.hibernate.usertype.UserCollectionType;
 
 import org.jboss.logging.Logger;
 
@@ -150,7 +154,7 @@ public abstract class CollectionBinder {
 	);
 
 	private final MetadataBuildingContext buildingContext;
-	private final SemanticsResolver semanticsResolver;
+	private final Supplier<ManagedBean<? extends UserCollectionType>> customTypeBeanResolver;
 	private final boolean isSortedCollection;
 
 	protected Collection collection;
@@ -194,8 +198,11 @@ public abstract class CollectionBinder {
 	private String explicitType;
 	private final Properties explicitTypeParameters = new Properties();
 
-	protected CollectionBinder(SemanticsResolver semanticsResolver, boolean isSortedCollection, MetadataBuildingContext buildingContext) {
-		this.semanticsResolver = semanticsResolver;
+	protected CollectionBinder(
+			Supplier<ManagedBean<? extends UserCollectionType>> customTypeBeanResolver,
+			boolean isSortedCollection,
+			MetadataBuildingContext buildingContext) {
+		this.customTypeBeanResolver = customTypeBeanResolver;
 		this.isSortedCollection = isSortedCollection;
 		this.buildingContext = buildingContext;
 	}
@@ -204,8 +211,8 @@ public abstract class CollectionBinder {
 		return buildingContext;
 	}
 
-	protected SemanticsResolver getSemanticsResolver() {
-		return semanticsResolver;
+	public Supplier<ManagedBean<? extends UserCollectionType>> getCustomTypeBeanResolver() {
+		return customTypeBeanResolver;
 	}
 
 	public boolean isMap() {
@@ -286,15 +293,20 @@ public abstract class CollectionBinder {
 		final CollectionBinder binder;
 		if ( typeAnnotation != null ) {
 			binder = createBinderFromCustomTypeAnnotation( property, typeAnnotation, buildingContext );
+
+			// todo (6.0) - technically, these should no longer be needed
 			binder.explicitType = typeAnnotation.type().getName();
 			for ( Parameter param : typeAnnotation.parameters() ) {
 				binder.explicitTypeParameters.setProperty( param.name(), param.value() );
 			}
 		}
 		else {
-			final CollectionSemantics customSemantics = property.getAnnotation( CollectionSemantics.class );
-			if ( customSemantics != null ) {
-				binder = createBinderFromCustomSemantics( customSemantics, property, buildingContext );
+			final CollectionClassification classification = determineCollectionClassification( property, buildingContext );
+			final CollectionTypeRegistrationDescriptor typeRegistration = buildingContext
+					.getMetadataCollector()
+					.findCollectionTypeRegistration( classification );
+			if ( typeRegistration != null ) {
+				binder = createBinderFromTypeRegistration( property, classification, typeRegistration, buildingContext );
 			}
 			else {
 				binder = createBinderFromProperty( property, buildingContext );
@@ -306,74 +318,164 @@ public abstract class CollectionBinder {
 		return binder;
 	}
 
-	private static CollectionBinder createBinderFromCustomSemantics(
-			CollectionSemantics customSemantics,
+	private static CollectionBinder createBinderFromTypeRegistration(
 			XProperty property,
+			CollectionClassification classification,
+			CollectionTypeRegistrationDescriptor typeRegistration,
 			MetadataBuildingContext buildingContext) {
-		final ManagedBeanRegistry beanRegistry = buildingContext.getBootstrapContext()
-				.getServiceRegistry()
-				.getService( ManagedBeanRegistry.class );
-		final ManagedBean<? extends org.hibernate.collection.spi.CollectionSemantics> semanticsBean = beanRegistry.getBean( customSemantics.value() );
-		final org.hibernate.collection.spi.CollectionSemantics semantics = semanticsBean.getBeanInstance();
 		return createBinder(
 				property,
-				semantics.getCollectionClassification(),
-				(type) -> semantics,
+				() -> createCustomType(
+						property.getDeclaringClass().getName() + "#" + property.getName(),
+						typeRegistration.getImplementation(),
+						typeRegistration.getParameters(),
+						buildingContext
+				),
+				classification,
 				buildingContext
 		);
+	}
+
+	private static ManagedBean<? extends UserCollectionType> createCustomType(
+			String role,
+			Class<? extends UserCollectionType> implementation,
+			Properties parameters,
+			MetadataBuildingContext buildingContext) {
+		final StandardServiceRegistry serviceRegistry = buildingContext.getBuildingOptions().getServiceRegistry();
+		final ManagedBeanRegistry beanRegistry = serviceRegistry.getService( ManagedBeanRegistry.class );
+		if ( CollectionHelper.isNotEmpty( parameters ) ) {
+			return beanRegistry.getBean( implementation );
+		}
+		else {
+			// defined parameters...
+			if ( ParameterizedType.class.isAssignableFrom( implementation ) ) {
+				// because there are config parameters and the type is configurable, we need
+				// a separate bean instance which means uniquely naming it
+				final ManagedBean<? extends UserCollectionType> typeBean = beanRegistry.getBean( role, implementation );
+				final UserCollectionType type = typeBean.getBeanInstance();
+				( (ParameterizedType) type ).setParameterValues( parameters );
+				return typeBean;
+			}
+			else {
+				// log a "warning"
+				BootLogging.LOGGER.debugf(
+						"Custom collection-type (`%s`) assigned to attribute (`%s`) does not implement `%s`, but its `@CollectionType` defined parameters",
+						implementation.getName(),
+						role,
+						ParameterizedType.class.getName()
+				);
+
+				// but still return the bean - we can again use the no-config bean instance
+				return beanRegistry.getBean( implementation );
+			}
+		}
 	}
 
 	private static CollectionBinder createBinderFromProperty(
 			XProperty property,
 			MetadataBuildingContext buildingContext) {
-		final CollectionClassification classification = determineCollectionClassification( property, null, buildingContext );
-		return createBinder( property, classification, null, buildingContext );
+		final CollectionClassification classification = determineCollectionClassification( property, buildingContext );
+		return createBinder( property, null, classification, buildingContext );
 	}
 
 	private static CollectionBinder createBinderFromCustomTypeAnnotation(
 			XProperty property,
 			CollectionType typeAnnotation,
 			MetadataBuildingContext buildingContext) {
-		final CollectionClassification classification = determineCollectionClassification( property, typeAnnotation, buildingContext );
-		final SemanticsResolver semanticsResolver = (collectionType) -> new CustomCollectionTypeSemantics<>( collectionType, classification );
-		return createBinder( property, classification, semanticsResolver, buildingContext );
+		determineSemanticJavaType( property );
+
+		final ManagedBean<? extends UserCollectionType> customTypeBean = resolveCustomType( property, typeAnnotation, buildingContext );
+		return createBinder(
+				property,
+				() -> customTypeBean,
+				customTypeBean.getBeanInstance().getClassification(),
+				buildingContext
+		);
+	}
+
+	public static ManagedBean<? extends UserCollectionType> resolveCustomType(
+			XProperty property,
+			CollectionType typeAnnotation,
+			MetadataBuildingContext buildingContext) {
+		final ManagedBeanRegistry beanRegistry = buildingContext.getBootstrapContext()
+				.getServiceRegistry()
+				.getService( ManagedBeanRegistry.class );
+
+		final Class<? extends UserCollectionType> typeImpl = typeAnnotation.type();
+		if ( typeAnnotation.parameters().length == 0 ) {
+			// no parameters - we can re-use a no-config bean instance
+			return beanRegistry.getBean( typeImpl );
+		}
+		else {
+			// defined parameters...
+			final String attributeKey = property.getDeclaringClass().getName() + "#" + property.getName();
+
+			if ( ParameterizedType.class.isAssignableFrom( typeImpl ) ) {
+				// because there are config parameters and the type is configurable, we need
+				// a separate bean instance which means uniquely naming it
+				final ManagedBean<? extends UserCollectionType> typeBean = beanRegistry.getBean( attributeKey, typeImpl );
+				final UserCollectionType type = typeBean.getBeanInstance();
+				( (ParameterizedType) type ).setParameterValues( extractParameters( typeAnnotation ) );
+				return typeBean;
+			}
+			else {
+				// log a "warning"
+				BootLogging.LOGGER.debugf(
+						"Custom collection-type (`%s`) assigned to attribute (`%s`) does not implement `%s`, but its `@CollectionType` defined parameters",
+						typeImpl.getName(),
+						attributeKey,
+						ParameterizedType.class.getName()
+				);
+
+				// but still return the bean - we can again use the no-config bean instance
+				return beanRegistry.getBean( typeImpl );
+			}
+		}
+	}
+
+	private static Properties extractParameters(CollectionType typeAnnotation) {
+		final Parameter[] parameterAnnotations = typeAnnotation.parameters();
+		final Properties configParams = new Properties( parameterAnnotations.length );
+		for ( Parameter parameterAnnotation : parameterAnnotations ) {
+			configParams.put( parameterAnnotation.name(), parameterAnnotation.value() );
+		}
+		return configParams;
 	}
 
 	private static CollectionBinder createBinder(
 			XProperty property,
+			Supplier<ManagedBean<? extends UserCollectionType>> customTypeBeanAccess,
 			CollectionClassification classification,
-			SemanticsResolver semanticsResolver,
 			MetadataBuildingContext buildingContext) {
-
 		switch ( classification ) {
 			case ARRAY: {
 				if ( property.getElementClass().isPrimitive() ) {
-					return new PrimitiveArrayBinder( semanticsResolver, buildingContext );
+					return new PrimitiveArrayBinder( customTypeBeanAccess, buildingContext );
 				}
-				return new ArrayBinder( semanticsResolver, buildingContext );
+				return new ArrayBinder( customTypeBeanAccess, buildingContext );
 			}
 			case BAG: {
-				return new BagBinder( semanticsResolver, buildingContext );
+				return new BagBinder( customTypeBeanAccess, buildingContext );
 			}
 			case ID_BAG: {
-				return new IdBagBinder( semanticsResolver, buildingContext );
+				return new IdBagBinder( customTypeBeanAccess, buildingContext );
 			}
 			case LIST: {
-				return new ListBinder( semanticsResolver, buildingContext );
+				return new ListBinder( customTypeBeanAccess, buildingContext );
 			}
 			case MAP:
 			case ORDERED_MAP: {
-				return new MapBinder( semanticsResolver, false, buildingContext );
+				return new MapBinder( customTypeBeanAccess, false, buildingContext );
 			}
 			case SORTED_MAP: {
-				return new MapBinder( semanticsResolver, true, buildingContext );
+				return new MapBinder( customTypeBeanAccess, true, buildingContext );
 			}
 			case SET:
 			case ORDERED_SET: {
-				return new SetBinder( semanticsResolver, false, buildingContext );
+				return new SetBinder( customTypeBeanAccess, false, buildingContext );
 			}
 			case SORTED_SET: {
-				return new SetBinder( semanticsResolver, true, buildingContext );
+				return new SetBinder( customTypeBeanAccess, true, buildingContext );
 			}
 		}
 
@@ -392,23 +494,32 @@ public abstract class CollectionBinder {
 
 	private static CollectionClassification determineCollectionClassification(
 			XProperty property,
-			CollectionType typeAnnotation,
 			MetadataBuildingContext buildingContext) {
-		final CollectionClassificationType classificationTypeAnnotation = property.getAnnotation( CollectionClassificationType.class );
-
 		if ( property.isArray() ) {
-			if ( classificationTypeAnnotation != null ) {
-				throw new AnnotationException( "Arrays should not be annotated with `@" + CollectionClassificationType.class.getName() + "`" );
-			}
 			return CollectionClassification.ARRAY;
 		}
 
-		if ( classificationTypeAnnotation != null ) {
-			return classificationTypeAnnotation.value();
+		final Bag bagAnnotation = HCANNHelper.findAnnotation( property, Bag.class );
+		if ( bagAnnotation != null ) {
+			final Class<?> collectionJavaType = property.getCollectionClass();
+			if ( java.util.List.class.equals( collectionJavaType ) || java.util.Collection.class.equals( collectionJavaType ) ) {
+				return CollectionClassification.BAG;
+			}
+			throw new MappingException(
+					String.format(
+							Locale.ROOT,
+							"@Bag annotation encountered on an attribute `%s#%s` of type `%s`; only `%s` and `%s` are supported",
+							property.getDeclaringClass().getName(),
+							property.getName(),
+							collectionJavaType.getName(),
+							java.util.List.class.getName(),
+							java.util.Collection.class.getName()
+					)
+			);
 		}
 
 		return determineCollectionClassification(
-				determineSemanticJavaType( property, typeAnnotation ),
+				determineSemanticJavaType( property ),
 				property,
 				buildingContext
 		);
@@ -466,14 +577,7 @@ public abstract class CollectionBinder {
 		}
 	}
 
-	private static Class<?> determineSemanticJavaType(XProperty property, CollectionType typeAnnotation) {
-		if ( typeAnnotation != null ) {
-			final Class<?> requestedSemanticsJavaType = typeAnnotation.semantics();
-			if ( requestedSemanticsJavaType != null && requestedSemanticsJavaType != void.class ) {
-				return inferCollectionClassFromSubclass( requestedSemanticsJavaType );
-			}
-		}
-
+	private static Class<?> determineSemanticJavaType(XProperty property) {
 		final Class<?> returnedJavaType = property.getCollectionClass();
 		if ( returnedJavaType == null ) {
 			throw new AnnotationException(

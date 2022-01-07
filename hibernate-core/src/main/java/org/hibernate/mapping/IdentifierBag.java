@@ -6,11 +6,15 @@
  */
 package org.hibernate.mapping;
 
+import java.util.function.Supplier;
+
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.collection.internal.StandardIdentifierBagSemantics;
 import org.hibernate.collection.spi.CollectionSemantics;
+import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.IdentifierBagType;
+import org.hibernate.usertype.UserCollectionType;
 
 /**
  * An {@code IdentifierBag} has a primary key consisting of
@@ -28,8 +32,8 @@ public class IdentifierBag extends IdentifierCollection {
 	/**
 	 * annotation binding
 	 */
-	public IdentifierBag(SemanticsResolver semanticsResolver, PersistentClass owner, MetadataBuildingContext buildingContext) {
-		super( semanticsResolver, owner, buildingContext );
+	public IdentifierBag(Supplier<ManagedBean<? extends UserCollectionType>> customTypeBeanResolver, PersistentClass owner, MetadataBuildingContext buildingContext) {
+		super( customTypeBeanResolver, owner, buildingContext );
 	}
 
 	public CollectionType getDefaultCollectionType() {

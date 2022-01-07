@@ -37,6 +37,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.EntityPersister;
@@ -73,6 +74,8 @@ public abstract class CollectionType extends AbstractType implements Association
 		this.role = role;
 		this.foreignKeyPropertyName = foreignKeyPropertyName;
 	}
+
+	public abstract CollectionClassification getCollectionClassification();
 
 	public String getRole() {
 		return role;

@@ -14,6 +14,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentMap;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -22,6 +23,11 @@ public class MapType extends CollectionType {
 
 	public MapType(TypeConfiguration typeConfiguration, String role, String propertyRef) {
 		super( typeConfiguration, role, propertyRef );
+	}
+
+	@Override
+	public CollectionClassification getCollectionClassification() {
+		return CollectionClassification.MAP;
 	}
 
 	@Override

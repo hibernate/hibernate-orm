@@ -7,14 +7,12 @@
 package org.hibernate.orm.test.bytecode.enhancement.lazy.cache;
 
 import java.nio.charset.Charset;
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.annotations.CustomType;
-import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.Type;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.usertype.UserTypeLegacyBridge;
@@ -97,7 +95,7 @@ public class LazyInCacheTest extends BaseCoreFunctionalTestCase {
         List<Tag> tags = new ArrayList<>();
 
         @Basic( fetch = FetchType.LAZY )
-        @CustomType( BinaryCustomType.class )
+        @Type( BinaryCustomType.class )
 //        @JdbcTypeCode(Types.LONGVARBINARY)
         byte[] data;
     }

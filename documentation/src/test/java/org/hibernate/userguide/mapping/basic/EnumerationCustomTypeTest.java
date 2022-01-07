@@ -6,7 +6,7 @@
  */
 package org.hibernate.userguide.mapping.basic;
 
-import org.hibernate.annotations.CustomType;
+import org.hibernate.annotations.Type;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Test;
@@ -48,7 +48,7 @@ public class EnumerationCustomTypeTest extends BaseEntityManagerFunctionalTestCa
 
 		private String name;
 
-		@CustomType(org.hibernate.userguide.mapping.basic.GenderType.class)
+		@Type(org.hibernate.userguide.mapping.basic.GenderType.class)
 		public Gender gender;
 
 		//Getters and setters are omitted for brevity

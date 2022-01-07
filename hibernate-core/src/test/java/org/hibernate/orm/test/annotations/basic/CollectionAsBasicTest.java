@@ -9,7 +9,7 @@ package org.hibernate.orm.test.annotations.basic;
 import java.sql.Types;
 import java.util.Set;
 
-import org.hibernate.annotations.CustomType;
+import org.hibernate.annotations.Type;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -49,7 +49,7 @@ public class CollectionAsBasicTest {
 		public Integer id;
 		public String name;
 		@Basic
-		@CustomType( DelimitedStringsJavaTypeDescriptor.class )
+		@Type( DelimitedStringsJavaTypeDescriptor.class )
 		Set<String> tags;
 	}
 

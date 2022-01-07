@@ -9,6 +9,7 @@ package org.hibernate.envers.test.integration.customtype;
 import java.util.Arrays;
 import java.util.List;
 
+import org.hibernate.annotations.Type;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.Audited;
@@ -59,12 +60,12 @@ public class ExtendedEnumTypeTest extends BaseEnversJPAFunctionalTestCase {
 		@GeneratedValue
 		private Integer id;
 
-		@org.hibernate.annotations.CustomType( ExtendedEnumType.class )
+		@Type( ExtendedEnumType.class )
 		@Enumerated(EnumType.STRING)
 		private Status status;
 
 		@Enumerated
-		@org.hibernate.annotations.CustomType( ExtendedEnumType.class )
+		@Type( ExtendedEnumType.class )
 		private Status status2;
 
 		public enum Status {

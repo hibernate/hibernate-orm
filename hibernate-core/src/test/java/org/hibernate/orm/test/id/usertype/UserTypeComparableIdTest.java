@@ -14,7 +14,7 @@ import java.sql.Types;
 import java.util.Comparator;
 
 import org.hibernate.HibernateException;
-import org.hibernate.annotations.CustomType;
+import org.hibernate.annotations.Type;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.usertype.UserType;
@@ -71,7 +71,7 @@ public class UserTypeComparableIdTest {
 	public static class SomeEntity {
 
 		@Id
-		@CustomType( CustomIdType.class )
+		@Type( CustomIdType.class )
 		@Column(name = "id")
 		private CustomId customId;
 

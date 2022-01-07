@@ -20,12 +20,23 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Steve Ebersole
  */
 @DomainModel( annotatedClasses = {
-		EntityWithBagAsCollection.class
+		EntityWithBagAsCollection.class,
+		EntityWithBagAsList.class
 } )
 public class BagTests {
 	@Test
 	public void verifyCollectionAsBag(DomainModelScope scope) {
 		scope.withHierarchy( EntityWithBagAsCollection.class, (entityDescriptor) -> {
+			final Property names = entityDescriptor.getProperty( "names" );
+			final Collection namesMapping = (Collection) names.getValue();
+
+			assertThat( namesMapping.getCollectionSemantics().getCollectionClassification() ).isEqualTo( CollectionClassification.BAG );
+		} );
+	}
+
+	@Test
+	public void verifyListMarkedAsBag(DomainModelScope scope) {
+		scope.withHierarchy( EntityWithBagAsList.class, (entityDescriptor) -> {
 			final Property names = entityDescriptor.getProperty( "names" );
 			final Collection namesMapping = (Collection) names.getValue();
 

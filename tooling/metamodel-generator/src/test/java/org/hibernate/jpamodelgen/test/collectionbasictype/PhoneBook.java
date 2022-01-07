@@ -3,7 +3,7 @@ package org.hibernate.jpamodelgen.test.collectionbasictype;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hibernate.annotations.CustomType;
+import org.hibernate.annotations.Type;
 
 import jakarta.persistence.Basic;
 import jakarta.persistence.Entity;
@@ -19,7 +19,7 @@ public class PhoneBook {
 	private Long id;
 
 	@Basic
-	@CustomType( CommaDelimitedStringsMapType.class )
+	@Type( CommaDelimitedStringsMapType.class )
 	private Map<String, String> phones = new HashMap<>();
 
 	public Map<String, String> getPhones() {

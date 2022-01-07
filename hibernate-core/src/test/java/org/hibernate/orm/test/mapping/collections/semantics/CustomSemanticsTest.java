@@ -8,7 +8,9 @@ package org.hibernate.orm.test.mapping.collections.semantics;
 
 import java.util.ArrayList;
 
+import org.hibernate.collection.internal.CustomCollectionTypeSemantics;
 import org.hibernate.mapping.Property;
+import org.hibernate.type.CustomCollectionType;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
@@ -32,8 +34,11 @@ public class CustomSemanticsTest {
 		scope.withHierarchy( TheEntityWithUniqueList.class, (entityDescriptor) -> {
 			final Property strings = entityDescriptor.getProperty( "strings" );
 			final org.hibernate.mapping.Collection collectionDescriptor = (org.hibernate.mapping.Collection) strings.getValue();
-			final org.hibernate.collection.spi.CollectionSemantics collectionSemantics = collectionDescriptor.getCollectionSemantics();
-			assertThat( collectionSemantics ).isInstanceOf( UniqueListSemantic.class );
+			assertThat( collectionDescriptor.getCollectionSemantics() ).isInstanceOf( CustomCollectionTypeSemantics.class );
+			final CustomCollectionTypeSemantics semantics = (CustomCollectionTypeSemantics) collectionDescriptor.getCollectionSemantics();
+			assertThat( semantics.getCollectionType() ).isInstanceOf( CustomCollectionType.class );
+			final CustomCollectionType collectionType = (CustomCollectionType) semantics.getCollectionType();
+			assertThat( collectionType.getUserType() ).isInstanceOf( UniqueListType.class );
 		} );
 	}
 

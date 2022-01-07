@@ -15,6 +15,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -27,6 +28,8 @@ import org.hibernate.DuplicateMappingException;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
+import org.hibernate.annotations.CollectionTypeRegistration;
+import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.SessionFactoryBuilder;
@@ -54,6 +57,7 @@ import org.hibernate.boot.query.NamedProcedureCallDefinition;
 import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
+import org.hibernate.boot.spi.InFlightMetadataCollector.CollectionTypeRegistrationDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.NaturalIdUniqueKeyBinder;
@@ -95,12 +99,14 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
+import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.EmbeddableInstantiator;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.usertype.UserCollectionType;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Embeddable;
@@ -405,6 +411,48 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		}
 
 		return registeredInstantiators.get( embeddableType );
+	}
+
+	private Map<CollectionClassification, CollectionTypeRegistrationDescriptor> collectionTypeRegistrations;
+
+
+	@Override
+	public void addCollectionTypeRegistration(CollectionTypeRegistration registrationAnnotation) {
+		addCollectionTypeRegistration(
+				registrationAnnotation.classification(),
+				toDescriptor( registrationAnnotation )
+		);
+	}
+
+	@Override
+	public void addCollectionTypeRegistration(CollectionClassification classification, CollectionTypeRegistrationDescriptor descriptor) {
+		if ( collectionTypeRegistrations == null ) {
+			collectionTypeRegistrations = new HashMap<>();
+		}
+		collectionTypeRegistrations.put( classification, descriptor );
+	}
+
+	@Override
+	public CollectionTypeRegistrationDescriptor findCollectionTypeRegistration(CollectionClassification classification) {
+		if ( collectionTypeRegistrations == null ) {
+			return null;
+		}
+
+		return collectionTypeRegistrations.get( classification );
+	}
+
+	private CollectionTypeRegistrationDescriptor toDescriptor(CollectionTypeRegistration registrationAnnotation) {
+		final Properties parameters;
+		if ( registrationAnnotation.parameters().length > 0 ) {
+			parameters = new Properties();
+			for ( Parameter parameter : registrationAnnotation.parameters() ) {
+				parameters.put( parameter.name(), parameter.value() );
+			}
+		}
+		else {
+			parameters = null;
+		}
+		return new CollectionTypeRegistrationDescriptor( registrationAnnotation.type(), parameters );
 	}
 
 

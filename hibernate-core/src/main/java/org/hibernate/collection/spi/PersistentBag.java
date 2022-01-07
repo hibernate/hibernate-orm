@@ -500,7 +500,7 @@ public class PersistentBag<E> extends AbstractPersistentCollection<E> implements
 
 	@Override
 	public Object getIndex(Object entry, int i, CollectionPersister persister) {
-		throw new UnsupportedOperationException( "Bags don't have indexes" );
+		throw new UnsupportedOperationException( "Bags don't have indexes : " + persister.getRole() );
 	}
 
 	@Override

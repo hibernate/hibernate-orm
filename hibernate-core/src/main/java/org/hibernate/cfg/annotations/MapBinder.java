@@ -9,6 +9,7 @@ package org.hibernate.cfg.annotations;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
@@ -48,6 +49,8 @@ import org.hibernate.mapping.SemanticsResolver;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
+import org.hibernate.resource.beans.spi.ManagedBean;
+import org.hibernate.usertype.UserCollectionType;
 
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.AttributeOverrides;
@@ -64,8 +67,8 @@ import jakarta.persistence.MapKeyJoinColumns;
  * @author Emmanuel Bernard
  */
 public class MapBinder extends CollectionBinder {
-	public MapBinder(SemanticsResolver semanticsResolver, boolean sorted, MetadataBuildingContext buildingContext) {
-		super( semanticsResolver, sorted, buildingContext );
+	public MapBinder(Supplier<ManagedBean<? extends UserCollectionType>> customTypeBeanResolver, boolean sorted, MetadataBuildingContext buildingContext) {
+		super( customTypeBeanResolver, sorted, buildingContext );
 	}
 
 	public boolean isMap() {
@@ -73,7 +76,7 @@ public class MapBinder extends CollectionBinder {
 	}
 
 	protected Collection createCollection(PersistentClass owner) {
-		return new org.hibernate.mapping.Map( getSemanticsResolver(), owner, getBuildingContext() );
+		return new org.hibernate.mapping.Map( getCustomTypeBeanResolver(), owner, getBuildingContext() );
 	}
 
 	@Override

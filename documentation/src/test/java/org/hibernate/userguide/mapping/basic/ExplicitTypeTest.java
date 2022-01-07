@@ -9,7 +9,7 @@ package org.hibernate.userguide.mapping.basic;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
-import org.hibernate.annotations.CustomType;
+import org.hibernate.annotations.Type;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.usertype.UserTypeLegacyBridge;
@@ -46,13 +46,13 @@ public class ExplicitTypeTest extends BaseEntityManagerFunctionalTestCase {
 		
 		private String sku;
 
-		@CustomType(
+		@Type(
 				value = UserTypeLegacyBridge.class,
 				parameters = @Parameter(name = UserTypeLegacyBridge.TYPE_NAME_PARAM_KEY, value = "nstring")
 		)
 		private String name;
 
-		@CustomType(
+		@Type(
 				value = UserTypeLegacyBridge.class,
 				parameters = @Parameter(name = UserTypeLegacyBridge.TYPE_NAME_PARAM_KEY, value = "materialized_nclob")
 		)

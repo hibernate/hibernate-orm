@@ -8,7 +8,7 @@ package org.hibernate.orm.test.envers.entities.ids;
 
 import java.io.Serializable;
 
-import org.hibernate.annotations.CustomType;
+import org.hibernate.annotations.Type;
 
 import jakarta.persistence.Embeddable;
 
@@ -19,7 +19,7 @@ import jakarta.persistence.Embeddable;
 public class EmbIdWithCustomType implements Serializable {
 	private Integer x;
 
-	@CustomType(CustomEnumUserType.class)
+	@Type(CustomEnumUserType.class)
 	private CustomEnum customEnum;
 
 	public EmbIdWithCustomType() {

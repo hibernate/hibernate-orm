@@ -6,22 +6,25 @@
  */
 package org.hibernate.cfg.annotations;
 
+import java.util.function.Supplier;
+
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.PrimitiveArray;
-import org.hibernate.mapping.SemanticsResolver;
+import org.hibernate.resource.beans.spi.ManagedBean;
+import org.hibernate.usertype.UserCollectionType;
 
 /**
  * @author Emmanuel Bernard
  */
 public class PrimitiveArrayBinder extends ArrayBinder {
-	public PrimitiveArrayBinder(SemanticsResolver semanticsResolver, MetadataBuildingContext buildingContext) {
-		super( semanticsResolver, buildingContext );
+	public PrimitiveArrayBinder(Supplier<ManagedBean<? extends UserCollectionType>> customTypeBeanResolver, MetadataBuildingContext buildingContext) {
+		super( customTypeBeanResolver, buildingContext );
 	}
 
 	@Override
 	protected Collection createCollection(PersistentClass owner) {
-		return new PrimitiveArray( getSemanticsResolver(), owner, getBuildingContext() );
+		return new PrimitiveArray( getCustomTypeBeanResolver(), owner, getBuildingContext() );
 	}
 }

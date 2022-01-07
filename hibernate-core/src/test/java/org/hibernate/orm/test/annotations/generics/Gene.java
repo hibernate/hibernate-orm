@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.annotations.generics;
 
-import org.hibernate.annotations.CustomType;
+import org.hibernate.annotations.Type;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -22,7 +22,7 @@ public class Gene<T, STE extends Enum> {
 	private Integer id;
 	private STE state;
 
-	@CustomType( StateType.class )
+	@Type( StateType.class )
 	public STE getState() {
 		return state;
 	}

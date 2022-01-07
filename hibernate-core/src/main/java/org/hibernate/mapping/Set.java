@@ -7,6 +7,7 @@
 package org.hibernate.mapping;
 
 import java.util.Iterator;
+import java.util.function.Supplier;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -15,10 +16,12 @@ import org.hibernate.collection.internal.StandardSetSemantics;
 import org.hibernate.collection.internal.StandardSortedSetSemantics;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.engine.spi.Mapping;
+import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.OrderedSetType;
 import org.hibernate.type.SetType;
 import org.hibernate.type.SortedSetType;
+import org.hibernate.usertype.UserCollectionType;
 
 /**
  * A set with no nullable element columns. It will have a primary key
@@ -36,8 +39,8 @@ public class Set extends Collection {
 	/**
 	 * Used by annotation binding
 	 */
-	public Set(SemanticsResolver semanticsResolver, PersistentClass persistentClass, MetadataBuildingContext buildingContext) {
-		super( semanticsResolver, persistentClass, buildingContext );
+	public Set(Supplier<ManagedBean<? extends UserCollectionType>> customTypeBeanResolver, PersistentClass persistentClass, MetadataBuildingContext buildingContext) {
+		super( customTypeBeanResolver, persistentClass, buildingContext );
 	}
 
 	public void validate(Mapping mapping) throws MappingException {

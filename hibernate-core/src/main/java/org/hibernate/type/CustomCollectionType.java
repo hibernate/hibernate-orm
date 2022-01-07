@@ -10,11 +10,12 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
-import org.hibernate.MappingException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.LoggableUserType;
 import org.hibernate.usertype.UserCollectionType;
@@ -32,30 +33,24 @@ public class CustomCollectionType extends CollectionType {
 	private final boolean customLogging;
 
 	public CustomCollectionType(
-			Class<? extends UserCollectionType> userTypeClass,
+			ManagedBean<? extends UserCollectionType> userTypeBean,
 			String role,
 			String foreignKeyPropertyName,
 			TypeConfiguration typeConfiguration) {
 		super( typeConfiguration, role, foreignKeyPropertyName );
 
-		if ( !UserCollectionType.class.isAssignableFrom( userTypeClass ) ) {
-			throw new MappingException( "Custom type does not implement UserCollectionType: " + userTypeClass.getName() );
-		}
-
-		userType = createUserCollectionType( userTypeClass );
+		userType = userTypeBean.getBeanInstance();
 		customLogging = userType instanceof LoggableUserType;
 	}
 
-	private static UserCollectionType createUserCollectionType(Class<? extends UserCollectionType> userTypeClass) {
-		try {
-			return userTypeClass.newInstance();
-		}
-		catch (InstantiationException ie) {
-			throw new MappingException( "Cannot instantiate custom type: " + userTypeClass.getName() );
-		}
-		catch (IllegalAccessException iae) {
-			throw new MappingException( "IllegalAccessException trying to instantiate custom type: " + userTypeClass.getName() );
-		}
+	@Override
+	public Class getReturnedClass() {
+		return userType.instantiate( -1 ).getClass();
+	}
+
+	@Override
+	public CollectionClassification getCollectionClassification() {
+		return userType.getClassification();
 	}
 
 	@Override
@@ -67,11 +62,6 @@ public class CustomCollectionType extends CollectionType {
 	@Override
 	public PersistentCollection wrap(SharedSessionContractImplementor session, Object collection) {
 		return userType.wrap( session, collection );
-	}
-
-	@Override
-	public Class getReturnedClass() {
-		return userType.instantiate( -1 ).getClass();
 	}
 
 	@Override

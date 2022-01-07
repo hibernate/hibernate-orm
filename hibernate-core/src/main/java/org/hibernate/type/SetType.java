@@ -10,6 +10,7 @@ import org.hibernate.collection.spi.PersistentSet;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -20,13 +21,18 @@ public class SetType extends CollectionType {
 	}
 
 	@Override
-	public PersistentCollection instantiate(SharedSessionContractImplementor session, CollectionPersister persister, Object key) {
-		return new PersistentSet( session );
+	public CollectionClassification getCollectionClassification() {
+		return CollectionClassification.SET;
 	}
 
 	@Override
 	public Class getReturnedClass() {
 		return java.util.Set.class;
+	}
+
+	@Override
+	public PersistentCollection instantiate(SharedSessionContractImplementor session, CollectionPersister persister, Object key) {
+		return new PersistentSet( session );
 	}
 
 	@Override

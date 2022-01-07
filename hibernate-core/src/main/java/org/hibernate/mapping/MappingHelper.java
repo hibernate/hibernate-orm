@@ -6,18 +6,17 @@
  */
 package org.hibernate.mapping;
 
-import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.function.Supplier;
 
 import org.hibernate.Internal;
-import org.hibernate.MappingException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.metamodel.mapping.MappingModelCreationLogger;
+import org.hibernate.resource.beans.spi.ManagedBean;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CustomCollectionType;
@@ -47,20 +46,23 @@ public final class MappingHelper {
 			String propertyRef,
 			MetadataImplementor metadata) {
 		final ClassLoaderService cls = metadata.getMetadataBuildingOptions().getServiceRegistry().getService( ClassLoaderService.class );
+		final Class<? extends UserCollectionType> typeImpl = cls.classForName( typeName );
 
-		try {
-			final Class<? extends UserCollectionType> typeClass = cls.classForName( typeName );
+		final ManagedBeanRegistry beanRegistry = metadata
+				.getMetadataBuildingOptions()
+				.getServiceRegistry()
+				.getService( ManagedBeanRegistry.class );
 
-			CustomCollectionType result = new CustomCollectionType( typeClass, role, propertyRef, metadata.getTypeConfiguration() );
-			if ( typeParameters != null ) {
-				injectParameters( result.getUserType(), typeParameters );
-			}
-
-			return result;
+		final ManagedBean<? extends UserCollectionType> customTypeBean;
+		if ( typeParameters == null ) {
+			customTypeBean = beanRegistry.getBean( typeImpl );
 		}
-		catch (ClassLoadingException e) {
-			throw new MappingException( "user collection type class not found: " + typeName, e );
+		else {
+			customTypeBean = beanRegistry.getBean( role, typeImpl );
+			injectParameters( customTypeBean.getBeanInstance(), typeParameters );
 		}
+
+		return new CustomCollectionType( customTypeBean, role, propertyRef, metadata.getTypeConfiguration() );
 	}
 
 	public static void injectParameters(Object type, Properties parameters) {

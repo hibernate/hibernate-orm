@@ -6,19 +6,15 @@
  */
 package org.hibernate.orm.test.mapping.collections.classification.bag;
 
-import java.util.Collection;
 import java.util.List;
 
-import org.hibernate.annotations.CollectionClassificationType;
-import org.hibernate.metamodel.CollectionClassification;
+import org.hibernate.annotations.Bag;
 import org.hibernate.orm.test.mapping.collections.classification.Name;
 
 import jakarta.persistence.Basic;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-
-import static org.hibernate.metamodel.CollectionClassification.BAG;
 
 /**
  * @author Steve Ebersole
@@ -36,7 +32,7 @@ public class EntityWithBagAsList {
 
 	//tag::collections-bag-list-ex[]
 	@ElementCollection
-	@CollectionClassificationType( BAG )
+	@Bag
 	private List<Name> names;
 	//end::collections-bag-list-ex[]
 

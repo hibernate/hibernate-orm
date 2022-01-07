@@ -18,7 +18,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import org.hibernate.HibernateException;
-import org.hibernate.annotations.CustomType;
+import org.hibernate.annotations.Type;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.usertype.UserType;
 
@@ -63,7 +63,7 @@ public class UserTypeNonComparableIdTest {
 	public static class SomeEntity {
 
 		@Id
-		@CustomType( CustomIdType.class )
+		@Type( CustomIdType.class )
 		@Column(name = "id")
 		private CustomId customId;
 

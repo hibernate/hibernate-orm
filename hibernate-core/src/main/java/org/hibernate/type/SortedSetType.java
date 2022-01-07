@@ -12,6 +12,7 @@ import java.util.TreeSet;
 import org.hibernate.collection.spi.PersistentSortedSet;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -25,12 +26,17 @@ public class SortedSetType extends SetType {
 	}
 
 	@Override
-	public PersistentCollection instantiate(SharedSessionContractImplementor session, CollectionPersister persister, Object key) {
-		return new PersistentSortedSet( session, comparator );
+	public CollectionClassification getCollectionClassification() {
+		return CollectionClassification.SORTED_SET;
 	}
 
 	public Class getReturnedClass() {
 		return java.util.SortedSet.class;
+	}
+
+	@Override
+	public PersistentCollection instantiate(SharedSessionContractImplementor session, CollectionPersister persister, Object key) {
+		return new PersistentSortedSet( session, comparator );
 	}
 
 	@SuppressWarnings( {"unchecked"})

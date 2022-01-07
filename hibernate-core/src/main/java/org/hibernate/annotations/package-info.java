@@ -31,7 +31,7 @@
  *     </li>
  *     <li>
  *          Contracted via the {@link org.hibernate.usertype.UserType} interface and specified using
- *          {@link org.hibernate.annotations.CustomType}.
+ *          {@link org.hibernate.annotations.Type}.
  *          As with the compositional approach, there are model-part specific annotations for specifying
  *          custom-types as well.
  *     </li>

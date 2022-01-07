@@ -14,8 +14,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
-import java.util.SortedMap;
-import java.util.SortedSet;
+import java.util.function.Supplier;
 
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
@@ -29,12 +28,14 @@ import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.CollectionType;
+import org.hibernate.type.CustomCollectionType;
 import org.hibernate.type.Type;
 import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.usertype.UserCollectionType;
 
 /**
  * Mapping for a collection. Subclasses specialize to particular collection styles.
@@ -77,7 +78,10 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 
 	private String typeName;
 	private Properties typeParameters;
-	private SemanticsResolver customSemanticsResolver;
+	private Supplier<ManagedBean<? extends UserCollectionType>> customTypeBeanResolver;
+	private CollectionType cachedCollectionType;
+	private CollectionSemantics<?,?> cachedCollectionSemantics;
+
 	private Class<? extends CollectionPersister> collectionPersisterClass;
 
 	private final List<FilterConfiguration> filters = new ArrayList<>();
@@ -110,8 +114,11 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	/**
 	 * Annotation binding
 	 */
-	protected Collection(SemanticsResolver customSemanticsResolver, PersistentClass owner, MetadataBuildingContext buildingContext) {
-		this.customSemanticsResolver = customSemanticsResolver;
+	protected Collection(
+			Supplier<ManagedBean<? extends UserCollectionType>> customTypeBeanResolver,
+			PersistentClass owner,
+			MetadataBuildingContext buildingContext) {
+		this.customTypeBeanResolver = customTypeBeanResolver;
 		this.owner = owner;
 		this.buildingContext = buildingContext;
 	}
@@ -409,8 +416,6 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		return getCollectionType();
 	}
 
-	private CollectionSemantics<?,?> cachedCollectionSemantics;
-
 	@SuppressWarnings("rawtypes")
 	public CollectionSemantics getCollectionSemantics() {
 		if ( cachedCollectionSemantics == null ) {
@@ -422,8 +427,32 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 
 	private CollectionSemantics<?, ?> resolveCollectionSemantics() {
 		final CollectionType collectionType;
-		if ( typeName == null ) {
-			collectionType = null;
+		if ( cachedCollectionType == null ) {
+			collectionType = resolveCollectionType();
+			cachedCollectionType = collectionType;
+		}
+		else {
+			collectionType = cachedCollectionType;
+		}
+
+		return new CustomCollectionTypeSemantics<>( collectionType );
+	}
+
+	private CollectionType resolveCollectionType() {
+		final CollectionType collectionType;
+		if ( cachedCollectionType != null ) {
+			collectionType = cachedCollectionType;
+		}
+		else if ( customTypeBeanResolver != null ) {
+			collectionType = new CustomCollectionType(
+					customTypeBeanResolver.get(),
+					role,
+					referencedPropertyName,
+					getMetadata().getTypeConfiguration()
+			);
+		}
+		else if ( typeName == null ) {
+			collectionType = getDefaultCollectionType();
 		}
 		else {
 			collectionType = MappingHelper.customCollection(
@@ -434,50 +463,7 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 					getMetadata()
 			);
 		}
-
-		if ( customSemanticsResolver != null ) {
-			return customSemanticsResolver.resolve( collectionType );
-		}
-
-		if ( collectionType == null ) {
-			return getDefaultCollectionSemantics();
-		}
-
-		final Class<?> semanticJavaType = collectionType.getReturnedClass();
-		final CollectionClassification classification;
-
-		if ( semanticJavaType.isArray() ) {
-			classification = CollectionClassification.ARRAY;
-		}
-		else if ( List.class.isAssignableFrom( semanticJavaType ) ) {
-			classification = CollectionClassification.LIST;
-		}
-		else if ( SortedSet.class.isAssignableFrom( semanticJavaType ) ) {
-			classification = CollectionClassification.SORTED_SET;
-		}
-		else if ( Set.class.isAssignableFrom( semanticJavaType ) ) {
-			classification = CollectionClassification.SET;
-		}
-		else if ( SortedMap.class.isAssignableFrom( semanticJavaType ) ) {
-			classification = CollectionClassification.SORTED_MAP;
-		}
-		else if ( Map.class.isAssignableFrom( semanticJavaType ) ) {
-			classification = CollectionClassification.MAP;
-		}
-		else if ( Collection.class.isAssignableFrom( semanticJavaType ) ) {
-			if ( isIdentified() ) {
-				classification = CollectionClassification.ID_BAG;
-			}
-			else {
-				classification = CollectionClassification.BAG;
-			}
-		}
-		else {
-			throw new IllegalArgumentException( "Unexpected collection-semantics Java type : " + semanticJavaType );
-		}
-
-		return new CustomCollectionTypeSemantics<>( collectionType, classification );
-
+		return collectionType;
 	}
 
 	public CollectionSemantics<?,?> getDefaultCollectionSemantics() {
@@ -488,13 +474,10 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	}
 
 	public CollectionType getCollectionType() {
-		// todo (6.0) : hook in CollectionSemantics
-		if ( typeName == null ) {
-			return getDefaultCollectionType();
+		if ( cachedCollectionType == null ) {
+			cachedCollectionType = resolveCollectionType();
 		}
-		else {
-			return MappingHelper.customCollection( typeName, typeParameters, role, referencedPropertyName, getMetadata() );
-		}
+		return cachedCollectionType;
 	}
 
 	public boolean isNullable() {

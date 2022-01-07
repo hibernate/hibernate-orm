@@ -12,15 +12,27 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
 
 /**
  * A custom type for mapping user-written classes that implement {@code PersistentCollection}
  *
- * @author Gavin King
  * @see PersistentCollection
+ *
+ * @author Gavin King
+ * @author Steve Ebersole
  */
 public interface UserCollectionType {
+	/**
+	 * The classification mapped by this custom type
+	 */
+	CollectionClassification getClassification();
+
+	/**
+	 * The Java type that this type maps.
+	 */
+	Class<?> getCollectionClass();
 
 	/**
 	 * Instantiate an uninitialized instance of the collection wrapper

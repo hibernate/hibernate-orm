@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.hibernate.HibernateException;
+import org.hibernate.annotations.Type;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.TypedParameterValue;
@@ -114,7 +115,7 @@ public class TypedValueParametersTest {
 		@Id
 		private int id;
 
-		@org.hibernate.annotations.CustomType( TagUserType.class )
+		@Type( TagUserType.class )
 		@Column(name = "tags")
 		private List<String> tags = new ArrayList<>();
 

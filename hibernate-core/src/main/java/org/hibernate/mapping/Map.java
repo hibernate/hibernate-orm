@@ -6,16 +6,20 @@
  */
 package org.hibernate.mapping;
 
+import java.util.function.Supplier;
+
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.collection.internal.StandardMapSemantics;
 import org.hibernate.collection.internal.StandardOrderedMapSemantics;
 import org.hibernate.collection.internal.StandardSortedMapSemantics;
 import org.hibernate.collection.spi.CollectionSemantics;
+import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.MapType;
 import org.hibernate.type.OrderedMapType;
 import org.hibernate.type.SortedMapType;
+import org.hibernate.usertype.UserCollectionType;
 
 /**
  * A map has a primary key consisting of
@@ -29,8 +33,8 @@ public class Map extends IndexedCollection {
 		super( buildingContext, owner );
 	}
 
-	public Map(SemanticsResolver semanticsResolver, PersistentClass owner, MetadataBuildingContext buildingContext) {
-		super( semanticsResolver, owner, buildingContext );
+	public Map(Supplier<ManagedBean<? extends UserCollectionType>> customTypeBeanResolver, PersistentClass owner, MetadataBuildingContext buildingContext) {
+		super( customTypeBeanResolver, owner, buildingContext );
 	}
 
 	public boolean isMap() {

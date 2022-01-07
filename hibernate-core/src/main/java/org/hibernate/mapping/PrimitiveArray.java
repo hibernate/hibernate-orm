@@ -6,9 +6,13 @@
  */
 package org.hibernate.mapping;
 
+import java.util.function.Supplier;
+
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.collection.internal.StandardArraySemantics;
 import org.hibernate.collection.spi.CollectionSemantics;
+import org.hibernate.resource.beans.spi.ManagedBean;
+import org.hibernate.usertype.UserCollectionType;
 
 /**
  * A primitive array has a primary key consisting of the key columns + index column.
@@ -18,8 +22,8 @@ public class PrimitiveArray extends Array {
 		super( buildingContext, owner );
 	}
 
-	public PrimitiveArray(SemanticsResolver semanticsResolver, PersistentClass owner, MetadataBuildingContext buildingContext) {
-		super( semanticsResolver, owner, buildingContext );
+	public PrimitiveArray(Supplier<ManagedBean<? extends UserCollectionType>> customTypeBeanResolver, PersistentClass owner, MetadataBuildingContext buildingContext) {
+		super( customTypeBeanResolver, owner, buildingContext );
 	}
 
 	public boolean isPrimitiveArray() {

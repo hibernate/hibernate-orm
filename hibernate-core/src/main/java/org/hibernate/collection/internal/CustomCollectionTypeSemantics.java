@@ -30,16 +30,18 @@ import org.hibernate.type.CollectionType;
  */
 public class CustomCollectionTypeSemantics<CE, E> implements CollectionSemantics<CE, E> {
 	private final CollectionType collectionType;
-	private final CollectionClassification classification;
 
-	public CustomCollectionTypeSemantics(CollectionType collectionType, CollectionClassification classification) {
+	public CustomCollectionTypeSemantics(CollectionType collectionType) {
 		this.collectionType = collectionType;
-		this.classification = classification;
+	}
+
+	public CollectionType getCollectionType() {
+		return collectionType;
 	}
 
 	@Override
 	public CollectionClassification getCollectionClassification() {
-		return classification;
+		return collectionType.getCollectionClassification();
 	}
 
 	@Override
@@ -77,7 +79,7 @@ public class CustomCollectionTypeSemantics<CE, E> implements CollectionSemantics
 		return InitializerProducerBuilder.createCollectionTypeWrapperInitializerProducer(
 				navigablePath,
 				attributeMapping,
-				classification,
+				getCollectionClassification(),
 				fetchParent,
 				selected,
 				indexFetch,

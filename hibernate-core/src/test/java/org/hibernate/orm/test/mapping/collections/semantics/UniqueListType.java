@@ -13,6 +13,7 @@ import java.util.Map;
 
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.usertype.UserCollectionType;
 
@@ -21,6 +22,16 @@ import org.hibernate.usertype.UserCollectionType;
  */
 //tag::collections-custom-type-ex[]
 public class UniqueListType implements UserCollectionType {
+	@Override
+	public CollectionClassification getClassification() {
+		return CollectionClassification.LIST;
+	}
+
+	@Override
+	public Class<?> getCollectionClass() {
+		return List.class;
+	}
+
 	@Override
 	public PersistentCollection instantiate(
 			SharedSessionContractImplementor session,

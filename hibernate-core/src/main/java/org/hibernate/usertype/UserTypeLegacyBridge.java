@@ -10,6 +10,7 @@ import java.util.Properties;
 import java.util.function.BiConsumer;
 
 import org.hibernate.MappingException;
+import org.hibernate.annotations.Type;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.TypeConfigurationAware;
@@ -18,7 +19,7 @@ import org.hibernate.type.spi.TypeConfigurationAware;
  * Convenience UserType implementation to mimic the legacy `@Type` annotation
  * which based on the {@code hbm.xml} mapping's String-based type support
  *
- * @see org.hibernate.annotations.CustomType
+ * @see Type
  */
 public class UserTypeLegacyBridge extends BaseUserTypeSupport<Object> implements ParameterizedType, TypeConfigurationAware {
 	public static final String TYPE_NAME_PARAM_KEY = "hbm-type-name";

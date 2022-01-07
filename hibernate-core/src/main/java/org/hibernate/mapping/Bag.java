@@ -7,12 +7,15 @@
 package org.hibernate.mapping;
 
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.collection.internal.StandardBagSemantics;
 import org.hibernate.collection.spi.CollectionSemantics;
+import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.type.BagType;
 import org.hibernate.type.CollectionType;
+import org.hibernate.usertype.UserCollectionType;
 
 /**
  * A bag permits duplicates, so it has no primary key
@@ -30,8 +33,8 @@ public class Bag extends Collection {
 	/**
 	 * Annotation binding
 	 */
-	public Bag(SemanticsResolver semanticsResolver, PersistentClass owner, MetadataBuildingContext buildingContext) {
-		super( semanticsResolver, owner, buildingContext );
+	public Bag(Supplier<ManagedBean<? extends UserCollectionType>> customTypeBeanResolver, PersistentClass owner, MetadataBuildingContext buildingContext) {
+		super( customTypeBeanResolver, owner, buildingContext );
 	}
 
 	public CollectionType getDefaultCollectionType() {

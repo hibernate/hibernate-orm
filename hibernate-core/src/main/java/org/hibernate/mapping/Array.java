@@ -6,7 +6,7 @@
  */
 package org.hibernate.mapping;
 
-import java.util.function.Function;
+import java.util.function.Supplier;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -14,10 +14,12 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.collection.internal.StandardArraySemantics;
 import org.hibernate.collection.spi.CollectionSemantics;
+import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.type.ArrayType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
+import org.hibernate.usertype.UserCollectionType;
 
 /**
  * An array mapping has a primary key consisting of the key columns + index column.
@@ -31,8 +33,8 @@ public class Array extends List {
 		super( buildingContext, owner );
 	}
 
-	public Array(SemanticsResolver semanticsResolver, PersistentClass owner, MetadataBuildingContext buildingContext) {
-		super( semanticsResolver, owner, buildingContext );
+	public Array(Supplier<ManagedBean<? extends UserCollectionType>> customTypeBeanResolver, PersistentClass owner, MetadataBuildingContext buildingContext) {
+		super( customTypeBeanResolver, owner, buildingContext );
 	}
 
 	public Class<?> getElementClass() throws MappingException {

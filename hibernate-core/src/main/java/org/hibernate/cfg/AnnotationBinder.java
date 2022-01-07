@@ -19,7 +19,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 
 import org.hibernate.AnnotationException;
@@ -33,6 +32,8 @@ import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.Check;
 import org.hibernate.annotations.CollectionId;
+import org.hibernate.annotations.CollectionTypeRegistration;
+import org.hibernate.annotations.CollectionTypeRegistrations;
 import org.hibernate.annotations.Columns;
 import org.hibernate.annotations.Comment;
 import org.hibernate.annotations.DiscriminatorFormula;
@@ -873,16 +874,18 @@ public final class AnnotationBinder {
 				}
 			}
 		}
-	}
 
-	private static Properties extractProperties(Parameter[] parameters) {
-		final Properties properties = new Properties();
-		if ( parameters.length > 0 ) {
-			for ( int i = 0; i < parameters.length; i++ ) {
-				properties.setProperty( parameters[i].name(), parameters[i].value() );
+		final CollectionTypeRegistration singleRegistration = annotatedElement.getAnnotation( CollectionTypeRegistration.class );
+		if ( singleRegistration != null ) {
+			context.getMetadataCollector().addCollectionTypeRegistration( singleRegistration );
+		}
+
+		final CollectionTypeRegistrations multiRegistration = annotatedElement.getAnnotation( CollectionTypeRegistrations.class );
+		if ( multiRegistration != null ) {
+			for ( CollectionTypeRegistration registration : multiRegistration.value() ) {
+				context.getMetadataCollector().addCollectionTypeRegistration( registration );
 			}
 		}
-		return properties;
 	}
 
 	private static void handleSqlTypeDescriptorRegistration(

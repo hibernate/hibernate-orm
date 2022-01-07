@@ -6,10 +6,14 @@
  */
 package org.hibernate.cfg.annotations;
 
+import java.util.function.Supplier;
+
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.SemanticsResolver;
+import org.hibernate.resource.beans.spi.ManagedBean;
+import org.hibernate.usertype.UserCollectionType;
 
 /**
  * Bind a bag.
@@ -17,11 +21,11 @@ import org.hibernate.mapping.SemanticsResolver;
  * @author Matthew Inger
  */
 public class BagBinder extends CollectionBinder {
-	public BagBinder(SemanticsResolver semanticsResolver, MetadataBuildingContext context) {
-		super( semanticsResolver, false, context );
+	public BagBinder(Supplier<ManagedBean<? extends UserCollectionType>> customTypeBeanResolver, MetadataBuildingContext context) {
+		super( customTypeBeanResolver, false, context );
 	}
 
 	protected Collection createCollection(PersistentClass owner) {
-		return new org.hibernate.mapping.Bag( getSemanticsResolver(), owner, getBuildingContext() );
+		return new org.hibernate.mapping.Bag( getCustomTypeBeanResolver(), owner, getBuildingContext() );
 	}
 }

@@ -56,6 +56,9 @@ public enum CollectionClassification {
 	 * A sorted {@link #SET} using either natural sorting of the elements or a
 	 * specified {@link java.util.Comparator}.  Represented
 	 * as {@link java.util.SortedSet} or {@link java.util.Set}
+	 *
+	 * @see org.hibernate.annotations.SortNatural
+	 * @see org.hibernate.annotations.SortComparator
 	 */
 	SORTED_SET( PluralAttribute.CollectionType.SET ),
 
@@ -64,6 +67,9 @@ public enum CollectionClassification {
 	 * as the collection is loaded.  Does not maintain ordering
 	 * while in memory if the contents change.  Represented
 	 * as {@link java.util.Set}.
+	 *
+	 * @see jakarta.persistence.OrderBy
+	 * @see org.hibernate.annotations.OrderBy
 	 */
 	ORDERED_SET( PluralAttribute.CollectionType.SET ),
 
@@ -76,6 +82,9 @@ public enum CollectionClassification {
 	 * A sorted {@link #MAP} using either natural sorting of the keys or a
 	 * specified {@link java.util.Comparator}.  Represented
 	 * as {@link java.util.SortedMap} or {@link java.util.Map}
+	 *
+	 * @see org.hibernate.annotations.SortNatural
+	 * @see org.hibernate.annotations.SortComparator
 	 */
 	SORTED_MAP( PluralAttribute.CollectionType.MAP ),
 
@@ -84,6 +93,9 @@ public enum CollectionClassification {
 	 * as the collection is loaded.  Does not maintain ordering
 	 * while in memory if the contents change.  Represented
 	 * as {@link java.util.Map}.
+	 *
+	 * @see jakarta.persistence.OrderBy
+	 * @see org.hibernate.annotations.OrderBy
 	 */
 	ORDERED_MAP( PluralAttribute.CollectionType.MAP );
 

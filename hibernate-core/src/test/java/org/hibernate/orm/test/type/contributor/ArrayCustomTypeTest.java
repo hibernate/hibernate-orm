@@ -8,7 +8,7 @@ package org.hibernate.orm.test.type.contributor;
 
 import java.util.List;
 
-import org.hibernate.annotations.CustomType;
+import org.hibernate.annotations.Type;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.Query;
 
@@ -79,7 +79,7 @@ public class ArrayCustomTypeTest extends BaseEntityManagerFunctionalTestCase {
 		private String userName;
 
 		@Basic
-		@CustomType( ArrayType.class )
+		@Type( ArrayType.class )
 		private Array emailAddresses = new Array();
 
 		public String getUserName() {

@@ -27,6 +27,8 @@ import org.hibernate.sql.results.graph.FetchParent;
  *
  * @author Steve Ebersole
  * @author Gavin King
+ *
+ * @since 6.0
  */
 @Incubating
 public interface CollectionSemantics<CE, E> {

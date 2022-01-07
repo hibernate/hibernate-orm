@@ -7,7 +7,6 @@
 package org.hibernate.query.internal;
 
 import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.util.function.Consumer;
 
 import org.hibernate.boot.model.convert.internal.ConverterHelper;
@@ -118,7 +117,7 @@ public class ResultMementoBasicStandard implements ResultMementoBasic {
 				}
 				else if ( UserType.class.isAssignableFrom( registeredJtd.getJavaTypeClass() ) ) {
 					final ManagedBean<UserType<?>> userTypeBean = (ManagedBean) beanRegistry.getBean( registeredJtd.getJavaTypeClass() );
-					// todo (6.0) : is this the best approach?  or should we keep a Class<? extends UserType> -> CustomType mapping somewhere?
+					// todo (6.0) : is this the best approach?  or should we keep a Class<? extends UserType> -> @Type mapping somewhere?
 					explicitType = new CustomType<>( (UserType<Object>) userTypeBean.getBeanInstance(), typeConfiguration );
 					explicitJavaTypeDescriptor = explicitType.getJavaTypeDescriptor();
 				}
@@ -135,8 +134,8 @@ public class ResultMementoBasicStandard implements ResultMementoBasic {
 	private BasicJavaType<?> determineDomainJavaType(
 			ParameterizedType parameterizedType,
 			JavaTypeRegistry jtdRegistry) {
-		final Type[] typeParameters = parameterizedType.getActualTypeArguments();
-		final Type domainTypeType = typeParameters[ 0 ];
+		final java.lang.reflect.Type[] typeParameters = parameterizedType.getActualTypeArguments();
+		final java.lang.reflect.Type domainTypeType = typeParameters[ 0 ];
 		final Class<?> domainClass = (Class<?>) domainTypeType;
 
 		return (BasicJavaType<?>) jtdRegistry.getDescriptor( domainClass );
@@ -145,7 +144,7 @@ public class ResultMementoBasicStandard implements ResultMementoBasic {
 	private BasicValuedMapping resolveUnderlyingMapping(
 			ParameterizedType parameterizedType,
 			TypeConfiguration typeConfiguration) {
-		final Type[] typeParameters = parameterizedType.getActualTypeArguments();
+		final java.lang.reflect.Type[] typeParameters = parameterizedType.getActualTypeArguments();
 		return typeConfiguration.standardBasicTypeForJavaType( (Class) typeParameters[ 1 ] );
 	}
 

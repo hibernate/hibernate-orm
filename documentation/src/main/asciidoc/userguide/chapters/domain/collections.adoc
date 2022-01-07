@@ -237,7 +237,7 @@ Some apps map BAG collections using `java.util.List` instead.  Hibernate provide
 lists as bags.  First an explicit annotation
 
 [[collection-bag-list-ex]]
-.List as BAG
+.@Bag
 ====
 [source, JAVA, indent=0]
 ----
@@ -245,11 +245,11 @@ include::{classificationTestsDir}/bag/EntityWithBagAsList.java[tags=collections-
 ----
 ====
 
-Specifically, the usage of `@CollectionClassificationType(BAG)` forces the interpretation to
-BAG.  See <<collection-classification-ann>> for details on using `@CollectionClassificationType`.
+Specifically, the usage of `@Bag` forces the classification as BAG.  Even though the `names` attribute is defined
+as `List`, Hibernate will treat it using the BAG semantics.
 
 Additionally, as discussed in <<collection-list>>, the `hibernate.mapping.default_list_semantics` setting
-is available to have Hibernate interpret a `List` with no `@OrderColumn` as a BAG.
+is available to have Hibernate interpret a `List` with no `@OrderColumn` and no `@ListIndexBase` as a BAG.
 
 
 An ID_BAG is similar to a BAG, except that it maps a generated, per-row identifier into the collection
@@ -380,118 +380,16 @@ Id:: the identifier for an ID_BAG
 // todo (6.0) - finish
 
 
-[[collection-semantics-influence]]
-==== Influencing CollectionSemantics
-
-Hibernate provides multiple ways to influence the `CollectionSemantics used to
-map any particular plural attribute:
-
-1. <<collection-classification-ann, @CollectionClassificationType>>
-2. <<collection-semantics-ann, @CollectionSemantics>>
-3. <<collection-type-ann>>
-
-
-
-[[collection-classification-ann]]
-===== @CollectionClassificationType
-
-`@CollectionClassificationType` allows directly telling Hibernate which semantics to use
-through its classification.
-
-For example, as discussed in <<collection-bag>>, Hibernate will map a `java.util.Collection`
-using BAG semantics by default.
-
-As seen in <<collection-bag-list-ex>>, we can use the `@CollectionClassificationType`
-annotation to request it handled using a different semantic - there LIST.
-
-In fact, we can use this technique with any of the classifications as long
-as the attribute's declared type on the domain model is assignable from the type
-implied by the semantic associated with the classification.  The most common case where
-this would be useful is when exposing a plural attribute using `java.util.Collection` but
-telling Hibernate to use a semantic other than BAG.  E.g., to use SET semantics for a
-`java.util.Collection`
-
-
-[[collection-bag-set-ex]]
-.Collection as SET
-====
-[source, JAVA, indent=0]
-----
-include::{classificationTestsDir}/explicit/EntityWithExplicitSetClassification.java[tags=collections-bag-set-ex]
-----
-====
-
-
-[[collection-semantics-ann]]
-===== @CollectionSemantics
-
-Applications can also use the `@CollectionSemantics` annotation to specify a custom
-link:{javadoc-base}/org/hibernate/collection/spi/CollectionSemantics.html[`org.hibernate.collection.spi.CollectionSemantics`]
-implementation to use for the plural attribute.
-
-As an example, consider a requirement for a collection with the semantics of a "unique list" - a
-cross between the ordered-ness of a `List` and the uniqueness of a `Set`.  First the entity:
-
-
-[[collection-semantics-ann-ex]]
-.@CollectionSemantics
-====
-[source, JAVA, indent=0]
-----
-include::{coreCollectionTestsDir}/semantics/TheEntityWithUniqueList.java[tags=collections-custom-semantics-ex]
-----
-====
-
-The mapping specifies that a custom `UniqueListSemantic` should be used as the `CollectionSemantics` for the
-`strings` attribute.
-
-
-[[collection-semantics-ann-impl-ex]]
-.@CollectionSemantics
-====
-[source, JAVA, indent=0]
-----
-include::{coreCollectionTestsDir}/semantics/UniqueListSemantic.java[tags=collections-custom-semantics-ex]
-----
-====
-
-`UniqueListSemantic` defines the actual semantics of what a unique list is and how Hibernate should handle it.
-
-See the `CollectionSemantics` link:{javadoc-base}/org/hibernate/collection/spi/CollectionSemantics.html[javadoc] for
-details.
-
-
-[[collection-semantics-ann-wrapper-ex]]
-.PersistentCollection
-====
-[source, JAVA, indent=0]
-----
-include::{coreCollectionTestsDir}/semantics/UniqueListWrapper.java[tags=collections-custom-semantics-ex]
-----
-====
-
-Most custom `CollectionSemantics` will need their own `PersistentCollection` implementation.
-`UniqueListWrapper` is the `PersistentCollection` implementation for the "unique list" semantic.
-See <<collection-wrapper>> for more details.
-
-
-For cases where an application wants to apply the same custom semantic to all
-plural attributes of a given classification, Hibernate also provides the
-`@CollectionSemanticsRegistration`:
-
-// todo (6.0) - example of using `@CollectionSemanticsRegistration`
-
 
 [[collection-type-ann]]
-===== @CollectionType
+==== @CollectionType
 
 The `@CollectionType` annotation provides the ability to use a custom
 link:{javadoc-base}/org/hibernate/usertype/UserCollectionType.html[`UserCollectionType`]
-implementation.
+implementation to influence how the collection for a plural attribute behaves.
 
-Let's revisit the requirement of needing a unique list that was used
-in <<collection-semantics-ann>> and see how to implement the same behavior using
-`UserCollectionType`.
+As an example, consider a requirement for a collection with the semantics of a "unique list" - a
+cross between the ordered-ness of a `List` and the uniqueness of a `Set`.  First the entity:
 
 
 [[collection-type-ann-ex]]
@@ -499,7 +397,7 @@ in <<collection-semantics-ann>> and see how to implement the same behavior using
 ====
 [source, JAVA, indent=0]
 ----
-include::{coreCollectionTestsDir}/semantics/AnotherEntityWithUniqueList.java[tags=collections-custom-type-ex]
+include::{coreCollectionTestsDir}/semantics/TheEntityWithUniqueList.java[tags=ex-collections-custom-type-model]
 ----
 ====
 
@@ -513,6 +411,30 @@ The mapping says to use the `UniqueListType` class for the mapping of the plural
 include::{coreCollectionTestsDir}/semantics/UniqueListType.java[tags=collections-custom-type-ex]
 ----
 ====
+
+Most custom `UserCollectionType` implementations will want their own `PersistentCollection` implementation.
+
+[[collection-type-usertype-wrapper-ex]]
+.UniqueListWrapper
+====
+[source, JAVA, indent=0]
+----
+include::{coreCollectionTestsDir}/semantics/UniqueListWrapper.java[tags=collections-custom-semantics-ex]
+----
+====
+
+`UniqueListWrapper` is the `PersistentCollection` implementation for the "unique list" semantic.  See <<collection-wrapper>> for more details.
+
+
+For cases where an application wants to apply the same custom type to all
+plural attributes of a given classification, Hibernate also provides the
+`@CollectionTypeRegistration`:
+
+// todo (6.0) - example of using `@CollectionTypeRegistration`
+
+
+[[collection-type-reg-ann]]
+==== @CollectionTypeRegistration
 
 
 

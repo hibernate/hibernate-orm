@@ -12,6 +12,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentIdentifierBag;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -19,6 +20,11 @@ public class IdentifierBagType extends CollectionType {
 
 	public IdentifierBagType(TypeConfiguration typeConfiguration, String role, String propertyRef) {
 		super( typeConfiguration, role, propertyRef );
+	}
+
+	@Override
+	public CollectionClassification getCollectionClassification() {
+		return CollectionClassification.ID_BAG;
 	}
 
 	@Override

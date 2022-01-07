@@ -8,6 +8,7 @@ package org.hibernate.cfg.annotations;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.CollectionId;
@@ -24,10 +25,13 @@ import org.hibernate.cfg.SecondPass;
 import org.hibernate.cfg.WrappedInferredData;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.IdentifierBag;
 import org.hibernate.mapping.IdentifierCollection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.SemanticsResolver;
 import org.hibernate.mapping.Table;
+import org.hibernate.resource.beans.spi.ManagedBean;
+import org.hibernate.usertype.UserCollectionType;
 
 import jakarta.persistence.Column;
 
@@ -35,12 +39,12 @@ import jakarta.persistence.Column;
  * @author Emmanuel Bernard
  */
 public class IdBagBinder extends BagBinder {
-	public IdBagBinder(SemanticsResolver semanticsResolver, MetadataBuildingContext buildingContext) {
-		super( semanticsResolver, buildingContext );
+	public IdBagBinder(Supplier<ManagedBean<? extends UserCollectionType>> customTypeBeanResolver, MetadataBuildingContext buildingContext) {
+		super( customTypeBeanResolver, buildingContext );
 	}
 
 	protected Collection createCollection(PersistentClass owner) {
-		return new org.hibernate.mapping.IdentifierBag( getSemanticsResolver(), owner, getBuildingContext() );
+		return new IdentifierBag( getCustomTypeBeanResolver(), owner, getBuildingContext() );
 	}
 
 	@Override

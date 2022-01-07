@@ -12,13 +12,21 @@ import java.util.List;
 import org.hibernate.collection.spi.PersistentList;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.metamodel.CollectionClassification.LIST;
 
 public class ListType extends CollectionType {
 
 	public ListType(TypeConfiguration typeConfiguration, String role, String propertyRef) {
 		super( typeConfiguration, role, propertyRef );
+	}
+
+	@Override
+	public CollectionClassification getCollectionClassification() {
+		return LIST;
 	}
 
 	@Override

@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.envers.entities.customtype;
 
-import org.hibernate.annotations.CustomType;
+import org.hibernate.annotations.Type;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.envers.Audited;
 
@@ -26,7 +26,7 @@ public class ParametrizedCustomTypeEntity {
 	private Integer id;
 
 	@Audited
-	@CustomType(
+	@Type(
 			value = ParametrizedTestUserType.class,
 			parameters = {
 					@Parameter(name = "param1", value = "x"),

@@ -17,7 +17,7 @@ import java.util.Objects;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.annotations.CustomType;
+import org.hibernate.annotations.Type;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
@@ -122,7 +122,7 @@ public class QueryParametersValidationTest extends BaseEntityManagerFunctionalTe
 		@GeneratedValue(strategy = GenerationType.AUTO)
 		private Long id;
 
-		@CustomType( QueryParametersValidationTest.BooleanUserType.class )
+		@Type( QueryParametersValidationTest.BooleanUserType.class )
 		private boolean active;
 	}
 

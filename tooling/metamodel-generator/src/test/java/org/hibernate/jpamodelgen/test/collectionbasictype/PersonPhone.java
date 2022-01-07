@@ -3,7 +3,7 @@ package org.hibernate.jpamodelgen.test.collectionbasictype;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.annotations.CustomType;
+import org.hibernate.annotations.Type;
 import org.hibernate.jpamodelgen.test.collectionbasictype.extras.Phone;
 
 import jakarta.persistence.Basic;
@@ -20,7 +20,7 @@ public class PersonPhone {
 	private Long id;
 
 	@Basic
-	@CustomType( CommaDelimitedStringsType.class )
+	@Type( CommaDelimitedStringsType.class )
 	private List<Phone> phones = new ArrayList<>();
 
 	public List<Phone> getPhones() {

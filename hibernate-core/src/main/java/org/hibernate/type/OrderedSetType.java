@@ -7,6 +7,7 @@
 package org.hibernate.type;
 
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -16,6 +17,11 @@ public class OrderedSetType extends SetType {
 
 	public OrderedSetType(TypeConfiguration typeConfiguration, String role, String propertyRef) {
 		super( typeConfiguration, role, propertyRef );
+	}
+
+	@Override
+	public CollectionClassification getCollectionClassification() {
+		return CollectionClassification.ORDERED_SET;
 	}
 
 	@Override

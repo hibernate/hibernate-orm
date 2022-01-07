@@ -144,7 +144,7 @@ See https://docs.jboss.org/hibernate/orm/6.0/userguide/html_single/Hibernate_Use
 
 ==== UserType
 
-`UserType` is still supported, and is specified using the new `@CustomType` annotation.
+`UserType` is still supported, and is specified using the new `Type` annotation.
 
 See https://docs.jboss.org/hibernate/orm/6.0/userguide/html_single/Hibernate_User_Guide.html#basic-mapping-custom for details.
 
@@ -201,9 +201,13 @@ See https://docs.jboss.org/hibernate/orm/6.0/userguide/html_single/Hibernate_Use
 
 === Plural attributes
 
-6.0 adds some new ways to influence collection mapping and makes some changes
-to an existing way.
+6.0 defines 2 main ways to influence collection mapping:
 
+`@CollectionType`:: see <<collection-type-ann>>
+`@CollectionTypeRegistration`:: see <<collection-type-reg-ann>>
+
+
+[[collection-type-ann]]
 ==== `@CollectionType`
 
 The `@CollectionType` annotation is kept from 5.x.  However, where it used to define
@@ -225,25 +229,15 @@ See https://docs.jboss.org/hibernate/orm/6.0/userguide/html_single/Hibernate_Use
 for details of using `@CollectionType`
 
 
-==== `@CollectionClassificationType`
+[[collection-type-reg-ann]]
+==== `@CollectionTypeRegistration`
 
-6.0 adds the `@CollectionClassificationType` annotation to allow specifying the semantics to apply to a
-plural attribute mapping based on discrete (enum) set of classifications.
+Allows to "auto apply" a `UserCollectionType` whenever Hibernate encounters a particular
+plural attribute classification
 
-See https://docs.jboss.org/hibernate/orm/6.0/userguide/html_single/Hibernate_User_Guide.html#collection-classification-ann
-for details of using `@CollectionClassificationType`
+See https://docs.jboss.org/hibernate/orm/6.0/userguide/html_single/Hibernate_User_Guide.html#collection-type-reg-ann
+for details of using `@CollectionTypeRegistration`
 
-
-==== `@CollectionSemantics`
-
-6.0 adds the `@CollectionSemantics` annotation to allow specifying a custom `CollectionSemantics` implementation
-to use for a plural attribute mapping.
-
-It also adds `@CollectionSemanticsRegistration` annotation to auto-apply a custom semantic to all collections
-determined to use the specified classification.
-
-See https://docs.jboss.org/hibernate/orm/6.0/userguide/html_single/Hibernate_User_Guide.html#collection-semantics-ann
-for details of using `@CollectionSemantics`
 
 === Misc
 

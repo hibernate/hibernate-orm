@@ -9,11 +9,9 @@ package org.hibernate.orm.test.mapping.collections;
 import java.util.Collection;
 import java.util.List;
 
-import org.hibernate.annotations.CollectionClassificationType;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.mapping.Bag;
 import org.hibernate.mapping.Property;
-import org.hibernate.metamodel.CollectionClassification;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
@@ -23,6 +21,7 @@ import jakarta.persistence.Basic;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -69,11 +68,11 @@ public class ImplicitListDefaultSemanticsTests {
 		private Collection<String> implicitBag;
 
 		@ElementCollection
-		@CollectionClassificationType( CollectionClassification.BAG )
+		@org.hibernate.annotations.Bag
 		private List<String> explicitBag;
 
 		@ElementCollection
-		@CollectionClassificationType( CollectionClassification.LIST )
+		@OrderColumn( name = "explicit_list_position" )
 		private List<String> explicitList;
 
 		private AnEntity() {

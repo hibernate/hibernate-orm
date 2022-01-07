@@ -20,6 +20,7 @@ import org.hibernate.collection.spi.PersistentArrayHolder;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -41,6 +42,11 @@ public class ArrayType extends CollectionType {
 	@Override
 	public Class getReturnedClass() {
 		return arrayClass;
+	}
+
+	@Override
+	public CollectionClassification getCollectionClassification() {
+		return CollectionClassification.ARRAY;
 	}
 
 	@Override

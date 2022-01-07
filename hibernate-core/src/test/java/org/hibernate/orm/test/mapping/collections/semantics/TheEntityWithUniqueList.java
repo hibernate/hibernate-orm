@@ -8,7 +8,7 @@ package org.hibernate.orm.test.mapping.collections.semantics;
 
 import java.util.List;
 
-import org.hibernate.annotations.CollectionSemantics;
+import org.hibernate.annotations.CollectionType;
 
 import jakarta.persistence.Basic;
 import jakarta.persistence.CollectionTable;
@@ -21,23 +21,23 @@ import jakarta.persistence.Table;
  * @author Steve Ebersole
  */
 @Table(name = "unique_list_owners")
-//tag::collections-custom-semantics-ex[]
+//tag::ex-collections-custom-type-model[]
 @Entity
 public class TheEntityWithUniqueList {
-	//end::collections-custom-semantics-ex[]
+	//end::ex-collections-custom-type-model[]
 	@Id
 	private Integer id;
 	@Basic
 	private String name;
 
 	@CollectionTable(name = "unique_list_contents")
-	//tag::collections-custom-semantics-ex[]
+	//tag::ex-collections-custom-type-model[]
 	@ElementCollection
-	@CollectionSemantics(UniqueListSemantic.class)
+	@CollectionType(type = UniqueListType.class)
 	private List<String> strings;
 
 	// ...
-	//end::collections-custom-semantics-ex[]
+	//end::ex-collections-custom-type-model[]
 
 	private TheEntityWithUniqueList() {
 		// for use by Hibernate
@@ -67,7 +67,7 @@ public class TheEntityWithUniqueList {
 	public void setStrings(List<String> strings) {
 		this.strings = strings;
 	}
-//tag::collections-custom-semantics-ex[]
+//tag::ex-collections-custom-type-model[]
 }
-//end::collections-custom-semantics-ex[]
+//end::ex-collections-custom-type-model[]
 

@@ -15,11 +15,21 @@ import java.util.Queue;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.usertype.UserCollectionType;
 
 //tag::collections-custom-collection-mapping-example[]
 public class QueueType implements UserCollectionType {
+    @Override
+    public CollectionClassification getClassification() {
+        return CollectionClassification.BAG;
+    }
+
+    @Override
+    public Class<?> getCollectionClass() {
+        return Queue.class;
+    }
 
     @Override
     public PersistentCollection instantiate(

@@ -48,7 +48,19 @@ import org.hibernate.proxy.LazyInitializer;
  * and {@link CollectionInterface#createDetachedProxy(SessionFactory, Class, Object)}
  * are intended for use by generic code that must materialize an "amputated" graph of
  * Hibernate entities. (For example, a library which deserializes entities from JSON.)
- *
+ * <p>
+ * Graphs of Hibernate entities obtained from a {@link Session} are usually in an
+ * amputated form, with associations and collections replaced by proxies and lazy
+ * collections. (That is, by instances of the internal types {@link HibernateProxy}
+ * and {@link PersistentCollection}.) These objects are fully serializable using
+ * Java serialization, but can cause discomfort when working with custom serialization
+ * libraries. Therefore, this class defines operations that may be used to write code
+ * that completely removes the amputated leaves of the graph (the proxies) during
+ * serialization, and rematerializes and reattaches them during deserialization. It's
+ * possible, in principle, to use these operations, together with reflection, or with
+ * the Hibernate metamodel, to write such generic code for any given serialization
+ * library, but the details depend on what facilities the library itself offers for
+ * the program to intervene in the process of serialization and of deserialization.
  *
  * @author Gavin King
  * @see java.sql.Clob
@@ -63,7 +75,6 @@ public final class Hibernate {
 	private Hibernate() {
 		throw new UnsupportedOperationException();
 	}
-
 
 	/**
 	 * Force initialization of a proxy or persistent collection. In the case of a

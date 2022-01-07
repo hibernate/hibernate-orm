@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -29,7 +28,6 @@ import org.hibernate.collection.spi.PersistentSet;
 import org.hibernate.collection.spi.PersistentSortedMap;
 import org.hibernate.collection.spi.PersistentSortedSet;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.HibernateIterator;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
@@ -42,12 +40,15 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 
 /**
- * <ul>
- * <li>Provides access to the full range of Hibernate built-in types. {@code Type}
- * instances may be used to bind values to query parameters.
- * <li>A factory for new {@link java.sql.Blob}s and {@link java.sql.Clob}s.
- * <li>Defines static methods for manipulation of proxies.
- * </ul>
+ * Various utility functions for working with proxies and lazy collection references,
+ * along with factory methods for obtaining a {@link LobCreator}.
+ * <p>
+ * Operations like {@link #isInitialized(Object)} and {@link #initialize(Object)} are
+ * of general purpose. But {@link #createDetachedProxy(SessionFactory, Class, Object)}
+ * and {@link CollectionInterface#createDetachedProxy(SessionFactory, Class, Object)}
+ * are intended for use by generic code that must materialize an "amputated" graph of
+ * Hibernate entities. (For example, a library which deserializes entities from JSON.)
+ *
  *
  * @author Gavin King
  * @see java.sql.Clob
@@ -65,13 +66,14 @@ public final class Hibernate {
 
 
 	/**
-	 * Force initialization of a proxy or persistent collection.
-	 * <p/>
-	 * Note: This only ensures initialization of a proxy object or collection;
-	 * it is not guaranteed that the elements INSIDE the collection will be initialized/materialized.
+	 * Force initialization of a proxy or persistent collection. In the case of a
+	 * many-valued association, only the collection itself is initialized. It is not
+	 * guaranteed that the associated entities held within the collection will be
+	 * initialized.
 	 *
 	 * @param proxy a persistable object, proxy, persistent collection or {@code null}
-	 * @throws HibernateException if we can't initialize the proxy at this time, eg. the {@code Session} was closed
+	 * @throws HibernateException if the proxy cannot be initialized at this time,
+	 * for example, if the {@code Session} was closed
 	 */
 	public static void initialize(Object proxy) throws HibernateException {
 		if ( proxy == null ) {
@@ -82,7 +84,7 @@ public final class Hibernate {
 			( (HibernateProxy) proxy ).getHibernateLazyInitializer().initialize();
 		}
 		else if ( proxy instanceof PersistentCollection ) {
-			( (PersistentCollection) proxy ).forceInitialization();
+			( (PersistentCollection<?>) proxy ).forceInitialization();
 		}
 		else if ( proxy instanceof PersistentAttributeInterceptable ) {
 			final PersistentAttributeInterceptable interceptable = (PersistentAttributeInterceptable) proxy;
@@ -106,13 +108,10 @@ public final class Hibernate {
 		}
 		else if ( proxy instanceof PersistentAttributeInterceptable ) {
 			final PersistentAttributeInterceptor interceptor = ( (PersistentAttributeInterceptable) proxy ).$$_hibernate_getInterceptor();
-			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
-				return false;
-			}
-			return true;
+			return !(interceptor instanceof EnhancementAsProxyLazinessInterceptor);
 		}
 		else if ( proxy instanceof PersistentCollection ) {
-			return ( (PersistentCollection) proxy ).wasInitialized();
+			return ( (PersistentCollection<?>) proxy ).wasInitialized();
 		}
 		else {
 			return true;
@@ -121,21 +120,23 @@ public final class Hibernate {
 
 	/**
 	 * Get the true, underlying class of a proxied persistent class. This operation
-	 * will initialize a proxy by side-effect.
+	 * will initialize a proxy by side effect.
 	 *
-	 * @param proxy a persistable object or proxy
+	 * @param proxy an entity instance or proxy
 	 * @return the true class of the instance
-	 * @throws HibernateException
 	 */
-	public static Class getClass(Object proxy) {
+	@SuppressWarnings("unchecked")
+	public static <T> Class<? extends T> getClass(T proxy) {
+		Class<?> result;
 		if ( proxy instanceof HibernateProxy ) {
-			return ( (HibernateProxy) proxy ).getHibernateLazyInitializer()
+			result = ( (HibernateProxy) proxy ).getHibernateLazyInitializer()
 					.getImplementation()
 					.getClass();
 		}
 		else {
-			return proxy.getClass();
+			result = proxy.getClass();
 		}
+		return (Class<? extends T>) result;
 	}
 
 	/**
@@ -178,32 +179,13 @@ public final class Hibernate {
 	}
 
 	/**
-	 * Close an {@link Iterator} instances obtained from {@link org.hibernate.Query#iterate()} immediately
-	 * instead of waiting until the session is closed or disconnected.
-	 *
-	 * @param iterator an Iterator created by iterate()
-	 *
-	 * @throws HibernateException Indicates a problem closing the Hibernate iterator.
-	 * @throws IllegalArgumentException If the Iterator is not a "Hibernate Iterator".
-	 *
-	 * @see Query#iterate()
-	 */
-	public static void close(Iterator iterator) throws HibernateException {
-		if ( iterator instanceof HibernateIterator ) {
-			( (HibernateIterator) iterator ).close();
-		}
-		else {
-			throw new IllegalArgumentException( "not a Hibernate iterator" );
-		}
-	}
-
-	/**
-	 * Check if the property is initialized. If the named property does not exist
-	 * or is not persistent, this method always returns {@code true}.
+	 * Check if the property is initialized. If the named property does not exist or
+	 * is not persistent, this method always returns {@code true}.
 	 *
 	 * @param proxy The potential proxy
 	 * @param propertyName the name of a persistent attribute of the object
-	 * @return true if the named property of the object is not listed as uninitialized; false otherwise
+	 * @return true if the named property of the object is not listed as uninitialized;
+	 *         false otherwise
 	 */
 	public static boolean isPropertyInitialized(Object proxy, String propertyName) {
 		final Object entity;
@@ -231,11 +213,15 @@ public final class Hibernate {
 	}
 
     /**
-     * Unproxies a {@link HibernateProxy}. If the proxy is uninitialized, it automatically triggers an initialization.
-     * In case the supplied object is null or not a proxy, the object will be returned as-is.
-     *
-     * @param proxy the {@link HibernateProxy} to be unproxied
-     * @return the proxy's underlying implementation object, or the supplied object otherwise
+     * If the given object is not a proxy, return it. But, if it is a proxy, ensure
+	 * that the proxy is initialized, and return a direct reference to its proxied
+	 * entity object.
+	 *
+	 * @param proxy an object which might be a proxy for an entity
+	 * @return a reference that is never proxied
+	 *
+	 * @throws LazyInitializationException if this operation is called on an
+	 * uninitialized proxy that is not associated with an open session.
      */
 	public static Object unproxy(Object proxy) {
 		if ( proxy instanceof HibernateProxy ) {
@@ -249,23 +235,28 @@ public final class Hibernate {
 	}
 
 	/**
-	 * Unproxies a {@link HibernateProxy}. If the proxy is uninitialized, it automatically triggers an initialization.
-	 * In case the supplied object is null or not a proxy, the object will be returned as-is.
+	 * If the given object is not a proxy, cast it to the given type, and return it.
+	 * But, if it is a proxy, ensure that the proxy is initialized, and return a
+	 * direct reference to its proxied entity object, after casting to the given type.
 	 *
-	 * @param proxy the {@link HibernateProxy} to be unproxied
-	 * @param entityClass the entity type
-	 * @return the proxy's underlying implementation object, or the supplied object otherwise
+	 * @param proxy an object which might be a proxy for an entity
+	 * @param entityClass an entity type to cast to
+	 * @return a reference that is never proxied
+	 *
+	 * @throws LazyInitializationException if this operation is called on an
+	 * uninitialized proxy that is not associated with an open session.
 	 */
 	public static <T> T unproxy(T proxy, Class<T> entityClass) {
 		return entityClass.cast( unproxy( proxy ) );
 	}
 
 	/**
-	 * Obtain a detached, uninitialized reference (a proxy) for a persistent entity with the given identifier.
+	 * Obtain a detached, uninitialized reference (a proxy) for a persistent entity with
+	 * the given identifier.
 	 *
-	 * The returned proxy is not associated with any session, and cannot be initialized by calling
-	 * {@link #initialize(Object)}. It can be used to represent a reference to the entity when working with
-	 * a detached object graph.
+	 * The returned proxy is not associated with any session, and cannot be initialized
+	 * by calling {@link #initialize(Object)}. It can be used to represent a reference to
+	 * the entity when working with a detached object graph.
 	 *
 	 * @param sessionFactory the session factory with which the entity is associated
 	 * @param entityClass the entity class
@@ -273,6 +264,7 @@ public final class Hibernate {
 	 *
 	 * @return a detached uninitialized proxy
 	 */
+	@SuppressWarnings("unchecked")
 	public static <E> E createDetachedProxy(SessionFactory sessionFactory, Class<E> entityClass, Object id) {
 		EntityPersister persister =
 				sessionFactory.unwrap(SessionFactoryImplementor.class).getMetamodel()
@@ -298,11 +290,12 @@ public final class Hibernate {
 		}
 
 		/**
-		 * Obtain a detached, uninitialized persistent collection of the type represented by this object.
+		 * Obtain a detached, uninitialized persistent collection of the type represented
+		 * by this object.
 		 *
-		 * The returned wrapper object is not associated with any session, and cannot be initialized by calling
-		 * {@link #initialize(Object)}. It can be used to represent an uninitialized collection when working with
-		 * a detached object graph.
+		 * The returned wrapper object is not associated with any session, and cannot be
+		 * initialized by calling {@link #initialize(Object)}. It can be used to represent
+		 * an uninitialized collection when working with a detached object graph.
 		 *
 		 * @return an uninitialized persistent collection
 		 */

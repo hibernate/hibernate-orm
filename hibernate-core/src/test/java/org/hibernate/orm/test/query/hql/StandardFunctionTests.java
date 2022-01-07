@@ -605,22 +605,10 @@ public class StandardFunctionTests {
 					session.createQuery("select extract(time from local_datetime), extract(date from local_datetime) from EntityOfBasics e")
 							.list();
 
-// Not a fan of these "current date", "current time" and "current timestamp" forms.  They were meant to represent `LocalDate`,
-// `LocalTime` and `LocalDateTime` values.  Which imo is just super confusing with `current_date`, `current_time` and
-// `current_timestamp` returning the `Date`, `Time` and `Timestamp` forms
-//					session.createQuery("select extract(time from current datetime), extract(date from current datetime) from EntityOfBasics e")
-//							.list();
-// So I added `local_date`, `local_time` and `local_datetime` functions instead.  See the `localDateTests`, etc
-
 					session.createQuery("select extract(week of month from current_date) from EntityOfBasics e")
 							.list();
 					session.createQuery("select extract(week of year from current_date) from EntityOfBasics e")
 							.list();
-
-// I really don't like this "separate word" approach - here, even moreso.  The problem is the PR also defines a
-// `FIELD( temporalValue)` form which here, e.g., would mean this is a valid expression: `week of year( current date )` which is awful imo
-//					session.createQuery("select extract(week of year from current date) from EntityOfBasics e")
-//							.list();
 				}
 		);
 	}
@@ -632,10 +620,8 @@ public class StandardFunctionTests {
 				session -> {
 					session.createQuery("select extract(offset hour from e.theZonedDateTime) from EntityOfBasics e")
 							.list();
-
-// the grammar rule is defined as `HOUR | MINUTE` so no idea how both ever worked.
-//					session.createQuery("select extract(offset hour minute from e.theZonedDateTime) from EntityOfBasics e")
-//							.list();
+					session.createQuery("select extract(offset minute from e.theZonedDateTime) from EntityOfBasics e")
+							.list();
 				}
 		);
 	}

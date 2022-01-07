@@ -31,6 +31,7 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 	private final boolean globallyQuoteIdentifiers;
 	private final boolean globallyQuoteIdentifiersSkipColumnDefinitions;
 	private final boolean autoQuoteKeywords;
+	private final boolean autoQuoteInitialUnderscore;
 	private final TreeSet<String> reservedWords;
 	private final IdentifierCaseStrategy unquotedCaseStrategy;
 	private final IdentifierCaseStrategy quotedCaseStrategy;
@@ -41,6 +42,7 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 			boolean globallyQuoteIdentifiers,
 			boolean globallyQuoteIdentifiersSkipColumnDefinitions,
 			boolean autoQuoteKeywords,
+			boolean autoQuoteInitialUnderscore,
 			TreeSet<String> reservedWords, //careful, we intentionally omit making a defensive copy to not waste memory
 			IdentifierCaseStrategy unquotedCaseStrategy,
 			IdentifierCaseStrategy quotedCaseStrategy) {
@@ -49,6 +51,7 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 		this.globallyQuoteIdentifiers = globallyQuoteIdentifiers;
 		this.globallyQuoteIdentifiersSkipColumnDefinitions = globallyQuoteIdentifiersSkipColumnDefinitions;
 		this.autoQuoteKeywords = autoQuoteKeywords;
+		this.autoQuoteInitialUnderscore = autoQuoteInitialUnderscore;
 		this.reservedWords = reservedWords;
 		this.unquotedCaseStrategy = unquotedCaseStrategy == null ? IdentifierCaseStrategy.UPPER : unquotedCaseStrategy;
 		this.quotedCaseStrategy = quotedCaseStrategy == null ? IdentifierCaseStrategy.MIXED : quotedCaseStrategy;
@@ -76,6 +79,11 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 			return Identifier.toIdentifier( identifier.getText(), true );
 		}
 
+		if ( autoQuoteInitialUnderscore && identifier.getText().startsWith("_") ) {
+			log.tracef( "Forcing identifier [%s] to quoted due to initial underscore", identifier );
+			return Identifier.toIdentifier( identifier.getText(), true );
+		}
+
 		return identifier;
 	}
 
@@ -96,7 +104,7 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 
 	@Override
 	public boolean isReservedWord(String word) {
-		if ( autoQuoteKeywords == false ) {
+		if ( !autoQuoteKeywords ) {
 			throw new AssertionFailure( "The reserved keywords map is only initialized if autoQuoteKeywords is true" );
 		}
 		return reservedWords.contains( word );

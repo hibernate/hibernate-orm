@@ -24,6 +24,8 @@ import org.hibernate.dialect.sequence.DerbySequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
@@ -64,6 +66,8 @@ import org.hibernate.type.descriptor.jdbc.SmallIntJdbcType;
 import org.hibernate.type.descriptor.jdbc.TimestampJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
+import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
 import java.sql.Types;
 
 import jakarta.persistence.TemporalType;
@@ -875,5 +879,12 @@ public class DerbyDialect extends Dialect {
 	public boolean supportsWindowFunctions() {
 		// It seems at least the row_number function is supported as of 10.4
 		return getVersion().isSameOrAfter( 10, 4 );
+	}
+
+	@Override
+	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)
+			throws SQLException {
+		builder.setAutoQuoteInitialUnderscore(true);
+		return super.buildIdentifierHelper(builder, dbMetaData);
 	}
 }

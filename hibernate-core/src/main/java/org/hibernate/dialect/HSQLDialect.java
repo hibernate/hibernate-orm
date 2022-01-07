@@ -7,6 +7,7 @@
 package org.hibernate.dialect;
 
 import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.JDBCException;
@@ -31,6 +32,8 @@ import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -785,4 +788,10 @@ public class HSQLDialect extends Dialect {
 		}
 	}
 
+	@Override
+	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)
+			throws SQLException {
+		builder.setAutoQuoteInitialUnderscore(true);
+		return super.buildIdentifierHelper(builder, dbMetaData);
+	}
 }

@@ -40,6 +40,7 @@ public class IdentifierHelperBuilder {
 	private boolean globallyQuoteIdentifiers = false;
 	private boolean skipGlobalQuotingForColumnDefinitions = false;
 	private boolean autoQuoteKeywords = true;
+	private boolean autoQuoteInitialUnderscore = false;
 	private IdentifierCaseStrategy unquotedCaseStrategy = IdentifierCaseStrategy.UPPER;
 	private IdentifierCaseStrategy quotedCaseStrategy = IdentifierCaseStrategy.MIXED;
 
@@ -64,10 +65,9 @@ public class IdentifierHelperBuilder {
 		}
 
 		//Important optimisation: skip loading all keywords from the DB when autoQuoteKeywords is disabled
-		if ( autoQuoteKeywords == false ) {
-			return;
+		if ( autoQuoteKeywords ) {
+			this.reservedWords.addAll( parseKeywords( metaData.getSQLKeywords() ) );
 		}
-		this.reservedWords.addAll( parseKeywords( metaData.getSQLKeywords() ) );
 	}
 
 	private static List<String> parseKeywords(String extraKeywordsString) {
@@ -153,6 +153,10 @@ public class IdentifierHelperBuilder {
 		this.autoQuoteKeywords = autoQuoteKeywords;
 	}
 
+	public void setAutoQuoteInitialUnderscore(boolean autoQuoteInitialUnderscore) {
+		this.autoQuoteInitialUnderscore = autoQuoteInitialUnderscore;
+	}
+
 	public NameQualifierSupport getNameQualifierSupport() {
 		return nameQualifierSupport;
 	}
@@ -187,10 +191,9 @@ public class IdentifierHelperBuilder {
 
 	public void applyReservedWords(Collection<String> words) {
 		//No use when autoQuoteKeywords is disabled
-		if ( autoQuoteKeywords == false ) {
-			return;
+		if ( autoQuoteKeywords ) {
+			this.reservedWords.addAll( words );
 		}
-		this.reservedWords.addAll( words );
 	}
 
 	public void applyReservedWords(Set<String> words) {
@@ -218,6 +221,7 @@ public class IdentifierHelperBuilder {
 				globallyQuoteIdentifiers,
 				skipGlobalQuotingForColumnDefinitions,
 				autoQuoteKeywords,
+				autoQuoteInitialUnderscore,
 				reservedWords,
 				unquotedCaseStrategy,
 				quotedCaseStrategy

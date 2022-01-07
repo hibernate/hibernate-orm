@@ -7,6 +7,7 @@
 package org.hibernate.dialect;
 
 import java.sql.CallableStatement;
+import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
@@ -32,6 +33,8 @@ import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockAcquisitionException;
@@ -1261,5 +1264,12 @@ public class OracleDialect extends Dialect {
 	@Override
 	public String generatedAs(String generatedAs) {
 		return " generated always as (" + generatedAs + ")";
+	}
+
+	@Override
+	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)
+			throws SQLException {
+		builder.setAutoQuoteInitialUnderscore(true);
+		return super.buildIdentifierHelper(builder, dbMetaData);
 	}
 }

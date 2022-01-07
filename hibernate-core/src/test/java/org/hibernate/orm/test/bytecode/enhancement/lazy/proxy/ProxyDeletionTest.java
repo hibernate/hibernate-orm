@@ -96,7 +96,7 @@ public class ProxyDeletionTest extends BaseNonConfigCoreFunctionalTestCase {
 					d.setOid( 1 );
 
 					byte[] lBytes = "agdfagdfagfgafgsfdgasfdgfgasdfgadsfgasfdgasfdgasdasfdg".getBytes();
-					Blob lBlob = Hibernate.getLobCreator( session ).createBlob( lBytes );
+					Blob lBlob = session.getLobCreator().createBlob( lBytes );
 					d.setBlob( lBlob );
 
 					BEntity b1 = new BEntity();

@@ -13,6 +13,8 @@ import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
+import org.hibernate.testing.orm.domain.gambit.EntityOfLists;
+import org.hibernate.testing.orm.domain.gambit.EntityOfMaps;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -30,6 +32,7 @@ import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.Map;
 
 import org.hamcrest.Matchers;
 
@@ -57,6 +60,14 @@ public class FunctionTests {
 					entity.setTheTime( new Time( 20, 10, 8 ) );
 					entity.setTheTimestamp( new Timestamp( 121, 4, 27, 13, 22, 50, 123456789 ) );
 					em.persist(entity);
+
+					EntityOfLists eol = new EntityOfLists(1,"");
+					eol.addBasic("hello");
+					em.persist(eol);
+
+					EntityOfMaps eom = new EntityOfMaps(2,"");
+					eom.addBasicByBasic("hello", "world");
+					em.persist(eom);
 				}
 		);
 	}
@@ -71,6 +82,53 @@ public class FunctionTests {
 							.list();
 					session.createQuery("select naturalid(w) from VersionedEntity w")
 							.list();
+				}
+		);
+	}
+
+	@Test
+	public void testMaxindexMaxelement(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertThat( session.createQuery("select maxindex(l) from EntityOfLists eol join eol.listOfBasics l")
+							.getSingleResult(), is(0) );
+					assertThat( session.createQuery("select maxelement(l) from EntityOfLists eol join eol.listOfBasics l")
+							.getSingleResult(), is("hello") );
+					assertThat( session.createQuery("select maxindex(eol.listOfBasics) from EntityOfLists eol")
+							.getSingleResult(), is(0) );
+					assertThat( session.createQuery("select maxelement(eol.listOfBasics) from EntityOfLists eol")
+							.getSingleResult(), is("hello") );
+
+					assertThat( session.createQuery("select maxindex(m) from EntityOfMaps eom join eom.basicByBasic m")
+							.getSingleResult(), is("hello") );
+					assertThat( session.createQuery("select maxelement(m) from EntityOfMaps eom join eom.basicByBasic m")
+							.getSingleResult(), is("world") );
+					assertThat( session.createQuery("select maxindex(eom.basicByBasic) from EntityOfMaps eom")
+							.getSingleResult(), is("hello") );
+					assertThat( session.createQuery("select maxelement(eom.basicByBasic) from EntityOfMaps eom")
+							.getSingleResult(), is("world") );
+				}
+		);
+	}
+
+	@Test
+	public void testKeyIndexValueEntry(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertThat( session.createQuery("select index(l) from EntityOfLists eol join eol.listOfBasics l")
+							.getSingleResult(), is(0) );
+					assertThat( session.createQuery("select value(l) from EntityOfLists eol join eol.listOfBasics l")
+							.getSingleResult(), is("hello") );
+
+					assertThat( session.createQuery("select key(m) from EntityOfMaps eom join eom.basicByBasic m")
+							.getSingleResult(), is("hello") );
+					assertThat( session.createQuery("select index(m) from EntityOfMaps eom join eom.basicByBasic m")
+							.getSingleResult(), is("hello") );
+					assertThat( session.createQuery("select value(m) from EntityOfMaps eom join eom.basicByBasic m")
+							.getSingleResult(), is("world") );
+
+					assertThat( session.createQuery("select entry(m) from EntityOfMaps eom join eom.basicByBasic m")
+							.getSingleResult(), is( Map.entry("hello", "world") ) );
 				}
 		);
 	}

@@ -249,12 +249,12 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 		doTest(
 				ClobEntity.class,
 				Clob.class,
-				session -> Hibernate.getLobCreator( session ).createClob( "some text" )
+				session -> session.getLobHelper().createClob( "some text" )
 		);
 		doTest(
 				BlobEntity.class,
 				Blob.class,
-				session -> Hibernate.getLobCreator( session ).createBlob( "some text".getBytes() )
+				session -> session.getLobHelper().createBlob( "some text".getBytes() )
 		);
 	}
 

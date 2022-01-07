@@ -28,20 +28,15 @@ import org.hibernate.collection.spi.PersistentSet;
 import org.hibernate.collection.spi.PersistentSortedMap;
 import org.hibernate.collection.spi.PersistentSortedSet;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.jdbc.LobCreator;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 
 /**
- * Various utility functions for working with proxies and lazy collection references,
- * along with factory methods for obtaining a {@link LobCreator}.
+ * Various utility functions for working with proxies and lazy collection references.
  * <p>
  * Operations like {@link #isInitialized(Object)} and {@link #initialize(Object)} are
  * of general purpose. But {@link #createDetachedProxy(SessionFactory, Class, Object)}
@@ -63,11 +58,7 @@ import org.hibernate.proxy.LazyInitializer;
  * the program to intervene in the process of serialization and of deserialization.
  *
  * @author Gavin King
- * @see java.sql.Clob
- * @see java.sql.Blob
- * @see org.hibernate.type.Type
  */
-
 public final class Hibernate {
 	/**
 	 * Cannot be instantiated.
@@ -112,7 +103,6 @@ public final class Hibernate {
 	 * @param proxy a persistable object, proxy, persistent collection or {@code null}
 	 * @return true if the argument is already initialized, or is not a proxy or collection
 	 */
-	@SuppressWarnings("SimplifiableIfStatement")
 	public static boolean isInitialized(Object proxy) {
 		if ( proxy instanceof HibernateProxy ) {
 			return !( (HibernateProxy) proxy ).getHibernateLazyInitializer().isUninitialized();
@@ -148,45 +138,6 @@ public final class Hibernate {
 			result = proxy.getClass();
 		}
 		return (Class<? extends T>) result;
-	}
-
-	/**
-	 * Obtain a lob creator for the given session.
-	 *
-	 * @param session The session for which to obtain a lob creator
-	 *
-	 * @return The log creator reference
-	 */
-	public static LobCreator getLobCreator(Session session) {
-		return getLobCreator( (SessionImplementor) session );
-	}
-
-	/**
-	 * Obtain a lob creator for the given session.
-	 *
-	 * @param session The session for which to obtain a lob creator
-	 *
-	 * @return The log creator reference
-	 */
-	public static LobCreator getLobCreator(SharedSessionContractImplementor session) {
-		return session.getFactory()
-				.getServiceRegistry()
-				.getService( JdbcServices.class )
-				.getLobCreator( session );
-	}
-
-	/**
-	 * Obtain a lob creator for the given session.
-	 *
-	 * @param session The session for which to obtain a lob creator
-	 *
-	 * @return The log creator reference
-	 */
-	public static LobCreator getLobCreator(SessionImplementor session) {
-		return session.getFactory()
-				.getServiceRegistry()
-				.getService( JdbcServices.class )
-				.getLobCreator( session );
 	}
 
 	/**

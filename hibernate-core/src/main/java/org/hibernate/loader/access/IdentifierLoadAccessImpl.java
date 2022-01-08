@@ -40,6 +40,7 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 
 	private LockOptions lockOptions;
 	private CacheMode cacheMode;
+	private Boolean readOnly;
 	private RootGraphImplementor<T> rootGraph;
 	private GraphSemantic graphSemantic;
 
@@ -57,6 +58,12 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 	@Override
 	public IdentifierLoadAccess<T> with(CacheMode cacheMode) {
 		this.cacheMode = cacheMode;
+		return this;
+	}
+
+	@Override
+	public IdentifierLoadAccess<T> withReadOnly(boolean readOnly) {
+		this.readOnly = readOnly;
 		return this;
 	}
 
@@ -122,21 +129,21 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 			id = entityPersister.getIdentifierMapping().getJavaTypeDescriptor().coerce( id, this );
 		}
 
+		String entityName = entityPersister.getEntityName();
+		Boolean readOnly = this.readOnly != null ? this.readOnly : loadQueryInfluencers.getReadOnly();
+
 		if ( this.lockOptions != null ) {
-			LoadEvent event = new LoadEvent( id, entityPersister.getEntityName(), lockOptions, eventSource, loadQueryInfluencers.getReadOnly() );
+			LoadEvent event = new LoadEvent( id, entityName, lockOptions, eventSource, readOnly );
 			context.fireLoad( event, LoadEventListener.LOAD );
 			return (T) event.getResult();
 		}
 
-		LoadEvent event = new LoadEvent( id, entityPersister.getEntityName(), false, eventSource, loadQueryInfluencers.getReadOnly() );
+		LoadEvent event = new LoadEvent( id, entityName, false, eventSource, readOnly );
 		boolean success = false;
 		try {
 			context.fireLoad( event, LoadEventListener.LOAD );
 			if ( event.getResult() == null ) {
-				session.getFactory().getEntityNotFoundDelegate().handleEntityNotFound(
-						entityPersister.getEntityName(),
-						id
-				);
+				session.getFactory().getEntityNotFoundDelegate().handleEntityNotFound( entityName, id );
 			}
 			success = true;
 			return (T) event.getResult();
@@ -167,8 +174,11 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 			id = entityPersister.getIdentifierMapping().getJavaTypeDescriptor().coerce( id, this );
 		}
 
+		String entityName = entityPersister.getEntityName();
+		Boolean readOnly = this.readOnly != null ? this.readOnly : loadQueryInfluencers.getReadOnly();
+
 		if ( this.lockOptions != null ) {
-			LoadEvent event = new LoadEvent( id, entityPersister.getEntityName(), lockOptions, eventSource, loadQueryInfluencers.getReadOnly() );
+			LoadEvent event = new LoadEvent( id, entityName, lockOptions, eventSource, readOnly );
 			context.fireLoad( event, LoadEventListener.GET );
 			final Object result = event.getResult();
 			initializeIfNecessary( result );
@@ -176,7 +186,7 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 			return (T) result;
 		}
 
-		LoadEvent event = new LoadEvent( id, entityPersister.getEntityName(), false, eventSource, loadQueryInfluencers.getReadOnly() );
+		LoadEvent event = new LoadEvent( id, entityName, false, eventSource, readOnly );
 		boolean success = false;
 		try {
 			context.fireLoad( event, LoadEventListener.GET );
@@ -206,17 +216,15 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 			if ( initializer.isUninitialized() ) {
 				initializer.initialize();
 			}
-			return;
 		}
-
-		final BytecodeEnhancementMetadata enhancementMetadata = entityPersister.getEntityMetamodel().getBytecodeEnhancementMetadata();
-		if ( ! enhancementMetadata.isEnhancedForLazyLoading() ) {
-			return;
-		}
-
-		final BytecodeLazyAttributeInterceptor interceptor = enhancementMetadata.extractLazyInterceptor( result);
-		if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
-			( (EnhancementAsProxyLazinessInterceptor) interceptor ).forceInitialize( result, null );
+		else {
+			final BytecodeEnhancementMetadata enhancementMetadata = entityPersister.getEntityMetamodel().getBytecodeEnhancementMetadata();
+			if ( enhancementMetadata.isEnhancedForLazyLoading() ) {
+				final BytecodeLazyAttributeInterceptor interceptor = enhancementMetadata.extractLazyInterceptor( result);
+				if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
+					( (EnhancementAsProxyLazinessInterceptor) interceptor ).forceInitialize( result, null );
+				}
+			}
 		}
 	}
 

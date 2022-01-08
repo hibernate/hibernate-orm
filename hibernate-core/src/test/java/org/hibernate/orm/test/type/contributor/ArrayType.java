@@ -6,8 +6,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.HibernateException;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.model.domain.AllowableParameterType;
+import org.hibernate.query.AllowableParameterType;
+import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
@@ -23,18 +25,15 @@ public class ArrayType implements UserType<Array>, AllowableParameterType<Array>
     private final JdbcType jdbcType = VarcharJdbcType.INSTANCE;
 
     @Override
-    public BasicJavaType<Array> getExpressableJavaTypeDescriptor() {
-        return javaType;
-    }
-
-    @Override
-    public PersistenceType getPersistenceType() {
-        return PersistenceType.BASIC;
-    }
-
-    @Override
-    public Class<Array> getJavaType() {
+    public Class<Array> getBindableJavaType() {
+        // really a UserType should not implement AllowableParameterType
         return Array.class;
+    }
+
+    @Override
+    public SqmExpressable<Array> resolveExpressable(SessionFactoryImplementor sessionFactory) {
+        // really a UserType should not implement AllowableParameterType
+        throw new UnsupportedOperationException();
     }
 
     @Override

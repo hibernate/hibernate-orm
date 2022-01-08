@@ -10,10 +10,10 @@ import java.io.Serializable;
 
 import org.hibernate.graph.internal.SubGraphImpl;
 import org.hibernate.graph.spi.SubGraphImplementor;
-import org.hibernate.metamodel.ManagedTypeRepresentationStrategy;
 import org.hibernate.metamodel.model.domain.AbstractManagedType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
+import org.hibernate.query.AllowableParameterType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -25,7 +25,7 @@ import org.hibernate.type.descriptor.java.JavaType;
  */
 public class EmbeddableTypeImpl<J>
 		extends AbstractManagedType<J>
-		implements EmbeddableDomainType<J>, Serializable {
+		implements EmbeddableDomainType<J>, AllowableParameterType<J>, Serializable {
 
 	private final boolean isDynamic;
 

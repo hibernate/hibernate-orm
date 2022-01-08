@@ -6,7 +6,8 @@
  */
 package org.hibernate.metamodel.model.domain;
 
-import org.hibernate.metamodel.ManagedTypeRepresentationStrategy;
+import org.hibernate.query.AllowableParameterType;
+import org.hibernate.query.sqm.SqmExpressable;
 
 import jakarta.persistence.metamodel.EmbeddableType;
 
@@ -18,5 +19,6 @@ import jakarta.persistence.metamodel.EmbeddableType;
  *
  * @author Steve Ebersole
  */
-public interface EmbeddableDomainType<J> extends ManagedDomainType<J>, EmbeddableType<J>, AllowableParameterType<J> {
+public interface EmbeddableDomainType<J>
+		extends ManagedDomainType<J>, EmbeddableType<J>, AllowableParameterType<J>, SqmExpressable<J> {
 }

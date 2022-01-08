@@ -7,6 +7,7 @@
 package org.hibernate.graph.internal.parse;
 
 import org.hibernate.graph.CannotContainSubGraphException;
+import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 
@@ -35,7 +36,7 @@ public enum PathQualifierType {
 	);
 
 	private static ManagedDomainType resolveSubTypeManagedType(
-			SimpleDomainType<?> graphType,
+			DomainType<?> graphType,
 			String subTypeName) {
 		if ( !( graphType instanceof ManagedDomainType ) ) {
 			throw new CannotContainSubGraphException( "The given type [" + graphType + "] is not a ManagedType" );

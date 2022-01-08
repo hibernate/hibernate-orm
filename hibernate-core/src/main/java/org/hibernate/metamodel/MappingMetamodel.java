@@ -13,7 +13,7 @@ import java.util.function.Function;
 import org.hibernate.Incubating;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
-import org.hibernate.metamodel.model.domain.AllowableParameterType;
+import org.hibernate.query.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;

@@ -6,9 +6,9 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
-import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
-import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
+import org.hibernate.query.AllowableFunctionReturnType;
+import org.hibernate.query.AllowableParameterType;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;

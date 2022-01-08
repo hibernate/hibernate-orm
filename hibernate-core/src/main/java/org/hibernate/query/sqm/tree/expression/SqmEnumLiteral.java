@@ -46,14 +46,16 @@ public class SqmEnumLiteral<E extends Enum<E>> extends AbstractSqmExpression<E> 
 		return enumValue;
 	}
 
-	public String getEnumValueName() {
-		return enumValueName;
-	}
-
 	@Override
 	public EnumJavaTypeDescriptor<E> getExpressableJavaTypeDescriptor() {
 		return referencedEnumTypeDescriptor;
 	}
+
+	@Override
+	public Class<E> getBindableJavaType() {
+		return getJavaTypeDescriptor().getJavaTypeClass();
+	}
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// SemanticPathPart
@@ -134,5 +136,4 @@ public class SqmEnumLiteral<E extends Enum<E>> extends AbstractSqmExpression<E> 
 		sb.append( '.' );
 		sb.append( enumValueName );
 	}
-
 }

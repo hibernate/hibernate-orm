@@ -28,6 +28,11 @@ public abstract class AbstractSqmPathSource<J> implements SqmPathSource<J> {
 	}
 
 	@Override
+	public Class<J> getBindableJavaType() {
+		return domainType.getBindableJavaType();
+	}
+
+	@Override
 	public String getPathName() {
 		return localPathName;
 	}
@@ -45,10 +50,5 @@ public abstract class AbstractSqmPathSource<J> implements SqmPathSource<J> {
 	@Override
 	public JavaType<J> getExpressableJavaTypeDescriptor() {
 		return domainType.getExpressableJavaTypeDescriptor();
-	}
-
-	@Override
-	public Class<J> getBindableJavaType() {
-		return getExpressableJavaTypeDescriptor().getJavaTypeClass();
 	}
 }

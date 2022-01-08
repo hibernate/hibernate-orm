@@ -9,14 +9,6 @@ package org.hibernate.orm.test.mapping.converted.converter;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.stream.Stream;
-import jakarta.persistence.AttributeConverter;
-import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import jakarta.persistence.TemporalType;
 
 import org.hibernate.query.Query;
 
@@ -27,6 +19,14 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -45,7 +45,7 @@ public class LongToDateConversionTest {
 				(session) -> {
 					final String qryStr = "SELECT e FROM TestEntity e WHERE e.date <= :ts";
 					final Query<TestEntity> query = session.createQuery( qryStr, TestEntity.class );
-					query.setParameter( "ts", new DateAttribute( System.currentTimeMillis() ), TemporalType.TIMESTAMP );
+					query.setParameter( "ts", new DateAttribute( System.currentTimeMillis() ) );
 					final Stream<TestEntity> stream = query.stream();
 					assertThat( stream.count(), is( 1L ) );
 				}

@@ -144,7 +144,7 @@ public class CriteriaQueryTypeQueryAdapterTest extends BaseEntityManagerFunction
 
 			QueryImplementor<?> criteriaQuery = (QueryImplementor<?>) entityManager.createQuery( query );
 
-			criteriaQuery.setParameter( "placedAt", Instant.now(), TemporalType.TIMESTAMP ).list();
+			criteriaQuery.setParameter( "placedAt", Instant.now() ).list();
 		} );
 	}
 
@@ -162,7 +162,7 @@ public class CriteriaQueryTypeQueryAdapterTest extends BaseEntityManagerFunction
 
 			QueryImplementor<?> criteriaQuery = (QueryImplementor<?>) entityManager.createQuery( query );
 
-			criteriaQuery.setParameter( "placedAt", Instant.now(), TemporalType.TIMESTAMP ).list();
+			criteriaQuery.setParameter( "placedAt", Instant.now() ).list();
 		} );
 	}
 

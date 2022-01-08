@@ -13,16 +13,44 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
-import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.AllowableParameterType;
 import org.hibernate.query.hql.spi.SqmCreationState;
+import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.type.descriptor.java.JdbcDateJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JdbcTimeJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JdbcTimestampJavaTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
  */
-public class LiteralHelper {
+public class SqmExpressionHelper {
+	public static <T> SqmExpressable<T> toSqmType(AllowableParameterType<T> parameterType, SqmCreationState creationState) {
+		return toSqmType( parameterType, creationState.getCreationContext().getJpaMetamodel().getTypeConfiguration() );
+	}
+
+	public static <T> SqmExpressable<T> toSqmType(AllowableParameterType<T> anticipatedType, NodeBuilder nodeBuilder) {
+		return toSqmType( anticipatedType, nodeBuilder.getTypeConfiguration() );
+	}
+
+	public static <T> SqmExpressable<T> toSqmType(AllowableParameterType<T> anticipatedType, TypeConfiguration typeConfiguration) {
+		return toSqmType( anticipatedType, typeConfiguration.getSessionFactory() );
+	}
+
+	public static <T> SqmExpressable<T> toSqmType(AllowableParameterType<T> anticipatedType, SessionFactoryImplementor sessionFactory) {
+		if ( anticipatedType == null ) {
+			return null;
+		}
+		final SqmExpressable<T> sqmExpressable = anticipatedType.resolveExpressable( sessionFactory );
+		assert sqmExpressable != null;
+
+		return sqmExpressable;
+
+	}
+
 	public static SqmLiteral<Timestamp> timestampLiteralFrom(String literalText, SqmCreationState creationState) {
 		final Timestamp literal = Timestamp.valueOf(
 				LocalDateTime.from( JdbcTimestampJavaTypeDescriptor.LITERAL_FORMATTER.parse( literalText ) )

@@ -11,12 +11,12 @@ import org.hibernate.metamodel.CollectionClassification;
 /**
  * Attribute metadata contract for a plural attribute.
  *
- * @param <X> The owner type
- * @param <Y> The attribute type (the collection type)
+ * @param <O> The owner type
+ * @param <C> The attribute type (the collection type)
  * @param <E> The collection element type
  */
 @SuppressWarnings("UnusedDeclaration")
-public interface PluralAttributeMetadata<X, Y, E> extends AttributeMetadata<X, Y> {
+public interface PluralAttributeMetadata<O, C, E> extends AttributeMetadata<O, C> {
 	/**
 	 * The classification of the collection, indicating the collection semantics
 	 * to be used.

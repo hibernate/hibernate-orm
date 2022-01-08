@@ -66,7 +66,6 @@ public class SqmDynamicInstantiation<T>
 	}
 
 	public static <M extends Map<?, ?>> SqmDynamicInstantiation<M> forMapInstantiation(NodeBuilder nodeBuilder) {
-		//noinspection unchecked
 		return forMapInstantiation(
 				nodeBuilder.getTypeConfiguration().getJavaTypeDescriptorRegistry().getDescriptor( Map.class ),
 				nodeBuilder
@@ -83,7 +82,6 @@ public class SqmDynamicInstantiation<T>
 	}
 
 	public static <L extends List<?>> SqmDynamicInstantiation<L> forListInstantiation(NodeBuilder nodeBuilder) {
-		//noinspection unchecked
 		return forListInstantiation(
 				nodeBuilder.getTypeConfiguration().getJavaTypeDescriptorRegistry().getDescriptor( List.class ),
 				nodeBuilder
@@ -218,6 +216,11 @@ public class SqmDynamicInstantiation<T>
 		@Override
 		public JavaType<T> getExpressableJavaTypeDescriptor() {
 			return getTargetTypeDescriptor();
+		}
+
+		@Override
+		public Class<T> getBindableJavaType() {
+			return getTargetTypeDescriptor().getJavaTypeClass();
 		}
 	}
 

@@ -11,7 +11,7 @@ import java.sql.CallableStatement;
 import jakarta.persistence.ParameterMode;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.model.domain.AllowableParameterType;
+import org.hibernate.query.AllowableParameterType;
 import org.hibernate.sql.exec.internal.JdbcCallRefCursorExtractorImpl;
 
 /**

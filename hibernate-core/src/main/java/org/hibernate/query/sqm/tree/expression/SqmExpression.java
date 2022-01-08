@@ -13,7 +13,7 @@ import java.util.function.Consumer;
 import jakarta.persistence.criteria.Expression;
 
 import org.hibernate.annotations.Remove;
-import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
+import org.hibernate.query.AllowableFunctionReturnType;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.spi.QueryEngine;

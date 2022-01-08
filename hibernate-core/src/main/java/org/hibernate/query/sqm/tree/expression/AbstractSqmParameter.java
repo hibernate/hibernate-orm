@@ -6,8 +6,8 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
+import org.hibernate.query.AllowableParameterType;
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressable;
@@ -22,7 +22,7 @@ public abstract class AbstractSqmParameter<T> extends AbstractSqmExpression<T> i
 
 	public AbstractSqmParameter(
 			boolean canBeMultiValued,
-			AllowableParameterType<T> inherentType,
+			SqmExpressable<T> inherentType,
 			NodeBuilder nodeBuilder) {
 		super( inherentType, nodeBuilder );
 		this.canBeMultiValued = canBeMultiValued;
@@ -36,7 +36,7 @@ public abstract class AbstractSqmParameter<T> extends AbstractSqmExpression<T> i
 		else if ( type instanceof PluralPersistentAttribute<?, ?, ?> ) {
 			type = ( (PluralPersistentAttribute<?, ?, ?>) type ).getElementType();
 		}
-		final SqmExpressable<?> oldType = getNodeType();
+		final SqmExpressable<T> oldType = getNodeType();
 
 		final SqmExpressable<?> newType = QueryHelper.highestPrecedenceType( oldType, type );
 		if ( newType != null && newType != oldType ) {
@@ -57,11 +57,6 @@ public abstract class AbstractSqmParameter<T> extends AbstractSqmExpression<T> i
 	@Override
 	public boolean allowMultiValuedBinding() {
 		return canBeMultiValued;
-	}
-
-	@Override
-	public AllowableParameterType<T> getNodeType() {
-		return (AllowableParameterType<T>) super.getNodeType();
 	}
 
 	@Override

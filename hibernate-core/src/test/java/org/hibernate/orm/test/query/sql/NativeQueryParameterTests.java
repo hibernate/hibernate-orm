@@ -8,19 +8,11 @@ package org.hibernate.orm.test.query.sql;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import jakarta.persistence.TemporalType;
 
-import org.hibernate.boot.Metadata;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.event.service.spi.EventListenerRegistry;
-import org.hibernate.event.spi.EventType;
-import org.hibernate.integrator.spi.Integrator;
-import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.hibernate.type.StandardBasicTypes;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
@@ -83,8 +75,8 @@ public class NativeQueryParameterTests {
 						final Instant startPeriod = now.minus( 30, ChronoUnit.DAYS );
 
 						session.createNativeQuery( qryString )
-								.setParameter( 1, startPeriod, TemporalType.DATE )
-								.setParameter( 2, now, TemporalType.DATE )
+								.setParameter( 1, startPeriod )
+								.setParameter( 2, now )
 								.list();
 					}
 
@@ -93,8 +85,8 @@ public class NativeQueryParameterTests {
 						final Instant startPeriod = now.minus( 30, ChronoUnit.DAYS );
 
 						session.createNativeQuery( qryString )
-								.setParameter( 1, startPeriod, TemporalType.TIMESTAMP )
-								.setParameter( 2, now, TemporalType.TIMESTAMP )
+								.setParameter( 1, startPeriod )
+								.setParameter( 2, now )
 								.list();
 					}
 				}

@@ -7,9 +7,6 @@
 package org.hibernate.query;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
@@ -17,11 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
-import jakarta.persistence.FlushModeType;
-import jakarta.persistence.LockModeType;
-import jakarta.persistence.Parameter;
-import jakarta.persistence.TemporalType;
-import jakarta.persistence.TypedQuery;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -35,10 +27,14 @@ import org.hibernate.SharedSessionContract;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
-import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.transform.ResultTransformer;
-import org.hibernate.type.BasicTypeReference;
+
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.TypedQuery;
 
 /**
  * Represents an HQL/JPQL query or a compiled Criteria query.  Also acts as the Hibernate
@@ -334,57 +330,116 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 */
 	ParameterMetadata getParameterMetadata();
 
+
+
 	/**
-	 * Bind the given argument to a named query parameter, inferring the
-	 * {@link AllowableParameterType}.
+	 * Bind the given argument to a named query parameter
 	 * <p>
 	 * If the type of the parameter cannot be inferred from the context in which
-	 * it occurs, {@link #setParameter(String, Object, AllowableParameterType)}
-	 * must be used instead.
+	 * it occurs, use one of the forms accept a "type".
 	 *
-	 * @param name the parameter name
-	 * @param value the argument, which might be null
-	 *
-	 * @return {@code this}, for method chaining
+	 * @see #setParameter(String, Object, Class)
+	 * @see #setParameter(String, Object, AllowableParameterType)
 	 */
 	@Override
 	Query<R> setParameter(String name, Object value);
 
 	/**
-	 * Bind the given argument to a positional query parameter, inferring the
+	 * Bind the given argument to a named query parameter using the given
+	 * Class reference to attempt to determine the {@link AllowableParameterType}
+	 * to use.  If unable to determine an appropriate {@link AllowableParameterType},
+	 * {@link #setParameter(String, Object)} is used
+	 *
+	 * @see AllowableParameterType#parameterType(Class)
+	 * @see #setParameter(String, Object, AllowableParameterType)
+	 */
+	<P> Query<R> setParameter(String name, P value, Class<P> type);
+
+	/**
+	 * Bind the given argument to a named query parameter using the given
 	 * {@link AllowableParameterType}.
+	 *
+	 * @see AllowableParameterType#parameterType
+	 */
+	<P> Query<R> setParameter(String name, P value, AllowableParameterType<P> type);
+
+	/**
+	 * Bind an {@link Instant} value to the named query parameter using just the portion
+	 * indicated by the given {@link TemporalType}.
+	 */
+	Query<R> setParameter(String name, Instant value, TemporalType temporalType);
+
+	/**
+	 * {@link jakarta.persistence.Query} override
+	 */
+	@Override
+	Query<R> setParameter(String name, Calendar value, TemporalType temporalType);
+
+	/**
+	 * {@link jakarta.persistence.Query} override
+	 */
+	@Override
+	Query<R> setParameter(String name, Date value, TemporalType temporalType);
+
+
+
+	/**
+	 * Bind the given argument to a positional query parameter.
 	 * <p>
 	 * If the type of the parameter cannot be inferred from the context in which
-	 * it occurs, {@link #setParameter(int, Object, AllowableParameterType)}
-	 * must be used instead.
+	 * it occurs, use one of the forms accept a "type".
 	 *
-	 * @param position the positional parameter label
-	 * @param value the argument, which might be null
-	 *
-	 * @return {@code this}, for method chaining
+	 * @see #setParameter(int, Object, Class)
+	 * @see #setParameter(int, Object, AllowableParameterType)
 	 */
 	@Override
 	Query<R> setParameter(int position, Object value);
 
 	/**
-	 * Bind the given argument to the query parameter represented by the given
-	 * {@link Parameter} object.
+	 * Bind the given argument to a positional query parameter using the given
+	 * Class reference to attempt to determine the {@link AllowableParameterType}
+	 * to use.  If unable to determine an appropriate {@link AllowableParameterType},
+	 * {@link #setParameter(int, Object)} is used
 	 *
-	 * @param param the {@link Parameter}.
-	 * @param value the argument, which might be null
+	 * @see AllowableParameterType#parameterType(Class)
+	 * @see #setParameter(int, Object, AllowableParameterType)
+	 */
+	<P> Query<R> setParameter(int position, P value, Class<P> type);
+
+	/**
+	 * Bind the given argument to a positional query parameter using the given
+	 * {@link AllowableParameterType}.
 	 *
-	 * @return {@code this}, for method chaining
+	 * @see AllowableParameterType#parameterType
+	 */
+	<P> Query<R> setParameter(int position, P value, AllowableParameterType<P> type);
+
+	/**
+	 * Bind an {@link Instant} value to the positional query parameter using just the portion
+	 * indicated by the given {@link TemporalType}.
+	 */
+	Query<R> setParameter(int position, Instant value, TemporalType temporalType);
+
+	/**
+	 * {@link jakarta.persistence.Query} override
 	 */
 	@Override
-	<T> Query<R> setParameter(Parameter<T> param, T value);
+	Query<R> setParameter(int position, Date value, TemporalType temporalType);
+
+	/**
+	 * {@link jakarta.persistence.Query} override
+	 */
+	@Override
+	Query<R> setParameter(int position, Calendar value, TemporalType temporalType);
 
 	/**
 	 * Bind an argument to the query parameter represented by the given
-	 * {@link QueryParameter}, inferring the {@link AllowableParameterType}.
+	 * {@link QueryParameter}.
 	 * <p>
 	 * If the type of the parameter cannot be inferred from the context in which
-	 * it occurs, {@link #setParameter(QueryParameter, Object, AllowableParameterType)}
-	 * must be used instead.
+	 * it occurs, use on of the forms accept a "type".
+	 *
+	 * @see #setParameter(QueryParameter, Object, AllowableParameterType)
 	 *
 	 * @param parameter the query parameter memento
 	 * @param value the argument, which might be null
@@ -394,140 +449,205 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	<T> Query<R> setParameter(QueryParameter<T> parameter, T value);
 
 	/**
-	 * Bind the given argument to a named query parameter using the given
-	 * {@link AllowableParameterType}.
+	 * Bind an argument to the query parameter represented by the given
+	 * {@link QueryParameter} using the given Class reference to attempt to
+	 * determine the {@link AllowableParameterType} to use.  If unable to determine
+	 * an appropriate {@link AllowableParameterType}, {@link #setParameter(QueryParameter, Object)} is used
 	 *
-	 * @param name the name of the parameter
+	 * @param parameter the query parameter memento
 	 * @param value the argument, which might be null
-	 * @param type an {@link AllowableParameterType} representing the type of the parameter
+	 * @param type a {@link AllowableParameterType} representing the type of the parameter
 	 *
 	 * @return {@code this}, for method chaining
+	 *
+	 * @see AllowableParameterType#parameterType(Class)
+	 * @see #setParameter(QueryParameter, Object, AllowableParameterType)
 	 */
-	<P> Query<R> setParameter(String name, P value, AllowableParameterType<P> type);
-
-	/**
-	 * Bind the given argument to a positional query parameter using the given
-	 * {@link AllowableParameterType}.
-	 *
-	 * @param position the positional parameter label
-	 * @param value the argument, which might be null
-	 * @param type an {@link AllowableParameterType} representing the type of the parameter
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	<P> Query<R> setParameter(int position, P value, AllowableParameterType<P> type);
-
-	/**
-	 * Bind the given argument to a named query parameter using the given
-	 * {@link BasicTypeReference}.
-	 *
-	 * @param name the name of the parameter
-	 * @param value the argument, which might be null
-	 * @param type a {@link BasicTypeReference} representing the type of the parameter
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	<P> Query<R> setParameter(String name, P value, BasicTypeReference<P> type);
-
-	/**
-	 * Bind the given argument to a positional query parameter using the given
-	 * {@link BasicTypeReference}.
-	 *
-	 * @param position the positional parameter label
-	 * @param value the argument, which might be null
-	 * @param type a {@link BasicTypeReference} representing the type of the parameter
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	<P> Query<R> setParameter(int position, P value, BasicTypeReference<P> type);
+	<P> Query<R> setParameter(QueryParameter<P> parameter, P value, Class<P> type);
 
 	/**
 	 * Bind an argument to the query parameter represented by the given
 	 * {@link QueryParameter} using the given {@link AllowableParameterType}.
 	 *
 	 * @param parameter the query parameter memento
-	 * @param value the argument, which might be null
+	 * @param val the argument, which might be null
 	 * @param type an {@link AllowableParameterType} representing the type of the parameter
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	<P> Query<R> setParameter(QueryParameter<P> parameter, P value, AllowableParameterType<P> type);
+	<P> Query<R> setParameter(QueryParameter<P> parameter, P val, AllowableParameterType<P> type);
 
 	/**
-	 * Bind an argument to the query parameter represented by the given
-	 * {@link QueryParameter} using the given {@link BasicTypeReference}.
-	 *
-	 * @param parameter the query parameter memento
-	 * @param val the argument, which might be null
-	 * @param type an {@link BasicTypeReference} representing the type of the parameter
-	 *
-	 * @return {@code this}, for method chaining
+	 * {@link jakarta.persistence.Query} override
 	 */
-	<P> Query<R> setParameter(QueryParameter<P> parameter, P val, BasicTypeReference<P> type);
+	@Override
+	<T> Query<R> setParameter(Parameter<T> param, T value);
 
 	/**
-	 * Bind multiple arguments to a named query parameter, inferring the
-	 * {@link AllowableParameterType}. This is used for binding a list of
-	 * values to an expression such as {@code entity.field in (:values)}.
-	 * <p>
-	 * The type of the parameter is inferred from the context in which it
-	 * occurs, and from the type of the first given argument.
+	 * {@link jakarta.persistence.Query} override
+	 */
+	@Override
+	Query<R> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
+
+	/**
+	 * {@link jakarta.persistence.Query} override
+	 */
+	@Override
+	Query<R> setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
+
+
+
+	/**
+	 * Bind multiple arguments to a named query parameter.
+	 * <p/>
+	 * The "type mapping" for the binding is inferred from the type of
+	 * the first collection element
 	 *
-	 * @param name the name of the parameter
-	 * @param values a collection of arguments
+	 * @see #setParameterList(java.lang.String, java.util.Collection, org.hibernate.query.AllowableParameterType)
+	 *
+	 * @apiNote This is used for binding a list of values to an expression such as {@code entity.field in (:values)}.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
 	Query<R> setParameterList(String name, @SuppressWarnings("rawtypes") Collection values);
 
 	/**
-	 * Bind multiple arguments to a positional query parameter, inferring
-	 * the {@link AllowableParameterType}. This is used for binding a list
-	 * of values to an expression such as {@code entity.field in (?1)}.
-	 * <p>
-	 * The type of the parameter is inferred from the context in which it
-	 * occurs, and from the type of the first given argument.
+	 * Bind multiple arguments to a named query parameter using the given
+	 * Class reference to attempt to determine the {@link AllowableParameterType}
+	 * to use.  If unable to determine an appropriate {@link AllowableParameterType},
+	 * {@link #setParameterList(String, Collection)} is used
 	 *
-	 * @param position the parameter positional label
-	 * @param values a collection of arguments
+	 * @see AllowableParameterType#parameterType(Class)
+	 * @see #setParameterList(java.lang.String, java.util.Collection, org.hibernate.query.AllowableParameterType)
+	 *
+	 * @apiNote This is used for binding a list of values to an expression such as {@code entity.field in (:values)}.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	Query<R> setParameterList(int position, @SuppressWarnings("rawtypes") Collection values);
+	<P> Query<R> setParameterList(String name, Collection<? extends P> values, Class<P> javaType);
 
 	/**
-	 * Bind multiple arguments to a named query parameter, inferring the
-	 * {@link AllowableParameterType}. This is used for binding a list of
-	 * values to an expression such as {@code entity.field in (:values)}.
-	 * <p>
-	 * The type of the parameter is inferred from the context in which it
-	 * occurs, and from the type of the first given argument.
+	 * Bind multiple arguments to a named query parameter using the passed type-mapping.
 	 *
-	 * @param name the name of the parameter
-	 * @param values an array of arguments
+	 * @apiNote This is used for binding a list of values to an expression such as {@code entity.field in (:values)}.
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	<P> Query<R> setParameterList(String name, Collection<? extends P> values, AllowableParameterType<P> type);
+
+
+	/**
+	 * Bind multiple arguments to a named query parameter.
+	 * <p/>
+	 * The "type mapping" for the binding is inferred from the type of
+	 * the first collection element
+	 *
+	 * @apiNote This is used for binding a list of values to an expression such as {@code entity.field in (:values)}.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
 	Query<R> setParameterList(String name, Object[] values);
 
 	/**
-	 * Bind multiple arguments to a positional query parameter, inferring
-	 * the {@link AllowableParameterType}. This is used for binding a list
-	 * of values to an expression such as {@code entity.field in (?1)}.
-	 * <p>
-	 * The type of the parameter is inferred from the context in which it
-	 * occurs, and from the type of the first given argument.
+	 * Bind multiple arguments to a named query parameter using the given
+	 * Class reference to attempt to determine the {@link AllowableParameterType}
+	 * to use.  If unable to determine an appropriate {@link AllowableParameterType},
+	 * {@link #setParameterList(String, Collection)} is used
 	 *
-	 * @param position the positional parameter label
-	 * @param values an array of arguments
+	 * @see AllowableParameterType#parameterType(Class)
+	 * @see #setParameterList(java.lang.String, Object[], org.hibernate.query.AllowableParameterType)
+	 *
+	 * @apiNote This is used for binding a list of values to an expression such as {@code entity.field in (:values)}.
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	<P> Query<R> setParameterList(String name, P[] values, Class<P> javaType);
+
+
+	/**
+	 * Bind multiple arguments to a named query parameter using the passed type-mapping.
+	 *
+	 * @apiNote This is used for binding a list of values to an expression such as {@code entity.field in (:values)}.
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	<P> Query<R> setParameterList(String name, P[] values, AllowableParameterType<P> type);
+
+	/**
+	 * Bind multiple arguments to a positional query parameter.
+	 * <p/>
+	 * The "type mapping" for the binding is inferred from the type of
+	 * the first collection element
+	 *
+	 * @apiNote This is used for binding a list of values to an expression such as {@code entity.field in (:values)}.
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	Query<R> setParameterList(int position, @SuppressWarnings("rawtypes") Collection values);
+
+	/**
+	 * Bind multiple arguments to a positional query parameter using the given
+	 * Class reference to attempt to determine the {@link AllowableParameterType}
+	 * to use.  If unable to determine an appropriate {@link AllowableParameterType},
+	 * {@link #setParameterList(String, Collection)} is used
+	 *
+	 * @see AllowableParameterType#parameterType(Class)
+	 * @see #setParameterList(int, Collection, org.hibernate.query.AllowableParameterType)
+	 *
+	 * @apiNote This is used for binding a list of values to an expression such as {@code entity.field in (:values)}.
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	<P> Query<R> setParameterList(int position, Collection<? extends P> values, Class<P> javaType);
+
+	/**
+	 * Bind multiple arguments to a positional query parameter using the passed type-mapping.
+	 *
+	 * @apiNote This is used for binding a list of values to an expression such as {@code entity.field in (:values)}.
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	<P> Query<R> setParameterList(int position, Collection<? extends P> values, AllowableParameterType<P> type);
+
+	/**
+	 * Bind multiple arguments to a positional query parameter.
+	 * <p/>
+	 * The "type mapping" for the binding is inferred from the type of
+	 * the first collection element
+	 *
+	 * @apiNote This is used for binding a list of values to an expression such as {@code entity.field in (:values)}.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
 	Query<R> setParameterList(int position, Object[] values);
 
 	/**
+	 * Bind multiple arguments to a positional query parameter using the given
+	 * Class reference to attempt to determine the {@link AllowableParameterType}
+	 * to use.  If unable to determine an appropriate {@link AllowableParameterType},
+	 * {@link #setParameterList(String, Collection)} is used
+	 *
+	 * @see AllowableParameterType#parameterType(Class)
+	 * @see #setParameterList(int, Object[], org.hibernate.query.AllowableParameterType)
+	 *
+	 * @apiNote This is used for binding a list of values to an expression such as {@code entity.field in (:values)}.
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	<P> Query<R> setParameterList(int position, P[] values, Class<P> javaType);
+
+	/**
+	 * Bind multiple arguments to a positional query parameter using the passed type-mapping.
+	 *
+	 * @apiNote This is used for binding a list of values to an expression such as {@code entity.field in (:values)}.
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	<P> Query<R> setParameterList(int position, P[] values, AllowableParameterType<P> type);
+
+	/**
 	 * Bind multiple arguments to the query parameter represented by the
-	 * given {@link QueryParameter}, inferring the {@link AllowableParameterType}.
+	 * given {@link QueryParameter}.
 	 * <p>
 	 * The type of the parameter is inferred from the context in which it
 	 * occurs, and from the type of the first given argument.
@@ -537,92 +657,84 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	<P> Query<R> setParameterList(QueryParameter<P> parameter, Collection<P> values);
+	<P> Query<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values);
 
 	/**
-	 * Bind multiple arguments to a named query parameter, inferring the
-	 * {@link AllowableParameterType}. This is used for binding a list of
-	 * values to an expression such as {@code entity.field in (:values)}.
+	 * Bind multiple arguments to the query parameter represented by the
+	 * given {@link QueryParameter} using the given Class reference to attempt
+	 * to determine the {@link AllowableParameterType} to use.  If unable to
+	 * determine an appropriate {@link AllowableParameterType},
+	 * {@link #setParameterList(String, Collection)} is used
+	 *
+	 * @see AllowableParameterType#parameterType(Class)
+	 * @see #setParameterList(QueryParameter, java.util.Collection, org.hibernate.query.AllowableParameterType)
+	 *
+	 * @apiNote This is used for binding a list of values to an expression such as {@code entity.field in (:values)}.
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	<P> Query<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Class<P> javaType);
+
+	/**
+	 * Bind multiple arguments to the query parameter represented by the
+	 * given {@link QueryParameter}, inferring the {@link AllowableParameterType}.
+	 *
+	 * Bind multiple arguments to a named query parameter.
+	 * <p/>
+	 * The "type mapping" for the binding is inferred from the type of
+	 * the first collection element
+	 *
+	 * @apiNote This is used for binding a list of values to an expression such as {@code entity.field in (:values)}.
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	<P> Query<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, AllowableParameterType<P> type);
+
+	/**
+	 * Bind multiple arguments to the query parameter represented by the
+	 * given {@link QueryParameter}
 	 * <p>
-	 * The type of the parameter is inferred from the context in which it
-	 * occurs, and from the type represented by the given class object.
+	 * The type of the parameter is inferred between the context in which it
+	 * occurs, the type associated with the QueryParameter and the type of
+	 * the first given argument.
 	 *
-	 * @param name the name of the parameter
+	 * @param parameter the parameter memento
 	 * @param values a collection of arguments
-	 * @param type the Java class of the arguments
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	<P> Query<R> setParameterList(String name, Collection<? extends P> values, Class<P> type);
+	<P> Query<R> setParameterList(QueryParameter<P> parameter, P[] values);
 
 	/**
-	 * Bind multiple arguments to a positional query parameter, inferring
-	 * the {@link AllowableParameterType}. This is used for binding a list
-	 * of values to an expression such as {@code entity.field in (?1)}.
-	 * <p>
-	 * The type of the parameter is inferred from the context in which it
-	 * occurs, and from the type represented by the given class object.
+	 * Bind multiple arguments to the query parameter represented by the
+	 * given {@link QueryParameter} using the given Class reference to attempt
+	 * to determine the {@link AllowableParameterType} to use.  If unable to
+	 * determine an appropriate {@link AllowableParameterType},
+	 * {@link #setParameterList(String, Collection)} is used
 	 *
-	 * @param position the positional parameter label
-	 * @param values a collection of arguments
-	 * @param type the Java class of the arguments
+	 * @see AllowableParameterType#parameterType(Class)
+	 * @see #setParameterList(QueryParameter, Object[], org.hibernate.query.AllowableParameterType)
+	 *
+	 * @apiNote This is used for binding a list of values to an expression such as {@code entity.field in (:values)}.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	<P> Query<R> setParameterList(int position, Collection<? extends P> values, Class<P> type);
+	<P> Query<R> setParameterList(QueryParameter<P> parameter, P[] values, Class<P> javaType);
 
 	/**
-	 * Bind multiple arguments to a named query parameter, using the given
-	 * {@link AllowableParameterType}. This is used for binding a list of
-	 * values to an expression such as {@code entity.field in (?1)}.
+	 * Bind multiple arguments to the query parameter represented by the
+	 * given {@link QueryParameter}, inferring the {@link AllowableParameterType}.
 	 *
-	 * @param name the name of the parameter
-	 * @param values a collection of arguments
-	 * @param type an {@link AllowableParameterType} representing the type of the parameter
+	 * Bind multiple arguments to a named query parameter.
+	 * <p/>
+	 * The "type mapping" for the binding is inferred from the type of
+	 * the first collection element
 	 *
-	 * @return {@code this}, for method chaining
-	 */
-	<P> Query<R> setParameterList(String name, Collection<? extends P> values, AllowableParameterType<P> type);
-
-	/**
-	 * Bind multiple arguments to a positional query parameter, using the
-	 * given {@link AllowableParameterType}. This is used for binding a list
-	 * of values to an expression such as {@code entity.field in (?1)}.
-	 *
-	 * @param position the positional parameter label
-	 * @param values a collection of arguments
-	 * @param type an {@link AllowableParameterType} representing the type of the parameter
+	 * @apiNote This is used for binding a list of values to an expression such as {@code entity.field in (:values)}.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	<P> Query<R> setParameterList(int position, Collection<? extends P> values, AllowableParameterType<P> type);
-
-	/**
-	 * Bind multiple arguments to a named query parameter, using the given
-	 * {@link AllowableParameterType}. This is used for binding a list of
-	 * values to an expression such as {@code entity.field in (?1)}.
-	 *
-	 * @param name the name of the parameter
-	 * @param values an array of arguments
-	 * @param type an {@link AllowableParameterType} representing the type of the parameter
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	Query<R> setParameterList(String name, Object[] values, @SuppressWarnings("rawtypes") AllowableParameterType type);
-
-	/**
-	 * Bind multiple arguments to a positional query parameter, using the
-	 * given {@link AllowableParameterType}. This is used for binding a list
-	 * of values to an expression such as {@code entity.field in (?1)}.
-	 *
-	 * @param position the positional parameter label
-	 * @param values an array of arguments
-	 * @param type an {@link AllowableParameterType} representing the type of the parameter
-	 *
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	Query<R> setParameterList(int position, Object[] values, @SuppressWarnings("rawtypes") AllowableParameterType type);
+	<P> Query<R> setParameterList(QueryParameter<P> parameter, P[] values, AllowableParameterType<P> type);
 
 	/**
 	 * Bind the property values of the given bean to named parameters of the query,
@@ -645,6 +757,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * @return {@code this}, for method chaining
 	 */
 	Query<R> setProperties(@SuppressWarnings("rawtypes") Map bean);
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// covariant overrides - CommonQueryContract
@@ -670,6 +783,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	@Override
 	Query<R> setReadOnly(boolean readOnly);
 
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// covariant overrides - jakarta.persistence.Query/TypedQuery
 
@@ -688,6 +802,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	@Override
 	Query<R> setLockMode(LockModeType lockMode);
 
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// deprecated methods
 
@@ -702,181 +817,4 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 		return this;
 	}
 
-	/**
-	 * Bind a positional query parameter as some form of date/time using
-	 * the indicated temporal-type.
-	 *
-	 * @param position the position of the parameter in the query string
-	 * @param val the possibly-null parameter value
-	 * @param temporalType the temporal-type to use in binding the date/time
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated use {@link #setParameter(int, Object)}
-	 *             passing a {@link java.time.LocalDate}, {@link java.time.LocalTime},
-	 *             or {@link java.time.LocalDateTime}
-	 */
-	@Deprecated
-	Query<R> setParameter(int position, Object val, TemporalType temporalType);
-
-	/**
-	 * Bind a named query parameter as some form of date/time using
-	 * the indicated temporal-type.
-	 *
-	 * @param name the parameter name
-	 * @param val the possibly-null parameter value
-	 * @param temporalType the temporal-type to use in binding the date/time
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated use {@link #setParameter(String, Object)}
-	 *             passing a {@link java.time.LocalDate}, {@link java.time.LocalTime},
-	 *             or {@link java.time.LocalDateTime}
-	 */
-	@Deprecated
-	Query<R> setParameter(String name, Object val, TemporalType temporalType);
-
-	/**
-	 * Bind a query parameter as some form of date/time using the indicated
-	 * temporal-type.
-	 *
-	 * @param parameter The query parameter memento
-	 * @param val the possibly-null parameter value
-	 * @param temporalType the temporal-type to use in binding the date/time
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated use {@link #setParameter(int, Object)}
-	 *             passing a {@link java.time.LocalDate}, {@link java.time.LocalTime},
-	 *             or {@link java.time.LocalDateTime}
-	 */
-	@Deprecated
-	<P> Query<R> setParameter(QueryParameter<P> parameter, P val, TemporalType temporalType);
-
-	/**
-	 * @deprecated use {@link #setParameter(Parameter, Object)}
-	 */
-	@Override @Deprecated
-	Query<R> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
-
-	/**
-	 * @deprecated use {@link #setParameter(Parameter, Object)},
-	 *             passing a {@link java.time.LocalDate}, {@link java.time.LocalTime},
-	 *             or {@link java.time.LocalDateTime}
-	 */
-	@Override @Deprecated
-	Query<R> setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
-
-	/**
-	 * @deprecated use {@link #setParameter(String, Object)},
-	 *             passing a {@link java.time.LocalDate}, {@link java.time.LocalTime},
-	 *             or {@link java.time.LocalDateTime}
-	 */
-	@Override @Deprecated
-	Query<R> setParameter(String name, Calendar value, TemporalType temporalType);
-
-	/**
-	 * @deprecated use {@link #setParameter(String, Object)}
-	 *             passing a {@link java.time.LocalDate}, {@link java.time.LocalTime},
-	 *             or {@link java.time.LocalDateTime}
-	 */
-	@Override @Deprecated
-	Query<R> setParameter(String name, Date value, TemporalType temporalType);
-
-	/**
-	 * @deprecated use {@link #setParameter(int, Object)}
-	 *             passing a {@link java.time.LocalDate}, {@link java.time.LocalTime},
-	 *             or {@link java.time.LocalDateTime}
-	 */
-	@Override @Deprecated
-	Query<R> setParameter(int position, Calendar value, TemporalType temporalType);
-
-	/**
-	 * @deprecated use {@link #setParameter(int, Object)}
-	 *             passing a {@link java.time.LocalDate}, {@link java.time.LocalTime},
-	 *             or {@link java.time.LocalDateTime}
-	 */
-	@Override @Deprecated
-	Query<R> setParameter(int position, Date value, TemporalType temporalType);
-
-	/**
-	 * @deprecated use {@link #setParameter(Parameter, Object)}
-	 */
-	@Deprecated
-	Query<R> setParameter(Parameter<Instant> param, Instant value, TemporalType temporalType);
-
-	/**
-	 * @deprecated use {@link #setParameter(Parameter, Object)}
-	 */
-	@Deprecated
-	Query<R> setParameter(
-			Parameter<LocalDateTime> param,
-			LocalDateTime value,
-			TemporalType temporalType);
-
-	/**
-	 * @deprecated use {@link #setParameter(Parameter, Object)}
-	 */
-	@Deprecated
-	Query<R> setParameter(
-			Parameter<ZonedDateTime> param,
-			ZonedDateTime value,
-			TemporalType temporalType);
-
-	/**
-	 * @deprecated use {@link #setParameter(Parameter, Object)}
-	 */
-	@Deprecated
-	Query<R> setParameter(
-			Parameter<OffsetDateTime> param,
-			OffsetDateTime value,
-			TemporalType temporalType);
-
-	/**
-	 * @deprecated use {@link #setParameter(String, Object)}
-	 */
-	@Deprecated
-	Query<R> setParameter(String name, Instant value, TemporalType temporalType);
-
-	/**
-	 * @deprecated use {@link #setParameter(String, Object)}
-	 */
-	@Deprecated
-	Query<R> setParameter(String name, LocalDateTime value, TemporalType temporalType);
-
-	/**
-	 * @deprecated use {@link #setParameter(String, Object)}
-	 */
-	@Deprecated
-	Query<R> setParameter(String name, ZonedDateTime value, TemporalType temporalType);
-
-	/**
-	 * @deprecated use {@link #setParameter(String, Object)}
-	 */
-	@Deprecated
-	Query<R> setParameter(String name, OffsetDateTime value, TemporalType temporalType);
-
-	/**
-	 * @deprecated use {@link #setParameter(int, Object)}
-	 */
-	@Deprecated
-	Query<R> setParameter(int position, Instant value, TemporalType temporalType);
-
-	/**
-	 * @deprecated use {@link #setParameter(int, Object)}
-	 */
-	@Deprecated
-	Query<R> setParameter(int position, LocalDateTime value, TemporalType temporalType);
-
-	/**
-	 * @deprecated use {@link #setParameter(int, Object)}
-	 */
-	@Deprecated
-	Query<R> setParameter(int position, ZonedDateTime value, TemporalType temporalType);
-
-	/**
-	 * @deprecated use {@link #setParameter(int, Object)}
-	 */
-	@Deprecated
-	Query<R> setParameter(int position, OffsetDateTime value, TemporalType temporalType);
 }

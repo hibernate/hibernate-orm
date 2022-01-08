@@ -15,7 +15,7 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
  */
 public class SqmLiteralNull<T> extends SqmLiteral<T> {
 
-	private static final SqmExpressable<Object> NULL_TYPE = () -> null;
+	private static final SqmExpressable<Object> NULL_TYPE = NullSqmExpressable.NULL_SQM_EXPRESSABLE;
 
 	public SqmLiteralNull(NodeBuilder nodeBuilder) {
 		//noinspection unchecked

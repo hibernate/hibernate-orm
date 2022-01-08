@@ -33,7 +33,6 @@ import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.procedure.NoSuchParameterException;
 import org.hibernate.procedure.ParameterStrategyException;
@@ -45,6 +44,7 @@ import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
+import org.hibernate.query.AllowableParameterType;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.internal.QueryOptionsImpl;
@@ -60,6 +60,7 @@ import org.hibernate.query.spi.QueryOptionsAdapter;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
+import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.result.NoMoreReturnsException;
 import org.hibernate.result.Output;
 import org.hibernate.result.ResultSetOutput;
@@ -146,7 +147,7 @@ public class ProcedureCallImpl<R>
 	 * @param procedureName The name of the procedure to call
 	 * @param resultClasses The classes making up the result
 	 */
-	public ProcedureCallImpl(SharedSessionContractImplementor session, String procedureName, Class... resultClasses) {
+	public ProcedureCallImpl(SharedSessionContractImplementor session, String procedureName, Class<?>... resultClasses) {
 		super( session );
 
 		assert resultClasses != null && resultClasses.length > 0;
@@ -455,16 +456,29 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public <T> ProcedureParameter<T> registerParameter(int position, Class<T> javaType, ParameterMode mode) {
-		final AllowableParameterType<T> parameterType = getSessionFactory().getDomainModel().resolveQueryParameterType(
-				javaType
-		);
+		final AllowableParameterType<T> parameterType = getSessionFactory()
+				.getDomainModel()
+				.resolveQueryParameterType( javaType );
+
+		final Class<T> expressableJavaType;
+		if ( parameterType == null ) {
+			expressableJavaType = null;
+		}
+		else {
+			final SqmExpressable<T> sqmExpressable = parameterType.resolveExpressable( getSessionFactory() );
+			assert sqmExpressable != null;
+
+			expressableJavaType = sqmExpressable.getExpressableJavaTypeDescriptor().getJavaTypeClass();
+		}
+
 		final ProcedureParameterImpl<T> procedureParameter = new ProcedureParameterImpl<>(
 				position,
 				mode,
-				parameterType == null ? javaType : parameterType.getJavaType(),
+				expressableJavaType,
 				parameterType
 		);
 		registerParameter( procedureParameter );
+
 		return procedureParameter;
 	}
 
@@ -486,25 +500,24 @@ public class ProcedureCallImpl<R>
 		return procedureParameter;
 	}
 
-	private void registerParameter(ProcedureParameterImplementor parameter) {
+	private void registerParameter(ProcedureParameterImplementor<?> parameter) {
 		getParameterMetadata().registerParameter( parameter );
 	}
 
 	@Override
-	public ProcedureParameterImplementor getParameterRegistration(int position) {
+	public ProcedureParameterImplementor<?> getParameterRegistration(int position) {
 		return getParameterMetadata().getQueryParameter( position );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <T> ProcedureParameterImplementor<T> registerParameter(String name, Class<T> javaType, ParameterMode mode) {
 		final AllowableParameterType<T> parameterType = getSessionFactory().getDomainModel().resolveQueryParameterType(
 				javaType
 		);
-		final ProcedureParameterImpl parameter = new ProcedureParameterImpl(
+		final ProcedureParameterImpl<T> parameter = new ProcedureParameterImpl<>(
 				name,
 				mode,
-				parameterType.getJavaType(),
+				parameterType.getBindableJavaType(),
 				parameterType
 		);
 
@@ -514,7 +527,6 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <T> ProcedureParameterImplementor<T> registerParameter(
 			String name,
 			BasicTypeReference<T> typeReference,
@@ -522,7 +534,7 @@ public class ProcedureCallImpl<R>
 		final BasicType<T> basicType = getSessionFactory().getTypeConfiguration()
 				.getBasicTypeRegistry()
 				.resolve( typeReference );
-		final ProcedureParameterImpl parameter = new ProcedureParameterImpl(
+		final ProcedureParameterImpl<T> parameter = new ProcedureParameterImpl<>(
 				name,
 				mode,
 				basicType.getJavaType(),
@@ -535,12 +547,12 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	public ProcedureParameterImplementor getParameterRegistration(String name) {
+	public ProcedureParameterImplementor<?> getParameterRegistration(String name) {
 		return getParameterMetadata().getQueryParameter( name );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public List getRegisteredParameters() {
 		return getParameterMetadata().getRegistrationsAsList() ;
 	}
@@ -784,7 +796,7 @@ public class ProcedureCallImpl<R>
 
 		parameterMetadata.visitRegistrations(
 				queryParameter -> {
-					final ProcedureParameterImplementor procedureParameter = (ProcedureParameterImplementor) queryParameter;
+					final ProcedureParameterImplementor<?> procedureParameter = (ProcedureParameterImplementor<?>) queryParameter;
 					mementos.add(
 							new NamedCallableQueryMementoImpl.ParameterMementoImpl(
 									procedureParameter.getPosition(),
@@ -1115,50 +1127,6 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	public <P> ProcedureCallImplementor<R> setParameter(String name, P value, BasicTypeReference<P> type) {
-		super.setParameter( name, value, type );
-		return this;
-	}
-
-	@Override
-	public <P> ProcedureCallImplementor<R> setParameter(int position, P value, BasicTypeReference<P> type) {
-		super.setParameter( position, value, type );
-		return this;
-	}
-
-	@Override
-	public <P> ProcedureCallImplementor<R> setParameter(QueryParameter<P> parameter, P val, BasicTypeReference<P> type) {
-		super.setParameter( parameter, val, type );
-		return this;
-	}
-//	@Override
-//	public ProcedureCallImplementor<R> setParameter(int position, Object value, Type type) {
-//		super.setParameter( position, value, type );
-//		return this;
-//	}
-
-	@Override
-	public <P> ProcedureCallImplementor<R> setParameter(
-			QueryParameter<P> parameter,
-			P value,
-			TemporalType temporalPrecision) {
-		super.setParameter( parameter, value, temporalPrecision );
-		return this;
-	}
-
-	@Override
-	public ProcedureCallImplementor<R> setParameter(String name, Object value, TemporalType temporalPrecision) {
-		super.setParameter( name, value, temporalPrecision );
-		return this;
-	}
-
-	@Override
-	public ProcedureCallImplementor<R> setParameter(int position, Object value, TemporalType temporalPrecision) {
-		super.setParameter( position, value, temporalPrecision );
-		return this;
-	}
-
-	@Override
 	public ProcedureCallImplementor<R> setParameter(
 			Parameter<Calendar> parameter,
 			Calendar value,
@@ -1198,8 +1166,7 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public Stream getResultStream() {
+	public Stream<R> getResultStream() {
 		return getResultList().stream();
 	}
 

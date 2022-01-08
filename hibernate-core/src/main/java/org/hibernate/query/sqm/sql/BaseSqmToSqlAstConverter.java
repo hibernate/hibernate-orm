@@ -83,48 +83,29 @@ import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
-import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
-import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.CompositeSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.DiscriminatorSqmPath;
 import org.hibernate.persister.entity.AbstractEntityPersister;
-import org.hibernate.query.FetchClauseType;
-import org.hibernate.query.SortOrder;
-import org.hibernate.query.criteria.JpaPath;
-import org.hibernate.query.internal.QueryHelper;
-import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
-import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
-import org.hibernate.query.sqm.tree.SqmJoinType;
-import org.hibernate.query.sqm.tree.domain.SqmCorrelatedRootJoin;
-import org.hibernate.query.sqm.tree.domain.SqmCorrelation;
-import org.hibernate.query.sqm.tree.domain.SqmPluralPartJoin;
-import org.hibernate.query.sqm.tree.expression.*;
-import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
-import org.hibernate.sql.ast.tree.expression.ModifiedSubQueryExpression;
-import org.hibernate.query.sqm.tree.domain.SqmTreatedRoot;
-import org.hibernate.sql.ast.tree.expression.Over;
-import org.hibernate.sql.ast.tree.expression.SelfRenderingSqlFragmentExpression;
-import org.hibernate.sql.ast.tree.from.CorrelatedPluralTableGroup;
-import org.hibernate.sql.ast.tree.from.NamedTableReference;
-import org.hibernate.sql.ast.tree.from.PluralTableGroup;
-import org.hibernate.sql.ast.tree.from.QueryPartTableGroup;
-import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
-import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.exec.internal.VersionTypeSeedParameterSpecification;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
+import org.hibernate.query.AllowableFunctionReturnType;
+import org.hibernate.query.AllowableParameterType;
 import org.hibernate.query.BinaryArithmeticOperator;
 import org.hibernate.query.CastType;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.DynamicInstantiationNature;
+import org.hibernate.query.FetchClauseType;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.QueryLogging;
 import org.hibernate.query.SemanticException;
+import org.hibernate.query.SortOrder;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.UnaryArithmeticOperator;
+import org.hibernate.query.criteria.JpaPath;
+import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
@@ -135,8 +116,10 @@ import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.SelfRenderingAggregateFunctionSqlAstExpression;
+import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmMappingModelHelper;
+import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
 import org.hibernate.query.sqm.spi.BaseSemanticQueryWalker;
 import org.hibernate.query.sqm.sql.internal.BasicValuedPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.DiscriminatedAssociationPathInterpretation;
@@ -152,6 +135,7 @@ import org.hibernate.query.sqm.sql.internal.SqmMapEntryResult;
 import org.hibernate.query.sqm.sql.internal.SqmParameterInterpretation;
 import org.hibernate.query.sqm.sql.internal.SqmPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.TypeHelper;
+import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.cte.SqmCteContainer;
@@ -164,6 +148,8 @@ import org.hibernate.query.sqm.tree.domain.AbstractSqmSpecificPluralPartPath;
 import org.hibernate.query.sqm.tree.domain.NonAggregatedCompositeSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmAnyValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelatedRootJoin;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelation;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmIndexedCollectionAccessPath;
@@ -171,8 +157,45 @@ import org.hibernate.query.sqm.tree.domain.SqmMapEntryReference;
 import org.hibernate.query.sqm.tree.domain.SqmElementAggregateFunction;
 import org.hibernate.query.sqm.tree.domain.SqmIndexAggregateFunction;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.domain.SqmPluralPartJoin;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
+import org.hibernate.query.sqm.tree.domain.SqmTreatedRoot;
+import org.hibernate.query.sqm.tree.expression.Conversion;
+import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
+import org.hibernate.query.sqm.tree.expression.SqmAliasedNodeRef;
+import org.hibernate.query.sqm.tree.expression.SqmAny;
+import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
+import org.hibernate.query.sqm.tree.expression.SqmByUnit;
+import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
+import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
+import org.hibernate.query.sqm.tree.expression.SqmCastTarget;
+import org.hibernate.query.sqm.tree.expression.SqmCollation;
+import org.hibernate.query.sqm.tree.expression.SqmCollectionSize;
+import org.hibernate.query.sqm.tree.expression.SqmDistinct;
+import org.hibernate.query.sqm.tree.expression.SqmDurationUnit;
+import org.hibernate.query.sqm.tree.expression.SqmEnumLiteral;
+import org.hibernate.query.sqm.tree.expression.SqmEvery;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.expression.SqmExtractUnit;
+import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
+import org.hibernate.query.sqm.tree.expression.SqmFormat;
+import org.hibernate.query.sqm.tree.expression.SqmFunction;
+import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
+import org.hibernate.query.sqm.tree.expression.SqmLiteral;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
+import org.hibernate.query.sqm.tree.expression.SqmModifiedSubQueryExpression;
+import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
+import org.hibernate.query.sqm.tree.expression.SqmParameter;
+import org.hibernate.query.sqm.tree.expression.SqmParameterizedEntityType;
+import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
+import org.hibernate.query.sqm.tree.expression.SqmStar;
+import org.hibernate.query.sqm.tree.expression.SqmSummarization;
+import org.hibernate.query.sqm.tree.expression.SqmToDuration;
+import org.hibernate.query.sqm.tree.expression.SqmTrimSpecification;
+import org.hibernate.query.sqm.tree.expression.SqmTuple;
+import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
@@ -181,6 +204,7 @@ import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
+import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertValuesStatement;
 import org.hibernate.query.sqm.tree.insert.SqmValues;
 import org.hibernate.query.sqm.tree.predicate.SqmAndPredicate;
@@ -256,19 +280,28 @@ import org.hibernate.sql.ast.tree.expression.ExtractUnit;
 import org.hibernate.sql.ast.tree.expression.Format;
 import org.hibernate.sql.ast.tree.expression.JdbcLiteral;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.ast.tree.expression.ModifiedSubQueryExpression;
+import org.hibernate.sql.ast.tree.expression.Over;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
+import org.hibernate.sql.ast.tree.expression.SelfRenderingSqlFragmentExpression;
 import org.hibernate.sql.ast.tree.expression.SqlSelectionExpression;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Star;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.expression.TrimSpecification;
 import org.hibernate.sql.ast.tree.expression.UnaryOperation;
+import org.hibernate.sql.ast.tree.from.CorrelatedPluralTableGroup;
 import org.hibernate.sql.ast.tree.from.CorrelatedTableGroup;
 import org.hibernate.sql.ast.tree.from.LazyTableGroup;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
+import org.hibernate.sql.ast.tree.from.PluralTableGroup;
+import org.hibernate.sql.ast.tree.from.QueryPartTableGroup;
+import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
+import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.VirtualTableGroup;
 import org.hibernate.sql.ast.tree.insert.InsertStatement;
 import org.hibernate.sql.ast.tree.insert.Values;
@@ -297,6 +330,7 @@ import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.internal.JdbcParametersImpl;
+import org.hibernate.sql.exec.internal.VersionTypeSeedParameterSpecification;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParameters;
@@ -4350,24 +4384,26 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 		}
 
-		AllowableParameterType<?> parameterSqmType = binding.getBindType();
-		if ( parameterSqmType == null ) {
-			parameterSqmType = queryParameter.getHibernateType();
-			if ( parameterSqmType == null ) {
-				parameterSqmType = sqmParameter.getAnticipatedType();
+		AllowableParameterType<?> paramType = binding.getBindType();
+		if ( paramType == null ) {
+			paramType = queryParameter.getHibernateType();
+			if ( paramType == null ) {
+				paramType = sqmParameter.getAnticipatedType();
 			}
 		}
 
-		if ( parameterSqmType == null ) {
+		if ( paramType == null ) {
 			// Default to the Object type
 			return basicType( Object.class );
 		}
-		else if ( parameterSqmType instanceof MappingModelExpressable<?> && parameterSqmType.getJavaType() == Object.class ) {
-			return (MappingModelExpressable<?>) parameterSqmType;
+		else if ( paramType instanceof MappingModelExpressable<?> && paramType.getBindableJavaType() == Object.class ) {
+			return (MappingModelExpressable<?>) paramType;
 		}
 
-		if ( parameterSqmType instanceof SqmPath ) {
-			final SqmPath<?> sqmPath = (SqmPath<?>) parameterSqmType;
+		final SqmExpressable<?> paramSqmType = paramType.resolveExpressable( creationContext.getSessionFactory() );
+
+		if ( paramSqmType instanceof SqmPath ) {
+			final SqmPath<?> sqmPath = (SqmPath<?>) paramSqmType;
 			final NavigablePath navigablePath = sqmPath.getNavigablePath();
 			if ( navigablePath.getParent() != null ) {
 				final TableGroup tableGroup = getFromClauseAccess().getTableGroup( navigablePath.getParent() );
@@ -4380,11 +4416,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			return getFromClauseAccess().getTableGroup( navigablePath ).getModelPart();
 		}
 
-		if ( parameterSqmType instanceof BasicValuedMapping ) {
-			return (BasicValuedMapping) parameterSqmType;
+		if ( paramSqmType instanceof BasicValuedMapping ) {
+			return (BasicValuedMapping) paramSqmType;
 		}
 
-		if ( parameterSqmType instanceof CompositeSqmPathSource ) {
+		if ( paramSqmType instanceof CompositeSqmPathSource ) {
 			// Try to infer the value mapping since the other side apparently is a path source
 			final MappingModelExpressable<?> inferredValueMapping = getInferredValueMapping();
 			if ( inferredValueMapping != null ) {
@@ -4393,15 +4429,14 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			throw new NotYetImplementedFor6Exception( "Support for embedded-valued parameters not yet implemented" );
 		}
 
-		if ( parameterSqmType instanceof SqmPathSource<?> || parameterSqmType instanceof BasicDomainType<?> ) {
+		if ( paramSqmType instanceof SqmPathSource<?> || paramSqmType instanceof BasicDomainType<?> ) {
 			// Try to infer the value mapping since the other side apparently is a path source
 			final MappingModelExpressable<?> inferredValueMapping = getInferredValueMapping();
 			if ( inferredValueMapping != null ) {
 				return inferredValueMapping;
 			}
 			return getTypeConfiguration().getBasicTypeForJavaType(
-					( (SqmExpressable<?>) parameterSqmType ).getExpressableJavaTypeDescriptor()
-							.getJavaTypeClass()
+					paramSqmType.getExpressableJavaTypeDescriptor().getJavaTypeClass()
 			);
 		}
 
@@ -4838,7 +4873,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						.findFunctionDescriptor( "timestampdiff" );
 	}
 
-	private <T> T cleanly(Supplier<T> supplier) {
+	private <X> X cleanly(Supplier<X> supplier) {
 		SqmByUnit byUnit = appliedByUnit;
 		Expression timestamp = adjustedTimestamp;
 		SqmExpressable<?> timestampType = adjustedTimestampType;

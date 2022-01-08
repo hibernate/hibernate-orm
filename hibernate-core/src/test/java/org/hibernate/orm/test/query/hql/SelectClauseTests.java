@@ -11,6 +11,7 @@ import java.util.Map;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
+import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
@@ -167,7 +168,7 @@ public class SelectClauseTests extends BaseSqmUnitTest {
 	private void collectionIndexFunctionAssertions(
 			SqmSelectStatement<?> statement,
 			CollectionClassification expectedCollectionClassification,
-			Class<? extends SimpleDomainType> expectedIndexDomainTypeType,
+			Class<? extends DomainType> expectedIndexDomainTypeType,
 			String expectedAlias) {
 		assertEquals( 1, statement.getQuerySpec().getSelectClause().getSelections().size() );
 

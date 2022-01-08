@@ -9,11 +9,10 @@ package org.hibernate.query.sqm.tree.domain;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.PathException;
-import org.hibernate.query.hql.spi.SemanticPathPart;
-import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.hql.spi.SqmCreationState;
+import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.SqmPathSource;
 
 /**
  * @author Steve Ebersole

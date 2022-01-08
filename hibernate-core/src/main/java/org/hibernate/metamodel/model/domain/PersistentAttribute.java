@@ -27,6 +27,6 @@ public interface PersistentAttribute<D,J> extends Attribute<D,J> {
 	 */
 	AttributeClassification getAttributeClassification();
 
-	SimpleDomainType<?> getValueGraphType();
+	DomainType<?> getValueGraphType();
 	SimpleDomainType<?> getKeyGraphType();
 }

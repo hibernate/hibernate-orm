@@ -7,17 +7,19 @@
 package org.hibernate.metamodel.model.domain;
 
 import java.util.function.Consumer;
-import jakarta.persistence.metamodel.ManagedType;
 
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.metamodel.RepresentationMode;
+import org.hibernate.query.sqm.SqmExpressable;
+
+import jakarta.persistence.metamodel.ManagedType;
 
 /**
  * Hibernate extension to the JPA {@link ManagedType} contract
  *
  * @author Steve Ebersole
  */
-public interface ManagedDomainType<J> extends AllowableParameterType<J>, ManagedType<J> {
+public interface ManagedDomainType<J> extends SqmExpressable<J>, DomainType<J>, ManagedType<J> {
 	/**
 	 * Get the type name.
 	 *

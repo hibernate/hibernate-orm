@@ -9,11 +9,14 @@ package org.hibernate.query.spi;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
-import jakarta.persistence.TemporalType;
 
-import org.hibernate.metamodel.model.domain.AllowableParameterType;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.AllowableParameterType;
+import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import jakarta.persistence.TemporalType;
 
 /**
  * @author Andrea Boriero
@@ -25,49 +28,61 @@ public class QueryParameterBindingValidator {
 	private QueryParameterBindingValidator() {
 	}
 
-	public void validate(AllowableParameterType paramType, Object bind) {
-		validate( paramType, bind, null );
+	public void validate(AllowableParameterType<?> paramType, Object bind, SessionFactoryImplementor sessionFactory) {
+		validate( paramType, bind, null, sessionFactory );
 	}
 
-	public void validate(AllowableParameterType paramType, Object bind, TemporalType temporalType) {
+	public void validate(
+			AllowableParameterType<?> paramType,
+			Object bind,
+			TemporalType temporalPrecision,
+			SessionFactoryImplementor sessionFactory) {
 		if ( bind == null || paramType == null ) {
 			// nothing we can check
 			return;
 		}
 
 		if ( paramType instanceof AttributeConverterTypeAdapter ) {
-			final AttributeConverterTypeAdapter converterTypeAdapter = (AttributeConverterTypeAdapter) paramType;
-			final JavaType domainJtd = converterTypeAdapter.getDomainJtd();
+			final AttributeConverterTypeAdapter<?> converterTypeAdapter = (AttributeConverterTypeAdapter<?>) paramType;
+			final JavaType<?> domainJtd = converterTypeAdapter.getDomainJtd();
 
 			if ( domainJtd.getJavaTypeClass().isInstance( bind ) ) {
 				return;
 			}
 		}
 
-		final Class parameterType = paramType.getExpressableJavaTypeDescriptor().getJavaTypeClass();
-		if ( parameterType == null ) {
+		final Class<?> parameterJavaType;
+		if ( paramType.getBindableJavaType() != null ) {
+			parameterJavaType = paramType.getBindableJavaType();
+		}
+		else {
+			final SqmExpressable<?> sqmExpressable = paramType.resolveExpressable( sessionFactory );
+			parameterJavaType = sqmExpressable.getBindableJavaType();
+		}
+
+		if ( parameterJavaType == null ) {
 			// nothing we can check
 			return;
 		}
 
-		if ( Collection.class.isInstance( bind ) && !Collection.class.isAssignableFrom( parameterType ) ) {
+		if ( bind instanceof Collection && !Collection.class.isAssignableFrom( parameterJavaType ) ) {
 			// we have a collection passed in where we are expecting a non-collection.
 			// 		NOTE : this can happen in Hibernate's notion of "parameter list" binding
 			// 		NOTE2 : the case of a collection value and an expected collection (if that can even happen)
 			//			will fall through to the main check.
-			validateCollectionValuedParameterBinding( parameterType, (Collection) bind, temporalType );
+			validateCollectionValuedParameterBinding( parameterJavaType, (Collection<?>) bind, temporalPrecision );
 		}
 		else if ( bind.getClass().isArray() ) {
-			validateArrayValuedParameterBinding( parameterType, bind, temporalType );
+			validateArrayValuedParameterBinding( parameterJavaType, bind, temporalPrecision );
 		}
 		else {
-			if ( !isValidBindValue( parameterType, bind, temporalType ) ) {
+			if ( !isValidBindValue( parameterJavaType, bind, temporalPrecision ) ) {
 				throw new IllegalArgumentException(
 						String.format(
 								"Parameter value [%s] did not match expected type [%s (%s)]",
 								bind,
-								parameterType.getName(),
-								extractName( temporalType )
+								parameterJavaType.getName(),
+								extractName( temporalPrecision )
 						)
 				);
 			}
@@ -79,8 +94,8 @@ public class QueryParameterBindingValidator {
 	}
 
 	private void validateCollectionValuedParameterBinding(
-			Class parameterType,
-			Collection value,
+			Class<?> parameterType,
+			Collection<?> value,
 			TemporalType temporalType) {
 		// validate the elements...
 		for ( Object element : value ) {
@@ -97,7 +112,7 @@ public class QueryParameterBindingValidator {
 		}
 	}
 
-	private static boolean isValidBindValue(Class expectedType, Object value, TemporalType temporalType) {
+	private static boolean isValidBindValue(Class<?> expectedType, Object value, TemporalType temporalType) {
 		if ( expectedType.isPrimitive() ) {
 			if ( expectedType == boolean.class ) {
 				return value instanceof Boolean;
@@ -137,16 +152,14 @@ public class QueryParameterBindingValidator {
 			final boolean bindIsTemporal = value instanceof Date
 					|| value instanceof Calendar;
 
-			if ( parameterDeclarationIsTemporal && bindIsTemporal ) {
-				return true;
-			}
+			return parameterDeclarationIsTemporal && bindIsTemporal;
 		}
 
 		return false;
 	}
 
 	private void validateArrayValuedParameterBinding(
-			Class parameterType,
+			Class<?> parameterType,
 			Object value,
 			TemporalType temporalType) {
 		if ( !parameterType.isArray() ) {

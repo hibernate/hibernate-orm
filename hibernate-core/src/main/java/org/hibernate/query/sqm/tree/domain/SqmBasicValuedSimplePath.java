@@ -6,14 +6,15 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.AllowableParameterType;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.PathException;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -23,7 +24,7 @@ import org.hibernate.type.descriptor.java.JavaType;
  */
 public class SqmBasicValuedSimplePath<T>
 		extends AbstractSqmSimplePath<T>
-		implements AllowableParameterType<T> {
+		implements AllowableParameterType<T>, SqmExpressable<T> {
 	public SqmBasicValuedSimplePath(
 			NavigablePath navigablePath,
 			SqmPathSource<T> referencedPathSource,
@@ -87,18 +88,18 @@ public class SqmBasicValuedSimplePath<T>
 	}
 
 	@Override
+	public Class<T> getJavaType() {
+		return getJavaTypeDescriptor().getJavaTypeClass();
+	}
+
+	@Override
 	public JavaType<T> getExpressableJavaTypeDescriptor() {
 		return getJavaTypeDescriptor();
 	}
 
 	@Override
-	public PersistenceType getPersistenceType() {
-		return PersistenceType.BASIC;
-	}
-
-	@Override
-	public Class<T> getJavaType() {
-		return getJavaTypeDescriptor().getJavaTypeClass();
+	public Class<T> getBindableJavaType() {
+		return getJavaType();
 	}
 
 

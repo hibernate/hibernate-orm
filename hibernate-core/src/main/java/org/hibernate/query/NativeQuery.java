@@ -28,7 +28,6 @@ import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.BasicTypeReference;
@@ -570,160 +569,113 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	@Override @SuppressWarnings("deprecation")
 	NativeQuery<T> setResultTransformer(ResultTransformer transformer);
 
-
 	@Override
 	NativeQuery<T> setParameter(String name, Object value);
 
 	@Override
-	NativeQuery<T> setParameter(int position, Object value);
-
-	@Override
-	<P> NativeQuery<T> setParameter(QueryParameter<P> parameter, P val);
-
-	@Override
-	NativeQuery<T> setParameter(Parameter<Instant> param, Instant value, TemporalType temporalType);
-
-	@Override
-	NativeQuery<T> setParameter(Parameter<LocalDateTime> param, LocalDateTime value, TemporalType temporalType);
-
-	@Override
-	NativeQuery<T> setParameter(Parameter<ZonedDateTime> param, ZonedDateTime value, TemporalType temporalType);
-
-	@Override
-	NativeQuery<T> setParameter(Parameter<OffsetDateTime> param, OffsetDateTime value, TemporalType temporalType);
-
-	@Override
-	NativeQuery<T> setParameter(String name, Instant value, TemporalType temporalType);
-
-	@Override
-	NativeQuery<T> setParameter(String name, LocalDateTime value, TemporalType temporalType);
-
-	@Override
-	NativeQuery<T> setParameter(String name, ZonedDateTime value, TemporalType temporalType);
-
-	@Override
-	NativeQuery<T> setParameter(String name, OffsetDateTime value, TemporalType temporalType);
-
-	@Override
-	NativeQuery<T> setParameter(int position, Instant value, TemporalType temporalType);
-
-	@Override
-	NativeQuery<T> setParameter(int position, LocalDateTime value, TemporalType temporalType);
-
-	@Override
-	NativeQuery<T> setParameter(int position, ZonedDateTime value, TemporalType temporalType);
-
-	@Override
-	NativeQuery<T> setParameter(int position, OffsetDateTime value, TemporalType temporalType);
-
-	@Override
-	<P> NativeQuery<T> setParameter(Parameter<P> param, P value);
-
-
-//	@Override
-//	NativeQuery<T> setParameter(String name, Object val, Type type);
-//
-//	@Override
-//	NativeQuery<T> setParameter(int position, Object val, Type type);
-//
-//	@Override
-//	<P> NativeQuery<T> setParameter(QueryParameter<P> parameter, P val, Type type);
-
-
-	@Override
-	NativeQuery<T> setParameter(String name, Object val, TemporalType temporalType);
-
-	@Override
-	NativeQuery<T> setParameter(int position, Object val, TemporalType temporalType);
-
-	@Override
-	<P> NativeQuery<T> setParameter(QueryParameter<P> parameter, P val, TemporalType temporalType);
-
-	@Override
-	NativeQuery<T> setParameter(
-			Parameter<Calendar> param,
-			Calendar value,
-			TemporalType temporalType);
-
-	@Override
-	NativeQuery<T> setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
-
-	@Override
-	NativeQuery<T> setParameter(String name, Calendar value, TemporalType temporalType);
-
-	@Override
-	NativeQuery<T> setParameter(int position, Calendar value, TemporalType temporalType);
-
-	@Override
-	NativeQuery<T> setParameter(String name, Date value, TemporalType temporalType);
-
-	@Override
-	NativeQuery<T> setParameter(int position, Date value, TemporalType temporalType);
-
-	@Override
-	<P> NativeQuery<T> setParameterList(QueryParameter<P> parameter, Collection<P> values);
-
-	@Override
-	NativeQuery<T> setParameterList(String name, @SuppressWarnings("rawtypes") Collection values);
-
-//	@Override
-//	default NativeQuery<T> setParameterList(String name, Collection values, Type type) {
-//		return setParameterList( name, values, (AllowableParameterType) type );
-//	}
-
-	@Override
-	<P> NativeQuery<T> setParameterList(String name, Collection<? extends P> values, AllowableParameterType<P> type);
-
-//	@Override
-//	NativeQuery<T> setParameterList(String name, Object[] values, Type type);
-
-	@Override
-	NativeQuery<T> setParameterList(String name, Object[] values, @SuppressWarnings("rawtypes") AllowableParameterType type);
-
-	@Override
-	NativeQuery<T> setParameterList(String name, Object[] values);
+	<P> NativeQuery<T> setParameter(String name, P val, Class<P> type);
 
 	@Override
 	<P> NativeQuery<T> setParameter(String name, P val, AllowableParameterType<P> type);
 
 	@Override
+	NativeQuery<T> setParameter(String name, Instant value, TemporalType temporalType);
+
+	@Override
+	NativeQuery<T> setParameter(String name, Calendar value, TemporalType temporalType);
+
+	@Override
+	NativeQuery<T> setParameter(String name, Date value, TemporalType temporalType);
+
+	@Override
+	NativeQuery<T> setParameter(int position, Object value);
+
+	@Override
+	<P> NativeQuery<T> setParameter(int position, P val, Class<P> type);
+
+	@Override
 	<P> NativeQuery<T> setParameter(int position, P val, AllowableParameterType<P> type);
+
+	@Override
+	NativeQuery<T> setParameter(int position, Instant value, TemporalType temporalType);
+
+	@Override
+	NativeQuery<T> setParameter(int position, Calendar value, TemporalType temporalType);
+
+	@Override
+	NativeQuery<T> setParameter(int position, Date value, TemporalType temporalType);
+
+	@Override
+	<P> NativeQuery<T> setParameter(QueryParameter<P> parameter, P val);
+
+	@Override
+	<P> NativeQuery<T> setParameter(QueryParameter<P> parameter, P val, Class<P> type);
 
 	@Override
 	<P> NativeQuery<T> setParameter(QueryParameter<P> parameter, P val, AllowableParameterType<P> type);
 
 	@Override
-	<P> NativeQuery<T> setParameter(String name, P val, BasicTypeReference<P> type);
+	<P> NativeQuery<T> setParameter(Parameter<P> param, P value);
 
 	@Override
-	<P> NativeQuery<T> setParameter(int position, P val, BasicTypeReference<P> type);
+	NativeQuery<T> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
 
 	@Override
-	<P> NativeQuery<T> setParameter(QueryParameter<P> parameter, P val, BasicTypeReference<P> type);
+	NativeQuery<T> setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
 
 	@Override
-	NativeQuery<T> setParameterList(int position, @SuppressWarnings("rawtypes") Collection values);
+	NativeQuery<T> setParameterList(String name, @SuppressWarnings("rawtypes") Collection values);
 
 	@Override
 	<P> NativeQuery<T> setParameterList(String name, Collection<? extends P> values, Class<P> type);
 
 	@Override
+	<P> NativeQuery<T> setParameterList(String name, Collection<? extends P> values, AllowableParameterType<P> type);
+
+	@Override
+	NativeQuery<T> setParameterList(String name, Object[] values);
+
+	@Override
+	<P> NativeQuery<T> setParameterList(String name, P[] values, Class<P> type);
+
+	@Override
+	<P> NativeQuery<T> setParameterList(String name, P[] values, AllowableParameterType<P> type);
+
+	@Override
+	NativeQuery<T> setParameterList(int position, @SuppressWarnings("rawtypes") Collection values);
+
+	@Override
 	<P> NativeQuery<T> setParameterList(int position, Collection<? extends P> values, Class<P> type);
 
-//	@Override
-//	NativeQuery<T> setParameterList(int position, Collection values, Type type);
-
 	@Override
-	<P> NativeQuery<T> setParameterList(int position, Collection<? extends P> values, AllowableParameterType<P> type);
-
-//	@Override
-//	NativeQuery<T> setParameterList(int position, Object[] values, Type type);
-
-	@Override
-	NativeQuery<T> setParameterList(int position, Object[] values, @SuppressWarnings("rawtypes") AllowableParameterType type);
+	<P> NativeQuery<T> setParameterList(int position, Collection<? extends P> values, AllowableParameterType<P> javaType);
 
 	@Override
 	NativeQuery<T> setParameterList(int position, Object[] values);
+
+	@Override
+	<P> NativeQuery<T> setParameterList(int position, P[] values, Class<P> javaType);
+
+	@Override
+	<P> NativeQuery<T> setParameterList(int position, P[] values, AllowableParameterType<P> javaType);
+
+	@Override
+	<P> NativeQuery<T> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values);
+
+	@Override
+	<P> NativeQuery<T> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Class<P> javaType);
+
+	@Override
+	<P> NativeQuery<T> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, AllowableParameterType<P> type);
+
+	@Override
+	<P> NativeQuery<T> setParameterList(QueryParameter<P> parameter, P[] values);
+
+	@Override
+	<P> NativeQuery<T> setParameterList(QueryParameter<P> parameter, P[] values, Class<P> javaType);
+
+	@Override
+	<P> NativeQuery<T> setParameterList(QueryParameter<P> parameter, P[] values, AllowableParameterType<P> type);
 
 	@Override
 	NativeQuery<T> setProperties(Object bean);

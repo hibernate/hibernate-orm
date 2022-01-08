@@ -6,7 +6,7 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
-import org.hibernate.metamodel.model.domain.AllowableParameterType;
+import org.hibernate.query.AllowableParameterType;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.model.domain.AnyMappingDomainType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
@@ -57,16 +57,5 @@ public class AnyMappingSqmPathSource<J> extends AbstractSqmPathSource<J> impleme
 			navigablePath = lhs.getNavigablePath().append( intermediatePathSource.getPathName() ).append( getPathName() );
 		}
 		return new SqmAnyValuedSimplePath<>( navigablePath, this, lhs, lhs.nodeBuilder() );
-	}
-
-	@Override
-	public PersistenceType getPersistenceType() {
-		// todo (6.0): no idea what is best here
-		return PersistenceType.EMBEDDABLE;
-	}
-
-	@Override
-	public Class<J> getJavaType() {
-		return getBindableJavaType();
 	}
 }

@@ -23,40 +23,26 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
-import jakarta.persistence.Tuple;
-import jakarta.persistence.criteria.CollectionJoin;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.ListJoin;
-import jakarta.persistence.criteria.MapJoin;
-import jakarta.persistence.criteria.Path;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
-import jakarta.persistence.criteria.Selection;
-import jakarta.persistence.criteria.SetJoin;
-import jakarta.persistence.criteria.Subquery;
 
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.QueryException;
 import org.hibernate.SessionFactory;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.query.NullPrecedence;
-import org.hibernate.QueryException;
-import org.hibernate.query.SetOperator;
-import org.hibernate.query.SortOrder;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
-import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
+import org.hibernate.query.AllowableFunctionReturnType;
+import org.hibernate.query.AllowableParameterType;
 import org.hibernate.query.BinaryArithmeticOperator;
 import org.hibernate.query.ComparisonOperator;
-import org.hibernate.query.SemanticException;
+import org.hibernate.query.NullPrecedence;
+import org.hibernate.query.SetOperator;
+import org.hibernate.query.SortOrder;
 import org.hibernate.query.TrimSpec;
 import org.hibernate.query.UnaryArithmeticOperator;
 import org.hibernate.query.criteria.JpaCoalesce;
@@ -131,8 +117,22 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import jakarta.persistence.Tuple;
+import jakarta.persistence.criteria.CollectionJoin;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.ListJoin;
+import jakarta.persistence.criteria.MapJoin;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Selection;
+import jakarta.persistence.criteria.SetJoin;
+import jakarta.persistence.criteria.Subquery;
+
 import static java.util.Arrays.asList;
 import static org.hibernate.query.internal.QueryHelper.highestPrecedenceType;
 
@@ -436,37 +436,33 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	public <R> SqmTuple<R> tuple(Class<R> tupleType, JpaExpression<?>... expressions) {
-		//noinspection unchecked
-		return tuple( tupleType, (List<SqmExpression<?>>) (List<?>) asList( expressions ) );
+	public <R> SqmTuple<R> tuple(Class<R> tupleType, SqmExpression<?>... expressions) {
+		return tuple( tupleType, asList( expressions ) );
 	}
 
 	@Override
-	public <R> SqmTuple<R> tuple(Class<R> tupleType, List<? extends JpaExpression<?>> expressions) {
+	public <R> SqmTuple<R> tuple(Class<R> tupleType, List<? extends SqmExpression<?>> expressions) {
 		final TypeConfiguration typeConfiguration = getTypeConfiguration();
 		@SuppressWarnings("unchecked")
-		final List<SqmExpression<?>> sqmExpressions = (List<SqmExpression<?>>) (List<?>) expressions;
-		final DomainType<R> domainType;
+		final List<SqmExpression<?>> sqmExpressions = (List<SqmExpression<?>>) expressions;
+		final SqmExpressable<R> expressableType;
 		if ( tupleType == null || tupleType == Object[].class ) {
 			//noinspection unchecked
-			domainType = (DomainType<R>) typeConfiguration.resolveTupleType( sqmExpressions );
+			expressableType = (DomainType<R>) typeConfiguration.resolveTupleType( sqmExpressions );
 		}
 		else {
-			domainType = typeConfiguration.getSessionFactory().getMetamodel().embeddable( tupleType );
+			expressableType = typeConfiguration.getSessionFactory().getMetamodel().embeddable( tupleType );
 		}
-		return tuple( domainType, sqmExpressions );
+		return tuple( expressableType, sqmExpressions );
 	}
 
 	@Override
-	public <R> SqmTuple<R> tuple(DomainType<R> tupleType, JpaExpression<?>... expressions) {
-		//noinspection unchecked
-		return tuple( tupleType, (List<SqmExpression<?>>) (List<?>) asList( expressions ) );
+	public <R> SqmTuple<R> tuple(SqmExpressable<R> tupleType, SqmExpression<?>... expressions) {
+		return tuple( tupleType, asList( expressions ) );
 	}
 
 	@Override
-	public <R> SqmTuple<R> tuple(DomainType<R> tupleType, List<? extends JpaExpression<?>> expressions) {
-		@SuppressWarnings("unchecked")
-		final List<SqmExpression<?>> sqmExpressions = (List<SqmExpression<?>>) (List<?>) expressions;
+	public <R> SqmTuple<R> tuple(SqmExpressable<R> tupleType, List<? extends SqmExpression<?>> sqmExpressions) {
 		if ( tupleType == null ) {
 			//noinspection unchecked
 			tupleType = (DomainType<R>) getTypeConfiguration().resolveTupleType( sqmExpressions );
@@ -921,11 +917,14 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			return new SqmLiteralNull<>( this );
 		}
 
-		return new SqmLiteral<>(
-				value,
-				queryEngine.getTypeConfiguration().getSessionFactory().resolveParameterBindType( value ),
-				this
-		);
+		final AllowableParameterType<T> valueParamType = queryEngine.getTypeConfiguration()
+				.getSessionFactory()
+				.resolveParameterBindType( value );
+		final SqmExpressable<T> sqmExpressable = valueParamType == null
+				? null
+				: valueParamType.resolveExpressable( getTypeConfiguration().getSessionFactory() );
+
+		return new SqmLiteral<>( value, sqmExpressable, this );
 	}
 
 	@Override
@@ -970,7 +969,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return new SqmLiteralNull<>( sqmExpressable, this );
 	}
 
-	class MultiValueParameterType<T> implements AllowableParameterType<T> {
+	class MultiValueParameterType<T> implements SqmExpressable<T> {
 		private final JavaType<T> javaTypeDescriptor;
 
 		public MultiValueParameterType(Class<T> type) {
@@ -986,12 +985,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		}
 
 		@Override
-		public PersistenceType getPersistenceType() {
-			return PersistenceType.BASIC;
-		}
-
-		@Override
-		public Class<T> getJavaType() {
+		public Class<T> getBindableJavaType() {
 			return javaTypeDescriptor.getJavaTypeClass();
 		}
 	}
@@ -1049,7 +1043,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
 	public SqmExpression<String> concat(Expression<String> x, String y) {
 		final SqmExpression<String> xSqmExpression = (SqmExpression<String>) x;
 		final SqmExpression<String> ySqmExpression = value( y, xSqmExpression );
@@ -1063,7 +1056,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
 	public SqmExpression<String> concat(String x, Expression<String> y) {
 		final SqmExpression<String> ySqmExpression = (SqmExpression<String>) y;
 		final SqmExpression<String> xSqmExpression = value( x, ySqmExpression );
@@ -1077,7 +1069,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
 	public SqmExpression<String> concat(String x, String y) {
 		final SqmExpression<String> xSqmExpression = value( x );
 		final SqmExpression<String> ySqmExpression = value( y, xSqmExpression );
@@ -1450,7 +1441,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 				return (AllowableParameterType<T>) typeInferenceSource;
 			}
 
-			if ( typeInferenceSource.getNodeType() instanceof AllowableParameterType ) {
+			if ( typeInferenceSource.getNodeType() != null ) {
 				//noinspection unchecked
 				return (AllowableParameterType<T>) typeInferenceSource.getNodeType();
 			}

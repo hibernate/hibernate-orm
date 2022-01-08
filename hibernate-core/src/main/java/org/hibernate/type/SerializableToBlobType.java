@@ -24,6 +24,7 @@ public class SerializableToBlobType<T extends Serializable> extends AbstractSing
 	
 	private static final long serialVersionUID = 1L;
 
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public SerializableToBlobType() {
 		super( BlobJdbcType.DEFAULT, new SerializableJavaTypeDescriptor( Serializable.class ) );
 	}
@@ -34,11 +35,11 @@ public class SerializableToBlobType<T extends Serializable> extends AbstractSing
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public void setParameterValues(Properties parameters) {
 		ParameterType reader = (ParameterType) parameters.get( PARAMETER_TYPE );
 		if ( reader != null ) {
-			setJavaTypeDescriptor( new SerializableJavaTypeDescriptor<>( reader.getReturnedClass() ) );
+			setJavaTypeDescriptor( new SerializableJavaTypeDescriptor( reader.getReturnedClass() ) );
 		}
 		else {
 			String className = parameters.getProperty( CLASS_NAME );

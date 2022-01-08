@@ -36,6 +36,13 @@ public interface IdentifierLoadAccess<T> {
 	 */
 	IdentifierLoadAccess<T> with(CacheMode cacheMode);
 
+	/**
+	 * Specify whether the entity should be loaded in read-only mode.
+	 *
+	 * @see Session#setDefaultReadOnly(boolean)
+	 */
+	IdentifierLoadAccess<T> withReadOnly(boolean readOnly);
+
 	default IdentifierLoadAccess<T> with(RootGraph<T> graph) {
 		return with( graph, GraphSemantic.LOAD );
 	}

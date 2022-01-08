@@ -43,8 +43,8 @@ public class LoaderWithInvalidQueryTest extends BaseEntityManagerFunctionalTestC
 			HibernateException rootCause = (HibernateException) ExceptionUtil.rootCause( expected );
 			Throwable[] suppressed = rootCause.getSuppressed();
 			assertEquals( 2, suppressed.length );
-			assertTrue( ExceptionUtil.rootCause( suppressed[0] ).getMessage().contains( "Could not resolve attribute named `valid`" ) );
-			assertTrue( ExceptionUtil.rootCause( suppressed[1] ).getMessage().contains( "Could not resolve entity reference: _Person" ) );
+			assertTrue( ExceptionUtil.rootCause( suppressed[0] ).getMessage().contains( "Could not resolve attribute 'valid'" ) );
+			assertTrue( ExceptionUtil.rootCause( suppressed[1] ).getMessage().contains( "Could not resolve entity '_Person'" ) );
 		}
 	}
 

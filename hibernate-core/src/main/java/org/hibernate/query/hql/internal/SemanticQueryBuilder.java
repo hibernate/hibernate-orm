@@ -1071,7 +1071,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					.getPathRegistry()
 					.findAliasedNodeByPosition( position );
 			if ( nodeByPosition == null ) {
-				throw new ParsingException( "Numeric literal `" + position + "` used in group-by does not match a registered select-item" );
+				throw new ParsingException( "Numeric literal '" + position + "' used in group-by does not match a registered select-item" );
 			}
 
 			return new SqmAliasedNodeRef( position, integerDomainType, creationContext.getNodeBuilder() );
@@ -1474,9 +1474,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					);
 					return correlation.getCorrelatedRoot();
 				}
-				throw new SemanticException( "Could not resolve entity reference or correlation path: " + name );
+				throw new SemanticException( "Could not resolve entity or correlation path '" + name + "'" );
 			}
-			throw new SemanticException( "Could not resolve entity reference: " + name );
+			throw new SemanticException( "Could not resolve entity '" + name + "'" );
 		}
 		checkFQNEntityNameJpaComplianceViolationIfNeeded( name, entityDescriptor );
 

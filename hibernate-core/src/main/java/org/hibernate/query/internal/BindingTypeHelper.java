@@ -11,13 +11,16 @@ import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.time.ZonedDateTime;
 import java.util.Calendar;
-import jakarta.persistence.TemporalType;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.model.domain.AllowableParameterType;
+import org.hibernate.query.AllowableParameterType;
+import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.TemporalJavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import jakarta.persistence.TemporalType;
 
 /**
  * @author Steve Ebersole
@@ -34,21 +37,25 @@ public class BindingTypeHelper {
 	public <T> AllowableParameterType<T> resolveTemporalPrecision(
 			TemporalType precision,
 			AllowableParameterType<T> declaredParameterType,
-			TypeConfiguration typeConfiguration) {
+			SessionFactoryImplementor sessionFactory) {
 		if ( precision != null ) {
-			if ( !( declaredParameterType.getExpressableJavaTypeDescriptor() instanceof TemporalJavaTypeDescriptor ) ) {
+			final SqmExpressable<T> sqmExpressable = declaredParameterType.resolveExpressable( sessionFactory );
+			if ( !( sqmExpressable.getExpressableJavaTypeDescriptor() instanceof TemporalJavaTypeDescriptor ) ) {
 				throw new UnsupportedOperationException(
 						"Cannot treat non-temporal parameter type with temporal precision"
 				);
 			}
-			final TemporalJavaTypeDescriptor<T> temporalJtd = (TemporalJavaTypeDescriptor<T>) declaredParameterType.getExpressableJavaTypeDescriptor();
+
+			final TemporalJavaTypeDescriptor<T> temporalJtd = (TemporalJavaTypeDescriptor<T>) sqmExpressable.getExpressableJavaTypeDescriptor();
 			if ( temporalJtd.getPrecision() != precision ) {
+				final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();
 				return typeConfiguration.getBasicTypeRegistry().resolve(
 						temporalJtd.resolveTypeForPrecision( precision, typeConfiguration ),
 						TemporalJavaTypeDescriptor.resolveJdbcTypeCode( precision )
 				);
 			}
 		}
+
 		return declaredParameterType;
 	}
 
@@ -78,12 +85,12 @@ public class BindingTypeHelper {
 		}
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public AllowableParameterType resolveTimestampTemporalTypeVariant(
 			Class javaType,
 			AllowableParameterType baseType,
 			TypeConfiguration typeConfiguration) {
-		//noinspection unchecked
-		if ( baseType.getExpressableJavaTypeDescriptor().getJavaTypeClass().isAssignableFrom( javaType ) ) {
+		if ( baseType.getBindableJavaType().isAssignableFrom( javaType ) ) {
 			return baseType;
 		}
 
@@ -118,7 +125,7 @@ public class BindingTypeHelper {
 			Class<?> javaType,
 			AllowableParameterType<?> baseType,
 			TypeConfiguration typeConfiguration) {
-		if ( baseType.getExpressableJavaTypeDescriptor().getJavaTypeClass().isAssignableFrom( javaType ) ) {
+		if ( baseType.getBindableJavaType().isAssignableFrom( javaType ) ) {
 			return baseType;
 		}
 

@@ -266,7 +266,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 		else if ( binding.getBindValue() != null ) {
 			return typeConfiguration.getBasicTypeForJavaType( binding.getBindValue().getClass() );
 		}
-		return typeConfiguration.getBasicTypeForJavaType( binding.getBindType().getJavaType() );
+		return typeConfiguration.getBasicTypeForJavaType( binding.getBindType().getBindableJavaType() );
 	}
 
 

@@ -11,8 +11,8 @@ import java.sql.Types;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.model.domain.AllowableOutputParameterType;
-import org.hibernate.metamodel.model.domain.AllowableParameterType;
+import org.hibernate.query.AllowableOutputParameterType;
+import org.hibernate.query.AllowableParameterType;
 import org.hibernate.procedure.spi.FunctionReturnImplementor;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;

@@ -19,6 +19,7 @@ import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.internal.AttributeFactory;
 import org.hibernate.metamodel.internal.MetadataContext;
 import org.hibernate.metamodel.internal.PluralAttributeMetadata;
+import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
@@ -35,8 +36,8 @@ public class PluralAttributeBuilder<D, C, E, K> {
 	private final AttributeClassification attributeClassification;
 	private final CollectionClassification collectionClassification;
 
-	private final SimpleDomainType<E> elementType;
-	private final SimpleDomainType<K> listIndexOrMapKeyType;
+	private final DomainType<E> elementType;
+	private final DomainType<K> listIndexOrMapKeyType;
 
 	private final ManagedDomainType<D> declaringType;
 
@@ -47,8 +48,8 @@ public class PluralAttributeBuilder<D, C, E, K> {
 			JavaType<C> collectionJtd,
 			AttributeClassification attributeClassification,
 			CollectionClassification collectionClassification,
-			SimpleDomainType<E> elementType,
-			SimpleDomainType<K> listIndexOrMapKeyType,
+			DomainType<E> elementType,
+			DomainType<K> listIndexOrMapKeyType,
 			ManagedDomainType<D> declaringType,
 			Property property,
 			Member member) {
@@ -62,6 +63,7 @@ public class PluralAttributeBuilder<D, C, E, K> {
 		this.member = member;
 	}
 
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public static <Y, X> PersistentAttribute<X, Y> build(
 			PluralAttributeMetadata<?,Y,?> attributeMetadata,
 			MetadataContext metadataContext) {
@@ -70,7 +72,6 @@ public class PluralAttributeBuilder<D, C, E, K> {
 				.getJavaTypeDescriptorRegistry()
 				.getDescriptor( attributeMetadata.getJavaType() );
 
-		//noinspection unchecked
 		final PluralAttributeBuilder builder = new PluralAttributeBuilder(
 				attributeJtd,
 				attributeMetadata.getAttributeClassification(),
@@ -86,43 +87,34 @@ public class PluralAttributeBuilder<D, C, E, K> {
 		);
 
 		if ( Map.class.equals( attributeJtd.getJavaTypeClass() ) ) {
-			//noinspection unchecked
-			return new MapAttributeImpl<>( builder, metadataContext );
+			return new MapAttributeImpl( builder, metadataContext );
 		}
 		else if ( Set.class.equals( attributeJtd.getJavaTypeClass() ) ) {
-			//noinspection unchecked
-			return new SetAttributeImpl<>( builder, metadataContext );
+			return new SetAttributeImpl( builder, metadataContext );
 		}
 		else if ( List.class.equals( attributeJtd.getJavaTypeClass() ) ) {
-			//noinspection unchecked
-			return new ListAttributeImpl<>( builder, metadataContext );
+			return new ListAttributeImpl( builder, metadataContext );
 		}
 		else if ( Collection.class.equals( attributeJtd.getJavaTypeClass() ) ) {
-			//noinspection unchecked
-			return new BagAttributeImpl<>( builder, metadataContext );
+			return new BagAttributeImpl( builder, metadataContext );
 		}
 
 		//apply loose rules
 		if ( attributeJtd.getJavaTypeClass().isArray() ) {
-			//noinspection unchecked
-			return new ListAttributeImpl<>( builder, metadataContext );
+			return new ListAttributeImpl( builder, metadataContext );
 		}
 
 		if ( Map.class.isAssignableFrom( attributeJtd.getJavaTypeClass() ) ) {
-			//noinspection unchecked
-			return new MapAttributeImpl<>( builder, metadataContext );
+			return new MapAttributeImpl( builder, metadataContext );
 		}
 		else if ( Set.class.isAssignableFrom( attributeJtd.getJavaTypeClass() ) ) {
-			//noinspection unchecked
-			return new SetAttributeImpl<>( builder, metadataContext );
+			return new SetAttributeImpl( builder, metadataContext );
 		}
 		else if ( List.class.isAssignableFrom( attributeJtd.getJavaTypeClass() ) ) {
-			//noinspection unchecked
-			return new ListAttributeImpl<>( builder, metadataContext );
+			return new ListAttributeImpl( builder, metadataContext );
 		}
 		else if ( Collection.class.isAssignableFrom( attributeJtd.getJavaTypeClass() ) ) {
-			//noinspection unchecked
-			return new BagAttributeImpl<>( builder, metadataContext );
+			return new BagAttributeImpl( builder, metadataContext );
 		}
 
 		throw new UnsupportedMappingException( "Unknown collection: " + attributeJtd.getJavaType() );
@@ -132,7 +124,7 @@ public class PluralAttributeBuilder<D, C, E, K> {
 			PluralAttributeMetadata<?,?,?> attributeMetadata,
 			MetadataContext metadataContext) {
 		if ( Map.class.isAssignableFrom( attributeMetadata.getJavaType() ) ) {
-			return determineSimpleType( attributeMetadata.getMapKeyValueContext(), metadataContext );
+			return (SimpleDomainType<?>) determineSimpleType( attributeMetadata.getMapKeyValueContext(), metadataContext );
 		}
 
 		if ( List.class.isAssignableFrom( attributeMetadata.getJavaType() )
@@ -155,7 +147,7 @@ public class PluralAttributeBuilder<D, C, E, K> {
 		return collectionClassification;
 	}
 
-	public SimpleDomainType<K> getListIndexOrMapKeyType() {
+	public DomainType<K> getListIndexOrMapKeyType() {
 		return listIndexOrMapKeyType;
 	}
 
@@ -163,7 +155,7 @@ public class PluralAttributeBuilder<D, C, E, K> {
 		return collectionJtd;
 	}
 
-	public SimpleDomainType<E> getValueType() {
+	public DomainType<E> getValueType() {
 		return elementType;
 	}
 

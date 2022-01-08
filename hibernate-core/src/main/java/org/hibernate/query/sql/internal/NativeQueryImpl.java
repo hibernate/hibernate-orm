@@ -8,9 +8,6 @@ package org.hibernate.query.sql.internal;
 
 import java.io.Serializable;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
@@ -44,8 +41,8 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.jpa.spi.NativeQueryTupleTransformer;
-import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
+import org.hibernate.query.AllowableParameterType;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.Query;
@@ -1208,17 +1205,8 @@ public class NativeQueryImpl<R>
 		return true;
 	}
 
-	@Override
-	public <P> NativeQueryImplementor<R> setParameter(QueryParameter<P> parameter, P value) {
-		super.setParameter( parameter, value );
-		return this;
-	}
 
-	@Override
-	public <P> NativeQueryImplementor<R> setParameter(Parameter<P> parameter, P value) {
-		super.setParameter( parameter, value );
-		return this;
-	}
+
 
 	@Override
 	public NativeQueryImplementor<R> setParameter(String name, Object value) {
@@ -1227,199 +1215,14 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public NativeQueryImplementor<R> setParameter(int position, Object value) {
-		super.setParameter( position, value );
-		return this;
-	}
-
-//	@Override
-//	@SuppressWarnings("unchecked")
-//	public NativeQueryImplementor<R> setParameter(QueryParameter parameter, Object value, Type type) {
-//		super.setParameter( parameter, value, type );
-//		return this;
-//	}
-//
-//	@Override
-//	public NativeQueryImplementor<R> setParameter(String name, Object value, Type type) {
-//		super.setParameter( name, value, type );
-//		return this;
-//	}
-//
-//	@Override
-//	public NativeQueryImplementor<R> setParameter(int position, Object value, Type type) {
-//		super.setParameter( position, value, type );
-//		return this;
-//	}
-
-	@Override
-	public <P> NativeQueryImplementor<R> setParameter(QueryParameter<P> parameter, P value, TemporalType temporalType) {
-		super.setParameter( parameter, value, temporalType );
+	public <P> NativeQueryImplementor<R> setParameter(String name, P value, Class<P> javaType) {
+		super.setParameter( name, value, javaType );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<R> setParameter(String name, Object value, TemporalType temporalType) {
-		super.setParameter( name, value, temporalType );
-		return this;
-	}
-
-	@Override
-	public NativeQueryImplementor<R> setParameter(int position, Object value, TemporalType temporalType) {
-		super.setParameter( position, value, temporalType );
-		return this;
-	}
-
-	@Override
-	public NativeQueryImplementor<R> setParameter(Parameter<Instant> param, Instant value, TemporalType temporalType) {
-		super.setParameter( param, value, temporalType );
-		return this;
-	}
-
-	@Override
-	public NativeQueryImplementor<R> setParameter(Parameter<LocalDateTime> param, LocalDateTime value, TemporalType temporalType) {
-		super.setParameter( param, value, temporalType );
-		return this;
-	}
-
-	@Override
-	public NativeQueryImplementor<R> setParameter(Parameter<ZonedDateTime> param, ZonedDateTime value, TemporalType temporalType) {
-		super.setParameter( param, value, temporalType );
-		return this;
-	}
-
-	@Override
-	public NativeQueryImplementor<R> setParameter(Parameter<OffsetDateTime> param, OffsetDateTime value, TemporalType temporalType) {
-		super.setParameter( param, value, temporalType );
-		return this;
-	}
-//
-//	@Override
-//	public NativeQueryImplementor<R> setParameterList(int position, Collection values, Type type) {
-//		return setParameterList( position, values, ( AllowableParameterType) type );
-//	}
-
-	@Override
-	public <P> NativeQueryImplementor<R> setParameterList(String name, Collection<? extends P> values, AllowableParameterType<P> type) {
-		super.setParameterList( name, values, type );
-		return this;
-	}
-
-	@Override
-	public <P> NativeQueryImplementor<R> setParameterList(
-			int position, Collection<? extends P> values,
-			AllowableParameterType<P> type) {
-		super.setParameterList( position, values, type );
-		return this;
-	}
-
-	@Override
-	public NativeQueryImplementor<R> setParameterList(
-			String name, Object[] values,
-			@SuppressWarnings("rawtypes") AllowableParameterType type) {
-		super.setParameterList( name, values, type );
-		return this;
-	}
-
-	@Override
-	public NativeQueryImplementor<R> setParameterList(
-			int position, Object[] values,
-			@SuppressWarnings("rawtypes") AllowableParameterType type) {
-		super.setParameterList( position, values, type );
-		return this;
-	}
-
-//	@Override
-//	public NativeQueryImplementor<R> setParameterList(int position, Object[] values, Type type) {
-//		return null;
-//	}
-
-	@Override
-	public NativeQueryImplementor<R> setParameter(String name, Instant value, TemporalType temporalType) {
-		super.setParameter( name, value, temporalType );
-		return this;
-	}
-
-	@Override
-	public NativeQueryImplementor<R> setParameter(String name, LocalDateTime value, TemporalType temporalType) {
-		super.setParameter( name, value, temporalType );
-		return this;
-	}
-
-	@Override
-	public NativeQueryImplementor<R> setParameter(String name, ZonedDateTime value, TemporalType temporalType) {
-		super.setParameter( name, value, temporalType );
-		return this;
-	}
-
-	@Override
-	public NativeQueryImplementor<R> setParameter(String name, OffsetDateTime value, TemporalType temporalType) {
-		super.setParameter( name, value, temporalType );
-		return this;
-	}
-
-	@Override
-	public NativeQueryImplementor<R> setParameter(int position, Instant value, TemporalType temporalType) {
-		super.setParameter( position, value, temporalType );
-		return this;
-	}
-
-	@Override
-	public NativeQueryImplementor<R> setParameter(int position, LocalDateTime value, TemporalType temporalType) {
-		super.setParameter( position, value, temporalType );
-		return this;
-	}
-
-	@Override
-	public NativeQueryImplementor<R> setParameter(int position, ZonedDateTime value, TemporalType temporalType) {
-		super.setParameter( position, value, temporalType );
-		return this;
-	}
-
-	@Override
-	public NativeQueryImplementor<R> setParameter(int position, OffsetDateTime value, TemporalType temporalType) {
-		super.setParameter( position, value, temporalType );
-		return this;
-	}
-
-	@Override
-	public <P> NativeQueryImplementor<R> setParameterList(QueryParameter<P> parameter, Collection<P> values) {
-		super.setParameterList( parameter, values );
-		return this;
-	}
-
-	@Override
-	public NativeQueryImplementor<R> setParameterList(String name, @SuppressWarnings("rawtypes") Collection values) {
-		super.setParameterList( name, values );
-		return this;
-	}
-
-//	@Override
-//	public NativeQueryImplementor<R> setParameterList(String name, Collection values, Type type) {
-//		super.setParameterList( name, values, type );
-//		return this;
-//	}
-//
-//	@Override
-//	public NativeQueryImplementor<R> setParameterList(String name, Object[] values, Type type) {
-//		super.setParameterList( name, values, type );
-//		return this;
-//	}
-
-	@Override
-	public NativeQueryImplementor<R> setParameterList(String name, Object[] values) {
-		super.setParameterList( name, values );
-		return this;
-	}
-
-	@Override
-	public NativeQueryImplementor<R> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType) {
-		super.setParameter( param, value, temporalType );
-		return this;
-	}
-
-	@Override
-	public NativeQueryImplementor<R> setParameter(Parameter<Date> param, Date value, TemporalType temporalType) {
-		super.setParameter( param, value, temporalType );
+	public <P> NativeQueryImplementor<R> setParameter(String name, P value, AllowableParameterType<P> type) {
+		super.setParameter( name, value, type );
 		return this;
 	}
 
@@ -1430,8 +1233,38 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
+	public NativeQueryImplementor<R> setParameter(String name, Instant value, TemporalType temporalType) {
+		super.setParameter( name, value, temporalType );
+		return this;
+	}
+
+	@Override
 	public NativeQueryImplementor<R> setParameter(String name, Date value, TemporalType temporalType) {
 		super.setParameter( name, value, temporalType );
+		return this;
+	}
+
+	@Override
+	public NativeQueryImplementor<R> setParameter(int position, Object value) {
+		super.setParameter( position, value );
+		return this;
+	}
+
+	@Override
+	public <P> NativeQueryImplementor<R> setParameter(int position, P value, Class<P> javaType) {
+		super.setParameter( position, value, javaType );
+		return this;
+	}
+
+	@Override
+	public <P> NativeQueryImplementor<R> setParameter(int position, P value, AllowableParameterType<P> type) {
+		super.setParameter( position, value, type );
+		return this;
+	}
+
+	@Override
+	public NativeQueryImplementor<R> setParameter(int position, Instant value, TemporalType temporalType) {
+		super.setParameter( position, value, temporalType );
 		return this;
 	}
 
@@ -1447,9 +1280,160 @@ public class NativeQueryImpl<R>
 		return this;
 	}
 
-	@Override @SuppressWarnings("deprecation")
-	public NativeQueryImplementor<R> setResultTransformer(ResultTransformer transformer) {
-		super.setResultTransformer( transformer );
+	@Override
+	public <P> NativeQueryImplementor<R> setParameter(QueryParameter<P> parameter, P value) {
+		super.setParameter( parameter, value );
+		return this;
+	}
+
+	@Override
+	public <P> NativeQueryImplementor<R> setParameter(QueryParameter<P> parameter, P value, Class<P> javaType) {
+		super.setParameter( parameter, value, javaType );
+		return this;
+	}
+
+	@Override
+	public <P> NativeQueryImplementor<R> setParameter(QueryParameter<P> parameter, P value, AllowableParameterType<P> type) {
+		super.setParameter( parameter, value, type );
+		return this;
+	}
+
+	@Override
+	public <P> NativeQueryImplementor<R> setParameter(Parameter<P> parameter, P value) {
+		super.setParameter( parameter, value );
+		return this;
+	}
+
+	@Override
+	public NativeQueryImplementor<R> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType) {
+		super.setParameter( param, value, temporalType );
+		return this;
+	}
+
+	@Override
+	public NativeQueryImplementor<R> setParameter(Parameter<Date> param, Date value, TemporalType temporalType) {
+		super.setParameter( param, value, temporalType );
+		return this;
+	}
+
+
+
+
+
+
+
+
+
+	@Override
+	public NativeQueryImplementor<R> setParameterList(String name, @SuppressWarnings("rawtypes") Collection values) {
+		super.setParameterList( name, values );
+		return this;
+	}
+
+	@Override
+	public <P> NativeQueryImplementor<R> setParameterList(String name, Collection<? extends P> values, Class<P> javaType) {
+		super.setParameterList( name, values, javaType );
+		return this;
+	}
+
+	@Override
+	public <P> NativeQueryImplementor<R> setParameterList(String name, Collection<? extends P> values, AllowableParameterType<P> type) {
+		super.setParameterList( name, values, type );
+		return this;
+	}
+
+	@Override
+	public NativeQueryImplementor<R> setParameterList(String name, Object[] values) {
+		super.setParameterList( name, values );
+		return this;
+	}
+
+	@Override
+	public <P> NativeQueryImplementor<R> setParameterList(String name, P[] values, Class<P> javaType) {
+		super.setParameterList( name, values, javaType );
+		return this;
+	}
+
+	@Override
+	public <P> NativeQueryImplementor<R> setParameterList(String name, P[] values, AllowableParameterType<P> type) {
+		super.setParameterList( name, values, type );
+		return this;
+	}
+
+
+
+
+	@Override
+	public NativeQueryImplementor<R> setParameterList(int position, @SuppressWarnings("rawtypes") Collection values) {
+		super.setParameterList( position, values );
+		return this;
+	}
+
+	@Override
+	public <P> NativeQueryImplementor<R> setParameterList(int position, Collection<? extends P> values, Class<P> javaType) {
+		super.setParameterList( position, values, javaType );
+		return this;
+	}
+
+	@Override
+	public <P> NativeQueryImplementor<R> setParameterList(int position, Collection<? extends P> values, AllowableParameterType<P> type) {
+		super.setParameterList( position, values, type );
+		return this;
+	}
+
+	@Override
+	public NativeQueryImplementor<R> setParameterList(int position, Object[] values) {
+		super.setParameterList( position, values );
+		return this;
+	}
+
+	@Override
+	public <P> NativeQueryImplementor<R> setParameterList(int position, P[] values, Class<P> javaType) {
+		super.setParameterList( position, values, javaType );
+		return this;
+	}
+
+	@Override
+	public <P> NativeQueryImplementor<R> setParameterList(int position, P[] values, AllowableParameterType<P> type) {
+		super.setParameterList( position, values, type );
+		return this;
+	}
+
+
+
+	@Override
+	public <P> NativeQueryImplementor<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values) {
+		super.setParameterList( parameter, values );
+		return this;
+	}
+
+	@Override
+	public <P> NativeQueryImplementor<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Class<P> javaType) {
+		super.setParameterList( parameter, values, javaType );
+		return this;
+	}
+
+	@Override
+	public <P> NativeQueryImplementor<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, AllowableParameterType<P> type) {
+		super.setParameterList( parameter, values, type );
+		return this;
+	}
+
+	@Override
+	public <P> NativeQueryImplementor<R> setParameterList(QueryParameter<P> parameter, P[] values) {
+		super.setParameterList( parameter, values );
+		return this;
+	}
+
+	@Override
+	public <P> NativeQueryImplementor<R> setParameterList(QueryParameter<P> parameter, P[] values, Class<P> javaType) {
+		super.setParameterList( parameter, values, javaType );
+		return this;
+	}
+
+	@Override
+	public <P> NativeQueryImplementor<R> setParameterList(QueryParameter<P> parameter, P[] values, AllowableParameterType<P> type) {
+		super.setParameterList( parameter, values, type );
 		return this;
 	}
 
@@ -1465,6 +1449,23 @@ public class NativeQueryImpl<R>
 		return this;
 	}
 
+
+
+
+
+
+
+
+
+
+
+
+	@Override @SuppressWarnings("deprecation")
+	public NativeQueryImplementor<R> setResultTransformer(ResultTransformer transformer) {
+		super.setResultTransformer( transformer );
+		return this;
+	}
+
 	@Override
 	public NativeQueryImplementor<R> setMaxResults(int maxResult) {
 		super.setMaxResults( maxResult );
@@ -1477,65 +1478,6 @@ public class NativeQueryImpl<R>
 		return this;
 	}
 
-	@Override
-	public <P> NativeQueryImplementor<R> setParameter(QueryParameter<P> parameter, P value, AllowableParameterType<P> type) {
-		super.setParameter( parameter, value, type );
-		return this;
-	}
-
-	@Override
-	public <P> NativeQueryImplementor<R> setParameter(String name, P value, AllowableParameterType<P> type) {
-		super.setParameter( name, value, type );
-		return this;
-	}
-
-	@Override
-	public <P> NativeQueryImplementor<R> setParameter(int position, P value, AllowableParameterType<P> type) {
-		super.setParameter( position, value, type );
-		return this;
-	}
-
-	@Override
-	public <P> NativeQueryImplementor<R> setParameter(String name, P value, BasicTypeReference<P> type) {
-		super.setParameter( name, value, type );
-		return this;
-	}
-
-	@Override
-	public <P> NativeQueryImplementor<R> setParameter(int position, P value, BasicTypeReference<P> type) {
-		super.setParameter( position, value, type );
-		return this;
-	}
-
-	@Override
-	public <P> NativeQueryImplementor<R> setParameter(QueryParameter<P> parameter, P val, BasicTypeReference<P> type) {
-		super.setParameter( parameter, val, type );
-		return this;
-	}
-
-	@Override
-	public NativeQueryImplementor<R> setParameterList(int position, @SuppressWarnings("rawtypes") Collection values) {
-		super.setParameterList( position, values );
-		return this;
-	}
-
-	@Override
-	public NativeQueryImplementor<R> setParameterList(int position, Object[] values) {
-		super.setParameterList( position, values );
-		return this;
-	}
-
-	@Override
-	public <P> NativeQueryImplementor<R> setParameterList(String name, Collection<? extends P> values, Class<P> javaType) {
-		super.setParameterList( name, values, javaType );
-		return this;
-	}
-
-	@Override
-	public <P> NativeQueryImplementor<R> setParameterList(int position, Collection<? extends P> values, Class<P> javaType) {
-		super.setParameterList( position, values, javaType );
-		return this;
-	}
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

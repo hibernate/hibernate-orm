@@ -6,8 +6,9 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import org.hibernate.metamodel.model.domain.AllowableParameterType;
+import org.hibernate.query.AllowableParameterType;
 import org.hibernate.query.criteria.JpaParameterExpression;
+import org.hibernate.query.sqm.SqmExpressable;
 
 /**
  * Models a parameter expression declared in the query.
@@ -62,7 +63,7 @@ public interface SqmParameter<T> extends SqmExpression<T>, JpaParameterExpressio
 	AllowableParameterType<T> getAnticipatedType();
 
 	@Override
-	AllowableParameterType<T> getNodeType();
+	SqmExpressable<T> getNodeType();
 
 	/**
 	 * Make a copy

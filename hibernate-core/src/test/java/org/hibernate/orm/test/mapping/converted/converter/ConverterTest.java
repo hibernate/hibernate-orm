@@ -13,7 +13,7 @@ import jakarta.persistence.Id;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.metamodel.model.domain.AllowableParameterType;
+import org.hibernate.query.AllowableParameterType;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.query.Query;
 import org.hibernate.type.Type;

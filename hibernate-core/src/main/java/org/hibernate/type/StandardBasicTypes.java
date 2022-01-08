@@ -35,11 +35,7 @@ import java.util.UUID;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * Centralizes access to the standard set of basic {@link Type types}.
- * <p/>
- * Type mappings can be adjusted per {@link org.hibernate.SessionFactory}.
- *
- * @see BasicTypeRegistry
+ * References to common {@link BasicTypeReference} instances
  *
  * @author Gavin King
  * @author Steve Ebersole

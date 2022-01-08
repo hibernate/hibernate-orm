@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.spi;
 
-import org.hibernate.metamodel.model.domain.AllowableParameterType;
+import org.hibernate.query.AllowableParameterType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**

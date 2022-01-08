@@ -146,11 +146,6 @@ public class EntityTypeImpl<J>
 	}
 
 	@Override
-	public Class<J> getBindableJavaType() {
-		return getJavaType();
-	}
-
-	@Override
 	public PersistenceType getPersistenceType() {
 		return PersistenceType.ENTITY;
 	}

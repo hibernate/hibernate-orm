@@ -14,6 +14,7 @@ import org.hibernate.graph.spi.GraphHelper;
 import org.hibernate.metamodel.AttributeClassification;
 import org.hibernate.metamodel.internal.MetadataContext;
 import org.hibernate.metamodel.model.domain.AnyMappingDomainType;
+import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
@@ -48,7 +49,7 @@ public class SingularAttributeImpl<D,J>
 			ManagedDomainType<D> declaringType,
 			String name,
 			AttributeClassification attributeClassification,
-			SimpleDomainType<J> attributeType,
+			DomainType<J> attributeType,
 			Member member,
 			boolean isIdentifier,
 			boolean isVersion,

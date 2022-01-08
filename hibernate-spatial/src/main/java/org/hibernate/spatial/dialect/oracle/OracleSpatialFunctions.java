@@ -11,7 +11,6 @@ import java.util.List;
 import org.hibernate.QueryException;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.spatial.SpatialAnalysis;
 import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.SpatialRelation;

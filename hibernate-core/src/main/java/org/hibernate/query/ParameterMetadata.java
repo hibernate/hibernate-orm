@@ -11,7 +11,6 @@ import java.util.function.Consumer;
 import jakarta.persistence.Parameter;
 
 import org.hibernate.Incubating;
-import org.hibernate.metamodel.model.domain.AllowableParameterType;
 
 
 /**

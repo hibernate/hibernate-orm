@@ -8,16 +8,19 @@ package org.hibernate.type;
 
 import java.io.Serializable;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
+import org.hibernate.query.AllowableParameterType;
+import org.hibernate.query.sqm.SqmExpressable;
 
 /**
  * A basic type reference.
  *
  * @author Christian Beikov
  */
-public final class BasicTypeReference<T> implements Serializable {
+public final class BasicTypeReference<T> implements AllowableParameterType<T>, Serializable {
 	private final String name;
-	private final Class<? extends T> javaType;
+	private final Class<T> javaType;
 	private final int sqlTypeCode;
 	private final BasicValueConverter<T, ?> converter;
 	private final boolean forceImmutable;
@@ -41,7 +44,8 @@ public final class BasicTypeReference<T> implements Serializable {
 			BasicValueConverter<T, ?> converter,
 			boolean forceImmutable) {
 		this.name = name;
-		this.javaType = javaType;
+		//noinspection unchecked
+		this.javaType = (Class<T>) javaType;
 		this.sqlTypeCode = sqlTypeCode;
 		this.converter = converter;
 		this.forceImmutable = forceImmutable;
@@ -51,7 +55,8 @@ public final class BasicTypeReference<T> implements Serializable {
 		return name;
 	}
 
-	public Class<? extends T> getJavaType() {
+	@Override
+	public Class<T> getBindableJavaType() {
 		return javaType;
 	}
 
@@ -75,5 +80,10 @@ public final class BasicTypeReference<T> implements Serializable {
 				converter,
 				true
 		);
+	}
+
+	@Override
+	public SqmExpressable<T> resolveExpressable(SessionFactoryImplementor sessionFactory) {
+		return sessionFactory.getTypeConfiguration().getBasicTypeRegistry().resolve( this );
 	}
 }

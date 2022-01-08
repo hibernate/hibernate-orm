@@ -7,7 +7,6 @@
 package org.hibernate.query;
 
 import org.hibernate.Incubating;
-import org.hibernate.metamodel.model.domain.AllowableParameterType;
 
 /**
  * Represents a parameter defined in the source (HQL/JPQL or criteria) query.

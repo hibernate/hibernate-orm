@@ -8,7 +8,7 @@ package org.hibernate.query.sqm.function;
 
 import java.util.List;
 
-import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
+import org.hibernate.query.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;

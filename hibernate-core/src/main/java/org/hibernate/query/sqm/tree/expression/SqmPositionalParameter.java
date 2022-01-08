@@ -6,9 +6,9 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.SqmExpressable;
 
 /**
  * Models a positional parameter expression
@@ -28,7 +28,7 @@ public class SqmPositionalParameter<T> extends AbstractSqmParameter<T> {
 	public SqmPositionalParameter(
 			int position,
 			boolean canBeMultiValued,
-			AllowableParameterType<T> expressableType,
+			SqmExpressable<T> expressableType,
 			NodeBuilder nodeBuilder) {
 		super( canBeMultiValued, expressableType, nodeBuilder );
 		this.position = position;

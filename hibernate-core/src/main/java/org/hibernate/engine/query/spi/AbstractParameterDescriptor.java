@@ -7,7 +7,7 @@
 package org.hibernate.engine.query.spi;
 
 import org.hibernate.Incubating;
-import org.hibernate.metamodel.model.domain.AllowableParameterType;
+import org.hibernate.query.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.internal.EntityTypeImpl;
 import org.hibernate.query.QueryParameter;
@@ -18,12 +18,12 @@ import org.hibernate.query.QueryParameter;
  * @author Steve Ebersole
  */
 @Incubating
-public abstract class AbstractParameterDescriptor implements QueryParameter {
+public abstract class AbstractParameterDescriptor<T> implements QueryParameter<T> {
 	private final int[] sourceLocations;
 
-	private AllowableParameterType expectedType;
+	private AllowableParameterType<T> expectedType;
 
-	public AbstractParameterDescriptor(int[] sourceLocations, AllowableParameterType expectedType) {
+	public AbstractParameterDescriptor(int[] sourceLocations, AllowableParameterType<T> expectedType) {
 		this.sourceLocations = sourceLocations;
 		this.expectedType = expectedType;
 	}
@@ -39,28 +39,28 @@ public abstract class AbstractParameterDescriptor implements QueryParameter {
 	}
 
 	@Override
-	public Class getParameterType() {
-		return expectedType == null ? null : expectedType.getExpressableJavaTypeDescriptor().getJavaTypeClass();
+	public Class<T> getParameterType() {
+		return expectedType == null ? null : expectedType.getBindableJavaType();
 	}
 
 	@Override
-	public AllowableParameterType getHibernateType() {
+	public AllowableParameterType<T> getHibernateType() {
 		return getExpectedType();
 	}
 
 
-	public AllowableParameterType getExpectedType() {
+	public AllowableParameterType<T> getExpectedType() {
 		return expectedType;
 	}
 
-	public void resetExpectedType(AllowableParameterType expectedType) {
+	public void resetExpectedType(AllowableParameterType<T> expectedType) {
 		this.expectedType = expectedType;
 	}
 
 	@Override
 	public boolean allowsMultiValuedBinding() {
 		if ( expectedType instanceof EntityTypeImpl ) {
-			return ( (EntityTypeImpl) expectedType ).getIdType() instanceof EmbeddableDomainType;
+			return ( (EntityTypeImpl<T>) expectedType ).getIdType() instanceof EmbeddableDomainType;
 		}
 		return expectedType instanceof EmbeddableDomainType;
 	}

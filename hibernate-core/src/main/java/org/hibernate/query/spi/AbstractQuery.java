@@ -8,9 +8,6 @@ package org.hibernate.query.spi;
 
 import java.io.Serializable;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
@@ -24,13 +21,6 @@ import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
-import jakarta.persistence.FlushModeType;
-import jakarta.persistence.LockModeType;
-import jakarta.persistence.NoResultException;
-import jakarta.persistence.Parameter;
-import jakarta.persistence.TemporalType;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -49,11 +39,11 @@ import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
-import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.query.AllowableParameterType;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.QueryLogging;
 import org.hibernate.query.QueryParameter;
@@ -62,14 +52,23 @@ import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.TypedParameterValue;
 import org.hibernate.query.internal.ScrollableResultsIterator;
 import org.hibernate.query.named.NamedQueryMemento;
+import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.BasicTypeReference;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.TemporalType;
 
 import static org.hibernate.LockMode.UPGRADE;
 import static org.hibernate.LockOptions.NONE;
 import static org.hibernate.LockOptions.READ;
 import static org.hibernate.LockOptions.WAIT_FOREVER;
+import static org.hibernate.annotations.QueryHints.NATIVE_LOCKMODE;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_LOCK_SCOPE;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_LOCK_TIMEOUT;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_SHARED_CACHE_RETRIEVE_MODE;
@@ -79,7 +78,6 @@ import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_TIMEOUT;
 import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_RETRIEVE_MODE;
 import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_STORE_MODE;
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
-import static org.hibernate.annotations.QueryHints.NATIVE_LOCKMODE;
 import static org.hibernate.jpa.QueryHints.HINT_CACHEABLE;
 import static org.hibernate.jpa.QueryHints.HINT_CACHE_MODE;
 import static org.hibernate.jpa.QueryHints.HINT_CACHE_REGION;
@@ -831,445 +829,6 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	public boolean isBound(Parameter<?> param) {
-		getSession().checkOpen();
-
-		final QueryParameterImplementor<?> qp = getParameterMetadata().resolve( param );
-		return qp != null && getQueryParameterBindings().isBound( qp );
-	}
-
-	@SuppressWarnings( {"WeakerAccess", "unchecked", "rawtypes"} )
-	protected <P> QueryParameterBinding<P> locateBinding(Parameter<P> parameter) {
-		if ( parameter instanceof QueryParameterImplementor ) {
-			return locateBinding( (QueryParameterImplementor) parameter );
-		}
-		else if ( parameter.getName() != null ) {
-			return locateBinding( parameter.getName() );
-		}
-		else if ( parameter.getPosition() != null ) {
-			return locateBinding( parameter.getPosition() );
-		}
-
-		throw getSession().getExceptionConverter().convert(
-				new IllegalArgumentException( "Could not resolve binding for given parameter reference [" + parameter + "]" )
-		);
-	}
-
-	@SuppressWarnings("WeakerAccess")
-	protected <P> QueryParameterBinding<P> locateBinding(QueryParameterImplementor<P> parameter) {
-		getSession().checkOpen();
-		return getQueryParameterBindings().getBinding( parameter );
-	}
-
-	@SuppressWarnings( {"WeakerAccess"} )
-	protected <P> QueryParameterBinding<P> locateBinding(String name) {
-		getSession().checkOpen();
-		return getQueryParameterBindings().getBinding( name );
-	}
-
-	@SuppressWarnings( {"WeakerAccess"} )
-	protected <P> QueryParameterBinding<P> locateBinding(int position) {
-		getSession().checkOpen();
-		return getQueryParameterBindings().getBinding( position );
-	}
-
-	@Override
-	public QueryImplementor<R> setParameter(Parameter<Instant> param, Instant value, TemporalType temporalType) {
-		locateBinding( param ).setBindValue( value, temporalType );
-		return this;
-	}
-
-	@Override
-	public QueryImplementor<R> setParameter(Parameter<LocalDateTime> param, LocalDateTime value, TemporalType temporalType) {
-		locateBinding( param ).setBindValue( value, temporalType );
-		return this;
-	}
-
-	@Override
-	public QueryImplementor<R> setParameter(Parameter<ZonedDateTime> param, ZonedDateTime value, TemporalType temporalType) {
-		locateBinding( param ).setBindValue( value, temporalType );
-		return this;
-	}
-
-	@Override
-	public QueryImplementor<R> setParameter(Parameter<OffsetDateTime> param, OffsetDateTime value, TemporalType temporalType) {
-		locateBinding( param ).setBindValue( value, temporalType );
-		return this;
-	}
-
-	@Override
-	public QueryImplementor<R> setParameter(String name, Instant value, TemporalType temporalType) {
-		locateBinding( name ).setBindValue( value, temporalType );
-		return this;
-	}
-
-	@Override
-	public QueryImplementor<R> setParameter(String name, LocalDateTime value, TemporalType temporalType) {
-		locateBinding( name ).setBindValue( value, temporalType );
-		return this;
-	}
-
-	@Override
-	public QueryImplementor<R> setParameter(String name, ZonedDateTime value, TemporalType temporalType) {
-		locateBinding( name ).setBindValue( value, temporalType );
-		return this;
-	}
-
-	@Override
-	public QueryImplementor<R> setParameter(String name, OffsetDateTime value, TemporalType temporalType) {
-		locateBinding( name ).setBindValue( value, temporalType );
-		return this;
-	}
-
-	@Override
-	public QueryImplementor<R> setParameter(int position, Instant value, TemporalType temporalType) {
-		locateBinding( position ).setBindValue( value, temporalType );
-		return this;
-	}
-
-	@Override
-	public QueryImplementor<R> setParameter(int position, LocalDateTime value, TemporalType temporalType) {
-		locateBinding( position ).setBindValue( value, temporalType );
-		return this;
-	}
-
-	@Override
-	public QueryImplementor<R> setParameter(int position, ZonedDateTime value, TemporalType temporalType) {
-		locateBinding( position ).setBindValue( value, temporalType );
-		return this;
-	}
-
-	@Override
-	public QueryImplementor<R> setParameter(int position, OffsetDateTime value, TemporalType temporalType) {
-		locateBinding( position ).setBindValue( value, temporalType );
-		return this;
-	}
-
-	@Override
-	public <P> QueryImplementor<R> setParameter(QueryParameter<P> parameter, P value) {
-		locateBinding( parameter ).setBindValue( value, resolveJdbcParameterTypeIfNecessary() );
-		return this;
-	}
-
-	@Override
-	public <P> QueryImplementor<R> setParameter(Parameter<P> parameter, P value) {
-		if ( value instanceof TypedParameterValue ) {
-			@SuppressWarnings("unchecked")
-			final TypedParameterValue<P> typedValue = (TypedParameterValue<P>) value;
-			final AllowableParameterType<P> type = typedValue.getType();
-			if ( type != null ) {
-				setParameter( parameter, typedValue.getValue(), type );
-			}
-			else {
-				setParameter( parameter, typedValue.getValue(), typedValue.getTypeReference() );
-			}
-		}
-		else {
-			locateBinding( parameter ).setBindValue( value, resolveJdbcParameterTypeIfNecessary() );
-		}
-
-		return this;
-	}
-
-	private <P> void setParameter(Parameter<P> parameter, P value, BasicTypeReference<P> type) {
-		setParameter( parameter, value, session.getTypeConfiguration().getBasicTypeRegistry().resolve( type ) );
-	}
-
-	private <P> void setParameter(Parameter<P> parameter, P value, AllowableParameterType<P> type) {
-		if ( parameter instanceof QueryParameter ) {
-			setParameter( (QueryParameter<P>) parameter, value, type );
-		}
-		else if ( value == null ) {
-			locateBinding( parameter ).setBindValue( null, type );
-		}
-		else if ( value instanceof Collection ) {
-			//TODO: this looks wrong to me: how can value be both a P and a (Collection<P>)?
-			locateBinding( parameter ).setBindValues( (Collection<P>) value );
-		}
-		else {
-			locateBinding( parameter ).setBindValue( value, type );
-		}
-	}
-
-	@Override
-	public QueryImplementor<R> setParameter(String name, Object value) {
-		if ( value instanceof TypedParameterValue ) {
-			@SuppressWarnings("unchecked")
-			final TypedParameterValue<Object> typedValue = (TypedParameterValue<Object>) value;
-			final AllowableParameterType<Object> type = typedValue.getType();
-			if ( type != null ) {
-				return setParameter( name, typedValue.getValue(), type );
-			}
-			else {
-				return setParameter( name, typedValue.getValue(), typedValue.getTypeReference() );
-			}
-		}
-
-		final QueryParameterImplementor<?> param = getParameterMetadata().getQueryParameter( name );
-
-		if ( param == null ) {
-			throw new IllegalArgumentException( "Named parameter [" + name + "] is not registered with this procedure call" );
-		}
-
-		if ( param.allowsMultiValuedBinding() ) {
-			final AllowableParameterType<?> hibernateType = param.getHibernateType();
-			if ( hibernateType == null || ! hibernateType.getExpressableJavaTypeDescriptor().getJavaTypeClass().isInstance( value ) ) {
-				if ( value instanceof Collection ) {
-					//noinspection rawtypes
-					setParameterList( name, (Collection) value );
-				}
-			}
-		}
-
-		locateBinding( name ).setBindValue( value, resolveJdbcParameterTypeIfNecessary() );
-
-		return this;
-	}
-
-	@Override
-	public QueryImplementor<R> setParameter(int position, Object value) {
-		if ( value instanceof TypedParameterValue ) {
-			@SuppressWarnings("unchecked")
-			final TypedParameterValue<Object> typedValue = (TypedParameterValue<Object>) value;
-			final AllowableParameterType<Object> type = typedValue.getType();
-			if ( type != null ) {
-				return setParameter( position, typedValue.getValue(), type );
-			}
-			else {
-				return setParameter( position, typedValue.getValue(), typedValue.getTypeReference() );
-			}
-		}
-
-		final QueryParameterImplementor<?> param = getParameterMetadata().getQueryParameter( position );
-
-		if ( param == null ) {
-			throw new IllegalArgumentException( "Positional parameter [" + position + "] is not registered with this procedure call" );
-		}
-
-		if ( param.allowsMultiValuedBinding() ) {
-			final AllowableParameterType<?> hibernateType = param.getHibernateType();
-			if ( hibernateType == null || ! hibernateType.getExpressableJavaTypeDescriptor().getJavaTypeClass().isInstance( value ) ) {
-				if ( value instanceof Collection ) {
-					//noinspection rawtypes,unchecked
-					setParameterList( param, (Collection) value );
-				}
-			}
-		}
-
-		locateBinding( position ).setBindValue( value, resolveJdbcParameterTypeIfNecessary() );
-		return this;
-	}
-
-	@Override
-	public <P> QueryImplementor<R> setParameter(QueryParameter<P> parameter, P value, AllowableParameterType<P> type) {
-		locateBinding( parameter ).setBindValue( value,  type );
-		return this;
-	}
-
-	@Override
-	public <P> QueryImplementor<R> setParameter(String name, P value, AllowableParameterType<P> type) {
-		this.<P>locateBinding( name ).setBindValue( value, type );
-		return this;
-	}
-
-	@Override
-	public <P> QueryImplementor<R> setParameter(int position, P value, AllowableParameterType<P> type) {
-		this.<P>locateBinding( position ).setBindValue( value, type );
-		return this;
-	}
-
-	@Override
-	public <P> QueryImplementor<R> setParameter(String name, P value, BasicTypeReference<P> type) {
-		return setParameter( name, value, session.getTypeConfiguration().getBasicTypeRegistry().resolve( type ) );
-	}
-
-	@Override
-	public <P> QueryImplementor<R> setParameter(int position, P value, BasicTypeReference<P> type) {
-		return setParameter( position, value, session.getTypeConfiguration().getBasicTypeRegistry().resolve( type ) );
-	}
-
-	@Override
-	public <P> QueryImplementor<R> setParameter(QueryParameter<P> parameter, P val, BasicTypeReference<P> type) {
-		return setParameter( parameter, val, session.getTypeConfiguration().getBasicTypeRegistry().resolve( type ) );
-	}
-
-	@Override
-	public <P> QueryImplementor<R> setParameter(QueryParameter<P> parameter, P value, TemporalType temporalType) {
-		locateBinding( parameter ).setBindValue( value, temporalType );
-		return this;
-	}
-
-	@Override
-	public QueryImplementor<R> setParameter(String name, Object value, TemporalType temporalType) {
-		locateBinding( name ).setBindValue( value, temporalType );
-		return this;
-	}
-
-	@Override
-	public QueryImplementor<R> setParameter(int position, Object value, TemporalType temporalType) {
-		locateBinding( position ).setBindValue( value, temporalType );
-		return this;
-	}
-
-	@Override
-	public <P> QueryImplementor<R> setParameterList(QueryParameter<P> parameter, Collection<P> values) {
-		locateBinding( parameter ).setBindValues( values );
-		return this;
-	}
-
-	@Override
-	public QueryImplementor<R> setParameterList(String name, @SuppressWarnings("rawtypes") Collection values) {
-		locateBinding( name ).setBindValues( values );
-		return this;
-	}
-
-	@Override
-	public QueryImplementor<R> setParameterList(int position, @SuppressWarnings("rawtypes") Collection values) {
-		locateBinding( position ).setBindValues( values );
-		return this;
-	}
-
-	@Override
-	public <P> QueryImplementor<R> setParameterList(String name, Collection<? extends P> values, AllowableParameterType<P> type) {
-		this.<P>locateBinding( name ).setBindValues( values, type );
-		return this;
-	}
-
-	@Override
-	public <P> QueryImplementor<R> setParameterList(int position, Collection<? extends P> values, AllowableParameterType<P> type) {
-		this.<P>locateBinding( position ).setBindValues( values, type );
-		return this;
-	}
-
-	@Override
-	public QueryImplementor<R> setParameterList(String name, Object[] values) {
-		locateBinding( name ).setBindValues( Arrays.asList( values ) );
-		return this;
-	}
-
-	@Override
-	public QueryImplementor<R> setParameterList(int position, Object[] values) {
-		locateBinding( position ).setBindValues( Arrays.asList( values ) );
-		return this;
-	}
-
-	@Override @SuppressWarnings({"rawtypes", "unchecked"})
-	public QueryImplementor<R> setParameterList(String name, Object[] values, AllowableParameterType type) {
-		locateBinding( name ).setBindValues( Arrays.asList( values ), type );
-		return this;
-	}
-
-	@Override @SuppressWarnings({"rawtypes", "unchecked"})
-	public QueryImplementor<R> setParameterList(int position, Object[] values, AllowableParameterType type) {
-		locateBinding( position ).setBindValues( Arrays.asList( values ), type );
-		return this;
-	}
-
-	@Override
-	public <P> QueryImplementor<R> setParameterList(String name, Collection<? extends P> values, Class<P> javaType) {
-		final JavaType<P> javaDescriptor = getSession().getFactory()
-				.getTypeConfiguration()
-				.getJavaTypeDescriptorRegistry()
-				.getDescriptor( javaType );
-		if ( javaDescriptor == null ) {
-			setParameterList( name, values );
-		}
-		else {
-			final AllowableParameterType<P> paramType;
-			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
-			if ( basicType != null ) {
-				paramType = basicType;
-			}
-			else {
-				final ManagedDomainType<P> managedDomainType = getSession().getFactory()
-						.getRuntimeMetamodels()
-						.getJpaMetamodel()
-						.managedType( javaType );
-				if ( managedDomainType != null ) {
-					paramType = managedDomainType;
-				}
-				else {
-					throw new HibernateException( "Unable to determine AllowableParameterType : " + javaType.getName() );
-				}
-			}
-
-			setParameterList( name, values, paramType );
-		}
-
-		return this;
-	}
-
-	@Override
-	public <P> QueryImplementor<R> setParameterList(int position, Collection<? extends P> values, Class<P> javaType) {
-		final JavaType<P> javaDescriptor = getSession().getFactory()
-				.getTypeConfiguration()
-				.getJavaTypeDescriptorRegistry()
-				.getDescriptor( javaType );
-		if ( javaDescriptor == null ) {
-			setParameterList( position, values );
-		}
-		else {
-			final AllowableParameterType<P> paramType;
-			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
-			if ( basicType != null ) {
-				paramType = basicType;
-			}
-			else {
-				final ManagedDomainType<P> managedDomainType = getSession().getFactory()
-						.getRuntimeMetamodels()
-						.getJpaMetamodel()
-						.managedType( javaType );
-				if ( managedDomainType != null ) {
-					paramType = managedDomainType;
-				}
-				else {
-					throw new HibernateException( "Unable to determine AllowableParameterType : " + javaType.getName() );
-				}
-			}
-
-			setParameterList( position, values, paramType );
-		}
-
-		return this;
-	}
-
-	@Override
-	public QueryImplementor<R> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType) {
-		locateBinding( param ).setBindValue( value, temporalType );
-		return this;
-	}
-
-	@Override
-	public QueryImplementor<R> setParameter(Parameter<Date> param, Date value, TemporalType temporalType) {
-		locateBinding( param ).setBindValue( value, temporalType );
-		return this;
-	}
-
-	@Override
-	public QueryImplementor<R> setParameter(String name, Calendar value, TemporalType temporalType) {
-		locateBinding( name ).setBindValue( value, temporalType );
-		return this;
-	}
-
-	@Override
-	public QueryImplementor<R> setParameter(String name, Date value, TemporalType temporalType) {
-		locateBinding( name ).setBindValue( value, temporalType );
-		return this;
-	}
-
-	@Override
-	public QueryImplementor<R> setParameter(int position, Calendar value, TemporalType temporalType) {
-		locateBinding( position ).setBindValue( value, temporalType );
-		return this;
-	}
-
-	@Override
-	public QueryImplementor<R> setParameter(int position, Date value, TemporalType temporalType) {
-		locateBinding( position ).setBindValue( value, temporalType );
-		return this;
-	}
-
-	@Override
 	public <T> T getParameterValue(Parameter<T> param) {
 		QueryLogging.QUERY_LOGGER.tracef( "#getParameterValue(%s)", param );
 
@@ -1334,6 +893,643 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		else {
 			return binding.getBindValue();
 		}
+	}
+
+	@Override
+	public boolean isBound(Parameter<?> param) {
+		getSession().checkOpen();
+
+		final QueryParameterImplementor<?> qp = getParameterMetadata().resolve( param );
+		return qp != null && getQueryParameterBindings().isBound( qp );
+	}
+
+	@SuppressWarnings( {"WeakerAccess", "unchecked", "rawtypes"} )
+	protected <P> QueryParameterBinding<P> locateBinding(Parameter<P> parameter) {
+		if ( parameter instanceof QueryParameterImplementor ) {
+			return locateBinding( (QueryParameterImplementor) parameter );
+		}
+		else if ( parameter.getName() != null ) {
+			return locateBinding( parameter.getName() );
+		}
+		else if ( parameter.getPosition() != null ) {
+			return locateBinding( parameter.getPosition() );
+		}
+
+		throw getSession().getExceptionConverter().convert(
+				new IllegalArgumentException( "Could not resolve binding for given parameter reference [" + parameter + "]" )
+		);
+	}
+
+	@SuppressWarnings("WeakerAccess")
+	protected <P> QueryParameterBinding<P> locateBinding(QueryParameterImplementor<P> parameter) {
+		getSession().checkOpen();
+		return getQueryParameterBindings().getBinding( parameter );
+	}
+
+	@SuppressWarnings( {"WeakerAccess"} )
+	protected <P> QueryParameterBinding<P> locateBinding(String name) {
+		getSession().checkOpen();
+		return getQueryParameterBindings().getBinding( name );
+	}
+
+	@SuppressWarnings( {"WeakerAccess"} )
+	protected <P> QueryParameterBinding<P> locateBinding(int position) {
+		getSession().checkOpen();
+		return getQueryParameterBindings().getBinding( position );
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	@Override
+	public QueryImplementor<R> setParameter(String name, Object value) {
+		if ( value instanceof TypedParameterValue ) {
+			@SuppressWarnings("unchecked")
+			final TypedParameterValue<Object> typedValue = (TypedParameterValue<Object>) value;
+			final AllowableParameterType<Object> type = typedValue.getType();
+			if ( type != null ) {
+				return setParameter( name, typedValue.getValue(), type );
+			}
+			else {
+				return setParameter( name, typedValue.getValue(), typedValue.getTypeReference() );
+			}
+		}
+
+		final QueryParameterImplementor<?> param = getParameterMetadata().getQueryParameter( name );
+
+		if ( param == null ) {
+			throw new IllegalArgumentException( "Named parameter [" + name + "] is not registered with this procedure call" );
+		}
+
+		if ( param.allowsMultiValuedBinding() ) {
+			final AllowableParameterType<?> hibernateType = param.getHibernateType();
+			if ( hibernateType == null || isInstance( hibernateType, value ) ) {
+				if ( value instanceof Collection ) {
+					//noinspection rawtypes
+					setParameterList( name, (Collection) value );
+				}
+			}
+		}
+
+		locateBinding( name ).setBindValue( value, resolveJdbcParameterTypeIfNecessary() );
+
+		return this;
+	}
+
+	private boolean isInstance(AllowableParameterType<?> parameterType, Object value) {
+		final SqmExpressable<?> sqmExpressable = parameterType.resolveExpressable( session.getFactory() );
+		assert sqmExpressable != null;
+
+		return sqmExpressable.getExpressableJavaTypeDescriptor().isInstance( value );
+	}
+
+	@Override
+	public <P> QueryImplementor<R> setParameter(String name, P value, Class<P> javaType) {
+		final JavaType<P> javaDescriptor = getSession().getFactory()
+				.getTypeConfiguration()
+				.getJavaTypeDescriptorRegistry()
+				.getDescriptor( javaType );
+		if ( javaDescriptor == null ) {
+			setParameter( name, value );
+		}
+		else {
+			final AllowableParameterType<P> paramType;
+			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
+			if ( basicType != null ) {
+				paramType = basicType;
+			}
+			else {
+				final ManagedDomainType<P> managedDomainType = getSession().getFactory()
+						.getRuntimeMetamodels()
+						.getJpaMetamodel()
+						.managedType( javaType );
+				if ( managedDomainType != null ) {
+					paramType = managedDomainType;
+				}
+				else {
+					throw new HibernateException( "Unable to determine AllowableParameterType : " + javaType.getName() );
+				}
+			}
+
+			setParameter( name, value, paramType );
+		}
+
+		return this;
+	}
+
+	@Override
+	public <P> QueryImplementor<R> setParameter(String name, P value, AllowableParameterType<P> type) {
+		this.<P>locateBinding( name ).setBindValue( value, type );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<R> setParameter(String name, Instant value, TemporalType temporalType) {
+		this.locateBinding( name ).setBindValue( value, temporalType );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<R> setParameter(int position, Object value) {
+		if ( value instanceof TypedParameterValue ) {
+			@SuppressWarnings("unchecked")
+			final TypedParameterValue<Object> typedValue = (TypedParameterValue<Object>) value;
+			final AllowableParameterType<Object> type = typedValue.getType();
+			if ( type != null ) {
+				return setParameter( position, typedValue.getValue(), type );
+			}
+			else {
+				return setParameter( position, typedValue.getValue(), typedValue.getTypeReference() );
+			}
+		}
+
+		final QueryParameterImplementor<?> param = getParameterMetadata().getQueryParameter( position );
+
+		if ( param == null ) {
+			throw new IllegalArgumentException( "Positional parameter [" + position + "] is not registered with this procedure call" );
+		}
+
+		if ( param.allowsMultiValuedBinding() ) {
+			final AllowableParameterType<?> hibernateType = param.getHibernateType();
+			if ( hibernateType == null || isInstance( hibernateType, value ) ) {
+				if ( value instanceof Collection ) {
+					//noinspection rawtypes,unchecked
+					setParameterList( param, (Collection) value );
+				}
+			}
+		}
+
+		locateBinding( position ).setBindValue( value, resolveJdbcParameterTypeIfNecessary() );
+		return this;
+	}
+
+	@Override
+	public <P> QueryImplementor<R> setParameter(int position, P value, Class<P> javaType) {
+		final JavaType<P> javaDescriptor = getSession().getFactory()
+				.getTypeConfiguration()
+				.getJavaTypeDescriptorRegistry()
+				.getDescriptor( javaType );
+		if ( javaDescriptor == null ) {
+			setParameter( position, value );
+		}
+		else {
+			final AllowableParameterType<P> paramType;
+			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
+			if ( basicType != null ) {
+				paramType = basicType;
+			}
+			else {
+				final ManagedDomainType<P> managedDomainType = getSession().getFactory()
+						.getRuntimeMetamodels()
+						.getJpaMetamodel()
+						.managedType( javaType );
+				if ( managedDomainType != null ) {
+					paramType = managedDomainType;
+				}
+				else {
+					throw new HibernateException( "Unable to determine AllowableParameterType : " + javaType.getName() );
+				}
+			}
+
+			setParameter( position, value, paramType );
+		}
+
+		return this;
+	}
+
+	@Override
+	public <P> QueryImplementor<R> setParameter(int position, P value, AllowableParameterType<P> type) {
+		this.<P>locateBinding( position ).setBindValue( value, type );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<R> setParameter(int position, Instant value, TemporalType temporalType) {
+		this.locateBinding( position ).setBindValue( value, temporalType );
+		return this;
+	}
+
+
+
+	@Override
+	public <P> QueryImplementor<R> setParameter(QueryParameter<P> parameter, P value) {
+		locateBinding( parameter ).setBindValue( value, resolveJdbcParameterTypeIfNecessary() );
+		return this;
+	}
+
+	@Override
+	public <P> QueryImplementor<R> setParameter(QueryParameter<P> parameter, P value, Class<P> javaType) {
+		final JavaType<P> javaDescriptor = getSession().getFactory()
+				.getTypeConfiguration()
+				.getJavaTypeDescriptorRegistry()
+				.getDescriptor( javaType );
+		if ( javaDescriptor == null ) {
+			setParameter( parameter, value );
+		}
+		else {
+			final AllowableParameterType<P> paramType;
+			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
+			if ( basicType != null ) {
+				paramType = basicType;
+			}
+			else {
+				final ManagedDomainType<P> managedDomainType = getSession().getFactory()
+						.getRuntimeMetamodels()
+						.getJpaMetamodel()
+						.managedType( javaType );
+				if ( managedDomainType != null ) {
+					paramType = managedDomainType;
+				}
+				else {
+					throw new HibernateException( "Unable to determine AllowableParameterType : " + javaType.getName() );
+				}
+			}
+
+			setParameter( parameter, value, paramType );
+		}
+
+		return this;
+	}
+
+	@Override
+	public <P> QueryImplementor<R> setParameter(QueryParameter<P> parameter, P value, AllowableParameterType<P> type) {
+		locateBinding( parameter ).setBindValue( value,  type );
+		return this;
+	}
+
+
+	@Override
+	public <P> QueryImplementor<R> setParameter(Parameter<P> parameter, P value) {
+		if ( value instanceof TypedParameterValue ) {
+			@SuppressWarnings("unchecked")
+			final TypedParameterValue<P> typedValue = (TypedParameterValue<P>) value;
+			final AllowableParameterType<P> type = typedValue.getType();
+			if ( type != null ) {
+				setParameter( parameter, typedValue.getValue(), type );
+			}
+			else {
+				setParameter( parameter, typedValue.getValue(), typedValue.getTypeReference() );
+			}
+		}
+		else {
+			locateBinding( parameter ).setBindValue( value, resolveJdbcParameterTypeIfNecessary() );
+		}
+
+		return this;
+	}
+
+	private <P> void setParameter(Parameter<P> parameter, P value, AllowableParameterType<P> type) {
+		if ( parameter instanceof QueryParameter ) {
+			setParameter( (QueryParameter<P>) parameter, value, type );
+		}
+		else if ( value == null ) {
+			locateBinding( parameter ).setBindValue( null, type );
+		}
+		else if ( value instanceof Collection ) {
+			//TODO: this looks wrong to me: how can value be both a P and a (Collection<P>)?
+			locateBinding( parameter ).setBindValues( (Collection<P>) value );
+		}
+		else {
+			locateBinding( parameter ).setBindValue( value, type );
+		}
+	}
+
+
+
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Parameter list
+
+	@Override
+	public QueryImplementor<R> setParameterList(String name, @SuppressWarnings("rawtypes") Collection values) {
+		locateBinding( name ).setBindValues( values );
+		return this;
+	}
+
+	public <P> QueryImplementor<R> setParameterList(String name, Collection<? extends P> values, Class<P> javaType) {
+		final JavaType<P> javaDescriptor = getSession().getFactory()
+				.getTypeConfiguration()
+				.getJavaTypeDescriptorRegistry()
+				.getDescriptor( javaType );
+		if ( javaDescriptor == null ) {
+			setParameterList( name, values );
+		}
+		else {
+			final AllowableParameterType<P> paramType;
+			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
+			if ( basicType != null ) {
+				paramType = basicType;
+			}
+			else {
+				final ManagedDomainType<P> managedDomainType = getSession().getFactory()
+						.getRuntimeMetamodels()
+						.getJpaMetamodel()
+						.managedType( javaType );
+				if ( managedDomainType != null ) {
+					paramType = managedDomainType;
+				}
+				else {
+					throw new HibernateException( "Unable to determine AllowableParameterType : " + javaType.getName() );
+				}
+			}
+
+			setParameterList( name, values, paramType );
+		}
+
+		return this;
+	}
+
+
+	@Override
+	public <P> QueryImplementor<R> setParameterList(String name, Collection<? extends P> values, AllowableParameterType<P> type) {
+		this.<P>locateBinding( name ).setBindValues( values, type );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<R> setParameterList(String name, Object[] values) {
+		locateBinding( name ).setBindValues( Arrays.asList( values ) );
+		return this;
+	}
+
+	@Override
+	public <P> QueryImplementor<R> setParameterList(String name, P[] values, Class<P> javaType) {
+		final JavaType<P> javaDescriptor = getSession().getFactory()
+				.getTypeConfiguration()
+				.getJavaTypeDescriptorRegistry()
+				.getDescriptor( javaType );
+		if ( javaDescriptor == null ) {
+			setParameterList( name, values );
+		}
+		else {
+			final AllowableParameterType<P> paramType;
+			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
+			if ( basicType != null ) {
+				paramType = basicType;
+			}
+			else {
+				final ManagedDomainType<P> managedDomainType = getSession().getFactory()
+						.getRuntimeMetamodels()
+						.getJpaMetamodel()
+						.managedType( javaType );
+				if ( managedDomainType != null ) {
+					paramType = managedDomainType;
+				}
+				else {
+					throw new HibernateException( "Unable to determine AllowableParameterType : " + javaType.getName() );
+				}
+			}
+
+			setParameterList( name, values, paramType );
+		}
+
+		return this;
+	}
+
+	public <P> QueryImplementor<R> setParameterList(String name, P[] values, AllowableParameterType<P> type) {
+		this.<P>locateBinding( name ).setBindValues( Arrays.asList( values ), type );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<R> setParameterList(int position, @SuppressWarnings("rawtypes") Collection values) {
+		locateBinding( position ).setBindValues( values );
+		return this;
+	}
+
+	@Override
+	public <P> QueryImplementor<R> setParameterList(int position, Collection<? extends P> values, Class<P> javaType) {
+		final JavaType<P> javaDescriptor = getSession().getFactory()
+				.getTypeConfiguration()
+				.getJavaTypeDescriptorRegistry()
+				.getDescriptor( javaType );
+		if ( javaDescriptor == null ) {
+			setParameterList( position, values );
+		}
+		else {
+			final AllowableParameterType<P> paramType;
+			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
+			if ( basicType != null ) {
+				paramType = basicType;
+			}
+			else {
+				final ManagedDomainType<P> managedDomainType = getSession().getFactory()
+						.getRuntimeMetamodels()
+						.getJpaMetamodel()
+						.managedType( javaType );
+				if ( managedDomainType != null ) {
+					paramType = managedDomainType;
+				}
+				else {
+					throw new HibernateException( "Unable to determine AllowableParameterType : " + javaType.getName() );
+				}
+			}
+
+			setParameterList( position, values, paramType );
+		}
+
+		return this;
+	}
+
+	@Override
+	public <P> QueryImplementor<R> setParameterList(int position, Collection<? extends P> values, AllowableParameterType<P> type) {
+		this.<P>locateBinding( position ).setBindValues( values, type );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<R> setParameterList(int position, Object[] values) {
+		locateBinding( position ).setBindValues( Arrays.asList( values ) );
+		return this;
+	}
+
+	@Override
+	public <P> QueryImplementor<R> setParameterList(int position, P[] values, Class<P> javaType) {
+		final JavaType<P> javaDescriptor = getSession().getFactory()
+				.getTypeConfiguration()
+				.getJavaTypeDescriptorRegistry()
+				.getDescriptor( javaType );
+		if ( javaDescriptor == null ) {
+			setParameterList( position, values );
+		}
+		else {
+			final AllowableParameterType<P> paramType;
+			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
+			if ( basicType != null ) {
+				paramType = basicType;
+			}
+			else {
+				final ManagedDomainType<P> managedDomainType = getSession().getFactory()
+						.getRuntimeMetamodels()
+						.getJpaMetamodel()
+						.managedType( javaType );
+				if ( managedDomainType != null ) {
+					paramType = managedDomainType;
+				}
+				else {
+					throw new HibernateException( "Unable to determine AllowableParameterType : " + javaType.getName() );
+				}
+			}
+
+			setParameterList( position, values, paramType );
+		}
+
+		return this;
+	}
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public <P> QueryImplementor<R> setParameterList(int position, P[] values, AllowableParameterType<P> type) {
+		locateBinding( position ).setBindValues( Arrays.asList( values ), (AllowableParameterType) type );
+		return this;
+	}
+
+
+
+
+
+
+
+
+	@Override
+	public <P> QueryImplementor<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values) {
+		locateBinding( parameter ).setBindValues( values );
+		return this;
+	}
+
+	@Override
+	public <P> QueryImplementor<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Class<P> javaType) {
+		final JavaType<P> javaDescriptor = getSession().getFactory()
+				.getTypeConfiguration()
+				.getJavaTypeDescriptorRegistry()
+				.getDescriptor( javaType );
+		if ( javaDescriptor == null ) {
+			setParameterList( parameter, values );
+		}
+		else {
+			final AllowableParameterType<P> paramType;
+			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
+			if ( basicType != null ) {
+				paramType = basicType;
+			}
+			else {
+				final ManagedDomainType<P> managedDomainType = getSession().getFactory()
+						.getRuntimeMetamodels()
+						.getJpaMetamodel()
+						.managedType( javaType );
+				if ( managedDomainType != null ) {
+					paramType = managedDomainType;
+				}
+				else {
+					throw new HibernateException( "Unable to determine AllowableParameterType : " + javaType.getName() );
+				}
+			}
+
+			setParameterList( parameter, values, paramType );
+		}
+
+		return this;
+	}
+
+	@Override
+	public <P> QueryImplementor<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, AllowableParameterType<P> type) {
+		locateBinding( parameter ).setBindValues( values, type );
+		return this;
+	}
+
+	@Override
+	public <P> QueryImplementor<R> setParameterList(QueryParameter<P> parameter, P[] values) {
+		locateBinding( parameter ).setBindValues( values == null ? null : Arrays.asList( values ) );
+		return this;
+	}
+
+	@Override
+	public <P> QueryImplementor<R> setParameterList(QueryParameter<P> parameter, P[] values, Class<P> javaType) {
+		final JavaType<P> javaDescriptor = getSession().getFactory()
+				.getTypeConfiguration()
+				.getJavaTypeDescriptorRegistry()
+				.getDescriptor( javaType );
+		if ( javaDescriptor == null ) {
+			setParameterList( parameter, values );
+		}
+		else {
+			final AllowableParameterType<P> paramType;
+			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
+			if ( basicType != null ) {
+				paramType = basicType;
+			}
+			else {
+				final ManagedDomainType<P> managedDomainType = getSession().getFactory()
+						.getRuntimeMetamodels()
+						.getJpaMetamodel()
+						.managedType( javaType );
+				if ( managedDomainType != null ) {
+					paramType = managedDomainType;
+				}
+				else {
+					throw new HibernateException( "Unable to determine AllowableParameterType : " + javaType.getName() );
+				}
+			}
+
+			setParameterList( parameter, values, paramType );
+		}
+
+		return this;
+	}
+
+
+	@Override
+	public <P> QueryImplementor<R> setParameterList(QueryParameter<P> parameter, P[] values, AllowableParameterType<P> type) {
+		locateBinding( parameter ).setBindValues( Arrays.asList( values ), type );
+		return this;
+	}
+
+
+	@Override
+	public QueryImplementor<R> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType) {
+		locateBinding( param ).setBindValue( value, temporalType );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<R> setParameter(Parameter<Date> param, Date value, TemporalType temporalType) {
+		locateBinding( param ).setBindValue( value, temporalType );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<R> setParameter(String name, Calendar value, TemporalType temporalType) {
+		locateBinding( name ).setBindValue( value, temporalType );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<R> setParameter(String name, Date value, TemporalType temporalType) {
+		locateBinding( name ).setBindValue( value, temporalType );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<R> setParameter(int position, Calendar value, TemporalType temporalType) {
+		locateBinding( position ).setBindValue( value, temporalType );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<R> setParameter(int position, Date value, TemporalType temporalType) {
+		locateBinding( position ).setBindValue( value, temporalType );
+		return this;
 	}
 
 

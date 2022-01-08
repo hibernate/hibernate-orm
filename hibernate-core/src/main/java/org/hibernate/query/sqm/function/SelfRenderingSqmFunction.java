@@ -12,7 +12,7 @@ import java.util.List;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
-import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
+import org.hibernate.query.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;

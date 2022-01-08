@@ -6,7 +6,6 @@
  */
 package org.hibernate.query;
 
-import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.query.spi.QueryParameterImplementor;
 
 /**
@@ -57,6 +56,6 @@ public abstract class AbstractQueryParameter<T> implements QueryParameterImpleme
 
 	@Override
 	public Class<T> getParameterType() {
-		return anticipatedType.getJavaType();
+		return anticipatedType.getBindableJavaType();
 	}
 }

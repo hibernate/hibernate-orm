@@ -71,7 +71,7 @@ public class BasicTypeRegistry implements Serializable {
 			}
 		}
 		final JavaType<Object> javaTypeDescriptor = typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor(
-				typeReference.getJavaType()
+				typeReference.getBindableJavaType()
 		);
 		final JdbcType jdbcType = typeConfiguration.getJdbcTypeDescriptorRegistry().getDescriptor(
 				typeReference.getSqlTypeCode()

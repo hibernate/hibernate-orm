@@ -6,12 +6,11 @@
  */
 package org.hibernate.procedure.internal;
 
-import org.hibernate.metamodel.model.domain.AllowableParameterType;
-import org.hibernate.query.internal.QueryParameterBindingImpl;
-import org.hibernate.query.procedure.ProcedureParameterBinding;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.procedure.spi.ProcedureParameterBindingImplementor;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
-import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
+import org.hibernate.query.internal.QueryParameterBindingImpl;
+import org.hibernate.query.procedure.ProcedureParameterBinding;
 
 /**
  * Implementation of the {@link ProcedureParameterBinding} contract.
@@ -23,14 +22,7 @@ public class ProcedureParameterBindingImpl<T>
 		implements ProcedureParameterBindingImplementor<T> {
 	public ProcedureParameterBindingImpl(
 			ProcedureParameterImplementor<T> queryParameter,
-			QueryParameterBindingTypeResolver typeResolver) {
-		super( queryParameter, typeResolver, true );
-	}
-
-	public ProcedureParameterBindingImpl(
-			AllowableParameterType<T> bindType,
-			ProcedureParameterImplementor<T> queryParameter,
-			QueryParameterBindingTypeResolver typeResolver) {
-		super( queryParameter, typeResolver, bindType, true );
+			SessionFactoryImplementor sessionFactory) {
+		super( queryParameter, sessionFactory, true );
 	}
 }

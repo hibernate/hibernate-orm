@@ -31,6 +31,7 @@ import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.model.domain.AbstractIdentifiableType;
+import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
@@ -110,15 +111,15 @@ public class AttributeFactory {
 				normalMemberResolver,
 				metadataContext
 		);
-		if ( attributeMetadata == null ) {
-			return null;
-		}
-		if ( attributeMetadata.isPlural() ) {
+
+		if ( attributeMetadata instanceof PluralAttributeMetadata ) {
+			//noinspection rawtypes
 			return PluralAttributeBuilder.build( (PluralAttributeMetadata) attributeMetadata, metadataContext );
 		}
+
 		final SingularAttributeMetadata<X, Y> singularAttributeMetadata = (SingularAttributeMetadata<X, Y>) attributeMetadata;
-		final SimpleDomainType<Y> metaModelType = determineSimpleType( singularAttributeMetadata.getValueContext(), metadataContext );
-		return new SingularAttributeImpl(
+		final DomainType<Y> metaModelType = determineSimpleType( singularAttributeMetadata.getValueContext(), metadataContext );
+		return new SingularAttributeImpl<>(
 				ownerType,
 				attributeMetadata.getName(),
 				attributeMetadata.getAttributeClassification(),
@@ -132,7 +133,7 @@ public class AttributeFactory {
 	}
 
 	private static <X> AttributeContext<X> wrap(final ManagedDomainType<X> ownerType, final Property property) {
-		return new AttributeContext<X>() {
+		return new AttributeContext<>() {
 			public ManagedDomainType<X> getOwnerType() {
 				return ownerType;
 			}
@@ -153,7 +154,6 @@ public class AttributeFactory {
 	 *
 	 * @return The built attribute descriptor
 	 */
-	@SuppressWarnings({"unchecked"})
 	public <X, Y> SingularPersistentAttribute<X, Y> buildIdAttribute(
 			IdentifiableDomainType<X> ownerType,
 			Property property) {
@@ -164,15 +164,15 @@ public class AttributeFactory {
 
 		// id-attribute = "id"
 
-		final SingularAttributeMetadata<X, Y> attributeMetadata = (SingularAttributeMetadata) determineAttributeMetadata(
+		final SingularAttributeMetadata<X, Y> attributeMetadata = (SingularAttributeMetadata<X,Y>) determineAttributeMetadata(
 				wrap( ownerType, property ),
 				identifierMemberResolver
 		);
 
-		return new SingularAttributeImpl.Identifier(
+		return new SingularAttributeImpl.Identifier<>(
 				ownerType,
 				property.getName(),
-				determineSimpleType( attributeMetadata.getValueContext() ),
+				(SimpleDomainType<Y>) determineSimpleType( attributeMetadata.getValueContext() ),
 				attributeMetadata.getMember(),
 				attributeMetadata.getAttributeClassification(),
 				context
@@ -189,7 +189,6 @@ public class AttributeFactory {
 	 *
 	 * @return The built attribute descriptor
 	 */
-	@SuppressWarnings({"unchecked"})
 	public <X, Y> SingularAttributeImpl<X, Y> buildVersionAttribute(
 			IdentifiableDomainType<X> ownerType,
 			Property property) {
@@ -200,22 +199,22 @@ public class AttributeFactory {
 				versionMemberResolver
 		);
 
-		return new SingularAttributeImpl.Version(
+		return new SingularAttributeImpl.Version<>(
 				ownerType,
 				property.getName(),
 				attributeMetadata.getAttributeClassification(),
-				determineSimpleType( attributeMetadata.getValueContext() ),
+				(SimpleDomainType<Y>) determineSimpleType( attributeMetadata.getValueContext() ),
 				attributeMetadata.getMember(),
 				context
 		);
 	}
 
-	private <Y> SimpleDomainType<Y> determineSimpleType(ValueContext typeContext) {
+	private <Y> DomainType<Y> determineSimpleType(ValueContext typeContext) {
 		return determineSimpleType( typeContext, context );
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <Y> SimpleDomainType<Y> determineSimpleType(ValueContext typeContext, MetadataContext context) {
+	public static <Y> DomainType<Y> determineSimpleType(ValueContext typeContext, MetadataContext context) {
 		switch ( typeContext.getValueClassification() ) {
 			case BASIC: {
 				return context.resolveBasicType( typeContext.getJpaBindableType() );
@@ -229,7 +228,7 @@ public class AttributeFactory {
 
 				assert type instanceof AnyType;
 				final AnyType anyType = (AnyType) type;
-				final JavaType<Object> baseJtd = context.getTypeConfiguration()
+				final JavaType<Y> baseJtd = context.getTypeConfiguration()
 						.getJavaTypeDescriptorRegistry()
 						.resolveDescriptor( anyType.getReturnedClass() );
 				return new AnyMappingDomainTypeImpl<>( anyType, baseJtd );
@@ -239,7 +238,7 @@ public class AttributeFactory {
 				final EmbeddableTypeImpl<Y> embeddableType;
 
 				if ( component.isDynamic() ) {
-					final JavaType javaTypeDescriptor = context.getJavaTypeDescriptorRegistry().getDescriptor( java.util.Map.class );
+					final JavaType<Y> javaTypeDescriptor = context.getJavaTypeDescriptorRegistry().getDescriptor( java.util.Map.class );
 
 					embeddableType = new EmbeddableTypeImpl<>(
 							javaTypeDescriptor,
@@ -293,10 +292,6 @@ public class AttributeFactory {
 		}
 	}
 
-	private EntityMetamodel getDeclarerEntityMetamodel(AbstractIdentifiableType<?> ownerType) {
-		return getDeclarerEntityMetamodel( ownerType, context );
-	}
-
 	private static EntityPersister getDeclaringEntity(
 			AbstractIdentifiableType<?> ownerType,
 			MetadataContext metadataContext) {
@@ -347,7 +342,6 @@ public class AttributeFactory {
 	 *
 	 * @return The attribute description
 	 */
-	@SuppressWarnings({"unchecked"})
 	private <X, Y> AttributeMetadata<X, Y> determineAttributeMetadata(
 			AttributeContext<X> attributeContext,
 			MemberResolver memberResolver) {
@@ -447,7 +441,7 @@ public class AttributeFactory {
 				else {
 					indexClassification = null;
 				}
-				return new PluralAttributeMetadataImpl(
+				return new PluralAttributeMetadataImpl<>(
 						propertyMapping,
 						attributeContext.getOwnerType(),
 						member,
@@ -644,7 +638,7 @@ public class AttributeFactory {
 	 * A {@link Member} resolver for normal attributes.
 	 */
 	private static final MemberResolver normalMemberResolver = (attributeContext, metadataContext) -> {
-		final ManagedDomainType ownerType = attributeContext.getOwnerType();
+		final ManagedDomainType<?> ownerType = attributeContext.getOwnerType();
 		final Property property = attributeContext.getPropertyMapping();
 		final Type.PersistenceType persistenceType = ownerType.getPersistenceType();
 		if ( Type.PersistenceType.EMBEDDABLE == persistenceType ) {
@@ -652,7 +646,7 @@ public class AttributeFactory {
 		}
 		else if ( Type.PersistenceType.ENTITY == persistenceType
 				|| Type.PersistenceType.MAPPED_SUPERCLASS == persistenceType ) {
-			final AbstractIdentifiableType identifiableType = (AbstractIdentifiableType) ownerType;
+			final AbstractIdentifiableType<?> identifiableType = (AbstractIdentifiableType<?>) ownerType;
 			final EntityPersister declaringEntityMapping = getDeclaringEntity( identifiableType, metadataContext );
 			final EntityMetamodel entityMetamodel = declaringEntityMapping.getEntityMetamodel();
 			final String propertyName = property.getName();
@@ -674,7 +668,7 @@ public class AttributeFactory {
 	};
 
 	private final MemberResolver identifierMemberResolver = (attributeContext, metadataContext) -> {
-		final AbstractIdentifiableType identifiableType = (AbstractIdentifiableType) attributeContext.getOwnerType();
+		final AbstractIdentifiableType<?> identifiableType = (AbstractIdentifiableType<?>) attributeContext.getOwnerType();
 		final EntityPersister declaringEntityMapping = getDeclaringEntity( identifiableType, metadataContext );
 		final EntityMetamodel entityMetamodel = declaringEntityMapping.getEntityMetamodel();
 
@@ -696,30 +690,25 @@ public class AttributeFactory {
 		}
 	};
 
-	private final MemberResolver versionMemberResolver = new MemberResolver() {
-		@Override
-		public Member resolveMember(
-				AttributeContext attributeContext,
-				MetadataContext metadataContext) {
-			final AbstractIdentifiableType identifiableType = (AbstractIdentifiableType) attributeContext.getOwnerType();
-			final EntityPersister declaringEntityMapping = getDeclaringEntity( identifiableType, metadataContext );
-			final EntityMetamodel entityMetamodel = declaringEntityMapping.getEntityMetamodel();
-			final String versionPropertyName = attributeContext.getPropertyMapping().getName();
-			if ( !versionPropertyName.equals( entityMetamodel.getVersionProperty().getName() ) ) {
-				// this should never happen, but to be safe...
-				throw new IllegalArgumentException( "Given property did not match declared version property" );
-			}
+	private final MemberResolver versionMemberResolver = (attributeContext, metadataContext) -> {
+		final AbstractIdentifiableType<?> identifiableType = (AbstractIdentifiableType<?>) attributeContext.getOwnerType();
+		final EntityPersister declaringEntityMapping = getDeclaringEntity( identifiableType, metadataContext );
+		final EntityMetamodel entityMetamodel = declaringEntityMapping.getEntityMetamodel();
+		final String versionPropertyName = attributeContext.getPropertyMapping().getName();
+		if ( !versionPropertyName.equals( entityMetamodel.getVersionProperty().getName() ) ) {
+			// this should never happen, but to be safe...
+			throw new IllegalArgumentException( "Given property did not match declared version property" );
+		}
 
-			final Getter getter = declaringEntityMapping.getRepresentationStrategy().resolvePropertyAccess( attributeContext.getPropertyMapping() ).getGetter();
-			if ( PropertyAccessMapImpl.GetterImpl.class.isInstance( getter ) ) {
-				return new MapMember(
-						versionPropertyName,
-						attributeContext.getPropertyMapping().getType().getReturnedClass()
-				);
-			}
-			else {
-				return getter.getMember();
-			}
+		final Getter getter = declaringEntityMapping.getRepresentationStrategy().resolvePropertyAccess( attributeContext.getPropertyMapping() ).getGetter();
+		if ( getter instanceof PropertyAccessMapImpl.GetterImpl ) {
+			return new MapMember(
+					versionPropertyName,
+					attributeContext.getPropertyMapping().getType().getReturnedClass()
+			);
+		}
+		else {
+			return getter.getMember();
 		}
 	};
 }

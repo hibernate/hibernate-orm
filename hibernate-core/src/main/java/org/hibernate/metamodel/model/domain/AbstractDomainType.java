@@ -34,4 +34,9 @@ public abstract class AbstractDomainType<J> implements SimpleDomainType<J> {
 	public Class<J> getJavaType() {
 		return getExpressableJavaTypeDescriptor().getJavaTypeClass();
 	}
+
+	@Override
+	public Class<J> getBindableJavaType() {
+		return getJavaType();
+	}
 }

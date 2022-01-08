@@ -7,7 +7,7 @@
 package org.hibernate.query.sqm.produce.function;
 
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
-import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
+import org.hibernate.query.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.type.spi.TypeConfiguration;

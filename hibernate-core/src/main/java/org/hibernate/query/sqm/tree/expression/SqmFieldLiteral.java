@@ -12,7 +12,6 @@ import java.math.BigInteger;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
-import jakarta.persistence.criteria.Expression;
 
 import org.hibernate.QueryException;
 import org.hibernate.query.SemanticException;
@@ -26,6 +25,8 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import jakarta.persistence.criteria.Expression;
 
 /**
  * @author Steve Ebersole
@@ -77,10 +78,6 @@ public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressable<T>, 
 		return value;
 	}
 
-	public JavaType<T> getFieldJavaTypeDescriptor() {
-		return fieldJavaTypeDescriptor;
-	}
-
 	public String getFieldName() {
 		return fieldName;
 	}
@@ -96,8 +93,6 @@ public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressable<T>, 
 
 	@Override
 	public void applyInferableType(SqmExpressable<?> type) {
-		//noinspection unchecked
-//		this.expressable = (SqmExpressable) type;
 	}
 
 	@Override
@@ -112,6 +107,11 @@ public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressable<T>, 
 	@Override
 	public JavaType<T> getJavaTypeDescriptor() {
 		return getExpressableJavaTypeDescriptor();
+	}
+
+	@Override
+	public Class<T> getBindableJavaType() {
+		return getJavaTypeDescriptor().getJavaTypeClass();
 	}
 
 	@Override

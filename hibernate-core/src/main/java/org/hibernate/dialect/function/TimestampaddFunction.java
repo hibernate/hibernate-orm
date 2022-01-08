@@ -9,7 +9,7 @@ package org.hibernate.dialect.function;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
+import org.hibernate.query.AllowableFunctionReturnType;
 import org.hibernate.query.BinaryArithmeticOperator;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;

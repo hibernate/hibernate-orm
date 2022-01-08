@@ -19,7 +19,7 @@ public class AnyMappingDomainTypeImpl<T> implements AnyMappingDomainType<T> {
 	private final AnyType anyType;
 	private final JavaType<T> baseJtd;
 
-	public AnyMappingDomainTypeImpl(AnyType anyType, JavaType baseJtd) {
+	public AnyMappingDomainTypeImpl(AnyType anyType, JavaType<T> baseJtd) {
 		this.anyType = anyType;
 		this.baseJtd = baseJtd;
 	}

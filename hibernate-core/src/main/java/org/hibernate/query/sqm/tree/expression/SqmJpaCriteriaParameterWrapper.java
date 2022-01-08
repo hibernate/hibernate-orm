@@ -8,12 +8,13 @@ package org.hibernate.query.sqm.tree.expression;
 
 import java.util.function.Consumer;
 
-import org.hibernate.metamodel.model.domain.AllowableParameterType;
+import org.hibernate.query.AllowableParameterType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+
+import static org.hibernate.query.sqm.tree.expression.SqmExpressionHelper.toSqmType;
 
 /**
  * Acts as the per-use wrapper for a JpaCriteriaParameter ({@link jakarta.persistence.criteria.CriteriaBuilder#parameter}).
@@ -30,7 +31,7 @@ public class SqmJpaCriteriaParameterWrapper<T>
 			AllowableParameterType<T> type,
 			JpaCriteriaParameter<T> jpaCriteriaParameter,
 			NodeBuilder criteriaBuilder) {
-		super( type, criteriaBuilder );
+		super( toSqmType( type, criteriaBuilder ), criteriaBuilder );
 		this.jpaCriteriaParameter = jpaCriteriaParameter;
 	}
 
@@ -50,16 +51,6 @@ public class SqmJpaCriteriaParameterWrapper<T>
 	}
 
 	@Override
-	public AllowableParameterType<T> getNodeType() {
-		SqmExpressable<T> nodeType = super.getNodeType();
-		if ( nodeType == null || nodeType instanceof AllowableParameterType ) {
-			return ( (AllowableParameterType<T>) nodeType );
-		}
-
-		throw new IllegalStateException( "Expecting AllowableParameterType as node type" );
-	}
-
-	@Override
 	public Class<T> getParameterType() {
 		return jpaCriteriaParameter.getParameterType();
 	}
@@ -75,7 +66,7 @@ public class SqmJpaCriteriaParameterWrapper<T>
 	}
 
 	@Override
-	public SqmParameter copy() {
+	public SqmParameter<T> copy() {
 		return new SqmJpaCriteriaParameterWrapper<>(
 				getNodeType(),
 				jpaCriteriaParameter,

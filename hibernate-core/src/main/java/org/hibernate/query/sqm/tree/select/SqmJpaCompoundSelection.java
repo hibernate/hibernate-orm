@@ -85,6 +85,11 @@ public class SqmJpaCompoundSelection<T>
 	}
 
 	@Override
+	public Class<T> getBindableJavaType() {
+		return getJavaType();
+	}
+
+	@Override
 	public List<SqmSelectableNode<?>> getSelectionItems() {
 		return selectableNodes;
 	}
@@ -122,5 +127,4 @@ public class SqmJpaCompoundSelection<T>
 	public void visitSubSelectableNodes(Consumer<SqmSelectableNode<?>> jpaSelectionConsumer) {
 		selectableNodes.forEach( jpaSelectionConsumer );
 	}
-
 }

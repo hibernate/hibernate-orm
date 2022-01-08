@@ -10,6 +10,8 @@ import java.util.Objects;
 import jakarta.persistence.metamodel.BasicType;
 
 import org.hibernate.HibernateException;
+import org.hibernate.query.AllowableFunctionReturnType;
+import org.hibernate.query.AllowableOutputParameterType;
 import org.hibernate.query.sqm.SqmExpressable;
 
 /**

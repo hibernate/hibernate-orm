@@ -7,11 +7,10 @@
 package org.hibernate.query;
 
 
-import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.type.BasicTypeReference;
 
 /**
- * Can be used to bind query parameter values.  Allows to provide additional details about the
+ * Can be used to bind query parameter values.  Allows providing additional details about the
  * parameter value/binding.
  *
  * @author Steve Ebersole

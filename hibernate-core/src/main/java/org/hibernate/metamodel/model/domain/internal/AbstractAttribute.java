@@ -14,6 +14,7 @@ import jakarta.persistence.metamodel.Attribute;
 
 import org.hibernate.metamodel.AttributeClassification;
 import org.hibernate.metamodel.internal.MetadataContext;
+import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
@@ -34,7 +35,7 @@ public abstract class AbstractAttribute<D,J,B> implements PersistentAttribute<D,
 
 	private final AttributeClassification attributeClassification;
 
-	private final SimpleDomainType<B> valueType;
+	private final DomainType<B> valueType;
 	private transient Member member;
 
 	@SuppressWarnings("WeakerAccess")
@@ -43,7 +44,7 @@ public abstract class AbstractAttribute<D,J,B> implements PersistentAttribute<D,
 			String name,
 			JavaType<J> attributeJtd,
 			AttributeClassification attributeClassification,
-			SimpleDomainType<B> valueType,
+			DomainType<B> valueType,
 			Member member,
 			MetadataContext metadataContext) {
 		this.declaringType = declaringType;
@@ -64,7 +65,7 @@ public abstract class AbstractAttribute<D,J,B> implements PersistentAttribute<D,
 		return attributeJtd.getJavaTypeClass();
 	}
 
-	public SimpleDomainType<B> getSqmPathType() {
+	public DomainType<B> getSqmPathType() {
 		return valueType;
 	}
 
@@ -94,7 +95,7 @@ public abstract class AbstractAttribute<D,J,B> implements PersistentAttribute<D,
 	}
 
 	@Override
-	public SimpleDomainType<?> getValueGraphType() {
+	public DomainType<?> getValueGraphType() {
 		return valueType;
 	}
 

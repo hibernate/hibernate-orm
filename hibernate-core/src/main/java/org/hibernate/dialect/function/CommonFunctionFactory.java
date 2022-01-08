@@ -16,7 +16,7 @@ import java.util.function.Supplier;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
-import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
+import org.hibernate.query.AllowableFunctionReturnType;
 
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.spi.QueryEngine;

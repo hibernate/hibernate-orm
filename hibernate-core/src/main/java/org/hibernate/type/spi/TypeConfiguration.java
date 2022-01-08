@@ -10,6 +10,8 @@ import java.io.InvalidObjectException;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.Duration;
 import java.time.LocalDate;
@@ -62,9 +64,6 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.internal.BasicTypeImpl;
-
-import java.sql.Time;
-import java.sql.Timestamp;
 
 import jakarta.persistence.TemporalType;
 
@@ -321,27 +320,30 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	}
 
 	/**
-	 * Encapsulation of lifecycle concerns for a TypeConfiguration, mainly in
-	 * regards to eventually being associated with a SessionFactory.  Goes
-	 * 3 "lifecycle" stages, pertaining to {@link #getMetadataBuildingContext()}
-	 * and {@link #getSessionFactory()}:
+	 * Encapsulation of lifecycle concerns for a TypeConfiguration:<ol>
+	 *     <li>
+	 *         "Boot" is where the {@link TypeConfiguration} is first
+	 *         built as the boot-model ({@link org.hibernate.boot.model}) of
+	 *         the user's domain model is converted into the runtime-model
+	 *         ({@link org.hibernate.metamodel.model}). During this phase,
+	 *         {@link #getMetadataBuildingContext()} will be accessible but
+	 *         {@link #getSessionFactory} will throw an exception.
+	 *     </li>
+	 *     <li>
+	 *         "Runtime" is where the runtime-model is accessible.  During this
+	 *         phase {@link #getSessionFactory()} is accessible while
+	 *         {@link #getMetadataBuildingContext()} will now throw an exception
+	 *     </li>
+	 *     <li>
+	 *        "Sunset" is after the SessionFactory has been closed.  At this point, both
+	 *        {@link #getSessionFactory()} and {@link #getMetadataBuildingContext()}
+	 *        will now throw an exception
+	 *     </li>
+	 * </ol>
+	 * <p/>
+	 * {@link #getServiceRegistry()} is available for both "Boot" and "Runtime".
 	 *
-	 * 		* "Initialization" is where the {@link TypeConfiguration} is first
-	 * 			built as the "boot model" ({@link org.hibernate.boot.model}) of
-	 * 			the user's domain model is converted into the "runtime model"
-	 * 			({@link org.hibernate.metamodel.model}).  During this phase,
-	 * 			{@link #getMetadataBuildingContext()} will be accessible but
-	 * 			{@link #getSessionFactory} will throw an exception.
-	 * 		* "Runtime" is where the "runtime model" is accessible while the
-	 * 			SessionFactory is still unclosed.  During this phase
-	 * 			{@link #getSessionFactory()} is accessible while
-	 * 			{@link #getMetadataBuildingContext()} will now throw an
-	 * 			exception
-	 * 		* "Sunset" is after the SessionFactory has been closed.  During this
-	 * 			phase both {@link #getSessionFactory()} and
-	 * 			{@link #getMetadataBuildingContext()} will now throw an exception
-	 *
-	 * Each stage or phase is consider a "scope" for the TypeConfiguration.
+	 * Each stage or phase is consider a scope for the TypeConfiguration.
 	 */
 	private static class Scope implements Serializable {
 		private final TypeConfiguration typeConfiguration;

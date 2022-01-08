@@ -6,7 +6,7 @@
  */
 package org.hibernate.type;
 
-import org.hibernate.metamodel.model.domain.AllowableOutputParameterType;
+import org.hibernate.query.AllowableOutputParameterType;
 
 /**
  * Optional {@link Type} contract for implementations that are aware of how to extract values from

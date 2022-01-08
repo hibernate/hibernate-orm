@@ -11,8 +11,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
-import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.Predicate;
 
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -20,6 +18,9 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Predicate;
 
 
 /**
@@ -45,8 +46,7 @@ public class SqmMapEntryReference<K,V>
 		this.mapPath = mapPath;
 		this.nodeBuilder = nodeBuilder;
 
-		//noinspection unchecked
-		this.mapEntryTypeDescriptor = (JavaType) nodeBuilder.getDomainModel()
+		this.mapEntryTypeDescriptor = nodeBuilder.getDomainModel()
 				.getTypeConfiguration()
 				.getJavaTypeDescriptorRegistry()
 				.getDescriptor( Map.Entry.class );
@@ -108,6 +108,11 @@ public class SqmMapEntryReference<K,V>
 	}
 
 	@Override
+	public Class<Map.Entry<K, V>> getBindableJavaType() {
+		return getNodeType().getBindableJavaType();
+	}
+
+	@Override
 	public NodeBuilder nodeBuilder() {
 		return nodeBuilder;
 	}
@@ -156,5 +161,4 @@ public class SqmMapEntryReference<K,V>
 	public <X> Expression<X> as(Class<X> type) {
 		throw new UnsupportedOperationException( "Whatever JPA" );
 	}
-
 }

@@ -11,7 +11,6 @@ import java.util.List;
 
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.type.BasicTypeReference;
 import org.hibernate.type.Type;
 

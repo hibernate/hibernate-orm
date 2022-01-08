@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.spi;
 
-import org.hibernate.metamodel.model.domain.AllowableParameterType;
+import org.hibernate.query.AllowableParameterType;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.named.NamedQueryMemento;
 
@@ -16,7 +16,7 @@ import org.hibernate.query.named.NamedQueryMemento;
 public interface QueryParameterImplementor<T> extends QueryParameter<T> {
 	void disallowMultiValuedBinding();
 
-	void applyAnticipatedType(AllowableParameterType type);
+	void applyAnticipatedType(AllowableParameterType<?> type);
 
 	NamedQueryMemento.ParameterMemento toMemento();
 }

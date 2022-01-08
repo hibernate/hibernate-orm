@@ -12,12 +12,12 @@ import java.util.function.BiConsumer;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.cache.spi.QueryKey;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.procedure.spi.ProcedureParameterBindingImplementor;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
 import org.hibernate.query.procedure.ProcedureParameterBinding;
 import org.hibernate.query.spi.QueryParameterBinding;
-import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
 
@@ -26,15 +26,15 @@ import org.hibernate.query.spi.QueryParameterImplementor;
  */
 public class ProcedureParamBindings implements QueryParameterBindings {
 	private final ProcedureParameterMetadataImpl parameterMetadata;
-	private final QueryParameterBindingTypeResolver typeResolver;
+	private final SessionFactoryImplementor sessionFactory;
 
 	private final Map<ProcedureParameterImplementor<?>, ProcedureParameterBindingImplementor<?>> bindingMap = new HashMap<>();
 
 	public ProcedureParamBindings(
 			ProcedureParameterMetadataImpl parameterMetadata,
-			QueryParameterBindingTypeResolver typeResolver) {
+			SessionFactoryImplementor sessionFactory) {
 		this.parameterMetadata = parameterMetadata;
-		this.typeResolver = typeResolver;
+		this.sessionFactory = sessionFactory;
 	}
 
 	public ProcedureParameterMetadataImpl getParameterMetadata() {
@@ -61,7 +61,7 @@ public class ProcedureParamBindings implements QueryParameterBindings {
 				throw new IllegalArgumentException( "Passed parameter is not registered with this query" );
 			}
 
-			binding = new ProcedureParameterBindingImpl<>( procParam, typeResolver );
+			binding = new ProcedureParameterBindingImpl<>( procParam, sessionFactory );
 			bindingMap.put( procParam, binding );
 		}
 

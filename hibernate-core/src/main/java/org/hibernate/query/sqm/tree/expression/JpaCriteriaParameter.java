@@ -7,8 +7,8 @@
 package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
+import org.hibernate.query.AllowableParameterType;
 import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.criteria.JpaParameterExpression;
 import org.hibernate.query.spi.QueryParameterImplementor;
@@ -48,7 +48,7 @@ public class JpaCriteriaParameter<T>
 			AllowableParameterType<T> type,
 			boolean allowsMultiValuedBinding,
 			NodeBuilder nodeBuilder) {
-		super( type, nodeBuilder );
+		super( toSqmType( type, nodeBuilder ), nodeBuilder );
 		this.name = name;
 		this.value = null;
 		this.allowsMultiValuedBinding = allowsMultiValuedBinding;
@@ -60,14 +60,23 @@ public class JpaCriteriaParameter<T>
 			T value,
 			boolean allowsMultiValuedBinding,
 			NodeBuilder nodeBuilder) {
-		super( type, nodeBuilder );
+		super( toSqmType( type, nodeBuilder ), nodeBuilder );
 		this.name = name;
 		this.value = value;
 		this.allowsMultiValuedBinding = allowsMultiValuedBinding;
 	}
 
-	public JpaCriteriaParameter(AllowableParameterType<T> type, T value, NodeBuilder criteriaBuilder) {
-		super( type, criteriaBuilder );
+	private static <T> SqmExpressable<T> toSqmType(AllowableParameterType<T> type, NodeBuilder nodeBuilder) {
+		if ( type == null ) {
+			return null;
+		}
+		return type.resolveExpressable(
+				nodeBuilder.getQueryEngine().getTypeConfiguration().getSessionFactory()
+		);
+	}
+
+	public JpaCriteriaParameter(AllowableParameterType<T> type, T value, NodeBuilder nodeBuilder) {
+		super( toSqmType( type, nodeBuilder ), nodeBuilder );
 		this.name = null;
 		this.value = value;
 	}
@@ -107,14 +116,10 @@ public class JpaCriteriaParameter<T>
 		return getHibernateType();
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	public void applyAnticipatedType(AllowableParameterType type) {
-		super.internalApplyInferableType( type );
-	}
-
-	@Override
-	public AllowableParameterType<T> getNodeType() {
-		return (AllowableParameterType<T>) super.getNodeType();
+		super.internalApplyInferableType( toSqmType( type, nodeBuilder() ) );
 	}
 
 	@Override

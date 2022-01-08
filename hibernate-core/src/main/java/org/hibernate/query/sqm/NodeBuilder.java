@@ -16,23 +16,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import jakarta.persistence.Tuple;
-import jakarta.persistence.criteria.CollectionJoin;
-import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.ListJoin;
-import jakarta.persistence.criteria.MapJoin;
-import jakarta.persistence.criteria.Path;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
-import jakarta.persistence.criteria.Selection;
-import jakarta.persistence.criteria.SetJoin;
-import jakarta.persistence.criteria.Subquery;
 
+import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.SortOrder;
-import org.hibernate.metamodel.model.domain.DomainType;
-import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCoalesce;
 import org.hibernate.query.criteria.JpaCompoundSelection;
@@ -50,6 +37,7 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmSetJoin;
 import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.expression.SqmFunction;
 import org.hibernate.query.sqm.tree.expression.SqmModifiedSubQueryExpression;
 import org.hibernate.query.sqm.tree.expression.SqmTuple;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
@@ -61,9 +49,21 @@ import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.query.sqm.tree.expression.SqmFunction;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import jakarta.persistence.Tuple;
+import jakarta.persistence.criteria.CollectionJoin;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.ListJoin;
+import jakarta.persistence.criteria.MapJoin;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Selection;
+import jakarta.persistence.criteria.SetJoin;
+import jakarta.persistence.criteria.Subquery;
 
 /**
  * Adapts the JPA CriteriaBuilder to generate SQM nodes.
@@ -83,6 +83,22 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 	ServiceRegistry getServiceRegistry();
 
 	QueryEngine getQueryEngine();
+
+	<R> SqmTuple<R> tuple(
+			Class<R> tupleType,
+			SqmExpression<?>... expressions);
+
+	<R> SqmTuple<R> tuple(
+			Class<R> tupleType,
+			List<? extends SqmExpression<?>> expressions);
+
+	<R> SqmTuple<R> tuple(
+			SqmExpressable<R> tupleType,
+			SqmExpression<?>... expressions);
+
+	<R> SqmTuple<R> tuple(
+			SqmExpressable<R> tupleType,
+			List<? extends SqmExpression<?>> expressions);
 
 	@Override
 	SqmSelectStatement<Object> createQuery();
@@ -403,26 +419,6 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 
 	@Override
 	<R> JpaSearchedCase<R> selectCase();
-
-	@Override
-	<R> SqmTuple<R> tuple(
-			Class<R> tupleType,
-			JpaExpression<?>... expressions);
-
-	@Override
-	<R> SqmTuple<R> tuple(
-			Class<R> tupleType,
-			List<? extends JpaExpression<?>> expressions);
-
-	@Override
-	<R> SqmTuple<R> tuple(
-			DomainType<R> tupleType,
-			JpaExpression<?>... expressions);
-
-	@Override
-	<R> SqmTuple<R> tuple(
-			DomainType<R> tupleType,
-			List<? extends JpaExpression<?>> expressions);
 
 	@Override
 	SqmPredicate and(Expression<Boolean> x, Expression<Boolean> y);

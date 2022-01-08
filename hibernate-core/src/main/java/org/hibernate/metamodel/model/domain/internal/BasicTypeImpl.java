@@ -61,6 +61,4 @@ public class BasicTypeImpl<J> implements BasicDomainType<J>, Serializable {
 			throws SQLException {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
-
-
 }

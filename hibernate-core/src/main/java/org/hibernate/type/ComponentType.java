@@ -38,10 +38,10 @@ import org.hibernate.metamodel.EmbeddableInstantiator;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.tuple.PropertyFactory;
 import org.hibernate.tuple.StandardProperty;
 import org.hibernate.tuple.ValueGeneration;
-import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.CompositeTypeImplementor;
 
@@ -818,18 +818,13 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 	}
 
 	@Override
-	public JavaType getExpressableJavaTypeDescriptor() {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
-
-	@Override
-	public PersistenceType getPersistenceType() {
-		return PersistenceType.EMBEDDABLE;
-	}
-
-	@Override
-	public Class getJavaType() {
+	public Class<?> getBindableJavaType() {
 		return getReturnedClass();
+	}
+
+	@Override
+	public SqmExpressable resolveExpressable(SessionFactoryImplementor sessionFactory) {
+		return sessionFactory.getRuntimeMetamodels().getJpaMetamodel().embeddable( getReturnedClass() );
 	}
 
 	@Override

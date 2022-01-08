@@ -24,7 +24,7 @@ public class SqmParameterizedEntityType<T> extends AbstractSqmExpression<T> impl
 	}
 
 	public SqmParameterizedEntityType(SqmParameter<T> parameterExpression, NodeBuilder nodeBuilder) {
-		super( parameterExpression.getAnticipatedType(), nodeBuilder );
+		super( SqmExpressionHelper.toSqmType( parameterExpression.getAnticipatedType(), nodeBuilder ), nodeBuilder );
 		this.discriminatorSource = parameterExpression;
 	}
 

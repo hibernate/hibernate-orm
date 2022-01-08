@@ -15,12 +15,12 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
 import org.hibernate.query.AbstractQueryParameter;
+import org.hibernate.query.AllowableParameterType;
 import org.hibernate.query.internal.BindingTypeHelper;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.sql.exec.internal.JdbcCallParameterExtractorImpl;
@@ -30,10 +30,8 @@ import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
-import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.ProcedureParameterNamedBinder;
-import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.ParameterMode;
 
@@ -118,13 +116,12 @@ public class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> impleme
 			int startIndex,
 			ProcedureCallImplementor<?> procedureCall) {
 		final QueryParameterBinding<T> binding = procedureCall.getParameterBindings().getBinding( this );
-		final TypeConfiguration typeConfiguration = procedureCall.getSession().getFactory().getTypeConfiguration();
 		final AllowableParameterType<T> typeToUse = BindingTypeHelper.INSTANCE.resolveTemporalPrecision(
 				binding == null || binding.getExplicitTemporalPrecision() == null
 						? null
 						: binding.getExplicitTemporalPrecision(),
 				getHibernateType(),
-				typeConfiguration
+				procedureCall.getSession().getFactory()
 		);
 
 		final String name;

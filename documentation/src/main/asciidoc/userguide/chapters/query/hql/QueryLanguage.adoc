@@ -2105,17 +2105,17 @@ include::{sourcedir}/HQLTest.java[tags=hql-limit-example]
 ----
 ====
 
-These are well-defined limits: the number of results returned by `getMaxResults()` will be limited to 50, as promised.
+These are well-defined limits: the number of results returned by the database will be limited to 50, as promised.
 But not every query is quite so well-behaved.
 
 [NOTE]
 ====
 _Limiting_ certainly _isn't_ a well-defined relational operation, and must be used with care.
 
-A limit can easily break the semantics of certain other features of HQL, including <<hql-explicit-fetch-join,fetch joins>>.
+In particular, limits don't play well with <<hql-explicit-fetch-join,fetch joins>>.
 ====
 
-This next query is accepted by HQL, but the last `Phone` in the result list might have an incomplete collection of phones:
+This next query is accepted by HQL, and no more than 50 results are returned by `getResultList()`, just as expected:
 
 [[hql-bad-limit-example]]
 //.Order by example
@@ -2126,7 +2126,36 @@ include::{sourcedir}/HQLTest.java[tags=hql-bad-limit-example]
 ----
 ====
 
-The `limit 50` here refers to the total number of rows returned from the database.
-The final number of ``Phone``s returned by `getResultList()` will be fewer, after Hibernate eliminates duplicate ``Phone``s from the result list.
+However, if you log the SQL executed by Hibernate, you'll notice something wrong:
+
+[source, SQL, indent=0]
+----
+    select
+        p1_0.id,
+        c1_0.phone_id,
+        c1_0.calls_ORDER,
+        c1_0.id,
+        c1_0.duration,
+        c1_0.payment_id,
+        c1_0.call_timestamp,
+        p1_0.phone_number,
+        p1_0.person_id,
+        p1_0.phone_type
+    from
+        Phone p1_0
+    join
+        phone_call c1_0
+            on p1_0.id=c1_0.phone_id
+    order by 1
+----
+
+What happened to the `limit` clause?
+
+[IMPORTANT]
+====
+When limits or pagination are combined with `fetch join`, Hibernate must retrieve all matching results from the database and _apply the limit in memory_!
+
+This _almost certainly_ isn't the behavior you were hoping for, and in general will exhibit _terrible_ performance characteristics.
+====
 
 In the next chapter we'll see a completely different way to write queries in Hibernate.

@@ -2939,15 +2939,12 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-bad-limit-example[]
-			// don't do this!
+			// don't do this! join fetch should not be used with limit
 			List<Phone> wrongCalls = entityManager.createQuery(
 				"select p " +
 				"from Phone p " +
-				// join fetch should not be used with limit
 				"join fetch p.calls " +
-				// but if you insist, at least sort by the collection owner
 				"order by p " +
-				// this won't be the final number of results!
 				"limit 50",
 				Phone.class)
 			.getResultList();

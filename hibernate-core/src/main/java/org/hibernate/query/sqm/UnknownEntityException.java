@@ -22,7 +22,7 @@ public class UnknownEntityException extends SemanticException {
 	private final String entityName;
 
 	public UnknownEntityException(String entityName) {
-		this( "Unable to resolve [" + entityName + "] as entity", entityName );
+		this( "Could not resolve entity '" + entityName + "'", entityName );
 	}
 
 	public UnknownEntityException(String message, String entityName) {

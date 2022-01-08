@@ -44,7 +44,7 @@ public class LoaderWithInvalidQueryTest extends BaseEntityManagerFunctionalTestC
 			Throwable[] suppressed = rootCause.getSuppressed();
 			assertEquals( 2, suppressed.length );
 			assertTrue( ExceptionUtil.rootCause( suppressed[0] ).getMessage().contains( "Could not resolve attribute 'valid'" ) );
-			assertTrue( ExceptionUtil.rootCause( suppressed[1] ).getMessage().contains( "Could not resolve entity '_Person'" ) );
+			assertTrue( ExceptionUtil.rootCause( suppressed[1] ).getMessage().contains( "Could not resolve root entity '_Person'" ) );
 		}
 	}
 

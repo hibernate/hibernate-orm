@@ -19,6 +19,7 @@ import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;
@@ -142,7 +143,12 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 		final SqmPathSource<?> subNavigable = getReferencedPathSource().findSubPathSource( attributeName );
 
 		if ( subNavigable == null ) {
-			throw new IllegalArgumentException( "Could not resolve attribute named `" + attributeName + "` relative to `" + getNavigablePath() + "`" );
+			throw new SemanticException(
+					String.format(
+							"Could not resolve attribute '%s' of '%s'",
+							attributeName, getNavigablePath()
+					)
+			);
 		}
 		return resolvePath( attributeName, subNavigable );
 	}

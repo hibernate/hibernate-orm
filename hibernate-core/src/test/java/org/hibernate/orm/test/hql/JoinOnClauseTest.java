@@ -72,7 +72,7 @@ public class JoinOnClauseTest extends BaseEntityManagerFunctionalTestCase {
 				fail( "Referring to a join alias in the on clause that is joined later should be invalid!" );
 			}
 			catch (IllegalArgumentException ex) {
-				assertTrue( ex.getCause().getCause().getMessage().endsWith( ": author2" ) );
+				assertTrue( ex.getCause().getMessage().contains( "'author2'" ) );
 			}
 		} );
 	}

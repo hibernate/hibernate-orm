@@ -17,6 +17,7 @@ import org.hibernate.orm.test.jpa.metamodel.Order;
 import org.hibernate.orm.test.jpa.metamodel.Thing;
 import org.hibernate.orm.test.jpa.metamodel.ThingWithQuantity;
 
+import org.hibernate.query.SemanticException;
 import org.hibernate.testing.orm.junit.ExpectedException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -66,7 +67,7 @@ public class AbstractPathImplTest extends AbstractMetamodelSpecificTest {
         em.close();
     }
 
-	@ExpectedException(value = IllegalArgumentException.class)
+	@ExpectedException(value = SemanticException.class)
 	@Test
 	public void testGetNonExistingAttributeViaName() {
 		EntityManager em = getOrCreateEntityManager();

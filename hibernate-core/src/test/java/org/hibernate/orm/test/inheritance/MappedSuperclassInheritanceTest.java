@@ -76,7 +76,7 @@ public class MappedSuperclassInheritanceTest extends BaseEntityManagerFunctional
 				fail();
 			} catch (Exception expected) {
 				SemanticException rootException = (SemanticException) ExceptionUtil.rootCause( expected);
-				assertEquals("Could not resolve entity reference: Employee", rootException.getMessage());
+				assertEquals("Could not resolve entity 'Employee'", rootException.getMessage());
 			}
 		} );
 	}

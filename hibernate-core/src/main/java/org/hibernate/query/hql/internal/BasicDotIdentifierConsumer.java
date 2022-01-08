@@ -10,12 +10,12 @@ import java.lang.reflect.Field;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.SemanticException;
 import org.hibernate.query.hql.HqlLogging;
 import org.hibernate.query.hql.spi.DotIdentifierConsumer;
 import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
-import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -252,7 +252,12 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 				}
 			}
 
-			throw new ParsingException( "Could not interpret dot-ident : " + path );
+			throw new SemanticException(
+					String.format(
+						"Could not interpret path expression '%s'",
+						path
+					)
+			);
 		}
 
 		protected void validateAsRoot(SqmFrom<?, ?> pathRoot) {

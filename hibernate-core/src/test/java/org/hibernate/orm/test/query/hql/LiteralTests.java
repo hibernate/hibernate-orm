@@ -34,7 +34,7 @@ import static org.hamcrest.Matchers.is;
  */
 @SuppressWarnings({"deprecation","WeakerAccess"})
 @ServiceRegistry
-@DomainModel( standardModels = StandardDomainModel.GAMBIT )
+@DomainModel( standardModels = {StandardDomainModel.GAMBIT, StandardDomainModel.ANIMAL} )
 @SessionFactory
 public class LiteralTests {
 
@@ -262,6 +262,21 @@ public class LiteralTests {
 							.getSingleResult(), is( BigInteger.valueOf(10000000000000000L) ) );
 					assertThat( session.createQuery( "select 9999999999999.9999bd" )
 							.getSingleResult(), is( BigDecimal.valueOf(99999999999999999L, 4) ) );
+				}
+		);
+	}
+
+	@Test
+	public void testEnums(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery( "from Zoo where classification=COOL" ).getResultList();
+					session.createQuery( "from Zoo where classification=org.hibernate.testing.orm.domain.animal.Classification.COOL" ).getResultList();
+
+					assertThat( session.createQuery( "select org.hibernate.testing.orm.domain.animal.Classification.LAME" )
+							.getSingleResult(), is( org.hibernate.testing.orm.domain.animal.Classification.LAME ) );
+					assertThat( session.createQuery( "select org.hibernate.testing.orm.domain.gambit.EntityOfBasics$Gender.MALE" )
+							.getSingleResult(), is( org.hibernate.testing.orm.domain.gambit.EntityOfBasics.Gender.MALE ) );
 				}
 		);
 	}

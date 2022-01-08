@@ -28,21 +28,29 @@ In HQL and JPQL, the case sensitivity of an identifier depends on the kind of th
 
 The rules for case sensitivity are:
 
-- keywords, identification variable names, and function names are case-insensitive, but
-- Java class names, and the names of attributes of Java classes, are case-sensitive.
-
-Just to reiterate these rules:
-
-* `select`, `SeLeCT`, `sELEct`, and `SELECT` are all the same, but
-* `from BackPack` and `from Backpack` are different, referring to different Java classes, and similarly,
-* `person.nickName` and `person.nickname` are different, since the path expression element `nickName` refers to an attribute of an entity defined in Java, and finally,
-* a bit confusingly perhaps, `person.nickName`, `Person.nickName`, and `PERSON.nickName` are all the _same_, since the first element of a path expression is an <<hql-identification-variables,identification variable>>.
+- keywords and function names are case-insensitive, but
+- identification variable names, Java class names, and the names of attributes of Java classes, are case-sensitive.
 
 [NOTE]
 ====
-It is standard practice to use lowercase keywords in HQL and JPQL.
+Incidentally, it's standard practice to use lowercase keywords in HQL and JPQL.
 
 The use of uppercase keywords indicates an endearing but unhealthy attachment to the culture of the 1970's.
+====
+
+Just to reiterate these rules:
+
+* `select`, `SeLeCT`, `sELEct`, and `SELECT` are all the same, and also
+* `upper(name)` and `UPPER(name)` are the same, but
+* `from BackPack` and `from Backpack` are different, referring to different Java classes, and similarly,
+* `person.nickName` and `person.nickname` are different, since the path expression element `nickName` refers to an attribute of an entity defined in Java, and finally,
+* `person.nickName`, `Person.nickName`, and `PERSON.nickName` are also all different, since the first element of a path expression is an <<hql-identification-variables,identification variable>>.
+
+[NOTE]
+====
+The JPQL specification defines identification variables as case-_insensitive_.
+
+And so in strict JPA-compliant mode, Hibernate treats `person.nickName`, `Person.nickName`, and `PERSON.nickName` as the _same_.
 ====
 
 A _quoted identifier_ is written in backticks. Quoting lets you use a keyword as an identifier, for example `` thing.\`select` ``.

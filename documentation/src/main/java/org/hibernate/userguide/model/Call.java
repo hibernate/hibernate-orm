@@ -7,7 +7,6 @@
 package org.hibernate.userguide.model;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

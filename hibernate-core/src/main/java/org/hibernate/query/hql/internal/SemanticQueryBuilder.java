@@ -423,7 +423,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final SqmRoot<R> root = visitTargetEntity( dmlTargetContext );
 		if ( root.getReferencedPathSource() instanceof SqmPolymorphicRootDescriptor<?> ) {
 			throw new SemanticException(
-					"Can't create an INSERT for a non entity name: " + root.getReferencedPathSource().getHibernateEntityName()
+					String.format(
+							"Target type '%s' in insert statement is not an entity",
+							root.getReferencedPathSource().getHibernateEntityName()
+					)
 			);
 		}
 
@@ -511,7 +514,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final SqmRoot<R> root = visitTargetEntity( dmlTargetContext );
 		if ( root.getReferencedPathSource() instanceof SqmPolymorphicRootDescriptor<?> ) {
 			throw new SemanticException(
-					"Can't create an UPDATE for a non entity name: " + root.getReferencedPathSource().getHibernateEntityName()
+					String.format(
+							"Target type '%s' in update statement is not an entity",
+							root.getReferencedPathSource().getHibernateEntityName()
+					)
 			);
 		}
 
@@ -779,7 +785,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				sqmQueryPart.setFetchExpression( visitLimitClause( limitClauseContext ) );
 			}
 			else {
-				throw new SemanticException("Can't use both, limit and fetch clause!" );
+				throw new SemanticException("Can't use both limit and fetch clause" );
 			}
 		}
 	}
@@ -961,7 +967,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				);
 			}
 			catch (ClassLoadingException e) {
-				throw new SemanticException( "Unable to resolve class named for dynamic instantiation : " + className );
+				throw new SemanticException( "Could not resolve class '" + className + "' named for instantiation" );
 			}
 		}
 		else {
@@ -1362,7 +1368,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				.getJpaMetamodel()
 				.getHqlEntityReference( entityName );
 		if ( entityReference == null ) {
-			throw new UnknownEntityException( "Could not resolve entity name [" + entityName + "] as DML target", entityName );
+			throw new UnknownEntityException( "Could not resolve target entity '" + entityName + "'", entityName );
 		}
 		checkFQNEntityNameJpaComplianceViolationIfNeeded( entityName, entityReference );
 		if ( entityReference instanceof SqmPolymorphicRootDescriptor<?> && getCreationOptions().useStrictJpaCompliance() ) {
@@ -1476,7 +1482,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				}
 				throw new SemanticException( "Could not resolve entity or correlation path '" + name + "'" );
 			}
-			throw new SemanticException( "Could not resolve entity '" + name + "'" );
+			throw new UnknownEntityException( "Could not resolve root entity '" + name + "'", name );
 		}
 		checkFQNEntityNameJpaComplianceViolationIfNeeded( name, entityDescriptor );
 
@@ -1491,7 +1497,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 			if ( processingStateStack.depth() > 1 ) {
 				throw new SemanticException(
-						"Illegal implicit-polymorphic domain path in sub-query : " + entityDescriptor.getName()
+						"Illegal implicit-polymorphic domain path in subquery '" + entityDescriptor.getName() +"'"
 				);
 			}
 		}
@@ -2140,7 +2146,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			throw new NotYetImplementedFor6Exception( "Path continuation from `id()` reference not yet implemented" );
 		}
 
-		throw new SemanticException( "Path does not reference an identifiable-type : " + sqmPath.getNavigablePath().getFullPath() );
+		throw new SemanticException( "Path does not resolve to an entity type '" + sqmPath.getNavigablePath().getFullPath() + "'" );
 	}
 
 	@Override
@@ -2159,15 +2165,17 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			final SingularPersistentAttribute<Object, ?> versionAttribute = identifiableType.findVersionAttribute();
 			if ( versionAttribute == null ) {
 				throw new SemanticException(
-						"`" + sqmPath.getNavigablePath().getFullPath() + "` resolved to an identifiable-type (`" +
-								identifiableType.getTypeName() + "`) which does not define a version"
+						String.format(
+								"Path '%s' resolved to entity type '%s' which does not define a version",
+								sqmPath.getNavigablePath().getFullPath(), identifiableType.getTypeName()
+						)
 				);
 			}
 
 			return sqmPath.get( versionAttribute );
 		}
 
-		throw new SemanticException( "Path does not reference an identifiable-type : " + sqmPath.getNavigablePath().getFullPath() );
+		throw new SemanticException( "Path does not resolve to an entity type '" + sqmPath.getNavigablePath().getFullPath() + "'" );
 	}
 
 	@Override
@@ -2186,14 +2194,18 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			final List<? extends PersistentAttribute<Object, ?>> attributes = identifiableType.findNaturalIdAttributes();
 			if ( attributes == null ) {
 				throw new SemanticException(
-						"`" + sqmPath.getNavigablePath().getFullPath() + "` resolved to an identifiable-type (`" +
-								identifiableType.getTypeName() + "`) which does not define a natural id"
+						String.format(
+								"Path '%s' resolved to entity type '%s' which does not define a natural id",
+								sqmPath.getNavigablePath().getFullPath(), identifiableType.getTypeName()
+						)
 				);
 			}
 			else if ( attributes.size() >1 ) {
 				throw new SemanticException(
-						"`" + sqmPath.getNavigablePath().getFullPath() + "` resolved to an identifiable-type (`" +
-								identifiableType.getTypeName() + "`) which defines multiple natural ids"
+						String.format(
+								"Path '%s' resolved to entity type '%s' which defines multiple natural ids",
+								sqmPath.getNavigablePath().getFullPath(), identifiableType.getTypeName()
+						)
 				);
 			}
 
@@ -2203,7 +2215,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			return sqmPath.get( naturalIdAttribute );
 		}
 
-		throw new SemanticException( "Path does not reference an identifiable-type : " + sqmPath.getNavigablePath().getFullPath() );
+		throw new SemanticException( "Path does not resolve to an entity type '" + sqmPath.getNavigablePath().getFullPath() + "'" );
 	}
 
 	@Override
@@ -3501,7 +3513,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	public Object visitFormat(HqlParser.FormatContext ctx) {
 		String format = QuotingHelper.unquoteStringLiteral( ctx.getChild( 0 ).getText() );
 		if (!FORMAT.matcher(format).matches()) {
-			throw new SemanticException("illegal format pattern: '" + format + "'");
+			throw new SemanticException("illegal format pattern '" + format + "'");
 		}
 		return new SqmFormat(
 				format,
@@ -3681,7 +3693,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 		if ( !(referencedPathSource instanceof PluralPersistentAttribute ) ) {
 			throw new PathException(
-					"Illegal attempt to treat non-plural path as a plural path : " + pluralAttributePath.getNavigablePath()
+					"Path is not a plural path '" + pluralAttributePath.getNavigablePath() + "'"
 			);
 		}
 		final SqmSubQuery<?> subQuery = new SqmSubQuery<>(
@@ -3809,7 +3821,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final String padCharText = ctx.STRING_LITERAL().getText();
 
 		if ( padCharText.length() != 3 ) {
-			throw new SemanticException( "Pad character for pad() function must be single character, found: " + padCharText );
+			throw new SemanticException( "Pad character for pad() function must be single character, found '" + padCharText + "'" );
 		}
 
 		return new SqmLiteral<>(
@@ -3878,7 +3890,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				: " "; // JPA says space is the default
 
 		if ( trimCharText.length() != 1 ) {
-			throw new SemanticException( "Trim character for trim() function must be single character, found: " + trimCharText );
+			throw new SemanticException( "Trim character for trim() function must be single character, found '" + trimCharText + "'" );
 		}
 
 		return new SqmLiteral<>(
@@ -4181,10 +4193,15 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	public SqmPath<?> visitCollectionElementNavigablePath(HqlParser.CollectionElementNavigablePathContext ctx) {
 		final SqmPath<?> pluralAttributePath = consumeDomainPath( (HqlParser.PathContext) ctx.getChild( 2 ) );
 		final SqmPathSource<?> referencedPathSource = pluralAttributePath.getReferencedPathSource();
+		final TerminalNode firstNode = (TerminalNode) ctx.getChild( 0 );
 
 		if ( !(referencedPathSource instanceof PluralPersistentAttribute<?, ?, ?> ) ) {
 			throw new PathException(
-					"Illegal attempt to treat non-plural path as a plural path : " + pluralAttributePath.getNavigablePath()
+					String.format(
+							"Argument of '%s' is not a plural path '%s'",
+							firstNode.getSymbol().getText(),
+							pluralAttributePath.getNavigablePath()
+					)
 			);
 		}
 
@@ -4194,7 +4211,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			if ( attribute.getCollectionClassification() != CollectionClassification.MAP ) {
 				throw new StrictJpaComplianceViolation( StrictJpaComplianceViolation.Type.VALUE_FUNCTION_ON_NON_MAP );
 			}
-			final TerminalNode firstNode = (TerminalNode) ctx.getChild( 0 );
 			if ( firstNode.getSymbol().getType() == HqlParser.ELEMENTS ) {
 				throw new StrictJpaComplianceViolation( StrictJpaComplianceViolation.Type.HQL_COLLECTION_FUNCTION );
 			}
@@ -4219,8 +4235,13 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final SqmPathSource<?> referencedPathSource = pluralAttributePath.getReferencedPathSource();
 
 		if ( !(referencedPathSource instanceof PluralPersistentAttribute<?, ?, ?> ) ) {
+			final TerminalNode firstNode = (TerminalNode) ctx.getChild( 0 );
 			throw new PathException(
-					"Illegal attempt to treat non-plural path as a plural path : " + pluralAttributePath.getNavigablePath()
+					String.format(
+							"Argument of '%s' is not a plural path '%s'",
+							firstNode.getSymbol().getText(),
+							pluralAttributePath.getNavigablePath()
+					)
 			);
 		}
 

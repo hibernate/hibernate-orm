@@ -15,8 +15,8 @@ import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.SemanticException;
 
+import org.hibernate.query.sqm.UnknownEntityException;
 import org.hibernate.test.annotations.Boat;
 import org.hibernate.test.annotations.Ferry;
 import org.hibernate.test.annotations.Port;
@@ -68,7 +68,7 @@ public class ConfigurationTest {
 							fail( "Boat should not be mapped" );
 						}
 						catch (IllegalArgumentException expected) {
-							assertEquals( SemanticException.class, expected.getCause().getClass() );
+							assertEquals( UnknownEntityException.class, expected.getCause().getClass() );
 							// expected outcome
 
 							// see org.hibernate.test.jpa.compliance.tck2_2.QueryApiTest#testInvalidQueryMarksTxnForRollback

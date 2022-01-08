@@ -118,7 +118,7 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 			// identifier is an alias (identification variable)
 
 			if ( isTerminal ) {
-				throw new SemanticException( "Cannot join to root : " + identifier );
+				throw new SemanticException( "Cannot join to root '" + identifier + "'" );
 			}
 
 			return new AttributeJoinDelegate(
@@ -181,9 +181,9 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 			throw new HqlInterpretationException(
 					String.format(
 							Locale.ROOT,
-							"Could not locate specified joinable path : %s -> %s",
-							lhs.getNavigablePath(),
-							name
+							"Could not resolve joined attribute '%s' of '%s'",
+							name,
+							lhs.getNavigablePath()
 					)
 			);
 		}

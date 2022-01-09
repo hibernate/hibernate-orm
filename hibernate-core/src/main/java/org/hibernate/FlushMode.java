@@ -14,80 +14,73 @@ import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
  * and executing SQL statements.
  *
  * @see Session#setHibernateFlushMode
- * @see org.hibernate.query.Query#setHibernateFlushMode
+ * @see org.hibernate.query.CommonQueryContract#setHibernateFlushMode
  *
  * @author Gavin King
  */
 public enum FlushMode {
 	/**
-	 * The {@link Session} is only ever flushed when {@link Session#flush}
-	 * is explicitly called by the application. This mode is very
-	 * efficient for read only transactions.
+	 * The {@link Session} is only flushed when {@link Session#flush}
+	 * is called explicitly. This mode is very efficient for read-only
+	 * transactions.
 	 */
-	MANUAL( 0 ),
+	MANUAL,
 
 	/**
 	 * The {@link Session} is flushed when {@link Transaction#commit}
 	 * is called.
 	 */
-	COMMIT(5 ),
+	COMMIT,
 
 	/**
 	 * The {@link Session} is sometimes flushed before query execution
 	 * in order to ensure that queries never return stale state. This
 	 * is the default flush mode.
 	 */
-	AUTO(10 ),
+	AUTO,
 
 	/**
-	 * The {@link Session} is flushed before every query. This is
-	 * almost always unnecessary and inefficient.
+	 * The {@link Session} is flushed before every query. This is almost
+	 * always unnecessary and inefficient.
 	 */
-	ALWAYS(20 );
-
-	private final int level;
-
-	private FlushMode(int level) {
-		this.level = level;
-	}
+	ALWAYS;
 
 	/**
-	 * Checks to see if {@code this} flush mode is less than the given flush mode.
+	 * Compare this flush mode to the given flush mode.
 	 *
-	 * @param other THe flush mode value to be checked against {@code this}
-	 *
-	 * @return {@code true} indicates {@code other} is less than {@code this}; {@code false} otherwise
+	 * @return {@code true} if this flush mode flushes less often than
+	 *         the given flush mode
 	 */
 	public boolean lessThan(FlushMode other) {
-		return this.level < other.level;
+		return this.level() < other.level();
 	}
 
 	/**
-	 * Checks to see if the given mode is the same as {@link #MANUAL}.
+	 * Interprets an external representation of a flush mode.
 	 *
-	 * @param mode The mode to check
+	 * @param externalName the name of a {@code FlushMode}, or of a
+	 *                     {@link jakarta.persistence.FlushModeType}
 	 *
-	 * @return true/false
+	 * @return a {@code FlushMode}, or null if the argument was null
 	 *
-	 * @deprecated Just use equality check against {@link #MANUAL}.  Legacy from before this was an enum
-	 */
-	@Deprecated
-	public static boolean isManualFlushMode(FlushMode mode) {
-		return MANUAL.level == mode.level;
-	}
-
-	/**
-	 * Interprets an external representation of the flush mode.  {@code null} is returned as {@code null}, otherwise
-	 * {@link FlushMode#valueOf(String)} is used with the upper-case version of the incoming value.  An unknown,
-	 * non-null value results in a MappingException being thrown.
-	 *
-	 * @param externalName The external representation
-	 *
-	 * @return The interpreted FlushMode value.
-	 *
-	 * @throws MappingException Indicates an unrecognized external representation
+	 * @throws MappingException for an unrecognized external representation
 	 */
 	public static FlushMode interpretExternalSetting(String externalName) {
 		return FlushModeTypeHelper.interpretExternalSetting( externalName );
+	}
+
+	private int level() {
+		switch (this) {
+			case ALWAYS:
+				return 20;
+			case AUTO:
+				return 10;
+			case COMMIT:
+				return 5;
+			case MANUAL:
+				return 0;
+			default:
+				throw new AssertionFailure("Impossible FlushMode");
+		}
 	}
 }

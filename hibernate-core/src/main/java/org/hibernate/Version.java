@@ -12,7 +12,7 @@ import org.hibernate.internal.build.AllowSysOut;
 import org.jboss.logging.Logger;
 
 /**
- * Information about the Hibernate version.
+ * Information about the version of Hibernate.
  *
  * @author Steve Ebersole
  */

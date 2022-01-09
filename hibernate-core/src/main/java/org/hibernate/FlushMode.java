@@ -20,14 +20,14 @@ import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
  */
 public enum FlushMode {
 	/**
-	 * The {@link Session} is only flushed when {@link Session#flush}
+	 * The {@link Session} is only flushed when {@link Session#flush()}
 	 * is called explicitly. This mode is very efficient for read-only
 	 * transactions.
 	 */
 	MANUAL,
 
 	/**
-	 * The {@link Session} is flushed when {@link Transaction#commit}
+	 * The {@link Session} is flushed when {@link Transaction#commit()}
 	 * is called.
 	 */
 	COMMIT,

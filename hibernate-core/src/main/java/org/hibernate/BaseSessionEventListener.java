@@ -12,7 +12,6 @@ package org.hibernate;
  *
  * @author Steve Ebersole
  */
-@SuppressWarnings("UnusedDeclaration")
 public class BaseSessionEventListener implements SessionEventListener {
 	@Override
 	public void transactionCompletion(boolean successful) {

@@ -18,7 +18,6 @@ import java.io.Serializable;
  *
  * @author Steve Ebersole
  */
-@SuppressWarnings( {"UnusedDeclaration"})
 public interface Cache extends jakarta.persistence.Cache {
 	/**
 	 * Access to the SessionFactory this Cache is bound to.
@@ -44,7 +43,7 @@ public interface Cache extends jakarta.persistence.Cache {
 	 * @return True if the underlying cache contains corresponding data; false
 	 * otherwise.
 	 */
-	boolean containsEntity(Class entityClass, Object identifier);
+	boolean containsEntity(Class<?> entityClass, Object identifier);
 
 	/**
 	 * Determine whether the cache contains data for the given entity "instance".
@@ -67,7 +66,7 @@ public interface Cache extends jakarta.persistence.Cache {
 	 *
 	 * @since 5.3
 	 */
-	void evictEntityData(Class entityClass, Object identifier);
+	void evictEntityData(Class<?> entityClass, Object identifier);
 
 	/**
 	 * Evicts the entity data for a particular entity "instance".
@@ -87,7 +86,7 @@ public interface Cache extends jakarta.persistence.Cache {
 	 *
 	 * @since 5.3
 	 */
-	void evictEntityData(Class entityClass);
+	void evictEntityData(Class<?> entityClass);
 
 	/**
 	 * Evicts all entity data from the given region (i.e. for all entities of
@@ -118,7 +117,7 @@ public interface Cache extends jakarta.persistence.Cache {
 	 *
 	 * @since 5.3
 	 */
-	void evictNaturalIdData(Class entityClass);
+	void evictNaturalIdData(Class<?> entityClass);
 
 	/**
 	 * Evict cached data for the given entity's natural-id
@@ -155,7 +154,6 @@ public interface Cache extends jakarta.persistence.Cache {
 	 *
 	 * @return True if the underlying cache contains corresponding data; false otherwise.
 	 */
-	@SuppressWarnings( {"UnusedDeclaration"})
 	boolean containsCollection(String role, Object ownerIdentifier);
 
 
@@ -268,10 +266,10 @@ public interface Cache extends jakarta.persistence.Cache {
 	 * @param entityClass The entity class.
 	 * @param identifier The entity identifier
 	 *
-	 * @deprecated Use {@link Cache#evictEntityData(Class, Serializable)} instead
+	 * @deprecated Use {@link Cache#evictEntityData(Class, Object)} instead
 	 */
 	@Deprecated
-	default void evictEntity(Class entityClass, Object identifier) {
+	default void evictEntity(Class<?> entityClass, Object identifier) {
 		evictEntityData( entityClass, identifier );
 	}
 
@@ -281,7 +279,7 @@ public interface Cache extends jakarta.persistence.Cache {
 	 * @param entityName The entity name.
 	 * @param identifier The entity identifier
 	 *
-	 * @deprecated Use {@link Cache#evictEntityData(String, Serializable)} instead
+	 * @deprecated Use {@link Cache#evictEntityData(String, Object)} instead
 	 */
 	@Deprecated
 	default void evictEntity(String entityName, Object identifier) {
@@ -297,7 +295,7 @@ public interface Cache extends jakarta.persistence.Cache {
 	 * @deprecated Use {@link Cache#evictEntityData(Class)} instead
 	 */
 	@Deprecated
-	default void evictEntityRegion(Class entityClass) {
+	default void evictEntityRegion(Class<?> entityClass) {
 		evictEntityData( entityClass );
 	}
 
@@ -333,7 +331,7 @@ public interface Cache extends jakarta.persistence.Cache {
 	 * @deprecated Use {@link Cache#evictNaturalIdData(Class)} instead
 	 */
 	@Deprecated
-	default void evictNaturalIdRegion(Class entityClass) {
+	default void evictNaturalIdRegion(Class<?> entityClass) {
 		evictNaturalIdData( entityClass );
 	}
 
@@ -366,7 +364,7 @@ public interface Cache extends jakarta.persistence.Cache {
 	 * @param role The "collection role" (in form [owner-entity-name].[collection-property-name]).
 	 * @param ownerIdentifier The identifier of the owning entity
 	 *
-	 * @deprecated Use {@link Cache#evictCollectionData(String, Serializable)} instead
+	 * @deprecated Use {@link Cache#evictCollectionData(String, Object)} instead
 	 */
 	@Deprecated
 	default void evictCollection(String role, Serializable ownerIdentifier) {

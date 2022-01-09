@@ -830,10 +830,9 @@ public class AnnotatedColumn {
 
 	@Override
 	public String toString() {
-		return "Ejb3Column" + "{table=" + getTable()
-				+ ", mappingColumn=" + mappingColumn.getName()
-				+ ", insertable=" + insertable
-				+ ", updatable=" + updatable
-				+ ", unique=" + unique + '}';
+		return String.format(
+				"Ejb3Column{table=%s, mappingColumn=%s, insertable=%s, updatable=%s, unique=%s}",
+				getTable(), mappingColumn.getName(), insertable, updatable, unique
+		);
 	}
 }

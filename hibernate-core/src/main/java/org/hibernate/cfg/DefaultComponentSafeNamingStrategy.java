@@ -29,14 +29,8 @@ public class DefaultComponentSafeNamingStrategy extends PersistenceStandardNamin
 			String ownerEntity, String ownerEntityTable, String associatedEntity, String associatedEntityTable,
 			String propertyName
 	) {
-		return tableName(
-				new StringBuilder( ownerEntityTable ).append( "_" )
-						.append(
-								associatedEntityTable != null ?
-										associatedEntityTable :
-										addUnderscores( propertyName )
-						).toString()
-		);
+		String entityTableName = associatedEntityTable != null ? associatedEntityTable : addUnderscores(propertyName);
+		return tableName( ownerEntityTable + "_" + entityTableName );
 	}
 
 
@@ -61,12 +55,8 @@ public class DefaultComponentSafeNamingStrategy extends PersistenceStandardNamin
 			return tableName;
 		}
 		else {
-			return new StringBuilder( ownerEntityTable ).append( "_" )
-					.append(
-							associatedEntityTable != null ?
-									associatedEntityTable :
-									propertyName
-					).toString();
+			String entityTableName = associatedEntityTable != null ? associatedEntityTable : propertyName;
+			return ownerEntityTable + "_" + entityTableName;
 		}
 
 	}

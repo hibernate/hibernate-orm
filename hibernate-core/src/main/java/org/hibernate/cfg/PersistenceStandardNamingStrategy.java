@@ -38,14 +38,10 @@ public class PersistenceStandardNamingStrategy implements NamingStrategy, Serial
 			String ownerEntity, String ownerEntityTable, String associatedEntity, String associatedEntityTable,
 			String propertyName
 	) {
-		return tableName(
-				new StringBuilder( ownerEntityTable ).append( "_" )
-						.append(
-								associatedEntityTable != null ?
-										associatedEntityTable :
-										StringHelper.unqualify( propertyName )
-						).toString()
-		);
+		String entityTableName = associatedEntityTable != null
+				? associatedEntityTable
+				: StringHelper.unqualify(propertyName);
+		return tableName( ownerEntityTable + "_" + entityTableName );
 	}
 
 	public String joinKeyColumnName(String joinedColumn, String joinedTable) {
@@ -72,12 +68,10 @@ public class PersistenceStandardNamingStrategy implements NamingStrategy, Serial
 			return tableName;
 		}
 		else {
-			return new StringBuilder( ownerEntityTable ).append( "_" )
-					.append(
-							associatedEntityTable != null ?
-									associatedEntityTable :
-									StringHelper.unqualify( propertyName )
-					).toString();
+			String entityTableName = associatedEntityTable != null
+					? associatedEntityTable
+					: StringHelper.unqualify(propertyName);
+			return ownerEntityTable + "_" + entityTableName;
 		}
 	}
 

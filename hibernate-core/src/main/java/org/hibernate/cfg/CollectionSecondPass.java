@@ -73,9 +73,9 @@ public abstract class CollectionSecondPass implements SecondPass {
 
 	private static String columns(Value val) {
 		StringBuilder columns = new StringBuilder();
-		Iterator iter = val.getColumnIterator();
+		Iterator<Selectable> iter = val.getColumnIterator();
 		while ( iter.hasNext() ) {
-			columns.append( ( (Selectable) iter.next() ).getText() );
+			columns.append( iter.next().getText() );
 			if ( iter.hasNext() ) columns.append( ", " );
 		}
 		return columns.toString();

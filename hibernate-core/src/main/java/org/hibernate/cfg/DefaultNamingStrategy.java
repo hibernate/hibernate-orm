@@ -97,12 +97,10 @@ public class DefaultNamingStrategy implements NamingStrategy, Serializable {
 			return tableName;
 		}
 		else {
-			return new StringBuilder(ownerEntityTable).append("_")
-					.append(
-						associatedEntityTable != null ?
-						associatedEntityTable :
-						StringHelper.unqualify( propertyName )
-					).toString();
+			String entityTableName = associatedEntityTable != null
+					? associatedEntityTable
+					: StringHelper.unqualify(propertyName);
+			return ownerEntityTable + "_" + entityTableName;
 		}
 	}
 	/**

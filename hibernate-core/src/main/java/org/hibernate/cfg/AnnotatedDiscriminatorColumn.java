@@ -89,11 +89,8 @@ public class AnnotatedDiscriminatorColumn extends AnnotatedColumn {
 
 	@Override
 	public String toString() {
-		final StringBuilder sb = new StringBuilder();
-		sb.append( "Ejb3DiscriminatorColumn" );
-		sb.append( "{logicalColumnName'" ).append( getLogicalColumnName() ).append( '\'' );
-		sb.append( ", discriminatorTypeName='" ).append( discriminatorTypeName ).append( '\'' );
-		sb.append( '}' );
-		return sb.toString();
+		return String.format("Ejb3DiscriminatorColumn{logicalColumnName'%s', discriminatorTypeName='%s'}",
+				getLogicalColumnName(), discriminatorTypeName
+		);
 	}
 }

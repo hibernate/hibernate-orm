@@ -133,10 +133,9 @@ public class BinderHelper {
 			 * We need to shallow copy those properties to mark them
 			 * as non insertable / non updatable
 			 */
-			StringBuilder propertyNameBuffer = new StringBuilder( "_" );
-			propertyNameBuffer.append( associatedClass.getEntityName().replace( '.', '_' ) );
-			propertyNameBuffer.append( "_" ).append( columns[0].getPropertyName().replace( '.', '_' ) );
-			String syntheticPropertyName = propertyNameBuffer.toString();
+			String syntheticPropertyName =
+					"_" + associatedClass.getEntityName().replace('.', '_') +
+					"_" + columns[0].getPropertyName().replace('.', '_');
 			//find properties associated to a certain column
 			Object columnOwner = findColumnOwner( ownerEntity, columns[0].getReferencedColumn(), context );
 			List<Property> properties = findPropertiesByColumns( columnOwner, columns, context );

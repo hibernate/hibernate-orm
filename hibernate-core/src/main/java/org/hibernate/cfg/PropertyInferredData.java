@@ -28,12 +28,7 @@ public class PropertyInferredData implements PropertyData {
 
 	@Override
 	public String toString() {
-		final StringBuilder sb = new StringBuilder();
-		sb.append( "PropertyInferredData" );
-		sb.append( "{property=" ).append( property );
-		sb.append( ", declaringClass=" ).append( declaringClass );
-		sb.append( '}' );
-		return sb.toString();
+		return String.format( "PropertyInferredData{property=%s, declaringClass=%s}", property, declaringClass );
 	}
 
 	/**

@@ -894,18 +894,19 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 	 * @param column the referenced column.
 	 */
 	public void overrideFromReferencedColumnIfNecessary(Column column) {
-		if (getMappingColumn() != null) {
+		Column mappingColumn = getMappingColumn();
+		if (mappingColumn != null) {
 			// columnDefinition can also be specified using @JoinColumn, hence we have to check
 			// whether it is set or not
 			if ( StringHelper.isEmpty( sqlType ) ) {
 				sqlType = column.getSqlType();
-				getMappingColumn().setSqlType( sqlType );
+				mappingColumn.setSqlType( sqlType );
 			}
 
 			// these properties can only be applied on the referenced column - we can just take them over
-			getMappingColumn().setLength(column.getLength());
-			getMappingColumn().setPrecision(column.getPrecision());
-			getMappingColumn().setScale(column.getScale());
+			mappingColumn.setLength( column.getLength() );
+			mappingColumn.setPrecision( column.getPrecision() );
+			mappingColumn.setScale( column.getScale() );
 		}
 	}
 

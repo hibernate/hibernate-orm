@@ -13,7 +13,7 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Define a DB index.
+ * Defines an index of a database table.
  *
  * @author Emmanuel Bernard
  *

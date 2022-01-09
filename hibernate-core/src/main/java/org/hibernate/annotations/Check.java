@@ -15,7 +15,11 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Arbitrary SQL CHECK constraints which can be defined at the class, property or collection level.
+ * Specifies a {@code check} constraint to be included in the generated DDL.
+ * <ul>
+ * <li>When a field or property is annotated, the check constraint is added to the column definition.
+ * <li>When an entity class is annotated, the check constraint is added to the primary table.
+ * </ul>
  *
  * @author Emmanuel Bernard
  */
@@ -23,7 +27,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface Check {
 	/**
-	 * The check constraints string.
+	 * The check constraint, written in native SQL.
 	 */
 	String constraints();
 }

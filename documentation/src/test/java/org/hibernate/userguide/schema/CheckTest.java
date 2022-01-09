@@ -12,7 +12,8 @@ import jakarta.persistence.PersistenceException;
 
 import org.hibernate.annotations.Check;
 import org.hibernate.annotations.NaturalId;
-import org.hibernate.dialect.PostgreSQL81Dialect;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
@@ -26,7 +27,8 @@ import static org.junit.Assert.fail;
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialect(PostgreSQL81Dialect.class)
+@RequiresDialect(PostgreSQLDialect.class)
+@RequiresDialect(H2Dialect.class)
 public class CheckTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
@@ -81,7 +83,6 @@ public class CheckTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Entity(name = "Person")
-	@Check(constraints = "code > 0")
 	public static class Person {
 
 		@Id
@@ -89,8 +90,7 @@ public class CheckTest extends BaseEntityManagerFunctionalTestCase {
 
 		private String name;
 
-		// This one does not work! Only the entity-level annotation works.
-		// @Check(constraints = "code > 0")
+		@Check(constraints = "code > 0")
 		private Long code;
 
 		public Long getId() {

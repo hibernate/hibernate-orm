@@ -14,6 +14,7 @@ import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.domain.gambit.EntityOfLists;
@@ -96,6 +97,7 @@ public class FunctionTests {
 	@RequiresDialect(MySQLDialect.class)
 	@RequiresDialect(SybaseDialect.class)
 	@RequiresDialect(MariaDBDialect.class)
+	@RequiresDialect(TiDBDialect.class)
 	// it's failing on the other dialects due to a bug in query translator
 	public void testMaxindexMaxelement(SessionFactoryScope scope) {
 		scope.inTransaction(
@@ -795,7 +797,10 @@ public class FunctionTests {
 		);
 	}
 
-	@Test @SkipForDialect(dialectClass = MySQLDialect.class) @SkipForDialect(dialectClass = MariaDBDialect.class)
+	@Test
+	@SkipForDialect(dialectClass = MySQLDialect.class)
+	@SkipForDialect(dialectClass = MariaDBDialect.class)
+	@SkipForDialect(dialectClass = TiDBDialect.class)
 	public void testDateAddDiffFunctions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

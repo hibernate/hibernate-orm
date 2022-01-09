@@ -33,7 +33,9 @@ public @interface Table {
 	Index[] indexes() default {};
 
 	/**
-	 * define a table comment.
+	 * Define a table comment.
+	 *
+	 * @see Comment
 	 */
 	String comment() default "";
 

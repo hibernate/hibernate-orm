@@ -37,6 +37,8 @@ import org.hibernate.mapping.Table;
 
 import org.jboss.logging.Logger;
 
+import static org.hibernate.cfg.AnnotationBinder.getOverridableAnnotation;
+
 /**
  * Wrap state of an EJB3 @Column annotation
  * and build the Hibernate column mapping element
@@ -672,7 +674,7 @@ public class AnnotatedColumn {
 	private void applyColumnDefault(PropertyData inferredData, int length) {
 		final XProperty xProperty = inferredData.getProperty();
 		if ( xProperty != null ) {
-			ColumnDefault columnDefaultAnn = xProperty.getAnnotation( ColumnDefault.class );
+			ColumnDefault columnDefaultAnn = getOverridableAnnotation( xProperty, ColumnDefault.class, context );
 			if ( columnDefaultAnn != null ) {
 				if (length!=1) {
 					throw new MappingException("@ColumnDefault may only be applied to single-column mappings");
@@ -690,7 +692,7 @@ public class AnnotatedColumn {
 	private void applyGeneratedAs(PropertyData inferredData, int length) {
 		final XProperty xProperty = inferredData.getProperty();
 		if ( xProperty != null ) {
-			GeneratedColumn generatedAnn = xProperty.getAnnotation( GeneratedColumn.class );
+			GeneratedColumn generatedAnn = getOverridableAnnotation( xProperty, GeneratedColumn.class, context );
 			if ( generatedAnn != null ) {
 				if (length!=1) {
 					throw new MappingException("@GeneratedColumn may only be applied to single-column mappings");
@@ -708,7 +710,7 @@ public class AnnotatedColumn {
 	private void applyCheckConstraint(PropertyData inferredData, int length) {
 		final XProperty xProperty = inferredData.getProperty();
 		if ( xProperty != null ) {
-			Check columnDefaultAnn = xProperty.getAnnotation( Check.class );
+			Check columnDefaultAnn = AnnotationBinder.getOverridableAnnotation( xProperty, Check.class, context );
 			if ( columnDefaultAnn != null ) {
 				if (length!=1) {
 					throw new MappingException("@Check may only be applied to single-column mappings (use a table-level @Check)");

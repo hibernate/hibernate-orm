@@ -56,7 +56,7 @@ public class CommentTest {
 
 	@Entity(name = "Person")
 	@jakarta.persistence.Table(name = TABLE_NAME)
-	@org.hibernate.annotations.Table(comment = TABLE_COMMENT, appliesTo = TABLE_NAME)
+	@Comment(TABLE_COMMENT)
 	public static class TestEntity {
 
 		@Id

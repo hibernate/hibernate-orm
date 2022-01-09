@@ -73,13 +73,14 @@ class ColumnsBuilder {
 		joinColumns = buildExplicitJoinColumns(property, inferredData);
 
 
+		Comment comment = property.getAnnotation(Comment.class);
 		if ( property.isAnnotationPresent( Column.class ) || property.isAnnotationPresent( Formula.class ) ) {
 			Column ann = property.getAnnotation( Column.class );
 			Formula formulaAnn = property.getAnnotation( Formula.class );
 			columns = AnnotatedColumn.buildColumnFromAnnotation(
 					new Column[] { ann },
 					formulaAnn,
-					property.getAnnotation( Comment.class ),
+					comment,
 					nullability,
 					propertyHolder,
 					inferredData,
@@ -92,7 +93,7 @@ class ColumnsBuilder {
 			columns = AnnotatedColumn.buildColumnFromAnnotation(
 					anns.columns(),
 					null,
-					property.getAnnotation( Comment.class ),
+					comment,
 					nullability,
 					propertyHolder,
 					inferredData,
@@ -118,7 +119,7 @@ class ColumnsBuilder {
 					"";
 			joinColumns = AnnotatedJoinColumn.buildJoinColumns(
 					null,
-					property.getAnnotation( Comment.class ),
+					comment,
 					mappedBy,
 					entityBinder.getSecondaryTables(),
 					propertyHolder,
@@ -135,7 +136,7 @@ class ColumnsBuilder {
 			columns = AnnotatedColumn.buildColumnFromAnnotation(
 					null,
 					null,
-					property.getAnnotation( Comment.class ),
+					comment,
 					nullability,
 					propertyHolder,
 					inferredData,
@@ -156,10 +157,11 @@ class ColumnsBuilder {
 	AnnotatedJoinColumn[] buildDefaultJoinColumnsForXToOne(XProperty property, PropertyData inferredData) {
 		AnnotatedJoinColumn[] joinColumns;
 		JoinTable joinTableAnn = propertyHolder.getJoinTable( property );
+		Comment comment = property.getAnnotation(Comment.class);
 		if ( joinTableAnn != null ) {
 			joinColumns = AnnotatedJoinColumn.buildJoinColumns(
 					joinTableAnn.inverseJoinColumns(),
-					property.getAnnotation( Comment.class ),
+					comment,
 					null,
 					entityBinder.getSecondaryTables(),
 					propertyHolder,
@@ -180,7 +182,7 @@ class ColumnsBuilder {
 					: null;
 			joinColumns = AnnotatedJoinColumn.buildJoinColumns(
 					null,
-					property.getAnnotation( Comment.class ),
+					comment,
 					mappedBy,
 					entityBinder.getSecondaryTables(),
 					propertyHolder,

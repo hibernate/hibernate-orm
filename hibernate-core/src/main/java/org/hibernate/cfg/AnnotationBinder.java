@@ -2059,6 +2059,7 @@ public final class AnnotationBinder {
 				PropertyData virtualProperty = isJPA2ForValueMapping ? inferredData : new WrappedInferredData(
 						inferredData, "element"
 				);
+				Comment comment = property.getAnnotation(Comment.class);
 				if ( property.isAnnotationPresent( Column.class ) || property.isAnnotationPresent(
 						Formula.class
 				) ) {
@@ -2067,7 +2068,7 @@ public final class AnnotationBinder {
 					elementColumns = AnnotatedColumn.buildColumnFromAnnotation(
 							new Column[] { ann },
 							formulaAnn,
-							property.getAnnotation( Comment.class ),
+							comment,
 							nullability,
 							propertyHolder,
 							virtualProperty,
@@ -2080,7 +2081,7 @@ public final class AnnotationBinder {
 					elementColumns = AnnotatedColumn.buildColumnFromAnnotation(
 							anns.columns(),
 							null,
-							property.getAnnotation( Comment.class ),
+							comment,
 							nullability,
 							propertyHolder,
 							virtualProperty,
@@ -2092,7 +2093,7 @@ public final class AnnotationBinder {
 					elementColumns = AnnotatedColumn.buildColumnFromAnnotation(
 							null,
 							null,
-							property.getAnnotation( Comment.class ),
+							comment,
 							nullability,
 							propertyHolder,
 							virtualProperty,
@@ -2112,7 +2113,7 @@ public final class AnnotationBinder {
 					AnnotatedColumn[] mapColumns = AnnotatedColumn.buildColumnFromAnnotation(
 							keyColumns,
 							null,
-							property.getAnnotation( Comment.class ),
+							comment,
 							Nullability.FORCED_NOT_NULL,
 							propertyHolder,
 							inferredData,
@@ -2152,7 +2153,7 @@ public final class AnnotationBinder {
 
 					AnnotatedJoinColumn[] mapJoinColumns = AnnotatedJoinColumn.buildJoinColumnsWithDefaultColumnSuffix(
 							joinKeyColumns,
-							property.getAnnotation( Comment.class ),
+							comment,
 							null,
 							entityBinder.getSecondaryTables(),
 							propertyHolder,

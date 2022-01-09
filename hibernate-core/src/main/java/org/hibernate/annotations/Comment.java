@@ -11,14 +11,19 @@ import java.lang.annotation.Target;
 
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * SQL column comment which can be defined at property level.
+ * Specifies a comment that will be included in generated DDL.
+ * <ul>
+ * <li>When a field or property is annotated, the comment applies to the mapped column.
+ * <li>When an entity class is annotated, the comment applies to the primary table.
+ * </ul>
  *
  * @author Yanming Zhou
  */
-@Target({METHOD, FIELD})
+@Target({METHOD, FIELD, TYPE})
 @Retention(RUNTIME)
 public @interface Comment {
 	/**

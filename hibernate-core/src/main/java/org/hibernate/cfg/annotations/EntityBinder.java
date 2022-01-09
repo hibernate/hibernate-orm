@@ -31,6 +31,7 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Comment;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.FetchMode;
@@ -817,6 +818,11 @@ public class EntityBinder {
 			table.setRowId( rowId.value() );
 		}
 
+		final Comment comment = annotatedClass.getAnnotation( Comment.class );
+		if ( comment != null ) {
+			table.setComment( comment.value() );
+		}
+
 		context.getMetadataCollector().addEntityTableXref(
 				persistentClass.getEntityName(),
 				logicalName,
@@ -1221,7 +1227,9 @@ public class EntityBinder {
 					"@org.hibernate.annotations.Table references an unknown table: " + appliedTable
 			);
 		}
-		if ( !BinderHelper.isEmptyAnnotationValue( table.comment() ) ) hibTable.setComment( table.comment() );
+		if ( !BinderHelper.isEmptyAnnotationValue( table.comment() ) ) {
+			hibTable.setComment( table.comment() );
+		}
 		TableBinder.addIndexes( hibTable, table.indexes(), context );
 	}
 

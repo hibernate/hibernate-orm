@@ -11,6 +11,7 @@ import java.util.Map;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
+import org.hibernate.annotations.Check;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.GeneratedColumn;
 import org.hibernate.annotations.ColumnTransformer;
@@ -73,6 +74,7 @@ public class AnnotatedColumn {
 	private String generatedAs;
 
 	private String comment;
+	private String checkConstraint;
 
 	public void setTable(Table table) {
 		this.table = table;
@@ -193,8 +195,16 @@ public class AnnotatedColumn {
 		return defaultValue;
 	}
 
+	public String getCheckConstraint() {
+		return checkConstraint;
+	}
+
 	public void setDefaultValue(String defaultValue) {
 		this.defaultValue = defaultValue;
+	}
+
+	public void setCheckConstraint(String checkConstraint) {
+		this.checkConstraint = checkConstraint;
 	}
 
 	public String getComment() {
@@ -228,6 +238,9 @@ public class AnnotatedColumn {
 			);
 			if ( defaultValue != null ) {
 				mappingColumn.setDefaultValue( defaultValue );
+			}
+			if ( checkConstraint !=null ) {
+				mappingColumn.setCheckConstraint( checkConstraint );
 			}
 			if ( StringHelper.isNotEmpty( comment ) ) {
 				mappingColumn.setComment( comment );
@@ -266,6 +279,7 @@ public class AnnotatedColumn {
 			this.mappingColumn.setNullable( nullable );
 			this.mappingColumn.setSqlType( sqlType );
 			this.mappingColumn.setUnique( unique );
+			this.mappingColumn.setCheckConstraint( checkConstraint );
 
 			if ( writeExpression != null ) {
 				final int numberOfJdbcParams = StringHelper.count( writeExpression, '?' );
@@ -645,6 +659,7 @@ public class AnnotatedColumn {
 					column.setBuildingContext( context );
 					column.applyColumnDefault( inferredData, length );
 					column.applyGeneratedAs( inferredData, length );
+					column.applyCheckConstraint( inferredData, length );
 					column.extractDataFromPropertyData(inferredData);
 					column.bind();
 					columns[index] = column;
@@ -685,7 +700,25 @@ public class AnnotatedColumn {
 		}
 		else {
 			LOG.trace(
-					"Could not perform @ColumnGeneratedAlways lookup as 'PropertyData' did not give access to XProperty"
+					"Could not perform @GeneratedColumn lookup as 'PropertyData' did not give access to XProperty"
+			);
+		}
+	}
+
+	private void applyCheckConstraint(PropertyData inferredData, int length) {
+		final XProperty xProperty = inferredData.getProperty();
+		if ( xProperty != null ) {
+			Check columnDefaultAnn = xProperty.getAnnotation( Check.class );
+			if ( columnDefaultAnn != null ) {
+				if (length!=1) {
+					throw new MappingException("@Check may only be applied to single-column mappings (use a table-level @Check)");
+				}
+				setCheckConstraint( columnDefaultAnn.constraints() );
+			}
+		}
+		else {
+			LOG.trace(
+					"Could not perform @Check lookup as 'PropertyData' did not give access to XProperty"
 			);
 		}
 	}
@@ -761,6 +794,7 @@ public class AnnotatedColumn {
 		column.setImplicit( implicit );
 		column.applyColumnDefault( inferredData, 1 );
 		column.applyGeneratedAs( inferredData, 1 );
+		column.applyCheckConstraint( inferredData, 1 );
 		column.extractDataFromPropertyData( inferredData );
 		column.bind();
 

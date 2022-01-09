@@ -1230,6 +1230,9 @@ public class EntityBinder {
 		if ( !BinderHelper.isEmptyAnnotationValue( table.comment() ) ) {
 			hibTable.setComment( table.comment() );
 		}
+		if ( !BinderHelper.isEmptyAnnotationValue( table.checkConstraint() ) ) {
+			hibTable.addCheckConstraint( table.checkConstraint() );
+		}
 		TableBinder.addIndexes( hibTable, table.indexes(), context );
 	}
 

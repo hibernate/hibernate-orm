@@ -23,7 +23,7 @@ import java.util.Set;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
-import org.hibernate.FetchMode;
+import org.hibernate.mapping.FetchMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.BatchSize;

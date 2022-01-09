@@ -34,7 +34,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.FetchMode;
+import org.hibernate.mapping.FetchMode;
 import org.hibernate.Filter;
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;

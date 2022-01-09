@@ -8,7 +8,7 @@ package org.hibernate.type;
 
 import java.lang.reflect.Method;
 
-import org.hibernate.FetchMode;
+import org.hibernate.mapping.FetchMode;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;

@@ -17,7 +17,7 @@ import java.util.function.Supplier;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
-import org.hibernate.FetchMode;
+import org.hibernate.mapping.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.Bag;
 import org.hibernate.annotations.BatchSize;

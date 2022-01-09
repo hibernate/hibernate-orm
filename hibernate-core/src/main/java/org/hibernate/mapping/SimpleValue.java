@@ -17,7 +17,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 
-import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.annotations.common.reflection.XProperty;

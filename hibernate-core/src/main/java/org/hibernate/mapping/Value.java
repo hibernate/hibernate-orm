@@ -10,7 +10,6 @@ import java.io.Serializable;
 import java.util.Iterator;
 import java.util.List;
 
-import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.service.ServiceRegistry;

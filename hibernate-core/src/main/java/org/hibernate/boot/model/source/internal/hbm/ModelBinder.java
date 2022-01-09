@@ -17,7 +17,7 @@ import java.util.Objects;
 import java.util.Properties;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.FetchMode;
+import org.hibernate.mapping.FetchMode;
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedNativeQueryType;

@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import org.hibernate.EntityNameResolver;
-import org.hibernate.FetchMode;
+import org.hibernate.mapping.FetchMode;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;

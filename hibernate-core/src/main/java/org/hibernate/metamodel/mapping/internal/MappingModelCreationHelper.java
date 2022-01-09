@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.SortedMap;
 import java.util.SortedSet;
 
-import org.hibernate.FetchMode;
+import org.hibernate.mapping.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.SharedSessionContract;

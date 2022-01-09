@@ -37,8 +37,8 @@ public class FetchStrategyHelperTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testManyToOneDefaultFetch() {
 		final AssociationType associationType = determineAssociationType( AnEntity.class, "otherEntityDefault" );
-		final org.hibernate.FetchMode fetchMode = determineFetchMode( AnEntity.class, "otherEntityDefault" );
-		assertSame( org.hibernate.FetchMode.JOIN, fetchMode );
+		final org.hibernate.mapping.FetchMode fetchMode = determineFetchMode( AnEntity.class, "otherEntityDefault" );
+		assertSame( org.hibernate.mapping.FetchMode.JOIN, fetchMode );
 		final FetchStyle fetchStyle = FetchOptionsHelper.determineFetchStyleByMetadata(
 				fetchMode,
 				associationType,
@@ -56,8 +56,8 @@ public class FetchStrategyHelperTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testManyToOneJoinFetch() {
 		final AssociationType associationType = determineAssociationType( AnEntity.class, "otherEntityJoin" );
-		final org.hibernate.FetchMode fetchMode = determineFetchMode( AnEntity.class, "otherEntityJoin" );
-		assertSame( org.hibernate.FetchMode.JOIN, fetchMode );
+		final org.hibernate.mapping.FetchMode fetchMode = determineFetchMode( AnEntity.class, "otherEntityJoin" );
+		assertSame( org.hibernate.mapping.FetchMode.JOIN, fetchMode );
 		final FetchStyle fetchStyle = FetchOptionsHelper.determineFetchStyleByMetadata(
 				fetchMode,
 				associationType,
@@ -75,8 +75,8 @@ public class FetchStrategyHelperTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testManyToOneSelectFetch() {
 		final AssociationType associationType = determineAssociationType( AnEntity.class, "otherEntitySelect" );
-		final org.hibernate.FetchMode fetchMode = determineFetchMode( AnEntity.class, "otherEntitySelect" );
-		assertSame( org.hibernate.FetchMode.SELECT, fetchMode );
+		final org.hibernate.mapping.FetchMode fetchMode = determineFetchMode( AnEntity.class, "otherEntitySelect" );
+		assertSame( org.hibernate.mapping.FetchMode.SELECT, fetchMode );
 		final FetchStyle fetchStyle = FetchOptionsHelper.determineFetchStyleByMetadata(
 				fetchMode,
 				associationType,
@@ -94,8 +94,8 @@ public class FetchStrategyHelperTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testCollectionDefaultFetch() {
 		final AssociationType associationType = determineAssociationType( AnEntity.class, "colorsDefault" );
-		final org.hibernate.FetchMode fetchMode = determineFetchMode( AnEntity.class, "colorsDefault" );
-		assertSame( org.hibernate.FetchMode.SELECT, fetchMode );
+		final org.hibernate.mapping.FetchMode fetchMode = determineFetchMode( AnEntity.class, "colorsDefault" );
+		assertSame( org.hibernate.mapping.FetchMode.SELECT, fetchMode );
 		final FetchStyle fetchStyle = FetchOptionsHelper.determineFetchStyleByMetadata(
 				fetchMode,
 				associationType,
@@ -113,8 +113,8 @@ public class FetchStrategyHelperTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testCollectionJoinFetch() {
 		final AssociationType associationType = determineAssociationType( AnEntity.class, "colorsJoin" );
-		final org.hibernate.FetchMode fetchMode = determineFetchMode( AnEntity.class, "colorsJoin" );
-		assertSame( org.hibernate.FetchMode.JOIN, fetchMode );
+		final org.hibernate.mapping.FetchMode fetchMode = determineFetchMode( AnEntity.class, "colorsJoin" );
+		assertSame( org.hibernate.mapping.FetchMode.JOIN, fetchMode );
 		final FetchStyle fetchStyle = FetchOptionsHelper.determineFetchStyleByMetadata(
 				fetchMode,
 				associationType,
@@ -132,8 +132,8 @@ public class FetchStrategyHelperTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testCollectionSelectFetch() {
 		final AssociationType associationType = determineAssociationType( AnEntity.class, "colorsSelect" );
-		final org.hibernate.FetchMode fetchMode = determineFetchMode( AnEntity.class, "colorsSelect" );
-		assertSame( org.hibernate.FetchMode.SELECT, fetchMode );
+		final org.hibernate.mapping.FetchMode fetchMode = determineFetchMode( AnEntity.class, "colorsSelect" );
+		assertSame( org.hibernate.mapping.FetchMode.SELECT, fetchMode );
 		final FetchStyle fetchStyle = FetchOptionsHelper.determineFetchStyleByMetadata(
 				fetchMode,
 				associationType,
@@ -151,8 +151,8 @@ public class FetchStrategyHelperTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testCollectionSubselectFetch() {
 		final AssociationType associationType = determineAssociationType( AnEntity.class, "colorsSubselect" );
-		final org.hibernate.FetchMode fetchMode = determineFetchMode( AnEntity.class, "colorsSubselect" );
-		assertSame( org.hibernate.FetchMode.SELECT, fetchMode );
+		final org.hibernate.mapping.FetchMode fetchMode = determineFetchMode( AnEntity.class, "colorsSubselect" );
+		assertSame( org.hibernate.mapping.FetchMode.SELECT, fetchMode );
 		final FetchStyle fetchStyle = FetchOptionsHelper.determineFetchStyleByMetadata(
 				fetchMode,
 				associationType,
@@ -167,7 +167,7 @@ public class FetchStrategyHelperTest extends BaseCoreFunctionalTestCase {
 		assertSame( FetchTiming.DELAYED, fetchTiming );
 	}
 
-	private org.hibernate.FetchMode determineFetchMode(Class<?> entityClass, String path) {
+	private org.hibernate.mapping.FetchMode determineFetchMode(Class<?> entityClass, String path) {
 		OuterJoinLoadable entityPersister = (OuterJoinLoadable) sessionFactory().getEntityPersister( entityClass.getName() );
 		int index = ( (UniqueKeyLoadable) entityPersister ).getPropertyIndex( path );
 		return  entityPersister.getFetchMode( index );

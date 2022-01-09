@@ -6,7 +6,7 @@
  */
 package org.hibernate.tuple;
 
-import org.hibernate.FetchMode;
+import org.hibernate.mapping.FetchMode;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.type.Type;
 

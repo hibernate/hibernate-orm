@@ -16,7 +16,6 @@ import java.util.Objects;
 import java.util.Properties;
 import java.util.function.Supplier;
 
-import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataBuildingContext;

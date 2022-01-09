@@ -6,7 +6,7 @@
  */
 package org.hibernate.persister.walking.internal;
 
-import org.hibernate.FetchMode;
+import org.hibernate.mapping.FetchMode;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.profile.Fetch;

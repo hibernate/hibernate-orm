@@ -1,6 +1,5 @@
 package org.hibernate.test.bytecode.enhancement.join;
 
-import org.hibernate.FetchMode;
 import org.hibernate.Session;
 import org.hibernate.annotations.LazyToOne;
 import org.hibernate.annotations.LazyToOneOption;

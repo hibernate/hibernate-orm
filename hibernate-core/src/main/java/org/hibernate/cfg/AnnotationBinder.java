@@ -7,8 +7,10 @@
 package org.hibernate.cfg;
 
 import java.lang.annotation.Annotation;
+import java.lang.annotation.Repeatable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Member;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -20,6 +22,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
@@ -36,6 +39,7 @@ import org.hibernate.annotations.CollectionTypeRegistration;
 import org.hibernate.annotations.CollectionTypeRegistrations;
 import org.hibernate.annotations.Columns;
 import org.hibernate.annotations.Comment;
+import org.hibernate.annotations.DialectOverride.OverridesAnnotation;
 import org.hibernate.annotations.DiscriminatorFormula;
 import org.hibernate.annotations.DiscriminatorOptions;
 import org.hibernate.annotations.EmbeddableInstantiatorRegistration;
@@ -47,6 +51,7 @@ import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.FilterDefs;
 import org.hibernate.annotations.Filters;
+import org.hibernate.annotations.DialectOverride;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.GenericGenerator;
@@ -104,6 +109,7 @@ import org.hibernate.cfg.annotations.PropertyBinder;
 import org.hibernate.cfg.annotations.QueryBinder;
 import org.hibernate.cfg.annotations.TableBinder;
 import org.hibernate.cfg.internal.NullableDiscriminatorColumnSecondPass;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.id.IdentifierGenerator;
@@ -632,15 +638,15 @@ public final class AnnotationBinder {
 
 		entityBinder.setProxy( clazzToProcess.getAnnotation( Proxy.class ) );
 		entityBinder.setBatchSize( clazzToProcess.getAnnotation( BatchSize.class ) );
-		entityBinder.setWhere( clazzToProcess.getAnnotation( Where.class ) );
+		entityBinder.setWhere( getOverridableAnnotation( clazzToProcess, Where.class, context ) );
 		applyCacheSettings( entityBinder, clazzToProcess, context );
 
-		bindFilters( clazzToProcess, entityBinder, context );
+		bindFiltersAndFilterDefs( clazzToProcess, entityBinder, context );
 
 		entityBinder.bindEntity();
 
 		if ( inheritanceState.hasTable() ) {
-			Check checkAnn = clazzToProcess.getAnnotation( Check.class );
+			Check checkAnn = getOverridableAnnotation( clazzToProcess, Check.class, context );
 			String constraints = checkAnn == null
 					? null
 					: checkAnn.constraints();
@@ -842,6 +848,57 @@ public final class AnnotationBinder {
 		bindCallbacks( clazzToProcess, persistentClass, context );
 	}
 
+	public static <T extends Annotation> T getOverridableAnnotation(
+			XAnnotatedElement element,
+			Class<T> annotationType,
+			MetadataBuildingContext context) {
+		Dialect dialect = context.getMetadataCollector().getDatabase().getDialect();
+		Iterator<Annotation> annotations =
+				Arrays.stream( element.getAnnotations() )
+						.flatMap(annotation -> {
+							try {
+								Method value = annotation.annotationType().getDeclaredMethod("value");
+								Class<?> returnType = value.getReturnType();
+								if ( returnType.isArray()
+										&& returnType.getComponentType().isAnnotationPresent(Repeatable.class)
+										&& returnType.getComponentType().isAnnotationPresent(OverridesAnnotation.class) ) {
+									return Stream.of( (Annotation[]) value.invoke(annotation) );
+								}
+							}
+							catch (NoSuchMethodException ignored) {}
+							catch (Exception e) {
+								throw new AssertionFailure("could not read @DialectOverride annotation", e);
+							}
+							return Stream.of(annotation);
+						}).iterator();
+		while ( annotations.hasNext() ) {
+			Annotation annotation = annotations.next();
+			Class<? extends Annotation> type = annotation.annotationType();
+			OverridesAnnotation overridesAnnotation = type.getAnnotation(OverridesAnnotation.class);
+			if ( overridesAnnotation != null
+					&& overridesAnnotation.value().equals(annotationType) ) {
+				try {
+					Class<? extends Dialect> overrideDialect = (Class<? extends Dialect>)
+							type.getDeclaredMethod("dialect").invoke(annotation);
+					if ( overrideDialect.isAssignableFrom( dialect.getClass() ) ) {
+						DialectOverride.Version before = (DialectOverride.Version)
+								type.getDeclaredMethod("before").invoke(annotation);
+						DialectOverride.Version sameOrAfter = (DialectOverride.Version)
+								type.getDeclaredMethod("sameOrAfter").invoke(annotation);
+						if ( dialect.getVersion().isBefore( before.major(), before.minor() )
+							&& dialect.getVersion().isSameOrAfter( sameOrAfter.major(), sameOrAfter.minor() ) ) {
+							return (T) type.getDeclaredMethod("override").invoke(annotation);
+						}
+					}
+				}
+				catch (Exception e) {
+					throw new AssertionFailure("could not read @DialectOverride annotation", e);
+				}
+			}
+		}
+		return element.getAnnotation( annotationType );
+	}
+
 	private static void handleTypeDescriptorRegistrations(XAnnotatedElement annotatedElement, MetadataBuildingContext context) {
 		final ManagedBeanRegistry managedBeanRegistry = context.getBootstrapContext()
 				.getServiceRegistry()
@@ -958,9 +1015,7 @@ public final class AnnotationBinder {
 				? discAnn.discriminatorType()
 				: DiscriminatorType.STRING;
 
-		DiscriminatorFormula discFormulaAnn = clazzToProcess.getAnnotation(
-				DiscriminatorFormula.class
-		);
+		DiscriminatorFormula discFormulaAnn = getOverridableAnnotation( clazzToProcess, DiscriminatorFormula.class, context );
 		if ( isRoot ) {
 			discriminatorColumn = AnnotatedDiscriminatorColumn.buildDiscriminatorColumn(
 					discriminatorType,
@@ -1402,18 +1457,18 @@ public final class AnnotationBinder {
 	 * on the MappedSuperclass(s) in the inheritance hierarchy
 	 */
 
-	private static void bindFilters(
+	private static void bindFiltersAndFilterDefs(
 			XClass annotatedClass,
 			EntityBinder entityBinder,
 			MetadataBuildingContext context) {
 
-		bindFilters( annotatedClass, entityBinder );
+		bindFilters( annotatedClass, entityBinder, context );
 
 		XClass classToProcess = annotatedClass.getSuperclass();
 		while ( classToProcess != null ) {
 			AnnotatedClassType classType = context.getMetadataCollector().getClassType( classToProcess );
 			if ( AnnotatedClassType.EMBEDDABLE_SUPERCLASS.equals( classType ) ) {
-				bindFilters( classToProcess, entityBinder );
+				bindFilters( classToProcess, entityBinder, context );
 			}
 			else {
 				break;
@@ -1423,9 +1478,8 @@ public final class AnnotationBinder {
 
 	}
 
-	private static void bindFilters(XAnnotatedElement annotatedElement, EntityBinder entityBinder) {
-
-		Filters filtersAnn = annotatedElement.getAnnotation( Filters.class );
+	private static void bindFilters(XAnnotatedElement annotatedElement, EntityBinder entityBinder, MetadataBuildingContext context) {
+		Filters filtersAnn = getOverridableAnnotation( annotatedElement, Filters.class, context );
 		if ( filtersAnn != null ) {
 			for ( Filter filter : filtersAnn.value() ) {
 				entityBinder.addFilter(filter);
@@ -1440,7 +1494,7 @@ public final class AnnotationBinder {
 
 	private static void bindFilterDefs(XAnnotatedElement annotatedElement, MetadataBuildingContext context) {
 		FilterDef defAnn = annotatedElement.getAnnotation( FilterDef.class );
-		FilterDefs defsAnn = annotatedElement.getAnnotation( FilterDefs.class );
+		FilterDefs defsAnn = getOverridableAnnotation( annotatedElement, FilterDefs.class, context );
 		if ( defAnn != null ) {
 			bindFilterDef( defAnn, context );
 		}
@@ -2038,7 +2092,7 @@ public final class AnnotationBinder {
 				collectionBinder.setBatchSize( property.getAnnotation( BatchSize.class ) );
 
 				collectionBinder.setJpaOrderBy( property.getAnnotation( jakarta.persistence.OrderBy.class ) );
-				collectionBinder.setSqlOrderBy( property.getAnnotation( OrderBy.class ) );
+				collectionBinder.setSqlOrderBy( getOverridableAnnotation( property, OrderBy.class, context ) );
 
 				collectionBinder.setNaturalSort( property.getAnnotation( SortNatural.class ) );
 				collectionBinder.setComparatorSort( property.getAnnotation( SortComparator.class ) );
@@ -2060,11 +2114,10 @@ public final class AnnotationBinder {
 						inferredData, "element"
 				);
 				Comment comment = property.getAnnotation(Comment.class);
-				if ( property.isAnnotationPresent( Column.class ) || property.isAnnotationPresent(
-						Formula.class
-				) ) {
+				if ( property.isAnnotationPresent( Column.class )
+						|| property.isAnnotationPresent( Formula.class ) ) {
 					Column ann = property.getAnnotation( Column.class );
-					Formula formulaAnn = property.getAnnotation( Formula.class );
+					Formula formulaAnn = getOverridableAnnotation( property, Formula.class, context );
 					elementColumns = AnnotatedColumn.buildColumnFromAnnotation(
 							new Column[] { ann },
 							formulaAnn,
@@ -3371,8 +3424,8 @@ public final class AnnotationBinder {
 			EntityBinder entityBinder,
 			boolean isIdentifierMapper,
 			MetadataBuildingContext buildingContext) {
-		org.hibernate.annotations.Any anyAnn = inferredData
-				.getProperty()
+		XProperty property = inferredData.getProperty();
+		org.hibernate.annotations.Any anyAnn = property
 				.getAnnotation( org.hibernate.annotations.Any.class );
 		if ( anyAnn == null ) {
 			throw new AssertionFailure(
@@ -3381,8 +3434,8 @@ public final class AnnotationBinder {
 			);
 		}
 
-		final Column discriminatorColumnAnn = inferredData.getProperty().getAnnotation( Column.class );
-		final Formula discriminatorFormulaAnn = inferredData.getProperty().getAnnotation( Formula.class );
+		final Column discriminatorColumnAnn = property.getAnnotation( Column.class );
+		final Formula discriminatorFormulaAnn = getOverridableAnnotation( property, Formula.class, buildingContext );
 
 		boolean lazy = ( anyAnn.fetch() == FetchType.LAZY );
 		Any value = BinderHelper.buildAnyValue(

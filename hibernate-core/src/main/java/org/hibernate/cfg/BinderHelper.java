@@ -816,7 +816,7 @@ public class BinderHelper {
 		value.setLazy( lazy );
 		value.setCascadeDeleteEnabled( cascadeOnDelete );
 
-		final BasicValueBinder discriminatorValueBinder = new BasicValueBinder( BasicValueBinder.Kind.ANY_DISCRIMINATOR, context );
+		final BasicValueBinder<?> discriminatorValueBinder = new BasicValueBinder<>( BasicValueBinder.Kind.ANY_DISCRIMINATOR, context );
 
 		final AnnotatedColumn[] discriminatorColumns = AnnotatedColumn.buildColumnFromAnnotation(
 				new jakarta.persistence.Column[] { discriminatorColumn },

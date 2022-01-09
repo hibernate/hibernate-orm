@@ -89,7 +89,7 @@ public class IdBagBinder extends BagBinder {
 				Nullability.FORCED_NOT_NULL,
 				propertyHolder,
 				propertyData,
-				Collections.EMPTY_MAP,
+				Collections.emptyMap(),
 				buildingContext
 		);
 

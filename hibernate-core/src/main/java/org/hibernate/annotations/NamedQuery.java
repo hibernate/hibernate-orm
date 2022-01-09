@@ -21,7 +21,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @see org.hibernate.query.Query
  */
-@Target( { TYPE, PACKAGE })
+@Target({TYPE, PACKAGE})
 @Retention(RUNTIME)
 @Repeatable(NamedQueries.class)
 public @interface NamedQuery {

@@ -12,15 +12,17 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Define the fetching strategy used for the given association.
+ * Specify the fetching strategy used for the annotated association.
  *
  * @author Emmanuel Bernard
+ *
+ * @see FetchMode
  */
 @Target({ElementType.METHOD, ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Fetch {
 	/**
-	 * The style of fetch to use.
+	 * The method that should be used to fetch the association.
 	 */
 	FetchMode value();
 }

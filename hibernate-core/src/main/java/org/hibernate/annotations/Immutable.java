@@ -5,28 +5,35 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.annotations;
-import java.lang.annotation.ElementType;
+
+import java.lang.annotation.Target;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
+import static java.lang.annotation.ElementType.*;
+
 /**
- * Mark an Entity, a Collection, or an Attribute type as immutable. No annotation means the element is mutable.
- * <p>
- * An immutable entity may not be updated by the application. Updates to an immutable
- * entity will be ignored, but no exception is thrown. &#064;Immutable  must be used on root entities only. 
- * </p>
- * <p>
- * &#064;Immutable placed on a collection makes the collection immutable, meaning additions and 
- * deletions to and from the collection are not allowed. A <i>HibernateException</i> is thrown in this case. 
- * </p>
- * <p>
- * An immutable attribute type will not be copied in the currently running Persistence Context in order to detect if the underlying value is dirty. As a result loading the entity will require less memory
- * and checking changes will be much faster.
- * </p>
+ * Marks an entity, collection, or attribute as immutable. The absence of this annotation
+ * means the element is mutable.
+ * <ul>
+ * <li>
+ *     Changes made in memory to the state of an immutable entity are never synchronized to
+ *     the database. The changes are ignored, with no exception thrown. In a mapped inheritance
+ *     hierarchy, {@code @Immutable} may be applied only to the root entity.
+ * </li>
+ * <li>
+ *     An immutable collection may not be modified. A {@link org.hibernate.HibernateException}
+ *     is thrown if an element is added to or removed from the collection.
+ * </li>
+ * <li>
+ *     An immutable attribute is ignored by the dirty-checking process, and so the persistence
+ *     context does not need to keep track of its state. This may help reduce memory allocation.
+ * </li>
+ * </ul>
  *
  * @author Emmanuel Bernard
  */
-@java.lang.annotation.Target({ElementType.TYPE, ElementType.METHOD, ElementType.FIELD})
+@Target({TYPE, METHOD, FIELD})
 @Retention( RetentionPolicy.RUNTIME )
 public @interface Immutable {
 }

@@ -7,22 +7,27 @@
 package org.hibernate.annotations;
 
 /**
- * Fetch options on associations.  Defines more of the "how" of fetching, whereas JPA {@link jakarta.persistence.FetchType}
- * focuses on the "when".
+ * Enumerates the association fetching strategies available in Hibernate.
+ * <p>
+ * Whereas the JPA {@link jakarta.persistence.FetchType} enumeration provides a way to
+ * specify <em>when</em> an association should be fetched, this enumeration provides a
+ * way to express <em>how</em> it should be fetched.
  *
  * @author Emmanuel Bernard
  */
 public enum FetchMode {
 	/**
-	 * Use a secondary select for each individual entity, collection, or join load.
+	 * The association or collection is fetched with a separate subsequent SQL select.
 	 */
 	SELECT,
 	/**
-	 * Use an outer join to load the related entities, collections or joins.
+	 * The association or collection is fetched using an outer join clause added to
+	 * the initial SQL select.
 	 */
 	JOIN,
 	/**
-	 * Available for collections only.  When accessing a non-initialized collection, this fetch mode will trigger loading all elements of all collections of the same role for all owners associated with the persistence context using a single secondary select.
+	 * For collections and many-valued associations only. After the initial SQL select,
+	 * all associated collections are fetched together in a single subsequent select.
 	 */
 	SUBSELECT
 }

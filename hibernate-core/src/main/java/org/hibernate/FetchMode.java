@@ -7,13 +7,7 @@
 package org.hibernate;
 
 /**
- * Represents an association fetching strategy. This is used
- * together with the {@code Criteria} API to specify runtime
- * fetching strategies.
- * <p>
- * For HQL queries, use the {@code FETCH} keyword instead.
- *
- * @see Criteria#setFetchMode(String, FetchMode)
+ * Represents an association fetching strategy.
  *
  * @author Gavin King
  */

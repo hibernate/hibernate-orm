@@ -7,9 +7,15 @@
 package org.hibernate.annotations;
 
 /**
- * Enumeration extending jakarta.persistence flush modes.
+ * Enumeration extending {@link jakarta.persistence.FlushModeType JPA flush modes} with
+ * flush modes specific to Hibernate, and a "null" flush mode, {@link #PERSISTENCE_CONTEXT}
+ * for use as a default annotation value. Except for the null value, this enumeration is
+ * isomorphic to {@link org.hibernate.FlushMode}.
  *
  * @author Carlos Gonzalez-Cadenas
+ *
+ * @see NamedQuery
+ * @see NamedNativeQuery
  */
 public enum FlushModeType {
 	/**

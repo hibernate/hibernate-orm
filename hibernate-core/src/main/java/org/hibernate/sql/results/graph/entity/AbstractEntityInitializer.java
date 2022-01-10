@@ -29,6 +29,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.event.spi.PostLoadEvent;
+import org.hibernate.event.spi.PostLoadEventListener;
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.internal.util.StringHelper;
@@ -625,6 +627,9 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		}
 
 		notifyResolutionListeners( entityInstanceForNotify );
+
+		postLoad( rowProcessingState );
+
 		isInitialized = true;
 	}
 
@@ -908,6 +913,30 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 					.eventListenerGroup_PRE_LOAD;
 			for ( PreLoadEventListener listener : listenerGroup.listeners() ) {
 				listener.onPreLoad( preLoadEvent );
+			}
+		}
+	}
+
+	private void postLoad(RowProcessingState rowProcessingState) {
+		final SharedSessionContractImplementor session = rowProcessingState.getJdbcValuesSourceProcessingState()
+				.getSession();
+
+		if ( session instanceof EventSource ) {
+			final PostLoadEvent postLoadEventLoadEvent = rowProcessingState.getJdbcValuesSourceProcessingState()
+					.getPostLoadEvent();
+			assert postLoadEventLoadEvent != null;
+
+			postLoadEventLoadEvent.reset();
+
+			postLoadEventLoadEvent.setEntity( entityInstance )
+					.setId( entityKey.getIdentifier() )
+					.setPersister( concreteDescriptor );
+
+			final EventListenerGroup<PostLoadEventListener> listenerGroup = session.getFactory()
+					.getFastSessionServices()
+					.eventListenerGroup_POST_LOAD;
+			for ( PostLoadEventListener listener : listenerGroup.listeners() ) {
+				listener.onPostLoad( postLoadEventLoadEvent );
 			}
 		}
 	}

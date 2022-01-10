@@ -61,7 +61,7 @@ public abstract class AbstractSqmSelfRenderingFunctionDescriptor
 		}
 		return new SelfRenderingSqmFunction<>(
 				this,
-				this::render,
+				(sqlAppender, sqlAstArguments, walker) -> render(sqlAppender, sqlAstArguments, walker),
 				arguments,
 				impliedResultType,
 				getArgumentsValidator(),
@@ -99,12 +99,12 @@ public abstract class AbstractSqmSelfRenderingFunctionDescriptor
 	 */
 	public abstract void render(
 			SqlAppender sqlAppender,
-			List<SqlAstNode> sqlAstArguments,
+			List<? extends SqlAstNode> sqlAstArguments,
 			SqlAstTranslator<?> walker);
 
 	public void render(
 			SqlAppender sqlAppender,
-			List<SqlAstNode> sqlAstArguments,
+			List<? extends SqlAstNode> sqlAstArguments,
 			Predicate filter,
 			SqlAstTranslator<?> walker) {
 		render( sqlAppender, sqlAstArguments, walker );

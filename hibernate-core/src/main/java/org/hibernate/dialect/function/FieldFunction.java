@@ -34,7 +34,7 @@ public class FieldFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 
 	@Override
 	public void render(
-			SqlAppender sqlAppender, List<SqlAstNode> sqlAstArguments, SqlAstTranslator<?> walker) {
+			SqlAppender sqlAppender, List<? extends SqlAstNode> sqlAstArguments, SqlAstTranslator<?> walker) {
 		sqlAppender.appendSql( "field(" );
 		sqlAstArguments.get( 0 ).accept( walker );
 		for ( int i = 1; i < sqlAstArguments.size(); i++ ) {

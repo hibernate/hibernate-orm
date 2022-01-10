@@ -49,7 +49,7 @@ public class DB2FormatEmulation
 	@Override
 	public void render(
 			SqlAppender sqlAppender,
-			List<SqlAstNode> arguments,
+			List<? extends SqlAstNode> arguments,
 			SqlAstTranslator<?> walker) {
 		final Expression datetime = (Expression) arguments.get(0);
 		final boolean isTime = TypeConfiguration.getSqlTemporalType( datetime.getExpressionType() ) == TemporalType.TIME;

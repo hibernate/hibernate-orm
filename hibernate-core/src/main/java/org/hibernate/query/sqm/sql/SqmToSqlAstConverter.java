@@ -23,6 +23,6 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 public interface SqmToSqlAstConverter extends SemanticQueryWalker<Object>, SqlAstCreationState {
 	Stack<Clause> getCurrentClauseStack();
 
-	List<Expression> expandSelfRenderingFunctionMultiValueParameter(SqmParameter sqmParameter);
+	List<Expression> expandSelfRenderingFunctionMultiValueParameter(SqmParameter<?> sqmParameter);
 
 }

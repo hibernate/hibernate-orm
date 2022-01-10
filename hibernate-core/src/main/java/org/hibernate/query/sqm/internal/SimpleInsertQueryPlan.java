@@ -18,6 +18,7 @@ import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryParameterImplementor;
+import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.sql.SqmTranslation;
 import org.hibernate.query.sqm.sql.SqmTranslator;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
@@ -34,16 +35,16 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
  * @author Gavin King
  */
 public class SimpleInsertQueryPlan implements NonSelectQueryPlan {
-	private final SqmInsertStatement sqmInsert;
+	private final SqmInsertStatement<?> sqmInsert;
 	private final DomainParameterXref domainParameterXref;
-	private Map<SqmParameter, MappingModelExpressable> paramTypeResolutions;
+	private Map<SqmParameter<?>, MappingModelExpressable<?>> paramTypeResolutions;
 
 	private JdbcInsert jdbcInsert;
 	private FromClauseAccess tableGroupAccess;
-	private Map<QueryParameterImplementor<?>, Map<SqmParameter, List<List<JdbcParameter>>>> jdbcParamsXref;
+	private Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<List<JdbcParameter>>>> jdbcParamsXref;
 
 	public SimpleInsertQueryPlan(
-			SqmInsertStatement sqmInsert,
+			SqmInsertStatement<?> sqmInsert,
 			DomainParameterXref domainParameterXref) {
 		this.sqmInsert = sqmInsert;
 		this.domainParameterXref = domainParameterXref;
@@ -97,7 +98,12 @@ public class SimpleInsertQueryPlan implements NonSelectQueryPlan {
 				jdbcParamsXref,
 				factory.getDomainModel(),
 				tableGroupAccess::findTableGroup,
-				paramTypeResolutions::get,
+				new SqmParameterMappingModelResolutionAccess() {
+					@Override @SuppressWarnings("unchecked")
+					public <T> MappingModelExpressable<T> getResolvedMappingModelType(SqmParameter<T> parameter) {
+						return (MappingModelExpressable<T>) paramTypeResolutions.get(parameter);
+					}
+				},
 				session
 		);
 

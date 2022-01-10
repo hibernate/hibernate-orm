@@ -17,7 +17,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -70,7 +69,7 @@ public class SqmUtil {
 	private SqmUtil() {
 	}
 
-	public static void verifyIsSelectStatement(SqmStatement sqm, String hqlString) {
+	public static void verifyIsSelectStatement(SqmStatement<?> sqm, String hqlString) {
 		if ( !(sqm instanceof SqmSelectStatement) ) {
 			throw new IllegalQueryOperationException(
 					String.format(
@@ -85,7 +84,7 @@ public class SqmUtil {
 		}
 	}
 
-	public static void verifyIsNonSelectStatement(SqmStatement sqm, String hqlString) {
+	public static void verifyIsNonSelectStatement(SqmStatement<?> sqm, String hqlString) {
 		if ( !(sqm instanceof SqmDmlStatement) ) {
 			throw new IllegalQueryOperationException(
 					String.format(
@@ -100,7 +99,7 @@ public class SqmUtil {
 		}
 	}
 
-	public static Map<QueryParameterImplementor<?>, Map<SqmParameter, List<List<JdbcParameter>>>> generateJdbcParamsXref(
+	public static Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<List<JdbcParameter>>>> generateJdbcParamsXref(
 			DomainParameterXref domainParameterXref,
 			JdbcParameterBySqmParameterAccess jdbcParameterBySqmParameterAccess) {
 		if ( domainParameterXref == null || !domainParameterXref.hasParameters() ) {
@@ -108,23 +107,23 @@ public class SqmUtil {
 		}
 
 		final int queryParameterCount = domainParameterXref.getQueryParameterCount();
-		final Map<QueryParameterImplementor<?>, Map<SqmParameter, List<List<JdbcParameter>>>> result = new IdentityHashMap<>( queryParameterCount );
+		final Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<List<JdbcParameter>>>> result = new IdentityHashMap<>( queryParameterCount );
 
-		for ( Map.Entry<QueryParameterImplementor<?>, List<SqmParameter>> entry : domainParameterXref.getSqmParamByQueryParam().entrySet() ) {
+		for ( Map.Entry<QueryParameterImplementor<?>, List<SqmParameter<?>>> entry : domainParameterXref.getSqmParamByQueryParam().entrySet() ) {
 			final QueryParameterImplementor<?> queryParam = entry.getKey();
-			final List<SqmParameter> sqmParams = entry.getValue();
+			final List<SqmParameter<?>> sqmParams = entry.getValue();
 
-			final Map<SqmParameter, List<List<JdbcParameter>>> sqmParamMap = result.computeIfAbsent(
+			final Map<SqmParameter<?>, List<List<JdbcParameter>>> sqmParamMap = result.computeIfAbsent(
 					queryParam,
 					qp -> new IdentityHashMap<>( sqmParams.size() )
 			);
 
-			for ( SqmParameter sqmParam : sqmParams ) {
+			for ( SqmParameter<?> sqmParam : sqmParams ) {
 				sqmParamMap.put( sqmParam, jdbcParameterBySqmParameterAccess.getJdbcParamsBySqmParam().get( sqmParam ) );
 
-				final List<SqmParameter> expansions = domainParameterXref.getExpansions( sqmParam );
+				final List<SqmParameter<?>> expansions = domainParameterXref.getExpansions( sqmParam );
 				if ( ! expansions.isEmpty() ) {
-					for ( SqmParameter expansion : expansions ) {
+					for ( SqmParameter<?> expansion : expansions ) {
 						sqmParamMap.put( expansion, jdbcParameterBySqmParameterAccess.getJdbcParamsBySqmParam().get( expansion ) );
 						result.put( queryParam, sqmParamMap );
 					}
@@ -178,7 +177,7 @@ public class SqmUtil {
 	public static JdbcParameterBindings createJdbcParameterBindings(
 			QueryParameterBindings domainParamBindings,
 			DomainParameterXref domainParameterXref,
-			Map<QueryParameterImplementor<?>, Map<SqmParameter, List<List<JdbcParameter>>>> jdbcParamXref,
+			Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<List<JdbcParameter>>>> jdbcParamXref,
 			MappingMetamodel domainModel,
 			Function<NavigablePath, TableGroup> tableGroupLocator,
 			SqmParameterMappingModelResolutionAccess mappingModelResolutionAccess,
@@ -187,15 +186,15 @@ public class SqmUtil {
 				domainParameterXref.getSqmParameterCount()
 		);
 
-		for ( Map.Entry<QueryParameterImplementor<?>, List<SqmParameter>> entry :
+		for ( Map.Entry<QueryParameterImplementor<?>, List<SqmParameter<?>>> entry :
 				domainParameterXref.getSqmParamByQueryParam().entrySet() ) {
 			final QueryParameterImplementor<?> queryParam = entry.getKey();
-			final List<SqmParameter> sqmParameters = entry.getValue();
+			final List<SqmParameter<?>> sqmParameters = entry.getValue();
 
 			final QueryParameterBinding<?> domainParamBinding = domainParamBindings.getBinding( queryParam );
 
-			final Map<SqmParameter, List<List<JdbcParameter>>> jdbcParamMap = jdbcParamXref.get( queryParam );
-			sqm_params: for ( SqmParameter sqmParameter : sqmParameters ) {
+			final Map<SqmParameter<?>, List<List<JdbcParameter>>> jdbcParamMap = jdbcParamXref.get( queryParam );
+			for ( SqmParameter<?> sqmParameter : sqmParameters ) {
 				final Bindable parameterType = determineParameterType(
 						domainParamBinding,
 						queryParam,
@@ -211,12 +210,12 @@ public class SqmUtil {
 					continue;
 				}
 				if ( !domainParamBinding.isBound() ) {
-					final MappingModelExpressable mappingExpressable = SqmMappingModelHelper.resolveMappingModelExpressable(
+					final MappingModelExpressable<?> mappingExpressable = SqmMappingModelHelper.resolveMappingModelExpressable(
 							sqmParameter,
 							domainModel,
 							tableGroupLocator
 					);
-					jdbc_params: for ( int i = 0; i < jdbcParamsBinds.size(); i++ ) {
+					for ( int i = 0; i < jdbcParamsBinds.size(); i++ ) {
 						final List<JdbcParameter> jdbcParams = jdbcParamsBinds.get( i );
 						mappingExpressable.forEachJdbcType(
 								(position, jdbcType) -> {
@@ -248,11 +247,11 @@ public class SqmUtil {
 					}
 
 					// an then one for each of the expansions
-					final List<SqmParameter> expansions = domainParameterXref.getExpansions( sqmParameter );
+					final List<SqmParameter<?>> expansions = domainParameterXref.getExpansions( sqmParameter );
 					assert expansions.size() == bindValues.size() - 1;
 					int expansionPosition = 0;
 					while ( valueItr.hasNext() ) {
-						final SqmParameter expansionSqmParam = expansions.get( expansionPosition++ );
+						final SqmParameter<?> expansionSqmParam = expansions.get( expansionPosition++ );
 						final List<List<JdbcParameter>> jdbcParamBinds = jdbcParamMap.get( expansionSqmParam );
 						for ( int i = 0; i < jdbcParamBinds.size(); i++ ) {
 							List<JdbcParameter> expansionJdbcParams = jdbcParamBinds.get( i );
@@ -287,7 +286,7 @@ public class SqmUtil {
 						final JdbcMapping jdbcMapping;
 
 						if ( domainParamBinding.getType() instanceof AttributeConverterTypeAdapter ) {
-							final AttributeConverterTypeAdapter adapter = (AttributeConverterTypeAdapter) domainParamBinding.getType();
+							final AttributeConverterTypeAdapter<?> adapter = (AttributeConverterTypeAdapter<?>) domainParamBinding.getType();
 							valueConverter = adapter.getAttributeConverter();
 							jdbcMapping = adapter.getJdbcMapping();
 						}
@@ -310,7 +309,7 @@ public class SqmUtil {
 								);
 							}
 
-							continue sqm_params;
+							continue;
 						}
 					}
 
@@ -394,7 +393,7 @@ public class SqmUtil {
 	public static Bindable determineParameterType(
 			QueryParameterBinding<?> binding,
 			QueryParameterImplementor<?> parameter,
-			List<SqmParameter> sqmParameters,
+			List<SqmParameter<?>> sqmParameters,
 			SqmParameterMappingModelResolutionAccess mappingModelResolutionAccess,
 			SessionFactoryImplementor sessionFactory) {
 		if ( binding.getType() != null ) {

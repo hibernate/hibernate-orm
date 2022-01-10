@@ -49,6 +49,7 @@ import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
 import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.mutation.internal.InsertHandler;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
+import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.cte.SqmCteTable;
 import org.hibernate.query.sqm.tree.cte.SqmCteTableColumn;
@@ -173,7 +174,7 @@ public class CteInsertHandler implements InsertHandler {
 		);
 		final TableGroup insertingTableGroup = sqmConverter.getMutatingTableGroup();
 
-		final Map<SqmParameter, List<List<JdbcParameter>>> parameterResolutions;
+		final Map<SqmParameter<?>, List<List<JdbcParameter>>> parameterResolutions;
 		if ( domainParameterXref.getSqmParameterCount() == 0 ) {
 			parameterResolutions = Collections.emptyMap();
 		}
@@ -188,7 +189,7 @@ public class CteInsertHandler implements InsertHandler {
 		final int size = sqmStatement.getInsertionTargetPaths().size();
 		final List<Map.Entry<SqmCteTableColumn, Assignment>> targetPathColumns = new ArrayList<>( size );
 		final List<SqmCteTableColumn> targetPathSqmCteColumns = new ArrayList<>( size );
-		final Map<SqmParameter, MappingModelExpressable> paramTypeResolutions = new LinkedHashMap<>();
+		final Map<SqmParameter<?>, MappingModelExpressable<?>> paramTypeResolutions = new LinkedHashMap<>();
 		final NamedTableReference entityTableReference = new NamedTableReference(
 				cteTable.getCteName(),
 				TemporaryTable.DEFAULT_ALIAS,
@@ -629,7 +630,7 @@ public class CteInsertHandler implements InsertHandler {
 
 		final Expression count = createCountStar( factory, sqmConverter );
 		domainResults.add(
-				new BasicResult<>(
+				new BasicResult(
 						0,
 						null,
 						( (SqlExpressable) count).getJdbcMapping().getJavaTypeDescriptor()
@@ -656,10 +657,15 @@ public class CteInsertHandler implements InsertHandler {
 		final JdbcParameterBindings jdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
 				executionContext.getQueryParameterBindings(),
 				domainParameterXref,
-				SqmUtil.generateJdbcParamsXref( domainParameterXref, sqmConverter ),
+				SqmUtil.generateJdbcParamsXref(domainParameterXref, sqmConverter),
 				factory.getDomainModel(),
 				navigablePath -> sqmConverter.getMutatingTableGroup(),
-				paramTypeResolutions::get,
+				new SqmParameterMappingModelResolutionAccess() {
+					@Override @SuppressWarnings("unchecked")
+					public <T> MappingModelExpressable<T> getResolvedMappingModelType(SqmParameter<T> parameter) {
+						return (MappingModelExpressable<T>) paramTypeResolutions.get(parameter);
+					}
+				},
 				executionContext.getSession()
 		);
 		final JdbcSelect select = translator.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
@@ -694,7 +700,7 @@ public class CteInsertHandler implements InsertHandler {
 			List<Map.Entry<SqmCteTableColumn, Assignment>> assignments,
 			boolean assignsId,
 			MultiTableSqmMutationConverter sqmConverter,
-			Map<SqmParameter, List<List<JdbcParameter>>> parameterResolutions,
+			Map<SqmParameter<?>, List<List<JdbcParameter>>> parameterResolutions,
 			SessionFactoryImplementor factory) {
 		final TableGroup updatingTableGroup = sqmConverter.getMutatingTableGroup();
 		final EntityMappingType entityDescriptor = getEntityDescriptor();

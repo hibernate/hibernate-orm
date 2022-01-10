@@ -42,7 +42,7 @@ public interface FromClauseAccess {
 
 	/**
 	 * Register a TableGroup under the given `navigablePath`.  Logs a message
-	 * if thhis registration over-writes an existing one.
+	 * if this registration over-writes an existing one.
 	 */
 	void registerTableGroup(NavigablePath navigablePath, TableGroup tableGroup);
 

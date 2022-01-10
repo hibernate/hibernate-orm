@@ -13,7 +13,6 @@ import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
-import org.hibernate.query.sqm.produce.function.FunctionParameterType;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
@@ -54,7 +53,7 @@ public class TimestampdiffFunction
 	@Override
 	public void render(
 			SqlAppender sqlAppender,
-			List<SqlAstNode> arguments,
+			List<? extends SqlAstNode> arguments,
 			SqlAstTranslator<?> walker) {
 
 		final DurationUnit field = (DurationUnit) arguments.get( 0 );
@@ -104,7 +103,7 @@ public class TimestampdiffFunction
 		DurationUnit field = (DurationUnit) sqlAstArguments[0];
 		return new SelfRenderingFunctionSqlAstExpression(
 				getName(),
-				this::render,
+				this,
 				asList( sqlAstArguments ),
 				impliedResultType != null
 						? impliedResultType

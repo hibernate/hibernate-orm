@@ -10,7 +10,6 @@ import java.util.List;
 
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
-import org.hibernate.query.sqm.produce.function.FunctionParameterType;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -40,7 +39,7 @@ public class CaseLeastGreatestEmulation
 	@Override
 	public void render(
 			SqlAppender sqlAppender,
-			List<SqlAstNode> arguments,
+			List<? extends SqlAstNode> arguments,
 			SqlAstTranslator<?> walker) {
 		final int numberOfArguments = arguments.size();
 		if ( numberOfArguments > 1 ) {

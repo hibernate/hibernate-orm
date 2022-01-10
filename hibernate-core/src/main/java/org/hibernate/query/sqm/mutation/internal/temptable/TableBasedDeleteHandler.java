@@ -80,7 +80,7 @@ public class TableBasedDeleteHandler
 	}
 
 	@Override
-	public SqmDeleteStatement getSqmDeleteOrUpdateStatement() {
-		return (SqmDeleteStatement) super.getSqmDeleteOrUpdateStatement();
+	public SqmDeleteStatement<?> getSqmDeleteOrUpdateStatement() {
+		return (SqmDeleteStatement<?>) super.getSqmDeleteOrUpdateStatement();
 	}
 }

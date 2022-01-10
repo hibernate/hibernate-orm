@@ -19,12 +19,14 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
 import org.hibernate.query.sqm.internal.SqmUtil;
+import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.sql.internal.SqlAstQueryPartProcessingStateImpl;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
@@ -281,10 +283,16 @@ public class MatchingIdSelectionHelper {
 		final JdbcParameterBindings jdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
 				executionContext.getQueryParameterBindings(),
 				domainParameterXref,
-				SqmUtil.generateJdbcParamsXref( domainParameterXref, sqmConverter ),
+				SqmUtil.generateJdbcParamsXref(domainParameterXref, sqmConverter),
 				factory.getDomainModel(),
 				navigablePath -> sqmConverter.getMutatingTableGroup(),
-				sqmConverter.getSqmParameterMappingModelExpressableResolutions()::get,
+				new SqmParameterMappingModelResolutionAccess() {
+					@Override @SuppressWarnings("unchecked")
+					public <T> MappingModelExpressable<T> getResolvedMappingModelType(SqmParameter<T> parameter) {
+						return (MappingModelExpressable<T>) sqmConverter.getSqmParameterMappingModelExpressableResolutions().get(parameter);
+					}
+				}
+				,
 				executionContext.getSession()
 		);
 		final LockOptions lockOptions = executionContext.getQueryOptions().getLockOptions();

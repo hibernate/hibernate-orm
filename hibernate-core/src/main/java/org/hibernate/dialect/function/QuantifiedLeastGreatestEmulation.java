@@ -39,7 +39,7 @@ public class QuantifiedLeastGreatestEmulation
 	@Override
 	public void render(
 			SqlAppender sqlAppender,
-			List<SqlAstNode> arguments,
+			List<? extends SqlAstNode> arguments,
 			SqlAstTranslator<?> walker) {
 		final int numberOfArguments = arguments.size();
 		if ( numberOfArguments > 1 ) {

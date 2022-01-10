@@ -31,7 +31,7 @@ public class SelfRenderingAggregateFunctionSqlAstExpression extends SelfRenderin
 	public SelfRenderingAggregateFunctionSqlAstExpression(
 			String functionName,
 			FunctionRenderingSupport renderer,
-			List<SqlAstNode> sqlAstArguments,
+			List<? extends SqlAstNode> sqlAstArguments,
 			Predicate filter,
 			AllowableFunctionReturnType<?> type,
 			JdbcMappingContainer expressable) {

@@ -67,7 +67,7 @@ public class TransactSQLStrFunction extends CastStrEmulation implements Function
 	}
 
 	@Override
-	public void render(SqlAppender sqlAppender, List<SqlAstNode> arguments, SqlAstTranslator<?> walker) {
+	public void render(SqlAppender sqlAppender, List<? extends SqlAstNode> arguments, SqlAstTranslator<?> walker) {
 		sqlAppender.appendSql( "str(" );
 		arguments.get( 0 ).accept( walker );
 		for ( int i = 1; i < arguments.size(); i++ ) {

@@ -194,11 +194,11 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 
 	private static class ImmutableHqlInterpretation {
 
-		private final SqmStatement sqmStatement;
+		private final SqmStatement<?> sqmStatement;
 		private final ParameterMetadataImplementor parameterMetadata;
 
 		public ImmutableHqlInterpretation(
-				SqmStatement sqmStatement,
+				SqmStatement<?> sqmStatement,
 				ParameterMetadataImplementor parameterMetadata) {
 			this.sqmStatement = sqmStatement;
 			this.parameterMetadata = parameterMetadata;

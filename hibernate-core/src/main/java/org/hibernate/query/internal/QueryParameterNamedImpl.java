@@ -26,7 +26,7 @@ public class QueryParameterNamedImpl<T> extends AbstractQueryParameter<T> {
 	 *
 	 * @return The parameter descriptor
 	 */
-	public static <T> QueryParameterNamedImpl<T> fromSqm(SqmParameter parameter) {
+	public static <T> QueryParameterNamedImpl<T> fromSqm(SqmParameter<?> parameter) {
 		assert parameter.getName() != null;
 		assert parameter.getPosition() == null;
 
@@ -63,7 +63,7 @@ public class QueryParameterNamedImpl<T> extends AbstractQueryParameter<T> {
 
 	@Override
 	public NamedQueryMemento.ParameterMemento toMemento() {
-		return session -> new QueryParameterNamedImpl( getName(), allowsMultiValuedBinding(), getHibernateType() );
+		return session -> new QueryParameterNamedImpl<>( getName(), allowsMultiValuedBinding(), getHibernateType() );
 	}
 
 	@Override

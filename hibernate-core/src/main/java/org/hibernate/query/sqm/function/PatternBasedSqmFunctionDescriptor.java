@@ -71,13 +71,13 @@ public class PatternBasedSqmFunctionDescriptor
 	@Override
 	public void render(
 			SqlAppender sqlAppender,
-			List<SqlAstNode> sqlAstArguments,
+			List<? extends SqlAstNode> sqlAstArguments,
 			SqlAstTranslator<?> walker) {
 		renderer.render( sqlAppender, sqlAstArguments, null, walker );
 	}
 
 	@Override
-	public void render(SqlAppender sqlAppender, List<SqlAstNode> sqlAstArguments, Predicate filter, SqlAstTranslator<?> walker) {
+	public void render(SqlAppender sqlAppender, List<? extends SqlAstNode> sqlAstArguments, Predicate filter, SqlAstTranslator<?> walker) {
 		renderer.render( sqlAppender, sqlAstArguments, filter, walker );
 	}
 

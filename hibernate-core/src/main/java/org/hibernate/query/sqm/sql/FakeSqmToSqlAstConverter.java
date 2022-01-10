@@ -74,7 +74,7 @@ public class FakeSqmToSqlAstConverter extends BaseSemanticQueryWalker implements
 	}
 
 	@Override
-	public List<Expression> expandSelfRenderingFunctionMultiValueParameter(SqmParameter sqmParameter) {
+	public List<Expression> expandSelfRenderingFunctionMultiValueParameter(SqmParameter<?> sqmParameter) {
 		return null;
 	}
 }

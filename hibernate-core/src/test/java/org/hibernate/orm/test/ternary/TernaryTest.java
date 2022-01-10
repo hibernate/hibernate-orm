@@ -126,9 +126,9 @@ public class TernaryTest extends BaseCoreFunctionalTestCase {
 		session.beginTransaction();
 		session.createQuery( "from Employee e join e.managerBySite as m where index(m) is not null" )
 				.list();
-		session.createQuery( "from Employee e join e.managerBySite as m where minIndex(m) is not null" )
+		session.createQuery( "from Employee e where minIndex(e.managerBySite) is not null" )
 				.list();
-		session.createQuery( "from Employee e join e.managerBySite as m where maxIndex(m) is not null" )
+		session.createQuery( "from Employee e where maxIndex(e.managerBySite) is not null" )
 				.list();
 		session.getTransaction().commit();
 		session.close();

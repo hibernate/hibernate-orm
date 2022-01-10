@@ -948,9 +948,10 @@ function
 	: standardFunction
 	| aggregateFunction
 	| jpaCollectionFunction
-	| hqlCollectionFunction
-	| jpaNonstandardFunction
+	| indexAggregateFunction
+	| elementAggregateFunction
 	| collectionFunctionMisuse
+	| jpaNonstandardFunction
 	| genericFunction
 	;
 
@@ -1002,13 +1003,27 @@ jpaCollectionFunction
 	;
 
 /**
- * The special collection functions defined by HQL
+ * The special aggregate collection functions defined by HQL
  */
-hqlCollectionFunction
-	: MAXINDEX LEFT_PAREN path RIGHT_PAREN				# MaxIndexFunction
-	| MAXELEMENT LEFT_PAREN path RIGHT_PAREN			# MaxElementFunction
-	| MININDEX LEFT_PAREN path RIGHT_PAREN				# MinIndexFunction
-	| MINELEMENT LEFT_PAREN path RIGHT_PAREN			# MinElementFunction
+indexAggregateFunction
+	: MAXINDEX LEFT_PAREN path RIGHT_PAREN
+	| MININDEX LEFT_PAREN path RIGHT_PAREN
+	| MAX LEFT_PAREN INDEX path RIGHT_PAREN
+	| MIN LEFT_PAREN INDEX path RIGHT_PAREN
+	| SUM LEFT_PAREN INDEX path RIGHT_PAREN
+	| AVG LEFT_PAREN ELEMENT path RIGHT_PAREN
+	;
+
+/**
+ * The special aggregate collection functions defined by HQL
+ */
+elementAggregateFunction
+	: MAXELEMENT LEFT_PAREN path RIGHT_PAREN
+	| MINELEMENT LEFT_PAREN path RIGHT_PAREN
+	| MAX LEFT_PAREN ELEMENT path RIGHT_PAREN
+	| MIN LEFT_PAREN ELEMENT path RIGHT_PAREN
+	| SUM LEFT_PAREN ELEMENT path RIGHT_PAREN
+	| AVG LEFT_PAREN ELEMENT path RIGHT_PAREN
 	;
 
 /**
@@ -1365,6 +1380,7 @@ identifier
 	| ANY
 	| AS
 	| ASC
+	| AVG
 	| BETWEEN
 	| BOTH
 	| BY
@@ -1429,11 +1445,13 @@ identifier
 	| LOCAL_DATETIME
 	| LOCAL_TIME
 	| MAP
+	| MAX
 	| MAXELEMENT
 	| MAXINDEX
 	| MEMBER
 	| MICROSECOND
 	| MILLISECOND
+	| MIN
 	| MINELEMENT
 	| MININDEX
 	| MINUTE
@@ -1469,6 +1487,7 @@ identifier
 	| SIZE
 	| SOME
 	| SUBSTRING
+	| SUM
 	| THEN
 	| TIES
 	| TIME

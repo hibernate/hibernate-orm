@@ -43,13 +43,13 @@ public class MapIndexFormulaTest {
 					session.createQuery( "from Group g join g.users u where g.name = 'something' and index(u) = 'nada'" )
 							.list();
 					session.createQuery(
-									"from Group g join g.users u where g.name = 'something' and minindex(u) = 'nada'" )
+									"from Group g where g.name = 'something' and minindex(g.users) = 'nada'" )
 							.list();
 					session.createQuery(
-									"from Group g join g.users u where g.name = 'something' and maxindex(u) = 'nada'" )
+									"from Group g where g.name = 'something' and maxindex(g.users) = 'nada'" )
 							.list();
 					session.createQuery(
-									"from Group g join g.users u where g.name = 'something' and maxindex(u) = 'nada' and maxindex(u) = 'nada'" )
+									"from Group g where g.name = 'something' and maxindex(g.users) = 'nada' and maxindex(g.users) = 'nada'" )
 							.list();
 				}
 		);

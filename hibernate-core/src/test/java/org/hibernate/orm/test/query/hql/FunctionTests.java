@@ -67,10 +67,13 @@ public class FunctionTests {
 
 					EntityOfLists eol = new EntityOfLists(1,"");
 					eol.addBasic("hello");
+					eol.addNumber(1.0);
+					eol.addNumber(2.0);
 					em.persist(eol);
 
 					EntityOfMaps eom = new EntityOfMaps(2,"");
 					eom.addBasicByBasic("hello", "world");
+					eom.addNumberByNumber(1,1.0);
 					em.persist(eom);
 				}
 		);
@@ -99,22 +102,53 @@ public class FunctionTests {
 	@RequiresDialect(MariaDBDialect.class)
 	@RequiresDialect(TiDBDialect.class)
 	// it's failing on the other dialects due to a bug in query translator
+	public void testMaxMinSumIndexElement(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertThat( session.createQuery("select max(index eol.listOfNumbers) from EntityOfLists eol")
+							.getSingleResult(), is(1) );
+					assertThat( session.createQuery("select max(element eol.listOfNumbers) from EntityOfLists eol")
+							.list().get(0),
+//							.getSingleResult(),
+							is(2.0) );
+
+					assertThat( session.createQuery("select sum(index eol.listOfNumbers) from EntityOfLists eol")
+							.getSingleResult(), is(1) );
+					assertThat( session.createQuery("select sum(element eol.listOfNumbers) from EntityOfLists eol")
+							.list().get(0),
+//							.getSingleResult(),
+							is(3.0) );
+
+					assertThat( session.createQuery("select max(index eom.numberByNumber) from EntityOfMaps eom")
+							.getSingleResult(), is(1) );
+					assertThat( session.createQuery("select max(element eom.numberByNumber) from EntityOfMaps eom")
+							.getSingleResult(), is(1.0) );
+
+					assertThat( session.createQuery("select sum(index eom.numberByNumber) from EntityOfMaps eom")
+							.getSingleResult(), is(1) );
+					assertThat( session.createQuery("select sum(element eom.numberByNumber) from EntityOfMaps eom")
+							.getSingleResult(), is(1.0) );
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialect(H2Dialect.class)
+	@RequiresDialect(HSQLDialect.class)
+	@RequiresDialect(DerbyDialect.class)
+	@RequiresDialect(MySQLDialect.class)
+	@RequiresDialect(SybaseDialect.class)
+	@RequiresDialect(MariaDBDialect.class)
+	@RequiresDialect(TiDBDialect.class)
+	// it's failing on the other dialects due to a bug in query translator
 	public void testMaxindexMaxelement(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					assertThat( session.createQuery("select maxindex(l) from EntityOfLists eol join eol.listOfBasics l")
-							.getSingleResult(), is(0) );
-					assertThat( session.createQuery("select maxelement(l) from EntityOfLists eol join eol.listOfBasics l")
-							.getSingleResult(), is("hello") );
 					assertThat( session.createQuery("select maxindex(eol.listOfBasics) from EntityOfLists eol")
 							.getSingleResult(), is(0) );
 					assertThat( session.createQuery("select maxelement(eol.listOfBasics) from EntityOfLists eol")
 							.getSingleResult(), is("hello") );
 
-					assertThat( session.createQuery("select maxindex(m) from EntityOfMaps eom join eom.basicByBasic m")
-							.getSingleResult(), is("hello") );
-					assertThat( session.createQuery("select maxelement(m) from EntityOfMaps eom join eom.basicByBasic m")
-							.getSingleResult(), is("world") );
 					assertThat( session.createQuery("select maxindex(eom.basicByBasic) from EntityOfMaps eom")
 							.getSingleResult(), is("hello") );
 					assertThat( session.createQuery("select maxelement(eom.basicByBasic) from EntityOfMaps eom")

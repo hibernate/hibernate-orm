@@ -6,27 +6,46 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import org.hibernate.metamodel.model.domain.ManagedDomainType;
+import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
+import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
-import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmCreationState;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmMinElementPath<T> extends AbstractSqmSpecificPluralPartPath<T> {
-	public static final String NAVIGABLE_NAME = "{min-element}";
+public class SqmIndexAggregateFunction<T> extends AbstractSqmSpecificPluralPartPath<T> {
+	public static final String NAVIGABLE_NAME = "{max-index}";
 
-	public SqmMinElementPath(SqmPath<?> pluralDomainPath) {
+	private final SqmPathSource<T> indexPathSource;
+	private final String functionName;
+
+	public SqmIndexAggregateFunction(SqmPath<?> pluralDomainPath, String functionName) {
 		//noinspection unchecked
 		super(
 				pluralDomainPath.getNavigablePath().getParent().append( pluralDomainPath.getNavigablePath().getLocalName(), NAVIGABLE_NAME ),
 				pluralDomainPath,
 				(PluralPersistentAttribute<?, ?, T>) pluralDomainPath.getReferencedPathSource()
 		);
+		this.functionName = functionName;
+
+		if ( getPluralAttribute() instanceof ListPersistentAttribute ) {
+			//noinspection unchecked
+			this.indexPathSource = (SqmPathSource<T>) getPluralAttribute().getIndexPathSource();
+		}
+		else if ( getPluralAttribute() instanceof MapPersistentAttribute ) {
+			//noinspection unchecked
+			this.indexPathSource = ( (MapPersistentAttribute<?, T, ?>) getPluralAttribute() ).getKeyPathSource();
+		}
+		else {
+			throw new UnsupportedOperationException( "Plural attribute [" + getPluralAttribute() + "] is not indexed" );
+		}
+	}
+
+	public String getFunctionName() {
+		return functionName;
 	}
 
 	@Override
@@ -41,17 +60,17 @@ public class SqmMinElementPath<T> extends AbstractSqmSpecificPluralPartPath<T> {
 
 	@Override
 	public SqmPathSource<T> getReferencedPathSource() {
-		return getPluralAttribute().getElementPathSource();
+		return indexPathSource;
 	}
 
 	@Override
 	public <X> X accept(SemanticQueryWalker<X> walker) {
-		return walker.visitMinElementPath( this );
+		return walker.visitIndexAggregateFunction( this );
 	}
 
 	@Override
 	public void appendHqlString(StringBuilder sb) {
-		sb.append( "minelement(" );
+		sb.append(functionName).append( "(" );
 		getLhs().appendHqlString( sb );
 		sb.append( ')' );
 	}

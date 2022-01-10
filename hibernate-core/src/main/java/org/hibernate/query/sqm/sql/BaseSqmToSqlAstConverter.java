@@ -168,10 +168,8 @@ import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmIndexedCollectionAccessPath;
 import org.hibernate.query.sqm.tree.domain.SqmMapEntryReference;
-import org.hibernate.query.sqm.tree.domain.SqmMaxElementPath;
-import org.hibernate.query.sqm.tree.domain.SqmMaxIndexPath;
-import org.hibernate.query.sqm.tree.domain.SqmMinElementPath;
-import org.hibernate.query.sqm.tree.domain.SqmMinIndexPath;
+import org.hibernate.query.sqm.tree.domain.SqmElementAggregateFunction;
+import org.hibernate.query.sqm.tree.domain.SqmIndexAggregateFunction;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
@@ -3270,24 +3268,29 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		);
 	}
 
-	@Override
-	public Expression visitMaxElementPath(SqmMaxElementPath<?> path) {
-		return createMinOrMaxIndexOrElement( path, false, true );
+	protected Expression createMinOrMaxIndexOrElement(
+			AbstractSqmSpecificPluralPartPath<?> pluralPartPath,
+			boolean index,
+			String functionName) {
+		boolean isMinOrMax = functionName.equalsIgnoreCase("min")
+				|| functionName.equalsIgnoreCase("max");
+		// Try to create a lateral sub-query join if possible which allows the re-use of the expression
+		if ( isMinOrMax && creationContext.getSessionFactory().getJdbcServices().getDialect().supportsLateral() ) {
+			return createLateralJoinExpression( pluralPartPath, index, functionName );
+		}
+		else {
+			return createCorrelatedAggregateSubQuery( pluralPartPath, index, functionName );
+		}
 	}
 
 	@Override
-	public Expression visitMinElementPath(SqmMinElementPath<?> path) {
-		return createMinOrMaxIndexOrElement( path, false, false );
+	public Expression visitElementAggregateFunction(SqmElementAggregateFunction<?> path) {
+		return createMinOrMaxIndexOrElement( path, false, path.getFunctionName() );
 	}
 
 	@Override
-	public Expression visitMaxIndexPath(SqmMaxIndexPath<?> path) {
-		return createMinOrMaxIndexOrElement( path, true, true );
-	}
-
-	@Override
-	public Expression visitMinIndexPath(SqmMinIndexPath<?> path) {
-		return createMinOrMaxIndexOrElement( path, true, false );
+	public Expression visitIndexAggregateFunction(SqmIndexAggregateFunction<?> path) {
+		return createMinOrMaxIndexOrElement( path, true, path.getFunctionName() );
 	}
 
 	@Override
@@ -3466,23 +3469,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		};
 	}
 
-	protected Expression createMinOrMaxIndexOrElement(
-			AbstractSqmSpecificPluralPartPath<?> pluralPartPath,
-			boolean index,
-			boolean max) {
-		// Try to create a lateral sub-query join if possible which allows the re-use of the expression
-		if ( creationContext.getSessionFactory().getJdbcServices().getDialect().supportsLateral() ) {
-			return createLateralJoinExpression( pluralPartPath, index, max );
-		}
-		else {
-			return createCorrelatedAggregateSubQuery( pluralPartPath, index, max );
-		}
-	}
-
 	protected Expression createCorrelatedAggregateSubQuery(
 			AbstractSqmSpecificPluralPartPath<?> pluralPartPath,
 			boolean index,
-			boolean max) {
+			String function) {
 		prepareReusablePath( pluralPartPath.getLhs(), () -> null );
 
 		final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) determineValueMapping(
@@ -3520,11 +3510,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			registerPluralTableGroupParts( tableGroup );
 			subQuerySpec.getFromClause().addRoot( tableGroup );
 
-			final AbstractSqmSelfRenderingFunctionDescriptor functionDescriptor = (AbstractSqmSelfRenderingFunctionDescriptor) creationContext
-					.getSessionFactory()
-					.getQueryEngine()
-					.getSqmFunctionRegistry()
-					.findFunctionDescriptor( max ? "max" : "min" );
+			final AbstractSqmSelfRenderingFunctionDescriptor functionDescriptor =
+					(AbstractSqmSelfRenderingFunctionDescriptor) creationContext
+							.getSessionFactory()
+							.getQueryEngine()
+							.getSqmFunctionRegistry()
+							.findFunctionDescriptor( function );
 			final CollectionPart collectionPart = index
 					? pluralAttributeMapping.getIndexDescriptor()
 					: pluralAttributeMapping.getElementDescriptor();
@@ -3591,7 +3582,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	protected Expression createLateralJoinExpression(
 			AbstractSqmSpecificPluralPartPath<?> pluralPartPath,
 			boolean index,
-			boolean max) {
+			String functionName) {
 		prepareReusablePath( pluralPartPath.getLhs(), () -> null );
 
 		final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) determineValueMapping(
@@ -3611,7 +3602,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			modelPart = collectionPart;
 		}
 		final int jdbcTypeCount = modelPart.getJdbcTypeCount();
-		final String pathName = ( max ? "max" : "min" ) + ( index ? "_index" : "_element" );
+		final String pathName = functionName + ( index ? "_index" : "_element" );
 		final String identifierVariable = parentTableGroup.getPrimaryTableReference().getIdentificationVariable()
 				+ "_" + pathName;
 		final NavigablePath queryPath = new NavigablePath( parentTableGroup.getNavigablePath(), pathName, identifierVariable );
@@ -3680,7 +3671,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 							subQuerySpec.addSortSpecification(
 									new SortSpecification(
 											columnReference,
-											max ? SortOrder.DESCENDING : SortOrder.ASCENDING
+											functionName.equalsIgnoreCase("max")
+													? SortOrder.DESCENDING
+													: SortOrder.ASCENDING
 									)
 							);
 							resultColumnReferences.add(

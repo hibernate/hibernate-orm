@@ -40,6 +40,7 @@ public class EntityOfMaps {
 	private String name;
 
 	private Map<String, String> basicByBasic;
+	private Map<Integer, Double> numberByNumber;
 
 	private SortedMap<String, String> sortedBasicByBasic;
 	private SortedMap<String, String> sortedBasicByBasicWithComparator;
@@ -107,6 +108,25 @@ public class EntityOfMaps {
 			basicByBasic = new HashMap<>();
 		}
 		basicByBasic.put( key, val );
+	}
+
+	@ElementCollection
+	@CollectionTable(name = "EntityOfMaps_number_number1")
+	@MapKeyColumn(name = "number_key")
+	@Column(name = "number_val")
+	public Map<Integer, Double> getNumberByNumber() {
+		return numberByNumber;
+	}
+
+	public void setNumberByNumber(Map<Integer, Double> numberByNumber) {
+		this.numberByNumber = numberByNumber;
+	}
+
+	public void addNumberByNumber(int key, double val) {
+		if ( numberByNumber == null ) {
+			numberByNumber = new HashMap<>();
+		}
+		numberByNumber.put( key, val );
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

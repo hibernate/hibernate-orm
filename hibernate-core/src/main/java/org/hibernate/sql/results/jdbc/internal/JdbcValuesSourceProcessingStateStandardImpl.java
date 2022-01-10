@@ -21,7 +21,6 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostLoadEvent;
 import org.hibernate.event.spi.PostLoadEventListener;
 import org.hibernate.event.spi.PreLoadEvent;
-import org.hibernate.mapping.UniqueKey;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.results.graph.Initializer;

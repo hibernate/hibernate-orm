@@ -425,6 +425,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				|| entityDescriptor.getJavaTypeDescriptor().getJavaTypeClass().isInstance( proxy ) ) ) {
 			if ( this instanceof EntityResultInitializer && entityInstanceFromExecutionContext != null ) {
 				this.entityInstance = entityInstanceFromExecutionContext;
+				registerLoadingEntity( rowProcessingState, entityInstance );
 			}
 			else {
 				this.entityInstance = proxy;
@@ -435,9 +436,11 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 			if ( existingEntity != null ) {
 				this.entityInstance = existingEntity;
+				registerLoadingEntity( rowProcessingState, entityInstance );
 			}
 			else if ( this instanceof EntityResultInitializer && entityInstanceFromExecutionContext != null ) {
 				this.entityInstance = entityInstanceFromExecutionContext;
+				registerLoadingEntity( rowProcessingState, entityInstance );
 			}
 			else {
 				// look to see if another initializer from a parent load context or an earlier
@@ -578,6 +581,12 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			}
 		}
 
+		registerLoadingEntity( rowProcessingState, instance );
+
+		return instance;
+	}
+
+	private void registerLoadingEntity(RowProcessingState rowProcessingState, Object instance) {
 		final LoadingEntityEntry loadingEntry = new LoadingEntityEntry(
 				this,
 				entityKey,
@@ -588,8 +597,6 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				entityKey,
 				loadingEntry
 		);
-
-		return instance;
 	}
 
 	@Override
@@ -625,6 +632,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		}
 
 		notifyResolutionListeners( entityInstanceForNotify );
+
 		isInitialized = true;
 	}
 

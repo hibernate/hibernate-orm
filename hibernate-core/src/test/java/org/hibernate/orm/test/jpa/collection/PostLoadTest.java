@@ -28,32 +28,26 @@ public class PostLoadTest {
 	 */
 	@Test
 	public void testAccessAssociatedSetInPostLoad(EntityManagerFactoryScope scope) {
+
+		scope.inTransaction(
+				entityManager -> {
+					Child child = new Child();
+					child.setId( 1 );
+					Parent daddy = new Parent();
+					daddy.setId( 1 );
+					child.setDaddy( daddy );
+					Set<Child> children = new HashSet<>();
+					children.add( child );
+					daddy.setChildren( children );
+
+					entityManager.persist( daddy );
+				}
+		);
+
 		scope.inEntityManager(
 				entityManager -> {
-					try {
-						Child child = new Child();
-						child.setId( 1 );
-						Parent daddy = new Parent();
-						daddy.setId( 1 );
-						child.setDaddy( daddy );
-						Set<Child> children = new HashSet<>();
-						children.add( child );
-						daddy.setChildren( children );
-
-						entityManager.getTransaction().begin();
-						entityManager.persist( daddy );
-						entityManager.getTransaction().commit();
-						entityManager.clear();
-
-						daddy = entityManager.find( Parent.class, 1 );
-						assertEquals( 1, daddy.getNrOfChildren() );
-					}
-					catch (Exception e) {
-						if ( entityManager.getTransaction().isActive() ) {
-							entityManager.getTransaction().rollback();
-						}
-						throw e;
-					}
+					Parent daddy = entityManager.find( Parent.class, 1 );
+					assertEquals( 1, daddy.getNrOfChildren() );
 				}
 		);
 	}

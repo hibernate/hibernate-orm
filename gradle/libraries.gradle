@@ -44,7 +44,7 @@ ext {
     jakartaJaxbRuntimeVersion = '3.0.0'
 
     //GraalVM
-    graalvmVersion = '21.2.0'
+    graalvmVersion = '21.3.0'
 
     micrometerVersion = '1.6.1'
 

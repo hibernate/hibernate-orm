@@ -42,7 +42,7 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.jpa.spi.NativeQueryTupleTransformer;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
-import org.hibernate.query.AllowableParameterType;
+import org.hibernate.query.BindableType;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.Query;
@@ -1221,7 +1221,7 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameter(String name, P value, AllowableParameterType<P> type) {
+	public <P> NativeQueryImplementor<R> setParameter(String name, P value, BindableType<P> type) {
 		super.setParameter( name, value, type );
 		return this;
 	}
@@ -1257,7 +1257,7 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameter(int position, P value, AllowableParameterType<P> type) {
+	public <P> NativeQueryImplementor<R> setParameter(int position, P value, BindableType<P> type) {
 		super.setParameter( position, value, type );
 		return this;
 	}
@@ -1293,7 +1293,7 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameter(QueryParameter<P> parameter, P value, AllowableParameterType<P> type) {
+	public <P> NativeQueryImplementor<R> setParameter(QueryParameter<P> parameter, P value, BindableType<P> type) {
 		super.setParameter( parameter, value, type );
 		return this;
 	}
@@ -1337,7 +1337,7 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameterList(String name, Collection<? extends P> values, AllowableParameterType<P> type) {
+	public <P> NativeQueryImplementor<R> setParameterList(String name, Collection<? extends P> values, BindableType<P> type) {
 		super.setParameterList( name, values, type );
 		return this;
 	}
@@ -1355,7 +1355,7 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameterList(String name, P[] values, AllowableParameterType<P> type) {
+	public <P> NativeQueryImplementor<R> setParameterList(String name, P[] values, BindableType<P> type) {
 		super.setParameterList( name, values, type );
 		return this;
 	}
@@ -1376,7 +1376,7 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameterList(int position, Collection<? extends P> values, AllowableParameterType<P> type) {
+	public <P> NativeQueryImplementor<R> setParameterList(int position, Collection<? extends P> values, BindableType<P> type) {
 		super.setParameterList( position, values, type );
 		return this;
 	}
@@ -1394,7 +1394,7 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameterList(int position, P[] values, AllowableParameterType<P> type) {
+	public <P> NativeQueryImplementor<R> setParameterList(int position, P[] values, BindableType<P> type) {
 		super.setParameterList( position, values, type );
 		return this;
 	}
@@ -1414,7 +1414,7 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, AllowableParameterType<P> type) {
+	public <P> NativeQueryImplementor<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, BindableType<P> type) {
 		super.setParameterList( parameter, values, type );
 		return this;
 	}
@@ -1432,7 +1432,7 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameterList(QueryParameter<P> parameter, P[] values, AllowableParameterType<P> type) {
+	public <P> NativeQueryImplementor<R> setParameterList(QueryParameter<P> parameter, P[] values, BindableType<P> type) {
 		super.setParameterList( parameter, values, type );
 		return this;
 	}

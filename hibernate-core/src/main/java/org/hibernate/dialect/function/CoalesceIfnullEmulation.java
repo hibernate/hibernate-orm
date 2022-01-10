@@ -6,7 +6,7 @@
  */
 package org.hibernate.dialect.function;
 
-import org.hibernate.query.AllowableFunctionReturnType;
+import org.hibernate.query.ReturnableType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.AbstractSqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
@@ -32,7 +32,7 @@ public class CoalesceIfnullEmulation
 	@Override
 	protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
 			List<? extends SqmTypedNode<?>> arguments,
-			AllowableFunctionReturnType<T> impliedResultType,
+			ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
 		return queryEngine.getSqmFunctionRegistry().findFunctionDescriptor( "coalesce" )

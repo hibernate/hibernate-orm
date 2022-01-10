@@ -11,7 +11,7 @@ import java.util.Collection;
 import java.util.Date;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.AllowableParameterType;
+import org.hibernate.query.BindableType;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -28,12 +28,12 @@ public class QueryParameterBindingValidator {
 	private QueryParameterBindingValidator() {
 	}
 
-	public void validate(AllowableParameterType<?> paramType, Object bind, SessionFactoryImplementor sessionFactory) {
+	public void validate(BindableType<?> paramType, Object bind, SessionFactoryImplementor sessionFactory) {
 		validate( paramType, bind, null, sessionFactory );
 	}
 
 	public void validate(
-			AllowableParameterType<?> paramType,
+			BindableType<?> paramType,
 			Object bind,
 			TemporalType temporalPrecision,
 			SessionFactoryImplementor sessionFactory) {

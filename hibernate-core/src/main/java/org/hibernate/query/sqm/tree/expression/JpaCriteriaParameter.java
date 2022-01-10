@@ -8,7 +8,7 @@ package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
-import org.hibernate.query.AllowableParameterType;
+import org.hibernate.query.BindableType;
 import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.criteria.JpaParameterExpression;
 import org.hibernate.query.spi.QueryParameterImplementor;
@@ -37,7 +37,7 @@ public class JpaCriteriaParameter<T>
 	private boolean allowsMultiValuedBinding;
 
 	public JpaCriteriaParameter(
-			AllowableParameterType<T> type,
+			BindableType<T> type,
 			boolean allowsMultiValuedBinding,
 			NodeBuilder nodeBuilder) {
 		this( null, type, allowsMultiValuedBinding, nodeBuilder );
@@ -45,7 +45,7 @@ public class JpaCriteriaParameter<T>
 
 	public JpaCriteriaParameter(
 			String name,
-			AllowableParameterType<T> type,
+			BindableType<T> type,
 			boolean allowsMultiValuedBinding,
 			NodeBuilder nodeBuilder) {
 		super( toSqmType( type, nodeBuilder ), nodeBuilder );
@@ -56,7 +56,7 @@ public class JpaCriteriaParameter<T>
 
 	public JpaCriteriaParameter(
 			String name,
-			AllowableParameterType<T> type,
+			BindableType<T> type,
 			T value,
 			boolean allowsMultiValuedBinding,
 			NodeBuilder nodeBuilder) {
@@ -66,7 +66,7 @@ public class JpaCriteriaParameter<T>
 		this.allowsMultiValuedBinding = allowsMultiValuedBinding;
 	}
 
-	private static <T> SqmExpressable<T> toSqmType(AllowableParameterType<T> type, NodeBuilder nodeBuilder) {
+	private static <T> SqmExpressable<T> toSqmType(BindableType<T> type, NodeBuilder nodeBuilder) {
 		if ( type == null ) {
 			return null;
 		}
@@ -75,7 +75,7 @@ public class JpaCriteriaParameter<T>
 		);
 	}
 
-	public JpaCriteriaParameter(AllowableParameterType<T> type, T value, NodeBuilder nodeBuilder) {
+	public JpaCriteriaParameter(BindableType<T> type, T value, NodeBuilder nodeBuilder) {
 		super( toSqmType( type, nodeBuilder ), nodeBuilder );
 		this.name = null;
 		this.value = value;
@@ -112,13 +112,13 @@ public class JpaCriteriaParameter<T>
 	}
 
 	@Override
-	public AllowableParameterType<T> getAnticipatedType() {
+	public BindableType<T> getAnticipatedType() {
 		return getHibernateType();
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	public void applyAnticipatedType(AllowableParameterType type) {
+	public void applyAnticipatedType(BindableType type) {
 		super.internalApplyInferableType( toSqmType( type, nodeBuilder() ) );
 	}
 
@@ -133,7 +133,7 @@ public class JpaCriteriaParameter<T>
 	}
 
 	@Override
-	public AllowableParameterType<T> getHibernateType() {
+	public BindableType<T> getHibernateType() {
 		return this.getNodeType();
 	}
 

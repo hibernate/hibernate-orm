@@ -17,10 +17,9 @@ import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.SqlExpressable;
-import org.hibernate.query.AllowableFunctionReturnType;
+import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
@@ -46,14 +45,14 @@ public class SelfRenderingFunctionSqlAstExpression
 	private final String functionName;
 	private final FunctionRenderingSupport renderer;
 	private final List<? extends SqlAstNode> sqlAstArguments;
-	private final AllowableFunctionReturnType<?> type;
+	private final ReturnableType<?> type;
 	private final JdbcMappingContainer expressable;
 
 	public SelfRenderingFunctionSqlAstExpression(
 			String functionName,
 			FunctionRenderingSupport renderer,
 			List<? extends SqlAstNode> sqlAstArguments,
-			AllowableFunctionReturnType<?> type,
+			ReturnableType<?> type,
 			JdbcMappingContainer expressable) {
 		this.functionName = functionName;
 		this.renderer = renderer;

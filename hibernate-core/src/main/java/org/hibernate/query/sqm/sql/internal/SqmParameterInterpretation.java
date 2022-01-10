@@ -14,7 +14,7 @@ import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
-import org.hibernate.query.AllowableParameterType;
+import org.hibernate.query.BindableType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterImplementor;
@@ -96,7 +96,7 @@ public class SqmParameterInterpretation implements Expression, DomainResultProdu
 			throw new SemanticException( "Composite query parameter cannot be used in select" );
 		}
 
-		AllowableParameterType<?> nodeType = sqmParameter.getNodeType();
+		BindableType<?> nodeType = sqmParameter.getNodeType();
 		if ( nodeType == null ) {
 			final QueryParameterBinding<?> binding = queryParameterBindingResolver.apply( queryParameter );
 			nodeType = binding.getBindType();
@@ -137,7 +137,7 @@ public class SqmParameterInterpretation implements Expression, DomainResultProdu
 			throw new SemanticException( "Composite query parameter cannot be used in select" );
 		}
 
-		AllowableParameterType<?> nodeType = sqmParameter.getNodeType();
+		BindableType<?> nodeType = sqmParameter.getNodeType();
 		if ( nodeType == null ) {
 			final QueryParameterBinding<?> binding = queryParameterBindingResolver.apply( queryParameter );
 			nodeType = binding.getBindType();

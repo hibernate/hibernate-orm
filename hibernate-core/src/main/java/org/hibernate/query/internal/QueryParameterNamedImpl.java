@@ -8,7 +8,7 @@ package org.hibernate.query.internal;
 
 import java.util.Objects;
 
-import org.hibernate.query.AllowableParameterType;
+import org.hibernate.query.BindableType;
 import org.hibernate.query.AbstractQueryParameter;
 import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
@@ -50,7 +50,7 @@ public class QueryParameterNamedImpl<T> extends AbstractQueryParameter<T> {
 	private QueryParameterNamedImpl(
 			String name,
 			boolean allowMultiValuedBinding,
-			AllowableParameterType anticipatedType) {
+			BindableType anticipatedType) {
 		//noinspection unchecked
 		super( allowMultiValuedBinding, anticipatedType );
 		this.name = name;

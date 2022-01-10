@@ -7,7 +7,7 @@
 package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
-import org.hibernate.query.AllowableParameterType;
+import org.hibernate.query.BindableType;
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressable;
@@ -60,7 +60,7 @@ public abstract class AbstractSqmParameter<T> extends AbstractSqmExpression<T> i
 	}
 
 	@Override
-	public AllowableParameterType<T> getAnticipatedType() {
+	public BindableType<T> getAnticipatedType() {
 		return this.getNodeType();
 	}
 

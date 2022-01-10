@@ -7,9 +7,6 @@
 package org.hibernate.query;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
@@ -576,7 +573,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	<P> NativeQuery<T> setParameter(String name, P val, Class<P> type);
 
 	@Override
-	<P> NativeQuery<T> setParameter(String name, P val, AllowableParameterType<P> type);
+	<P> NativeQuery<T> setParameter(String name, P val, BindableType<P> type);
 
 	@Override
 	NativeQuery<T> setParameter(String name, Instant value, TemporalType temporalType);
@@ -594,7 +591,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	<P> NativeQuery<T> setParameter(int position, P val, Class<P> type);
 
 	@Override
-	<P> NativeQuery<T> setParameter(int position, P val, AllowableParameterType<P> type);
+	<P> NativeQuery<T> setParameter(int position, P val, BindableType<P> type);
 
 	@Override
 	NativeQuery<T> setParameter(int position, Instant value, TemporalType temporalType);
@@ -612,7 +609,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	<P> NativeQuery<T> setParameter(QueryParameter<P> parameter, P val, Class<P> type);
 
 	@Override
-	<P> NativeQuery<T> setParameter(QueryParameter<P> parameter, P val, AllowableParameterType<P> type);
+	<P> NativeQuery<T> setParameter(QueryParameter<P> parameter, P val, BindableType<P> type);
 
 	@Override
 	<P> NativeQuery<T> setParameter(Parameter<P> param, P value);
@@ -630,7 +627,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	<P> NativeQuery<T> setParameterList(String name, Collection<? extends P> values, Class<P> type);
 
 	@Override
-	<P> NativeQuery<T> setParameterList(String name, Collection<? extends P> values, AllowableParameterType<P> type);
+	<P> NativeQuery<T> setParameterList(String name, Collection<? extends P> values, BindableType<P> type);
 
 	@Override
 	NativeQuery<T> setParameterList(String name, Object[] values);
@@ -639,7 +636,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	<P> NativeQuery<T> setParameterList(String name, P[] values, Class<P> type);
 
 	@Override
-	<P> NativeQuery<T> setParameterList(String name, P[] values, AllowableParameterType<P> type);
+	<P> NativeQuery<T> setParameterList(String name, P[] values, BindableType<P> type);
 
 	@Override
 	NativeQuery<T> setParameterList(int position, @SuppressWarnings("rawtypes") Collection values);
@@ -648,7 +645,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	<P> NativeQuery<T> setParameterList(int position, Collection<? extends P> values, Class<P> type);
 
 	@Override
-	<P> NativeQuery<T> setParameterList(int position, Collection<? extends P> values, AllowableParameterType<P> javaType);
+	<P> NativeQuery<T> setParameterList(int position, Collection<? extends P> values, BindableType<P> javaType);
 
 	@Override
 	NativeQuery<T> setParameterList(int position, Object[] values);
@@ -657,7 +654,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	<P> NativeQuery<T> setParameterList(int position, P[] values, Class<P> javaType);
 
 	@Override
-	<P> NativeQuery<T> setParameterList(int position, P[] values, AllowableParameterType<P> javaType);
+	<P> NativeQuery<T> setParameterList(int position, P[] values, BindableType<P> javaType);
 
 	@Override
 	<P> NativeQuery<T> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values);
@@ -666,7 +663,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	<P> NativeQuery<T> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Class<P> javaType);
 
 	@Override
-	<P> NativeQuery<T> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, AllowableParameterType<P> type);
+	<P> NativeQuery<T> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, BindableType<P> type);
 
 	@Override
 	<P> NativeQuery<T> setParameterList(QueryParameter<P> parameter, P[] values);
@@ -675,7 +672,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	<P> NativeQuery<T> setParameterList(QueryParameter<P> parameter, P[] values, Class<P> javaType);
 
 	@Override
-	<P> NativeQuery<T> setParameterList(QueryParameter<P> parameter, P[] values, AllowableParameterType<P> type);
+	<P> NativeQuery<T> setParameterList(QueryParameter<P> parameter, P[] values, BindableType<P> type);
 
 	@Override
 	NativeQuery<T> setProperties(Object bean);

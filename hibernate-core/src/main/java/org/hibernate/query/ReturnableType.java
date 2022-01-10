@@ -13,5 +13,5 @@ import org.hibernate.metamodel.model.domain.SimpleDomainType;
  *
  * @author Steve Ebersole
  */
-public interface AllowableFunctionReturnType<T> extends SimpleDomainType<T> {
+public interface ReturnableType<T> extends SimpleDomainType<T> {
 }

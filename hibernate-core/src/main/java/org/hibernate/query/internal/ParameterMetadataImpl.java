@@ -22,7 +22,7 @@ import org.hibernate.QueryException;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.compare.ComparableComparator;
-import org.hibernate.query.AllowableParameterType;
+import org.hibernate.query.BindableType;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryParameterImplementor;
@@ -167,13 +167,13 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 	}
 
 	@Override
-	public <T> AllowableParameterType<T> getInferredParameterType(QueryParameter<T> parameter) {
+	public <T> BindableType<T> getInferredParameterType(QueryParameter<T> parameter) {
 		final List<SqmParameter<?>> sqmParameters = queryParameters.get( parameter );
 		if ( sqmParameters == null || sqmParameters.isEmpty() ) {
 			return null;
 		}
 		for ( SqmParameter<?> sqmParameter : sqmParameters ) {
-			final AllowableParameterType<T> nodeType = (AllowableParameterType<T>) sqmParameter.getNodeType();
+			final BindableType<T> nodeType = (BindableType<T>) sqmParameter.getNodeType();
 			if ( nodeType != null ) {
 				return nodeType;
 			}

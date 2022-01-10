@@ -13,7 +13,7 @@ import java.util.function.Function;
 import org.hibernate.Incubating;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
-import org.hibernate.query.AllowableParameterType;
+import org.hibernate.query.BindableType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -45,10 +45,10 @@ public interface MappingMetamodel {
 	MappingModelExpressable lenientlyResolveMappingExpressable(SqmExpressable<?> sqmExpressable, Function<NavigablePath, TableGroup> tableGroupLocator);
 
 	/**
-	 * Given a Java type, determine the corresponding AllowableParameterType to
+	 * Given a Java type, determine the corresponding BindableType to
 	 * use implicitly
 	 */
-	<T> AllowableParameterType<T> resolveQueryParameterType(Class<T> javaType);
+	<T> BindableType<T> resolveQueryParameterType(Class<T> javaType);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

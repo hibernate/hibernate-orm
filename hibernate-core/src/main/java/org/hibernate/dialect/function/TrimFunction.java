@@ -64,7 +64,7 @@ public class TrimFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 //	@SuppressWarnings("unchecked")
 //	public <T> SelfRenderingSqlFunctionExpression<T> generateSqmFunctionExpression(
 //			List<SqmTypedNode<?>> arguments,
-//			AllowableFunctionReturnType<T> impliedResultType,
+//			ReturnableType<T> impliedResultType,
 //			QueryEngine queryEngine,
 //			TypeConfiguration typeConfiguration) {
 //		final TrimSpec specification = ( (SqmTrimSpecification) arguments.get( 0 ) ).getSpecification();

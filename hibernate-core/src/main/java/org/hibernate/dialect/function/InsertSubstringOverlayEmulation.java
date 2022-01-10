@@ -6,7 +6,7 @@
  */
 package org.hibernate.dialect.function;
 
-import org.hibernate.query.AllowableFunctionReturnType;
+import org.hibernate.query.ReturnableType;
 import org.hibernate.query.BinaryArithmeticOperator;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.spi.QueryEngine;
@@ -59,7 +59,7 @@ public class InsertSubstringOverlayEmulation
 	@Override
 	protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
 			List<? extends SqmTypedNode<?>> arguments,
-			AllowableFunctionReturnType<T> impliedResultType,
+			ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
 		final BasicType<Integer> intType = typeConfiguration.getBasicTypeForJavaType( Integer.class );

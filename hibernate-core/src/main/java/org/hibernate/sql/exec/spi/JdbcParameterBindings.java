@@ -18,14 +18,13 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.Bindable;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.query.AllowableParameterType;
+import org.hibernate.query.BindableType;
 import org.hibernate.query.internal.BindingTypeHelper;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sql.internal.NativeQueryImpl;
 import org.hibernate.query.sql.spi.ParameterOccurrence;
-import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
@@ -127,7 +126,7 @@ public interface JdbcParameterBindings {
 
 			final JdbcMapping jdbcMapping;
 
-			final AllowableParameterType<?> type = determineParamType( param, binding );
+			final BindableType<?> type = determineParamType( param, binding );
 			if ( type == null ) {
 				jdbcMapping = factory.getTypeConfiguration().getBasicTypeForJavaType( Object.class );
 			}
@@ -177,8 +176,8 @@ public interface JdbcParameterBindings {
 		}
 	}
 
-	private AllowableParameterType<?> determineParamType(QueryParameterImplementor<?> param, QueryParameterBinding<?> binding) {
-		AllowableParameterType<?> type = binding.getBindType();
+	private BindableType<?> determineParamType(QueryParameterImplementor<?> param, QueryParameterBinding<?> binding) {
+		BindableType<?> type = binding.getBindType();
 		if ( type == null ) {
 			type = param.getHibernateType();
 		}

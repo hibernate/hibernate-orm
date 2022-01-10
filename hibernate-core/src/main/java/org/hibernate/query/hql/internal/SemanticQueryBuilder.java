@@ -47,7 +47,7 @@ import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.CollectionPart;
-import org.hibernate.query.AllowableFunctionReturnType;
+import org.hibernate.query.ReturnableType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -3560,7 +3560,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 
 		return new SqmCastTarget<>(
-				(AllowableFunctionReturnType<?>)
+				(ReturnableType<?>)
 						creationContext.getJpaMetamodel().getTypeConfiguration()
 								.resolveCastTargetType( targetName ),
 				//TODO: is there some way to interpret as length vs precision/scale here at this point?

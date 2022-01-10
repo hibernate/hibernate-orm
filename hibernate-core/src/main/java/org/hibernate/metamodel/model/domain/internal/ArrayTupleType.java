@@ -15,9 +15,9 @@ import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
-import org.hibernate.query.AllowableFunctionReturnType;
+import org.hibernate.query.ReturnableType;
 import org.hibernate.metamodel.model.domain.TupleType;
-import org.hibernate.query.AllowableParameterType;
+import org.hibernate.query.BindableType;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -27,8 +27,8 @@ import org.hibernate.type.descriptor.java.ObjectArrayJavaTypeDescriptor;
  * @author Christian Beikov
  */
 public class ArrayTupleType implements TupleType<Object[]>,
-		AllowableParameterType<Object[]>,
-		AllowableFunctionReturnType<Object[]>,
+		BindableType<Object[]>,
+		ReturnableType<Object[]>,
 		MappingModelExpressable<Object[]> {
 
 	private final ObjectArrayJavaTypeDescriptor javaTypeDescriptor;

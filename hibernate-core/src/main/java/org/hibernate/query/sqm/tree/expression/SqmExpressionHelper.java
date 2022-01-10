@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.AllowableParameterType;
+import org.hibernate.query.BindableType;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -28,19 +28,19 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  */
 public class SqmExpressionHelper {
-	public static <T> SqmExpressable<T> toSqmType(AllowableParameterType<T> parameterType, SqmCreationState creationState) {
+	public static <T> SqmExpressable<T> toSqmType(BindableType<T> parameterType, SqmCreationState creationState) {
 		return toSqmType( parameterType, creationState.getCreationContext().getJpaMetamodel().getTypeConfiguration() );
 	}
 
-	public static <T> SqmExpressable<T> toSqmType(AllowableParameterType<T> anticipatedType, NodeBuilder nodeBuilder) {
+	public static <T> SqmExpressable<T> toSqmType(BindableType<T> anticipatedType, NodeBuilder nodeBuilder) {
 		return toSqmType( anticipatedType, nodeBuilder.getTypeConfiguration() );
 	}
 
-	public static <T> SqmExpressable<T> toSqmType(AllowableParameterType<T> anticipatedType, TypeConfiguration typeConfiguration) {
+	public static <T> SqmExpressable<T> toSqmType(BindableType<T> anticipatedType, TypeConfiguration typeConfiguration) {
 		return toSqmType( anticipatedType, typeConfiguration.getSessionFactory() );
 	}
 
-	public static <T> SqmExpressable<T> toSqmType(AllowableParameterType<T> anticipatedType, SessionFactoryImplementor sessionFactory) {
+	public static <T> SqmExpressable<T> toSqmType(BindableType<T> anticipatedType, SessionFactoryImplementor sessionFactory) {
 		if ( anticipatedType == null ) {
 			return null;
 		}

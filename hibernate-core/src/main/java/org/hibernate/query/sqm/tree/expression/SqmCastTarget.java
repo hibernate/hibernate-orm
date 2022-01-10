@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import org.hibernate.query.AllowableFunctionReturnType;
+import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressable;
@@ -19,7 +19,7 @@ import org.hibernate.query.sqm.tree.SqmVisitableNode;
  * @author Gavin King
  */
 public class SqmCastTarget<T> extends AbstractSqmNode implements SqmTypedNode<T>, SqmVisitableNode {
-	private final AllowableFunctionReturnType<T> type;
+	private final ReturnableType<T> type;
 	private final Long length;
 	private final Integer precision;
 	private final Integer scale;
@@ -37,20 +37,20 @@ public class SqmCastTarget<T> extends AbstractSqmNode implements SqmTypedNode<T>
 	}
 
 	public SqmCastTarget(
-			AllowableFunctionReturnType<T> type,
+			ReturnableType<T> type,
 			NodeBuilder nodeBuilder) {
 		this( type, null, nodeBuilder );
 	}
 
 	public SqmCastTarget(
-			AllowableFunctionReturnType<T> type,
+			ReturnableType<T> type,
 			Long length,
 			NodeBuilder nodeBuilder) {
 		this( type, length, null, null, nodeBuilder );
 	}
 
 	public SqmCastTarget(
-			AllowableFunctionReturnType<T> type,
+			ReturnableType<T> type,
 			Integer precision,
 			Integer scale,
 			NodeBuilder nodeBuilder) {
@@ -58,7 +58,7 @@ public class SqmCastTarget<T> extends AbstractSqmNode implements SqmTypedNode<T>
 	}
 
 	public SqmCastTarget(
-			AllowableFunctionReturnType<T> type,
+			ReturnableType<T> type,
 			Long length,
 			Integer precision,
 			Integer scale,
@@ -70,7 +70,7 @@ public class SqmCastTarget<T> extends AbstractSqmNode implements SqmTypedNode<T>
 		this.scale = scale;
 	}
 
-	public AllowableFunctionReturnType<T> getType() {
+	public ReturnableType<T> getType() {
 		return type;
 	}
 

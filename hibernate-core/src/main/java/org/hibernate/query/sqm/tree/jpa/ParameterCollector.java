@@ -11,7 +11,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Consumer;
 
-import org.hibernate.query.AllowableParameterType;
+import org.hibernate.query.BindableType;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.spi.BaseSemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmExpressableAccessor;
@@ -95,19 +95,19 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 		);
 	}
 
-	private <T> AllowableParameterType<T> getInferredParameterType(JpaCriteriaParameter<?> expression) {
-		AllowableParameterType<?> parameterType = null;
+	private <T> BindableType<T> getInferredParameterType(JpaCriteriaParameter<?> expression) {
+		BindableType<?> parameterType = null;
 		if ( inferenceBasis != null ) {
 			final SqmExpressable<?> expressable = inferenceBasis.getExpressable();
-			if ( expressable instanceof AllowableParameterType<?> ) {
-				parameterType = (AllowableParameterType<?>) expressable;
+			if ( expressable instanceof BindableType<?> ) {
+				parameterType = (BindableType<?>) expressable;
 			}
 		}
 		if ( parameterType == null ) {
 			parameterType = expression.getHibernateType();
 		}
 		//noinspection unchecked
-		return (AllowableParameterType<T>) parameterType;
+		return (BindableType<T>) parameterType;
 	}
 
 	private <T extends SqmParameter<?>> T visitParameter(T param) {
@@ -148,7 +148,7 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 				() -> {
 					for ( SqmCaseSimple.WhenFragment<?, ?> whenFragment : expression.getWhenFragments() ) {
 						final SqmExpressable<?> resolved = whenFragment.getCheckValue().getExpressable();
-						if ( resolved instanceof AllowableParameterType<?> ) {
+						if ( resolved instanceof BindableType<?> ) {
 							return (SqmExpressable<Object>) resolved;
 						}
 					}
@@ -214,11 +214,11 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 			return type1;
 		}
 
-		if ( type1.getExpressable() instanceof AllowableParameterType<?> ) {
+		if ( type1.getExpressable() instanceof BindableType<?> ) {
 			return type1;
 		}
 
-		if ( type2.getExpressable() instanceof AllowableParameterType<?> ) {
+		if ( type2.getExpressable() instanceof BindableType<?> ) {
 			return type2;
 		}
 
@@ -226,7 +226,7 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 	}
 
 	private SqmExpressableAccessor<?> determineCurrentExpressable(SqmExpression<?> expression) {
-		if ( expression.getExpressable() instanceof AllowableParameterType<?> ) {
+		if ( expression.getExpressable() instanceof BindableType<?> ) {
 			return () -> (SqmExpressable<Object>) expression.getExpressable();
 		}
 		return null;

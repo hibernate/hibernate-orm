@@ -6,7 +6,7 @@
  */
 package org.hibernate.type;
 
-import org.hibernate.query.AllowableOutputParameterType;
+import org.hibernate.query.OutputableType;
 
 /**
  * Optional {@link Type} contract for implementations that are aware of how to extract values from
@@ -14,5 +14,5 @@ import org.hibernate.query.AllowableOutputParameterType;
  *
  * @author Steve Ebersole
  */
-public interface ProcedureParameterExtractionAware<T> extends AllowableOutputParameterType<T> {
+public interface ProcedureParameterExtractionAware<T> extends OutputableType<T> {
 }

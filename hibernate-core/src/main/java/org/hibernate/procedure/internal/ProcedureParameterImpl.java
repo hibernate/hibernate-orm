@@ -20,7 +20,7 @@ import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
 import org.hibernate.query.AbstractQueryParameter;
-import org.hibernate.query.AllowableParameterType;
+import org.hibernate.query.BindableType;
 import org.hibernate.query.internal.BindingTypeHelper;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.sql.exec.internal.JdbcCallParameterExtractorImpl;
@@ -49,7 +49,7 @@ public class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> impleme
 			String name,
 			ParameterMode mode,
 			Class<T> javaType,
-			AllowableParameterType<T> hibernateType) {
+			BindableType<T> hibernateType) {
 		super( false, hibernateType );
 		this.name = name;
 		this.position = null;
@@ -61,7 +61,7 @@ public class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> impleme
 			Integer position,
 			ParameterMode mode,
 			Class<T> javaType,
-			AllowableParameterType<T> hibernateType) {
+			BindableType<T> hibernateType) {
 		super( false, hibernateType );
 		this.name = null;
 		this.position = position;
@@ -116,7 +116,7 @@ public class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> impleme
 			int startIndex,
 			ProcedureCallImplementor<?> procedureCall) {
 		final QueryParameterBinding<T> binding = procedureCall.getParameterBindings().getBinding( this );
-		final AllowableParameterType<T> typeToUse = BindingTypeHelper.INSTANCE.resolveTemporalPrecision(
+		final BindableType<T> typeToUse = BindingTypeHelper.INSTANCE.resolveTemporalPrecision(
 				binding == null || binding.getExplicitTemporalPrecision() == null
 						? null
 						: binding.getExplicitTemporalPrecision(),
@@ -163,7 +163,7 @@ public class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> impleme
 		return new JdbcCallParameterRegistrationImpl( name, startIndex, mode, typeToUse, parameterBinder, parameterExtractor, refCursorExtractor );
 	}
 
-	private JdbcParameterBinder getParameterBinder(AllowableParameterType<T> typeToUse, String name) {
+	private JdbcParameterBinder getParameterBinder(BindableType<T> typeToUse, String name) {
 		if ( typeToUse instanceof BasicType<?> ) {
 			if ( name == null ) {
 				return new JdbcParameterImpl( (BasicType<T>) typeToUse );
@@ -193,7 +193,7 @@ public class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> impleme
 	}
 
 	private boolean canDoNameParameterBinding(
-			AllowableParameterType<?> hibernateType,
+			BindableType<?> hibernateType,
 			ProcedureCallImplementor<?> procedureCall) {
 		final ExtractedDatabaseMetaData databaseMetaData = procedureCall.getSession()
 				.getJdbcCoordinator()

@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
-import org.hibernate.query.AllowableFunctionReturnType;
+import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.function.NamedSqmFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
@@ -39,8 +39,8 @@ public class StandardSQLFunction extends NamedSqmFunctionDescriptor {
 	public StandardSQLFunction(String name, boolean useParentheses, BasicTypeReference<?> type) {
 		super( name, useParentheses, null, new FunctionReturnTypeResolver() {
 			@Override
-			public AllowableFunctionReturnType<?> resolveFunctionReturnType(
-					AllowableFunctionReturnType<?> impliedType,
+			public ReturnableType<?> resolveFunctionReturnType(
+					ReturnableType<?> impliedType,
 					List<? extends SqmTypedNode<?>> arguments,
 					TypeConfiguration typeConfiguration) {
 				return type == null ? null : typeConfiguration.getBasicTypeRegistry().resolve( type );

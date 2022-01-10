@@ -99,7 +99,7 @@ import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.metamodel.RuntimeMetamodels;
 import org.hibernate.metamodel.internal.RuntimeMetamodelsImpl;
-import org.hibernate.query.AllowableParameterType;
+import org.hibernate.query.BindableType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
@@ -1085,7 +1085,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
-	public <T> AllowableParameterType<T> resolveParameterBindType(T bindValue) {
+	public <T> BindableType<T> resolveParameterBindType(T bindValue) {
 		if ( bindValue == null ) {
 			// we can't guess
 			return null;
@@ -1095,7 +1095,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
-	public <T> AllowableParameterType<T> resolveParameterBindType(Class<T> javaType) {
+	public <T> BindableType<T> resolveParameterBindType(Class<T> javaType) {
 		return getMetamodel().resolveQueryParameterType( javaType );
 	}
 

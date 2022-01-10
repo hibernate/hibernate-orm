@@ -17,10 +17,10 @@ import org.hibernate.type.BasicTypeReference;
  */
 public final class TypedParameterValue<J> {
 
-	private final Object type;
+	private final BindableType<J> type;
 	private final J value;
 
-	public TypedParameterValue(AllowableParameterType<J> type, J value) {
+	public TypedParameterValue(BindableType<J> type, J value) {
 		this.type = type;
 		this.value = value;
 	}
@@ -44,8 +44,8 @@ public final class TypedParameterValue<J> {
 	 *
 	 * @return The Hibernate type to use.
 	 */
-	public AllowableParameterType<J> getType() {
-		return type instanceof AllowableParameterType ? (AllowableParameterType<J>) type : null;
+	public BindableType<J> getType() {
+		return type;
 	}
 
 	/**

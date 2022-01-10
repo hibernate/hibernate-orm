@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import org.hibernate.query.AllowableFunctionReturnType;
+import org.hibernate.query.ReturnableType;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -20,9 +20,9 @@ import org.hibernate.query.sqm.tree.SqmVisitableNode;
  */
 public class SqmExtractUnit<T> extends AbstractSqmNode implements SqmTypedNode<T>, SqmVisitableNode {
 	private final TemporalUnit unit;
-	private final AllowableFunctionReturnType<T> type;
+	private final ReturnableType<T> type;
 
-	public SqmExtractUnit(TemporalUnit unit, AllowableFunctionReturnType<T> type, NodeBuilder nodeBuilder) {
+	public SqmExtractUnit(TemporalUnit unit, ReturnableType<T> type, NodeBuilder nodeBuilder) {
 		super( nodeBuilder );
 		this.unit = unit;
 		this.type = type;
@@ -32,7 +32,7 @@ public class SqmExtractUnit<T> extends AbstractSqmNode implements SqmTypedNode<T
 		return unit;
 	}
 
-	public AllowableFunctionReturnType<T> getType() {
+	public ReturnableType<T> getType() {
 		return type;
 	}
 

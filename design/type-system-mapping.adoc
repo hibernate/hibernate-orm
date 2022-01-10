@@ -64,9 +64,9 @@ EntityIdentifierMapping::EntityIdentifierDefinition
 
 == AllowableParameterType
 
-`AllowableParameterType` is a contract that defines types that are valid for parameter binding in terms of an SQM query.
+`BindableType` is a contract that defines types that are valid for parameter binding in terms of an SQM query.
 
 AT some point this needs to be "resolved" to a ValueMapping/Type/Bindable when generating the SQL AST and executing.
 
-One option is to have the `AllowableParameterType` be resolved first to a `SqmExpressable`
+One option is to have the `BindableType` be resolved first to a `SqmExpressable`
 `SqmExpressableAllowableParameterType#resolveSqmExpressable`

@@ -11,7 +11,7 @@ import java.sql.SQLException;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.query.AllowableParameterType;
+import org.hibernate.query.BindableType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.sql.exec.spi.JdbcCallParameterExtractor;
 
@@ -30,7 +30,7 @@ public class JdbcCallParameterExtractorImpl<T> implements JdbcCallParameterExtra
 			String callableName,
 			String parameterName,
 			int parameterPosition,
-			AllowableParameterType ormType) {
+			BindableType ormType) {
 		if ( ! (ormType instanceof BasicDomainType ) ) {
 			throw new NotYetImplementedFor6Exception(
 					"Support for JDBC CallableStatement parameter extraction not yet supported for non-basic types"

@@ -12,7 +12,7 @@ import java.util.List;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
-import org.hibernate.query.AllowableFunctionReturnType;
+import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
@@ -30,17 +30,17 @@ import static java.util.Collections.emptyList;
  * @author Steve Ebersole
  */
 public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
-	private final AllowableFunctionReturnType<T> impliedResultType;
+	private final ReturnableType<T> impliedResultType;
 	private final ArgumentsValidator argumentsValidator;
 	private final FunctionReturnTypeResolver returnTypeResolver;
 	private final FunctionRenderingSupport renderingSupport;
-	private AllowableFunctionReturnType<?> resultType;
+	private ReturnableType<?> resultType;
 
 	public SelfRenderingSqmFunction(
 			SqmFunctionDescriptor descriptor,
 			FunctionRenderingSupport renderingSupport,
 			List<? extends SqmTypedNode<?>> arguments,
-			AllowableFunctionReturnType<T> impliedResultType,
+			ReturnableType<T> impliedResultType,
 			ArgumentsValidator argumentsValidator,
 			FunctionReturnTypeResolver returnTypeResolver,
 			NodeBuilder nodeBuilder,
@@ -74,7 +74,7 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 
 	@Override
 	public SelfRenderingFunctionSqlAstExpression convertToSqlAst(SqmToSqlAstConverter walker) {
-		final AllowableFunctionReturnType<?> resultType = resolveResultType(
+		final ReturnableType<?> resultType = resolveResultType(
 				walker.getCreationContext().getDomainModel().getTypeConfiguration()
 		);
 
@@ -100,7 +100,7 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 		return nodeType;
 	}
 
-	protected AllowableFunctionReturnType<?> resolveResultType(TypeConfiguration typeConfiguration) {
+	protected ReturnableType<?> resolveResultType(TypeConfiguration typeConfiguration) {
 		if ( resultType == null ) {
 			resultType = returnTypeResolver.resolveFunctionReturnType(
 				impliedResultType,
@@ -114,7 +114,7 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 
 	protected MappingModelExpressable<?> getMappingModelExpressable(
 			SqmToSqlAstConverter walker,
-			AllowableFunctionReturnType<?> resultType) {
+			ReturnableType<?> resultType) {
 		MappingModelExpressable<?> mapping;
 		if ( resultType instanceof MappingModelExpressable ) {
 			// here we have a BasicType, which can be cast

@@ -10,7 +10,6 @@ import java.sql.CallableStatement;
 import java.sql.SQLException;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.query.AllowableParameterType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
@@ -21,7 +20,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
  *
  * @author Steve Ebersole
  */
-public interface AllowableOutputParameterType<J> extends AllowableParameterType<J> {
+public interface OutputableType<J> extends BindableType<J> {
 	/**
 	 * Can the given instance of this type actually perform the parameter value extractions?
 	 *

@@ -44,7 +44,7 @@ import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
-import org.hibernate.query.AllowableParameterType;
+import org.hibernate.query.BindableType;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.internal.QueryOptionsImpl;
@@ -456,7 +456,7 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public <T> ProcedureParameter<T> registerParameter(int position, Class<T> javaType, ParameterMode mode) {
-		final AllowableParameterType<T> parameterType = getSessionFactory()
+		final BindableType<T> parameterType = getSessionFactory()
 				.getDomainModel()
 				.resolveQueryParameterType( javaType );
 
@@ -511,7 +511,7 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public <T> ProcedureParameterImplementor<T> registerParameter(String name, Class<T> javaType, ParameterMode mode) {
-		final AllowableParameterType<T> parameterType = getSessionFactory().getDomainModel().resolveQueryParameterType(
+		final BindableType<T> parameterType = getSessionFactory().getDomainModel().resolveQueryParameterType(
 				javaType
 		);
 		final ProcedureParameterImpl<T> parameter = new ProcedureParameterImpl<>(
@@ -1097,7 +1097,7 @@ public class ProcedureCallImpl<R>
 	public <P> ProcedureCallImplementor<R> setParameter(
 			QueryParameter<P> parameter,
 			P value,
-			AllowableParameterType<P> type) {
+			BindableType<P> type) {
 		super.setParameter( parameter, value, type );
 		return this;
 	}
@@ -1109,7 +1109,7 @@ public class ProcedureCallImpl<R>
 //	}
 
 	@Override
-	public <P> ProcedureCallImplementor<R> setParameter(String name, P value, AllowableParameterType<P> type) {
+	public <P> ProcedureCallImplementor<R> setParameter(String name, P value, BindableType<P> type) {
 		super.setParameter( name, value, type );
 		return this;
 	}
@@ -1121,7 +1121,7 @@ public class ProcedureCallImpl<R>
 //	}
 
 	@Override
-	public <P> ProcedureCallImplementor<R> setParameter(int position, P value, AllowableParameterType<P> type) {
+	public <P> ProcedureCallImplementor<R> setParameter(int position, P value, BindableType<P> type) {
 		super.setParameter( position, value, type );
 		return this;
 	}

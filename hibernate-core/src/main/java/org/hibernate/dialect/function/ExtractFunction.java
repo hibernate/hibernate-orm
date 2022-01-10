@@ -7,7 +7,7 @@
 package org.hibernate.dialect.function;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.query.AllowableFunctionReturnType;
+import org.hibernate.query.ReturnableType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
@@ -55,7 +55,7 @@ public class ExtractFunction
 	@Override
 	protected <T> SelfRenderingSqmFunction generateSqmFunctionExpression(
 			List<? extends SqmTypedNode<?>> arguments,
-			AllowableFunctionReturnType<T> impliedResultType,
+			ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
 		SqmExtractUnit<?> field = (SqmExtractUnit<?>) arguments.get(0);
@@ -257,7 +257,7 @@ public class ExtractFunction
 
 	private SelfRenderingSqmFunction<?> extractDateOrTimeUsingCast(
 			SqmExpression<?> expressionToExtract,
-			AllowableFunctionReturnType<?> type,
+			ReturnableType<?> type,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
 		final NodeBuilder builder = expressionToExtract.nodeBuilder();

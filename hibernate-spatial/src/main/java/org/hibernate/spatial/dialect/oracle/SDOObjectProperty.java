@@ -12,7 +12,7 @@ import org.hibernate.QueryException;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.AllowableFunctionReturnType;
+import org.hibernate.query.ReturnableType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
@@ -95,7 +95,7 @@ class SDOObjectProperty implements SqmFunctionDescriptor {
 	@Override
 	public <T> SelfRenderingSqmFunction<T> generateSqmExpression(
 			List<? extends SqmTypedNode<?>> arguments,
-			AllowableFunctionReturnType<T> impliedResultType,
+			ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
 		throw new NotYetImplementedException();
@@ -105,7 +105,7 @@ class SDOObjectProperty implements SqmFunctionDescriptor {
 	public <T> SelfRenderingSqmFunction<T> generateAggregateSqmExpression(
 			List<? extends SqmTypedNode<?>> arguments,
 			SqmPredicate filter,
-			AllowableFunctionReturnType<T> impliedResultType,
+			ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
 		return SqmFunctionDescriptor.super.generateAggregateSqmExpression(
@@ -120,7 +120,7 @@ class SDOObjectProperty implements SqmFunctionDescriptor {
 	@Override
 	public <T> SelfRenderingSqmFunction<T> generateSqmExpression(
 			SqmTypedNode<?> argument,
-			AllowableFunctionReturnType<T> impliedResultType,
+			ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
 		return SqmFunctionDescriptor.super.generateSqmExpression(
@@ -133,7 +133,7 @@ class SDOObjectProperty implements SqmFunctionDescriptor {
 
 	@Override
 	public <T> SelfRenderingSqmFunction<T> generateSqmExpression(
-			AllowableFunctionReturnType<T> impliedResultType,
+			ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
 		return SqmFunctionDescriptor.super.generateSqmExpression( impliedResultType, queryEngine, typeConfiguration );

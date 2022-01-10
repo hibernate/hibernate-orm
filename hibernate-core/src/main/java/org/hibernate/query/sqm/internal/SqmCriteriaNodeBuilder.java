@@ -36,8 +36,8 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
-import org.hibernate.query.AllowableFunctionReturnType;
-import org.hibernate.query.AllowableParameterType;
+import org.hibernate.query.ReturnableType;
+import org.hibernate.query.BindableType;
 import org.hibernate.query.BinaryArithmeticOperator;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.NullPrecedence;
@@ -589,7 +589,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		final SqmTypedNode<N> typedNode = (SqmTypedNode<N>) argument;
 		return getFunctionDescriptor( "sum" ).generateSqmExpression(
 				typedNode,
-				(AllowableFunctionReturnType<N>) typedNode.getNodeType(),
+				(ReturnableType<N>) typedNode.getNodeType(),
 				queryEngine,
 				getJpaMetamodel().getTypeConfiguration()
 		);
@@ -917,7 +917,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			return new SqmLiteralNull<>( this );
 		}
 
-		final AllowableParameterType<T> valueParamType = queryEngine.getTypeConfiguration()
+		final BindableType<T> valueParamType = queryEngine.getTypeConfiguration()
 				.getSessionFactory()
 				.resolveParameterBindType( value );
 		final SqmExpressable<T> sqmExpressable = valueParamType == null
@@ -1009,7 +1009,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	private <T> JpaParameterExpression<T> parameter(Class<T> paramClass, String name, T value) {
 		final BasicType<T> basicType = getTypeConfiguration().getBasicTypeForJavaType( paramClass );
 		if ( basicType == null ) {
-			final AllowableParameterType<T> parameterType;
+			final BindableType<T> parameterType;
 			if ( Collection.class.isAssignableFrom( paramClass ) ) {
 				// a Collection-valued, multi-valued parameter
 				parameterType = new MultiValueParameterType<>( (Class<T>) Collection.class );
@@ -1431,19 +1431,19 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		);
 	}
 
-	private static <T> AllowableParameterType<T> resolveInferredParameterType(
+	private static <T> BindableType<T> resolveInferredParameterType(
 			T value,
 			SqmExpression<? extends T> typeInferenceSource,
 			TypeConfiguration typeConfiguration) {
 		if ( typeInferenceSource != null ) {
-			if ( typeInferenceSource instanceof AllowableParameterType ) {
+			if ( typeInferenceSource instanceof BindableType ) {
 				//noinspection unchecked
-				return (AllowableParameterType<T>) typeInferenceSource;
+				return (BindableType<T>) typeInferenceSource;
 			}
 
 			if ( typeInferenceSource.getNodeType() != null ) {
 				//noinspection unchecked
-				return (AllowableParameterType<T>) typeInferenceSource.getNodeType();
+				return (BindableType<T>) typeInferenceSource.getNodeType();
 			}
 		}
 
@@ -1533,7 +1533,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	private <Y> SqmExpression<Y> createNullifFunctionNode(SqmExpression<Y> first, SqmExpression<Y> second) {
 		//noinspection unchecked
-		final AllowableFunctionReturnType<Y> type = (AllowableFunctionReturnType<Y>) highestPrecedenceType(
+		final ReturnableType<Y> type = (ReturnableType<Y>) highestPrecedenceType(
 				first.getNodeType(),
 				second.getNodeType()
 		);

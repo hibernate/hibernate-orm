@@ -32,5 +32,5 @@ public interface QueryParameter<T> extends jakarta.persistence.Parameter<T> {
 	 *
 	 * @return The associated Hibernate Type, may be {@code null}.
 	 */
-	AllowableParameterType<T> getHibernateType();
+	BindableType<T> getHibernateType();
 }

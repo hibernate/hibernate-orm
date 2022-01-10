@@ -10,7 +10,7 @@ import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
-import org.hibernate.query.AllowableFunctionReturnType;
+import org.hibernate.query.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -33,7 +33,7 @@ public class SelfRenderingAggregateFunctionSqlAstExpression extends SelfRenderin
 			FunctionRenderingSupport renderer,
 			List<? extends SqlAstNode> sqlAstArguments,
 			Predicate filter,
-			AllowableFunctionReturnType<?> type,
+			ReturnableType<?> type,
 			JdbcMappingContainer expressable) {
 		super( functionName, renderer, sqlAstArguments, type, expressable );
 		this.filter = filter;

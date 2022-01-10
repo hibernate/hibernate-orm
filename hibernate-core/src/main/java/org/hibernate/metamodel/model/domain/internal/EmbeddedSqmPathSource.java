@@ -6,7 +6,7 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
-import org.hibernate.query.AllowableParameterType;
+import org.hibernate.query.BindableType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -18,7 +18,7 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
  */
 public class EmbeddedSqmPathSource<J>
 		extends AbstractSqmPathSource<J>
-		implements CompositeSqmPathSource<J>, AllowableParameterType<J> {
+		implements CompositeSqmPathSource<J>, BindableType<J> {
 
 	public EmbeddedSqmPathSource(
 			String localPathName,

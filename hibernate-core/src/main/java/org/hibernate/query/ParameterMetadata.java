@@ -57,7 +57,7 @@ public interface ParameterMetadata {
 	 */
 	<P> QueryParameter<P> resolve(Parameter<P> param);
 
-	default <T> AllowableParameterType<T> getInferredParameterType(QueryParameter<T> parameter) {
+	default <T> BindableType<T> getInferredParameterType(QueryParameter<T> parameter) {
 		return null;
 	}
 

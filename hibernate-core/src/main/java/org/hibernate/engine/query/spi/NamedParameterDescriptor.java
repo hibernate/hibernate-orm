@@ -7,7 +7,7 @@
 package org.hibernate.engine.query.spi;
 
 import org.hibernate.Incubating;
-import org.hibernate.query.AllowableParameterType;
+import org.hibernate.query.BindableType;
 
 /**
  * Descriptor regarding a named parameter.
@@ -25,7 +25,7 @@ public class NamedParameterDescriptor<T> extends AbstractParameterDescriptor<T> 
 	 * @param expectedType The expected type of the parameter, according to the translator
 	 * @param sourceLocations The locations of the named parameters (aye aye aye)
 	 */
-	public NamedParameterDescriptor(String name, AllowableParameterType<T> expectedType, int[] sourceLocations) {
+	public NamedParameterDescriptor(String name, BindableType<T> expectedType, int[] sourceLocations) {
 		super( sourceLocations, expectedType );
 		this.name = name;
 	}

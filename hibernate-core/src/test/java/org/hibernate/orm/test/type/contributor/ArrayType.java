@@ -8,7 +8,7 @@ import java.sql.SQLException;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.query.AllowableParameterType;
+import org.hibernate.query.BindableType;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -18,7 +18,7 @@ import org.hibernate.usertype.UserType;
 /**
  * @author Vlad Mihalcea
  */
-public class ArrayType implements UserType<Array>, AllowableParameterType<Array> {
+public class ArrayType implements UserType<Array>, BindableType<Array> {
     public static final ArrayType INSTANCE = new ArrayType();
 
     private final BasicJavaType<Array> javaType = ArrayTypeDescriptor.INSTANCE;
@@ -26,13 +26,13 @@ public class ArrayType implements UserType<Array>, AllowableParameterType<Array>
 
     @Override
     public Class<Array> getBindableJavaType() {
-        // really a UserType should not implement AllowableParameterType
+        // really a UserType should not implement BindableType
         return Array.class;
     }
 
     @Override
     public SqmExpressable<Array> resolveExpressable(SessionFactoryImplementor sessionFactory) {
-        // really a UserType should not implement AllowableParameterType
+        // really a UserType should not implement BindableType
         throw new UnsupportedOperationException();
     }
 

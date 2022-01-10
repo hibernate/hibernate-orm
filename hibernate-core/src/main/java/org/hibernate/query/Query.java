@@ -339,29 +339,29 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * it occurs, use one of the forms accept a "type".
 	 *
 	 * @see #setParameter(String, Object, Class)
-	 * @see #setParameter(String, Object, AllowableParameterType)
+	 * @see #setParameter(String, Object, BindableType)
 	 */
 	@Override
 	Query<R> setParameter(String name, Object value);
 
 	/**
 	 * Bind the given argument to a named query parameter using the given
-	 * Class reference to attempt to determine the {@link AllowableParameterType}
-	 * to use.  If unable to determine an appropriate {@link AllowableParameterType},
+	 * Class reference to attempt to determine the {@link BindableType}
+	 * to use.  If unable to determine an appropriate {@link BindableType},
 	 * {@link #setParameter(String, Object)} is used
 	 *
-	 * @see AllowableParameterType#parameterType(Class)
-	 * @see #setParameter(String, Object, AllowableParameterType)
+	 * @see BindableType#parameterType(Class)
+	 * @see #setParameter(String, Object, BindableType)
 	 */
 	<P> Query<R> setParameter(String name, P value, Class<P> type);
 
 	/**
 	 * Bind the given argument to a named query parameter using the given
-	 * {@link AllowableParameterType}.
+	 * {@link BindableType}.
 	 *
-	 * @see AllowableParameterType#parameterType
+	 * @see BindableType#parameterType
 	 */
-	<P> Query<R> setParameter(String name, P value, AllowableParameterType<P> type);
+	<P> Query<R> setParameter(String name, P value, BindableType<P> type);
 
 	/**
 	 * Bind an {@link Instant} value to the named query parameter using just the portion
@@ -390,29 +390,29 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * it occurs, use one of the forms accept a "type".
 	 *
 	 * @see #setParameter(int, Object, Class)
-	 * @see #setParameter(int, Object, AllowableParameterType)
+	 * @see #setParameter(int, Object, BindableType)
 	 */
 	@Override
 	Query<R> setParameter(int position, Object value);
 
 	/**
 	 * Bind the given argument to a positional query parameter using the given
-	 * Class reference to attempt to determine the {@link AllowableParameterType}
-	 * to use.  If unable to determine an appropriate {@link AllowableParameterType},
+	 * Class reference to attempt to determine the {@link BindableType}
+	 * to use.  If unable to determine an appropriate {@link BindableType},
 	 * {@link #setParameter(int, Object)} is used
 	 *
-	 * @see AllowableParameterType#parameterType(Class)
-	 * @see #setParameter(int, Object, AllowableParameterType)
+	 * @see BindableType#parameterType(Class)
+	 * @see #setParameter(int, Object, BindableType)
 	 */
 	<P> Query<R> setParameter(int position, P value, Class<P> type);
 
 	/**
 	 * Bind the given argument to a positional query parameter using the given
-	 * {@link AllowableParameterType}.
+	 * {@link BindableType}.
 	 *
-	 * @see AllowableParameterType#parameterType
+	 * @see BindableType#parameterType
 	 */
-	<P> Query<R> setParameter(int position, P value, AllowableParameterType<P> type);
+	<P> Query<R> setParameter(int position, P value, BindableType<P> type);
 
 	/**
 	 * Bind an {@link Instant} value to the positional query parameter using just the portion
@@ -439,7 +439,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * If the type of the parameter cannot be inferred from the context in which
 	 * it occurs, use on of the forms accept a "type".
 	 *
-	 * @see #setParameter(QueryParameter, Object, AllowableParameterType)
+	 * @see #setParameter(QueryParameter, Object, BindableType)
 	 *
 	 * @param parameter the query parameter memento
 	 * @param value the argument, which might be null
@@ -451,31 +451,31 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	/**
 	 * Bind an argument to the query parameter represented by the given
 	 * {@link QueryParameter} using the given Class reference to attempt to
-	 * determine the {@link AllowableParameterType} to use.  If unable to determine
-	 * an appropriate {@link AllowableParameterType}, {@link #setParameter(QueryParameter, Object)} is used
+	 * determine the {@link BindableType} to use.  If unable to determine
+	 * an appropriate {@link BindableType}, {@link #setParameter(QueryParameter, Object)} is used
 	 *
 	 * @param parameter the query parameter memento
 	 * @param value the argument, which might be null
-	 * @param type a {@link AllowableParameterType} representing the type of the parameter
+	 * @param type a {@link BindableType} representing the type of the parameter
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @see AllowableParameterType#parameterType(Class)
-	 * @see #setParameter(QueryParameter, Object, AllowableParameterType)
+	 * @see BindableType#parameterType(Class)
+	 * @see #setParameter(QueryParameter, Object, BindableType)
 	 */
 	<P> Query<R> setParameter(QueryParameter<P> parameter, P value, Class<P> type);
 
 	/**
 	 * Bind an argument to the query parameter represented by the given
-	 * {@link QueryParameter} using the given {@link AllowableParameterType}.
+	 * {@link QueryParameter} using the given {@link BindableType}.
 	 *
 	 * @param parameter the query parameter memento
 	 * @param val the argument, which might be null
-	 * @param type an {@link AllowableParameterType} representing the type of the parameter
+	 * @param type an {@link BindableType} representing the type of the parameter
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	<P> Query<R> setParameter(QueryParameter<P> parameter, P val, AllowableParameterType<P> type);
+	<P> Query<R> setParameter(QueryParameter<P> parameter, P val, BindableType<P> type);
 
 	/**
 	 * {@link jakarta.persistence.Query} override
@@ -503,7 +503,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * The "type mapping" for the binding is inferred from the type of
 	 * the first collection element
 	 *
-	 * @see #setParameterList(java.lang.String, java.util.Collection, org.hibernate.query.AllowableParameterType)
+	 * @see #setParameterList(java.lang.String, java.util.Collection, BindableType)
 	 *
 	 * @apiNote This is used for binding a list of values to an expression such as {@code entity.field in (:values)}.
 	 *
@@ -513,12 +513,12 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 
 	/**
 	 * Bind multiple arguments to a named query parameter using the given
-	 * Class reference to attempt to determine the {@link AllowableParameterType}
-	 * to use.  If unable to determine an appropriate {@link AllowableParameterType},
+	 * Class reference to attempt to determine the {@link BindableType}
+	 * to use.  If unable to determine an appropriate {@link BindableType},
 	 * {@link #setParameterList(String, Collection)} is used
 	 *
-	 * @see AllowableParameterType#parameterType(Class)
-	 * @see #setParameterList(java.lang.String, java.util.Collection, org.hibernate.query.AllowableParameterType)
+	 * @see BindableType#parameterType(Class)
+	 * @see #setParameterList(java.lang.String, java.util.Collection, BindableType)
 	 *
 	 * @apiNote This is used for binding a list of values to an expression such as {@code entity.field in (:values)}.
 	 *
@@ -533,7 +533,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	<P> Query<R> setParameterList(String name, Collection<? extends P> values, AllowableParameterType<P> type);
+	<P> Query<R> setParameterList(String name, Collection<? extends P> values, BindableType<P> type);
 
 
 	/**
@@ -550,12 +550,12 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 
 	/**
 	 * Bind multiple arguments to a named query parameter using the given
-	 * Class reference to attempt to determine the {@link AllowableParameterType}
-	 * to use.  If unable to determine an appropriate {@link AllowableParameterType},
+	 * Class reference to attempt to determine the {@link BindableType}
+	 * to use.  If unable to determine an appropriate {@link BindableType},
 	 * {@link #setParameterList(String, Collection)} is used
 	 *
-	 * @see AllowableParameterType#parameterType(Class)
-	 * @see #setParameterList(java.lang.String, Object[], org.hibernate.query.AllowableParameterType)
+	 * @see BindableType#parameterType(Class)
+	 * @see #setParameterList(java.lang.String, Object[], BindableType)
 	 *
 	 * @apiNote This is used for binding a list of values to an expression such as {@code entity.field in (:values)}.
 	 *
@@ -571,7 +571,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	<P> Query<R> setParameterList(String name, P[] values, AllowableParameterType<P> type);
+	<P> Query<R> setParameterList(String name, P[] values, BindableType<P> type);
 
 	/**
 	 * Bind multiple arguments to a positional query parameter.
@@ -587,12 +587,12 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 
 	/**
 	 * Bind multiple arguments to a positional query parameter using the given
-	 * Class reference to attempt to determine the {@link AllowableParameterType}
-	 * to use.  If unable to determine an appropriate {@link AllowableParameterType},
+	 * Class reference to attempt to determine the {@link BindableType}
+	 * to use.  If unable to determine an appropriate {@link BindableType},
 	 * {@link #setParameterList(String, Collection)} is used
 	 *
-	 * @see AllowableParameterType#parameterType(Class)
-	 * @see #setParameterList(int, Collection, org.hibernate.query.AllowableParameterType)
+	 * @see BindableType#parameterType(Class)
+	 * @see #setParameterList(int, Collection, BindableType)
 	 *
 	 * @apiNote This is used for binding a list of values to an expression such as {@code entity.field in (:values)}.
 	 *
@@ -607,7 +607,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	<P> Query<R> setParameterList(int position, Collection<? extends P> values, AllowableParameterType<P> type);
+	<P> Query<R> setParameterList(int position, Collection<? extends P> values, BindableType<P> type);
 
 	/**
 	 * Bind multiple arguments to a positional query parameter.
@@ -623,12 +623,12 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 
 	/**
 	 * Bind multiple arguments to a positional query parameter using the given
-	 * Class reference to attempt to determine the {@link AllowableParameterType}
-	 * to use.  If unable to determine an appropriate {@link AllowableParameterType},
+	 * Class reference to attempt to determine the {@link BindableType}
+	 * to use.  If unable to determine an appropriate {@link BindableType},
 	 * {@link #setParameterList(String, Collection)} is used
 	 *
-	 * @see AllowableParameterType#parameterType(Class)
-	 * @see #setParameterList(int, Object[], org.hibernate.query.AllowableParameterType)
+	 * @see BindableType#parameterType(Class)
+	 * @see #setParameterList(int, Object[], BindableType)
 	 *
 	 * @apiNote This is used for binding a list of values to an expression such as {@code entity.field in (:values)}.
 	 *
@@ -643,7 +643,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	<P> Query<R> setParameterList(int position, P[] values, AllowableParameterType<P> type);
+	<P> Query<R> setParameterList(int position, P[] values, BindableType<P> type);
 
 	/**
 	 * Bind multiple arguments to the query parameter represented by the
@@ -662,12 +662,12 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	/**
 	 * Bind multiple arguments to the query parameter represented by the
 	 * given {@link QueryParameter} using the given Class reference to attempt
-	 * to determine the {@link AllowableParameterType} to use.  If unable to
-	 * determine an appropriate {@link AllowableParameterType},
+	 * to determine the {@link BindableType} to use.  If unable to
+	 * determine an appropriate {@link BindableType},
 	 * {@link #setParameterList(String, Collection)} is used
 	 *
-	 * @see AllowableParameterType#parameterType(Class)
-	 * @see #setParameterList(QueryParameter, java.util.Collection, org.hibernate.query.AllowableParameterType)
+	 * @see BindableType#parameterType(Class)
+	 * @see #setParameterList(QueryParameter, java.util.Collection, BindableType)
 	 *
 	 * @apiNote This is used for binding a list of values to an expression such as {@code entity.field in (:values)}.
 	 *
@@ -677,7 +677,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 
 	/**
 	 * Bind multiple arguments to the query parameter represented by the
-	 * given {@link QueryParameter}, inferring the {@link AllowableParameterType}.
+	 * given {@link QueryParameter}, inferring the {@link BindableType}.
 	 *
 	 * Bind multiple arguments to a named query parameter.
 	 * <p/>
@@ -688,7 +688,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	<P> Query<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, AllowableParameterType<P> type);
+	<P> Query<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, BindableType<P> type);
 
 	/**
 	 * Bind multiple arguments to the query parameter represented by the
@@ -708,12 +708,12 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	/**
 	 * Bind multiple arguments to the query parameter represented by the
 	 * given {@link QueryParameter} using the given Class reference to attempt
-	 * to determine the {@link AllowableParameterType} to use.  If unable to
-	 * determine an appropriate {@link AllowableParameterType},
+	 * to determine the {@link BindableType} to use.  If unable to
+	 * determine an appropriate {@link BindableType},
 	 * {@link #setParameterList(String, Collection)} is used
 	 *
-	 * @see AllowableParameterType#parameterType(Class)
-	 * @see #setParameterList(QueryParameter, Object[], org.hibernate.query.AllowableParameterType)
+	 * @see BindableType#parameterType(Class)
+	 * @see #setParameterList(QueryParameter, Object[], BindableType)
 	 *
 	 * @apiNote This is used for binding a list of values to an expression such as {@code entity.field in (:values)}.
 	 *
@@ -723,7 +723,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 
 	/**
 	 * Bind multiple arguments to the query parameter represented by the
-	 * given {@link QueryParameter}, inferring the {@link AllowableParameterType}.
+	 * given {@link QueryParameter}, inferring the {@link BindableType}.
 	 *
 	 * Bind multiple arguments to a named query parameter.
 	 * <p/>
@@ -734,7 +734,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	<P> Query<R> setParameterList(QueryParameter<P> parameter, P[] values, AllowableParameterType<P> type);
+	<P> Query<R> setParameterList(QueryParameter<P> parameter, P[] values, BindableType<P> type);
 
 	/**
 	 * Bind the property values of the given bean to named parameters of the query,

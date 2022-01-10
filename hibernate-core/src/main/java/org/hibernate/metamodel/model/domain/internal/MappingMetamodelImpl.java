@@ -51,7 +51,7 @@ import org.hibernate.metamodel.internal.JpaMetaModelPopulationSetting;
 import org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
-import org.hibernate.query.AllowableParameterType;
+import org.hibernate.query.BindableType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
@@ -821,7 +821,7 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 	}
 
 	@Override
-	public  <T> AllowableParameterType<T> resolveQueryParameterType(Class<T> javaClass) {
+	public  <T> BindableType<T> resolveQueryParameterType(Class<T> javaClass) {
 		final BasicType<T> basicType = getTypeConfiguration().getBasicTypeForJavaType( javaClass );
 		// For enums, we simply don't know the exact mapping if there is no basic type registered
 		if ( basicType != null || javaClass.isEnum() ) {

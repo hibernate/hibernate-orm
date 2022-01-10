@@ -11,7 +11,7 @@ import java.util.List;
 
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
-import org.hibernate.query.AllowableFunctionReturnType;
+import org.hibernate.query.ReturnableType;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.query.NavigablePath;
@@ -53,7 +53,7 @@ public class OrderByFragmentFunction extends AbstractSqmFunctionDescriptor {
 	@Override
 	protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
 			List<? extends SqmTypedNode<?>> arguments,
-			AllowableFunctionReturnType<T> impliedResultType,
+			ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
 		return new SelfRenderingSqmFunction<T>(
@@ -69,7 +69,7 @@ public class OrderByFragmentFunction extends AbstractSqmFunctionDescriptor {
 
 			@Override
 			public SelfRenderingFunctionSqlAstExpression convertToSqlAst(SqmToSqlAstConverter walker) {
-				final AllowableFunctionReturnType<?> resultType = resolveResultType(
+				final ReturnableType<?> resultType = resolveResultType(
 						walker.getCreationContext().getDomainModel().getTypeConfiguration()
 				);
 				final String sqmAlias = ( (SqmLiteral<String>) getArguments().get( 0 ) ).getLiteralValue();

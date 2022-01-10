@@ -43,7 +43,7 @@ import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.query.AllowableParameterType;
+import org.hibernate.query.BindableType;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.QueryLogging;
 import org.hibernate.query.QueryParameter;
@@ -957,7 +957,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		if ( value instanceof TypedParameterValue ) {
 			@SuppressWarnings("unchecked")
 			final TypedParameterValue<Object> typedValue = (TypedParameterValue<Object>) value;
-			final AllowableParameterType<Object> type = typedValue.getType();
+			final BindableType<Object> type = typedValue.getType();
 			if ( type != null ) {
 				return setParameter( name, typedValue.getValue(), type );
 			}
@@ -973,7 +973,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		}
 
 		if ( param.allowsMultiValuedBinding() ) {
-			final AllowableParameterType<?> hibernateType = param.getHibernateType();
+			final BindableType<?> hibernateType = param.getHibernateType();
 			if ( hibernateType == null || isInstance( hibernateType, value ) ) {
 				if ( value instanceof Collection ) {
 					//noinspection rawtypes
@@ -987,7 +987,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		return this;
 	}
 
-	private boolean isInstance(AllowableParameterType<?> parameterType, Object value) {
+	private boolean isInstance(BindableType<?> parameterType, Object value) {
 		final SqmExpressable<?> sqmExpressable = parameterType.resolveExpressable( session.getFactory() );
 		assert sqmExpressable != null;
 
@@ -1004,7 +1004,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 			setParameter( name, value );
 		}
 		else {
-			final AllowableParameterType<P> paramType;
+			final BindableType<P> paramType;
 			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
 			if ( basicType != null ) {
 				paramType = basicType;
@@ -1018,7 +1018,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 					paramType = managedDomainType;
 				}
 				else {
-					throw new HibernateException( "Unable to determine AllowableParameterType : " + javaType.getName() );
+					throw new HibernateException( "Unable to determine BindableType : " + javaType.getName() );
 				}
 			}
 
@@ -1029,7 +1029,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	public <P> QueryImplementor<R> setParameter(String name, P value, AllowableParameterType<P> type) {
+	public <P> QueryImplementor<R> setParameter(String name, P value, BindableType<P> type) {
 		this.<P>locateBinding( name ).setBindValue( value, type );
 		return this;
 	}
@@ -1045,7 +1045,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		if ( value instanceof TypedParameterValue ) {
 			@SuppressWarnings("unchecked")
 			final TypedParameterValue<Object> typedValue = (TypedParameterValue<Object>) value;
-			final AllowableParameterType<Object> type = typedValue.getType();
+			final BindableType<Object> type = typedValue.getType();
 			if ( type != null ) {
 				return setParameter( position, typedValue.getValue(), type );
 			}
@@ -1061,7 +1061,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		}
 
 		if ( param.allowsMultiValuedBinding() ) {
-			final AllowableParameterType<?> hibernateType = param.getHibernateType();
+			final BindableType<?> hibernateType = param.getHibernateType();
 			if ( hibernateType == null || isInstance( hibernateType, value ) ) {
 				if ( value instanceof Collection ) {
 					//noinspection rawtypes,unchecked
@@ -1084,7 +1084,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 			setParameter( position, value );
 		}
 		else {
-			final AllowableParameterType<P> paramType;
+			final BindableType<P> paramType;
 			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
 			if ( basicType != null ) {
 				paramType = basicType;
@@ -1098,7 +1098,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 					paramType = managedDomainType;
 				}
 				else {
-					throw new HibernateException( "Unable to determine AllowableParameterType : " + javaType.getName() );
+					throw new HibernateException( "Unable to determine BindableType : " + javaType.getName() );
 				}
 			}
 
@@ -1109,7 +1109,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	public <P> QueryImplementor<R> setParameter(int position, P value, AllowableParameterType<P> type) {
+	public <P> QueryImplementor<R> setParameter(int position, P value, BindableType<P> type) {
 		this.<P>locateBinding( position ).setBindValue( value, type );
 		return this;
 	}
@@ -1138,7 +1138,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 			setParameter( parameter, value );
 		}
 		else {
-			final AllowableParameterType<P> paramType;
+			final BindableType<P> paramType;
 			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
 			if ( basicType != null ) {
 				paramType = basicType;
@@ -1152,7 +1152,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 					paramType = managedDomainType;
 				}
 				else {
-					throw new HibernateException( "Unable to determine AllowableParameterType : " + javaType.getName() );
+					throw new HibernateException( "Unable to determine BindableType : " + javaType.getName() );
 				}
 			}
 
@@ -1163,7 +1163,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	public <P> QueryImplementor<R> setParameter(QueryParameter<P> parameter, P value, AllowableParameterType<P> type) {
+	public <P> QueryImplementor<R> setParameter(QueryParameter<P> parameter, P value, BindableType<P> type) {
 		locateBinding( parameter ).setBindValue( value,  type );
 		return this;
 	}
@@ -1174,7 +1174,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		if ( value instanceof TypedParameterValue ) {
 			@SuppressWarnings("unchecked")
 			final TypedParameterValue<P> typedValue = (TypedParameterValue<P>) value;
-			final AllowableParameterType<P> type = typedValue.getType();
+			final BindableType<P> type = typedValue.getType();
 			if ( type != null ) {
 				setParameter( parameter, typedValue.getValue(), type );
 			}
@@ -1189,7 +1189,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		return this;
 	}
 
-	private <P> void setParameter(Parameter<P> parameter, P value, AllowableParameterType<P> type) {
+	private <P> void setParameter(Parameter<P> parameter, P value, BindableType<P> type) {
 		if ( parameter instanceof QueryParameter ) {
 			setParameter( (QueryParameter<P>) parameter, value, type );
 		}
@@ -1227,7 +1227,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 			setParameterList( name, values );
 		}
 		else {
-			final AllowableParameterType<P> paramType;
+			final BindableType<P> paramType;
 			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
 			if ( basicType != null ) {
 				paramType = basicType;
@@ -1241,7 +1241,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 					paramType = managedDomainType;
 				}
 				else {
-					throw new HibernateException( "Unable to determine AllowableParameterType : " + javaType.getName() );
+					throw new HibernateException( "Unable to determine BindableType : " + javaType.getName() );
 				}
 			}
 
@@ -1253,7 +1253,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 
 
 	@Override
-	public <P> QueryImplementor<R> setParameterList(String name, Collection<? extends P> values, AllowableParameterType<P> type) {
+	public <P> QueryImplementor<R> setParameterList(String name, Collection<? extends P> values, BindableType<P> type) {
 		this.<P>locateBinding( name ).setBindValues( values, type );
 		return this;
 	}
@@ -1274,7 +1274,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 			setParameterList( name, values );
 		}
 		else {
-			final AllowableParameterType<P> paramType;
+			final BindableType<P> paramType;
 			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
 			if ( basicType != null ) {
 				paramType = basicType;
@@ -1288,7 +1288,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 					paramType = managedDomainType;
 				}
 				else {
-					throw new HibernateException( "Unable to determine AllowableParameterType : " + javaType.getName() );
+					throw new HibernateException( "Unable to determine BindableType : " + javaType.getName() );
 				}
 			}
 
@@ -1298,7 +1298,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		return this;
 	}
 
-	public <P> QueryImplementor<R> setParameterList(String name, P[] values, AllowableParameterType<P> type) {
+	public <P> QueryImplementor<R> setParameterList(String name, P[] values, BindableType<P> type) {
 		this.<P>locateBinding( name ).setBindValues( Arrays.asList( values ), type );
 		return this;
 	}
@@ -1319,7 +1319,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 			setParameterList( position, values );
 		}
 		else {
-			final AllowableParameterType<P> paramType;
+			final BindableType<P> paramType;
 			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
 			if ( basicType != null ) {
 				paramType = basicType;
@@ -1333,7 +1333,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 					paramType = managedDomainType;
 				}
 				else {
-					throw new HibernateException( "Unable to determine AllowableParameterType : " + javaType.getName() );
+					throw new HibernateException( "Unable to determine BindableType : " + javaType.getName() );
 				}
 			}
 
@@ -1344,7 +1344,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	public <P> QueryImplementor<R> setParameterList(int position, Collection<? extends P> values, AllowableParameterType<P> type) {
+	public <P> QueryImplementor<R> setParameterList(int position, Collection<? extends P> values, BindableType<P> type) {
 		this.<P>locateBinding( position ).setBindValues( values, type );
 		return this;
 	}
@@ -1365,7 +1365,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 			setParameterList( position, values );
 		}
 		else {
-			final AllowableParameterType<P> paramType;
+			final BindableType<P> paramType;
 			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
 			if ( basicType != null ) {
 				paramType = basicType;
@@ -1379,7 +1379,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 					paramType = managedDomainType;
 				}
 				else {
-					throw new HibernateException( "Unable to determine AllowableParameterType : " + javaType.getName() );
+					throw new HibernateException( "Unable to determine BindableType : " + javaType.getName() );
 				}
 			}
 
@@ -1390,8 +1390,8 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public <P> QueryImplementor<R> setParameterList(int position, P[] values, AllowableParameterType<P> type) {
-		locateBinding( position ).setBindValues( Arrays.asList( values ), (AllowableParameterType) type );
+	public <P> QueryImplementor<R> setParameterList(int position, P[] values, BindableType<P> type) {
+		locateBinding( position ).setBindValues( Arrays.asList( values ), (BindableType) type );
 		return this;
 	}
 
@@ -1418,7 +1418,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 			setParameterList( parameter, values );
 		}
 		else {
-			final AllowableParameterType<P> paramType;
+			final BindableType<P> paramType;
 			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
 			if ( basicType != null ) {
 				paramType = basicType;
@@ -1432,7 +1432,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 					paramType = managedDomainType;
 				}
 				else {
-					throw new HibernateException( "Unable to determine AllowableParameterType : " + javaType.getName() );
+					throw new HibernateException( "Unable to determine BindableType : " + javaType.getName() );
 				}
 			}
 
@@ -1443,7 +1443,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	public <P> QueryImplementor<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, AllowableParameterType<P> type) {
+	public <P> QueryImplementor<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, BindableType<P> type) {
 		locateBinding( parameter ).setBindValues( values, type );
 		return this;
 	}
@@ -1464,7 +1464,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 			setParameterList( parameter, values );
 		}
 		else {
-			final AllowableParameterType<P> paramType;
+			final BindableType<P> paramType;
 			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
 			if ( basicType != null ) {
 				paramType = basicType;
@@ -1478,7 +1478,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 					paramType = managedDomainType;
 				}
 				else {
-					throw new HibernateException( "Unable to determine AllowableParameterType : " + javaType.getName() );
+					throw new HibernateException( "Unable to determine BindableType : " + javaType.getName() );
 				}
 			}
 
@@ -1490,7 +1490,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 
 
 	@Override
-	public <P> QueryImplementor<R> setParameterList(QueryParameter<P> parameter, P[] values, AllowableParameterType<P> type) {
+	public <P> QueryImplementor<R> setParameterList(QueryParameter<P> parameter, P[] values, BindableType<P> type) {
 		locateBinding( parameter ).setBindValues( Arrays.asList( values ), type );
 		return this;
 	}
@@ -1585,7 +1585,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 					setParameterList( paramName, (Object[]) object );
 				}
 				else {
-					AllowableParameterType<Object> type = determineType( paramName, retType );
+					BindableType<Object> type = determineType( paramName, retType );
 					setParameter( paramName, object, type );
 				}
 			}
@@ -1597,8 +1597,8 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@SuppressWarnings("WeakerAccess")
-	protected AllowableParameterType<Object> determineType(String namedParam, Class<?> retType) {
-		AllowableParameterType<?> type = locateBinding( namedParam ).getBindType();
+	protected BindableType<Object> determineType(String namedParam, Class<?> retType) {
+		BindableType<?> type = locateBinding( namedParam ).getBindType();
 		if ( type == null ) {
 			type = getParameterMetadata().getQueryParameter( namedParam ).getHibernateType();
 		}
@@ -1606,7 +1606,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 			type = getSession().getFactory().resolveParameterBindType( retType );
 		}
 		//noinspection unchecked
-		return (AllowableParameterType<Object>) type;
+		return (BindableType<Object>) type;
 	}
 
 	@Override

@@ -13,11 +13,11 @@ import org.hibernate.query.spi.QueryParameterImplementor;
  */
 public abstract class AbstractQueryParameter<T> implements QueryParameterImplementor<T> {
 	private boolean allowMultiValuedBinding;
-	private AllowableParameterType<T> anticipatedType;
+	private BindableType<T> anticipatedType;
 
 	public AbstractQueryParameter(
 			boolean allowMultiValuedBinding,
-			AllowableParameterType<T> anticipatedType) {
+			BindableType<T> anticipatedType) {
 		this.allowMultiValuedBinding = allowMultiValuedBinding;
 		this.anticipatedType = anticipatedType;
 	}
@@ -34,12 +34,12 @@ public abstract class AbstractQueryParameter<T> implements QueryParameterImpleme
 	}
 
 	@Override
-	public AllowableParameterType<T> getHibernateType() {
+	public BindableType<T> getHibernateType() {
 		return anticipatedType;
 	}
 
 	@Override
-	public void applyAnticipatedType(AllowableParameterType type) {
+	public void applyAnticipatedType(BindableType type) {
 		//noinspection unchecked
 		this.anticipatedType = type;
 	}

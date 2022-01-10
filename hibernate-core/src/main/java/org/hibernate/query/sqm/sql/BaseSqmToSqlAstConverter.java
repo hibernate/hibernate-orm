@@ -91,8 +91,8 @@ import org.hibernate.metamodel.model.domain.internal.DiscriminatorSqmPath;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
-import org.hibernate.query.AllowableFunctionReturnType;
-import org.hibernate.query.AllowableParameterType;
+import org.hibernate.query.ReturnableType;
+import org.hibernate.query.BindableType;
 import org.hibernate.query.BinaryArithmeticOperator;
 import org.hibernate.query.CastType;
 import org.hibernate.query.ComparisonOperator;
@@ -3180,7 +3180,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				// given date or timestamp, producing an
 				// adjusted date or timestamp
 				result = timestampadd().expression(
-						(AllowableFunctionReturnType<?>) adjustedTimestampType,
+						(ReturnableType<?>) adjustedTimestampType,
 						new DurationUnit( SECOND, basicType( Long.class ) ),
 						scaledExpression,
 						adjustedTimestamp
@@ -3588,7 +3588,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					functionDescriptor,
 					arguments,
 					null,
-					(AllowableFunctionReturnType<?>) modelPart.getJdbcMappings().get( 0 ),
+					(ReturnableType<?>) modelPart.getJdbcMappings().get( 0 ),
 					modelPart
 			);
 			subQuerySpec.getSelectClause().addSqlSelection( new SqlSelectionImpl( 1, 0, expression ) );
@@ -4384,7 +4384,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 		}
 
-		AllowableParameterType<?> paramType = binding.getBindType();
+		BindableType<?> paramType = binding.getBindType();
 		if ( paramType == null ) {
 			paramType = queryParameter.getHibernateType();
 			if ( paramType == null ) {
@@ -4832,7 +4832,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			DurationUnit unit = new DurationUnit( baseUnit, basicType( Integer.class ) );
 			Expression magnitude = applyScale( timestampdiff().expression( null, unit, right, left ) );
 			return timestampadd().expression(
-					(AllowableFunctionReturnType<?>) adjustedTimestampType, //TODO should be adjustedTimestamp.getType()
+					(ReturnableType<?>) adjustedTimestampType, //TODO should be adjustedTimestamp.getType()
 					unit, magnitude, adjustedTimestamp
 			);
 		}
@@ -4848,7 +4848,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			DurationUnit unit = new DurationUnit( baseUnit, basicType( Integer.class ) );
 			BasicValuedMapping durationType = (BasicValuedMapping) expression.getNodeType();
 			Expression scaledMagnitude = applyScale( timestampdiff().expression(
-					(AllowableFunctionReturnType<?>) expression.getNodeType(),
+					(ReturnableType<?>) expression.getNodeType(),
 					unit, right, left
 			) );
 			return new Duration( scaledMagnitude, baseUnit, durationType );
@@ -4979,7 +4979,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				throw new IllegalStateException();
 			}
 			return timestampadd().expression(
-					(AllowableFunctionReturnType<?>) adjustedTimestampType, //TODO should be adjustedTimestamp.getType()
+					(ReturnableType<?>) adjustedTimestampType, //TODO should be adjustedTimestamp.getType()
 					unit, scaledMagnitude, adjustedTimestamp
 			);
 		}

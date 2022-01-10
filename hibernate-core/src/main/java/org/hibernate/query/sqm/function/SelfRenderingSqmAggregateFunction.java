@@ -8,7 +8,7 @@ package org.hibernate.query.sqm.function;
 
 import java.util.List;
 
-import org.hibernate.query.AllowableFunctionReturnType;
+import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
@@ -34,7 +34,7 @@ public class SelfRenderingSqmAggregateFunction<T> extends SelfRenderingSqmFuncti
 			FunctionRenderingSupport renderingSupport,
 			List<? extends SqmTypedNode<?>> arguments,
 			SqmPredicate filter,
-			AllowableFunctionReturnType<T> impliedResultType,
+			ReturnableType<T> impliedResultType,
 			ArgumentsValidator argumentsValidator,
 			FunctionReturnTypeResolver returnTypeResolver,
 			NodeBuilder nodeBuilder,
@@ -45,7 +45,7 @@ public class SelfRenderingSqmAggregateFunction<T> extends SelfRenderingSqmFuncti
 
 	@Override
 	public SelfRenderingFunctionSqlAstExpression convertToSqlAst(SqmToSqlAstConverter walker) {
-		final AllowableFunctionReturnType<?> resultType = resolveResultType(
+		final ReturnableType<?> resultType = resolveResultType(
 				walker.getCreationContext().getDomainModel().getTypeConfiguration()
 		);
 

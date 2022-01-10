@@ -7,7 +7,7 @@
 package org.hibernate.query.sqm;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.AllowableParameterType;
+import org.hibernate.query.BindableType;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -19,7 +19,7 @@ import org.hibernate.type.descriptor.java.JavaType;
  *
  * @author Steve Ebersole
  */
-public interface SqmExpressable<J> extends AllowableParameterType<J> {
+public interface SqmExpressable<J> extends BindableType<J> {
 	/**
 	 * The Java type descriptor for this expressable
 	 */

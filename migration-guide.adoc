@@ -247,7 +247,7 @@ for details of using `@CollectionTypeRegistration`
 [[query]]
 == Query
 
-// todo (6.0) - Query parameter binding overloads accepting `Type`, `AllowableParameterType`
+// todo (6.0) - Query parameter binding overloads accepting `Type`, `BindableType`
 // todo (6.0) - addition of parameter binding overloads accepting Class - AttributeConverter, UserType, Java Type (resolved from JavaTypeRegistry), ...
 
 [[query-stream]]

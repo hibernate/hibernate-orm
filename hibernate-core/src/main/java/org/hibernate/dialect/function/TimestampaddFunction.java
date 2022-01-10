@@ -9,7 +9,7 @@ package org.hibernate.dialect.function;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.query.AllowableFunctionReturnType;
+import org.hibernate.query.ReturnableType;
 import org.hibernate.query.BinaryArithmeticOperator;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
@@ -160,7 +160,7 @@ public class TimestampaddFunction
 //	@Override
 //	protected <T> SelfRenderingSqlFunctionExpression<T> generateSqmFunctionExpression(
 //			List<SqmTypedNode<?>> arguments,
-//			AllowableFunctionReturnType<T> impliedResultType,
+//			ReturnableType<T> impliedResultType,
 //			QueryEngine queryEngine,
 //			TypeConfiguration typeConfiguration) {
 //		SqmExtractUnit<?> field = (SqmExtractUnit<?>) arguments.get(0);
@@ -185,7 +185,7 @@ public class TimestampaddFunction
 //	}
 
 	public SelfRenderingFunctionSqlAstExpression expression(
-			AllowableFunctionReturnType<?> impliedResultType,
+			ReturnableType<?> impliedResultType,
 			SqlAstNode... sqlAstArguments) {
 		Expression to = (Expression) sqlAstArguments[2];
 		return new SelfRenderingFunctionSqlAstExpression(
@@ -194,7 +194,7 @@ public class TimestampaddFunction
 				asList( sqlAstArguments ),
 				impliedResultType != null
 						? impliedResultType
-						: (AllowableFunctionReturnType<?>) to.getExpressionType().getJdbcMappings().get( 0 ),
+						: (ReturnableType<?>) to.getExpressionType().getJdbcMappings().get( 0 ),
 				to.getExpressionType()
 		);
 	}

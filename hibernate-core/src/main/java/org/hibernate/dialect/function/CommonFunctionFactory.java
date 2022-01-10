@@ -16,7 +16,7 @@ import java.util.function.Supplier;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
-import org.hibernate.query.AllowableFunctionReturnType;
+import org.hibernate.query.ReturnableType;
 
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.spi.QueryEngine;
@@ -1893,14 +1893,14 @@ public class CommonFunctionFactory {
 				.setReturnTypeResolver(
 						new FunctionReturnTypeResolver() {
 							@Override
-							public AllowableFunctionReturnType<?> resolveFunctionReturnType(
-									AllowableFunctionReturnType<?> impliedType,
+							public ReturnableType<?> resolveFunctionReturnType(
+									ReturnableType<?> impliedType,
 									List<? extends SqmTypedNode<?>> arguments,
 									TypeConfiguration typeConfiguration) {
 								if ( impliedType != null ) {
 									return impliedType;
 								}
-								final AllowableFunctionReturnType<?> argType = StandardFunctionReturnTypeResolvers.extractArgumentType(
+								final ReturnableType<?> argType = StandardFunctionReturnTypeResolvers.extractArgumentType(
 										arguments,
 										1
 								);
@@ -2435,8 +2435,8 @@ public class CommonFunctionFactory {
 		}
 
 		@Override
-		public AllowableFunctionReturnType<?> resolveFunctionReturnType(
-				AllowableFunctionReturnType<?> impliedType,
+		public ReturnableType<?> resolveFunctionReturnType(
+				ReturnableType<?> impliedType,
 				List<? extends SqmTypedNode<?>> arguments,
 				TypeConfiguration typeConfiguration) {
 			final JdbcMapping baseType = StandardFunctionReturnTypeResolvers
@@ -2445,10 +2445,10 @@ public class CommonFunctionFactory {
 					.extractArgumentJdbcMapping( typeConfiguration, arguments, 2 );
 
 			if ( baseType.getJdbcTypeDescriptor().isDecimal() ) {
-				return (AllowableFunctionReturnType<?>) arguments.get( 0 ).getNodeType();
+				return (ReturnableType<?>) arguments.get( 0 ).getNodeType();
 			}
 			else if ( powerType.getJdbcTypeDescriptor().isDecimal() ) {
-				return (AllowableFunctionReturnType<?>) arguments.get( 1 ).getNodeType();
+				return (ReturnableType<?>) arguments.get( 1 ).getNodeType();
 			}
 			return typeConfiguration.getBasicTypeForJavaType( Double.class );
 		}

@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.internal;
 
-import org.hibernate.query.AllowableParameterType;
+import org.hibernate.query.BindableType;
 import org.hibernate.query.QueryParameter;
 
 /**
@@ -18,20 +18,20 @@ import org.hibernate.query.QueryParameter;
  * @author Steve Ebersole
  */
 public abstract class AbstractQueryParameterImpl<T> implements QueryParameter<T> {
-	private AllowableParameterType<T> expectedType;
+	private BindableType<T> expectedType;
 
-	public AbstractQueryParameterImpl(AllowableParameterType<T> expectedType) {
+	public AbstractQueryParameterImpl(BindableType<T> expectedType) {
 		this.expectedType = expectedType;
 	}
 
 	@Override
-	public AllowableParameterType<T> getHibernateType() {
+	public BindableType<T> getHibernateType() {
 		return expectedType;
 	}
 
-	public void setHibernateType(AllowableParameterType<?> expectedType) {
+	public void setHibernateType(BindableType<?> expectedType) {
 		//noinspection unchecked
-		this.expectedType = (AllowableParameterType<T>) expectedType;
+		this.expectedType = (BindableType<T>) expectedType;
 	}
 
 	@Override

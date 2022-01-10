@@ -7,7 +7,7 @@
 package org.hibernate.query.sqm.produce.function;
 
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
-import org.hibernate.query.AllowableFunctionReturnType;
+import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -32,8 +32,8 @@ public interface FunctionReturnTypeResolver {
 	 *
 	 * @return The resolved type.
 	 */
-	AllowableFunctionReturnType<?> resolveFunctionReturnType(
-			AllowableFunctionReturnType<?> impliedType,
+	ReturnableType<?> resolveFunctionReturnType(
+			ReturnableType<?> impliedType,
 			List<? extends SqmTypedNode<?>> arguments,
 			TypeConfiguration typeConfiguration);
 

@@ -14,7 +14,7 @@ import jakarta.persistence.ParameterMode;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.query.AllowableParameterType;
+import org.hibernate.query.BindableType;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.procedure.spi.ParameterStrategy;
@@ -176,7 +176,7 @@ public class NamedCallableQueryMementoImpl extends AbstractNamedQueryMemento imp
 		private final String name;
 		private final ParameterMode mode;
 		private final Class type;
-		private final AllowableParameterType hibernateType;
+		private final BindableType hibernateType;
 
 		/**
 		 * Create the memento
@@ -186,7 +186,7 @@ public class NamedCallableQueryMementoImpl extends AbstractNamedQueryMemento imp
 				String name,
 				ParameterMode mode,
 				Class type,
-				AllowableParameterType hibernateType) {
+				BindableType hibernateType) {
 			this.position = position;
 			this.name = name;
 			this.mode = mode;
@@ -210,7 +210,7 @@ public class NamedCallableQueryMementoImpl extends AbstractNamedQueryMemento imp
 			return type;
 		}
 
-		public AllowableParameterType getHibernateType() {
+		public BindableType getHibernateType() {
 			return hibernateType;
 		}
 

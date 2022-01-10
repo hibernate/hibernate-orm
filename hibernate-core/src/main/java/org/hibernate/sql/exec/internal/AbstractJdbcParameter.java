@@ -14,7 +14,7 @@ import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.mapping.SqlExpressable;
-import org.hibernate.query.AllowableParameterType;
+import org.hibernate.query.BindableType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
@@ -112,7 +112,7 @@ public abstract class AbstractJdbcParameter
 			return jdbcMapping;
 		}
 
-		final AllowableParameterType<?> parameterType = executionContext.getSession()
+		final BindableType<?> parameterType = executionContext.getSession()
 				.getFactory()
 				.resolveParameterBindType( bindValue );
 		if ( parameterType instanceof JdbcMapping ) {

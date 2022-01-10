@@ -6,7 +6,7 @@
  */
 package org.hibernate.dialect.function;
 
-import org.hibernate.query.AllowableFunctionReturnType;
+import org.hibernate.query.ReturnableType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.AbstractSqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
@@ -42,7 +42,7 @@ public class NvlCoalesceEmulation
 	@Override
 	protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
 			List<? extends SqmTypedNode<?>> arguments,
-			AllowableFunctionReturnType<T> impliedResultType,
+			ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
 
@@ -54,8 +54,8 @@ public class NvlCoalesceEmulation
 
 		int pos = arguments.size();
 		SqmExpression<?> result = (SqmExpression<?>) arguments.get( --pos );
-		AllowableFunctionReturnType<?> type =
-				(AllowableFunctionReturnType<?>) result.getNodeType();
+		ReturnableType<?> type =
+				(ReturnableType<?>) result.getNodeType();
 
 		while (pos>0) {
 			SqmExpression<?> next = (SqmExpression<?>) arguments.get( --pos );

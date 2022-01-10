@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.exec.internal;
 
-import org.hibernate.query.AllowableParameterType;
+import org.hibernate.query.BindableType;
 import org.hibernate.sql.exec.spi.JdbcCallFunctionReturn;
 
 import jakarta.persistence.ParameterMode;
@@ -16,7 +16,7 @@ import jakarta.persistence.ParameterMode;
  */
 public class JdbcCallFunctionReturnImpl extends JdbcCallParameterRegistrationImpl implements JdbcCallFunctionReturn {
 	public JdbcCallFunctionReturnImpl(
-			AllowableParameterType ormType,
+			BindableType ormType,
 			JdbcCallParameterExtractorImpl parameterExtractor,
 			JdbcCallRefCursorExtractorImpl refCursorExtractor) {
 		super(

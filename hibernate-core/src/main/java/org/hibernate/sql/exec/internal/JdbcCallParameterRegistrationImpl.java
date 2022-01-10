@@ -11,7 +11,7 @@ import java.sql.SQLException;
 
 import org.hibernate.engine.jdbc.cursor.spi.RefCursorSupport;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.query.AllowableParameterType;
+import org.hibernate.query.BindableType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.sql.exec.spi.JdbcCallParameterExtractor;
 import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;
@@ -27,7 +27,7 @@ public class JdbcCallParameterRegistrationImpl implements JdbcCallParameterRegis
 	private final String name;
 	private final int jdbcParameterPositionStart;
 	private final ParameterMode parameterMode;
-	private final AllowableParameterType ormType;
+	private final BindableType ormType;
 	private final JdbcParameterBinder parameterBinder;
 	private final JdbcCallParameterExtractorImpl parameterExtractor;
 	private final JdbcCallRefCursorExtractorImpl refCursorExtractor;
@@ -36,7 +36,7 @@ public class JdbcCallParameterRegistrationImpl implements JdbcCallParameterRegis
 			String name,
 			int jdbcParameterPositionStart,
 			ParameterMode parameterMode,
-			AllowableParameterType ormType,
+			BindableType ormType,
 			JdbcParameterBinder parameterBinder,
 			JdbcCallParameterExtractorImpl parameterExtractor,
 			JdbcCallRefCursorExtractorImpl refCursorExtractor) {
@@ -70,7 +70,7 @@ public class JdbcCallParameterRegistrationImpl implements JdbcCallParameterRegis
 	}
 
 	@Override
-	public AllowableParameterType getParameterType() {
+	public BindableType getParameterType() {
 		return ormType;
 	}
 

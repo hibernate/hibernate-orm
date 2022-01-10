@@ -9,7 +9,7 @@ package org.hibernate.query.internal;
 
 import java.util.Objects;
 
-import org.hibernate.query.AllowableParameterType;
+import org.hibernate.query.BindableType;
 import org.hibernate.query.AbstractQueryParameter;
 import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
@@ -52,7 +52,7 @@ public class QueryParameterPositionalImpl<T> extends AbstractQueryParameter<T> {
 	public QueryParameterPositionalImpl(
 			Integer position,
 			boolean allowMultiValuedBinding,
-			AllowableParameterType<T> anticipatedType) {
+			BindableType<T> anticipatedType) {
 		super( allowMultiValuedBinding, anticipatedType );
 		this.position = position;
 	}

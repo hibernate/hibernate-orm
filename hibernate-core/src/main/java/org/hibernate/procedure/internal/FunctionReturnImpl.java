@@ -11,8 +11,8 @@ import java.sql.Types;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.query.AllowableOutputParameterType;
-import org.hibernate.query.AllowableParameterType;
+import org.hibernate.query.OutputableType;
+import org.hibernate.query.BindableType;
 import org.hibernate.procedure.spi.FunctionReturnImplementor;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
@@ -33,14 +33,14 @@ public class FunctionReturnImpl<T> implements FunctionReturnImplementor<T> {
 	private final ProcedureCallImplementor<T> procedureCall;
 	private final int jdbcTypeCode;
 
-	private AllowableOutputParameterType<T> ormType;
+	private OutputableType<T> ormType;
 
 	public FunctionReturnImpl(ProcedureCallImplementor<T> procedureCall, int jdbcTypeCode) {
 		this.procedureCall = procedureCall;
 		this.jdbcTypeCode = jdbcTypeCode;
 	}
 
-	public FunctionReturnImpl(ProcedureCallImplementor<T> procedureCall, AllowableOutputParameterType<T> ormType) {
+	public FunctionReturnImpl(ProcedureCallImplementor<T> procedureCall, OutputableType<T> ormType) {
 		this.procedureCall = procedureCall;
 		this.jdbcTypeCode = ormType.getJdbcTypeDescriptor().getJdbcTypeCode();
 		this.ormType = ormType;
@@ -48,7 +48,7 @@ public class FunctionReturnImpl<T> implements FunctionReturnImplementor<T> {
 
 	@Override
 	public JdbcCallFunctionReturn toJdbcFunctionReturn(SharedSessionContractImplementor persistenceContext) {
-		final AllowableParameterType<T> ormType;
+		final BindableType<T> ormType;
 		final JdbcCallRefCursorExtractorImpl refCursorExtractor;
 		final JdbcCallParameterExtractorImpl<T> parameterExtractor;
 
@@ -64,7 +64,7 @@ public class FunctionReturnImpl<T> implements FunctionReturnImplementor<T> {
 			final BasicJavaType<?> javaTypeMapping = sqlTypeDescriptor
 					.getJdbcRecommendedJavaTypeMapping( null, null, typeConfiguration );
 			//noinspection unchecked
-			ormType = (AllowableParameterType<T>) typeConfiguration.standardBasicTypeForJavaType( javaTypeMapping.getJavaTypeClass() );
+			ormType = (BindableType<T>) typeConfiguration.standardBasicTypeForJavaType( javaTypeMapping.getJavaTypeClass() );
 			parameterExtractor = new JdbcCallParameterExtractorImpl<>( procedureCall.getProcedureName(), null, 1, ormType );
 			refCursorExtractor = null;
 		}
@@ -78,7 +78,7 @@ public class FunctionReturnImpl<T> implements FunctionReturnImplementor<T> {
 	}
 
 	@Override
-	public AllowableParameterType<T> getHibernateType() {
+	public BindableType<T> getHibernateType() {
 		return ormType;
 	}
 
@@ -110,7 +110,7 @@ public class FunctionReturnImpl<T> implements FunctionReturnImplementor<T> {
 	}
 
 	@Override
-	public void applyAnticipatedType(AllowableParameterType type) {
+	public void applyAnticipatedType(BindableType type) {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 

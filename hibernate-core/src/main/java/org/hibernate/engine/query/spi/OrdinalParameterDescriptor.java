@@ -7,7 +7,7 @@
 package org.hibernate.engine.query.spi;
 
 import org.hibernate.Incubating;
-import org.hibernate.query.AllowableParameterType;
+import org.hibernate.query.BindableType;
 
 /**
  * Descriptor regarding an ordinal parameter.
@@ -25,7 +25,7 @@ public class OrdinalParameterDescriptor<T> extends AbstractParameterDescriptor<T
 	public OrdinalParameterDescriptor(
 			int label,
 			int valuePosition,
-			AllowableParameterType<T> expectedType,
+			BindableType<T> expectedType,
 			int[] sourceLocations) {
 		super( sourceLocations, expectedType );
 		this.label = label;

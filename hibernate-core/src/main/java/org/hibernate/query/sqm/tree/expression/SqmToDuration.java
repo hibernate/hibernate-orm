@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import org.hibernate.query.AllowableFunctionReturnType;
+import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 
@@ -20,7 +20,7 @@ public class SqmToDuration<T> extends AbstractSqmExpression<T> {
 	public SqmToDuration(
 			SqmExpression<?> magnitude,
 			SqmDurationUnit<?> unit,
-			AllowableFunctionReturnType<T> type,
+			ReturnableType<T> type,
 			NodeBuilder nodeBuilder) {
 		super( type, nodeBuilder );
 		this.magnitude = magnitude;

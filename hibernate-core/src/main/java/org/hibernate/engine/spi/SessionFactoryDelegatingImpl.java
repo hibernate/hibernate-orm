@@ -39,7 +39,7 @@ import org.hibernate.internal.FastSessionServices;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.metamodel.RuntimeMetamodels;
-import org.hibernate.query.AllowableParameterType;
+import org.hibernate.query.BindableType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -433,12 +433,12 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
-	public <T> AllowableParameterType<T> resolveParameterBindType(T bindValue) {
+	public <T> BindableType<T> resolveParameterBindType(T bindValue) {
 		return delegate.resolveParameterBindType( bindValue );
 	}
 
 	@Override
-	public <T> AllowableParameterType<T> resolveParameterBindType(Class<T> clazz) {
+	public <T> BindableType<T> resolveParameterBindType(Class<T> clazz) {
 		return delegate.resolveParameterBindType( clazz );
 	}
 

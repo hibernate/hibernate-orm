@@ -11,7 +11,7 @@ import jakarta.persistence.TemporalType;
 
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
-import org.hibernate.query.AllowableParameterType;
+import org.hibernate.query.BindableType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -39,7 +39,7 @@ public interface QueryParameterBinding<T> {
 	 *
 	 * @return The currently associated Type
 	 */
-	AllowableParameterType<T> getBindType();
+	BindableType<T> getBindType();
 
 	/**
 	 * If the parameter represents a temporal type, return the explicitly
@@ -65,7 +65,7 @@ public interface QueryParameterBinding<T> {
 	 * @param value The bind value
 	 * @param clarifiedType The explicit Type to use
 	 */
-	void setBindValue(T value, AllowableParameterType<T> clarifiedType);
+	void setBindValue(T value, BindableType<T> clarifiedType);
 
 	/**
 	 * Sets the parameter binding value using the explicit TemporalType.
@@ -94,7 +94,7 @@ public interface QueryParameterBinding<T> {
 	 * @param values The bind values
 	 * @param clarifiedType The explicit Type to use
 	 */
-	void setBindValues(Collection<? extends T> values, AllowableParameterType<T> clarifiedType);
+	void setBindValues(Collection<? extends T> values, BindableType<T> clarifiedType);
 
 	/**Sets the parameter binding value using the explicit TemporalType in regards to the individual values.
 	 *

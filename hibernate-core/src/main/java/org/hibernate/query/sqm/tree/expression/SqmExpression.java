@@ -13,7 +13,7 @@ import java.util.function.Consumer;
 import jakarta.persistence.criteria.Expression;
 
 import org.hibernate.annotations.Remove;
-import org.hibernate.query.AllowableFunctionReturnType;
+import org.hibernate.query.ReturnableType;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.spi.QueryEngine;
@@ -104,12 +104,12 @@ public interface SqmExpression<T> extends SqmSelectableNode<T>, JpaExpression<T>
 
 	default <X> SqmExpression<X> castAs(DomainType<X> type) {
 		QueryEngine queryEngine = nodeBuilder().getQueryEngine();
-		SqmCastTarget<T> target = new SqmCastTarget<>( (AllowableFunctionReturnType<T>) type, nodeBuilder() );
+		SqmCastTarget<T> target = new SqmCastTarget<>( (ReturnableType<T>) type, nodeBuilder() );
 		return queryEngine.getSqmFunctionRegistry()
 				.findFunctionDescriptor("cast")
 					.generateSqmExpression(
 							asList( this, target ),
-							(AllowableFunctionReturnType<X>) type,
+							(ReturnableType<X>) type,
 							queryEngine,
 							nodeBuilder().getTypeConfiguration()
 					);

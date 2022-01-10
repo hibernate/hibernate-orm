@@ -10,7 +10,7 @@ import java.io.Serializable;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
-import org.hibernate.query.AllowableParameterType;
+import org.hibernate.query.BindableType;
 import org.hibernate.query.sqm.SqmExpressable;
 
 /**
@@ -18,7 +18,7 @@ import org.hibernate.query.sqm.SqmExpressable;
  *
  * @author Christian Beikov
  */
-public final class BasicTypeReference<T> implements AllowableParameterType<T>, Serializable {
+public final class BasicTypeReference<T> implements BindableType<T>, Serializable {
 	private final String name;
 	private final Class<T> javaType;
 	private final int sqlTypeCode;

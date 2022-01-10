@@ -9,7 +9,7 @@ package org.hibernate.dialect.function;
 import java.util.List;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.query.AllowableFunctionReturnType;
+import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
@@ -71,7 +71,7 @@ public class TimestampdiffFunction
 //	@Override
 //	protected <T> SelfRenderingSqlFunctionExpression<T> generateSqmFunctionExpression(
 //			List<SqmTypedNode<?>> arguments,
-//			AllowableFunctionReturnType<T> impliedResultType,
+//			ReturnableType<T> impliedResultType,
 //			QueryEngine queryEngine,
 //			TypeConfiguration typeConfiguration) {
 //		SqmExtractUnit<?> field = (SqmExtractUnit<?>) arguments.get(0);
@@ -98,7 +98,7 @@ public class TimestampdiffFunction
 //	}
 
 	public SelfRenderingFunctionSqlAstExpression expression(
-			AllowableFunctionReturnType<?> impliedResultType,
+			ReturnableType<?> impliedResultType,
 			SqlAstNode... sqlAstArguments) {
 		DurationUnit field = (DurationUnit) sqlAstArguments[0];
 		return new SelfRenderingFunctionSqlAstExpression(
@@ -107,7 +107,7 @@ public class TimestampdiffFunction
 				asList( sqlAstArguments ),
 				impliedResultType != null
 						? impliedResultType
-						: (AllowableFunctionReturnType<?>) field.getExpressionType().getJdbcMapping(),
+						: (ReturnableType<?>) field.getExpressionType().getJdbcMapping(),
 				field.getExpressionType()
 		);
 	}

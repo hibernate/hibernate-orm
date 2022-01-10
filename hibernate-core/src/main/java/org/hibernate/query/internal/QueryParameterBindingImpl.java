@@ -13,7 +13,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
-import org.hibernate.query.AllowableParameterType;
+import org.hibernate.query.BindableType;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindingValidator;
@@ -38,7 +38,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 	private boolean isBound;
 	private boolean isMultiValued;
 
-	private AllowableParameterType<T> bindType;
+	private BindableType<T> bindType;
 	private MappingModelExpressable<T> type;
 	private TemporalType explicitTemporalPrecision;
 
@@ -64,7 +64,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 	public QueryParameterBindingImpl(
 			QueryParameter<T> queryParameter,
 			SessionFactoryImplementor sessionFactory,
-			AllowableParameterType<T> bindType,
+			BindableType<T> bindType,
 			boolean isBindingValidationRequired) {
 		this.queryParameter = queryParameter;
 		this.sessionFactory = sessionFactory;
@@ -73,7 +73,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 	}
 
 	@Override
-	public AllowableParameterType<T> getBindType() {
+	public BindableType<T> getBindType() {
 		return bindType;
 	}
 
@@ -142,7 +142,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 		bindValue( value );
 	}
 
-	private T coerce(T value, AllowableParameterType<T> parameterType) {
+	private T coerce(T value, BindableType<T> parameterType) {
 		if ( value == null ) {
 			return null;
 		}
@@ -187,7 +187,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 	}
 
 	@Override
-	public void setBindValue(T value, AllowableParameterType<T> clarifiedType) {
+	public void setBindValue(T value, BindableType<T> clarifiedType) {
 		if ( handleAsMultiValue( value ) ) {
 			return;
 		}
@@ -284,7 +284,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 	}
 
 	@Override
-	public void setBindValues(Collection<? extends T> values, AllowableParameterType<T> clarifiedType) {
+	public void setBindValues(Collection<? extends T> values, BindableType<T> clarifiedType) {
 		if ( clarifiedType != null ) {
 			this.bindType = clarifiedType;
 		}
@@ -312,7 +312,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 		this.explicitTemporalPrecision = temporalTypePrecision;
 	}
 
-	private JavaType<T> determineJavaType(AllowableParameterType<T> bindType) {
+	private JavaType<T> determineJavaType(BindableType<T> bindType) {
 		final SqmExpressable<T> sqmExpressable = bindType.resolveExpressable( sessionFactory );
 		assert sqmExpressable != null;
 
@@ -328,16 +328,16 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 	public boolean setType(MappingModelExpressable<T> type) {
 		this.type = type;
 		if ( bindType == null || bindType.getBindableJavaType() == Object.class ) {
-			if ( type instanceof AllowableParameterType<?> ) {
+			if ( type instanceof BindableType<?> ) {
 				final boolean changed = bindType != null && type != bindType;
-				this.bindType = (AllowableParameterType<T>) type;
+				this.bindType = (BindableType<T>) type;
 				return changed;
 			}
 			else if ( type instanceof BasicValuedMapping ) {
 				final JdbcMapping jdbcMapping = ( (BasicValuedMapping) type ).getJdbcMapping();
-				if ( jdbcMapping instanceof AllowableParameterType<?> ) {
+				if ( jdbcMapping instanceof BindableType<?> ) {
 					final boolean changed = bindType != null && jdbcMapping != bindType;
-					this.bindType = (AllowableParameterType<T>) jdbcMapping;
+					this.bindType = (BindableType<T>) jdbcMapping;
 					return changed;
 				}
 			}
@@ -349,7 +349,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 		QueryParameterBindingValidator.INSTANCE.validate( getBindType(), value, sessionFactory );
 	}
 
-	private void validate(T value, AllowableParameterType<?> clarifiedType) {
+	private void validate(T value, BindableType<?> clarifiedType) {
 		QueryParameterBindingValidator.INSTANCE.validate( clarifiedType, value, sessionFactory );
 	}
 

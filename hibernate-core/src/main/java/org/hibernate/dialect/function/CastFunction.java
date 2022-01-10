@@ -76,7 +76,7 @@ public class CastFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 //	@Override
 //	protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
 //			List<SqmTypedNode<?>> arguments,
-//			AllowableFunctionReturnType<T> impliedResultType,
+//			ReturnableType<T> impliedResultType,
 //			QueryEngine queryEngine,
 //			TypeConfiguration typeConfiguration) {
 //		SqmCastTarget<?> targetType = (SqmCastTarget<?>) arguments.get(1);

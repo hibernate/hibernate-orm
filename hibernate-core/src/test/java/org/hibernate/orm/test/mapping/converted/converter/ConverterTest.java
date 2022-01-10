@@ -13,7 +13,7 @@ import jakarta.persistence.Id;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.query.AllowableParameterType;
+import org.hibernate.query.BindableType;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.query.Query;
 import org.hibernate.type.Type;
@@ -81,7 +81,7 @@ public class ConverterTest extends BaseEntityManagerFunctionalTestCase {
 				"from Photo p " +
 				"where upper(caption) = upper(:caption) ", Photo.class )
 			.unwrap( Query.class )
-			.setParameter( "caption", new Caption("Nicolae Grigorescu"), (AllowableParameterType) captionType )
+			.setParameter( "caption", new Caption("Nicolae Grigorescu"), (BindableType) captionType )
 			.getSingleResult();
 			//end::basic-attribute-converter-query-parameter-converter-object-example[]
 

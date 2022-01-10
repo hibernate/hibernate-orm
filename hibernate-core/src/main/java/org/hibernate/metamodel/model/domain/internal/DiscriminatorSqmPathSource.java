@@ -10,8 +10,8 @@ import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.query.AllowableFunctionReturnType;
-import org.hibernate.query.AllowableParameterType;
+import org.hibernate.query.ReturnableType;
+import org.hibernate.query.BindableType;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -22,7 +22,7 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
  * @author Steve Ebersole
  */
 public class DiscriminatorSqmPathSource<D> extends AbstractSqmPathSource<D>
-		implements AllowableParameterType<D>, AllowableFunctionReturnType<D> {
+		implements BindableType<D>, ReturnableType<D> {
 	private final EntityDomainType<?> entityDomainType;
 	private final EntityMappingType entityMapping;
 

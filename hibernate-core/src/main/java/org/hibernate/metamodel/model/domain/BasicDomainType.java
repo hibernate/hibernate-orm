@@ -10,8 +10,8 @@ import java.util.Objects;
 import jakarta.persistence.metamodel.BasicType;
 
 import org.hibernate.HibernateException;
-import org.hibernate.query.AllowableFunctionReturnType;
-import org.hibernate.query.AllowableOutputParameterType;
+import org.hibernate.query.ReturnableType;
+import org.hibernate.query.OutputableType;
 import org.hibernate.query.sqm.SqmExpressable;
 
 /**
@@ -20,7 +20,7 @@ import org.hibernate.query.sqm.SqmExpressable;
  * @author Steve Ebersole
  */
 public interface BasicDomainType<J>
-		extends SimpleDomainType<J>, BasicType<J>, SqmExpressable<J>, AllowableOutputParameterType<J>, AllowableFunctionReturnType<J> {
+		extends SimpleDomainType<J>, BasicType<J>, SqmExpressable<J>, OutputableType<J>, ReturnableType<J> {
 	@Override
 	default PersistenceType getPersistenceType() {
 		return PersistenceType.BASIC;

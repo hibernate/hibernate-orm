@@ -8,7 +8,7 @@ package org.hibernate.query.sqm.tree.expression;
 
 import java.util.function.Consumer;
 
-import org.hibernate.query.AllowableParameterType;
+import org.hibernate.query.BindableType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
@@ -28,7 +28,7 @@ public class SqmJpaCriteriaParameterWrapper<T>
 	private final JpaCriteriaParameter<T> jpaCriteriaParameter;
 
 	public SqmJpaCriteriaParameterWrapper(
-			AllowableParameterType<T> type,
+			BindableType<T> type,
 			JpaCriteriaParameter<T> jpaCriteriaParameter,
 			NodeBuilder criteriaBuilder) {
 		super( toSqmType( type, criteriaBuilder ), criteriaBuilder );
@@ -61,7 +61,7 @@ public class SqmJpaCriteriaParameterWrapper<T>
 	}
 
 	@Override
-	public AllowableParameterType<T> getAnticipatedType() {
+	public BindableType<T> getAnticipatedType() {
 		return getNodeType();
 	}
 

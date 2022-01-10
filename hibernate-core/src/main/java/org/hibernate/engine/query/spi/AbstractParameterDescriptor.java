@@ -7,7 +7,7 @@
 package org.hibernate.engine.query.spi;
 
 import org.hibernate.Incubating;
-import org.hibernate.query.AllowableParameterType;
+import org.hibernate.query.BindableType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.internal.EntityTypeImpl;
 import org.hibernate.query.QueryParameter;
@@ -21,9 +21,9 @@ import org.hibernate.query.QueryParameter;
 public abstract class AbstractParameterDescriptor<T> implements QueryParameter<T> {
 	private final int[] sourceLocations;
 
-	private AllowableParameterType<T> expectedType;
+	private BindableType<T> expectedType;
 
-	public AbstractParameterDescriptor(int[] sourceLocations, AllowableParameterType<T> expectedType) {
+	public AbstractParameterDescriptor(int[] sourceLocations, BindableType<T> expectedType) {
 		this.sourceLocations = sourceLocations;
 		this.expectedType = expectedType;
 	}
@@ -44,16 +44,16 @@ public abstract class AbstractParameterDescriptor<T> implements QueryParameter<T
 	}
 
 	@Override
-	public AllowableParameterType<T> getHibernateType() {
+	public BindableType<T> getHibernateType() {
 		return getExpectedType();
 	}
 
 
-	public AllowableParameterType<T> getExpectedType() {
+	public BindableType<T> getExpectedType() {
 		return expectedType;
 	}
 
-	public void resetExpectedType(AllowableParameterType<T> expectedType) {
+	public void resetExpectedType(BindableType<T> expectedType) {
 		this.expectedType = expectedType;
 	}
 

@@ -1331,7 +1331,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 
 			// select clause date/time arithmetic operations
 			Integer years = entityManager.createQuery(
-				"select year(current_date()) - year(p.createdOn) " +
+				"select year(local date) - year(p.createdOn) " +
 				"from Person p " +
 				"where p.id = 1L",
 				Integer.class)
@@ -1350,7 +1350,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 			List<Person> persons = entityManager.createQuery(
 				"select p " +
 				"from Person p " +
-				"where year(current_date()) - year(p.createdOn) > 1",
+				"where year(local date) - year(p.createdOn) > 1",
 				Person.class)
 			.getResultList();
 			//end::hql-numeric-arithmetic-example[]
@@ -1625,15 +1625,17 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@RequiresDialect(SQLServerDialect.class)
 	public void test_hql_current_date_function_example_sql_server() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
+			//tag::hql-extract-function-example[]
 			List<Call> calls = entityManager.createQuery(
 				"select c " +
 				"from Call c " +
-				"where c.timestamp = current_date()",
+				"where extract(date from c.timestamp) = local date",
 				Call.class)
 			.getResultList();
+
+			//end::hql-extract-function-example[]
 			assertEquals(0, calls.size());
 		});
 	}
@@ -1720,7 +1722,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-extract-function-example[]
 			List<Integer> years = entityManager.createQuery(
-				"select extract(YEAR from c.timestamp) " +
+				"select extract(year from c.timestamp) " +
 				"from Call c ",
 				Integer.class)
 			.getResultList();
@@ -1826,26 +1828,6 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void test_hql_collection_expressions_example_4() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			Call call = entityManager.createQuery("select c from Call c", Call.class).getResultList().get(0);
-			Phone phone = call.getPhone();
-			//tag::hql-collection-expressions-example[]
-
-			// the above query can be re-written with member of
-			List<Person> persons = entityManager.createQuery(
-				"select p " +
-				"from Person p " +
-				"where :phone member of p.phones",
-				Person.class)
-			.setParameter("phone", phone)
-			.getResultList();
-			//end::hql-collection-expressions-example[]
-			assertEquals(1, persons.size());
-		});
-	}
-
-	@Test
 	public void test_hql_collection_expressions_example_5() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			Call call = entityManager.createQuery("select c from Call c", Call.class).getResultList().get(0);
@@ -1856,6 +1838,26 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 				"select p " +
 				"from Person p " +
 				"where :phone = some elements(p.phones)",
+				Person.class)
+			.setParameter("phone", phone)
+			.getResultList();
+			//end::hql-collection-expressions-some-example[]
+			assertEquals(1, persons.size());
+		});
+	}
+
+	@Test
+	public void test_hql_collection_expressions_example_4() {
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			Call call = entityManager.createQuery("select c from Call c", Call.class).getResultList().get(0);
+			Phone phone = call.getPhone();
+			//tag::hql-collection-expressions-some-example[]
+
+			// the above query can be re-written with member of
+			List<Person> persons = entityManager.createQuery(
+				"select p " +
+				"from Person p " +
+				"where :phone member of p.phones",
 				Person.class)
 			.setParameter("phone", phone)
 			.getResultList();
@@ -1882,23 +1884,6 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@SkipForDialect(value = DerbyDialect.class, comment = "Comparisons between 'DATE' and 'TIMESTAMP' are not supported")
-	public void test_hql_collection_expressions_example_7() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			//tag::hql-collection-expressions-example[]
-
-			List<Phone> phones = entityManager.createQuery(
-				"select p " +
-				"from Phone p " +
-				"where current_date() > key(p.callHistory)",
-				Phone.class)
-			.getResultList();
-			//end::hql-collection-expressions-example[]
-			assertEquals(1, phones.size());
-		});
-	}
-
-	@Test
-	@SkipForDialect(value = DerbyDialect.class, comment = "Comparisons between 'DATE' and 'TIMESTAMP' are not supported")
 	public void test_hql_collection_expressions_example_8() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-collection-expressions-all-example[]
@@ -1906,7 +1891,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 			List<Phone> phones = entityManager.createQuery(
 				"select p " +
 				"from Phone p " +
-				"where current_date() > all elements(p.repairTimestamps)",
+				"where local date > all elements(p.repairTimestamps)",
 				Phone.class)
 			.getResultList();
 			//end::hql-collection-expressions-all-example[]
@@ -1933,15 +1918,15 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void test_hql_collection_expressions_example_10() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
-			//tag::hql-collection-expressions-example[]
+			//tag::hql-size-example[]
 
 			List<Person> persons = entityManager.createQuery(
 				"select p " +
 				"from Person p " +
-				"where size(p.phones) = 2",
+				"where size(p.phones) >= 2",
 				Person.class)
 			.getResultList();
-			//end::hql-collection-expressions-example[]
+			//end::hql-size-example[]
 			assertEquals(1, persons.size());
 		});
 	}

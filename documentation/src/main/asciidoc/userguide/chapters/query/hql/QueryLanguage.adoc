@@ -724,6 +724,18 @@ include::{sourcedir}/HQLTest.java[tags=hql-coalesce-example]
 
 TIP: HQL allows `ifnull()` as a synonym for `coalesce()` in the case of exactly two arguments.
 
+===== `size()`
+
+The number of elements of a collection or to-many association.
+
+[[hql-size-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-size-example]
+----
+====
+
 ===== `concat()`
 Produces a string by concatenating its arguments.
 
@@ -985,13 +997,16 @@ include::{sourcedir}/HQLTest.java[tags=hql-collection-index-operator-example]
 There are even more functions which accept a collection-valued attribute or to-many association:
 
 |===
-| HQL Function | Applies to | Purpose
+| HQL Function (modern syntax) | HQL Function (old syntax) | Applies to | Purpose
 
-| `size()` | Any collection | The size of the collection.
-| `maxelement()` | Collections of basic type | The maximum element as determined by applying the `max()` SQL aggregation.
-| `minelement()` | Collections of basic type | The minimum element as determined by applying the `min()` SQL aggregation.
-| `maxindex()` | Indexed collections (lists and maps) | The maximum index (key/position) as determined by applying the `max()` SQL aggregation.
-| `minindex()` | Indexed collections (lists and maps) | The minimum index (key/position) as determined by applying the `min()` SQL aggregation.
+| `max(element x)`| `maxelement(x)` | Collections of basic type | The maximum element
+| `min(element x)`| `minelement(x)` | Collections of basic type | The minimum element
+| `sum(element x)`| &mdash; | Collections of basic type | The sum of the elements
+| `avg(element x)`| &mdash; | Collections of basic type | The sum of the elements
+| `max(index x)`| `maxindex(x)` | Indexed collections (lists and maps) | The maximum list index or map key
+| `min(index x)`| `minindex(x)` | Indexed collections (lists and maps) | The minimum list index or map key
+| `sum(index x)`| &mdash; | Indexed collections (lists and maps) | The sum of the list indexes or map keys
+| `avg(index x)`| &mdash; | Indexed collections (lists and maps) | The average of the list indexes or map keys
 |===
 
 We've intentionally left two functions off this list, so we can come back to them <<hql-elements-indices,later>>.

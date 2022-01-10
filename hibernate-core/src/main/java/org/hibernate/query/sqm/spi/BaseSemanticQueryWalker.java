@@ -23,10 +23,8 @@ import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmIndexedCollectionAccessPath;
 import org.hibernate.query.sqm.tree.domain.SqmMapEntryReference;
-import org.hibernate.query.sqm.tree.domain.SqmMaxElementPath;
-import org.hibernate.query.sqm.tree.domain.SqmMaxIndexPath;
-import org.hibernate.query.sqm.tree.domain.SqmMinElementPath;
-import org.hibernate.query.sqm.tree.domain.SqmMinIndexPath;
+import org.hibernate.query.sqm.tree.domain.SqmElementAggregateFunction;
+import org.hibernate.query.sqm.tree.domain.SqmIndexAggregateFunction;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPluralPartJoin;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
@@ -318,22 +316,12 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 	}
 
 	@Override
-	public Object visitMaxElementPath(SqmMaxElementPath<?> path) {
+	public Object visitElementAggregateFunction(SqmElementAggregateFunction<?> path) {
 		return path;
 	}
 
 	@Override
-	public Object visitMinElementPath(SqmMinElementPath<?> path) {
-		return path;
-	}
-
-	@Override
-	public Object visitMaxIndexPath(SqmMaxIndexPath<?> path) {
-		return path;
-	}
-
-	@Override
-	public Object visitMinIndexPath(SqmMinIndexPath<?> path) {
+	public Object visitIndexAggregateFunction(SqmIndexAggregateFunction<?> path) {
 		return path;
 	}
 

@@ -29,6 +29,7 @@ public class EntityOfLists {
 	private String name;
 
 	private List<String> listOfBasics;
+	private List<Double> listOfNumbers;
 
 	private List<EnumValue> listOfConvertedEnums;
 	private List<EnumValue> listOfEnums;
@@ -78,11 +79,29 @@ public class EntityOfLists {
 		this.listOfBasics = listOfBasics;
 	}
 
+	@ElementCollection
+	@OrderColumn(name="num_indx")
+	@CollectionTable(name = "EntityOfLists_numbers")
+	public List<Double> getListOfNumbers() {
+		return listOfNumbers;
+	}
+
+	public void setListOfNumbers(List<Double> listOfNumbers) {
+		this.listOfNumbers = listOfNumbers;
+	}
+
 	public void addBasic(String basic) {
 		if ( listOfBasics == null ) {
 			listOfBasics = new ArrayList<>();
 		}
 		listOfBasics.add( basic );
+	}
+
+	public void addNumber(double number) {
+		if ( listOfNumbers == null ) {
+			listOfNumbers = new ArrayList<>();
+		}
+		listOfNumbers.add( number );
 	}
 
 

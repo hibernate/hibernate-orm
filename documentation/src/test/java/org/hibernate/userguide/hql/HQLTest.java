@@ -1782,7 +1782,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 			List<Phone> phones = entityManager.createQuery(
 				"select p " +
 				"from Phone p " +
-				"where maxelement(p.calls) = :call",
+				"where max(element p.calls) = :call",
 				Phone.class)
 			.setParameter("call", call)
 			.getResultList();
@@ -1800,7 +1800,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 			List<Phone> phones = entityManager.createQuery(
 				"select p " +
 				"from Phone p " +
-				"where minelement(p.calls) = :call",
+				"where min(element p.calls) = :call",
 				Phone.class)
 			.setParameter("call", call)
 			.getResultList();
@@ -1817,7 +1817,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 			List<Person> persons = entityManager.createQuery(
 				"select p " +
 				"from Person p " +
-				"where maxindex(p.phones) = 0",
+				"where max(index p.phones) = 0",
 				Person.class)
 			.getResultList();
 			//end::hql-collection-expressions-example[]
@@ -1991,7 +1991,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 			List<Person> persons = entityManager.createQuery(
 				"select pr " +
 				"from Person pr " +
-				"where pr.phones[maxindex(pr.phones)].type = 'LAND_LINE'",
+				"where pr.phones[max(index pr.phones)].type = 'LAND_LINE'",
 				Person.class)
 			.getResultList();
 			//end::hql-collection-index-operator-example[]

@@ -102,10 +102,8 @@ import org.hibernate.query.sqm.tree.domain.AbstractSqmFrom;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelation;
 import org.hibernate.query.sqm.tree.domain.SqmMapEntryReference;
 import org.hibernate.query.sqm.tree.domain.SqmMapJoin;
-import org.hibernate.query.sqm.tree.domain.SqmMaxElementPath;
-import org.hibernate.query.sqm.tree.domain.SqmMaxIndexPath;
-import org.hibernate.query.sqm.tree.domain.SqmMinElementPath;
-import org.hibernate.query.sqm.tree.domain.SqmMinIndexPath;
+import org.hibernate.query.sqm.tree.domain.SqmElementAggregateFunction;
+import org.hibernate.query.sqm.tree.domain.SqmIndexAggregateFunction;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPolymorphicRootDescriptor;
@@ -3969,57 +3967,40 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	@Override
-	public SqmMaxElementPath<?> visitMaxElementFunction(HqlParser.MaxElementFunctionContext ctx) {
+	public SqmElementAggregateFunction<?> visitElementAggregateFunction(HqlParser.ElementAggregateFunctionContext ctx) {
 		if ( creationOptions.useStrictJpaCompliance() ) {
 			throw new StrictJpaComplianceViolation( StrictJpaComplianceViolation.Type.HQL_COLLECTION_FUNCTION );
 		}
 
-		return new SqmMaxElementPath<>( consumePluralAttributeReference( (HqlParser.PathContext) ctx.getChild( 2 ) ) );
+		SqmPath<?> pluralPath = consumePluralAttributeReference( ctx.path() );
+		if ( !(pluralPath instanceof SqmPluralValuedSimplePath) ) {
+			throw new SemanticException( "Path '" + ctx.path().getText() + "' did not resolve to a many-valued attribute" );
+		}
+
+		String functionName = ctx.getChild(0).getText().substring(0, 3);
+		return new SqmElementAggregateFunction<>( pluralPath, functionName );
 	}
 
 	@Override
-	public SqmMinElementPath<?> visitMinElementFunction(HqlParser.MinElementFunctionContext ctx) {
+	public SqmIndexAggregateFunction<?> visitIndexAggregateFunction(HqlParser.IndexAggregateFunctionContext ctx) {
 		if ( creationOptions.useStrictJpaCompliance() ) {
 			throw new StrictJpaComplianceViolation( StrictJpaComplianceViolation.Type.HQL_COLLECTION_FUNCTION );
 		}
 
-		return new SqmMinElementPath<>( consumePluralAttributeReference( (HqlParser.PathContext) ctx.getChild( 2 ) ) );
-	}
-
-	@Override
-	public SqmMaxIndexPath<?> visitMaxIndexFunction(HqlParser.MaxIndexFunctionContext ctx) {
-		if ( creationOptions.useStrictJpaCompliance() ) {
-			throw new StrictJpaComplianceViolation( StrictJpaComplianceViolation.Type.HQL_COLLECTION_FUNCTION );
+		final SqmPath<?> pluralPath = consumePluralAttributeReference( ctx.path() );
+		if ( !(pluralPath instanceof SqmPluralValuedSimplePath) ) {
+			throw new SemanticException( "Path '" + ctx.path().getText() + "' did not resolve to a many-valued attribute" );
 		}
-
-		final SqmPath<?> pluralPath = consumePluralAttributeReference( (HqlParser.PathContext) ctx.getChild( 2 ) );
 		if ( !isIndexedPluralAttribute( pluralPath ) ) {
 			throw new SemanticException(
 					"maxindex() function can only be applied to path expressions which resolve to an " +
-							"indexed collection (list,map); specified path [" + ctx.getChild( 2 ).getText() +
+							"indexed collection (list,map); specified path [" + ctx.path() +
 							"] resolved to " + pluralPath.getReferencedPathSource()
 			);
 		}
 
-		return new SqmMaxIndexPath<>( pluralPath );
-	}
-
-	@Override
-	public SqmMinIndexPath<?> visitMinIndexFunction(HqlParser.MinIndexFunctionContext ctx) {
-		if ( creationOptions.useStrictJpaCompliance() ) {
-			throw new StrictJpaComplianceViolation( StrictJpaComplianceViolation.Type.HQL_COLLECTION_FUNCTION );
-		}
-
-		final SqmPath<?> pluralPath = consumePluralAttributeReference( (HqlParser.PathContext) ctx.getChild( 2 ) );
-		if ( !isIndexedPluralAttribute( pluralPath ) ) {
-			throw new SemanticException(
-					"minindex() function can only be applied to path expressions which resolve to an " +
-							"indexed collection (list,map); specified path [" + ctx.getChild( 2 ).getText() +
-							"] resolved to " + pluralPath.getReferencedPathSource()
-			);
-		}
-
-		return new SqmMinIndexPath<>( pluralPath );
+		String functionName = ctx.getChild(0).getText().substring(0, 3);
+		return new SqmIndexAggregateFunction<>( pluralPath, functionName );
 	}
 
 	@Override

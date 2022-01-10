@@ -198,11 +198,7 @@ import static java.time.format.DateTimeFormatter.ISO_LOCAL_TIME;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
-import static org.hibernate.grammars.hql.HqlParser.EXCEPT;
-import static org.hibernate.grammars.hql.HqlParser.IDENTIFIER;
-import static org.hibernate.grammars.hql.HqlParser.INTERSECT;
-import static org.hibernate.grammars.hql.HqlParser.PLUS;
-import static org.hibernate.grammars.hql.HqlParser.UNION;
+import static org.hibernate.grammars.hql.HqlParser.*;
 import static org.hibernate.query.TemporalUnit.DATE;
 import static org.hibernate.query.TemporalUnit.DAY_OF_MONTH;
 import static org.hibernate.query.TemporalUnit.DAY_OF_WEEK;
@@ -3933,6 +3929,46 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	@Override
+	public SqmPath<?> visitCollectionFunctionMisuse(HqlParser.CollectionFunctionMisuseContext ctx) {
+
+		// Note: this is a total misuse of the elements() and indices() functions,
+		//       which are supposed to be a shortcut way to write a subquery!
+		//       used this way, they're just a worse way to write value()/index()
+
+		if ( getCreationOptions().useStrictJpaCompliance() ) {
+			throw new StrictJpaComplianceViolation( StrictJpaComplianceViolation.Type.HQL_COLLECTION_FUNCTION );
+		}
+
+		final SqmPath<?> pluralAttributePath = consumeDomainPath( (HqlParser.PathContext) ctx.getChild( 2 ) );
+		final SqmPathSource<?> referencedPathSource = pluralAttributePath.getReferencedPathSource();
+		final TerminalNode firstNode = (TerminalNode) ctx.getChild( 0 );
+
+		if ( !(referencedPathSource instanceof PluralPersistentAttribute<?, ?, ?> ) ) {
+			throw new PathException(
+					String.format(
+							"Argument of '%s' is not a plural path '%s'",
+							firstNode.getSymbol().getText(),
+							pluralAttributePath.getNavigablePath()
+					)
+			);
+		}
+
+		CollectionPart.Nature nature;
+		switch ( firstNode.getSymbol().getType() ) {
+			case ELEMENTS:
+				nature = CollectionPart.Nature.ELEMENT;
+				break;
+			case INDICES:
+				nature = CollectionPart.Nature.INDEX;
+				break;
+			default:
+				throw new ParsingException("Impossible symbol");
+		}
+
+		return pluralAttributePath.resolvePathPart( nature.getName(), true, this );
+	}
+
+	@Override
 	public SqmMaxElementPath<?> visitMaxElementFunction(HqlParser.MaxElementFunctionContext ctx) {
 		if ( creationOptions.useStrictJpaCompliance() ) {
 			throw new StrictJpaComplianceViolation( StrictJpaComplianceViolation.Type.HQL_COLLECTION_FUNCTION );
@@ -4069,11 +4105,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		if ( firstChild instanceof HqlParser.TreatedNavigablePathContext ) {
 			return visitTreatedNavigablePath( (HqlParser.TreatedNavigablePathContext) firstChild );
 		}
-		else if ( firstChild instanceof HqlParser.CollectionElementNavigablePathContext ) {
-			return visitCollectionElementNavigablePath( (HqlParser.CollectionElementNavigablePathContext) firstChild );
-		}
-		else if ( firstChild instanceof HqlParser.CollectionIndexNavigablePathContext ) {
-			return visitCollectionIndexNavigablePath( (HqlParser.CollectionIndexNavigablePathContext) firstChild );
+		else if ( firstChild instanceof HqlParser.CollectionValueNavigablePathContext ) {
+			return visitCollectionValueNavigablePath( (HqlParser.CollectionValueNavigablePathContext) firstChild );
 		}
 		else if ( firstChild instanceof HqlParser.MapKeyNavigablePathContext ) {
 			return visitMapKeyNavigablePath( (HqlParser.MapKeyNavigablePathContext) firstChild );
@@ -4190,7 +4223,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	@Override
-	public SqmPath<?> visitCollectionElementNavigablePath(HqlParser.CollectionElementNavigablePathContext ctx) {
+	public SqmPath<?> visitCollectionValueNavigablePath(HqlParser.CollectionValueNavigablePathContext ctx) {
 		final SqmPath<?> pluralAttributePath = consumeDomainPath( (HqlParser.PathContext) ctx.getChild( 2 ) );
 		final SqmPathSource<?> referencedPathSource = pluralAttributePath.getReferencedPathSource();
 		final TerminalNode firstNode = (TerminalNode) ctx.getChild( 0 );
@@ -4211,9 +4244,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			if ( attribute.getCollectionClassification() != CollectionClassification.MAP ) {
 				throw new StrictJpaComplianceViolation( StrictJpaComplianceViolation.Type.VALUE_FUNCTION_ON_NON_MAP );
 			}
-			if ( firstNode.getSymbol().getType() == HqlParser.ELEMENTS ) {
-				throw new StrictJpaComplianceViolation( StrictJpaComplianceViolation.Type.HQL_COLLECTION_FUNCTION );
-			}
 		}
 
 		SqmPath<?> result = pluralAttributePath.resolvePathPart( CollectionPart.Nature.ELEMENT.getName(), true, this );
@@ -4225,28 +4255,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return result;
 	}
 
-
-	@Override
-	public SqmPath<?> visitCollectionIndexNavigablePath(HqlParser.CollectionIndexNavigablePathContext ctx) {
-		if ( getCreationOptions().useStrictJpaCompliance() ) {
-			throw new StrictJpaComplianceViolation( StrictJpaComplianceViolation.Type.HQL_COLLECTION_FUNCTION );
-		}
-		final SqmPath<?> pluralAttributePath = consumeDomainPath( (HqlParser.PathContext) ctx.getChild( 2 ) );
-		final SqmPathSource<?> referencedPathSource = pluralAttributePath.getReferencedPathSource();
-
-		if ( !(referencedPathSource instanceof PluralPersistentAttribute<?, ?, ?> ) ) {
-			final TerminalNode firstNode = (TerminalNode) ctx.getChild( 0 );
-			throw new PathException(
-					String.format(
-							"Argument of '%s' is not a plural path '%s'",
-							firstNode.getSymbol().getText(),
-							pluralAttributePath.getNavigablePath()
-					)
-			);
-		}
-
-		return pluralAttributePath.resolvePathPart( CollectionPart.Nature.INDEX.getName(), true, this );
-	}
 
 	@Override
 	@SuppressWarnings("rawtypes")

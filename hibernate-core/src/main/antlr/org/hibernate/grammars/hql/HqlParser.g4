@@ -385,8 +385,7 @@ pathContinuation
  */
 syntacticDomainPath
 	: treatedNavigablePath
-	| collectionElementNavigablePath
-	| collectionIndexNavigablePath
+	| collectionValueNavigablePath
 	| mapKeyNavigablePath
 	| simplePath indexedPathAccessFragment
 	;
@@ -419,17 +418,10 @@ treatedNavigablePath
 	;
 
 /**
- * A 'values()' or 'elements()' function that "breaks" a path expression
+ * A 'value()' function that "breaks" a path expression
  */
-collectionElementNavigablePath
-	: (VALUE | ELEMENTS) LEFT_PAREN path RIGHT_PAREN pathContinuation?
-	;
-
-/**
- * An 'indices()' function that "breaks" a path expression
- */
-collectionIndexNavigablePath
-	: INDICES LEFT_PAREN path RIGHT_PAREN
+collectionValueNavigablePath
+	: VALUE LEFT_PAREN path RIGHT_PAREN pathContinuation?
 	;
 
 /**
@@ -958,6 +950,7 @@ function
 	| jpaCollectionFunction
 	| hqlCollectionFunction
 	| jpaNonstandardFunction
+	| collectionFunctionMisuse
 	| genericFunction
 	;
 
@@ -1016,6 +1009,17 @@ hqlCollectionFunction
 	| MAXELEMENT LEFT_PAREN path RIGHT_PAREN			# MaxElementFunction
 	| MININDEX LEFT_PAREN path RIGHT_PAREN				# MinIndexFunction
 	| MINELEMENT LEFT_PAREN path RIGHT_PAREN			# MinElementFunction
+	;
+
+/**
+ * To accommodate the misuse of elements() and indices() in the select clause
+ *
+ * (At some stage in the history of HQL, someone mixed them up with value() and index(),
+ *  and so we have tests that insist they're interchangeable. Ugh.)
+ */
+collectionFunctionMisuse
+	: ELEMENTS LEFT_PAREN path RIGHT_PAREN
+	| INDICES LEFT_PAREN path RIGHT_PAREN
 	;
 
 /**

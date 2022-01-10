@@ -961,7 +961,7 @@ The following functions may be applied to a collection-valued path expression to
 |===
 | Function | Applies to | Interpretation | Notes
 
-| `value()` | Any collection | The collection element or map entry value
+| `value()` or `element()` | Any collection | The collection element or map entry value
 | Always optional, and useful only to explicitly indicate intent.
 | `index()` | Any `List` with an index column | The index of the element in the list
 | For backward compatibility, it's also an alternative to ``key()``, when applied to a map.
@@ -997,16 +997,16 @@ include::{sourcedir}/HQLTest.java[tags=hql-collection-index-operator-example]
 There are even more functions which accept a collection-valued attribute or to-many association:
 
 |===
-| HQL Function (modern syntax) | HQL Function (old syntax) | Applies to | Purpose
+| HQL Function | Synonym | Old syntax | Applies to | Purpose
 
-| `max(element x)`| `maxelement(x)` | Collections of basic type | The maximum element
-| `min(element x)`| `minelement(x)` | Collections of basic type | The minimum element
-| `sum(element x)`| &mdash; | Collections of basic type | The sum of the elements
-| `avg(element x)`| &mdash; | Collections of basic type | The sum of the elements
-| `max(index x)`| `maxindex(x)` | Indexed collections (lists and maps) | The maximum list index or map key
-| `min(index x)`| `minindex(x)` | Indexed collections (lists and maps) | The minimum list index or map key
-| `sum(index x)`| &mdash; | Indexed collections (lists and maps) | The sum of the list indexes or map keys
-| `avg(index x)`| &mdash; | Indexed collections (lists and maps) | The average of the list indexes or map keys
+| `max(element&nbsp;x)` | `max(value&nbsp;x)` | `maxelement(x)` | Any collection with sortable elements | The maximum element or map value
+| `min(element&nbsp;x)` | `min(value&nbsp;x)` | `minelement(x)` | Any collection with sortable elements | The minimum element or map value
+| `sum(element&nbsp;x)` | `sum(value&nbsp;x)` | &mdash; | Any collection with numeric elements | The sum of the elements or map values
+| `avg(element&nbsp;x)` | `avg(value&nbsp;x)` | &mdash; | Any collection with numeric elements | The sum of the elements or map values
+| `max(index&nbsp;x)` | `max(key&nbsp;x)` | `maxindex(x)` | Indexed collections (lists and maps) | The maximum list index or map key
+| `min(index&nbsp;x)` | `min(key&nbsp;x)` | `minindex(x)` | Indexed collections (lists and maps) | The minimum list index or map key
+| `sum(index&nbsp;x)` | `sum(key&nbsp;x)` | &mdash; | Indexed collections (lists and maps) | The sum of the list indexes or map keys
+| `avg(index&nbsp;x)` | `avg(key&nbsp;x)`| &mdash; | Indexed collections (lists and maps) | The average of the list indexes or map keys
 |===
 
 We've intentionally left two functions off this list, so we can come back to them <<hql-elements-indices,later>>.

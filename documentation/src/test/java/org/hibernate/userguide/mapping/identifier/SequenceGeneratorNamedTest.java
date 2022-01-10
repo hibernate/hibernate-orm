@@ -19,6 +19,7 @@ import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.junit.Test;
 
+import static jakarta.persistence.GenerationType.SEQUENCE;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
 /**
@@ -54,12 +55,12 @@ public class SequenceGeneratorNamedTest extends BaseEntityManagerFunctionalTestC
 
 		@Id
 		@GeneratedValue(
-			strategy = GenerationType.SEQUENCE,
+			strategy = SEQUENCE,
 			generator = "sequence-generator"
 		)
 		@SequenceGenerator(
 			name = "sequence-generator",
-			sequenceName = "product_sequence"
+			sequenceName = "explicit_product_sequence"
 		)
 		private Long id;
 

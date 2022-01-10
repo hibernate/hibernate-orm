@@ -59,7 +59,7 @@ public class SequenceGeneratorConfiguredTest extends BaseEntityManagerFunctional
 		)
 		@SequenceGenerator(
 			name = "sequence-generator",
-			sequenceName = "product_sequence",
+			sequenceName = "explicit_product_sequence",
 			allocationSize = 5
 		)
 		private Long id;

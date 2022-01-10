@@ -16,12 +16,14 @@ import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-@IdGeneratorType( SimpleSequenceGenerator.class )
+//tag::identifiers-IdGeneratorType-example[]
+@IdGeneratorType( CustomSequenceGenerator.class )
 @Target({METHOD, FIELD})
 @Retention(RUNTIME)
 public @interface Sequence {
 	String name();
 	int startWith() default 1;
 	int incrementBy() default 50;
-	Class<? extends Optimizer> optimizerStrategy() default Optimizer.class;
+	Class<? extends Optimizer> optimizer() default Optimizer.class;
 }
+//end::identifiers-IdGeneratorType-example[]

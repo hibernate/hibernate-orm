@@ -21,13 +21,22 @@ import org.hibernate.id.factory.spi.CustomIdGeneratorCreationContext;
 /**
  * An example custom generator.
  */
-public class SimpleSequenceGenerator implements IdentifierGenerator {
+//tag::identifiers-IdGeneratorType-example[]
+public class CustomSequenceGenerator implements IdentifierGenerator {
+//end::identifiers-IdGeneratorType-example[]
 	public static int generationCount = 0;
 
 	private final Identifier sequenceName;
 	private final String sqlSelectFrag;
 
-	public SimpleSequenceGenerator(Sequence config, Member annotatedMember, CustomIdGeneratorCreationContext context) {
+//tag::identifiers-IdGeneratorType-example[]
+
+	public CustomSequenceGenerator(
+			Sequence config,
+			Member annotatedMember,
+			CustomIdGeneratorCreationContext context) {
+		//...
+//end::identifiers-IdGeneratorType-example[]
 		final String name = config.name();
 
 		// ignore the other config for now...
@@ -52,10 +61,16 @@ public class SimpleSequenceGenerator implements IdentifierGenerator {
 				.getDialect()
 				.getSequenceSupport()
 				.getSequenceNextValString( sequenceName.render( database.getDialect() ) );
+
+//tag::identifiers-IdGeneratorType-example[]
 	}
 
 	@Override
-	public Object generate(SharedSessionContractImplementor session, Object object) {
+	public Object generate(
+			SharedSessionContractImplementor session,
+			Object object) {
+		//...
+//end::identifiers-IdGeneratorType-example[]
 		generationCount++;
 		try {
 			final PreparedStatement st = session.getJdbcCoordinator().getStatementPreparer().prepareStatement( sqlSelectFrag );
@@ -88,4 +103,6 @@ public class SimpleSequenceGenerator implements IdentifierGenerator {
 			);
 		}
 	}
+//tag::identifiers-IdGeneratorType-example[]
 }
+//end::identifiers-IdGeneratorType-example[]

@@ -1,22 +1,23 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
 package org.hibernate.userguide.mapping.identifier;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.junit.Test;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.SequenceGenerator;
 
 import static jakarta.persistence.GenerationType.SEQUENCE;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
@@ -25,7 +26,7 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
  * @author Vlad Mihalcea
  */
 @RequiresDialectFeature(DialectChecks.SupportsSequences.class)
-public class SequenceGeneratorUnnamedTest extends BaseEntityManagerFunctionalTestCase {
+public class SequenceGeneratorAnnotationNameTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -53,7 +54,10 @@ public class SequenceGeneratorUnnamedTest extends BaseEntityManagerFunctionalTes
 	public static class Product {
 
 		@Id
-		@GeneratedValue( strategy = SEQUENCE )
+		@GeneratedValue(
+			strategy = SEQUENCE,
+			generator = "explicit_product_sequence"
+		)
 		private Long id;
 
 		@Column(name = "product_name")

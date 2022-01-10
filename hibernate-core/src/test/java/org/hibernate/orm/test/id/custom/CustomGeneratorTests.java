@@ -38,12 +38,12 @@ public class CustomGeneratorTests {
 
 	@Test
 	public void basicUseTest(SessionFactoryScope scope) {
-		assertThat( SimpleSequenceGenerator.generationCount ).isEqualTo( 0 );
+		assertThat( CustomSequenceGenerator.generationCount ).isEqualTo( 0 );
 
 		scope.inTransaction( (session) -> {
 			session.persist( new TheEntity( "steve" ) );
 		} );
 
-		assertThat( SimpleSequenceGenerator.generationCount ).isEqualTo( 1 );
+		assertThat( CustomSequenceGenerator.generationCount ).isEqualTo( 1 );
 	}
 }

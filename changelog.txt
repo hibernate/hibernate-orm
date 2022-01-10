@@ -3,6 +3,32 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.4.33.Final (January 10, 2022)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31947
+
+** Bug
+    * [HHH-14972] - log4j2 <= 2.14.1 has an RCE (CVE-2021-44228)
+    * [HHH-14840] - IBM Db2 11.1 fails on TransientOverride test cases
+    * [HHH-14828] - Bytecode enhancement generates invalid bytecode for final fields
+    * [HHH-14796] - Cannot replace an existing JPQL NamedQuery with a native NamedQuery
+    * [HHH-14757] - Cannot save (dirty check failed) single element GeometryCollection
+    * [HHH-14657] - Byte code enhancement via Gradle plugin fails
+    * [HHH-14608] - Merge causes StackOverflow when JPA proxy compliance is enabled
+    * [HHH-14540] - Interceptor instance is shared between ORM session and Enver's temporary session resulting in multiple calls.
+
+** Deprecation
+    * [HHH-14847] - Deprecate JMX integration
+    * [HHH-14845] - Deprecate JACC integration
+
+** Task
+    * [HHH-14979] - Upgrade to Log4J 2 2.16.0
+    * [HHH-14788] - Upgrade to Byteman 4.0.16
+    * [HHH-14771] - Upgrade to Byte Buddy 1.11.12
+    * [HHH-14635] - Upgrade to latest JUnit and to Log4j 2
+
+
 Changes in 5.4.32.Final (May 24, 2021)
 ------------------------------------------------------------------------------------------------------------------------
 

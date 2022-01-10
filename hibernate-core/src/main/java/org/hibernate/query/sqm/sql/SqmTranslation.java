@@ -8,10 +8,8 @@ package org.hibernate.query.sqm.sql;
 
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
-import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
@@ -27,6 +25,6 @@ public interface SqmTranslation<T extends Statement> {
 	T getSqlAst();
 	SqlExpressionResolver getSqlExpressionResolver();
 	FromClauseAccess getFromClauseAccess();
-	Map<SqmParameter, List<List<JdbcParameter>>> getJdbcParamsBySqmParam();
-	Map<SqmParameter,MappingModelExpressable> getSqmParameterMappingModelTypeResolutions();
+	Map<SqmParameter<?>, List<List<JdbcParameter>>> getJdbcParamsBySqmParam();
+	Map<SqmParameter<?>, MappingModelExpressable<?>> getSqmParameterMappingModelTypeResolutions();
 }

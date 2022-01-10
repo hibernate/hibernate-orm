@@ -43,7 +43,7 @@ public class CaseWhenEveryAnyEmulation extends AbstractSqmSelfRenderingFunctionD
 	@Override
 	public void render(
 			SqlAppender sqlAppender,
-			List<SqlAstNode> sqlAstArguments,
+			List<? extends SqlAstNode> sqlAstArguments,
 			Predicate filter,
 			SqlAstTranslator<?> walker) {
 		if ( every ) {
@@ -66,7 +66,7 @@ public class CaseWhenEveryAnyEmulation extends AbstractSqmSelfRenderingFunctionD
 
 	@Override
 	public void render(
-			SqlAppender sqlAppender, List<SqlAstNode> sqlAstArguments, SqlAstTranslator<?> walker) {
+			SqlAppender sqlAppender, List<? extends SqlAstNode> sqlAstArguments, SqlAstTranslator<?> walker) {
 		this.render( sqlAppender, sqlAstArguments, null, walker );
 	}
 }

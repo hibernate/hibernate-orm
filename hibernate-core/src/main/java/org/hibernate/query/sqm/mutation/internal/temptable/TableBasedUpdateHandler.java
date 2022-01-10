@@ -79,13 +79,13 @@ public class TableBasedUpdateHandler
 		this.entityDescriptor = sessionFactory.getDomainModel().getEntityDescriptor( targetEntityName );
 	}
 
-	protected SqmUpdateStatement getSqmUpdate() {
+	protected SqmUpdateStatement<?> getSqmUpdate() {
 		return getSqmDeleteOrUpdateStatement();
 	}
 
 	@Override
-	public SqmUpdateStatement getSqmDeleteOrUpdateStatement() {
-		return (SqmUpdateStatement) super.getSqmDeleteOrUpdateStatement();
+	public SqmUpdateStatement<?> getSqmDeleteOrUpdateStatement() {
+		return (SqmUpdateStatement<?>) super.getSqmDeleteOrUpdateStatement();
 	}
 
 
@@ -131,7 +131,7 @@ public class TableBasedUpdateHandler
 		);
 		assert hierarchyRootTableReference != null;
 
-		final Map<SqmParameter, List<List<JdbcParameter>>> parameterResolutions;
+		final Map<SqmParameter<?>, List<List<JdbcParameter>>> parameterResolutions;
 		if ( domainParameterXref.getSqmParameterCount() == 0 ) {
 			parameterResolutions = Collections.emptyMap();
 		}
@@ -144,7 +144,7 @@ public class TableBasedUpdateHandler
 		// information about the assignments
 
 		final List<Assignment> assignments = new ArrayList<>();
-		final Map<SqmParameter, MappingModelExpressable> paramTypeResolutions = new LinkedHashMap<>();
+		final Map<SqmParameter<?>, MappingModelExpressable<?>> paramTypeResolutions = new LinkedHashMap<>();
 
 		converterDelegate.visitSetClause(
 				getSqmDeleteOrUpdateStatement().getSetClause(),

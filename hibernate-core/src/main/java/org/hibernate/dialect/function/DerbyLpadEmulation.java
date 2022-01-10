@@ -43,7 +43,7 @@ public class DerbyLpadEmulation
 	@Override
 	public void render(
 			SqlAppender sqlAppender,
-			List<SqlAstNode> arguments,
+			List<? extends SqlAstNode> arguments,
 			SqlAstTranslator<?> walker) {
 		final SqlAstNode string = arguments.get( 0 );
 		final SqlAstNode length = arguments.get( 1 );

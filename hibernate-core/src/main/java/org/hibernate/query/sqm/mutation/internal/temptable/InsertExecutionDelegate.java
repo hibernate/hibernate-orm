@@ -42,6 +42,7 @@ import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
+import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
@@ -89,7 +90,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 	private final JdbcParameterBindings jdbcParameterBindings;
 
 	private final Map<TableReference, List<Assignment>> assignmentsByTable;
-	private final Map<SqmParameter, MappingModelExpressable> paramTypeResolutions;
+	private final Map<SqmParameter<?>, MappingModelExpressable<?>> paramTypeResolutions;
 	private final SessionFactoryImplementor sessionFactory;
 
 	public InsertExecutionDelegate(
@@ -103,8 +104,8 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 			Map<String, TableReference> tableReferenceByAlias,
 			List<Assignment> assignments,
 			InsertStatement insertStatement,
-			Map<SqmParameter, List<List<JdbcParameter>>> parameterResolutions,
-			Map<SqmParameter, MappingModelExpressable> paramTypeResolutions,
+			Map<SqmParameter<?>, List<List<JdbcParameter>>> parameterResolutions,
+			Map<SqmParameter<?>, MappingModelExpressable<?>> paramTypeResolutions,
 			DomainQueryExecutionContext executionContext) {
 		this.sqmInsert = sqmInsert;
 		this.sqmConverter = sqmConverter;
@@ -134,7 +135,13 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 				),
 				sessionFactory.getDomainModel(),
 				navigablePath -> insertingTableGroup,
-				paramTypeResolutions::get,
+				new SqmParameterMappingModelResolutionAccess() {
+					@Override @SuppressWarnings("unchecked")
+					public <T> MappingModelExpressable<T> getResolvedMappingModelType(SqmParameter<T> parameter) {
+						return (MappingModelExpressable<T>) paramTypeResolutions.get(parameter);
+					}
+				}
+				,
 				executionContext.getSession()
 		);
 

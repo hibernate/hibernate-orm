@@ -129,7 +129,7 @@ public class TableBasedInsertHandler implements InsertHandler {
 
 		final TableGroup insertingTableGroup = converterDelegate.getMutatingTableGroup();
 
-		final Map<SqmParameter, List<List<JdbcParameter>>> parameterResolutions;
+		final Map<SqmParameter<?>, List<List<JdbcParameter>>> parameterResolutions;
 		if ( domainParameterXref.getSqmParameterCount() == 0 ) {
 			parameterResolutions = Collections.emptyMap();
 		}
@@ -142,7 +142,7 @@ public class TableBasedInsertHandler implements InsertHandler {
 		// information about the target paths
 
 		final List<Assignment> targetPathColumns = new ArrayList<>();
-		final Map<SqmParameter, MappingModelExpressable> paramTypeResolutions = new LinkedHashMap<>();
+		final Map<SqmParameter<?>, MappingModelExpressable<?>> paramTypeResolutions = new LinkedHashMap<>();
 		final NamedTableReference entityTableReference = new NamedTableReference(
 				entityTable.getTableExpression(),
 				TemporaryTable.DEFAULT_ALIAS,

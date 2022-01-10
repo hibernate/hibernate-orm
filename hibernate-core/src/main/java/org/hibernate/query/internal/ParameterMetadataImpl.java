@@ -39,7 +39,7 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 	 */
 	public static final ParameterMetadataImpl EMPTY = new ParameterMetadataImpl();
 
-	private final Map<QueryParameterImplementor<?>, List<SqmParameter>> queryParameters;
+	private final Map<QueryParameterImplementor<?>, List<SqmParameter<?>>> queryParameters;
 
 	private final Set<String> names;
 	private final Set<Integer> labels;
@@ -51,7 +51,7 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 		this.labels = Collections.emptySet();
 	}
 
-	public ParameterMetadataImpl(Map<QueryParameterImplementor<?>, List<SqmParameter>> queryParameters) {
+	public ParameterMetadataImpl(Map<QueryParameterImplementor<?>, List<SqmParameter<?>>> queryParameters) {
 		this.queryParameters = queryParameters;
 
 		// if we have any ordinal parameters, make sure the numbers
@@ -168,12 +168,12 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 
 	@Override
 	public <T> AllowableParameterType<T> getInferredParameterType(QueryParameter<T> parameter) {
-		final List<SqmParameter> sqmParameters = queryParameters.get( parameter );
+		final List<SqmParameter<?>> sqmParameters = queryParameters.get( parameter );
 		if ( sqmParameters == null || sqmParameters.isEmpty() ) {
 			return null;
 		}
-		for ( SqmParameter sqmParameter : sqmParameters ) {
-			final AllowableParameterType nodeType = sqmParameter.getNodeType();
+		for ( SqmParameter<?> sqmParameter : sqmParameters ) {
+			final AllowableParameterType<T> nodeType = (AllowableParameterType<T>) sqmParameter.getNodeType();
 			if ( nodeType != null ) {
 				return nodeType;
 			}

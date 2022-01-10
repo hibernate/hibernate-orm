@@ -17,7 +17,7 @@ import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.QueryLiteral;
+import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.TrimSpecification;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -50,12 +50,12 @@ public class TrimFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 	}
 
 	@Override
-	public void render(SqlAppender sqlAppender, List<SqlAstNode> sqlAstArguments, SqlAstTranslator<?> walker) {
+	public void render(SqlAppender sqlAppender, List<? extends SqlAstNode> sqlAstArguments, SqlAstTranslator<?> walker) {
 		final TrimSpec specification = ( (TrimSpecification) sqlAstArguments.get( 0 ) ).getSpecification();
-		final Character trimCharacter = ( (QueryLiteral<Character>) sqlAstArguments.get( 1 ) ).getLiteralValue();
+		final Object trimCharacter = ( (Literal) sqlAstArguments.get( 1 ) ).getLiteralValue();
 		final Expression sourceExpr = (Expression) sqlAstArguments.get( 2 );
 
-		String trim = dialect.trimPattern( specification, trimCharacter );
+		String trim = dialect.trimPattern( specification, (char) trimCharacter );
 
 		new PatternRenderer( trim ).render( sqlAppender, Collections.singletonList( sourceExpr ), walker );
 	}

@@ -67,7 +67,7 @@ public class TimestampaddFunction
 	@Override
 	public void render(
 			SqlAppender sqlAppender,
-			List<SqlAstNode> arguments,
+			List<? extends SqlAstNode> arguments,
 			SqlAstTranslator<?> walker) {
 
 		final DurationUnit field = (DurationUnit) arguments.get( 0 );
@@ -143,7 +143,7 @@ public class TimestampaddFunction
 					1,
 					new SelfRenderingFunctionSqlAstExpression(
 							"cast",
-							castFunction::render,
+							castFunction,
 							castArguments,
 							integerType,
 							integerType
@@ -190,7 +190,7 @@ public class TimestampaddFunction
 		Expression to = (Expression) sqlAstArguments[2];
 		return new SelfRenderingFunctionSqlAstExpression(
 				getName(),
-				this::render,
+				this,
 				asList( sqlAstArguments ),
 				impliedResultType != null
 						? impliedResultType

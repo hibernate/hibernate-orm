@@ -22,5 +22,5 @@ public interface JdbcParameterBySqmParameterAccess {
 	/**
 	 * The mapping between an SqmParameter and all of its JDBC parameters
 	 */
-	Map<SqmParameter, List<List<JdbcParameter>>> getJdbcParamsBySqmParam();
+	Map<SqmParameter<?>, List<List<JdbcParameter>>> getJdbcParamsBySqmParam();
 }

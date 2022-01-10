@@ -57,7 +57,7 @@ import org.hibernate.sql.ast.tree.update.Assignment;
  */
 public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Statement> {
 	public interface SqmParameterResolutionConsumer {
-		void accept(SqmParameter sqmParam, MappingModelExpressable mappingType, List<JdbcParameter> jdbcParameters);
+		void accept(SqmParameter<?> sqmParam, MappingModelExpressable<?> mappingType, List<JdbcParameter> jdbcParameters);
 	}
 
 	private final EntityMappingType mutatingEntityDescriptor;
@@ -231,7 +231,7 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 	}
 
 	@Override
-	protected Expression consumeSingleSqmParameter(SqmParameter sqmParameter) {
+	protected Expression consumeSingleSqmParameter(SqmParameter<?> sqmParameter) {
 		assert parameterResolutionConsumer != null;
 
 		final Expression expression = super.consumeSingleSqmParameter( sqmParameter );

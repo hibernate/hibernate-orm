@@ -44,7 +44,7 @@ public class EveryAnyEmulation extends AbstractSqmSelfRenderingFunctionDescripto
 	@Override
 	public void render(
 			SqlAppender sqlAppender,
-			List<SqlAstNode> sqlAstArguments,
+			List<? extends SqlAstNode> sqlAstArguments,
 			Predicate filter,
 			SqlAstTranslator<?> walker) {
 		sqlAppender.appendSql( "(sum(case when " );
@@ -72,7 +72,7 @@ public class EveryAnyEmulation extends AbstractSqmSelfRenderingFunctionDescripto
 
 	@Override
 	public void render(
-			SqlAppender sqlAppender, List<SqlAstNode> sqlAstArguments, SqlAstTranslator<?> walker) {
+			SqlAppender sqlAppender, List<? extends SqlAstNode> sqlAstArguments, SqlAstTranslator<?> walker) {
 		this.render( sqlAppender, sqlAstArguments, null, walker );
 	}
 }

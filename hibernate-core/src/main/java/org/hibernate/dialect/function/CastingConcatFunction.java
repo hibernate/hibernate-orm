@@ -63,7 +63,7 @@ public class CastingConcatFunction extends AbstractSqmSelfRenderingFunctionDescr
 	}
 
 	@Override
-	public void render(SqlAppender sqlAppender, List<SqlAstNode> sqlAstArguments, SqlAstTranslator<?> walker) {
+	public void render(SqlAppender sqlAppender, List<? extends SqlAstNode> sqlAstArguments, SqlAstTranslator<?> walker) {
 		sqlAppender.appendSql( '(' );
 		renderAsString( sqlAppender, walker, (Expression) sqlAstArguments.get( 0 ) );
 		for ( int i = 1; i < sqlAstArguments.size(); i++ ) {

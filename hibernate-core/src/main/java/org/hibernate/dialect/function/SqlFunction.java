@@ -15,7 +15,6 @@ import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
-import org.hibernate.type.BasicType;
 import org.hibernate.type.JavaObjectType;
 
 /**
@@ -37,7 +36,7 @@ public class SqlFunction
 	@Override
 	public void render(
 			SqlAppender sqlAppender,
-			List<SqlAstNode> arguments,
+			List<? extends SqlAstNode> arguments,
 			SqlAstTranslator<?> walker) {
 		final QueryLiteral<String> sqlFragmentLiteral = (QueryLiteral<String>) arguments.get( 0 );
 		final String sqlFragment = sqlFragmentLiteral.getLiteralValue();

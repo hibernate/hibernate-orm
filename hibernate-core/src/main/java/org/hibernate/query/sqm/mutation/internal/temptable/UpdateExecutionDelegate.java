@@ -27,6 +27,7 @@ import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
+import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
@@ -48,7 +49,7 @@ import org.hibernate.sql.exec.spi.JdbcUpdate;
  * @author Steve Ebersole
  */
 public class UpdateExecutionDelegate implements TableBasedUpdateHandler.ExecutionDelegate {
-	private final SqmUpdateStatement sqmUpdate;
+	private final SqmUpdateStatement<?> sqmUpdate;
 	private final MultiTableSqmMutationConverter sqmConverter;
 	private final TemporaryTable idTable;
 	private final AfterUseAction afterUseAction;
@@ -62,7 +63,7 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 	private final JdbcParameterBindings jdbcParameterBindings;
 
 	private final Map<TableReference, List<Assignment>> assignmentsByTable;
-	private final Map<SqmParameter, MappingModelExpressable> paramTypeResolutions;
+	private final Map<SqmParameter<?>, MappingModelExpressable<?>> paramTypeResolutions;
 	private final SessionFactoryImplementor sessionFactory;
 
 	public UpdateExecutionDelegate(
@@ -77,8 +78,8 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 			Map<String, TableReference> tableReferenceByAlias,
 			List<Assignment> assignments,
 			Predicate suppliedPredicate,
-			Map<SqmParameter, List<List<JdbcParameter>>> parameterResolutions,
-			Map<SqmParameter, MappingModelExpressable> paramTypeResolutions,
+			Map<SqmParameter<?>, List<List<JdbcParameter>>> parameterResolutions,
+			Map<SqmParameter<?>, MappingModelExpressable<?>> paramTypeResolutions,
 			DomainQueryExecutionContext executionContext) {
 		this.sqmUpdate = sqmUpdate;
 		this.sqmConverter = sqmConverter;
@@ -108,7 +109,12 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 				),
 				sessionFactory.getDomainModel(),
 				navigablePath -> updatingTableGroup,
-				paramTypeResolutions::get,
+				new SqmParameterMappingModelResolutionAccess() {
+					@Override @SuppressWarnings("unchecked")
+					public <T> MappingModelExpressable<T> getResolvedMappingModelType(SqmParameter<T> parameter) {
+						return (MappingModelExpressable<T>) paramTypeResolutions.get(parameter);
+					}
+				},
 				executionContext.getSession()
 		);
 

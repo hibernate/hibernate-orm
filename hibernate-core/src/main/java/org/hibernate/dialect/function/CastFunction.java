@@ -51,7 +51,7 @@ public class CastFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 	}
 
 	@Override
-	public void render(SqlAppender sqlAppender, List<SqlAstNode> arguments, SqlAstTranslator<?> walker) {
+	public void render(SqlAppender sqlAppender, List<? extends SqlAstNode> arguments, SqlAstTranslator<?> walker) {
 		final Expression source = (Expression) arguments.get( 0 );
 		final JdbcMapping sourceMapping = source.getExpressionType().getJdbcMappings().get( 0 );
 		final CastType sourceType = getCastType( sourceMapping );

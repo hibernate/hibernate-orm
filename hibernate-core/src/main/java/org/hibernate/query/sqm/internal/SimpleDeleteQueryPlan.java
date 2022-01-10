@@ -15,6 +15,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
+import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.mapping.MappingModelHelper;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
@@ -22,6 +23,7 @@ import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
+import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.sql.SqmTranslation;
 import org.hibernate.query.sqm.sql.SqmTranslator;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
@@ -43,16 +45,16 @@ import org.hibernate.sql.results.internal.SqlSelectionImpl;
  */
 public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 	private final EntityMappingType entityDescriptor;
-	private final SqmDeleteStatement sqmDelete;
+	private final SqmDeleteStatement<?> sqmDelete;
 	private final DomainParameterXref domainParameterXref;
 
 	private JdbcDelete jdbcDelete;
 	private SqmTranslation<DeleteStatement> sqmInterpretation;
-	private Map<QueryParameterImplementor<?>, Map<SqmParameter, List<List<JdbcParameter>>>> jdbcParamsXref;
+	private Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<List<JdbcParameter>>>> jdbcParamsXref;
 
 	public SimpleDeleteQueryPlan(
 			EntityMappingType entityDescriptor,
-			SqmDeleteStatement sqmDelete,
+			SqmDeleteStatement<?> sqmDelete,
 			DomainParameterXref domainParameterXref) {
 		assert entityDescriptor.getEntityName().equals( sqmDelete.getTarget().getEntityName() );
 
@@ -103,7 +105,12 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 				jdbcParamsXref,
 				factory.getDomainModel(),
 				sqmInterpretation.getFromClauseAccess()::findTableGroup,
-				sqmInterpretation.getSqmParameterMappingModelTypeResolutions()::get,
+				new SqmParameterMappingModelResolutionAccess() {
+					@Override @SuppressWarnings("unchecked")
+					public <T> MappingModelExpressable<T> getResolvedMappingModelType(SqmParameter<T> parameter) {
+						return (MappingModelExpressable<T>) sqmInterpretation.getSqmParameterMappingModelTypeResolutions().get(parameter);
+					}
+				},
 				session
 		);
 

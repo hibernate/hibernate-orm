@@ -108,7 +108,7 @@ public class FunctionExpression implements OrderingExpression, FunctionRendering
 	}
 
 	@Override
-	public void render(SqlAppender sqlAppender, List<SqlAstNode> sqlAstArguments, SqlAstTranslator<?> walker) {
+	public void render(SqlAppender sqlAppender, List<? extends SqlAstNode> sqlAstArguments, SqlAstTranslator<?> walker) {
 		sqlAppender.appendSql( name );
 		sqlAppender.appendSql( '(' );
 		if ( !sqlAstArguments.isEmpty() ) {

@@ -47,14 +47,14 @@ public class SelfRenderingFunctionSqlAstExpression
 		implements SelfRenderingExpression, Selectable, SqlExpressable, DomainResultProducer, FunctionExpression {
 	private final String functionName;
 	private final FunctionRenderingSupport renderer;
-	private final List<SqlAstNode> sqlAstArguments;
+	private final List<? extends SqlAstNode> sqlAstArguments;
 	private final AllowableFunctionReturnType<?> type;
 	private final JdbcMappingContainer expressable;
 
 	public SelfRenderingFunctionSqlAstExpression(
 			String functionName,
 			FunctionRenderingSupport renderer,
-			List<SqlAstNode> sqlAstArguments,
+			List<? extends SqlAstNode> sqlAstArguments,
 			AllowableFunctionReturnType<?> type,
 			JdbcMappingContainer expressable) {
 		this.functionName = functionName;
@@ -71,7 +71,7 @@ public class SelfRenderingFunctionSqlAstExpression
 	}
 
 	@Override
-	public List<SqlAstNode> getArguments() {
+	public List<? extends SqlAstNode> getArguments() {
 		return sqlAstArguments;
 	}
 

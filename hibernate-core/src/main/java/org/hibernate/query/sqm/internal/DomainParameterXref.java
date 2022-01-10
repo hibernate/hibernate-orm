@@ -82,10 +82,10 @@ public class DomainParameterXref {
 			return empty();
 		}
 
-		final Map<QueryParameterImplementor<?>, List<SqmParameter>> sqmParamsByQueryParam = new IdentityHashMap<>();
+		final Map<QueryParameterImplementor<?>, List<SqmParameter<?>>> sqmParamsByQueryParam = new IdentityHashMap<>();
 
 		final int sqmParamCount = parameterResolutions.getSqmParameters().size();
-		final Map<SqmParameter, QueryParameterImplementor<?>> queryParamBySqmParam = new IdentityHashMap<>( sqmParamCount );
+		final Map<SqmParameter<?>, QueryParameterImplementor<?>> queryParamBySqmParam = new IdentityHashMap<>( sqmParamCount );
 
 		for ( SqmParameter<?> sqmParameter : parameterResolutions.getSqmParameters() ) {
 			if ( sqmParameter instanceof JpaCriteriaParameter ) {
@@ -147,17 +147,17 @@ public class DomainParameterXref {
 
 	private final SqmStatement.ParameterResolutions parameterResolutions;
 
-	private final Map<QueryParameterImplementor<?>, List<SqmParameter>> sqmParamsByQueryParam;
-	private final Map<SqmParameter, QueryParameterImplementor<?>> queryParamBySqmParam;
+	private final Map<QueryParameterImplementor<?>, List<SqmParameter<?>>> sqmParamsByQueryParam;
+	private final Map<SqmParameter<?>, QueryParameterImplementor<?>> queryParamBySqmParam;
 
-	private Map<SqmParameter,List<SqmParameter>> expansions;
+	private Map<SqmParameter<?>,List<SqmParameter<?>>> expansions;
 
 	/**
 	 * @implSpec Constructor is defined as public for
 	 */
 	public DomainParameterXref(
-			Map<QueryParameterImplementor<?>, List<SqmParameter>> sqmParamsByQueryParam,
-			Map<SqmParameter, QueryParameterImplementor<?>> queryParamBySqmParam,
+			Map<QueryParameterImplementor<?>, List<SqmParameter<?>>> sqmParamsByQueryParam,
+			Map<SqmParameter<?>, QueryParameterImplementor<?>> queryParamBySqmParam,
 			SqmStatement.ParameterResolutions parameterResolutions) {
 		this.sqmParamsByQueryParam = sqmParamsByQueryParam;
 		this.queryParamBySqmParam = queryParamBySqmParam;
@@ -174,7 +174,7 @@ public class DomainParameterXref {
 	/**
 	 * Get all of the QueryParameters mapped by this xref
 	 */
-	public Map<QueryParameterImplementor<?>, List<SqmParameter>> getQueryParameters() {
+	public Map<QueryParameterImplementor<?>, List<SqmParameter<?>>> getQueryParameters() {
 		return sqmParamsByQueryParam;
 	}
 
@@ -187,7 +187,7 @@ public class DomainParameterXref {
 	}
 
 	public int getNumberOfSqmParameters(QueryParameterImplementor<?> queryParameter) {
-		final List<SqmParameter> sqmParameters = sqmParamsByQueryParam.get( queryParameter );
+		final List<SqmParameter<?>> sqmParameters = sqmParamsByQueryParam.get( queryParameter );
 		if ( sqmParameters == null ) {
 			// this should maybe be an exception instead
 			return 0;
@@ -199,7 +199,7 @@ public class DomainParameterXref {
 	 * Get the mapping of all QueryParameters to the List of its corresponding
 	 * SqmParameters
 	 */
-	public Map<QueryParameterImplementor<?>, List<SqmParameter>> getSqmParamByQueryParam() {
+	public Map<QueryParameterImplementor<?>, List<SqmParameter<?>>> getSqmParamByQueryParam() {
 		return sqmParamsByQueryParam;
 	}
 
@@ -207,13 +207,13 @@ public class DomainParameterXref {
 		return parameterResolutions;
 	}
 
-	public List<SqmParameter> getSqmParameters(QueryParameterImplementor<?> queryParameter) {
+	public List<SqmParameter<?>> getSqmParameters(QueryParameterImplementor<?> queryParameter) {
 		return sqmParamsByQueryParam.get( queryParameter );
 	}
 
-	public QueryParameterImplementor<?> getQueryParameter(SqmParameter sqmParameter) {
+	public QueryParameterImplementor<?> getQueryParameter(SqmParameter<?> sqmParameter) {
 		if ( sqmParameter instanceof SqmJpaCriteriaParameterWrapper ) {
-			return ( (SqmJpaCriteriaParameterWrapper) sqmParameter ).getJpaCriteriaParameter();
+			return ( (SqmJpaCriteriaParameterWrapper<?>) sqmParameter ).getJpaCriteriaParameter();
 		}
 		else if ( sqmParameter instanceof QueryParameterImplementor<?> ) {
 			return (QueryParameterImplementor<?>) sqmParameter;
@@ -235,12 +235,12 @@ public class DomainParameterXref {
 		expansions.computeIfAbsent( originalSqmParameter, p -> new ArrayList<>() ).add( expansion );
 	}
 
-	public List<SqmParameter> getExpansions(SqmParameter sqmParameter) {
+	public List<SqmParameter<?>> getExpansions(SqmParameter<?> sqmParameter) {
 		if ( expansions == null ) {
 			return Collections.emptyList();
 		}
 
-		final List<SqmParameter> sqmParameters = expansions.get( sqmParameter );
+		final List<SqmParameter<?>> sqmParameters = expansions.get( sqmParameter );
 		return sqmParameters == null ? Collections.emptyList() : sqmParameters;
 	}
 
@@ -249,8 +249,8 @@ public class DomainParameterXref {
 			return;
 		}
 
-		for ( List<SqmParameter> expansionList : expansions.values() ) {
-			for ( SqmParameter expansion : expansionList ) {
+		for ( List<SqmParameter<?>> expansionList : expansions.values() ) {
+			for ( SqmParameter<?> expansion : expansionList ) {
 				queryParamBySqmParam.remove( expansion );
 			}
 		}

@@ -169,10 +169,7 @@ public interface QueryOptions {
 	default boolean hasLimit() {
 		final Limit limit = getLimit();
 		if ( limit != null ) {
-			if ( limit.getFirstRow() != null ) {
-				return true;
-			}
-			if ( limit.getMaxRows() != null ) {
+			if ( limit.getFirstRow() != null || limit.getMaxRows() != null ) {
 				return true;
 			}
 		}

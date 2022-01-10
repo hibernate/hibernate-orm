@@ -19,5 +19,5 @@ public interface FunctionExpression extends Expression {
 
 	String getFunctionName();
 
-	List<SqlAstNode> getArguments();
+	List<? extends SqlAstNode> getArguments();
 }

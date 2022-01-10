@@ -134,14 +134,14 @@ public class PatternRenderer {
 	@SuppressWarnings({ "UnusedDeclaration" })
 	public void render(
 			SqlAppender sqlAppender,
-			List<SqlAstNode> args,
+			List<? extends SqlAstNode> args,
 			SqlAstTranslator<?> translator) {
 		render( sqlAppender, args, null, translator );
 	}
 
 	public void render(
 			SqlAppender sqlAppender,
-			List<SqlAstNode> args,
+			List<? extends SqlAstNode> args,
 			Predicate filter,
 			SqlAstTranslator<?> translator) {
 		final int numberOfArguments = args.size();

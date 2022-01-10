@@ -18,6 +18,7 @@ import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryParameterImplementor;
+import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.sql.SqmTranslation;
 import org.hibernate.query.sqm.sql.SqmTranslator;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
@@ -34,16 +35,16 @@ import org.hibernate.sql.exec.spi.JdbcUpdate;
  * @author Steve Ebersole
  */
 public class SimpleUpdateQueryPlan implements NonSelectQueryPlan {
-	private final SqmUpdateStatement sqmUpdate;
+	private final SqmUpdateStatement<?> sqmUpdate;
 	private final DomainParameterXref domainParameterXref;
 
 	private JdbcUpdate jdbcUpdate;
 	private FromClauseAccess tableGroupAccess;
-	private Map<QueryParameterImplementor<?>, Map<SqmParameter, List<List<JdbcParameter>>>> jdbcParamsXref;
-	private Map<SqmParameter,MappingModelExpressable> sqmParamMappingTypeResolutions;
+	private Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<List<JdbcParameter>>>> jdbcParamsXref;
+	private Map<SqmParameter<?>,MappingModelExpressable<?>> sqmParamMappingTypeResolutions;
 
 	public SimpleUpdateQueryPlan(
-			SqmUpdateStatement sqmUpdate,
+			SqmUpdateStatement<?> sqmUpdate,
 			DomainParameterXref domainParameterXref) {
 		this.sqmUpdate = sqmUpdate;
 		this.domainParameterXref = domainParameterXref;
@@ -66,7 +67,12 @@ public class SimpleUpdateQueryPlan implements NonSelectQueryPlan {
 				jdbcParamsXref,
 				factory.getDomainModel(),
 				tableGroupAccess::findTableGroup,
-				sqmParamMappingTypeResolutions::get,
+				new SqmParameterMappingModelResolutionAccess() {
+					@Override @SuppressWarnings("unchecked")
+					public <T> MappingModelExpressable<T> getResolvedMappingModelType(SqmParameter<T> parameter) {
+						return (MappingModelExpressable<T>) sqmParamMappingTypeResolutions.get(parameter);
+					}
+				},
 				session
 		);
 

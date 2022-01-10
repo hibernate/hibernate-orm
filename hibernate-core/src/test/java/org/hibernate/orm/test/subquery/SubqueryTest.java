@@ -59,9 +59,9 @@ public class SubqueryTest extends BaseSessionFactoryFunctionalTest {
 
 		@Override
 		public void render(
-				SqlAppender sqlAppender, List<SqlAstNode> sqlAstArguments, SqlAstTranslator<?> walker) {
+                SqlAppender sqlAppender, List<? extends SqlAstNode> sqlAstArguments, SqlAstTranslator<?> walker) {
 			sqlAstArguments.get( 0 ).accept( walker );
-			sqlAppender.appendSql( " limit " + ( (QueryLiteral) sqlAstArguments.get( 1 ) ).getLiteralValue() );
+			sqlAppender.appendSql( " limit " + ( (QueryLiteral<?>) sqlAstArguments.get( 1 ) ).getLiteralValue() );
 		}
 	}
 

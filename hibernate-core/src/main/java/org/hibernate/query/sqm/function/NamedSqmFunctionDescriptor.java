@@ -91,7 +91,7 @@ public class NamedSqmFunctionDescriptor
 	@Override
 	public void render(
 			SqlAppender sqlAppender,
-			List<SqlAstNode> sqlAstArguments,
+			List<? extends SqlAstNode> sqlAstArguments,
 			SqlAstTranslator<?> translator) {
 		render( sqlAppender, sqlAstArguments, null, translator );
 	}
@@ -99,7 +99,7 @@ public class NamedSqmFunctionDescriptor
 	@Override
 	public void render(
 			SqlAppender sqlAppender,
-			List<SqlAstNode> sqlAstArguments,
+			List<? extends SqlAstNode> sqlAstArguments,
 			Predicate filter,
 			SqlAstTranslator<?> translator) {
 		final boolean useParens = useParenthesesWhenNoArgs || !sqlAstArguments.isEmpty();

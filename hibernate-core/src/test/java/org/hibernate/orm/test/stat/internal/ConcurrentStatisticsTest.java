@@ -8,7 +8,7 @@ package org.hibernate.orm.test.stat.internal;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.stat.SecondLevelCacheStatistics;
+import org.hibernate.stat.CacheRegionStatistics;
 import org.hibernate.stat.internal.StatisticsImpl;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -38,8 +38,8 @@ public class ConcurrentStatisticsTest {
 
 	@Test
 	public void testThatGetSecondLevelCacheStatisticsWhenSecondLevelCacheIsNotEnabledReturnsNull(SessionFactoryScope scope) {
-		final SecondLevelCacheStatistics secondLevelCacheStatistics = new StatisticsImpl( scope.getSessionFactory() )
-				.getSecondLevelCacheStatistics( StringHelper.qualify( REGION_PREFIX, TRIVIAL_REGION_NAME ) );
+		final CacheRegionStatistics secondLevelCacheStatistics = new StatisticsImpl( scope.getSessionFactory() )
+				.getCacheRegionStatistics( StringHelper.qualify( REGION_PREFIX, TRIVIAL_REGION_NAME ) );
 		assertThat( secondLevelCacheStatistics, is( nullValue() ) );
 	}
 }

@@ -12,14 +12,13 @@ import java.util.concurrent.atomic.LongAdder;
 import org.hibernate.cache.spi.ExtendedStatisticsSupport;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.stat.CacheRegionStatistics;
-import org.hibernate.stat.SecondLevelCacheStatistics;
 
 /**
  * Second level cache statistics of a specific region
  *
  * @author Alex Snaps
  */
-public class CacheRegionStatisticsImpl implements CacheRegionStatistics, SecondLevelCacheStatistics, Serializable {
+public class CacheRegionStatisticsImpl implements CacheRegionStatistics, Serializable {
 	private final transient Region region;
 
 	private final LongAdder hitCount = new LongAdder();

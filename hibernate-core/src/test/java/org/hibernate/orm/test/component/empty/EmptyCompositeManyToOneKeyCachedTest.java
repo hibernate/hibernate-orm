@@ -16,8 +16,8 @@ import jakarta.persistence.SharedCacheMode;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.stat.CacheRegionStatistics;
 import org.hibernate.stat.QueryStatistics;
-import org.hibernate.stat.SecondLevelCacheStatistics;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -393,9 +393,9 @@ public class EmptyCompositeManyToOneKeyCachedTest extends BaseCoreFunctionalTest
 		return true;
 	}
 
-	private SecondLevelCacheStatistics getEntity2LCStatistics(Class<?> className) {
+	private CacheRegionStatistics getEntity2LCStatistics(Class<?> className) {
 		return sessionFactory().getStatistics()
-				.getSecondLevelCacheStatistics( className.getName() );
+				.getDomainDataRegionStatistics( className.getName() );
 	}
 
 	private QueryStatistics getQueryStatistics(String queryString) {

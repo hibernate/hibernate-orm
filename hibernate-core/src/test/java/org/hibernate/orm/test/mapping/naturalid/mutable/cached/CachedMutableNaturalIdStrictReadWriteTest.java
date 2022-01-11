@@ -6,15 +6,12 @@
  */
 package org.hibernate.orm.test.mapping.naturalid.mutable.cached;
 
-import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.stat.NaturalIdCacheStatistics;
 import org.hibernate.stat.NaturalIdStatistics;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -197,8 +194,6 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends CachedMutableNatu
 	@Test
 	@TestForIssue( jiraKey = "HHH-9200" )
 	public void testNaturalIdCacheStatisticsReset(SessionFactoryScope scope) {
-		final String naturalIdCacheRegion = "hibernate.test." + Another.class.getName() + "##NaturalId";
-
 		final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
 		statistics.clear();
 
@@ -208,13 +203,13 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends CachedMutableNatu
 				}
 		);
 
-		NaturalIdCacheStatistics stats = statistics.getNaturalIdCacheStatistics( naturalIdCacheRegion );
-		assertEquals( 1, stats.getPutCount() );
+		NaturalIdStatistics stats = statistics.getNaturalIdStatistics( Another.class.getName() );
+		assertEquals( 1, stats.getCachePutCount() );
 
 		statistics.clear();
 
 		// Refresh statistics reference.
-		stats = statistics.getNaturalIdCacheStatistics( naturalIdCacheRegion );
-		assertEquals( 0, stats.getPutCount() );
+		stats = statistics.getNaturalIdStatistics( Another.class.getName() );
+		assertEquals( 0, stats.getCachePutCount() );
 	}
 }

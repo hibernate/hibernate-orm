@@ -39,7 +39,6 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 	private final MetamodelImplementor metamodel;
 	private final CacheImplementor cache;
-	private final String cacheRegionPrefix;
 	private final boolean secondLevelCacheEnabled;
 	private final boolean queryCacheEnabled;
 
@@ -110,22 +109,16 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 	 */
 	private final StatsNamedContainer<CacheRegionStatisticsImpl> l2CacheStatsMap = new StatsNamedContainer<>();
 
-	private final StatsNamedContainer<DeprecatedNaturalIdCacheStatisticsImpl> deprecatedNaturalIdStatsMap
-			= new StatsNamedContainer<>();
-
 	public StatisticsImpl(SessionFactoryImplementor sessionFactory) {
 		Objects.requireNonNull( sessionFactory );
 		SessionFactoryOptions sessionFactoryOptions = sessionFactory.getSessionFactoryOptions();
 		this.queryStatsMap = new StatsNamedContainer<>(
-				sessionFactory != null ?
-					sessionFactoryOptions.getQueryStatisticsMaxSize() :
-					Statistics.DEFAULT_QUERY_STATISTICS_MAX_SIZE,
+				sessionFactoryOptions.getQueryStatisticsMaxSize(),
 				20
 		);
 		resetStart();
 		metamodel = sessionFactory.getMetamodel();
 		cache = sessionFactory.getCache();
-		cacheRegionPrefix = sessionFactoryOptions.getCacheRegionPrefix();
 		secondLevelCacheEnabled = sessionFactoryOptions.isSecondLevelCacheEnabled();
 		queryCacheEnabled = sessionFactoryOptions.isQueryCacheEnabled();
 	}
@@ -187,7 +180,6 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 		naturalIdQueryStatsMap.clear();
 		l2CacheStatsMap.clear();
 		queryStatsMap.clear();
-		deprecatedNaturalIdStatsMap.clear();
 
 		queryPlanCacheHitCount.reset();
 		queryPlanCacheMissCount.reset();
@@ -429,15 +421,6 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 		);
 	}
 
-	@Override @Deprecated
-	public DeprecatedNaturalIdCacheStatisticsImpl getNaturalIdCacheStatistics(String regionName) {
-		final String key = cache.unqualifyRegionName( regionName );
-		return deprecatedNaturalIdStatsMap.getOrCompute(
-				key,
-				this::instantiateDeprecatedNaturalIdCacheStatistics
-		);
-	}
-
 	@Override
 	public long getNaturalIdQueryExecutionCount() {
 		return naturalIdQueryExecutionCount.sum();
@@ -482,8 +465,6 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 		getDomainDataRegionStatistics( regionName ).incrementPutCount();
 
 		getNaturalIdStatistics( rootEntityName.getFullPath() ).incrementCachePutCount();
-
-		getNaturalIdCacheStatistics( qualify( regionName ) ).incrementPutCount();
 	}
 
 	@Override
@@ -495,8 +476,6 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 		getDomainDataRegionStatistics( regionName ).incrementHitCount();
 
 		getNaturalIdStatistics( rootEntityName.getFullPath() ).incrementCacheHitCount();
-
-		getNaturalIdCacheStatistics( qualify( regionName ) ).incrementHitCount();
 	}
 
 	@Override
@@ -508,14 +487,6 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 		getDomainDataRegionStatistics( regionName ).incrementMissCount();
 
 		getNaturalIdStatistics( rootEntityName.getFullPath() ).incrementCacheMissCount();
-
-		getNaturalIdCacheStatistics( qualify( regionName ) ).incrementMissCount();
-	}
-
-	private String qualify(final String regionName) {
-		return cacheRegionPrefix == null
-					? regionName
-					: cacheRegionPrefix + '.' + regionName;
 	}
 
 	@Override
@@ -538,15 +509,9 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 		getNaturalIdStatistics( rootEntityName ).queryExecuted( time );
 
-		if ( rootEntityPersister.hasNaturalIdCache() ) {
-			final String naturalIdRegionName = rootEntityPersister.getNaturalIdCacheAccessStrategy()
-					.getRegion()
-					.getName();
-			getNaturalIdCacheStatistics( qualify( naturalIdRegionName ) ).queryExecuted( time );
-
-			if ( isLongestQuery ) {
-				naturalIdQueryExecutionMaxTimeRegion = naturalIdRegionName;
-			}
+		if ( isLongestQuery && rootEntityPersister.hasNaturalIdCache() ) {
+			naturalIdQueryExecutionMaxTimeRegion
+					= rootEntityPersister.getNaturalIdCacheAccessStrategy().getRegion().getName();
 		}
 	}
 
@@ -595,7 +560,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 		);
 	}
 
-	@Override
+	@Deprecated
 	public CacheRegionStatisticsImpl getSecondLevelCacheStatistics(String regionName) {
 		return getCacheRegionStatistics( cache.unqualifyRegionName( regionName ) );
 	}
@@ -979,14 +944,6 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 			throw new IllegalArgumentException( "Given entity [" + entityName + "] does not define natural-id" );
 		}
 		return new NaturalIdStatisticsImpl( entityDescriptor );
-	}
-
-	@Deprecated
-	private DeprecatedNaturalIdCacheStatisticsImpl instantiateDeprecatedNaturalIdCacheStatistics(final String unqualifiedRegionName) {
-		return new DeprecatedNaturalIdCacheStatisticsImpl(
-				unqualifiedRegionName,
-				cache.getNaturalIdAccessesInRegion( unqualifiedRegionName )
-		);
 	}
 
 	private CacheRegionStatisticsImpl instantiateCacheRegionStatistics(final String regionName) {

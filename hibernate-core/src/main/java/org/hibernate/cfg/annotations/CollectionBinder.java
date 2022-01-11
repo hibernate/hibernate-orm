@@ -549,6 +549,10 @@ public abstract class CollectionBinder {
 				// it is implicitly a LIST because of presence of explicit List index config
 				return CollectionClassification.LIST;
 			}
+			if ( property.isAnnotationPresent( jakarta.persistence.OrderBy.class )
+					|| property.isAnnotationPresent( OrderBy.class ) ) {
+				return CollectionClassification.BAG;
+			}
 			// otherwise, return the implicit classification for List attributes
 			return buildingContext.getBuildingOptions().getMappingDefaults().getImplicitListClassification();
 		}

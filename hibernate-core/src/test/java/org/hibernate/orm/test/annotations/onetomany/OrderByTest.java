@@ -336,7 +336,7 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 
 		s.flush();
 		s.clear();
-		sessionFactory().getCache().evictEntityRegions();
+		sessionFactory().getCache().evictEntityData();
 
 		forum = (Forum) s.get( Forum.class, forum.getId() );
 
@@ -354,7 +354,7 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 
 		s.flush();
 		s.clear();
-		sessionFactory().getCache().evictEntityRegions();
+		sessionFactory().getCache().evictEntityData();
 
 		forum = (Forum) s.get( Forum.class, forum.getId() );
 
@@ -367,7 +367,7 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 
 		s.flush();
 		s.clear();
-		sessionFactory().getCache().evictEntityRegions();
+		sessionFactory().getCache().evictEntityData();
 
 		forum = (Forum) s.get( Forum.class, forum.getId() );
 
@@ -405,7 +405,7 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 
 		s.flush();
 		s.clear();
-		sessionFactory().getCache().evictEntityRegions();
+		sessionFactory().getCache().evictEntityData();
 
 		employee = (Employee) s.get( Employee.class, employee.getId() );
 

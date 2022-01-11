@@ -63,8 +63,8 @@ public class PartialComponentPropertyRefTest extends BaseNonConfigCoreFunctional
 		
 		s.clear();
 
-		sessionFactory().getCache().evictEntityRegion( Account.class );
-		sessionFactory().getCache().evictEntityRegion( Person.class );
+		sessionFactory().getCache().evictEntityData( Account.class );
+		sessionFactory().getCache().evictEntityData( Person.class );
 		
 		a = (Account) s.get(Account.class, "123-12345-1236");
 		assertTrue( Hibernate.isInitialized( a.getOwner() ) );

@@ -190,7 +190,7 @@ public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantC
 
 		// make sure the same works from datastore too
 		sessionFactory.getStatistics().clear();
-		sessionFactory.getCache().evictEntityRegions();
+		sessionFactory.getCache().evictEntityData();
 		// first jboss
 		doInHibernateSessionBuilder( this::jboss, session -> {
 			Customer customer = session.load( Customer.class, 1L );

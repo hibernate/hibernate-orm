@@ -221,8 +221,8 @@ public class BackrefCompositeMapKeyTest {
 
 
 		SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
-		sessionFactory.getCache().evictEntityRegion( Product.class );
-		sessionFactory.getCache().evictEntityRegion( Part.class );
+		sessionFactory.getCache().evictEntityData( Product.class );
+		sessionFactory.getCache().evictEntityData( Part.class );
 
 		scope.inTransaction(
 				session -> {
@@ -234,8 +234,8 @@ public class BackrefCompositeMapKeyTest {
 		);
 
 
-		sessionFactory.getCache().evictEntityRegion( Product.class );
-		sessionFactory.getCache().evictEntityRegion( Part.class );
+		sessionFactory.getCache().evictEntityData( Product.class );
+		sessionFactory.getCache().evictEntityData( Part.class );
 
 		scope.inTransaction(
 				session -> {

@@ -84,7 +84,7 @@ public class JoinFetchTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		sessionFactory().getCache().evictEntityRegion( Item.class );
+		sessionFactory().getCache().evictEntityData( Item.class );
 
 		inTransaction(
 				s -> {
@@ -97,7 +97,7 @@ public class JoinFetchTest extends BaseCoreFunctionalTestCase {
 		);
 
 
-		sessionFactory().getCache().evictEntityRegion( Bid.class );
+		sessionFactory().getCache().evictEntityData( Bid.class );
 
 		inTransaction(
 				s -> {
@@ -108,7 +108,7 @@ public class JoinFetchTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		sessionFactory().getCache().evictCollectionRegion( Item.class.getName() + ".bids" );
+		sessionFactory().getCache().evictCollectionData( Item.class.getName() + ".bids" );
 
 		inTransaction(
 				s -> {

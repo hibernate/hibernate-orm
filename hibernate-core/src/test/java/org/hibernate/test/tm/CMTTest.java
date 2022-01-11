@@ -84,7 +84,7 @@ public class CMTTest extends BaseNonConfigCoreFunctionalTestCase {
 		assertEquals(2, sessionFactory().getStatistics().getUpdateTimestampsCachePutCount()); // One preinvalidate & one invalidate
 		assertEquals(0, sessionFactory().getStatistics().getUpdateTimestampsCacheMissCount());
 
-		sessionFactory().getCache().evictEntityRegion( "Item" );
+		sessionFactory().getCache().evictEntityData( "Item" );
 
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		Session s1 = openSession();
@@ -101,7 +101,7 @@ public class CMTTest extends BaseNonConfigCoreFunctionalTestCase {
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().resume( tx );
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 
-		sessionFactory().getCache().evictEntityRegion( "Item" );
+		sessionFactory().getCache().evictEntityData( "Item" );
 
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		s1 = openSession();
@@ -159,7 +159,7 @@ public class CMTTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		sessionFactory().getStatistics().clear();
 
-		sessionFactory().getCache().evictEntityRegion( "Item" );
+		sessionFactory().getCache().evictEntityData( "Item" );
 
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		Session s4 = openSession();

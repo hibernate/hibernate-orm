@@ -39,7 +39,6 @@ public class StatisticsWithNoCachingTest {
 	@Test
 	@TestForIssue(jiraKey = "HHH-12508")
 	public void testUncachedRegion(SessionFactoryScope scope) {
-		final Statistics statistics = scope.getSessionFactory().getStatistics();
-		statistics.getSecondLevelCacheStatistics( "hibernate.test.unknown" );
+		scope.getSessionFactory().getStatistics().getCacheRegionStatistics( "hibernate.test.unknown" );
 	}
 }

@@ -27,7 +27,6 @@ import org.hibernate.cache.spi.Region;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.stat.CacheRegionStatistics;
 import org.hibernate.stat.QueryStatistics;
-import org.hibernate.stat.SecondLevelCacheStatistics;
 import org.hibernate.stat.Statistics;
 
 import org.hibernate.testing.TestForIssue;
@@ -61,11 +60,7 @@ public class SharedDomainDataAndQueryResultsTest extends BaseNonConfigCoreFuncti
 		final Statistics statistics = sessionFactory().getStatistics();
 		statistics.clear();
 
-		final SecondLevelCacheStatistics regionStatisticsDeprecated = statistics.getSecondLevelCacheStatistics(
-				PREFIX + '.' + REGION
-		);
 		final CacheRegionStatistics regionStatistics = statistics.getCacheRegionStatistics( REGION );
-		assertSame( regionStatistics, regionStatisticsDeprecated );
 
 		final QueryStatistics queryStatistics = statistics.getQueryStatistics( QUERY );
 

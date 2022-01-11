@@ -370,47 +370,13 @@ public interface Statistics {
 	 */
 	long getOptimisticFailureCount();
 
-
-	/**
-	 * Second-level cache statistics per region.
-	 *
-	 * @param regionName qualified region name
-	 *
-	 * @return the statistics object, or {@code null} if the second-level
-	 *         cache is not enabled
-	 *
-	 * @throws IllegalArgumentException if there is no region with the given name
-	 *
-	 * @deprecated Use {@link #getDomainDataRegionStatistics}
-	 */
-	@Deprecated(since = "5.3")
-	SecondLevelCacheStatistics getSecondLevelCacheStatistics(String regionName);
-
-	/**
-	 * Natural id cache statistics per region.
-	 *
-	 * @param regionName region name
-	 * @return NaturalIdCacheStatistics
-	 *
-	 * @deprecated Use {@link #getNaturalIdStatistics} or
-	 *             {@link #getDomainDataRegionStatistics}
-	 */
-	@Deprecated(since = "5.3")
-	NaturalIdCacheStatistics getNaturalIdCacheStatistics(String regionName);
-
 	/**
 	 * The global number of query plans successfully retrieved from cache.
 	 */
-	default long getQueryPlanCacheHitCount() {
-		//For backward compatibility
-		return 0;
-	}
+	long getQueryPlanCacheHitCount();
 
 	/**
 	 * The global number of query plans lookups <em>not</em> found in cache.
 	 */
-	default long getQueryPlanCacheMissCount() {
-		//For backward compatibility
-		return 0;
-	}
+	long getQueryPlanCacheMissCount();
 }

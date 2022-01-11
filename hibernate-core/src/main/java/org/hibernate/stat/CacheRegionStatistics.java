@@ -9,7 +9,7 @@ package org.hibernate.stat;
 import java.io.Serializable;
 
 /**
- * Second level cache statistics of a specific region
+ * Second-level cache statistics of a specific region.
  *
  * @author Gavin King
  */
@@ -43,7 +43,7 @@ public interface CacheRegionStatistics extends Serializable {
 
 	/**
 	 * The number of elements currently in memory within the cache provider.
-	 *
+	 * <p>
 	 * This is an optional value contingent upon the underlying cache provider
 	 * providing extended stats support via
 	 * {@link org.hibernate.cache.spi.ExtendedStatisticsSupport}.  If the provider
@@ -54,7 +54,7 @@ public interface CacheRegionStatistics extends Serializable {
 
 	/**
 	 * The number of elements currently stored to disk within the cache provider.
-	 *
+	 * <p>
 	 * This is an optional value contingent upon the underlying cache provider
 	 * providing extended stats support via
 	 * {@link org.hibernate.cache.spi.ExtendedStatisticsSupport}.  If the provider
@@ -65,7 +65,7 @@ public interface CacheRegionStatistics extends Serializable {
 
 	/**
 	 * The size that the in-memory elements take up within the cache provider.
-	 *
+	 * <p>
 	 * This is an optional value contingent upon the underlying cache provider
 	 * providing extended stats support via
 	 * {@link org.hibernate.cache.spi.ExtendedStatisticsSupport}.  If the provider

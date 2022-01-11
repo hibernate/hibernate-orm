@@ -9,7 +9,7 @@ package org.hibernate.stat;
 import java.io.Serializable;
 
 /**
- * Entity related statistics
+ * Entity-related statistics.
  *
  * @author Gavin King
  * @author Steve Ebersole

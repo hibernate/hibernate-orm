@@ -6,6 +6,7 @@
  */
 package org.hibernate.stat.internal;
 
+import java.time.Instant;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAdder;
@@ -32,7 +33,6 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
  * @author Alex Snaps
  * @author Sanne Grinovero
  */
-@SuppressWarnings({ "unchecked" })
 public class StatisticsImpl implements StatisticsImplementor, Service {
 
 	private static final CoreMessageLogger LOG = messageLogger( StatisticsImpl.class );
@@ -44,7 +44,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 	private final boolean queryCacheEnabled;
 
 	private volatile boolean isStatisticsEnabled;
-	private volatile long startTime;
+	private volatile Instant startTime;
 
 	private final LongAdder sessionOpenCount = new LongAdder();
 	private final LongAdder sessionCloseCount = new LongAdder();
@@ -96,9 +96,9 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 	private final LongAdder optimisticFailureCount = new LongAdder();
 
-	private final StatsNamedContainer<EntityStatisticsImpl> entityStatsMap = new StatsNamedContainer();
-	private final StatsNamedContainer<NaturalIdStatisticsImpl> naturalIdQueryStatsMap = new StatsNamedContainer();
-	private final StatsNamedContainer<CollectionStatisticsImpl> collectionStatsMap = new StatsNamedContainer();
+	private final StatsNamedContainer<EntityStatisticsImpl> entityStatsMap = new StatsNamedContainer<>();
+	private final StatsNamedContainer<NaturalIdStatisticsImpl> naturalIdQueryStatsMap = new StatsNamedContainer<>();
+	private final StatsNamedContainer<CollectionStatisticsImpl> collectionStatsMap = new StatsNamedContainer<>();
 
 	/**
 	 * Keyed by query string
@@ -110,18 +110,19 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 	 */
 	private final StatsNamedContainer<CacheRegionStatisticsImpl> l2CacheStatsMap = new StatsNamedContainer<>();
 
-	private final StatsNamedContainer<DeprecatedNaturalIdCacheStatisticsImpl> deprecatedNaturalIdStatsMap = new StatsNamedContainer();
+	private final StatsNamedContainer<DeprecatedNaturalIdCacheStatisticsImpl> deprecatedNaturalIdStatsMap
+			= new StatsNamedContainer<>();
 
 	public StatisticsImpl(SessionFactoryImplementor sessionFactory) {
 		Objects.requireNonNull( sessionFactory );
 		SessionFactoryOptions sessionFactoryOptions = sessionFactory.getSessionFactoryOptions();
-		this.queryStatsMap = new StatsNamedContainer(
+		this.queryStatsMap = new StatsNamedContainer<>(
 				sessionFactory != null ?
 					sessionFactoryOptions.getQueryStatisticsMaxSize() :
 					Statistics.DEFAULT_QUERY_STATISTICS_MAX_SIZE,
 				20
 		);
-		resetStartTime();
+		resetStart();
 		metamodel = sessionFactory.getMetamodel();
 		cache = sessionFactory.getCache();
 		cacheRegionPrefix = sessionFactoryOptions.getCacheRegionPrefix();
@@ -191,16 +192,21 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 		queryPlanCacheHitCount.reset();
 		queryPlanCacheMissCount.reset();
 
-		resetStartTime();
+		resetStart();
 	}
 
-	private void resetStartTime() {
-		startTime = System.currentTimeMillis();
+	private void resetStart() {
+		startTime = Instant.now();
+	}
+
+	@Override
+	public Instant getStart() {
+		return startTime;
 	}
 
 	@Override
 	public long getStartTime() {
-		return startTime;
+		return startTime.toEpochMilli();
 	}
 
 	@Override
@@ -209,8 +215,8 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 	}
 
 	@Override
-	public void setStatisticsEnabled(boolean b) {
-		isStatisticsEnabled = b;
+	public void setStatisticsEnabled(boolean enabled) {
+		isStatisticsEnabled = enabled;
 	}
 
 
@@ -875,7 +881,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 	@Override
 	public void logSummary() {
 		LOG.loggingStatistics();
-		LOG.startTime( startTime );
+		LOG.startTime( startTime.toEpochMilli() );
 		LOG.sessionsOpened( sessionOpenCount.sum() );
 		LOG.sessionsClosed( sessionCloseCount.sum() );
 		LOG.transactions( transactionCount.sum() );
@@ -917,48 +923,46 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 	@Override
 	public String toString() {
-		return new StringBuilder()
-				.append( "Statistics[" )
-				.append( "start time=" ).append( startTime )
-				.append( ",sessions opened=" ).append( sessionOpenCount )
-				.append( ",sessions closed=" ).append( sessionCloseCount )
-				.append( ",transactions=" ).append( transactionCount )
-				.append( ",successful transactions=" ).append( committedTransactionCount )
-				.append( ",optimistic lock failures=" ).append( optimisticFailureCount )
-				.append( ",flushes=" ).append( flushCount )
-				.append( ",connections obtained=" ).append( connectCount )
-				.append( ",statements prepared=" ).append( prepareStatementCount )
-				.append( ",statements closed=" ).append( closeStatementCount )
-				.append( ",second level cache puts=" ).append( secondLevelCachePutCount )
-				.append( ",second level cache hits=" ).append( secondLevelCacheHitCount )
-				.append( ",second level cache misses=" ).append( secondLevelCacheMissCount )
-				.append( ",entities loaded=" ).append( entityLoadCount )
-				.append( ",entities updated=" ).append( entityUpdateCount )
-				.append( ",entities inserted=" ).append( entityInsertCount )
-				.append( ",entities deleted=" ).append( entityDeleteCount )
-				.append( ",entities fetched=" ).append( entityFetchCount )
-				.append( ",collections loaded=" ).append( collectionLoadCount )
-				.append( ",collections updated=" ).append( collectionUpdateCount )
-				.append( ",collections removed=" ).append( collectionRemoveCount )
-				.append( ",collections recreated=" ).append( collectionRecreateCount )
-				.append( ",collections fetched=" ).append( collectionFetchCount )
-				.append( ",naturalId queries executed to database=" ).append( naturalIdQueryExecutionCount )
-				.append( ",naturalId cache puts=" ).append( naturalIdCachePutCount )
-				.append( ",naturalId cache hits=" ).append( naturalIdCacheHitCount )
-				.append( ",naturalId cache misses=" ).append( naturalIdCacheMissCount )
-				.append( ",naturalId max query time=" ).append( naturalIdQueryExecutionMaxTime )
-				.append( ",queries executed to database=" ).append( queryExecutionCount )
-				.append( ",query cache puts=" ).append( queryCachePutCount )
-				.append( ",query cache hits=" ).append( queryCacheHitCount )
-				.append( ",query cache misses=" ).append( queryCacheMissCount )
-				.append(",update timestamps cache puts=").append(updateTimestampsCachePutCount)
-				.append(",update timestamps cache hits=").append(updateTimestampsCacheHitCount)
-				.append(",update timestamps cache misses=").append(updateTimestampsCacheMissCount)
-				.append( ",max query time=" ).append( queryExecutionMaxTime )
-				.append( ",query plan cache hits=" ).append( queryPlanCacheHitCount )
-				.append( ",query plan cache misses=" ).append( queryPlanCacheMissCount )
-				.append( ']' )
-				.toString();
+		return "Statistics[" +
+				"start time=" + startTime +
+				",sessions opened=" + sessionOpenCount +
+				",sessions closed=" + sessionCloseCount +
+				",transactions=" + transactionCount +
+				",successful transactions=" + committedTransactionCount +
+				",optimistic lock failures=" + optimisticFailureCount +
+				",flushes=" + flushCount +
+				",connections obtained=" + connectCount +
+				",statements prepared=" + prepareStatementCount +
+				",statements closed=" + closeStatementCount +
+				",second level cache puts=" + secondLevelCachePutCount +
+				",second level cache hits=" + secondLevelCacheHitCount +
+				",second level cache misses=" + secondLevelCacheMissCount +
+				",entities loaded=" + entityLoadCount +
+				",entities updated=" + entityUpdateCount +
+				",entities inserted=" + entityInsertCount +
+				",entities deleted=" + entityDeleteCount +
+				",entities fetched=" + entityFetchCount +
+				",collections loaded=" + collectionLoadCount +
+				",collections updated=" + collectionUpdateCount +
+				",collections removed=" + collectionRemoveCount +
+				",collections recreated=" + collectionRecreateCount +
+				",collections fetched=" + collectionFetchCount +
+				",naturalId queries executed to database=" + naturalIdQueryExecutionCount +
+				",naturalId cache puts=" + naturalIdCachePutCount +
+				",naturalId cache hits=" + naturalIdCacheHitCount +
+				",naturalId cache misses=" + naturalIdCacheMissCount +
+				",naturalId max query time=" + naturalIdQueryExecutionMaxTime +
+				",queries executed to database=" + queryExecutionCount +
+				",query cache puts=" + queryCachePutCount +
+				",query cache hits=" + queryCacheHitCount +
+				",query cache misses=" + queryCacheMissCount +
+				",update timestamps cache puts=" + updateTimestampsCachePutCount +
+				",update timestamps cache hits=" + updateTimestampsCacheHitCount +
+				",update timestamps cache misses=" + updateTimestampsCacheMissCount +
+				",max query time=" + queryExecutionMaxTime +
+				",query plan cache hits=" + queryPlanCacheHitCount +
+				",query plan cache misses=" + queryPlanCacheMissCount +
+				']';
 	}
 
 	private EntityStatisticsImpl instantiateEntityStatistics(final String entityName) {

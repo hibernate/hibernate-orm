@@ -32,7 +32,7 @@ public final class StatsNamedContainer<V> {
 	 * Creates a bounded container - based on BoundedConcurrentHashMap
 	 */
 	public StatsNamedContainer(int capacity, int concurrencyLevel) {
-		this.map = new BoundedConcurrentHashMap( capacity, concurrencyLevel, BoundedConcurrentHashMap.Eviction.LRU );
+		this.map = new BoundedConcurrentHashMap<>( capacity, concurrencyLevel, BoundedConcurrentHashMap.Eviction.LRU );
 	}
 
 	/**
@@ -63,6 +63,7 @@ public final class StatsNamedContainer<V> {
 	 * Most notably, the ConcurrentHashMap implementation might block other accesses for the sake of making
 	 * sure the function is invoked at most once: we don't need this guarantee, and prefer to reduce risk of blocking.
 	 */
+	@SuppressWarnings("unchecked")
 	public V getOrCompute(final String key, final Function<String, V> function) {
 		final Object v1 = map.get( key );
 		if ( v1 != null ) {

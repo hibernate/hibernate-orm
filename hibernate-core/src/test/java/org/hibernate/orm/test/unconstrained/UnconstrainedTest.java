@@ -58,7 +58,7 @@ public class UnconstrainedTest {
 	public void testUnconstrainedNoCache(SessionFactoryScope scope) {
 
 		final CacheImplementor cache = scope.getSessionFactory().getCache();
-		cache.evictEntityRegion( Person.class );
+		cache.evictEntityData( Person.class );
 
 		scope.inTransaction(
 				session -> {
@@ -68,7 +68,7 @@ public class UnconstrainedTest {
 				}
 		);
 
-		cache.evictEntityRegion( Person.class );
+		cache.evictEntityData( Person.class );
 
 		scope.inTransaction(
 				session -> {
@@ -85,7 +85,7 @@ public class UnconstrainedTest {
 
 		final CacheImplementor cache = scope.getSessionFactory().getCache();
 
-		cache.evictEntityRegion( Person.class );
+		cache.evictEntityData( Person.class );
 
 		scope.inTransaction(
 				session -> {
@@ -104,7 +104,7 @@ public class UnconstrainedTest {
 				}
 		);
 
-		cache.evictEntityRegion( Person.class );
+		cache.evictEntityData( Person.class );
 
 		scope.inTransaction(
 				session -> {

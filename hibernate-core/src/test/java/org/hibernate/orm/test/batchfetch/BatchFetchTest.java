@@ -74,8 +74,8 @@ public class BatchFetchTest {
 				}
 		);
 
-		scope.getSessionFactory().getCache().evictEntityRegion( Model.class );
-		scope.getSessionFactory().getCache().evictEntityRegion( ProductLine.class );
+		scope.getSessionFactory().getCache().evictEntityData( Model.class );
+		scope.getSessionFactory().getCache().evictEntityData( ProductLine.class );
 
 		scope.inTransaction(
 				session -> {

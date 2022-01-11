@@ -504,7 +504,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		assertUpdateCount( 1, scope );
 		clearCounts( scope );
 
-		scope.getSessionFactory().getCache().evictEntityRegion( NumberedNode.class );
+		scope.getSessionFactory().getCache().evictEntityData( NumberedNode.class );
 
 		NumberedNode child2 = new NumberedNode( "child2" );
 		NumberedNode grandchild3 = new NumberedNode( "grandchild3" );

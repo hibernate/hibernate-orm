@@ -16,9 +16,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author Guenther Demetz
@@ -117,7 +115,7 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 	public void testDefaultLockModeOnEntityLoad() {
 
 		// first evict user
-		sessionFactory().getCache().evictEntity( User.class.getName(), 1 );
+		sessionFactory().getCache().evictEntityData( User.class.getName(), 1 );
 
 		Session s1 = openSession();
 		s1.beginTransaction();
@@ -153,7 +151,7 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 	public void testReadLockModeOnEntityLoad() {
 
 		// first evict user
-		sessionFactory().getCache().evictEntity( User.class.getName(), 1 );
+		sessionFactory().getCache().evictEntityData( User.class.getName(), 1 );
 
 		Session s1 = openSession();
 		s1.beginTransaction();

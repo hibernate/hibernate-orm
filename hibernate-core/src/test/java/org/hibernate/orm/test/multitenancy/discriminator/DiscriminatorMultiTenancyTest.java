@@ -160,7 +160,7 @@ public class DiscriminatorMultiTenancyTest extends BaseUnitTestCase {
 
 		// make sure the same works from data store too
 		sessionFactory.getStatistics().clear();
-		sessionFactory.getCache().evictEntityRegions();
+		sessionFactory.getCache().evictEntityData();
 
 		// first jboss
 		doInHibernate( "jboss", session -> {

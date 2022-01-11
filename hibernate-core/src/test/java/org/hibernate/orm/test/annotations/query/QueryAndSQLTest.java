@@ -652,7 +652,7 @@ public class QueryAndSQLTest {
 					session.persist( chaos );
 					session.flush();
 					session.clear();
-					session.getSessionFactory().getCache().evictEntityRegion( Chaos.class );
+					session.getSessionFactory().getCache().evictEntityData( Chaos.class );
 
 					Chaos resultChaos = session.load( Chaos.class, chaos.getId() );
 					assertEquals( upperName, resultChaos.getName() );
@@ -686,7 +686,7 @@ public class QueryAndSQLTest {
 					chaos.getParticles().add( p );
 					session.flush();
 					session.clear();
-					session.getSessionFactory().getCache().evictEntityRegion( Chaos.class );
+					session.getSessionFactory().getCache().evictEntityData( Chaos.class );
 
 					Chaos resultChaos = session.load( Chaos.class, chaos.getId() );
 					assertEquals( 2, resultChaos.getParticles().size() );

@@ -71,7 +71,7 @@ public class InsertedDataTest {
 
 	@Test
 	public void testInsert() {
-		sessionFactory().getCache().evictEntityRegions();
+		sessionFactory().getCache().evictEntityData();
 		sessionFactory().getStatistics().clear();
 
 		inTransaction(
@@ -92,7 +92,7 @@ public class InsertedDataTest {
 
 	@Test
 	public void testInsertWithRollback() {
-		sessionFactory().getCache().evictEntityRegions();
+		sessionFactory().getCache().evictEntityData();
 		sessionFactory().getStatistics().clear();
 
 		inTransaction(
@@ -110,7 +110,7 @@ public class InsertedDataTest {
 
 	@Test
 	public void testInsertThenUpdate() {
-		sessionFactory().getCache().evictEntityRegions();
+		sessionFactory().getCache().evictEntityData();
 		sessionFactory().getStatistics().clear();
 
 		inTransaction(
@@ -133,7 +133,7 @@ public class InsertedDataTest {
 
 	@Test
 	public void testInsertThenUpdateThenRollback() {
-		sessionFactory().getCache().evictEntityRegions();
+		sessionFactory().getCache().evictEntityData();
 		sessionFactory().getStatistics().clear();
 
 		inTransaction(
@@ -152,7 +152,7 @@ public class InsertedDataTest {
 
 	@Test
 	public void testInsertWithRefresh() {
-		sessionFactory().getCache().evictEntityRegions();
+		sessionFactory().getCache().evictEntityData();
 		sessionFactory().getStatistics().clear();
 
 		inTransaction(
@@ -175,7 +175,7 @@ public class InsertedDataTest {
 
 	@Test
 	public void testInsertWithRefreshThenRollback() {
-		sessionFactory().getCache().evictEntityRegions();
+		sessionFactory().getCache().evictEntityData();
 		sessionFactory().getStatistics().clear();
 
 		inTransaction(
@@ -219,7 +219,7 @@ public class InsertedDataTest {
 
 	@Test
 	public void testInsertWithClear() {
-		sessionFactory().getCache().evictEntityRegions();
+		sessionFactory().getCache().evictEntityData();
 		sessionFactory().getStatistics().clear();
 
 		inTransaction(
@@ -242,7 +242,7 @@ public class InsertedDataTest {
 
 	@Test
 	public void testInsertWithClearThenRollback() {
-		sessionFactory().getCache().evictEntityRegions();
+		sessionFactory().getCache().evictEntityData();
 		sessionFactory().getStatistics().clear();
 
 		inTransaction(

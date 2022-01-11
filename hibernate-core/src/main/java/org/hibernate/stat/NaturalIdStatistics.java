@@ -9,12 +9,13 @@ package org.hibernate.stat;
 import java.io.Serializable;
 
 /**
- * Statistics pertaining to the execution of the "natural id resolution" query.
+ * Statistics pertaining to the execution of queries which resolve a natural
+ * id lookup against the database.
  *
  * @apiNote The natural-id resolution data is allowed to be stored in the
- * second level cache, and if so stored will have available caching stats as
- * well available via {@link Statistics#getDomainDataRegionStatistics} using the
- * configured region name
+ * second-level cache, and if so stored will have available caching stats as
+ * well available via {@link Statistics#getDomainDataRegionStatistics} using
+ * the configured region name
  *
  * todo (6.0) : consider a means to get the cache Region statistics for:
  * 		1) an entity by name

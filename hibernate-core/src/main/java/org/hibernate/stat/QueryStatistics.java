@@ -9,9 +9,11 @@ package org.hibernate.stat;
 import java.io.Serializable;
 
 /**
- * Query statistics (HQL and SQL)
- * <p/>
- * Note that for a cached query, the cache miss is equals to the db count
+ * Statistics relating to a particular query written in HQL or SQL.
+ * <p>
+ * Note that for a cached query, the number of cache missed is the
+ * same as the number of queries actually executed against the
+ * database.
  *
  * @author Gavin King
  * @author Steve Ebersole
@@ -23,7 +25,8 @@ public interface QueryStatistics extends Serializable {
 	long getExecutionCount();
 
 	/**
-	 * How many ResultSet rows have been processed for this query ?
+	 * How many {@link java.sql.ResultSet} rows have been processed
+	 * for this query
 	 */
 	long getExecutionRowCount();
 
@@ -43,7 +46,8 @@ public interface QueryStatistics extends Serializable {
 	long getExecutionMinTime();
 
 	/**
-	 * How long, cumulatively, have all executions of this query taken?
+	 * How long, cumulatively, have all executions of this query
+	 * taken?
 	 */
 	long getExecutionTotalTime();
 
@@ -77,7 +81,8 @@ public interface QueryStatistics extends Serializable {
 	long getCachePutCount();
 
 	/**
-	 * The number of query plans successfully fetched from the cache.
+	 * The number of query plans successfully fetched from the
+	 * cache.
 	 */
 	default long getPlanCacheHitCount() {
 		//For backward compatibility
@@ -93,7 +98,8 @@ public interface QueryStatistics extends Serializable {
 	}
 
 	/**
-	 * The overall time spent to compile the plan for this particular query.
+	 * The overall time spent to compile the plan for this
+	 * particular query.
 	 */
 	default long getPlanCompilationTotalMicroseconds() {
 		//For backward compatibility

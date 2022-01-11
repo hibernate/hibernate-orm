@@ -9,28 +9,29 @@ package org.hibernate.stat;
 import java.util.Set;
 
 /**
- * Information about the first-level (session) cache
- * for a particular session instance
+ * Information about the first-level (session) cache for a particular
+ * instance of {@link org.hibernate.Session}.
+ *
  * @author Gavin King
  */
 public interface SessionStatistics {
 	/**
-	 * Get the number of entity instances associated with the session
+	 * The number of entity instances associated with the session.
 	 */
 	int getEntityCount();
 	/**
-	 * Get the number of collection instances associated with the session
+	 * The number of collection instances associated with the session.
 	 */
 	int getCollectionCount();
 
 	/**
-	 * Get the set of all {@code EntityKey}s
-	 * @see org.hibernate.engine.spi.EntityKey
+	 * The set of all {@link org.hibernate.engine.spi.EntityKey}s
+	 * currently held within the persistence context.
 	 */
 	Set<?> getEntityKeys();
 	/**
-	 * Get the set of all {@code CollectionKey}s
-	 * @see org.hibernate.engine.spi.CollectionKey
+	 * The set of all {@link org.hibernate.engine.spi.CollectionKey}s
+	 * currently held within the persistence context.
 	 */
 	Set<?> getCollectionKeys();
 	

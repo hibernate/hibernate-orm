@@ -423,7 +423,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 		);
 	}
 
-	@Override
+	@Override @Deprecated
 	public DeprecatedNaturalIdCacheStatisticsImpl getNaturalIdCacheStatistics(String regionName) {
 		final String key = cache.unqualifyRegionName( regionName );
 		return deprecatedNaturalIdStatsMap.getOrCompute(
@@ -548,7 +548,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Second-level cache region stats
 
-	@Override
+	@Override @Deprecated
 	public String[] getSecondLevelCacheRegionNames() {
 		return cache.getSecondLevelCacheRegionNames();
 	}
@@ -977,6 +977,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 		return new NaturalIdStatisticsImpl( entityDescriptor );
 	}
 
+	@Deprecated
 	private DeprecatedNaturalIdCacheStatisticsImpl instantiateDeprecatedNaturalIdCacheStatistics(final String unqualifiedRegionName) {
 		return new DeprecatedNaturalIdCacheStatisticsImpl(
 				unqualifiedRegionName,

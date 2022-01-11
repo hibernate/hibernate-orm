@@ -45,6 +45,8 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 
 /**
+ * A {@link CacheImplementor} service used when the second-level cache is enabled.
+ *
  * @author Steve Ebersole
  * @author Strong Liu
  * @author Gail Badner
@@ -129,7 +131,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 			// Entity caching
 
 			for ( EntityDataCachingConfig entityAccessConfig : regionConfig.getEntityCaching() ) {
-				final EntityDataAccess entityDataAccess = entityAccessMap.put(
+				entityAccessMap.put(
 						entityAccessConfig.getNavigableRole(),
 						region.getEntityDataAccess( entityAccessConfig.getNavigableRole() )
 				);
@@ -168,7 +170,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 			// Collection caching
 
 			for ( CollectionDataCachingConfig collectionAccessConfig : regionConfig.getCollectionCaching() ) {
-				final CollectionDataAccess collectionDataAccess = collectionAccessMap.put(
+				collectionAccessMap.put(
 						collectionAccessConfig.getNavigableRole(),
 						region.getCollectionDataAccess( collectionAccessConfig.getNavigableRole() )
 				);
@@ -219,7 +221,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	// Entity data
 
 	@Override
-	public boolean containsEntity(Class entityClass, Object identifier) {
+	public boolean containsEntity(Class<?> entityClass, Object identifier) {
 		return containsEntity( entityClass.getName(), identifier );
 	}
 
@@ -236,7 +238,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	}
 
 	@Override
-	public void evictEntityData(Class entityClass, Object identifier) {
+	public void evictEntityData(Class<?> entityClass, Object identifier) {
 		evictEntityData( entityClass.getName(), identifier );
 	}
 
@@ -260,7 +262,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	}
 
 	@Override
-	public void evictEntityData(Class entityClass) {
+	public void evictEntityData(Class<?> entityClass) {
 		evictEntityData( entityClass.getName() );
 	}
 
@@ -305,7 +307,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	// Natural-id data
 
 	@Override
-	public void evictNaturalIdData(Class entityClass) {
+	public void evictNaturalIdData(Class<?> entityClass) {
 		evictNaturalIdData( entityClass.getName() );
 	}
 
@@ -499,7 +501,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 				this::makeQueryResultsRegion
 		);
 		final QueryResultsRegion queryResultsRegion;
-		if ( QueryResultsRegion.class.isInstance( region ) ) {
+		if ( region instanceof QueryResultsRegion ) {
 			queryResultsRegion = (QueryResultsRegion) region;
 		}
 		else {
@@ -589,22 +591,22 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Deprecations
 
-	@Override
+	@Override @Deprecated
 	public EntityDataAccess getEntityRegionAccess(NavigableRole rootEntityName) {
 		return entityAccessMap.get( rootEntityName );
 	}
 
-	@Override
+	@Override @Deprecated
 	public NaturalIdDataAccess getNaturalIdCacheRegionAccessStrategy(NavigableRole rootEntityName) {
 		return naturalIdAccessMap.get( rootEntityName );
 	}
 
-	@Override
+	@Override @Deprecated
 	public CollectionDataAccess getCollectionRegionAccess(NavigableRole collectionRole) {
 		return collectionAccessMap.get( collectionRole );
 	}
 
-	@Override
+	@Override @Deprecated
 	public String[] getSecondLevelCacheRegionNames() {
 		return ArrayHelper.toStringArray( legacySecondLevelCacheNames );
 	}

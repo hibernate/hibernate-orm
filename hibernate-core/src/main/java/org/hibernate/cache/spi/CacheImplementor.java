@@ -22,14 +22,15 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.Service;
 
 /**
- * SPI contract for Hibernate's second-level cache engine
+ * An SPI supported by any Hibernate {@linkplain Service service} that provides an
+ * implementation of the {@link Cache} API. Extends {@code Cache} with operations
+ * called internally by Hibernate.
  *
  * @since 4.1
  *
  * @author Strong Liu
  * @author Steve Ebersole
  */
-@SuppressWarnings("unused")
 public interface CacheImplementor extends Service, Cache, Serializable {
 	@Override
 	SessionFactoryImplementor getSessionFactory();
@@ -107,7 +108,10 @@ public interface CacheImplementor extends Service, Cache, Serializable {
 
 	/**
 	 * Clean up the default query cache
+	 *
+	 * @deprecated only because it's currently never called
 	 */
+	@Deprecated
 	default void evictQueries() throws HibernateException {
 		QueryResultsCache cache = getDefaultQueryResultsCache();
 		if ( cache != null ) {
@@ -158,7 +162,7 @@ public interface CacheImplementor extends Service, Cache, Serializable {
 	 * @apiNote It is only valid to call this method after {@link #prime} has
 	 * been performed
 	 *
-	 * @deprecated Use {@link EntityPersister#getNaturalIdCacheAccessStrategy()} ()} instead
+	 * @deprecated Use {@link EntityPersister#getNaturalIdCacheAccessStrategy()} instead
 	 */
 	@Deprecated
 	NaturalIdDataAccess getNaturalIdCacheRegionAccessStrategy(NavigableRole rootEntityName);
@@ -170,7 +174,7 @@ public interface CacheImplementor extends Service, Cache, Serializable {
 	 * @apiNote It is only valid to call this method after {@link #prime} has
 	 * been performed
 	 *
-	 * @deprecated Use {@link EntityPersister#getNaturalIdCacheAccessStrategy()} ()} instead
+	 * @deprecated Use {@link EntityPersister#getNaturalIdCacheAccessStrategy()} instead
 	 */
 	@Deprecated
 	CollectionDataAccess getCollectionRegionAccess(NavigableRole collectionRole);

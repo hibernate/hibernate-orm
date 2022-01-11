@@ -23,7 +23,7 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 
 /**
- * CacheImplementor implementation for disabled caching
+ * A {@link CacheImplementor} service used when the second-level cache is disabled.
  *
  * @author Steve Ebersole
  */
@@ -52,7 +52,7 @@ public class DisabledCaching implements CacheImplementor {
 	}
 
 	@Override
-	public boolean containsEntity(Class entityClass, Object identifier) {
+	public boolean containsEntity(Class<?> entityClass, Object identifier) {
 		return false;
 	}
 
@@ -62,7 +62,7 @@ public class DisabledCaching implements CacheImplementor {
 	}
 
 	@Override
-	public void evictEntityData(Class entityClass, Object identifier) {
+	public void evictEntityData(Class<?> entityClass, Object identifier) {
 		// nothing to do
 
 	}
@@ -74,7 +74,7 @@ public class DisabledCaching implements CacheImplementor {
 	}
 
 	@Override
-	public void evictEntityData(Class entityClass) {
+	public void evictEntityData(Class<?> entityClass) {
 		// nothing to do
 	}
 
@@ -89,7 +89,7 @@ public class DisabledCaching implements CacheImplementor {
 	}
 
 	@Override
-	public void evictNaturalIdData(Class entityClass) {
+	public void evictNaturalIdData(Class<?> entityClass) {
 		// nothing to do
 	}
 
@@ -177,7 +177,7 @@ public class DisabledCaching implements CacheImplementor {
 	public void close() {
 	}
 
-	@Override
+	@Override @Deprecated
 	public String[] getSecondLevelCacheRegionNames() {
 		return ArrayHelper.EMPTY_STRING_ARRAY;
 	}
@@ -187,17 +187,17 @@ public class DisabledCaching implements CacheImplementor {
 		return null;
 	}
 
-	@Override
+	@Override @Deprecated
 	public EntityDataAccess getEntityRegionAccess(NavigableRole rootEntityName) {
 		return null;
 	}
 
-	@Override
+	@Override @Deprecated
 	public NaturalIdDataAccess getNaturalIdCacheRegionAccessStrategy(NavigableRole rootEntityName) {
 		return null;
 	}
 
-	@Override
+	@Override @Deprecated
 	public CollectionDataAccess getCollectionRegionAccess(NavigableRole collectionRole) {
 		return null;
 	}

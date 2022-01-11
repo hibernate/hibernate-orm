@@ -6,7 +6,6 @@
  */
 package org.hibernate.cache.spi.access;
 
-import java.io.Serializable;
 import jakarta.persistence.Cache;
 
 import org.hibernate.cache.CacheException;
@@ -143,7 +142,6 @@ public interface CachedDomainDataAccess {
 	 * Remove all data for this accessed type
 	 *
 	 * @throws CacheException Propagated from underlying cache provider
-	 * @param session
 	 */
 	void removeAll(SharedSessionContractImplementor session);
 
@@ -191,8 +189,8 @@ public interface CachedDomainDataAccess {
 	 * it is also required by JPA - so we cannot remove it.
 	 * <p/>
 	 * Used from JPA's {@link jakarta.persistence.Cache#evict(Class, Object)}, as well as the
-	 * Hibernate extension {@link org.hibernate.Cache#evictEntityData(Class, Serializable)}
-	 * and {@link org.hibernate.Cache#evictEntityData(String, Serializable)}
+	 * Hibernate extension {@link org.hibernate.Cache#evictEntityData(Class, Object)}
+	 * and {@link org.hibernate.Cache#evictEntityData(String, Object)}
 	 *
 	 * @param key The key of the item to remove
 	 *

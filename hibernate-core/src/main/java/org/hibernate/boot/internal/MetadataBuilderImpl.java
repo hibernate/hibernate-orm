@@ -458,6 +458,18 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 					value -> AccessType.fromExternalName( value.toString() )
 			);
 
+			final CollectionClassification defaultCollectionClassification;
+			if ( configService.getSetting(
+					AvailableSettings.JPA_LIST_COMPLIANCE,
+					StandardConverters.BOOLEAN,
+					false
+			) ) {
+				defaultCollectionClassification = CollectionClassification.BAG;
+			}
+			else {
+				defaultCollectionClassification = CollectionClassification.LIST;
+			}
+
 			this.implicitListClassification = configService.getSetting(
 					AvailableSettings.DEFAULT_LIST_SEMANTICS,
 					value -> {
@@ -476,7 +488,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 						}
 						return classification;
 					},
-					CollectionClassification.LIST
+					defaultCollectionClassification
 			);
 		}
 

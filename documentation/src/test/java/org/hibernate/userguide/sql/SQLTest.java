@@ -463,7 +463,7 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 				List<Person> entities = entityManager.createNativeQuery(
 					"SELECT * " +
 					"FROM Person pr, Partner pt " +
-					"WHERE pr.name = pt.name", Person.class)
+					"WHERE pr.name = pt.name")
 				.getResultList();
 				//end::sql-jpa-multi-entity-query-example[]
 				assertEquals(2, entities.size());
@@ -484,7 +484,7 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 				List<Person> entities = session.createNativeQuery(
 					"SELECT * " +
 					"FROM Person pr, Partner pt " +
-					"WHERE pr.name = pt.name", Person.class)
+					"WHERE pr.name = pt.name")
 				.list();
 				//end::sql-hibernate-multi-entity-query-example[]
 				assertEquals(2, entities.size());

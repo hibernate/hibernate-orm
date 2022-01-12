@@ -6,7 +6,6 @@
  */
 repositories {
 	mavenCentral()
-	jcenter()
 }
 
 apply plugin: "groovy"

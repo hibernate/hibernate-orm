@@ -7,6 +7,7 @@
 package org.hibernate.transform;
 
 import java.io.Serializable;
+import java.util.List;
 
 import org.hibernate.Query;
 import org.hibernate.query.ResultListTransformer;
@@ -20,11 +21,13 @@ import org.hibernate.query.TupleTransformer;
  *
  * @author Gavin King
  *
- * @deprecated ResultTransformer is no longer supported.  It has been split
- * into {@link TupleTransformer} and {@link ResultListTransformer} to define
- * functional interfaces.
+ * @deprecated Use {@link TupleTransformer} and/or {@link ResultListTransformer}
  */
 @Deprecated
-public interface ResultTransformer extends TupleTransformer, ResultListTransformer, Serializable {
+public interface ResultTransformer<T> extends TupleTransformer<T>, ResultListTransformer<T>, Serializable {
+	@Override
+	default List<T> transformList(List<T> resultList) {
+		return resultList;
+	}
 }
 

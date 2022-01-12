@@ -301,12 +301,12 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	/**
 	 * Set a {@link TupleTransformer}
 	 */
-	Query<R> setTupleTransformer(TupleTransformer<R> transformer);
+	<T> Query<T> setTupleTransformer(TupleTransformer<T> transformer);
 
 	/**
 	 * Set a {@link ResultListTransformer}
 	 */
-	Query<R> setResultListTransformer(ResultListTransformer transformer);
+	Query<R> setResultListTransformer(ResultListTransformer<R> transformer);
 
 	/**
 	 * Get the execution options for this Query.  Many of the setter on the Query
@@ -805,14 +805,11 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	// deprecated methods
 
 	/**
-	 * @deprecated (since 5.2) Use {@link #setTupleTransformer} or {@link #setResultListTransformer}
+	 * @deprecated Use {@link #setTupleTransformer} or {@link #setResultListTransformer}
 	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	default Query<R> setResultTransformer(ResultTransformer transformer) {
-		setTupleTransformer( transformer );
-		setResultListTransformer( transformer );
-		return this;
+	@Deprecated(since = "5.2")
+	default <T> Query<T> setResultTransformer(ResultTransformer<T> transformer) {
+		return setTupleTransformer( transformer ).setResultListTransformer( transformer );
 	}
 
 }

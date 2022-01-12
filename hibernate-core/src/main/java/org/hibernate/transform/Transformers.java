@@ -26,8 +26,8 @@ final public class Transformers {
 	 * Creates a ResultTransformer that will inject aliased values into
 	 * instances of Class via property methods or fields.
 	 */
-	public static ResultTransformer aliasToBean(Class target) {
-		return new AliasToBeanResultTransformer(target);
+	public static <T> ResultTransformer<T> aliasToBean(Class<T> target) {
+		return new AliasToBeanResultTransformer<>(target);
 	}
 
 }

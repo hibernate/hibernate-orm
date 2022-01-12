@@ -66,12 +66,6 @@ public class ResultTransformerTest extends BaseCoreFunctionalTestCase {
 				// return only the PartnerA object from the query
 				return arg0[1];
 			}
-
-			@SuppressWarnings("unchecked")
-			public List transformList(List arg0)
-			{
-				return arg0;
-			}
 		});
 		ScrollableResults sr = q.scroll();
 		// HANA supports only ResultSet.TYPE_FORWARD_ONLY and

@@ -9,15 +9,17 @@ package org.hibernate.query;
 import java.util.List;
 
 /**
- * Allows defining transformation of the result List from a Query to some
- * other form.
+ * Defines some processing performed on the result {@link List} of a
+ * {@link org.hibernate.Query} before the result list is returned to
+ * the caller of {@link org.hibernate.Query#getResultList()}.
  *
  * @see org.hibernate.transform.ResultTransformer
  *
  * @author Steve Ebersole
  * @author Gavin King
  */
-public interface ResultListTransformer {
+@FunctionalInterface
+public interface ResultListTransformer<T> {
 	/**
 	 * Here we have an opportunity to perform transformation on the
 	 * query result as a whole.  This might be useful to convert from
@@ -29,5 +31,5 @@ public interface ResultListTransformer {
 	 *
 	 * @return The transformed result.
 	 */
-	List transformList(List resultList);
+	List<T> transformList(List<T> resultList);
 }

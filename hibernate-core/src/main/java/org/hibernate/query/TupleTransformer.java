@@ -8,12 +8,19 @@ package org.hibernate.query;
 
 import org.hibernate.sql.results.internal.RowTransformerTupleTransformerAdapter;
 
+import java.util.List;
+
 /**
- * User hook for applying transformations of the query result tuples (the result "row").
- *
- * Ultimately, gets wrapped in a {@link RowTransformerTupleTransformerAdapter}
- * to adapt the TupleTransformer to the {@link org.hibernate.sql.results.spi.RowTransformer}
- * contract, which is the thing actually used to process the results internally.
+ * Defines some transformation applied to each result of a {@link org.hibernate.Query}
+ * before the results are packaged as a {@link List} and returned to the caller of
+ * {@link org.hibernate.Query#getResultList()}. Each query result is received as a
+ * tuple, that is, as an array of type {@code Object[]}, and may be transformed to
+ * some other type.
+ * <p>
+ * Every {@code TupleTransformer} is automatically wrapped in an instance of
+ * {@link RowTransformerTupleTransformerAdapter}, adapting it to the
+ * {@link org.hibernate.sql.results.spi.RowTransformer} contract, which is always
+ * used to actually process the results internally.
  *
  * @see org.hibernate.transform.ResultTransformer
  * @see org.hibernate.sql.results.spi.RowTransformer
@@ -21,6 +28,7 @@ import org.hibernate.sql.results.internal.RowTransformerTupleTransformerAdapter;
  * @author Steve Ebersole
  * @author Gavin King
  */
+@FunctionalInterface
 public interface TupleTransformer<T> {
 	/**
 	 * Tuples are the elements making up each "row" of the query result.
@@ -33,11 +41,4 @@ public interface TupleTransformer<T> {
 	 * @return The transformed row.
 	 */
 	T transformTuple(Object[] tuple, String[] aliases);
-
-	/**
-	 * How many result elements will this transformation produce?
-	 */
-	default int determineNumberOfResultElements(int rawElementCount) {
-		return rawElementCount;
-	}
 }

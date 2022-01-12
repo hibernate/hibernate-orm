@@ -559,13 +559,13 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	NativeQuery<T> setLockMode(LockModeType lockMode);
 
 	@Override
-	NativeQuery<T> setTupleTransformer(TupleTransformer<T> transformer);
+	<R> NativeQuery<R> setTupleTransformer(TupleTransformer<R> transformer);
 
 	@Override
-	NativeQuery<T> setResultListTransformer(ResultListTransformer transformer);
+	NativeQuery<T> setResultListTransformer(ResultListTransformer<T> transformer);
 
-	@Override @SuppressWarnings("deprecation")
-	NativeQuery<T> setResultTransformer(ResultTransformer transformer);
+	@Override @Deprecated @SuppressWarnings("deprecation")
+	<S> NativeQuery<S> setResultTransformer(ResultTransformer<S> transformer);
 
 	@Override
 	NativeQuery<T> setParameter(String name, Object value);

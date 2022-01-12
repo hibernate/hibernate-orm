@@ -22,6 +22,8 @@ import org.hibernate.query.QueryParameter;
 
 import jakarta.persistence.Parameter;
 import jakarta.persistence.TemporalType;
+import org.hibernate.query.ResultListTransformer;
+import org.hibernate.query.TupleTransformer;
 
 /**
  * @author Steve Ebersole
@@ -45,6 +47,12 @@ public interface QueryImplementor<R> extends Query<R> {
 	@Override
 	ScrollableResultsImplementor<R> scroll(ScrollMode scrollMode);
 
+
+	@Override
+	<T> QueryImplementor<T> setTupleTransformer(TupleTransformer<T> transformer);
+
+	@Override
+	QueryImplementor<R> setResultListTransformer(ResultListTransformer<R> transformer);
 
 	@Override
 	QueryImplementor<R> setParameter(String name, Object value);
@@ -101,7 +109,7 @@ public interface QueryImplementor<R> extends Query<R> {
 	QueryImplementor<R> setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
 
 	@Override
-	QueryImplementor<R> setParameterList(String name, Collection values);
+	QueryImplementor<R> setParameterList(String name, @SuppressWarnings("rawtypes") Collection values);
 
 	@Override
 	<P> QueryImplementor<R> setParameterList(String name, Collection<? extends P> values, Class<P> javaType);
@@ -119,7 +127,7 @@ public interface QueryImplementor<R> extends Query<R> {
 	<P> QueryImplementor<R> setParameterList(String name, P[] values, BindableType<P> type);
 
 	@Override
-	QueryImplementor<R> setParameterList(int position, Collection values);
+	QueryImplementor<R> setParameterList(int position, @SuppressWarnings("rawtypes") Collection values);
 
 	@Override
 	<P> QueryImplementor<R> setParameterList(int position, Collection<? extends P> values, Class<P> javaType);
@@ -158,5 +166,5 @@ public interface QueryImplementor<R> extends Query<R> {
 	QueryImplementor<R> setProperties(Object bean);
 
 	@Override
-	QueryImplementor<R> setProperties(Map bean);
+	QueryImplementor<R> setProperties(@SuppressWarnings("rawtypes") Map bean);
 }

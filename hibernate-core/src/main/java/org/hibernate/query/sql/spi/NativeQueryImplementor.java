@@ -190,10 +190,10 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	NativeQueryImplementor<R> addQueryHint(String hint);
 
 	@Override
-	NativeQueryImplementor<R> setTupleTransformer(@SuppressWarnings("rawtypes") TupleTransformer transformer);
+	<T> NativeQueryImplementor<T> setTupleTransformer(TupleTransformer<T> transformer);
 
 	@Override
-	NativeQueryImplementor<R> setResultListTransformer(ResultListTransformer transformer);
+	NativeQueryImplementor<R> setResultListTransformer(ResultListTransformer<R> transformer);
 
 	@Override
 	NativeQueryImplementor<R> setParameter(String name, Object val);

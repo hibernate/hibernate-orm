@@ -11,15 +11,12 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 
 /**
  * {@link ResultTransformer} implementation which builds a map for each "row",
- * made up  of each aliased value where the alias is the map key.
- * <p/>
- * Since this transformer is stateless, all instances would be considered equal.
- * So for optimization purposes we limit it to a single, singleton {@link #INSTANCE instance}.
+ * made up of each aliased value where the alias is the map key.
  *
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class AliasToEntityMapResultTransformer extends AliasedTupleSubsetResultTransformer {
+public class AliasToEntityMapResultTransformer implements ResultTransformer<Map<String,Object>> {
 
 	public static final AliasToEntityMapResultTransformer INSTANCE = new AliasToEntityMapResultTransformer();
 
@@ -30,8 +27,8 @@ public class AliasToEntityMapResultTransformer extends AliasedTupleSubsetResultT
 	}
 
 	@Override
-	public Object transformTuple(Object[] tuple, String[] aliases) {
-		Map result = CollectionHelper.mapOfSize( tuple.length );
+	public Map<String,Object> transformTuple(Object[] tuple, String[] aliases) {
+		Map<String,Object> result = CollectionHelper.mapOfSize( tuple.length );
 		for ( int i = 0; i < tuple.length; i++ ) {
 			String alias = aliases[i];
 			if ( alias != null ) {
@@ -39,11 +36,6 @@ public class AliasToEntityMapResultTransformer extends AliasedTupleSubsetResultT
 			}
 		}
 		return result;
-	}
-
-	@Override
-	public boolean isTransformedValueATupleElement(String[] aliases, int tupleLength) {
-		return false;
 	}
 
 	/**

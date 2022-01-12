@@ -32,6 +32,6 @@ public class RowTransformerTupleTransformerAdapter<T> implements RowTransformer<
 
 	@Override
 	public int determineNumberOfResultElements(int rawElementCount) {
-		return tupleTransformer.determineNumberOfResultElements( rawElementCount );
+		return rawElementCount;
 	}
 }

@@ -104,7 +104,6 @@ import static org.hibernate.jpa.QueryHints.HINT_NATIVE_LOCKMODE;
 /**
  * @author Steve Ebersole
  */
-@SuppressWarnings("WeakerAccess")
 public class NativeQueryImpl<R>
 		extends AbstractQuery<R>
 		implements NativeQueryImplementor<R>, DomainQueryExecutionContext, ResultSetMappingResolutionContext {
@@ -503,12 +502,12 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public NativeQueryImplementor<R> setTupleTransformer(@SuppressWarnings("rawtypes") TupleTransformer transformer) {
-		return (NativeQueryImplementor<R>) super.setTupleTransformer( transformer );
+	public <T> NativeQueryImplementor<T> setTupleTransformer(TupleTransformer<T> transformer) {
+		return (NativeQueryImplementor<T>) super.setTupleTransformer( transformer );
 	}
 
 	@Override
-	public NativeQueryImplementor<R> setResultListTransformer(ResultListTransformer transformer) {
+	public NativeQueryImplementor<R> setResultListTransformer(ResultListTransformer<R> transformer) {
 		return (NativeQueryImplementor<R>) super.setResultListTransformer( transformer );
 	}
 
@@ -1449,21 +1448,9 @@ public class NativeQueryImpl<R>
 		return this;
 	}
 
-
-
-
-
-
-
-
-
-
-
-
-	@Override @SuppressWarnings("deprecation")
-	public NativeQueryImplementor<R> setResultTransformer(ResultTransformer transformer) {
-		super.setResultTransformer( transformer );
-		return this;
+	@Override @Deprecated @SuppressWarnings("deprecation")
+	public <S> NativeQueryImplementor<S> setResultTransformer(ResultTransformer<S> transformer) {
+		return setTupleTransformer( transformer ).setResultListTransformer( transformer );
 	}
 
 	@Override

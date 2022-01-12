@@ -12,7 +12,7 @@ import java.util.Locale;
 import java.util.Set;
 
 import org.hibernate.Session;
-import org.hibernate.query.Query;
+import org.hibernate.Query;
 
 /**
  * @author Adam Warski (adam at warski dot org)

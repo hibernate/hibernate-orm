@@ -10,7 +10,7 @@ import java.sql.PreparedStatement;
 
 import org.hibernate.Transaction;
 import org.hibernate.dialect.HANAColumnStoreDialect;
-import org.hibernate.query.Query;
+import org.hibernate.Query;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;

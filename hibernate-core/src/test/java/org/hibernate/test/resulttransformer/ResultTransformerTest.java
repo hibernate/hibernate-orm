@@ -6,12 +6,11 @@
  */
 package org.hibernate.test.resulttransformer;
 
-import java.sql.ResultSet;
 import java.util.List;
 
 import org.junit.Test;
 
-import org.hibernate.query.Query;
+import org.hibernate.Query;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.Transaction;

@@ -19,14 +19,13 @@ import jakarta.persistence.TemporalType;
 
 import org.hibernate.Session;
 import org.hibernate.orm.test.query.sqm.BaseSqmUnitTest;
-import org.hibernate.query.Query;
+import org.hibernate.Query;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
-import org.hibernate.sql.exec.spi.ExecutionContext;
 
 import org.hibernate.testing.orm.junit.ExpectedException;
 import org.hibernate.testing.orm.junit.ExpectedExceptionExtension;

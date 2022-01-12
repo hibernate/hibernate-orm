@@ -7,7 +7,7 @@
 package org.hibernate;
 
 /**
- * Thrown when the application calls {@link org.hibernate.query.Query#uniqueResult()}
+ * Thrown when the application calls {@link Query#uniqueResult()}
  * and the query returned more than one result.  Unlike all other Hibernate exceptions,
  * this one is recoverable!
  *

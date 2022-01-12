@@ -7,10 +7,9 @@
 package org.hibernate.orm.test.annotations.idclass.xml;
 
 
-import org.hibernate.query.Query;
+import org.hibernate.Query;
 
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;

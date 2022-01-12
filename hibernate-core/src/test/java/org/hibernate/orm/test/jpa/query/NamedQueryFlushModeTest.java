@@ -15,8 +15,8 @@ import org.hibernate.Session;
 import org.hibernate.annotations.FlushModeType;
 import org.hibernate.annotations.NamedNativeQuery;
 import org.hibernate.annotations.NamedQuery;
-import org.hibernate.query.NativeQuery;
-import org.hibernate.query.Query;
+import org.hibernate.NativeQuery;
+import org.hibernate.Query;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;

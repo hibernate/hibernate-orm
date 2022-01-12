@@ -9,7 +9,7 @@ package org.hibernate.orm.test.temporal;
 import java.sql.Timestamp;
 
 import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.query.Query;
+import org.hibernate.Query;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.domain.StandardDomainModel;

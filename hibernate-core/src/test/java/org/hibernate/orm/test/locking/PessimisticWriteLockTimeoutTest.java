@@ -2,6 +2,7 @@ package org.hibernate.orm.test.locking;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.dialect.OracleDialect;
@@ -60,7 +61,7 @@ public class PessimisticWriteLockTimeoutTest
 		try {
 			session.createQuery(
 				"select a from A a", A.class )
-			.unwrap( org.hibernate.query.Query.class )
+			.unwrap( Query.class )
 			.setLockOptions(
 				new LockOptions( LockMode.PESSIMISTIC_WRITE )
 		 	.setTimeOut( LockOptions.NO_WAIT ) )
@@ -85,7 +86,7 @@ public class PessimisticWriteLockTimeoutTest
 		try {
 			session.createQuery(
 				"select a from A a", A.class )
-			.unwrap( org.hibernate.query.Query.class )
+			.unwrap( Query.class )
 			.setLockOptions(
 				new LockOptions( LockMode.PESSIMISTIC_WRITE )
 		 	.setTimeOut( LockOptions.SKIP_LOCKED ) )

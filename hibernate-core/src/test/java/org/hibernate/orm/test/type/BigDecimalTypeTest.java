@@ -7,7 +7,7 @@
 package org.hibernate.orm.test.type;
 
 import org.hibernate.Session;
-import org.hibernate.query.Query;
+import org.hibernate.Query;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Assert;

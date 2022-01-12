@@ -7,7 +7,6 @@
 package org.hibernate.orm.test.jpa.lock;
 
 import java.util.List;
-import java.util.Map;
 
 import org.hibernate.LockMode;
 import org.hibernate.dialect.CockroachDialect;
@@ -15,7 +14,7 @@ import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.internal.SessionImpl;
 import org.hibernate.jpa.QueryHints;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.query.NativeQuery;
+import org.hibernate.NativeQuery;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialect;
@@ -57,7 +56,7 @@ public class QueryLockingTest extends BaseEntityManagerFunctionalTestCase {
 	public void testOverallLockMode() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
-		org.hibernate.query.Query query = em.createQuery( "from Lockable l" ).unwrap( org.hibernate.query.Query.class );
+		org.hibernate.Query query = em.createQuery( "from Lockable l" ).unwrap( org.hibernate.Query.class );
 		assertEquals( LockMode.NONE, query.getLockOptions().getLockMode() );
 		assertNull( query.getLockOptions().getAliasSpecificLockMode( "l" ) );
 		assertEquals( LockMode.NONE, query.getLockOptions().getEffectiveLockMode( "l" ) );
@@ -82,7 +81,7 @@ public class QueryLockingTest extends BaseEntityManagerFunctionalTestCase {
 	public void testNoneLockModeForNonSelectQueryAllowed() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
-		org.hibernate.query.Query query = em.createQuery( "delete from Lockable l" ).unwrap( org.hibernate.query.Query.class );
+		org.hibernate.Query query = em.createQuery( "delete from Lockable l" ).unwrap( org.hibernate.Query.class );
 
 		assertEquals( LockMode.NONE, query.getLockOptions().getLockMode() );
 
@@ -93,7 +92,7 @@ public class QueryLockingTest extends BaseEntityManagerFunctionalTestCase {
 
 		// ensure other modes still throw the exception
 		em.getTransaction().begin();
-		query = em.createQuery( "delete from Lockable l" ).unwrap( org.hibernate.query.Query.class );
+		query = em.createQuery( "delete from Lockable l" ).unwrap( org.hibernate.Query.class );
 		assertEquals( LockMode.NONE, query.getLockOptions().getLockMode() );
 
 		try {

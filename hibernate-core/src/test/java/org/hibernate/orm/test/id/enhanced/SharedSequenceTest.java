@@ -15,7 +15,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 
 import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.query.Query;
+import org.hibernate.Query;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;

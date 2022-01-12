@@ -34,7 +34,7 @@ import org.hibernate.graph.RootGraph;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.QueryableCollection;
-import org.hibernate.query.Query;
+import org.hibernate.Query;
 import org.hibernate.sql.SimpleSelect;
 
 import org.hibernate.testing.RequiresDialect;

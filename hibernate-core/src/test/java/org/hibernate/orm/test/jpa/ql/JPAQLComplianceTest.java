@@ -9,7 +9,7 @@ package org.hibernate.orm.test.jpa.ql;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.query.Query;
+import org.hibernate.Query;
 import org.hibernate.query.SemanticException;
 
 import org.hibernate.testing.TestForIssue;

@@ -11,9 +11,8 @@ import java.util.List;
 import java.util.function.BiFunction;
 
 import org.hibernate.query.DynamicInstantiationNature;
-import org.hibernate.query.NativeQuery;
+import org.hibernate.NativeQuery;
 import org.hibernate.query.results.Builders;
-import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.ResultBuilderInstantiationValued;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;

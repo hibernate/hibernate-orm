@@ -116,7 +116,7 @@ public class LockOptions implements Serializable {
 	 * @param lockMode The lock mode to apply to the given alias
 	 * @return this LockRequest instance for operation chaining.
 	 *
-	 * @see org.hibernate.query.Query#setLockMode(String, LockMode)
+	 * @see Query#setLockMode(String, LockMode)
 	 */
 	public LockOptions setAliasSpecificLockMode(String alias, LockMode lockMode) {
 		if ( aliasSpecificLockModes == null ) {

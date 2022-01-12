@@ -7,12 +7,12 @@
 
 /**
  * Support for mutable result/fetch builder graphs nodes built dynamically via
- * Hibernate's {@link org.hibernate.query.NativeQuery} APIs
+ * Hibernate's {@link org.hibernate.NativeQuery} APIs
  *
- * @see org.hibernate.query.NativeQuery#addScalar
- * @see org.hibernate.query.NativeQuery#addEntity
- * @see org.hibernate.query.NativeQuery#addJoin
- * @see org.hibernate.query.NativeQuery#addFetch
- * @see org.hibernate.query.NativeQuery#addRoot
+ * @see org.hibernate.NativeQuery#addScalar
+ * @see org.hibernate.NativeQuery#addEntity
+ * @see org.hibernate.NativeQuery#addJoin
+ * @see org.hibernate.NativeQuery#addFetch
+ * @see org.hibernate.NativeQuery#addRoot
  */
 package org.hibernate.query.results.dynamic;

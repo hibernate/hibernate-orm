@@ -21,7 +21,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
-import org.hibernate.query.Query;
+import org.hibernate.Query;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;

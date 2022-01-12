@@ -917,7 +917,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			QueryProducer session = entityManager.unwrap(Session.class);
 			//tag::hql-api-example[]
-			org.hibernate.query.Query<Person> query = session.createQuery(
+			org.hibernate.Query<Person> query = session.createQuery(
 				"select p " +
 				"from Person p " +
 				"where p.name like :name",
@@ -931,7 +931,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			QueryProducer session = entityManager.unwrap(Session.class);
 			//tag::hql-api-named-query-example[]
-			org.hibernate.query.Query<Person> query = session.createNamedQuery(
+			org.hibernate.Query<Person> query = session.createNamedQuery(
 				"get_person_by_name",
 				Person.class);
 			//end::hql-api-named-query-example[]
@@ -943,7 +943,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			QueryProducer session = entityManager.unwrap(Session.class);
 			//tag::hql-api-basic-usage-example[]
-			org.hibernate.query.Query<Person> query = session.createQuery(
+			org.hibernate.Query<Person> query = session.createQuery(
 				"select p " +
 				"from Person p " +
 				"where p.name like :name",
@@ -965,7 +965,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			QueryProducer session = entityManager.unwrap(Session.class);
 			//tag::hql-api-parameter-example[]
-			org.hibernate.query.Query<Person> query = session.createQuery(
+			org.hibernate.Query<Person> query = session.createQuery(
 				"select p " +
 				"from Person p " +
 				"where p.name like :name",
@@ -980,7 +980,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			QueryProducer session = entityManager.unwrap(Session.class);
 			//tag::hql-api-parameter-inferred-type-example[]
-			org.hibernate.query.Query<Person> query = session.createQuery(
+			org.hibernate.Query<Person> query = session.createQuery(
 				"select p " +
 				"from Person p " +
 				"where p.name like :name",
@@ -996,7 +996,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 			LocalDateTime timestamp = LocalDateTime.now();
 			QueryProducer session = entityManager.unwrap(Session.class);
 			//tag::hql-api-parameter-short-form-example[]
-			org.hibernate.query.Query<Person> query = session.createQuery(
+			org.hibernate.Query<Person> query = session.createQuery(
 				"select p " +
 				"from Person p " +
 				"where p.name like :name " +
@@ -1014,7 +1014,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 			Date timestamp = new Date();
 			QueryProducer session = entityManager.unwrap(Session.class);
 			//tag::hql-api-ordinal-parameter-example[]
-			org.hibernate.query.Query<Person> query = session.createQuery(
+			org.hibernate.Query<Person> query = session.createQuery(
 				"select p " +
 				"from Person p " +
 				"where p.name like ?",
@@ -2984,7 +2984,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 				"where p.number = :phoneNumber ",
 				Call.class)
 			.setParameter("phoneNumber", "123-456-7890")
-			.unwrap(org.hibernate.query.Query.class)
+			.unwrap( org.hibernate.Query.class)
 			.setReadOnly(true)
 			.getResultList();
 			//end::hql-read-only-entities-native-example[]

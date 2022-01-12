@@ -12,7 +12,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
 import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.query.Query;
+import org.hibernate.Query;
 import org.hibernate.type.StandardBasicTypes;
 
 import org.hibernate.testing.orm.junit.DomainModel;

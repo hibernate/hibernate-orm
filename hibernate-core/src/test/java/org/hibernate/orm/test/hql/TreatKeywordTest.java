@@ -8,15 +8,11 @@ package org.hibernate.orm.test.hql;
 
 import java.util.List;
 
-import org.hibernate.query.Query;
+import org.hibernate.Query;
 import org.hibernate.Session;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.orm.test.hql.Animal;
-import org.hibernate.orm.test.hql.Cat;
-import org.hibernate.orm.test.hql.Dog;
-import org.hibernate.orm.test.hql.Human;
 import org.junit.Test;
 
 import static junit.framework.TestCase.assertEquals;

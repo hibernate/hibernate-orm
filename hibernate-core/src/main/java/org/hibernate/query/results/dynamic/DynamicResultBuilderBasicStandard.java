@@ -9,6 +9,7 @@ package org.hibernate.query.results.dynamic;
 import java.util.Objects;
 import java.util.function.BiFunction;
 
+import org.hibernate.NativeQuery;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.query.results.ResultsHelper;
@@ -25,7 +26,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 /**
  * Standard DynamicResultBuilder for basic values.
  *
- * @see org.hibernate.query.NativeQuery#addScalar
+ * @see NativeQuery#addScalar
  *
  * @author Steve Ebersole
  */

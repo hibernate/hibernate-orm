@@ -11,7 +11,7 @@ import java.util.Map;
 
 import org.hibernate.Session;
 import org.hibernate.envers.internal.tools.MutableInteger;
-import org.hibernate.query.Query;
+import org.hibernate.Query;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)

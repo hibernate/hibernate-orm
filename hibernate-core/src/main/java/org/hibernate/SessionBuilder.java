@@ -135,7 +135,7 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	T jdbcTimeZone(TimeZone timeZone);
 
 	/**
-	 * Should {@link org.hibernate.query.Query#setParameter} perform parameter validation
+	 * Should {@link Query#setParameter} perform parameter validation
 	 * when the Session is bootstrapped via JPA {@link jakarta.persistence.EntityManagerFactory}
 	 *
 	 * @param enabled {@code true} indicates the validation should be performed, {@code false} otherwise

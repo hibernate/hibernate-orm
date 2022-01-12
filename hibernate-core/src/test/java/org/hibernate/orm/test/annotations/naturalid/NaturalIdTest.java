@@ -6,8 +6,6 @@
  */
 package org.hibernate.orm.test.annotations.naturalid;
 
-import java.util.List;
-
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
@@ -17,7 +15,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.metadata.ClassMetadata;
-import org.hibernate.query.Query;
+import org.hibernate.Query;
 import org.hibernate.stat.Statistics;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;

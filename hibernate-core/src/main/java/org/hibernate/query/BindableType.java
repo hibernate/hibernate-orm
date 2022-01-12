@@ -8,6 +8,7 @@ package org.hibernate.query;
 
 import org.hibernate.Incubating;
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.Query;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.SqmExpressable;
 
@@ -15,7 +16,7 @@ import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.metamodel.ManagedType;
 
 /**
- * Types that can be used to handle binding {@link org.hibernate.query.Query} parameters
+ * Types that can be used to handle binding {@link Query} parameters
  *
  * @see org.hibernate.type.BasicTypeReference
  * @see org.hibernate.type.StandardBasicTypes

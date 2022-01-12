@@ -46,7 +46,7 @@ import org.hibernate.orm.test.any.hbm.IntegerPropertyValue;
 import org.hibernate.orm.test.any.hbm.PropertySet;
 import org.hibernate.orm.test.any.hbm.PropertyValue;
 import org.hibernate.orm.test.any.hbm.StringPropertyValue;
-import org.hibernate.query.Query;
+import org.hibernate.Query;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.SqmExpressable;

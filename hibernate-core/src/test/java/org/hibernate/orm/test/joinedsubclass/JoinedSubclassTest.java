@@ -7,15 +7,12 @@
 package org.hibernate.orm.test.joinedsubclass;
 
 import java.math.BigDecimal;
-import java.util.Iterator;
 import java.util.List;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
-import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
-import org.hibernate.query.Query;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;

@@ -10,7 +10,7 @@ import java.util.List;
 
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.orm.test.util.SchemaUtil;
-import org.hibernate.query.Query;
+import org.hibernate.Query;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;

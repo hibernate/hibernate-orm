@@ -8,9 +8,8 @@ package org.hibernate.query.results.dynamic;
 
 import java.util.List;
 
-import org.hibernate.query.NativeQuery;
+import org.hibernate.NativeQuery;
 import org.hibernate.query.results.FetchBuilder;
-import org.hibernate.sql.results.graph.Fetchable;
 
 /**
  * @author Steve Ebersole

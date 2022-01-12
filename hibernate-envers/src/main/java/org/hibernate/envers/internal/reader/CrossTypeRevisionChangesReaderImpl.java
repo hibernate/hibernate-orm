@@ -22,7 +22,7 @@ import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.tools.EntityTools;
 import org.hibernate.envers.query.criteria.internal.RevisionTypeAuditExpression;
 import org.hibernate.envers.tools.Pair;
-import org.hibernate.query.Query;
+import org.hibernate.Query;
 
 import static org.hibernate.envers.internal.tools.ArgumentsTools.checkNotNull;
 import static org.hibernate.envers.internal.tools.ArgumentsTools.checkPositive;

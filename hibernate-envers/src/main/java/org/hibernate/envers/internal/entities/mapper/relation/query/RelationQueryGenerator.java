@@ -7,7 +7,7 @@
 package org.hibernate.envers.internal.entities.mapper.relation.query;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.query.Query;
+import org.hibernate.Query;
 
 /**
  * Implementations of this interface provide a method to generate queries on a

@@ -18,7 +18,7 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.orm.test.bootstrap.binding.annotations.embedded.FloatLeg.RateIndex;
 import org.hibernate.orm.test.bootstrap.binding.annotations.embedded.Leg.Frequency;
-import org.hibernate.query.Query;
+import org.hibernate.Query;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;

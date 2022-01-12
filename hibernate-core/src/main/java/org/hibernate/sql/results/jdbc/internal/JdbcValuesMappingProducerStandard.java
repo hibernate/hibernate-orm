@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import org.hibernate.NativeQuery;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -20,7 +21,7 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 /**
  * Hibernate's standard ResultSetMappingDescriptor implementation for cases
  * where Hibernate itself creates the mappings.  Basically this covers all
- * scenarios *except* {@link org.hibernate.query.NativeQuery} processing -
+ * scenarios *except* {@link NativeQuery} processing -
  * an important distinction as it means we do not have to perform any
  * {@link java.sql.ResultSetMetaData} resolutions.
  *

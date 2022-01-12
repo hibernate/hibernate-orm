@@ -6,9 +6,8 @@
  */
 package org.hibernate.orm.test.idprops;
 import org.hibernate.Session;
-import org.hibernate.query.Query;
+import org.hibernate.Query;
 
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;

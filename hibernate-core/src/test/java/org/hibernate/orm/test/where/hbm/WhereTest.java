@@ -19,7 +19,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import org.hibernate.Hibernate;
-import org.hibernate.query.NativeQuery;
+import org.hibernate.NativeQuery;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 

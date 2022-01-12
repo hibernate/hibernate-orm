@@ -14,7 +14,7 @@ import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.query.Query;
+import org.hibernate.Query;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 

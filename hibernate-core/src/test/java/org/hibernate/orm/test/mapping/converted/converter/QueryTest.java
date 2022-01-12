@@ -22,7 +22,6 @@ import jakarta.persistence.Table;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
-import org.hibernate.query.NativeQuery;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
 
 import org.hibernate.testing.FailureExpected;

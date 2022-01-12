@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.query;
+package org.hibernate;
 
 import java.time.Instant;
 import java.util.Calendar;
@@ -18,14 +18,15 @@ import jakarta.persistence.Parameter;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.metamodel.SingularAttribute;
 
-import org.hibernate.CacheMode;
-import org.hibernate.FlushMode;
-import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
-import org.hibernate.MappingException;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
+import org.hibernate.query.BindableType;
+import org.hibernate.query.NavigablePath;
+import org.hibernate.query.QueryParameter;
+import org.hibernate.query.ResultListTransformer;
+import org.hibernate.query.SynchronizeableQuery;
+import org.hibernate.query.TupleTransformer;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.BasicTypeReference;
 
@@ -38,7 +39,7 @@ import org.hibernate.type.BasicTypeReference;
  *     </li>
  *     <li>
  *         Tables used via {@link #addSynchronizedQuerySpace}, {@link #addSynchronizedEntityName} and
- *         {@link SynchronizeableQuery#addSynchronizedEntityClass}.  This allows Hibernate to know how to properly deal with
+ *         {@link org.hibernate.query.SynchronizeableQuery#addSynchronizedEntityClass}.  This allows Hibernate to know how to properly deal with
  *         auto-flush checking as well as cached query results if the results of the query are being
  *         cached.
  *     </li>

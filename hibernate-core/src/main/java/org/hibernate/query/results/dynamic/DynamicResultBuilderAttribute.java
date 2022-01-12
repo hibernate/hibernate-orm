@@ -11,7 +11,7 @@ import java.util.function.BiFunction;
 
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
-import org.hibernate.query.NativeQuery;
+import org.hibernate.NativeQuery;
 import org.hibernate.query.results.ResultSetMappingSqlSelection;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;

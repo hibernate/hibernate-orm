@@ -12,6 +12,7 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.Query;
 import org.hibernate.ScrollMode;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -63,7 +64,7 @@ import static org.hibernate.query.sqm.internal.QuerySqmImpl.CRITERIA_HQL_STRING;
 
 /**
  * Standard Hibernate implementation of SelectQueryPlan for SQM-backed
- * {@link org.hibernate.query.Query} implementations, which means
+ * {@link Query} implementations, which means
  * HQL/JPQL or {@link jakarta.persistence.criteria.CriteriaQuery}
  *
  * @author Steve Ebersole

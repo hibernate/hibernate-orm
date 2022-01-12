@@ -11,12 +11,11 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.orm.test.annotations.inheritance.Apple;
 import org.hibernate.orm.test.annotations.inheritance.singletable.Funk;
 import org.hibernate.orm.test.annotations.inheritance.singletable.Music;
 import org.hibernate.orm.test.annotations.inheritance.singletable.Noise;
 import org.hibernate.orm.test.annotations.inheritance.singletable.Rock;
-import org.hibernate.query.Query;
+import org.hibernate.Query;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;

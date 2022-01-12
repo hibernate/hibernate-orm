@@ -10,7 +10,7 @@ import java.util.List;
 
 import org.hibernate.annotations.Type;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.query.Query;
+import org.hibernate.Query;
 
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;

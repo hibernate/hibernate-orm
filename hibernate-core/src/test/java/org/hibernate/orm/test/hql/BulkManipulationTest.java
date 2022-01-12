@@ -26,7 +26,7 @@ import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.query.Query;
+import org.hibernate.Query;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;

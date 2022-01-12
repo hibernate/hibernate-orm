@@ -9,6 +9,8 @@ package org.hibernate.cfg;
 import java.util.function.Supplier;
 
 import org.hibernate.HibernateException;
+import org.hibernate.NativeQuery;
+import org.hibernate.Query;
 import org.hibernate.Transaction;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.registry.classloading.internal.TcclLookupPrecedence;
@@ -884,7 +886,7 @@ public interface AvailableSettings {
 	 * their declaration, whereas the binding position is implicit with ordinal
 	 * parameters based on its ordinal position in the query.  As of 6.0, support
 	 * for this ordinal parameter declaration form has been removed from HQL and
-	 * is now only valid for {@link org.hibernate.query.NativeQuery}s.
+	 * is now only valid for {@link NativeQuery}s.
 	 * <p/>
 	 * Historically Hibernate followed JDBC conventions for ordinal parameter binding
 	 * such that the implied positions were 0-based.  This presents a mismatch between
@@ -2039,7 +2041,7 @@ public interface AvailableSettings {
 
 
 	/**
-	 * Setting which indicates if {@link org.hibernate.query.Query#setParameter} should not perform parameters validation
+	 * Setting which indicates if {@link Query#setParameter} should not perform parameters validation
 	 *
 	 * This setting is applied only when the Session is bootstrapped via JPA {@link jakarta.persistence.EntityManagerFactory}
 	 *

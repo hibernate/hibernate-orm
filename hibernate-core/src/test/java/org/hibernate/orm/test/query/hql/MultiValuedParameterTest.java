@@ -12,7 +12,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.query.Query;
+import org.hibernate.Query;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.domain.contacts.Contact;

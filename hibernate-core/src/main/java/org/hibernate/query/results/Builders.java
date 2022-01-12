@@ -14,6 +14,7 @@ import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.LockMode;
+import org.hibernate.NativeQuery;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.RuntimeMetamodels;
@@ -207,10 +208,10 @@ public class Builders {
 	/**
 	 * Creates a EntityResultBuilder that does not allow any further configuring of the mapping.
 	 *
-	 * @see org.hibernate.query.NativeQuery#addEntity(Class)
-	 * @see org.hibernate.query.NativeQuery#addEntity(String)
-	 * @see org.hibernate.query.NativeQuery#addEntity(String, Class)
-	 * @see org.hibernate.query.NativeQuery#addEntity(String, String)
+	 * @see NativeQuery#addEntity(Class)
+	 * @see NativeQuery#addEntity(String)
+	 * @see NativeQuery#addEntity(String, Class)
+	 * @see NativeQuery#addEntity(String, String)
 	 */
 	public static DynamicResultBuilderEntityCalculated entityCalculated(
 			String tableAlias,
@@ -223,8 +224,8 @@ public class Builders {
 	 * Creates a EntityResultBuilder that does not allow any further configuring of the mapping.
 	 *
 	 * @see #entityCalculated(String, String, SessionFactoryImplementor)
-	 * @see org.hibernate.query.NativeQuery#addEntity(String, Class, LockMode)
-	 * @see org.hibernate.query.NativeQuery#addEntity(String, String, LockMode)
+	 * @see NativeQuery#addEntity(String, Class, LockMode)
+	 * @see NativeQuery#addEntity(String, String, LockMode)
 	 */
 	public static DynamicResultBuilderEntityCalculated entityCalculated(
 			String tableAlias,

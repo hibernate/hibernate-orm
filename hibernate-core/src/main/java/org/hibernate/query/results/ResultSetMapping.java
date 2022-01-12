@@ -10,12 +10,13 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.hibernate.Incubating;
+import org.hibernate.NativeQuery;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 
 /**
- * Acts as the {@link JdbcValuesMappingProducer} for {@link org.hibernate.query.NativeQuery}
+ * Acts as the {@link JdbcValuesMappingProducer} for {@link NativeQuery}
  * or {@link org.hibernate.procedure.ProcedureCall} / {@link jakarta.persistence.StoredProcedureQuery}
  * instances.
  *
@@ -25,11 +26,11 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
  *     </li>
  *     <li>
  *         dynamically via Hibernate-specific APIs:<ul>
- *             <li>{@link org.hibernate.query.NativeQuery#addScalar}</li>
- *             <li>{@link org.hibernate.query.NativeQuery#addEntity}</li>
- *             <li>{@link org.hibernate.query.NativeQuery#addJoin}</li>
- *             <li>{@link org.hibernate.query.NativeQuery#addFetch}</li>
- *             <li>{@link org.hibernate.query.NativeQuery#addRoot}</li>
+ *             <li>{@link NativeQuery#addScalar}</li>
+ *             <li>{@link NativeQuery#addEntity}</li>
+ *             <li>{@link NativeQuery#addJoin}</li>
+ *             <li>{@link NativeQuery#addFetch}</li>
+ *             <li>{@link NativeQuery#addRoot}</li>
  *         </ul>
  *     </li>
  * </ul>

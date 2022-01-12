@@ -21,7 +21,7 @@ import org.hibernate.boot.spi.MetadataBuilderImplementor;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.query.NativeQuery;
+import org.hibernate.NativeQuery;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 

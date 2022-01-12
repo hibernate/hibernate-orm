@@ -20,7 +20,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.query.NativeQuery;
+import org.hibernate.NativeQuery;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;

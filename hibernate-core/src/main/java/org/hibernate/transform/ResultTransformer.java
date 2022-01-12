@@ -8,6 +8,7 @@ package org.hibernate.transform;
 
 import java.io.Serializable;
 
+import org.hibernate.Query;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
 
@@ -15,7 +16,7 @@ import org.hibernate.query.TupleTransformer;
  * Implementors define a strategy for transforming query results into the
  * actual application-visible query result list.
  *
- * @see org.hibernate.query.Query#setResultTransformer(ResultTransformer)
+ * @see Query#setResultTransformer(ResultTransformer)
  *
  * @author Gavin King
  *

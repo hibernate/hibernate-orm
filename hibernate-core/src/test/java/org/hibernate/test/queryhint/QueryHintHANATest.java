@@ -28,7 +28,7 @@ import jakarta.persistence.criteria.Root;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.Query;
+import org.hibernate.Query;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.jdbc.SQLStatementInterceptor;

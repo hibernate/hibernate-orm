@@ -20,6 +20,7 @@ import jakarta.persistence.criteria.Root;
 import jakarta.persistence.metamodel.EntityType;
 
 import org.hibernate.CacheMode;
+import org.hibernate.Query;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
@@ -215,13 +216,13 @@ public class CriteriaCompilingTest extends BaseEntityManagerFunctionalTestCase {
 			Root<Order> from = query.from( Order.class );
 			query.orderBy( builder.desc( from.get( "totalPrice" ) ) );
 			TypedQuery<Order> jpaQuery = session.createQuery( query );
-			org.hibernate.query.Query<?> hibQuery = jpaQuery.unwrap( org.hibernate.query.Query.class );
+			Query<?> hibQuery = jpaQuery.unwrap( Query.class );
 
 			ScrollableResults sr = hibQuery.scroll( ScrollMode.FORWARD_ONLY );
 
 			hibQuery.setCacheMode( CacheMode.IGNORE ).scroll( ScrollMode.FORWARD_ONLY );
 
-			org.hibernate.query.Query<Order> anotherQuery = session.createQuery(
+			Query<Order> anotherQuery = session.createQuery(
 					"select o from Order o where totalPrice in :totalPrices",
 					Order.class
 			);

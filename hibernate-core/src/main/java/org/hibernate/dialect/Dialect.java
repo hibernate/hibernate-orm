@@ -43,6 +43,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.Query;
 import org.hibernate.ScrollMode;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.boot.model.TypeContributions;
@@ -1768,8 +1769,8 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * Returns a {@link LimitHandler} that implements support for
-	 * {@link org.hibernate.query.Query#setMaxResults(int)} and
-	 * {@link org.hibernate.query.Query#setFirstResult(int)} for
+	 * {@link Query#setMaxResults(int)} and
+	 * {@link Query#setFirstResult(int)} for
 	 * this dialect.
 	 */
 	public LimitHandler getLimitHandler() {

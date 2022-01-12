@@ -8,7 +8,7 @@ package org.hibernate.envers.internal.entities.mapper.id;
 
 import java.util.Objects;
 
-import org.hibernate.query.Query;
+import org.hibernate.Query;
 
 /**
  * @author Adam Warski (adam at warski dot org)

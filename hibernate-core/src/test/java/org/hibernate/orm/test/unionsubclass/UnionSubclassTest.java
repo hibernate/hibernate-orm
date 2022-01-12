@@ -14,7 +14,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.query.Query;
+import org.hibernate.Query;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 
 import org.hibernate.testing.TestForIssue;

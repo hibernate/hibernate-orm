@@ -18,7 +18,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.query.Query;
+import org.hibernate.Query;
 import org.hibernate.sql.ast.SqlTreeCreationException;
 
 import org.hibernate.testing.orm.ExceptionHelper;

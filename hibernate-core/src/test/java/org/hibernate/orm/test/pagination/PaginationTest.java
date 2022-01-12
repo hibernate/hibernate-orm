@@ -13,8 +13,8 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
-import org.hibernate.query.NativeQuery;
-import org.hibernate.query.Query;
+import org.hibernate.NativeQuery;
+import org.hibernate.Query;
 import org.hibernate.Session;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;

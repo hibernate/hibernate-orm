@@ -26,7 +26,7 @@ import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.entry.CollectionCacheEntry;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.query.Query;
+import org.hibernate.Query;
 import org.hibernate.transform.DistinctRootEntityResultTransformer;
 
 import org.hibernate.testing.DialectChecks;

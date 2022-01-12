@@ -34,7 +34,7 @@ import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
-import org.hibernate.query.Query;
+import org.hibernate.Query;
 import org.hibernate.query.QueryTypeMismatchException;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.criteria.JpaExpression;

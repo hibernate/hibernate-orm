@@ -6,11 +6,13 @@
  */
 package org.hibernate.query.criteria;
 
+import org.hibernate.Query;
+
 import jakarta.persistence.criteria.CommonAbstractCriteria;
 
 /**
  * Common contract for the forms of criteria that are "queryable" - can be
- * converted into a {@link org.hibernate.query.Query}.
+ * converted into a {@link Query}.
  *
  * Hibernate extension to the JPA {@link CommonAbstractCriteria} contract.
  *

@@ -6,9 +6,11 @@
  */
 package org.hibernate.query.results.dynamic;
 
+import org.hibernate.NativeQuery;
+
 /**
  * Contract for handling Hibernate's legacy way of representing fetches through
- * {@link org.hibernate.query.NativeQuery#addFetch}, {@link org.hibernate.query.NativeQuery#addJoin},
+ * {@link NativeQuery#addFetch}, {@link NativeQuery#addJoin},
  * `hbm.xml` mappings, etc
  *
  * @see org.hibernate.query.results.DomainResultCreationStateImpl#getLegacyFetchResolver()

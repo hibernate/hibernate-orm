@@ -10,7 +10,7 @@ import java.util.List;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
-import org.hibernate.query.Query;
+import org.hibernate.Query;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;

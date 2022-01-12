@@ -7,7 +7,7 @@
 package org.hibernate.orm.test.annotations.lob.hhh4635;
 
 import org.hibernate.dialect.OracleDialect;
-import org.hibernate.query.Query;
+import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;

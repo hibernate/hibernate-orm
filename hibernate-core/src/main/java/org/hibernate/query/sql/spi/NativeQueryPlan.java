@@ -6,10 +6,11 @@
  */
 package org.hibernate.query.sql.spi;
 
+import org.hibernate.NativeQuery;
 import org.hibernate.query.spi.QueryPlan;
 
 /**
- * Specialization of {@link QueryPlan} for {@link org.hibernate.query.NativeQuery}
+ * Specialization of {@link QueryPlan} for {@link NativeQuery}
  * plans
  *
  * @author Steve Ebersole

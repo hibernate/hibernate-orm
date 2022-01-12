@@ -15,7 +15,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.BindableType;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
-import org.hibernate.query.Query;
+import org.hibernate.Query;
 import org.hibernate.type.Type;
 
 import org.hibernate.testing.TestForIssue;

@@ -14,7 +14,6 @@ import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaUpdate;
 import org.hibernate.graph.RootGraph;
-import org.hibernate.query.Query;
 import org.hibernate.stat.SessionStatistics;
 
 /**
@@ -266,10 +265,10 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * <p>
 	 * To override this session's read-only/modifiable setting for all
 	 * entities and proxies loaded by a certain {@code Query} use
-	 * {@link org.hibernate.query.Query#setReadOnly(boolean)}.
+	 * {@link Query#setReadOnly(boolean)}.
 	 *
 	 * @see #setReadOnly(Object,boolean)
-	 * @see org.hibernate.query.Query#setReadOnly(boolean)
+	 * @see Query#setReadOnly(boolean)
 	 *
 	 * @param readOnly {@code true}, the default for loaded entities/proxies is read-only;
 	 *				 {@code false}, the default for loaded entities/proxies is modifiable
@@ -1130,10 +1129,10 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * <p>
 	 * To override this session's read-only/modifiable setting for entities
 	 * and proxies loaded by a {@code Query} use
-	 * {@link org.hibernate.query.Query#setReadOnly(boolean)}
+	 * {@link Query#setReadOnly(boolean)}
 	 *
 	 * @see #setDefaultReadOnly(boolean)
-	 * @see org.hibernate.query.Query#setReadOnly(boolean)
+	 * @see Query#setReadOnly(boolean)
 	 *
 	 * @param entityOrProxy an entity or proxy
 	 * @param readOnly {@code true} if the entity or proxy should be made read-only;

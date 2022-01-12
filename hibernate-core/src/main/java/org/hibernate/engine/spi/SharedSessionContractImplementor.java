@@ -6,7 +6,6 @@
  */
 package org.hibernate.engine.spi;
 
-import java.sql.Connection;
 import java.util.Set;
 import java.util.UUID;
 import jakarta.persistence.FlushModeType;
@@ -16,6 +15,7 @@ import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
+import org.hibernate.Query;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.Transaction;
 import org.hibernate.cache.spi.CacheTransactionSynchronization;
@@ -173,7 +173,7 @@ public interface SharedSessionContractImplementor
 	void checkOpen(boolean markForRollbackIfClosed);
 
 	/**
-	 * Prepare for the execution of a {@link org.hibernate.query.Query} or
+	 * Prepare for the execution of a {@link Query} or
 	 * {@link org.hibernate.procedure.ProcedureCall}
 	 */
 	void prepareForQueryExecution(boolean requiresTxn);

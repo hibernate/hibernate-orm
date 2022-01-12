@@ -10,36 +10,31 @@ import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**
  * Defines the aspects of query definition that apply to all forms of
- * querying (HQL, JPQL, criteria) across all forms of persistence contexts
- * (Session, StatelessSession, EntityManager).
+ * querying - HQL, Criteria and ProcedureCall
  *
  * @author Steve Ebersole
  * @author Gavin King
  */
 public interface CommonQueryContract {
 	/**
-	 * Obtain the FlushMode in effect for this query.  By default, the query inherits the FlushMode of the Session
-	 * from which it originates.
-	 *
-	 * @return The query FlushMode.
+	 * Obtain the FlushMode in effect for this query.  By default, the query
+	 * inherits the FlushMode of the Session from which it originates.
 	 *
 	 * @see Session#getHibernateFlushMode
-	 * @see FlushMode
 	 */
 	FlushMode getHibernateFlushMode();
 
 	/**
-	 * (Re)set the current FlushMode in effect for this query.
+	 * Set the current FlushMode in effect for this query.
 	 *
-	 * @param flushMode The new FlushMode to use.
+	 * @implNote Setting to {@code null} ultimately indicates to use the FlushMode of the Session
 	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @see Session#getHibernateFlushMode()
 	 * @see #getHibernateFlushMode()
+	 * @see Session#getHibernateFlushMode()
 	 */
 	CommonQueryContract setHibernateFlushMode(FlushMode flushMode);
 
@@ -49,42 +44,36 @@ public interface CommonQueryContract {
 	 * <p/>
 	 * NOTE: The CacheMode here describes reading-from/writing-to the
 	 * entity/collection caches as we process query results.  For caching of
-	 * the actual (unparsed) query results, see {@link #isCacheable()} and
+	 * the actual query results, see {@link #isCacheable()} and
 	 * {@link #getCacheRegion()}
 	 * <p/>
 	 * In order for this setting to have any affect, second-level caching would
 	 * have to be enabled and the entities/collections in question configured
 	 * for caching.
 	 *
-	 * @return The query CacheMode.
-	 *
 	 * @see Session#getCacheMode()
-	 * @see CacheMode
 	 */
 	CacheMode getCacheMode();
 
 	/**
-	 * (Re)set the current CacheMode in effect for this query.
+	 * Set the current CacheMode in effect for this query.
 	 *
-	 * @param cacheMode The new CacheMode to use.
-	 *
-	 * @return {@code this}, for method chaining
+	 * @implNote Setting to {@code null} ultimately indicates to use the CacheMode of the Session
 	 *
 	 * @see #getCacheMode()
+	 * @see Session#setCacheMode
 	 */
 	CommonQueryContract setCacheMode(CacheMode cacheMode);
 
 	/**
-	 * Are the results of this query eligible for second level query caching?
+	 * Should the results of the query be stored in the second level cache?
 	 * <p/>
-	 * This is different that second level caching of any returned entities and collections, which
+	 * This is different than second level caching of any returned entities and collections, which
 	 * is controlled by {@link #getCacheMode()}.
 	 * <p/>
 	 * NOTE: the query being "eligible" for caching does not necessarily mean its results will be cached.  Second level
 	 * query caching still has to be enabled on the {@link SessionFactory} for this to happen.  Usually that is
 	 * controlled by the {@code hibernate.cache.use_query_cache} configuration setting.
-	 *
-	 * @return {@code true} if the query results are eligible for caching, {@code false} otherwise.
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#USE_QUERY_CACHE
 	 */
@@ -92,10 +81,6 @@ public interface CommonQueryContract {
 
 	/**
 	 * Enable/disable second level query (result) caching for this query.
-	 *
-	 * @param cacheable Should the query results be cacheable?
-	 *
-	 * @return {@code this}, for method chaining
 	 *
 	 * @see #isCacheable
 	 */
@@ -105,19 +90,12 @@ public interface CommonQueryContract {
 	 * Obtain the name of the second level query cache region in which query results will be stored (if they are
 	 * cached, see the discussion on {@link #isCacheable()} for more information).  {@code null} indicates that the
 	 * default region should be used.
-	 *
-	 * @return The specified cache region name into which query results should be placed; {@code null} indicates
-	 * the default region.
 	 */
 	String getCacheRegion();
 
 	/**
-	 * Set the name of the cache region where query results should be cached (if cached at all).
-	 *
-	 * @param cacheRegion the name of a query cache region, or {@code null} to indicate that the default region
-	 * should be used.
-	 *
-	 * @return {@code this}, for method chaining
+	 * Set the name of the cache region where query results should be cached
+	 * (assuming {@link #isCacheable}).  {@code null} indicates to use the default region.
 	 *
 	 * @see #getCacheRegion()
 	 */
@@ -126,8 +104,6 @@ public interface CommonQueryContract {
 	/**
 	 * Obtain the query timeout <b>in seconds</b>.  This value is eventually passed along to the JDBC query via
 	 * {@link java.sql.Statement#setQueryTimeout(int)}.  Zero indicates no timeout.
-	 *
-	 * @return The timeout <b>in seconds</b>
 	 *
 	 * @see java.sql.Statement#getQueryTimeout()
 	 * @see java.sql.Statement#setQueryTimeout(int)

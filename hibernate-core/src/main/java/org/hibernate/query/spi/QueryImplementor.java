@@ -17,7 +17,7 @@ import org.hibernate.Incubating;
 import org.hibernate.ScrollMode;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.BindableType;
-import org.hibernate.query.Query;
+import org.hibernate.Query;
 import org.hibernate.query.QueryParameter;
 
 import jakarta.persistence.Parameter;

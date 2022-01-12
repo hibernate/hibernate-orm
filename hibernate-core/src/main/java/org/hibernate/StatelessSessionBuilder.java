@@ -40,7 +40,7 @@ public interface StatelessSessionBuilder<T extends StatelessSessionBuilder> {
 	T tenantIdentifier(String tenantIdentifier);
 
 	/**
-	 * Should {@link org.hibernate.query.Query#setParameter} perform parameter validation
+	 * Should {@link Query#setParameter} perform parameter validation
 	 * when the Session is bootstrapped via JPA {@link jakarta.persistence.EntityManagerFactory}
 	 *
 	 * @param enabled {@code true} indicates the validation should be performed, {@code false} otherwise

@@ -8,7 +8,7 @@ package org.hibernate.orm.test.annotations.derivedidentities.bidirectional;
 
 import java.util.List;
 
-import org.hibernate.query.Query;
+import org.hibernate.Query;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;

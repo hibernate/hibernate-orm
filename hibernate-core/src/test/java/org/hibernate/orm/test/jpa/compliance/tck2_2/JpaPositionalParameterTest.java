@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.jpa.compliance.tck2_2;
 
-import org.hibernate.query.Query;
+import org.hibernate.Query;
 
 import org.hibernate.orm.test.jpa.model.AbstractJPATest;
 import org.junit.jupiter.api.Test;

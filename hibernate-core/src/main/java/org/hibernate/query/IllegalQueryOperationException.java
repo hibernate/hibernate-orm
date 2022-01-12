@@ -7,6 +7,7 @@
 
 package org.hibernate.query;
 
+import org.hibernate.Query;
 import org.hibernate.QueryException;
 
 /**

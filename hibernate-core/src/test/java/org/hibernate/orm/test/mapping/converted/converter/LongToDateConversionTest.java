@@ -10,7 +10,7 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.stream.Stream;
 
-import org.hibernate.query.Query;
+import org.hibernate.Query;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;

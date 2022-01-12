@@ -11,6 +11,7 @@ import java.sql.SQLException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.hibernate.Query;
 import org.hibernate.query.Limit;
 
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
@@ -87,10 +88,10 @@ public abstract class AbstractLimitHandler implements LimitHandler {
 	/**
 	 * Does the limit clause expect the number of the last row, or the
 	 * "page size", the maximum number of rows we want to receive?
-	 * Hibernate's {@link org.hibernate.query.Query#setMaxResults(int)}
+	 * Hibernate's {@link Query#setMaxResults(int)}
 	 * accepts the page size, so the number of the last row is obtained
 	 * by adding the number of the first row, which is one greater than
-	 * {@link org.hibernate.query.Query#setFirstResult(int)}.
+	 * {@link Query#setFirstResult(int)}.
 	 *
 	 * @return true if the limit clause expects the number of
 	 *         the last row, false if it expects the page size
@@ -115,7 +116,7 @@ public abstract class AbstractLimitHandler implements LimitHandler {
 	}
 
 	/**
-	 * Hibernate {@link org.hibernate.query.Query#setFirstResult(int)} accepts
+	 * Hibernate {@link Query#setFirstResult(int)} accepts
 	 * a zero-based offset. Does this dialect require a one-based offset to be
 	 * specified in the offset clause?
 	 * <p/>

@@ -12,8 +12,6 @@ import jakarta.persistence.criteria.CriteriaUpdate;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.NativeQuery;
-import org.hibernate.query.Query;
 import org.hibernate.query.QueryProducer;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
 

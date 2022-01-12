@@ -13,7 +13,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
 import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.query.NativeQuery;
+import org.hibernate.NativeQuery;
 import org.hibernate.type.StandardBasicTypes;
 
 import org.hibernate.testing.orm.junit.DomainModel;

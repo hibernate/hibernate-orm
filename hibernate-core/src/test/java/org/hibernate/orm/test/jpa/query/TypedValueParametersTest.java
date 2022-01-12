@@ -73,7 +73,7 @@ public class TypedValueParametersTest {
 						  scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class ).getTypeConfiguration()
 				  );
 
-				  org.hibernate.query.Query hibernateQuery = q.unwrap( org.hibernate.query.Query.class );
+				  org.hibernate.Query hibernateQuery = q.unwrap( org.hibernate.Query.class );
 				  hibernateQuery.setParameter( "tags", Arrays.asList( "important", "business" ), customType );
 			  }
 		);

@@ -6,7 +6,6 @@
  */
 package org.hibernate.test.sql.hand.query;
 
-import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -36,8 +35,7 @@ import org.hibernate.orm.test.sql.hand.Speech;
 import org.hibernate.orm.test.sql.hand.TextHolder;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
-import org.hibernate.transform.BasicTransformerAdapter;
-import org.hibernate.transform.DistinctRootEntityResultTransformer;
+import org.hibernate.transform.ResultTransformer;
 import org.hibernate.transform.Transformers;
 import org.hibernate.type.StandardBasicTypes;
 
@@ -215,7 +213,12 @@ public class NativeSQLQueriesTest {
 																"     left outer join EMPLOYMENT emp on org.ORGID = emp.EMPLOYER, ORGANIZATION org2" )
 							.addEntity("org", Organization.class)
 							.addJoin("emp", "org.employments")
-							.setResultTransformer( DistinctRootEntityResultTransformer.INSTANCE )
+							.setResultTransformer(new ResultTransformer() {
+								@Override
+								public Object transformTuple(Object[] tuple, String[] aliases) {
+									return tuple[0];
+								}
+							})
 							.list();
 					assertEquals( l.size(), 2 );
 				}
@@ -893,10 +896,9 @@ public class NativeSQLQueriesTest {
 		return on ? ( byte ) 1 : ( byte ) 0;
 	}
 
-	@SuppressWarnings( {"unchecked"})
-	private static class UpperCasedAliasToEntityMapResultTransformer extends BasicTransformerAdapter implements Serializable {
+	private static class UpperCasedAliasToEntityMapResultTransformer implements ResultTransformer<Object> {
 		public Object transformTuple(Object[] tuple, String[] aliases) {
-			Map result = new HashMap( tuple.length );
+			Map<String,Object> result = new HashMap<>( tuple.length );
 			for ( int i = 0; i < tuple.length; i++ ) {
 				String alias = aliases[i];
 				if ( alias != null ) {

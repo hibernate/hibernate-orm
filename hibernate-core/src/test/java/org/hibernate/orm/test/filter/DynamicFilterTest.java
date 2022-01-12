@@ -27,12 +27,12 @@ import org.hibernate.cache.spi.entry.CollectionCacheEntry;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.query.Query;
-import org.hibernate.transform.DistinctRootEntityResultTransformer;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.hibernate.transform.ResultTransformer;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -808,13 +808,17 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 					criteria.where( criteriaBuilder.equal( root.get( "id" ), testData.prod1Id ) );
 
 					Product prod = session.createQuery( criteria )
-							.setResultTransformer( DistinctRootEntityResultTransformer.INSTANCE )
+							.setResultTransformer(new ResultTransformer<Product>() {
+								@Override
+								public Product transformTuple(Object[] tuple, String[] aliases) {
+									return (Product) tuple[0];
+								}
+								@Override
+								public List<Product> transformList(List<Product> resultList) {
+									return ResultTransformer.super.transformList(resultList);
+								}
+							})
 							.uniqueResult();
-
-//		Product prod = ( Product ) session.createCriteria( Product.class )
-//		        .setResultTransformer( DistinctRootEntityResultTransformer.INSTANCE )
-//		        .add( Restrictions.eq( "id", testData.prod1Id ) )
-//		        .uniqueResult();
 
 					assertNotNull( prod );
 					assertEquals( "Incorrect Product.categories count for filter", 1, prod.getCategories().size() );

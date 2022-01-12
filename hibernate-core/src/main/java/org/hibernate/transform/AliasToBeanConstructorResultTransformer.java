@@ -5,26 +5,24 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.transform;
+
 import java.lang.reflect.Constructor;
-import java.util.List;
 
 import org.hibernate.QueryException;
 
 /**
  * Wraps the tuples in a constructor call.
- *
- * todo : why Alias* in the name???
  */
-public class AliasToBeanConstructorResultTransformer implements ResultTransformer {
+public class AliasToBeanConstructorResultTransformer<T> implements ResultTransformer<T> {
 
-	private final Constructor constructor;
+	private final Constructor<T> constructor;
 
 	/**
 	 * Instantiates a AliasToBeanConstructorResultTransformer.
 	 *
 	 * @param constructor The constructor in which to wrap the tuples.
 	 */
-	public AliasToBeanConstructorResultTransformer(Constructor constructor) {
+	public AliasToBeanConstructorResultTransformer(Constructor<T> constructor) {
 		this.constructor = constructor;
 	}
 
@@ -32,7 +30,7 @@ public class AliasToBeanConstructorResultTransformer implements ResultTransforme
 	 * Wrap the incoming tuples in a call to our configured constructor.
 	 */
 	@Override
-	public Object transformTuple(Object[] tuple, String[] aliases) {
+	public T transformTuple(Object[] tuple, String[] aliases) {
 		try {
 			return constructor.newInstance( tuple );
 		}
@@ -42,11 +40,6 @@ public class AliasToBeanConstructorResultTransformer implements ResultTransforme
 					e
 			);
 		}
-	}
-
-	@Override
-	public List transformList(List collection) {
-		return collection;
 	}
 
 	/**
@@ -69,6 +62,6 @@ public class AliasToBeanConstructorResultTransformer implements ResultTransforme
 	@Override
 	public boolean equals(Object other) {
 		return other instanceof AliasToBeanConstructorResultTransformer
-				&& constructor.equals( ( ( AliasToBeanConstructorResultTransformer ) other ).constructor );
+			&& constructor.equals( ( (AliasToBeanConstructorResultTransformer<?>) other ).constructor );
 	}
 }

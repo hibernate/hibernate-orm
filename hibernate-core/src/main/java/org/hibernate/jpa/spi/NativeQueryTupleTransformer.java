@@ -14,17 +14,17 @@ import jakarta.persistence.Tuple;
 import jakarta.persistence.TupleElement;
 
 import org.hibernate.HibernateException;
-import org.hibernate.transform.BasicTransformerAdapter;
+import org.hibernate.transform.ResultTransformer;
 
 /**
  * ResultTransformer adapter for handling Tuple results from Native queries
  *
  * @author Arnold Galovics
  */
-public class NativeQueryTupleTransformer extends BasicTransformerAdapter {
+public class NativeQueryTupleTransformer implements ResultTransformer<Tuple> {
 
 	@Override
-	public Object transformTuple(Object[] tuple, String[] aliases) {
+	public Tuple transformTuple(Object[] tuple, String[] aliases) {
 		return new NativeTupleImpl( tuple, aliases );
 	}
 
@@ -52,10 +52,10 @@ public class NativeQueryTupleTransformer extends BasicTransformerAdapter {
 
 	private static class NativeTupleImpl implements Tuple {
 
-		private Object[] tuple;
+		private final Object[] tuple;
 
-		private Map<String, Object> aliasToValue = new LinkedHashMap<>();
-		private Map<String, String> aliasReferences = new LinkedHashMap<>();
+		private final Map<String, Object> aliasToValue = new LinkedHashMap<>();
+		private final Map<String, String> aliasReferences = new LinkedHashMap<>();
 
 		public NativeTupleImpl(Object[] tuple, String[] aliases) {
 			if ( tuple == null ) {

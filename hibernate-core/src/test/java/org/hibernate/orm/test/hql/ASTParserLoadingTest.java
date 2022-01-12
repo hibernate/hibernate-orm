@@ -56,7 +56,7 @@ import org.hibernate.query.sqm.tree.expression.SqmFunction;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.stat.QueryStatistics;
-import org.hibernate.transform.DistinctRootEntityResultTransformer;
+import org.hibernate.transform.ResultTransformer;
 import org.hibernate.transform.Transformers;
 
 import org.hibernate.testing.DialectChecks;
@@ -3572,7 +3572,12 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		t = session.beginTransaction();
 
 		results = session.createQuery( "select a from Animal a, Animal b order by a.id" )
-				.setResultTransformer( DistinctRootEntityResultTransformer.INSTANCE )
+				.setResultTransformer(new ResultTransformer() {
+					@Override
+					public Object transformTuple(Object[] tuple, String[] aliases) {
+						return tuple[0];
+					}
+				})
 				.list();
 		assertEquals( "Incorrect result size", 2, results.size());
 		assertTrue( "Incorrect return type", results.get( 0 ) instanceof Animal );

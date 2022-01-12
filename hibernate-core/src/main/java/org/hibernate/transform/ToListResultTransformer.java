@@ -7,11 +7,12 @@
 package org.hibernate.transform;
 
 import java.util.Arrays;
+import java.util.List;
 
 /**
- * Transforms each result row from a tuple into a {@link java.util.List} whose elements are each tuple value
+ * Transforms each result row from a tuple into a {@link List} whose elements are each tuple value
  */
-public class ToListResultTransformer extends BasicTransformerAdapter {
+public class ToListResultTransformer implements ResultTransformer<List<Object>> {
 	public static final ToListResultTransformer INSTANCE = new ToListResultTransformer();
 
 	/**
@@ -21,7 +22,7 @@ public class ToListResultTransformer extends BasicTransformerAdapter {
 	}
 
 	@Override
-	public Object transformTuple(Object[] tuple, String[] aliases) {
+	public List<Object> transformTuple(Object[] tuple, String[] aliases) {
 		return Arrays.asList( tuple );
 	}
 

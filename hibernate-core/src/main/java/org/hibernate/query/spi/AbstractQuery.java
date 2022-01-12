@@ -97,7 +97,6 @@ import static org.hibernate.jpa.QueryHints.SPEC_HINT_TIMEOUT;
 /**
  * @author Steve Ebersole
  */
-@SuppressWarnings("WeakerAccess")
 public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	protected static final EntityManagerMessageLogger log = HEMLogging.messageLogger( AbstractQuery.class );
 
@@ -201,15 +200,15 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		return this;
 	}
 
-	@Override
-	@SuppressWarnings( "rawtypes" )
-	public QueryImplementor<R> setTupleTransformer(TupleTransformer transformer) {
+	@Override @SuppressWarnings("unchecked")
+	public <T> QueryImplementor<T> setTupleTransformer(TupleTransformer<T> transformer) {
 		getQueryOptions().setTupleTransformer( transformer );
-		return this;
+		// this is bad, we should really return a new instance:
+		return (QueryImplementor<T>) this;
 	}
 
 	@Override
-	public QueryImplementor<R> setResultListTransformer(ResultListTransformer transformer) {
+	public QueryImplementor<R> setResultListTransformer(ResultListTransformer<R> transformer) {
 		getQueryOptions().setResultListTransformer( transformer );
 		return this;
 	}

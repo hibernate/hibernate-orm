@@ -7,6 +7,7 @@
 package org.hibernate.orm.test.hqlfetchscroll;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -14,12 +15,12 @@ import java.util.Set;
 
 import org.hibernate.Hibernate;
 import org.hibernate.ScrollableResults;
-import org.hibernate.transform.DistinctRootEntityResultTransformer;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.transform.ResultTransformer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -43,7 +44,16 @@ public class HQLScrollFetchTest {
 		scope.inTransaction(
 				session -> {
 					List list = session.createQuery( QUERY )
-							.setResultTransformer( DistinctRootEntityResultTransformer.INSTANCE )
+							.setResultTransformer(new ResultTransformer() {
+								@Override
+								public Object transformTuple(Object[] tuple, String[] aliases) {
+									return tuple[0];
+								}
+								@Override
+								public List transformList(List resultList) {
+									return Arrays.asList( new HashSet(resultList).toArray() );
+								}
+							})
 							.list();
 					assertResultFromAllUsers( list );
 				}

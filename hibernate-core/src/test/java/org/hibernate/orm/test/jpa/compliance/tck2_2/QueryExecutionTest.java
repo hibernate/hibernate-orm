@@ -8,7 +8,7 @@ package org.hibernate.orm.test.jpa.compliance.tck2_2;
 
 import java.util.ArrayList;
 import java.util.List;
-import jakarta.persistence.CascadeType;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
@@ -17,9 +17,9 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.transform.DistinctRootEntityResultTransformer;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.hibernate.transform.ResultTransformer;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -47,7 +47,12 @@ public class QueryExecutionTest extends BaseNonConfigCoreFunctionalTestCase {
 					assertThat( distinctResult.size(), CoreMatchers.is( 1 ) );
 
 					final List distinctViaTransformerResult = session.createQuery( "select c from Customer c join fetch c.orders" )
-							.setResultTransformer( DistinctRootEntityResultTransformer.INSTANCE ).list();
+							.setResultTransformer(new ResultTransformer() {
+								@Override
+								public Object transformTuple(Object[] tuple, String[] aliases) {
+									return tuple[0];
+								}
+							}).list();
 					assertThat( distinctResult.size(), CoreMatchers.is( 1 ) );
 				}
 		);

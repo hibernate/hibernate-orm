@@ -914,6 +914,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	public <T> SqmLiteral<T> literal(T value) {
 		if ( value == null ) {
+			if ( jpaComplianceEnabled ) {
+				throw new IllegalArgumentException( "literal value cannot be null" );
+			}
 			return new SqmLiteralNull<>( this );
 		}
 

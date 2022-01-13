@@ -144,9 +144,11 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 
 		if ( subNavigable == null ) {
 			throw new IllegalArgumentException(
-					String.format(
-							"Could not resolve attribute '%s' of '%s'",
-							attributeName, getNavigablePath()
+					new SemanticException(
+							String.format(
+									"Could not resolve attribute '%s' of '%s'",
+									attributeName, getNavigablePath()
+							)
 					)
 			);
 		}

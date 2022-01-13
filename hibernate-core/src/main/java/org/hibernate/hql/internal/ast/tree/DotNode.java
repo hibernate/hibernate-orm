@@ -393,6 +393,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 		String property = propertyName;
 		final boolean joinIsNeeded;
 
+
 		if ( isDotNode( parent ) ) {
 			// our parent is another dot node, meaning we are being further dereferenced.
 			// thus we need to generate a join unless the association is non-nullable and
@@ -401,8 +402,14 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 			property = parentAsDotNode.propertyName;
 			joinIsNeeded = generateJoin && (
 					entityType.isNullable() ||
-					!isPropertyEmbeddedInJoinProperties( parentAsDotNode.propertyName )
+							!isPropertyEmbeddedInJoinProperties( parentAsDotNode.propertyName )
 			);
+			if ( generateJoin
+					&& implicitJoin
+					&& entityType.isNullable()
+					&& isReferenceToPrimaryKey( parentAsDotNode.propertyName, entityType ) ) {
+				joinType = JoinType.LEFT_OUTER_JOIN;
+			}
 		}
 		else if ( !getWalker().isSelectStatement() ) {
 			// in non-select queries, the only time we should need to join is if we are in a subquery from clause
@@ -429,6 +436,42 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 		}
 
 	}
+
+	/**
+	 * Is the given property name a reference to the primary key of the associated
+	 * entity construed by the given entity type?
+	 * <p/>
+	 * For example, consider a fragment like order.customer.id
+	 * (where order is a from-element alias).  Here, we'd have:
+	 * propertyName = "id" AND
+	 * owningType = ManyToOneType(Customer)
+	 * and are being asked to determine whether "customer.id" is a reference
+	 * to customer's PK...
+	 *
+	 * @param propertyName The name of the property to check.
+	 * @param owningType The type represeting the entity "owning" the property
+	 *
+	 * @return True if propertyName references the entity's (owningType->associatedEntity)
+	 *         primary key; false otherwise.
+	 */
+	private boolean isReferenceToPrimaryKey(String propertyName, EntityType owningType) {
+		EntityPersister persister = getSessionFactoryHelper()
+				.getFactory().getMetamodel().entityPersister( owningType.getAssociatedEntityName() );
+		if ( persister.getEntityMetamodel().hasNonIdentifierPropertyNamedId() ) {
+			// only the identifier property field name can be a reference to the associated entity's PK...
+			return propertyName.equals( persister.getIdentifierPropertyName() ) && owningType.isReferenceToPrimaryKey();
+		}
+		// here, we have two possibilities:
+		// 1) the property-name matches the explicitly identifier property name
+		// 2) the property-name matches the implicit 'id' property name
+		// the referenced node text is the special 'id'
+		if ( EntityPersister.ENTITY_ID.equals( propertyName ) ) {
+			return owningType.isReferenceToPrimaryKey();
+		}
+		String keyPropertyName = getSessionFactoryHelper().getIdentifierOrUniqueKeyPropertyName( owningType );
+		return keyPropertyName != null && keyPropertyName.equals( propertyName ) && owningType.isReferenceToPrimaryKey();
+	}
+
 
 	private static boolean isDotNode(AST n) {
 		return n != null && n.getType() == SqlTokenTypes.DOT;

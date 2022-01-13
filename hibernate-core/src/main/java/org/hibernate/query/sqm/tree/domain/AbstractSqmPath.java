@@ -143,7 +143,7 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 		final SqmPathSource<?> subNavigable = getReferencedPathSource().findSubPathSource( attributeName );
 
 		if ( subNavigable == null ) {
-			throw new SemanticException(
+			throw new IllegalArgumentException(
 					String.format(
 							"Could not resolve attribute '%s' of '%s'",
 							attributeName, getNavigablePath()

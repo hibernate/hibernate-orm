@@ -57,7 +57,7 @@ public class JndiServiceImpl implements JndiService {
 	 * @return The extracted JNDI specific properties.
 	 */
 	@SuppressWarnings({ "unchecked" })
-	public static Properties extractJndiProperties(Map configurationValues) {
+	private static Properties extractJndiProperties(Map configurationValues) {
 		final Properties jndiProperties = new Properties();
 
 		for ( Map.Entry entry : (Set<Map.Entry>) configurationValues.entrySet() ) {

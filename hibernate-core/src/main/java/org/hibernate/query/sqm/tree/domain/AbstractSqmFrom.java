@@ -384,7 +384,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	@Override
 	@SuppressWarnings("unchecked")
 	public <X, Y> SqmAttributeJoin<X, Y> join(String attributeName, JoinType jt) {
-		final SqmPathSource<?> subPathSource = getReferencedPathSource().findSubPathSource( attributeName );
+		final SqmPathSource<?> subPathSource = getReferencedPathSource().getSubPathSource( attributeName );
 		return (SqmAttributeJoin<X, Y>) buildJoin( subPathSource, SqmJoinType.from( jt ), false );
 	}
 
@@ -396,7 +396,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	@Override
 	@SuppressWarnings("unchecked")
 	public <X, Y> SqmBagJoin<X, Y> joinCollection(String attributeName, JoinType jt) {
-		final SqmPathSource<?> joinedPathSource = getReferencedPathSource().findSubPathSource( attributeName );
+		final SqmPathSource<?> joinedPathSource = getReferencedPathSource().getSubPathSource( attributeName );
 
 		if ( joinedPathSource instanceof BagPersistentAttribute ) {
 			final SqmBagJoin<T, Y> join = buildBagJoin(
@@ -427,7 +427,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	@Override
 	@SuppressWarnings("unchecked")
 	public <X, Y> SqmSetJoin<X, Y> joinSet(String attributeName, JoinType jt) {
-		final SqmPathSource<?> joinedPathSource = getReferencedPathSource().findSubPathSource( attributeName );
+		final SqmPathSource<?> joinedPathSource = getReferencedPathSource().getSubPathSource( attributeName );
 
 		if ( joinedPathSource instanceof SetPersistentAttribute ) {
 			final SqmSetJoin<T, Y> join = buildSetJoin(
@@ -458,7 +458,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	@Override
 	@SuppressWarnings("unchecked")
 	public <X, Y> SqmListJoin<X, Y> joinList(String attributeName, JoinType jt) {
-		final SqmPathSource<?> joinedPathSource = getReferencedPathSource().findSubPathSource( attributeName );
+		final SqmPathSource<?> joinedPathSource = getReferencedPathSource().getSubPathSource( attributeName );
 
 		if ( joinedPathSource instanceof ListPersistentAttribute ) {
 			final SqmListJoin<T, Y> join = buildListJoin(
@@ -489,7 +489,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	@Override
 	@SuppressWarnings("unchecked")
 	public <X, K, V> SqmMapJoin<X, K, V> joinMap(String attributeName, JoinType jt) {
-		final SqmPathSource<?> joinedPathSource = getReferencedPathSource().findSubPathSource( attributeName );
+		final SqmPathSource<?> joinedPathSource = getReferencedPathSource().getSubPathSource( attributeName );
 
 		if ( joinedPathSource instanceof MapPersistentAttribute<?, ?, ?> ) {
 			final SqmMapJoin<T, K, V> join = buildMapJoin(

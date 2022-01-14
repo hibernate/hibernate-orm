@@ -9,6 +9,7 @@ package org.hibernate.query.sqm;
 import jakarta.persistence.metamodel.Bindable;
 
 import org.hibernate.metamodel.model.domain.DomainType;
+import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.tree.SqmExpressableAccessor;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 
@@ -37,9 +38,33 @@ public interface SqmPathSource<J> extends SqmExpressable<J>, Bindable<J>, SqmExp
 	/**
 	 * Find a SqmPathSource by name relative to this source.
 	 *
+	 * returns null if the subPathSource is not found
+	 *
 	 * @throws IllegalStateException to indicate that this source cannot be de-referenced
 	 */
 	SqmPathSource<?> findSubPathSource(String name);
+
+	/**
+	 * Find a SqmPathSource by name relative to this source.
+	 *
+	 * @throws IllegalStateException to indicate that this source cannot be de-referenced
+	 * @throws IllegalArgumentException if the subPathSource is not found
+	 */
+	default SqmPathSource<?> getSubPathSource(String name) {
+		final SqmPathSource<?> subPathSource = findSubPathSource( name );
+		if ( subPathSource == null ) {
+			throw new IllegalArgumentException(
+					new SemanticException(
+							String.format(
+									"Could not resolve attribute '%s' of '%s'",
+									name,
+									getExpressable().getExpressableJavaTypeDescriptor().getJavaType().getTypeName()
+							)
+					)
+			);
+		}
+		return subPathSource;
+	}
 
 	/**
 	 * Returns the intermediate SqmPathSource for a path source previously acquired via {@link #findSubPathSource(String)}.

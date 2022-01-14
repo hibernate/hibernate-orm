@@ -140,18 +140,8 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 		//			1) add `Navigable#createCriteriaExpression` (ala, the exist `#createSqmExpression`)
 		//			2) remove `Navigable#createSqmExpression` and use the approach used here instead.
 
-		final SqmPathSource<?> subNavigable = getReferencedPathSource().findSubPathSource( attributeName );
+		final SqmPathSource<?> subNavigable = getReferencedPathSource().getSubPathSource( attributeName );
 
-		if ( subNavigable == null ) {
-			throw new IllegalArgumentException(
-					new SemanticException(
-							String.format(
-									"Could not resolve attribute '%s' of '%s'",
-									attributeName, getNavigablePath()
-							)
-					)
-			);
-		}
 		return resolvePath( attributeName, subNavigable );
 	}
 

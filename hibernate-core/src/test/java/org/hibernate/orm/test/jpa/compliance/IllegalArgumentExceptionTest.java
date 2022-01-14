@@ -15,15 +15,22 @@ import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.From;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Selection;
 
 import static org.junit.jupiter.api.Assertions.fail;
 
 @Jpa(
-		annotatedClasses = IllegalArgumentExceptionTest.Person.class
+		annotatedClasses = {
+				IllegalArgumentExceptionTest.Person.class,
+				IllegalArgumentExceptionTest.Address.class
+		}
 )
 public class IllegalArgumentExceptionTest {
 
@@ -74,8 +81,8 @@ public class IllegalArgumentExceptionTest {
 
 		try {
 			query.multiselect(
-					person.get( "not_existing" ).alias( "a1" ),
-					person.get( "another_not_existing" ).alias( "a2" )
+					person.get( "not_existing_attribute_name" ).alias( "a1" ),
+					person.get( "another_not_existing_attribute_name" ).alias( "a2" )
 			);
 			fail( "TCK expects an IllegalArgumentException" );
 		}
@@ -87,11 +94,91 @@ public class IllegalArgumentExceptionTest {
 	@Test
 	public void testCriteriaStringQuery(EntityManagerFactoryScope scope) {
 
-		final CriteriaQuery<String> query = scope.getEntityManagerFactory().getCriteriaBuilder().createQuery( String.class );
+		final CriteriaQuery<String> query = scope.getEntityManagerFactory()
+				.getCriteriaBuilder()
+				.createQuery( String.class );
 		try {
 			final Root<Person> person = query.from( Person.class );
-			person.get( "not_existing" );
+			person.get( "not_existing_attribute_name" );
 
+			fail( "TCK expects an IllegalArgumentException" );
+		}
+		catch (IllegalArgumentException iae) {
+			//expected by TCK
+		}
+	}
+
+	@Test
+	public void testGetStringNonExistingAttributeName(EntityManagerFactoryScope scope) {
+		try {
+			final CriteriaQuery<Person> query = scope.getEntityManagerFactory()
+					.getCriteriaBuilder()
+					.createQuery( Person.class );
+			query.from( Person.class ).get( "not_existing_attribute_name" );
+			fail( "TCK expects an IllegalArgumentException" );
+		}
+		catch (IllegalArgumentException iae) {
+			//expected by TCK
+		}
+	}
+
+	@Test
+	public void testJoinANonExistingAttributeNameToAFrom(EntityManagerFactoryScope scope) {
+		final CriteriaQuery<Person> query = scope.getEntityManagerFactory()
+				.getCriteriaBuilder()
+				.createQuery( Person.class );
+		final From<Person, Person> customer = query.from( Person.class );
+		try {
+			customer.join( "not_existing_attribute_name" );
+			fail( "TCK expects an IllegalArgumentException" );
+		}
+		catch (IllegalArgumentException iae) {
+			//expected by TCK
+		}
+	}
+
+	@Test
+	public void testJoinANonExistingAttributeNameToAFrom2(EntityManagerFactoryScope scope) {
+		final CriteriaQuery<Person> query = scope.getEntityManagerFactory()
+				.getCriteriaBuilder()
+				.createQuery( Person.class );
+		final From<Person, Person> customer = query.from( Person.class );
+		try {
+			customer.join( "not_existing_attribute_name", JoinType.INNER );
+			fail( "TCK expects an IllegalArgumentException" );
+		}
+		catch (IllegalArgumentException iae) {
+			//expected by TCK
+		}
+	}
+
+	@Test
+	public void testJoinANonExistingAttributeNameToAJoin(EntityManagerFactoryScope scope) {
+		final CriteriaQuery<Person> query = scope.getEntityManagerFactory()
+				.getCriteriaBuilder()
+				.createQuery( Person.class );
+
+		Root<Person> customer = query.from( Person.class );
+		Join<Person, Address> address = customer.join( "address" );
+		try {
+			address.join( "not_existing_attribute_name" );
+			fail( "TCK expects an IllegalArgumentException" );
+		}
+		catch (IllegalArgumentException iae) {
+			//expected by TCK
+		}
+	}
+
+	@Test
+	public void testJoinANonExistingAttributeNameToAJoin2(EntityManagerFactoryScope scope) {
+		final CriteriaQuery<Person> query = scope.getEntityManagerFactory()
+				.getCriteriaBuilder()
+				.createQuery( Person.class );
+
+		Root<Person> customer = query.from( Person.class );
+		Join<Person, Address> address = customer.join( "address" );
+		try {
+			address.join( "not_existing_attribute_name", JoinType.INNER );
 			fail( "TCK expects an IllegalArgumentException" );
 		}
 		catch (IllegalArgumentException iae) {
@@ -107,12 +194,54 @@ public class IllegalArgumentExceptionTest {
 
 		private String name;
 
+		@ManyToOne
+		private Address address;
+
 		Person() {
 		}
 
 		public Person(Integer id, String name) {
 			this.id = id;
 			this.name = name;
+		}
+	}
+
+	@Entity(name = "Address")
+	public static class Address {
+		@Id
+		private Integer id;
+
+		private String street;
+
+		private String city;
+
+		private String zipcode;
+
+		Address() {
+		}
+
+		public Address(Integer id, String street, String city, String zipcode) {
+			this.id = id;
+			this.street = street;
+			this.city = city;
+			this.zipcode = zipcode;
+		}
+
+		public String getCity() {
+			return city;
+		}
+
+		public void setCity(String city) {
+			this.city = city;
+		}
+
+
+		public String getStreet() {
+			return street;
+		}
+
+		public void setStreet(String street) {
+			this.street = street;
 		}
 	}
 }

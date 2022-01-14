@@ -27,7 +27,7 @@ public interface ParameterRegistration<T> extends Parameter<T> {
 	 * the parameter holders are labelled (named :/).  At any rate the semantics are different and we often
 	 * need to understand which we are dealing with (and applications might too).
 	 *
-	 * @return {@code true} if this is a JPA-style positional parameter; {@code false} would indicate
+	 * @return {@code true} if this is a JPA-style ordinal parameter; {@code false} would indicate
 	 * we have either a named parameter ({@link #getName()} would return a non-{@code null} value) or a native
 	 * Hibernate positional parameter.
 	 */

@@ -58,10 +58,10 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 			for ( Integer position : positionsArray ) {
 				if ( position != previous + 1 ) {
 					if ( first ) {
-						throw new QueryException( "Positional parameters did not start with base 1 : " + position );
+						throw new QueryException( "Ordinal parameters did not start with base 1 : " + position );
 					}
 					else {
-						throw new QueryException( "Gap in positional parameter positions; skipped " + (previous+1) );
+						throw new QueryException( "Gap in ordinal parameter positions; skipped " + (previous+1) );
 					}
 				}
 				first = false;

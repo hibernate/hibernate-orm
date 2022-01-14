@@ -144,7 +144,7 @@ public class ParameterParser {
 					indx = chopLocation - 1;
 				}
 				else if ( c == '?' ) {
-					// could be either an ordinal or JPA-positional parameter
+					// could be either a positional or JPA-style ordinal parameter
 					if ( indx < stringLength - 1 && Character.isDigit( sqlString.charAt( indx + 1 ) ) ) {
 						// a peek ahead showed this as a JPA-positional parameter
 						final int right = StringHelper.firstIndexOfChar( sqlString, HQL_SEPARATORS, indx + 1 );
@@ -156,7 +156,7 @@ public class ParameterParser {
 							indx = chopLocation - 1;
 						}
 						catch( NumberFormatException e ) {
-							throw new QueryException( "JPA-style positional param was not an integral ordinal" );
+							throw new QueryException( "Ordinal parameter label was not an integer" );
 						}
 					}
 					else {

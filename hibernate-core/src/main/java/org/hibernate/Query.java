@@ -340,7 +340,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * @see #setParameter(String, Object, BindableType)
 	 */
 	@Override
-	Query<R> setParameter(String name, Object value);
+	Query<R> setParameter(String parameter, Object argument);
 
 	/**
 	 * Bind the given argument to a named query parameter using the given
@@ -351,7 +351,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * @see BindableType#parameterType(Class)
 	 * @see #setParameter(String, Object, BindableType)
 	 */
-	<P> Query<R> setParameter(String name, P value, Class<P> type);
+	<P> Query<R> setParameter(String parameter, P argument, Class<P> type);
 
 	/**
 	 * Bind the given argument to a named query parameter using the given
@@ -359,42 +359,42 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @see BindableType#parameterType
 	 */
-	<P> Query<R> setParameter(String name, P value, BindableType<P> type);
+	<P> Query<R> setParameter(String parameter, P argument, BindableType<P> type);
 
 	/**
 	 * Bind an {@link Instant} value to the named query parameter using just the portion
 	 * indicated by the given {@link TemporalType}.
 	 */
-	Query<R> setParameter(String name, Instant value, TemporalType temporalType);
+	Query<R> setParameter(String parameter, Instant argument, TemporalType temporalType);
 
 	/**
 	 * {@link jakarta.persistence.Query} override
 	 */
 	@Override
-	Query<R> setParameter(String name, Calendar value, TemporalType temporalType);
+	Query<R> setParameter(String parameter, Calendar argument, TemporalType temporalType);
 
 	/**
 	 * {@link jakarta.persistence.Query} override
 	 */
 	@Override
-	Query<R> setParameter(String name, Date value, TemporalType temporalType);
+	Query<R> setParameter(String parameter, Date argument, TemporalType temporalType);
 
 
 
 	/**
-	 * Bind the given argument to a positional query parameter.
+	 * Bind the given argument to an ordinal query parameter.
 	 * <p>
 	 * If the type of the parameter cannot be inferred from the context in which
-	 * it occurs, use one of the forms accept a "type".
+	 * it occurs, use one of the forms which accepts a "type".
 	 *
 	 * @see #setParameter(int, Object, Class)
 	 * @see #setParameter(int, Object, BindableType)
 	 */
 	@Override
-	Query<R> setParameter(int position, Object value);
+	Query<R> setParameter(int parameter, Object argument);
 
 	/**
-	 * Bind the given argument to a positional query parameter using the given
+	 * Bind the given argument to an ordinal query parameter using the given
 	 * Class reference to attempt to determine the {@link BindableType}
 	 * to use.  If unable to determine an appropriate {@link BindableType},
 	 * {@link #setParameter(int, Object)} is used
@@ -402,49 +402,49 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * @see BindableType#parameterType(Class)
 	 * @see #setParameter(int, Object, BindableType)
 	 */
-	<P> Query<R> setParameter(int position, P value, Class<P> type);
+	<P> Query<R> setParameter(int parameter, P argument, Class<P> type);
 
 	/**
-	 * Bind the given argument to a positional query parameter using the given
+	 * Bind the given argument to an ordinal query parameter using the given
 	 * {@link BindableType}.
 	 *
 	 * @see BindableType#parameterType
 	 */
-	<P> Query<R> setParameter(int position, P value, BindableType<P> type);
+	<P> Query<R> setParameter(int parameter, P argument, BindableType<P> type);
 
 	/**
-	 * Bind an {@link Instant} value to the positional query parameter using just the portion
+	 * Bind an {@link Instant} value to the ordinal query parameter using just the portion
 	 * indicated by the given {@link TemporalType}.
 	 */
-	Query<R> setParameter(int position, Instant value, TemporalType temporalType);
+	Query<R> setParameter(int parameter, Instant argument, TemporalType temporalType);
 
 	/**
 	 * {@link jakarta.persistence.Query} override
 	 */
 	@Override
-	Query<R> setParameter(int position, Date value, TemporalType temporalType);
+	Query<R> setParameter(int parameter, Date argument, TemporalType temporalType);
 
 	/**
 	 * {@link jakarta.persistence.Query} override
 	 */
 	@Override
-	Query<R> setParameter(int position, Calendar value, TemporalType temporalType);
+	Query<R> setParameter(int parameter, Calendar argument, TemporalType temporalType);
 
 	/**
 	 * Bind an argument to the query parameter represented by the given
 	 * {@link QueryParameter}.
 	 * <p>
 	 * If the type of the parameter cannot be inferred from the context in which
-	 * it occurs, use on of the forms accept a "type".
+	 * it occurs, use one of the forms which accepts a "type".
 	 *
 	 * @see #setParameter(QueryParameter, Object, BindableType)
 	 *
 	 * @param parameter the query parameter memento
-	 * @param value the argument, which might be null
+	 * @param argument the argument, which might be null
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	<T> Query<R> setParameter(QueryParameter<T> parameter, T value);
+	<T> Query<R> setParameter(QueryParameter<T> parameter, T argument);
 
 	/**
 	 * Bind an argument to the query parameter represented by the given
@@ -453,7 +453,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * an appropriate {@link BindableType}, {@link #setParameter(QueryParameter, Object)} is used
 	 *
 	 * @param parameter the query parameter memento
-	 * @param value the argument, which might be null
+	 * @param argument the argument, which might be null
 	 * @param type a {@link BindableType} representing the type of the parameter
 	 *
 	 * @return {@code this}, for method chaining
@@ -461,37 +461,37 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * @see BindableType#parameterType(Class)
 	 * @see #setParameter(QueryParameter, Object, BindableType)
 	 */
-	<P> Query<R> setParameter(QueryParameter<P> parameter, P value, Class<P> type);
+	<P> Query<R> setParameter(QueryParameter<P> parameter, P argument, Class<P> type);
 
 	/**
 	 * Bind an argument to the query parameter represented by the given
 	 * {@link QueryParameter} using the given {@link BindableType}.
 	 *
 	 * @param parameter the query parameter memento
-	 * @param val the argument, which might be null
+	 * @param argument the argument, which might be null
 	 * @param type an {@link BindableType} representing the type of the parameter
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	<P> Query<R> setParameter(QueryParameter<P> parameter, P val, BindableType<P> type);
+	<P> Query<R> setParameter(QueryParameter<P> parameter, P argument, BindableType<P> type);
 
 	/**
 	 * {@link jakarta.persistence.Query} override
 	 */
 	@Override
-	<T> Query<R> setParameter(Parameter<T> param, T value);
+	<T> Query<R> setParameter(Parameter<T> parameter, T argument);
 
 	/**
 	 * {@link jakarta.persistence.Query} override
 	 */
 	@Override
-	Query<R> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
+	Query<R> setParameter(Parameter<Calendar> parameter, Calendar argument, TemporalType temporalType);
 
 	/**
 	 * {@link jakarta.persistence.Query} override
 	 */
 	@Override
-	Query<R> setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
+	Query<R> setParameter(Parameter<Date> parameter, Date argument, TemporalType temporalType);
 
 
 
@@ -507,7 +507,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	Query<R> setParameterList(String name, @SuppressWarnings("rawtypes") Collection values);
+	Query<R> setParameterList(String parameter, @SuppressWarnings("rawtypes") Collection arguments);
 
 	/**
 	 * Bind multiple arguments to a named query parameter using the given
@@ -522,7 +522,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	<P> Query<R> setParameterList(String name, Collection<? extends P> values, Class<P> javaType);
+	<P> Query<R> setParameterList(String parameter, Collection<? extends P> arguments, Class<P> javaType);
 
 	/**
 	 * Bind multiple arguments to a named query parameter using the passed type-mapping.
@@ -531,7 +531,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	<P> Query<R> setParameterList(String name, Collection<? extends P> values, BindableType<P> type);
+	<P> Query<R> setParameterList(String parameter, Collection<? extends P> arguments, BindableType<P> type);
 
 
 	/**
@@ -544,7 +544,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	Query<R> setParameterList(String name, Object[] values);
+	Query<R> setParameterList(String parameter, Object[] values);
 
 	/**
 	 * Bind multiple arguments to a named query parameter using the given
@@ -559,7 +559,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	<P> Query<R> setParameterList(String name, P[] values, Class<P> javaType);
+	<P> Query<R> setParameterList(String parameter, P[] arguments, Class<P> javaType);
 
 
 	/**
@@ -569,10 +569,10 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	<P> Query<R> setParameterList(String name, P[] values, BindableType<P> type);
+	<P> Query<R> setParameterList(String parameter, P[] arguments, BindableType<P> type);
 
 	/**
-	 * Bind multiple arguments to a positional query parameter.
+	 * Bind multiple arguments to an ordinal query parameter.
 	 * <p/>
 	 * The "type mapping" for the binding is inferred from the type of
 	 * the first collection element
@@ -581,10 +581,10 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	Query<R> setParameterList(int position, @SuppressWarnings("rawtypes") Collection values);
+	Query<R> setParameterList(int parameter, @SuppressWarnings("rawtypes") Collection arguments);
 
 	/**
-	 * Bind multiple arguments to a positional query parameter using the given
+	 * Bind multiple arguments to an ordinal query parameter using the given
 	 * Class reference to attempt to determine the {@link BindableType}
 	 * to use.  If unable to determine an appropriate {@link BindableType},
 	 * {@link #setParameterList(String, Collection)} is used
@@ -596,19 +596,19 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	<P> Query<R> setParameterList(int position, Collection<? extends P> values, Class<P> javaType);
+	<P> Query<R> setParameterList(int parameter, Collection<? extends P> arguments, Class<P> javaType);
 
 	/**
-	 * Bind multiple arguments to a positional query parameter using the passed type-mapping.
+	 * Bind multiple arguments to an ordinal query parameter using the passed type-mapping.
 	 *
 	 * @apiNote This is used for binding a list of values to an expression such as {@code entity.field in (:values)}.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	<P> Query<R> setParameterList(int position, Collection<? extends P> values, BindableType<P> type);
+	<P> Query<R> setParameterList(int parameter, Collection<? extends P> arguments, BindableType<P> type);
 
 	/**
-	 * Bind multiple arguments to a positional query parameter.
+	 * Bind multiple arguments to an ordinal query parameter.
 	 * <p/>
 	 * The "type mapping" for the binding is inferred from the type of
 	 * the first collection element
@@ -617,10 +617,10 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	Query<R> setParameterList(int position, Object[] values);
+	Query<R> setParameterList(int parameter, Object[] arguments);
 
 	/**
-	 * Bind multiple arguments to a positional query parameter using the given
+	 * Bind multiple arguments to an ordinal query parameter using the given
 	 * Class reference to attempt to determine the {@link BindableType}
 	 * to use.  If unable to determine an appropriate {@link BindableType},
 	 * {@link #setParameterList(String, Collection)} is used
@@ -632,16 +632,16 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	<P> Query<R> setParameterList(int position, P[] values, Class<P> javaType);
+	<P> Query<R> setParameterList(int parameter, P[] arguments, Class<P> javaType);
 
 	/**
-	 * Bind multiple arguments to a positional query parameter using the passed type-mapping.
+	 * Bind multiple arguments to an ordinal query parameter using the passed type-mapping.
 	 *
 	 * @apiNote This is used for binding a list of values to an expression such as {@code entity.field in (:values)}.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	<P> Query<R> setParameterList(int position, P[] values, BindableType<P> type);
+	<P> Query<R> setParameterList(int parameter, P[] arguments, BindableType<P> type);
 
 	/**
 	 * Bind multiple arguments to the query parameter represented by the
@@ -651,11 +651,11 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * occurs, and from the type of the first given argument.
 	 *
 	 * @param parameter the parameter memento
-	 * @param values a collection of arguments
+	 * @param arguments a collection of arguments
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	<P> Query<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values);
+	<P> Query<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> arguments);
 
 	/**
 	 * Bind multiple arguments to the query parameter represented by the
@@ -671,7 +671,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	<P> Query<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Class<P> javaType);
+	<P> Query<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> arguments, Class<P> javaType);
 
 	/**
 	 * Bind multiple arguments to the query parameter represented by the
@@ -686,7 +686,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	<P> Query<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, BindableType<P> type);
+	<P> Query<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> arguments, BindableType<P> type);
 
 	/**
 	 * Bind multiple arguments to the query parameter represented by the
@@ -697,11 +697,11 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * the first given argument.
 	 *
 	 * @param parameter the parameter memento
-	 * @param values a collection of arguments
+	 * @param arguments a collection of arguments
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	<P> Query<R> setParameterList(QueryParameter<P> parameter, P[] values);
+	<P> Query<R> setParameterList(QueryParameter<P> parameter, P[] arguments);
 
 	/**
 	 * Bind multiple arguments to the query parameter represented by the
@@ -717,7 +717,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	<P> Query<R> setParameterList(QueryParameter<P> parameter, P[] values, Class<P> javaType);
+	<P> Query<R> setParameterList(QueryParameter<P> parameter, P[] arguments, Class<P> javaType);
 
 	/**
 	 * Bind multiple arguments to the query parameter represented by the
@@ -732,7 +732,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	<P> Query<R> setParameterList(QueryParameter<P> parameter, P[] values, BindableType<P> type);
+	<P> Query<R> setParameterList(QueryParameter<P> parameter, P[] arguments, BindableType<P> type);
 
 	/**
 	 * Bind the property values of the given bean to named parameters of the query,

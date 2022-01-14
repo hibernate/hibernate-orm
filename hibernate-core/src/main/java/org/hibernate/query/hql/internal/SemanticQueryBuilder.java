@@ -3142,7 +3142,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	@Override
 	public SqmPositionalParameter<?> visitPositionalParameter(HqlParser.PositionalParameterContext ctx) {
 		if ( ctx.getChildCount() == 1 ) {
-			throw new SemanticException( "Encountered positional parameter which did not declare position (? instead of, e.g., ?1)" );
+			throw new SemanticException( "Unlabeled ordinal parameter ('?' rather than ?1)" );
 		}
 		parameterStyle = parameterStyle.withPositional();
 		final SqmPositionalParameter<?> param = new SqmPositionalParameter<>(
@@ -4377,7 +4377,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			@Override
 			ParameterStyle withPositional() {
 				throw new StrictJpaComplianceViolation(
-						"Cannot mix positional and named parameters",
+						"Cannot mix ordinal and named parameters",
 						StrictJpaComplianceViolation.Type.MIXED_POSITIONAL_NAMED_PARAMETERS
 				);
 			}

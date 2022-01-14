@@ -10,7 +10,7 @@ import java.util.List;
 
 import org.hibernate.Incubating;
 import org.hibernate.ScrollMode;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 
 /**
  * General contract for performing execution of a query returning results.  These

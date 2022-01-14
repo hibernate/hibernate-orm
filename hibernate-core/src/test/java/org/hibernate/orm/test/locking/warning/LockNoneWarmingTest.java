@@ -20,7 +20,7 @@ import jakarta.persistence.Table;
 import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;

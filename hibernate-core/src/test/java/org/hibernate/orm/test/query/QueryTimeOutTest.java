@@ -17,8 +17,8 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.jpa.QueryHints;
-import org.hibernate.NativeQuery;
-import org.hibernate.Query;
+import org.hibernate.query.NativeQuery;
+import org.hibernate.query.Query;
 import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 

@@ -32,7 +32,7 @@ import org.hibernate.envers.query.criteria.AuditProperty;
 import org.hibernate.envers.query.criteria.internal.CriteriaTools;
 import org.hibernate.envers.query.order.NullPrecedence;
 import org.hibernate.envers.tools.Pair;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.query.internal.QueryLiteralHelper;
 import org.hibernate.type.BasicType;
 

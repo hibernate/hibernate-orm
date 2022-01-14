@@ -17,7 +17,7 @@ import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.ScrollableResults;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;

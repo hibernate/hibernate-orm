@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate;
+package org.hibernate.query;
 
 import java.time.Instant;
 import java.util.Calendar;
@@ -15,16 +15,18 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import org.hibernate.CacheMode;
+import org.hibernate.FlushMode;
+import org.hibernate.Incubating;
+import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
+import org.hibernate.NonUniqueResultException;
+import org.hibernate.ScrollMode;
+import org.hibernate.ScrollableResults;
+import org.hibernate.SharedSessionContract;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
-import org.hibernate.query.BindableType;
-import org.hibernate.query.CommonQueryContract;
-import org.hibernate.query.ParameterMetadata;
-import org.hibernate.query.QueryParameter;
-import org.hibernate.query.QueryProducer;
-import org.hibernate.query.ResultListTransformer;
-import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.transform.ResultTransformer;
 

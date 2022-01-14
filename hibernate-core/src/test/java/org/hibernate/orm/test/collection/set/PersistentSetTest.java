@@ -14,7 +14,7 @@ import jakarta.persistence.criteria.Root;
 import org.hibernate.CacheMode;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.collection.spi.PersistentSet;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.stat.CollectionStatistics;
 
 import org.hibernate.testing.orm.junit.DomainModel;

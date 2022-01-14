@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.criteria;
 
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 
 import jakarta.persistence.criteria.CommonAbstractCriteria;
 

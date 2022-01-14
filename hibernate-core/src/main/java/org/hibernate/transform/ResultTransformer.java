@@ -8,7 +8,7 @@ package org.hibernate.transform;
 
 import java.io.Serializable;
 
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
 

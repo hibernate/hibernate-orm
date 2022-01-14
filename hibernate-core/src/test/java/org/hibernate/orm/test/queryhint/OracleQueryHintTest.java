@@ -10,7 +10,7 @@ import java.util.List;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.OracleDialect;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.jdbc.SQLStatementInspector;

@@ -8,7 +8,7 @@ package org.hibernate.query.results.dynamic;
 
 import java.util.List;
 
-import org.hibernate.NativeQuery;
+import org.hibernate.query.NativeQuery;
 import org.hibernate.query.results.FetchBuilder;
 
 /**

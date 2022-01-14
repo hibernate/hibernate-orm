@@ -13,7 +13,7 @@ import java.sql.Statement;
 import java.util.List;
 
 import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;

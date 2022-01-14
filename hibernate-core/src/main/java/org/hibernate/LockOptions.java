@@ -13,6 +13,8 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.hibernate.query.Query;
+
 /**
  * Contains locking details (LockMode, Timeout and Scope).
  * 

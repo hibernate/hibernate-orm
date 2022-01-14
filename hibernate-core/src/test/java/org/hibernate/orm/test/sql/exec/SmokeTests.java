@@ -23,7 +23,7 @@ import jakarta.persistence.Table;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.stat.spi.StatisticsImplementor;
 

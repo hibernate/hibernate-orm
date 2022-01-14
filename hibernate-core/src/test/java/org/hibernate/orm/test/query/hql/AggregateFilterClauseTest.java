@@ -8,7 +8,7 @@ package org.hibernate.orm.test.query.hql;
 
 import java.util.Date;
 
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.query.sqm.ParsingException;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;

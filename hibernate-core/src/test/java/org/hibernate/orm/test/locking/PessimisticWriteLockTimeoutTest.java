@@ -2,7 +2,7 @@ package org.hibernate.orm.test.locking;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.Session;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.dialect.OracleDialect;

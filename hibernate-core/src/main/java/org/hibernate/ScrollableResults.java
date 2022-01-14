@@ -8,6 +8,8 @@ package org.hibernate;
 
 import java.io.Closeable;
 
+import org.hibernate.query.Query;
+
 /**
  * A result iterator that allows moving around within the results
  * by arbitrary increments. The {@code Query} / {@code ScrollableResults}

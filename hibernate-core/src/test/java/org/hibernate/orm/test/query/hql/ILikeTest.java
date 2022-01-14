@@ -8,7 +8,7 @@ package org.hibernate.orm.test.query.hql;
 
 import java.util.List;
 
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.BasicEntity;

@@ -9,7 +9,7 @@ package org.hibernate.orm.test.query.named.simple;
 import jakarta.persistence.FlushModeType;
 
 import org.hibernate.CacheMode;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.spi.QueryImplementor;

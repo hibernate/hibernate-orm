@@ -9,7 +9,7 @@ package org.hibernate.query.results.dynamic;
 import java.util.Objects;
 import java.util.function.BiFunction;
 
-import org.hibernate.NativeQuery;
+import org.hibernate.query.NativeQuery;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.query.results.ResultsHelper;

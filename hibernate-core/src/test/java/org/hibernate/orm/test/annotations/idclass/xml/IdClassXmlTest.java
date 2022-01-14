@@ -7,7 +7,7 @@
 package org.hibernate.orm.test.annotations.idclass.xml;
 
 
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;

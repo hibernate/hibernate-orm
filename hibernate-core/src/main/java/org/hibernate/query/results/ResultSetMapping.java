@@ -10,7 +10,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.hibernate.Incubating;
-import org.hibernate.NativeQuery;
+import org.hibernate.query.NativeQuery;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;

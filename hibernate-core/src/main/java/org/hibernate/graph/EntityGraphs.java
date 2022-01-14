@@ -80,7 +80,7 @@ public final class EntityGraphs {
 	 */
 	@SuppressWarnings("unchecked")
 	public static List executeList(Query query, EntityGraph graph, GraphSemantic semantic) {
-		return query.unwrap( org.hibernate.Query.class )
+		return query.unwrap( org.hibernate.query.Query.class )
 				.applyGraph( (RootGraph) graph, semantic )
 				.list();
 	}
@@ -114,7 +114,7 @@ public final class EntityGraphs {
 	 */
 	@SuppressWarnings({"unused", "unchecked"})
 	public static List executeList(Query query, EntityGraph graph, String semanticJpaHintName) {
-		return query.unwrap( org.hibernate.Query.class )
+		return query.unwrap( org.hibernate.query.Query.class )
 				.applyGraph( (RootGraph) graph, GraphSemantic.fromJpaHintName( semanticJpaHintName ) )
 				.list();
 	}
@@ -149,7 +149,7 @@ public final class EntityGraphs {
 	 */
 	@SuppressWarnings({"unused", "unchecked"})
 	public static List executeList(Query query, EntityGraph graph) {
-		return query.unwrap( org.hibernate.Query.class )
+		return query.unwrap( org.hibernate.query.Query.class )
 				.applyFetchGraph( (RootGraph) graph )
 				.list();
 	}

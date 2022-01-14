@@ -16,7 +16,7 @@ import java.util.function.Supplier;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.persister.collection.CollectionPersister;

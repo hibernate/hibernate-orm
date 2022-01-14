@@ -6,6 +6,8 @@
  */
 package org.hibernate;
 
+import org.hibernate.query.Query;
+
 /**
  * Thrown when the application calls {@link Query#uniqueResult()}
  * and the query returned more than one result.  Unlike all other Hibernate exceptions,

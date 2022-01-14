@@ -10,7 +10,7 @@ import from.In;
 import in.from.Any;
 
 import org.hibernate.Session;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
 import org.junit.Test;

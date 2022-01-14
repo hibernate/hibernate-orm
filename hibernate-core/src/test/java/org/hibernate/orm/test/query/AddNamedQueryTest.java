@@ -116,7 +116,7 @@ public class AddNamedQueryTest {
 					q = em.createNamedQuery( name );
 					assertEquals(
 							LockMode.OPTIMISTIC,
-							q.unwrap( org.hibernate.Query.class ).getLockOptions().getLockMode()
+							q.unwrap( org.hibernate.query.Query.class ).getLockOptions().getLockMode()
 					);
 					assertEquals( LockModeType.OPTIMISTIC, q.getLockMode() );
 				}
@@ -147,7 +147,7 @@ public class AddNamedQueryTest {
 					q = em.createNamedQuery( name );
 					assertEquals(
 							FlushMode.COMMIT,
-							q.unwrap( org.hibernate.Query.class ).getHibernateFlushMode()
+							q.unwrap( org.hibernate.query.Query.class ).getHibernateFlushMode()
 					);
 					assertEquals( FlushModeType.COMMIT, q.getFlushMode() );
 				}
@@ -160,7 +160,7 @@ public class AddNamedQueryTest {
 		scope.inTransaction(
 				em -> {
 					Query query = em.createNamedQuery( name );
-					org.hibernate.Query hibernateQuery = (org.hibernate.Query) query;
+					org.hibernate.query.Query hibernateQuery = (org.hibernate.query.Query) query;
 					// assert the state of the query config settings based on the initial named query
 					//
 					//		NOTE: here we check "query options" via the Hibernate contract (allowing nullness checking); see below for access via the JPA contract
@@ -177,7 +177,7 @@ public class AddNamedQueryTest {
 					em.getEntityManagerFactory().addNamedQuery( name, query );
 
 					query = em.createNamedQuery( name );
-					hibernateQuery = (org.hibernate.Query) query;
+					hibernateQuery = (org.hibernate.query.Query) query;
 					// assert the state of the query config settings based on the initial named query
 					//
 					//		NOTE: here we check "query options" via the JPA contract
@@ -193,7 +193,7 @@ public class AddNamedQueryTest {
 					em.getEntityManagerFactory().addNamedQuery( name, query );
 
 					query = em.createNamedQuery( name );
-					hibernateQuery = (org.hibernate.Query) query;
+					hibernateQuery = (org.hibernate.query.Query) query;
 					// assert the state of the query config settings based on the initial named query
 					assertEquals( 0, hibernateQuery.getFirstResult() );
 					assertEquals( Integer.MAX_VALUE, hibernateQuery.getMaxResults() );
@@ -207,7 +207,7 @@ public class AddNamedQueryTest {
 					em.getEntityManagerFactory().addNamedQuery( name, query );
 
 					query = em.createNamedQuery( name );
-					hibernateQuery = (org.hibernate.Query) query;
+					hibernateQuery = (org.hibernate.query.Query) query;
 					// assert the state of the query config settings based on the initial named query
 					assertEquals( 51, hibernateQuery.getFirstResult() );
 					assertEquals( Integer.MAX_VALUE, hibernateQuery.getMaxResults() );

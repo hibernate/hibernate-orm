@@ -11,7 +11,7 @@ import java.sql.SQLException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.query.Limit;
 
 import static java.util.regex.Pattern.CASE_INSENSITIVE;

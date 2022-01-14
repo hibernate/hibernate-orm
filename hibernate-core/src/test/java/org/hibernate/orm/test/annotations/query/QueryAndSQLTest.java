@@ -22,8 +22,8 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.NativeQuery;
-import org.hibernate.Query;
+import org.hibernate.query.NativeQuery;
+import org.hibernate.query.Query;
 import org.hibernate.stat.Statistics;
 import org.hibernate.type.StandardBasicTypes;
 

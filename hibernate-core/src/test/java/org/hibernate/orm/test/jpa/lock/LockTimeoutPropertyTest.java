@@ -41,7 +41,7 @@ public class LockTimeoutPropertyTest extends BaseEntityManagerFunctionalTestCase
 		Query query = em.createNamedQuery( "getAll" );
 		query.setLockMode( LockModeType.PESSIMISTIC_READ );
 
-		int timeout = query.unwrap( org.hibernate.Query.class ).getLockOptions().getTimeOut();
+		int timeout = query.unwrap( org.hibernate.query.Query.class ).getLockOptions().getTimeOut();
 		assertEquals( 3000, timeout );
 	}
 
@@ -55,14 +55,14 @@ public class LockTimeoutPropertyTest extends BaseEntityManagerFunctionalTestCase
 		assertTrue( b );
 		int timeout = Integer.valueOf( em.getProperties().get( AvailableSettings.JPA_LOCK_TIMEOUT ).toString() );
 		assertEquals( 2000, timeout);
-		org.hibernate.Query q = (org.hibernate.Query) em.createQuery( "select u from UnversionedLock u" );
+		org.hibernate.query.Query q = (org.hibernate.query.Query) em.createQuery( "select u from UnversionedLock u" );
 		timeout = q.getLockOptions().getTimeOut();
 		assertEquals( 2000, timeout );
 
 		Query query = em.createQuery( "select u from UnversionedLock u" );
 		query.setLockMode(LockModeType.PESSIMISTIC_WRITE);
 		query.setHint( AvailableSettings.JPA_LOCK_TIMEOUT, 3000 );
-		q = (org.hibernate.Query) query;
+		q = (org.hibernate.query.Query) query;
 		timeout = q.getLockOptions().getTimeOut();
 		assertEquals( 3000, timeout );
 		em.getTransaction().rollback();

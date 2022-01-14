@@ -26,7 +26,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 import org.hibernate.testing.TestForIssue;

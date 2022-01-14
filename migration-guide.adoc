@@ -253,7 +253,7 @@ for details of using `@CollectionTypeRegistration`
 [[query-stream]]
 === Stream
 
-`jakarta.persistence.Query#getResultStream()` and `org.hibernate.Query#stream()` no longer
+`jakarta.persistence.Query#getResultStream()` and `org.hibernate.query.Query#stream()` no longer
 return a `Stream` decorator.  In order to close the underlying IO resources, it is now necessary to
 explicitly call the `Stream#close()` method.
 

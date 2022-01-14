@@ -2,7 +2,7 @@ package org.hibernate.orm.test.locking;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 
 /**
  * @author Vlad Mihalcea

@@ -18,7 +18,7 @@ import jakarta.persistence.TypedQuery;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.stat.QueryStatistics;
 import org.hibernate.stat.Statistics;

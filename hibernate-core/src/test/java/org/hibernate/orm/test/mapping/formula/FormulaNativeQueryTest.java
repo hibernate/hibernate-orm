@@ -14,8 +14,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import org.hibernate.annotations.Formula;
-import org.hibernate.NativeQuery;
-import org.hibernate.Query;
+import org.hibernate.query.NativeQuery;
+import org.hibernate.query.Query;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;

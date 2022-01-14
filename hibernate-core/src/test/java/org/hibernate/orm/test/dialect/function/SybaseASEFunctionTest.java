@@ -32,7 +32,7 @@ import java.util.Calendar;
 import java.util.Date;
 
 import org.hibernate.dialect.SybaseASEDialect;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;

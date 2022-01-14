@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.results.dynamic;
 
-import org.hibernate.NativeQuery;
+import org.hibernate.query.NativeQuery;
 import org.hibernate.query.results.ResultBuilder;
 
 /**

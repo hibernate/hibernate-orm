@@ -8,7 +8,6 @@ package org.hibernate.query;
 
 import org.hibernate.Incubating;
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.Query;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.SqmExpressable;
 

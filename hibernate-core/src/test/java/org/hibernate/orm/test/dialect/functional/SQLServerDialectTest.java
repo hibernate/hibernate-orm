@@ -26,7 +26,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.exception.LockTimeoutException;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;

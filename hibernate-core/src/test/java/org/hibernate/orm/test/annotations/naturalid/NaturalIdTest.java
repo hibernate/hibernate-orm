@@ -15,7 +15,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.metadata.ClassMetadata;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.stat.Statistics;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;

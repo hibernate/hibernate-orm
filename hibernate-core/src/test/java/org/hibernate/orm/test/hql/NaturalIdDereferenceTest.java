@@ -8,7 +8,7 @@
 package org.hibernate.orm.test.hql;
 
 import org.hibernate.annotations.NaturalId;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.jdbc.SQLStatementInspector;

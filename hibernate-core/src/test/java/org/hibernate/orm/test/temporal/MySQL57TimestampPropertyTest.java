@@ -14,7 +14,7 @@ import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.GenerationTime;
 import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.type.StandardBasicTypes;
 
 import org.hibernate.testing.TestForIssue;

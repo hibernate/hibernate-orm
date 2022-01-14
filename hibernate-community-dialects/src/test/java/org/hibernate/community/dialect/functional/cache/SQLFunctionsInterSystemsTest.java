@@ -18,7 +18,7 @@ import java.util.List;
 
 import org.hibernate.LockOptions;
 import org.hibernate.community.dialect.CacheDialect;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.Transaction;

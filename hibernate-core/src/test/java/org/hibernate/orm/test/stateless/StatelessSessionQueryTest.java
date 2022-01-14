@@ -11,8 +11,8 @@ import java.util.List;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.AbstractHANADialect;
-import org.hibernate.NativeQuery;
-import org.hibernate.Query;
+import org.hibernate.query.NativeQuery;
+import org.hibernate.query.Query;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;

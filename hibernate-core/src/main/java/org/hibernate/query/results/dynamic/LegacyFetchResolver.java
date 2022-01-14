@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.results.dynamic;
 
-import org.hibernate.NativeQuery;
+import org.hibernate.query.NativeQuery;
 
 /**
  * Contract for handling Hibernate's legacy way of representing fetches through

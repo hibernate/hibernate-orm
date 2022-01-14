@@ -30,7 +30,7 @@ import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.query.AuditQueryCreator;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 
 import static org.hibernate.envers.internal.tools.ArgumentsTools.checkNotNull;
 import static org.hibernate.envers.internal.tools.ArgumentsTools.checkPositive;

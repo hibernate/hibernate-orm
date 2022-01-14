@@ -8,7 +8,7 @@ package org.hibernate.orm.test.sql.hand.quotedidentifiers;
 
 import org.hibernate.Session;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.NativeQuery;
+import org.hibernate.query.NativeQuery;
 
 import org.hibernate.testing.DialectCheck;
 import org.hibernate.testing.RequiresDialectFeature;

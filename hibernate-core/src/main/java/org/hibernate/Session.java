@@ -14,6 +14,7 @@ import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaUpdate;
 import org.hibernate.graph.RootGraph;
+import org.hibernate.query.Query;
 import org.hibernate.stat.SessionStatistics;
 
 /**

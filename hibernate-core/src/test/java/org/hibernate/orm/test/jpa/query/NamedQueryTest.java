@@ -20,7 +20,7 @@ import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.jpa.QueryHints;
-import org.hibernate.NativeQuery;
+import org.hibernate.query.NativeQuery;
 
 import org.hibernate.testing.TestForIssue;
 import org.junit.After;
@@ -83,7 +83,7 @@ public class NamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 					 assertEquals( 1, list.size() );
 
 					 final Session session = entityManager.unwrap( Session.class );
-					 final org.hibernate.Query sessionQuery = session.createQuery( "select g from Game g where title = ?1" );
+					 final org.hibernate.query.Query sessionQuery = session.createQuery( "select g from Game g where title = ?1" );
 					 sessionQuery.setParameter( 1, GAME_TITLES[0] );
 					 list = sessionQuery.getResultList();
 
@@ -102,7 +102,7 @@ public class NamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 					 assertEquals( 1, list.size() );
 
 					 final Session session = entityManager.unwrap( Session.class );
-					 final org.hibernate.Query sessionQuery = session.getNamedQuery( "NamedQuery" );
+					 final org.hibernate.query.Query sessionQuery = session.getNamedQuery( "NamedQuery" );
 					 sessionQuery.setParameter( 1, GAME_TITLES[0] );
 					 list = sessionQuery.getResultList();
 
@@ -132,7 +132,7 @@ public class NamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 					 assertEquals( 1, list.size() );
 
 					 final Session session = entityManager.unwrap( Session.class );
-					 final org.hibernate.Query sessionQuery = session.createNativeQuery(
+					 final org.hibernate.query.Query sessionQuery = session.createNativeQuery(
 							 "select * from Game g where title = ?" );
 					 sessionQuery.setParameter( 1, GAME_TITLES[0] );
 					 list = sessionQuery.getResultList();
@@ -152,7 +152,7 @@ public class NamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 					 assertEquals( 1, list.size() );
 
 					 final Session session = entityManager.unwrap( Session.class );
-					 final org.hibernate.Query sessionQuery = session.getNamedNativeQuery(
+					 final org.hibernate.query.Query sessionQuery = session.getNamedNativeQuery(
 							 "NamedNativeQuery" );
 					 sessionQuery.setParameter( 1, GAME_TITLES[0] );
 					 list = sessionQuery.getResultList();

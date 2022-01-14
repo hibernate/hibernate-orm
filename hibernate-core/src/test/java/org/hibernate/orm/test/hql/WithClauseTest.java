@@ -13,7 +13,7 @@ import java.util.List;
 import org.hibernate.HibernateException;
 import org.hibernate.QueryException;
 import org.hibernate.dialect.DerbyDialect;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.SkipForDialect;

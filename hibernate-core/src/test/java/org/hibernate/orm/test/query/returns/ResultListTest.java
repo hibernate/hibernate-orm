@@ -11,7 +11,7 @@ import java.util.function.Consumer;
 import jakarta.persistence.Tuple;
 import jakarta.persistence.TupleElement;
 
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.query.spi.QueryImplementor;
 
 import org.hibernate.testing.orm.domain.gambit.BasicEntity;

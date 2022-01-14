@@ -9,7 +9,7 @@ package org.hibernate.orm.test.embeddable;
 import java.util.List;
 
 import org.hibernate.Session;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;

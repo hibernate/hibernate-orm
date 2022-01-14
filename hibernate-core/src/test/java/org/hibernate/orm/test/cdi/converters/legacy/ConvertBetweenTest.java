@@ -33,7 +33,7 @@ package org.hibernate.orm.test.cdi.converters.legacy;
 import java.math.BigDecimal;
 import java.util.List;
 
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.orm.test.jpa.model.AbstractJPATest;

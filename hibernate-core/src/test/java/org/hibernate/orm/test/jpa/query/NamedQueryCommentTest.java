@@ -174,7 +174,7 @@ public class NamedQueryCommentTest {
 					Query query = entityManager.createNamedQuery( "UpdateNamedNativeQuery" );
 					query.setParameter( "title", GAME_TITLES[0] );
 					query.setParameter( "id", 1L );
-					query.unwrap( org.hibernate.Query.class ).addQueryHint( "INDEX (game idx_game_id)" );
+					query.unwrap( org.hibernate.query.Query.class ).addQueryHint( "INDEX (game idx_game_id)" );
 					int updateCount = query.executeUpdate();
 					assertEquals( 1, updateCount );
 
@@ -197,7 +197,7 @@ public class NamedQueryCommentTest {
 					Query query = entityManager.createNamedQuery( "UpdateNamedNativeQuery" );
 					query.setParameter( "title", GAME_TITLES[0] );
 					query.setParameter( "id", 1L );
-					query.unwrap( org.hibernate.Query.class ).addQueryHint( "INDEX (game idx_game_id)" );
+					query.unwrap( org.hibernate.query.Query.class ).addQueryHint( "INDEX (game idx_game_id)" );
 					int updateCount = query.executeUpdate();
 					assertEquals( 1, updateCount );
 
@@ -220,7 +220,7 @@ public class NamedQueryCommentTest {
 
 					Query query = entityManager.createNamedQuery( "SelectNamedQuery" );
 					query.setParameter( "title", GAME_TITLES[0] );
-					query.unwrap( org.hibernate.Query.class ).addQueryHint( "idx_game_id" );
+					query.unwrap( org.hibernate.query.Query.class ).addQueryHint( "idx_game_id" );
 					List<Game> list = query.getResultList();
 					assertEquals( 1, list.size() );
 

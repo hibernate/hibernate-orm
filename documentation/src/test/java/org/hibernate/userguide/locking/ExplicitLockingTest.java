@@ -25,7 +25,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 
 import org.hibernate.testing.RequiresDialect;
 import org.junit.Test;

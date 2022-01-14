@@ -12,7 +12,7 @@ import java.util.List;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.SQLServer2012Dialect;
 import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;

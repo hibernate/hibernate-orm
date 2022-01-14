@@ -6,9 +6,6 @@
  */
 package org.hibernate.query;
 
-import org.hibernate.NativeQuery;
-import org.hibernate.Query;
-
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaUpdate;

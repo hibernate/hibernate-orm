@@ -18,7 +18,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;

@@ -8,6 +8,8 @@ package org.hibernate;
 
 import java.sql.Connection;
 
+import org.hibernate.query.Query;
+
 /**
  * Represents a consolidation of all stateless session creation options into a builder style delegate.
  *

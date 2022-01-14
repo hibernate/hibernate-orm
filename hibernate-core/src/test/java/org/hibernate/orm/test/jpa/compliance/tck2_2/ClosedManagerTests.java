@@ -9,7 +9,7 @@ package org.hibernate.orm.test.jpa.compliance.tck2_2;
 import org.hibernate.Session;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 
 import org.hibernate.orm.test.jpa.model.AbstractJPATest;
 import org.junit.jupiter.api.Test;

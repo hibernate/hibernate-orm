@@ -15,7 +15,7 @@ import org.hibernate.orm.test.annotations.inheritance.singletable.Funk;
 import org.hibernate.orm.test.annotations.inheritance.singletable.Music;
 import org.hibernate.orm.test.annotations.inheritance.singletable.Noise;
 import org.hibernate.orm.test.annotations.inheritance.singletable.Rock;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;

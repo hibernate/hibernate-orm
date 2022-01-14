@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sql.spi;
 
-import org.hibernate.NativeQuery;
+import org.hibernate.query.NativeQuery;
 import org.hibernate.query.spi.QueryPlan;
 
 /**

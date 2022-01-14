@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.spi;
 
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.exec.spi.Callback;
 

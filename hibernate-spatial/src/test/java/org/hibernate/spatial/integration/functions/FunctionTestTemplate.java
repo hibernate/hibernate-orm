@@ -21,8 +21,8 @@ import java.util.stream.Stream;
 
 import org.hibernate.Session;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.NativeQuery;
-import org.hibernate.Query;
+import org.hibernate.query.NativeQuery;
+import org.hibernate.query.Query;
 import org.hibernate.spatial.CommonSpatialFunction;
 import org.hibernate.spatial.GeomCodec;
 import org.hibernate.spatial.integration.Model;

@@ -15,7 +15,7 @@ import java.math.BigDecimal;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.AbstractHANADialect;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;

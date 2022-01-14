@@ -7,8 +7,8 @@
 package org.hibernate.annotations;
 
 import org.hibernate.FlushMode;
-import org.hibernate.NativeQuery;
-import org.hibernate.Query;
+import org.hibernate.query.NativeQuery;
+import org.hibernate.query.Query;
 
 /**
  * List of hints that may be passed to {@link jakarta.persistence.Query#setHint(String, Object)}

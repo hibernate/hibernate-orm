@@ -17,7 +17,7 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
  *
  * @author Steve Ebersole
  */
-public class JndiServiceInitiator implements StandardServiceInitiator<JndiService> {
+public final class JndiServiceInitiator implements StandardServiceInitiator<JndiService> {
 	/**
 	 * Singleton access
 	 */

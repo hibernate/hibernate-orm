@@ -31,7 +31,7 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public class JndiServiceImpl implements JndiService {
+final class JndiServiceImpl implements JndiService {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			CoreMessageLogger.class,
 			JndiServiceImpl.class.getName()

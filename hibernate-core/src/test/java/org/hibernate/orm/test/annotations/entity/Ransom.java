@@ -10,7 +10,10 @@ package org.hibernate.orm.test.annotations.entity;
 
 import java.util.Date;
 
+import org.hibernate.annotations.EmbeddableInstantiatorRegistration;
+
 import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
@@ -19,6 +22,7 @@ import jakarta.persistence.Id;
  * @author Emmanuel Bernard
  */
 @Entity
+@EmbeddableInstantiatorRegistration( embeddableClass = MonetaryAmount.class, instantiator = MonetaryAmountInstantiator.class )
 public class Ransom {
 	private Integer id;
 	private String kidnapperName;
@@ -43,11 +47,7 @@ public class Ransom {
 		this.kidnapperName = kidnapperName;
 	}
 
-//	@Type(type = "org.hibernate.test.annotations.entity.MonetaryAmountUserType")
-//	@Columns(columns = {
-//	@Column(name = "r_amount"),
-//	@Column(name = "r_currency")
-//			})
+	@Embedded
 	public MonetaryAmount getAmount() {
 		return amount;
 	}

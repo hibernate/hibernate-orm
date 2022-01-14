@@ -24,8 +24,6 @@ import org.hibernate.query.Query;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.testing.orm.junit.NotImplementedYet;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import jakarta.persistence.OptimisticLockException;
@@ -40,8 +38,6 @@ import static org.junit.Assert.fail;
 /**
  * @author Emmanuel Bernard
  */
-@Ignore( "Missing support for composite user types" )
-@NotImplementedYet( /* just so we can find this later via the annotation */ )
 public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected boolean isCleanupTestDataRequired() {
@@ -588,7 +584,7 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@NotImplementedYet(reason = "Support for custom composite types not implemented - org.hibernate.orm.test.annotations.entity.Ransom#getAmount")
+//	@NotImplementedYet(reason = "Support for custom composite types not implemented - org.hibernate.orm.test.annotations.entity.Ransom#getAmount")
 	public void testCompositeType() throws Exception {
 		Session s;
 		Transaction tx;

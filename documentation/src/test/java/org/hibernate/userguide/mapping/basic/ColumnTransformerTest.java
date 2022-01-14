@@ -9,16 +9,16 @@ package org.hibernate.userguide.mapping.basic;
 import java.math.BigDecimal;
 import java.util.Currency;
 import java.util.Locale;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
 
 import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.junit.Test;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
@@ -26,10 +26,6 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Vlad Mihalcea
  */
-@NotImplementedYet(
-		reason = "composition-as-basic (basic mapped to multiple columns) is no longer supported. See https://github.com/hibernate/hibernate-orm/discussions/3960",
-		strict = false
-)
 @RequiresDialect(H2Dialect.class)
 public class ColumnTransformerTest extends BaseEntityManagerFunctionalTestCase {
 

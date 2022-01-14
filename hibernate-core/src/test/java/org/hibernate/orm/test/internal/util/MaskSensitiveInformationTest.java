@@ -32,6 +32,8 @@ public class MaskSensitiveInformationTest {
 		Map<String, Object> properties = scope.getEntityManagerFactory().getProperties();
 		assertThat( properties.get( AvailableSettings.USER ) ).isEqualTo( EXPECTED_MASKED_VALUE );
 		assertThat( properties.get( AvailableSettings.PASS ) ).isEqualTo( EXPECTED_MASKED_VALUE );
+		assertThat( properties.get( AvailableSettings.JAKARTA_JDBC_USER ) ).isEqualTo( EXPECTED_MASKED_VALUE );
+		assertThat( properties.get( AvailableSettings.JAKARTA_JDBC_PASSWORD ) ).isEqualTo( EXPECTED_MASKED_VALUE );
 		assertThat( properties.get( AvailableSettings.JPA_JDBC_USER ) ).isEqualTo( EXPECTED_MASKED_VALUE );
 		assertThat( properties.get( AvailableSettings.JPA_JDBC_PASSWORD ) ).isEqualTo( EXPECTED_MASKED_VALUE );
 	}

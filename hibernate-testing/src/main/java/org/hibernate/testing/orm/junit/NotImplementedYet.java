@@ -18,7 +18,7 @@ import org.hibernate.NotImplementedYetException;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
- * Marks a test method or class's tested functionality as not being implemented yet.
+ * Indicates that the test tests functionality that has not been implemented yet.
  *
  * @see NotImplementedYetExtension
  *

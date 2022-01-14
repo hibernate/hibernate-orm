@@ -8,7 +8,6 @@ package org.hibernate.engine.jndi.internal;
 
 import java.util.Hashtable;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -57,8 +56,8 @@ public class JndiServiceImpl implements JndiService {
 	 * @return The extracted JNDI specific properties.
 	 */
 	@SuppressWarnings({ "unchecked" })
-	private static Properties extractJndiProperties(Map configurationValues) {
-		final Properties jndiProperties = new Properties();
+	private static Hashtable extractJndiProperties(Map configurationValues) {
+		final Hashtable jndiProperties = new Hashtable();
 
 		for ( Map.Entry entry : (Set<Map.Entry>) configurationValues.entrySet() ) {
 			if ( !String.class.isInstance( entry.getKey() ) ) {

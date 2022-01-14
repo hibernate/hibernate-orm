@@ -11,6 +11,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
+import org.hibernate.annotations.NaturalId;
 import org.hibernate.cache.internal.DefaultCacheKeysFactory;
 import org.hibernate.cache.internal.NaturalIdCacheKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -21,6 +22,11 @@ import org.hibernate.persister.entity.EntityPersister;
 
 import org.junit.Test;
 
+import jakarta.persistence.Basic;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertArrayEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -30,6 +36,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class NaturalIdCacheKeyTest {
+
     @Test
     public void testSerializationRoundTrip() throws Exception {
         final SessionFactoryImplementor sessionFactoryImplementor = mock( SessionFactoryImplementor.class );
@@ -64,5 +71,11 @@ public class NaturalIdCacheKeyTest {
         assertArrayEquals( (Object[]) key.getNaturalIdValues(), (Object[]) keyClone.getNaturalIdValues() );
         assertEquals(key.getTenantId(), keyClone.getTenantId());
         
+    }
+
+
+    @Test
+    public void testSimpleKeyCreation() {
+
     }
 }

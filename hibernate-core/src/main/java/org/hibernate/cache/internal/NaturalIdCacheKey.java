@@ -13,9 +13,8 @@ import java.util.Objects;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.ValueHolder;
-import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
-import org.hibernate.type.Type;
+import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * Defines a key for caching natural identifier resolutions into the second level cache.
@@ -34,24 +33,15 @@ public class NaturalIdCacheKey implements Serializable {
 	// "transient" is important here -- NaturalIdCacheKey needs to be Serializable
 	private transient ValueHolder<String> toString;
 
-	/**
-	 * Construct a new key for a caching natural identifier resolutions into the second level cache.
-	 * @param naturalIdValues The naturalIdValues associated with the cached data
-	 * @param propertyTypes
-	 * @param naturalIdPropertyIndexes
-	 * @param session The originating session
-	 */
-	public NaturalIdCacheKey(
-			final Object naturalIdValues,
-			Type[] propertyTypes,
-			int[] naturalIdPropertyIndexes,
-			final String entityName,
-			final SharedSessionContractImplementor session) {
+	public NaturalIdCacheKey(Object naturalIdValues, EntityPersister persister, SharedSessionContractImplementor session) {
+		this( naturalIdValues, persister, persister.getRootEntityName(), session );
+	}
+
+	public NaturalIdCacheKey(Object naturalIdValues, EntityPersister persister, String entityName, SharedSessionContractImplementor session) {
 		this.entityName = entityName;
 		this.tenantId = session.getTenantIdentifier();
 
-		final EntityMappingType entityMappingType = session.getFactory().getRuntimeMetamodels().getEntityMappingType( entityName );
-		final NaturalIdMapping naturalIdMapping = entityMappingType.getNaturalIdMapping();
+		final NaturalIdMapping naturalIdMapping = persister.getNaturalIdMapping();
 
 		this.naturalIdValues = naturalIdMapping.disassemble( naturalIdValues, session );
 		this.hashCode = naturalIdMapping.calculateHashCode( naturalIdValues, session );
@@ -61,28 +51,24 @@ public class NaturalIdCacheKey implements Serializable {
 
 	private void initTransients() {
 		this.toString = new ValueHolder<>(
-				new ValueHolder.DeferredInitializer<String>() {
-					@Override
-					public String initialize() {
-						//Complex toString is needed as naturalIds for entities are not simply based on a single value like primary keys
-						//the only same way to differentiate the keys is to include the disassembled values in the string.
-						final StringBuilder toStringBuilder = new StringBuilder()
-								.append( entityName ).append( "##NaturalId[" );
-						if ( naturalIdValues instanceof Object[] ) {
-							final Object[] values = (Object[]) naturalIdValues;
-							for ( int i = 0; i < values.length; i++ ) {
-								toStringBuilder.append( values[ i ] );
-								if ( i + 1 < values.length ) {
-									toStringBuilder.append( ", " );
-								}
+				() -> {
+					//Complex toString is needed as naturalIds for entities are not simply based on a single value like primary keys
+					//the only same way to differentiate the keys is to include the disassembled values in the string.
+					final StringBuilder toStringBuilder = new StringBuilder().append( entityName ).append( "##NaturalId[" );
+					if ( naturalIdValues instanceof Object[] ) {
+						final Object[] values = (Object[]) naturalIdValues;
+						for ( int i = 0; i < values.length; i++ ) {
+							toStringBuilder.append( values[ i ] );
+							if ( i + 1 < values.length ) {
+								toStringBuilder.append( ", " );
 							}
 						}
-						else {
-							toStringBuilder.append( naturalIdValues );
-						}
-
-						return toStringBuilder.toString();
 					}
+					else {
+						toStringBuilder.append( naturalIdValues );
+					}
+
+					return toStringBuilder.toString();
 				}
 		);
 	}

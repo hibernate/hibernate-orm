@@ -18,6 +18,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Fetch;
 import jakarta.persistence.criteria.From;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
@@ -158,8 +159,8 @@ public class IllegalArgumentExceptionTest {
 				.getCriteriaBuilder()
 				.createQuery( Person.class );
 
-		Root<Person> customer = query.from( Person.class );
-		Join<Person, Address> address = customer.join( "address" );
+		final Root<Person> customer = query.from( Person.class );
+		final Join<Person, Address> address = customer.join( "address" );
 		try {
 			address.join( "not_existing_attribute_name" );
 			fail( "TCK expects an IllegalArgumentException" );
@@ -175,10 +176,28 @@ public class IllegalArgumentExceptionTest {
 				.getCriteriaBuilder()
 				.createQuery( Person.class );
 
-		Root<Person> customer = query.from( Person.class );
-		Join<Person, Address> address = customer.join( "address" );
+		final Root<Person> customer = query.from( Person.class );
+		final Join<Person, Address> address = customer.join( "address" );
 		try {
 			address.join( "not_existing_attribute_name", JoinType.INNER );
+			fail( "TCK expects an IllegalArgumentException" );
+		}
+		catch (IllegalArgumentException iae) {
+			//expected by TCK
+		}
+	}
+
+	@Test
+	public void fetchFetchStringIllegalArgumentExceptionTest(EntityManagerFactoryScope scope) {
+		final CriteriaQuery<Person> query = scope.getEntityManagerFactory()
+				.getCriteriaBuilder()
+				.createQuery( Person.class );
+
+		final From<Person, Person> customer = query.from( Person.class );
+		final Fetch f = customer.fetch( "address" );
+
+		try {
+			f.fetch( "not_existing_attribute_name" );
 			fail( "TCK expects an IllegalArgumentException" );
 		}
 		catch (IllegalArgumentException iae) {

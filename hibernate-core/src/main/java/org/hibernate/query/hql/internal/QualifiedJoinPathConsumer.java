@@ -176,17 +176,7 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 			boolean isTerminal,
 			SqmCreationState creationState) {
 		//noinspection unchecked
-		final SqmPathSource<Object> subPathSource = (SqmPathSource<Object>) lhs.getReferencedPathSource().findSubPathSource( name );
-		if ( subPathSource == null ) {
-			throw new HqlInterpretationException(
-					String.format(
-							Locale.ROOT,
-							"Could not resolve joined attribute '%s' of '%s'",
-							name,
-							lhs.getNavigablePath()
-					)
-			);
-		}
+		final SqmPathSource<Object> subPathSource = (SqmPathSource<Object>) lhs.getReferencedPathSource().getSubPathSource( name );
 		if ( !isTerminal ) {
 			for ( SqmJoin<?, ?> sqmJoin : lhs.getSqmJoins() ) {
 				if ( sqmJoin.getAlias() == null && sqmJoin.getReferencedPathSource() == subPathSource ) {

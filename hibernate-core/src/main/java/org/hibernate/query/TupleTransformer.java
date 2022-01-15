@@ -6,28 +6,32 @@
  */
 package org.hibernate.query;
 
+import org.hibernate.Incubating;
 import org.hibernate.sql.results.internal.RowTransformerTupleTransformerAdapter;
 
 import java.util.List;
 
 /**
- * Defines some transformation applied to each result of a {@link org.hibernate.Query}
- * before the results are packaged as a {@link List} and returned to the caller of
- * {@link org.hibernate.Query#getResultList()}. Each query result is received as a
- * tuple, that is, as an array of type {@code Object[]}, and may be transformed to
+ * Defines some transformation applied to each result of a {@link Query}
+ * before the results are packaged as a {@link List} and returned to the caller.  Each result
+ * is received as a tuple (that is, as an {@code Object[]}), and may be transformed to
  * some other type.
- * <p>
- * Every {@code TupleTransformer} is automatically wrapped in an instance of
+ *
+ * @implNote Every {@code TupleTransformer} is automatically wrapped in an instance of
  * {@link RowTransformerTupleTransformerAdapter}, adapting it to the
  * {@link org.hibernate.sql.results.spi.RowTransformer} contract, which is always
  * used to actually process the results internally.
  *
- * @see org.hibernate.transform.ResultTransformer
+ * @see Query#setTupleTransformer
+ * @see Query#list
+ * @see Query#getResultList
+ * @see ResultListTransformer
  * @see org.hibernate.sql.results.spi.RowTransformer
  *
  * @author Steve Ebersole
  * @author Gavin King
  */
+@Incubating
 @FunctionalInterface
 public interface TupleTransformer<T> {
 	/**

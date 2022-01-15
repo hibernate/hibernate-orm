@@ -8,16 +8,21 @@ package org.hibernate.query;
 
 import java.util.List;
 
+import org.hibernate.Incubating;
+
 /**
- * Defines some processing performed on the result {@link List} of a
- * {@link org.hibernate.Query} before the result list is returned to
- * the caller of {@link org.hibernate.Query#getResultList()}.
+ * Defines some processing performed on the overall result {@link List}
+ * of a {@link Query} before the result list is returned to the caller.
  *
- * @see org.hibernate.transform.ResultTransformer
+ * @see Query#setResultListTransformer
+ * @see Query#list
+ * @see Query#getResultList
+ * @see TupleTransformer
  *
  * @author Steve Ebersole
  * @author Gavin King
  */
+@Incubating
 @FunctionalInterface
 public interface ResultListTransformer<T> {
 	/**

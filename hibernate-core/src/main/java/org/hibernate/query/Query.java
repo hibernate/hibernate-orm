@@ -131,6 +131,8 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * by default each result in the list is packaged in an array of type
 	 * {@code Object[]}.
 	 *
+	 * @implNote Delegates to {@link #list()}
+	 *
 	 * @return the results as a list
 	 */
 	default List<R> getResultList() {
@@ -145,6 +147,10 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * <p>
 	 * The client should call {@link Stream#close()} after processing the
 	 * stream so that resources are freed as soon as possible.
+	 *
+	 * @implNote Delegates to {@link #stream()}, which in turn delegates
+	 * to this method.  Implementors should implement at least one of
+	 * these methods.
 	 *
 	 * @return The results as a {@link Stream}
 	 */
@@ -216,6 +222,10 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * stream so that resources are freed as soon as possible.
 	 *
 	 * @return The results as a {@link Stream}
+	 *
+	 * @implNote Delegates to {@link #getResultStream()}, which in turn
+	 * delegates to this method.  Implementors should implement at least
+	 * one of these methods.
 	 *
 	 * @since 5.2
 	 */

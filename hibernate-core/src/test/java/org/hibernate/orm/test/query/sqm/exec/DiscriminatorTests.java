@@ -14,19 +14,13 @@ import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.retail.DomesticVendor;
 import org.hibernate.testing.orm.domain.retail.ForeignVendor;
-import org.hibernate.testing.orm.domain.retail.Vendor;
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
-import org.hibernate.testing.orm.junit.FailureExpected;
-import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import org.hamcrest.Matcher;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import static org.hamcrest.CoreMatchers.either;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * @author Steve Ebersole
@@ -59,23 +53,16 @@ public class DiscriminatorTests extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	@NotImplementedYet(strict = false, reason = "selection of discriminator not yet implemented")
 	public void testSelection() {
 		inTransaction(
 				session -> {
-					final QueryImplementor query = session.createQuery( "select type( v ) from Vendor v" );
-					final List list = query.list();
-					assertThat( list.size(), is( 2 ) );
-					for ( Object o : list ) {
-						assertThat(
-								o,
-								(Matcher) either( is( DomesticVendor.class.getName() ) )
-								.or( is( ForeignVendor.class.getName() ) )
-						);
-					}
+					final QueryImplementor<Class> query = session.createQuery( "select type( v ) from Vendor v", Class.class );
+					final List<Class> list = query.list();
+					assertThat( list ).hasSize( 2 );
+					assertThat( list ).containsOnly( DomesticVendor.class, ForeignVendor.class );
 
-					assert list.contains( DomesticVendor.class.getName() );
-					assert list.contains( ForeignVendor.class.getName() );
+					assertThat( list ).contains( DomesticVendor.class );
+					assertThat( list ).contains( ForeignVendor.class );
 				}
 		);
 	}

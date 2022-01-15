@@ -6,11 +6,9 @@
  */
 package org.hibernate.orm.test.mapping.naturalid.inheritance.cache;
 
-import org.hibernate.WrongClassException;
 import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -22,7 +20,6 @@ import org.junit.jupiter.api.Test;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
 
 @ServiceRegistry( settings = @Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" ) )
 @DomainModel( annotatedClasses = { MyEntity.class, ExtendedEntity.class } )

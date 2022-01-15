@@ -584,7 +584,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	@SuppressWarnings("unchecked")
 	public <X, A> SqmAttributeJoin<X, A> fetch(String attributeName, JoinType jt) {
 		final SqmPathSource<A> fetchedPathSource = (SqmPathSource<A>) getReferencedPathSource()
-				.findSubPathSource( attributeName );
+				.getSubPathSource( attributeName );
 		return (SqmAttributeJoin<X, A>) buildJoin(
 				fetchedPathSource,
 				SqmJoinType.from( jt ),

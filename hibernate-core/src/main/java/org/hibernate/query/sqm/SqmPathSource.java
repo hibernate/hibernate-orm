@@ -6,6 +6,8 @@
  */
 package org.hibernate.query.sqm;
 
+import java.util.Locale;
+
 import jakarta.persistence.metamodel.Bindable;
 
 import org.hibernate.metamodel.model.domain.DomainType;
@@ -56,6 +58,7 @@ public interface SqmPathSource<J> extends SqmExpressable<J>, Bindable<J>, SqmExp
 			throw new IllegalArgumentException(
 					new SemanticException(
 							String.format(
+									Locale.ROOT,
 									"Could not resolve attribute '%s' of '%s'",
 									name,
 									getExpressable().getExpressableJavaTypeDescriptor().getJavaType().getTypeName()

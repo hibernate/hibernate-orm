@@ -12,10 +12,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 import org.hibernate.testing.orm.domain.gambit.EntityWithLazyManyToOneSelfReference;
-import org.hibernate.testing.orm.domain.gambit.EntityWithManyToOneSelfReference;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.FailureExpected;
-import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -195,7 +192,6 @@ public class EntityWithLazyManyToOneSelfReferenceTest {
 	}
 
 	@Test
-	@NotImplementedYet(strict = false)
 	public void testGetByMultipleIds(SessionFactoryScope scope) {
 
 		scope.inTransaction(
@@ -203,10 +199,17 @@ public class EntityWithLazyManyToOneSelfReferenceTest {
 					final List<EntityWithLazyManyToOneSelfReference> list = session.byMultipleIds(
 							EntityWithLazyManyToOneSelfReference.class )
 							.multiLoad( 1, 3 );
-					assert list.size() == 1;
-					final EntityWithLazyManyToOneSelfReference loaded = list.get( 0 );
-					assert loaded != null;
-					assertThat( loaded.getName(), equalTo( "first" ) );
+					// ordered-returns (the default) returns a list with one (possibly null) element
+					// per requested id.  Here we have 2 ids so the list should have 2 elements, the
+					// second one (#3) being null
+					org.assertj.core.api.Assertions.assertThat( list ).hasSize( 2 );
+
+					final EntityWithLazyManyToOneSelfReference entity1 = list.get( 0 );
+					org.assertj.core.api.Assertions.assertThat( entity1 ).isNotNull();
+					org.assertj.core.api.Assertions.assertThat( entity1.getName() ).isEqualTo( "first" );
+
+					final EntityWithLazyManyToOneSelfReference entity3 = list.get( 1 );
+					org.assertj.core.api.Assertions.assertThat( entity3 ).isNull();
 				}
 		);
 
@@ -215,12 +218,14 @@ public class EntityWithLazyManyToOneSelfReferenceTest {
 					final List<EntityWithLazyManyToOneSelfReference> list = session.byMultipleIds(
 							EntityWithLazyManyToOneSelfReference.class )
 							.multiLoad( 2, 3 );
-					assert list.size() == 1;
-					final EntityWithLazyManyToOneSelfReference loaded = list.get( 0 );
-					assert loaded != null;
-					assertThat( loaded.getName(), equalTo( "second" ) );
-					assert loaded.getOther() != null;
-					assertThat( loaded.getOther().getName(), equalTo( "first" ) );
+
+					// same as above, here we expect a List with 2 elements - one null and one non-null
+					org.assertj.core.api.Assertions.assertThat( list ).hasSize( 2 );
+
+					final EntityWithLazyManyToOneSelfReference entity2 = list.get( 0 );
+					org.assertj.core.api.Assertions.assertThat( entity2 ).isNotNull();
+					org.assertj.core.api.Assertions.assertThat( entity2.getName() ).isEqualTo( "second" );
+					assertThat( entity2.getOther().getName(), equalTo( "first" ) );
 				}
 		);
 	}

@@ -12,7 +12,7 @@ import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
-import org.hibernate.testing.orm.junit.NotImplementedYet;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -22,12 +22,16 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * @author Bruno P. Kinoshita
  */
-@Jpa
+@Jpa(
+		integrationSettings = {
+				@Setting( name = AvailableSettings.USER, value = "user" ),
+				@Setting( name = AvailableSettings.PASS, value = "pass" )
+		}
+)
 public class MaskSensitiveInformationTest {
 	private static final String EXPECTED_MASKED_VALUE = "****";
 
 	@Test
-	@NotImplementedYet( strict = false, reason = "Setting `" + AvailableSettings.PASS + "` does not propagate to `" + AvailableSettings.JPA_JDBC_PASSWORD + "`" )
 	public void testMaskOutSensitiveInformation(EntityManagerFactoryScope scope) {
 		Map<String, Object> properties = scope.getEntityManagerFactory().getProperties();
 		assertThat( properties.get( AvailableSettings.USER ) ).isEqualTo( EXPECTED_MASKED_VALUE );

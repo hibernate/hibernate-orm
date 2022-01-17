@@ -6,12 +6,15 @@
  */
 package org.hibernate.orm.test.jpa.criteria.basic;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.Date;
 import java.util.List;
+
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+
+import org.hibernate.testing.TestForIssue;
+import org.junit.Test;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
@@ -22,11 +25,8 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.metamodel.SingularAttribute;
 
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.orm.junit.NotImplementedYet;
-import org.junit.Ignore;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Steve Ebersole
@@ -67,12 +67,11 @@ public class BasicCriteriaUsageTest extends BaseEntityManagerFunctionalTestCase 
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-8283")
-	@Ignore( "Missing support for composite user types" )
-	@NotImplementedYet
 	public void testDateCompositeCustomType() {
-		Payment payment = new Payment();
+		final Date date = Date.from( Instant.now() );
+		final Payment payment = new Payment();
 		payment.setAmount( new BigDecimal( 1000 ) );
-		payment.setDate( new Date() );
+		payment.setDate( date );
 
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -80,7 +79,7 @@ public class BasicCriteriaUsageTest extends BaseEntityManagerFunctionalTestCase 
 
 		CriteriaQuery<Payment> criteria = em.getCriteriaBuilder().createQuery( Payment.class );
 		Root<Payment> rp = criteria.from( Payment.class );
-		Predicate predicate = em.getCriteriaBuilder().equal( rp.get( Payment_.date ), new Date() );
+		Predicate predicate = em.getCriteriaBuilder().equal( rp.get( Payment_.date ), date );
 		criteria.where( predicate );
 
 		TypedQuery<Payment> q = em.createQuery( criteria );

@@ -12,7 +12,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
 
-import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.CommonQueryContract;
@@ -24,7 +23,9 @@ import jakarta.persistence.Parameter;
 import jakarta.persistence.TemporalType;
 
 /**
- * Query based on an SQM tree
+ * Query based on an SQM tree.
+ *
+ * @implSpec I
  *
  * @author Steve Ebersole
  */
@@ -154,22 +155,4 @@ public interface SqmQuery extends CommonQueryContract {
 
 	@Override
 	SqmQuery setHibernateFlushMode(FlushMode flushMode);
-
-	@Override
-	SqmQuery setCacheMode(CacheMode cacheMode);
-
-	@Override
-	SqmQuery setCacheable(boolean cacheable);
-
-	@Override
-	SqmQuery setCacheRegion(String cacheRegion);
-
-	@Override
-	SqmQuery setTimeout(int timeout);
-
-	@Override
-	SqmQuery setFetchSize(int fetchSize);
-
-	@Override
-	SqmQuery setReadOnly(boolean readOnly);
 }

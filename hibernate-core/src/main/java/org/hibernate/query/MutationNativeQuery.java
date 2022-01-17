@@ -12,11 +12,8 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
 
-import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 
-import jakarta.persistence.FlushModeType;
-import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.TemporalType;
 
@@ -142,35 +139,5 @@ public interface MutationNativeQuery extends MutationQuery {
 	MutationNativeQuery setHibernateFlushMode(FlushMode flushMode);
 
 	@Override
-	MutationNativeQuery setCacheMode(CacheMode cacheMode);
-
-	@Override
-	MutationNativeQuery setCacheable(boolean cacheable);
-
-	@Override
-	MutationNativeQuery setCacheRegion(String cacheRegion);
-
-	@Override
 	MutationNativeQuery setTimeout(int timeout);
-
-	@Override
-	MutationNativeQuery setFetchSize(int fetchSize);
-
-	@Override
-	MutationNativeQuery setReadOnly(boolean readOnly);
-
-	@Override
-	MutationNativeQuery setMaxResults(int maxResult);
-
-	@Override
-	MutationNativeQuery setFirstResult(int startPosition);
-
-	@Override
-	MutationNativeQuery setHint(String hintName, Object value);
-
-	@Override
-	MutationNativeQuery setFlushMode(FlushModeType flushMode);
-
-	@Override
-	MutationNativeQuery setLockMode(LockModeType lockMode);
 }

@@ -9,7 +9,6 @@ package org.hibernate;
 import java.util.List;
 
 import org.hibernate.graph.RootGraph;
-import org.hibernate.query.MutationQuery;
 import org.hibernate.query.Query;
 import org.hibernate.stat.SessionStatistics;
 
@@ -1323,8 +1322,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	<R> Query<R> createQuery(CriteriaQuery<R> criteriaQuery);
 
 	@Override
-	MutationQuery createQuery(CriteriaDelete deleteQuery);
+	Query createQuery(CriteriaDelete deleteQuery);
 
 	@Override
-	MutationQuery createQuery(CriteriaUpdate updateQuery);
+	Query createQuery(CriteriaUpdate updateQuery);
 }

@@ -35,19 +35,20 @@ public interface QueryProducer {
 	 * @see jakarta.persistence.EntityManager#createQuery(String)
 	 *
 	 * @deprecated use {@link #createQuery(String, Class)},
-	 * {@link #createUntypedQuery}, {@link #createMutationQuery(String)}
-	 * or {@link #createMutationQuery} depending on intention
+	 * {@link #createSelectQuery} or {@link #createMutationQuery(String)}
+	 * depending on intention
 	 */
 	@Deprecated(since = "6.0") @SuppressWarnings("rawtypes")
 	Query createQuery(String queryString);
 
 	/**
-	 * Create an {@link UntypedQuery} reference for the given HQL.
+	 * Create a {@link SelectionQuery} reference for the given HQL.
+	 *
 	 * Only valid for select queries
 	 *
 	 * @see jakarta.persistence.EntityManager#createQuery(String)
 	 */
-	UntypedQuery createUntypedQuery(String hqlString);
+	SelectionQuery createSelectQuery(String hqlString);
 
 	/**
 	 * Create a typed {@link Query} instance for the given HQL/JPQL query string.
@@ -206,6 +207,16 @@ public interface QueryProducer {
 	MutationNativeQuery createNativeMutationQuery(String sqlString);
 
 	/**
+	 * Create a `MutationQuery` from the given update criteria tree
+	 */
+	MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") CriteriaUpdate updateQuery);
+
+	/**
+	 * Create a `MutationQuery` from the given delete criteria tree
+	 */
+	MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") CriteriaDelete deleteQuery);
+
+	/**
 	 * Create a {@link Query} for the given JPA {@link CriteriaQuery}
 	 */
 	<R> Query<R> createQuery(CriteriaQuery<R> criteriaQuery);
@@ -213,12 +224,12 @@ public interface QueryProducer {
 	/**
 	 * Create a {@link MutationQuery} for the given JPA {@link CriteriaUpdate}
 	 */
-	MutationQuery createQuery(@SuppressWarnings("rawtypes") CriteriaUpdate updateQuery);
+	Query createQuery(@SuppressWarnings("rawtypes") CriteriaUpdate updateQuery);
 
 	/**
 	 * Create a {@link MutationQuery} for the given JPA {@link CriteriaDelete}
 	 */
-	MutationQuery createQuery(@SuppressWarnings("rawtypes") CriteriaDelete deleteQuery);
+	Query createQuery(@SuppressWarnings("rawtypes") CriteriaDelete deleteQuery);
 
 	/**
 	 * Create a {@link Query} instance for the named query.

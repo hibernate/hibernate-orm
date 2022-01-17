@@ -27,12 +27,10 @@ import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.NonUniqueResultException;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.ScrollMode;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.HEMLogging;
 import org.hibernate.jpa.AvailableHints;
@@ -56,34 +54,24 @@ import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.TemporalType;
 
-import static org.hibernate.LockMode.UPGRADE;
-import static org.hibernate.LockOptions.NONE;
-import static org.hibernate.LockOptions.READ;
 import static org.hibernate.LockOptions.WAIT_FOREVER;
-import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHEABLE;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHE_MODE;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHE_REGION;
 import static org.hibernate.jpa.HibernateHints.HINT_COMMENT;
 import static org.hibernate.jpa.HibernateHints.HINT_FETCH_SIZE;
 import static org.hibernate.jpa.HibernateHints.HINT_FLUSH_MODE;
-import static org.hibernate.jpa.HibernateHints.HINT_FOLLOW_ON_LOCKING;
 import static org.hibernate.jpa.HibernateHints.HINT_NATIVE_LOCK_MODE;
-import static org.hibernate.jpa.HibernateHints.HINT_NATIVE_SPACES;
 import static org.hibernate.jpa.HibernateHints.HINT_READ_ONLY;
 import static org.hibernate.jpa.HibernateHints.HINT_TIMEOUT;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_CACHE_RETRIEVE_MODE;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_CACHE_STORE_MODE;
-import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_FETCH_GRAPH;
-import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_LOAD_GRAPH;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_LOCK_SCOPE;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_LOCK_TIMEOUT;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_QUERY_TIMEOUT;
@@ -99,7 +87,7 @@ import static org.hibernate.jpa.SpecHints.HINT_SPEC_QUERY_TIMEOUT;
  * @author Steve Ebersole
  */
 public abstract class AbstractQuery<R>
-		extends AbstractCommonQueryContract
+		extends AbstractSelectionQuery
 		implements QueryImplementor<R> {
 	protected static final EntityManagerMessageLogger log = HEMLogging.messageLogger( AbstractQuery.class );
 
@@ -145,14 +133,15 @@ public abstract class AbstractQuery<R>
 		}
 	}
 
-	protected abstract QueryParameterBindings getQueryParameterBindings();
-
-	@Override
-	public abstract ParameterMetadataImplementor getParameterMetadata();
-
-
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// QueryOptions handling
+
+
+	@Override
+	public QueryImplementor<R> setHint(String hintName, Object value) {
+		super.setHint( hintName, value );
+		return this;
+	}
 
 	@Override
 	public MutableQueryOptions getQueryOptions() {
@@ -346,7 +335,6 @@ public abstract class AbstractQuery<R>
 		return hints;
 	}
 
-	@SuppressWarnings("deprecation")
 	protected void collectHints(Map<String, Object> hints) {
 		if ( getQueryOptions().getTimeout() != null ) {
 			hints.put( HINT_TIMEOUT, getQueryOptions().getTimeout() );
@@ -408,313 +396,6 @@ public abstract class AbstractQuery<R>
 		if ( hintValue != null ) {
 			hints.put( hintName, hintValue );
 		}
-	}
-
-	@Override @SuppressWarnings("deprecation")
-	public QueryImplementor<R> setHint(String hintName, Object value) {
-		getSession().checkOpen( true );
-
-		boolean applied = false;
-		try {
-			if ( HINT_TIMEOUT.equals( hintName ) ) {
-				applied = applyTimeout( ConfigurationHelper.getInteger( value ) );
-			}
-			else if ( HINT_SPEC_QUERY_TIMEOUT.equals( hintName )
-					|| HINT_JAVAEE_QUERY_TIMEOUT.equals( hintName ) ) {
-				if ( HINT_JAVAEE_QUERY_TIMEOUT.equals( hintName ) ) {
-					DEPRECATION_LOGGER.deprecatedSetting( HINT_JAVAEE_QUERY_TIMEOUT, HINT_SPEC_QUERY_TIMEOUT );
-				}
-				// convert milliseconds to seconds
-				int timeout = (int)Math.round( ConfigurationHelper.getInteger( value ).doubleValue() / 1000.0 );
-				applied = applyTimeout( timeout );
-			}
-			else if ( HINT_SPEC_LOCK_TIMEOUT.equals( hintName )
-					|| HINT_JAVAEE_LOCK_TIMEOUT.equals( hintName ) ) {
-				if ( HINT_JAVAEE_LOCK_TIMEOUT.equals( hintName ) ) {
-					DEPRECATION_LOGGER.deprecatedSetting( HINT_JAVAEE_LOCK_TIMEOUT, HINT_SPEC_LOCK_TIMEOUT );
-				}
-				applied = applyLockTimeoutHint( ConfigurationHelper.getInteger( value ) );
-			}
-			else if ( HINT_COMMENT.equals( hintName ) ) {
-				applied = applyCommentHint( (String) value );
-			}
-			else if ( HINT_FETCH_SIZE.equals( hintName ) ) {
-				applied = applyFetchSizeHint( ConfigurationHelper.getInteger( value ) );
-			}
-			else if ( HINT_CACHEABLE.equals( hintName ) ) {
-				applied = applyCacheableHint( ConfigurationHelper.getBoolean( value ) );
-			}
-			else if ( HINT_CACHE_REGION.equals( hintName ) ) {
-				applied = applyCacheRegionHint( (String) value );
-			}
-			else if ( HINT_READ_ONLY.equals( hintName ) ) {
-				applied = applyReadOnlyHint( ConfigurationHelper.getBoolean( value ) );
-			}
-			else if ( HINT_FLUSH_MODE.equals( hintName ) ) {
-				applied = applyFlushModeHint( ConfigurationHelper.getFlushMode( value ) );
-			}
-			else if ( HINT_CACHE_MODE.equals( hintName ) ) {
-				applied = applyCacheModeHint( ConfigurationHelper.getCacheMode( value ) );
-			}
-			else if ( HINT_SPEC_CACHE_RETRIEVE_MODE.equals( hintName )
-					|| HINT_JAVAEE_CACHE_RETRIEVE_MODE.equals( hintName ) ) {
-				if ( HINT_JAVAEE_CACHE_RETRIEVE_MODE.equals( hintName ) ) {
-					DEPRECATION_LOGGER.deprecatedSetting( HINT_JAVAEE_CACHE_RETRIEVE_MODE, HINT_SPEC_CACHE_RETRIEVE_MODE );
-				}
-				final CacheRetrieveMode retrieveMode = value != null ? CacheRetrieveMode.valueOf( value.toString() ) : null;
-				applied = applyJpaCacheRetrieveMode( retrieveMode );
-			}
-			else if ( HINT_SPEC_CACHE_STORE_MODE.equals( hintName )
-					|| HINT_JAVAEE_CACHE_STORE_MODE.equals( hintName ) ) {
-				if ( HINT_JAVAEE_CACHE_STORE_MODE.equals( hintName ) ) {
-					DEPRECATION_LOGGER.deprecatedSetting( HINT_JAVAEE_CACHE_STORE_MODE, HINT_SPEC_CACHE_STORE_MODE );
-				}
-				final CacheStoreMode storeMode = value != null ? CacheStoreMode.valueOf( value.toString() ) : null;
-				applied = applyJpaCacheStoreMode( storeMode );
-			}
-			else if ( HINT_NATIVE_LOCK_MODE.equals( hintName ) ) {
-				applied = applyNativeQueryLockMode( value );
-			}
-			else if ( hintName.startsWith( HINT_NATIVE_LOCK_MODE ) ) {
-				// extract the alias
-				final String alias = hintName.substring( HINT_NATIVE_LOCK_MODE.length() + 1 );
-				// determine the LockMode
-				try {
-					final LockMode lockMode = LockModeTypeHelper.interpretLockMode( value );
-					applyAliasSpecificLockModeHint( alias, lockMode );
-					applied = true;
-				}
-				catch ( Exception e ) {
-					log.unableToDetermineLockModeValue( hintName, value );
-					applied = false;
-				}
-			}
-			else if ( HINT_SPEC_FETCH_GRAPH.equals( hintName ) || HINT_SPEC_LOAD_GRAPH.equals( hintName ) ) {
-				if ( value instanceof RootGraphImplementor ) {
-					applyEntityGraphQueryHint( hintName, (RootGraphImplementor<?>) value );
-				}
-				else {
-					// https://hibernate.atlassian.net/browse/HHH-14855 - accepting a String parseable
-					// via the Graph Language parser here would be a nice feature
-					log.warnf( "The %s hint was set, but the value was not an EntityGraph!", hintName );
-				}
-				applied = true;
-			}
-			else if ( HINT_JAVAEE_FETCH_GRAPH.equals( hintName ) || HINT_JAVAEE_LOAD_GRAPH.equals( hintName ) ) {
-				if ( HINT_JAVAEE_FETCH_GRAPH.equals( hintName ) ) {
-					DEPRECATION_LOGGER.deprecatedSetting( HINT_JAVAEE_FETCH_GRAPH, HINT_SPEC_FETCH_GRAPH );
-				}
-				else {
-					DEPRECATION_LOGGER.deprecatedSetting( HINT_JAVAEE_LOAD_GRAPH, HINT_SPEC_LOAD_GRAPH );
-				}
-
-				if ( value instanceof RootGraphImplementor ) {
-					applyEntityGraphQueryHint( hintName, (RootGraphImplementor<?>) value );
-				}
-				else {
-					// https://hibernate.atlassian.net/browse/HHH-14855 - accepting a String parseable
-					// via the Graph Language parser here would be a nice feature
-					log.warnf( "The %s hint was set, but the value was not an EntityGraph!", hintName );
-				}
-				applied = true;
-			}
-			else if ( HINT_FOLLOW_ON_LOCKING.equals( hintName ) ) {
-				applied = applyFollowOnLockingHint( ConfigurationHelper.getBoolean( value ) );
-			}
-			else if ( HINT_NATIVE_SPACES.equals( hintName ) ) {
-				applied = applySynchronizeSpacesHint( value );
-			}
-			else {
-				log.ignoringUnrecognizedQueryHint( hintName );
-			}
-		}
-		catch ( ClassCastException e ) {
-			throw new IllegalArgumentException( "Value for hint" );
-		}
-
-		if ( !applied ) {
-			log.debugf( "Skipping unsupported query hint [%s]", hintName );
-		}
-
-		return this;
-	}
-
-	@SuppressWarnings("WeakerAccess")
-	protected boolean applyJpaCacheRetrieveMode(CacheRetrieveMode retrieveMode) {
-		getQueryOptions().setCacheRetrieveMode( retrieveMode );
-		return true;
-	}
-
-	@SuppressWarnings("WeakerAccess")
-	protected boolean applyJpaCacheStoreMode(CacheStoreMode storeMode) {
-		getQueryOptions().setCacheStoreMode( storeMode );
-		return true;
-	}
-
-	protected boolean applyNativeQueryLockMode(Object value) {
-		return false;
-	}
-
-	protected boolean applySynchronizeSpacesHint(Object value) {
-		return false;
-	}
-
-	/**
-	 * Apply the query timeout hint.
-	 *
-	 * @param timeout The timeout (in seconds!) specified as a hint
-	 *
-	 * @return {@code true} if the hint was "applied"
-	 */
-	@SuppressWarnings("WeakerAccess")
-	protected boolean applyTimeout(int timeout) {
-		setTimeout( timeout );
-		return true;
-	}
-
-	/**
-	 * Apply the lock timeout (in seconds!) hint
-	 *
-	 * @param timeout The timeout (in seconds!) specified as a hint
-	 *
-	 * @return {@code true} if the hint was "applied"
-	 */
-	@SuppressWarnings("WeakerAccess")
-	protected boolean applyLockTimeoutHint(int timeout) {
-		getLockOptions().setTimeOut( timeout );
-		return true;
-	}
-
-	/**
-	 * Apply the comment hint.
-	 *
-	 * @param comment The comment specified as a hint
-	 *
-	 * @return {@code true} if the hint was "applied"
-	 */
-	@SuppressWarnings("WeakerAccess")
-	protected boolean applyCommentHint(String comment) {
-		setComment( comment );
-		return true;
-	}
-
-	/**
-	 * Apply the fetch size hint
-	 *
-	 * @param fetchSize The fetch size specified as a hint
-	 *
-	 * @return {@code true} if the hint was "applied"
-	 */
-	@SuppressWarnings("WeakerAccess")
-	protected boolean applyFetchSizeHint(int fetchSize) {
-		setFetchSize( fetchSize );
-		return true;
-	}
-
-	/**
-	 * Apply the cacheable (true/false) hint.
-	 *
-	 * @param isCacheable The value specified as hint
-	 *
-	 * @return {@code true} if the hint was "applied"
-	 */
-	@SuppressWarnings("WeakerAccess")
-	protected boolean applyCacheableHint(boolean isCacheable) {
-		setCacheable( isCacheable );
-		return true;
-	}
-
-	/**
-	 * Apply the cache region hint
-	 *
-	 * @param regionName The name of the cache region specified as a hint
-	 *
-	 * @return {@code true} if the hint was "applied"
-	 */
-	@SuppressWarnings("WeakerAccess")
-	protected boolean applyCacheRegionHint(String regionName) {
-		setCacheRegion( regionName );
-		return true;
-	}
-
-	/**
-	 * Apply the read-only (true/false) hint.
-	 *
-	 * @param isReadOnly The value specified as hint
-	 *
-	 * @return {@code true} if the hint was "applied"
-	 */
-	@SuppressWarnings("WeakerAccess")
-	protected boolean applyReadOnlyHint(boolean isReadOnly) {
-		setReadOnly( isReadOnly );
-		return true;
-	}
-
-	/**
-	 * Apply the CacheMode hint.
-	 *
-	 * @param cacheMode The CacheMode value specified as a hint.
-	 *
-	 * @return {@code true} if the hint was "applied"
-	 */
-	@SuppressWarnings("WeakerAccess")
-	protected boolean applyCacheModeHint(CacheMode cacheMode) {
-		setCacheMode( cacheMode );
-		return true;
-	}
-
-	/**
-	 * Apply the FlushMode hint.
-	 *
-	 * @param flushMode The FlushMode value specified as hint
-	 *
-	 * @return {@code true} if the hint was "applied"
-	 */
-	@SuppressWarnings("WeakerAccess")
-	protected boolean applyFlushModeHint(FlushMode flushMode) {
-		setHibernateFlushMode( flushMode );
-		return true;
-	}
-
-	@SuppressWarnings( "UnusedReturnValue" )
-	protected boolean applyLockModeTypeHint(LockModeType lockModeType) {
-		getLockOptions().setLockMode( LockModeTypeHelper.getLockMode( lockModeType ) );
-		return true;
-	}
-
-	@SuppressWarnings({"UnusedReturnValue", "deprecation"})
-	protected boolean applyHibernateLockModeHint(LockMode lockMode) {
-		//TODO: this method is a noop. Delete it?
-		final LockOptions lockOptions;
-		if ( lockMode == LockMode.NONE ) {
-			lockOptions = NONE;
-		}
-		else if ( lockMode == LockMode.READ ) {
-			lockOptions = READ;
-		}
-		else if ( lockMode == UPGRADE || lockMode == LockMode.PESSIMISTIC_WRITE ) {
-			lockOptions = LockOptions.UPGRADE;
-		}
-
-		return true;
-	}
-
-	@SuppressWarnings("WeakerAccess")
-	protected void applyAliasSpecificLockModeHint(String alias, LockMode lockMode) {
-		setLockMode( alias, lockMode );
-	}
-
-	protected abstract void applyEntityGraphQueryHint(String hintName, RootGraphImplementor<?> entityGraph);
-
-	/**
-	 * Apply the follow-on-locking hint.
-	 *
-	 * @param followOnLocking The follow-on-locking strategy.
-	 */
-	@SuppressWarnings("WeakerAccess")
-	protected boolean applyFollowOnLockingHint(Boolean followOnLocking) {
-		getLockOptions().setFollowOnLocking( followOnLocking );
-		return true;
 	}
 
 
@@ -1648,7 +1329,7 @@ public abstract class AbstractQuery<R>
 
 	@Override
 	public R uniqueResult() {
-		return uniqueElement( list() );
+		return (R) uniqueElement( list() );
 	}
 
 	@Override
@@ -1658,27 +1339,11 @@ public abstract class AbstractQuery<R>
 			if ( list.isEmpty() ) {
 				throw new NoResultException( "No entity found for query" );
 			}
-			return uniqueElement( list );
+			return (R) uniqueElement( list );
 		}
 		catch ( HibernateException e ) {
 			throw getSession().getExceptionConverter().convert( e, getLockOptions() );
 		}
-	}
-
-	@SuppressWarnings("WeakerAccess")
-	public static <R> R uniqueElement(List<R> list) throws NonUniqueResultException {
-		int size = list.size();
-		if ( size == 0 ) {
-			return null;
-		}
-		R first = list.get( 0 );
-		// todo (6.0) : add a setting here to control whether to perform this validation or not
-		for ( int i = 1; i < size; i++ ) {
-			if ( list.get( i ) != first ) {
-				throw new NonUniqueResultException( list.size() );
-			}
-		}
-		return first;
 	}
 
 	@Override

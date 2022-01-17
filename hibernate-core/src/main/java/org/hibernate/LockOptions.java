@@ -324,6 +324,10 @@ public class LockOptions implements Serializable {
 		return copy;
 	}
 
+	public void overlay(LockOptions lockOptions) {
+		copy( lockOptions, this );
+	}
+
 	/**
 	 * Perform a shallow copy.
 	 *
@@ -380,5 +384,4 @@ public class LockOptions implements Serializable {
 		result = 31 * result + ( scope ? 1 : 0 );
 		return result;
 	}
-
 }

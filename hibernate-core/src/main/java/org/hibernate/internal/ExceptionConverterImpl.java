@@ -8,16 +8,6 @@ package org.hibernate.internal;
 
 import java.io.Serializable;
 import java.sql.SQLException;
-import jakarta.persistence.EntityExistsException;
-import jakarta.persistence.EntityNotFoundException;
-import jakarta.persistence.LockTimeoutException;
-import jakarta.persistence.NoResultException;
-import jakarta.persistence.NonUniqueResultException;
-import jakarta.persistence.OptimisticLockException;
-import jakarta.persistence.PersistenceException;
-import jakarta.persistence.PessimisticLockException;
-import jakarta.persistence.QueryTimeoutException;
-import jakarta.persistence.RollbackException;
 
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
@@ -38,6 +28,17 @@ import org.hibernate.loader.MultipleBagFetchException;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.InterpretationException;
 import org.hibernate.query.sqm.ParsingException;
+
+import jakarta.persistence.EntityExistsException;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.LockTimeoutException;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.NonUniqueResultException;
+import jakarta.persistence.OptimisticLockException;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.PessimisticLockException;
+import jakarta.persistence.QueryTimeoutException;
+import jakarta.persistence.RollbackException;
 
 /**
  * @author Andrea Boriero
@@ -87,69 +88,68 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 	}
 
 	@Override
-	public RuntimeException convert(HibernateException e, LockOptions lockOptions) {
-		Throwable cause = e;
-		if ( cause instanceof StaleStateException ) {
-			final PersistenceException converted = wrapStaleStateException( (StaleStateException) cause );
+	public RuntimeException convert(HibernateException exception, LockOptions lockOptions) {
+		if ( exception instanceof StaleStateException ) {
+			final PersistenceException converted = wrapStaleStateException( (StaleStateException) exception );
 			handlePersistenceException( converted );
 			return converted;
 		}
-		else if ( cause instanceof LockAcquisitionException ) {
-			final PersistenceException converted = wrapLockException( (HibernateException) cause, lockOptions );
+		else if ( exception instanceof LockAcquisitionException ) {
+			final PersistenceException converted = wrapLockException( (HibernateException) exception, lockOptions );
 			handlePersistenceException( converted );
 			return converted;
 		}
-		else if ( cause instanceof LockingStrategyException ) {
-			final PersistenceException converted = wrapLockException( (HibernateException) cause, lockOptions );
+		else if ( exception instanceof LockingStrategyException ) {
+			final PersistenceException converted = wrapLockException( (HibernateException) exception, lockOptions );
 			handlePersistenceException( converted );
 			return converted;
 		}
-		else if ( cause instanceof org.hibernate.PessimisticLockException ) {
-			final PersistenceException converted = wrapLockException( (HibernateException) cause, lockOptions );
+		else if ( exception instanceof org.hibernate.PessimisticLockException ) {
+			final PersistenceException converted = wrapLockException( (HibernateException) exception, lockOptions );
 			handlePersistenceException( converted );
 			return converted;
 		}
-		else if ( cause instanceof org.hibernate.QueryTimeoutException ) {
-			final QueryTimeoutException converted = new QueryTimeoutException( cause.getMessage(), cause );
+		else if ( exception instanceof org.hibernate.QueryTimeoutException ) {
+			final QueryTimeoutException converted = new QueryTimeoutException( exception.getMessage(), exception );
 			handlePersistenceException( converted );
 			return converted;
 		}
-		else if ( cause instanceof ObjectNotFoundException ) {
-			final EntityNotFoundException converted = new EntityNotFoundException( cause.getMessage() );
+		else if ( exception instanceof ObjectNotFoundException ) {
+			final EntityNotFoundException converted = new EntityNotFoundException( exception.getMessage() );
 			handlePersistenceException( converted );
 			return converted;
 		}
-		else if ( cause instanceof org.hibernate.NonUniqueObjectException ) {
-			final EntityExistsException converted = new EntityExistsException( cause.getMessage() );
+		else if ( exception instanceof org.hibernate.NonUniqueObjectException ) {
+			final EntityExistsException converted = new EntityExistsException( exception.getMessage() );
 			handlePersistenceException( converted );
 			return converted;
 		}
-		else if ( cause instanceof org.hibernate.NonUniqueResultException ) {
-			final NonUniqueResultException converted = new NonUniqueResultException( cause.getMessage() );
+		else if ( exception instanceof org.hibernate.NonUniqueResultException ) {
+			final NonUniqueResultException converted = new NonUniqueResultException( exception.getMessage() );
 			handlePersistenceException( converted );
 			return converted;
 		}
-		else if ( cause instanceof UnresolvableObjectException ) {
-			final EntityNotFoundException converted = new EntityNotFoundException( cause.getMessage() );
+		else if ( exception instanceof UnresolvableObjectException ) {
+			final EntityNotFoundException converted = new EntityNotFoundException( exception.getMessage() );
 			handlePersistenceException( converted );
 			return converted;
 		}
-		else if ( cause instanceof SemanticException ) {
-			return new IllegalArgumentException( cause );
+		else if ( exception instanceof SemanticException ) {
+			return new IllegalArgumentException( exception );
 		}
-		else if ( cause instanceof QueryException ) {
-			return new IllegalArgumentException( cause );
+		else if ( exception instanceof QueryException ) {
+			return new IllegalArgumentException( exception );
 		}
-		else if ( cause instanceof InterpretationException ) {
-			return new IllegalArgumentException( cause );
+		else if ( exception instanceof InterpretationException ) {
+			return new IllegalArgumentException( exception );
 		}
-		else if ( cause instanceof ParsingException ) {
-			return new IllegalArgumentException( cause );
+		else if ( exception instanceof ParsingException ) {
+			return new IllegalArgumentException( exception );
 		}
-		else if ( cause instanceof MultipleBagFetchException ) {
-			return new IllegalArgumentException( cause );
+		else if ( exception instanceof MultipleBagFetchException ) {
+			return new IllegalArgumentException( exception );
 		}
-		else if ( cause instanceof TransientObjectException ) {
+		else if ( exception instanceof TransientObjectException ) {
 			try {
 				sharedSessionContract.markForRollbackOnly();
 			}
@@ -157,12 +157,13 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 				//we do not want the subsequent exception to swallow the original one
 				log.unableToMarkForRollbackOnTransientObjectException( ne );
 			}
-			return new IllegalStateException( e ); //Spec 3.2.3 Synchronization rules
+			//Spec 3.2.3 Synchronization rules
+			return new IllegalStateException( exception );
 		}
 		else {
 			final PersistenceException converted = new PersistenceException(
-					"Converting `" + cause.getClass().getName() + "` to JPA `PersistenceException` : " + cause.getMessage(),
-					cause
+					"Converting `" + exception.getClass().getName() + "` to JPA `PersistenceException` : " + exception.getMessage(),
+					exception
 			);
 			handlePersistenceException( converted );
 			return converted;

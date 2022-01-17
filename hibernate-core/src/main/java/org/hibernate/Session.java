@@ -7,15 +7,18 @@
 package org.hibernate;
 
 import java.util.List;
+
+import org.hibernate.graph.RootGraph;
+import org.hibernate.query.MutationQuery;
+import org.hibernate.query.Query;
+import org.hibernate.stat.SessionStatistics;
+
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaUpdate;
-import org.hibernate.graph.RootGraph;
-import org.hibernate.query.Query;
-import org.hibernate.stat.SessionStatistics;
 
 /**
  * The main runtime interface between a Java application and Hibernate. Represents the
@@ -723,8 +726,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * from the underlying database. This may be useful:
 	 * <ul>
 	 * <li>when a database trigger alters the object state upon insert or update
-	 * <li>after {@linkplain #createStatement(String) executing} any HQL update or delete statement
-	 * <li>after {@linkplain #createNativeStatement(String) executing} a native SQL statement
+	 * <li>after {@linkplain #createMutationQuery(String) executing} any HQL update or delete statement
+	 * <li>after {@linkplain #createNativeMutationQuery(String) executing} a native SQL statement
 	 * <li>after inserting a {@link java.sql.Blob} or {@link java.sql.Clob}
 	 * </ul>
 	 * This operation cascades to associated instances if the association is mapped
@@ -739,8 +742,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * from the underlying database. This may be useful:
 	 * <ul>
 	 * <li>when a database trigger alters the object state upon insert or update
-	 * <li>after {@linkplain #createStatement(String) executing} any HQL update or delete statement
-	 * <li>after {@linkplain #createNativeStatement(String) executing} a native SQL statement
+	 * <li>after {@linkplain #createMutationQuery(String) executing} any HQL update or delete statement
+	 * <li>after {@linkplain #createNativeMutationQuery(String) executing} a native SQL statement
 	 * <li>after inserting a {@link java.sql.Blob} or {@link java.sql.Clob}
 	 * </ul>
 	 * This operation cascades to associated instances if the association is mapped
@@ -1320,8 +1323,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	<R> Query<R> createQuery(CriteriaQuery<R> criteriaQuery);
 
 	@Override
-	Query<Void> createQuery(CriteriaDelete deleteQuery);
+	MutationQuery createQuery(CriteriaDelete deleteQuery);
 
 	@Override
-	Query<Void> createQuery(CriteriaUpdate updateQuery);
+	MutationQuery createQuery(CriteriaUpdate updateQuery);
 }

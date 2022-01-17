@@ -24,6 +24,7 @@ import jakarta.persistence.Parameter;
 import jakarta.persistence.TemporalType;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
+import org.hibernate.transform.ResultTransformer;
 
 /**
  * @author Steve Ebersole
@@ -53,6 +54,13 @@ public interface QueryImplementor<R> extends Query<R> {
 
 	@Override
 	QueryImplementor<R> setResultListTransformer(ResultListTransformer<R> transformer);
+
+	@Override
+	default <T> QueryImplementor<T> setResultTransformer(ResultTransformer<T> transformer) {
+		Query.super.setResultTransformer( transformer );
+		//noinspection unchecked
+		return (QueryImplementor<T>) this;
+	}
 
 	@Override
 	QueryImplementor<R> setParameter(String name, Object value);

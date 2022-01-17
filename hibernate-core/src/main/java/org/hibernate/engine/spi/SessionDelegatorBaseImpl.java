@@ -50,10 +50,14 @@ import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.procedure.ProcedureCall;
+import org.hibernate.query.MutationNativeQuery;
+import org.hibernate.query.MutationQuery;
+import org.hibernate.query.UntypedQuery;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryProducerImplementor;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
+import org.hibernate.query.sqm.internal.UntypedSqmQueryImpl;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.stat.SessionStatistics;
@@ -452,12 +456,12 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public QueryImplementor<Void> createQuery(CriteriaUpdate updateQuery) {
+	public MutationQuery createQuery(CriteriaUpdate updateQuery) {
 		return queryDelegate().createQuery( updateQuery );
 	}
 
 	@Override
-	public QueryImplementor<Void> createQuery(CriteriaDelete deleteQuery) {
+	public MutationQuery createQuery(CriteriaDelete deleteQuery) {
 		return queryDelegate().createQuery( deleteQuery );
 	}
 
@@ -479,6 +483,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override @SuppressWarnings("rawtypes")
 	public QueryImplementor createQuery(String queryString) {
 		return queryDelegate().createQuery( queryString );
+	}
+
+	@Override
+	public UntypedQuery createUntypedQuery(String hqlString) {
+		return queryDelegate().createUntypedQuery( hqlString );
 	}
 
 	@Override
@@ -522,18 +531,18 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public QueryImplementor<Void> createStatement(String statementString) {
-		return delegate.createStatement( statementString );
+	public MutationQuery createMutationQuery(String statementString) {
+		return delegate.createMutationQuery( statementString );
 	}
 
 	@Override
-	public QueryImplementor<Void> createNamedStatement(String name) {
-		return delegate.createNamedStatement( name );
+	public MutationQuery createNamedMutationQuery(String name) {
+		return delegate.createNamedMutationQuery( name );
 	}
 
 	@Override
-	public NativeQueryImplementor<Void> createNativeStatement(String sqlString) {
-		return delegate.createNativeStatement( sqlString );
+	public MutationNativeQuery createNativeMutationQuery(String sqlString) {
+		return delegate.createNativeMutationQuery( sqlString );
 	}
 
 	@Override

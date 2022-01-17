@@ -48,7 +48,6 @@ import org.hibernate.query.BindableType;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.internal.QueryOptionsImpl;
-import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.procedure.ProcedureParameter;
 import org.hibernate.query.results.ResultSetMapping;
 import org.hibernate.query.results.ResultSetMappingImpl;
@@ -296,7 +295,7 @@ public class ProcedureCallImpl<R>
 	}
 
 	protected void applyOptions(NamedCallableQueryMemento memento) {
-		applyOptions( (NamedQueryMemento) memento );
+		super.applyOptions( memento );
 
 		if ( memento.getHints() != null ) {
 			final Object callableFunction = memento.getHints().get( HINT_CALLABLE_FUNCTION );

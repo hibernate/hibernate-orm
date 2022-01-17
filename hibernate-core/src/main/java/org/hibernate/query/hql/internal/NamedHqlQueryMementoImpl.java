@@ -13,11 +13,10 @@ import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.query.hql.spi.HqlQueryImplementor;
 import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
+import org.hibernate.query.hql.spi.SqmQueryImplementor;
 import org.hibernate.query.named.AbstractNamedQueryMemento;
 import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.sqm.internal.QuerySqmImpl;
 
 import org.jboss.logging.Logger;
@@ -129,12 +128,12 @@ public class NamedHqlQueryMementoImpl extends AbstractNamedQueryMemento implemen
 	}
 
 	@Override
-	public <T> QueryImplementor<T> toQuery(SharedSessionContractImplementor session) {
+	public <T> SqmQueryImplementor<T> toQuery(SharedSessionContractImplementor session) {
 		return toQuery( session, null );
 	}
 
 	@Override
-	public <T> HqlQueryImplementor<T> toQuery(SharedSessionContractImplementor session, Class<T> resultType) {
+	public <T> SqmQueryImplementor<T> toQuery(SharedSessionContractImplementor session, Class<T> resultType) {
 		return new QuerySqmImpl<>( this, resultType, session );
 	}
 }

@@ -120,7 +120,9 @@ import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
+import org.hibernate.query.JpaQuery;
 import org.hibernate.query.Query;
+import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.UnknownSqlResultSetMappingException;
 import org.hibernate.resource.transaction.TransactionRequiredForJoinException;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
@@ -280,7 +282,11 @@ public class SessionImpl
 		return this.lockOptions;
 	}
 
-	protected void applyQuerySettingsAndHints(Query<?> query) {
+	protected void applyQuerySettingsAndHints(SelectionQuery query) {
+		applyLockOptionsHint( query );
+	}
+
+	protected void applyLockOptionsHint(SelectionQuery query) {
 		final LockOptions lockOptionsForRead = getLockOptionsForRead();
 		if ( lockOptionsForRead.getLockMode() != LockMode.NONE ) {
 			query.setLockMode( getLockMode( lockOptionsForRead.getLockMode() ) );
@@ -289,10 +295,17 @@ public class SessionImpl
 		if ( ( queryTimeout = getSessionProperty( QueryHints.SPEC_HINT_TIMEOUT )  ) != null ) {
 			query.setHint( QueryHints.SPEC_HINT_TIMEOUT, queryTimeout );
 		}
+	}
+
+	@Override
+	protected void applyQuerySettingsAndHints(JpaQuery query) {
+		applyQuerySettingsAndHints( (SelectionQuery) query );
+
 		final Object jakartaQueryTimeout;
 		if ( ( jakartaQueryTimeout = getSessionProperty( QueryHints.JAKARTA_SPEC_HINT_TIMEOUT )  ) != null ) {
 			query.setHint( QueryHints.JAKARTA_SPEC_HINT_TIMEOUT, jakartaQueryTimeout );
 		}
+
 		final Object lockTimeout;
 		final Object jpaLockTimeout = getSessionProperty( JPA_LOCK_TIMEOUT );
 		if ( jpaLockTimeout == null ) {

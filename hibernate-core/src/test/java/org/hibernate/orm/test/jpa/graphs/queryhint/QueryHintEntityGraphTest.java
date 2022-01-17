@@ -15,6 +15,7 @@ import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import jakarta.persistence.Subgraph;
+import jakarta.persistence.TypedQuery;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
@@ -31,6 +32,7 @@ import org.hibernate.orm.test.jpa.graphs.Market;
 import org.hibernate.orm.test.jpa.graphs.Student;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.transaction.TransactionUtil2;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -112,6 +114,32 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 	}
 
 	@Test
+	@TestForIssue(jiraKey = "https://hibernate.atlassian.net/browse/HHH-14855")
+	public void testEntityGraphStringQueryHint() {
+		TransactionUtil2.inTransaction( entityManagerFactory(), (session) -> {
+			final String hql = "from Company c";
+			final String graphString = "Company( location, markets )";
+
+			{
+				TypedQuery<Company> query = session.createQuery( hql, Company.class );
+				final Company company = query.getSingleResult();
+				assertFalse( Hibernate.isInitialized( company.employees ) );
+				assertFalse( Hibernate.isInitialized( company.location ) );
+				assertFalse( Hibernate.isInitialized( company.markets ) );
+			}
+
+			{
+				TypedQuery<Company> query = session.createQuery( hql, Company.class );
+				query.setHint( QueryHints.JAKARTA_HINT_FETCHGRAPH, graphString );
+				final Company company = query.getSingleResult();
+				assertFalse( Hibernate.isInitialized( company.employees ) );
+				assertTrue( Hibernate.isInitialized( company.location ) );
+				assertTrue( Hibernate.isInitialized( company.markets ) );
+			}
+		} );
+	}
+
+	@Test
 	@TestForIssue(jiraKey = "HHH-8776")
 	public void testFetchGraph() {
 		EntityManager entityManager = getOrCreateEntityManager();
@@ -121,7 +149,7 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 		entityGraph.addAttributeNodes( "location" );
 		entityGraph.addAttributeNodes( "markets" );
 		Query query = entityManager.createQuery( "from " + Company.class.getName() );
-		query.setHint( QueryHints.HINT_FETCHGRAPH, entityGraph );
+		query.setHint( QueryHints.JAKARTA_HINT_FETCHGRAPH, entityGraph );
 		Company company = (Company) query.getSingleResult();
 
 		entityManager.getTransaction().commit();

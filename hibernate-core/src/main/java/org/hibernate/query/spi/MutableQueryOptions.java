@@ -11,6 +11,8 @@ import jakarta.persistence.CacheStoreMode;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.graph.GraphSemantic;
+import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.query.QueryLogging;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
@@ -85,4 +87,6 @@ public interface MutableQueryOptions extends QueryOptions {
 	void setTupleTransformer(TupleTransformer transformer);
 
 	void setResultListTransformer(ResultListTransformer transformer);
+
+	void applyGraph(RootGraphImplementor<?> rootGraph, GraphSemantic graphSemantic);
 }

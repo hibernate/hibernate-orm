@@ -33,6 +33,7 @@ import org.hibernate.engine.jndi.JndiNameException;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.IntegralDataTypeHolder;
+import org.hibernate.query.QueryLogging;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SerializationException;
 import org.hibernate.type.Type;
@@ -304,6 +305,10 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Fetching database metadata", id = 102)
 	void fetchingDatabaseMetadata();
 
+	/**
+	 * @deprecated See {@link QueryLogging#firstOrMaxResultsSpecifiedWithCollectionFetch()}
+	 */
+	@Deprecated
 	@LogMessage(level = WARN)
 	@Message(value = "firstResult/maxResults specified with collection fetch; applying in memory!", id = 104)
 	void firstOrMaxResultsSpecifiedWithCollectionFetch();
@@ -366,8 +371,12 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Ignoring unique constraints specified on table generator [%s]", id = 120)
 	void ignoringTableGeneratorConstraints(String name);
 
+	/**
+	 * @deprecated See {@link org.hibernate.query.QueryLogging#ignoringUnrecognizedQueryHint}
+	 */
 	@LogMessage(level = INFO)
 	@Message(value = "Ignoring unrecognized query hint [%s]", id = 121)
+	@Deprecated
 	void ignoringUnrecognizedQueryHint(String hintName);
 
 	@LogMessage(level = ERROR)
@@ -1018,8 +1027,14 @@ public interface CoreMessageLogger extends BasicLogger {
 			String region,
 			String message);
 
+	/**
+	 * @deprecated see {@link org.hibernate.query.QueryLogging#unableToDetermineLockModeValue}
+	 * @param hintName
+	 * @param value
+	 */
 	@LogMessage(level = INFO)
 	@Message(value = "Unable to determine lock mode value : %s -> %s", id = 311)
+	@Deprecated
 	void unableToDetermineLockModeValue(
 			String hintName,
 			Object value);

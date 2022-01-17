@@ -58,7 +58,7 @@ public class ScrollableTest extends BaseCoreFunctionalTestCase {
 		try (Session session = openSession()) {
 			session.getTransaction().begin();
 			try {
-				session.createStatement( "delete from MyEntity" ).executeUpdate();
+				session.createMutationQuery( "delete from MyEntity" ).executeUpdate();
 				session.getTransaction().commit();
 			}
 			catch (Exception e) {

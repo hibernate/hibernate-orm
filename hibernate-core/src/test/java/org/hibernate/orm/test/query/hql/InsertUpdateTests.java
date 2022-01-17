@@ -32,9 +32,9 @@ public class InsertUpdateTests {
 	public void testUpdate(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createStatement("update Ticket set subject = 'Outage', details = 'The service is down' where id = 1").executeUpdate();
-					session.createStatement("update Ticket t set t.subject = 'Outage' where t.id = 1").executeUpdate();
-					session.createStatement("update Ticket t set t.subject = upper(t.subject) where t.id = 1").executeUpdate();
+					session.createMutationQuery("update Ticket set subject = 'Outage', details = 'The service is down' where id = 1").executeUpdate();
+					session.createMutationQuery("update Ticket t set t.subject = 'Outage' where t.id = 1").executeUpdate();
+					session.createMutationQuery("update Ticket t set t.subject = upper(t.subject) where t.id = 1").executeUpdate();
 				}
 		);
 	}
@@ -43,7 +43,7 @@ public class InsertUpdateTests {
 	public void testUpdateSecondaryTable(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createStatement("update Contact set birthDay = local date").executeUpdate();
+					session.createMutationQuery("update Contact set birthDay = local date").executeUpdate();
 				}
 		);
 	}
@@ -52,7 +52,7 @@ public class InsertUpdateTests {
 	public void testUpdateEmbedded(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createStatement("update Contact set name.first = 'Hibernate'").executeUpdate();
+					session.createMutationQuery("update Contact set name.first = 'Hibernate'").executeUpdate();
 				}
 		);
 	}
@@ -61,8 +61,8 @@ public class InsertUpdateTests {
 	public void testDelete(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createStatement("delete from Ticket where id = 1").executeUpdate();
-					session.createStatement("delete from Ticket t where t.id = 1").executeUpdate();
+					session.createMutationQuery("delete from Ticket where id = 1").executeUpdate();
+					session.createMutationQuery("delete from Ticket t where t.id = 1").executeUpdate();
 				}
 		);
 	}
@@ -76,7 +76,7 @@ public class InsertUpdateTests {
 					contact.setName( new Name("Hibernate", "ORM") );
 					contact.setBirthDay( LocalDate.now() );
 					session.persist(contact);
-					session.createStatement("delete from Contact").executeUpdate();
+					session.createMutationQuery("delete from Contact").executeUpdate();
 				}
 		);
 	}
@@ -85,8 +85,8 @@ public class InsertUpdateTests {
 	public void testInsertValues(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createStatement("delete from Ticket").executeUpdate();
-					session.createStatement("insert into Ticket (id, key, subject, details) values (6, 'ABC123', 'Outage', 'Something is broken')").executeUpdate();
+					session.createMutationQuery("delete from Ticket").executeUpdate();
+					session.createMutationQuery("insert into Ticket (id, key, subject, details) values (6, 'ABC123', 'Outage', 'Something is broken')").executeUpdate();
 				}
 		);
 	}
@@ -96,8 +96,8 @@ public class InsertUpdateTests {
 	public void testInsertMultipleValues(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createStatement("delete from Ticket").executeUpdate();
-					session.createStatement("insert into Ticket (id, key, subject, details) values (2, 'XYZ123', 'Outage', 'Something is broken'), (13, 'HIJ456', 'x', 'x')").executeUpdate();
+					session.createMutationQuery("delete from Ticket").executeUpdate();
+					session.createMutationQuery("insert into Ticket (id, key, subject, details) values (2, 'XYZ123', 'Outage', 'Something is broken'), (13, 'HIJ456', 'x', 'x')").executeUpdate();
 				}
 		);
 	}
@@ -106,9 +106,9 @@ public class InsertUpdateTests {
 	public void testInsertSelect(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createStatement("delete from Ticket").executeUpdate();
-					session.createStatement("insert into Ticket (id, key, subject, details) select 6, 'ABC123', 'Outage', 'Something is broken'").executeUpdate();
-					session.createStatement("insert into Ticket (id, key, subject, details) select 13, 'DEF456', tt.subject, tt.details from Ticket tt").executeUpdate();
+					session.createMutationQuery("delete from Ticket").executeUpdate();
+					session.createMutationQuery("insert into Ticket (id, key, subject, details) select 6, 'ABC123', 'Outage', 'Something is broken'").executeUpdate();
+					session.createMutationQuery("insert into Ticket (id, key, subject, details) select 13, 'DEF456', tt.subject, tt.details from Ticket tt").executeUpdate();
 				}
 		);
 	}
@@ -117,9 +117,9 @@ public class InsertUpdateTests {
 	public void testAliasedInsertSelect(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createStatement("delete from Ticket").executeUpdate();
-					session.createStatement("insert into Ticket t (t.id, t.key, t.subject, t.details) select 12, 'ABC123', 'Outage', 'Something is broken'").executeUpdate();
-					session.createStatement("insert into Ticket as t (t.id, t.key, t.subject, t.details) select 5, 'DEF456', tt.subject, tt.details from Ticket tt").executeUpdate();
+					session.createMutationQuery("delete from Ticket").executeUpdate();
+					session.createMutationQuery("insert into Ticket t (t.id, t.key, t.subject, t.details) select 12, 'ABC123', 'Outage', 'Something is broken'").executeUpdate();
+					session.createMutationQuery("insert into Ticket as t (t.id, t.key, t.subject, t.details) select 5, 'DEF456', tt.subject, tt.details from Ticket tt").executeUpdate();
 				}
 		);
 	}

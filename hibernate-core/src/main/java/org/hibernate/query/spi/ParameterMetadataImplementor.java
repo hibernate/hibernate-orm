@@ -32,7 +32,13 @@ public interface ParameterMetadataImplementor extends ParameterMetadata {
 	boolean hasAnyMatching(Predicate<QueryParameterImplementor<?>> filter);
 
 	@Override
+	QueryParameterImplementor<?> findQueryParameter(String name);
+
+	@Override
 	QueryParameterImplementor<?> getQueryParameter(String name);
+
+	@Override
+	QueryParameterImplementor<?> findQueryParameter(int positionLabel);
 
 	@Override
 	QueryParameterImplementor<?> getQueryParameter(int positionLabel);

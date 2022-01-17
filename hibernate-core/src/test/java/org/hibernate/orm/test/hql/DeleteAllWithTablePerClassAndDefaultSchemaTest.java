@@ -6,16 +6,8 @@
  */
 package org.hibernate.orm.test.hql;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Inheritance;
-import jakarta.persistence.InheritanceType;
-
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 
 import org.hibernate.testing.RequiresDialect;
@@ -23,6 +15,13 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Before;
 import org.junit.Test;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @TestForIssue(jiraKey = "HHH-15022")
 @RequiresDialect(PostgreSQLDialect.class)
@@ -55,7 +54,7 @@ public class DeleteAllWithTablePerClassAndDefaultSchemaTest extends BaseCoreFunc
 					.isEqualTo( 2L );
 		} );
 		inTransaction( session -> {
-			session.createStatement( "delete from subent1" ).executeUpdate();
+			session.createMutationQuery( "delete from subent1" ).executeUpdate();
 		} );
 		inTransaction( session -> {
 			assertThat( session.createQuery( "select count(*) from superent", Long.class ).uniqueResult() )

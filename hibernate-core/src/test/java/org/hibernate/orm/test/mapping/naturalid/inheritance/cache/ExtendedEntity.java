@@ -11,11 +11,11 @@ import jakarta.persistence.Entity;
 
 @Entity
 public class ExtendedEntity extends MyEntity {
-	public ExtendedEntity() {
+	protected ExtendedEntity() {
 	}
 
-	public ExtendedEntity(final String uid, final String extendedValue) {
-		super( uid );
+	public ExtendedEntity(Integer id, String uid, String extendedValue) {
+		super( id, uid );
 		this.extendedValue = extendedValue;
 	}
 

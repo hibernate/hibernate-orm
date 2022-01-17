@@ -6,39 +6,38 @@
  */
 package org.hibernate.orm.test.mapping.naturalid.inheritance.cache;
 
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.NaturalId;
+import org.hibernate.annotations.NaturalIdCache;
+
 import jakarta.persistence.Cacheable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-
-import org.hibernate.annotations.Cache;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.NaturalId;
 
 @Entity
 @Cacheable
+@NaturalIdCache
 @Cache(usage = CacheConcurrencyStrategy.TRANSACTIONAL)
 public class MyEntity {
-	private Long id;
+	private Integer id;
 	private String uid;
 
-	public MyEntity() {
+	protected MyEntity() {
 	}
 
-	public MyEntity(String uid) {
+	public MyEntity(Integer id, String uid) {
+		this.id = id;
 		this.uid = uid;
 	}
 
 	@Id
-	@GeneratedValue(generator = "increment")
-	@GenericGenerator(name = "increment", strategy = "increment")
-	public Long getId() {
+	public Integer getId() {
 		return id;
 	}
 
-	public void setId(Long id) {
+	public void setId(Integer id) {
 		this.id = id;
 	}
 

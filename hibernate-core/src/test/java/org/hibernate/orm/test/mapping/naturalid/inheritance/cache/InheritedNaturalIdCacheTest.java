@@ -6,8 +6,9 @@
  */
 package org.hibernate.orm.test.mapping.naturalid.inheritance.cache;
 
-import org.hibernate.WrongClassException;
+import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.NotImplementedYet;
@@ -19,22 +20,122 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @ServiceRegistry( settings = @Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "true" ) )
 @DomainModel( annotatedClasses = { MyEntity.class, ExtendedEntity.class } )
 @SessionFactory
 public class InheritedNaturalIdCacheTest {
+
+	@Test
+	public void testProperLoadingByNaturalId(SessionFactoryScope scope) {
+		// load the entities properly by natural-id
+		scope.inTransaction(
+				(session) -> {
+					final MyEntity base = session.bySimpleNaturalId( MyEntity.class ).load( "base" );
+					assertThat( base ).isNotNull();
+
+					final ExtendedEntity extended = session.bySimpleNaturalId( ExtendedEntity.class ).load( "extended" );
+					assertThat( extended ).isNotNull();
+				}
+		);
+	}
+
+	@Test
+	public void testLoadWrongClassById(SessionFactoryScope scope) {
+		clearCaches( scope );
+
+		// try to load `MyEntity#1` as an ExtendedEntity
+		scope.inTransaction( (session) -> {
+			final ExtendedEntity loaded = session.byId( ExtendedEntity.class ).load( 1 );
+			assertThat( loaded ).isNull();
+		} );
+	}
+
+	@Test
+	@NotImplementedYet(
+			strict = false,
+			reason = "Because `MyEntity#1` is stored in the second level cache, the attempt to " +
+					"access it throws `WrongClassException`.  Not consistent with what happens " +
+					"when the entity is not in the cache - `#testLoadWrongClassById`"
+	)
+	public void testLoadWrongClassByIdFromCache(SessionFactoryScope scope) {
+		clearCaches( scope );
+
+		// load `MyEntity#1` into the cache
+		scope.inTransaction( (session) -> {
+			final MyEntity loaded = session.byId( MyEntity.class ).load( 1 );
+			assertThat( loaded ).isNotNull();
+		} );
+
+		final CacheImplementor cache = scope.getSessionFactory().getCache();
+		assertThat( cache.containsEntity( MyEntity.class, 1 ) ).isTrue();
+
+		// now try to access it as an ExtendedEntity
+		scope.inTransaction( (session) -> {
+			final ExtendedEntity loaded = session.byId( ExtendedEntity.class ).load( 1 );
+			assertThat( loaded ).isNull();
+		} );
+	}
+
+	@Test
+	public void testLoadWrongClassByNaturalId(SessionFactoryScope scope) {
+		clearCaches( scope );
+
+		// try to load `MyEntity#1` as an ExtendedEntity
+		scope.inTransaction( (session) -> {
+			final ExtendedEntity loaded = session.bySimpleNaturalId( ExtendedEntity.class ).load( "base" );
+			assertThat( loaded ).isNull();
+		} );
+	}
+
+	@Test
+	@NotImplementedYet(
+			strict = false,
+			reason = "Because `MyEntity#1` is stored in the second level cache, the attempt to " +
+					"access it throws `WrongClassException`.  Not consistent with what happens " +
+					"when the entity is not in the cache - `#testLoadWrongClassByNaturalId`"
+	)
+	public void testLoadWrongClassByNaturalIdFromCache(SessionFactoryScope scope) {
+		clearCaches( scope );
+
+		// load `MyEntity#1` into the cache
+		scope.inTransaction( (session) -> {
+			final MyEntity loaded = session.bySimpleNaturalId( MyEntity.class ).load( "base" );
+			assertThat( loaded ).isNotNull();
+		} );
+
+		final CacheImplementor cache = scope.getSessionFactory().getCache();
+		assertThat( cache.containsEntity( MyEntity.class, 1 ) ).isTrue();
+
+		// now try to access it as an ExtendedEntity
+		scope.inTransaction( (session) -> {
+			final ExtendedEntity loaded = session.bySimpleNaturalId( ExtendedEntity.class ).load( "base" );
+			assertThat( loaded ).isNull();
+		} );
+	}
+
+
+	private void clearCaches(SessionFactoryScope scope) {
+		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
+		final CacheImplementor cache = sessionFactory.getCache();
+
+		cache.evictEntityData( MyEntity.class );
+		cache.evictEntityData( ExtendedEntity.class );
+
+		cache.evictNaturalIdData( MyEntity.class );
+		cache.evictNaturalIdData( ExtendedEntity.class );
+	}
+
 	@BeforeEach
 	public void createTestData(SessionFactoryScope scope) {
 		// create the data:
 		//		MyEntity#1
-		//		ExtendedEntity#1
+		//		ExtendedEntity#2
 		scope.inTransaction(
 				(session) -> {
-					session.save( new MyEntity( "base" ) );
-					session.save( new ExtendedEntity( "extended", "ext" ) );
+					session.save( new MyEntity( 1, "base" ) );
+					session.save( new ExtendedEntity( 2, "extended", "ext" ) );
 				}
 		);
 	}
@@ -45,66 +146,4 @@ public class InheritedNaturalIdCacheTest {
 				(session) -> session.createQuery( "delete MyEntity" ).executeUpdate()
 		);
 	}
-
-	@Test
-	@NotImplementedYet(
-			reason = "We do not throw `WrongClassException` atm, we just return null",
-			strict = false
-	)
-	public void testLoadingInheritedEntitiesByNaturalId(SessionFactoryScope scope) {
-		// load the entities "properly" by natural-id
-		scope.inTransaction(
-				(session) -> {
-					final MyEntity entity = session.bySimpleNaturalId( MyEntity.class ).load( "base" );
-					assertNotNull( entity );
-
-					final ExtendedEntity extendedEntity = session.bySimpleNaturalId( ExtendedEntity.class ).load( "extended" );
-					assertNotNull( extendedEntity );
-				}
-		);
-
-		// baseline: loading the wrong class by id...
-
-		scope.inTransaction(
-				(session) -> {
-					try {
-						session.byId( ExtendedEntity.class ).load( 1L );
-						fail( "Expecting WrongClassException" );
-					}
-					catch (WrongClassException expected) {
-						// expected outcome
-					}
-					catch (Exception other) {
-						throw new AssertionError(
-								"Unexpected exception type : " + other.getClass().getName(),
-								other
-						);
-					}
-				}
-		);
-
-		// finally, attempt to load MyEntity#1 as an ExtendedEntity, which should
-		// throw a `WrongClassException` same as above with loading by id
-		//
-		// NOTE : this is what fails currently
-		scope.inTransaction(
-				(session) -> {
-					try {
-						session.bySimpleNaturalId( ExtendedEntity.class ).load( "base" );
-						fail( "Expecting WrongClassException" );
-					}
-					catch (WrongClassException expected) {
-						// expected outcome
-					}
-					catch (Exception other) {
-						throw new AssertionError(
-								"Unexpected exception type : " + other.getClass().getName(),
-								other
-						);
-					}
-				}
-		);
-
-	}
-
 }

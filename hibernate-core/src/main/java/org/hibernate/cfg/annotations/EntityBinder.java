@@ -1056,8 +1056,8 @@ public class EntityBinder {
 		Join join = new Join();
 		join.setPersistentClass( persistentClass );
 
-		final String schema;
-		final String catalog;
+		String schema;
+		String catalog;
 		final Object joinColumns;
 		final List<UniqueConstraintHolder> uniqueConstraintHolders;
 
@@ -1094,6 +1094,13 @@ public class EntityBinder {
 		}
 		else {
 			throw new AssertionFailure( "Both JoinTable and SecondaryTable are null" );
+		}
+
+		if ( schema.isEmpty() ) {
+			schema = AnnotationBinder.defaultSchema( annotatedClass );
+		}
+		if ( catalog.isEmpty() ) {
+			catalog = AnnotationBinder.defaultCatalog( annotatedClass );
 		}
 
 		final Table table = TableBinder.buildAndFillTable(

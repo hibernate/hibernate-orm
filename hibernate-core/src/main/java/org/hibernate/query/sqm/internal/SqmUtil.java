@@ -69,8 +69,16 @@ public class SqmUtil {
 	private SqmUtil() {
 	}
 
+	public static boolean isSelect(SqmStatement<?> sqm) {
+		return sqm instanceof SqmSelectStatement;
+	}
+
+	public static boolean isMutation(SqmStatement<?> sqm) {
+		return sqm instanceof SqmDmlStatement;
+	}
+
 	public static void verifyIsSelectStatement(SqmStatement<?> sqm, String hqlString) {
-		if ( !(sqm instanceof SqmSelectStatement) ) {
+		if ( ! isSelect( sqm ) ) {
 			throw new IllegalQueryOperationException(
 					String.format(
 							Locale.ROOT,
@@ -85,7 +93,7 @@ public class SqmUtil {
 	}
 
 	public static void verifyIsNonSelectStatement(SqmStatement<?> sqm, String hqlString) {
-		if ( !( sqm instanceof SqmDmlStatement ) ) {
+		if ( ! isMutation( sqm ) ) {
 			throw expectingNonSelect( sqm, hqlString );
 		}
 	}

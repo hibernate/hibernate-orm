@@ -58,8 +58,6 @@ import org.hibernate.query.MutationNativeQuery;
 import org.hibernate.query.MutationQuery;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.UnknownNamedQueryException;
-import org.hibernate.query.UntypedQuery;
-import org.hibernate.query.Query;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
 import org.hibernate.query.hql.spi.SqmQueryImplementor;
@@ -70,8 +68,9 @@ import org.hibernate.query.spi.QueryInterpretationCache;
 import org.hibernate.query.sql.internal.NativeQueryImpl;
 import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
+import org.hibernate.query.sqm.SqmSelectionQuery;
 import org.hibernate.query.sqm.internal.QuerySqmImpl;
-import org.hibernate.query.sqm.internal.UntypedSqmQueryImpl;
+import org.hibernate.query.sqm.internal.SqmSelectQueryImpl;
 import org.hibernate.query.sqm.tree.SqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
@@ -665,7 +664,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@Override
-	public UntypedQuery createUntypedQuery(String hqlString) {
+	public SelectionQuery createSelectQuery(String hqlString) {
 		checkOpen();
 		pulseTransactionCoordinator();
 		delayedAfterCompletion();
@@ -674,7 +673,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			final QueryEngine queryEngine = getFactory().getQueryEngine();
 			final QueryInterpretationCache interpretationCache = queryEngine.getInterpretationCache();
 
-			final UntypedSqmQueryImpl query = new UntypedSqmQueryImpl(
+			final SqmSelectionQuery query = new SqmSelectQueryImpl(
 					hqlString,
 					interpretationCache.resolveHqlInterpretation(
 							hqlString,
@@ -1034,6 +1033,32 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@Override
+	public MutationQuery createMutationQuery(CriteriaUpdate updateQuery) {
+		checkOpen();
+		try {
+			return new QuerySqmImpl<>(
+					(SqmUpdateStatement) updateQuery,
+					null,
+					this
+			);
+		}
+		catch ( RuntimeException e ) {
+			throw getExceptionConverter().convert( e );
+		}
+	}
+
+	@Override
+	public MutationQuery createMutationQuery(CriteriaDelete deleteQuery) {
+		checkOpen();
+		try {
+			return new QuerySqmImpl( (SqmDeleteStatement) deleteQuery, null, this );
+		}
+		catch ( RuntimeException e ) {
+			throw getExceptionConverter().convert( e );
+		}
+	}
+
+	@Override
 	@SuppressWarnings("UnnecessaryLocalVariable")
 	public ProcedureCall getNamedProcedureCall(String name) {
 		checkOpen();
@@ -1160,7 +1185,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@Override @SuppressWarnings("unchecked")
-	public MutationQuery createQuery(@SuppressWarnings("rawtypes") CriteriaUpdate criteriaUpdate) {
+	public QueryImplementor createQuery(@SuppressWarnings("rawtypes") CriteriaUpdate criteriaUpdate) {
 		checkOpen();
 		try {
 			return new QuerySqmImpl<>(
@@ -1175,7 +1200,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@Override @SuppressWarnings("unchecked")
-	public MutationQuery createQuery(@SuppressWarnings("rawtypes") CriteriaDelete criteriaDelete) {
+	public QueryImplementor createQuery(@SuppressWarnings("rawtypes") CriteriaDelete criteriaDelete) {
 		checkOpen();
 		try {
 			return new QuerySqmImpl<>(

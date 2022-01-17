@@ -52,6 +52,18 @@ public interface SqmQueryImplementor<R> extends QueryImplementor<R>, SqmQuery, N
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// covariance
 
+	SqmQueryImplementor<R> setCacheMode(CacheMode cacheMode);
+
+	SqmQueryImplementor<R> setCacheable(boolean cacheable);
+
+	SqmQueryImplementor<R> setCacheRegion(String cacheRegion);
+
+	SqmQueryImplementor<R> setTimeout(int timeout);
+
+	SqmQueryImplementor<R> setFetchSize(int fetchSize);
+
+	SqmQueryImplementor<R> setReadOnly(boolean readOnly);
+
 	@Override
 	SqmQueryImplementor<R> applyGraph(RootGraph graph, GraphSemantic semantic);
 
@@ -93,24 +105,6 @@ public interface SqmQueryImplementor<R> extends QueryImplementor<R>, SqmQuery, N
 
 	@Override
 	SqmQueryImplementor<R> setHibernateFlushMode(FlushMode flushMode);
-
-	@Override
-	SqmQueryImplementor<R> setCacheable(boolean cacheable);
-
-	@Override
-	SqmQueryImplementor<R> setCacheRegion(String cacheRegion);
-
-	@Override
-	SqmQueryImplementor<R> setCacheMode(CacheMode cacheMode);
-
-	@Override
-	SqmQueryImplementor<R> setTimeout(int timeout);
-
-	@Override
-	SqmQueryImplementor<R> setFetchSize(int fetchSize);
-
-	@Override
-	SqmQueryImplementor<R> setReadOnly(boolean readOnly);
 
 	@Override
 	SqmQueryImplementor<R> setMaxResults(int maxResult);

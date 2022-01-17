@@ -25,6 +25,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphParser;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.internal.RootGraphImpl;
+import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
@@ -60,8 +61,12 @@ import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.TemporalType;
 
+import static java.lang.Boolean.TRUE;
 import static java.util.Locale.ROOT;
+import static org.hibernate.LockOptions.WAIT_FOREVER;
+import static org.hibernate.annotations.QueryHints.FOLLOW_ON_LOCKING;
 import static org.hibernate.annotations.QueryHints.NATIVE_LOCKMODE;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_LOCK_TIMEOUT;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_SHARED_CACHE_RETRIEVE_MODE;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_SHARED_CACHE_STORE_MODE;
 import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_TIMEOUT;
@@ -168,33 +173,51 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 			hints.put( SPEC_HINT_TIMEOUT, getQueryOptions().getTimeout() * 1000 );
 		}
 
-		putIfNotNull( hints, HINT_FETCH_SIZE, getQueryOptions().getFetchSize() );
+		putIfNotNull( hints, HINT_COMMENT, getComment() );
 		putIfNotNull( hints, HINT_FLUSH_MODE, getHibernateFlushMode() );
 
-		if ( getCacheMode() != null ) {
-			putIfNotNull( hints, HINT_CACHE_MODE, getCacheMode() );
-			putIfNotNull( hints, JAKARTA_SHARED_CACHE_RETRIEVE_MODE, getQueryOptions().getCacheRetrieveMode() );
-			putIfNotNull( hints, JAKARTA_SHARED_CACHE_STORE_MODE, getQueryOptions().getCacheStoreMode() );
-			putIfNotNull( hints, JPA_SHARED_CACHE_RETRIEVE_MODE, getQueryOptions().getCacheRetrieveMode() );
-			putIfNotNull( hints, JPA_SHARED_CACHE_STORE_MODE, getQueryOptions().getCacheStoreMode() );
+		putIfNotNull( hints, HINT_READONLY, getQueryOptions().isReadOnly() );
+		putIfNotNull( hints, HINT_FETCH_SIZE, getQueryOptions().getFetchSize() );
+		putIfNotNull( hints, HINT_CACHEABLE, getQueryOptions().isResultCachingEnabled() );
+		putIfNotNull( hints, HINT_CACHE_REGION, getQueryOptions().getResultCacheRegionName() );
+		putIfNotNull( hints, HINT_CACHE_MODE, getQueryOptions().getCacheMode() );
+
+		putIfNotNull( hints, JAKARTA_SHARED_CACHE_RETRIEVE_MODE, getQueryOptions().getCacheRetrieveMode() );
+		putIfNotNull( hints, JPA_SHARED_CACHE_RETRIEVE_MODE, getQueryOptions().getCacheRetrieveMode() );
+
+		putIfNotNull( hints, JAKARTA_SHARED_CACHE_STORE_MODE, getQueryOptions().getCacheStoreMode() );
+		putIfNotNull( hints, JPA_SHARED_CACHE_STORE_MODE, getQueryOptions().getCacheStoreMode() );
+
+		final AppliedGraph appliedGraph = getQueryOptions().getAppliedGraph();
+		if ( appliedGraph != null && appliedGraph.getSemantic() != null ) {
+			hints.put( appliedGraph.getSemantic().getJakartaHintName(), appliedGraph.getGraph() );
+			hints.put( appliedGraph.getSemantic().getJpaHintName(), appliedGraph.getGraph() );
 		}
 
-		if ( isCacheable() ) {
-			hints.put( HINT_CACHEABLE, true );
-			putIfNotNull( hints, HINT_CACHE_REGION, getCacheRegion() );
-		}
+		final LockOptions lockOptions = getQueryOptions().getLockOptions();
+		if ( ! lockOptions.isEmpty() ) {
+			final LockMode lockMode = lockOptions.getLockMode();
+			if ( lockMode != null && lockMode != LockMode.NONE ) {
+				hints.put( HINT_NATIVE_LOCKMODE, lockMode );
+			}
 
-		if ( isReadOnly() ) {
-			hints.put( HINT_READONLY, true );
-		}
+			if ( lockOptions.hasAliasSpecificLockModes() ) {
+				for ( Map.Entry<String, LockMode> entry : lockOptions.getAliasSpecificLocks() ) {
+					hints.put(
+							HINT_NATIVE_LOCKMODE + "." + entry.getKey(),
+							entry.getValue()
+					);
+				}
+			}
 
-		putIfNotNull( hints, HINT_COMMENT, getComment() );
+			if ( lockOptions.getFollowOnLocking() == TRUE ) {
+				hints.put( FOLLOW_ON_LOCKING, TRUE );
+			}
 
-		if ( getQueryOptions().getAppliedGraph() != null && getQueryOptions().getAppliedGraph().getSemantic() != null ) {
-			hints.put(
-					getQueryOptions().getAppliedGraph().getSemantic().getJpaHintName(),
-					getQueryOptions().getAppliedGraph().getGraph()
-			);
+			if ( lockOptions.getTimeOut() != WAIT_FOREVER ) {
+				hints.put( JAKARTA_LOCK_TIMEOUT, lockOptions.getTimeOut() );
+				hints.put( JPA_LOCK_TIMEOUT, lockOptions.getTimeOut() );
+			}
 		}
 	}
 
@@ -213,121 +236,293 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		}
 	}
 
+	@Override
+	public CommonQueryContract setHint(String hintName, Object value) {
+		applyHint( hintName, value );
+		return this;
+	}
+
 	@SuppressWarnings("deprecation")
-	public boolean applyHint(String hintName, Object value) {
+	public final boolean applyHint(String hintName, Object value) {
 		getSession().checkOpen( true );
 
-		boolean applied = false;
 		try {
 			if ( HINT_TIMEOUT.equals( hintName ) ) {
-				applied = applyTimeout( ConfigurationHelper.getInteger( value ) );
+				applyTimeoutHint( ConfigurationHelper.getInteger( value ) );
+				return true;
 			}
-			else if ( SPEC_HINT_TIMEOUT.equals( hintName ) ) {
+
+			if ( SPEC_HINT_TIMEOUT.equals( hintName ) ) {
 				// convert milliseconds to seconds
 				int timeout = (int)Math.round( ConfigurationHelper.getInteger( value ).doubleValue() / 1000.0 );
-				applied = applyTimeout( timeout );
+				applyTimeoutHint( timeout );
+				return true;
 			}
-			else if ( JPA_LOCK_TIMEOUT.equals( hintName ) ) {
-				applied = applyLockTimeout( ConfigurationHelper.getInteger( value ) );
-			}
-			else if ( HINT_COMMENT.equals( hintName ) ) {
-				applied = applyComment( (String) value );
-			}
-			else if ( HINT_FETCH_SIZE.equals( hintName ) ) {
-				applied = applyFetchSize( ConfigurationHelper.getInteger( value ) );
-			}
-			else if ( HINT_CACHEABLE.equals( hintName ) ) {
-				applied = applyCacheable( ConfigurationHelper.getBoolean( value ) );
-			}
-			else if ( HINT_CACHE_REGION.equals( hintName ) ) {
-				applied = applyCacheRegion( (String) value );
-			}
-			else if ( HINT_READONLY.equals( hintName ) ) {
-				applied = applyReadOnly( ConfigurationHelper.getBoolean( value ) );
-			}
-			else if ( HINT_FLUSH_MODE.equals( hintName ) ) {
-				applied = applyFlushMode( ConfigurationHelper.getFlushMode( value ) );
-			}
-			else if ( HINT_CACHE_MODE.equals( hintName ) ) {
-				applied = applyCacheMode( ConfigurationHelper.getCacheMode( value ) );
-			}
-			else if ( JAKARTA_SHARED_CACHE_RETRIEVE_MODE.equals( hintName ) ) {
-				final CacheRetrieveMode retrieveMode = value != null ? CacheRetrieveMode.valueOf( value.toString() ) : null;
-				applied = applyJpaCacheRetrieveMode( retrieveMode );
-			}
-			else if ( JAKARTA_SHARED_CACHE_STORE_MODE.equals( hintName ) ) {
-				final CacheStoreMode storeMode = value != null ? CacheStoreMode.valueOf( value.toString() ) : null;
-				applied = applyJpaCacheStoreMode( storeMode );
-			}
-			else if ( JPA_SHARED_CACHE_RETRIEVE_MODE.equals( hintName ) ) {
-				final CacheRetrieveMode retrieveMode = value != null ? CacheRetrieveMode.valueOf( value.toString() ) : null;
-				applied = applyJpaCacheRetrieveMode( retrieveMode );
-			}
-			else if ( JPA_SHARED_CACHE_STORE_MODE.equals( hintName ) ) {
-				final CacheStoreMode storeMode = value != null ? CacheStoreMode.valueOf( value.toString() ) : null;
-				applied = applyJpaCacheStoreMode( storeMode );
-			}
-			else if ( QueryHints.HINT_NATIVE_LOCKMODE.equals( hintName ) ) {
-				applied = applyNativeQueryLockMode( value );
-			}
-			else if ( hintName.startsWith( NATIVE_LOCKMODE ) ) {
-				// extract the alias
-				final String alias = hintName.substring( NATIVE_LOCKMODE.length() + 1 );
-				// determine the LockMode
-				try {
-					final LockMode lockMode = LockModeTypeHelper.interpretLockMode( value );
-					applied = applyAliasSpecificLockMode( alias, lockMode );
-				}
-				catch ( Exception e ) {
-					QueryLogging.QUERY_MESSAGE_LOGGER.unableToDetermineLockModeValue( hintName, value );
-				}
-			}
-			else if ( JAKARTA_HINT_FETCH_GRAPH.equals( hintName ) || JAKARTA_HINT_LOAD_GRAPH.equals( hintName ) ) {
-				if ( value instanceof RootGraphImplementor ) {
-					applied = applyEntityGraphQuery( hintName, (RootGraphImplementor<?>) value );
-				}
-				else if ( value instanceof String ) {
-					// https://hibernate.atlassian.net/browse/HHH-14855
-					applied = applyEntityGraphQuery( hintName, (String) value );
-				}
-				else {
-					QueryLogging.QUERY_LOGGER.debugf( "The %s hint was set, but the value was neither an EntityGraph nor String", hintName );
-				}
-			}
-			else if ( HINT_FETCHGRAPH.equals( hintName ) || HINT_LOADGRAPH.equals( hintName ) ) {
-				if ( HINT_FETCHGRAPH.equals( hintName ) ) {
-					DEPRECATION_LOGGER.deprecatedSetting( HINT_FETCHGRAPH, JAKARTA_HINT_FETCH_GRAPH );
-				}
-				else {
-					DEPRECATION_LOGGER.deprecatedSetting( HINT_FETCHGRAPH, JAKARTA_HINT_FETCH_GRAPH );
-				}
 
-				if ( value instanceof RootGraphImplementor ) {
-					applied = applyEntityGraphQuery( hintName, (RootGraphImplementor<?>) value );
-				}
-				else {
-					QueryLogging.QUERY_LOGGER.debugf( "The %s hint was set, but the value was not an EntityGraph!", hintName );
-				}
+			if ( HINT_COMMENT.equals( hintName ) ) {
+				applyCommentHint( (String) value );
+				return true;
 			}
-			else if ( HINT_FOLLOW_ON_LOCKING.equals( hintName ) ) {
-				applied = applyFollowOnLocking( ConfigurationHelper.getBoolean( value ) );
+
+			if ( HINT_FLUSH_MODE.equals( hintName ) ) {
+				applyFlushModeHint( ConfigurationHelper.getFlushMode( value ) );
+				return true;
 			}
-			else if ( HINT_NATIVE_SPACES.equals( hintName ) ) {
-				applied = applySynchronizeSpaces( value );
+
+			if ( HINT_NATIVE_SPACES.equals( hintName ) ) {
+				applySynchronizeSpacesHint( value );
+				return true;
 			}
-			else {
-				QueryLogging.QUERY_MESSAGE_LOGGER.ignoringUnrecognizedQueryHint( hintName );
+
+			final boolean selectionHintApplied = applySelectionHint( hintName, value );
+			if ( selectionHintApplied ) {
+				return true;
 			}
 		}
 		catch ( ClassCastException e ) {
 			throw new IllegalArgumentException( "Value for Query hint", e );
 		}
 
-		if ( !applied ) {
-			QueryLogging.QUERY_LOGGER.debugf( "Skipping unsupported query hint [%s]", hintName );
+		final boolean appliedAdditionalHint = applyAdditionalPossibleHints( hintName, value );
+		if ( appliedAdditionalHint ) {
+			return true;
 		}
 
-		return applied;
+		QueryLogging.QUERY_MESSAGE_LOGGER.ignoringUnrecognizedQueryHint( hintName );
+		return false;
+	}
+
+	protected void applySynchronizeSpacesHint(Object value) {
+		QueryLogging.QUERY_LOGGER.debug( "Query spaces hint was specified for non-native query; ignoring" );
+	}
+
+	protected final boolean applySelectionHint(String hintName, Object value) {
+		final boolean lockingHintApplied = applyLockingHint( hintName, value );
+		if ( lockingHintApplied ) {
+			return true;
+		}
+
+		if ( HINT_READONLY.equals( hintName ) ) {
+			applyReadOnlyHint( ConfigurationHelper.getBoolean( value ) );
+			return true;
+		}
+
+		if ( HINT_FETCH_SIZE.equals( hintName ) ) {
+			applyFetchSizeHint( ConfigurationHelper.getInteger( value ) );
+			return true;
+		}
+
+		if ( HINT_CACHEABLE.equals( hintName ) ) {
+			applyCacheableHint( ConfigurationHelper.getBoolean( value ) );
+			return true;
+		}
+
+		if ( HINT_CACHE_REGION.equals( hintName ) ) {
+			applyCacheRegionHint( (String) value );
+			return true;
+		}
+
+		if ( HINT_CACHE_MODE.equals( hintName ) ) {
+			applyCacheModeHint( ConfigurationHelper.getCacheMode( value ) );
+			return true;
+		}
+
+		if ( JAKARTA_SHARED_CACHE_RETRIEVE_MODE.equals( hintName ) ) {
+			final CacheRetrieveMode retrieveMode = value != null ? CacheRetrieveMode.valueOf( value.toString() ) : null;
+			applyJpaCacheRetrieveModeHint( retrieveMode );
+			return true;
+		}
+
+		if ( JAKARTA_SHARED_CACHE_STORE_MODE.equals( hintName ) ) {
+			final CacheStoreMode storeMode = value != null ? CacheStoreMode.valueOf( value.toString() ) : null;
+			applyJpaCacheStoreModeHint( storeMode );
+			return true;
+		}
+
+		if ( JPA_SHARED_CACHE_RETRIEVE_MODE.equals( hintName ) ) {
+			DEPRECATION_LOGGER.deprecatedSetting( JPA_SHARED_CACHE_RETRIEVE_MODE, JAKARTA_SHARED_CACHE_RETRIEVE_MODE );
+			final CacheRetrieveMode retrieveMode = value != null ? CacheRetrieveMode.valueOf( value.toString() ) : null;
+			applyJpaCacheRetrieveModeHint( retrieveMode );
+			return true;
+		}
+
+		if ( JPA_SHARED_CACHE_STORE_MODE.equals( hintName ) ) {
+			DEPRECATION_LOGGER.deprecatedSetting( JPA_SHARED_CACHE_STORE_MODE, JAKARTA_SHARED_CACHE_STORE_MODE );
+			final CacheStoreMode storeMode = value != null ? CacheStoreMode.valueOf( value.toString() ) : null;
+			applyJpaCacheStoreModeHint( storeMode );
+			return true;
+		}
+
+		if ( JAKARTA_HINT_FETCH_GRAPH.equals( hintName ) || JAKARTA_HINT_LOAD_GRAPH.equals( hintName ) ) {
+			applyEntityGraphHint( hintName, value );
+			return true;
+		}
+
+		if ( HINT_FETCHGRAPH.equals( hintName ) || HINT_LOADGRAPH.equals( hintName ) ) {
+			if ( HINT_FETCHGRAPH.equals( hintName ) ) {
+				DEPRECATION_LOGGER.deprecatedSetting( HINT_FETCHGRAPH, JAKARTA_HINT_FETCH_GRAPH );
+			}
+			else {
+				DEPRECATION_LOGGER.deprecatedSetting( HINT_LOADGRAPH, JAKARTA_HINT_LOAD_GRAPH );
+			}
+			applyEntityGraphHint( hintName, value );
+			return true;
+		}
+
+		return false;
+	}
+
+	protected void applyFetchSizeHint(int fetchSize) {
+		getQueryOptions().setFetchSize( fetchSize );
+	}
+
+	protected void applyCacheModeHint(CacheMode cacheMode) {
+		getQueryOptions().setCacheMode( cacheMode );
+	}
+
+	protected void applyCacheableHint(boolean isCacheable) {
+		getQueryOptions().setResultCachingEnabled( isCacheable );
+	}
+
+	protected void applyCacheRegionHint(String regionName) {
+		getQueryOptions().setResultCacheRegionName( regionName );
+	}
+
+	private void applyReadOnlyHint(Boolean readOnly) {
+		getQueryOptions().setReadOnly( readOnly );
+	}
+
+	protected void applyEntityGraphHint(String hintName, Object value) {
+		final GraphSemantic graphSemantic = GraphSemantic.fromJpaHintName( hintName );
+		if ( value instanceof RootGraphImplementor ) {
+			applyGraph( (RootGraphImplementor<?>) value, graphSemantic );
+		}
+		else if ( value instanceof String ) {
+			applyGraph( (String) value, graphSemantic );
+		}
+		else {
+			QueryLogging.QUERY_LOGGER.debugf( "The %s hint was set, but the value was neither an EntityGraph nor String", hintName );
+		}
+	}
+
+	protected void applyGraph(String graphString, GraphSemantic graphSemantic) {
+		final int separatorPosition = graphString.indexOf( '(' );
+		final int terminatorPosition = graphString.lastIndexOf( ')' );
+		if ( separatorPosition < 0 || terminatorPosition < 0 ) {
+			throw new IllegalArgumentException(
+					String.format(
+							ROOT,
+							"Invalid entity-graph definition `%s`; expected form `${EntityName}( ${property1} ... )",
+							graphString
+					)
+			);
+		}
+
+		final RuntimeMetamodels runtimeMetamodels = getSession().getFactory().getRuntimeMetamodels();
+		final JpaMetamodel jpaMetamodel = runtimeMetamodels.getJpaMetamodel();
+
+		final String entityName = runtimeMetamodels.getImportedName( graphString.substring( 0, separatorPosition ).trim() );
+		final String graphNodes = graphString.substring( separatorPosition + 1, terminatorPosition );
+
+		final RootGraphImpl<?> rootGraph = new RootGraphImpl<>( null, jpaMetamodel.entity( entityName ), jpaMetamodel );
+		GraphParser.parseInto( (EntityGraph<?>) rootGraph, graphNodes, getSession().getSessionFactory() );
+		applyGraph( rootGraph, graphSemantic );
+	}
+
+	protected void applyGraph(RootGraphImplementor<?> entityGraph, GraphSemantic graphSemantic) {
+		getQueryOptions().applyGraph( entityGraph, graphSemantic );
+	}
+
+	private boolean applyLockingHint(String hintName, Object value) {
+		if ( JAKARTA_LOCK_TIMEOUT.equals( hintName ) && value != null ) {
+			applyLockTimeoutHint( ConfigurationHelper.getInteger( value ) );
+			return true;
+		}
+
+		if ( JPA_LOCK_TIMEOUT.equals( hintName ) && value != null ) {
+			DEPRECATION_LOGGER.deprecatedSetting( JPA_LOCK_TIMEOUT, JAKARTA_LOCK_TIMEOUT );
+			applyLockTimeoutHint( ConfigurationHelper.getInteger( value ) );
+			return true;
+		}
+
+		if ( HINT_FOLLOW_ON_LOCKING.equals( hintName ) ) {
+			applyFollowOnLockingHint( ConfigurationHelper.getBoolean( value ) );
+			return true;
+		}
+
+		if ( QueryHints.HINT_NATIVE_LOCKMODE.equals( hintName ) ) {
+			applyLockModeHint( value );
+			return true;
+		}
+
+		if ( hintName.startsWith( HINT_NATIVE_LOCKMODE ) ) {
+			applyAliasSpecificLockModeHint( hintName, value );
+			return true;
+		}
+
+		return false;
+	}
+
+	protected void applyLockTimeoutHint(Integer timeout) {
+		if ( timeout != null ) {
+			applyLockTimeoutHint( (int) timeout );
+		}
+	}
+
+	protected void applyLockTimeoutHint(int timeout) {
+		getQueryOptions().getLockOptions().setTimeOut( timeout );
+	}
+
+	protected void applyHibernateLockMode(LockMode value) {
+		getQueryOptions().getLockOptions().setLockMode( value );
+	}
+
+	protected void applyLockModeType(LockModeType value) {
+		applyHibernateLockMode( LockMode.fromJpaLockMode( value ) );
+	}
+
+	protected final void applyLockModeHint(Object value) {
+		if ( value instanceof LockMode ) {
+			applyHibernateLockMode( (LockMode) value );
+		}
+		else if ( value instanceof LockModeType ) {
+			applyLockModeType( (LockModeType) value );
+		}
+		else if ( value instanceof String ) {
+			applyHibernateLockMode( LockModeTypeHelper.interpretLockMode( value ) );
+		}
+		else {
+			throw new IllegalArgumentException(
+					String.format(
+							"Native lock-mode hint [%s] must specify %s or %s.  Encountered type : %s",
+							HINT_NATIVE_LOCKMODE,
+							LockMode.class.getName(),
+							LockModeType.class.getName(),
+							value.getClass().getName()
+					)
+			);
+		}
+	}
+
+	protected void applyAliasSpecificLockModeHint(String hintName, Object value) {
+		// extract the alias
+		final String alias = hintName.substring( NATIVE_LOCKMODE.length() + 1 );
+		// determine the LockMode
+		try {
+			final LockMode lockMode = LockModeTypeHelper.interpretLockMode( value );
+			getQueryOptions().getLockOptions().setAliasSpecificLockMode( alias, lockMode );
+		}
+		catch ( Exception e ) {
+			QueryLogging.QUERY_MESSAGE_LOGGER.unableToDetermineLockModeValue( hintName, value );
+		}
+	}
+
+	protected void applyFollowOnLockingHint(Boolean followOnLocking) {
+		getQueryOptions().getLockOptions().setFollowOnLocking( followOnLocking );
+	}
+
+	protected boolean applyAdditionalPossibleHints(String hintName, Object value) {
+		return false;
 	}
 
 
@@ -355,226 +550,46 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	@SuppressWarnings("WeakerAccess")
-	protected boolean applyJpaCacheRetrieveMode(CacheRetrieveMode retrieveMode) {
+	protected boolean applyJpaCacheRetrieveModeHint(CacheRetrieveMode retrieveMode) {
 		getQueryOptions().setCacheRetrieveMode( retrieveMode );
 		return true;
 	}
 
 	@SuppressWarnings("WeakerAccess")
-	protected boolean applyJpaCacheStoreMode(CacheStoreMode storeMode) {
+	protected boolean applyJpaCacheStoreModeHint(CacheStoreMode storeMode) {
 		getQueryOptions().setCacheStoreMode( storeMode );
 		return true;
 	}
 
-	protected boolean applyNativeQueryLockMode(Object value) {
-		if ( value instanceof LockMode ) {
-			applyHibernateLockMode( (LockMode) value );
-		}
-		else if ( value instanceof LockModeType ) {
-			applyLockModeType( (LockModeType) value );
-		}
-		else if ( value instanceof String ) {
-			applyHibernateLockMode( LockModeTypeHelper.interpretLockMode( value ) );
-		}
-		else {
-			throw new IllegalArgumentException(
-					String.format(
-							"Native lock-mode hint [%s] must specify %s or %s.  Encountered type : %s",
-							HINT_NATIVE_LOCKMODE,
-							LockMode.class.getName(),
-							LockModeType.class.getName(),
-							value.getClass().getName()
-					)
-			);
-		}
-
-		return true;
-	}
-
-	protected boolean applySynchronizeSpaces(Object value) {
-		throw new UnsupportedOperationException( "Explicit query-spaces not supported for non-native queries" );
-	}
-
-	/**
-	 * Apply the query timeout hint.
-	 *
-	 * @param timeout The timeout (in seconds!) specified as a hint
-	 *
-	 * @return {@code true} if the hint was "applied"
-	 */
-	@SuppressWarnings("WeakerAccess")
-	protected boolean applyTimeout(int timeout) {
+	protected void applyTimeoutHint(int timeout) {
 		setTimeout( timeout );
-		return true;
 	}
 
-	/**
-	 * Apply the comment hint.
-	 *
-	 * @param comment The comment specified as a hint
-	 * @return {@code true} if the hint was "applied"
-	 */
-	@SuppressWarnings("WeakerAccess")
-	protected boolean applyComment(String comment) {
+	protected void applyCommentHint(String comment) {
 		setComment( comment );
-		return true;
 	}
 
-	/**
-	 * Apply the fetch size hint
-	 *
-	 * @param fetchSize The fetch size specified as a hint
-	 *
-	 * @return {@code true} if the hint was "applied"
-	 */
-	@SuppressWarnings("WeakerAccess")
-	protected boolean applyFetchSize(int fetchSize) {
-		setFetchSize( fetchSize );
-		return true;
-	}
-
-	/**
-	 * Apply the cacheable (true/false) hint.
-	 *
-	 * @param isCacheable The value specified as hint
-	 *
-	 * @return {@code true} if the hint was "applied"
-	 */
-	@SuppressWarnings("WeakerAccess")
-	protected boolean applyCacheable(boolean isCacheable) {
-		setCacheable( isCacheable );
-		return true;
-	}
-
-	/**
-	 * Apply the cache region hint
-	 *
-	 * @param regionName The name of the cache region specified as a hint
-	 *
-	 * @return {@code true} if the hint was "applied"
-	 */
-	@SuppressWarnings("WeakerAccess")
-	protected boolean applyCacheRegion(String regionName) {
-		setCacheRegion( regionName );
-		return true;
-	}
-
-	/**
-	 * Apply the read-only (true/false) hint.
-	 *
-	 * @param isReadOnly The value specified as hint
-	 *
-	 * @return {@code true} if the hint was "applied"
-	 */
-	@SuppressWarnings("WeakerAccess")
-	protected boolean applyReadOnly(boolean isReadOnly) {
-		setReadOnly( isReadOnly );
-		return true;
-	}
-
-	/**
-	 * Apply the CacheMode hint.
-	 *
-	 * @param cacheMode The CacheMode value specified as a hint.
-	 *
-	 * @return {@code true} if the hint was "applied"
-	 */
-	@SuppressWarnings("WeakerAccess")
-	protected boolean applyCacheMode(CacheMode cacheMode) {
-		setCacheMode( cacheMode );
-		return true;
-	}
-
-	/**
-	 * Apply the FlushMode hint.
-	 *
-	 * @param flushMode The FlushMode value specified as hint
-	 *
-	 * @return {@code true} if the hint was "applied"
-	 */
-	@SuppressWarnings("WeakerAccess")
-	protected boolean applyFlushMode(FlushMode flushMode) {
+	protected void applyFlushModeHint(FlushMode flushMode) {
 		setHibernateFlushMode( flushMode );
-		return true;
-	}
-
-	@SuppressWarnings("UnusedReturnValue")
-	protected boolean applyLockModeType(LockModeType lockModeType) {
-		applyJpaLockMode( lockModeType );
-		return true;
-	}
-
-	@SuppressWarnings({ "UnusedReturnValue" })
-	protected boolean applyHibernateLockMode(LockMode lockMode) {
-		applyLockMode( lockMode );
-		return true;
-	}
-
-	@SuppressWarnings({ "UnusedReturnValue" })
-	protected boolean applyLockTimeout(int timeout) {
-		getQueryOptions().getLockOptions().setTimeOut( timeout );
-		return true;
-	}
-
-	@SuppressWarnings("WeakerAccess")
-	protected boolean applyAliasSpecificLockMode(String alias, LockMode lockMode) {
-		applyLockMode( alias, lockMode );
-		return true;
-	}
-
-	/**
-	 * Apply the follow-on-locking hint.
-	 *
-	 * @param followOnLocking The follow-on-locking strategy.
-	 */
-	protected boolean applyFollowOnLocking(Boolean followOnLocking) {
-		getQueryOptions().getLockOptions().setFollowOnLocking( followOnLocking );
-		return true;
-	}
-
-	protected boolean applyEntityGraphQuery(String hintName, RootGraphImplementor<?> entityGraph) {
-		final GraphSemantic graphSemantic = GraphSemantic.fromJpaHintName( hintName );
-		return applyGraph( entityGraph, graphSemantic );
-	}
-
-	protected boolean applyGraph(RootGraphImplementor<?> entityGraph, GraphSemantic graphSemantic) {
-		getQueryOptions().applyGraph( entityGraph, graphSemantic );
-		return true;
-	}
-
-	protected boolean applyEntityGraphQuery(String hintName, String entityGraphString) {
-		final int separatorPosition = entityGraphString.indexOf( '(' );
-		final int terminatorPosition = entityGraphString.lastIndexOf( ')' );
-		if ( separatorPosition < 0 || terminatorPosition < 0 ) {
-			throw new IllegalArgumentException(
-					String.format(
-							ROOT,
-							"Invalid entity-graph definition `%s`; expected form `${EntityName}( ${property1} ... )",
-							entityGraphString
-					)
-			);
-		}
-
-		final RuntimeMetamodels runtimeMetamodels = getSession().getFactory().getRuntimeMetamodels();
-		final JpaMetamodel jpaMetamodel = runtimeMetamodels.getJpaMetamodel();
-
-		final GraphSemantic graphSemantic = GraphSemantic.fromJpaHintName( hintName );
-		final String entityName = runtimeMetamodels.getImportedName( entityGraphString.substring( 0, separatorPosition ).trim() );
-		final String graphNodes = entityGraphString.substring( separatorPosition + 1, terminatorPosition );
-
-		final RootGraphImpl<?> rootGraph = new RootGraphImpl<>( null, jpaMetamodel.entity( entityName ), jpaMetamodel );
-		GraphParser.parseInto( (EntityGraph<?>) rootGraph, graphNodes, getSession().getSessionFactory() );
-		applyGraph( rootGraph, graphSemantic );
-
-		return true;
 	}
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Options
 
-	protected MutableQueryOptions getQueryOptions() {
+	public MutableQueryOptions getQueryOptions() {
 		return queryOptions;
+	}
+
+	@Override
+	public Integer getTimeout() {
+		return getQueryOptions().getTimeout();
+	}
+
+	@Override
+	public CommonQueryContract setTimeout(int timeout) {
+		getQueryOptions().setTimeout( timeout );
+		return this;
 	}
 
 	public int getMaxResults() {
@@ -617,106 +632,15 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		setHibernateFlushMode( FlushModeTypeHelper.getFlushMode( flushModeType ) );
 	}
 
-	@Override
-	public CacheMode getCacheMode() {
-		return getQueryOptions().getCacheMode();
-	}
-
-	@Override
-	public CommonQueryContract setCacheMode(CacheMode cacheMode) {
-		getQueryOptions().setCacheMode( cacheMode );
-		return this;
-	}
-
-	@Override
-	public boolean isCacheable() {
-		return getQueryOptions().isResultCachingEnabled() == Boolean.TRUE;
-	}
-
-	@Override
-	public CommonQueryContract setCacheable(boolean cacheable) {
-		getQueryOptions().setResultCachingEnabled( cacheable );
-		return this;
-	}
-
-	@Override
-	public String getCacheRegion() {
-		return getQueryOptions().getResultCacheRegionName();
-	}
-
-	@Override
-	public CommonQueryContract setCacheRegion(String cacheRegion) {
-		getQueryOptions().setResultCacheRegionName( cacheRegion );
-		return this;
-	}
-
-	@Override
-	public Integer getTimeout() {
-		return getQueryOptions().getTimeout();
-	}
-
-	@Override
-	public CommonQueryContract setTimeout(int timeout) {
-		getQueryOptions().setTimeout( timeout );
-		return this;
-	}
-
-	protected LockModeType getJpaLockMode() {
-		getSession().checkOpen( false );
-		return LockModeTypeHelper.getLockModeType( getQueryOptions().getLockOptions().getLockMode() );
-	}
-
-	protected void applyJpaLockMode(LockModeType lockModeType) {
-		getSession().checkOpen();
-		getQueryOptions().getLockOptions().setLockMode( LockModeTypeHelper.getLockMode( lockModeType ) );
-	}
-
-	protected void applyLockOptions(LockOptions lockOptions) {
-		getQueryOptions().getLockOptions().setLockMode( lockOptions.getLockMode() );
-		getQueryOptions().getLockOptions().setScope( lockOptions.getScope() );
-		getQueryOptions().getLockOptions().setTimeOut( lockOptions.getTimeOut() );
-		getQueryOptions().getLockOptions().setFollowOnLocking( lockOptions.getFollowOnLocking() );
-	}
-
-	protected void applyLockMode(LockMode lockMode) {
-		getQueryOptions().getLockOptions().setLockMode( lockMode );
-	}
-
-	protected void applyLockMode(String alias, LockMode lockMode) {
-		getQueryOptions().getLockOptions().setAliasSpecificLockMode( alias, lockMode );
-	}
-
-	@Override
-	public Integer getFetchSize() {
-		return getQueryOptions().getFetchSize();
-	}
-
-	@Override
-	public CommonQueryContract setFetchSize(int fetchSize) {
-		getQueryOptions().setFetchSize( fetchSize );
-		return this;
-	}
-
-	@Override
-	public boolean isReadOnly() {
-		return getQueryOptions().isReadOnly() == null
-				? getSession().isDefaultReadOnly()
-				: getQueryOptions().isReadOnly();
-	}
-
-	@Override
-	public CommonQueryContract setReadOnly(boolean readOnly) {
-		getQueryOptions().setReadOnly( readOnly );
-		return this;
-	}
-
 	@SuppressWarnings( "rawtypes" )
-	public void applyTupleTransformer(TupleTransformer transformer) {
+	public boolean applyTupleTransformer(TupleTransformer transformer) {
 		getQueryOptions().setTupleTransformer( transformer );
+		return true;
 	}
 
-	public void applyResultListTransformer(ResultListTransformer transformer) {
+	public boolean applyResultListTransformer(ResultListTransformer transformer) {
 		getQueryOptions().setResultListTransformer( transformer );
+		return true;
 	}
 
 

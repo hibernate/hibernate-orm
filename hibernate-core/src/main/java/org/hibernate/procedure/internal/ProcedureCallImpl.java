@@ -814,7 +814,7 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	protected void applyEntityGraphQueryHint(String hintName, @SuppressWarnings("rawtypes") RootGraphImplementor entityGraph) {
+	protected void applyGraph(RootGraphImplementor<?> entityGraph, GraphSemantic graphSemantic) {
 		throw new IllegalStateException( "EntityGraph hints are not supported for ProcedureCall/StoredProcedureQuery" );
 	}
 
@@ -959,6 +959,11 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public ScrollableResultsImplementor<R> scroll(ScrollMode scrollMode) {
+		throw new UnsupportedOperationException( "Query#scroll is not valid for ProcedureCall/StoredProcedureQuery" );
+	}
+
+	@Override
+	protected ScrollableResultsImplementor<R> doScroll(ScrollMode scrollMode) {
 		throw new UnsupportedOperationException( "Query#scroll is not valid for ProcedureCall/StoredProcedureQuery" );
 	}
 

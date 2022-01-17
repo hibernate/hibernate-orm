@@ -12,7 +12,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
 
-import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 
 import jakarta.persistence.Parameter;
@@ -23,7 +22,7 @@ import jakarta.persistence.TemporalType;
  *
  * @author Steve Ebersole
  */
-public interface MutationQuery extends CommonQueryContract, jakarta.persistence.Query {
+public interface MutationQuery extends CommonQueryContract {
 
 	/**
 	 * Execute an insert, update, or delete statement, and return the
@@ -45,7 +44,6 @@ public interface MutationQuery extends CommonQueryContract, jakarta.persistence.
 	 *
 	 * @see jakarta.persistence.Query#executeUpdate()
 	 */
-	@Override
 	int executeUpdate();
 
 
@@ -168,22 +166,4 @@ public interface MutationQuery extends CommonQueryContract, jakarta.persistence.
 
 	@Override
 	MutationQuery setHibernateFlushMode(FlushMode flushMode);
-
-	@Override
-	MutationQuery setCacheMode(CacheMode cacheMode);
-
-	@Override
-	MutationQuery setCacheable(boolean cacheable);
-
-	@Override
-	MutationQuery setCacheRegion(String cacheRegion);
-
-	@Override
-	MutationQuery setTimeout(int timeout);
-
-	@Override
-	MutationQuery setFetchSize(int fetchSize);
-
-	@Override
-	MutationQuery setReadOnly(boolean readOnly);
 }

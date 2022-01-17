@@ -17,10 +17,13 @@ import java.util.stream.Stream;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.hibernate.dialect.Dialect;
 
 import jakarta.persistence.FlushModeType;
@@ -137,17 +140,201 @@ public interface SelectionQuery extends CommonQueryContract {
 	 */
 	Optional uniqueResultOptional();
 
-	LockOptions getLockOptions();
-
-	SelectionQuery setMaxResults(int maxResult);
-
-	SelectionQuery setFirstResult(int startPosition);
-
 	SelectionQuery setHint(String hintName, Object value);
 
+	@Override
 	SelectionQuery setFlushMode(FlushModeType flushMode);
 
+	@Override
+	SelectionQuery setHibernateFlushMode(FlushMode flushMode);
+
+	@Override
+	SelectionQuery setTimeout(int timeout);
+
+	/**
+	 * Obtain the JDBC fetch size hint in effect for this query.  This value is eventually passed along to the JDBC
+	 * query via {@link java.sql.Statement#setFetchSize(int)}.  As defined b y JDBC, this value is a hint to the
+	 * driver to indicate how many rows to fetch from the database when more rows are needed.
+	 *
+	 * NOTE : JDBC expressly defines this value as a hint.  It may or may not have any effect on the actual
+	 * query execution and ResultSet processing depending on the driver.
+	 *
+	 * @return The timeout <b>in seconds</b>
+	 *
+	 * @see java.sql.Statement#getFetchSize()
+	 * @see java.sql.Statement#setFetchSize(int)
+	 */
+	Integer getFetchSize();
+
+	/**
+	 * Sets a JDBC fetch size hint for the query.
+	 *
+	 * @param fetchSize the fetch size hint
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @see #getFetchSize()
+	 */
+	SelectionQuery setFetchSize(int fetchSize);
+
+	/**
+	 * Should entities and proxies loaded by this Query be put in read-only mode? If the
+	 * read-only/modifiable setting was not initialized, then the default
+	 * read-only/modifiable setting for the persistence context is returned instead.
+	 *
+	 * @see #setReadOnly(boolean)
+	 * @see org.hibernate.engine.spi.PersistenceContext#isDefaultReadOnly()
+	 *
+	 * The read-only/modifiable setting has no impact on entities/proxies returned by the
+	 * query that existed in the session beforeQuery the query was executed.
+	 *
+	 * @return {@code true} if the entities and proxies loaded by the query will be put
+	 * in read-only mode; {@code false} otherwise (they will be modifiable)
+	 */
+	boolean isReadOnly();
+
+	/**
+	 * Set the read-only/modifiable mode for entities and proxies
+	 * loaded by this Query. This setting overrides the default setting
+	 * for the persistence context.
+	 * @see org.hibernate.engine.spi.PersistenceContext#isDefaultReadOnly()
+	 *
+	 * To set the default read-only/modifiable setting used for
+	 * entities and proxies that are loaded into the session:
+	 * @see org.hibernate.engine.spi.PersistenceContext#setDefaultReadOnly(boolean)
+	 * @see Session#setDefaultReadOnly(boolean)
+	 *
+	 * Read-only entities are not dirty-checked and snapshots of persistent
+	 * state are not maintained. Read-only entities can be modified, but
+	 * changes are not persisted.
+	 *
+	 * When a proxy is initialized, the loaded entity will have the same
+	 * read-only/modifiable setting as the uninitialized
+	 * proxy has, regardless of the session's current setting.
+	 *
+	 * The read-only/modifiable setting has no impact on entities/proxies
+	 * returned by the query that existed in the session beforeQuery the query was executed.
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @param readOnly {@code true} indicates that entities and proxies loaded by the query
+	 * are to be put in read-only mode; {@code false} indicates that entities and proxies
+	 * loaded by the query will be put in modifiable mode
+	 */
+	SelectionQuery setReadOnly(boolean readOnly);
+
+	/**
+	 * The max number of rows requested for the query results
+	 */
+	int getMaxResults();
+
+	/**
+	 * Set the max number of rows requested for the query results.  Applied
+	 * to the SQL query
+	 */
+	SelectionQuery setMaxResults(int maxResult);
+
+	/**
+	 * The first row position to return from the query results.  Applied
+	 * to the SQL query
+	 */
+	int getFirstResult();
+
+	/**
+	 * Set the first row position to return from the query results.  Applied
+	 * to the SQL query
+	 */
+	SelectionQuery setFirstResult(int startPosition);
+
+	/**
+	 * Obtain the CacheMode in effect for this query.  By default, the query
+	 * inherits the CacheMode of the Session from which is originates.
+	 * <p/>
+	 * NOTE: The CacheMode here describes reading-from/writing-to the
+	 * entity/collection caches as we process query results.  For caching of
+	 * the actual query results, see {@link #isCacheable()} and
+	 * {@link #getCacheRegion()}
+	 * <p/>
+	 * In order for this setting to have any affect, second-level caching would
+	 * have to be enabled and the entities/collections in question configured
+	 * for caching.
+	 *
+	 * @see Session#getCacheMode()
+	 */
+	CacheMode getCacheMode();
+
+	/**
+	 * Set the current CacheMode in effect for this query.
+	 *
+	 * @implNote Setting to {@code null} ultimately indicates to use the CacheMode of the Session
+	 *
+	 * @see #getCacheMode()
+	 * @see Session#setCacheMode
+	 */
+	SelectionQuery setCacheMode(CacheMode cacheMode);
+
+	/**
+	 * Should the results of the query be stored in the second level cache?
+	 * <p/>
+	 * This is different than second level caching of any returned entities and collections, which
+	 * is controlled by {@link #getCacheMode()}.
+	 * <p/>
+	 * NOTE: the query being "eligible" for caching does not necessarily mean its results will be cached.  Second level
+	 * query caching still has to be enabled on the {@link SessionFactory} for this to happen.  Usually that is
+	 * controlled by the {@code hibernate.cache.use_query_cache} configuration setting.
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#USE_QUERY_CACHE
+	 */
+	boolean isCacheable();
+
+	/**
+	 * Enable/disable second level query (result) caching for this query.
+	 *
+	 * @see #isCacheable
+	 */
+	SelectionQuery setCacheable(boolean cacheable);
+
+	/**
+	 * Obtain the name of the second level query cache region in which query results will be stored (if they are
+	 * cached, see the discussion on {@link #isCacheable()} for more information).  {@code null} indicates that the
+	 * default region should be used.
+	 */
+	String getCacheRegion();
+
+	/**
+	 * Set the name of the cache region where query results should be cached
+	 * (assuming {@link #isCacheable}).  {@code null} indicates to use the default region.
+	 *
+	 * @see #getCacheRegion()
+	 */
+	SelectionQuery setCacheRegion(String cacheRegion);
+
+	/**
+	 * The LockOptions currently in effect for the query
+	 */
+	LockOptions getLockOptions();
+
+	/**
+	 * Specify the root LockModeType for the query
+	 *
+	 * @see #setHibernateLockMode
+	 */
 	SelectionQuery setLockMode(LockModeType lockMode);
+
+	/**
+	 * Specify the root LockMode for the query
+	 */
+	SelectionQuery setHibernateLockMode(LockMode lockMode);
+
+	/**
+	 * Specify a LockMode to apply to a specific alias defined in the query
+	 */
+	SelectionQuery setAliasSpecificLockMode(String alias, LockMode lockMode);
+
+	/**
+	 * Specifies whether follow-on locking should be applied?
+	 */
+	SelectionQuery setFollowOnLocking(boolean enable);
 
 	@Override
 	SelectionQuery setParameter(String name, Object value);
@@ -262,25 +449,4 @@ public interface SelectionQuery extends CommonQueryContract {
 
 	@Override
 	SelectionQuery setProperties(Map bean);
-
-	@Override
-	SelectionQuery setHibernateFlushMode(FlushMode flushMode);
-
-	@Override
-	SelectionQuery setCacheMode(CacheMode cacheMode);
-
-	@Override
-	SelectionQuery setCacheable(boolean cacheable);
-
-	@Override
-	SelectionQuery setCacheRegion(String cacheRegion);
-
-	@Override
-	SelectionQuery setTimeout(int timeout);
-
-	@Override
-	SelectionQuery setFetchSize(int fetchSize);
-
-	@Override
-	SelectionQuery setReadOnly(boolean readOnly);
 }

@@ -39,7 +39,6 @@ import org.hibernate.internal.AbstractSharedSessionContract;
 import org.hibernate.internal.util.MathHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.jpa.spi.NativeQueryTupleTransformer;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.query.BindableType;
@@ -100,6 +99,7 @@ import jakarta.persistence.Tuple;
 import jakarta.persistence.metamodel.SingularAttribute;
 
 import static org.hibernate.jpa.QueryHints.HINT_NATIVE_LOCKMODE;
+import static org.hibernate.jpa.QueryHints.HINT_NATIVE_SPACES;
 
 /**
  * @author Steve Ebersole
@@ -122,6 +122,7 @@ public class NativeQueryImpl<R>
 	private Callback callback;
 
 	private Object collectionKey;
+
 
 	/**
 	 * Constructs a NativeQueryImpl given a sql query defined in the mappings.
@@ -485,8 +486,23 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
+	protected void applyGraph(String graphString, GraphSemantic graphSemantic) {
+		throw new HibernateException( "A native SQL query cannot use EntityGraphs" );
+	}
+
+	@Override
+	protected void applyGraph(RootGraphImplementor<?> entityGraph, GraphSemantic graphSemantic) {
+		throw new HibernateException( "A native SQL query cannot use EntityGraphs" );
+	}
+
+	@Override
 	public Query<R> applyGraph(@SuppressWarnings("rawtypes") RootGraph graph, GraphSemantic semantic) {
 		throw new HibernateException( "A native SQL query cannot use EntityGraphs" );
+	}
+
+	@Override
+	protected void applyEntityGraphHint(String hintName, Object value) {
+		super.applyEntityGraphHint( hintName, value );
 	}
 
 	@Override
@@ -770,7 +786,7 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public ScrollableResultsImplementor<R> scroll(ScrollMode scrollMode) {
+	protected ScrollableResultsImplementor doScroll(ScrollMode scrollMode) {
 		return resolveSelectQueryPlan().performScroll( scrollMode, this );
 	}
 
@@ -1003,6 +1019,7 @@ public class NativeQueryImpl<R>
 		return querySpaces;
 	}
 
+
 	@Override
 	public NativeQueryImplementor<R> addSynchronizedQuerySpace(String querySpace) {
 		addQuerySpaces( querySpace );
@@ -1132,14 +1149,33 @@ public class NativeQueryImpl<R>
 		putIfNotNull( hints, HINT_NATIVE_LOCKMODE, getLockOptions().getLockMode() );
 	}
 
+
 	@Override
-	protected boolean applySynchronizeSpacesHint(Object value) {
+	public boolean applyAdditionalPossibleHints(String hintName, Object value) {
+		final boolean superApplied = super.applyAdditionalPossibleHints( hintName, value );
+		if ( superApplied ) {
+			return true;
+		}
+
+		if ( HINT_NATIVE_SPACES.equals( hintName ) ) {
+			applySynchronizeSpace( value );
+			return true;
+		}
+
+		return false;
+	}
+
+	protected void applySynchronizeSpacesHint(Object value) {
+		applySynchronizeSpace( value );
+	}
+
+	protected void applySynchronizeSpace(Object value) {
 		if ( value instanceof String ) {
 			addSynchronizedQuerySpace( (String) value );
 		}
 		else if ( value instanceof String[] ) {
 			for (String string : (String[]) value) {
-				addSynchronizedQuerySpace(string);
+				addSynchronizedQuerySpace( string );
 			}
 		}
 		else if ( value instanceof Class ) {
@@ -1147,53 +1183,20 @@ public class NativeQueryImpl<R>
 		}
 		else if ( value instanceof Class[] ) {
 			for (Class<?> aClass : (Class<?>[]) value) {
-				addSynchronizedEntityClass(aClass);
+				addSynchronizedEntityClass( aClass );
 			}
 		}
 		else if ( value instanceof List ) {
 			final List<?> list = (List<?>) value;
-			list.forEach( this::applySynchronizeSpacesHint );
+			list.forEach( this::applySynchronizeSpace );
 		}
 		else if ( value instanceof Collection ) {
 			final Collection<?> values = (Collection<?>) value;
 			for ( Object element : values ) {
-				applySynchronizeSpacesHint( element );
+				applySynchronizeSpace( element );
 			}
 		}
-		else {
-			return false;
-		}
-
-		return true;
 	}
-
-	@Override
-	protected boolean applyNativeQueryLockMode(Object value) {
-		if ( value instanceof LockMode ) {
-			applyHibernateLockModeHint( (LockMode) value );
-		}
-		else if ( value instanceof LockModeType ) {
-			applyLockModeTypeHint( (LockModeType) value );
-		}
-		else if ( value instanceof String ) {
-			applyHibernateLockModeHint( LockModeTypeHelper.interpretLockMode( value ) );
-		}
-		else {
-			throw new IllegalArgumentException(
-					String.format(
-							"Native lock-mode hint [%s] must specify %s or %s.  Encountered type : %s",
-							HINT_NATIVE_LOCKMODE,
-							LockMode.class.getName(),
-							LockModeType.class.getName(),
-							value.getClass().getName()
-					)
-			);
-		}
-
-		return true;
-	}
-
-
 
 
 	@Override
@@ -1465,10 +1468,6 @@ public class NativeQueryImpl<R>
 		return this;
 	}
 
-	@Override
-	protected void applyEntityGraphQueryHint(String hintName, @SuppressWarnings("rawtypes") RootGraphImplementor entityGraph) {
-		throw new HibernateException( "A native SQL query cannot use EntityGraphs" );
-	}
 
 	private static class ParameterInterpretationImpl implements ParameterInterpretation {
 		private final String sqlString;

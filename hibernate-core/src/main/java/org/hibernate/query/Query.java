@@ -48,7 +48,7 @@ import jakarta.persistence.TypedQuery;
  * @param <R> The query result type, for typed queries, or {@code Object} for untyped queries
  */
 @Incubating
-public interface Query<R> extends UntypedQuery, JpaQuery, TypedQuery<R> {
+public interface Query<R> extends SelectionQuery, JpaQuery, TypedQuery<R> {
 
 	/**
 	 * Execute the query and return the query results as a {@link List}.

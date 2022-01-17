@@ -11,14 +11,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
-import jakarta.persistence.EntityGraph;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.FlushModeType;
-import jakarta.persistence.LockModeType;
-import jakarta.persistence.criteria.CriteriaDelete;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.CriteriaUpdate;
-import jakarta.persistence.metamodel.Metamodel;
 
 import org.hibernate.CacheMode;
 import org.hibernate.Filter;
@@ -52,15 +44,23 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.query.MutationNativeQuery;
 import org.hibernate.query.MutationQuery;
-import org.hibernate.query.UntypedQuery;
+import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryProducerImplementor;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
-import org.hibernate.query.sqm.internal.UntypedSqmQueryImpl;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.stat.SessionStatistics;
+
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.criteria.CriteriaDelete;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaUpdate;
+import jakarta.persistence.metamodel.Metamodel;
 
 /**
  * This class is meant to be extended.
@@ -451,17 +451,27 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public MutationQuery createMutationQuery(CriteriaUpdate updateQuery) {
+		return delegate().createMutationQuery( updateQuery );
+	}
+
+	@Override
+	public MutationQuery createMutationQuery(CriteriaDelete deleteQuery) {
+		return delegate().createMutationQuery( deleteQuery );
+	}
+
+	@Override
 	public <T> QueryImplementor<T> createQuery(CriteriaQuery<T> criteriaQuery) {
 		return queryDelegate().createQuery( criteriaQuery );
 	}
 
 	@Override
-	public MutationQuery createQuery(CriteriaUpdate updateQuery) {
+	public QueryImplementor createQuery(CriteriaUpdate updateQuery) {
 		return queryDelegate().createQuery( updateQuery );
 	}
 
 	@Override
-	public MutationQuery createQuery(CriteriaDelete deleteQuery) {
+	public QueryImplementor createQuery(CriteriaDelete deleteQuery) {
 		return queryDelegate().createQuery( deleteQuery );
 	}
 
@@ -486,8 +496,8 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public UntypedQuery createUntypedQuery(String hqlString) {
-		return queryDelegate().createUntypedQuery( hqlString );
+	public SelectionQuery createSelectQuery(String hqlString) {
+		return queryDelegate().createSelectQuery( hqlString );
 	}
 
 	@Override

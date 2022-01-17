@@ -8,6 +8,7 @@ package org.hibernate.sql.results.graph;
 
 import java.util.List;
 
+import org.hibernate.Incubating;
 import org.hibernate.metamodel.mapping.AssociationKey;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -16,31 +17,56 @@ import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 
 /**
+ * Contains state related to building {@link DomainResult} and
+ * {@link Fetch} graphs
+ *
  * @author Steve Ebersole
  */
+@Incubating
 public interface DomainResultCreationState {
-
+	/**
+	 * Whether forcing the selection of the identifier is
+	 * in effect for this creation
+	 */
 	default boolean forceIdentifierSelection(){
 		return true;
 	}
 
+	/**
+	 * The underlying state for SQL AST creation
+	 */
 	SqlAstCreationState getSqlAstCreationState();
 
+	/**
+	 * Access to the SQL alias helper
+	 */
 	default SqlAliasBaseManager getSqlAliasBaseManager() {
 		return (SqlAliasBaseManager) getSqlAstCreationState().getSqlAliasBaseGenerator();
 	}
 
-	default boolean registerVisitedAssociationKey(AssociationKey associationKey) {
+	/**
+	 * Registers a circularity detection key
+	 */
+	default boolean registerVisitedAssociationKey(AssociationKey circularityKey) {
 		return false;
 	}
 
-	default void removeVisitedAssociationKey(AssociationKey associationKey){
+	/**
+	 * Removes the registration of a circularity detection key
+	 */
+	default void removeVisitedAssociationKey(AssociationKey circularityKey){
 	}
 
-	default boolean isAssociationKeyVisited(AssociationKey associationKey){
+	/**
+	 * Checks whether the given circularityKey is registered
+	 */
+	default boolean isAssociationKeyVisited(AssociationKey circularityKey){
 		return false;
 	}
 
+	/**
+	 * Is this state accepting circularity detection keys?
+	 */
 	default boolean isRegisteringVisitedAssociationKeys(){
 		return false;
 	}

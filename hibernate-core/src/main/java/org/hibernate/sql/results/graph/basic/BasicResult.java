@@ -16,6 +16,8 @@ import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
+ * DomainResult for a basic-value
+ *
  * @author Steve Ebersole
  */
 public class BasicResult<T> implements DomainResult<T>, BasicResultGraphNode<T> {

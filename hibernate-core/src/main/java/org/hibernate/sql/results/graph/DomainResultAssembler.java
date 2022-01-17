@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.results.graph;
 
+import org.hibernate.Incubating;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -18,6 +19,7 @@ import org.hibernate.type.descriptor.java.JavaType;
  *
  * @author Steve Ebersole
  */
+@Incubating
 public interface DomainResultAssembler<J> {
 	/**
 	 * The main "assembly" contract.  Assemble the result and return it.

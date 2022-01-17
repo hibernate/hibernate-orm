@@ -6,11 +6,11 @@
  */
 package org.hibernate.sql.results.graph.entity;
 
-import org.hibernate.sql.results.graph.DomainResult;
-import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 
 /**
+ * Specialization of Fetch for entity-valued fetches
+ *
  * @author Steve Ebersole
  */
 public interface EntityFetch extends EntityResultGraphNode, Fetch {
@@ -19,8 +19,4 @@ public interface EntityFetch extends EntityResultGraphNode, Fetch {
 		return true;
 	}
 
-	@Override
-	default DomainResult<?> asResult(DomainResultCreationState creationState) {
-		throw new UnsupportedOperationException( "EntityFetch -> DomainResult not supported" );
-	}
 }

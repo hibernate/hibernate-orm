@@ -15,7 +15,6 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
@@ -491,11 +490,6 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 		@Override
 		public boolean hasTableGroup() {
 			return false;
-		}
-
-		@Override
-		public DomainResult<?> asResult(DomainResultCreationState creationState) {
-			throw new UnsupportedOperationException();
 		}
 
 		@Override

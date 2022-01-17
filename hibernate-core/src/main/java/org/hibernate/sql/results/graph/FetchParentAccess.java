@@ -8,7 +8,6 @@ package org.hibernate.sql.results.graph;
 
 import java.util.function.Consumer;
 
-import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.query.NavigablePath;
 
 /**

@@ -8,11 +8,11 @@ package org.hibernate.sql.results.graph;
 
 import java.util.List;
 
+import org.hibernate.Incubating;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.metamodel.mapping.Association;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.query.EntityIdentifierNavigablePath;
@@ -23,6 +23,7 @@ import org.hibernate.query.NavigablePath;
  *
  * @author Steve Ebersole
  */
+@Incubating
 public interface FetchParent extends DomainResultGraphNode {
 	/**
 	 * This parent's mapping type
@@ -33,17 +34,6 @@ public interface FetchParent extends DomainResultGraphNode {
 	 * This parent's mapping type
 	 */
 	FetchableContainer getReferencedMappingType();
-
-	default FetchParent resolveContainingAssociationParent() {
-		final ModelPart referencedModePart = getReferencedModePart();
-		if ( referencedModePart instanceof Association ) {
-			return this;
-		}
-		if ( this instanceof Fetch ) {
-			( (Fetch) this ).getFetchParent().resolveContainingAssociationParent();
-		}
-		return null;
-	}
 
 	default NavigablePath resolveNavigablePath(Fetchable fetchable) {
 		final String fetchableName = fetchable.getFetchableName();

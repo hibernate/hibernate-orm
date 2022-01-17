@@ -43,8 +43,8 @@ public class StandardEntityGraphTraversalStateImpl implements EntityGraphTravers
 	}
 
 	@Override
-	public void backtrack(GraphImplementor previousContext) {
-		currentGraphContext = previousContext;
+	public void backtrack(TraversalResult previousContext) {
+		currentGraphContext = previousContext.getGraph();
 	}
 
 	@Override

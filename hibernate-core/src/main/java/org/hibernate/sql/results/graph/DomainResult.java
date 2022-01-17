@@ -6,6 +6,8 @@
  */
 package org.hibernate.sql.results.graph;
 
+import org.hibernate.Incubating;
+
 /**
  * Represents a result value in the domain query results.  Acts as the producer for the
  * {@link DomainResultAssembler} for this result as well as any {@link Initializer} instances needed
@@ -19,6 +21,7 @@ package org.hibernate.sql.results.graph;
  *
  * @author Steve Ebersole
  */
+@Incubating
 public interface DomainResult<J> extends DomainResultGraphNode {
 	/**
 	 * The result-variable (alias) associated with this result.

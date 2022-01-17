@@ -12,9 +12,14 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 
 /**
+ * Container of {@link Fetchable} references
+ *
  * @author Steve Ebersole
  */
 public interface FetchableContainer extends ModelPartContainer {
+	/**
+	 * The number of fetchables in the container
+	 */
 	int getNumberOfFetchables();
 
 	default void visitKeyFetchables(

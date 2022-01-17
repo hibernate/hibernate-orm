@@ -14,6 +14,8 @@ import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.query.NavigablePath;
 
 /**
+ * Fetchable which is entity-valued
+ *
  * @author Steve Ebersole
  */
 public interface EntityValuedFetchable extends Fetchable, EntityValuedModelPart {

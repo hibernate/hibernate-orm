@@ -9,8 +9,7 @@ package org.hibernate.sql.results.graph.basic;
 import org.hibernate.sql.results.graph.DomainResult;
 
 /**
- * Represent a simple scalar return within a query result.  Generally this would be values of basic (String, Integer,
- * etc) or composite types.
+ * DomainResult for basic values
  *
  * @author Steve Ebersole
  * @author Gail Badner

@@ -7,11 +7,12 @@
 package org.hibernate.sql.results.graph.embeddable;
 
 
-import org.hibernate.sql.results.graph.FetchParentAccess;
-import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
+import org.hibernate.sql.results.graph.FetchParentAccess;
 
 /**
+ * Special initializer contract for embeddables
+ *
  * @author Steve Ebersole
  */
 public interface EmbeddableInitializer extends FetchParentAccess {

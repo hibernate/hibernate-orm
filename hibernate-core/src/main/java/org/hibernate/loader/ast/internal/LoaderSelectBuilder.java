@@ -482,7 +482,7 @@ public class LoaderSelectBuilder {
 			applyFiltering( rootQuerySpec, rootTableGroup, pluralAttributeMapping, sqlAstCreationState );
 			applyOrdering( rootTableGroup, pluralAttributeMapping );
 		}
-		else if ( loadable instanceof Restrictable ) {
+		else {
 			applyFiltering( rootQuerySpec, rootTableGroup, (Restrictable) loadable, sqlAstCreationState );
 		}
 
@@ -888,7 +888,7 @@ public class LoaderSelectBuilder {
 					currentBagRole = previousBagRole;
 				}
 				if ( entityGraphTraversalState != null && traversalResult != null ) {
-					entityGraphTraversalState.backtrack( traversalResult.getPreviousContext() );
+					entityGraphTraversalState.backtrack( traversalResult );
 				}
 			}
 		};

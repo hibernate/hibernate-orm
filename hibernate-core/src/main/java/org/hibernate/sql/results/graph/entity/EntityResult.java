@@ -9,7 +9,7 @@ package org.hibernate.sql.results.graph.entity;
 import org.hibernate.sql.results.graph.DomainResult;
 
 /**
- * Further defines a first-level Return that is a reference to an entity
+ * Specialization of DomainResult for entity-valued results
  *
  * @author Steve Ebersole
  */

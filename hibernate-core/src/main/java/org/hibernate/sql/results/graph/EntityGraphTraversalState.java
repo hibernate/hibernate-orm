@@ -6,35 +6,36 @@
  */
 package org.hibernate.sql.results.graph;
 
+import org.hibernate.Incubating;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.graph.AttributeNode;
+import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.GraphImplementor;
 
 /**
+ * State used as part of applying entity graphs to
+ * Hibernate {@link DomainResult} / {@link Fetch} load graphs.
+ *
  * @author Nathan Xu
  */
+@Incubating
 public interface EntityGraphTraversalState {
 
 	/**
-	 * POJO class to store the result of applied entity graph traversal, including
-	 * <ul>
-	 *     <li>previous entity graph node so later on {@link EntityGraphTraversalState} object can backtrack to it</li>
-	 *     <li>whether the new graph node should be eagerly loaded or not</li>
-	 *     <li>whether the new graph node fetching is joined</li>
-	 * </ul>
+	 * Details of a particular traversal within the entity graph
 	 */
 	class TraversalResult {
+		private final GraphImplementor<?> previousContext;
+		private final FetchTiming fetchTiming;
+		private final boolean joined;
 
-		private GraphImplementor previousContext;
-		private FetchTiming fetchTiming;
-		private boolean joined;
-
-		public TraversalResult(GraphImplementor previousContext, FetchTiming fetchTiming, boolean joined) {
+		public TraversalResult(GraphImplementor<?> previousContext, FetchTiming fetchTiming, boolean joined) {
 			this.previousContext = previousContext;
 			this.fetchTiming = fetchTiming;
 			this.joined = joined;
 		}
 
-		public GraphImplementor getPreviousContext() {
+		public GraphImplementor<?> getGraph() {
 			return previousContext;
 		}
 
@@ -48,21 +49,23 @@ public interface EntityGraphTraversalState {
 	}
 
 	/**
-	 * Backtrack to previous entity graph status before last travrsal.
+	 * Traverses to the next part of the Jakarta Persistence entity graph relating to the
+	 * given fetchable.
+	 * <p/>
+	 *
+	 * The {@link AttributeNode} corresponding to the given `fetchable` is resolved.
+	 *
+	 * Depending on `exploreKeySubgraph`, either {@link AttributeNode#getSubGraphs()}
+	 * or {@link AttributeNode#getKeySubGraphs()} will be used
+	 */
+	TraversalResult traverse(FetchParent parent, Fetchable fetchable, boolean exploreKeySubgraph);
+
+	/**
+	 * Backtrack to previous entity graph status before last traversal.
 	 * Mainly reset the current context entity graph node to the passed method parameter.
 	 *
 	 * @param previousContext The previous entity graph context node; should not be null
 	 * @see #traverse(FetchParent, Fetchable, boolean)
 	 */
-	void backtrack(GraphImplementor previousContext);
-
-	/**
-	 * Tries to traverse from parent to child node within entity graph and returns non-null {@code Result}.
-	 *
-	 * @param parent The FetchParent or traversal source node
-	 * @param fetchable The Fetchable or traversal destination node
-	 * @param exploreKeySubgraph true if only key sub graph is explored; false if key sub graph is excluded
-	 * @return traversal result; never be null
-	 */
-	TraversalResult traverse(FetchParent parent, Fetchable fetchable, boolean exploreKeySubgraph);
+	void backtrack(TraversalResult previousContext);
 }

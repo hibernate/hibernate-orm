@@ -10,14 +10,12 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupProducer;
 import org.hibernate.sql.results.graph.AbstractFetchParent;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
-import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
@@ -121,18 +119,6 @@ public class EmbeddableFetchImpl extends AbstractFetchParent implements Embeddab
 			}
 		}
 		return super.resolveNavigablePath( fetchable );
-	}
-
-	@Override
-	public DomainResult<?> asResult(DomainResultCreationState creationState) {
-		return embeddedPartDescriptor.createDomainResult(
-				getNavigablePath(),
-				ResultsHelper.impl( creationState )
-						.getFromClauseAccess()
-						.getTableGroup( fetchParent.getNavigablePath() ),
-				null,
-				creationState
-		);
 	}
 
 	@Override

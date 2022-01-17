@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.results.graph;
 
+import org.hibernate.Incubating;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.query.NavigablePath;
 
@@ -16,6 +17,7 @@ import org.hibernate.query.NavigablePath;
  *
  * @author Steve Ebersole
  */
+@Incubating
 public interface Fetch extends DomainResultGraphNode {
 	/**
 	 * Get the property path to this fetch
@@ -32,10 +34,6 @@ public interface Fetch extends DomainResultGraphNode {
 	 * * inject the fetched instance into the parent and potentially inject
 	 * the parent reference into the fetched instance if it defines
 	 * such injection (e.g. {@link org.hibernate.annotations.Parent})
-	 *
-	 * todo (6.0) : remove?
-	 * 		- this is never used.  not sure its useful, and it creates a bi-directional link between
-	 * 		Fetch#getParent and FetchParent#getFetches
 	 */
 	FetchParent getFetchParent();
 
@@ -60,8 +58,6 @@ public interface Fetch extends DomainResultGraphNode {
 	default boolean containsAnyNonScalarResults() {
 		return true;
 	}
-
-	DomainResult<?> asResult(DomainResultCreationState creationState);
 
 	/**
 	 * Create the assembler for this fetch

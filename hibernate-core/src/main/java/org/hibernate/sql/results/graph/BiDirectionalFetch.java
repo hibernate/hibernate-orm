@@ -58,10 +58,4 @@ public interface BiDirectionalFetch extends Fetch {
 	 */
 	NavigablePath getReferencedPath();
 
-	@Override
-	default DomainResult<?> asResult(DomainResultCreationState creationState) {
-		throw new UnsupportedOperationException(
-				"Entity Fetch references conversion to DomainResult not supported"
-		);
-	}
 }

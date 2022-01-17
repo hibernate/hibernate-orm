@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.results.graph;
 
+import org.hibernate.Incubating;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -16,6 +17,7 @@ import org.hibernate.type.descriptor.java.JavaType;
  *
  * @author Steve Ebersole
  */
+@Incubating
 public interface DomainResultGraphNode {
 	/**
 	 * Does this node contain any non-scalar (sub-)results?

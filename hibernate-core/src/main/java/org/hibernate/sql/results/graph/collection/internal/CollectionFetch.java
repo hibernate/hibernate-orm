@@ -8,9 +8,6 @@ package org.hibernate.sql.results.graph.collection.internal;
 
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.query.results.ResultsHelper;
-import org.hibernate.sql.results.graph.DomainResult;
-import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 
@@ -40,18 +37,6 @@ public abstract class CollectionFetch implements Fetch {
 	@Override
 	public PluralAttributeMapping getFetchedMapping() {
 		return fetchedAttribute;
-	}
-
-	@Override
-	public DomainResult<?> asResult(DomainResultCreationState creationState) {
-		return fetchedAttribute.createDomainResult(
-				fetchedPath,
-				ResultsHelper.impl( creationState )
-						.getFromClauseAccess()
-						.getTableGroup( fetchParent.getNavigablePath() ),
-				null,
-				creationState
-		);
 	}
 
 	@Override

@@ -5985,7 +5985,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				fetchDepth--;
 			}
 			if ( entityGraphTraversalState != null && traversalResult != null ) {
-				entityGraphTraversalState.backtrack( traversalResult.getPreviousContext() );
+				entityGraphTraversalState.backtrack( traversalResult );
 			}
 		}
 	}

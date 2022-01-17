@@ -59,6 +59,7 @@ import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLe
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.SqlTypes;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
@@ -276,6 +277,20 @@ public class H2Dialect extends Dialect {
 		if ( getVersion().isSameOrAfter( 2 ) ) {
 			tableTypesList.add( "BASE TABLE" );
 		}
+	}
+
+	@Override
+	public JdbcType resolveSqlTypeDescriptor(
+			String columnTypeName,
+			int jdbcTypeCode,
+			int precision,
+			int scale,
+			JdbcTypeRegistry jdbcTypeRegistry) {
+		// As of H2 2.0 we get a FLOAT type code even though it is a DOUBLE
+		if ( jdbcTypeCode == FLOAT && "DOUBLE PRECISION".equals( columnTypeName ) ) {
+			return jdbcTypeRegistry.getDescriptor( DOUBLE );
+		}
+		return super.resolveSqlTypeDescriptor( columnTypeName, jdbcTypeCode, precision, scale, jdbcTypeRegistry );
 	}
 
 	@Override

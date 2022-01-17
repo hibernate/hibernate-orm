@@ -26,13 +26,41 @@ public interface Exporter<T extends Exportable> {
 	 * Get the commands needed for creation.
 	 *
 	 * @return The commands needed for creation scripting.
+	 * @deprecated Will be removed in favor of the variant accepting {@link SqlStringGenerationContext}
+	 * @see #getSqlCreateStrings(Exportable, Metadata, SqlStringGenerationContext)
 	 */
-	String[] getSqlCreateStrings(T exportable, Metadata metadata, SqlStringGenerationContext context);
+	@Deprecated
+	default String[] getSqlCreateStrings(T exportable, Metadata metadata) {
+		throw new IllegalStateException("getSqlCreateStrings() was not implemented!");
+	}
+
+	/**
+	 * Get the commands needed for creation.
+	 *
+	 * @return The commands needed for creation scripting.
+	 */
+	default String[] getSqlCreateStrings(T exportable, Metadata metadata, SqlStringGenerationContext context) {
+		return getSqlCreateStrings( exportable, metadata );
+	}
+
+	/**
+	 * Get the commands needed for dropping.
+	 *
+	 * @return The commands needed for drop scripting.
+	 * @deprecated Will be removed in favor of the variant accepting {@link SqlStringGenerationContext}
+	 * @see #getSqlDropStrings(Exportable, Metadata, SqlStringGenerationContext)
+	 */
+	@Deprecated
+	default String[] getSqlDropStrings(T exportable, Metadata metadata) {
+		throw new IllegalStateException("getSqlDropStrings() was not implemented!");
+	}
 
 	/**
 	 * Get the commands needed for dropping.
 	 *
 	 * @return The commands needed for drop scripting.
 	 */
-	String[] getSqlDropStrings(T exportable, Metadata metadata, SqlStringGenerationContext context);
+	default String[] getSqlDropStrings(T exportable, Metadata metadata, SqlStringGenerationContext context) {
+		return getSqlDropStrings( exportable, metadata );
+	}
 }

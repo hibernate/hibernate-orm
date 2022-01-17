@@ -159,6 +159,12 @@ public class EntityManagerFactoryExtension
 		}
 
 		final Map<String, Object> integrationSettings = new HashMap<>();
+
+		( (Map<Object, Object>) Environment.getProperties() ).forEach(
+				(key, value) ->
+						integrationSettings.put( (String) key, value )
+		);
+
 		integrationSettings.put( GlobalTemporaryTableMutationStrategy.DROP_ID_TABLES, "true" );
 		integrationSettings.put( LocalTemporaryTableMutationStrategy.DROP_ID_TABLES, "true" );
 		if ( !integrationSettings.containsKey( Environment.CONNECTION_PROVIDER ) ) {

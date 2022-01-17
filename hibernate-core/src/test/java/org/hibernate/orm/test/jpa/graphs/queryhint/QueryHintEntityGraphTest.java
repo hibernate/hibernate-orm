@@ -26,6 +26,7 @@ import org.hibernate.orm.test.jpa.graphs.Market;
 import org.hibernate.orm.test.jpa.graphs.Student;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.transaction.TransactionUtil2;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -33,9 +34,11 @@ import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import jakarta.persistence.Subgraph;
+import jakarta.persistence.TypedQuery;
 
 import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_FETCH_GRAPH;
+import static org.hibernate.jpa.SpecHints.HINT_SPEC_FETCH_GRAPH;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOAD_GRAPH;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
@@ -111,6 +114,32 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 			}
 		}
 		assertTrue(foundManager);
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "https://hibernate.atlassian.net/browse/HHH-14855")
+	public void testEntityGraphStringQueryHint() {
+		TransactionUtil2.inTransaction( entityManagerFactory(), (session) -> {
+			final String hql = "from Company c";
+			final String graphString = "Company( location, markets )";
+
+			{
+				TypedQuery<Company> query = session.createQuery( hql, Company.class );
+				final Company company = query.getSingleResult();
+				assertFalse( Hibernate.isInitialized( company.employees ) );
+				assertFalse( Hibernate.isInitialized( company.location ) );
+				assertFalse( Hibernate.isInitialized( company.markets ) );
+			}
+
+			{
+				TypedQuery<Company> query = session.createQuery( hql, Company.class );
+				query.setHint( HINT_SPEC_FETCH_GRAPH, graphString );
+				final Company company = query.getSingleResult();
+				assertFalse( Hibernate.isInitialized( company.employees ) );
+				assertTrue( Hibernate.isInitialized( company.location ) );
+				assertTrue( Hibernate.isInitialized( company.markets ) );
+			}
+		} );
 	}
 
 	@Test

@@ -33,7 +33,7 @@ public class InsertWithSubSelectTest {
 	public void testInsert(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
-					session.createStatement(
+					session.createMutationQuery(
 							"insert into C (id) " +
 									"select a.id from A a " +
 									"where exists (" +

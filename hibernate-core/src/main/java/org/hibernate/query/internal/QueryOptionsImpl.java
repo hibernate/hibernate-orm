@@ -184,6 +184,7 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 		return readOnlyEnabled;
 	}
 
+	@Override
 	public void applyGraph(RootGraphImplementor<?> rootGraph, GraphSemantic graphSemantic) {
 		this.rootGraph = rootGraph;
 		this.graphSemantic = graphSemantic;

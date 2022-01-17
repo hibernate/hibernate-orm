@@ -15,7 +15,7 @@ import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.orm.test.mapping.SmokeTests.Gender;
 import org.hibernate.orm.test.mapping.SmokeTests.SimpleEntity;
 import org.hibernate.query.spi.NavigablePath;
-import org.hibernate.query.hql.spi.HqlQueryImplementor;
+import org.hibernate.query.hql.spi.SqmQueryImplementor;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.internal.QuerySqmImpl;
@@ -76,7 +76,7 @@ public class SmokeTests {
 							"select e.name from SimpleEntity e",
 							String.class
 					);
-					final HqlQueryImplementor<String> hqlQuery = (HqlQueryImplementor<String>) query;
+					final SqmQueryImplementor<String> hqlQuery = (SqmQueryImplementor<String>) query;
 					final SqmSelectStatement<String> sqmStatement = (SqmSelectStatement<String>) hqlQuery.getSqmStatement();
 
 					final StandardSqmTranslator<SelectStatement> sqmConverter = new StandardSqmTranslator<>(
@@ -135,7 +135,7 @@ public class SmokeTests {
 							.getTypeConfiguration()
 							.getJdbcTypeRegistry();
 					final QueryImplementor<Gender> query = session.createQuery( "select e.gender from SimpleEntity e", Gender.class );
-					final HqlQueryImplementor<Gender> hqlQuery = (HqlQueryImplementor<Gender>) query;
+					final SqmQueryImplementor<Gender> hqlQuery = (SqmQueryImplementor<Gender>) query;
 					final SqmSelectStatement<Gender> sqmStatement = (SqmSelectStatement<Gender>) hqlQuery.getSqmStatement();
 
 					final StandardSqmTranslator<SelectStatement> sqmConverter = new StandardSqmTranslator<>(

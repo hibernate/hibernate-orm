@@ -12,6 +12,8 @@ import jakarta.persistence.criteria.CriteriaUpdate;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.MutationNativeQuery;
+import org.hibernate.query.MutationQuery;
 import org.hibernate.query.QueryProducer;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
 
@@ -66,20 +68,20 @@ public interface QueryProducerImplementor extends QueryProducer {
 	NativeQueryImplementor getNamedNativeQuery(String name, String resultSetMapping);
 
 	@Override
-	QueryImplementor<Void> createStatement(String statementString);
+	MutationQuery createMutationQuery(String statementString);
 
 	@Override
-	QueryImplementor<Void> createNamedStatement(String name);
+	MutationQuery createNamedMutationQuery(String name);
 
 	@Override
-	NativeQueryImplementor<Void> createNativeStatement(String sqlString);
+	MutationNativeQuery createNativeMutationQuery(String sqlString);
 
 	@Override
 	<R> QueryImplementor<R> createQuery(CriteriaQuery<R> criteriaQuery);
 
 	@Override
-	QueryImplementor<Void> createQuery(@SuppressWarnings("rawtypes") CriteriaUpdate updateQuery);
+	MutationQuery createQuery(@SuppressWarnings("rawtypes") CriteriaUpdate updateQuery);
 
 	@Override
-	QueryImplementor<Void> createQuery(@SuppressWarnings("rawtypes") CriteriaDelete deleteQuery);
+	MutationQuery createQuery(@SuppressWarnings("rawtypes") CriteriaDelete deleteQuery);
 }

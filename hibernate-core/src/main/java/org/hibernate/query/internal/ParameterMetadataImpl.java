@@ -237,11 +237,21 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 	}
 
 	@Override
-	public QueryParameterImplementor<?> getQueryParameter(String name) {
+	public QueryParameterImplementor<?> findQueryParameter(String name) {
 		for ( QueryParameterImplementor<?> queryParameter : queryParameters.keySet() ) {
 			if ( name.equals( queryParameter.getName() ) ) {
 				return queryParameter;
 			}
+		}
+		return null;
+	}
+
+	@Override
+	public QueryParameterImplementor<?> getQueryParameter(String name) {
+		final QueryParameterImplementor<?> parameter = findQueryParameter( name );
+
+		if ( parameter != null ) {
+			return parameter;
 		}
 
 		final String errorMessage = String.format(
@@ -271,11 +281,21 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 	}
 
 	@Override
-	public QueryParameterImplementor<?> getQueryParameter(int positionLabel) {
+	public QueryParameterImplementor<?> findQueryParameter(int positionLabel) {
 		for ( QueryParameterImplementor<?> queryParameter : queryParameters.keySet() ) {
 			if ( queryParameter.getPosition() != null && queryParameter.getPosition() == positionLabel ) {
 				return queryParameter;
 			}
+		}
+		return null;
+	}
+
+	@Override
+	public QueryParameterImplementor<?> getQueryParameter(int positionLabel) {
+		final QueryParameterImplementor<?> queryParameter = findQueryParameter( positionLabel );
+
+		if ( queryParameter != null ) {
+			return queryParameter;
 		}
 
 		final String errorMessage = String.format(

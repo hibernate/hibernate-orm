@@ -67,7 +67,7 @@ public class TupleTest {
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
 		scope.inTransaction(
-				session -> session.createStatement( "delete SimpleEntity" ).executeUpdate()
+				session -> session.createMutationQuery( "delete SimpleEntity" ).executeUpdate()
 		);
 	}
 }

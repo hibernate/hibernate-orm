@@ -85,18 +85,22 @@ public class SqmUtil {
 	}
 
 	public static void verifyIsNonSelectStatement(SqmStatement<?> sqm, String hqlString) {
-		if ( !(sqm instanceof SqmDmlStatement) ) {
-			throw new IllegalQueryOperationException(
-					String.format(
-							Locale.ROOT,
-							"Expecting a non-SELECT Query [%s], but found %s",
-							SqmDmlStatement.class.getName(),
-							sqm.getClass().getName()
-					),
-					hqlString,
-					null
-			);
+		if ( !( sqm instanceof SqmDmlStatement ) ) {
+			throw expectingNonSelect( sqm, hqlString );
 		}
+	}
+
+	public static IllegalQueryOperationException expectingNonSelect(SqmStatement<?> sqm, String hqlString) {
+		return new IllegalQueryOperationException(
+				String.format(
+						Locale.ROOT,
+						"Expecting a non-SELECT Query [%s], but found %s",
+						SqmDmlStatement.class.getName(),
+						sqm.getClass().getName()
+				),
+				hqlString,
+				null
+		);
 	}
 
 	public static Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<List<JdbcParameter>>>> generateJdbcParamsXref(

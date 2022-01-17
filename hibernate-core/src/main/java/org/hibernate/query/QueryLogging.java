@@ -17,6 +17,8 @@ import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
 import static org.jboss.logging.Logger.Level.ERROR;
+import static org.jboss.logging.Logger.Level.INFO;
+import static org.jboss.logging.Logger.Level.WARN;
 
 /**
  * @author Steve Ebersole
@@ -47,4 +49,16 @@ public interface QueryLogging extends BasicLogger {
 	@LogMessage(level = ERROR)
 	@Message(value = "Error in named query: %s", id = 90003001)
 	void namedQueryError(String queryName, @Cause HibernateException e);
+
+	@LogMessage(level = INFO)
+	@Message(value = "Unable to determine lock mode value : %s -> %s", id = 90003002)
+	void unableToDetermineLockModeValue(String hintName, Object value);
+
+	@LogMessage(level = INFO)
+	@Message(value = "Ignoring unrecognized query hint [%s]", id = 90003003)
+	void ignoringUnrecognizedQueryHint(String hintName);
+
+	@LogMessage(level = WARN)
+	@Message(value = "firstResult/maxResults specified with collection fetch; applying in memory!", id = 90003004)
+	void firstOrMaxResultsSpecifiedWithCollectionFetch();
 }

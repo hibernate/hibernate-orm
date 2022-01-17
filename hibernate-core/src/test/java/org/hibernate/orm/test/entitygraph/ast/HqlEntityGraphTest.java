@@ -31,7 +31,7 @@ import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.query.hql.spi.HqlQueryImplementor;
+import org.hibernate.query.hql.spi.SqmQueryImplementor;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.sqm.internal.QuerySqmImpl;
 import org.hibernate.query.sqm.sql.SqmTranslation;
@@ -368,7 +368,7 @@ public class HqlEntityGraphTest implements SessionFactoryScopeAware {
 				hql,
 				entityType
 		);
-		final HqlQueryImplementor<String> hqlQuery = (HqlQueryImplementor<String>) query;
+		final SqmQueryImplementor<String> hqlQuery = (SqmQueryImplementor<String>) query;
 		hqlQuery.applyGraph( entityGraph, mode );
 
 		final SqmSelectStatement<String> sqmStatement = (SqmSelectStatement<String>) hqlQuery.getSqmStatement();

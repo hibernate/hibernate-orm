@@ -499,7 +499,8 @@ public class NativeQueryImpl<R>
 		return (NativeQueryImplementor<R>) super.setResultListTransformer( transformer );
 	}
 
-	protected Boolean isSelectQuery() {
+	@Override
+	public Boolean isSelectQuery() {
 		if ( resultMappingSuppliedToCtor
 				|| resultSetMapping.getNumberOfResultBuilders() > 0
 				|| isReadOnly() ) {

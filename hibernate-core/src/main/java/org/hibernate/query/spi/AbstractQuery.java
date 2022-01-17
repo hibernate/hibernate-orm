@@ -98,13 +98,13 @@ import static org.hibernate.jpa.SpecHints.HINT_SPEC_QUERY_TIMEOUT;
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractQuery<R> implements QueryImplementor<R> {
+public abstract class AbstractQuery<R>
+		extends AbstractCommonQueryContract
+		implements QueryImplementor<R> {
 	protected static final EntityManagerMessageLogger log = HEMLogging.messageLogger( AbstractQuery.class );
 
-	private final SharedSessionContractImplementor session;
-
 	public AbstractQuery(SharedSessionContractImplementor session) {
-		this.session = session;
+		super( session );
 	}
 
 	protected void applyOptions(NamedQueryMemento memento) {
@@ -145,11 +145,6 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		}
 	}
 
-	@Override
-	public SharedSessionContractImplementor getSession() {
-		return session;
-	}
-
 	protected abstract QueryParameterBindings getQueryParameterBindings();
 
 	@Override
@@ -160,7 +155,9 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	// QueryOptions handling
 
 	@Override
-	public abstract MutableQueryOptions getQueryOptions();
+	public MutableQueryOptions getQueryOptions() {
+		return super.getQueryOptions();
+	}
 
 
 	@Override
@@ -215,13 +212,8 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	public FlushMode getHibernateFlushMode() {
-		return getQueryOptions().getFlushMode();
-	}
-
-	@Override
 	public QueryImplementor<R> setHibernateFlushMode(FlushMode flushMode) {
-		getQueryOptions().setFlushMode( flushMode );
+		super.setHibernateFlushMode( flushMode );
 		return this;
 	}
 
@@ -242,70 +234,43 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	public CacheMode getCacheMode() {
-		return getQueryOptions().getCacheMode();
-	}
-
-	@Override
 	public QueryImplementor<R> setCacheMode(CacheMode cacheMode) {
-		getQueryOptions().setCacheMode( cacheMode );
+		super.setCacheMode( cacheMode );
 		return this;
 	}
 
 	@Override
 	public boolean isCacheable() {
-		return getQueryOptions().isResultCachingEnabled() == Boolean.TRUE;
+		return super.isCacheable();
 	}
 
 	@Override
 	public QueryImplementor<R> setCacheable(boolean cacheable) {
-		getQueryOptions().setResultCachingEnabled( cacheable );
+		super.setCacheable( cacheable );
 		return this;
-	}
-
-	@Override
-	public String getCacheRegion() {
-		return getQueryOptions().getResultCacheRegionName();
 	}
 
 	@Override
 	public QueryImplementor<R> setCacheRegion(String cacheRegion) {
-		getQueryOptions().setResultCacheRegionName( cacheRegion );
+		super.setCacheRegion( cacheRegion );
 		return this;
-	}
-
-	@Override
-	public Integer getTimeout() {
-		return getQueryOptions().getTimeout();
 	}
 
 	@Override
 	public QueryImplementor<R> setTimeout(int timeout) {
-		getQueryOptions().setTimeout( timeout );
+		super.setTimeout( timeout );
 		return this;
-	}
-
-	@Override
-	public Integer getFetchSize() {
-		return getQueryOptions().getFetchSize();
 	}
 
 	@Override
 	public QueryImplementor<R> setFetchSize(int fetchSize) {
-		getQueryOptions().setFetchSize( fetchSize );
+		super.setFetchSize( fetchSize );
 		return this;
 	}
 
 	@Override
-	public boolean isReadOnly() {
-		return getQueryOptions().isReadOnly() == null
-				? getSession().isDefaultReadOnly()
-				: getQueryOptions().isReadOnly();
-	}
-
-	@Override
 	public QueryImplementor<R> setReadOnly(boolean readOnly) {
-		getQueryOptions().setReadOnly( readOnly );
+		super.setReadOnly( readOnly );
 		return this;
 	}
 
@@ -452,7 +417,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		boolean applied = false;
 		try {
 			if ( HINT_TIMEOUT.equals( hintName ) ) {
-				applied = applyTimeoutHint( ConfigurationHelper.getInteger( value ) );
+				applied = applyTimeout( ConfigurationHelper.getInteger( value ) );
 			}
 			else if ( HINT_SPEC_QUERY_TIMEOUT.equals( hintName )
 					|| HINT_JAVAEE_QUERY_TIMEOUT.equals( hintName ) ) {
@@ -461,7 +426,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 				}
 				// convert milliseconds to seconds
 				int timeout = (int)Math.round( ConfigurationHelper.getInteger( value ).doubleValue() / 1000.0 );
-				applied = applyTimeoutHint( timeout );
+				applied = applyTimeout( timeout );
 			}
 			else if ( HINT_SPEC_LOCK_TIMEOUT.equals( hintName )
 					|| HINT_JAVAEE_LOCK_TIMEOUT.equals( hintName ) ) {
@@ -602,7 +567,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	 * @return {@code true} if the hint was "applied"
 	 */
 	@SuppressWarnings("WeakerAccess")
-	protected boolean applyTimeoutHint(int timeout) {
+	protected boolean applyTimeout(int timeout) {
 		setTimeout( timeout );
 		return true;
 	}
@@ -769,7 +734,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	public Parameter<?> getParameter(String name) {
+	public QueryParameterImplementor<?> getParameter(String name) {
 		getSession().checkOpen( false );
 
 		try {
@@ -782,12 +747,12 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> Parameter<T> getParameter(String name, Class<T> type) {
+	public <T> QueryParameterImplementor<T> getParameter(String name, Class<T> type) {
 		getSession().checkOpen( false );
 
 		try {
 			//noinspection rawtypes
-			final QueryParameter parameter = getParameterMetadata().getQueryParameter( name );
+			final QueryParameterImplementor parameter = getParameterMetadata().getQueryParameter( name );
 			if ( !parameter.getParameterType().isAssignableFrom( type ) ) {
 				throw new IllegalArgumentException(
 						"The type [" + parameter.getParameterType().getName() +
@@ -803,7 +768,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	public Parameter<?> getParameter(int position) {
+	public QueryParameterImplementor<?> getParameter(int position) {
 		getSession().checkOpen( false );
 
 		try {
@@ -816,11 +781,11 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 
 	@Override
 	@SuppressWarnings( {"unchecked", "rawtypes"} )
-	public <T> Parameter<T> getParameter(int position, Class<T> type) {
+	public <T> QueryParameterImplementor<T> getParameter(int position, Class<T> type) {
 		getSession().checkOpen( false );
 
 		try {
-			final QueryParameter parameter = getParameterMetadata().getQueryParameter( position );
+			final QueryParameterImplementor parameter = getParameterMetadata().getQueryParameter( position );
 			if ( !parameter.getParameterType().isAssignableFrom( type ) ) {
 				throw new IllegalArgumentException(
 						"The type [" + parameter.getParameterType().getName() +
@@ -995,7 +960,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	private boolean isInstance(BindableType<?> parameterType, Object value) {
-		final SqmExpressable<?> sqmExpressable = parameterType.resolveExpressable( session.getFactory() );
+		final SqmExpressable<?> sqmExpressable = parameterType.resolveExpressable( getSession().getFactory() );
 		assert sqmExpressable != null;
 
 		return sqmExpressable.getExpressableJavaType().isInstance( value );
@@ -1650,10 +1615,10 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 			getSession().setCacheMode( sessionCacheMode );
 			sessionCacheMode = null;
 		}
-		if ( !session.isTransactionInProgress() ) {
-			session.getJdbcCoordinator().getLogicalConnection().afterTransaction();
+		if ( !getSession().isTransactionInProgress() ) {
+			getSession().getJdbcCoordinator().getLogicalConnection().afterTransaction();
 		}
-		session.afterOperation( success );
+		getSession().afterOperation( success );
 	}
 
 	@Override

@@ -1,0 +1,189 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ */
+package org.hibernate.query;
+
+import java.time.Instant;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Date;
+import java.util.Map;
+
+import org.hibernate.CacheMode;
+import org.hibernate.FlushMode;
+
+import jakarta.persistence.Parameter;
+import jakarta.persistence.TemporalType;
+
+/**
+ * Specialization of CommonQueryContract for insert, update and delete queries
+ *
+ * @author Steve Ebersole
+ */
+public interface MutationQuery extends CommonQueryContract, jakarta.persistence.Query {
+
+	/**
+	 * Execute an insert, update, or delete statement, and return the
+	 * number of affected entities.
+	 * <p>
+	 * For use with instances of {@code Query<Void>} created using
+	 * {@link QueryProducer#createMutationQuery(String)},
+	 * {@link QueryProducer#createNamedMutationQuery(String)},
+	 * {@link QueryProducer#createNativeMutationQuery(String)},
+	 * {@link QueryProducer#createQuery(jakarta.persistence.criteria.CriteriaUpdate)}, or
+	 * {@link QueryProducer#createQuery(jakarta.persistence.criteria.CriteriaDelete)}.
+	 *
+	 * @return the number of affected entity instances
+	 *         (may differ from the number of affected rows)
+	 *
+	 * @see QueryProducer#createMutationQuery(String)
+	 * @see QueryProducer#createNamedMutationQuery(String)
+	 * @see QueryProducer#createNativeMutationQuery(String)
+	 *
+	 * @see jakarta.persistence.Query#executeUpdate()
+	 */
+	@Override
+	int executeUpdate();
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Covariant returns
+
+	@Override
+	MutationQuery setParameter(String name, Object value);
+
+	@Override
+	<P> MutationQuery setParameter(String name, P value, Class<P> type);
+
+	@Override
+	<P> MutationQuery setParameter(String name, P value, BindableType<P> type);
+
+	@Override
+	MutationQuery setParameter(String name, Instant value, TemporalType temporalType);
+
+	@Override
+	MutationQuery setParameter(String name, Calendar value, TemporalType temporalType);
+
+	@Override
+	MutationQuery setParameter(String name, Date value, TemporalType temporalType);
+
+	@Override
+	MutationQuery setParameter(int position, Object value);
+
+	@Override
+	<P> MutationQuery setParameter(int position, P value, Class<P> type);
+
+	@Override
+	<P> MutationQuery setParameter(int position, P value, BindableType<P> type);
+
+	@Override
+	MutationQuery setParameter(int position, Instant value, TemporalType temporalType);
+
+	@Override
+	MutationQuery setParameter(int position, Date value, TemporalType temporalType);
+
+	@Override
+	MutationQuery setParameter(int position, Calendar value, TemporalType temporalType);
+
+	@Override
+	<T> MutationQuery setParameter(QueryParameter<T> parameter, T value);
+
+	@Override
+	<P> MutationQuery setParameter(QueryParameter<P> parameter, P value, Class<P> type);
+
+	@Override
+	<P> MutationQuery setParameter(QueryParameter<P> parameter, P val, BindableType<P> type);
+
+	@Override
+	<T> MutationQuery setParameter(Parameter<T> param, T value);
+
+	@Override
+	MutationQuery setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
+
+	@Override
+	MutationQuery setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
+
+	@Override
+	MutationQuery setParameterList(String name, Collection values);
+
+	@Override
+	<P> MutationQuery setParameterList(String name, Collection<? extends P> values, Class<P> javaType);
+
+	@Override
+	<P> MutationQuery setParameterList(String name, Collection<? extends P> values, BindableType<P> type);
+
+	@Override
+	MutationQuery setParameterList(String name, Object[] values);
+
+	@Override
+	<P> MutationQuery setParameterList(String name, P[] values, Class<P> javaType);
+
+	@Override
+	<P> MutationQuery setParameterList(String name, P[] values, BindableType<P> type);
+
+	@Override
+	MutationQuery setParameterList(int position, Collection values);
+
+	@Override
+	<P> MutationQuery setParameterList(int position, Collection<? extends P> values, Class<P> javaType);
+
+	@Override
+	<P> MutationQuery setParameterList(int position, Collection<? extends P> values, BindableType<P> type);
+
+	@Override
+	MutationQuery setParameterList(int position, Object[] values);
+
+	@Override
+	<P> MutationQuery setParameterList(int position, P[] values, Class<P> javaType);
+
+	@Override
+	<P> MutationQuery setParameterList(int position, P[] values, BindableType<P> type);
+
+	@Override
+	<P> MutationQuery setParameterList(QueryParameter<P> parameter, Collection<? extends P> values);
+
+	@Override
+	<P> MutationQuery setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Class<P> javaType);
+
+	@Override
+	<P> MutationQuery setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, BindableType<P> type);
+
+	@Override
+	<P> MutationQuery setParameterList(QueryParameter<P> parameter, P[] values);
+
+	@Override
+	<P> MutationQuery setParameterList(QueryParameter<P> parameter, P[] values, Class<P> javaType);
+
+	@Override
+	<P> MutationQuery setParameterList(QueryParameter<P> parameter, P[] values, BindableType<P> type);
+
+	@Override
+	MutationQuery setProperties(Object bean);
+
+	@Override
+	MutationQuery setProperties(Map bean);
+
+	@Override
+	MutationQuery setHibernateFlushMode(FlushMode flushMode);
+
+	@Override
+	MutationQuery setCacheMode(CacheMode cacheMode);
+
+	@Override
+	MutationQuery setCacheable(boolean cacheable);
+
+	@Override
+	MutationQuery setCacheRegion(String cacheRegion);
+
+	@Override
+	MutationQuery setTimeout(int timeout);
+
+	@Override
+	MutationQuery setFetchSize(int fetchSize);
+
+	@Override
+	MutationQuery setReadOnly(boolean readOnly);
+}

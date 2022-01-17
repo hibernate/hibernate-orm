@@ -112,7 +112,7 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.HibernateProxyHelper;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.query.QueryLogging;
-import org.hibernate.query.hql.spi.HqlQueryImplementor;
+import org.hibernate.query.hql.spi.SqmQueryImplementor;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryImplementor;
@@ -876,7 +876,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		// first, handle StoredProcedureQuery
 		final NamedObjectRepository namedObjectRepository = getQueryEngine().getNamedObjectRepository();
 		try {
-			final ProcedureCallImplementor unwrapped = query.unwrap( ProcedureCallImplementor.class );
+			final ProcedureCallImplementor<?> unwrapped = query.unwrap( ProcedureCallImplementor.class );
 			if ( unwrapped != null ) {
 				namedObjectRepository.registerCallableQueryMemento(
 						name,
@@ -897,14 +897,14 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 				if ( hibernateQuery instanceof NativeQueryImplementor ) {
 					namedObjectRepository.registerNativeQueryMemento(
 							name,
-							( (NativeQueryImplementor) hibernateQuery ).toMemento( name )
+							( (NativeQueryImplementor<?>) hibernateQuery ).toMemento( name )
 					);
 
 				}
 				else {
 					namedObjectRepository.registerHqlQueryMemento(
 							name,
-							( ( HqlQueryImplementor ) hibernateQuery ).toMemento( name )
+							( (SqmQueryImplementor<?>) hibernateQuery ).toMemento( name )
 					);
 				}
 				return;

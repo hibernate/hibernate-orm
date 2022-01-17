@@ -37,8 +37,10 @@ import jakarta.persistence.TemporalType;
 import jakarta.persistence.TypedQuery;
 
 /**
- * Represents an HQL/JPQL query or a compiled Criteria query.  Also acts as the Hibernate
- * extension to the JPA Query/TypedQuery contract
+ * Represents an HQL or Criteria query.
+ *
+ * Hibernate extension of {@link TypedQuery}, adapting to the
+ * {@link org.hibernate.query.CommonQueryContract} hierarchy
  *
  * @author Gavin King
  * @author Steve Ebersole
@@ -46,7 +48,159 @@ import jakarta.persistence.TypedQuery;
  * @param <R> The query result type, for typed queries, or {@code Object} for untyped queries
  */
 @Incubating
-public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
+public interface Query<R> extends UntypedQuery, JpaQuery, TypedQuery<R> {
+
+	/**
+	 * Execute the query and return the query results as a {@link List}.
+	 * If the query contains multiple items in the selection list, then
+	 * by default each result in the list is packaged in an array of type
+	 * {@code Object[]}.
+	 *
+	 * @return the result list
+	 */
+	@Override
+	List<R> list();
+
+	/**
+	 * Execute the query and return the query results as a {@link List}.
+	 * If the query contains multiple items in the selection list, then
+	 * by default each result in the list is packaged in an array of type
+	 * {@code Object[]}.
+	 *
+	 * @implNote Delegates to {@link #list()}
+	 *
+	 * @return the results as a list
+	 */
+	@Override
+	default List<R> getResultList() {
+		return list();
+	}
+
+	/**
+	 * Returns scrollable access to the query results.
+	 *
+	 * This form calls {@link #scroll(ScrollMode)} using {@link Dialect#defaultScrollMode()}
+	 *
+	 * @apiNote The exact behavior of this method depends somewhat
+	 * on the JDBC driver's {@link java.sql.ResultSet} scrolling support
+	 */
+	@Override
+	ScrollableResults<R> scroll();
+
+	/**
+	 * Returns scrollable access to the query results.  The capabilities of the
+	 * returned ScrollableResults depend on the specified ScrollMode.
+	 *
+	 * @apiNote The exact behavior of this method depends somewhat
+	 * on the JDBC driver's {@link java.sql.ResultSet} scrolling support
+	 */
+	@Override
+	ScrollableResults<R> scroll(ScrollMode scrollMode);
+
+	/**
+	 * Execute the query and return the query results as a {@link Stream}.
+	 * If the query contains multiple items in the selection list, then
+	 * by default each result in the stream is packaged in an array of type
+	 * {@code Object[]}.
+	 * <p>
+	 * The client should call {@link Stream#close()} after processing the
+	 * stream so that resources are freed as soon as possible.
+	 *
+	 * @implNote Delegates to {@link #stream()}, which in turn delegates
+	 * to this method.  Implementors should implement at least one of
+	 * these methods.
+	 *
+	 * @return The results as a {@link Stream}
+	 */
+	@Override
+	default Stream<R> getResultStream() {
+		return stream();
+	}
+
+	/**
+	 * Execute the query and return the query results as a {@link Stream}.
+	 * If the query contains multiple items in the selection list, then
+	 * by default each result in the stream is packaged in an array of type
+	 * {@code Object[]}.
+	 * <p>
+	 * The client should call {@link Stream#close()} after processing the
+	 * stream so that resources are freed as soon as possible.
+	 *
+	 * @return The results as a {@link Stream}
+	 *
+	 * @since 5.2
+	 */
+	@Override
+	default Stream<R> stream() {
+		return getResultStream();
+	}
+
+	/**
+	 * Execute the query and return the single result of the query,
+	 * or {@code null} if the query returns no results.
+	 *
+	 * @return the single result or {@code null}
+	 *
+	 * @throws NonUniqueResultException if there is more than one matching result
+	 */
+	@Override
+	R uniqueResult();
+
+	/**
+	 * Execute the query and return the single result of the query,
+	 * throwing an exception if the query returns no results.
+	 *
+	 * @return the single result, only if there is exactly one
+	 *
+	 * @throws jakarta.persistence.NonUniqueResultException if there is more than one matching result
+	 * @throws jakarta.persistence.NoResultException if there is no result to return
+	 */
+	@Override
+	R getSingleResult();
+
+	/**
+	 * Execute the query and return the single result of the query,
+	 * as an {@link Optional}.
+	 *
+	 * @return the single result as an {@code Optional}
+	 *
+	 * @throws NonUniqueResultException if there is more than one matching result
+	 */
+	@Override
+	Optional<R> uniqueResultOptional();
+
+	/**
+	 * Execute an insert, update, or delete statement, and return the
+	 * number of affected entities.
+	 * <p>
+	 * For use with instances of {@code Query<Void>} created using
+	 * {@link QueryProducer#createMutationQuery(String)},
+	 * {@link QueryProducer#createNamedMutationQuery(String)},
+	 * {@link QueryProducer#createNativeMutationQuery(String)},
+	 * {@link QueryProducer#createQuery(jakarta.persistence.criteria.CriteriaUpdate)}, or
+	 * {@link QueryProducer#createQuery(jakarta.persistence.criteria.CriteriaDelete)}.
+	 *
+	 * @return the number of affected entity instances
+	 *         (may differ from the number of affected rows)
+	 *
+	 * @see QueryProducer#createMutationQuery
+	 * @see QueryProducer#createMutationQuery(String)
+	 * @see QueryProducer#createNamedMutationQuery(String)
+	 * @see QueryProducer#createNativeMutationQuery(String)
+	 *
+	 * @see jakarta.persistence.Query#executeUpdate()
+	 *
+	 * @apiNote This form is needed because Hibernate's Query
+	 * extends from the Jakarta Persistence Query, which defines
+	 * this method.  See {@link MutationQuery}
+	 * and {@link SelectionQuery}
+	 *
+	 * See {@link QueryProducer#createMutationQuery}
+	 *
+	 */
+	@Override
+	int executeUpdate();
+
 	/**
 	 * Get the QueryProducer this Query originates from.  Generally speaking,
 	 * this is the Session/StatelessSession that was used to create the Query
@@ -60,8 +214,6 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * Get the query string.  Note that this may be {@code null} or some other
 	 * less-than-useful return because the source of the query might not be a
 	 * String (e.g., a Criteria query).
-	 *
-	 * @return the query string.
 	 */
 	String getQueryString();
 
@@ -94,143 +246,6 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	@SuppressWarnings("UnusedDeclaration")
 	default Query<R> applyLoadGraph(@SuppressWarnings("rawtypes") RootGraph graph) {
 		return applyGraph( graph, GraphSemantic.LOAD );
-	}
-
-	/**
-	 * Returns scrollable access to the query results.
-	 *
-	 * This form calls {@link #scroll(ScrollMode)} using {@link Dialect#defaultScrollMode()}
-	 *
-	 * @apiNote The exact behavior of this method depends somewhat
-	 * on the JDBC driver's {@link java.sql.ResultSet} scrolling support
-	 */
-	ScrollableResults<R> scroll();
-
-	/**
-	 * Returns scrollable access to the query results.  The capabilities of the
-	 * returned ScrollableResults depend on the specified ScrollMode.
-	 *
-	 * @apiNote The exact behavior of this method depends somewhat
-	 * on the JDBC driver's {@link java.sql.ResultSet} scrolling support
-	 */
-	ScrollableResults<R> scroll(ScrollMode scrollMode);
-
-	/**
-	 * Execute the query and return the query results as a {@link List}.
-	 * If the query contains multiple items in the selection list, then
-	 * by default each result in the list is packaged in an array of type
-	 * {@code Object[]}.
-	 *
-	 * @return the result list
-	 */
-	List<R> list();
-
-	/**
-	 * Execute the query and return the query results as a {@link List}.
-	 * If the query contains multiple items in the selection list, then
-	 * by default each result in the list is packaged in an array of type
-	 * {@code Object[]}.
-	 *
-	 * @implNote Delegates to {@link #list()}
-	 *
-	 * @return the results as a list
-	 */
-	default List<R> getResultList() {
-		return list();
-	}
-
-	/**
-	 * Execute the query and return the query results as a {@link Stream}.
-	 * If the query contains multiple items in the selection list, then
-	 * by default each result in the stream is packaged in an array of type
-	 * {@code Object[]}.
-	 * <p>
-	 * The client should call {@link Stream#close()} after processing the
-	 * stream so that resources are freed as soon as possible.
-	 *
-	 * @implNote Delegates to {@link #stream()}, which in turn delegates
-	 * to this method.  Implementors should implement at least one of
-	 * these methods.
-	 *
-	 * @return The results as a {@link Stream}
-	 */
-	default Stream<R> getResultStream() {
-		return stream();
-	}
-
-	/**
-	 * Execute an insert, update, or delete statement, and return the
-	 * number of affected entities.
-	 * <p>
-	 * For use with instances of {@code Query<Void>} created using
-	 * {@link QueryProducer#createStatement(String)},
-	 * {@link QueryProducer#createNamedStatement(String)},
-	 * {@link QueryProducer#createNativeStatement(String)},
-	 * {@link QueryProducer#createQuery(jakarta.persistence.criteria.CriteriaUpdate)}, or
-	 * {@link QueryProducer#createQuery(jakarta.persistence.criteria.CriteriaDelete)}.
-	 *
-	 * @return the number of affected entity instances
-	 *         (may differ from the number of affected rows)
-	 *
-	 * @see QueryProducer#createStatement(String)
-	 * @see QueryProducer#createNamedStatement(String)
-	 * @see QueryProducer#createNativeStatement(String)
-	 *
-	 * @see jakarta.persistence.Query#executeUpdate()
-	 */
-	@Override
-	int executeUpdate();
-
-	/**
-	 * Execute the query and return the single result of the query,
-	 * or {@code null} if the query returns no results.
-	 *
-	 * @return the single result or {@code null}
-	 *
-	 * @throws NonUniqueResultException if there is more than one matching result
-	 */
-	R uniqueResult();
-
-	/**
-	 * Execute the query and return the single result of the query,
-	 * throwing an exception if the query returns no results.
-	 *
-	 * @return the single result, only if there is exactly one
-	 *
-	 * @throws jakarta.persistence.NonUniqueResultException if there is more than one matching result
-	 * @throws jakarta.persistence.NoResultException if there is no result to return
-	 */
-	R getSingleResult();
-
-	/**
-	 * Execute the query and return the single result of the query,
-	 * as an {@link Optional}.
-	 *
-	 * @return the single result as an {@code Optional}
-	 *
-	 * @throws NonUniqueResultException if there is more than one matching result
-	 */
-	Optional<R> uniqueResultOptional();
-
-	/**
-	 * Execute the query and return the query results as a {@link Stream}.
-	 * If the query contains multiple items in the selection list, then
-	 * by default each result in the stream is packaged in an array of type
-	 * {@code Object[]}.
-	 * <p>
-	 * The client should call {@link Stream#close()} after processing the
-	 * stream so that resources are freed as soon as possible.
-	 *
-	 * @return The results as a {@link Stream}
-	 *
-	 * @implNote Delegates to {@link #getResultStream()}, which in turn
-	 * delegates to this method.  Implementors should implement at least
-	 * one of these methods.
-	 *
-	 * @since 5.2
-	 */
-	default Stream<R> stream() {
-		return getResultStream();
 	}
 
 	/**

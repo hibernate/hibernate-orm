@@ -69,6 +69,15 @@ public class QueryHintDefinition {
 		}
 	}
 
+	public Boolean getBooleanWrapper(String hintName) {
+		try {
+			return ConfigurationHelper.getBooleanWrapper( hintName, hintsMap, null );
+		}
+		catch (Exception e) {
+			throw new AnnotationException( "Named query hint [" + hintName + "] is not a boolean: " + queryName, e );
+		}
+	}
+
 	public Integer getInteger(String hintName) {
 		try {
 			return ConfigurationHelper.getInteger( hintName, hintsMap );
@@ -143,7 +152,7 @@ public class QueryHintDefinition {
 	public LockOptions determineLockOptions(NamedQuery namedQueryAnnotation) {
 		final LockModeType lockModeType = namedQueryAnnotation.lockMode();
 		final Integer lockTimeoutHint = specLockTimeout();
-		final Boolean followOnLocking = getBoolean( HibernateHints.HINT_FOLLOW_ON_LOCKING );
+		final Boolean followOnLocking = getBooleanWrapper( HibernateHints.HINT_FOLLOW_ON_LOCKING );
 
 		return determineLockOptions(lockModeType, lockTimeoutHint, followOnLocking);
 	}

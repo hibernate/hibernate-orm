@@ -120,7 +120,9 @@ import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
+import org.hibernate.query.JpaQuery;
 import org.hibernate.query.Query;
+import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.UnknownSqlResultSetMappingException;
 import org.hibernate.resource.transaction.TransactionRequiredForJoinException;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
@@ -285,7 +287,11 @@ public class SessionImpl
 		return this.lockOptions;
 	}
 
-	protected void applyQuerySettingsAndHints(Query<?> query) {
+	protected void applyQuerySettingsAndHints(SelectionQuery query) {
+		applyLockOptionsHint( query );
+	}
+
+	protected void applyLockOptionsHint(SelectionQuery query) {
 		final LockOptions lockOptionsForRead = getLockOptionsForRead();
 		if ( lockOptionsForRead.getLockMode() != LockMode.NONE ) {
 			query.setLockMode( getLockMode( lockOptionsForRead.getLockMode() ) );
@@ -300,6 +306,11 @@ public class SessionImpl
 			query.setHint( HINT_SPEC_QUERY_TIMEOUT, specQueryTimeout );
 			query.setHint( HINT_JAVAEE_QUERY_TIMEOUT, specQueryTimeout );
 		}
+	}
+
+	@Override
+	protected void applyQuerySettingsAndHints(JpaQuery query) {
+		applyQuerySettingsAndHints( (SelectionQuery) query );
 
 		final Integer specLockTimeout = LegacySpecHelper.getInteger(
 				HINT_SPEC_LOCK_TIMEOUT,

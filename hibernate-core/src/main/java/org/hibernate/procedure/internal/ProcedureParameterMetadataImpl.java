@@ -130,7 +130,7 @@ public class ProcedureParameterMetadataImpl implements ProcedureParameterMetadat
 			return false;
 		}
 
-		for ( ProcedureParameterImplementor parameter : parameters ) {
+		for ( ProcedureParameterImplementor<?> parameter : parameters ) {
 			if ( filter.test( parameter ) ) {
 				return true;
 			}
@@ -140,21 +140,40 @@ public class ProcedureParameterMetadataImpl implements ProcedureParameterMetadat
 	}
 
 	@Override
-	public ProcedureParameterImplementor<?> getQueryParameter(String name) {
-		for ( ProcedureParameterImplementor parameter : parameters ) {
+	public ProcedureParameterImplementor<?> findQueryParameter(String name) {
+		for ( ProcedureParameterImplementor<?> parameter : parameters ) {
 			if ( name.equals( parameter.getName() ) ) {
 				return parameter;
 			}
 		}
+		return null;
+	}
+
+	@Override
+	public ProcedureParameterImplementor<?> getQueryParameter(String name) {
+		final ProcedureParameterImplementor<?> parameter = findQueryParameter( name );
+		if ( parameter != null ) {
+			return parameter;
+		}
+
 		throw new IllegalArgumentException( "Named parameter [" + name + "] is not registered with this procedure call" );
 	}
 
 	@Override
-	public ProcedureParameterImplementor<?> getQueryParameter(int positionLabel) {
-		for ( ProcedureParameterImplementor parameter : parameters ) {
+	public ProcedureParameterImplementor<?> findQueryParameter(int positionLabel) {
+		for ( ProcedureParameterImplementor<?> parameter : parameters ) {
 			if ( parameter.getName() == null && positionLabel == parameter.getPosition() ) {
 				return parameter;
 			}
+		}
+		return null;
+	}
+
+	@Override
+	public ProcedureParameterImplementor<?> getQueryParameter(int positionLabel) {
+		final ProcedureParameterImplementor<?> queryParameter = findQueryParameter( positionLabel );
+		if ( queryParameter != null ) {
+			return queryParameter;
 		}
 
 		throw new IllegalArgumentException( "Positional parameter [" + positionLabel + "] is not registered with this procedure call" );
@@ -176,25 +195,22 @@ public class ProcedureParameterMetadataImpl implements ProcedureParameterMetadat
 
 	@Override
 	public Set<? extends QueryParameter<?>> getRegistrations() {
-		//noinspection unchecked
 		if ( parameters == null ) {
 			return Collections.emptySet();
 		}
-		return parameters.stream().collect( Collectors.toSet() );
+		return new HashSet<>( parameters );
 	}
 
 	@Override
 	public List<? extends ProcedureParameterImplementor<?>> getRegistrationsAsList() {
-		//noinspection unchecked
 		if ( parameters == null ) {
-			return Collections.EMPTY_LIST;
+			return Collections.emptyList();
 		}
 		return parameters;
 	}
 
 	@Override
 	public void visitRegistrations(Consumer<? extends QueryParameter<?>> action) {
-		//noinspection unchecked
 		if ( parameters != null ) {
 			parameters.forEach( (Consumer) action );
 		}

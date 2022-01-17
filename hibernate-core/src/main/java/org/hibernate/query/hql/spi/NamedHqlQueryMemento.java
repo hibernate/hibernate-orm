@@ -32,12 +32,12 @@ public interface NamedHqlQueryMemento extends NamedQueryMemento {
 	/**
 	 * Convert the memento into a typed executable query
 	 */
-	<T> HqlQueryImplementor<T> toQuery(SharedSessionContractImplementor session, Class<T> resultType);
+	<T> SqmQueryImplementor<T> toQuery(SharedSessionContractImplementor session, Class<T> resultType);
 
 	/**
 	 * Convert the memento into an untyped executable query
 	 */
-	<T> QueryImplementor<T> toQuery(SharedSessionContractImplementor session);
+	<T> SqmQueryImplementor<T> toQuery(SharedSessionContractImplementor session);
 
 	Integer getFirstResult();
 

@@ -276,15 +276,15 @@ public class FirebirdDialect extends Dialect {
 		CommonFunctionFactory.reverse( queryEngine );
 		CommonFunctionFactory.bitandorxornot_binAndOrXorNot( queryEngine );
 		CommonFunctionFactory.leastGreatest_minMaxValue( queryEngine );
-
 		SqmFunctionRegistry functionRegistry = queryEngine.getSqmFunctionRegistry();
+
 		functionRegistry.registerBinaryTernaryPattern(
 				"locate",
 				integerType,
-				"position(?1 in ?2)",
-				"position(?1,?2,?3)",
+				"position(?2 in ?1)",
+				"position(?2,?1,?3)",
 				STRING, STRING, INTEGER
-		).setArgumentListSignature( "(pattern, string[, start])" );
+		).setArgumentListSignature( "(string, pattern[, start])" );
 		functionRegistry.namedDescriptorBuilder( "ascii_val" )
 				.setExactArgumentCount( 1 )
 				.setInvariantType( shortType )

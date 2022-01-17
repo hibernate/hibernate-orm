@@ -170,10 +170,10 @@ public class CacheDialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
 				"locate",
 				queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER ),
-				"$find(?2,?1)",
-				"$find(?2,?1,?3)",
+				"$find(?1,?2)",
+				"$find(?1,?2,?3)",
 				STRING, STRING, INTEGER
-		).setArgumentListSignature("(pattern, string[, start])");
+		).setArgumentListSignature("(string, pattern[, start])");
 		CommonFunctionFactory.bitLength_pattern( queryEngine, "($length(?1)*8)" );
 
 		useJdbcEscape(queryEngine, "sin");

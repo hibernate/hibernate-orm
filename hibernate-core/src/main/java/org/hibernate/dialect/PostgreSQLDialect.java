@@ -452,10 +452,10 @@ public class PostgreSQLDialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
 				"locate",
 				queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER ),
-				"position(?1 in ?2)",
-				"(position(?1 in substring(?2 from ?3))+(?3)-1)",
+				"position(?2 in ?1)",
+				"(position(?2 in substring(?1 from ?3))+(?3)-1)",
 				FunctionParameterType.STRING, FunctionParameterType.STRING, FunctionParameterType.INTEGER
-		).setArgumentListSignature("(pattern, string[, start])");
+		).setArgumentListSignature("(string, pattern[, start])");
 
 		if ( getVersion().isSameOrAfter( 9, 4 ) ) {
 			CommonFunctionFactory.makeDateTimeTimestamp( queryEngine );

@@ -1548,29 +1548,40 @@ public class CommonFunctionFactory {
 	}
 
 	public static void locate(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "locate" )
-				.setInvariantType(
-						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER )
+		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
+						"locate",
+						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER ),
+						"locate(?2,?1)",
+						"locate(?2,?1,?3)",
+						STRING,
+						STRING,
+						INTEGER
 				)
-				.setArgumentCountBetween( 2, 3 )
-				.setParameterTypes(STRING, STRING, INTEGER)
-				.setArgumentListSignature( "(STRING pattern, STRING string[, INTEGER start])" )
-				.register();
+				.setArgumentListSignature( "(STRING string, STRING pattern[, INTEGER start])" );
 	}
 
 	/**
 	 * Transact SQL-style
 	 */
 	public static void locate_charindex(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
+				"locate",
+				queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER ),
+				"charindex(?2,?1)",
+				"charindex(?2,?1,?3)",
+				STRING,
+				STRING,
+				INTEGER
+		).setArgumentListSignature( "(STRING string, STRING pattern[, INTEGER start])" );
+
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "charindex" )
 				.setInvariantType(
 						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER )
 				)
 				.setArgumentCountBetween( 2, 3 )
-				.setParameterTypes(STRING, STRING, INTEGER)
+				.setParameterTypes( STRING, STRING, INTEGER )
 				.setArgumentListSignature( "(STRING pattern, STRING string[, INTEGER start])" )
 				.register();
-		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "locate", "charindex" );
 	}
 
 	/**
@@ -1580,10 +1591,10 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
 						"locate",
 						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER ),
-						"position(?1 in ?2)", "(position(?1 in substring(?2 from ?3))+?3)",
+						"position(?2 in ?1)", "(position(?2 in substring(?1 from ?3))+?3)",
 						STRING, STRING, INTEGER
 				)
-				.setArgumentListSignature( "(STRING pattern, STRING string[, INTEGER start])" );
+				.setArgumentListSignature( "(STRING string, STRING pattern[, INTEGER start])" );
 	}
 	/**
 	 * ANSI-style substring

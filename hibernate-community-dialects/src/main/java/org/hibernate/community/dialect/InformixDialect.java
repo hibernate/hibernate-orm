@@ -185,10 +185,10 @@ public class InformixDialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
 				"locate",
 				queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER ),
-				"instr(?2,?1)",
-				"instr(?2,?1,?3)",
+				"instr(?1,?2)",
+				"instr(?1,?2,?3)",
 				STRING, STRING, INTEGER
-		).setArgumentListSignature("(pattern, string[, start])");
+		).setArgumentListSignature("(string, pattern[, start])");
 
 		//coalesce() and nullif() both supported since Informix 12
 

@@ -274,10 +274,10 @@ public class SQLiteDialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
 				"locate",
 				integerType,
-				"instr(?2,?1)",
-				"instr(?2,?1,?3)",
+				"instr(?1,?2)",
+				"instr(?1,?2,?3)",
 				STRING, STRING, INTEGER
-		).setArgumentListSignature("(pattern, string[, start])");
+		).setArgumentListSignature("(string, pattern[, start])");
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
 				"lpad",
 				stringType,

@@ -75,7 +75,7 @@ public class H2Dialect extends Dialect {
 	};
 
 	private final boolean supportsTuplesInSubqueries;
-	private final boolean requiresParensForTupleDistinctCounts;
+	private final boolean hasOddDstBehavior;
 	private final boolean isVersion2;
 	private final String querySequenceString;
 	private final SequenceInformationExtractor sequenceInformationExtractor;
@@ -88,7 +88,7 @@ public class H2Dialect extends Dialect {
 
 		int buildId = Integer.MIN_VALUE;
 		boolean supportsTuplesInSubqueries = false;
-		boolean requiresParensForTupleDistinctCounts = false;
+		boolean hasOddDstBehavior = false;
 		boolean isVersion2 = false;
 
 		try {
@@ -102,8 +102,8 @@ public class H2Dialect extends Dialect {
 				LOG.unsupportedMultiTableBulkHqlJpaql( majorVersion, minorVersion, buildId );
 			}
 			supportsTuplesInSubqueries = majorVersion > 1 || minorVersion > 4 || buildId >= 198;
-			// As of 1.4.200, this is not necessary anymore
-			requiresParensForTupleDistinctCounts = !( majorVersion > 1 || minorVersion > 4 || buildId >= 200 );
+			// As of 1.4.200, the DST handling for timestamp without time zone is odd
+			hasOddDstBehavior = majorVersion > 1 || minorVersion > 4 || buildId >= 200;
 			isVersion2 = majorVersion > 1;
 		}
 		catch ( Exception e ) {
@@ -123,7 +123,7 @@ public class H2Dialect extends Dialect {
 			this.querySequenceString = null;
 		}
 		this.supportsTuplesInSubqueries = supportsTuplesInSubqueries;
-		this.requiresParensForTupleDistinctCounts = requiresParensForTupleDistinctCounts;
+		this.hasOddDstBehavior = hasOddDstBehavior;
 		this.isVersion2 = isVersion2;
 
 		registerColumnType( Types.BOOLEAN, "boolean" );
@@ -247,8 +247,11 @@ public class H2Dialect extends Dialect {
 
 	public boolean hasOddDstBehavior() {
 		// H2 1.4.200 has a bug: https://github.com/h2database/h2database/issues/3184
-		// requiresParensForTupleDistinctCounts will be false for 1.4.200+
-		return !requiresParensForTupleDistinctCounts;
+		return hasOddDstBehavior;
+	}
+
+	public boolean isVersion2() {
+		return isVersion2;
 	}
 
 	@Override
@@ -457,7 +460,7 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	public boolean requiresParensForTupleDistinctCounts() {
-		return requiresParensForTupleDistinctCounts;
+		return true;
 	}
 
 	@Override

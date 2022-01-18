@@ -1,17 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.test.id.sequence;
-
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.SequenceGenerator;
-import jakarta.persistence.Table;
+package org.hibernate.orm.test.id.sequence;
 
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.relational.Namespace;
@@ -19,7 +12,6 @@ import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
@@ -29,7 +21,13 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Steve Ebersole
@@ -66,8 +64,9 @@ public class SequenceExportTest extends BaseUnitTestCase {
 			}
 		}
 
-		assertEquals( 1, namespaceCount );
-		assertEquals( 1, sequenceCount );
+		assertThat( namespaceCount ).isEqualTo( 1 );
+		// 1 per entity
+		assertThat( sequenceCount ).isEqualTo( 2 );
 	}
 
 	@Test
@@ -88,8 +87,8 @@ public class SequenceExportTest extends BaseUnitTestCase {
 			}
 		}
 
-		assertEquals( 1, namespaceCount );
-		assertEquals( 1, sequenceCount );
+		assertThat( namespaceCount ).isEqualTo( 1 );
+		assertThat( sequenceCount ).isEqualTo( 1 );
 	}
 
 	@Entity( name = "Entity1" )
@@ -112,8 +111,7 @@ public class SequenceExportTest extends BaseUnitTestCase {
 	@Table( name = "Entity3" )
 	public static class Entity3 {
 		@Id
-		@GeneratedValue( strategy = GenerationType.SEQUENCE )
-		@SequenceGenerator( name = "my_sequence" )
+		@GeneratedValue( strategy = GenerationType.SEQUENCE, generator = "my_sequence" )
 		public Integer id;
 	}
 
@@ -121,8 +119,7 @@ public class SequenceExportTest extends BaseUnitTestCase {
 	@Table( name = "Entity4" )
 	public static class Entity4 {
 		@Id
-		@GeneratedValue( strategy = GenerationType.SEQUENCE )
-		@SequenceGenerator( name = "my_sequence" )
+		@GeneratedValue( strategy = GenerationType.SEQUENCE, generator = "my_sequence" )
 		public Integer id;
 	}
 }

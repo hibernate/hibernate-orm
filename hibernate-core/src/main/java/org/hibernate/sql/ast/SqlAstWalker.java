@@ -18,6 +18,7 @@ import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.CastTarget;
 import org.hibernate.sql.ast.tree.expression.Collation;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.expression.ConvertedQueryLiteral;
 import org.hibernate.sql.ast.tree.expression.Distinct;
 import org.hibernate.sql.ast.tree.expression.Duration;
 import org.hibernate.sql.ast.tree.expression.DurationUnit;
@@ -156,6 +157,8 @@ public interface SqlAstWalker {
 	void visitJdbcLiteral(JdbcLiteral<?> jdbcLiteral);
 
 	void visitQueryLiteral(QueryLiteral<?> queryLiteral);
+
+	void acceptConvertedQueryLiteral(ConvertedQueryLiteral<?,?> convertedQueryLiteral);
 
 	void visitUnaryOperationExpression(UnaryOperation unaryOperationExpression);
 

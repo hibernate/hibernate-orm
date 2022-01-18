@@ -7,6 +7,7 @@
 package org.hibernate.orm.test.query.hql;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
+import org.hibernate.testing.orm.domain.animal.Classification;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -23,7 +24,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
+import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaTypeDescriptor;
+
+import org.assertj.core.api.Assertions;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
@@ -267,17 +271,46 @@ public class LiteralTests {
 	}
 
 	@Test
-	public void testEnums(SessionFactoryScope scope) {
+	public void testEnumLiteralInPredicate(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
 					session.createQuery( "from Zoo where classification=COOL" ).getResultList();
+					session.createQuery( "from Zoo where classification=Classification.COOL" ).getResultList();
 					session.createQuery( "from Zoo where classification=org.hibernate.testing.orm.domain.animal.Classification.COOL" ).getResultList();
-
-					assertThat( session.createQuery( "select org.hibernate.testing.orm.domain.animal.Classification.LAME" )
-							.getSingleResult(), is( org.hibernate.testing.orm.domain.animal.Classification.LAME ) );
-					assertThat( session.createQuery( "select org.hibernate.testing.orm.domain.gambit.EntityOfBasics$Gender.MALE" )
-							.getSingleResult(), is( org.hibernate.testing.orm.domain.gambit.EntityOfBasics.Gender.MALE ) );
 				}
 		);
 	}
+
+	@Test
+	public void testIntegerLiteralInSelect(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertThat( session.createQuery( "select 1" ).getSingleResult(), is( 1 ) );
+				}
+		);
+	}
+
+	@Test
+	public void testEnumLiteralInSelect(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					{
+						final QueryImplementor<Object[]> query = session.createQuery( "select 1, org.hibernate.testing.orm.domain.animal.Classification.LAME" );
+						final Object[] result = query.getSingleResult();
+						final Object classification = result[ 1 ];
+
+						Assertions.assertThat( classification ).isEqualTo( Classification.LAME );
+					}
+
+					{
+						final QueryImplementor<Classification> query = session.createQuery( "select org.hibernate.testing.orm.domain.animal.Classification.LAME" );
+						final Classification result = query.getSingleResult();
+
+						Assertions.assertThat( result ).isEqualTo( Classification.LAME );
+					}
+				}
+		);
+	}
+
+
 }

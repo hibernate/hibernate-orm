@@ -82,6 +82,7 @@ import org.hibernate.metamodel.mapping.internal.EmbeddedCollectionPart;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
+import org.hibernate.metamodel.model.convert.internal.OrdinalEnumValueConverter;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -91,15 +92,15 @@ import org.hibernate.metamodel.model.domain.internal.DiscriminatorSqmPath;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
-import org.hibernate.query.ReturnableType;
-import org.hibernate.query.BindableType;
 import org.hibernate.query.BinaryArithmeticOperator;
+import org.hibernate.query.BindableType;
 import org.hibernate.query.CastType;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.DynamicInstantiationNature;
 import org.hibernate.query.FetchClauseType;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.QueryLogging;
+import org.hibernate.query.ReturnableType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.SortOrder;
 import org.hibernate.query.TemporalUnit;
@@ -150,12 +151,12 @@ import org.hibernate.query.sqm.tree.domain.SqmAnyValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedRootJoin;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelation;
+import org.hibernate.query.sqm.tree.domain.SqmElementAggregateFunction;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmIndexAggregateFunction;
 import org.hibernate.query.sqm.tree.domain.SqmIndexedCollectionAccessPath;
 import org.hibernate.query.sqm.tree.domain.SqmMapEntryReference;
-import org.hibernate.query.sqm.tree.domain.SqmElementAggregateFunction;
-import org.hibernate.query.sqm.tree.domain.SqmIndexAggregateFunction;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPluralPartJoin;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
@@ -270,6 +271,7 @@ import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.CastTarget;
 import org.hibernate.sql.ast.tree.expression.Collation;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.expression.ConvertedQueryLiteral;
 import org.hibernate.sql.ast.tree.expression.Distinct;
 import org.hibernate.sql.ast.tree.expression.Duration;
 import org.hibernate.sql.ast.tree.expression.DurationUnit;
@@ -345,7 +347,11 @@ import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.internal.StandardEntityGraphTraversalStateImpl;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.JavaObjectType;
+import org.hibernate.type.SqlTypes;
+import org.hibernate.type.descriptor.java.BasicJavaType;
+import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.UserVersionType;
@@ -5274,6 +5280,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return (Expression) sqmExpression.getDiscriminatorSource().accept( this );
 	}
 
+	@SuppressWarnings({"raw","unchecked"})
 	@Override
 	public Object visitEnumLiteral(SqmEnumLiteral<?> sqmEnumLiteral) {
 		final BasicValuedMapping inferrableType = (BasicValuedMapping) inferrableTypeAccessStack.getCurrent().get();
@@ -5285,9 +5292,17 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			return new QueryLiteral<>( jdbcValue, inferredPart );
 		}
 
-		return new QueryLiteral<>(
+		final EnumJavaTypeDescriptor<?> enumJtd = sqmEnumLiteral.getExpressableJavaTypeDescriptor();
+		final JdbcType jdbcType = getTypeConfiguration().getJdbcTypeDescriptorRegistry().getDescriptor( SqlTypes.TINYINT );
+		final BasicJavaType<Integer> relationalJtd = (BasicJavaType) getTypeConfiguration()
+				.getJavaTypeDescriptorRegistry()
+				.getDescriptor( Integer.class );
+		final BasicType<?> jdbcMappingType = getTypeConfiguration().getBasicTypeRegistry().resolve( relationalJtd, jdbcType );
+
+		return new ConvertedQueryLiteral(
 				sqmEnumLiteral.getEnumValue(),
-				(BasicValuedMapping) determineValueMapping( sqmEnumLiteral )
+				new OrdinalEnumValueConverter( enumJtd, jdbcType, relationalJtd ),
+				jdbcMappingType
 		);
 	}
 

@@ -4685,17 +4685,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private BasicValuedMapping getExpressionType(SqmBinaryArithmetic<?> expression) {
-		final SqmExpressable<?> sqmExpressable = QueryHelper.highestPrecedenceType(
-				expression.getLeftHandOperand().getNodeType(),
-				expression.getRightHandOperand().getNodeType()
-		);
-		if ( sqmExpressable instanceof BasicValuedMapping ) {
-			return (BasicValuedMapping) sqmExpressable;
-		}
-		else if ( sqmExpressable != null ) {
-			return getTypeConfiguration().getBasicTypeForJavaType(
-					sqmExpressable.getExpressableJavaTypeDescriptor().getJavaTypeClass()
-			);
+		final SqmExpressable<?> nodeType = expression.getNodeType();
+		if ( nodeType != null ) {
+			if ( nodeType instanceof BasicValuedMapping ) {
+				return (BasicValuedMapping) nodeType;
+			}
+			else {
+				return getTypeConfiguration().getBasicTypeForJavaType(
+						nodeType.getExpressableJavaTypeDescriptor().getJavaTypeClass()
+				);
+			}
 		}
 		return JavaObjectType.INSTANCE;
 	}

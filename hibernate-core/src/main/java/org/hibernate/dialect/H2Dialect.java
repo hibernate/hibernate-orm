@@ -74,6 +74,7 @@ public class H2Dialect extends Dialect {
 	};
 
 	private final boolean supportsTuplesInSubqueries;
+	private final boolean requiresParensForTupleDistinctCounts;
 	private final String querySequenceString;
 	private final SequenceInformationExtractor sequenceInformationExtractor;
 
@@ -85,6 +86,7 @@ public class H2Dialect extends Dialect {
 
 		int buildId = Integer.MIN_VALUE;
 		boolean supportsTuplesInSubqueries = false;
+		boolean requiresParensForTupleDistinctCounts = false;
 
 		try {
 			// HHH-2300
@@ -97,6 +99,8 @@ public class H2Dialect extends Dialect {
 				LOG.unsupportedMultiTableBulkHqlJpaql( majorVersion, minorVersion, buildId );
 			}
 			supportsTuplesInSubqueries = majorVersion > 1 || minorVersion > 4 || buildId >= 198;
+			// As of 1.4.200, this is not necessary anymore
+			requiresParensForTupleDistinctCounts = !( majorVersion > 1 || minorVersion > 4 || buildId >= 200 );
 		}
 		catch ( Exception e ) {
 			// probably H2 not in the classpath, though in certain app server environments it might just mean we are
@@ -115,6 +119,7 @@ public class H2Dialect extends Dialect {
 			this.querySequenceString = null;
 		}
 		this.supportsTuplesInSubqueries = supportsTuplesInSubqueries;
+		this.requiresParensForTupleDistinctCounts = requiresParensForTupleDistinctCounts;
 
 		registerColumnType( Types.BOOLEAN, "boolean" );
 		registerColumnType( Types.BIGINT, "bigint" );
@@ -434,7 +439,7 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	public boolean requiresParensForTupleDistinctCounts() {
-		return true;
+		return requiresParensForTupleDistinctCounts;
 	}
 
 	@Override

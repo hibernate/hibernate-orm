@@ -65,7 +65,7 @@ public class ManipulationCriteriaTest extends AbstractMetamodelSpecificTest {
 		{
 			CriteriaUpdate<Customer> updateCriteria = builder.createCriteriaUpdate( Customer.class );
 			Root<Customer> root = updateCriteria.from( Customer.class );
-			updateCriteria.set( Customer_.name, "Acme" );
+			updateCriteria.set( Customer_.age, 23 );
 			updateCriteria.where(
 					builder.equal(
 							root.get( Customer_.name ),
@@ -73,6 +73,22 @@ public class ManipulationCriteriaTest extends AbstractMetamodelSpecificTest {
 					)
 			);
 			em.createQuery( updateCriteria ).executeUpdate();
+		}
+
+		{
+			CriteriaDelete<Customer> deleteCriteria = builder.createCriteriaDelete( Customer.class );
+			Root<Customer> root = deleteCriteria.from( Customer.class );
+			deleteCriteria.where(
+					builder.equal(
+							root.get( Customer_.name ),
+							"Acme"
+					),
+					builder.equal(
+							root.get(Customer_.age),
+							23
+					)
+			);
+			em.createQuery( deleteCriteria ).executeUpdate();
 		}
 
 		em.getTransaction().commit();

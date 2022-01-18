@@ -715,7 +715,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.ADD,
 				(SqmExpression<?>) x,
-				value( y, (SqmExpression) x )
+				value( y )
 		);
 	}
 
@@ -724,7 +724,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	public <N extends Number> SqmExpression<N> sum(N x, Expression<? extends N> y) {
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.ADD,
-				value( x, (SqmExpression) y ),
+				value( x ),
 				(SqmExpression<?>) y
 		);
 	}
@@ -743,7 +743,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.MULTIPLY,
 				(SqmExpression<?>) x,
-				value( y, (SqmExpression<?>) x )
+				value( y )
 		);
 	}
 
@@ -751,7 +751,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	public <N extends Number> SqmExpression<N> prod(N x, Expression<? extends N> y) {
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.MULTIPLY,
-				value( x, (SqmExpression<?>) y ),
+				value( x ),
 				(SqmExpression<?>) y
 		);
 	}
@@ -771,7 +771,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.SUBTRACT,
 				(SqmExpression) x,
-				value( y, (SqmExpression) x )
+				value( y )
 		);
 	}
 
@@ -779,7 +779,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	public <N extends Number> SqmExpression<N> diff(N x, Expression<? extends N> y) {
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.SUBTRACT,
-				value( x, (SqmExpression<?>) y ),
+				value( x ),
 				(SqmExpression<?>) y
 		);
 	}
@@ -798,7 +798,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.QUOT,
 				(SqmExpression<?>) x,
-				value( y, (SqmExpression<?>) x )
+				value( y )
 		);
 	}
 
@@ -807,7 +807,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	public SqmExpression<Number> quot(Number x, Expression<? extends Number> y) {
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.QUOT,
-				value( x, (SqmExpression<? extends Number>) y ),
+				value( x ),
 				(SqmExpression<? extends Number>) y
 		);
 	}
@@ -826,7 +826,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.MODULO,
 				(SqmExpression<Integer>) x,
-				value( y, (SqmExpression<Integer>) x )
+				value( y )
 		);
 	}
 
@@ -834,7 +834,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	public SqmExpression<Integer> mod(Integer x, Expression<Integer> y) {
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.MODULO,
-				value( x, (SqmExpression<Integer>) y ),
+				value( x ),
 				(SqmExpression<Integer>) y
 		);
 	}

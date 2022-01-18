@@ -511,19 +511,18 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			SqmExpressable<?> firstType,
 			SqmExpressable<?> secondType,
 			BinaryArithmeticOperator operator) {
-		return resolveArithmeticType( firstType, secondType, operator == DIVIDE );
+		return resolveArithmeticType( firstType, secondType );
 	}
 
 	/**
 	 * Determine the result type of an arithmetic operation as defined by the
-	 * rules in section 6.5.7.1.
+	 * rules in section 6.5.8.1.
 	 *
 	 * @see QueryHelper#highestPrecedenceType2
 	 */
 	public SqmExpressable<?> resolveArithmeticType(
 			SqmExpressable<?> firstType,
-			SqmExpressable<?> secondType,
-			boolean isDivision) {
+			SqmExpressable<?> secondType) {
 
 		if ( getSqlTemporalType( firstType ) != null ) {
 			if ( secondType==null || getSqlTemporalType( secondType ) != null ) {
@@ -547,15 +546,6 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			// parameter (which doesn't have a type yet)
 			return getBasicTypeRegistry().getRegisteredType( Duration.class );
 		}
-
-		if ( isDivision ) {
-			// covered under the note in 6.5.7.1 discussing the unportable
-			// "semantics of the SQL division operation"..
-			return getBasicTypeRegistry().getRegisteredType( Number.class.getName() );
-		}
-
-
-		// non-division
 
 		if ( matchesJavaType( firstType, Double.class ) ) {
 			return firstType;

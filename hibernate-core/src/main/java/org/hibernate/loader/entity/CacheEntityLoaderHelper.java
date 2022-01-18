@@ -288,11 +288,12 @@ public class CacheEntityLoaderHelper {
 			Object entity = convertCacheEntryToEntity( entry, entityKey.getIdentifier(), source, persister, instanceToLoad, entityKey );
 
 			if ( !persister.isInstance( entity ) ) {
-				throw new WrongClassException(
-						"loaded object was of wrong class " + entity.getClass(),
-						entityKey.getIdentifier(),
-						persister.getEntityName()
-				);
+				return null;
+//				throw new WrongClassException(
+//						"loaded object was of wrong class " + entity.getClass(),
+//						entityKey.getIdentifier(),
+//						persister.getEntityName()
+//				);
 			}
 
 			return entity;

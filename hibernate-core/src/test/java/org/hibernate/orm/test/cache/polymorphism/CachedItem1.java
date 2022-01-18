@@ -13,14 +13,14 @@ import jakarta.persistence.Entity;
  * @author Guillaume Smet
  */
 @Entity
-public class CachedItem1 extends AbstractCachedItem {
+public class CachedItem1 extends Cacheable {
 
 	public CachedItem1() {
 		super();
 	}
 
-	public CachedItem1(String name) {
-		super( name );
+	public CachedItem1(long id, String name) {
+		super( id, name );
 	}
 	
 }

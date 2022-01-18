@@ -11,7 +11,6 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -53,12 +52,6 @@ public class InheritedNaturalIdCacheTest {
 	}
 
 	@Test
-	@NotImplementedYet(
-			strict = false,
-			reason = "Because `MyEntity#1` is stored in the second level cache, the attempt to " +
-					"access it throws `WrongClassException`.  Not consistent with what happens " +
-					"when the entity is not in the cache - `#testLoadWrongClassById`"
-	)
 	public void testLoadWrongClassByIdFromCache(SessionFactoryScope scope) {
 		clearCaches( scope );
 
@@ -90,12 +83,6 @@ public class InheritedNaturalIdCacheTest {
 	}
 
 	@Test
-	@NotImplementedYet(
-			strict = false,
-			reason = "Because `MyEntity#1` is stored in the second level cache, the attempt to " +
-					"access it throws `WrongClassException`.  Not consistent with what happens " +
-					"when the entity is not in the cache - `#testLoadWrongClassByNaturalId`"
-	)
 	public void testLoadWrongClassByNaturalIdFromCache(SessionFactoryScope scope) {
 		clearCaches( scope );
 
@@ -134,8 +121,8 @@ public class InheritedNaturalIdCacheTest {
 		//		ExtendedEntity#2
 		scope.inTransaction(
 				(session) -> {
-					session.save( new MyEntity( 1, "base" ) );
-					session.save( new ExtendedEntity( 2, "extended", "ext" ) );
+					session.persist( new MyEntity( 1, "base" ) );
+					session.persist( new ExtendedEntity( 2, "extended", "ext" ) );
 				}
 		);
 	}

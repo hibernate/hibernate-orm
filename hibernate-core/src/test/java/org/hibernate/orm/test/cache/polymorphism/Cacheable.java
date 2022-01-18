@@ -5,13 +5,12 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.orm.test.cache.polymorphism;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
 
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.annotations.GenericGenerator;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 /**
  * @author Steve Ebersole
@@ -19,20 +18,19 @@ import org.hibernate.annotations.GenericGenerator;
  */
 @Entity
 @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-public class AbstractCachedItem {
+public class Cacheable {
 	private Long id;
 	private String name;
 
-	public AbstractCachedItem() {
+	public Cacheable() {
 	}
 
-	public AbstractCachedItem(String name) {
+	public Cacheable(long id, String name) {
+		this.id = id;
 		this.name = name;
 	}
 
 	@Id
-	@GeneratedValue(generator = "increment")
-	@GenericGenerator(name = "increment", strategy = "increment")
 	public Long getId() {
 		return id;
 	}

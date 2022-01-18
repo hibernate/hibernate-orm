@@ -184,10 +184,10 @@ public class OracleDialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
 				"locate",
 				queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER ),
-				"instr(?1,?2)",
-				"instr(?1,?2,?3)",
+				"instr(?2,?1)",
+				"instr(?2,?1,?3)",
 				FunctionParameterType.STRING, FunctionParameterType.STRING, FunctionParameterType.INTEGER
-		).setArgumentListSignature("(string, pattern[, start])");
+		).setArgumentListSignature("(pattern, string[, start])");
 	}
 
 	@Override

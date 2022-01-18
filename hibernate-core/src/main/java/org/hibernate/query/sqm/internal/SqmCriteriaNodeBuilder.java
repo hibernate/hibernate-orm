@@ -1255,14 +1255,14 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		final List<SqmTypedNode<?>> arguments;
 		if ( startPosition == null ) {
 			arguments = asList(
-					source,
-					pattern
-			);
+					pattern,
+					source
+					);
 		}
 		else {
 			arguments = asList(
-					source,
 					pattern,
+					source,
 					startPosition
 			);
 		}

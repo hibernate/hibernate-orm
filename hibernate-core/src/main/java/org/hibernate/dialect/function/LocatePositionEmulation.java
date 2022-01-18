@@ -6,7 +6,6 @@
  */
 package org.hibernate.dialect.function;
 
-import org.hibernate.mapping.Collection;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.AbstractSqmFunctionDescriptor;
@@ -18,8 +17,6 @@ import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
@@ -45,18 +42,6 @@ public class LocatePositionEmulation extends AbstractSqmFunctionDescriptor {
 			ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
-		if ( arguments instanceof ArrayList ) {
-			Collections.swap( arguments, 0, 1 );
-		}
-		else {
-			List<SqmTypedNode<?>> argumentTemp = new ArrayList<>( arguments.size() );
-			argumentTemp.add( arguments.get( 1 ) );
-			argumentTemp.add( arguments.get( 0 ) );
-			for ( int i = 2; i < arguments.size(); i++ ) {
-				argumentTemp.add( arguments.get( i ) );
-			}
-			arguments = argumentTemp;
-		}
 		return queryEngine.getSqmFunctionRegistry().findFunctionDescriptor( "locate" )
 				.generateSqmExpression( arguments, impliedResultType, queryEngine, typeConfiguration );
 	}

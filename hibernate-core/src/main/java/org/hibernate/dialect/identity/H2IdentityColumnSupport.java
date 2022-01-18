@@ -28,6 +28,6 @@ public class H2IdentityColumnSupport extends IdentityColumnSupportImpl {
 
 	@Override
 	public String getIdentityInsertString() {
-		return "null";
+		return "default";
 	}
 }

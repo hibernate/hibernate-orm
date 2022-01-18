@@ -46,8 +46,10 @@ public class UserTypeJavaTypeWrapper<J> implements BasicJavaType<J> {
 
 		if ( resolvedMutabilityPlan == null ) {
 			final Class<J> jClass = userType.returnedClass();
-			if ( jClass.getAnnotation( Immutable.class ) != null ) {
-				resolvedMutabilityPlan = ImmutableMutabilityPlan.instance();
+			if ( jClass != null ) {
+				if ( jClass.getAnnotation( Immutable.class ) != null ) {
+					resolvedMutabilityPlan = ImmutableMutabilityPlan.instance();
+				}
 			}
 		}
 

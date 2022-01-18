@@ -59,14 +59,16 @@ public class UserTypeSqlTypeAdapter<J> implements JdbcType {
 	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <X> ValueBinder<X> getBinder(JavaType<X> javaTypeDescriptor) {
-		assert jtd.getJavaTypeClass().isAssignableFrom( javaTypeDescriptor.getJavaTypeClass() );
+		assert javaTypeDescriptor.getJavaTypeClass() == null
+				|| jtd.getJavaTypeClass().isAssignableFrom( javaTypeDescriptor.getJavaTypeClass() );
 		return (ValueBinder<X>) valueBinder;
 	}
 
 	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <X> ValueExtractor<X> getExtractor(JavaType<X> javaTypeDescriptor) {
-		assert javaTypeDescriptor.getJavaTypeClass().isAssignableFrom( jtd.getJavaTypeClass() );
+		assert javaTypeDescriptor.getJavaTypeClass() == null
+				|| javaTypeDescriptor.getJavaTypeClass().isAssignableFrom( jtd.getJavaTypeClass() );
 		return (ValueExtractor<X>) valueExtractor;
 	}
 

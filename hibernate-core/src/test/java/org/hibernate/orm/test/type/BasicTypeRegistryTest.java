@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.test.type;
+package org.hibernate.orm.test.type;
 
 import java.io.Serializable;
 import java.sql.PreparedStatement;
@@ -22,6 +22,7 @@ import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.UUIDJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.BinaryJdbcType;
 import org.hibernate.type.descriptor.jdbc.CharJdbcType;
+import org.hibernate.type.descriptor.jdbc.ObjectJdbcType;
 import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
 import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -30,6 +31,7 @@ import org.hibernate.usertype.UserType;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
@@ -46,15 +48,22 @@ public class BasicTypeRegistryTest extends BaseUnitTestCase {
 		TypeConfiguration typeConfiguration = new TypeConfiguration();
 		BasicTypeRegistry registry = typeConfiguration.getBasicTypeRegistry();
 
-		BasicType<?> type = registry.getRegisteredType( "uuid-binary" );
-		assertTrue( type.getJavaTypeDescriptor() instanceof UUIDJavaTypeDescriptor );
-		assertTrue( type.getJdbcTypeDescriptor() instanceof BinaryJdbcType );
-		assertSame( type, registry.getRegisteredType( UUID.class.getName() ) );
+		BasicType<?> uuidBinaryRegistration = registry.getRegisteredType( "uuid-binary" );
+		assertTrue( uuidBinaryRegistration.getJavaTypeDescriptor() instanceof UUIDJavaTypeDescriptor );
+		assertTrue( uuidBinaryRegistration.getJdbcTypeDescriptor() instanceof BinaryJdbcType );
 
-		BasicType<?> override = new BasicTypeImpl<>( UUIDJavaTypeDescriptor.INSTANCE, CharJdbcType.INSTANCE );
+		final BasicType<UUID> uuidRegistration = registry.getRegisteredType( UUID.class.getName() );
+		assertTrue( uuidRegistration.getJavaTypeDescriptor() instanceof UUIDJavaTypeDescriptor );
+		assertTrue( uuidRegistration.getJdbcTypeDescriptor() instanceof ObjectJdbcType );
+
+		final BasicType<?> override = new BasicTypeImpl<>( UUIDJavaTypeDescriptor.INSTANCE, CharJdbcType.INSTANCE );
 		registry.register( override, UUID.class.getName() );
-		assertNotSame( type, registry.getRegisteredType( UUID.class.getName() ) );
-		assertSame( override, registry.getRegisteredType( UUID.class.getName() ) );
+
+		final BasicType<Object> overrideRegistration = registry.getRegisteredType( UUID.class.getName() );
+
+		assertSame( override, overrideRegistration );
+		assertNotSame( uuidBinaryRegistration, overrideRegistration );
+		assertNotSame( uuidRegistration, overrideRegistration );
 	}
 
 	@Test
@@ -83,8 +92,9 @@ public class BasicTypeRegistryTest extends BaseUnitTestCase {
 		assertEquals( TotallyIrrelevantUserType.class, ( (CustomType<Object>) customType ).getUserType().getClass() );
 
 		BasicType<?> type = registry.getRegisteredType( UUID.class.getName() );
-		assertTrue( type.getJavaTypeDescriptor() instanceof UUIDJavaTypeDescriptor );
-		assertTrue( type.getJdbcTypeDescriptor() instanceof BinaryJdbcType );
+		assertThat( type.getJavaTypeDescriptor() ).isInstanceOf( UUIDJavaTypeDescriptor.class );
+		assertThat( type.getJdbcTypeDescriptor() ).isInstanceOf( ObjectJdbcType.class );
+
 		registry.register( new TotallyIrrelevantUserType(), UUID.class.getName() );
 		assertNotSame( type, registry.getRegisteredType( UUID.class.getName() ) );
 		assertEquals( CustomType.class, registry.getRegisteredType( UUID.class.getName() ).getClass() );

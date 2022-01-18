@@ -20,6 +20,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
+
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.Dialect;
@@ -264,6 +266,13 @@ abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalTestCase
 		protected AbstractParametersBuilder() {
 			dialect = determineDialect();
 			remappingDialectClasses.add( null ); // Always test without remapping
+		}
+
+		public S skippedForDialects(Predicate<Dialect> skipPredicate, Consumer<S> skippedIfDialectMatchesClasses) {
+			if ( !skipPredicate.test( dialect ) ) {
+				skippedIfDialectMatchesClasses.accept( thisAsS() );
+			}
+			return thisAsS();
 		}
 
 		public S skippedForDialects(List<Class<?>> dialectClasses, Consumer<S> skippedIfDialectMatchesClasses) {

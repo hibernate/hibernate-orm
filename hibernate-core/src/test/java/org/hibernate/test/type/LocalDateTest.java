@@ -22,6 +22,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 
 import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.dialect.MySQLDialect;
@@ -42,6 +43,7 @@ import org.junit.runners.Parameterized;
 				+ " when the JVM default timezone is different from the server timezone:"
 				+ " https://bugs.mysql.com/bug.php?id=91112"
 )
+@SkipForDialect(value = H2Dialect.class, comment = "H2 1.4.200 DST bug. See org.hibernate.dialect.H2Dialect.hasDstBug")
 public class LocalDateTest extends AbstractJavaTimeTypeTest<LocalDate, LocalDateTest.EntityWithLocalDate> {
 
 	private static class ParametersBuilder extends AbstractParametersBuilder<ParametersBuilder> {

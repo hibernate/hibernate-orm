@@ -61,7 +61,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-@RequiresDialectFeature(DialectChecks.SupportsNoColumnInsert.class)
+//@RequiresDialectFeature(DialectChecks.SupportsNoColumnInsert.class)
+@RequiresDialectFeature(value = {DialectChecks.SupportsNoColumnInsert.class, DialectChecks.NotH2Version2.class}, comment = "See https://github.com/h2database/h2database/issues/3385")
 public class FumTest extends LegacyTestCase {
 	private static short fumKeyShort = 1;
 

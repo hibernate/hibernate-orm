@@ -28,7 +28,9 @@ import org.hibernate.annotations.NaturalId;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
+import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.junit.Test;
 
 import org.jboss.logging.Logger;
@@ -41,6 +43,7 @@ import static org.junit.Assert.assertNotNull;
  * @author Vlad Mihalcea
  */
 @RequiresDialect(H2Dialect.class)
+@RequiresDialectFeature(value = DialectChecks.NotH2Version2.class, comment = "See https://github.com/h2database/h2database/issues/3338")
 public class FetchingTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
@@ -181,6 +184,12 @@ public class FetchingTest extends BaseEntityManagerFunctionalTestCase {
 			read = "decrypt( 'AES', '00', pswd  )",
 			write = "encrypt('AES', '00', ?)"
 		)
+// For H2 2.0.202+ one must use the varbinary DDL type
+//		@Column(name = "pswd", columnDefinition = "varbinary")
+//		@ColumnTransformer(
+//			read = "trim(trailing u&'\\0000' from cast(decrypt('AES', '00', pswd ) as character varying))",
+//			write = "encrypt('AES', '00', ?)"
+//		)
 		private String password;
 
 		private int accessLevel;

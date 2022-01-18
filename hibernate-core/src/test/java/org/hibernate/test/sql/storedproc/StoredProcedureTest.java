@@ -18,7 +18,9 @@ import org.hibernate.procedure.ProcedureOutputs;
 import org.hibernate.result.Output;
 import org.hibernate.result.ResultSetOutput;
 
+import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -169,6 +171,7 @@ public class StoredProcedureTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@RequiresDialectFeature(value = DialectChecks.NotH2Version2.class, comment = "No idea why H2 2.0 doesn't support that")
 	public void testInParametersNotSet() {
 		Session session = openSession();
 		session.beginTransaction();
@@ -206,6 +209,7 @@ public class StoredProcedureTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@RequiresDialectFeature(value = DialectChecks.NotH2Version2.class, comment = "No idea why H2 2.0 doesn't support that")
 	public void testInParametersNotSetPass() {
 		Session session = openSession();
 		session.beginTransaction();
@@ -238,6 +242,7 @@ public class StoredProcedureTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@SuppressWarnings("unchecked")
+	@RequiresDialectFeature(value = DialectChecks.NotH2Version2.class, comment = "No idea why H2 2.0 doesn't support that")
 	public void testInParametersNullnessPassingInNamedQueriesViaHints() {
 		Session session = openSession();
 		session.beginTransaction();

@@ -157,6 +157,11 @@ public class SqlStringGenerationContextImpl
 	}
 
 	@Override
+	public String formatWithoutDefaults(QualifiedTableName qualifiedName) {
+		return qualifiedObjectNameFormatter.format( qualifiedName, dialect );
+	}
+
+	@Override
 	public String format(QualifiedSequenceName qualifiedName) {
 		return qualifiedObjectNameFormatter.format( withDefaults( qualifiedName ), dialect );
 	}

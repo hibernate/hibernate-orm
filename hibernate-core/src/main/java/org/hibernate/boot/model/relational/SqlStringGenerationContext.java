@@ -66,6 +66,15 @@ public interface SqlStringGenerationContext {
 	String format(QualifiedTableName qualifiedName);
 
 	/**
+	 * Render a formatted a table name, ignoring the default catalog/schema.
+	 *
+	 * @param qualifiedName The table name
+	 *
+	 * @return The formatted name
+	 */
+	String formatWithoutDefaults(QualifiedTableName qualifiedName);
+
+	/**
 	 * Render a formatted sequence name
 	 *
 	 * @param qualifiedName The sequence name

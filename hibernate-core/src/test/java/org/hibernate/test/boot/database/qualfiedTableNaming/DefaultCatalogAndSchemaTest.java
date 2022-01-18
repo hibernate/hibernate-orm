@@ -52,6 +52,9 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.MariaDB102Dialect;
+import org.hibernate.dialect.MariaDB10Dialect;
+import org.hibernate.dialect.MariaDB53Dialect;
 import org.hibernate.dialect.SQLServer2012Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
@@ -72,6 +75,7 @@ import org.hibernate.tool.schema.spi.TargetDescriptor;
 
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 import org.hibernate.testing.junit4.CustomParameterized;
@@ -81,6 +85,12 @@ import org.junit.runners.Parameterized;
 
 @RunWith(CustomParameterized.class)
 @TestForIssue(jiraKey = { "HHH-14921", "HHH-14922" })
+@SkipForDialect(value = MariaDB53Dialect.class, strictMatching = true,
+		comment = "MariaDB < 10.3 doesn't support sequences")
+@SkipForDialect(value = MariaDB10Dialect.class, strictMatching = true,
+		comment = "MariaDB < 10.3 doesn't support sequences")
+@SkipForDialect(value = MariaDB102Dialect.class, strictMatching = true,
+		comment = "MariaDB < 10.3 doesn't support sequences")
 public class DefaultCatalogAndSchemaTest {
 
 	private static final String SQL_QUOTE_CHARACTER_CLASS = "([`\"]|\\[|\\])";

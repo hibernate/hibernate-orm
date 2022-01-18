@@ -10,12 +10,14 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.BinaryArithmeticOperator;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
+import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -216,5 +218,22 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 
 	private boolean supportsOffsetFetchClause() {
 		return getDialect().getVersion().isSameOrAfter( 2, 5 );
+	}
+
+	@Override
+	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
+		final BinaryArithmeticOperator operator = arithmeticExpression.getOperator();
+		if ( operator == BinaryArithmeticOperator.MODULO ) {
+			append( "mod" );
+			appendSql( OPEN_PARENTHESIS );
+			arithmeticExpression.getLeftHandOperand().accept( this );
+			appendSql( ',' );
+			arithmeticExpression.getRightHandOperand().accept( this );
+			appendSql( CLOSE_PARENTHESIS );
+			return;
+		}
+		else {
+			super.visitBinaryArithmeticExpression( arithmeticExpression );
+		}
 	}
 }

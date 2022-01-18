@@ -8,6 +8,7 @@ package org.hibernate.dialect;
 
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.List;
 
 import org.hibernate.JDBCException;
 import org.hibernate.PessimisticLockException;
@@ -75,6 +76,7 @@ public class H2Dialect extends Dialect {
 
 	private final boolean supportsTuplesInSubqueries;
 	private final boolean requiresParensForTupleDistinctCounts;
+	private final boolean isVersion2;
 	private final String querySequenceString;
 	private final SequenceInformationExtractor sequenceInformationExtractor;
 
@@ -87,6 +89,7 @@ public class H2Dialect extends Dialect {
 		int buildId = Integer.MIN_VALUE;
 		boolean supportsTuplesInSubqueries = false;
 		boolean requiresParensForTupleDistinctCounts = false;
+		boolean isVersion2 = false;
 
 		try {
 			// HHH-2300
@@ -101,6 +104,7 @@ public class H2Dialect extends Dialect {
 			supportsTuplesInSubqueries = majorVersion > 1 || minorVersion > 4 || buildId >= 198;
 			// As of 1.4.200, this is not necessary anymore
 			requiresParensForTupleDistinctCounts = !( majorVersion > 1 || minorVersion > 4 || buildId >= 200 );
+			isVersion2 = majorVersion > 1;
 		}
 		catch ( Exception e ) {
 			// probably H2 not in the classpath, though in certain app server environments it might just mean we are
@@ -120,6 +124,7 @@ public class H2Dialect extends Dialect {
 		}
 		this.supportsTuplesInSubqueries = supportsTuplesInSubqueries;
 		this.requiresParensForTupleDistinctCounts = requiresParensForTupleDistinctCounts;
+		this.isVersion2 = isVersion2;
 
 		registerColumnType( Types.BOOLEAN, "boolean" );
 		registerColumnType( Types.BIGINT, "bigint" );
@@ -238,6 +243,12 @@ public class H2Dialect extends Dialect {
 		getDefaultProperties().setProperty( AvailableSettings.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 		// http://code.google.com/p/h2database/issues/detail?id=235
 		getDefaultProperties().setProperty( AvailableSettings.NON_CONTEXTUAL_LOB_CREATION, "true" );
+	}
+
+	public boolean hasOddDstBehavior() {
+		// H2 1.4.200 has a bug: https://github.com/h2database/h2database/issues/3184
+		// requiresParensForTupleDistinctCounts will be false for 1.4.200+
+		return !requiresParensForTupleDistinctCounts;
 	}
 
 	@Override
@@ -431,6 +442,13 @@ public class H2Dialect extends Dialect {
 
 
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	@Override
+	public void augmentPhysicalTableTypes(List<String> tableTypesList) {
+		if ( isVersion2 ) {
+			tableTypesList.add( "BASE TABLE" );
+		}
+	}
 
 	@Override
 	public boolean supportsLobValueChangePropogation() {

@@ -68,11 +68,8 @@ public abstract class AbstractMultiTableBulkIdStrategyImpl<TT extends IdTableInf
 				continue;
 			}
 
-			final String idTableName = sqlStringGenerationContext.format(
-					determineIdTableName( jdbcEnvironment, entityBinding )
-			);
-			final Table idTable = new Table();
-			idTable.setName( idTableName );
+			final QualifiedTableName idTableName = determineIdTableName( jdbcEnvironment, entityBinding );
+			final Table idTable = new Table( idTableName.getCatalogName(), idTableName.getSchemaName(), idTableName.getTableName(), false );
 			idTable.setComment( "Used to hold id values for the " + entityBinding.getEntityName() + " entity" );
 
 			Iterator itr = entityBinding.getTable().getPrimaryKey().getColumnIterator();
@@ -138,7 +135,7 @@ public abstract class AbstractMultiTableBulkIdStrategyImpl<TT extends IdTableInf
 
 		StringBuilder buffer = new StringBuilder( getIdTableSupport().getCreateIdTableCommand() )
 				.append( ' ' )
-				.append( sqlStringGenerationContext.format( idTable.getQualifiedTableName() ) )
+				.append( formatIdTableName( idTable.getQualifiedTableName(), sqlStringGenerationContext ) )
 				.append( " (" );
 
 		Iterator<Column> itr = idTable.getColumnIterator();
@@ -175,7 +172,17 @@ public abstract class AbstractMultiTableBulkIdStrategyImpl<TT extends IdTableInf
 
 	protected String buildIdTableDropStatement(Table idTable, SqlStringGenerationContext sqlStringGenerationContext) {
 		return getIdTableSupport().getDropIdTableCommand() + " "
-				+ sqlStringGenerationContext.format( idTable.getQualifiedTableName() );
+				+ formatIdTableName( idTable.getQualifiedTableName(), sqlStringGenerationContext );
+	}
+
+	protected String formatIdTableName(QualifiedTableName qualifiedTableName,
+			SqlStringGenerationContext sqlStringGenerationContext) {
+		// Historically, we've always ignored the default catalog/schema here,
+		// so for the sake of backwards compatibility, we will continue that way.
+		// Also, we must not use the default catalog/schema for temporary tables,
+		// because some vendors don't allow creating temporary tables
+		// in just any catalog/schema (for postgres, it must be a "temporary schema").
+		return sqlStringGenerationContext.formatWithoutDefaults( qualifiedTableName );
 	}
 
 	protected void finishPreparation(

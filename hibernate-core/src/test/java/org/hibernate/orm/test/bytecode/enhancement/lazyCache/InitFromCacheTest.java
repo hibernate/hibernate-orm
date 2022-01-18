@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.test.bytecode.enhancement.lazyCache;
+package org.hibernate.orm.test.bytecode.enhancement.lazyCache;
 
 import java.util.Date;
 import java.util.Locale;
@@ -26,6 +26,8 @@ import org.hibernate.cache.spi.entry.StandardCacheEntryImpl;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.graph.RootGraph;
+import org.hibernate.jpa.QueryHints;
 import org.hibernate.persister.entity.EntityPersister;
 
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
@@ -81,13 +83,17 @@ public class InitFromCacheTest extends BaseCoreFunctionalTestCase {
         doInHibernate(
         		this::sessionFactory,
 				s -> {
-					Document d = (Document) s.createQuery( "from Document fetch all properties" ).uniqueResult();
-					assertTrue( isPropertyInitialized( d, "text" ) );
-					assertTrue( isPropertyInitialized( d, "summary" ) );
+                    final RootGraph<Document> entityGraph = s.createEntityGraph( Document.class );
+                    entityGraph.addAttributeNodes( "text", "summary" );
+                    final Document document = s.createQuery( "from Document", Document.class )
+                            .setHint( QueryHints.JAKARTA_HINT_FETCH_GRAPH, entityGraph )
+                            .uniqueResult();
+					assertTrue( isPropertyInitialized( document, "text" ) );
+					assertTrue( isPropertyInitialized( document, "summary" ) );
 
 					final EntityDataAccess entityDataAccess = persister.getCacheAccessStrategy();
 					final Object cacheKey = entityDataAccess.generateCacheKey(
-							d.id,
+                            document.id,
 							persister,
 							sessionFactory(),
 							null

@@ -1,6 +1,13 @@
-package org.hibernate.test.bytecode.enhancement.join;
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ */
+package org.hibernate.orm.test.bytecode.enhancement.join;
 
-import org.hibernate.FetchMode;
+import java.util.List;
+
 import org.hibernate.Session;
 import org.hibernate.annotations.LazyToOne;
 import org.hibernate.annotations.LazyToOneOption;
@@ -23,7 +30,6 @@ import jakarta.persistence.Table;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.JoinType;
-import java.util.List;
 
 import static org.hibernate.Hibernate.isInitialized;
 import static org.hibernate.Hibernate.isPropertyInitialized;
@@ -82,14 +88,11 @@ public class HHH3949Test extends BaseCoreFunctionalTestCase {
 
     @Test
     public void test1() {
-        // verify the work around query
-        performQueryAndVerifyPersonResults( "from Person p fetch all properties left join fetch p.vehicle" );
         performQueryAndVerifyPersonResults( "from Person p left join fetch p.vehicle" );
     }
 
     @Test
     public void test2() {
-        performQueryAndVerifyVehicleResults( "from Vehicle v fetch all properties left join fetch v.driver" );
         performQueryAndVerifyVehicleResults( "from Vehicle v left join fetch v.driver" );
     }
 

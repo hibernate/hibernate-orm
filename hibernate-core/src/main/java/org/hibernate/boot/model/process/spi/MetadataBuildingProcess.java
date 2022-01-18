@@ -360,6 +360,7 @@ public class MetadataBuildingProcess {
 	private static void handleTypes(BootstrapContext bootstrapContext, MetadataBuildingOptions options) {
 		final ClassLoaderService classLoaderService = options.getServiceRegistry().getService( ClassLoaderService.class );
 
+		final TypeConfiguration typeConfiguration = bootstrapContext.getTypeConfiguration();
 		final TypeContributions typeContributions = new TypeContributions() {
 			@Override
 			public void contributeType(BasicType type) {
@@ -385,17 +386,25 @@ public class MetadataBuildingProcess {
 
 			@Override
 			public void contributeJavaTypeDescriptor(JavaType descriptor) {
-				bootstrapContext.getTypeConfiguration().getJavaTypeDescriptorRegistry().addDescriptor( descriptor );
+				typeConfiguration.getJavaTypeDescriptorRegistry().addDescriptor( descriptor );
 			}
 
 			@Override
 			public void contributeJdbcTypeDescriptor(JdbcType descriptor) {
-				bootstrapContext.getTypeConfiguration().getJdbcTypeDescriptorRegistry().addDescriptor( descriptor );
+				typeConfiguration.getJdbcTypeDescriptorRegistry().addDescriptor( descriptor );
+			}
+
+			@Override
+			public <T> void contributeType(UserType<T> descriptor) {
+				typeConfiguration.getBasicTypeRegistry().register(
+						descriptor,
+						descriptor.returnedClass().getName()
+				);
 			}
 
 			@Override
 			public TypeConfiguration getTypeConfiguration() {
-				return bootstrapContext.getTypeConfiguration();
+				return typeConfiguration;
 			}
 
 			final BasicTypeRegistry getBasicTypeRegistry() {
@@ -414,7 +423,7 @@ public class MetadataBuildingProcess {
 		}
 
 		// add fallback type descriptors
-		final JdbcTypeRegistry jdbcTypeRegistry = bootstrapContext.getTypeConfiguration()
+		final JdbcTypeRegistry jdbcTypeRegistry = typeConfiguration
 				.getJdbcTypeDescriptorRegistry();
 		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.UUID, SqlTypes.BINARY );
 		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.JSON, SqlTypes.VARBINARY );
@@ -424,15 +433,15 @@ public class MetadataBuildingProcess {
 		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.POINT, SqlTypes.VARBINARY );
 
 		// add explicit application registered types
-		bootstrapContext.getTypeConfiguration()
+		typeConfiguration
 				.addBasicTypeRegistrationContributions( options.getBasicTypeRegistrations() );
 
 		// For NORMALIZE, we replace the standard types that use TIMESTAMP_WITH_TIMEZONE to use TIMESTAMP
 		if ( options.getDefaultTimeZoneStorage() == TimeZoneStorageStrategy.NORMALIZE ) {
-			final JavaTypeRegistry javaTypeRegistry = bootstrapContext.getTypeConfiguration()
+			final JavaTypeRegistry javaTypeRegistry = typeConfiguration
 					.getJavaTypeDescriptorRegistry();
 			final JdbcType timestampDescriptor = jdbcTypeRegistry.getDescriptor( Types.TIMESTAMP );
-			final BasicTypeRegistry basicTypeRegistry = bootstrapContext.getTypeConfiguration().getBasicTypeRegistry();
+			final BasicTypeRegistry basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
 			final BasicType<?> offsetDateTimeType = new NamedBasicTypeImpl<>(
 					javaTypeRegistry.getDescriptor( OffsetDateTime.class ),
 					timestampDescriptor,

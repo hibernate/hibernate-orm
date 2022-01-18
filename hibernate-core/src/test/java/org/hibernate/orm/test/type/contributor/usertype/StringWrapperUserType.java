@@ -1,4 +1,10 @@
-package org.hibernate.test.usertype;
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ */
+package org.hibernate.orm.test.type.contributor.usertype;
 
 import java.io.Serializable;
 import java.sql.PreparedStatement;
@@ -16,7 +22,7 @@ import org.jboss.logging.Logger;
 /**
  * @author Christian Beikov
  */
-public class StringWrapperUserType implements UserType {
+public class StringWrapperUserType implements UserType<StringWrapper> {
 
 	public static final StringWrapperUserType INSTANCE = new StringWrapperUserType();
 
@@ -28,7 +34,7 @@ public class StringWrapperUserType implements UserType {
     }
 
     @Override
-    public Class returnedClass() {
+    public Class<StringWrapper> returnedClass() {
         return StringWrapper.class;
     }
 
@@ -45,7 +51,7 @@ public class StringWrapperUserType implements UserType {
     }
 
     @Override
-    public Object nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+    public StringWrapper nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
         String columnValue = (String) rs.getObject( position );
         log.debugv( "Result set column {0} value is {1}", position, columnValue );
         return columnValue == null ? null : fromString( columnValue );
@@ -53,7 +59,7 @@ public class StringWrapperUserType implements UserType {
 
     @Override
     public void nullSafeSet(
-            PreparedStatement st, Object value, int index, SharedSessionContractImplementor session)
+            PreparedStatement st, StringWrapper value, int index, SharedSessionContractImplementor session)
             throws HibernateException, SQLException {
         if ( value == null ) {
             log.debugv("Binding null to parameter {0} ",index);

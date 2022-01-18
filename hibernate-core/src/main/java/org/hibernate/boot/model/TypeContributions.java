@@ -36,6 +36,12 @@ public interface TypeContributions {
 	void contributeJdbcTypeDescriptor(JdbcType descriptor);
 
 	/**
+	 * Registers a UserType as the implicit (auto-applied) type
+	 * for values of type {@link UserType#returnedClass()}
+	 */
+	<T> void contributeType(UserType<T> type);
+
+	/**
 	 * @deprecated (6.0) See user-guide section `2.2.46. TypeContributor` for details - `basic_types.adoc`
 	 */
 	@Deprecated

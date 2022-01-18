@@ -62,11 +62,7 @@ public abstract class AbstractSqmRestrictedDmlStatement<T> extends AbstractSqmDm
 			return;
 		}
 
-		if ( whereClause == null ) {
-			whereClause = new SqmWhereClause( nodeBuilder() );
-		}
-
-		whereClause.applyPredicate( predicate );
+		initAndGetWhereClause().applyPredicate( predicate );
 	}
 
 	public void setWhereClause(SqmWhereClause whereClause) {
@@ -79,13 +75,21 @@ public abstract class AbstractSqmRestrictedDmlStatement<T> extends AbstractSqmDm
 	}
 
 	protected void setWhere(Expression<Boolean> restriction) {
-		applyPredicate( null );
-		applyPredicate( (SqmPredicate) restriction );
+		// Replaces the current predicate if one is present
+		initAndGetWhereClause().setPredicate( (SqmPredicate) restriction );
+	}
+
+	protected SqmWhereClause initAndGetWhereClause() {
+		if ( whereClause == null ) {
+			whereClause = new SqmWhereClause( nodeBuilder() );
+		}
+		return whereClause;
 	}
 
 	protected void setWhere(Predicate... restrictions) {
-		applyPredicate( null );
-		final SqmWhereClause whereClause = getWhereClause();
+		final SqmWhereClause whereClause = initAndGetWhereClause();
+		// Clear the current predicate if one is present
+		whereClause.setPredicate(null);
 		for ( Predicate restriction : restrictions ) {
 			whereClause.applyPredicate( (SqmPredicate) restriction );
 		}

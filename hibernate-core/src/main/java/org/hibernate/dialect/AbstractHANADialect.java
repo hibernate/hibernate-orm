@@ -277,10 +277,10 @@ public abstract class AbstractHANADialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
 				"locate",
 				queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER ),
-				"locate(?1,?2)",
-				"locate(?1,?2,?3)",
+				"locate(?2,?1)",
+				"locate(?2,?1,?3)",
 				FunctionParameterType.STRING, FunctionParameterType.STRING, FunctionParameterType.INTEGER
-		).setArgumentListSignature("(string, pattern[, start])");
+		).setArgumentListSignature("(pattern, string[, start])");
 
 		CommonFunctionFactory.ceiling_ceil( queryEngine );
 		CommonFunctionFactory.concat_pipeOperator( queryEngine );

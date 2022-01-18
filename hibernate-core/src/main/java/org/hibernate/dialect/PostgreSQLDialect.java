@@ -449,13 +449,7 @@ public class PostgreSQLDialect extends Dialect {
 		CommonFunctionFactory.overlay( queryEngine );
 		CommonFunctionFactory.soundex( queryEngine ); //was introduced in Postgres 9 apparently
 
-		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
-				"locate",
-				queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER ),
-				"position(?2 in ?1)",
-				"(position(?2 in substring(?1 from ?3))+(?3)-1)",
-				FunctionParameterType.STRING, FunctionParameterType.STRING, FunctionParameterType.INTEGER
-		).setArgumentListSignature("(string, pattern[, start])");
+		CommonFunctionFactory.locate_positionSubstring( queryEngine );
 
 		if ( getVersion().isSameOrAfter( 9, 4 ) ) {
 			CommonFunctionFactory.makeDateTimeTimestamp( queryEngine );

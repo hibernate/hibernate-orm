@@ -279,10 +279,16 @@ public class IngresDialect extends Dialect {
 		CommonFunctionFactory.format_dateFormat( queryEngine );
 		CommonFunctionFactory.dateTrunc( queryEngine );
 		CommonFunctionFactory.bitLength_pattern( queryEngine, "octet_length(hex(?1))*4" );
-		CommonFunctionFactory.locate_positionSubstring( queryEngine );
 
 		final BasicType<Integer> integerType = queryEngine.getTypeConfiguration().getBasicTypeRegistry()
 				.resolve( StandardBasicTypes.INTEGER );
+		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
+				"locate",
+				integerType,
+				"position(?1 in ?2)",
+				"(position(?1 in substring(?2 from ?3))+(?3)-1)",
+				STRING, STRING, INTEGER
+		).setArgumentListSignature("(pattern, string[, start])");
 
 		queryEngine.getSqmFunctionRegistry().registerPattern( "extract", "date_part('?1',?2)", integerType );
 

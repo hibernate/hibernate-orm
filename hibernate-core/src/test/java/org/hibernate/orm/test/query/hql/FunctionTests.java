@@ -407,11 +407,11 @@ public class FunctionTests {
 	public void testLocateFunction(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery("select locate( e.theString, 'hello') from EntityOfBasics e")
+					session.createQuery("select locate('hello', e.theString) from EntityOfBasics e")
 							.list();
-					session.createQuery("select locate( e.theString, 'hello', e.theInteger) from EntityOfBasics e")
+					session.createQuery("select locate('hello', e.theString, e.theInteger) from EntityOfBasics e")
 							.list();
-					assertThat( session.createQuery("select locate( 'hello world', 'world')").getSingleResult(), is(7) );
+					assertThat( session.createQuery("select locate('world', 'hello world')").getSingleResult(), is(7) );
 				}
 		);
 	}

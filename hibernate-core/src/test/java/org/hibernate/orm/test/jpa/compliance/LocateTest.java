@@ -26,9 +26,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Jpa(
-		annotatedClasses = CriteriaLocateTest.Person.class
+		annotatedClasses = LocateTest.Person.class
 )
-public class CriteriaLocateTest {
+public class LocateTest {
 
 	@BeforeEach
 	public void setUp(EntityManagerFactoryScope scope) {
@@ -108,6 +108,21 @@ public class CriteriaLocateTest {
 					assertEquals( 2, results.size() );
 					assertTrue( results.contains( 3 ) );
 					assertTrue( results.contains( 4 ) );
+				}
+		);
+	}
+
+	@Test
+	public void locateQueryTest(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					final List<Integer> ids = entityManager.createQuery(
+									"select distinct p.id from Person p where locate('nd', p.name) = 2" )
+							.getResultList();
+
+					assertEquals( 2, ids.size() );
+					assertTrue( ids.contains( 3 ) );
+					assertTrue( ids.contains( 4 ) );
 				}
 		);
 	}

@@ -181,14 +181,7 @@ public class InformixDialect extends Dialect {
 		CommonFunctionFactory.monthsBetween( queryEngine );
 		CommonFunctionFactory.stddev( queryEngine );
 		CommonFunctionFactory.variance( queryEngine );
-
-		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
-				"locate",
-				queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER ),
-				"instr(?1,?2)",
-				"instr(?1,?2,?3)",
-				STRING, STRING, INTEGER
-		).setArgumentListSignature("(string, pattern[, start])");
+		CommonFunctionFactory.locate_positionSubstring( queryEngine );
 
 		//coalesce() and nullif() both supported since Informix 12
 

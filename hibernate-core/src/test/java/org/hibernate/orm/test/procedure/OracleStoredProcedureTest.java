@@ -440,13 +440,18 @@ public class OracleStoredProcedureTest {
 				);
 
 				statement.execute(
-						"create or replace function find_char(in char search, in varchar string, in integer start default 0) " +
+						"create or replace function find_char(" +
+								"		search in char, " +
+								"		string in varchar," +
+								"		start in integer default 0) " +
 								"return integer " +
-								"as begin " +
-								"    select instr( search, string, start ) as position " +
+								"as " +
+								"		position integer; " +
+								"begin " +
+								"    select instr( search, string, start ) into position " +
 								"    from dual; " +
 								"    return position; " +
-								"end"
+								"end;"
 				);
 			}
 		} ) );

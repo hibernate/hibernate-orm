@@ -9,7 +9,10 @@ package org.hibernate.orm.test.annotations.manytoonewithformula;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.SQLServerDialect;
 
+import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -132,6 +135,7 @@ public class ManyToOneWithFormulaTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@SkipForDialect( value = { HSQLDialect.class }, comment = "The used join conditions does not work in HSQLDB. See HHH-4497." )
+	@SkipForDialect( value = { OracleDialect.class }, comment = "Oracle do not support 'substring' function" )
 	public void testManyToOneFromNonPkToNonPk() throws Exception {
 		// also tests usage of the stand-alone @JoinFormula annotation (i.e. not wrapped within @JoinColumnsOrFormulas)
 		Session s = openSession();
@@ -166,6 +170,7 @@ public class ManyToOneWithFormulaTest extends BaseCoreFunctionalTestCase {
     }
 
     @Test
+	@RequiresDialect(value = { SQLServerDialect.class})
     public void testManyToOneFromNonPkToNonPkSqlServer() throws Exception {
         // also tests usage of the stand-alone @JoinFormula annotation (i.e. not wrapped within @JoinColumnsOrFormulas)
         Session s = openSession();

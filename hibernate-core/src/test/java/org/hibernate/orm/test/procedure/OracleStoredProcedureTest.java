@@ -18,6 +18,7 @@ import java.time.ZoneOffset;
 import java.util.List;
 
 import org.hibernate.Session;
+import org.hibernate.annotations.QueryHints;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.query.procedure.ProcedureParameter;
@@ -45,6 +46,7 @@ import jakarta.persistence.NamedStoredProcedureQuery;
 import jakarta.persistence.ParameterMode;
 import jakarta.persistence.StoredProcedureParameter;
 import jakarta.persistence.StoredProcedureQuery;
+import org.assertj.core.api.Assertions;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -68,247 +70,25 @@ import static org.junit.jupiter.api.Assertions.fail;
 @RequiresDialect(value = OracleDialect.class)
 public class OracleStoredProcedureTest {
 
-	@NamedStoredProcedureQueries({
-			@NamedStoredProcedureQuery(
-					name = "singleRefCursor",
-					procedureName = "singleRefCursor",
-					parameters = {
-							@StoredProcedureParameter(mode = ParameterMode.REF_CURSOR, type = void.class)
-					}
-			),
-			@NamedStoredProcedureQuery(
-					name = "outAndRefCursor",
-					procedureName = "outAndRefCursor",
-					parameters = {
-							@StoredProcedureParameter(mode = ParameterMode.REF_CURSOR, type = void.class),
-							@StoredProcedureParameter(mode = ParameterMode.OUT, type = Long.class),
-					}
-			)
-	})
-	@Entity(name = "IdHolder")
-	public static class IdHolder {
+	@Test
+	public void testUnRegisteredParameter(EntityManagerFactoryScope scope) {
+		scope.inTransaction( (em) -> {
+			final StoredProcedureQuery function = em.createStoredProcedureQuery( "find_char", Integer.class );
+			function.setHint( QueryHints.CALLABLE_FUNCTION, "true" );
+			// search-string
+			function.registerStoredProcedureParameter( 1, String.class, ParameterMode.IN );
+			// source-string
+			function.registerStoredProcedureParameter( 2, String.class, ParameterMode.IN );
 
-		@Id
-		Long id;
+			function.setParameter( 1, "." );
+			function.setParameter( 2, "org.hibernate.query" );
+
+			final Object singleResult = function.getSingleResult();
+			Assertions.assertThat( singleResult ).isInstanceOf( Integer.class );
+			Assertions.assertThat( singleResult ).isEqualTo( 4 );
+		} );
 	}
 
-	@BeforeEach
-	public void init(EntityManagerFactoryScope scope) {
-		EntityManager entityManager = scope.getEntityManagerFactory().createEntityManager();
-		entityManager.getTransaction().begin();
-
-		try {
-			Session session = entityManager.unwrap( Session.class );
-
-			session.doWork( connection -> {
-				Statement statement = null;
-				try {
-					statement = connection.createStatement();
-					statement.executeUpdate(
-							"CREATE OR REPLACE PROCEDURE sp_count_phones (  " +
-									"   personId IN NUMBER,  " +
-									"   phoneCount OUT NUMBER )  " +
-									"AS  " +
-									"BEGIN  " +
-									"    SELECT COUNT(*) INTO phoneCount  " +
-									"    FROM phone  " +
-									"    WHERE person_id = personId; " +
-									"END;"
-					);
-					statement.executeUpdate(
-							"CREATE OR REPLACE PROCEDURE sp_person_phones ( " +
-									"   personId IN NUMBER, " +
-									"   personPhones OUT SYS_REFCURSOR ) " +
-									"AS  " +
-									"BEGIN " +
-									"    OPEN personPhones FOR " +
-									"    SELECT *" +
-									"    FROM phone " +
-									"    WHERE person_id = personId; " +
-									"END;"
-					);
-					statement.executeUpdate(
-							"CREATE OR REPLACE FUNCTION fn_count_phones ( " +
-									"    personId IN NUMBER ) " +
-									"    RETURN NUMBER " +
-									"IS " +
-									"    phoneCount NUMBER; " +
-									"BEGIN " +
-									"    SELECT COUNT(*) INTO phoneCount " +
-									"    FROM phone " +
-									"    WHERE person_id = personId; " +
-									"    RETURN( phoneCount ); " +
-									"END;"
-					);
-					statement.executeUpdate(
-							"CREATE OR REPLACE FUNCTION fn_person_and_phones ( " +
-									"    personId IN NUMBER ) " +
-									"    RETURN SYS_REFCURSOR " +
-									"IS " +
-									"    personAndPhones SYS_REFCURSOR; " +
-									"BEGIN " +
-									"   OPEN personAndPhones FOR " +
-									"        SELECT " +
-									"            pr.id AS \"pr.id\", " +
-									"            pr.name AS \"pr.name\", " +
-									"            pr.nickName AS \"pr.nickName\", " +
-									"            pr.address AS \"pr.address\", " +
-									"            pr.createdOn AS \"pr.createdOn\", " +
-									"            pr.version AS \"pr.version\", " +
-									"            ph.id AS \"ph.id\", " +
-									"            ph.person_id AS \"ph.person_id\", " +
-									"            ph.phone_number AS \"ph.phone_number\", " +
-									"            ph.valid AS \"ph.valid\" " +
-									"       FROM person pr " +
-									"       JOIN phone ph ON pr.id = ph.person_id " +
-									"       WHERE pr.id = personId; " +
-									"   RETURN personAndPhones; " +
-									"END;"
-					);
-					statement.executeUpdate(
-							"CREATE OR REPLACE " +
-									"PROCEDURE singleRefCursor(p_recordset OUT SYS_REFCURSOR) AS " +
-									"  BEGIN " +
-									"    OPEN p_recordset FOR " +
-									"    SELECT 1 as id " +
-									"    FROM dual; " +
-									"  END; "
-					);
-					statement.executeUpdate(
-							"CREATE OR REPLACE " +
-									"PROCEDURE outAndRefCursor(p_recordset OUT SYS_REFCURSOR, p_value OUT NUMBER) AS " +
-									"  BEGIN " +
-									"    OPEN p_recordset FOR " +
-									"    SELECT 1 as id " +
-									"    FROM dual; " +
-									"	 SELECT 1 INTO p_value FROM dual; " +
-									"  END; "
-					);
-					statement.executeUpdate(
-							"CREATE OR REPLACE PROCEDURE sp_phone_validity ( " +
-									"   validity IN NUMBER, " +
-									"   personPhones OUT SYS_REFCURSOR ) " +
-									"AS  " +
-									"BEGIN " +
-									"    OPEN personPhones FOR " +
-									"    SELECT phone_number " +
-									"    FROM phone " +
-									"    WHERE valid = validity; " +
-									"END;"
-					);
-					statement.executeUpdate(
-							"CREATE OR REPLACE PROCEDURE sp_votes ( " +
-									"   validity IN CHAR, " +
-									"   votes OUT SYS_REFCURSOR ) " +
-									"AS  " +
-									"BEGIN " +
-									"    OPEN votes FOR " +
-									"    SELECT id " +
-									"    FROM vote " +
-									"    WHERE vote_choice = validity; " +
-									"END;"
-					);
-				}
-				finally {
-					if ( statement != null ) {
-						statement.close();
-					}
-				}
-			} );
-		}
-		finally {
-			entityManager.getTransaction().rollback();
-			entityManager.close();
-		}
-
-		entityManager = scope.getEntityManagerFactory().createEntityManager();
-		entityManager.getTransaction().begin();
-
-		try {
-			Person person1 = new Person( "John Doe" );
-			person1.setNickName( "JD" );
-			person1.setAddress( "Earth" );
-			person1.setCreatedOn( Timestamp.from( LocalDateTime.of( 2000, 1, 1, 0, 0, 0 )
-														  .toInstant( ZoneOffset.UTC ) ) );
-
-			entityManager.persist( person1 );
-
-			Phone phone1 = new Phone( "123-456-7890" );
-			phone1.setId( 1L );
-			phone1.setValid( true );
-
-			person1.addPhone( phone1 );
-
-			Phone phone2 = new Phone( "098_765-4321" );
-			phone2.setId( 2L );
-			phone2.setValid( false );
-
-			person1.addPhone( phone2 );
-
-			entityManager.getTransaction().commit();
-		}
-		finally {
-			entityManager.close();
-		}
-	}
-
-	@AfterEach
-	public void destroy(EntityManagerFactoryScope scope) {
-		EntityManager entityManager = scope.getEntityManagerFactory().createEntityManager();
-		entityManager.getTransaction().begin();
-
-		try {
-			Session session = entityManager.unwrap( Session.class );
-			session.doWork( connection -> {
-				try (Statement statement = connection.createStatement()) {
-					statement.executeUpdate( "DROP PROCEDURE sp_count_phones" );
-				}
-				catch (SQLException ignore) {
-				}
-			} );
-		}
-		finally {
-			entityManager.getTransaction().rollback();
-			entityManager.close();
-		}
-
-		entityManager = scope.getEntityManagerFactory().createEntityManager();
-		entityManager.getTransaction().begin();
-
-		try {
-			Session session = entityManager.unwrap( Session.class );
-			session.doWork( connection -> {
-				try (Statement statement = connection.createStatement()) {
-					statement.executeUpdate( "DROP PROCEDURE sp_person_phones" );
-				}
-				catch (SQLException ignore) {
-				}
-			} );
-		}
-		finally {
-			entityManager.getTransaction().rollback();
-			entityManager.close();
-		}
-
-		entityManager = scope.getEntityManagerFactory().createEntityManager();
-		entityManager.getTransaction().begin();
-
-		try {
-			Session session = entityManager.unwrap( Session.class );
-			session.doWork( connection -> {
-				try (Statement statement = connection.createStatement()) {
-					statement.executeUpdate( "DROP FUNCTION fn_count_phones" );
-				}
-				catch (SQLException ignore) {
-				}
-			} );
-		}
-		finally {
-			entityManager.getTransaction().rollback();
-			entityManager.close();
-		}
-		scope.releaseEntityManagerFactory();
-	}
 
 	@Test
 	public void testStoredProcedureOutParameter(EntityManagerFactoryScope scope) {
@@ -519,5 +299,232 @@ public class OracleStoredProcedureTest {
 					assertEquals( 1, votes.size() );
 					assertEquals( 1, ( (Number) votes.get( 0 ) ).intValue() );
 				} );
+	}
+
+
+	@BeforeEach
+	public void prepareSchema(EntityManagerFactoryScope scope) {
+		scope.inTransaction( (entityManager) -> entityManager.unwrap( Session.class ).doWork( (connection) -> {
+			try ( Statement statement = connection.createStatement() ) {
+				statement.executeUpdate(
+						"CREATE OR REPLACE PROCEDURE sp_count_phones (  " +
+								"   personId IN NUMBER,  " +
+								"   phoneCount OUT NUMBER )  " +
+								"AS  " +
+								"BEGIN  " +
+								"    SELECT COUNT(*) INTO phoneCount  " +
+								"    FROM phone  " +
+								"    WHERE person_id = personId; " +
+								"END;"
+				);
+				statement.executeUpdate(
+						"CREATE OR REPLACE PROCEDURE sp_person_phones ( " +
+								"   personId IN NUMBER, " +
+								"   personPhones OUT SYS_REFCURSOR ) " +
+								"AS  " +
+								"BEGIN " +
+								"    OPEN personPhones FOR " +
+								"    SELECT *" +
+								"    FROM phone " +
+								"    WHERE person_id = personId; " +
+								"END;"
+				);
+				statement.executeUpdate(
+						"CREATE OR REPLACE FUNCTION fn_count_phones ( " +
+								"    personId IN NUMBER ) " +
+								"    RETURN NUMBER " +
+								"IS " +
+								"    phoneCount NUMBER; " +
+								"BEGIN " +
+								"    SELECT COUNT(*) INTO phoneCount " +
+								"    FROM phone " +
+								"    WHERE person_id = personId; " +
+								"    RETURN( phoneCount ); " +
+								"END;"
+				);
+				statement.executeUpdate(
+						"CREATE OR REPLACE FUNCTION fn_person_and_phones ( " +
+								"    personId IN NUMBER ) " +
+								"    RETURN SYS_REFCURSOR " +
+								"IS " +
+								"    personAndPhones SYS_REFCURSOR; " +
+								"BEGIN " +
+								"   OPEN personAndPhones FOR " +
+								"        SELECT " +
+								"            pr.id AS \"pr.id\", " +
+								"            pr.name AS \"pr.name\", " +
+								"            pr.nickName AS \"pr.nickName\", " +
+								"            pr.address AS \"pr.address\", " +
+								"            pr.createdOn AS \"pr.createdOn\", " +
+								"            pr.version AS \"pr.version\", " +
+								"            ph.id AS \"ph.id\", " +
+								"            ph.person_id AS \"ph.person_id\", " +
+								"            ph.phone_number AS \"ph.phone_number\", " +
+								"            ph.valid AS \"ph.valid\" " +
+								"       FROM person pr " +
+								"       JOIN phone ph ON pr.id = ph.person_id " +
+								"       WHERE pr.id = personId; " +
+								"   RETURN personAndPhones; " +
+								"END;"
+				);
+				statement.executeUpdate(
+						"CREATE OR REPLACE " +
+								"PROCEDURE singleRefCursor(p_recordset OUT SYS_REFCURSOR) AS " +
+								"  BEGIN " +
+								"    OPEN p_recordset FOR " +
+								"    SELECT 1 as id " +
+								"    FROM dual; " +
+								"  END; "
+				);
+				statement.executeUpdate(
+						"CREATE OR REPLACE " +
+								"PROCEDURE outAndRefCursor(p_recordset OUT SYS_REFCURSOR, p_value OUT NUMBER) AS " +
+								"  BEGIN " +
+								"    OPEN p_recordset FOR " +
+								"    SELECT 1 as id " +
+								"    FROM dual; " +
+								"	 SELECT 1 INTO p_value FROM dual; " +
+								"  END; "
+				);
+				statement.executeUpdate(
+						"CREATE OR REPLACE PROCEDURE sp_phone_validity ( " +
+								"   validity IN NUMBER, " +
+								"   personPhones OUT SYS_REFCURSOR ) " +
+								"AS  " +
+								"BEGIN " +
+								"    OPEN personPhones FOR " +
+								"    SELECT phone_number " +
+								"    FROM phone " +
+								"    WHERE valid = validity; " +
+								"END;"
+				);
+				statement.executeUpdate(
+						"CREATE OR REPLACE PROCEDURE sp_votes ( " +
+								"   validity IN CHAR, " +
+								"   votes OUT SYS_REFCURSOR ) " +
+								"AS  " +
+								"BEGIN " +
+								"    OPEN votes FOR " +
+								"    SELECT id " +
+								"    FROM vote " +
+								"    WHERE vote_choice = validity; " +
+								"END;"
+				);
+
+				statement.execute(
+						"create or replace function find_char(in char search, in varchar string, in integer start default 0) " +
+								"return integer " +
+								"as begin " +
+								"    select instr( search, string, start ) as position " +
+								"    from dual; " +
+								"    return position; " +
+								"end"
+				);
+			}
+		} ) );
+
+		scope.inTransaction( (entityManager) -> {
+			Person person1 = new Person( "John Doe" );
+			person1.setNickName( "JD" );
+			person1.setAddress( "Earth" );
+			person1.setCreatedOn( Timestamp.from( LocalDateTime.of( 2000, 1, 1, 0, 0, 0 )
+					.toInstant( ZoneOffset.UTC ) ) );
+
+			entityManager.persist( person1 );
+
+			Phone phone1 = new Phone( "123-456-7890" );
+			phone1.setId( 1L );
+			phone1.setValid( true );
+
+			person1.addPhone( phone1 );
+
+			Phone phone2 = new Phone( "098_765-4321" );
+			phone2.setId( 2L );
+			phone2.setValid( false );
+
+			person1.addPhone( phone2 );
+		} );
+	}
+
+	@AfterEach
+	public void cleanUpSchema(EntityManagerFactoryScope scope) {
+		EntityManager entityManager = scope.getEntityManagerFactory().createEntityManager();
+		entityManager.getTransaction().begin();
+
+		try {
+			Session session = entityManager.unwrap( Session.class );
+			session.doWork( connection -> {
+				try (Statement statement = connection.createStatement()) {
+					statement.executeUpdate( "DROP PROCEDURE sp_count_phones" );
+				}
+				catch (SQLException ignore) {
+				}
+			} );
+		}
+		finally {
+			entityManager.getTransaction().rollback();
+			entityManager.close();
+		}
+
+		entityManager = scope.getEntityManagerFactory().createEntityManager();
+		entityManager.getTransaction().begin();
+
+		try {
+			Session session = entityManager.unwrap( Session.class );
+			session.doWork( connection -> {
+				try (Statement statement = connection.createStatement()) {
+					statement.executeUpdate( "DROP PROCEDURE sp_person_phones" );
+				}
+				catch (SQLException ignore) {
+				}
+			} );
+		}
+		finally {
+			entityManager.getTransaction().rollback();
+			entityManager.close();
+		}
+
+		entityManager = scope.getEntityManagerFactory().createEntityManager();
+		entityManager.getTransaction().begin();
+
+		try {
+			Session session = entityManager.unwrap( Session.class );
+			session.doWork( connection -> {
+				try (Statement statement = connection.createStatement()) {
+					statement.executeUpdate( "DROP FUNCTION fn_count_phones" );
+				}
+				catch (SQLException ignore) {
+				}
+			} );
+		}
+		finally {
+			entityManager.getTransaction().rollback();
+			entityManager.close();
+		}
+		scope.releaseEntityManagerFactory();
+	}
+
+	@NamedStoredProcedureQueries({
+			@NamedStoredProcedureQuery(
+					name = "singleRefCursor",
+					procedureName = "singleRefCursor",
+					parameters = {
+							@StoredProcedureParameter(mode = ParameterMode.REF_CURSOR, type = void.class)
+					}
+			),
+			@NamedStoredProcedureQuery(
+					name = "outAndRefCursor",
+					procedureName = "outAndRefCursor",
+					parameters = {
+							@StoredProcedureParameter(mode = ParameterMode.REF_CURSOR, type = void.class),
+							@StoredProcedureParameter(mode = ParameterMode.OUT, type = Long.class),
+					}
+			)
+	})
+	@Entity(name = "IdHolder")
+	public static class IdHolder {
+		@Id
+		Long id;
+		String name;
 	}
 }

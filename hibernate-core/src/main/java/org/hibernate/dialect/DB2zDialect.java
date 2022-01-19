@@ -12,6 +12,7 @@ import org.hibernate.dialect.identity.DB2390IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.FetchLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.sequence.DB2zSequenceSupport;
 import org.hibernate.dialect.sequence.NoSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
@@ -82,7 +83,9 @@ public class DB2zDialect extends DB2Dialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		return FetchLimitHandler.INSTANCE;
+		return getZVersion().isBefore(12)
+				? FetchLimitHandler.INSTANCE
+				: OffsetFetchLimitHandler.INSTANCE;
 	}
 
 	@Override

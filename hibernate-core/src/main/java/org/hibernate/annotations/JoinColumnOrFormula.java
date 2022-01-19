@@ -16,8 +16,14 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Allows joins based on column or a formula.  One of {@link #formula()} or {@link #column()} should be
- * specified, but not both.
+ * Specifies one element of a {@linkplain JoinColumnsOrFormulas composite join condition}
+ * involving both {@linkplain JoinFormula formulas} and {@linkplain JoinColumn columns}.
+ * One of {@link #formula()} or {@link #column()} must be specified, but not both. If a
+ * composite join condition involves only columns, this annotation is unnecessary.
+ *
+ * @see JoinColumnsOrFormulas
+ * @see JoinFormula
+ * @see JoinColumn
  *
  * @author Sharath Reddy
  */
@@ -26,12 +32,12 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Repeatable(JoinColumnsOrFormulas.class)
 public @interface JoinColumnOrFormula {
 	/**
-	 * The formula to use in joining.
+	 * The formula to use in the join condition.
 	 */
 	JoinFormula formula() default @JoinFormula(value="", referencedColumnName="");
 
 	/**
-	 * The column to use in joining.
+	 * The column to use in the join condition.
 	 */
 	JoinColumn column() default @JoinColumn();
 }

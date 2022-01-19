@@ -10,10 +10,12 @@ import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.ComparisonOperator;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
+import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
@@ -136,6 +138,15 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstT
 		else {
 			expression.accept( this );
 		}
+	}
+
+	@Override
+	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
+		appendSql( OPEN_PARENTHESIS );
+		render( arithmeticExpression.getLeftHandOperand(), SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
+		appendSql( arithmeticExpression.getOperator().getOperatorSqlTextString() );
+		render( arithmeticExpression.getRightHandOperand(), SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
+		appendSql( CLOSE_PARENTHESIS );
 	}
 
 	@Override

@@ -547,51 +547,11 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			return getBasicTypeRegistry().getRegisteredType( Duration.class );
 		}
 
-		if ( matchesJavaType( firstType, Double.class ) ) {
+		if ( secondType == null || firstType != null
+				&& firstType.getExpressableJavaTypeDescriptor().isWider( secondType.getExpressableJavaTypeDescriptor() ) ) {
 			return firstType;
 		}
-		else if ( matchesJavaType( secondType, Double.class ) ) {
-			return secondType;
-		}
-		else if ( matchesJavaType( firstType, Float.class ) ) {
-			return firstType;
-		}
-		else if ( matchesJavaType( secondType, Float.class ) ) {
-			return secondType;
-		}
-		else if ( matchesJavaType( firstType, BigDecimal.class ) ) {
-			return firstType;
-		}
-		else if ( matchesJavaType( secondType, BigDecimal.class ) ) {
-			return secondType;
-		}
-		else if ( matchesJavaType( firstType, BigInteger.class ) ) {
-			return firstType;
-		}
-		else if ( matchesJavaType( secondType, BigInteger.class ) ) {
-			return secondType;
-		}
-		else if ( matchesJavaType( firstType, Long.class ) ) {
-			return firstType;
-		}
-		else if ( matchesJavaType( secondType, Long.class ) ) {
-			return secondType;
-		}
-		else if ( matchesJavaType( firstType, Integer.class ) ) {
-			return firstType;
-		}
-		else if ( matchesJavaType( secondType, Integer.class ) ) {
-			return secondType;
-		}
-		else if ( matchesJavaType( firstType, Short.class ) ) {
-			return getBasicTypeRegistry().getRegisteredType( Integer.class.getName() );
-		}
-		else if ( matchesJavaType( secondType, Short.class ) ) {
-			return getBasicTypeRegistry().getRegisteredType( Integer.class.getName() );
-		}
-		else {
-			return getBasicTypeRegistry().getRegisteredType( Number.class.getName() );
-		}
+		return secondType;
 	}
 
 	private static boolean matchesJavaType(SqmExpressable<?> type, Class<?> javaType) {

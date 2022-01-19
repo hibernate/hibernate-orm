@@ -279,10 +279,13 @@ public class DerbySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 			appendSql( ',' );
 			arithmeticExpression.getRightHandOperand().accept( this );
 			appendSql( CLOSE_PARENTHESIS );
-			return;
 		}
 		else {
-			super.visitBinaryArithmeticExpression( arithmeticExpression );
+			appendSql( OPEN_PARENTHESIS );
+			render( arithmeticExpression.getLeftHandOperand(), SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
+			appendSql( arithmeticExpression.getOperator().getOperatorSqlTextString() );
+			render( arithmeticExpression.getRightHandOperand(), SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
+			appendSql( CLOSE_PARENTHESIS );
 		}
 	}
 

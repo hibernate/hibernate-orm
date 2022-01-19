@@ -103,8 +103,11 @@ public interface SqmExpression<T> extends SqmSelectableNode<T>, JpaExpression<T>
 	SqmPredicate in(Expression<Collection<?>> values);
 
 	default <X> SqmExpression<X> castAs(DomainType<X> type) {
-		QueryEngine queryEngine = nodeBuilder().getQueryEngine();
-		SqmCastTarget<T> target = new SqmCastTarget<>( (ReturnableType<T>) type, nodeBuilder() );
+		if ( getNodeType() == type ) {
+			return (SqmExpression<X>) this;
+		}
+		final QueryEngine queryEngine = nodeBuilder().getQueryEngine();
+		final SqmCastTarget<T> target = new SqmCastTarget<>( (ReturnableType<T>) type, nodeBuilder() );
 		return queryEngine.getSqmFunctionRegistry()
 				.findFunctionDescriptor("cast")
 					.generateSqmExpression(

@@ -454,6 +454,10 @@ public class OracleStoredProcedureTest {
 								"end;"
 				);
 			}
+			catch (SQLException e) {
+				System.err.println( "Error exporting procedure and function definitions to Oracle database : " + e.getMessage() );
+				e.printStackTrace(System.err);
+			}
 		} ) );
 
 		scope.inTransaction( (entityManager) -> {

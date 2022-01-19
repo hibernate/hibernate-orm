@@ -3,6 +3,29 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.6.4.Final (January 19, 2022)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32012
+
+** Bug
+    * [HHH-15032] - Fix backwards incompatible SPI change that happened in 5.6.2 due to introducing SqlStringGenerationContext
+    * [HHH-15022] - Bug After Upgrade Hibernate from 5.6.1.Final to 5.6.3.Final
+    * [HHH-15002] - H2Dialect does not work properly with h2 2.0.202 and booleans types
+
+** Task
+    * [HHH-15036] - Disable DefaultCatalogAndSchemaTest when testing against MariaDB < 10.3
+    * [HHH-15033] - Restrict JNDI lookups to "java" scheme
+    * [HHH-15031] - Upgrade to ByteBuddy 1.12.7
+    * [HHH-15028] - Upgrade to JBoss Logging 3.4.3.Final
+    * [HHH-15026] - Upgrade to Log4J 2.17.1
+    * [HHH-15024] - Upgrade to Jandex 2.4.2.Final
+    * [HHH-15018] - OracleTypesHelper shouldn't log stacktraces when the Oracle JDBC driver isn't loadable
+    * [HHH-14998] - Upgrade to GraalVM 21.3.0
+    * [HHH-14988] - Upgrade to ByteBuddy 1.12.5
+    * [HHH-14987] - Upgrade to Log4j 2.17.0
+
+
 Changes in 5.6.3.Final (December 15, 2021)
 ------------------------------------------------------------------------------------------------------------------------
 

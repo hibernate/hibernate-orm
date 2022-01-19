@@ -52,7 +52,7 @@ public class RefreshUpdatedDataTest extends BaseUnitTestCase {
 				.configure( "hibernate-config/hibernate.cfg.xml" );
 
 		if ( H2Dialect.class.equals( Dialect.getDialect().getClass() ) ) {
-			ssrb.applySetting( AvailableSettings.URL, "jdbc:h2:mem:db-mvcc;MVCC=true" );
+			ssrb.applySetting( AvailableSettings.URL, "jdbc:h2:mem:db-mvcc" );
 		}
 		ssrb.applySetting( AvailableSettings.GENERATE_STATISTICS, "true" );
 

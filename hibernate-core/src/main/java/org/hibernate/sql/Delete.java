@@ -9,6 +9,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.hibernate.Internal;
 import org.hibernate.dialect.Dialect;
 
 /**
@@ -16,6 +17,7 @@ import org.hibernate.dialect.Dialect;
  *
  * @author Gavin King
  */
+@Internal
 public class Delete {
 
 	protected String tableName;

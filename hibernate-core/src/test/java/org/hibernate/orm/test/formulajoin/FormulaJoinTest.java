@@ -103,6 +103,7 @@ public class FormulaJoinTest extends BaseCoreFunctionalTestCase {
 		tx = s.beginTransaction();
 		l = s.createQuery("from Detail d join fetch d.currentRoot.root m join fetch m.detail").list();
 		assertEquals( l.size(), 2 );
+		tx.commit();
 
 		s = openSession();
 		tx = s.beginTransaction();

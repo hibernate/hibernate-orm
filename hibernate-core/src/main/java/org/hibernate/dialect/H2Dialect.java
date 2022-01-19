@@ -16,6 +16,7 @@ import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.function.AvgWithArgumentCastFunction;
 import org.hibernate.dialect.function.NoArgSQLFunction;
+import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
 import org.hibernate.dialect.hint.IndexQueryHintHandler;
@@ -149,6 +150,12 @@ public class H2Dialect extends Dialect {
 		registerColumnType( Types.VARBINARY, buildId >= 201 ? "varbinary($l)" : "binary($l)" );
 		registerColumnType( Types.BLOB, "blob" );
 		registerColumnType( Types.CLOB, "clob" );
+
+		if ( isVersion2 ) {
+			registerColumnType( Types.LONGVARCHAR, "character varying" );
+			registerColumnType( Types.BINARY, "binary($l)" );
+			registerFunction( "str", new SQLFunctionTemplate( StandardBasicTypes.STRING, "cast(?1 as character varying)") );
+		}
 
 		// Aggregations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		registerFunction( "avg", new AvgWithArgumentCastFunction( "double" ) );

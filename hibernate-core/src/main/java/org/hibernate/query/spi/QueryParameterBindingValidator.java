@@ -79,8 +79,9 @@ public class QueryParameterBindingValidator {
 			if ( !isValidBindValue( parameterJavaType, bind, temporalPrecision ) ) {
 				throw new IllegalArgumentException(
 						String.format(
-								"Parameter value [%s] did not match expected type [%s (%s)]",
+								"Argument [%s] of type [%s] did not match parameter type [%s (%s)]",
 								bind,
+								bind.getClass().getName(),
 								parameterJavaType.getName(),
 								extractName( temporalPrecision )
 						)

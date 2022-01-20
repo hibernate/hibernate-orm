@@ -11,12 +11,9 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 
-import org.hibernate.cfg.AvailableSettings;
-
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
-import org.hibernate.testing.orm.junit.Setting;
 
 import org.junit.jupiter.api.Test;
 
@@ -25,9 +22,7 @@ import org.junit.jupiter.api.Test;
  */
 @TestForIssue(jiraKey = "HHH-11579")
 @Jpa(
-		annotatedClasses = {
-				QueryParametersWithDisabledValidationTest.TestEntity.class
-		}
+		annotatedClasses = {QueryParametersWithDisabledValidationTest.TestEntity.class}
 )
 public class QueryParametersWithDisabledValidationTest {
 
@@ -46,7 +41,7 @@ public class QueryParametersWithDisabledValidationTest {
 	}
 
 	@Entity(name = "TestEntity")
-	public class TestEntity {
+	public static class TestEntity {
 
 		@Id
 		@GeneratedValue(strategy = GenerationType.AUTO)

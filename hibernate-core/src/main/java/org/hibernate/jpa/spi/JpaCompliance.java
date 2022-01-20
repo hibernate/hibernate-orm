@@ -41,7 +41,7 @@ public interface JpaCompliance {
 	 * Controls how Hibernate interprets a mapped List without an "order columns"
 	 * specified.  Historically Hibernate defines this as a "bag", which is a concept
 	 * JPA does not have.
-	 *
+	 * <p>
 	 * If enabled, Hibernate will recognize this condition as defining
 	 * a {@link org.hibernate.collection.spi.PersistentList}, otherwise
 	 * Hibernate will treat is as a {@link org.hibernate.collection.spi.PersistentBag}
@@ -56,7 +56,7 @@ public interface JpaCompliance {
 	 * {@link jakarta.persistence.EntityManager} and {@link jakarta.persistence.EntityManagerFactory}
 	 * when those objects have been closed.  This setting controls
 	 * whether the spec defined behavior or Hibernate's behavior will be used.
-	 *
+	 * <p>
 	 * If enabled Hibernate will operate in the JPA specified way throwing
 	 * exceptions when the spec says it should with regard to close checking
 	 *
@@ -68,10 +68,11 @@ public interface JpaCompliance {
 	 * JPA spec says that an {@link jakarta.persistence.EntityNotFoundException}
 	 * should be thrown when accessing an entity Proxy which does not have an associated
 	 * table row in the database.
-	 *
+	 * <p>
 	 * Traditionally, Hibernate does not initialize an entity Proxy when accessing its
-	 * identifier since we already know the identifier value, hence we can save a database roundtrip.
-	 *
+	 * identifier since we already know the identifier value, hence we can save a database
+	 * round trip.
+	 * <p>
 	 * If enabled Hibernate will initialize the entity Proxy even when accessing its identifier.
 	 *
 	 * @return {@code true} indicates to behave in the spec-defined way
@@ -91,8 +92,9 @@ public interface JpaCompliance {
 	boolean isJpaCacheComplianceEnabled();
 
 	/**
-	 * Should the the scope of {@link jakarta.persistence.TableGenerator#name()} and {@link jakarta.persistence.SequenceGenerator#name()} be
-	 * considered globally or locally defined?
+	 * Should the the scope of {@link jakarta.persistence.TableGenerator#name()} and
+	 * {@link jakarta.persistence.SequenceGenerator#name()} be considered globally or locally
+	 * defined?
 	 *
 	 * @return {@code true} indicates the generator name scope is considered global.
 	 */
@@ -100,20 +102,23 @@ public interface JpaCompliance {
 
 	/**
 	 * Should we strictly handle {@link jakarta.persistence.OrderBy} expressions?
-	 *
-	 * JPA says the order-items can only be attribute references whereas Hibernate supports a wide range of items.  With
-	 * this enabled, Hibernate will throw a compliance error when a non-attribute-reference is used.
+	 * <p>
+	 * JPA says the order-items can only be attribute references whereas Hibernate supports a
+	 * wide range of items.  With this enabled, Hibernate will throw a compliance error when a
+	 * non-attribute-reference is used.
 	 */
 	boolean isJpaOrderByMappingComplianceEnabled();
 
 	/**
 	 * JPA says that the id passed to {@link jakarta.persistence.EntityManager#getReference} and
-	 * {@link jakarta.persistence.EntityManager#find} should be the exact expected type, allowing
+	 * {@link jakarta.persistence.EntityManager#find} should be exactly the expected type, allowing
 	 * no type coercion.
-	 *
-	 * Historically, Hibernate behaved the same way.  Since 6.0 however, Hibernate has the ability to
-	 * coerce the passed type to the expected type.
-	 *
+	 * <p>
+	 * Historically, Hibernate behaved the same way.  Since 6.0 however, Hibernate has the ability
+	 * to coerce the passed type to the expected type.  For example, an {@link Integer} may be
+	 * widened to {@link Long}.  Coercion is performed by calling
+	 * {@link org.hibernate.type.descriptor.java.JavaType#coerce}.
+	 * <p>
 	 * This setting controls whether such a coercion should be allowed.
 	 *
 	 * @since 6.0

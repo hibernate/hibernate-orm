@@ -15,7 +15,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.jboss.logging.Logger;
 
 /**
- * Manages a registry of {@link Synchronization Synchronizations}.
+ * Manages a registry of {@link Synchronization}s.
  *
  * @author Steve Ebersole
  */

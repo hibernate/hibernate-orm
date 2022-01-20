@@ -322,8 +322,8 @@ public final class ReflectHelper {
 	}
 
 	/**
-	 * Retrieve a constructor for the given class, with arguments matching the specified Hibernate mapping
-	 * {@link Type types}.
+	 * Retrieve a constructor for the given class, with arguments matching
+	 * the specified Hibernate mapping {@linkplain Type types}.
 	 *
 	 * @param clazz The class needing instantiation
 	 * @param types The types representing the required ctor param signature

@@ -4058,7 +4058,7 @@ public abstract class Dialect implements ConversionContext {
 	/**
 	 * Return the name used to identify the given field
 	 * as an argument to the {@code extract()} function,
-	 * or of this dialect's {@link #extractPattern equivalent}
+	 * or of this dialect's {@linkplain #extractPattern equivalent}
 	 * function.
 	 * <p>
 	 * This method does not need to handle
@@ -4098,8 +4098,8 @@ public abstract class Dialect implements ConversionContext {
 	 * Return the name used to identify the given unit of
 	 * duration as an argument to {@code #timestampadd()}
 	 * or {@code #timestampdiff()}, or of this dialect's
-	 * {@link #timestampaddPattern equivalent}
-	 * {@link #timestampdiffPattern functions}.
+	 * {@linkplain #timestampaddPattern equivalent}
+	 * {@linkplain #timestampdiffPattern functions}.
 	 * <p>
 	 * This method does not need to handle
 	 * {@link TemporalUnit#NANOSECOND},

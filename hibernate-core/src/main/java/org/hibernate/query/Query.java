@@ -295,7 +295,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * Set the LockMode to use for specific alias (as defined in the query's {@code FROM} clause).
 	 * <p>
 	 * The alias-specific lock modes specified here are added to the query's internal
-	 * {@link #getLockOptions() LockOptions}.
+	 * {@link #getLockOptions() LockOption}s.
 	 * <p>
 	 * The effect of these alias-specific LockModes is somewhat dependent on the driver/database in use.  Generally
 	 * speaking, for maximum portability, this method should only be used to mark that the rows corresponding to

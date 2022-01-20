@@ -19,7 +19,7 @@ import org.hibernate.engine.jdbc.internal.CharacterStreamImpl;
 import org.hibernate.type.descriptor.java.DataHelper;
 
 /**
- * Manages aspects of proxying {@link Clob Clobs} for non-contextual creation, including proxy creation and
+ * Manages aspects of proxying {@link Clob}s for non-contextual creation, including proxy creation and
  * handling proxy invocations.  We use proxies here solely to avoid JDBC version incompatibilities.
  *
  * @author Gavin King

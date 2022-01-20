@@ -9,8 +9,8 @@
 <body>
 <p>
     Defines contracts for transactional and concurrent access to cached
-    {@link org.hibernate.cache.spi.access.EntityDataAccess entity} and
-    {@link org.hibernate.cache.spi.access.CollectionDataAccess collection} data. Transactions pass in a
+    {@linkplain org.hibernate.cache.spi.access.EntityDataAccess entity} and
+    {@linkplain org.hibernate.cache.spi.access.CollectionDataAccess collection} data. Transactions pass in a
     timestamp indicating transaction start time which is then used to protect against concurrent access (exactly how
     that occurs is based on the actual access-strategy impl used). Two different implementation patterns are provided
     for:
@@ -29,7 +29,7 @@
     The <i>asynchronous</i> access strategies are: {@link org.hibernate.cache.spi.access.AccessType#READ_ONLY read-only},
     {@link org.hibernate.cache.spi.access.AccessType#READ_WRITE read-write} and
     {@link org.hibernate.cache.spi.access.AccessType#NONSTRICT_READ_WRITE nonstrict-read-write}.  The only
-    <i>synchronous</i> access strategy is {@link org.hibernate.cache.spi.access.AccessType#TRANSACTIONAL transactional}.
+    <i>synchronous</i> access strategy is {@linkplain org.hibernate.cache.spi.access.AccessType#TRANSACTIONAL transactional}.
 </p>
 <p>
     Note that, for an <i>asynchronous</i> cache, cache invalidation must be a two step process (lock->unlock or

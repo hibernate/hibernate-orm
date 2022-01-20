@@ -290,7 +290,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 
 	/**
 	 * The amount of increment to use.  The exact implications of this
-	 * depends on the {@link #getOptimizer() optimizer} being used.
+	 * depends on the {@linkplain #getOptimizer() optimizer} being used.
 	 *
 	 * @return The increment amount.
 	 */
@@ -366,7 +366,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 	/**
 	 * Determine the table name to use for the generator values.
 	 * <p/>
-	 * Called during {@link #configure configuration}.
+	 * Called during {@linkplain #configure configuration}.
 	 *
 	 * @see #getTableName()
 	 * @param params The params supplied in the generator config (plus some standard useful extras).
@@ -408,7 +408,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 	 * Determine the name of the column used to indicate the segment for each
 	 * row.  This column acts as the primary key.
 	 * <p/>
-	 * Called during {@link #configure configuration}.
+	 * Called during {@linkplain #configure configuration}.
 	 *
 	 * @see #getSegmentColumnName()
 	 * @param params The params supplied in the generator config (plus some standard useful extras).
@@ -424,7 +424,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 	/**
 	 * Determine the name of the column in which we will store the generator persistent value.
 	 * <p/>
-	 * Called during {@link #configure configuration}.
+	 * Called during {@linkplain #configure configuration}.
 	 *
 	 * @see #getValueColumnName()
 	 * @param params The params supplied in the generator config (plus some standard useful extras).
@@ -440,7 +440,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 	/**
 	 * Determine the segment value corresponding to this generator instance.
 	 * <p/>
-	 * Called during {@link #configure configuration}.
+	 * Called during {@linkplain #configure configuration}.
 	 *
 	 * @see #getSegmentValue()
 	 * @param params The params supplied in the generator config (plus some standard useful extras).
@@ -473,7 +473,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 	/**
 	 * Determine the size of the {@link #getSegmentColumnName segment column}
 	 * <p/>
-	 * Called during {@link #configure configuration}.
+	 * Called during {@linkplain #configure configuration}.
 	 *
 	 * @see #getSegmentValueLength()
 	 * @param params The params supplied in the generator config (plus some standard useful extras).

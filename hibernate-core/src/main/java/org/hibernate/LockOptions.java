@@ -153,9 +153,9 @@ public class LockOptions implements Serializable {
 
 	/**
 	 * Determine the {@link LockMode} to apply to the given alias.  If no
-	 * mode was explicitly {@link #setAliasSpecificLockMode set}, the
-	 * {@link #getLockMode overall mode} is returned.  If the overall lock mode is
-	 * {@code null} as well, {@link LockMode#NONE} is returned.
+	 * mode was explicitly {@linkplain #setAliasSpecificLockMode set}, the
+	 * {@linkplain #getLockMode overall mode} is returned.  If the overall
+	 * lock mode is {@code null} as well, {@link LockMode#NONE} is returned.
 	 * <p/>
 	 * Differs from {@link #getAliasSpecificLockMode} in that here we fallback to we only return
 	 * the overall lock mode.

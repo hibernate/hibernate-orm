@@ -144,7 +144,7 @@ public class SqlExceptionHelper {
 	// SQLWarning ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
-	 * Contract for handling {@link SQLWarning warnings}
+	 * Contract for handling {@linkplain SQLWarning warnings}
 	 */
 	public interface WarningHandler {
 		/**
@@ -155,7 +155,7 @@ public class SqlExceptionHelper {
 		boolean doProcess();
 
 		/**
-		 * Prepare for processing of a {@link SQLWarning warning} stack.
+		 * Prepare for processing of a {@linkplain SQLWarning warning} stack.
 		 * <p/>
 		 * Note that the warning here is also the first passed to {@link #handleWarning}
 		 *
@@ -172,7 +172,7 @@ public class SqlExceptionHelper {
 	}
 
 	/**
-	 * Basic support for {@link WarningHandler} implementations which handle {@link SQLWarning warnings}
+	 * Basic support for {@link WarningHandler} implementations which handle {@linkplain SQLWarning warnings}
 	 */
 	public abstract static class WarningHandlerLoggingSupport implements WarningHandler {
 		@Override
@@ -184,7 +184,7 @@ public class SqlExceptionHelper {
 		}
 
 		/**
-		 * Delegate to log common details of a {@link SQLWarning warning}
+		 * Delegate to log common details of a {@linkplain SQLWarning warning}
 		 *
 		 * @param description A description of the warning
 		 * @param message The warning message

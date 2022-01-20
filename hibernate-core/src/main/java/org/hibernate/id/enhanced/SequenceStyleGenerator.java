@@ -269,7 +269,7 @@ public class SequenceStyleGenerator
 	 * Determine the name of the sequence (or table if this resolves to a physical table)
 	 * to use.
 	 * <p/>
-	 * Called during {@link #configure configuration}.
+	 * Called during {@linkplain #configure configuration}.
 	 *
 	 * @param params The params supplied in the generator config (plus some standard useful extras).
 	 * @param dialect The dialect in effect
@@ -352,7 +352,7 @@ public class SequenceStyleGenerator
 	 * Determine the name of the column used to store the generator value in
 	 * the db.
 	 * <p/>
-	 * Called during {@link #configure configuration} <b>when resolving to a
+	 * Called during {@linkplain #configure configuration} <b>when resolving to a
 	 * physical table</b>.
 	 *
 	 * @param params The params supplied in the generator config (plus some standard useful extras).
@@ -370,7 +370,7 @@ public class SequenceStyleGenerator
 	 * initializing the {@link #getDatabaseStructure() database structure}
 	 * (i.e. sequence/table).
 	 * <p/>
-	 * Called during {@link #configure configuration}.
+	 * Called during {@linkplain #configure configuration}.
 	 *
 	 * @param params The params supplied in the generator config (plus some standard useful extras).
 	 * @return The initial value
@@ -382,9 +382,9 @@ public class SequenceStyleGenerator
 
 	/**
 	 * Determine the increment size to be applied.  The exact implications of
-	 * this value depends on the {@link #getOptimizer() optimizer} being used.
+	 * this value depends on the {@linkplain #getOptimizer() optimizer} being used.
 	 * <p/>
-	 * Called during {@link #configure configuration}.
+	 * Called during {@linkplain #configure configuration}.
 	 *
 	 * @param params The params supplied in the generator config (plus some standard useful extras).
 	 * @return The increment size
@@ -397,7 +397,7 @@ public class SequenceStyleGenerator
 	/**
 	 * Determine the optimizer to use.
 	 * <p/>
-	 * Called during {@link #configure configuration}.
+	 * Called during {@linkplain #configure configuration}.
 	 *
 	 * @param params The params supplied in the generator config (plus some standard useful extras).
 	 * @param incrementSize The {@link #determineIncrementSize determined increment size}

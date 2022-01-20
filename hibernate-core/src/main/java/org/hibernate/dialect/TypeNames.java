@@ -13,17 +13,18 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * This class maps {@link java.sql.Types JDBC type codes} to SQL type names for
- * a {@link Dialect dialect} of SQL. An association between a type code and a
- * SQL type name may be {@link #put(int, long, String) registered} with a capacity,
- * that is, with the maximum size that the given SQL type can accommodate.
- *
- * When a type association is {@link #get(int, Long, Integer, Integer)} retrieved}
+ * This class maintains a mapping of {@linkplain java.sql.Types JDBC type codes} to
+ * SQL type names for a {@linkplain Dialect dialect} of SQL. An association between a
+ * type code and a SQL type name may be {@linkplain #put(int, long, String) registered}
+ * with a <em>capacity</em>, that is, with the maximum size that the given SQL type can
+ * accommodate.
+ * <p>
+ * When a type association is {@linkplain #get(int, Long, Integer, Integer) retrieved}
  * for a given type code and actual size n, {@code get()} will return the associated
- * type name with smallest capacity greater than or equal to n, if available, or an
+ * type name with the smallest capacity greater than or equal to n, if available, or an
  * unmarked default type otherwise.
- *
- * For example, setting
+ * <p>
+ * For example, setting:
  *
  * <pre>
  *	names.put( type,        "TEXT" );
@@ -40,13 +41,13 @@ import java.util.TreeMap;
  *  names.get( type, 100000 ) // --> "TEXT" (default)
  * </pre>
  *
- * On the other hand, simply putting
+ * On the other hand, simply putting:
  *
  * <pre>
  *	names.put( type, "VARCHAR($l)" );
  * </pre>
  *
- * would result in
+ * would result in:
  *
  * <pre>
  *  names.get( type )        // --> "VARCHAR($l)" (will cause trouble)

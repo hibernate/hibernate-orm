@@ -38,7 +38,7 @@ import org.hibernate.type.Type;
 
 /**
  * Delegate responsible for, in conjunction with the various
- * {@link CascadingAction actions}, implementing cascade processing.
+ * {@linkplain CascadingAction actions}, implementing cascade processing.
  *
  * @author Gavin King
  * @see CascadingAction

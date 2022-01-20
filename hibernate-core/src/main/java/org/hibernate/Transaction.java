@@ -39,7 +39,7 @@ import org.hibernate.resource.transaction.spi.TransactionStatus;
  */
 public interface Transaction extends EntityTransaction {
 	/**
-	 * Get the current {@link TransactionStatus status} of this transaction.
+	 * Get the current {@linkplain TransactionStatus status} of this transaction.
 	 */
 	TransactionStatus getStatus();
 

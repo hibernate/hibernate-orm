@@ -7,7 +7,7 @@
 package org.hibernate.service;
 
 /**
- * A registry of {@link Service services}.
+ * A registry of {@linkplain Service services}.
  *
  * @author Steve Ebersole
  */

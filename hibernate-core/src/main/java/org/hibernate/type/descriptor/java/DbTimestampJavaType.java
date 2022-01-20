@@ -30,6 +30,7 @@ import jakarta.persistence.TemporalType;
  * Wrapper Java type descriptor for that uses the database timestamp as seed value for versions.
  *
  * @author Christian Beikov
+ * @deprecated We should replace this with a different contract to handle DB generation
  */
 @Deprecated
 public class DbTimestampJavaType<T> implements VersionJavaType<T>, TemporalJavaType<T> {

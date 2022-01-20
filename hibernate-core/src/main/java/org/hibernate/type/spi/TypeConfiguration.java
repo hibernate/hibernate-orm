@@ -236,22 +236,10 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 					() -> basicType.getJavaTypeDescriptor()
 			);
 
-			try {
-				int[] jdbcTypes = basicType.getSqlTypeCodes( null );
-
-				if ( jdbcTypes.length == 1 ) {
-					int jdbcType = jdbcTypes[0];
-					Set<String> hibernateTypes = jdbcToHibernateTypeContributionMap.computeIfAbsent(
-						jdbcType,
-						k -> new HashSet<>()
-					);
-					hibernateTypes.add( basicType.getName() );
-				}
-			}
-			catch (Exception e) {
-				log.errorf( e, "Cannot register [%s] Hibernate Type contribution", basicType.getName() );
-			}
-
+			jdbcToHibernateTypeContributionMap.computeIfAbsent(
+				basicType.getJdbcType().getDefaultSqlTypeCode(),
+				k -> new HashSet<>()
+			).add( basicType.getName() );
 		}
 	}
 

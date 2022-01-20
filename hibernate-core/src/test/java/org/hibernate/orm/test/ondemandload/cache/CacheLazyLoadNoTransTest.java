@@ -53,8 +53,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		settings = {
 				@Setting(name = AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, value = "true"),
 				@Setting(name = Environment.USE_SECOND_LEVEL_CACHE, value = "true"),
-				@Setting(name = Environment.USE_QUERY_CACHE, value = "true"),
-				@Setting(name = Environment.CACHE_PROVIDER_CONFIG, value = "true"),
+				@Setting(name = Environment.USE_QUERY_CACHE, value = "true")
 		},
 		settingProviders = @SettingProvider(
 				settingName = DEFAULT_LIST_SEMANTICS,

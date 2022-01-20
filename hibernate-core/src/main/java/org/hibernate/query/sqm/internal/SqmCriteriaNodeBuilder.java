@@ -331,6 +331,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	@SafeVarargs
 	public final SqmPredicate wrap(Expression<Boolean>... expressions) {
+		if ( expressions.length == 1 ) {
+			return wrap( expressions[0] );
+		}
+
 		final SqmPredicate lhs = wrap( expressions[0] );
 		final SqmPredicate rhs = wrap( expressions[1] );
 		SqmPredicate predicate = new SqmAndPredicate( lhs, rhs, this );

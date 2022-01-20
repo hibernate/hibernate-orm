@@ -70,7 +70,7 @@ public abstract class AbstractAttribute<D,J,B> implements PersistentAttribute<D,
 	}
 
 	@Override
-	public JavaType<J> getAttributeJavaTypeDescriptor() {
+	public JavaType<J> getAttributeJavaType() {
 		return attributeJtd;
 	}
 

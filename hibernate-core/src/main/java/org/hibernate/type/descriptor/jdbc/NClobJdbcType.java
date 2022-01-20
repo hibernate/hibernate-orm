@@ -42,32 +42,32 @@ public abstract class NClobJdbcType implements JdbcType {
 	}
 
 	@Override
-	public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaTypeDescriptor) {
-		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
+	public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaType) {
+		return new BasicExtractor<X>( javaType, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( rs.getNClob( paramIndex ), options );
+				return javaType.wrap( rs.getNClob( paramIndex ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options)
 					throws SQLException {
-				return javaTypeDescriptor.wrap( statement.getNClob( index ), options );
+				return javaType.wrap( statement.getNClob( index ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
 					throws SQLException {
-				return javaTypeDescriptor.wrap( statement.getNClob( name ), options );
+				return javaType.wrap( statement.getNClob( name ), options );
 			}
 		};
 	}
 
-	protected abstract <X> BasicBinder<X> getNClobBinder(JavaType<X> javaTypeDescriptor);
+	protected abstract <X> BasicBinder<X> getNClobBinder(JavaType<X> javaType);
 
 	@Override
-	public <X> ValueBinder<X> getBinder(JavaType<X> javaTypeDescriptor) {
-		return getNClobBinder( javaTypeDescriptor );
+	public <X> ValueBinder<X> getBinder(JavaType<X> javaType) {
+		return getNClobBinder( javaType );
 	}
 
 
@@ -78,16 +78,16 @@ public abstract class NClobJdbcType implements JdbcType {
 		}
 
 		@Override
-		public <X> BasicBinder<X> getNClobBinder(final JavaType<X> javaTypeDescriptor) {
-			return new BasicBinder<X>( javaTypeDescriptor, this ) {
+		public <X> BasicBinder<X> getNClobBinder(final JavaType<X> javaType) {
+			return new BasicBinder<X>( javaType, this ) {
 				@Override
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 						throws SQLException {
 					if ( options.useStreamForLobBinding() ) {
-						STREAM_BINDING.getNClobBinder( javaTypeDescriptor ).doBind( st, value, index, options );
+						STREAM_BINDING.getNClobBinder( javaType ).doBind( st, value, index, options );
 					}
 					else {
-						NCLOB_BINDING.getNClobBinder( javaTypeDescriptor ).doBind( st, value, index, options );
+						NCLOB_BINDING.getNClobBinder( javaType ).doBind( st, value, index, options );
 					}
 				}
 
@@ -95,10 +95,10 @@ public abstract class NClobJdbcType implements JdbcType {
 				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 						throws SQLException {
 					if ( options.useStreamForLobBinding() ) {
-						STREAM_BINDING.getNClobBinder( javaTypeDescriptor ).doBind( st, value, name, options );
+						STREAM_BINDING.getNClobBinder( javaType ).doBind( st, value, name, options );
 					}
 					else {
-						NCLOB_BINDING.getNClobBinder( javaTypeDescriptor ).doBind( st, value, name, options );
+						NCLOB_BINDING.getNClobBinder( javaType ).doBind( st, value, name, options );
 					}
 				}
 			};
@@ -112,18 +112,18 @@ public abstract class NClobJdbcType implements JdbcType {
 		}
 
 		@Override
-		public <X> BasicBinder<X> getNClobBinder(final JavaType<X> javaTypeDescriptor) {
-			return new BasicBinder<X>( javaTypeDescriptor, this ) {
+		public <X> BasicBinder<X> getNClobBinder(final JavaType<X> javaType) {
+			return new BasicBinder<X>( javaType, this ) {
 				@Override
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 						throws SQLException {
-					st.setNClob( index, javaTypeDescriptor.unwrap( value, NClob.class, options ) );
+					st.setNClob( index, javaType.unwrap( value, NClob.class, options ) );
 				}
 
 				@Override
 				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 						throws SQLException {
-					st.setNClob( name, javaTypeDescriptor.unwrap( value, NClob.class, options ) );
+					st.setNClob( name, javaType.unwrap( value, NClob.class, options ) );
 				}
 			};
 		}
@@ -136,12 +136,12 @@ public abstract class NClobJdbcType implements JdbcType {
 		}
 
 		@Override
-		public <X> BasicBinder<X> getNClobBinder(final JavaType<X> javaTypeDescriptor) {
-			return new BasicBinder<X>( javaTypeDescriptor, this ) {
+		public <X> BasicBinder<X> getNClobBinder(final JavaType<X> javaType) {
+			return new BasicBinder<X>( javaType, this ) {
 				@Override
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 						throws SQLException {
-					final CharacterStream characterStream = javaTypeDescriptor.unwrap(
+					final CharacterStream characterStream = javaType.unwrap(
 							value,
 							CharacterStream.class,
 							options
@@ -152,7 +152,7 @@ public abstract class NClobJdbcType implements JdbcType {
 				@Override
 				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 						throws SQLException {
-					final CharacterStream characterStream = javaTypeDescriptor.unwrap(
+					final CharacterStream characterStream = javaType.unwrap(
 							value,
 							CharacterStream.class,
 							options

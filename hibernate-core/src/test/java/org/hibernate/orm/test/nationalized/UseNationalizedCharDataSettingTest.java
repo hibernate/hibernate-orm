@@ -23,8 +23,8 @@ import org.hibernate.dialect.NationalizationSupport;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.descriptor.java.CharacterJavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.CharacterJavaType;
+import org.hibernate.type.descriptor.java.StringJavaType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import org.hibernate.testing.TestForIssue;
@@ -55,17 +55,17 @@ public class UseNationalizedCharDataSettingTest extends BaseUnitTestCase {
 			final Metadata metadata = ms.buildMetadata();
 			final JdbcTypeRegistry jdbcTypeRegistry = metadata.getDatabase()
 					.getTypeConfiguration()
-					.getJdbcTypeDescriptorRegistry();
+					.getJdbcTypeRegistry();
 			final PersistentClass pc = metadata.getEntityBinding( NationalizedBySettingEntity.class.getName() );
 			final Property nameAttribute = pc.getProperty( "name" );
 			final BasicType<?> type = (BasicType<?>) nameAttribute.getType();
 			final Dialect dialect = metadata.getDatabase().getDialect();
-			assertSame( StringJavaTypeDescriptor.INSTANCE, type.getJavaTypeDescriptor() );
+			assertSame( StringJavaType.INSTANCE, type.getJavaTypeDescriptor() );
 			if ( dialect.getNationalizationSupport() != NationalizationSupport.EXPLICIT ) {
-				Assertions.assertSame( jdbcTypeRegistry.getDescriptor( Types.VARCHAR ), type.getJdbcTypeDescriptor() );
+				Assertions.assertSame( jdbcTypeRegistry.getDescriptor( Types.VARCHAR ), type.getJdbcType() );
 			}
 			else {
-				Assertions.assertSame( jdbcTypeRegistry.getDescriptor( Types.NVARCHAR ), type.getJdbcTypeDescriptor() );
+				Assertions.assertSame( jdbcTypeRegistry.getDescriptor( Types.NVARCHAR ), type.getJdbcType() );
 			}
 
 		}
@@ -88,17 +88,17 @@ public class UseNationalizedCharDataSettingTest extends BaseUnitTestCase {
 			final Metadata metadata = ms.buildMetadata();
 			final JdbcTypeRegistry jdbcTypeRegistry = metadata.getDatabase()
 					.getTypeConfiguration()
-					.getJdbcTypeDescriptorRegistry();
+					.getJdbcTypeRegistry();
 			final PersistentClass pc = metadata.getEntityBinding( NationalizedBySettingEntity.class.getName() );
 			final Property nameAttribute = pc.getProperty( "flag" );
 			final BasicType<?> type = (BasicType<?>) nameAttribute.getType();
 			final Dialect dialect = metadata.getDatabase().getDialect();
-			assertSame( CharacterJavaTypeDescriptor.INSTANCE, type.getJavaTypeDescriptor() );
+			assertSame( CharacterJavaType.INSTANCE, type.getJavaTypeDescriptor() );
 			if ( dialect.getNationalizationSupport() != NationalizationSupport.EXPLICIT ) {
-				Assertions.assertSame( jdbcTypeRegistry.getDescriptor( Types.CHAR ), type.getJdbcTypeDescriptor() );
+				Assertions.assertSame( jdbcTypeRegistry.getDescriptor( Types.CHAR ), type.getJdbcType() );
 			}
 			else {
-				Assertions.assertSame( jdbcTypeRegistry.getDescriptor( Types.NCHAR ), type.getJdbcTypeDescriptor() );
+				Assertions.assertSame( jdbcTypeRegistry.getDescriptor( Types.NCHAR ), type.getJdbcType() );
 			}
 
 		}

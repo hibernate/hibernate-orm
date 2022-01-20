@@ -842,7 +842,7 @@ public class BinderHelper {
 
 		final JavaType<?> discriminatorJavaType = discriminatorDescriptor
 				.resolve()
-				.getRelationalJavaDescriptor();
+				.getRelationalJavaType();
 
 		final Map<Object,Class<?>> discriminatorValueMappings = new HashMap<>();
 		processAnyDiscriminatorValues(

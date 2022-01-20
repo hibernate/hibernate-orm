@@ -55,7 +55,7 @@ public class JdbcTypeTests {
 		final Dialect dialect = domainModel.getDatabase().getDialect();
 		final NationalizationSupport nationalizationSupport = dialect.getNationalizationSupport();
 		final JdbcTypeRegistry jdbcTypeRegistry = domainModel.getTypeConfiguration()
-				.getJdbcTypeDescriptorRegistry();
+				.getJdbcTypeRegistry();
 		final PersistentClass entityBinding = domainModel.getEntityBinding( SimpleEntity.class.getName() );
 
 		verifyJdbcTypeCode(
@@ -120,7 +120,7 @@ public class JdbcTypeTests {
 		final BasicValue basicValue = (BasicValue) value;
 		final BasicValue.Resolution<?> resolution = basicValue.resolve();
 
-		verifier.accept( property, resolution.getJdbcTypeDescriptor() );
+		verifier.accept( property, resolution.getJdbcType() );
 	}
 
 
@@ -132,7 +132,7 @@ public class JdbcTypeTests {
 		final BasicValue basicValue = (BasicValue) value;
 		final BasicValue.Resolution<?> resolution = basicValue.resolve();
 
-		stdVerifier.accept( resolution.getJdbcTypeDescriptor() );
+		stdVerifier.accept( resolution.getJdbcType() );
 	}
 
 	@Entity( name = "SimpleEntity" )
@@ -176,13 +176,13 @@ public class JdbcTypeTests {
 		}
 
 		@Override
-		public <X> ValueBinder<X> getBinder(JavaType<X> javaTypeDescriptor) {
-			return TinyIntJdbcType.INSTANCE.getBinder( javaTypeDescriptor );
+		public <X> ValueBinder<X> getBinder(JavaType<X> javaType) {
+			return TinyIntJdbcType.INSTANCE.getBinder( javaType );
 		}
 
 		@Override
-		public <X> ValueExtractor<X> getExtractor(JavaType<X> javaTypeDescriptor) {
-			return TinyIntJdbcType.INSTANCE.getExtractor( javaTypeDescriptor );
+		public <X> ValueExtractor<X> getExtractor(JavaType<X> javaType) {
+			return TinyIntJdbcType.INSTANCE.getExtractor( javaType );
 		}
 	}
 

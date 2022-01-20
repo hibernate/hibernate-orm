@@ -33,13 +33,13 @@ class SDOGeometryValueBinder<J> implements ValueBinder<J> {
 	private static final String SQL_TYPE_NAME = "MDSYS.SDO_GEOMETRY";
 
 	private final OracleJDBCTypeFactory typeFactory;
-	private final JavaType<J> javaTypeDescriptor;
+	private final JavaType<J> javaType;
 
 	public SDOGeometryValueBinder(
-			JavaType<J> javaTypeDescriptor,
-			JdbcType sqlTypeDescriptor,
+			JavaType<J> javaType,
+			JdbcType jdbcType,
 			OracleJDBCTypeFactory typeFactory) {
-		this.javaTypeDescriptor = javaTypeDescriptor;
+		this.javaType = javaType;
 		this.typeFactory = typeFactory;
 	}
 
@@ -49,7 +49,7 @@ class SDOGeometryValueBinder<J> implements ValueBinder<J> {
 			st.setNull( index, Types.STRUCT, SQL_TYPE_NAME );
 		}
 		else {
-			final Geometry geometry = javaTypeDescriptor.unwrap( value, Geometry.class, options );
+			final Geometry geometry = javaType.unwrap( value, Geometry.class, options );
 			final Object dbGeom = toNative( geometry, st.getConnection() );
 			st.setObject( index, dbGeom );
 		}
@@ -62,7 +62,7 @@ class SDOGeometryValueBinder<J> implements ValueBinder<J> {
 			st.setNull( name, Types.STRUCT, SQL_TYPE_NAME );
 		}
 		else {
-			final Geometry geometry = javaTypeDescriptor.unwrap( value, Geometry.class, options );
+			final Geometry geometry = javaType.unwrap( value, Geometry.class, options );
 			final Object dbGeom = toNative( geometry, st.getConnection() );
 			st.setObject( name, dbGeom );
 		}

@@ -726,7 +726,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 	}
 
 	@Override
-	public JdbcType getJdbcTypeDescriptor() {
+	public JdbcType getJdbcType() {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 

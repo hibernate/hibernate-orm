@@ -79,13 +79,13 @@ public class Builders {
 	public static DynamicResultBuilderBasic scalar(
 			String columnAlias,
 			String resultAlias,
-			Class<?> javaType,
+			Class<?> javaTypeClass,
 			SessionFactoryImplementor factory) {
-		final JavaType<?> javaTypeDescriptor = factory.getTypeConfiguration()
-				.getJavaTypeDescriptorRegistry()
-				.getDescriptor( javaType );
+		final JavaType<?> javaType = factory.getTypeConfiguration()
+				.getJavaTypeRegistry()
+				.getDescriptor( javaTypeClass );
 
-		return new DynamicResultBuilderBasicStandard( columnAlias, resultAlias, javaTypeDescriptor );
+		return new DynamicResultBuilderBasicStandard( columnAlias, resultAlias, javaType );
 	}
 
 	public static <R> ResultBuilder converted(
@@ -134,7 +134,7 @@ public class Builders {
 
 	public static <J> DynamicResultBuilderInstantiation<J> instantiation(Class<J> targetJavaType, SessionFactoryImplementor factory) {
 		final JavaType<J> targetJtd = factory.getTypeConfiguration()
-				.getJavaTypeDescriptorRegistry()
+				.getJavaTypeRegistry()
 				.getDescriptor( targetJavaType );
 		return new DynamicResultBuilderInstantiation<>( targetJtd );
 	}

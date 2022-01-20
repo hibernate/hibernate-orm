@@ -1917,7 +1917,7 @@ public class CommonFunctionFactory {
 										return impliedType;
 									}
 								}
-								switch ( basicType.getJdbcTypeDescriptor().getJdbcTypeCode() ) {
+								switch ( basicType.getJdbcType().getJdbcTypeCode() ) {
 									case Types.SMALLINT:
 									case Types.TINYINT:
 									case Types.INTEGER:
@@ -1954,7 +1954,7 @@ public class CommonFunctionFactory {
 										arguments,
 										1
 								);
-								switch ( specifiedArgType.getJdbcMapping().getJdbcTypeDescriptor().getJdbcTypeCode() ) {
+								switch ( specifiedArgType.getJdbcMapping().getJdbcType().getJdbcTypeCode() ) {
 									case Types.SMALLINT:
 									case Types.TINYINT:
 									case Types.INTEGER:
@@ -2447,10 +2447,10 @@ public class CommonFunctionFactory {
 			final JdbcMapping powerType = StandardFunctionReturnTypeResolvers
 					.extractArgumentJdbcMapping( typeConfiguration, arguments, 2 );
 
-			if ( baseType.getJdbcTypeDescriptor().isDecimal() ) {
+			if ( baseType.getJdbcType().isDecimal() ) {
 				return (ReturnableType<?>) arguments.get( 0 ).getNodeType();
 			}
-			else if ( powerType.getJdbcTypeDescriptor().isDecimal() ) {
+			else if ( powerType.getJdbcType().isDecimal() ) {
 				return (ReturnableType<?>) arguments.get( 1 ).getNodeType();
 			}
 			return typeConfiguration.getBasicTypeForJavaType( Double.class );
@@ -2467,10 +2467,10 @@ public class CommonFunctionFactory {
 					arguments,
 					2
 			);
-			if ( baseMapping.getJdbcMapping().getJdbcTypeDescriptor().isDecimal() ) {
+			if ( baseMapping.getJdbcMapping().getJdbcType().isDecimal() ) {
 				return baseMapping;
 			}
-			else if ( powerMapping.getJdbcMapping().getJdbcTypeDescriptor().isDecimal() ) {
+			else if ( powerMapping.getJdbcMapping().getJdbcType().isDecimal() ) {
 				return powerMapping;
 			}
 			return doubleType;

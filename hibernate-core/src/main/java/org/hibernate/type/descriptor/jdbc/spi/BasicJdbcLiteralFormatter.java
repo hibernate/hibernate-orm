@@ -16,8 +16,8 @@ import org.hibernate.type.descriptor.java.JavaType;
  * @author Steve Ebersole
  */
 public abstract class BasicJdbcLiteralFormatter extends AbstractJdbcLiteralFormatter {
-	public BasicJdbcLiteralFormatter(JavaType<?> javaTypeDescriptor) {
-		super( javaTypeDescriptor );
+	public BasicJdbcLiteralFormatter(JavaType<?> javaType) {
+		super( javaType );
 	}
 
 	@SuppressWarnings("unchecked")
@@ -29,6 +29,6 @@ public abstract class BasicJdbcLiteralFormatter extends AbstractJdbcLiteralForma
 			return (X) value;
 		}
 
-		return (X) getJavaTypeDescriptor().unwrap( value, unwrapType, wrapperOptions );
+		return (X) getJavaType().unwrap( value, unwrapType, wrapperOptions );
 	}
 }

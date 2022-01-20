@@ -28,11 +28,11 @@ import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.testing.RequiresDialect;
 
 import org.hibernate.orm.test.id.usertype.inet.Inet;
-import org.hibernate.orm.test.id.usertype.inet.InetJavaTypeDescriptor;
+import org.hibernate.orm.test.id.usertype.inet.InetJavaType;
 import org.hibernate.orm.test.id.usertype.inet.InetJdbcType;
 import org.hibernate.orm.test.id.usertype.inet.InetType;
 import org.hibernate.orm.test.id.usertype.json.Json;
-import org.hibernate.orm.test.id.usertype.json.JsonJavaTypeDescriptor;
+import org.hibernate.orm.test.id.usertype.json.JsonJavaType;
 import org.hibernate.orm.test.id.usertype.json.JsonType;
 import org.junit.Test;
 
@@ -74,8 +74,8 @@ public class PostgreSQLMultipleTypesOtherContributorTest extends BaseEntityManag
 					final TypeConfiguration typeConfiguration = metadataBuilder.unwrap( MetadataBuilderImplementor.class )
 							.getBootstrapContext()
 							.getTypeConfiguration();
-					typeConfiguration.getJavaTypeDescriptorRegistry().addDescriptor( InetJavaTypeDescriptor.INSTANCE );
-					typeConfiguration.getJdbcTypeDescriptorRegistry().addDescriptor( InetJdbcType.INSTANCE );
+					typeConfiguration.getJavaTypeRegistry().addDescriptor( InetJavaType.INSTANCE );
+					typeConfiguration.getJdbcTypeRegistry().addDescriptor( InetJdbcType.INSTANCE );
 					metadataBuilder.applyBasicType(
 							InetType.INSTANCE, InetType.INSTANCE.getName()
 					);
@@ -127,12 +127,12 @@ public class PostgreSQLMultipleTypesOtherContributorTest extends BaseEntityManag
 
 		@Column(name = "ip")
 		@JdbcTypeCode(SqlTypes.INET)
-		@JavaType(InetJavaTypeDescriptor.class)
+		@JavaType(InetJavaType.class)
 		private Inet ip;
 
 		@Column(name = "properties")
 		@JdbcTypeCode(SqlTypes.JSON)
-		@JavaType(JsonJavaTypeDescriptor.class)
+		@JavaType(JsonJavaType.class)
 		private Json properties;
 
 		public Long getId() {

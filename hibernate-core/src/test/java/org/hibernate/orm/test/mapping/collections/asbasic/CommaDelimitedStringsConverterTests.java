@@ -45,8 +45,8 @@ public class CommaDelimitedStringsConverterTests {
 
 			assertThat( resolution.getValueConverter() ).isNotNull();
 
-			assertThat( resolution.getDomainJavaDescriptor().getJavaTypeClass() ).isEqualTo( List.class );
-			assertThat( resolution.getRelationalJavaDescriptor().getJavaTypeClass() ).isEqualTo( String.class );
+			assertThat( resolution.getDomainJavaType().getJavaTypeClass() ).isEqualTo( List.class );
+			assertThat( resolution.getRelationalJavaType().getJavaTypeClass() ).isEqualTo( String.class );
 		} );
 	}
 

@@ -813,7 +813,7 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
-		public JavaType getMappedJavaTypeDescriptor() {
+		public JavaType getMappedJavaType() {
 			return null;
 		}
 	}

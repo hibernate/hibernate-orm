@@ -20,7 +20,7 @@ import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.type.descriptor.java.TemporalJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.TemporalJavaType;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -45,31 +45,31 @@ public class DatePrecisionTests {
 		{
 			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("dateAsTimestamp");
 			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
-			final TemporalJavaTypeDescriptor jtd = (TemporalJavaTypeDescriptor) jdbcMapping.getJavaTypeDescriptor();
-			assertThat(jtd, is(attribute.getJavaTypeDescriptor()));
+			final TemporalJavaType jtd = (TemporalJavaType) jdbcMapping.getJavaTypeDescriptor();
+			assertThat(jtd, is(attribute.getJavaType()));
 			assertThat(jtd.getJavaTypeClass(), equalTo(Timestamp.class));
 			assertThat(jtd.getPrecision(), equalTo(TemporalType.TIMESTAMP));
-			assertThat(jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo(Types.TIMESTAMP));
+			assertThat( jdbcMapping.getJdbcType().getJdbcTypeCode(), equalTo( Types.TIMESTAMP));
 		}
 
 		{
 			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("dateAsDate");
 			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
-			final TemporalJavaTypeDescriptor jtd = (TemporalJavaTypeDescriptor) jdbcMapping.getJavaTypeDescriptor();
-			assertThat(jtd, is(attribute.getJavaTypeDescriptor()));
+			final TemporalJavaType jtd = (TemporalJavaType) jdbcMapping.getJavaTypeDescriptor();
+			assertThat(jtd, is(attribute.getJavaType()));
 			assertThat(jtd.getJavaTypeClass(), equalTo(java.sql.Date.class));
 			assertThat(jtd.getPrecision(), equalTo(TemporalType.DATE));
-			assertThat(jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo(Types.DATE));
+			assertThat( jdbcMapping.getJdbcType().getJdbcTypeCode(), equalTo( Types.DATE));
 		}
 
 		{
 			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("dateAsTime");
 			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
-			final TemporalJavaTypeDescriptor jtd = (TemporalJavaTypeDescriptor) jdbcMapping.getJavaTypeDescriptor();
-			assertThat(jtd, is(attribute.getJavaTypeDescriptor()));
+			final TemporalJavaType jtd = (TemporalJavaType) jdbcMapping.getJavaTypeDescriptor();
+			assertThat(jtd, is(attribute.getJavaType()));
 			assertThat(jtd.getJavaTypeClass(), equalTo(Time.class));
 			assertThat(jtd.getPrecision(), equalTo(TemporalType.TIME));
-			assertThat(jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo(Types.TIME));
+			assertThat( jdbcMapping.getJdbcType().getJdbcTypeCode(), equalTo( Types.TIME));
 		}
 
 		// check persistence operations

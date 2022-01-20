@@ -7,7 +7,6 @@
 package org.hibernate.userguide.mapping.basic;
 
 import java.sql.Types;
-import java.time.Instant;
 import java.time.LocalDate;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -41,7 +40,7 @@ public class LocalDateMappingTests {
 		final BasicAttributeMapping duration = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("localDate");
 		final JdbcMapping jdbcMapping = duration.getJdbcMapping();
 		assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(LocalDate.class));
-		assertThat(jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo(Types.DATE));
+		assertThat( jdbcMapping.getJdbcType().getJdbcTypeCode(), equalTo( Types.DATE));
 
 		scope.inTransaction(
 				(session) -> {

@@ -74,7 +74,7 @@ public class HibernateTypeSourceImpl implements HibernateTypeSource, JavaTypeDes
 	public void resolveJavaTypeDescriptor(JavaTypeDescriptor descriptor) {
 		if ( this.javaTypeDescriptor != null ) {
 			if ( this.javaTypeDescriptor != descriptor ) {
-				throw new IllegalStateException( "Attempt to resolve an already resolved JavaTypeDescriptor" );
+				throw new IllegalStateException( "Attempt to resolve an already resolved JavaType" );
 			}
 		}
 		this.javaTypeDescriptor = descriptor;

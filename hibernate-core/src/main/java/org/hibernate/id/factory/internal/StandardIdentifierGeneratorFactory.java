@@ -181,7 +181,7 @@ public class StandardIdentifierGeneratorFactory
 			GenerationType generationType,
 			String generatedValueGeneratorName,
 			String generatorName,
-			JavaType<?> javaTypeDescriptor,
+			JavaType<?> javaType,
 			Properties config,
 			GeneratorDefinitionResolver definitionResolver) {
 		final GenerationTypeStrategy strategy = generatorTypeStrategyMap.get( generationType );
@@ -189,7 +189,7 @@ public class StandardIdentifierGeneratorFactory
 			return strategy.createIdentifierGenerator(
 					generationType,
 					generatorName,
-					javaTypeDescriptor,
+					javaType,
 					config,
 					definitionResolver,
 					serviceRegistry

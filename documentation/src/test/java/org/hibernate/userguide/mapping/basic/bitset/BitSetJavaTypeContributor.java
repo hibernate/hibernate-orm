@@ -16,6 +16,6 @@ import org.hibernate.service.ServiceRegistry;
 public class BitSetJavaTypeContributor implements TypeContributor {
 	@Override
 	public void contribute(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
-		typeContributions.contributeJavaTypeDescriptor(BitSetJavaType.INSTANCE);
+		typeContributions.contributeJavaType( BitSetJavaType.INSTANCE);
 	}
 }

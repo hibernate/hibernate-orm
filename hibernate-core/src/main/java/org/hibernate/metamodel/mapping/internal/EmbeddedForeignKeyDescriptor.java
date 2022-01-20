@@ -555,8 +555,8 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 	}
 
 	@Override
-	public JavaType<?> getJavaTypeDescriptor() {
-		return targetSide.getModelPart().getJavaTypeDescriptor();
+	public JavaType<?> getJavaType() {
+		return targetSide.getModelPart().getJavaType();
 	}
 
 	@Override

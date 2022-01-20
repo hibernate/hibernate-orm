@@ -39,7 +39,7 @@ public class BitSetJavaTypeRegistrationTests {
 				.findEntityDescriptor(Product.class);
 		final SingularAttributeMapping bitSetAttribute = (SingularAttributeMapping) productType.findAttributeMapping("bitSet");
 		// make sure BitSetTypeDescriptor was selected
-		assertThat(bitSetAttribute.getJavaTypeDescriptor(), instanceOf(BitSetJavaType.class));
+		assertThat( bitSetAttribute.getJavaType(), instanceOf( BitSetJavaType.class));
 	}
 
 

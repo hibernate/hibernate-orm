@@ -41,9 +41,7 @@ import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
-import org.hibernate.metamodel.mapping.MappingModelCreationLogger;
 import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.metamodel.mapping.NonTransientException;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
@@ -145,7 +143,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				.getRepresentationStrategySelector()
 				.resolveStrategy( bootDescriptor, () -> this, creationContext );
 
-		this.embeddableJtd = representationStrategy.getMappedJavaTypeDescriptor();
+		this.embeddableJtd = representationStrategy.getMappedJavaType();
 		this.valueMapping = embeddedPartBuilder.apply( this );
 
 		final ConfigurationService cs = sessionFactory.getServiceRegistry()
@@ -167,7 +165,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			MappingModelCreationProcess creationProcess) {
 		super( creationProcess );
 
-		this.embeddableJtd = inverseMappingType.getJavaTypeDescriptor();
+		this.embeddableJtd = inverseMappingType.getJavaType();
 		this.representationStrategy = inverseMappingType.getRepresentationStrategy();
 		this.valueMapping = valueMapping;
 		this.createEmptyCompositesEnabled = inverseMappingType.isCreateEmptyCompositesEnabled();
@@ -434,7 +432,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 
 				attributeMapping = new DiscriminatedAssociationAttributeMapping(
 						valueMapping.getNavigableRole().append( bootPropertyDescriptor.getName() ),
-						typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Object.class ),
+						typeConfiguration.getJavaTypeRegistry().getDescriptor( Object.class ),
 						this,
 						attributeIndex,
 						attributeMetadataAccess,
@@ -555,7 +553,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 	}
 
 	@Override
-	public JavaType<?> getMappedJavaTypeDescriptor() {
+	public JavaType<?> getMappedJavaType() {
 		return embeddableJtd;
 	}
 

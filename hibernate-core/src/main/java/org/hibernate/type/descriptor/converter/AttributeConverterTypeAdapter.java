@@ -65,12 +65,12 @@ public class AttributeConverterTypeAdapter<T> extends AbstractSingleColumnStanda
 		// NOTE : the way that JpaAttributeConverter get built, their "domain JTD" already
 		// contains the proper MutabilityPlan based on whether the `@Immuatble` is present
 		if ( mutabilityPlan == null ) {
-			this.mutabilityPlan = (MutabilityPlan<T>) attributeConverter.getDomainJavaTypeDescriptor().getMutabilityPlan();
+			this.mutabilityPlan = (MutabilityPlan<T>) attributeConverter.getDomainJavaType().getMutabilityPlan();
 		}
 		else {
 			this.mutabilityPlan = mutabilityPlan;
 		}
-		this.valueBinder = getJdbcTypeDescriptor().getBinder( (JavaType<Object>) relationalJtd );
+		this.valueBinder = getJdbcType().getBinder( (JavaType<Object>) relationalJtd );
 
 		log.debugf( "Created AttributeConverterTypeAdapter -> %s", name );
 	}

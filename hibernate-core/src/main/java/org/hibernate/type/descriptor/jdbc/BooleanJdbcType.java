@@ -50,29 +50,29 @@ public class BooleanJdbcType implements AdjustableJdbcType {
 			Integer length,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
-		return (BasicJavaType<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Boolean.class );
+		return (BasicJavaType<T>) typeConfiguration.getJavaTypeRegistry().getDescriptor( Boolean.class );
 	}
 
 	@Override
-	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaTypeDescriptor) {
+	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaType) {
 		//noinspection unchecked
-		return new JdbcLiteralFormatterBoolean( javaTypeDescriptor );
+		return new JdbcLiteralFormatterBoolean( javaType );
 	}
 
 	@Override
-	public JdbcType resolveIndicatedType(JdbcTypeDescriptorIndicators indicators, JavaType<?> domainJtd) {
+	public JdbcType resolveIndicatedType(JdbcTypeIndicators indicators, JavaType<?> domainJtd) {
 		final int preferredSqlTypeCodeForBoolean = indicators.getPreferredSqlTypeCodeForBoolean();
 		// We treat BIT like BOOLEAN because it uses the same JDBC access methods
 		if ( preferredSqlTypeCodeForBoolean != Types.BIT && preferredSqlTypeCodeForBoolean != Types.BOOLEAN ) {
 			return indicators.getTypeConfiguration()
-					.getJdbcTypeDescriptorRegistry()
+					.getJdbcTypeRegistry()
 					.getDescriptor( preferredSqlTypeCodeForBoolean );
 		}
 		return this;
 	}
 
-	public <X> ValueBinder<X> getBinder(final JavaType<X> javaTypeDescriptor) {
-		return new BasicBinder<X>( javaTypeDescriptor, this ) {
+	public <X> ValueBinder<X> getBinder(final JavaType<X> javaType) {
+		return new BasicBinder<X>( javaType, this ) {
 			@Override
 			protected void doBindNull(PreparedStatement st, int index, WrapperOptions options) throws SQLException {
 				st.setNull( index, options.getPreferredSqlTypeCodeForBoolean() );
@@ -85,32 +85,32 @@ public class BooleanJdbcType implements AdjustableJdbcType {
 
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
-				st.setBoolean( index, javaTypeDescriptor.unwrap( value, Boolean.class, options ) );
+				st.setBoolean( index, javaType.unwrap( value, Boolean.class, options ) );
 			}
 
 			@Override
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
-				st.setBoolean( name, javaTypeDescriptor.unwrap( value, Boolean.class, options ) );
+				st.setBoolean( name, javaType.unwrap( value, Boolean.class, options ) );
 			}
 		};
 	}
 
-	public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaTypeDescriptor) {
-		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
+	public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaType) {
+		return new BasicExtractor<X>( javaType, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( rs.getBoolean( paramIndex ), options );
+				return javaType.wrap( rs.getBoolean( paramIndex ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( statement.getBoolean( index ), options );
+				return javaType.wrap( statement.getBoolean( index ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( statement.getBoolean( name ), options );
+				return javaType.wrap( statement.getBoolean( name ), options );
 			}
 		};
 	}

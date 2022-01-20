@@ -14,7 +14,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
-import org.hibernate.type.descriptor.java.JdbcTimestampJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JdbcTimestampJavaType;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -59,7 +59,7 @@ public class DbVersionTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		s.close();
 
-		assertFalse( "owner version not incremented", JdbcTimestampJavaTypeDescriptor.INSTANCE.areEqual( steveTimestamp, steve.getTimestamp() ) );
+		assertFalse( "owner version not incremented", JdbcTimestampJavaType.INSTANCE.areEqual( steveTimestamp, steve.getTimestamp() ) );
 
 		steveTimestamp = steve.getTimestamp();
 		Thread.sleep( 1500 );
@@ -71,7 +71,7 @@ public class DbVersionTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		s.close();
 
-		assertFalse( "owner version not incremented", JdbcTimestampJavaTypeDescriptor.INSTANCE.areEqual( steveTimestamp, steve.getTimestamp() ) );
+		assertFalse( "owner version not incremented", JdbcTimestampJavaType.INSTANCE.areEqual( steveTimestamp, steve.getTimestamp() ) );
 
 		s = openSession();
 		t = s.beginTransaction();
@@ -102,7 +102,7 @@ public class DbVersionTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		s.close();
 
-		assertTrue( "owner version was incremented", JdbcTimestampJavaTypeDescriptor.INSTANCE.areEqual( steveTimestamp, steve.getTimestamp() ) );
+		assertTrue( "owner version was incremented", JdbcTimestampJavaType.INSTANCE.areEqual( steveTimestamp, steve.getTimestamp() ) );
 
 		s = openSession();
 		t = s.beginTransaction();
@@ -111,7 +111,7 @@ public class DbVersionTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		s.close();
 
-		assertTrue( "owner version was incremented", JdbcTimestampJavaTypeDescriptor.INSTANCE.areEqual( steveTimestamp, steve.getTimestamp() ) );
+		assertTrue( "owner version was incremented", JdbcTimestampJavaType.INSTANCE.areEqual( steveTimestamp, steve.getTimestamp() ) );
 
 		s = openSession();
 		t = s.beginTransaction();

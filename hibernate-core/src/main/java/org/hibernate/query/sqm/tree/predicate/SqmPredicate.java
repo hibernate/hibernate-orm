@@ -9,7 +9,7 @@ package org.hibernate.query.sqm.tree.predicate;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.type.descriptor.java.BooleanJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.BooleanJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -19,7 +19,7 @@ public interface SqmPredicate
 		extends SqmVisitableNode, JpaPredicate, SqmExpression<Boolean> {
 	@Override
 	default JavaType<Boolean> getJavaTypeDescriptor(){
-		return BooleanJavaTypeDescriptor.INSTANCE;
+		return BooleanJavaType.INSTANCE;
 	}
 
 	@Override

@@ -155,7 +155,7 @@ public class Compatibility {
 			JavaType from) {
 
 		// todo (6.0) - base this in the descriptor.
-		// 		`JavaTypeDescriptor#assignableFrom` ?
+		// 		`JavaType#assignableFrom` ?
 		//      Note from Christian: I think this is a good idea to allow honoring parameterized types
 
 		return areAssignmentCompatible( to.getJavaTypeClass(), from.getJavaTypeClass() );

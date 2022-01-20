@@ -28,8 +28,8 @@ public interface ValueMapping extends MappingModelExpressable, JavaTypedExpressa
 	MappingType getMappedType();
 
 	@Override
-	default JavaType<?> getExpressableJavaTypeDescriptor() {
-		return getMappedType().getMappedJavaTypeDescriptor();
+	default JavaType<?> getExpressableJavaType() {
+		return getMappedType().getMappedJavaType();
 	}
 
 	/**return null;

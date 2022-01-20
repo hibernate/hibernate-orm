@@ -65,7 +65,7 @@ public class QueryLiteral<T> implements Literal, DomainResultProducer<T> {
 		final SqlExpressionResolver sqlExpressionResolver = creationState.getSqlAstCreationState().getSqlExpressionResolver();
 		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 				this,
-				type.getMappedType().getMappedJavaTypeDescriptor(),
+				type.getMappedType().getMappedJavaType(),
 				creationState.getSqlAstCreationState()
 						.getCreationContext()
 						.getSessionFactory()
@@ -75,7 +75,7 @@ public class QueryLiteral<T> implements Literal, DomainResultProducer<T> {
 		return new BasicResult(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
-				type.getMappedType().getMappedJavaTypeDescriptor()
+				type.getMappedType().getMappedJavaType()
 		);
 	}
 

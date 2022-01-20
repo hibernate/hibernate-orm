@@ -1697,10 +1697,10 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(
 			id = 481,
-			value = "Encountered Java type [%s] for which we could not locate a JavaTypeDescriptor and " +
+			value = "Encountered Java type [%s] for which we could not locate a JavaType and " +
 					"which does not appear to implement equals and/or hashCode.  This can lead to " +
 					"significant performance problems when performing equality/dirty checking involving " +
-					"this Java type.  Consider registering a custom JavaTypeDescriptor or at least " +
+					"this Java type.  Consider registering a custom JavaType or at least " +
 					"implementing equals/hashCode."
 	)
 	void unknownJavaTypeNoEqualsHashCode(Class javaType);

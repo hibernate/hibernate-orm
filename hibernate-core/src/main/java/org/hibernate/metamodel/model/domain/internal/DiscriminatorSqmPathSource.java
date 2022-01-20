@@ -59,6 +59,6 @@ public class DiscriminatorSqmPathSource<D> extends AbstractSqmPathSource<D>
 
 	@Override
 	public Class<D> getJavaType() {
-		return getExpressableJavaTypeDescriptor().getJavaTypeClass();
+		return getExpressableJavaType().getJavaTypeClass();
 	}
 }

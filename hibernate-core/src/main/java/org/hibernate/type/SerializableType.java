@@ -9,7 +9,7 @@ package org.hibernate.type;
 import java.io.Serializable;
 
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.SerializableJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.SerializableJavaType;
 import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcType;
 
 /**
@@ -18,7 +18,7 @@ import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcType;
  * Notice specifically the 3 constructors:<ul>
  *     <li>{@link #INSTANCE} indicates a mapping using the {@link Serializable} interface itself.</li>
  *     <li>{@link #SerializableType(Class)} indicates a mapping using the specific class</li>
- *     <li>{@link #SerializableType(JavaType)} indicates a mapping using the specific JavaTypeDescriptor</li>
+ *     <li>{@link #SerializableType(JavaType)} indicates a mapping using the specific JavaType</li>
  * </ul>
  * The important distinction has to do with locating the appropriate {@link ClassLoader} to use during deserialization.
  * In the fist form we are always using the {@link ClassLoader} of the JVM (Hibernate will always fallback to trying
@@ -33,7 +33,7 @@ public class SerializableType<T extends Serializable> extends AbstractSingleColu
 	private final Class<T> serializableClass;
 
 	public SerializableType(Class<T> serializableClass) {
-		super( VarbinaryJdbcType.INSTANCE, new SerializableJavaTypeDescriptor<>( serializableClass )  );
+		super( VarbinaryJdbcType.INSTANCE, new SerializableJavaType<>( serializableClass )  );
 		this.serializableClass = serializableClass;
 	}
 

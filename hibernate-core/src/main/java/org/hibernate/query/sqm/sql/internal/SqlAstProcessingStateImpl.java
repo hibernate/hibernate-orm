@@ -140,7 +140,7 @@ public class SqlAstProcessingStateImpl
 	@Override
 	public SqlSelection resolveSqlSelection(
 			Expression expression,
-			JavaType<?> javaTypeDescriptor,
+			JavaType<?> javaType,
 			TypeConfiguration typeConfiguration) {
 		throw new ConversionException( "Unexpected call to resolve SqlSelection outside of QuerySpec processing" );
 	}

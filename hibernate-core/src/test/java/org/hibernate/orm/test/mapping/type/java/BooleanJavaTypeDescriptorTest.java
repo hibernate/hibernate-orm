@@ -6,14 +6,14 @@
  */
 package org.hibernate.orm.test.mapping.type.java;
 
-import org.hibernate.type.descriptor.java.BooleanJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.BooleanJavaType;
 
 import org.junit.Test;
 
 import static org.junit.Assert.*;
 
 public class BooleanJavaTypeDescriptorTest {
-    private BooleanJavaTypeDescriptor underTest = new BooleanJavaTypeDescriptor();
+    private BooleanJavaType underTest = new BooleanJavaType();
 
     @Test
     public void testWrapShouldReturnTrueWhenYStringGiven() {

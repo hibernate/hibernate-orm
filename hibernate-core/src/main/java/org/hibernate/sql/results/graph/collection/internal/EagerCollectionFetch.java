@@ -190,7 +190,7 @@ public class EagerCollectionFetch extends CollectionFetch implements FetchParent
 	}
 
 	@Override
-	public JavaType<?> getResultJavaTypeDescriptor() {
-		return getFetchedMapping().getJavaTypeDescriptor();
+	public JavaType<?> getResultJavaType() {
+		return getFetchedMapping().getJavaType();
 	}
 }

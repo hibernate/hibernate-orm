@@ -54,7 +54,6 @@ import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.UnionTableGroup;
 import org.hibernate.sql.ast.tree.from.UnionTableReference;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
@@ -566,7 +565,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 					if ( selectableMapping == null ) {
 						// If there is no selectable mapping for a table name, we render a null expression
 						selectableMapping = selectableMappings.values().iterator().next();
-						final int sqlType = selectableMapping.getJdbcMapping().getJdbcTypeDescriptor()
+						final int sqlType = selectableMapping.getJdbcMapping().getJdbcType()
 								.getDefaultSqlTypeCode();
 						buf.append( dialect.getSelectClauseNullString( sqlType ) )
 								.append( " as " );

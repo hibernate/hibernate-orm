@@ -25,7 +25,6 @@ import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.MappingModelCreationLogger;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping.IdentifierValueMapper;
@@ -86,7 +85,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 		this.virtualIdEmbeddable = virtualIdEmbeddable;
 
 		this.javaType = sessionFactory.getTypeConfiguration()
-				.getJavaTypeDescriptorRegistry()
+				.getJavaTypeRegistry()
 				.resolveManagedTypeDescriptor( idClassSource.getComponentClass() );
 
 		this.representationStrategy = new IdClassRepresentationStrategy( this );
@@ -160,7 +159,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 			if ( o == null ) {
 				final AttributeMapping idClassAttributeMapping = idClassAttribute.get( i );
 				if ( idClassAttributeMapping.getPropertyAccess().getGetter().getReturnTypeClass().isPrimitive() ) {
-					propertyValues[i] = idClassAttributeMapping.getExpressableJavaTypeDescriptor().getDefaultValue();
+					propertyValues[i] = idClassAttributeMapping.getExpressableJavaType().getDefaultValue();
 				}
 				else {
 					propertyValues[i] = null;
@@ -248,7 +247,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 	}
 
 	@Override
-	public JavaType<?> getMappedJavaTypeDescriptor() {
+	public JavaType<?> getMappedJavaType() {
 		return javaType;
 	}
 

@@ -61,16 +61,16 @@ public class DynamicResultBuilderInstantiation<J>
 		}
 	}
 
-	private final JavaType<J> javaTypeDescriptor;
+	private final JavaType<J> javaType;
 	private final List<InstantiationArgument> argumentResultBuilders;
 
-	public DynamicResultBuilderInstantiation(JavaType<J> javaTypeDescriptor) {
-		this.javaTypeDescriptor = javaTypeDescriptor;
+	public DynamicResultBuilderInstantiation(JavaType<J> javaType) {
+		this.javaType = javaType;
 		this.argumentResultBuilders = new ArrayList<>();
 	}
 
 	private DynamicResultBuilderInstantiation(DynamicResultBuilderInstantiation<J> original) {
-		this.javaTypeDescriptor = original.javaTypeDescriptor;
+		this.javaType = original.javaType;
 		final List<InstantiationArgument> arguments = new ArrayList<>( original.argumentResultBuilders.size() );
 		for ( InstantiationArgument argument : original.argumentResultBuilders ) {
 			arguments.add(
@@ -86,7 +86,7 @@ public class DynamicResultBuilderInstantiation<J>
 
 	@Override
 	public Class<?> getJavaType() {
-		return javaTypeDescriptor.getJavaTypeClass();
+		return javaType.getJavaTypeClass();
 	}
 
 	@Override
@@ -132,7 +132,7 @@ public class DynamicResultBuilderInstantiation<J>
 		return new DynamicInstantiationResultImpl<>(
 				null,
 				DynamicInstantiationNature.CLASS,
-				javaTypeDescriptor,
+				javaType,
 				argumentDomainResults
 		);
 	}
@@ -148,7 +148,7 @@ public class DynamicResultBuilderInstantiation<J>
 
 		DynamicResultBuilderInstantiation<?> that = (DynamicResultBuilderInstantiation<?>) o;
 
-		if ( !javaTypeDescriptor.equals( that.javaTypeDescriptor ) ) {
+		if ( !javaType.equals( that.javaType ) ) {
 			return false;
 		}
 		return argumentResultBuilders.equals( that.argumentResultBuilders );
@@ -156,7 +156,7 @@ public class DynamicResultBuilderInstantiation<J>
 
 	@Override
 	public int hashCode() {
-		int result = javaTypeDescriptor.hashCode();
+		int result = javaType.hashCode();
 		result = 31 * result + argumentResultBuilders.hashCode();
 		return result;
 	}

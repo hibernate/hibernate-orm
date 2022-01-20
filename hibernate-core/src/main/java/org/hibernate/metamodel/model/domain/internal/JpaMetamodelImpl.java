@@ -59,8 +59,8 @@ import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.query.sqm.tree.domain.SqmPolymorphicRootDescriptor;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.spi.DynamicModelJtd;
-import org.hibernate.type.descriptor.java.spi.EntityJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.DynamicModelJavaType;
+import org.hibernate.type.descriptor.java.spi.EntityJavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -447,7 +447,7 @@ public class JpaMetamodelImpl implements JpaMetamodel, Serializable {
 			}
 			if ( !matchingDescriptors.isEmpty() ) {
 				final SqmPolymorphicRootDescriptor<T> descriptor = new SqmPolymorphicRootDescriptor<>(
-						typeConfiguration.getJavaTypeDescriptorRegistry().resolveDescriptor( javaType ),
+						typeConfiguration.getJavaTypeRegistry().resolveDescriptor( javaType ),
 						matchingDescriptors
 				);
 				polymorphicEntityReferenceMap.putIfAbsent( javaType, descriptor );
@@ -505,7 +505,7 @@ public class JpaMetamodelImpl implements JpaMetamodel, Serializable {
 					if ( embeddable.getJavaType() != null && embeddable.getJavaType() != Map.class ) {
 						this.jpaEmbeddables.add( embeddable );
 						this.jpaManagedTypes.add( embeddable );
-						if ( !( embeddable.getExpressableJavaTypeDescriptor() instanceof EntityJavaTypeDescriptor<?> ) ) {
+						if ( !( embeddable.getExpressableJavaType() instanceof EntityJavaType<?> ) ) {
 							this.jpaManagedTypeMap.put( embeddable.getJavaType(), embeddable );
 						}
 					}
@@ -514,7 +514,7 @@ public class JpaMetamodelImpl implements JpaMetamodel, Serializable {
 					this.jpaEmbeddables.add( embeddable );
 					this.jpaManagedTypes.add( embeddable );
 					if ( embeddable.getJavaType() != null
-							&& !( embeddable.getExpressableJavaTypeDescriptor() instanceof EntityJavaTypeDescriptor<?> ) ) {
+							&& !( embeddable.getExpressableJavaType() instanceof EntityJavaType<?> ) ) {
 						this.jpaManagedTypeMap.put( embeddable.getJavaType(), embeddable );
 					}
 					break;
@@ -522,7 +522,7 @@ public class JpaMetamodelImpl implements JpaMetamodel, Serializable {
 					if ( embeddable.getJavaType() == null ) {
 						throw new UnsupportedOperationException( "ANY not supported" );
 					}
-					if ( !( embeddable.getExpressableJavaTypeDescriptor() instanceof EntityJavaTypeDescriptor<?> ) ) {
+					if ( !( embeddable.getExpressableJavaType() instanceof EntityJavaType<?> ) ) {
 						this.jpaManagedTypeMap.put( embeddable.getJavaType(), embeddable );
 					}
 					break;
@@ -598,20 +598,20 @@ public class JpaMetamodelImpl implements JpaMetamodel, Serializable {
 					: locateOrBuildEntityType( superPersistentClass, context, typeConfiguration );
 		}
 
-		final Class<?> javaType = persistentClass.getMappedClass();
-		final JavaType<?> javaTypeDescriptor;
-		if ( javaType == null || Map.class.isAssignableFrom( javaType ) ) {
+		final Class<?> javaTypeClass = persistentClass.getMappedClass();
+		final JavaType<?> javaType;
+		if ( javaTypeClass == null || Map.class.isAssignableFrom( javaTypeClass ) ) {
 			// dynamic map
-			javaTypeDescriptor = new DynamicModelJtd();
+			javaType = new DynamicModelJavaType();
 		}
 		else {
-			javaTypeDescriptor = context.getTypeConfiguration()
-					.getJavaTypeDescriptorRegistry()
-					.resolveEntityTypeDescriptor( javaType );
+			javaType = context.getTypeConfiguration()
+					.getJavaTypeRegistry()
+					.resolveEntityTypeDescriptor( javaTypeClass );
 		}
 
 		final EntityTypeImpl<?> entityType = new EntityTypeImpl(
-				javaTypeDescriptor,
+				javaType,
 				superType,
 				persistentClass,
 				this
@@ -660,11 +660,11 @@ public class JpaMetamodelImpl implements JpaMetamodel, Serializable {
 					? null
 					: locateOrBuildEntityType( superPersistentClass, context, typeConfiguration );
 		}
-		final JavaType<?> javaTypeDescriptor = context.getTypeConfiguration()
-				.getJavaTypeDescriptorRegistry()
+		final JavaType<?> javaType = context.getTypeConfiguration()
+				.getJavaTypeRegistry()
 				.resolveManagedTypeDescriptor( mappedSuperclass.getMappedClass() );
 		final MappedSuperclassTypeImpl<?> mappedSuperclassType = new MappedSuperclassTypeImpl(
-				javaTypeDescriptor,
+				javaType,
 				mappedSuperclass,
 				superType,
 				this

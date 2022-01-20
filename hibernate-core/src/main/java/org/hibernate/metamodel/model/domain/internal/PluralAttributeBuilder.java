@@ -69,7 +69,7 @@ public class PluralAttributeBuilder<D, C, E, K> {
 			MetadataContext metadataContext) {
 
 		final JavaType<Y> attributeJtd = metadataContext.getTypeConfiguration()
-				.getJavaTypeDescriptorRegistry()
+				.getJavaTypeRegistry()
 				.getDescriptor( attributeMetadata.getJavaType() );
 
 		final PluralAttributeBuilder builder = new PluralAttributeBuilder(
@@ -151,7 +151,7 @@ public class PluralAttributeBuilder<D, C, E, K> {
 		return listIndexOrMapKeyType;
 	}
 
-	public JavaType<C> getCollectionJavaTypeDescriptor() {
+	public JavaType<C> getCollectionJavaType() {
 		return collectionJtd;
 	}
 

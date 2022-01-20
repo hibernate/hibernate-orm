@@ -46,7 +46,7 @@ public class BooleanMappingTests {
 			final JdbcMapping jdbcMapping = implicit.getJdbcMapping();
 			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaType(), equalTo(Boolean.class));
 			assertThat(
-					jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(),
+					jdbcMapping.getJdbcType().getJdbcTypeCode(),
 					// the implicit mapping will depend on the Dialect
 					isOneOf(Types.BOOLEAN, Types.BIT, Types.TINYINT)
 			);
@@ -61,7 +61,7 @@ public class BooleanMappingTests {
 			final JdbcMapping jdbcMapping = convertedYesNo.getJdbcMapping();
 			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaType(), equalTo(Character.class));
 			assertThat(
-					jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(),
+					jdbcMapping.getJdbcType().getJdbcTypeCode(),
 					// could be NCHAR if nationalization is globally enabled
 					isOneOf(Types.CHAR, Types.NCHAR)
 			);
@@ -72,7 +72,7 @@ public class BooleanMappingTests {
 			final JdbcMapping jdbcMapping = convertedTrueFalse.getJdbcMapping();
 			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaType(), equalTo(Character.class));
 			assertThat(
-					jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(),
+					jdbcMapping.getJdbcType().getJdbcTypeCode(),
 					// could be NCHAR if nationalization is globally enabled
 					isOneOf(Types.CHAR, Types.NCHAR)
 			);
@@ -83,7 +83,7 @@ public class BooleanMappingTests {
 			final JdbcMapping jdbcMapping = convertedNumeric.getJdbcMapping();
 			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaType(), equalTo(Integer.class));
 			assertThat(
-					jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(),
+					jdbcMapping.getJdbcType().getJdbcTypeCode(),
 					equalTo(Types.INTEGER)
 			);
 		}

@@ -24,7 +24,7 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 
@@ -224,12 +224,12 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 					if ( namedClass != null ) {
 						final JavaTypeRegistry javaTypeRegistry = creationContext.getJpaMetamodel()
 								.getTypeConfiguration()
-								.getJavaTypeDescriptorRegistry();
+								.getJavaTypeRegistry();
 
 						if ( namedClass.isEnum() ) {
 							return new SqmEnumLiteral(
 									Enum.valueOf( (Class) namedClass, terminal ),
-									(EnumJavaTypeDescriptor) javaTypeRegistry.resolveDescriptor( namedClass ),
+									(EnumJavaType) javaTypeRegistry.resolveDescriptor( namedClass ),
 									terminal,
 									creationContext.getNodeBuilder()
 							);

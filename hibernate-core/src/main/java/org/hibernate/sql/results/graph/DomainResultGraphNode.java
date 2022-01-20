@@ -28,7 +28,7 @@ public interface DomainResultGraphNode {
 
 	// todo (6.0) : result variable (selection alias)?  - even fetches can have alias
 
-	JavaType<?> getResultJavaTypeDescriptor();
+	JavaType<?> getResultJavaType();
 
 	/**
 	 * The NavigablePath for this node (if one!).  Certain nodes will not

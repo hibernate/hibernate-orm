@@ -34,23 +34,23 @@ public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationRe
 	private final String resultVariable;
 
 	private final DynamicInstantiationNature nature;
-	private final JavaType<R> javaTypeDescriptor;
+	private final JavaType<R> javaType;
 	private final List<ArgumentDomainResult<?>> argumentResults;
 
 	public DynamicInstantiationResultImpl(
 			String resultVariable,
 			DynamicInstantiationNature nature,
-			JavaType<R> javaTypeDescriptor,
+			JavaType<R> javaType,
 			List<ArgumentDomainResult<?>> argumentResults) {
 		this.resultVariable = resultVariable;
 		this.nature = nature;
-		this.javaTypeDescriptor = javaTypeDescriptor;
+		this.javaType = javaType;
 		this.argumentResults = argumentResults;
 	}
 
 	@Override
-	public JavaType<R> getResultJavaTypeDescriptor() {
-		return javaTypeDescriptor;
+	public JavaType<R> getResultJavaType() {
+		return javaType;
 	}
 
 	@Override
@@ -125,7 +125,7 @@ public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationRe
 				log.debug( "One or more arguments for List dynamic instantiation (`new list(...)`) specified an alias; ignoring" );
 			}
 			return (DomainResultAssembler<R>) new DynamicInstantiationAssemblerListImpl(
-					(JavaType<List<?>>) javaTypeDescriptor,
+					(JavaType<List<?>>) javaType,
 					argumentReaders
 			);
 		}
@@ -139,14 +139,14 @@ public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationRe
 				);
 			}
 			return (DomainResultAssembler<R>) new DynamicInstantiationAssemblerMapImpl(
-					(JavaType<Map<?,?>>) javaTypeDescriptor,
+					(JavaType<Map<?,?>>) javaType,
 					argumentReaders
 			);
 		}
 		else {
 			// find a constructor matching argument types
 			constructor_loop:
-			for ( Constructor<?> constructor : javaTypeDescriptor.getJavaTypeClass().getDeclaredConstructors() ) {
+			for ( Constructor<?> constructor : javaType.getJavaTypeClass().getDeclaredConstructors() ) {
 				final Type[] genericParameterTypes = constructor.getGenericParameterTypes();
 				if ( genericParameterTypes.length != argumentReaders.size() ) {
 					continue;
@@ -157,12 +157,12 @@ public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationRe
 					final JavaType<?> argumentTypeDescriptor = creationState.getSqlAstCreationContext()
 							.getDomainModel()
 							.getTypeConfiguration()
-							.getJavaTypeDescriptorRegistry()
+							.getJavaTypeRegistry()
 							.resolveDescriptor( genericParameterTypes[i] );
 
 					final boolean assignmentCompatible = Compatibility.areAssignmentCompatible(
 							argumentTypeDescriptor,
-							argumentReader.getAssembledJavaTypeDescriptor()
+							argumentReader.getAssembledJavaType()
 					);
 					if ( !assignmentCompatible ) {
 						if ( log.isDebugEnabled() ) {
@@ -181,7 +181,7 @@ public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationRe
 				//noinspection rawtypes
 				return new DynamicInstantiationAssemblerConstructorImpl(
 						constructor,
-						javaTypeDescriptor,
+						javaType,
 						argumentReaders
 				);
 			}
@@ -189,7 +189,7 @@ public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationRe
 			if ( log.isDebugEnabled() ) {
 				log.debugf(
 						"Could not locate appropriate constructor for dynamic instantiation of [%s]; attempting bean-injection instantiation",
-						javaTypeDescriptor.getJavaType().getTypeName()
+						javaType.getJavaType().getTypeName()
 				);
 			}
 
@@ -206,7 +206,7 @@ public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationRe
 			}
 
 			return new DynamicInstantiationAssemblerInjectionImpl<>(
-					javaTypeDescriptor,
+					javaType,
 					argumentReaders
 			);
 		}

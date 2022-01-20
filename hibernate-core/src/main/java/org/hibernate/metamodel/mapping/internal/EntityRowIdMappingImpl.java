@@ -58,7 +58,7 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping, SelectableMap
 	}
 
 	@Override
-	public JavaType<?> getJavaTypeDescriptor() {
+	public JavaType<?> getJavaType() {
 		return rowIdType.getJavaTypeDescriptor();
 	}
 

@@ -7,7 +7,6 @@
 package org.hibernate.userguide.mapping.basic;
 
 import java.sql.Types;
-import java.util.Currency;
 import java.util.Locale;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -37,13 +36,13 @@ public class LocaleMappingTests {
 	@Test
 	public void verifyMappings(SessionFactoryScope scope) {
 		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
-		final JdbcTypeRegistry jdbcRegistry = domainModel.getTypeConfiguration().getJdbcTypeDescriptorRegistry();
+		final JdbcTypeRegistry jdbcRegistry = domainModel.getTypeConfiguration().getJdbcTypeRegistry();
 		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor(EntityWithLocale.class);
 
 		final BasicAttributeMapping duration = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("locale");
 		final JdbcMapping jdbcMapping = duration.getJdbcMapping();
 		assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Locale.class));
-		assertThat(jdbcMapping.getJdbcTypeDescriptor(), equalTo(jdbcRegistry.getDescriptor(Types.VARCHAR)));
+		assertThat( jdbcMapping.getJdbcType(), equalTo( jdbcRegistry.getDescriptor( Types.VARCHAR)));
 
 		scope.inTransaction(
 				(session) -> {

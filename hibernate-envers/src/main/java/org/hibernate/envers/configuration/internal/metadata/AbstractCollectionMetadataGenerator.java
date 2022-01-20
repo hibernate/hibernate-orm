@@ -541,8 +541,8 @@ public abstract class AbstractCollectionMetadataGenerator extends AbstractMetada
 			if ( !type.isComponentType() && !type.isAssociationType() && type instanceof BasicType<?> ) {
 				final BasicType<?> basicType = (BasicType<?>) type;
 				return basicType.getJavaType() == String.class && (
-						basicType.getJdbcTypeDescriptor().getJdbcTypeCode() == Types.CLOB
-								|| basicType.getJdbcTypeDescriptor().getJdbcTypeCode() == Types.NCLOB
+						basicType.getJdbcType().getJdbcTypeCode() == Types.CLOB
+								|| basicType.getJdbcType().getJdbcTypeCode() == Types.NCLOB
 				);
 			}
 		}

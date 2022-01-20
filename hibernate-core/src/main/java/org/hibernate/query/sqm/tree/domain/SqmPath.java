@@ -109,7 +109,7 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 
 	@Override
 	default JavaType<T> getJavaTypeDescriptor() {
-		return getNodeType().getExpressableJavaTypeDescriptor();
+		return getNodeType().getExpressableJavaType();
 	}
 
 	@Override

@@ -434,7 +434,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		//noinspection unchecked
 		return new SqmJpaCompoundSelection<>(
 				(List<SqmSelectableNode<?>>) selections,
-				getTypeConfiguration().getJavaTypeDescriptorRegistry().getDescriptor( Tuple.class ),
+				getTypeConfiguration().getJavaTypeRegistry().getDescriptor( Tuple.class ),
 				this
 		);
 	}
@@ -501,7 +501,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		//noinspection unchecked
 		return new SqmJpaCompoundSelection<>(
 				(List<SqmSelectableNode<?>>) selections,
-				getTypeConfiguration().getJavaTypeDescriptorRegistry().getDescriptor( resultClass ),
+				getTypeConfiguration().getJavaTypeRegistry().getDescriptor( resultClass ),
 				this
 		);
 	}
@@ -977,23 +977,23 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	class MultiValueParameterType<T> implements SqmExpressable<T> {
-		private final JavaType<T> javaTypeDescriptor;
+		private final JavaType<T> javaType;
 
 		public MultiValueParameterType(Class<T> type) {
-			this.javaTypeDescriptor = domainModelAccess.get()
+			this.javaType = domainModelAccess.get()
 					.getTypeConfiguration()
-					.getJavaTypeDescriptorRegistry()
+					.getJavaTypeRegistry()
 					.getDescriptor( type );
 		}
 
 		@Override
-		public JavaType<T> getExpressableJavaTypeDescriptor() {
-			return javaTypeDescriptor;
+		public JavaType<T> getExpressableJavaType() {
+			return javaType;
 		}
 
 		@Override
 		public Class<T> getBindableJavaType() {
-			return javaTypeDescriptor.getJavaTypeClass();
+			return javaType.getJavaTypeClass();
 		}
 	}
 

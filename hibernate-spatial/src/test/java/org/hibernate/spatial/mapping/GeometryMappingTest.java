@@ -9,7 +9,7 @@ package org.hibernate.spatial.mapping;
 
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.spatial.GeolatteGeometryJavaTypeDescriptor;
+import org.hibernate.spatial.GeolatteGeometryJavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
@@ -40,14 +40,14 @@ public class GeometryMappingTest {
 				.getEntityDescriptor( MLEntity.class );
 		final JdbcTypeRegistry jdbcTypeRegistry = entityDescriptor.getFactory()
 				.getTypeConfiguration()
-				.getJdbcTypeDescriptorRegistry();
+				.getJdbcTypeRegistry();
 
 		final JavaTypeRegistry javaTypeRegistry = entityDescriptor.getFactory()
 				.getTypeConfiguration()
-				.getJavaTypeDescriptorRegistry();
+				.getJavaTypeRegistry();
 
 		ModelPart part = entityDescriptor.findSubPart( "lineString" );
-		assertThat( part.getJavaTypeDescriptor(), equalTo( GeolatteGeometryJavaTypeDescriptor.MULTILINESTRING_INSTANCE ) );
+		assertThat( part.getJavaType(), equalTo( GeolatteGeometryJavaType.MULTILINESTRING_INSTANCE ) );
 
 	}
 }

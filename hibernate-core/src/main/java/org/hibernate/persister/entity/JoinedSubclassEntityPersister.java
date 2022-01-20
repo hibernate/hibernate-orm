@@ -190,7 +190,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 				else {
 					try {
 						discriminatorValue = discriminatorType.getJavaTypeDescriptor().fromString( persistentClass.getDiscriminatorValue() );
-						discriminatorSQLString = discriminatorType.getJdbcTypeDescriptor().getJdbcLiteralFormatter( (JavaType) discriminatorType.getJavaTypeDescriptor() )
+						discriminatorSQLString = discriminatorType.getJdbcType().getJdbcLiteralFormatter( (JavaType) discriminatorType.getJavaTypeDescriptor() )
 								.toJdbcLiteral(
 										discriminatorValue,
 										factory.getJdbcServices().getDialect(),

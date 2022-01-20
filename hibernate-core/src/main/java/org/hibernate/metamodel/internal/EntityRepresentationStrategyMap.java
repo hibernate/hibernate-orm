@@ -45,7 +45,7 @@ public class EntityRepresentationStrategyMap implements EntityRepresentationStra
 			PersistentClass bootType,
 			RuntimeModelCreationContext creationContext) {
 		this.mapJtd = creationContext.getTypeConfiguration()
-				.getJavaTypeDescriptorRegistry()
+				.getJavaTypeRegistry()
 				.getDescriptor( Map.class );
 
 		this.proxyFactory = createProxyFactory( bootType );
@@ -120,12 +120,12 @@ public class EntityRepresentationStrategyMap implements EntityRepresentationStra
 	}
 
 	@Override
-	public JavaType<?> getMappedJavaTypeDescriptor() {
+	public JavaType<?> getMappedJavaType() {
 		return mapJtd;
 	}
 
 	@Override
-	public JavaType<?> getProxyJavaTypeDescriptor() {
+	public JavaType<?> getProxyJavaType() {
 		return null;
 	}
 

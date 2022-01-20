@@ -116,8 +116,8 @@ public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions,
 	}
 
 	@Override
-	public JavaType<?> getJavaTypeDescriptor() {
-		return jdbcMapping().getMappedJavaTypeDescriptor();
+	public JavaType<?> getJavaType() {
+		return jdbcMapping().getMappedJavaType();
 	}
 
 	@Override
@@ -241,7 +241,7 @@ public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions,
 		);
 		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 				columnReference,
-				jdbcMapping().getMappedJavaTypeDescriptor(),
+				jdbcMapping().getMappedJavaType(),
 				sessionFactory.getTypeConfiguration()
 		);
 

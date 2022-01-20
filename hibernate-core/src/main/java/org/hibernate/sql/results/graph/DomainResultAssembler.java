@@ -34,8 +34,8 @@ public interface DomainResultAssembler<J> {
 	}
 
 	/**
-	 * The JavaTypeDescriptor describing the Java type that this assembler
+	 * The JavaType describing the Java type that this assembler
 	 * assembles.
 	 */
-	JavaType<J> getAssembledJavaTypeDescriptor();
+	JavaType<J> getAssembledJavaType();
 }

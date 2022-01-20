@@ -79,7 +79,7 @@ import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.DynamicParameterizedType;
 import org.hibernate.usertype.UserType;
@@ -105,7 +105,7 @@ import static org.hibernate.cfg.annotations.HCANNHelper.findAnnotation;
  * @author Steve Ebersole
  * @author Emmanuel Bernard
  */
-public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
+public class BasicValueBinder<T> implements JdbcTypeIndicators {
 
 	// todo (6.0) : In light of how we want to build Types (specifically BasicTypes) moving forward this class should undergo major changes
 	//		see the comments in #setType
@@ -437,7 +437,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 			final CollectionIdJdbcTypeCode jdbcTypeCodeAnn = findAnnotation( modelXProperty, CollectionIdJdbcTypeCode.class );
 			if ( jdbcTypeCodeAnn != null ) {
 				if ( jdbcTypeCodeAnn.value() != Integer.MIN_VALUE ) {
-					return typeConfiguration.getJdbcTypeDescriptorRegistry().getDescriptor( jdbcTypeCodeAnn.value() );
+					return typeConfiguration.getJdbcTypeRegistry().getDescriptor( jdbcTypeCodeAnn.value() );
 				}
 			}
 
@@ -482,7 +482,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 				return ImmutableMutabilityPlan.instance();
 			}
 
-			// generally, this will trigger usage of the `JavaTypeDescriptor#getMutabilityPlan`
+			// generally, this will trigger usage of the `JavaType#getMutabilityPlan`
 			return null;
 		};
 
@@ -534,7 +534,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 			if ( jdbcTypeCodeAnn != null ) {
 				final int jdbcTypeCode = jdbcTypeCodeAnn.value();
 				if ( jdbcTypeCode != Integer.MIN_VALUE ) {
-					return typeConfiguration.getJdbcTypeDescriptorRegistry().getDescriptor( jdbcTypeCode );
+					return typeConfiguration.getJdbcTypeRegistry().getDescriptor( jdbcTypeCode );
 				}
 			}
 
@@ -553,7 +553,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 
 			final MapKeyClass mapKeyClassAnn = mapAttribute.getAnnotation( MapKeyClass.class );
 			if ( mapKeyClassAnn != null ) {
-				return (BasicJavaType) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( mapKeyClassAnn.value() );
+				return (BasicJavaType) typeConfiguration.getJavaTypeRegistry().getDescriptor( mapKeyClassAnn.value() );
 			}
 
 			return null;
@@ -599,7 +599,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 				}
 			}
 
-			// generally, this will trigger usage of the `JavaTypeDescriptor#getMutabilityPlan`
+			// generally, this will trigger usage of the `JavaType#getMutabilityPlan`
 			return null;
 		};
 	}
@@ -637,7 +637,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 
 			final ListIndexJdbcTypeCode jdbcTypeCodeAnn = findAnnotation( listAttribute, ListIndexJdbcTypeCode.class );
 			if ( jdbcTypeCodeAnn != null ) {
-				return typeConfiguration.getJdbcTypeDescriptorRegistry().getDescriptor( jdbcTypeCodeAnn.value() );
+				return typeConfiguration.getJdbcTypeRegistry().getDescriptor( jdbcTypeCodeAnn.value() );
 			}
 
 			return null;
@@ -811,7 +811,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 				}
 
 				return (BasicJavaType) typeConfiguration
-						.getJavaTypeDescriptorRegistry()
+						.getJavaTypeRegistry()
 						.getDescriptor( elementCollectionAnn.targetClass() );
 			};
 		}
@@ -904,7 +904,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 
 			final Class<?> hintedJavaType = (Class<?>) implicitJavaTypeAccess.apply( typeConfiguration );
 			final JavaType<Object> hintedDescriptor = typeConfiguration
-					.getJavaTypeDescriptorRegistry()
+					.getJavaTypeRegistry()
 					.getDescriptor( hintedJavaType );
 			return hintedDescriptor.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() );
 		};
@@ -932,7 +932,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 			if ( javaClassAnn != null ) {
 				//noinspection rawtypes
 				return (BasicJavaType) typeConfiguration
-						.getJavaTypeDescriptorRegistry()
+						.getJavaTypeRegistry()
 						.getDescriptor( javaClassAnn.value() );
 			}
 
@@ -952,7 +952,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 			final AnyKeyJdbcTypeCode jdbcTypeCodeAnn = findAnnotation( modelXProperty, AnyKeyJdbcTypeCode.class );
 			if ( jdbcTypeCodeAnn != null ) {
 				if ( jdbcTypeCodeAnn.value() != Integer.MIN_VALUE ) {
-					return typeConfiguration.getJdbcTypeDescriptorRegistry().getDescriptor( jdbcTypeCodeAnn.value() );
+					return typeConfiguration.getJdbcTypeRegistry().getDescriptor( jdbcTypeCodeAnn.value() );
 				}
 			}
 
@@ -981,7 +981,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 			if ( jdbcTypeCodeAnn != null ) {
 				final int jdbcTypeCode = jdbcTypeCodeAnn.value();
 				if ( jdbcTypeCode != Integer.MIN_VALUE ) {
-					return typeConfiguration.getJdbcTypeDescriptorRegistry().getDescriptor( jdbcTypeCode );
+					return typeConfiguration.getJdbcTypeRegistry().getDescriptor( jdbcTypeCode );
 				}
 			}
 
@@ -1041,7 +1041,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 				}
 			}
 
-			// generally, this will trigger usage of the `JavaTypeDescriptor#getMutabilityPlan`
+			// generally, this will trigger usage of the `JavaType#getMutabilityPlan`
 			return null;
 		};
 	}
@@ -1067,7 +1067,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 			final Target targetAnn = findAnnotation( attributeXProperty, Target.class );
 			if ( targetAnn != null ) {
 				return (BasicJavaType) typeConfiguration
-						.getJavaTypeDescriptorRegistry()
+						.getJavaTypeRegistry()
 						.getDescriptor( targetAnn.value() );
 			}
 

@@ -19,9 +19,9 @@ public interface SqmTypedNode<T> extends SqmNode, SqmExpressableAccessor<T> {
 	/**
 	 * The Java type descriptor for this node.
 	 */
-	default JavaType<T> getNodeJavaTypeDescriptor() {
+	default JavaType<T> getNodeJavaType() {
 		final SqmExpressable<T> nodeType = getNodeType();
-		return nodeType != null ? nodeType.getExpressableJavaTypeDescriptor() : null;
+		return nodeType != null ? nodeType.getExpressableJavaType() : null;
 	}
 
 	@Override

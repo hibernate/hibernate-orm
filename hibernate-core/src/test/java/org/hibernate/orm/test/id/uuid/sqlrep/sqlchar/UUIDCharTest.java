@@ -57,7 +57,7 @@ public class UUIDCharTest {
 		final List<JdbcMapping> identifierJdbcMappings = entityDescriptor.getIdentifierMapping().getJdbcMappings();
 		assertThat( identifierJdbcMappings, hasSize( 1 ) );
 		final JdbcMapping jdbcMapping = identifierJdbcMappings.get( 0 );
-		assertThat( jdbcMapping.getJdbcTypeDescriptor().isString(), is( true ) );
+		assertThat( jdbcMapping.getJdbcType().isString(), is( true ) );
 
 		final UUIDPair uuidPair = scope.fromTransaction( session -> {
 			final Node root = new Node( "root" );

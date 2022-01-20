@@ -353,7 +353,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	}
 
 	@Override
-	public JavaType<?> getJavaTypeDescriptor() {
+	public JavaType<?> getJavaType() {
 		return targetSide.getModelPart().getJdbcMapping().getJavaTypeDescriptor();
 	}
 

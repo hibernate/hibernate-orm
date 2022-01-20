@@ -59,54 +59,54 @@ public class VarbinaryJdbcType implements AdjustableJdbcType {
 			Integer length,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
-		return (BasicJavaType<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( byte[].class );
+		return (BasicJavaType<T>) typeConfiguration.getJavaTypeRegistry().getDescriptor( byte[].class );
 	}
 
 	@Override
-	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaTypeDescriptor) {
+	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaType) {
 		//noinspection unchecked
-		return supportsLiterals ? new JdbcLiteralFormatterBinary( javaTypeDescriptor ) : null;
+		return supportsLiterals ? new JdbcLiteralFormatterBinary( javaType ) : null;
 	}
 
 	@Override
-	public JdbcType resolveIndicatedType(JdbcTypeDescriptorIndicators indicators, JavaType<?> domainJtd) {
-		final JdbcTypeRegistry jdbcTypeRegistry = indicators.getTypeConfiguration().getJdbcTypeDescriptorRegistry();
+	public JdbcType resolveIndicatedType(JdbcTypeIndicators indicators, JavaType<?> domainJtd) {
+		final JdbcTypeRegistry jdbcTypeRegistry = indicators.getTypeConfiguration().getJdbcTypeRegistry();
 		return indicators.isLob()
 				? jdbcTypeRegistry.getDescriptor( Types.BLOB )
 				: this;
 	}
 
-	public <X> ValueBinder<X> getBinder(final JavaType<X> javaTypeDescriptor) {
-		return new BasicBinder<X>( javaTypeDescriptor, this ) {
+	public <X> ValueBinder<X> getBinder(final JavaType<X> javaType) {
+		return new BasicBinder<X>( javaType, this ) {
 
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
-				st.setBytes( index, javaTypeDescriptor.unwrap( value, byte[].class, options ) );
+				st.setBytes( index, javaType.unwrap( value, byte[].class, options ) );
 			}
 
 			@Override
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
-				st.setBytes( name, javaTypeDescriptor.unwrap( value, byte[].class, options ) );
+				st.setBytes( name, javaType.unwrap( value, byte[].class, options ) );
 			}
 		};
 	}
 
-	public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaTypeDescriptor) {
-		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
+	public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaType) {
+		return new BasicExtractor<X>( javaType, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( rs.getBytes( paramIndex ), options );
+				return javaType.wrap( rs.getBytes( paramIndex ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( statement.getBytes( index ), options );
+				return javaType.wrap( statement.getBytes( index ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( statement.getBytes( name ), options );
+				return javaType.wrap( statement.getBytes( name ), options );
 			}
 		};
 	}

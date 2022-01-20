@@ -377,7 +377,7 @@ public interface EntityPersister
 	 */
 	BasicType<?> getVersionType();
 
-	default VersionJavaType<Object> getVersionJavaTypeDescriptor() {
+	default VersionJavaType<Object> getVersionJavaType() {
 		final BasicType<?> versionType = getVersionType();
 		//noinspection unchecked
 		return versionType == null

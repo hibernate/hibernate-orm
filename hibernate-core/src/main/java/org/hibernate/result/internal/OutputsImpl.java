@@ -161,7 +161,7 @@ public class OutputsImpl implements Outputs {
 
 		final JavaTypeRegistry javaTypeRegistry = context.getSession()
 				.getTypeConfiguration()
-				.getJavaTypeDescriptorRegistry();
+				.getJavaTypeRegistry();
 		procedureCall.getParameterBindings().visitBindings(
 				(parameterImplementor, queryParameterBinding) -> {
 					ProcedureParameter parameter = (ProcedureParameter) parameterImplementor;

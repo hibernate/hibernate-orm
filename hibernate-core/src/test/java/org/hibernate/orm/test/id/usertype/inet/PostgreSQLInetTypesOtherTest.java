@@ -45,8 +45,8 @@ public class PostgreSQLInetTypesOtherTest extends BaseEntityManagerFunctionalTes
 					final TypeConfiguration typeConfiguration = metadataBuilder.unwrap( MetadataBuilderImplementor.class )
 							.getBootstrapContext()
 							.getTypeConfiguration();
-					typeConfiguration.getJavaTypeDescriptorRegistry().addDescriptor( InetJavaTypeDescriptor.INSTANCE );
-					typeConfiguration.getJdbcTypeDescriptorRegistry().addDescriptor( InetJdbcType.INSTANCE );
+					typeConfiguration.getJavaTypeRegistry().addDescriptor( InetJavaType.INSTANCE );
+					typeConfiguration.getJdbcTypeRegistry().addDescriptor( InetJdbcType.INSTANCE );
 					metadataBuilder.applyBasicType(
 							InetType.INSTANCE, InetType.INSTANCE.getName()
 					);

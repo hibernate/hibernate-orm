@@ -111,7 +111,7 @@ public class BasicValuedCollectionPart
 	}
 
 	@Override
-	public JavaType<?> getJavaTypeDescriptor() {
+	public JavaType<?> getJavaType() {
 		return selectableMapping.getJdbcMapping().getJavaTypeDescriptor();
 	}
 
@@ -137,7 +137,7 @@ public class BasicValuedCollectionPart
 		return new BasicResult(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
-				getJavaTypeDescriptor(),
+				getJavaType(),
 				valueConverter,
 				navigablePath
 		);
@@ -176,7 +176,7 @@ public class BasicValuedCollectionPart
 								creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()
 						)
 				),
-				getJavaTypeDescriptor(),
+				getJavaType(),
 				creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
 		);
 	}
@@ -208,7 +208,7 @@ public class BasicValuedCollectionPart
 
 	@Override
 	public MappingType getMappedType() {
-		return this::getJavaTypeDescriptor;
+		return this::getJavaType;
 	}
 
 	@Override

@@ -139,7 +139,7 @@ public class JpaCriteriaParameter<T>
 
 	@Override
 	public Class<T> getParameterType() {
-		return this.getNodeType().getExpressableJavaTypeDescriptor().getJavaTypeClass();
+		return this.getNodeType().getExpressableJavaType().getJavaTypeClass();
 	}
 
 	@Override

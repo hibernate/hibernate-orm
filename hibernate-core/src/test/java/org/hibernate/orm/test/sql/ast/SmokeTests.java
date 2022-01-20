@@ -133,7 +133,7 @@ public class SmokeTests {
 				session -> {
 					final JdbcTypeRegistry jdbcTypeRegistry = session.getFactory()
 							.getTypeConfiguration()
-							.getJdbcTypeDescriptorRegistry();
+							.getJdbcTypeRegistry();
 					final QueryImplementor<Gender> query = session.createQuery( "select e.gender from SimpleEntity e", Gender.class );
 					final HqlQueryImplementor<Gender> hqlQuery = (HqlQueryImplementor<Gender>) query;
 					final SqmSelectStatement<Gender> sqmStatement = (SqmSelectStatement<Gender>) hqlQuery.getSqmStatement();
@@ -185,7 +185,7 @@ public class SmokeTests {
 					final BasicTypeImpl basicType = (BasicTypeImpl) selectedExpressable;
 					assertThat( basicType.getJavaTypeDescriptor().getJavaTypeClass(), AssignableMatcher.assignableTo( Integer.class ) );
 					assertThat(
-							basicType.getJdbcTypeDescriptor(),
+							basicType.getJdbcType(),
 							is( jdbcTypeRegistry.getDescriptor( Types.TINYINT ) )
 					);
 

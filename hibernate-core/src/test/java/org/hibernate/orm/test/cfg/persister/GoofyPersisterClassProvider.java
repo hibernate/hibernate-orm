@@ -801,7 +801,7 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public JavaType getMappedJavaTypeDescriptor() {
+		public JavaType getMappedJavaType() {
 			return null;
 		}
 	}

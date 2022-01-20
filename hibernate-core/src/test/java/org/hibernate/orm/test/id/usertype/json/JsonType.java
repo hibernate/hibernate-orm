@@ -14,7 +14,7 @@ public class JsonType extends AbstractSingleColumnStandardBasicType<Json> {
 	public static final JsonType INSTANCE = new JsonType();
 
 	public JsonType() {
-		super( PostgreSQLJsonbJdbcType.INSTANCE, JsonJavaTypeDescriptor.INSTANCE );
+		super( PostgreSQLJsonbJdbcType.INSTANCE, JsonJavaType.INSTANCE );
 	}
 
 	@Override

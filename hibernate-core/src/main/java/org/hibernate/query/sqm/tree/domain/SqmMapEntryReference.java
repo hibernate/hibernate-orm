@@ -48,7 +48,7 @@ public class SqmMapEntryReference<K,V>
 
 		this.mapEntryTypeDescriptor = nodeBuilder.getDomainModel()
 				.getTypeConfiguration()
-				.getJavaTypeDescriptorRegistry()
+				.getJavaTypeRegistry()
 				.getDescriptor( Map.Entry.class );
 	}
 
@@ -73,12 +73,12 @@ public class SqmMapEntryReference<K,V>
 	}
 
 	@Override
-	public JavaType<Map.Entry<K, V>> getNodeJavaTypeDescriptor() {
+	public JavaType<Map.Entry<K, V>> getNodeJavaType() {
 		return mapEntryTypeDescriptor;
 	}
 
 	@Override
-	public JavaType<Map.Entry<K, V>> getExpressableJavaTypeDescriptor() {
+	public JavaType<Map.Entry<K, V>> getExpressableJavaType() {
 		return mapEntryTypeDescriptor;
 	}
 

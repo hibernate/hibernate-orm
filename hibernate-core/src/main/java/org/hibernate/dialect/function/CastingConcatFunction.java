@@ -53,8 +53,8 @@ public class CastingConcatFunction extends AbstractSqmSelfRenderingFunctionDescr
 		this.concatArgumentCastType = dialect.getTypeName(
 				SqlTypes.VARCHAR,
 				dialect.getSizeStrategy().resolveSize(
-						typeConfiguration.getJdbcTypeDescriptorRegistry().getDescriptor( SqlTypes.VARCHAR ),
-						typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( String.class ),
+						typeConfiguration.getJdbcTypeRegistry().getDescriptor( SqlTypes.VARCHAR ),
+						typeConfiguration.getJavaTypeRegistry().getDescriptor( String.class ),
 						null,
 						null,
 						null

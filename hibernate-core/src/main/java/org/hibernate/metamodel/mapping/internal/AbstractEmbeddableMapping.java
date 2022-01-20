@@ -68,8 +68,8 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 	}
 
 	@Override
-	public JavaType<?> getMappedJavaTypeDescriptor() {
-		return getRepresentationStrategy().getMappedJavaTypeDescriptor();
+	public JavaType<?> getMappedJavaType() {
+		return getRepresentationStrategy().getMappedJavaType();
 	}
 
 	@Override
@@ -293,7 +293,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 
 				attributeMapping = new DiscriminatedAssociationAttributeMapping(
 						navigableRole.append( bootPropertyDescriptor.getName() ),
-						typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Object.class ),
+						typeConfiguration.getJavaTypeRegistry().getDescriptor( Object.class ),
 						declarer,
 						attributeIndex,
 						attributeMetadataAccess,

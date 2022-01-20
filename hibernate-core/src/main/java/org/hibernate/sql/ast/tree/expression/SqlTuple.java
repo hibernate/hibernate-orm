@@ -63,12 +63,12 @@ public class SqlTuple implements Expression, SqlTupleContainer, DomainResultProd
 	public DomainResult createDomainResult(
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final JavaType javaTypeDescriptor = ( (SqmExpressable<?>) valueMapping ).getExpressableJavaTypeDescriptor();
+		final JavaType javaType = ( (SqmExpressable<?>) valueMapping ).getExpressableJavaType();
 		final int[] valuesArrayPositions = new int[expressions.size()];
 		for ( int i = 0; i < expressions.size(); i++ ) {
 			valuesArrayPositions[i] = creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
 					expressions.get( i ),
-					javaTypeDescriptor,
+					javaType,
 					creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
 			).getValuesArrayPosition();
 		}
@@ -76,7 +76,7 @@ public class SqlTuple implements Expression, SqlTupleContainer, DomainResultProd
 		return new TupleResult(
 				valuesArrayPositions,
 				resultVariable,
-				javaTypeDescriptor
+				javaType
 		);
 	}
 

@@ -29,19 +29,19 @@ import org.hibernate.type.descriptor.java.JavaType;
 public class CompleteResultBuilderInstantiation
 		implements CompleteResultBuilder, ResultBuilderInstantiationValued {
 
-	private final JavaType<?> javaTypeDescriptor;
+	private final JavaType<?> javaType;
 	private final List<ResultBuilder> argumentResultBuilders;
 
 	public CompleteResultBuilderInstantiation(
-			JavaType<?> javaTypeDescriptor,
+			JavaType<?> javaType,
 			List<ResultBuilder> argumentResultBuilders) {
-		this.javaTypeDescriptor = javaTypeDescriptor;
+		this.javaType = javaType;
 		this.argumentResultBuilders = argumentResultBuilders;
 	}
 
 	@Override
 	public Class<?> getJavaType() {
-		return javaTypeDescriptor.getJavaTypeClass();
+		return javaType.getJavaTypeClass();
 	}
 
 	@Override
@@ -75,7 +75,7 @@ public class CompleteResultBuilderInstantiation
 		return new DynamicInstantiationResultImpl<>(
 				null,
 				DynamicInstantiationNature.CLASS,
-				javaTypeDescriptor,
+				javaType,
 				argumentDomainResults
 		);
 	}
@@ -90,13 +90,13 @@ public class CompleteResultBuilderInstantiation
 		}
 
 		final CompleteResultBuilderInstantiation that = (CompleteResultBuilderInstantiation) o;
-		return javaTypeDescriptor.equals( that.javaTypeDescriptor )
+		return javaType.equals( that.javaType )
 				&& argumentResultBuilders.equals( that.argumentResultBuilders );
 	}
 
 	@Override
 	public int hashCode() {
-		int result = javaTypeDescriptor.hashCode();
+		int result = javaType.hashCode();
 		result = 31 * result + argumentResultBuilders.hashCode();
 		return result;
 	}

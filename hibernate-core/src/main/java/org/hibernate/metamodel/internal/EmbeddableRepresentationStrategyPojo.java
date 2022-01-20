@@ -49,7 +49,7 @@ public class EmbeddableRepresentationStrategyPojo extends AbstractEmbeddableRepr
 		super(
 				bootDescriptor,
 				creationContext.getTypeConfiguration()
-						.getJavaTypeDescriptorRegistry()
+						.getJavaTypeRegistry()
 						.resolveDescriptor( bootDescriptor.getComponentClass() ),
 				creationContext
 		);
@@ -82,7 +82,7 @@ public class EmbeddableRepresentationStrategyPojo extends AbstractEmbeddableRepr
 		if ( reflectionOptimizer != null && reflectionOptimizer.getInstantiationOptimizer() != null ) {
 			final ReflectionOptimizer.InstantiationOptimizer instantiationOptimizer = reflectionOptimizer.getInstantiationOptimizer();
 			return new EmbeddableInstantiatorPojoOptimized(
-					getEmbeddableJavaTypeDescriptor(),
+					getEmbeddableJavaType(),
 					runtimeDescriptorAccess,
 					instantiationOptimizer
 			);
@@ -99,7 +99,7 @@ public class EmbeddableRepresentationStrategyPojo extends AbstractEmbeddableRepr
 			);
 		}
 
-		return new EmbeddableInstantiatorPojoStandard( getEmbeddableJavaTypeDescriptor(), runtimeDescriptorAccess );
+		return new EmbeddableInstantiatorPojoStandard( getEmbeddableJavaType(), runtimeDescriptorAccess );
 	}
 
 	@Override
@@ -109,7 +109,7 @@ public class EmbeddableRepresentationStrategyPojo extends AbstractEmbeddableRepr
 
 	@Override
 	protected PropertyAccess buildPropertyAccess(Property bootAttributeDescriptor) {
-		PropertyAccessStrategy strategy = bootAttributeDescriptor.getPropertyAccessStrategy( getEmbeddableJavaTypeDescriptor().getJavaTypeClass() );
+		PropertyAccessStrategy strategy = bootAttributeDescriptor.getPropertyAccessStrategy( getEmbeddableJavaType().getJavaTypeClass() );
 
 		if ( strategy == null ) {
 			final String propertyAccessorName = bootAttributeDescriptor.getPropertyAccessorName();
@@ -146,14 +146,14 @@ public class EmbeddableRepresentationStrategyPojo extends AbstractEmbeddableRepr
 					String.format(
 							Locale.ROOT,
 							"Could not resolve PropertyAccess for attribute `%s#%s`",
-							getEmbeddableJavaTypeDescriptor().getJavaType().getTypeName(),
+							getEmbeddableJavaType().getJavaType().getTypeName(),
 							bootAttributeDescriptor.getName()
 					)
 			);
 		}
 
 		return strategy.buildPropertyAccess(
-				getEmbeddableJavaTypeDescriptor().getJavaTypeClass(),
+				getEmbeddableJavaType().getJavaTypeClass(),
 				bootAttributeDescriptor.getName(),
 				instantiator instanceof StandardEmbeddableInstantiator
 		);

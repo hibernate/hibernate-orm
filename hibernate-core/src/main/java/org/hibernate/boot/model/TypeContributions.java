@@ -24,16 +24,16 @@ public interface TypeContributions {
 	TypeConfiguration getTypeConfiguration();
 
 	/**
-	 * Add the JavaTypeDescriptor to the {@link TypeConfiguration}'s
+	 * Add the JavaType to the {@link TypeConfiguration}'s
 	 * {@link JavaTypeRegistry}
 	 */
-	void contributeJavaTypeDescriptor(JavaType descriptor);
+	void contributeJavaType(JavaType<?> descriptor);
 
 	/**
 	 * Add the JdbcType to the {@link TypeConfiguration}'s
 	 * {@link JdbcTypeRegistry}
 	 */
-	void contributeJdbcTypeDescriptor(JdbcType descriptor);
+	void contributeJdbcType(JdbcType descriptor);
 
 	/**
 	 * Registers a UserType as the implicit (auto-applied) type

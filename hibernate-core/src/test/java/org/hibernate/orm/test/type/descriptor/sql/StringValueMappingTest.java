@@ -19,7 +19,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.StringJavaType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
  */
 @BaseUnitTest
 public class StringValueMappingTest {
-	private final StringJavaTypeDescriptor stringJavaDescriptor = new StringJavaTypeDescriptor();
+	private final StringJavaType stringJavaType = new StringJavaType();
 
 	private final VarcharJdbcType varcharSqlDescriptor = new VarcharJdbcType();
 	private final ClobJdbcType clobSqlDescriptor = ClobJdbcType.DEFAULT;
@@ -80,8 +80,8 @@ public class StringValueMappingTest {
 
 	@Test
 	public void testNormalVarcharHandling() throws SQLException {
-		final ValueExtractor<String> extractor = varcharSqlDescriptor.getExtractor( stringJavaDescriptor );
-		final ValueBinder<String> binder = varcharSqlDescriptor.getBinder( stringJavaDescriptor );
+		final ValueExtractor<String> extractor = varcharSqlDescriptor.getExtractor( stringJavaType );
+		final ValueBinder<String> binder = varcharSqlDescriptor.getBinder( stringJavaType );
 
 		final String fixture = "string value";
 
@@ -95,8 +95,8 @@ public class StringValueMappingTest {
 
 	@Test
 	public void testNullVarcharHandling() throws SQLException {
-		final ValueExtractor<String> extractor = varcharSqlDescriptor.getExtractor( stringJavaDescriptor );
-		final ValueBinder<String> binder = varcharSqlDescriptor.getBinder( stringJavaDescriptor );
+		final ValueExtractor<String> extractor = varcharSqlDescriptor.getExtractor( stringJavaType );
+		final ValueBinder<String> binder = varcharSqlDescriptor.getBinder( stringJavaType );
 
 		final String fixture = null;
 
@@ -110,8 +110,8 @@ public class StringValueMappingTest {
 
 	@Test
 	public void testNormalClobHandling() throws SQLException {
-		final ValueExtractor<String> extractor = clobSqlDescriptor.getExtractor( stringJavaDescriptor );
-		final ValueBinder<String> binder = clobSqlDescriptor.getBinder( stringJavaDescriptor );
+		final ValueExtractor<String> extractor = clobSqlDescriptor.getExtractor( stringJavaType );
+		final ValueBinder<String> binder = clobSqlDescriptor.getBinder( stringJavaType );
 
 		final String fixture = "clob string";
 		final Clob clob = new StringClobImpl( fixture );
@@ -126,8 +126,8 @@ public class StringValueMappingTest {
 
 	@Test
 	public void testNullClobHandling() throws SQLException {
-		final ValueExtractor<String> extractor = clobSqlDescriptor.getExtractor( stringJavaDescriptor );
-		final ValueBinder<String> binder = clobSqlDescriptor.getBinder( stringJavaDescriptor );
+		final ValueExtractor<String> extractor = clobSqlDescriptor.getExtractor( stringJavaType );
+		final ValueBinder<String> binder = clobSqlDescriptor.getBinder( stringJavaType );
 
 		final String fixture = null;
 		final Clob clob = null;

@@ -292,7 +292,7 @@ public class DomainResultCreationStateImpl
 	@Override
 	public SqlSelection resolveSqlSelection(
 			Expression expression,
-			JavaType<?> javaTypeDescriptor,
+			JavaType<?> javaType,
 			TypeConfiguration typeConfiguration) {
 		if ( expression == null ) {
 			throw new IllegalArgumentException( "Expression cannot be null" );

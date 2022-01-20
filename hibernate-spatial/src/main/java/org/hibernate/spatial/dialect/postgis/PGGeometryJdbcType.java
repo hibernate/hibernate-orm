@@ -52,8 +52,8 @@ public class PGGeometryJdbcType implements JdbcType {
 	public static final PGGeometryJdbcType INSTANCE_WKB_2 = new PGGeometryJdbcType( Wkb.Dialect.POSTGIS_EWKB_2 );
 
 	@Override
-	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaTypeDescriptor) {
-		return new PGGeometryLiteralFormatter<>( javaTypeDescriptor );
+	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaType) {
+		return new PGGeometryLiteralFormatter<>( javaType );
 	}
 
 	private PGGeometryJdbcType(Wkb.Dialect dialect) {
@@ -101,8 +101,8 @@ public class PGGeometryJdbcType implements JdbcType {
 	}
 
 	@Override
-	public <X> ValueBinder<X> getBinder(final JavaType<X> javaTypeDescriptor) {
-		return new BasicBinder<X>( javaTypeDescriptor, this ) {
+	public <X> ValueBinder<X> getBinder(final JavaType<X> javaType) {
+		return new BasicBinder<X>( javaType, this ) {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 					throws SQLException {
@@ -119,7 +119,7 @@ public class PGGeometryJdbcType implements JdbcType {
 
 			private PGobject toPGobject(X value, WrapperOptions options) throws SQLException {
 				final WkbEncoder encoder = Wkb.newEncoder( Wkb.Dialect.POSTGIS_EWKB_1 );
-				final Geometry<?> geometry = getJavaTypeDescriptor().unwrap( value, Geometry.class, options );
+				final Geometry<?> geometry = getJavaType().unwrap( value, Geometry.class, options );
 				final String hexString = encoder.encode( geometry, ByteOrder.NDR ).toString();
 				final PGobject obj = new PGobject();
 				obj.setType( "geometry" );
@@ -131,24 +131,24 @@ public class PGGeometryJdbcType implements JdbcType {
 	}
 
 	@Override
-	public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaTypeDescriptor) {
-		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
+	public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaType) {
+		return new BasicExtractor<X>( javaType, this ) {
 
 
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-				return getJavaTypeDescriptor().wrap( toGeometry( rs.getObject( paramIndex ) ), options );
+				return getJavaType().wrap( toGeometry( rs.getObject( paramIndex ) ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-				return getJavaTypeDescriptor().wrap( toGeometry( statement.getObject( index ) ), options );
+				return getJavaType().wrap( toGeometry( statement.getObject( index ) ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
 					throws SQLException {
-				return getJavaTypeDescriptor().wrap( toGeometry( statement.getObject( name ) ), options );
+				return getJavaType().wrap( toGeometry( statement.getObject( name ) ), options );
 			}
 		};
 	}

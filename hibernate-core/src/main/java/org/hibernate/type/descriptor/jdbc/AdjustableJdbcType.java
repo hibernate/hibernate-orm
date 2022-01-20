@@ -20,5 +20,5 @@ public interface AdjustableJdbcType extends JdbcType {
 	/**
 	 * Perform the adjustment
 	 */
-	JdbcType resolveIndicatedType(JdbcTypeDescriptorIndicators indicators, JavaType<?> domainJtd);
+	JdbcType resolveIndicatedType(JdbcTypeIndicators indicators, JavaType<?> domainJtd);
 }

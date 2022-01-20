@@ -152,7 +152,7 @@ import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.LongNVarcharJdbcType;
@@ -1313,14 +1313,14 @@ public abstract class Dialect implements ConversionContext {
 
 		final NationalizationSupport nationalizationSupport = getNationalizationSupport();
 		if ( nationalizationSupport == NationalizationSupport.EXPLICIT ) {
-			typeContributions.contributeJdbcTypeDescriptor( NCharJdbcType.INSTANCE );
-			typeContributions.contributeJdbcTypeDescriptor( NVarcharJdbcType.INSTANCE );
-			typeContributions.contributeJdbcTypeDescriptor( LongNVarcharJdbcType.INSTANCE );
-			typeContributions.contributeJdbcTypeDescriptor( NClobJdbcType.DEFAULT );
+			typeContributions.contributeJdbcType( NCharJdbcType.INSTANCE );
+			typeContributions.contributeJdbcType( NVarcharJdbcType.INSTANCE );
+			typeContributions.contributeJdbcType( LongNVarcharJdbcType.INSTANCE );
+			typeContributions.contributeJdbcType( NClobJdbcType.DEFAULT );
 		}
 
 		if ( useInputStreamToInsertBlob() ) {
-			typeContributions.getTypeConfiguration().getJdbcTypeDescriptorRegistry().addDescriptor(
+			typeContributions.getTypeConfiguration().getJdbcTypeRegistry().addDescriptor(
 					Types.CLOB,
 					ClobJdbcType.STREAM_BINDING
 			);
@@ -1432,7 +1432,7 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public String getCastTypeName(SqlExpressable type, Long length, Integer precision, Integer scale) {
 		final JdbcMapping jdbcMapping = type.getJdbcMapping();
-		final JdbcType jdbcType = jdbcMapping.getJdbcTypeDescriptor();
+		final JdbcType jdbcType = jdbcMapping.getJdbcType();
 		final JavaType<?> javaType = jdbcMapping.getJavaTypeDescriptor();
 		Size size;
 		if ( length == null && precision == null ) {
@@ -3858,7 +3858,7 @@ public abstract class Dialect implements ConversionContext {
 
 	public void appendBinaryLiteral(SqlAppender appender, byte[] bytes) {
 		appender.appendSql( "X'" );
-		PrimitiveByteArrayJavaTypeDescriptor.INSTANCE.appendString( appender, bytes );
+		PrimitiveByteArrayJavaType.INSTANCE.appendString( appender, bytes );
 		appender.appendSql( '\'' );
 	}
 

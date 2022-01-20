@@ -16,11 +16,11 @@ import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.Mutability;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
-import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
-import org.hibernate.type.descriptor.java.SerializableJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.SerializableJavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -79,7 +79,7 @@ public class RegistryHelper {
 		}
 
 		if ( Serializable.class.isAssignableFrom( javaTypeClass ) ) {
-			return (MutabilityPlan<J>) SerializableJavaTypeDescriptor.SerializableMutabilityPlan.INSTANCE;
+			return (MutabilityPlan<J>) SerializableJavaType.SerializableMutabilityPlan.INSTANCE;
 		}
 
 		return null;
@@ -94,17 +94,17 @@ public class RegistryHelper {
 		if ( javaTypeClass.isEnum() ) {
 			// enums are unequivocally immutable
 			//noinspection rawtypes
-			return new EnumJavaTypeDescriptor( javaTypeClass );
+			return new EnumJavaType( javaTypeClass );
 		}
 
 		final MutabilityPlan<J> plan = mutabilityPlanResolver.apply( javaTypeClass );
 
 		if ( Serializable.class.isAssignableFrom( javaTypeClass ) ) {
 			//noinspection rawtypes
-			return new SerializableJavaTypeDescriptor( javaTypeClass, plan );
+			return new SerializableJavaType( javaTypeClass, plan );
 		}
 
-		return new JavaTypeDescriptorBasicAdaptor<>( javaTypeClass, plan );
+		return new JavaTypeBasicAdaptor<>( javaTypeClass, plan );
 	}
 
 	private <J> Class<J> determineJavaTypeClass(Type javaType) {

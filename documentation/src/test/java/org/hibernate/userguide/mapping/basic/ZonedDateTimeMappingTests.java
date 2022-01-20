@@ -7,7 +7,6 @@
 package org.hibernate.userguide.mapping.basic;
 
 import java.sql.Types;
-import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -42,7 +41,7 @@ public class ZonedDateTimeMappingTests {
 		final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("zonedDateTime");
 		final JdbcMapping jdbcMapping = attributeMapping.getJdbcMapping();
 		assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(ZonedDateTime.class));
-		assertThat(jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), isOneOf(Types.TIMESTAMP, Types.TIMESTAMP_WITH_TIMEZONE));
+		assertThat( jdbcMapping.getJdbcType().getJdbcTypeCode(), isOneOf( Types.TIMESTAMP, Types.TIMESTAMP_WITH_TIMEZONE));
 
 		scope.inTransaction(
 				(session) -> {

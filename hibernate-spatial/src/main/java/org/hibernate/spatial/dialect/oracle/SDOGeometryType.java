@@ -46,13 +46,13 @@ public class SDOGeometryType implements JdbcType {
 	}
 
 	@Override
-	public <X> ValueBinder<X> getBinder(final JavaType<X> javaTypeDescriptor) {
-		return (ValueBinder<X>) new SDOGeometryValueBinder( javaTypeDescriptor, this, typeFactory );
+	public <X> ValueBinder<X> getBinder(final JavaType<X> javaType) {
+		return (ValueBinder<X>) new SDOGeometryValueBinder( javaType, this, typeFactory );
 	}
 
 	@Override
-	public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaTypeDescriptor) {
-		return (ValueExtractor<X>) new SDOGeometryValueExtractor( javaTypeDescriptor, this );
+	public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaType) {
+		return (ValueExtractor<X>) new SDOGeometryValueExtractor( javaType, this );
 	}
 
 	/**

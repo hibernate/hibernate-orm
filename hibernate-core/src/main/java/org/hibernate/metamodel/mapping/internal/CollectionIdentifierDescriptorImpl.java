@@ -106,8 +106,8 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 	}
 
 	@Override
-	public JavaType<?> getJavaTypeDescriptor() {
-		return getMappedType().getMappedJavaTypeDescriptor();
+	public JavaType<?> getJavaType() {
+		return getMappedType().getMappedJavaType();
 	}
 
 	@Override

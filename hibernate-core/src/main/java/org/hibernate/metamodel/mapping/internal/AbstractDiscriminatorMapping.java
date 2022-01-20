@@ -120,7 +120,7 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 	}
 
 	@Override
-	public JavaType<?> getJavaTypeDescriptor() {
+	public JavaType<?> getJavaType() {
 		return getJdbcMapping().getJavaTypeDescriptor();
 	}
 
@@ -136,7 +136,7 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 		return new BasicResult(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
-				domainResultConverter.getDomainJavaDescriptor(),
+				domainResultConverter.getDomainJavaType(),
 				domainResultConverter,
 				navigablePath
 		);
@@ -304,7 +304,7 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 				BasicType underlyingDiscriminatorType,
 				final SessionFactoryImplementor sessionFactory) {
 			final TypeConfiguration typeConfiguration = sessionFactory.getDomainModel().getTypeConfiguration();
-			final JavaTypeRegistry jtdRegistry = typeConfiguration.getJavaTypeDescriptorRegistry();
+			final JavaTypeRegistry jtdRegistry = typeConfiguration.getJavaTypeRegistry();
 
 			final JavaType<Object> domainJtd;
 			final Function<String,Object> entityNameHandler;
@@ -383,12 +383,12 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 		}
 
 		@Override
-		public JavaType<Object> getDomainJavaDescriptor() {
+		public JavaType<Object> getDomainJavaType() {
 			return domainJtd;
 		}
 
 		@Override
-		public JavaType<R> getRelationalJavaDescriptor() {
+		public JavaType<R> getRelationalJavaType() {
 			return relationalJtd;
 		}
 	}

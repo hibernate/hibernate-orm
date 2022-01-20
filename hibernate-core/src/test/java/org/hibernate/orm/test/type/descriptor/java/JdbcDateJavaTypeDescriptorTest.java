@@ -2,7 +2,7 @@ package org.hibernate.orm.test.type.descriptor.java;
 
 import java.sql.Date;
 
-import org.hibernate.type.descriptor.java.JdbcDateJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JdbcDateJavaType;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.junit.jupiter.api.Test;
@@ -14,33 +14,33 @@ public class JdbcDateJavaTypeDescriptorTest {
 
 	@Test
 	public void testToString() {
-		final JdbcDateJavaTypeDescriptor javaTypeDescriptor = JdbcDateJavaTypeDescriptor.INSTANCE;
+		final JdbcDateJavaType javaType = JdbcDateJavaType.INSTANCE;
 
-		final String utilDate = javaTypeDescriptor.toString( new java.util.Date( 0 ) );
+		final String utilDate = javaType.toString( new java.util.Date( 0 ) );
 		assertThat( utilDate ).isEqualTo( "01 January 1970" );
 
-		final String sqlDate = javaTypeDescriptor.toString( new java.sql.Date( 0 ) );
+		final String sqlDate = javaType.toString( new java.sql.Date( 0 ) );
 		assertThat( sqlDate ).isEqualTo( "01 January 1970" );
 	}
 
 	@Test
 	public void testIsInstance() {
-		final JdbcDateJavaTypeDescriptor javaTypeDescriptor = JdbcDateJavaTypeDescriptor.INSTANCE;
+		final JdbcDateJavaType javaType = JdbcDateJavaType.INSTANCE;
 
-		javaTypeDescriptor.isInstance( new java.sql.Date( 0 ) );
-		javaTypeDescriptor.isInstance( new java.util.Date( 0 ) );
+		javaType.isInstance( new java.sql.Date( 0 ) );
+		javaType.isInstance( new java.util.Date( 0 ) );
 	}
 
 	@Test
 	public void testWrap() {
-		final JdbcDateJavaTypeDescriptor javaTypeDescriptor = JdbcDateJavaTypeDescriptor.INSTANCE;
+		final JdbcDateJavaType javaType = JdbcDateJavaType.INSTANCE;
 
 		final Date sqlDate = new Date( 0 );
-		final java.util.Date wrappedSqlDate = javaTypeDescriptor.wrap( sqlDate, null );
+		final java.util.Date wrappedSqlDate = javaType.wrap( sqlDate, null );
 		assertThat( wrappedSqlDate ).isSameAs( sqlDate );
 
 		final java.util.Date utilDate = new java.util.Date( 0 );
-		final java.util.Date wrappedUtilDate = javaTypeDescriptor.wrap( utilDate, null );
+		final java.util.Date wrappedUtilDate = javaType.wrap( utilDate, null );
 		assertThat( wrappedUtilDate ).isInstanceOf( java.sql.Date.class );
 	}
 }

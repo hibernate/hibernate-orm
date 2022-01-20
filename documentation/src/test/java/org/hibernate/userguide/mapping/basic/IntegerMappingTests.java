@@ -43,20 +43,20 @@ public class IntegerMappingTests {
 
 		{
 			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("wrapper");
-			assertThat(attribute.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Integer.class));
+			assertThat( attribute.getJavaType().getJavaTypeClass(), equalTo( Integer.class));
 
 			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
 			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Integer.class));
-			assertThat(jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), is(Types.INTEGER));
+			assertThat( jdbcMapping.getJdbcType().getJdbcTypeCode(), is( Types.INTEGER));
 		}
 
 		{
 			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("primitive");
-			assertThat(attribute.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Integer.class));
+			assertThat( attribute.getJavaType().getJavaTypeClass(), equalTo( Integer.class));
 
 			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
 			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Integer.class));
-			assertThat(jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), is(Types.INTEGER));
+			assertThat( jdbcMapping.getJdbcType().getJdbcTypeCode(), is( Types.INTEGER));
 		}
 
 

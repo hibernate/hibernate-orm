@@ -197,7 +197,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 			final MappingModelExpressable<?> mappingType = determineMappingType( binding, persistenceContext );
 			assert mappingType instanceof JavaTypedExpressable;
 			//noinspection unchecked
-			final JavaType<Object> javaType = ( (JavaTypedExpressable<Object>) mappingType ).getExpressableJavaTypeDescriptor();
+			final JavaType<Object> javaType = ( (JavaTypedExpressable<Object>) mappingType ).getExpressableJavaType();
 
 			if ( binding.isMultiValued() ) {
 				for ( Object bindValue : binding.getBindValues() ) {
@@ -246,7 +246,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 
 		if ( binding.getBindType() instanceof JavaTypedExpressable ) {
 			final JavaTypedExpressable<?> javaTypedExpressable = (JavaTypedExpressable<?>) binding.getBindType();
-			final JavaType<?> jtd = javaTypedExpressable.getExpressableJavaTypeDescriptor();
+			final JavaType<?> jtd = javaTypedExpressable.getExpressableJavaType();
 			if ( jtd.getJavaTypeClass() != null ) {
 				// avoid dynamic models
 				return typeConfiguration.getBasicTypeForJavaType( jtd.getJavaTypeClass() );

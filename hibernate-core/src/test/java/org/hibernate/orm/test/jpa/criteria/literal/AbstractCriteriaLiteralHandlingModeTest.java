@@ -102,9 +102,9 @@ public abstract class AbstractCriteriaLiteralHandlingModeTest extends BaseEntity
 						getDialect().getTypeName(
 								SqlTypes.VARCHAR,
 								getDialect().getSizeStrategy().resolveSize(
-										typeConfiguration.getJdbcTypeDescriptorRegistry()
+										typeConfiguration.getJdbcTypeRegistry()
 												.getDescriptor(SqlTypes.VARCHAR ),
-										typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( String.class ),
+										typeConfiguration.getJavaTypeRegistry().getDescriptor( String.class ),
 										null,
 										null,
 										null

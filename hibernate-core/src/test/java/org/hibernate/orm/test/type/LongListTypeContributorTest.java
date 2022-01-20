@@ -17,7 +17,7 @@ import org.hibernate.jpa.boot.spi.TypeContributorList;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.AbstractClassJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.AbstractClassJavaType;
 import org.hibernate.type.descriptor.jdbc.LongVarcharJdbcType;
 
 import org.hibernate.testing.TestForIssue;
@@ -44,8 +44,8 @@ public class LongListTypeContributorTest extends EntityManagerFactoryBasedFuncti
 
 	@Override
 	protected void entityManagerFactoryBuilt(EntityManagerFactory factory) {
-		( (SessionFactoryImplementor) factory ).getTypeConfiguration().getJavaTypeDescriptorRegistry()
-				.addDescriptor( StringifiedCollectionTypeContributor.StringifiedCollectionJavaTypeDescriptor.INSTANCE );
+		( (SessionFactoryImplementor) factory ).getTypeConfiguration().getJavaTypeRegistry()
+				.addDescriptor( StringifiedCollectionTypeContributor.StringifiedCollectionJavaType.INSTANCE );
 	}
 
 	@Override
@@ -145,7 +145,7 @@ public class LongListTypeContributorTest extends EntityManagerFactoryBasedFuncti
 
 		@Override
 		public void contribute(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
-//			JavaTypeRegistry.INSTANCE.addDescriptor( StringifiedCollectionJavaTypeDescriptor.INSTANCE );
+//			JavaTypeRegistry.INSTANCE.addDescriptor( StringifiedCollectionJavaType.INSTANCE );
 			typeContributions.contributeType( StringifiedCollectionType.INSTANCE );
 		}
 
@@ -160,7 +160,7 @@ public class LongListTypeContributorTest extends EntityManagerFactoryBasedFuncti
 			public StringifiedCollectionType() {
 				super(
 						LongVarcharJdbcType.INSTANCE,
-						StringifiedCollectionJavaTypeDescriptor.INSTANCE
+						StringifiedCollectionJavaType.INSTANCE
 				);
 				regKeys = new String[] { LongList.class.getName() };
 				name = "StringifiedCollection";
@@ -182,11 +182,11 @@ public class LongListTypeContributorTest extends EntityManagerFactoryBasedFuncti
 			}
 		}
 
-		private static class StringifiedCollectionJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<LongList> {
+		private static class StringifiedCollectionJavaType extends AbstractClassJavaType<LongList> {
 
-			public static StringifiedCollectionJavaTypeDescriptor INSTANCE = new StringifiedCollectionJavaTypeDescriptor();
+			public static StringifiedCollectionJavaType INSTANCE = new StringifiedCollectionJavaType();
 
-			public StringifiedCollectionJavaTypeDescriptor() {
+			public StringifiedCollectionJavaType() {
 				super( LongList.class );
 			}
 

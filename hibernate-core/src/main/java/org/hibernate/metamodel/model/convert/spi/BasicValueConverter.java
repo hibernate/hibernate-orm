@@ -40,10 +40,10 @@ public interface BasicValueConverter<D,R> {
 	/**
 	 * Descriptor for the Java type for the domain portion of this converter
 	 */
-	JavaType<D> getDomainJavaDescriptor();
+	JavaType<D> getDomainJavaType();
 
 	/**
 	 * Descriptor for the Java type for the relational portion of this converter
 	 */
-	JavaType<R> getRelationalJavaDescriptor();
+	JavaType<R> getRelationalJavaType();
 }

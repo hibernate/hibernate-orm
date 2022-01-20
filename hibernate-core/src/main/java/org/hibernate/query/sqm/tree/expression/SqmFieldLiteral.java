@@ -33,7 +33,7 @@ import jakarta.persistence.criteria.Expression;
  */
 public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressable<T>, SqmSelectableNode<T>, SemanticPathPart {
 	private final T value;
-	private final JavaType<T> fieldJavaTypeDescriptor;
+	private final JavaType<T> fieldJavaType;
 	private final String fieldName;
 	private final NodeBuilder nodeBuilder;
 
@@ -41,11 +41,11 @@ public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressable<T>, 
 
 	public SqmFieldLiteral(
 			Field field,
-			JavaType<T> fieldJavaTypeDescriptor,
+			JavaType<T> fieldJavaType,
 			NodeBuilder nodeBuilder){
 		this(
 				extractValue( field ),
-				fieldJavaTypeDescriptor,
+				fieldJavaType,
 				field.getName(),
 				nodeBuilder
 		);
@@ -63,11 +63,11 @@ public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressable<T>, 
 
 	public SqmFieldLiteral(
 			T value,
-			JavaType<T> fieldJavaTypeDescriptor,
+			JavaType<T> fieldJavaType,
 			String fieldName,
 			NodeBuilder nodeBuilder) {
 		this.value = value;
-		this.fieldJavaTypeDescriptor = fieldJavaTypeDescriptor;
+		this.fieldJavaType = fieldJavaType;
 		this.fieldName = fieldName;
 		this.nodeBuilder = nodeBuilder;
 
@@ -96,17 +96,17 @@ public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressable<T>, 
 	}
 
 	@Override
-	public JavaType<T> getExpressableJavaTypeDescriptor() {
+	public JavaType<T> getExpressableJavaType() {
 		if ( expressable == this ) {
-			return fieldJavaTypeDescriptor;
+			return fieldJavaType;
 		}
 
-		return expressable.getExpressableJavaTypeDescriptor();
+		return expressable.getExpressableJavaType();
 	}
 
 	@Override
 	public JavaType<T> getJavaTypeDescriptor() {
-		return getExpressableJavaTypeDescriptor();
+		return getExpressableJavaType();
 	}
 
 	@Override
@@ -214,7 +214,7 @@ public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressable<T>, 
 				String.format(
 						Locale.ROOT,
 						"Static field reference [%s#%s] cannot be de-referenced",
-						fieldJavaTypeDescriptor.getJavaType().getTypeName(),
+						fieldJavaType.getJavaType().getTypeName(),
 						fieldName
 				)
 		);
@@ -229,7 +229,7 @@ public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressable<T>, 
 				String.format(
 						Locale.ROOT,
 						"Static field reference [%s#%s] cannot be de-referenced",
-						fieldJavaTypeDescriptor.getJavaType().getTypeName(),
+						fieldJavaType.getJavaType().getTypeName(),
 						fieldName
 				)
 		);

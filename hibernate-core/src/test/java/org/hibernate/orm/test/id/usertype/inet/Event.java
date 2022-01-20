@@ -27,7 +27,7 @@ public class Event {
 
 	@Column(name = "ip")
 	@JdbcTypeCode(SqlTypes.INET)
-	@JavaType(InetJavaTypeDescriptor.class)
+	@JavaType(InetJavaType.class)
 	private Inet ip;
 
 	public Long getId() {

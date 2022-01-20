@@ -106,7 +106,7 @@ public class DynamicFetchBuilderStandard
 								return new ResultSetMappingSqlSelection( valuesArrayPosition, selectableMapping.getJdbcMapping() );
 							}
 					),
-					selectableMapping.getJdbcMapping().getMappedJavaTypeDescriptor(),
+					selectableMapping.getJdbcMapping().getMappedJavaType(),
 					domainResultCreationState.getSqlAstCreationState()
 							.getCreationContext()
 							.getSessionFactory()

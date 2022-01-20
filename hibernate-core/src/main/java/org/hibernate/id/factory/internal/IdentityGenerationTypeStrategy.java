@@ -27,7 +27,7 @@ public class IdentityGenerationTypeStrategy implements GenerationTypeStrategy {
 	public IdentifierGenerator createIdentifierGenerator(
 			GenerationType generationType,
 			String generatorName,
-			JavaType<?> javaTypeDescriptor,
+			JavaType<?> javaType,
 			Properties config,
 			GeneratorDefinitionResolver definitionResolver,
 			ServiceRegistry serviceRegistry) {

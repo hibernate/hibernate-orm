@@ -46,12 +46,12 @@ public class ObjectJdbcType implements JdbcType {
 	}
 
 	@Override
-	public <X> ValueBinder<X> getBinder(JavaType<X> javaTypeDescriptor) {
-		if ( Serializable.class.isAssignableFrom( javaTypeDescriptor.getJavaTypeClass() ) ) {
-			return VarbinaryJdbcType.INSTANCE.getBinder( javaTypeDescriptor );
+	public <X> ValueBinder<X> getBinder(JavaType<X> javaType) {
+		if ( Serializable.class.isAssignableFrom( javaType.getJavaTypeClass() ) ) {
+			return VarbinaryJdbcType.INSTANCE.getBinder( javaType );
 		}
 
-		return new BasicBinder<X>( javaTypeDescriptor, this ) {
+		return new BasicBinder<X>( javaType, this ) {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 					throws SQLException {
@@ -68,12 +68,12 @@ public class ObjectJdbcType implements JdbcType {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <X> ValueExtractor<X> getExtractor(JavaType<X> javaTypeDescriptor) {
-		if ( Serializable.class.isAssignableFrom( javaTypeDescriptor.getJavaTypeClass() ) ) {
-			return VarbinaryJdbcType.INSTANCE.getExtractor( javaTypeDescriptor );
+	public <X> ValueExtractor<X> getExtractor(JavaType<X> javaType) {
+		if ( Serializable.class.isAssignableFrom( javaType.getJavaTypeClass() ) ) {
+			return VarbinaryJdbcType.INSTANCE.getExtractor( javaType );
 		}
 
-		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
+		return new BasicExtractor<X>( javaType, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
 				return (X) rs.getObject( paramIndex );

@@ -86,7 +86,7 @@ public class ExplicitDateConvertersTest extends BaseNonConfigCoreFunctionalTestC
 				AttributeConverterTypeAdapter.class,
 				theDatePropertyType
 		);
-		assertTrue( LongToDateConverter.class.isAssignableFrom( type.getAttributeConverter().getConverterJavaTypeDescriptor().getJavaTypeClass() ) );
+		assertTrue( LongToDateConverter.class.isAssignableFrom( type.getAttributeConverter().getConverterJavaType().getJavaTypeClass() ) );
 
 		resetFlags();
 

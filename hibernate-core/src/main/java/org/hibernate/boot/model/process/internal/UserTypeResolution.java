@@ -42,18 +42,18 @@ public class UserTypeResolution implements BasicValue.Resolution {
 	}
 
 	@Override
-	public JavaType<?> getDomainJavaDescriptor() {
+	public JavaType<?> getDomainJavaType() {
 		return userTypeAdapter.getJavaTypeDescriptor();
 	}
 
 	@Override
-	public JavaType<?> getRelationalJavaDescriptor() {
+	public JavaType<?> getRelationalJavaType() {
 		return userTypeAdapter.getJavaTypeDescriptor();
 	}
 
 	@Override
-	public JdbcType getJdbcTypeDescriptor() {
-		return userTypeAdapter.getJdbcTypeDescriptor();
+	public JdbcType getJdbcType() {
+		return userTypeAdapter.getJdbcType();
 	}
 
 	@Override

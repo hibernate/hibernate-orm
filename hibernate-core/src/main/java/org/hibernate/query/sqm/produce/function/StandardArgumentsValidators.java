@@ -205,7 +205,7 @@ public final class StandardArgumentsValidators {
 	public static ArgumentsValidator of(Class<?> javaType) {
 		return (arguments, functionName, queryEngine) -> arguments.forEach(
 				arg -> {
-					Class<?> argType = arg.getNodeJavaTypeDescriptor().getJavaTypeClass();
+					Class<?> argType = arg.getNodeJavaType().getJavaTypeClass();
 					if ( !javaType.isAssignableFrom( argType ) ) {
 						throw new QueryException(
 								String.format(

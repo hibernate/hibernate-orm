@@ -49,7 +49,7 @@ public class JpaAttributeConverterImpl<O,R> implements JpaAttributeConverter<O,R
 		this.attributeConverterBean = attributeConverterBean;
 		this.converterJtd = converterJtd;
 
-		final JavaTypeRegistry jtdRegistry = context.getJavaTypeDescriptorRegistry();
+		final JavaTypeRegistry jtdRegistry = context.getJavaTypeRegistry();
 
 		jdbcJtd = jtdRegistry.getDescriptor( jdbcJavaType );
 		//noinspection unchecked
@@ -107,27 +107,17 @@ public class JpaAttributeConverterImpl<O,R> implements JpaAttributeConverter<O,R
 	}
 
 	@Override
-	public JavaType<? extends AttributeConverter<O, R>> getConverterJavaTypeDescriptor() {
+	public JavaType<? extends AttributeConverter<O, R>> getConverterJavaType() {
 		return converterJtd;
 	}
 
 	@Override
-	public JavaType<O> getDomainJavaDescriptor() {
-		return getDomainJavaTypeDescriptor();
-	}
-
-	@Override
-	public JavaType<R> getRelationalJavaDescriptor() {
-		return getRelationalJavaTypeDescriptor();
-	}
-
-	@Override
-	public JavaType<O> getDomainJavaTypeDescriptor() {
+	public JavaType<O> getDomainJavaType() {
 		return domainJtd;
 	}
 
 	@Override
-	public JavaType<R> getRelationalJavaTypeDescriptor() {
+	public JavaType<R> getRelationalJavaType() {
 		return jdbcJtd;
 	}
 

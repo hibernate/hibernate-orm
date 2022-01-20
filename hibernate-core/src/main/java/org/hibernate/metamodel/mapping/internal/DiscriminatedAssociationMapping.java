@@ -289,12 +289,12 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 		return this;
 	}
 
-	public JavaType<?> getJavaTypeDescriptor() {
+	public JavaType<?> getJavaType() {
 		return baseAssociationJtd;
 	}
 
 	@Override
-	public JavaType<?> getMappedJavaTypeDescriptor() {
+	public JavaType<?> getMappedJavaType() {
 		return baseAssociationJtd;
 	}
 
@@ -382,7 +382,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 		}
 
 		@Override
-		public JavaType<?> getResultJavaTypeDescriptor() {
+		public JavaType<?> getResultJavaType() {
 			return baseAssociationJtd;
 		}
 
@@ -560,9 +560,9 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 		}
 
 		@Override
-		public JavaType<T> getAssembledJavaTypeDescriptor() {
+		public JavaType<T> getAssembledJavaType() {
 			//noinspection unchecked
-			return (JavaType<T>) fetchedPart.getJavaTypeDescriptor();
+			return (JavaType<T>) fetchedPart.getJavaType();
 		}
 
 		@Override

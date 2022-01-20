@@ -63,7 +63,7 @@ public class ConvertedQueryLiteral<D,R> implements Literal, DomainResultProducer
 	@Override
 	public DomainResult<D> createDomainResult(String resultVariable, DomainResultCreationState creationState) {
 		applySqlSelections( creationState );
-		return new ConstantDomainResult<>( domainLiteralValue, converter.getDomainJavaDescriptor(), resultVariable );
+		return new ConstantDomainResult<>( domainLiteralValue, converter.getDomainJavaType(), resultVariable );
 	}
 
 	@Override
@@ -75,7 +75,7 @@ public class ConvertedQueryLiteral<D,R> implements Literal, DomainResultProducer
 		final SqlExpressionResolver expressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 		expressionResolver.resolveSqlSelection(
 				this,
-				relationalMapping.getExpressableJavaTypeDescriptor(),
+				relationalMapping.getExpressableJavaType(),
 				sqlAstCreationState.getCreationContext().getDomainModel().getTypeConfiguration()
 		);
 	}
@@ -123,7 +123,7 @@ public class ConvertedQueryLiteral<D,R> implements Literal, DomainResultProducer
 		}
 
 		@Override
-		public JavaType<?> getResultJavaTypeDescriptor() {
+		public JavaType<?> getResultJavaType() {
 			return javaType;
 		}
 
@@ -138,7 +138,7 @@ public class ConvertedQueryLiteral<D,R> implements Literal, DomainResultProducer
 		}
 
 		@Override
-		public JavaType<D> getAssembledJavaTypeDescriptor() {
+		public JavaType<D> getAssembledJavaType() {
 			return javaType;
 		}
 	}

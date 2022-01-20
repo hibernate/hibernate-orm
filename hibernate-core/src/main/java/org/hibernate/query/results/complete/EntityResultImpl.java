@@ -174,6 +174,6 @@ public class EntityResultImpl implements EntityResult {
 				)
 		);
 
-		return new EntityAssembler( getResultJavaTypeDescriptor(), initializer );
+		return new EntityAssembler( getResultJavaType(), initializer );
 	}
 }

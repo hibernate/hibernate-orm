@@ -309,7 +309,7 @@ public class ProcedureCallImpl<R>
 					markAsFunctionCall( Types.REF_CURSOR );
 				}
 				else {
-					markAsFunctionCall( type.getJdbcTypeDescriptor().getJdbcTypeCode() );
+					markAsFunctionCall( type.getJdbcType().getJdbcTypeCode() );
 				}
 			}
 		}
@@ -468,7 +468,7 @@ public class ProcedureCallImpl<R>
 			final SqmExpressable<T> sqmExpressable = parameterType.resolveExpressable( getSessionFactory() );
 			assert sqmExpressable != null;
 
-			expressableJavaType = sqmExpressable.getExpressableJavaTypeDescriptor().getJavaTypeClass();
+			expressableJavaType = sqmExpressable.getExpressableJavaType().getJavaTypeClass();
 		}
 
 		final ProcedureParameterImpl<T> procedureParameter = new ProcedureParameterImpl<>(

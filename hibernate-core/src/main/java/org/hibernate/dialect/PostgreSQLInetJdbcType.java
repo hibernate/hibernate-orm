@@ -22,7 +22,7 @@ public class PostgreSQLInetJdbcType extends PostgreSQLPGObjectJdbcType {
 	}
 
 	@Override
-	protected <X> X fromString(String string, JavaType<X> javaTypeDescriptor, WrapperOptions options) {
+	protected <X> X fromString(String string, JavaType<X> javaType, WrapperOptions options) {
 		final String host;
 		if ( string == null ) {
 			host = null;
@@ -37,6 +37,6 @@ public class PostgreSQLInetJdbcType extends PostgreSQLPGObjectJdbcType {
 				host = string.substring( 0, slashIndex );
 			}
 		}
-		return javaTypeDescriptor.wrap( host, options );
+		return javaType.wrap( host, options );
 	}
 }

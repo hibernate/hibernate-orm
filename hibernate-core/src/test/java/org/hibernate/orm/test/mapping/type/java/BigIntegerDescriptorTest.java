@@ -7,7 +7,7 @@
 package org.hibernate.orm.test.mapping.type.java;
 import java.math.BigInteger;
 
-import org.hibernate.type.descriptor.java.BigIntegerJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.BigIntegerJavaType;
 
 /**
  * @author Steve Ebersole
@@ -18,7 +18,7 @@ public class BigIntegerDescriptorTest extends AbstractDescriptorTest<BigInteger>
 	final BigInteger different = BigInteger.valueOf( 999 );
 
 	public BigIntegerDescriptorTest() {
-		super( BigIntegerJavaTypeDescriptor.INSTANCE );
+		super( BigIntegerJavaType.INSTANCE );
 	}
 
 	@Override

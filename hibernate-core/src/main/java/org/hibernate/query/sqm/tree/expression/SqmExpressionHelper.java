@@ -19,9 +19,9 @@ import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressable;
-import org.hibernate.type.descriptor.java.JdbcDateJavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.JdbcTimeJavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.JdbcTimestampJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JdbcDateJavaType;
+import org.hibernate.type.descriptor.java.JdbcTimeJavaType;
+import org.hibernate.type.descriptor.java.JdbcTimestampJavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -53,7 +53,7 @@ public class SqmExpressionHelper {
 
 	public static SqmLiteral<Timestamp> timestampLiteralFrom(String literalText, SqmCreationState creationState) {
 		final Timestamp literal = Timestamp.valueOf(
-				LocalDateTime.from( JdbcTimestampJavaTypeDescriptor.LITERAL_FORMATTER.parse( literalText ) )
+				LocalDateTime.from( JdbcTimestampJavaType.LITERAL_FORMATTER.parse( literalText ) )
 		);
 
 		return new SqmLiteral<>(
@@ -80,7 +80,7 @@ public class SqmExpressionHelper {
 	}
 
 	public static SqmLiteral<Date> dateLiteralFrom(String literalText, SqmCreationState creationState) {
-		final LocalDate localDate = LocalDate.from( JdbcDateJavaTypeDescriptor.LITERAL_FORMATTER.parse( literalText ) );
+		final LocalDate localDate = LocalDate.from( JdbcDateJavaType.LITERAL_FORMATTER.parse( literalText ) );
 		final Date literal = new Date( localDate.toEpochDay() );
 
 		return new SqmLiteral<>(
@@ -91,7 +91,7 @@ public class SqmExpressionHelper {
 	}
 
 	public static SqmLiteral<Time> timeLiteralFrom(String literalText, SqmCreationState creationState) {
-		final LocalTime localTime = LocalTime.from( JdbcTimeJavaTypeDescriptor.LITERAL_FORMATTER.parse( literalText ) );
+		final LocalTime localTime = LocalTime.from( JdbcTimeJavaType.LITERAL_FORMATTER.parse( literalText ) );
 		final Time literal = Time.valueOf( localTime );
 
 		return new SqmLiteral<>(

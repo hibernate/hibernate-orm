@@ -24,9 +24,9 @@ public class EntityInstantiatorPojoOptimized extends AbstractEntityInstantiatorP
 	public EntityInstantiatorPojoOptimized(
 			EntityMetamodel entityMetamodel,
 			PersistentClass persistentClass,
-			JavaType<?> javaTypeDescriptor,
+			JavaType<?> javaType,
 			InstantiationOptimizer instantiationOptimizer) {
-		super( entityMetamodel, persistentClass, javaTypeDescriptor );
+		super( entityMetamodel, persistentClass, javaType );
 		this.instantiationOptimizer = instantiationOptimizer;
 	}
 

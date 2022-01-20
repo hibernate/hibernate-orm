@@ -45,42 +45,42 @@ public abstract class ClobJdbcType implements AdjustableJdbcType {
 
 	@Override
 	public JdbcType resolveIndicatedType(
-			JdbcTypeDescriptorIndicators indicators,
+			JdbcTypeIndicators indicators,
 			JavaType<?> domainJtd) {
 		final TypeConfiguration typeConfiguration = indicators.getTypeConfiguration();
-		final JdbcTypeRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeDescriptorRegistry();
+		final JdbcTypeRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeRegistry();
 		return indicators.isNationalized()
 				? jdbcTypeRegistry.getDescriptor( Types.NCLOB )
 				: jdbcTypeRegistry.getDescriptor( Types.CLOB );
 	}
 
 	@Override
-	public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaTypeDescriptor) {
-		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
+	public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaType) {
+		return new BasicExtractor<X>( javaType, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( rs.getClob( paramIndex ), options );
+				return javaType.wrap( rs.getClob( paramIndex ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options)
 					throws SQLException {
-				return javaTypeDescriptor.wrap( statement.getClob( index ), options );
+				return javaType.wrap( statement.getClob( index ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
 					throws SQLException {
-				return javaTypeDescriptor.wrap( statement.getClob( name ), options );
+				return javaType.wrap( statement.getClob( name ), options );
 			}
 		};
 	}
 
-	protected abstract <X> BasicBinder<X> getClobBinder(JavaType<X> javaTypeDescriptor);
+	protected abstract <X> BasicBinder<X> getClobBinder(JavaType<X> javaType);
 
 	@Override
-	public <X> ValueBinder<X> getBinder(JavaType<X> javaTypeDescriptor) {
-		return getClobBinder( javaTypeDescriptor );
+	public <X> ValueBinder<X> getBinder(JavaType<X> javaType) {
+		return getClobBinder( javaType );
 	}
 
 
@@ -91,16 +91,16 @@ public abstract class ClobJdbcType implements AdjustableJdbcType {
 		}
 
 		@Override
-		public <X> BasicBinder<X> getClobBinder(final JavaType<X> javaTypeDescriptor) {
-			return new BasicBinder<X>( javaTypeDescriptor, this ) {
+		public <X> BasicBinder<X> getClobBinder(final JavaType<X> javaType) {
+			return new BasicBinder<X>( javaType, this ) {
 				@Override
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 						throws SQLException {
 					if ( options.useStreamForLobBinding() ) {
-						STREAM_BINDING.getClobBinder( javaTypeDescriptor ).doBind( st, value, index, options );
+						STREAM_BINDING.getClobBinder( javaType ).doBind( st, value, index, options );
 					}
 					else {
-						CLOB_BINDING.getClobBinder( javaTypeDescriptor ).doBind( st, value, index, options );
+						CLOB_BINDING.getClobBinder( javaType ).doBind( st, value, index, options );
 					}
 				}
 
@@ -108,10 +108,10 @@ public abstract class ClobJdbcType implements AdjustableJdbcType {
 				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 						throws SQLException {
 					if ( options.useStreamForLobBinding() ) {
-						STREAM_BINDING.getClobBinder( javaTypeDescriptor ).doBind( st, value, name, options );
+						STREAM_BINDING.getClobBinder( javaType ).doBind( st, value, name, options );
 					}
 					else {
-						CLOB_BINDING.getClobBinder( javaTypeDescriptor ).doBind( st, value, name, options );
+						CLOB_BINDING.getClobBinder( javaType ).doBind( st, value, name, options );
 					}
 				}
 			};
@@ -125,40 +125,40 @@ public abstract class ClobJdbcType implements AdjustableJdbcType {
 		}
 
 		@Override
-		public <X> BasicBinder<X> getClobBinder(final JavaType<X> javaTypeDescriptor) {
-			return new BasicBinder<X>( javaTypeDescriptor, this ) {
+		public <X> BasicBinder<X> getClobBinder(final JavaType<X> javaType) {
+			return new BasicBinder<X>( javaType, this ) {
 				@Override
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 						throws SQLException {
-					st.setString( index, javaTypeDescriptor.unwrap( value, String.class, options ) );
+					st.setString( index, javaType.unwrap( value, String.class, options ) );
 				}
 
 				@Override
 				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 						throws SQLException {
-					st.setString( name, javaTypeDescriptor.unwrap( value, String.class, options ) );
+					st.setString( name, javaType.unwrap( value, String.class, options ) );
 				}
 			};
 		}
 
 		@Override
-		public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaTypeDescriptor) {
-			return new BasicExtractor<X>( javaTypeDescriptor, this ) {
+		public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaType) {
+			return new BasicExtractor<X>( javaType, this ) {
 				@Override
 				protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-					return javaTypeDescriptor.wrap( rs.getString( paramIndex ), options );
+					return javaType.wrap( rs.getString( paramIndex ), options );
 				}
 
 				@Override
 				protected X doExtract(CallableStatement statement, int index, WrapperOptions options)
 						throws SQLException {
-					return javaTypeDescriptor.wrap( statement.getString( index ), options );
+					return javaType.wrap( statement.getString( index ), options );
 				}
 
 				@Override
 				protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
 						throws SQLException {
-					return javaTypeDescriptor.wrap( statement.getString( name ), options );
+					return javaType.wrap( statement.getString( name ), options );
 				}
 			};
 		}
@@ -171,18 +171,18 @@ public abstract class ClobJdbcType implements AdjustableJdbcType {
 		}
 
 		@Override
-		public <X> BasicBinder<X> getClobBinder(final JavaType<X> javaTypeDescriptor) {
-			return new BasicBinder<X>( javaTypeDescriptor, this ) {
+		public <X> BasicBinder<X> getClobBinder(final JavaType<X> javaType) {
+			return new BasicBinder<X>( javaType, this ) {
 				@Override
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 						throws SQLException {
-					st.setClob( index, javaTypeDescriptor.unwrap( value, Clob.class, options ) );
+					st.setClob( index, javaType.unwrap( value, Clob.class, options ) );
 				}
 
 				@Override
 				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 						throws SQLException {
-					st.setClob( name, javaTypeDescriptor.unwrap( value, Clob.class, options ) );
+					st.setClob( name, javaType.unwrap( value, Clob.class, options ) );
 				}
 			};
 		}
@@ -195,12 +195,12 @@ public abstract class ClobJdbcType implements AdjustableJdbcType {
 		}
 
 		@Override
-		public <X> BasicBinder<X> getClobBinder(final JavaType<X> javaTypeDescriptor) {
-			return new BasicBinder<X>( javaTypeDescriptor, this ) {
+		public <X> BasicBinder<X> getClobBinder(final JavaType<X> javaType) {
+			return new BasicBinder<X>( javaType, this ) {
 				@Override
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 						throws SQLException {
-					final CharacterStream characterStream = javaTypeDescriptor.unwrap(
+					final CharacterStream characterStream = javaType.unwrap(
 							value,
 							CharacterStream.class,
 							options
@@ -211,7 +211,7 @@ public abstract class ClobJdbcType implements AdjustableJdbcType {
 				@Override
 				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 						throws SQLException {
-					final CharacterStream characterStream = javaTypeDescriptor.unwrap(
+					final CharacterStream characterStream = javaType.unwrap(
 							value,
 							CharacterStream.class,
 							options
@@ -229,12 +229,12 @@ public abstract class ClobJdbcType implements AdjustableJdbcType {
 		}
 
 		@Override
-		public <X> BasicBinder<X> getClobBinder(final JavaType<X> javaTypeDescriptor) {
-			return new BasicBinder<X>( javaTypeDescriptor, this ) {
+		public <X> BasicBinder<X> getClobBinder(final JavaType<X> javaType) {
+			return new BasicBinder<X>( javaType, this ) {
 				@Override
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 						throws SQLException {
-					final CharacterStream characterStream = javaTypeDescriptor.unwrap(
+					final CharacterStream characterStream = javaType.unwrap(
 							value,
 							CharacterStream.class,
 							options
@@ -245,7 +245,7 @@ public abstract class ClobJdbcType implements AdjustableJdbcType {
 				@Override
 				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 						throws SQLException {
-					final CharacterStream characterStream = javaTypeDescriptor.unwrap(
+					final CharacterStream characterStream = javaType.unwrap(
 							value,
 							CharacterStream.class,
 							options
@@ -256,23 +256,23 @@ public abstract class ClobJdbcType implements AdjustableJdbcType {
 		}
 
 		@Override
-		public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaTypeDescriptor) {
-			return new BasicExtractor<X>( javaTypeDescriptor, this ) {
+		public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaType) {
+			return new BasicExtractor<X>( javaType, this ) {
 				@Override
 				protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-					return javaTypeDescriptor.wrap( rs.getCharacterStream( paramIndex ), options );
+					return javaType.wrap( rs.getCharacterStream( paramIndex ), options );
 				}
 
 				@Override
 				protected X doExtract(CallableStatement statement, int index, WrapperOptions options)
 						throws SQLException {
-					return javaTypeDescriptor.wrap( statement.getCharacterStream( index ), options );
+					return javaType.wrap( statement.getCharacterStream( index ), options );
 				}
 
 				@Override
 				protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
 						throws SQLException {
-					return javaTypeDescriptor.wrap( statement.getCharacterStream( name ), options );
+					return javaType.wrap( statement.getCharacterStream( name ), options );
 				}
 			};
 		}

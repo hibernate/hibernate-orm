@@ -49,15 +49,15 @@ public class Every implements Expression, DomainResultProducer {
 	public DomainResult createDomainResult(
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final JavaType javaTypeDescriptor = type.getJdbcMappings().get( 0 ).getJavaTypeDescriptor();
+		final JavaType javaType = type.getJdbcMappings().get( 0 ).getJavaTypeDescriptor();
 		return new BasicResult(
 				creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
 						this,
-						javaTypeDescriptor,
+						javaType,
 						creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
 				).getValuesArrayPosition(),
 				resultVariable,
-				javaTypeDescriptor
+				javaType
 		);
 	}
 

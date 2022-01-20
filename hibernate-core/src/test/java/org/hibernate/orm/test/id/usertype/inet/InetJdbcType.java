@@ -24,11 +24,11 @@ public class InetJdbcType extends PostgreSQLInetJdbcType {
 			Integer precision,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
-		return (BasicJavaType<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Inet.class );
+		return (BasicJavaType<T>) typeConfiguration.getJavaTypeRegistry().getDescriptor( Inet.class );
 	}
 
 	@Override
-	protected <X> X fromString(String string, JavaType<X> javaTypeDescriptor, WrapperOptions options) {
-		return javaTypeDescriptor.wrap( string, options );
+	protected <X> X fromString(String string, JavaType<X> javaType, WrapperOptions options) {
+		return javaType.wrap( string, options );
 	}
 }

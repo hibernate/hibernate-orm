@@ -15,7 +15,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.spatial.GeolatteGeometryJavaTypeDescriptor;
+import org.hibernate.spatial.GeolatteGeometryJavaType;
 import org.hibernate.tool.schema.Action;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -51,8 +51,8 @@ public class GeometryConverterTest extends BaseUnitTestCase {
 				final TypeConfiguration typeConfiguration = sessionFactory.getMetamodel().getTypeConfiguration();
 
 				assertThat(
-						typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Geometry.class ),
-						sameInstance( GeolatteGeometryJavaTypeDescriptor.GEOMETRY_INSTANCE )
+						typeConfiguration.getJavaTypeRegistry().getDescriptor( Geometry.class ),
+						sameInstance( GeolatteGeometryJavaType.GEOMETRY_INSTANCE )
 				);
 
 				// todo (5.3) : what to assert wrt to SqlTypeDescriptor?  Anything?

@@ -56,26 +56,26 @@ public class SqmJpaCompoundSelection<T>
 	//			whether `SqmJpaCompoundSelection` or `SqmTuple` is used based on `JpaCompliance#isJpaQueryComplianceEnabled`
 
 	private final List<SqmSelectableNode<?>> selectableNodes;
-	private final JavaType<T> javaTypeDescriptor;
+	private final JavaType<T> javaType;
 
 	public SqmJpaCompoundSelection(
 			List<SqmSelectableNode<?>> selectableNodes,
-			JavaType<T> javaTypeDescriptor,
+			JavaType<T> javaType,
 			NodeBuilder criteriaBuilder) {
 		super( null, criteriaBuilder );
 		this.selectableNodes = selectableNodes;
-		this.javaTypeDescriptor = javaTypeDescriptor;
+		this.javaType = javaType;
 
 		setExpressableType( this );
 	}
 
 	@Override
 	public JavaType<T> getJavaTypeDescriptor() {
-		return javaTypeDescriptor;
+		return javaType;
 	}
 
 	@Override
-	public JavaType<T> getExpressableJavaTypeDescriptor() {
+	public JavaType<T> getExpressableJavaType() {
 		return getJavaTypeDescriptor();
 	}
 

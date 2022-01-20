@@ -44,7 +44,7 @@ public class UnfetchedCollectionAssembler implements DomainResultAssembler {
 	}
 
 	@Override
-	public JavaType getAssembledJavaTypeDescriptor() {
-		return fetchedMapping.getJavaTypeDescriptor();
+	public JavaType getAssembledJavaType() {
+		return fetchedMapping.getJavaType();
 	}
 }

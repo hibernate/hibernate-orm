@@ -168,13 +168,13 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 	}
 
 	@Override
-	public JavaType<?> getJavaTypeDescriptor() {
-		return discriminatorMapping.getJavaTypeDescriptor();
+	public JavaType<?> getJavaType() {
+		return discriminatorMapping.getJavaType();
 	}
 
 	@Override
-	public JavaType<?> getExpressableJavaTypeDescriptor() {
-		return getJavaTypeDescriptor();
+	public JavaType<?> getExpressableJavaType() {
+		return getJavaType();
 	}
 
 	@Override

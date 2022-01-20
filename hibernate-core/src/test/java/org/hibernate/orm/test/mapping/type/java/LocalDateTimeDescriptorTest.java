@@ -7,7 +7,7 @@
 package org.hibernate.orm.test.mapping.type.java;
 
 import java.time.LocalDateTime;
-import org.hibernate.type.descriptor.java.LocalDateTimeJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.LocalDateTimeJavaType;
 
 /**
  * @author Jordan Gigov
@@ -18,7 +18,7 @@ public class LocalDateTimeDescriptorTest extends AbstractDescriptorTest<LocalDat
 	final LocalDateTime different = LocalDateTime.of( 2013,  8, 8, 15, 12 );
 
 	public LocalDateTimeDescriptorTest() {
-		super( LocalDateTimeJavaTypeDescriptor.INSTANCE);
+		super( LocalDateTimeJavaType.INSTANCE);
 	}
 
 	@Override

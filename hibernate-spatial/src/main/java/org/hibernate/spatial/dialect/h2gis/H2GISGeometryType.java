@@ -26,7 +26,6 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import org.geolatte.geom.Geometry;
 import org.geolatte.geom.codec.Wkt;
-import org.geolatte.geom.jts.JTS;
 
 /**
  * Descriptor for GeoDB Geometries.
@@ -51,47 +50,47 @@ public class H2GISGeometryType implements JdbcType {
 	}
 
 	@Override
-	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaTypeDescriptor) {
-		return new GeometryLiteralFormatter<T>( javaTypeDescriptor, Wkt.Dialect.SFA_1_1_0, "ST_GeomFromText" );
+	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaType) {
+		return new GeometryLiteralFormatter<T>( javaType, Wkt.Dialect.SFA_1_1_0, "ST_GeomFromText" );
 	}
 
 	@Override
-	public <X> ValueBinder<X> getBinder(final JavaType<X> javaTypeDescriptor) {
-		return new BasicBinder<X>( javaTypeDescriptor, this ) {
+	public <X> ValueBinder<X> getBinder(final JavaType<X> javaType) {
+		return new BasicBinder<X>( javaType, this ) {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 					throws SQLException {
-				final Geometry geometry = getJavaTypeDescriptor().unwrap( value, Geometry.class, options );
+				final Geometry geometry = getJavaType().unwrap( value, Geometry.class, options );
 				st.setBytes( index, H2GISWkb.to( geometry ) );
 			}
 
 			@Override
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
-				final Geometry geometry = getJavaTypeDescriptor().unwrap( value, Geometry.class, options );
+				final Geometry geometry = getJavaType().unwrap( value, Geometry.class, options );
 				st.setBytes( name, H2GISWkb.to( geometry ) );
 			}
 		};
 	}
 
 	@Override
-	public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaTypeDescriptor) {
-		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
+	public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaType) {
+		return new BasicExtractor<X>( javaType, this ) {
 
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-				return getJavaTypeDescriptor().wrap( H2GISWkb.from( rs.getObject( paramIndex ) ), options );
+				return getJavaType().wrap( H2GISWkb.from( rs.getObject( paramIndex ) ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-				return getJavaTypeDescriptor().wrap( H2GISWkb.from( statement.getObject( index ) ), options );
+				return getJavaType().wrap( H2GISWkb.from( statement.getObject( index ) ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
 					throws SQLException {
-				return getJavaTypeDescriptor().wrap( H2GISWkb.from( statement.getObject( name ) ), options );
+				return getJavaType().wrap( H2GISWkb.from( statement.getObject( name ) ), options );
 			}
 		};
 	}

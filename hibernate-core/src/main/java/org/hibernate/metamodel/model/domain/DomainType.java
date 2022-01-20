@@ -35,7 +35,7 @@ public interface DomainType<J> extends SqmExpressable<J> {
 	 */
 	default String getTypeName() {
 		// default impl to handle the general case returning the Java type name
-		return getExpressableJavaTypeDescriptor().getJavaType().getTypeName();
+		return getExpressableJavaType().getJavaType().getTypeName();
 	}
 
 	/**
@@ -44,5 +44,5 @@ public interface DomainType<J> extends SqmExpressable<J> {
 	 *
 	 * @see #getTypeName
 	 */
-	JavaType<J> getExpressableJavaTypeDescriptor();
+	JavaType<J> getExpressableJavaType();
 }

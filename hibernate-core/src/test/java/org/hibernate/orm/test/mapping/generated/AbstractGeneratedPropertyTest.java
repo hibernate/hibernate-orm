@@ -12,7 +12,7 @@ import org.hibernate.Transaction;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
-import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -54,11 +54,11 @@ public abstract class AbstractGeneratedPropertyTest extends BaseCoreFunctionalTe
 			s = openSession();
 			t = s.beginTransaction();
 			entity = ( GeneratedPropertyEntity ) s.get( GeneratedPropertyEntity.class, entity.getId() );
-			assertTrue( PrimitiveByteArrayJavaTypeDescriptor.INSTANCE.areEqual( bytes, entity.getLastModified() ) );
+			assertTrue( PrimitiveByteArrayJavaType.INSTANCE.areEqual( bytes, entity.getLastModified() ) );
 			t.commit();
 			s.close();
 
-			assertTrue( PrimitiveByteArrayJavaTypeDescriptor.INSTANCE.areEqual( bytes, entity.getLastModified() ) );
+			assertTrue( PrimitiveByteArrayJavaType.INSTANCE.areEqual( bytes, entity.getLastModified() ) );
 
 			s = openSession();
 			t = s.beginTransaction();

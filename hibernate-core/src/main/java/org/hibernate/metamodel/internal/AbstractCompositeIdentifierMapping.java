@@ -92,8 +92,8 @@ public abstract class AbstractCompositeIdentifierMapping
 	}
 
 	@Override
-	public JavaType<?> getJavaTypeDescriptor() {
-		return getPartMappingType().getMappedJavaTypeDescriptor();
+	public JavaType<?> getJavaType() {
+		return getPartMappingType().getMappedJavaType();
 	}
 
 	@Override

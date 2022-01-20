@@ -47,7 +47,7 @@ public class EntityDomainResultBuilder implements ResultBuilder {
 
 	@Override
 	public Class<?> getJavaType() {
-		return entityDescriptor.getJavaTypeDescriptor().getJavaTypeClass();
+		return entityDescriptor.getJavaType().getJavaTypeClass();
 	}
 
 	@Override

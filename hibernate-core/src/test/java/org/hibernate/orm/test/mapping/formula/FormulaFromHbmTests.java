@@ -40,7 +40,7 @@ public class FormulaFromHbmTests {
 				(rootClass) -> {
 					final JdbcTypeRegistry jdbcTypeRegistry = scope.getDomainModel()
 							.getTypeConfiguration()
-							.getJdbcTypeDescriptorRegistry();
+							.getJdbcTypeRegistry();
 					final Property stringFormula = rootClass.getProperty( "stringFormula" );
 					{
 						final int[] sqlTypes = stringFormula.getType().getSqlTypeCodes( scope.getDomainModel() );

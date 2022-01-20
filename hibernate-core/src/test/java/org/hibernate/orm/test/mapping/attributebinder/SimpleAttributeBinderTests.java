@@ -11,7 +11,6 @@ import java.sql.Types;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Property;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
-import org.hibernate.type.spi.TypeConfiguration;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
@@ -36,11 +35,11 @@ public class SimpleAttributeBinderTests {
 			final JdbcTypeRegistry jdbcTypeRegistry = activeMapping.getBuildingContext()
 					.getBuildingOptions()
 					.getTypeConfiguration()
-					.getJdbcTypeDescriptorRegistry();
+					.getJdbcTypeRegistry();
 
-			assertThat( resolution.getDomainJavaDescriptor().getJavaType() ).isEqualTo( Boolean.class );
-			assertThat( resolution.getRelationalJavaDescriptor().getJavaType() ).isEqualTo( Character.class );
-			assertThat( resolution.getJdbcTypeDescriptor() ).isEqualTo( jdbcTypeRegistry.getDescriptor( Types.CHAR ) );
+			assertThat( resolution.getDomainJavaType().getJavaType() ).isEqualTo( Boolean.class );
+			assertThat( resolution.getRelationalJavaType().getJavaType() ).isEqualTo( Character.class );
+			assertThat( resolution.getJdbcType() ).isEqualTo( jdbcTypeRegistry.getDescriptor( Types.CHAR ) );
 			assertThat( resolution.getValueConverter() ).isNotNull();
 		} );
 	}

@@ -15,14 +15,14 @@ import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 
 /**
  * Descriptor for {@link Float} handling.
  *
  * @author Steve Ebersole
  */
-public class FloatTypeDescriptor extends AbstractClassJavaTypeDescriptor<Float> implements PrimitiveJavaType<Float> {
+public class FloatTypeDescriptor extends AbstractClassJavaType<Float> implements PrimitiveJavaType<Float> {
 	public static final FloatTypeDescriptor INSTANCE = new FloatTypeDescriptor();
 
 	public FloatTypeDescriptor() {
@@ -30,8 +30,8 @@ public class FloatTypeDescriptor extends AbstractClassJavaTypeDescriptor<Float> 
 	}
 
 	@Override
-	public JdbcType getRecommendedJdbcType(JdbcTypeDescriptorIndicators indicators) {
-		return indicators.getTypeConfiguration().getJdbcTypeDescriptorRegistry().getDescriptor( SqlTypes.FLOAT );
+	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators indicators) {
+		return indicators.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( SqlTypes.FLOAT );
 	}
 
 	@Override

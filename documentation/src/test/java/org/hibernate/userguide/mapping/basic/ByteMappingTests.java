@@ -42,24 +42,24 @@ public class ByteMappingTests {
 		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
 		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor(EntityOfBytes.class);
 		final JdbcTypeRegistry jdbcTypeRegistry = domainModel.getTypeConfiguration()
-				.getJdbcTypeDescriptorRegistry();
+				.getJdbcTypeRegistry();
 
 		{
 			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("wrapper");
-			assertThat(attribute.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Byte.class));
+			assertThat( attribute.getJavaType().getJavaTypeClass(), equalTo( Byte.class));
 
 			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
 			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Byte.class));
-			assertThat(jdbcMapping.getJdbcTypeDescriptor(), is(jdbcTypeRegistry.getDescriptor(Types.TINYINT)));
+			assertThat( jdbcMapping.getJdbcType(), is( jdbcTypeRegistry.getDescriptor( Types.TINYINT)));
 		}
 
 		{
 			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("primitive");
-			assertThat(attribute.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Byte.class));
+			assertThat( attribute.getJavaType().getJavaTypeClass(), equalTo( Byte.class));
 
 			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
 			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Byte.class));
-			assertThat(jdbcMapping.getJdbcTypeDescriptor(), is(jdbcTypeRegistry.getDescriptor(Types.TINYINT)));
+			assertThat( jdbcMapping.getJdbcType(), is( jdbcTypeRegistry.getDescriptor( Types.TINYINT)));
 		}
 
 

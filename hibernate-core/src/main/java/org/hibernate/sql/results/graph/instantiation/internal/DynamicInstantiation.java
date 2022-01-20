@@ -15,8 +15,6 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.DynamicInstantiationNature;
 import org.hibernate.query.sqm.sql.ConversionException;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -32,7 +30,7 @@ public class DynamicInstantiation<T> implements DomainResultProducer {
 	private static final Logger log = Logger.getLogger( DynamicInstantiation.class );
 
 	private final DynamicInstantiationNature nature;
-	private final JavaType<T> targetJavaTypeDescriptor;
+	private final JavaType<T> targetJavaType;
 	private List<DynamicInstantiationArgument> arguments;
 
 	private boolean argumentAdditionsComplete = false;
@@ -40,9 +38,9 @@ public class DynamicInstantiation<T> implements DomainResultProducer {
 	@SuppressWarnings("WeakerAccess")
 	public DynamicInstantiation(
 			DynamicInstantiationNature nature,
-			JavaType<T> targetJavaTypeDescriptor) {
+			JavaType<T> targetJavaType) {
 		this.nature = nature;
-		this.targetJavaTypeDescriptor = targetJavaTypeDescriptor;
+		this.targetJavaType = targetJavaType;
 	}
 
 	public DynamicInstantiationNature getNature() {
@@ -50,15 +48,8 @@ public class DynamicInstantiation<T> implements DomainResultProducer {
 	}
 
 	@SuppressWarnings("WeakerAccess")
-	public JavaType<T> getTargetJavaTypeDescriptor() {
-		return targetJavaTypeDescriptor;
-	}
-
-	/**
-	 * todo (6.0) : remove this.  find usages and replace with #getTargetJavaTypeDescriptor
-	 */
-	public Class<T> getTargetJavaType() {
-		return getTargetJavaTypeDescriptor().getJavaTypeClass();
+	public JavaType<T> getTargetJavaType() {
+		return targetJavaType;
 	}
 
 	public void addArgument(String alias, DomainResultProducer<?> argumentResultProducer, DomainResultCreationState creationState) {
@@ -70,7 +61,7 @@ public class DynamicInstantiation<T> implements DomainResultProducer {
 			arguments = new ArrayList<>();
 		}
 
-		if ( List.class.equals( getTargetJavaTypeDescriptor().getJavaTypeClass() ) ) {
+		if ( List.class.equals( getTargetJavaType().getJavaTypeClass() ) ) {
 			// really should not have an alias...
 			if ( alias != null && log.isDebugEnabled() ) {
 				log.debugf(
@@ -81,7 +72,7 @@ public class DynamicInstantiation<T> implements DomainResultProducer {
 				);
 			}
 		}
-		else if ( Map.class.equals( getTargetJavaTypeDescriptor().getJavaTypeClass() ) ) {
+		else if ( Map.class.equals( getTargetJavaType().getJavaTypeClass() ) ) {
 			// Retain the default alias we also used in 5.x which is the position
 			if ( alias == null ) {
 				alias = Integer.toString( arguments.size() );
@@ -102,7 +93,7 @@ public class DynamicInstantiation<T> implements DomainResultProducer {
 
 	@Override
 	public String toString() {
-		return "DynamicInstantiation(" + getTargetJavaTypeDescriptor().getJavaType().getTypeName() + ")";
+		return "DynamicInstantiation(" + getTargetJavaType().getJavaType().getTypeName() + ")";
 	}
 
 	@Override
@@ -113,7 +104,7 @@ public class DynamicInstantiation<T> implements DomainResultProducer {
 		return new DynamicInstantiationResultImpl(
 				resultVariable,
 				getNature(),
-				getTargetJavaTypeDescriptor(),
+				getTargetJavaType(),
 				getArguments().stream()
 						.map( argument -> argument.buildArgumentDomainResult( creationState ) )
 						.collect( Collectors.toList() )
@@ -140,7 +131,7 @@ public class DynamicInstantiation<T> implements DomainResultProducer {
 //				log.debug( "One or more arguments for List dynamic instantiation (`new list(...)`) specified an alias; ignoring" );
 //			}
 //			return new DynamicInstantiationListAssemblerImpl(
-//					(JavaTypeDescriptor<List>) dynamicInstantiation.getTargetJavaTypeDescriptor(),
+//					(JavaType<List>) dynamicInstantiation.getTargetJavaType(),
 //					argumentReaders
 //			);
 //		}
@@ -154,35 +145,35 @@ public class DynamicInstantiation<T> implements DomainResultProducer {
 //				);
 //			}
 //			return new DynamicInstantiationMapAssemblerImpl(
-//					(JavaTypeDescriptor<Map>) dynamicInstantiation.getTargetJavaTypeDescriptor(),
+//					(JavaType<Map>) dynamicInstantiation.getTargetJavaType(),
 //					argumentReaders
 //			);
 //		}
 //		else {
 //			// find a constructor matching argument types
 //			constructor_loop:
-//			for ( Constructor constructor : dynamicInstantiation.getTargetJavaTypeDescriptor().getJavaType().getDeclaredConstructors() ) {
+//			for ( Constructor constructor : dynamicInstantiation.getTargetJavaType().getJavaType().getDeclaredConstructors() ) {
 //				if ( constructor.getParameterTypes().length != dynamicInstantiation.arguments.size() ) {
 //					continue;
 //				}
 //
 //				for ( int i = 0; i < dynamicInstantiation.arguments.size(); i++ ) {
 //					final ArgumentReader argumentReader = argumentReaders.get( i );
-//					final JavaTypeDescriptor argumentTypeDescriptor = creationState.getSqlAstCreationContext().getDomainModel()
+//					final JavaType argumentType = creationState.getSqlAstCreationContext().getDomainModel()
 //							.getTypeConfiguration()
-//							.getJavaTypeDescriptorRegistry()
+//							.getJavaTypeRegistry()
 //							.resolveDescriptor( constructor.getParameterTypes()[i] );
 //
 //					final boolean assignmentCompatible = Compatibility.areAssignmentCompatible(
-//							argumentTypeDescriptor,
-//							argumentReader.getAssembledJavaTypeDescriptor()
+//							argumentType,
+//							argumentReader.getAssembledJavaType()
 //					);
 //					if ( !assignmentCompatible ) {
 //						log.debugf(
 //								"Skipping constructor for dynamic-instantiation match due to argument mismatch [%s] : %s -> %s",
 //								i,
 //								constructor.getParameterTypes()[i].getName(),
-//								argumentTypeDescriptor.getJavaType().getName()
+//								argumentType.getJavaType().getName()
 //						);
 //						continue constructor_loop;
 //					}
@@ -191,14 +182,14 @@ public class DynamicInstantiation<T> implements DomainResultProducer {
 //				constructor.setAccessible( true );
 //				return new DynamicInstantiationConstructorAssemblerImpl(
 //						constructor,
-//						dynamicInstantiation.getTargetJavaTypeDescriptor(),
+//						dynamicInstantiation.getTargetJavaType(),
 //						argumentReaders
 //				);
 //			}
 //
 //			log.debugf(
 //					"Could not locate appropriate constructor for dynamic instantiation of [%s]; attempting bean-injection instantiation",
-//					dynamicInstantiation.getTargetJavaTypeDescriptor().getJavaType().getName()
+//					dynamicInstantiation.getTargetJavaType().getJavaType().getName()
 //			);
 //
 //
@@ -215,7 +206,7 @@ public class DynamicInstantiation<T> implements DomainResultProducer {
 //			}
 //
 //			return new DynamicInstantiationInjectionAssemblerImpl(
-//					dynamicInstantiation.getTargetJavaTypeDescriptor(),
+//					dynamicInstantiation.getTargetJavaType(),
 //					argumentReaders
 //			);
 //		}
@@ -223,14 +214,14 @@ public class DynamicInstantiation<T> implements DomainResultProducer {
 //
 //	class Builder {
 //		private final DynamicInstantiationNature nature;
-//		private final JavaTypeDescriptor<T> targetJavaTypeDescriptor;
+//		private final JavaType<T> targetJavaType;
 //		private List<DynamicInstantiationArgument> arguments;
 //
 //		public Builder(
 //				DynamicInstantiationNature nature,
-//				JavaTypeDescriptor<T> targetJavaTypeDescriptor) {
+//				JavaTypeDescriptor<T> targetJavaType) {
 //			this.nature = nature;
-//			this.targetJavaTypeDescriptor = targetJavaTypeDescriptor;
+//			this.targetJavaType = targetJavaType;
 //		}
 //
 //

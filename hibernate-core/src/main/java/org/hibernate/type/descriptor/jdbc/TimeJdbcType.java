@@ -55,21 +55,21 @@ public class TimeJdbcType implements JdbcType {
 			Integer length,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
-		return (BasicJavaType<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Time.class );
+		return (BasicJavaType<T>) typeConfiguration.getJavaTypeRegistry().getDescriptor( Time.class );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaTypeDescriptor) {
-		return new JdbcLiteralFormatterTemporal( javaTypeDescriptor, TemporalType.TIME );
+	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaType) {
+		return new JdbcLiteralFormatterTemporal( javaType, TemporalType.TIME );
 	}
 
 	@Override
-	public <X> ValueBinder<X> getBinder(final JavaType<X> javaTypeDescriptor) {
-		return new BasicBinder<X>( javaTypeDescriptor, this ) {
+	public <X> ValueBinder<X> getBinder(final JavaType<X> javaType) {
+		return new BasicBinder<X>( javaType, this ) {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
-				final Time time = javaTypeDescriptor.unwrap( value, Time.class, options );
+				final Time time = javaType.unwrap( value, Time.class, options );
 				if ( value instanceof Calendar ) {
 					st.setTime( index, time, (Calendar) value );
 				}
@@ -84,7 +84,7 @@ public class TimeJdbcType implements JdbcType {
 			@Override
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
-				final Time time = javaTypeDescriptor.unwrap( value, Time.class, options );
+				final Time time = javaType.unwrap( value, Time.class, options );
 				if ( value instanceof Calendar ) {
 					st.setTime( name, time, (Calendar) value );
 				}
@@ -99,27 +99,27 @@ public class TimeJdbcType implements JdbcType {
 	}
 
 	@Override
-	public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaTypeDescriptor) {
-		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
+	public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaType) {
+		return new BasicExtractor<X>( javaType, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
 				return options.getJdbcTimeZone() != null ?
-						javaTypeDescriptor.wrap( rs.getTime( paramIndex, Calendar.getInstance( options.getJdbcTimeZone() ) ), options ) :
-						javaTypeDescriptor.wrap( rs.getTime( paramIndex ), options );
+						javaType.wrap( rs.getTime( paramIndex, Calendar.getInstance( options.getJdbcTimeZone() ) ), options ) :
+						javaType.wrap( rs.getTime( paramIndex ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
 				return options.getJdbcTimeZone() != null ?
-						javaTypeDescriptor.wrap( statement.getTime( index, Calendar.getInstance( options.getJdbcTimeZone() ) ), options ) :
-						javaTypeDescriptor.wrap( statement.getTime( index ), options );
+						javaType.wrap( statement.getTime( index, Calendar.getInstance( options.getJdbcTimeZone() ) ), options ) :
+						javaType.wrap( statement.getTime( index ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
 				return options.getJdbcTimeZone() != null ?
-						javaTypeDescriptor.wrap( statement.getTime( name, Calendar.getInstance( options.getJdbcTimeZone() ) ), options ) :
-						javaTypeDescriptor.wrap( statement.getTime( name ), options );
+						javaType.wrap( statement.getTime( name, Calendar.getInstance( options.getJdbcTimeZone() ) ), options ) :
+						javaType.wrap( statement.getTime( name ), options );
 			}
 		};
 	}

@@ -28,7 +28,7 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
-import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -94,9 +94,9 @@ public class FullyQualifiedReflectivePathTerminal
 					if ( namedClass.isEnum() ) {
 						return new SqmEnumLiteral(
 								Enum.valueOf( namedClass, getLocalName() ),
-								(EnumJavaTypeDescriptor) creationState.getCreationContext().getJpaMetamodel().getTypeConfiguration().getJavaTypeDescriptorRegistry().resolveDescriptor(
+								(EnumJavaType) creationState.getCreationContext().getJpaMetamodel().getTypeConfiguration().getJavaTypeRegistry().resolveDescriptor(
 										namedClass,
-										() -> new EnumJavaTypeDescriptor( namedClass )
+										() -> new EnumJavaType( namedClass )
 								),
 								getLocalName(),
 								nodeBuilder()
@@ -106,9 +106,9 @@ public class FullyQualifiedReflectivePathTerminal
 						final Field field = namedClass.getField( getLocalName() );
 						return new SqmFieldLiteral(
 								field,
-								creationState.getCreationContext().getJpaMetamodel().getTypeConfiguration().getJavaTypeDescriptorRegistry().resolveDescriptor(
+								creationState.getCreationContext().getJpaMetamodel().getTypeConfiguration().getJavaTypeRegistry().resolveDescriptor(
 										namedClass,
-										() -> new EnumJavaTypeDescriptor( namedClass )
+										() -> new EnumJavaType( namedClass )
 								),
 								nodeBuilder()
 						);
@@ -136,7 +136,7 @@ public class FullyQualifiedReflectivePathTerminal
 
 	@Override
 	public JavaType getJavaTypeDescriptor() {
-		return expressableType.getExpressableJavaTypeDescriptor();
+		return expressableType.getExpressableJavaType();
 	}
 
 

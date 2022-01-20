@@ -366,7 +366,7 @@ public class QuerySqmImpl<R>
 				final SqmParameter<?> sqmParameter = (SqmParameter<?>) sqmSelection.getSelectableNode();
 
 				// we may not yet know a selection type
-				if ( sqmParameter.getNodeType() == null || sqmParameter.getNodeType().getExpressableJavaTypeDescriptor() == null ) {
+				if ( sqmParameter.getNodeType() == null || sqmParameter.getNodeType().getExpressableJavaType() == null ) {
 					// we can't verify the result type up front
 					return;
 				}
@@ -381,21 +381,21 @@ public class QuerySqmImpl<R>
 			SqmExpressable<?> sqmExpressable,
 			SessionFactoryImplementor sessionFactory) {
 		assert sqmExpressable != null;
-		assert sqmExpressable.getExpressableJavaTypeDescriptor() != null;
+		assert sqmExpressable.getExpressableJavaType() != null;
 
-		final Class<?> javaTypeClass = sqmExpressable.getExpressableJavaTypeDescriptor().getJavaTypeClass();
+		final Class<?> javaTypeClass = sqmExpressable.getExpressableJavaType().getJavaTypeClass();
 		if ( ! resultClass.isAssignableFrom( javaTypeClass ) ) {
 			// Special case for date because we always report java.util.Date as expression type
 			// But the expected resultClass could be a subtype of that, so we need to check the JdbcType
 			if ( javaTypeClass == Date.class ) {
 				JdbcType jdbcType = null;
 				if ( sqmExpressable instanceof BasicDomainType<?> ) {
-					jdbcType = ( (BasicDomainType<?>) sqmExpressable ).getJdbcTypeDescriptor();
+					jdbcType = ( (BasicDomainType<?>) sqmExpressable ).getJdbcType();
 				}
 				else if ( sqmExpressable instanceof SqmPathSource<?> ) {
 					final DomainType<?> domainType = ( (SqmPathSource<?>) sqmExpressable ).getSqmPathType();
 					if ( domainType instanceof BasicDomainType<?> ) {
-						jdbcType = ( (BasicDomainType<?>) domainType ).getJdbcTypeDescriptor();
+						jdbcType = ( (BasicDomainType<?>) domainType ).getJdbcType();
 					}
 				}
 				if ( jdbcType != null ) {
@@ -421,7 +421,7 @@ public class QuerySqmImpl<R>
 			final String errorMessage = String.format(
 					"Specified result type [%s] did not match Query selection type [%s] - multiple selections: use Tuple or array",
 					resultClass.getName(),
-					sqmExpressable.getExpressableJavaTypeDescriptor().getJavaType().getTypeName()
+					sqmExpressable.getExpressableJavaType().getJavaType().getTypeName()
 			);
 
 			if ( sessionFactory.getSessionFactoryOptions().getJpaCompliance().isJpaQueryComplianceEnabled() ) {
@@ -501,15 +501,15 @@ public class QuerySqmImpl<R>
 		}
 		for ( int i = 0; i < expressionsSize; i++ ) {
 			final SqmTypedNode<?> expression = expressions.get( i );
-			if ( expression.getNodeJavaTypeDescriptor() == null ) {
+			if ( expression.getNodeJavaType() == null ) {
 				continue;
 			}
-			if ( insertionTargetPaths.get( i ).getJavaTypeDescriptor() != expression.getNodeJavaTypeDescriptor() ) {
+			if ( insertionTargetPaths.get( i ).getJavaTypeDescriptor() != expression.getNodeJavaType() ) {
 				throw new SemanticException(
 						String.format(
 								"Expected insert attribute type [%s] did not match Query selection type [%s] at selection index [%d]",
 								insertionTargetPaths.get( i ).getJavaTypeDescriptor().getJavaType().getTypeName(),
-								expression.getNodeJavaTypeDescriptor().getJavaType().getTypeName(),
+								expression.getNodeJavaType().getJavaType().getTypeName(),
 								i
 						),
 						hqlString,

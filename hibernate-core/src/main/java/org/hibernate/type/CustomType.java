@@ -59,7 +59,7 @@ public class CustomType<J>
 
 	private final String name;
 
-	private final BasicJavaType<J> mappedJavaTypeDescriptor;
+	private final BasicJavaType<J> mappedJavaType;
 	private final JdbcType jdbcType;
 
 	private final ValueExtractor<J> valueExtractor;
@@ -78,24 +78,24 @@ public class CustomType<J>
 
 		if ( userType instanceof BasicJavaType ) {
 			//noinspection unchecked
-			this.mappedJavaTypeDescriptor = ( (BasicJavaType<J>) userType );
+			this.mappedJavaType = ( (BasicJavaType<J>) userType );
 		}
 		else if ( userType instanceof JavaTypedExpressable ) {
 			//noinspection unchecked
-			this.mappedJavaTypeDescriptor = (BasicJavaType<J>) ( (JavaTypedExpressable<J>) userType ).getExpressableJavaTypeDescriptor();
+			this.mappedJavaType = (BasicJavaType<J>) ( (JavaTypedExpressable<J>) userType ).getExpressableJavaType();
 		}
 		else if ( userType instanceof UserVersionType ) {
-			this.mappedJavaTypeDescriptor = new UserTypeVersionJavaTypeWrapper<>( (UserVersionType<J>) userType );
+			this.mappedJavaType = new UserTypeVersionJavaTypeWrapper<>( (UserVersionType<J>) userType );
 		}
 		else {
-			this.mappedJavaTypeDescriptor = new UserTypeJavaTypeWrapper<>( userType );
+			this.mappedJavaType = new UserTypeJavaTypeWrapper<>( userType );
 		}
 
 		// create a JdbcType adapter that uses the UserType binder/extract handling
-		this.jdbcType = new UserTypeSqlTypeAdapter<>( userType, mappedJavaTypeDescriptor , typeConfiguration);
+		this.jdbcType = new UserTypeSqlTypeAdapter<>( userType, mappedJavaType, typeConfiguration);
 
-		this.valueExtractor = jdbcType.getExtractor( mappedJavaTypeDescriptor );
-		this.valueBinder = jdbcType.getBinder( mappedJavaTypeDescriptor );
+		this.valueExtractor = jdbcType.getExtractor( mappedJavaType );
+		this.valueBinder = jdbcType.getBinder( mappedJavaType );
 
 		if ( userType instanceof Sized ) {
 			final Sized sized = (Sized) userType;
@@ -125,7 +125,7 @@ public class CustomType<J>
 	}
 
 	@Override
-	public JdbcType getJdbcTypeDescriptor() {
+	public JdbcType getJdbcType() {
 		return jdbcType;
 	}
 
@@ -337,21 +337,21 @@ public class CustomType<J>
 
 	@Override
 	public Class<J> getJavaType() {
-		return mappedJavaTypeDescriptor.getJavaTypeClass();
+		return mappedJavaType.getJavaTypeClass();
 	}
 
 	@Override
-	public JavaType<J> getMappedJavaTypeDescriptor() {
-		return mappedJavaTypeDescriptor;
+	public JavaType<J> getMappedJavaType() {
+		return mappedJavaType;
 	}
 
 	@Override
-	public JavaType<J> getExpressableJavaTypeDescriptor() {
-		return getMappedJavaTypeDescriptor();
+	public JavaType<J> getExpressableJavaType() {
+		return this.getMappedJavaType();
 	}
 
 	@Override
 	public JavaType<J> getJavaTypeDescriptor() {
-		return getMappedJavaTypeDescriptor();
+		return this.getMappedJavaType();
 	}
 }

@@ -349,10 +349,10 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.BasicJavaType;
-import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.UserVersionType;
 
@@ -375,7 +375,7 @@ import static org.hibernate.type.spi.TypeConfiguration.isDuration;
  * @author Steve Ebersole
  */
 public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends BaseSemanticQueryWalker
-		implements SqmTranslator<T>, DomainResultCreationState, JdbcTypeDescriptorIndicators {
+		implements SqmTranslator<T>, DomainResultCreationState, JdbcTypeIndicators {
 
 	private static final Logger log = Logger.getLogger( BaseSqmToSqlAstConverter.class );
 
@@ -752,8 +752,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		final ColumnReference versionColumn = targetColumnReferences.get( 0 );
 		final Expression value;
-		if ( versionMapping.getJdbcMapping().getJdbcTypeDescriptor().isTemporal() ) {
-			value = new VersionTypeSeedParameterSpecification( versionType, persister.getVersionJavaTypeDescriptor() );
+		if ( versionMapping.getJdbcMapping().getJdbcType().isTemporal() ) {
+			value = new VersionTypeSeedParameterSpecification( versionType, persister.getVersionJavaType() );
 		}
 		else {
 			value = new BinaryArithmeticExpression(
@@ -1153,7 +1153,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			targetColumnReferenceConsumer.accept( versionPath, targetColumnReferences );
 			versionExpression = new VersionTypeSeedParameterSpecification(
 					entityDescriptor.getVersionMapping().getJdbcMapping(),
-					entityDescriptor.getVersionJavaTypeDescriptor()
+					entityDescriptor.getVersionJavaType()
 			);
 		}
 		if ( discriminatorMapping != null && discriminatorMapping.isPhysical() ) {
@@ -1398,7 +1398,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		return getCreationContext().getDomainModel()
 				.getTypeConfiguration()
-				.getJavaTypeDescriptorRegistry()
+				.getJavaTypeRegistry()
 				.getDescriptor( targetJavaType );
 	}
 
@@ -3203,7 +3203,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				Duration duration;
 				if ( durationType.getJdbcMappings()
 						.get( 0 )
-						.getJdbcTypeDescriptor()
+						.getJdbcType()
 						.isInterval() ) {
 					// For interval types, we need to extract the epoch for integer arithmetic for the 'by unit' operator
 					duration = new Duration(
@@ -3496,7 +3496,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					String resultVariable,
 					DomainResultCreationState creationState) {
 				final JavaType<Map.Entry<Object, Object>> mapEntryDescriptor = getTypeConfiguration()
-						.getJavaTypeDescriptorRegistry()
+						.getJavaTypeRegistry()
 						.resolveDescriptor( Map.Entry.class );
 				return new SqmMapEntryResult<>( indexResult, valueResult, resultVariable, mapEntryDescriptor );
 			}
@@ -3926,18 +3926,18 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				final Object literalValue = literal.getLiteralValue();
 				final Object sqlLiteralValue;
 
-				if ( valueConverter.getDomainJavaDescriptor().getJavaTypeClass().isInstance( literalValue ) ) {
+				if ( valueConverter.getDomainJavaType().getJavaTypeClass().isInstance( literalValue ) ) {
 					sqlLiteralValue = valueConverter.toRelationalValue( literalValue );
 				}
 				else {
-					if ( !valueConverter.getRelationalJavaDescriptor().getJavaTypeClass().isInstance( literalValue ) ) {
+					if ( !valueConverter.getRelationalJavaType().getJavaTypeClass().isInstance( literalValue ) ) {
 						throw new SqlTreeCreationException(
 								String.format(
 										Locale.ROOT,
 										"QueryLiteral type [`%s`] did not match domain Java-type [`%s`] nor JDBC Java-type [`%s`]",
 										literalValue.getClass(),
-										valueConverter.getDomainJavaDescriptor().getJavaTypeClass().getName(),
-										valueConverter.getRelationalJavaDescriptor().getJavaTypeClass().getName()
+										valueConverter.getDomainJavaType().getJavaTypeClass().getName(),
+										valueConverter.getRelationalJavaType().getJavaTypeClass().getName()
 								)
 						);
 					}
@@ -3957,19 +3957,19 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						.getEntityDescriptor( (Class<?>) literalValue );
 			}
 			else {
-				final JavaType<?> javaTypeDescriptor = discriminatorMapping.getJdbcMapping().getJavaTypeDescriptor();
+				final JavaType<?> javaType = discriminatorMapping.getJdbcMapping().getJavaTypeDescriptor();
 				final Object discriminatorValue;
-				if ( javaTypeDescriptor.getJavaTypeClass().isInstance( literalValue ) ) {
+				if ( javaType.getJavaTypeClass().isInstance( literalValue ) ) {
 					discriminatorValue = literalValue;
 				}
 				else if ( literalValue instanceof CharSequence ) {
-					discriminatorValue = javaTypeDescriptor.fromString( (CharSequence) literalValue );
+					discriminatorValue = javaType.fromString( (CharSequence) literalValue );
 				}
 				else if ( creationContext.getSessionFactory().getJpaMetamodel().getJpaCompliance().isLoadByIdComplianceEnabled() ) {
 					discriminatorValue = literalValue;
 				}
 				else {
-					discriminatorValue = javaTypeDescriptor.coerce( literalValue, null );
+					discriminatorValue = javaType.coerce( literalValue, null );
 				}
 				final String entityName = discriminatorMapping.getConcreteEntityNameForDiscriminatorValue(
 						discriminatorValue
@@ -4448,7 +4448,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				return inferredValueMapping;
 			}
 			return getTypeConfiguration().getBasicTypeForJavaType(
-					paramSqmType.getExpressableJavaTypeDescriptor().getJavaTypeClass()
+					paramSqmType.getExpressableJavaType().getJavaTypeClass()
 			);
 		}
 
@@ -4601,7 +4601,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			targetType = InferredBasicValueResolver.resolveSqlTypeIndicators(
 					this,
 					(BasicType<?>) targetType,
-					target.getNodeJavaTypeDescriptor()
+					target.getNodeJavaType()
 			);
 		}
 		return new CastTarget(
@@ -4698,7 +4698,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 			else {
 				return getTypeConfiguration().getBasicTypeForJavaType(
-						nodeType.getExpressableJavaTypeDescriptor().getJavaTypeClass()
+						nodeType.getExpressableJavaType().getJavaTypeClass()
 				);
 			}
 		}
@@ -4934,7 +4934,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				else {
 					final BasicValuedMapping magnitudeType = (BasicValuedMapping) magnitude.getExpressionType();
 					final BasicValuedMapping expressionType;
-					if ( magnitudeType.getJdbcMapping().getJdbcTypeDescriptor().isInterval() ) {
+					if ( magnitudeType.getJdbcMapping().getJdbcType().isInterval() ) {
 						expressionType = magnitudeType;
 					}
 					else {
@@ -5000,7 +5000,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			if ( scaledMagnitude.getExpressionType()
 					.getJdbcMappings()
 					.get( 0 )
-					.getJdbcTypeDescriptor()
+					.getJdbcType()
 					.isInterval() ) {
 				duration = new Duration( extractEpoch( scaledMagnitude ), SECOND, durationType );
 			}
@@ -5036,8 +5036,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private BasicValuedMapping widestNumeric(BasicValuedMapping lhs, BasicValuedMapping rhs) {
-		final CastType lhsCastType = lhs.getJdbcMapping().getJdbcTypeDescriptor().getCastType();
-		final CastType rhsCastType = rhs.getJdbcMapping().getJdbcTypeDescriptor().getCastType();
+		final CastType lhsCastType = lhs.getJdbcMapping().getJdbcType().getCastType();
+		final CastType rhsCastType = rhs.getJdbcMapping().getJdbcType().getCastType();
 		if ( lhsCastType == CastType.FIXED ) {
 			return lhs;
 		}
@@ -5297,10 +5297,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			return new QueryLiteral<>( jdbcValue, inferredPart );
 		}
 
-		final EnumJavaTypeDescriptor<?> enumJtd = sqmEnumLiteral.getExpressableJavaTypeDescriptor();
-		final JdbcType jdbcType = getTypeConfiguration().getJdbcTypeDescriptorRegistry().getDescriptor( SqlTypes.TINYINT );
+		final EnumJavaType<?> enumJtd = sqmEnumLiteral.getExpressableJavaType();
+		final JdbcType jdbcType = getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( SqlTypes.TINYINT );
 		final BasicJavaType<Integer> relationalJtd = (BasicJavaType) getTypeConfiguration()
-				.getJavaTypeDescriptorRegistry()
+				.getJavaTypeRegistry()
 				.getDescriptor( Integer.class );
 		final BasicType<?> jdbcMappingType = getTypeConfiguration().getBasicTypeRegistry().resolve( relationalJtd, jdbcType );
 
@@ -5828,8 +5828,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 //		}
 //
 //
-//		final JavaTypeDescriptor jtd = typeConfiguration
-//				.getJavaTypeDescriptorRegistry()
+//		final JavaType jtd = typeConfiguration
+//				.getJavaTypeRegistry()
 //				.getOrMakeJavaDescriptor( namedClass );
 	}
 
@@ -6186,9 +6186,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		@Override
 		public SqlSelection resolveSqlSelection(
 				Expression expression,
-				JavaType<?> javaTypeDescriptor,
+				JavaType<?> javaType,
 				TypeConfiguration typeConfiguration) {
-			return delegate.resolveSqlSelection( expression, javaTypeDescriptor, typeConfiguration );
+			return delegate.resolveSqlSelection( expression, javaType, typeConfiguration );
 		}
 
 		public void setSqmAliasedNodeCollector(SqmAliasedNodeCollector sqmAliasedNodeCollector) {
@@ -6239,9 +6239,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		@Override
 		public SqlSelection resolveSqlSelection(
 				Expression expression,
-				JavaType<?> javaTypeDescriptor,
+				JavaType<?> javaType,
 				TypeConfiguration typeConfiguration) {
-			SqlSelection selection = delegate.resolveSqlSelection( expression, javaTypeDescriptor, typeConfiguration );
+			SqlSelection selection = delegate.resolveSqlSelection( expression, javaType, typeConfiguration );
 			List<SqlSelection> sqlSelectionList = sqlSelectionsForSqmSelection[index];
 			if ( sqlSelectionList == null ) {
 				sqlSelectionsForSqmSelection[index] = sqlSelectionList = new ArrayList<>();

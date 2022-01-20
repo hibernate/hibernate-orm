@@ -48,7 +48,7 @@ public class TypeOverrideTest extends BaseSessionFactoryFunctionalTest {
 	public void testStandardBasicSqlTypeDescriptor() {
 		final Dialect dialect = getMetadata().getDatabase().getDialect();
 		final JdbcTypeRegistry jdbcTypeRegistry = getMetadata().getTypeConfiguration()
-				.getJdbcTypeDescriptorRegistry();
+				.getJdbcTypeRegistry();
 		// no override
 		assertSame( IntegerJdbcType.INSTANCE, jdbcTypeRegistry.getDescriptor( Types.INTEGER ) );
 

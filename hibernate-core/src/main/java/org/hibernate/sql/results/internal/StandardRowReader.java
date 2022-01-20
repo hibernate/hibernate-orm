@@ -66,19 +66,19 @@ public class StandardRowReader<T> implements RowReader<T> {
 	@SuppressWarnings("unchecked")
 	public Class<T> getResultJavaType() {
 		if ( resultAssemblers.size() == 1 ) {
-			return (Class<T>) resultAssemblers.get( 0 ).getAssembledJavaTypeDescriptor().getJavaTypeClass();
+			return (Class<T>) resultAssemblers.get( 0 ).getAssembledJavaType().getJavaTypeClass();
 		}
 
 		return (Class<T>) Object[].class;
 	}
 
 	@Override
-	public List<JavaType> getResultJavaTypeDescriptors() {
-		List<JavaType> javaTypeDescriptors = new ArrayList<>( resultAssemblers.size() );
+	public List<JavaType> getResultJavaTypes() {
+		List<JavaType> javaTypes = new ArrayList<>( resultAssemblers.size() );
 		for ( DomainResultAssembler resultAssembler : resultAssemblers ) {
-			javaTypeDescriptors.add( resultAssembler.getAssembledJavaTypeDescriptor() );
+			javaTypes.add( resultAssembler.getAssembledJavaType() );
 		}
-		return javaTypeDescriptors;
+		return javaTypes;
 	}
 
 	@Override

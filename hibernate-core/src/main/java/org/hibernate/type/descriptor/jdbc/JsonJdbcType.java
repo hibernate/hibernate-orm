@@ -44,14 +44,14 @@ public class JsonJdbcType implements JdbcType {
 	}
 
 	@Override
-	public <X> ValueBinder<X> getBinder(JavaType<X> javaTypeDescriptor) {
-		return new BasicBinder<X>( javaTypeDescriptor, this ) {
+	public <X> ValueBinder<X> getBinder(JavaType<X> javaType) {
+		return new BasicBinder<X>( javaType, this ) {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 					throws SQLException {
 				final String json = options.getSessionFactory().getFastSessionServices().getJsonFormatMapper().toString(
 						value,
-						getJavaTypeDescriptor(),
+						getJavaType(),
 						options
 				);
 				st.setString( index, json );
@@ -62,7 +62,7 @@ public class JsonJdbcType implements JdbcType {
 					throws SQLException {
 				final String json = options.getSessionFactory().getFastSessionServices().getJsonFormatMapper().toString(
 						value,
-						getJavaTypeDescriptor(),
+						getJavaType(),
 						options
 				);
 				st.setString( name, json );
@@ -71,13 +71,13 @@ public class JsonJdbcType implements JdbcType {
 	}
 
 	@Override
-	public <X> ValueExtractor<X> getExtractor(JavaType<X> javaTypeDescriptor) {
-		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
+	public <X> ValueExtractor<X> getExtractor(JavaType<X> javaType) {
+		return new BasicExtractor<X>( javaType, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
 				return options.getSessionFactory().getFastSessionServices().getJsonFormatMapper().fromString(
 						rs.getString( paramIndex ),
-						getJavaTypeDescriptor(),
+						getJavaType(),
 						options
 				);
 			}
@@ -86,7 +86,7 @@ public class JsonJdbcType implements JdbcType {
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
 				return options.getSessionFactory().getFastSessionServices().getJsonFormatMapper().fromString(
 						statement.getString( index ),
-						getJavaTypeDescriptor(),
+						getJavaType(),
 						options
 				);
 			}
@@ -95,7 +95,7 @@ public class JsonJdbcType implements JdbcType {
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
 				return options.getSessionFactory().getFastSessionServices().getJsonFormatMapper().fromString(
 						statement.getString( name ),
-						getJavaTypeDescriptor(),
+						getJavaType(),
 						options
 				);
 			}

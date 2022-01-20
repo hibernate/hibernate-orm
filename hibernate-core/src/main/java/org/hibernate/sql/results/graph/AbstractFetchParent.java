@@ -41,8 +41,8 @@ public abstract class AbstractFetchParent implements FetchParent {
 	}
 
 	@Override
-	public JavaType<?> getResultJavaTypeDescriptor() {
-		return fetchContainer.getJavaTypeDescriptor();
+	public JavaType<?> getResultJavaType() {
+		return fetchContainer.getJavaType();
 	}
 
 	@Override

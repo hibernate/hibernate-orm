@@ -273,7 +273,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 			type = getTypeForComponentValue( mapping, type, getTypeIndex() );
 		}
 		columnSize = dialect.getSizeStrategy().resolveSize(
-				( (JdbcMapping) type ).getJdbcTypeDescriptor(),
+				( (JdbcMapping) type ).getJdbcType(),
 				( (JdbcMapping) type ).getJavaTypeDescriptor(),
 				precision,
 				scale,

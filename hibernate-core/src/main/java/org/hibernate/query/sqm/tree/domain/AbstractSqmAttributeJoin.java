@@ -87,7 +87,7 @@ public abstract class AbstractSqmAttributeJoin<O,T>
 	}
 
 	@Override
-	public JavaType<T> getNodeJavaTypeDescriptor() {
+	public JavaType<T> getNodeJavaType() {
 		return getJavaTypeDescriptor();
 	}
 

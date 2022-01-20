@@ -36,7 +36,7 @@ public class ArgumentReader<A> implements DomainResultAssembler<A> {
 	}
 
 	@Override
-	public JavaType<A> getAssembledJavaTypeDescriptor() {
-		return delegateAssembler.getAssembledJavaTypeDescriptor();
+	public JavaType<A> getAssembledJavaType() {
+		return delegateAssembler.getAssembledJavaType();
 	}
 }

@@ -16,7 +16,7 @@ import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import org.hibernate.type.BasicType;
-import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 
 import static org.junit.Assert.assertTrue;
@@ -35,8 +35,8 @@ public class MaterializedBlobTest extends BaseCoreFunctionalTestCase {
 	public void testTypeSelection() {
 		int index = sessionFactory().getEntityPersister( MaterializedBlobEntity.class.getName() ).getEntityMetamodel().getPropertyIndex( "theBytes" );
 		BasicType<?> type = (BasicType<?>) sessionFactory().getEntityPersister( MaterializedBlobEntity.class.getName() ).getEntityMetamodel().getProperties()[index].getType();
-		assertTrue( type.getJavaTypeDescriptor() instanceof PrimitiveByteArrayJavaTypeDescriptor );
-		assertTrue( type.getJdbcTypeDescriptor() instanceof BlobJdbcType );
+		assertTrue( type.getJavaTypeDescriptor() instanceof PrimitiveByteArrayJavaType );
+		assertTrue( type.getJdbcType() instanceof BlobJdbcType );
 	}
 
 	@Test

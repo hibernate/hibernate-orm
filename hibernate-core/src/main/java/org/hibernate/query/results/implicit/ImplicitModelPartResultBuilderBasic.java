@@ -35,7 +35,7 @@ public class ImplicitModelPartResultBuilderBasic
 
 	@Override
 	public Class<?> getJavaType() {
-		return modelPart.getExpressableJavaTypeDescriptor().getJavaTypeClass();
+		return modelPart.getExpressableJavaType().getJavaTypeClass();
 	}
 
 	@Override

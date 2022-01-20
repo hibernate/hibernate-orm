@@ -48,21 +48,21 @@ public class YearMappingTests {
 
 		{
 			final BasicAttributeMapping yearAttribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "year" );
-			assertThat( yearAttribute.getJdbcMapping().getJdbcTypeDescriptor().getJdbcTypeCode() ).isEqualTo( Types.INTEGER );
+			assertThat( yearAttribute.getJdbcMapping().getJdbcType().getJdbcTypeCode() ).isEqualTo( Types.INTEGER );
 			assertThat( yearAttribute.getJdbcMapping().getJavaTypeDescriptor().getJavaTypeClass() ).isEqualTo( Year.class );
 		}
 
 		{
 			final PluralAttributeMapping yearsAttribute = (PluralAttributeMapping) entityDescriptor.findAttributeMapping( "years" );
 			final BasicValuedCollectionPart elementDescriptor = (BasicValuedCollectionPart) yearsAttribute.getElementDescriptor();
-			assertThat( elementDescriptor.getJdbcMapping().getJdbcTypeDescriptor().getJdbcTypeCode() ).isEqualTo( Types.INTEGER );
+			assertThat( elementDescriptor.getJdbcMapping().getJdbcType().getJdbcTypeCode() ).isEqualTo( Types.INTEGER );
 			assertThat( elementDescriptor.getJdbcMapping().getJavaTypeDescriptor().getJavaTypeClass() ).isEqualTo( Year.class );
 		}
 
 		{
 			final PluralAttributeMapping countByYearAttribute = (PluralAttributeMapping) entityDescriptor.findAttributeMapping( "countByYear" );
 			final BasicValuedCollectionPart keyDescriptor = (BasicValuedCollectionPart) countByYearAttribute.getIndexDescriptor();
-			assertThat( keyDescriptor.getJdbcMapping().getJdbcTypeDescriptor().getJdbcTypeCode() ).isEqualTo( Types.INTEGER );
+			assertThat( keyDescriptor.getJdbcMapping().getJdbcType().getJdbcTypeCode() ).isEqualTo( Types.INTEGER );
 			assertThat( keyDescriptor.getJdbcMapping().getJavaTypeDescriptor().getJavaTypeClass() ).isEqualTo( Year.class );
 		}
 	}

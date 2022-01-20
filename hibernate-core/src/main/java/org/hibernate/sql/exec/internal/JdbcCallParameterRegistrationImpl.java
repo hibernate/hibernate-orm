@@ -113,7 +113,7 @@ public class JdbcCallParameterRegistrationImpl implements JdbcCallParameterRegis
 	private void registerOutputParameter(
 			CallableStatement callableStatement,
 			SharedSessionContractImplementor session) {
-		final JdbcType sqlTypeDescriptor = ( (BasicDomainType) ormType ).getJdbcTypeDescriptor();
+		final JdbcType sqlTypeDescriptor = ( (BasicDomainType) ormType ).getJdbcType();
 		try {
 			if ( name != null ) {
 				callableStatement.registerOutParameter( name, sqlTypeDescriptor.getJdbcTypeCode() );

@@ -85,7 +85,7 @@ public class DynamicResultBuilderEntityStandard
 
 	@Override
 	public Class<?> getJavaType() {
-		return entityMapping.getJavaTypeDescriptor().getJavaTypeClass();
+		return entityMapping.getJavaType().getJavaTypeClass();
 	}
 
 	@Override
@@ -280,7 +280,7 @@ public class DynamicResultBuilderEntityStandard
 							return new ResultSetMappingSqlSelection( valuesArrayPosition, jdbcMapping );
 						}
 				),
-				jdbcMapping.getMappedJavaTypeDescriptor(),
+				jdbcMapping.getMappedJavaType(),
 				domainResultCreationState.getSqlAstCreationState().getCreationContext().getSessionFactory().getTypeConfiguration()
 		);
 	}

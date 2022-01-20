@@ -53,7 +53,7 @@ public abstract class AbstractJdbcParameter
 	public SqlSelection createSqlSelection(
 			int jdbcPosition,
 			int valuesArrayPosition,
-			JavaType javaTypeDescriptor,
+			JavaType javaType,
 			TypeConfiguration typeConfiguration) {
 		// todo (6.0) : investigate "virtual" or "static" selections
 		//		- anything that is the same for each row always - parameter, literal, etc;
@@ -85,7 +85,7 @@ public abstract class AbstractJdbcParameter
 		}
 
 		// If the parameter type is not known from the context i.e. null or Object, infer it from the bind value
-		if ( jdbcMapping == null || jdbcMapping.getMappedJavaTypeDescriptor().getJavaTypeClass() == Object.class ) {
+		if ( jdbcMapping == null || jdbcMapping.getMappedJavaType().getJavaTypeClass() == Object.class ) {
 			jdbcMapping = guessBindType( executionContext, bindValue, jdbcMapping );
 		}
 

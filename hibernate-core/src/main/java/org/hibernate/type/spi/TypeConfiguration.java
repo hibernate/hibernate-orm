@@ -61,7 +61,7 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.internal.BasicTypeImpl;
 
@@ -123,15 +123,15 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	}
 
 
-	public JavaTypeRegistry getJavaTypeDescriptorRegistry() {
+	public JavaTypeRegistry getJavaTypeRegistry() {
 		return javaTypeRegistry;
 	}
 
-	public JdbcTypeRegistry getJdbcTypeDescriptorRegistry() {
+	public JdbcTypeRegistry getJdbcTypeRegistry() {
 		return jdbcTypeRegistry;
 	}
 
-	public JdbcTypeDescriptorIndicators getCurrentBaseSqlTypeIndicators() {
+	public JdbcTypeIndicators getCurrentBaseSqlTypeIndicators() {
 		return scope.getCurrentBaseSqlTypeIndicators();
 	}
 
@@ -354,7 +354,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		private String sessionFactoryName;
 		private String sessionFactoryUuid;
 
-		private final transient JdbcTypeDescriptorIndicators currentSqlTypeIndicators = new JdbcTypeDescriptorIndicators() {
+		private final transient JdbcTypeIndicators currentSqlTypeIndicators = new JdbcTypeIndicators() {
 			@Override
 			public TypeConfiguration getTypeConfiguration() {
 				return typeConfiguration;
@@ -370,7 +370,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			this.typeConfiguration = typeConfiguration;
 		}
 
-		public JdbcTypeDescriptorIndicators getCurrentBaseSqlTypeIndicators() {
+		public JdbcTypeIndicators getCurrentBaseSqlTypeIndicators() {
 			return currentSqlTypeIndicators;
 		}
 
@@ -548,7 +548,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		}
 
 		if ( secondType == null || firstType != null
-				&& firstType.getExpressableJavaTypeDescriptor().isWider( secondType.getExpressableJavaTypeDescriptor() ) ) {
+				&& firstType.getExpressableJavaType().isWider( secondType.getExpressableJavaType() ) ) {
 			return firstType;
 		}
 		return secondType;
@@ -556,7 +556,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 	private static boolean matchesJavaType(SqmExpressable<?> type, Class<?> javaType) {
 		assert javaType != null;
-		return type != null && javaType.isAssignableFrom( type.getExpressableJavaTypeDescriptor().getJavaTypeClass() );
+		return type != null && javaType.isAssignableFrom( type.getExpressableJavaType().getJavaTypeClass() );
 	}
 
 
@@ -609,8 +609,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 					}
 
 					// otherwise, apply the creator
-					final JavaType<J> javaTypeDescriptor = javaTypeRegistry.resolveDescriptor( javaType );
-					return creator.apply( javaTypeDescriptor );
+					return creator.apply( javaTypeRegistry.resolveDescriptor( javaType ) );
 				}
 		);
 	}
@@ -619,21 +618,21 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		if ( type == null ) {
 			return null;
 		}
-		return getSqlTemporalType( type.getExpressableJavaTypeDescriptor().getRecommendedJdbcType( getCurrentBaseSqlTypeIndicators() ) );
+		return getSqlTemporalType( type.getExpressableJavaType().getRecommendedJdbcType( getCurrentBaseSqlTypeIndicators() ) );
 	}
 
 	public static TemporalType getSqlTemporalType(JdbcMapping jdbcMapping) {
-		return getSqlTemporalType( jdbcMapping.getJdbcTypeDescriptor() );
+		return getSqlTemporalType( jdbcMapping.getJdbcType() );
 	}
 
 	public static TemporalType getSqlTemporalType(JdbcMappingContainer jdbcMappings) {
 		assert jdbcMappings.getJdbcTypeCount() == 1;
-		return getSqlTemporalType( jdbcMappings.getJdbcMappings().get( 0 ).getJdbcTypeDescriptor() );
+		return getSqlTemporalType( jdbcMappings.getJdbcMappings().get( 0 ).getJdbcType() );
 	}
 
 	public static TemporalType getSqlTemporalType(MappingModelExpressable<?> type) {
 		if ( type instanceof BasicValuedMapping ) {
-			return getSqlTemporalType( ( (BasicValuedMapping) type ).getJdbcMapping().getJdbcTypeDescriptor() );
+			return getSqlTemporalType( ( (BasicValuedMapping) type ).getJdbcMapping().getJdbcType() );
 		}
 		return null;
 	}
@@ -658,7 +657,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 	public static IntervalType getSqlIntervalType(JdbcMappingContainer jdbcMappings) {
 		assert jdbcMappings.getJdbcTypeCount() == 1;
-		return getSqlIntervalType( jdbcMappings.getJdbcMappings().get( 0 ).getJdbcTypeDescriptor() );
+		return getSqlIntervalType( jdbcMappings.getJdbcMappings().get( 0 ).getJdbcType() );
 	}
 
 	public static IntervalType getSqlIntervalType(JdbcType descriptor) {

@@ -77,14 +77,14 @@ public class Java8DateTimeTests extends BaseNonConfigCoreFunctionalTestCase {
 		final Iterator propertyBindingIterator = entityBinding.getPropertyClosureIterator();
 		while ( propertyBindingIterator.hasNext() ) {
 			final Property propertyBinding = (Property) propertyBindingIterator.next();
-			final JavaType javaTypeDescriptor = ( (AbstractStandardBasicType) propertyBinding.getType() ).getJavaTypeDescriptor();
+			final JavaType javaType = ( (AbstractStandardBasicType) propertyBinding.getType() ).getJavaTypeDescriptor();
 
 			System.out.println(
 					String.format(
 							"%s (%s) -> %s",
 							propertyBinding.getName(),
-							javaTypeDescriptor.getJavaTypeClass().getSimpleName(),
-							javaTypeDescriptor.toString( propertyBinding.getGetter( TheEntity.class ).get( theEntity ) )
+							javaType.getJavaTypeClass().getSimpleName(),
+							javaType.toString( propertyBinding.getGetter( TheEntity.class ).get( theEntity ) )
 					)
 			);
 		}

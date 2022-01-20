@@ -36,13 +36,13 @@ public class CurrencyMappingTests {
 	@Test
 	public void verifyMappings(SessionFactoryScope scope) {
 		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
-		final JdbcTypeRegistry jdbcRegistry = domainModel.getTypeConfiguration().getJdbcTypeDescriptorRegistry();
+		final JdbcTypeRegistry jdbcRegistry = domainModel.getTypeConfiguration().getJdbcTypeRegistry();
 		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor(EntityWithCurrency.class);
 
 		final BasicAttributeMapping duration = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("currency");
 		final JdbcMapping jdbcMapping = duration.getJdbcMapping();
 		assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Currency.class));
-		assertThat(jdbcMapping.getJdbcTypeDescriptor(), equalTo(jdbcRegistry.getDescriptor(Types.VARCHAR)));
+		assertThat( jdbcMapping.getJdbcType(), equalTo( jdbcRegistry.getDescriptor( Types.VARCHAR)));
 
 		scope.inTransaction(
 				(session) -> {

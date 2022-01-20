@@ -59,7 +59,7 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.descriptor.java.BigDecimalJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.BigDecimalJavaType;
 import org.hibernate.type.descriptor.jdbc.DecimalJdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullResolvingJdbcType;
 import org.hibernate.type.descriptor.jdbc.SmallIntJdbcType;
@@ -361,7 +361,7 @@ public class DerbyDialect extends Dialect {
 					case FLOAT:
 					case DOUBLE:
 						// Derby can't cast to char directly, but needs to be cast to decimal first...
-						return "cast(trim(cast(cast(?1 as decimal(" + getDefaultDecimalPrecision() + "," + BigDecimalJavaTypeDescriptor.INSTANCE.getDefaultSqlScale( this, null ) + ")) as char(254))) as ?2)";
+						return "cast(trim(cast(cast(?1 as decimal(" + getDefaultDecimalPrecision() + "," + BigDecimalJavaType.INSTANCE.getDefaultSqlScale( this, null ) + ")) as char(254))) as ?2)";
 					case INTEGER:
 					case LONG:
 					case FIXED:
@@ -542,7 +542,7 @@ public class DerbyDialect extends Dialect {
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
-				.getJdbcTypeDescriptorRegistry();
+				.getJdbcTypeRegistry();
 		if ( getVersion().isBefore( 10, 7 ) ) {
 			jdbcTypeRegistry.addDescriptor( Types.BOOLEAN, SmallIntJdbcType.INSTANCE );
 		}
@@ -550,14 +550,14 @@ public class DerbyDialect extends Dialect {
 		jdbcTypeRegistry.addDescriptor( Types.TIMESTAMP_WITH_TIMEZONE, TimestampJdbcType.INSTANCE );
 
 		// Derby requires a custom binder for binding untyped nulls that resolves the type through the statement
-		typeContributions.contributeJdbcTypeDescriptor( ObjectNullResolvingJdbcType.INSTANCE );
+		typeContributions.contributeJdbcType( ObjectNullResolvingJdbcType.INSTANCE );
 
 		// Until we remove StandardBasicTypes, we have to keep this
 		typeContributions.contributeType(
 				new JavaObjectType(
 						ObjectNullResolvingJdbcType.INSTANCE,
 						typeContributions.getTypeConfiguration()
-								.getJavaTypeDescriptorRegistry()
+								.getJavaTypeRegistry()
 								.getDescriptor( Object.class )
 				)
 		);

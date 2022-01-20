@@ -7,7 +7,7 @@
 package org.hibernate.orm.test.mapping.type.java;
 
 
-import org.hibernate.type.descriptor.java.BooleanJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.BooleanJavaType;
 
 /**
  * @author Steve Ebersole
@@ -18,7 +18,7 @@ public class BooleanDescriptorTest extends AbstractDescriptorTest<Boolean> {
 	final Boolean different = Boolean.FALSE;
 
 	public BooleanDescriptorTest() {
-		super( BooleanJavaTypeDescriptor.INSTANCE );
+		super( BooleanJavaType.INSTANCE );
 	}
 
 	@Override

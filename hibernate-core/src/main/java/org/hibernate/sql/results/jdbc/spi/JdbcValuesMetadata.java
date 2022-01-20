@@ -35,7 +35,7 @@ public interface JdbcValuesMetadata {
 	 */
 	<J> BasicType<J> resolveType(
 			int position,
-			JavaType<J> explicitJavaTypeDescriptor,
+			JavaType<J> explicitJavaType,
 			SessionFactoryImplementor sessionFactory);
 
 }

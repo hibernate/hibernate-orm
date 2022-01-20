@@ -7,7 +7,6 @@
 package org.hibernate.userguide.mapping.basic;
 
 import java.sql.Types;
-import java.time.Duration;
 import java.time.Instant;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -41,7 +40,7 @@ public class InstantMappingTests {
 		final BasicAttributeMapping duration = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("instant");
 		final JdbcMapping jdbcMapping = duration.getJdbcMapping();
 		assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Instant.class));
-		assertThat(jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo(Types.TIMESTAMP));
+		assertThat( jdbcMapping.getJdbcType().getJdbcTypeCode(), equalTo( Types.TIMESTAMP));
 
 		scope.inTransaction(
 				(session) -> {

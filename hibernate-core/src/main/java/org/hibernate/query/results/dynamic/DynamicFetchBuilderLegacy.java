@@ -217,7 +217,7 @@ public class DynamicFetchBuilderLegacy implements DynamicFetchBuilder, NativeQue
 							return new ResultSetMappingSqlSelection( valuesArrayPosition, jdbcMapping );
 						}
 				),
-				jdbcMapping.getMappedJavaTypeDescriptor(),
+				jdbcMapping.getMappedJavaType(),
 				domainResultCreationState.getSqlAstCreationState().getCreationContext().getSessionFactory().getTypeConfiguration()
 		);
 	}

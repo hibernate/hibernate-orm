@@ -88,7 +88,7 @@ public class SelfRenderingFunctionSqlAstExpression
 	public SqlSelection createSqlSelection(
 			int jdbcPosition,
 			int valuesArrayPosition,
-			JavaType javaTypeDescriptor,
+			JavaType javaType,
 			TypeConfiguration typeConfiguration) {
 		return new SqlSelectionImpl(
 				jdbcPosition,
@@ -105,13 +105,13 @@ public class SelfRenderingFunctionSqlAstExpression
 				creationState.getSqlAstCreationState().getSqlExpressionResolver()
 						.resolveSqlSelection(
 								this,
-								type.getExpressableJavaTypeDescriptor(),
+								type.getExpressableJavaType(),
 								creationState.getSqlAstCreationState().getCreationContext()
 										.getDomainModel().getTypeConfiguration()
 						)
 						.getValuesArrayPosition(),
 				resultVariable,
-				type.getExpressableJavaTypeDescriptor()
+				type.getExpressableJavaType()
 		);
 	}
 
@@ -180,7 +180,7 @@ public class SelfRenderingFunctionSqlAstExpression
 
 		sqlExpressionResolver.resolveSqlSelection(
 				this,
-				type.getExpressableJavaTypeDescriptor(),
+				type.getExpressableJavaType(),
 				sqlAstCreationState.getCreationContext().getDomainModel().getTypeConfiguration()
 		);
 	}

@@ -26,16 +26,16 @@ import org.jboss.logging.Logger;
 /**
  * An implementation of {@link org.hibernate.context.spi.CurrentSessionContext} which scopes the notion
  * of a current session to a JTA transaction.  Because JTA gives us a nice tie-in to clean up after
- * ourselves, this implementation will generate Sessions as needed provided a JTA transaction is in
+ * ourselves, this implementation will generate Sessions as needed, provided a JTA transaction is in
  * effect.  If a session is not already associated with the current JTA transaction at the time
- * {@link #currentSession()} is called, a new session will be opened and it will be associated with that
- * JTA transaction.
- *
+ * {@link #currentSession()} is called, a new session is opened and is associated with the JTA
+ * transaction.
+ * <p>
  * Note that the sessions returned from this method are automatically configured with both the
- * {@link org.hibernate.cfg.Environment#FLUSH_BEFORE_COMPLETION auto-flush} and
- * {@link org.hibernate.cfg.Environment#AUTO_CLOSE_SESSION auto-close} attributes set to true, meaning
- * that the Session will be automatically flushed and closed as part of the lifecycle for the JTA
- * transaction to which it is associated.  Additionally, it will also be configured to aggressively
+ * properties {@value org.hibernate.cfg.Environment#FLUSH_BEFORE_COMPLETION} and
+ * {@value org.hibernate.cfg.Environment#AUTO_CLOSE_SESSION} set to true,
+ * meaning that the session will be automatically flushed and closed as part of the lifecycle of the
+ * JTA transaction with which it is associated.  Additionally, it will be configured to aggressively
  * release JDBC connections after each statement is executed.  These settings are governed by the
  * {@link #isAutoFlushEnabled()}, {@link #isAutoCloseEnabled()}, and {@link #getConnectionReleaseMode()}
  * methods; these are provided (along with the {@link #buildOrObtainSession()} method) for easier

@@ -35,7 +35,7 @@ import org.junit.jupiter.api.Assertions;
 import static org.junit.Assert.assertSame;
 
 /**
- * Test the use of {@link AvailableSettings#USE_NATIONALIZED_CHARACTER_DATA}
+ * Test the use of {@value AvailableSettings#USE_NATIONALIZED_CHARACTER_DATA}
  * to indicate that nationalized character data should be used.
  *
  * @author Steve Ebersole

@@ -384,7 +384,7 @@ public final class StandardBasicTypes {
 
 	/**
 	 * The standard Hibernate type for mapping {@link OffsetDateTime} to JDBC {@link org.hibernate.type.SqlTypes#TIMESTAMP_WITH_TIMEZONE TIMESTAMP_WITH_TIMEZONE}
-	 * or {@link org.hibernate.type.SqlTypes#TIMESTAMP TIMESTAMP} depending on the {@link org.hibernate.cfg.AvailableSettings#TIMEZONE_DEFAULT_STORAGE} setting.
+	 * or {@link org.hibernate.type.SqlTypes#TIMESTAMP TIMESTAMP} depending on the {@value org.hibernate.cfg.AvailableSettings#TIMEZONE_DEFAULT_STORAGE} setting.
 	 */
 	public static final BasicTypeReference<OffsetDateTime> OFFSET_DATE_TIME = new BasicTypeReference<>(
 			"OffsetDateTime",
@@ -423,7 +423,7 @@ public final class StandardBasicTypes {
 
 	/**
 	 * The standard Hibernate type for mapping {@link ZonedDateTime} to JDBC {@link org.hibernate.type.SqlTypes#TIMESTAMP_WITH_TIMEZONE TIMESTAMP_WITH_TIMEZONE}
-	 * or {@link org.hibernate.type.SqlTypes#TIMESTAMP TIMESTAMP} depending on the {@link org.hibernate.cfg.AvailableSettings#TIMEZONE_DEFAULT_STORAGE} setting.
+	 * or {@link org.hibernate.type.SqlTypes#TIMESTAMP TIMESTAMP} depending on the {@value org.hibernate.cfg.AvailableSettings#TIMEZONE_DEFAULT_STORAGE} setting.
 	 */
 	public static final BasicTypeReference<ZonedDateTime> ZONED_DATE_TIME = new BasicTypeReference<>(
 			"ZonedDateTime",

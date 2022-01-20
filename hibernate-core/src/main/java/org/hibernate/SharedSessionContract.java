@@ -169,7 +169,7 @@ public interface SharedSessionContract extends QueryProducer, Closeable, Seriali
 	 * Set the session-level JDBC batch size. Overrides the
 	 * {@link org.hibernate.boot.spi.SessionFactoryOptions#getJdbcBatchSize() factory-level}
 	 * JDBC batch size defined by the configuration property
-	 * {@link org.hibernate.cfg.AvailableSettings#STATEMENT_BATCH_SIZE}.
+	 * {@value org.hibernate.cfg.AvailableSettings#STATEMENT_BATCH_SIZE}.
 	 *
 	 * @param jdbcBatchSize the new session-level JDBC batch size
 	 *

@@ -54,6 +54,7 @@ public class OneToOneCacheEnableSelectingTest extends BaseCoreFunctionalTestCase
 			Product product = s.find(Product.class, pid.get());
 			ProductConfig config = new ProductConfig();
 			config.setProduct(product);
+			product.setConfig( config );
 			s.persist(config);
 		});
 

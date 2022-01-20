@@ -57,7 +57,7 @@ public interface EntityTuplizer extends Tuplizer {
 	Object[] getPropertyValuesToInsert(Object entity, Map mergeMap, SharedSessionContractImplementor session);
 
 	/**
-	 * Get any {@link EntityNameResolver EntityNameResolvers} associated with this {@link Tuplizer}.
+	 * Get any {@link EntityNameResolver}s associated with this {@link Tuplizer}.
 	 *
 	 * @return The associated resolvers.  May be null or empty.
 	 */

@@ -9,8 +9,9 @@ package org.hibernate.integrator.spi;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 
 /**
- * Additional, optional contract for Integrators that wish to contribute {@link org.hibernate.service.Service services}
- * to the Hibernate {@link org.hibernate.service.ServiceRegistry}.
+ * Additional, optional contract for Integrators that wish to contribute
+ * {@linkplain org.hibernate.service.Service services} to the Hibernate
+ * {@link org.hibernate.service.ServiceRegistry}.
  *
  * @author Steve Ebersole
  *

@@ -51,7 +51,7 @@ public interface EntitySource extends IdentifiableTypeSource, ToolingHintContext
 	boolean isLazy();
 
 	/**
-	 * For {@link #isLazy() lazy} entities, obtain the interface to use in constructing its proxies.
+	 * For {@linkplain #isLazy() lazy} entities, obtain the interface to use in constructing its proxies.
 	 *
 	 * @return The proxy interface name
 	 */

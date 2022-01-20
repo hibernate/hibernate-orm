@@ -7,8 +7,8 @@
 package org.hibernate.boot.model.source.spi;
 
 /**
- * Additional contract describing the source of an identifier mapping whose {@link #getNature() nature} is
- * {@link org.hibernate.id.EntityIdentifierNature#SIMPLE simple}.
+ * Additional contract describing the source of an identifier mapping whose {@linkplain #getNature() nature} is
+ * {@linkplain org.hibernate.id.EntityIdentifierNature#SIMPLE simple}.
  *
  * @author Steve Ebersole
  */

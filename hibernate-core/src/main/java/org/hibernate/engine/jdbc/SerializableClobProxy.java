@@ -16,7 +16,7 @@ import java.sql.Clob;
 import org.hibernate.HibernateException;
 
 /**
- * Manages aspects of proxying {@link Clob Clobs} to add serializability.
+ * Manages aspects of proxying {@link Clob}s to add serializability.
  *
  * @author Gavin King
  * @author Steve Ebersole

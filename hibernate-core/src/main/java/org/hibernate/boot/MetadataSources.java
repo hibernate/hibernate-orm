@@ -389,7 +389,7 @@ public class MetadataSources implements Serializable {
 	}
 
 	/**
-	 * Add XML mapping bindings created from an arbitrary source by the {@link #getXmlMappingBinderAccess() binder}.
+	 * Add XML mapping bindings created from an arbitrary source by the {@linkplain #getXmlMappingBinderAccess() binder}.
 	 *
 	 * @param binding The binding.
 	 *

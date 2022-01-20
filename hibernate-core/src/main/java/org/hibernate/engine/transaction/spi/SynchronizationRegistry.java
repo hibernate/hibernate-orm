@@ -10,7 +10,7 @@ import java.io.Serializable;
 import jakarta.transaction.Synchronization;
 
 /**
- * Manages a registry of {@link Synchronization Synchronizations}.
+ * Manages a registry of {@link Synchronization}s.
  *
  * @author Steve Ebersole
  */
@@ -25,14 +25,14 @@ public interface SynchronizationRegistry extends Serializable {
 	public void registerSynchronization(Synchronization synchronization);
 
 	/**
-	 * Delegate {@link Synchronization#beforeCompletion} calls to the {@link #registerSynchronization registered}
-	 * {@link Synchronization Synchronizations}
+	 * Delegate {@link Synchronization#beforeCompletion} calls to the {@linkplain #registerSynchronization registered}
+	 * {@link Synchronization}s
 	 */
 	void notifySynchronizationsBeforeTransactionCompletion();
 
 	/**
-	 * Delegate {@link Synchronization#afterCompletion} calls to {@link #registerSynchronization registered}
-	 * {@link Synchronization Synchronizations}
+	 * Delegate {@link Synchronization#afterCompletion} calls to {@linkplain #registerSynchronization registered}
+	 * {@link Synchronization}s
 	 *
 	 * @param status The transaction status (if known) per {@link jakarta.transaction.Status}
 	 */

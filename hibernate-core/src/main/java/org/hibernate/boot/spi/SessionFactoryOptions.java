@@ -189,8 +189,6 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 
 	boolean isNamedQueryStartupCheckingEnabled();
 
-	boolean isConventionalJavaConstants();
-
 	boolean isSecondLevelCacheEnabled();
 
 	boolean isQueryCacheEnabled();

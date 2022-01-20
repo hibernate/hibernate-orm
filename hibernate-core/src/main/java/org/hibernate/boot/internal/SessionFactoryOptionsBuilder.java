@@ -90,7 +90,6 @@ import static org.hibernate.cfg.AvailableSettings.CACHE_REGION_PREFIX;
 import static org.hibernate.cfg.AvailableSettings.CALLABLE_NAMED_PARAMS_ENABLED;
 import static org.hibernate.cfg.AvailableSettings.CHECK_NULLABILITY;
 import static org.hibernate.cfg.AvailableSettings.CONNECTION_HANDLING;
-import static org.hibernate.cfg.AvailableSettings.CONVENTIONAL_JAVA_CONSTANTS;
 import static org.hibernate.cfg.AvailableSettings.CRITERIA_VALUE_HANDLING_MODE;
 import static org.hibernate.cfg.AvailableSettings.CUSTOM_ENTITY_DIRTINESS_STRATEGY;
 import static org.hibernate.cfg.AvailableSettings.DEFAULT_BATCH_FETCH_SIZE;
@@ -220,7 +219,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private SqmTranslatorFactory sqmTranslatorFactory;
 	private Boolean useOfJdbcNamedParametersEnabled;
 	private boolean namedQueryStartupCheckingEnabled;
-	private boolean conventionalJavaConstants;
 	private final boolean omitJoinOfSuperclassTablesEnabled;
 	private final int preferredSqlTypeCodeForBoolean;
 	private final TimeZoneStorageStrategy defaultTimeZoneStorageStrategy;
@@ -441,14 +439,12 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.useOfJdbcNamedParametersEnabled = cfgService.getSetting( CALLABLE_NAMED_PARAMS_ENABLED, BOOLEAN, true );
 
 		this.namedQueryStartupCheckingEnabled = cfgService.getSetting( QUERY_STARTUP_CHECKING, BOOLEAN, true );
-		this.conventionalJavaConstants = cfgService.getSetting(
-				CONVENTIONAL_JAVA_CONSTANTS, BOOLEAN, true );
 		this.omitJoinOfSuperclassTablesEnabled = cfgService.getSetting( OMIT_JOIN_OF_SUPERCLASS_TABLES, BOOLEAN, true );
 		this.preferredSqlTypeCodeForBoolean = ConfigurationHelper.getPreferredSqlTypeCodeForBoolean( serviceRegistry );
 		this.defaultTimeZoneStorageStrategy = context.getMetadataBuildingOptions().getDefaultTimeZoneStorage();
 
 		final RegionFactory regionFactory = serviceRegistry.getService( RegionFactory.class );
-		if ( !NoCachingRegionFactory.class.isInstance( regionFactory ) ) {
+		if ( !(regionFactory instanceof NoCachingRegionFactory) ) {
 			this.secondLevelCacheEnabled = cfgService.getSetting( USE_SECOND_LEVEL_CACHE, BOOLEAN, true );
 			this.queryCacheEnabled = cfgService.getSetting( USE_QUERY_CACHE, BOOLEAN, false );
 			this.timestampsCacheFactory = strategySelector.resolveDefaultableStrategy(
@@ -1045,11 +1041,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	public boolean isNamedQueryStartupCheckingEnabled() {
 		return namedQueryStartupCheckingEnabled;
-	}
-
-	@Override
-	public boolean isConventionalJavaConstants() {
-		return conventionalJavaConstants;
 	}
 
 	@Override

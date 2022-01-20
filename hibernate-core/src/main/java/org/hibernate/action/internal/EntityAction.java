@@ -187,19 +187,6 @@ public abstract class EntityAction
 		}
 	}
 
-	/**
-	 * @deprecated This will be removed as it's not very efficient. If you need access to EventListenerGroup(s),
-	 * use the direct references from {@link #getFastSessionServices()}.
-	 */
-	@Deprecated
-	protected <T> EventListenerGroup<T> listenerGroup(EventType<T> eventType) {
-		return getSession()
-				.getFactory()
-				.getServiceRegistry()
-				.getService( EventListenerRegistry.class )
-				.getEventListenerGroup( eventType );
-	}
-
 	protected EventSource eventSource() {
 		return (EventSource) getSession();
 	}

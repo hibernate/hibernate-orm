@@ -16,10 +16,7 @@ import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.service.spi.EventListenerGroup;
-import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.event.spi.EventType;
 import org.hibernate.internal.FastSessionServices;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -183,19 +180,6 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 			);
 			cache.unlockItem( session, ck, lock );
 		}
-	}
-
-	/**
-	 * @deprecated This will be removed as it's not very efficient. If you need access to EventListenerGroup(s),
-	 * use the direct references from {@link #getFastSessionServices()}.
-	 */
-	@Deprecated
-	protected <T> EventListenerGroup<T> listenerGroup(EventType<T> eventType) {
-		return getSession()
-				.getFactory()
-				.getServiceRegistry()
-				.getService( EventListenerRegistry.class )
-				.getEventListenerGroup( eventType );
 	}
 
 	protected EventSource eventSource() {

@@ -201,19 +201,6 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 		this.generatedId = generatedId;
 	}
 
-	/**
-	 * Access to the delayed entity key
-	 *
-	 * @return The delayed entity key
-	 *
-	 * @deprecated No Hibernate code currently uses this method
-	 */
-	@Deprecated
-	@SuppressWarnings("UnusedDeclaration")
-	public EntityKey getDelayedEntityKey() {
-		return delayedEntityKey;
-	}
-
 	@Override
 	public boolean isEarlyInsert() {
 		return !isDelayed;

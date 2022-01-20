@@ -381,7 +381,7 @@ public abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalT
 		private final ZoneId defaultJvmTimeZone;
 
 		/**
-		 * The Hibernate setting, {@link AvailableSettings#JDBC_TIME_ZONE},
+		 * The Hibernate setting, {@value AvailableSettings#JDBC_TIME_ZONE},
 		 * may affect a lot of time-related types,
 		 * which is why we take it into account even with timezone-independent types such as Instant.
 		 */

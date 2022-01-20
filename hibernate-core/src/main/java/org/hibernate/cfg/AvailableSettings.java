@@ -498,7 +498,7 @@ public interface AvailableSettings {
 	 * Should we prefer using the {@link org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform#retrieveUserTransaction}
 	 * over using {@link org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform#retrieveTransactionManager}?
 	 *
-	 * Default is <code>false</code>
+	 * Default is {@code false}
 	 *
 	 * @since 5.0
 	 */
@@ -796,7 +796,7 @@ public interface AvailableSettings {
 
 	/**
 	 * Use JDBC scrollable {@code ResultSet}s. This property is only necessary when there is
-	 * no {@code ConnectionProvider}, ie. the user is supplying JDBC connections.
+	 * no {@code ConnectionProvider}, that is, when the client is supplying JDBC connections.
 	 */
 	String USE_SCROLLABLE_RESULTSET = "hibernate.jdbc.use_scrollable_resultset";
 
@@ -999,9 +999,10 @@ public interface AvailableSettings {
 	/**
 	 * Setting which indicates whether or not Java constant follow the Java Naming conventions.
 	 * <p/>
-	 * Default is {@code true}. Existing applications may want to disable this (set it {@code false}) if non-conventional Java constants are used.
-	 * However, there is a significant performance overhead for using non-conventional Java constants since Hibernate cannot determine if aliases
-	 * should be treated as Java constants or not.
+	 * Default is {@code true}. Existing applications may want to disable this (set it {@code false})
+	 * if unconventional Java constants are used. However, there is a significant performance overhead
+	 * for using unconventional Java constants since Hibernate cannot determine if aliases should be
+	 * treated as Java constants or not.
 	 *
 	 * @since 5.2
 	 */
@@ -1172,8 +1173,8 @@ public interface AvailableSettings {
 
 	/**
 	 * Proxool property with the Proxool pool alias to use
-	 * (Required for {@code PROXOOL_EXISTING_POOL}, {@code PROXOOL_PROPERTIES}, or
-	 * {@code PROXOOL_XML})
+	 * (Required for {@link #PROXOOL_EXISTING_POOL}, {@link #PROXOOL_PROPERTIES}, or
+	 * {@link #PROXOOL_XML})
 	 */
 	String PROXOOL_POOL_ALIAS = "hibernate.proxool.pool_alias";
 
@@ -1716,7 +1717,7 @@ public interface AvailableSettings {
 
 	/**
 	 * Identifies the delimiter to use to separate schema management statements in script outputs.
-	 * The default value is <code>;</code>.
+	 * The default value is {@code ;}.
 	 */
 	String HBM2DDL_DELIMITER = "hibernate.hbm2ddl.delimiter";
 
@@ -1754,8 +1755,8 @@ public interface AvailableSettings {
 	String CUSTOM_ENTITY_DIRTINESS_STRATEGY = "hibernate.entity_dirtiness_strategy";
 
 	/**
-	 * Controls whether an entity's "where" clause, mapped using <code>@Where(clause="....")</code>
-	 * or <code>&lt;entity ... where="..."&gt;</code>, is taken into account when loading one-to-many
+	 * Controls whether an entity's "where" clause, mapped using {@code @Where(clause="....")}
+	 * or {@code &lt;entity ... where="..."&gt;}, is taken into account when loading one-to-many
 	 * or many-to-many collections of that type of entity.
 	 * <p/>
 	 * This setting has no affect on collections of embeddable values containing an association to
@@ -1860,7 +1861,7 @@ public interface AvailableSettings {
 	 * access; this ensures that all access patterns which are not useful
 	 * to the application are never instantiated, possibly saving a
 	 * substantial amount of memory for applications having many entities.
-	 * The only exception is the loader for <code>LockMode.NONE</code>,
+	 * The only exception is the loader for {@link org.hibernate.LockMode#NONE},
 	 * which will always be eagerly initialized; this is necessary to
 	 * detect mapping errors.
 	 *
@@ -1879,7 +1880,7 @@ public interface AvailableSettings {
 	 * to handle this situation requires checking the Thread ID every time
 	 * Session is called.  This can certainly have performance considerations.
 	 *
-	 * Default is <code>true</code> (enabled).
+	 * Default is {@code true} (enabled).
 	 */
 	String JTA_TRACK_BY_THREAD = "hibernate.jta.track_by_thread";
 

@@ -12,11 +12,12 @@ import org.hibernate.service.Service;
 import org.hibernate.service.spi.Wrapped;
 
 /**
- * A contract for obtaining JDBC connections.
- * <p/>
- * Implementors might also implement connection pooling.
- * <p/>
- * Implementors should provide a public default constructor.
+ * A contract for obtaining JDBC connections and, optionally, for pooling connections.
+ * <p>
+ * Implementors must provide a public default constructor.
+ * <p>
+ * A {@code ConnectionProvider} may be selected using the configuration property
+ * {@value org.hibernate.cfg.AvailableSettings#CONNECTION_PROVIDER}.
  *
  * @author Gavin King
  * @author Steve Ebersole
@@ -43,15 +44,15 @@ public interface ConnectionProvider extends Service, Wrapped {
 	public void closeConnection(Connection conn) throws SQLException;
 
 	/**
-	 * Does this connection provider support aggressive release of JDBC
-	 * connections and re-acquisition of those connections (if need be) later?
+	 * Does this connection provider support aggressive release of JDBC connections and later
+	 * re-acquisition of those connections if needed?
 	 * <p/>
-	 * This is used in conjunction with {@link org.hibernate.cfg.Environment#RELEASE_CONNECTIONS}
+	 * This is used in conjunction with {@link org.hibernate.ConnectionReleaseMode#AFTER_STATEMENT}
 	 * to aggressively release JDBC connections.  However, the configured ConnectionProvider
 	 * must support re-acquisition of the same underlying connection for that semantic to work.
 	 * <p/>
-	 * Typically, this is only true in managed environments where a container
-	 * tracks connections by transaction or thread.
+	 * Typically, this is only true in managed environments where a container tracks connections
+	 * by transaction or thread.
 	 *
 	 * Note that JTA semantic depends on the fact that the underlying connection provider does
 	 * support aggressive release.

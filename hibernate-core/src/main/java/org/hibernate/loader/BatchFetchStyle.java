@@ -12,7 +12,7 @@ import org.jboss.logging.Logger;
 /**
  * Defines the style that should be used to perform batch loading.  Which style to use is declared using
  * the "{@value org.hibernate.cfg.AvailableSettings#BATCH_FETCH_STYLE}"
- * ({@link org.hibernate.cfg.AvailableSettings#BATCH_FETCH_STYLE}) setting
+ * ({@value org.hibernate.cfg.AvailableSettings#BATCH_FETCH_STYLE}) setting
  *
  * @author Steve Ebersole
  *

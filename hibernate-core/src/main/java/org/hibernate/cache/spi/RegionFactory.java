@@ -27,6 +27,9 @@ import org.hibernate.service.spi.Stoppable;
  * </ul>
  * Use the first when we need to read config properties prior to
  * {@link #start} being called.
+ * <p>
+ * A {@code RegionFactory} may be selected using the property
+ * {@value org.hibernate.cfg.AvailableSettings#CACHE_REGION_FACTORY}.
  *
  * @author Steve Ebersole
  */

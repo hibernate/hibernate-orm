@@ -13,7 +13,7 @@ import java.time.Instant;
  * particular {@link org.hibernate.SessionFactory}.
  * <p>
  * Collection of statistics is enabled if the configuration property
- * {@link org.hibernate.cfg.AvailableSettings#GENERATE_STATISTICS} is
+ * {@value org.hibernate.cfg.AvailableSettings#GENERATE_STATISTICS} is
  * set to {@code true}. It may be dynamically enabled or disabled at
  * runtime by calling {@link #setStatisticsEnabled(boolean)}.
  *
@@ -23,7 +23,7 @@ public interface Statistics {
 
 	/**
 	 * The default value of the configuration property
-	 * {@link org.hibernate.cfg.AvailableSettings#QUERY_STATISTICS_MAX_SIZE}.
+	 * {@value org.hibernate.cfg.AvailableSettings#QUERY_STATISTICS_MAX_SIZE}.
 	 */
 	int DEFAULT_QUERY_STATISTICS_MAX_SIZE = 5000;
 
@@ -323,7 +323,7 @@ public interface Statistics {
 	 * <p>
 	 * The maximum number of queries tracked by the Hibernate statistics
 	 * is determined by the configuration property
-	 * {@link org.hibernate.cfg.AvailableSettings#QUERY_STATISTICS_MAX_SIZE}.
+	 * {@value org.hibernate.cfg.AvailableSettings#QUERY_STATISTICS_MAX_SIZE}.
 	 */
 	String[] getQueries();
 

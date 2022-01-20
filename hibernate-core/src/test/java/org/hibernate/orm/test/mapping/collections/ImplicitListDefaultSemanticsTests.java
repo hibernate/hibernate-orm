@@ -27,7 +27,7 @@ import jakarta.persistence.Table;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Uses the default {@link AvailableSettings#DEFAULT_LIST_SEMANTICS} value of LIST
+ * Uses the default {@value AvailableSettings#DEFAULT_LIST_SEMANTICS} value of LIST
  * and verifies the outcome
  *
  * @author Steve Ebersole

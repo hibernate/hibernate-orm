@@ -31,7 +31,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
 
 /**
- * Explicitly sets {@link AvailableSettings#DEFAULT_LIST_SEMANTICS} to BAG
+ * Explicitly sets {@value AvailableSettings#DEFAULT_LIST_SEMANTICS} to BAG
  * and verifies the outcome.
  *
  * Basically verifies that the legacy behavior can be achieved via the setting

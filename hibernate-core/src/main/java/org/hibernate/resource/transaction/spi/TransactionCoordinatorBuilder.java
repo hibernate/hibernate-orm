@@ -13,7 +13,10 @@ import org.hibernate.service.Service;
 import org.hibernate.tool.schema.internal.exec.JdbcContext;
 
 /**
- * Builder for TransactionCoordinator instances
+ * Builder for {@link TransactionCoordinator} instances.
+ * <p>
+ * A {@code TransactionCoordinator} may be selected using the configuration property
+ * {@value org.hibernate.cfg.AvailableSettings#TRANSACTION_COORDINATOR_STRATEGY}.
  *
  * @author Steve Ebersole
  */

@@ -40,7 +40,7 @@ public interface MetadataBuilder {
 	/**
 	 * Specify the implicit catalog name to apply to any unqualified database names.
 	 * <p/>
-	 * Its default is defined by the {@link org.hibernate.cfg.AvailableSettings#DEFAULT_CATALOG}
+	 * Its default is defined by the {@value org.hibernate.cfg.AvailableSettings#DEFAULT_CATALOG}
 	 * setting if using property-based configuration.
 	 *
 	 * @param implicitCatalogName The implicit catalog name
@@ -54,7 +54,7 @@ public interface MetadataBuilder {
 	/**
 	 * Specify the implicit schema name to apply to any unqualified database names.
 	 * <p/>
-	 * Its default is defined by the {@link org.hibernate.cfg.AvailableSettings#DEFAULT_SCHEMA}
+	 * Its default is defined by the {@value org.hibernate.cfg.AvailableSettings#DEFAULT_SCHEMA}
 	 * setting if using property-based configuration.
 	 *
 	 * @param implicitSchemaName The implicit schema name
@@ -68,7 +68,7 @@ public interface MetadataBuilder {
 	/**
 	 * Specify the ImplicitNamingStrategy to use in building the Metadata.
 	 * <p/>
-	 * Its default is defined by the {@link org.hibernate.cfg.AvailableSettings#IMPLICIT_NAMING_STRATEGY}
+	 * Its default is defined by the {@value org.hibernate.cfg.AvailableSettings#IMPLICIT_NAMING_STRATEGY}
 	 * setting if using property-based configuration.
 	 *
 	 * @param namingStrategy The ImplicitNamingStrategy to apply
@@ -82,7 +82,7 @@ public interface MetadataBuilder {
 	/**
 	 * Specify the PhysicalNamingStrategy to use in building the Metadata.
 	 * <p/>
-	 * Its default is defined by the {@link org.hibernate.cfg.AvailableSettings#PHYSICAL_NAMING_STRATEGY}
+	 * Its default is defined by the {@value org.hibernate.cfg.AvailableSettings#PHYSICAL_NAMING_STRATEGY}
 	 * setting if using property-based configuration.
 	 *
 	 * @param namingStrategy The PhysicalNamingStrategy to apply
@@ -112,7 +112,7 @@ public interface MetadataBuilder {
 	 * Specify the second-level access-type to be used by default for entities and collections that define second-level
 	 * caching, but do not specify a granular access-type.
 	 * <p/>
-	 * Its default is defined by the {@link org.hibernate.cfg.AvailableSettings#DEFAULT_CACHE_CONCURRENCY_STRATEGY}
+	 * Its default is defined by the {@value org.hibernate.cfg.AvailableSettings#DEFAULT_CACHE_CONCURRENCY_STRATEGY}
 	 * setting if using property-based configuration.
 	 *
 	 * @param accessType The access-type to use as default.
@@ -162,7 +162,7 @@ public interface MetadataBuilder {
 	/**
 	 * Specify a particular Scanner instance to use.
 	 * <p/>
-	 * Its default is defined by the {@link org.hibernate.cfg.AvailableSettings#SCANNER}
+	 * Its default is defined by the {@value org.hibernate.cfg.AvailableSettings#SCANNER}
 	 * setting if using property-based configuration.
 	 *
 	 * @param scanner The scanner to use.
@@ -176,7 +176,7 @@ public interface MetadataBuilder {
 	/**
 	 * Specify a particular ArchiveDescriptorFactory instance to use in scanning.
 	 * <p/>
-	 * Its default is defined by the {@link org.hibernate.cfg.AvailableSettings#SCANNER_ARCHIVE_INTERPRETER}
+	 * Its default is defined by the {@value org.hibernate.cfg.AvailableSettings#SCANNER_ARCHIVE_INTERPRETER}
 	 * setting if using property-based configuration.
 	 *
 	 * @param factory The ArchiveDescriptorFactory to use.
@@ -198,7 +198,7 @@ public interface MetadataBuilder {
 	 * explicit discriminators along with joined inheritance.  It is configurable
 	 * though to support legacy apps.
 	 * <p/>
-	 * Its default is defined by the {@link org.hibernate.cfg.AvailableSettings#IGNORE_EXPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS}
+	 * Its default is defined by the {@value org.hibernate.cfg.AvailableSettings#IGNORE_EXPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS}
 	 * setting if using property-based configuration.
 	 *
 	 * @param enabled Should processing (not ignoring) explicit discriminators be
@@ -220,7 +220,7 @@ public interface MetadataBuilder {
 	 * Again the premise here is JPA portability, bearing in mind that some
 	 * JPA provider need these discriminators.
 	 * <p/>
-	 * Its default is defined by the {@link org.hibernate.cfg.AvailableSettings#IMPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS}
+	 * Its default is defined by the {@value org.hibernate.cfg.AvailableSettings#IMPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS}
 	 * setting if using property-based configuration.
 	 *
 	 * @param enabled Should we implicitly create discriminator for joined
@@ -236,7 +236,7 @@ public interface MetadataBuilder {
 	 * For entities which do not explicitly say, should we force discriminators into
 	 * SQL selects?  The (historical) default is {@code false}
 	 * <p/>
-	 * Its default is defined by the {@link org.hibernate.cfg.AvailableSettings#FORCE_DISCRIMINATOR_IN_SELECTS_BY_DEFAULT}
+	 * Its default is defined by the {@value org.hibernate.cfg.AvailableSettings#FORCE_DISCRIMINATOR_IN_SELECTS_BY_DEFAULT}
 	 * setting if using property-based configuration.
 	 *
 	 * @param supported {@code true} indicates we will force the discriminator into the select;
@@ -252,7 +252,7 @@ public interface MetadataBuilder {
 	 * Should nationalized variants of character data be used in the database types?  For example, should
 	 * {@code NVARCHAR} be used instead of {@code VARCHAR}?  {@code NCLOB} instead of {@code CLOB}?
 	 * <p/>
-	 * Its default is defined by the {@link org.hibernate.cfg.AvailableSettings#USE_NATIONALIZED_CHARACTER_DATA}
+	 * Its default is defined by the {@value org.hibernate.cfg.AvailableSettings#USE_NATIONALIZED_CHARACTER_DATA}
 	 * setting if using property-based configuration.
 	 *
 	 * @param enabled {@code true} says to use nationalized variants; {@code false}
@@ -335,7 +335,7 @@ public interface MetadataBuilder {
 	 * of the methods on this contract that deal with multiple values internally, this
 	 * one *replaces* any already set (its more a setter) instead of adding to.
 	 * <p/>
-	 * Its default is defined by the {@link org.hibernate.cfg.AvailableSettings#ARTIFACT_PROCESSING_ORDER}
+	 * Its default is defined by the {@value org.hibernate.cfg.AvailableSettings#ARTIFACT_PROCESSING_ORDER}
 	 * setting if using property-based configuration.
 	 *
 	 * @param sourceTypes The types, in the order they should be processed

@@ -27,8 +27,8 @@ public enum JdbcMetadaAccessStrategy {
 	 * execute a single {@link java.sql.DatabaseMetaData#getTables(String, String, String, String[])} call
 	 * to retrieve all the database table in order to determine all the {@link jakarta.persistence.Entity} have a mapped database tables.
 	 * <p>
-	 * This strategy is the default one and it may require {@link AvailableSettings#DEFAULT_CATALOG} and/or
-	 * {@link AvailableSettings#DEFAULT_SCHEMA} values to be provided.
+	 * This strategy is the default one and it may require {@value AvailableSettings#DEFAULT_CATALOG} and/or
+	 * {@value AvailableSettings#DEFAULT_SCHEMA} values to be provided.
 	 */
 	GROUPED( "grouped" );
 

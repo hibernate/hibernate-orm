@@ -207,6 +207,12 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  * Programs using Hibernate should migrate away from the use of versioned
  * dialect classes like, for example, {@link PostgreSQL95Dialect}. These
  * classes are now deprecated and will be removed in a future release.
+ * <p>
+ * A custom {@code Dialect} may be specified using the configuration
+ * property {@value org.hibernate.cfg.AvailableSettings#DIALECT}, but
+ * for supported databases this property is unnecessary, and Hibernate
+ * will select the correct {@code Dialect} based on the JDBC URL and
+ * {@link DialectResolutionInfo}.
  *
  * @author Gavin King, David Channon
  */
@@ -1264,7 +1270,7 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * The default value to use for the configuration property
-	 * {@link Environment#STATEMENT_BATCH_SIZE}.
+	 * {@value Environment#STATEMENT_BATCH_SIZE}.
 	 */
 	public int getDefaultStatementBatchSize() {
 		return 1;
@@ -1272,7 +1278,7 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * The default value to use for the configuration property
-	 * {@link Environment#USE_STREAMS_FOR_BINARY}.
+	 * {@value Environment#USE_STREAMS_FOR_BINARY}.
 	 */
 	public boolean getDefaultUseStreamsForBinary() {
 		return false;
@@ -1280,7 +1286,7 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * The default value to use for the configuration property
-	 * {@link Environment#NON_CONTEXTUAL_LOB_CREATION}.
+	 * {@value Environment#NON_CONTEXTUAL_LOB_CREATION}.
 	 */
 	public boolean getDefaultNonContextualLobCreation() {
 		return false;
@@ -1288,7 +1294,7 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * The default value to use for the configuration property
-	 * {@link Environment#USE_GET_GENERATED_KEYS}.
+	 * {@value Environment#USE_GET_GENERATED_KEYS}.
 	 */
 	public boolean getDefaultUseGetGeneratedKeys() {
 		return true;

@@ -386,11 +386,6 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
-	public boolean isQueryParametersValidationEnabled() {
-		return delegate.isQueryParametersValidationEnabled();
-	}
-
-	@Override
 	public ValueHandlingMode getCriteriaValueHandlingMode() {
 		return delegate.getCriteriaValueHandlingMode();
 	}

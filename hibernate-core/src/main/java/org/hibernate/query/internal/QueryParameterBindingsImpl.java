@@ -41,57 +41,34 @@ import org.hibernate.type.spi.TypeConfiguration;
 public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	private final SessionFactoryImplementor sessionFactory;
 	private final ParameterMetadataImplementor parameterMetadata;
-	private final boolean queryParametersValidationEnabled;
 
 	private Map<QueryParameter<?>, QueryParameterBinding<?>> parameterBindingMap;
 
 	/**
 	 * Constructs a QueryParameterBindings based on the passed information
-	 *
-	 * @apiNote Calls {@link #from(ParameterMetadataImplementor,SessionFactoryImplementor,boolean)}
-	 * using {@link org.hibernate.boot.spi.SessionFactoryOptions#isQueryParametersValidationEnabled}
-	 * as `queryParametersValidationEnabled`
 	 */
 	public static QueryParameterBindingsImpl from(
 			ParameterMetadataImplementor parameterMetadata,
 			SessionFactoryImplementor sessionFactory) {
-		return from(
-				parameterMetadata,
-				sessionFactory,
-				sessionFactory.getSessionFactoryOptions().isQueryParametersValidationEnabled()
-		);
-	}
-
-	/**
-	 * Constructs a QueryParameterBindings based on the passed information
-	 */
-	public static QueryParameterBindingsImpl from(
-			ParameterMetadataImplementor parameterMetadata,
-			SessionFactoryImplementor sessionFactory,
-			boolean queryParametersValidationEnabled) {
 		if ( parameterMetadata == null ) {
 			throw new QueryParameterException( "Query parameter metadata cannot be null" );
 		}
 
 		return new QueryParameterBindingsImpl(
 				sessionFactory,
-				parameterMetadata,
-				queryParametersValidationEnabled
+				parameterMetadata
 		);
 	}
 
 	private QueryParameterBindingsImpl(
 			SessionFactoryImplementor sessionFactory,
-			ParameterMetadataImplementor parameterMetadata,
-			boolean queryParametersValidationEnabled) {
+			ParameterMetadataImplementor parameterMetadata) {
 		this.sessionFactory = sessionFactory;
 		this.parameterMetadata = parameterMetadata;
-		this.queryParametersValidationEnabled = queryParametersValidationEnabled;
 
 		this.parameterBindingMap = new ConcurrentHashMap<>( parameterMetadata.getParameterCount() );
 	}
 
-	@SuppressWarnings({"WeakerAccess" })
 	protected <T> QueryParameterBinding<T> makeBinding(QueryParameterImplementor<T> queryParameter) {
 		if ( parameterBindingMap == null ) {
 			parameterBindingMap = new IdentityHashMap<>();
@@ -109,8 +86,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 		final QueryParameterBinding<T> binding = new QueryParameterBindingImpl<>(
 				queryParameter,
 				sessionFactory,
-				parameterMetadata.getInferredParameterType( queryParameter ),
-				queryParametersValidationEnabled
+				parameterMetadata.getInferredParameterType( queryParameter )
 		);
 		parameterBindingMap.put( queryParameter, binding );
 

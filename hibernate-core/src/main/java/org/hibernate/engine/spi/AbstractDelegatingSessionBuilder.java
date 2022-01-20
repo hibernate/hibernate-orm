@@ -122,12 +122,6 @@ public abstract class AbstractDelegatingSessionBuilder<T extends SessionBuilder>
 	}
 
 	@Override
-	public T setQueryParameterValidation(boolean enabled) {
-		delegate.setQueryParameterValidation( enabled );
-		return getThis();
-	}
-
-	@Override
 	public T connectionHandlingMode(PhysicalConnectionHandlingMode mode) {
 		delegate.connectionHandlingMode( mode );
 		return getThis();

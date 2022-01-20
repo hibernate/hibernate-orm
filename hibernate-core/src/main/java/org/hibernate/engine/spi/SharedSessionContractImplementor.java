@@ -396,10 +396,6 @@ public interface SharedSessionContractImplementor
 
 	boolean isAutoCloseSessionEnabled();
 
-	default boolean isQueryParametersValidationEnabled(){
-		return getFactory().getSessionFactoryOptions().isQueryParametersValidationEnabled();
-	}
-
 	/**
 	 * Get the load query influencers associated with this session.
 	 *

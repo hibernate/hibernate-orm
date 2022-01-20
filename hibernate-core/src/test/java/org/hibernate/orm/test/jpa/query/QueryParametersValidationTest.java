@@ -60,20 +60,6 @@ public class QueryParametersValidationTest extends BaseEntityManagerFunctionalTe
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11579")
-	public void setParameterWithWrongTypeShouldNotThrowIllegalArgumentExceptionWhenValidationIsDisabled() {
-		final SessionFactory sessionFactory = entityManagerFactory().unwrap( SessionFactory.class );
-		final Session session = sessionFactory.withOptions().setQueryParameterValidation( false ).openSession();
-		try {
-			session.createQuery( "select e from TestEntity e where e.id = :id" ).setParameter( "id", 1 );
-		}
-		finally {
-			session.close();
-			sessionFactory.close();
-		}
-	}
-
-	@Test
 	public void setParameterWithCorrectTypeShouldNotThrowIllegalArgumentException() {
 		final EntityManager entityManager = entityManagerFactory().createEntityManager();
 		try {

@@ -132,7 +132,6 @@ import static org.hibernate.cfg.AvailableSettings.USE_SCROLLABLE_RESULTSET;
 import static org.hibernate.cfg.AvailableSettings.USE_SECOND_LEVEL_CACHE;
 import static org.hibernate.cfg.AvailableSettings.USE_SQL_COMMENTS;
 import static org.hibernate.cfg.AvailableSettings.USE_STRUCTURED_CACHE;
-import static org.hibernate.cfg.AvailableSettings.VALIDATE_QUERY_PARAMETERS;
 import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
@@ -246,7 +245,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private PhysicalConnectionHandlingMode connectionHandlingMode;
 	private boolean connectionProviderDisablesAutoCommit;
 	private TimeZone jdbcTimeZone;
-	private boolean queryParametersValidationEnabled;
 	private ValueHandlingMode criteriaValueHandlingMode;
 	private ImmutableEntityUpdateQueryHandlingMode immutableEntityUpdateQueryHandlingMode;
 	// These two settings cannot be modified from the builder,
@@ -557,12 +555,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		else if ( jdbcTimeZoneValue != null ) {
 			throw new IllegalArgumentException( "Configuration property " + JDBC_TIME_ZONE + " value [" + jdbcTimeZoneValue + "] is not supported!" );
 		}
-
-		this.queryParametersValidationEnabled = ConfigurationHelper.getBoolean(
-				VALIDATE_QUERY_PARAMETERS,
-				configurationSettings,
-				true
-		);
 
 		this.criteriaValueHandlingMode = ValueHandlingMode.interpret(
 				configurationSettings.get( CRITERIA_VALUE_HANDLING_MODE )
@@ -1166,11 +1158,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	public TimeZone getJdbcTimeZone() {
 		return this.jdbcTimeZone;
-	}
-
-	@Override
-	public boolean isQueryParametersValidationEnabled() {
-		return this.queryParametersValidationEnabled;
 	}
 
 	@Override

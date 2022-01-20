@@ -1170,7 +1170,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		private boolean autoClear;
 		private String tenantIdentifier;
 		private TimeZone jdbcTimeZone;
-		private boolean queryParametersValidationEnabled;
 		private boolean explicitNoInterceptor;
 
 		// Lazy: defaults can be built by invoking the builder in fastSessionServices.defaultSessionEventListeners
@@ -1195,7 +1194,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 				tenantIdentifier = currentTenantIdentifierResolver.resolveCurrentTenantIdentifier();
 			}
 			this.jdbcTimeZone = sessionFactoryOptions.getJdbcTimeZone();
-			this.queryParametersValidationEnabled = sessionFactoryOptions.isQueryParametersValidationEnabled();
 		}
 
 
@@ -1226,11 +1224,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			return sessionOwnerBehavior == SessionOwnerBehavior.LEGACY_JPA
 					? ManagedFlushCheckerLegacyJpaImpl.INSTANCE
 					: null;
-		}
-
-		@Override
-		public boolean isQueryParametersValidationEnabled() {
-			return this.queryParametersValidationEnabled;
 		}
 
 		@Override
@@ -1419,19 +1412,12 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			jdbcTimeZone = timeZone;
 			return (T) this;
 		}
-
-		@Override
-		public T setQueryParameterValidation(boolean enabled) {
-			queryParametersValidationEnabled = enabled;
-			return (T) this;
-		}
 	}
 
 	public static class StatelessSessionBuilderImpl implements StatelessSessionBuilder, SessionCreationOptions {
 		private final SessionFactoryImpl sessionFactory;
 		private Connection connection;
 		private String tenantIdentifier;
-		private boolean queryParametersValidationEnabled;
 
 		public StatelessSessionBuilderImpl(SessionFactoryImpl sessionFactory) {
 			this.sessionFactory = sessionFactory;
@@ -1440,7 +1426,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			if ( tenantIdentifierResolver != null ) {
 				tenantIdentifier = tenantIdentifierResolver.resolveCurrentTenantIdentifier();
 			}
-			queryParametersValidationEnabled = sessionFactory.getSessionFactoryOptions().isQueryParametersValidationEnabled();
 		}
 
 		@Override
@@ -1534,17 +1519,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		@Override
 		public ManagedFlushChecker getManagedFlushChecker() {
 			return null;
-		}
-
-		@Override
-		public boolean isQueryParametersValidationEnabled() {
-			return queryParametersValidationEnabled;
-		}
-
-		@Override
-		public StatelessSessionBuilder setQueryParameterValidation(boolean enabled) {
-			queryParametersValidationEnabled = enabled;
-			return this;
 		}
 	}
 

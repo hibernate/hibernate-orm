@@ -492,10 +492,6 @@ Can reference a
 `StatementInspector` implementation `Class` reference or
 `StatementInspector` implementation class name (fully-qualified class name).
 
-`*hibernate.query.validate_parameters*` (e.g. `true` (default value) or `false`)::
-This configuration property can be used to disable parameters validation performed by `org.hibernate.query.Query#setParameter` when the Session is bootstrapped via Jakarta Persistence
-`jakarta.persistence.EntityManagerFactory`.
-
 `*hibernate.criteria.value_handling_mode*` (e.g. `BIND` (default value) or `INLINE`)::
 By default, Criteria queries uses bind parameters for any value passed through the Jakarta Persistence Criteria API.
 +

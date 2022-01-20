@@ -23,6 +23,6 @@ public class ProcedureParameterBindingImpl<T>
 	public ProcedureParameterBindingImpl(
 			ProcedureParameterImplementor<T> queryParameter,
 			SessionFactoryImplementor sessionFactory) {
-		super( queryParameter, sessionFactory, true );
+		super( queryParameter, sessionFactory );
 	}
 }

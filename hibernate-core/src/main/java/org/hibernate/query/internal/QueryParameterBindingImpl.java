@@ -33,7 +33,6 @@ import jakarta.persistence.TemporalType;
 public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, JavaType.CoercionContext {
 	private final QueryParameter<T> queryParameter;
 	private final SessionFactoryImplementor sessionFactory;
-	private final boolean isBindingValidationRequired;
 
 	private boolean isBound;
 	private boolean isMultiValued;
@@ -50,11 +49,9 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 	 */
 	protected QueryParameterBindingImpl(
 			QueryParameter<T> queryParameter,
-			SessionFactoryImplementor sessionFactory,
-			boolean isBindingValidationRequired) {
+			SessionFactoryImplementor sessionFactory) {
 		this.queryParameter = queryParameter;
 		this.sessionFactory = sessionFactory;
-		this.isBindingValidationRequired = isBindingValidationRequired;
 		this.bindType = queryParameter.getHibernateType();
 	}
 
@@ -64,11 +61,9 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 	public QueryParameterBindingImpl(
 			QueryParameter<T> queryParameter,
 			SessionFactoryImplementor sessionFactory,
-			BindableType<T> bindType,
-			boolean isBindingValidationRequired) {
+			BindableType<T> bindType) {
 		this.queryParameter = queryParameter;
 		this.sessionFactory = sessionFactory;
-		this.isBindingValidationRequired = isBindingValidationRequired;
 		this.bindType = bindType;
 	}
 
@@ -132,9 +127,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 			}
 		}
 
-		if ( isBindingValidationRequired ) {
-			validate( value );
-		}
+		validate( value );
 
 		if ( resolveJdbcTypeIfNecessary && bindType == null && value == null ) {
 			bindType = getTypeConfiguration().getBasicTypeRegistry().getRegisteredType( "null" );
@@ -203,9 +196,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 			value = coerce( value, queryParameter.getHibernateType() );
 		}
 
-		if ( isBindingValidationRequired ) {
-			validate( value, clarifiedType );
-		}
+		validate( value, clarifiedType );
 
 		bindValue( value );
 	}
@@ -242,9 +233,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 			}
 		}
 
-		if ( isBindingValidationRequired ) {
-			validate( value, temporalTypePrecision );
-		}
+		validate( value, temporalTypePrecision );
 
 		bindValue( value );
 		setExplicitTemporalPrecision( temporalTypePrecision );

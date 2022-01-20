@@ -190,11 +190,7 @@ public class NativeQueryImpl<R>
 		this.sqlString = parameterInterpretation.getAdjustedSqlString();
 		this.parameterMetadata = parameterInterpretation.toParameterMetadata( session );
 		this.parameterOccurrences = parameterInterpretation.getOrderedParameterOccurrences();
-		this.parameterBindings = QueryParameterBindingsImpl.from(
-				parameterMetadata,
-				session.getFactory(),
-				session.isQueryParametersValidationEnabled()
-		);
+		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, session.getFactory() );
 		this.querySpaces = new HashSet<>();
 
 		this.resultSetMapping = resultSetMappingCreator.get();
@@ -327,11 +323,7 @@ public class NativeQueryImpl<R>
 		this.sqlString = parameterInterpretation.getAdjustedSqlString();
 		this.parameterMetadata = parameterInterpretation.toParameterMetadata( session );
 		this.parameterOccurrences = parameterInterpretation.getOrderedParameterOccurrences();
-		this.parameterBindings = QueryParameterBindingsImpl.from(
-				parameterMetadata,
-				session.getFactory(),
-				session.isQueryParametersValidationEnabled()
-		);
+		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, session.getFactory() );
 		this.querySpaces = new HashSet<>();
 
 		this.resultSetMapping = new ResultSetMappingImpl( resultSetMappingMemento.getName() );
@@ -386,11 +378,7 @@ public class NativeQueryImpl<R>
 		this.sqlString = parameterInterpretation.getAdjustedSqlString();
 		this.parameterMetadata = parameterInterpretation.toParameterMetadata( session );
 		this.parameterOccurrences = parameterInterpretation.getOrderedParameterOccurrences();
-		this.parameterBindings = QueryParameterBindingsImpl.from(
-				parameterMetadata,
-				session.getFactory(),
-				session.isQueryParametersValidationEnabled()
-		);
+		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, session.getFactory() );
 
 		this.resultSetMapping = new ResultSetMappingImpl( sqlString, true );
 		this.resultMappingSuppliedToCtor = false;

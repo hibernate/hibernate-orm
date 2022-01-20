@@ -187,13 +187,13 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 			);
 		}
 
-		if ( sequenceInformation.getIncrementSize() > 0
-				&& sequence.getIncrementSize() != sequenceInformation.getIncrementSize() ) {
+		if ( sequenceInformation.getIncrementValue() > 0
+				&& sequence.getIncrementSize() != sequenceInformation.getIncrementValue() ) {
 			throw new SchemaManagementException(
 					String.format(
 							"Schema-validation: sequence [%s] defined inconsistent increment-size; found [%s] but expecting [%s]",
 							sequence.getName(),
-							sequenceInformation.getIncrementSize(),
+							sequenceInformation.getIncrementValue(),
 							sequence.getIncrementSize()
 					)
 			);

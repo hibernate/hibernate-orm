@@ -81,7 +81,7 @@ import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtract
 import static org.hibernate.type.SqlTypes.*;
 
 /**
- * An SQL dialect for MySQL (prior to 5.x).
+ * A {@linkplain Dialect SQL dialect} for MySQL 5 and above.
  *
  * @author Gavin King
  */

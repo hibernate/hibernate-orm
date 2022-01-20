@@ -79,7 +79,7 @@ import static org.hibernate.type.SqlTypes.NCLOB;
 import static org.hibernate.type.SqlTypes.NUMERIC;
 
 /**
- * An SQL dialect compatible with HyperSQL (HSQLDB) version 1.8 and above.
+ * A {@linkplain Dialect SQL dialect} for HSQLDB (HyperSQL) 1.8 and above.
  *
  * @author Christoph Sturm
  * @author Phillip Baird

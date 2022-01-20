@@ -46,8 +46,7 @@ import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtract
 import static org.hibernate.type.SqlTypes.*;
 
 /**
- * Dialect for Sybase Adaptive Server Enterprise for
- * Sybase 11.9.2 and above.
+ * A {@linkplain Dialect SQL dialect} for Sybase Adaptive Server Enterprise 11.9 and above.
  */
 public class SybaseASEDialect extends SybaseDialect {
 
@@ -589,7 +588,6 @@ public class SybaseASEDialect extends SybaseDialect {
 	}
 
 	@Override
-	@SuppressWarnings("deprecation")
 	public String applyLocksToSql(String sql, LockOptions aliasedLockOptions, Map<String, String[]> keyColumnNames) {
 		//TODO: is this really correct?
 		return getVersion().isBefore( 15, 7 )

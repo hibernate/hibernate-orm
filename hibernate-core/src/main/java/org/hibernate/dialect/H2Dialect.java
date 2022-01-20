@@ -69,7 +69,7 @@ import static org.hibernate.query.TemporalUnit.SECOND;
 import static org.hibernate.type.SqlTypes.*;
 
 /**
- * A dialect compatible with the H2 database.
+ * A {@linkplain Dialect SQL dialect} for H2.
  *
  * @author Thomas Mueller
  */
@@ -82,7 +82,6 @@ public class H2Dialect extends Dialect {
 	private final boolean cascadeConstraints;
 	private final boolean useLocalTime;
 
-	private final boolean supportsTuplesInSubqueries;
 	private final SequenceInformationExtractor sequenceInformationExtractor;
 	private final String querySequenceString;
 
@@ -107,7 +106,7 @@ public class H2Dialect extends Dialect {
 			LOG.unsupportedMultiTableBulkHqlJpaql( version.getMajor(), version.getMinor(), version.getMicro() );
 		}
 
-		supportsTuplesInSubqueries = version.isSameOrAfter( 1, 4, 198 );
+//		supportsTuplesInSubqueries = version.isSameOrAfter( 1, 4, 198 );
 
 		// Prior to 1.4.200 there was no support for 'current value for sequence_name'
 		// After 2.0.202 there is no support for 'sequence_name.nextval' and 'sequence_name.currval'
@@ -473,20 +472,20 @@ public class H2Dialect extends Dialect {
 
 	private static final ViolatedConstraintNameExtractor EXTRACTOR =
 			new TemplatedViolatedConstraintNameExtractor( sqle -> {
-				String constraintName = null;
 				// 23000: Check constraint violation: {0}
 				// 23001: Unique index or primary key violation: {0}
 				if ( sqle.getSQLState().startsWith( "23" ) ) {
 					final String message = sqle.getMessage();
 					final int idx = message.indexOf( "violation: " );
 					if ( idx > 0 ) {
-						constraintName = message.substring( idx + "violation: ".length() );
-					}
-					if ( sqle.getSQLState().equals( "23506" ) ) {
-						constraintName = constraintName.substring( 1, constraintName.indexOf( ":" ) );
+						String constraintName = message.substring( idx + "violation: ".length() );
+						if ( sqle.getSQLState().equals( "23506" ) ) {
+							constraintName = constraintName.substring( 1, constraintName.indexOf( ":" ) );
+						}
+						return constraintName;
 					}
 				}
-				return constraintName;
+				return null;
 			} );
 
 	@Override

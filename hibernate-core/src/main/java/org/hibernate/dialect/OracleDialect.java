@@ -95,7 +95,7 @@ import org.hibernate.query.sqm.produce.function.FunctionParameterType;
 import static org.hibernate.type.SqlTypes.*;
 
 /**
- * A dialect for Oracle 8i and above.
+ * A {@linkplain Dialect SQL dialect} for Oracle 8i and above.
  *
  * @author Steve Ebersole
  * @author Gavin King

@@ -176,16 +176,37 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
 
 /**
- * Represents a dialect of SQL implemented by a particular RDBMS. Subclasses
- * implement Hibernate compatibility with different database platforms.
+ * Represents a dialect of SQL implemented by a particular RDBMS. Every
+ * subclass of this class implements support for a certain database
+ * platform. For example, {@link PostgreSQLDialect} implements support
+ * for PostgreSQL, and {@link MySQLDialect} implements support for MySQL.
  * <p>
- * Subclasses must provide a public constructor that registers a set of type
- * mappings from JDBC type codes to database native type names, along with
- * default Hibernate properties. This constructor may have no parameters, or
- * it may have a single parameter of type
- * {@link org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo}.
+ * A subclass must provide a public constructor with a single parameter
+ * of type {@link DialectResolutionInfo}. Alternatively, for purposes of
+ * backward compatibility with older versions of Hibernate, a constructor
+ * with no parameters is also allowed.
  * <p>
- * Subclasses should be immutable.
+ * Almost every subclass must, as a bare minimum, override at least:
+ * <ul>
+ *     <li>{@link #columnType(int)} to define a mapping from JDBC
+ *     {@linkplain Types type codes} to database column types, and
+ *     <li>{@link #initializeFunctionRegistry(QueryEngine)} to register
+ *     mappings for standard HQL functions with the
+ *     {@link org.hibernate.query.sqm.function.SqmFunctionRegistry}.
+ * </ul>
+ * A subclass representing a dialect of SQL which deviates significantly
+ * from ANSI SQL will certainly override many additional operations.
+ * <p>
+ * Subclasses should be threadsafe and immutable.
+ * <p>
+ * Since Hibernate 6, a single subclass of {@code Dialect} represents all
+ * releases of a given product-specific SQL dialect. The version of the
+ * database is exposed at runtime via the {@link DialectResolutionInfo}
+ * passed to the constructor, and by the {@link #getVersion()} property.
+ * <p>
+ * Programs using Hibernate should migrate away from the use of versioned
+ * dialect classes like, for example, {@link PostgreSQL95Dialect}. These
+ * classes are now deprecated and will be removed in a future release.
  *
  * @author Gavin King, David Channon
  */

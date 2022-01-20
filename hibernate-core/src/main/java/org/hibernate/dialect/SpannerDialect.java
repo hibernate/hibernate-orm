@@ -55,7 +55,7 @@ import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
 import static org.hibernate.type.SqlTypes.*;
 
 /**
- * Hibernate Dialect implementation for Cloud Spanner.
+ * A {@linkplain Dialect SQL dialect} for Cloud Spanner.
  *
  * @author Mike Eltsufin
  * @author Chengyuan Zhao
@@ -133,7 +133,8 @@ public class SpannerDialect extends Dialect {
 		return 2_621_440;
 	}
 
-	public int getMaxBytesLength() {
+	@Override
+	public int getMaxVarbinaryLength() {
 		//max is equivalent to 10_485_760
 		return 10_485_760;
 	}

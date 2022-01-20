@@ -100,7 +100,7 @@ public class AvgFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 	private void renderArgument(SqlAppender sqlAppender, SqlAstTranslator<?> translator, Expression realArg) {
 		final JdbcMapping sourceMapping = realArg.getExpressionType().getJdbcMappings().get( 0 );
 		// Only cast to float/double if this is an integer
-		if ( sourceMapping.getJdbcTypeDescriptor().isInteger() ) {
+		if ( sourceMapping.getJdbcType().isInteger() ) {
 			final String cast = dialect.castPattern( sourceMapping.getCastType(), CastType.DOUBLE );
 			new PatternRenderer( cast.replace( "?2", doubleCastType ) )
 					.render( sqlAppender, Collections.singletonList( realArg ), translator );

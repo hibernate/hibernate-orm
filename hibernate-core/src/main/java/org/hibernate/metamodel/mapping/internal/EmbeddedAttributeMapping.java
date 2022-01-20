@@ -15,7 +15,6 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
@@ -378,7 +377,7 @@ public class EmbeddedAttributeMapping
 		final PropertyAccess parentInjectionAttributePropertyAccess;
 		if ( parentInjectionAttributeName != null ) {
 			parentInjectionAttributePropertyAccess = PropertyAccessStrategyBasicImpl.INSTANCE.buildPropertyAccess(
-					embeddableMappingType.getMappedJavaTypeDescriptor().getJavaTypeClass(),
+					embeddableMappingType.getMappedJavaType().getJavaTypeClass(),
 					parentInjectionAttributeName,
 					true );
 		}

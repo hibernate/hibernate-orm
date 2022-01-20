@@ -85,7 +85,7 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 			RuntimeModelCreationContext creationContext) {
 		final SessionFactoryImplementor sessionFactory = creationContext.getSessionFactory();
 		final JavaTypeRegistry jtdRegistry = creationContext.getTypeConfiguration()
-				.getJavaTypeDescriptorRegistry();
+				.getJavaTypeRegistry();
 
 		final Class<?> mappedJavaType = bootDescriptor.getMappedClass();
 		this.mappedJtd = jtdRegistry.resolveEntityTypeDescriptor( mappedJavaType );
@@ -418,12 +418,12 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 	}
 
 	@Override
-	public JavaType<?> getMappedJavaTypeDescriptor() {
+	public JavaType<?> getMappedJavaType() {
 		return mappedJtd;
 	}
 
 	@Override
-	public JavaType<?> getProxyJavaTypeDescriptor() {
+	public JavaType<?> getProxyJavaType() {
 		return proxyJtd;
 	}
 

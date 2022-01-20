@@ -76,7 +76,7 @@ public class ArrayTypeCompositionTest extends BaseEntityManagerFunctionalTestCas
 		@Id
 		private String userName;
 
-		@JavaType( ArrayTypeDescriptor.class )
+		@JavaType( ArrayJavaType.class )
 		private Array emailAddresses = new Array();
 
 		public String getUserName() {

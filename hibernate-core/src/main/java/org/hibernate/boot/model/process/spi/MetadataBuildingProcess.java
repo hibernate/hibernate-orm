@@ -369,7 +369,7 @@ public class MetadataBuildingProcess {
 			}
 
 			private void conditionallyRegisterJtd(JavaType jtd) {
-				final JavaTypeRegistry jtdRegistry = getTypeConfiguration().getJavaTypeDescriptorRegistry();
+				final JavaTypeRegistry jtdRegistry = getTypeConfiguration().getJavaTypeRegistry();
 				jtdRegistry.resolveDescriptor( jtd.getJavaTypeClass(), () -> jtd );
 			}
 
@@ -385,13 +385,13 @@ public class MetadataBuildingProcess {
 			}
 
 			@Override
-			public void contributeJavaTypeDescriptor(JavaType descriptor) {
-				typeConfiguration.getJavaTypeDescriptorRegistry().addDescriptor( descriptor );
+			public void contributeJavaType(JavaType<?> descriptor) {
+				typeConfiguration.getJavaTypeRegistry().addDescriptor( descriptor );
 			}
 
 			@Override
-			public void contributeJdbcTypeDescriptor(JdbcType descriptor) {
-				typeConfiguration.getJdbcTypeDescriptorRegistry().addDescriptor( descriptor );
+			public void contributeJdbcType(JdbcType descriptor) {
+				typeConfiguration.getJdbcTypeRegistry().addDescriptor( descriptor );
 			}
 
 			@Override
@@ -424,7 +424,7 @@ public class MetadataBuildingProcess {
 
 		// add fallback type descriptors
 		final JdbcTypeRegistry jdbcTypeRegistry = typeConfiguration
-				.getJdbcTypeDescriptorRegistry();
+				.getJdbcTypeRegistry();
 		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.UUID, SqlTypes.BINARY );
 		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.JSON, SqlTypes.VARBINARY );
 		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.INET, SqlTypes.VARBINARY );
@@ -439,7 +439,7 @@ public class MetadataBuildingProcess {
 		// For NORMALIZE, we replace the standard types that use TIMESTAMP_WITH_TIMEZONE to use TIMESTAMP
 		if ( options.getDefaultTimeZoneStorage() == TimeZoneStorageStrategy.NORMALIZE ) {
 			final JavaTypeRegistry javaTypeRegistry = typeConfiguration
-					.getJavaTypeDescriptorRegistry();
+					.getJavaTypeRegistry();
 			final JdbcType timestampDescriptor = jdbcTypeRegistry.getDescriptor( Types.TIMESTAMP );
 			final BasicTypeRegistry basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
 			final BasicType<?> offsetDateTimeType = new NamedBasicTypeImpl<>(

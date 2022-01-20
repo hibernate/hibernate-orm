@@ -46,7 +46,7 @@ public class EntityResultJoinedSubclassImpl extends EntityResultImpl {
 				)
 		);
 
-		return new EntityAssembler( getResultJavaTypeDescriptor(), initializer );
+		return new EntityAssembler( this.getResultJavaType(), initializer );
 	}
 
 }

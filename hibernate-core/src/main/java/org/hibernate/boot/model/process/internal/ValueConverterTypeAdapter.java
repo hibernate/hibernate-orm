@@ -17,7 +17,7 @@ import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 
 /**
  * @author Steve Ebersole
@@ -32,15 +32,15 @@ public class ValueConverterTypeAdapter<J> extends AbstractSingleColumnStandardBa
 	public ValueConverterTypeAdapter(
 			String description,
 			BasicValueConverter<J, ?> converter,
-			JdbcTypeDescriptorIndicators indicators) {
+			JdbcTypeIndicators indicators) {
 		super(
-				converter.getRelationalJavaDescriptor().getRecommendedJdbcType( indicators ),
-				(JavaType<J>) converter.getRelationalJavaDescriptor()
+				converter.getRelationalJavaType().getRecommendedJdbcType( indicators ),
+				(JavaType<J>) converter.getRelationalJavaType()
 		);
 
 		this.description = description;
 		this.converter = (BasicValueConverter<J, Object>) converter;
-		this.valueBinder = getJdbcTypeDescriptor().getBinder( this.converter.getRelationalJavaDescriptor() );
+		this.valueBinder = getJdbcType().getBinder( this.converter.getRelationalJavaType() );
 	}
 
 	@Override
@@ -66,13 +66,13 @@ public class ValueConverterTypeAdapter<J> extends AbstractSingleColumnStandardBa
 
 	@Override
 	protected MutabilityPlan<J> getMutabilityPlan() {
-		return converter.getDomainJavaDescriptor().getMutabilityPlan();
+		return converter.getDomainJavaType().getMutabilityPlan();
 	}
 
 	@Override
 	public boolean isEqual(Object one, Object another) {
 		//noinspection unchecked
-		return ( (JavaType<Object>) converter.getDomainJavaDescriptor() ).areEqual( one, another );
+		return ( (JavaType<Object>) converter.getDomainJavaType() ).areEqual( one, another );
 	}
 
 	@Override

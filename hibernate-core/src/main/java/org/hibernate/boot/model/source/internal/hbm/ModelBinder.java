@@ -141,7 +141,6 @@ import org.hibernate.mapping.Set;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.SingleTableSubclass;
 import org.hibernate.mapping.SortableValue;
-import org.hibernate.mapping.SyntheticProperty;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UnionSubclass;
 import org.hibernate.mapping.UniqueKey;
@@ -1964,7 +1963,7 @@ public class ModelBinder {
 					.getBasicTypeRegistry()
 					.getRegisteredType( value.getTypeName() );
 			if ( basicType instanceof AbstractSingleColumnStandardBasicType ) {
-				if ( isLob( basicType.getJdbcTypeDescriptor().getJdbcTypeCode(), null ) ) {
+				if ( isLob( basicType.getJdbcType().getJdbcTypeCode(), null ) ) {
 					value.makeLob();
 				}
 			}

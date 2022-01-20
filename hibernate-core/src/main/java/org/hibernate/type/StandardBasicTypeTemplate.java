@@ -12,7 +12,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 /**
  * A BasicType adapter targeting partial portability to 6.0's type
  * system changes.  In 6.0 the notion of a BasicType is just a
- * combination of JavaTypeDescriptor/SqlTypeDescriptor.
+ * combination of JavaType/JdbcType.
  *
  * @author Steve Ebersole
  */
@@ -23,12 +23,12 @@ public class StandardBasicTypeTemplate<J> extends AbstractSingleColumnStandardBa
 
 	public StandardBasicTypeTemplate(
 			JdbcType jdbcType,
-			JavaType<J> javaTypeDescriptor,
+			JavaType<J> javaType,
 			String... registrationKeys) {
-		super( jdbcType, javaTypeDescriptor );
+		super( jdbcType, javaType );
 		this.registrationKeys = registrationKeys;
 
-		this.name = javaTypeDescriptor.getJavaType() == null ? "(map-mode)" : javaTypeDescriptor.getJavaType().getTypeName()
+		this.name = javaType.getJavaType() == null ? "(map-mode)" : javaType.getJavaType().getTypeName()
 				+ " -> " + jdbcType.getJdbcTypeCode();
 	}
 

@@ -23,19 +23,19 @@ import org.hibernate.type.descriptor.java.JavaType;
  * @author Steve Ebersole
  */
 public class DynamicInstantiationAssemblerListImpl implements DomainResultAssembler<List<?>> {
-	private final JavaType<List<?>> listJavaDescriptor;
+	private final JavaType<List<?>> listJavaType;
 	private final List<ArgumentReader<?>> argumentReaders;
 
 	public DynamicInstantiationAssemblerListImpl(
-			JavaType<List<?>> listJavaDescriptor,
+			JavaType<List<?>> listJavaType,
 			List<ArgumentReader<?>> argumentReaders) {
-		this.listJavaDescriptor = listJavaDescriptor;
+		this.listJavaType = listJavaType;
 		this.argumentReaders = argumentReaders;
 	}
 
 	@Override
-	public JavaType<List<?>> getAssembledJavaTypeDescriptor() {
-		return listJavaDescriptor;
+	public JavaType<List<?>> getAssembledJavaType() {
+		return listJavaType;
 	}
 
 	@Override

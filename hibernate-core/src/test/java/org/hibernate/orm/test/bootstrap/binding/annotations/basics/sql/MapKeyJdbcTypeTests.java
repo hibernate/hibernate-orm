@@ -51,7 +51,7 @@ public class MapKeyJdbcTypeTests {
 		final Dialect dialect = domainModel.getDatabase().getDialect();
 		final NationalizationSupport nationalizationSupport = dialect.getNationalizationSupport();
 		final JdbcTypeRegistry jdbcTypeRegistry = domainModel.getTypeConfiguration()
-				.getJdbcTypeDescriptorRegistry();
+				.getJdbcTypeRegistry();
 
 		final PersistentClass entityBinding = domainModel.getEntityBinding( MyEntity.class.getName() );
 
@@ -101,12 +101,12 @@ public class MapKeyJdbcTypeTests {
 		assertThat( mapValue.getIndex(), instanceOf( BasicValue.class ) );
 		final BasicValue indexValue = (BasicValue) mapValue.getIndex();
 		final BasicValue.Resolution<?> indexResolution = indexValue.resolve();
-		keyTypeVerifier.accept( indexResolution.getJdbcTypeDescriptor() );
+		keyTypeVerifier.accept( indexResolution.getJdbcType() );
 
 		assertThat( mapValue.getElement(), instanceOf( BasicValue.class ) );
 		final BasicValue elementValue = (BasicValue) mapValue.getElement();
 		final BasicValue.Resolution<?> elementResolution = elementValue.resolve();
-		valueTypeVerifier.accept( elementResolution.getJdbcTypeDescriptor() );
+		valueTypeVerifier.accept( elementResolution.getJdbcType() );
 	}
 
 	@Entity( name = "MyEntity" )

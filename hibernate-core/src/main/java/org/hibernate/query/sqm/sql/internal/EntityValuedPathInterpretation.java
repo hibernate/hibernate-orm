@@ -276,7 +276,7 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 	public void applySqlSelections(DomainResultCreationState creationState) {
 		creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
 				sqlExpression,
-				getExpressionType().getJavaTypeDescriptor(),
+				getExpressionType().getJavaType(),
 				creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
 		);
 	}

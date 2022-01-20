@@ -730,8 +730,8 @@ public abstract class AbstractEntityPersister
 		this.representationStrategy = creationContext.getBootstrapContext().getRepresentationStrategySelector()
 				.resolveStrategy( bootDescriptor, this, creationContext );
 
-		this.javaTypeDescriptor = representationStrategy.getLoadJavaTypeDescriptor();
-		assert javaTypeDescriptor != null;
+		this.javaType = representationStrategy.getLoadJavaType();
+		assert javaType != null;
 
 
 		final JdbcServices jdbcServices = factory.getServiceRegistry().getService( JdbcServices.class );
@@ -2105,7 +2105,7 @@ public abstract class AbstractEntityPersister
 			throw new HibernateException( "LockMode.FORCE is currently not supported for generated version properties" );
 		}
 
-		Object nextVersion = getVersionJavaTypeDescriptor().next( currentVersion, session );
+		Object nextVersion = getVersionJavaType().next( currentVersion, session );
 		if ( LOG.isTraceEnabled() ) {
 			LOG.trace(
 					"Forcing version increment [" + MessageHelper.infoString( this, id, getFactory() ) + "; "
@@ -4924,7 +4924,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	public final Class<?> getMappedClass() {
-		return getMappedJavaTypeDescriptor().getJavaTypeClass();
+		return this.getMappedJavaType().getJavaTypeClass();
 	}
 
 	public boolean implementsLifecycle() {
@@ -4932,8 +4932,8 @@ public abstract class AbstractEntityPersister
 	}
 
 	public Class<?> getConcreteProxyClass() {
-		final JavaType<?> proxyJavaTypeDescriptor = getRepresentationStrategy().getProxyJavaTypeDescriptor();
-		return proxyJavaTypeDescriptor != null ? proxyJavaTypeDescriptor.getJavaTypeClass() : javaTypeDescriptor.getJavaTypeClass();
+		final JavaType<?> proxyJavaType = getRepresentationStrategy().getProxyJavaType();
+		return proxyJavaType != null ? proxyJavaType.getJavaTypeClass() : javaType.getJavaTypeClass();
 	}
 
 	@Override
@@ -5477,7 +5477,7 @@ public abstract class AbstractEntityPersister
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// org.hibernate.metamodel.mapping.EntityMappingType
 
-	private final JavaType<?> javaTypeDescriptor;
+	private final JavaType<?> javaType;
 	private final EntityRepresentationStrategy representationStrategy;
 
 	private EntityMappingType superMappingType;
@@ -6132,7 +6132,7 @@ public abstract class AbstractEntityPersister
 		else if ( attrType instanceof AnyType ) {
 			final JavaType<Object> baseAssociationJtd = sessionFactory
 					.getTypeConfiguration()
-					.getJavaTypeDescriptorRegistry()
+					.getJavaTypeRegistry()
 					.getDescriptor( Object.class );
 
 			final AnyType anyType = (AnyType) attrType;
@@ -6241,8 +6241,8 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public JavaType<?> getMappedJavaTypeDescriptor() {
-		return javaTypeDescriptor;
+	public JavaType<?> getMappedJavaType() {
+		return javaType;
 	}
 
 	@Override

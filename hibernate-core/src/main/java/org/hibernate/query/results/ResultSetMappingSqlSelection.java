@@ -51,7 +51,7 @@ public class ResultSetMappingSqlSelection implements SqlSelection, Expression, S
 	public SqlSelection createSqlSelection(
 			int jdbcPosition,
 			int valuesArrayPosition,
-			JavaType javaTypeDescriptor,
+			JavaType javaType,
 			TypeConfiguration typeConfiguration) {
 		return this;
 	}

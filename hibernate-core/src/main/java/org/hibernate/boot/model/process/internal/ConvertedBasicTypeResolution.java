@@ -14,7 +14,7 @@ import org.hibernate.type.ConvertedBasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 
 /**
  * @author Steve Ebersole
@@ -25,7 +25,7 @@ public class ConvertedBasicTypeResolution<J> implements BasicValue.Resolution<J>
 
 	public ConvertedBasicTypeResolution(
 			ConvertedBasicType basicType,
-			JdbcTypeDescriptorIndicators stdIndicators) {
+			JdbcTypeIndicators stdIndicators) {
 		this.basicType = basicType;
 
 		final BasicValueConverter valueConverter = basicType.getValueConverter();
@@ -48,18 +48,18 @@ public class ConvertedBasicTypeResolution<J> implements BasicValue.Resolution<J>
 	}
 
 	@Override
-	public JavaType<J> getDomainJavaDescriptor() {
-		return basicType.getValueConverter().getDomainJavaDescriptor();
+	public JavaType<J> getDomainJavaType() {
+		return basicType.getValueConverter().getDomainJavaType();
 	}
 
 	@Override
-	public JavaType<?> getRelationalJavaDescriptor() {
-		return basicType.getValueConverter().getRelationalJavaDescriptor();
+	public JavaType<?> getRelationalJavaType() {
+		return basicType.getValueConverter().getRelationalJavaType();
 	}
 
 	@Override
-	public JdbcType getJdbcTypeDescriptor() {
-		return adapted.getJdbcTypeDescriptor();
+	public JdbcType getJdbcType() {
+		return adapted.getJdbcType();
 	}
 
 	@Override
@@ -69,6 +69,6 @@ public class ConvertedBasicTypeResolution<J> implements BasicValue.Resolution<J>
 
 	@Override
 	public MutabilityPlan<J> getMutabilityPlan() {
-		return getDomainJavaDescriptor().getMutabilityPlan();
+		return getDomainJavaType().getMutabilityPlan();
 	}
 }

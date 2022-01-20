@@ -27,7 +27,7 @@ import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
@@ -95,7 +95,7 @@ public class ExplicitJavaTypeDescriptorTest extends BaseNonConfigCoreFunctionalT
 
 	@Override
 	protected void configureMetadataBuilder(MetadataBuilder metadataBuilder) {
-		( (TypeContributions) metadataBuilder ).contributeJavaTypeDescriptor( PseudoMutableStateJavaType.INSTANCE );
+		( (TypeContributions) metadataBuilder ).contributeJavaType( PseudoMutableStateJavaType.INSTANCE );
 	}
 
 	@Override
@@ -325,8 +325,8 @@ public class ExplicitJavaTypeDescriptorTest extends BaseNonConfigCoreFunctionalT
 		}
 
 		@Override
-		public JdbcType getRecommendedJdbcType(JdbcTypeDescriptorIndicators context) {
-			return context.getTypeConfiguration().getJdbcTypeDescriptorRegistry().getDescriptor( Types.VARCHAR );
+		public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
+			return context.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( Types.VARCHAR );
 		}
 
 		@Override

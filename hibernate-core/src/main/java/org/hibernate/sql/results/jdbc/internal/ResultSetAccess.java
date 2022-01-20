@@ -19,7 +19,7 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -74,7 +74,7 @@ public interface ResultSetAccess extends JdbcValuesMetadata {
 	@Override
 	default <J> BasicType<J> resolveType(
 			int position,
-			JavaType<J> explicitJavaTypeDescriptor,
+			JavaType<J> explicitJavaType,
 			SessionFactoryImplementor sessionFactory) {
 		final TypeConfiguration typeConfiguration = getFactory().getTypeConfiguration();
 		final JdbcServices jdbcServices = getFactory().getJdbcServices();
@@ -99,15 +99,15 @@ public interface ResultSetAccess extends JdbcValuesMetadata {
 							columnType,
 							length,
 							scale,
-							typeConfiguration.getJdbcTypeDescriptorRegistry()
+							typeConfiguration.getJdbcTypeRegistry()
 					);
-			final JavaType<J> javaTypeDescriptor;
+			final JavaType<J> javaType;
 			final JdbcType jdbcType;
-			// If there is an explicit JavaTypeDescriptor, then prefer its recommended JDBC type
-			if ( explicitJavaTypeDescriptor != null ) {
-				javaTypeDescriptor = explicitJavaTypeDescriptor;
-				jdbcType = explicitJavaTypeDescriptor.getRecommendedJdbcType(
-						new JdbcTypeDescriptorIndicators() {
+			// If there is an explicit JavaType, then prefer its recommended JDBC type
+			if ( explicitJavaType != null ) {
+				javaType = explicitJavaType;
+				jdbcType = explicitJavaType.getRecommendedJdbcType(
+						new JdbcTypeIndicators() {
 							@Override
 							public TypeConfiguration getTypeConfiguration() {
 								return typeConfiguration;
@@ -137,13 +137,13 @@ public interface ResultSetAccess extends JdbcValuesMetadata {
 			}
 			else {
 				jdbcType = resolvedJdbcType;
-				javaTypeDescriptor = jdbcType.getJdbcRecommendedJavaTypeMapping(
+				javaType = jdbcType.getJdbcRecommendedJavaTypeMapping(
 						length,
 						scale,
 						typeConfiguration
 				);
 			}
-			return typeConfiguration.getBasicTypeRegistry().resolve( javaTypeDescriptor, jdbcType );
+			return typeConfiguration.getBasicTypeRegistry().resolve( javaType, jdbcType );
 		}
 		catch (SQLException e) {
 			throw jdbcServices.getSqlExceptionHelper().convert(

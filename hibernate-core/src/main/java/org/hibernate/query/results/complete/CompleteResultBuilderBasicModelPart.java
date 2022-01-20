@@ -47,7 +47,7 @@ public class CompleteResultBuilderBasicModelPart
 
 	@Override
 	public Class<?> getJavaType() {
-		return modelPart.getExpressableJavaTypeDescriptor().getJavaTypeClass();
+		return modelPart.getExpressableJavaType().getJavaTypeClass();
 	}
 
 	@Override
@@ -86,7 +86,7 @@ public class CompleteResultBuilderBasicModelPart
 							return new ResultSetMappingSqlSelection( valuesArrayPosition, modelPart );
 						}
 				),
-				modelPart.getJavaTypeDescriptor(),
+				modelPart.getJavaType(),
 				creationStateImpl.getSessionFactory().getTypeConfiguration()
 		);
 
@@ -94,7 +94,7 @@ public class CompleteResultBuilderBasicModelPart
 		return new BasicResult(
 				sqlSelection.getValuesArrayPosition(),
 				columnAlias,
-				modelPart.getJavaTypeDescriptor()
+				modelPart.getJavaType()
 		);
 	}
 

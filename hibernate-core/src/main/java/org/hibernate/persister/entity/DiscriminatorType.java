@@ -27,9 +27,9 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.ClassJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.ClassJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.StringJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
@@ -114,7 +114,7 @@ public class DiscriminatorType<T> extends AbstractType implements BasicType<T>, 
 		}
 		final EntityPersister entityPersister = session.getEntityPersister( entityName, null );
 		return entityPersister.getRepresentationStrategy().getMode() == RepresentationMode.POJO
-				? entityPersister.getJavaTypeDescriptor().getJavaTypeClass()
+				? entityPersister.getJavaType().getJavaTypeClass()
 				: entityName;
 	}
 
@@ -215,25 +215,25 @@ public class DiscriminatorType<T> extends AbstractType implements BasicType<T>, 
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public JavaType<T> getExpressableJavaTypeDescriptor() {
+	public JavaType<T> getExpressableJavaType() {
 		return (JavaType<T>) (persister.getRepresentationStrategy().getMode() == RepresentationMode.POJO
-				? ClassJavaTypeDescriptor.INSTANCE
-				: StringJavaTypeDescriptor.INSTANCE);
+				? ClassJavaType.INSTANCE
+				: StringJavaType.INSTANCE);
 	}
 
 	@Override
 	public JavaType<T> getJavaTypeDescriptor() {
-		return getExpressableJavaTypeDescriptor();
+		return getExpressableJavaType();
 	}
 
 	@Override
-	public JavaType<T> getMappedJavaTypeDescriptor() {
-		return getExpressableJavaTypeDescriptor();
+	public JavaType<T> getMappedJavaType() {
+		return getExpressableJavaType();
 	}
 
 	@Override
-	public JdbcType getJdbcTypeDescriptor() {
-		return underlyingType.getJdbcTypeDescriptor();
+	public JdbcType getJdbcType() {
+		return underlyingType.getJdbcType();
 	}
 
 	@Override

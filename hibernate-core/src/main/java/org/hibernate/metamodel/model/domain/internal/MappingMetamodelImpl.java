@@ -833,7 +833,7 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 			return managedType;
 		}
 
-		final JavaType<T> javaType = getTypeConfiguration().getJavaTypeDescriptorRegistry()
+		final JavaType<T> javaType = getTypeConfiguration().getJavaTypeRegistry()
 				.findDescriptor( javaClass );
 		if ( javaType != null ) {
 			final JdbcType recommendedJdbcType = javaType.getRecommendedJdbcType( getTypeConfiguration().getCurrentBaseSqlTypeIndicators() );

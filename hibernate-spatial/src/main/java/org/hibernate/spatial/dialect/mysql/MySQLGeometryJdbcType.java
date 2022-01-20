@@ -55,18 +55,18 @@ public class MySQLGeometryJdbcType implements JdbcType {
 	}
 
 	@Override
-	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaTypeDescriptor) {
-		return new GeometryLiteralFormatter<T>( javaTypeDescriptor, Wkt.Dialect.SFA_1_1_0, "ST_GeomFromText" );
+	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaType) {
+		return new GeometryLiteralFormatter<T>( javaType, Wkt.Dialect.SFA_1_1_0, "ST_GeomFromText" );
 	}
 
 	@Override
-	public <X> ValueBinder<X> getBinder(final JavaType<X> javaTypeDescriptor) {
-		return new BasicBinder<X>( javaTypeDescriptor, this ) {
+	public <X> ValueBinder<X> getBinder(final JavaType<X> javaType) {
+		return new BasicBinder<X>( javaType, this ) {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 					throws SQLException {
 				final WkbEncoder encoder = Wkb.newEncoder( Wkb.Dialect.MYSQL_WKB );
-				final Geometry geometry = getJavaTypeDescriptor().unwrap( value, Geometry.class, options );
+				final Geometry geometry = getJavaType().unwrap( value, Geometry.class, options );
 				final ByteBuffer buffer = encoder.encode( geometry, ByteOrder.NDR );
 				final byte[] bytes = ( buffer == null ? null : buffer.toByteArray() );
 				st.setBytes( index, bytes );
@@ -76,7 +76,7 @@ public class MySQLGeometryJdbcType implements JdbcType {
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
 				final WkbEncoder encoder = Wkb.newEncoder( Wkb.Dialect.MYSQL_WKB );
-				final Geometry geometry = getJavaTypeDescriptor().unwrap( value, Geometry.class, options );
+				final Geometry geometry = getJavaType().unwrap( value, Geometry.class, options );
 				final ByteBuffer buffer = encoder.encode( geometry, ByteOrder.NDR );
 				final byte[] bytes = ( buffer == null ? null : buffer.toByteArray() );
 				st.setBytes( name, bytes );
@@ -85,23 +85,23 @@ public class MySQLGeometryJdbcType implements JdbcType {
 	}
 
 	@Override
-	public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaTypeDescriptor) {
-		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
+	public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaType) {
+		return new BasicExtractor<X>( javaType, this ) {
 
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-				return getJavaTypeDescriptor().wrap( toGeometry( rs.getBytes( paramIndex ) ), options );
+				return getJavaType().wrap( toGeometry( rs.getBytes( paramIndex ) ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-				return getJavaTypeDescriptor().wrap( toGeometry( statement.getBytes( index ) ), options );
+				return getJavaType().wrap( toGeometry( statement.getBytes( index ) ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
 					throws SQLException {
-				return getJavaTypeDescriptor().wrap( toGeometry( statement.getBytes( name ) ), options );
+				return getJavaType().wrap( toGeometry( statement.getBytes( name ) ), options );
 			}
 		};
 	}

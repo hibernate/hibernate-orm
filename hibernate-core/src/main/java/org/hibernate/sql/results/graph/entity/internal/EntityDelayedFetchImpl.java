@@ -63,6 +63,6 @@ public class EntityDelayedFetchImpl extends AbstractNonJoinedEntityFetch {
 				)
 		);
 
-		return new EntityAssembler( getFetchedMapping().getJavaTypeDescriptor(), entityInitializer );
+		return new EntityAssembler( getFetchedMapping().getJavaType(), entityInitializer );
 	}
 }

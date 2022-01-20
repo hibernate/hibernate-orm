@@ -18,7 +18,7 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Registers the BasicJavaDescriptor to use for the given {@link #javaType}
+ * Registers the BasicJavaType to use for the given {@link #javaType}
  *
  * Registrations applied to a package are processed before Hibernate begins to process
  * any attributes, etc.

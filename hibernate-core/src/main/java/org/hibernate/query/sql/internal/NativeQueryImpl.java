@@ -1214,8 +1214,8 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameter(String name, P value, Class<P> javaType) {
-		super.setParameter( name, value, javaType );
+	public <P> NativeQueryImplementor<R> setParameter(String name, P value, Class<P> javaTypeClass) {
+		super.setParameter( name, value, javaTypeClass );
 		return this;
 	}
 
@@ -1250,8 +1250,8 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameter(int position, P value, Class<P> javaType) {
-		super.setParameter( position, value, javaType );
+	public <P> NativeQueryImplementor<R> setParameter(int position, P value, Class<P> javaTypeClass) {
+		super.setParameter( position, value, javaTypeClass );
 		return this;
 	}
 
@@ -1286,8 +1286,8 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameter(QueryParameter<P> parameter, P value, Class<P> javaType) {
-		super.setParameter( parameter, value, javaType );
+	public <P> NativeQueryImplementor<R> setParameter(QueryParameter<P> parameter, P value, Class<P> javaTypeClass) {
+		super.setParameter( parameter, value, javaTypeClass );
 		return this;
 	}
 
@@ -1330,8 +1330,8 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameterList(String name, Collection<? extends P> values, Class<P> javaType) {
-		super.setParameterList( name, values, javaType );
+	public <P> NativeQueryImplementor<R> setParameterList(String name, Collection<? extends P> values, Class<P> javaTypeClass) {
+		super.setParameterList( name, values, javaTypeClass );
 		return this;
 	}
 
@@ -1348,8 +1348,8 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameterList(String name, P[] values, Class<P> javaType) {
-		super.setParameterList( name, values, javaType );
+	public <P> NativeQueryImplementor<R> setParameterList(String name, P[] values, Class<P> javaTypeClass) {
+		super.setParameterList( name, values, javaTypeClass );
 		return this;
 	}
 
@@ -1369,8 +1369,8 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameterList(int position, Collection<? extends P> values, Class<P> javaType) {
-		super.setParameterList( position, values, javaType );
+	public <P> NativeQueryImplementor<R> setParameterList(int position, Collection<? extends P> values, Class<P> javaTypeClass) {
+		super.setParameterList( position, values, javaTypeClass );
 		return this;
 	}
 
@@ -1387,8 +1387,8 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameterList(int position, P[] values, Class<P> javaType) {
-		super.setParameterList( position, values, javaType );
+	public <P> NativeQueryImplementor<R> setParameterList(int position, P[] values, Class<P> javaTypeClass) {
+		super.setParameterList( position, values, javaTypeClass );
 		return this;
 	}
 
@@ -1407,8 +1407,8 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Class<P> javaType) {
-		super.setParameterList( parameter, values, javaType );
+	public <P> NativeQueryImplementor<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Class<P> javaTypeClass) {
+		super.setParameterList( parameter, values, javaTypeClass );
 		return this;
 	}
 
@@ -1425,8 +1425,8 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameterList(QueryParameter<P> parameter, P[] values, Class<P> javaType) {
-		super.setParameterList( parameter, values, javaType );
+	public <P> NativeQueryImplementor<R> setParameterList(QueryParameter<P> parameter, P[] values, Class<P> javaTypeClass) {
+		super.setParameterList( parameter, values, javaTypeClass );
 		return this;
 	}
 

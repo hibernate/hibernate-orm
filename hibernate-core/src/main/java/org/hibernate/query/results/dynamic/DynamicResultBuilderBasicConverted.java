@@ -45,7 +45,7 @@ public class DynamicResultBuilderBasicConverted<O,R> implements DynamicResultBui
 			AttributeConverter<O, R> converter,
 			SessionFactoryImplementor sessionFactory) {
 		final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();
-		final JavaTypeRegistry jtdRegistry = typeConfiguration.getJavaTypeDescriptorRegistry();
+		final JavaTypeRegistry jtdRegistry = typeConfiguration.getJavaTypeRegistry();
 		final JavaType<? extends AttributeConverter<O, R>> converterJtd = jtdRegistry.getDescriptor( converter.getClass() );
 		final ManagedBean<? extends AttributeConverter<O,R>> bean = new ProvidedInstanceManagedBeanImpl<>( converter );
 
@@ -66,7 +66,7 @@ public class DynamicResultBuilderBasicConverted<O,R> implements DynamicResultBui
 			SessionFactoryImplementor sessionFactory) {
 		final ManagedBeanRegistry beans = sessionFactory.getServiceRegistry().getService( ManagedBeanRegistry.class );
 		final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();
-		final JavaTypeRegistry jtdRegistry = typeConfiguration.getJavaTypeDescriptorRegistry();
+		final JavaTypeRegistry jtdRegistry = typeConfiguration.getJavaTypeRegistry();
 		final JavaType<? extends AttributeConverter<O, R>> converterJtd = jtdRegistry.getDescriptor( converterJavaType );
 		final ManagedBean<? extends AttributeConverter<O, R>> bean = beans.getBean( converterJavaType );
 
@@ -81,7 +81,7 @@ public class DynamicResultBuilderBasicConverted<O,R> implements DynamicResultBui
 
 	@Override
 	public Class<?> getJavaType() {
-		return basicValueConverter.getDomainJavaDescriptor().getJavaTypeClass();
+		return basicValueConverter.getDomainJavaType().getJavaTypeClass();
 	}
 
 	@Override
@@ -116,7 +116,7 @@ public class DynamicResultBuilderBasicConverted<O,R> implements DynamicResultBui
 							}
 							final BasicType<?> basicType = jdbcResultsMetadata.resolveType(
 									jdbcPosition,
-									basicValueConverter.getRelationalJavaDescriptor(),
+									basicValueConverter.getRelationalJavaType(),
 									domainResultCreationState.getSqlAstCreationState()
 											.getCreationContext()
 											.getSessionFactory()
@@ -126,14 +126,14 @@ public class DynamicResultBuilderBasicConverted<O,R> implements DynamicResultBui
 							return new ResultSetMappingSqlSelection( valuesArrayPosition, (BasicValuedMapping) basicType );
 						}
 				),
-				basicValueConverter.getDomainJavaDescriptor(),
+				basicValueConverter.getDomainJavaType(),
 				typeConfiguration
 		);
 
 		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				columnAlias,
-				basicValueConverter.getDomainJavaDescriptor(),
+				basicValueConverter.getDomainJavaType(),
 				basicValueConverter
 		);
 	}

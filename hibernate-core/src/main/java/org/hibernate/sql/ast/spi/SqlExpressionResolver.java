@@ -76,6 +76,6 @@ public interface SqlExpressionResolver {
 	 */
 	SqlSelection resolveSqlSelection(
 			Expression expression,
-			JavaType<?> javaTypeDescriptor,
+			JavaType<?> javaType,
 			TypeConfiguration typeConfiguration);
 }

@@ -109,14 +109,14 @@ public class SqmParameterInterpretation implements Expression, DomainResultProdu
 
 		final SqlSelection sqlSelection = creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
 				resolvedExpression,
-				sqmExpressable.getExpressableJavaTypeDescriptor(),
+				sqmExpressable.getExpressableJavaType(),
 				sessionFactory.getTypeConfiguration()
 		);
 
 		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
-				sqmExpressable.getExpressableJavaTypeDescriptor()
+				sqmExpressable.getExpressableJavaType()
 		);
 	}
 
@@ -151,7 +151,7 @@ public class SqmParameterInterpretation implements Expression, DomainResultProdu
 
 		return creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
 				resolvedExpression,
-				sqmExpressable.getExpressableJavaTypeDescriptor(),
+				sqmExpressable.getExpressableJavaType(),
 				sessionFactory.getTypeConfiguration()
 		);
 	}

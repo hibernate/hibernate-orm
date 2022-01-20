@@ -149,8 +149,8 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 	}
 
 	@Override
-	public JavaType<?> getResultJavaTypeDescriptor() {
-		return getEntityValuedModelPart().getEntityMappingType().getMappedJavaTypeDescriptor();
+	public JavaType<?> getResultJavaType() {
+		return getEntityValuedModelPart().getEntityMappingType().getMappedJavaType();
 	}
 
 	public Fetch getIdentifierFetch() {

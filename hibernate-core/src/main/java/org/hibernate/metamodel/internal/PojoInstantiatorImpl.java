@@ -23,8 +23,8 @@ public class PojoInstantiatorImpl<J> extends AbstractPojoInstantiator {
 	private final Constructor constructor;
 
 	@SuppressWarnings("WeakerAccess")
-	public PojoInstantiatorImpl(JavaType javaTypeDescriptor) {
-		super( javaTypeDescriptor.getJavaTypeClass() );
+	public PojoInstantiatorImpl(JavaType javaType) {
+		super( javaType.getJavaTypeClass() );
 
 		this.constructor = isAbstract()
 				? null

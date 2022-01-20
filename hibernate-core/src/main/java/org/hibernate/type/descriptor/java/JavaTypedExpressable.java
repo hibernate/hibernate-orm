@@ -7,8 +7,8 @@
 package org.hibernate.type.descriptor.java;
 
 /**
- * Contract for something that has an associated JavaTypeDescriptor
+ * Contract for something that has an associated JavaType
  */
 public interface JavaTypedExpressable<T> {
-	JavaType<T> getExpressableJavaTypeDescriptor();
+	JavaType<T> getExpressableJavaType();
 }

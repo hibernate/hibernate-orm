@@ -95,7 +95,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 
 		unsavedStrategy = UnsavedValueFactory.getUnsavedIdentifierValue(
 				bootEntityDescriptor.getIdentifier(),
-				getJavaTypeDescriptor(),
+				getJavaType(),
 				propertyAccess.getGetter(),
 				instanceCreator,
 				sessionFactory
@@ -181,8 +181,8 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 	}
 
 	@Override
-	public JavaType<?> getJavaTypeDescriptor() {
-		return getMappedType().getMappedJavaTypeDescriptor();
+	public JavaType<?> getJavaType() {
+		return getMappedType().getMappedJavaType();
 	}
 
 	@Override
@@ -201,7 +201,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 		return new BasicResult(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
-				entityPersister.getIdentifierMapping().getMappedType().getMappedJavaTypeDescriptor(),
+				entityPersister.getIdentifierMapping().getMappedType().getMappedJavaType(),
 				navigablePath
 		);
 	}
@@ -265,7 +265,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 
 		return expressionResolver.resolveSqlSelection(
 				expression,
-				idType.getExpressableJavaTypeDescriptor(),
+				idType.getExpressableJavaType(),
 				sessionFactory.getTypeConfiguration()
 		);
 	}

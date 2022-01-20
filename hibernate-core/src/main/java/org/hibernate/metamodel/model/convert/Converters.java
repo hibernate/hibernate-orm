@@ -35,7 +35,7 @@ public class Converters {
 		final ManagedBean<? extends AttributeConverter<O, R>> converterBean = beanRegistry.getBean( converterClass );
 
 		final TypeConfiguration typeConfiguration = sfi.getTypeConfiguration();
-		final JavaTypeRegistry jtdRegistry = typeConfiguration.getJavaTypeDescriptorRegistry();
+		final JavaTypeRegistry jtdRegistry = typeConfiguration.getJavaTypeRegistry();
 		final JavaType<? extends AttributeConverter<O, R>> converterJtd = jtdRegistry.getDescriptor( converterClass );
 
 		return new JpaAttributeConverterImpl<>( converterBean, converterJtd, domainJtd, relationalJtd );

@@ -33,7 +33,7 @@ public class StringArrayJdbcType implements JdbcType {
 
 	@Override
 	public <T> BasicJavaType<T> getJdbcRecommendedJavaTypeMapping(Integer precision, Integer scale, TypeConfiguration typeConfiguration) {
-		return (BasicJavaType<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( String[].class );
+		return (BasicJavaType<T>) typeConfiguration.getJavaTypeRegistry().getDescriptor( String[].class );
 	}
 
 	private final ValueBinder<String[]> binder = new BasicBinder<String[]>( StringArrayJavaType.INSTANCE, this ) {
@@ -78,13 +78,13 @@ public class StringArrayJdbcType implements JdbcType {
 	};
 
 	@Override
-	public <X> ValueBinder<X> getBinder(JavaType<X> javaTypeDescriptor) {
+	public <X> ValueBinder<X> getBinder(JavaType<X> javaType) {
 		//noinspection unchecked
 		return (ValueBinder<X>) binder;
 	}
 
 	@Override
-	public <X> ValueExtractor<X> getExtractor(JavaType<X> javaTypeDescriptor) {
+	public <X> ValueExtractor<X> getExtractor(JavaType<X> javaType) {
 		//noinspection unchecked
 		return (ValueExtractor<X>) extractor;
 	}

@@ -28,7 +28,7 @@ import org.jboss.logging.Logger;
  *
  * @since 5.3
  */
-public class JavaTypeRegistry implements JavaTypeDescriptorBaseline.BaselineTarget, Serializable {
+public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serializable {
 	private static final Logger log = Logger.getLogger( JavaTypeRegistry.class );
 
 	private final TypeConfiguration typeConfiguration;
@@ -36,7 +36,7 @@ public class JavaTypeRegistry implements JavaTypeDescriptorBaseline.BaselineTarg
 
 	public JavaTypeRegistry(TypeConfiguration typeConfiguration) {
 		this.typeConfiguration = typeConfiguration;
-		JavaTypeDescriptorBaseline.prime( this );
+		JavaTypeBaseline.prime( this );
 	}
 
 
@@ -46,7 +46,7 @@ public class JavaTypeRegistry implements JavaTypeDescriptorBaseline.BaselineTarg
 	@Override
 	public void addBaselineDescriptor(JavaType<?> descriptor) {
 		if ( descriptor.getJavaType() == null ) {
-			throw new IllegalStateException( "Illegal to add BasicJavaTypeDescriptor with null Java type" );
+			throw new IllegalStateException( "Illegal to add BasicJavaType with null Java type" );
 		}
 		addBaselineDescriptor( descriptor.getJavaType(), descriptor );
 	}
@@ -59,7 +59,7 @@ public class JavaTypeRegistry implements JavaTypeDescriptorBaseline.BaselineTarg
 
 	private void performInjections(JavaType<?> descriptor) {
 		if ( descriptor instanceof TypeConfigurationAware ) {
-			// would be nice to make the JavaTypeDescriptor for an entity, e.g., aware of the the TypeConfiguration
+			// would be nice to make the JavaType for an entity, e.g., aware of the the TypeConfiguration
 			( (TypeConfigurationAware) descriptor ).setTypeConfiguration( typeConfiguration );
 		}
 	}
@@ -75,7 +75,7 @@ public class JavaTypeRegistry implements JavaTypeDescriptorBaseline.BaselineTarg
 //				javaType,
 //				() -> {
 //					log.debugf(
-//							"Could not find matching scoped JavaTypeDescriptor for requested Java class [%s]; " +
+//							"Could not find matching scoped JavaType for requested Java class [%s]; " +
 //									"falling back to static registry",
 //							javaType.getName()
 //					);
@@ -86,7 +86,7 @@ public class JavaTypeRegistry implements JavaTypeDescriptorBaseline.BaselineTarg
 //
 //					if ( !AttributeConverter.class.isAssignableFrom( javaType ) ) {
 //						log.debugf(
-//								"Could not find matching JavaTypeDescriptor for requested Java class [%s]; using fallback.  " +
+//								"Could not find matching JavaType for requested Java class [%s]; using fallback.  " +
 //										"This means Hibernate does not know how to perform certain basic operations in relation to this Java type." +
 //										"",
 //								javaType.getName()
@@ -94,7 +94,7 @@ public class JavaTypeRegistry implements JavaTypeDescriptorBaseline.BaselineTarg
 //						checkEqualsAndHashCode( javaType );
 //					}
 //
-//					return new FallbackJavaTypeDescriptor<>( javaType );
+//					return new FallbackJavaType<>( javaType );
 //				}
 //		);
 	}
@@ -191,14 +191,14 @@ public class JavaTypeRegistry implements JavaTypeDescriptorBaseline.BaselineTarg
 					else {
 						mutabilityPlan = (MutabilityPlan<J>) MutableMutabilityPlan.INSTANCE;
 					}
-					return entity ? new EntityJavaTypeDescriptor<>( javaTypeClass, mutabilityPlan )
-							: new JavaTypeDescriptorBasicAdaptor<>( javaTypeClass, mutabilityPlan );
+					return entity ? new EntityJavaType<>( javaTypeClass, mutabilityPlan )
+							: new JavaTypeBasicAdaptor<>( javaTypeClass, mutabilityPlan );
 				}
 		);
 	}
 
 	public JavaType<?> resolveDynamicEntityDescriptor(String typeName) {
-		return new DynamicModelJtd();
+		return new DynamicModelJavaType();
 	}
 
 }

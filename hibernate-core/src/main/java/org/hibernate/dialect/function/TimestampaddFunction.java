@@ -79,7 +79,7 @@ public class TimestampaddFunction
 		else {
 			final Expression magnitude = (Expression) arguments.get( 1 );
 			final JdbcMapping magnitudeJdbcMapping = magnitude.getExpressionType().getJdbcMappings().get( 0 );
-			switch ( magnitudeJdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode() ) {
+			switch ( magnitudeJdbcMapping.getJdbcType().getJdbcTypeCode() ) {
 				case Types.INTEGER:
 				case Types.TINYINT:
 				case Types.SMALLINT:
@@ -87,7 +87,7 @@ public class TimestampaddFunction
 					unit = field.getUnit();
 					break;
 				default:
-					if ( magnitudeJdbcMapping.getMappedJavaTypeDescriptor().getJavaTypeClass() == Duration.class ) {
+					if ( magnitudeJdbcMapping.getMappedJavaType().getJavaTypeClass() == Duration.class ) {
 						// Don't scale durations
 						unit = field.getUnit();
 					}
@@ -128,7 +128,7 @@ public class TimestampaddFunction
 										? BinaryArithmeticOperator.MULTIPLY
 										: BinaryArithmeticOperator.DIVIDE,
 								new QueryLiteral<>(
-										expressionType.getExpressableJavaTypeDescriptor()
+										expressionType.getExpressableJavaType()
 												.fromString( conversionFactor.substring( 1 ) ),
 										expressionType
 								),

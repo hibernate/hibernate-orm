@@ -99,7 +99,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 					final Fetch fetch = resultDescriptor.findFetch( stateArrayContributor );
 
 					final DomainResultAssembler<?> stateAssembler = fetch == null
-							? new NullValueAssembler<>( stateArrayContributor.getJavaTypeDescriptor() )
+							? new NullValueAssembler<>( stateArrayContributor.getJavaType() )
 							: fetch.createAssembler( this, creationState );
 
 					assemblers.add( stateAssembler );
@@ -417,6 +417,6 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 
 	@Override
 	public String toString() {
-		return getClass().getSimpleName() + "(" + navigablePath + ") : `" + getInitializedPart().getJavaTypeDescriptor().getJavaTypeClass() + "`";
+		return getClass().getSimpleName() + "(" + navigablePath + ") : `" + getInitializedPart().getJavaType().getJavaTypeClass() + "`";
 	}
 }

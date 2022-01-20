@@ -10,9 +10,9 @@ import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.metamodel.model.convert.internal.NamedEnumValueConverter;
 import org.hibernate.metamodel.model.convert.internal.OrdinalEnumValueConverter;
 import org.hibernate.type.EnumType;
-import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.IntegerJavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.EnumJavaType;
+import org.hibernate.type.descriptor.java.IntegerJavaType;
+import org.hibernate.type.descriptor.java.StringJavaType;
 import org.hibernate.type.descriptor.jdbc.IntegerJdbcType;
 import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -28,14 +28,14 @@ public class TestEnumTypeSerialization {
 	@Test
 	public void testOrdinalSerializability() {
 		TypeConfiguration typeConfiguration = new TypeConfiguration();
-		final EnumJavaTypeDescriptor<UnspecifiedEnumTypeEntity.E1> enumJtd = (EnumJavaTypeDescriptor) typeConfiguration
-				.getJavaTypeDescriptorRegistry()
+		final EnumJavaType<UnspecifiedEnumTypeEntity.E1> enumJtd = (EnumJavaType) typeConfiguration
+				.getJavaTypeRegistry()
 				.resolveDescriptor( UnspecifiedEnumTypeEntity.E1.class );
 
 		final OrdinalEnumValueConverter valueConverter = new OrdinalEnumValueConverter(
 				enumJtd,
 				IntegerJdbcType.INSTANCE,
-				IntegerJavaTypeDescriptor.INSTANCE
+				IntegerJavaType.INSTANCE
 		);
 
 		final EnumType<UnspecifiedEnumTypeEntity.E1> enumType = new EnumType<>(
@@ -50,14 +50,14 @@ public class TestEnumTypeSerialization {
 	@Test
 	public void testNamedSerializability() {
 		TypeConfiguration typeConfiguration = new TypeConfiguration();
-		final EnumJavaTypeDescriptor<UnspecifiedEnumTypeEntity.E1> enumJtd = (EnumJavaTypeDescriptor) typeConfiguration
-				.getJavaTypeDescriptorRegistry()
+		final EnumJavaType<UnspecifiedEnumTypeEntity.E1> enumJtd = (EnumJavaType) typeConfiguration
+				.getJavaTypeRegistry()
 				.resolveDescriptor( UnspecifiedEnumTypeEntity.E1.class );
 
 		final NamedEnumValueConverter valueConverter = new NamedEnumValueConverter(
 				enumJtd,
 				VarcharJdbcType.INSTANCE,
-				StringJavaTypeDescriptor.INSTANCE
+				StringJavaType.INSTANCE
 		);
 
 		final EnumType<UnspecifiedEnumTypeEntity.E1> enumType = new EnumType<>(

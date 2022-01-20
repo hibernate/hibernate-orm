@@ -19,7 +19,7 @@ import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.MutabilityPlanExposer;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.usertype.Sized;
 import org.hibernate.usertype.UserType;
 
@@ -88,8 +88,8 @@ public class UserTypeJavaTypeWrapper<J> implements BasicJavaType<J> {
 	}
 
 	@Override
-	public JdbcType getRecommendedJdbcType(JdbcTypeDescriptorIndicators context) {
-		return context.getTypeConfiguration().getJdbcTypeDescriptorRegistry().getDescriptor( userType.sqlTypes()[0] );
+	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
+		return context.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( userType.sqlTypes()[0] );
 	}
 
 	@Override

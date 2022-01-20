@@ -51,7 +51,7 @@ public class DynamicResultBuilderEntityCalculated implements DynamicResultBuilde
 
 	@Override
 	public Class<?> getJavaType() {
-		return entityMapping.getJavaTypeDescriptor().getJavaTypeClass();
+		return entityMapping.getJavaType().getJavaTypeClass();
 	}
 
 	@Override

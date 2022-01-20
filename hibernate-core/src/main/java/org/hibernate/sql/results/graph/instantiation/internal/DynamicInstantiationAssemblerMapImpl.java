@@ -25,13 +25,13 @@ import org.hibernate.type.descriptor.java.JavaType;
  * @author Steve Ebersole
  */
 public class DynamicInstantiationAssemblerMapImpl implements DomainResultAssembler<Map<?,?>> {
-	private final JavaType<Map<?,?>> mapJavaDescriptor;
+	private final JavaType<Map<?,?>> mapJavaType;
 	private final List<ArgumentReader<?>> argumentReaders;
 
 	public DynamicInstantiationAssemblerMapImpl(
-			JavaType<Map<?,?>> mapJavaDescriptor,
+			JavaType<Map<?,?>> mapJavaType,
 			List<ArgumentReader<?>> argumentReaders) {
-		this.mapJavaDescriptor = mapJavaDescriptor;
+		this.mapJavaType = mapJavaType;
 		this.argumentReaders = argumentReaders;
 
 		final Set<String> aliases = new HashSet<>();
@@ -48,8 +48,8 @@ public class DynamicInstantiationAssemblerMapImpl implements DomainResultAssembl
 	}
 
 	@Override
-	public JavaType<Map<?,?>> getAssembledJavaTypeDescriptor() {
-		return mapJavaDescriptor;
+	public JavaType<Map<?,?>> getAssembledJavaType() {
+		return mapJavaType;
 	}
 
 	@Override

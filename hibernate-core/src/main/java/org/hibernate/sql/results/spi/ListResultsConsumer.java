@@ -82,14 +82,14 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 			}
 
 			if ( uniqueRows ) {
-				final List<JavaType> resultJavaTypeDescriptors = rowReader.getResultJavaTypeDescriptors();
-				assert resultJavaTypeDescriptors.size() == 1;
-				final JavaType<R> resultJavaTypeDescriptor = resultJavaTypeDescriptors.get( 0 );
+				final List<JavaType> resultJavaTypes = rowReader.getResultJavaTypes();
+				assert resultJavaTypes.size() == 1;
+				final JavaType<R> resultJavaType = resultJavaTypes.get( 0 );
 				while ( rowProcessingState.next() ) {
 					final R row = rowReader.readRow( rowProcessingState, processingOptions );
 					boolean add = true;
 					for ( R existingRow : results ) {
-						if ( resultJavaTypeDescriptor.areEqual( existingRow, row ) ) {
+						if ( resultJavaType.areEqual( existingRow, row ) ) {
 							if ( uniqueSemantic == UniqueSemantic.ASSERT && !rowProcessingState.hasCollectionInitializers() ) {
 								throw new HibernateException(
 										"More than one row with the given identifier was found: " +

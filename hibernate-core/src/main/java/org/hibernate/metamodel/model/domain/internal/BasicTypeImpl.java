@@ -20,10 +20,10 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
  * @author Emmanuel Bernard
  */
 public class BasicTypeImpl<J> implements BasicDomainType<J>, Serializable {
-	private final JavaType<J> javaTypeDescriptor;
+	private final JavaType<J> javaType;
 
-	public BasicTypeImpl(JavaType<J> javaTypeDescriptor) {
-		this.javaTypeDescriptor = javaTypeDescriptor;
+	public BasicTypeImpl(JavaType<J> javaType) {
+		this.javaType = javaType;
 	}
 
 	public PersistenceType getPersistenceType() {
@@ -31,12 +31,12 @@ public class BasicTypeImpl<J> implements BasicDomainType<J>, Serializable {
 	}
 
 	@Override
-	public JavaType<J> getExpressableJavaTypeDescriptor() {
-		return javaTypeDescriptor;
+	public JavaType<J> getExpressableJavaType() {
+		return javaType;
 	}
 
 	public Class<J> getJavaType() {
-		return getExpressableJavaTypeDescriptor().getJavaTypeClass();
+		return getExpressableJavaType().getJavaTypeClass();
 	}
 
 	@Override
@@ -45,7 +45,7 @@ public class BasicTypeImpl<J> implements BasicDomainType<J>, Serializable {
 	}
 
 	@Override
-	public JdbcType getJdbcTypeDescriptor() {
+	public JdbcType getJdbcType() {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 

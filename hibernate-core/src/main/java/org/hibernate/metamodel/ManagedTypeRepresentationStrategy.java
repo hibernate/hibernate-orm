@@ -35,7 +35,7 @@ public interface ManagedTypeRepresentationStrategy {
 	 * The Java type descriptor for the concrete type.  For dynamic-map models
 	 * this will return the JTD for java.util.Map
 	 */
-	JavaType<?> getMappedJavaTypeDescriptor();
+	JavaType<?> getMappedJavaType();
 
 	/**
 	 * Create the property accessor object for the specified attribute

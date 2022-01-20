@@ -92,7 +92,7 @@ public class BasicAttributeMapping
 			domainTypeDescriptor = jdbcMapping.getJavaTypeDescriptor();
 		}
 		else {
-			domainTypeDescriptor = valueConverter.getDomainJavaDescriptor();
+			domainTypeDescriptor = valueConverter.getDomainJavaType();
 		}
 
 		this.customReadExpression = customReadExpression;
@@ -160,7 +160,7 @@ public class BasicAttributeMapping
 	}
 
 	@Override
-	public JavaType<?> getJavaTypeDescriptor() {
+	public JavaType<?> getJavaType() {
 		return domainTypeDescriptor;
 	}
 
@@ -216,7 +216,7 @@ public class BasicAttributeMapping
 		return new BasicResult(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
-				getMappedType().getMappedJavaTypeDescriptor(),
+				getMappedType().getMappedJavaType(),
 				valueConverter,
 				navigablePath
 		);
@@ -245,7 +245,7 @@ public class BasicAttributeMapping
 								creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()
 						)
 				),
-				valueConverter == null ? getMappedType().getMappedJavaTypeDescriptor() : valueConverter.getRelationalJavaDescriptor(),
+				valueConverter == null ? getMappedType().getMappedJavaType() : valueConverter.getRelationalJavaType(),
 				creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
 		);
 	}

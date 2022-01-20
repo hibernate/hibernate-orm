@@ -20,7 +20,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.type.descriptor.java.JdbcTimestampJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JdbcTimestampJavaType;
 
 import org.junit.Test;
 
@@ -142,7 +142,7 @@ public class MapKeyTypeTest extends BaseEntityManagerFunctionalTestCase {
 		@MapKeyJdbcTypeCode(Types.BIGINT)
 // todo (6.0) : figure out why `@MapKeyTemporal` did not work.  imo it should
 //		@MapKeyTemporal(TemporalType.TIMESTAMP)
-		@MapKeyJavaType(JdbcTimestampJavaTypeDescriptor.class)
+		@MapKeyJavaType(JdbcTimestampJavaType.class)
 		@MapKeyColumn(name = "call_timestamp_epoch")
 		@Column(name = "phone_number")
 		private Map<Date, Integer> callRegister = new HashMap<>();

@@ -12,7 +12,7 @@ import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.MutableMutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 
 /**
  * @author Steve Ebersole
@@ -39,7 +39,7 @@ public class PayloadWrapperJavaType implements BasicJavaType<PayloadWrapper> {
 	}
 
 	@Override
-	public JdbcType getRecommendedJdbcType(JdbcTypeDescriptorIndicators context) {
+	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
 		return PayloadWrapperJdbcType.INSTANCE;
 	}
 

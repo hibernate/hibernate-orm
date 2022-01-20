@@ -320,7 +320,7 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 	public void applyInferableType(SqmExpressable<?> type) {
 		//noinspection unchecked
 		this.expressableType = (SqmExpressable<T>) type;
-		setResultType( type == null ? null : expressableType.getExpressableJavaTypeDescriptor().getJavaTypeClass() );
+		setResultType( type == null ? null : expressableType.getExpressableJavaType().getJavaTypeClass() );
 	}
 
 	@Override
@@ -368,7 +368,7 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 		if ( getNodeType() == null ) {
 			return null;
 		}
-		return getNodeType().getExpressableJavaTypeDescriptor();
+		return getNodeType().getExpressableJavaType();
 	}
 
 	@Override

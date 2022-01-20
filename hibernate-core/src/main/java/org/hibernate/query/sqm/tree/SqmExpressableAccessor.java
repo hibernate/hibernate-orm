@@ -18,9 +18,9 @@ public interface SqmExpressableAccessor<T> {
 	/**
 	 * The Java type descriptor for this node.
 	 */
-	default JavaType<T> getNodeJavaTypeDescriptor() {
+	default JavaType<T> getNodeJavaType() {
 		final SqmExpressable<T> nodeType = getExpressable();
-		return nodeType != null ? nodeType.getExpressableJavaTypeDescriptor() : null;
+		return nodeType != null ? nodeType.getExpressableJavaType() : null;
 	}
 
 	SqmExpressable<T> getExpressable();

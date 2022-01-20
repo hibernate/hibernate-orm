@@ -7,7 +7,7 @@
 package org.hibernate.orm.test.mapping.type.java;
 import java.math.BigDecimal;
 
-import org.hibernate.type.descriptor.java.BigDecimalJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.BigDecimalJavaType;
 
 /**
  * @author Steve Ebersole
@@ -18,7 +18,7 @@ public class BigDecimalDescriptorTest extends AbstractDescriptorTest<BigDecimal>
 	final BigDecimal different = new BigDecimal( 999 );
 
 	public BigDecimalDescriptorTest() {
-		super( BigDecimalJavaTypeDescriptor.INSTANCE );
+		super( BigDecimalJavaType.INSTANCE );
 	}
 
 	@Override

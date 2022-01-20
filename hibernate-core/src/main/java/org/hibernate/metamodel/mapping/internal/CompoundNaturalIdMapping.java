@@ -26,7 +26,6 @@ import org.hibernate.loader.ast.spi.NaturalIdLoader;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -71,7 +70,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		super( declaringType, isMutable( declaringType, attributes, creationProcess ) );
 		this.attributes = attributes;
 
-		jtd = creationProcess.getCreationContext().getTypeConfiguration().getJavaTypeDescriptorRegistry().getDescriptor(
+		jtd = creationProcess.getCreationContext().getTypeConfiguration().getJavaTypeRegistry().getDescriptor(
 				Object[].class
 		);
 
@@ -258,13 +257,13 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 	}
 
 	@Override
-	public JavaType<?> getJavaTypeDescriptor() {
+	public JavaType<?> getJavaType() {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
-	public JavaType<?> getMappedJavaTypeDescriptor() {
-		return getJavaTypeDescriptor();
+	public JavaType<?> getMappedJavaType() {
+		return getJavaType();
 	}
 
 
@@ -279,7 +278,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 
 		final JavaType<Object[]> jtd = sessionFactory
 				.getTypeConfiguration()
-				.getJavaTypeDescriptorRegistry()
+				.getJavaTypeRegistry()
 				.getDescriptor( Object[].class );
 
 		// register the table group under `...{natural-id}` as well
@@ -484,7 +483,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		}
 
 		@Override
-		public JavaType<Object[]> getResultJavaTypeDescriptor() {
+		public JavaType<Object[]> getResultJavaType() {
 			return arrayJtd;
 		}
 
@@ -568,7 +567,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		}
 
 		@Override
-		public JavaType<Object[]> getAssembledJavaTypeDescriptor() {
+		public JavaType<Object[]> getAssembledJavaType() {
 			return jtd;
 		}
 	}

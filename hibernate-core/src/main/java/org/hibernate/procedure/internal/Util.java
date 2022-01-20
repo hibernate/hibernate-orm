@@ -71,7 +71,7 @@ public class Util {
 			Consumer<String> querySpaceConsumer,
 			ResultSetMappingResolutionContext context) {
 		final MappingMetamodel domainModel = context.getSessionFactory().getDomainModel();
-		final JavaTypeRegistry javaTypeRegistry = domainModel.getTypeConfiguration().getJavaTypeDescriptorRegistry();
+		final JavaTypeRegistry javaTypeRegistry = domainModel.getTypeConfiguration().getJavaTypeRegistry();
 
 		for ( Class<?> resultSetMappingClass : resultSetMappingClasses ) {
 			final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( resultSetMappingClass );

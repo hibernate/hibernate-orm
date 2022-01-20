@@ -42,7 +42,7 @@ public abstract class AbstractCollectionAssembler implements DomainResultAssembl
 	}
 
 	@Override
-	public JavaType getAssembledJavaTypeDescriptor() {
-		return fetchedMapping.getJavaTypeDescriptor();
+	public JavaType getAssembledJavaType() {
+		return fetchedMapping.getJavaType();
 	}
 }

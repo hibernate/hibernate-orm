@@ -42,8 +42,8 @@ public abstract class AbstractAttributeMapping implements AttributeMapping {
 	}
 
 	@Override
-	public JavaType<?> getJavaTypeDescriptor() {
-		return getMappedType().getMappedJavaTypeDescriptor();
+	public JavaType<?> getJavaType() {
+		return getMappedType().getMappedJavaType();
 	}
 
 	void setForeignKeyDescriptor(ForeignKeyDescriptor foreignKeyDescriptor){

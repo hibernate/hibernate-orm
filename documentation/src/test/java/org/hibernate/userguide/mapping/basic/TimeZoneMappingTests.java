@@ -7,8 +7,6 @@
 package org.hibernate.userguide.mapping.basic;
 
 import java.sql.Types;
-import java.time.Duration;
-import java.time.ZoneId;
 import java.util.TimeZone;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -38,13 +36,13 @@ public class TimeZoneMappingTests {
 	@Test
 	public void verifyMappings(SessionFactoryScope scope) {
 		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
-		final JdbcTypeRegistry jdbcRegistry = domainModel.getTypeConfiguration().getJdbcTypeDescriptorRegistry();
+		final JdbcTypeRegistry jdbcRegistry = domainModel.getTypeConfiguration().getJdbcTypeRegistry();
 		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor(EntityWithTimeZone.class);
 
 		final BasicAttributeMapping duration = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("timeZone");
 		final JdbcMapping jdbcMapping = duration.getJdbcMapping();
 		assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(TimeZone.class));
-		assertThat(jdbcMapping.getJdbcTypeDescriptor(), equalTo(jdbcRegistry.getDescriptor(Types.VARCHAR)));
+		assertThat( jdbcMapping.getJdbcType(), equalTo( jdbcRegistry.getDescriptor( Types.VARCHAR)));
 
 		scope.inTransaction(
 				(session) -> {

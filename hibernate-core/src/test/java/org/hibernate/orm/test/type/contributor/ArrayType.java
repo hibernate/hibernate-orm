@@ -21,7 +21,7 @@ import org.hibernate.usertype.UserType;
 public class ArrayType implements UserType<Array>, BindableType<Array> {
     public static final ArrayType INSTANCE = new ArrayType();
 
-    private final BasicJavaType<Array> javaType = ArrayTypeDescriptor.INSTANCE;
+    private final BasicJavaType<Array> javaType = ArrayJavaType.INSTANCE;
     private final JdbcType jdbcType = VarcharJdbcType.INSTANCE;
 
     @Override

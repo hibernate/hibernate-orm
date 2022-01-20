@@ -257,14 +257,14 @@ public class MappingModelCreationHelper {
 
 		if ( valueConverter != null ) {
 			// we want to "decompose" the "type" into its various pieces as expected by the mapping
-			assert valueConverter.getRelationalJavaDescriptor() == resolution.getRelationalJavaDescriptor();
+			assert valueConverter.getRelationalJavaType() == resolution.getRelationalJavaType();
 
 			//noinspection unchecked
 			final BasicType<?> mappingBasicType = creationProcess.getCreationContext()
 					.getDomainModel()
 					.getTypeConfiguration()
 					.getBasicTypeRegistry()
-					.resolve( valueConverter.getRelationalJavaDescriptor(), resolution.getJdbcTypeDescriptor() );
+					.resolve( valueConverter.getRelationalJavaType(), resolution.getJdbcType() );
 
 			final GeneratedValueResolver generatedValueResolver;
 			if ( valueGeneration == null ) {
@@ -556,7 +556,7 @@ public class MappingModelCreationHelper {
 		final String sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromAttributeName( bootProperty.getName() );
 
 		final CollectionMappingType<?> collectionMappingType;
-		final JavaTypeRegistry jtdRegistry = creationContext.getJavaTypeDescriptorRegistry();
+		final JavaTypeRegistry jtdRegistry = creationContext.getJavaTypeRegistry();
 
 		final CollectionPart elementDescriptor = interpretElement(
 				bootValueMapping,
@@ -1445,7 +1445,7 @@ public class MappingModelCreationHelper {
 
 			final SessionFactoryImplementor sessionFactory = creationProcess.getCreationContext().getSessionFactory();
 			final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();
-			final JavaTypeRegistry jtdRegistry = typeConfiguration.getJavaTypeDescriptorRegistry();
+			final JavaTypeRegistry jtdRegistry = typeConfiguration.getJavaTypeRegistry();
 			final JavaType<Object> baseJtd = jtdRegistry.getDescriptor(Object.class);
 
 			return new DiscriminatedCollectionPart(
@@ -1546,7 +1546,7 @@ public class MappingModelCreationHelper {
 		}
 
 		@Override
-		public JavaType getMappedJavaTypeDescriptor() {
+		public JavaType getMappedJavaType() {
 			return collectionJtd;
 		}
 	}

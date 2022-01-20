@@ -22,12 +22,12 @@ public class JdbcLiteralFormatterCharacterData extends BasicJdbcLiteralFormatter
 
 	private final boolean isNationalized;
 
-	public JdbcLiteralFormatterCharacterData(JavaType<?> javaTypeDescriptor) {
-		this( javaTypeDescriptor, false );
+	public JdbcLiteralFormatterCharacterData(JavaType<?> javaType) {
+		this( javaType, false );
 	}
 
-	public JdbcLiteralFormatterCharacterData(JavaType<?> javaTypeDescriptor, boolean isNationalized) {
-		super( javaTypeDescriptor );
+	public JdbcLiteralFormatterCharacterData(JavaType<?> javaType, boolean isNationalized) {
+		super( javaType );
 		this.isNationalized = isNationalized;
 	}
 

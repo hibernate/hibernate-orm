@@ -126,7 +126,7 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 
 		final JpaCompliance jpaCompliance = session.getFactory().getSessionFactoryOptions().getJpaCompliance();
 		if ( ! jpaCompliance.isLoadByIdComplianceEnabled() ) {
-			id = entityPersister.getIdentifierMapping().getJavaTypeDescriptor().coerce( id, this );
+			id = entityPersister.getIdentifierMapping().getJavaType().coerce( id, this );
 		}
 
 		String entityName = entityPersister.getEntityName();
@@ -171,7 +171,7 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 
 		final JpaCompliance jpaCompliance = session.getFactory().getSessionFactoryOptions().getJpaCompliance();
 		if ( ! jpaCompliance.isLoadByIdComplianceEnabled() ) {
-			id = entityPersister.getIdentifierMapping().getJavaTypeDescriptor().coerce( id, this );
+			id = entityPersister.getIdentifierMapping().getJavaType().coerce( id, this );
 		}
 
 		String entityName = entityPersister.getEntityName();

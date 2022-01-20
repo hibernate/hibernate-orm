@@ -51,12 +51,12 @@ public class SqlServer2008GeometryType implements JdbcType {
 	}
 
 	@Override
-	public <X> ValueBinder<X> getBinder(final JavaType<X> javaTypeDescriptor) {
-		return new BasicBinder<X>( javaTypeDescriptor, this ) {
+	public <X> ValueBinder<X> getBinder(final JavaType<X> javaType) {
+		return new BasicBinder<X>( javaType, this ) {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 					throws SQLException {
-				final Geometry geometry = getJavaTypeDescriptor().unwrap( value, Geometry.class, options );
+				final Geometry geometry = getJavaType().unwrap( value, Geometry.class, options );
 				final byte[] bytes = Encoders.encode( geometry );
 				st.setObject( index, bytes );
 			}
@@ -64,7 +64,7 @@ public class SqlServer2008GeometryType implements JdbcType {
 			@Override
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
-				final Geometry geometry = getJavaTypeDescriptor().unwrap( value, Geometry.class, options );
+				final Geometry geometry = getJavaType().unwrap( value, Geometry.class, options );
 				final byte[] bytes = Encoders.encode( geometry );
 				st.setObject( name, bytes );
 			}
@@ -73,23 +73,23 @@ public class SqlServer2008GeometryType implements JdbcType {
 	}
 
 	@Override
-	public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaTypeDescriptor) {
-		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
+	public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaType) {
+		return new BasicExtractor<X>( javaType, this ) {
 
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-				return getJavaTypeDescriptor().wrap( toGeometry( rs.getObject( paramIndex ) ), options );
+				return getJavaType().wrap( toGeometry( rs.getObject( paramIndex ) ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-				return getJavaTypeDescriptor().wrap( toGeometry( statement.getObject( index ) ), options );
+				return getJavaType().wrap( toGeometry( statement.getObject( index ) ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
 					throws SQLException {
-				return getJavaTypeDescriptor().wrap( toGeometry( statement.getObject( name ) ), options );
+				return getJavaType().wrap( toGeometry( statement.getObject( name ) ), options );
 			}
 		};
 	}

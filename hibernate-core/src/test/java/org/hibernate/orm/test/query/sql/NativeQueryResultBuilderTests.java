@@ -286,19 +286,19 @@ public class NativeQueryResultBuilderTests {
 				.getEntityMappingType( EntityOfBasics.class );
 		final JdbcTypeRegistry jdbcTypeRegistry = scope.getSessionFactory()
 				.getTypeConfiguration()
-				.getJdbcTypeDescriptorRegistry();
+				.getJdbcTypeRegistry();
 		final ModelPart part = entityDescriptor.findSubPart( "convertedGender", null );
 		assertThat( part, instanceOf( BasicAttributeMapping.class ) );
 		final BasicAttributeMapping attrMapping = (BasicAttributeMapping) part;
 
-		assertThat( attrMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( EntityOfBasics.Gender.class ) );
+		assertThat( attrMapping.getJavaType().getJavaTypeClass(), equalTo( EntityOfBasics.Gender.class ) );
 
 		final BasicValueConverter valueConverter = attrMapping.getValueConverter();
 		assertThat( valueConverter, instanceOf( JpaAttributeConverter.class ) );
-		assertThat( valueConverter.getDomainJavaDescriptor(), is( attrMapping.getJavaTypeDescriptor() ) );
-		assertThat( valueConverter.getRelationalJavaDescriptor().getJavaTypeClass(), equalTo( Character.class ) );
+		assertThat( valueConverter.getDomainJavaType(), is( attrMapping.getJavaType() ) );
+		assertThat( valueConverter.getRelationalJavaType().getJavaTypeClass(), equalTo( Character.class ) );
 
-		assertThat( attrMapping.getJdbcMapping().getJdbcTypeDescriptor(), is( jdbcTypeRegistry.getDescriptor( Types.CHAR ) ) );
+		assertThat( attrMapping.getJdbcMapping().getJdbcType(), is( jdbcTypeRegistry.getDescriptor( Types.CHAR ) ) );
 	}
 
 	@BeforeEach

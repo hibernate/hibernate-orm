@@ -10,7 +10,7 @@ import java.net.URL;
 
 import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypeTemplate;
-import org.hibernate.type.descriptor.java.UrlJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.UrlJavaType;
 import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -33,11 +33,11 @@ public class StandardBasicTypeTemplateTest extends BaseUnitTestCase {
 	@Test
 	public void testContributedBasicType() {
 		TypeConfiguration typeConfiguration = new TypeConfiguration();
-		typeConfiguration.getJavaTypeDescriptorRegistry().addDescriptor( ValidatingUrlJavaJavaTypeDescriptor.INSTANCE );
+		typeConfiguration.getJavaTypeRegistry().addDescriptor( ValidatingUrlJavaJavaType.INSTANCE );
 		typeConfiguration.getBasicTypeRegistry().register(
 				new StandardBasicTypeTemplate<>(
 						VarcharJdbcType.INSTANCE,
-						ValidatingUrlJavaJavaTypeDescriptor.INSTANCE,
+						ValidatingUrlJavaJavaType.INSTANCE,
 						REG_KEY
 				)
 		);
@@ -47,11 +47,11 @@ public class StandardBasicTypeTemplateTest extends BaseUnitTestCase {
 		assertTyping( StandardBasicTypeTemplate.class, registeredType );
 	}
 
-	private static class ValidatingUrlJavaJavaTypeDescriptor extends UrlJavaTypeDescriptor {
+	private static class ValidatingUrlJavaJavaType extends UrlJavaType {
 		/**
 		 * Singleton access
 		 */
-		public static final ValidatingUrlJavaJavaTypeDescriptor INSTANCE = new ValidatingUrlJavaJavaTypeDescriptor();
+		public static final ValidatingUrlJavaJavaType INSTANCE = new ValidatingUrlJavaJavaType();
 
 		@Override
 		public URL fromString(CharSequence string) {

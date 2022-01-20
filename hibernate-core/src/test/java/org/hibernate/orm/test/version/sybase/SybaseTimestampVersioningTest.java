@@ -19,7 +19,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcType;
 
 import static org.junit.Assert.assertFalse;
@@ -153,7 +153,7 @@ public class SybaseTimestampVersioningTest extends BaseCoreFunctionalTestCase {
 		s.close();
 
 		assertFalse(
-				"owner version not incremented", PrimitiveByteArrayJavaTypeDescriptor.INSTANCE.areEqual(
+				"owner version not incremented", PrimitiveByteArrayJavaType.INSTANCE.areEqual(
 				steveTimestamp, steve.getTimestamp()
 		)
 		);
@@ -168,7 +168,7 @@ public class SybaseTimestampVersioningTest extends BaseCoreFunctionalTestCase {
 		s.close();
 
 		assertFalse(
-				"owner version not incremented", PrimitiveByteArrayJavaTypeDescriptor.INSTANCE.areEqual(
+				"owner version not incremented", PrimitiveByteArrayJavaType.INSTANCE.areEqual(
 				steveTimestamp, steve.getTimestamp()
 		)
 		);
@@ -205,7 +205,7 @@ public class SybaseTimestampVersioningTest extends BaseCoreFunctionalTestCase {
 		s.close();
 
 		assertTrue(
-				"owner version was incremented", PrimitiveByteArrayJavaTypeDescriptor.INSTANCE.areEqual(
+				"owner version was incremented", PrimitiveByteArrayJavaType.INSTANCE.areEqual(
 				steveTimestamp, steve.getTimestamp()
 		)
 		);
@@ -218,7 +218,7 @@ public class SybaseTimestampVersioningTest extends BaseCoreFunctionalTestCase {
 		s.close();
 
 		assertTrue(
-				"owner version was incremented", PrimitiveByteArrayJavaTypeDescriptor.INSTANCE.areEqual(
+				"owner version was incremented", PrimitiveByteArrayJavaType.INSTANCE.areEqual(
 				steveTimestamp, steve.getTimestamp()
 		)
 		);
@@ -236,8 +236,8 @@ public class SybaseTimestampVersioningTest extends BaseCoreFunctionalTestCase {
 	public void testComparableTimestamps() {
 		final BasicType<?> versionType =
 				sessionFactory().getEntityPersister( User.class.getName() ).getVersionType();
-		assertTrue( versionType.getJavaTypeDescriptor() instanceof PrimitiveByteArrayJavaTypeDescriptor );
-		assertTrue( versionType.getJdbcTypeDescriptor() instanceof VarbinaryJdbcType );
+		assertTrue( versionType.getJavaTypeDescriptor() instanceof PrimitiveByteArrayJavaType );
+		assertTrue( versionType.getJdbcType() instanceof VarbinaryJdbcType );
 
 		Session s = openSession();
 		s.getTransaction().begin();

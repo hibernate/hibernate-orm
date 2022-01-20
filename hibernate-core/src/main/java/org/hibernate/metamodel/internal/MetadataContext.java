@@ -47,7 +47,7 @@ import org.hibernate.metamodel.model.domain.internal.MappedSuperclassTypeImpl;
 import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.spi.EntityJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.EntityJavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -130,8 +130,8 @@ public class MetadataContext {
 		return typeConfiguration;
 	}
 
-	public JavaTypeRegistry getJavaTypeDescriptorRegistry(){
-		return typeConfiguration.getJavaTypeDescriptorRegistry();
+	public JavaTypeRegistry getJavaTypeRegistry(){
+		return typeConfiguration.getJavaTypeRegistry();
 	}
 
 	MappingMetamodel getMetamodel() {
@@ -390,7 +390,7 @@ public class MetadataContext {
 	private void addAttribute(ManagedDomainType<?> type, PersistentAttribute<Object, ?> attribute) {
 		final AttributeContainer.InFlightAccess<Object> inFlightAccess = ( (AttributeContainer<Object>) type ).getInFlightAccess();
 		final boolean virtual = attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED
-				&& attribute.getAttributeJavaTypeDescriptor() instanceof EntityJavaTypeDescriptor<?>;
+				&& attribute.getAttributeJavaType() instanceof EntityJavaType<?>;
 		if ( virtual ) {
 			final EmbeddableDomainType<?> embeddableDomainType = (EmbeddableDomainType<?>) attribute.getValueGraphType();
 			final Component component = componentByEmbeddable.get( embeddableDomainType );
@@ -475,12 +475,12 @@ public class MetadataContext {
 
 	private EmbeddableTypeImpl<?> applyIdClassMetadata(Component idClassComponent) {
 		final JavaTypeRegistry registry = getTypeConfiguration()
-				.getJavaTypeDescriptorRegistry();
+				.getJavaTypeRegistry();
 		final Class<?> componentClass = idClassComponent.getComponentClass();
-		final JavaType<?> javaTypeDescriptor = registry.resolveManagedTypeDescriptor( componentClass );
+		final JavaType<?> javaType = registry.resolveManagedTypeDescriptor( componentClass );
 
 		final EmbeddableTypeImpl<?> embeddableType = new EmbeddableTypeImpl<>(
-				javaTypeDescriptor,
+				javaType,
 				false,
 				getJpaMetamodel()
 		);
@@ -706,7 +706,7 @@ public class MetadataContext {
 				jt -> {
 					final JavaTypeRegistry registry =
 							getTypeConfiguration()
-							.getJavaTypeDescriptorRegistry();
+							.getJavaTypeRegistry();
 					return new BasicTypeImpl<>( registry.resolveDescriptor( javaType ) );
 				}
 		);

@@ -11,10 +11,10 @@ import java.util.Comparator;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
-import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.StringJavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.junit.Test;
@@ -34,7 +34,7 @@ public class JavaTypeRegistryTest {
 
 		final JavaType<String> descriptor = registry.getDescriptor( String.class );
 
-		assertThat( descriptor, instanceOf( StringJavaTypeDescriptor.class ) );
+		assertThat( descriptor, instanceOf( StringJavaType.class ) );
 	}
 
 	@Test
@@ -63,7 +63,7 @@ public class JavaTypeRegistryTest {
 		}
 
 		@Override
-		public JdbcType getRecommendedJdbcType(JdbcTypeDescriptorIndicators context) {
+		public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
 			return null;
 		}
 

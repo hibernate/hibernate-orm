@@ -57,17 +57,17 @@ public class InferredBasicValueResolution<J> implements BasicValue.Resolution<J>
 	}
 
 	@Override
-	public JavaType<J> getDomainJavaDescriptor() {
+	public JavaType<J> getDomainJavaType() {
 		return domainJtd;
 	}
 
 	@Override
-	public JavaType<?> getRelationalJavaDescriptor() {
+	public JavaType<?> getRelationalJavaType() {
 		return relationalJtd;
 	}
 
 	@Override
-	public JdbcType getJdbcTypeDescriptor() {
+	public JdbcType getJdbcType() {
 		return jdbcType;
 	}
 

@@ -42,28 +42,28 @@ public class ByteArrayMappingTests {
 			final BasicAttributeMapping primitive = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("primitive");
 			final JdbcMapping jdbcMapping = primitive.getJdbcMapping();
 			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(byte[].class));
-			assertThat(jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo(Types.VARBINARY));
+			assertThat( jdbcMapping.getJdbcType().getJdbcTypeCode(), equalTo( Types.VARBINARY));
 		}
 
 		{
 			final BasicAttributeMapping primitive = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("wrapper");
 			final JdbcMapping jdbcMapping = primitive.getJdbcMapping();
 			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Byte[].class));
-			assertThat(jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo(Types.VARBINARY));
+			assertThat( jdbcMapping.getJdbcType().getJdbcTypeCode(), equalTo( Types.VARBINARY));
 		}
 
 		{
 			final BasicAttributeMapping primitive = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("primitiveLob");
 			final JdbcMapping jdbcMapping = primitive.getJdbcMapping();
 			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(byte[].class));
-			assertThat(jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo(Types.BLOB));
+			assertThat( jdbcMapping.getJdbcType().getJdbcTypeCode(), equalTo( Types.BLOB));
 		}
 
 		{
 			final BasicAttributeMapping primitive = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("wrapperLob");
 			final JdbcMapping jdbcMapping = primitive.getJdbcMapping();
 			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Byte[].class));
-			assertThat(jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo(Types.BLOB));
+			assertThat( jdbcMapping.getJdbcType().getJdbcTypeCode(), equalTo( Types.BLOB));
 		}
 
 		scope.inTransaction(

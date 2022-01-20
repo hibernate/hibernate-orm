@@ -35,12 +35,12 @@ public class NCharJdbcType extends NVarcharJdbcType {
 
 	@Override
 	public JdbcType resolveIndicatedType(
-			JdbcTypeDescriptorIndicators indicators,
+			JdbcTypeIndicators indicators,
 			JavaType<?> domainJtd) {
 		assert domainJtd != null;
 
 		final TypeConfiguration typeConfiguration = indicators.getTypeConfiguration();
-		final JdbcTypeRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeDescriptorRegistry();
+		final JdbcTypeRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeRegistry();
 
 		final int jdbcTypeCode;
 		if ( indicators.isLob() ) {

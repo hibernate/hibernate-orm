@@ -57,7 +57,7 @@ public class QueryHelper {
 		}
 
 		// any other precedence rules?
-		if ( type2.getExpressableJavaTypeDescriptor().isWider( type1.getExpressableJavaTypeDescriptor() ) ) {
+		if ( type2.getExpressableJavaType().isWider( type1.getExpressableJavaType() ) ) {
 			return type2;
 		}
 

@@ -107,7 +107,7 @@ public class EntityResultImpl extends AbstractEntityResultGraphNode implements E
 				)
 		);
 
-		return new EntityAssembler( getResultJavaTypeDescriptor(), initializer );
+		return new EntityAssembler( this.getResultJavaType(), initializer );
 	}
 
 	@Override

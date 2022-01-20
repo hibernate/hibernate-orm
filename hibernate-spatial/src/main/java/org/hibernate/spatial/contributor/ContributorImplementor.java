@@ -9,10 +9,9 @@ package org.hibernate.spatial.contributor;
 
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.spatial.GeolatteGeometryJavaTypeDescriptor;
-import org.hibernate.spatial.JTSGeometryJavaTypeDescriptor;
+import org.hibernate.spatial.GeolatteGeometryJavaType;
+import org.hibernate.spatial.JTSGeometryJavaType;
 
 /**
  * Internal contract for Type and Function Contributors
@@ -20,24 +19,24 @@ import org.hibernate.spatial.JTSGeometryJavaTypeDescriptor;
 public interface ContributorImplementor {
 
 	default void contributeJavaTypes(TypeContributions typeContributions) {
-		typeContributions.contributeJavaTypeDescriptor( GeolatteGeometryJavaTypeDescriptor.GEOMETRY_INSTANCE );
-		typeContributions.contributeJavaTypeDescriptor( GeolatteGeometryJavaTypeDescriptor.POINT_INSTANCE );
-		typeContributions.contributeJavaTypeDescriptor( GeolatteGeometryJavaTypeDescriptor.LINESTRING_INSTANCE );
-		typeContributions.contributeJavaTypeDescriptor( GeolatteGeometryJavaTypeDescriptor.POLYGON_INSTANCE );
-		typeContributions.contributeJavaTypeDescriptor( GeolatteGeometryJavaTypeDescriptor.MULTIPOINT_INSTANCE );
-		typeContributions.contributeJavaTypeDescriptor( GeolatteGeometryJavaTypeDescriptor.MULTILINESTRING_INSTANCE );
-		typeContributions.contributeJavaTypeDescriptor( GeolatteGeometryJavaTypeDescriptor.MULTIPOLYGON_INSTANCE );
-		typeContributions.contributeJavaTypeDescriptor( GeolatteGeometryJavaTypeDescriptor.GEOMETRYCOLL_INSTANCE );
+		typeContributions.contributeJavaType( GeolatteGeometryJavaType.GEOMETRY_INSTANCE );
+		typeContributions.contributeJavaType( GeolatteGeometryJavaType.POINT_INSTANCE );
+		typeContributions.contributeJavaType( GeolatteGeometryJavaType.LINESTRING_INSTANCE );
+		typeContributions.contributeJavaType( GeolatteGeometryJavaType.POLYGON_INSTANCE );
+		typeContributions.contributeJavaType( GeolatteGeometryJavaType.MULTIPOINT_INSTANCE );
+		typeContributions.contributeJavaType( GeolatteGeometryJavaType.MULTILINESTRING_INSTANCE );
+		typeContributions.contributeJavaType( GeolatteGeometryJavaType.MULTIPOLYGON_INSTANCE );
+		typeContributions.contributeJavaType( GeolatteGeometryJavaType.GEOMETRYCOLL_INSTANCE );
 
 
-		typeContributions.contributeJavaTypeDescriptor( JTSGeometryJavaTypeDescriptor.GEOMETRY_INSTANCE );
-		typeContributions.contributeJavaTypeDescriptor( JTSGeometryJavaTypeDescriptor.POINT_INSTANCE );
-		typeContributions.contributeJavaTypeDescriptor( JTSGeometryJavaTypeDescriptor.LINESTRING_INSTANCE );
-		typeContributions.contributeJavaTypeDescriptor( JTSGeometryJavaTypeDescriptor.POLYGON_INSTANCE );
-		typeContributions.contributeJavaTypeDescriptor( JTSGeometryJavaTypeDescriptor.MULTIPOINT_INSTANCE );
-		typeContributions.contributeJavaTypeDescriptor( JTSGeometryJavaTypeDescriptor.MULTILINESTRING_INSTANCE );
-		typeContributions.contributeJavaTypeDescriptor( JTSGeometryJavaTypeDescriptor.MULTIPOLYGON_INSTANCE );
-		typeContributions.contributeJavaTypeDescriptor( JTSGeometryJavaTypeDescriptor.GEOMETRYCOLL_INSTANCE );
+		typeContributions.contributeJavaType( JTSGeometryJavaType.GEOMETRY_INSTANCE );
+		typeContributions.contributeJavaType( JTSGeometryJavaType.POINT_INSTANCE );
+		typeContributions.contributeJavaType( JTSGeometryJavaType.LINESTRING_INSTANCE );
+		typeContributions.contributeJavaType( JTSGeometryJavaType.POLYGON_INSTANCE );
+		typeContributions.contributeJavaType( JTSGeometryJavaType.MULTIPOINT_INSTANCE );
+		typeContributions.contributeJavaType( JTSGeometryJavaType.MULTILINESTRING_INSTANCE );
+		typeContributions.contributeJavaType( JTSGeometryJavaType.MULTIPOLYGON_INSTANCE );
+		typeContributions.contributeJavaType( JTSGeometryJavaType.GEOMETRYCOLL_INSTANCE );
 
 	}
 

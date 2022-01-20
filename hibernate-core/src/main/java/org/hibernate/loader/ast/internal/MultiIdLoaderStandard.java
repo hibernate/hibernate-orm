@@ -130,7 +130,7 @@ public class MultiIdLoaderStandard<T> implements MultiIdEntityLoader<T> {
 		for ( int i = 0; i < ids.length; i++ ) {
 			final Object id;
 			if ( coerce ) {
-				id = entityDescriptor.getIdentifierMapping().getJavaTypeDescriptor().coerce( ids[i], session );
+				id = entityDescriptor.getIdentifierMapping().getJavaType().coerce( ids[i], session );
 			}
 			else {
 				id = ids[i];
@@ -372,7 +372,7 @@ public class MultiIdLoaderStandard<T> implements MultiIdEntityLoader<T> {
 			for ( int i = 0; i < ids.length; i++ ) {
 				final Object id;
 				if ( coerce ) {
-					id = entityDescriptor.getIdentifierMapping().getJavaTypeDescriptor().coerce( ids[i], session );
+					id = entityDescriptor.getIdentifierMapping().getJavaType().coerce( ids[i], session );
 				}
 				else {
 					id = ids[i];

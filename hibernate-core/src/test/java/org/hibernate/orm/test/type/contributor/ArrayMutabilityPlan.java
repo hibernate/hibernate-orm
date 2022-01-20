@@ -38,11 +38,11 @@ public class ArrayMutabilityPlan implements MutabilityPlan<Array> {
 
 	@Override
 	public Serializable disassemble(Array value, SharedSessionContract session) {
-		return ArrayTypeDescriptor.INSTANCE.toString( value );
+		return ArrayJavaType.INSTANCE.toString( value );
 	}
 
 	@Override
 	public Array assemble(Serializable cached, SharedSessionContract session) {
-		return ArrayTypeDescriptor.INSTANCE.fromString( (String) cached );
+		return ArrayJavaType.INSTANCE.fromString( (String) cached );
 	}
 }

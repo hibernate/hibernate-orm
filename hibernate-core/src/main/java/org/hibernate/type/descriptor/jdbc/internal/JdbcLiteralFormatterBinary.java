@@ -18,8 +18,8 @@ import org.hibernate.type.descriptor.jdbc.spi.BasicJdbcLiteralFormatter;
  * @author Gavin King
  */
 public class JdbcLiteralFormatterBinary extends BasicJdbcLiteralFormatter {
-	public JdbcLiteralFormatterBinary(JavaType<?> javaTypeDescriptor) {
-		super( javaTypeDescriptor );
+	public JdbcLiteralFormatterBinary(JavaType<?> javaType) {
+		super( javaType );
 	}
 
 	@Override

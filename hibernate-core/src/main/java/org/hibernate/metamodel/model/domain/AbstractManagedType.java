@@ -55,10 +55,10 @@ public abstract class AbstractManagedType<J>
 
 	protected AbstractManagedType(
 			String hibernateTypeName,
-			JavaType<J> javaTypeDescriptor,
+			JavaType<J> javaType,
 			ManagedDomainType<? super J> superType,
 			JpaMetamodel domainMetamodel) {
-		super( javaTypeDescriptor, domainMetamodel );
+		super( javaType, domainMetamodel );
 		this.hibernateTypeName = hibernateTypeName;
 		this.superType = superType;
 		if ( superType != null ) {

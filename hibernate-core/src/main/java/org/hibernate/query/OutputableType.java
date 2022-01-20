@@ -16,7 +16,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
  * Specialization of DomainType for types that can be used as a
  * parameter output for a {@link org.hibernate.procedure.ProcedureCall}
  *
- * @apiNote We assume a type that maps to exactly one SQL value, hence {@link #getJdbcTypeDescriptor()}
+ * @apiNote We assume a type that maps to exactly one SQL value, hence {@link #getJdbcType()}
  *
  * @author Steve Ebersole
  */
@@ -31,7 +31,7 @@ public interface OutputableType<J> extends BindableType<J> {
 	/**
 	 * Descriptor for the SQL type mapped by this type.
 	 */
-	JdbcType getJdbcTypeDescriptor();
+	JdbcType getJdbcType();
 
 	/**
 	 * Perform the extraction

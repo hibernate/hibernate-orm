@@ -168,15 +168,15 @@ public class EnumResolutionTests {
 			Consumer<BasicType> legacyTypeChecker) {
 		final BasicValue.Resolution<?> resolution = ( (BasicValue) property.getValue() ).resolve();
 		final TypeConfiguration typeConfiguration = ( (BasicValue) property.getValue() ).getTypeConfiguration();
-		final JdbcType jdbcType = typeConfiguration.getJdbcTypeDescriptorRegistry().getDescriptor( jdbcCode );
+		final JdbcType jdbcType = typeConfiguration.getJdbcTypeRegistry().getDescriptor( jdbcCode );
 		// verify the interpretations used for reading
-		assertThat( resolution.getJdbcTypeDescriptor(), is( jdbcType ) );
-		assertThat( resolution.getRelationalJavaDescriptor().getJavaTypeClass(), equalTo( javaType ) );
-		assertThat( resolution.getDomainJavaDescriptor().getJavaTypeClass(), equalTo( Values.class ) );
+		assertThat( resolution.getJdbcType(), is( jdbcType ) );
+		assertThat( resolution.getRelationalJavaType().getJavaTypeClass(), equalTo( javaType ) );
+		assertThat( resolution.getDomainJavaType().getJavaTypeClass(), equalTo( Values.class ) );
 
 		final JdbcMapping jdbcMapping = resolution.getJdbcMapping();
-		assertThat( jdbcMapping.getJdbcTypeDescriptor(), equalTo( resolution.getJdbcTypeDescriptor() ) );
-		assertThat( jdbcMapping.getJavaTypeDescriptor(), equalTo( resolution.getRelationalJavaDescriptor() ) );
+		assertThat( jdbcMapping.getJdbcType(), equalTo( resolution.getJdbcType() ) );
+		assertThat( jdbcMapping.getJavaTypeDescriptor(), equalTo( resolution.getRelationalJavaType() ) );
 
 		converterChecker.accept( resolution.getValueConverter() );
 

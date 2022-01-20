@@ -15,10 +15,10 @@ import org.hibernate.type.descriptor.java.JavaType;
  * @author Steve Ebersole
  */
 public class NullValueAssembler<J> implements DomainResultAssembler<J> {
-	private final JavaType<J> javaTypeDescriptor;
+	private final JavaType<J> javaType;
 
-	public NullValueAssembler(JavaType<J> javaTypeDescriptor) {
-		this.javaTypeDescriptor = javaTypeDescriptor;
+	public NullValueAssembler(JavaType<J> javaType) {
+		this.javaType = javaType;
 	}
 
 	@Override
@@ -27,7 +27,7 @@ public class NullValueAssembler<J> implements DomainResultAssembler<J> {
 	}
 
 	@Override
-	public JavaType<J> getAssembledJavaTypeDescriptor() {
-		return javaTypeDescriptor;
+	public JavaType<J> getAssembledJavaType() {
+		return javaType;
 	}
 }

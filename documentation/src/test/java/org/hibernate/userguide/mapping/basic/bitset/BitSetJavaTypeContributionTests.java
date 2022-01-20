@@ -8,7 +8,6 @@ package org.hibernate.userguide.mapping.basic.bitset;
 
 import java.util.BitSet;
 
-import org.hibernate.annotations.JavaTypeRegistration;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 
@@ -42,7 +41,7 @@ public class BitSetJavaTypeContributionTests {
 				.findEntityDescriptor(Product.class);
 		final SingularAttributeMapping bitSetAttribute = (SingularAttributeMapping) productType.findAttributeMapping("bitSet");
 		// make sure BitSetTypeDescriptor was selected
-		assertThat(bitSetAttribute.getJavaTypeDescriptor(), instanceOf(BitSetJavaType.class));
+		assertThat( bitSetAttribute.getJavaType(), instanceOf( BitSetJavaType.class));
 	}
 
 

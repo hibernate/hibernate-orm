@@ -26,7 +26,7 @@ public class MySQLDialectContributor implements ContributorImplementor {
 	@Override
 	public void contributeJdbcTypes(TypeContributions typeContributions) {
 		HSMessageLogger.LOGGER.typeContributions( this.getClass().getCanonicalName() );
-		typeContributions.contributeJdbcTypeDescriptor( MySQLGeometryJdbcType.INSTANCE);
+		typeContributions.contributeJdbcType( MySQLGeometryJdbcType.INSTANCE);
 	}
 
 	@Override

@@ -35,29 +35,29 @@ public class SDOGeometryValueExtractor<X> extends BasicExtractor<X> {
 	/**
 	 * Creates instance
 	 *
-	 * @param javaDescriptor the {@code JavaTypeDescriptor} to use
-	 * @param sqlTypeDescriptor the {@code SqlTypeDescriptor} to use
+	 * @param javaType the {@code JavaType} to use
+	 * @param jdbcType the {@code JdbcType} to use
 	 */
-	public SDOGeometryValueExtractor(JavaType<X> javaDescriptor, JdbcType sqlTypeDescriptor) {
-		super( javaDescriptor, sqlTypeDescriptor );
+	public SDOGeometryValueExtractor(JavaType<X> javaType, JdbcType jdbcType) {
+		super( javaType, jdbcType );
 	}
 
 	@Override
 	protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
 		final Object geomObj = rs.getObject( paramIndex );
-		return getJavaTypeDescriptor().wrap( convert( geomObj ), options );
+		return getJavaType().wrap( convert( geomObj ), options );
 	}
 
 	@Override
 	protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
 		final Object geomObj = statement.getObject( index );
-		return getJavaTypeDescriptor().wrap( convert( geomObj ), options );
+		return getJavaType().wrap( convert( geomObj ), options );
 	}
 
 	@Override
 	protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
 		final Object geomObj = statement.getObject( name );
-		return getJavaTypeDescriptor().wrap( convert( geomObj ), options );
+		return getJavaType().wrap( convert( geomObj ), options );
 	}
 
 	/**

@@ -54,7 +54,7 @@ public class CompleteResultBuilderEntityStandard implements CompleteResultBuilde
 
 	@Override
 	public Class<?> getJavaType() {
-		return entityDescriptor.getJavaTypeDescriptor().getJavaTypeClass();
+		return entityDescriptor.getJavaType().getJavaTypeClass();
 	}
 
 	@Override

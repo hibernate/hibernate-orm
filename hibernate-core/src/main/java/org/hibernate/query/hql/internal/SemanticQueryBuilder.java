@@ -31,7 +31,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.NotYetImplementedFor6Exception;
@@ -182,7 +181,7 @@ import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 
 import org.jboss.logging.Logger;
 
@@ -271,8 +270,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	private final Stack<SqmCreationProcessingState> processingStateStack = new StandardStack<>();
 
 	private final BasicDomainType<Integer> integerDomainType;
-	private final JavaType<List<?>> listJavaTypeDescriptor;
-	private final JavaType<Map<?,?>> mapJavaTypeDescriptor;
+	private final JavaType<List<?>> listJavaType;
+	private final JavaType<Map<?,?>> mapJavaType;
 
 	private ParameterCollector parameterCollector;
 	private ParameterStyle parameterStyle;
@@ -290,15 +289,15 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				.getNodeBuilder()
 				.getTypeConfiguration()
 				.standardBasicTypeForJavaType( Integer.class );
-		this.listJavaTypeDescriptor = creationContext
+		this.listJavaType = creationContext
 				.getNodeBuilder()
 				.getTypeConfiguration()
-				.getJavaTypeDescriptorRegistry()
+				.getJavaTypeRegistry()
 				.resolveDescriptor( List.class );
-		this.mapJavaTypeDescriptor = creationContext
+		this.mapJavaType = creationContext
 				.getNodeBuilder()
 				.getTypeConfiguration()
-				.getJavaTypeDescriptorRegistry()
+				.getJavaTypeRegistry()
 				.resolveDescriptor( Map.class );
 	}
 
@@ -969,13 +968,13 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			switch ( terminalNode.getSymbol().getType() ) {
 				case HqlParser.MAP:
 					dynamicInstantiation = SqmDynamicInstantiation.forMapInstantiation(
-							mapJavaTypeDescriptor,
+							mapJavaType,
 							creationContext.getNodeBuilder()
 					);
 					break;
 				case HqlParser.LIST:
 					dynamicInstantiation = SqmDynamicInstantiation.forListInstantiation(
-							listJavaTypeDescriptor,
+							listJavaType,
 							creationContext.getNodeBuilder()
 					);
 					break;
@@ -995,7 +994,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final Class<?> targetJavaType = classForName( creationContext.getJpaMetamodel().qualifyImportableName( className ) );
 		return creationContext.getJpaMetamodel()
 				.getTypeConfiguration()
-				.getJavaTypeDescriptorRegistry()
+				.getJavaTypeRegistry()
 				.resolveDescriptor( targetJavaType );
 	}
 
@@ -2941,7 +2940,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	private SqmLiteral<byte[]> binaryLiteral(String text) {
 		return new SqmLiteral<>(
-				PrimitiveByteArrayJavaTypeDescriptor.INSTANCE.fromString(
+				PrimitiveByteArrayJavaType.INSTANCE.fromString(
 						CharSequenceHelper.subSequence( text, 2, text.length() - 1 )
 				),
 				resolveExpressableTypeBasic( byte[].class ),

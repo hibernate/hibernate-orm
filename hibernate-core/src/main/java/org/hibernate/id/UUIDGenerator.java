@@ -20,7 +20,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
-import org.hibernate.type.descriptor.java.UUIDJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.UUIDJavaType;
 
 /**
  * An {@link IdentifierGenerator} which generates {@link UUID} values using a pluggable
@@ -48,7 +48,7 @@ public class UUIDGenerator implements StandardGenerator {
 	public static final String UUID_GEN_STRATEGY_CLASS = "uuid_gen_strategy_class";
 
 	private UUIDGenerationStrategy strategy;
-	private UUIDJavaTypeDescriptor.ValueTransformer valueTransformer;
+	private UUIDJavaType.ValueTransformer valueTransformer;
 
 	@Override
 	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
@@ -81,14 +81,14 @@ public class UUIDGenerator implements StandardGenerator {
 		}
 
 		if ( UUID.class.isAssignableFrom( type.getReturnedClass() ) ) {
-			valueTransformer = UUIDJavaTypeDescriptor.PassThroughTransformer.INSTANCE;
+			valueTransformer = UUIDJavaType.PassThroughTransformer.INSTANCE;
 		}
 		else if ( String.class.isAssignableFrom( type.getReturnedClass() ) ) {
-			// todo (6.0) : allow for org.hibernate.type.descriptor.java.UUIDJavaTypeDescriptor.NoDashesStringTransformer
-			valueTransformer = UUIDJavaTypeDescriptor.ToStringTransformer.INSTANCE;
+			// todo (6.0) : allow for org.hibernate.type.descriptor.java.UUIDJavaType.NoDashesStringTransformer
+			valueTransformer = UUIDJavaType.ToStringTransformer.INSTANCE;
 		}
 		else if ( byte[].class.isAssignableFrom( type.getReturnedClass() ) ) {
-			valueTransformer = UUIDJavaTypeDescriptor.ToBytesTransformer.INSTANCE;
+			valueTransformer = UUIDJavaType.ToBytesTransformer.INSTANCE;
 		}
 		else {
 			throw new HibernateException( "Unanticipated return type [" + type.getReturnedClass().getName() + "] for UUID conversion" );

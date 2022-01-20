@@ -28,11 +28,11 @@ public class EmbeddableInstantiatorPojoStandard extends AbstractPojoInstantiator
 	private final boolean constructorInjection = false;
 	private final Constructor<?> constructor;
 
-	public EmbeddableInstantiatorPojoStandard(JavaType<?> javaTypeDescriptor, Supplier<EmbeddableMappingType> embeddableMappingAccess) {
-		super( javaTypeDescriptor.getJavaTypeClass() );
+	public EmbeddableInstantiatorPojoStandard(JavaType<?> javaType, Supplier<EmbeddableMappingType> embeddableMappingAccess) {
+		super( javaType.getJavaTypeClass() );
 
 		this.embeddableMappingAccess = embeddableMappingAccess;
-		this.constructor = resolveConstructor( javaTypeDescriptor.getJavaTypeClass() );
+		this.constructor = resolveConstructor( javaType.getJavaTypeClass() );
 	}
 
 	protected static Constructor<?> resolveConstructor(Class<?> mappedPojoClass) {

@@ -20,7 +20,7 @@ public interface PersistentAttribute<D,J> extends Attribute<D,J> {
 	@Override
 	ManagedDomainType<D> getDeclaringType();
 
-	JavaType<J> getAttributeJavaTypeDescriptor();
+	JavaType<J> getAttributeJavaType();
 
 	/**
 	 * The classification of the attribute (is it a basic type, entity, etc)

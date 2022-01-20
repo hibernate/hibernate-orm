@@ -377,13 +377,13 @@ public class EntityCollectionPart
 	}
 
 	@Override
-	public JavaType<?> getJavaTypeDescriptor() {
-		return getEntityMappingType().getJavaTypeDescriptor();
+	public JavaType<?> getJavaType() {
+		return getEntityMappingType().getJavaType();
 	}
 
 	@Override
-	public JavaType<?> getExpressableJavaTypeDescriptor() {
-		return getJavaTypeDescriptor();
+	public JavaType<?> getExpressableJavaType() {
+		return getJavaType();
 	}
 
 	@Override

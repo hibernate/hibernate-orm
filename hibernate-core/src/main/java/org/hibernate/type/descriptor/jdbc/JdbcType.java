@@ -61,7 +61,7 @@ public interface JdbcType extends Serializable {
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
 		// match legacy behavior
-		return (BasicJavaType<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor(
+		return (BasicJavaType<T>) typeConfiguration.getJavaTypeRegistry().getDescriptor(
 				JdbcTypeJavaClassMappings.INSTANCE.determineJavaClassForJdbcTypeCode( getDefaultSqlTypeCode() )
 		);
 	}
@@ -69,7 +69,7 @@ public interface JdbcType extends Serializable {
 	/**
 	 * todo (6.0) : move to {@link org.hibernate.metamodel.mapping.JdbcMapping}?
 	 */
-	default <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaTypeDescriptor) {
+	default <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaType) {
 		return (appender, value, dialect, wrapperOptions) -> appender.appendSql( value.toString() );
 	}
 
@@ -77,21 +77,21 @@ public interface JdbcType extends Serializable {
 	 * Get the binder (setting JDBC in-going parameter values) capable of handling values of the type described by the
 	 * passed descriptor.
 	 *
-	 * @param javaTypeDescriptor The descriptor describing the types of Java values to be bound
+	 * @param javaType The descriptor describing the types of Java values to be bound
 	 *
 	 * @return The appropriate binder.
 	 */
-	<X> ValueBinder<X> getBinder(JavaType<X> javaTypeDescriptor);
+	<X> ValueBinder<X> getBinder(JavaType<X> javaType);
 
 	/**
 	 * Get the extractor (pulling out-going values from JDBC objects) capable of handling values of the type described
 	 * by the passed descriptor.
 	 *
-	 * @param javaTypeDescriptor The descriptor describing the types of Java values to be extracted
+	 * @param javaType The descriptor describing the types of Java values to be extracted
 	 *
 	 * @return The appropriate extractor
 	 */
-	<X> ValueExtractor<X> getExtractor(JavaType<X> javaTypeDescriptor);
+	<X> ValueExtractor<X> getExtractor(JavaType<X> javaType);
 
 	default boolean isInteger() {
 		switch ( getJdbcTypeCode() ) {

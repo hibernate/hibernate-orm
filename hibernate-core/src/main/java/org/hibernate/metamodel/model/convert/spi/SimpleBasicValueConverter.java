@@ -42,12 +42,12 @@ public class SimpleBasicValueConverter<D,R> implements BasicValueConverter<D,R> 
 	}
 
 	@Override
-	public JavaType<D> getDomainJavaDescriptor() {
+	public JavaType<D> getDomainJavaType() {
 		return domainJtd;
 	}
 
 	@Override
-	public JavaType<R> getRelationalJavaDescriptor() {
+	public JavaType<R> getRelationalJavaType() {
 		return relationalJtd;
 	}
 }

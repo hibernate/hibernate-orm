@@ -421,9 +421,9 @@ public abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalT
 		public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 			super.contributeTypes( typeContributions, serviceRegistry );
 
-			typeContributions.getTypeConfiguration().getJdbcTypeDescriptorRegistry().addDescriptor(
+			typeContributions.getTypeConfiguration().getJdbcTypeRegistry().addDescriptor(
 					overriddenSqlTypeCode,
-					typeContributions.getTypeConfiguration().getJdbcTypeDescriptorRegistry().getDescriptor(
+					typeContributions.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor(
 							overridingSqlTypeCode
 					)
 			);

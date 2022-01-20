@@ -7,7 +7,6 @@
 package org.hibernate.userguide.mapping.basic;
 
 import java.sql.Types;
-import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -42,7 +41,7 @@ public class OffsetTimeMappingTests {
 		final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("offsetTime");
 		final JdbcMapping jdbcMapping = attributeMapping.getJdbcMapping();
 		assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(OffsetTime.class));
-		assertThat(jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), isOneOf(Types.TIME, Types.TIME_WITH_TIMEZONE));
+		assertThat( jdbcMapping.getJdbcType().getJdbcTypeCode(), isOneOf( Types.TIME, Types.TIME_WITH_TIMEZONE));
 
 		scope.inTransaction(
 				(session) -> {

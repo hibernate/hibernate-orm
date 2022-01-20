@@ -73,7 +73,7 @@ public class SqmEmbeddedValuedSimplePath<T>
 	}
 
 	@Override
-	public JavaType<T> getExpressableJavaTypeDescriptor() {
+	public JavaType<T> getExpressableJavaType() {
 		return getJavaTypeDescriptor();
 	}
 

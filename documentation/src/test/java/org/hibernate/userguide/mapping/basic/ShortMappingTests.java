@@ -43,20 +43,20 @@ public class ShortMappingTests {
 
 		{
 			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("wrapper");
-			assertThat(attribute.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Short.class));
+			assertThat( attribute.getJavaType().getJavaTypeClass(), equalTo( Short.class));
 
 			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
 			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Short.class));
-			assertThat(jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), is(Types.SMALLINT));
+			assertThat( jdbcMapping.getJdbcType().getJdbcTypeCode(), is( Types.SMALLINT));
 		}
 
 		{
 			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("primitive");
-			assertThat(attribute.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Short.class));
+			assertThat( attribute.getJavaType().getJavaTypeClass(), equalTo( Short.class));
 
 			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
 			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Short.class));
-			assertThat(jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), is(Types.SMALLINT));
+			assertThat( jdbcMapping.getJdbcType().getJdbcTypeCode(), is( Types.SMALLINT));
 		}
 
 

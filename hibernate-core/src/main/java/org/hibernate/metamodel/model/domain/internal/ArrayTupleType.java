@@ -21,7 +21,7 @@ import org.hibernate.query.BindableType;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.ObjectArrayJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.ObjectArrayJavaType;
 
 /**
  * @author Christian Beikov
@@ -31,18 +31,18 @@ public class ArrayTupleType implements TupleType<Object[]>,
 		ReturnableType<Object[]>,
 		MappingModelExpressable<Object[]> {
 
-	private final ObjectArrayJavaTypeDescriptor javaTypeDescriptor;
+	private final ObjectArrayJavaType javaType;
 	private final SqmExpressable<?>[] components;
 
 	public ArrayTupleType(SqmExpressable<?>[] components) {
 		this.components = components;
-		this.javaTypeDescriptor = new ObjectArrayJavaTypeDescriptor( getTypeDescriptors( components ) );
+		this.javaType = new ObjectArrayJavaType( getTypeDescriptors( components ) );
 	}
 
 	private static JavaType<?>[] getTypeDescriptors(SqmExpressable<?>[] components) {
 		final JavaType<?>[] typeDescriptors = new JavaType<?>[components.length];
 		for ( int i = 0; i < components.length; i++ ) {
-			typeDescriptors[i] = components[i].getExpressableJavaTypeDescriptor();
+			typeDescriptors[i] = components[i].getExpressableJavaType();
 		}
 		return typeDescriptors;
 	}
@@ -73,8 +73,8 @@ public class ArrayTupleType implements TupleType<Object[]>,
 	}
 
 	@Override
-	public JavaType<Object[]> getExpressableJavaTypeDescriptor() {
-		return javaTypeDescriptor;
+	public JavaType<Object[]> getExpressableJavaType() {
+		return javaType;
 	}
 
 	@Override
@@ -84,7 +84,7 @@ public class ArrayTupleType implements TupleType<Object[]>,
 
 	@Override
 	public Class<Object[]> getJavaType() {
-		return getExpressableJavaTypeDescriptor().getJavaTypeClass();
+		return getExpressableJavaType().getJavaTypeClass();
 	}
 
 	@Override

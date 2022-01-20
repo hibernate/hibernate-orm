@@ -177,7 +177,7 @@ class DatabaseSnapshotExecutor {
 								new BasicResult(
 										0,
 										null,
-										contributorMapping.getJavaTypeDescriptor()
+										contributorMapping.getJavaType()
 								)
 						);
 					}

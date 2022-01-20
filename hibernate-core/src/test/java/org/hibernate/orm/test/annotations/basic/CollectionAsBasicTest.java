@@ -49,12 +49,12 @@ public class CollectionAsBasicTest {
 		public Integer id;
 		public String name;
 		@Basic
-		@Type( DelimitedStringsJavaTypeDescriptor.class )
+		@Type( DelimitedStringsJavaType.class )
 		Set<String> tags;
 	}
 
-	public static class DelimitedStringsJavaTypeDescriptor extends UserTypeSupport<Set> {
-		public DelimitedStringsJavaTypeDescriptor() {
+	public static class DelimitedStringsJavaType extends UserTypeSupport<Set> {
+		public DelimitedStringsJavaType() {
 			super( Set.class, Types.VARCHAR );
 		}
 	}

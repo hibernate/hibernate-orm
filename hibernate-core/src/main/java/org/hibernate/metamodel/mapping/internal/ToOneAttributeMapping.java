@@ -242,7 +242,7 @@ public class ToOneAttributeMapping
 							if ( property.getValue() instanceof OneToOne
 									&& name.equals( ( (OneToOne) property.getValue() ).getMappedByProperty() )
 									&& ( (OneToOne) property.getValue() ).getReferencedEntityName().equals(
-									declaringType.getJavaTypeDescriptor().getJavaType().getTypeName() ) ) {
+									declaringType.getJavaType().getJavaType().getTypeName() ) ) {
 								bidirectionalAttributeName = property.getName();
 								break;
 							}
@@ -257,7 +257,7 @@ public class ToOneAttributeMapping
 						if ( value instanceof Collection
 								&& name.equals( ( (Collection) value ).getMappedByProperty() )
 								&& ( (Collection) value ).getElement().getType().getName()
-								.equals( declaringType.getJavaTypeDescriptor().getJavaType().getTypeName() ) ) {
+								.equals( declaringType.getJavaType().getJavaType().getTypeName() ) ) {
 							bidirectionalAttributeName = property.getName();
 							break;
 						}
@@ -1217,8 +1217,8 @@ public class ToOneAttributeMapping
 		}
 		else {
 			if ( parentTableGroup.canUseInnerJoins() ) {
-				final Class<?> attributeDeclaringType = declaringTableGroupProducer.getJavaTypeDescriptor().getJavaTypeClass();
-				final Class<?> parentTableGroupType = parentTableGroup.getModelPart().getJavaTypeDescriptor().getJavaTypeClass();
+				final Class<?> attributeDeclaringType = declaringTableGroupProducer.getJavaType().getJavaTypeClass();
+				final Class<?> parentTableGroupType = parentTableGroup.getModelPart().getJavaType().getJavaTypeClass();
 
 				// This attribute mapping must be declared on the parent table group type or one of its super types
 				// If not, this is a fetch for a subtype of the parent table group, which might be left joined

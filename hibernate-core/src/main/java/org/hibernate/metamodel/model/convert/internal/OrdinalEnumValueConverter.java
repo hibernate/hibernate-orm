@@ -11,13 +11,12 @@ import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Types;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.convert.spi.EnumValueConverter;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
-import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
@@ -29,33 +28,33 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
  */
 public class OrdinalEnumValueConverter<E extends Enum<E>> implements EnumValueConverter<E,Integer>, Serializable {
 
-	private final EnumJavaTypeDescriptor<E> enumJavaDescriptor;
+	private final EnumJavaType<E> enumJavaType;
 	private final JdbcType jdbcType;
-	private final JavaType<Integer> relationalJavaDescriptor;
+	private final JavaType<Integer> relationalJavaType;
 
 	private transient ValueExtractor<Integer> valueExtractor;
 	private transient ValueBinder<Integer> valueBinder;
 
 	public OrdinalEnumValueConverter(
-			EnumJavaTypeDescriptor<E> enumJavaDescriptor,
+			EnumJavaType<E> enumJavaType,
 			JdbcType jdbcType,
-			JavaType<Integer> relationalJavaDescriptor) {
-		this.enumJavaDescriptor = enumJavaDescriptor;
+			JavaType<Integer> relationalJavaType) {
+		this.enumJavaType = enumJavaType;
 		this.jdbcType = jdbcType;
-		this.relationalJavaDescriptor = relationalJavaDescriptor;
+		this.relationalJavaType = relationalJavaType;
 
-		this.valueExtractor = jdbcType.getExtractor( relationalJavaDescriptor );
-		this.valueBinder = jdbcType.getBinder( relationalJavaDescriptor );
+		this.valueExtractor = jdbcType.getExtractor( relationalJavaType );
+		this.valueBinder = jdbcType.getBinder( relationalJavaType );
 	}
 
 	@Override
 	public E toDomainValue(Integer relationalForm) {
-		return enumJavaDescriptor.fromOrdinal( relationalForm );
+		return enumJavaType.fromOrdinal( relationalForm );
 	}
 
 	@Override
 	public Integer toRelationalValue(E domainForm) {
-		return enumJavaDescriptor.toOrdinal( domainForm );
+		return enumJavaType.toOrdinal( domainForm );
 	}
 
 	@Override
@@ -64,13 +63,13 @@ public class OrdinalEnumValueConverter<E extends Enum<E>> implements EnumValueCo
 	}
 
 	@Override
-	public EnumJavaTypeDescriptor<E> getDomainJavaDescriptor() {
-		return enumJavaDescriptor;
+	public EnumJavaType<E> getDomainJavaType() {
+		return enumJavaType;
 	}
 
 	@Override
-	public JavaType<Integer> getRelationalJavaDescriptor() {
-		return relationalJavaDescriptor;
+	public JavaType<Integer> getRelationalJavaType() {
+		return relationalJavaType;
 	}
 
 	@Override
@@ -82,8 +81,8 @@ public class OrdinalEnumValueConverter<E extends Enum<E>> implements EnumValueCo
 	private void readObject(ObjectInputStream stream) throws ClassNotFoundException, IOException {
 		stream.defaultReadObject();
 
-		this.valueExtractor = jdbcType.getExtractor( relationalJavaDescriptor );
-		this.valueBinder = jdbcType.getBinder( relationalJavaDescriptor );
+		this.valueExtractor = jdbcType.getExtractor( relationalJavaType );
+		this.valueBinder = jdbcType.getBinder( relationalJavaType );
 	}
 
 	@Override

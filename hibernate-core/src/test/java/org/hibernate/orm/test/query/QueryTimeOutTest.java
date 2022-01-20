@@ -19,7 +19,7 @@ import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.jpa.QueryHints;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
-import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.StringJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import org.hibernate.testing.DialectChecks;
@@ -63,10 +63,10 @@ public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Before
 	public void before() {
 		CONNECTION_PROVIDER.clear();
-		final JdbcType jdbcType = sessionFactory().getTypeConfiguration().getJdbcTypeDescriptorRegistry().getDescriptor(
+		final JdbcType jdbcType = sessionFactory().getTypeConfiguration().getJdbcTypeRegistry().getDescriptor(
 				Types.VARCHAR
 		);
-		expectedSqlQuery = "update AnEntity set name=" + jdbcType.getJdbcLiteralFormatter( StringJavaTypeDescriptor.INSTANCE )
+		expectedSqlQuery = "update AnEntity set name=" + jdbcType.getJdbcLiteralFormatter( StringJavaType.INSTANCE )
 				.toJdbcLiteral(
 						"abc",
 						sessionFactory().getJdbcServices().getDialect(),

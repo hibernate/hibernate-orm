@@ -9,7 +9,7 @@
 
 package org.hibernate.orm.test.annotations.lob;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
-import org.hibernate.type.descriptor.java.PrimitiveCharacterArrayJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.PrimitiveCharacterArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.LongVarcharJdbcType;
 
 /**
@@ -21,7 +21,7 @@ public class PrimitiveCharacterArrayTextType extends AbstractSingleColumnStandar
 	public static final PrimitiveCharacterArrayTextType INSTANCE = new PrimitiveCharacterArrayTextType();
 
 	public PrimitiveCharacterArrayTextType() {
-		super( LongVarcharJdbcType.INSTANCE, PrimitiveCharacterArrayJavaTypeDescriptor.INSTANCE );
+		super( LongVarcharJdbcType.INSTANCE, PrimitiveCharacterArrayJavaType.INSTANCE );
 	}
 
 	public String getName() {

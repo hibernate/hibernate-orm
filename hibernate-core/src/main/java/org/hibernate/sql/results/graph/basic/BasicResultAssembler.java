@@ -22,26 +22,26 @@ import org.hibernate.type.descriptor.java.JavaType;
  * @author Steve Ebersole
  */
 public class BasicResultAssembler<J> implements DomainResultAssembler<J> {
-	public static <X> BasicResultAssembler<X> from(SqlSelection selection, JavaType<X> javaTypeDescriptor) {
-		return new BasicResultAssembler<>( selection.getValuesArrayPosition(), javaTypeDescriptor );
+	public static <X> BasicResultAssembler<X> from(SqlSelection selection, JavaType<X> javaType) {
+		return new BasicResultAssembler<>( selection.getValuesArrayPosition(), javaType );
 	}
 
 	private final int valuesArrayPosition;
-	private final JavaType<J> assembledJavaTypeDescriptor;
+	private final JavaType<J> assembledJavaType;
 	private final BasicValueConverter<J,?> valueConverter;
 
 	public BasicResultAssembler(
 			int valuesArrayPosition,
-			JavaType<J> assembledJavaTypeDescriptor) {
-		this( valuesArrayPosition, assembledJavaTypeDescriptor, null );
+			JavaType<J> assembledJavaType) {
+		this( valuesArrayPosition, assembledJavaType, null );
 	}
 
 	public BasicResultAssembler(
 			int valuesArrayPosition,
-			JavaType<J> assembledJavaTypeDescriptor,
+			JavaType<J> assembledJavaType,
 			BasicValueConverter<J, ?> valueConverter) {
 		this.valuesArrayPosition = valuesArrayPosition;
-		this.assembledJavaTypeDescriptor = assembledJavaTypeDescriptor;
+		this.assembledJavaType = assembledJavaType;
 		this.valueConverter = valueConverter;
 	}
 
@@ -63,12 +63,12 @@ public class BasicResultAssembler<J> implements DomainResultAssembler<J> {
 		if ( valueConverter != null ) {
 			if ( jdbcValue != null ) {
 				// the raw value type should be the converter's relational-JTD
-				if ( ! valueConverter.getRelationalJavaDescriptor().getJavaTypeClass().isInstance( jdbcValue ) ) {
+				if ( ! valueConverter.getRelationalJavaType().getJavaTypeClass().isInstance( jdbcValue ) ) {
 					throw new HibernateException(
 							String.format(
 									Locale.ROOT,
 									"Expecting raw JDBC value of type `%s`, but found `%s` : [%s]",
-									valueConverter.getRelationalJavaDescriptor().getJavaType().getTypeName(),
+									valueConverter.getRelationalJavaType().getJavaType().getTypeName(),
 									jdbcValue.getClass().getName(),
 									jdbcValue
 							)
@@ -85,8 +85,8 @@ public class BasicResultAssembler<J> implements DomainResultAssembler<J> {
 	}
 
 	@Override
-	public JavaType<J> getAssembledJavaTypeDescriptor() {
-		return assembledJavaTypeDescriptor;
+	public JavaType<J> getAssembledJavaType() {
+		return assembledJavaType;
 	}
 
 	/**

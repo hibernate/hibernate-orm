@@ -7,7 +7,7 @@
 package org.hibernate.type.descriptor.java;
 
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeJavaClassMappings;
 
 /**
@@ -22,9 +22,9 @@ public interface BasicJavaType<T> extends JavaType<T> {
 	 *
 	 * @return The recommended SQL type descriptor
 	 */
-	default JdbcType getRecommendedJdbcType(JdbcTypeDescriptorIndicators indicators) {
+	default JdbcType getRecommendedJdbcType(JdbcTypeIndicators indicators) {
 		// match legacy behavior
-		return indicators.getTypeConfiguration().getJdbcTypeDescriptorRegistry().getDescriptor(
+		return indicators.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor(
 				JdbcTypeJavaClassMappings.INSTANCE.determineJdbcTypeCodeForJavaClass( getJavaTypeClass() )
 		);
 	}

@@ -60,7 +60,7 @@ public class NestedEmbeddableMetadataTest {
 			int[] currencySqlTypes = currencyType.getSqlTypeCodes( metadata );
 			assertEquals( 1, currencySqlTypes.length );
 			assertJdbcTypeCode(
-					typeConfiguration.getJdbcTypeDescriptorRegistry().getDescriptor( Types.VARCHAR ).getJdbcTypeCode(),
+					typeConfiguration.getJdbcTypeRegistry().getDescriptor( Types.VARCHAR ).getJdbcTypeCode(),
 					currencySqlTypes[0]
 			);
 		}

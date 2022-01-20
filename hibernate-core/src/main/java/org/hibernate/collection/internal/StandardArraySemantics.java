@@ -53,7 +53,7 @@ public class StandardArraySemantics<E> implements CollectionSemantics<E[], E> {
 			int anticipatedSize,
 			CollectionPersister collectionDescriptor) {
 //		return (Object[]) Array.newInstance(
-//				collectionDescriptor.getJavaTypeDescriptor().getJavaType().getComponentType(),
+//				collectionDescriptor.getJavaType().getJavaType().getComponentType(),
 //				anticipatedSize
 //		);
 		throw new UnsupportedOperationException();

@@ -43,7 +43,7 @@ public class ImplicitModelPartResultBuilderEntity
 
 	@Override
 	public Class<?> getJavaType() {
-		return modelPart.getJavaTypeDescriptor().getJavaTypeClass();
+		return modelPart.getJavaType().getJavaTypeClass();
 	}
 
 	@Override

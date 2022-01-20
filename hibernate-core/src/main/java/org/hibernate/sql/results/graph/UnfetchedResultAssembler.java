@@ -16,10 +16,10 @@ import org.hibernate.type.descriptor.java.JavaType;
  */
 public class UnfetchedResultAssembler<J>  implements DomainResultAssembler<J> {
 
-	private final JavaType<J> javaTypeDescriptor;
+	private final JavaType<J> javaType;
 
-	public UnfetchedResultAssembler(JavaType<J> javaTypeDescriptor) {
-		this.javaTypeDescriptor = javaTypeDescriptor;
+	public UnfetchedResultAssembler(JavaType<J> javaType) {
+		this.javaType = javaType;
 	}
 
 	@Override
@@ -28,8 +28,8 @@ public class UnfetchedResultAssembler<J>  implements DomainResultAssembler<J> {
 	}
 
 	@Override
-	public JavaType<J> getAssembledJavaTypeDescriptor() {
-		return javaTypeDescriptor;
+	public JavaType<J> getAssembledJavaType() {
+		return javaType;
 	}
 }
 

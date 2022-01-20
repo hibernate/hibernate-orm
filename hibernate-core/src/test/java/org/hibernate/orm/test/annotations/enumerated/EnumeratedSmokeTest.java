@@ -20,7 +20,6 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
-import org.hibernate.type.spi.TypeConfiguration;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -62,7 +61,7 @@ public class EnumeratedSmokeTest extends BaseUnitTestCase {
 				.buildMetadata();
 		mappings.validate();
 
-		final JdbcTypeRegistry jdbcTypeRegistry = mappings.getTypeConfiguration().getJdbcTypeDescriptorRegistry();
+		final JdbcTypeRegistry jdbcTypeRegistry = mappings.getTypeConfiguration().getJdbcTypeRegistry();
 		final PersistentClass entityBinding = mappings.getEntityBinding( EntityWithEnumeratedAttributes.class.getName() );
 
 		validateEnumMapping( jdbcTypeRegistry, entityBinding.getProperty( "notAnnotated" ), EnumType.ORDINAL );

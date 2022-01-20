@@ -53,25 +53,25 @@ public class NVarcharJdbcType implements AdjustableJdbcType {
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
 		if ( length != null && length == 1 ) {
-			return (BasicJavaType<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Character.class );
+			return (BasicJavaType<T>) typeConfiguration.getJavaTypeRegistry().getDescriptor( Character.class );
 		}
-		return (BasicJavaType<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( String.class );
+		return (BasicJavaType<T>) typeConfiguration.getJavaTypeRegistry().getDescriptor( String.class );
 	}
 
 	@Override
-	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaTypeDescriptor) {
+	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaType) {
 		//noinspection unchecked
-		return new JdbcLiteralFormatterCharacterData( javaTypeDescriptor, true );
+		return new JdbcLiteralFormatterCharacterData( javaType, true );
 	}
 
 	@Override
 	public JdbcType resolveIndicatedType(
-			JdbcTypeDescriptorIndicators indicators,
+			JdbcTypeIndicators indicators,
 			JavaType<?> domainJtd) {
 		assert domainJtd != null;
 
 		final TypeConfiguration typeConfiguration = indicators.getTypeConfiguration();
-		final JdbcTypeRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeDescriptorRegistry();
+		final JdbcTypeRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeRegistry();
 
 		final int jdbcTypeCode;
 		if ( indicators.isLob() ) {
@@ -85,37 +85,37 @@ public class NVarcharJdbcType implements AdjustableJdbcType {
 	}
 
 	@Override
-	public <X> ValueBinder<X> getBinder(final JavaType<X> javaTypeDescriptor) {
-		return new BasicBinder<X>( javaTypeDescriptor, this ) {
+	public <X> ValueBinder<X> getBinder(final JavaType<X> javaType) {
+		return new BasicBinder<X>( javaType, this ) {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
-				st.setNString( index, javaTypeDescriptor.unwrap( value, String.class, options ) );
+				st.setNString( index, javaType.unwrap( value, String.class, options ) );
 			}
 
 			@Override
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
-				st.setNString( name, javaTypeDescriptor.unwrap( value, String.class, options ) );
+				st.setNString( name, javaType.unwrap( value, String.class, options ) );
 			}
 		};
 	}
 
 	@Override
-	public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaTypeDescriptor) {
-		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
+	public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaType) {
+		return new BasicExtractor<X>( javaType, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( rs.getNString( paramIndex ), options );
+				return javaType.wrap( rs.getNString( paramIndex ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( statement.getNString( index ), options );
+				return javaType.wrap( statement.getNString( index ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( statement.getNString( name ), options );
+				return javaType.wrap( statement.getNString( name ), options );
 			}
 		};
 	}

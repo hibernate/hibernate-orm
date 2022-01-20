@@ -30,8 +30,8 @@ public interface EntityResultGraphNode extends DomainResultGraphNode, FetchParen
 	}
 
 	@Override
-	default JavaType<?> getResultJavaTypeDescriptor() {
-		return getEntityValuedModelPart().getEntityMappingType().getMappedJavaTypeDescriptor();
+	default JavaType<?> getResultJavaType() {
+		return getEntityValuedModelPart().getEntityMappingType().getMappedJavaType();
 	}
 
 	@Override

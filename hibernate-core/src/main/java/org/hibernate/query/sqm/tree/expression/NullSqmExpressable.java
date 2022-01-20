@@ -24,7 +24,7 @@ public class NullSqmExpressable implements SqmExpressable<Object> {
 	}
 
 	@Override
-	public JavaType<Object> getExpressableJavaTypeDescriptor() {
+	public JavaType<Object> getExpressableJavaType() {
 		return null;
 	}
 }

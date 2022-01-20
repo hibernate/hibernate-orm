@@ -21,13 +21,13 @@ import org.hibernate.type.descriptor.java.JavaType;
  */
 public class MappedSuperclassTypeImpl<X> extends AbstractIdentifiableType<X> implements MappedSuperclassDomainType<X> {
 	public MappedSuperclassTypeImpl(
-			JavaType<X> javaTypeDescriptor,
+			JavaType<X> javaType,
 			MappedSuperclass mappedSuperclass,
 			IdentifiableDomainType<? super X> superType,
 			JpaMetamodel jpaMetamodel) {
 		super(
-				javaTypeDescriptor.getJavaType().getTypeName(),
-				javaTypeDescriptor,
+				javaType.getJavaType().getTypeName(),
+				javaType,
 				superType,
 				mappedSuperclass.getDeclaredIdentifierMapper() != null || ( superType != null && superType.hasIdClass() ),
 				mappedSuperclass.hasIdentifierProperty(),

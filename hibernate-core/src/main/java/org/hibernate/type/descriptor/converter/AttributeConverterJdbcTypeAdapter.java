@@ -39,15 +39,15 @@ public class AttributeConverterJdbcTypeAdapter implements JdbcType {
 
 	private final JpaAttributeConverter converter;
 	private final JdbcType delegate;
-	private final JavaType intermediateJavaTypeDescriptor;
+	private final JavaType intermediateJavaType;
 
 	public AttributeConverterJdbcTypeAdapter(
 			JpaAttributeConverter converter,
 			JdbcType delegate,
-			JavaType intermediateJavaTypeDescriptor) {
+			JavaType intermediateJavaType) {
 		this.converter = converter;
 		this.delegate = delegate;
-		this.intermediateJavaTypeDescriptor = intermediateJavaTypeDescriptor;
+		this.intermediateJavaType = intermediateJavaType;
 	}
 
 	@Override
@@ -70,9 +70,9 @@ public class AttributeConverterJdbcTypeAdapter implements JdbcType {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <X> ValueBinder<X> getBinder(JavaType<X> javaTypeDescriptor) {
+	public <X> ValueBinder<X> getBinder(JavaType<X> javaType) {
 		// Get the binder for the intermediate type representation
-		final ValueBinder realBinder = delegate.getBinder( intermediateJavaTypeDescriptor );
+		final ValueBinder realBinder = delegate.getBinder( intermediateJavaType );
 
 		return new ValueBinder<X>() {
 			@Override
@@ -115,9 +115,9 @@ public class AttributeConverterJdbcTypeAdapter implements JdbcType {
 	// Extraction ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public <X> ValueExtractor<X> getExtractor(JavaType<X> javaTypeDescriptor) {
+	public <X> ValueExtractor<X> getExtractor(JavaType<X> javaType) {
 		// Get the extractor for the intermediate type representation
-		final ValueExtractor realExtractor = delegate.getExtractor( intermediateJavaTypeDescriptor );
+		final ValueExtractor realExtractor = delegate.getExtractor( intermediateJavaType );
 
 		return new ValueExtractor<X>() {
 			@Override

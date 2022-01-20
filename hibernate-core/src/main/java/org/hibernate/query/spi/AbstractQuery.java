@@ -990,21 +990,21 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		final SqmExpressable<?> sqmExpressable = parameterType.resolveExpressable( session.getFactory() );
 		assert sqmExpressable != null;
 
-		return sqmExpressable.getExpressableJavaTypeDescriptor().isInstance( value );
+		return sqmExpressable.getExpressableJavaType().isInstance( value );
 	}
 
 	@Override
-	public <P> QueryImplementor<R> setParameter(String name, P value, Class<P> javaType) {
-		final JavaType<P> javaDescriptor = getSession().getFactory()
+	public <P> QueryImplementor<R> setParameter(String name, P value, Class<P> javaTypeClass) {
+		final JavaType<P> javaType = getSession().getFactory()
 				.getTypeConfiguration()
-				.getJavaTypeDescriptorRegistry()
-				.getDescriptor( javaType );
-		if ( javaDescriptor == null ) {
+				.getJavaTypeRegistry()
+				.getDescriptor( javaTypeClass );
+		if ( javaType == null ) {
 			setParameter( name, value );
 		}
 		else {
 			final BindableType<P> paramType;
-			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
+			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaTypeClass );
 			if ( basicType != null ) {
 				paramType = basicType;
 			}
@@ -1012,12 +1012,12 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 				final ManagedDomainType<P> managedDomainType = getSession().getFactory()
 						.getRuntimeMetamodels()
 						.getJpaMetamodel()
-						.managedType( javaType );
+						.managedType( javaTypeClass );
 				if ( managedDomainType != null ) {
 					paramType = managedDomainType;
 				}
 				else {
-					throw new HibernateException( "Unable to determine BindableType : " + javaType.getName() );
+					throw new HibernateException( "Unable to determine BindableType : " + javaTypeClass.getName() );
 				}
 			}
 
@@ -1074,17 +1074,17 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	public <P> QueryImplementor<R> setParameter(int position, P value, Class<P> javaType) {
-		final JavaType<P> javaDescriptor = getSession().getFactory()
+	public <P> QueryImplementor<R> setParameter(int position, P value, Class<P> javaTypeClass) {
+		final JavaType<P> javaType = getSession().getFactory()
 				.getTypeConfiguration()
-				.getJavaTypeDescriptorRegistry()
-				.getDescriptor( javaType );
-		if ( javaDescriptor == null ) {
+				.getJavaTypeRegistry()
+				.getDescriptor( javaTypeClass );
+		if ( javaType == null ) {
 			setParameter( position, value );
 		}
 		else {
 			final BindableType<P> paramType;
-			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
+			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaTypeClass );
 			if ( basicType != null ) {
 				paramType = basicType;
 			}
@@ -1092,12 +1092,12 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 				final ManagedDomainType<P> managedDomainType = getSession().getFactory()
 						.getRuntimeMetamodels()
 						.getJpaMetamodel()
-						.managedType( javaType );
+						.managedType( javaTypeClass );
 				if ( managedDomainType != null ) {
 					paramType = managedDomainType;
 				}
 				else {
-					throw new HibernateException( "Unable to determine BindableType : " + javaType.getName() );
+					throw new HibernateException( "Unable to determine BindableType : " + javaTypeClass.getName() );
 				}
 			}
 
@@ -1128,17 +1128,17 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	public <P> QueryImplementor<R> setParameter(QueryParameter<P> parameter, P value, Class<P> javaType) {
-		final JavaType<P> javaDescriptor = getSession().getFactory()
+	public <P> QueryImplementor<R> setParameter(QueryParameter<P> parameter, P value, Class<P> javaTypeClass) {
+		final JavaType<P> javaType = getSession().getFactory()
 				.getTypeConfiguration()
-				.getJavaTypeDescriptorRegistry()
-				.getDescriptor( javaType );
-		if ( javaDescriptor == null ) {
+				.getJavaTypeRegistry()
+				.getDescriptor( javaTypeClass );
+		if ( javaType == null ) {
 			setParameter( parameter, value );
 		}
 		else {
 			final BindableType<P> paramType;
-			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
+			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaTypeClass );
 			if ( basicType != null ) {
 				paramType = basicType;
 			}
@@ -1146,12 +1146,12 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 				final ManagedDomainType<P> managedDomainType = getSession().getFactory()
 						.getRuntimeMetamodels()
 						.getJpaMetamodel()
-						.managedType( javaType );
+						.managedType( javaTypeClass );
 				if ( managedDomainType != null ) {
 					paramType = managedDomainType;
 				}
 				else {
-					throw new HibernateException( "Unable to determine BindableType : " + javaType.getName() );
+					throw new HibernateException( "Unable to determine BindableType : " + javaTypeClass.getName() );
 				}
 			}
 
@@ -1217,17 +1217,17 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		return this;
 	}
 
-	public <P> QueryImplementor<R> setParameterList(String name, Collection<? extends P> values, Class<P> javaType) {
-		final JavaType<P> javaDescriptor = getSession().getFactory()
+	public <P> QueryImplementor<R> setParameterList(String name, Collection<? extends P> values, Class<P> javaTypeClass) {
+		final JavaType<P> javaType = getSession().getFactory()
 				.getTypeConfiguration()
-				.getJavaTypeDescriptorRegistry()
-				.getDescriptor( javaType );
-		if ( javaDescriptor == null ) {
+				.getJavaTypeRegistry()
+				.getDescriptor( javaTypeClass );
+		if ( javaType == null ) {
 			setParameterList( name, values );
 		}
 		else {
 			final BindableType<P> paramType;
-			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
+			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaTypeClass );
 			if ( basicType != null ) {
 				paramType = basicType;
 			}
@@ -1235,12 +1235,12 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 				final ManagedDomainType<P> managedDomainType = getSession().getFactory()
 						.getRuntimeMetamodels()
 						.getJpaMetamodel()
-						.managedType( javaType );
+						.managedType( javaTypeClass );
 				if ( managedDomainType != null ) {
 					paramType = managedDomainType;
 				}
 				else {
-					throw new HibernateException( "Unable to determine BindableType : " + javaType.getName() );
+					throw new HibernateException( "Unable to determine BindableType : " + javaTypeClass.getName() );
 				}
 			}
 
@@ -1264,17 +1264,17 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	public <P> QueryImplementor<R> setParameterList(String name, P[] values, Class<P> javaType) {
-		final JavaType<P> javaDescriptor = getSession().getFactory()
+	public <P> QueryImplementor<R> setParameterList(String name, P[] values, Class<P> javaTypeClass) {
+		final JavaType<P> javaType = getSession().getFactory()
 				.getTypeConfiguration()
-				.getJavaTypeDescriptorRegistry()
-				.getDescriptor( javaType );
-		if ( javaDescriptor == null ) {
+				.getJavaTypeRegistry()
+				.getDescriptor( javaTypeClass );
+		if ( javaType == null ) {
 			setParameterList( name, values );
 		}
 		else {
 			final BindableType<P> paramType;
-			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
+			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaTypeClass );
 			if ( basicType != null ) {
 				paramType = basicType;
 			}
@@ -1282,12 +1282,12 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 				final ManagedDomainType<P> managedDomainType = getSession().getFactory()
 						.getRuntimeMetamodels()
 						.getJpaMetamodel()
-						.managedType( javaType );
+						.managedType( javaTypeClass );
 				if ( managedDomainType != null ) {
 					paramType = managedDomainType;
 				}
 				else {
-					throw new HibernateException( "Unable to determine BindableType : " + javaType.getName() );
+					throw new HibernateException( "Unable to determine BindableType : " + javaTypeClass.getName() );
 				}
 			}
 
@@ -1309,17 +1309,17 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	public <P> QueryImplementor<R> setParameterList(int position, Collection<? extends P> values, Class<P> javaType) {
-		final JavaType<P> javaDescriptor = getSession().getFactory()
+	public <P> QueryImplementor<R> setParameterList(int position, Collection<? extends P> values, Class<P> javaTypeClass) {
+		final JavaType<P> javaType = getSession().getFactory()
 				.getTypeConfiguration()
-				.getJavaTypeDescriptorRegistry()
-				.getDescriptor( javaType );
-		if ( javaDescriptor == null ) {
+				.getJavaTypeRegistry()
+				.getDescriptor( javaTypeClass );
+		if ( javaType == null ) {
 			setParameterList( position, values );
 		}
 		else {
 			final BindableType<P> paramType;
-			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
+			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaTypeClass );
 			if ( basicType != null ) {
 				paramType = basicType;
 			}
@@ -1327,12 +1327,12 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 				final ManagedDomainType<P> managedDomainType = getSession().getFactory()
 						.getRuntimeMetamodels()
 						.getJpaMetamodel()
-						.managedType( javaType );
+						.managedType( javaTypeClass );
 				if ( managedDomainType != null ) {
 					paramType = managedDomainType;
 				}
 				else {
-					throw new HibernateException( "Unable to determine BindableType : " + javaType.getName() );
+					throw new HibernateException( "Unable to determine BindableType : " + javaTypeClass.getName() );
 				}
 			}
 
@@ -1355,17 +1355,17 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	public <P> QueryImplementor<R> setParameterList(int position, P[] values, Class<P> javaType) {
-		final JavaType<P> javaDescriptor = getSession().getFactory()
+	public <P> QueryImplementor<R> setParameterList(int position, P[] values, Class<P> javaTypeClass) {
+		final JavaType<P> javaType = getSession().getFactory()
 				.getTypeConfiguration()
-				.getJavaTypeDescriptorRegistry()
-				.getDescriptor( javaType );
-		if ( javaDescriptor == null ) {
+				.getJavaTypeRegistry()
+				.getDescriptor( javaTypeClass );
+		if ( javaType == null ) {
 			setParameterList( position, values );
 		}
 		else {
 			final BindableType<P> paramType;
-			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
+			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaTypeClass );
 			if ( basicType != null ) {
 				paramType = basicType;
 			}
@@ -1373,12 +1373,12 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 				final ManagedDomainType<P> managedDomainType = getSession().getFactory()
 						.getRuntimeMetamodels()
 						.getJpaMetamodel()
-						.managedType( javaType );
+						.managedType( javaTypeClass );
 				if ( managedDomainType != null ) {
 					paramType = managedDomainType;
 				}
 				else {
-					throw new HibernateException( "Unable to determine BindableType : " + javaType.getName() );
+					throw new HibernateException( "Unable to determine BindableType : " + javaTypeClass.getName() );
 				}
 			}
 
@@ -1408,17 +1408,17 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	public <P> QueryImplementor<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Class<P> javaType) {
-		final JavaType<P> javaDescriptor = getSession().getFactory()
+	public <P> QueryImplementor<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Class<P> javaTypeClass) {
+		final JavaType<P> javaType = getSession().getFactory()
 				.getTypeConfiguration()
-				.getJavaTypeDescriptorRegistry()
-				.getDescriptor( javaType );
-		if ( javaDescriptor == null ) {
+				.getJavaTypeRegistry()
+				.getDescriptor( javaTypeClass );
+		if ( javaType == null ) {
 			setParameterList( parameter, values );
 		}
 		else {
 			final BindableType<P> paramType;
-			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
+			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaTypeClass );
 			if ( basicType != null ) {
 				paramType = basicType;
 			}
@@ -1426,12 +1426,12 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 				final ManagedDomainType<P> managedDomainType = getSession().getFactory()
 						.getRuntimeMetamodels()
 						.getJpaMetamodel()
-						.managedType( javaType );
+						.managedType( javaTypeClass );
 				if ( managedDomainType != null ) {
 					paramType = managedDomainType;
 				}
 				else {
-					throw new HibernateException( "Unable to determine BindableType : " + javaType.getName() );
+					throw new HibernateException( "Unable to determine BindableType : " + javaTypeClass.getName() );
 				}
 			}
 
@@ -1454,17 +1454,17 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	public <P> QueryImplementor<R> setParameterList(QueryParameter<P> parameter, P[] values, Class<P> javaType) {
-		final JavaType<P> javaDescriptor = getSession().getFactory()
+	public <P> QueryImplementor<R> setParameterList(QueryParameter<P> parameter, P[] values, Class<P> javaTypeClass) {
+		final JavaType<P> javaType = getSession().getFactory()
 				.getTypeConfiguration()
-				.getJavaTypeDescriptorRegistry()
-				.getDescriptor( javaType );
-		if ( javaDescriptor == null ) {
+				.getJavaTypeRegistry()
+				.getDescriptor( javaTypeClass );
+		if ( javaType == null ) {
 			setParameterList( parameter, values );
 		}
 		else {
 			final BindableType<P> paramType;
-			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
+			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaTypeClass );
 			if ( basicType != null ) {
 				paramType = basicType;
 			}
@@ -1472,12 +1472,12 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 				final ManagedDomainType<P> managedDomainType = getSession().getFactory()
 						.getRuntimeMetamodels()
 						.getJpaMetamodel()
-						.managedType( javaType );
+						.managedType( javaTypeClass );
 				if ( managedDomainType != null ) {
 					paramType = managedDomainType;
 				}
 				else {
-					throw new HibernateException( "Unable to determine BindableType : " + javaType.getName() );
+					throw new HibernateException( "Unable to determine BindableType : " + javaTypeClass.getName() );
 				}
 			}
 

@@ -69,20 +69,20 @@ public class BasicFetch<T> implements Fetch, BasicResultGraphNode<T> {
 		this.fetchParent = fetchParent;
 		this.valuedMapping = valuedMapping;
 		this.fetchTiming = fetchTiming;
-		@SuppressWarnings("unchecked") final JavaType<T> javaTypeDescriptor = (JavaType<T>) valuedMapping.getJavaTypeDescriptor();
+		@SuppressWarnings("unchecked") final JavaType<T> javaType = (JavaType<T>) valuedMapping.getJavaType();
 		// lazy basic attribute
 		if ( fetchTiming == FetchTiming.DELAYED && valuesArrayPosition == -1 ) {
 			if ( canBasicPartFetchBeDelayed ) {
-				this.assembler = new UnfetchedResultAssembler<>( javaTypeDescriptor );
+				this.assembler = new UnfetchedResultAssembler<>( javaType );
 			}
 			else {
-				this.assembler = new UnfetchedBasicPartResultAssembler( javaTypeDescriptor );
+				this.assembler = new UnfetchedBasicPartResultAssembler( javaType );
 			}
 		}
 		else {
 			this.assembler = new BasicResultAssembler<>(
 					valuesArrayPosition,
-					javaTypeDescriptor,
+					javaType,
 					valueConverter
 			);
 		}
@@ -109,7 +109,7 @@ public class BasicFetch<T> implements Fetch, BasicResultGraphNode<T> {
 	}
 
 	@Override
-	public JavaType<?> getResultJavaTypeDescriptor() {
+	public JavaType<?> getResultJavaType() {
 		return null;
 	}
 

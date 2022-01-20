@@ -43,7 +43,7 @@ public class DynamicInstantiationAssemblerInjectionImpl<T> implements DomainResu
 								if ( propertyDescriptor.getWriteMethod() != null ) {
 									final boolean assignmentCompatible = Compatibility.areAssignmentCompatible(
 											propertyDescriptor.getWriteMethod().getParameterTypes()[0],
-											argumentReader.getAssembledJavaTypeDescriptor().getClass()
+											argumentReader.getAssembledJavaType().getClass()
 									);
 									if ( assignmentCompatible ) {
 										propertyDescriptor.getWriteMethod().setAccessible( true );
@@ -67,7 +67,7 @@ public class DynamicInstantiationAssemblerInjectionImpl<T> implements DomainResu
 						final Field field = findField(
 								targetJavaType,
 								argumentReader.getAlias(),
-								argumentReader.getAssembledJavaTypeDescriptor().getJavaTypeClass()
+								argumentReader.getAssembledJavaType().getJavaTypeClass()
 						);
 						if ( field != null ) {
 							beanInjections.add(
@@ -108,7 +108,7 @@ public class DynamicInstantiationAssemblerInjectionImpl<T> implements DomainResu
 	}
 
 	@Override
-	public JavaType<T> getAssembledJavaTypeDescriptor() {
+	public JavaType<T> getAssembledJavaType() {
 		return target;
 	}
 

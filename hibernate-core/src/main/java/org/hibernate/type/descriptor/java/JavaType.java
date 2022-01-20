@@ -18,7 +18,7 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.compare.ComparableComparator;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -90,7 +90,7 @@ public interface JavaType<T> extends Serializable {
 	 *
 	 * @return The recommended SQL type descriptor
 	 */
-	JdbcType getRecommendedJdbcType(JdbcTypeDescriptorIndicators context);
+	JdbcType getRecommendedJdbcType(JdbcTypeIndicators context);
 
 	/**
 	 * The default column length when this Java type is mapped
@@ -192,7 +192,7 @@ public interface JavaType<T> extends Serializable {
 	/**
 	 * Unwrap an instance of our handled Java type into the requested type.
 	 * <p/>
-	 * As an example, if this is a {@code JavaTypeDescriptor<Integer>} and we are asked to unwrap
+	 * As an example, if this is a {@code JavaType<Integer>} and we are asked to unwrap
 	 * the {@code Integer value} as a {@code Long} we would return something like
 	 * <code>Long.valueOf( value.longValue() )</code>.
 	 * <p/>

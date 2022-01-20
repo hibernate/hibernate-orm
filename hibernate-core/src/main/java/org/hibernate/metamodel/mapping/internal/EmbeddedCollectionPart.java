@@ -81,7 +81,7 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 		this.nature = nature;
 		if ( parentInjectionAttributeName != null ) {
 			parentInjectionAttributePropertyAccess = PropertyAccessStrategyBasicImpl.INSTANCE.buildPropertyAccess(
-					embeddableMappingType.getMappedJavaTypeDescriptor().getJavaTypeClass(),
+					embeddableMappingType.getMappedJavaType().getJavaTypeClass(),
 					parentInjectionAttributeName,
 					true );
 		}
@@ -298,13 +298,13 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 	}
 
 	@Override
-	public JavaType<?> getJavaTypeDescriptor() {
-		return getEmbeddableTypeDescriptor().getJavaTypeDescriptor();
+	public JavaType<?> getJavaType() {
+		return getEmbeddableTypeDescriptor().getJavaType();
 	}
 
 	@Override
-	public JavaType<?> getExpressableJavaTypeDescriptor() {
-		return getJavaTypeDescriptor();
+	public JavaType<?> getExpressableJavaType() {
+		return getJavaType();
 	}
 
 	@Override

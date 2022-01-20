@@ -221,7 +221,7 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 
 			final SessionFactoryImplementor sessionFactory = resolutionContext.getSessionFactory();
 			final JavaType<?> targetJtd = sessionFactory.getTypeConfiguration()
-					.getJavaTypeDescriptorRegistry()
+					.getJavaTypeRegistry()
 					.getDescriptor( targetJavaType );
 
 			return new ResultMementoInstantiationStandard( targetJtd, argumentResultMementos );

@@ -23,7 +23,7 @@ public interface SqmExpressable<J> extends BindableType<J> {
 	/**
 	 * The Java type descriptor for this expressable
 	 */
-	JavaType<J> getExpressableJavaTypeDescriptor();
+	JavaType<J> getExpressableJavaType();
 
 	@Override
 	default SqmExpressable<J> resolveExpressable(SessionFactoryImplementor sessionFactory) {

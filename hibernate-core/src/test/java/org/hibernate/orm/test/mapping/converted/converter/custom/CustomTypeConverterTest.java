@@ -71,12 +71,12 @@ public class CustomTypeConverterTest extends BaseUnitTestCase {
 			);
 
 			assertThat(
-					bootTypeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( PayloadWrapper.class ),
+					bootTypeConfiguration.getJavaTypeRegistry().getDescriptor( PayloadWrapper.class ),
 					sameInstance( PayloadWrapperJavaType.INSTANCE )
 			);
 
 			assertThat(
-					bootTypeConfiguration.getJdbcTypeDescriptorRegistry().getDescriptor( PayloadWrapperJdbcType.INSTANCE.getJdbcTypeCode() ),
+					bootTypeConfiguration.getJdbcTypeRegistry().getDescriptor( PayloadWrapperJdbcType.INSTANCE.getJdbcTypeCode() ),
 					sameInstance( PayloadWrapperJdbcType.INSTANCE )
 			);
 
@@ -89,9 +89,9 @@ public class CustomTypeConverterTest extends BaseUnitTestCase {
 		@Override
 		public void contribute(InFlightMetadataCollector metadataCollector, IndexView jandexIndex) {
 			final TypeConfiguration typeConfiguration = metadataCollector.getTypeConfiguration();
-			typeConfiguration.getJavaTypeDescriptorRegistry()
+			typeConfiguration.getJavaTypeRegistry()
 					.addDescriptor( PayloadWrapperJavaType.INSTANCE );
-			typeConfiguration.getJdbcTypeDescriptorRegistry()
+			typeConfiguration.getJdbcTypeRegistry()
 					.addDescriptor( PayloadWrapperJdbcType.INSTANCE );
 		}
 	}

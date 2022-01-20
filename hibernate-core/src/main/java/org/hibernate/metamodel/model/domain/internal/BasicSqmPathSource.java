@@ -63,7 +63,7 @@ public class BasicSqmPathSource<J>
 
 	@Override
 	public Class<J> getJavaType() {
-		return getExpressableJavaTypeDescriptor().getJavaTypeClass();
+		return getExpressableJavaType().getJavaTypeClass();
 	}
 
 	@Override

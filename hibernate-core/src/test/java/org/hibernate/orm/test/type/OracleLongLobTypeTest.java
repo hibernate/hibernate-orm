@@ -107,14 +107,14 @@ public class OracleLongLobTypeTest extends BaseUnitTestCase {
 
 			final PersistentClass entityBinding = mappings.getEntityBinding( entityClass.getName() );
 			final JdbcTypeRegistry jdbcTypeRegistry = mappings.getTypeConfiguration()
-					.getJdbcTypeDescriptorRegistry();
+					.getJdbcTypeRegistry();
 
 			BasicType<?> type;
 
 			type = (BasicType<?>) entityBinding.getProperty( "binaryData" ).getType();
-			assertSame( jdbcTypeRegistry.getDescriptor( binaryTypeClass.getSqlTypeCode() ), type.getJdbcTypeDescriptor() );
+			assertSame( jdbcTypeRegistry.getDescriptor( binaryTypeClass.getSqlTypeCode() ), type.getJdbcType() );
 			type = (BasicType<?>) entityBinding.getProperty( "characterData" ).getType();
-			assertSame( jdbcTypeRegistry.getDescriptor( charTypeClass.getSqlTypeCode() ), type.getJdbcTypeDescriptor() );
+			assertSame( jdbcTypeRegistry.getDescriptor( charTypeClass.getSqlTypeCode() ), type.getJdbcType() );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );

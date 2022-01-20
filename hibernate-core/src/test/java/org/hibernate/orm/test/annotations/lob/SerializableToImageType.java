@@ -8,7 +8,7 @@ package org.hibernate.orm.test.annotations.lob;
 import java.io.Serializable;
 
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
-import org.hibernate.type.descriptor.java.SerializableJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.SerializableJavaType;
 import org.hibernate.type.descriptor.jdbc.LongVarbinaryJdbcType;
 
 /**
@@ -22,7 +22,7 @@ public class SerializableToImageType extends AbstractSingleColumnStandardBasicTy
 	public static final PrimitiveCharacterArrayTextType INSTANCE = new PrimitiveCharacterArrayTextType();
 
 	public SerializableToImageType() {
-		super( LongVarbinaryJdbcType.INSTANCE, new SerializableJavaTypeDescriptor<Serializable>( Serializable.class ) );
+		super( LongVarbinaryJdbcType.INSTANCE, new SerializableJavaType<Serializable>( Serializable.class ) );
 	}
 
 	public String getName() {

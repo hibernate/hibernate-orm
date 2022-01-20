@@ -453,21 +453,21 @@ public class MySQLDialect extends Dialect {
 		super.contributeTypes( typeContributions, serviceRegistry );
 
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
-				.getJdbcTypeDescriptorRegistry();
+				.getJdbcTypeRegistry();
 
 		if ( getMySQLVersion().isSameOrAfter( 5, 7 ) ) {
 			jdbcTypeRegistry.addDescriptorIfAbsent( SqlTypes.JSON, JsonJdbcType.INSTANCE );
 		}
 
 		// MySQL requires a custom binder for binding untyped nulls with the NULL type
-		typeContributions.contributeJdbcTypeDescriptor( NullJdbcType.INSTANCE );
+		typeContributions.contributeJdbcType( NullJdbcType.INSTANCE );
 
 		// Until we remove StandardBasicTypes, we have to keep this
 		typeContributions.contributeType(
 				new NullType(
 						NullJdbcType.INSTANCE,
 						typeContributions.getTypeConfiguration()
-								.getJavaTypeDescriptorRegistry()
+								.getJavaTypeRegistry()
 								.getDescriptor( Object.class )
 				)
 		);
@@ -808,7 +808,7 @@ public class MySQLDialect extends Dialect {
 	@Override
 	public String getCastTypeName(SqlExpressable type, Long length, Integer precision, Integer scale) {
 		final JdbcMapping jdbcMapping = type.getJdbcMapping();
-		final JdbcType jdbcType = jdbcMapping.getJdbcTypeDescriptor();
+		final JdbcType jdbcType = jdbcMapping.getJdbcType();
 		final JavaType<?> javaType = jdbcMapping.getJavaTypeDescriptor();
 		switch ( jdbcType.getDefaultSqlTypeCode() ) {
 			case Types.INTEGER:

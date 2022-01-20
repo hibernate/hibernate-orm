@@ -54,18 +54,18 @@ public class TimestampWithTimeZoneJdbcType implements JdbcType {
 			Integer length,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
-		return (BasicJavaType<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( OffsetDateTime.class );
+		return (BasicJavaType<T>) typeConfiguration.getJavaTypeRegistry().getDescriptor( OffsetDateTime.class );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaTypeDescriptor) {
-		return new JdbcLiteralFormatterTemporal( javaTypeDescriptor, TemporalType.TIMESTAMP );
+	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaType) {
+		return new JdbcLiteralFormatterTemporal( javaType, TemporalType.TIMESTAMP );
 	}
 
 	@Override
-	public <X> ValueBinder<X> getBinder(final JavaType<X> javaTypeDescriptor) {
-		return new BasicBinder<X>( javaTypeDescriptor, this ) {
+	public <X> ValueBinder<X> getBinder(final JavaType<X> javaType) {
+		return new BasicBinder<X>( javaType, this ) {
 			@Override
 			protected void doBind(
 					PreparedStatement st,
@@ -73,13 +73,13 @@ public class TimestampWithTimeZoneJdbcType implements JdbcType {
 					int index,
 					WrapperOptions wrapperOptions) throws SQLException {
 				try {
-					final OffsetDateTime dateTime = javaTypeDescriptor.unwrap( value, OffsetDateTime.class, wrapperOptions );
+					final OffsetDateTime dateTime = javaType.unwrap( value, OffsetDateTime.class, wrapperOptions );
 					// supposed to be supported in JDBC 4.2
 					st.setObject( index, dateTime, Types.TIMESTAMP_WITH_TIMEZONE );
 				}
 				catch (SQLException|AbstractMethodError e) {
 					// fall back to treating it as a JDBC Timestamp
-					final Timestamp timestamp = javaTypeDescriptor.unwrap( value, Timestamp.class, wrapperOptions );
+					final Timestamp timestamp = javaType.unwrap( value, Timestamp.class, wrapperOptions );
 					st.setTimestamp( index, timestamp );
 				}
 			}
@@ -92,13 +92,13 @@ public class TimestampWithTimeZoneJdbcType implements JdbcType {
 					WrapperOptions wrapperOptions)
 					throws SQLException {
 				try {
-					final OffsetDateTime dateTime = javaTypeDescriptor.unwrap( value, OffsetDateTime.class, wrapperOptions );
+					final OffsetDateTime dateTime = javaType.unwrap( value, OffsetDateTime.class, wrapperOptions );
 					// supposed to be supported in JDBC 4.2
 					st.setObject( name, dateTime, Types.TIMESTAMP_WITH_TIMEZONE );
 				}
 				catch (SQLException|AbstractMethodError e) {
 					// fall back to treating it as a JDBC Timestamp
-					final Timestamp timestamp = javaTypeDescriptor.unwrap( value, Timestamp.class, wrapperOptions );
+					final Timestamp timestamp = javaType.unwrap( value, Timestamp.class, wrapperOptions );
 					st.setTimestamp( name, timestamp );
 				}
 			}
@@ -106,17 +106,17 @@ public class TimestampWithTimeZoneJdbcType implements JdbcType {
 	}
 
 	@Override
-	public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaTypeDescriptor) {
-		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
+	public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaType) {
+		return new BasicExtractor<X>( javaType, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, int position, WrapperOptions wrapperOptions) throws SQLException {
 				try {
 					// supposed to be supported in JDBC 4.2
-					return javaTypeDescriptor.wrap( rs.getObject( position, OffsetDateTime.class ), wrapperOptions );
+					return javaType.wrap( rs.getObject( position, OffsetDateTime.class ), wrapperOptions );
 				}
 				catch (SQLException|AbstractMethodError e) {
 					// fall back to treating it as a JDBC Timestamp
-					return javaTypeDescriptor.wrap( rs.getTimestamp( position ), wrapperOptions );
+					return javaType.wrap( rs.getTimestamp( position ), wrapperOptions );
 				}
 			}
 
@@ -124,11 +124,11 @@ public class TimestampWithTimeZoneJdbcType implements JdbcType {
 			protected X doExtract(CallableStatement statement, int position, WrapperOptions wrapperOptions) throws SQLException {
 				try {
 					// supposed to be supported in JDBC 4.2
-					return javaTypeDescriptor.wrap( statement.getObject( position, OffsetDateTime.class ), wrapperOptions );
+					return javaType.wrap( statement.getObject( position, OffsetDateTime.class ), wrapperOptions );
 				}
 				catch (SQLException|AbstractMethodError e) {
 					// fall back to treating it as a JDBC Timestamp
-					return javaTypeDescriptor.wrap( statement.getTimestamp( position ), wrapperOptions );
+					return javaType.wrap( statement.getTimestamp( position ), wrapperOptions );
 				}
 			}
 
@@ -136,11 +136,11 @@ public class TimestampWithTimeZoneJdbcType implements JdbcType {
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions wrapperOptions) throws SQLException {
 				try {
 					// supposed to be supported in JDBC 4.2
-					return javaTypeDescriptor.wrap( statement.getObject( name, OffsetDateTime.class ), wrapperOptions );
+					return javaType.wrap( statement.getObject( name, OffsetDateTime.class ), wrapperOptions );
 				}
 				catch (SQLException|AbstractMethodError e) {
 					// fall back to treating it as a JDBC Timestamp
-					return javaTypeDescriptor.wrap( statement.getTimestamp( name ), wrapperOptions );
+					return javaType.wrap( statement.getTimestamp( name ), wrapperOptions );
 				}
 			}
 		};

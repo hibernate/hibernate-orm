@@ -16,20 +16,20 @@ import org.hibernate.type.descriptor.java.JavaType;
  * @author Steve Ebersole
  */
 public class EntityAssembler implements DomainResultAssembler {
-	private final JavaType javaTypeDescriptor;
+	private final JavaType javaType;
 	private final EntityInitializer initializer;
 	private EntityInitializer replacedInitializer;
 
 	public EntityAssembler(
-			JavaType javaTypeDescriptor,
+			JavaType javaType,
 			EntityInitializer initializer) {
-		this.javaTypeDescriptor = javaTypeDescriptor;
+		this.javaType = javaType;
 		this.initializer = initializer;
 	}
 
 	@Override
-	public JavaType getAssembledJavaTypeDescriptor() {
-		return javaTypeDescriptor;
+	public JavaType getAssembledJavaType() {
+		return javaType;
 	}
 
 	@Override

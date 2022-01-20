@@ -137,7 +137,7 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 	}
 
 	@Override
-	public JavaType<?> getJavaTypeDescriptor() {
+	public JavaType<?> getJavaType() {
 		return versionBasicType.getJavaTypeDescriptor();
 	}
 
@@ -219,7 +219,7 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 		return new BasicResult(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
-				getJavaTypeDescriptor(),
+				getJavaType(),
 				navigablePath
 		);
 	}

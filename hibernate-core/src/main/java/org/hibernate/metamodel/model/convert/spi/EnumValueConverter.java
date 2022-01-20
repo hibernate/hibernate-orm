@@ -13,7 +13,7 @@ import org.hibernate.annotations.Remove;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
-import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.EnumJavaType;
 
 /**
  * BasicValueConverter extension for enum-specific support
@@ -22,7 +22,7 @@ import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
  */
 public interface EnumValueConverter<O extends Enum<O>, R> extends BasicValueConverter<O,R> {
 	@Override
-	EnumJavaTypeDescriptor<O> getDomainJavaDescriptor();
+	EnumJavaType<O> getDomainJavaType();
 
 	int getJdbcTypeCode();
 

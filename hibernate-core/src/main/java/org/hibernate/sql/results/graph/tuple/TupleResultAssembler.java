@@ -18,13 +18,13 @@ import org.hibernate.type.descriptor.java.JavaType;
 public class TupleResultAssembler<J> implements DomainResultAssembler<J> {
 
 	private final int[] valuesArrayPositions;
-	private final JavaType<J> assembledJavaTypeDescriptor;
+	private final JavaType<J> assembledJavaType;
 
 	public TupleResultAssembler(
 			int[] valuesArrayPositions,
-			JavaType<J> assembledJavaTypeDescriptor) {
+			JavaType<J> assembledJavaType) {
 		this.valuesArrayPositions = valuesArrayPositions;
-		this.assembledJavaTypeDescriptor = assembledJavaTypeDescriptor;
+		this.assembledJavaType = assembledJavaType;
 	}
 
 	/**
@@ -59,8 +59,8 @@ public class TupleResultAssembler<J> implements DomainResultAssembler<J> {
 	}
 
 	@Override
-	public JavaType<J> getAssembledJavaTypeDescriptor() {
-		return assembledJavaTypeDescriptor;
+	public JavaType<J> getAssembledJavaType() {
+		return assembledJavaType;
 	}
 
 }

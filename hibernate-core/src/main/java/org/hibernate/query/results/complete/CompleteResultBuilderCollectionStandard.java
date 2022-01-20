@@ -68,7 +68,7 @@ public class CompleteResultBuilderCollectionStandard implements CompleteResultBu
 
 	@Override
 	public Class<?> getJavaType() {
-		return pluralAttributeDescriptor.getExpressableJavaTypeDescriptor().getJavaTypeClass();
+		return pluralAttributeDescriptor.getExpressableJavaType().getJavaTypeClass();
 	}
 
 	@Override
@@ -164,7 +164,7 @@ public class CompleteResultBuilderCollectionStandard implements CompleteResultBu
 								return new ResultSetMappingSqlSelection( valuesArrayPosition, basicType );
 							}
 					),
-					selectableMapping.getJdbcMapping().getMappedJavaTypeDescriptor(),
+					selectableMapping.getJdbcMapping().getMappedJavaType(),
 					creationStateImpl.getSessionFactory().getTypeConfiguration()
 			);
 		};

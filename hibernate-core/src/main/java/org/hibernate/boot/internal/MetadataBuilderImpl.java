@@ -74,7 +74,6 @@ import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.CustomType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -298,13 +297,13 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	@Override
-	public void contributeJavaTypeDescriptor(JavaType descriptor) {
-		this.bootstrapContext.getTypeConfiguration().getJavaTypeDescriptorRegistry().addDescriptor( descriptor );
+	public void contributeJavaType(JavaType<?> descriptor) {
+		this.bootstrapContext.getTypeConfiguration().getJavaTypeRegistry().addDescriptor( descriptor );
 	}
 
 	@Override
-	public void contributeJdbcTypeDescriptor(JdbcType descriptor) {
-		this.bootstrapContext.getTypeConfiguration().getJdbcTypeDescriptorRegistry().addDescriptor( descriptor );
+	public void contributeJdbcType(JdbcType descriptor) {
+		this.bootstrapContext.getTypeConfiguration().getJdbcTypeRegistry().addDescriptor( descriptor );
 	}
 
 	@Override

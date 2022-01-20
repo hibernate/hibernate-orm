@@ -66,7 +66,7 @@ public class CompleteResultBuilderEntityJpa implements CompleteResultBuilderEnti
 
 	@Override
 	public Class<?> getJavaType() {
-		return entityDescriptor.getJavaTypeDescriptor().getJavaTypeClass();
+		return entityDescriptor.getJavaType().getJavaTypeClass();
 	}
 
 	@Override

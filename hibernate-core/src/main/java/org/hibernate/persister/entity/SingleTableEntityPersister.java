@@ -54,7 +54,6 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.InListPredicate;
 import org.hibernate.sql.ast.tree.predicate.Junction;
@@ -341,7 +340,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 				discriminatorInsertable = persistentClass.isDiscriminatorInsertable() && !discrimValue.hasFormula();
 				try {
 					discriminatorValue = discriminatorType.getJavaTypeDescriptor().fromString( persistentClass.getDiscriminatorValue() );
-					discriminatorSQLValue = discriminatorType.getJdbcTypeDescriptor().getJdbcLiteralFormatter( (JavaType) discriminatorType.getJavaTypeDescriptor() )
+					discriminatorSQLValue = discriminatorType.getJdbcType().getJdbcLiteralFormatter( (JavaType) discriminatorType.getJavaTypeDescriptor() )
 							.toJdbcLiteral(
 									discriminatorValue,
 									factory.getJdbcServices().getDialect(),

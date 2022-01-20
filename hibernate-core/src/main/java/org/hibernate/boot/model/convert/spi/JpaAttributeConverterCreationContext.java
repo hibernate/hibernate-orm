@@ -21,7 +21,7 @@ public interface JpaAttributeConverterCreationContext {
 	ManagedBeanRegistry getManagedBeanRegistry();
 	TypeConfiguration getTypeConfiguration();
 
-	default JavaTypeRegistry getJavaTypeDescriptorRegistry() {
-		return getTypeConfiguration().getJavaTypeDescriptorRegistry();
+	default JavaTypeRegistry getJavaTypeRegistry() {
+		return getTypeConfiguration().getJavaTypeRegistry();
 	}
 }

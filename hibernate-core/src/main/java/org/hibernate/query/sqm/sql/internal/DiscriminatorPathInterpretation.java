@@ -53,7 +53,7 @@ public class DiscriminatorPathInterpretation extends AbstractSqmPathInterpretati
 	public SqlSelection createSqlSelection(
 			int jdbcPosition,
 			int valuesArrayPosition,
-			JavaType javaTypeDescriptor,
+			JavaType javaType,
 			TypeConfiguration typeConfiguration) {
 		return new ResultSetMappingSqlSelection( valuesArrayPosition, getDiscriminatorMapping() );
 	}

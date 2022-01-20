@@ -12,9 +12,8 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.BasicJavaType;
-import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 
 import static org.hibernate.internal.util.StringHelper.WHITESPACE;
 
@@ -33,8 +32,8 @@ public class StringArrayJavaType implements BasicJavaType<String[]> {
 	}
 
 	@Override
-	public JdbcType getRecommendedJdbcType(JdbcTypeDescriptorIndicators context) {
-		return context.getTypeConfiguration().getJdbcTypeDescriptorRegistry().getDescriptor( Types.ARRAY );
+	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
+		return context.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( Types.ARRAY );
 	}
 
 	@Override

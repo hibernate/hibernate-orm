@@ -43,7 +43,7 @@ public abstract class AbstractPluralAttribute<D, C, E>
 		super(
 				builder.getDeclaringType(),
 				builder.getProperty().getName(),
-				builder.getCollectionJavaTypeDescriptor(),
+				builder.getCollectionJavaType(),
 				builder.getAttributeClassification(),
 				builder.getValueType(),
 				builder.getMember(),
@@ -93,8 +93,8 @@ public abstract class AbstractPluralAttribute<D, C, E>
 	}
 
 	@Override
-	public JavaType<E> getExpressableJavaTypeDescriptor() {
-		return getElementType().getExpressableJavaTypeDescriptor();
+	public JavaType<E> getExpressableJavaType() {
+		return getElementType().getExpressableJavaType();
 	}
 
 	@Override

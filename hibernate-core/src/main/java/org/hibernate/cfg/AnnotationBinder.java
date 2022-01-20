@@ -906,28 +906,28 @@ public final class AnnotationBinder {
 
 		final JavaTypeRegistration javaTypeAnn = annotatedElement.getAnnotation( JavaTypeRegistration.class );
 		if ( javaTypeAnn != null ) {
-			handleJavaTypeDescriptorRegistration( context, managedBeanRegistry, javaTypeAnn );
+			handleJavaTypeRegistration( context, managedBeanRegistry, javaTypeAnn );
 		}
 		else {
 			final JavaTypeRegistrations annotation = annotatedElement.getAnnotation( JavaTypeRegistrations.class );
 			if ( annotation != null ) {
 				final JavaTypeRegistration[] registrations = annotation.value();
 				for ( int i = 0; i < registrations.length; i++ ) {
-					handleJavaTypeDescriptorRegistration( context, managedBeanRegistry, registrations[i] );
+					handleJavaTypeRegistration( context, managedBeanRegistry, registrations[i] );
 				}
 			}
 		}
 
 		final JdbcTypeRegistration jdbcTypeAnn = annotatedElement.getAnnotation( JdbcTypeRegistration.class );
 		if ( jdbcTypeAnn != null ) {
-			handleSqlTypeDescriptorRegistration( context, managedBeanRegistry, jdbcTypeAnn );
+			handleJdbcTypeRegistration( context, managedBeanRegistry, jdbcTypeAnn );
 		}
 		else {
 			final JdbcTypeRegistrations jdbcTypesAnn = annotatedElement.getAnnotation( JdbcTypeRegistrations.class );
 			if ( jdbcTypesAnn != null ) {
 				final JdbcTypeRegistration[] registrations = jdbcTypesAnn.value();
 				for ( int i = 0; i < registrations.length; i++ ) {
-					handleSqlTypeDescriptorRegistration( context, managedBeanRegistry, registrations[ i ] );
+					handleJdbcTypeRegistration( context, managedBeanRegistry, registrations[ i ] );
 				}
 			}
 		}
@@ -945,7 +945,7 @@ public final class AnnotationBinder {
 		}
 	}
 
-	private static void handleSqlTypeDescriptorRegistration(
+	private static void handleJdbcTypeRegistration(
 			MetadataBuildingContext context,
 			ManagedBeanRegistry managedBeanRegistry,
 			JdbcTypeRegistration annotation) {
@@ -958,7 +958,7 @@ public final class AnnotationBinder {
 		context.getMetadataCollector().addJdbcTypeRegistration( typeCode, jdbcType );
 	}
 
-	private static void handleJavaTypeDescriptorRegistration(
+	private static void handleJavaTypeRegistration(
 			MetadataBuildingContext context,
 			ManagedBeanRegistry managedBeanRegistry,
 			JavaTypeRegistration annotation) {

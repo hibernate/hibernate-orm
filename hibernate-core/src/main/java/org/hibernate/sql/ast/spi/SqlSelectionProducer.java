@@ -19,12 +19,12 @@ public interface SqlSelectionProducer {
 	 *
 	 * @param jdbcPosition The index position used to read values from JDBC
 	 * @param valuesArrayPosition The position in our {@linkplain RowProcessingState#getJdbcValue(SqlSelection) "current JDBC values array"}
-	 * @param javaTypeDescriptor The descriptor for the Java type to read the value as
+	 * @param javaType The descriptor for the Java type to read the value as
 	 * @param typeConfiguration The associated TypeConfiguration
 	 */
 	SqlSelection createSqlSelection(
 			int jdbcPosition,
 			int valuesArrayPosition,
-			JavaType javaTypeDescriptor,
+			JavaType javaType,
 			TypeConfiguration typeConfiguration);
 }

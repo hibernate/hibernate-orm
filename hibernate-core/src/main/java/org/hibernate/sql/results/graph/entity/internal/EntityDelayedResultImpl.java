@@ -45,8 +45,8 @@ public class EntityDelayedResultImpl implements DomainResult {
 	}
 
 	@Override
-	public JavaType<?> getResultJavaTypeDescriptor() {
-		return entityValuedModelPart.getAssociatedEntityMappingType().getMappedJavaTypeDescriptor();
+	public JavaType<?> getResultJavaType() {
+		return entityValuedModelPart.getAssociatedEntityMappingType().getMappedJavaType();
 	}
 
 	@Override
@@ -75,7 +75,7 @@ public class EntityDelayedResultImpl implements DomainResult {
 				)
 		);
 
-		return new EntityAssembler( getResultJavaTypeDescriptor(), initializer );
+		return new EntityAssembler( getResultJavaType(), initializer );
 	}
 
 	@Override

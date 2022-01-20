@@ -51,7 +51,7 @@ import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.TypeConfigurationAware;
@@ -68,7 +68,7 @@ import static org.hibernate.mapping.MappingHelper.injectParameters;
  * @author Steve Ebersole
  */
 @SuppressWarnings({"unchecked", "rawtypes"})
-public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicators, Resolvable {
+public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resolvable {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( BasicValue.class );
 
 	private final TypeConfiguration typeConfiguration;
@@ -301,7 +301,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 		if ( column instanceof Column && resolution.getValueConverter() == null ) {
 			final Column physicalColumn = (Column) column;
 			if ( physicalColumn.getSqlTypeCode() == null ) {
-				physicalColumn.setSqlTypeCode( resolution.getJdbcTypeDescriptor().getDefaultSqlTypeCode() );
+				physicalColumn.setSqlTypeCode( resolution.getJdbcType().getDefaultSqlTypeCode() );
 			}
 
 			final BasicType<?> basicType = resolution.getLegacyResolvedBasicType();
@@ -311,7 +311,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 				physicalColumn.setCheckConstraint(
 						basicType.getJavaTypeDescriptor().getCheckCondition(
 								physicalColumn.getQuotedName( dialect ),
-								basicType.getJdbcTypeDescriptor(),
+								basicType.getJdbcType(),
 								dialect
 						)
 				);
@@ -402,13 +402,13 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 			if ( implicitJavaTypeAccess != null ) {
 				final java.lang.reflect.Type implicitJtd = implicitJavaTypeAccess.apply( typeConfiguration );
 				if ( implicitJtd != null ) {
-					jtd = typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( implicitJtd );
+					jtd = typeConfiguration.getJavaTypeRegistry().getDescriptor( implicitJtd );
 				}
 			}
 		}
 
 		if ( jtd == null ) {
-			final JavaType reflectedJtd = determineReflectedJavaTypeDescriptor();
+			final JavaType reflectedJtd = determineReflectedJavaType();
 			if ( reflectedJtd != null ) {
 				jtd = reflectedJtd;
 			}
@@ -424,7 +424,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 		}
 
 		if ( jtd == null ) {
-			throw new MappingException( "Unable to determine JavaTypeDescriptor to use : " + this );
+			throw new MappingException( "Unable to determine JavaType to use : " + this );
 		}
 
 		final TypeDefinitionRegistry typeDefinitionRegistry = getBuildingContext().getTypeDefinitionRegistry();
@@ -443,7 +443,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 				explicitJavaTypeAccess,
 				explicitJdbcTypeAccess,
 				resolvedJavaType,
-				this::determineReflectedJavaTypeDescriptor,
+				this::determineReflectedJavaType,
 				this,
 				getTable(),
 				getColumn(),
@@ -454,7 +454,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 
 	}
 
-	private JavaType determineReflectedJavaTypeDescriptor() {
+	private JavaType determineReflectedJavaType() {
 		final java.lang.reflect.Type impliedJavaType;
 
 		if ( resolvedJavaType != null ) {
@@ -483,7 +483,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 			return null;
 		}
 
-		return typeConfiguration.getJavaTypeDescriptorRegistry().resolveDescriptor( impliedJavaType );
+		return typeConfiguration.getJavaTypeRegistry().resolveDescriptor( impliedJavaType );
 	}
 
 
@@ -498,7 +498,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 			ConverterDescriptor converterDescriptor,
 			Map localTypeParams,
 			Consumer<Properties> combinedParameterConsumer,
-			JdbcTypeDescriptorIndicators stdIndicators,
+			JdbcTypeIndicators stdIndicators,
 			TypeConfiguration typeConfiguration,
 			MetadataBuildingContext context) {
 
@@ -556,7 +556,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 			final JavaType<?> domainJtd;
 			if ( converterDescriptor != null ) {
 				valueConverter = converterDescriptor.createJpaAttributeConverter( converterCreationContext );
-				domainJtd = valueConverter.getDomainJavaDescriptor();
+				domainJtd = valueConverter.getDomainJavaType();
 			}
 			else if ( basicTypeByName instanceof ConvertedBasicType ) {
 				final ConvertedBasicType convertedType = (ConvertedBasicType) basicTypeByName;
@@ -804,25 +804,25 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 		JdbcMapping getJdbcMapping();
 
 		/**
-		 * The JavaTypeDescriptor for the value as part of the domain model
+		 * The JavaType for the value as part of the domain model
 		 */
-		JavaType<J> getDomainJavaDescriptor();
+		JavaType<J> getDomainJavaType();
 
 		/**
-		 * The JavaTypeDescriptor for the relational value as part of
+		 * The JavaType for the relational value as part of
 		 * the relational model (its JDBC representation)
 		 */
-		JavaType<?> getRelationalJavaDescriptor();
+		JavaType<?> getRelationalJavaType();
 
 		/**
-		 * The JavaTypeDescriptor for the relational value as part of
+		 * The JavaType for the relational value as part of
 		 * the relational model (its JDBC representation)
 		 */
-		JdbcType getJdbcTypeDescriptor();
+		JdbcType getJdbcType();
 
 		/**
 		 * Converter, if any, to convert values between the
-		 * domain and relational JavaTypeDescriptor representations
+		 * domain and relational JavaType representations
 		 */
 		BasicValueConverter getValueConverter();
 

@@ -47,7 +47,7 @@ public class ListIndexJdbcTypeTests {
 		final MetadataImplementor domainModel = scope.getDomainModel();
 		final PersistentClass entityBinding = domainModel.getEntityBinding( TheEntity.class.getName() );
 		final JdbcTypeRegistry jdbcTypeRegistry = domainModel.getTypeConfiguration()
-				.getJdbcTypeDescriptorRegistry();
+				.getJdbcTypeRegistry();
 
 		verifyJdbcTypeCodes( entityBinding.getProperty( "listOfStrings" ), Types.TINYINT );
 
@@ -75,7 +75,7 @@ public class ListIndexJdbcTypeTests {
 		assertThat( listValue.getIndex(), instanceOf( BasicValue.class ) );
 		final BasicValue indexValue = (BasicValue) listValue.getIndex();
 		final BasicValue.Resolution<?> indexResolution = indexValue.resolve();
-		typeVerifier.accept( indexResolution.getJdbcTypeDescriptor() );
+		typeVerifier.accept( indexResolution.getJdbcType() );
 	}
 
 	@Entity( name = "TheEntity" )

@@ -23,8 +23,8 @@ public class EmbeddableAssembler implements DomainResultAssembler {
 	}
 
 	@Override
-	public JavaType getAssembledJavaTypeDescriptor() {
-		return initializer.getInitializedPart().getJavaTypeDescriptor();
+	public JavaType getAssembledJavaType() {
+		return initializer.getInitializedPart().getJavaType();
 	}
 
 	@Override

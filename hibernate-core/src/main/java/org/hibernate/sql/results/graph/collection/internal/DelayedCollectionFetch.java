@@ -67,7 +67,7 @@ public class DelayedCollectionFetch extends CollectionFetch {
 	}
 
 	@Override
-	public JavaType<?> getResultJavaTypeDescriptor() {
-		return getFetchedMapping().getJavaTypeDescriptor();
+	public JavaType<?> getResultJavaType() {
+		return getFetchedMapping().getJavaType();
 	}
 }

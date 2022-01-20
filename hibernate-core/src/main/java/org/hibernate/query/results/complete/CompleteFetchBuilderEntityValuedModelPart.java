@@ -91,7 +91,7 @@ public class CompleteFetchBuilderEntityValuedModelPart
 										return new ResultSetMappingSqlSelection( valuesArrayPosition, selectableMapping.getJdbcMapping() );
 									}
 							),
-							modelPart.getJavaTypeDescriptor(),
+							modelPart.getJavaType(),
 							creationStateImpl.getSessionFactory().getTypeConfiguration()
 					);
 				}

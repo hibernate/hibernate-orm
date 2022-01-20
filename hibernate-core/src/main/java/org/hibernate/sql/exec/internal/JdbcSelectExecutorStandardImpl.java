@@ -639,14 +639,14 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		@Override
 		public <J> BasicType<J> resolveType(
 				int position,
-				JavaType<J> explicitJavaTypeDescriptor,
+				JavaType<J> explicitJavaType,
 				SessionFactoryImplementor sessionFactory) {
 			if ( columnNames == null ) {
 				initializeArrays();
 			}
 			final BasicType<J> basicType = resultSetAccess.resolveType(
 					position,
-					explicitJavaTypeDescriptor,
+					explicitJavaType,
 					sessionFactory
 			);
 			types[position - 1] = basicType;
@@ -696,20 +696,20 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		@Override
 		public <J> BasicType<J> resolveType(
 				int position,
-				JavaType<J> explicitJavaTypeDescriptor,
+				JavaType<J> explicitJavaType,
 				SessionFactoryImplementor sessionFactory) {
 			final BasicType<?> type = types[position - 1];
 			if ( type == null ) {
 				throw new IllegalStateException( "Unexpected resolving of unavailable column at position: " + position );
 			}
-			if ( explicitJavaTypeDescriptor == null || type.getJavaTypeDescriptor() == explicitJavaTypeDescriptor ) {
+			if ( explicitJavaType == null || type.getJavaTypeDescriptor() == explicitJavaType ) {
 				//noinspection unchecked
 				return (BasicType<J>) type;
 			}
 			else {
 				return sessionFactory.getTypeConfiguration().getBasicTypeRegistry().resolve(
-						explicitJavaTypeDescriptor,
-						type.getJdbcTypeDescriptor()
+						explicitJavaType,
+						type.getJdbcType()
 				);
 			}
 		}

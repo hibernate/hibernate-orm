@@ -32,10 +32,10 @@ public interface JdbcMapping extends MappingType, JdbcMappingContainer {
 	 * The descriptor for the SQL type represented by this
 	 * expressable type
 	 */
-	JdbcType getJdbcTypeDescriptor();
+	JdbcType getJdbcType();
 
 	default CastType getCastType() {
-		return getJdbcTypeDescriptor().getCastType();
+		return getJdbcType().getCastType();
 	}
 
 	/**
@@ -51,7 +51,7 @@ public interface JdbcMapping extends MappingType, JdbcMappingContainer {
 	ValueBinder getJdbcValueBinder();
 
 	@Override
-	default JavaType getMappedJavaTypeDescriptor() {
+	default JavaType getMappedJavaType() {
 		return getJavaTypeDescriptor();
 	}
 

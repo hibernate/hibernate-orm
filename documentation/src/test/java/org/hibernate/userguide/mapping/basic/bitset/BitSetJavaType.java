@@ -10,16 +10,16 @@ import java.sql.Types;
 import java.util.BitSet;
 
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.AbstractClassJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.AbstractClassJavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 
 /**
  * @author Vlad Mihalcea
  */
 //tag::basic-bitset-example-java-type[]
-public class BitSetJavaType extends AbstractClassJavaTypeDescriptor<BitSet> {
+public class BitSetJavaType extends AbstractClassJavaType<BitSet> {
     public static final BitSetJavaType INSTANCE = new BitSetJavaType();
 
     public BitSetJavaType() {
@@ -32,9 +32,9 @@ public class BitSetJavaType extends AbstractClassJavaTypeDescriptor<BitSet> {
     }
 
     @Override
-    public JdbcType getRecommendedJdbcType(JdbcTypeDescriptorIndicators indicators) {
+    public JdbcType getRecommendedJdbcType(JdbcTypeIndicators indicators) {
         return indicators.getTypeConfiguration()
-                .getJdbcTypeDescriptorRegistry()
+                .getJdbcTypeRegistry()
                 .getDescriptor(Types.VARCHAR);
     }
 

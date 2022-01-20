@@ -25,7 +25,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 import org.hibernate.query.spi.QueryImplementor;
-import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 
 import org.assertj.core.api.Assertions;
 
@@ -47,14 +47,14 @@ public class LiteralTests {
 		scope.inTransaction(
 				session -> {
 					byte[] bytes1 = (byte[]) session.createQuery( "select X'DEADBEEF'" ).getSingleResult();
-					assertThat( PrimitiveByteArrayJavaTypeDescriptor.INSTANCE.toString( bytes1), is( "deadbeef") );
+					assertThat( PrimitiveByteArrayJavaType.INSTANCE.toString( bytes1), is( "deadbeef") );
 					byte[] bytes2 = (byte[]) session.createQuery( "select X'deadbeef'" ).getSingleResult();
-					assertThat( PrimitiveByteArrayJavaTypeDescriptor.INSTANCE.toString(bytes2), is("deadbeef") );
+					assertThat( PrimitiveByteArrayJavaType.INSTANCE.toString( bytes2), is( "deadbeef") );
 
 					byte[] bytes3 = (byte[]) session.createQuery( "select {0xDE, 0xAD, 0xBE, 0xEF}" ).getSingleResult();
-					assertThat( PrimitiveByteArrayJavaTypeDescriptor.INSTANCE.toString(bytes3), is("deadbeef") );
+					assertThat( PrimitiveByteArrayJavaType.INSTANCE.toString( bytes3), is( "deadbeef") );
 					byte[] bytes4 = (byte[]) session.createQuery( "select {0xde, 0xad, 0xbe, 0xef}" ).getSingleResult();
-					assertThat( PrimitiveByteArrayJavaTypeDescriptor.INSTANCE.toString(bytes4), is("deadbeef") );
+					assertThat( PrimitiveByteArrayJavaType.INSTANCE.toString( bytes4), is( "deadbeef") );
 				}
 		);
 	}

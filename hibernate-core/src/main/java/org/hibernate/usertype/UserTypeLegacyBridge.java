@@ -67,7 +67,7 @@ public class UserTypeLegacyBridge extends BaseUserTypeSupport<Object> implements
 
 		resolutionConsumer.accept(
 				registeredType.getJavaTypeDescriptor(),
-				registeredType.getJdbcTypeDescriptor()
+				registeredType.getJdbcType()
 		);
 	}
 }

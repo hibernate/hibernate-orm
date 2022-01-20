@@ -52,35 +52,35 @@ public abstract class BlobJdbcType implements JdbcType {
 			Integer length,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
-		return (BasicJavaType<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Blob.class );
+		return (BasicJavaType<T>) typeConfiguration.getJavaTypeRegistry().getDescriptor( Blob.class );
 	}
 
 	@Override
-	public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaTypeDescriptor) {
-		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
+	public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaType) {
+		return new BasicExtractor<X>( javaType, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( rs.getBlob( paramIndex ), options );
+				return javaType.wrap( rs.getBlob( paramIndex ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( statement.getBlob( index ), options );
+				return javaType.wrap( statement.getBlob( index ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
 					throws SQLException {
-				return javaTypeDescriptor.wrap( statement.getBlob( name ), options );
+				return javaType.wrap( statement.getBlob( name ), options );
 			}
 		};
 	}
 
-	protected abstract <X> BasicBinder<X> getBlobBinder(final JavaType<X> javaTypeDescriptor);
+	protected abstract <X> BasicBinder<X> getBlobBinder(final JavaType<X> javaType);
 
 	@Override
-	public <X> BasicBinder<X> getBinder(final JavaType<X> javaTypeDescriptor) {
-		return getBlobBinder( javaTypeDescriptor );
+	public <X> BasicBinder<X> getBinder(final JavaType<X> javaType) {
+		return getBlobBinder( javaType );
 	}
 
 	public static final BlobJdbcType DEFAULT = new BlobJdbcType() {
@@ -90,8 +90,8 @@ public abstract class BlobJdbcType implements JdbcType {
 		}
 
 		@Override
-		public <X> BasicBinder<X> getBlobBinder(final JavaType<X> javaTypeDescriptor) {
-			return new BasicBinder<X>( javaTypeDescriptor, this ) {
+		public <X> BasicBinder<X> getBlobBinder(final JavaType<X> javaType) {
+			return new BasicBinder<X>( javaType, this ) {
 				@Override
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 						throws SQLException {
@@ -103,7 +103,7 @@ public abstract class BlobJdbcType implements JdbcType {
 					else if ( options.useStreamForLobBinding() ) {
 						descriptor = STREAM_BINDING;
 					}
-					descriptor.getBlobBinder( javaTypeDescriptor ).doBind( st, value, index, options );
+					descriptor.getBlobBinder( javaType ).doBind( st, value, index, options );
 				}
 
 				@Override
@@ -117,7 +117,7 @@ public abstract class BlobJdbcType implements JdbcType {
 					else if ( options.useStreamForLobBinding() ) {
 						descriptor = STREAM_BINDING;
 					}
-					descriptor.getBlobBinder( javaTypeDescriptor ).doBind( st, value, name, options );
+					descriptor.getBlobBinder( javaType ).doBind( st, value, name, options );
 				}
 			};
 		}
@@ -130,18 +130,18 @@ public abstract class BlobJdbcType implements JdbcType {
 		}
 
 		@Override
-		public <X> BasicBinder<X> getBlobBinder(final JavaType<X> javaTypeDescriptor) {
-			return new BasicBinder<X>( javaTypeDescriptor, this ) {
+		public <X> BasicBinder<X> getBlobBinder(final JavaType<X> javaType) {
+			return new BasicBinder<X>( javaType, this ) {
 				@Override
 				public void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 						throws SQLException {
-					st.setBytes( index, javaTypeDescriptor.unwrap( value, byte[].class, options ) );
+					st.setBytes( index, javaType.unwrap( value, byte[].class, options ) );
 				}
 
 				@Override
 				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 						throws SQLException {
-					st.setBytes( name, javaTypeDescriptor.unwrap( value, byte[].class, options ) );
+					st.setBytes( name, javaType.unwrap( value, byte[].class, options ) );
 				}
 			};
 		}
@@ -154,18 +154,18 @@ public abstract class BlobJdbcType implements JdbcType {
 		}
 
 		@Override
-		public <X> BasicBinder<X> getBlobBinder(final JavaType<X> javaTypeDescriptor) {
-			return new BasicBinder<X>( javaTypeDescriptor, this ) {
+		public <X> BasicBinder<X> getBlobBinder(final JavaType<X> javaType) {
+			return new BasicBinder<X>( javaType, this ) {
 				@Override
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 						throws SQLException {
-					st.setBlob( index, javaTypeDescriptor.unwrap( value, Blob.class, options ) );
+					st.setBlob( index, javaType.unwrap( value, Blob.class, options ) );
 				}
 
 				@Override
 				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 						throws SQLException {
-					st.setBlob( name, javaTypeDescriptor.unwrap( value, Blob.class, options ) );
+					st.setBlob( name, javaType.unwrap( value, Blob.class, options ) );
 				}
 			};
 		}
@@ -178,12 +178,12 @@ public abstract class BlobJdbcType implements JdbcType {
 		}
 
 		@Override
-		public <X> BasicBinder<X> getBlobBinder(final JavaType<X> javaTypeDescriptor) {
-			return new BasicBinder<X>( javaTypeDescriptor, this ) {
+		public <X> BasicBinder<X> getBlobBinder(final JavaType<X> javaType) {
+			return new BasicBinder<X>( javaType, this ) {
 				@Override
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 						throws SQLException {
-					final BinaryStream binaryStream = javaTypeDescriptor.unwrap(
+					final BinaryStream binaryStream = javaType.unwrap(
 							value,
 							BinaryStream.class,
 							options
@@ -194,7 +194,7 @@ public abstract class BlobJdbcType implements JdbcType {
 				@Override
 				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 						throws SQLException {
-					final BinaryStream binaryStream = javaTypeDescriptor.unwrap(
+					final BinaryStream binaryStream = javaType.unwrap(
 							value,
 							BinaryStream.class,
 							options

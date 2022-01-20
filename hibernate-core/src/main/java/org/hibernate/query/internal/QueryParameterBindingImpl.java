@@ -20,7 +20,7 @@ import org.hibernate.query.spi.QueryParameterBindingValidator;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.type.descriptor.java.CoercionException;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.TemporalJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.TemporalJavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.TemporalType;
@@ -150,7 +150,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 		final SqmExpressable<T> sqmExpressable = parameterType.resolveExpressable( sessionFactory );
 		assert sqmExpressable != null;
 
-		return sqmExpressable.getExpressableJavaTypeDescriptor().coerce( value, this );
+		return sqmExpressable.getExpressableJavaType().coerce( value, this );
 	}
 
 	private boolean handleAsMultiValue(T value) {
@@ -301,7 +301,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 	}
 
 	private void setExplicitTemporalPrecision(TemporalType temporalTypePrecision) {
-		if ( bindType == null || determineJavaType( bindType ) instanceof TemporalJavaTypeDescriptor<?> ) {
+		if ( bindType == null || determineJavaType( bindType ) instanceof TemporalJavaType<?> ) {
 			this.bindType = BindingTypeHelper.INSTANCE.resolveTemporalPrecision(
 					temporalTypePrecision,
 					bindType,
@@ -316,7 +316,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 		final SqmExpressable<T> sqmExpressable = bindType.resolveExpressable( sessionFactory );
 		assert sqmExpressable != null;
 
-		return sqmExpressable.getExpressableJavaTypeDescriptor();
+		return sqmExpressable.getExpressableJavaType();
 	}
 
 	@Override

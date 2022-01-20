@@ -233,7 +233,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 			return false;
 		}
 
-		final Object idValue = entityDescriptor.getIdentifierMapping().getJavaTypeDescriptor().coerce(
+		final Object idValue = entityDescriptor.getIdentifierMapping().getJavaType().coerce(
 				identifier,
 				sessionFactory::getTypeConfiguration
 		);

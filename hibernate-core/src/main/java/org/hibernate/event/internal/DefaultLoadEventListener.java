@@ -143,7 +143,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 					else {
 						mappedType = parentIdTargetIdMapping.getMappedType();
 					}
-					final JavaType<?> parentIdJtd = mappedType.getMappedJavaTypeDescriptor();
+					final JavaType<?> parentIdJtd = mappedType.getMappedJavaType();
 					if ( parentIdJtd.getJavaTypeClass().isInstance( event.getEntityId() ) ) {
 						// yep that's what we have...
 						loadByDerivedIdentitySimplePkValue(

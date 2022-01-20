@@ -25,13 +25,11 @@ import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
 import org.hibernate.sql.ast.tree.expression.TrimSpecification;
 import org.hibernate.sql.exec.spi.JdbcOperation;
-import org.hibernate.type.descriptor.java.CharacterJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.CharacterJavaType;
 import org.hibernate.type.descriptor.jdbc.CharJdbcType;
 import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import org.hibernate.testing.orm.junit.FailureExpected;
-import org.hibernate.testing.orm.junit.SessionFactory;
 import org.junit.Test;
 
 import org.mockito.Mockito;
@@ -130,7 +128,7 @@ public class AnsiTrimEmulationFunctionTest  {
 		);
 		List<SqlAstNode> sqlAstArguments = new ArrayList<>();
 		sqlAstArguments.add( new TrimSpecification( trimSpec ) );
-		sqlAstArguments.add( new QueryLiteral<>( trimCharacter, new BasicTypeImpl<>( CharacterJavaTypeDescriptor.INSTANCE, CharJdbcType.INSTANCE ) ) );
+		sqlAstArguments.add( new QueryLiteral<>( trimCharacter, new BasicTypeImpl<>( CharacterJavaType.INSTANCE, CharJdbcType.INSTANCE ) ) );
 		sqlAstArguments.add( new SelfRenderingExpression() {
 			@Override
 			public void renderToSql(

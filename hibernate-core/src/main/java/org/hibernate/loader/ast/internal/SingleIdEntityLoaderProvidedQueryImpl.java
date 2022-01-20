@@ -41,7 +41,7 @@ public class SingleIdEntityLoaderProvidedQueryImpl<T> implements SingleIdEntityL
 		//noinspection unchecked
 		final QueryImplementor<T> query = namedQueryMemento.toQuery(
 				session,
-				entityDescriptor.getMappedJavaTypeDescriptor().getJavaTypeClass()
+				entityDescriptor.getMappedJavaType().getJavaTypeClass()
 		);
 
 		query.setParameter( 1, pkValue );

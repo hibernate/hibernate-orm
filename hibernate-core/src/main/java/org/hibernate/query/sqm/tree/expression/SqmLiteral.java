@@ -55,9 +55,9 @@ public class SqmLiteral<T> extends AbstractSqmExpression<T> {
 		appendHqlString( sb, getJavaTypeDescriptor(), value );
 	}
 
-	public static <T> void appendHqlString(StringBuilder sb, JavaType<T> javaTypeDescriptor, T value) {
-		final String string = javaTypeDescriptor.toString( value );
-		if ( javaTypeDescriptor.getJavaTypeClass() == String.class ) {
+	public static <T> void appendHqlString(StringBuilder sb, JavaType<T> javaType, T value) {
+		final String string = javaType.toString( value );
+		if ( javaType.getJavaTypeClass() == String.class ) {
 			QueryLiteralHelper.appendStringLiteral( sb, string );
 		}
 		else {

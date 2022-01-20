@@ -23,7 +23,7 @@ import org.hibernate.type.descriptor.jdbc.TimestampJdbcType;
  * datatype is supported).  Depends on the frequency of DML operations...
  *
  * @author Steve Ebersole
- * @deprecated We should replace this with a different contract to handle DB generation
+ * @deprecated Use {@link org.hibernate.tuple.ValueGeneration} instead
  */
 @Deprecated
 public class DbTimestampType extends AbstractSingleColumnStandardBasicType<Date> {

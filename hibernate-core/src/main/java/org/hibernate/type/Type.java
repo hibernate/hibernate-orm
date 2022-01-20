@@ -13,6 +13,7 @@ import java.sql.SQLException;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.Mapping;
@@ -34,6 +35,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  * @author Gavin King
  * @author Steve Ebersole
  */
+@Internal
 public interface Type extends Serializable {
 	/**
 	 * Return true if the implementation is castable to {@link AssociationType}. This does not necessarily imply that

@@ -564,16 +564,6 @@ It follows a pattern similar to the ANSI SQL definition of the global temporary 
 +
 This configuration property defines the database catalog used for storing the temporary tables used for bulk HQL operations.
 
-`*hibernate.query.conventional_java_constants*` (e.g. `true` (default value) or `false`)::
-Setting which indicates whether or not Java constants follow the https://docs.oracle.com/javase/tutorial/java/nutsandbolts/variables.html[Java Naming conventions].
-+
-The default is `true`.
-Existing applications may want to disable this (set it `false`) if non-conventional Java constants are used.
-However, there is a significant performance overhead for using non-conventional Java constants
-since Hibernate cannot determine if aliases should be treated as Java constants or not.
-+
-Check out https://hibernate.atlassian.net/browse/HHH-4959[HHH-4959] for more details.
-
 [[configurations-batch]]
 === Batching properties
 

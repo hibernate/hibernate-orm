@@ -230,11 +230,6 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
-	public boolean isConventionalJavaConstants() {
-		return delegate.isConventionalJavaConstants();
-	}
-
-	@Override
 	public boolean isAllowOutOfTransactionUpdateOperations() {
 		return delegate.isAllowOutOfTransactionUpdateOperations();
 	}

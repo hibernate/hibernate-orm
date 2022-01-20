@@ -986,18 +986,6 @@ public interface AvailableSettings {
 	String QUERY_STARTUP_CHECKING = "hibernate.query.startup_check";
 
 	/**
-	 * Setting which indicates whether or not Java constant follow the Java Naming conventions.
-	 * <p/>
-	 * Default is {@code true}. Existing applications may want to disable this (set it {@code false})
-	 * if unconventional Java constants are used. However, there is a significant performance overhead
-	 * for using unconventional Java constants since Hibernate cannot determine if aliases should be
-	 * treated as Java constants or not.
-	 *
-	 * @since 5.2
-	 */
-	String CONVENTIONAL_JAVA_CONSTANTS = "hibernate.query.conventional_java_constants";
-
-	/**
 	 * Enable ordering of update statements by primary key value
 	 */
 	String ORDER_UPDATES = "hibernate.order_updates";

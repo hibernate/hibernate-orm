@@ -239,13 +239,6 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	}
 
 	@Override
-	@SuppressWarnings("deprecation")
-	public T applyQuerySubstitutions(Map substitutions) {
-		delegate.applyQuerySubstitutions( substitutions );
-		return getThis();
-	}
-
-	@Override
 	public T applyStrictJpaQueryLanguageCompliance(boolean enabled) {
 		delegate.applyStrictJpaQueryLanguageCompliance( enabled );
 		return getThis();
@@ -320,12 +313,6 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	@Override
 	public T applyScrollableResultsSupport(boolean enabled) {
 		delegate.applyScrollableResultsSupport( enabled );
-		return getThis();
-	}
-
-	@Override
-	public T applyResultSetsWrapping(boolean enabled) {
-		delegate.applyResultSetsWrapping( enabled );
 		return getThis();
 	}
 

@@ -1403,9 +1403,6 @@ By default, the `SQLExceptionConverter` is defined by the configured Hibernate `
 https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/dialect/Dialect.html#buildSQLExceptionConversionDelegate--[`buildSQLExceptionConversionDelegate`] method
 which is overridden by several database-specific ``Dialect``s.
 
-However, it is also possible to plug in a custom implementation. See the
-<<appendices/Configurations.adoc#configurations-exception-handling,`hibernate.jdbc.sql_exception_converter`>> configuration property for more details.
-
 The standard `JDBCException` subtypes are:
 
 ConstraintViolationException::

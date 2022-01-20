@@ -24,9 +24,8 @@ public class QueryExceptionHandlingTest extends BaseExceptionHandlingTest {
 
 	public QueryExceptionHandlingTest(
 			BootstrapMethod bootstrapMethod,
-			ExceptionHandlingSetting exceptionHandlingSetting,
 			ExceptionExpectations exceptionExpectations) {
-		super( bootstrapMethod, exceptionHandlingSetting, exceptionExpectations );
+		super( bootstrapMethod, exceptionExpectations );
 	}
 
 	@Override

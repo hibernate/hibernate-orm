@@ -262,12 +262,6 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
-	public SessionFactoryBuilder applyQuerySubstitutions(@SuppressWarnings("rawtypes") Map substitutions) {
-		this.optionsBuilder.applyQuerySubstitutions( substitutions );
-		return this;
-	}
-
-	@Override
 	public SessionFactoryBuilder applyNamedQueryCheckingOnStartup(boolean enabled) {
 		this.optionsBuilder.enableNamedQueryCheckingOnStartup( enabled );
 		return this;
@@ -336,12 +330,6 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public SessionFactoryBuilder applyScrollableResultsSupport(boolean enabled) {
 		this.optionsBuilder.enableScrollableResultSupport( enabled );
-		return this;
-	}
-
-	@Override
-	public SessionFactoryBuilder applyResultSetsWrapping(boolean enabled) {
-		this.optionsBuilder.enableResultSetWrappingSupport( enabled );
 		return this;
 	}
 

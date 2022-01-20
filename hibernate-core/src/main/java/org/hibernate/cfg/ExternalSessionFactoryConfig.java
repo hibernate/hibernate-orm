@@ -16,9 +16,8 @@ import java.util.Set;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 
 /**
- * Defines support for various externally configurable SessionFactory(s), for
- * example, {@link org.hibernate.jmx.HibernateService JMX} or the JCA
- * adapter.
+ * Defines support for various externally configurable SessionFactory(s),
+ * for example, the JCA adapter.
  *
  * @author Steve Ebersole
  */
@@ -35,7 +34,6 @@ public abstract class ExternalSessionFactoryConfig {
 	private String getGeneratedKeysEnabled;
 	private String streamsForBinaryEnabled;
 	private String reflectionOptimizationEnabled;
-	private String querySubstitutions;
 	private String showSqlEnabled;
 	private String commentsEnabled;
 	private String cacheRegionFactory;
@@ -160,14 +158,6 @@ public abstract class ExternalSessionFactoryConfig {
 		this.reflectionOptimizationEnabled = reflectionOptimizationEnabled;
 	}
 
-	public final String getQuerySubstitutions() {
-		return querySubstitutions;
-	}
-
-	public final void setQuerySubstitutions(String querySubstitutions) {
-		this.querySubstitutions = querySubstitutions;
-	}
-
 	public final String getShowSqlEnabled() {
 		return showSqlEnabled;
 	}
@@ -267,7 +257,6 @@ public abstract class ExternalSessionFactoryConfig {
 		setUnlessNull( props, Environment.USE_GET_GENERATED_KEYS, getGeneratedKeysEnabled );
 		setUnlessNull( props, Environment.USE_STREAMS_FOR_BINARY, streamsForBinaryEnabled );
 		setUnlessNull( props, Environment.USE_REFLECTION_OPTIMIZER, reflectionOptimizationEnabled );
-		setUnlessNull( props, Environment.QUERY_SUBSTITUTIONS, querySubstitutions );
 		setUnlessNull( props, Environment.SHOW_SQL, showSqlEnabled );
 		setUnlessNull( props, Environment.USE_SQL_COMMENTS, commentsEnabled );
 		setUnlessNull( props, Environment.CACHE_REGION_FACTORY, cacheRegionFactory );

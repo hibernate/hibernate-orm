@@ -27,9 +27,8 @@ import org.junit.Test;
 public class ConstraintViolationExceptionHandlingTest extends BaseExceptionHandlingTest {
 
 	public ConstraintViolationExceptionHandlingTest(BootstrapMethod bootstrapMethod,
-			ExceptionHandlingSetting exceptionHandlingSetting,
 			ExceptionExpectations exceptionExpectations) {
-		super( bootstrapMethod, exceptionHandlingSetting, exceptionExpectations );
+		super( bootstrapMethod, exceptionExpectations );
 	}
 
 	@Override

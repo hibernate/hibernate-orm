@@ -31,28 +31,6 @@ public interface DeprecationLogger extends BasicLogger {
 			CATEGORY
 	);
 
-	/**
-	 * Log about usage of deprecated Scanner setting
-	 */
-	@LogMessage( level = INFO )
-	@Message(
-			value = "Found usage of deprecated setting for specifying Scanner [hibernate.ejb.resource_scanner]; " +
-					"use [hibernate.archive.scanner] instead",
-			id = 90000001
-	)
-	public void logDeprecatedScannerSetting();
-
-//	/**
-//	 * Log message indicating the use of features that were only useful for DOM4J EntityMode,
-//	 * which was removed a long time ago.
-//	 */
-//	@LogMessage( level = WARN )
-//	@Message(
-//			value = "Use of DOM4J entity-mode is considered deprecated",
-//			id = 90000003
-//	)
-//	public void logDeprecationOfDomEntityModeSupport();
-
 	@LogMessage(level = WARN)
 	@Message(
 			value = "embed-xml attributes were intended to be used for DOM4J entity mode. Since that entity mode has been " +

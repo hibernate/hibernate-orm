@@ -225,11 +225,6 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
-	public Map getQuerySubstitutions() {
-		return delegate.getQuerySubstitutions();
-	}
-
-	@Override
 	public boolean isNamedQueryStartupCheckingEnabled() {
 		return delegate.isNamedQueryStartupCheckingEnabled();
 	}
@@ -307,11 +302,6 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	@Override
 	public boolean isScrollableResultSetsEnabled() {
 		return delegate.isScrollableResultSetsEnabled();
-	}
-
-	@Override
-	public boolean isWrapResultSetsEnabled() {
-		return delegate.isWrapResultSetsEnabled();
 	}
 
 	@Override
@@ -438,11 +428,6 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	@Override
 	public boolean inClauseParameterPaddingEnabled() {
 		return delegate.inClauseParameterPaddingEnabled();
-	}
-
-	@Override
-	public boolean nativeExceptionHandling51Compliance() {
-		return delegate.nativeExceptionHandling51Compliance();
 	}
 
 	@Override

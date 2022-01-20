@@ -25,9 +25,8 @@ import static org.junit.Assert.fail;
 public class TransientObjectExceptionHandlingTest extends BaseExceptionHandlingTest {
 
 	public TransientObjectExceptionHandlingTest(BootstrapMethod bootstrapMethod,
-			ExceptionHandlingSetting exceptionHandlingSetting,
 			ExceptionExpectations exceptionExpectations) {
-		super( bootstrapMethod, exceptionHandlingSetting, exceptionExpectations );
+		super( bootstrapMethod, exceptionExpectations );
 	}
 
 	@Override

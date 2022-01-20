@@ -101,12 +101,6 @@ public class BootstrapContextImpl implements BootstrapContext {
 
 		// ScanEnvironment must be set explicitly
 		this.scannerSetting = configService.getSettings().get( AvailableSettings.SCANNER );
-		if ( this.scannerSetting == null ) {
-			this.scannerSetting = configService.getSettings().get( AvailableSettings.SCANNER_DEPRECATED );
-			if ( this.scannerSetting != null ) {
-				DEPRECATION_LOGGER.logDeprecatedScannerSetting();
-			}
-		}
 		this.archiveDescriptorFactory = strategySelector.resolveStrategy(
 				ArchiveDescriptorFactory.class,
 				configService.getSettings().get( AvailableSettings.SCANNER_ARCHIVE_INTERPRETER )

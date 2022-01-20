@@ -8,19 +8,20 @@ package org.hibernate;
 
 import java.io.Serializable;
 import java.sql.Connection;
-import java.util.Map;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import javax.naming.Referenceable;
-import jakarta.persistence.EntityManagerFactory;
 
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.spi.FilterDefinition;
-import org.hibernate.jpa.HibernateEntityManagerFactory;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.stat.Statistics;
+
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.EntityManagerFactory;
 
 /**
  * The main contract here is the creation of {@link Session} instances.  Usually
@@ -38,7 +39,7 @@ import org.hibernate.stat.Statistics;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public interface SessionFactory extends EntityManagerFactory, HibernateEntityManagerFactory, Referenceable, Serializable, java.io.Closeable {
+public interface SessionFactory extends EntityManagerFactory, Referenceable, Serializable, java.io.Closeable {
 	/**
 	 * Get the special options used to build the factory.
 	 *
@@ -239,6 +240,13 @@ public interface SessionFactory extends EntityManagerFactory, HibernateEntityMan
 	 */
 	@Override
 	Cache getCache();
+
+	/**
+	 * Get all EntityGraphs registered for a particular entity type
+	 * 
+	 * @see #addNamedEntityGraph 
+	 */
+	<T> List<EntityGraph<? super T>> findEntityGraphsByType(Class<T> entityClass);
 
 	/**
 	 * Obtain a set of the names of all filters defined on this SessionFactory.

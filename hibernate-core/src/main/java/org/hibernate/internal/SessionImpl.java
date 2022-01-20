@@ -2213,9 +2213,6 @@ public class SessionImpl
 		return getHibernateFlushMode() != FlushMode.MANUAL;
 	}
 
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// HibernateEntityManager impl
-
 	@Override
 	public SessionImplementor getSession() {
 		return this;

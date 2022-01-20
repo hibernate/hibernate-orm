@@ -9,19 +9,17 @@
 
 package org.hibernate.orm.test.jpa;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceException;
-
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.SessionFactoryImpl;
-import org.hibernate.jpa.HibernateEntityManagerFactory;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
-
 import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceException;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -43,21 +41,6 @@ public class EntityManagerFactoryUnwrapTest {
 	public void testEntityManagerCanBeUnwrappedToSessionFactoryImplementor(EntityManagerFactoryScope scope) {
 		SessionFactoryImplementor sessionFactoryImplementor = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
 		assertNotNull( sessionFactoryImplementor, "Unwrapping to SPI class SessionFactoryImplementor should be ok" );
-	}
-
-	@Test
-	public void testEntityManagerCanBeUnwrappedToDeprecatedHibernateEntityManagerFactory(EntityManagerFactoryScope scope) {
-		HibernateEntityManagerFactory hibernateEntityManagerFactory = scope.getEntityManagerFactory().unwrap(
-				HibernateEntityManagerFactory.class
-		);
-		assertNotNull( hibernateEntityManagerFactory, "Unwrapping to SPI class HibernateEntityManagerFactory should be ok" );
-	}
-
-	@Test
-	public void testEntityManagerCanBeUnwrappedToHibernateEntityManagerFactory(EntityManagerFactoryScope scope) {
-		HibernateEntityManagerFactory hibernateEntityManagerFactory = scope.getEntityManagerFactory().unwrap(
-				HibernateEntityManagerFactory.class );
-		assertNotNull( hibernateEntityManagerFactory, "Unwrapping to SPI class HibernateEntityManagerFactory should be ok"	);
 	}
 
 	@Test

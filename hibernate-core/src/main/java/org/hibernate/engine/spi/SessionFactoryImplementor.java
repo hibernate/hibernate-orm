@@ -251,8 +251,7 @@ public interface SessionFactoryImplementor
 	@Override
 	MetamodelImplementor getMetamodel();
 
-	@Override
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	default <T> List<EntityGraph<? super T>> findEntityGraphsByType(Class<T> entityClass) {
 		return (List) findEntityGraphsByJavaType( entityClass );
 	}

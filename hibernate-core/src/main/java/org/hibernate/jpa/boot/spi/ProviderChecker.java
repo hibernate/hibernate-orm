@@ -9,7 +9,6 @@ package org.hibernate.jpa.boot.spi;
 import java.util.Map;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.internal.HEMLogging;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.NullnessHelper;
 import org.hibernate.jpa.HibernatePersistenceProvider;
@@ -18,7 +17,7 @@ import org.jboss.logging.Logger;
 
 /**
  * Helper for handling checks to see whether Hibernate is the requested
- * {@link jakarta.persistence.spi.PersistenceProvider}
+ * {@link jakarta.persistence.spi.PersistenceProvider}.
  *
  * @author Steve Ebersole
  */
@@ -28,8 +27,10 @@ public final class ProviderChecker {
 
 	/**
 	 * Does the descriptor and/or integration request Hibernate as the
-	 * {@link jakarta.persistence.spi.PersistenceProvider}?  Note that in the case of no requested provider being named
-	 * we assume we are the provider (the calls got to us somehow...)
+	 * {@link jakarta.persistence.spi.PersistenceProvider}?
+	 *
+	 * Note that in the case of no requested provider being named we assume we are the
+	 * provider (the calls got to us somehow...)
 	 *
 	 * @param persistenceUnit The {@code <persistence-unit/>} descriptor.
 	 * @param integration The integration values.
@@ -53,23 +54,14 @@ public final class ProviderChecker {
 				"Checking requested PersistenceProvider name [%s] against Hibernate provider names",
 				requestedProviderName
 		);
-		final String deprecatedPersistenceProvider = "org.hibernate.ejb.HibernatePersistence";
-		if ( deprecatedPersistenceProvider.equals( requestedProviderName) ) {
-			HEMLogging.messageLogger( ProviderChecker.class )
-					.deprecatedPersistenceProvider(
-					deprecatedPersistenceProvider,
-					HibernatePersistenceProvider.class.getName()
-			);
-			return true;
-		}
 		return HibernatePersistenceProvider.class.getName().equals( requestedProviderName );
 	}
 
 	/**
-	 * Extract the requested persistence provider name using the algorithm Hibernate
-	 * uses.  Namely, a provider named in the 'integration' map (under the key
-	 * '{@value AvailableSettings#JPA_PERSISTENCE_PROVIDER}') is preferred, as per-spec, over
-	 * value specified in persistence unit.
+	 * Extract the requested persistence provider name using the algorithm Hibernate uses.
+	 * Namely, a provider named in the 'integration' map (under the key
+	 * {@value AvailableSettings#JAKARTA_PERSISTENCE_PROVIDER}) is preferred, as per-spec,
+	 * over the value specified by the persistence unit.
 	 *
 	 * @param persistenceUnit The {@code <persistence-unit/>} descriptor.
 	 * @param integration The integration values.

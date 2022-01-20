@@ -62,7 +62,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
 
 /**
- * A dialect for CockroachDB.
+ * A {@linkplain Dialect SQL dialect} for CockroachDB.
  *
  * @author Gavin King
  */

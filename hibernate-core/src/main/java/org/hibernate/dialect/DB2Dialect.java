@@ -65,7 +65,7 @@ import jakarta.persistence.TemporalType;
 import static org.hibernate.type.SqlTypes.*;
 
 /**
- * An SQL dialect for DB2.
+ * A {@linkplain Dialect SQL dialect} for DB2.
  *
  * @author Gavin King
  */

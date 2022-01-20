@@ -76,7 +76,7 @@ import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTyp
 import static org.hibernate.type.SqlTypes.*;
 
 /**
- * Hibernate Dialect for Apache Derby / Cloudscape 10
+ * A {@linkplain Dialect SQL dialect} for Apache Derby.
  *
  * @author Simon Johnston
  * @author Gavin King

@@ -27,7 +27,7 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.StandardBasicTypes;
 
 /**
- * SQL dialect for MariaDB
+ * A {@linkplain Dialect SQL dialect} for MariaDB
  *
  * @author Vlad Mihalcea
  * @author Gavin King

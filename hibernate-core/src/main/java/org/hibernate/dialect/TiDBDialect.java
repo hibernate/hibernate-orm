@@ -22,7 +22,7 @@ import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorTi
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 
 /**
- * An SQL dialect for TiDB (prior to 5.x).
+ * A {@linkplain Dialect SQL dialect} for TiDB.
  *
  * @author Cong Wang
  */

@@ -221,10 +221,6 @@ By default, Hibernate uses the https://docs.jboss.org/hibernate/orm/{majorMinorV
 You can customize how the schema name is resolved by providing a custom implementation of the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/engine/jdbc/env/spi/SchemaNameResolver.html[`SchemaNameResolver`] interface.
 
 ==== Identifier options
-`*hibernate.id.new_generator_mappings*` (e.g. `true` (default value) or `false`)::
-Setting which indicates whether or not the new https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/id/IdentifierGenerator.html[`IdentifierGenerator`] are used for `AUTO`, `TABLE` and `SEQUENCE`.
-+
-Existing applications may want to disable this (set it `false`) for upgrade compatibility from 3.x and 4.x to 5.x.
 
 `*hibernate.use_identifier_rollback*` (e.g. `true` or `false` (default value))::
 If true, generated identifier properties are reset to default values when objects are deleted.
@@ -1002,39 +998,6 @@ Specifies a `SessionFactoryObserver` to be applied to the SessionFactory. The cl
 
 `*hibernate.ejb.event*` (e.g. `hibernate.ejb.event.pre-load` = `com.acme.SecurityListener,com.acme.AuditListener`)::
 Event listener list for a given event type. The list of event listeners is a comma separated fully qualified class name list.
-
-[[configurations-jmx]]
-=== JMX settings
-
-`*hibernate.jmx.enabled*` (e.g. `true` or `false` (default value))::
-Enable JMX.
-
-`*hibernate.jmx.usePlatformServer*` (e.g. `true` or `false` (default value))::
-Uses the platform MBeanServer as returned by `ManagementFactory#getPlatformMBeanServer()`.
-
-`*hibernate.jmx.agentId*`::
-The agent identifier of the associated `MBeanServer`.
-
-`*hibernate.jmx.defaultDomain*`::
-The domain name of the associated `MBeanServer`.
-
-`*hibernate.jmx.sessionFactoryName*`::
-The `SessionFactory` name appended to the object name the Manageable Bean is registered with. If null, the `hibernate.session_factory_name` configuration value is used.
-
-`*org.hibernate.core*`::
-The default object domain appended to the object name the Manageable Bean is registered with.
-
-[[configurations-jacc]]
-=== JACC settings
-
-`*hibernate.jacc.enabled*` (e.g. `true` or `false` (default value))::
-Is JACC enabled?
-
-`*hibernate.jacc*` (e.g. `hibernate.jacc.allowed.org.jboss.ejb3.test.jacc.AllEntity`)::
-The property name defines the role (e.g. `allowed`) and the entity class name (e.g. `org.jboss.ejb3.test.jacc.AllEntity`), while the property value defines the authorized actions (e.g. `insert,update,read`).
-
-`*hibernate.jacc_context_id*`::
-A String identifying the policy context whose PolicyConfiguration interface is to be returned. The value passed to this parameter must not be null.
 
 [[configurations-classloader]]
 === ClassLoaders property

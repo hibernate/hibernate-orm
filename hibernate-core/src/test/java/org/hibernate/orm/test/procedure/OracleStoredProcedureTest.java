@@ -39,7 +39,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.Id;
 import jakarta.persistence.NamedStoredProcedureQueries;
 import jakarta.persistence.NamedStoredProcedureQuery;
@@ -457,60 +456,31 @@ public class OracleStoredProcedureTest {
 
 	@AfterEach
 	public void cleanUpSchema(EntityManagerFactoryScope scope) {
-		EntityManager entityManager = scope.getEntityManagerFactory().createEntityManager();
-		entityManager.getTransaction().begin();
-
-		try {
-			Session session = entityManager.unwrap( Session.class );
+		scope.inEntityManager( (em) -> {
+			final Session session = em.unwrap( Session.class );
 			session.doWork( connection -> {
 				try (Statement statement = connection.createStatement()) {
 					statement.executeUpdate( "DROP PROCEDURE sp_count_phones" );
-				}
-				catch (SQLException ignore) {
-				}
-			} );
-		}
-		finally {
-			entityManager.getTransaction().rollback();
-			entityManager.close();
-		}
-
-		entityManager = scope.getEntityManagerFactory().createEntityManager();
-		entityManager.getTransaction().begin();
-
-		try {
-			Session session = entityManager.unwrap( Session.class );
-			session.doWork( connection -> {
-				try (Statement statement = connection.createStatement()) {
 					statement.executeUpdate( "DROP PROCEDURE sp_person_phones" );
-				}
-				catch (SQLException ignore) {
-				}
-			} );
-		}
-		finally {
-			entityManager.getTransaction().rollback();
-			entityManager.close();
-		}
-
-		entityManager = scope.getEntityManagerFactory().createEntityManager();
-		entityManager.getTransaction().begin();
-
-		try {
-			Session session = entityManager.unwrap( Session.class );
-			session.doWork( connection -> {
-				try (Statement statement = connection.createStatement()) {
+					statement.executeUpdate( "DROP PROCEDURE singleRefCursor" );
+					statement.executeUpdate( "DROP PROCEDURE outAndRefCursor" );
+					statement.executeUpdate( "DROP PROCEDURE sp_phone_validity" );
+					statement.executeUpdate( "DROP PROCEDURE sp_votes" );
 					statement.executeUpdate( "DROP FUNCTION fn_count_phones" );
+					statement.executeUpdate( "DROP FUNCTION fn_person_and_phones" );
+					statement.executeUpdate( "DROP FUNCTION find_char" );
 				}
 				catch (SQLException ignore) {
 				}
 			} );
-		}
-		finally {
-			entityManager.getTransaction().rollback();
-			entityManager.close();
-		}
-		scope.releaseEntityManagerFactory();
+
+			scope.inTransaction( em, (em2) -> {
+				final List<Person> people = em.createQuery( "from Person", Person.class ).getResultList();
+				people.forEach( em::remove );
+
+				em.createQuery( "delete IdHolder" ).executeUpdate();
+			});
+		} );
 	}
 
 	@NamedStoredProcedureQueries({

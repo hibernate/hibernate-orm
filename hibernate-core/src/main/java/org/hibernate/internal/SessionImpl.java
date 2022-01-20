@@ -183,7 +183,6 @@ public class SessionImpl
 
 	private boolean autoClear;
 	private boolean autoClose;
-	private boolean queryParametersValidationEnabled;
 
 	private transient int dontFlushFromFind;
 
@@ -201,7 +200,6 @@ public class SessionImpl
 
 		this.autoClear = options.shouldAutoClear();
 		this.autoClose = options.shouldAutoClose();
-		this.queryParametersValidationEnabled = options.isQueryParametersValidationEnabled();
 
 		if ( options instanceof SharedSessionCreationOptions ) {
 			final SharedSessionCreationOptions sharedOptions = (SharedSessionCreationOptions) options;
@@ -429,11 +427,6 @@ public class SessionImpl
 	@Override
 	public boolean isAutoCloseSessionEnabled() {
 		return autoClose;
-	}
-
-	@Override
-	public boolean isQueryParametersValidationEnabled() {
-		return queryParametersValidationEnabled;
 	}
 
 	@Override
@@ -2066,11 +2059,6 @@ public class SessionImpl
 			return shareTransactionContext ?
 					session.getActionQueue().getTransactionCompletionProcesses() :
 					null;
-		}
-
-		@Override
-		public boolean isQueryParametersValidationEnabled() {
-			return session.isQueryParametersValidationEnabled();
 		}
 	}
 

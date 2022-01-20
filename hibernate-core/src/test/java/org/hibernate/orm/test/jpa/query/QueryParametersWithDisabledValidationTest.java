@@ -27,8 +27,7 @@ import org.junit.jupiter.api.Test;
 @Jpa(
 		annotatedClasses = {
 				QueryParametersWithDisabledValidationTest.TestEntity.class
-		},
-		integrationSettings = { @Setting(name = AvailableSettings.VALIDATE_QUERY_PARAMETERS, value = "false") }
+		}
 )
 public class QueryParametersWithDisabledValidationTest {
 

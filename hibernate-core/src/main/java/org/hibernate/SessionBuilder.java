@@ -136,22 +136,6 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	T jdbcTimeZone(TimeZone timeZone);
 
 	/**
-	 * Should {@link Query#setParameter} perform parameter validation
-	 * when the Session is bootstrapped via JPA {@link jakarta.persistence.EntityManagerFactory}
-	 *
-	 * @param enabled {@code true} indicates the validation should be performed, {@code false} otherwise
-	 * <p>
-	 * The default value is {@code true}
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	default T setQueryParameterValidation(boolean enabled) {
-		return (T) this;
-	}
-
-
-
-	/**
 	 * Should the session be automatically closed after transaction completion?
 	 *
 	 * @param autoClose Should the session be automatically closed

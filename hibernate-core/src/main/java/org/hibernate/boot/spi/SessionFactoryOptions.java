@@ -252,10 +252,6 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 
 	TimeZone getJdbcTimeZone();
 
-	default boolean isQueryParametersValidationEnabled(){
-		return isJpaBootstrap();
-	}
-
 	default ValueHandlingMode getCriteriaValueHandlingMode() {
 		return ValueHandlingMode.BIND;
 	}

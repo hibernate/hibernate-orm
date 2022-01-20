@@ -159,11 +159,7 @@ public class QuerySqmImpl<R>
 		this.domainParameterXref = hqlInterpretation.getDomainParameterXref();
 		this.parameterMetadata = hqlInterpretation.getParameterMetadata();
 
-		this.parameterBindings = QueryParameterBindingsImpl.from(
-				parameterMetadata,
-				producer.getFactory(),
-				producer.isQueryParametersValidationEnabled()
-		);
+		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, producer.getFactory() );
 
 		applyOptions( memento );
 	}
@@ -224,11 +220,7 @@ public class QuerySqmImpl<R>
 		this.parameterMetadata = hqlInterpretation.getParameterMetadata();
 		this.domainParameterXref = hqlInterpretation.getDomainParameterXref();
 
-		this.parameterBindings = QueryParameterBindingsImpl.from(
-				parameterMetadata,
-				producer.getFactory(),
-				producer.isQueryParametersValidationEnabled()
-		);
+		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, producer.getFactory() );
 	}
 
 	/**
@@ -275,11 +267,8 @@ public class QuerySqmImpl<R>
 			this.parameterMetadata = new ParameterMetadataImpl( domainParameterXref.getQueryParameters() );
 		}
 
-		this.parameterBindings = QueryParameterBindingsImpl.from(
-				parameterMetadata,
-				producer.getFactory(),
-				producer.isQueryParametersValidationEnabled()
-		);
+		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, producer.getFactory() );
+
 		// Parameters might be created through HibernateCriteriaBuilder.value which we need to bind here
 		for ( SqmParameter<?> sqmParameter : this.domainParameterXref.getParameterResolutions().getSqmParameters() ) {
 			if ( sqmParameter instanceof SqmJpaCriteriaParameterWrapper<?> ) {

@@ -1969,20 +1969,6 @@ public interface AvailableSettings {
 	String MERGE_ENTITY_COPY_OBSERVER = "hibernate.event.merge.entity_copy_observer";
 
 	/**
-	 * Setting which indicates if {@link Query#setParameter} should not perform parameters validation
-	 *
-	 * This setting is applied only when the Session is bootstrapped via JPA {@link jakarta.persistence.EntityManagerFactory}
-	 *
-	 * </p>
-	 * Values are: {@code true} indicates the validation should be performed, {@code false} otherwise
-	 * <p>
-	 * The default value is {@code true} when the Session is bootstrapped via JPA {@link jakarta.persistence.EntityManagerFactory},
-	 * otherwise is {@code false}
-	 *
-	 */
-	String VALIDATE_QUERY_PARAMETERS = "hibernate.query.validate_parameters";
-
-	/**
 	 * By default, Criteria queries uses bind parameters for any value passed through the JPA Criteria API.
 	 *
 	 * The {@link org.hibernate.query.criteria.ValueHandlingMode#BIND} mode (default) will use bind variables for any value.

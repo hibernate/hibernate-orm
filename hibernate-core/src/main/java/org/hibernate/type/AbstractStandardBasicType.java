@@ -40,9 +40,6 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 public abstract class AbstractStandardBasicType<T>
 		implements BasicType<T>, ProcedureParameterExtractionAware<T>, ProcedureParameterNamedBinder<T> {
 
-	private static final Size DEFAULT_SIZE = new Size( 19, 2, 255, Size.LobMultiplier.NONE ); // to match legacy behavior
-	private final Size dictatedSize = new Size();
-
 	private final JdbcType jdbcType;
 	private final JavaType<T> javaType;
 	private final int[] sqlTypes;
@@ -97,14 +94,6 @@ public abstract class AbstractStandardBasicType<T>
 		return false;
 	}
 
-	protected static Size getDefaultSize() {
-		return DEFAULT_SIZE;
-	}
-
-	protected Size getDictatedSize() {
-		return dictatedSize;
-	}
-
 	// final implementations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	public final JavaType<T> getJavaTypeDescriptor() {
@@ -128,16 +117,6 @@ public abstract class AbstractStandardBasicType<T>
 	@Override
 	public final int[] getSqlTypeCodes(Mapping mapping) throws MappingException {
 		return sqlTypes;
-	}
-
-	@Override
-	public Size[] dictatedSizes(Mapping mapping) throws MappingException {
-		return new Size[] { getDictatedSize() };
-	}
-
-	@Override
-	public Size[] defaultSizes(Mapping mapping) throws MappingException {
-		return new Size[] { getDefaultSize() };
 	}
 
 	@Override

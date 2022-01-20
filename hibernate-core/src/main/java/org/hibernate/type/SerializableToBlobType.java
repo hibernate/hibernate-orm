@@ -173,16 +173,6 @@ public class SerializableToBlobType<T extends Serializable> implements BasicType
 	}
 
 	@Override
-	public Size[] dictatedSizes(Mapping mapping) throws MappingException {
-		return new Size[] { getDictatedSize() };
-	}
-
-	@Override
-	public Size[] defaultSizes(Mapping mapping) throws MappingException {
-		return new Size[] { DEFAULT_SIZE };
-	}
-
-	@Override
 	public final boolean isAssociationType() {
 		return false;
 	}

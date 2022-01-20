@@ -111,36 +111,6 @@ public interface Type extends Serializable {
 	int[] getSqlTypeCodes(Mapping mapping) throws MappingException;
 
 	/**
-	 * Return the column sizes dictated by this type.  For example, the mapping for a {@code char}/{@link Character} would
-	 * have a dictated length limit of 1; for a string-based {@link java.util.UUID} would have a size limit of 36; etc.
-	 * <p/>
-	 * NOTE: The number of elements in this array matches the return from {@link #getColumnSpan}.
-	 *
-	 * @param mapping The mapping object :/
-	 * @todo Would be much much better to have this aware of Dialect once the service/metamodel split is done
-	 *
-	 * @return The dictated sizes.
-	 *
-	 * @throws MappingException Generally indicates an issue accessing the passed mapping object.
-	 */
-	Size[] dictatedSizes(Mapping mapping) throws MappingException;
-
-	/**
-	 * Defines the column sizes to use according to this type if the user did not explicitly say (and if no
-	 * {@link #dictatedSizes} were given).
-	 * <p/>
-	 * NOTE: The number of elements in this array matches the return from {@link #getColumnSpan}.
-	 *
-	 * @param mapping The mapping object :/
-	 * @todo Would be much much better to have this aware of Dialect once the service/metamodel split is done
-	 *
-	 * @return The default sizes.
-	 *
-	 * @throws MappingException Generally indicates an issue accessing the passed mapping object.
-	 */
-	Size[] defaultSizes(Mapping mapping) throws MappingException;
-
-	/**
 	 * The class returned by {@link #nullSafeGet} methods. This is used to  establish the class of an array of
 	 * this type.
 	 *

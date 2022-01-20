@@ -25,7 +25,6 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.collection.spi.AbstractPersistentCollection;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityEntry;
@@ -156,16 +155,6 @@ public abstract class CollectionType extends AbstractType implements Association
 	@Override
 	public int[] getSqlTypeCodes(Mapping session) throws MappingException {
 		return ArrayHelper.EMPTY_INT_ARRAY;
-	}
-
-	@Override
-	public Size[] dictatedSizes(Mapping mapping) throws MappingException {
-		return new Size[] { LEGACY_DICTATED_SIZE };
-	}
-
-	@Override
-	public Size[] defaultSizes(Mapping mapping) throws MappingException {
-		return new Size[] { LEGACY_DEFAULT_SIZE };
 	}
 
 	@Override

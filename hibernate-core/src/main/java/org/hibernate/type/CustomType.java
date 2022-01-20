@@ -32,7 +32,6 @@ import org.hibernate.type.internal.UserTypeSqlTypeAdapter;
 import org.hibernate.type.internal.UserTypeVersionJavaTypeWrapper;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.EnhancedUserType;
-import org.hibernate.usertype.Sized;
 import org.hibernate.usertype.UserType;
 import org.hibernate.usertype.UserVersionType;
 
@@ -65,9 +64,6 @@ public class CustomType<J>
 	private final ValueExtractor<J> valueExtractor;
 	private final ValueBinder<J> valueBinder;
 
-	private final Size dictatedSize;
-	private final Size defaultSize;
-
 	public CustomType(UserType<J> userType, TypeConfiguration typeConfiguration) throws MappingException {
 		this( userType, ArrayHelper.EMPTY_STRING_ARRAY, typeConfiguration );
 	}
@@ -96,17 +92,6 @@ public class CustomType<J>
 
 		this.valueExtractor = jdbcType.getExtractor( mappedJavaType );
 		this.valueBinder = jdbcType.getBinder( mappedJavaType );
-
-		if ( userType instanceof Sized ) {
-			final Sized sized = (Sized) userType;
-			this.dictatedSize = sized.dictatedSizes()[0];
-			this.defaultSize = sized.defaultSizes()[0];
-		}
-		else {
-			this.dictatedSize = null;
-			this.defaultSize = null;
-		}
-
 		this.registrationKeys = registrationKeys;
 	}
 
@@ -140,16 +125,6 @@ public class CustomType<J>
 	}
 
 	@Override
-	public Size[] dictatedSizes(Mapping mapping) throws MappingException {
-		return new Size[] {dictatedSize};
-	}
-
-	@Override
-	public Size[] defaultSizes(Mapping mapping) throws MappingException {
-		return new Size[] {defaultSize};
-	}
-
-	@Override
 	public int getColumnSpan(Mapping session) {
 		return 1;
 	}
@@ -167,22 +142,6 @@ public class CustomType<J>
 	@Override
 	public int getHashCode(Object x) {
 		return getUserType().hashCode( x);
-	}
-
-	private Object nullSafeGet(
-			ResultSet rs,
-			String[] names,
-			SharedSessionContractImplementor session,
-			Object owner) throws SQLException {
-		throw new UnsupportedOperationException( "Reading from ResultSet by name is no longer supported" );
-	}
-
-	private Object nullSafeGet(
-			ResultSet rs,
-			String columnName,
-			SharedSessionContractImplementor session,
-			Object owner) throws SQLException {
-		throw new UnsupportedOperationException( "Reading from ResultSet by name is no longer supported" );
 	}
 
 	@Override

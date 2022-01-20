@@ -13,7 +13,6 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.engine.internal.ForeignKeys;
-import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.*;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -107,16 +106,6 @@ public class ManyToOneType extends EntityType {
 	@Override
 	public int[] getSqlTypeCodes(Mapping mapping) throws MappingException {
 		return requireIdentifierOrUniqueKeyType( mapping ).getSqlTypeCodes( mapping );
-	}
-
-	@Override
-	public Size[] dictatedSizes(Mapping mapping) throws MappingException {
-		return requireIdentifierOrUniqueKeyType( mapping ).dictatedSizes( mapping );
-	}
-
-	@Override
-	public Size[] defaultSizes(Mapping mapping) throws MappingException {
-		return requireIdentifierOrUniqueKeyType( mapping ).defaultSizes( mapping );
 	}
 
 	@Override

@@ -11,7 +11,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
  * This interface should be implemented by user-defined "types".
@@ -140,4 +143,16 @@ public interface UserType<J> {
 	 * @return the value to be merged
 	 */
 	Object replace(Object detached, Object managed, Object owner);
+
+	default long getDefaultSqlLength(Dialect dialect, JdbcType jdbcType) {
+		return Size.DEFAULT_LENGTH;
+	}
+
+	default int getDefaultSqlPrecision(Dialect dialect, JdbcType jdbcType) {
+		return Size.DEFAULT_PRECISION;
+	}
+
+	default int getDefaultSqlScale(Dialect dialect, JdbcType jdbcType) {
+		return Size.DEFAULT_SCALE;
+	}
 }

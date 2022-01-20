@@ -15,7 +15,6 @@ import java.util.Objects;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -191,16 +190,6 @@ public class DiscriminatorType<T> extends AbstractType implements BasicType<T>, 
 	@Override
 	public int[] getSqlTypeCodes(Mapping mapping) throws MappingException {
 		return underlyingType.getSqlTypeCodes( mapping );
-	}
-
-	@Override
-	public Size[] dictatedSizes(Mapping mapping) throws MappingException {
-		return underlyingType.dictatedSizes( mapping );
-	}
-
-	@Override
-	public Size[] defaultSizes(Mapping mapping) throws MappingException {
-		return underlyingType.defaultSizes( mapping );
 	}
 
 	@Override

@@ -54,7 +54,6 @@ public class RefreshUpdatedDataTest extends BaseCoreFunctionalTestCase {
 		cfg.setProperty( Environment.CACHE_REGION_PREFIX, "" );
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
 		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, "true" );
-		cfg.setProperty( Environment.CACHE_PROVIDER_CONFIG, "true" );
 	}
 
 	@Test

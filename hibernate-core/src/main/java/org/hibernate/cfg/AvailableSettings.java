@@ -1168,11 +1168,6 @@ public interface AvailableSettings {
 	String CACHE_KEYS_FACTORY = "hibernate.cache.keys_factory";
 
 	/**
-	 * The {@code CacheProvider} implementation class
-	 */
-	String CACHE_PROVIDER_CONFIG = "hibernate.cache.provider_configuration_file_resource_path";
-
-	/**
 	 * Enable the second-level cache.
 	 * <p>
 	 * By default, if the currently configured {@link org.hibernate.cache.spi.RegionFactory} is not the {@link org.hibernate.cache.internal.NoCachingRegionFactory},

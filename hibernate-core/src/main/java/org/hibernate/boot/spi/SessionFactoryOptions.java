@@ -6,7 +6,6 @@
  */
 package org.hibernate.boot.spi;
 
-import java.util.Map;
 import java.util.TimeZone;
 import java.util.function.Supplier;
 
@@ -179,8 +178,6 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 
 	boolean isJtaTrackByThread();
 
-	Map getQuerySubstitutions();
-
 	/**
 	 * @deprecated Use {@link JpaCompliance#isJpaQueryComplianceEnabled()} instead
 	 * via {@link #getJpaCompliance()}
@@ -217,12 +214,6 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	boolean isJdbcBatchVersionedData();
 
 	boolean isScrollableResultSetsEnabled();
-
-	/**
-	 * @deprecated (since 5.5) Scheduled for removal in 6.0 as ResultSet wrapping is no longer needed
-	 */
-	@Deprecated
-	boolean isWrapResultSetsEnabled();
 
 	boolean isGetGeneratedKeysEnabled();
 
@@ -300,10 +291,6 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	}
 
 	default boolean inClauseParameterPaddingEnabled() {
-		return false;
-	}
-
-	default boolean nativeExceptionHandling51Compliance() {
 		return false;
 	}
 

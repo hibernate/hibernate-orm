@@ -464,9 +464,6 @@ Defines precedence of null values in `ORDER BY` clause. Defaults to `none` which
 `*hibernate.discriminator.force_in_select*` (e.g. `true` or `false` (default value))::
 For entities which do not explicitly say, should we force discriminators into SQL selects?
 
-`*hibernate.query.substitutions*` (e.g. `true=1,false=0`)::
-A comma-separated list of token substitutions to use when translating a Hibernate query to SQL.
-
 `*hibernate.query.factory_class*` (e.g. `org.hibernate.hql.internal.ast.ASTQueryTranslatorFactory` (default value) or `org.hibernate.hql.internal.classic.ClassicQueryTranslatorFactory`)::
 Chooses the HQL parser implementation.
 
@@ -571,13 +568,6 @@ It follows a pattern similar to the ANSI SQL definition of the global temporary 
 +
 This configuration property defines the database catalog used for storing the temporary tables used for bulk HQL operations.
 
-`*hibernate.legacy_limit_handler*` (e.g. `true` or `false` (default value))::
-Setting which indicates whether or not to use `org.hibernate.dialect.pagination.LimitHandler`
-implementations that sacrifices performance optimizations to allow legacy 4.x limit behavior.
-+
-Legacy 4.x behavior favored performing pagination in-memory by avoiding the use of the offset value, which is overall poor performance.
-In 5.x, the limit handler behavior favors performance, thus, if the dialect doesn't support offsets, an exception is thrown instead.
-
 `*hibernate.query.conventional_java_constants*` (e.g. `true` (default value) or `false`)::
 Setting which indicates whether or not Java constants follow the https://docs.oracle.com/javase/tutorial/java/nutsandbolts/variables.html[Java Naming conventions].
 +
@@ -633,9 +623,6 @@ Use streams when writing or reading `binary` or `serializable` types to or from 
 
 `*hibernate.jdbc.use_get_generated_keys*` (e.g. `true` or `false`)::
 Allows Hibernate to use JDBC3 `PreparedStatement.getGeneratedKeys()` to retrieve natively-generated keys after insert. You need the JDBC3+ driver and JRE1.4+. Disable this property if your driver has problems with the Hibernate identifier generators. By default, it tries to detect the driver capabilities from connection metadata.
-
-`*hibernate.jdbc.wrap_result_sets*` (e.g. `true` or `false` (default value))::
-Enable wrapping of JDBC result sets in order to speed up column name lookups for broken JDBC drivers.
 
 `*hibernate.enable_lazy_load_no_trans*` (e.g. `true` or `false` (default value))::
 Initialize Lazy Proxies or Collections outside a given Transactional Persistence Context.
@@ -708,11 +695,11 @@ Enables the automatic eviction of a bi-directional association's collection cach
 `*hibernate.cache.use_reference_entries*` (e.g. `true` or `false`)::
 Optimizes second-level cache operation to store immutable entities (aka "reference") which do not have associations into cache directly. In this case, disassembling and deep copy operations can be avoided. The default value of this property is `false`.
 
-`*hibernate.ejb.classcache*` (e.g. `hibernate.ejb.classcache.org.hibernate.ejb.test.Item` = `read-write`)::
-Sets the associated entity class cache concurrency strategy for the designated region. Caching configuration should follow the following pattern `hibernate.ejb.classcache.<fully.qualified.Classname> = usage[, region]` where usage is the cache strategy used and region the cache region name.
+`*hibernate.classcache*` (e.g. `hibernate.classcache.org.hibernate.ejb.test.Item` = `read-write`)::
+Sets the associated entity class cache concurrency strategy for the designated region. Caching configuration should follow the following pattern `hibernate.classcache.<fully.qualified.Classname> = usage[, region]` where usage is the cache strategy used and region the cache region name.
 
-`*hibernate.ejb.collectioncache*` (e.g. `hibernate.ejb.collectioncache.org.hibernate.ejb.test.Item.distributors` = `read-write, RegionName`)::
-Sets the associated collection cache concurrency strategy for the designated region. Caching configuration should follow the following pattern `hibernate.ejb.collectioncache.<fully.qualified.Classname>.<role> = usage[, region]` where usage is the cache strategy used and region the cache region name.
+`*hibernate.collectioncache*` (e.g. `hibernate.collectioncache.org.hibernate.ejb.test.Item.distributors` = `read-write, RegionName`)::
+Sets the associated collection cache concurrency strategy for the designated region. Caching configuration should follow the following pattern `hibernate.collectioncache.<fully.qualified.Classname>.<role> = usage[, region]` where usage is the cache strategy used and region the cache region name.
 
 [[configurations-infinispan]]
 === Infinispan properties
@@ -965,18 +952,6 @@ Defines the charset (encoding) used for all input/output schema generation resou
 
 `*hibernate.hbm2ddl.halt_on_error*` (e.g. `true` or `false` (default value))::
 Whether the schema migration tool should halt on error, therefore terminating the bootstrap process. By default, the `EntityManagerFactory` or `SessionFactory` are created even if the schema migration throws exceptions. To prevent this default behavior, set this property value to `true`.
-
-[[configurations-exception-handling]]
-=== Exception handling
-
-`*hibernate.jdbc.sql_exception_converter*` (e.g. fully-qualified name of class implementing `SQLExceptionConverter`)::
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/exception/spi/SQLExceptionConverter.html[`SQLExceptionConverter`] to use for converting `SQLExceptions` to Hibernate's `JDBCException` hierarchy. The default is to use the configured https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/dialect/Dialect.html[`Dialect`]'s preferred `SQLExceptionConverter`.
-
-`*hibernate.native_exception_handling_51_compliance*` (e.g. `true` or `false` (default value))::
-Indicates if exception handling for a `SessionFactory` built via Hibernate's native bootstrapping
-should behave the same as native exception handling in Hibernate ORM 5.1. When set to `true`,
-`HibernateException` will not be wrapped or converted according to the Jakarta Persistence specification. This
-setting will be ignored for a `SessionFactory` built via Jakarta Persistence bootstrapping.
 
 [[configurations-session-events]]
 === Session events

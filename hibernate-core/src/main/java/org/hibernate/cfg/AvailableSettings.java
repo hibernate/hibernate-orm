@@ -603,11 +603,6 @@ public interface AvailableSettings {
 	String USE_NATIONALIZED_CHARACTER_DATA = "hibernate.use_nationalized_character_data";
 
 	/**
-	 * The deprecated name.  Use {@link #SCANNER} or {@link #SCANNER_ARCHIVE_INTERPRETER} instead.
-	 */
-	String SCANNER_DEPRECATED = "hibernate.ejb.resource_scanner";
-
-	/**
 	 * Pass an implementation of {@link org.hibernate.boot.archive.scan.spi.Scanner}.
 	 * Accepts either:<ul>
 	 *     <li>an actual instance</li>
@@ -984,12 +979,6 @@ public interface AvailableSettings {
 	String QUERY_MULTI_TABLE_INSERT_STRATEGY = "hibernate.query.insert_strategy";
 
 	/**
-	 * A comma-separated list of token substitutions to use when translating a Hibernate
-	 * query to SQL
-	 */
-	String QUERY_SUBSTITUTIONS = "hibernate.query.substitutions";
-
-	/**
 	 * Should named queries be checked during startup (the default is enabled).
 	 * <p/>
 	 * Mainly intended for test environments.
@@ -1006,34 +995,6 @@ public interface AvailableSettings {
 	 * @since 5.2
 	 */
 	String CONVENTIONAL_JAVA_CONSTANTS = "hibernate.query.conventional_java_constants";
-
-	/**
-	 * The {@link org.hibernate.exception.spi.SQLExceptionConverter} to use for converting SQLExceptions
-	 * to Hibernate's JDBCException hierarchy.  The default is to use the configured
-	 * {@link org.hibernate.dialect.Dialect}'s preferred SQLExceptionConverter.
-	 */
-	String SQL_EXCEPTION_CONVERTER = "hibernate.jdbc.sql_exception_converter";
-
-	/**
-	 * Enable wrapping of JDBC result sets in order to speed up column name lookups for
-	 * broken JDBC drivers
-	 *
-	 * @deprecated (since 5.5) Scheduled for removal in 6.0 as ResultSet wrapping is no longer needed
-	 */
-	@Deprecated
-	String WRAP_RESULT_SETS = "hibernate.jdbc.wrap_result_sets";
-
-	/**
-	 * Indicates if exception handling for a SessionFactory built via Hibernate's native bootstrapping
-	 * should behave the same as native exception handling in Hibernate ORM 5.1, When set to {@code true},
-	 * {@link HibernateException} will not be wrapped or converted according to the JPA specification.
-	 * <p/>
-	 * This setting will be ignored for a SessionFactory built via JPA bootstrapping.
-	 * <p/>
-	 * Values are {@code true}  or {@code false}.
-	 * Default value is {@code false}
-	 */
-	String NATIVE_EXCEPTION_HANDLING_51_COMPLIANCE = "hibernate.native_exception_handling_51_compliance";
 
 	/**
 	 * Enable ordering of update statements by primary key value
@@ -2024,23 +1985,6 @@ public interface AvailableSettings {
 	String MERGE_ENTITY_COPY_OBSERVER = "hibernate.event.merge.entity_copy_observer";
 
 	/**
-	 * Setting which indicates whether or not to use {@link org.hibernate.dialect.pagination.LimitHandler}
-	 * implementations that sacrifices performance optimizations to allow legacy 4.x limit behavior.
-	 * </p>
-	 * Legacy 4.x behavior favored performing pagination in-memory by avoiding the use of the offset
-	 * value, which is overall poor performance.  In 5.x, the limit handler behavior favors performance
-	 * thus if the dialect doesn't support offsets, an exception is thrown instead.
-	 * </p>
-	 * Default is {@code false}.
-	 *
-	 * @since 5.2.5
-	 * @deprecated this setting now has no effect
-	 */
-	@Deprecated
-	String USE_LEGACY_LIMIT_HANDLERS = "hibernate.legacy_limit_handler";
-
-
-	/**
 	 * Setting which indicates if {@link Query#setParameter} should not perform parameters validation
 	 *
 	 * This setting is applied only when the Session is bootstrapped via JPA {@link jakarta.persistence.EntityManagerFactory}
@@ -2587,14 +2531,14 @@ public interface AvailableSettings {
 
 	/**
 	 * Caching configuration should follow the following pattern
-	 * {@code hibernate.ejb.classcache.<fully.qualified.Classname> usage[, region]}
+	 * {@code hibernate.classcache.<fully.qualified.Classname> usage[, region]}
 	 * where usage is the cache strategy used and region the cache region name
 	 */
 	String CLASS_CACHE_PREFIX = "hibernate.classcache";
 
 	/**
 	 * Caching configuration should follow the following pattern
-	 * {@code hibernate.ejb.collectioncache.<fully.qualified.Classname>.<role> usage[, region]}
+	 * {@code hibernate.collectioncache.<fully.qualified.Classname>.<role> usage[, region]}
 	 * where usage is the cache strategy used and region the cache region name
 	 */
 	String COLLECTION_CACHE_PREFIX = "hibernate.collectioncache";

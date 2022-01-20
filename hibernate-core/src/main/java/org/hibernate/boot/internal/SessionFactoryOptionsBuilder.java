@@ -111,7 +111,6 @@ import static org.hibernate.cfg.AvailableSettings.JTA_TRACK_BY_THREAD;
 import static org.hibernate.cfg.AvailableSettings.LOG_SESSION_METRICS;
 import static org.hibernate.cfg.AvailableSettings.MAX_FETCH_DEPTH;
 import static org.hibernate.cfg.AvailableSettings.MULTI_TENANT_IDENTIFIER_RESOLVER;
-import static org.hibernate.cfg.AvailableSettings.NATIVE_EXCEPTION_HANDLING_51_COMPLIANCE;
 import static org.hibernate.cfg.AvailableSettings.OMIT_JOIN_OF_SUPERCLASS_TABLES;
 import static org.hibernate.cfg.AvailableSettings.ORDER_INSERTS;
 import static org.hibernate.cfg.AvailableSettings.ORDER_UPDATES;
@@ -119,7 +118,6 @@ import static org.hibernate.cfg.AvailableSettings.PREFER_USER_TRANSACTION;
 import static org.hibernate.cfg.AvailableSettings.QUERY_CACHE_FACTORY;
 import static org.hibernate.cfg.AvailableSettings.QUERY_STARTUP_CHECKING;
 import static org.hibernate.cfg.AvailableSettings.QUERY_STATISTICS_MAX_SIZE;
-import static org.hibernate.cfg.AvailableSettings.QUERY_SUBSTITUTIONS;
 import static org.hibernate.cfg.AvailableSettings.SESSION_FACTORY_NAME;
 import static org.hibernate.cfg.AvailableSettings.SESSION_FACTORY_NAME_IS_JNDI;
 import static org.hibernate.cfg.AvailableSettings.SESSION_SCOPED_INTERCEPTOR;
@@ -136,7 +134,6 @@ import static org.hibernate.cfg.AvailableSettings.USE_SECOND_LEVEL_CACHE;
 import static org.hibernate.cfg.AvailableSettings.USE_SQL_COMMENTS;
 import static org.hibernate.cfg.AvailableSettings.USE_STRUCTURED_CACHE;
 import static org.hibernate.cfg.AvailableSettings.VALIDATE_QUERY_PARAMETERS;
-import static org.hibernate.cfg.AvailableSettings.WRAP_RESULT_SETS;
 import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
@@ -222,7 +219,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private SqmFunctionRegistry sqmFunctionRegistry;
 	private SqmTranslatorFactory sqmTranslatorFactory;
 	private Boolean useOfJdbcNamedParametersEnabled;
-	private Map querySubstitutions;
 	private boolean namedQueryStartupCheckingEnabled;
 	private boolean conventionalJavaConstants;
 	private final boolean omitJoinOfSuperclassTablesEnabled;
@@ -251,7 +247,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private boolean commentsEnabled;
 	private PhysicalConnectionHandlingMode connectionHandlingMode;
 	private boolean connectionProviderDisablesAutoCommit;
-	private boolean wrapResultSetsEnabled;
 	private TimeZone jdbcTimeZone;
 	private boolean queryParametersValidationEnabled;
 	private ValueHandlingMode criteriaValueHandlingMode;
@@ -270,7 +265,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private boolean failOnPaginationOverCollectionFetchEnabled;
 	private boolean inClauseParameterPaddingEnabled;
 
-	private boolean nativeExceptionHandling51Compliance;
 	private int queryStatisticsMaxSize;
 
 
@@ -446,7 +440,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 		this.useOfJdbcNamedParametersEnabled = cfgService.getSetting( CALLABLE_NAMED_PARAMS_ENABLED, BOOLEAN, true );
 
-		this.querySubstitutions = ConfigurationHelper.toMap( QUERY_SUBSTITUTIONS, " ,=;:\n\t\r\f", configurationSettings );
 		this.namedQueryStartupCheckingEnabled = cfgService.getSetting( QUERY_STARTUP_CHECKING, BOOLEAN, true );
 		this.conventionalJavaConstants = cfgService.getSetting(
 				CONVENTIONAL_JAVA_CONSTANTS, BOOLEAN, true );
@@ -521,11 +514,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				USE_SCROLLABLE_RESULTSET,
 				configurationSettings,
 				meta.supportsScrollableResults()
-		);
-		this.wrapResultSetsEnabled = ConfigurationHelper.getBoolean(
-				WRAP_RESULT_SETS,
-				configurationSettings,
-				false
 		);
 		this.getGeneratedKeysEnabled = ConfigurationHelper.getBoolean(
 				USE_GET_GENERATED_KEYS,
@@ -606,22 +594,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				false
 		);
 
-		this.nativeExceptionHandling51Compliance = ConfigurationHelper.getBoolean(
-				NATIVE_EXCEPTION_HANDLING_51_COMPLIANCE,
-				configurationSettings,
-				false
-		);
-
 		this.queryStatisticsMaxSize = ConfigurationHelper.getInt(
 				QUERY_STATISTICS_MAX_SIZE,
 				configurationSettings,
 				Statistics.DEFAULT_QUERY_STATISTICS_MAX_SIZE
 		);
-
-		if ( context.isJpaBootstrap() && nativeExceptionHandling51Compliance ) {
-			log.nativeExceptionHandling51ComplianceJpaBootstrapping();
-			this.nativeExceptionHandling51Compliance = false;
-		}
 	}
 
 	private SqmMultiTableMutationStrategy resolveSqmMutationStrategy(
@@ -1066,11 +1043,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
-	public Map getQuerySubstitutions() {
-		return querySubstitutions;
-	}
-
-	@Override
 	public boolean isNamedQueryStartupCheckingEnabled() {
 		return namedQueryStartupCheckingEnabled;
 	}
@@ -1138,11 +1110,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	public boolean isScrollableResultSetsEnabled() {
 		return scrollableResultSetsEnabled;
-	}
-
-	@Override
-	public boolean isWrapResultSetsEnabled() {
-		return wrapResultSetsEnabled;
 	}
 
 	@Override
@@ -1248,11 +1215,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	public JpaCompliance getJpaCompliance() {
 		return jpaCompliance;
-	}
-
-	@Override
-	public boolean nativeExceptionHandling51Compliance() {
-		return nativeExceptionHandling51Compliance;
 	}
 
 	@Override
@@ -1432,11 +1394,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.currentTenantIdentifierResolver = resolver;
 	}
 
-	@SuppressWarnings("unchecked")
-	public void applyQuerySubstitutions(Map substitutions) {
-		this.querySubstitutions.putAll( substitutions );
-	}
-
 	public void enableNamedQueryCheckingOnStartup(boolean enabled) {
 		this.namedQueryStartupCheckingEnabled = enabled;
 	}
@@ -1483,11 +1440,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	public void enableScrollableResultSupport(boolean enabled) {
 		this.scrollableResultSetsEnabled = enabled;
-	}
-
-	@Deprecated
-	public void enableResultSetWrappingSupport(boolean enabled) {
-		this.wrapResultSetsEnabled = enabled;
 	}
 
 	public void enableGeneratedKeysSupport(boolean enabled) {

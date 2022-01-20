@@ -15,8 +15,6 @@ import java.util.Map;
 import java.util.Objects;
 
 import org.hibernate.HibernateException;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.hibernate.annotations.Type;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -102,7 +100,7 @@ public class QueryParametersValidationTest extends BaseEntityManagerFunctionalTe
 	}
 
 	@Entity(name = "TestEntity")
-	public class TestEntity {
+	public static class TestEntity {
 
 		@Id
 		@GeneratedValue(strategy = GenerationType.AUTO)

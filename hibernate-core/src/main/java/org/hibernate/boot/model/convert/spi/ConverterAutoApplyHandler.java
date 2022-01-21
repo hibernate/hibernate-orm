@@ -6,6 +6,7 @@
  */
 package org.hibernate.boot.model.convert.spi;
 
+import org.hibernate.Incubating;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 
@@ -19,6 +20,7 @@ import jakarta.persistence.Converter;
  *
  * @author Steve Ebersole
  */
+@Incubating
 public interface ConverterAutoApplyHandler {
 	/**
 	 * Resolve the auto-applied converter to be applied to a basic attribute described
@@ -43,7 +45,7 @@ public interface ConverterAutoApplyHandler {
 	 * described by the passed property descriptor.  {@code null} indicates that no auto-applied
 	 * converter matched
 	 *
-	 * @param property The HCANN descriptor for the plural Map attribute
+	 * @param property The HCANN descriptor for the Map-typed plural attribute
 	 */
 	ConverterDescriptor findAutoApplyConverterForMapKey(XProperty property, MetadataBuildingContext context);
 }

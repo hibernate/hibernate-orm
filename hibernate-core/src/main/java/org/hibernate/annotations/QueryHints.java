@@ -68,9 +68,9 @@ public class QueryHints implements HibernateHints, SpecHints {
 	public static final String TIMEOUT_HIBERNATE = HibernateHints.HINT_TIMEOUT;
 
 	/**
-	 * @see org.hibernate.jpa.SpecHints#HINT_QUERY_TIMEOUT
+	 * @see org.hibernate.jpa.SpecHints#HINT_SPEC_QUERY_TIMEOUT
 	 */
-	public static final String TIMEOUT_JAKARTA_JPA = SpecHints.HINT_QUERY_TIMEOUT;
+	public static final String TIMEOUT_JAKARTA_JPA = SpecHints.HINT_SPEC_QUERY_TIMEOUT;
 
 	/**
 	 * @see HibernateHints#HINT_NATIVE_LOCK_MODE
@@ -99,7 +99,7 @@ public class QueryHints implements HibernateHints, SpecHints {
 	public static final String CALLABLE_FUNCTION = HibernateHints.HINT_CALLABLE_FUNCTION;
 
 	/**
-	 * @see org.hibernate.jpa.SpecHints#HINT_QUERY_TIMEOUT
+	 * @see org.hibernate.jpa.SpecHints#HINT_SPEC_QUERY_TIMEOUT
 	 */
 	public static final String TIMEOUT_JPA = LegacySpecHints.HINT_JAVAEE_QUERY_TIMEOUT;
 }

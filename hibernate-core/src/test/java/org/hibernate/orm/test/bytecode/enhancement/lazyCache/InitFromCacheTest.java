@@ -8,15 +8,6 @@ package org.hibernate.orm.test.bytecode.enhancement.lazyCache;
 
 import java.util.Date;
 import java.util.Locale;
-import jakarta.persistence.Basic;
-import jakarta.persistence.Cacheable;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
 
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
@@ -27,7 +18,6 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.RootGraph;
-import org.hibernate.jpa.QueryHints;
 import org.hibernate.persister.entity.EntityPersister;
 
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
@@ -36,7 +26,18 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import jakarta.persistence.Basic;
+import jakarta.persistence.Cacheable;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+
 import static org.hibernate.Hibernate.isPropertyInitialized;
+import static org.hibernate.jpa.SpecHints.HINT_SPEC_FETCH_GRAPH;
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
@@ -86,7 +87,7 @@ public class InitFromCacheTest extends BaseCoreFunctionalTestCase {
                     final RootGraph<Document> entityGraph = s.createEntityGraph( Document.class );
                     entityGraph.addAttributeNodes( "text", "summary" );
                     final Document document = s.createQuery( "from Document", Document.class )
-                            .setHint( QueryHints.JAKARTA_HINT_FETCH_GRAPH, entityGraph )
+                            .setHint( HINT_SPEC_FETCH_GRAPH, entityGraph )
                             .uniqueResult();
 					assertTrue( isPropertyInitialized( document, "text" ) );
 					assertTrue( isPropertyInitialized( document, "summary" ) );

@@ -6,15 +6,10 @@
  */
 package org.hibernate.orm.test.query;
 
-import jakarta.persistence.FlushModeType;
-import jakarta.persistence.LockModeType;
-import jakarta.persistence.Query;
-
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.jpa.QueryHints;
 import org.hibernate.orm.test.jpa.Distributor;
 import org.hibernate.orm.test.jpa.Item;
 import org.hibernate.orm.test.jpa.Wallet;
@@ -24,6 +19,12 @@ import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.Query;
+
+import static org.hibernate.jpa.HibernateHints.HINT_TIMEOUT;
+import static org.hibernate.jpa.SpecHints.HINT_SPEC_QUERY_TIMEOUT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
@@ -173,7 +174,7 @@ public class AddNamedQueryTest {
 					// jpa timeout is in milliseconds, whereas Hibernate's is in seconds
 					assertEquals( (Integer) 3, hibernateQuery.getTimeout() );
 
-					query.setHint( QueryHints.HINT_TIMEOUT, 10 );
+					query.setHint( HINT_TIMEOUT, 10 );
 					em.getEntityManagerFactory().addNamedQuery( name, query );
 
 					query = em.createNamedQuery( name );
@@ -189,7 +190,7 @@ public class AddNamedQueryTest {
 					assertEquals( LockMode.PESSIMISTIC_WRITE, hibernateQuery.getLockOptions().getLockMode() );
 					assertEquals( (Integer) 10, hibernateQuery.getTimeout() );
 
-					query.setHint( QueryHints.SPEC_HINT_TIMEOUT, 10000 );
+					query.setHint( HINT_SPEC_QUERY_TIMEOUT, 10000 );
 					em.getEntityManagerFactory().addNamedQuery( name, query );
 
 					query = em.createNamedQuery( name );

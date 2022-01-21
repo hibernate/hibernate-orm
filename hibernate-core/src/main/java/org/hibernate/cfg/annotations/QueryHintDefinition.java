@@ -83,7 +83,7 @@ public class QueryHintDefinition {
 	// Specialized access
 
 	public Integer getTimeout() {
-		final Integer jakartaTimeout = getInteger( SpecHints.HINT_QUERY_TIMEOUT );
+		final Integer jakartaTimeout = getInteger( SpecHints.HINT_SPEC_QUERY_TIMEOUT );
 		if ( jakartaTimeout != null ) {
 			// convert milliseconds to seconds
 			return (int) Math.round( jakartaTimeout.doubleValue() / 1000.0 );

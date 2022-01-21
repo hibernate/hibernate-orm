@@ -23,37 +23,37 @@ package org.hibernate.jpa;
 @Deprecated
 public interface LegacySpecHints {
 	/**
-	 * @see SpecHints#HINT_FETCH_GRAPH
+	 * @see SpecHints#HINT_SPEC_FETCH_GRAPH
 	 */
 	String HINT_JAVAEE_FETCH_GRAPH = "javax.persistence.fetchgraph";
 
 	/**
-	 * @see SpecHints#HINT_LOAD_GRAPH
+	 * @see SpecHints#HINT_SPEC_LOAD_GRAPH
 	 */
 	String HINT_JAVAEE_LOAD_GRAPH = "javax.persistence.loadgraph";
 
 	/**
-	 * @see SpecHints#HINT_LOCK_TIMEOUT
+	 * @see SpecHints#HINT_SPEC_LOCK_TIMEOUT
 	 */
 	String HINT_JAVAEE_LOCK_TIMEOUT = "javax.persistence.lock.timeout";
 
 	/**
-	 * @see SpecHints#HINT_LOCK_SCOPE
+	 * @see SpecHints#HINT_SPEC_LOCK_SCOPE
 	 */
 	String HINT_JAVAEE_LOCK_SCOPE = "javax.persistence.lock.scope";
 
 	/**
-	 * @see SpecHints#HINT_QUERY_TIMEOUT
+	 * @see SpecHints#HINT_SPEC_QUERY_TIMEOUT
 	 */
 	String HINT_JAVAEE_QUERY_TIMEOUT = "javax.persistence.query.timeout";
 
 	/**
-	 * @see SpecHints#HINT_CACHE_RETRIEVE_MODE
+	 * @see SpecHints#HINT_SPEC_CACHE_RETRIEVE_MODE
 	 */
 	String HINT_JAVAEE_CACHE_RETRIEVE_MODE = "javax.persistence.cache.retrieveMode";
 
 	/**
-	 * @see SpecHints#HINT_CACHE_STORE_MODE
+	 * @see SpecHints#HINT_SPEC_CACHE_STORE_MODE
 	 */
 	String HINT_JAVAEE_CACHE_STORE_MODE = "javax.persistence.cache.storeMode";
 }

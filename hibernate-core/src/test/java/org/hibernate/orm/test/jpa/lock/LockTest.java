@@ -25,8 +25,8 @@ import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.jpa.QueryHints;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.RequiresDialectFeature;
@@ -46,6 +46,7 @@ import jakarta.persistence.PessimisticLockException;
 import jakarta.persistence.Query;
 import jakarta.persistence.QueryTimeoutException;
 
+import static org.hibernate.jpa.SpecHints.HINT_SPEC_QUERY_TIMEOUT;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -928,7 +929,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 										"select L from Lock_ L where L.id < 10000 "
 								);
 								query.setLockMode( LockModeType.PESSIMISTIC_READ );
-								query.setHint( QueryHints.SPEC_HINT_TIMEOUT, 500 ); // 1 sec timeout
+								query.setHint( HINT_SPEC_QUERY_TIMEOUT, 500 ); // 1 sec timeout
 								List<Lock> resultList = query.getResultList();
 								String name = resultList.get( 0 ).getName(); //  force entity to be read
 								log.info( "testQueryTimeout: name read =" + name );
@@ -995,7 +996,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 		final CountDownLatch latch = new CountDownLatch( 1 );
 
 		final Map<String, Object> timeoutProps = new HashMap<String, Object>();
-		timeoutProps.put( QueryHints.SPEC_HINT_TIMEOUT, 500 ); // 1 sec timeout (should round up)
+		timeoutProps.put( HINT_SPEC_QUERY_TIMEOUT, 500 ); // 1 sec timeout (should round up)
 		final Lock lock = new Lock();
 
 		FutureTask<Boolean> bgTask = new FutureTask<>(

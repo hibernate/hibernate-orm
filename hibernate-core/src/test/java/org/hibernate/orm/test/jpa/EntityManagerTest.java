@@ -21,7 +21,6 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
-import org.hibernate.jpa.QueryHints;
 import org.hibernate.stat.Statistics;
 
 import org.hibernate.testing.TestForIssue;
@@ -34,6 +33,7 @@ import jakarta.persistence.FlushModeType;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.Query;
 
+import static org.hibernate.jpa.HibernateHints.HINT_READ_ONLY;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -507,7 +507,7 @@ public class EntityManagerTest extends BaseEntityManagerFunctionalTestCase {
 
 		em = getOrCreateEntityManager();
 		Map<String, Object> hints = new HashMap<>();
-		hints.put(QueryHints.HINT_READONLY, true);
+		hints.put(HINT_READ_ONLY, true);
 
 		em.getTransaction().begin();
 

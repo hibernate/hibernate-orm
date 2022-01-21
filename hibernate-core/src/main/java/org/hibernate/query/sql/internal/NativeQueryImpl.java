@@ -99,7 +99,7 @@ import jakarta.persistence.TemporalType;
 import jakarta.persistence.Tuple;
 import jakarta.persistence.metamodel.SingularAttribute;
 
-import static org.hibernate.jpa.QueryHints.HINT_NATIVE_LOCKMODE;
+import static org.hibernate.jpa.HibernateHints.HINT_NATIVE_LOCK_MODE;
 
 /**
  * @author Steve Ebersole
@@ -1128,7 +1128,7 @@ public class NativeQueryImpl<R>
 	protected void collectHints(Map<String, Object> hints) {
 		super.collectHints( hints );
 
-		putIfNotNull( hints, HINT_NATIVE_LOCKMODE, getLockOptions().getLockMode() );
+		putIfNotNull( hints, HINT_NATIVE_LOCK_MODE, getLockOptions().getLockMode() );
 	}
 
 	@Override
@@ -1181,7 +1181,7 @@ public class NativeQueryImpl<R>
 			throw new IllegalArgumentException(
 					String.format(
 							"Native lock-mode hint [%s] must specify %s or %s.  Encountered type : %s",
-							HINT_NATIVE_LOCKMODE,
+							HINT_NATIVE_LOCK_MODE,
 							LockMode.class.getName(),
 							LockModeType.class.getName(),
 							value.getClass().getName()

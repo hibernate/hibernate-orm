@@ -1,10 +1,6 @@
 package org.hibernate.orm.test.loading;
 
 import java.util.Collections;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-
-import org.hibernate.jpa.QueryHints;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -14,8 +10,12 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hibernate.jpa.HibernateHints.HINT_READ_ONLY;
 
 @DomainModel(
 		annotatedClasses = {
@@ -42,7 +42,7 @@ public class ReadonlyHintTest {
 	@Test
 	void testWithReadOnlyHint(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			SimpleEntity fetchedEntity = session.find( SimpleEntity.class, 1L, Collections.singletonMap( QueryHints.HINT_READONLY, true ) );
+			SimpleEntity fetchedEntity = session.find( SimpleEntity.class, 1L, Collections.singletonMap( HINT_READ_ONLY, true ) );
 			fetchedEntity.name = CHANGED_NAME;
 		} );
 

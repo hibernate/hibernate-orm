@@ -7,8 +7,6 @@
 package org.hibernate.query.internal;
 
 import java.util.Map;
-import jakarta.persistence.FlushModeType;
-import jakarta.persistence.LockModeType;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -16,9 +14,18 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
+
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.LockModeType;
+
+import static org.hibernate.jpa.HibernateHints.HINT_CACHEABLE;
+import static org.hibernate.jpa.HibernateHints.HINT_CACHE_MODE;
+import static org.hibernate.jpa.HibernateHints.HINT_CACHE_REGION;
+import static org.hibernate.jpa.HibernateHints.HINT_FLUSH_MODE;
+import static org.hibernate.jpa.HibernateHints.HINT_NATIVE_LOCK_MODE;
+import static org.hibernate.jpa.HibernateHints.HINT_READ_ONLY;
 
 /**
  * @author Steve Ebersole
@@ -54,7 +61,7 @@ public class NamedQueryHelper {
 			cacheMode = cacheable ? determineCacheMode( hints, sessionFactory ) : null;
 
 			flushMode = determineFlushMode( hints, sessionFactory );
-			readOnly = ConfigurationHelper.getBoolean( QueryHints.HINT_READONLY, hints, false );
+			readOnly = ConfigurationHelper.getBoolean( HINT_READ_ONLY, hints, false );
 
 			lockOptions = determineLockOptions( hints, sessionFactory );
 
@@ -145,17 +152,17 @@ public class NamedQueryHelper {
 
 	private static boolean isCacheable(Map<String, Object> hints, SessionFactoryImplementor sessionFactory) {
 		return sessionFactory.getSessionFactoryOptions().isQueryCacheEnabled()
-				&& ConfigurationHelper.getBoolean( QueryHints.HINT_CACHEABLE, hints, false );
+				&& ConfigurationHelper.getBoolean( HINT_CACHEABLE, hints, false );
 	}
 
 	private static String determineCacheRegion(Map<String, Object> hints, SessionFactoryImplementor sessionFactory) {
 		assert sessionFactory.getSessionFactoryOptions().isQueryCacheEnabled();
-		return ConfigurationHelper.getString( QueryHints.HINT_CACHE_REGION, hints );
+		return ConfigurationHelper.getString( HINT_CACHE_REGION, hints );
 	}
 
 	private static CacheMode determineCacheMode(Map<String, Object> hints, SessionFactoryImplementor sessionFactory) {
 		assert sessionFactory.getSessionFactoryOptions().isQueryCacheEnabled();
-		final Object setting = hints.get( QueryHints.HINT_CACHE_MODE );
+		final Object setting = hints.get( HINT_CACHE_MODE );
 
 		if ( setting != null ) {
 			if ( CacheMode.class.isInstance( setting ) ) {
@@ -172,15 +179,15 @@ public class NamedQueryHelper {
 	}
 
 	private static FlushMode determineFlushMode(Map<String, Object> hints, SessionFactoryImplementor sessionFactory) {
-		final Object setting = hints.get( QueryHints.HINT_FLUSH_MODE );
+		final Object setting = hints.get( HINT_FLUSH_MODE );
 
 		if ( setting != null ) {
-			if ( FlushMode.class.isInstance( setting ) ) {
+			if ( setting instanceof FlushMode ) {
 				return (FlushMode) setting;
 			}
 
-			if ( FlushModeType.class.isInstance( setting ) ) {
-				return FlushModeTypeHelper.getFlushMode( FlushModeType.class.cast( setting ) );
+			if ( setting instanceof FlushModeType ) {
+				return FlushModeTypeHelper.getFlushMode( (FlushModeType) setting );
 			}
 
 			final FlushMode mode = FlushMode.interpretExternalSetting( setting.toString() );
@@ -193,16 +200,16 @@ public class NamedQueryHelper {
 	}
 
 	private static LockOptions determineLockOptions(Map<String, Object> hints, SessionFactoryImplementor sessionFactory) {
-		final Object lockModeSetting = hints.get( QueryHints.HINT_NATIVE_LOCKMODE );
+		final Object lockModeSetting = hints.get( HINT_NATIVE_LOCK_MODE );
 		final LockMode lockMode;
 		if ( lockModeSetting == null ) {
 			lockMode = LockMode.NONE;
 		}
-		else if ( LockMode.class.isInstance( lockModeSetting ) ) {
-			lockMode = LockMode.class.cast( lockModeSetting );
+		else if ( lockModeSetting instanceof LockMode ) {
+			lockMode = (LockMode) lockModeSetting;
 		}
-		else if ( LockModeType.class.isInstance( lockModeSetting ) ) {
-			lockMode = LockModeTypeHelper.getLockMode( LockModeType.class.cast( lockModeSetting ) );
+		else if ( lockModeSetting instanceof LockModeType ) {
+			lockMode = LockModeTypeHelper.getLockMode( (LockModeType) lockModeSetting );
 		}
 		else {
 			lockMode = LockMode.fromExternalForm( lockModeSetting.toString() );

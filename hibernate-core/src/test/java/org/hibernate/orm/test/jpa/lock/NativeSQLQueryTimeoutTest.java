@@ -6,18 +6,19 @@
  */
 package org.hibernate.orm.test.jpa.lock;
 
+import java.util.Map;
+
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.jpa.QueryHints;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.util.ExceptionUtil;
 import org.junit.Test;
 
-import java.util.Map;
-
+import static org.hibernate.jpa.SpecHints.HINT_SPEC_QUERY_TIMEOUT;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -31,7 +32,7 @@ import static org.junit.Assert.fail;
 public class NativeSQLQueryTimeoutTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	protected void addConfigOptions(Map options) {
-		options.put( QueryHints.SPEC_HINT_TIMEOUT, "500" );
+		options.put( HINT_SPEC_QUERY_TIMEOUT, "500" );
 	}
 
 	@Test

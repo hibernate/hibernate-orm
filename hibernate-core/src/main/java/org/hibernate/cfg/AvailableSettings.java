@@ -100,14 +100,14 @@ public interface AvailableSettings {
 	String JAKARTA_SHARED_CACHE_MODE = "jakarta.persistence.sharedCache.mode";
 
 	/**
-	 * @see org.hibernate.jpa.SpecHints#HINT_CACHE_RETRIEVE_MODE
+	 * @see org.hibernate.jpa.SpecHints#HINT_SPEC_CACHE_RETRIEVE_MODE
 	 */
-	String JAKARTA_SHARED_CACHE_RETRIEVE_MODE = org.hibernate.jpa.SpecHints.HINT_CACHE_RETRIEVE_MODE;
+	String JAKARTA_SHARED_CACHE_RETRIEVE_MODE = org.hibernate.jpa.SpecHints.HINT_SPEC_CACHE_RETRIEVE_MODE;
 
 	/**
-	 * @see org.hibernate.jpa.SpecHints#HINT_CACHE_STORE_MODE
+	 * @see org.hibernate.jpa.SpecHints#HINT_SPEC_CACHE_STORE_MODE
 	 */
-	String JAKARTA_SHARED_CACHE_STORE_MODE = org.hibernate.jpa.SpecHints.HINT_CACHE_STORE_MODE;
+	String JAKARTA_SHARED_CACHE_STORE_MODE = org.hibernate.jpa.SpecHints.HINT_SPEC_CACHE_STORE_MODE;
 
 	/**
 	 * Used to indicate what form of automatic validation is in effect as per rules defined
@@ -349,7 +349,7 @@ public interface AvailableSettings {
 	String DIALECT ="hibernate.dialect";
 
 	/**
-	 * Specifies additional {@link org.hibernate.engine.jdbc.dialect.spi.DialectResolver} implementations 
+	 * Specifies additional {@link org.hibernate.engine.jdbc.dialect.spi.DialectResolver} implementations
 	 * to register with the standard {@link org.hibernate.engine.jdbc.dialect.spi.DialectFactory}.
 	 */
 	String DIALECT_RESOLVERS = "hibernate.dialect_resolvers";

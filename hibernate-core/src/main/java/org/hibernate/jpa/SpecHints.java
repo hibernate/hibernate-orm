@@ -8,7 +8,6 @@ package org.hibernate.jpa;
 
 import java.util.Map;
 
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.graph.GraphSemantic;
 
 import jakarta.persistence.LockModeType;
@@ -31,7 +30,7 @@ public interface SpecHints {
 	 *
 	 * @see GraphSemantic#FETCH
 	 */
-	String HINT_FETCH_GRAPH = "jakarta.persistence.fetchgraph";
+	String HINT_SPEC_FETCH_GRAPH = "jakarta.persistence.fetchgraph";
 
 	/**
 	 * Hint providing a {@link jakarta.persistence.EntityGraph} which should be
@@ -39,19 +38,19 @@ public interface SpecHints {
 	 *
 	 * @see GraphSemantic#LOAD
 	 */
-	String HINT_LOAD_GRAPH = "jakarta.persistence.loadgraph";
+	String HINT_SPEC_LOAD_GRAPH = "jakarta.persistence.loadgraph";
 
 	/**
 	 * Hint requesting a pessimistic lock timeout (in milliseconds).
 	 */
-	String HINT_LOCK_TIMEOUT = "jakarta.persistence.lock.timeout";
+	String HINT_SPEC_LOCK_TIMEOUT = "jakarta.persistence.lock.timeout";
 
 	/**
 	 * Hint indicating whether to extend pessimistic locking to
 	 * associated tables.  Expected to be an instance of
 	 * {@link jakarta.persistence.PessimisticLockScope}
 	 */
-	String HINT_LOCK_SCOPE = "jakarta.persistence.lock.scope";
+	String HINT_SPEC_LOCK_SCOPE = "jakarta.persistence.lock.scope";
 
 	/**
 	 * The Jakarta Persistence defined hint for requesting a timeout
@@ -59,7 +58,7 @@ public interface SpecHints {
 	 *
 	 * @implSpec Not valid for load and/or lock operations
 	 */
-	String HINT_QUERY_TIMEOUT = "jakarta.persistence.query.timeout";
+	String HINT_SPEC_QUERY_TIMEOUT = "jakarta.persistence.query.timeout";
 
 	/**
 	 * Hint specifying how Hibernate should handle retrieving data from
@@ -70,7 +69,7 @@ public interface SpecHints {
 	 * @see jakarta.persistence.Query#setHint
 	 * @see org.hibernate.CacheMode
 	 */
-	String HINT_CACHE_RETRIEVE_MODE = "jakarta.persistence.cache.retrieveMode";
+	String HINT_SPEC_CACHE_RETRIEVE_MODE = "jakarta.persistence.cache.retrieveMode";
 
 	/**
 	 * Hint specifying how Hibernate should handle retrieving data from
@@ -81,6 +80,6 @@ public interface SpecHints {
 	 * @see jakarta.persistence.Query#setHint
 	 * @see org.hibernate.CacheMode
 	 */
-	String HINT_CACHE_STORE_MODE = "jakarta.persistence.cache.storeMode";
+	String HINT_SPEC_CACHE_STORE_MODE = "jakarta.persistence.cache.storeMode";
 
 }

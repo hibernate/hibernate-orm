@@ -8,14 +8,12 @@ package org.hibernate.bytecode.internal.bytebuddy;
 
 import java.util.Collections;
 import java.lang.reflect.Constructor;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.spi.BasicProxyFactory;
-import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.proxy.ProxyConfiguration;
 
@@ -27,7 +25,7 @@ import net.bytebuddy.dynamic.scaffold.subclass.ConstructorStrategy;
 public class BasicProxyFactoryImpl implements BasicProxyFactory {
 
 	private static final Class[] NO_INTERFACES = ArrayHelper.EMPTY_CLASS_ARRAY;
-	private static final String PROXY_NAMING_SUFFIX = Environment.useLegacyProxyClassnames() ? "HibernateBasicProxy$" : "HibernateBasicProxy";
+	private static final String PROXY_NAMING_SUFFIX = "HibernateBasicProxy";
 
 	private final Class proxyClass;
 	private final ProxyConfiguration.Interceptor interceptor;

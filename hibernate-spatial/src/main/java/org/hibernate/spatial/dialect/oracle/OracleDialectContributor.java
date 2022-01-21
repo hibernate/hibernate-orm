@@ -25,9 +25,16 @@ import org.geolatte.geom.codec.db.oracle.OracleJDBCTypeFactory;
 public class OracleDialectContributor implements ContributorImplementor {
 
 	private final ServiceRegistry serviceRegistry;
+	private final boolean useSTGeometry;
 
 	public OracleDialectContributor(ServiceRegistry serviceRegistry) {
 		this.serviceRegistry = serviceRegistry;
+		final var cfgService = getServiceRegistry().getService( ConfigurationService.class );
+		this.useSTGeometry = cfgService.getSetting(
+				HibernateSpatialConfigurationSettings.ORACLE_OGC_STRICT,
+				StandardConverters.BOOLEAN,
+				false
+		);
 	}
 
 	@Override
@@ -35,6 +42,7 @@ public class OracleDialectContributor implements ContributorImplementor {
 		HSMessageLogger.LOGGER.typeContributions( this.getClass().getCanonicalName() );
 		final ConfigurationService cfgService = getServiceRegistry().getService( ConfigurationService.class );
 		final StrategySelector strategySelector = getServiceRegistry().getService( StrategySelector.class );
+
 
 		final ConnectionFinder connectionFinder = strategySelector.resolveStrategy(
 				ConnectionFinder.class,
@@ -48,27 +56,20 @@ public class OracleDialectContributor implements ContributorImplementor {
 		HSMessageLogger.LOGGER.connectionFinder( connectionFinder.getClass().getCanonicalName() );
 
 		SDOGeometryType sdoGeometryType = new SDOGeometryType(
-				new OracleJDBCTypeFactory(
-						connectionFinder
-				)
+				new OracleJDBCTypeFactory( connectionFinder ), useSTGeometry
 		);
 
-		typeContributions.contributeJdbcTypeDescriptor( sdoGeometryType );
+		typeContributions.contributeJdbcType( sdoGeometryType );
 	}
 
 	@Override
 	public void contributeFunctions(FunctionContributions functionContributions) {
 		HSMessageLogger.LOGGER.functionContributions( this.getClass().getCanonicalName() );
-		final var cfgService = getServiceRegistry().getService( ConfigurationService.class );
-		boolean isOgcStrict = cfgService.getSetting(
-				HibernateSpatialConfigurationSettings.ORACLE_OGC_STRICT,
-				StandardConverters.BOOLEAN,
-				false
-		);
 
 		KeyedSqmFunctionDescriptors functionDescriptors;
-		if (isOgcStrict)
-			functionDescriptors = new OracleSQLMMFunctionDescriptors( functionContributions);
+		if ( useSTGeometry ) {
+			functionDescriptors = new OracleSQLMMFunctionDescriptors( functionContributions );
+		}
 		else {
 			functionDescriptors = new OracleSDOFunctionDescriptors( functionContributions );
 		}

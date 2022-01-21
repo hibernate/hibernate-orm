@@ -33,7 +33,7 @@ public class OracleSDOTestSupport extends TestSupport {
 
 	@Override
 	public PredicateRegexes predicateRegexes() {
-		return new PredicateRegexes( "st_" );
+		return new OraclePredicateRegexes();
 	}
 
 	@Override

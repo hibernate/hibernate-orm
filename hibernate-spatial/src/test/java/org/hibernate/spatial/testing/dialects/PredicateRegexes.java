@@ -80,8 +80,12 @@ public class PredicateRegexes {
 				.map( mkPredRegex );
 	}
 
-	private void add(String predicate, String inlineRegex, String bindingRegex) {
+	protected void add(String predicate, String inlineRegex, String bindingRegex) {
 		regexes.put( predicate, new RegexPair( inlineRegex, bindingRegex ) );
+	}
+
+	protected void add(String predicate, String regex) {
+		regexes.put( predicate, new RegexPair( regex, regex ) );
 	}
 
 	static public class PredicateRegex {

@@ -22,10 +22,10 @@ import org.hibernate.spatial.SpatialRelation;
 class SqlServerSupport implements SpatialDialect, Serializable {
 
 	private SqlServerFunctions functions = new SqlServerFunctions();
-
-	Iterable<? extends Map.Entry<String, SqmFunctionDescriptor>> functionsToRegister() {
-		return functions;
-	}
+//
+//	Iterable<? extends Map.Entry<String, SqmFunctionDescriptor>> functionsToRegister() {
+//		return functions;
+//	}
 
 	void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 	}
@@ -100,7 +100,7 @@ class SqlServerSupport implements SpatialDialect, Serializable {
 
 
 	public boolean supports(SpatialFunction function) {
-		return ( functions.get( function.toString() ) != null );
+		return true;
 	}
 
 }

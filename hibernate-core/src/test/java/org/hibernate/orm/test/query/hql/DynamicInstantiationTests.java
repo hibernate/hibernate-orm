@@ -13,7 +13,7 @@ import org.hibernate.orm.test.query.sqm.BaseSqmUnitTest;
 import org.hibernate.orm.test.query.sqm.domain.ConstructedLookupListItem;
 import org.hibernate.orm.test.query.sqm.domain.InjectedLookupListItem;
 import org.hibernate.orm.test.query.sqm.domain.NestedCtorLookupListItem;
-import org.hibernate.query.DynamicInstantiationNature;
+import org.hibernate.query.sqm.DynamicInstantiationNature;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;

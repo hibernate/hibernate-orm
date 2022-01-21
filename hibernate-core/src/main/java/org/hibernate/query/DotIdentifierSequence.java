@@ -9,17 +9,41 @@ package org.hibernate.query;
 import java.util.function.BiFunction;
 
 /**
- * Hibernate often deals with compound names/paths.  This interface defines a standard way of interacting with them
+ * Hibernate often deals with compound names/paths.  This interface defines a
+ * standard way of interacting with them
  *
  * @author Steve Ebersole
  */
 public interface DotIdentifierSequence {
+	/**
+	 * The parent sequence part.  E.g., given the sequence `a.b.c`,
+	 * this returns `a.b`
+	 */
 	DotIdentifierSequence getParent();
+
+	/**
+	 * The name of this sequence part.  E.g., given the sequence `a.b.c`,
+	 * this returns `c`
+	 */
 	String getLocalName();
+
+	/**
+	 * The full sequence text.  E.g., given the sequence `a.b.c`,
+	 * this returns `a.b.c`
+	 */
 	String getFullPath();
 
+	/**
+	 * Add a new part to the end of this sequence, returning the new
+	 * representation.  E.g., given the sequence `a.b.c` and appending `d`
+	 * would return a new sequence `a.b.c.d`
+	 */
 	DotIdentifierSequence append(String subPathName);
 
+	/**
+	 * Is this sequence node the root of the sequence.  Same as checking
+	 * the nullness of {@link #getParent()}
+	 */
 	default boolean isRoot() {
 		return getParent() == null;
 	}

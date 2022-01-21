@@ -8,10 +8,8 @@ package org.hibernate.query.sqm.tree.cte;
 
 import java.util.List;
 
-import org.hibernate.query.NullPrecedence;
-import org.hibernate.query.SortOrder;
-import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
-import org.hibernate.sql.ast.tree.cte.CteColumn;
+import org.hibernate.query.sqm.NullPrecedence;
+import org.hibernate.query.sqm.SortOrder;
 import org.hibernate.sql.ast.tree.cte.CteMaterialization;
 import org.hibernate.sql.ast.tree.cte.CteSearchClauseKind;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -19,7 +17,6 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
-import org.hibernate.sql.ast.tree.cte.SearchClauseSpecification;
 
 /**
  * @author Steve Ebersole

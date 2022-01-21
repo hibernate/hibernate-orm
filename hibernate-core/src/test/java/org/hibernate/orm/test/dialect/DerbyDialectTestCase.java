@@ -8,7 +8,7 @@ package org.hibernate.orm.test.dialect;
 
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.DerbyDialect;
-import org.hibernate.query.Limit;
+import org.hibernate.query.spi.Limit;
 
 import static org.junit.Assert.assertEquals;
 

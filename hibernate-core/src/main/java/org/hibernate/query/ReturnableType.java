@@ -6,6 +6,7 @@
  */
 package org.hibernate.query;
 
+import org.hibernate.Incubating;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 
 /**
@@ -13,5 +14,6 @@ import org.hibernate.metamodel.model.domain.SimpleDomainType;
  *
  * @author Steve Ebersole
  */
+@Incubating
 public interface ReturnableType<T> extends SimpleDomainType<T> {
 }

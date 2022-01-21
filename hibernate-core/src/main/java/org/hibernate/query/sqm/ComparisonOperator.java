@@ -4,11 +4,13 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.query;
+package org.hibernate.query.sqm;
 
 /**
  * Defines the comparison operators.  We could also get away with
  * only 3 and use negation...
+ *
+ * @author Steve Ebersole
  */
 public enum ComparisonOperator {
 	EQUAL {

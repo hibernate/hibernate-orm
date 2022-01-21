@@ -12,6 +12,7 @@ import jakarta.persistence.metamodel.Bindable;
 
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.SemanticException;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.sqm.tree.SqmExpressableAccessor;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 
@@ -27,7 +28,7 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 public interface SqmPathSource<J> extends SqmExpressable<J>, Bindable<J>, SqmExpressableAccessor<J> {
 	/**
 	 * The name of this thing.  Mainly used in logging and when creating a
-	 * {@link org.hibernate.query.NavigablePath}
+	 * {@link NavigablePath}
 	 */
 	String getPathName();
 

@@ -12,12 +12,11 @@ import java.util.List;
 
 import org.hibernate.ScrollMode;
 import org.hibernate.internal.EmptyScrollableResults;
-import org.hibernate.query.Limit;
+import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.sql.exec.spi.ExecutionContext;
 
 /**
  * @author Steve Ebersole

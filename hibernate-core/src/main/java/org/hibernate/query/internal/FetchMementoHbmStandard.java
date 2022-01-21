@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.named.FetchMemento;
 import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;

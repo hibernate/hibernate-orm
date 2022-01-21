@@ -9,7 +9,7 @@ package org.hibernate.orm.test.dialect;
 import java.util.Locale;
 
 import org.hibernate.dialect.SQLServer2012Dialect;
-import org.hibernate.query.Limit;
+import org.hibernate.query.spi.Limit;
 
 import org.junit.After;
 import org.junit.Before;

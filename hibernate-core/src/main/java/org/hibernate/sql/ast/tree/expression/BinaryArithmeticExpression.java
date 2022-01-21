@@ -7,7 +7,7 @@
 package org.hibernate.sql.ast.tree.expression;
 
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
-import org.hibernate.query.BinaryArithmeticOperator;
+import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlSelection;

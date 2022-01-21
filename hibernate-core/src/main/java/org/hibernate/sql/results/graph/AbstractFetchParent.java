@@ -9,7 +9,7 @@ package org.hibernate.sql.results.graph;
 import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**

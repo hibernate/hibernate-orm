@@ -15,7 +15,7 @@ import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.StrictJpaComplianceViolation;

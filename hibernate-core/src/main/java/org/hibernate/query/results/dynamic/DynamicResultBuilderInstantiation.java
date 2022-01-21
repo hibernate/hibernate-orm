@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
 
-import org.hibernate.query.DynamicInstantiationNature;
+import org.hibernate.query.sqm.DynamicInstantiationNature;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.results.Builders;
 import org.hibernate.query.results.ResultBuilderInstantiationValued;

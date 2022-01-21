@@ -9,7 +9,7 @@ package org.hibernate.dialect.pagination;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-import org.hibernate.query.Limit;
+import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.QueryOptions;
 
 /**

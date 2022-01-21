@@ -9,9 +9,8 @@ package org.hibernate.sql.ast.tree.from;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;

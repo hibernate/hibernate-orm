@@ -30,9 +30,8 @@ import jakarta.persistence.criteria.Selection;
 import jakarta.persistence.criteria.SetJoin;
 import jakarta.persistence.criteria.Subquery;
 
-import org.hibernate.query.NullPrecedence;
-import org.hibernate.query.SortOrder;
-import org.hibernate.metamodel.model.domain.DomainType;
+import org.hibernate.query.sqm.NullPrecedence;
+import org.hibernate.query.sqm.SortOrder;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**

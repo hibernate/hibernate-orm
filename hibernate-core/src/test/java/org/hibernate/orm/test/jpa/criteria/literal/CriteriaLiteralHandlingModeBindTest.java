@@ -10,7 +10,7 @@ import java.util.Map;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.query.CastType;
+import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.criteria.ValueHandlingMode;
 
 import org.hibernate.testing.RequiresDialect;

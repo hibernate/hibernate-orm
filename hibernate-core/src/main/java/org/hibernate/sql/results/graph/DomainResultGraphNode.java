@@ -7,7 +7,7 @@
 package org.hibernate.sql.results.graph;
 
 import org.hibernate.Incubating;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**

@@ -7,7 +7,7 @@
 package org.hibernate.query.sqm.tree.select;
 
 
-import org.hibernate.query.DynamicInstantiationNature;
+import org.hibernate.query.sqm.DynamicInstantiationNature;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.type.descriptor.java.JavaType;
 

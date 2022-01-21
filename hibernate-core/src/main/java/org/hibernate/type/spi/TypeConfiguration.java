@@ -48,8 +48,8 @@ import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.model.domain.internal.ArrayTupleType;
 import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
-import org.hibernate.query.BinaryArithmeticOperator;
-import org.hibernate.query.IntervalType;
+import org.hibernate.query.sqm.BinaryArithmeticOperator;
+import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
@@ -68,7 +68,6 @@ import org.hibernate.type.internal.BasicTypeImpl;
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.internal.CoreLogging.messageLogger;
-import static org.hibernate.query.BinaryArithmeticOperator.DIVIDE;
 
 /**
  * Defines a set of available Type instances as isolated from other configurations.  The

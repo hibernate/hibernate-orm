@@ -4,12 +4,16 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
+package org.hibernate.query.sqm;
 
 /**
- * Package defining support for native SQL queries
+ * The different types of intervals that SQL defines.
  *
- * @see org.hibernate.query.NativeQuery
- * @see org.hibernate.query.sql.spi.NativeQueryImplementor
- * @see org.hibernate.query.sql.spi.NamedNativeQueryMemento
+ * @author Christian Beikov
  */
-package org.hibernate.query.sql;
+public enum IntervalType {
+	/**
+	 * A second based interval.
+	 **/
+	SECOND;
+}

@@ -6,6 +6,8 @@
  */
 package org.hibernate.query.sqm.produce.function;
 
+import org.hibernate.query.sqm.TemporalUnit;
+
 /**
  * A mini-"type system" for HQL function parameters.
  * <p>
@@ -56,7 +58,7 @@ public enum FunctionParameterType {
 	 * A temporal unit, used by the {@code extract()} function, and
 	 * some native database functions
 	 *
-	 * @see org.hibernate.query.TemporalUnit
+	 * @see TemporalUnit
 	 * @see org.hibernate.query.sqm.tree.expression.SqmExtractUnit
 	 * @see org.hibernate.query.sqm.tree.expression.SqmDurationUnit
 	 */

@@ -8,8 +8,8 @@ package org.hibernate.query.criteria;
 
 import java.util.List;
 
-import org.hibernate.query.FetchClauseType;
-import org.hibernate.query.SetOperator;
+import org.hibernate.query.sqm.FetchClauseType;
+import org.hibernate.query.sqm.SetOperator;
 
 /**
  * A query group i.e. query parts connected with a set operator.

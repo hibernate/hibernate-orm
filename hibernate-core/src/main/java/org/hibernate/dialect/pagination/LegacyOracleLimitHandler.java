@@ -7,7 +7,7 @@
 package org.hibernate.dialect.pagination;
 
 import org.hibernate.dialect.DatabaseVersion;
-import org.hibernate.query.Limit;
+import org.hibernate.query.spi.Limit;
 
 import java.util.regex.Matcher;
 

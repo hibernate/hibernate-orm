@@ -14,11 +14,11 @@ import jakarta.persistence.TemporalType;
 
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
-import org.hibernate.query.CastType;
-import org.hibernate.query.TemporalUnit;
+import org.hibernate.query.sqm.CastType;
+import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 
-import static org.hibernate.query.TemporalUnit.DAY;
+import static org.hibernate.query.sqm.TemporalUnit.DAY;
 
 /**
  * An SQL dialect for Postgres Plus

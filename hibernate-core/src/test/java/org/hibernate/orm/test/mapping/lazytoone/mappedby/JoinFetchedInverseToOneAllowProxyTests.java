@@ -59,7 +59,6 @@ public class JoinFetchedInverseToOneAllowProxyTests extends BaseNonConfigCoreFun
 	@Override
 	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
 		super.configureStandardServiceRegistryBuilder( ssrb );
-		ssrb.applySetting( AvailableSettings.ALLOW_ENHANCEMENT_AS_PROXY, true );
 		sqlStatementInterceptor = new SQLStatementInterceptor( ssrb );
 	}
 

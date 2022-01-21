@@ -837,32 +837,6 @@ public interface AvailableSettings {
 	String USE_REFLECTION_OPTIMIZER = "hibernate.bytecode.use_reflection_optimizer";
 
 	/**
-	 * Controls the base integer for binding JDBC-style ({@code ?}) ordinal
-	 * parameters when the Hibernate SessionFactory is bootstrapped via the native
-	 * bootstrapping API.  JPA says that all non-named parameter binding is explicitly
-	 * 1-based; so when bootstrapped via JPA, Hibernate always treats these as 1-based.
-	 * <p/>
-	 * Note that this affects only ordinal parameters.  Positional
-	 * parameters (e.g. {@code ?1}) explicitly define the binding position (1) in
-	 * their declaration, whereas the binding position is implicit with ordinal
-	 * parameters based on its ordinal position in the query.  As of 6.0, support
-	 * for this ordinal parameter declaration form has been removed from HQL and
-	 * is now only valid for {@link org.hibernate.query.NativeQuery}s.
-	 * <p/>
-	 * Historically Hibernate followed JDBC conventions for ordinal parameter binding
-	 * such that the implied positions were 0-based.  This presents a mismatch between
-	 * how to bind ordinal parameters based on how the SessionFactory was bootstrapped,
-	 * which is not ideal.  This setting then seeks to allow unifying how these are
-	 * handled regardless of the bootstrap method.  The expected value of this setting
-	 * is an integer value of either 0 (the default) or 1.  The default follows the legacy
-	 * expectations and allows legacy Hibernate apps to continue to work.  Setting this
-	 * to 1 (one) allows all non-named parameter binding to be unified as 1-based.
-	 *
-	 * @since 6.0
-	 */
-	String NATIVE_QUERY_ORDINAL_PARAMETER_BASE = "hibernate.query.native.ordinal_parameter_base";
-
-	/**
 	 * Controls whether Hibernate attempts to map parameter names specified in a
 	 * {@link org.hibernate.procedure.ProcedureCall} or
 	 * {@link jakarta.persistence.StoredProcedureQuery} to named parameters in the
@@ -1119,8 +1093,11 @@ public interface AvailableSettings {
 	 *     <li>'simple' as a short name for {@link org.hibernate.cache.internal.SimpleCacheKeysFactory}</li>
 	 * </ul>
 	 *
-	 * @since 5.2 - note that currently this is only honored for hibernate-infinispan
+	 * @since 5.2
+	 *
+	 * @deprecated this is only honored for hibernate-infinispan
 	 */
+	@Deprecated
 	String CACHE_KEYS_FACTORY = "hibernate.cache.keys_factory";
 
 	/**

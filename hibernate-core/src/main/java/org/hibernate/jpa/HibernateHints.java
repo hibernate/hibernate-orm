@@ -130,7 +130,7 @@ public interface HibernateHints {
 	 * occur as part of a flush.  See {@link org.hibernate.query.SynchronizeableQuery}
 	 * and {@link FlushMode#MANUAL} for more information.
 	 *
-	 * @see org.hibernate.SynchronizeableQuery
+	 * @see org.hibernate.query.SynchronizeableQuery
 	 * @see #HINT_FLUSH_MODE
 	 */
 	String HINT_NATIVE_SPACES = "org.hibernate.query.native.spaces";

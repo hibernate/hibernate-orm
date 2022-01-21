@@ -95,7 +95,7 @@ public @interface NamedNativeQuery {
 	/**
 	 * The query spaces to apply for the query.
 	 *
-	 * @see org.hibernate.SynchronizeableQuery
+	 * @see org.hibernate.query.SynchronizeableQuery
 	 */
 	String[] querySpaces() default {};
 }

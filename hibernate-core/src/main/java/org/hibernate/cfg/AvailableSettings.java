@@ -930,39 +930,6 @@ public interface AvailableSettings {
 	String CALLABLE_NAMED_PARAMS_ENABLED = "hibernate.query.proc.callable_named_params_enabled";
 
 	/**
-	 * Should Hibernate use enhanced entities "as a proxy"?
-	 * <p>
-	 * E.g., when an application uses {@link org.hibernate.Session#load} against an enhanced
-	 * class, enabling this will allow Hibernate to create an "empty" instance of the enhanced
-	 * class to act as the proxy - it contains just the identifier which is later used to
-	 * trigger the base initialization but no other data is loaded
-	 * <p>
-	 * Not enabling this (the legacy default behavior) would cause the "base" attributes to
-	 * be loaded.  Any lazy-group attributes would not be initialized.
-	 * <p>
-	 * Applications using bytecode enhancement and switching to allowing this should be careful
-	 * in use of the various {@link org.hibernate.Hibernate} methods such as
-	 * {@link org.hibernate.Hibernate#isInitialized},
-	 * {@link org.hibernate.Hibernate#isPropertyInitialized}, etc - enabling this setting changes
-	 * the results of those methods
-	 *
-	 * @implSpec See {@link org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor}
-	 *
-	 * @deprecated (as of 5.5) with no replacement.  When using enhancement based lazy loading
-	 * using the enhanced class as proxy is always used when appropriate.
-	 */
-	@Deprecated
-	String ALLOW_ENHANCEMENT_AS_PROXY = "hibernate.bytecode.allow_enhancement_as_proxy";
-
-	/**
-	 * The classname of the HQL query parser factory
-	 *
-	 * @deprecated Use {@link #SEMANTIC_QUERY_PRODUCER}
-	 */
-	@Deprecated
-	String QUERY_TRANSLATOR = "hibernate.query.factory_class";
-
-	/**
 	 * Names the {@link org.hibernate.query.hql.HqlTranslator} class to use.
 	 */
 	String SEMANTIC_QUERY_PRODUCER = "hibernate.query.hql.translator";
@@ -971,18 +938,6 @@ public interface AvailableSettings {
 	 * Names the {@link org.hibernate.query.sqm.sql.SqmTranslatorFactory} class to use.
 	 */
 	String SEMANTIC_QUERY_TRANSLATOR = "hibernate.query.sqm.translator";
-
-	/**
-	 * @deprecated Use {@link #QUERY_MULTI_TABLE_MUTATION_STRATEGY} instead
-	 */
-	@Deprecated
-	String HQL_BULK_ID_STRATEGY = "hibernate.hql.bulk_id_strategy";
-
-	/**
-	 * @deprecated Use {@link #QUERY_MULTI_TABLE_MUTATION_STRATEGY} instead
-	 */
-	@Deprecated
-	String ID_TABLE_STRATEGY = "hibernate.id_table_strategy";
 
 	/**
 	 * Defines the "global" strategy to use for handling HQL and Criteria mutation queries.

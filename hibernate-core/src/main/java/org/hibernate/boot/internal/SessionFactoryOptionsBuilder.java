@@ -378,13 +378,9 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 		this.jtaTrackByThread = cfgService.getSetting( JTA_TRACK_BY_THREAD, BOOLEAN, true );
 
-		final String hqlTranslatorImplFqn = ConfigurationHelper.extractValue(
+		final String hqlTranslatorImplFqn = ConfigurationHelper.extractPropertyValue(
 				AvailableSettings.SEMANTIC_QUERY_PRODUCER,
-				configurationSettings,
-				() -> ConfigurationHelper.extractPropertyValue(
-						AvailableSettings.QUERY_TRANSLATOR,
-						configurationSettings
-				)
+				configurationSettings
 		);
 		this.hqlTranslator = resolveHqlTranslator(
 				hqlTranslatorImplFqn,
@@ -403,17 +399,9 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		);
 
 
-		final String sqmMutationStrategyImplName = ConfigurationHelper.extractValue(
+		final String sqmMutationStrategyImplName = ConfigurationHelper.extractPropertyValue(
 				AvailableSettings.QUERY_MULTI_TABLE_MUTATION_STRATEGY,
-				configurationSettings,
-				() -> ConfigurationHelper.extractValue(
-						AvailableSettings.ID_TABLE_STRATEGY,
-						configurationSettings,
-						() -> ConfigurationHelper.extractPropertyValue(
-								AvailableSettings.HQL_BULK_ID_STRATEGY,
-								configurationSettings
-						)
-				)
+				configurationSettings
 		);
 
 		this.sqmMultiTableMutationStrategy = resolveSqmMutationStrategy(

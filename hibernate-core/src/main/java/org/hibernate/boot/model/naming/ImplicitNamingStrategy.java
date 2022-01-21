@@ -6,6 +6,8 @@
  */
 package org.hibernate.boot.model.naming;
 
+import org.hibernate.Incubating;
+
 /**
  * Pluggable strategy for applying implicit naming rules when an
  * explicit name is not given.
@@ -45,6 +47,7 @@ package org.hibernate.boot.model.naming;
  *
  * @author Steve Ebersole
  */
+@Incubating
 public interface ImplicitNamingStrategy {
 	/**
 	 * Determine the implicit name of an entity's primary table.
@@ -53,7 +56,7 @@ public interface ImplicitNamingStrategy {
 	 *
 	 * @return The implicit table name.
 	 */
-	public Identifier determinePrimaryTableName(ImplicitEntityNameSource source);
+	Identifier determinePrimaryTableName(ImplicitEntityNameSource source);
 
 	/**
 	 * Determine the name of an association join table given the source naming
@@ -63,7 +66,7 @@ public interface ImplicitNamingStrategy {
 	 *
 	 * @return The implicit table name.
 	 */
-	public Identifier determineJoinTableName(ImplicitJoinTableNameSource source);
+	Identifier determineJoinTableName(ImplicitJoinTableNameSource source);
 
 	/**
 	 * Determine the name of a collection join table given the source naming
@@ -73,7 +76,7 @@ public interface ImplicitNamingStrategy {
 	 *
 	 * @return The implicit table name.
 	 */
-	public Identifier determineCollectionTableName(ImplicitCollectionTableNameSource source);
+	Identifier determineCollectionTableName(ImplicitCollectionTableNameSource source);
 
 
 	/**
@@ -83,7 +86,7 @@ public interface ImplicitNamingStrategy {
 	 *
 	 * @return The implicit discriminator column name
 	 */
-	public Identifier determineDiscriminatorColumnName(ImplicitDiscriminatorColumnNameSource source);
+	Identifier determineDiscriminatorColumnName(ImplicitDiscriminatorColumnNameSource source);
 
 	/**
 	 * Determine the implicit name for the tenant (multi-tenancy) identifier column for the given entity
@@ -92,7 +95,7 @@ public interface ImplicitNamingStrategy {
 	 *
 	 * @return The determined tenant identifier column name
 	 */
-	public Identifier determineTenantIdColumnName(ImplicitTenantIdColumnNameSource source);
+	Identifier determineTenantIdColumnName(ImplicitTenantIdColumnNameSource source);
 
 	/**
 	 * Determine the implicit name for the identifier column for the given entity
@@ -101,7 +104,7 @@ public interface ImplicitNamingStrategy {
 	 *
 	 * @return The determined identifier column name
 	 */
-	public Identifier determineIdentifierColumnName(ImplicitIdentifierColumnNameSource source);
+	Identifier determineIdentifierColumnName(ImplicitIdentifierColumnNameSource source);
 
 	/**
 	 * Determine the name of an attribute's column given the source naming
@@ -111,7 +114,7 @@ public interface ImplicitNamingStrategy {
 	 *
 	 * @return The implicit column name.
 	 */
-	public Identifier determineBasicColumnName(ImplicitBasicColumnNameSource source);
+	Identifier determineBasicColumnName(ImplicitBasicColumnNameSource source);
 
 	/**
 	 * Determine the column name related to {@link jakarta.persistence.JoinColumn}.  In
@@ -122,7 +125,7 @@ public interface ImplicitNamingStrategy {
 	 *
 	 * @return The determined join column name
 	 */
-	public Identifier determineJoinColumnName(ImplicitJoinColumnNameSource source);
+	Identifier determineJoinColumnName(ImplicitJoinColumnNameSource source);
 
 	/**
 	 * Determine the column name related to {@link jakarta.persistence.PrimaryKeyJoinColumn}.  In
@@ -133,7 +136,7 @@ public interface ImplicitNamingStrategy {
 	 *
 	 * @return The determined column name
 	 */
-	public Identifier determinePrimaryKeyJoinColumnName(ImplicitPrimaryKeyJoinColumnNameSource source);
+	Identifier determinePrimaryKeyJoinColumnName(ImplicitPrimaryKeyJoinColumnNameSource source);
 
 	/**
 	 * Determine the column name related to the discriminator portion of an ANY mapping when

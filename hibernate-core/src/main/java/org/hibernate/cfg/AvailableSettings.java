@@ -9,6 +9,7 @@ package org.hibernate.cfg;
 import java.util.function.Supplier;
 
 import org.hibernate.HibernateException;
+import org.hibernate.jpa.HibernateHints;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
 import org.hibernate.Transaction;
@@ -32,6 +33,7 @@ import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.tool.schema.JdbcMetadaAccessStrategy;
 import org.hibernate.tool.schema.SourceType;
 import org.hibernate.tool.schema.UniqueConstraintSchemaUpdateStrategy;
+import org.hibernate.tool.schema.internal.script.SingleLineSqlScriptExtractor;
 
 /**
  * @author Steve Ebersole
@@ -125,24 +127,14 @@ public interface AvailableSettings {
 	String JAKARTA_SHARED_CACHE_MODE = "jakarta.persistence.sharedCache.mode";
 
 	/**
-	 * NOTE : Not a valid EMF property...
-	 * <p/>
-	 * Used to indicate if the provider should attempt to retrieve requested data
-	 * in the shared cache.
-	 *
-	 * @see jakarta.persistence.CacheRetrieveMode
+	 * @see org.hibernate.jpa.SpecHints#HINT_CACHE_RETRIEVE_MODE
 	 */
-	String JAKARTA_SHARED_CACHE_RETRIEVE_MODE ="jakarta.persistence.cache.retrieveMode";
+	String JAKARTA_SHARED_CACHE_RETRIEVE_MODE = org.hibernate.jpa.SpecHints.HINT_CACHE_RETRIEVE_MODE;
 
 	/**
-	 * NOTE : Not a valid EMF property...
-	 * <p/>
-	 * Used to indicate if the provider should attempt to store data loaded from the database
-	 * in the shared cache.
-	 *
-	 * @see jakarta.persistence.CacheStoreMode
+	 * @see org.hibernate.jpa.SpecHints#HINT_CACHE_STORE_MODE
 	 */
-	String JAKARTA_SHARED_CACHE_STORE_MODE ="jakarta.persistence.cache.storeMode";
+	String JAKARTA_SHARED_CACHE_STORE_MODE = org.hibernate.jpa.SpecHints.HINT_CACHE_STORE_MODE;
 
 	/**
 	 * Used to indicate what form of automatic validation is in effect as per rules defined
@@ -1415,7 +1407,7 @@ public interface AvailableSettings {
 	String HBM2DDL_LOAD_SCRIPT_SOURCE = "javax.persistence.sql-load-script-source";
 
 	/**
-	 * Reference to the {@link org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractor} implementation class
+	 * Reference to the {@link  org.hibernate.tool.schema.spi.SqlScriptCommandExtractor} implementation class
 	 * to use for parsing source/import files as defined by {@link #HBM2DDL_CREATE_SCRIPT_SOURCE},
 	 * {@link #HBM2DDL_DROP_SCRIPT_SOURCE} or {@link #HBM2DDL_IMPORT_FILES}.
 	 * <p/>
@@ -1423,7 +1415,7 @@ public interface AvailableSettings {
 	 * of the ImportSqlCommandExtractor implementation.  If the FQN is given, the implementation
 	 * must provide a no-arg constructor.
 	 * <p/>
-	 * The default value is {@link org.hibernate.tool.hbm2ddl.SingleLineSqlCommandExtractor}.
+	 * The default value is {@link SingleLineSqlScriptExtractor}.
 	 */
 	String HBM2DDL_IMPORT_FILES_SQL_EXTRACTOR = "hibernate.hbm2ddl.import_files_sql_extractor";
 
@@ -2485,6 +2477,8 @@ public interface AvailableSettings {
 
 	/**
 	 * Used to determine flush mode.
+	 *
+	 * @see HibernateHints#HINT_FLUSH_MODE
 	 */
 	String FLUSH_MODE = "org.hibernate.flushMode";
 

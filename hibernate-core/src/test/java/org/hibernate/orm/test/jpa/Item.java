@@ -7,9 +7,11 @@
 
 //$Id$
 package org.hibernate.orm.test.jpa;
+
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityResult;
@@ -24,7 +26,13 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.QueryHint;
 import jakarta.persistence.SqlResultSetMapping;
 
-import org.hibernate.annotations.QueryHints;
+import static org.hibernate.jpa.HibernateHints.HINT_CACHEABLE;
+import static org.hibernate.jpa.HibernateHints.HINT_CACHE_MODE;
+import static org.hibernate.jpa.HibernateHints.HINT_COMMENT;
+import static org.hibernate.jpa.HibernateHints.HINT_FETCH_SIZE;
+import static org.hibernate.jpa.HibernateHints.HINT_FLUSH_MODE;
+import static org.hibernate.jpa.HibernateHints.HINT_READ_ONLY;
+import static org.hibernate.jpa.SpecHints.HINT_QUERY_TIMEOUT;
 
 /**
  * @author Gavin King
@@ -54,13 +62,13 @@ import org.hibernate.annotations.QueryHints;
 				query = "select i from Item i",
 				lockMode = LockModeType.PESSIMISTIC_WRITE,
 				hints = {
-						@QueryHint( name = QueryHints.TIMEOUT_JPA, value = "3000" ),
-						@QueryHint( name = QueryHints.CACHE_MODE, value = "ignore" ),
-						@QueryHint( name = QueryHints.CACHEABLE, value = "true" ),
-						@QueryHint( name = QueryHints.READ_ONLY, value = "true" ),
-						@QueryHint( name = QueryHints.COMMENT, value = "custom static comment" ),
-						@QueryHint( name = QueryHints.FETCH_SIZE, value = "512" ),
-						@QueryHint( name = QueryHints.FLUSH_MODE, value = "manual" )
+						@QueryHint( name = HINT_QUERY_TIMEOUT, value = "3000" ),
+						@QueryHint( name = HINT_CACHE_MODE, value = "ignore" ),
+						@QueryHint( name = HINT_CACHEABLE, value = "true" ),
+						@QueryHint( name = HINT_READ_ONLY, value = "true" ),
+						@QueryHint( name = HINT_COMMENT, value = "custom static comment" ),
+						@QueryHint( name = HINT_FETCH_SIZE, value = "512" ),
+						@QueryHint( name = HINT_FLUSH_MODE, value = "manual" )
 				}
 		),
 		@NamedQuery(name = "query-construct", query = "select new Item(i.name,i.descr) from Item i")

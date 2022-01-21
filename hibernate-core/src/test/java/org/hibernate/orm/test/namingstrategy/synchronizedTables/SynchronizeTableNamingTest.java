@@ -72,8 +72,8 @@ public class SynchronizeTableNamingTest {
 		public static final TestingPhysicalNamingStrategy INSTANCE = new TestingPhysicalNamingStrategy();
 
 		@Override
-		public Identifier toPhysicalTableName(Identifier name, JdbcEnvironment context) {
-			String baseName = name.render( context.getDialect() );
+		public Identifier toPhysicalTableName(Identifier logicalName, JdbcEnvironment context) {
+			String baseName = logicalName.render( context.getDialect() );
 			if ( baseName.equals( "table_a" ) ) {
 				baseName = "tbl_a";
 			}

@@ -6,6 +6,24 @@
  */
 package org.hibernate.cfg.annotations;
 
+import org.hibernate.AnnotationException;
+import org.hibernate.AssertionFailure;
+import org.hibernate.CacheMode;
+import org.hibernate.FlushMode;
+import org.hibernate.annotations.CacheModeType;
+import org.hibernate.annotations.FlushModeType;
+import org.hibernate.boot.internal.NamedHqlQueryDefinitionImpl;
+import org.hibernate.boot.internal.NamedProcedureCallDefinitionImpl;
+import org.hibernate.boot.query.NamedHqlQueryDefinition;
+import org.hibernate.boot.query.NamedNativeQueryDefinition;
+import org.hibernate.boot.query.NamedNativeQueryDefinitionBuilder;
+import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.cfg.BinderHelper;
+import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.jpa.HibernateHints;
+
+import org.jboss.logging.Logger;
+
 import jakarta.persistence.NamedNativeQueries;
 import jakarta.persistence.NamedNativeQuery;
 import jakarta.persistence.NamedQueries;
@@ -13,24 +31,6 @@ import jakarta.persistence.NamedQuery;
 import jakarta.persistence.NamedStoredProcedureQuery;
 import jakarta.persistence.SqlResultSetMapping;
 import jakarta.persistence.SqlResultSetMappings;
-
-import org.hibernate.AnnotationException;
-import org.hibernate.AssertionFailure;
-import org.hibernate.CacheMode;
-import org.hibernate.FlushMode;
-import org.hibernate.annotations.CacheModeType;
-import org.hibernate.annotations.FlushModeType;
-import org.hibernate.annotations.QueryHints;
-import org.hibernate.boot.internal.NamedHqlQueryDefinitionImpl;
-import org.hibernate.boot.internal.NamedProcedureCallDefinitionImpl;
-import org.hibernate.boot.query.NamedNativeQueryDefinitionBuilder;
-import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.boot.query.NamedHqlQueryDefinition;
-import org.hibernate.boot.query.NamedNativeQueryDefinition;
-import org.hibernate.cfg.BinderHelper;
-import org.hibernate.internal.CoreMessageLogger;
-
-import org.jboss.logging.Logger;
 
 /**
  * Query binder
@@ -65,13 +65,13 @@ public abstract class QueryBinder {
 				.setHqlString( queryString )
 				.setCacheable( hints.getCacheability() )
 				.setCacheMode( hints.getCacheMode() )
-				.setCacheRegion( hints.getString( QueryHints.CACHE_REGION ) )
+				.setCacheRegion( hints.getString( HibernateHints.HINT_CACHE_REGION ) )
 				.setTimeout( hints.getTimeout() )
-				.setFetchSize( hints.getInteger( QueryHints.FETCH_SIZE ) )
+				.setFetchSize( hints.getInteger( HibernateHints.HINT_FETCH_SIZE ) )
 				.setFlushMode( hints.getFlushMode() )
-				.setReadOnly( hints.getBoolean( QueryHints.READ_ONLY ) )
+				.setReadOnly( hints.getBoolean( HibernateHints.HINT_READ_ONLY ) )
 				.setLockOptions( hints.determineLockOptions( queryAnn ) )
-				.setComment( hints.getString( QueryHints.COMMENT ) )
+				.setComment( hints.getString( HibernateHints.HINT_COMMENT ) )
 				.build();
 
 		if ( isDefault ) {
@@ -112,12 +112,12 @@ public abstract class QueryBinder {
 				.setQuerySpaces( null )
 				.setCacheable( hints.getCacheability() )
 				.setCacheMode( hints.getCacheMode() )
-				.setCacheRegion( hints.getString( QueryHints.CACHE_REGION ) )
+				.setCacheRegion( hints.getString( HibernateHints.HINT_CACHE_REGION ) )
 				.setTimeout( hints.getTimeout() )
-				.setFetchSize( hints.getInteger( QueryHints.FETCH_SIZE ) )
+				.setFetchSize( hints.getInteger( HibernateHints.HINT_FETCH_SIZE ) )
 				.setFlushMode( hints.getFlushMode() )
-				.setReadOnly( hints.getBoolean( QueryHints.READ_ONLY ) )
-				.setComment( hints.getString( QueryHints.COMMENT ) )
+				.setReadOnly( hints.getBoolean( HibernateHints.HINT_READ_ONLY ) )
+				.setComment( hints.getString( HibernateHints.HINT_COMMENT ) )
 				.addHints( hints.getHintsMap() );
 
 

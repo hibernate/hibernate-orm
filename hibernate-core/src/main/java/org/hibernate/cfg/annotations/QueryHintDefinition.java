@@ -9,9 +9,6 @@ package org.hibernate.cfg.annotations;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import jakarta.persistence.LockModeType;
-import jakarta.persistence.NamedQuery;
-import jakarta.persistence.QueryHint;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.CacheMode;
@@ -19,10 +16,16 @@ import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
-import org.hibernate.annotations.QueryHints;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.util.LockModeConverter;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.jpa.HibernateHints;
+import org.hibernate.jpa.LegacySpecHints;
+import org.hibernate.jpa.SpecHints;
+
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.NamedQuery;
+import jakarta.persistence.QueryHint;
 
 /**
  * @author <a href="mailto:stliu@hibernate.org">Strong Liu</a>
@@ -80,21 +83,27 @@ public class QueryHintDefinition {
 	// Specialized access
 
 	public Integer getTimeout() {
-		final Integer jpaTimeout = getInteger( QueryHints.TIMEOUT_JPA );
-		if ( jpaTimeout != null ) {
+		final Integer jakartaTimeout = getInteger( SpecHints.HINT_QUERY_TIMEOUT );
+		if ( jakartaTimeout != null ) {
 			// convert milliseconds to seconds
-			return (int) Math.round( jpaTimeout.doubleValue() / 1000.0 );
+			return (int) Math.round( jakartaTimeout.doubleValue() / 1000.0 );
 		}
 
-		return getInteger( QueryHints.TIMEOUT_HIBERNATE );
+		final Integer javaeeTimeout = getInteger( LegacySpecHints.HINT_JAVAEE_QUERY_TIMEOUT );
+		if ( javaeeTimeout != null ) {
+			// convert milliseconds to seconds
+			return (int) Math.round( javaeeTimeout.doubleValue() / 1000.0 );
+		}
+
+		return getInteger( HibernateHints.HINT_TIMEOUT );
 	}
 
 	public boolean getCacheability() {
-		return getBoolean( QueryHints.CACHEABLE );
+		return getBoolean( HibernateHints.HINT_CACHEABLE );
 	}
 
 	public CacheMode getCacheMode() {
-		final String value = getString( QueryHints.CACHE_MODE );
+		final String value = getString( HibernateHints.HINT_CACHE_MODE );
 		try {
 			return value == null
 					? null
@@ -106,7 +115,7 @@ public class QueryHintDefinition {
 	}
 
 	public FlushMode getFlushMode() {
-		final String value = getString( QueryHints.FLUSH_MODE );
+		final String value = getString( HibernateHints.HINT_FLUSH_MODE );
 		try {
 			return value == null
 					? null
@@ -118,7 +127,7 @@ public class QueryHintDefinition {
 	}
 
 	public LockMode getLockMode(String query) {
-		String hitName = QueryHints.NATIVE_LOCKMODE;
+		String hitName = HibernateHints.HINT_NATIVE_LOCK_MODE;
 		String value =(String) hintsMap.get( hitName );
 		if ( value == null ) {
 			return null;
@@ -132,14 +141,20 @@ public class QueryHintDefinition {
 	}
 
 	public LockOptions determineLockOptions(NamedQuery namedQueryAnnotation) {
-		LockModeType lockModeType = namedQueryAnnotation.lockMode();
-		Integer lockTimeoutHint = getInteger( AvailableSettings.JPA_LOCK_TIMEOUT );
-		if ( lockTimeoutHint == null ) {
-			lockTimeoutHint = getInteger( AvailableSettings.JAKARTA_LOCK_TIMEOUT );
-		}
-		Boolean followOnLocking = getBoolean( QueryHints.FOLLOW_ON_LOCKING );
+		final LockModeType lockModeType = namedQueryAnnotation.lockMode();
+		final Integer lockTimeoutHint = specLockTimeout();
+		final Boolean followOnLocking = getBoolean( HibernateHints.HINT_FOLLOW_ON_LOCKING );
 
 		return determineLockOptions(lockModeType, lockTimeoutHint, followOnLocking);
+	}
+
+	private Integer specLockTimeout() {
+		final Integer jakartaLockTimeout = getInteger( AvailableSettings.JAKARTA_LOCK_TIMEOUT );
+		if ( jakartaLockTimeout != null ) {
+			return jakartaLockTimeout;
+		}
+
+		return getInteger( AvailableSettings.JPA_LOCK_TIMEOUT );
 	}
 
 	private LockOptions determineLockOptions(LockModeType lockModeType, Integer lockTimeoutHint, Boolean followOnLocking) {

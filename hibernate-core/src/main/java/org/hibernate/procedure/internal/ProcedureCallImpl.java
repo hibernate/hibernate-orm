@@ -95,6 +95,8 @@ import jakarta.persistence.PersistenceException;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.TransactionRequiredException;
 
+import static org.hibernate.jpa.HibernateHints.HINT_CALLABLE_FUNCTION;
+
 /**
  * Standard implementation of {@link ProcedureCall}
  *
@@ -297,7 +299,7 @@ public class ProcedureCallImpl<R>
 		applyOptions( (NamedQueryMemento) memento );
 
 		if ( memento.getHints() != null ) {
-			final Object callableFunction = memento.getHints().get( QueryHints.CALLABLE_FUNCTION );
+			final Object callableFunction = memento.getHints().get( HINT_CALLABLE_FUNCTION );
 			if ( callableFunction != null && Boolean.parseBoolean( callableFunction.toString() ) ) {
 				final List<Class<?>> resultTypes = new ArrayList<>();
 				resultSetMapping.visitResultBuilders(

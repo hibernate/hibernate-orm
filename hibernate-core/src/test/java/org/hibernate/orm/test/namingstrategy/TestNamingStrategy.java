@@ -35,32 +35,32 @@ public class TestNamingStrategy extends ImplicitNamingStrategyJpaCompliantImpl i
 	}
 
 	@Override
-	public Identifier toPhysicalCatalogName(Identifier name, JdbcEnvironment context) {
-		return PhysicalNamingStrategyStandardImpl.INSTANCE.toPhysicalCatalogName( name, context );
+	public Identifier toPhysicalCatalogName(Identifier logicalName, JdbcEnvironment context) {
+		return PhysicalNamingStrategyStandardImpl.INSTANCE.toPhysicalCatalogName( logicalName, context );
 	}
 
 	@Override
-	public Identifier toPhysicalSchemaName(Identifier name, JdbcEnvironment jdbcEnvironment) {
-		return PhysicalNamingStrategyStandardImpl.INSTANCE.toPhysicalSchemaName( name, jdbcEnvironment );
+	public Identifier toPhysicalSchemaName(Identifier logicalName, JdbcEnvironment jdbcEnvironment) {
+		return PhysicalNamingStrategyStandardImpl.INSTANCE.toPhysicalSchemaName( logicalName, jdbcEnvironment );
 	}
 
 	@Override
-	public Identifier toPhysicalTableName(Identifier name, JdbcEnvironment jdbcEnvironment) {
-		return Identifier.toIdentifier( "TAB_" + name.getText() );
+	public Identifier toPhysicalTableName(Identifier logicalName, JdbcEnvironment jdbcEnvironment) {
+		return Identifier.toIdentifier( "TAB_" + logicalName.getText() );
 	}
 
 	@Override
-	public Identifier toPhysicalSequenceName(Identifier name, JdbcEnvironment jdbcEnvironment) {
-		return PhysicalNamingStrategyStandardImpl.INSTANCE.toPhysicalSequenceName( name, jdbcEnvironment );
+	public Identifier toPhysicalSequenceName(Identifier logicalName, JdbcEnvironment jdbcEnvironment) {
+		return PhysicalNamingStrategyStandardImpl.INSTANCE.toPhysicalSequenceName( logicalName, jdbcEnvironment );
 	}
 
 	@Override
-	public Identifier toPhysicalColumnName(Identifier name, JdbcEnvironment jdbcEnvironment) {
-		if ( name.getText().startsWith( "PTCN_" ) ) {
-			return name;
+	public Identifier toPhysicalColumnName(Identifier logicalName, JdbcEnvironment jdbcEnvironment) {
+		if ( logicalName.getText().startsWith( "PTCN_" ) ) {
+			return logicalName;
 		}
 		else {
-			return Identifier.toIdentifier( "CN_" + name.getText() );
+			return Identifier.toIdentifier( "CN_" + logicalName.getText() );
 		}
 	}
 }

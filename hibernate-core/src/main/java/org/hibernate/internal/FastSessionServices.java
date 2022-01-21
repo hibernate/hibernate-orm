@@ -61,7 +61,9 @@ import org.hibernate.event.spi.RefreshEventListener;
 import org.hibernate.event.spi.ReplicateEventListener;
 import org.hibernate.event.spi.ResolveNaturalIdEventListener;
 import org.hibernate.event.spi.SaveOrUpdateEventListener;
+import org.hibernate.jpa.LegacySpecHints;
 import org.hibernate.jpa.QueryHints;
+import org.hibernate.jpa.SpecHints;
 import org.hibernate.jpa.internal.util.CacheModeHelper;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.jpa.internal.util.LockOptionsHelper;
@@ -287,17 +289,19 @@ public final class FastSessionServices {
 
 		//Defaults defined by SessionFactory configuration:
 		final String[] ENTITY_MANAGER_SPECIFIC_PROPERTIES = {
-				JPA_LOCK_SCOPE,
-				JAKARTA_LOCK_SCOPE,
-				JPA_LOCK_TIMEOUT,
-				JAKARTA_LOCK_TIMEOUT,
+				SpecHints.HINT_LOCK_SCOPE,
+				SpecHints.HINT_LOCK_TIMEOUT,
+				SpecHints.HINT_QUERY_TIMEOUT,
+				SpecHints.HINT_CACHE_RETRIEVE_MODE,
+				SpecHints.HINT_CACHE_STORE_MODE,
+
 				AvailableSettings.FLUSH_MODE,
-				JPA_SHARED_CACHE_RETRIEVE_MODE,
-				JAKARTA_SHARED_CACHE_RETRIEVE_MODE,
-				JPA_SHARED_CACHE_STORE_MODE,
-				JAKARTA_SHARED_CACHE_STORE_MODE,
-				QueryHints.SPEC_HINT_TIMEOUT,
-				QueryHints.JAKARTA_SPEC_HINT_TIMEOUT
+
+				LegacySpecHints.HINT_JAVAEE_LOCK_SCOPE,
+				LegacySpecHints.HINT_JAVAEE_LOCK_TIMEOUT,
+				LegacySpecHints.HINT_JAVAEE_CACHE_RETRIEVE_MODE,
+				LegacySpecHints.HINT_JAVAEE_CACHE_STORE_MODE,
+				LegacySpecHints.HINT_JAVAEE_QUERY_TIMEOUT
 		};
 		final Map<String, Object> properties = sf.getProperties();
 		for ( String key : ENTITY_MANAGER_SPECIFIC_PROPERTIES ) {

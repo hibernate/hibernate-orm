@@ -78,12 +78,12 @@ public class AttributeConverterManager implements ConverterAutoApplyHandler {
 	}
 	@Override
 	public ConverterDescriptor findAutoApplyConverterForAttribute(
-			XProperty xProperty,
+			XProperty property,
 			MetadataBuildingContext context) {
 		return locateMatchingConverter(
-				xProperty,
+				property,
 				ConversionSite.ATTRIBUTE,
-				(autoApplyDescriptor) -> autoApplyDescriptor.getAutoAppliedConverterDescriptorForAttribute( xProperty, context )
+				(autoApplyDescriptor) -> autoApplyDescriptor.getAutoAppliedConverterDescriptorForAttribute( property, context )
 		);
 	}
 
@@ -138,23 +138,23 @@ public class AttributeConverterManager implements ConverterAutoApplyHandler {
 
 	@Override
 	public ConverterDescriptor findAutoApplyConverterForCollectionElement(
-			XProperty xProperty,
+			XProperty property,
 			MetadataBuildingContext context) {
 		return locateMatchingConverter(
-				xProperty,
+				property,
 				ConversionSite.COLLECTION_ELEMENT,
-				(autoApplyDescriptor) -> autoApplyDescriptor.getAutoAppliedConverterDescriptorForCollectionElement( xProperty, context )
+				(autoApplyDescriptor) -> autoApplyDescriptor.getAutoAppliedConverterDescriptorForCollectionElement( property, context )
 		);
 	}
 
 	@Override
 	public ConverterDescriptor findAutoApplyConverterForMapKey(
-			XProperty xProperty,
+			XProperty property,
 			MetadataBuildingContext context) {
 		return locateMatchingConverter(
-				xProperty,
+				property,
 				ConversionSite.MAP_KEY,
-				(autoApplyDescriptor) -> autoApplyDescriptor.getAutoAppliedConverterDescriptorForMapKey( xProperty, context )
+				(autoApplyDescriptor) -> autoApplyDescriptor.getAutoAppliedConverterDescriptorForMapKey( property, context )
 		);
 	}
 

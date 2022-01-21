@@ -224,29 +224,16 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 
 	void addIdentifierGenerator(IdentifierGeneratorDefinition generatorDefinition);
 
-
 	/**
-	 * @deprecated AttributeConverterDefinition forces early resolution of the
-	 * AttributeConverter instance, which precludes resolution of the converter
-	 * from {@link org.hibernate.resource.beans.spi.ManagedBeanRegistry} (CDI, etc).
-	 * Instead one of:
-	 * * {@link #addAttributeConverter(ConverterDescriptor)}
-	 * * {@link #addAttributeConverter(Class)}
-	 * * {@link #addAttributeConverter(Class)}
+	 * Apply the descriptor for an {@link AttributeConverter}
 	 */
-	@Deprecated
-	default void addAttributeConverter(AttributeConverterDefinition converter) {
-		addAttributeConverter(
-				new InstanceBasedConverterDescriptor(
-						converter.getAttributeConverter(),
-						getBootstrapContext().getClassmateContext()
-				)
-		);
-	}
-
 	void addAttributeConverter(ConverterDescriptor descriptor);
 
+	/**
+	 * Apply an {@link AttributeConverter}
+	 */
 	void addAttributeConverter(Class<? extends AttributeConverter> converterClass);
+
 
 	ConverterAutoApplyHandler getAttributeConverterAutoApplyHandler();
 

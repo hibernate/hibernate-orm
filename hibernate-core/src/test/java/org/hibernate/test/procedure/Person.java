@@ -9,13 +9,15 @@ package org.hibernate.test.procedure;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
+import org.hibernate.annotations.NamedNativeQuery;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityResult;
 import jakarta.persistence.FieldResult;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-import jakarta.persistence.NamedStoredProcedureQueries;
 import jakarta.persistence.NamedStoredProcedureQuery;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderColumn;
@@ -27,8 +29,7 @@ import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Version;
 
-import org.hibernate.annotations.NamedNativeQuery;
-import org.hibernate.annotations.QueryHints;
+import static org.hibernate.jpa.HibernateHints.HINT_CALLABLE_FUNCTION;
 
 /**
  * @author Vlad Mihalcea
@@ -52,7 +53,7 @@ import org.hibernate.annotations.QueryHints;
         parameters = {
                 @StoredProcedureParameter(type = Long.class)
         },
-        hints = @QueryHint(name = QueryHints.CALLABLE_FUNCTION, value = "true")
+        hints = @QueryHint(name = HINT_CALLABLE_FUNCTION, value = "true")
 )
 @SqlResultSetMappings({
      @SqlResultSetMapping(

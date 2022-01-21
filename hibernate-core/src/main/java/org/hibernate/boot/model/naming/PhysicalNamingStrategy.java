@@ -6,25 +6,38 @@
  */
 package org.hibernate.boot.model.naming;
 
+import org.hibernate.Incubating;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 
 /**
  * Pluggable strategy contract for applying physical naming rules for database object names.
  *
- * NOTE: Ideally we'd pass "extra" things in here like Dialect, etc to better handle identifier
- * length constraints or auto quoting of identifiers.  However, the pre-metamodel model does not
- * necessarily know this information at the time the strategy is called.
- *
  * @author Steve Ebersole
  */
+@Incubating
 public interface PhysicalNamingStrategy {
-	public Identifier toPhysicalCatalogName(Identifier name, JdbcEnvironment jdbcEnvironment);
+	/**
+	 * Determine the appropriate physical catalog name to use for the  given logical name
+	 */
+	Identifier toPhysicalCatalogName(Identifier logicalName, JdbcEnvironment jdbcEnvironment);
 
-	public Identifier toPhysicalSchemaName(Identifier name, JdbcEnvironment jdbcEnvironment);
+	/**
+	 * Determine the appropriate physical schema name to use for the given logical name
+	 */
+	Identifier toPhysicalSchemaName(Identifier logicalName, JdbcEnvironment jdbcEnvironment);
 
-	public Identifier toPhysicalTableName(Identifier name, JdbcEnvironment jdbcEnvironment);
+	/**
+	 * Determine the appropriate physical table name to use for the given logical name
+	 */
+	Identifier toPhysicalTableName(Identifier logicalName, JdbcEnvironment jdbcEnvironment);
 
-	public Identifier toPhysicalSequenceName(Identifier name, JdbcEnvironment jdbcEnvironment);
+	/**
+	 * Determine the appropriate physical sequence name to use for the given logical name
+	 */
+	Identifier toPhysicalSequenceName(Identifier logicalName, JdbcEnvironment jdbcEnvironment);
 
-	public Identifier toPhysicalColumnName(Identifier name, JdbcEnvironment jdbcEnvironment);
+	/**
+	 * Determine the appropriate physical column name to use for the given logical name
+	 */
+	Identifier toPhysicalColumnName(Identifier logicalName, JdbcEnvironment jdbcEnvironment);
 }

@@ -9,6 +9,20 @@ package org.hibernate.orm.test.querycache;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
+import org.hibernate.SessionFactory;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.NaturalId;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.jpa.HibernateHints;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -16,19 +30,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-
-import org.hibernate.SessionFactory;
-import org.hibernate.annotations.Cache;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.annotations.NaturalId;
-import org.hibernate.annotations.QueryHints;
-import org.hibernate.cfg.AvailableSettings;
-
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
-import org.hibernate.testing.orm.junit.Jpa;
-import org.hibernate.testing.orm.junit.Setting;
-import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -70,7 +71,7 @@ public class QueryCacheJoinFetchTest {
 							"select distinct p " +
 									"from Person p " +
 									"join fetch p.phones ph", Person.class )
-					.setHint( QueryHints.CACHEABLE, Boolean.TRUE )
+					.setHint( HibernateHints.HINT_CACHEABLE, Boolean.TRUE )
 					.getSingleResult();
 		} );
 
@@ -87,7 +88,7 @@ public class QueryCacheJoinFetchTest {
 							"select distinct p " +
 									"from Person p " +
 									"join fetch p.phones ph", Person.class )
-					.setHint( QueryHints.CACHEABLE, Boolean.TRUE )
+					.setHint( HibernateHints.HINT_CACHEABLE, Boolean.TRUE )
 					.getSingleResult();
 		} );
 

@@ -16,8 +16,8 @@ public class TestingNamingStrategy extends PhysicalNamingStrategyStandardImpl {
 	}
 
 	@Override
-	public Identifier toPhysicalTableName(Identifier name, JdbcEnvironment jdbcEnvironment) {
-		return jdbcEnvironment.getIdentifierHelper().toIdentifier( applyPrefix( name.getText() ) );
+	public Identifier toPhysicalTableName(Identifier logicalName, JdbcEnvironment jdbcEnvironment) {
+		return jdbcEnvironment.getIdentifierHelper().toIdentifier( applyPrefix( logicalName.getText() ) );
 	}
 
 	private String determineUniquePrefix() {

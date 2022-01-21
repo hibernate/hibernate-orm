@@ -20,28 +20,28 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 public class CamelCaseToUnderscoresNamingStrategy implements PhysicalNamingStrategy {
 
 	@Override
-	public Identifier toPhysicalCatalogName(Identifier name, JdbcEnvironment jdbcEnvironment) {
-		return apply( name, jdbcEnvironment );
+	public Identifier toPhysicalCatalogName(Identifier logicalName, JdbcEnvironment jdbcEnvironment) {
+		return apply( logicalName, jdbcEnvironment );
 	}
 
 	@Override
-	public Identifier toPhysicalSchemaName(Identifier name, JdbcEnvironment jdbcEnvironment) {
-		return apply( name, jdbcEnvironment );
+	public Identifier toPhysicalSchemaName(Identifier logicalName, JdbcEnvironment jdbcEnvironment) {
+		return apply( logicalName, jdbcEnvironment );
 	}
 
 	@Override
-	public Identifier toPhysicalTableName(Identifier name, JdbcEnvironment jdbcEnvironment) {
-		return apply( name, jdbcEnvironment );
+	public Identifier toPhysicalTableName(Identifier logicalName, JdbcEnvironment jdbcEnvironment) {
+		return apply( logicalName, jdbcEnvironment );
 	}
 
 	@Override
-	public Identifier toPhysicalSequenceName(Identifier name, JdbcEnvironment jdbcEnvironment) {
-		return apply( name, jdbcEnvironment );
+	public Identifier toPhysicalSequenceName(Identifier logicalName, JdbcEnvironment jdbcEnvironment) {
+		return apply( logicalName, jdbcEnvironment );
 	}
 
 	@Override
-	public Identifier toPhysicalColumnName(Identifier name, JdbcEnvironment jdbcEnvironment) {
-		return apply( name, jdbcEnvironment );
+	public Identifier toPhysicalColumnName(Identifier logicalName, JdbcEnvironment jdbcEnvironment) {
+		return apply( logicalName, jdbcEnvironment );
 	}
 
 	private Identifier apply(final Identifier name, final JdbcEnvironment jdbcEnvironment) {

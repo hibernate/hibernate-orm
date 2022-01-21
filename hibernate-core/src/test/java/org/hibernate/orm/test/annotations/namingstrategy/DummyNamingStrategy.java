@@ -13,7 +13,7 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 @SuppressWarnings("serial")
 public class DummyNamingStrategy extends PhysicalNamingStrategyStandardImpl {
 	@Override
-	public Identifier toPhysicalTableName(Identifier name, JdbcEnvironment jdbcEnvironment) {
-		return jdbcEnvironment.getIdentifierHelper().toIdentifier( "T" + name.getText() );
+	public Identifier toPhysicalTableName(Identifier logicalName, JdbcEnvironment jdbcEnvironment) {
+		return jdbcEnvironment.getIdentifierHelper().toIdentifier( "T" + logicalName.getText() );
 	}
 }

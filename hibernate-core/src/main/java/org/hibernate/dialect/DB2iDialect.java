@@ -47,6 +47,11 @@ public class DB2iDialect extends DB2Dialect {
 	}
 
 	@Override
+	public DatabaseVersion getDB2Version() {
+		return DatabaseVersion.make(9, 0);
+	}
+
+	@Override
 	protected UniqueDelegate createUniqueDelegate() {
 		return getVersion().isSameOrAfter(7, 3)
 				? new DefaultUniqueDelegate(this)

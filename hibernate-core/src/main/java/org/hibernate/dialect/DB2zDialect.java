@@ -7,7 +7,6 @@
 package org.hibernate.dialect;
 
 import jakarta.persistence.TemporalType;
-
 import org.hibernate.dialect.identity.DB2390IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.FetchLimitHandler;
@@ -55,6 +54,11 @@ public class DB2zDialect extends DB2Dialect {
 			return "timestamp with time zone";
 		}
 		return super.columnType(jdbcTypeCode);
+	}
+
+	@Override
+	public DatabaseVersion getDB2Version() {
+		return DatabaseVersion.make(9, 0);
 	}
 
 	@Override

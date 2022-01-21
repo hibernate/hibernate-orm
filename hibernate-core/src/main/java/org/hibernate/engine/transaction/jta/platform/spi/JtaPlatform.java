@@ -33,14 +33,18 @@ import org.hibernate.service.Service;
 public interface JtaPlatform extends Service {
 
 	/**
-	 * Locate the {@link TransactionManager}
+	 * Locate the {@link TransactionManager}.
 	 *
 	 * @return The {@link TransactionManager}
 	 */
 	TransactionManager retrieveTransactionManager();
 
 	/**
-	 * Locate the {@link UserTransaction}
+	 * Locate the {@link UserTransaction}.
+	 * <p>
+	 * If {@link org.hibernate.cfg.AvailableSettings#PREFER_USER_TRANSACTION} is enabled, Hibernate
+	 * will use the {@code UserTransaction} in preference to the {@link TransactionManager} where
+	 * possible.
 	 *
 	 * @return The {@link UserTransaction}
 	 */

@@ -625,13 +625,11 @@ public class FunctionTests {
 					assertThat( session.createQuery("select cast('123' as Integer)").getSingleResult(), is(123) );
 					assertThat( session.createQuery("select cast('123' as Long)").getSingleResult(), is(123l) );
 					assertThat( session.createQuery("select cast('123.12' as Float)").getSingleResult(), is(123.12f) );
-//					assertThat( session.createQuery("select cast('123.12' as Double)").getSingleResult(), is(123.12d) );
 
 					assertThat( session.createQuery("select cast('hello' as String)").getSingleResult(), is("hello") );
 					assertThat( ((String) session.createQuery("select cast(true as String)").getSingleResult()).toLowerCase(), is("true") );
 					assertThat( ((String) session.createQuery("select cast(false as String)").getSingleResult()).toLowerCase(), is("false") );
 					assertThat( session.createQuery("select cast(123 as String)").getSingleResult(), is("123") );
-//					assertThat( session.createQuery("select cast(123.12 as String)").getSingleResult(), is("123.12") );
 
 					assertThat( session.createQuery("select cast('1911-10-09' as LocalDate)").getSingleResult(), is(LocalDate.of(1911,10,9)) );
 					assertThat( session.createQuery("select cast('12:13:14' as LocalTime)").getSingleResult(), is(LocalTime.of(12,13,14)) );
@@ -655,6 +653,20 @@ public class FunctionTests {
 					assertThat( session.createQuery("select cast('N' as YesNo)").getSingleResult(), is(false) );
 					assertThat( session.createQuery("select cast('T' as TrueFalse)").getSingleResult(), is(true) );
 					assertThat( session.createQuery("select cast('F' as TrueFalse)").getSingleResult(), is(false) );
+				}
+		);
+	}
+
+	@Test
+	public void testCastDoubleToString(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertThat( session.createQuery("select str(123.12)").getSingleResult(), is("123.12") );
+					assertThat( session.createQuery("select cast(123.12 as String)").getSingleResult(), is("123.12") );
+					assertThat( session.createQuery("select cast(123.12d as String)").getSingleResult(), is("123.12") );
+					assertThat( session.createQuery("select cast(123.12f as String)").getSingleResult(), is("123.12") );
+					assertThat( session.createQuery("select cast('123.12' as Double)").getSingleResult(), is(123.12d) );
+					assertThat( session.createQuery("select cast('123.12' as Float)").getSingleResult(), is(123.12f) );
 				}
 		);
 	}

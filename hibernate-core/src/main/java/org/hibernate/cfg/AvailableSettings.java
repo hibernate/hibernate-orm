@@ -407,13 +407,14 @@ public interface AvailableSettings {
 
 	/**
 	 * Specifies the name of the database provider in cases where a connection to the
-	 * database is not available (usually for generating scripts). This value is used to
-	 * help more precisely determine how to perform schema generation tasks for the
+	 * database is not available (usually for generating scripts). This value is used
+	 * to help more precisely determine how to perform schema generation tasks for the
 	 * underlying database in cases where {@value #DIALECT_DB_NAME} does not provide
 	 * enough distinction.
 	 * <p/>
 	 * The value of this setting is expected to match the value returned by
-	 * {@link java.sql.DatabaseMetaData#getDatabaseProductVersion()} for the target database.
+	 * {@link java.sql.DatabaseMetaData#getDatabaseProductVersion()} for the target
+	 * database.
 	 *
 	 * @see #DIALECT_DB_NAME
 	 *
@@ -874,7 +875,7 @@ public interface AvailableSettings {
 	 * when binding parameters.
 	 * <p>
 	 * By default, the {@linkplain java.util.TimeZone#getDefault() JVM default time zone}
-	 * assumed by the JDBC driver.
+	 * is assumed by the JDBC driver.
 	 *
 	 * @since 5.2.3
 	 */
@@ -930,38 +931,40 @@ public interface AvailableSettings {
 	String CALLABLE_NAMED_PARAMS_ENABLED = "hibernate.query.proc.callable_named_params_enabled";
 
 	/**
-	 * Names the {@link org.hibernate.query.hql.HqlTranslator} class to use.
+	 * Specifies a {@link org.hibernate.query.hql.HqlTranslator} to use for HQL query
+	 * translation.
 	 */
 	String SEMANTIC_QUERY_PRODUCER = "hibernate.query.hql.translator";
 
 	/**
-	 * Names the {@link org.hibernate.query.sqm.sql.SqmTranslatorFactory} class to use.
+	 * Specifies a {@link org.hibernate.query.sqm.sql.SqmTranslatorFactory} to use for
+	 * HQL query translation.
 	 */
 	String SEMANTIC_QUERY_TRANSLATOR = "hibernate.query.sqm.translator";
 
 	/**
 	 * Defines the "global" strategy to use for handling HQL and Criteria mutation queries.
-	 *
-	 * Names the {@link org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy} to use.
+	 * Specifies a {@link org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy}..
 	 */
 	String QUERY_MULTI_TABLE_MUTATION_STRATEGY = "hibernate.query.mutation_strategy";
 
 	/**
 	 * Defines the "global" strategy to use for handling HQL and Criteria insert queries.
-	 *
-	 * Names the {@link org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy} to use.
+	 * Specifies a {@link org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy}.
 	 */
 	String QUERY_MULTI_TABLE_INSERT_STRATEGY = "hibernate.query.insert_strategy";
 
 	/**
-	 * Should named queries be checked during startup (the default is enabled).
-	 * <p/>
-	 * Mainly intended for test environments.
+	 * When enabled, specifies that named queries be checked during startup.
+	 * <p>
+	 * By default, named queries are checked at startup.
+	 * <p>
+	 * Mainly intended for use in test environments.
 	 */
 	String QUERY_STARTUP_CHECKING = "hibernate.query.startup_check";
 
 	/**
-	 * Enable ordering of update statements by primary key value
+	 * Enable ordering of update statements by primary key value.
 	 */
 	String ORDER_UPDATES = "hibernate.order_updates";
 
@@ -971,37 +974,44 @@ public interface AvailableSettings {
 	String ORDER_INSERTS = "hibernate.order_inserts";
 
 	/**
-	 * JPA Callbacks are enabled by default. Set this to {@code false} to disable them.
+	 * JPA callbacks are enabled by default. Set this to {@code false} to disable them.
 	 * Mostly useful to save a bit of memory when they are not used.
+	 *
 	 * Experimental and will likely be removed as soon as the memory overhead is resolved.
+	 *
+	 * @see org.hibernate.jpa.event.spi.CallbackType
+	 *
 	 * @since 5.4
 	 */
 	String JPA_CALLBACKS_ENABLED = "hibernate.jpa_callbacks.enabled";
 
 	/**
-	 * Default precedence of null values in {@code ORDER BY} clause.  Supported options: {@code none} (default),
-	 * {@code first}, {@code last}.
+	 * Default precedence of null values in {@code ORDER BY} clause.
+	 * <p>
+	 * Supported options: {@code none} (default), {@code first}, {@code last}.
 	 */
 	String DEFAULT_NULL_ORDERING = "hibernate.order_by.default_null_ordering";
 
 	/**
-	 * Enable fetching JDBC statement warning for logging.
+	 * When enabled, specifies that JDBC statement warnings should be logged.
+	 * <p>
+	 * The default is determined by
+	 * {@link org.hibernate.dialect.Dialect#isJdbcLogWarningsEnabledByDefault()}.
 	 *
-	 * Values are {@code true}  or {@code false} .
-	 * Default value is {@link org.hibernate.dialect.Dialect#isJdbcLogWarningsEnabledByDefault()}
+	 * @see java.sql.Statement#getWarnings()
 	 *
 	 * @since 5.1
 	 */
-	String LOG_JDBC_WARNINGS =  "hibernate.jdbc.log.warnings";
+	String LOG_JDBC_WARNINGS = "hibernate.jdbc.log.warnings";
 
 	/**
-	 * Identifies an explicit {@link org.hibernate.resource.beans.container.spi.BeanContainer}
+	 * Identifies a {@link org.hibernate.resource.beans.container.spi.BeanContainer}
 	 * to be used.
-	 *
+	 * <p>
 	 * Note that for CDI-based containers setting this is not necessary - simply
-	 * pass the BeanManager to use via {@link #CDI_BEAN_MANAGER} and
-	 * optionally specify {@link #DELAY_CDI_ACCESS}.  This setting is more meant to
-	 * integrate non-CDI bean containers such as Spring.
+	 * pass the {@link jakarta.enterprise.inject.spi.BeanManager} to use via
+	 * {@link #CDI_BEAN_MANAGER} and optionally specify {@link #DELAY_CDI_ACCESS}.
+	 * This setting useful to integrate non-CDI bean containers such as Spring.
 	 *
 	 * @since 5.3
 	 */
@@ -1111,22 +1121,23 @@ public interface AvailableSettings {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
-	 * The {@link org.hibernate.cache.spi.RegionFactory} implementation.  Can refer to:<ul>
-	 *     <li>an Object implementing {@link org.hibernate.cache.spi.RegionFactory}</li>
-	 *     <li>a Class implementing {@link org.hibernate.cache.spi.RegionFactory}</li>
-	 *     <li>FQN of a Class implementing {@link org.hibernate.cache.spi.RegionFactory}</li>
+	 * The {@link org.hibernate.cache.spi.RegionFactory} implementation, either:
+	 * <ul>
+	 *     <li>an instance of {@link org.hibernate.cache.spi.RegionFactory},
+	 *     <li>a {@link Class} implementing {@link org.hibernate.cache.spi.RegionFactory}, or
+	 *     <li>he name of a class implementing {@link org.hibernate.cache.spi.RegionFactory}.
 	 * </ul>
 	 */
 	String CACHE_REGION_FACTORY = "hibernate.cache.region.factory_class";
 
 	/**
-	 * Allow control to specify the {@link org.hibernate.cache.spi.CacheKeysFactory} impl to use.
-	 * Can refer to:<ul>
-	 *     <li>an Object implementing {@link org.hibernate.cache.spi.CacheKeysFactory}</li>
-	 *     <li>a Class implementing {@link org.hibernate.cache.spi.CacheKeysFactory}</li>
-	 *     <li>FQN of a Class implementing {@link org.hibernate.cache.spi.CacheKeysFactory}</li>
-	 *     <li>'default' as a short name for {@link org.hibernate.cache.internal.DefaultCacheKeysFactory}</li>
-	 *     <li>'simple' as a short name for {@link org.hibernate.cache.internal.SimpleCacheKeysFactory}</li>
+	 * Specifies the {@link org.hibernate.cache.spi.CacheKeysFactory} to use, either:
+	 * <ul>
+	 *     <li>an instance of {@link org.hibernate.cache.spi.CacheKeysFactory},
+	 *     <li>a {@link Class} implementing {@link org.hibernate.cache.spi.CacheKeysFactory},
+	 *     <li>the name of a class implementing {@link org.hibernate.cache.spi.CacheKeysFactory},
+	 *     <li>{@code "default"} as a short name for {@link org.hibernate.cache.internal.DefaultCacheKeysFactory}, or
+	 *     <li>'{@code "simple"} as a short name for {@link org.hibernate.cache.internal.SimpleCacheKeysFactory}.
 	 * </ul>
 	 *
 	 * @since 5.2
@@ -1137,11 +1148,11 @@ public interface AvailableSettings {
 	String CACHE_KEYS_FACTORY = "hibernate.cache.keys_factory";
 
 	/**
-	 * Enable the second-level cache.
+	 * When enabled, specifies that the second-level cache may be used.
 	 * <p>
-	 * By default, if the currently configured {@link org.hibernate.cache.spi.RegionFactory} is
-	 * not the {@link org.hibernate.cache.internal.NoCachingRegionFactory}, then the second-level
-	 * cache is enabled. Otherwise, the second-level cache is disabled.
+	 * By default, if the configured {@link org.hibernate.cache.spi.RegionFactory}
+	 * is not the {@link org.hibernate.cache.internal.NoCachingRegionFactory}, then
+	 * the second-level cache is enabled. Otherwise, the second-level cache is disabled.
 	 */
 	String USE_SECOND_LEVEL_CACHE = "hibernate.cache.use_second_level_cache";
 
@@ -1151,7 +1162,7 @@ public interface AvailableSettings {
 	String USE_QUERY_CACHE = "hibernate.cache.use_query_cache";
 
 	/**
-	 * The {@link org.hibernate.cache.spi.TimestampsCacheFactory} implementation class.
+	 * Specifies the {@link org.hibernate.cache.spi.TimestampsCacheFactory} to use.
 	 */
 	String QUERY_CACHE_FACTORY = "hibernate.cache.query_cache_factory";
 
@@ -1161,24 +1172,29 @@ public interface AvailableSettings {
 	String CACHE_REGION_PREFIX = "hibernate.cache.region_prefix";
 
 	/**
-	 * Optimize the cache for minimal puts instead of minimal gets
+	 * Optimize interaction with the second-level cache to minimize writes, at the cost
+	 * of more frequent database reads.
 	 */
 	String USE_MINIMAL_PUTS = "hibernate.cache.use_minimal_puts";
 
 	/**
-	 * Enable use of structured second-level cache entries
+	 * Enables the use of structured second-level cache entries.
 	 */
 	String USE_STRUCTURED_CACHE = "hibernate.cache.use_structured_entries";
 
 	/**
-	 * Enables the automatic eviction of a bi-directional association's collection cache when an element in the
-	 * ManyToOne collection is added/updated/removed without properly managing the change on the OneToMany side.
+	 * Enables the automatic eviction of a bidirectional association's collection
+	 * cache when an element in the {@link jakarta.persistence.ManyToOne} collection
+	 * is added, updated, or removed without properly managing the change on the
+	 * {@link jakarta.persistence.OneToMany} side.
 	 */
 	String AUTO_EVICT_COLLECTION_CACHE = "hibernate.cache.auto_evict_collection_cache";
 
 	/**
-	 * Enable direct storage of entity references into the second level cache when applicable (immutable data, etc).
-	 * Default is to not store direct references.
+	 * Enable direct storage of entity references into the second level cache when
+	 * applicable (immutable data, etc).
+	 * <p>
+	 * By default, entities are always stored in a "disassembled" form.
 	 */
 	String USE_DIRECT_REFERENCE_CACHE_ENTRIES = "hibernate.cache.use_reference_entries";
 
@@ -1190,32 +1206,34 @@ public interface AvailableSettings {
 	// Still to categorize
 
 	/**
-	 * Should all database identifiers be quoted.  A {@code true}/{@code false} option.
+	 * When enabled, all database identifiers are quoted.
 	 */
 	String GLOBALLY_QUOTED_IDENTIFIERS = "hibernate.globally_quoted_identifiers";
 
 	/**
-	 * Assuming {@link #GLOBALLY_QUOTED_IDENTIFIERS}, this allows such global quoting
-	 * to skip column-definitions as defined by {@link jakarta.persistence.Column},
+	 * Assuming {@link #GLOBALLY_QUOTED_IDENTIFIERS}, this allows global quoting
+	 * to skip column definitions defined by {@link jakarta.persistence.Column},
 	 * {@link jakarta.persistence.JoinColumn}, etc.
-	 * <p/>
-	 * JPA states that column-definitions are subject to global quoting, so by default this setting
-	 * is {@code false} for JPA compliance.  Set to {@code true} to avoid column-definitions
-	 * being quoted due to global quoting (they will still be quoted if explicitly quoted in the
-	 * annotation/xml).
+	 * <p>
+	 * JPA states that column definitions are subject to global quoting, so by default
+	 * this setting is {@code false} for JPA compliance. Set to {@code true} to avoid
+	 * explicit column names being quoted due to global quoting (they will still be
+	 * quoted if explicitly quoted in the annotation or XML).
 	 */
 	String GLOBALLY_QUOTED_IDENTIFIERS_SKIP_COLUMN_DEFINITIONS = "hibernate.globally_quoted_identifiers_skip_column_definitions";
 
 	/**
-	 * Enable nullability checking.
-	 * Raises an exception if a property marked as not-null is null.
-	 * Default to false if Bean Validation is present in the classpath and Hibernate Annotations is used,
-	 * true otherwise.
+	 * Enable nullability checking, raises an exception if an attribute marked as
+	 * {@linkplain jakarta.persistence.Basic#optional() not null} is null at runtime.
+	 * <p>
+	 * Defaults to disabled if Bean Validation is present in the classpath and
+	 * annotations are used, or enabled otherwise.
 	 */
 	String CHECK_NULLABILITY = "hibernate.check_nullability";
 
 	/**
-	 * Pick which bytecode enhancing library to use.
+	 * Selects a bytecode enhancment library.
+	 * <p>
 	 * At present only bytebuddy is supported, bytebuddy being the default since version 5.3.
 	 */
 	String BYTECODE_PROVIDER = "hibernate.bytecode.provider";
@@ -1223,34 +1241,45 @@ public interface AvailableSettings {
 	String JPAQL_STRICT_COMPLIANCE= "hibernate.query.jpaql_strict_compliance";
 
 	/**
-	 * When a generator specified an increment-size and an optimizer was not explicitly specified, which
-	 * of the "pooled" optimizers should be preferred?  Can specify an optimizer short name or the name
-	 * of a class which implements {@link org.hibernate.id.enhanced.Optimizer}.
+	 * When a generator specifies an increment-size and an optimizer was not explicitly
+	 * specified, which of the "pooled" optimizers should be preferred? Can specify an
+	 * optimizer short name or the name of a class which implements
+	 * {@link org.hibernate.id.enhanced.Optimizer}.
 	 */
 	String PREFERRED_POOLED_OPTIMIZER = "hibernate.id.optimizer.pooled.preferred";
 
 	/**
-	 * Should query plan caching be enabled at all?  Default is {@code false} unless one of
-	 * {@link #QUERY_PLAN_CACHE_MAX_SIZE} or
+	 * Should query plan caching be enabled at all?  Default is {@code false} unless
+	 * one of {@link #QUERY_PLAN_CACHE_MAX_SIZE} or
 	 * {@link #QUERY_PLAN_CACHE_PARAMETER_METADATA_MAX_SIZE} is specified.
 	 */
 	String QUERY_PLAN_CACHE_ENABLED = "hibernate.query.plan_cache_enabled";
 
 	/**
-	 * The maximum number of entries in the Hibernate "Query Plan Cache".  The default size is 2048.
+	 * The maximum number of entries in the
+	 * {@linkplain org.hibernate.query.spi.QueryPlanCache query plan cache}.
+	 * <p>
+	 * The default maximum is
+	 * {@value org.hibernate.query.internal.QueryInterpretationCacheStandardImpl#DEFAULT_QUERY_PLAN_MAX_COUNT}.
 	 *
 	 * @see org.hibernate.query.spi.QueryPlanCache
 	 */
 	String QUERY_PLAN_CACHE_MAX_SIZE = "hibernate.query.plan_cache_max_size";
 
 	/**
-	 * The maximum number of {@link org.hibernate.query.internal.ParameterMetadataImpl} maintained
-	 * by {@link org.hibernate.query.spi.QueryInterpretationCache}. Default is 128.
+	 * The maximum number of {@link org.hibernate.query.internal.ParameterMetadataImpl}
+	 * maintained by the {@link org.hibernate.query.spi.QueryInterpretationCache}.
+	 * <p>
+	 * The default maximum is
+	 * {@value org.hibernate.query.internal.QueryInterpretationCacheStandardImpl#DEFAULT_PARAMETER_METADATA_MAX_COUNT}.
 	 */
 	String QUERY_PLAN_CACHE_PARAMETER_METADATA_MAX_SIZE = "hibernate.query.plan_parameter_metadata_max_size";
 
 	/**
-	 * Should we not use contextual LOB creation (aka based on {@link java.sql.Connection#createBlob()} et al).
+	 * When enabled, specifies that Hibernate should not use contextual LOB creation.
+	 *
+	 * @see org.hibernate.engine.jdbc.LobCreator
+	 * @see org.hibernate.engine.jdbc.LobCreationContext
 	 */
 	String NON_CONTEXTUAL_LOB_CREATION = "hibernate.jdbc.lob.non_contextual_creation";
 
@@ -1260,13 +1289,13 @@ public interface AvailableSettings {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
-	 * Setting to perform SchemaManagementTool actions automatically as part of
-	 * the SessionFactory lifecycle.  Valid options are defined by the
-	 * {@link org.hibernate.tool.schema.Action} enum.
+	 * Setting to perform {@link org.hibernate.tool.schema.spi.SchemaManagementTool}
+	 * actions automatically as part of the {@link org.hibernate.SessionFactory}
+	 * lifecycle. Valid options are enumeratd by {@link org.hibernate.tool.schema.Action}.
 	 * <p/>
 	 * Interpreted in combination with {@link #HBM2DDL_DATABASE_ACTION} and
-	 * {@link #HBM2DDL_SCRIPTS_ACTION}.  If no value is specified, the default
-	 * is "none" ({@link org.hibernate.tool.schema.Action#NONE}).
+	 * {@link #HBM2DDL_SCRIPTS_ACTION}. If no value is specified, the default
+	 * is {@link org.hibernate.tool.schema.Action#NONE "none"}.
 	 *
 	 * @see org.hibernate.tool.schema.Action
 	 */
@@ -1614,18 +1643,19 @@ public interface AvailableSettings {
 
 	/**
 	 * The JPA variant of {@link #HBM2DDL_CREATE_NAMESPACES} used to specify whether database
-	 * schemas used in the mapping model should be created on export in addition to creating the
-	 * tables, sequences, etc.
+	 * schemas used in the mapping model should be created on export in addition to creating
+	 * the tables, sequences, etc.
 	 *
 	 * The default is {@code false}, meaning to not create schemas
 	 */
 	String JAKARTA_HBM2DDL_CREATE_SCHEMAS = "jakarta.persistence.create-database-schemas";
 
 	/**
-	 * Used to specify the {@link org.hibernate.tool.schema.spi.SchemaFilterProvider} to be used by
-	 * create, drop, migrate and validate operations on the database schema.  SchemaFilterProvider
-	 * provides filters that can be used to limit the scope of these operations to specific namespaces,
-	 * tables and sequences. All objects are included by default.
+	 * Used to specify the {@link org.hibernate.tool.schema.spi.SchemaFilterProvider} to be
+	 * used by create, drop, migrate and validate operations on the database schema. A
+	 * {@code SchemaFilterProvider} provides filters that can be used to limit the scope of
+	 * these operations to specific namespaces, tables and sequences. All objects are
+	 * included by default.
 	 *
 	 * @since 5.1
 	 */
@@ -1633,38 +1663,41 @@ public interface AvailableSettings {
 
 	/**
 	 * Setting to choose the strategy used to access the JDBC Metadata.
-	 *
+	 * <p>
 	 * Valid options are defined by {@link org.hibernate.tool.schema.JdbcMetadaAccessStrategy}.
-	 *
-	 * {@link org.hibernate.tool.schema.JdbcMetadaAccessStrategy#GROUPED} is the default value.
+	 * {@link org.hibernate.tool.schema.JdbcMetadaAccessStrategy#GROUPED} is the default.
 	 *
 	 * @see org.hibernate.tool.schema.JdbcMetadaAccessStrategy
 	 */
 	String HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY = "hibernate.hbm2ddl.jdbc_metadata_extraction_strategy";
 
 	/**
-	 * Identifies the delimiter to use to separate schema management statements in script outputs.
+	 * Identifies the delimiter to use to separate schema management statements in script
+	 * outputs.
+	 * <p>
 	 * The default value is {@code ;}.
 	 */
 	String HBM2DDL_DELIMITER = "hibernate.hbm2ddl.delimiter";
 
 	/**
 	 * The name of the charset used by the schema generation resource.
-	 * Without specifying this configuration property, the JVM default charset is used.
+	 * <p>
+	 * By default, the JVM default charset is used.
 	 *
 	 * @since 5.2.3
 	 */
 	String HBM2DDL_CHARSET_NAME = "hibernate.hbm2ddl.charset_name";
 
 	/**
-	 * Whether the schema migration tool should halt on error, therefore terminating the bootstrap process.
+	 * When enabled, specifies that the schema migration tool should halt on any error,
+	 * terminating the bootstrap process.
 	 *
 	 * @since 5.2.4
 	 */
 	String HBM2DDL_HALT_ON_ERROR = "hibernate.hbm2ddl.halt_on_error";
 
 	/**
-	 * This setting is useful with the {@link jakarta.persistence.ConstraintMode#PROVIDER_DEFAULT}
+	 * Used with the {@link jakarta.persistence.ConstraintMode#PROVIDER_DEFAULT}
 	 * strategy for foreign key mapping.
 	 * <p>
 	 * Valid values are {@link jakarta.persistence.ConstraintMode#CONSTRAINT} and

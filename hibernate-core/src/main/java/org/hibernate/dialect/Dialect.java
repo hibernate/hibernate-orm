@@ -3426,7 +3426,7 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Does this dialect support window functions like `row_number() over (..)`
+	 * Does this dialect support window functions like {@code row_number() over (..)}?
 	 *
 	 * @return {@code true} if the underlying database supports window functions,
 	 * {@code false} otherwise.  The default is {@code false}.
@@ -3436,7 +3436,7 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Does this dialect support the SQL lateral keyword or a proprietary alternative=
+	 * Does this dialect support the SQL lateral keyword or a proprietary alternative?
 	 *
 	 * @return {@code true} if the underlying database supports lateral,
 	 * {@code false} otherwise.  The default is {@code false}.
@@ -3494,9 +3494,7 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Does the fetching JDBC statement warning for logging is enabled by default
-	 *
-	 * @return boolean
+	 * Is JDBC statement warning logging enabled by default?
 	 *
 	 * @since 5.1
 	 */
@@ -3513,9 +3511,7 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Does the underlying database support partition by
-	 *
-	 * @return boolean
+	 * Does the underlying database support partition by?
 	 *
 	 * @since 5.2
 	 */

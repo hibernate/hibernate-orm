@@ -282,7 +282,8 @@ public class ResultsHelper {
 						cacheKey,
 						collectionDescriptor.getCacheEntryStructure().structure( entry ),
 						version,
-						factory.getSessionFactoryOptions().isMinimalPutsEnabled() && session.getCacheMode()!= CacheMode.REFRESH
+						factory.getSessionFactoryOptions().isMinimalPutsEnabled()
+								&& session.getCacheMode()!= CacheMode.REFRESH
 				);
 
 				final StatisticsImplementor statistics = factory.getStatistics();

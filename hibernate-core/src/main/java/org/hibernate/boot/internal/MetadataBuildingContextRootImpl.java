@@ -9,7 +9,6 @@ package org.hibernate.boot.internal;
 import org.hibernate.boot.model.TypeDefinitionRegistryStandardImpl;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.boot.spi.BootstrapContext;
-import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MappingDefaults;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -64,11 +63,6 @@ public class MetadataBuildingContextRootImpl implements MetadataBuildingContext 
 	@Override
 	public InFlightMetadataCollector getMetadataCollector() {
 		return metadataCollector;
-	}
-
-	@Override
-	public ClassLoaderAccess getClassLoaderAccess() {
-		return bootstrapContext.getClassLoaderAccess();
 	}
 
 	@Override

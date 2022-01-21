@@ -12,10 +12,6 @@ import jakarta.persistence.SharedCacheMode;
 
 import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
-import org.hibernate.boot.CacheRegionDefinition;
-import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
-import org.hibernate.boot.archive.scan.spi.ScanOptions;
-import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
@@ -28,9 +24,6 @@ import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.metamodel.internal.ManagedTypeRepresentationResolverStandard;
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
 import org.hibernate.type.spi.TypeConfiguration;
-import org.jboss.jandex.IndexView;
-
-import jakarta.persistence.SharedCacheMode;
 
 /**
  * Describes the options used while building the Metadata object (during
@@ -95,73 +88,6 @@ public interface MetadataBuildingOptions {
 	@Deprecated
 	ReflectionManager getReflectionManager();
 
-	/**
-	 * Access to the Jandex index passed by call to
-	 * {@link org.hibernate.boot.MetadataBuilder#applyIndexView(IndexView)}, if any.
-	 *
-	 * @return The Jandex index
-	 *
-	 * @deprecated  Use {@link BootstrapContext#getJandexView()} instead.
-	 */
-	@Deprecated
-	IndexView getJandexView();
-
-	/**
-	 * Access to the options to be used for scanning
-	 *
-	 * @return The scan options
-	 *
-	 * @deprecated  Use {@link BootstrapContext#getScanOptions()} instead.
-	 */
-	@Deprecated
-	ScanOptions getScanOptions();
-
-	/**
-	 * Access to the environment for scanning.  Consider this temporary; see discussion on
-	 * {@link ScanEnvironment}
-	 *
-	 * @return The scan environment
-	 *
-	 * @deprecated  Use {@link BootstrapContext#getScanEnvironment()} instead.
-	 */
-	@Deprecated
-	ScanEnvironment getScanEnvironment();
-
-	/**
-	 * Access to the Scanner to be used for scanning.  Can be:<ul>
-	 *     <li>A Scanner instance</li>
-	 *     <li>A Class reference to the Scanner implementor</li>
-	 *     <li>A String naming the Scanner implementor</li>
-	 * </ul>
-	 *
-	 * @return The scanner
-	 *
-	 *  @deprecated  Use {@link BootstrapContext#getScanner()} instead.
-	 */
-	@Deprecated
-	Object getScanner();
-
-	/**
-	 * Access to the ArchiveDescriptorFactory to be used for scanning
-	 *
-	 * @return The ArchiveDescriptorFactory
-	 *
-	 * @deprecated Use {@link BootstrapContext#getArchiveDescriptorFactory()} instead.
-	 */
-	@Deprecated
-	ArchiveDescriptorFactory getArchiveDescriptorFactory();
-
-	/**
-	 * Access the temporary ClassLoader passed to us as defined by
-	 * {@link jakarta.persistence.spi.PersistenceUnitInfo#getNewTempClassLoader()}, if any.
-	 *
-	 * @return The tempo ClassLoader
-	 *
-	 *  @deprecated  Use {@link BootstrapContext#getJpaTempClassLoader()} instead.
-	 */
-	@Deprecated
-	ClassLoader getTempClassLoader();
-
 	ImplicitNamingStrategy getImplicitNamingStrategy();
 
 	PhysicalNamingStrategy getPhysicalNamingStrategy();
@@ -191,16 +117,6 @@ public interface MetadataBuildingOptions {
 	IdGeneratorStrategyInterpreter getIdGenerationTypeInterpreter();
 
 	TypeConfiguration getTypeConfiguration();
-
-	/**
-	 * Access to all explicit cache region mappings.
-	 *
-	 * @return Explicit cache region mappings.
-	 *
-	 *  @deprecated  Use {@link BootstrapContext#getClassmateContext()} instead.
-	 */
-	@Deprecated
-	List<CacheRegionDefinition> getCacheRegionDefinitions();
 
 	/**
 	 * Whether explicit discriminator declarations should be ignored for joined

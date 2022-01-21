@@ -23,9 +23,4 @@ public abstract class AbstractArchiveDescriptorFactory implements ArchiveDescrip
 	public URL getJarURLFromURLEntry(URL url, String entry) throws IllegalArgumentException {
 		return ArchiveHelper.getJarURLFromURLEntry( url, entry );
 	}
-
-	@Override
-	public URL getURLFromPath(String jarPath) {
-		return ArchiveHelper.getURLFromPath( jarPath );
-	}
 }

@@ -43,16 +43,6 @@ public abstract class AbstractDelegatingMetadataBuilderImplementor<T extends Met
 
 	private final MetadataBuilderImplementor delegate;
 
-	/**
-	 * Kept for compatibility reason but should be removed as soon as possible.
-	 *
-	 * @deprecated use {@link #delegate()} instead
-	 */
-	@Deprecated
-	public MetadataBuilderImplementor getDelegate() {
-		return delegate;
-	}
-
 	protected MetadataBuilderImplementor delegate() {
 		return delegate;
 	}

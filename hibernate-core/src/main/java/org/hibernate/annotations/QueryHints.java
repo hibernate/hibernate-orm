@@ -6,6 +6,7 @@
  */
 package org.hibernate.annotations;
 
+import org.hibernate.jpa.AvailableHints;
 import org.hibernate.jpa.HibernateHints;
 import org.hibernate.jpa.LegacySpecHints;
 import org.hibernate.jpa.SpecHints;
@@ -17,10 +18,13 @@ import org.hibernate.query.Query;
  * the {@link Query} interface, and so hints are only necessary for programs
  * working with the JPA APIs.
  *
- * @see SpecHints
- * @see HibernateHints
+ * @see AvailableHints
+ *
+ * @deprecated (since 6.0) Use {@link AvailableHints} instead
  */
-public class QueryHints implements HibernateHints, SpecHints {
+@SuppressWarnings("unused")
+@Deprecated
+public final class QueryHints {
 	/**
 	 * Disallow instantiation.
 	 */

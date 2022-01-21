@@ -6,9 +6,10 @@
  */
 package org.hibernate.jpa;
 
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+import org.hibernate.jpa.internal.HintsCollector;
 
 import jakarta.persistence.LockModeType;
 
@@ -23,37 +24,8 @@ import jakarta.persistence.LockModeType;
  *
  * @author Steve Ebersole
  */
-public class AvailableHints implements HibernateHints, SpecHints {
-	private static final Set<String> HINTS = buildHintsSet();
-
-	public static Set<String> getDefinedHints() {
-		return HINTS;
+public interface AvailableHints extends HibernateHints, SpecHints {
+	static Set<String> getDefinedHints() {
+		return HintsCollector.getDefinedHints();
 	}
-
-	private static Set<String> buildHintsSet() {
-		final HashSet<String> hints = new HashSet<>();
-
-		hints.add( HibernateHints.HINT_TIMEOUT );
-		hints.add( HibernateHints.HINT_READ_ONLY );
-		hints.add( HibernateHints.HINT_FLUSH_MODE );
-		hints.add( HibernateHints.HINT_CACHEABLE );
-		hints.add( HibernateHints.HINT_CACHE_MODE );
-		hints.add( HibernateHints.HINT_CACHE_REGION );
-		hints.add( HibernateHints.HINT_FETCH_SIZE );
-		hints.add( HibernateHints.HINT_COMMENT );
-		hints.add( HibernateHints.HINT_NATIVE_SPACES );
-		hints.add( HibernateHints.HINT_NATIVE_LOCK_MODE );
-
-		hints.add( SpecHints.HINT_SPEC_QUERY_TIMEOUT );
-		hints.add( SpecHints.HINT_SPEC_FETCH_GRAPH );
-		hints.add( SpecHints.HINT_SPEC_LOAD_GRAPH );
-
-		hints.add( LegacySpecHints.HINT_JAVAEE_QUERY_TIMEOUT );
-		hints.add( LegacySpecHints.HINT_JAVAEE_FETCH_GRAPH );
-		hints.add( LegacySpecHints.HINT_JAVAEE_LOAD_GRAPH );
-
-		return java.util.Collections.unmodifiableSet( hints );
-	}
-
-
 }

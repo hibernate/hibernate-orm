@@ -16,9 +16,10 @@ import jakarta.persistence.LockModeType;
  * The hints explicitly defined by the Jakarta Persistence specification
  * which are available for both queries and loading
  *
+ * @see jakarta.persistence.EntityManager#setProperty
  * @see jakarta.persistence.EntityManager#find(Class, Object, Map)
  * @see jakarta.persistence.EntityManager#find(Class, Object, LockModeType, Map)
- * @see org.hibernate.Session#lock(Object, LockModeType, Map)
+ * @see jakarta.persistence.EntityManager#lock(Object, LockModeType, Map)
  * @see jakarta.persistence.Query#setHint
  *
  * @author Steve Ebersole

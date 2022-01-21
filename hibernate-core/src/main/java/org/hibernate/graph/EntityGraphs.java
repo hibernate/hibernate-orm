@@ -104,18 +104,18 @@ public final class EntityGraphs {
 	/**
 	 * Convenience method for {@linkplain Query#getResultList() executing} the Query, applying the
 	 * given EntityGraph using the named semantic using JPA's "hint name" - see
-	 * {@link GraphSemantic#fromJpaHintName}
+	 * {@link GraphSemantic#fromHintName}
 	 *
 	 * @param query The JPA Query
 	 * @param graph The graph to apply
-	 * @param semanticJpaHintName See {@link GraphSemantic#fromJpaHintName}
+	 * @param semanticJpaHintName See {@link GraphSemantic#fromHintName}
 	 *
 	 * @return The result list
 	 */
 	@SuppressWarnings({"unused", "unchecked"})
 	public static List executeList(Query query, EntityGraph graph, String semanticJpaHintName) {
 		return query.unwrap( org.hibernate.query.Query.class )
-				.applyGraph( (RootGraph) graph, GraphSemantic.fromJpaHintName( semanticJpaHintName ) )
+				.applyGraph( (RootGraph) graph, GraphSemantic.fromHintName( semanticJpaHintName ) )
 				.list();
 	}
 
@@ -124,7 +124,7 @@ public final class EntityGraphs {
 	 *
 	 * @param query The JPA Query
 	 * @param graph The graph to apply
-	 * @param semanticJpaHintName See {@link GraphSemantic#fromJpaHintName}
+	 * @param semanticJpaHintName See {@link GraphSemantic#fromHintName}
 	 *
 	 * @apiNote This signature assumes that the Query's return is an entity and that the graph
 	 * applies to that entity's type.  JPA does not necessarily require that, but it is by

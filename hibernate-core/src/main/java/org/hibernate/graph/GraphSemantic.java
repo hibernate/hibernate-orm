@@ -6,8 +6,10 @@
  */
 package org.hibernate.graph;
 
-import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_FETCH_GRAPH;
-import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_LOAD_GRAPH;
+import java.util.Locale;
+
+import org.hibernate.jpa.LegacySpecHints;
+
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_FETCH_GRAPH;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOAD_GRAPH;
 
@@ -27,7 +29,7 @@ public enum GraphSemantic {
 	 * are not fetched.
 	 * </ul>
 	 */
-	FETCH( HINT_SPEC_FETCH_GRAPH, HINT_JAVAEE_FETCH_GRAPH ),
+	FETCH( HINT_SPEC_FETCH_GRAPH, LegacySpecHints.HINT_JAVAEE_FETCH_GRAPH ),
 
 	/**
 	 * Indicates that an {@link jakarta.persistence.EntityGraph} should be interpreted as a JPA "load graph".
@@ -38,27 +40,28 @@ public enum GraphSemantic {
 	 * depending on the mapping of the attribute, instead of forcing {@code FetchType.LAZY}.
 	 * </ul>
 	 */
-	LOAD( HINT_SPEC_LOAD_GRAPH, HINT_JAVAEE_LOAD_GRAPH );
+	LOAD( HINT_SPEC_LOAD_GRAPH, LegacySpecHints.HINT_JAVAEE_LOAD_GRAPH );
 
 	private final String jakartaHintName;
-	private final String jpaHintName;
+	private final String javaeeHintName;
 
-	GraphSemantic(String jakartaHintName, String jpaHintName) {
+	GraphSemantic(String jakartaHintName, String javaeeHintName) {
 		this.jakartaHintName = jakartaHintName;
-		this.jpaHintName = jpaHintName;
+		this.javaeeHintName = javaeeHintName;
 	}
 
 	/**
-	 * The hint name that should be used with Jakarta Persistence.
+	 * The corresponding Jakarta Persistence hint name.
 	 *
-	 * @see jakarta.persistence.Query#setHint(String, Object)
+	 * @see org.hibernate.jpa.SpecHints#HINT_SPEC_FETCH_GRAPH
+	 * @see org.hibernate.jpa.SpecHints#HINT_SPEC_LOAD_GRAPH
 	 */
 	public String getJakartaHintName() {
 		return jakartaHintName;
 	}
 
 	/**
-	 * The hint name that should be used with JPA.
+	 * The hint name that should be used with Java Persistence.
 	 *
 	 * @see org.hibernate.jpa.LegacySpecHints#HINT_JAVAEE_FETCH_GRAPH
 	 * @see org.hibernate.jpa.LegacySpecHints#HINT_JAVAEE_LOAD_GRAPH
@@ -67,7 +70,7 @@ public enum GraphSemantic {
 	 */
 	@Deprecated
 	public String getJpaHintName() {
-		return jpaHintName;
+		return javaeeHintName;
 	}
 
 	public static GraphSemantic fromHintName(String hintName) {
@@ -82,8 +85,16 @@ public enum GraphSemantic {
 		}
 
 		throw new IllegalArgumentException(
-				"Unknown EntityGraph hint name [" + hintName + "]; " +
-						"expecting `" + FETCH.jpaHintName + "` or `" + LOAD.jpaHintName + "`."
+				String.format(
+						Locale.ROOT,
+						"Unknown EntityGraph hint name - `%s`.  " +
+								"Expecting `%s` or `%s` (or `%s` and `%s`).",
+								hintName,
+						FETCH.jakartaHintName,
+						LOAD.jakartaHintName,
+						FETCH.javaeeHintName,
+						LOAD.javaeeHintName
+				)
 		);
 	}
 

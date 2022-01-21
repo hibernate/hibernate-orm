@@ -6,16 +6,20 @@
  */
 package org.hibernate.jpa;
 
-import java.util.HashSet;
 import java.util.Set;
+
+import org.hibernate.jpa.internal.HintsCollector;
 
 /**
  * List of all supported hints that may be passed to {@link jakarta.persistence.Query#setHint(String, Object)}.
  *
- * @see SpecHints
- * @see HibernateHints
+ * @see AvailableHints
+ *
+ * @deprecated (since 6.0) Use {@link AvailableHints} instead
  */
-public class QueryHints {
+@SuppressWarnings("unused")
+@Deprecated
+public final class QueryHints {
 	/**
 	 * @see SpecHints#HINT_SPEC_QUERY_TIMEOUT
 	 */
@@ -110,43 +114,13 @@ public class QueryHints {
 
 	/**
 	 * @see LegacySpecHints#HINT_JAVAEE_QUERY_TIMEOUT
-	 *
-	 * @deprecated use {@link SpecHints#HINT_QUERY_TIMEOUT} instead
 	 */
 	public static final String SPEC_HINT_TIMEOUT = LegacySpecHints.HINT_JAVAEE_QUERY_TIMEOUT;
 
-
-	private static final Set<String> HINTS = buildHintsSet();
-
-	private static Set<String> buildHintsSet() {
-		final HashSet<String> hints = new HashSet<>();
-
-		hints.add( HibernateHints.HINT_TIMEOUT );
-		hints.add( HibernateHints.HINT_READ_ONLY );
-		hints.add( HibernateHints.HINT_FLUSH_MODE );
-		hints.add( HibernateHints.HINT_CACHEABLE );
-		hints.add( HibernateHints.HINT_CACHE_MODE );
-		hints.add( HibernateHints.HINT_CACHE_REGION );
-		hints.add( HibernateHints.HINT_FETCH_SIZE );
-		hints.add( HibernateHints.HINT_COMMENT );
-		hints.add( HibernateHints.HINT_NATIVE_SPACES );
-		hints.add( HibernateHints.HINT_NATIVE_LOCK_MODE );
-
-		hints.add( SpecHints.HINT_SPEC_QUERY_TIMEOUT );
-		hints.add( SpecHints.HINT_SPEC_FETCH_GRAPH );
-		hints.add( SpecHints.HINT_SPEC_LOAD_GRAPH );
-
-		hints.add( LegacySpecHints.HINT_JAVAEE_QUERY_TIMEOUT );
-		hints.add( LegacySpecHints.HINT_JAVAEE_FETCH_GRAPH );
-		hints.add( LegacySpecHints.HINT_JAVAEE_LOAD_GRAPH );
-
-		return java.util.Collections.unmodifiableSet( hints );
-	}
-
 	public static Set<String> getDefinedHints() {
-		return HINTS;
+		return HintsCollector.getDefinedHints();
 	}
 
-	protected QueryHints() {
+	private QueryHints() {
 	}
 }

@@ -539,7 +539,7 @@ public class QuerySqmImpl<R>
 
 	@Override
 	protected void applyEntityGraphQueryHint(String hintName, @SuppressWarnings("rawtypes") RootGraphImplementor entityGraph) {
-		final GraphSemantic graphSemantic = GraphSemantic.fromJpaHintName( hintName );
+		final GraphSemantic graphSemantic = GraphSemantic.fromHintName( hintName );
 
 		applyGraph( entityGraph, graphSemantic );
 	}

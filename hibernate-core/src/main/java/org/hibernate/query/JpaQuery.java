@@ -25,7 +25,7 @@ import jakarta.persistence.TemporalType;
 
 /**
  * Adaptation of {@link jakarta.persistence.Query} to the
- * {@link org.hibernate.Query} hierarchy
+ * {@link org.hibernate.query.Query} hierarchy
  *
  * @apiNote Jakarta Persistence defines its {@link jakarta.persistence.Query}
  * contract as modeling both selection and mutation queries,
@@ -34,15 +34,13 @@ import jakarta.persistence.TemporalType;
  * @author Steve Ebersole
  */
 public interface JpaQuery extends CommonQueryContract, SelectionQuery, MutationQuery, jakarta.persistence.Query {
-	@SuppressWarnings("rawtypes")
 	@Override
-	default List getResultList() {
+	default List<?> getResultList() {
 		return SelectionQuery.super.getResultList();
 	}
 
-	@SuppressWarnings("rawtypes")
 	@Override
-	default Stream getResultStream() {
+	default Stream<?> getResultStream() {
 		return SelectionQuery.super.getResultStream();
 	}
 

@@ -32,9 +32,11 @@ import jakarta.persistence.Parameter;
 import jakarta.persistence.TemporalType;
 
 /**
+ * Models a selection query returning results.  It is a slimmed down version
+ * of {@link Query}, but providing only methods relevant to selection queries
+ *
  * @author Steve Ebersole
  */
-@SuppressWarnings("rawtypes")
 public interface SelectionQuery extends CommonQueryContract {
 	/**
 	 * Execute the query and return the query results as a {@link List}.
@@ -44,7 +46,7 @@ public interface SelectionQuery extends CommonQueryContract {
 	 *
 	 * @return the result list
 	 */
-	List list();
+	List<?> list();
 
 	/**
 	 * Execute the query and return the query results as a {@link List}.
@@ -54,7 +56,7 @@ public interface SelectionQuery extends CommonQueryContract {
 	 *
 	 * @return the results as a list
 	 */
-	default List getResultList() {
+	default List<?> getResultList() {
 		return list();
 	}
 
@@ -66,7 +68,7 @@ public interface SelectionQuery extends CommonQueryContract {
 	 * @apiNote The exact behavior of this method depends somewhat
 	 * on the JDBC driver's {@link java.sql.ResultSet} scrolling support
 	 */
-	ScrollableResults scroll();
+	ScrollableResults<?> scroll();
 
 	/**
 	 * Returns scrollable access to the query results.  The capabilities of the
@@ -75,7 +77,7 @@ public interface SelectionQuery extends CommonQueryContract {
 	 * @apiNote The exact behavior of this method depends somewhat
 	 * on the JDBC driver's {@link java.sql.ResultSet} scrolling support
 	 */
-	ScrollableResults scroll(ScrollMode scrollMode);
+	ScrollableResults<?> scroll(ScrollMode scrollMode);
 
 	/**
 	 * Execute the query and return the query results as a {@link Stream}.
@@ -88,7 +90,7 @@ public interface SelectionQuery extends CommonQueryContract {
 	 *
 	 * @return The results as a {@link Stream}
 	 */
-	default Stream getResultStream() {
+	default Stream<?> getResultStream() {
 		return stream();
 	}
 
@@ -105,7 +107,7 @@ public interface SelectionQuery extends CommonQueryContract {
 	 *
 	 * @since 5.2
 	 */
-	default Stream stream() {
+	default Stream<?> stream() {
 		return getResultStream();
 	}
 
@@ -138,7 +140,7 @@ public interface SelectionQuery extends CommonQueryContract {
 	 *
 	 * @throws NonUniqueResultException if there is more than one matching result
 	 */
-	Optional uniqueResultOptional();
+	Optional<?> uniqueResultOptional();
 
 	SelectionQuery setHint(String hintName, Object value);
 

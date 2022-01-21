@@ -34,11 +34,9 @@ import org.jboss.logging.Logger;
  * <li><em>System-level</em> properties are shared by all factory instances and are always
  * determined by the {@code Environment} properties.
  * </ul>
- * The only system-level properties are
- * <ul>
- * <li>{@code hibernate.jdbc.use_streams_for_binary}
- * <li>{@code hibernate.cglib.use_reflection_optimizer}
- * </ul>
+ * <p>
+ * The only system-level property is {@value #USE_REFLECTION_OPTIMIZER}.
+ * </p>
  * {@code Environment} properties are populated by calling {@link System#getProperties()}
  * and then from a resource named {@code /hibernate.properties} if it exists. System
  * properties override properties specified in {@code hibernate.properties}.
@@ -144,22 +142,10 @@ public final class Environment implements AvailableSettings {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, Environment.class.getName());
 
 	private static final BytecodeProvider BYTECODE_PROVIDER_INSTANCE;
-	private static final boolean ENABLE_BINARY_STREAMS;
 	private static final boolean ENABLE_REFLECTION_OPTIMIZER;
 	private static final boolean ENABLE_LEGACY_PROXY_CLASSNAMES;
 
 	private static final Properties GLOBAL_PROPERTIES;
-
-	/**
-	 * No longer effective.
-	 *
-	 * @param configurationValues The specified properties.
-	 * @deprecated without replacement. Such verification is best done ad hoc, case by case.
-	 */
-	@Deprecated
-	public static void verifyProperties(Map<?,?> configurationValues) {
-		//Obsolete and Renamed properties are no longer handled here
-	}
 
 	static {
 		Version.logVersion();
@@ -202,11 +188,6 @@ public final class Environment implements AvailableSettings {
 			LOG.unableToCopySystemProperties();
 		}
 
-		ENABLE_BINARY_STREAMS = ConfigurationHelper.getBoolean(USE_STREAMS_FOR_BINARY, GLOBAL_PROPERTIES);
-		if ( ENABLE_BINARY_STREAMS ) {
-			LOG.usingStreams();
-		}
-
 		ENABLE_REFLECTION_OPTIMIZER = ConfigurationHelper.getBoolean(USE_REFLECTION_OPTIMIZER, GLOBAL_PROPERTIES);
 		if ( ENABLE_REFLECTION_OPTIMIZER ) {
 			LOG.usingReflectionOptimizer();
@@ -230,24 +211,6 @@ public final class Environment implements AvailableSettings {
 	@Deprecated
 	public static boolean jvmHasTimestampBug() {
 		return false;
-	}
-
-	/**
-	 * Should we use streams to bind binary types to JDBC IN parameters?
-	 *
-	 * @return True if streams should be used for binary data handling; false otherwise.
-	 *
-	 * @see #USE_STREAMS_FOR_BINARY
-	 *
-	 * @deprecated Deprecated to indicate that the method will be moved to
-	 * {@link org.hibernate.boot.spi.SessionFactoryOptions} /
-	 * {@link org.hibernate.boot.SessionFactoryBuilder} - probably in 6.0.
-	 * See <a href="https://hibernate.atlassian.net/browse/HHH-12194">HHH-12194</a> and
-	 * <a href="https://hibernate.atlassian.net/browse/HHH-12193">HHH-12193</a> for details
-	 */
-	@Deprecated
-	public static boolean useStreamsForBinary() {
-		return ENABLE_BINARY_STREAMS;
 	}
 
 	/**

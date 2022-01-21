@@ -124,7 +124,7 @@ public class TeradataDialect extends Dialect {
 	}
 
 	@Override
-	public boolean getDefaultUseStreamsForBinary() {
+	public boolean useInputStreamToInsertBlob() {
 		return getVersion().isSameOrAfter( 14 );
 	}
 

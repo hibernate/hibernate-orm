@@ -600,9 +600,6 @@ A non-zero value determines the JDBC fetch size, by calling `Statement.setFetchS
 `*hibernate.jdbc.use_scrollable_resultset*` (e.g. `true` or `false`)::
 Enables Hibernate to use JDBC2 scrollable resultsets. This property is only relevant for user-supplied JDBC connections. Otherwise, Hibernate uses connection metadata.
 
-`*hibernate.jdbc.use_streams_for_binary*` (e.g. `true` or `false` (default value))::
-Use streams when writing or reading `binary` or `serializable` types to or from JDBC. This is a system-level property.
-
 `*hibernate.jdbc.use_get_generated_keys*` (e.g. `true` or `false`)::
 Allows Hibernate to use JDBC3 `PreparedStatement.getGeneratedKeys()` to retrieve natively-generated keys after insert. You need the JDBC3+ driver and JRE1.4+. Disable this property if your driver has problems with the Hibernate identifier generators. By default, it tries to detect the driver capabilities from connection metadata.
 

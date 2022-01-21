@@ -122,11 +122,6 @@ public class CUBRIDDialect extends Dialect {
 	}
 
 	@Override
-	public boolean getDefaultUseStreamsForBinary() {
-		return true;
-	}
-
-	@Override
 	public int getMaxVarcharLength() {
 		return 1_073_741_823;
 	}

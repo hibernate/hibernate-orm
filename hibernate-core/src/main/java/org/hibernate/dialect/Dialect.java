@@ -281,8 +281,6 @@ public abstract class Dialect implements ConversionContext {
 	protected void initDefaultProperties() {
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE,
 				Integer.toString( getDefaultStatementBatchSize() ) );
-		getDefaultProperties().setProperty( Environment.USE_STREAMS_FOR_BINARY,
-				Boolean.toString( getDefaultUseStreamsForBinary() ) );
 		getDefaultProperties().setProperty( Environment.NON_CONTEXTUAL_LOB_CREATION,
 				Boolean.toString( getDefaultNonContextualLobCreation() ) );
 		getDefaultProperties().setProperty( Environment.USE_GET_GENERATED_KEYS,
@@ -1274,14 +1272,6 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public int getDefaultStatementBatchSize() {
 		return 1;
-	}
-
-	/**
-	 * The default value to use for the configuration property
-	 * {@value Environment#USE_STREAMS_FOR_BINARY}.
-	 */
-	public boolean getDefaultUseStreamsForBinary() {
-		return false;
 	}
 
 	/**

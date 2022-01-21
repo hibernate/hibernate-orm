@@ -18,7 +18,9 @@ import jakarta.persistence.Parameter;
 import jakarta.persistence.TemporalType;
 
 /**
- * Specialization of CommonQueryContract for insert, update and delete queries
+ * Models a mutation (insert, update and delete) query.  It is a slimmed
+ * down version of {@link Query}, but providing only methods relevant to
+ * mutation queries
  *
  * @author Steve Ebersole
  */

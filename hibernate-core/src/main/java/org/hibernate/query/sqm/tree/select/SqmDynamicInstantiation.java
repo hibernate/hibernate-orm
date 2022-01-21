@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import org.hibernate.query.DynamicInstantiationNature;
+import org.hibernate.query.sqm.DynamicInstantiationNature;
 import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -21,9 +21,9 @@ import org.hibernate.type.descriptor.java.JavaType;
 
 import org.jboss.logging.Logger;
 
-import static org.hibernate.query.DynamicInstantiationNature.CLASS;
-import static org.hibernate.query.DynamicInstantiationNature.LIST;
-import static org.hibernate.query.DynamicInstantiationNature.MAP;
+import static org.hibernate.query.sqm.DynamicInstantiationNature.CLASS;
+import static org.hibernate.query.sqm.DynamicInstantiationNature.LIST;
+import static org.hibernate.query.sqm.DynamicInstantiationNature.MAP;
 
 /**
  * Represents a dynamic instantiation ({@code select new XYZ(...) ...}) as part of the SQM.

@@ -17,7 +17,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.query.Limit;
+import org.hibernate.query.spi.Limit;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.spi.MutableQueryOptions;

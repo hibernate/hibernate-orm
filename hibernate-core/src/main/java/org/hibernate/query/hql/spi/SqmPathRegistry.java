@@ -9,7 +9,7 @@ package org.hibernate.query.hql.spi;
 import java.util.function.Function;
 
 import org.hibernate.Incubating;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.select.SqmAliasedNode;

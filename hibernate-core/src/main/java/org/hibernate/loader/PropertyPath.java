@@ -7,7 +7,7 @@
 package org.hibernate.loader;
 
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 
 /**
  * @author Steve Ebersole

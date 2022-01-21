@@ -19,7 +19,7 @@ import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.dialect.TiDBDialect;
-import org.hibernate.query.FetchClauseType;
+import org.hibernate.query.sqm.FetchClauseType;
 
 /**
  * Container class for different implementation of the {@link DialectFeatureCheck} interface.

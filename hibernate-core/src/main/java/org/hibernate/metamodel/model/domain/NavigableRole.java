@@ -10,7 +10,7 @@ import java.util.Objects;
 
 import org.hibernate.query.DotIdentifierSequence;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 
 /**
  * Poorly named.

@@ -9,7 +9,7 @@ package org.hibernate.sql.ast.tree.expression;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SqlExpressable;
-import org.hibernate.query.TrimSpec;
+import org.hibernate.query.sqm.TrimSpec;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 

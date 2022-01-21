@@ -10,7 +10,7 @@ import java.util.List;
 
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.exec.spi.Callback;

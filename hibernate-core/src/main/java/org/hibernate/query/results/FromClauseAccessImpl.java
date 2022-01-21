@@ -7,10 +7,9 @@
 package org.hibernate.query.results;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 

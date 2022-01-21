@@ -9,7 +9,7 @@ package org.hibernate.type.descriptor.jdbc;
 import java.io.Serializable;
 import java.sql.Types;
 
-import org.hibernate.query.CastType;
+import org.hibernate.query.sqm.CastType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;

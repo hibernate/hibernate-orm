@@ -11,9 +11,9 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import org.hibernate.query.FetchClauseType;
+import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.SemanticException;
-import org.hibernate.query.SetOperator;
+import org.hibernate.query.sqm.SetOperator;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaOrder;

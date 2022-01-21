@@ -6,7 +6,7 @@
  */
 package org.hibernate.dialect.pagination;
 
-import org.hibernate.query.Limit;
+import org.hibernate.query.spi.Limit;
 
 /**
  * A {@link LimitHandler} for DB2. Uses {@code FETCH FIRST n ROWS ONLY},

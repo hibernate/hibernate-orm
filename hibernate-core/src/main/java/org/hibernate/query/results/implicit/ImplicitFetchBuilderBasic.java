@@ -12,7 +12,7 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.ConvertibleModelPart;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.results.BasicValuedFetchBuilder;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.FetchBuilder;

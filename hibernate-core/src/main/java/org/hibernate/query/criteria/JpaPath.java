@@ -8,15 +8,14 @@ package org.hibernate.query.criteria;
 
 import java.util.Collection;
 import java.util.Map;
-import jakarta.persistence.criteria.Expression;
+
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.metamodel.MapAttribute;
 import jakarta.persistence.metamodel.PluralAttribute;
 import jakarta.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.query.NavigablePath;
-import org.hibernate.query.PathException;
+import org.hibernate.query.spi.NavigablePath;
 
 /**
  * API extension to the JPA {@link Path} contract

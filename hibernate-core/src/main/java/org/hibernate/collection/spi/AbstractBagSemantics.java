@@ -11,13 +11,10 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.function.Consumer;
 
-import org.hibernate.collection.spi.BagSemantics;
-import org.hibernate.collection.spi.CollectionInitializerProducer;
-import org.hibernate.collection.spi.InitializerProducerBuilder;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParent;

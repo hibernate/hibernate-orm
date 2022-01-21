@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.internal.FilterJdbcParameter;
-import org.hibernate.query.Limit;
+import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;

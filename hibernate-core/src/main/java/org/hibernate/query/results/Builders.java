@@ -26,7 +26,7 @@ import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.internal.ResultSetMappingResolutionContext;
 import org.hibernate.query.results.dynamic.DynamicResultBuilderAttribute;
 import org.hibernate.query.results.dynamic.DynamicResultBuilderBasic;

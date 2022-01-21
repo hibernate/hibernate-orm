@@ -4,11 +4,13 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.query;
+package org.hibernate.query.spi;
 
 import java.io.Serializable;
 
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.query.DotIdentifierSequence;
+import org.hibernate.query.sqm.spi.EntityIdentifierNavigablePath;
 
 /**
  * Compound-name where each path references to a domain or mapping model-part relative to a root path.  Generally
@@ -101,7 +103,7 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 		this( "" );
 	}
 
-	NavigablePath(
+	public NavigablePath(
 			NavigablePath parent,
 			String fullPath,
 			String unaliasedLocalName,

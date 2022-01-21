@@ -33,9 +33,9 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.IntervalType;
-import org.hibernate.query.NullOrdering;
-import org.hibernate.query.TemporalUnit;
+import org.hibernate.query.sqm.IntervalType;
+import org.hibernate.query.sqm.NullOrdering;
+import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -54,8 +54,8 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import jakarta.persistence.TemporalType;
 
-import static org.hibernate.query.TemporalUnit.DAY;
-import static org.hibernate.query.TemporalUnit.NATIVE;
+import static org.hibernate.query.sqm.TemporalUnit.DAY;
+import static org.hibernate.query.sqm.TemporalUnit.NATIVE;
 import static org.hibernate.type.SqlTypes.*;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;

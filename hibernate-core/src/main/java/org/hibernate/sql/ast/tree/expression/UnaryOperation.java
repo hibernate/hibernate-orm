@@ -9,7 +9,7 @@ package org.hibernate.sql.ast.tree.expression;
 
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
-import org.hibernate.query.UnaryArithmeticOperator;
+import org.hibernate.query.sqm.UnaryArithmeticOperator;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;

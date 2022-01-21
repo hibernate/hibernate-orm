@@ -30,7 +30,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.internal.FetchMementoBasicStandard;
 import org.hibernate.query.internal.FetchMementoEntityStandard;
 import org.hibernate.query.internal.ModelPartResultMementoBasicImpl;

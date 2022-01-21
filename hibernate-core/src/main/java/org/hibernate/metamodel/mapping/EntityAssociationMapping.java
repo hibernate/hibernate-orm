@@ -6,7 +6,7 @@
  */
 package org.hibernate.metamodel.mapping;
 
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
 import org.hibernate.sql.results.graph.DomainResult;

@@ -9,7 +9,7 @@ package org.hibernate.query.internal;
 import java.util.function.Consumer;
 
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.named.FetchMementoBasic;
 import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.complete.CompleteFetchBuilderBasicPart;

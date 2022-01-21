@@ -18,7 +18,7 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.type.spi.TypeConfiguration;

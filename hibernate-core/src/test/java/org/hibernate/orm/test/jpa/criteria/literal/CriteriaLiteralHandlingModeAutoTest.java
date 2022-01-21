@@ -7,7 +7,7 @@
 package org.hibernate.orm.test.jpa.criteria.literal;
 
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.query.CastType;
+import org.hibernate.query.sqm.CastType;
 
 import org.hibernate.testing.RequiresDialect;
 

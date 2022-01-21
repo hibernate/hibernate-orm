@@ -9,15 +9,13 @@ package org.hibernate.query.sqm.tree.select;
 import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.query.FetchClauseType;
+import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaOrder;
 import org.hibernate.query.criteria.JpaQueryPart;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.type.StandardBasicTypes;
 
 /**
  * Defines the ordering and fetch/offset part of a query which is shared with query groups.

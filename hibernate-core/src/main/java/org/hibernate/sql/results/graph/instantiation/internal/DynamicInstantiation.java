@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.query.DynamicInstantiationNature;
+import org.hibernate.query.sqm.DynamicInstantiationNature;
 import org.hibernate.query.sqm.sql.ConversionException;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.results.graph.DomainResult;

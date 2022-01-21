@@ -6,7 +6,7 @@
  */
 package org.hibernate.dialect.pagination;
 
-import org.hibernate.query.Limit;
+import org.hibernate.query.spi.Limit;
 
 import static java.lang.String.valueOf;
 

@@ -8,7 +8,7 @@ package org.hibernate.sql.results.graph.basic;
 
 import org.hibernate.Internal;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;

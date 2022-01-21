@@ -9,10 +9,9 @@ package org.hibernate.query.sqm.tree.domain;
 import jakarta.persistence.criteria.PluralJoin;
 
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.criteria.JpaJoin;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmJoinable;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 

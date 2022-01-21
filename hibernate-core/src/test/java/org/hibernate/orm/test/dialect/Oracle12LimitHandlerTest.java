@@ -7,7 +7,7 @@
 package org.hibernate.orm.test.dialect;
 
 import org.hibernate.dialect.pagination.Oracle12LimitHandler;
-import org.hibernate.query.Limit;
+import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.QueryOptions;
 
 import org.hibernate.testing.TestForIssue;

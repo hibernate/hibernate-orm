@@ -12,7 +12,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.query.NavigablePath;
+import org.hibernate.query.spi.NavigablePath;
 import org.hibernate.query.QueryLogging;
 import org.hibernate.query.named.FetchMemento;
 import org.hibernate.query.named.FetchMementoBasic;

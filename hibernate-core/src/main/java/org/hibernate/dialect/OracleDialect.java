@@ -610,11 +610,6 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
-	public boolean getDefaultUseStreamsForBinary() {
-		return true;
-	}
-
-	@Override
 	public boolean getDefaultUseGetGeneratedKeys() {
 		// Oracle driver reports to support getGeneratedKeys(), but they only
 		// support the version taking an array of the names of the columns to

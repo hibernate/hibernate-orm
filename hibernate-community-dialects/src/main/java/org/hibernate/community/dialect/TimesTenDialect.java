@@ -114,11 +114,6 @@ public class TimesTenDialect extends Dialect {
 	}
 
 	@Override
-	public boolean getDefaultUseStreamsForBinary() {
-		return true;
-	}
-
-	@Override
 	public JdbcType resolveSqlTypeDescriptor(
 			String columnTypeName,
 			int jdbcTypeCode,

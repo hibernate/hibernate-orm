@@ -362,11 +362,6 @@ hibernate.jdbc.batch_versioned_data true
 #hibernate.jdbc.use_scrollable_resultset true
 
 
-## use streams when writing binary types to / from JDBC
-
-hibernate.jdbc.use_streams_for_binary true
-
-
 ## use JDBC 3 PreparedStatement.getGeneratedKeys() to get the identifier of an inserted row
 
 #hibernate.jdbc.use_get_generated_keys false

@@ -108,11 +108,6 @@ public class MimerSQLDialect extends Dialect {
 	}
 
 	@Override
-	public boolean getDefaultUseStreamsForBinary() {
-		return true;
-	}
-
-	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 

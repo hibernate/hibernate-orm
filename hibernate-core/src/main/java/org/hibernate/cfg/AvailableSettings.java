@@ -11,7 +11,6 @@ import java.util.function.Supplier;
 import org.hibernate.HibernateException;
 import org.hibernate.jpa.HibernateHints;
 import org.hibernate.query.NativeQuery;
-import org.hibernate.query.Query;
 import org.hibernate.Transaction;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.registry.classloading.internal.TcclLookupPrecedence;
@@ -775,11 +774,6 @@ public interface AvailableSettings {
 	 * The default batch size for batch fetching
 	 */
 	String DEFAULT_BATCH_FETCH_SIZE = "hibernate.default_batch_fetch_size";
-
-	/**
-	 * Use {@code java.io} streams to read / write binary data from / to JDBC
-	 */
-	String USE_STREAMS_FOR_BINARY = "hibernate.jdbc.use_streams_for_binary";
 
 	/**
 	 * Use JDBC scrollable {@code ResultSet}s. This property is only necessary when there is

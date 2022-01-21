@@ -15,7 +15,18 @@ import jakarta.transaction.UserTransaction;
 import org.hibernate.service.Service;
 
 /**
- * Defines how we interact with various JTA services on the given platform/environment.
+ * A {@link Service} that defines how Hibernate interacts with JTA on a certain
+ * platform. In particular, a {@code JtaPlatform} allows Hibernate to obtain
+ * the {@link TransactionManager} and {@link UserTransaction}, and register
+ * {@link Synchronization}s.
+ * <p>
+ * An implementation may be selected by specifying the configuration property
+ * {@value org.hibernate.cfg.AvailableSettings#JTA_PLATFORM}. Alternatively,
+ * a {@link JtaPlatformProvider} or even a custom {@link JtaPlatformResolver}
+ * may be used.
+ *
+ * @see JtaPlatformResolver
+ * @see JtaPlatformProvider
  *
  * @author Steve Ebersole
  */

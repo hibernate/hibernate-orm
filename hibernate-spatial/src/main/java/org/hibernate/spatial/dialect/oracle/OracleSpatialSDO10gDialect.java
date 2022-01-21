@@ -11,8 +11,8 @@ import org.hibernate.spatial.SpatialDialect;
 
 /**
  * A Spatial Dialect for Oracle 10g/11g that uses the "native" SDO spatial operators.
- * <p>
- * Created by Karel Maesen, Geovise BVBA on 11/02/17.
+ *
+ *  @deprecated A SpatialDialect is no longer required. Use the standard Dialect for this database.
  */
 @Deprecated
 public class OracleSpatialSDO10gDialect extends Oracle10gDialect

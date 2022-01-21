@@ -20,8 +20,12 @@ import org.hibernate.type.StandardBasicTypes;
 
 public class SDOGetGeometryType extends OracleSpatialFunction {
 	public SDOGetGeometryType(BasicTypeRegistry typeRegistry) {
-		super( "GetGeometryType", true, StandardArgumentsValidators.exactly( 1 ),
-			   StandardFunctionReturnTypeResolvers.invariant( typeRegistry.resolve( StandardBasicTypes.STRING ) ) );
+		super(
+				"GetGeometryType",
+				true,
+				StandardArgumentsValidators.exactly( 1 ),
+				StandardFunctionReturnTypeResolvers.invariant( typeRegistry.resolve( StandardBasicTypes.STRING ) )
+		);
 	}
 
 	@Override

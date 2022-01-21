@@ -11,7 +11,7 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.spatial.HibernateSpatialConfigurationSettings;
 import org.hibernate.spatial.testing.dialects.oracle.OracleSTNativeSqlTemplates;
 
-import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.Setting;
 

@@ -47,9 +47,9 @@ tasks.test {
 			   'mariadb',
 			   'mysql_ci',
 			   'mysql_docker',
-				'oracle_docker',
-				'oracle_ci',
-				'oracle_rds'
+			   'oracle_docker',
+			   'oracle_ci',
+			   'oracle_rds'
 	].contains( project.db )
 }
 

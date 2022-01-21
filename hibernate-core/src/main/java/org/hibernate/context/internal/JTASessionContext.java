@@ -118,7 +118,7 @@ public class JTASessionContext extends AbstractCurrentSessionContext {
 	}
 
 	/**
-	 * Builds a {@link CleanupSync} capable of cleaning up the the current session map as an after transaction
+	 * Builds a {@link CleanupSync} capable of cleaning up the current session map as an after transaction
 	 * callback.
 	 *
 	 * @param transactionIdentifier The transaction identifier under which the current session is registered.
@@ -146,7 +146,7 @@ public class JTASessionContext extends AbstractCurrentSessionContext {
 	/**
 	 * Mainly for subclass usage.  This impl always returns true.
 	 *
-	 * @return Whether or not the the session should be closed by transaction completion.
+	 * @return Whether the session should be closed by transaction completion.
 	 */
 	protected boolean isAutoCloseEnabled() {
 		return true;
@@ -155,7 +155,7 @@ public class JTASessionContext extends AbstractCurrentSessionContext {
 	/**
 	 * Mainly for subclass usage.  This impl always returns true.
 	 *
-	 * @return Whether or not the the session should be flushed prior transaction completion.
+	 * @return Whether the session should be flushed prior transaction completion.
 	 */
 	protected boolean isAutoFlushEnabled() {
 		return true;

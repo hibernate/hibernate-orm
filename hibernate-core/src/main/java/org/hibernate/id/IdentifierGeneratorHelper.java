@@ -59,7 +59,7 @@ public final class IdentifierGeneratorHelper {
 	/**
 	 * Get the generated identifier when using identity columns
 	 *
-	 * @param rs The result set from which to extract the the generated identity.
+	 * @param rs The result set from which to extract the generated identity.
 	 * @param identifier The name of the identifier column
 	 * @param type The expected type mapping for the identity value.
 	 * @param dialect The current database dialect.

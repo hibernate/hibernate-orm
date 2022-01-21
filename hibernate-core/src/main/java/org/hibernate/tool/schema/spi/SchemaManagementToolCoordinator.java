@@ -604,7 +604,7 @@ public class SchemaManagementToolCoordinator {
 
 	/**
 	 * For JPA-style schema-gen, database and script target handing are configured
-	 * individually - this tuple allows interpreting the the action for both targets
+	 * individually - this tuple allows interpreting the action for both targets
 	 * simultaneously
 	 */
 	public static class ActionGrouping {

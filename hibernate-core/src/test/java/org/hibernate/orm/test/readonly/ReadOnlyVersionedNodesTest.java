@@ -585,7 +585,7 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 					assertEquals( 0, child.getVersion() );
 					assertNotNull( parent );
 					assertEquals( 0, parent.getChildren().size() );
-					assertEquals( 1, parent.getVersion() );    // hmmm, why is was version updated?
+					assertEquals( 1, parent.getVersion() );    // hmmm, why was version updated?
 					session.setReadOnly( parent, true );
 					session.setReadOnly( child, true );
 					session.delete( parent );
@@ -629,7 +629,7 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 					assertEquals( 0, child.getVersion() );
 					assertNotNull( parent );
 					assertEquals( 0, parent.getChildren().size() );
-					assertEquals( 1, parent.getVersion() ); // / hmmm, why is was version updated?
+					assertEquals( 1, parent.getVersion() ); // / hmmm, why was version updated?
 					session.setReadOnly( parent, true );
 					session.setReadOnly( child, true );
 					session.delete( parent );

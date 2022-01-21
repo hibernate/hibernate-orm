@@ -7,7 +7,7 @@
 package org.hibernate.engine.jdbc.internal;
 
 /**
- * Represents the the understood types or styles of formatting. 
+ * Represents the understood types or styles of formatting.
  *
  * @author Steve Ebersole
  */

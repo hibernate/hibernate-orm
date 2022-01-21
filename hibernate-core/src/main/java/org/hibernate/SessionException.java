@@ -8,7 +8,7 @@ package org.hibernate;
 
 /**
  * Thrown when the user calls a method of a {@link Session} that is in an inappropriate state for the given call (for
- * example, the the session is closed or disconnected).
+ * example, the session is closed or disconnected).
  *
  * @author Gavin King
  */

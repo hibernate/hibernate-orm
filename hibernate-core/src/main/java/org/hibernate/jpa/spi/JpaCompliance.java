@@ -92,7 +92,7 @@ public interface JpaCompliance {
 	boolean isJpaCacheComplianceEnabled();
 
 	/**
-	 * Should the the scope of {@link jakarta.persistence.TableGenerator#name()} and
+	 * Should the scope of {@link jakarta.persistence.TableGenerator#name()} and
 	 * {@link jakarta.persistence.SequenceGenerator#name()} be considered globally or locally
 	 * defined?
 	 *

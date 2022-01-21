@@ -456,8 +456,8 @@ public abstract class AbstractEntityPersister
 		 *  @JoinTable's.
 		 *
 		 *  Probably this method needs to be properly implemented for the various entity persisters,
-		 *  but this at least fixes the SingleTableEntityPersister, while maintaining the the
-		 *  previous behaviour for other persisters.
+		 *  but this at least fixes the SingleTableEntityPersister, while maintaining the previous
+		 *  behaviour for other persisters.
 		 */
 		return isClassOrSuperclassTable( j );
 	}

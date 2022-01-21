@@ -55,8 +55,8 @@ public interface DomainModelDescriptor {
 	 * Identifies the specific mapping features this domain model uses.
 	 */
 	default EnumSet<MappingFeature> getMappingFeaturesUsed() {
-		// for now just return none.  this is is simply informative, not used to
-		// drive any functionality - so maybe its not important to add
+		// for now just return none.  this is simply informative, not used to
+		// drive any functionality - so maybe it's not important to add
 		return EnumSet.noneOf( MappingFeature.class );
 	}
 }

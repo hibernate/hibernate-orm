@@ -59,7 +59,7 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 
 	private void performInjections(JavaType<?> descriptor) {
 		if ( descriptor instanceof TypeConfigurationAware ) {
-			// would be nice to make the JavaType for an entity, e.g., aware of the the TypeConfiguration
+			// would be nice to make the JavaType for an entity, e.g., aware of the TypeConfiguration
 			( (TypeConfigurationAware) descriptor ).setTypeConfiguration( typeConfiguration );
 		}
 	}

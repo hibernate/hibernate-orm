@@ -238,7 +238,7 @@ public enum TemporalUnit {
 	 * Obtain a fragment of SQL that can be used to perform
 	 * a unit conversion. If the normalization factor is
 	 * very large, represent it using exponential form so
-	 * as to minimize the noise the the generated SQL.
+	 * as to minimize the noise the generated SQL.
 	 *
 	 * @param factor the conversion factor
 	 * @return a string to inject into the SQL expression

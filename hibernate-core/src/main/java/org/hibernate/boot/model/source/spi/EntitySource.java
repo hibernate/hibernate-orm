@@ -60,7 +60,7 @@ public interface EntitySource extends IdentifiableTypeSource, ToolingHintContext
 	/**
 	 * Obtain the batch-size to be applied when initializing proxies of this entity.
 	 *
-	 * @return returns the the batch-size.
+	 * @return returns the batch-size.
 	 */
 	int getBatchSize();
 

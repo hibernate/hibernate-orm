@@ -304,7 +304,7 @@ public class LockOptions implements Serializable {
 	}
 
 	/**
-	 * Set the the follow-on-locking setting.
+	 * Set the follow-on-locking setting.
 	 * @param followOnLocking The new follow-on-locking setting
 	 * @return this (for method chaining).
 	 */

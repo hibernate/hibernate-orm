@@ -325,7 +325,7 @@ public class H2Dialect extends Dialect {
 
 	/**
 	 * In H2, the extract() function does not return
-	 * fractional seconds for the the field
+	 * fractional seconds for the field
 	 * {@link TemporalUnit#SECOND}. We work around
 	 * this here with two calls to extract().
 	 */

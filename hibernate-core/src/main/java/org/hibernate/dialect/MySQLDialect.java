@@ -99,7 +99,7 @@ public class MySQLDialect extends Dialect {
 				Long length) {
 			switch ( jdbcType.getDefaultSqlTypeCode() ) {
 				case Types.BIT:
-					// MySQL allows BIT with a length up to 64 (less the the default length 255)
+					// MySQL allows BIT with a length up to 64 (less the default length 255)
 					if ( length != null ) {
 						return Size.length( Math.min( Math.max( length, 1 ), 64 ) );
 					}

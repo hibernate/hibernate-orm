@@ -12,7 +12,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 
 /**
  * A pluggable strategy for defining any actions to be performed during
- * {@link jakarta.transaction.Synchronization#afterCompletion} processing from the the
+ * {@link jakarta.transaction.Synchronization#afterCompletion} processing from the
  * {@link jakarta.transaction.Synchronization} registered by Hibernate with the underlying JTA platform.
  *
  * @author Steve Ebersole

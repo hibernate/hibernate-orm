@@ -204,7 +204,7 @@ public interface QueryProducer {
 	 *
 	 * @return The NativeQuery instance for manipulation and execution
 	 */
-	MutationNativeQuery createNativeMutationQuery(String sqlString);
+	MutationQuery createNativeMutationQuery(String sqlString);
 
 	/**
 	 * Create a `MutationQuery` from the given update criteria tree

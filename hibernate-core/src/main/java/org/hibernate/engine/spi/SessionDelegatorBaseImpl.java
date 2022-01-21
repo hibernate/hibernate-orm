@@ -42,7 +42,6 @@ import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.procedure.ProcedureCall;
-import org.hibernate.query.MutationNativeQuery;
 import org.hibernate.query.MutationQuery;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
@@ -551,7 +550,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public MutationNativeQuery createNativeMutationQuery(String sqlString) {
+	public MutationQuery createNativeMutationQuery(String sqlString) {
 		return delegate.createNativeMutationQuery( sqlString );
 	}
 

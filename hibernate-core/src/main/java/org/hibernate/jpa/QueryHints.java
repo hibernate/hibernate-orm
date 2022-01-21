@@ -111,6 +111,8 @@ public class QueryHints {
 
 	/**
 	 * @see LegacySpecHints#HINT_JAVAEE_QUERY_TIMEOUT
+	 *
+	 * @deprecated use {@link SpecHints#HINT_QUERY_TIMEOUT} instead
 	 */
 	@Deprecated
 	public static final String SPEC_HINT_TIMEOUT = LegacySpecHints.HINT_JAVAEE_QUERY_TIMEOUT;

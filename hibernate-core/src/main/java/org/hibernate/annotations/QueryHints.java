@@ -9,7 +9,6 @@ package org.hibernate.annotations;
 import org.hibernate.jpa.HibernateHints;
 import org.hibernate.jpa.LegacySpecHints;
 import org.hibernate.jpa.SpecHints;
-import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
 
 /**
@@ -84,18 +83,20 @@ public class QueryHints implements HibernateHints, SpecHints {
 	public static final String FOLLOW_ON_LOCKING = HibernateHints.HINT_FOLLOW_ON_LOCKING;
 
 	/**
-	 * @see QueryHints#NATIVE_SPACES
+	 * @see HibernateHints#HINT_NATIVE_SPACES
 	 */
 	public static final String NATIVE_SPACES = HibernateHints.HINT_NATIVE_SPACES;
 
 	/**
+	 * @see HibernateHints#HINT_CALLABLE_FUNCTION
+	 *
 	 * @deprecated Calling stored-procedures and functions via
-	 * {@link NativeQuery} is no longer supported. Use
-	 * {@link org.hibernate.procedure.ProcedureCall} or
-	 * {@link jakarta.persistence.StoredProcedureQuery} instead
+	 * {@link org.hibernate.query.NativeQuery} is no longer supported.
+	 * Use {@link org.hibernate.procedure.ProcedureCall} or
+	 * {@link jakarta.persistence.StoredProcedureQuery} instead.
 	 */
 	@Deprecated
-	public static final String CALLABLE_FUNCTION = "org.hibernate.callableFunction";
+	public static final String CALLABLE_FUNCTION = HibernateHints.HINT_CALLABLE_FUNCTION;
 
 	/**
 	 * @see org.hibernate.jpa.SpecHints#HINT_QUERY_TIMEOUT

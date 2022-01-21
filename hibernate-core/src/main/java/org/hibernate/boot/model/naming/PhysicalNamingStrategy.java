@@ -11,6 +11,9 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 
 /**
  * Pluggable strategy contract for applying physical naming rules for database object names.
+ * <p>
+ * A {@code PhysicalNamingStrategy} may be selected using the configuration property
+ * {@value org.hibernate.cfg.AvailableSettings#PHYSICAL_NAMING_STRATEGY}.
  *
  * @author Steve Ebersole
  */

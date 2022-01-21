@@ -9,7 +9,8 @@ package org.hibernate.jpa.spi;
 import java.util.Map;
 
 /**
- * Provide a set of IdentifierGenerator strategies allowing to override the Hibernate Core default ones
+ * Provides a set of {@link org.hibernate.id.IdentifierGenerator} strategies,
+ * overriding the default strategies.
  *
  * @author <a href="mailto:emmanuel@hibernate.org">Emmanuel Bernard</a>
  *

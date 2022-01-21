@@ -10,7 +10,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 /**
- * Contract for validating JDBC Connections
+ * Contract for validating JDBC {@linkplain Connection connections}.
  *
  * @author Christian Beikov
  */

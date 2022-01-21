@@ -19,7 +19,10 @@ import static org.hibernate.ConnectionReleaseMode.BEFORE_TRANSACTION_COMPLETION;
 import static org.hibernate.ConnectionReleaseMode.ON_CLOSE;
 
 /**
- * Represents valid combinations of ConnectionAcquisitionMode and ConnectionReleaseMode
+ * Enumerates valid combinations of {@link ConnectionAcquisitionMode} and
+ * {@link ConnectionReleaseMode}.
+ *
+ * @see org.hibernate.cfg.AvailableSettings#CONNECTION_HANDLING
  *
  * @author Steve Ebersole
  */
@@ -36,18 +39,18 @@ public enum PhysicalConnectionHandlingMode {
 	 */
 	DELAYED_ACQUISITION_AND_HOLD( AS_NEEDED, ON_CLOSE ),
 	/**
-	 * The Connection will be acquired as soon as it is needed; it will be released
-	 * after each statement is executed.
+	 * The Connection will be acquired as soon as it is needed; it will be
+	 * released after each statement is executed.
 	 */
 	DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT( AS_NEEDED, AFTER_STATEMENT ),
 	/**
-	 * The Connection will be acquired as soon as it is needed; it will be released
-	 * before commit/rollback.
+	 * The Connection will be acquired as soon as it is needed; it will be
+	 * released before commit/rollback.
 	 */
 	DELAYED_ACQUISITION_AND_RELEASE_BEFORE_TRANSACTION_COMPLETION( AS_NEEDED, BEFORE_TRANSACTION_COMPLETION ),
 	/**
-	 * The Connection will be acquired as soon as it is needed; it will be released
-	 * after each transaction is completed.
+	 * The Connection will be acquired as soon as it is needed; it will be
+	 * released after each transaction is completed.
 	 */
 	DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION( AS_NEEDED, AFTER_TRANSACTION )
 	;

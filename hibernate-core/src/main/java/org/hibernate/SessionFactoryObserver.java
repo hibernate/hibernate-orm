@@ -9,7 +9,10 @@ package org.hibernate;
 import java.io.Serializable;
 
 /**
- * Allows reaction to basic {@link SessionFactory} occurrences.
+ * Allows reaction to basic {@link SessionFactory} lifecycle events.
+ * <p>
+ * A {@code SessionFactoryObserver} may be registered using the configuration property
+ * {@value org.hibernate.cfg.AvailableSettings#SESSION_FACTORY_OBSERVER}.
  *
  * @author Steve Ebersole
  */
@@ -24,8 +27,8 @@ public interface SessionFactoryObserver extends Serializable {
 	}
 
 	/**
-	 * Callback to indicate that the given factory is about to close.  The passed factory reference should be usable
-	 * since it is only about to close.
+	 * Callback to indicate that the given factory is about to close.  The passed factory
+	 * reference should be usable since it is only about to close.
 	 * <p/>
 	 * NOTE : defined as default to allow for existing SessionFactoryObserver impls to work
 	 * in 5.2.  Starting in 6.0 the default will be removed and SessionFactoryObserver impls

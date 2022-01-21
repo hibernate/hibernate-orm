@@ -13,17 +13,27 @@ import org.hibernate.query.Query;
  * List of Hibernate-specific (extension) hints available to query,
  * load and lock scenarios.
  *
- * Some hints are only valid for certain scenarios, which is noted on
- * each constant's docuementation
+ * Some hints are only effective in certain scenarios, which is noted on
+ * each constant's documentation
  *
  * @author Steve Ebersole
  */
 public interface HibernateHints {
 	/**
-	 * Hint for specifying a query timeout, in seconds.
+	 * Hint for specifying the {@link org.hibernate.FlushMode}
+	 * to apply to an EntityManager or a Query
+	 *
+	 * @see Query#setHibernateFlushMode
+	 * @see org.hibernate.Session#setHibernateFlushMode
+	 */
+	String HINT_FLUSH_MODE = "org.hibernate.flushMode";
+
+	/**
+	 * Hint for specifying a Query timeout, in seconds.
 	 *
 	 * @see org.hibernate.query.Query#setTimeout
 	 * @see java.sql.Statement#setQueryTimeout
+	 * @see SpecHints#HINT_SPEC_QUERY_TIMEOUT
 	 */
 	String HINT_TIMEOUT = "org.hibernate.timeout";
 
@@ -33,37 +43,18 @@ public interface HibernateHints {
 	 * persistence context as read-only.
 	 *
 	 * @see Query#setReadOnly
+	 * @see org.hibernate.Session#setDefaultReadOnly
 	 */
 	String HINT_READ_ONLY = "org.hibernate.readOnly";
 
 	/**
-	 * Hint for specifying a JDBC fetch size to be applied to the
+	 * Hint for specifying a fetch size to be applied to the
 	 * JDBC statement.
 	 *
 	 * @see Query#setFetchSize
 	 * @see java.sql.Statement#setFetchSize
 	 */
 	String HINT_FETCH_SIZE = "org.hibernate.fetchSize";
-
-	/**
-	 * Hint for specifying a database comment to be applied to
-	 * the SQL sent to the database.
-	 *
-	 * @implSpec Not valid for {@link org.hibernate.procedure.ProcedureCall}
-	 * nor {@link jakarta.persistence.StoredProcedureQuery} scenarios
-	 *
-	 * @see Query#setComment
-	 */
-	String HINT_COMMENT = "org.hibernate.comment";
-
-	/**
-	 * Hint for specifying the {@link org.hibernate.FlushMode}
-	 * to apply to Query execution
-	 *
-	 * @see Query#setHibernateFlushMode
-	 * @see org.hibernate.Session#setHibernateFlushMode
-	 */
-	String HINT_FLUSH_MODE = "org.hibernate.flushMode";
 
 	/**
 	 * Hint for specifying whether results from a query should
@@ -91,6 +82,17 @@ public interface HibernateHints {
 	 * @see Query#setCacheMode
 	 */
 	String HINT_CACHE_MODE = "org.hibernate.cacheMode";
+
+	/**
+	 * Hint for specifying a database comment to be applied to
+	 * the SQL sent to the database.
+	 *
+	 * @implSpec Not valid for {@link org.hibernate.procedure.ProcedureCall}
+	 * nor {@link jakarta.persistence.StoredProcedureQuery} scenarios
+	 *
+	 * @see Query#setComment
+	 */
+	String HINT_COMMENT = "org.hibernate.comment";
 
 	/**
 	 * Hint to enable/disable the follow-on-locking mechanism provided by

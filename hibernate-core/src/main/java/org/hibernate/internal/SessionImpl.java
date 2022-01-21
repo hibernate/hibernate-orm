@@ -305,7 +305,8 @@ public class SessionImpl
 				HINT_SPEC_LOCK_TIMEOUT,
 				HINT_JAVAEE_LOCK_TIMEOUT,
 				this::getSessionProperty,
-				(value) -> Integer.valueOf( LockOptions.WAIT_FOREVER ).equals( value )
+				// treat WAIT_FOREVER the same as null
+				(value) -> !Integer.valueOf( LockOptions.WAIT_FOREVER ).equals( value )
 		);
 		if ( specLockTimeout != null ) {
 			query.setHint( HINT_SPEC_LOCK_TIMEOUT, specLockTimeout );

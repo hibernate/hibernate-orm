@@ -8,6 +8,8 @@ package org.hibernate.cfg;
 
 import java.util.function.Supplier;
 
+import org.hibernate.jpa.LegacySpecHints;
+
 /**
  * @author Steve Ebersole
  */
@@ -2399,7 +2401,7 @@ public interface AvailableSettings {
 	 * @deprecated Use {@link #JAKARTA_REMOVE_VALIDATION_GROUP} instead
 	 */
 	@Deprecated
-	String JPA_REMOVE_VALIDATION_GROUP = "javJPAax.persistence.validation.group.pre-remove";
+	String JPA_REMOVE_VALIDATION_GROUP = "javax.persistence.validation.group.pre-remove";
 
 	/**
 	 * Used to request (hint) a pessimistic lock scope.
@@ -2409,7 +2411,7 @@ public interface AvailableSettings {
 	 * @deprecated Use {@link #JAKARTA_LOCK_SCOPE} instead
 	 */
 	@Deprecated
-	String JPA_LOCK_SCOPE = "javax.persistence.lock.scope";
+	String JPA_LOCK_SCOPE = LegacySpecHints.HINT_JAVAEE_LOCK_SCOPE;
 
 	/**
 	 * Used to request (hint) a pessimistic lock timeout (in milliseconds).
@@ -2419,7 +2421,7 @@ public interface AvailableSettings {
 	 * @deprecated Use {@link #JAKARTA_LOCK_TIMEOUT} instead
 	 */
 	@Deprecated
-	String JPA_LOCK_TIMEOUT = "javax.persistence.lock.timeout";
+	String JPA_LOCK_TIMEOUT = LegacySpecHints.HINT_JAVAEE_LOCK_TIMEOUT;
 
 	/**
 	 * Used to pass along the CDI {@link jakarta.enterprise.inject.spi.BeanManager},

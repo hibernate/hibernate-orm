@@ -54,7 +54,6 @@ import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.query.IllegalMutationQueryException;
 import org.hibernate.query.IllegalNamedQueryOptionsException;
 import org.hibernate.query.JpaQuery;
-import org.hibernate.query.MutationNativeQuery;
 import org.hibernate.query.MutationQuery;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.UnknownNamedQueryException;
@@ -976,7 +975,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@Override
-	public MutationNativeQuery createNativeMutationQuery(String sqlString) {
+	public MutationQuery createNativeMutationQuery(String sqlString) {
 		final NativeQueryImplementor<?> query = createNativeQuery( sqlString );
 		if ( query.isSelectQuery() == TRUE ) {
 			throw new IllegalMutationQueryException( "Expecting a native mutation query, but found `" + sqlString + "`" );

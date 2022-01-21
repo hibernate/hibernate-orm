@@ -9,7 +9,6 @@ package org.hibernate.query.spi;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.MutationNativeQuery;
 import org.hibernate.query.MutationQuery;
 import org.hibernate.query.QueryProducer;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
@@ -75,7 +74,7 @@ public interface QueryProducerImplementor extends QueryProducer {
 	MutationQuery createNamedMutationQuery(String name);
 
 	@Override
-	MutationNativeQuery createNativeMutationQuery(String sqlString);
+	MutationQuery createNativeMutationQuery(String sqlString);
 
 	@Override
 	MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") CriteriaUpdate updateQuery);

@@ -62,7 +62,7 @@ import org.hibernate.type.BasicTypeReference;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public interface NativeQuery<T> extends Query<T>, MutationNativeQuery, SynchronizeableQuery {
+public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	/**
 	 * Declare a scalar query result. Hibernate will attempt to automatically
 	 * detect the underlying type.

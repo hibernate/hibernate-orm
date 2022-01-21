@@ -20,7 +20,7 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.jboss.logging.Logger;
 
 /**
- * A service initiator for the MultiTenantConnectionProvider service
+ * A service initiator for the {@link MultiTenantConnectionProvider} service.
  *
  * @author Steve Ebersole
  */

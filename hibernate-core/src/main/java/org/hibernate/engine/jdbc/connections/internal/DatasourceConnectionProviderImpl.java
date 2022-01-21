@@ -24,9 +24,9 @@ import org.hibernate.service.spi.Stoppable;
  * A {@link ConnectionProvider} that manages connections from an underlying {@link DataSource}.
  * <p/>
  * The {@link DataSource} to use may be specified by either:<ul>
- * <li>injection using {@link #setDataSource}</li>
- * <li>declaring the {@link DataSource} instance using the {@value Environment#DATASOURCE} config property</li>
- * <li>declaring the JNDI name under which the {@link DataSource} can be found via the {@value Environment#DATASOURCE} config property</li>
+ * <li>injection using {@link #setDataSource}
+ * <li>declaring the {@link DataSource} instance using the {@value Environment#DATASOURCE} config property
+ * <li>declaring the JNDI name under which the {@link DataSource} is found via the {@value Environment#DATASOURCE} config property
  * </ul>
  *
  * @author Gavin King

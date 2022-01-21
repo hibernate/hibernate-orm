@@ -9,7 +9,7 @@ package org.hibernate.engine.jdbc.connections.internal;
 import java.sql.Connection;
 
 /**
- * Contract for creating JDBC Connections on demand
+ * Contract for creating JDBC {@linkplain Connection connections} on demand.
  *
  * @author Steve Ebersole
  */

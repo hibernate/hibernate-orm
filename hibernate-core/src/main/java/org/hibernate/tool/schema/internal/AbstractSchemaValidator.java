@@ -187,7 +187,7 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 			);
 		}
 
-		if ( sequenceInformation.getIncrementValue() > 0
+		if ( sequenceInformation.getIncrementValue() != null && sequenceInformation.getIncrementValue() > 0
 				&& sequence.getIncrementSize() != sequenceInformation.getIncrementValue() ) {
 			throw new SchemaManagementException(
 					String.format(

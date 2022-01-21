@@ -35,8 +35,6 @@ import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
  */
 public class DB2zDialect extends DB2Dialect {
 
-	private final DatabaseVersion version;
-
 	public DB2zDialect(DialectResolutionInfo info) {
 		this( info.makeCopy() );
 		registerKeywords( info );
@@ -47,14 +45,13 @@ public class DB2zDialect extends DB2Dialect {
 	}
 
 	public DB2zDialect(DatabaseVersion version) {
-		super();
-		this.version = version;
+		super(version);
 	}
 
 	@Override
 	protected String columnType(int jdbcTypeCode) {
 		// See https://www.ibm.com/support/knowledgecenter/SSEPEK_10.0.0/wnew/src/tpc/db2z_10_timestamptimezone.html
-		if ( jdbcTypeCode==TIMESTAMP_WITH_TIMEZONE && version.isAfter(10) ) {
+		if ( jdbcTypeCode==TIMESTAMP_WITH_TIMEZONE && getVersion().isAfter(10) ) {
 			return "timestamp with time zone";
 		}
 		return super.columnType(jdbcTypeCode);
@@ -62,28 +59,24 @@ public class DB2zDialect extends DB2Dialect {
 
 	@Override
 	public TimeZoneSupport getTimeZoneSupport() {
-		return getZVersion().isAfter(10) ? TimeZoneSupport.NATIVE : TimeZoneSupport.NONE;
-	}
-
-	DatabaseVersion getZVersion() {
-		return version;
+		return getVersion().isAfter(10) ? TimeZoneSupport.NATIVE : TimeZoneSupport.NONE;
 	}
 
 	@Override
 	public SequenceSupport getSequenceSupport() {
-		return getZVersion().isBefore(8)
+		return getVersion().isBefore(8)
 				? NoSequenceSupport.INSTANCE
 				: DB2zSequenceSupport.INSTANCE;
 	}
 
 	@Override
 	public String getQuerySequencesString() {
-		return getZVersion().isBefore(8) ? null : "select * from sysibm.syssequences";
+		return getVersion().isBefore(8) ? null : "select * from sysibm.syssequences";
 	}
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		return getZVersion().isBefore(12)
+		return getVersion().isBefore(12)
 				? FetchLimitHandler.INSTANCE
 				: OffsetFetchLimitHandler.INSTANCE;
 	}
@@ -160,7 +153,7 @@ public class DB2zDialect extends DB2Dialect {
 			@Override
 			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
 					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new DB2zSqlAstTranslator<>( sessionFactory, statement, version );
+				return new DB2zSqlAstTranslator<>( sessionFactory, statement, getVersion() );
 			}
 		};
 	}

@@ -17,9 +17,9 @@ import java.util.Set;
  */
 public class QueryHints {
 	/**
-	 * @see SpecHints#HINT_QUERY_TIMEOUT
+	 * @see SpecHints#HINT_SPEC_QUERY_TIMEOUT
 	 */
-	public static final String JAKARTA_SPEC_HINT_TIMEOUT = SpecHints.HINT_QUERY_TIMEOUT;
+	public static final String JAKARTA_SPEC_HINT_TIMEOUT = SpecHints.HINT_SPEC_QUERY_TIMEOUT;
 
 	/**
 	 * @see HibernateHints#HINT_COMMENT
@@ -62,24 +62,24 @@ public class QueryHints {
 	public static final String HINT_NATIVE_LOCKMODE = HibernateHints.HINT_NATIVE_LOCK_MODE;
 
 	/**
-	 * @see SpecHints#HINT_FETCH_GRAPH
+	 * @see SpecHints#HINT_SPEC_FETCH_GRAPH
 	 */
-	public static final String JAKARTA_HINT_FETCH_GRAPH = SpecHints.HINT_FETCH_GRAPH;
+	public static final String JAKARTA_HINT_FETCH_GRAPH = SpecHints.HINT_SPEC_FETCH_GRAPH;
 
 	/**
-	 * @see SpecHints#HINT_LOAD_GRAPH
+	 * @see SpecHints#HINT_SPEC_LOAD_GRAPH
 	 */
-	public static final String JAKARTA_HINT_FETCHGRAPH = SpecHints.HINT_FETCH_GRAPH;
+	public static final String JAKARTA_HINT_FETCHGRAPH = SpecHints.HINT_SPEC_FETCH_GRAPH;
 
 	/**
-	 * @see SpecHints#HINT_LOAD_GRAPH
+	 * @see SpecHints#HINT_SPEC_LOAD_GRAPH
 	 */
-	public static final String JAKARTA_HINT_LOAD_GRAPH = SpecHints.HINT_LOAD_GRAPH;
+	public static final String JAKARTA_HINT_LOAD_GRAPH = SpecHints.HINT_SPEC_LOAD_GRAPH;
 
 	/**
-	 * @see SpecHints#HINT_LOAD_GRAPH
+	 * @see SpecHints#HINT_SPEC_LOAD_GRAPH
 	 */
-	public static final String JAKARTA_HINT_LOADGRAPH = SpecHints.HINT_LOAD_GRAPH;
+	public static final String JAKARTA_HINT_LOADGRAPH = SpecHints.HINT_SPEC_LOAD_GRAPH;
 
 	/**
 	 * @see HibernateHints#HINT_FOLLOW_ON_LOCKING
@@ -104,9 +104,8 @@ public class QueryHints {
 	/**
 	 * The hint key for specifying a query timeout per Hibernate O/RM, which defines the timeout in seconds.
 	 *
-	 * @deprecated use {@link #SPEC_HINT_TIMEOUT} instead
+	 * @see HibernateHints#HINT_TIMEOUT
 	 */
-	@Deprecated
 	public static final String HINT_TIMEOUT = HibernateHints.HINT_TIMEOUT;
 
 	/**
@@ -114,7 +113,6 @@ public class QueryHints {
 	 *
 	 * @deprecated use {@link SpecHints#HINT_QUERY_TIMEOUT} instead
 	 */
-	@Deprecated
 	public static final String SPEC_HINT_TIMEOUT = LegacySpecHints.HINT_JAVAEE_QUERY_TIMEOUT;
 
 
@@ -134,9 +132,9 @@ public class QueryHints {
 		hints.add( HibernateHints.HINT_NATIVE_SPACES );
 		hints.add( HibernateHints.HINT_NATIVE_LOCK_MODE );
 
-		hints.add( SpecHints.HINT_QUERY_TIMEOUT );
-		hints.add( SpecHints.HINT_FETCH_GRAPH );
-		hints.add( SpecHints.HINT_LOAD_GRAPH );
+		hints.add( SpecHints.HINT_SPEC_QUERY_TIMEOUT );
+		hints.add( SpecHints.HINT_SPEC_FETCH_GRAPH );
+		hints.add( SpecHints.HINT_SPEC_LOAD_GRAPH );
 
 		hints.add( LegacySpecHints.HINT_JAVAEE_QUERY_TIMEOUT );
 		hints.add( LegacySpecHints.HINT_JAVAEE_FETCH_GRAPH );

@@ -9,14 +9,10 @@ package org.hibernate.orm.test.query;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Map;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.jpa.QueryHints;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
 import org.hibernate.type.descriptor.java.StringJavaType;
@@ -30,6 +26,11 @@ import org.hibernate.testing.orm.jdbc.PreparedStatementSpyConnectionProvider;
 import org.junit.Before;
 import org.junit.Test;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
+import static org.hibernate.jpa.SpecHints.HINT_SPEC_QUERY_TIMEOUT;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.times;
@@ -111,7 +112,7 @@ public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 		doInHibernate(
 				this::sessionFactory, session -> {
 					Query query = session.createQuery( QUERY );
-					query.setHint( QueryHints.SPEC_HINT_TIMEOUT, 123000 );
+					query.setHint( HINT_SPEC_QUERY_TIMEOUT, 123000 );
 					query.executeUpdate();
 
 					try {
@@ -161,7 +162,7 @@ public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 		doInHibernate(
 				this::sessionFactory, session -> {
 					NativeQuery query = session.createNativeQuery( QUERY );
-					query.setHint( QueryHints.SPEC_HINT_TIMEOUT, 123000 );
+					query.setHint( HINT_SPEC_QUERY_TIMEOUT, 123000 );
 					query.executeUpdate();
 
 					try {
@@ -199,7 +200,7 @@ public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 		doInHibernate(
 				this::sessionFactory, session -> {
 					NativeQuery query = session.createNativeQuery( QUERY );
-					query.setHint( QueryHints.SPEC_HINT_TIMEOUT, 123000 );
+					query.setHint( HINT_SPEC_QUERY_TIMEOUT, 123000 );
 					query.executeUpdate();
 
 					try {

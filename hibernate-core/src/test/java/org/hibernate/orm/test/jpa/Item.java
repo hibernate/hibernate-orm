@@ -32,7 +32,7 @@ import static org.hibernate.jpa.HibernateHints.HINT_COMMENT;
 import static org.hibernate.jpa.HibernateHints.HINT_FETCH_SIZE;
 import static org.hibernate.jpa.HibernateHints.HINT_FLUSH_MODE;
 import static org.hibernate.jpa.HibernateHints.HINT_READ_ONLY;
-import static org.hibernate.jpa.SpecHints.HINT_QUERY_TIMEOUT;
+import static org.hibernate.jpa.SpecHints.HINT_SPEC_QUERY_TIMEOUT;
 
 /**
  * @author Gavin King
@@ -62,7 +62,7 @@ import static org.hibernate.jpa.SpecHints.HINT_QUERY_TIMEOUT;
 				query = "select i from Item i",
 				lockMode = LockModeType.PESSIMISTIC_WRITE,
 				hints = {
-						@QueryHint( name = HINT_QUERY_TIMEOUT, value = "3000" ),
+						@QueryHint( name = HINT_SPEC_QUERY_TIMEOUT, value = "3000" ),
 						@QueryHint( name = HINT_CACHE_MODE, value = "ignore" ),
 						@QueryHint( name = HINT_CACHEABLE, value = "true" ),
 						@QueryHint( name = HINT_READ_ONLY, value = "true" ),

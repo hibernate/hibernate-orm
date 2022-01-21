@@ -12,7 +12,6 @@ import org.hibernate.LockMode;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.internal.SessionImpl;
-import org.hibernate.jpa.QueryHints;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.NativeQuery;
 
@@ -36,6 +35,7 @@ import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.ParameterExpression;
 import jakarta.persistence.criteria.Root;
 
+import static org.hibernate.jpa.HibernateHints.HINT_NATIVE_LOCK_MODE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -67,7 +67,7 @@ public class QueryLockingTest extends BaseEntityManagerFunctionalTestCase {
 		assertNull( query.getLockOptions().getAliasSpecificLockMode( "l" ) );
 		assertEquals( LockMode.OPTIMISTIC, query.getLockOptions().getEffectiveLockMode( "l" ) );
 
-		query.setHint( QueryHints.HINT_NATIVE_LOCKMODE + ".l", LockModeType.PESSIMISTIC_WRITE );
+		query.setHint( HINT_NATIVE_LOCK_MODE + ".l", LockModeType.PESSIMISTIC_WRITE );
 		assertEquals( LockMode.OPTIMISTIC, query.getLockOptions().getLockMode() );
 		assertEquals( LockMode.PESSIMISTIC_WRITE, query.getLockOptions().getAliasSpecificLockMode( "l" ) );
 		assertEquals( LockMode.PESSIMISTIC_WRITE, query.getLockOptions().getEffectiveLockMode( "l" ) );
@@ -124,13 +124,13 @@ public class QueryLockingTest extends BaseEntityManagerFunctionalTestCase {
 		}
 
 		// however, we should be able to set it using hints
-		query.setHint( QueryHints.HINT_NATIVE_LOCKMODE, LockModeType.READ );
+		query.setHint( HINT_NATIVE_LOCK_MODE, LockModeType.READ );
 		// NOTE : LockModeType.READ should map to LockMode.OPTIMISTIC
 		assertEquals( LockMode.OPTIMISTIC, query.getLockOptions().getLockMode() );
 		assertNull( query.getLockOptions().getAliasSpecificLockMode( "l" ) );
 		assertEquals( LockMode.OPTIMISTIC, query.getLockOptions().getEffectiveLockMode( "l" ) );
 
-		query.setHint( QueryHints.HINT_NATIVE_LOCKMODE +".l", LockModeType.PESSIMISTIC_WRITE );
+		query.setHint( HINT_NATIVE_LOCK_MODE +".l", LockModeType.PESSIMISTIC_WRITE );
 		assertEquals( LockMode.OPTIMISTIC, query.getLockOptions().getLockMode() );
 		assertEquals( LockMode.PESSIMISTIC_WRITE, query.getLockOptions().getAliasSpecificLockMode( "l" ) );
 		assertEquals( LockMode.PESSIMISTIC_WRITE, query.getLockOptions().getEffectiveLockMode( "l" ) );
@@ -180,7 +180,7 @@ public class QueryLockingTest extends BaseEntityManagerFunctionalTestCase {
 		em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 		Lockable reread = em.createQuery( "from Lockable l", Lockable.class )
-				.setHint( QueryHints.HINT_NATIVE_LOCKMODE + ".l", LockModeType.PESSIMISTIC_FORCE_INCREMENT )
+				.setHint( HINT_NATIVE_LOCK_MODE + ".l", LockModeType.PESSIMISTIC_FORCE_INCREMENT )
 				.getSingleResult();
 		assertFalse( reread.getVersion().equals( initial ) );
 		em.getTransaction().commit();
@@ -233,7 +233,7 @@ public class QueryLockingTest extends BaseEntityManagerFunctionalTestCase {
 		em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 		Lockable reread = em.createQuery( "from Lockable l", Lockable.class )
-				.setHint( QueryHints.HINT_NATIVE_LOCKMODE + ".l", LockModeType.OPTIMISTIC_FORCE_INCREMENT )
+				.setHint( HINT_NATIVE_LOCK_MODE + ".l", LockModeType.OPTIMISTIC_FORCE_INCREMENT )
 				.getSingleResult();
 		assertEquals( initial, reread.getVersion() );
 		em.getTransaction().commit();
@@ -315,7 +315,7 @@ public class QueryLockingTest extends BaseEntityManagerFunctionalTestCase {
 		em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 		Lockable reread = em.createQuery( "from Lockable l", Lockable.class )
-				.setHint( QueryHints.HINT_NATIVE_LOCKMODE + ".l", LockModeType.OPTIMISTIC )
+				.setHint( HINT_NATIVE_LOCK_MODE + ".l", LockModeType.OPTIMISTIC )
 				.getSingleResult();
 		assertEquals( initial, reread.getVersion() );
 		assertTrue( em.unwrap( SessionImpl.class ).getActionQueue().hasBeforeTransactionActions() );

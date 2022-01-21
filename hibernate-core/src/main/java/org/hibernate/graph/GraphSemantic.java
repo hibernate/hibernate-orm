@@ -8,8 +8,8 @@ package org.hibernate.graph;
 
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_FETCH_GRAPH;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_LOAD_GRAPH;
-import static org.hibernate.jpa.SpecHints.HINT_FETCH_GRAPH;
-import static org.hibernate.jpa.SpecHints.HINT_LOAD_GRAPH;
+import static org.hibernate.jpa.SpecHints.HINT_SPEC_FETCH_GRAPH;
+import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOAD_GRAPH;
 
 /**
  * JPA specifies two distinct ways to apply an {@link jakarta.persistence.EntityGraph} -
@@ -27,7 +27,7 @@ public enum GraphSemantic {
 	 * are not fetched.
 	 * </ul>
 	 */
-	FETCH( HINT_FETCH_GRAPH, HINT_JAVAEE_FETCH_GRAPH ),
+	FETCH( HINT_SPEC_FETCH_GRAPH, HINT_JAVAEE_FETCH_GRAPH ),
 
 	/**
 	 * Indicates that an {@link jakarta.persistence.EntityGraph} should be interpreted as a JPA "load graph".
@@ -38,7 +38,7 @@ public enum GraphSemantic {
 	 * depending on the mapping of the attribute, instead of forcing {@code FetchType.LAZY}.
 	 * </ul>
 	 */
-	LOAD( HINT_LOAD_GRAPH, HINT_JAVAEE_LOAD_GRAPH );
+	LOAD( HINT_SPEC_LOAD_GRAPH, HINT_JAVAEE_LOAD_GRAPH );
 
 	private final String jakartaHintName;
 	private final String jpaHintName;

@@ -35,10 +35,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.HEMLogging;
-import org.hibernate.jpa.HibernateHints;
-import org.hibernate.jpa.LegacySpecHints;
-import org.hibernate.jpa.QueryHints;
-import org.hibernate.jpa.SpecHints;
+import org.hibernate.jpa.AvailableHints;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
@@ -82,6 +79,7 @@ import static org.hibernate.jpa.HibernateHints.HINT_FOLLOW_ON_LOCKING;
 import static org.hibernate.jpa.HibernateHints.HINT_NATIVE_LOCK_MODE;
 import static org.hibernate.jpa.HibernateHints.HINT_NATIVE_SPACES;
 import static org.hibernate.jpa.HibernateHints.HINT_READ_ONLY;
+import static org.hibernate.jpa.HibernateHints.HINT_TIMEOUT;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_CACHE_RETRIEVE_MODE;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_CACHE_STORE_MODE;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_FETCH_GRAPH;
@@ -89,14 +87,13 @@ import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_LOAD_GRAPH;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_LOCK_SCOPE;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_LOCK_TIMEOUT;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_QUERY_TIMEOUT;
-import static org.hibernate.jpa.QueryHints.HINT_NATIVE_LOCKMODE;
-import static org.hibernate.jpa.SpecHints.HINT_CACHE_RETRIEVE_MODE;
-import static org.hibernate.jpa.SpecHints.HINT_CACHE_STORE_MODE;
-import static org.hibernate.jpa.SpecHints.HINT_FETCH_GRAPH;
-import static org.hibernate.jpa.SpecHints.HINT_LOAD_GRAPH;
-import static org.hibernate.jpa.SpecHints.HINT_LOCK_SCOPE;
-import static org.hibernate.jpa.SpecHints.HINT_LOCK_TIMEOUT;
-import static org.hibernate.jpa.SpecHints.HINT_QUERY_TIMEOUT;
+import static org.hibernate.jpa.SpecHints.HINT_SPEC_CACHE_RETRIEVE_MODE;
+import static org.hibernate.jpa.SpecHints.HINT_SPEC_CACHE_STORE_MODE;
+import static org.hibernate.jpa.SpecHints.HINT_SPEC_FETCH_GRAPH;
+import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOAD_GRAPH;
+import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOCK_SCOPE;
+import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOCK_TIMEOUT;
+import static org.hibernate.jpa.SpecHints.HINT_SPEC_QUERY_TIMEOUT;
 
 /**
  * @author Steve Ebersole
@@ -370,7 +367,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 
 	@SuppressWarnings( {"UnusedDeclaration"})
 	public Set<String> getSupportedHints() {
-		return QueryHints.getDefinedHints();
+		return AvailableHints.getDefinedHints();
 	}
 
 	@Override
@@ -387,18 +384,18 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	@SuppressWarnings("deprecation")
 	protected void collectHints(Map<String, Object> hints) {
 		if ( getQueryOptions().getTimeout() != null ) {
-			hints.put( HibernateHints.HINT_TIMEOUT, getQueryOptions().getTimeout() );
-			hints.put( HINT_QUERY_TIMEOUT, getQueryOptions().getTimeout() * 1000 );
+			hints.put( HINT_TIMEOUT, getQueryOptions().getTimeout() );
+			hints.put( HINT_SPEC_QUERY_TIMEOUT, getQueryOptions().getTimeout() * 1000 );
 			hints.put( HINT_JAVAEE_QUERY_TIMEOUT, getQueryOptions().getTimeout() * 1000 );
 		}
 
 		if ( getLockOptions().getTimeOut() != WAIT_FOREVER ) {
-			hints.put( HINT_LOCK_TIMEOUT, getLockOptions().getTimeOut() );
+			hints.put( HINT_SPEC_LOCK_TIMEOUT, getLockOptions().getTimeOut() );
 			hints.put( HINT_JAVAEE_LOCK_TIMEOUT, getLockOptions().getTimeOut() );
 		}
 
 		if ( getLockOptions().getScope() ) {
-			hints.put( HINT_LOCK_SCOPE, getLockOptions().getScope() );
+			hints.put( HINT_SPEC_LOCK_SCOPE, getLockOptions().getScope() );
 			hints.put( HINT_JAVAEE_LOCK_SCOPE, getLockOptions().getScope() );
 		}
 
@@ -417,8 +414,8 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 
 		if ( getCacheMode() != null ) {
 			putIfNotNull( hints, HINT_CACHE_MODE, getCacheMode() );
-			putIfNotNull( hints, HINT_CACHE_RETRIEVE_MODE, getQueryOptions().getCacheRetrieveMode() );
-			putIfNotNull( hints, HINT_CACHE_STORE_MODE, getQueryOptions().getCacheStoreMode() );
+			putIfNotNull( hints, HINT_SPEC_CACHE_RETRIEVE_MODE, getQueryOptions().getCacheRetrieveMode() );
+			putIfNotNull( hints, HINT_SPEC_CACHE_STORE_MODE, getQueryOptions().getCacheStoreMode() );
 			putIfNotNull( hints, HINT_JAVAEE_CACHE_RETRIEVE_MODE, getQueryOptions().getCacheRetrieveMode() );
 			putIfNotNull( hints, HINT_JAVAEE_CACHE_STORE_MODE, getQueryOptions().getCacheStoreMode() );
 		}
@@ -454,22 +451,22 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 
 		boolean applied = false;
 		try {
-			if ( QueryHints.HINT_TIMEOUT.equals( hintName ) ) {
+			if ( HINT_TIMEOUT.equals( hintName ) ) {
 				applied = applyTimeoutHint( ConfigurationHelper.getInteger( value ) );
 			}
-			else if ( HINT_QUERY_TIMEOUT.equals( hintName )
+			else if ( HINT_SPEC_QUERY_TIMEOUT.equals( hintName )
 					|| HINT_JAVAEE_QUERY_TIMEOUT.equals( hintName ) ) {
 				if ( HINT_JAVAEE_QUERY_TIMEOUT.equals( hintName ) ) {
-					DEPRECATION_LOGGER.deprecatedSetting( HINT_JAVAEE_QUERY_TIMEOUT, HINT_QUERY_TIMEOUT );
+					DEPRECATION_LOGGER.deprecatedSetting( HINT_JAVAEE_QUERY_TIMEOUT, HINT_SPEC_QUERY_TIMEOUT );
 				}
 				// convert milliseconds to seconds
 				int timeout = (int)Math.round( ConfigurationHelper.getInteger( value ).doubleValue() / 1000.0 );
 				applied = applyTimeoutHint( timeout );
 			}
-			else if ( HINT_LOCK_TIMEOUT.equals( hintName )
+			else if ( HINT_SPEC_LOCK_TIMEOUT.equals( hintName )
 					|| HINT_JAVAEE_LOCK_TIMEOUT.equals( hintName ) ) {
 				if ( HINT_JAVAEE_LOCK_TIMEOUT.equals( hintName ) ) {
-					DEPRECATION_LOGGER.deprecatedSetting( HINT_JAVAEE_LOCK_TIMEOUT, HINT_LOCK_TIMEOUT );
+					DEPRECATION_LOGGER.deprecatedSetting( HINT_JAVAEE_LOCK_TIMEOUT, HINT_SPEC_LOCK_TIMEOUT );
 				}
 				applied = applyLockTimeoutHint( ConfigurationHelper.getInteger( value ) );
 			}
@@ -494,23 +491,23 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 			else if ( HINT_CACHE_MODE.equals( hintName ) ) {
 				applied = applyCacheModeHint( ConfigurationHelper.getCacheMode( value ) );
 			}
-			else if ( HINT_CACHE_RETRIEVE_MODE.equals( hintName )
+			else if ( HINT_SPEC_CACHE_RETRIEVE_MODE.equals( hintName )
 					|| HINT_JAVAEE_CACHE_RETRIEVE_MODE.equals( hintName ) ) {
 				if ( HINT_JAVAEE_CACHE_RETRIEVE_MODE.equals( hintName ) ) {
-					DEPRECATION_LOGGER.deprecatedSetting( HINT_JAVAEE_CACHE_RETRIEVE_MODE, HINT_CACHE_RETRIEVE_MODE );
+					DEPRECATION_LOGGER.deprecatedSetting( HINT_JAVAEE_CACHE_RETRIEVE_MODE, HINT_SPEC_CACHE_RETRIEVE_MODE );
 				}
 				final CacheRetrieveMode retrieveMode = value != null ? CacheRetrieveMode.valueOf( value.toString() ) : null;
 				applied = applyJpaCacheRetrieveMode( retrieveMode );
 			}
-			else if ( HINT_CACHE_STORE_MODE.equals( hintName )
+			else if ( HINT_SPEC_CACHE_STORE_MODE.equals( hintName )
 					|| HINT_JAVAEE_CACHE_STORE_MODE.equals( hintName ) ) {
 				if ( HINT_JAVAEE_CACHE_STORE_MODE.equals( hintName ) ) {
-					DEPRECATION_LOGGER.deprecatedSetting( HINT_JAVAEE_CACHE_STORE_MODE, HINT_CACHE_STORE_MODE );
+					DEPRECATION_LOGGER.deprecatedSetting( HINT_JAVAEE_CACHE_STORE_MODE, HINT_SPEC_CACHE_STORE_MODE );
 				}
 				final CacheStoreMode storeMode = value != null ? CacheStoreMode.valueOf( value.toString() ) : null;
 				applied = applyJpaCacheStoreMode( storeMode );
 			}
-			else if ( HINT_NATIVE_LOCKMODE.equals( hintName ) ) {
+			else if ( HINT_NATIVE_LOCK_MODE.equals( hintName ) ) {
 				applied = applyNativeQueryLockMode( value );
 			}
 			else if ( hintName.startsWith( HINT_NATIVE_LOCK_MODE ) ) {
@@ -527,7 +524,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 					applied = false;
 				}
 			}
-			else if ( HINT_FETCH_GRAPH.equals( hintName ) || HINT_LOAD_GRAPH.equals( hintName ) ) {
+			else if ( HINT_SPEC_FETCH_GRAPH.equals( hintName ) || HINT_SPEC_LOAD_GRAPH.equals( hintName ) ) {
 				if ( value instanceof RootGraphImplementor ) {
 					applyEntityGraphQueryHint( hintName, (RootGraphImplementor<?>) value );
 				}
@@ -540,10 +537,10 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 			}
 			else if ( HINT_JAVAEE_FETCH_GRAPH.equals( hintName ) || HINT_JAVAEE_LOAD_GRAPH.equals( hintName ) ) {
 				if ( HINT_JAVAEE_FETCH_GRAPH.equals( hintName ) ) {
-					DEPRECATION_LOGGER.deprecatedSetting( HINT_JAVAEE_FETCH_GRAPH, HINT_FETCH_GRAPH );
+					DEPRECATION_LOGGER.deprecatedSetting( HINT_JAVAEE_FETCH_GRAPH, HINT_SPEC_FETCH_GRAPH );
 				}
 				else {
-					DEPRECATION_LOGGER.deprecatedSetting( HINT_JAVAEE_LOAD_GRAPH, HINT_LOAD_GRAPH );
+					DEPRECATION_LOGGER.deprecatedSetting( HINT_JAVAEE_LOAD_GRAPH, HINT_SPEC_LOAD_GRAPH );
 				}
 
 				if ( value instanceof RootGraphImplementor ) {

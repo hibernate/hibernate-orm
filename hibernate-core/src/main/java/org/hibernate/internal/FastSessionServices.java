@@ -62,7 +62,6 @@ import org.hibernate.event.spi.ReplicateEventListener;
 import org.hibernate.event.spi.ResolveNaturalIdEventListener;
 import org.hibernate.event.spi.SaveOrUpdateEventListener;
 import org.hibernate.jpa.LegacySpecHints;
-import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.SpecHints;
 import org.hibernate.jpa.internal.util.CacheModeHelper;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
@@ -289,11 +288,11 @@ public final class FastSessionServices {
 
 		//Defaults defined by SessionFactory configuration:
 		final String[] ENTITY_MANAGER_SPECIFIC_PROPERTIES = {
-				SpecHints.HINT_LOCK_SCOPE,
-				SpecHints.HINT_LOCK_TIMEOUT,
-				SpecHints.HINT_QUERY_TIMEOUT,
-				SpecHints.HINT_CACHE_RETRIEVE_MODE,
-				SpecHints.HINT_CACHE_STORE_MODE,
+				SpecHints.HINT_SPEC_LOCK_SCOPE,
+				SpecHints.HINT_SPEC_LOCK_TIMEOUT,
+				SpecHints.HINT_SPEC_QUERY_TIMEOUT,
+				SpecHints.HINT_SPEC_CACHE_RETRIEVE_MODE,
+				SpecHints.HINT_SPEC_CACHE_STORE_MODE,
 
 				AvailableSettings.FLUSH_MODE,
 

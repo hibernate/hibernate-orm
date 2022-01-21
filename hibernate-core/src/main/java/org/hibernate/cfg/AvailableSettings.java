@@ -11,7 +11,6 @@ import java.util.function.Supplier;
 import org.hibernate.HibernateException;
 import org.hibernate.jpa.HibernateHints;
 import org.hibernate.query.NativeQuery;
-import org.hibernate.query.Query;
 import org.hibernate.Transaction;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.registry.classloading.internal.TcclLookupPrecedence;
@@ -127,14 +126,14 @@ public interface AvailableSettings {
 	String JAKARTA_SHARED_CACHE_MODE = "jakarta.persistence.sharedCache.mode";
 
 	/**
-	 * @see org.hibernate.jpa.SpecHints#HINT_CACHE_RETRIEVE_MODE
+	 * @see org.hibernate.jpa.SpecHints#HINT_SPEC_CACHE_RETRIEVE_MODE
 	 */
-	String JAKARTA_SHARED_CACHE_RETRIEVE_MODE = org.hibernate.jpa.SpecHints.HINT_CACHE_RETRIEVE_MODE;
+	String JAKARTA_SHARED_CACHE_RETRIEVE_MODE = org.hibernate.jpa.SpecHints.HINT_SPEC_CACHE_RETRIEVE_MODE;
 
 	/**
-	 * @see org.hibernate.jpa.SpecHints#HINT_CACHE_STORE_MODE
+	 * @see org.hibernate.jpa.SpecHints#HINT_SPEC_CACHE_STORE_MODE
 	 */
-	String JAKARTA_SHARED_CACHE_STORE_MODE = org.hibernate.jpa.SpecHints.HINT_CACHE_STORE_MODE;
+	String JAKARTA_SHARED_CACHE_STORE_MODE = org.hibernate.jpa.SpecHints.HINT_SPEC_CACHE_STORE_MODE;
 
 	/**
 	 * Used to indicate what form of automatic validation is in effect as per rules defined

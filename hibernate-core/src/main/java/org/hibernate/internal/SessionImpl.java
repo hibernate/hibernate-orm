@@ -103,7 +103,7 @@ import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.internal.RootGraphImpl;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.util.ExceptionHelper;
-import org.hibernate.jpa.QueryHints;
+import org.hibernate.jpa.internal.LegacySpecHelper;
 import org.hibernate.jpa.internal.util.CacheModeHelper;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
@@ -149,6 +149,11 @@ import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_SCOPE;
 import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_TIMEOUT;
 import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_RETRIEVE_MODE;
 import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_STORE_MODE;
+import static org.hibernate.jpa.HibernateHints.HINT_READ_ONLY;
+import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_LOCK_TIMEOUT;
+import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_QUERY_TIMEOUT;
+import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOCK_TIMEOUT;
+import static org.hibernate.jpa.SpecHints.HINT_SPEC_QUERY_TIMEOUT;
 
 /**
  * Concrete implementation of a the {@link Session} API.
@@ -285,33 +290,26 @@ public class SessionImpl
 		if ( lockOptionsForRead.getLockMode() != LockMode.NONE ) {
 			query.setLockMode( getLockMode( lockOptionsForRead.getLockMode() ) );
 		}
-		final Object queryTimeout;
-		if ( ( queryTimeout = getSessionProperty( QueryHints.SPEC_HINT_TIMEOUT )  ) != null ) {
-			query.setHint( QueryHints.SPEC_HINT_TIMEOUT, queryTimeout );
+
+		final Object specQueryTimeout = LegacySpecHelper.getInteger(
+				HINT_SPEC_QUERY_TIMEOUT,
+				HINT_JAVAEE_QUERY_TIMEOUT,
+				this::getSessionProperty
+		);
+		if ( specQueryTimeout != null ) {
+			query.setHint( HINT_SPEC_QUERY_TIMEOUT, specQueryTimeout );
+			query.setHint( HINT_JAVAEE_QUERY_TIMEOUT, specQueryTimeout );
 		}
-		final Object jakartaQueryTimeout;
-		if ( ( jakartaQueryTimeout = getSessionProperty( QueryHints.JAKARTA_SPEC_HINT_TIMEOUT )  ) != null ) {
-			query.setHint( QueryHints.JAKARTA_SPEC_HINT_TIMEOUT, jakartaQueryTimeout );
-		}
-		final Object lockTimeout;
-		final Object jpaLockTimeout = getSessionProperty( JPA_LOCK_TIMEOUT );
-		if ( jpaLockTimeout == null ) {
-			lockTimeout = getSessionProperty( JAKARTA_LOCK_TIMEOUT );
-		}
-		else if ( Integer.valueOf( LockOptions.WAIT_FOREVER ).equals( jpaLockTimeout ) ) {
-			final Object jakartaLockTimeout = getSessionProperty( JAKARTA_LOCK_TIMEOUT );
-			if ( jakartaLockTimeout == null ) {
-				lockTimeout = jpaLockTimeout;
-			}
-			else {
-				lockTimeout = jakartaLockTimeout;
-			}
-		}
-		else {
-			lockTimeout = jpaLockTimeout;
-		}
-		if ( lockTimeout != null ) {
-			query.setHint( JPA_LOCK_TIMEOUT, lockTimeout );
+
+		final Integer specLockTimeout = LegacySpecHelper.getInteger(
+				HINT_SPEC_LOCK_TIMEOUT,
+				HINT_JAVAEE_LOCK_TIMEOUT,
+				this::getSessionProperty,
+				(value) -> Integer.valueOf( LockOptions.WAIT_FOREVER ).equals( value )
+		);
+		if ( specLockTimeout != null ) {
+			query.setHint( HINT_SPEC_LOCK_TIMEOUT, specLockTimeout );
+			query.setHint( HINT_JAVAEE_LOCK_TIMEOUT, specLockTimeout );
 		}
 	}
 
@@ -2269,7 +2267,7 @@ public class SessionImpl
 
 		try {
 			getLoadQueryInfluencers().getEffectiveEntityGraph().applyConfiguredGraph( properties );
-			Boolean readOnly = properties == null ? null : (Boolean) properties.get( QueryHints.HINT_READONLY );
+			Boolean readOnly = properties == null ? null : (Boolean) properties.get( HINT_READ_ONLY );
 			getLoadQueryInfluencers().setReadOnly( readOnly );
 			final IdentifierLoadAccess<T> loadAccess = byId( entityClass );
 			loadAccess.with( determineAppropriateLocalCacheMode( properties ) );

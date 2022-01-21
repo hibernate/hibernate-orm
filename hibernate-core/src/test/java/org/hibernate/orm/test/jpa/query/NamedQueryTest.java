@@ -7,6 +7,17 @@
 package org.hibernate.orm.test.jpa.query;
 
 import java.util.List;
+
+import org.hibernate.LockMode;
+import org.hibernate.Session;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.query.NativeQuery;
+
+import org.hibernate.testing.TestForIssue;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
@@ -16,17 +27,7 @@ import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.Query;
 
-import org.hibernate.LockMode;
-import org.hibernate.Session;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.jpa.QueryHints;
-import org.hibernate.query.NativeQuery;
-
-import org.hibernate.testing.TestForIssue;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
+import static org.hibernate.jpa.HibernateHints.HINT_NATIVE_LOCK_MODE;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
@@ -199,9 +200,9 @@ public class NamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 	public void testQueryHintLockMode() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 					 Query query = entityManager.createNamedQuery( "NamedNativeQuery" );
-					 query.setHint( QueryHints.HINT_NATIVE_LOCKMODE, "none" );
+					 query.setHint( HINT_NATIVE_LOCK_MODE, "none" );
 					 query.setParameter( 1, GAME_TITLES[0] );
-					 assertEquals( LockMode.NONE, query.getHints().get( QueryHints.HINT_NATIVE_LOCKMODE ) );
+					 assertEquals( LockMode.NONE, query.getHints().get( HINT_NATIVE_LOCK_MODE ) );
 				 }
 		);
 	}

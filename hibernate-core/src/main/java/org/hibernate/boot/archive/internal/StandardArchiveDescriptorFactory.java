@@ -85,11 +85,6 @@ public class StandardArchiveDescriptorFactory implements ArchiveDescriptorFactor
 	}
 
 	@Override
-	public URL getURLFromPath(String jarPath) {
-		return ArchiveHelper.getURLFromPath( jarPath );
-	}
-
-	@Override
 	public URL adjustJarFileEntryUrl(URL url, URL rootUrl) {
 		final String protocol = url.getProtocol();
 		final boolean check = StringHelper.isEmpty( protocol )

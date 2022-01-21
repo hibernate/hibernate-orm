@@ -178,15 +178,6 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 
 	boolean isJtaTrackByThread();
 
-	/**
-	 * @deprecated Use {@link JpaCompliance#isJpaQueryComplianceEnabled()} instead
-	 * via {@link #getJpaCompliance()}
-	 */
-	@Deprecated
-	default boolean isStrictJpaQueryLanguageCompliance() {
-		return getJpaCompliance().isJpaQueryComplianceEnabled();
-	}
-
 	boolean isNamedQueryStartupCheckingEnabled();
 
 	boolean isSecondLevelCacheEnabled();
@@ -292,25 +283,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 		return Statistics.DEFAULT_QUERY_STATISTICS_MAX_SIZE;
 	}
 
-	/**
-	 * @deprecated Since 5.4.1, this is no longer used.
-	 */
-	@Deprecated
-	default boolean isPostInsertIdentifierDelayableEnabled() {
-		return true;
-	}
-
 	default boolean areJPACallbacksEnabled() {
-		return true;
-	}
-
-	/**
-	 * Can bytecode-enhanced entity classes be used as a "proxy"?
-	 *
-	 * @deprecated (since 5.5) use of enhanced proxies is always enabled
-	 */
-	@Deprecated
-	default boolean isEnhancementAsProxyEnabled() {
 		return true;
 	}
 

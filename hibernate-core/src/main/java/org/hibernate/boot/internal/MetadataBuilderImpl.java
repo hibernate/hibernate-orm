@@ -795,36 +795,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		}
 
 		@Override
-		public IndexView getJandexView() {
-			return bootstrapContext.getJandexView();
-		}
-
-		@Override
-		public ScanOptions getScanOptions() {
-			return bootstrapContext.getScanOptions();
-		}
-
-		@Override
-		public ScanEnvironment getScanEnvironment() {
-			return bootstrapContext.getScanEnvironment();
-		}
-
-		@Override
-		public Object getScanner() {
-			return bootstrapContext.getScanner();
-		}
-
-		@Override
-		public ArchiveDescriptorFactory getArchiveDescriptorFactory() {
-			return bootstrapContext.getArchiveDescriptorFactory();
-		}
-
-		@Override
-		public ClassLoader getTempClassLoader() {
-			return bootstrapContext.getJpaTempClassLoader();
-		}
-
-		@Override
 		public ImplicitNamingStrategy getImplicitNamingStrategy() {
 			return implicitNamingStrategy;
 		}
@@ -852,11 +822,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		@Override
 		public IdGeneratorStrategyInterpreter getIdGenerationTypeInterpreter() {
 			return idGenerationTypeInterpreter;
-		}
-
-		@Override
-		public List<CacheRegionDefinition> getCacheRegionDefinitions() {
-			return new ArrayList<>( bootstrapContext.getCacheRegionDefinitions() );
 		}
 
 		@Override

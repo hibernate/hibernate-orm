@@ -10,7 +10,6 @@ import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.boot.model.TypeDefinitionRegistry;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.boot.spi.BootstrapContext;
-import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MappingDefaults;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -72,11 +71,6 @@ public class EnversMetadataBuildingContextImpl implements EnversMetadataBuilding
 	@Override
 	public InFlightMetadataCollector getMetadataCollector() {
 		return metadataCollector;
-	}
-
-	@Override
-	public ClassLoaderAccess getClassLoaderAccess() {
-		return metadataCollector.getBootstrapContext().getClassLoaderAccess();
 	}
 
 	@Override

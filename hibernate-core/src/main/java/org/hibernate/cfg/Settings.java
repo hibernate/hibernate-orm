@@ -194,7 +194,7 @@ public final class Settings {
 	}
 
 	public boolean isStrictJPAQLCompliance() {
-		return sessionFactoryOptions.isStrictJpaQueryLanguageCompliance();
+		return sessionFactoryOptions.getJpaCompliance().isJpaCacheComplianceEnabled();
 	}
 
 	public boolean isNamedQueryStartupCheckingEnabled() {

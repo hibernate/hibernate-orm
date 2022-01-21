@@ -45,14 +45,6 @@ public class BootstrapServiceRegistryBuilder {
 	private boolean autoCloseRegistry = true;
 
 	/**
-	 * @deprecated Use {@link #applyIntegrator} instead
-	 */
-	@Deprecated
-	public BootstrapServiceRegistryBuilder with(Integrator integrator) {
-		return applyIntegrator( integrator );
-	}
-
-	/**
 	 * Add an {@link Integrator} to be applied to the bootstrap registry.
 	 *
 	 * @param integrator The integrator to add.
@@ -62,14 +54,6 @@ public class BootstrapServiceRegistryBuilder {
 	public BootstrapServiceRegistryBuilder applyIntegrator(Integrator integrator) {
 		providedIntegrators.add( integrator );
 		return this;
-	}
-
-	/**
-	 * @deprecated Use {@link #applyClassLoader} instead
-	 */
-	@Deprecated
-	public BootstrapServiceRegistryBuilder with(ClassLoader classLoader) {
-		return applyClassLoader( classLoader );
 	}
 
 	/**
@@ -97,14 +81,6 @@ public class BootstrapServiceRegistryBuilder {
 	}
 
 	/**
-	 * @deprecated Use {@link #applyClassLoaderService} instead
-	 */
-	@Deprecated
-	public BootstrapServiceRegistryBuilder with(ClassLoaderService classLoaderService) {
-		return applyClassLoaderService( classLoaderService );
-	}
-
-	/**
 	 * Adds a provided {@link ClassLoaderService} for use in class-loading and resource-lookup.
 	 *
 	 * @param classLoaderService The class loader service to use
@@ -114,15 +90,6 @@ public class BootstrapServiceRegistryBuilder {
 	public BootstrapServiceRegistryBuilder applyClassLoaderService(ClassLoaderService classLoaderService) {
 		providedClassLoaderService = classLoaderService;
 		return this;
-	}
-
-	/**
-	 * @deprecated Use {@link #applyStrategySelector} instead
-	 */
-	@SuppressWarnings( {"UnusedDeclaration"})
-	@Deprecated
-	public <T> BootstrapServiceRegistryBuilder withStrategySelector(Class<T> strategy, String name, Class<? extends T> implementation) {
-		return applyStrategySelector( strategy, name, implementation );
 	}
 
 	/**
@@ -142,15 +109,6 @@ public class BootstrapServiceRegistryBuilder {
 	public <T> BootstrapServiceRegistryBuilder applyStrategySelector(Class<T> strategy, String name, Class<? extends T> implementation) {
 		this.strategySelectorBuilder.addExplicitStrategyRegistration( strategy, implementation, name );
 		return this;
-	}
-
-	/**
-	 * @deprecated Use {@link #applyStrategySelectors} instead
-	 */
-	@SuppressWarnings( {"UnusedDeclaration"})
-	@Deprecated
-	public BootstrapServiceRegistryBuilder withStrategySelectors(StrategyRegistrationProvider strategyRegistrationProvider) {
-		return applyStrategySelectors( strategyRegistrationProvider );
 	}
 
 	/**

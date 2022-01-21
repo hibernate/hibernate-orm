@@ -12,6 +12,8 @@ import org.hibernate.service.spi.Stoppable;
 /**
  * Represents a backend "bean container" - CDI, Spring, etc
  *
+ * @see org.hibernate.cfg.AvailableSettings#BEAN_CONTAINER
+ *
  * @author Steve Ebersole
  */
 public interface BeanContainer extends Stoppable {

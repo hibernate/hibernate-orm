@@ -18,6 +18,8 @@ import org.hibernate.type.Type;
  * already have knowledge of an entity's dirtiness and using that information instead would be more performant.
  * The purpose of this contract then is to allow applications such a plug-in point.
  *
+ * @see org.hibernate.cfg.AvailableSettings#CUSTOM_ENTITY_DIRTINESS_STRATEGY
+ *
  * @author Steve Ebersole
  */
 public interface CustomEntityDirtinessStrategy {

@@ -6,9 +6,6 @@
  */
 package org.hibernate.dialect;
 
-import java.util.List;
-import java.util.function.Consumer;
-
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.FetchClauseType;
@@ -18,13 +15,7 @@ import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.MutationStatement;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
-import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
-import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.Literal;
-import org.hibernate.sql.ast.tree.expression.SqlTuple;
-import org.hibernate.sql.ast.tree.expression.Summarization;
+import org.hibernate.sql.ast.tree.expression.*;
 import org.hibernate.sql.ast.tree.insert.InsertStatement;
 import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
@@ -32,6 +23,9 @@ import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+
+import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * A SQL AST translator for DB2.
@@ -51,7 +45,7 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 
 	@Override
 	public void visitBooleanExpressionPredicate(BooleanExpressionPredicate booleanExpressionPredicate) {
-		if ( getDialect().getVersion().isSameOrAfter( 11 ) ) {
+		if ( getDialectVersion().isSameOrAfter( 11 ) ) {
 			booleanExpressionPredicate.getExpression().accept( this );
 		}
 		else {
@@ -132,12 +126,12 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 		// Check if current query part is already row numbering to avoid infinite recursion
 		return getQueryPartForRowNumbering() != queryPart && (
 				useOffsetFetchClause( queryPart ) && !isRowsOnlyFetchClauseType( queryPart )
-						|| getDialect().getVersion().isBefore( 11, 1 ) && ( queryPart.isRoot() && hasLimit() || !( queryPart.getFetchClauseExpression() instanceof Literal ) )
+						|| getDialectVersion().isBefore( 11, 1 ) && ( queryPart.isRoot() && hasLimit() || !( queryPart.getFetchClauseExpression() instanceof Literal ) )
 		);
 	}
 
 	protected boolean supportsOffsetClause() {
-		return getDialect().getVersion().isSameOrAfter( 11, 1 );
+		return getDialectVersion().isSameOrAfter( 11, 1 );
 	}
 
 	@Override
@@ -228,7 +222,7 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 
 	@Override
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
-		if ( getDialect().getVersion().isSameOrAfter( 11, 1 ) ) {
+		if ( getDialectVersion().isSameOrAfter( 11, 1 ) ) {
 			renderComparisonStandard( lhs, operator, rhs );
 		}
 		else {
@@ -294,6 +288,14 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 	@Override
 	protected void visitReturningColumns(MutationStatement mutationStatement) {
 		// For DB2 we use #renderReturningClause to render a wrapper around the DML statement
+	}
+
+	private DatabaseVersion getDialectVersion() {
+		final var dialect = getDialect();
+		if (dialect instanceof DB2Dialect) {
+			return ((DB2Dialect) dialect).getDB2Version();
+		}
+		return dialect.getVersion();
 	}
 
 }

@@ -68,7 +68,7 @@ public class OracleSpatialSQLMMFunction extends OracleSpatialFunction {
 		for ( int i = 1; i < arguments.size(); i++ ) {
 			Expression param = (Expression) arguments.get( i );
 
-			if ( param.getExpressionType().getJdbcMappings().get( 0 ).getJdbcTypeDescriptor()
+			if ( param.getExpressionType().getJdbcMappings().get( 0 ).getJdbcType()
 					.getDefaultSqlTypeCode() == SqlTypes.GEOMETRY ) {
 				sqlAppender.appendSql( "ST_GEOMETRY(" );
 				walker.render( param, SqlAstNodeRenderingMode.DEFAULT);

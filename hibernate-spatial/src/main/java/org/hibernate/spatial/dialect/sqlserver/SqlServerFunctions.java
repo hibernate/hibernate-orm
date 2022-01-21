@@ -7,14 +7,10 @@
 package org.hibernate.spatial.dialect.sqlserver;
 
 
-import org.hibernate.spatial.dialect.SpatialFunctionsRegistry;
-
-
-
 /**
  * Created by Karel Maesen, Geovise BVBA on 19/09/2018.
  */
-class SqlServerFunctions extends SpatialFunctionsRegistry {
+class SqlServerFunctions{
 	public SqlServerFunctions() {
 
 		//TODO -- re-implement. In 6.0 there is no longer a SQLFunctionTemplate class

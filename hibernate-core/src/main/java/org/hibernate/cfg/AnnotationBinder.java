@@ -40,6 +40,7 @@ import org.hibernate.annotations.CollectionTypeRegistrations;
 import org.hibernate.annotations.Columns;
 import org.hibernate.annotations.Comment;
 import org.hibernate.annotations.DialectOverride.OverridesAnnotation;
+import org.hibernate.annotations.DefaultSchema;
 import org.hibernate.annotations.DiscriminatorFormula;
 import org.hibernate.annotations.DiscriminatorOptions;
 import org.hibernate.annotations.EmbeddableInstantiatorRegistration;
@@ -595,9 +596,9 @@ public final class AnnotationBinder {
 		bindQueries( clazzToProcess, context );
 		bindFilterDefs( clazzToProcess, context );
 
-		String schema = "";
-		String table = ""; //might be no @Table annotation on the annotated class
-		String catalog = "";
+		String schema;
+		String catalog;
+		String table;
 		List<UniqueConstraintHolder> uniqueConstraints = new ArrayList<>();
 		jakarta.persistence.Table tabAnn = null;
 		if ( clazzToProcess.isAnnotationPresent( jakarta.persistence.Table.class ) ) {
@@ -606,6 +607,19 @@ public final class AnnotationBinder {
 			schema = tabAnn.schema();
 			catalog = tabAnn.catalog();
 			uniqueConstraints = TableBinder.buildUniqueConstraintHolders( tabAnn.uniqueConstraints() );
+		}
+		else {
+			//might be no @Table annotation on the annotated class
+			schema = "";
+			catalog = "";
+			table = "";
+		}
+
+		if ( schema.isEmpty() ) {
+			schema = defaultSchema( clazzToProcess );
+		}
+		if ( catalog.isEmpty() ) {
+			catalog = defaultCatalog( clazzToProcess );
 		}
 
 		AnnotatedJoinColumn[] inheritanceJoinedColumns = makeInheritanceJoinColumns(
@@ -897,6 +911,36 @@ public final class AnnotationBinder {
 			}
 		}
 		return element.getAnnotation( annotationType );
+	}
+
+	public static String defaultSchema(XClass clazzToProcess) {
+		XAnnotatedElement annotatedElement = clazzToProcess;
+		while (true) {
+			if ( annotatedElement.isAnnotationPresent(DefaultSchema.class) ) {
+				return annotatedElement.getAnnotation(DefaultSchema.class).schema();
+			}
+			else if ( annotatedElement instanceof XClass ) {
+				annotatedElement = ((XClass) annotatedElement).getContainingElement();
+			}
+			else {
+				return "";
+			}
+		}
+	}
+
+	public static String defaultCatalog(XClass clazzToProcess) {
+		XAnnotatedElement annotatedElement = clazzToProcess;
+		while (true) {
+			if ( annotatedElement.isAnnotationPresent(DefaultSchema.class) ) {
+				return annotatedElement.getAnnotation(DefaultSchema.class).catalog();
+			}
+			else if ( annotatedElement instanceof XClass ) {
+				annotatedElement = ((XClass) annotatedElement).getContainingElement();
+			}
+			else {
+				return "";
+			}
+		}
 	}
 
 	private static void handleTypeDescriptorRegistrations(XAnnotatedElement annotatedElement, MetadataBuildingContext context) {
@@ -2707,8 +2751,14 @@ public final class AnnotationBinder {
 			if ( !BinderHelper.isEmptyAnnotationValue( schema ) ) {
 				associationTableBinder.setSchema( schema );
 			}
+			else {
+				associationTableBinder.setSchema( defaultSchema( property.getDeclaringClass() ) );
+			}
 			if ( !BinderHelper.isEmptyAnnotationValue( catalog ) ) {
 				associationTableBinder.setCatalog( catalog );
+			}
+			else {
+				associationTableBinder.setCatalog( defaultCatalog( property.getDeclaringClass() ) );
 			}
 			if ( !BinderHelper.isEmptyAnnotationValue( tableName ) ) {
 				associationTableBinder.setName( tableName );
@@ -2722,6 +2772,8 @@ public final class AnnotationBinder {
 		else {
 			annJoins = null;
 			annInverseJoins = null;
+			associationTableBinder.setSchema( defaultSchema( property.getDeclaringClass() ) );
+			associationTableBinder.setCatalog( defaultCatalog( property.getDeclaringClass() ) );
 		}
 		AnnotatedJoinColumn[] joinColumns = AnnotatedJoinColumn.buildJoinTableJoinColumns(
 				annJoins,

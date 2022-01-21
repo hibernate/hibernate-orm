@@ -8,15 +8,12 @@ package org.hibernate.cfg;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Map;
 import java.util.Properties;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Version;
 import org.hibernate.bytecode.spi.BytecodeProvider;
-import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.log.UnsupportedLogger;
 import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 
@@ -24,114 +21,105 @@ import org.jboss.logging.Logger;
 
 
 /**
- * Provides access to configuration info passed in {@code Properties} objects.
+ * Provides access to configuration properties passed in {@link Properties} objects.
  * <p>
  * Hibernate has two property scopes:
  * <ul>
- * <li><em>Factory-level</em> properties may be passed to the {@code SessionFactory} when it
- * is instantiated. Each instance might have different property values. If no
- * properties are specified, the factory calls {@code Environment.getProperties()}.
- * <li><em>System-level</em> properties are shared by all factory instances and are always
- * determined by the {@code Environment} properties.
+ * <li><em>Factory-level</em> properties are specified when a
+ * {@link org.hibernate.SessionFactory} is configured and instantiated. Each instance
+ * might have different property values.
+ * <li><em>System-level</em> properties are shared by all factory instances and are
+ * always determined by the {@code Environment} properties in {@link #getProperties()}.
  * </ul>
+ * The only system-level properties are {@value #USE_REFLECTION_OPTIMIZER} and
+ * {@value #BYTECODE_PROVIDER}.
  * <p>
- * The only system-level property is {@value #USE_REFLECTION_OPTIMIZER}.
- * </p>
  * {@code Environment} properties are populated by calling {@link System#getProperties()}
- * and then from a resource named {@code /hibernate.properties} if it exists. System
+ * and then from a resource named {@code /hibernate.properties}, if it exists. System
  * properties override properties specified in {@code hibernate.properties}.
  * <p>
- * The {@link org.hibernate.SessionFactory} is controlled by the following properties.
- * Properties may be either be {@link System} properties, properties defined in a
- * resource named {@code /hibernate.properties} or an instance of
- * {@link java.util.Properties} passed to {@link Configuration#addProperties(Properties)}.
- * <p>
+ * The {@link org.hibernate.SessionFactory} obtains properties from:
+ * <ul>
+ * <li>{@link System#getProperties() system properties},
+ * <li>properties defined in a resource named {@code /hibernate.properties}, and
+ * <li>any instance of {@link Properties} passed to {@link Configuration#addProperties}.
+ * </ul>
  * <table>
- * <tr><td><b>property</b></td><td><b>meaning</b></td></tr>
+ * <tr><td><b>Property</b></td><td><b>Interpretation</b></td></tr>
  * <tr>
- *   <td>{@code hibernate.dialect}</td>
- *   <td>classname of {@link org.hibernate.dialect.Dialect} subclass</td>
+ *   <td>{@value #DIALECT}</td>
+ *   <td>name of {@link org.hibernate.dialect.Dialect} subclass</td>
  * </tr>
  * <tr>
- *   <td>{@code hibernate.connection.provider_class}</td>
+ *   <td>{@value #CONNECTION_PROVIDER}</td>
  *   <td>name of a {@link org.hibernate.engine.jdbc.connections.spi.ConnectionProvider}
  *   subclass (if not specified heuristics are used)</td>
  * </tr>
- * <tr><td>{@code hibernate.connection.username}</td><td>database username</td></tr>
- * <tr><td>{@code hibernate.connection.password}</td><td>database password</td></tr>
+ * <tr><td>{@value #USER}</td><td>database username</td></tr>
+ * <tr><td>{@value #PASS}</td><td>database password</td></tr>
  * <tr>
- *   <td>{@code hibernate.connection.url}</td>
+ *   <td>{@value #URL}</td>
  *   <td>JDBC URL (when using {@link java.sql.DriverManager})</td>
  * </tr>
  * <tr>
- *   <td>{@code hibernate.connection.driver_class}</td>
+ *   <td>{@value #DRIVER}</td>
  *   <td>classname of JDBC driver</td>
  * </tr>
  * <tr>
- *   <td>{@code hibernate.connection.isolation}</td>
+ *   <td>{@value #ISOLATION}</td>
  *   <td>JDBC transaction isolation level (only when using
  *     {@link java.sql.DriverManager})
  *   </td>
  * </tr>
- *   <td>{@code hibernate.connection.pool_size}</td>
+ *   <td>{@value #POOL_SIZE}</td>
  *   <td>the maximum size of the connection pool (only when using
  *     {@link java.sql.DriverManager})
  *   </td>
  * </tr>
  * <tr>
- *   <td>{@code hibernate.connection.datasource}</td>
+ *   <td>{@value #DATASOURCE}</td>
  *   <td>datasource JNDI name (when using {@link javax.sql.DataSource})</td>
  * </tr>
  * <tr>
- *   <td>{@code hibernate.jndi.url}</td><td>JNDI {@link javax.naming.InitialContext} URL</td>
+ *   <td>{@value #JNDI_URL}</td><td>JNDI {@link javax.naming.InitialContext} URL</td>
  * </tr>
  * <tr>
- *   <td>{@code hibernate.jndi.class}</td><td>JNDI {@link javax.naming.InitialContext} classname</td>
+ *   <td>{@value #JNDI_CLASS}</td><td>JNDI {@link javax.naming.InitialContext} class name</td>
  * </tr>
  * <tr>
- *   <td>{@code hibernate.max_fetch_depth}</td>
+ *   <td>{@value #MAX_FETCH_DEPTH}</td>
  *   <td>maximum depth of outer join fetching</td>
  * </tr>
  * <tr>
- *   <td>{@code hibernate.jdbc.batch_size}</td>
+ *   <td>{@value #STATEMENT_BATCH_SIZE}</td>
  *   <td>enable use of JDBC2 batch API for drivers which support it</td>
  * </tr>
  * <tr>
- *   <td>{@code hibernate.jdbc.fetch_size}</td>
+ *   <td>{@value #STATEMENT_FETCH_SIZE}</td>
  *   <td>set the JDBC fetch size</td>
  * </tr>
  * <tr>
- *   <td>{@code hibernate.jdbc.use_scrollable_resultset}</td>
- *   <td>enable use of JDBC2 scrollable resultsets (you only need to specify
- *   this property when using user supplied connections)</td>
+ *   <td>{@value #USE_GET_GENERATED_KEYS}</td>
+ *   <td>enable use of JDBC3 {@link java.sql.PreparedStatement#getGeneratedKeys()}
+ *   to retrieve natively generated keys after insert. Requires JDBC3+ driver and
+ *   JRE1.4+</td>
  * </tr>
  * <tr>
- *   <td>{@code hibernate.jdbc.use_getGeneratedKeys}</td>
- *   <td>enable use of JDBC3 PreparedStatement.getGeneratedKeys() to retrieve
- *   natively generated keys after insert. Requires JDBC3+ driver and JRE1.4+</td>
- * </tr>
- * <tr>
- *   <td>{@code hibernate.hbm2ddl.auto}</td>
+ *   <td>{@value #HBM2DDL_AUTO}</td>
  *   <td>enable auto DDL export</td>
  * </tr>
  * <tr>
- *   <td>{@code hibernate.default_schema}</td>
+ *   <td>{@value #DEFAULT_SCHEMA}</td>
  *   <td>use given schema name for unqualified tables (always optional)</td>
  * </tr>
  * <tr>
- *   <td>{@code hibernate.default_catalog}</td>
+ *   <td>{@value #DEFAULT_CATALOG}</td>
  *   <td>use given catalog name for unqualified tables (always optional)</td>
  * </tr>
  * <tr>
- *   <td>{@code hibernate.session_factory_name}</td>
- *   <td>If set, the factory attempts to bind this name to itself in the
- *   JNDI context. This name is also used to support cross JVM {@code 
- *   Session} (de)serialization.</td>
- * </tr>
- * <tr>
- *   <td>{@code hibernate.transaction.jta.platform}</td>
- *   <td>classname of {@link org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform}
- *   implementor</td>
+ *   <td>{@value #JTA_PLATFORM}</td>
+ *   <td>name of {@link org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform}
+ *   implementation</td>
  * </tr>
  * </table>
  *
@@ -143,7 +131,6 @@ public final class Environment implements AvailableSettings {
 
 	private static final BytecodeProvider BYTECODE_PROVIDER_INSTANCE;
 	private static final boolean ENABLE_REFLECTION_OPTIMIZER;
-	private static final boolean ENABLE_LEGACY_PROXY_CLASSNAMES;
 
 	private static final Properties GLOBAL_PROPERTIES;
 
@@ -193,24 +180,7 @@ public final class Environment implements AvailableSettings {
 			LOG.usingReflectionOptimizer();
 		}
 
-		ENABLE_LEGACY_PROXY_CLASSNAMES = ConfigurationHelper.getBoolean( ENFORCE_LEGACY_PROXY_CLASSNAMES, GLOBAL_PROPERTIES );
-		if ( ENABLE_LEGACY_PROXY_CLASSNAMES ) {
-			final UnsupportedLogger unsupportedLogger = Logger.getMessageLogger( UnsupportedLogger.class, Environment.class.getName() );
-			unsupportedLogger.usingLegacyClassnamesForProxies();
-		}
-
 		BYTECODE_PROVIDER_INSTANCE = buildBytecodeProvider( GLOBAL_PROPERTIES );
-	}
-
-	/**
-	 * This will be removed soon; currently just returns false as no known JVM exhibits this bug
-	 * and is also able to run this version of Hibernate ORM.
-	 * @deprecated removed as unnecessary
-	 * @return false
-	 */
-	@Deprecated
-	public static boolean jvmHasTimestampBug() {
-		return false;
 	}
 
 	/**
@@ -246,15 +216,6 @@ public final class Environment implements AvailableSettings {
 	}
 
 	/**
-	 * @return True if global option org.hibernate.cfg.AvailableSettings#ENFORCE_LEGACY_PROXY_CLASSNAMES was enabled
-	 * @deprecated This option will be removed soon and should not be relied on.
-	 */
-	@Deprecated
-	public static boolean useLegacyProxyClassnames() {
-		return ENABLE_LEGACY_PROXY_CLASSNAMES;
-	}
-
-	/**
 	 * Disallow instantiation
 	 */
 	private Environment() {
@@ -262,24 +223,14 @@ public final class Environment implements AvailableSettings {
 	}
 
 	/**
-	 * Return {@code System} properties, extended by any properties specified
-	 * in {@code hibernate.properties}.
-	 * @return Properties
+	 * The {@link System#getProperties() system properties}, extended with all
+	 * additional properties specified in {@code hibernate.properties}.
 	 */
 	public static Properties getProperties() {
 		Properties copy = new Properties();
 		copy.putAll(GLOBAL_PROPERTIES);
 		return copy;
 	}
-
-	/**
-	 * @deprecated Use {@link ConnectionProviderInitiator#toIsolationNiceName} instead
-	 */
-	@Deprecated
-	public static String isolationLevelToString(int isolation) {
-		return ConnectionProviderInitiator.toIsolationNiceName( isolation );
-	}
-
 
 	public static final String BYTECODE_PROVIDER_NAME_BYTEBUDDY = "bytebuddy";
 	public static final String BYTECODE_PROVIDER_NAME_NONE = "none";

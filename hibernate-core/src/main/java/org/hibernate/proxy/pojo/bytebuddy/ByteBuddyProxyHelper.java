@@ -16,7 +16,6 @@ import java.util.function.Function;
 
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.internal.bytebuddy.ByteBuddyState;
-import org.hibernate.cfg.Environment;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.proxy.HibernateProxy;
@@ -35,7 +34,7 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
 public class ByteBuddyProxyHelper implements Serializable {
 
 	private static final CoreMessageLogger LOG = messageLogger( ByteBuddyProxyHelper.class );
-	private static final String PROXY_NAMING_SUFFIX = Environment.useLegacyProxyClassnames() ? "HibernateProxy$" : "HibernateProxy";
+	private static final String PROXY_NAMING_SUFFIX = "HibernateProxy";
 
 	private final ByteBuddyState byteBuddyState;
 

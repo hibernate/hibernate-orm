@@ -847,16 +847,6 @@ public interface AvailableSettings {
 	String USE_REFLECTION_OPTIMIZER = "hibernate.bytecode.use_reflection_optimizer";
 
 	/**
-	 * Configure the global BytecodeProvider implementation to generate class names matching the
-	 * existing naming patterns.
-	 * It is not a good idea to rely on a classname to check if a class is an Hibernate proxy,
-	 * yet some frameworks are currently relying on this.
-	 * This option is disabled by default and will log a deprecation warning when enabled.
-	 */
-	String ENFORCE_LEGACY_PROXY_CLASSNAMES = "hibernate.bytecode.enforce_legacy_proxy_classnames";
-
-
-	/**
 	 * Controls the base integer for binding JDBC-style ({@code ?}) ordinal
 	 * parameters when the Hibernate SessionFactory is bootstrapped via the native
 	 * bootstrapping API.  JPA says that all non-named parameter binding is explicitly

@@ -54,8 +54,8 @@ import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.query.IllegalMutationQueryException;
 import org.hibernate.query.IllegalNamedQueryOptionsException;
 import org.hibernate.query.IllegalSelectQueryException;
-import org.hibernate.query.JpaQuery;
 import org.hibernate.query.MutationQuery;
+import org.hibernate.query.Query;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.UnknownNamedQueryException;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
@@ -938,7 +938,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	protected void applyQuerySettingsAndHints(SelectionQuery query) {
 	}
 
-	protected void applyQuerySettingsAndHints(JpaQuery query) {
+	protected void applyQuerySettingsAndHints(Query<?> query) {
 	}
 
 	@Override @SuppressWarnings("rawtypes")

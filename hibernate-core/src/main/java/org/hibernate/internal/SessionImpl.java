@@ -120,7 +120,6 @@ import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
-import org.hibernate.query.JpaQuery;
 import org.hibernate.query.Query;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.UnknownSqlResultSetMappingException;
@@ -308,8 +307,7 @@ public class SessionImpl
 		}
 	}
 
-	@Override
-	protected void applyQuerySettingsAndHints(JpaQuery query) {
+	protected void applyQuerySettingsAndHints(Query query) {
 		applyQuerySettingsAndHints( (SelectionQuery) query );
 
 		final Integer specLockTimeout = LegacySpecHelper.getInteger(

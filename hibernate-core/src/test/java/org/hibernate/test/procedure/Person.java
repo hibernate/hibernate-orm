@@ -11,6 +11,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.hibernate.annotations.NamedNativeQuery;
+import org.hibernate.jpa.AvailableHints;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
@@ -34,30 +35,22 @@ import static org.hibernate.jpa.HibernateHints.HINT_CALLABLE_FUNCTION;
 /**
  * @author Vlad Mihalcea
  */
-@NamedNativeQuery(
-    name = "fn_person_and_phones",
-    query = "{ ? = call fn_person_and_phones( ? ) }",
-    callable = true,
-    resultSetMapping = "person_with_phones"
+@NamedStoredProcedureQuery(
+        name = "personAndPhonesFunction",
+        procedureName = "fn_person_and_phones",
+        resultSetMappings = "personWithPhonesMapping",
+        parameters = @StoredProcedureParameter(type = Long.class),
+        hints = @QueryHint(name = HINT_CALLABLE_FUNCTION, value = "true")
 )
 @NamedNativeQuery(
-	    name = "fn_person_and_phones_hana",
-	    query = "select \"pr.id\", \"pr.name\", \"pr.nickName\", \"pr.address\", \"pr.createdOn\", \"pr.version\", \"ph.id\", \"ph.person_id\", \"ph.phone_number\", \"ph.valid\" from fn_person_and_phones( ? )",
-	    callable = false,
-	    resultSetMapping = "person_with_phones_hana"
-	)
-@NamedStoredProcedureQuery(
-        name = "fn_person_and_phones_sq",
-        procedureName = "fn_person_and_phones",
-        resultSetMappings = "person_with_phones",
-        parameters = {
-                @StoredProcedureParameter(type = Long.class)
-        },
-        hints = @QueryHint(name = HINT_CALLABLE_FUNCTION, value = "true")
+        name = "fn_person_and_phones_hana",
+        query = "select \"pr.id\", \"pr.name\", \"pr.nickName\", \"pr.address\", \"pr.createdOn\", \"pr.version\", \"ph.id\", \"ph.person_id\", \"ph.phone_number\", \"ph.valid\" from fn_person_and_phones( ? )",
+        callable = false,
+        resultSetMapping = "person_with_phones_hana"
 )
 @SqlResultSetMappings({
      @SqlResultSetMapping(
-         name = "person_with_phones",
+         name = "personWithPhonesMapping",
          entities = {
              @EntityResult(
                  entityClass = Person.class,

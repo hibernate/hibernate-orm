@@ -11,10 +11,14 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Set;
 
+import org.gradle.api.Project;
+import org.gradle.api.file.Directory;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.provider.Provider;
 
+import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.Index;
 import org.jboss.jandex.IndexWriter;
 import org.jboss.jandex.Indexer;
@@ -25,22 +29,28 @@ import org.jboss.jandex.Indexer;
  * @author Steve Ebersole
  */
 public class IndexManager {
-	private final Provider<RegularFile> jarFileReference;
-	private final Provider<RegularFile> indexFileReference;
+	private final Provider<Directory> classesDirectoryReferenceAccess;
+	private final Provider<RegularFile> indexFileReferenceAccess;
+	private final Project project;
 
 	private Index index;
 
-	public IndexManager(Provider<RegularFile> jarFileReference, Provider<RegularFile> indexFileReference) {
-		this.jarFileReference = jarFileReference;
-		this.indexFileReference = indexFileReference;
+	public IndexManager(
+			Provider<Directory> classesDirectoryReferenceAccess,
+			Project project) {
+		this.classesDirectoryReferenceAccess = classesDirectoryReferenceAccess;
+		this.indexFileReferenceAccess = project.getLayout()
+				.getBuildDirectory()
+				.file( "post/" + project.getName() + ".idx" );
+		this.project = project;
 	}
 
-	public Provider<RegularFile> getJarFileReference() {
-		return jarFileReference;
+	public Provider<Directory> getClassesDirectoryReferenceAccess() {
+		return classesDirectoryReferenceAccess;
 	}
 
-	public Provider<RegularFile> getIndexFileReference() {
-		return indexFileReference;
+	public Provider<RegularFile> getIndexFileReferenceAccess() {
+		return indexFileReferenceAccess;
 	}
 
 	public Index getIndex() {
@@ -55,16 +65,31 @@ public class IndexManager {
 			return;
 		}
 
-		final File jarFileAsFile = jarFileReference.get().getAsFile();
 		final Indexer indexer = new Indexer();
-		try ( final FileInputStream stream = new FileInputStream( jarFileAsFile ) ) {
-			indexer.index( stream );
-		}
-		catch (FileNotFoundException e) {
-			throw new RuntimeException( "Unable to locate project jar file - " + jarFileAsFile.getAbsolutePath(), e );
-		}
-		catch (IOException e) {
-			throw new RuntimeException( "Error accessing project jar file - " + jarFileAsFile.getAbsolutePath(), e );
+
+		final Directory classesDirectory = classesDirectoryReferenceAccess.get();
+		final Set<File> classFiles = classesDirectory.getAsFileTree().getFiles();
+		for ( File classFile : classFiles ) {
+			if ( !classFile.getName().endsWith( ".class" ) ) {
+				continue;
+			}
+
+			if ( !classFile.getAbsolutePath().contains( "org/hibernate" ) ) {
+				continue;
+			}
+
+			try ( final FileInputStream stream = new FileInputStream( classFile ) ) {
+				final ClassInfo indexedClassInfo = indexer.index( stream );
+				if ( indexedClassInfo == null ) {
+					project.getLogger().lifecycle( "Problem indexing class file - " + classFile.getAbsolutePath() );
+				}
+			}
+			catch (FileNotFoundException e) {
+				throw new RuntimeException( "Problem locating project class file - " + classFile.getAbsolutePath(), e );
+			}
+			catch (IOException e) {
+				throw new RuntimeException( "Error accessing project class file - " + classFile.getAbsolutePath(), e );
+			}
 		}
 
 		this.index = indexer.complete();
@@ -72,13 +97,13 @@ public class IndexManager {
 	}
 
 	private void storeIndex(Index index) {
-		final File indexFile = indexFileReference.get().getAsFile();
+		final File indexFile = indexFileReferenceAccess.get().getAsFile();
 		if ( indexFile.exists() ) {
 			indexFile.delete();
 		}
 
 		try {
-			indexFile.mkdirs();
+			indexFile.getParentFile().mkdirs();
 			indexFile.createNewFile();
 		}
 		catch (IOException e) {

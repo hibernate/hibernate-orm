@@ -12,6 +12,11 @@ import java.util.TreeSet;
 import javax.inject.Inject;
 
 import org.gradle.api.DefaultTask;
+import org.gradle.api.Project;
+import org.gradle.api.file.RegularFile;
+import org.gradle.api.provider.Provider;
+import org.gradle.api.tasks.InputFile;
+import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
 
 import org.jboss.jandex.AnnotationInstance;
@@ -28,10 +33,22 @@ public abstract class IncubatingCollectorTask extends DefaultTask {
 	public static final String INCUBATING_ANN_NAME = "org.hibernate.Incubating";
 
 	private final IndexManager indexManager;
+	private final Provider<RegularFile> reportFileReferenceAccess;
 
 	@Inject
-	public IncubatingCollectorTask(IndexManager indexManager) {
+	public IncubatingCollectorTask(IndexManager indexManager, Project project) {
 		this.indexManager = indexManager;
+		this.reportFileReferenceAccess = project.getLayout().getBuildDirectory().file( "post/" + project.getName() + "-incubating.txt" );
+	}
+
+	@InputFile
+	public Provider<RegularFile> getIndexFileReference() {
+		return indexManager.getIndexFileReferenceAccess();
+	}
+
+	@OutputFile
+	public Provider<RegularFile> getReportFileReferenceAccess() {
+		return reportFileReferenceAccess;
 	}
 
 	@TaskAction

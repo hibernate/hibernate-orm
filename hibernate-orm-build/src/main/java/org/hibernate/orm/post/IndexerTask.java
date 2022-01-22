@@ -9,10 +9,12 @@ package org.hibernate.orm.post;
 import javax.inject.Inject;
 
 import org.gradle.api.DefaultTask;
+import org.gradle.api.file.Directory;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.provider.Provider;
-import org.gradle.api.tasks.InputFile;
+import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.OutputFile;
+import org.gradle.api.tasks.SkipWhenEmpty;
 import org.gradle.api.tasks.TaskAction;
 
 /**
@@ -28,14 +30,15 @@ public abstract class IndexerTask extends DefaultTask {
 		this.indexManager = indexManager;
 	}
 
-	@InputFile
-	public Provider<RegularFile> getJarFileReference() {
-		return indexManager.getJarFileReference();
+	@InputDirectory
+	@SkipWhenEmpty
+	public Provider<Directory> getClassesDirectory() {
+		return indexManager.getClassesDirectoryReferenceAccess();
 	}
 
 	@OutputFile
 	public Provider<RegularFile> getIndexFileReference() {
-		return indexManager.getIndexFileReference();
+		return indexManager.getIndexFileReferenceAccess();
 	}
 
 	@TaskAction

@@ -8,9 +8,12 @@ package org.hibernate.orm.post;
 
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-import org.gradle.api.file.RegularFile;
+import org.gradle.api.file.Directory;
+import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.provider.Provider;
-import org.gradle.jvm.tasks.Jar;
+import org.gradle.api.tasks.SourceSet;
+
+import static org.gradle.api.tasks.SourceSet.MAIN_SOURCE_SET_NAME;
 
 /**
  * @author Steve Ebersole
@@ -18,29 +21,32 @@ import org.gradle.jvm.tasks.Jar;
 public class CollectorPlugin implements Plugin<Project> {
 	@Override
 	public void apply(Project project) {
-		final Jar jarTask = (Jar) project.getTasks().findByName( "jar" );
-		final Provider<RegularFile> jarFileReferenceAccess = jarTask.getArchiveFile();
-		final Provider<RegularFile> indexFileReferenceAccess = project.getLayout()
-				.getBuildDirectory()
-				.file( "post/" + project.getName() + ".idx" );
+		final JavaPluginExtension javaPluginExtension = project.getExtensions().getByType( JavaPluginExtension.class );
+		final SourceSet projectMainSourceSet = javaPluginExtension.getSourceSets().getByName( MAIN_SOURCE_SET_NAME );
+		final Provider<Directory> classesDirectory = projectMainSourceSet.getJava().getClassesDirectory();
 
-		final IndexManager indexManager = new IndexManager( jarFileReferenceAccess, indexFileReferenceAccess );
+		final IndexManager indexManager = new IndexManager( classesDirectory, project );
 
 		final IndexerTask indexerTask = project.getTasks().create(
-				"indexProjectJar",
+				"indexProject",
 				IndexerTask.class,
 				indexManager
 		);
 
+		// NOTE : `indexProject` implicitly depends on the compilation task.
+		// 		it uses the `classesDirectory` from the `main` sourceSet.  Gradle
+		// 		understands that the `classesDirectory` is generated from the
+		//		compilation task and implicitly creates the task dependency
+
 		final IncubatingCollectorTask incubatingTask = project.getTasks().create(
-				"collectProjectIncubating",
+				"createIncubatingReport",
 				IncubatingCollectorTask.class,
 				indexManager
 		);
 		incubatingTask.dependsOn( indexerTask );
 
 		final LoggingCollectorTask loggingTask = project.getTasks().create(
-				"collectProjectLogging",
+				"createLoggingReport",
 				LoggingCollectorTask.class,
 				indexManager
 		);

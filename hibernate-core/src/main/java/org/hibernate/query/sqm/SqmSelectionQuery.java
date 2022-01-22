@@ -25,140 +25,140 @@ import jakarta.persistence.TemporalType;
 /**
  * @author Steve Ebersole
  */
-public interface SqmSelectionQuery extends SqmQuery, SelectionQuery {
+public interface SqmSelectionQuery<R> extends SqmQuery, SelectionQuery<R> {
 
 	@Override
-	SqmSelectionQuery setParameter(String name, Object value);
+	SqmSelectionQuery<R> setParameter(String name, Object value);
 
 	@Override
-	<P> SqmSelectionQuery setParameter(String name, P value, Class<P> type);
+	<P> SqmSelectionQuery<R> setParameter(String name, P value, Class<P> type);
 
 	@Override
-	<P> SqmSelectionQuery setParameter(String name, P value, BindableType<P> type);
+	<P> SqmSelectionQuery<R> setParameter(String name, P value, BindableType<P> type);
 
 	@Override
-	SqmSelectionQuery setParameter(String name, Instant value, TemporalType temporalType);
+	SqmSelectionQuery<R> setParameter(String name, Instant value, TemporalType temporalType);
 
 	@Override
-	SqmSelectionQuery setParameter(String name, Calendar value, TemporalType temporalType);
+	SqmSelectionQuery<R> setParameter(String name, Calendar value, TemporalType temporalType);
 
 	@Override
-	SqmSelectionQuery setParameter(String name, Date value, TemporalType temporalType);
+	SqmSelectionQuery<R> setParameter(String name, Date value, TemporalType temporalType);
 
 	@Override
-	SqmSelectionQuery setParameter(int position, Object value);
+	SqmSelectionQuery<R> setParameter(int position, Object value);
 
 	@Override
-	<P> SqmSelectionQuery setParameter(int position, P value, Class<P> type);
+	<P> SqmSelectionQuery<R> setParameter(int position, P value, Class<P> type);
 
 	@Override
-	<P> SqmSelectionQuery setParameter(int position, P value, BindableType<P> type);
+	<P> SqmSelectionQuery<R> setParameter(int position, P value, BindableType<P> type);
 
 	@Override
-	SqmSelectionQuery setParameter(int position, Instant value, TemporalType temporalType);
+	SqmSelectionQuery<R> setParameter(int position, Instant value, TemporalType temporalType);
 
 	@Override
-	SqmSelectionQuery setParameter(int position, Date value, TemporalType temporalType);
+	SqmSelectionQuery<R> setParameter(int position, Date value, TemporalType temporalType);
 
 	@Override
-	SqmSelectionQuery setParameter(int position, Calendar value, TemporalType temporalType);
+	SqmSelectionQuery<R> setParameter(int position, Calendar value, TemporalType temporalType);
 
 	@Override
-	<T> SqmSelectionQuery setParameter(QueryParameter<T> parameter, T value);
+	<T> SqmSelectionQuery<R> setParameter(QueryParameter<T> parameter, T value);
 
 	@Override
-	<P> SqmSelectionQuery setParameter(QueryParameter<P> parameter, P value, Class<P> type);
+	<P> SqmSelectionQuery<R> setParameter(QueryParameter<P> parameter, P value, Class<P> type);
 
 	@Override
-	<P> SqmSelectionQuery setParameter(QueryParameter<P> parameter, P val, BindableType<P> type);
+	<P> SqmSelectionQuery<R> setParameter(QueryParameter<P> parameter, P val, BindableType<P> type);
 
 	@Override
-	<T> SqmSelectionQuery setParameter(Parameter<T> param, T value);
+	<T> SqmSelectionQuery<R> setParameter(Parameter<T> param, T value);
 
 	@Override
-	SqmSelectionQuery setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
+	SqmSelectionQuery<R> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
 
 	@Override
-	SqmSelectionQuery setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
+	SqmSelectionQuery<R> setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
 
 	@Override
-	SqmSelectionQuery setParameterList(String name, Collection values);
+	SqmSelectionQuery<R> setParameterList(String name, Collection values);
 
 	@Override
-	<P> SqmSelectionQuery setParameterList(String name, Collection<? extends P> values, Class<P> javaType);
+	<P> SqmSelectionQuery<R> setParameterList(String name, Collection<? extends P> values, Class<P> javaType);
 
 	@Override
-	<P> SqmSelectionQuery setParameterList(String name, Collection<? extends P> values, BindableType<P> type);
+	<P> SqmSelectionQuery<R> setParameterList(String name, Collection<? extends P> values, BindableType<P> type);
 
 	@Override
-	SqmSelectionQuery setParameterList(String name, Object[] values);
+	SqmSelectionQuery<R> setParameterList(String name, Object[] values);
 
 	@Override
-	<P> SqmSelectionQuery setParameterList(String name, P[] values, Class<P> javaType);
+	<P> SqmSelectionQuery<R> setParameterList(String name, P[] values, Class<P> javaType);
 
 	@Override
-	<P> SqmSelectionQuery setParameterList(String name, P[] values, BindableType<P> type);
+	<P> SqmSelectionQuery<R> setParameterList(String name, P[] values, BindableType<P> type);
 
 	@Override
-	SqmSelectionQuery setParameterList(int position, Collection values);
+	SqmSelectionQuery<R> setParameterList(int position, Collection values);
 
 	@Override
-	<P> SqmSelectionQuery setParameterList(int position, Collection<? extends P> values, Class<P> javaType);
+	<P> SqmSelectionQuery<R> setParameterList(int position, Collection<? extends P> values, Class<P> javaType);
 
 	@Override
-	<P> SqmSelectionQuery setParameterList(int position, Collection<? extends P> values, BindableType<P> type);
+	<P> SqmSelectionQuery<R> setParameterList(int position, Collection<? extends P> values, BindableType<P> type);
 
 	@Override
-	SqmSelectionQuery setParameterList(int position, Object[] values);
+	SqmSelectionQuery<R> setParameterList(int position, Object[] values);
 
 	@Override
-	<P> SqmSelectionQuery setParameterList(int position, P[] values, Class<P> javaType);
+	<P> SqmSelectionQuery<R> setParameterList(int position, P[] values, Class<P> javaType);
 
 	@Override
-	<P> SqmSelectionQuery setParameterList(int position, P[] values, BindableType<P> type);
+	<P> SqmSelectionQuery<R> setParameterList(int position, P[] values, BindableType<P> type);
 
 	@Override
-	<P> SqmSelectionQuery setParameterList(QueryParameter<P> parameter, Collection<? extends P> values);
+	<P> SqmSelectionQuery<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values);
 
 	@Override
-	<P> SqmSelectionQuery setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Class<P> javaType);
+	<P> SqmSelectionQuery<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Class<P> javaType);
 
 	@Override
-	<P> SqmSelectionQuery setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, BindableType<P> type);
+	<P> SqmSelectionQuery<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, BindableType<P> type);
 
 	@Override
-	<P> SqmSelectionQuery setParameterList(QueryParameter<P> parameter, P[] values);
+	<P> SqmSelectionQuery<R> setParameterList(QueryParameter<P> parameter, P[] values);
 
 	@Override
-	<P> SqmSelectionQuery setParameterList(QueryParameter<P> parameter, P[] values, Class<P> javaType);
+	<P> SqmSelectionQuery<R> setParameterList(QueryParameter<P> parameter, P[] values, Class<P> javaType);
 
 	@Override
-	<P> SqmSelectionQuery setParameterList(QueryParameter<P> parameter, P[] values, BindableType<P> type);
+	<P> SqmSelectionQuery<R> setParameterList(QueryParameter<P> parameter, P[] values, BindableType<P> type);
 
 	@Override
-	SqmSelectionQuery setProperties(Object bean);
+	SqmSelectionQuery<R> setProperties(Object bean);
 
 	@Override
-	SqmSelectionQuery setProperties(Map bean);
+	SqmSelectionQuery<R> setProperties(Map bean);
 
 	@Override
-	SqmSelectionQuery setHibernateFlushMode(FlushMode flushMode);
+	SqmSelectionQuery<R> setHibernateFlushMode(FlushMode flushMode);
 
 	@Override
-	SqmSelectionQuery setCacheMode(CacheMode cacheMode);
+	SqmSelectionQuery<R> setCacheMode(CacheMode cacheMode);
 
 	@Override
-	SqmSelectionQuery setCacheable(boolean cacheable);
+	SqmSelectionQuery<R> setCacheable(boolean cacheable);
 
 	@Override
-	SqmSelectionQuery setCacheRegion(String cacheRegion);
+	SqmSelectionQuery<R> setCacheRegion(String cacheRegion);
 
 	@Override
-	SqmSelectionQuery setTimeout(int timeout);
+	SqmSelectionQuery<R> setTimeout(int timeout);
 
 	@Override
-	SqmSelectionQuery setFetchSize(int fetchSize);
+	SqmSelectionQuery<R> setFetchSize(int fetchSize);
 
 	@Override
-	SqmSelectionQuery setReadOnly(boolean readOnly);
+	SqmSelectionQuery<R> setReadOnly(boolean readOnly);
 }

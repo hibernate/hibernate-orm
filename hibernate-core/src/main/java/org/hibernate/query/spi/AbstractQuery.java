@@ -34,7 +34,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.HEMLogging;
 import org.hibernate.jpa.AvailableHints;
-import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
@@ -77,8 +76,6 @@ import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_LOCK_TIMEOUT;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_QUERY_TIMEOUT;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_CACHE_RETRIEVE_MODE;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_CACHE_STORE_MODE;
-import static org.hibernate.jpa.SpecHints.HINT_SPEC_FETCH_GRAPH;
-import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOAD_GRAPH;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOCK_SCOPE;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOCK_TIMEOUT;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_QUERY_TIMEOUT;
@@ -87,7 +84,7 @@ import static org.hibernate.jpa.SpecHints.HINT_SPEC_QUERY_TIMEOUT;
  * @author Steve Ebersole
  */
 public abstract class AbstractQuery<R>
-		extends AbstractSelectionQuery
+		extends AbstractSelectionQuery<R>
 		implements QueryImplementor<R> {
 	protected static final EntityManagerMessageLogger log = HEMLogging.messageLogger( AbstractQuery.class );
 

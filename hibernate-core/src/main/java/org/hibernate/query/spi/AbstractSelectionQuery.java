@@ -59,9 +59,9 @@ import static org.hibernate.jpa.QueryHints.HINT_READONLY;
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractSelectionQuery
+public abstract class AbstractSelectionQuery<R>
 		extends AbstractCommonQueryContract
-		implements SelectionQuery, DomainQueryExecutionContext {
+		implements SelectionQuery<R>, DomainQueryExecutionContext {
 
 	private Callback callback;
 
@@ -115,11 +115,11 @@ public abstract class AbstractSelectionQuery
 	private CacheMode sessionCacheMode;
 
 	@Override
-	public List list() {
+	public List<R> list() {
 		beforeQuery();
 		boolean success = false;
 		try {
-			final List result = doList();
+			final List<R> result = doList();
 			success = true;
 			return result;
 		}
@@ -180,19 +180,19 @@ public abstract class AbstractSelectionQuery
 		return lockMode != null && lockMode.greaterThan( LockMode.READ );
 	}
 
-	protected abstract List doList();
+	protected abstract List<R> doList();
 
 	@Override
-	public ScrollableResultsImplementor scroll() {
+	public ScrollableResultsImplementor<R> scroll() {
 		return scroll( getSession().getFactory().getJdbcServices().getJdbcEnvironment().getDialect().defaultScrollMode() );
 	}
 
 	@Override
-	public ScrollableResultsImplementor scroll(ScrollMode scrollMode) {
+	public ScrollableResultsImplementor<R> scroll(ScrollMode scrollMode) {
 		return doScroll( scrollMode );
 	}
 
-	protected abstract ScrollableResultsImplementor doScroll(ScrollMode scrollMode);
+	protected abstract ScrollableResultsImplementor<R> doScroll(ScrollMode scrollMode);
 
 	@SuppressWarnings( {"unchecked", "rawtypes"} )
 	@Override
@@ -206,14 +206,14 @@ public abstract class AbstractSelectionQuery
 	}
 
 	@Override
-	public Object uniqueResult() {
+	public R uniqueResult() {
 		return uniqueElement( list() );
 	}
 
 	@Override
-	public Object getSingleResult() {
+	public R getSingleResult() {
 		try {
-			final List<?> list = list();
+			final List<R> list = list();
 			if ( list.isEmpty() ) {
 				throw new NoResultException( "No result found for query" );
 			}
@@ -225,12 +225,12 @@ public abstract class AbstractSelectionQuery
 	}
 
 	@SuppressWarnings("WeakerAccess")
-	protected static Object uniqueElement(List<?> list) throws NonUniqueResultException {
+	protected static <T> T uniqueElement(List<T> list) throws NonUniqueResultException {
 		int size = list.size();
 		if ( size == 0 ) {
 			return null;
 		}
-		final Object first = list.get( 0 );
+		final T first = list.get( 0 );
 		// todo (6.0) : add a setting here to control whether to perform this validation or not
 		for ( int i = 1; i < size; i++ ) {
 			if ( list.get( i ) != first ) {
@@ -240,9 +240,8 @@ public abstract class AbstractSelectionQuery
 		return first;
 	}
 
-	@SuppressWarnings("rawtypes")
 	@Override
-	public Optional uniqueResultOptional() {
+	public Optional<R> uniqueResultOptional() {
 		return Optional.ofNullable( uniqueResult() );
 	}
 
@@ -279,13 +278,13 @@ public abstract class AbstractSelectionQuery
 	}
 
 	@Override
-	public SelectionQuery setFlushMode(FlushModeType flushMode) {
+	public SelectionQuery<R> setFlushMode(FlushModeType flushMode) {
 		getQueryOptions().setFlushMode( FlushMode.fromJpaFlushMode( flushMode ) );
 		return this;
 	}
 
 	@Override
-	public SelectionQuery setMaxResults(int maxResult) {
+	public SelectionQuery<R> setMaxResults(int maxResult) {
 		if ( maxResult < 0 ) {
 			throw new IllegalArgumentException( "max-results cannot be negative" );
 		}
@@ -298,12 +297,12 @@ public abstract class AbstractSelectionQuery
 	}
 
 	@Override
-	public SelectionQuery setFirstResult(int startPosition) {
+	public SelectionQuery<R> setFirstResult(int startPosition) {
 		return null;
 	}
 
 	@Override
-	public SelectionQuery setHint(String hintName, Object value) {
+	public SelectionQuery<R> setHint(String hintName, Object value) {
 		super.setHint( hintName, value );
 		return this;
 	}
@@ -319,7 +318,7 @@ public abstract class AbstractSelectionQuery
 	 *
 	 * @see #setHibernateLockMode
 	 */
-	public SelectionQuery setLockMode(LockModeType lockMode) {
+	public SelectionQuery<R> setLockMode(LockModeType lockMode) {
 		setHibernateLockMode( LockModeTypeHelper.getLockMode( lockMode ) );
 		return this;
 	}
@@ -327,7 +326,7 @@ public abstract class AbstractSelectionQuery
 	/**
 	 * Specify the root LockMode for the query
 	 */
-	public SelectionQuery setHibernateLockMode(LockMode lockMode) {
+	public SelectionQuery<R> setHibernateLockMode(LockMode lockMode) {
 		getLockOptions().setLockMode( lockMode );
 		return this;
 	}
@@ -335,7 +334,7 @@ public abstract class AbstractSelectionQuery
 	/**
 	 * Specify a LockMode to apply to a specific alias defined in the query
 	 */
-	public SelectionQuery setAliasSpecificLockMode(String alias, LockMode lockMode) {
+	public SelectionQuery<R> setAliasSpecificLockMode(String alias, LockMode lockMode) {
 		getLockOptions().setAliasSpecificLockMode( alias, lockMode );
 		return this;
 	}
@@ -343,7 +342,7 @@ public abstract class AbstractSelectionQuery
 	/**
 	 * Specifies whether follow-on locking should be applied?
 	 */
-	public SelectionQuery setFollowOnLocking(boolean enable) {
+	public SelectionQuery<R> setFollowOnLocking(boolean enable) {
 		getLockOptions().setFollowOnLocking( enable );
 		return this;
 	}
@@ -385,7 +384,7 @@ public abstract class AbstractSelectionQuery
 	}
 
 	@Override
-	public SelectionQuery setFetchSize(int fetchSize) {
+	public SelectionQuery<R> setFetchSize(int fetchSize) {
 		getQueryOptions().setFetchSize( fetchSize );
 		return this;
 	}
@@ -398,7 +397,7 @@ public abstract class AbstractSelectionQuery
 	}
 
 	@Override
-	public SelectionQuery setReadOnly(boolean readOnly) {
+	public SelectionQuery<R> setReadOnly(boolean readOnly) {
 		getQueryOptions().setReadOnly( readOnly );
 		return this;
 	}
@@ -408,7 +407,7 @@ public abstract class AbstractSelectionQuery
 	}
 
 	@Override
-	public SelectionQuery setCacheMode(CacheMode cacheMode) {
+	public SelectionQuery<R> setCacheMode(CacheMode cacheMode) {
 		getQueryOptions().setCacheMode( cacheMode );
 		return this;
 	}
@@ -419,7 +418,7 @@ public abstract class AbstractSelectionQuery
 	}
 
 	@Override
-	public SelectionQuery setCacheable(boolean cacheable) {
+	public SelectionQuery<R> setCacheable(boolean cacheable) {
 		getQueryOptions().setResultCachingEnabled( cacheable );
 		return this;
 	}
@@ -430,7 +429,7 @@ public abstract class AbstractSelectionQuery
 	}
 
 	@Override
-	public SelectionQuery setCacheRegion(String regionName) {
+	public SelectionQuery<R> setCacheRegion(String regionName) {
 		getQueryOptions().setResultCacheRegionName( regionName );
 		return this;
 	}
@@ -440,242 +439,242 @@ public abstract class AbstractSelectionQuery
 	// covariance
 
 	@Override
-	public SelectionQuery setHibernateFlushMode(FlushMode flushMode) {
+	public SelectionQuery<R> setHibernateFlushMode(FlushMode flushMode) {
 		super.setHibernateFlushMode( flushMode );
 		return this;
 	}
 
 	@Override
-	public SelectionQuery setTimeout(int timeout) {
+	public SelectionQuery<R> setTimeout(int timeout) {
 		super.setTimeout( timeout );
 		return this;
 	}
 
 
 	@Override
-	public SelectionQuery setParameter(String name, Object value) {
+	public SelectionQuery<R> setParameter(String name, Object value) {
 		super.setParameter( name, value );
 		return this;
 	}
 
 	@Override
-	public <P> SelectionQuery setParameter(String name, P value, Class<P> javaType) {
+	public <P> SelectionQuery<R> setParameter(String name, P value, Class<P> javaType) {
 		super.setParameter( name, value, javaType );
 		return this;
 	}
 
 	@Override
-	public <P> SelectionQuery setParameter(String name, P value, BindableType<P> type) {
+	public <P> SelectionQuery<R> setParameter(String name, P value, BindableType<P> type) {
 		super.setParameter( name, value, type );
 		return this;
 	}
 
 	@Override
-	public SelectionQuery setParameter(String name, Instant value, TemporalType temporalType) {
+	public SelectionQuery<R> setParameter(String name, Instant value, TemporalType temporalType) {
 		super.setParameter( name, value, temporalType );
 		return this;
 	}
 
 	@Override
-	public SelectionQuery setParameter(int position, Object value) {
+	public SelectionQuery<R> setParameter(int position, Object value) {
 		super.setParameter( position, value );
 		return this;
 	}
 
 	@Override
-	public <P> SelectionQuery setParameter(int position, P value, Class<P> javaType) {
+	public <P> SelectionQuery<R> setParameter(int position, P value, Class<P> javaType) {
 		super.setParameter( position, value, javaType );
 		return this;
 	}
 
 	@Override
-	public <P> SelectionQuery setParameter(int position, P value, BindableType<P> type) {
+	public <P> SelectionQuery<R> setParameter(int position, P value, BindableType<P> type) {
 		super.setParameter( position, value, type );
 		return this;
 	}
 
 	@Override
-	public SelectionQuery setParameter(int position, Instant value, TemporalType temporalType) {
+	public SelectionQuery<R> setParameter(int position, Instant value, TemporalType temporalType) {
 		super.setParameter( position, value, temporalType );
 		return this;
 	}
 
 	@Override
-	public <P> SelectionQuery setParameter(QueryParameter<P> parameter, P value) {
+	public <P> SelectionQuery<R> setParameter(QueryParameter<P> parameter, P value) {
 		super.setParameter( parameter, value );
 		return this;
 	}
 
 	@Override
-	public <P> SelectionQuery setParameter(QueryParameter<P> parameter, P value, Class<P> javaType) {
+	public <P> SelectionQuery<R> setParameter(QueryParameter<P> parameter, P value, Class<P> javaType) {
 		super.setParameter( parameter, value, javaType );
 		return this;
 	}
 
 	@Override
-	public <P> SelectionQuery setParameter(QueryParameter<P> parameter, P value, BindableType<P> type) {
+	public <P> SelectionQuery<R> setParameter(QueryParameter<P> parameter, P value, BindableType<P> type) {
 		super.setParameter( parameter, value, type );
 		return this;
 	}
 
 	@Override
-	public <P> SelectionQuery setParameter(Parameter<P> parameter, P value) {
+	public <P> SelectionQuery<R> setParameter(Parameter<P> parameter, P value) {
 		super.setParameter( parameter, value );
 		return this;
 	}
 
 	@Override
-	public SelectionQuery setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType) {
+	public SelectionQuery<R> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType) {
 		super.setParameter( param, value, temporalType );
 		return this;
 	}
 
 	@Override
-	public SelectionQuery setParameter(Parameter<Date> param, Date value, TemporalType temporalType) {
+	public SelectionQuery<R> setParameter(Parameter<Date> param, Date value, TemporalType temporalType) {
 		super.setParameter( param, value, temporalType );
 		return this;
 	}
 
 	@Override
-	public SelectionQuery setParameter(String name, Calendar value, TemporalType temporalType) {
+	public SelectionQuery<R> setParameter(String name, Calendar value, TemporalType temporalType) {
 		super.setParameter( name, value, temporalType );
 		return this;
 	}
 
 	@Override
-	public SelectionQuery setParameter(String name, Date value, TemporalType temporalType) {
+	public SelectionQuery<R> setParameter(String name, Date value, TemporalType temporalType) {
 		super.setParameter( name, value, temporalType );
 		return this;
 	}
 
 	@Override
-	public SelectionQuery setParameter(int position, Calendar value, TemporalType temporalType) {
+	public SelectionQuery<R> setParameter(int position, Calendar value, TemporalType temporalType) {
 		super.setParameter( position, value, temporalType );
 		return this;
 	}
 
 	@Override
-	public SelectionQuery setParameter(int position, Date value, TemporalType temporalType) {
+	public SelectionQuery<R> setParameter(int position, Date value, TemporalType temporalType) {
 		super.setParameter( position, value, temporalType );
 		return this;
 	}
 
 	@Override
-	public SelectionQuery setParameterList(String name, Collection values) {
+	public SelectionQuery<R> setParameterList(String name, Collection values) {
 		super.setParameterList( name, values );
 		return this;
 	}
 
 	@Override
-	public <P> SelectionQuery setParameterList(String name, Collection<? extends P> values, Class<P> javaType) {
+	public <P> SelectionQuery<R> setParameterList(String name, Collection<? extends P> values, Class<P> javaType) {
 		super.setParameterList( name, values, javaType );
 		return this;
 	}
 
 	@Override
-	public <P> SelectionQuery setParameterList(String name, Collection<? extends P> values, BindableType<P> type) {
+	public <P> SelectionQuery<R> setParameterList(String name, Collection<? extends P> values, BindableType<P> type) {
 		super.setParameterList( name, values, type );
 		return this;
 	}
 
 	@Override
-	public SelectionQuery setParameterList(String name, Object[] values) {
+	public SelectionQuery<R> setParameterList(String name, Object[] values) {
 		super.setParameterList( name, values );
 		return this;
 	}
 
 	@Override
-	public <P> SelectionQuery setParameterList(String name, P[] values, Class<P> javaType) {
+	public <P> SelectionQuery<R> setParameterList(String name, P[] values, Class<P> javaType) {
 		super.setParameterList( name, values, javaType );
 		return this;
 	}
 
 	@Override
-	public <P> SelectionQuery setParameterList(String name, P[] values, BindableType<P> type) {
+	public <P> SelectionQuery<R> setParameterList(String name, P[] values, BindableType<P> type) {
 		super.setParameterList( name, values, type );
 		return this;
 	}
 
 	@Override
-	public SelectionQuery setParameterList(int position, Collection values) {
+	public SelectionQuery<R> setParameterList(int position, Collection values) {
 		super.setParameterList( position, values );
 		return this;
 	}
 
 	@Override
-	public <P> SelectionQuery setParameterList(int position, Collection<? extends P> values, Class<P> javaType) {
+	public <P> SelectionQuery<R> setParameterList(int position, Collection<? extends P> values, Class<P> javaType) {
 		super.setParameterList( position, values, javaType );
 		return this;
 	}
 
 	@Override
-	public <P> SelectionQuery setParameterList(int position, Collection<? extends P> values, BindableType<P> type) {
+	public <P> SelectionQuery<R> setParameterList(int position, Collection<? extends P> values, BindableType<P> type) {
 		super.setParameterList( position, values, type );
 		return this;
 	}
 
 	@Override
-	public SelectionQuery setParameterList(int position, Object[] values) {
+	public SelectionQuery<R> setParameterList(int position, Object[] values) {
 		super.setParameterList( position, values );
 		return this;
 	}
 
 	@Override
-	public <P> SelectionQuery setParameterList(int position, P[] values, Class<P> javaType) {
+	public <P> SelectionQuery<R> setParameterList(int position, P[] values, Class<P> javaType) {
 		super.setParameterList( position, values, javaType );
 		return this;
 	}
 
 	@Override
-	public <P> SelectionQuery setParameterList(int position, P[] values, BindableType<P> type) {
+	public <P> SelectionQuery<R> setParameterList(int position, P[] values, BindableType<P> type) {
 		super.setParameterList( position, values, type );
 		return this;
 	}
 
 	@Override
-	public <P> SelectionQuery setParameterList(QueryParameter<P> parameter, Collection<? extends P> values) {
+	public <P> SelectionQuery<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values) {
 		super.setParameterList( parameter, values );
 		return this;
 	}
 
 	@Override
-	public <P> SelectionQuery setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Class<P> javaType) {
+	public <P> SelectionQuery<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Class<P> javaType) {
 		super.setParameterList( parameter, values, javaType );
 		return this;
 	}
 
 	@Override
-	public <P> SelectionQuery setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, BindableType<P> type) {
+	public <P> SelectionQuery<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, BindableType<P> type) {
 		super.setParameterList( parameter, values, type );
 		return this;
 	}
 
 	@Override
-	public <P> SelectionQuery setParameterList(QueryParameter<P> parameter, P[] values) {
+	public <P> SelectionQuery<R> setParameterList(QueryParameter<P> parameter, P[] values) {
 		super.setParameterList( parameter, values );
 		return this;
 	}
 
 	@Override
-	public <P> SelectionQuery setParameterList(QueryParameter<P> parameter, P[] values, Class<P> javaType) {
+	public <P> SelectionQuery<R> setParameterList(QueryParameter<P> parameter, P[] values, Class<P> javaType) {
 		super.setParameterList( parameter, values, javaType );
 		return this;
 	}
 
 	@Override
-	public <P> SelectionQuery setParameterList(QueryParameter<P> parameter, P[] values, BindableType<P> type) {
+	public <P> SelectionQuery<R> setParameterList(QueryParameter<P> parameter, P[] values, BindableType<P> type) {
 		super.setParameterList( parameter, values, type );
 		return this;
 	}
 
 	@Override
-	public SelectionQuery setProperties(Map map) {
+	public SelectionQuery<R> setProperties(Map map) {
 		super.setProperties( map );
 		return this;
 	}
 
 	@Override
-	public SelectionQuery setProperties(Object bean) {
+	public SelectionQuery<R> setProperties(Object bean) {
 		super.setProperties( bean );
 		return this;
 	}

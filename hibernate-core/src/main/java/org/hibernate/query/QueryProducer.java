@@ -168,7 +168,19 @@ public interface QueryProducer {
 	 * @throws IllegalSelectQueryException if the given HQL query
 	 * is an insert, update or delete query
 	 */
-	SelectionQuery createSelectQuery(String hqlString);
+	SelectionQuery<?> createSelectQuery(String hqlString);
+
+	/**
+	 * Create a {@link SelectionQuery} reference for the given HQL.
+	 *
+	 * Only valid for select queries
+	 *
+	 * @see jakarta.persistence.EntityManager#createQuery(String)
+	 *
+	 * @throws IllegalSelectQueryException if the given HQL query
+	 * is an insert, update or delete query
+	 */
+	<R> SelectionQuery<R> createSelectQuery(String hqlString, Class<R> resultType);
 
 	/**
 	 * Create a MutationQuery reference for the given HQL insert,

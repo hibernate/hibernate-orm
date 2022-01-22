@@ -11,6 +11,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.query.SelectionQuery;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
+import org.hibernate.testing.orm.domain.contacts.Contact;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -23,7 +24,17 @@ import org.junit.jupiter.api.Test;
 @SessionFactory
 public class BasicUntypedQueryTests {
 	@Test
-	public void untypedEntitySelectTest(SessionFactoryScope scope) {
+	public void typedEntitySelectTest(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			checkResults(
+					session.createSelectQuery( "select c from Contact c", Contact.class ),
+					session
+			);
+		} );
+	}
+
+	@Test
+	public void rawEntitySelectTest(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			checkResults(
 					session.createSelectQuery( "select c from Contact c" ),
@@ -32,7 +43,31 @@ public class BasicUntypedQueryTests {
 		} );
 	}
 
-	private void checkResults(SelectionQuery query, SessionImplementor session) {
+	@Test
+	public void rawScalarSelectTest(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			checkResults(
+					session.createSelectQuery( "select c.name from Contact c" ),
+					session
+			);
+		} );
+	}
+
+	@Test
+	public void typedScalarSelectTest(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			checkResults(
+					session.createSelectQuery( "select c.name from Contact c", Contact.Name.class ),
+					session
+			);
+			checkResults(
+					session.createSelectQuery( "select c.name.first from Contact c", String.class ),
+					session
+			);
+		} );
+	}
+
+	private void checkResults(SelectionQuery<?> query, SessionImplementor session) {
 		query.list();
 		query.getResultList();
 		query.uniqueResult();
@@ -40,15 +75,5 @@ public class BasicUntypedQueryTests {
 		query.scroll().close();
 		query.scroll( ScrollMode.SCROLL_SENSITIVE ).close();
 		query.stream().close();
-	}
-
-	@Test
-	public void untypedScalarSelectTest(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			checkResults(
-					session.createSelectQuery( "select c.name from Contact c" ),
-					session
-			);
-		} );
 	}
 }

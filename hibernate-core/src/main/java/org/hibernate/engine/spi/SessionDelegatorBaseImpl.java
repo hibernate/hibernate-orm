@@ -495,8 +495,13 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public SelectionQuery createSelectQuery(String hqlString) {
+	public SelectionQuery<?> createSelectQuery(String hqlString) {
 		return queryDelegate().createSelectQuery( hqlString );
+	}
+
+	@Override
+	public <R> SelectionQuery<R> createSelectQuery(String hqlString, Class<R> resultType) {
+		return queryDelegate().createSelectQuery( hqlString, resultType );
 	}
 
 	@Override

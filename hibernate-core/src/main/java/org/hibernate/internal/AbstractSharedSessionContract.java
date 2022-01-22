@@ -11,6 +11,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Locale;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.function.Function;
@@ -56,6 +57,7 @@ import org.hibernate.query.IllegalNamedQueryOptionsException;
 import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.MutationQuery;
 import org.hibernate.query.Query;
+import org.hibernate.query.QueryTypeMismatchException;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.UnknownNamedQueryException;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
@@ -71,7 +73,7 @@ import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
 import org.hibernate.query.sqm.SqmSelectionQuery;
 import org.hibernate.query.sqm.internal.QuerySqmImpl;
-import org.hibernate.query.sqm.internal.SqmSelectQueryImpl;
+import org.hibernate.query.sqm.internal.SqmSelectionQueryImpl;
 import org.hibernate.query.sqm.tree.SqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
@@ -665,7 +667,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@Override
-	public SelectionQuery createSelectQuery(String hqlString) {
+	public SelectionQuery<?> createSelectQuery(String hqlString) {
 		checkOpen();
 		pulseTransactionCoordinator();
 		delayedAfterCompletion();
@@ -682,7 +684,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 				throw new IllegalSelectQueryException( "Expecting a selection query, but found `" + hqlString + "`" );
 			}
 
-			final SqmSelectionQuery query = new SqmSelectQueryImpl( hqlString, hqlInterpretation, this );
+			final SqmSelectionQuery<?> query = new SqmSelectionQueryImpl<>( hqlString, hqlInterpretation, this );
 			query.setComment( hqlString );
 
 			applyQuerySettingsAndHints( query );
@@ -694,6 +696,27 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			throw getExceptionConverter().convert( e );
 		}
 	}
+
+	@Override
+	public <R> SelectionQuery<R> createSelectQuery(String hqlString, Class<R> expectedResultType) {
+		final SelectionQuery<?> selectQuery = createSelectQuery( hqlString );
+		//noinspection unchecked
+		final Class<?> resultType = ( (SqmSelectionQueryImpl<R>) selectQuery ).getResultType();
+		if ( resultType == null || expectedResultType.isAssignableFrom( resultType ) ) {
+			//noinspection unchecked
+			return (SelectionQuery<R>) selectQuery;
+		}
+
+		throw new QueryTypeMismatchException(
+				String.format(
+						Locale.ROOT,
+						"Query result-type error - expecting `%s`, but found `%s`",
+						expectedResultType.getName(),
+						resultType.getName()
+				)
+		);
+	}
+
 
 	@Override
 	public <T> QueryImplementor<T> createQuery(String queryString, Class<T> resultClass) {

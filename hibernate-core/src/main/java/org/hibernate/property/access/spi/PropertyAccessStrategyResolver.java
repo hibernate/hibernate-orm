@@ -27,7 +27,7 @@ public interface PropertyAccessStrategyResolver extends Service {
 	 * @return The resolved PropertyAccessStrategy
 	 */
 	PropertyAccessStrategy resolvePropertyAccessStrategy(
-			Class containerClass,
+			Class<?> containerClass,
 			String explicitAccessStrategyName,
 			RepresentationMode representationMode);
 }

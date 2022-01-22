@@ -25,12 +25,12 @@ import org.hibernate.property.access.internal.AbstractFieldSerialForm;
  * @author Steve Ebersole
  */
 public class GetterFieldImpl implements Getter {
-	private final Class containerClass;
+	private final Class<?> containerClass;
 	private final String propertyName;
 	private final Field field;
 	private final Method getterMethod;
 
-	public GetterFieldImpl(Class containerClass, String propertyName, Field field) {
+	public GetterFieldImpl(Class<?> containerClass, String propertyName, Field field) {
 		this.containerClass = containerClass;
 		this.propertyName = propertyName;
 		this.field = field;
@@ -51,22 +51,22 @@ public class GetterFieldImpl implements Getter {
 			Class<?> type = field.getType();
 			if ( type.isPrimitive() ) {
 				if ( type == Boolean.TYPE ) {
-					return Boolean.valueOf( field.getBoolean( owner ) );
+					return field.getBoolean(owner);
 				}
 				else if ( type == Byte.TYPE ) {
-					return Byte.valueOf( field.getByte( owner ) );
+					return field.getByte(owner);
 				}
 				else if ( type == Character.TYPE ) {
-					return Character.valueOf( field.getChar( owner ) );
+					return field.getChar(owner);
 				}
 				else if ( type == Integer.TYPE ) {
-					return Integer.valueOf( field.getInt( owner ) );
+					return field.getInt(owner);
 				}
 				else if ( type == Long.TYPE ) {
-					return Long.valueOf( field.getLong( owner ) );
+					return field.getLong(owner);
 				}
 				else if ( type == Short.TYPE ) {
-					return Short.valueOf( field.getShort( owner ) );
+					return field.getShort(owner);
 				}
 			}
 			return field.get( owner );
@@ -121,10 +121,10 @@ public class GetterFieldImpl implements Getter {
 	}
 
 	private static class SerialForm extends AbstractFieldSerialForm implements Serializable {
-		private final Class containerClass;
+		private final Class<?> containerClass;
 		private final String propertyName;
 
-		private SerialForm(Class containerClass, String propertyName, Field field) {
+		private SerialForm(Class<?> containerClass, String propertyName, Field field) {
 			super( field );
 			this.containerClass = containerClass;
 			this.propertyName = propertyName;

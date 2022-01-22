@@ -60,7 +60,7 @@ public interface LazyInitializer {
 	 *
 	 * @return The actual entity class.
 	 */
-	Class getPersistentClass();
+	Class<?> getPersistentClass();
 
 	/**
 	 * Is the proxy uninitialized?

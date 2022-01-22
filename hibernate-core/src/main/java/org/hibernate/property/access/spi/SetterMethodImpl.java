@@ -23,13 +23,13 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
 public class SetterMethodImpl implements Setter {
 	private static final CoreMessageLogger LOG = messageLogger( SetterMethodImpl.class );
 
-	private final Class containerClass;
+	private final Class<?> containerClass;
 	private final String propertyName;
 	private final Method setterMethod;
 
 	private final boolean isPrimitive;
 
-	public SetterMethodImpl(Class containerClass, String propertyName, Method setterMethod) {
+	public SetterMethodImpl(Class<?> containerClass, String propertyName, Method setterMethod) {
 		this.containerClass = containerClass;
 		this.propertyName = propertyName;
 		this.setterMethod = setterMethod;
@@ -92,7 +92,7 @@ public class SetterMethodImpl implements Setter {
 				);
 			}
 			else {
-				final Class expectedType = setterMethod.getParameterTypes()[0];
+				final Class<?> expectedType = setterMethod.getParameterTypes()[0];
 				LOG.illegalPropertySetterArgument( containerClass.getName(), propertyName );
 				LOG.expectedType( expectedType.getName(), value == null ? null : value.getClass().getName() );
 				throw new PropertySetterAccessException(
@@ -122,14 +122,14 @@ public class SetterMethodImpl implements Setter {
 	}
 
 	private static class SerialForm implements Serializable {
-		private final Class containerClass;
+		private final Class<?> containerClass;
 		private final String propertyName;
 
-		private final Class declaringClass;
+		private final Class<?> declaringClass;
 		private final String methodName;
-		private final Class argumentType;
+		private final Class<?> argumentType;
 
-		private SerialForm(Class containerClass, String propertyName, Method method) {
+		private SerialForm(Class<?> containerClass, String propertyName, Method method) {
 			this.containerClass = containerClass;
 			this.propertyName = propertyName;
 			this.declaringClass = method.getDeclaringClass();
@@ -141,7 +141,6 @@ public class SetterMethodImpl implements Setter {
 			return new SetterMethodImpl( containerClass, propertyName, resolveMethod() );
 		}
 
-		@SuppressWarnings("unchecked")
 		private Method resolveMethod() {
 			try {
 				final Method method = declaringClass.getDeclaredMethod( methodName, argumentType );

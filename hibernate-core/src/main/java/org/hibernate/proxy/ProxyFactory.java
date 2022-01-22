@@ -46,8 +46,8 @@ public interface ProxyFactory {
 	 */
 	void postInstantiate(
 			String entityName,
-			Class persistentClass,
-			Set<Class> interfaces,
+			Class<?> persistentClass,
+			Set<Class<?>> interfaces,
 			Method getIdentifierMethod,
 			Method setIdentifierMethod,
 			CompositeType componentIdType) throws HibernateException;

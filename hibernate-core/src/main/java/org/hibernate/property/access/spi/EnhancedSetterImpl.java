@@ -14,7 +14,6 @@ import org.hibernate.engine.spi.CompositeOwner;
 import org.hibernate.engine.spi.CompositeTracker;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.property.access.internal.AbstractFieldSerialForm;
 
 /**
@@ -29,8 +28,7 @@ import org.hibernate.property.access.internal.AbstractFieldSerialForm;
 public class EnhancedSetterImpl extends SetterFieldImpl {
 	private final String propertyName;
 
-	@SuppressWarnings("rawtypes")
-	public EnhancedSetterImpl(Class containerClass, String propertyName, Field field) {
+	public EnhancedSetterImpl(Class<?> containerClass, String propertyName, Field field) {
 		super( containerClass, propertyName, field );
 		this.propertyName = propertyName;
 	}

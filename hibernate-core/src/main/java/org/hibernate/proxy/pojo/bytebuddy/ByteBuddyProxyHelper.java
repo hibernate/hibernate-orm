@@ -58,12 +58,11 @@ public class ByteBuddyProxyHelper implements Serializable {
 	/**
 	 * Do not remove: used by Quarkus
 	 */
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public DynamicType.Unloaded<?> buildUnloadedProxy(final Class persistentClass, final Class[] interfaces) {
+	public DynamicType.Unloaded<?> buildUnloadedProxy(final Class<?> persistentClass, final Class<?>[] interfaces) {
 		return byteBuddyState.make( proxyBuilder( persistentClass, interfaces ) );
 	}
 
-	private Function<ByteBuddy, DynamicType.Builder<?>> proxyBuilder(Class persistentClass, Class[] interfaces) {
+	private Function<ByteBuddy, DynamicType.Builder<?>> proxyBuilder(Class<?> persistentClass, Class<?>[] interfaces) {
 		return byteBuddy -> byteBuddy
 				.ignore( byteBuddyState.getProxyDefinitionHelpers().getGroovyGetMetaClassFilter() )
 				.with( new NamingStrategy.SuffixingRandom( PROXY_NAMING_SUFFIX, new NamingStrategy.SuffixingRandom.BaseNameResolver.ForFixedValue( persistentClass.getName() ) ) )
@@ -93,7 +92,7 @@ public class ByteBuddyProxyHelper implements Serializable {
 
 		// note: interface is assumed to already contain HibernateProxy.class
 		try {
-			final Class proxyClass = buildProxy(
+			final Class<?> proxyClass = buildProxy(
 					serializableProxy.getPersistentClass(),
 					serializableProxy.getInterfaces()
 			);

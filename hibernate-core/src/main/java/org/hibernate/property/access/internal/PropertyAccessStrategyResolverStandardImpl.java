@@ -30,7 +30,7 @@ public class PropertyAccessStrategyResolverStandardImpl implements PropertyAcces
 
 	@Override
 	public PropertyAccessStrategy resolvePropertyAccessStrategy(
-			Class containerClass,
+			Class<?> containerClass,
 			String explicitAccessStrategyName,
 			RepresentationMode representationMode) {
 

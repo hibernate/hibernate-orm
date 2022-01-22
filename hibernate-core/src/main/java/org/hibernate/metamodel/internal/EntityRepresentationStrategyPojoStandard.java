@@ -182,10 +182,10 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 			BytecodeProvider bytecodeProvider,
 			RuntimeModelCreationContext creationContext) {
 
-		final Set<Class> proxyInterfaces = new java.util.HashSet<>();
+		final Set<Class<?>> proxyInterfaces = new java.util.HashSet<>();
 
-		final Class mappedClass = mappedJtd.getJavaTypeClass();
-		Class proxyInterface;
+		final Class<?> mappedClass = mappedJtd.getJavaTypeClass();
+		Class<?> proxyInterface;
 		if ( proxyJtd != null ) {
 			proxyInterface = proxyJtd.getJavaTypeClass();
 		}
@@ -206,12 +206,11 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 			proxyInterfaces.add( mappedClass );
 		}
 
-		//noinspection unchecked
 		final Iterator<Subclass> subclasses = bootDescriptor.getSubclassIterator();
 		while ( subclasses.hasNext() ) {
 			final Subclass subclass = subclasses.next();
-			final Class subclassProxy = subclass.getProxyInterface();
-			final Class subclassClass = subclass.getMappedClass();
+			final Class<?> subclassProxy = subclass.getProxyInterface();
+			final Class<?> subclassClass = subclass.getMappedClass();
 			if ( subclassProxy != null && !subclassClass.equals( subclassProxy ) ) {
 				if ( !subclassProxy.isInterface() ) {
 					throw new MappingException(
@@ -224,8 +223,8 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 
 		proxyInterfaces.add( HibernateProxy.class );
 
-		Iterator properties = bootDescriptor.getPropertyIterator();
-		Class clazz = bootDescriptor.getMappedClass();
+		Iterator<?> properties = bootDescriptor.getPropertyIterator();
+		Class<?> clazz = bootDescriptor.getMappedClass();
 		final Method idGetterMethod;
 		final Method idSetterMethod;
 
@@ -294,8 +293,8 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 	private ReflectionOptimizer resolveReflectionOptimizer(
 			PersistentClass bootType,
 			BytecodeProvider bytecodeProvider,
-			@SuppressWarnings("unused") SessionFactoryImplementor sessionFactory) {
-		final Class javaTypeToReflect;
+			SessionFactoryImplementor sessionFactory) {
+		final Class<?> javaTypeToReflect;
 		if ( proxyFactory != null ) {
 			assert proxyJtd != null;
 			javaTypeToReflect = proxyJtd.getJavaTypeClass();
@@ -306,13 +305,11 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 
 		final List<String> getterNames = new ArrayList<>();
 		final List<String> setterNames = new ArrayList<>();
-		final List<Class> getterTypes = new ArrayList<>();
+		final List<Class<?>> getterTypes = new ArrayList<>();
 
 		boolean foundCustomAccessor = false;
 
-		//noinspection unchecked
 		final Iterator<Property> itr = bootType.getPropertyClosureIterator();
-		int i = 0;
 		while ( itr.hasNext() ) {
 			//TODO: redesign how PropertyAccessors are acquired...
 			final Property property = itr.next();
@@ -328,8 +325,6 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 			getterTypes.add( propertyAccess.getGetter().getReturnTypeClass() );
 
 			setterNames.add( propertyAccess.getSetter().getMethodName() );
-
-			i++;
 		}
 
 		if ( foundCustomAccessor || ! Environment.useReflectionOptimizer() ) {

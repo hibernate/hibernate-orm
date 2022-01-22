@@ -39,11 +39,11 @@ public class CompositionBasedCompositionAttribute extends AbstractCompositionAtt
 	@Override
 	protected EntityPersister locateOwningPersister() {
 		final AbstractCompositionAttribute source = (AbstractCompositionAttribute) getSource();
-		if ( EntityDefinition.class.isInstance( source.getSource() ) ) {
-			return EntityDefinition.class.cast( source.getSource() ).getEntityPersister();
+		if (source.getSource() instanceof EntityDefinition) {
+			return ( (EntityDefinition) source.getSource() ).getEntityPersister();
 		}
 		else {
-			return AbstractCompositionAttribute.class.cast( source.getSource() ).locateOwningPersister();
+			return ( (AbstractCompositionAttribute) source.getSource() ).locateOwningPersister();
 		}
 	}
 }

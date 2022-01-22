@@ -22,9 +22,9 @@ import org.hibernate.metamodel.RepresentationMode;
  * @author Steve Ebersole
  */
 public class EntityTuplizerFactory implements Serializable {
-	public static final Class[] ENTITY_TUP_CTOR_SIG = new Class[] { EntityMetamodel.class, PersistentClass.class };
+	public static final Class<?>[] ENTITY_TUP_CTOR_SIG = new Class[] { EntityMetamodel.class, PersistentClass.class };
 
-	private Map<RepresentationMode,Class<? extends EntityTuplizer>> defaultImplClassByMode = buildBaseMapping();
+	private final Map<RepresentationMode,Class<? extends EntityTuplizer>> defaultImplClassByMode = buildBaseMapping();
 
 	/**
 	 * Method allowing registration of the tuplizer class to use as default for a particular entity-mode.
@@ -53,7 +53,7 @@ public class EntityTuplizerFactory implements Serializable {
 	 * @throws HibernateException If class name cannot be resolved to a class reference, or if the
 	 * {@link Constructor#newInstance} call fails.
 	 */
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public EntityTuplizer constructTuplizer(
 			String tuplizerClassName,
 			EntityMetamodel metamodel,
@@ -92,18 +92,18 @@ public class EntityTuplizerFactory implements Serializable {
 		}
 	}
 
-	private boolean isEntityTuplizerImplementor(Class tuplizerClass) {
+	private boolean isEntityTuplizerImplementor(Class<?> tuplizerClass) {
 		return ReflectHelper.implementsInterface( tuplizerClass, EntityTuplizer.class );
 	}
 
-	private boolean hasProperConstructor(Class<? extends EntityTuplizer> tuplizerClass, Class[] constructorArgs) {
+	private boolean hasProperConstructor(Class<? extends EntityTuplizer> tuplizerClass, Class<?>[] constructorArgs) {
 		return getProperConstructor( tuplizerClass, constructorArgs ) != null
 				&& ! ReflectHelper.isAbstractClass( tuplizerClass );
 	}
 
 	private Constructor<? extends EntityTuplizer> getProperConstructor(
 			Class<? extends EntityTuplizer> clazz,
-			Class[] constructorArgs) {
+			Class<?>[] constructorArgs) {
 		Constructor<? extends EntityTuplizer> constructor = null;
 		try {
 			constructor = clazz.getDeclaredConstructor( constructorArgs );

@@ -19,5 +19,5 @@ public interface BeforeTransactionCompletionProcess {
 	 *
 	 * @param session The session on which the transaction is preparing to complete.
 	 */
-	public void doBeforeTransactionCompletion(SessionImplementor session);
+	void doBeforeTransactionCompletion(SessionImplementor session);
 }

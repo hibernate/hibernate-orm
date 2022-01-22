@@ -15,7 +15,7 @@ public interface InMemoryValueGenerationStrategy {
 	 *
 	 * @return When the value is generated.
 	 */
-	public GenerationTiming getGenerationTiming();
+	GenerationTiming getGenerationTiming();
 
 	/**
 	 * Obtain the in-VM value generator.
@@ -25,5 +25,5 @@ public interface InMemoryValueGenerationStrategy {
 	 *
 	 * @return The strategy for performing in-VM value generation
 	 */
-	public ValueGenerator getValueGenerator();
+	ValueGenerator<?> getValueGenerator();
 }

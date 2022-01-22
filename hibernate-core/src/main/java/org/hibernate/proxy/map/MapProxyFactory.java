@@ -9,7 +9,6 @@ package org.hibernate.proxy.map;
 import java.lang.reflect.Method;
 import java.util.Set;
 
-import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.ProxyFactory;
@@ -24,11 +23,11 @@ public class MapProxyFactory implements ProxyFactory {
 
 	public void postInstantiate(
 			final String entityName,
-			final Class persistentClass,
-			final Set interfaces,
+			final Class<?> persistentClass,
+			final Set<Class<?>> interfaces,
 			final Method getIdentifierMethod,
 			final Method setIdentifierMethod,
-			CompositeType componentIdType) throws HibernateException {
+			CompositeType componentIdType) {
 		this.entityName = entityName;
 	}
 

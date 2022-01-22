@@ -13,8 +13,6 @@ import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -31,16 +29,14 @@ import org.hibernate.tuple.entity.PojoEntityTuplizer;
  */
 public final class ProxyFactoryHelper {
 
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( ProxyFactoryHelper.class );
-
 	private ProxyFactoryHelper() {
 		//not meant to be instantiated
 	}
 
-	public static Set<Class> extractProxyInterfaces(final PersistentClass persistentClass, final String entityName) {
-		final Set<Class> proxyInterfaces = new java.util.HashSet<>();
-		final Class mappedClass = persistentClass.getMappedClass();
-		final Class proxyInterface = persistentClass.getProxyInterface();
+	public static Set<Class<?>> extractProxyInterfaces(final PersistentClass persistentClass, final String entityName) {
+		final Set<Class<?>> proxyInterfaces = new java.util.HashSet<>();
+		final Class<?> mappedClass = persistentClass.getMappedClass();
+		final Class<?> proxyInterface = persistentClass.getProxyInterface();
 
 		if ( proxyInterface != null && !mappedClass.equals( proxyInterface ) ) {
 			if ( !proxyInterface.isInterface() ) {
@@ -58,8 +54,8 @@ public final class ProxyFactoryHelper {
 		Iterator<Subclass> subclasses = persistentClass.getSubclassIterator();
 		while ( subclasses.hasNext() ) {
 			final Subclass subclass = subclasses.next();
-			final Class subclassProxy = subclass.getProxyInterface();
-			final Class subclassClass = subclass.getMappedClass();
+			final Class<?> subclassProxy = subclass.getProxyInterface();
+			final Class<?> subclassClass = subclass.getMappedClass();
 			if ( subclassProxy != null && !subclassClass.equals( subclassProxy ) ) {
 				if ( !subclassProxy.isInterface() ) {
 					throw new MappingException(
@@ -75,8 +71,8 @@ public final class ProxyFactoryHelper {
 	}
 
 	public static void validateProxyability(final PersistentClass persistentClass) {
-		Iterator properties = persistentClass.getPropertyIterator();
-		Class clazz = persistentClass.getMappedClass();
+		Iterator<?> properties = persistentClass.getPropertyIterator();
+		Class<?> clazz = persistentClass.getMappedClass();
 		while ( properties.hasNext() ) {
 			Property property = (Property) properties.next();
 			validateGetterSetterMethodProxyability( "Getter", property.getGetter( clazz ).getMethod() );
@@ -97,21 +93,19 @@ public final class ProxyFactoryHelper {
 		}
 	}
 
-	public static Method extractProxySetIdentifierMethod(final Setter idSetter, final Class proxyInterface) {
+	public static Method extractProxySetIdentifierMethod(final Setter idSetter, final Class<?> proxyInterface) {
 		Method idSetterMethod = idSetter == null ? null : idSetter.getMethod();
 
-		Method proxySetIdentifierMethod = idSetterMethod == null || proxyInterface == null ?
-				null :
-				ReflectHelper.getMethod( proxyInterface, idSetterMethod );
-		return proxySetIdentifierMethod;
+		return idSetterMethod == null || proxyInterface == null
+				? null
+				: ReflectHelper.getMethod( proxyInterface, idSetterMethod );
 	}
 
-	public static Method extractProxyGetIdentifierMethod(final Getter idGetter, final Class proxyInterface) {
+	public static Method extractProxyGetIdentifierMethod(final Getter idGetter, final Class<?> proxyInterface) {
 		Method idGetterMethod = idGetter == null ? null : idGetter.getMethod();
 
-		Method proxyGetIdentifierMethod = idGetterMethod == null || proxyInterface == null ?
-				null :
-				ReflectHelper.getMethod( proxyInterface, idGetterMethod );
-		return proxyGetIdentifierMethod;
+		return idGetterMethod == null || proxyInterface == null
+				? null
+				: ReflectHelper.getMethod( proxyInterface, idGetterMethod );
 	}
 }

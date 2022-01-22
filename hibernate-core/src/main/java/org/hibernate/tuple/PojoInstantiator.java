@@ -26,9 +26,9 @@ import org.hibernate.mapping.Component;
 public class PojoInstantiator implements Instantiator, Serializable {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( PojoInstantiator.class.getName() );
 
-	private transient Constructor constructor;
+	private transient Constructor<?> constructor;
 
-	private final Class mappedClass;
+	private final Class<?> mappedClass;
 	private final transient ReflectionOptimizer.InstantiationOptimizer optimizer;
 	private final boolean embeddedIdentifier;
 	private final boolean isAbstract;
@@ -38,7 +38,7 @@ public class PojoInstantiator implements Instantiator, Serializable {
 	 */
 	@Deprecated
 	public PojoInstantiator(
-			Class mappedClass,
+			Class<?> mappedClass,
 			ReflectionOptimizer.InstantiationOptimizer optimizer,
 			boolean embeddedIdentifier) {
 		this.mappedClass = mappedClass;
@@ -67,7 +67,7 @@ public class PojoInstantiator implements Instantiator, Serializable {
 	 * @deprecated (as of 6.0) See {@link PojoInstantiator}
 	 */
 	@Deprecated
-	public PojoInstantiator(Class componentClass, ReflectionOptimizer.InstantiationOptimizer optimizer) {
+	public PojoInstantiator(Class<?> componentClass, ReflectionOptimizer.InstantiationOptimizer optimizer) {
 		this.mappedClass = componentClass;
 		this.isAbstract = ReflectHelper.isAbstractClass( mappedClass );
 		this.optimizer = optimizer;

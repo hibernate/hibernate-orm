@@ -124,7 +124,7 @@ public class EntityMetamodel implements Serializable {
 	private final boolean inherited;
 	private final boolean hasSubclasses;
 	private final Set<String> subclassEntityNames;
-	private final Map<Class,String> entityNameByInheritenceClassMap;
+	private final Map<Class<?>,String> entityNameByInheritenceClassMap;
 
 	private final BytecodeEnhancementMetadata bytecodeEnhancementMetadata;
 
@@ -290,7 +290,7 @@ public class EntityMetamodel implements Serializable {
 			if ( pair.getInMemoryStrategy() != null ) {
 				final GenerationTiming timing = pair.getInMemoryStrategy().getGenerationTiming();
 				if ( timing != GenerationTiming.NEVER ) {
-					final ValueGenerator generator = pair.getInMemoryStrategy().getValueGenerator();
+					final ValueGenerator<?> generator = pair.getInMemoryStrategy().getValueGenerator();
 					if ( generator != null ) {
 						// we have some level of generation indicated
 						if ( timing == GenerationTiming.INSERT ) {
@@ -372,7 +372,7 @@ public class EntityMetamodel implements Serializable {
 					ReflectHelper.isAbstractClass( persistentClass.getMappedClass() );
 		}
 		else {
-			isAbstract = persistentClass.isAbstract().booleanValue();
+			isAbstract = persistentClass.isAbstract();
 			if ( !isAbstract && persistentClass.hasPojoRepresentation() &&
 					ReflectHelper.isAbstractClass( persistentClass.getMappedClass() ) ) {
 				LOG.entityMappedAsNonAbstract(name);
@@ -405,7 +405,7 @@ public class EntityMetamodel implements Serializable {
 		hasCollections = foundCollection;
 		mutablePropertiesIndexes = mutableIndexes;
 
-		Iterator iter = persistentClass.getSubclassIterator();
+		Iterator<?> iter = persistentClass.getSubclassIterator();
 		final Set<String> subclassEntityNamesLocal = new HashSet<>();
 		while ( iter.hasNext() ) {
 			subclassEntityNamesLocal.add( ( (PersistentClass) iter.next() ).getEntityName() );
@@ -413,16 +413,16 @@ public class EntityMetamodel implements Serializable {
 		subclassEntityNamesLocal.add( name );
 		subclassEntityNames = CollectionHelper.toSmallSet( subclassEntityNamesLocal );
 
-		HashMap<Class, String> entityNameByInheritenceClassMapLocal = new HashMap<Class, String>();
+		HashMap<Class<?>, String> entityNameByInheritanceClassMapLocal = new HashMap<>();
 		if ( persistentClass.hasPojoRepresentation() ) {
-			entityNameByInheritenceClassMapLocal.put( persistentClass.getMappedClass(), persistentClass.getEntityName() );
+			entityNameByInheritanceClassMapLocal.put( persistentClass.getMappedClass(), persistentClass.getEntityName() );
 			iter = persistentClass.getSubclassIterator();
 			while ( iter.hasNext() ) {
 				final PersistentClass pc = ( PersistentClass ) iter.next();
-				entityNameByInheritenceClassMapLocal.put( pc.getMappedClass(), pc.getEntityName() );
+				entityNameByInheritanceClassMapLocal.put( pc.getMappedClass(), pc.getEntityName() );
 			}
 		}
-		entityNameByInheritenceClassMap = CollectionHelper.toSmallMap( entityNameByInheritenceClassMapLocal );
+		entityNameByInheritenceClassMap = CollectionHelper.toSmallMap( entityNameByInheritanceClassMapLocal );
 	}
 
 	private static GenerationStrategyPair buildGenerationStrategyPair(
@@ -463,7 +463,7 @@ public class EntityMetamodel implements Serializable {
 			SessionFactoryImplementor sessionFactory,
 			Component composite,
 			CompositeGenerationStrategyPairBuilder builder) {
-		Iterator subProperties = composite.getPropertyIterator();
+		Iterator<?> subProperties = composite.getPropertyIterator();
 		while ( subProperties.hasNext() ) {
 			final Property subProperty = (Property) subProperties.next();
 			builder.addPair( buildGenerationStrategyPair( sessionFactory, subProperty ) );
@@ -616,7 +616,7 @@ public class EntityMetamodel implements Serializable {
 				// start building the aggregate values
 				int propertyIndex = -1;
 				int columnIndex = 0;
-				Iterator subProperties = composite.getPropertyIterator();
+				Iterator<?> subProperties = composite.getPropertyIterator();
 				while ( subProperties.hasNext() ) {
 					propertyIndex++;
 					final Property subProperty = (Property) subProperties.next();
@@ -672,16 +672,16 @@ public class EntityMetamodel implements Serializable {
 		}
 
 		@Override
-		public ValueGenerator getValueGenerator() {
+		public ValueGenerator<?> getValueGenerator() {
 			return null;
 		}
 	}
 
 	private static class FullInMemoryValueGenerationStrategy implements InMemoryValueGenerationStrategy {
 		private final GenerationTiming timing;
-		private final ValueGenerator generator;
+		private final ValueGenerator<?> generator;
 
-		private FullInMemoryValueGenerationStrategy(GenerationTiming timing, ValueGenerator generator) {
+		private FullInMemoryValueGenerationStrategy(GenerationTiming timing, ValueGenerator<?> generator) {
 			this.timing = timing;
 			this.generator = generator;
 		}
@@ -699,7 +699,7 @@ public class EntityMetamodel implements Serializable {
 		}
 
 		@Override
-		public ValueGenerator getValueGenerator() {
+		public ValueGenerator<?> getValueGenerator() {
 			return generator;
 		}
 	}
@@ -760,7 +760,7 @@ public class EntityMetamodel implements Serializable {
 	private void mapPropertyToIndex(Property prop, int i) {
 		propertyIndexes.put( prop.getName(), i );
 		if ( prop.getValue() instanceof Component ) {
-			Iterator iter = ( (Component) prop.getValue() ).getPropertyIterator();
+			Iterator<?> iter = ( (Component) prop.getValue() ).getPropertyIterator();
 			while ( iter.hasNext() ) {
 				Property subprop = (Property) iter.next();
 				propertyIndexes.put(
@@ -962,11 +962,11 @@ public class EntityMetamodel implements Serializable {
 	/**
 	 * Return the entity-name mapped to the given class within our inheritance hierarchy, if any.
 	 *
-	 * @param inheritenceClass The class for which to resolve the entity-name.
+	 * @param inheritanceClass The class for which to resolve the entity-name.
 	 * @return The mapped entity-name, or null if no such mapping was found.
 	 */
-	public String findEntityNameByEntityClass(Class inheritenceClass) {
-		return entityNameByInheritenceClassMap.get( inheritenceClass );
+	public String findEntityNameByEntityClass(Class<?> inheritanceClass) {
+		return entityNameByInheritenceClassMap.get( inheritanceClass );
 	}
 
 	@Override

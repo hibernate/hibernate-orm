@@ -1083,24 +1083,26 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		return fetchProfiles.get( name );
 	}
 
-	@Override @SuppressWarnings("unchecked")
+	@Override
 	public <T> BindableType<? extends T> resolveParameterBindType(T bindValue) {
 		if ( bindValue == null ) {
 			// we can't guess
 			return null;
 		}
 
-		Class<? extends T> clazz;
+		Class<?> clazz;
 		if (bindValue instanceof HibernateProxy) {
 			HibernateProxy proxy = (HibernateProxy) bindValue;
 			LazyInitializer li = proxy.getHibernateLazyInitializer();
 			clazz = li.getPersistentClass();
 		}
 		else {
-			clazz = (Class<? extends T>) bindValue.getClass();
+			clazz = bindValue.getClass();
 		}
 
-		return resolveParameterBindType( clazz );
+		@SuppressWarnings("unchecked")
+		Class<? extends T> c = (Class<? extends T>) clazz;
+		return resolveParameterBindType( c );
 	}
 
 	@Override

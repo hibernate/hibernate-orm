@@ -22,12 +22,11 @@ final class DisallowedProxyFactory implements ProxyFactory {
 	@Override
 	public void postInstantiate(
 			String entityName,
-			Class persistentClass,
-			Set<Class> interfaces,
+			Class<?> persistentClass,
+			Set<Class<?>> interfaces,
 			Method getIdentifierMethod,
 			Method setIdentifierMethod,
-			CompositeType componentIdType) throws HibernateException {
-
+			CompositeType componentIdType) {
 	}
 
 	@Override

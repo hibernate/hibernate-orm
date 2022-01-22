@@ -44,7 +44,7 @@ public interface Tuplizer {
 	 * @param i The index of the property for which to extract the value.
 	 * @return The current value of the given property on the given entity.
 	 */
-	public Object getPropertyValue(Object entity, int i);
+	Object getPropertyValue(Object entity, int i);
 
 	/**
 	 * Return the pojo class managed by this tuplizer.
@@ -56,7 +56,7 @@ public interface Tuplizer {
 	 *
 	 * @return The persistent class.
 	 */
-	public Class getMappedClass();
+	Class<?> getMappedClass();
 
 	/**
 	 * Retrieve the getter for the specified property.
@@ -64,5 +64,5 @@ public interface Tuplizer {
 	 * @param i The property index.
 	 * @return The property getter.
 	 */
-	public Getter getGetter(int i);
+	Getter getGetter(int i);
 }

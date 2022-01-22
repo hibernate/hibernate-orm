@@ -78,7 +78,7 @@ public class DynamicMapEntityTuplizer extends AbstractEntityTuplizer {
 	}
 
 	@Override
-	public Class getMappedClass() {
+	public Class<?> getMappedClass() {
 		return Map.class;
 	}
 
@@ -89,10 +89,10 @@ public class DynamicMapEntityTuplizer extends AbstractEntityTuplizer {
 
 	@Override
 	public String determineConcreteSubclassEntityName(Object entityInstance, SessionFactoryImplementor factory) {
-		return extractEmbeddedEntityName( (Map) entityInstance );
+		return extractEmbeddedEntityName( (Map<?,?>) entityInstance );
 	}
 
-	public static String extractEmbeddedEntityName(Map entity) {
+	public static String extractEmbeddedEntityName(Map<?,?> entity) {
 		return (String) entity.get( DynamicMapInstantiator.KEY );
 	}
 
@@ -101,10 +101,10 @@ public class DynamicMapEntityTuplizer extends AbstractEntityTuplizer {
 
 		@Override
 		public String resolveEntityName(Object entity) {
-			if ( !Map.class.isInstance( entity ) ) {
+			if ( !(entity instanceof Map) ) {
 				return null;
 			}
-			final String entityName = extractEmbeddedEntityName( (Map) entity );
+			final String entityName = extractEmbeddedEntityName( (Map<?,?>) entity );
 			if ( entityName == null ) {
 				throw new HibernateException( "Could not determine type of dynamic map entity" );
 			}

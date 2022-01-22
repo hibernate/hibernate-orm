@@ -10,9 +10,9 @@ import java.util.Locale;
 import org.jboss.logging.Logger;
 
 /**
- * Defines the style that should be used to perform batch loading.  Which style to use is declared using
- * the "{@value org.hibernate.cfg.AvailableSettings#BATCH_FETCH_STYLE}"
- * ({@value org.hibernate.cfg.AvailableSettings#BATCH_FETCH_STYLE}) setting
+ * Defines a type of batch loading.
+ *
+ * @see org.hibernate.cfg.AvailableSettings#BATCH_FETCH_STYLE
  *
  * @author Steve Ebersole
  *

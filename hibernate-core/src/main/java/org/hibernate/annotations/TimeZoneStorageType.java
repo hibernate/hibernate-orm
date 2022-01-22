@@ -10,7 +10,7 @@ import org.hibernate.Incubating;
 import org.hibernate.dialect.Dialect;
 
 /**
- * Describes the storage for the time zone information for time zone based types.
+ * Describes the storage of timezone information for zoned datetime types.
  *
  * @author Christian Beikov
  * @author Steve Ebersole
@@ -19,19 +19,28 @@ import org.hibernate.dialect.Dialect;
 @Incubating
 public enum TimeZoneStorageType {
 	/**
-	 * Stores the time zone by using the "with time zone" type. Error if {@link Dialect#getTimeZoneSupport()} is not {@link org.hibernate.dialect.TimeZoneSupport#NATIVE}.
+	 * Stores the timezone by using the {@code with time zone}
+	 * SQL column type.
+	 *
+	 * Error if {@link Dialect#getTimeZoneSupport()} is not
+	 * {@link org.hibernate.dialect.TimeZoneSupport#NATIVE}.
 	 */
 	NATIVE,
 	/**
-	 * Does not store the time zone, and instead normalizes timestamps to UTC.
+	 * Does not store the time zone, and instead normalizes
+	 * timestamps to UTC.
 	 */
 	NORMALIZE,
 	/**
-	 * Stores the time zone in a separate column; works in conjunction with {@link TimeZoneColumn}.
+	 * Stores the time zone in a separate column; works in
+	 * conjunction with {@link TimeZoneColumn}.
 	 */
 	COLUMN,
 	/**
-	 * Stores the time zone either with {@link #NATIVE} if {@link Dialect#getTimeZoneSupport()} is {@link org.hibernate.dialect.TimeZoneSupport#NATIVE}, otherwise uses the {@link #COLUMN} strategy.
+	 * Stores the time zone either with {@link #NATIVE} if
+	 * {@link Dialect#getTimeZoneSupport()} is
+	 * {@link org.hibernate.dialect.TimeZoneSupport#NATIVE},
+	 * otherwise uses the {@link #COLUMN} strategy.
 	 */
 	AUTO
 

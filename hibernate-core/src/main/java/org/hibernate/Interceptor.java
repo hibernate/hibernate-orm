@@ -14,21 +14,24 @@ import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.type.Type;
 
 /**
- * Allows user code to inspect and/or change property values.
- *
- * Inspection occurs before property values are written and after they are read
- * from the database.
- *
- * There might be a single instance of {@code Interceptor} for a {@code SessionFactory}, or a new instance
- * might be specified for each {@code Session}. Whichever approach is used, the interceptor must be
- * serializable if the {@code Session} is to be serializable. This means that {@code SessionFactory}-scoped
+ * Allows user code to inspect and/or change entity property values before they are
+ * written to the database, or after the are read from the database.
+ * <p>
+ * The {@code Session} may not be invoked from a callback (nor may a callback cause a
+ * collection or proxy to be lazily initialized).
+ * <p>
+ * There might be a single instance of {@code Interceptor} for a {@link SessionFactory},
+ * or a new instance might be created for each {@link Session}. Use:
+ * <ul>
+ *     <li>{@link org.hibernate.cfg.AvailableSettings#INTERCEPTOR} to specify an
+ *         interceptor shared between sessions, or
+ *     <li>{@link org.hibernate.cfg.AvailableSettings#SESSION_SCOPED_INTERCEPTOR} to
+ *         specify that there is a dedicated instance of the interceptor for each
+ *         session.
+ * </ul>
+ * Whichever approach is used, the interceptor must be serializable for the
+ * {@code Session} to be serializable. This means that {@code SessionFactory}-scoped
  * interceptors should implement {@code readResolve()}.
- *
- * The {@code Session} may not be invoked from a callback (nor may a callback cause a collection or proxy to
- * be lazily initialized).
- *
- * Instead of implementing this interface directly, it is usually better to extend {@code EmptyInterceptor}
- * and override only the callback methods of interest.
  *
  * @see SessionBuilder#interceptor(Interceptor)
  * @see SharedSessionBuilder#interceptor()

@@ -11,6 +11,8 @@ import java.io.Serializable;
 /**
  * NOTE : Consider this an incubating API, likely to change as wider usage indicates changes that need to be made
  *
+ * @see org.hibernate.cfg.AvailableSettings#AUTO_SESSION_EVENTS_LISTENER
+ *
  * @author Steve Ebersole
  */
 public interface SessionEventListener extends Serializable {

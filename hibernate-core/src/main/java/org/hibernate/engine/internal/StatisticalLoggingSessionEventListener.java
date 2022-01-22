@@ -11,6 +11,8 @@ import org.hibernate.BaseSessionEventListener;
 import org.jboss.logging.Logger;
 
 /**
+ * @see org.hibernate.cfg.AvailableSettings#LOG_SESSION_METRICS
+ *
  * @author Steve Ebersole
  */
 public class StatisticalLoggingSessionEventListener extends BaseSessionEventListener {

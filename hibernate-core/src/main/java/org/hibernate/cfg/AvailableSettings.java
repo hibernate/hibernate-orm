@@ -9,6 +9,7 @@ package org.hibernate.cfg;
 import java.util.function.Supplier;
 
 import org.hibernate.jpa.LegacySpecHints;
+import org.hibernate.query.spi.QueryPlan;
 
 /**
  * Enumerates the configuration properties supported by Hibernate, including
@@ -137,6 +138,7 @@ public interface AvailableSettings {
 	 * <p/>
 	 * See JPA 2 section 8.2.1.9
 	 */
+	@SuppressWarnings("unused")
 	String JAKARTA_PERSIST_VALIDATION_GROUP = "jakarta.persistence.validation.group.pre-persist";
 
 	/**
@@ -144,6 +146,7 @@ public interface AvailableSettings {
 	 * <p/>
 	 * See JPA 2 section 8.2.1.9
 	 */
+	@SuppressWarnings("unused")
 	String JAKARTA_UPDATE_VALIDATION_GROUP = "jakarta.persistence.validation.group.pre-update";
 
 	/**
@@ -151,6 +154,7 @@ public interface AvailableSettings {
 	 * <p/>
 	 * See JPA 2 section 8.2.1.9
 	 */
+	@SuppressWarnings("unused")
 	String JAKARTA_REMOVE_VALIDATION_GROUP = "jakarta.persistence.validation.group.pre-remove";
 
 	/**
@@ -200,7 +204,7 @@ public interface AvailableSettings {
 
 	/**
 	 * Specifies a {@link java.util.Collection collection} of the {@link ClassLoader}
-	 * instances Hibernate should use for classloading and resource lookups.
+	 * instances Hibernate should use for classloading and resource loading.
 	 *
 	 * @since 5.0
 	 */
@@ -322,7 +326,8 @@ public interface AvailableSettings {
 	String POOL_SIZE = " hibernate.connection.pool_size";
 
 	/**
-	 * Specifies a {@link javax.sql.DataSource}, either:<ul>
+	 * Specifies a {@link javax.sql.DataSource}, either:
+	 * <ul>
 	 *     <li>an instance of {@link javax.sql.DataSource}, or
 	 *     <li>a JNDI name under which to obtain the {@link javax.sql.DataSource}.
 	 * </ul>
@@ -403,6 +408,7 @@ public interface AvailableSettings {
 	 * @deprecated Use {@link #JAKARTA_HBM2DDL_DB_NAME} instead
 	 */
 	@Deprecated
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String DIALECT_DB_NAME = "javax.persistence.database-product-name";
 
 	/**
@@ -421,6 +427,7 @@ public interface AvailableSettings {
 	 * @deprecated Use {@link #JAKARTA_HBM2DDL_DB_VERSION} instead
 	 */
 	@Deprecated
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String DIALECT_DB_VERSION = "javax.persistence.database-product-version";
 
 	/**
@@ -436,6 +443,7 @@ public interface AvailableSettings {
 	 * @deprecated Use {@link #JAKARTA_HBM2DDL_DB_MAJOR_VERSION} instead
 	 */
 	@Deprecated
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String DIALECT_DB_MAJOR_VERSION = "javax.persistence.database-major-version";
 
 	/**
@@ -450,6 +458,7 @@ public interface AvailableSettings {
 	 * @deprecated Use {@link #JAKARTA_HBM2DDL_DB_MINOR_VERSION} instead
 	 */
 	@Deprecated
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String DIALECT_DB_MINOR_VERSION = "javax.persistence.database-minor-version";
 
 	/**
@@ -1192,7 +1201,7 @@ public interface AvailableSettings {
 
 	/**
 	 * Enable direct storage of entity references into the second level cache when
-	 * applicable (immutable data, etc).
+	 * applicable. This is appropriate only for immutable entities.
 	 * <p>
 	 * By default, entities are always stored in a "disassembled" form.
 	 */
@@ -1249,9 +1258,12 @@ public interface AvailableSettings {
 	String PREFERRED_POOLED_OPTIMIZER = "hibernate.id.optimizer.pooled.preferred";
 
 	/**
-	 * Should query plan caching be enabled at all?  Default is {@code false} unless
-	 * one of {@link #QUERY_PLAN_CACHE_MAX_SIZE} or
-	 * {@link #QUERY_PLAN_CACHE_PARAMETER_METADATA_MAX_SIZE} is specified.
+	 * When enabled, specifies that {@linkplain QueryPlan query plans} should be
+	 * {@linkplain org.hibernate.query.spi.QueryPlanCache cached}.
+	 * <p>
+	 * By default, the query plan cache is disabled, unless one of the configuration
+	 * properties {@value #QUERY_PLAN_CACHE_MAX_SIZE} or
+	 * {@value #QUERY_PLAN_CACHE_PARAMETER_METADATA_MAX_SIZE} is set.
 	 */
 	String QUERY_PLAN_CACHE_ENABLED = "hibernate.query.plan_cache_enabled";
 
@@ -1322,6 +1334,7 @@ public interface AvailableSettings {
 	 * @deprecated Use {@link #JAKARTA_HBM2DDL_CONNECTION} instead
 	 */
 	@Deprecated
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String HBM2DDL_CONNECTION = "javax.persistence.schema-generation-connection";
 
 	/**
@@ -1329,11 +1342,12 @@ public interface AvailableSettings {
 	 * on object/relational mapping metadata, DDL scripts, or a combination of the two. See
 	 * {@link org.hibernate.tool.schema.SourceType} for the list of legal values.
 	 * <p>
-	 * If no value is specified, a default is inferred as follows:<ul>
+	 * If no value is specified, a default is inferred as follows:
+	 * <ul>
 	 *     <li>if source scripts are specified via {@value #HBM2DDL_CREATE_SCRIPT_SOURCE}, then
-	 *     {@link org.hibernate.tool.schema.SourceType#SCRIPT "script"} is assumed, or
+	 *         {@link org.hibernate.tool.schema.SourceType#SCRIPT "script"} is assumed, or
 	 *     <li>otherwise, {@link org.hibernate.tool.schema.SourceType#SCRIPT "metadata"} is
-	 *     assumed.
+	 *         assumed.
 	 * </ul>
 	 *
 	 * @see org.hibernate.tool.schema.SourceType
@@ -1341,15 +1355,16 @@ public interface AvailableSettings {
 	String HBM2DDL_CREATE_SOURCE = "javax.persistence.schema-generation.create-source";
 
 	/**
-	 * Specifies whether schema generation commands for schema dropping are to be determined based
-	 * on object/relational mapping metadata, DDL scripts, or a combination of the two. See
-	 * {@link org.hibernate.tool.schema.SourceType} for the list of legal values.
+	 * Specifies whether schema generation commands for schema dropping are to be determined
+	 * based on object/relational mapping metadata, DDL scripts, or a combination of the two.
+	 * See {@link org.hibernate.tool.schema.SourceType} for the list of legal values.
 	 * <p>
-	 * If no value is specified, a default is inferred as follows:<ul>
+	 * If no value is specified, a default is inferred as follows:
+	 * <ul>
 	 *     <li>if source scripts are specified via {@value #HBM2DDL_DROP_SCRIPT_SOURCE}, then
-	 *     {@link org.hibernate.tool.schema.SourceType#SCRIPT "script"} is assumed, or
+	 *         {@link org.hibernate.tool.schema.SourceType#SCRIPT "script"} is assumed, or
 	 *     <li>otherwise, {@link org.hibernate.tool.schema.SourceType#SCRIPT "metadata"} is
-	 *     assumed.
+	 *         assumed.
 	 * </ul>
 	 *
 	 * @see org.hibernate.tool.schema.SourceType
@@ -1428,6 +1443,7 @@ public interface AvailableSettings {
 	 * @deprecated Use {@link #JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE} instead
 	 */
 	@Deprecated
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String HBM2DDL_LOAD_SCRIPT_SOURCE = "javax.persistence.sql-load-script-source";
 
 	/**
@@ -1454,6 +1470,7 @@ public interface AvailableSettings {
 	 * @deprecated Use {@link #JAKARTA_HBM2DDL_CREATE_SCHEMAS} instead
 	 */
 	@Deprecated
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String HBM2DDL_CREATE_SCHEMAS = "javax.persistence.create-database-schemas";
 
 	/**
@@ -1566,13 +1583,14 @@ public interface AvailableSettings {
 	String JAKARTA_HBM2DDL_DB_MINOR_VERSION = "jakarta.persistence.database-minor-version";
 
 	/**
-	 * Specifies whether schema generation commands for schema creation are to be determined based
-	 * on object/relational mapping metadata, DDL scripts, or a combination of the two. See
-	 * {@link org.hibernate.tool.schema.SourceType} for the list of legal values.
+	 * Specifies whether schema generation commands for schema creation are to be determined
+	 * based on object/relational mapping metadata, DDL scripts, or a combination of the two.
+	 * See {@link org.hibernate.tool.schema.SourceType} for the list of legal values.
 	 * <p>
-	 * If no value is specified, a default is inferred as follows:<ul>
-	 *     <li>if source scripts are specified via {@value #HBM2DDL_CREATE_SCRIPT_SOURCE}, then
-	 *     {@link org.hibernate.tool.schema.SourceType#SCRIPT "script"} is assumed, or
+	 * If no value is specified, a default is inferred as follows:
+	 * <ul>
+	 *     <li>if source scripts are specified via {@value #HBM2DDL_CREATE_SCRIPT_SOURCE},
+	 *     then {@link org.hibernate.tool.schema.SourceType#SCRIPT "script"} is assumed, or
 	 *     <li>otherwise, {@link org.hibernate.tool.schema.SourceType#SCRIPT "metadata"} is
 	 *     assumed.
 	 * </ul>
@@ -1582,15 +1600,16 @@ public interface AvailableSettings {
 	String JAKARTA_HBM2DDL_CREATE_SOURCE = "jakarta.persistence.schema-generation.create-source";
 
 	/**
-	 * Specifies whether schema generation commands for schema dropping are to be determined based
-	 * on object/relational mapping metadata, DDL scripts, or a combination of the two. See
-	 * {@link org.hibernate.tool.schema.SourceType} for the list of legal values.
+	 * Specifies whether schema generation commands for schema dropping are to be determined
+	 * based on object/relational mapping metadata, DDL scripts, or a combination of the two.
+	 * See {@link org.hibernate.tool.schema.SourceType} for the list of legal values.
 	 * <p>
-	 * If no value is specified, a default is inferred as follows:<ul>
+	 * If no value is specified, a default is inferred as follows:
+	 * <ul>
 	 *     <li>if source scripts are specified via {@value #HBM2DDL_DROP_SCRIPT_SOURCE}, then
 	 *     {@linkplain org.hibernate.tool.schema.SourceType#SCRIPT "script"} is assumed, or
-	 *     <li>otherwise, {@linkplain org.hibernate.tool.schema.SourceType#SCRIPT "metadata"} is
-	 *     assumed.
+	 *     <li>otherwise, {@linkplain org.hibernate.tool.schema.SourceType#SCRIPT "metadata"}
+	 *     is assumed.
 	 * </ul>
 	 *
 	 * @see org.hibernate.tool.schema.SourceType
@@ -1721,18 +1740,22 @@ public interface AvailableSettings {
 	String CUSTOM_ENTITY_DIRTINESS_STRATEGY = "hibernate.entity_dirtiness_strategy";
 
 	/**
-	 * Controls whether an entity's "where" clause, mapped using {@code @Where(clause="....")}
-	 * or {@code &lt;entity ... where="..."&gt;}, is taken into account when loading one-to-many
-	 * or many-to-many collections of that type of entity.
-	 * <p/>
-	 * This setting has no affect on collections of embeddable values containing an association
-	 * to that type of entity.
-	 * <p/>
-	 * When {@code true}, the default, the entity's "where" clause will be taken into account
-	 * when loading one-to-many or many-to-many collections of that type of entity.
-	 * <p/>
-	 * `false` indicates that the entity's "where" clause will be ignored when loading
-	 * one-to-many or many-to-many collections of that type of entity.
+	 * The {@link org.hibernate.annotations.Where} annotation specifies a restriction
+	 * on the table rows which are visible as entity class instances or collection
+	 * elements.
+	 * <p>
+	 * This setting controls whether the restriction is applied when loading a
+	 * {@link jakarta.persistence.OneToMany one-to-many} or
+	 * or {@link jakarta.persistence.ManyToMany many-to-many} association whose target
+	 * type defines the restriction.
+	 * <p>
+	 * By default, the restriction is not applied. When this setting is enabled, the
+	 * restriction is applied.
+	 * <p>
+	 * The setting has no effect on a collection of {@link jakarta.persistence.Embeddable
+	 * embeddable} values containing a {@link jakarta.persistence.ManyToOne many-to-one}
+	 * association to the entity.
+	 *
 	 */
 	String USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS = "hibernate.use_entity_where_clause_for_collections";
 
@@ -1746,9 +1769,9 @@ public interface AvailableSettings {
 	String MULTI_TENANT_CONNECTION_PROVIDER = "hibernate.multi_tenant_connection_provider";
 
 	/**
-	 * Specifies a {@link org.hibernate.context.spi.CurrentTenantIdentifierResolver} to use.
-	 * <p/>
-	 * Can be<ul>
+	 * Specifies a {@link org.hibernate.context.spi.CurrentTenantIdentifierResolver} to use,
+	 * either:
+	 * <ul>
 	 *     <li>an instance of {@code CurrentTenantIdentifierResolver},
 	 *     <li>a {@link Class} representing an class that implements {@code CurrentTenantIdentifierResolver}, or
 	 *     <li>the name of a class that implements {@code CurrentTenantIdentifierResolver}.
@@ -1759,44 +1782,47 @@ public interface AvailableSettings {
 	String MULTI_TENANT_IDENTIFIER_RESOLVER = "hibernate.tenant_identifier_resolver";
 
 	/**
-	 * Names a {@link org.hibernate.Interceptor} implementation associated with the
-	 * {@link org.hibernate.SessionFactory} and propagated to each Session created from the SessionFactory.
-	 * This setting identifies an Interceptor which is effectively a singleton across all the Sessions
-	 * opened from the SessionFactory to which it is applied; the same instance will be passed to each Session.
-	 * <p/>
-	 * See {@link #SESSION_SCOPED_INTERCEPTOR} for an approach to create unique Interceptor instances for each Session
-	 * <p/>
-	 * Can reference<ul>
+	 * Specifies an {@link org.hibernate.Interceptor} implementation associated with
+	 * the {@link org.hibernate.SessionFactory} and propagated to each {@code Session}
+	 * created from the {@code SessionFactory}. Either:
+	 * <ul>
 	 *     <li>an instance of {@code Interceptor},
-	 *     <li>a {@link Class} representing an class that implements {@code Interceptor}, or
+	 *     <li>a {@link Class} representing a class that implements {@code Interceptor}, or
 	 *     <li>the name of a class that implements {@code Interceptor}.
 	 * </ul>
+	 * This setting identifies an {@code Interceptor} which is effectively a singleton
+	 * across all the sessions opened from the {@code SessionFactory} to which it is
+	 * applied; the same instance will be passed to each {@code Session}. If there
+	 * should be a separate instance of {@code Interceptor} for each {@code Session},
+	 * use {@link #SESSION_SCOPED_INTERCEPTOR} instead.
 	 *
 	 * @since 5.0
 	 */
 	String INTERCEPTOR = "hibernate.session_factory.interceptor";
 
 	/**
-	 * Specifies a {@link org.hibernate.Interceptor} implementation associated with the
-	 * {@link org.hibernate.SessionFactory} and propagated to each Session created from the SessionFactory.
-	 * This setting identifies an Interceptor implementation that is to be applied to every Session opened
-	 * from the SessionFactory, but unlike {@link #INTERCEPTOR} a unique instance of the Interceptor is
-	 * used for each Session.
-	 * <p/>
-	 * Can reference<ul>
-	 *     <li>a {@link Class} representing an class that implements {@code Interceptor},
+	 * Specifies an {@link org.hibernate.Interceptor} implementation associated with
+	 * the {@link org.hibernate.SessionFactory} and propagated to each {@code Session}
+	 * created from the {@code SessionFactory}. Either:
+	 * <ul>
+	 *     <li>a {@link Class} representing a class that implements {@code Interceptor},
 	 *     <li>the name of a class that implements {@code Interceptor}, or
-	 *     <li>a {@link Supplier} used to obtain the interceptor.
+	 *     <li>an instance of {@link Supplier} used to obtain the interceptor.
 	 * </ul>
 	 * Note that this setting cannot specify an {@code Interceptor} instance.
+	 * <p>
+	 * This setting identifies an {@code Interceptor} implementation that is to be
+	 * applied to every {@code Session} opened from the {@code SessionFactory}, but
+	 * unlike {@link #INTERCEPTOR}, a separate instance created for each {@code Session}.
 	 *
 	 * @since 5.2
 	 */
 	String SESSION_SCOPED_INTERCEPTOR = "hibernate.session_factory.session_scoped_interceptor";
 
 	/**
-	 * Specifies a {@link org.hibernate.resource.jdbc.spi.StatementInspector} implementation
-	 * associated with the {@link org.hibernate.SessionFactory}, either:
+	 * Specifies a {@link org.hibernate.resource.jdbc.spi.StatementInspector}
+	 * implementation associated with the {@link org.hibernate.SessionFactory},
+	 * either:
 	 * <ul>
 	 *     <li>an instance of {@code StatementInspector},
 	 *     <li>a {@link Class} representing an class that implements {@code StatementInspector}, or
@@ -1810,20 +1836,20 @@ public interface AvailableSettings {
 	String ENABLE_LAZY_LOAD_NO_TRANS = "hibernate.enable_lazy_load_no_trans";
 
 	/**
-	 * Names the {@link org.hibernate.loader.BatchFetchStyle} to use.  Can specify either the
-	 * {@link org.hibernate.loader.BatchFetchStyle} name (insensitively), or a
-	 * {@link org.hibernate.loader.BatchFetchStyle} instance.
-	 *
-	 * {@code LEGACY} is the default value.
+	 * Specifies the {@link org.hibernate.loader.BatchFetchStyle} to use,
+	 * either the name of a {code BatchFetchStyle} instance, or an instance
+	 * of {@code BatchFetchStyle}.
 	 *
 	 * @deprecated (since 6.0) : An appropriate batch-fetch style is selected automatically
 	 */
 	@Deprecated
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String BATCH_FETCH_STYLE = "hibernate.batch_fetch_style";
 
 	/**
-	 * Controls how the individual Loaders for an entity are created.
-	 *
+	 * Controls how {@linkplain org.hibernate.loader.ast.spi.Loader entity loaders}
+	 * are created.
+	 * <p>
 	 * When {@code true}, the default, the loaders are only created on first
 	 * access; this ensures that all access patterns which are not useful
 	 * to the application are never instantiated, possibly saving a
@@ -1832,8 +1858,8 @@ public interface AvailableSettings {
 	 * which will always be eagerly initialized; this is necessary to
 	 * detect mapping errors.
 	 * <p>
-	 * {@code false} indicates that all loaders should be created up front; this
-	 * will consume more memory but ensures all necessary memory is
+	 * {@code false} indicates that all loaders should be created up front;
+	 * this will consume more memory but ensures all necessary memory is
 	 * allocated right away.
 	 *
 	 * @since 5.3
@@ -1852,16 +1878,16 @@ public interface AvailableSettings {
 	String JTA_TRACK_BY_THREAD = "hibernate.jta.track_by_thread";
 
 	/**
-	 * If enabled, allows schema update and validation to support synonyms.  Due
+	 * If enabled, allows schema update and validation to support synonyms. Due
 	 * to the possibility that this would return duplicate tables (especially in
 	 * Oracle), this is disabled by default.
 	 */
 	String ENABLE_SYNONYMS = "hibernate.synonyms";
 
 	/**
-	 * Identifies a comma-separate list of values to specify extra table types,
-	 * other than the default "TABLE" value, to recognize as defining a physical table
-	 * by schema update, creation and validation.
+	 * Specifies a comma-separated list of extra table types, in addition to the
+	 * default types {@code "TABLE"} and {@code "VIEW"}, to recognize as physical
+	 * tables when performing schema update, creation and validation.
 	 *
 	 * @since 5.0
 	 */
@@ -1873,58 +1899,72 @@ public interface AvailableSettings {
 	 * finding existing constraints is extremely inconsistent. Worse, unique constraints
 	 * without explicit names are assigned names with randomly generated characters.
 	 * <p>
-	 * Therefore, select from these strategies:<ul>
-	 * <li>{@link org.hibernate.tool.schema.UniqueConstraintSchemaUpdateStrategy#DROP_RECREATE_QUIETLY}:
-	 * 			Attempt to drop, then (re-)create each unique constraint,
-	 * 			ignoring any exceptions thrown.
-	 * 			This is the default.
-	 * <li>{@link org.hibernate.tool.schema.UniqueConstraintSchemaUpdateStrategy#RECREATE_QUIETLY}:
-	 * 			attempt to (re-)create unique constraints,
-	 * 			ignoring exceptions thrown if the constraint already existed.
-	 * <li>{@link org.hibernate.tool.schema.UniqueConstraintSchemaUpdateStrategy#SKIP}:
-	 * 			do not attempt to create unique constraints on a schema update.
+	 * Therefore, select from these strategies:
+	 * <ul>
+	 *     <li>{@link org.hibernate.tool.schema.UniqueConstraintSchemaUpdateStrategy#DROP_RECREATE_QUIETLY
+	 *         DROP_RECREATE_QUIETLY}:
+	 *         Attempt to drop, then (re-)create each unique constraint,
+	 *         ignoring any exceptions thrown.
+	 *         This is the default.
+	 *     <li>{@link org.hibernate.tool.schema.UniqueConstraintSchemaUpdateStrategy#RECREATE_QUIETLY
+	 *         RECREATE_QUIETLY}:
+	 *         attempt to (re-)create unique constraints,
+	 *         ignoring exceptions thrown if the constraint already existed.
+	 *     <li>{@link org.hibernate.tool.schema.UniqueConstraintSchemaUpdateStrategy#SKIP
+	 *         SKIP}:
+	 *         do not attempt to create unique constraints on a schema update.
 	 * </ul>
 	 */
 	String UNIQUE_CONSTRAINT_SCHEMA_UPDATE_STRATEGY = "hibernate.schema_update.unique_constraint_strategy";
 
 	/**
-	 * Enable statistics collection
+	 * When enabled, specifies that {@linkplain org.hibernate.stat.Statistics statistics}
+	 * should be collected.
 	 */
 	String GENERATE_STATISTICS = "hibernate.generate_statistics";
 
 	/**
-	 * A setting to control whether to {@link org.hibernate.engine.internal.StatisticalLoggingSessionEventListener}
-	 * is enabled on all sessions (unless explicitly disabled for a given session). The default value of this
-	 * setting is determined by the value for {@link #GENERATE_STATISTICS}, meaning that if collection of
-	 * statistics is enabled logging of session metrics is enabled by default too.
+	 * Controls whether {@linkplain org.hibernate.stat.SessionStatistics session metrics}
+	 * should be {@linkplain org.hibernate.engine.internal.StatisticalLoggingSessionEventListener
+	 * logged} for any session in which statistics are being collected.
+	 * <p>
+	 * By default, logging of session metrics is disabled unless {@link #GENERATE_STATISTICS}
+	 * is enabled.
 	 */
 	String LOG_SESSION_METRICS = "hibernate.session.events.log";
 
 	/**
-	 * Setting that logs query which executed slower than specified milliseconds. Default is 0 (disabled).
+	 * Specifies a duration in milliseconds defining the minimum query execution time that
+	 * characterizes a "slow" query. Any SQL query which takes longer than this amount of
+	 * time to execute will be logged.
+	 * <p>
+	 * A value of {@code 0}, the default, disables logging of "slow" queries.
 	 */
 	String LOG_SLOW_QUERY = "hibernate.session.events.log.LOG_QUERIES_SLOWER_THAN_MS";
 
 	/**
-	 * Defines a default {@link org.hibernate.SessionEventListener} to be applied to newly-opened
-	 * {@link org.hibernate.Session}s.
+	 * Defines a default {@link org.hibernate.SessionEventListener} to be applied to
+	 * newly-opened {@link org.hibernate.Session}s.
 	 */
 	String AUTO_SESSION_EVENTS_LISTENER = "hibernate.session.events.auto";
 
 	/**
-	 * [EXPERIMENTAL] Enable instantiation of composite/embedded objects when all of its attribute
-	 * values are {@code null}. The default (and historical) behavior is that a {@code null}
-	 * reference will be used to represent the composite when all of its attributes are {@code null}.
+	 * [EXPERIMENTAL] Enable instantiation of composite/embedded objects when all
+	 * attribute values are {@code null}. The default (and historical) behavior is
+	 * that a {@code null} reference will be used to represent the composite when
+	 * all of its attributes are {@code null}.
 	 * <p>
-	 * This is an experimental feature that has known issues. It should not be used in production
-	 * until it is stabilized. See Hibernate Jira issue HHH-11936 for details.
+	 * This is an experimental feature that has known issues. It should not be used
+	 * in production until it is stabilized. See Hibernate JIRA issue HHH-11936 for
+	 * details.
 	 *
 	 * @since 5.1
 	 */
 	String CREATE_EMPTY_COMPOSITES_ENABLED = "hibernate.create_empty_composites.enabled";
 
 	/**
-	 * When enabled, allows access to the {@link org.hibernate.Transaction} even when using a JTA.
+	 * When enabled, allows access to the {@link org.hibernate.Transaction} even when
+	 * using a JTA for transaction management.
 	 * <p>
 	 * Values are {@code true}, which grants access, and {@code false}, which does not.
 	 * <p>
@@ -1935,11 +1975,11 @@ public interface AvailableSettings {
 	/**
 	 * When enabled, allows update operations outside a transaction.
 	 * <p>
-	 * Since version 5.2 Hibernate conforms with the JPA specification and disallows flushing any
-	 * update outside a transaction.
+	 * Since version 5.2 Hibernate conforms with the JPA specification and disallows
+	 * flushing any update outside a transaction.
 	 * <p>
-	 * Values are {@code true}, which allows flushing outside a transaction, and {@code false},
-	 * which does not.
+	 * Values are {@code true}, which allows flushing outside a transaction, and
+	 * {@code false}, which does not.
 	 * <p>
 	 * The default behavior is to disallow update operations outside a transaction.
 	 *
@@ -1952,54 +1992,54 @@ public interface AvailableSettings {
 	 * and {@link org.hibernate.Session#refresh(Object)} on a detached entity instance.
 	 * <p>
 	 * Values are {@code true}, which allows refreshing a detached instance and {@code false},
-	 * which does not. When refreshing is disallowed, an {@link IllegalArgumentException} is
-	 * thrown.
+	 * which does not. When refreshing is disallowed, an {@link IllegalArgumentException}
+	 * is thrown.
 	 * <p>
-	 * The default behavior is to allow refreshing a detached instance unless Hibernate is
-	 * bootstrapped via JPA.
+	 * The default behavior is to allow refreshing a detached instance unless Hibernate
+	 * is bootstrapped via JPA.
 	 *
 	 * @since 5.2
 	 */
 	String ALLOW_REFRESH_DETACHED_ENTITY = "hibernate.allow_refresh_detached_entity";
 
 	/**
-	 * Setting that specifies how Hibernate will respond when multiple representations of the
-	 * same persistent entity ("entity copy") are detected while merging.
+	 * Setting that specifies how Hibernate will respond when multiple representations of
+	 * the same persistent entity ("entity copy") are detected while merging.
 	 * <p>
 	 * The possible values are:
 	 * <ul>
-	 *     <li>disallow (the default): throws {@link IllegalStateException} if an entity copy
-	 *     is detected
+	 *     <li>disallow (the default): throws {@link IllegalStateException} if an entity
+	 *         copy is detected
 	 *     <li>allow: performs the merge operation on each entity copy that is detected
-	 *     <li>log: (provided for testing only) performs the merge operation on each entity copy
-	 *     that is detected and logs information about the entity copies. This setting requires
-	 *     DEBUG logging be enabled for
-	 *     {@link org.hibernate.event.internal.EntityCopyAllowedLoggedObserver}.
-	 *     </li>
+	 *     <li>log: (provided for testing only) performs the merge operation on each entity
+	 *         copy that is detected and logs information about the entity copies. This
+	 *         setting requires DEBUG logging be enabled for
+	 *         {@link org.hibernate.event.internal.EntityCopyAllowedLoggedObserver}.
 	 * </ul>
-	 * Alternatively, the application may customize the behavior by providing an implementation
-	 * of {@link org.hibernate.event.spi.EntityCopyObserver} and setting the property
-	 * {@value #MERGE_ENTITY_COPY_OBSERVER} to the class name.
+	 * Alternatively, the application may customize the behavior by providing an
+	 * implementation of {@link org.hibernate.event.spi.EntityCopyObserver} and setting
+	 * the property {@value #MERGE_ENTITY_COPY_OBSERVER} to the class name.
 	 * <p>
-	 * When this property is set to {@code allow} or {@code log}, Hibernate will merge each entity
-	 * copy detected while cascading the merge operation. In the process of merging each entity copy,
-	 * Hibernate will cascade the merge operation from each entity copy to its associations with
-	 * {@link jakarta.persistence.CascadeType#MERGE} or {@link jakarta.persistence.CascadeType#ALL}.
-	 * The entity state resulting from merging an entity copy will be overwritten when another entity
-	 * copy is merged.
+	 * When this property is set to {@code allow} or {@code log}, Hibernate will merge
+	 * each entity copy detected while cascading the merge operation. In the process of
+	 * merging each entity copy, Hibernate will cascade the merge operation from each
+	 * entity copy to its associations with {@link jakarta.persistence.CascadeType#MERGE}
+	 * or {@link jakarta.persistence.CascadeType#ALL}. The entity state resulting from
+	 * merging an entity copy will be overwritten when another entity copy is merged.
 	 *
 	 * @since 4.3
 	 */
+	@SuppressWarnings("JavaDoc")
 	String MERGE_ENTITY_COPY_OBSERVER = "hibernate.event.merge.entity_copy_observer";
 
 	/**
-	 * By default, {@linkplain jakarta.persistence.criteria.CriteriaBuilder criteria} queries use
-	 * bind parameters for any value passed via the JPA Criteria API.
+	 * By default, {@linkplain jakarta.persistence.criteria.CriteriaBuilder criteria}
+	 * queries use bind parameters for any value passed via the JPA Criteria API.
 	 * <ul>
-	 * <li>The {@link org.hibernate.query.criteria.ValueHandlingMode#BIND "bind"} mode uses bind
-	 * variables for any literal value.
-	 * <li>The {@link org.hibernate.query.criteria.ValueHandlingMode#INLINE "inline"} mode will
-	 * inline values as SQL literals.
+	 *     <li>The {@link org.hibernate.query.criteria.ValueHandlingMode#BIND "bind"}
+	 *     mode uses bind variables for any literal value.
+	 *     <li>The {@link org.hibernate.query.criteria.ValueHandlingMode#INLINE "inline"}
+	 *     mode inlines values as SQL literals.
 	 * </ul>
 	 * The default value is {@link org.hibernate.query.criteria.ValueHandlingMode#BIND}.
 	 *
@@ -2010,8 +2050,9 @@ public interface AvailableSettings {
 	String CRITERIA_VALUE_HANDLING_MODE = "hibernate.criteria.value_handling_mode";
 
 	/**
-	 * Allows setting default value for all {@link org.hibernate.jpa.spi.JpaCompliance} flags.
-	 * Each individual flags may still be overridden using its specific configuration property.
+	 * Specifies a default value for all {@link org.hibernate.jpa.spi.JpaCompliance}
+	 * flags. Each individual flag may still be overridden by explicitly specifying
+	 * its specific configuration property.
 	 *
 	 * @see #JPA_TRANSACTION_COMPLIANCE
 	 * @see #JPA_QUERY_COMPLIANCE
@@ -2039,13 +2080,17 @@ public interface AvailableSettings {
 	String JPA_TRANSACTION_COMPLIANCE = "hibernate.jpa.compliance.transaction";
 
 	/**
-	 * Controls whether Hibernate's handling of {@link jakarta.persistence.Query}
-	 * (JPQL, Criteria and native-query) should strictly follow the JPA spec.
-	 * This includes both in terms of parsing or translating a query as well
-	 * as calls to the {@link jakarta.persistence.Query} methods throwing spec
-	 * defined exceptions where as Hibernate might not.
-	 *
-	 * Deviations result in an exception if enabled
+	 * When enabled, specifies that every {@linkplain org.hibernate.query.Query query}
+	 * must strictly follow the specified behavior of {@link jakarta.persistence.Query}.
+	 * The affects JPQL queries, criteria queries, and native SQL queries.
+	 * <p>
+	 * This setting modifies the behavior of the JPQL query translator, and of the
+	 * {@code Query} interface itself. In particular, it forces all methods of
+	 * {@code Query} to throw the exception types defined by the JPA specification.
+	 * <p>
+	 * If enabled, any deviations from the JPQL specification results in an exception.
+	 * Therefore, this setting is not recommended, since it prohibits the use of many
+	 * useful features of HQL.
 	 *
 	 * @see org.hibernate.jpa.spi.JpaCompliance#isJpaQueryComplianceEnabled()
 	 *
@@ -2072,7 +2117,7 @@ public interface AvailableSettings {
 	 * Controls whether Hibernate should recognize what it considers a "bag"
 	 * ({@link org.hibernate.collection.spi.PersistentBag}) as a list
 	 * ({@link org.hibernate.collection.spi.PersistentList}) or as a bag.
-	 *
+	 * <p>
 	 * If enabled, Hibernate will recognize it as a list where the
 	 * {@link jakarta.persistence.OrderColumn} annotation is simply missing
 	 * (and its defaults will apply).
@@ -2086,7 +2131,7 @@ public interface AvailableSettings {
 	/**
 	 * JPA defines specific exception types that must be thrown by specific
 	 * methods of {@link jakarta.persistence.EntityManager} and
-	 * {@link jakarta.persistence.EntityManagerFactory} when the objects has
+	 * {@link jakarta.persistence.EntityManagerFactory} when the object has
 	 * been closed. When enabled, this setting specifies that Hibernate should
 	 * comply with the specification.
 	 *
@@ -2097,16 +2142,19 @@ public interface AvailableSettings {
 	String JPA_CLOSED_COMPLIANCE = "hibernate.jpa.compliance.closed";
 
 	/**
-	 * The JPA spec insists that a {@link jakarta.persistence.EntityNotFoundException}
-	 * should be thrown when accessing an entity proxy which does not have an associated
-	 * table row in the database.
+	 * The JPA specification insists that an
+	 * {@link jakarta.persistence.EntityNotFoundException} must be thrown whenever
+	 * an uninitialized entity proxy with no corresponding row in the database is
+	 * accessed. For most programs, this results in many completely unnecessary
+	 * round trips to the database.
 	 * <p>
-	 * Traditionally, Hibernate does not initialize an entity proxy when accessing its
-	 * identifier since it already knows the identifier value, and saves a database
-	 * round trip.
+	 * Traditionally, Hibernate does not initialize an entity proxy when its
+	 * identifier attribute is accessed, since the identifier value is already
+	 * known and held in the proxy instance. This behavior saves the round trip
+	 * to the database.
 	 * <p>
-	 * If enabled Hibernate will initialize the entity proxy even when accessing its
-	 * identifier.
+	 * When enabled, this setting forces Hibernate to initialize the entity proxy
+	 * when its identifier is accessed. Clearly, this setting is not recommended.
 	 *
 	 * @see org.hibernate.jpa.spi.JpaCompliance#isJpaProxyComplianceEnabled()
 	 *
@@ -2122,13 +2170,15 @@ public interface AvailableSettings {
 	String JPA_CACHING_COMPLIANCE = "hibernate.jpa.compliance.caching";
 
 	/**
-	 * Determines whether the scope of {@link jakarta.persistence.TableGenerator#name()}
-	 * and {@link jakarta.persistence.SequenceGenerator#name()} should be considered global
-	 * or local.
+	 * Determines whether the scope of any identifier generator name specified via
+	 * {@link jakarta.persistence.TableGenerator#name()} or
+	 * {@link jakarta.persistence.SequenceGenerator#name()} is considered global to
+	 * the persistence unit, or local to the entity in which identifier generator
+	 * is defined.
 	 * <p>
-	 * If enabled, the names will be considered globally scoped, so defining two different
-	 * generators with the same name will cause a name collision and an exception will be
-	 * thrown during the bootstrap phase.
+	 * If enabled, the name will be considered globally scoped, and so the existence
+	 * of two different generators with the same name will be considered a collision,
+	 * and will result in an exception during bootstrap.
 	 *
 	 * @see org.hibernate.jpa.spi.JpaCompliance#isGlobalGeneratorScopeEnabled()
 	 *
@@ -2144,21 +2194,27 @@ public interface AvailableSettings {
 	String JPA_LOAD_BY_ID_COMPLIANCE = "hibernate.jpa.compliance.load_by_id";
 
 	/**
-	 * True/False setting indicating if the value stored in the table used by the
-	 * {@link jakarta.persistence.TableGenerator} is the last value generated or the
-	 * next value to be used.
-	 *
-	 * The default value is true.
+	 * Determines if the identifier value stored in the database table backing a
+	 * {@linkplain jakarta.persistence.TableGenerator table generator} is the last
+	 * value returned by the identifier generator, or the next value to be returned.
+	 * <p>
+	 * By default, the value stored in the database table is the last generated value.
 	 *
 	 * @since 5.3
 	 */
 	String TABLE_GENERATOR_STORE_LAST_USED = "hibernate.id.generator.stored_last_used";
 
 	/**
-	 * Raises an exception when in-memory pagination over collection fetch is about to
-	 * be performed.
-	 *
-	 * Disabled by default. Set to true to enable.
+	 * When {@linkplain org.hibernate.query.Query#setMaxResults(int) pagination} is used
+	 * in combination with a {@code fetch join} applied to a collection or many-valued
+	 * association, the limit must be applied in-memory instead of on the database. This
+	 * typically has terrible performance characteristics, and should be avoided.
+	 * <p>
+	 * When enabled, this setting specifies that an exception should be thrown for any
+	 * query which would result in the limit being applied in-memory.
+	 * <p>
+	 * By default, the exception is <em>disabled</em>, and the possibility of terrible
+	 * performance is left as a problem for the client to avoid.
 	 *
 	 * @since 5.2.13
 	 */
@@ -2166,17 +2222,17 @@ public interface AvailableSettings {
 
 	/**
 	 * This setting defines how {@link org.hibernate.annotations.Immutable} entities
-	 * are handled when executing a bulk update query. Valid options are defined by the
-	 * enumeration {@link org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode}:
+	 * are handled when executing a bulk update query. Valid options are enumerated
+	 * by {@link org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode}:
 	 * <ul>
-	 * <li>{@link org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode#WARNING "warning"}
-	 * specifies that a warning log message is issued when an
-	 * {@linkplain org.hibernate.annotations.Immutable immutable} entity is to
-	 * be updated via a bulk update statement, and
-	 * <li {@link org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode#EXCEPTION "exception"}
-	 * specifies that a {@link org.hibernate.HibernateException} should be thrown.
+	 *     <li>{@link org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode#WARNING "warning"}
+	 *     specifies that a warning log message is issued when an
+	 *     {@linkplain org.hibernate.annotations.Immutable immutable} entity is to be
+	 *     updated via a bulk update statement, and
+	 *     <li>{@link org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode#EXCEPTION "exception"}
+	 *     specifies that a {@link org.hibernate.HibernateException} should be thrown.
 	 * </ul>
-	 * The default value is {@link org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode#WARNING "warning"}.
+	 * By default, a warning is logged.
 	 *
 	 * @since 5.2.17
 	 *
@@ -2185,20 +2241,18 @@ public interface AvailableSettings {
 	String IMMUTABLE_ENTITY_UPDATE_QUERY_HANDLING_MODE = "hibernate.query.immutable_entity_update_query_handling_mode";
 
 	/**
-	 * By default, the IN clause expands to include all bind parameter values.
-	 * </p>
-	 * However, for database systems supporting execution plan caching, there's
-	 * a better chance of hitting the cache if the number of possible IN clause
-	 * parameters lowers.
-	 * </p>
-	 * For this reason, we can expand the bind parameters to power-of-two:
-	 * 4, 8, 16, 32, 64. This way, an IN clause with 5, 6, or 7 bind parameters
-	 * will use the 8 IN clause, therefore reusing its execution plan.
-	 * </p>
-	 * If you want to activate this feature, you need to set this property to
-	 * {@code true}.
-	 * </p>
-	 * The default value is {@code false}.
+	 * Determines how parameters occurring in a SQL {@code IN} predicate are expanded.
+	 * By default, the {@code IN} predicate expands to include sufficient bind parameters
+	 * to accommodate the specified arguments.
+	 * <p>
+	 * However, for database systems supporting execution plan caching, there's a
+	 * better chance of hitting the cache if the number of possible {@code IN} clause
+	 * parameters is smaller.
+	 * <p>
+	 * When this setting is enabled, we expand the number of bind parameters to an
+	 * integer power of two: 4, 8, 16, 32, 64. Thus, if 5, 6, or 7 arguments are bound
+	 * to a parameter, a SQL statement with 8 bind parameters in the {@code IN} clause
+	 * will be used, and null will be bound to the left-over parameters.
 	 *
 	 * @since 5.2.17
 	 */
@@ -2216,9 +2270,9 @@ public interface AvailableSettings {
 	String QUERY_STATISTICS_MAX_SIZE = "hibernate.statistics.query_max_size";
 
 	/**
-	 * This setting defines the {@link org.hibernate.id.SequenceMismatchStrategy} used when
-	 * Hibernate detects a mismatch between a sequence configuration in an entity mapping
-	 * and its database sequence object counterpart.
+	 * This setting defines the {@link org.hibernate.id.SequenceMismatchStrategy} used
+	 * when Hibernate detects a mismatch between a sequence configuration in an entity
+	 * mapping and its database sequence object counterpart.
 	 * <p>
 	 * Possible values are {@link org.hibernate.id.SequenceMismatchStrategy#EXCEPTION},
 	 * {@link org.hibernate.id.SequenceMismatchStrategy#LOG},
@@ -2245,43 +2299,43 @@ public interface AvailableSettings {
 	String OMIT_JOIN_OF_SUPERCLASS_TABLES = "hibernate.query.omit_join_of_superclass_tables";
 
 	/**
-	 * Global setting identifying the preferred JDBC type code for storing boolean
-	 * values. The fallback is to ask the {@link org.hibernate.dialect.Dialect}.
+	 * Specifies the preferred JDBC type code for storing boolean values. When no
+	 * type code is explicitly specified, a sensible
+	 * {@link org.hibernate.dialect.Dialect#getPreferredSqlTypeCodeForBoolean()
+	 * dialect-specific default type code} is used.
 	 *
 	 * @since 6.0
 	 */
 	String PREFERRED_BOOLEAN_JDBC_TYPE_CODE = "hibernate.type.preferred_boolean_jdbc_type_code";
 
 	/**
-	 * Names a {@link org.hibernate.type.FormatMapper} implementation to be applied to
-	 * the {@link org.hibernate.SessionFactory} for JSON serialization and deserialization.
-	 * Can reference<ul>
-	 *     <li>FormatMapper instance</li>
-	 *     <li>FormatMapper implementation {@link Class} reference</li>
-	 *     <li>FormatMapper implementation class name (FQN)</li>
-	 *     <li>one of the short hand constants<ul>
-	 *     		<li>jackson</li>
-	 * 	    	<li>jsonb</li>
-	 *     </ul>
-	 *     </li>
+	 * Specifies a {@link org.hibernate.type.FormatMapper} used for for JSON serialization
+	 * and deserialization, either:
+	 * <ul>
+	 *     <li>an instance of {@code FormatMapper},
+	 *     <li>a {@link Class} representing a class that implements {@code FormatMapper},
+	 *     <li>the name of a class that implements {@code FormatMapper}, or
+	 *     <li>one of the short hand constants {@code jackson} or {@code jsonb}.
 	 * </ul>
-	 * By default the first of the possible providers that is available in the runtime is used,
-	 * according to the listing order.
+	 * By default, the first of the possible providers that is available in the runtime is
+	 * used, according to the listing order.
 	 *
 	 * @since 6.0
 	 */
 	String JSON_FORMAT_MAPPER = "hibernate.type.json_format_mapper";
 
 	/**
-	 * Global setting for configuring the default storage for the time zone information for time zone based types.
-	 * </p>
-	 * Possible values are {@link org.hibernate.annotations.TimeZoneStorageType#NORMALIZE},
-	 * {@link org.hibernate.annotations.TimeZoneStorageType#COLUMN},
-	 * {@link org.hibernate.annotations.TimeZoneStorageType#NATIVE}
-	 * and {@link org.hibernate.annotations.TimeZoneStorageType#AUTO}.
-	 * </p>
-	 * The default value is given by the {@link org.hibernate.annotations.TimeZoneStorageType#NORMALIZE},
-	 * meaning that time zone information is not stored by default, but timestamps are normalized instead.
+	 * Specifies the default strategy for storage of the timezone information
+	 * for zoned datetime types:
+	 * <ul>
+	 *     <li>{@link org.hibernate.annotations.TimeZoneStorageType#NORMALIZE},
+	 *     <li>{@link org.hibernate.annotations.TimeZoneStorageType#COLUMN},
+	 *     <li>{@link org.hibernate.annotations.TimeZoneStorageType#NATIVE}, or
+	 *     <li>{@link org.hibernate.annotations.TimeZoneStorageType#AUTO}.
+	 * </ul>
+	 * The default is {@link org.hibernate.annotations.TimeZoneStorageType#NORMALIZE},
+	 * meaning that timezone information is not stored by default, but timestamps are
+	 * normalized to UTC instead.
 	 *
 	 * @since 6.0
 	 */
@@ -2292,13 +2346,14 @@ public interface AvailableSettings {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
-	 * The name of the {@link jakarta.persistence.spi.PersistenceProvider} implementor
+	 * Specifies a class implementing {@link jakarta.persistence.spi.PersistenceProvider}.
 	 * <p/>
 	 * See JPA 2 sections 9.4.3 and 8.2.1.4
 	 *
 	 * @deprecated Use {@link #JAKARTA_PERSISTENCE_PROVIDER} instead
 	 */
 	@Deprecated
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String JPA_PERSISTENCE_PROVIDER = "javax.persistence.provider";
 
 	/**
@@ -2319,6 +2374,7 @@ public interface AvailableSettings {
 	 * @deprecated Use {@link #JAKARTA_JTA_DATASOURCE} instead
 	 */
 	@Deprecated
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String JPA_JTA_DATASOURCE = "javax.persistence.jtaDataSource";
 
 	/**
@@ -2329,6 +2385,7 @@ public interface AvailableSettings {
 	 * @deprecated Use {@link #JAKARTA_NON_JTA_DATASOURCE} instead
 	 */
 	@Deprecated
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String JPA_NON_JTA_DATASOURCE = "javax.persistence.nonJtaDataSource";
 
 	/**
@@ -2345,6 +2402,7 @@ public interface AvailableSettings {
 	 * @deprecated Use {@link #JAKARTA_JDBC_DRIVER} instead
 	 */
 	@Deprecated
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String JPA_JDBC_DRIVER = "javax.persistence.jdbc.driver";
 
 	/**
@@ -2361,6 +2419,7 @@ public interface AvailableSettings {
 	 * @deprecated Use {@link #JAKARTA_JDBC_URL} instead
 	 */
 	@Deprecated
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String JPA_JDBC_URL = "javax.persistence.jdbc.url";
 
 	/**
@@ -2374,6 +2433,7 @@ public interface AvailableSettings {
 	 * @deprecated Use {@link #JAKARTA_JDBC_USER} instead
 	 */
 	@Deprecated
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String JPA_JDBC_USER = "javax.persistence.jdbc.user";
 
 	/**
@@ -2387,6 +2447,7 @@ public interface AvailableSettings {
 	 * @deprecated Use {@link #JAKARTA_JDBC_PASSWORD} instead
 	 */
 	@Deprecated
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String JPA_JDBC_PASSWORD = "javax.persistence.jdbc.password";
 
 	/**
@@ -2399,6 +2460,7 @@ public interface AvailableSettings {
 	 * @deprecated Use {@link #JAKARTA_SHARED_CACHE_MODE} instead
 	 */
 	@Deprecated
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String JPA_SHARED_CACHE_MODE = "javax.persistence.sharedCache.mode";
 
 	/**
@@ -2411,6 +2473,7 @@ public interface AvailableSettings {
 	 */
 	//NOTE : Not a valid EMF property
 	@Deprecated
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String JPA_SHARED_CACHE_RETRIEVE_MODE = "javax.persistence.cache.retrieveMode";
 
 	/**
@@ -2423,6 +2486,7 @@ public interface AvailableSettings {
 	 */
 	//NOTE: Not a valid EMF property
 	@Deprecated
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String JPA_SHARED_CACHE_STORE_MODE = "javax.persistence.cache.storeMode";
 
 	/**
@@ -2436,6 +2500,7 @@ public interface AvailableSettings {
 	 * @deprecated Use {@link #JAKARTA_VALIDATION_MODE} instead
 	 */
 	@Deprecated
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String JPA_VALIDATION_MODE = "javax.persistence.validation.mode";
 
 	/**
@@ -2444,6 +2509,7 @@ public interface AvailableSettings {
 	 * @deprecated Use {@link #JAKARTA_VALIDATION_FACTORY} instead
 	 */
 	@Deprecated
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String JPA_VALIDATION_FACTORY = "javax.persistence.validation.factory";
 
 	/**
@@ -2484,6 +2550,7 @@ public interface AvailableSettings {
 	 * @deprecated Use {@link #JAKARTA_LOCK_SCOPE} instead
 	 */
 	@Deprecated
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String JPA_LOCK_SCOPE = LegacySpecHints.HINT_JAVAEE_LOCK_SCOPE;
 
 	/**
@@ -2494,6 +2561,7 @@ public interface AvailableSettings {
 	 * @deprecated Use {@link #JAKARTA_LOCK_TIMEOUT} instead
 	 */
 	@Deprecated
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String JPA_LOCK_TIMEOUT = LegacySpecHints.HINT_JAVAEE_LOCK_TIMEOUT;
 
 	/**
@@ -2593,6 +2661,7 @@ public interface AvailableSettings {
 	 * instead
 	 */
 	@Deprecated
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String IDENTIFIER_GENERATOR_STRATEGY_PROVIDER = "hibernate.identifier_generator_strategy_provider";
 
 	/**

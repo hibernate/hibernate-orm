@@ -230,7 +230,56 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 							toOneAttributeMapping.getSideNature().inverse()
 					);
 					if ( targetPart instanceof EntityIdentifierMapping ) {
-						propertyValues[i] = ( (EntityIdentifierMapping) targetPart ).getIdentifier( o, session );
+						propertyValues[i] = ( (EntityIdentifierMapping) targetPart ).getIdentifier( o );
+					}
+					else {
+						propertyValues[i] = o;
+						assert false;
+					}
+				}
+				else {
+					propertyValues[i] = o;
+				}
+			}
+			identifierValueMapper.setValues( id, propertyValues );
+			return id;
+		}
+		else {
+			return entity;
+		}
+	}
+
+	@Override
+	public Object getIdentifier(Object entity) {
+		if ( hasContainingClass() ) {
+			final Object id = identifierValueMapper.getRepresentationStrategy().getInstantiator().instantiate(
+					null,
+					sessionFactory
+			);
+			final List<AttributeMapping> attributeMappings = getEmbeddableTypeDescriptor().getAttributeMappings();
+			final List<AttributeMapping> idClassAttributeMappings = identifierValueMapper.getAttributeMappings();
+			final Object[] propertyValues = new Object[attributeMappings.size()];
+			for ( int i = 0; i < propertyValues.length; i++ ) {
+				final AttributeMapping attributeMapping = attributeMappings.get( i );
+				final Object o = attributeMapping.getPropertyAccess().getGetter().get( entity );
+				if ( o == null ) {
+					final AttributeMapping idClassAttributeMapping = idClassAttributeMappings.get( i );
+					if ( idClassAttributeMapping.getPropertyAccess().getGetter().getReturnTypeClass().isPrimitive() ) {
+						propertyValues[i] = idClassAttributeMapping.getExpressibleJavaType().getDefaultValue();
+					}
+					else {
+						propertyValues[i] = null;
+					}
+				}
+				//JPA 2 @MapsId + @IdClass points to the pk of the entity
+				else if ( attributeMapping instanceof ToOneAttributeMapping
+						&& !( idClassAttributeMappings.get( i ) instanceof ToOneAttributeMapping ) ) {
+					final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attributeMapping;
+					final ModelPart targetPart = toOneAttributeMapping.getForeignKeyDescriptor().getPart(
+							toOneAttributeMapping.getSideNature().inverse()
+					);
+					if ( targetPart instanceof EntityIdentifierMapping ) {
+						propertyValues[i] = ( (EntityIdentifierMapping) targetPart ).getIdentifier( o );
 					}
 					else {
 						propertyValues[i] = o;

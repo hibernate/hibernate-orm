@@ -6,7 +6,6 @@
  */
 package org.hibernate.type.descriptor.jdbc.spi;
 
-
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -27,6 +26,18 @@ public abstract class BasicJdbcLiteralFormatter extends AbstractJdbcLiteralForma
 		// for performance reasons, avoid conversions if we can
 		if ( unwrapType.isInstance( value ) ) {
 			return (X) value;
+		}
+
+		if ( !getJavaType().isInstance( value ) ) {
+			final Object coerce = getJavaType().coerce( value, wrapperOptions.getSession() );
+			if ( unwrapType.isInstance( coerce ) ) {
+				return (X) coerce;
+			}
+			return (X) getJavaType().unwrap(
+					coerce,
+					unwrapType,
+					wrapperOptions
+			);
 		}
 
 		return (X) getJavaType().unwrap( value, unwrapType, wrapperOptions );

@@ -535,12 +535,13 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 			throw new IllegalArgumentException( "Configuration property " + JDBC_TIME_ZONE + " value [" + jdbcTimeZoneValue + "] is not supported!" );
 		}
 
-		this.criteriaValueHandlingMode = ValueHandlingMode.interpret(
-				configurationSettings.get( CRITERIA_VALUE_HANDLING_MODE )
-		);
-
 		// added the boolean parameter in case we want to define some form of "all" as discussed
 		this.jpaCompliance = context.getJpaCompliance();
+
+		this.criteriaValueHandlingMode = ValueHandlingMode.interpret(
+				configurationSettings.get( CRITERIA_VALUE_HANDLING_MODE ),
+				jpaCompliance.isJpaQueryComplianceEnabled()
+		);
 
 		this.failOnPaginationOverCollectionFetchEnabled = ConfigurationHelper.getBoolean(
 				FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH,

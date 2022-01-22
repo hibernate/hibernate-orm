@@ -129,7 +129,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 	@Override
 	public Object getIdentifier(Object entity, SharedSessionContractImplementor session) {
 		final EntityIdentifierMapping identifierMapping = resolveIdentifierDescriptor();
-		return identifierMapping.getIdentifier( entity, session );
+		return identifierMapping.getIdentifier( entity );
 	}
 
 	protected EntityIdentifierMapping resolveIdentifierDescriptor() {

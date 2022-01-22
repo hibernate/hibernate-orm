@@ -87,8 +87,10 @@ import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
+import org.hibernate.metamodel.model.domain.internal.BasicSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.CompositeSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.DiscriminatorSqmPath;
+import org.hibernate.metamodel.model.domain.internal.EntityTypeImpl;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
@@ -3917,31 +3919,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		if ( inferableExpressible instanceof ConvertibleModelPart ) {
 			final ConvertibleModelPart convertibleModelPart = (ConvertibleModelPart) inferableExpressible;
-			final BasicValueConverter valueConverter = convertibleModelPart.getValueConverter();
 
-			if ( valueConverter != null ) {
-				final Object literalValue = literal.getLiteralValue();
-				final Object sqlLiteralValue;
-
-				if ( valueConverter.getDomainJavaType().getJavaTypeClass().isInstance( literalValue ) ) {
-					sqlLiteralValue = valueConverter.toRelationalValue( literalValue );
-				}
-				else {
-					if ( !valueConverter.getRelationalJavaType().getJavaTypeClass().isInstance( literalValue ) ) {
-						throw new SqlTreeCreationException(
-								String.format(
-										Locale.ROOT,
-										"QueryLiteral type [`%s`] did not match domain Java-type [`%s`] nor JDBC Java-type [`%s`]",
-										literalValue.getClass(),
-										valueConverter.getDomainJavaType().getJavaTypeClass().getName(),
-										valueConverter.getRelationalJavaType().getJavaTypeClass().getName()
-								)
-						);
-					}
-					sqlLiteralValue = literalValue;
-				}
-
-				return new QueryLiteral<>( sqlLiteralValue, convertibleModelPart );
+			if ( convertibleModelPart.getValueConverter() != null ) {
+				return new QueryLiteral<>(
+						literal.getLiteralValue(),
+						convertibleModelPart
+				);
 			}
 		}
 		// Special case for when we create an entity literal through the JPA CriteriaBuilder.literal API
@@ -3977,6 +3960,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			return new EntityTypeLiteral( mappingDescriptor );
 		}
 
+
 		final MappingModelExpressible<?> expressible;
 		final MappingModelExpressible<?> localExpressible = SqmMappingModelHelper.resolveMappingModelExpressible(
 				literal,
@@ -4000,6 +3984,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 		}
 
+		if ( expressible instanceof EntityIdentifierMapping && literal.getNodeType() instanceof EntityTypeImpl ) {
+			return new QueryLiteral<>(
+					( (EntityIdentifierMapping) expressible ).getIdentifier( literal.getLiteralValue() ),
+					(BasicValuedMapping) expressible
+			);
+		}
+
 		if ( expressible instanceof BasicValuedMapping ) {
 			return new QueryLiteral<>(
 					literal.getLiteralValue(),
@@ -4007,7 +3998,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			);
 		}
 		// Handling other values might seem unnecessary, but with JPA Criteria it is totally possible to have such literals
-		else if ( expressible instanceof EmbeddableValuedModelPart ) {
+		if ( expressible instanceof EmbeddableValuedModelPart ) {
 			final EmbeddableValuedModelPart embeddableValuedModelPart = (EmbeddableValuedModelPart) expressible;
 			final List<Expression> list = new ArrayList<>( embeddableValuedModelPart.getJdbcTypeCount() );
 			embeddableValuedModelPart.forEachJdbcValue(
@@ -4021,46 +4012,41 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		else if ( expressible instanceof EntityValuedModelPart ) {
 			final EntityValuedModelPart entityValuedModelPart = (EntityValuedModelPart) expressible;
-			final Object associationKey;
-			final ModelPart associationKeyPart;
-			if ( entityValuedModelPart instanceof Association ) {
-				final Association association = (Association) entityValuedModelPart;
-				final ForeignKeyDescriptor foreignKeyDescriptor = association.getForeignKeyDescriptor();
-				associationKey = foreignKeyDescriptor.getAssociationKeyFromSide(
-						literal.getLiteralValue(),
-						association.getSideNature(),
-						null
-				);
-				associationKeyPart = foreignKeyDescriptor.getPart( association.getSideNature() );
-			}
-			else {
-				final EntityIdentifierMapping identifierMapping = entityValuedModelPart.getEntityMappingType()
-						.getIdentifierMapping();
-				associationKeyPart = identifierMapping;
-				associationKey = identifierMapping.getIdentifier(
-						literal.getLiteralValue(),
-						null
-				);
-			}
-			if ( associationKeyPart instanceof BasicValuedMapping ) {
+			final EntityIdentifierMapping identifierMapping = entityValuedModelPart.getEntityMappingType()
+					.getIdentifierMapping();
+			final Object associationKey = identifierMapping.getIdentifier( literal.getLiteralValue() );
+			if ( identifierMapping instanceof BasicValuedMapping ) {
 				return new QueryLiteral<>(
 						associationKey,
-						(BasicValuedMapping) associationKeyPart
+						(BasicValuedMapping) identifierMapping
 				);
 			}
 			else {
-				final List<Expression> list = new ArrayList<>( associationKeyPart.getJdbcTypeCount() );
-				associationKeyPart.forEachJdbcValue(
+				final List<Expression> list = new ArrayList<>( identifierMapping.getJdbcTypeCount() );
+				identifierMapping.forEachJdbcValue(
 						associationKey,
 						null,
 						(selectionIndex, value, jdbcMapping)
 								-> list.add( new QueryLiteral<>( value, (BasicValuedMapping) jdbcMapping ) ),
 						null
 				);
-				return new SqlTuple( list, associationKeyPart );
+				return new SqlTuple( list, identifierMapping );
 			}
 		}
 		else {
+			if ( literal instanceof SqmLiteral ) {
+				return new QueryLiteral<>(
+						literal.getLiteralValue(),
+						creationContext.getSessionFactory()
+								.getTypeConfiguration()
+								.getBasicTypeRegistry()
+								.getRegisteredType(
+										( (BasicSqmPathSource) literal.getNodeType() ).getSqmPathType()
+												.getJavaType()
+												.getName()
+								)
+				);
+			}
 			throw new NotYetImplementedFor6Exception(
 					expressible == null ? literal.getLiteralValue().getClass() : expressible.getClass()
 			);

@@ -31,8 +31,11 @@ public enum ValueHandlingMode {
 	 * @param valueHandlingMode configured {@link ValueHandlingMode} representation
 	 * @return associated {@link ValueHandlingMode} object
 	 */
-	public static ValueHandlingMode interpret(Object valueHandlingMode) {
+	public static ValueHandlingMode interpret(Object valueHandlingMode, boolean isJpaQueryCompliance) {
 		if ( valueHandlingMode == null ) {
+			if ( isJpaQueryCompliance ) {
+				return INLINE;
+			}
 			return BIND;
 		}
 		else if ( valueHandlingMode instanceof ValueHandlingMode ) {

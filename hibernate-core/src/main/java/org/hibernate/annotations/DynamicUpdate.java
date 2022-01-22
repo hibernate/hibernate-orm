@@ -13,10 +13,18 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * For updating, should this entity use dynamic sql generation where only changed columns get referenced in the
- * prepared sql statement?
- * <p/>
- * Note, for re-attachment of detached entities this is not possible without select-before-update being enabled.
+ * Specifies that SQL {@code update} statements for the annotated entity
+ * are generated dynamically, and only include columns which are actually
+ * being updated.
+ * <p>
+ * This might result in improved performance if it is common to change
+ * only some of the attributes of the entity. However, there is a cost
+ * associated with generating the SQL at runtime.
+ * <p>
+ * When detached entities are reattached using
+ * {@link org.hibernate.Session#update(Object)}, the entity must also be
+ * annotated {@link SelectBeforeUpdate} for this annotation to have any
+ * effect.
  *
  * @author Steve Ebersole
  *
@@ -26,9 +34,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention( RUNTIME )
 public @interface DynamicUpdate {
 	/**
-	 * Should dynamic update generation be used for this entity?  {@code true} says the update sql will be dynamic
-	 * generated.  Default is {@code true} (since generally this annotation is not used unless the user wants dynamic
-	 * generation).
+	 * @deprecated When {@code false}, this annotation has no effect.
 	 */
+	@Deprecated
 	boolean value() default true;
 }

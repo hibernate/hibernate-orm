@@ -12,17 +12,20 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Whether or not a change of the annotated property will trigger an entity version increment.
- *
- * If the annotation is not present, the property is involved in the optimistic lock strategy (default).
+ * Specifies whether updating the annotated attribute should trigger an increment
+ * to the {@link jakarta.persistence.Version version} of the entity instance.
+ * <p>
+ * If this annotation is not present, updating an attribute does cause the version
+ * to be incremented.
  *
  * @author Logi Ragnarsson
  */
-@Target( { ElementType.METHOD, ElementType.FIELD })
+@Target({ElementType.METHOD, ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface OptimisticLock {
 	/**
-	 * Whether the annotated property should be included in optimistic locking determinations for the owner.
+	 * {@code true} if changing the annotated attribute should <em>not</em> cause
+	 * the version to be incremented.
 	 */
 	boolean excluded();
 }

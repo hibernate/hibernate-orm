@@ -16,6 +16,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * Add caching strategy to a root entity or a collection.
  *
+ * @see jakarta.persistence.Cacheable
+ *
  * @author Emmanuel Bernard
  */
 @Target({TYPE, METHOD, FIELD})

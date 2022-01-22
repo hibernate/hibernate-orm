@@ -829,6 +829,8 @@ public interface AvailableSettings {
 
 	/**
 	 * Specifies the default batch size for batch fetching.
+	 *
+	 * @see org.hibernate.annotations.BatchSize
 	 */
 	String DEFAULT_BATCH_FETCH_SIZE = "hibernate.default_batch_fetch_size";
 

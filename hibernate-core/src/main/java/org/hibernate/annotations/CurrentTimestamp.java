@@ -15,8 +15,8 @@ import java.lang.annotation.Target;
 import org.hibernate.tuple.GenerationTiming;
 
 /**
- * Specifies to use the database `current_timestamp` function for generating
- * values for the associated attribute based on {@link #timing()}
+ * Specifies that the database {@code current_timestamp} function is used to
+ * generate values of the annotated attribute, based on {@link #timing()}.
  *
  * @see CurrentTimestampGeneration
  *

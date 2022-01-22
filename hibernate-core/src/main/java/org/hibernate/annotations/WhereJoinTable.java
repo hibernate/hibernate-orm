@@ -12,8 +12,12 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Where clause to add to the collection join table.  The clause is written in SQL.  Just as with
- * {@link Where}, a common use case is for implementing soft-deletes.
+ * Specifies a restriction written in native SQL to add to the generated
+ * SQL when querying the {@link jakarta.persistence.JoinTable join table}
+ * of a collection.
+ * <p>
+ * For example, {@code @Where("deleted = false")} could be used to hide
+ * associations which have been soft-deleted from an association table.
  *
  * @author Emmanuel Bernard
  */
@@ -21,7 +25,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface WhereJoinTable {
 	/**
-	 * The where-clause predicate.
+	 * A predicate, written in native SQL.
 	 */
 	String clause();
 }

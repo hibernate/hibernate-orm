@@ -13,8 +13,13 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * For inserting, should this entity use dynamic sql generation where only non-null columns get referenced in the 
- * prepared sql statement?
+ * Specifies that SQL {@code insert} statements for the annotated entity
+ * are generated dynamically, and only include the columns to which a
+ * non-null value must be assigned.
+ * <p>
+ * This might result in improved performance if an entity is likely to
+ * have many null attributes when it is first made persistent. However,
+ * there is a cost associated with generating the SQL at runtime.
  *
  * @author Steve Ebersole
  */
@@ -22,8 +27,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention( RUNTIME )
 public @interface DynamicInsert {
 	/**
-	 * Should dynamic insertion be used for this entity?  {@code true} says dynamic insertion will be used.
-	 * Default is {@code true} (since generally this annotation is not used unless the user wants dynamic insertion).
+	 * @deprecated When {@code false}, this annotation has no effect.
 	 */
+	@Deprecated
 	boolean value() default true;
 }

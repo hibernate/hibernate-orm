@@ -13,7 +13,8 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Used to define the style of optimistic locking to be applied to an entity.  In a hierarchy, only valid on the
+ * Used to define the style of optimistic locking to be applied to an entity.
+ * In an inheritance hierarchy, this annotation may only be applies to the
  * root entity.
  *
  * @author Steve Ebersole

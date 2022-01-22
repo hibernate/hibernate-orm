@@ -72,6 +72,7 @@ import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmSetJoin;
 import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
+import org.hibernate.query.sqm.tree.expression.ValueBindJpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
@@ -1419,7 +1420,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			return literal( value, typeInferenceSource );
 		}
 
-		return new JpaCriteriaParameter<>(
+		return new ValueBindJpaCriteriaParameter<>(
 				resolveInferredParameterType( value, typeInferenceSource, getTypeConfiguration() ),
 				value,
 				this

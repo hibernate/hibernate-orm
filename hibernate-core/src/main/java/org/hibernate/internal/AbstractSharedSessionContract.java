@@ -792,9 +792,10 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		return query;
 	}
 
-	@Override @SuppressWarnings({"rawtypes", "unchecked"})
-	public NativeQueryImplementor createNativeQuery(String sqlString, Class resultClass, String tableAlias) {
-		NativeQueryImplementor query = createNativeQuery( sqlString );
+	@Override
+	public <T> NativeQueryImplementor<T> createNativeQuery(String sqlString, Class<T> resultClass, String tableAlias) {
+		@SuppressWarnings("unchecked")
+		NativeQueryImplementor<T> query = createNativeQuery( sqlString );
 		if ( getFactory().getMetamodel().isEntityClass(resultClass) ) {
 			query.addEntity( tableAlias, resultClass.getName(), LockMode.READ );
 		}
@@ -804,9 +805,10 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		return query;
 	}
 
-	@Override @SuppressWarnings({"rawtypes", "unchecked"})
-	public NativeQueryImplementor  createNativeQuery(String sqlString, String resultSetMappingName, Class resultClass) {
-		final NativeQueryImplementor query = createNativeQuery( sqlString, resultSetMappingName );
+	@Override
+	public <T> NativeQueryImplementor<T>  createNativeQuery(String sqlString, String resultSetMappingName, Class<T> resultClass) {
+		@SuppressWarnings("unchecked")
+		final NativeQueryImplementor<T> query = createNativeQuery( sqlString, resultSetMappingName );
 		if ( Tuple.class.equals( resultClass ) ) {
 			query.setTupleTransformer( new NativeQueryTupleTransformer() );
 		}
@@ -1035,11 +1037,11 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@Override
-	public MutationQuery createMutationQuery(CriteriaUpdate updateQuery) {
+	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") CriteriaUpdate updateQuery) {
 		checkOpen();
 		try {
 			return new QuerySqmImpl<>(
-					(SqmUpdateStatement) updateQuery,
+					(SqmUpdateStatement<?>) updateQuery,
 					null,
 					this
 			);
@@ -1050,10 +1052,10 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@Override
-	public MutationQuery createMutationQuery(CriteriaDelete deleteQuery) {
+	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") CriteriaDelete deleteQuery) {
 		checkOpen();
 		try {
-			return new QuerySqmImpl( (SqmDeleteStatement) deleteQuery, null, this );
+			return new QuerySqmImpl<>( (SqmDeleteStatement<?>) deleteQuery, null, this );
 		}
 		catch ( RuntimeException e ) {
 			throw getExceptionConverter().convert( e );
@@ -1186,7 +1188,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 	}
 
-	@Override @SuppressWarnings("unchecked")
+	@Override @SuppressWarnings({"unchecked", "rawtypes"})
 	public QueryImplementor createQuery(@SuppressWarnings("rawtypes") CriteriaUpdate criteriaUpdate) {
 		checkOpen();
 		try {
@@ -1201,7 +1203,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 	}
 
-	@Override @SuppressWarnings("unchecked")
+	@Override @SuppressWarnings({"unchecked", "rawtypes"})
 	public QueryImplementor createQuery(@SuppressWarnings("rawtypes") CriteriaDelete criteriaDelete) {
 		checkOpen();
 		try {

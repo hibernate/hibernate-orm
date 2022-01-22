@@ -450,12 +450,12 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public MutationQuery createMutationQuery(CriteriaUpdate updateQuery) {
+	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") CriteriaUpdate updateQuery) {
 		return delegate().createMutationQuery( updateQuery );
 	}
 
 	@Override
-	public MutationQuery createMutationQuery(CriteriaDelete deleteQuery) {
+	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") CriteriaDelete deleteQuery) {
 		return delegate().createMutationQuery( deleteQuery );
 	}
 
@@ -464,12 +464,12 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 		return queryDelegate().createQuery( criteriaQuery );
 	}
 
-	@Override
+	@Override @SuppressWarnings("rawtypes")
 	public QueryImplementor createQuery(CriteriaUpdate updateQuery) {
 		return queryDelegate().createQuery( updateQuery );
 	}
 
-	@Override
+	@Override @SuppressWarnings("rawtypes")
 	public QueryImplementor createQuery(CriteriaDelete deleteQuery) {
 		return queryDelegate().createQuery( deleteQuery );
 	}
@@ -520,12 +520,14 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override @SuppressWarnings({"rawtypes", "unchecked"})
+	//note: we're doing something a bit funny here to work around
+	//      the clashing signatures declared by the supertypes
 	public NativeQueryImplementor createNativeQuery(String sqlString, Class resultClass) {
 		return queryDelegate().createNativeQuery( sqlString, resultClass );
 	}
 
-	@Override @SuppressWarnings({"rawtypes", "unchecked"})
-	public NativeQueryImplementor createNativeQuery(String sqlString, Class resultClass, String tableAlias) {
+	@Override
+	public <T> NativeQueryImplementor<T> createNativeQuery(String sqlString, Class<T> resultClass, String tableAlias) {
 		return queryDelegate().createNativeQuery( sqlString, resultClass, tableAlias );
 	}
 
@@ -534,8 +536,8 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 		return queryDelegate().createNativeQuery( sqlString, resultSetMappingName );
 	}
 
-	@Override @SuppressWarnings({"rawtypes", "unchecked"})
-	public NativeQueryImplementor createNativeQuery(String sqlString, String resultSetMappingName, Class resultClass) {
+	@Override
+	public <T> NativeQueryImplementor<T> createNativeQuery(String sqlString, String resultSetMappingName, Class<T> resultClass) {
 		return queryDelegate().createNativeQuery( sqlString, resultSetMappingName, resultClass );
 	}
 

@@ -53,16 +53,16 @@ public interface QueryProducerImplementor extends QueryProducer {
 	@Override
 	<R> NativeQueryImplementor<R> createNativeQuery(String sqlString, Class<R> resultClass, String tableAlias);
 
-	@Override @SuppressWarnings("rawtypes")
+	@Override @Deprecated @SuppressWarnings("rawtypes")
 	NativeQueryImplementor createNativeQuery(String sqlString, String resultSetMappingName);
 
 	@Override
 	<R> NativeQueryImplementor<R> createNativeQuery(String sqlString, String resultSetMappingName, Class<R> resultClass);
 
-	@Override @SuppressWarnings("rawtypes")
+	@Override @Deprecated @SuppressWarnings("rawtypes")
 	NativeQueryImplementor getNamedNativeQuery(String name);
 
-	@Override @SuppressWarnings("rawtypes")
+	@Override @Deprecated @SuppressWarnings("rawtypes")
 	NativeQueryImplementor getNamedNativeQuery(String name, String resultSetMapping);
 
 	@Override
@@ -83,9 +83,9 @@ public interface QueryProducerImplementor extends QueryProducer {
 	@Override
 	<R> QueryImplementor<R> createQuery(CriteriaQuery<R> criteriaQuery);
 
-	@Override
-	QueryImplementor createQuery(@SuppressWarnings("rawtypes") CriteriaUpdate updateQuery);
+	@Override @Deprecated @SuppressWarnings("rawtypes")
+	QueryImplementor createQuery(CriteriaUpdate updateQuery);
 
-	@Override
-	QueryImplementor createQuery(@SuppressWarnings("rawtypes") CriteriaDelete deleteQuery);
+	@Override @Deprecated @SuppressWarnings("rawtypes")
+	QueryImplementor createQuery(CriteriaDelete deleteQuery);
 }

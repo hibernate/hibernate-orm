@@ -1321,9 +1321,9 @@ public interface Session extends SharedSessionContract, EntityManager {
 	@Override
 	<R> Query<R> createQuery(CriteriaQuery<R> criteriaQuery);
 
-	@Override
+	@Override @Deprecated @SuppressWarnings("rawtypes")
 	Query createQuery(CriteriaDelete deleteQuery);
 
-	@Override
+	@Override @Deprecated @SuppressWarnings("rawtypes")
 	Query createQuery(CriteriaUpdate updateQuery);
 }

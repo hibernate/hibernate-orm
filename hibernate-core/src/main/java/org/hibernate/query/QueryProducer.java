@@ -28,8 +28,9 @@ public interface QueryProducer {
 	 * Create a {@link Query} instance for the given HQL query, or
 	 * HQL insert, update, or delete statement.
 	 *
-	 * @apiNote Returns a raw Query reference, as opposed to unbounded (`<?>`),
-	 * to match {@link jakarta.persistence.EntityManager#createQuery(String)}
+	 * @apiNote Returns a raw {@code Query} type instead of a wildcard
+	 * type {@code Query<?>}, to match the signature of the JPA method
+	 * {@link jakarta.persistence.EntityManager#createQuery(String)}.
 	 *
 	 * @param queryString The HQL query
 	 *
@@ -65,14 +66,18 @@ public interface QueryProducer {
 
 	/**
 	 * Create a {@link MutationQuery} for the given JPA {@link CriteriaUpdate}
+	 *
+	 * @deprecated use {@link #createMutationQuery(CriteriaUpdate)}
 	 */
-	@SuppressWarnings("rawtypes")
+	@Deprecated(since = "6.0") @SuppressWarnings("rawtypes")
 	Query createQuery(CriteriaUpdate updateQuery);
 
 	/**
 	 * Create a {@link MutationQuery} for the given JPA {@link CriteriaDelete}
+	 *
+	 * @deprecated use {@link #createMutationQuery(CriteriaDelete)}
 	 */
-	@SuppressWarnings("rawtypes")
+	@Deprecated(since = "6.0") @SuppressWarnings("rawtypes")
 	Query createQuery(CriteriaDelete deleteQuery);
 
 	/**
@@ -175,12 +180,12 @@ public interface QueryProducer {
 	MutationQuery createMutationQuery(String hqlString);
 
 	/**
-	 * Create a `MutationQuery` from the given update criteria tree
+	 * Create a {@link MutationQuery} from the given update criteria tree
 	 */
 	MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") CriteriaUpdate updateQuery);
 
 	/**
-	 * Create a `MutationQuery` from the given delete criteria tree
+	 * Create a {@link MutationQuery} from the given delete criteria tree
 	 */
 	MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") CriteriaDelete deleteQuery);
 
@@ -207,7 +212,8 @@ public interface QueryProducer {
 	 *
 	 * @see jakarta.persistence.EntityManager#createNamedQuery(String)
 	 * 
-	 * @deprecated use {@link #createNamedQuery(String, Class)} or {@link #createNamedMutationQuery(String)}
+	 * @deprecated use {@link #createNamedQuery(String, Class)} or
+	 *                 {@link #createNamedMutationQuery(String)}
 	 */
 	@Deprecated(since = "6.0") @SuppressWarnings("rawtypes")
 	Query createNamedQuery(String name);

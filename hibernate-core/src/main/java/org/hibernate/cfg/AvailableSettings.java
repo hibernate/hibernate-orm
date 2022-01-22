@@ -1257,21 +1257,23 @@ public interface AvailableSettings {
 
 	/**
 	 * The maximum number of entries in the
-	 * {@linkplain org.hibernate.query.spi.QueryPlanCache query plan cache}.
+	 * {@linkplain org.hibernate.query.spi.QueryPlanCache query plan cache} or
+	 * {@linkplain org.hibernate.query.spi.QueryInterpretationCache
+	 * query interpretation cache}.
 	 * <p>
 	 * The default maximum is
-	 * {@value org.hibernate.query.internal.QueryInterpretationCacheStandardImpl#DEFAULT_QUERY_PLAN_MAX_COUNT}.
+	 * {@value org.hibernate.query.spi.QueryEngine#DEFAULT_QUERY_PLAN_MAX_COUNT}.
 	 *
 	 * @see org.hibernate.query.spi.QueryPlanCache
 	 */
 	String QUERY_PLAN_CACHE_MAX_SIZE = "hibernate.query.plan_cache_max_size";
 
 	/**
-	 * The maximum number of {@link org.hibernate.query.internal.ParameterMetadataImpl}
+	 * The maximum number of {@link org.hibernate.query.ParameterMetadata} instances
 	 * maintained by the {@link org.hibernate.query.spi.QueryInterpretationCache}.
 	 * <p>
 	 * The default maximum is
-	 * {@value org.hibernate.query.internal.QueryInterpretationCacheStandardImpl#DEFAULT_PARAMETER_METADATA_MAX_COUNT}.
+	 * {@value org.hibernate.query.spi.QueryEngine#DEFAULT_PARAMETER_METADATA_MAX_COUNT}.
 	 *
 	 * @deprecated this setting is not currently used
 	 */

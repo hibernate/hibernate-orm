@@ -2116,14 +2116,6 @@ public interface AvailableSettings {
 	String JPA_LIST_COMPLIANCE	= "hibernate.jpa.compliance.list";
 
 	/**
-	 * Controls whether Hibernate should recognize what it considers a "bag"
-	 * ({@link org.hibernate.collection.spi.PersistentBag}) as a list
-	 * ({@link org.hibernate.collection.spi.PersistentList}) or as a bag.
-	 * <p>
-	 * If enabled, Hibernate will recognize it as a list where the
-	 * {@link jakarta.persistence.OrderColumn} annotation is simply missing
-	 * (and its defaults will apply).
-	 *
 	 * @see org.hibernate.jpa.spi.JpaCompliance#isJpaOrderByMappingComplianceEnabled()
 	 *
 	 * @since 6.0

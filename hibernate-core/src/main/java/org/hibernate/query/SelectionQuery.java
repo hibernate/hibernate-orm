@@ -17,6 +17,7 @@ import java.util.stream.Stream;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.Incubating;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.NonUniqueResultException;
@@ -37,6 +38,7 @@ import jakarta.persistence.TemporalType;
  *
  * @author Steve Ebersole
  */
+@Incubating
 public interface SelectionQuery extends CommonQueryContract {
 	/**
 	 * Execute the query and return the query results as a {@link List}.

@@ -13,6 +13,7 @@ import java.util.Date;
 import java.util.Map;
 
 import org.hibernate.FlushMode;
+import org.hibernate.Incubating;
 
 import jakarta.persistence.Parameter;
 import jakarta.persistence.TemporalType;
@@ -24,6 +25,7 @@ import jakarta.persistence.TemporalType;
  *
  * @author Steve Ebersole
  */
+@Incubating
 public interface MutationQuery extends CommonQueryContract {
 
 	/**

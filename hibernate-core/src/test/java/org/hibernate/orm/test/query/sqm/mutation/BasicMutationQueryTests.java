@@ -82,19 +82,10 @@ public class BasicMutationQueryTests {
 	}
 
 	@Test
+	@ExpectedException( IllegalMutationQueryException.class )
 	void basicInvalidNamedNativeDeleteTest(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			try {
-				// we do not know unequivocally whether this is a select or mutation
-				//		- this will be an execution exception
-				session.createNamedMutationQuery( "invalid-native" ).executeUpdate();
-				fail( "Expecting query to fail" );
-			}
-			catch (PersistenceException expected) {
-				assertThat( expected.getCause() ).isNotNull();
-				assertThat( expected.getCause().getCause() ).isNotNull();
-				assertThat( expected.getCause().getCause() ).isInstanceOf( SQLException.class );
-			}
+			session.createNamedMutationQuery( "invalid-native" ).executeUpdate();
 		} );
 	}
 

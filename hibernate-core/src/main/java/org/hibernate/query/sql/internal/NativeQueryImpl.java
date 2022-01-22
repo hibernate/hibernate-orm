@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -119,6 +120,7 @@ public class NativeQueryImpl<R>
 
 	private final QueryOptionsImpl queryOptions = new QueryOptionsImpl();
 
+	private Boolean startsWithSelect;
 	private Set<String> querySpaces;
 	private Callback callback;
 
@@ -524,8 +526,21 @@ public class NativeQueryImpl<R>
 			return true;
 		}
 
+		if ( startsWithSelect() ) {
+			// as a last resort, see if the SQL starts with "select"
+			return true;
+		}
+
 		return null;
 	}
+
+	private boolean startsWithSelect() {
+		if ( startsWithSelect == null ) {
+			startsWithSelect = sqlString.toLowerCase( Locale.ROOT ).startsWith( "select " );
+		}
+		return startsWithSelect;
+	}
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Execution

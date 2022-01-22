@@ -53,6 +53,7 @@ import org.hibernate.procedure.internal.ProcedureCallImpl;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.query.IllegalMutationQueryException;
 import org.hibernate.query.IllegalNamedQueryOptionsException;
+import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.JpaQuery;
 import org.hibernate.query.MutationQuery;
 import org.hibernate.query.SelectionQuery;
@@ -61,6 +62,7 @@ import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
 import org.hibernate.query.hql.spi.SqmQueryImplementor;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
+import org.hibernate.query.spi.HqlInterpretation;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryInterpretationCache;
@@ -671,18 +673,19 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		try {
 			final QueryEngine queryEngine = getFactory().getQueryEngine();
 			final QueryInterpretationCache interpretationCache = queryEngine.getInterpretationCache();
-
-			final SqmSelectionQuery query = new SqmSelectQueryImpl(
+			final HqlInterpretation hqlInterpretation = interpretationCache.resolveHqlInterpretation(
 					hqlString,
-					interpretationCache.resolveHqlInterpretation(
-							hqlString,
-							s -> queryEngine.getHqlTranslator().translate( hqlString )
-					),
-					this
+					s -> queryEngine.getHqlTranslator().translate( hqlString )
 			);
 
-			applyQuerySettingsAndHints( query );
+			if ( hqlInterpretation.getSqmStatement() instanceof SqmDmlStatement ) {
+				throw new IllegalSelectQueryException( "Expecting a selection query, but found `" + hqlString + "`" );
+			}
+
+			final SqmSelectionQuery query = new SqmSelectQueryImpl( hqlString, hqlInterpretation, this );
 			query.setComment( hqlString );
+
+			applyQuerySettingsAndHints( query );
 
 			return query;
 		}
@@ -1016,7 +1019,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 					final Boolean isUnequivocallySelect = query.isSelectQuery();
 					if ( isUnequivocallySelect == TRUE ) {
 						throw new IllegalMutationQueryException(
-								"Expecting a named native mutation query (" + queryName + "), but found `" + nativeMemento.getSqlString() + "`"
+								"Expecting named native query (" + queryName + ") to be a mutation query, but found `" + nativeMemento.getSqlString() + "`"
 						);
 					}
 

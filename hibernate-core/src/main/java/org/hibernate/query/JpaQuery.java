@@ -33,7 +33,7 @@ import jakarta.persistence.TemporalType;
  *
  * @author Steve Ebersole
  */
-public interface JpaQuery extends CommonQueryContract, SelectionQuery, MutationQuery, jakarta.persistence.Query {
+public interface JpaQuery extends SelectionQuery, MutationQuery, jakarta.persistence.Query {
 	@Override
 	default List<?> getResultList() {
 		return SelectionQuery.super.getResultList();

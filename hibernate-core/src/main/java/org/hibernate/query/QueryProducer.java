@@ -25,10 +25,13 @@ import jakarta.persistence.criteria.CriteriaUpdate;
  */
 public interface QueryProducer {
 	/**
-	 * Create a {@link Query} instance for the given HQL/JPQL query, or
-	 * HQL/JPQL insert, update, or delete statement.
+	 * Create a {@link Query} instance for the given HQL query, or
+	 * HQL insert, update, or delete statement.
 	 *
-	 * @param queryString The HQL/JPQL query
+	 * @apiNote Returns a raw Query reference, as opposed to unbounded (`<?>`),
+	 * to match {@link jakarta.persistence.EntityManager#createQuery(String)}
+	 *
+	 * @param queryString The HQL query
 	 *
 	 * @return The {@link Query} instance for manipulation and execution
 	 *
@@ -42,21 +45,12 @@ public interface QueryProducer {
 	Query createQuery(String queryString);
 
 	/**
-	 * Create a {@link SelectionQuery} reference for the given HQL.
-	 *
-	 * Only valid for select queries
-	 *
-	 * @see jakarta.persistence.EntityManager#createQuery(String)
-	 */
-	SelectionQuery createSelectQuery(String hqlString);
-
-	/**
-	 * Create a typed {@link Query} instance for the given HQL/JPQL query string.
+	 * Create a typed {@link Query} instance for the given HQL query string.
 	 * <p>
 	 * The returned {@code Query} may be executed by calling
 	 * {@link Query#getResultList()} or {@link Query#getSingleResult()}.
 	 *
-	 * @param queryString The HQL/JPQL query
+	 * @param queryString The HQL query
 	 * @param resultClass The type of the query result
 	 * @return The Query instance for manipulation and execution
 	 *
@@ -65,59 +59,21 @@ public interface QueryProducer {
 	<R> Query<R> createQuery(String queryString, Class<R> resultClass);
 
 	/**
-	 * Create a MutationQuery reference for the given HQL insert,
-	 * update, or delete statement.
+	 * Create a {@link Query} for the given JPA {@link CriteriaQuery}
 	 */
-	MutationQuery createMutationQuery(String hqlString);
+	<R> Query<R> createQuery(CriteriaQuery<R> criteriaQuery);
 
 	/**
-	 * Create a typed {@link Query} instance for the given named query.
-	 * The named query might be defined in HQL or in native SQL.
-	 *
-	 * @param name the name of a pre-defined, named query
-	 *
-	 * @return The {@link Query} instance for manipulation and execution
-	 *
-	 * @throws IllegalArgumentException if a query has not been
-	 * defined with the given name or if the query string is
-	 * found to be invalid
-	 *
-	 * @see jakarta.persistence.EntityManager#createNamedQuery(String)
-	 * 
-	 * @deprecated use {@link #createNamedQuery(String, Class)} or {@link #createNamedMutationQuery(String)}
+	 * Create a {@link MutationQuery} for the given JPA {@link CriteriaUpdate}
 	 */
-	@Deprecated(since = "6.0") @SuppressWarnings("rawtypes")
-	Query createNamedQuery(String name);
+	@SuppressWarnings("rawtypes")
+	Query createQuery(CriteriaUpdate updateQuery);
 
 	/**
-	 * Create a typed {@link Query} instance for the given named query.
-	 * The named query might be defined in HQL or in native SQL.
-	 *
-	 * @param name the name of a query defined in metadata
-	 * @param resultClass the type of the query result
-	 *
-	 * @return The {@link Query} instance for manipulation and execution
-	 *
-	 * @throws IllegalArgumentException if a query has not been
-	 * defined with the given name or if the query string is
-	 * found to be invalid or if the query result is found to
-	 * not be assignable to the specified type
-	 *
-	 * @see jakarta.persistence.EntityManager#createNamedQuery(String,Class)
+	 * Create a {@link MutationQuery} for the given JPA {@link CriteriaDelete}
 	 */
-	<R> Query<R> createNamedQuery(String name, Class<R> resultClass);
-
-	/**
-	 * Create a {@link MutationQuery} instance for the given named insert,
-	 * update, or delete HQL query. The named query might be defined as
-	 * {@linkplain  jakarta.persistence.NamedQuery HQL}) or
-	 * {@linkplain  jakarta.persistence.NamedNativeQuery native-SQL}.
-	 *
-	 * @throws IllegalArgumentException if no query has been
-	 * defined with the given name or if the query string is
-	 * found to be invalid (a selection e.g.)
-	 */
-	MutationQuery createNamedMutationQuery(String name);
+	@SuppressWarnings("rawtypes")
+	Query createQuery(CriteriaDelete deleteQuery);
 
 	/**
 	 * Create a {@link NativeQuery} instance for the given native (SQL) query
@@ -177,7 +133,7 @@ public interface QueryProducer {
 	 *
 	 * @see jakarta.persistence.EntityManager#createNativeQuery(String,Class)
 	 * @see jakarta.persistence.SqlResultSetMapping
-	 * 
+	 *
 	 * @deprecated use {@link #createNativeQuery(String, String, Class)}
 	 */
 	@Deprecated(since = "6.0") @SuppressWarnings("rawtypes")
@@ -198,13 +154,25 @@ public interface QueryProducer {
 	<R> NativeQuery<R> createNativeQuery(String sqlString, String resultSetMappingName, Class<R> resultClass);
 
 	/**
-	 * Create a {@link NativeQuery} instance for the given native (SQL) statement
+	 * Create a {@link SelectionQuery} reference for the given HQL.
 	 *
-	 * @param sqlString a native SQL statement string
+	 * Only valid for select queries
 	 *
-	 * @return The NativeQuery instance for manipulation and execution
+	 * @see jakarta.persistence.EntityManager#createQuery(String)
+	 *
+	 * @throws IllegalSelectQueryException if the given HQL query
+	 * is an insert, update or delete query
 	 */
-	MutationQuery createNativeMutationQuery(String sqlString);
+	SelectionQuery createSelectQuery(String hqlString);
+
+	/**
+	 * Create a MutationQuery reference for the given HQL insert,
+	 * update, or delete statement.
+	 *
+	 * @throws IllegalMutationQueryException if the given HQL query
+	 * is a select query
+	 */
+	MutationQuery createMutationQuery(String hqlString);
 
 	/**
 	 * Create a `MutationQuery` from the given update criteria tree
@@ -217,19 +185,64 @@ public interface QueryProducer {
 	MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") CriteriaDelete deleteQuery);
 
 	/**
-	 * Create a {@link Query} for the given JPA {@link CriteriaQuery}
+	 * Create a {@link NativeQuery} instance for the given native (SQL) statement
+	 *
+	 * @param sqlString a native SQL statement string
+	 *
+	 * @return The NativeQuery instance for manipulation and execution
 	 */
-	<R> Query<R> createQuery(CriteriaQuery<R> criteriaQuery);
+	MutationQuery createNativeMutationQuery(String sqlString);
 
 	/**
-	 * Create a {@link MutationQuery} for the given JPA {@link CriteriaUpdate}
+	 * Create a typed {@link Query} instance for the given named query.
+	 * The named query might be defined in HQL or in native SQL.
+	 *
+	 * @param name the name of a pre-defined, named query
+	 *
+	 * @return The {@link Query} instance for manipulation and execution
+	 *
+	 * @throws IllegalArgumentException if a query has not been
+	 * defined with the given name or if the query string is
+	 * found to be invalid
+	 *
+	 * @see jakarta.persistence.EntityManager#createNamedQuery(String)
+	 * 
+	 * @deprecated use {@link #createNamedQuery(String, Class)} or {@link #createNamedMutationQuery(String)}
 	 */
-	Query createQuery(@SuppressWarnings("rawtypes") CriteriaUpdate updateQuery);
+	@Deprecated(since = "6.0") @SuppressWarnings("rawtypes")
+	Query createNamedQuery(String name);
 
 	/**
-	 * Create a {@link MutationQuery} for the given JPA {@link CriteriaDelete}
+	 * Create a typed {@link Query} instance for the given named query.
+	 * The named query might be defined in HQL or in native SQL.
+	 *
+	 * @param name the name of a query defined in metadata
+	 * @param resultClass the type of the query result
+	 *
+	 * @return The {@link Query} instance for manipulation and execution
+	 *
+	 * @throws IllegalArgumentException if a query has not been
+	 * defined with the given name or if the query string is
+	 * found to be invalid or if the query result is found to
+	 * not be assignable to the specified type
+	 *
+	 * @see jakarta.persistence.EntityManager#createNamedQuery(String,Class)
 	 */
-	Query createQuery(@SuppressWarnings("rawtypes") CriteriaDelete deleteQuery);
+	<R> Query<R> createNamedQuery(String name, Class<R> resultClass);
+
+	/**
+	 * Create a {@link MutationQuery} instance for the given named insert,
+	 * update, or delete HQL query. The named query might be defined as
+	 * {@linkplain  jakarta.persistence.NamedQuery HQL}) or
+	 * {@linkplain  jakarta.persistence.NamedNativeQuery native-SQL}.
+	 *
+	 * @throws IllegalMutationQueryException if the given HQL query is a select query
+	 * @throws UnknownNamedQueryException if no query has been defined with the given name
+	 */
+	MutationQuery createNamedMutationQuery(String name);
+
+
+
 
 	/**
 	 * Create a {@link Query} instance for the named query.

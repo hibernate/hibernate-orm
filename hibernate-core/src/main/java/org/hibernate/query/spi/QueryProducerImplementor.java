@@ -29,8 +29,6 @@ public interface QueryProducerImplementor extends QueryProducer {
 	FlushMode getHibernateFlushMode();
 	CacheMode getCacheMode();
 
-	// todo : define list/scroll/iterate methods here...
-
 	@Override @SuppressWarnings("rawtypes")
 	QueryImplementor getNamedQuery(String queryName);
 

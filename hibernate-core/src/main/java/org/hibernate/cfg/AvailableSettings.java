@@ -1272,7 +1272,10 @@ public interface AvailableSettings {
 	 * <p>
 	 * The default maximum is
 	 * {@value org.hibernate.query.internal.QueryInterpretationCacheStandardImpl#DEFAULT_PARAMETER_METADATA_MAX_COUNT}.
+	 *
+	 * @deprecated this setting is not currently used
 	 */
+	@Deprecated(since="6.0")
 	String QUERY_PLAN_CACHE_PARAMETER_METADATA_MAX_SIZE = "hibernate.query.plan_parameter_metadata_max_size";
 
 	/**

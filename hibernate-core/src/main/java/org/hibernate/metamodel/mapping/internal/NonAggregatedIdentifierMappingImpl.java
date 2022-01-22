@@ -202,6 +202,11 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 
 	@Override
 	public Object getIdentifier(Object entity, SharedSessionContractImplementor session) {
+		return getIdentifier( entity );
+	}
+
+	@Override
+	public Object getIdentifier(Object entity) {
 		if ( hasContainingClass() ) {
 			final Object id = identifierValueMapper.getRepresentationStrategy().getInstantiator().instantiate(
 					null,
@@ -230,7 +235,7 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 							toOneAttributeMapping.getSideNature().inverse()
 					);
 					if ( targetPart instanceof EntityIdentifierMapping ) {
-						propertyValues[i] = ( (EntityIdentifierMapping) targetPart ).getIdentifier( o, session );
+						propertyValues[i] = ( (EntityIdentifierMapping) targetPart ).getIdentifier( o );
 					}
 					else {
 						propertyValues[i] = o;

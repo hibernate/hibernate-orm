@@ -29,7 +29,19 @@ public interface EntityIdentifierMapping extends ValueMapping, ModelPart {
 	 */
 	IdentifierValue getUnsavedStrategy();
 
+	/**
+	 *
+	 *
+	 * @return the entity identifier value
+	 *
+	 * @deprecated Use {@link #getIdentifier(Object)}
+	 */
+	@Deprecated
 	Object getIdentifier(Object entity, SharedSessionContractImplementor session);
+
+	Object getIdentifier(Object entity);
+
 	void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session);
+
 	Object instantiate();
 }

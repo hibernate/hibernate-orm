@@ -29,7 +29,7 @@ import static org.hibernate.query.internal.QueryHelper.highestPrecedenceType;
  */
 public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> implements SqmExpression<T> {
 
-	public AbstractSqmExpression(SqmExpressable<T> type, NodeBuilder criteriaBuilder) {
+	public AbstractSqmExpression(SqmExpressable<? extends T> type, NodeBuilder criteriaBuilder) {
 		super( type, criteriaBuilder );
 	}
 

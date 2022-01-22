@@ -714,7 +714,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public <N extends Number> SqmExpression<N> sum(Expression<? extends N> x, N y) {
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.ADD,
@@ -724,7 +723,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public <N extends Number> SqmExpression<N> sum(N x, Expression<? extends N> y) {
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.ADD,
@@ -770,11 +768,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public <N extends Number> SqmExpression<N> diff(Expression<? extends N> x, N y) {
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.SUBTRACT,
-				(SqmExpression) x,
+				(SqmExpression<?>) x,
 				value( y )
 		);
 	}
@@ -894,8 +891,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			return new SqmLiteralNull<>( this );
 		}
 
-		final SqmExpressable<T> expressable = resolveInferredType( value, typeInferenceSource, getTypeConfiguration() );
-		return new SqmLiteral<>( value, expressable, this );
+		final SqmExpressable<T> expressible = resolveInferredType( value, typeInferenceSource, getTypeConfiguration() );
+		return new SqmLiteral<>( value, expressible, this );
 	}
 
 	private static <T> SqmExpressable<T> resolveInferredType(
@@ -924,10 +921,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			return new SqmLiteralNull<>( this );
 		}
 
-		final BindableType<T> valueParamType = queryEngine.getTypeConfiguration()
+		final BindableType<? extends T> valueParamType = queryEngine.getTypeConfiguration()
 				.getSessionFactory()
 				.resolveParameterBindType( value );
-		final SqmExpressable<T> sqmExpressable = valueParamType == null
+		final SqmExpressable<? extends T> sqmExpressable = valueParamType == null
 				? null
 				: valueParamType.resolveExpressable( getTypeConfiguration().getSessionFactory() );
 

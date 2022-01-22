@@ -39,7 +39,7 @@ public interface QueryParameterBinding<T> {
 	 *
 	 * @return The currently associated Type
 	 */
-	BindableType<T> getBindType();
+	BindableType<? extends T> getBindType();
 
 	/**
 	 * If the parameter represents a temporal type, return the explicitly

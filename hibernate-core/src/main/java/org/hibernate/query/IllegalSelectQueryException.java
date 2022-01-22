@@ -9,10 +9,8 @@ package org.hibernate.query;
 import org.hibernate.QueryException;
 
 /**
- * Indicates an attempt to call {@link QueryProducer#createSelectQuery(String)},
- * {@link QueryProducer#name(String)} or
- * {@link QueryProducer#createNativeMutationQuery(String)} with a non-mutation
- * query (generally a select query)
+ * Indicates an attempt to call {@link QueryProducer#createSelectQuery(String)}
+ * with a non-selection query (generally a mutation query)
  *
  * @author Steve Ebersole
  */

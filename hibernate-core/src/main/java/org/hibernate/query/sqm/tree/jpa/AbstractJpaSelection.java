@@ -21,7 +21,7 @@ import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 public abstract class AbstractJpaSelection<T>
 		extends AbstractJpaTupleElement<T>
 		implements SqmSelectableNode<T>, JpaSelection<T> {
-	protected AbstractJpaSelection(SqmExpressable<T> sqmExpressable, NodeBuilder criteriaBuilder) {
+	protected AbstractJpaSelection(SqmExpressable<? extends T> sqmExpressable, NodeBuilder criteriaBuilder) {
 		super( sqmExpressable, criteriaBuilder );
 	}
 

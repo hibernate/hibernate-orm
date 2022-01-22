@@ -37,7 +37,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 	private boolean isBound;
 	private boolean isMultiValued;
 
-	private BindableType<T> bindType;
+	private BindableType<? extends T> bindType;
 	private MappingModelExpressable<T> type;
 	private TemporalType explicitTemporalPrecision;
 
@@ -68,7 +68,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 	}
 
 	@Override
-	public BindableType<T> getBindType() {
+	public BindableType<? extends T> getBindType() {
 		return bindType;
 	}
 
@@ -135,12 +135,12 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 		bindValue( value );
 	}
 
-	private T coerce(T value, BindableType<T> parameterType) {
+	private T coerce(T value, BindableType<? extends T> parameterType) {
 		if ( value == null ) {
 			return null;
 		}
 
-		final SqmExpressable<T> sqmExpressable = parameterType.resolveExpressable( sessionFactory );
+		final SqmExpressable<? extends T> sqmExpressable = parameterType.resolveExpressable( sessionFactory );
 		assert sqmExpressable != null;
 
 		return sqmExpressable.getExpressableJavaType().coerce( value, this );
@@ -301,8 +301,8 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 		this.explicitTemporalPrecision = temporalTypePrecision;
 	}
 
-	private JavaType<T> determineJavaType(BindableType<T> bindType) {
-		final SqmExpressable<T> sqmExpressable = bindType.resolveExpressable( sessionFactory );
+	private JavaType<? extends T> determineJavaType(BindableType<? extends T> bindType) {
+		final SqmExpressable<? extends T> sqmExpressable = bindType.resolveExpressable( sessionFactory );
 		assert sqmExpressable != null;
 
 		return sqmExpressable.getExpressableJavaType();

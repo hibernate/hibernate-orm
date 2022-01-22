@@ -109,7 +109,6 @@ import org.hibernate.persister.entity.SessionFactoryBasedWrapperOptions;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.proxy.HibernateProxyHelper;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.query.QueryLogging;
 import org.hibernate.query.hql.spi.SqmQueryImplementor;
@@ -1084,14 +1083,24 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		return fetchProfiles.get( name );
 	}
 
-	@Override
-	public <T> BindableType<T> resolveParameterBindType(T bindValue) {
+	@Override @SuppressWarnings("unchecked")
+	public <T> BindableType<? extends T> resolveParameterBindType(T bindValue) {
 		if ( bindValue == null ) {
 			// we can't guess
 			return null;
 		}
 
-		return resolveParameterBindType( HibernateProxyHelper.getClassWithoutInitializingProxy( bindValue ) );
+		Class<? extends T> clazz;
+		if (bindValue instanceof HibernateProxy) {
+			HibernateProxy proxy = (HibernateProxy) bindValue;
+			LazyInitializer li = proxy.getHibernateLazyInitializer();
+			clazz = li.getPersistentClass();
+		}
+		else {
+			clazz = (Class<? extends T>) bindValue.getClass();
+		}
+
+		return resolveParameterBindType( clazz );
 	}
 
 	@Override

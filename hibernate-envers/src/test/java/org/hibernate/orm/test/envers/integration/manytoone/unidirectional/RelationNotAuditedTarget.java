@@ -16,8 +16,8 @@ import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.entities.UnversionedStrTestEntity;
 import org.hibernate.orm.test.envers.entities.manytoone.unidirectional.TargetNotAuditedEntity;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.proxy.HibernateProxyHelper;
 
+import org.hibernate.proxy.LazyInitializer;
 import org.junit.Test;
 
 /**
@@ -113,6 +113,17 @@ public class RelationNotAuditedTarget extends BaseEnversJPAFunctionalTestCase {
 		assert Arrays.asList( 1, 2, 3, 4 ).equals( revisions );
 	}
 
+	static Class<?> getClassWithoutInitializingProxy(Object object) {
+		if (object instanceof HibernateProxy) {
+			HibernateProxy proxy = (HibernateProxy) object;
+			LazyInitializer li = proxy.getHibernateLazyInitializer();
+			return li.getPersistentClass();
+		}
+		else {
+			return object.getClass();
+		}
+	}
+
 	@Test
 	public void testHistoryOfTnae1_id() {
 		// load original "tnae1" TargetNotAuditedEntity to force load "str1" UnversionedStrTestEntity as Proxy
@@ -133,7 +144,7 @@ public class RelationNotAuditedTarget extends BaseEnversJPAFunctionalTestCase {
 
 		assert original.getReference() instanceof HibernateProxy;
 		assert UnversionedStrTestEntity.class.equals( Hibernate.getClass( original.getReference() ) );
-		assert UnversionedStrTestEntity.class.equals( HibernateProxyHelper.getClassWithoutInitializingProxy( rev1.getReference() ) );
+		assert UnversionedStrTestEntity.class.equals( getClassWithoutInitializingProxy( rev1.getReference() ) );
 		assert UnversionedStrTestEntity.class.equals( Hibernate.getClass( rev1.getReference() ) );
 	}
 

@@ -25,7 +25,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 public class SqmLiteral<T> extends AbstractSqmExpression<T> {
 	private final T value;
 
-	public SqmLiteral(T value, SqmExpressable<T> inherentType, NodeBuilder nodeBuilder) {
+	public SqmLiteral(T value, SqmExpressable<? extends T> inherentType, NodeBuilder nodeBuilder) {
 		super( inherentType, nodeBuilder );
 		assert value != null;
 		this.value = value;

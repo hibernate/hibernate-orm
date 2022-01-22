@@ -2287,18 +2287,6 @@ public interface AvailableSettings {
 	String SEQUENCE_INCREMENT_SIZE_MISMATCH_STRATEGY = "hibernate.id.sequence.increment_size_mismatch_strategy";
 
 	/**
-	 * When you use {@link jakarta.persistence.InheritanceType#JOINED} strategy for
-	 * inheritance mapping and query a value from an entity, all superclass tables
-	 * are joined in the query regardless you need them. With this setting set to
-	 * true only superclass tables which are really needed are joined.
-	 * <p>
-	 * The default value is true.
-	 *
-	 * @since 5.4
-	 */
-	String OMIT_JOIN_OF_SUPERCLASS_TABLES = "hibernate.query.omit_join_of_superclass_tables";
-
-	/**
 	 * Specifies the preferred JDBC type code for storing boolean values. When no
 	 * type code is explicitly specified, a sensible
 	 * {@link org.hibernate.dialect.Dialect#getPreferredSqlTypeCodeForBoolean()

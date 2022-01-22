@@ -344,8 +344,6 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 		return false;
 	}
 
-	boolean isOmitJoinOfSuperclassTablesEnabled();
-
 	int getPreferredSqlTypeCodeForBoolean();
 
 	TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy();

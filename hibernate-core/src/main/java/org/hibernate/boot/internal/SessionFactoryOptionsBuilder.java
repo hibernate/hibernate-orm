@@ -110,7 +110,6 @@ import static org.hibernate.cfg.AvailableSettings.JTA_TRACK_BY_THREAD;
 import static org.hibernate.cfg.AvailableSettings.LOG_SESSION_METRICS;
 import static org.hibernate.cfg.AvailableSettings.MAX_FETCH_DEPTH;
 import static org.hibernate.cfg.AvailableSettings.MULTI_TENANT_IDENTIFIER_RESOLVER;
-import static org.hibernate.cfg.AvailableSettings.OMIT_JOIN_OF_SUPERCLASS_TABLES;
 import static org.hibernate.cfg.AvailableSettings.ORDER_INSERTS;
 import static org.hibernate.cfg.AvailableSettings.ORDER_UPDATES;
 import static org.hibernate.cfg.AvailableSettings.PREFER_USER_TRANSACTION;
@@ -218,7 +217,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private SqmTranslatorFactory sqmTranslatorFactory;
 	private Boolean useOfJdbcNamedParametersEnabled;
 	private boolean namedQueryStartupCheckingEnabled;
-	private final boolean omitJoinOfSuperclassTablesEnabled;
 	private final int preferredSqlTypeCodeForBoolean;
 	private final TimeZoneStorageStrategy defaultTimeZoneStorageStrategy;
 
@@ -425,7 +423,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.useOfJdbcNamedParametersEnabled = cfgService.getSetting( CALLABLE_NAMED_PARAMS_ENABLED, BOOLEAN, true );
 
 		this.namedQueryStartupCheckingEnabled = cfgService.getSetting( QUERY_STARTUP_CHECKING, BOOLEAN, true );
-		this.omitJoinOfSuperclassTablesEnabled = cfgService.getSetting( OMIT_JOIN_OF_SUPERCLASS_TABLES, BOOLEAN, true );
 		this.preferredSqlTypeCodeForBoolean = ConfigurationHelper.getPreferredSqlTypeCodeForBoolean( serviceRegistry );
 		this.defaultTimeZoneStorageStrategy = context.getMetadataBuildingOptions().getDefaultTimeZoneStorage();
 
@@ -1196,11 +1193,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	public boolean isCollectionsInDefaultFetchGroupEnabled() {
 		return collectionsInDefaultFetchGroupEnabled;
-	}
-
-	@Override
-	public boolean isOmitJoinOfSuperclassTablesEnabled() {
-		return omitJoinOfSuperclassTablesEnabled;
 	}
 
 	@Override

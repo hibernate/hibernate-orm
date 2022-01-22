@@ -522,12 +522,6 @@ For this reason, we can expand the bind parameters to power-of-two: 4, 8, 16, 32
 This way, an IN clause with 5, 6, or 7 bind parameters will use the 8 IN clause,
 therefore reusing its execution plan.
 
-`*hibernate.query.omit_join_of_superclass_tables*` (e.g. `false` or `true` (default value))::
-When you use `jakarta.persistence.InheritanceType#JOINED` strategy for inheritance mapping and query
-a value from an entity, all superclass tables are joined in the query regardless you need them.
-+
-With this setting set to true only superclass tables which are really needed are joined.
-
 ==== Multi-table bulk HQL operations
 
 `*hibernate.hql.bulk_id_strategy*` (e.g. A fully-qualified class name, an instance, or a `Class` object reference)::

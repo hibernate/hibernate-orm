@@ -107,16 +107,16 @@ import jakarta.persistence.PersistenceException;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Tuple;
 
-import static org.hibernate.cfg.AvailableSettings.JAKARTA_SHARED_CACHE_RETRIEVE_MODE;
-import static org.hibernate.cfg.AvailableSettings.JAKARTA_SHARED_CACHE_STORE_MODE;
-import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_RETRIEVE_MODE;
-import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_STORE_MODE;
-import static org.hibernate.jpa.QueryHints.HINT_CACHEABLE;
-import static org.hibernate.jpa.QueryHints.HINT_CACHE_MODE;
-import static org.hibernate.jpa.QueryHints.HINT_CACHE_REGION;
-import static org.hibernate.jpa.QueryHints.HINT_FETCH_SIZE;
-import static org.hibernate.jpa.QueryHints.HINT_FOLLOW_ON_LOCKING;
-import static org.hibernate.jpa.QueryHints.HINT_READONLY;
+import static org.hibernate.jpa.HibernateHints.HINT_CACHEABLE;
+import static org.hibernate.jpa.HibernateHints.HINT_CACHE_MODE;
+import static org.hibernate.jpa.HibernateHints.HINT_CACHE_REGION;
+import static org.hibernate.jpa.HibernateHints.HINT_FETCH_SIZE;
+import static org.hibernate.jpa.HibernateHints.HINT_FOLLOW_ON_LOCKING;
+import static org.hibernate.jpa.HibernateHints.HINT_READ_ONLY;
+import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_CACHE_RETRIEVE_MODE;
+import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_CACHE_STORE_MODE;
+import static org.hibernate.jpa.SpecHints.HINT_SPEC_CACHE_RETRIEVE_MODE;
+import static org.hibernate.jpa.SpecHints.HINT_SPEC_CACHE_STORE_MODE;
 import static org.hibernate.query.spi.SqlOmittingQueryOptions.omitSqlQueryOptions;
 import static org.hibernate.query.sqm.internal.SqmUtil.isSelect;
 
@@ -126,7 +126,7 @@ import static org.hibernate.query.sqm.internal.SqmUtil.isSelect;
  * @author Steve Ebersole
  */
 public class QuerySqmImpl<R>
-		extends AbstractSelectionQuery
+		extends AbstractSelectionQuery<R>
 		implements SqmQueryImplementor<R>, InterpretationsKeySource, DomainQueryExecutionContext {
 
 	/**
@@ -603,7 +603,7 @@ public class QuerySqmImpl<R>
 		}
 	}
 
-	protected List doList() {
+	protected List<R> doList() {
 		verifySelect();
 		getSession().prepareForQueryExecution( requiresTxn( getQueryOptions().getLockOptions().findGreatestLockMode() ) );
 
@@ -645,7 +645,7 @@ public class QuerySqmImpl<R>
 			executionContextToUse = this;
 		}
 
-		final List<?> list = resolveSelectQueryPlan().performList( executionContextToUse );
+		final List<R> list = resolveSelectQueryPlan().performList( executionContextToUse );
 
 		if ( needsDistinct ) {
 			int includedCount = -1;
@@ -656,9 +656,9 @@ public class QuerySqmImpl<R>
 			final int max = !hasLimit || getQueryOptions().getLimit().getMaxRows() == null
 					? getMaxRows( sqmStatement, list.size() )
 					: getQueryOptions().getLimit().getMaxRows();
-			final List<Object> tmp = new ArrayList<>( list.size() );
+			final List<R> tmp = new ArrayList<>( list.size() );
 			final IdentitySet<Object> distinction = new IdentitySet<>( list.size() );
-			for ( final Object result : list ) {
+			for ( final R result : list ) {
 				if ( !distinction.add( result ) ) {
 					continue;
 				}
@@ -687,7 +687,7 @@ public class QuerySqmImpl<R>
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Select query plan
 
-	private SelectQueryPlan<?> resolveSelectQueryPlan() {
+	private SelectQueryPlan<R> resolveSelectQueryPlan() {
 		final QueryInterpretationCache.Key cacheKey = SqmInterpretationsKey.createInterpretationsKey( this );
 		if ( cacheKey != null ) {
 			return getSession().getFactory().getQueryEngine().getInterpretationCache().resolveSelectQueryPlan(
@@ -700,9 +700,9 @@ public class QuerySqmImpl<R>
 		}
 	}
 
-	private SelectQueryPlan<?> buildSelectQueryPlan() {
-		final SqmSelectStatement<?>[] concreteSqmStatements = QuerySplitter.split(
-				(SqmSelectStatement<?>) getSqmStatement(),
+	private SelectQueryPlan<R> buildSelectQueryPlan() {
+		final SqmSelectStatement<R>[] concreteSqmStatements = QuerySplitter.split(
+				(SqmSelectStatement<R>) getSqmStatement(),
 				getSession().getFactory()
 		);
 
@@ -714,8 +714,9 @@ public class QuerySqmImpl<R>
 		}
 	}
 
-	private SelectQueryPlan<?> buildAggregatedSelectQueryPlan(SqmSelectStatement<?>[] concreteSqmStatements) {
-		final SelectQueryPlan<?>[] aggregatedQueryPlans = new SelectQueryPlan[ concreteSqmStatements.length ];
+	private SelectQueryPlan<R> buildAggregatedSelectQueryPlan(SqmSelectStatement<?>[] concreteSqmStatements) {
+		//noinspection unchecked
+		final SelectQueryPlan<R>[] aggregatedQueryPlans = new SelectQueryPlan[ concreteSqmStatements.length ];
 
 		// todo (6.0) : we want to make sure that certain thing (ResultListTransformer, etc) only get applied at the aggregator-level
 
@@ -727,12 +728,12 @@ public class QuerySqmImpl<R>
 			);
 		}
 
-		return new AggregatedSelectQueryPlanImpl( aggregatedQueryPlans );
+		return new AggregatedSelectQueryPlanImpl<>( aggregatedQueryPlans );
 	}
 
-	private <R> SelectQueryPlan<R> buildConcreteSelectQueryPlan(
+	private <T> SelectQueryPlan<T> buildConcreteSelectQueryPlan(
 			SqmSelectStatement<?> concreteSqmStatement,
-			Class<R> resultType,
+			Class<T> resultType,
 			QueryOptions queryOptions) {
 		return new ConcreteSqmSelectQueryPlan<>(
 				concreteSqmStatement,
@@ -1000,7 +1001,7 @@ public class QuerySqmImpl<R>
 		super.collectHints( hints );
 
 		if ( isReadOnly() ) {
-			hints.put( HINT_READONLY, true );
+			hints.put( HINT_READ_ONLY, true );
 		}
 
 		putIfNotNull( hints, HINT_FETCH_SIZE, getFetchSize() );
@@ -1008,14 +1009,12 @@ public class QuerySqmImpl<R>
 		if ( isCacheable() ) {
 			hints.put( HINT_CACHEABLE, true );
 			putIfNotNull( hints, HINT_CACHE_REGION, getCacheRegion() );
-
 			putIfNotNull( hints, HINT_CACHE_MODE, getCacheMode() );
-			putIfNotNull( hints, JAKARTA_SHARED_CACHE_RETRIEVE_MODE, getQueryOptions().getCacheRetrieveMode() );
-			putIfNotNull( hints, JAKARTA_SHARED_CACHE_STORE_MODE, getQueryOptions().getCacheStoreMode() );
-			//noinspection deprecation
-			putIfNotNull( hints, JPA_SHARED_CACHE_RETRIEVE_MODE, getQueryOptions().getCacheRetrieveMode() );
-			//noinspection deprecation
-			putIfNotNull( hints, JPA_SHARED_CACHE_STORE_MODE, getQueryOptions().getCacheStoreMode() );
+
+			putIfNotNull( hints, HINT_SPEC_CACHE_RETRIEVE_MODE, getQueryOptions().getCacheRetrieveMode() );
+			putIfNotNull( hints, HINT_SPEC_CACHE_STORE_MODE, getQueryOptions().getCacheStoreMode() );
+			putIfNotNull( hints, HINT_JAVAEE_CACHE_RETRIEVE_MODE, getQueryOptions().getCacheRetrieveMode() );
+			putIfNotNull( hints, HINT_JAVAEE_CACHE_STORE_MODE, getQueryOptions().getCacheStoreMode() );
 		}
 
 		final AppliedGraph appliedGraph = getQueryOptions().getAppliedGraph();

@@ -39,7 +39,7 @@ import jakarta.persistence.TemporalType;
  * @author Steve Ebersole
  */
 @Incubating
-public interface SelectionQuery extends CommonQueryContract {
+public interface SelectionQuery<R> extends CommonQueryContract {
 	/**
 	 * Execute the query and return the query results as a {@link List}.
 	 * If the query contains multiple items in the selection list, then
@@ -48,7 +48,7 @@ public interface SelectionQuery extends CommonQueryContract {
 	 *
 	 * @return the result list
 	 */
-	List<?> list();
+	List<R> list();
 
 	/**
 	 * Execute the query and return the query results as a {@link List}.
@@ -58,7 +58,7 @@ public interface SelectionQuery extends CommonQueryContract {
 	 *
 	 * @return the results as a list
 	 */
-	default List<?> getResultList() {
+	default List<R> getResultList() {
 		return list();
 	}
 
@@ -70,7 +70,7 @@ public interface SelectionQuery extends CommonQueryContract {
 	 * @apiNote The exact behavior of this method depends somewhat
 	 * on the JDBC driver's {@link java.sql.ResultSet} scrolling support
 	 */
-	ScrollableResults<?> scroll();
+	ScrollableResults<R> scroll();
 
 	/**
 	 * Returns scrollable access to the query results.  The capabilities of the
@@ -79,7 +79,7 @@ public interface SelectionQuery extends CommonQueryContract {
 	 * @apiNote The exact behavior of this method depends somewhat
 	 * on the JDBC driver's {@link java.sql.ResultSet} scrolling support
 	 */
-	ScrollableResults<?> scroll(ScrollMode scrollMode);
+	ScrollableResults<R> scroll(ScrollMode scrollMode);
 
 	/**
 	 * Execute the query and return the query results as a {@link Stream}.
@@ -92,7 +92,7 @@ public interface SelectionQuery extends CommonQueryContract {
 	 *
 	 * @return The results as a {@link Stream}
 	 */
-	default Stream<?> getResultStream() {
+	default Stream<R> getResultStream() {
 		return stream();
 	}
 
@@ -109,7 +109,7 @@ public interface SelectionQuery extends CommonQueryContract {
 	 *
 	 * @since 5.2
 	 */
-	default Stream<?> stream() {
+	default Stream<R> stream() {
 		return getResultStream();
 	}
 
@@ -121,7 +121,7 @@ public interface SelectionQuery extends CommonQueryContract {
 	 *
 	 * @throws NonUniqueResultException if there is more than one matching result
 	 */
-	Object uniqueResult();
+	R uniqueResult();
 
 	/**
 	 * Execute the query and return the single result of the query,
@@ -132,7 +132,7 @@ public interface SelectionQuery extends CommonQueryContract {
 	 * @throws jakarta.persistence.NonUniqueResultException if there is more than one matching result
 	 * @throws jakarta.persistence.NoResultException if there is no result to return
 	 */
-	Object getSingleResult();
+	R getSingleResult();
 
 	/**
 	 * Execute the query and return the single result of the query,
@@ -142,18 +142,18 @@ public interface SelectionQuery extends CommonQueryContract {
 	 *
 	 * @throws NonUniqueResultException if there is more than one matching result
 	 */
-	Optional<?> uniqueResultOptional();
+	Optional<R> uniqueResultOptional();
 
-	SelectionQuery setHint(String hintName, Object value);
-
-	@Override
-	SelectionQuery setFlushMode(FlushModeType flushMode);
+	SelectionQuery<R> setHint(String hintName, Object value);
 
 	@Override
-	SelectionQuery setHibernateFlushMode(FlushMode flushMode);
+	SelectionQuery<R> setFlushMode(FlushModeType flushMode);
 
 	@Override
-	SelectionQuery setTimeout(int timeout);
+	SelectionQuery<R> setHibernateFlushMode(FlushMode flushMode);
+
+	@Override
+	SelectionQuery<R> setTimeout(int timeout);
 
 	/**
 	 * Obtain the JDBC fetch size hint in effect for this query.  This value is eventually passed along to the JDBC
@@ -179,7 +179,7 @@ public interface SelectionQuery extends CommonQueryContract {
 	 *
 	 * @see #getFetchSize()
 	 */
-	SelectionQuery setFetchSize(int fetchSize);
+	SelectionQuery<R> setFetchSize(int fetchSize);
 
 	/**
 	 * Should entities and proxies loaded by this Query be put in read-only mode? If the
@@ -225,7 +225,7 @@ public interface SelectionQuery extends CommonQueryContract {
 	 * are to be put in read-only mode; {@code false} indicates that entities and proxies
 	 * loaded by the query will be put in modifiable mode
 	 */
-	SelectionQuery setReadOnly(boolean readOnly);
+	SelectionQuery<R> setReadOnly(boolean readOnly);
 
 	/**
 	 * The max number of rows requested for the query results
@@ -236,7 +236,7 @@ public interface SelectionQuery extends CommonQueryContract {
 	 * Set the max number of rows requested for the query results.  Applied
 	 * to the SQL query
 	 */
-	SelectionQuery setMaxResults(int maxResult);
+	SelectionQuery<R> setMaxResults(int maxResult);
 
 	/**
 	 * The first row position to return from the query results.  Applied
@@ -248,7 +248,7 @@ public interface SelectionQuery extends CommonQueryContract {
 	 * Set the first row position to return from the query results.  Applied
 	 * to the SQL query
 	 */
-	SelectionQuery setFirstResult(int startPosition);
+	SelectionQuery<R> setFirstResult(int startPosition);
 
 	/**
 	 * Obtain the CacheMode in effect for this query.  By default, the query
@@ -275,7 +275,7 @@ public interface SelectionQuery extends CommonQueryContract {
 	 * @see #getCacheMode()
 	 * @see Session#setCacheMode
 	 */
-	SelectionQuery setCacheMode(CacheMode cacheMode);
+	SelectionQuery<R> setCacheMode(CacheMode cacheMode);
 
 	/**
 	 * Should the results of the query be stored in the second level cache?
@@ -296,7 +296,7 @@ public interface SelectionQuery extends CommonQueryContract {
 	 *
 	 * @see #isCacheable
 	 */
-	SelectionQuery setCacheable(boolean cacheable);
+	SelectionQuery<R> setCacheable(boolean cacheable);
 
 	/**
 	 * Obtain the name of the second level query cache region in which query results will be stored (if they are
@@ -311,7 +311,7 @@ public interface SelectionQuery extends CommonQueryContract {
 	 *
 	 * @see #getCacheRegion()
 	 */
-	SelectionQuery setCacheRegion(String cacheRegion);
+	SelectionQuery<R> setCacheRegion(String cacheRegion);
 
 	/**
 	 * The LockOptions currently in effect for the query
@@ -323,134 +323,134 @@ public interface SelectionQuery extends CommonQueryContract {
 	 *
 	 * @see #setHibernateLockMode
 	 */
-	SelectionQuery setLockMode(LockModeType lockMode);
+	SelectionQuery<R> setLockMode(LockModeType lockMode);
 
 	/**
 	 * Specify the root LockMode for the query
 	 */
-	SelectionQuery setHibernateLockMode(LockMode lockMode);
+	SelectionQuery<R> setHibernateLockMode(LockMode lockMode);
 
 	/**
 	 * Specify a LockMode to apply to a specific alias defined in the query
 	 */
-	SelectionQuery setAliasSpecificLockMode(String alias, LockMode lockMode);
+	SelectionQuery<R> setAliasSpecificLockMode(String alias, LockMode lockMode);
 
 	/**
 	 * Specifies whether follow-on locking should be applied?
 	 */
-	SelectionQuery setFollowOnLocking(boolean enable);
+	SelectionQuery<R> setFollowOnLocking(boolean enable);
 
 	@Override
-	SelectionQuery setParameter(String name, Object value);
+	SelectionQuery<R> setParameter(String name, Object value);
 
 	@Override
-	<P> SelectionQuery setParameter(String name, P value, Class<P> type);
+	<P> SelectionQuery<R> setParameter(String name, P value, Class<P> type);
 
 	@Override
-	<P> SelectionQuery setParameter(String name, P value, BindableType<P> type);
+	<P> SelectionQuery<R> setParameter(String name, P value, BindableType<P> type);
 
 	@Override
-	SelectionQuery setParameter(String name, Instant value, TemporalType temporalType);
+	SelectionQuery<R> setParameter(String name, Instant value, TemporalType temporalType);
 
 	@Override
-	SelectionQuery setParameter(String name, Calendar value, TemporalType temporalType);
+	SelectionQuery<R> setParameter(String name, Calendar value, TemporalType temporalType);
 
 	@Override
-	SelectionQuery setParameter(String name, Date value, TemporalType temporalType);
+	SelectionQuery<R> setParameter(String name, Date value, TemporalType temporalType);
 
 	@Override
-	SelectionQuery setParameter(int position, Object value);
+	SelectionQuery<R> setParameter(int position, Object value);
 
 	@Override
-	<P> SelectionQuery setParameter(int position, P value, Class<P> type);
+	<P> SelectionQuery<R> setParameter(int position, P value, Class<P> type);
 
 	@Override
-	<P> SelectionQuery setParameter(int position, P value, BindableType<P> type);
+	<P> SelectionQuery<R> setParameter(int position, P value, BindableType<P> type);
 
 	@Override
-	SelectionQuery setParameter(int position, Instant value, TemporalType temporalType);
+	SelectionQuery<R> setParameter(int position, Instant value, TemporalType temporalType);
 
 	@Override
-	SelectionQuery setParameter(int position, Date value, TemporalType temporalType);
+	SelectionQuery<R> setParameter(int position, Date value, TemporalType temporalType);
 
 	@Override
-	SelectionQuery setParameter(int position, Calendar value, TemporalType temporalType);
+	SelectionQuery<R> setParameter(int position, Calendar value, TemporalType temporalType);
 
 	@Override
-	<T> SelectionQuery setParameter(QueryParameter<T> parameter, T value);
+	<T> SelectionQuery<R> setParameter(QueryParameter<T> parameter, T value);
 
 	@Override
-	<P> SelectionQuery setParameter(QueryParameter<P> parameter, P value, Class<P> type);
+	<P> SelectionQuery<R> setParameter(QueryParameter<P> parameter, P value, Class<P> type);
 
 	@Override
-	<P> SelectionQuery setParameter(QueryParameter<P> parameter, P val, BindableType<P> type);
+	<P> SelectionQuery<R> setParameter(QueryParameter<P> parameter, P val, BindableType<P> type);
 
 	@Override
-	<T> SelectionQuery setParameter(Parameter<T> param, T value);
+	<T> SelectionQuery<R> setParameter(Parameter<T> param, T value);
 
 	@Override
-	SelectionQuery setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
+	SelectionQuery<R> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
 
 	@Override
-	SelectionQuery setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
+	SelectionQuery<R> setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
 
 	@Override
-	SelectionQuery setParameterList(String name, Collection values);
+	SelectionQuery<R> setParameterList(String name, Collection values);
 
 	@Override
-	<P> SelectionQuery setParameterList(String name, Collection<? extends P> values, Class<P> javaType);
+	<P> SelectionQuery<R> setParameterList(String name, Collection<? extends P> values, Class<P> javaType);
 
 	@Override
-	<P> SelectionQuery setParameterList(String name, Collection<? extends P> values, BindableType<P> type);
+	<P> SelectionQuery<R> setParameterList(String name, Collection<? extends P> values, BindableType<P> type);
 
 	@Override
-	SelectionQuery setParameterList(String name, Object[] values);
+	SelectionQuery<R> setParameterList(String name, Object[] values);
 
 	@Override
-	<P> SelectionQuery setParameterList(String name, P[] values, Class<P> javaType);
+	<P> SelectionQuery<R> setParameterList(String name, P[] values, Class<P> javaType);
 
 	@Override
-	<P> SelectionQuery setParameterList(String name, P[] values, BindableType<P> type);
+	<P> SelectionQuery<R> setParameterList(String name, P[] values, BindableType<P> type);
 
 	@Override
-	SelectionQuery setParameterList(int position, Collection values);
+	SelectionQuery<R> setParameterList(int position, Collection values);
 
 	@Override
-	<P> SelectionQuery setParameterList(int position, Collection<? extends P> values, Class<P> javaType);
+	<P> SelectionQuery<R> setParameterList(int position, Collection<? extends P> values, Class<P> javaType);
 
 	@Override
-	<P> SelectionQuery setParameterList(int position, Collection<? extends P> values, BindableType<P> type);
+	<P> SelectionQuery<R> setParameterList(int position, Collection<? extends P> values, BindableType<P> type);
 
 	@Override
-	SelectionQuery setParameterList(int position, Object[] values);
+	SelectionQuery<R> setParameterList(int position, Object[] values);
 
 	@Override
-	<P> SelectionQuery setParameterList(int position, P[] values, Class<P> javaType);
+	<P> SelectionQuery<R> setParameterList(int position, P[] values, Class<P> javaType);
 
 	@Override
-	<P> SelectionQuery setParameterList(int position, P[] values, BindableType<P> type);
+	<P> SelectionQuery<R> setParameterList(int position, P[] values, BindableType<P> type);
 
 	@Override
-	<P> SelectionQuery setParameterList(QueryParameter<P> parameter, Collection<? extends P> values);
+	<P> SelectionQuery<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values);
 
 	@Override
-	<P> SelectionQuery setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Class<P> javaType);
+	<P> SelectionQuery<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Class<P> javaType);
 
 	@Override
-	<P> SelectionQuery setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, BindableType<P> type);
+	<P> SelectionQuery<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, BindableType<P> type);
 
 	@Override
-	<P> SelectionQuery setParameterList(QueryParameter<P> parameter, P[] values);
+	<P> SelectionQuery<R> setParameterList(QueryParameter<P> parameter, P[] values);
 
 	@Override
-	<P> SelectionQuery setParameterList(QueryParameter<P> parameter, P[] values, Class<P> javaType);
+	<P> SelectionQuery<R> setParameterList(QueryParameter<P> parameter, P[] values, Class<P> javaType);
 
 	@Override
-	<P> SelectionQuery setParameterList(QueryParameter<P> parameter, P[] values, BindableType<P> type);
+	<P> SelectionQuery<R> setParameterList(QueryParameter<P> parameter, P[] values, BindableType<P> type);
 
 	@Override
-	SelectionQuery setProperties(Object bean);
+	SelectionQuery<R> setProperties(Object bean);
 
 	@Override
-	SelectionQuery setProperties(@SuppressWarnings("rawtypes") Map bean);
+	SelectionQuery<R> setProperties(@SuppressWarnings("rawtypes") Map bean);
 }

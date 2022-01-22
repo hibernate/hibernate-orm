@@ -40,7 +40,6 @@ import org.hibernate.internal.AbstractSharedSessionContract;
 import org.hibernate.internal.util.MathHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.jpa.spi.NativeQueryTupleTransformer;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.query.BindableType;
@@ -101,7 +100,6 @@ import jakarta.persistence.Tuple;
 import jakarta.persistence.metamodel.SingularAttribute;
 
 import static org.hibernate.jpa.HibernateHints.HINT_NATIVE_LOCK_MODE;
-import static org.hibernate.jpa.QueryHints.HINT_NATIVE_SPACES;
 
 /**
  * @author Steve Ebersole

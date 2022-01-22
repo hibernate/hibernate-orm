@@ -5069,7 +5069,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public Object getIdentifier(Object entity, SharedSessionContractImplementor session) {
-		return identifierMapping.getIdentifier( entity, session );
+		return identifierMapping.getIdentifier( entity );
 	}
 
 	@Override
@@ -6529,7 +6529,7 @@ public abstract class AbstractEntityPersister
 			return null;
 		}
 		final EntityIdentifierMapping identifierMapping = getIdentifierMapping();
-		final Object identifier = identifierMapping.getIdentifier( value, session );
+		final Object identifier = identifierMapping.getIdentifier( value );
 		return identifierMapping.disassemble( identifier, session );
 	}
 
@@ -6562,7 +6562,7 @@ public abstract class AbstractEntityPersister
 			identifier = null;
 		}
 		else {
-			identifier = identifierMapping.disassemble( identifierMapping.getIdentifier( value, session ), session );
+			identifier = identifierMapping.disassemble( identifierMapping.getIdentifier( value ), session );
 		}
 		return identifierMapping.forEachDisassembledJdbcValue(
 				identifier,

@@ -8,12 +8,15 @@ package org.hibernate.sql.ast.tree.expression;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.Locale;
 
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.ConvertibleModelPart;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.SqlAstWalker;
+import org.hibernate.sql.ast.SqlTreeCreationException;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.exec.spi.ExecutionContext;
@@ -35,8 +38,43 @@ public class QueryLiteral<T> implements Literal, DomainResultProducer<T> {
 	private final BasicValuedMapping type;
 
 	public QueryLiteral(T value, BasicValuedMapping type) {
-		this.value = value;
-		this.type = type;
+		if ( type instanceof ConvertibleModelPart ) {
+			final ConvertibleModelPart convertibleModelPart = (ConvertibleModelPart) type;
+			final BasicValueConverter valueConverter = convertibleModelPart.getValueConverter();
+
+			if ( valueConverter != null ) {
+				final Object literalValue = value;
+				final Object sqlLiteralValue;
+
+				if ( valueConverter.getDomainJavaType().getJavaTypeClass().isInstance( literalValue ) ) {
+					sqlLiteralValue = valueConverter.toRelationalValue( literalValue );
+				}
+				else {
+					if ( !valueConverter.getRelationalJavaType().getJavaTypeClass().isInstance( literalValue ) ) {
+						throw new SqlTreeCreationException(
+								String.format(
+										Locale.ROOT,
+										"QueryLiteral type [`%s`] did not match domain Java-type [`%s`] nor JDBC Java-type [`%s`]",
+										literalValue.getClass(),
+										valueConverter.getDomainJavaType().getJavaTypeClass().getName(),
+										valueConverter.getRelationalJavaType().getJavaTypeClass().getName()
+								)
+						);
+					}
+					sqlLiteralValue = literalValue;
+				}
+				this.value = (T) sqlLiteralValue;
+				this.type = convertibleModelPart;
+			}
+			else {
+				this.value = value;
+				this.type = type;
+			}
+		}
+		else {
+			this.value = value;
+			this.type = type;
+		}
 	}
 
 	@Override

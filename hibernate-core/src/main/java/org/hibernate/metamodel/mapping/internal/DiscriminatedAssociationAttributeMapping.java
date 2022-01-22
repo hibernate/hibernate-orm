@@ -200,7 +200,7 @@ public class DiscriminatedAssociationAttributeMapping
 		final Object discriminator = discriminatorMapping
 				.getModelPart()
 				.resolveDiscriminatorForEntityType( concreteMappingType );
-		final Object identifier = identifierMapping.getIdentifier( value, session );
+		final Object identifier = identifierMapping.getIdentifier( value );
 
 		return new Object[] {
 				discriminatorMapping.getDiscriminatorPart().disassemble( discriminator, session ),
@@ -271,7 +271,7 @@ public class DiscriminatedAssociationAttributeMapping
 				);
 
 				final EntityIdentifierMapping identifierMapping = concreteMappingType.getIdentifierMapping();
-				final Object identifier = identifierMapping.getIdentifier( value, session );
+				final Object identifier = identifierMapping.getIdentifier( value );
 				final Object disassembledKey = discriminatorMapping.getKeyPart().disassemble( identifier, session );
 				valuesConsumer.consume(
 						offset + 1,
@@ -295,7 +295,7 @@ public class DiscriminatedAssociationAttributeMapping
 		valueConsumer.consume( disassembledDiscriminator, discriminatorMapping.getDiscriminatorPart() );
 
 		final EntityIdentifierMapping identifierMapping = concreteMappingType.getIdentifierMapping();
-		final Object identifier = identifierMapping.getIdentifier( domainValue, session );
+		final Object identifier = identifierMapping.getIdentifier( domainValue );
 		final Object disassembledKey = discriminatorMapping.getKeyPart().disassemble( identifier, session );
 		valueConsumer.consume( disassembledKey, discriminatorMapping.getKeyPart() );
 	}

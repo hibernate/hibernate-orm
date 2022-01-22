@@ -173,7 +173,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 						toOneAttributeMapping.getSideNature().inverse()
 				);
 				if ( targetPart instanceof EntityIdentifierMapping ) {
-					propertyValues[i] = ( (EntityIdentifierMapping) targetPart ).getIdentifier( o, session );
+					propertyValues[i] = ( (EntityIdentifierMapping) targetPart ).getIdentifier( o );
 				}
 				else {
 					propertyValues[i] = o;

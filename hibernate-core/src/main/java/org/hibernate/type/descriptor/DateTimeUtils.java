@@ -6,6 +6,7 @@
  */
 package org.hibernate.type.descriptor;
 
+import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -196,7 +197,15 @@ public final class DateTimeUtils {
 	}
 
 	public static void appendAsTimestampWithMicros(SqlAppender appender, Date date, TimeZone jdbcTimeZone) {
-		final SimpleDateFormat simpleDateFormat = TIMESTAMP_WITH_MICROS_FORMAT.get();
+		final SimpleDateFormat simpleDateFormat;
+		if ( date instanceof Timestamp ) {
+			// java.sql.Timestamp supports micro sec
+			simpleDateFormat = TIMESTAMP_WITH_MICROS_FORMAT.get();
+		}
+		else {
+			// java.util.Date supports only milli sec
+			simpleDateFormat = TIMESTAMP_WITH_MILLIS_FORMAT.get();
+		}
 		final TimeZone originalTimeZone = simpleDateFormat.getTimeZone();
 		try {
 			simpleDateFormat.setTimeZone( jdbcTimeZone );
@@ -231,7 +240,8 @@ public final class DateTimeUtils {
 	}
 
 	public static void appendAsTimestampWithMicros(SqlAppender appender, Calendar calendar, TimeZone jdbcTimeZone) {
-		final SimpleDateFormat simpleDateFormat = TIMESTAMP_WITH_MICROS_FORMAT.get();
+		// it is possible to use micro sec resolution with java.util.Date
+		final SimpleDateFormat simpleDateFormat = TIMESTAMP_WITH_MILLIS_FORMAT.get();
 		final TimeZone originalTimeZone = simpleDateFormat.getTimeZone();
 		try {
 			simpleDateFormat.setTimeZone( jdbcTimeZone );

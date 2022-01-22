@@ -229,14 +229,6 @@ ext {
                         'jdbc.url'   : 'jdbc:sqlserver://' + dbHost + ';databaseName=hibernate_orm_test',
                         'connection.init_sql' : ''
                 ],
-                mssql_spatial_ci : [
-                        'db.dialect' : 'org.hibernate.spatial.dialect.sqlserver.SqlServer2012SpatialDialect',
-                        'jdbc.driver': 'com.microsoft.sqlserver.jdbc.SQLServerDriver',
-                        'jdbc.user'  : 'sa',
-                        'jdbc.pass'  : 'Hibernate_orm_test',
-                        'jdbc.url'   : 'jdbc:sqlserver://' + dbHost + ';databaseName=hibernate_orm_test',
-                        'connection.init_sql' : ''
-                ],
                 informix : [
                         'db.dialect' : 'org.hibernate.dialect.InformixDialect',
                         'jdbc.driver': 'com.informix.jdbc.IfxDriver',

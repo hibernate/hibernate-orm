@@ -14,6 +14,7 @@ import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.SQLServerDialect;
 
 import org.hibernate.testing.orm.junit.DialectFeatureCheck;
 
@@ -31,6 +32,7 @@ public class IsSupportedBySpatial implements DialectFeatureCheck {
 				|| dialect instanceof MySQLDialect
 				|| dialect instanceof MariaDBDialect
 				|| dialect instanceof OracleDialect
+				|| dialect instanceof SQLServerDialect
 				|| dialect instanceof H2Dialect;
 	}
 }

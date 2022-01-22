@@ -29,6 +29,8 @@ import org.hibernate.type.BasicTypeRegistry;
 public class BaseSqmFunctionDescriptors implements KeyedSqmFunctionDescriptors {
 	protected final Map<FunctionKey, SqmFunctionDescriptor> map = new HashMap<>();
 
+	//TODO -- refactor so that the function registration is done a separate function so that it can be
+	//overwritten by subclasses
 	public  BaseSqmFunctionDescriptors(FunctionContributions functionContributions) {
 		final BasicTypeRegistry basicTypeRegistry = functionContributions.getTypeConfiguration().getBasicTypeRegistry();
 		for ( CommonSpatialFunction func : filter( CommonSpatialFunction.values() ) ) {

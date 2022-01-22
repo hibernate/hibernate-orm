@@ -33,36 +33,15 @@ public class JpaCriteriaParameter<T>
 		extends AbstractSqmExpression<T>
 		implements SqmParameter<T>, QueryParameterImplementor<T>, DomainResultProducer<T> {
 	private final String name;
-	private final T value;
 	private boolean allowsMultiValuedBinding;
 
 	public JpaCriteriaParameter(
-			BindableType<T> type,
-			boolean allowsMultiValuedBinding,
-			NodeBuilder nodeBuilder) {
-		this( null, type, allowsMultiValuedBinding, nodeBuilder );
-	}
-
-	public JpaCriteriaParameter(
 			String name,
 			BindableType<T> type,
 			boolean allowsMultiValuedBinding,
 			NodeBuilder nodeBuilder) {
 		super( toSqmType( type, nodeBuilder ), nodeBuilder );
 		this.name = name;
-		this.value = null;
-		this.allowsMultiValuedBinding = allowsMultiValuedBinding;
-	}
-
-	public JpaCriteriaParameter(
-			String name,
-			BindableType<T> type,
-			T value,
-			boolean allowsMultiValuedBinding,
-			NodeBuilder nodeBuilder) {
-		super( toSqmType( type, nodeBuilder ), nodeBuilder );
-		this.name = name;
-		this.value = value;
 		this.allowsMultiValuedBinding = allowsMultiValuedBinding;
 	}
 
@@ -75,19 +54,13 @@ public class JpaCriteriaParameter<T>
 		);
 	}
 
-	public JpaCriteriaParameter(BindableType<T> type, T value, NodeBuilder nodeBuilder) {
-		super( toSqmType( type, nodeBuilder ), nodeBuilder );
-		this.name = null;
-		this.value = value;
-	}
-
 	@Override
 	public String getName() {
 		return name;
 	}
 
 	public T getValue() {
-		return value;
+		return null;
 	}
 
 	@Override
@@ -159,13 +132,8 @@ public class JpaCriteriaParameter<T>
 
 	@Override
 	public void appendHqlString(StringBuilder sb) {
-		if ( getName() == null ) {
-			sb.append( value );
-		}
-		else {
-			sb.append( ':' );
-			sb.append( getName() );
-		}
+		sb.append( ':' );
+		sb.append( getName() );
 	}
 
 	@Override

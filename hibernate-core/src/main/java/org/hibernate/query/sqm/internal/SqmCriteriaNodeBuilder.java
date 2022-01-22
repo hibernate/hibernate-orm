@@ -72,6 +72,7 @@ import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmSetJoin;
 import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
+import org.hibernate.query.sqm.tree.expression.ValueBindJpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
@@ -996,16 +997,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <T> JpaCriteriaParameter<T> parameter(Class<T> paramClass, String name) {
-		return (JpaCriteriaParameter<T>) parameter( paramClass, name, null );
-	}
 
-	@Override
-	public <T> JpaParameterExpression<T> parameter(Class<T> paramClass, T value) {
-		return parameter( paramClass, null, value );
-	}
-
-	@SuppressWarnings("unchecked")
-	private <T> JpaParameterExpression<T> parameter(Class<T> paramClass, String name, T value) {
 		final BasicType<T> basicType = getTypeConfiguration().getBasicTypeForJavaType( paramClass );
 		if ( basicType == null ) {
 			final BindableType<T> parameterType;
@@ -1019,13 +1011,12 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			return new JpaCriteriaParameter<>(
 					name,
 					parameterType,
-					value,
 					true,
 					this
 			);
 		}
 		else {
-			return new JpaCriteriaParameter<>( name, basicType, value, false, this );
+			return new JpaCriteriaParameter<>( name, basicType, false, this );
 		}
 	}
 
@@ -1419,7 +1410,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			return literal( value, typeInferenceSource );
 		}
 
-		return new JpaCriteriaParameter<>(
+		return new ValueBindJpaCriteriaParameter<>(
 				resolveInferredParameterType( value, typeInferenceSource, getTypeConfiguration() ),
 				value,
 				this
@@ -1456,7 +1447,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			return literal( value );
 		}
 		else {
-			return new JpaCriteriaParameter<>(
+			return new ValueBindJpaCriteriaParameter<>(
 					queryEngine.getTypeConfiguration().getSessionFactory().resolveParameterBindType( value ),
 					value,
 					this

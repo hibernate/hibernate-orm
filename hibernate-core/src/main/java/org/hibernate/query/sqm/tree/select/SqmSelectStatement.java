@@ -10,6 +10,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+
 import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Order;
@@ -26,6 +28,7 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.tree.SqmStatement;
+import org.hibernate.query.sqm.tree.expression.ValueBindJpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.jpa.ParameterCollector;
@@ -177,7 +180,10 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 		//
 		// for a "finalized" set of parameters, use `#resolveParameters` instead
 		assert querySource == SqmQuerySource.CRITERIA;
-		return (Set<ParameterExpression<?>>) (Set<?>) getSqmParameters();
+		final Set<ParameterExpression<?>> sqmParameters = (Set<ParameterExpression<?>>) (Set<?>) getSqmParameters();
+		return sqmParameters.stream()
+				.filter( parameterExpression -> !( parameterExpression instanceof ValueBindJpaCriteriaParameter ) )
+				.collect( Collectors.toSet() );
 	}
 
 	@Override

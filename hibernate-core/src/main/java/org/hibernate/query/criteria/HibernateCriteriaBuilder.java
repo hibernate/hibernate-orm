@@ -274,8 +274,6 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	@Override
 	<T> JpaParameterExpression<T> parameter(Class<T> paramClass, String name);
 
-	<T> JpaParameterExpression<T> parameter(Class<T> paramClass, T value);
-
 	@Override
 	JpaExpression<String> concat(Expression<String> x, Expression<String> y);
 

@@ -64,7 +64,6 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @author Steve Ebersole
  */
-@SuppressWarnings("WeakerAccess")
 public class SqmUtil {
 	private SqmUtil() {
 	}

@@ -33,7 +33,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * @author Steve Ebersole
  */
-@SuppressWarnings("WeakerAccess")
 public class DynamicInstantiationTests extends BaseSqmUnitTest {
 
 	@Override

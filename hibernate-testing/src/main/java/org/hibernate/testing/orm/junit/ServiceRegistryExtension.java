@@ -41,7 +41,6 @@ public class ServiceRegistryExtension
 	private static final Logger log = Logger.getLogger( ServiceRegistryExtension.class );
 	private static final String REGISTRY_KEY = ServiceRegistryScope.class.getName();
 
-	@SuppressWarnings("WeakerAccess")
 	public static StandardServiceRegistry findServiceRegistry(
 			Object testInstance,
 			ExtensionContext context) {
@@ -54,7 +53,6 @@ public class ServiceRegistryExtension
 		return JUnitHelper.locateExtensionStore( ServiceRegistryExtension.class, context, testInstance );
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	public static ServiceRegistryScope findServiceRegistryScope(Object testInstance, ExtensionContext context) {
 		log.tracef( "#findServiceRegistryScope(%s, %s)", testInstance, context.getDisplayName() );
 

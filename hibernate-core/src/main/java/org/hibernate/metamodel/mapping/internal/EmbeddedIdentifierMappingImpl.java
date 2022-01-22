@@ -33,7 +33,6 @@ public class EmbeddedIdentifierMappingImpl
 	private final EmbeddableMappingType embeddableDescriptor;
 	private final PropertyAccess propertyAccess;
 
-	@SuppressWarnings("WeakerAccess")
 	public EmbeddedIdentifierMappingImpl(
 			EntityMappingType entityMapping,
 			String name,

@@ -31,7 +31,6 @@ import static org.junit.Assert.assertFalse;
 /**
  * @author Gail Badner
  */
-@SuppressWarnings({"unused", "WeakerAccess","ResultOfMethodCallIgnored"})
 @TestForIssue( jiraKey = "HHH-13607" )
 @RunWith( BytecodeEnhancerRunner.class )
 @EnhancementOptions( lazyLoading = true )

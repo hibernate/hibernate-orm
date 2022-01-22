@@ -68,7 +68,6 @@ public class EmbeddedAttributeMapping
 	private final EmbeddableMappingType embeddableMappingType;
 	private final PropertyAccess parentInjectionAttributePropertyAccess;
 
-	@SuppressWarnings("WeakerAccess")
 	public EmbeddedAttributeMapping(
 			String name,
 			NavigableRole navigableRole,

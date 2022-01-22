@@ -41,7 +41,6 @@ import org.hibernate.sql.exec.spi.StatementCreatorHelper;
  * @author Vlad Mihalcea
  * @author Steve Ebersole
  */
-@SuppressWarnings("WeakerAccess")
 public class InlineDeleteHandler implements DeleteHandler {
 	private final MatchingIdRestrictionProducer matchingIdsPredicateProducer;
 	private final SqmDeleteStatement sqmDeleteStatement;

@@ -34,7 +34,6 @@ import jakarta.persistence.TemporalType;
 public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 	public static final JdbcDateJavaType INSTANCE = new JdbcDateJavaType();
 
-	@SuppressWarnings("WeakerAccess")
 	public static final String DATE_FORMAT = "dd MMMM yyyy";
 
 	/**
@@ -45,7 +44,6 @@ public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 	@SuppressWarnings("unused")
 	public static final DateTimeFormatter LITERAL_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE;
 
-	@SuppressWarnings("WeakerAccess")
 	public JdbcDateJavaType() {
 		super( java.sql.Date.class, DateMutabilityPlan.INSTANCE );
 	}

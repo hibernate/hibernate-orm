@@ -266,13 +266,13 @@ public class MappingModelCreationHelper {
 					.getBasicTypeRegistry()
 					.resolve( valueConverter.getRelationalJavaType(), resolution.getJdbcType() );
 
-			final GeneratedValueResolver generatedValueResolver;
-			if ( valueGeneration == null ) {
-				generatedValueResolver = NoGeneratedValueResolver.INSTANCE;
-			}
-			else if ( valueGeneration.getValueGenerator() == null ) {
-				// in-db generation
-			}
+//			final GeneratedValueResolver generatedValueResolver;
+//			if ( valueGeneration == null ) {
+//				generatedValueResolver = NoGeneratedValueResolver.INSTANCE;
+//			}
+//			else if ( valueGeneration.getValueGenerator() == null ) {
+//				// in-db generation
+//			}
 
 			return new BasicAttributeMapping(
 					attrName,
@@ -1527,26 +1527,24 @@ public class MappingModelCreationHelper {
 		}
 	}
 
-	@SuppressWarnings("rawtypes")
 	private static class CollectionMappingTypeImpl implements CollectionMappingType {
-		private final JavaType collectionJtd;
-		private final CollectionSemantics semantics;
+		private final JavaType<?> collectionJtd;
+		private final CollectionSemantics<?,?> semantics;
 
-		@SuppressWarnings("WeakerAccess")
 		public CollectionMappingTypeImpl(
-				JavaType collectionJtd,
-				CollectionSemantics semantics) {
+				JavaType<?> collectionJtd,
+				CollectionSemantics<?,?> semantics) {
 			this.collectionJtd = collectionJtd;
 			this.semantics = semantics;
 		}
 
 		@Override
-		public CollectionSemantics getCollectionSemantics() {
+		public CollectionSemantics<?,?> getCollectionSemantics() {
 			return semantics;
 		}
 
 		@Override
-		public JavaType getMappedJavaType() {
+		public JavaType<?> getMappedJavaType() {
 			return collectionJtd;
 		}
 	}

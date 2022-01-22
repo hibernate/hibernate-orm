@@ -32,7 +32,6 @@ public class SqmInterpretationsKey implements QueryInterpretationCache.Key {
 		Class<?> getResultType();
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	public static SqmInterpretationsKey createInterpretationsKey(InterpretationsKeySource keySource) {
 		if ( ! isCacheable( keySource ) ) {
 			return null;
@@ -83,7 +82,6 @@ public class SqmInterpretationsKey implements QueryInterpretationCache.Key {
 		return true;
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	public static QueryInterpretationCache.Key generateNonSelectKey(InterpretationsKeySource keyDetails) {
 		// todo (6.0) : do we want to cache non-select plans?  If so, what requirements?
 		//		- very minimum is that it be a "simple" (non-multi-table) statement

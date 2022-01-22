@@ -62,7 +62,6 @@ public class EntityManagerFactoryExtension
 		return JUnitHelper.locateExtensionStore( EntityManagerFactoryExtension.class, context, testInstance );
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	public static EntityManagerFactoryScope findEntityManagerFactoryScope(
 			Object testInstance,
 			ExtensionContext context) {

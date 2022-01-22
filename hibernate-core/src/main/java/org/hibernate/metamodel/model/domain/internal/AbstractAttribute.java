@@ -38,7 +38,6 @@ public abstract class AbstractAttribute<D,J,B> implements PersistentAttribute<D,
 	private final DomainType<B> valueType;
 	private transient Member member;
 
-	@SuppressWarnings("WeakerAccess")
 	protected AbstractAttribute(
 			ManagedDomainType<D> declaringType,
 			String name,

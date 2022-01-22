@@ -9,7 +9,6 @@ package org.hibernate.orm.test.query.sqm.domain;
 /**
  * @author Steve Ebersole
  */
-@SuppressWarnings("WeakerAccess")
 public class ConstructedLookupListItem implements LookupListItem {
 	private final Integer id;
 	private final String displayValue;

@@ -228,7 +228,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		return dialect;
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected AbstractSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		this.sessionFactory = sessionFactory;
 		this.statement = statement;
@@ -347,7 +346,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		setLimitParameter( null );
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	public List<JdbcParameterBinder> getParameterBinders() {
 		return parameterBinders;
 	}
@@ -2278,7 +2276,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected void renderOffset(Expression offsetExpression, boolean renderOffsetRowsKeyword) {
 		appendSql( " offset " );
 		clauseStack.push( Clause.OFFSET );
@@ -2293,7 +2290,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected void renderFetch(
 			Expression fetchExpression,
 			Expression offsetExpressionToAdd,
@@ -3591,7 +3587,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected void renderRootTableGroup(TableGroup tableGroup, List<TableGroupJoin> tableGroupJoinCollector) {
 		final LockMode effectiveLockMode = getEffectiveLockMode( tableGroup.getSourceAlias() );
 		final boolean usesLockHint = renderPrimaryTableReference( tableGroup, effectiveLockMode );
@@ -3759,7 +3754,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		return false;
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected boolean renderNamedTableReference(NamedTableReference tableReference, LockMode lockMode) {
 		appendSql( tableReference.getTableExpression() );
 		registerAffectedTable( tableReference );
@@ -3875,7 +3869,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		affectedTableNames.add( tableExpression );
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected void renderTableReferenceJoins(TableGroup tableGroup) {
 		final List<TableReferenceJoin> joins = tableGroup.getTableReferenceJoins();
 		if ( joins == null || joins.isEmpty() ) {
@@ -3896,17 +3889,14 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected void processTableGroupJoins(TableGroup source) {
 		source.visitTableGroupJoins( tableGroupJoin -> processTableGroupJoin( tableGroupJoin, null ) );
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected void processNestedTableGroupJoins(TableGroup source, List<TableGroupJoin> tableGroupJoinCollector) {
 		source.visitNestedTableGroupJoins( tableGroupJoin -> processTableGroupJoin( tableGroupJoin, tableGroupJoinCollector ) );
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected void processTableGroupJoin(TableGroupJoin tableGroupJoin, List<TableGroupJoin> tableGroupJoinCollector) {
 		final TableGroup joinedGroup = tableGroupJoin.getJoinedGroup();
 		final TableGroup realTableGroup;

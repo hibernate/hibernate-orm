@@ -30,7 +30,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * @author Steve Ebersole
  */
-@SuppressWarnings({"deprecation", "WeakerAccess"})
+@SuppressWarnings("deprecation")
 @ServiceRegistry
 @DomainModel( standardModels = StandardDomainModel.GAMBIT )
 @SessionFactory

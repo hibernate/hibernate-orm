@@ -52,7 +52,6 @@ public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFa
 	}
 
 
-	@SuppressWarnings({"unchecked", "WeakerAccess"})
 	protected RegionFactory resolveRegionFactory(Map configurationValues, ServiceRegistryImplementor registry) {
 		final Properties p = new Properties();
 		p.putAll( configurationValues );
@@ -126,7 +125,6 @@ public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFa
 		return NoCachingRegionFactory.INSTANCE;
 	}
 
-	@SuppressWarnings({"WeakerAccess", "unused"})
 	protected RegionFactory getFallback(Map configurationValues, ServiceRegistryImplementor registry) {
 		return null;
 	}

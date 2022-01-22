@@ -1866,7 +1866,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		}
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected void secondPassCompileForeignKeys(
 			final Table table,
 			Set<ForeignKey> done,

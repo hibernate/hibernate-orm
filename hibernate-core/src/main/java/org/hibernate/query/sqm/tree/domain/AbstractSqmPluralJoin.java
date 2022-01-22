@@ -20,7 +20,6 @@ import org.hibernate.query.sqm.tree.from.SqmFrom;
  */
 public abstract class AbstractSqmPluralJoin<O,C,E> extends AbstractSqmAttributeJoin<O,E> implements JpaJoin<O,E>, PluralJoin<O,C,E> {
 
-	@SuppressWarnings("WeakerAccess")
 	public AbstractSqmPluralJoin(
 			SqmFrom<?, O> lhs,
 			PluralPersistentAttribute<O,C,E> joinedNavigable,

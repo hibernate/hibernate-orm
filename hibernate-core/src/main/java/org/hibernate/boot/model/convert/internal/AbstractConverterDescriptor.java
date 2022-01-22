@@ -33,7 +33,6 @@ public abstract class AbstractConverterDescriptor implements ConverterDescriptor
 
 	private final AutoApplicableConverterDescriptor autoApplicableDescriptor;
 
-	@SuppressWarnings("WeakerAccess")
 	public AbstractConverterDescriptor(
 			Class<? extends AttributeConverter> converterClass,
 			Boolean forceAutoApply,

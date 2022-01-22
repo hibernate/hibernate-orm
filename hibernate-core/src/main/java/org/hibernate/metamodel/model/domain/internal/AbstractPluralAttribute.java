@@ -36,7 +36,6 @@ public abstract class AbstractPluralAttribute<D, C, E>
 	private final CollectionClassification classification;
 	private final SqmPathSource<E> elementPathSource;
 
-	@SuppressWarnings("WeakerAccess")
 	protected AbstractPluralAttribute(
 			PluralAttributeBuilder<D,C,E,?> builder,
 			MetadataContext metadataContext) {

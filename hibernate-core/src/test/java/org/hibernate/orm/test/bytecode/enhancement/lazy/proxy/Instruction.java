@@ -25,7 +25,6 @@ public class Instruction extends BaseEntity {
 		super();
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	public Instruction(Integer id, String summary) {
 		super( id );
 		this.summary = summary;

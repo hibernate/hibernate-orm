@@ -35,7 +35,6 @@ import static org.hibernate.sql.results.graph.collection.CollectionLoadingLogger
  * @author Steve Ebersole
  * @implNote Mainly an intention contract wrt the immediacy of the fetch.
  */
-@SuppressWarnings("WeakerAccess")
 public abstract class AbstractImmediateCollectionInitializer extends AbstractCollectionInitializer {
 	private final LockMode lockMode;
 
@@ -267,7 +266,6 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 	 * inclusion in the collection.  Can be null to indicate that the current row
 	 * does not contain any collection values
 	 */
-	@SuppressWarnings("WeakerAccess")
 	protected Object getCollectionValueKey() {
 		return collectionValueKey;
 	}

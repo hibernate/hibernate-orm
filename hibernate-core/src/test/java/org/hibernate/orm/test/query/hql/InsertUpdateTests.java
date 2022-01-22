@@ -22,7 +22,6 @@ import java.time.LocalDate;
 /**
  * @author Gavin King
  */
-@SuppressWarnings("WeakerAccess")
 @ServiceRegistry
 @DomainModel( standardModels = {StandardDomainModel.HELPDESK, StandardDomainModel.CONTACTS} )
 @SessionFactory

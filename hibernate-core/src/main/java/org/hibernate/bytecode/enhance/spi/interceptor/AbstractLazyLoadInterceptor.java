@@ -18,7 +18,6 @@ public abstract class AbstractLazyLoadInterceptor extends AbstractInterceptor im
 		super( entityName );
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	public AbstractLazyLoadInterceptor(String entityName, SharedSessionContractImplementor session) {
 		super( entityName );
 		setSession( session );

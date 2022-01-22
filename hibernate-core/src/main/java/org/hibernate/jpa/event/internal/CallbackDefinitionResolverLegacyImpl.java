@@ -25,7 +25,6 @@ import org.hibernate.annotations.common.reflection.XMethod;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.jpa.event.spi.CallbackDefinition;
 import org.hibernate.jpa.event.spi.CallbackType;
-import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.property.access.spi.Getter;
 
@@ -41,12 +40,11 @@ import org.jboss.logging.Logger;
 public final class CallbackDefinitionResolverLegacyImpl {
 	private static final Logger log = Logger.getLogger( CallbackDefinitionResolverLegacyImpl.class );
 
-	@SuppressWarnings({"unchecked", "WeakerAccess"})
 	public static List<CallbackDefinition> resolveEntityCallbacks(ReflectionManager reflectionManager,
 			XClass entityClass, CallbackType callbackType) {
 		List<CallbackDefinition> callbackDefinitions = new ArrayList<>();
 		List<String> callbacksMethodNames = new ArrayList<>();
-		List<Class> orderedListeners = new ArrayList<>();
+		List<Class<?>> orderedListeners = new ArrayList<>();
 		XClass currentClazz = entityClass;
 		boolean stopListeners = false;
 		boolean stopDefaultListeners = false;
@@ -61,8 +59,8 @@ public final class CallbackDefinitionResolverLegacyImpl {
 						//overridden method, remove the superclass overridden method
 						if ( callbackDefinition == null ) {
 							callbackDefinition = new EntityCallback.Definition( method, callbackType );
-							Class returnType = method.getReturnType();
-							Class[] args = method.getParameterTypes();
+							Class<?> returnType = method.getReturnType();
+							Class<?>[] args = method.getParameterTypes();
 							if ( returnType != Void.TYPE || args.length != 0 ) {
 								throw new RuntimeException(
 										"Callback methods annotated on the bean class must return void and take no arguments: "
@@ -108,7 +106,9 @@ public final class CallbackDefinitionResolverLegacyImpl {
 
 		//handle default listeners
 		if ( !stopDefaultListeners ) {
-			List<Class> defaultListeners = (List<Class>) reflectionManager.getDefaults().get( EntityListeners.class );
+			@SuppressWarnings("unchecked")
+			List<Class<?>> defaultListeners = (List<Class<?>>)
+					reflectionManager.getDefaults().get( EntityListeners.class );
 
 			if ( defaultListeners != null ) {
 				int defaultListenerSize = defaultListeners.size();
@@ -118,7 +118,7 @@ public final class CallbackDefinitionResolverLegacyImpl {
 			}
 		}
 
-		for ( Class listener : orderedListeners ) {
+		for ( Class<?> listener : orderedListeners ) {
 			CallbackDefinition callbackDefinition = null;
 			if ( listener != null ) {
 				XClass xListener = reflectionManager.toXClass( listener );
@@ -133,8 +133,8 @@ public final class CallbackDefinitionResolverLegacyImpl {
 							if ( callbackDefinition == null ) {
 								callbackDefinition = new ListenerCallback.Definition( listener, method, callbackType );
 
-								Class returnType = method.getReturnType();
-								Class[] args = method.getParameterTypes();
+								Class<?> returnType = method.getReturnType();
+								Class<?>[] args = method.getParameterTypes();
 								if ( returnType != Void.TYPE || args.length != 1 ) {
 									throw new PersistenceException(
 											"Callback methods annotated in a listener bean class must return void and take one argument: "
@@ -171,7 +171,7 @@ public final class CallbackDefinitionResolverLegacyImpl {
 	public static List<CallbackDefinition> resolveEmbeddableCallbacks(ReflectionManager reflectionManager,
 			Class<?> entityClass, Property embeddableProperty,
 			CallbackType callbackType) {
-		final Class embeddableClass = embeddableProperty.getType().getReturnedClass();
+		final Class<?> embeddableClass = embeddableProperty.getType().getReturnedClass();
 		final XClass embeddableXClass = reflectionManager.toXClass( embeddableClass );
 		final Getter embeddableGetter = embeddableProperty.getGetter( entityClass );
 		final List<CallbackDefinition> callbackDefinitions = new ArrayList<>();
@@ -188,8 +188,8 @@ public final class CallbackDefinitionResolverLegacyImpl {
 						//overridden method, remove the superclass overridden method
 						if ( callbackDefinition == null ) {
 							callbackDefinition = new EmbeddableCallback.Definition( embeddableGetter, method, callbackType );
-							Class returnType = method.getReturnType();
-							Class[] args = method.getParameterTypes();
+							Class<?> returnType = method.getReturnType();
+							Class<?>[] args = method.getParameterTypes();
 							if ( returnType != Void.TYPE || args.length != 0 ) {
 								throw new RuntimeException(
 										"Callback methods annotated on the bean class must return void and take no arguments: "
@@ -238,15 +238,16 @@ public final class CallbackDefinitionResolverLegacyImpl {
 			for ( ElementType type : target.value() ) {
 				if ( type.equals( ElementType.ANNOTATION_TYPE ) ) {
 					useAnnotationAnnotatedByListener = true;
+					break;
 				}
 			}
 		}
 	}
 
-	private static void getListeners(XClass currentClazz, List<Class> orderedListeners) {
+	private static void getListeners(XClass currentClazz, List<Class<?>> orderedListeners) {
 		EntityListeners entityListeners = currentClazz.getAnnotation( EntityListeners.class );
 		if ( entityListeners != null ) {
-			Class[] classes = entityListeners.value();
+			Class<?>[] classes = entityListeners.value();
 			int size = classes.length;
 			for ( int index = size - 1; index >= 0; index-- ) {
 				orderedListeners.add( classes[index] );
@@ -257,7 +258,7 @@ public final class CallbackDefinitionResolverLegacyImpl {
 			for ( Annotation annot : annotations ) {
 				entityListeners = annot.getClass().getAnnotation( EntityListeners.class );
 				if ( entityListeners != null ) {
-					Class[] classes = entityListeners.value();
+					Class<?>[] classes = entityListeners.value();
 					int size = classes.length;
 					for ( int index = size - 1; index >= 0; index-- ) {
 						orderedListeners.add( classes[index] );

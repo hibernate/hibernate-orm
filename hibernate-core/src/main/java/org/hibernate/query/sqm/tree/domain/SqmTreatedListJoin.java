@@ -22,7 +22,6 @@ public class SqmTreatedListJoin<O,T, S extends T> extends SqmListJoin<O,S> imple
 	private final SqmListJoin<O,T> wrappedPath;
 	private final EntityDomainType<S> treatTarget;
 
-	@SuppressWarnings("WeakerAccess")
 	public SqmTreatedListJoin(
 			SqmListJoin<O, T> wrappedPath,
 			EntityDomainType<S> treatTarget,

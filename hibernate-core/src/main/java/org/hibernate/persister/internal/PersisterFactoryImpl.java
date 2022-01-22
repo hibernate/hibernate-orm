@@ -36,7 +36,6 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 	/**
 	 * The constructor signature for {@link EntityPersister} implementations
 	 */
-	@SuppressWarnings("WeakerAccess")
 	public static final Class<?>[] ENTITY_PERSISTER_CONSTRUCTOR_ARGS = new Class[] {
 			PersistentClass.class,
 			EntityDataAccess.class,
@@ -47,7 +46,6 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 	/**
 	 * The constructor signature for {@link CollectionPersister} implementations
 	 */
-	@SuppressWarnings("WeakerAccess")
 	public static final Class<?>[] COLLECTION_PERSISTER_CONSTRUCTOR_ARGS = new Class[] {
 			Collection.class,
 			CollectionDataAccess.class,
@@ -143,7 +141,6 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 	}
 
 	@Override
-	@SuppressWarnings( {"unchecked"})
 	public CollectionPersister createCollectionPersister(
 			Collection collectionBinding,
 			CollectionDataAccess cacheAccessStrategy,

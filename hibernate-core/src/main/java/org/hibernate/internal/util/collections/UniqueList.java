@@ -20,7 +20,6 @@ import java.util.Spliterators;
  *
  * @author Steve Ebersole
  */
-@SuppressWarnings({"NullableProblems", "unused", "WeakerAccess"})
 public class UniqueList<E> extends AbstractList<E> implements Set<E>, List<E> {
 	private final List<E> elements;
 

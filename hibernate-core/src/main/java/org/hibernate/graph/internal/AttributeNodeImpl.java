@@ -36,7 +36,6 @@ public class AttributeNodeImpl<J>
 	private Map<Class<? extends J>, SubGraphImplementor<? extends J>> subGraphMap;
 	private Map<Class<? extends J>, SubGraphImplementor<? extends J>> keySubGraphMap;
 
-	@SuppressWarnings("WeakerAccess")
 	public <X> AttributeNodeImpl(
 			boolean mutable,
 			PersistentAttribute<X, J> attribute,
@@ -150,7 +149,7 @@ public class AttributeNodeImpl<J>
 		return internalMakeSubgraph( managedType.findSubType( subType ) );
 	}
 
-	@SuppressWarnings({"WeakerAccess", "unchecked"})
+	@SuppressWarnings("unchecked")
 	protected <S extends J> void internalAddSubGraph(Class<S> subType, SubGraphImplementor<S> subGraph) {
 		log.tracef( "Adding sub-graph : ( (%s) %s )", subGraph.getGraphedType().getTypeName(), getAttributeName() );
 
@@ -217,7 +216,7 @@ public class AttributeNodeImpl<J>
 		return internalMakeKeySubgraph( subType );
 	}
 
-	@SuppressWarnings({"WeakerAccess", "unchecked"})
+	@SuppressWarnings("unchecked")
 	protected <S extends J> void internalAddKeySubGraph(Class<S> subType, SubGraph<S> subGraph) {
 		log.tracef( "Adding key sub-graph : ( (%s) %s )", subType.getName(), getAttributeName() );
 

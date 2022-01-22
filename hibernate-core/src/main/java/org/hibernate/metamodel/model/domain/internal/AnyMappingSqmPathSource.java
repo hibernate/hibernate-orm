@@ -23,18 +23,16 @@ import static jakarta.persistence.metamodel.Bindable.BindableType.SINGULAR_ATTRI
 public class AnyMappingSqmPathSource<J> extends AbstractSqmPathSource<J> implements BindableType<J> {
 	private final SqmPathSource<?> keyPathSource;
 
-	@SuppressWarnings("WeakerAccess")
 	public AnyMappingSqmPathSource(
 			String localPathName,
 			AnyMappingDomainType<J> domainType,
 			BindableType jpaBindableType) {
 		super( localPathName, domainType, jpaBindableType );
-		keyPathSource = new BasicSqmPathSource( "id", (BasicDomainType) domainType.getKeyType(), SINGULAR_ATTRIBUTE );
+		keyPathSource = new BasicSqmPathSource<>( "id", (BasicDomainType<?>) domainType.getKeyType(), SINGULAR_ATTRIBUTE );
 	}
 
-	@Override
+	@Override @SuppressWarnings("unchecked")
 	public AnyMappingDomainType<J> getSqmPathType() {
-		//noinspection unchecked
 		return (AnyMappingDomainType<J>) super.getSqmPathType();
 	}
 

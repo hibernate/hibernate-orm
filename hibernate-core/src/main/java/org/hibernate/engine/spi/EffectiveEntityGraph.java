@@ -54,7 +54,6 @@ public class EffectiveEntityGraph implements AppliedGraph, Serializable {
 	 * @implSpec See {@link #EffectiveEntityGraph}
 	 */
 	@Incubating
-	@SuppressWarnings("WeakerAccess")
 	public EffectiveEntityGraph(boolean allowOverwrite) {
 		this.allowOverwrite = allowOverwrite;
 	}

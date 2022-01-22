@@ -253,7 +253,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	 * Main entry point into analysis of HQL/JPQL parse tree - producing a semantic model of the
 	 * query.
 	 */
-	@SuppressWarnings("WeakerAccess")
 	public static <R> SqmStatement<R> buildSemanticModel(
 			HqlParser.StatementContext hqlParseTree,
 			SqmCreationOptions creationOptions,
@@ -276,7 +275,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	private ParameterCollector parameterCollector;
 	private ParameterStyle parameterStyle;
 
-	@SuppressWarnings("WeakerAccess")
 	public SemanticQueryBuilder(SqmCreationOptions creationOptions, SqmCreationContext creationContext) {
 		this.creationOptions = creationOptions;
 		this.creationContext = creationContext;
@@ -838,7 +836,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return sqmQuerySpec;
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected SqmSelectClause buildInferredSelectClause(SqmFromClause fromClause) {
 		// for now, this is slightly different than the legacy behavior where
 		// the root and each non-fetched-join was selected.  For now, here, we simply
@@ -1591,7 +1588,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		throw new UnsupportedOperationException( "Unexpected call to #visitJoin, see #consumeJoin" );
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected <X> void consumeJoin(HqlParser.JoinContext parserJoin, SqmRoot<X> sqmRoot) {
 		final SqmJoinType joinType;
 		final int firstJoinTypeSymbolType;
@@ -1689,7 +1685,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		throw new UnsupportedOperationException();
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected void consumeJpaCollectionJoin(
 			HqlParser.JpaCollectionJoinContext ctx,
 			SqmRoot<?> sqmRoot) {

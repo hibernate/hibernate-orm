@@ -41,7 +41,6 @@ public abstract class AbstractSqmAttributeJoin<O,T>
 
 	private SqmPredicate onClausePredicate;
 
-	@SuppressWarnings("WeakerAccess")
 	public AbstractSqmAttributeJoin(
 			SqmFrom<?,O> lhs,
 			SqmJoinable joinedNavigable,

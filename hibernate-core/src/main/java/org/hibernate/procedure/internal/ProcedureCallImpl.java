@@ -720,7 +720,6 @@ public class ProcedureCallImpl<R>
 	 *
 	 * @return The spaces
 	 */
-	@SuppressWarnings("WeakerAccess")
 	protected Set<String> synchronizedQuerySpaces() {
 		if ( synchronizedQuerySpaces == null ) {
 			synchronizedQuerySpaces = new HashSet<>();
@@ -750,7 +749,6 @@ public class ProcedureCallImpl<R>
 		return this;
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected void addSynchronizedQuerySpaces(EntityPersister persister) {
 		synchronizedQuerySpaces().addAll( Arrays.asList( (String[]) persister.getQuerySpaces() ) );
 	}

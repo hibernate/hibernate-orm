@@ -36,7 +36,6 @@ import jakarta.persistence.TemporalType;
 public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 	public static final JdbcTimeJavaType INSTANCE = new JdbcTimeJavaType();
 
-	@SuppressWarnings("WeakerAccess")
 	public static final String TIME_FORMAT = "HH:mm:ss.SSS";
 
 	public static final DateTimeFormatter LITERAL_FORMATTER = DateTimeFormatter.ISO_LOCAL_TIME;
@@ -51,7 +50,6 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 	@SuppressWarnings("unused")
 	public static final DateTimeFormatter LOGGABLE_FORMATTER = DateTimeFormatter.ISO_LOCAL_TIME;
 
-	@SuppressWarnings("WeakerAccess")
 	public JdbcTimeJavaType() {
 		super( Time.class, TimeMutabilityPlan.INSTANCE );
 	}

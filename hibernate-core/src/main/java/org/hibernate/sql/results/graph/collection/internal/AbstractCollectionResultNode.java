@@ -20,7 +20,6 @@ public abstract class AbstractCollectionResultNode implements CollectionResultGr
 
 	private final String resultVariable;
 
-	@SuppressWarnings("WeakerAccess")
 	protected AbstractCollectionResultNode(
 			NavigablePath navigablePath,
 			PluralAttributeMapping attributeMapping,
@@ -36,7 +35,6 @@ public abstract class AbstractCollectionResultNode implements CollectionResultGr
 	}
 
 
-	@SuppressWarnings("WeakerAccess")
 	protected PluralAttributeMapping getAttributeMapping() {
 		return attributeMapping;
 	}

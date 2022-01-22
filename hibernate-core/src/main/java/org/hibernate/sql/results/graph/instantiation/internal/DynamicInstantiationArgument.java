@@ -18,7 +18,6 @@ public class DynamicInstantiationArgument<T> {
 	private final DomainResultProducer<T> argumentResultProducer;
 	private final String alias;
 
-	@SuppressWarnings("WeakerAccess")
 	public DynamicInstantiationArgument(DomainResultProducer<T> argumentResultProducer, String alias) {
 		this.argumentResultProducer = argumentResultProducer;
 		this.alias = alias;

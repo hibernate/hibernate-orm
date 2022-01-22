@@ -20,7 +20,6 @@ public class SqmTreatedSetJoin<O,T, S extends T> extends SqmSetJoin<O,S> impleme
 	private final SqmSetJoin<O,T> wrappedPath;
 	private final EntityDomainType<S> treatTarget;
 
-	@SuppressWarnings("WeakerAccess")
 	public SqmTreatedSetJoin(
 			SqmSetJoin<O, T> wrappedPath,
 			EntityDomainType<S> treatTarget,

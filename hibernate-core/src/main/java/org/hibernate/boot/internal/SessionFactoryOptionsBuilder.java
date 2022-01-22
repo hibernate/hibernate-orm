@@ -145,7 +145,6 @@ import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
  *
  * @author Steve Ebersole
  */
-@SuppressWarnings("WeakerAccess")
 public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private static final CoreMessageLogger log = messageLogger( SessionFactoryOptionsBuilder.class );
 
@@ -262,7 +261,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private int queryStatisticsMaxSize;
 
 
-	@SuppressWarnings({"WeakerAccess", "deprecation"})
 	public SessionFactoryOptionsBuilder(StandardServiceRegistry serviceRegistry, BootstrapContext context) {
 		this.serviceRegistry = serviceRegistry;
 		this.jpaBootstrap = context.isJpaBootstrap();

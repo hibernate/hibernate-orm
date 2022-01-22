@@ -141,7 +141,7 @@ import static org.hibernate.cfg.BinderHelper.toAliasTableMap;
  * @author inger
  * @author Emmanuel Bernard
  */
-@SuppressWarnings({"unchecked", "WeakerAccess", "deprecation"})
+@SuppressWarnings({"unchecked", "deprecation"})
 public abstract class CollectionBinder {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, CollectionBinder.class.getName());
 

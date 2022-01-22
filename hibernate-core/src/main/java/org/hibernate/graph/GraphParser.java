@@ -30,7 +30,7 @@ import org.hibernate.graph.spi.RootGraphImplementor;
  *
  * @author asusnjar
  */
-@SuppressWarnings({"unused", "WeakerAccess"})
+@SuppressWarnings("unused")
 public final class GraphParser {
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

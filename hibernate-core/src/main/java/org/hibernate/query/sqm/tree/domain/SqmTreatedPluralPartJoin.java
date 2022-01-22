@@ -18,7 +18,6 @@ public class SqmTreatedPluralPartJoin<O,T, S extends T> extends SqmPluralPartJoi
 	private final SqmPluralPartJoin<O,T> wrappedPath;
 	private final EntityDomainType<S> treatTarget;
 
-	@SuppressWarnings("WeakerAccess")
 	public SqmTreatedPluralPartJoin(
 			SqmPluralPartJoin<O,T> wrappedPath,
 			EntityDomainType<S> treatTarget,

@@ -30,7 +30,6 @@ public class SqmInSubQueryPredicate<T> extends AbstractNegatableSqmPredicate imp
 		this( testExpression, subQueryExpression, false, nodeBuilder );
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	public SqmInSubQueryPredicate(
 			SqmExpression<T> testExpression,
 			SqmSubQuery<T> subQueryExpression,

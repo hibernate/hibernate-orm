@@ -20,7 +20,6 @@ public abstract class AbstractAttributeMapping implements AttributeMapping {
 
 	private final ManagedMappingType declaringType;
 
-	@SuppressWarnings("WeakerAccess")
 	public AbstractAttributeMapping(String name, ManagedMappingType declaringType) {
 		this.name = name;
 		this.declaringType = declaringType;

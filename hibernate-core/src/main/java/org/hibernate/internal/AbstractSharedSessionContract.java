@@ -114,7 +114,6 @@ import static java.lang.Boolean.TRUE;
  *
  * @author Steve Ebersole
  */
-@SuppressWarnings("WeakerAccess")
 public abstract class AbstractSharedSessionContract implements SharedSessionContractImplementor {
 	private static final EntityManagerMessageLogger log = HEMLogging.messageLogger( SessionImpl.class );
 

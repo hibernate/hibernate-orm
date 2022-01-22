@@ -20,7 +20,6 @@ public class SqmTreatedBagJoin<O,T, S extends T> extends SqmBagJoin<O,S> impleme
 	private final SqmBagJoin<O, T> wrappedPath;
 	private final EntityDomainType<S> treatTarget;
 
-	@SuppressWarnings("WeakerAccess")
 	public SqmTreatedBagJoin(
 			SqmBagJoin<O, T> wrappedPath,
 			EntityDomainType<S> treatTarget,

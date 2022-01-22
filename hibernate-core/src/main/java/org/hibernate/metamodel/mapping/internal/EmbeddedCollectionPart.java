@@ -68,7 +68,6 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 	private final PropertyAccess parentInjectionAttributePropertyAccess;
 	private final String sqlAliasStem;
 
-	@SuppressWarnings("WeakerAccess")
 	public EmbeddedCollectionPart(
 			CollectionPersister collectionDescriptor,
 			Nature nature,

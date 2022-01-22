@@ -94,7 +94,6 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private final Map<String, SqmFunctionDescriptor> sqlFunctionMap;
 	private final Database database;
 
-	@SuppressWarnings("WeakerAccess")
 	public MetadataImpl(
 			UUID uuid,
 			MetadataBuildingOptions metadataBuildingOptions,

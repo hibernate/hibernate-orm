@@ -25,7 +25,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author Steve Ebersole
  */
-@SuppressWarnings("WeakerAccess")
 public class DiscriminatorTests extends BaseSessionFactoryFunctionalTest {
 
 	@Override

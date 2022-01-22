@@ -57,7 +57,6 @@ public class SessionFactoryExtension
 		return JUnitHelper.locateExtensionStore( SessionFactoryExtension.class, context, testInstance );
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	public static SessionFactoryScope findSessionFactoryScope(Object testInstance, ExtensionContext context) {
 		final ExtensionContext.Store store = locateExtensionStore( testInstance, context );
 		final SessionFactoryScope existing = (SessionFactoryScope) store.get( SESSION_FACTORY_KEY );

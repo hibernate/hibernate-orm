@@ -35,8 +35,6 @@ public class StandardRowReader<T> implements RowReader<T> {
 
 	private final int assemblerCount;
 
-
-	@SuppressWarnings("WeakerAccess")
 	public StandardRowReader(
 			List<DomainResultAssembler> resultAssemblers,
 			List<Initializer> initializers,

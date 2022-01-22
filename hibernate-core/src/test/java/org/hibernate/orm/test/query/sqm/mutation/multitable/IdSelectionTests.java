@@ -36,7 +36,6 @@ import org.junit.jupiter.api.Test;
  *
  * @author Steve Ebersole
  */
-@SuppressWarnings("WeakerAccess")
 @DomainModel(
 		standardModels = StandardDomainModel.GAMBIT,
 		annotatedClasses = {

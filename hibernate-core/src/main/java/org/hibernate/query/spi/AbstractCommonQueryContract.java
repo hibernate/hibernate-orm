@@ -551,13 +551,11 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		return this;
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected boolean applyJpaCacheRetrieveModeHint(CacheRetrieveMode retrieveMode) {
 		getQueryOptions().setCacheRetrieveMode( retrieveMode );
 		return true;
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected boolean applyJpaCacheStoreModeHint(CacheStoreMode storeMode) {
 		getQueryOptions().setCacheStoreMode( storeMode );
 		return true;
@@ -748,13 +746,11 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		return getQueryParameterBindings().getBinding( parameter );
 	}
 
-	@SuppressWarnings( {"WeakerAccess"} )
 	protected <P> QueryParameterBinding<P> locateBinding(String name) {
 		getSession().checkOpen();
 		return getQueryParameterBindings().getBinding( name );
 	}
 
-	@SuppressWarnings( {"WeakerAccess"} )
 	protected <P> QueryParameterBinding<P> locateBinding(int position) {
 		getSession().checkOpen();
 		return getQueryParameterBindings().getBinding( position );
@@ -1421,7 +1417,6 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		return this;
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected BindableType<Object> determineType(String namedParam, Class<?> retType) {
 		BindableType<?> type = locateBinding( namedParam ).getBindType();
 		if ( type == null ) {

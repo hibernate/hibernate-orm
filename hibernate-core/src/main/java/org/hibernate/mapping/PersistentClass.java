@@ -565,7 +565,6 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	 *
 	 * @return {@code true} if a property with that name exists; {@code false} if not
 	 */
-	@SuppressWarnings("WeakerAccess")
 	public boolean hasProperty(String name) {
 		final Property identifierProperty = getIdentifierProperty();
 		if ( identifierProperty != null && identifierProperty.getName().equals( name ) ) {
@@ -606,7 +605,6 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	 *
 	 * @return {@code true} if a property with that name exists; {@code false} if not
 	 */
-	@SuppressWarnings({"WeakerAccess", "RedundantIfStatement"})
 	public boolean isPropertyDefinedInHierarchy(String name) {
 		if ( hasProperty( name ) ) {
 			return true;

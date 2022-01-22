@@ -20,7 +20,7 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 public class BasicSqmPathSource<J>
 		extends AbstractSqmPathSource<J>
 		implements BindableType<J>, ReturnableType<J> {
-	@SuppressWarnings("WeakerAccess")
+
 	public BasicSqmPathSource(
 			String localPathName,
 			BasicDomainType<J> domainType,

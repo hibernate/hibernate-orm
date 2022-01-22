@@ -18,7 +18,6 @@ import static org.junit.jupiter.api.extension.ExtensionContext.Namespace.create;
  * @author Steve Ebersole
  */
 @Internal
-@SuppressWarnings("WeakerAccess")
 public class JUnitHelper {
 	public static ExtensionContext.Store locateExtensionStore(
 			Class<? extends Extension> extensionClass,

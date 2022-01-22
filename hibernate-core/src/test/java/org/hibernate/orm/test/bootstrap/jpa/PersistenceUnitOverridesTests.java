@@ -530,7 +530,6 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 		}
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	public static class IntegrationDialect extends Dialect {
 		@Override
 		public DatabaseVersion getVersion() {

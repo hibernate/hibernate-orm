@@ -224,7 +224,6 @@ public abstract class AbstractSelectionQuery<R>
 		}
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected static <T> T uniqueElement(List<T> list) throws NonUniqueResultException {
 		int size = list.size();
 		if ( size == 0 ) {

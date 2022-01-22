@@ -18,7 +18,6 @@ public class SqmTreatedMapJoin<O, K, V, S extends V> extends SqmMapJoin<O, K, S>
 	private final SqmMapJoin<O, K, V> wrappedPath;
 	private final EntityDomainType<S> treatTarget;
 
-	@SuppressWarnings("WeakerAccess")
 	public SqmTreatedMapJoin(
 			SqmMapJoin<O, K, V> wrappedPath,
 			EntityDomainType<S> treatTarget,

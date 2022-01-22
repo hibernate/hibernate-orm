@@ -27,7 +27,6 @@ import org.hibernate.graph.spi.RootGraphImplementor;
  * 
  * @author asusnjar
  */
-@SuppressWarnings("WeakerAccess")
 public final class EntityGraphs {
 	/**
 	 * Merges multiple entity graphs into a single graph that specifies the fetching/loading of all attributes the input

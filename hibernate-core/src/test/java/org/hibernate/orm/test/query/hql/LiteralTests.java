@@ -36,7 +36,7 @@ import static org.hamcrest.Matchers.is;
 /**
  * @author Steve Ebersole
  */
-@SuppressWarnings({"deprecation","WeakerAccess"})
+@SuppressWarnings("deprecation")
 @ServiceRegistry
 @DomainModel( standardModels = {StandardDomainModel.GAMBIT, StandardDomainModel.ANIMAL} )
 @SessionFactory

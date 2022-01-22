@@ -39,7 +39,6 @@ public class SqmPluralValuedSimplePath<E> extends AbstractSqmSimplePath<E> {
 		this( navigablePath, referencedNavigable, lhs, null, nodeBuilder );
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	public SqmPluralValuedSimplePath(
 			NavigablePath navigablePath,
 			PluralPersistentAttribute<?, ?, E> referencedNavigable,

@@ -33,7 +33,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 @DomainModel( standardModels = StandardDomainModel.GAMBIT )
 @ServiceRegistry
 @SessionFactory
-@SuppressWarnings("WeakerAccess")
 public class PluralAttributeMappingTests {
 
 	@Test

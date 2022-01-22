@@ -35,7 +35,6 @@ public class LoggingInspectionsExtension implements TestInstancePostProcessor, B
 		}
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	public static LoggingInspectionsScope resolveLoggingInspectionScope(Object testInstance, ExtensionContext context) {
 		final Store extensionStore = locateExtensionStore( testInstance, context );
 		final Object existing = extensionStore.get( KEY );

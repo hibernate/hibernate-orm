@@ -87,7 +87,6 @@ public class EntityCollectionPart
 	private ModelPart fkTargetModelPart;
 	private ForeignKeyDescriptor fkDescriptor;
 
-	@SuppressWarnings("WeakerAccess")
 	public EntityCollectionPart(
 			CollectionPersister collectionDescriptor,
 			Nature nature,
@@ -198,7 +197,6 @@ public class EntityCollectionPart
 		}
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	public void finishInitialization(
 			CollectionPersister collectionDescriptor,
 			Collection bootValueMapping,

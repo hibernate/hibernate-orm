@@ -38,7 +38,6 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	 */
 	private Map<String, SqmPath<?>> reusablePaths;
 
-	@SuppressWarnings("WeakerAccess")
 	protected AbstractSqmPath(
 			NavigablePath navigablePath,
 			SqmPathSource<T> referencedPathSource,

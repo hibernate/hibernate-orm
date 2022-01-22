@@ -130,7 +130,6 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 		this.enumerationStyle = enumerationStyle;
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	public EnumType getEnumerationStyle() {
 		return enumerationStyle;
 	}

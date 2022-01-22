@@ -59,7 +59,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 		}
 )
 @SessionFactory
-@SuppressWarnings("WeakerAccess")
 public class MappedFetchTests {
 	@Test
 	public void baseline(SessionFactoryScope scope) {

@@ -78,7 +78,6 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 	private final Function<SharedSessionContractImplementor,String> sessionUidAccess;
 	private final MultiTableSqmMutationConverter converter;
 
-	@SuppressWarnings("WeakerAccess")
 	public RestrictedDeleteExecutionDelegate(
 			EntityMappingType entityDescriptor,
 			TemporaryTable idTable,

@@ -106,7 +106,6 @@ public class SqlAstProcessingStateImpl
 		return normalize( expression );
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected Expression normalize(Expression expression) {
 		final Clause currentClause = currentClauseAccess.get();
 		if ( currentClause == Clause.ORDER

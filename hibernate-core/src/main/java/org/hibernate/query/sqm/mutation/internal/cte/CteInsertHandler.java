@@ -118,7 +118,6 @@ public class CteInsertHandler implements InsertHandler {
 	private final SqmCteTable cteTable;
 	private final DomainParameterXref domainParameterXref;
 
-	@SuppressWarnings("WeakerAccess")
 	public CteInsertHandler(
 			SqmCteTable cteTable,
 			SqmInsertStatement<?> sqmStatement,

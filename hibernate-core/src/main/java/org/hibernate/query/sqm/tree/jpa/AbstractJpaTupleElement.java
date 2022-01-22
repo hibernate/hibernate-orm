@@ -24,7 +24,6 @@ public abstract class AbstractJpaTupleElement<T>
 	private SqmExpressable<T> expressableType;
 	private String alias;
 
-	@SuppressWarnings("WeakerAccess")
 	protected AbstractJpaTupleElement(SqmExpressable<? extends T> expressableType, NodeBuilder criteriaBuilder) {
 		super( criteriaBuilder );
 

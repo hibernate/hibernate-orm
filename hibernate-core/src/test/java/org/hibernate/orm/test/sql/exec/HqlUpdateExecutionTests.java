@@ -23,7 +23,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * @author Steve Ebersole
  */
-@SuppressWarnings("WeakerAccess")
 @DomainModel(
 		standardModels = StandardDomainModel.GAMBIT,
 		annotatedClasses = {

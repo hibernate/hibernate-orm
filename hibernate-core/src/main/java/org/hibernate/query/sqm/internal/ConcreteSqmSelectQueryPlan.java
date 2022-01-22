@@ -80,7 +80,6 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 
 	private volatile CacheableSqmInterpretation cacheableSqmInterpretation;
 
-	@SuppressWarnings("WeakerAccess")
 	public ConcreteSqmSelectQueryPlan(
 			SqmSelectStatement<?> sqm,
 			String hql,

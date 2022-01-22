@@ -45,7 +45,6 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	private final MetadataImplementor metadata;
 	private final SessionFactoryOptionsBuilder optionsBuilder;
 
-	@SuppressWarnings("WeakerAccess")
 	public SessionFactoryBuilderImpl(MetadataImplementor metadata, BootstrapContext bootstrapContext) {
 		this(
 				metadata,
@@ -56,7 +55,6 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		);
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	public SessionFactoryBuilderImpl(MetadataImplementor metadata, SessionFactoryOptionsBuilder optionsBuilder) {
 		this.metadata = metadata;
 		this.optionsBuilder = optionsBuilder;

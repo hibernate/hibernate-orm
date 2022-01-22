@@ -27,7 +27,6 @@ import org.hibernate.type.Type;
  *
  * @author Gavin King
  */
-@SuppressWarnings("WeakerAccess")
 public class WrapVisitor extends ProxyVisitor {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( WrapVisitor.class );
 	protected Object entity;

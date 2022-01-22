@@ -553,7 +553,7 @@ public abstract class AbstractQuery<R>
 		return qp != null && getQueryParameterBindings().isBound( qp );
 	}
 
-	@SuppressWarnings( {"WeakerAccess", "unchecked", "rawtypes"} )
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	protected <P> QueryParameterBinding<P> locateBinding(Parameter<P> parameter) {
 		if ( parameter instanceof QueryParameterImplementor ) {
 			return locateBinding( (QueryParameterImplementor) parameter );
@@ -570,19 +570,16 @@ public abstract class AbstractQuery<R>
 		);
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected <P> QueryParameterBinding<P> locateBinding(QueryParameterImplementor<P> parameter) {
 		getSession().checkOpen();
 		return getQueryParameterBindings().getBinding( parameter );
 	}
 
-	@SuppressWarnings( {"WeakerAccess"} )
 	protected <P> QueryParameterBinding<P> locateBinding(String name) {
 		getSession().checkOpen();
 		return getQueryParameterBindings().getBinding( name );
 	}
 
-	@SuppressWarnings( {"WeakerAccess"} )
 	protected <P> QueryParameterBinding<P> locateBinding(int position) {
 		getSession().checkOpen();
 		return getQueryParameterBindings().getBinding( position );
@@ -1246,7 +1243,6 @@ public abstract class AbstractQuery<R>
 		return this;
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected BindableType<Object> determineType(String namedParam, Class<?> retType) {
 		BindableType<?> type = locateBinding( namedParam ).getBindType();
 		if ( type == null ) {
@@ -1283,7 +1279,6 @@ public abstract class AbstractQuery<R>
 		return this;
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected void afterQuery(boolean success) {
 		if ( sessionFlushMode != null ) {
 			getSession().setHibernateFlushMode( sessionFlushMode );

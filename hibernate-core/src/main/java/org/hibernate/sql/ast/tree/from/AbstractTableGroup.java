@@ -33,7 +33,6 @@ public abstract class AbstractTableGroup extends AbstractColumnReferenceQualifie
 
 	private final SessionFactoryImplementor sessionFactory;
 
-	@SuppressWarnings("WeakerAccess")
 	public AbstractTableGroup(
 			boolean canUseInnerJoins,
 			NavigablePath navigablePath,

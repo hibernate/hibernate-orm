@@ -50,7 +50,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * @author Steve Ebersole
  */
-@SuppressWarnings("WeakerAccess")
 @DomainModel(
 		annotatedClasses = { SmokeTests.SimpleEntity.class, SmokeTests.OtherEntity.class }
 )

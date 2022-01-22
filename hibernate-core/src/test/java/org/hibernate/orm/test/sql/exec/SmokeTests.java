@@ -46,7 +46,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
  * @author Andrea Boriero
  * @author Steve Ebersole
  */
-@SuppressWarnings({ "WeakerAccess", "DefaultAnnotationParam" })
 @DomainModel(
 		annotatedClasses = { SmokeTests.SimpleEntity.class, SmokeTests.OtherEntity.class },
 		extraQueryImportClasses = {

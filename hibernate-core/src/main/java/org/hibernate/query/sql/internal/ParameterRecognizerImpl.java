@@ -41,7 +41,6 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 	private List<ParameterOccurrence> parameterList;
 	private final StringBuilder sqlStringBuffer = new StringBuilder();
 
-	@SuppressWarnings("WeakerAccess")
 	public ParameterRecognizerImpl(SessionFactoryImplementor factory) {
 		ordinalParameterImplicitPosition = 1;
 	}

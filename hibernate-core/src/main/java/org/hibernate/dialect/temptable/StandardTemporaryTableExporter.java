@@ -14,7 +14,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 /**
  * @author Steve Ebersole
  */
-@SuppressWarnings("WeakerAccess")
 public class StandardTemporaryTableExporter implements TemporaryTableExporter {
 	private final Dialect dialect;
 

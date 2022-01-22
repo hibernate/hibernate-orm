@@ -178,7 +178,6 @@ public class StandardTableGroup extends AbstractTableGroup {
 		return null;
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected TableReference potentiallyCreateTableReference(String tableExpression) {
 		final TableReferenceJoin join = tableReferenceJoinCreator.apply( tableExpression, this );
 		if ( join != null ) {

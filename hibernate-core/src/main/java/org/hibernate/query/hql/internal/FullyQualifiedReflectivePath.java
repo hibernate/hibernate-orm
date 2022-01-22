@@ -18,7 +18,6 @@ public class FullyQualifiedReflectivePath implements SemanticPathPart, FullyQual
 	private final FullyQualifiedReflectivePathSource pathSource;
 	private final String localName;
 
-	@SuppressWarnings("WeakerAccess")
 	public FullyQualifiedReflectivePath(
 			FullyQualifiedReflectivePathSource pathSource,
 			String localName) {

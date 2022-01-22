@@ -37,7 +37,6 @@ import static org.junit.jupiter.api.Assertions.fail;
  *
  * @author Steve Ebersole
  */
-@SuppressWarnings("WeakerAccess")
 public class FromClauseTests extends BaseSqmUnitTest {
 
 	@Override

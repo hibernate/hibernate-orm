@@ -26,7 +26,6 @@ import org.hibernate.jdbc.AbstractWork;
 /**
  * @author Steve Ebersole
  */
-@SuppressWarnings("WeakerAccess")
 public class TemporaryTableHelper {
 	private final static CoreMessageLogger log = CoreLogging.messageLogger( TemporaryTableHelper.class );
 

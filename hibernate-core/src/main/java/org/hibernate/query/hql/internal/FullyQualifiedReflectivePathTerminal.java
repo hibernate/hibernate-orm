@@ -42,7 +42,6 @@ public class FullyQualifiedReflectivePathTerminal
 
 	private final Function<SemanticQueryWalker,?> handler;
 
-	@SuppressWarnings("WeakerAccess")
 	public FullyQualifiedReflectivePathTerminal(
 			FullyQualifiedReflectivePathSource pathSource,
 			String subPathName,

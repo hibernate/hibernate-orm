@@ -38,7 +38,6 @@ public abstract class AbstractCollectionInitializer implements CollectionInitial
 	protected PersistentCollection collectionInstance;
 	protected CollectionKey collectionKey;
 
-	@SuppressWarnings("WeakerAccess")
 	protected AbstractCollectionInitializer(
 			NavigablePath collectionPath,
 			PluralAttributeMapping collectionAttributeMapping,

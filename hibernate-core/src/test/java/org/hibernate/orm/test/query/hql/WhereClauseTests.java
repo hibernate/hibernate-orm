@@ -33,7 +33,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
  *
  * @author Gunnar Morling
  */
-@SuppressWarnings("WeakerAccess")
 public class WhereClauseTests extends BaseSqmUnitTest {
 
 	@Override

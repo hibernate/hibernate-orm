@@ -112,13 +112,12 @@ public class PluralAttributeMappingImpl
 	private OrderByFragment orderByFragment;
 	private OrderByFragment manyToManyOrderByFragment;
 
-	@SuppressWarnings({"WeakerAccess", "rawtypes"})
 	public PluralAttributeMappingImpl(
 			String attributeName,
 			Collection bootDescriptor,
 			PropertyAccess propertyAccess,
 			StateArrayContributorMetadataAccess stateArrayContributorMetadataAccess,
-			CollectionMappingType collectionMappingType,
+			CollectionMappingType<?> collectionMappingType,
 			int stateArrayPosition,
 			CollectionPart elementDescriptor,
 			CollectionPart indexDescriptor,

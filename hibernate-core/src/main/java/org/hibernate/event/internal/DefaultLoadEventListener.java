@@ -592,7 +592,6 @@ public class DefaultLoadEventListener implements LoadEventListener {
 	 *
 	 * @return The object loaded from the datasource, or null if not found.
 	 */
-	@SuppressWarnings("WeakerAccess")
 	protected Object loadFromDatasource(
 			final LoadEvent event,
 			final EntityPersister persister) {

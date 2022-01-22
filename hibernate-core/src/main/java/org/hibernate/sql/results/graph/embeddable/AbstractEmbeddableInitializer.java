@@ -69,8 +69,6 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 	private Boolean stateInjected;
 	private Object compositeInstance;
 
-
-	@SuppressWarnings("WeakerAccess")
 	public AbstractEmbeddableInitializer(
 			EmbeddableResultGraphNode resultDescriptor,
 			FetchParentAccess fetchParentAccess,
@@ -120,7 +118,6 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		return embedded;
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	public FetchParentAccess getFetchParentAccess() {
 		return fetchParentAccess;
 	}

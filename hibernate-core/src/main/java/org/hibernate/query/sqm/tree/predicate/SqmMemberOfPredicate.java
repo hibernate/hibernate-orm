@@ -22,7 +22,6 @@ public class SqmMemberOfPredicate extends AbstractNegatableSqmPredicate {
 		this( leftHandExpression, pluralPath, false, nodeBuilder );
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	public SqmMemberOfPredicate(
 			SqmExpression leftHandExpression,
 			SqmPath pluralPath,

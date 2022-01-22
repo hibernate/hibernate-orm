@@ -35,7 +35,6 @@ public class DynamicInstantiation<T> implements DomainResultProducer {
 
 	private boolean argumentAdditionsComplete = false;
 
-	@SuppressWarnings("WeakerAccess")
 	public DynamicInstantiation(
 			DynamicInstantiationNature nature,
 			JavaType<T> targetJavaType) {
@@ -47,7 +46,6 @@ public class DynamicInstantiation<T> implements DomainResultProducer {
 		return nature;
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	public JavaType<T> getTargetJavaType() {
 		return targetJavaType;
 	}

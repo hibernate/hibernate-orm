@@ -15,7 +15,6 @@ public abstract class AbstractDomainType<J> implements SimpleDomainType<J> {
 	private final JpaMetamodel domainMetamodel;
 	private final JavaType<J> javaType;
 
-	@SuppressWarnings("WeakerAccess")
 	public AbstractDomainType(JavaType<J> javaType, JpaMetamodel domainMetamodel) {
 		this.javaType = javaType;
 		this.domainMetamodel = domainMetamodel;

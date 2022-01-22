@@ -36,7 +36,6 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 	private final ManagedDomainType<J> managedType;
 	private Map<PersistentAttribute<?,?>, AttributeNodeImplementor<?>> attrNodeMap;
 
-	@SuppressWarnings("WeakerAccess")
 	public AbstractGraph(
 			ManagedDomainType<J> managedType,
 			boolean mutable,
@@ -45,7 +44,6 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 		this.managedType = managedType;
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected AbstractGraph(boolean mutable, GraphImplementor<J> original) {
 		this( original.getGraphedType(), mutable, original.jpaMetamodel() );
 

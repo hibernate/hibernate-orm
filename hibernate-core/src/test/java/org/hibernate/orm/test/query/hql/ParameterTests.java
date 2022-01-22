@@ -42,7 +42,6 @@ import static org.hibernate.testing.hamcrest.CollectionMatchers.hasSize;
  * @author Andrea Boriero
  * @author Chris Cranford
  */
-@SuppressWarnings("WeakerAccess")
 @ExtendWith( ExpectedExceptionExtension.class )
 public class ParameterTests extends BaseSqmUnitTest {
 	@Test

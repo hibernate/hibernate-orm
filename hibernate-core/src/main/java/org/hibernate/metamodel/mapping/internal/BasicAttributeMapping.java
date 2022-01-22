@@ -62,7 +62,6 @@ public class BasicAttributeMapping
 
 	private final JavaType domainTypeDescriptor;
 
-	@SuppressWarnings("WeakerAccess")
 	public BasicAttributeMapping(
 			String attributeName,
 			NavigableRole navigableRole,

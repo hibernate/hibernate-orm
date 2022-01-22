@@ -21,7 +21,6 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 public class DomainPathPart implements SemanticPathPart {
 	private SqmPath<?> currentPath;
 
-	@SuppressWarnings("WeakerAccess")
 	public DomainPathPart(SqmPath<?> basePath) {
 		this.currentPath = basePath;
 		assert currentPath != null;

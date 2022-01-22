@@ -19,7 +19,6 @@ public abstract class AbstractSqmSpecificPluralPartPath<T> extends AbstractSqmPa
 	private final SqmPath<?> pluralDomainPath;
 	private final PluralPersistentAttribute<?, ?, T> pluralAttribute;
 
-	@SuppressWarnings("WeakerAccess")
 	public AbstractSqmSpecificPluralPartPath(
 			NavigablePath navigablePath,
 			SqmPath<?> pluralDomainPath,
@@ -34,12 +33,10 @@ public abstract class AbstractSqmSpecificPluralPartPath<T> extends AbstractSqmPa
 		this.pluralAttribute = referencedAttribute;
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	public SqmPath<?> getPluralDomainPath() {
 		return pluralDomainPath;
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	public PluralPersistentAttribute<?, ?, T> getPluralAttribute() {
 		return pluralAttribute;
 	}

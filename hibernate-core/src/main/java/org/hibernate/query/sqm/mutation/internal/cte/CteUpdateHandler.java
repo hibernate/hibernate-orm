@@ -45,7 +45,6 @@ import org.hibernate.sql.ast.tree.update.UpdateStatement;
  */
 public class CteUpdateHandler extends AbstractCteMutationHandler implements UpdateHandler {
 
-	@SuppressWarnings("WeakerAccess")
 	public CteUpdateHandler(
 			SqmCteTable cteTable,
 			SqmUpdateStatement sqmStatement,

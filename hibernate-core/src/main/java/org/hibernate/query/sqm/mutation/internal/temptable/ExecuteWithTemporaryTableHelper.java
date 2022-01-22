@@ -47,7 +47,6 @@ import org.hibernate.sql.results.internal.SqlSelectionImpl;
 /**
  * @author Steve Ebersole
  */
-@SuppressWarnings("WeakerAccess")
 public final class ExecuteWithTemporaryTableHelper {
 	private ExecuteWithTemporaryTableHelper() {
 	}

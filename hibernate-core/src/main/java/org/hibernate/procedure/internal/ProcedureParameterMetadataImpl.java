@@ -35,11 +35,9 @@ public class ProcedureParameterMetadataImpl implements ProcedureParameterMetadat
 	private ParameterStrategy parameterStrategy = ParameterStrategy.UNKNOWN;
 	private List<ProcedureParameterImplementor<?>> parameters;
 
-	@SuppressWarnings("WeakerAccess")
 	public ProcedureParameterMetadataImpl() {
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	public ProcedureParameterMetadataImpl(NamedCallableQueryMemento memento, SharedSessionContractImplementor session) {
 		memento.getParameterMementos().forEach(
 				parameterMemento -> registerParameter( parameterMemento.resolve( session ) )
@@ -119,7 +117,6 @@ public class ProcedureParameterMetadataImpl implements ProcedureParameterMetadat
 		return parameters.contains( parameter );
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	public ParameterStrategy getParameterStrategy() {
 		return parameterStrategy;
 	}

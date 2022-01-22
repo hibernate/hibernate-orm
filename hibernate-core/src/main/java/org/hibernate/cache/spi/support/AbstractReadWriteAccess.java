@@ -175,13 +175,11 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 		}
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected void decrementLock(SharedSessionContractImplementor session, Object key, SoftLockImpl lock) {
 		lock.unlock( getRegion().getRegionFactory().nextTimestamp() );
 		getStorageAccess().putIntoCache( key, lock, session );
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected void handleLockExpiry(SharedSessionContractImplementor session, Object key, Lockable lock) {
 		SecondLevelCacheLogger.INSTANCE.softLockedCacheExpired( getRegion().getName(), key );
 		log.info( "Cached entry expired : " + key );

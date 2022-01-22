@@ -30,7 +30,6 @@ public class CteTableGroup extends AbstractTableGroup {
 		this( false, cteTableReference );
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	public CteTableGroup(boolean canUseInnerJoins, NamedTableReference cteTableReference) {
 		super(
 				canUseInnerJoins,

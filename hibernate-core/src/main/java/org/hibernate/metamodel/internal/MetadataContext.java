@@ -217,7 +217,6 @@ public class MetadataContext {
 	 *
 	 * @return Tne corresponding JPA {@link org.hibernate.type.EntityType}, or null if not yet processed.
 	 */
-	@SuppressWarnings("WeakerAccess")
 	public EntityDomainType<?> locateEntityType(PersistentClass persistentClass) {
 		return entityTypesByPersistentClass.get( persistentClass );
 	}
@@ -242,17 +241,16 @@ public class MetadataContext {
 	 *
 	 * @return The corresponding JPA {@link org.hibernate.type.EntityType}, or null.
 	 */
-	@SuppressWarnings({"unchecked", "WeakerAccess"})
+	@SuppressWarnings("unchecked")
 	public <E> EntityDomainType<E> locateEntityType(String entityName) {
 		return (EntityDomainType<E>) entityTypesByEntityName.get( entityName );
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	public Map<String, EntityDomainType<?>> getEntityTypesByEntityName() {
 		return Collections.unmodifiableMap( entityTypesByEntityName );
 	}
 
-	@SuppressWarnings({"unchecked", "WeakerAccess"})
+	@SuppressWarnings("unchecked")
 	public void wrapUp() {
 		if ( LOG.isTraceEnabled() ) {
 			LOG.trace( "Wrapping up metadata context..." );

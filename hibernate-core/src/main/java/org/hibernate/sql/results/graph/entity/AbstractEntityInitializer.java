@@ -98,7 +98,6 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 	// todo (6.0) : ^^ need a better way to track whether we are loading the entity state or if something else is/has
 
-	@SuppressWarnings("WeakerAccess")
 	protected AbstractEntityInitializer(
 			EntityResultGraphNode resultDescriptor,
 			NavigablePath navigablePath,
@@ -329,7 +328,6 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		return concreteType;
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected void resolveEntityKey(RowProcessingState rowProcessingState) {
 		if ( entityKey != null ) {
 			// its already been resolved

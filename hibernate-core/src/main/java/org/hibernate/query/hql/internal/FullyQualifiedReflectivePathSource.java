@@ -12,6 +12,5 @@ import org.hibernate.query.hql.spi.SemanticPathPart;
 /**
  * @author Steve Ebersole
  */
-@SuppressWarnings("WeakerAccess")
 public interface FullyQualifiedReflectivePathSource extends DotIdentifierSequence, SemanticPathPart {
 }

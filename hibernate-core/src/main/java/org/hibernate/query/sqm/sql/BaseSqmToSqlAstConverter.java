@@ -2132,7 +2132,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	protected Predicate additionalRestrictions;
 
-	@SuppressWarnings("WeakerAccess")
 	protected void consumeFromClauseRoot(SqmRoot<?> sqmRoot) {
 		log.tracef( "Resolving SqmRoot [%s] to TableGroup", sqmRoot );
 		final FromClauseIndex fromClauseIndex = getFromClauseIndex();
@@ -2441,7 +2440,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected TableGroup consumeExplicitJoin(
 			SqmJoin<?, ?> sqmJoin,
 			TableGroup lhsTableGroup,
@@ -4378,7 +4376,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return null;
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	protected MappingModelExpressable<?> determineValueMapping(SqmParameter<?> sqmParameter) {
 		log.debugf( "Determining mapping-model type for SqmParameter : %s", sqmParameter );
 

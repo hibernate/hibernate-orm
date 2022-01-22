@@ -38,7 +38,6 @@ import org.hibernate.sql.results.graph.basic.BasicResult;
  *
  * @author Christian Beikov
  */
-@SuppressWarnings("WeakerAccess")
 public class CteDeleteHandler extends AbstractCteMutationHandler implements DeleteHandler {
 
 	protected CteDeleteHandler(

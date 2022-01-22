@@ -20,9 +20,8 @@ import org.hibernate.type.descriptor.java.JavaType;
 public class PojoInstantiatorImpl<J> extends AbstractPojoInstantiator {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( PojoInstantiatorImpl.class );
 
-	private final Constructor constructor;
+	private final Constructor<?> constructor;
 
-	@SuppressWarnings("WeakerAccess")
 	public PojoInstantiatorImpl(JavaType javaType) {
 		super( javaType.getJavaTypeClass() );
 
@@ -31,9 +30,8 @@ public class PojoInstantiatorImpl<J> extends AbstractPojoInstantiator {
 				: resolveConstructor( getMappedPojoClass() );
 	}
 
-	protected static Constructor resolveConstructor(Class mappedPojoClass) {
+	protected static Constructor<?> resolveConstructor(Class<?> mappedPojoClass) {
 		try {
-			//noinspection unchecked
 			return ReflectHelper.getDefaultConstructor( mappedPojoClass);
 		}
 		catch ( PropertyNotFoundException e ) {

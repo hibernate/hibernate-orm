@@ -39,7 +39,6 @@ import static org.junit.Assert.assertTrue;
  * @author Steve Ebersole
  * @author Gail BadnerMergeProxyTest
  */
-@SuppressWarnings({"unused", "WeakerAccess","ResultOfMethodCallIgnored"})
 @TestForIssue( jiraKey = "HHH-11147" )
 @RunWith( BytecodeEnhancerRunner.class )
 @EnhancementOptions( lazyLoading = true )

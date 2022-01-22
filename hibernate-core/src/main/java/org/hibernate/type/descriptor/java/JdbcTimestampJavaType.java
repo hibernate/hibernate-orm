@@ -39,7 +39,6 @@ import org.hibernate.type.spi.TypeConfiguration;
 public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implements VersionJavaType<Date> {
 	public static final JdbcTimestampJavaType INSTANCE = new JdbcTimestampJavaType();
 
-	@SuppressWarnings("WeakerAccess")
 	public static final String TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
 
 	/**
@@ -51,7 +50,6 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 	public static final DateTimeFormatter LITERAL_FORMATTER = DateTimeFormatter.ofPattern( TIMESTAMP_FORMAT )
 			.withZone( ZoneId.from( ZoneOffset.UTC ) );
 
-	@SuppressWarnings("WeakerAccess")
 	public JdbcTimestampJavaType() {
 		super( Timestamp.class, TimestampMutabilityPlan.INSTANCE );
 	}

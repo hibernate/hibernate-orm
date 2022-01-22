@@ -26,7 +26,6 @@ public class DynamicInstantiationAssemblerInjectionImpl<T> implements DomainResu
 	private final JavaType<T> target;
 	private final List<BeanInjection> beanInjections = new ArrayList<>();
 
-	@SuppressWarnings("WeakerAccess")
 	public DynamicInstantiationAssemblerInjectionImpl(
 			JavaType<T> target,
 			List<ArgumentReader<?>> argumentReaders) {

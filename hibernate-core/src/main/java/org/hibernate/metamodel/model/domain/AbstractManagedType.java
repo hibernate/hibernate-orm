@@ -336,12 +336,11 @@ public abstract class AbstractManagedType<J>
 		}
 	}
 
-	@SuppressWarnings({"SimplifiableIfStatement", "WeakerAccess"})
 	protected <Y> boolean isPrimitiveVariant(SingularAttribute<?,?> attribute, Class<Y> javaType) {
 		if ( attribute == null ) {
 			return false;
 		}
-		Class declaredType = attribute.getBindableJavaType();
+		Class<?> declaredType = attribute.getBindableJavaType();
 
 		if ( declaredType.isPrimitive() ) {
 			return ( Boolean.class.equals( javaType ) && Boolean.TYPE.equals( declaredType ) )

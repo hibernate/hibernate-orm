@@ -34,7 +34,7 @@ import jakarta.persistence.TemporalType;
 
 /**
  * Models a selection query returning results.  It is a slimmed down version
- * of {@link Query}, but providing only methods relevant to selection queries
+ * of {@link Query}, but providing only methods relevant to selection queries.
  *
  * @author Steve Ebersole
  */

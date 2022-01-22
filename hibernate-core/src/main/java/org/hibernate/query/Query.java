@@ -37,15 +37,33 @@ import jakarta.persistence.TemporalType;
 import jakarta.persistence.TypedQuery;
 
 /**
- * Represents an HQL or Criteria query.
- *
- * Hibernate extension of {@link TypedQuery}, adapting to the
- * {@link org.hibernate.query.CommonQueryContract} hierarchy
+ * Represents a {@link jakarta.persistence.criteria.CriteriaBuilder criteria query}
+ * or a query written in HQL. The subtype {@link NativeQuery} represents a query
+ * written in native SQL.
+ * <p>
+ * This type simply mixes {@link TypedQuery} defined by JPA with {@link SelectionQuery}
+ * and {@link MutationQuery}. Unfortunately, JPA does not distinguish between
+ * {@link SelectionQuery selection queries} and {@link MutationQuery mutation queries},
+ * so we lose that distinction here. However, every {@code Query} may logically be
+ * classified as one or the other.
+ * <p>
+ * A {@code Query} controls how a query is executed, and allows arguments to be
+ * bound to its parameters.
+ * <ul>
+ * <li>Selection queries are usually executed using {@link #getResultList()} or
+ *     {@link #getSingleResult()}, and mutation queries must be executed using
+ *     {@link #executeUpdate()}.
+ * <li>The methods {@link #setMaxResults(int)} and {@link #setFirstResult(int)}
+ *     control limits and pagination.
+ * <li>The various overloads of {@link #setParameter(String, Object)} and
+ *     {@link #setParameter(int, Object)} allow arguments to be bound to named and
+ *     ordinal parameters defined by the query.
+ * </ul>
  *
  * @author Gavin King
  * @author Steve Ebersole
  *
- * @param <R> The query result type, for typed queries, or {@code Object} for untyped queries
+ * @param <R> The query result type, for typed queries, or {@link Object} for untyped queries
  */
 @Incubating
 public interface Query<R> extends SelectionQuery, MutationQuery, TypedQuery<R> {

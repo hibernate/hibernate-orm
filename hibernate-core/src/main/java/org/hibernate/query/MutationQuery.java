@@ -19,9 +19,9 @@ import jakarta.persistence.Parameter;
 import jakarta.persistence.TemporalType;
 
 /**
- * Models a mutation (insert, update and delete) query.  It is a slimmed
+ * Models a mutation (insert, update, or delete) query.  It is a slimmed
  * down version of {@link Query}, but providing only methods relevant to
- * mutation queries
+ * mutation queries.
  *
  * @author Steve Ebersole
  */

@@ -21,7 +21,7 @@ public class NativeQueryInterpreterStandardImpl implements NativeQueryInterprete
 	/**
 	 * Singleton access
 	 */
-	public static final NativeQueryInterpreterStandardImpl INSTANCE = new NativeQueryInterpreterStandardImpl();
+	public static final NativeQueryInterpreterStandardImpl NATIVE_QUERY_INTERPRETER = new NativeQueryInterpreterStandardImpl();
 
 	@Override
 	public void recognizeParameters(String nativeQuery, ParameterRecognizer recognizer) {

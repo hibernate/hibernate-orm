@@ -14,6 +14,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.hibernate.spatial.GeometryLiteralFormatter;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
@@ -21,9 +22,11 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
+import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import org.geolatte.geom.Geometry;
+import org.geolatte.geom.codec.Wkt;
 import org.geolatte.geom.codec.db.sqlserver.Decoders;
 import org.geolatte.geom.codec.db.sqlserver.Encoders;
 
@@ -33,12 +36,12 @@ import org.geolatte.geom.codec.db.sqlserver.Encoders;
  * @author Karel Maesen, Geovise BVBA
  * creation-date: 8/23/11
  */
-public class SqlServer2008GeometryType implements JdbcType {
+public class SqlServerGeometryType implements JdbcType {
 
 	/**
 	 * An instance of the descrtiptor
 	 */
-	public static final SqlServer2008GeometryType INSTANCE = new SqlServer2008GeometryType();
+	public static final SqlServerGeometryType INSTANCE = new SqlServerGeometryType();
 
 	@Override
 	public int getJdbcTypeCode() {
@@ -48,6 +51,11 @@ public class SqlServer2008GeometryType implements JdbcType {
 	@Override
 	public int getDefaultSqlTypeCode() {
 		return SqlTypes.GEOMETRY;
+	}
+
+	@Override
+	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaType) {
+		return new GeometryLiteralFormatter<>( javaType, Wkt.Dialect.SFA_1_2_1, "geometry::STGeomFromText" );
 	}
 
 	@Override

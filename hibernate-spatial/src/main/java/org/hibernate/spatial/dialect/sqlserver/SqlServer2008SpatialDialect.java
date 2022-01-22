@@ -15,7 +15,9 @@ import org.hibernate.spatial.SpatialDialect;
  * The <code>SpatialDialect</code> for Microsoft SQL Server (2008).
  *
  * @author Karel Maesen, Martin Steinwender.
+ * @deprecated A SpatialDialect is no longer required. Use the standard Dialect for this database.
  */
+@Deprecated
 public class SqlServer2008SpatialDialect extends SQLServer2008Dialect implements SpatialDialect {
 
 }

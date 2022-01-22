@@ -11,7 +11,9 @@ import org.hibernate.spatial.SpatialDialect;
 
 /**
  * Created by Karel Maesen, Geovise BVBA on 19/09/2018.
+ * @deprecated A SpatialDialect is no longer required. Use the standard Dialect for this database.
  */
+@Deprecated
 public class SqlServer2012SpatialDialect extends SQLServer2012Dialect implements SpatialDialect {
 
 }

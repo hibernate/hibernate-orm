@@ -14,6 +14,7 @@ import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.spatial.testing.datareader.TestSupport;
 import org.hibernate.spatial.testing.dialects.cockroachdb.CockroachDBTestSupport;
 import org.hibernate.spatial.testing.dialects.db2.DB2TestSupport;
@@ -71,10 +72,7 @@ public class TestSupportFactories {
 			return OracleSDOTestSupport.class;
 		}
 
-		if ( "org.hibernate.spatial.dialect.sqlserver.SqlServer2008SpatialDialect".equals( canonicalName ) ) {
-			return SQLServerTestSupport.class;
-		}
-		if ( "org.hibernate.spatial.dialect.sqlserver.SqlServer2012SpatialDialect".equals( canonicalName ) ) {
+		if ( SQLServerDialect.class.isAssignableFrom( dialect.getClass() ) ) {
 			return SQLServerTestSupport.class;
 		}
 

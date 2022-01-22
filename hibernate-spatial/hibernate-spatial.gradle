@@ -49,7 +49,9 @@ tasks.test {
 			   'mysql_docker',
 			   'oracle_docker',
 			   'oracle_ci',
-			   'oracle_rds'
+			   'oracle_rds',
+			   'mssql',
+			   'mssql_ci'
 	].contains( project.db )
 }
 

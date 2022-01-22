@@ -18,6 +18,7 @@ import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.dialect.cockroachdb.CockroachDbContributor;
@@ -26,6 +27,7 @@ import org.hibernate.spatial.dialect.mariadb.MariaDBDialectContributor;
 import org.hibernate.spatial.dialect.mysql.MySQLDialectContributor;
 import org.hibernate.spatial.dialect.oracle.OracleDialectContributor;
 import org.hibernate.spatial.dialect.postgis.PostgisDialectContributor;
+import org.hibernate.spatial.dialect.sqlserver.SqlServerDialectContributor;
 
 class ContributorResolver {
 
@@ -40,6 +42,7 @@ class ContributorResolver {
 		CONTRIBUTOR_MAP.put( MySQLDialect.class, MySQLDialectContributor::new );
 		CONTRIBUTOR_MAP.put( H2Dialect.class, H2GisDialectContributor::new );
 		CONTRIBUTOR_MAP.put( OracleDialect.class, OracleDialectContributor::new );
+		CONTRIBUTOR_MAP.put( SQLServerDialect.class, SqlServerDialectContributor::new );
 	}
 
 	private ContributorResolver() {

@@ -213,8 +213,8 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		final Integer timeout = queryOptions.getTimeout();
 		final FlushMode flushMode = queryOptions.getFlushMode();
 		final AppliedGraph appliedGraph = queryOptions.getAppliedGraph();
-		final TupleTransformer tupleTransformer = queryOptions.getTupleTransformer();
-		final ResultListTransformer resultListTransformer = queryOptions.getResultListTransformer();
+		final TupleTransformer<?> tupleTransformer = queryOptions.getTupleTransformer();
+		final ResultListTransformer<?> resultListTransformer = queryOptions.getResultListTransformer();
 		final Boolean resultCachingEnabled = queryOptions.isResultCachingEnabled();
 		final CacheRetrieveMode cacheRetrieveMode = queryOptions.getCacheRetrieveMode();
 		final CacheStoreMode cacheStoreMode = queryOptions.getCacheStoreMode();
@@ -251,12 +251,12 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 					}
 
 					@Override
-					public TupleTransformer getTupleTransformer() {
+					public TupleTransformer<?> getTupleTransformer() {
 						return tupleTransformer;
 					}
 
 					@Override
-					public ResultListTransformer getResultListTransformer() {
+					public ResultListTransformer<?> getResultListTransformer() {
 						return resultListTransformer;
 					}
 
@@ -346,7 +346,9 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		);
 
 		if ( rowTransformer == null ) {
-			final TupleTransformer<R> tupleTransformer = executionContext.getQueryOptions().getTupleTransformer();
+			@SuppressWarnings("unchecked")
+			final TupleTransformer<R> tupleTransformer = (TupleTransformer<R>)
+					executionContext.getQueryOptions().getTupleTransformer();
 			if ( tupleTransformer == null ) {
 				rowTransformer = RowTransformerPassThruImpl.instance();
 			}
@@ -449,12 +451,11 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 
 	private <T> int getResultSize(T result) {
 		if ( result instanceof List ) {
-			return ( (List) result ).size();
+			return ( (List<?>) result ).size();
 		}
 		return -1;
 	}
 
-	@SuppressWarnings("unchecked")
 	private JdbcValues resolveJdbcValuesSource(
 			String queryIdentifier,
 			JdbcSelect jdbcSelect,
@@ -465,7 +466,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		final SessionFactoryImplementor factory = session.getFactory();
 		final boolean queryCacheEnabled = factory.getSessionFactoryOptions().isQueryCacheEnabled();
 
-		final List<Object> cachedResults;
+		final List<?> cachedResults;
 		final CacheMode cacheMode = JdbcExecHelper.resolveCacheMode( executionContext );
 
 		final JdbcValuesMappingProducer mappingProducer = jdbcSelect.getJdbcValuesMappingProducer();

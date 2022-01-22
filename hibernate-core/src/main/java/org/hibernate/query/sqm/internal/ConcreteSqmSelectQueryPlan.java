@@ -24,6 +24,7 @@ import org.hibernate.internal.EmptyScrollableResults;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.query.IllegalQueryOperationException;
+import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.QueryEngine;
@@ -252,9 +253,12 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 			}
 		}
 
+
+		@SuppressWarnings("unchecked")
+		TupleTransformer<R> tupleTransformer = (TupleTransformer<R>) queryOptions.getTupleTransformer();
 		return new RowTransformerTupleTransformerAdapter<R>(
 				ArrayHelper.toStringArray( aliases ),
-				queryOptions.getTupleTransformer()
+				tupleTransformer
 		);
 	}
 

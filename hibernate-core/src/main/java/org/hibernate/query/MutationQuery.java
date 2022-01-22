@@ -32,7 +32,7 @@ public interface MutationQuery extends CommonQueryContract {
 	 * Execute an insert, update, or delete statement, and return the
 	 * number of affected entities.
 	 * <p>
-	 * For use with instances of {@code Query<Void>} created using
+	 * For use with instances of {@code MutationQuery} created using
 	 * {@link QueryProducer#createMutationQuery(String)},
 	 * {@link QueryProducer#createNamedMutationQuery(String)},
 	 * {@link QueryProducer#createNativeMutationQuery(String)},
@@ -166,7 +166,7 @@ public interface MutationQuery extends CommonQueryContract {
 	MutationQuery setProperties(Object bean);
 
 	@Override
-	MutationQuery setProperties(Map bean);
+	MutationQuery setProperties(@SuppressWarnings("rawtypes") Map bean);
 
 	@Override
 	MutationQuery setHibernateFlushMode(FlushMode flushMode);

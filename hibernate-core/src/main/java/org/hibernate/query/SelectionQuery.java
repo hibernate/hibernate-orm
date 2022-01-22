@@ -452,5 +452,5 @@ public interface SelectionQuery extends CommonQueryContract {
 	SelectionQuery setProperties(Object bean);
 
 	@Override
-	SelectionQuery setProperties(Map bean);
+	SelectionQuery setProperties(@SuppressWarnings("rawtypes") Map bean);
 }

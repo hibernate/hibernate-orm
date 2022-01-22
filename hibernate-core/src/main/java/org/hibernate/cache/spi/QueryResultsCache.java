@@ -39,7 +39,7 @@ public interface QueryResultsCache {
 	 */
 	boolean put(
 			QueryKey key,
-			List result,
+			List<?> result,
 			SharedSessionContractImplementor session) throws HibernateException;
 
 	/**
@@ -53,7 +53,7 @@ public interface QueryResultsCache {
 	 *
 	 * @throws HibernateException Indicates a problem delegating to the underlying cache.
 	 */
-	List get(
+	List<?> get(
 			QueryKey key,
 			Set<String> spaces,
 			SharedSessionContractImplementor session) throws HibernateException;
@@ -69,7 +69,7 @@ public interface QueryResultsCache {
 	 *
 	 * @throws HibernateException Indicates a problem delegating to the underlying cache.
 	 */
-	List get(
+	List<?> get(
 			QueryKey key,
 			String[] spaces,
 			SharedSessionContractImplementor session) throws HibernateException;

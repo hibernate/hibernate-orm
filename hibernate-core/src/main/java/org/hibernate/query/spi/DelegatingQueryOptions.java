@@ -49,12 +49,12 @@ public class DelegatingQueryOptions implements QueryOptions {
 	}
 
 	@Override
-	public TupleTransformer getTupleTransformer() {
+	public TupleTransformer<?> getTupleTransformer() {
 		return queryOptions.getTupleTransformer();
 	}
 
 	@Override
-	public ResultListTransformer getResultListTransformer() {
+	public ResultListTransformer<?> getResultListTransformer() {
 		return queryOptions.getResultListTransformer();
 	}
 

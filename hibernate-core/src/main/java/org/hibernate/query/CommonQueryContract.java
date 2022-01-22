@@ -505,9 +505,9 @@ public interface CommonQueryContract {
 	CommonQueryContract setProperties(Object bean);
 
 	/**
-	 * Bind the values of the given Map for each named parameters of the query,
-	 * matching key names with parameter names and mapping value types to
-	 * Hibernate types using heuristics.
+	 * Bind the values of the given {@code Map} to named parameters of the query,
+	 * matching key names with parameter names and mapping value types to Hibernate
+	 * types using heuristics.
 	 *
 	 * @param bean a {@link Map} of names to arguments
 	 *

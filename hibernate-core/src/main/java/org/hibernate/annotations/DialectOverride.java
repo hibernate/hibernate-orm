@@ -21,6 +21,19 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Allows certain annotations to be overridden in a given SQL {@link Dialect}.
+ * <p>
+ * For example, a {@link org.hibernate.annotations.Formula} annotation may be
+ * customized for a given {@code Dialect} using the {@link Formula} annotation.
+ * An annotation may even be customized for a specific range of <em>versions</em>
+ * of the dialect by specifying a {@link Version}.
+ * <ul>
+ *     <li>{@link Formula#dialect() dialect} specifies the SQL dialect to which
+ *         the override applies,
+ *     <li>{@link Formula#sameOrAfter() sameOrAfter} specifies that the override
+ *         applies to all versions beginning with the given version, and
+ *     <li>{@link Formula#before() before} specifies that the override applies
+ *         to all versions earlier than the given version.
+ * </ul>
  *
  * @author Gavin King
  */

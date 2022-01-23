@@ -17,7 +17,7 @@ import java.util.Objects;
 public interface RowObjectMapper<T> {
 	default Data apply(Object obj) {
 		Object[] row = (Object[]) obj;
-		return new Data( (Number) row[0], (T) row[1] );
+		return new Data( (Number) row[0], row[1] );
 	}
 }
 
@@ -64,6 +64,7 @@ class Data {
 		return "Data{" +
 				"id=" + id +
 				", datum=" + datum +
+				" (" + datum.getClass().getCanonicalName() + ")" +
 				'}';
 	}
 }

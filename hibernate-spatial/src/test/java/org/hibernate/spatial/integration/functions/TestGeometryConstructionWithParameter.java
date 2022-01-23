@@ -26,7 +26,6 @@ import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 import org.junit.jupiter.api.function.Executable;
 
-
 @RequiresDialectFeature(feature = IsSupportedBySpatial.class)
 @SessionFactory
 public class TestGeometryConstructionWithParameter extends SpatialTestBase {
@@ -61,8 +60,8 @@ public class TestGeometryConstructionWithParameter extends SpatialTestBase {
 	@TestFactory
 	public Stream<DynamicTest> testFunctions() {
 		return Arrays.stream( CommonSpatialFunction.values() )
-				.filter( f -> f.getType() == CommonSpatialFunction.Type.CONSTRUCTION && isSupported( f ) && templateAvailable(
-						f ) )
+				.filter( f -> f.getType() == CommonSpatialFunction.Type.CONSTRUCTION && isSupported( f )
+						&& templateAvailable( f ) )
 				.map( this::buildTestFunction );
 	}
 
@@ -72,14 +71,12 @@ public class TestGeometryConstructionWithParameter extends SpatialTestBase {
 	}
 
 	private Executable buildExec(final CommonSpatialFunction func) {
-		return () -> {
-			scope.inSession( session -> {
-				String hql = templates.get( func );
-				hql = adaptToDialect( session, hql );
-				session.createQuery( hql, GeomEntity.class ).setParameter( "poly", filterGeometry ).getResultList();
-				//we just check that this parses for now.
-			} );
-		};
+		return () -> scope.inSession( session -> {
+			String hql = templates.get( func );
+			hql = adaptToDialect( session, hql );
+			session.createQuery( hql, GeomEntity.class ).setParameter( "poly", filterGeometry ).getResultList();
+			//we just check that this parses for now.
+		} );
 	}
 
 	private String adaptToDialect(SessionImplementor session, String hql) {
@@ -96,6 +93,6 @@ public class TestGeometryConstructionWithParameter extends SpatialTestBase {
 	}
 
 	private boolean templateAvailable(CommonSpatialFunction f) {
-		return templates.keySet().contains( f );
+		return templates.containsKey( f );
 	}
 }

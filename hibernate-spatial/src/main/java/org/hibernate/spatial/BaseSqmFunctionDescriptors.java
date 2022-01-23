@@ -36,7 +36,7 @@ public class BaseSqmFunctionDescriptors implements KeyedSqmFunctionDescriptors {
 		for ( CommonSpatialFunction func : filter( CommonSpatialFunction.values() ) ) {
 			final FunctionReturnTypeResolver returnTypeResolver;
 			if ( func.getReturnType() == null ) {
-				returnTypeResolver = null;
+				returnTypeResolver = StandardFunctionReturnTypeResolvers.useFirstNonNull();
 			}
 			else {
 				returnTypeResolver = StandardFunctionReturnTypeResolvers.invariant(

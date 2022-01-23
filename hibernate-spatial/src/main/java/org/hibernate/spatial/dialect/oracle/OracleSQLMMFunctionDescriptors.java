@@ -9,14 +9,11 @@ package org.hibernate.spatial.dialect.oracle;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
 import org.hibernate.boot.model.FunctionContributions;
-import org.hibernate.query.sqm.function.NamedSqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
-import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.spatial.CommonSpatialFunction;
 import org.hibernate.spatial.FunctionKey;
@@ -52,7 +49,7 @@ public class OracleSQLMMFunctionDescriptors implements KeyedSqmFunctionDescripto
 		addSTFunction( CommonSpatialFunction.ST_WITHIN, StandardBasicTypes.BOOLEAN );
 		addSTFunction( CommonSpatialFunction.ST_EQUALS, StandardBasicTypes.BOOLEAN );
 		addSTFunction( CommonSpatialFunction.ST_DISTANCE, StandardBasicTypes.DOUBLE );
-		addSTFunction( CommonSpatialFunction.ST_RELATE, new STRelateFunction( typeRegistry ) );
+		addSTRelateFunction();
 		addSTFunction( CommonSpatialFunction.ST_DIFFERENCE );
 		addSTFunction( CommonSpatialFunction.ST_INTERSECTION );
 		addSTFunction( CommonSpatialFunction.ST_SYMDIFFERENCE );
@@ -78,7 +75,13 @@ public class OracleSQLMMFunctionDescriptors implements KeyedSqmFunctionDescripto
 	private void addSTFunction(CommonSpatialFunction func, String stMethod) {
 		map.put(
 				func.getKey(),
-				new OracleSpatialSQLMMFunction( func.getKey().getName(), stMethod, func.getNumArgs(), null, true )
+				new OracleSpatialSQLMMFunction(
+						func.getKey().getName(),
+						stMethod,
+						func.getNumArgs(),
+						StandardFunctionReturnTypeResolvers.useFirstNonNull(),
+						true
+				)
 		);
 	}
 
@@ -90,10 +93,9 @@ public class OracleSQLMMFunctionDescriptors implements KeyedSqmFunctionDescripto
 		addSTFunction( func, func.getKey().getName().toUpperCase( Locale.ROOT ) );
 	}
 
-	private void addSTFunction(CommonSpatialFunction func, OracleSpatialFunction descriptor) {
-		map.put( func.getKey(), descriptor );
+	private void addSTRelateFunction() {
+		map.put( CommonSpatialFunction.ST_RELATE.getKey(), new STRelateFunction( typeRegistry ) );
 	}
-
 
 
 	@Override

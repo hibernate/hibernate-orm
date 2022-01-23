@@ -81,7 +81,7 @@ import jakarta.persistence.criteria.CriteriaUpdate;
  * use the following idiom:
  * <pre>
  * Session session = factory.openSession();
- * Transaction tx;
+ * Transaction tx = null;
  * try {
  *     tx = session.beginTransaction();
  *     //do some work

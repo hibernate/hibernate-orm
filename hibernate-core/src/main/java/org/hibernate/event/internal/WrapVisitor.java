@@ -80,7 +80,7 @@ public class WrapVisitor extends ProxyVisitor {
 			return null;
 		}
 		else {
-			CollectionPersister persister = session.getFactory().getCollectionPersister( collectionType.getRole() );
+			CollectionPersister persister = session.getFactory().getMetamodel().collectionPersister(collectionType.getRole());
 
 			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 			//TODO: move into collection type, so we can use polymorphism!

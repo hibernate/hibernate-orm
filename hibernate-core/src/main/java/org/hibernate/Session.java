@@ -1299,9 +1299,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	RootGraph<?> getEntityGraph(String graphName);
 
 	@Override
-	default <T> List<EntityGraph<? super T>> getEntityGraphs(Class<T> entityClass) {
-		return getSessionFactory().findEntityGraphsByType( entityClass );
-	}
+	<T> List<EntityGraph<? super T>> getEntityGraphs(Class<T> entityClass);
 
 	// The following overrides should not be necessary,
 	// and are only needed to work around a bug in IntelliJ

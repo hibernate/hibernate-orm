@@ -384,7 +384,7 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 	}
 
 	private SQLLoadable getSQLLoadable(String entityName) throws MappingException {
-		EntityPersister persister = factory.getEntityPersister( entityName );
+		EntityPersister persister = factory.getMetamodel().entityPersister(entityName);
 		if ( !(persister instanceof SQLLoadable) ) {
 			throw new MappingException( "class persister is not SQLLoadable: " + entityName );
 		}
@@ -450,7 +450,7 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 	}
 
 	private void addCollection(String role, String alias, Map<String, String[]> propertyResults) {
-		SQLLoadableCollection collectionPersister = ( SQLLoadableCollection ) factory.getCollectionPersister( role );
+		SQLLoadableCollection collectionPersister = ( SQLLoadableCollection ) factory.getMetamodel().collectionPersister(role);
 		alias2CollectionPersister.put( alias, collectionPersister );
 		String suffix = generateCollectionSuffix();
 		LOG.tracev( "Mapping alias [{0}] to collection-suffix [{1}]", alias, suffix );

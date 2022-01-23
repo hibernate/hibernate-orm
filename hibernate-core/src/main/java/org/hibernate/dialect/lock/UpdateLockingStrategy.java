@@ -123,7 +123,7 @@ public class UpdateLockingStrategy implements LockingStrategy {
 
 	protected String generateLockString() {
 		final SessionFactoryImplementor factory = lockable.getFactory();
-        final Update update = new Update( factory.getJdbcServices().getDialect() );
+		final Update update = new Update( factory.getJdbcServices().getDialect() );
 		update.setTableName( lockable.getRootTableName() );
 		update.addPrimaryKeyColumns( lockable.getRootTableIdentifierColumnNames() );
 		update.setVersionColumnName( lockable.getVersionColumnName() );

@@ -30,7 +30,7 @@ public class PooledForcedTableSequenceTest {
 
 	@Test
 	public void testNormalBoundary(SessionFactoryScope scope) {
-		EntityPersister persister = scope.getSessionFactory().getEntityPersister( Entity.class.getName() );
+        EntityPersister persister = scope.getSessionFactory().getMetamodel().entityPersister(Entity.class.getName());
 		assertThat( persister.getIdentifierGenerator(), instanceOf( SequenceStyleGenerator.class ) );
 
 		final SequenceStyleGenerator generator = (SequenceStyleGenerator) persister.getIdentifierGenerator();

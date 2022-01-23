@@ -44,7 +44,7 @@ public class SimpleOverriddenConverterTest extends BaseNonConfigCoreFunctionalTe
 	 */
 	@Test
 	public void testSimpleConvertOverrides() {
-		final EntityPersister ep = sessionFactory().getEntityPersister( Sub.class.getName() );
+        final EntityPersister ep = sessionFactory().getMetamodel().entityPersister(Sub.class.getName());
 		final JdbcTypeRegistry jdbcTypeRegistry = sessionFactory().getTypeConfiguration()
 				.getJdbcTypeRegistry();
 

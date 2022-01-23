@@ -607,17 +607,10 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		);
 	}
 
-	@SuppressWarnings("deprecation")
-	public Settings getSettings() {
-		return settings;
-	}
-
 	@Override
-	public <T> List<RootGraphImplementor<? super T>> findEntityGraphsByJavaType(Class<T> entityClass) {
-		return getMetamodel().findEntityGraphsByJavaType( entityClass );
+	public <T> List<EntityGraph<? super T>> findEntityGraphsByType(Class<T> entityClass) {
+		return (List) getMetamodel().findEntityGraphsByJavaType( entityClass );
 	}
-
-
 
 	// todo : (5.2) review synchronizationType, persistenceContextType, transactionType usage
 
@@ -708,7 +701,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
-	public RootGraphImplementor findEntityGraphByName(String name) {
+	public RootGraphImplementor<?> findEntityGraphByName(String name) {
 		return getMetamodel().findEntityGraphByName( name );
 	}
 
@@ -1027,29 +1020,27 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			}
 		}
 
-		if ( "jta".equals( impl ) ) {
+		switch (impl) {
+			case "jta":
 //			if ( ! transactionFactory().compatibleWithJtaSynchronization() ) {
 //				LOG.autoFlushWillNotWork();
 //			}
-			return new JTASessionContext( this );
-		}
-		else if ( "thread".equals( impl ) ) {
-			return new ThreadLocalSessionContext( this );
-		}
-		else if ( "managed".equals( impl ) ) {
-			return new ManagedSessionContext( this );
-		}
-		else {
-			try {
-				Class implClass = serviceRegistry.getService( ClassLoaderService.class ).classForName( impl );
-				return (CurrentSessionContext)
-						implClass.getConstructor( new Class[] { SessionFactoryImplementor.class } )
-						.newInstance( this );
-			}
-			catch( Throwable t ) {
-				LOG.unableToConstructCurrentSessionContext( impl, t );
-				return null;
-			}
+				return new JTASessionContext(this);
+			case "thread":
+				return new ThreadLocalSessionContext(this);
+			case "managed":
+				return new ManagedSessionContext(this);
+			default:
+				try {
+					Class<?> implClass = serviceRegistry.getService(ClassLoaderService.class).classForName(impl);
+					return (CurrentSessionContext)
+							implClass.getConstructor( new Class[]{SessionFactoryImplementor.class} )
+									.newInstance(this);
+				}
+				catch (Throwable t) {
+					LOG.unableToConstructCurrentSessionContext(impl, t);
+					return null;
+				}
 		}
 	}
 
@@ -1149,7 +1140,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 		else if ( statelessInterceptorImplementor != null ) {
 			try {
-				/**
+				/*
 				 * We could remove the getStatelessInterceptorImplementor method and use just the getStatelessInterceptorImplementorSupplier
 				 * since it can cover both cases when the user has given a Supplier<? extends Interceptor> or just the
 				 * Class<? extends Interceptor>, in which case, we simply instantiate the Interceptor when calling the Supplier.
@@ -1302,7 +1293,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public T owner(SessionOwner sessionOwner) {
 			throw new UnsupportedOperationException( "SessionOwner was long deprecated and this method should no longer be invoked" );
 		}
@@ -1418,7 +1408,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			return (T) this;
 		}
 
-		@Override
+		@Override @SuppressWarnings("unchecked")
 		public T jdbcTimeZone(TimeZone timeZone) {
 			jdbcTimeZone = timeZone;
 			return (T) this;
@@ -1684,6 +1674,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	private enum Status {
 		OPEN,
 		CLOSING,
-		CLOSED;
+		CLOSED
 	}
 }

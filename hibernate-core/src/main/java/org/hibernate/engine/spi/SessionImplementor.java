@@ -17,31 +17,33 @@ import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 
 /**
- * Defines the "internal contract" for {@link Session} and other parts of Hibernate such as
- * {@link org.hibernate.type.Type}, {@link EntityPersister}
+ * Defines the "internal contract" for {@link Session} and other parts of Hibernate such
+ * as {@link org.hibernate.type.Type}, {@link EntityPersister}
  * and {@link org.hibernate.persister.collection.CollectionPersister} implementations.
  *
  * A Session, through this interface and SharedSessionContractImplementor, implements:
  * <ul>
  *     <li>
- *         {@link org.hibernate.resource.jdbc.spi.JdbcSessionOwner} to drive the behavior of the
- *         {@link org.hibernate.resource.jdbc.spi.JdbcSessionContext} delegate
+ *         {@link org.hibernate.resource.jdbc.spi.JdbcSessionOwner} to drive the behavior
+ *         of the {@link org.hibernate.resource.jdbc.spi.JdbcSessionContext} delegate
  *     </li>
  *     <li>
  *         {@link TransactionCoordinatorBuilder.Options}
  *         to drive the creation of the {@link TransactionCoordinator} delegate
  *     </li>
  *     <li>
- *         {@link org.hibernate.engine.jdbc.LobCreationContext} to act as the context for JDBC LOB instance creation
+ *         {@link org.hibernate.engine.jdbc.LobCreationContext} to act as the context for
+ *         JDBC LOB instance creation
  *     </li>
  *     <li>
- *         {@link org.hibernate.type.descriptor.WrapperOptions} to fulfill the behavior needed while
- *         binding/extracting values to/from JDBC as part of the Type contracts
+ *         {@link org.hibernate.type.descriptor.WrapperOptions} to fulfill the behavior
+ *         needed while binding/extracting values to/from JDBC as part of the {@code Type}
+ *         contracts
  *     </li>
  * </ul>
  *
- * See also {@link org.hibernate.event.spi.EventSource} which extends this interface providing
- * bridge to the event generation features of {@link org.hibernate.event}
+ * See also {@link org.hibernate.event.spi.EventSource} which extends this interface
+ * providing s bridge to the event generation features of {@link org.hibernate.event}.
  *
  * @author Gavin King
  * @author Steve Ebersole
@@ -65,13 +67,6 @@ public interface SessionImplementor extends Session, SharedSessionContractImplem
 	@Override
 	RootGraphImplementor<?> getEntityGraph(String graphName);
 
-
-	/**
-	 * @deprecated (since 5.2) use {@link #getHibernateFlushMode()} instead.
-	 */
-	@Deprecated
-	boolean isFlushBeforeCompletionEnabled();
-
 	ActionQueue getActionQueue();
 
 	Object instantiate(EntityPersister persister, Object id) throws HibernateException;
@@ -79,37 +74,37 @@ public interface SessionImplementor extends Session, SharedSessionContractImplem
 	void forceFlush(EntityEntry e) throws HibernateException;
 
 	/**
-	 * @deprecated  OperationalContext should cover this overload I believe; Gail?
+	 * @deprecated  OperationalContext should cover this overload I believe
 	 */
 	@Deprecated
 	void merge(String entityName, Object object, Map copiedAlready) throws HibernateException;
 
 	/**
-	 * @deprecated  OperationalContext should cover this overload I believe; Gail?
+	 * @deprecated  OperationalContext should cover this overload I believe
 	 */
 	@Deprecated
 	void persist(String entityName, Object object, Map createdAlready) throws HibernateException;
 
 	/**
-	 * @deprecated  OperationalContext should cover this overload I believe; Gail?
+	 * @deprecated  OperationalContext should cover this overload I believe
 	 */
 	@Deprecated
 	void persistOnFlush(String entityName, Object object, Map copiedAlready);
 
 	/**
-	 * @deprecated  OperationalContext should cover this overload I believe; Gail?
+	 * @deprecated  OperationalContext should cover this overload I believe
 	 */
 	@Deprecated
 	void refresh(String entityName, Object object, Map refreshedAlready) throws HibernateException;
 
 	/**
-	 * @deprecated  OperationalContext should cover this overload I believe; Gail?
+	 * @deprecated  OperationalContext should cover this overload I believe
 	 */
 	@Deprecated
 	void delete(String entityName, Object child, boolean isCascadeDeleteEnabled, Set transientEntities);
 
 	/**
-	 * @deprecated  OperationalContext should cover this overload I believe; Gail?
+	 * @deprecated  OperationalContext should cover this overload I believe
 	 */
 	@Deprecated
 	void removeOrphanBeforeUpdates(String entityName, Object child);

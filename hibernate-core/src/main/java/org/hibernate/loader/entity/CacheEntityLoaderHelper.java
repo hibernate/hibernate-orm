@@ -141,8 +141,7 @@ public class CacheEntityLoaderHelper {
 			}
 			if ( options.isAllowNulls() ) {
 				final EntityPersister persister = event.getSession()
-						.getFactory()
-						.getEntityPersister( keyToLoad.getEntityName() );
+						.getFactory().getMetamodel().entityPersister(keyToLoad.getEntityName());
 				if ( !persister.isInstance( old ) ) {
 					LOG.debug(
 							"Load request found matching entity in context, but the matched entity was of an inconsistent return type; returning null"
@@ -366,7 +365,7 @@ public class CacheEntityLoaderHelper {
 
 		final Object entity;
 
-		subclassPersister = factory.getEntityPersister( entry.getSubclass() );
+		subclassPersister = factory.getMetamodel().entityPersister(entry.getSubclass());
 		entity = instanceToLoad == null
 				? source.instantiate( subclassPersister, entityId )
 				: instanceToLoad;

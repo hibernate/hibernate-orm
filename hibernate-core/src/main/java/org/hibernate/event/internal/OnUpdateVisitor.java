@@ -16,9 +16,9 @@ import org.hibernate.type.CollectionType;
  * When an entity is passed to update(), we must inspect all its collections and
  * 1. associate any uninitialized PersistentCollections with this session
  * 2. associate any initialized PersistentCollections with this session, using the
- *    existing snapshot
+ *	existing snapshot
  * 3. execute a collection removal (SQL DELETE) for each null collection property
- *    or "new" collection
+ *	or "new" collection
  *
  * @author Gavin King
  */
@@ -36,7 +36,7 @@ public class OnUpdateVisitor extends ReattachVisitor {
 		}
 
 		EventSource session = getSession();
-		CollectionPersister persister = session.getFactory().getCollectionPersister( type.getRole() );
+		CollectionPersister persister = session.getFactory().getMetamodel().collectionPersister(type.getRole());
 
 		final Object collectionKey = extractCollectionKeyFromOwner( persister );
 		if ( ( collection instanceof PersistentCollection ) ) {

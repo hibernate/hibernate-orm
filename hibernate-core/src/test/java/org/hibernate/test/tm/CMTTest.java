@@ -66,7 +66,7 @@ public class CMTTest extends BaseNonConfigCoreFunctionalTestCase {
 		assertEquals( 0, sessionFactory().getStatistics().getUpdateTimestampsCacheHitCount() );
 		assertEquals( 0, sessionFactory().getStatistics().getUpdateTimestampsCachePutCount() );
 		assertEquals( 0, sessionFactory().getStatistics().getUpdateTimestampsCacheMissCount() );
-		assertNotNull( sessionFactory().getEntityPersister( "Item" ).getCacheAccessStrategy() );
+        assertNotNull( sessionFactory().getMetamodel().entityPersister("Item").getCacheAccessStrategy() );
 		assertEquals( 0, sessionFactory().getStatistics().getEntityLoadCount() );
 
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();

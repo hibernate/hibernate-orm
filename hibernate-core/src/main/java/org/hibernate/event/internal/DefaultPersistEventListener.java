@@ -52,7 +52,7 @@ public class DefaultPersistEventListener
 	 *
 	 */
 	public void onPersist(PersistEvent event) throws HibernateException {
-		onPersist( event, new IdentityHashMap( 10 ) );
+		onPersist( event, new IdentityHashMap<>( 10 ) );
 	}
 
 	/**
@@ -103,8 +103,8 @@ public class DefaultPersistEventListener
 			// entity state again.
 
 			// NOTE: entityEntry must be null to get here, so we cannot use any of its values
-			EntityPersister persister = source.getFactory().getEntityPersister( entityName );
-			if ( ForeignGenerator.class.isInstance( persister.getIdentifierGenerator() ) ) {
+			EntityPersister persister = source.getFactory().getMetamodel().entityPersister(entityName);
+			if ( persister.getIdentifierGenerator() instanceof ForeignGenerator ) {
 				if ( LOG.isDebugEnabled() && persister.getIdentifier( entity, source ) != null ) {
 					LOG.debug( "Resetting entity id attribute to null for foreign generator" );
 				}

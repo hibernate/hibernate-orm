@@ -24,16 +24,36 @@ import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManagerFactory;
 
 /**
- * The main contract here is the creation of {@link Session} instances.  Usually
- * an application has a single {@link SessionFactory} instance and threads
- * servicing client requests obtain {@link Session} instances from this factory.
- * <p/>
- * The internal state of a {@link SessionFactory} is immutable.  Once it is created
- * this internal state is set.  This internal state includes all of the metadata
- * about Object/Relational Mapping.
- * <p/>
- * Implementors <strong>must</strong> be threadsafe.
+ * A {@code SessionFactory} represents an "instance" of Hibernate: it maintains
+ * the runtime metamodel representing persistent entities, their attributes,
+ * their associations, and their mappings to relational database tables, along
+ * with {@linkplain org.hibernate.cfg.AvailableSettings configuration} that
+ * affects the runtime behavior of Hibernate, and instances of services that
+ * Hibernate needs to perform its duties.
+ * <p>
+ * Crucially, this is where a program comes to obtain {@link Session sessions}.
+ * Typically, a program has a single {@link SessionFactory} instance, and must
+ * obtain a new {@link Session} instance from the factory each time it services
+ * a client request.
+ * <p>
+ * Depending on how Hibernate is configured, the {@code SessionFactory} itself
+ * might be responsible for the lifecycle of pooled JDBC connections and
+ * transactions, or it may simply act as a client for a connection pool or
+ * transaction manager provided by a container environment.
+ * <p>
+ * The internal state of a {@code SessionFactory} is considered in some sense
+ * "immutable". While it interacts with stateful services like JDBC connection
+ * pools, such state changes are never visible to its clients. In particular,
+ * the runtime metamodel representing the entities and their O/R mappings is
+ * fixed as soon as the {@code SessionFactory} is created. Of course, any
+ * {@code SessionFactory} is threadsafe.
+ * <p>
+ * Every {@code SessionFactory} is a JPA {@link EntityManagerFactory}.
+ * Furthermore, when Hibernate is acting as the JPA persistence provider, the
+ * method {@link EntityManagerFactory#unwrap(Class)} may be used to obtain the
+ * underlying {@code SessionFactory}.
  *
+ * @see Session
  * @see org.hibernate.cfg.Configuration
  *
  * @author Gavin King

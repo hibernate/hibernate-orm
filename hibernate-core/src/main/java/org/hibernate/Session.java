@@ -102,6 +102,10 @@ import jakarta.persistence.criteria.CriteriaUpdate;
  * be consistent with the database after the exception occurs.
  * <p>
  * A {@code Session} instance is serializable if its entities are serializable.
+ * <p>
+ * Every {@code Session} is a JPA {@link EntityManager}. Furthermore, when Hibernate is
+ * acting as the JPA persistence provider, the method {@link EntityManager#unwrap(Class)}
+ * may be used to obtain the underlying {@code Session}.
  *
  * @see SessionFactory
  *

@@ -19,7 +19,7 @@ public interface CurrentTenantIdentifierResolver {
 	 * 
 	 * @return The current tenant identifier
 	 */
-	public String resolveCurrentTenantIdentifier();
+	String resolveCurrentTenantIdentifier();
 
 	/**
 	 * Should we validate that the tenant identifier on "current sessions" that already exist when
@@ -30,14 +30,14 @@ public interface CurrentTenantIdentifierResolver {
 	 *
 	 * @see org.hibernate.context.TenantIdentifierMismatchException
 	 */
-	public boolean validateExistingCurrentSessions();
+	boolean validateExistingCurrentSessions();
 
 	/**
 	 * Does the given tenant id represent a "root" tenant with access to all partitions.
 	 * @param tenantId a tenant id produced by {@link #resolveCurrentTenantIdentifier()}
 	 * @return true is this is root tenant
 	 */
-	public default boolean isRoot(String tenantId) {
+	default boolean isRoot(String tenantId) {
 		return false;
 	}
 }

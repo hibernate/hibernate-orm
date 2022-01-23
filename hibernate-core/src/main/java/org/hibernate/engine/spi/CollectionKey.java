@@ -96,7 +96,6 @@ public final class CollectionKey implements Serializable {
 	 *
 	 * @param oos The stream to which we should write the serial data.
 	 *
-	 * @throws IOException
 	 */
 	public void serialize(ObjectOutputStream oos) throws IOException {
 		oos.writeObject( role );
@@ -113,8 +112,6 @@ public final class CollectionKey implements Serializable {
 	 *
 	 * @return The deserialized CollectionKey
 	 *
-	 * @throws IOException
-	 * @throws ClassNotFoundException
 	 */
 	public static CollectionKey deserialize(
 			ObjectInputStream ois,

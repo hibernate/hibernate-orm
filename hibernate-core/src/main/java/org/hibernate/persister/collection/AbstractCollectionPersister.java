@@ -2049,8 +2049,6 @@ public abstract class AbstractCollectionPersister
 	 * @param key The collection key
 	 * @param nextIndex The next index to write
 	 * @param session The session
-	 * @throws HibernateException
-	 *
 	 * @deprecated Use {@link #doProcessQueuedOps(PersistentCollection, Object, SharedSessionContractImplementor)}
 	 */
 	@Deprecated

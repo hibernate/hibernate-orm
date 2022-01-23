@@ -16,12 +16,12 @@ import java.lang.reflect.InvocationTargetException;
  * @author Steve Ebersole
  */
 public class BeanInfoHelper {
-	public static interface BeanInfoDelegate {
-		public void processBeanInfo(BeanInfo beanInfo) throws Exception;
+	public interface BeanInfoDelegate {
+		void processBeanInfo(BeanInfo beanInfo) throws Exception;
 	}
 
-	public static interface ReturningBeanInfoDelegate<T> {
-		public T processBeanInfo(BeanInfo beanInfo) throws Exception;
+	public interface ReturningBeanInfoDelegate<T> {
+		T processBeanInfo(BeanInfo beanInfo) throws Exception;
 	}
 
 	private final Class beanClass;

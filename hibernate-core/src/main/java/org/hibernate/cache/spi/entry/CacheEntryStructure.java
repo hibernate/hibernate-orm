@@ -21,7 +21,7 @@ public interface CacheEntryStructure {
 	 *
 	 * @return The structured form.
 	 */
-	public Object structure(Object item);
+	Object structure(Object item);
 
 	/**
 	 * Convert the previous structured form of the item back into its item form.
@@ -31,5 +31,5 @@ public interface CacheEntryStructure {
 	 *
 	 * @return The item
 	 */
-	public Object destructure(Object structured, SessionFactoryImplementor factory);
+	Object destructure(Object structured, SessionFactoryImplementor factory);
 }

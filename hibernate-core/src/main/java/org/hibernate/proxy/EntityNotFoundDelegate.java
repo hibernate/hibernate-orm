@@ -12,5 +12,5 @@ package org.hibernate.proxy;
  * @author Steve Ebersole
  */
 public interface EntityNotFoundDelegate {
-	public void handleEntityNotFound(String entityName, Object id);
+	void handleEntityNotFound(String entityName, Object id);
 }

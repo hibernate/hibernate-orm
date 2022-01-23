@@ -85,9 +85,9 @@ public class UUIDJavaType extends AbstractClassJavaType<UUID> {
 		throw unknownWrap( value.getClass() );
 	}
 
-	public static interface ValueTransformer {
-		public Serializable transform(UUID uuid);
-		public UUID parse(Object value);
+	public interface ValueTransformer {
+		Serializable transform(UUID uuid);
+		UUID parse(Object value);
 	}
 
 	public static class PassThroughTransformer implements ValueTransformer {

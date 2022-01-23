@@ -80,7 +80,6 @@ public interface QueryParameterBindings {
 	/**
 	 * Generate a "memento" for these parameter bindings that can be used
 	 * in creating a {@link QueryKey}
-	 * @param persistenceContext
 	 */
 	QueryKey.ParameterBindingsMemento generateQueryKeyMemento(SharedSessionContractImplementor persistenceContext);
 

@@ -416,17 +416,14 @@ public interface MetadataBuilder {
 	/**
 	 * Allows unwrapping this builder as another, more specific type.
 	 *
-	 * @param type
-	 * @param <T>
-	 *
 	 * @return The unwrapped builder.
 	 */
-	public <T extends MetadataBuilder> T unwrap(Class<T> type);
+	<T extends MetadataBuilder> T unwrap(Class<T> type);
 
 	/**
 	 * Actually build the metamodel
 	 *
 	 * @return The built metadata.
 	 */
-	public Metadata build();
+	Metadata build();
 }

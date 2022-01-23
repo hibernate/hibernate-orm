@@ -12,5 +12,5 @@ package org.hibernate.boot.model.source.spi;
  * @author Steve Ebersole
  */
 public interface FetchableAttributeSource {
-	public FetchCharacteristics getFetchCharacteristics();
+	FetchCharacteristics getFetchCharacteristics();
 }

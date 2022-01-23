@@ -21,19 +21,19 @@ public interface ImplicitCollectionTableNameSource extends ImplicitNameSource {
 	  *
 	  * @return Owning entity's table name.
 	  */
-	public Identifier getOwningPhysicalTableName();
+	Identifier getOwningPhysicalTableName();
 
 	/**
 	 * Access to entity naming information for the owning side.
 	 *
 	 * @return Owning entity naming information
 	 */
-	public EntityNaming getOwningEntityNaming();
+	EntityNaming getOwningEntityNaming();
 
 	/**
 	 * Access to the name of the attribute, from the owning side, that defines the association.
 	 *
 	 * @return The owning side's attribute name.
 	 */
-	public AttributePath getOwningAttributePath();
+	AttributePath getOwningAttributePath();
 }

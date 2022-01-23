@@ -17,5 +17,5 @@ public interface UpdateCountOutput extends Output {
 	 *
 	 * @return The update count
 	 */
-	public int getUpdateCount();
+	int getUpdateCount();
 }

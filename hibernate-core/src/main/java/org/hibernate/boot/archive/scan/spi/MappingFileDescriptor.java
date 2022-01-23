@@ -21,12 +21,12 @@ public interface MappingFileDescriptor {
 	 *
 	 * @return The mapping file resource name.
 	 */
-	public String getName();
+	String getName();
 
 	/**
 	 * Retrieves access to the InputStream for the mapping file.
 	 *
 	 * @return Access to the InputStream for the mapping file.
 	 */
-	public InputStreamAccess getStreamAccess();
+	InputStreamAccess getStreamAccess();
 }

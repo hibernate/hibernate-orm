@@ -1614,7 +1614,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 	/**
 	 * Exposed to extensions: see Hibernate Reactive
-	 * @return
 	 */
 	protected StandardServiceRegistry getStandardServiceRegistry() {
 		return standardServiceRegistry;

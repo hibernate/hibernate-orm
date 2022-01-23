@@ -191,9 +191,6 @@ public class Builders {
 	/**
 	 * Creates a EntityResultBuilder allowing for further configuring of the mapping.
 	 *
-	 * @param tableAlias
-	 * @param entityName
-	 * @return
 	 */
 	public static DynamicResultBuilderEntityStandard entity(
 			String tableAlias,

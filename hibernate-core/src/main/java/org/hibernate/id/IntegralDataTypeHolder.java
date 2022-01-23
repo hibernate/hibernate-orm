@@ -23,7 +23,7 @@ public interface IntegralDataTypeHolder extends Serializable {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	public IntegralDataTypeHolder initialize(long value);
+	IntegralDataTypeHolder initialize(long value);
 
 	/**
 	 * Initialize the internal value from the given result set, using the specified default value
@@ -36,7 +36,7 @@ public interface IntegralDataTypeHolder extends Serializable {
 	 *
 	 * @throws SQLException Any exception from accessing the result set
 	 */
-	public IntegralDataTypeHolder initialize(ResultSet resultSet, long defaultValue) throws SQLException;
+	IntegralDataTypeHolder initialize(ResultSet resultSet, long defaultValue) throws SQLException;
 
 	/**
 	 * Bind this holders internal value to the given result set.
@@ -46,14 +46,14 @@ public interface IntegralDataTypeHolder extends Serializable {
 	 *
 	 * @throws SQLException Any exception from accessing the statement
 	 */
-	public void bind(PreparedStatement preparedStatement, int position) throws SQLException;
+	void bind(PreparedStatement preparedStatement, int position) throws SQLException;
 
 	/**
 	 * Equivalent to a ++ operation
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	public IntegralDataTypeHolder increment();
+	IntegralDataTypeHolder increment();
 
 	/**
 	 * Perform an addition
@@ -62,14 +62,14 @@ public interface IntegralDataTypeHolder extends Serializable {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	public IntegralDataTypeHolder add(long addend);
+	IntegralDataTypeHolder add(long addend);
 
 	/**
 	 * Equivalent to a -- operation
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	public IntegralDataTypeHolder decrement();
+	IntegralDataTypeHolder decrement();
 
 	/**
 	 * Perform a subtraction
@@ -78,7 +78,7 @@ public interface IntegralDataTypeHolder extends Serializable {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	public IntegralDataTypeHolder subtract(long subtrahend);
+	IntegralDataTypeHolder subtract(long subtrahend);
 
 	/**
 	 * Perform a multiplication.
@@ -87,7 +87,7 @@ public interface IntegralDataTypeHolder extends Serializable {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	public IntegralDataTypeHolder multiplyBy(IntegralDataTypeHolder factor);
+	IntegralDataTypeHolder multiplyBy(IntegralDataTypeHolder factor);
 
 	/**
 	 * Perform a multiplication.
@@ -96,7 +96,7 @@ public interface IntegralDataTypeHolder extends Serializable {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	public IntegralDataTypeHolder multiplyBy(long factor);
+	IntegralDataTypeHolder multiplyBy(long factor);
 
 	/**
 	 * Perform an equality comparison check
@@ -105,7 +105,7 @@ public interface IntegralDataTypeHolder extends Serializable {
 	 *
 	 * @return True if the two are equal
 	 */
-	public boolean eq(IntegralDataTypeHolder other);
+	boolean eq(IntegralDataTypeHolder other);
 
 	/**
 	 * Perform an equality comparison check
@@ -114,7 +114,7 @@ public interface IntegralDataTypeHolder extends Serializable {
 	 *
 	 * @return True if the two are equal
 	 */
-	public boolean eq(long other);
+	boolean eq(long other);
 
 	/**
 	 * Perform a "less than" comparison check.  We check to see if our value is less than
@@ -124,7 +124,7 @@ public interface IntegralDataTypeHolder extends Serializable {
 	 *
 	 * @return True if our value is less than the 'other' value.
 	 */
-	public boolean lt(IntegralDataTypeHolder other);
+	boolean lt(IntegralDataTypeHolder other);
 
 	/**
 	 * Perform a "less than" comparison check.  We check to see if our value is less than
@@ -134,7 +134,7 @@ public interface IntegralDataTypeHolder extends Serializable {
 	 *
 	 * @return True if our value is less than the 'other' value.
 	 */
-	public boolean lt(long other);
+	boolean lt(long other);
 
 	/**
 	 * Perform a "greater than" comparison check.  We check to see if our value is greater
@@ -144,7 +144,7 @@ public interface IntegralDataTypeHolder extends Serializable {
 	 *
 	 * @return True if our value is greater than the 'other' value.
 	 */
-	public boolean gt(IntegralDataTypeHolder other);
+	boolean gt(IntegralDataTypeHolder other);
 
 	/**
 	 * Perform a "greater than" comparison check.  We check to see if our value is greater
@@ -154,28 +154,28 @@ public interface IntegralDataTypeHolder extends Serializable {
 	 *
 	 * @return True if our value is greater than the 'other' value.
 	 */
-	public boolean gt(long other);
+	boolean gt(long other);
 
 	/**
 	 * Make a copy of this holder.
 	 *
 	 * @return The copy.
 	 */
-	public IntegralDataTypeHolder copy();
+	IntegralDataTypeHolder copy();
 
 	/**
 	 * Return the internal value.
 	 *
 	 * @return The current internal value
 	 */
-	public Number makeValue();
+	Number makeValue();
 
 	/**
 	 * Increment the internal state, but return the pre-incremented value.
 	 *
 	 * @return The pre-incremented internal value
 	 */
-	public Number makeValueThenIncrement();
+	Number makeValueThenIncrement();
 
 	/**
 	 * Increment the internal state by the given addend, but return the pre-incremented value.
@@ -184,5 +184,5 @@ public interface IntegralDataTypeHolder extends Serializable {
 	 *
 	 * @return The pre-incremented internal value
 	 */
-	public Number makeValueThenAdd(long addend);
+	Number makeValueThenAdd(long addend);
 }

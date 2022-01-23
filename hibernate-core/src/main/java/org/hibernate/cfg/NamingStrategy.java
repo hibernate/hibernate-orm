@@ -30,25 +30,25 @@ public interface NamingStrategy {
 	 * @param className the fully-qualified class name
 	 * @return a table name
 	 */
-	public String classToTableName(String className);
+	String classToTableName(String className);
 	/**
 	 * Return a column name for a property path expression
 	 * @param propertyName a property path
 	 * @return a column name
 	 */
-	public String propertyToColumnName(String propertyName);
+	String propertyToColumnName(String propertyName);
 	/**
 	 * Alter the table name given in the mapping document
 	 * @param tableName a table name
 	 * @return a table name
 	 */
-	public String tableName(String tableName);
+	String tableName(String tableName);
 	/**
 	 * Alter the column name given in the mapping document
 	 * @param columnName a column name
 	 * @return a column name
 	 */
-	public String columnName(String columnName);
+	String columnName(String columnName);
 	/**
 	 * Return a collection table name ie an association having a join table
 	 *
@@ -58,7 +58,7 @@ public interface NamingStrategy {
 	 * @param associatedEntityTable reverse side table name if any
 	 * @param propertyName collection role
 	 */
-	public String collectionTableName(
+	String collectionTableName(
 			String ownerEntity, String ownerEntityTable, String associatedEntity, String associatedEntityTable,
 			String propertyName
 	);
@@ -68,7 +68,7 @@ public interface NamingStrategy {
 	 * @param joinedColumn joined column name (logical one) used to join with
 	 * @param joinedTable joined table name (ie the referenced table) used to join with
 	 */
-	public String joinKeyColumnName(String joinedColumn, String joinedTable);
+	String joinKeyColumnName(String joinedColumn, String joinedTable);
 	/**
 	 * Return the foreign key column name for the given parameters
 	 * @param propertyName the property name involved
@@ -76,7 +76,7 @@ public interface NamingStrategy {
 	 * @param propertyTableName the property table name involved (logical one)
 	 * @param referencedColumnName the referenced column name involved (logical one)
 	 */
-	public String foreignKeyColumnName(
+	String foreignKeyColumnName(
 			String propertyName, String propertyEntityName, String propertyTableName, String referencedColumnName
 	);
 	/**
@@ -88,7 +88,7 @@ public interface NamingStrategy {
 	 * @param columnName given column name if any
 	 * @param propertyName property name of this column
 	 */
-	public String logicalColumnName(String columnName, String propertyName);
+	String logicalColumnName(String columnName, String propertyName);
 	/**
 	 * Returns the logical collection table name used to refer to a table in the mapping metadata
 	 *
@@ -97,7 +97,7 @@ public interface NamingStrategy {
 	 * @param associatedEntityTable reverse side table name if any (logical one)
 	 * @param propertyName collection role
 	 */
-	public String logicalCollectionTableName(String tableName, String ownerEntityTable, String associatedEntityTable, String propertyName);
+	String logicalCollectionTableName(String tableName, String ownerEntityTable, String associatedEntityTable, String propertyName);
 
 	/**
 	 * Returns the logical foreign key column name used to refer to this column in the mapping metadata
@@ -106,5 +106,5 @@ public interface NamingStrategy {
 	 * @param propertyName property name
 	 * @param referencedColumn referenced column name (logical one) in the join
 	 */
-	public String logicalCollectionColumnName(String columnName, String propertyName, String referencedColumn);
+	String logicalCollectionColumnName(String columnName, String propertyName, String referencedColumn);
 }

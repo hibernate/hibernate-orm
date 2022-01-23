@@ -16,5 +16,5 @@ public interface InvalidatableWrapper<T> extends JdbcWrapper<T> {
 	/**
 	 * Make the wrapper invalid for further usage.
 	 */
-	public void invalidate();
+	void invalidate();
 }

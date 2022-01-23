@@ -13,6 +13,6 @@ import org.hibernate.engine.FetchTiming;
  * @author Steve Ebersole
  */
 public interface FetchCharacteristics {
-	public FetchTiming getFetchTiming();
-	public FetchStyle getFetchStyle();
+	FetchTiming getFetchTiming();
+	FetchStyle getFetchStyle();
 }

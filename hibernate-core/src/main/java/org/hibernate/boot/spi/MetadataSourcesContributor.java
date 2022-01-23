@@ -21,5 +21,5 @@ public interface MetadataSourcesContributor {
 	 *
 	 * @param metadataSources The MetadataSources, to which to contribute.
 	 */
-	public void contribute(MetadataSources metadataSources);
+	void contribute(MetadataSources metadataSources);
 }

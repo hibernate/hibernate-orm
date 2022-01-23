@@ -105,7 +105,6 @@ public class EntityUniqueKey implements Serializable {
 	 *
 	 * @param oos The stream to which we should write the serial data.
 	 *
-	 * @throws IOException
 	 */
 	public void serialize(ObjectOutputStream oos) throws IOException {
 		checkAbilityToSerialize();
@@ -124,8 +123,6 @@ public class EntityUniqueKey implements Serializable {
 	 *
 	 * @return The deserialized EntityEntry
 	 *
-	 * @throws IOException
-	 * @throws ClassNotFoundException
 	 */
 	public static EntityUniqueKey deserialize(
 			ObjectInputStream ois,

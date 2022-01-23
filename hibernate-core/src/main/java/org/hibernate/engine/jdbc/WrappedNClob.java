@@ -21,12 +21,12 @@ public interface WrappedNClob extends WrappedClob {
 	 */
 	@Override
 	@Deprecated
-	public NClob getWrappedClob();
+	NClob getWrappedClob();
 
 	/**
 	 * Retrieve the wrapped {@link java.sql.Blob} reference
 	 *
 	 * @return The wrapped {@link java.sql.Blob} reference
 	 */
-	public NClob getWrappedNClob();
+	NClob getWrappedNClob();
 }

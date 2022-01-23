@@ -31,7 +31,7 @@ public interface ClassTransformer extends jakarta.persistence.spi.ClassTransform
 	 * @return A well-formed class file that can be loaded
 	 */
 	@Override
-	public byte[] transform(
+	byte[] transform(
 			ClassLoader loader,
 			String className,
 			Class<?> classBeingRedefined,

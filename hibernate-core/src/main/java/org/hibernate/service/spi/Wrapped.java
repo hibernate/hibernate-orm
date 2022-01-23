@@ -21,7 +21,7 @@ public interface Wrapped {
 	 *
 	 * @return True/false.
 	 */
-	public boolean isUnwrappableAs(Class unwrapType);
+	boolean isUnwrappableAs(Class unwrapType);
 
 	/**
 	 * Unproxy the service proxy
@@ -32,5 +32,5 @@ public interface Wrapped {
 	 *
 	 * @throws UnknownUnwrapTypeException if the service cannot be unwrapped as the indicated type
 	 */
-	public <T> T unwrap(Class<T> unwrapType);
+	<T> T unwrap(Class<T> unwrapType);
 }

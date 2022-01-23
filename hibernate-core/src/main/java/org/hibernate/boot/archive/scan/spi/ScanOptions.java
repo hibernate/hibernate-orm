@@ -19,7 +19,7 @@ public interface ScanOptions {
 	 *
 	 * @return Whether detection of classes from root url is allowed
 	 */
-	public boolean canDetectUnlistedClassesInRoot();
+	boolean canDetectUnlistedClassesInRoot();
 
 	/**
 	 * Is detection of managed classes from non-root urls allowed?  In strict JPA
@@ -27,7 +27,7 @@ public interface ScanOptions {
 	 *
 	 * @return Whether detection of classes from non-root urls is allowed
 	 */
-	public boolean canDetectUnlistedClassesInNonRoot();
+	boolean canDetectUnlistedClassesInNonRoot();
 
 	/**
 	 * Is detection of Hibernate Mapping files allowed?
@@ -38,5 +38,5 @@ public interface ScanOptions {
 	 * be removed once support for reading {@code hbm.xml} files is fully removed.
 	 */
 	@Deprecated
-	public boolean canDetectHibernateMappingFiles();
+	boolean canDetectHibernateMappingFiles();
 }

@@ -27,8 +27,6 @@ public interface Getter extends Serializable {
 	 * @param owner The instance containing the property value to be retrieved.
 	 *
 	 * @return The extracted value.
-	 *
-	 * @throws org.hibernate.HibernateException
 	 */
 	Object get(Object owner);
 
@@ -40,8 +38,6 @@ public interface Getter extends Serializable {
 	 * @param session The session from which this request originated.
 	 *
 	 * @return The extracted value.
-	 *
-	 * @throws org.hibernate.HibernateException
 	 */
 	Object getForInsert(Object owner, Map mergeMap, SharedSessionContractImplementor session);
 

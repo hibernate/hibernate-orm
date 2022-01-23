@@ -40,5 +40,5 @@ public interface CurrentSessionContext extends Serializable {
 	 * @throws HibernateException Typically indicates an issue
 	 * locating or creating the current session.
 	 */
-	public Session currentSession() throws HibernateException;
+	Session currentSession() throws HibernateException;
 }

@@ -25,5 +25,5 @@ public interface ServiceContributingIntegrator extends Integrator {
 	 *
 	 * @param serviceRegistryBuilder The build to prepare.
 	 */
-	public void prepareServices(StandardServiceRegistryBuilder serviceRegistryBuilder);
+	void prepareServices(StandardServiceRegistryBuilder serviceRegistryBuilder);
 }

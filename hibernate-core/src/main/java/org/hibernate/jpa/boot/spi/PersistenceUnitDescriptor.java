@@ -28,28 +28,28 @@ public interface PersistenceUnitDescriptor {
 	 *
 	 * @return The root url
 	 */
-	public URL getPersistenceUnitRootUrl();
+	URL getPersistenceUnitRootUrl();
 
 	/**
 	 * Get the persistence unit name,
 	 *
 	 * @return The persistence unit name,
 	 */
-	public String getName();
+	String getName();
 
 	/**
 	 * Get the explicitly specified provider class name, or {@code null} if not specified.
 	 *
 	 * @return The specified provider class name
 	 */
-	public String getProviderClassName();
+	String getProviderClassName();
 
 	/**
 	 * Is the use of quoted identifiers in effect for this whole persistence unit?
 	 *
 	 * @return {@code true} is quoted identifiers should be used throughout the unit.
 	 */
-	public boolean isUseQuotedIdentifiers();
+	boolean isUseQuotedIdentifiers();
 
 	/**
 	 * Essentially should scanning for classes be performed?  If not, the list of classes available is limited to:<ul>
@@ -60,29 +60,29 @@ public interface PersistenceUnitDescriptor {
 	 *
 	 * @return {@code true} if the root url should not be scanned for classes.
 	 */
-	public boolean isExcludeUnlistedClasses();
+	boolean isExcludeUnlistedClasses();
 
-	public PersistenceUnitTransactionType getTransactionType();
+	PersistenceUnitTransactionType getTransactionType();
 
-	public ValidationMode getValidationMode();
+	ValidationMode getValidationMode();
 
-	public SharedCacheMode getSharedCacheMode();
+	SharedCacheMode getSharedCacheMode();
 
-	public List<String> getManagedClassNames();
+	List<String> getManagedClassNames();
 
-	public List<String> getMappingFileNames();
+	List<String> getMappingFileNames();
 
-	public List<URL> getJarFileUrls();
+	List<URL> getJarFileUrls();
 
-	public Object getNonJtaDataSource();
+	Object getNonJtaDataSource();
 
-	public Object getJtaDataSource();
+	Object getJtaDataSource();
 
-	public Properties getProperties();
+	Properties getProperties();
 
-	public ClassLoader getClassLoader();
+	ClassLoader getClassLoader();
 
-	public ClassLoader getTempClassLoader();
+	ClassLoader getTempClassLoader();
 
-	public void pushClassTransformer(EnhancementContext enhancementContext);
+	void pushClassTransformer(EnhancementContext enhancementContext);
 }

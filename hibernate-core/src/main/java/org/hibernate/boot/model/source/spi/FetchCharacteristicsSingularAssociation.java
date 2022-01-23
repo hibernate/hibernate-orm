@@ -10,5 +10,5 @@ package org.hibernate.boot.model.source.spi;
  * @author Steve Ebersole
  */
 public interface FetchCharacteristicsSingularAssociation extends FetchCharacteristics {
-	public boolean isUnwrapProxies();
+	boolean isUnwrapProxies();
 }

@@ -10,5 +10,5 @@ package org.hibernate.boot.model.source.spi;
  * @author Steve Ebersole
  */
 public interface EntityNamingSourceContributor {
-	public EntityNamingSource getEntityNamingSource();
+	EntityNamingSource getEntityNamingSource();
 }

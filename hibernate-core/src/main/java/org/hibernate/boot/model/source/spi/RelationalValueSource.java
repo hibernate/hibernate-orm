@@ -18,22 +18,22 @@ public interface RelationalValueSource {
 	/**
 	 * @return returns the name of the table that contains this value.
 	 */
-	public String getContainingTableName();
+	String getContainingTableName();
 
 	/**
 	 * Retrieve the nature of this relational value.  Is it a column?  Or is it a derived value (formula)?
 	 *
 	 * @return The nature.
 	 */
-	public Nature getNature();
+	Nature getNature();
 
-	public static enum Nature {
+	enum Nature {
 		COLUMN( ColumnSource.class ),
 		DERIVED( DerivedValueSource.class );
 
 		private final Class<? extends RelationalValueSource> specificContractClass;
 
-		private Nature(Class<? extends RelationalValueSource> specificContractClass) {
+		Nature(Class<? extends RelationalValueSource> specificContractClass) {
 			this.specificContractClass = specificContractClass;
 		}
 

@@ -19,33 +19,33 @@ public interface CollectionMetadata {
 	/**
 	 * The collection key type
 	 */
-	public Type getKeyType();
+	Type getKeyType();
 	/**
 	 * The collection element type
 	 */
-	public Type getElementType();
+	Type getElementType();
 	/**
 	 * The collection index type (or null if the collection has no index)
 	 */
-	public Type getIndexType();
+	Type getIndexType();
 	/**
 	 * Is this collection indexed?
 	 */
-	public boolean hasIndex();
+	boolean hasIndex();
 	/**
 	 * The name of this collection role
 	 */
-	public String getRole();
+	String getRole();
 	/**
 	 * Is the collection an array?
 	 */
-	public boolean isArray();
+	boolean isArray();
 	/**
 	 * Is the collection a primitive array?
 	 */
-	public boolean isPrimitiveArray();
+	boolean isPrimitiveArray();
 	/**
 	 * Is the collection lazily initialized?
 	 */
-	public boolean isLazy();
+	boolean isLazy();
 }

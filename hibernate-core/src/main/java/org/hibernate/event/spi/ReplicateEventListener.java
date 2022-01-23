@@ -15,11 +15,10 @@ import org.hibernate.HibernateException;
  */
 public interface ReplicateEventListener {
 
-    /** Handle the given replicate event.
-     *
-     * @param event The replicate event to be handled.
-     * @throws HibernateException
-     */
-	public void onReplicate(ReplicateEvent event) throws HibernateException;
+	/** Handle the given replicate event.
+	 *
+	 * @param event The replicate event to be handled.
+	 */
+	void onReplicate(ReplicateEvent event) throws HibernateException;
 
 }

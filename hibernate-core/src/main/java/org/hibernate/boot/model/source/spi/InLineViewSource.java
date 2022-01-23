@@ -18,7 +18,7 @@ public interface InLineViewSource extends TableSpecificationSource {
 	 *
 	 * @return The {@code SQL SELECT} statement
 	 */
-	public String getSelectStatement();
+	String getSelectStatement();
 
-	public String getLogicalName();
+	String getLogicalName();
 }

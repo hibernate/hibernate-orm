@@ -45,7 +45,7 @@ public interface UniqueDelegate {
 	 * @return The fragment (usually "unique"), empty string indicates the uniqueness will be indicated using a
 	 * different approach
 	 */
-	public String getColumnDefinitionUniquenessFragment(Column column, SqlStringGenerationContext context);
+	String getColumnDefinitionUniquenessFragment(Column column, SqlStringGenerationContext context);
 
 	/**
 	 * Get the fragment that can be used to apply unique constraints as part of table creation.  The implementation
@@ -60,7 +60,7 @@ public interface UniqueDelegate {
 	 * @return The fragment, typically in the form {@code ", unique(col1, col2), unique( col20)"}.  NOTE: The leading
 	 * comma is important!
 	 */
-	public String getTableCreationUniqueConstraintsFragment(Table table, SqlStringGenerationContext context);
+	String getTableCreationUniqueConstraintsFragment(Table table, SqlStringGenerationContext context);
 
 	/**
 	 * Get the SQL ALTER TABLE command to be used to create the given UniqueKey.
@@ -70,8 +70,7 @@ public interface UniqueDelegate {
 	 * @param context A context for SQL string generation
 	 * @return The ALTER TABLE command
 	 */
-	public String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata,
-			SqlStringGenerationContext context);
+	String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata, SqlStringGenerationContext context);
 
 	/**
 	 * Get the SQL ALTER TABLE command to be used to drop the given UniqueKey.
@@ -81,7 +80,6 @@ public interface UniqueDelegate {
 	 * @param context A context for SQL string generation
 	 * @return The ALTER TABLE command
 	 */
-	public String getAlterTableToDropUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata,
-			SqlStringGenerationContext context);
+	String getAlterTableToDropUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata, SqlStringGenerationContext context);
 
 }

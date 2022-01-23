@@ -24,5 +24,5 @@ public @interface FetchProfiles {
 	/**
 	 * The aggregated fetch profiles.
 	 */
-	public FetchProfile[] value();
+	FetchProfile[] value();
 }

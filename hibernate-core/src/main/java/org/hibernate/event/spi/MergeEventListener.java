@@ -17,20 +17,18 @@ import org.hibernate.HibernateException;
  */
 public interface MergeEventListener {
 
-    /** 
-     * Handle the given merge event.
-     *
-     * @param event The merge event to be handled.
-     * @throws HibernateException
-     */
-	public void onMerge(MergeEvent event) throws HibernateException;
+	/** 
+	 * Handle the given merge event.
+	 *
+	 * @param event The merge event to be handled.
+	 */
+	void onMerge(MergeEvent event) throws HibernateException;
 
-    /** 
-     * Handle the given merge event.
-     *
-     * @param event The merge event to be handled.
-     * @throws HibernateException
-     */
-	public void onMerge(MergeEvent event, Map copiedAlready) throws HibernateException;
+	/** 
+	 * Handle the given merge event.
+	 *
+	 * @param event The merge event to be handled.
+	 */
+	void onMerge(MergeEvent event, Map copiedAlready) throws HibernateException;
 
 }

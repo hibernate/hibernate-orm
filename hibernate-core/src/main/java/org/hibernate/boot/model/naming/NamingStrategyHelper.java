@@ -28,7 +28,7 @@ public interface NamingStrategyHelper {
 	 *
 	 * @return The implicit name
 	 */
-	public Identifier determineImplicitName(MetadataBuildingContext buildingContext);
+	Identifier determineImplicitName(MetadataBuildingContext buildingContext);
 
 	/**
 	 * Called when the user has supplied an explicit name for the database object.
@@ -47,7 +47,7 @@ public interface NamingStrategyHelper {
 	 *
 	 * @return The strategy-handled name.
 	 */
-	public Identifier handleExplicitName(String explicitName, MetadataBuildingContext buildingContext);
+	Identifier handleExplicitName(String explicitName, MetadataBuildingContext buildingContext);
 
 	/**
 	 * Handle converting a logical name to a physical name
@@ -66,5 +66,5 @@ public interface NamingStrategyHelper {
 	 *
 	 * @return The physical name
 	 */
-	public Identifier toPhysicalName(Identifier logicalName, MetadataBuildingContext buildingContext);
+	Identifier toPhysicalName(Identifier logicalName, MetadataBuildingContext buildingContext);
 }

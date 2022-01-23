@@ -14,6 +14,6 @@ package org.hibernate.boot.model.source.spi;
 public interface PluralAttributeKeySource
 		extends ForeignKeyContributingSource,
 				RelationalValueSourceContainer {
-	public String getReferencedPropertyName();
-	public boolean isCascadeDeleteEnabled();
+	String getReferencedPropertyName();
+	boolean isCascadeDeleteEnabled();
 }

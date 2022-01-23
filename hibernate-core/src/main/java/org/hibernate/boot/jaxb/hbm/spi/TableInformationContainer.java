@@ -12,13 +12,13 @@ package org.hibernate.boot.jaxb.hbm.spi;
  * @author Steve Ebersole
  */
 public interface TableInformationContainer {
-	public String getSchema();
+	String getSchema();
 
-	public String getCatalog();
+	String getCatalog();
 
-	public String getTable();
+	String getTable();
 
-	public String getSubselect();
+	String getSubselect();
 
-	public String getSubselectAttribute();
+	String getSubselectAttribute();
 }

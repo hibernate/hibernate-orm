@@ -61,7 +61,6 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 	/**
 	 * Constructs a ByteBuddy BytecodeProvider instance which aims to produce code compatible
 	 * with the specified target JVM version.
-	 * @param targetCompatibleJVM
 	 */
 	public BytecodeProviderImpl(ClassFileVersion targetCompatibleJVM) {
 		this.byteBuddyState = new ByteBuddyState( targetCompatibleJVM );

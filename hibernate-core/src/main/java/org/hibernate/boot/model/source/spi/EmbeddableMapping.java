@@ -16,8 +16,8 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmTuplizerType;
  * @author Steve Ebersole
  */
 public interface EmbeddableMapping {
-	public String getClazz();
-	public List<JaxbHbmTuplizerType> getTuplizer();
+	String getClazz();
+	List<JaxbHbmTuplizerType> getTuplizer();
 
-	public String getParent();
+	String getParent();
 }

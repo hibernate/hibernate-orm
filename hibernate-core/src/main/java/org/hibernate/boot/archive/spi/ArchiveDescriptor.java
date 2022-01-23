@@ -18,5 +18,5 @@ public interface ArchiveDescriptor {
 	 *
 	 * @param archiveContext The visitation context
 	 */
-	public void visitArchive(ArchiveContext archiveContext);
+	void visitArchive(ArchiveContext archiveContext);
 }

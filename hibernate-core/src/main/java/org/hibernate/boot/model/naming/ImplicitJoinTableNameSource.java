@@ -21,33 +21,33 @@ public interface ImplicitJoinTableNameSource extends ImplicitNameSource {
 	 *
 	 * @return Owning entity's primary table  name.
 	 */
-	public String getOwningPhysicalTableName();
+	String getOwningPhysicalTableName();
 
 	/**
 	 * Access to entity naming information for the owning side.
 	 *
 	 * @return Owning entity naming information
 	 */
-	public EntityNaming getOwningEntityNaming();
+	EntityNaming getOwningEntityNaming();
 
 	/**
 	 * Access to the physical name of the non-owning entity's primary table.
 	 *
 	 * @return Owning entity's primary table  name.
 	 */
-	public String getNonOwningPhysicalTableName();
+	String getNonOwningPhysicalTableName();
 
 	/**
 	 * Access to entity naming information for the owning side.
 	 *
 	 * @return Owning entity naming information
 	 */
-	public EntityNaming getNonOwningEntityNaming();
+	EntityNaming getNonOwningEntityNaming();
 
 	/**
 	 * Access to the name of the attribute, from the owning side, that defines the association.
 	 *
 	 * @return The owning side's attribute name.
 	 */
-	public AttributePath getAssociationOwningAttributePath();
+	AttributePath getAssociationOwningAttributePath();
 }

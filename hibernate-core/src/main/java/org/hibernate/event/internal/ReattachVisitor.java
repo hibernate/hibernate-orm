@@ -74,7 +74,6 @@ public abstract class ReattachVisitor extends ProxyVisitor {
 	 * @param collectionKey The collection key (differs from owner-id in the case of property-refs).
 	 * @param source The session from which the request originated.
 	 *
-	 * @throws HibernateException
 	 */
 	void removeCollection(CollectionPersister role, Object collectionKey, EventSource source)
 			throws HibernateException {

@@ -20,19 +20,19 @@ public interface StrategyRegistration<T> {
 	 *
 	 * @return The strategy contract/role.
 	 */
-	public Class<T> getStrategyRole();
+	Class<T> getStrategyRole();
 
 	/**
 	 * Any registered names for this strategy registration.
 	 *
 	 * @return The registered selection names.
 	 */
-	public Iterable<String> getSelectorNames();
+	Iterable<String> getSelectorNames();
 
 	/**
 	 * The strategy implementation class.
 	 *
 	 * @return The strategy implementation.
 	 */
-	public Class<? extends T> getStrategyImplementation();
+	Class<? extends T> getStrategyImplementation();
 }

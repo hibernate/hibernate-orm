@@ -29,5 +29,5 @@ public interface NullTypeBindableParameterRegistration<T> extends ParameterRegis
 	 * @throws IllegalArgumentException {@code parameterType} is null or if
 	 * {@link #getParameterType} does not return null.
 	 */
-	public void bindNullValue(Class<?> nullParameterType);
+	void bindNullValue(Class<?> nullParameterType);
 }

@@ -22,7 +22,7 @@ public interface PostInsertIdentityPersister extends EntityPersister {
 	 * column(s) to use in the select statement restriction.
 	 * @return The SQL select string
 	 */
-	public String getSelectByUniqueKeyString(String propertyName);
+	String getSelectByUniqueKeyString(String propertyName);
 
 	/**
 	 * Get the database-specific SQL command to retrieve the last
@@ -30,14 +30,14 @@ public interface PostInsertIdentityPersister extends EntityPersister {
 	 *
 	 * @return The SQL command string
 	 */
-	public String getIdentitySelectString();
+	String getIdentitySelectString();
 
-	public String[] getIdentifierColumnNames();
+	String[] getIdentifierColumnNames();
 
 	/**
 	 * The names of the primary key columns in the root table.
 	 *
 	 * @return The primary key column names.
 	 */
-	public String[] getRootTableKeyColumnNames();
+	String[] getRootTableKeyColumnNames();
 }

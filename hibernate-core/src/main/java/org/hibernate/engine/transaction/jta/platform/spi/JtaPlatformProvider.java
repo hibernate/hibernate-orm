@@ -21,5 +21,5 @@ public interface JtaPlatformProvider {
 	 *
 	 * @return The provided JtaPlatform
 	 */
-	public JtaPlatform getProvidedJtaPlatform();
+	JtaPlatform getProvidedJtaPlatform();
 }

@@ -14,6 +14,6 @@ import org.hibernate.persister.entity.EntityPersister;
  * @author Steve Ebersole
  */
 public interface EntityDefinition extends AttributeSource {
-	public EntityPersister getEntityPersister();
-	public EntityIdentifierDefinition getEntityKeyDefinition();
+	EntityPersister getEntityPersister();
+	EntityIdentifierDefinition getEntityKeyDefinition();
 }

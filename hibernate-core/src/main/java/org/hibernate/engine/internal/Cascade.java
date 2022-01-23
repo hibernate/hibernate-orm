@@ -55,7 +55,6 @@ public final class Cascade {
 	 *
 	 * @param persister The parent's entity persister
 	 * @param parent The parent reference.
-	 * @throws HibernateException
 	 */
 	public static void cascade(
 			final CascadingAction action, final CascadePoint cascadePoint,

@@ -25,7 +25,7 @@ public interface ProxyFactoryFactory extends Service {
 	 *
 	 * @return The lazy-load proxy factory.
 	 */
-	public ProxyFactory buildProxyFactory(SessionFactoryImplementor sessionFactory);
+	ProxyFactory buildProxyFactory(SessionFactoryImplementor sessionFactory);
 
 	/**
 	 * Build a proxy factory for basic proxy concerns.  The return
@@ -43,7 +43,7 @@ public interface ProxyFactoryFactory extends Service {
 	 * @return The proxy class
 	 */
 	@Deprecated
-	public BasicProxyFactory buildBasicProxyFactory(Class superClass, Class[] interfaces);
+	BasicProxyFactory buildBasicProxyFactory(Class superClass, Class[] interfaces);
 
 	/**
 	 * Build a proxy factory for basic proxy concerns.  The return
@@ -59,6 +59,6 @@ public interface ProxyFactoryFactory extends Service {
 	 * interface to be proxied.
 	 * @return The proxy class
 	 */
-	public BasicProxyFactory buildBasicProxyFactory(Class superClassOrInterface);
+	BasicProxyFactory buildBasicProxyFactory(Class superClassOrInterface);
 
 }

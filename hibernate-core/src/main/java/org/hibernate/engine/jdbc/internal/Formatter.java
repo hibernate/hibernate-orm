@@ -20,5 +20,5 @@ public interface Formatter {
 	 *
 	 * @return The formatted version
 	 */
-	public String format(String source);
+	String format(String source);
 }

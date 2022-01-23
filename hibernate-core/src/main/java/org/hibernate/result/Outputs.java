@@ -21,7 +21,7 @@ public interface Outputs {
 	 *
 	 * @return The current Output object.  Can be {@code null}
 	 */
-	public Output getCurrent();
+	Output getCurrent();
 
 	/**
 	 * Go to the next Output object (if any), returning an indication of whether there was another (aka, will
@@ -29,10 +29,10 @@ public interface Outputs {
 	 *
 	 * @return {@code true} if the next call to {@link #getCurrent()} will return a non-{@code null} value.
 	 */
-	public boolean goToNext();
+	boolean goToNext();
 
 	/**
 	 * Eagerly release any resources held by this Outputs.
 	 */
-	public void release();
+	void release();
 }

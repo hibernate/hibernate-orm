@@ -12,5 +12,5 @@ import org.hibernate.boot.model.JavaTypeDescriptor;
  * @author Steve Ebersole
  */
 public interface JavaTypeDescriptorResolvable {
-	public void resolveJavaTypeDescriptor(JavaTypeDescriptor descriptor);
+	void resolveJavaTypeDescriptor(JavaTypeDescriptor descriptor);
 }

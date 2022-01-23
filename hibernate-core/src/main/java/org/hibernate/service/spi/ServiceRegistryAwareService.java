@@ -17,5 +17,5 @@ public interface ServiceRegistryAwareService {
 	 *
 	 * @param serviceRegistry The registry
 	 */
-	public void injectServices(ServiceRegistryImplementor serviceRegistry);
+	void injectServices(ServiceRegistryImplementor serviceRegistry);
 }

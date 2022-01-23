@@ -21,5 +21,5 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
  * @since 5.0
  */
 public interface MetadataBuilderInitializer {
-	public void contribute(MetadataBuilder metadataBuilder, StandardServiceRegistry serviceRegistry);
+	void contribute(MetadataBuilder metadataBuilder, StandardServiceRegistry serviceRegistry);
 }

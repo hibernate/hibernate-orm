@@ -22,5 +22,5 @@ public interface XmlDocument extends Serializable {
 	 *
 	 * @return The origin
 	 */
-	public Origin getOrigin();
+	Origin getOrigin();
 }

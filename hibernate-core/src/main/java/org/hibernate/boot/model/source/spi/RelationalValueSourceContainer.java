@@ -31,6 +31,6 @@ public interface RelationalValueSourceContainer extends ColumnBindingDefaults {
 	 *
 	 * @return The contained {@link RelationalValueSource} references.
 	 */
-	public List<RelationalValueSource> getRelationalValueSources();
+	List<RelationalValueSource> getRelationalValueSources();
 
 }

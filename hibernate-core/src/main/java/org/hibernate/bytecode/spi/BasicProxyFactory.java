@@ -17,5 +17,5 @@ public interface BasicProxyFactory {
 	 *
 	 * @return A proxy reference.
 	 */
-	public Object getProxy();
+	Object getProxy();
 }

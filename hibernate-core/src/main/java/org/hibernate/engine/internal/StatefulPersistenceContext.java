@@ -1079,7 +1079,6 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	/**
 	 * @deprecated this will be removed: it provides too wide access, making it hard to optimise the internals
 	 * for specific access needs. Consider using #iterateEntities instead.
-	 * @return
 	 */
 	@Deprecated
 	@Override

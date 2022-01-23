@@ -40,7 +40,7 @@ public interface OrderingExpression extends Node {
 			SqlAstCreationState creationState);
 
 
-	public static Expression applyCollation(
+	static Expression applyCollation(
 			Expression expression,
 			String collation,
 			SqlAstCreationState creationState) {

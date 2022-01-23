@@ -109,7 +109,6 @@ public interface ClassLoaderService extends Service, Stoppable {
 	 * fine when the object doesn't exist.
 	 * In case of other errors, implementations are expected to log
 	 * a warning but it's still not treated as a fatal error.
-	 * @param packageName
 	 * @return the matching Package, or null.
 	 */
 	Package packageForNameOrNull(String packageName);

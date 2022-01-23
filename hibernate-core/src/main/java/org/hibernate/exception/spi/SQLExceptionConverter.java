@@ -33,5 +33,5 @@ public interface SQLExceptionConverter extends Serializable {
 	 * @return The resulting JDBCException.
 	 * @see org.hibernate.exception.ConstraintViolationException , JDBCConnectionException, SQLGrammarException, LockAcquisitionException
 	 */
-	public JDBCException convert(SQLException sqlException, String message, String sql);
+	JDBCException convert(SQLException sqlException, String message, String sql);
 }

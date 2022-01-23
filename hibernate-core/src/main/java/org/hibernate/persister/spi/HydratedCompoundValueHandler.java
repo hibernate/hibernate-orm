@@ -22,6 +22,6 @@ package org.hibernate.persister.spi;
  * @author Steve Ebersole
  */
 public interface HydratedCompoundValueHandler {
-	public Object extract(Object hydratedState);
-	public void inject(Object hydratedState, Object value);
+	Object extract(Object hydratedState);
+	void inject(Object hydratedState, Object value);
 }

@@ -24,14 +24,12 @@ public interface BulkInsertionCapableIdentifierGenerator extends StandardGenerat
 	 *
 	 * @return {@code true} if bulk insertions are supported; {@code false} otherwise.
 	 */
-	public boolean supportsBulkInsertionIdentifierGeneration();
+	boolean supportsBulkInsertionIdentifierGeneration();
 
 	/**
 	 * Return the select expression fragment, if any, that generates the identifier values.
 	 *
-	 * @param dialect The dialect against which the insert will be performed.
-	 *
 	 * @return The identifier value generation fragment (SQL).  {@code null} indicates that no fragment is needed.
 	 */
-	public String determineBulkInsertionIdentifierGenerationSelectFragment(SqlStringGenerationContext context);
+	String determineBulkInsertionIdentifierGenerationSelectFragment(SqlStringGenerationContext context);
 }

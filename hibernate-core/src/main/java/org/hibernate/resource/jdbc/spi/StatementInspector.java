@@ -25,5 +25,5 @@ public interface StatementInspector extends Serializable {
 	 *
 	 * @return The SQL to use; may be {@code null}
 	 */
-	public String inspect(String sql);
+	String inspect(String sql);
 }

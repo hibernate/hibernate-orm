@@ -21,7 +21,7 @@ public interface ImplicitBasicColumnNameSource extends ImplicitNameSource {
 	 *
 	 * @return The AttributePath for the basic value
 	 */
-	public AttributePath getAttributePath();
+	AttributePath getAttributePath();
 
 	/**
 	 * Is the basic column the "element column" for a collection?
@@ -32,5 +32,5 @@ public interface ImplicitBasicColumnNameSource extends ImplicitNameSource {
 	 * @return {@code true} if the column being named is the collection element
 	 * column; {@code false} otherwise.
 	 */
-	public boolean isCollectionElement();
+	boolean isCollectionElement();
 }

@@ -23,7 +23,7 @@ public interface JndiService extends Service {
 	 *
 	 * @return The object found (may be null).
 	 */
-	public Object locate(String jndiName);
+	Object locate(String jndiName);
 
 	/**
 	 * Binds a value into {@literal JNDI} by name.
@@ -31,14 +31,14 @@ public interface JndiService extends Service {
 	 * @param jndiName The name under which to bind the object
 	 * @param value The value to bind
 	 */
-	public void bind(String jndiName, Object value);
+	void bind(String jndiName, Object value);
 
 	/**
 	 * Unbind a value from {@literal JNDI} by name.
 	 *
 	 * @param jndiName The name under which the object is bound
 	 */
-	public void unbind(String jndiName);
+	void unbind(String jndiName);
 
 	/**
 	 * Adds the specified listener to the given {@literal JNDI} namespace.
@@ -46,5 +46,5 @@ public interface JndiService extends Service {
 	 * @param jndiName The {@literal JNDI} namespace
 	 * @param listener The listener
 	 */
-	public void addListener(String jndiName, NamespaceChangeListener listener);
+	void addListener(String jndiName, NamespaceChangeListener listener);
 }

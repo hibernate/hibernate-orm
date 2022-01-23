@@ -14,5 +14,5 @@ import java.util.List;
  * @author Steve Ebersole
  */
 public interface ToolingHintContainer {
-	public List<JaxbHbmToolingHintType> getToolingHints();
+	List<JaxbHbmToolingHintType> getToolingHints();
 }

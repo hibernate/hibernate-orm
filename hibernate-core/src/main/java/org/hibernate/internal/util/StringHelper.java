@@ -546,7 +546,6 @@ public final class StringHelper {
 
 	/**
 	 * @deprecated use {@link #isBlank(String)}
-	 * @return
 	 */
 	@Deprecated
 	public static boolean isEmptyOrWhitespace(String string) {

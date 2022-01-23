@@ -18,22 +18,22 @@ public interface SQLLoadable extends Loadable {
 	/**
 	 * Return the column alias names used to persist/query the named property of the class or a subclass (optional operation).
 	 */
-	public String[] getSubclassPropertyColumnAliases(String propertyName, String suffix);
+	String[] getSubclassPropertyColumnAliases(String propertyName, String suffix);
 
 	/**
 	 * Return the column names used to persist/query the named property of the class or a subclass (optional operation).
 	 */
-	public String[] getSubclassPropertyColumnNames(String propertyName);
+	String[] getSubclassPropertyColumnNames(String propertyName);
 	
 	/**
 	 * All columns to select, when loading.
 	 */
-	public String selectFragment(String alias, String suffix);
+	String selectFragment(String alias, String suffix);
 
 	/**
 	 * Get the type
 	 */
-	public Type getType();
+	Type getType();
 
 	
 

@@ -79,7 +79,6 @@ public abstract class AbstractScannerImpl implements Scanner {
 	 * Handle <jar-file/> references from a persistence.xml file.
 	 *
 	 * JPA allows for  to be specific
-	 * @param url
 	 * @return The resolved non-root URL
 	 */
 	protected URL resolveNonRootUrl(URL url) {

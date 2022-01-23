@@ -15,23 +15,23 @@ import java.sql.Connection;
  */
 @Deprecated
 public interface JdbcObserver {
-	public void jdbcConnectionAcquisitionStart();
-	public void jdbcConnectionAcquisitionEnd(Connection connection);
+	void jdbcConnectionAcquisitionStart();
+	void jdbcConnectionAcquisitionEnd(Connection connection);
 
-	public void jdbcConnectionReleaseStart();
-	public void jdbcConnectionReleaseEnd();
+	void jdbcConnectionReleaseStart();
+	void jdbcConnectionReleaseEnd();
 
-	public void jdbcPrepareStatementStart();
-	public void jdbcPrepareStatementEnd();
+	void jdbcPrepareStatementStart();
+	void jdbcPrepareStatementEnd();
 
-	public void jdbcExecuteStatementStart();
-	public void jdbcExecuteStatementEnd();
+	void jdbcExecuteStatementStart();
+	void jdbcExecuteStatementEnd();
 
-	public void jdbcExecuteBatchStart();
-	public void jdbcExecuteBatchEnd();
+	void jdbcExecuteBatchStart();
+	void jdbcExecuteBatchEnd();
 
-	default public void jdbcReleaseRegistryResourcesStart() {}
-	default public void jdbcReleaseRegistryResourcesEnd() {}
+	default void jdbcReleaseRegistryResourcesStart() {}
+	default void jdbcReleaseRegistryResourcesEnd() {}
 
 
 }

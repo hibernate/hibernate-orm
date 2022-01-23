@@ -22,5 +22,5 @@ public interface IdentifierGeneratorStrategyProvider {
 	/**
 	 * set of strategy / generator class pairs to register as accepted strategies
 	 */
-	public Map<String,Class<?>> getStrategies();
+	Map<String,Class<?>> getStrategies();
 }

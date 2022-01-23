@@ -20,12 +20,12 @@ public interface JtaSynchronizationStrategy extends Serializable {
 	 *
 	 * @param synchronization The synchronization to register.
 	 */
-	public void registerSynchronization(Synchronization synchronization);
+	void registerSynchronization(Synchronization synchronization);
 
 	/**
 	 * Can a synchronization be registered?
 	 *
 	 * @return {@literal true}/{@literal false}
 	 */
-	public boolean canRegisterSynchronization();
+	boolean canRegisterSynchronization();
 }

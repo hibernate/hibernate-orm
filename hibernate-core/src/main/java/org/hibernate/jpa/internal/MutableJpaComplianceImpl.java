@@ -38,11 +38,6 @@ public class MutableJpaComplianceImpl implements MutableJpaCompliance {
 		);
 	}
 
-	/**
-	 * Generallythe
-	 * @param configurationSettings
-	 * @param jpaByDefault
-	 */
 	@SuppressWarnings("ConstantConditions")
 	public MutableJpaComplianceImpl(Map configurationSettings, boolean jpaByDefault) {
 		final Object legacyQueryCompliance = configurationSettings.get( AvailableSettings.JPAQL_STRICT_COMPLIANCE );

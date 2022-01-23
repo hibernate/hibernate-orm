@@ -30,5 +30,5 @@ public interface Scanner {
 	 * @param options The options to control the scanning.
 	 * @param params The parameters for scanning
 	 */
-	public ScanResult scan(ScanEnvironment environment, ScanOptions options, ScanParameters params);
+	ScanResult scan(ScanEnvironment environment, ScanOptions options, ScanParameters params);
 }

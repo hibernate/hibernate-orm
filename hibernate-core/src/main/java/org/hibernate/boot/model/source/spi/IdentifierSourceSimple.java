@@ -18,13 +18,13 @@ public interface IdentifierSourceSimple extends IdentifierSource {
 	 *
 	 * @return The identifier attribute source.
 	 */
-	public SingularAttributeSource getIdentifierAttributeSource();
+	SingularAttributeSource getIdentifierAttributeSource();
 
 	/**
 	 *  Returns the "unsaved" entity identifier value.
 	 *
 	 *  @return the "unsaved" entity identifier value
 	 */
-	public String getUnsavedValue();
+	String getUnsavedValue();
 
 }

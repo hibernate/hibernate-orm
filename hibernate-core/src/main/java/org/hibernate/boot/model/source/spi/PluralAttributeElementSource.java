@@ -11,5 +11,5 @@ package org.hibernate.boot.model.source.spi;
  * @author Gail Badner
  */
 public interface PluralAttributeElementSource {
-	public PluralAttributeElementNature getNature();
+	PluralAttributeElementNature getNature();
 }

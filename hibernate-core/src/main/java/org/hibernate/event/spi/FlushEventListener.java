@@ -18,7 +18,6 @@ public interface FlushEventListener {
 	 * Handle the given flush event.
      *
      * @param event The flush event to be handled.
-     * @throws HibernateException
      */
-	public void onFlush(FlushEvent event) throws HibernateException;
+	void onFlush(FlushEvent event) throws HibernateException;
 }

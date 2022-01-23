@@ -19,19 +19,19 @@ public interface ScanResult {
 	 *
 	 * @return Descriptors for discovered packages
 	 */
-	public Set<PackageDescriptor> getLocatedPackages();
+	Set<PackageDescriptor> getLocatedPackages();
 
 	/**
 	 * Returns descriptors for all classes discovered as part of the scan
 	 *
 	 * @return Descriptors for discovered classes
 	 */
-	public Set<ClassDescriptor> getLocatedClasses();
+	Set<ClassDescriptor> getLocatedClasses();
 
 	/**
 	 * Returns descriptors for all mapping files discovered as part of the scan
 	 *
 	 * @return Descriptors for discovered mapping files
 	 */
-	public Set<MappingFileDescriptor> getLocatedMappingFiles();
+	Set<MappingFileDescriptor> getLocatedMappingFiles();
 }

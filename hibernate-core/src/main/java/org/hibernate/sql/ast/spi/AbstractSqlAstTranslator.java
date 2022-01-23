@@ -4964,7 +4964,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
-	protected static interface SubQueryRelationalRestrictionEmulationRenderer<X extends Expression> {
+	protected interface SubQueryRelationalRestrictionEmulationRenderer<X extends Expression> {
 		void renderComparison(final List<SqlSelection> lhsExpressions, X rhsExpression, ComparisonOperator operator);
 	}
 

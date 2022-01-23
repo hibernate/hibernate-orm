@@ -12,5 +12,5 @@ import org.hibernate.boot.model.source.internal.hbm.IndexedPluralAttributeSource
  * @author Steve Ebersole
  */
 public interface PluralAttributeSourceArray extends IndexedPluralAttributeSource {
-	public String getElementClass();
+	String getElementClass();
 }

@@ -14,5 +14,5 @@ import org.hibernate.integrator.spi.Integrator;
  * @author Steve Ebersole
  */
 public interface IntegratorProvider {
-	public List<Integrator> getIntegrators();
+	List<Integrator> getIntegrators();
 }

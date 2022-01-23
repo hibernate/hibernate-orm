@@ -26,5 +26,5 @@ public interface SessionFactoryBuilderFactory {
 	 *
 	 * @return The SessionFactoryBuilder, or {@code null}
 	 */
-	public SessionFactoryBuilder getSessionFactoryBuilder(MetadataImplementor metadata, SessionFactoryBuilderImplementor defaultBuilder);
+	SessionFactoryBuilder getSessionFactoryBuilder(MetadataImplementor metadata, SessionFactoryBuilderImplementor defaultBuilder);
 }

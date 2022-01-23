@@ -15,10 +15,9 @@ import org.hibernate.HibernateException;
  */
 public interface AutoFlushEventListener {
 
-    /** Handle the given auto-flush event.
-     *
-     * @param event The auto-flush event to be handled.
-     * @throws HibernateException
-     */
-	public void onAutoFlush(AutoFlushEvent event) throws HibernateException;
+	/** Handle the given auto-flush event.
+	 *
+	 * @param event The auto-flush event to be handled.
+	 */
+	void onAutoFlush(AutoFlushEvent event) throws HibernateException;
 }

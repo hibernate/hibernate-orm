@@ -18,5 +18,5 @@ public interface StrategyRegistrationProvider {
 	 *
 	 * @return All StrategyRegistrations
 	 */
-	public Iterable<StrategyRegistration> getStrategyRegistrations();
+	Iterable<StrategyRegistration> getStrategyRegistrations();
 }

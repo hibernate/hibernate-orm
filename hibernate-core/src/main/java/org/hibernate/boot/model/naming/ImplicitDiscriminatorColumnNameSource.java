@@ -17,5 +17,5 @@ public interface ImplicitDiscriminatorColumnNameSource extends ImplicitNameSourc
 	 *
 	 * @return The naming for the entity
 	 */
-	public EntityNaming getEntityNaming();
+	EntityNaming getEntityNaming();
 }

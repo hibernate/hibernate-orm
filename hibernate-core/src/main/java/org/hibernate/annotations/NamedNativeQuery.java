@@ -28,7 +28,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Repeatable(NamedNativeQueries.class)
 public @interface NamedNativeQuery {
 	/**
-	 * The name.  It is a named query after all :)
+	 * The registration name.
+	 *
+	 * @see org.hibernate.SessionFactory#addNamedQuery
+	 * @see org.hibernate.Session#createNamedQuery
 	 */
 	String name();
 
@@ -73,11 +76,6 @@ public @interface NamedNativeQuery {
 	int timeout() default -1;
 
 	/**
-	 * Does the SQL ({@link #query()}) represent a call to a procedure/function?
-	 */
-	boolean callable() default false;
-
-	/**
 	 * A comment added to the SQL query.  Useful when engaging with DBA.
 	 */
 	String comment() default "";
@@ -98,4 +96,13 @@ public @interface NamedNativeQuery {
 	 * @see org.hibernate.query.SynchronizeableQuery
 	 */
 	String[] querySpaces() default {};
+
+	/**
+	 * Does the SQL ({@link #query()}) represent a call to a procedure/function?
+	 *
+	 * @deprecated Calling database procedures and functions through {@link NativeQuery} is
+	 * no longer supported; use {@link jakarta.persistence.NamedStoredProcedureQuery} instead
+	 */
+	@Deprecated( since = "6.0" )
+	boolean callable() default false;
 }

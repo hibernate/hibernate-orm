@@ -65,7 +65,7 @@ public class OracleSDOFunctionDescriptors implements KeyedSqmFunctionDescriptors
 						"SDO_GEOM.SDO_MBR",
 						true,
 						StandardArgumentsValidators.exactly( 1 ),
-						null
+						StandardFunctionReturnTypeResolvers.useFirstNonNull()
 				)
 		);
 
@@ -125,7 +125,7 @@ public class OracleSDOFunctionDescriptors implements KeyedSqmFunctionDescriptors
 						"ST_BOUNDARY",
 						"ST_BOUNDARY",
 						1,
-						null,
+						StandardFunctionReturnTypeResolvers.useFirstNonNull(),
 						true
 				)
 		);
@@ -196,7 +196,7 @@ public class OracleSDOFunctionDescriptors implements KeyedSqmFunctionDescriptors
 						"SDO_GEOM.SDO_BUFFER",
 						true,
 						StandardArgumentsValidators.exactly( 2 ),
-						null
+						StandardFunctionReturnTypeResolvers.useFirstNonNull()
 				)
 		);
 
@@ -206,7 +206,7 @@ public class OracleSDOFunctionDescriptors implements KeyedSqmFunctionDescriptors
 						"SDO_GEOM.SDO_CONVEXHULL",
 						true,
 						StandardArgumentsValidators.exactly( 1 ),
-						null
+						StandardFunctionReturnTypeResolvers.useFirstNonNull()
 				)
 		);
 
@@ -216,7 +216,7 @@ public class OracleSDOFunctionDescriptors implements KeyedSqmFunctionDescriptors
 						"SDO_GEOM.SDO_DIFFERENCE",
 						true,
 						StandardArgumentsValidators.exactly( 2 ),
-						null
+						StandardFunctionReturnTypeResolvers.useFirstNonNull()
 				)
 		);
 
@@ -226,7 +226,7 @@ public class OracleSDOFunctionDescriptors implements KeyedSqmFunctionDescriptors
 						"SDO_GEOM.SDO_INTERSECTION",
 						true,
 						StandardArgumentsValidators.exactly( 2 ),
-						null
+						StandardFunctionReturnTypeResolvers.useFirstNonNull()
 				)
 		);
 
@@ -236,7 +236,7 @@ public class OracleSDOFunctionDescriptors implements KeyedSqmFunctionDescriptors
 						"SDO_GEOM.SDO_XOR",
 						true,
 						StandardArgumentsValidators.exactly( 2 ),
-						null
+						StandardFunctionReturnTypeResolvers.useFirstNonNull()
 				)
 		);
 
@@ -246,7 +246,7 @@ public class OracleSDOFunctionDescriptors implements KeyedSqmFunctionDescriptors
 						"SDO_GEOM.SDO_UNION",
 						true,
 						StandardArgumentsValidators.exactly( 2 ),
-						null
+						StandardFunctionReturnTypeResolvers.useFirstNonNull()
 				)
 		);
 

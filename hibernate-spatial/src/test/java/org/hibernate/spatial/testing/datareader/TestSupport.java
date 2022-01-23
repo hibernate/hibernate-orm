@@ -37,7 +37,6 @@ import static org.geolatte.geom.crs.CoordinateReferenceSystems.WGS84;
  * @author Karel Maesen, Geovise BVBA
  * creation-date: Sep 30, 2010
  */
-@Deprecated
 public abstract class TestSupport {
 
 	//TODO -- make this abstract

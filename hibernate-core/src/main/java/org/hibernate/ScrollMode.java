@@ -41,7 +41,7 @@ public enum ScrollMode {
 
 	private final int resultSetType;
 
-	private ScrollMode(int level) {
+	ScrollMode(int level) {
 		this.resultSetType = level;
 	}
 

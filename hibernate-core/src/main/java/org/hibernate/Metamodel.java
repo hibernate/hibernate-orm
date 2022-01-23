@@ -45,7 +45,6 @@ public interface Metamodel extends JpaMetamodel {
 	 * @return the names of all persistent (mapped) classes that extend or implement the
 	 *     given class or interface, accounting for implicit/explicit polymorphism settings
 	 *     and excluding mapped subclasses/joined-subclasses of other classes in the result.
-	 * @throws MappingException
 	 */
 	String[] getImplementors(String entityName);
 

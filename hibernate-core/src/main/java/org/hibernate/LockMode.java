@@ -79,7 +79,7 @@ public enum LockMode {
 	@Deprecated
 	FORCE( 15, "force" ),
 
-	/**
+	/*
 	 *  start of jakarta.persistence.LockModeType equivalent modes
 	 */
 
@@ -115,7 +115,7 @@ public enum LockMode {
 	private final int level;
 	private final String externalForm;
 
-	private LockMode(int level, String externalForm) {
+	LockMode(int level, String externalForm) {
 		this.level = level;
 		this.externalForm = externalForm;
 	}

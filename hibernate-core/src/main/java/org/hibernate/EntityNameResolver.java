@@ -20,5 +20,5 @@ public interface EntityNameResolver {
 	 * @return The corresponding entity-name, or null if this impl does not know how to perform resolution
 	 *         for the given entity instance.
 	 */
-	public String resolveEntityName(Object entity);
+	String resolveEntityName(Object entity);
 }

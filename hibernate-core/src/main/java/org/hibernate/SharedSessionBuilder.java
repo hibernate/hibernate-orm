@@ -115,7 +115,7 @@ public interface SharedSessionBuilder<T extends SharedSessionBuilder> extends Se
 	@Override
 	T autoClose(boolean autoClose);
 
-	@Override
+	@Override @SuppressWarnings("unchecked")
 	default T flushBeforeCompletion(boolean flushBeforeCompletion) {
 		if ( flushBeforeCompletion ) {
 			flushMode( FlushMode.ALWAYS );

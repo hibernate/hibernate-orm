@@ -22,7 +22,7 @@ public interface Filter {
 	 *
 	 * @return This filter's name.
 	 */
-	public String getName();
+	String getName();
 
 	/**
 	 * Get the filter definition containing additional information about the
@@ -30,7 +30,7 @@ public interface Filter {
 	 *
 	 * @return The filter definition
 	 */
-	public FilterDefinition getFilterDefinition();
+	FilterDefinition getFilterDefinition();
 
 
 	/**

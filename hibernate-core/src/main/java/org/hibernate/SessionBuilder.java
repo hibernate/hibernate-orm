@@ -9,7 +9,6 @@ package org.hibernate;
 import java.sql.Connection;
 import java.util.TimeZone;
 
-import org.hibernate.query.Query;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 
@@ -18,7 +17,6 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
  * 
  * @author Steve Ebersole
  */
-@SuppressWarnings("UnusedReturnValue")
 public interface SessionBuilder<T extends SessionBuilder> {
 	/**
 	 * Opens a session with the specified options.
@@ -94,6 +92,7 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
+	@SuppressWarnings("UnusedReturnValue")
 	T autoClear(boolean autoClear);
 
 	/**

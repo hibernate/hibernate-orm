@@ -7,18 +7,14 @@
 package org.hibernate.metamodel.spi;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import jakarta.persistence.EntityGraph;
 
 import org.hibernate.EntityNameResolver;
 import org.hibernate.MappingException;
 import org.hibernate.Metamodel;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.metamodel.MappingMetamodel;
-import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 
@@ -103,39 +99,16 @@ public interface MetamodelImplementor extends MappingMetamodel, Metamodel {
 	/**
 	 * Get the names of all entities known to this Metamodel
 	 *
-	 * @return All of the entity names
+	 * @return All the entity names
 	 */
 	String[] getAllEntityNames();
 
 	/**
 	 * Get the names of all collections known to this Metamodel
 	 *
-	 * @return All of the entity names
+	 * @return All the entity names
 	 */
 	String[] getAllCollectionRoles();
 
-	/**
-	 * @deprecated Use {@link #addNamedEntityGraph(String, RootGraphImplementor)} instead.
-	 */
-	@Deprecated
-	<T> void addNamedEntityGraph(String graphName, EntityGraph<T> entityGraph);
-
-	/**
-	 * @deprecated Use {@link #findEntityGraphsByJavaType(Class)} instead.
-	 */
-	@Deprecated
-	default <T> List<EntityGraph<? super T>> findEntityGraphsByType(Class<T> entityClass) {
-		return (List) findEntityGraphsByJavaType( entityClass );
-	}
-
 	void close();
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Co-variant returns
-
-	@Override
-	default EntityDomainType getEntityTypeByName(String entityName) {
-		return entity( entityName );
-	}
 }

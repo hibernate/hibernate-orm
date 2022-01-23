@@ -41,8 +41,8 @@ public interface MappingMetamodel {
 	/**
 	 * todo (6.0) : POC!!!  Intended for use in SQM -> SQL translation
 	 */
-	MappingModelExpressable resolveMappingExpressable(SqmExpressable<?> sqmExpressable, Function<NavigablePath, TableGroup> tableGroupLocator);
-	MappingModelExpressable lenientlyResolveMappingExpressable(SqmExpressable<?> sqmExpressable, Function<NavigablePath, TableGroup> tableGroupLocator);
+	MappingModelExpressable<?> resolveMappingExpressable(SqmExpressable<?> sqmExpressable, Function<NavigablePath, TableGroup> tableGroupLocator);
+	MappingModelExpressable<?> lenientlyResolveMappingExpressable(SqmExpressable<?> sqmExpressable, Function<NavigablePath, TableGroup> tableGroupLocator);
 
 	/**
 	 * Given a Java type, determine the corresponding BindableType to

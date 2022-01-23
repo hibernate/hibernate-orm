@@ -6,7 +6,6 @@
  */
 package org.hibernate.dialect;
 
-import jakarta.persistence.TemporalType;
 import org.hibernate.LockOptions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -55,7 +54,13 @@ import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.*;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
-import java.sql.*;
+import java.sql.CallableStatement;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+
+import jakarta.persistence.TemporalType;
 
 import static org.hibernate.type.SqlTypes.*;
 

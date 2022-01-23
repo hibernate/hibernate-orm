@@ -761,6 +761,8 @@ public interface AvailableSettings {
 	 *     <li>the (case insensitive) name of a {@code CollectionClassification}, or
 	 *     <li>a {@link Class} representing either {@link java.util.List} or {@link java.util.Collection}.
 	 * </ul>
+	 * <p/>
+	 * Backwards compatibility can be achieved by specifying `hibernate.mapping.default_list_semantics=bag` e.g.
 	 *
 	 * @see org.hibernate.jpa.spi.JpaCompliance#isJpaListComplianceEnabled()
 	 *

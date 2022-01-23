@@ -15,6 +15,8 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
+ * Grouping of {@link EmbeddableInstantiatorRegistration}
+ *
  * @author Steve Ebersole
  */
 @Target( {TYPE, ANNOTATION_TYPE, PACKAGE} )

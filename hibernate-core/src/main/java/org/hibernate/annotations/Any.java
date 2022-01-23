@@ -17,17 +17,18 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Maps a discriminated to-one style associations pointing to one of several entity types
+ * Maps a discriminated to-one style association pointing to one of several entity types
  * depending on a local discriminator, as opposed to discriminated inheritance where the
  * discriminator is kept as part of the entity hierarchy (see {@link jakarta.persistence.Inheritance}
  * and {@link jakarta.persistence.InheritanceType#SINGLE_TABLE} for details about discriminated
  * inheritance mappings).
- * <p>
+ * <p/>
  * For example, if you consider an {@code Order} entity containing {@code Payment} information
  * where {@code Payment} might be of type {@code CashPayment} or {@code CreditCardPayment},
  * the {@code @Any} approach would be to keep that discriminator and matching value on the
- * {@code Order} itself. Thought of another way, the "foreign key" is really made up of the
- * value and discriminator.
+ * {@code Order} itself instead as part of the {@code Payment} class. Thought of another way,
+ * the "foreign key" is really made up of the value and discriminator.  Note however that this
+ * composite foreign-key is a conceptual and cannot be phsical.
  * <ul>
  *     <li>Use {@link Column} or {@link Formula} to define the "column" to which the
  *         discriminator is mapped.

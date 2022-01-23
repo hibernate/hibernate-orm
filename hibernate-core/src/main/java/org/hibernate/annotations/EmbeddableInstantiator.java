@@ -16,7 +16,7 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Specifies a custom instantiator implementation
+ * Specifies a custom instantiator for a specific embedded
  */
 @Target( {TYPE, FIELD, METHOD, ANNOTATION_TYPE} )
 @Retention( RUNTIME )

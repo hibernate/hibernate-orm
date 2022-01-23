@@ -8,6 +8,8 @@ package org.hibernate.annotations;
 
 import java.lang.annotation.Retention;
 
+import org.hibernate.cfg.AvailableSettings;
+
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
@@ -16,9 +18,11 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * Can be used to map a {@link java.util.List}-valued attribute using
  * {@link org.hibernate.metamodel.CollectionClassification#BAG} semantics.
- *
+ * <p/>
  * @apiNote Ignored if either {@link jakarta.persistence.OrderColumn} or
  * {@link ListIndexBase} is used.
+ *
+ * @implSpec May also be specified SessionFactory-wide using {@value AvailableSettings#DEFAULT_LIST_SEMANTICS}
  *
  * @author Steve Ebersole
  */

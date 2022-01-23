@@ -12,5 +12,5 @@ package org.hibernate.event.spi;
  * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>
  */
 public interface PostLoadEventListener {
-	public void onPostLoad(PostLoadEvent event);
+	void onPostLoad(PostLoadEvent event);
 }

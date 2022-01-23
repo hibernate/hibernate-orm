@@ -17,7 +17,7 @@ public interface InDatabaseValueGenerationStrategy {
 	 *
 	 * @return When the value is generated.
 	 */
-	public GenerationTiming getGenerationTiming();
+	GenerationTiming getGenerationTiming();
 
 	/**
 	 * Should the column(s) be referenced in the INSERT / UPDATE SQL?
@@ -28,7 +28,7 @@ public interface InDatabaseValueGenerationStrategy {
 	 *
 	 * @return {@code true} indicates the column should be included in the SQL.
 	 */
-	public boolean referenceColumnsInSql();
+	boolean referenceColumnsInSql();
 
 	/**
 	 * For columns that will be referenced in the SQL (per {@link #referenceColumnsInSql()}), what value
@@ -37,6 +37,6 @@ public interface InDatabaseValueGenerationStrategy {
 	 * @return The column value to be used in the SQL.  {@code null} for any element indicates to use the Column
 	 * defined value ({@link org.hibernate.mapping.Column#getWriteExpr}).
 	 */
-	public String[] getReferencedColumnValues();
+	String[] getReferencedColumnValues();
 
 }

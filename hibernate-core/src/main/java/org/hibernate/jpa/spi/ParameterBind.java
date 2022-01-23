@@ -21,12 +21,12 @@ public interface ParameterBind<T> {
 	 *
 	 * @return The bound value
 	 */
-	public T getValue();
+	T getValue();
 
 	/**
 	 * The temporal type that will be used to "interpret" Date-like values (if applicable).
 	 *
 	 * @return The temporal type, or {@code null}
 	 */
-	public TemporalType getSpecifiedTemporalType();
+	TemporalType getSpecifiedTemporalType();
 }

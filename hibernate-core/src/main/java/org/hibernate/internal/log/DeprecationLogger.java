@@ -37,7 +37,7 @@ public interface DeprecationLogger extends BasicLogger {
 					"removed, embed-xml attributes are no longer supported and should be removed from mappings.",
 			id = 90000004
 	)
-	public void logDeprecationOfEmbedXmlSupport();
+	void logDeprecationOfEmbedXmlSupport();
 
 	@LogMessage(level = WARN)
 	@Message(
@@ -45,7 +45,7 @@ public interface DeprecationLogger extends BasicLogger {
 					"identifier to a physical entity attribute",
 			id = 90000005
 	)
-	public void logDeprecationOfNonNamedIdAttribute(String entityName);
+	void logDeprecationOfNonNamedIdAttribute(String entityName);
 
 //	/**
 //	 * Log a warning about an attempt to specify no-longer-supported NamingStrategy

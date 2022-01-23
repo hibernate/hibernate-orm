@@ -20,7 +20,7 @@ public interface Origin extends Serializable {
 	 *
 	 * @return The origin type.
 	 */
-	public String getType();
+	String getType();
 
 	/**
 	 * The name of the document origin.  Interpretation is relative to the type, but might be the
@@ -28,5 +28,5 @@ public interface Origin extends Serializable {
 	 *
 	 * @return The name.
 	 */
-	public String getName();
+	String getName();
 }

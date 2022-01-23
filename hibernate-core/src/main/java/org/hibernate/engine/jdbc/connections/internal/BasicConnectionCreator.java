@@ -22,7 +22,7 @@ import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
- * Template (as in template pattern) support for {@linl ConnectionCreator} implementors.
+ * Template (as in template pattern) support for {@link ConnectionCreator} implementors.
  *
  * @author Steve Ebersole
  */

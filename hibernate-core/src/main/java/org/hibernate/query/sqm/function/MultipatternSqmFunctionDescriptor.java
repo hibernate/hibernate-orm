@@ -51,7 +51,8 @@ public class MultipatternSqmFunctionDescriptor extends AbstractSqmFunctionDescri
 	 * template. The array must be padded with leading nulls
 	 * where there is no overloaded form corresponding to
 	 * lower arities.
-	 *  @param name
+	 *
+	 * @param name
 	 * @param functions the function templates to delegate to,
 	 * @param type
 	 */

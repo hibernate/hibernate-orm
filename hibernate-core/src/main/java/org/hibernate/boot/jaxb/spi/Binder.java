@@ -25,7 +25,7 @@ public interface Binder {
 	 *
 	 * @return The bound JAXB model
 	 */
-	public Binding bind(Source source, Origin origin);
+	Binding bind(Source source, Origin origin);
 
 	/**
 	 * Bind from an InputStream
@@ -35,5 +35,5 @@ public interface Binder {
 	 *
 	 * @return The bound JAXB model
 	 */
-	public Binding bind(InputStream stream, Origin origin);
+	Binding bind(InputStream stream, Origin origin);
 }

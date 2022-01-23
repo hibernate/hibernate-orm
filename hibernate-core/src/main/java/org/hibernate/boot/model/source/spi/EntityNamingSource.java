@@ -20,5 +20,5 @@ public interface EntityNamingSource extends EntityNaming {
 	 *
 	 * @return The reference-able type name
 	 */
-	public String getTypeName();
+	String getTypeName();
 }

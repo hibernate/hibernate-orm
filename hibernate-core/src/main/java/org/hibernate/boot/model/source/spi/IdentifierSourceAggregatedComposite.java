@@ -25,12 +25,12 @@ public interface IdentifierSourceAggregatedComposite extends CompositeIdentifier
 	 *
 	 * @return The identifier attribute source.
 	 */
-	public SingularAttributeSourceEmbedded getIdentifierAttributeSource();
+	SingularAttributeSourceEmbedded getIdentifierAttributeSource();
 
 	/**
 	 * Obtain the mapping of attributes annotated with {@link jakarta.persistence.MapsId}.
 	 *
 	 * @return The MapsId sources.
 	 */
-	public List<MapsIdSource> getMapsIdSources();
+	List<MapsIdSource> getMapsIdSources();
 }

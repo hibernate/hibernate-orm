@@ -17,5 +17,5 @@ public interface PostCommitUpdateEventListener extends PostUpdateEventListener {
 	 * 
 	 * @param event the update event to be handled
 	 */
-	public void onPostUpdateCommitFailed(PostUpdateEvent event);
+	void onPostUpdateCommitFailed(PostUpdateEvent event);
 }

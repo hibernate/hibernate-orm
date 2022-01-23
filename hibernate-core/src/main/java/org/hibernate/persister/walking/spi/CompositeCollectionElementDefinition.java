@@ -16,5 +16,5 @@ public interface CompositeCollectionElementDefinition extends CompositionDefinit
 	 * Returns the collection definition.
 	 * @return the collection definition.
 	 */
-	public CollectionDefinition getCollectionDefinition();
+	CollectionDefinition getCollectionDefinition();
 }

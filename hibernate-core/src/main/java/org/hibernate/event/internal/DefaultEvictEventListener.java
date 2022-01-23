@@ -39,7 +39,6 @@ public class DefaultEvictEventListener implements EvictEventListener {
 	 *
 	 * @param event The evict event to be handled.
 	 *
-	 * @throws HibernateException
 	 */
 	public void onEvict(EvictEvent event) throws HibernateException {
 		final Object object = event.getObject();

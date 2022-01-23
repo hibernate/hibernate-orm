@@ -25,5 +25,5 @@ public interface ResultSetIdentifierConsumer {
 	 * the identifier value.
 	 * @return The identifier value.
 	 */
-	public Object consumeIdentifier(ResultSet resultSet);
+	Object consumeIdentifier(ResultSet resultSet);
 }

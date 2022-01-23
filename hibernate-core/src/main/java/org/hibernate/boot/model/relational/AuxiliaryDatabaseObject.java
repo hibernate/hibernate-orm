@@ -24,7 +24,7 @@ public interface AuxiliaryDatabaseObject extends Exportable, Serializable {
 	 * @param dialect The dialect to check against.
 	 * @return True if this database object does apply to the given dialect.
 	 */
-	public boolean appliesToDialect(Dialect dialect);
+	boolean appliesToDialect(Dialect dialect);
 
 	/**
 	 * Defines a simple precedence.  Should creation of this auxiliary object happen before creation of
@@ -37,7 +37,7 @@ public interface AuxiliaryDatabaseObject extends Exportable, Serializable {
 	 * @return {@code true} indicates this object should be created before tables; {@code false} indicates
 	 * it should be created after.
 	 */
-	public boolean beforeTablesOnCreation();
+	boolean beforeTablesOnCreation();
 
 	/**
 	 * Gets the SQL strings for creating the database object.
@@ -91,7 +91,7 @@ public interface AuxiliaryDatabaseObject extends Exportable, Serializable {
 	 * Additional, optional interface for AuxiliaryDatabaseObject that want to allow
 	 * expansion of allowable dialects via mapping.
 	 */
-	public static interface Expandable {
-		public void addDialectScope(String dialectName);
+	interface Expandable {
+		void addDialectScope(String dialectName);
 	}
 }

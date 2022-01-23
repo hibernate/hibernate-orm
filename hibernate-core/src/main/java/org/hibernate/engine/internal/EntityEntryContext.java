@@ -648,20 +648,20 @@ public class EntityEntryContext {
 	/**
 	 * Used in building the {@link #reentrantSafeEntityEntries()} entries
 	 */
-	public static interface EntityEntryCrossRef extends Map.Entry<Object,EntityEntry> {
+	public interface EntityEntryCrossRef extends Map.Entry<Object,EntityEntry> {
 		/**
 		 * The entity
 		 *
 		 * @return The entity
 		 */
-		public Object getEntity();
+		Object getEntity();
 
 		/**
 		 * The associated EntityEntry
 		 *
 		 * @return The EntityEntry associated with the entity in this context
 		 */
-		public EntityEntry getEntityEntry();
+		EntityEntry getEntityEntry();
 	}
 
 	/**

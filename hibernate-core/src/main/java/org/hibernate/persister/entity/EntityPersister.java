@@ -948,11 +948,9 @@ public interface EntityPersister
 	/**
 	 * Like {@link #resolveAttributeIndexes(String[])} but also always returns mutable attributes
 	 *
-	 *
 	 * @param values
 	 * @param loadedState
 	 * @param attributeNames Array of names to be resolved
-	 *
 	 * @param session
 	 * @return A set of unique indexes of the attribute names found in the metamodel
 	 */

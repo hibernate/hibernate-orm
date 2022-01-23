@@ -28,26 +28,16 @@ public interface ColumnAliasExtractor {
 	 *
 	 * @throws SQLException Indicates a problem accessing the JDBC ResultSetMetaData
 	 */
-	public String extractColumnAlias(ResultSetMetaData metaData, int position) throws SQLException;
+	String extractColumnAlias(ResultSetMetaData metaData, int position) throws SQLException;
 
 	/**
 	 * An extractor which uses {@link ResultSetMetaData#getColumnLabel}
 	 */
-	public static final ColumnAliasExtractor COLUMN_LABEL_EXTRACTOR = new ColumnAliasExtractor() {
-		@Override
-		public String extractColumnAlias(ResultSetMetaData metaData, int position) throws SQLException {
-			return metaData.getColumnLabel( position );
-		}
-	};
+	ColumnAliasExtractor COLUMN_LABEL_EXTRACTOR = ResultSetMetaData::getColumnLabel;
 
 	/**
 	 * An extractor which uses {@link ResultSetMetaData#getColumnName}
 	 */
 	@SuppressWarnings("UnusedDeclaration")
-	public static final ColumnAliasExtractor COLUMN_NAME_EXTRACTOR = new ColumnAliasExtractor() {
-		@Override
-		public String extractColumnAlias(ResultSetMetaData metaData, int position) throws SQLException {
-			return metaData.getColumnName( position );
-		}
-	};
+	ColumnAliasExtractor COLUMN_NAME_EXTRACTOR = ResultSetMetaData::getColumnName;
 }

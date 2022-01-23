@@ -711,9 +711,6 @@ public interface SessionFactoryBuilder {
 	/**
 	 * Allows unwrapping this builder as another, more specific type.
 	 *
-	 * @param type
-	 * @param <T>
-	 *
 	 * @return The unwrapped builder.
 	 */
 	<T extends SessionFactoryBuilder> T unwrap(Class<T> type);

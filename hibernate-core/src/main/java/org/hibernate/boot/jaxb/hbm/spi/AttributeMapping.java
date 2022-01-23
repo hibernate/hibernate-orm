@@ -10,6 +10,6 @@ package org.hibernate.boot.jaxb.hbm.spi;
  * @author Steve Ebersole
  */
 public interface AttributeMapping {
-	public String getName();
-	public String getAccess();
+	String getName();
+	String getAccess();
 }

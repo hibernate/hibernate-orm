@@ -110,8 +110,8 @@ public class QualifiedObjectNameFormatterStandardImpl implements QualifiedObject
 		);
 	}
 
-	private static interface Format {
-		public String format(Identifier catalog, Identifier schema, Identifier name, Dialect dialect);
+	private interface Format {
+		String format(Identifier catalog, Identifier schema, Identifier name, Dialect dialect);
 	}
 
 	private static class NoQualifierSupportFormat implements Format {

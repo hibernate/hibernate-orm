@@ -24,7 +24,6 @@ public class DefaultFlushEventListener extends AbstractFlushingEventListener imp
 	/** Handle the given flush event.
 	 *
 	 * @param event The flush event to be handled.
-	 * @throws HibernateException
 	 */
 	public void onFlush(FlushEvent event) throws HibernateException {
 		final EventSource source = event.getSession();

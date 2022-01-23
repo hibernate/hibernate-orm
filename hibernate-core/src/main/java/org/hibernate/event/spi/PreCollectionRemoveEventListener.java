@@ -12,5 +12,5 @@ package org.hibernate.event.spi;
  * @author Gail Badner
  */
 public interface PreCollectionRemoveEventListener {
-	public void onPreRemoveCollection(PreCollectionRemoveEvent event);
+	void onPreRemoveCollection(PreCollectionRemoveEvent event);
 }

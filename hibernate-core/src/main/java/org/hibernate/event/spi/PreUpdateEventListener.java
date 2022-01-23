@@ -15,5 +15,5 @@ public interface PreUpdateEventListener {
 	/**
 	 * Return true if the operation should be vetoed
 	 */
-	public boolean onPreUpdate(PreUpdateEvent event);
+	boolean onPreUpdate(PreUpdateEvent event);
 }

@@ -18,5 +18,5 @@ public interface PluralAttributeElementSourceBasic
 		extends PluralAttributeElementSource,
 				RelationalValueSourceContainer,
 				ImplicitBasicColumnNameSource {
-	public HibernateTypeSource getExplicitHibernateTypeSource();
+	HibernateTypeSource getExplicitHibernateTypeSource();
 }

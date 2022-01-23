@@ -20,12 +20,12 @@ public interface AccessCallback {
 	 *
 	 * @return The next value.
 	 */
-	public IntegralDataTypeHolder getNextValue();
+	IntegralDataTypeHolder getNextValue();
 
 	/**
 	 * Obtain the tenant identifier (multi-tenancy), if one, associated with this callback.
 	 *
 	 * @return The tenant identifier
 	 */
-	public String getTenantIdentifier();
+	String getTenantIdentifier();
 }

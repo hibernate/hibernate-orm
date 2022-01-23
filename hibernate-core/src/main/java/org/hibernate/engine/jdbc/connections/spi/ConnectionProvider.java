@@ -31,7 +31,7 @@ public interface ConnectionProvider extends Service, Wrapped {
 	 * @throws SQLException Indicates a problem opening a connection
 	 * @throws org.hibernate.HibernateException Indicates a problem otherwise obtaining a connection.
 	 */
-	public Connection getConnection() throws SQLException;
+	Connection getConnection() throws SQLException;
 
 	/**
 	 * Release a connection from Hibernate use.
@@ -41,7 +41,7 @@ public interface ConnectionProvider extends Service, Wrapped {
 	 * @throws SQLException Indicates a problem closing the connection
 	 * @throws org.hibernate.HibernateException Indicates a problem otherwise releasing a connection.
 	 */
-	public void closeConnection(Connection conn) throws SQLException;
+	void closeConnection(Connection conn) throws SQLException;
 
 	/**
 	 * Does this connection provider support aggressive release of JDBC connections and later
@@ -59,5 +59,5 @@ public interface ConnectionProvider extends Service, Wrapped {
 	 *
 	 * @return {@code true} if aggressive releasing is supported; {@code false} otherwise.
 	 */
-	public boolean supportsAggressiveRelease();
+	boolean supportsAggressiveRelease();
 }

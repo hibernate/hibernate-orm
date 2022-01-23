@@ -19,7 +19,7 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
  */
 interface ConnectionCreatorFactory {
 
-	public ConnectionCreator create(
+	ConnectionCreator create(
 			Driver driver,
 			ServiceRegistryImplementor serviceRegistry,
 			String url,

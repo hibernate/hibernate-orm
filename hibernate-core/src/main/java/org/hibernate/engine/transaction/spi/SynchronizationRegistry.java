@@ -22,7 +22,7 @@ public interface SynchronizationRegistry extends Serializable {
 	 *
 	 * @throws org.hibernate.HibernateException
 	 */
-	public void registerSynchronization(Synchronization synchronization);
+	void registerSynchronization(Synchronization synchronization);
 
 	/**
 	 * Delegate {@link Synchronization#beforeCompletion} calls to the {@linkplain #registerSynchronization registered}

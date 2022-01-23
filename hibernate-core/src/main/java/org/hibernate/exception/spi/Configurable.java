@@ -23,5 +23,5 @@ public interface Configurable {
 	 * @param properties All defined startup properties.
 	 * @throws HibernateException Indicates a configuration exception.
 	 */
-	public void configure(Properties properties) throws HibernateException;
+	void configure(Properties properties) throws HibernateException;
 }

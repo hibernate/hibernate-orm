@@ -61,7 +61,6 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 	 *
 	 * @param event The merge event to be handled.
 	 *
-	 * @throws HibernateException
 	 */
 	public void onMerge(MergeEvent event) throws HibernateException {
 		final EntityCopyObserver entityCopyObserver = createEntityCopyObserver( event.getSession().getFactory() );
@@ -87,7 +86,6 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 	 *
 	 * @param event The merge event to be handled.
 	 *
-	 * @throws HibernateException
 	 */
 	public void onMerge(MergeEvent event, Map copiedAlready) throws HibernateException {
 

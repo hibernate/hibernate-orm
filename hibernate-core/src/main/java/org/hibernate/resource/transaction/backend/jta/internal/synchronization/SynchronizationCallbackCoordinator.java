@@ -17,11 +17,11 @@ public interface SynchronizationCallbackCoordinator extends Synchronization {
 	/**
 	 * Called by the TransactionCoordinator when it registers the Synchronization with the JTA system
 	 */
-	public void synchronizationRegistered();
+	void synchronizationRegistered();
 
 	/**
 	 * Called by the TransactionCoordinator to allow the SynchronizationCallbackCoordinator to process any
 	 * after-completion handling that it may have delayed due to thread affinity
 	 */
-	public void processAnyDelayedAfterCompletion();
+	void processAnyDelayedAfterCompletion();
 }

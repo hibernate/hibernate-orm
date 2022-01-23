@@ -16,12 +16,12 @@ public interface CollectionIndexDefinition {
 	 * Returns the collection definition.
 	 * @return  the collection definition.
 	 */
-	public CollectionDefinition getCollectionDefinition();
+	CollectionDefinition getCollectionDefinition();
 	/**
 	 * Returns the collection index type.
 	 * @return the collection index type
 	 */
-	public Type getType();
+	Type getType();
 	/**
 	 * If the index type returned by {@link #getType()} is an
 	 * {@link org.hibernate.type.EntityType}, then the entity
@@ -34,7 +34,7 @@ public interface CollectionIndexDefinition {
 	 * returned by {@link #getType()} is not of type
 	 * {@link org.hibernate.type.EntityType}.
 	 */
-	public EntityDefinition toEntityDefinition();
+	EntityDefinition toEntityDefinition();
 	/**
 	 * If the index type returned by {@link #getType()} is a
 	 * {@link org.hibernate.type.CompositeType}, then the composite
@@ -47,7 +47,7 @@ public interface CollectionIndexDefinition {
 	 * returned by {@link #getType()} is not of type
 	 * {@link org.hibernate.type.CompositeType}.
 	 */
-	public CompositionDefinition toCompositeDefinition();
+	CompositionDefinition toCompositeDefinition();
 
 	/**
 	 * If the index type returned by {@link #getType()} is an
@@ -61,5 +61,5 @@ public interface CollectionIndexDefinition {
 	 * returned by {@link #getType()} is not of type
 	 * {@link org.hibernate.type.AnyType}.
 	 */
-	public AnyMappingDefinition toAnyMappingDefinition();
+	AnyMappingDefinition toAnyMappingDefinition();
 }

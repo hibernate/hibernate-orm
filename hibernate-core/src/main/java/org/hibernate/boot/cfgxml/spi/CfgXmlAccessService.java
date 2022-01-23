@@ -14,7 +14,7 @@ import org.hibernate.service.Service;
  * @author Steve Ebersole
  */
 public interface CfgXmlAccessService extends Service {
-	public static final String LOADED_CONFIG_KEY = "hibernate.boot.CfgXmlAccessService.key";
+	String LOADED_CONFIG_KEY = "hibernate.boot.CfgXmlAccessService.key";
 
 	LoadedConfig getAggregatedConfig();
 }

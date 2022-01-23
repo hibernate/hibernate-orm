@@ -19,13 +19,13 @@ public interface CollectionElementDefinition {
 	 * Returns the collection definition.
 	 * @return  the collection definition.
 	 */
-	public CollectionDefinition getCollectionDefinition();
+	CollectionDefinition getCollectionDefinition();
 
 	/**
 	 * Returns the collection element type.
 	 * @return the collection element type
 	 */
-	public Type getType();
+	Type getType();
 
 	/**
 	 * If the element type returned by {@link #getType()} is an
@@ -39,7 +39,7 @@ public interface CollectionElementDefinition {
 	 * returned by {@link #getType()} is not of type
 	 * {@link org.hibernate.type.AnyType}.
 	 */
-	public AnyMappingDefinition toAnyMappingDefinition();
+	AnyMappingDefinition toAnyMappingDefinition();
 
 	/**
 	 * If the element type returned by {@link #getType()} is an
@@ -53,7 +53,7 @@ public interface CollectionElementDefinition {
 	 * returned by {@link #getType()} is not of type
 	 * {@link org.hibernate.type.EntityType}.
 	 */
-	public EntityDefinition toEntityDefinition();
+	EntityDefinition toEntityDefinition();
 
 	/**
 	 * If the element type returned by {@link #getType()} is a
@@ -67,5 +67,5 @@ public interface CollectionElementDefinition {
 	 * returned by {@link #getType()} is not of type
 	 * {@link org.hibernate.type.CompositeType}.
 	 */
-	public CompositeCollectionElementDefinition toCompositeElementDefinition();
+	CompositeCollectionElementDefinition toCompositeElementDefinition();
 }

@@ -277,7 +277,6 @@ public final class LobStreamDataHelper {
 	 *
 	 * @return The appropriate buffer size ({@link Clob#length()} by default.
 	 *
-	 * @throws SQLException
 	 */
 	private static long determineLengthForBufferSizing(Clob value) throws SQLException {
 		try {

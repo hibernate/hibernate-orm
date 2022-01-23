@@ -404,7 +404,6 @@ public final class CollectionEntry implements Serializable {
 	 * Session/PersistenceContext for increased performance.
 	 *
 	 * @param oos The stream to which we should write the serial data.
-	 * @throws IOException
 	 */
 	public void serialize(ObjectOutputStream oos) throws IOException {
 		oos.writeObject( role );
@@ -420,9 +419,6 @@ public final class CollectionEntry implements Serializable {
 	 * @param session The session being deserialized.
 	 *
 	 * @return The deserialized CollectionEntry
-	 *
-	 * @throws IOException
-	 * @throws ClassNotFoundException
 	 */
 	public static CollectionEntry deserialize(
 			ObjectInputStream ois,

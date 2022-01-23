@@ -593,7 +593,6 @@ public class ActionQueue {
 	 *
 	 * @param list The list of Executable elements to be performed
 	 *
-	 * @throws HibernateException
 	 */
 	private <E extends Executable & Comparable<?> & Serializable> void executeActions(ExecutableList<E> list) throws HibernateException {
 		// todo : consider ways to improve the double iteration of Executables here:

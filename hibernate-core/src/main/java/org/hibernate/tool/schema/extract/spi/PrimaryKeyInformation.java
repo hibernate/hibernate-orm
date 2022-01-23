@@ -19,12 +19,12 @@ public interface PrimaryKeyInformation {
 	 *
 	 * @return The PK identifier.
 	 */
-	public Identifier getPrimaryKeyIdentifier();
+	Identifier getPrimaryKeyIdentifier();
 
 	/**
 	 * Obtain the columns making up the primary key.  Returned in sequential order.
 	 *
 	 * @return The columns
 	 */
-	public Iterable<ColumnInformation> getColumns();
+	Iterable<ColumnInformation> getColumns();
 }

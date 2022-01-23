@@ -27,7 +27,6 @@ public class DefaultDirtyCheckEventListener extends AbstractFlushingEventListene
 	 * Handle the given dirty-check event.
 	 * 
 	 * @param event The dirty-check event to be handled.
-	 * @throws HibernateException
 	 */
 	public void onDirtyCheck(DirtyCheckEvent event) throws HibernateException {
 		final ActionQueue actionQueue = event.getSession().getActionQueue();

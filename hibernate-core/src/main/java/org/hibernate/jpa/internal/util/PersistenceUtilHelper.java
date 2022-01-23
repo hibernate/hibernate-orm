@@ -234,8 +234,8 @@ public final class PersistenceUtilHelper {
 		}
 	}
 
-	public static interface AttributeAccess {
-		public Object extractValue(Object owner) throws AttributeExtractionException;
+	public interface AttributeAccess {
+		Object extractValue(Object owner) throws AttributeExtractionException;
 	}
 
 	public static class FieldAttributeAccess implements AttributeAccess {

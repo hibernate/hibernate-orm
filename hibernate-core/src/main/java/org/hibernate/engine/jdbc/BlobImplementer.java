@@ -19,5 +19,5 @@ public interface BlobImplementer {
 	 *
 	 * @return Access to the underlying data.
 	 */
-	public BinaryStream getUnderlyingStream() throws SQLException;
+	BinaryStream getUnderlyingStream() throws SQLException;
 }

@@ -40,7 +40,7 @@ public interface Filter {
 	 * @param value The value to be applied.
 	 * @return This FilterImpl instance (for method chaining).
 	 */
-	public Filter setParameter(String name, Object value);
+	Filter setParameter(String name, Object value);
 
 	/**
 	 * Set the named parameter's value list for this filter.  Used
@@ -50,7 +50,7 @@ public interface Filter {
 	 * @param values The values to be expanded into an SQL IN list.
 	 * @return This FilterImpl instance (for method chaining).
 	 */
-	public Filter setParameterList(String name, Collection values);
+	Filter setParameterList(String name, Collection values);
 
 	/**
 	 * Set the named parameter's value list for this filter.  Used
@@ -60,7 +60,7 @@ public interface Filter {
 	 * @param values The values to be expanded into an SQL IN list.
 	 * @return This FilterImpl instance (for method chaining).
 	 */
-	public Filter setParameterList(String name, Object[] values);
+	Filter setParameterList(String name, Object[] values);
 
 	/**
 	 * Perform validation of the filter state.  This is used to verify the
@@ -68,5 +68,5 @@ public interface Filter {
 	 *
 	 * @throws HibernateException If the state is not currently valid.
 	 */
-	public void validate() throws HibernateException;
+	void validate() throws HibernateException;
 }

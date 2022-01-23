@@ -18,12 +18,12 @@ public interface MapsIdSource {
 	 * 
 	 * @return The corresponding id attribute name.
 	 */
-	public String getMappedIdAttributeName();
+	String getMappedIdAttributeName();
 
 	/**
 	 * The attribute source information
 	 * 
 	 * @return The association attribute information
 	 */
-	public SingularAttributeSourceToOne getAssociationAttributeSource();
+	SingularAttributeSourceToOne getAssociationAttributeSource();
 }

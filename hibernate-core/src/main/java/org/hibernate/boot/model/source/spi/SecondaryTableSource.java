@@ -20,7 +20,7 @@ public interface SecondaryTableSource extends ForeignKeyContributingSource {
 	 *
 	 * @return The joined table.
 	 */
-	public TableSpecificationSource getTableSource();
+	TableSpecificationSource getTableSource();
 
 	/**
 	 * Retrieves the columns defines as making up this secondary tables primary key.  Each entry should have
@@ -29,38 +29,38 @@ public interface SecondaryTableSource extends ForeignKeyContributingSource {
 	 *
 	 * @return The columns defining the primary key for this secondary table
 	 */
-	public List<ColumnSource> getPrimaryKeyColumnSources();
+	List<ColumnSource> getPrimaryKeyColumnSources();
 
-	public String getLogicalTableNameForContainedColumns();
+	String getLogicalTableNameForContainedColumns();
 
-	public String getComment();
+	String getComment();
 
-	public FetchStyle getFetchStyle();
+	FetchStyle getFetchStyle();
 
-	public boolean isInverse();
+	boolean isInverse();
 
-	public boolean isOptional();
+	boolean isOptional();
 
-	public boolean isCascadeDeleteEnabled();
+	boolean isCascadeDeleteEnabled();
 
 	/**
 	 * Obtain the custom SQL to be used for inserts for this entity
 	 *
 	 * @return The custom insert SQL
 	 */
-	public CustomSql getCustomSqlInsert();
+	CustomSql getCustomSqlInsert();
 
 	/**
 	 * Obtain the custom SQL to be used for updates for this entity
 	 *
 	 * @return The custom update SQL
 	 */
-	public CustomSql getCustomSqlUpdate();
+	CustomSql getCustomSqlUpdate();
 
 	/**
 	 * Obtain the custom SQL to be used for deletes for this entity
 	 *
 	 * @return The custom delete SQL
 	 */
-	public CustomSql getCustomSqlDelete();
+	CustomSql getCustomSqlDelete();
 }

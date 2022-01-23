@@ -25,14 +25,14 @@ package org.hibernate.boot.model.source.spi;
  * @author Steve Ebersole
  */
 public interface PluralAttributeMapKeySource extends PluralAttributeIndexSource {
-	public static enum Nature {
+	enum Nature {
 		BASIC,
 		EMBEDDED,
 		MANY_TO_MANY,
 		ANY
 	}
 
-	public Nature getMapKeyNature();
+	Nature getMapKeyNature();
 
 	/**
 	 * Is this plural attribute index source for an attribute of the referenced entity
@@ -44,5 +44,5 @@ public interface PluralAttributeMapKeySource extends PluralAttributeIndexSource 
 	 * @return true, if this plural attribute index source for an attribute of the referenced
 	 * entity; false, otherwise.
 	 */
-	public boolean isReferencedEntityAttribute();
+	boolean isReferencedEntityAttribute();
 }

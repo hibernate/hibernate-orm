@@ -17,5 +17,5 @@ public interface ImplicitEntityNameSource extends ImplicitNameSource {
 	 *
 	 * @return The entity's name information
 	 */
-	public EntityNaming getEntityNaming();
+	EntityNaming getEntityNaming();
 }

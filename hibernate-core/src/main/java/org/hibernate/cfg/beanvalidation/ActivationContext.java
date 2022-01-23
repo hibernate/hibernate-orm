@@ -28,26 +28,26 @@ public interface ActivationContext {
 	 *
 	 * @return The requested validation modes
 	 */
-	public Set<ValidationMode> getValidationModes();
+	Set<ValidationMode> getValidationModes();
 
 	/**
 	 * Access the mapping metadata
 	 *
 	 * @return The mapping metadata
 	 */
-	public Metadata getMetadata();
+	Metadata getMetadata();
 
 	/**
 	 * Access the SessionFactory being built to trigger this BV activation
 	 *
 	 * @return The SessionFactory being built
 	 */
-	public SessionFactoryImplementor getSessionFactory();
+	SessionFactoryImplementor getSessionFactory();
 
 	/**
 	 * Access the ServiceRegistry specific to the SessionFactory being built.
 	 *
 	 * @return The SessionFactoryServiceRegistry
 	 */
-	public SessionFactoryServiceRegistry getServiceRegistry();
+	SessionFactoryServiceRegistry getServiceRegistry();
 }

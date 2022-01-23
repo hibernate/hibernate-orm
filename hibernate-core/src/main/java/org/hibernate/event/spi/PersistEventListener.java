@@ -17,20 +17,18 @@ import org.hibernate.HibernateException;
  */
 public interface PersistEventListener {
 
-    /** 
-     * Handle the given create event.
-     *
-     * @param event The create event to be handled.
-     * @throws HibernateException
-     */
-	public void onPersist(PersistEvent event) throws HibernateException;
+	/** 
+	 * Handle the given create event.
+	 *
+	 * @param event The create event to be handled.
+	 */
+	void onPersist(PersistEvent event) throws HibernateException;
 
-    /** 
-     * Handle the given create event.
-     *
-     * @param event The create event to be handled.
-     * @throws HibernateException
-     */
-	public void onPersist(PersistEvent event, Map createdAlready) throws HibernateException;
+	/** 
+	 * Handle the given create event.
+	 *
+	 * @param event The create event to be handled.
+	 */
+	void onPersist(PersistEvent event, Map createdAlready) throws HibernateException;
 
 }

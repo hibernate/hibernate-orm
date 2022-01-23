@@ -130,8 +130,6 @@ public class Identifier implements Comparable<Identifier> {
 	 * That final form using double-quote (") is the JPA-defined quoting pattern.  Although
 	 * it is the standard, it makes for ugly declarations.
 	 *
-	 * @param name
-	 *
 	 * @return {@code true} if the given identifier text is considered quoted; {@code false} otherwise.
 	 */
 	public static boolean isQuoted(String name) {

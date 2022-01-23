@@ -12,5 +12,5 @@ package org.hibernate.event.spi;
  * @author Gail Badner
  */
 public interface PostCollectionRemoveEventListener {
-	public void onPostRemoveCollection(PostCollectionRemoveEvent event);
+	void onPostRemoveCollection(PostCollectionRemoveEvent event);
 }

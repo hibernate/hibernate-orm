@@ -36,7 +36,7 @@ public interface ResultSetReturn {
 	 *
 	 * @return The extracted ResultSet
 	 */
-	public ResultSet extract(PreparedStatement statement);
+	ResultSet extract(PreparedStatement statement);
 	
 	/**
 	 * Extract the ResultSet from the CallableStatement.  Note that this is the limited legacy form which delegates to
@@ -47,7 +47,7 @@ public interface ResultSetReturn {
 	 *
 	 * @return The extracted ResultSet
 	 */
-	public ResultSet extract(CallableStatement callableStatement);
+	ResultSet extract(CallableStatement callableStatement);
 	
 	/**
 	 * Performs the given SQL statement, expecting a ResultSet in return
@@ -57,7 +57,7 @@ public interface ResultSetReturn {
 	 *
 	 * @return The resulting ResultSet
 	 */
-	public ResultSet extract(Statement statement, String sql);
+	ResultSet extract(Statement statement, String sql);
 	
 	/**
 	 * Execute the PreparedStatement return its first ResultSet, if any.  If there is no ResultSet, returns {@code null}
@@ -66,7 +66,7 @@ public interface ResultSetReturn {
 	 *
 	 * @return The extracted ResultSet, or {@code null}
 	 */
-	public ResultSet execute(PreparedStatement statement);
+	ResultSet execute(PreparedStatement statement);
 	
 	/**
 	 * Performs the given SQL statement, returning its first ResultSet, if any.  If there is no ResultSet,
@@ -77,7 +77,7 @@ public interface ResultSetReturn {
 	 *
 	 * @return The extracted ResultSet, or {@code null}
 	 */
-	public ResultSet execute(Statement statement, String sql);
+	ResultSet execute(Statement statement, String sql);
 	
 	/**
 	 * Execute the PreparedStatement, returning its "affected row count".
@@ -86,7 +86,7 @@ public interface ResultSetReturn {
 	 *
 	 * @return The {@link PreparedStatement#executeUpdate()} result
 	 */
-	public int executeUpdate(PreparedStatement statement);
+	int executeUpdate(PreparedStatement statement);
 	
 	/**
 	 * Execute the given SQL statement returning its "affected row count".
@@ -96,5 +96,5 @@ public interface ResultSetReturn {
 	 *
 	 * @return The {@link PreparedStatement#executeUpdate(String)} result
 	 */
-	public int executeUpdate(Statement statement, String sql);
+	int executeUpdate(Statement statement, String sql);
 }

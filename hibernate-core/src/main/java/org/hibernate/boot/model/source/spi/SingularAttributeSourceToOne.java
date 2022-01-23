@@ -20,14 +20,14 @@ public interface SingularAttributeSourceToOne
 			AssociationSource,
 			CascadeStyleSource{
 
-	public String getReferencedEntityAttributeName();
-	public String getReferencedEntityName();
-	public ForeignKeyDirection getForeignKeyDirection();
+	String getReferencedEntityAttributeName();
+	String getReferencedEntityName();
+	ForeignKeyDirection getForeignKeyDirection();
 
 	@Override
 	FetchCharacteristicsSingularAssociation getFetchCharacteristics();
 
-	public boolean isUnique();
+	boolean isUnique();
 
-	public Boolean isEmbedXml();
+	Boolean isEmbedXml();
 }

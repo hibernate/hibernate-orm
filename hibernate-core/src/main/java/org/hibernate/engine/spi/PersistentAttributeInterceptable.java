@@ -10,6 +10,6 @@ package org.hibernate.engine.spi;
  * @author Steve Ebersole
  */
 public interface PersistentAttributeInterceptable {
-	public PersistentAttributeInterceptor $$_hibernate_getInterceptor();
-	public void $$_hibernate_setInterceptor(PersistentAttributeInterceptor interceptor);
+	PersistentAttributeInterceptor $$_hibernate_getInterceptor();
+	void $$_hibernate_setInterceptor(PersistentAttributeInterceptor interceptor);
 }

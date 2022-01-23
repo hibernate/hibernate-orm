@@ -19,12 +19,12 @@ interface ConnectionCreator {
 	 *
 	 * @return The connection URL.
 	 */
-	public String getUrl();
+	String getUrl();
 
 	/**
 	 * Create a Connection
 	 *
 	 * @return The created Connection
 	 */
-	public Connection createConnection();
+	Connection createConnection();
 }

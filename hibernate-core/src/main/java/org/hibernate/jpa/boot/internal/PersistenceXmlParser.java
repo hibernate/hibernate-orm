@@ -498,7 +498,6 @@ public class PersistenceXmlParser {
 
 	/**
 	 * Validate the document using the
-	 * @param document
 	 */
 	private void validate(Document document) {
 		// todo : add ability to disable validation...

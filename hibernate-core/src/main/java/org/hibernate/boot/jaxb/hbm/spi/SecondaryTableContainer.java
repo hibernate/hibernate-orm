@@ -14,5 +14,5 @@ import java.util.List;
  * @author Steve Ebersole
  */
 public interface SecondaryTableContainer {
-	public List<JaxbHbmSecondaryTableType> getJoin();
+	List<JaxbHbmSecondaryTableType> getJoin();
 }

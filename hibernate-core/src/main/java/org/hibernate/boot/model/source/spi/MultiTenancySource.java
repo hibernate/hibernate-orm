@@ -17,9 +17,9 @@ public interface MultiTenancySource {
 	 *
 	 * @return The column/formula information
 	 */
-	public RelationalValueSource getRelationalValueSource();
+	RelationalValueSource getRelationalValueSource();
 
-	public boolean isShared();
+	boolean isShared();
 
-	public boolean bindAsParameter();
+	boolean bindAsParameter();
 }

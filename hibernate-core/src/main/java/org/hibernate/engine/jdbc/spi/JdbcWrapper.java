@@ -20,5 +20,5 @@ public interface JdbcWrapper<T> {
 	 *
 	 * @return The wrapped object
 	 */
-	public T getWrappedObject();
+	T getWrappedObject();
 }

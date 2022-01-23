@@ -21,7 +21,7 @@ public class ValueHolder<T> {
 	 *
 	 * @param <T>
 	 */
-	public static interface DeferredInitializer<T> {
+	public interface DeferredInitializer<T> {
 		/**
 		 * Build the initialization value.
 		 * <p/>
@@ -29,7 +29,7 @@ public class ValueHolder<T> {
 		 *
 		 * @return The initialization value.
 		 */
-		public T initialize();
+		T initialize();
 	}
 
 	private final DeferredInitializer<T> valueInitializer;

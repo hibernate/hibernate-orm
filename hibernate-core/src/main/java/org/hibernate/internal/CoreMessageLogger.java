@@ -1029,8 +1029,6 @@ public interface CoreMessageLogger extends BasicLogger {
 
 	/**
 	 * @deprecated see {@link org.hibernate.query.QueryLogging#unableToDetermineLockModeValue}
-	 * @param hintName
-	 * @param value
 	 */
 	@LogMessage(level = INFO)
 	@Message(value = "Unable to determine lock mode value : %s -> %s", id = 311)

@@ -17,5 +17,5 @@ public interface IntegratorService extends Service {
 	 *
 	 * @return All integrators.
 	 */
-	public Iterable<Integrator> getIntegrators();
+	Iterable<Integrator> getIntegrators();
 }

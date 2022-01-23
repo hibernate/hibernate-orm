@@ -31,7 +31,6 @@ public class RecoverableException extends AnnotationException {
 	/**
 	 * Constructs a RecoverableException using the given message and underlying cause.
 	 *
-	 * @param msg
 	 */
 	public RecoverableException(String msg) {
 		super( msg );

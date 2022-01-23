@@ -17,5 +17,5 @@ public interface ClobImplementer {
 	 *
 	 * @return Access to the underlying data.
 	 */
-	public CharacterStream getUnderlyingStream();
+	CharacterStream getUnderlyingStream();
 }

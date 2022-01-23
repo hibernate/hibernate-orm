@@ -15,11 +15,10 @@ import org.hibernate.HibernateException;
  */
 public interface DirtyCheckEventListener {
 
-    /** Handle the given dirty-check event.
-     *
-     * @param event The dirty-check event to be handled.
-     * @throws HibernateException
-     */
-	public void onDirtyCheck(DirtyCheckEvent event) throws HibernateException;
+	/** Handle the given dirty-check event.
+	 *
+	 * @param event The dirty-check event to be handled.
+	 */
+	void onDirtyCheck(DirtyCheckEvent event) throws HibernateException;
 
 }

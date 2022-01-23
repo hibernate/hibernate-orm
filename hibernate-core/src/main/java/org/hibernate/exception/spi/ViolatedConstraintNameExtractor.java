@@ -22,5 +22,5 @@ public interface ViolatedConstraintNameExtractor {
 	 * @param sqle The exception that was the result of the constraint violation.
 	 * @return The extracted constraint name.
 	 */
-	public String extractConstraintName(SQLException sqle);
+	String extractConstraintName(SQLException sqle);
 }

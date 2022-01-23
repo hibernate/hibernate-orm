@@ -16,5 +16,5 @@ import org.hibernate.boot.registry.selector.StrategyRegistrationProvider;
  * TODO: Not a fan of this name or entry point into EMFBuilderImpl
  */
 public interface StrategyRegistrationProviderList {
-	public List<StrategyRegistrationProvider> getStrategyRegistrationProviders();
+	List<StrategyRegistrationProvider> getStrategyRegistrationProviders();
 }

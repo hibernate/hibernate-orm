@@ -14,27 +14,27 @@ import org.hibernate.persister.walking.spi.AttributeDefinition;
  * @author Steve Ebersole
  */
 public interface NonIdentifierAttribute extends Attribute, AttributeDefinition {
-	public boolean isLazy();
+	boolean isLazy();
 
-	public boolean isInsertable();
+	boolean isInsertable();
 
-	public boolean isUpdateable();
+	boolean isUpdateable();
 
-	public ValueGeneration getValueGenerationStrategy();
+	ValueGeneration getValueGenerationStrategy();
 
-	public boolean isNullable();
+	boolean isNullable();
 
 	/**
 	 * @deprecated Use {@link NonIdentifierAttribute#isDirtyCheckable()} instead
 	 */
 	@Deprecated
-	public boolean isDirtyCheckable(boolean hasUninitializedProperties);
+	boolean isDirtyCheckable(boolean hasUninitializedProperties);
 
-	public boolean isDirtyCheckable();
+	boolean isDirtyCheckable();
 
-	public boolean isVersionable();
+	boolean isVersionable();
 
-	public CascadeStyle getCascadeStyle();
+	CascadeStyle getCascadeStyle();
 
-	public FetchMode getFetchMode();
+	FetchMode getFetchMode();
 }

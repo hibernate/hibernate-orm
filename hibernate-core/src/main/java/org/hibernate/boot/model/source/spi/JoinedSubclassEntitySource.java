@@ -18,5 +18,5 @@ public interface JoinedSubclassEntitySource extends SubclassEntitySource, Foreig
 	 *
 	 * @return The {@code PrimaryKeyJoinColumnSource} lists defined on the joined subclass or {@code null} otherwise.
 	 */
-	public List<ColumnSource> getPrimaryKeyColumnSources();
+	List<ColumnSource> getPrimaryKeyColumnSources();
 }

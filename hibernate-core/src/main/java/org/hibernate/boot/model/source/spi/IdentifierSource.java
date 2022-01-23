@@ -20,7 +20,7 @@ public interface IdentifierSource extends ToolingHintContextContainer {
 	 *
 	 * @return The identifier source's nature.
 	 */
-	public EntityIdentifierNature getNature();
+	EntityIdentifierNature getNature();
 
 	/**
 	 * Obtain the identifier generator source.

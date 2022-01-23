@@ -25,12 +25,12 @@ public @interface InjectService {
 	 *
 	 * @return The service role.
 	 */
-	public Class serviceRole() default Void.class;
+	Class serviceRole() default Void.class;
 
 	/**
 	 * Is the service to be injected required (not optional)?
 	 *
 	 * @return True if the service is required.
 	 */
-	public boolean required() default true;
+	boolean required() default true;
 }

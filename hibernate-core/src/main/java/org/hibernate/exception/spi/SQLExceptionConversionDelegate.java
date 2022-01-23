@@ -27,6 +27,6 @@ public interface SQLExceptionConversionDelegate {
 	 *
 	 * @return The resulting JDBCException, can be {@code null}
 	 */
-	public JDBCException convert(SQLException sqlException, String message, String sql);
+	JDBCException convert(SQLException sqlException, String message, String sql);
 
 }

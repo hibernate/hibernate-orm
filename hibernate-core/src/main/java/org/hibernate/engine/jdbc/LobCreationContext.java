@@ -17,7 +17,7 @@ public interface LobCreationContext {
 	/**
 	 * The callback contract for making use of the JDBC {@link Connection}.
 	 */
-	public static interface Callback<T> {
+	interface Callback<T> {
 		/**
 		 * Perform whatever actions are necessary using the provided JDBC {@link Connection}.
 		 *
@@ -27,7 +27,7 @@ public interface LobCreationContext {
 		 *
 		 * @throws SQLException Indicates trouble accessing the JDBC driver to create the LOB
 		 */
-		public T executeOnConnection(Connection connection) throws SQLException;
+		T executeOnConnection(Connection connection) throws SQLException;
 	}
 
 	/**
@@ -39,5 +39,5 @@ public interface LobCreationContext {
 	 *
 	 * @return The LOB created by the callback.
 	 */
-	public <T> T execute(Callback<T> callback);
+	<T> T execute(Callback<T> callback);
 }

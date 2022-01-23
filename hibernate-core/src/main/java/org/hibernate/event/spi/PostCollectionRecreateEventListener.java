@@ -12,5 +12,5 @@ package org.hibernate.event.spi;
  * @author Gail Badner
  */
 public interface PostCollectionRecreateEventListener {
-	public void onPostRecreateCollection(PostCollectionRecreateEvent event);
+	void onPostRecreateCollection(PostCollectionRecreateEvent event);
 }

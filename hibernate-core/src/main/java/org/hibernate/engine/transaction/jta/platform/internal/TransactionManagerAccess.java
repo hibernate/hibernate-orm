@@ -21,5 +21,5 @@ public interface TransactionManagerAccess extends Serializable {
 	 *
 	 * @return The transaction manager.
 	 */
-	public TransactionManager getTransactionManager();
+	TransactionManager getTransactionManager();
 }

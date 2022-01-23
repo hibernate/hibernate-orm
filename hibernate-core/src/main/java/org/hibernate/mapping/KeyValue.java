@@ -23,7 +23,7 @@ public interface KeyValue extends Value {
 	 * instead.
 	 */
 	@Deprecated
-	public IdentifierGenerator createIdentifierGenerator(
+	IdentifierGenerator createIdentifierGenerator(
 			IdentifierGeneratorFactory identifierGeneratorFactory,
 			Dialect dialect,
 			String defaultCatalog,
@@ -35,13 +35,13 @@ public interface KeyValue extends Value {
 			Dialect dialect,
 			RootClass rootClass) throws MappingException;
 
-	public boolean isIdentityColumn(IdentifierGeneratorFactory identifierGeneratorFactory, Dialect dialect);
+	boolean isIdentityColumn(IdentifierGeneratorFactory identifierGeneratorFactory, Dialect dialect);
 	
-	public void createForeignKeyOfEntity(String entityName);
+	void createForeignKeyOfEntity(String entityName);
 	
-	public boolean isCascadeDeleteEnabled();
+	boolean isCascadeDeleteEnabled();
 	
-	public String getNullValue();
+	String getNullValue();
 	
-	public boolean isUpdateable();
+	boolean isUpdateable();
 }

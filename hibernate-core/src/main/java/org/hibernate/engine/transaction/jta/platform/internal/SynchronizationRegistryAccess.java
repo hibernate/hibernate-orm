@@ -21,5 +21,5 @@ public interface SynchronizationRegistryAccess extends Serializable {
 	 *
 	 * @return the synchronization registry
 	 */
-	public TransactionSynchronizationRegistry getSynchronizationRegistry();
+	TransactionSynchronizationRegistry getSynchronizationRegistry();
 }

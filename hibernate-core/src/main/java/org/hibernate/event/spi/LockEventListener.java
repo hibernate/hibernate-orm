@@ -15,10 +15,9 @@ import org.hibernate.HibernateException;
  */
 public interface LockEventListener {
 
-    /** Handle the given lock event.
-     *
-     * @param event The lock event to be handled.
-     * @throws HibernateException
-     */
-	public void onLock(LockEvent event) throws HibernateException;
+	/** Handle the given lock event.
+	 *
+	 * @param event The lock event to be handled.
+	 */
+	void onLock(LockEvent event) throws HibernateException;
 }

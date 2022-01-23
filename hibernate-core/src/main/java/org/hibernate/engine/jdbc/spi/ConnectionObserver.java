@@ -18,20 +18,20 @@ public interface ConnectionObserver {
 	 *
 	 * @param connection The physical connection just obtained.
 	 */
-	public void physicalConnectionObtained(Connection connection);
+	void physicalConnectionObtained(Connection connection);
 
 	/**
 	 * A physical connection was released.
 	 */
-	public void physicalConnectionReleased();
+	void physicalConnectionReleased();
 
 	/**
 	 * The logical connection was closed.
 	 */
-	public void logicalConnectionClosed();
+	void logicalConnectionClosed();
 
 	/**
 	 * Notification of a statement being prepared
 	 */
-	public void statementPrepared();
+	void statementPrepared();
 }

@@ -22,12 +22,12 @@ public interface IdentifierSourceNonAggregatedComposite extends CompositeIdentif
 	 *
 	 * @return The identifier attribute source.
 	 */
-	public List<SingularAttributeSource> getAttributeSourcesMakingUpIdentifier();
+	List<SingularAttributeSource> getAttributeSourcesMakingUpIdentifier();
 
 	/**
 	 * Retrieve the source information for the {@link jakarta.persistence.IdClass} definition
 	 *
 	 * @return The IdClass source information, or {@code null} if none.
 	 */
-	public EmbeddableSource getIdClassSource();
+	EmbeddableSource getIdClassSource();
 }

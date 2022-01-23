@@ -16,14 +16,14 @@ import org.hibernate.boot.model.source.internal.hbm.XmlElementMetadata;
  * @author Steve Ebersole
  */
 public interface AttributeSource extends ToolingHintContextContainer {
-	public XmlElementMetadata getSourceType();
+	XmlElementMetadata getSourceType();
 
 	/**
 	 * Obtain the attribute name.
 	 *
 	 * @return The attribute name. {@code null} is NOT allowed!
 	 */
-	public String getName();
+	String getName();
 
 	/**
 	 * Attributes are (coarsely speaking) either singular or plural.
@@ -32,7 +32,7 @@ public interface AttributeSource extends ToolingHintContextContainer {
 	 * to {@link SingularAttributeSource}); {@code false} indicates it is plural (and
 	 * therefore castable to {@link PluralAttributeSource}).
 	 */
-	public boolean isSingular();
+	boolean isSingular();
 
 	/**
 	 * This is only useful to log warnings when these deprecated attributes are populated.
@@ -40,17 +40,17 @@ public interface AttributeSource extends ToolingHintContextContainer {
 	 *
 	 * @return The xml node name
 	 */
-	public String getXmlNodeName();
+	String getXmlNodeName();
 
-	public AttributePath getAttributePath();
-	public AttributeRole getAttributeRole();
+	AttributePath getAttributePath();
+	AttributeRole getAttributeRole();
 
 	/**
 	 * Obtain information about the Hibernate type ({@link org.hibernate.type.Type}) for this attribute.
 	 *
 	 * @return The Hibernate type information
 	 */
-	public HibernateTypeSource getTypeInformation();
+	HibernateTypeSource getTypeInformation();
 
 	/**
 	 * Obtain the name of the property accessor style used to access this attribute.
@@ -59,7 +59,7 @@ public interface AttributeSource extends ToolingHintContextContainer {
 	 *
 	 * @see org.hibernate.property.access.spi.PropertyAccessStrategy
 	 */
-	public String getPropertyAccessorName();
+	String getPropertyAccessorName();
 
 	/**
 	 * If the containing entity is using optimistic locking, should this
@@ -69,5 +69,5 @@ public interface AttributeSource extends ToolingHintContextContainer {
 	 *
 	 * @return {@code true} indicates it should be included; {@code false}, it should not.
 	 */
-	public boolean isIncludedInOptimisticLocking();
+	boolean isIncludedInOptimisticLocking();
 }

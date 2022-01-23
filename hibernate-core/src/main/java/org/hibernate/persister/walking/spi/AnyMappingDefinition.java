@@ -20,21 +20,21 @@ public interface AnyMappingDefinition {
 	 *
 	 * @return The AnyType
 	 */
-	public AnyType getType();
+	AnyType getType();
 
 	/**
 	 * Was the mapping defined as lazy?
 	 *
 	 * @return true/false
 	 */
-	public boolean isLazy();
+	boolean isLazy();
 
 	/**
 	 * Access to the type of the value that makes up the identifier portion of the AnyType.
 	 *
 	 * @return The identifier type
 	 */
-	public Type getIdentifierType();
+	Type getIdentifierType();
 
 	/**
 	 * Access to the type of the value that makes up the discriminator portion of the AnyType.  The discriminator is
@@ -44,7 +44,7 @@ public interface AnyMappingDefinition {
 	 *
 	 * @return The discriminator type
 	 */
-	public Type getDiscriminatorType();
+	Type getDiscriminatorType();
 
 	/**
 	 * Access to discriminator mappings explicitly defined in the mapping metadata.
@@ -64,24 +64,24 @@ public interface AnyMappingDefinition {
 	 *
 	 * @return The explicitly defined discriminator value mappings.
 	 */
-	public Iterable<DiscriminatorMapping> getMappingDefinedDiscriminatorMappings();
+	Iterable<DiscriminatorMapping> getMappingDefinedDiscriminatorMappings();
 
 	/**
 	 * Models a single discriminator mapping definition
 	 */
-	public static interface DiscriminatorMapping {
+	interface DiscriminatorMapping {
 		/**
 		 * Access to the defined discriminator value (the database value) being mapped.
 		 *
 		 * @return The defined discriminator value
 		 */
-		public Object getDiscriminatorValue();
+		Object getDiscriminatorValue();
 
 		/**
 		 * Access to the defined entity name corresponding to the defined {@link #getDiscriminatorValue()}
 		 *
 		 * @return The defined entity name
 		 */
-		public String getEntityName();
+		String getEntityName();
 	}
 }

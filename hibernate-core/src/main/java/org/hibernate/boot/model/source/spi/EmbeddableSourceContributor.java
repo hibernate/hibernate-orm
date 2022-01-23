@@ -17,5 +17,5 @@ public interface EmbeddableSourceContributor {
 	 *
 	 * @return The EmbeddableSource
 	 */
-	public EmbeddableSource getEmbeddableSource();
+	EmbeddableSource getEmbeddableSource();
 }

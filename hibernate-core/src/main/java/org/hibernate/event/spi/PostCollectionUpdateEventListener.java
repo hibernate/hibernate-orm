@@ -12,5 +12,5 @@ package org.hibernate.event.spi;
  * @author Gail Badner
  */
 public interface PostCollectionUpdateEventListener {
-	public void onPostUpdateCollection(PostCollectionUpdateEvent event);
+	void onPostUpdateCollection(PostCollectionUpdateEvent event);
 }

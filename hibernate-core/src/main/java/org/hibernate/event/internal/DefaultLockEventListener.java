@@ -41,7 +41,6 @@ public class DefaultLockEventListener extends AbstractLockUpgradeEventListener i
 	 * Handle the given lock event.
 	 *
 	 * @param event The lock event to be handled.
-	 * @throws HibernateException
 	 */
 	public void onLock(LockEvent event) throws HibernateException {
 

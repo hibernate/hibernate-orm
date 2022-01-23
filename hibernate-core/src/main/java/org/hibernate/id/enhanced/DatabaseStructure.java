@@ -112,7 +112,7 @@ public interface DatabaseStructure extends ExportableProducer {
 	 * @deprecated Exposed for tests only.
 	 */
 	@Deprecated
-	public default String[] getAllSqlForTests() {
+	default String[] getAllSqlForTests() {
 		return new String[] { };
 	}
 }

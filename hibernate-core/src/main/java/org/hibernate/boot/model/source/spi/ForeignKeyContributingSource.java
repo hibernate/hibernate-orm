@@ -17,14 +17,14 @@ public interface ForeignKeyContributingSource {
 	 *
 	 * @return The user supplied foreign key name.
 	 */
-	public String getExplicitForeignKeyName();
+	String getExplicitForeignKeyName();
 
 	/**
 	 * Primarily exists to support JPA's {@code @ForeignKey(NO_CONSTRAINT)}.
 	 *
 	 * @return {@code true} if the FK constraint should be created, {@code false} if not.
 	 */
-	public boolean createForeignKeyConstraint();
+	boolean createForeignKeyConstraint();
 
 	/**
 	 * Is "cascade delete" enabled for the foreign key? In other words, if a record in the parent (referenced)
@@ -32,5 +32,5 @@ public interface ForeignKeyContributingSource {
 	 *
 	 * @return {@code true}, if the cascade delete is enabled; {@code false}, otherwise.
 	 */
-	public boolean isCascadeDeleteEnabled();
+	boolean isCascadeDeleteEnabled();
 }

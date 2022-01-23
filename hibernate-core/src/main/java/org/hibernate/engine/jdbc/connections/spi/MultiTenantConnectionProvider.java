@@ -27,7 +27,7 @@ public interface MultiTenantConnectionProvider extends Service, Wrapped {
 	 *
 	 * @throws SQLException Indicates a problem opening a connection
 	 */
-	public Connection getAnyConnection() throws SQLException;
+	Connection getAnyConnection() throws SQLException;
 
 	/**
 	 * Release a connection obtained from {@link #getAnyConnection}
@@ -36,7 +36,7 @@ public interface MultiTenantConnectionProvider extends Service, Wrapped {
 	 *
 	 * @throws SQLException Indicates a problem closing the connection
 	 */
-	public void releaseAnyConnection(Connection connection) throws SQLException;
+	void releaseAnyConnection(Connection connection) throws SQLException;
 
 	/**
 	 * Obtains a connection for Hibernate use according to the underlying strategy of this provider.
@@ -48,7 +48,7 @@ public interface MultiTenantConnectionProvider extends Service, Wrapped {
 	 * @throws SQLException Indicates a problem opening a connection
 	 * @throws org.hibernate.HibernateException Indicates a problem otherwise obtaining a connection.
 	 */
-	public Connection getConnection(String tenantIdentifier) throws SQLException;
+	Connection getConnection(String tenantIdentifier) throws SQLException;
 
 	/**
 	 * Release a connection from Hibernate use.
@@ -59,7 +59,7 @@ public interface MultiTenantConnectionProvider extends Service, Wrapped {
 	 * @throws SQLException Indicates a problem closing the connection
 	 * @throws org.hibernate.HibernateException Indicates a problem otherwise releasing a connection.
 	 */
-	public void releaseConnection(String tenantIdentifier, Connection connection) throws SQLException;
+	void releaseConnection(String tenantIdentifier, Connection connection) throws SQLException;
 
 	/**
 	 * Does this connection provider support aggressive release of JDBC connections and later
@@ -77,5 +77,5 @@ public interface MultiTenantConnectionProvider extends Service, Wrapped {
 	 *
 	 * @return {@code true} if aggressive releasing is supported; {@code false} otherwise.
 	 */
-	public boolean supportsAggressiveRelease();
+	boolean supportsAggressiveRelease();
 }

@@ -278,7 +278,7 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 
 	/* ---------------- Inner Classes -------------- */
 
-	static interface KeyReference {
+	interface KeyReference {
 		int keyHash();
 
 		Object keyRef();

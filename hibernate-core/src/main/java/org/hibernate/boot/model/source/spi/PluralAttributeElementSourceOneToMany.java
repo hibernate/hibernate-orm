@@ -13,9 +13,9 @@ package org.hibernate.boot.model.source.spi;
  * @author Steve Ebersole
  */
 public interface PluralAttributeElementSourceOneToMany extends PluralAttributeElementSourceAssociation {
-	public String getReferencedEntityName();
+	String getReferencedEntityName();
 
-	public boolean isIgnoreNotFound();
+	boolean isIgnoreNotFound();
 
-	public String getXmlNodeName();
+	String getXmlNodeName();
 }

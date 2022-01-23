@@ -21,5 +21,5 @@ public interface SchemaNameResolver {
 	 *
 	 * @return The name of the schema (may be null).
 	 */
-	public String resolveSchemaName(Connection connection);
+	String resolveSchemaName(Connection connection);
 }

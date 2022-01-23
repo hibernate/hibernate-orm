@@ -20,5 +20,5 @@ public interface LocalMetadataBuildingContext extends MetadataBuildingContext {
 	 *
 	 * @return The origin
 	 */
-	public Origin getOrigin();
+	Origin getOrigin();
 }

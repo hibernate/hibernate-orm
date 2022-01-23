@@ -103,7 +103,6 @@ public abstract class AbstractSelectingDelegate implements InsertGeneratedIdenti
 	 * @param ps The prepared {@linkplain #getSelectSQL SQL} command
 	 * @param entity The entity being saved.
 	 *
-	 * @throws SQLException
 	 */
 	protected void bindParameters(
 			SharedSessionContractImplementor session,
@@ -120,7 +119,6 @@ public abstract class AbstractSelectingDelegate implements InsertGeneratedIdenti
 	 *
 	 * @return The generated identifier
 	 *
-	 * @throws SQLException
 	 */
 	protected abstract Object getResult(
 			SharedSessionContractImplementor session,

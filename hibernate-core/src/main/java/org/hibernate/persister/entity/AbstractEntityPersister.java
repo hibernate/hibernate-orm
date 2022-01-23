@@ -4424,7 +4424,6 @@ public abstract class AbstractEntityPersister
 	 *
 	 * @return {@code null} or the indices of the dirty properties
 	 *
-	 * @throws HibernateException
 	 */
 	public int[] findDirty(Object[] currentState, Object[] previousState, Object entity, SharedSessionContractImplementor session)
 			throws HibernateException {
@@ -4454,7 +4453,6 @@ public abstract class AbstractEntityPersister
 	 *
 	 * @return {@code null} or the indices of the modified properties
 	 *
-	 * @throws HibernateException
 	 */
 	public int[] findModified(Object[] old, Object[] current, Object entity, SharedSessionContractImplementor session)
 			throws HibernateException {

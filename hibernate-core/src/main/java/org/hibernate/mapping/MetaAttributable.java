@@ -14,10 +14,10 @@ package org.hibernate.mapping;
  */
 public interface MetaAttributable {
 
-	public java.util.Map getMetaAttributes();
+	java.util.Map getMetaAttributes();
 
-	public void setMetaAttributes(java.util.Map metas);
+	void setMetaAttributes(java.util.Map metas);
 		
-	public MetaAttribute getMetaAttribute(String name);
+	MetaAttribute getMetaAttribute(String name);
 
 }

@@ -23,5 +23,5 @@ public interface InitialValueAwareOptimizer {
 	 * @param initialValue The initial value specified by the user, or {@code -1} to indicate that the
 	 * user did not specify.
 	 */
-	public void injectInitialValue(long initialValue);
+	void injectInitialValue(long initialValue);
 }

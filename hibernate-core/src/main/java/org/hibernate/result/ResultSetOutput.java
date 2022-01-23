@@ -19,7 +19,7 @@ public interface ResultSetOutput extends Output {
 	 *
 	 * @return The consumed ResultSet values.
 	 */
-	public List getResultList();
+	List getResultList();
 
 	/**
 	 * Consume the underlying {@link java.sql.ResultSet} with the expectation that there is just a single level of
@@ -27,5 +27,5 @@ public interface ResultSetOutput extends Output {
 	 *
 	 * @return The single result.
 	 */
-	public Object getSingleResult();
+	Object getSingleResult();
 }

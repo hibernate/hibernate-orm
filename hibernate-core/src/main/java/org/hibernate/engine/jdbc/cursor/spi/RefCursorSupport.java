@@ -25,7 +25,7 @@ public interface RefCursorSupport extends Service {
 	 * @param statement The callable statement.
 	 * @param position The bind position at which to register the output param.
 	 */
-	public void registerRefCursorParameter(CallableStatement statement, int position);
+	void registerRefCursorParameter(CallableStatement statement, int position);
 
 	/**
 	 * Register a parameter capable of returning a {@link ResultSet} *by name*.
@@ -33,7 +33,7 @@ public interface RefCursorSupport extends Service {
 	 * @param statement The callable statement.
 	 * @param name The parameter name (for drivers which support named parameters).
 	 */
-	public void registerRefCursorParameter(CallableStatement statement, String name);
+	void registerRefCursorParameter(CallableStatement statement, String name);
 
 	/**
 	 * Given a callable statement previously processed by {@link #registerRefCursorParameter(CallableStatement, int)},
@@ -45,7 +45,7 @@ public interface RefCursorSupport extends Service {
 	 *
 	 * @return The extracted result set.
 	 */
-	public ResultSet getResultSet(CallableStatement statement, int position);
+	ResultSet getResultSet(CallableStatement statement, int position);
 
 	/**
 	 * Given a callable statement previously processed by {@link #registerRefCursorParameter(CallableStatement, String)},
@@ -56,5 +56,5 @@ public interface RefCursorSupport extends Service {
 	 *
 	 * @return The extracted result set.
 	 */
-	public ResultSet getResultSet(CallableStatement statement, String name);
+	ResultSet getResultSet(CallableStatement statement, String name);
 }

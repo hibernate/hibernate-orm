@@ -41,7 +41,7 @@ public class IndexManager {
 		this.classesDirectoryReferenceAccess = classesDirectoryReferenceAccess;
 		this.indexFileReferenceAccess = project.getLayout()
 				.getBuildDirectory()
-				.file( "post/" + project.getName() + ".idx" );
+				.file( "reports/orm/" + project.getName() + ".idx" );
 		this.project = project;
 	}
 

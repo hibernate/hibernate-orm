@@ -12,21 +12,26 @@ import java.lang.annotation.Target;
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.CONSTRUCTOR;
 import static java.lang.annotation.ElementType.FIELD;
-import static java.lang.annotation.ElementType.PACKAGE;
 import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.PACKAGE;
 import static java.lang.annotation.ElementType.TYPE;
-import static java.lang.annotation.RetentionPolicy.CLASS;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Marks (recursively) certain of Hibernate's packages, types and methods
- * as incubating.  Incubating indicates a type or method that is still being
- * actively developed and therefore may change at a later time.  Users of these
- * types and methods are considered early adopters who help shape the final
- * definition of these types/methods.
+ * Marks certain of packages, types, etc. as incubating, potentially
+ * recursively.  Incubating indicates something that is still being
+ * actively developed and therefore may change at a later time; a
+ * "tech preview".
+ * <p/>
+ * Users of these types and methods are considered early adopters who
+ * help shape the final definition of these types/methods, along with
+ * the needs of consumers.
+ *
+ * @implNote Defined with RUNTIME retention so tooling can see it
  *
  * @author Steve Ebersole
  */
 @Target({PACKAGE, TYPE, ANNOTATION_TYPE, METHOD, FIELD, CONSTRUCTOR})
-@Retention(CLASS)
+@Retention(RUNTIME)
 public @interface Incubating {
 }

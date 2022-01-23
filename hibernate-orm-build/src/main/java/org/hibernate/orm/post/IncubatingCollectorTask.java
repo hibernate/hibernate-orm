@@ -6,6 +6,12 @@
  */
 package org.hibernate.orm.post;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.util.Comparator;
 import java.util.List;
 import java.util.TreeSet;
 
@@ -38,7 +44,7 @@ public abstract class IncubatingCollectorTask extends DefaultTask {
 	@Inject
 	public IncubatingCollectorTask(IndexManager indexManager, Project project) {
 		this.indexManager = indexManager;
-		this.reportFileReferenceAccess = project.getLayout().getBuildDirectory().file( "post/" + project.getName() + "-incubating.txt" );
+		this.reportFileReferenceAccess = project.getLayout().getBuildDirectory().file( "reports/orm/" + project.getName() + "-incubating.txt" );
 	}
 
 	@InputFile
@@ -56,53 +62,133 @@ public abstract class IncubatingCollectorTask extends DefaultTask {
 		final Index index = indexManager.getIndex();
 
 		final List<AnnotationInstance> usages = index.getAnnotations( DotName.createSimple( INCUBATING_ANN_NAME ) );
-		final TreeSet<String> usagePathSet = new TreeSet<>();
+		final TreeSet<Incubation> incubations = new TreeSet<>( Comparator.comparing( Incubation::getPath ) );
+
 		usages.forEach( (usage) -> {
 			final AnnotationTarget usageLocation = usage.target();
-			final String locationPath = determinePath( usageLocation );
-			if ( locationPath != null ) {
-				usagePathSet.add( locationPath );
+			final Incubation incubation = determinePath( usageLocation );
+			if ( incubation != null ) {
+				incubations.add( incubation );
 			}
 		} );
 
-		// at this point, `usagePathSet` contains a set of incubating names ordered alphabetically..
+		// NOTE : at this point, `usagePathSet` contains a set of incubating
+		// names ordered alphabetically..
+
+		reportIncubations( incubations );
+	}
+
+	private void reportIncubations(TreeSet<Incubation> incubations) {
+		final File reportFile = prepareReportFile();
+		assert reportFile.exists();
+
+		try ( final OutputStreamWriter fileWriter = new OutputStreamWriter( new FileOutputStream( reportFile ) ) ) {
+			generateReport( incubations, fileWriter );
+		}
+		catch (FileNotFoundException e) {
+			throw new RuntimeException( "Should never happen" );
+		}
+		catch (IOException e) {
+			throw new RuntimeException( "Error writing to `@Incubating` report file", e );
+		}
+	}
+
+	private File prepareReportFile() {
+		final File reportFile = reportFileReferenceAccess.get().getAsFile();
+
+		if ( reportFile.getParentFile().exists() ) {
+			if ( reportFile.exists() ) {
+				if ( !reportFile.delete() ) {
+					throw new RuntimeException( "Unable to delete `@Incubating` report file" );
+				}
+			}
+		}
+		else {
+			if ( !reportFile.getParentFile().mkdirs() ) {
+				throw new RuntimeException( "Unable to create directories for `@Incubating` report file" );
+			}
+		}
+
+		try {
+			if ( !reportFile.createNewFile() ) {
+				throw new RuntimeException( "Unable to create file for `@Incubating` report file" );
+			}
+		}
+		catch (IOException e) {
+			throw new RuntimeException( "Unable to create file for `@Incubating` report file" );
+		}
+
+		return reportFile;
+	}
+
+	private void generateReport(TreeSet<Incubation> incubations, OutputStreamWriter fileWriter) {
 		String previousPath = null;
-		for ( String usagePath : usagePathSet ) {
-			if ( previousPath != null && usagePath.startsWith( previousPath ) ) {
+		for ( Incubation incubation : incubations ) {
+			if ( previousPath != null && incubation.path.startsWith( previousPath ) ) {
 				continue;
 			}
 
 			// `usagePath` is a path we want to document
-			collectIncubation( usagePath );
+			try {
+				fileWriter.write( incubation.path );
+				if ( incubation.isPackage ) {
+					fileWriter.write( ".*" );
+				}
+				fileWriter.write( '\n' );
+				fileWriter.flush();
+			}
+			catch (IOException e) {
+				throw new RuntimeException( "Error writing entry (" + incubation.path + ") to `@Incubating` report file", e );
+			}
 
-			previousPath = usagePath;
+			previousPath = incubation.path;
 		}
 	}
 
-	private void collectIncubation(String usagePath) {
-		// todo - what to do with this?
+	private static class Incubation {
+		private final String path;
+		private final boolean isPackage;
+
+		public Incubation(String path, boolean isPackage) {
+			this.path = path;
+			this.isPackage = isPackage;
+		}
+
+		public Incubation(String path) {
+			this( path, false );
+		}
+
+		public String getPath() {
+			return path;
+		}
+
+		public boolean isPackage() {
+			return isPackage;
+		}
 	}
 
-	private String determinePath(AnnotationTarget usageLocation) {
+	private Incubation determinePath(AnnotationTarget usageLocation) {
 		switch ( usageLocation.kind() ) {
 			case CLASS: {
 				final DotName name = usageLocation.asClass().name();
-				if ( name.local().equals( "package-info.class" ) ) {
-					return name.packagePrefix();
+				if ( name.local().equals( "package-info" ) ) {
+					return new Incubation( name.packagePrefix(), true );
 				}
-				return name.toString();
+				return new Incubation( name.toString() );
 			}
 			case FIELD: {
 				final FieldInfo fieldInfo = usageLocation.asField();
-				return fieldInfo.declaringClass().name().toString()
+				final String path = fieldInfo.declaringClass().name().toString()
 						+ "#"
 						+ fieldInfo.name();
+				return new Incubation( path );
 			}
 			case METHOD: {
 				final MethodInfo methodInfo = usageLocation.asMethod();
-				return methodInfo.declaringClass().name().toString()
+				final String path = methodInfo.declaringClass().name().toString()
 						+ "#"
 						+ methodInfo.name();
+				return new Incubation( path );
 			}
 			default: {
 				return null;

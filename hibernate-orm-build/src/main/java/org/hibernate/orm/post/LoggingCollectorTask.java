@@ -26,6 +26,6 @@ public abstract class LoggingCollectorTask extends DefaultTask {
 
 	@TaskAction
 	public void collectLoggingDetails() {
-		final Index index = indexManager.getIndex();
+		getProject().getLogger().lifecycle( "Logging collection not implemented yet" );
 	}
 }

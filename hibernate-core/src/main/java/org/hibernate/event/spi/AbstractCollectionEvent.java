@@ -18,7 +18,7 @@ import org.hibernate.persister.collection.CollectionPersister;
  */
 public abstract class AbstractCollectionEvent extends AbstractEvent {
 
-	private final PersistentCollection collection;
+	private final PersistentCollection<?> collection;
 	private final Object affectedOwner;
 	private final Object affectedOwnerId;
 	private final String affectedOwnerEntityName;
@@ -34,7 +34,7 @@ public abstract class AbstractCollectionEvent extends AbstractEvent {
 	 */
 	public AbstractCollectionEvent(
 			CollectionPersister collectionPersister,
-			PersistentCollection collection,
+			PersistentCollection<?> collection,
 			EventSource source,
 			Object affectedOwner,
 			Object affectedOwnerId) {
@@ -46,16 +46,16 @@ public abstract class AbstractCollectionEvent extends AbstractEvent {
 				getAffectedOwnerEntityName( collectionPersister, affectedOwner, source );
 	}
 
-	protected static CollectionPersister getLoadedCollectionPersister( PersistentCollection collection, EventSource source ) {
+	protected static CollectionPersister getLoadedCollectionPersister( PersistentCollection<?> collection, EventSource source ) {
 		CollectionEntry ce = source.getPersistenceContextInternal().getCollectionEntry( collection );
 		return ( ce == null ? null : ce.getLoadedPersister() );		
 	}
 
-	protected static Object getLoadedOwnerOrNull( PersistentCollection collection, EventSource source ) {
+	protected static Object getLoadedOwnerOrNull( PersistentCollection<?> collection, EventSource source ) {
 		return source.getPersistenceContextInternal().getLoadedCollectionOwnerOrNull( collection );
 	}
 
-	protected static Object getLoadedOwnerIdOrNull(PersistentCollection collection, EventSource source ) {
+	protected static Object getLoadedOwnerIdOrNull(PersistentCollection<?> collection, EventSource source ) {
 		return source.getPersistenceContextInternal().getLoadedCollectionOwnerIdOrNull( collection );
 	}
 
@@ -79,7 +79,7 @@ public abstract class AbstractCollectionEvent extends AbstractEvent {
 		return entityName;
 	}
 
-	public PersistentCollection getCollection() {
+	public PersistentCollection<?> getCollection() {
 		return collection;
 	}
 

@@ -314,7 +314,7 @@ public interface SessionFactoryImplementor
 	 * @deprecated (since 5.2) Use {@link MetamodelImplementor#locateEntityPersister(Class)} instead.
 	 */
 	@Deprecated
-	default EntityPersister locateEntityPersister(Class byClass) {
+	default EntityPersister locateEntityPersister(Class<?> byClass) {
 		return getMetamodel().locateEntityPersister( byClass );
 	}
 

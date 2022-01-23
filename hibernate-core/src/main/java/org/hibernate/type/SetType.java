@@ -12,12 +12,11 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.type.spi.TypeConfiguration;
 
 public class SetType extends CollectionType {
 
-	public SetType(TypeConfiguration typeConfiguration, String role, String propertyRef) {
-		super( typeConfiguration, role, propertyRef );
+	public SetType(String role, String propertyRef) {
+		super(role, propertyRef );
 	}
 
 	@Override
@@ -26,18 +25,18 @@ public class SetType extends CollectionType {
 	}
 
 	@Override
-	public Class getReturnedClass() {
+	public Class<?> getReturnedClass() {
 		return java.util.Set.class;
 	}
 
 	@Override
-	public PersistentCollection instantiate(SharedSessionContractImplementor session, CollectionPersister persister, Object key) {
-		return new PersistentSet( session );
+	public PersistentCollection<?> instantiate(SharedSessionContractImplementor session, CollectionPersister persister, Object key) {
+		return new PersistentSet<>( session );
 	}
 
 	@Override
-	public PersistentCollection wrap(SharedSessionContractImplementor session, Object collection) {
-		return new PersistentSet( session, (java.util.Set) collection );
+	public PersistentCollection<?> wrap(SharedSessionContractImplementor session, Object collection) {
+		return new PersistentSet<>( session, (java.util.Set<?>) collection );
 	}
 
 	@Override

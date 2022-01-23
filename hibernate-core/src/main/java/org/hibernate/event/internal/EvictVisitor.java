@@ -28,7 +28,7 @@ import org.hibernate.type.CollectionType;
 public class EvictVisitor extends AbstractVisitor {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( EvictVisitor.class );
 	
-	private Object owner;
+	private final Object owner;
 
 	public EvictVisitor(EventSource session, Object owner) {
 		super(session);
@@ -45,17 +45,17 @@ public class EvictVisitor extends AbstractVisitor {
 	}
 	
 	public void evictCollection(Object value, CollectionType type) {
-		final PersistentCollection collection;
+		final PersistentCollection<?> collection;
 		final EventSource session = getSession();
 		if ( type.hasHolder() ) {
 			collection = session.getPersistenceContextInternal().removeCollectionHolder(value);
 		}
 		else if ( value instanceof PersistentCollection ) {
-			collection = (PersistentCollection) value;
+			collection = (PersistentCollection<?>) value;
 		}
 		else if ( value == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
 			final Object keyOfOwner = type.getKeyOfOwner( owner, session );
-			collection = (PersistentCollection) type.getCollection( keyOfOwner, session, owner, Boolean.FALSE );
+			collection = (PersistentCollection<?>) type.getCollection( keyOfOwner, session, owner, Boolean.FALSE );
 		}
 		else {
 			return; //EARLY EXIT!
@@ -66,7 +66,7 @@ public class EvictVisitor extends AbstractVisitor {
 		}
 	}
 
-	private void evictCollection(PersistentCollection collection) {
+	private void evictCollection(PersistentCollection<?> collection) {
 		final PersistenceContext persistenceContext = getSession().getPersistenceContextInternal();
 		CollectionEntry ce = persistenceContext.removeCollectionEntry( collection );
 		if ( LOG.isDebugEnabled() ) {

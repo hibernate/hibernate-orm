@@ -37,19 +37,19 @@ public interface UserCollectionType {
 	/**
 	 * Instantiate an uninitialized instance of the collection wrapper
 	 */
-	PersistentCollection instantiate(SharedSessionContractImplementor session, CollectionPersister persister)
+	PersistentCollection<?> instantiate(SharedSessionContractImplementor session, CollectionPersister persister)
 			throws HibernateException;
 
 	/**
 	 * Wrap an instance of a collection
 	 */
-	PersistentCollection wrap(SharedSessionContractImplementor session, Object collection);
+	PersistentCollection<?> wrap(SharedSessionContractImplementor session, Object collection);
 
 	/**
 	 * Return an iterator over the elements of this collection - the passed collection
 	 * instance may or may not be a wrapper
 	 */
-	Iterator getElementsIterator(Object collection);
+	Iterator<?> getElementsIterator(Object collection);
 
 	/**
 	 * Optional operation. Does the collection contain the entity instance?

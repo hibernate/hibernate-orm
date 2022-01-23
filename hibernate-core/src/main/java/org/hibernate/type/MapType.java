@@ -16,13 +16,12 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.type.spi.TypeConfiguration;
 
 
 public class MapType extends CollectionType {
 
-	public MapType(TypeConfiguration typeConfiguration, String role, String propertyRef) {
-		super( typeConfiguration, role, propertyRef );
+	public MapType(String role, String propertyRef) {
+		super(role, propertyRef );
 	}
 
 	@Override
@@ -31,36 +30,36 @@ public class MapType extends CollectionType {
 	}
 
 	@Override
-	public PersistentCollection instantiate(
+	public PersistentCollection<?> instantiate(
 			SharedSessionContractImplementor session,
 			CollectionPersister persister,
 			Object key) {
-		return new PersistentMap( session );
+		return new PersistentMap<>( session );
 	}
 
 	@Override
-	public Class getReturnedClass() {
+	public Class<?> getReturnedClass() {
 		return Map.class;
 	}
 
 	@Override
-	public Iterator getElementsIterator(Object collection) {
-		return ( (Map) collection ).values().iterator();
+	public Iterator<?> getElementsIterator(Object collection) {
+		return ( (Map<?,?>) collection ).values().iterator();
 	}
 
 	@Override
-	public PersistentCollection wrap(SharedSessionContractImplementor session, Object collection) {
-		return new PersistentMap( session, (Map) collection );
+	public PersistentCollection<?> wrap(SharedSessionContractImplementor session, Object collection) {
+		return new PersistentMap<>( session, (Map<?,?>) collection );
 	}
 
 	@Override
 	public Object instantiate(int anticipatedSize) {
 		return anticipatedSize <= 0
-				? new HashMap()
-				: new HashMap( anticipatedSize + (int) ( anticipatedSize * .75f ), .75f );
+				? new HashMap<>()
+				: new HashMap<>( anticipatedSize + (int) ( anticipatedSize * .75f ), .75f );
 	}
 
-	@Override
+	@Override @SuppressWarnings("rawtypes")
 	public Object replaceElements(
 			final Object original,
 			final Object target,
@@ -83,7 +82,7 @@ public class MapType extends CollectionType {
 
 	}
 
-	@Override
+	@Override @SuppressWarnings("rawtypes")
 	public Object indexOf(Object collection, Object element) {
 		for ( Object o : ( (Map) collection ).entrySet() ) {
 			Map.Entry me = (Map.Entry) o;

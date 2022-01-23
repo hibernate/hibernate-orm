@@ -326,8 +326,6 @@ public interface SharedSessionContractImplementor
 	 */
 	Object instantiate(EntityPersister persister, Object id) throws HibernateException;
 
-	int getDontFlushFromFind();
-
 	boolean isDefaultReadOnly();
 
 	CacheMode getCacheMode();

@@ -21,7 +21,6 @@ import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cfg.BaselineSessionEventsListenerBuilder;
-import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
@@ -264,12 +263,9 @@ public final class FastSessionServices {
 	private static boolean isTransactionAccessible(SessionFactoryImpl sf, TransactionCoordinatorBuilder transactionCoordinatorBuilder) {
 		// JPA requires that access not be provided to the transaction when using JTA.
 		// This is overridden when SessionFactoryOptions isJtaTransactionAccessEnabled() is true.
-		if ( sf.getSessionFactoryOptions().getJpaCompliance().isJpaTransactionComplianceEnabled() &&
-				transactionCoordinatorBuilder.isJta() &&
-				!sf.getSessionFactoryOptions().isJtaTransactionAccessEnabled() ) {
-			return false;
-		}
-		return true;
+		return !( sf.getSessionFactoryOptions().getJpaCompliance().isJpaTransactionComplianceEnabled()
+				&& transactionCoordinatorBuilder.isJta()
+				&& !sf.getSessionFactoryOptions().isJtaTransactionAccessEnabled() );
 	}
 
 	private static Map<String, Object> initializeDefaultSessionProperties(SessionFactoryImpl sf) {

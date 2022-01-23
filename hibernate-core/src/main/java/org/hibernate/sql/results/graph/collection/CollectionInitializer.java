@@ -27,7 +27,7 @@ public interface CollectionInitializer extends Initializer {
 		return getInitializedPart().getCollectionDescriptor();
 	}
 
-	PersistentCollection getCollectionInstance();
+	PersistentCollection<?> getCollectionInstance();
 
 	@Override
 	default Object getInitializedInstance() {

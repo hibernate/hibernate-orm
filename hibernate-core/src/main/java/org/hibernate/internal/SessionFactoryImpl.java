@@ -272,7 +272,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		LOG.debugf( "Instantiating session factory with properties: %s", properties );
 
 		class IntegratorObserver implements SessionFactoryObserver {
-			private ArrayList<Integrator> integrators = new ArrayList<>();
+			private final ArrayList<Integrator> integrators = new ArrayList<>();
 
 			@Override
 			public void sessionFactoryCreated(SessionFactory factory) {
@@ -754,7 +754,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		return getMetamodel().entityPersister( className ).getIdentifierPropertyName();
 	}
 
-	public ClassMetadata getClassMetadata(Class persistentClass) throws HibernateException {
+	public ClassMetadata getClassMetadata(@SuppressWarnings("rawtypes") Class persistentClass) throws HibernateException {
 		return getClassMetadata( persistentClass.getName() );
 	}
 

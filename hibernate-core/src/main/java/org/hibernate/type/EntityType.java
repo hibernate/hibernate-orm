@@ -55,7 +55,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 */
 	private transient volatile EntityPersister associatedEntityPersister;
 
-	private transient Class returnedClass;
+	private transient Class<?> returnedClass;
 
 	/**
 	 * Constructs the requested entity type mapping.
@@ -203,14 +203,14 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 * @return The entity class.
 	 */
 	@Override
-	public final Class getReturnedClass() {
+	public final Class<?> getReturnedClass() {
 		if ( returnedClass == null ) {
 			returnedClass = determineAssociatedEntityClass();
 		}
 		return returnedClass;
 	}
 
-	private Class determineAssociatedEntityClass() {
+	private Class<?> determineAssociatedEntityClass() {
 		final String entityName = getAssociatedEntityName();
 		try {
 			return ReflectHelper.classForName( entityName );
@@ -321,7 +321,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			id = ( (HibernateProxy) x ).getHibernateLazyInitializer().getInternalIdentifier();
 		}
 		else {
-			final Class mappedClass = persister.getMappedClass();
+			final Class<?> mappedClass = persister.getMappedClass();
 			if ( mappedClass.isAssignableFrom( x.getClass() ) ) {
 				id = persister.getIdentifier( x, null );
 			}
@@ -344,7 +344,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			return super.isEqual( x, y );
 		}
 
-		final Class mappedClass = persister.getMappedClass();
+		final Class<?> mappedClass = persister.getMappedClass();
 		Object xid;
 		if ( x instanceof HibernateProxy ) {
 			xid = ( (HibernateProxy) x ).getHibernateLazyInitializer()
@@ -382,14 +382,10 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	/**
 	 * Resolve an identifier or unique key value
 	 */
-	private Object resolve(Object value, SharedSessionContractImplementor session, Object owner) throws HibernateException {
-		return resolve(value, session, owner, null);
-	}
-
-	private Object resolve(Object value, SharedSessionContractImplementor session, Object owner, Boolean overridingEager) throws HibernateException {
+	private Object resolve(Object value, SharedSessionContractImplementor session, Object owner) {
 		if ( value != null && !isNull( owner, session ) ) {
 			if ( isReferenceToPrimaryKey() ) {
-				return resolveIdentifier( value, session, overridingEager );
+				return resolveIdentifier( value, session, null );
 			}
 			else if ( uniqueKeyPropertyName != null ) {
 				return loadByUniqueKey( getAssociatedEntityName(), uniqueKeyPropertyName, value, session );

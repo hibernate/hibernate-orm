@@ -87,7 +87,7 @@ public final class PersistenceUtilHelper {
 			return isInitialized ? LoadState.LOADED : LoadState.NOT_LOADED;
 		}
 		else if ( reference instanceof PersistentCollection ) {
-			final boolean isInitialized = ( (PersistentCollection) reference ).wasInitialized();
+			final boolean isInitialized = ( (PersistentCollection<?>) reference ).wasInitialized();
 			return isInitialized ? LoadState.LOADED : LoadState.NOT_LOADED;
 		}
 		else {
@@ -95,7 +95,6 @@ public final class PersistenceUtilHelper {
 		}
 	}
 
-	@SuppressWarnings("SimplifiableIfStatement")
 	private static boolean isInitialized(PersistentAttributeInterceptable interceptable) {
 		final BytecodeLazyAttributeInterceptor interceptor = extractInterceptor( interceptable );
 		return interceptable == null || interceptor == null || !interceptor.hasAnyUninitializedAttributes();

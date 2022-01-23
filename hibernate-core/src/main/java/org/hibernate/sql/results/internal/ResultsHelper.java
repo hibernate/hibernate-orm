@@ -107,8 +107,7 @@ public class ResultsHelper {
 
 		logInitializers( initializerMap );
 
-		//noinspection rawtypes
-		return new StandardRowReader<>( (List) assemblers, initializers, rowTransformer );
+		return new StandardRowReader<>( assemblers, initializers, rowTransformer );
 	}
 
 	private static void logInitializers(Map<NavigablePath, Initializer> initializerMap) {
@@ -131,7 +130,7 @@ public class ResultsHelper {
 	public static void finalizeCollectionLoading(
 			PersistenceContext persistenceContext,
 			CollectionPersister collectionDescriptor,
-			PersistentCollection collectionInstance,
+			PersistentCollection<?> collectionInstance,
 			Object key,
 			boolean hasNoQueuedAdds) {
 		CollectionEntry collectionEntry = persistenceContext.getCollectionEntry( collectionInstance );
@@ -201,7 +200,7 @@ public class ResultsHelper {
 	private static void addCollectionToCache(
 			PersistenceContext persistenceContext,
 			CollectionPersister collectionDescriptor,
-			PersistentCollection collectionInstance,
+			PersistentCollection<?> collectionInstance,
 			Object key) {
 		final SharedSessionContractImplementor session = persistenceContext.getSession();
 		final SessionFactoryImplementor factory = session.getFactory();

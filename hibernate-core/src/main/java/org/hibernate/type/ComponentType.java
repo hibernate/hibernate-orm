@@ -445,7 +445,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 				result.put( propertyNames[i], propertyTypes[i].toLoggableString( values[i], factory ) );
 			}
 		}
-		return StringHelper.unqualify( getName() ) + result.toString();
+		return StringHelper.unqualify( getName() ) + result;
 	}
 
 	@Override
@@ -705,10 +705,10 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 
 	private boolean determineIfProcedureParamExtractionCanBePerformed() {
 		for ( Type propertyType : propertyTypes ) {
-			if ( !ProcedureParameterExtractionAware.class.isInstance( propertyType ) ) {
+			if ( !(propertyType instanceof ProcedureParameterExtractionAware) ) {
 				return false;
 			}
-			if ( !( (ProcedureParameterExtractionAware) propertyType ).canDoExtraction() ) {
+			if ( !( (ProcedureParameterExtractionAware<?>) propertyType ).canDoExtraction() ) {
 				return false;
 			}
 		}
@@ -724,11 +724,8 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 		for ( int i = 0; i < propertySpan; i++ ) {
 			// we know this cast is safe from canDoExtraction
 			final Type propertyType = propertyTypes[i];
-			final Object value = ((ProcedureParameterExtractionAware) propertyType).extract(
-					statement,
-					currentIndex,
-					session
-			);
+			final Object value = ( (ProcedureParameterExtractionAware<?>) propertyType )
+					.extract( statement, currentIndex, session );
 			if ( value == null ) {
 				if ( isKey ) {
 					return null; //different nullability rules for pk/fk
@@ -796,7 +793,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 	}
 
 	@Override
-	public SqmExpressable resolveExpressable(SessionFactoryImplementor sessionFactory) {
+	public SqmExpressable<?> resolveExpressable(SessionFactoryImplementor sessionFactory) {
 		return sessionFactory.getRuntimeMetamodels().getJpaMetamodel().embeddable( getReturnedClass() );
 	}
 

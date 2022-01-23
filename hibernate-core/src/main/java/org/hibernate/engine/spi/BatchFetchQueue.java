@@ -57,7 +57,7 @@ public class BatchFetchQueue {
 	 * Used to hold information about the collections that are currently eligible for batch-fetching.  Ultimately
 	 * used by {@link #getCollectionBatch} to build collection load batches.
 	 */
-	private Map<String, LinkedHashMap<CollectionEntry, PersistentCollection>> batchLoadableCollections;
+	private Map<String, LinkedHashMap<CollectionEntry, PersistentCollection<?>>> batchLoadableCollections;
 
 	/**
 	 * Constructs a queue for the given context.
@@ -215,7 +215,8 @@ public class BatchFetchQueue {
 					return ids;
 				}
 
-				if ( entityDescriptor.getEntityPersister().getIdentifierType().isEqual( loadingId, key.getIdentifier() ) ) {
+				if ( entityDescriptor.getEntityPersister().getIdentifierType()
+						.isEqual( loadingId, key.getIdentifier() ) ) {
 					end = i;
 				}
 				else {
@@ -259,17 +260,18 @@ public class BatchFetchQueue {
 	 * If a CollectionEntry represents a batch loadable collection, add
 	 * it to the queue.
 	 */
-	public void addBatchLoadableCollection(PersistentCollection collection, CollectionEntry ce) {
+	public void addBatchLoadableCollection(PersistentCollection<?> collection, CollectionEntry ce) {
 		final CollectionPersister persister = ce.getLoadedPersister();
 
 		if ( batchLoadableCollections == null ) {
 			batchLoadableCollections = CollectionHelper.mapOfSize( 12 );
 		}
 
-		final LinkedHashMap<CollectionEntry, PersistentCollection> map =  batchLoadableCollections.computeIfAbsent(
-				persister.getRole(),
-				k -> CollectionHelper.linkedMapOfSize( 16 )
-		);
+		final LinkedHashMap<CollectionEntry, PersistentCollection<?>> map =
+				batchLoadableCollections.computeIfAbsent(
+						persister.getRole(),
+						k -> CollectionHelper.linkedMapOfSize( 16 )
+				);
 
 		map.put( ce, collection );
 	}
@@ -283,7 +285,8 @@ public class BatchFetchQueue {
 		if ( batchLoadableCollections == null ) {
 			return;
 		}
-		LinkedHashMap<CollectionEntry, PersistentCollection> map =  batchLoadableCollections.get( ce.getLoadedPersister().getRole() );
+		LinkedHashMap<CollectionEntry, PersistentCollection<?>> map =
+				batchLoadableCollections.get( ce.getLoadedPersister().getRole() );
 		if ( map != null ) {
 			map.remove( ce );
 		}
@@ -313,11 +316,12 @@ public class BatchFetchQueue {
 		int end = -1;
 		boolean checkForEnd = false;
 
-		final LinkedHashMap<CollectionEntry, PersistentCollection> map =  batchLoadableCollections.get( collectionPersister.getRole() );
+		final LinkedHashMap<CollectionEntry, PersistentCollection<?>> map =
+				batchLoadableCollections.get( collectionPersister.getRole() );
 		if ( map != null ) {
-			for ( Entry<CollectionEntry, PersistentCollection> me : map.entrySet() ) {
+			for ( Entry<CollectionEntry, PersistentCollection<?>> me : map.entrySet() ) {
 				final CollectionEntry ce = me.getKey();
-				final PersistentCollection collection = me.getValue();
+				final PersistentCollection<?> collection = me.getValue();
 
 				if ( ce.getLoadedKey() == null ) {
 					// the loadedKey of the collectionEntry might be null as it might have been reset to null

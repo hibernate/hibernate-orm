@@ -40,7 +40,7 @@ public class OnUpdateVisitor extends ReattachVisitor {
 
 		final Object collectionKey = extractCollectionKeyFromOwner( persister );
 		if ( ( collection instanceof PersistentCollection ) ) {
-			PersistentCollection wrapper = (PersistentCollection) collection;
+			PersistentCollection<?> wrapper = (PersistentCollection<?>) collection;
 			if ( wrapper.setCurrentSession(session) ) {
 				//a "detached" collection!
 				if ( !isOwnerUnchanged( persister, collectionKey, wrapper ) ) {

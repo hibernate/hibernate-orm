@@ -37,7 +37,7 @@ public interface LoadingCollectionEntry {
 	/**
 	 * The collection instance being loaded
 	 */
-	PersistentCollection getCollectionInstance();
+	PersistentCollection<?> getCollectionInstance();
 
 	/**
 	 * Callback for row loading.  Allows delayed List creation

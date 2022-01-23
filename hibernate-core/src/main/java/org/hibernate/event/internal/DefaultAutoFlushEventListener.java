@@ -85,8 +85,7 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 	private boolean flushMightBeNeeded(final EventSource source) {
 		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
 		return !source.getHibernateFlushMode().lessThan( FlushMode.AUTO )
-				&& source.getDontFlushFromFind() == 0
-				&& ( persistenceContext.getNumberOfManagedEntities() > 0 ||
-						persistenceContext.getCollectionEntriesSize() > 0 );
+			&& ( persistenceContext.getNumberOfManagedEntities() > 0
+				|| persistenceContext.getCollectionEntriesSize() > 0 );
 	}
 }

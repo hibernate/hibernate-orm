@@ -10,10 +10,6 @@ import java.util.function.Supplier;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.collection.internal.StandardMapSemantics;
-import org.hibernate.collection.internal.StandardOrderedMapSemantics;
-import org.hibernate.collection.internal.StandardSortedMapSemantics;
-import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.MapType;
@@ -49,29 +45,16 @@ public class Map extends IndexedCollection {
 		this.mapKeyPropertyName = mapKeyPropertyName;
 	}
 
-	@Override
-	public CollectionSemantics getDefaultCollectionSemantics() {
-		if ( isSorted() ) {
-			return StandardSortedMapSemantics.INSTANCE;
-		}
-
-		if ( hasOrder() ) {
-			return StandardOrderedMapSemantics.INSTANCE;
-		}
-
-		return StandardMapSemantics.INSTANCE;
-	}
-
 	public CollectionType getDefaultCollectionType() {
 		if ( isSorted() ) {
-			return new SortedMapType( getTypeConfiguration(), getRole(), getReferencedPropertyName(), getComparator() );
+			return new SortedMapType( getRole(), getReferencedPropertyName(), getComparator() );
 		}
 
 		if ( hasOrder() ) {
-			return new OrderedMapType( getTypeConfiguration(), getRole(), getReferencedPropertyName() );
+			return new OrderedMapType( getRole(), getReferencedPropertyName() );
 		}
 
-		return new MapType( getTypeConfiguration(), getRole(), getReferencedPropertyName() );
+		return new MapType( getRole(), getReferencedPropertyName() );
 	}
 
 

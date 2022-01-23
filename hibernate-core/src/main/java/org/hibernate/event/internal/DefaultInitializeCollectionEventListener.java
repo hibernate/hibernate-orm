@@ -34,7 +34,7 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 	 * called by a collection that wants to initialize itself
 	 */
 	public void onInitializeCollection(InitializeCollectionEvent event) throws HibernateException {
-		PersistentCollection collection = event.getCollection();
+		PersistentCollection<?> collection = event.getCollection();
 		SessionImplementor source = event.getSession();
 
 		CollectionEntry ce = source.getPersistenceContextInternal().getCollectionEntry( collection );
@@ -89,7 +89,7 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 	}
 
 	private void handlePotentiallyEmptyCollection(
-			PersistentCollection collection,
+			PersistentCollection<?> collection,
 			SessionImplementor source,
 			CollectionEntry ce,
 			CollectionPersister ceLoadedPersister) {
@@ -119,7 +119,7 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 	private boolean initializeCollectionFromCache(
 			Object id,
 			CollectionPersister persister,
-			PersistentCollection collection,
+			PersistentCollection<?> collection,
 			SessionImplementor source) {
 
 		if ( source.getLoadQueryInfluencers().hasEnabledFilters()

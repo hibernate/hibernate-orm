@@ -18,7 +18,7 @@ public class PostCollectionRecreateEvent extends AbstractCollectionEvent {
 
 	public PostCollectionRecreateEvent(
 			CollectionPersister collectionPersister,
-			PersistentCollection collection,
+			PersistentCollection<?> collection,
 			EventSource source) {
 		super(
 				collectionPersister,

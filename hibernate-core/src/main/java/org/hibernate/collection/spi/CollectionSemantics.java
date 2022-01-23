@@ -25,6 +25,9 @@ import org.hibernate.sql.results.graph.FetchParent;
  *
  * @apiNote The described collection need not be part of the "Java Collection Framework"
  *
+ * @param <E> the collection element or map key type
+ * @param <CE> the type of the collection
+ *
  * @author Steve Ebersole
  * @author Gavin King
  *

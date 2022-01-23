@@ -35,7 +35,7 @@ public abstract class AbstractCollectionInitializer implements CollectionInitial
 	 */
 	protected final DomainResultAssembler<?> collectionKeyResultAssembler;
 
-	protected PersistentCollection collectionInstance;
+	protected PersistentCollection<?> collectionInstance;
 	protected CollectionKey collectionKey;
 
 	protected AbstractCollectionInitializer(
@@ -101,7 +101,7 @@ public abstract class AbstractCollectionInitializer implements CollectionInitial
 	}
 
 	@Override
-	public PersistentCollection getCollectionInstance() {
+	public PersistentCollection<?> getCollectionInstance() {
 		return collectionInstance;
 	}
 

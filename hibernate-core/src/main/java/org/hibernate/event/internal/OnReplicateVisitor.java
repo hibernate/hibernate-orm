@@ -8,7 +8,6 @@ package org.hibernate.event.internal;
 
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.CollectionType;
@@ -26,7 +25,7 @@ import org.hibernate.type.CollectionType;
  */
 public class OnReplicateVisitor extends ReattachVisitor {
 
-	private boolean isUpdate;
+	private final boolean isUpdate;
 
 	public OnReplicateVisitor(EventSource session, Object key, Object owner, boolean isUpdate) {
 		super( session, key, owner );
@@ -46,7 +45,7 @@ public class OnReplicateVisitor extends ReattachVisitor {
 			removeCollection( persister, extractCollectionKeyFromOwner( persister ), session );
 		}
 		if ( collection instanceof PersistentCollection ) {
-			final PersistentCollection wrapper = (PersistentCollection) collection;
+			final PersistentCollection<?> wrapper = (PersistentCollection<?>) collection;
 			wrapper.setCurrentSession( session );
 			if ( wrapper.wasInitialized() ) {
 				session.getPersistenceContextInternal().addNewCollection( persister, wrapper );

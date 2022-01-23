@@ -8,14 +8,12 @@ package org.hibernate.type;
 
 import java.io.Serializable;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
-import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -118,7 +116,7 @@ public interface Type extends Serializable {
 	 *
 	 * @return The java type class handled by this type.
 	 */
-	Class getReturnedClass();
+	Class<?> getReturnedClass();
 
 	/**
 	 * Compare two instances of the class mapped by this type for persistence "equality" (equality of persistent

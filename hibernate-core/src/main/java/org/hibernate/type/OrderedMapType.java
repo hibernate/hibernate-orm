@@ -8,15 +8,14 @@ package org.hibernate.type;
 
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.CollectionClassification;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * A specialization of the map type, with (resultset-based) ordering.
  */
 public class OrderedMapType extends MapType {
 
-	public OrderedMapType(TypeConfiguration typeConfiguration, String role, String propertyRef) {
-		super( typeConfiguration, role, propertyRef );
+	public OrderedMapType(String role, String propertyRef) {
+		super( role, propertyRef );
 	}
 
 	@Override

@@ -29,15 +29,6 @@ import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionImplementor;
 
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.testing.orm.junit.SessionFactory;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-
 /**
  * @author Gail Badner
  */
@@ -47,7 +38,7 @@ public abstract class AbstractDereferencedCollectionTest {
 		return ( (SessionImplementor) s ).getPersistenceContextInternal().getEntry( entity );
 	}
 
-	protected CollectionEntry getCollectionEntry(Session s, PersistentCollection collection) {
+	protected CollectionEntry getCollectionEntry(Session s, PersistentCollection<?> collection) {
 		return ( (SessionImplementor) s ).getPersistenceContextInternal().getCollectionEntry( collection );
 	}
 }

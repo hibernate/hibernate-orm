@@ -20,7 +20,7 @@ public class HEMLogging {
 	private HEMLogging() {
 	}
 
-	public static EntityManagerMessageLogger messageLogger(Class classNeedingLogging) {
+	public static EntityManagerMessageLogger messageLogger(Class<?> classNeedingLogging) {
 		return messageLogger( classNeedingLogging.getName() );
 	}
 
@@ -28,7 +28,7 @@ public class HEMLogging {
 		return Logger.getMessageLogger( EntityManagerMessageLogger .class, loggerName );
 	}
 
-	public static Logger logger(Class classNeedingLogging) {
+	public static Logger logger(Class<?> classNeedingLogging) {
 		return Logger.getLogger( classNeedingLogging );
 	}
 

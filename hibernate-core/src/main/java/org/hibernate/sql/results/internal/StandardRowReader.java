@@ -29,14 +29,14 @@ import org.hibernate.type.descriptor.java.JavaType;
  */
 @SuppressWarnings("rawtypes")
 public class StandardRowReader<T> implements RowReader<T> {
-	private final List<DomainResultAssembler> resultAssemblers;
+	private final List<DomainResultAssembler<?>> resultAssemblers;
 	private final List<Initializer> initializers;
 	private final RowTransformer<T> rowTransformer;
 
 	private final int assemblerCount;
 
 	public StandardRowReader(
-			List<DomainResultAssembler> resultAssemblers,
+			List<DomainResultAssembler<?>> resultAssemblers,
 			List<Initializer> initializers,
 			RowTransformer<T> rowTransformer) {
 		this.resultAssemblers = resultAssemblers;
@@ -88,7 +88,7 @@ public class StandardRowReader<T> implements RowReader<T> {
 	public T readRow(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {
 		LoadingLogger.LOGGER.trace( "StandardRowReader#readRow" );
 
-		coordinateInitializers( rowProcessingState, options );
+		coordinateInitializers( rowProcessingState );
 
 		final Object[] resultRow = new Object[ assemblerCount ];
 
@@ -98,23 +98,19 @@ public class StandardRowReader<T> implements RowReader<T> {
 			resultRow[i] = assembler.assemble( rowProcessingState, options );
 		}
 
-		afterRow( rowProcessingState, options );
+		afterRow( rowProcessingState );
 
 		return rowTransformer.transformRow( resultRow );
 	}
 
-	private void afterRow(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {
+	private void afterRow(RowProcessingState rowProcessingState) {
 		LoadingLogger.LOGGER.trace( "StandardRowReader#afterRow" );
 
-		initializers.forEach( (initializer) -> {
-			initializer.finishUpRow( rowProcessingState );
-		} );
+		initializers.forEach( initializer -> initializer.finishUpRow( rowProcessingState ) );
 	}
 
 	@SuppressWarnings("ForLoopReplaceableByForEach")
-	private void coordinateInitializers(
-			RowProcessingState rowProcessingState,
-			JdbcValuesSourceProcessingOptions options) {
+	private void coordinateInitializers(RowProcessingState rowProcessingState) {
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// todo (6.0) : we may want to split handling of initializers into specific sub-type handling

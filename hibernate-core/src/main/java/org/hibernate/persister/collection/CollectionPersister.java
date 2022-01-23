@@ -113,7 +113,7 @@ public interface CollectionPersister extends CollectionDefinition, Restrictable 
 	/**
 	 * Return the element class of an array, or null otherwise
 	 */
-	Class getElementClass();
+	Class<?> getElementClass();
 
 	/**
 	 * The value converter for the element values of this collection
@@ -173,7 +173,7 @@ public interface CollectionPersister extends CollectionDefinition, Restrictable 
 	 * (Re)create the collection's persistent state
 	 */
 	void recreate(
-			PersistentCollection collection,
+			PersistentCollection<?> collection,
 			Object key,
 			SharedSessionContractImplementor session);
 
@@ -182,7 +182,7 @@ public interface CollectionPersister extends CollectionDefinition, Restrictable 
 	 * the collection
 	 */
 	void deleteRows(
-			PersistentCollection collection,
+			PersistentCollection<?> collection,
 			Object key,
 			SharedSessionContractImplementor session);
 
@@ -190,7 +190,7 @@ public interface CollectionPersister extends CollectionDefinition, Restrictable 
 	 * Update the persistent state of any elements that were modified
 	 */
 	void updateRows(
-			PersistentCollection collection,
+			PersistentCollection<?> collection,
 			Object key,
 			SharedSessionContractImplementor session);
 
@@ -198,7 +198,7 @@ public interface CollectionPersister extends CollectionDefinition, Restrictable 
 	 * Insert the persistent state of any new collection elements
 	 */
 	void insertRows(
-			PersistentCollection collection,
+			PersistentCollection<?> collection,
 			Object key,
 			SharedSessionContractImplementor session);
 	
@@ -206,7 +206,7 @@ public interface CollectionPersister extends CollectionDefinition, Restrictable 
 	 * Process queued operations within the PersistentCollection.
 	 */
 	void processQueuedOps(
-			PersistentCollection collection,
+			PersistentCollection<?> collection,
 			Object key,
 			SharedSessionContractImplementor session);
 	
@@ -355,7 +355,7 @@ public interface CollectionPersister extends CollectionDefinition, Restrictable 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// mapping model
 
-	CollectionSemantics getCollectionSemantics();
+	CollectionSemantics<?,?> getCollectionSemantics();
 
 
 	void applyBaseManyToManyRestrictions(

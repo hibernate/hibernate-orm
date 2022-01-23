@@ -89,7 +89,7 @@ public class CollectionLoaderSingleKey implements CollectionLoader {
 	}
 
 	@Override
-	public PersistentCollection load(Object key, SharedSessionContractImplementor session) {
+	public PersistentCollection<?> load(Object key, SharedSessionContractImplementor session) {
 		final CollectionKey collectionKey = new CollectionKey( attributeMapping.getCollectionDescriptor(), key );
 
 		final SessionFactoryImplementor sessionFactory = session.getFactory();

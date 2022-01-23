@@ -9,7 +9,8 @@ package org.hibernate;
 import java.sql.ResultSet;
 
 /**
- * Specifies the type of JDBC scrollable result set to use underneath a {@link ScrollableResults}.
+ * Specifies the type of JDBC scrollable {@linkplain ResultSet result set}
+ * to use underneath a {@link ScrollableResults}.
  *
  * @author Gavin King
  */
@@ -22,14 +23,16 @@ public enum ScrollMode {
 	FORWARD_ONLY( ResultSet.TYPE_FORWARD_ONLY ),
 
 	/**
-	 * Requests a scrollable result which is sensitive to changes in the underlying data.
+	 * Requests a scrollable result which is sensitive to changes
+	 * in the underlying data.
 	 *
 	 * @see ResultSet#TYPE_SCROLL_SENSITIVE
 	 */
 	SCROLL_SENSITIVE( ResultSet.TYPE_SCROLL_SENSITIVE ),
 
 	/**
-	 * Requests a scrollable result which is insensitive to changes in the underlying data.
+	 * Requests a scrollable result which is insensitive to changes
+	 * in the underlying data.
 	 *
 	 * Note that since the Hibernate session acts as a cache, you
 	 * might need to explicitly evict objects, if you need to see

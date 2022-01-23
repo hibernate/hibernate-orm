@@ -9,33 +9,49 @@ package org.hibernate;
 /**
  * Represents an association fetching strategy.
  *
+ * @apiNote This enumeration was previously used to override
+ * the fetching strategy specified by mapping annotations when
+ * using the old criteria query API. Now it is only used by
+ * SPIs and internal APIs.
+ *
+ * @see org.hibernate.annotations.FetchMode
+ *
  * @author Gavin King
  */
 public enum FetchMode  {
+
 	/**
-	 * Default to the setting configured in the mapping file.
+	 * Use the default fetching strategy specified by the
+	 * {@linkplain org.hibernate.annotations.Fetch mapping
+	 * annotations}.
 	 */
 	DEFAULT,
 
 	/**
-	 * Fetch using an outer join. Equivalent to {@code fetch="join"}.
+	 * Fetch in the initial select, using an outer join.
+	 *
+	 * @see org.hibernate.annotations.FetchMode#JOIN
 	 */
 	JOIN,
+
 	/**
-	 * Fetch eagerly, using a separate select. Equivalent to
-	 * {@code fetch="select"}.
+	 * Fetch using a separate subsequent select.
+	 *
+	 * @see org.hibernate.annotations.FetchMode#SELECT
+	 * @see org.hibernate.annotations.FetchMode#SUBSELECT
 	 */
 	SELECT;
 
 	/**
-	 * Fetch lazily. Equivalent to {@code outer-join="false"}.
+	 * Fetch lazily, using a separate select.
 	 *
 	 * @deprecated use {@link #SELECT}
 	 */
 	@Deprecated
 	public static final FetchMode LAZY = SELECT;
+
 	/**
-	 * Fetch eagerly, using an outer join. Equivalent to {@code outer-join="true"}.
+	 * Fetch eagerly, using an outer join.
 	 *
 	 * @deprecated use {@link #JOIN}
 	 */

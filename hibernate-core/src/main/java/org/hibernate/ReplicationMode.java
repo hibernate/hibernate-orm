@@ -9,9 +9,11 @@ package org.hibernate;
 import org.hibernate.type.BasicType;
 
 /**
- * Represents a replication strategy.
+ * Represents a replication strategy used by
+ * {@link Session#replicate(Object, ReplicationMode)}.
  *
  * @author Gavin King
+ *
  * @see Session#replicate(Object, ReplicationMode)
  */
 public enum ReplicationMode {

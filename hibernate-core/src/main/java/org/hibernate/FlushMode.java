@@ -13,7 +13,11 @@ import jakarta.persistence.FlushModeType;
 /**
  * Represents a flushing strategy. The flush process synchronizes
  * database state with session state by detecting state changes
- * and executing SQL statements.
+ * and executing SQL statements. A value of this enumeration
+ * specifies <em>when</em> the flush process occurs.
+ * <p>
+ * For example, {@link #COMMIT} specifies that the session flushes
+ * automatically when the transaction is about to commit.
  *
  * @see Session#setHibernateFlushMode
  * @see org.hibernate.query.CommonQueryContract#setHibernateFlushMode

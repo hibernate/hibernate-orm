@@ -17,8 +17,8 @@ import org.hibernate.type.Type;
  * Allows user code to inspect and/or change entity property values before they are
  * written to the database, or after the are read from the database.
  * <p>
- * The {@code Session} may not be invoked from a callback (nor may a callback cause a
- * collection or proxy to be lazily initialized).
+ * The {@link Session} may not be invoked from a callback (nor may a callback cause
+ * a collection or proxy to be lazily initialized).
  * <p>
  * There might be a single instance of {@code Interceptor} for a {@link SessionFactory},
  * or a new instance might be created for each {@link Session}. Use:

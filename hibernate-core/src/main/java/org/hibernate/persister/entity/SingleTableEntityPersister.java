@@ -18,7 +18,6 @@ import java.util.function.Supplier;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.boot.model.relational.Database;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.dialect.Dialect;
@@ -63,14 +62,16 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
-import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 
 /**
- * The default implementation of the {@code EntityPersister} interface.
- * Implements the "table-per-class-hierarchy" or "roll-up" mapping strategy
- * for an entity class and its inheritance hierarchy.  This is implemented
- * as a single table holding all classes in the hierarchy with a discriminator
- * column used to determine which concrete class is referenced.
+ * The default implementation of the {@link EntityPersister} interface.
+ * Implements the {@link jakarta.persistence.InheritanceType#SINGLE_TABLE}
+ * mapping strategy for an entity class and its inheritance hierarchy.
+ * <p>
+ * This is implemented as a single table for all classes of the hierarchy,
+ * with a discriminator column used to determine which concrete class a
+ * row represents.
  *
  * @author Gavin King
  */
@@ -141,8 +142,6 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		super( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext );
 
 		final SessionFactoryImplementor factory = creationContext.getSessionFactory();
-
-		final Database database = creationContext.getMetadata().getDatabase();
 
 		// CLASS + TABLE
 
@@ -240,7 +239,6 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 		final boolean lazyAvailable = isInstrumented();
 
-		boolean hasDeferred = false;
 		ArrayList<String> subclassTables = new ArrayList<>();
 		ArrayList<String[]> joinKeyColumns = new ArrayList<>();
 		ArrayList<Boolean> isConcretes = new ArrayList<>();
@@ -268,7 +266,6 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 			boolean isDeferred = join.isSequentialSelect() && ! persistentClass.isClassOrSuperclassJoin( join ) ;
 			isDeferreds.add( isDeferred );
-			hasDeferred |= isDeferred;
 
 			String joinTableName = determineTableName( join.getTable() );
 			subclassTables.add( joinTableName );
@@ -339,13 +336,15 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			else {
 				discriminatorInsertable = persistentClass.isDiscriminatorInsertable() && !discrimValue.hasFormula();
 				try {
-					discriminatorValue = discriminatorType.getJavaTypeDescriptor().fromString( persistentClass.getDiscriminatorValue() );
-					discriminatorSQLValue = discriminatorType.getJdbcType().getJdbcLiteralFormatter( (JavaType) discriminatorType.getJavaTypeDescriptor() )
-							.toJdbcLiteral(
-									discriminatorValue,
-									factory.getJdbcServices().getDialect(),
-									factory.getWrapperOptions()
-							);
+					discriminatorValue = discriminatorType.getJavaTypeDescriptor()
+							.fromString( persistentClass.getDiscriminatorValue() );
+					JdbcLiteralFormatter literalFormatter = discriminatorType.getJdbcType()
+							.getJdbcLiteralFormatter( discriminatorType.getJavaTypeDescriptor() );
+					discriminatorSQLValue = literalFormatter.toJdbcLiteral(
+							discriminatorValue,
+							factory.getJdbcServices().getDialect(),
+							factory.getWrapperOptions()
+					);
 				}
 				catch (ClassCastException cce) {
 					throw new MappingException( "Illegal discriminator type: " + discriminatorType.getName() );

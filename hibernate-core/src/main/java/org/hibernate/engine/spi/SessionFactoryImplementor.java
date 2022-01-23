@@ -173,7 +173,7 @@ public interface SessionFactoryImplementor
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// map these to Metamodel
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	MetamodelImplementor getMetamodel();
 
 	RootGraphImplementor<?> findEntityGraphByName(String name);

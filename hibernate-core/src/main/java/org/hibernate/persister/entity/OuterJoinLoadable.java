@@ -5,17 +5,16 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.persister.entity;
+
 import org.hibernate.FetchMode;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
 /**
- * A {@code EntityPersister} that may be loaded by outer join using
- * the {@code OuterJoinLoader} hierarchy and may be an element
- * of a one-to-many association.
+ * A {@link EntityPersister} that may be loaded by outer join using
+ * and may be an element of a one-to-many association.
  *
- * @see org.hibernate.loader.OuterJoinLoader
  * @author Gavin King
  */
 public interface OuterJoinLoadable extends Loadable, Joinable {

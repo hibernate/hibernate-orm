@@ -273,7 +273,7 @@ public abstract class AbstractCollectionPersister
 	private final BasicValueConverter elementConverter;
 	private final BasicValueConverter indexConverter;
 
-	// temprary
+	// temporary
 	private final JdbcMapping convertedElementType;
 	private final JdbcMapping convertedIndexType;
 
@@ -2158,21 +2158,17 @@ public abstract class AbstractCollectionPersister
 	// TODO: formulas ?
 	public void initCollectionPropertyMap() {
 
-		initCollectionPropertyMap( "key", keyType, keyColumnAliases, keyColumnNames );
-		initCollectionPropertyMap( "element", elementType, elementColumnAliases, elementColumnNames );
+		initCollectionPropertyMap( "key", keyType, keyColumnAliases );
+		initCollectionPropertyMap( "element", elementType, elementColumnAliases );
 		if ( hasIndex ) {
-			initCollectionPropertyMap( "index", indexType, indexColumnAliases, indexColumnNames );
+			initCollectionPropertyMap( "index", indexType, indexColumnAliases );
 		}
 		if ( hasIdentifier ) {
-			initCollectionPropertyMap(
-					"id",
-					identifierType,
-					new String[] { identifierColumnAlias },
-					new String[] { identifierColumnName } );
+			initCollectionPropertyMap( "id", identifierType, new String[] { identifierColumnAlias } );
 		}
 	}
 
-	private void initCollectionPropertyMap(String aliasName, Type type, String[] columnAliases, String[] columnNames) {
+	private void initCollectionPropertyMap(String aliasName, Type type, String[] columnAliases) {
 
 		collectionPropertyColumnAliases.put( aliasName, columnAliases );
 

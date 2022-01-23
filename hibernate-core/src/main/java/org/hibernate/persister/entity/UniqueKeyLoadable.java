@@ -9,6 +9,8 @@ package org.hibernate.persister.entity;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
+ * An {@link EntityPersister} that can be loaded by a non-primary unique key.
+ *
  * @author Gavin King
  */
 public interface UniqueKeyLoadable extends Loadable {

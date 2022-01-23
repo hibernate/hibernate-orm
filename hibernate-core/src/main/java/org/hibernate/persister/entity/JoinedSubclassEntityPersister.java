@@ -20,7 +20,6 @@ import java.util.function.Supplier;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.boot.model.relational.Database;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
@@ -65,15 +64,21 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
-import org.hibernate.type.descriptor.java.JavaType;
 
+import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.jboss.logging.Logger;
 
 import static java.util.Collections.emptyMap;
 
 /**
- * An {@code EntityPersister} implementing the normalized "table-per-subclass"
- * mapping strategy
+ * An {@link EntityPersister} implementing the normalized
+ * {@link jakarta.persistence.InheritanceType#JOINED} inheritance
+ * mapping strategy for an entity and its inheritance hierarchy.
+ * <p>
+ * This is implemented as a separate table for each subclass,
+ * with only declared attributes persisted as columns of that table.
+ * Thus, each instance of a subclass has its state stored across
+ * rows of multiple tables.
  *
  * @author Gavin King
  */
@@ -160,7 +165,6 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		super( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext );
 
 		final SessionFactoryImplementor factory = creationContext.getSessionFactory();
-		final Database database = creationContext.getMetadata().getDatabase();
 
 		// DISCRIMINATOR
 
@@ -189,13 +193,15 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 				}
 				else {
 					try {
-						discriminatorValue = discriminatorType.getJavaTypeDescriptor().fromString( persistentClass.getDiscriminatorValue() );
-						discriminatorSQLString = discriminatorType.getJdbcType().getJdbcLiteralFormatter( (JavaType) discriminatorType.getJavaTypeDescriptor() )
-								.toJdbcLiteral(
-										discriminatorValue,
-										factory.getJdbcServices().getDialect(),
-										factory.getWrapperOptions()
-								);
+						discriminatorValue = discriminatorType.getJavaTypeDescriptor()
+								.fromString( persistentClass.getDiscriminatorValue() );
+						JdbcLiteralFormatter literalFormatter = discriminatorType.getJdbcType()
+								.getJdbcLiteralFormatter( discriminatorType.getJavaTypeDescriptor() );
+						discriminatorSQLString = literalFormatter.toJdbcLiteral(
+								discriminatorValue,
+								factory.getJdbcServices().getDialect(),
+								factory.getWrapperOptions()
+						);
 					}
 					catch (ClassCastException cce) {
 						throw new MappingException("Illegal discriminator type: " + discriminatorType.getName() );

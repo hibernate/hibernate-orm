@@ -46,7 +46,9 @@ public interface MetamodelImplementor extends MappingMetamodel, Metamodel {
 	 *
 	 * @throws MappingException Indicates persister for that class could not be found.
 	 */
-	EntityPersister entityPersister(Class<?> entityClass);
+	default EntityPersister entityPersister(Class<?> entityClass) {
+		return getEntityDescriptor(entityClass);
+	}
 
 	/**
 	 * Locate the persister for an entity by the entity-name
@@ -57,7 +59,9 @@ public interface MetamodelImplementor extends MappingMetamodel, Metamodel {
 	 *
 	 * @throws MappingException Indicates persister could not be found with that name.
 	 */
-	EntityPersister entityPersister(String entityName);
+	default EntityPersister entityPersister(String entityName) {
+		return getEntityDescriptor(entityName);
+	}
 
 	/**
 	 * Get all entity persisters as a Map, which entity name its the key and the persister is the value.
@@ -75,7 +79,9 @@ public interface MetamodelImplementor extends MappingMetamodel, Metamodel {
 	 *
 	 * @throws MappingException Indicates persister could not be found with that role.
 	 */
-	CollectionPersister collectionPersister(String role);
+	default CollectionPersister collectionPersister(String role) {
+		return getCollectionDescriptor(role);
+	}
 
 	/**
 	 * Get all collection persisters as a Map, which collection role as the key and the persister is the value.

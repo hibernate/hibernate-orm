@@ -23,11 +23,9 @@ import java.util.function.Supplier;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
-import org.hibernate.cfg.Settings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.Mapping;
@@ -62,8 +60,12 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 
 /**
- * Implementation of the "table-per-concrete-class" or "roll-down" mapping
- * strategy for an entity and its inheritance hierarchy.
+ * An {@link EntityPersister} implementing the
+ * {@link jakarta.persistence.InheritanceType#TABLE_PER_CLASS}
+ * mapping strategy for an entity and its inheritance hierarchy.
+ * <p>
+ * This is implemented as a separate table for each concrete class,
+ * with all inherited attributes persisted as columns of that table.
  *
  * @author Gavin King
  */
@@ -103,7 +105,6 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		}
 
 		final SessionFactoryImplementor factory = creationContext.getSessionFactory();
-		final Database database = creationContext.getMetadata().getDatabase();
 
 		// TABLE
 
@@ -112,8 +113,8 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		//Custom SQL
 
 		String sql;
-		boolean callable = false;
-		ExecuteUpdateResultCheckStyle checkStyle = null;
+		boolean callable;
+		ExecuteUpdateResultCheckStyle checkStyle;
 		sql = persistentClass.getCustomSQLInsert();
 		callable = sql != null && persistentClass.isCustomInsertCallable();
 		checkStyle = sql == null
@@ -482,6 +483,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		StringBuilder buf = new StringBuilder()
 				.append( "( " );
 
+		@SuppressWarnings("unchecked")
 		Iterator<PersistentClass> siter = new JoinedIterator<>(
 				new SingletonIterator<>( model ),
 				model.getSubclassIterator()

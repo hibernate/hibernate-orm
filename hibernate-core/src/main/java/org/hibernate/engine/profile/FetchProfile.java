@@ -26,7 +26,7 @@ public class FetchProfile {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( FetchProfile.class );
 
 	private final String name;
-	private Map<String,Fetch> fetches = new HashMap<>();
+	private final Map<String,Fetch> fetches = new HashMap<>();
 
 	private boolean containsJoinFetchedCollection;
 	private boolean containsJoinFetchedBag;
@@ -78,7 +78,7 @@ public class FetchProfile {
 			if ( Fetch.Style.JOIN == fetch.getStyle() ) {
 				// first, if this is a bag we need to ignore it if we previously
 				// processed collection join fetches
-				if ( BagType.class.isInstance( associationType ) ) {
+				if ( associationType instanceof BagType ) {
 					if ( containsJoinFetchedCollection ) {
 						LOG.containsJoinFetchedCollection( fetchAssociactionRole );
 						// EARLY EXIT!!!

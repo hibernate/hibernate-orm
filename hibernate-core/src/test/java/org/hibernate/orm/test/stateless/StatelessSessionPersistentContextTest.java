@@ -146,7 +146,7 @@ public class StatelessSessionPersistentContextTest {
 				"StatelessSession: PersistenceContext has not been cleared"
 		);
 		assertTrue(
-				persistenceContextInternal.getCollectionsByKey() == Collections.emptyMap(),
+				persistenceContextInternal.getCollectionsByKey() == Collections.EMPTY_MAP,
 				"StatelessSession: PersistenceContext has not been cleared"
 		);
 	}

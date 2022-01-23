@@ -39,8 +39,7 @@ public final class ImmutableEntityEntry extends AbstractEntityEntry {
 			final LockMode lockMode,
 			final boolean existsInDatabase,
 			final EntityPersister persister,
-			final boolean disableVersionIncrement,
-			final PersistenceContext persistenceContext) {
+			final boolean disableVersionIncrement) {
 
 		super(
 				status,
@@ -60,7 +59,6 @@ public final class ImmutableEntityEntry extends AbstractEntityEntry {
 	/**
 	 * This for is used during custom deserialization handling
 	 */
-	@SuppressWarnings( {"JavaDoc"})
 	private ImmutableEntityEntry(
 			final SessionFactoryImplementor factory,
 			final String entityName,

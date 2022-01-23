@@ -51,8 +51,7 @@ public class ImmutableEntityEntryFactory implements EntityEntryFactory {
 				lockMode,
 				existsInDatabase,
 				persister,
-				disableVersionIncrement,
-				persistenceContext
+				disableVersionIncrement
 		);
 	}
 }

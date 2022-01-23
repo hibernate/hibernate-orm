@@ -53,7 +53,7 @@ public class Fetch {
 
 		private final String name;
 
-		private Style(String name) {
+		Style(String name) {
 			this.name = name;
 		}
 

@@ -25,27 +25,6 @@ import org.hibernate.persister.entity.EntityPersister;
  * @author <a href="mailto:sanne@hibernate.org">Sanne Grinovero </a>
  */
 public final class MutableEntityEntry extends AbstractEntityEntry {
-	/**
-	 * @deprecated the tenantId and entityMode parameters where removed: this constructor accepts but ignores them.
-	 * Use the other constructor!
-	 */
-	@Deprecated
-	public MutableEntityEntry(
-			final Status status,
-			final Object[] loadedState,
-			final Object rowId,
-			final Object id,
-			final Object version,
-			final LockMode lockMode,
-			final boolean existsInDatabase,
-			final EntityPersister persister,
-			final String tenantId,
-			final boolean disableVersionIncrement,
-			final PersistenceContext persistenceContext) {
-		this( status, loadedState, rowId, id, version, lockMode, existsInDatabase,
-				persister,disableVersionIncrement, persistenceContext
-		);
-	}
 
 	public MutableEntityEntry(
 			final Status status,
@@ -66,7 +45,6 @@ public final class MutableEntityEntry extends AbstractEntityEntry {
 	/**
 	 * This for is used during custom deserialization handling
 	 */
-	@SuppressWarnings( {"JavaDoc"})
 	private MutableEntityEntry(
 			final SessionFactoryImplementor factory,
 			final String entityName,

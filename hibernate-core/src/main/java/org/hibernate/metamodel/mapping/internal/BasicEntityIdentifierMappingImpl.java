@@ -97,8 +97,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 				bootEntityDescriptor.getIdentifier(),
 				getJavaType(),
 				propertyAccess.getGetter(),
-				instanceCreator,
-				sessionFactory
+				instanceCreator
 		);
 	}
 

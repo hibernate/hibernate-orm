@@ -7,7 +7,6 @@
 package org.hibernate.engine.spi;
 
 import java.io.Serializable;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.function.BiConsumer;
@@ -37,14 +36,12 @@ import org.hibernate.sql.results.spi.LoadContexts;
  * @author Gavin King
  * @author Steve Ebersole
  */
-@SuppressWarnings( {"JavaDoc"})
 public interface PersistenceContext {
 	/**
 	 * Marker object used to indicate (via reference checking) that no row was returned.
 	 */
 	Object NO_ROW = new MarkerObject( "NO_ROW" );
 
-	@SuppressWarnings( {"UnusedDeclaration"})
 	boolean isStateless();
 
 	/**
@@ -61,13 +58,13 @@ public interface PersistenceContext {
 	 */
 	LoadContexts getLoadContexts();
 
-	/**
-	 * Add a collection which has no owner loaded
-	 *
-	 * @param key The collection key under which to add the collection
-	 * @param collection The collection to add
-	 */
-	void addUnownedCollection(CollectionKey key, PersistentCollection collection);
+//	/**
+//	 * Add a collection which has no owner loaded
+//	 *
+//	 * @param key The collection key under which to add the collection
+//	 * @param collection The collection to add
+//	 */
+//	void addUnownedCollection(CollectionKey key, PersistentCollection<?> collection);
 
 	/**
 	 * Take ownership of a previously unowned collection, if one.  This method returns {@code null} if no such
@@ -79,7 +76,7 @@ public interface PersistenceContext {
 	 *
 	 * @return The unowned collection, or {@code null}
 	 */
-	PersistentCollection useUnownedCollection(CollectionKey key);
+	PersistentCollection<?> useUnownedCollection(CollectionKey key);
 
 	/**
 	 * Get the {@link BatchFetchQueue}, instantiating one if necessary.
@@ -93,11 +90,10 @@ public interface PersistenceContext {
 	 */
 	void clear();
 
-	/**
-	 * @return false if we know for certain that all the entities are read-only
-	 */
-	@SuppressWarnings( {"UnusedDeclaration"})
-	boolean hasNonReadOnlyEntities();
+//	/**
+//	 * @return false if we know for certain that all the entities are read-only
+//	 */
+//	boolean hasNonReadOnlyEntities();
 
 	/**
 	 * Set the status of an entry
@@ -233,7 +229,7 @@ public interface PersistenceContext {
 	 *
 	 * @return The matching collection entry
 	 */
-	CollectionEntry getCollectionEntry(PersistentCollection coll);
+	CollectionEntry getCollectionEntry(PersistentCollection<?> coll);
 
 	/**
 	 * Adds an entity to the internal caches.
@@ -268,7 +264,7 @@ public interface PersistenceContext {
 	/**
 	 * Is the given collection associated with this persistence context?
 	 */
-	boolean containsCollection(PersistentCollection collection);
+	boolean containsCollection(PersistentCollection<?> collection);
 
 	/**
 	 * Is the given proxy associated with this persistence context?
@@ -280,7 +276,6 @@ public interface PersistenceContext {
 	 *
 	 * @param value The possible proxy to be reassociated.
 	 * @return Whether the passed value represented an actual proxy which got initialized.
-	 * @throws MappingException
 	 */
 	boolean reassociateIfUninitializedProxy(Object value) ;
 
@@ -302,7 +297,6 @@ public interface PersistenceContext {
 	 *
 	 * @param maybeProxy The reference to be unproxied if it currently represents a proxy.
 	 * @return The unproxied instance.
-	 * @throws HibernateException
 	 */
 	Object unproxyAndReassociate(Object maybeProxy);
 
@@ -311,8 +305,6 @@ public interface PersistenceContext {
 	 * current session.
 	 *
 	 * @param object The entity reference against which to perform the uniqueness check.
-	 *
-	 * @throws HibernateException
 	 */
 	void checkUniqueness(EntityKey key, Object object);
 
@@ -327,7 +319,6 @@ public interface PersistenceContext {
 	 * @param key The internal cache key for the proxied entity.
 	 * @param object (optional) the actual proxied entity instance.
 	 * @return An appropriately narrowed instance.
-	 * @throws HibernateException
 	 */
 	Object narrowProxy(Object proxy, EntityPersister persister, EntityKey key, Object object);
 
@@ -363,7 +354,7 @@ public interface PersistenceContext {
 	 * @return the owner if its entity ID is available from the collection's loaded key
 	 * and the owner entity is in the persistence context; otherwise, returns null
 	 */
-	Object getLoadedCollectionOwnerOrNull(PersistentCollection collection);
+	Object getLoadedCollectionOwnerOrNull(PersistentCollection<?> collection);
 
 	/**
 	 * Get the ID for the entity that owned this persistent collection when it was loaded
@@ -371,24 +362,24 @@ public interface PersistenceContext {
 	 * @param collection The persistent collection
 	 * @return the owner ID if available from the collection's loaded key; otherwise, returns null
 	 */
-	Object getLoadedCollectionOwnerIdOrNull(PersistentCollection collection);
+	Object getLoadedCollectionOwnerIdOrNull(PersistentCollection<?> collection);
 
 	/**
 	 * add a collection we just loaded up (still needs initializing)
 	 */
-	void addUninitializedCollection(CollectionPersister persister, PersistentCollection collection, Object id);
+	void addUninitializedCollection(CollectionPersister persister, PersistentCollection<?> collection, Object id);
 
 	/**
 	 * add a detached uninitialized collection
 	 */
-	void addUninitializedDetachedCollection(CollectionPersister persister, PersistentCollection collection);
+	void addUninitializedDetachedCollection(CollectionPersister persister, PersistentCollection<?> collection);
 
 	/**
 	 * Add a new collection (ie. a newly created one, just instantiated by the
 	 * application, with no database state or snapshot)
 	 * @param collection The collection to be associated with the persistence context
 	 */
-	void addNewCollection(CollectionPersister persister, PersistentCollection collection);
+	void addNewCollection(CollectionPersister persister, PersistentCollection<?> collection);
 
 	/**
 	 * add an (initialized) collection that was created by another session and passed
@@ -396,26 +387,26 @@ public interface PersistenceContext {
 	 */
 	void addInitializedDetachedCollection(
 			CollectionPersister collectionPersister,
-			PersistentCollection collection);
+			PersistentCollection<?> collection);
 
 	/**
 	 * add a collection we just pulled out of the cache (does not need initializing)
 	 */
 	CollectionEntry addInitializedCollection(
 			CollectionPersister persister,
-			PersistentCollection collection,
+			PersistentCollection<?> collection,
 			Object id);
 
 	/**
 	 * Get the collection instance associated with the {@code CollectionKey}
 	 */
-	PersistentCollection getCollection(CollectionKey collectionKey);
+	PersistentCollection<?> getCollection(CollectionKey collectionKey);
 
 	/**
 	 * Register a collection for non-lazy loading at the end of the
 	 * two-phase load
 	 */
-	void addNonLazyCollection(PersistentCollection collection);
+	void addNonLazyCollection(PersistentCollection<?> collection);
 
 	/**
 	 * Force initialization of all non-lazy collections encountered during
@@ -427,36 +418,36 @@ public interface PersistenceContext {
 	/**
 	 * Get the {@code PersistentCollection} object for an array
 	 */
-	PersistentCollection getCollectionHolder(Object array);
+	PersistentCollection<?> getCollectionHolder(Object array);
 
 	/**
 	 * Register a {@code PersistentCollection} object for an array.
 	 * Associates a holder with an array - MUST be called after loading
 	 * array, since the array instance is not created until endLoad().
 	 */
-	void addCollectionHolder(PersistentCollection holder);
+	void addCollectionHolder(PersistentCollection<?> holder);
 
 	/**
 	 * Remove the mapping of collection to holder during eviction
 	 * of the owning entity
 	 */
-	PersistentCollection removeCollectionHolder(Object array);
+	PersistentCollection<?> removeCollectionHolder(Object array);
 
 	/**
 	 * Get the snapshot of the pre-flush collection state
 	 */
-	Serializable getSnapshot(PersistentCollection coll);
+	Serializable getSnapshot(PersistentCollection<?> coll);
 
-	/**
-	 * Get the collection entry for a collection passed to filter,
-	 * which might be a collection wrapper, an array, or an unwrapped
-	 * collection. Return null if there is no entry.
-	 *
-	 * @deprecated Intended use was in handling Hibernate's legacy
-	 * "collection filter via Query" feature which has been removed
-	 */
-	@Deprecated
-	CollectionEntry getCollectionEntryOrNull(Object collection);
+//	/**
+//	 * Get the collection entry for a collection passed to filter,
+//	 * which might be a collection wrapper, an array, or an unwrapped
+//	 * collection. Return null if there is no entry.
+//	 *
+//	 * @deprecated Intended use was in handling Hibernate's legacy
+//	 * "collection filter via Query" feature which has been removed
+//	 */
+//	@Deprecated
+//	CollectionEntry getCollectionEntryOrNull(Object collection);
 
 	/**
 	 * Get an existing proxy by key
@@ -479,12 +470,12 @@ public interface PersistenceContext {
 	 */
 	Object removeProxy(EntityKey key);
 
-	/**
-	 * Retrieve the set of EntityKeys representing nullifiable references
-	 * @deprecated Use {@link #containsNullifiableEntityKey(Supplier)} or {@link #registerNullifiableEntityKey(EntityKey)} or {@link #isNullifiableEntityKeysEmpty()}
-	 */
-	@Deprecated
-	HashSet getNullifiableEntityKeys();
+//	/**
+//	 * Retrieve the set of EntityKeys representing nullifiable references
+//	 * @deprecated Use {@link #containsNullifiableEntityKey(Supplier)} or {@link #registerNullifiableEntityKey(EntityKey)} or {@link #isNullifiableEntityKeysEmpty()}
+//	 */
+//	@Deprecated
+//	HashSet getNullifiableEntityKeys();
 
 	/**
 	 * Get the mapping from key value to entity instance
@@ -492,7 +483,7 @@ public interface PersistenceContext {
 	 * for specific access needs. Consider using #iterateEntities instead.
 	 */
 	@Deprecated
-	Map getEntitiesByKey();
+	Map<EntityKey,Object> getEntitiesByKey();
 
 	/**
 	 * Provides access to the entity/EntityEntry combos associated with the persistence context in a manner that
@@ -500,15 +491,15 @@ public interface PersistenceContext {
 	 */
 	Map.Entry<Object,EntityEntry>[] reentrantSafeEntityEntries();
 
-	/**
-	 * Get the mapping from entity instance to entity entry
-	 *
-	 * @deprecated Due to the introduction of EntityEntryContext and bytecode enhancement; only valid really for
-	 * sizing, see {@link #getNumberOfManagedEntities}.  For iterating the entity/EntityEntry combos, see
-	 * {@link #reentrantSafeEntityEntries}
-	 */
-	@Deprecated
-	Map getEntityEntries();
+//	/**
+//	 * Get the mapping from entity instance to entity entry
+//	 *
+//	 * @deprecated Due to the introduction of EntityEntryContext and bytecode enhancement; only valid really for
+//	 * sizing, see {@link #getNumberOfManagedEntities}.  For iterating the entity/EntityEntry combos, see
+//	 * {@link #reentrantSafeEntityEntries}
+//	 */
+//	@Deprecated
+//	Map getEntityEntries();
 
 	int getNumberOfManagedEntities();
 
@@ -517,14 +508,14 @@ public interface PersistenceContext {
 	 * @deprecated use {@link #removeCollectionEntry(PersistentCollection)} or {@link #getCollectionEntriesSize()}, {@link #forEachCollectionEntry(BiConsumer,boolean)}.
 	 */
 	@Deprecated
-	Map getCollectionEntries();
+	Map<PersistentCollection<?>,CollectionEntry> getCollectionEntries();
 
 	/**
 	 * Execute some action on each entry of the collectionEntries map, optionally iterating on a defensive copy.
 	 * @param action the lambda to apply on each PersistentCollection,CollectionEntry map entry of the PersistenceContext.
 	 * @param concurrent set this to false for improved efficiency, but that would make it illegal to make changes to the underlying collectionEntries map.
 	 */
-	void forEachCollectionEntry(BiConsumer<PersistentCollection,CollectionEntry> action, boolean concurrent);
+	void forEachCollectionEntry(BiConsumer<PersistentCollection<?>,CollectionEntry> action, boolean concurrent);
 
 	/**
 	 * Get the mapping from collection key to collection instance
@@ -534,7 +525,7 @@ public interface PersistenceContext {
 	 * N.B. This might return an immutable map: do not use for mutations!
 	 */
 	@Deprecated
-	Map getCollectionsByKey();
+	Map<CollectionKey,PersistentCollection<?>> getCollectionsByKey();
 
 	/**
 	 * How deep are we cascaded?
@@ -554,7 +545,6 @@ public interface PersistenceContext {
 	/**
 	 * Is a flush cycle currently in process?
 	 */
-	@SuppressWarnings( {"UnusedDeclaration"})
 	boolean isFlushing();
 
 	/**
@@ -774,7 +764,7 @@ public interface PersistenceContext {
 	 * @param collection the collection to remove
 	 * @return the matching {@link CollectionEntry}, if any was removed.
 	 */
-	CollectionEntry removeCollectionEntry(PersistentCollection collection);
+	CollectionEntry removeCollectionEntry(PersistentCollection<?> collection);
 
 	/**
 	 * Remove all state of the collections-by-key map.
@@ -787,7 +777,7 @@ public interface PersistenceContext {
 	 * @param persistentCollection
 	 * @return the previous collection, it the key was already mapped.
 	 */
-	PersistentCollection addCollectionByKey(CollectionKey collectionKey, PersistentCollection persistentCollection);
+	PersistentCollection<?> addCollectionByKey(CollectionKey collectionKey, PersistentCollection<?> persistentCollection);
 
 	/**
 	 * Remove a collection-by-key mapping.
@@ -798,7 +788,7 @@ public interface PersistenceContext {
 	/**
 	 * A read-only iterator on all entities managed by this persistence context
 	 */
-	Iterator managedEntitiesIterator();
+	Iterator<Object> managedEntitiesIterator();
 
 	/**
 	 * Access to the natural-id helper for this persistence context

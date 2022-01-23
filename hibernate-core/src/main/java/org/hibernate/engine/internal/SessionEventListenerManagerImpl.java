@@ -35,10 +35,10 @@ public class SessionEventListenerManagerImpl implements SessionEventListenerMana
 		}
 		else {
 			// Resize our existing array and add the new listeners
-			final SessionEventListener[] newlist = new SessionEventListener[ existing.length + additionalListeners.length ];
-			System.arraycopy( existing, 0, newlist, 0, existing.length );
-			System.arraycopy( additionalListeners, 0, newlist, existing.length, additionalListeners.length );
-			this.listeners = newlist;
+			final SessionEventListener[] newList = new SessionEventListener[ existing.length + additionalListeners.length ];
+			System.arraycopy( existing, 0, newList, 0, existing.length );
+			System.arraycopy( additionalListeners, 0, newList, existing.length, additionalListeners.length );
+			this.listeners = newList;
 		}
 	}
 

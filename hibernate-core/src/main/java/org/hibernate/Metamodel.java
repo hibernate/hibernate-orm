@@ -6,8 +6,6 @@
  */
 package org.hibernate;
 
-import jakarta.persistence.metamodel.EntityType;
-
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 
 /**
@@ -25,16 +23,6 @@ public interface Metamodel extends JpaMetamodel {
 	 * @return The SessionFactory
 	 */
 	SessionFactory getSessionFactory();
-
-	/**
-	 * @deprecated since 5.2
-	 */
-	@Deprecated
-	default EntityType getEntityTypeByName(String entityName) {
-		return entity( entityName );
-	}
-
-	String getImportedClassName(String className);
 
 	/**
 	 * Given the name of an entity class, determine all the class and interface names by which it can be

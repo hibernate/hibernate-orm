@@ -512,11 +512,6 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 	}
 
 	@Override
-	public String getImportedClassName(String className) {
-		throw new UnsupportedOperationException(  );
-	}
-
-	@Override
 	public String[] getImplementors(String className) throws MappingException {
 		// computeIfAbsent() can be a contention point and we expect all the values to be in the map at some point so
 		// let's do an optimistic check first

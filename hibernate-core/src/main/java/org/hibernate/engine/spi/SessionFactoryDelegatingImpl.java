@@ -14,7 +14,6 @@ import javax.naming.NamingException;
 import javax.naming.Reference;
 
 import org.hibernate.CustomEntityDirtinessStrategy;
-import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.Session;
@@ -26,12 +25,9 @@ import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.event.spi.EventEngine;
-import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.FastSessionServices;
@@ -234,11 +230,6 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	@Deprecated
 	public String[] getImplementors(String className) throws MappingException {
 		return delegate.getMetamodel().getImplementors(className);
-	}
-
-	@Deprecated
-	public String getImportedClassName(String name) {
-		return delegate.getMetamodel().getImportedClassName(name);
 	}
 
 	@Override

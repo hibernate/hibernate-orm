@@ -40,21 +40,6 @@ public enum FetchMode  {
 	 * @see org.hibernate.annotations.FetchMode#SELECT
 	 * @see org.hibernate.annotations.FetchMode#SUBSELECT
 	 */
-	SELECT;
+	SELECT
 
-	/**
-	 * Fetch lazily, using a separate select.
-	 *
-	 * @deprecated use {@link #SELECT}
-	 */
-	@Deprecated
-	public static final FetchMode LAZY = SELECT;
-
-	/**
-	 * Fetch eagerly, using an outer join.
-	 *
-	 * @deprecated use {@link #JOIN}
-	 */
-	@Deprecated
-	public static final FetchMode EAGER = JOIN;
 }

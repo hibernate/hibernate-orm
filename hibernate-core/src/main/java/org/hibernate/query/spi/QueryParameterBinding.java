@@ -10,7 +10,7 @@ import java.util.Collection;
 import jakarta.persistence.TemporalType;
 
 import org.hibernate.Incubating;
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.BindableType;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -111,17 +111,17 @@ public interface QueryParameterBinding<T> {
 	Collection<? extends T> getBindValues();
 
 	/**
-	 * Returns the inferred mapping model expressable i.e. the model reference against which this parameter is compared.
+	 * Returns the inferred mapping model expressible i.e. the model reference against which this parameter is compared.
 	 *
-	 * @return the inferred mapping model expressable or <code>null</code>
+	 * @return the inferred mapping model expressible or <code>null</code>
 	 */
-	MappingModelExpressable<T> getType();
+	MappingModelExpressible<T> getType();
 
 	/**
-	 * Sets the mapping model expressable for this parameter.
+	 * Sets the mapping model expressible for this parameter.
 	 *
-	 * @param type The mapping model expressable
+	 * @param type The mapping model expressible
 	 * @return Whether the bind type was changed
 	 */
-	boolean setType(MappingModelExpressable<T> type);
+	boolean setType(MappingModelExpressible<T> type);
 }

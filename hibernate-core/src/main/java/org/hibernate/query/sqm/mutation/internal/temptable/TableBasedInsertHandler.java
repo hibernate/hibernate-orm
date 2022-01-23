@@ -24,7 +24,7 @@ import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.enhanced.Optimizer;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.MappingMetamodel;
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
@@ -142,7 +142,7 @@ public class TableBasedInsertHandler implements InsertHandler {
 		// information about the target paths
 
 		final List<Assignment> targetPathColumns = new ArrayList<>();
-		final Map<SqmParameter<?>, MappingModelExpressable<?>> paramTypeResolutions = new LinkedHashMap<>();
+		final Map<SqmParameter<?>, MappingModelExpressible<?>> paramTypeResolutions = new LinkedHashMap<>();
 		final NamedTableReference entityTableReference = new NamedTableReference(
 				entityTable.getTableExpression(),
 				TemporaryTable.DEFAULT_ALIAS,

@@ -58,7 +58,7 @@ import org.hibernate.query.spi.QueryOptionsAdapter;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.result.NoMoreReturnsException;
 import org.hibernate.result.Output;
 import org.hibernate.result.ResultSetOutput;
@@ -460,21 +460,21 @@ public class ProcedureCallImpl<R>
 				.getDomainModel()
 				.resolveQueryParameterType( javaType );
 
-		final Class<T> expressableJavaType;
+		final Class<T> expressibleJavaType;
 		if ( parameterType == null ) {
-			expressableJavaType = null;
+			expressibleJavaType = null;
 		}
 		else {
-			final SqmExpressable<T> sqmExpressable = parameterType.resolveExpressable( getSessionFactory() );
-			assert sqmExpressable != null;
+			final SqmExpressible<T> sqmExpressible = parameterType.resolveExpressible( getSessionFactory() );
+			assert sqmExpressible != null;
 
-			expressableJavaType = sqmExpressable.getExpressableJavaType().getJavaTypeClass();
+			expressibleJavaType = sqmExpressible.getExpressibleJavaType().getJavaTypeClass();
 		}
 
 		final ProcedureParameterImpl<T> procedureParameter = new ProcedureParameterImpl<>(
 				position,
 				mode,
-				expressableJavaType,
+				expressibleJavaType,
 				parameterType
 		);
 		registerParameter( procedureParameter );

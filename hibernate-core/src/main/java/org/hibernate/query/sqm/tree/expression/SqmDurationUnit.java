@@ -10,7 +10,7 @@ import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
@@ -42,7 +42,7 @@ public class SqmDurationUnit<T> extends AbstractSqmNode implements SqmTypedNode<
 	}
 
 	@Override
-	public SqmExpressable<T> getNodeType() {
+	public SqmExpressible<T> getNodeType() {
 		return type;
 	}
 

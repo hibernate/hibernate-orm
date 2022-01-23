@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.ast.tree.expression;
 
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
@@ -23,9 +23,9 @@ import org.hibernate.type.descriptor.java.JavaType;
 public class Any implements Expression, DomainResultProducer {
 
 	private final QueryPart subquery;
-	private final MappingModelExpressable<?> type;
+	private final MappingModelExpressible<?> type;
 
-	public Any(QueryPart subquery, MappingModelExpressable<?> type) {
+	public Any(QueryPart subquery, MappingModelExpressible<?> type) {
 		this.subquery = subquery;
 		this.type = type;
 	}
@@ -35,7 +35,7 @@ public class Any implements Expression, DomainResultProducer {
 	}
 
 	@Override
-	public MappingModelExpressable getExpressionType() {
+	public MappingModelExpressible getExpressionType() {
 		return type;
 	}
 

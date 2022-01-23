@@ -12,7 +12,7 @@ import java.util.Date;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.BindableType;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -56,8 +56,8 @@ public class QueryParameterBindingValidator {
 			parameterJavaType = paramType.getBindableJavaType();
 		}
 		else {
-			final SqmExpressable<?> sqmExpressable = paramType.resolveExpressable( sessionFactory );
-			parameterJavaType = sqmExpressable.getBindableJavaType();
+			final SqmExpressible<?> sqmExpressible = paramType.resolveExpressible( sessionFactory );
+			parameterJavaType = sqmExpressible.getBindableJavaType();
 		}
 
 		if ( parameterJavaType == null ) {

@@ -9,7 +9,7 @@ package org.hibernate.metamodel.mapping;
 import java.util.Locale;
 
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.JavaTypedExpressable;
+import org.hibernate.type.descriptor.java.JavaTypedExpressible;
 
 /**
  * Describes a mapping related to any part of the app's domain model - e.g.
@@ -21,14 +21,14 @@ import org.hibernate.type.descriptor.java.JavaTypedExpressable;
  *
  * @author Steve Ebersole
  */
-public interface ValueMapping extends MappingModelExpressable, JavaTypedExpressable {
+public interface ValueMapping extends MappingModelExpressible, JavaTypedExpressible {
 	/**
 	 * Descriptor for the type of this mapping
 	 */
 	MappingType getMappedType();
 
 	@Override
-	default JavaType<?> getExpressableJavaType() {
+	default JavaType<?> getExpressibleJavaType() {
 		return getMappedType().getMappedJavaType();
 	}
 

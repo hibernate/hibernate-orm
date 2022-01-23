@@ -66,7 +66,7 @@ public abstract class AbstractStandardBasicType<T>
 
 	@Override
 	public Class<T> getJavaType() {
-		return this.getExpressableJavaType().getJavaTypeClass();
+		return this.getExpressibleJavaType().getJavaTypeClass();
 	}
 
 	public T fromString(CharSequence string) {

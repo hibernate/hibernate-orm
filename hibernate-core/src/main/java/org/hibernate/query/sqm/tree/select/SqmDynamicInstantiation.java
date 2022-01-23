@@ -214,7 +214,7 @@ public class SqmDynamicInstantiation<T>
 		}
 
 		@Override
-		public JavaType<T> getExpressableJavaType() {
+		public JavaType<T> getExpressibleJavaType() {
 			return getTargetTypeDescriptor();
 		}
 

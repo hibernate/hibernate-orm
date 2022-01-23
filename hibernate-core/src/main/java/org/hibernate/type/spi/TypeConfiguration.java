@@ -45,13 +45,13 @@ import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.model.domain.internal.ArrayTupleType;
 import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.internal.QueryHelper;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicType;
@@ -459,12 +459,12 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 	private final ConcurrentMap<ArrayCacheKey, ArrayTupleType> arrayTuples = new ConcurrentHashMap<>();
 
-	public SqmExpressable<?> resolveTupleType(List<? extends SqmTypedNode<?>> typedNodes) {
-		final SqmExpressable<?>[] components = new SqmExpressable<?>[typedNodes.size()];
+	public SqmExpressible<?> resolveTupleType(List<? extends SqmTypedNode<?>> typedNodes) {
+		final SqmExpressible<?>[] components = new SqmExpressible<?>[typedNodes.size()];
 		for ( int i = 0; i < typedNodes.size(); i++ ) {
-			final SqmExpressable<?> sqmExpressable = typedNodes.get( i ).getNodeType();
-			components[i] = sqmExpressable != null
-					? sqmExpressable
+			final SqmExpressible<?> sqmExpressible = typedNodes.get( i ).getNodeType();
+			components[i] = sqmExpressible != null
+					? sqmExpressible
 					: getBasicTypeForJavaType( Object.class );
 		}
 		return arrayTuples.computeIfAbsent(
@@ -474,9 +474,9 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	}
 
 	private static class ArrayCacheKey {
-		final SqmExpressable<?>[] components;
+		final SqmExpressible<?>[] components;
 
-		public ArrayCacheKey(SqmExpressable<?>[] components) {
+		public ArrayCacheKey(SqmExpressible<?>[] components) {
 			this.components = components;
 		}
 
@@ -494,9 +494,9 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	/**
 	 * @see QueryHelper#highestPrecedenceType2
 	 */
-	public SqmExpressable<?> resolveArithmeticType(
-			SqmExpressable<?> firstType,
-			SqmExpressable<?> secondType,
+	public SqmExpressible<?> resolveArithmeticType(
+			SqmExpressible<?> firstType,
+			SqmExpressible<?> secondType,
 			BinaryArithmeticOperator operator) {
 		return resolveArithmeticType( firstType, secondType );
 	}
@@ -507,9 +507,9 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	 *
 	 * @see QueryHelper#highestPrecedenceType2
 	 */
-	public SqmExpressable<?> resolveArithmeticType(
-			SqmExpressable<?> firstType,
-			SqmExpressable<?> secondType) {
+	public SqmExpressible<?> resolveArithmeticType(
+			SqmExpressible<?> firstType,
+			SqmExpressible<?> secondType) {
 
 		if ( getSqlTemporalType( firstType ) != null ) {
 			if ( secondType==null || getSqlTemporalType( secondType ) != null ) {
@@ -535,15 +535,15 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		}
 
 		if ( secondType == null || firstType != null
-				&& firstType.getExpressableJavaType().isWider( secondType.getExpressableJavaType() ) ) {
+				&& firstType.getExpressibleJavaType().isWider( secondType.getExpressibleJavaType() ) ) {
 			return firstType;
 		}
 		return secondType;
 	}
 
-	private static boolean matchesJavaType(SqmExpressable<?> type, Class<?> javaType) {
+	private static boolean matchesJavaType(SqmExpressible<?> type, Class<?> javaType) {
 		assert javaType != null;
-		return type != null && javaType.isAssignableFrom( type.getExpressableJavaType().getJavaTypeClass() );
+		return type != null && javaType.isAssignableFrom( type.getExpressibleJavaType().getJavaTypeClass() );
 	}
 
 
@@ -601,11 +601,11 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		);
 	}
 
-	public TemporalType getSqlTemporalType(SqmExpressable<?> type) {
+	public TemporalType getSqlTemporalType(SqmExpressible<?> type) {
 		if ( type == null ) {
 			return null;
 		}
-		return getSqlTemporalType( type.getExpressableJavaType().getRecommendedJdbcType( getCurrentBaseSqlTypeIndicators() ) );
+		return getSqlTemporalType( type.getExpressibleJavaType().getRecommendedJdbcType( getCurrentBaseSqlTypeIndicators() ) );
 	}
 
 	public static TemporalType getSqlTemporalType(JdbcMapping jdbcMapping) {
@@ -617,7 +617,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		return getSqlTemporalType( jdbcMappings.getJdbcMappings().get( 0 ).getJdbcType() );
 	}
 
-	public static TemporalType getSqlTemporalType(MappingModelExpressable<?> type) {
+	public static TemporalType getSqlTemporalType(MappingModelExpressible<?> type) {
 		if ( type instanceof BasicValuedMapping ) {
 			return getSqlTemporalType( ( (BasicValuedMapping) type ).getJdbcMapping().getJdbcType() );
 		}
@@ -659,11 +659,11 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		return null;
 	}
 
-	public static boolean isJdbcTemporalType(SqmExpressable<?> type) {
+	public static boolean isJdbcTemporalType(SqmExpressible<?> type) {
 		return matchesJavaType( type, Date.class );
 	}
 
-	public static boolean isDuration(SqmExpressable<?> type) {
+	public static boolean isDuration(SqmExpressible<?> type) {
 		return matchesJavaType( type, Duration.class );
 	}
 

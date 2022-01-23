@@ -91,11 +91,11 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 			List<? extends SqmExpression<?>> expressions);
 
 	<R> SqmTuple<R> tuple(
-			SqmExpressable<R> tupleType,
+			SqmExpressible<R> tupleType,
 			SqmExpression<?>... expressions);
 
 	<R> SqmTuple<R> tuple(
-			SqmExpressable<R> tupleType,
+			SqmExpressible<R> tupleType,
 			List<? extends SqmExpression<?>> expressions);
 
 	@Override

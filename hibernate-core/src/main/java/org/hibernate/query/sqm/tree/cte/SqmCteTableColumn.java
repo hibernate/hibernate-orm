@@ -8,7 +8,6 @@ package org.hibernate.query.sqm.tree.cte;
 
 import java.io.Serializable;
 
-import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ValueMapping;
 
 /**
@@ -18,15 +17,15 @@ import org.hibernate.metamodel.mapping.ValueMapping;
 public class SqmCteTableColumn implements Serializable {
 	private final SqmCteTable cteTable;
 	private final String columnName;
-	private final ValueMapping typeExpressable;
+	private final ValueMapping typeExpressible;
 
 	public SqmCteTableColumn(
 			SqmCteTable cteTable,
 			String columnName,
-			ValueMapping typeExpressable) {
+			ValueMapping typeExpressible) {
 		this.cteTable = cteTable;
 		this.columnName = columnName;
-		this.typeExpressable = typeExpressable;
+		this.typeExpressible = typeExpressible;
 	}
 
 	public SqmCteTable getCteTable() {
@@ -38,7 +37,7 @@ public class SqmCteTableColumn implements Serializable {
 	}
 
 	public ValueMapping getType() {
-		return typeExpressable;
+		return typeExpressible;
 	}
 
 }

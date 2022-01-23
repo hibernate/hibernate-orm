@@ -109,7 +109,7 @@ import org.hibernate.mapping.Index;
 import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.SqlExpressable;
+import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
@@ -1421,12 +1421,12 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * Get the name of the database type appropriate for casting operations
-	 * (via the CAST() SQL function) for the given {@link SqlExpressable}
+	 * (via the CAST() SQL function) for the given {@link SqlExpressible}
 	 * SQL type.
 	 *
 	 * @return The database type name
 	 */
-	public String getCastTypeName(SqlExpressable type, Long length, Integer precision, Integer scale) {
+	public String getCastTypeName(SqlExpressible type, Long length, Integer precision, Integer scale) {
 		final JdbcMapping jdbcMapping = type.getJdbcMapping();
 		final JdbcType jdbcType = jdbcMapping.getJdbcType();
 		final JavaType<?> javaType = jdbcMapping.getJavaTypeDescriptor();

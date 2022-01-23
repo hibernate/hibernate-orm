@@ -55,7 +55,7 @@ import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.function.NamedSqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
@@ -449,24 +449,24 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		final TypeConfiguration typeConfiguration = getTypeConfiguration();
 		@SuppressWarnings("unchecked")
 		final List<SqmExpression<?>> sqmExpressions = (List<SqmExpression<?>>) expressions;
-		final SqmExpressable<R> expressableType;
+		final SqmExpressible<R> expressibleType;
 		if ( tupleType == null || tupleType == Object[].class ) {
 			//noinspection unchecked
-			expressableType = (DomainType<R>) typeConfiguration.resolveTupleType( sqmExpressions );
+			expressibleType = (DomainType<R>) typeConfiguration.resolveTupleType( sqmExpressions );
 		}
 		else {
-			expressableType = typeConfiguration.getSessionFactory().getMetamodel().embeddable( tupleType );
+			expressibleType = typeConfiguration.getSessionFactory().getMetamodel().embeddable( tupleType );
 		}
-		return tuple( expressableType, sqmExpressions );
+		return tuple( expressibleType, sqmExpressions );
 	}
 
 	@Override
-	public <R> SqmTuple<R> tuple(SqmExpressable<R> tupleType, SqmExpression<?>... expressions) {
+	public <R> SqmTuple<R> tuple(SqmExpressible<R> tupleType, SqmExpression<?>... expressions) {
 		return tuple( tupleType, asList( expressions ) );
 	}
 
 	@Override
-	public <R> SqmTuple<R> tuple(SqmExpressable<R> tupleType, List<? extends SqmExpression<?>> sqmExpressions) {
+	public <R> SqmTuple<R> tuple(SqmExpressible<R> tupleType, List<? extends SqmExpression<?>> sqmExpressions) {
 		if ( tupleType == null ) {
 			//noinspection unchecked
 			tupleType = (DomainType<R>) getTypeConfiguration().resolveTupleType( sqmExpressions );
@@ -704,7 +704,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 				operator,
 				leftHandExpression,
 				rightHandExpression,
-				(SqmExpressable<N>) getDomainModel().getTypeConfiguration().resolveArithmeticType(
+				(SqmExpressible<N>) getDomainModel().getTypeConfiguration().resolveArithmeticType(
 						leftHandExpression.getNodeType(),
 						rightHandExpression.getNodeType(),
 						operator
@@ -891,17 +891,17 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			return new SqmLiteralNull<>( this );
 		}
 
-		final SqmExpressable<T> expressible = resolveInferredType( value, typeInferenceSource, getTypeConfiguration() );
+		final SqmExpressible<T> expressible = resolveInferredType( value, typeInferenceSource, getTypeConfiguration() );
 		return new SqmLiteral<>( value, expressible, this );
 	}
 
-	private static <T> SqmExpressable<T> resolveInferredType(
+	private static <T> SqmExpressible<T> resolveInferredType(
 			T value,
 			SqmExpression<? extends T> typeInferenceSource,
 			TypeConfiguration typeConfiguration) {
 		if ( typeInferenceSource != null ) {
 			//noinspection unchecked
-			return (SqmExpressable<T>) typeInferenceSource.getNodeType();
+			return (SqmExpressible<T>) typeInferenceSource.getNodeType();
 		}
 
 		if ( value == null ) {
@@ -924,11 +924,11 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		final BindableType<? extends T> valueParamType = queryEngine.getTypeConfiguration()
 				.getSessionFactory()
 				.resolveParameterBindType( value );
-		final SqmExpressable<? extends T> sqmExpressable = valueParamType == null
+		final SqmExpressible<? extends T> sqmExpressible = valueParamType == null
 				? null
-				: valueParamType.resolveExpressable( getTypeConfiguration().getSessionFactory() );
+				: valueParamType.resolveExpressible( getTypeConfiguration().getSessionFactory() );
 
-		return new SqmLiteral<>( value, sqmExpressable, this );
+		return new SqmLiteral<>( value, sqmExpressible, this );
 	}
 
 	@Override
@@ -961,19 +961,19 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	public <T> SqmExpression<T> nullLiteral(Class<T> resultClass) {
 		final TypeConfiguration typeConfiguration = getTypeConfiguration();
 		final BasicType<T> basicTypeForJavaType = typeConfiguration.getBasicTypeForJavaType( resultClass );
-		final SqmExpressable<T> sqmExpressable;
+		final SqmExpressible<T> sqmExpressible;
 		if ( basicTypeForJavaType == null ) {
-			sqmExpressable = typeConfiguration.getSessionFactory()
+			sqmExpressible = typeConfiguration.getSessionFactory()
 					.getMetamodel()
 					.managedType( resultClass );
 		}
 		else {
-			sqmExpressable = basicTypeForJavaType;
+			sqmExpressible = basicTypeForJavaType;
 		}
-		return new SqmLiteralNull<>( sqmExpressable, this );
+		return new SqmLiteralNull<>(sqmExpressible, this );
 	}
 
-	class MultiValueParameterType<T> implements SqmExpressable<T> {
+	class MultiValueParameterType<T> implements SqmExpressible<T> {
 		private final JavaType<T> javaType;
 
 		public MultiValueParameterType(Class<T> type) {
@@ -984,7 +984,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		}
 
 		@Override
-		public JavaType<T> getExpressableJavaType() {
+		public JavaType<T> getExpressibleJavaType() {
 			return javaType;
 		}
 
@@ -1501,12 +1501,12 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	public <Y> JpaCoalesce<Y> coalesce(Expression<? extends Y> x, Expression<? extends Y> y) {
 		@SuppressWarnings("unchecked")
-		final SqmExpressable<Y> sqmExpressable = (SqmExpressable<Y>) highestPrecedenceType(
+		final SqmExpressible<Y> sqmExpressible = (SqmExpressible<Y>) highestPrecedenceType(
 				( (SqmExpression<? extends Y>) x ).getNodeType(),
 				( (SqmExpression<? extends Y>) y ).getNodeType()
 		);
 		return new SqmCoalesce<>(
-				sqmExpressable,
+				sqmExpressible,
 				2,
 				this
 		)

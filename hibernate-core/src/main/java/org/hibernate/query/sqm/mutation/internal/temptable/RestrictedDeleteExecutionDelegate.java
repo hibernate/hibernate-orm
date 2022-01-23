@@ -26,7 +26,7 @@ import org.hibernate.internal.util.MutableInteger;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.MappingModelHelper;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.persister.entity.EntityPersister;
@@ -122,7 +122,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 		assert hierarchyRootTableReference != null;
 
 		final Map<SqmParameter<?>, List<List<JdbcParameter>>> parameterResolutions;
-		final Map<SqmParameter<?>, MappingModelExpressable<?>> paramTypeResolutions;
+		final Map<SqmParameter<?>, MappingModelExpressible<?>> paramTypeResolutions;
 
 		if ( domainParameterXref.getSqmParameterCount() == 0 ) {
 			parameterResolutions = Collections.emptyMap();
@@ -204,7 +204,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 			Predicate suppliedPredicate,
 			TableGroup tableGroup,
 			Map<SqmParameter<?>, List<List<JdbcParameter>>> restrictionSqmParameterResolutions,
-			Map<SqmParameter<?>, MappingModelExpressable<?>> paramTypeResolutions,
+			Map<SqmParameter<?>, MappingModelExpressible<?>> paramTypeResolutions,
 			SqlExpressionResolver sqlExpressionResolver,
 			ExecutionContext executionContext) {
 		assert entityDescriptor == entityDescriptor.getRootEntityDescriptor();
@@ -236,8 +236,8 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 				navigablePath -> tableGroup,
 				new SqmParameterMappingModelResolutionAccess() {
 					@Override @SuppressWarnings("unchecked")
-					public <T> MappingModelExpressable<T> getResolvedMappingModelType(SqmParameter<T> parameter) {
-						return (MappingModelExpressable<T>) paramTypeResolutions.get(parameter);
+					public <T> MappingModelExpressible<T> getResolvedMappingModelType(SqmParameter<T> parameter) {
+						return (MappingModelExpressible<T>) paramTypeResolutions.get(parameter);
 					}
 				},
 				executionContext.getSession()
@@ -472,7 +472,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 			Predicate predicate,
 			TableGroup deletingTableGroup,
 			Map<SqmParameter<?>, List<List<JdbcParameter>>> restrictionSqmParameterResolutions,
-			Map<SqmParameter<?>, MappingModelExpressable<?>> paramTypeResolutions,
+			Map<SqmParameter<?>, MappingModelExpressible<?>> paramTypeResolutions,
 			ExecutionContext executionContext) {
 		final JdbcParameterBindings jdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
 				executionContext.getQueryParameterBindings(),
@@ -485,8 +485,8 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 				navigablePath -> deletingTableGroup,
 				new SqmParameterMappingModelResolutionAccess() {
 					@Override @SuppressWarnings("unchecked")
-					public <T> MappingModelExpressable<T> getResolvedMappingModelType(SqmParameter<T> parameter) {
-						return (MappingModelExpressable<T>) paramTypeResolutions.get(parameter);
+					public <T> MappingModelExpressible<T> getResolvedMappingModelType(SqmParameter<T> parameter) {
+						return (MappingModelExpressible<T>) paramTypeResolutions.get(parameter);
 					}
 				},
 				executionContext.getSession()

@@ -10,7 +10,7 @@ import java.util.function.Function;
 
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.sql.ast.tree.expression.Expression;
 
 /**
@@ -21,7 +21,7 @@ public class SqmSelfRenderingExpression<T> extends AbstractSqmExpression<T> {
 
 	public SqmSelfRenderingExpression(
 			Function<SemanticQueryWalker, Expression> renderer,
-			SqmExpressable<T> type,
+			SqmExpressible<T> type,
 			NodeBuilder criteriaBuilder) {
 		super( type, criteriaBuilder );
 		this.renderer = renderer;

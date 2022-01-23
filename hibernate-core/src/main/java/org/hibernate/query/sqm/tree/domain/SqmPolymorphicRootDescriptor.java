@@ -145,7 +145,7 @@ public class SqmPolymorphicRootDescriptor<T> implements EntityDomainType<T> {
 	}
 
 	@Override
-	public JavaType<T> getExpressableJavaType() {
+	public JavaType<T> getExpressibleJavaType() {
 		return polymorphicJavaType;
 	}
 

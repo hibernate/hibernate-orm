@@ -9,7 +9,7 @@ package org.hibernate.query.sqm.tree.expression;
 import org.hibernate.query.internal.QueryLiteralHelper;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -25,13 +25,13 @@ import org.hibernate.type.descriptor.java.JavaType;
 public class SqmLiteral<T> extends AbstractSqmExpression<T> {
 	private final T value;
 
-	public SqmLiteral(T value, SqmExpressable<? extends T> inherentType, NodeBuilder nodeBuilder) {
+	public SqmLiteral(T value, SqmExpressible<? extends T> inherentType, NodeBuilder nodeBuilder) {
 		super( inherentType, nodeBuilder );
 		assert value != null;
 		this.value = value;
 	}
 
-	protected SqmLiteral(SqmExpressable<T> inherentType, NodeBuilder nodeBuilder) {
+	protected SqmLiteral(SqmExpressible<T> inherentType, NodeBuilder nodeBuilder) {
 		super( inherentType, nodeBuilder );
 		this.value = null;
 	}

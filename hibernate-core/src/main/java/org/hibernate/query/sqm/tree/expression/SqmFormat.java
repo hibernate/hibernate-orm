@@ -11,7 +11,7 @@ import java.util.regex.Pattern;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 
 /**
  * Effectively a query-literal but we want to handle it specially in the SQM -> SQL AST conversion
@@ -43,7 +43,7 @@ public class SqmFormat extends SqmLiteral<String> {
 
 	public SqmFormat(
 			String value,
-			SqmExpressable<String> inherentType,
+			SqmExpressible<String> inherentType,
 			NodeBuilder nodeBuilder) {
 		super(value, inherentType, nodeBuilder);
 		if (!FORMAT.matcher(value).matches()) {

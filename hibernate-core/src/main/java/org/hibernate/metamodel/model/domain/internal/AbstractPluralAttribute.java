@@ -92,8 +92,8 @@ public abstract class AbstractPluralAttribute<D, C, E>
 	}
 
 	@Override
-	public JavaType<E> getExpressableJavaType() {
-		return getElementType().getExpressableJavaType();
+	public JavaType<E> getExpressibleJavaType() {
+		return getElementType().getExpressibleJavaType();
 	}
 
 	@Override

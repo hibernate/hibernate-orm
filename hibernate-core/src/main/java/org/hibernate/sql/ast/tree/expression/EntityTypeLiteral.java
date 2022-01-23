@@ -11,7 +11,7 @@ import java.util.List;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.persister.entity.DiscriminatorType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Queryable;
@@ -23,12 +23,12 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.JavaTypedExpressable;
+import org.hibernate.type.descriptor.java.JavaTypedExpressible;
 
 /**
  * @author Steve Ebersole
  */
-public class EntityTypeLiteral implements Expression, MappingModelExpressable, DomainResultProducer, JavaTypedExpressable {
+public class EntityTypeLiteral implements Expression, MappingModelExpressible, DomainResultProducer, JavaTypedExpressible {
 	private final EntityPersister entityTypeDescriptor;
 	private final DiscriminatorType discriminatorType;
 
@@ -42,10 +42,10 @@ public class EntityTypeLiteral implements Expression, MappingModelExpressable, D
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// MappingModelExpressable
+	// MappingModelExpressible
 
 	@Override
-	public MappingModelExpressable getExpressionType() {
+	public MappingModelExpressible getExpressionType() {
 		return this;
 	}
 
@@ -104,7 +104,7 @@ public class EntityTypeLiteral implements Expression, MappingModelExpressable, D
 				createSqlSelection( creationState )
 						.getValuesArrayPosition(),
 				resultVariable,
-				discriminatorType.getExpressableJavaType()
+				discriminatorType.getExpressibleJavaType()
 		);
 	}
 
@@ -112,7 +112,7 @@ public class EntityTypeLiteral implements Expression, MappingModelExpressable, D
 		return creationState.getSqlAstCreationState().getSqlExpressionResolver()
 				.resolveSqlSelection(
 						this,
-						discriminatorType.getExpressableJavaType(),
+						discriminatorType.getExpressibleJavaType(),
 						creationState.getSqlAstCreationState().getCreationContext()
 								.getDomainModel().getTypeConfiguration()
 				);
@@ -124,7 +124,7 @@ public class EntityTypeLiteral implements Expression, MappingModelExpressable, D
 	}
 
 	@Override
-	public JavaType getExpressableJavaType() {
-		return discriminatorType.getExpressableJavaType();
+	public JavaType getExpressibleJavaType() {
+		return discriminatorType.getExpressibleJavaType();
 	}
 }

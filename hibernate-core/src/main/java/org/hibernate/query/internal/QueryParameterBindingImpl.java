@@ -12,12 +12,12 @@ import java.util.Iterator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindingValidator;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.type.descriptor.java.CoercionException;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.TemporalJavaType;
@@ -38,7 +38,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 	private boolean isMultiValued;
 
 	private BindableType<? extends T> bindType;
-	private MappingModelExpressable<T> type;
+	private MappingModelExpressible<T> type;
 	private TemporalType explicitTemporalPrecision;
 
 	private T bindValue;
@@ -140,10 +140,10 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 			return null;
 		}
 
-		final SqmExpressable<? extends T> sqmExpressable = parameterType.resolveExpressable( sessionFactory );
-		assert sqmExpressable != null;
+		final SqmExpressible<? extends T> sqmExpressible = parameterType.resolveExpressible( sessionFactory );
+		assert sqmExpressible != null;
 
-		return sqmExpressable.getExpressableJavaType().coerce( value, this );
+		return sqmExpressible.getExpressibleJavaType().coerce( value, this );
 	}
 
 	private boolean handleAsMultiValue(T value) {
@@ -302,19 +302,19 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 	}
 
 	private JavaType<? extends T> determineJavaType(BindableType<? extends T> bindType) {
-		final SqmExpressable<? extends T> sqmExpressable = bindType.resolveExpressable( sessionFactory );
-		assert sqmExpressable != null;
+		final SqmExpressible<? extends T> sqmExpressible = bindType.resolveExpressible( sessionFactory );
+		assert sqmExpressible != null;
 
-		return sqmExpressable.getExpressableJavaType();
+		return sqmExpressible.getExpressibleJavaType();
 	}
 
 	@Override
-	public MappingModelExpressable<T> getType() {
+	public MappingModelExpressible<T> getType() {
 		return type;
 	}
 
 	@Override @SuppressWarnings("unchecked")
-	public boolean setType(MappingModelExpressable<T> type) {
+	public boolean setType(MappingModelExpressible<T> type) {
 		this.type = type;
 		if ( bindType == null || bindType.getBindableJavaType() == Object.class ) {
 			if ( type instanceof BindableType<?> ) {

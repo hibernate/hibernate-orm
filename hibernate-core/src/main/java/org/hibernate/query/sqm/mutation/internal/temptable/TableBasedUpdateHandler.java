@@ -20,7 +20,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.MappingMetamodel;
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
@@ -144,7 +144,7 @@ public class TableBasedUpdateHandler
 		// information about the assignments
 
 		final List<Assignment> assignments = new ArrayList<>();
-		final Map<SqmParameter<?>, MappingModelExpressable<?>> paramTypeResolutions = new LinkedHashMap<>();
+		final Map<SqmParameter<?>, MappingModelExpressible<?>> paramTypeResolutions = new LinkedHashMap<>();
 
 		converterDelegate.visitSetClause(
 				getSqmDeleteOrUpdateStatement().getSetClause(),

@@ -11,10 +11,10 @@ import java.util.List;
 
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
@@ -87,14 +87,14 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 				getRenderingSupport(),
 				arguments,
 				resultType,
-				resultType == null ? null : getMappingModelExpressable( walker, resultType )
+				resultType == null ? null : getMappingModelExpressible( walker, resultType )
 		);
 	}
 
-	public SqmExpressable<T> getNodeType() {
-		SqmExpressable<T> nodeType = super.getNodeType();
+	public SqmExpressible<T> getNodeType() {
+		SqmExpressible<T> nodeType = super.getNodeType();
 		if ( nodeType == null ) {
-			nodeType = (SqmExpressable<T>) resolveResultType( nodeBuilder().getTypeConfiguration() );
+			nodeType = (SqmExpressible<T>) resolveResultType( nodeBuilder().getTypeConfiguration() );
 		}
 
 		return nodeType;
@@ -107,19 +107,19 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 				getArguments(),
 				typeConfiguration
 			);
-			setExpressableType( resultType );
+			setExpressibleType( resultType );
 		}
 		return resultType;
 	}
 
-	protected MappingModelExpressable<?> getMappingModelExpressable(
+	protected MappingModelExpressible<?> getMappingModelExpressible(
 			SqmToSqlAstConverter walker,
 			ReturnableType<?> resultType) {
-		MappingModelExpressable<?> mapping;
-		if ( resultType instanceof MappingModelExpressable ) {
+		MappingModelExpressible<?> mapping;
+		if ( resultType instanceof MappingModelExpressible) {
 			// here we have a BasicType, which can be cast
 			// directly to BasicValuedMapping
-			mapping = (MappingModelExpressable<?>) resultType;
+			mapping = (MappingModelExpressible<?>) resultType;
 		}
 		else {
 			// here we have something that is not a BasicType,
@@ -129,7 +129,7 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 					() -> {
 						try {
 							final MappingMetamodel domainModel = walker.getCreationContext().getDomainModel();
-							return (BasicValuedMapping) domainModel.resolveMappingExpressable(
+							return (BasicValuedMapping) domainModel.resolveMappingExpressible(
 									getNodeType(),
 									walker.getFromClauseAccess()::getTableGroup
 							);

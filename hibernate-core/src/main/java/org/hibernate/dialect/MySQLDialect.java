@@ -44,7 +44,7 @@ import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.SqlExpressable;
+import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
@@ -806,7 +806,7 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
-	public String getCastTypeName(SqlExpressable type, Long length, Integer precision, Integer scale) {
+	public String getCastTypeName(SqlExpressible type, Long length, Integer precision, Integer scale) {
 		final JdbcMapping jdbcMapping = type.getJdbcMapping();
 		final JdbcType jdbcType = jdbcMapping.getJdbcType();
 		final JavaType<?> javaType = jdbcMapping.getJavaTypeDescriptor();

@@ -29,7 +29,7 @@ import org.hibernate.metamodel.mapping.ConvertibleModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
@@ -221,14 +221,14 @@ public class SqmUtil {
 					continue;
 				}
 				if ( !domainParamBinding.isBound() ) {
-					final MappingModelExpressable<?> mappingExpressable = SqmMappingModelHelper.resolveMappingModelExpressable(
+					final MappingModelExpressible<?> mappingExpressible = SqmMappingModelHelper.resolveMappingModelExpressible(
 							sqmParameter,
 							domainModel,
 							tableGroupLocator
 					);
 					for ( int i = 0; i < jdbcParamsBinds.size(); i++ ) {
 						final List<JdbcParameter> jdbcParams = jdbcParamsBinds.get( i );
-						mappingExpressable.forEachJdbcType(
+						mappingExpressible.forEachJdbcType(
 								(position, jdbcType) -> {
 									jdbcParameterBindings.addBinding(
 											jdbcParams.get( position ),
@@ -420,7 +420,7 @@ public class SqmUtil {
 		}
 
 		for ( int i = 0; i < sqmParameters.size(); i++ ) {
-			final MappingModelExpressable<?> mappingModelType = mappingModelResolutionAccess
+			final MappingModelExpressible<?> mappingModelType = mappingModelResolutionAccess
 					.getResolvedMappingModelType( sqmParameters.get( i ) );
 			if ( mappingModelType != null ) {
 				return mappingModelType;

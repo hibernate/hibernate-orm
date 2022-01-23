@@ -19,7 +19,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.query.SemanticException;
@@ -63,7 +63,7 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 	private final JdbcParameterBindings jdbcParameterBindings;
 
 	private final Map<TableReference, List<Assignment>> assignmentsByTable;
-	private final Map<SqmParameter<?>, MappingModelExpressable<?>> paramTypeResolutions;
+	private final Map<SqmParameter<?>, MappingModelExpressible<?>> paramTypeResolutions;
 	private final SessionFactoryImplementor sessionFactory;
 
 	public UpdateExecutionDelegate(
@@ -79,7 +79,7 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 			List<Assignment> assignments,
 			Predicate suppliedPredicate,
 			Map<SqmParameter<?>, List<List<JdbcParameter>>> parameterResolutions,
-			Map<SqmParameter<?>, MappingModelExpressable<?>> paramTypeResolutions,
+			Map<SqmParameter<?>, MappingModelExpressible<?>> paramTypeResolutions,
 			DomainQueryExecutionContext executionContext) {
 		this.sqmUpdate = sqmUpdate;
 		this.sqmConverter = sqmConverter;
@@ -111,8 +111,8 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 				navigablePath -> updatingTableGroup,
 				new SqmParameterMappingModelResolutionAccess() {
 					@Override @SuppressWarnings("unchecked")
-					public <T> MappingModelExpressable<T> getResolvedMappingModelType(SqmParameter<T> parameter) {
-						return (MappingModelExpressable<T>) paramTypeResolutions.get(parameter);
+					public <T> MappingModelExpressible<T> getResolvedMappingModelType(SqmParameter<T> parameter) {
+						return (MappingModelExpressible<T>) paramTypeResolutions.get(parameter);
 					}
 				},
 				executionContext.getSession()

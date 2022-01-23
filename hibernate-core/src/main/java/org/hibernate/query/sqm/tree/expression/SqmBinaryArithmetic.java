@@ -10,7 +10,7 @@ import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 
 /**
@@ -29,7 +29,7 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> implements 
 			NodeBuilder nodeBuilder) {
 		//noinspection unchecked
 		super(
-				(SqmExpressable<T>) domainModel.getTypeConfiguration().resolveArithmeticType(
+				(SqmExpressible<T>) domainModel.getTypeConfiguration().resolveArithmeticType(
 						lhsOperand.getNodeType(),
 						rhsOperand.getNodeType(),
 						operator
@@ -49,16 +49,16 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> implements 
 			BinaryArithmeticOperator operator,
 			SqmExpression<?> lhsOperand,
 			SqmExpression<?> rhsOperand,
-			SqmExpressable<T> expressableType,
+			SqmExpressible<T> expressibleType,
 			NodeBuilder nodeBuilder) {
-		super( expressableType, nodeBuilder );
+		super( expressibleType, nodeBuilder );
 
 		this.operator = operator;
 
 		this.lhsOperand = lhsOperand;
 		this.rhsOperand = rhsOperand;
 
-		applyInferableType( expressableType );
+		applyInferableType( expressibleType );
 	}
 
 	@Override
@@ -94,7 +94,7 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> implements 
 	}
 
 	@Override
-	protected void internalApplyInferableType(SqmExpressable<?> type) {
+	protected void internalApplyInferableType(SqmExpressible<?> type) {
 		rhsOperand.applyInferableType( type );
 		lhsOperand.applyInferableType( type );
 

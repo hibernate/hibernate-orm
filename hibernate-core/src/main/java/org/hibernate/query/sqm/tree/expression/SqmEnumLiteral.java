@@ -15,7 +15,7 @@ import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 
@@ -25,7 +25,7 @@ import org.hibernate.type.descriptor.java.EnumJavaType;
  *
  * @author Steve Ebersole
  */
-public class SqmEnumLiteral<E extends Enum<E>> extends AbstractSqmExpression<E> implements SqmExpressable<E>, SemanticPathPart {
+public class SqmEnumLiteral<E extends Enum<E>> extends AbstractSqmExpression<E> implements SqmExpressible<E>, SemanticPathPart {
 	private final E enumValue;
 	private final EnumJavaType<E> referencedEnumTypeDescriptor;
 	private final String enumValueName;
@@ -39,7 +39,7 @@ public class SqmEnumLiteral<E extends Enum<E>> extends AbstractSqmExpression<E> 
 		this.enumValue = enumValue;
 		this.referencedEnumTypeDescriptor = referencedEnumTypeDescriptor;
 		this.enumValueName = enumValueName;
-		setExpressableType( this );
+		setExpressibleType( this );
 	}
 
 	public E getEnumValue() {
@@ -47,7 +47,7 @@ public class SqmEnumLiteral<E extends Enum<E>> extends AbstractSqmExpression<E> 
 	}
 
 	@Override
-	public EnumJavaType<E> getExpressableJavaType() {
+	public EnumJavaType<E> getExpressibleJavaType() {
 		return referencedEnumTypeDescriptor;
 	}
 
@@ -92,22 +92,22 @@ public class SqmEnumLiteral<E extends Enum<E>> extends AbstractSqmExpression<E> 
 
 	@Override
 	public SqmExpression<Long> asLong() {
-		return nodeBuilder().literal( getExpressableJavaType().toOrdinal( enumValue ).longValue() );
+		return nodeBuilder().literal( getExpressibleJavaType().toOrdinal( enumValue ).longValue() );
 	}
 
 	@Override
 	public SqmExpression<Integer> asInteger() {
-		return nodeBuilder().literal( getExpressableJavaType().toOrdinal( enumValue ) );
+		return nodeBuilder().literal( getExpressibleJavaType().toOrdinal( enumValue ) );
 	}
 
 	@Override
 	public SqmExpression<Float> asFloat() {
-		return nodeBuilder().literal( getExpressableJavaType().toOrdinal( enumValue ).floatValue() );
+		return nodeBuilder().literal( getExpressibleJavaType().toOrdinal( enumValue ).floatValue() );
 	}
 
 	@Override
 	public SqmExpression<Double> asDouble() {
-		return nodeBuilder().literal( getExpressableJavaType().toOrdinal( enumValue ).doubleValue() );
+		return nodeBuilder().literal( getExpressibleJavaType().toOrdinal( enumValue ).doubleValue() );
 	}
 
 	@Override
@@ -122,7 +122,7 @@ public class SqmEnumLiteral<E extends Enum<E>> extends AbstractSqmExpression<E> 
 
 	@Override
 	public SqmExpression<String> asString() {
-		return nodeBuilder().literal( getExpressableJavaType().toName( enumValue ) );
+		return nodeBuilder().literal( getExpressibleJavaType().toName( enumValue ) );
 	}
 
 	@Override

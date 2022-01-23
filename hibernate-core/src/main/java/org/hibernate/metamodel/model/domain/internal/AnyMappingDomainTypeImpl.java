@@ -35,7 +35,7 @@ public class AnyMappingDomainTypeImpl<T> implements AnyMappingDomainType<T> {
 	}
 
 	@Override
-	public JavaType<T> getExpressableJavaType() {
+	public JavaType<T> getExpressibleJavaType() {
 		return baseJtd;
 	}
 

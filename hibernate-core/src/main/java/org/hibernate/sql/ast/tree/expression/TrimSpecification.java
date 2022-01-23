@@ -8,7 +8,7 @@ package org.hibernate.sql.ast.tree.expression;
 
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.SqlExpressable;
+import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.query.sqm.TrimSpec;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -16,7 +16,7 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
 /**
  * @author Gavin King
  */
-public class TrimSpecification implements SqlExpressable, SqlAstNode {
+public class TrimSpecification implements SqlExpressible, SqlAstNode {
 	private TrimSpec trimSpec;
 
 	public TrimSpecification(TrimSpec trimSpec) {

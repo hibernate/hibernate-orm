@@ -49,7 +49,7 @@ import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.TypedParameterValue;
 import org.hibernate.query.internal.ScrollableResultsIterator;
 import org.hibernate.query.named.NamedQueryMemento;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -635,10 +635,10 @@ public abstract class AbstractQuery<R>
 	}
 
 	private boolean isInstance(BindableType<?> parameterType, Object value) {
-		final SqmExpressable<?> sqmExpressable = parameterType.resolveExpressable( getSession().getFactory() );
-		assert sqmExpressable != null;
+		final SqmExpressible<?> sqmExpressible = parameterType.resolveExpressible( getSession().getFactory() );
+		assert sqmExpressible != null;
 
-		return sqmExpressable.getExpressableJavaType().isInstance( value );
+		return sqmExpressible.getExpressibleJavaType().isInstance( value );
 	}
 
 	@Override

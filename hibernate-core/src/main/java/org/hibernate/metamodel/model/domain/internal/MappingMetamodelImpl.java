@@ -48,7 +48,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.internal.JpaMetaModelPopulationSetting;
 import org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting;
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.query.BindableType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
@@ -65,7 +65,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.spi.PersisterFactory;
 import org.hibernate.query.spi.NavigablePath;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -155,7 +155,7 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 	private final TypeConfiguration typeConfiguration;
 
 	private final Map<String, String[]> implementorsCache = new ConcurrentHashMap<>();
-	private final Map<TupleType<?>, MappingModelExpressable<?>> tupleTypeCache = new ConcurrentHashMap<>();
+	private final Map<TupleType<?>, MappingModelExpressible<?>> tupleTypeCache = new ConcurrentHashMap<>();
 
 	public MappingMetamodelImpl(SessionFactoryImplementor sessionFactory, TypeConfiguration typeConfiguration) {
 		this.sessionFactory = sessionFactory;
@@ -745,16 +745,16 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 	}
 
 	@Override
-	public MappingModelExpressable<?> lenientlyResolveMappingExpressable(
-			SqmExpressable<?> sqmExpressable,
+	public MappingModelExpressible<?> lenientlyResolveMappingExpressible(
+			SqmExpressible<?> sqmExpressible,
 			Function<NavigablePath, TableGroup> tableGroupLocator) {
-		return resolveMappingExpressable( sqmExpressable, tableGroupLocator );
+		return resolveMappingExpressible(sqmExpressible, tableGroupLocator );
 	}
 
 	@Override
-	public MappingModelExpressable<?> resolveMappingExpressable(SqmExpressable<?> sqmExpressable, Function<NavigablePath, TableGroup> tableGroupLocator) {
-		if ( sqmExpressable instanceof SqmPath ) {
-			final SqmPath<?> sqmPath = (SqmPath<?>) sqmExpressable;
+	public MappingModelExpressible<?> resolveMappingExpressible(SqmExpressible<?> sqmExpressible, Function<NavigablePath, TableGroup> tableGroupLocator) {
+		if ( sqmExpressible instanceof SqmPath ) {
+			final SqmPath<?> sqmPath = (SqmPath<?>) sqmExpressible;
 			final NavigablePath navigablePath = sqmPath.getNavigablePath();
 			if ( navigablePath.getParent() != null ) {
 				final TableGroup parentTableGroup = tableGroupLocator.apply( navigablePath.getParent() );
@@ -763,48 +763,48 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 			return tableGroupLocator.apply( navigablePath.getParent() ).getModelPart();
 		}
 
-		if ( sqmExpressable instanceof BasicType<?> ) {
-			return (BasicType<?>) sqmExpressable;
+		if ( sqmExpressible instanceof BasicType<?> ) {
+			return (BasicType<?>) sqmExpressible;
 		}
 
-		if ( sqmExpressable instanceof BasicSqmPathSource<?> ) {
-			return getTypeConfiguration().getBasicTypeForJavaType(((BasicSqmPathSource<?>) sqmExpressable).getJavaType());
+		if ( sqmExpressible instanceof BasicSqmPathSource<?> ) {
+			return getTypeConfiguration().getBasicTypeForJavaType(((BasicSqmPathSource<?>) sqmExpressible).getJavaType());
 		}
 
-		if ( sqmExpressable instanceof SqmFieldLiteral ) {
-			return getTypeConfiguration().getBasicTypeForJavaType( ( (SqmFieldLiteral<?>) sqmExpressable ).getJavaType() );
+		if ( sqmExpressible instanceof SqmFieldLiteral ) {
+			return getTypeConfiguration().getBasicTypeForJavaType( ( (SqmFieldLiteral<?>) sqmExpressible).getJavaType() );
 		}
 
-		if ( sqmExpressable instanceof CompositeSqmPathSource ) {
-			throw new NotYetImplementedFor6Exception( "Resolution of embedded-valued SqmExpressable nodes not yet implemented" );
+		if ( sqmExpressible instanceof CompositeSqmPathSource ) {
+			throw new NotYetImplementedFor6Exception( "Resolution of embedded-valued SqmExpressible nodes not yet implemented" );
 		}
 
-		if ( sqmExpressable instanceof EmbeddableTypeImpl ) {
-			return (MappingModelExpressable<?>) sqmExpressable;
+		if ( sqmExpressible instanceof EmbeddableTypeImpl ) {
+			return (MappingModelExpressible<?>) sqmExpressible;
 		}
 
-		if ( sqmExpressable instanceof EntityDomainType<?> ) {
-			return getEntityDescriptor( ( (EntityDomainType<?>) sqmExpressable ).getHibernateEntityName() );
+		if ( sqmExpressible instanceof EntityDomainType<?> ) {
+			return getEntityDescriptor( ( (EntityDomainType<?>) sqmExpressible).getHibernateEntityName() );
 		}
 
-		if ( sqmExpressable instanceof TupleType<?> ) {
-			final MappingModelExpressable<?> mappingModelExpressable = tupleTypeCache.get( sqmExpressable );
-			if ( mappingModelExpressable != null ) {
-				return mappingModelExpressable;
+		if ( sqmExpressible instanceof TupleType<?> ) {
+			final MappingModelExpressible<?> mappingModelExpressible = tupleTypeCache.get(sqmExpressible);
+			if ( mappingModelExpressible != null ) {
+				return mappingModelExpressible;
 			}
-			final TupleType<?> tupleType = (TupleType<?>) sqmExpressable;
-			final MappingModelExpressable<?>[] components = new MappingModelExpressable<?>[tupleType.componentCount()];
+			final TupleType<?> tupleType = (TupleType<?>) sqmExpressible;
+			final MappingModelExpressible<?>[] components = new MappingModelExpressible<?>[tupleType.componentCount()];
 			for ( int i = 0; i < components.length; i++ ) {
-				components[i] = resolveMappingExpressable( tupleType.get( i ), tableGroupLocator );
+				components[i] = resolveMappingExpressible( tupleType.get( i ), tableGroupLocator );
 			}
-			final MappingModelExpressable<?> createdMappingModelExpressable = new TupleMappingModelExpressable( components );
-			final MappingModelExpressable<?> existingMappingModelExpressable = tupleTypeCache.putIfAbsent(
+			final MappingModelExpressible<?> createdMappingModelExpressible = new TupleMappingModelExpressible( components );
+			final MappingModelExpressible<?> existingMappingModelExpressible = tupleTypeCache.putIfAbsent(
 					tupleType,
-					createdMappingModelExpressable
+					createdMappingModelExpressible
 			);
-			return existingMappingModelExpressable == null
-					? createdMappingModelExpressable
-					: existingMappingModelExpressable;
+			return existingMappingModelExpressible == null
+					? createdMappingModelExpressible
+					: existingMappingModelExpressible;
 		}
 		return null;
 	}

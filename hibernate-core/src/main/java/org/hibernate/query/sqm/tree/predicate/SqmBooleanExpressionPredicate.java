@@ -35,7 +35,7 @@ public class SqmBooleanExpressionPredicate extends AbstractNegatableSqmPredicate
 		super( negated, nodeBuilder );
 
 		assert booleanExpression.getNodeType() != null;
-		final Class<?> expressionJavaType = booleanExpression.getNodeType().getExpressableJavaType().getJavaTypeClass();
+		final Class<?> expressionJavaType = booleanExpression.getNodeType().getExpressibleJavaType().getJavaTypeClass();
 		assert boolean.class.equals( expressionJavaType ) || Boolean.class.equals( expressionJavaType );
 
 		this.booleanExpression = booleanExpression;

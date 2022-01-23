@@ -28,7 +28,7 @@ import org.hibernate.type.descriptor.java.JavaType;
  *
  * @author Steve Ebersole
  */
-public interface ModelPart extends MappingModelExpressable {
+public interface ModelPart extends MappingModelExpressible {
 	MappingType getPartMappingType();
 
 	JavaType<?> getJavaType();

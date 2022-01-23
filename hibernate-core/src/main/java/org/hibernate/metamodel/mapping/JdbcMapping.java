@@ -24,13 +24,13 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 public interface JdbcMapping extends MappingType, JdbcMappingContainer {
 	/**
 	 * The descriptor for the Java type represented by this
-	 * expressable type
+	 * expressible type
 	 */
 	JavaType getJavaTypeDescriptor();
 
 	/**
 	 * The descriptor for the SQL type represented by this
-	 * expressable type
+	 * expressible type
 	 */
 	JdbcType getJdbcType();
 
@@ -39,19 +39,19 @@ public interface JdbcMapping extends MappingType, JdbcMappingContainer {
 	}
 
 	/**
-	 * The strategy for extracting values of this expressable
+	 * The strategy for extracting values of this expressible
 	 * type from JDBC ResultSets, CallableStatements, etc
 	 */
-	ValueExtractor getJdbcValueExtractor();
+	ValueExtractor<?> getJdbcValueExtractor();
 
 	/**
-	 * The strategy for binding values of this expressable
-	 * type to JDBC PreparedStatements, CallableStatements, etc
+	 * The strategy for binding values of this expressible type to
+	 * JDBC {@code PreparedStatement}s and {@code CallableStatement}s.
 	 */
 	ValueBinder getJdbcValueBinder();
 
 	@Override
-	default JavaType getMappedJavaType() {
+	default JavaType<?> getMappedJavaType() {
 		return getJavaTypeDescriptor();
 	}
 

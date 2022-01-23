@@ -110,7 +110,7 @@ public class CompleteResultBuilderBasicValuedConverted<O,R> implements CompleteR
 //							return new SqlSelectionImpl( valuesArrayPosition, basicType );
 //						}
 //				),
-//				basicType.getExpressableJavaType(),
+//				basicType.getExpressibleJavaType(),
 //				sessionFactory.getTypeConfiguration()
 //		);
 

@@ -302,7 +302,7 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 	}
 
 	@Override
-	public JavaType<?> getExpressableJavaType() {
+	public JavaType<?> getExpressibleJavaType() {
 		return getJavaType();
 	}
 

@@ -109,7 +109,7 @@ public class SerializableToBlobType<T extends Serializable> implements BasicType
 
 	@Override
 	public Class<T> getJavaType() {
-		return this.getExpressableJavaType().getJavaTypeClass();
+		return this.getExpressibleJavaType().getJavaTypeClass();
 	}
 
 	public T fromString(CharSequence string) {

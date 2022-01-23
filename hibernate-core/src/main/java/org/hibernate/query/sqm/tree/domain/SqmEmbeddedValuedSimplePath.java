@@ -14,7 +14,7 @@ import org.hibernate.query.PathException;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -23,7 +23,7 @@ import org.hibernate.type.descriptor.java.JavaType;
  */
 public class SqmEmbeddedValuedSimplePath<T>
 		extends AbstractSqmSimplePath<T>
-		implements BindableType<T>, SqmExpressable<T> {
+		implements BindableType<T>, SqmExpressible<T> {
 	public SqmEmbeddedValuedSimplePath(
 			NavigablePath navigablePath,
 			SqmPathSource<T> referencedPathSource,
@@ -73,7 +73,7 @@ public class SqmEmbeddedValuedSimplePath<T>
 	}
 
 	@Override
-	public JavaType<T> getExpressableJavaType() {
+	public JavaType<T> getExpressibleJavaType() {
 		return getJavaTypeDescriptor();
 	}
 

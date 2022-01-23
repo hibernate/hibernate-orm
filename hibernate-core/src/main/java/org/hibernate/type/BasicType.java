@@ -44,7 +44,7 @@ public interface BasicType<T> extends Type, BasicDomainType<T>, MappingType, Bas
 	}
 
 	@Override
-	default JavaType<T> getExpressableJavaType() {
+	default JavaType<T> getExpressibleJavaType() {
 		return getJavaTypeDescriptor();
 	}
 

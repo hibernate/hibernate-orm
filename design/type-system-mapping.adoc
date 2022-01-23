@@ -18,7 +18,7 @@ skinparam handwritten true
 interface MappingType
 interface ManagedMappingType
 
-interface MappingModelExpressable
+interface MappingModelExpressible
 interface ValueMapping
 interface BasicType
 interface ModelPart
@@ -32,8 +32,8 @@ MappingType <|-- CollectionMappingType
 ManagedMappingType <|-- EmbeddableMappingType
 ManagedMappingType <|-- EntityMappingType
 
-MappingModelExpressable <|-- ValueMapping
-MappingModelExpressable <|-- ModelPart
+MappingModelExpressible <|-- ValueMapping
+MappingModelExpressible <|-- ModelPart
 
 ValueMapping <|-- BasicType
 
@@ -68,5 +68,5 @@ EntityIdentifierMapping::EntityIdentifierDefinition
 
 AT some point this needs to be "resolved" to a ValueMapping/Type/Bindable when generating the SQL AST and executing.
 
-One option is to have the `BindableType` be resolved first to a `SqmExpressable`
-`SqmExpressableAllowableParameterType#resolveSqmExpressable`
+One option is to have the `BindableType` be resolved first to a `SqmExpressible`
+`SqmExpressibleAllowableParameterType#resolveSqmExpressible`

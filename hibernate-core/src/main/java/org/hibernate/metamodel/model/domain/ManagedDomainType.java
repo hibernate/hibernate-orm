@@ -10,7 +10,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.metamodel.RepresentationMode;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 
 import jakarta.persistence.metamodel.ManagedType;
 
@@ -19,7 +19,7 @@ import jakarta.persistence.metamodel.ManagedType;
  *
  * @author Steve Ebersole
  */
-public interface ManagedDomainType<J> extends SqmExpressable<J>, DomainType<J>, ManagedType<J> {
+public interface ManagedDomainType<J> extends SqmExpressible<J>, DomainType<J>, ManagedType<J> {
 	/**
 	 * Get the type name.
 	 *

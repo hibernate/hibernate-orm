@@ -7,7 +7,7 @@
 package org.hibernate.metamodel.mapping;
 
 /**
- * Something that can be expressable at the mapping model level.
+ * Something that can be expressible at the mapping model level.
  *
  * Generally this is used generation of SQL AST
  *
@@ -16,5 +16,5 @@ package org.hibernate.metamodel.mapping;
  * @author Steve Ebersole
  * @author Andrea Boriero
  */
-public interface MappingModelExpressable<T> extends Bindable {
+public interface MappingModelExpressible<T> extends Bindable {
 }

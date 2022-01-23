@@ -68,7 +68,7 @@ public class CompleteResultBuilderCollectionStandard implements CompleteResultBu
 
 	@Override
 	public Class<?> getJavaType() {
-		return pluralAttributeDescriptor.getExpressableJavaType().getJavaTypeClass();
+		return pluralAttributeDescriptor.getExpressibleJavaType().getJavaTypeClass();
 	}
 
 	@Override

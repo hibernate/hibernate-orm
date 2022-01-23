@@ -505,7 +505,7 @@ public class JpaMetamodelImpl implements JpaMetamodel, Serializable {
 					if ( embeddable.getJavaType() != null && embeddable.getJavaType() != Map.class ) {
 						this.jpaEmbeddables.add( embeddable );
 						this.jpaManagedTypes.add( embeddable );
-						if ( !( embeddable.getExpressableJavaType() instanceof EntityJavaType<?> ) ) {
+						if ( !( embeddable.getExpressibleJavaType() instanceof EntityJavaType<?> ) ) {
 							this.jpaManagedTypeMap.put( embeddable.getJavaType(), embeddable );
 						}
 					}
@@ -514,7 +514,7 @@ public class JpaMetamodelImpl implements JpaMetamodel, Serializable {
 					this.jpaEmbeddables.add( embeddable );
 					this.jpaManagedTypes.add( embeddable );
 					if ( embeddable.getJavaType() != null
-							&& !( embeddable.getExpressableJavaType() instanceof EntityJavaType<?> ) ) {
+							&& !( embeddable.getExpressibleJavaType() instanceof EntityJavaType<?> ) ) {
 						this.jpaManagedTypeMap.put( embeddable.getJavaType(), embeddable );
 					}
 					break;
@@ -522,7 +522,7 @@ public class JpaMetamodelImpl implements JpaMetamodel, Serializable {
 					if ( embeddable.getJavaType() == null ) {
 						throw new UnsupportedOperationException( "ANY not supported" );
 					}
-					if ( !( embeddable.getExpressableJavaType() instanceof EntityJavaType<?> ) ) {
+					if ( !( embeddable.getExpressibleJavaType() instanceof EntityJavaType<?> ) ) {
 						this.jpaManagedTypeMap.put( embeddable.getJavaType(), embeddable );
 					}
 					break;

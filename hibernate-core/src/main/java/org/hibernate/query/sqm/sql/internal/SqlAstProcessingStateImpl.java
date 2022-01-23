@@ -127,7 +127,7 @@ public class SqlAstProcessingStateImpl
 	}
 
 //	@Override
-//	public Expression resolveSqlExpression(NonQualifiableSqlExpressable sqlSelectable) {
+//	public Expression resolveSqlExpression(NonQualifiableSqlExpressible sqlSelectable) {
 //		final Expression expression = normalize( sqlSelectable.createExpression() );
 //		final Consumer<Expression> expressionConsumer = resolvedExpressionConsumerAccess.get();
 //		if ( expressionConsumer != null ) {

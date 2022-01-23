@@ -23,7 +23,7 @@ import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.JavaTypedExpressable;
+import org.hibernate.type.descriptor.java.JavaTypedExpressible;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.internal.UserTypeJavaTypeWrapper;
 import org.hibernate.type.internal.UserTypeSqlTypeAdapter;
@@ -74,9 +74,9 @@ public class CustomType<J>
 			//noinspection unchecked
 			this.mappedJavaType = ( (BasicJavaType<J>) userType );
 		}
-		else if ( userType instanceof JavaTypedExpressable ) {
+		else if ( userType instanceof JavaTypedExpressible) {
 			//noinspection unchecked
-			this.mappedJavaType = (BasicJavaType<J>) ( (JavaTypedExpressable<J>) userType ).getExpressableJavaType();
+			this.mappedJavaType = (BasicJavaType<J>) ( (JavaTypedExpressible<J>) userType ).getExpressibleJavaType();
 		}
 		else if ( userType instanceof UserVersionType ) {
 			this.mappedJavaType = new UserTypeVersionJavaTypeWrapper<>( (UserVersionType<J>) userType );
@@ -305,7 +305,7 @@ public class CustomType<J>
 	}
 
 	@Override
-	public JavaType<J> getExpressableJavaType() {
+	public JavaType<J> getExpressibleJavaType() {
 		return this.getMappedJavaType();
 	}
 

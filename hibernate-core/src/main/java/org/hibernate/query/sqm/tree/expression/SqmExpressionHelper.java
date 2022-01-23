@@ -18,7 +18,7 @@ import org.hibernate.query.BindableType;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.type.descriptor.java.JdbcDateJavaType;
 import org.hibernate.type.descriptor.java.JdbcTimeJavaType;
 import org.hibernate.type.descriptor.java.JdbcTimestampJavaType;
@@ -28,26 +28,26 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  */
 public class SqmExpressionHelper {
-	public static <T> SqmExpressable<T> toSqmType(BindableType<T> parameterType, SqmCreationState creationState) {
+	public static <T> SqmExpressible<T> toSqmType(BindableType<T> parameterType, SqmCreationState creationState) {
 		return toSqmType( parameterType, creationState.getCreationContext().getJpaMetamodel().getTypeConfiguration() );
 	}
 
-	public static <T> SqmExpressable<T> toSqmType(BindableType<T> anticipatedType, NodeBuilder nodeBuilder) {
+	public static <T> SqmExpressible<T> toSqmType(BindableType<T> anticipatedType, NodeBuilder nodeBuilder) {
 		return toSqmType( anticipatedType, nodeBuilder.getTypeConfiguration() );
 	}
 
-	public static <T> SqmExpressable<T> toSqmType(BindableType<T> anticipatedType, TypeConfiguration typeConfiguration) {
+	public static <T> SqmExpressible<T> toSqmType(BindableType<T> anticipatedType, TypeConfiguration typeConfiguration) {
 		return toSqmType( anticipatedType, typeConfiguration.getSessionFactory() );
 	}
 
-	public static <T> SqmExpressable<T> toSqmType(BindableType<T> anticipatedType, SessionFactoryImplementor sessionFactory) {
+	public static <T> SqmExpressible<T> toSqmType(BindableType<T> anticipatedType, SessionFactoryImplementor sessionFactory) {
 		if ( anticipatedType == null ) {
 			return null;
 		}
-		final SqmExpressable<T> sqmExpressable = anticipatedType.resolveExpressable( sessionFactory );
-		assert sqmExpressable != null;
+		final SqmExpressible<T> sqmExpressible = anticipatedType.resolveExpressible( sessionFactory );
+		assert sqmExpressible != null;
 
-		return sqmExpressable;
+		return sqmExpressible;
 
 	}
 

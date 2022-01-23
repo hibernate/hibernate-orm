@@ -11,8 +11,8 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.SqlTreeCreationLogger;
@@ -26,9 +26,9 @@ import org.hibernate.type.descriptor.java.JavaType;
  */
 public class SqlTuple implements Expression, SqlTupleContainer, DomainResultProducer {
 	private final List<? extends Expression> expressions;
-	private final MappingModelExpressable valueMapping;
+	private final MappingModelExpressible valueMapping;
 
-	public SqlTuple(List<? extends Expression> expressions, MappingModelExpressable valueMapping) {
+	public SqlTuple(List<? extends Expression> expressions, MappingModelExpressible valueMapping) {
 		this.expressions = expressions;
 		this.valueMapping = valueMapping;
 
@@ -41,7 +41,7 @@ public class SqlTuple implements Expression, SqlTupleContainer, DomainResultProd
 	}
 
 	@Override
-	public MappingModelExpressable getExpressionType() {
+	public MappingModelExpressible getExpressionType() {
 		return valueMapping;
 	}
 
@@ -63,7 +63,7 @@ public class SqlTuple implements Expression, SqlTupleContainer, DomainResultProd
 	public DomainResult createDomainResult(
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final JavaType javaType = ( (SqmExpressable<?>) valueMapping ).getExpressableJavaType();
+		final JavaType javaType = ( (SqmExpressible<?>) valueMapping ).getExpressibleJavaType();
 		final int[] valuesArrayPositions = new int[expressions.size()];
 		for ( int i = 0; i < expressions.size(); i++ ) {
 			valuesArrayPositions[i] = creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
@@ -86,15 +86,15 @@ public class SqlTuple implements Expression, SqlTupleContainer, DomainResultProd
 	}
 
 	public static class Builder {
-		private final MappingModelExpressable valueMapping;
+		private final MappingModelExpressible valueMapping;
 
 		private List<Expression> expressions;
 
-		public Builder(MappingModelExpressable valueMapping) {
+		public Builder(MappingModelExpressible valueMapping) {
 			this.valueMapping = valueMapping;
 		}
 
-		public Builder(MappingModelExpressable valueMapping, int jdbcTypeCount) {
+		public Builder(MappingModelExpressible valueMapping, int jdbcTypeCount) {
 			this( valueMapping );
 			expressions = new ArrayList<>( jdbcTypeCount );
 		}

@@ -9,7 +9,7 @@ package org.hibernate.query;
 import org.hibernate.Incubating;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.metamodel.ManagedType;
@@ -54,9 +54,9 @@ public interface BindableType<J> {
 	}
 
 	/**
-	 * Resolve this parameter type to the corresponding SqmExpressable
+	 * Resolve this parameter type to the corresponding SqmExpressible
 	 *
 	 * @todo (6.0) - use SessionFactory (API) here instead - we'll just cast "below"
 	 */
-	SqmExpressable<J> resolveExpressable(SessionFactoryImplementor sessionFactory);
+	SqmExpressible<J> resolveExpressible(SessionFactoryImplementor sessionFactory);
 }

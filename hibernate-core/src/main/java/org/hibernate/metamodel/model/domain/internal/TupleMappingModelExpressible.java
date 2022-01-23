@@ -9,18 +9,18 @@ package org.hibernate.metamodel.model.domain.internal;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.sql.ast.Clause;
 
 /**
  * @author Christian Beikov
  */
-public class TupleMappingModelExpressable implements MappingModelExpressable {
+public class TupleMappingModelExpressible implements MappingModelExpressible {
 
-	private final MappingModelExpressable<Object>[] components;
+	private final MappingModelExpressible<Object>[] components;
 
-	public TupleMappingModelExpressable(MappingModelExpressable<?>[] components) {
-		this.components = (MappingModelExpressable<Object>[]) components;
+	public TupleMappingModelExpressible(MappingModelExpressible<?>[] components) {
+		this.components = (MappingModelExpressible<Object>[]) components;
 	}
 
 	@Override

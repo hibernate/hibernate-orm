@@ -13,7 +13,7 @@ import org.hibernate.action.internal.BulkOperationCleanupAction;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.QueryEngine;
@@ -37,7 +37,7 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 public class SimpleInsertQueryPlan implements NonSelectQueryPlan {
 	private final SqmInsertStatement<?> sqmInsert;
 	private final DomainParameterXref domainParameterXref;
-	private Map<SqmParameter<?>, MappingModelExpressable<?>> paramTypeResolutions;
+	private Map<SqmParameter<?>, MappingModelExpressible<?>> paramTypeResolutions;
 
 	private JdbcInsert jdbcInsert;
 	private FromClauseAccess tableGroupAccess;
@@ -100,8 +100,8 @@ public class SimpleInsertQueryPlan implements NonSelectQueryPlan {
 				tableGroupAccess::findTableGroup,
 				new SqmParameterMappingModelResolutionAccess() {
 					@Override @SuppressWarnings("unchecked")
-					public <T> MappingModelExpressable<T> getResolvedMappingModelType(SqmParameter<T> parameter) {
-						return (MappingModelExpressable<T>) paramTypeResolutions.get(parameter);
+					public <T> MappingModelExpressible<T> getResolvedMappingModelType(SqmParameter<T> parameter) {
+						return (MappingModelExpressible<T>) paramTypeResolutions.get(parameter);
 					}
 				},
 				session

@@ -15,7 +15,7 @@ import java.util.Calendar;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.BindableType;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.TemporalJavaType;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -39,14 +39,14 @@ public class BindingTypeHelper {
 			BindableType<T> declaredParameterType,
 			SessionFactoryImplementor sessionFactory) {
 		if ( precision != null ) {
-			final SqmExpressable<T> sqmExpressable = declaredParameterType.resolveExpressable( sessionFactory );
-			if ( !( sqmExpressable.getExpressableJavaType() instanceof TemporalJavaType ) ) {
+			final SqmExpressible<T> sqmExpressible = declaredParameterType.resolveExpressible( sessionFactory );
+			if ( !( sqmExpressible.getExpressibleJavaType() instanceof TemporalJavaType ) ) {
 				throw new UnsupportedOperationException(
 						"Cannot treat non-temporal parameter type with temporal precision"
 				);
 			}
 
-			final TemporalJavaType<T> temporalJtd = (TemporalJavaType<T>) sqmExpressable.getExpressableJavaType();
+			final TemporalJavaType<T> temporalJtd = (TemporalJavaType<T>) sqmExpressible.getExpressibleJavaType();
 			if ( temporalJtd.getPrecision() != precision ) {
 				final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();
 				return typeConfiguration.getBasicTypeRegistry().resolve(

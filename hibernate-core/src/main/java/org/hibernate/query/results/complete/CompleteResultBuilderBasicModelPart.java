@@ -47,7 +47,7 @@ public class CompleteResultBuilderBasicModelPart
 
 	@Override
 	public Class<?> getJavaType() {
-		return modelPart.getExpressableJavaType().getJavaTypeClass();
+		return modelPart.getExpressibleJavaType().getJavaTypeClass();
 	}
 
 	@Override

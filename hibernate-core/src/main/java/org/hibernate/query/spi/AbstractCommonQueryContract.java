@@ -45,7 +45,7 @@ import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.TypedParameterValue;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.internal.QueryOptionsImpl;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
@@ -862,10 +862,10 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 
 
 	private boolean isInstance(BindableType<?> parameterType, Object value) {
-		final SqmExpressable<?> sqmExpressable = parameterType.resolveExpressable( getSession().getFactory() );
-		assert sqmExpressable != null;
+		final SqmExpressible<?> sqmExpressible = parameterType.resolveExpressible( getSession().getFactory() );
+		assert sqmExpressible != null;
 
-		return sqmExpressable.getExpressableJavaType().isInstance( value );
+		return sqmExpressible.getExpressibleJavaType().isInstance( value );
 	}
 
 	@Override

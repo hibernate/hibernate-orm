@@ -11,7 +11,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
@@ -25,18 +25,18 @@ import org.hibernate.type.descriptor.java.JavaType;
  * @author Steve Ebersole
  */
 public class CaseSimpleExpression implements Expression, DomainResultProducer {
-	private final MappingModelExpressable type;
+	private final MappingModelExpressible type;
 	private final Expression fixture;
 
 	private List<WhenFragment> whenFragments = new ArrayList<>();
 	private Expression otherwise;
 
-	public CaseSimpleExpression(MappingModelExpressable type, Expression fixture) {
+	public CaseSimpleExpression(MappingModelExpressible type, Expression fixture) {
 		this.type = type;
 		this.fixture = fixture;
 	}
 
-	public CaseSimpleExpression(MappingModelExpressable type, Expression fixture, List<WhenFragment> whenFragments, Expression otherwise) {
+	public CaseSimpleExpression(MappingModelExpressible type, Expression fixture, List<WhenFragment> whenFragments, Expression otherwise) {
 		this.type = type;
 		this.fixture = fixture;
 		this.whenFragments = whenFragments;
@@ -48,7 +48,7 @@ public class CaseSimpleExpression implements Expression, DomainResultProducer {
 	}
 
 	@Override
-	public MappingModelExpressable getExpressionType() {
+	public MappingModelExpressible getExpressionType() {
 		return type;
 	}
 

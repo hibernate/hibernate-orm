@@ -14,7 +14,7 @@ import jakarta.persistence.criteria.Expression;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmTreeCreationLogger;
 import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
 import org.hibernate.query.sqm.tree.jpa.AbstractJpaSelection;
@@ -29,7 +29,7 @@ import static org.hibernate.query.internal.QueryHelper.highestPrecedenceType;
  */
 public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> implements SqmExpression<T> {
 
-	public AbstractSqmExpression(SqmExpressable<? extends T> type, NodeBuilder criteriaBuilder) {
+	public AbstractSqmExpression(SqmExpressible<? extends T> type, NodeBuilder criteriaBuilder) {
 		super( type, criteriaBuilder );
 	}
 
@@ -39,20 +39,20 @@ public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> i
 	}
 
 	@Override
-	public void applyInferableType(SqmExpressable<?> type) {
+	public void applyInferableType(SqmExpressible<?> type) {
 //		if ( type == null ) {
 //			return;
 //		}
 //
-//		final SqmExpressable<?> oldType = getNodeType();
+//		final SqmExpressible<?> oldType = getNodeType();
 //
-//		final SqmExpressable<?> newType = highestPrecedenceType( oldType, type );
+//		final SqmExpressible<?> newType = highestPrecedenceType( oldType, type );
 //		if ( newType != null && newType != oldType ) {
 //			internalApplyInferableType( newType );
 //		}
 	}
 
-	protected void internalApplyInferableType(SqmExpressable<?> newType) {
+	protected void internalApplyInferableType(SqmExpressible<?> newType) {
 		SqmTreeCreationLogger.LOGGER.debugf(
 				"Applying inferable type to SqmExpression [%s] : %s -> %s",
 				this,
@@ -60,7 +60,7 @@ public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> i
 				newType
 		);
 
-		setExpressableType( highestPrecedenceType( newType, getNodeType() ) );
+		setExpressibleType( highestPrecedenceType( newType, getNodeType() ) );
 	}
 
 	@Override
@@ -153,6 +153,6 @@ public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> i
 
 	@Override
 	public JavaType<T> getJavaTypeDescriptor() {
-		return getNodeType() == null ? null : getNodeType().getExpressableJavaType();
+		return getNodeType() == null ? null : getNodeType().getExpressibleJavaType();
 	}
 }

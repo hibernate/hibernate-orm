@@ -216,7 +216,7 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 				if ( o == null ) {
 					final AttributeMapping idClassAttributeMapping = idClassAttributeMappings.get( i );
 					if ( idClassAttributeMapping.getPropertyAccess().getGetter().getReturnTypeClass().isPrimitive() ) {
-						propertyValues[i] = idClassAttributeMapping.getExpressableJavaType().getDefaultValue();
+						propertyValues[i] = idClassAttributeMapping.getExpressibleJavaType().getDefaultValue();
 					}
 					else {
 						propertyValues[i] = null;

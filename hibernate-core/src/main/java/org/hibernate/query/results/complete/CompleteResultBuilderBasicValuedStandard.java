@@ -104,7 +104,7 @@ public class CompleteResultBuilderBasicValuedStandard implements CompleteResultB
 //							return new SqlSelectionImpl( valuesArrayPosition, basicType );
 //						}
 //				),
-//				basicType.getExpressableJavaType(),
+//				basicType.getExpressibleJavaType(),
 //				sessionFactory.getTypeConfiguration()
 //		);
 

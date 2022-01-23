@@ -19,14 +19,14 @@ import org.hibernate.type.descriptor.java.JavaType;
  *
  * @author Steve Ebersole
  */
-public interface SqmExpressable<J> extends BindableType<J> {
+public interface SqmExpressible<J> extends BindableType<J> {
 	/**
-	 * The Java type descriptor for this expressable
+	 * The Java type descriptor for this expressible
 	 */
-	JavaType<J> getExpressableJavaType();
+	JavaType<J> getExpressibleJavaType();
 
 	@Override
-	default SqmExpressable<J> resolveExpressable(SessionFactoryImplementor sessionFactory) {
+	default SqmExpressible<J> resolveExpressible(SessionFactoryImplementor sessionFactory) {
 		return this;
 	}
 }

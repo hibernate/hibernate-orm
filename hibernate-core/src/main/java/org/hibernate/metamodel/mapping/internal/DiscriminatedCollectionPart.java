@@ -173,7 +173,7 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 	}
 
 	@Override
-	public JavaType<?> getExpressableJavaType() {
+	public JavaType<?> getExpressibleJavaType() {
 		return getJavaType();
 	}
 

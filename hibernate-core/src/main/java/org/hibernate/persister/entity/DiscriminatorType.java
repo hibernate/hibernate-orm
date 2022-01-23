@@ -55,7 +55,7 @@ public class DiscriminatorType<T> extends AbstractType implements BasicType<T>, 
 	}
 
 	@Override
-	public Class getReturnedClass() {
+	public Class<?> getReturnedClass() {
 		return Class.class;
 	}
 
@@ -133,7 +133,7 @@ public class DiscriminatorType<T> extends AbstractType implements BasicType<T>, 
 			Object value,
 			int index,
 			SharedSessionContractImplementor session) throws HibernateException, SQLException {
-		String entityName = session.getFactory().getClassMetadata((Class) value).getEntityName();
+		String entityName = session.getFactory().getClassMetadata((Class<?>) value).getEntityName();
 		Loadable entityPersister = (Loadable) session.getFactory().getMetamodel().entityPersister(entityName);
 		underlyingType.nullSafeSet(st, entityPersister.getDiscriminatorValue(), index, session);
 	}
@@ -141,7 +141,7 @@ public class DiscriminatorType<T> extends AbstractType implements BasicType<T>, 
 	@Override
 	public void bind(PreparedStatement st, T value, int index, WrapperOptions options) throws SQLException {
 		final SessionFactoryImplementor factory = options.getSession().getFactory();
-		final String entityName = factory.getClassMetadata( (Class) value).getEntityName();
+		final String entityName = factory.getClassMetadata( (Class<?>) value).getEntityName();
 		final Loadable entityPersister = (Loadable) factory.getMetamodel().entityPersister(entityName);
 		underlyingType.getJdbcValueBinder().bind( st, entityPersister.getDiscriminatorValue(), index, options );
 	}
@@ -149,7 +149,7 @@ public class DiscriminatorType<T> extends AbstractType implements BasicType<T>, 
 	@Override
 	public void bind(CallableStatement st, T value, String name, WrapperOptions options) throws SQLException {
 		final SessionFactoryImplementor factory = options.getSession().getFactory();
-		final String entityName = factory.getClassMetadata( (Class) value).getEntityName();
+		final String entityName = factory.getClassMetadata( (Class<?>) value).getEntityName();
 		final Loadable entityPersister = (Loadable) factory.getMetamodel().entityPersister(entityName);
 		underlyingType.getJdbcValueBinder().bind( st, entityPersister.getDiscriminatorValue(), name, options );
 	}
@@ -204,7 +204,7 @@ public class DiscriminatorType<T> extends AbstractType implements BasicType<T>, 
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public JavaType<T> getExpressableJavaType() {
+	public JavaType<T> getExpressibleJavaType() {
 		return (JavaType<T>) (persister.getRepresentationStrategy().getMode() == RepresentationMode.POJO
 				? ClassJavaType.INSTANCE
 				: StringJavaType.INSTANCE);
@@ -212,12 +212,12 @@ public class DiscriminatorType<T> extends AbstractType implements BasicType<T>, 
 
 	@Override
 	public JavaType<T> getJavaTypeDescriptor() {
-		return getExpressableJavaType();
+		return this.getExpressibleJavaType();
 	}
 
 	@Override
 	public JavaType<T> getMappedJavaType() {
-		return getExpressableJavaType();
+		return this.getExpressibleJavaType();
 	}
 
 	@Override

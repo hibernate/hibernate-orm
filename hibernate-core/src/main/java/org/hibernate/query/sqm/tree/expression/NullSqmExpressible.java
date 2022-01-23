@@ -6,17 +6,17 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Steve Ebersole
  */
-public class NullSqmExpressable implements SqmExpressable<Object> {
+public class NullSqmExpressible implements SqmExpressible<Object> {
 	/**
 	 * Singleton access
 	 */
-	public static final NullSqmExpressable NULL_SQM_EXPRESSABLE = new NullSqmExpressable();
+	public static final NullSqmExpressible NULL_SQM_EXPRESSIBLE = new NullSqmExpressible();
 
 	@Override
 	public Class<Object> getBindableJavaType() {
@@ -24,7 +24,7 @@ public class NullSqmExpressable implements SqmExpressable<Object> {
 	}
 
 	@Override
-	public JavaType<Object> getExpressableJavaType() {
+	public JavaType<Object> getExpressibleJavaType() {
 		return null;
 	}
 }

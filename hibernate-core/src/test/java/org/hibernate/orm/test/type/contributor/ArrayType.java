@@ -9,7 +9,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.BindableType;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
@@ -31,7 +31,7 @@ public class ArrayType implements UserType<Array>, BindableType<Array> {
     }
 
     @Override
-    public SqmExpressable<Array> resolveExpressable(SessionFactoryImplementor sessionFactory) {
+    public SqmExpressible<Array> resolveExpressible(SessionFactoryImplementor sessionFactory) {
         // really a UserType should not implement BindableType
         throw new UnsupportedOperationException();
     }

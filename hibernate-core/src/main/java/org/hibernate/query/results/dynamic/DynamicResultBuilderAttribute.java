@@ -57,7 +57,7 @@ public class DynamicResultBuilderAttribute implements DynamicResultBuilder, Nati
 
 	@Override
 	public Class<?> getJavaType() {
-		return attributeMapping.getExpressableJavaType().getJavaTypeClass();
+		return attributeMapping.getExpressibleJavaType().getJavaTypeClass();
 	}
 
 	@Override

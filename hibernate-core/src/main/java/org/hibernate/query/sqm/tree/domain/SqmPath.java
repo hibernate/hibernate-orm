@@ -22,7 +22,7 @@ import org.hibernate.query.criteria.JpaPath;
 import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.ParsingException;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
@@ -103,13 +103,13 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 	SqmPathSource<T> getNodeType();
 
 	@Override
-	default void applyInferableType(SqmExpressable<?> type) {
+	default void applyInferableType(SqmExpressible<?> type) {
 		// do nothing
 	}
 
 	@Override
 	default JavaType<T> getJavaTypeDescriptor() {
-		return getNodeType().getExpressableJavaType();
+		return getNodeType().getExpressibleJavaType();
 	}
 
 	@Override

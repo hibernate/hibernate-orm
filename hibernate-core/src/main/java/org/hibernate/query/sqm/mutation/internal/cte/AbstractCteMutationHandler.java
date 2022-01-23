@@ -19,9 +19,9 @@ import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.metamodel.mapping.SqlExpressable;
+import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
@@ -134,7 +134,7 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 			parameterResolutions = new IdentityHashMap<>();
 		}
 
-		final Map<SqmParameter, MappingModelExpressable> paramTypeResolutions = new LinkedHashMap<>();
+		final Map<SqmParameter, MappingModelExpressible> paramTypeResolutions = new LinkedHashMap<>();
 
 		final Predicate restriction = sqmConverter.visitWhereClause(
 				sqmMutationStatement.getWhereClause(),
@@ -172,7 +172,7 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 				new BasicResult<>(
 						0,
 						null,
-						( (SqlExpressable) count).getJdbcMapping().getJavaTypeDescriptor()
+						( (SqlExpressible) count).getJdbcMapping().getJavaTypeDescriptor()
 				)
 		);
 		querySpec.getSelectClause().addSqlSelection( new SqlSelectionImpl( 1, 0, count ) );

@@ -6,22 +6,22 @@
  */
 package org.hibernate.query.sqm.tree;
 
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
- * Accessor for {@link SqmExpressable}.
+ * Accessor for {@link SqmExpressible}.
  *
  * @author Christian Beikov
  */
-public interface SqmExpressableAccessor<T> {
+public interface SqmExpressibleAccessor<T> {
 	/**
 	 * The Java type descriptor for this node.
 	 */
 	default JavaType<T> getNodeJavaType() {
-		final SqmExpressable<T> nodeType = getExpressable();
-		return nodeType != null ? nodeType.getExpressableJavaType() : null;
+		final SqmExpressible<T> nodeType = getExpressible();
+		return nodeType != null ? nodeType.getExpressibleJavaType() : null;
 	}
 
-	SqmExpressable<T> getExpressable();
+	SqmExpressible<T> getExpressible();
 }

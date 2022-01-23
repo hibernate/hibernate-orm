@@ -49,7 +49,7 @@ import org.hibernate.orm.test.any.hbm.StringPropertyValue;
 import org.hibernate.query.Query;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.sqm.ParsingException;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.internal.QuerySqmImpl;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmFunction;
@@ -1578,7 +1578,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 					final SqmSelectStatement<?> sqmStatement = (SqmSelectStatement<?>) query.unwrap( QuerySqmImpl.class ).getSqmStatement();
 					assertEquals( 1, sqmStatement.getQuerySpec().getSelectClause().getSelections().size() );
 					final SqmSelection<?> selection = sqmStatement.getQuerySpec().getSelectClause().getSelections().get( 0 );
-					final SqmExpressable<?> selectionType = selection.getSelectableNode().getNodeType();
+					final SqmExpressible<?> selectionType = selection.getSelectableNode().getNodeType();
 					assertThat( selectionType, CoreMatchers.instanceOf( EmbeddedSqmPathSource.class ) );
 					assertEquals( Name.class, selection.getNodeJavaType().getJavaTypeClass() );
 
@@ -1857,9 +1857,9 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 					final SqmSelectStatement<?> sqmStatement = (SqmSelectStatement<?>) query.unwrap( QuerySqmImpl.class ).getSqmStatement();
 					assertEquals( 1, sqmStatement.getQuerySpec().getSelectClause().getSelections().size() );
 					final SqmSelection<?> selection = sqmStatement.getQuerySpec().getSelectClause().getSelections().get( 0 );
-					final SqmExpressable<?> selectionType = selection.getSelectableNode().getNodeType();
+					final SqmExpressible<?> selectionType = selection.getSelectableNode().getNodeType();
 					assertThat( selectionType, instanceOf( EntityDomainType.class ) );
-					assertThat( selectionType.getExpressableJavaType().getJavaTypeClass(), equalTo( Animal.class ) );
+					assertThat( selectionType.getExpressibleJavaType().getJavaTypeClass(), equalTo( Animal.class ) );
 				}
 		);
 		Session s = openSession();

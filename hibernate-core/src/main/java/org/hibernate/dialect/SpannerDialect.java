@@ -32,7 +32,7 @@ import org.hibernate.mapping.Constraint;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
-import org.hibernate.metamodel.mapping.SqlExpressable;
+import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.SemanticException;
@@ -799,7 +799,7 @@ public class SpannerDialect extends Dialect {
 	/* Type conversion and casting */
 
 	@Override
-	public String getCastTypeName(SqlExpressable type, Long length, Integer precision, Integer scale) {
+	public String getCastTypeName(SqlExpressible type, Long length, Integer precision, Integer scale) {
 		//Spanner doesn't let you specify a length in cast() types
 		return super.getRawTypeName( type.getJdbcMapping().getJdbcType() );
 	}

@@ -264,7 +264,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 
 		return expressionResolver.resolveSqlSelection(
 				expression,
-				idType.getExpressableJavaType(),
+				idType.getExpressibleJavaType(),
 				sessionFactory.getTypeConfiguration()
 		);
 	}

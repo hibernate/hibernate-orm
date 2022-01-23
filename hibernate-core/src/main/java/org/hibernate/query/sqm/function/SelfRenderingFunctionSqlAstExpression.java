@@ -16,7 +16,7 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
-import org.hibernate.metamodel.mapping.SqlExpressable;
+import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -41,25 +41,25 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  */
 public class SelfRenderingFunctionSqlAstExpression
-		implements SelfRenderingExpression, Selectable, SqlExpressable, DomainResultProducer, FunctionExpression {
+		implements SelfRenderingExpression, Selectable, SqlExpressible, DomainResultProducer, FunctionExpression {
 	private final String functionName;
 	private final FunctionRenderingSupport renderer;
 	private final List<? extends SqlAstNode> sqlAstArguments;
 	private final ReturnableType<?> type;
-	private final JdbcMappingContainer expressable;
+	private final JdbcMappingContainer expressible;
 
 	public SelfRenderingFunctionSqlAstExpression(
 			String functionName,
 			FunctionRenderingSupport renderer,
 			List<? extends SqlAstNode> sqlAstArguments,
 			ReturnableType<?> type,
-			JdbcMappingContainer expressable) {
+			JdbcMappingContainer expressible) {
 		this.functionName = functionName;
 		this.renderer = renderer;
 		this.sqlAstArguments = sqlAstArguments;
 		this.type = type;
 		//might be null due to code in SelfRenderingFunctionSqlAstExpression
-		this.expressable = expressable;
+		this.expressible = expressible;
 	}
 
 	@Override
@@ -74,10 +74,10 @@ public class SelfRenderingFunctionSqlAstExpression
 
 	@Override
 	public JdbcMappingContainer getExpressionType() {
-		if ( type instanceof SqlExpressable ) {
+		if ( type instanceof SqlExpressible) {
 			return (JdbcMappingContainer) type;
 		}
-		return expressable;
+		return expressible;
 	}
 
 	protected FunctionRenderingSupport getRenderer() {
@@ -105,13 +105,13 @@ public class SelfRenderingFunctionSqlAstExpression
 				creationState.getSqlAstCreationState().getSqlExpressionResolver()
 						.resolveSqlSelection(
 								this,
-								type.getExpressableJavaType(),
+								type.getExpressibleJavaType(),
 								creationState.getSqlAstCreationState().getCreationContext()
 										.getDomainModel().getTypeConfiguration()
 						)
 						.getValuesArrayPosition(),
 				resultVariable,
-				type.getExpressableJavaType()
+				type.getExpressibleJavaType()
 		);
 	}
 
@@ -165,11 +165,11 @@ public class SelfRenderingFunctionSqlAstExpression
 
 	@Override
 	public JdbcMapping getJdbcMapping() {
-		if ( type instanceof SqlExpressable ) {
-			return ( (SqlExpressable) type ).getJdbcMapping();
+		if ( type instanceof SqlExpressible) {
+			return ( (SqlExpressible) type ).getJdbcMapping();
 		}
 		else {
-			return ( (SqlExpressable) expressable ).getJdbcMapping();
+			return ( (SqlExpressible) expressible).getJdbcMapping();
 		}
 	}
 
@@ -180,7 +180,7 @@ public class SelfRenderingFunctionSqlAstExpression
 
 		sqlExpressionResolver.resolveSqlSelection(
 				this,
-				type.getExpressableJavaType(),
+				type.getExpressibleJavaType(),
 				sqlAstCreationState.getCreationContext().getDomainModel().getTypeConfiguration()
 		);
 	}

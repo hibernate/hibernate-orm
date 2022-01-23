@@ -8,7 +8,7 @@ package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 
 /**
  * @author Gavin King
@@ -20,7 +20,7 @@ public class SqmByUnit extends AbstractSqmExpression<Long> {
 	public SqmByUnit(
 			SqmDurationUnit<?> unit,
 			SqmExpression<?> duration,
-			SqmExpressable longType,
+			SqmExpressible longType,
 			NodeBuilder nodeBuilder) {
 		super( longType, nodeBuilder );
 		this.unit = unit;

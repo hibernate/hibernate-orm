@@ -66,8 +66,8 @@ public interface SqlExpressionResolver {
 	}
 
 	/**
-	 * Given a qualifier + a qualifiable SqlExpressable, resolve the
-	 * (Sql)Expression reference.
+	 * Given a qualifier + a qualifiable {@link org.hibernate.metamodel.mapping.SqlExpressible},
+	 * resolve the (Sql)Expression reference.
 	 */
 	Expression resolveSqlExpression(String key, Function<SqlAstProcessingState,Expression> creator);
 

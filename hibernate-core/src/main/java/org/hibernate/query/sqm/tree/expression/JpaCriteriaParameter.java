@@ -14,7 +14,7 @@ import org.hibernate.query.criteria.JpaParameterExpression;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
@@ -66,11 +66,11 @@ public class JpaCriteriaParameter<T>
 		this.allowsMultiValuedBinding = allowsMultiValuedBinding;
 	}
 
-	private static <T> SqmExpressable<T> toSqmType(BindableType<T> type, NodeBuilder nodeBuilder) {
+	private static <T> SqmExpressible<T> toSqmType(BindableType<T> type, NodeBuilder nodeBuilder) {
 		if ( type == null ) {
 			return null;
 		}
-		return type.resolveExpressable(
+		return type.resolveExpressible(
 				nodeBuilder.getQueryEngine().getTypeConfiguration().getSessionFactory()
 		);
 	}
@@ -139,11 +139,11 @@ public class JpaCriteriaParameter<T>
 
 	@Override
 	public Class<T> getParameterType() {
-		return this.getNodeType().getExpressableJavaType().getJavaTypeClass();
+		return this.getNodeType().getExpressibleJavaType().getJavaTypeClass();
 	}
 
 	@Override
-	protected void internalApplyInferableType(SqmExpressable<?> newType) {
+	protected void internalApplyInferableType(SqmExpressible<?> newType) {
 		super.internalApplyInferableType( newType );
 	}
 

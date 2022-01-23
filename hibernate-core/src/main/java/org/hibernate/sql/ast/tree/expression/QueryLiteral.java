@@ -23,7 +23,8 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 
 /**
- * Represents a literal in the SQL AST.  This form accepts a {@link BasicValuedMapping} is its MappingModelExpressable.
+ * Represents a literal in the SQL AST.  This form accepts a {@link BasicValuedMapping}
+ * as its {@link org.hibernate.metamodel.mapping.MappingModelExpressible}.
  *
  * @see JdbcLiteral
  *

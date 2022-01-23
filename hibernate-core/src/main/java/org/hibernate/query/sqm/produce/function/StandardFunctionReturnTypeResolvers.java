@@ -16,7 +16,7 @@ import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.ReturnableType;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -205,7 +205,7 @@ public class StandardFunctionReturnTypeResolvers {
 			List<? extends SqmTypedNode<?>> arguments,
 			int position) {
 		final SqmTypedNode<?> specifiedArgument = arguments.get( position - 1 );
-		final SqmExpressable<?> specifiedArgType = specifiedArgument.getNodeType();
+		final SqmExpressible<?> specifiedArgType = specifiedArgument.getNodeType();
 		if ( !(specifiedArgType instanceof ReturnableType ) ) {
 			throw new QueryException(
 					String.format(
@@ -226,13 +226,13 @@ public class StandardFunctionReturnTypeResolvers {
 			List<? extends SqmTypedNode<?>> arguments,
 			int position) {
 		final SqmTypedNode<?> specifiedArgument = arguments.get( position - 1 );
-		final SqmExpressable<?> specifiedArgType = specifiedArgument.getNodeType();
+		final SqmExpressible<?> specifiedArgType = specifiedArgument.getNodeType();
 		if ( specifiedArgType instanceof BasicType<?> ) {
 			return ( (BasicType<?>) specifiedArgType ).getJdbcMapping();
 		}
 		else {
 			final BasicType<?> basicType = typeConfiguration.getBasicTypeForJavaType(
-					specifiedArgType.getExpressableJavaType().getJavaTypeClass()
+					specifiedArgType.getExpressibleJavaType().getJavaTypeClass()
 			);
 			if ( basicType == null ) {
 				throw new QueryException(

@@ -55,7 +55,7 @@ import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.metamodel.mapping.SqlExpressable;
+import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.query.sqm.ComparisonOperator;
@@ -4205,7 +4205,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	public void visitCastTarget(CastTarget castTarget) {
 		appendSql(
 				getDialect().getCastTypeName(
-						(SqlExpressable) castTarget.getExpressionType(),
+						(SqlExpressible) castTarget.getExpressionType(),
 						castTarget.getLength(),
 						castTarget.getPrecision(),
 						castTarget.getScale()

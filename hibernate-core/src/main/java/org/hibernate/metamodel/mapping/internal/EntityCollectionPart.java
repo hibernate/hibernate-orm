@@ -380,7 +380,7 @@ public class EntityCollectionPart
 	}
 
 	@Override
-	public JavaType<?> getExpressableJavaType() {
+	public JavaType<?> getExpressibleJavaType() {
 		return getJavaType();
 	}
 

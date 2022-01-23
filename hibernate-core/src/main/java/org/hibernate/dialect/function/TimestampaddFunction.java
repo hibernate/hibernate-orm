@@ -128,7 +128,7 @@ public class TimestampaddFunction
 										? BinaryArithmeticOperator.MULTIPLY
 										: BinaryArithmeticOperator.DIVIDE,
 								new QueryLiteral<>(
-										expressionType.getExpressableJavaType()
+										expressionType.getExpressibleJavaType()
 												.fromString( conversionFactor.substring( 1 ) ),
 										expressionType
 								),

@@ -58,7 +58,7 @@ public class SingularAttributeImpl<D,J>
 		super(
 				declaringType,
 				name,
-				attributeType.getExpressableJavaType(),
+				attributeType.getExpressibleJavaType(),
 				attributeClassification,
 				attributeType,
 				member,
@@ -81,8 +81,8 @@ public class SingularAttributeImpl<D,J>
 		return getName();
 	}
 
-	public JavaType<J> getExpressableJavaType() {
-		return sqmPathSource.getExpressableJavaType();
+	public JavaType<J> getExpressibleJavaType() {
+		return sqmPathSource.getExpressibleJavaType();
 	}
 
 	@Override
@@ -108,7 +108,7 @@ public class SingularAttributeImpl<D,J>
 
 	@Override
 	public Class<J> getBindableJavaType() {
-		return getExpressableJavaType().getJavaTypeClass();
+		return getExpressibleJavaType().getJavaTypeClass();
 	}
 
 	@Override

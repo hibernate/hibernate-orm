@@ -8,7 +8,6 @@ package org.hibernate.sql.ast.spi;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;

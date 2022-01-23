@@ -20,7 +20,7 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.hql.HqlInterpretationException;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.expression.SqmEnumLiteral;
@@ -37,7 +37,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 public class FullyQualifiedReflectivePathTerminal
 		extends FullyQualifiedReflectivePath
 		implements SqmExpression {
-	private final SqmExpressable expressableType;
+	private final SqmExpressible expressibleType;
 	private final SqmCreationState creationState;
 
 	private final Function<SemanticQueryWalker,?> handler;
@@ -52,7 +52,7 @@ public class FullyQualifiedReflectivePathTerminal
 		this.handler = resolveTerminalSemantic();
 
 		// todo (6.0) : how to calculate this?
-		this.expressableType = null;
+		this.expressibleType = null;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -124,8 +124,8 @@ public class FullyQualifiedReflectivePathTerminal
 	}
 
 	@Override
-	public SqmExpressable getNodeType() {
-		return expressableType;
+	public SqmExpressible getNodeType() {
+		return expressibleType;
 	}
 
 	@Override
@@ -135,12 +135,12 @@ public class FullyQualifiedReflectivePathTerminal
 
 	@Override
 	public JavaType getJavaTypeDescriptor() {
-		return expressableType.getExpressableJavaType();
+		return expressibleType.getExpressibleJavaType();
 	}
 
 
 	@Override
-	public void applyInferableType(SqmExpressable type) {
+	public void applyInferableType(SqmExpressible type) {
 	}
 
 	@Override

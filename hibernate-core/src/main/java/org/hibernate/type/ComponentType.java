@@ -37,7 +37,7 @@ import org.hibernate.metamodel.EmbeddableInstantiator;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.tuple.PropertyFactory;
 import org.hibernate.tuple.StandardProperty;
 import org.hibernate.tuple.ValueGeneration;
@@ -793,7 +793,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 	}
 
 	@Override
-	public SqmExpressable<?> resolveExpressable(SessionFactoryImplementor sessionFactory) {
+	public SqmExpressible<?> resolveExpressible(SessionFactoryImplementor sessionFactory) {
 		return sessionFactory.getRuntimeMetamodels().getJpaMetamodel().embeddable( getReturnedClass() );
 	}
 

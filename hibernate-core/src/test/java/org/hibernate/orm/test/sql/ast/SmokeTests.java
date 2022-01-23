@@ -179,9 +179,9 @@ public class SmokeTests {
 					final ColumnReference columnReference = (ColumnReference) selectedExpression;
 					assertThat( columnReference.renderSqlFragment( scope.getSessionFactory() ), is( "s1_0.gender" ) );
 
-					final JdbcMappingContainer selectedExpressable = selectedExpression.getExpressionType();
-					assertThat( selectedExpressable, instanceOf( BasicTypeImpl.class ) );
-					final BasicTypeImpl basicType = (BasicTypeImpl) selectedExpressable;
+					final JdbcMappingContainer selectedExpressible = selectedExpression.getExpressionType();
+					assertThat( selectedExpressible, instanceOf( BasicTypeImpl.class ) );
+					final BasicTypeImpl<?> basicType = (BasicTypeImpl<?>) selectedExpressible;
 					assertThat( basicType.getJavaTypeDescriptor().getJavaTypeClass(), AssignableMatcher.assignableTo( Integer.class ) );
 					assertThat(
 							basicType.getJdbcType(),
@@ -190,11 +190,11 @@ public class SmokeTests {
 
 
 					assertThat( sqlAst.getDomainResultDescriptors().size(), is( 1 ) );
-					final DomainResult domainResult = sqlAst.getDomainResultDescriptors().get( 0 );
+					final DomainResult<?> domainResult = sqlAst.getDomainResultDescriptors().get( 0 );
 					assertThat( domainResult, instanceOf( BasicResult.class ) );
-					final BasicResult scalarDomainResult = (BasicResult) domainResult;
+					final BasicResult<?> scalarDomainResult = (BasicResult<?>) domainResult;
 					assertThat( scalarDomainResult.getAssembler(), instanceOf( BasicResultAssembler.class ) );
-					final BasicResultAssembler<?> assembler = (BasicResultAssembler) scalarDomainResult.getAssembler();
+					final BasicResultAssembler<?> assembler = (BasicResultAssembler<?>) scalarDomainResult.getAssembler();
 					assertThat( assembler.getValueConverter(), notNullValue() );
 					assertThat( assembler.getValueConverter(), instanceOf( OrdinalEnumValueConverter.class ) );
 
@@ -207,10 +207,10 @@ public class SmokeTests {
 
 					// ScalarDomainResultImpl creates and caches the assembler at its creation.
 					// this just gets access to that cached one
-					final DomainResultAssembler resultAssembler = domainResult.createResultAssembler( null, null );
+					final DomainResultAssembler<?> resultAssembler = domainResult.createResultAssembler( null, null );
 
 					assertThat( resultAssembler, instanceOf( BasicResultAssembler.class ) );
-					final BasicValueConverter valueConverter = ( (BasicResultAssembler) resultAssembler ).getValueConverter();
+					final BasicValueConverter<?,?> valueConverter = ( (BasicResultAssembler<?>) resultAssembler ).getValueConverter();
 					assertThat( valueConverter, notNullValue() );
 					assertThat( valueConverter, instanceOf( OrdinalEnumValueConverter.class ) );
 

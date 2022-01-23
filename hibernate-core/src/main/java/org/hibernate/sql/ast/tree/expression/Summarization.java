@@ -8,7 +8,7 @@ package org.hibernate.sql.ast.tree.expression;
 
 import java.util.List;
 
-import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.sql.ast.SqlAstWalker;
 
 /**
@@ -33,7 +33,7 @@ public class Summarization implements Expression {
 	}
 
 	@Override
-	public MappingModelExpressable getExpressionType() {
+	public MappingModelExpressible getExpressionType() {
 		return null;
 	}
 

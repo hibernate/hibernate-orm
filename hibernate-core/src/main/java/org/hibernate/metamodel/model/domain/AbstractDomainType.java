@@ -25,13 +25,13 @@ public abstract class AbstractDomainType<J> implements SimpleDomainType<J> {
 	}
 
 	@Override
-	public JavaType<J> getExpressableJavaType() {
+	public JavaType<J> getExpressibleJavaType() {
 		return javaType;
 	}
 
 	@Override
 	public Class<J> getJavaType() {
-		return this.getExpressableJavaType().getJavaTypeClass();
+		return this.getExpressibleJavaType().getJavaTypeClass();
 	}
 
 	@Override

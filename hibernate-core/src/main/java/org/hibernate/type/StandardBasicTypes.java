@@ -175,7 +175,7 @@ public final class StandardBasicTypes {
 			"character",
 			Character.class,
 			SqlTypes.CHAR
-	);;
+	);
 
 	/**
 	 * The standard Hibernate type for mapping {@link Character} to JDBC {@link org.hibernate.type.SqlTypes#NCHAR NCHAR(1)}.

@@ -6,17 +6,9 @@
  */
 package org.hibernate.collection.internal;
 
-import org.hibernate.MappingException;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.CollectionSemanticsResolver;
-import org.hibernate.mapping.Array;
-import org.hibernate.mapping.Bag;
 import org.hibernate.mapping.Collection;
-import org.hibernate.mapping.IdentifierBag;
-import org.hibernate.mapping.List;
-import org.hibernate.mapping.Map;
-import org.hibernate.mapping.PrimitiveArray;
-import org.hibernate.mapping.Set;
 
 /**
  * Standard implementation of CollectionSemanticsResolver

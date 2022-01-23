@@ -263,17 +263,15 @@ public class BasicTypeRegistry implements Serializable {
 		}
 	}
 
-	public CustomType register(UserType type, String... keys) {
-		final CustomType<Object> customType = new CustomType<Object>( type, keys, typeConfiguration );
+	public <T> CustomType<T> register(UserType<T> type, String... keys) {
+		final CustomType<T> customType = new CustomType<>( type, keys, typeConfiguration );
 		register( customType );
 		return customType;
 	}
 
 	public void unregister(String... keys) {
 		for ( String key : keys ) {
-			final BasicType<?> removed = typesByName.remove( key );
-
-
+			typesByName.remove( key );
 		}
 	}
 
@@ -397,7 +395,7 @@ public class BasicTypeRegistry implements Serializable {
 
 			LOG.debugf( "Adding type registration %s -> %s", key, type );
 
-			final BasicTypeReference old = typeReferencesByName.put( key, type );
+			final BasicTypeReference<?> old = typeReferencesByName.put( key, type );
 			if ( old != null && old != type ) {
 				LOG.debugf(
 						"Type registration key [%s] overrode previous entry : `%s`",

@@ -29,8 +29,8 @@ public class FilterImpl implements Filter, Serializable {
 	public static final String MARKER = "$FILTER_PLACEHOLDER$";
 
 	private transient FilterDefinition definition;
-	private String filterName;
-	private Map<String,Object> parameters = new HashMap<>();
+	private final String filterName;
+	private final Map<String,Object> parameters = new HashMap<>();
 	
 	void afterDeserialize(SessionFactoryImplementor factory) {
 		definition = factory.getFilterDefinition( filterName );
@@ -94,7 +94,7 @@ public class FilterImpl implements Filter, Serializable {
 	 * @param values The values to be expanded into an SQL IN list.
 	 * @return This FilterImpl instance (for method chaining).
 	 */
-	public Filter setParameterList(String name, Collection values) throws HibernateException  {
+	public Filter setParameterList(String name, Collection<?> values) throws HibernateException  {
 		// Make sure this is a defined parameter and check the incoming value type
 		if ( values == null ) {
 			throw new IllegalArgumentException( "Collection must be not null!" );
@@ -104,7 +104,7 @@ public class FilterImpl implements Filter, Serializable {
 			throw new HibernateException( "Undefined filter parameter [" + name + "]" );
 		}
 		if ( !values.isEmpty() ) {
-			Class elementClass = values.iterator().next().getClass();
+			Class<?> elementClass = values.iterator().next().getClass();
 			if ( !type.getReturnedClass().isAssignableFrom( elementClass ) ) {
 				throw new HibernateException( "Incorrect type for parameter [" + name + "]" );
 			}

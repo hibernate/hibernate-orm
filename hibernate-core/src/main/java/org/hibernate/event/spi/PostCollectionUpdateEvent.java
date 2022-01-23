@@ -17,7 +17,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 public class PostCollectionUpdateEvent extends AbstractCollectionEvent {
 	public PostCollectionUpdateEvent(
 			CollectionPersister collectionPersister,
-			PersistentCollection collection,
+			PersistentCollection<?> collection,
 			EventSource source) {
 		super(
 				collectionPersister,

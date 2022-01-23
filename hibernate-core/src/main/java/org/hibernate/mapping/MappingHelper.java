@@ -62,7 +62,7 @@ public final class MappingHelper {
 			injectParameters( customTypeBean.getBeanInstance(), typeParameters );
 		}
 
-		return new CustomCollectionType( customTypeBean, role, propertyRef, metadata.getTypeConfiguration() );
+		return new CustomCollectionType( customTypeBean, role, propertyRef );
 	}
 
 	public static void injectParameters(Object type, Properties parameters) {

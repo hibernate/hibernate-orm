@@ -18,7 +18,7 @@ public class PreCollectionUpdateEvent extends AbstractCollectionEvent {
 
 	public PreCollectionUpdateEvent(
 			CollectionPersister collectionPersister,
-			PersistentCollection collection,
+			PersistentCollection<?> collection,
 			EventSource source) {
 		super(
 				collectionPersister,

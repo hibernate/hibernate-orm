@@ -15,7 +15,8 @@ import org.hibernate.collection.spi.PersistentCollection;
  * @author Gavin King
  */
 public class InitializeCollectionEvent extends AbstractCollectionEvent {
-	public InitializeCollectionEvent(PersistentCollection collection, EventSource source ) {
+
+	public InitializeCollectionEvent(PersistentCollection<?> collection, EventSource source ) {
 		super(
 				getLoadedCollectionPersister( collection, source ),
 				collection,

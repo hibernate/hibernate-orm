@@ -191,11 +191,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public int getDontFlushFromFind() {
-		return delegate.getDontFlushFromFind();
-	}
-
-	@Override
 	public PersistenceContext getPersistenceContext() {
 		return delegate.getPersistenceContext();
 	}

@@ -43,6 +43,8 @@ import org.hibernate.type.Type;
  * state when the collection is initialized and comparing at flush
  * time.
  *
+ * @param <E> the collection element type, or map value type
+ *
  * @author Gavin King
  */
 @Incubating

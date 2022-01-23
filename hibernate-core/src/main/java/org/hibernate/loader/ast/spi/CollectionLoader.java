@@ -22,7 +22,7 @@ public interface CollectionLoader extends Loader {
 	/**
 	 * Load a collection by its key (not necessarily the same as its owner's PK).
 	 */
-	PersistentCollection load(Object key, SharedSessionContractImplementor session);
+	PersistentCollection<?> load(Object key, SharedSessionContractImplementor session);
 
 	//TODO support 'readOnly' collection loading
 

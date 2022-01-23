@@ -39,14 +39,14 @@ public abstract class ProxyVisitor extends AbstractVisitor {
 	 * was snapshotted and detached?
 	 */
 	protected static boolean isOwnerUnchanged(
-			final CollectionPersister persister, final Object id, final PersistentCollection snapshot
+			final CollectionPersister persister, final Object id, final PersistentCollection<?> snapshot
 	) {
 		return isCollectionSnapshotValid(snapshot) &&
 				persister.getRole().equals( snapshot.getRole() ) &&
 				id.equals( snapshot.getKey() );
 	}
 
-	private static boolean isCollectionSnapshotValid(PersistentCollection snapshot) {
+	private static boolean isCollectionSnapshotValid(PersistentCollection<?> snapshot) {
 		return snapshot != null &&
 				snapshot.getRole() != null &&
 				snapshot.getKey() != null;
@@ -57,7 +57,7 @@ public abstract class ProxyVisitor extends AbstractVisitor {
 	 * collection wrapper, using a snapshot carried with the collection
 	 * wrapper
 	 */
-	protected void reattachCollection(PersistentCollection collection, CollectionType type)
+	protected void reattachCollection(PersistentCollection<?> collection, CollectionType type)
 	throws HibernateException {
 		final EventSource session = getSession();
 		if ( collection.wasInitialized() ) {

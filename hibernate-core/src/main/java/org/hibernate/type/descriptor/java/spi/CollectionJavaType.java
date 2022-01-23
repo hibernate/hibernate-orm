@@ -61,13 +61,13 @@ public class CollectionJavaType<C> extends AbstractClassJavaType<C> {
 		return one == another ||
 				(
 						one instanceof PersistentCollection &&
-								( (PersistentCollection) one ).wasInitialized() &&
-								( (PersistentCollection) one ).isWrapper( another )
+								( (PersistentCollection<?>) one ).wasInitialized() &&
+								( (PersistentCollection<?>) one ).isWrapper( another )
 				) ||
 				(
 						another instanceof PersistentCollection &&
-								( (PersistentCollection) another ).wasInitialized() &&
-								( (PersistentCollection) another ).isWrapper( one )
+								( (PersistentCollection<?>) another ).wasInitialized() &&
+								( (PersistentCollection<?>) another ).isWrapper( one )
 				);
 	}
 

@@ -6,12 +6,9 @@
  */
 package org.hibernate.mapping;
 
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.collection.internal.StandardBagSemantics;
-import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.type.BagType;
 import org.hibernate.type.CollectionType;
@@ -38,16 +35,11 @@ public class Bag extends Collection {
 	}
 
 	public CollectionType getDefaultCollectionType() {
-		return new BagType( getMetadata().getTypeConfiguration(), getRole(), getReferencedPropertyName() );
+		return new BagType( getRole(), getReferencedPropertyName() );
 	}
 
 	void createPrimaryKey() {
 		//create an index on the key columns??
-	}
-
-	@Override
-	public CollectionSemantics getDefaultCollectionSemantics() {
-		return StandardBagSemantics.INSTANCE;
 	}
 
 	public Object accept(ValueVisitor visitor) {

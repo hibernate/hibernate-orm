@@ -160,11 +160,11 @@ public class LazyAttributeLoadingInterceptor extends AbstractLazyLoadInterceptor
 				tracker = ( (SelfDirtinessTracker) target ).$$_hibernate_getCollectionTracker();
 			}
 
-			if ( value instanceof PersistentCollection && !( (PersistentCollection) value ).wasInitialized() ) {
+			if ( value instanceof PersistentCollection && !( (PersistentCollection<?>) value ).wasInitialized() ) {
 				// Cannot take a snapshot of an un-initialized collection.
 				return;
 			}
-			tracker.add( fieldName, ( (Collection) value ).size() );
+			tracker.add( fieldName, ( (Collection<?>) value ).size() );
 		}
 	}
 

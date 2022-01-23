@@ -188,9 +188,9 @@ public class CollectionCacheInvalidator
 
 	//execute the same process as invalidation with collection operations
 	private static final class CollectionEvictCacheAction extends CollectionAction {
-		protected CollectionEvictCacheAction(
+		CollectionEvictCacheAction(
 				CollectionPersister persister,
-				PersistentCollection collection,
+				PersistentCollection<?> collection,
 				Object key,
 				SharedSessionContractImplementor session) {
 			super( persister, collection, key, session );

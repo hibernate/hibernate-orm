@@ -40,11 +40,13 @@ public class TypeHelper {
 			return sourceValue;
 		}
 		else {
-			return navigable.getAttributeMetadataAccess().resolveAttributeMetadata( null ).getMutabilityPlan().deepCopy( sourceValue );
+			return navigable.getAttributeMetadataAccess()
+					.resolveAttributeMetadata( null )
+					.getMutabilityPlan()
+					.deepCopy( sourceValue );
 		}
 	};
 
-	@SuppressWarnings("unchecked")
 	public static void deepCopy(
 			ManagedMappingType containerDescriptor,
 			Object[] source,
@@ -100,25 +102,6 @@ public class TypeHelper {
 					target[i] = types[i].deepCopy( values[i], session
 						.getFactory() );
 				}
-			}
-		}
-	}
-
-	/**
-	 * Apply the {@link Type#beforeAssemble} operation across a series of values.
-	 *
-	 * @param row The values
-	 * @param types The value types
-	 * @param session The originating session
-	 */
-	public static void beforeAssemble(
-			final Serializable[] row,
-			final Type[] types,
-			final SharedSessionContractImplementor session) {
-		for ( int i = 0; i < types.length; i++ ) {
-			if ( row[i] != LazyPropertyInitializer.UNFETCHED_PROPERTY
-				&& row[i] != PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
-				types[i].beforeAssemble( row[i], session );
 			}
 		}
 	}
@@ -329,34 +312,6 @@ public class TypeHelper {
 	 * @param currentState The current state of the entity
 	 * @param previousState The baseline state of the entity
 	 * @param includeColumns Columns to be included in the dirty checking, per property
-	 * @param anyUninitializedProperties Does the entity currently hold any uninitialized property values?
-	 * @param session The session from which the dirty check request originated.
-	 *
-	 * @return Array containing indices of the dirty properties, or null if no properties considered dirty.
-	 *
-	 * @deprecated Use {org.hibernate.type.TypeHelper{@link #findDirty(NonIdentifierAttribute[], Object[], Object[], boolean[][], SharedSessionContractImplementor)} indtead
-	 */
-	@Deprecated
-	public static int[] findDirty(
-			final NonIdentifierAttribute[] properties,
-			final Object[] currentState,
-			final Object[] previousState,
-			final boolean[][] includeColumns,
-			final boolean anyUninitializedProperties,
-			final SharedSessionContractImplementor session) {
-		return findDirty( properties, currentState, previousState, includeColumns, session );
-	}
-
-	/**
-	 * Determine if any of the given field values are dirty, returning an array containing
-	 * indices of the dirty fields.
-	 * <p/>
-	 * If it is determined that no fields are dirty, null is returned.
-	 *
-	 * @param properties The property definitions
-	 * @param currentState The current state of the entity
-	 * @param previousState The baseline state of the entity
-	 * @param includeColumns Columns to be included in the dirty checking, per property
 	 * @param session The session from which the dirty check request originated.
 	 *
 	 * @return Array containing indices of the dirty properties, or null if no properties considered dirty.
@@ -401,37 +356,6 @@ public class TypeHelper {
 		else {
 			return ArrayHelper.trim(results, count);
 		}
-	}
-
-	/**
-	 * Determine if any of the given field values are modified, returning an array containing
-	 * indices of the modified fields.
-	 * <p/>
-	 * If it is determined that no fields are dirty, null is returned.
-	 *
-	 * @param properties The property definitions
-	 * @param currentState The current state of the entity
-	 * @param previousState The baseline state of the entity
-	 * @param includeColumns Columns to be included in the mod checking, per property
-	 * @param includeProperties Array of property indices that identify which properties participate in check
-	 * @param anyUninitializedProperties Does the entity currently hold any uninitialized property values?
-	 * @param session The session from which the dirty check request originated.
-	 *
-	 * @return Array containing indices of the modified properties, or null if no properties considered modified.
-	 *
-	 * @deprecated Use {@link #findModified(NonIdentifierAttribute[], Object[], Object[], boolean[][], boolean[], boolean, SharedSessionContractImplementor)}
-	 * instead.
-	 */
-	@Deprecated
-	public static int[] findModified(
-			final NonIdentifierAttribute[] properties,
-			final Object[] currentState,
-			final Object[] previousState,
-			final boolean[][] includeColumns,
-			final boolean[] includeProperties,
-			final boolean anyUninitializedProperties,
-			final SharedSessionContractImplementor session) {
-		return findModified( properties, currentState, previousState, includeColumns, includeProperties, session );
 	}
 
 	/**

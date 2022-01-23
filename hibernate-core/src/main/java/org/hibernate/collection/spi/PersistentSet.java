@@ -16,7 +16,6 @@ import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
-import org.hibernate.collection.spi.AbstractPersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;

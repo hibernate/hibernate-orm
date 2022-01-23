@@ -177,21 +177,21 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	}
 
 	@Override
-	public void recreate(PersistentCollection collection, Object id, SharedSessionContractImplementor session)
+	public void recreate(PersistentCollection<?> collection, Object id, SharedSessionContractImplementor session)
 			throws HibernateException {
 		super.recreate( collection, id, session );
 		writeIndex( collection, collection.entries( this ), id, true, session );
 	}
 
 	@Override
-	public void insertRows(PersistentCollection collection, Object id, SharedSessionContractImplementor session)
+	public void insertRows(PersistentCollection<?> collection, Object id, SharedSessionContractImplementor session)
 			throws HibernateException {
 		super.insertRows( collection, id, session );
 		writeIndex( collection, collection.entries( this ), id, true, session );
 	}
 
 	@Override
-	protected void doProcessQueuedOps(PersistentCollection collection, Object id, SharedSessionContractImplementor session)
+	protected void doProcessQueuedOps(PersistentCollection<?> collection, Object id, SharedSessionContractImplementor session)
 			throws HibernateException {
 		writeIndex( collection, collection.queuedAdditionIterator(), id, false, session );
 	}
@@ -213,7 +213,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 						final Object entry = entries.next();
 						if ( entry != null && collection.entryExists( entry, nextIndex ) ) {
 							int offset = 1;
-							PreparedStatement st = null;
+							PreparedStatement st;
 							boolean callable = isUpdateCallable();
 							boolean useBatch = expectation.canBeBatched();
 							String sql = getSQLUpdateRowString();
@@ -318,7 +318,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	private BasicBatchKey insertRowBatchKey;
 
 	@Override
-	protected int doUpdateRows(Object id, PersistentCollection collection, SharedSessionContractImplementor session) {
+	protected int doUpdateRows(Object id, PersistentCollection<?> collection, SharedSessionContractImplementor session) {
 
 		// we finish all the "removes" first to take care of possible unique
 		// constraints and so that we can take better advantage of batching

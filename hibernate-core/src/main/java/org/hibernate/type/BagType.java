@@ -15,12 +15,11 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.type.spi.TypeConfiguration;
 
 public class BagType extends CollectionType {
 
-	public BagType(TypeConfiguration typeConfiguration, String role, String propertyRef) {
-		super( typeConfiguration, role, propertyRef );
+	public BagType(String role, String propertyRef) {
+		super(role, propertyRef );
 	}
 
 	@Override
@@ -29,24 +28,24 @@ public class BagType extends CollectionType {
 	}
 
 	@Override
-	public Class getReturnedClass() {
+	public Class<?> getReturnedClass() {
 		return Collection.class;
 	}
 
 	@Override
-	public PersistentCollection instantiate(SharedSessionContractImplementor session, CollectionPersister persister, Object key)
+	public PersistentCollection<?> instantiate(SharedSessionContractImplementor session, CollectionPersister persister, Object key)
 	throws HibernateException {
-		return new PersistentBag( session );
+		return new PersistentBag<>( session );
 	}
 
 	@Override
-	public PersistentCollection wrap(SharedSessionContractImplementor session, Object collection) {
-		return new PersistentBag( session, (Collection) collection );
+	public PersistentCollection<?> wrap(SharedSessionContractImplementor session, Object collection) {
+		return new PersistentBag<>( session, (Collection<?>) collection );
 	}
 
 	@Override
 	public Object instantiate(int anticipatedSize) {
-		return anticipatedSize <= 0 ? new ArrayList() : new ArrayList( anticipatedSize + 1 );
+		return anticipatedSize <= 0 ? new ArrayList<>() : new ArrayList<>( anticipatedSize + 1 );
 	}
 
 }

@@ -50,7 +50,7 @@ public interface Filter {
 	 * @param values The values to be expanded into an SQL IN list.
 	 * @return This FilterImpl instance (for method chaining).
 	 */
-	Filter setParameterList(String name, Collection values);
+	Filter setParameterList(String name, Collection<?> values);
 
 	/**
 	 * Set the named parameter's value list for this filter.  Used

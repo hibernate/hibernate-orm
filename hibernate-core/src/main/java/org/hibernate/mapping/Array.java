@@ -12,8 +12,6 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.collection.internal.StandardArraySemantics;
-import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.type.ArrayType;
 import org.hibernate.type.BasicType;
@@ -59,13 +57,8 @@ public class Array extends List {
 	}
 
 	@Override
-	public CollectionSemantics<?,?> getDefaultCollectionSemantics() {
-		return StandardArraySemantics.INSTANCE;
-	}
-
-	@Override
 	public CollectionType getDefaultCollectionType() throws MappingException {
-		return new ArrayType( getTypeConfiguration(), getRole(), getReferencedPropertyName(), getElementClass() );
+		return new ArrayType( getRole(), getReferencedPropertyName(), getElementClass() );
 	}
 
 	@Override

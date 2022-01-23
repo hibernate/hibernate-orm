@@ -59,7 +59,6 @@ import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
-import org.hibernate.metamodel.mapping.GeneratedValueResolver;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -570,7 +569,7 @@ public class MappingModelCreationHelper {
 		final CollectionPart indexDescriptor;
 		CollectionIdentifierDescriptor identifierDescriptor = null;
 
-		final CollectionSemantics collectionSemantics = collectionDescriptor.getCollectionSemantics();
+		final CollectionSemantics<?,?> collectionSemantics = collectionDescriptor.getCollectionSemantics();
 		switch ( collectionSemantics.getCollectionClassification() ) {
 			case ARRAY: {
 				collectionMappingType = new CollectionMappingTypeImpl(

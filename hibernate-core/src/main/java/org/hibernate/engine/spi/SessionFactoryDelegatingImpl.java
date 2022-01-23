@@ -113,7 +113,7 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
-	public ClassMetadata getClassMetadata(Class entityClass) {
+	public ClassMetadata getClassMetadata(@SuppressWarnings("rawtypes") Class entityClass) {
 		return delegate.getClassMetadata( entityClass );
 	}
 
@@ -248,7 +248,7 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
-	public RootGraphImplementor findEntityGraphByName(String name) {
+	public RootGraphImplementor<?> findEntityGraphByName(String name) {
 		return delegate.findEntityGraphByName( name );
 	}
 
@@ -338,7 +338,7 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
-	public EntityPersister locateEntityPersister(Class byClass) {
+	public EntityPersister locateEntityPersister(Class<?> byClass) {
 		return delegate.locateEntityPersister( byClass );
 	}
 

@@ -25,7 +25,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 public class ManyToOneType extends EntityType {
 	private final String propertyName;
 	private final boolean ignoreNotFound;
-	private boolean isLogicalOneToOne;
+	private final boolean isLogicalOneToOne;
 
 	/**
 	 * Creates a many-to-one association type with the given referenced entity.
@@ -116,7 +116,6 @@ public class ManyToOneType extends EntityType {
 	/**
 	 * Register the entity as batch loadable, if enabled
 	 */
-	@SuppressWarnings({ "JavaDoc" })
 	private void scheduleBatchLoadIfNeeded(Object id, SharedSessionContractImplementor session) throws MappingException {
 		//cannot batch fetch by unique key (property-ref associations)
 		if ( uniqueKeyPropertyName == null && id != null ) {

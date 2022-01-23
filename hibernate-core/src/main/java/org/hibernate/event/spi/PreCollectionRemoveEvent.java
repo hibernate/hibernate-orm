@@ -18,7 +18,7 @@ public class PreCollectionRemoveEvent extends AbstractCollectionEvent {
 
 	public PreCollectionRemoveEvent(
 			CollectionPersister collectionPersister,
-			PersistentCollection collection,
+			PersistentCollection<?> collection,
 			EventSource source,
 			Object loadedOwner) {
 		super(

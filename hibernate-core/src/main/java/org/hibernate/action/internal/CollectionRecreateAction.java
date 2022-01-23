@@ -29,7 +29,7 @@ public final class CollectionRecreateAction extends CollectionAction {
 	 * @param session The session
 	 */
 	public CollectionRecreateAction(
-			final PersistentCollection collection,
+			final PersistentCollection<?> collection,
 			final CollectionPersister persister,
 			final Object id,
 			final SharedSessionContractImplementor session) {
@@ -40,7 +40,7 @@ public final class CollectionRecreateAction extends CollectionAction {
 	public void execute() throws HibernateException {
 		// this method is called when a new non-null collection is persisted
 		// or when an existing (non-null) collection is moved to a new owner
-		final PersistentCollection collection = getCollection();
+		final PersistentCollection<?> collection = getCollection();
 		
 		preRecreate();
 		final SharedSessionContractImplementor session = getSession();

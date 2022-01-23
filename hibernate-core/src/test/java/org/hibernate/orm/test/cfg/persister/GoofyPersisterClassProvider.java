@@ -320,10 +320,6 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 			return false;
 		}
 
-		public Comparator getVersionComparator() {
-			return null;
-		}
-
 		@Override
 		public BasicType<?> getVersionType() {
 			return null;
@@ -376,8 +372,7 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public List multiLoad(
-				Object[] ids, SharedSessionContractImplementor session, MultiIdLoadOptions loadOptions) {
+		public List<?> multiLoad(Object[] ids, SharedSessionContractImplementor session, MultiIdLoadOptions loadOptions) {
 			return Collections.emptyList();
 		}
 
@@ -619,7 +614,7 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public Class getMappedClass() {
+		public Class<?> getMappedClass() {
 			return null;
 		}
 
@@ -629,7 +624,7 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public Class getConcreteProxyClass() {
+		public Class<?> getConcreteProxyClass() {
 			return null;
 		}
 
@@ -867,7 +862,7 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 			return null;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
-		public Class getElementClass() {
+		public Class<?> getElementClass() {
 			return null;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 
@@ -907,22 +902,22 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 			//To change body of implemented methods use File | Settings | File Templates.
 		}
 
-		public void recreate(PersistentCollection collection, Object key, SharedSessionContractImplementor session)
+		public void recreate(PersistentCollection<?> collection, Object key, SharedSessionContractImplementor session)
 				throws HibernateException {
 			//To change body of implemented methods use File | Settings | File Templates.
 		}
 
-		public void deleteRows(PersistentCollection collection, Object key, SharedSessionContractImplementor session)
+		public void deleteRows(PersistentCollection<?> collection, Object key, SharedSessionContractImplementor session)
 				throws HibernateException {
 			//To change body of implemented methods use File | Settings | File Templates.
 		}
 
-		public void updateRows(PersistentCollection collection, Object key, SharedSessionContractImplementor session)
+		public void updateRows(PersistentCollection<?> collection, Object key, SharedSessionContractImplementor session)
 				throws HibernateException {
 			//To change body of implemented methods use File | Settings | File Templates.
 		}
 
-		public void insertRows(PersistentCollection collection, Object key, SharedSessionContractImplementor session)
+		public void insertRows(PersistentCollection<?> collection, Object key, SharedSessionContractImplementor session)
 				throws HibernateException {
 			//To change body of implemented methods use File | Settings | File Templates.
 		}
@@ -1039,7 +1034,7 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public CollectionSemantics getCollectionSemantics() {
+		public CollectionSemantics<?,?> getCollectionSemantics() {
 			return null;
 		}
 
@@ -1049,7 +1044,7 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public void processQueuedOps(PersistentCollection collection, Object key, SharedSessionContractImplementor session)
+		public void processQueuedOps(PersistentCollection<?> collection, Object key, SharedSessionContractImplementor session)
 				throws HibernateException {
 		}
 

@@ -32,9 +32,8 @@ public class CollectionLoaderNamedQuery implements CollectionLoader {
 	}
 
 	@Override
-	@SuppressWarnings("rawtypes")
-	public PersistentCollection load(Object key, SharedSessionContractImplementor session) {
-		final QueryImplementor<PersistentCollection> query = namedQueryMemento.toQuery( session );
+	public PersistentCollection<?> load(Object key, SharedSessionContractImplementor session) {
+		final QueryImplementor<PersistentCollection<?>> query = namedQueryMemento.toQuery( session );
 		query.setParameter( 1, key );
 		return query.getResultList().get( 0 );
 	}

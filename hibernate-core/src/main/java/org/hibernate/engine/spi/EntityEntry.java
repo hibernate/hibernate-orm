@@ -39,7 +39,7 @@ public interface EntityEntry {
 
 	Object getLoadedValue(String propertyName);
 
-	void overwriteLoadedStateCollectionValue(String propertyName, PersistentCollection collection);
+	void overwriteLoadedStateCollectionValue(String propertyName, PersistentCollection<?> collection);
 
 	Object[] getDeletedState();
 

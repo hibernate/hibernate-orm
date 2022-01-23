@@ -22,7 +22,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * A type for persistent arrays.
@@ -30,17 +29,17 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public class ArrayType extends CollectionType {
 
-	private final Class elementClass;
-	private final Class arrayClass;
+	private final Class<?> elementClass;
+	private final Class<?> arrayClass;
 
-	public ArrayType(TypeConfiguration typeConfiguration, String role, String propertyRef, Class elementClass) {
-		super( typeConfiguration, role, propertyRef );
+	public ArrayType(String role, String propertyRef, Class<?> elementClass) {
+		super(role, propertyRef );
 		this.elementClass = elementClass;
 		arrayClass = Array.newInstance(elementClass, 0).getClass();
 	}
 
 	@Override
-	public Class getReturnedClass() {
+	public Class<?> getReturnedClass() {
 		return arrayClass;
 	}
 
@@ -50,22 +49,22 @@ public class ArrayType extends CollectionType {
 	}
 
 	@Override
-	public PersistentCollection instantiate(SharedSessionContractImplementor session, CollectionPersister persister, Object key)
+	public PersistentCollection<?> instantiate(SharedSessionContractImplementor session, CollectionPersister persister, Object key)
 	throws HibernateException {
-		return new PersistentArrayHolder(session, persister);
+		return new PersistentArrayHolder<>(session, persister);
 	}
 
 	/**
 	 * Not defined for collections of primitive type
 	 */
 	@Override
-	public Iterator getElementsIterator(Object collection) {
+	public Iterator<?> getElementsIterator(Object collection) {
 		return Arrays.asList( (Object[]) collection ).iterator();
 	}
 
 	@Override
-	public PersistentCollection wrap(SharedSessionContractImplementor session, Object array) {
-		return new PersistentArrayHolder(session, array);
+	public PersistentCollection<?> wrap(SharedSessionContractImplementor session, Object array) {
+		return new PersistentArrayHolder<>(session, array);
 	}
 
 	@Override
@@ -79,11 +78,12 @@ public class ArrayType extends CollectionType {
 			return "null";
 		}
 		int length = Array.getLength(value);
-		List list = new ArrayList(length);
+		List<String> list = new ArrayList<>(length);
 		Type elemType = getElementType(factory);
 		for ( int i=0; i<length; i++ ) {
 			Object element = Array.get(value, i);
-			if ( element == LazyPropertyInitializer.UNFETCHED_PROPERTY || !Hibernate.isInitialized( element ) ) {
+			if ( element == LazyPropertyInitializer.UNFETCHED_PROPERTY
+					|| !Hibernate.isInitialized( element ) ) {
 				list.add( "<uninitialized>" );
 			}
 			else {

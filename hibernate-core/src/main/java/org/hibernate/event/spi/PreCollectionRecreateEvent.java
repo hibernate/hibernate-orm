@@ -18,7 +18,7 @@ public class PreCollectionRecreateEvent extends AbstractCollectionEvent {
 
 	public PreCollectionRecreateEvent(
 			CollectionPersister collectionPersister,
-			PersistentCollection collection,
+			PersistentCollection<?> collection,
 			EventSource source) {
 		super(
 				collectionPersister,

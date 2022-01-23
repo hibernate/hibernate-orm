@@ -13,7 +13,6 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.engine.internal.ForeignKeys;
-import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -85,8 +84,6 @@ public class OneToOneType extends EntityType {
 	public int[] getSqlTypeCodes(Mapping session) throws MappingException {
 		return ArrayHelper.EMPTY_INT_ARRAY;
 	}
-
-	private static final Size[] SIZES = new Size[0];
 
 	@Override
 	public boolean[] toColumnNullness(Object value, Mapping mapping) {

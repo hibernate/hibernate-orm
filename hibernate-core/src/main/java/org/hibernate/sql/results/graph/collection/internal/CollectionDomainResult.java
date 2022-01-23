@@ -59,7 +59,7 @@ public class CollectionDomainResult implements DomainResult, CollectionResultGra
 				creationState
 		);
 
-		final CollectionSemantics collectionSemantics = loadingAttribute.getCollectionDescriptor().getCollectionSemantics();
+		final CollectionSemantics<?,?> collectionSemantics = loadingAttribute.getCollectionDescriptor().getCollectionSemantics();
 		initializerProducer = collectionSemantics.createInitializerProducer(
 				loadingPath,
 				loadingAttribute,

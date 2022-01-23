@@ -959,7 +959,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		throw new UnknownNamedQueryException( queryName );
 	}
 
-	protected void applyQuerySettingsAndHints(SelectionQuery query) {
+	protected void applyQuerySettingsAndHints(SelectionQuery<?> query) {
 	}
 
 	protected void applyQuerySettingsAndHints(Query<?> query) {

@@ -11,7 +11,6 @@ import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.Collections;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.CollectionType;
 
 /**
@@ -22,7 +21,7 @@ import org.hibernate.type.CollectionType;
  * @author Gavin King
  */
 public class FlushVisitor extends AbstractVisitor {
-	private Object owner;
+	private final Object owner;
 
 	public FlushVisitor(EventSource session, Object owner) {
 		super(session);
@@ -36,17 +35,17 @@ public class FlushVisitor extends AbstractVisitor {
 		}
 
 		if ( collection != null ) {
-			final PersistentCollection coll;
+			final PersistentCollection<?> coll;
 			final EventSource session = getSession();
 			if ( type.hasHolder() ) {
 				coll = session.getPersistenceContextInternal().getCollectionHolder(collection);
 			}
 			else if ( collection == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
 				final Object keyOfOwner = type.getKeyOfOwner( owner, session );
-				coll = (PersistentCollection) type.getCollection( keyOfOwner, session, owner, Boolean.FALSE );
+				coll = (PersistentCollection<?>) type.getCollection( keyOfOwner, session, owner, Boolean.FALSE );
 			}
 			else if ( collection instanceof PersistentCollection ) {
-				coll = (PersistentCollection) collection;
+				coll = (PersistentCollection<?>) collection;
 			}
 			else {
 				return null;

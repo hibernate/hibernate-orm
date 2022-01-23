@@ -11,7 +11,6 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
-import org.hibernate.sql.results.graph.entity.internal.EntityResultInitializer;
 import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesSourceProcessingStateStandardImpl;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
@@ -319,8 +318,7 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 		getRowProcessingState().finishRowProcessing();
 
 		while ( !resultProcessed ) {
-			boolean result = getRowProcessingState().next();
-			if ( result ) {
+			if ( getRowProcessingState().next() ) {
 				final EntityKey entityKey2 = getEntityKey();
 				if ( !entityKey.equals( entityKey2 ) ) {
 					resultInitializer.finishUpRow( getRowProcessingState() );
@@ -329,11 +327,10 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 				}
 				else {
 					rowReader.readRow( getRowProcessingState(), getProcessingOptions() );
-
 					getRowProcessingState().finishRowProcessing();
 				}
 			}
-			else if ( !result ) {
+			else {
 				afterLast = true;
 				resultProcessed = true;
 			}

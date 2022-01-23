@@ -58,7 +58,7 @@ public class CustomCollectionTypeSemantics<CE, E> implements CollectionSemantics
 	@Override
 	public Iterator<E> getElementIterator(CE rawCollection) {
 		//noinspection unchecked
-		return collectionType.getElementsIterator( rawCollection, null );
+		return (Iterator<E>) collectionType.getElementsIterator( rawCollection, null );
 	}
 
 	@Override
@@ -94,7 +94,7 @@ public class CustomCollectionTypeSemantics<CE, E> implements CollectionSemantics
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
 		//noinspection unchecked
-		return collectionType.instantiate( session, collectionDescriptor, key );
+		return (PersistentCollection<E>) collectionType.instantiate( session, collectionDescriptor, key );
 	}
 
 	@Override
@@ -103,6 +103,6 @@ public class CustomCollectionTypeSemantics<CE, E> implements CollectionSemantics
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
 		//noinspection unchecked
-		return collectionType.wrap( session, rawCollection );
+		return (PersistentCollection<E>) collectionType.wrap( session, rawCollection );
 	}
 }

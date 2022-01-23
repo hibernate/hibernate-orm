@@ -46,21 +46,19 @@ public class SerializableToBlobType<T extends Serializable> implements BasicType
 	
 	public static final String CLASS_NAME = "classname";
 
-	private static final Size DEFAULT_SIZE = new Size( 19, 2, 255, Size.LobMultiplier.NONE ); // to match legacy behavior
 	private static final long serialVersionUID = 1L;
 	private final Size dictatedSize = new Size();
 
 	// Don't use final here.  Need to initialize after-the-fact
 	// by DynamicParameterizedTypes.
-	private JdbcType jdbcType;
+	private final JdbcType jdbcType;
 	private JavaType<T> javaType;
 	// sqlTypes need always to be in sync with sqlTypeDescriptor
-	private int[] sqlTypes;
+	private final int[] sqlTypes;
 
 	private ValueBinder<T> jdbcValueBinder;
 	private ValueExtractor<T> jdbcValueExtractor;
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public SerializableToBlobType() {
 		this.jdbcType = BlobJdbcType.DEFAULT;
 		this.sqlTypes = new int[] { jdbcType.getDefaultSqlTypeCode() };
@@ -71,11 +69,12 @@ public class SerializableToBlobType<T extends Serializable> implements BasicType
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public void setParameterValues(Properties parameters) {
 		ParameterType reader = (ParameterType) parameters.get( PARAMETER_TYPE );
 		if ( reader != null ) {
-			setJavaTypeDescriptor( new SerializableJavaType( reader.getReturnedClass() ) );
+			@SuppressWarnings("unchecked")
+			Class<T> returnedClass = reader.getReturnedClass();
+			setJavaTypeDescriptor( new SerializableJavaType<>(returnedClass) );
 		}
 		else {
 			String className = parameters.getProperty( CLASS_NAME );
@@ -83,7 +82,9 @@ public class SerializableToBlobType<T extends Serializable> implements BasicType
 				throw new MappingException( "No class name defined for type: " + SerializableToBlobType.class.getName() );
 			}
 			try {
-				setJavaTypeDescriptor( new SerializableJavaType<>( ReflectHelper.classForName( className ) ) );
+				@SuppressWarnings("unchecked")
+				Class<T> classForName = ReflectHelper.classForName(className);
+				setJavaTypeDescriptor( new SerializableJavaType<>(classForName) );
 			}
 			catch ( ClassNotFoundException e ) {
 				throw new MappingException( "Unable to load class from " + CLASS_NAME + " parameter", e );
@@ -148,7 +149,6 @@ public class SerializableToBlobType<T extends Serializable> implements BasicType
 	@Deprecated
 	public final void setJavaTypeDescriptor( JavaType<T> javaType ) {
 		this.javaType = javaType;
-
 		this.jdbcValueBinder = getJdbcType().getBinder( javaType );
 		this.jdbcValueExtractor = getJdbcType().getExtractor( javaType );
 	}
@@ -158,7 +158,7 @@ public class SerializableToBlobType<T extends Serializable> implements BasicType
 	}
 
 	@Override
-	public final Class getReturnedClass() {
+	public final Class<?> getReturnedClass() {
 		return javaType.getJavaTypeClass();
 	}
 
@@ -307,7 +307,7 @@ public class SerializableToBlobType<T extends Serializable> implements BasicType
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public final Object replace(Object original, Object target, SharedSessionContractImplementor session, Object owner, Map copyCache) {
 		if ( original == null && target == null ) {
 			return null;

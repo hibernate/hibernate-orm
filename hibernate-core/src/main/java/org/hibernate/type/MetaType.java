@@ -59,7 +59,7 @@ public class MetaType extends AbstractType {
 	}
 
 	@Override
-	public Class getReturnedClass() {
+	public Class<?> getReturnedClass() {
 		return String.class;
 	}
 

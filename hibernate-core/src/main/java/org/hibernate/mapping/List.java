@@ -10,8 +10,6 @@ import java.util.function.Supplier;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.collection.internal.StandardListSemantics;
-import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ListType;
@@ -44,13 +42,8 @@ public class List extends IndexedCollection {
 		return true;
 	}
 
-	@Override
-	public CollectionSemantics getDefaultCollectionSemantics() {
-		return StandardListSemantics.INSTANCE;
-	}
-
 	public CollectionType getDefaultCollectionType() throws MappingException {
-		return new ListType( getMetadata().getTypeConfiguration(), getRole(), getReferencedPropertyName() );
+		return new ListType( getRole(), getReferencedPropertyName() );
 	}
 	
 	public Object accept(ValueVisitor visitor) {

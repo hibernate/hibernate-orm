@@ -302,7 +302,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 	}
 
 	@Override
-	public void overwriteLoadedStateCollectionValue(String propertyName, PersistentCollection collection) {
+	public void overwriteLoadedStateCollectionValue(String propertyName, PersistentCollection<?> collection) {
 		// nothing to do if status is READ_ONLY
 		if ( getStatus() != Status.READ_ONLY ) {
 			assert propertyName != null;

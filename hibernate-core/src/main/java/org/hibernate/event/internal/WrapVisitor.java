@@ -44,10 +44,6 @@ public class WrapVisitor extends ProxyVisitor {
 		return substitute;
 	}
 
-	public WrapVisitor(EventSource session) {
-		super( session );
-	}
-
 	@Override
 	Object processCollection(Object collection, CollectionType collectionType)
 			throws HibernateException {
@@ -61,7 +57,7 @@ public class WrapVisitor extends ProxyVisitor {
 		}
 
 		if ( collection instanceof PersistentCollection ) {
-			final PersistentCollection coll = (PersistentCollection) collection;
+			final PersistentCollection<?> coll = (PersistentCollection<?>) collection;
 			final SessionImplementor session = getSession();
 
 			if ( coll.setCurrentSession( session ) ) {
@@ -94,7 +90,7 @@ public class WrapVisitor extends ProxyVisitor {
 					return null;
 				}
 
-				PersistentCollection ah = persistenceContext.getCollectionHolder( collection );
+				PersistentCollection<?> ah = persistenceContext.getCollectionHolder( collection );
 				if ( ah == null ) {
 					ah = collectionType.wrap( session, collection );
 					persistenceContext.addNewCollection( persister, ah );
@@ -109,7 +105,7 @@ public class WrapVisitor extends ProxyVisitor {
 					}
 				}
 
-				final PersistentCollection persistentCollection = collectionType.wrap( session, collection );
+				final PersistentCollection<?> persistentCollection = collectionType.wrap( session, collection );
 
 				persistenceContext.addNewCollection( persister, persistentCollection );
 

@@ -95,17 +95,17 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 			return converted;
 		}
 		else if ( exception instanceof LockAcquisitionException ) {
-			final PersistenceException converted = wrapLockException( (HibernateException) exception, lockOptions );
+			final PersistenceException converted = wrapLockException( exception, lockOptions );
 			handlePersistenceException( converted );
 			return converted;
 		}
 		else if ( exception instanceof LockingStrategyException ) {
-			final PersistenceException converted = wrapLockException( (HibernateException) exception, lockOptions );
+			final PersistenceException converted = wrapLockException( exception, lockOptions );
 			handlePersistenceException( converted );
 			return converted;
 		}
 		else if ( exception instanceof org.hibernate.PessimisticLockException ) {
-			final PersistenceException converted = wrapLockException( (HibernateException) exception, lockOptions );
+			final PersistenceException converted = wrapLockException( exception, lockOptions );
 			handlePersistenceException( converted );
 			return converted;
 		}

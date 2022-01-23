@@ -190,8 +190,6 @@ public class SessionImpl
 	private boolean autoClear;
 	private boolean autoClose;
 
-	private transient int dontFlushFromFind;
-
 	private transient LoadEvent loadEvent; //cached LoadEvent instance
 
 	private transient TransactionObserver transactionObserver;
@@ -286,11 +284,11 @@ public class SessionImpl
 		return this.lockOptions;
 	}
 
-	protected void applyQuerySettingsAndHints(SelectionQuery query) {
+	protected void applyQuerySettingsAndHints(SelectionQuery<?> query) {
 		applyLockOptionsHint( query );
 	}
 
-	protected void applyLockOptionsHint(SelectionQuery query) {
+	protected void applyLockOptionsHint(SelectionQuery<?> query) {
 		final LockOptions lockOptionsForRead = getLockOptionsForRead();
 		if ( lockOptionsForRead.getLockMode() != LockMode.NONE ) {
 			query.setLockMode( getLockMode( lockOptionsForRead.getLockMode() ) );
@@ -307,8 +305,8 @@ public class SessionImpl
 		}
 	}
 
-	protected void applyQuerySettingsAndHints(Query query) {
-		applyQuerySettingsAndHints( (SelectionQuery) query );
+	protected void applyQuerySettingsAndHints(Query<?> query) {
+		applyQuerySettingsAndHints( (SelectionQuery<?>) query );
 
 		final Integer specLockTimeout = LegacySpecHelper.getInteger(
 				HINT_SPEC_LOCK_TIMEOUT,
@@ -365,7 +363,6 @@ public class SessionImpl
 	}
 
 	@Override
-	@SuppressWarnings("StatementWithEmptyBody")
 	public void close() throws HibernateException {
 		if ( isClosed() ) {
 			if ( getFactory().getSessionFactoryOptions().getJpaCompliance().isJpaClosedComplianceEnabled() ) {
@@ -596,12 +593,12 @@ public class SessionImpl
 
 	// saveOrUpdate() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	@Override
+	@Override @Deprecated
 	public void saveOrUpdate(Object object) throws HibernateException {
 		saveOrUpdate( null, object );
 	}
 
-	@Override
+	@Override @Deprecated
 	public void saveOrUpdate(String entityName, Object obj) throws HibernateException {
 		fireSaveOrUpdate( new SaveOrUpdateEvent( entityName, obj, this ) );
 	}
@@ -616,12 +613,12 @@ public class SessionImpl
 
 	// save() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	@Override
+	@Override @Deprecated
 	public Object save(Object obj) throws HibernateException {
 		return save( null, obj );
 	}
 
-	@Override
+	@Override @Deprecated
 	public Object save(String entityName, Object object) throws HibernateException {
 		return fireSave( new SaveOrUpdateEvent( entityName, object, this ) );
 	}
@@ -638,12 +635,12 @@ public class SessionImpl
 
 	// update() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	@Override
+	@Override @Deprecated
 	public void update(Object obj) throws HibernateException {
 		update( null, obj );
 	}
 
-	@Override
+	@Override @Deprecated
 	public void update(String entityName, Object object) throws HibernateException {
 		fireUpdate( new SaveOrUpdateEvent( entityName, object, this ) );
 	}
@@ -784,13 +781,13 @@ public class SessionImpl
 
 	// merge() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	@Override
+	@Override @SuppressWarnings("unchecked")
 	public <T> T merge(String entityName, T object) throws HibernateException {
 		checkOpen();
 		return (T) fireMerge( new MergeEvent( entityName, object, this ) );
 	}
 
-	@Override
+	@Override @SuppressWarnings("unchecked")
 	public <T> T merge(T object) throws HibernateException {
 		checkOpen();
 		return (T) fireMerge( new MergeEvent( null, object, this ));
@@ -846,13 +843,13 @@ public class SessionImpl
 
 	// delete() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	@Override
+	@Override @Deprecated
 	public void delete(Object object) throws HibernateException {
 		checkOpen();
 		fireDelete( new DeleteEvent( object, this ) );
 	}
 
-	@Override
+	@Override @Deprecated
 	public void delete(String entityName, Object object) throws HibernateException {
 		checkOpen();
 		fireDelete( new DeleteEvent( entityName, object, this ) );
@@ -984,12 +981,12 @@ public class SessionImpl
 		}
 	}
 
-	@Override
+	@Override @Deprecated
 	public <T> T load(Class<T> entityClass, Object id) throws HibernateException {
 		return this.byId( entityClass ).getReference( id );
 	}
 
-	@Override
+	@Override @Deprecated
 	public Object load(String entityName, Object id) throws HibernateException {
 		return this.byId( entityName ).getReference( id );
 	}
@@ -1109,22 +1106,22 @@ public class SessionImpl
 		}
 	}
 
-	@Override
+	@Override @Deprecated
 	public <T> T load(Class<T> entityClass, Object id, LockMode lockMode) throws HibernateException {
 		return this.byId( entityClass ).with( new LockOptions( lockMode ) ).getReference( id );
 	}
 
-	@Override
+	@Override @Deprecated
 	public <T> T load(Class<T> entityClass, Object id, LockOptions lockOptions) throws HibernateException {
 		return this.byId( entityClass ).with( lockOptions ).getReference( id );
 	}
 
-	@Override
+	@Override @Deprecated
 	public Object load(String entityName, Object id, LockMode lockMode) throws HibernateException {
 		return this.byId( entityName ).with( new LockOptions( lockMode ) ).getReference( id );
 	}
 
-	@Override
+	@Override @Deprecated
 	public Object load(String entityName, Object id, LockOptions lockOptions) throws HibernateException {
 		return this.byId( entityName ).with( lockOptions ).getReference( id );
 	}
@@ -1232,7 +1229,7 @@ public class SessionImpl
 		fireRefresh( new RefreshEvent( null, object, this ) );
 	}
 
-	@Override
+	@Override @Deprecated
 	public void refresh(String entityName, Object object) throws HibernateException {
 		checkOpen();
 		fireRefresh( new RefreshEvent( entityName, object, this ) );
@@ -1250,7 +1247,7 @@ public class SessionImpl
 		refresh( null, object, lockOptions );
 	}
 
-	@Override
+	@Override @Deprecated
 	public void refresh(String entityName, Object object, LockOptions lockOptions) throws HibernateException {
 		checkOpen();
 		fireRefresh( new RefreshEvent( entityName, object, lockOptions, this ) );
@@ -1548,7 +1545,7 @@ public class SessionImpl
 			delayedAfterCompletion();
 
 			if ( entry == null ) {
-				if ( !HibernateProxy.class.isInstance( object ) && persistenceContext.getEntry( object ) == null ) {
+				if ( !(object instanceof HibernateProxy) && persistenceContext.getEntry( object ) == null ) {
 					// check if it is even an entity -> if not throw an exception (per JPA)
 					try {
 						final String entityName = getEntityNameResolver().resolveEntityName( object );
@@ -1736,12 +1733,6 @@ public class SessionImpl
 		getJdbcCoordinator().cancelLastQuery();
 	}
 
-
-	@Override
-	public int getDontFlushFromFind() {
-		return dontFlushFromFind;
-	}
-
 	@Override
 	public String toString() {
 		StringBuilder buf = new StringBuilder( 500 )
@@ -1870,7 +1861,7 @@ public class SessionImpl
 	@Override
 	public LobHelper getLobHelper() {
 		if ( lobHelper == null ) {
-			lobHelper = new LobHelperImpl( this );
+			lobHelper = new LobHelperImpl();
 		}
 		return lobHelper;
 	}
@@ -1937,11 +1928,6 @@ public class SessionImpl
 	}
 
 	private static class LobHelperImpl implements LobHelper {
-		private final SessionImpl session;
-
-		private LobHelperImpl(SessionImpl session) {
-			this.session = session;
-		}
 
 		@Override
 		public Blob createBlob(byte[] bytes) {
@@ -2160,7 +2146,7 @@ public class SessionImpl
 		transactionCoordinator.removeObserver( transactionObserver );
 	}
 
-	private EntityPersister requireEntityPersister(Class entityClass) {
+	private EntityPersister requireEntityPersister(Class<?> entityClass) {
 		return getFactory().getMetamodel().locateEntityPersister( entityClass );
 	}
 
@@ -2543,23 +2529,27 @@ public class SessionImpl
 
 		//now actually update settings, if it's any of these which have a direct impact on this Session state:
 
-		if ( AvailableSettings.FLUSH_MODE.equals( propertyName ) ) {
-			setHibernateFlushMode( ConfigurationHelper.getFlushMode( value, FlushMode.AUTO ) );
-		}
-		else if ( JPA_LOCK_SCOPE.equals( propertyName ) || JPA_LOCK_TIMEOUT.equals( propertyName )
-				|| JAKARTA_LOCK_SCOPE.equals( propertyName ) || JAKARTA_LOCK_TIMEOUT.equals( propertyName ) ) {
-			LockOptionsHelper.applyPropertiesToLockOptions( properties, this::getLockOptionsForWrite );
-		}
-		else if ( JPA_SHARED_CACHE_RETRIEVE_MODE.equals( propertyName )
-				|| JPA_SHARED_CACHE_STORE_MODE.equals( propertyName )
-				|| JAKARTA_SHARED_CACHE_RETRIEVE_MODE.equals( propertyName )
-				|| JAKARTA_SHARED_CACHE_STORE_MODE.equals( propertyName ) ) {
-			setCacheMode(
-					CacheModeHelper.interpretCacheMode(
-							determineCacheStoreMode( properties ),
-							determineCacheRetrieveMode( properties )
-					)
-			);
+		switch (propertyName) {
+			case AvailableSettings.FLUSH_MODE:
+				setHibernateFlushMode( ConfigurationHelper.getFlushMode(value, FlushMode.AUTO) );
+				break;
+			case JPA_LOCK_SCOPE:
+			case JPA_LOCK_TIMEOUT:
+			case JAKARTA_LOCK_SCOPE:
+			case JAKARTA_LOCK_TIMEOUT:
+				LockOptionsHelper.applyPropertiesToLockOptions(properties, this::getLockOptionsForWrite);
+				break;
+			case JPA_SHARED_CACHE_RETRIEVE_MODE:
+			case JPA_SHARED_CACHE_STORE_MODE:
+			case JAKARTA_SHARED_CACHE_RETRIEVE_MODE:
+			case JAKARTA_SHARED_CACHE_STORE_MODE:
+				setCacheMode(
+						CacheModeHelper.interpretCacheMode(
+								determineCacheStoreMode(properties),
+								determineCacheRetrieveMode(properties)
+						)
+				);
+				break;
 		}
 	}
 
@@ -2634,14 +2624,8 @@ public class SessionImpl
 	@Override
 	public void joinTransaction() {
 		checkOpen();
-		joinTransaction( true );
-	}
-
-	private void joinTransaction(boolean explicitRequest) {
 		if ( !getTransactionCoordinator().getTransactionCoordinatorBuilder().isJta() ) {
-			if ( explicitRequest ) {
-				log.callingJoinTransactionOnNonJtaEntityManager();
-			}
+			log.callingJoinTransactionOnNonJtaEntityManager();
 			return;
 		}
 
@@ -2713,7 +2697,7 @@ public class SessionImpl
 	@Override
 	public RootGraphImplementor<?> createEntityGraph(String graphName) {
 		checkOpen();
-		final RootGraphImplementor named = getEntityManagerFactory().findEntityGraphByName( graphName );
+		final RootGraphImplementor<?> named = getEntityManagerFactory().findEntityGraphByName( graphName );
 		if ( named == null ) {
 			return null;
 		}
@@ -2723,7 +2707,7 @@ public class SessionImpl
 	@Override
 	public RootGraphImplementor<?> getEntityGraph(String graphName) {
 		checkOpen();
-		final RootGraphImplementor named = getEntityManagerFactory().findEntityGraphByName( graphName );
+		final RootGraphImplementor<?> named = getEntityManagerFactory().findEntityGraphByName( graphName );
 		if ( named == null ) {
 			throw new IllegalArgumentException( "Could not locate EntityGraph with given name : " + graphName );
 		}

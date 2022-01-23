@@ -76,7 +76,7 @@ public class LoggingHelper {
 		return buffer.toString();
 	}
 
-	public static String toLoggableString(PersistentCollection collectionInstance) {
+	public static String toLoggableString(PersistentCollection<?> collectionInstance) {
 		if ( collectionInstance == null ) {
 			return NULL;
 		}

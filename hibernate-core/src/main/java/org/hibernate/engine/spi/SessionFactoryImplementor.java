@@ -240,7 +240,6 @@ public interface SessionFactoryImplementor
 	 * @deprecated since 5.0; use {@link #getSessionFactoryOptions()} instead
 	 */
 	@Deprecated
-	@SuppressWarnings("deprecation")
 	Settings getSettings();
 
 

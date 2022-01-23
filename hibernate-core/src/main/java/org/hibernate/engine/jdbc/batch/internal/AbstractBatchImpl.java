@@ -154,7 +154,7 @@ public abstract class AbstractBatchImpl implements Batch {
 
 	protected void releaseStatements() {
 		final LinkedHashMap<String, PreparedStatement> statements = getStatements();
-		final ResourceRegistry resourceRegistry = jdbcCoordinator.getResourceRegistry();
+		final ResourceRegistry resourceRegistry = jdbcCoordinator.getLogicalConnection().getResourceRegistry();
 		for ( PreparedStatement statement : statements.values() ) {
 			clearBatch( statement );
 			resourceRegistry.release( statement );

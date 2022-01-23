@@ -172,7 +172,7 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 	 * @return The connection release mode for any built sessions.
 	 */
 	protected ConnectionReleaseMode getConnectionReleaseMode() {
-		return factory().getSettings().getConnectionReleaseMode();
+		return factory().getSessionFactoryOptions().getPhysicalConnectionHandlingMode().getReleaseMode();
 	}
 
 	protected Session wrap(Session session) {

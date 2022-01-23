@@ -106,6 +106,6 @@ public class BasicConnectionTest extends BaseCoreFunctionalTestCase {
 	}
 
 	private ResourceRegistry getResourceRegistry(JdbcCoordinator jdbcCoord) {
-		return jdbcCoord.getResourceRegistry();
-	}
+        return jdbcCoord.getLogicalConnection().getResourceRegistry();
+    }
 }

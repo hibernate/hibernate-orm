@@ -157,7 +157,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 				transientEntities
 		);
 
-		if ( source.getFactory().getSettings().isIdentifierRollbackEnabled() ) {
+		if ( source.getFactory().getSessionFactoryOptions().isIdentifierRollbackEnabled() ) {
 			persister.resetIdentifier( entity, id, version, source );
 		}
 	}

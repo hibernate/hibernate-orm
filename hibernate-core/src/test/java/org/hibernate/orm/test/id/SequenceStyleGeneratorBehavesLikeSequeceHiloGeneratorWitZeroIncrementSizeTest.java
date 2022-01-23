@@ -9,10 +9,8 @@ package org.hibernate.orm.test.id;
 import java.util.Properties;
 
 import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -82,7 +80,7 @@ public class SequenceStyleGeneratorBehavesLikeSequeceHiloGeneratorWitZeroIncreme
 
 		sessionFactory = (SessionFactoryImplementor) metadata.buildSessionFactory();
 		generator.initialize( sessionFactory.getSqlStringGenerationContext() );
-		sequenceValueExtractor = new SequenceValueExtractor( sessionFactory.getDialect(), TEST_SEQUENCE );
+        sequenceValueExtractor = new SequenceValueExtractor(sessionFactory.getJdbcServices().getDialect(), TEST_SEQUENCE );
 	}
 
 	@AfterEach

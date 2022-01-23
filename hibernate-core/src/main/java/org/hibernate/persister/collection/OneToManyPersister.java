@@ -63,7 +63,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 			PersisterCreationContext creationContext) throws MappingException, CacheException {
 		super( collectionBinding, cacheAccessStrategy, creationContext );
 		cascadeDeleteEnabled = collectionBinding.getKey().isCascadeDeleteEnabled()
-				&& creationContext.getSessionFactory().getDialect().supportsCascadeDelete();
+				&& creationContext.getSessionFactory().getJdbcServices().getDialect().supportsCascadeDelete();
 		keyIsNullable = collectionBinding.getKey().isNullable();
 		keyIsUpdateable = collectionBinding.getKey().isUpdateable();
 	}
@@ -276,7 +276,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 							}
 							finally {
 								if ( !useBatch ) {
-									session.getJdbcCoordinator().getResourceRegistry().release( st );
+                                    session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
 									session.getJdbcCoordinator().afterStatementExecution();
 								}
 							}
@@ -389,7 +389,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 				}
 				finally {
 					if ( !useBatch ) {
-						session.getJdbcCoordinator().getResourceRegistry().release( st );
+                        session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
 						session.getJdbcCoordinator().afterStatementExecution();
 					}
 				}
@@ -461,7 +461,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 				}
 				finally {
 					if ( !useBatch ) {
-						session.getJdbcCoordinator().getResourceRegistry().release( st );
+                        session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
 						session.getJdbcCoordinator().afterStatementExecution();
 					}
 				}
@@ -470,7 +470,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 			return count;
 		}
 		catch (SQLException sqle) {
-			throw getFactory().getSQLExceptionHelper().convert(
+			throw getFactory().getJdbcServices().getSqlExceptionHelper().convert(
 					sqle,
 					"could not update collection rows: " +
 							MessageHelper.collectionInfoString( this, collection, id, session ),

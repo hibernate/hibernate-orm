@@ -301,8 +301,8 @@ public abstract class AbstractCollectionPersister
 			cacheEntryStructure = UnstructuredCacheEntry.INSTANCE;
 		}
 
-		dialect = factory.getDialect();
-		sqlExceptionHelper = factory.getSQLExceptionHelper();
+		dialect = factory.getJdbcServices().getDialect();
+		sqlExceptionHelper = factory.getJdbcServices().getSqlExceptionHelper();
 		collectionType = collectionBootDescriptor.getCollectionType();
 		navigableRole = new NavigableRole( collectionBootDescriptor.getRole() );
 		entityName = collectionBootDescriptor.getOwnerEntityName();
@@ -522,7 +522,7 @@ public abstract class AbstractCollectionPersister
 			identifierColumnAlias = col.getAlias( dialect );
 			identifierGenerator = idColl.getIdentifier().createIdentifierGenerator(
 					persisterCreationContext.getBootstrapContext().getIdentifierGeneratorFactory(),
-					factory.getDialect(),
+					factory.getJdbcServices().getDialect(),
 					null
 			);
 			identifierGenerator.initialize( creationContext.getSessionFactory().getSqlStringGenerationContext() );
@@ -1435,7 +1435,7 @@ public abstract class AbstractCollectionPersister
 				}
 				finally {
 					if ( !useBatch ) {
-						session.getJdbcCoordinator().getResourceRegistry().release( st );
+						session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
 						session.getJdbcCoordinator().afterStatementExecution();
 					}
 				}
@@ -1547,7 +1547,7 @@ public abstract class AbstractCollectionPersister
 						}
 						finally {
 							if ( !useBatch ) {
-								jdbcCoordinator.getResourceRegistry().release( st );
+								jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( st );
 								jdbcCoordinator.afterStatementExecution();
 							}
 						}
@@ -1668,7 +1668,7 @@ public abstract class AbstractCollectionPersister
 					}
 					finally {
 						if ( !useBatch ) {
-							session.getJdbcCoordinator().getResourceRegistry().release( st );
+							session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
 							session.getJdbcCoordinator().afterStatementExecution();
 						}
 					}
@@ -1779,7 +1779,7 @@ public abstract class AbstractCollectionPersister
 					}
 					finally {
 						if ( !useBatch ) {
-							session.getJdbcCoordinator().getResourceRegistry().release( st );
+							session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( st );
 							session.getJdbcCoordinator().afterStatementExecution();
 						}
 					}
@@ -2202,11 +2202,11 @@ public abstract class AbstractCollectionPersister
 					return rs.next() ? rs.getInt( 1 ) - baseIndex : 0;
 				}
 				finally {
-					jdbcCoordinator.getResourceRegistry().release( rs, st );
+					jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( rs, st );
 				}
 			}
 			finally {
-				jdbcCoordinator.getResourceRegistry().release( st );
+				jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( st );
 				jdbcCoordinator.afterStatementExecution();
 			}
 		}
@@ -2244,14 +2244,14 @@ public abstract class AbstractCollectionPersister
 					return rs.next();
 				}
 				finally {
-					jdbcCoordinator.getResourceRegistry().release( rs, st );
+					jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( rs, st );
 				}
 			}
 			catch ( TransientObjectException e ) {
 				return false;
 			}
 			finally {
-				jdbcCoordinator.getResourceRegistry().release( st );
+				jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( st );
 				jdbcCoordinator.afterStatementExecution();
 			}
 		}

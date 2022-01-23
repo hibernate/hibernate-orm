@@ -214,7 +214,7 @@ public final class ForeignKeys {
 			// case we definitely need to nullify
 			if ( object == self ) {
 				return isEarlyInsert
-					|| ( isDelete && session.getFactory().getDialect().hasSelfReferentialForeignKeyBug() );
+					|| ( isDelete && session.getFactory().getJdbcServices().getDialect().hasSelfReferentialForeignKeyBug() );
 			}
 
 			// See if the entity is already bound to this session, if not look at the

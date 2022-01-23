@@ -6096,7 +6096,7 @@ public abstract class AbstractEntityPersister
 					assert selectableIterator.hasNext();
 					final Selectable selectable = selectableIterator.next();
 
-					assert attrColumnExpression.equals( selectable.getText( sessionFactory.getDialect() ) );
+					assert attrColumnExpression.equals( selectable.getText(sessionFactory.getJdbcServices().getDialect()) );
 
 					customReadExpr = selectable.getTemplate( dialect, sessionFactory.getQueryEngine().getSqmFunctionRegistry() );
 					customWriteExpr = selectable.getCustomWriteExpression();

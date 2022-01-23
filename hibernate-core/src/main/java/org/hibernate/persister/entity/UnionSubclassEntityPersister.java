@@ -459,7 +459,6 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	protected String generateSubquery(PersistentClass model, Mapping mapping) {
 
 		Dialect dialect = getFactory().getJdbcServices().getDialect();
-		Settings settings = getFactory().getSettings();
 		SqlStringGenerationContext sqlStringGenerationContext = getFactory().getSqlStringGenerationContext();
 
 		if ( !model.hasSubclasses() ) {

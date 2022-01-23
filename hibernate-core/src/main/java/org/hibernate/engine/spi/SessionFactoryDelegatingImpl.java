@@ -202,22 +202,22 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 		return delegate.getProperties();
 	}
 
-	@Override
+	@Override @Deprecated
 	public EntityPersister getEntityPersister(String entityName) throws MappingException {
 		return delegate.getEntityPersister( entityName );
 	}
 
-	@Override
+	@Override @Deprecated
 	public Map<String, EntityPersister> getEntityPersisters() {
 		return delegate.getEntityPersisters();
 	}
 
-	@Override
+	@Override @Deprecated
 	public CollectionPersister getCollectionPersister(String role) throws MappingException {
 		return delegate.getCollectionPersister( role );
 	}
 
-	@Override
+	@Override @Deprecated
 	public Map<String, CollectionPersister> getCollectionPersisters() {
 		return delegate.getCollectionPersisters();
 	}
@@ -232,17 +232,17 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 		return delegate.getSqlStringGenerationContext();
 	}
 
-	@Override
+	@Override @Deprecated
 	public Dialect getDialect() {
-		return delegate.getDialect();
+		return delegate.getJdbcServices().getDialect();
 	}
 
-	@Override
+	@Override @Deprecated
 	public String[] getImplementors(String className) throws MappingException {
 		return delegate.getImplementors( className );
 	}
 
-	@Override
+	@Override @Deprecated
 	public String getImportedClassName(String name) {
 		return delegate.getImportedClassName( name );
 	}
@@ -257,22 +257,22 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 		return delegate.bestGuessEntityName( object );
 	}
 
-	@Override
+	@Override @Deprecated
 	public StatisticsImplementor getStatisticsImplementor() {
 		return delegate.getStatistics();
 	}
 
-	@Override
+	@Override @Deprecated
 	public SQLExceptionConverter getSQLExceptionConverter() {
 		return delegate.getSQLExceptionConverter();
 	}
 
-	@Override
+	@Override @Deprecated
 	public SqlExceptionHelper getSQLExceptionHelper() {
-		return delegate.getSQLExceptionHelper();
+		return delegate.getJdbcServices().getSqlExceptionHelper();
 	}
 
-	@Override
+	@Override @Deprecated
 	public Settings getSettings() {
 		return delegate.getSettings();
 	}
@@ -282,7 +282,7 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 		return delegate.openTemporarySession();
 	}
 
-	@Override
+	@Override @Deprecated
 	public Set<String> getCollectionRolesByEntityParticipant(String entityName) {
 		return delegate.getCollectionRolesByEntityParticipant( entityName );
 	}
@@ -327,7 +327,7 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 		return delegate.getCurrentTenantIdentifierResolver();
 	}
 
-	@Override
+	@Override @Deprecated
 	public Iterable<EntityNameResolver> iterateEntityNameResolvers() {
 		return delegate.iterateEntityNameResolvers();
 	}
@@ -337,12 +337,12 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 		return delegate.getFastSessionServices();
 	}
 
-	@Override
+	@Override @Deprecated
 	public EntityPersister locateEntityPersister(Class<?> byClass) {
 		return delegate.locateEntityPersister( byClass );
 	}
 
-	@Override
+	@Override @Deprecated
 	public EntityPersister locateEntityPersister(String byName) {
 		return delegate.locateEntityPersister( byName );
 	}

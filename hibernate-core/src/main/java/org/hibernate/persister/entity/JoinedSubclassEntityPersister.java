@@ -175,8 +175,8 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 				}
 				else {
 					final Column column = (Column) selectable;
-					explicitDiscriminatorColumnName = column.getQuotedName( factory.getDialect() );
-					discriminatorAlias = column.getAlias( factory.getDialect(), persistentClass.getRootTable() );
+                    explicitDiscriminatorColumnName = column.getQuotedName(factory.getJdbcServices().getDialect());
+                    discriminatorAlias = column.getAlias(factory.getJdbcServices().getDialect(), persistentClass.getRootTable() );
 				}
 				discriminatorType = (BasicType<?>) persistentClass.getDiscriminator().getType();
 				if ( persistentClass.isDiscriminatorValueNull() ) {

@@ -66,10 +66,10 @@ public class BatchingTest extends BaseCoreFunctionalTestCase implements BatchKey
 			// ignore if the DB doesn't support "if exists" and the table doesn't exist
 		}
 		jdbcCoordinator.getResultSetReturn().execute( statement, "create table SANDBOX_JDBC_TST ( ID integer, NAME varchar(100) )" );
-		assertTrue( jdbcCoordinator.getResourceRegistry().hasRegisteredResources() );
+        assertTrue( jdbcCoordinator.getLogicalConnection().getResourceRegistry().hasRegisteredResources() );
 		assertTrue( logicalConnection.isPhysicallyConnected() );
-		jdbcCoordinator.getResourceRegistry().release( statement );
-		assertFalse( jdbcCoordinator.getResourceRegistry().hasRegisteredResources() );
+        jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( statement );
+        assertFalse( jdbcCoordinator.getLogicalConnection().getResourceRegistry().hasRegisteredResources() );
 		assertTrue( logicalConnection.isPhysicallyConnected() ); // after_transaction specified
 
 		// ok, now we can get down to it...
@@ -94,12 +94,12 @@ public class BatchingTest extends BaseCoreFunctionalTestCase implements BatchKey
 		insertBatch.addToBatch();
 		assertEquals( 0, batchObserver.getExplicitExecutionCount() );
 		assertEquals( 1, batchObserver.getImplicitExecutionCount() );
-		assertFalse( jdbcCoordinator.getResourceRegistry().hasRegisteredResources() );
+        assertFalse( jdbcCoordinator.getLogicalConnection().getResourceRegistry().hasRegisteredResources() );
 
 		insertBatch.execute();
 		assertEquals( 1, batchObserver.getExplicitExecutionCount() );
 		assertEquals( 1, batchObserver.getImplicitExecutionCount() );
-		assertFalse( jdbcCoordinator.getResourceRegistry().hasRegisteredResources() );
+        assertFalse( jdbcCoordinator.getLogicalConnection().getResourceRegistry().hasRegisteredResources() );
 
 		insertBatch.release();
 
@@ -124,10 +124,10 @@ public class BatchingTest extends BaseCoreFunctionalTestCase implements BatchKey
 		catch ( Exception e ) {
 			// ignore if the DB doesn't support "if exists" and the table doesn't exist
 		}		jdbcCoordinator.getResultSetReturn().execute( statement, "create table SANDBOX_JDBC_TST ( ID integer, NAME varchar(100) )" );
-		assertTrue( jdbcCoordinator.getResourceRegistry().hasRegisteredResources() );
+        assertTrue( jdbcCoordinator.getLogicalConnection().getResourceRegistry().hasRegisteredResources() );
 		assertTrue( logicalConnection.isPhysicallyConnected() );
-		jdbcCoordinator.getResourceRegistry().release( statement );
-		assertFalse( jdbcCoordinator.getResourceRegistry().hasRegisteredResources() );
+        jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( statement );
+        assertFalse( jdbcCoordinator.getLogicalConnection().getResourceRegistry().hasRegisteredResources() );
 		assertTrue( logicalConnection.isPhysicallyConnected() ); // after_transaction specified
 
 		// ok, now we can get down to it...
@@ -152,7 +152,7 @@ public class BatchingTest extends BaseCoreFunctionalTestCase implements BatchKey
 		insertBatch.addToBatch();
 		assertEquals( 0, batchObserver.getExplicitExecutionCount() );
 		assertEquals( 0, batchObserver.getImplicitExecutionCount() );
-		assertTrue( jdbcCoordinator.getResourceRegistry().hasRegisteredResources() );
+        assertTrue( jdbcCoordinator.getLogicalConnection().getResourceRegistry().hasRegisteredResources() );
 
 		PreparedStatement insert2 = insertBatch.getBatchStatement( insertSql, false );
 		assertSame( insert, insert2 );
@@ -164,12 +164,12 @@ public class BatchingTest extends BaseCoreFunctionalTestCase implements BatchKey
 		insertBatch.addToBatch();
 		assertEquals( 0, batchObserver.getExplicitExecutionCount() );
 		assertEquals( 1, batchObserver.getImplicitExecutionCount() );
-		assertTrue( jdbcCoordinator.getResourceRegistry().hasRegisteredResources() );
+        assertTrue( jdbcCoordinator.getLogicalConnection().getResourceRegistry().hasRegisteredResources() );
 
 		insertBatch.execute();
 		assertEquals( 1, batchObserver.getExplicitExecutionCount() );
 		assertEquals( 1, batchObserver.getImplicitExecutionCount() );
-		assertFalse( jdbcCoordinator.getResourceRegistry().hasRegisteredResources() );
+        assertFalse( jdbcCoordinator.getLogicalConnection().getResourceRegistry().hasRegisteredResources() );
 
 		insertBatch.release();
 
@@ -195,10 +195,10 @@ public class BatchingTest extends BaseCoreFunctionalTestCase implements BatchKey
 		catch ( Exception e ) {
 			// ignore if the DB doesn't support "if exists" and the table doesn't exist
 		}		jdbcCoordinator.getResultSetReturn().execute( statement, "create table SANDBOX_JDBC_TST ( ID integer, NAME varchar(100) )" );
-		assertTrue( jdbcCoordinator.getResourceRegistry().hasRegisteredResources() );
+        assertTrue( jdbcCoordinator.getLogicalConnection().getResourceRegistry().hasRegisteredResources() );
 		assertTrue( logicalConnection.isPhysicallyConnected() );
-		jdbcCoordinator.getResourceRegistry().release( statement );
-		assertFalse( jdbcCoordinator.getResourceRegistry().hasRegisteredResources() );
+        jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( statement );
+        assertFalse( jdbcCoordinator.getLogicalConnection().getResourceRegistry().hasRegisteredResources() );
 		assertTrue( logicalConnection.isPhysicallyConnected() ); // after_transaction specified
 
 		// ok, now we can get down to it...
@@ -223,7 +223,7 @@ public class BatchingTest extends BaseCoreFunctionalTestCase implements BatchKey
 		insertBatch.addToBatch();
 		assertEquals( 0, batchObserver.getExplicitExecutionCount() );
 		assertEquals( 0, batchObserver.getImplicitExecutionCount() );
-		assertTrue( jdbcCoordinator.getResourceRegistry().hasRegisteredResources() );
+        assertTrue( jdbcCoordinator.getLogicalConnection().getResourceRegistry().hasRegisteredResources() );
 
 		PreparedStatement insert2 = insertBatch.getBatchStatement( insertSql, false );
 		assertSame( insert, insert2 );
@@ -235,7 +235,7 @@ public class BatchingTest extends BaseCoreFunctionalTestCase implements BatchKey
 		insertBatch.addToBatch();
 		assertEquals( 0, batchObserver.getExplicitExecutionCount() );
 		assertEquals( 0, batchObserver.getImplicitExecutionCount() );
-		assertTrue( jdbcCoordinator.getResourceRegistry().hasRegisteredResources() );
+        assertTrue( jdbcCoordinator.getLogicalConnection().getResourceRegistry().hasRegisteredResources() );
 
 		PreparedStatement insert3 = insertBatch.getBatchStatement( insertSql, false );
 		assertSame( insert, insert3 );
@@ -247,12 +247,12 @@ public class BatchingTest extends BaseCoreFunctionalTestCase implements BatchKey
 		insertBatch.addToBatch();
 		assertEquals( 0, batchObserver.getExplicitExecutionCount() );
 		assertEquals( 1, batchObserver.getImplicitExecutionCount() );
-		assertTrue( jdbcCoordinator.getResourceRegistry().hasRegisteredResources() );
+        assertTrue( jdbcCoordinator.getLogicalConnection().getResourceRegistry().hasRegisteredResources() );
 
 		insertBatch.execute();
 		assertEquals( 1, batchObserver.getExplicitExecutionCount() );
 		assertEquals( 1, batchObserver.getImplicitExecutionCount() );
-		assertFalse( jdbcCoordinator.getResourceRegistry().hasRegisteredResources() );
+        assertFalse( jdbcCoordinator.getLogicalConnection().getResourceRegistry().hasRegisteredResources() );
 
 		insertBatch.release();
 

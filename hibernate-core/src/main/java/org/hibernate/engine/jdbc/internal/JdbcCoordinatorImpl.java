@@ -274,11 +274,11 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	}
 
 	private void releaseResources() {
-		getResourceRegistry().releaseResources();
+        getLogicalConnection().getResourceRegistry().releaseResources();
 	}
 
 	private boolean hasRegisteredResources() {
-		return getResourceRegistry().hasRegisteredResources();
+        return getLogicalConnection().getResourceRegistry().hasRegisteredResources();
 	}
 
 	private ConnectionReleaseMode determineConnectionReleaseMode(

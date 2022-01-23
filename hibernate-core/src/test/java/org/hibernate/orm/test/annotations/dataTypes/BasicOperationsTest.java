@@ -130,10 +130,10 @@ public class BasicOperationsTest {
 			String columnNamePattern = generateFinalNamePattern( meta, columnName );
 
 			ResultSet columnInfo = meta.getColumns( null, null, tableNamePattern, columnNamePattern );
-			s.getJdbcCoordinator().getResourceRegistry().register( columnInfo, columnInfo.getStatement() );
+            s.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().register( columnInfo, columnInfo.getStatement() );
 			assertTrue( columnInfo.next() );
 			int dataType = columnInfo.getInt( "DATA_TYPE" );
-			s.getJdbcCoordinator().getResourceRegistry().release( columnInfo, columnInfo.getStatement() );
+            s.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( columnInfo, columnInfo.getStatement() );
 			assertEquals(
 					JdbcTypeNameMapper.getTypeName( expectedJdbcTypeCode ),
 					JdbcTypeNameMapper.getTypeName( dataType ),

@@ -1518,7 +1518,8 @@ public abstract class Dialect implements ConversionContext {
 					return target;
 				}
 				catch (SQLException e ) {
-					throw session.getFactory().getSQLExceptionHelper().convert( e, "unable to merge BLOB data" );
+					throw session.getFactory().getJdbcServices().getSqlExceptionHelper()
+							.convert( e, "unable to merge BLOB data" );
 				}
 			}
 			else {
@@ -1538,7 +1539,7 @@ public abstract class Dialect implements ConversionContext {
 					return target;
 				}
 				catch (SQLException e ) {
-					throw session.getFactory().getSQLExceptionHelper().convert( e, "unable to merge CLOB data" );
+					throw session.getFactory().getJdbcServices().getSqlExceptionHelper().convert( e, "unable to merge CLOB data" );
 				}
 			}
 			else {
@@ -1558,7 +1559,7 @@ public abstract class Dialect implements ConversionContext {
 					return target;
 				}
 				catch (SQLException e ) {
-					throw session.getFactory().getSQLExceptionHelper().convert( e, "unable to merge NCLOB data" );
+					throw session.getFactory().getJdbcServices().getSqlExceptionHelper().convert( e, "unable to merge NCLOB data" );
 				}
 			}
 			else {
@@ -1585,7 +1586,7 @@ public abstract class Dialect implements ConversionContext {
 						: lobCreator.createBlob( original.getBinaryStream(), original.length() );
 			}
 			catch (SQLException e) {
-				throw session.getFactory().getSQLExceptionHelper().convert( e, "unable to merge BLOB data" );
+				throw session.getFactory().getJdbcServices().getSqlExceptionHelper().convert( e, "unable to merge BLOB data" );
 			}
 		}
 
@@ -1601,7 +1602,7 @@ public abstract class Dialect implements ConversionContext {
 						: lobCreator.createClob( original.getCharacterStream(), original.length() );
 			}
 			catch (SQLException e) {
-				throw session.getFactory().getSQLExceptionHelper().convert( e, "unable to merge CLOB data" );
+				throw session.getFactory().getJdbcServices().getSqlExceptionHelper().convert( e, "unable to merge CLOB data" );
 			}
 		}
 
@@ -1617,7 +1618,7 @@ public abstract class Dialect implements ConversionContext {
 						: lobCreator.createNClob( original.getCharacterStream(), original.length() );
 			}
 			catch (SQLException e) {
-				throw session.getFactory().getSQLExceptionHelper().convert( e, "unable to merge NCLOB data" );
+				throw session.getFactory().getJdbcServices().getSqlExceptionHelper().convert( e, "unable to merge NCLOB data" );
 			}
 		}
 	};

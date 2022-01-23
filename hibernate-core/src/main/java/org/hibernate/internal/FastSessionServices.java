@@ -222,7 +222,7 @@ public final class FastSessionServices {
 		this.preferredSqlTypeCodeForBoolean = sessionFactoryOptions.getPreferredSqlTypeCodeForBoolean();
 		this.defaultTimeZoneStorageStrategy = sessionFactoryOptions.getDefaultTimeZoneStorageStrategy();
 		this.defaultJdbcBatchSize = sessionFactoryOptions.getJdbcBatchSize();
-		this.requiresMultiTenantConnectionProvider = sf.getSettings().isMultiTenancyEnabled();
+		this.requiresMultiTenantConnectionProvider = sf.getSessionFactoryOptions().isMultiTenancyEnabled();
 
 		//Some "hot" services:
 		this.connectionProvider = requiresMultiTenantConnectionProvider ? null : sr.getService( ConnectionProvider.class );

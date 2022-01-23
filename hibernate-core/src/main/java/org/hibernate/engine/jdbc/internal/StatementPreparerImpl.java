@@ -62,7 +62,7 @@ class StatementPreparerImpl implements StatementPreparer {
 	public Statement createStatement() {
 		try {
 			final Statement statement = connection().createStatement();
-			jdbcCoordinator.getResourceRegistry().register( statement, true );
+			jdbcCoordinator.getLogicalConnection().getResourceRegistry().register( statement, true );
 			return statement;
 		}
 		catch ( SQLException e ) {
@@ -190,7 +190,7 @@ class StatementPreparerImpl implements StatementPreparer {
 		protected abstract PreparedStatement doPrepare() throws SQLException;
 
 		public void postProcess(PreparedStatement preparedStatement) throws SQLException {
-			jdbcCoordinator.getResourceRegistry().register( preparedStatement, true );
+			jdbcCoordinator.getLogicalConnection().getResourceRegistry().register( preparedStatement, true );
 //			logicalConnection().notifyObserversStatementPrepared();
 		}
 

@@ -163,7 +163,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		this.flushMode = options.getInitialSessionFlushMode();
 
 		this.tenantIdentifier = options.getTenantIdentifier();
-		if ( factory.getSettings().isMultiTenancyEnabled() && tenantIdentifier == null ) {
+		if ( factory.getSessionFactoryOptions().isMultiTenancyEnabled() && tenantIdentifier == null ) {
 			throw new HibernateException( "SessionFactory configured for multi-tenancy, but no tenant identifier specified" );
 		}
 

@@ -23,7 +23,6 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Assert;
 import org.junit.Test;
 
-import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -129,8 +128,8 @@ public class AutoDiscoveryTest extends BaseCoreFunctionalTestCase {
 							Assert.assertFalse( "bad dialect.getColumnAliasExtractor impl", column1Alias.equals( column2Alias ) );
 						}
 						finally {
-							sessionImplementor.getJdbcCoordinator().getResourceRegistry().release( rs, ps );
-							sessionImplementor.getJdbcCoordinator().getResourceRegistry().release( ps );
+                            sessionImplementor.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( rs, ps );
+                            sessionImplementor.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( ps );
 						}
 					}
 				}

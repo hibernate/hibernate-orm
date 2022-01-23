@@ -65,7 +65,7 @@ public class ResultTransformerTest {
 			ScrollableResults sr = q.scroll();
 			// HANA supports only ResultSet.TYPE_FORWARD_ONLY and
 			// does not support java.sql.ResultSet.first()
-			if ( scope.getSessionFactory().getDialect() instanceof AbstractHANADialect ) {
+            if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof AbstractHANADialect ) {
 				sr.next();
 			}
 			else {

@@ -10,7 +10,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.WrongClassException;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.ReferenceCacheEntryImpl;
@@ -308,7 +307,9 @@ public class CacheEntityLoaderHelper {
 
 		if ( entity == null ) {
 			throw new IllegalStateException(
-					"Reference cache entry contained null : " + referenceCacheEntry.toString() );
+					"Reference cache entry contained null : "
+							+ referenceCacheEntry.toString()
+			);
 		}
 		else {
 			makeEntityCircularReferenceSafe( referenceCacheEntry, session, entity, entityKey );
@@ -366,10 +367,9 @@ public class CacheEntityLoaderHelper {
 		final Object entity;
 
 		subclassPersister = factory.getEntityPersister( entry.getSubclass() );
-		final Object optionalObject = instanceToLoad;
-		entity = optionalObject == null
+		entity = instanceToLoad == null
 				? source.instantiate( subclassPersister, entityId )
-				: optionalObject;
+				: instanceToLoad;
 
 		// make it circular-reference safe
 		TwoPhaseLoad.addUninitializedCachedEntity(
@@ -437,7 +437,7 @@ public class CacheEntityLoaderHelper {
 
 	public static class PersistenceContextEntry {
 		private final Object entity;
-		private EntityStatus status;
+		private final EntityStatus status;
 
 		public PersistenceContextEntry(Object entity, EntityStatus status) {
 			this.entity = entity;

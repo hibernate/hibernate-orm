@@ -717,12 +717,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 				return false;
 			}
 			final Resolution initial = pkToNaturalIdMap.get( pk );
-			if ( initial != null ) {
-				if ( initial.isSame( naturalIdValues ) ) {
-					return true;
-				}
-			}
-			return false;
+			return initial != null && initial.isSame( naturalIdValues );
 		}
 
 		public boolean cache(Object pk, Object naturalIdValues) {

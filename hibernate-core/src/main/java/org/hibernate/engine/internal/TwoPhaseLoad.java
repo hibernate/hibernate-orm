@@ -11,7 +11,6 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.type.EntityType;
 
 /**
  * Functionality relating to the Hibernate two-phase loading process, that may be reused by persisters

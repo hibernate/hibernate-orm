@@ -14,7 +14,6 @@ import java.util.Collection;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
-import org.hibernate.MappingException;
 import org.hibernate.collection.spi.AbstractPersistentCollection;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.internal.CoreLogging;
@@ -63,7 +62,7 @@ public final class CollectionEntry implements Serializable {
 	/**
 	 * For newly wrapped collections, or dereferenced collection wrappers
 	 */
-	public CollectionEntry(CollectionPersister persister, PersistentCollection collection) {
+	public CollectionEntry(CollectionPersister persister, PersistentCollection<?> collection) {
 		// new collections that get found + wrapped
 		// during flush shouldn't be ignored
 		ignore = false;
@@ -80,7 +79,7 @@ public final class CollectionEntry implements Serializable {
 	 * For collections just loaded from the database
 	 */
 	public CollectionEntry(
-			final PersistentCollection collection,
+			final PersistentCollection<?> collection,
 			final CollectionPersister loadedPersister,
 			final Object loadedKey,
 			final boolean ignore ) {
@@ -113,7 +112,7 @@ public final class CollectionEntry implements Serializable {
 	/**
 	 * For initialized detached collections
 	 */
-	public CollectionEntry(PersistentCollection collection, SessionFactoryImplementor factory) throws MappingException {
+	public CollectionEntry(PersistentCollection<?> collection, SessionFactoryImplementor factory) {
 		// detached collections that get found + reattached
 		// during flush shouldn't be ignored
 		ignore = false;
@@ -147,7 +146,7 @@ public final class CollectionEntry implements Serializable {
 	 * Determine if the collection is "really" dirty, by checking dirtiness
 	 * of the collection elements, if necessary
 	 */
-	private void dirty(PersistentCollection collection) throws HibernateException {
+	private void dirty(PersistentCollection<?> collection) throws HibernateException {
 
 		final CollectionPersister loadedPersister = getLoadedPersister();
 		boolean forceDirty = collection.wasInitialized() &&
@@ -163,7 +162,7 @@ public final class CollectionEntry implements Serializable {
 
 	}
 
-	public void preFlush(PersistentCollection collection) throws HibernateException {
+	public void preFlush(PersistentCollection<?> collection) throws HibernateException {
 		if ( loadedKey == null && collection.getKey() != null ) {
 			loadedKey = collection.getKey();
 		}
@@ -196,14 +195,14 @@ public final class CollectionEntry implements Serializable {
 		setDorecreate( false );
 	}
 
-	public void postInitialize(PersistentCollection collection) throws HibernateException {
+	public void postInitialize(PersistentCollection<?> collection) throws HibernateException {
 		final CollectionPersister loadedPersister = getLoadedPersister();
 		snapshot = loadedPersister.isMutable()
 				? collection.getSnapshot( loadedPersister )
 				: null;
 		collection.setSnapshot(loadedKey, role, snapshot);
 		if ( loadedPersister.getBatchSize() > 1 ) {
-			( (AbstractPersistentCollection) collection ).getSession()
+			( (AbstractPersistentCollection<?>) collection ).getSession()
 					.getPersistenceContextInternal()
 					.getBatchFetchQueue()
 					.removeBatchLoadableCollection( this );
@@ -213,7 +212,7 @@ public final class CollectionEntry implements Serializable {
 	/**
 	 * Called after a successful flush
 	 */
-	public void postFlush(PersistentCollection collection) throws HibernateException {
+	public void postFlush(PersistentCollection<?> collection) throws HibernateException {
 		if ( isIgnore() ) {
 			ignore = false;
 		}
@@ -226,7 +225,7 @@ public final class CollectionEntry implements Serializable {
 	/**
 	 * Called after execution of an action
 	 */
-	public void afterAction(PersistentCollection collection) {
+	public void afterAction(PersistentCollection<?> collection) {
 		loadedKey = getCurrentKey();
 		setLoadedPersister( getCurrentPersister() );
 
@@ -262,7 +261,7 @@ public final class CollectionEntry implements Serializable {
 	 * @param collection the persistentcollection to be updated
 	 * @param storedSnapshot the new stored snapshot
 	 */
-	public void resetStoredSnapshot(PersistentCollection collection, Serializable storedSnapshot) {
+	public void resetStoredSnapshot(PersistentCollection<?> collection, Serializable storedSnapshot) {
 		LOG.debugf("Reset storedSnapshot to %s for %s", storedSnapshot, this);
 
 		if ( fromMerge ) {
@@ -380,14 +379,14 @@ public final class CollectionEntry implements Serializable {
 	/**
 	 * Get the collection orphans (entities which were removed from the collection)
 	 */
-	public Collection getOrphans(String entityName, PersistentCollection collection) throws HibernateException {
+	public Collection<?> getOrphans(String entityName, PersistentCollection<?> collection) throws HibernateException {
 		if ( snapshot == null ) {
 			throw new AssertionFailure( "no collection snapshot for orphan delete" );
 		}
 		return collection.getOrphans( snapshot, entityName );
 	}
 
-	public boolean isSnapshotEmpty(PersistentCollection collection) {
+	public boolean isSnapshotEmpty(PersistentCollection<?> collection) {
 		//TODO: does this really need to be here?
 		//      does the collection already have
 		//      it's own up-to-date snapshot?

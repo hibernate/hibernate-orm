@@ -91,7 +91,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		Eagerly Initialized Fields
 		the following fields are used in all circumstances, and are not worth (or not suited) to being converted into lazy
 	 */
-	private SharedSessionContractImplementor session;
+	private final SharedSessionContractImplementor session;
 	private EntityEntryContext entityEntryContext;
 
 	/*
@@ -116,13 +116,13 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	private HashMap<EntityKey, Object> entitySnapshotsByKey;
 
 	// Identity map of array holder ArrayHolder instances, by the array instance
-	private IdentityHashMap<Object, PersistentCollection> arrayHolders;
+	private IdentityHashMap<Object, PersistentCollection<?>> arrayHolders;
 
 	// Identity map of CollectionEntry instances, by the collection wrapper
-	private IdentityMap<PersistentCollection, CollectionEntry> collectionEntries;
+	private IdentityMap<PersistentCollection<?>, CollectionEntry> collectionEntries;
 
 	// Collection wrappers, by the CollectionKey
-	private HashMap<CollectionKey, PersistentCollection> collectionsByKey;
+	private HashMap<CollectionKey, PersistentCollection<?>> collectionsByKey;
 
 	// Set of EntityKeys of deleted objects
 	private HashSet<EntityKey> nullifiableEntityKeys;
@@ -132,11 +132,11 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	// A list of collection wrappers that were instantiating during result set
 	// processing, that we will need to initialize at the end of the query
-	private ArrayList<PersistentCollection> nonlazyCollections;
+	private ArrayList<PersistentCollection<?>> nonlazyCollections;
 
 	// A container for collections we load up when the owning entity is not
 	// yet loaded ... for now, this is purely transient!
-	private HashMap<CollectionKey,PersistentCollection> unownedCollections;
+	private HashMap<CollectionKey,PersistentCollection<?>> unownedCollections;
 
 	// Parent entities cache by their child for cascading
 	// May be empty or not contains all relation
@@ -165,7 +165,6 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	private ConcurrentMap<EntityKey, Object> getOrInitializeProxiesByKey() {
 		if ( proxiesByKey == null ) {
-			//noinspection unchecked
 			proxiesByKey = new ConcurrentReferenceHashMap<>(
 					INIT_COLL_SIZE,
 					.75f,
@@ -196,16 +195,16 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		return loadContexts;
 	}
 
+//	@Override
+//	public void addUnownedCollection(CollectionKey key, PersistentCollection collection) {
+//		if ( unownedCollections == null ) {
+//			unownedCollections = CollectionHelper.mapOfSize( INIT_COLL_SIZE );
+//		}
+//		unownedCollections.put( key, collection );
+//	}
+//
 	@Override
-	public void addUnownedCollection(CollectionKey key, PersistentCollection collection) {
-		if ( unownedCollections == null ) {
-			unownedCollections = CollectionHelper.mapOfSize( INIT_COLL_SIZE );
-		}
-		unownedCollections.put( key, collection );
-	}
-
-	@Override
-	public PersistentCollection useUnownedCollection(CollectionKey key) {
+	public PersistentCollection<?> useUnownedCollection(CollectionKey key) {
 		return ( unownedCollections == null ) ? null : unownedCollections.remove( key );
 	}
 
@@ -274,10 +273,10 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		this.defaultReadOnly = defaultReadOnly;
 	}
 
-	@Override
-	public boolean hasNonReadOnlyEntities() {
-		return hasNonReadOnlyEntities;
-	}
+//	@Override
+//	public boolean hasNonReadOnlyEntities() {
+//		return hasNonReadOnlyEntities;
+//	}
 
 	@Override
 	public void setEntryStatus(EntityEntry entry, Status status) {
@@ -409,7 +408,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		if ( entitiesByKey != null ) {
 			entity = entitiesByKey.remove( key );
 			if ( entitiesByUniqueKey != null ) {
-				final Iterator itr = entitiesByUniqueKey.values().iterator();
+				final Iterator<?> itr = entitiesByUniqueKey.values().iterator();
 				while ( itr.hasNext() ) {
 					if ( itr.next() == entity ) {
 						itr.remove();
@@ -466,7 +465,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public CollectionEntry getCollectionEntry(PersistentCollection coll) {
+	public CollectionEntry getCollectionEntry(PersistentCollection<?> coll) {
 		return collectionEntries == null ? null : collectionEntries.get( coll );
 	}
 
@@ -563,7 +562,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		return e;
 	}
 
-	public EntityEntry addReferenceEntry(
+	public void addReferenceEntry(
 			final Object entity,
 			final Status status) {
 
@@ -571,11 +570,10 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		entityEntryContext.addEntityEntry( entity, ((ManagedEntity)entity).$$_hibernate_getEntityEntry() );
 
 		setHasNonReadOnlyEnties( status );
-		return ((ManagedEntity)entity).$$_hibernate_getEntityEntry();
 	}
 
 	@Override
-	public boolean containsCollection(PersistentCollection collection) {
+	public boolean containsCollection(PersistentCollection<?> collection) {
 		return collectionEntries != null && collectionEntries.containsKey( collection );
 	}
 
@@ -690,11 +688,10 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public Object narrowProxy(Object proxy, EntityPersister persister, EntityKey key, Object object)
 			throws HibernateException {
 
-		final Class concreteProxyClass = persister.getConcreteProxyClass();
+		final Class<?> concreteProxyClass = persister.getConcreteProxyClass();
 		final boolean alreadyNarrow = concreteProxyClass.isInstance( proxy );
 
 		if ( !alreadyNarrow ) {
@@ -834,7 +831,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public Object getLoadedCollectionOwnerOrNull(PersistentCollection collection) {
+	public Object getLoadedCollectionOwnerOrNull(PersistentCollection<?> collection) {
 		final CollectionEntry ce = getCollectionEntry( collection );
 		if ( ce == null || ce.getLoadedPersister() == null ) {
 			return null;
@@ -851,7 +848,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public Object getLoadedCollectionOwnerIdOrNull(PersistentCollection collection) {
+	public Object getLoadedCollectionOwnerIdOrNull(PersistentCollection<?> collection) {
 		return getLoadedCollectionOwnerIdOrNull( getCollectionEntry( collection ) );
 	}
 
@@ -871,7 +868,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public void addUninitializedCollection(CollectionPersister persister, PersistentCollection collection, Object id) {
+	public void addUninitializedCollection(CollectionPersister persister, PersistentCollection<?> collection, Object id) {
 		final CollectionEntry ce = new CollectionEntry( collection, persister, id, flushing );
 		addCollection( collection, ce, id );
 		if ( persister.getBatchSize() > 1 ) {
@@ -880,7 +877,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public void addUninitializedDetachedCollection(CollectionPersister persister, PersistentCollection collection) {
+	public void addUninitializedDetachedCollection(CollectionPersister persister, PersistentCollection<?> collection) {
 		final CollectionEntry ce = new CollectionEntry( persister, collection.getKey() );
 		addCollection( collection, ce, collection.getKey() );
 		if ( persister.getBatchSize() > 1 ) {
@@ -889,7 +886,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public void addNewCollection(CollectionPersister persister, PersistentCollection collection)
+	public void addNewCollection(CollectionPersister persister, PersistentCollection<?> collection)
 			throws HibernateException {
 		addCollection( collection, persister );
 	}
@@ -901,10 +898,10 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	 * @param entry The entry representing the collection.
 	 * @param key The key of the collection's entry.
 	 */
-	private void addCollection(PersistentCollection coll, CollectionEntry entry, Object key) {
+	private void addCollection(PersistentCollection<?> coll, CollectionEntry entry, Object key) {
 		getOrInitializeCollectionEntries().put( coll, entry );
 		final CollectionKey collectionKey = new CollectionKey( entry.getLoadedPersister(), key );
-		final PersistentCollection old = addCollectionByKey( collectionKey, coll );
+		final PersistentCollection<?> old = addCollectionByKey( collectionKey, coll );
 		if ( old != null ) {
 			if ( old == coll ) {
 				throw new AssertionFailure( "bug adding collection twice" );
@@ -919,7 +916,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 	}
 
-	private IdentityMap<PersistentCollection, CollectionEntry> getOrInitializeCollectionEntries() {
+	private IdentityMap<PersistentCollection<?>, CollectionEntry> getOrInitializeCollectionEntries() {
 		if ( this.collectionEntries == null ) {
 			this.collectionEntries = IdentityMap.instantiateSequenced( INIT_COLL_SIZE );
 		}
@@ -932,13 +929,13 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	 * @param collection The collection for which we are adding an entry.
 	 * @param persister The collection persister
 	 */
-	private void addCollection(PersistentCollection collection, CollectionPersister persister) {
+	private void addCollection(PersistentCollection<?> collection, CollectionPersister persister) {
 		final CollectionEntry ce = new CollectionEntry( persister, collection );
 		getOrInitializeCollectionEntries().put( collection, ce );
 	}
 
 	@Override
-	public void addInitializedDetachedCollection(CollectionPersister collectionPersister, PersistentCollection collection)
+	public void addInitializedDetachedCollection(CollectionPersister collectionPersister, PersistentCollection<?> collection)
 			throws HibernateException {
 		if ( collection.isUnreferenced() ) {
 			//treat it just like a new collection
@@ -951,7 +948,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public CollectionEntry addInitializedCollection(CollectionPersister persister, PersistentCollection collection, Object id)
+	public CollectionEntry addInitializedCollection(CollectionPersister persister, PersistentCollection<?> collection, Object id)
 			throws HibernateException {
 		final CollectionEntry ce = new CollectionEntry( collection, persister, id, flushing );
 		ce.postInitialize( collection );
@@ -960,12 +957,12 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public PersistentCollection getCollection(CollectionKey collectionKey) {
+	public PersistentCollection<?> getCollection(CollectionKey collectionKey) {
 		return collectionsByKey == null ? null : collectionsByKey.get( collectionKey );
 	}
 
 	@Override
-	public void addNonLazyCollection(PersistentCollection collection) {
+	public void addNonLazyCollection(PersistentCollection<?> collection) {
 		if ( nonlazyCollections == null ) {
 			nonlazyCollections = new ArrayList<>( INIT_COLL_SIZE );
 		}
@@ -977,7 +974,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		initializeNonLazyCollections( PersistentCollection::forceInitialization );
 	}
 
-	protected void initializeNonLazyCollections(Consumer<PersistentCollection> initializeAction ) {
+	protected void initializeNonLazyCollections(Consumer<PersistentCollection<?>> initializeAction ) {
 		if ( loadCounter == 0 ) {
 			LOG.trace( "Initializing non-lazy collections" );
 
@@ -999,12 +996,12 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public PersistentCollection getCollectionHolder(Object array) {
+	public PersistentCollection<?> getCollectionHolder(Object array) {
 		return arrayHolders == null ? null : arrayHolders.get( array );
 	}
 
 	@Override
-	public void addCollectionHolder(PersistentCollection holder) {
+	public void addCollectionHolder(PersistentCollection<?> holder) {
 		//TODO:refactor + make this method private
 		if ( arrayHolders == null ) {
 			arrayHolders = new IdentityHashMap<>( INIT_COLL_SIZE );
@@ -1013,40 +1010,40 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public PersistentCollection removeCollectionHolder(Object array) {
+	public PersistentCollection<?> removeCollectionHolder(Object array) {
 		return arrayHolders != null ? arrayHolders.remove( array ) : null;
 	}
 
 	@Override
-	public Serializable getSnapshot(PersistentCollection coll) {
+	public Serializable getSnapshot(PersistentCollection<?> coll) {
 		return getCollectionEntry( coll ).getSnapshot();
 	}
 
-	@Override
-	public CollectionEntry getCollectionEntryOrNull(Object collection) {
-		PersistentCollection coll;
-		if ( collection instanceof PersistentCollection ) {
-			coll = (PersistentCollection) collection;
-			//if (collection==null) throw new TransientObjectException("Collection was not yet persistent");
-		}
-		else {
-			coll = getCollectionHolder( collection );
-			if ( coll == null && collectionEntries != null ) {
-				//it might be an unwrapped collection reference!
-				//try to find a wrapper (slowish)
-				final Iterator<PersistentCollection> wrappers = collectionEntries.keyIterator();
-				while ( wrappers.hasNext() ) {
-					final PersistentCollection pc = wrappers.next();
-					if ( pc.isWrapper( collection ) ) {
-						coll = pc;
-						break;
-					}
-				}
-			}
-		}
-
-		return (coll == null) ? null : getCollectionEntry( coll );
-	}
+//	@Override
+//	public CollectionEntry getCollectionEntryOrNull(Object collection) {
+//		PersistentCollection<?> coll;
+//		if ( collection instanceof PersistentCollection ) {
+//			coll = (PersistentCollection<?>) collection;
+//			//if (collection==null) throw new TransientObjectException("Collection was not yet persistent");
+//		}
+//		else {
+//			coll = getCollectionHolder( collection );
+//			if ( coll == null && collectionEntries != null ) {
+//				//it might be an unwrapped collection reference!
+//				//try to find a wrapper (slowish)
+//				final Iterator<PersistentCollection<?>> wrappers = collectionEntries.keyIterator();
+//				while ( wrappers.hasNext() ) {
+//					final PersistentCollection<?> pc = wrappers.next();
+//					if ( pc.isWrapper( collection ) ) {
+//						coll = pc;
+//						break;
+//					}
+//				}
+//			}
+//		}
+//
+//		return (coll == null) ? null : getCollectionEntry( coll );
+//	}
 
 	@Override
 	public Object getProxy(EntityKey key) {
@@ -1068,13 +1065,13 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		return removeProxyByKey( key );
 	}
 
-	@Override
-	public HashSet getNullifiableEntityKeys() {
-		if ( nullifiableEntityKeys == null ) {
-			nullifiableEntityKeys = new HashSet<>();
-		}
-		return nullifiableEntityKeys;
-	}
+//	@Override
+//	public HashSet getNullifiableEntityKeys() {
+//		if ( nullifiableEntityKeys == null ) {
+//			nullifiableEntityKeys = new HashSet<>();
+//		}
+//		return nullifiableEntityKeys;
+//	}
 
 	/**
 	 * @deprecated this will be removed: it provides too wide access, making it hard to optimise the internals
@@ -1082,18 +1079,13 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	 */
 	@Deprecated
 	@Override
-	public Map getEntitiesByKey() {
+	public Map<EntityKey,Object> getEntitiesByKey() {
 		return entitiesByKey == null ? Collections.emptyMap() : entitiesByKey;
 	}
 
 	@Override
-	public Iterator managedEntitiesIterator() {
-		if ( entitiesByKey == null ) {
-			return Collections.emptyIterator();
-		}
-		else {
-			return entitiesByKey.values().iterator();
-		}
+	public Iterator<Object> managedEntitiesIterator() {
+		return entitiesByKey == null ? Collections.emptyIterator() : entitiesByKey.values().iterator();
 	}
 
 	@Override
@@ -1101,10 +1093,10 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		return entityEntryContext.getNumberOfManagedEntities();
 	}
 
-	@Override
-	public Map getEntityEntries() {
-		return null;
-	}
+//	@Override
+//	public Map getEntityEntries() {
+//		return null;
+//	}
 
 	/**
 	 * @deprecated We should not expose this directly: the other accessors that have been created as a replacement
@@ -1113,15 +1105,15 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	 */
 	@Override
 	@Deprecated
-	public Map getCollectionEntries() {
+	public Map<PersistentCollection<?>,CollectionEntry> getCollectionEntries() {
 		return getOrInitializeCollectionEntries();
 	}
 
 	@Override
-	public void forEachCollectionEntry(BiConsumer<PersistentCollection, CollectionEntry> action, boolean concurrent) {
+	public void forEachCollectionEntry(BiConsumer<PersistentCollection<?>, CollectionEntry> action, boolean concurrent) {
 		if ( collectionEntries != null ) {
 			if ( concurrent ) {
-				for ( Entry<PersistentCollection,CollectionEntry> entry : IdentityMap.concurrentEntries( collectionEntries ) ) {
+				for ( Entry<PersistentCollection<?>,CollectionEntry> entry : IdentityMap.concurrentEntries( collectionEntries ) ) {
 					action.accept( entry.getKey(), entry.getValue() );
 				}
 			}
@@ -1132,13 +1124,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public Map getCollectionsByKey() {
-		if ( collectionsByKey == null ) {
-			return Collections.emptyMap();
-		}
-		else {
-			return collectionsByKey;
-		}
+	public Map<CollectionKey,PersistentCollection<?>> getCollectionsByKey() {
+		return collectionsByKey == null ? Collections.emptyMap() : collectionsByKey;
 	}
 
 	@Override
@@ -1308,7 +1295,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		//		of the loop-in-loop especially considering this is far more likely the 'edge case'
 		if ( mergeMap != null ) {
 			for ( Object o : mergeMap.entrySet() ) {
-				final Entry mergeMapEntry = (Entry) o;
+				final Entry<?,?> mergeMapEntry = (Entry<?,?>) o;
 				if ( mergeMapEntry.getKey() instanceof HibernateProxy ) {
 					final HibernateProxy proxy = (HibernateProxy) mergeMapEntry.getKey();
 					if ( persister.isSubclassEntityName( proxy.getHibernateLazyInitializer().getEntityName() ) ) {
@@ -1677,7 +1664,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			if ( LOG.isTraceEnabled() ) {
 				LOG.trace( "Starting deserialization of [" + count + "] entitiesByKey entries" );
 			}
-			rtn.entitiesByKey = CollectionHelper.mapOfSize( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
+			rtn.entitiesByKey = CollectionHelper.mapOfSize(Math.max(count, INIT_COLL_SIZE));
 			for ( int i = 0; i < count; i++ ) {
 				rtn.entitiesByKey.put( EntityKey.deserialize( ois, sfi ), ois.readObject() );
 			}
@@ -1687,7 +1674,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 				LOG.trace( "Starting deserialization of [" + count + "] entitiesByUniqueKey entries" );
 			}
 			if ( count != 0 ) {
-				rtn.entitiesByUniqueKey = CollectionHelper.mapOfSize( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
+				rtn.entitiesByUniqueKey = CollectionHelper.mapOfSize(Math.max(count, INIT_COLL_SIZE));
 				for ( int i = 0; i < count; i++ ) {
 					rtn.entitiesByUniqueKey.put( EntityUniqueKey.deserialize( ois, session ), ois.readObject() );
 				}
@@ -1716,7 +1703,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			if ( LOG.isTraceEnabled() ) {
 				LOG.trace( "Starting deserialization of [" + count + "] entitySnapshotsByKey entries" );
 			}
-			rtn.entitySnapshotsByKey = CollectionHelper.mapOfSize( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
+			rtn.entitySnapshotsByKey = CollectionHelper.mapOfSize(Math.max(count, INIT_COLL_SIZE));
 			for ( int i = 0; i < count; i++ ) {
 				rtn.entitySnapshotsByKey.put( EntityKey.deserialize( ois, sfi ), ois.readObject() );
 			}
@@ -1727,9 +1714,12 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			if ( LOG.isTraceEnabled() ) {
 				LOG.trace( "Starting deserialization of [" + count + "] collectionsByKey entries" );
 			}
-			rtn.collectionsByKey = CollectionHelper.mapOfSize( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
+			rtn.collectionsByKey = CollectionHelper.mapOfSize(Math.max(count, INIT_COLL_SIZE));
 			for ( int i = 0; i < count; i++ ) {
-				rtn.collectionsByKey.put( CollectionKey.deserialize( ois, session ), (PersistentCollection) ois.readObject() );
+				rtn.collectionsByKey.put(
+						CollectionKey.deserialize( ois, session ),
+						(PersistentCollection<?>) ois.readObject()
+				);
 			}
 
 			count = ois.readInt();
@@ -1737,7 +1727,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 				LOG.trace( "Starting deserialization of [" + count + "] collectionEntries entries" );
 			}
 			for ( int i = 0; i < count; i++ ) {
-				final PersistentCollection pc = (PersistentCollection) ois.readObject();
+				final PersistentCollection<?> pc = (PersistentCollection<?>) ois.readObject();
 				final CollectionEntry ce = CollectionEntry.deserialize( ois, session );
 				pc.setCurrentSession( session );
 				rtn.getOrInitializeCollectionEntries().put( pc, ce );
@@ -1748,9 +1738,9 @@ public class StatefulPersistenceContext implements PersistenceContext {
 				LOG.trace( "Starting deserialization of [" + count + "] arrayHolders entries" );
 			}
 			if ( count != 0 ) {
-				rtn.arrayHolders = new IdentityHashMap<>( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
+				rtn.arrayHolders = new IdentityHashMap<>(Math.max(count, INIT_COLL_SIZE));
 				for ( int i = 0; i < count; i++ ) {
-					rtn.arrayHolders.put( ois.readObject(), (PersistentCollection) ois.readObject() );
+					rtn.arrayHolders.put( ois.readObject(), (PersistentCollection<?>) ois.readObject() );
 				}
 			}
 
@@ -1850,7 +1840,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public CollectionEntry removeCollectionEntry(PersistentCollection collection) {
+	public CollectionEntry removeCollectionEntry(PersistentCollection<?> collection) {
 		if ( collectionEntries == null ) {
 			return null;
 		}
@@ -1870,11 +1860,11 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public PersistentCollection addCollectionByKey(CollectionKey collectionKey, PersistentCollection persistentCollection) {
+	public PersistentCollection<?> addCollectionByKey(CollectionKey collectionKey, PersistentCollection<?> persistentCollection) {
 		if ( collectionsByKey == null ) {
 			collectionsByKey = CollectionHelper.mapOfSize( INIT_COLL_SIZE );
 		}
-		final PersistentCollection old = collectionsByKey.put( collectionKey, persistentCollection );
+		final PersistentCollection<?> old = collectionsByKey.put( collectionKey, persistentCollection );
 		return old;
 	}
 

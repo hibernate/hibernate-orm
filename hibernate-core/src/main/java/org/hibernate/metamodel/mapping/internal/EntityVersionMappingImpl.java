@@ -63,7 +63,7 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 			String attributeName,
 			String columnTableExpression,
 			String columnExpression,
-			BasicType versionBasicType,
+			BasicType<?> versionBasicType,
 			EntityMappingType declaringType,
 			MappingModelCreationProcess creationProcess) {
 		this.attributeName = attributeName;
@@ -76,13 +76,12 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 
 		unsavedValueStrategy = UnsavedValueFactory.getUnsavedVersionValue(
 				(KeyValue) bootEntityDescriptor.getVersion().getValue(),
-				(VersionJavaType) versionBasicType.getJavaTypeDescriptor(),
+				(VersionJavaType<?>) versionBasicType.getJavaTypeDescriptor(),
 				declaringType
 						.getRepresentationStrategy()
 						.resolvePropertyAccess( bootEntityDescriptor.getVersion() )
 						.getGetter(),
-				templateInstanceAccess,
-				creationProcess.getCreationContext().getSessionFactory()
+				templateInstanceAccess
 		);
 	}
 

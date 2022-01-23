@@ -144,7 +144,7 @@ public final class ForeignKeys {
 			// or 2) returnedValue was initialized, but not nullified.
 			// When bytecode-enhancement is used for dirty-checking, the change should
 			// only be tracked when returnedValue was nullified (1)).
-			if ( value != returnedValue && returnedValue == null && SelfDirtinessTracker.class.isInstance( self ) ) {
+			if ( value != returnedValue && returnedValue == null && self instanceof SelfDirtinessTracker ) {
 				( (SelfDirtinessTracker) self ).$$_hibernate_trackChange( propertyName );
 			}
 			return returnedValue;
@@ -214,7 +214,7 @@ public final class ForeignKeys {
 			// case we definitely need to nullify
 			if ( object == self ) {
 				return isEarlyInsert
-						|| ( isDelete && session.getFactory().getDialect().hasSelfReferentialForeignKeyBug() );
+					|| ( isDelete && session.getFactory().getDialect().hasSelfReferentialForeignKeyBug() );
 			}
 
 			// See if the entity is already bound to this session, if not look at the

@@ -26,6 +26,8 @@ import org.hibernate.type.BasicTypeReference;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.StandardBasicTypes;
 
+import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers.useFirstNonNull;
+
 public class SqlServerSqmFunctionDescriptors extends BaseSqmFunctionDescriptors {
 	private final BasicTypeRegistry typeRegistry;
 
@@ -47,7 +49,10 @@ public class SqlServerSqmFunctionDescriptors extends BaseSqmFunctionDescriptors 
 				new Method( "STDimension", exactly( 1 ), invariant( StandardBasicTypes.INTEGER ) )
 		);
 
-		map.put( CommonSpatialFunction.ST_ENVELOPE.getKey(), new Method( "STEnvelope", exactly( 1 ), sameAsFirst() ) );
+		map.put(
+				CommonSpatialFunction.ST_ENVELOPE.getKey(),
+				new Method( "STEnvelope", exactly( 1 ), useFirstNonNull() )
+		);
 
 		map.put(
 				CommonSpatialFunction.ST_SRID.getKey(),
@@ -69,7 +74,10 @@ public class SqlServerSqmFunctionDescriptors extends BaseSqmFunctionDescriptors 
 				new Method( "STIsSimple", exactly( 1 ), invariant( StandardBasicTypes.BOOLEAN ) )
 		);
 
-		map.put( CommonSpatialFunction.ST_BOUNDARY.getKey(), new Method( "STBoundary", exactly( 1 ), sameAsFirst() ) );
+		map.put(
+				CommonSpatialFunction.ST_BOUNDARY.getKey(),
+				new Method( "STBoundary", exactly( 1 ), useFirstNonNull() )
+		);
 		map.put(
 				CommonSpatialFunction.ST_OVERLAPS.getKey(),
 				new Method( "STOverlaps", exactly( 2 ), invariant( StandardBasicTypes.BOOLEAN ) )
@@ -111,25 +119,30 @@ public class SqlServerSqmFunctionDescriptors extends BaseSqmFunctionDescriptors 
 				new Method( "STDistance", exactly( 2 ), invariant( StandardBasicTypes.DOUBLE ) )
 		);
 
-		map.put( CommonSpatialFunction.ST_BUFFER.getKey(), new Method( "STBuffer", exactly( 2 ), sameAsFirst() ) );
+		map.put(
+				CommonSpatialFunction.ST_BUFFER.getKey(),
+				new Method( "STBuffer", exactly( 2 ),
+							useFirstNonNull()
+				)
+		);
 
 		map.put(
 				CommonSpatialFunction.ST_CONVEXHULL.getKey(),
-				new Method( "STConvexHull", exactly( 1 ), sameAsFirst() )
+				new Method( "STConvexHull", exactly( 1 ), useFirstNonNull() )
 		);
 		map.put(
 				CommonSpatialFunction.ST_DIFFERENCE.getKey(),
-				new Method( "STDifference", exactly( 2 ), sameAsFirst() )
+				new Method( "STDifference", exactly( 2 ), useFirstNonNull() )
 		);
 		map.put(
 				CommonSpatialFunction.ST_INTERSECTION.getKey(),
-				new Method( "STIntersection", exactly( 2 ), sameAsFirst() )
+				new Method( "STIntersection", exactly( 2 ), useFirstNonNull() )
 		);
 		map.put(
 				CommonSpatialFunction.ST_SYMDIFFERENCE.getKey(),
-				new Method( "STSymDifference", exactly( 2 ), sameAsFirst() )
+				new Method( "STSymDifference", exactly( 2 ), useFirstNonNull() )
 		);
-		map.put( CommonSpatialFunction.ST_UNION.getKey(), new Method( "STUnion", exactly( 2 ), sameAsFirst() ) );
+		map.put( CommonSpatialFunction.ST_UNION.getKey(), new Method( "STUnion", exactly( 2 ), useFirstNonNull() ) );
 		map.put(
 				CommonSpatialFunction.ST_RELATE.getKey(),
 				new Method( "STRelate", exactly( 3 ), invariant( StandardBasicTypes.BOOLEAN ) )
@@ -144,10 +157,6 @@ public class SqlServerSqmFunctionDescriptors extends BaseSqmFunctionDescriptors 
 
 	FunctionReturnTypeResolver invariant(BasicTypeReference<?> tpe) {
 		return StandardFunctionReturnTypeResolvers.invariant( typeRegistry.resolve( tpe ) );
-	}
-
-	FunctionReturnTypeResolver sameAsFirst() {
-		return StandardFunctionReturnTypeResolvers.useArgType( 1 );
 	}
 
 }

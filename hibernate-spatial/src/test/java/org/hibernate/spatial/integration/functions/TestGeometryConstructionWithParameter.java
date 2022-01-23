@@ -12,6 +12,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.spatial.CommonSpatialFunction;
 import org.hibernate.spatial.testing.IsSupportedBySpatial;
 import org.hibernate.spatial.testing.SpatialTestBase;
@@ -20,15 +22,9 @@ import org.hibernate.spatial.testing.domain.GeomEntity;
 
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
-
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 import org.junit.jupiter.api.function.Executable;
-
-import static org.geolatte.geom.builder.DSL.g;
-import static org.geolatte.geom.builder.DSL.polygon;
-import static org.geolatte.geom.builder.DSL.ring;
 
 
 @RequiresDialectFeature(feature = IsSupportedBySpatial.class)
@@ -63,13 +59,10 @@ public class TestGeometryConstructionWithParameter extends SpatialTestBase {
 	}
 
 	@TestFactory
-	@Disabled("Broken because of NULL argument return type")
 	public Stream<DynamicTest> testFunctions() {
 		return Arrays.stream( CommonSpatialFunction.values() )
-				.filter( f ->
-								 f.getType() == CommonSpatialFunction.Type.CONSTRUCTION &&
-										 isSupported( f ) &&
-										 templateAvailable( f ) )
+				.filter( f -> f.getType() == CommonSpatialFunction.Type.CONSTRUCTION && isSupported( f ) && templateAvailable(
+						f ) )
 				.map( this::buildTestFunction );
 	}
 
@@ -82,12 +75,20 @@ public class TestGeometryConstructionWithParameter extends SpatialTestBase {
 		return () -> {
 			scope.inSession( session -> {
 				String hql = templates.get( func );
-				session.createQuery( hql , GeomEntity.class )
-						.setParameter( "poly", filterGeometry )
-						.getResultList();
+				hql = adaptToDialect( session, hql );
+				session.createQuery( hql, GeomEntity.class ).setParameter( "poly", filterGeometry ).getResultList();
 				//we just check that this parses for now.
 			} );
 		};
+	}
+
+	private String adaptToDialect(SessionImplementor session, String hql) {
+		//special case for SqlServer.
+		// the cast ensures that SQL Server interprets the passed object (jdbc byte array) as a geometry
+		if ( session.getSessionFactory().getJdbcServices().getDialect() instanceof SQLServerDialect ) {
+			hql = hql.replace( ":poly", "cast( :poly as org.geolatte.geom.Geometry)" );
+		}
+		return hql;
 	}
 
 	private String buildName(CommonSpatialFunction func) {

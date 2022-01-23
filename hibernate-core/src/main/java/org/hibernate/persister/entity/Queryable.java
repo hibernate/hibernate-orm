@@ -7,7 +7,7 @@
 package org.hibernate.persister.entity;
 
 /**
- * Extends the generic {@code EntityPersister} contract to add
+ * Extends the generic {@link EntityPersister} contract to add
  * operations required by the Hibernate Query Language
  *
  * @author Gavin King

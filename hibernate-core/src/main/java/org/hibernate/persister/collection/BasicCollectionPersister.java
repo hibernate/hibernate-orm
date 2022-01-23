@@ -33,7 +33,11 @@ import org.hibernate.sql.Update;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 
 /**
- * Collection persister for collections of values and many-to-many associations.
+ * A {@link CollectionPersister} for {@linkplain jakarta.persistence.ElementCollection
+ * collections of values} and {@linkplain jakarta.persistence.ManyToMany many-to-many
+ * associations}.
+ *
+ * @see OneToManyPersister
  *
  * @author Gavin King
  */

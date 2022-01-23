@@ -32,7 +32,10 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 
 /**
- * Collection persister for one-to-many associations.
+ * A {@link CollectionPersister} for {@link jakarta.persistence.OneToMany one-to-one
+ * associations}.
+ *
+ * @see BasicCollectionPersister
  *
  * @author Gavin King
  * @author Brett Meyer

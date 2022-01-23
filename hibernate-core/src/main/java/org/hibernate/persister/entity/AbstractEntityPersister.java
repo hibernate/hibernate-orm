@@ -2089,10 +2089,6 @@ public abstract class AbstractEntityPersister
 		return new GeneratedValuesProcessor( this, timing, getFactory() );
 	}
 
-	protected interface InclusionChecker {
-		boolean includeProperty(int propertyNumber);
-	}
-
 	@Override
 	public Object forceVersionIncrement(Object id, Object currentVersion, SharedSessionContractImplementor session) {
 		if ( !isVersioned() ) {
@@ -2781,7 +2777,7 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	private void initDiscriminatorPropertyPath(Mapping mapping) throws MappingException {
+	private void initDiscriminatorPropertyPath() {
 		propertyMapping.initPropertyPaths(
 				ENTITY_CLASS,
 				getDiscriminatorType(),
@@ -2798,7 +2794,7 @@ public abstract class AbstractEntityPersister
 		initOrdinaryPropertyPaths( mapping ); //do two passes, for collection property-ref!
 		initIdentifierPropertyPaths( mapping );
 		if ( entityMetamodel.isPolymorphic() ) {
-			initDiscriminatorPropertyPath( mapping );
+			initDiscriminatorPropertyPath();
 		}
 	}
 
@@ -4092,11 +4088,7 @@ public abstract class AbstractEntityPersister
 		// subclass ought to be joined by outer-join.  However, TREAT-AS always requires that an inner-join be used
 		// so we give TREAT-AS higher precedence...
 
-		if ( isSubclassTableIndicatedByTreatAsDeclarations( subclassTableNumber, treatAsDeclarations ) ) {
-			return true;
-		}
-
-		return false;
+		return isSubclassTableIndicatedByTreatAsDeclarations(subclassTableNumber, treatAsDeclarations);
 	}
 
 	protected boolean isSubclassTableIndicatedByTreatAsDeclarations(
@@ -4340,7 +4332,7 @@ public abstract class AbstractEntityPersister
 	@Override
 	public boolean isAffectedByEnabledFilters(LoadQueryInfluencers loadQueryInfluencers) {
 		if ( loadQueryInfluencers.hasEnabledFilters() && filterHelper != null ) {
-			if ( filterHelper != null && filterHelper.isAffectedBy( loadQueryInfluencers.getEnabledFilters() ) ) {
+			if ( filterHelper.isAffectedBy( loadQueryInfluencers.getEnabledFilters() ) ) {
 				return true;
 			}
 			// we still need to verify collection fields to be eagerly loaded by 'join'
@@ -5883,7 +5875,6 @@ public abstract class AbstractEntityPersister
 	@Override
 	public void linkWithSubType(EntityMappingType sub, MappingModelCreationProcess creationProcess) {
 		if ( subclassMappingTypes == null ) {
-			//noinspection unchecked
 			subclassMappingTypes = new TreeMap<>();
 		}
 		subclassMappingTypes.put( sub.getEntityName(), sub );
@@ -6037,7 +6028,6 @@ public abstract class AbstractEntityPersister
 			int stateArrayPosition,
 			MappingModelCreationProcess creationProcess) {
 		final SessionFactoryImplementor sessionFactory = creationProcess.getCreationContext().getSessionFactory();
-		final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();
 		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
 		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
 		final Dialect dialect = jdbcEnvironment.getDialect();
@@ -6116,7 +6106,7 @@ public abstract class AbstractEntityPersister
 					stateArrayPosition,
 					bootProperty,
 					this,
-					(BasicType) attrType,
+					(BasicType<?>) attrType,
 					tableExpression,
 					attrColumnExpression,
 					isAttrColumnExpressionFormula,
@@ -6426,11 +6416,7 @@ public abstract class AbstractEntityPersister
 			return true;
 		}
 
-		if ( !entityMetamodel.hasNonIdentifierPropertyNamedId() && "id".equals( name ) ) {
-			return true;
-		}
-
-		return false;
+		return !entityMetamodel.hasNonIdentifierPropertyNamedId() && "id".equals( name );
 	}
 
 	@Override
@@ -6512,11 +6498,7 @@ public abstract class AbstractEntityPersister
 	public void visitSubTypeAttributeMappings(Consumer<? super AttributeMapping> action) {
 		visitAttributeMappings( action );
 		if ( subclassMappingTypes != null ) {
-			subclassMappingTypes.forEach(
-					(s, subType) -> {
-						subType.visitDeclaredAttributeMappings( action );
-					}
-			);
+			subclassMappingTypes.forEach( (s, subType) -> subType.visitDeclaredAttributeMappings( action ) );
 		}
 	}
 
